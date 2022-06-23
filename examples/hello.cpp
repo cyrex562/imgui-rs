@@ -1,6 +1,6 @@
 #include "node_editor.h"
 #include <imnodes.h>
-#include <imgui.h>
+#include <imgui_h.rs>
 
 namespace example
 {

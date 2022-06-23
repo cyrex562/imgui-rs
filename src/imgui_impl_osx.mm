@@ -15,7 +15,7 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#import "imgui.h"
+#import "imgui_h.rs"
 #import "imgui_impl_osx.h"
 #import <Cocoa/Cocoa.h>
 #import <Carbon/Carbon.h>

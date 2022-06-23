@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stddef.h>
-#include <imgui.h>
+#include <imgui_h.rs>
 
 #ifdef IMNODES_USER_CONFIG
 #include IMNODES_USER_CONFIG

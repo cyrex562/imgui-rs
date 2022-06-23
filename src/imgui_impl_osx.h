@@ -15,7 +15,7 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#include "imgui.h"      // IMGUI_IMPL_API
+#include "imgui_h.rs"      // IMGUI_IMPL_API
 
 @class NSEvent;
 @class NSView;

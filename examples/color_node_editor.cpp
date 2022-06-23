@@ -2,7 +2,7 @@
 #include "graph.h"
 
 #include <imnodes.h>
-#include <imgui.h>
+#include <imgui_h.rs>
 
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_timer.h>

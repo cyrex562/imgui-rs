@@ -28,7 +28,7 @@
 //  2018-11-30: Misc: Setting up io.BackendPlatformName so it can be displayed in the About Window.
 //  2018-03-22: Added GLUT Platform binding.
 
-#include "imgui.h"
+#include "imgui_h.rs"
 #include "imgui_impl_glut.h"
 #ifdef __APPLE__
 #include <GLUT/glut.h>
