@@ -247,12 +247,15 @@ type ImGuiID = i32;
 // Character types
 // (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)
 // typedef unsigned short ImWchar16;   // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
+type ImWchar16 = u16;
 // typedef unsigned pub ImWchar32: i32,   // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
+type ImWchar32 = u32;
 // #ifdef IMGUI_USE_WCHAR32            // ImWchar [configurable type: override in imconfig.h with '#define IMGUI_USE_WCHAR32' to support Unicode planes 1-16]
 // typedef ImWchar32 ImWchar;
 // #else
 // typedef ImWchar16 ImWchar;
 // #endif
+type ImWchar = ImWchar32;
 
 // Callback and functions types
 // typedef int     (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    // Callback function for ImGui::InputText()
@@ -289,6 +292,10 @@ impl ImVec2 {
             x,
             y
         }
+    }
+    pub fn clear(&mut self) {
+        self.x = 0;
+        self.y = 0;
     }
 }
 
@@ -2516,7 +2523,7 @@ impl ImGuiPayload {
 
 // Sorting specification for one column of a table (sizeof == 12 bytes)
 #[derive(Default,Debug,Clone)]
-struct ImGuiTableColumnSortSpecs
+pub struct ImGuiTableColumnSortSpecs
 {
     pub ColumnUserID: ImGuiID,     // User id of the column (if specified by a TableSetupColumn() call)
     pub ColumnIndex: i16,        // Index of the column
@@ -3220,15 +3227,15 @@ pub struct ImDrawList
     pub Flags: ImDrawListFlags,
     // [Internal, used while building lists]
     // unsigned pub _VtxCurrentIdx: i32,   // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
-    pub _VtxCurrentIdx: u32,
+    // pub _VtxCurrentIdx: u32,
     // const ImDrawListSharedData* _Data;          // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
     pub _Data: *const ImDrawListSharedData,
     // const char*             _OwnerName;         // Pointer to owner window's name for debugging
     pub _OwnerName: String,
     // ImDrawVert*             _VtxWritePtr;       // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    pub _VxWritePtr: *mut ImDrawVert,
+    // pub _VxWritePtr: *mut ImDrawVert,
     // ImDrawIdx*              _IdxWritePtr;       // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    pub _IdxWritePtr: *mut ImDrawIdx,
+    // pub _IdxWritePtr: *mut ImDrawIdx,
     // ImVector<ImVec4>        _ClipRectStack;     // [Internal]
     pub _ClipRectStack: Vec<ImVec4>,
     // ImVector<ImTextureID>   _TextureIdStack;    // [Internal]
@@ -3327,39 +3334,115 @@ impl ImDrawList {
         todo!()
     }
     // IMGUI_API void  AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness = 1.0f);
+    pub fn AddNgon(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32, thickness: f32) {
+        todo!()
+    }
     // IMGUI_API void  AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments);
+    pub fn AddNgonFilled(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32) {
+        todo!()
+    }
     // IMGUI_API void  AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
+    pub fn AddText(&mut self, pos: &ImVec2, col: u32, text_begin: &String, text_end: &String) {
+        todo!()
+    }
     // IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL);
+    pub fn AddText2(&mut self, font: &ImFont, font_size: f32, pos: &ImVec2, col: u32, text: &String, wrap_width: f32, cpu_fine_clip_rect: &ImVec4) {
+        todo!()
+    }
     // IMGUI_API void  AddPolyline(const ImVec2* points, int num_points, ImU32 col, ImDrawFlags flags, float thickness);
+    pub fn AddPolyline(&mut self, points: &[ImVec2], num_points: usize, col: u32, flags: ImDrawFlags, thickness: f32) {
+        todo!()
+    }
     // IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col);
+    pub fn AddConvexPolyFilled(&mut self, points: &[ImVec2], num_points: usize, col: u32) {
+        todo!()
+    }
     // IMGUI_API void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
+    pub fn AddBezierCubic(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32, thickness: f32, num_segments: i32) {
+        todo!()
+    }
     // IMGUI_API void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
+    pub fn AddBezierQuadratic(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32, thickness: f32, num_segments: i32) {
+        todo!()
+    }
 
     // Image primitives
     // - Read FAQ to understand what ImTextureID is.
     // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
     // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
     // IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
+    pub fn AddImage(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_min: &ImVec2, uv_max: &ImVec2, col: u32) {
+        todo!()
+    }
     // IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
+    pub fn AddImageQuad(&mut self, user_texture_id: ImTextureID, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, uv1: &ImVec2, uv2: &ImVec2, uv3: &ImVec2, uv4: &ImVec2, col: u32) {
+        todo!()
+    }
     // IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawFlags flags = 0);
+    pub fn AddImageRounded(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_min: &ImVec2, uv_max: &ImVec2, col: u32, rounding: f32, flags: ImDrawFlags) {
+        todo!()
+    }
 
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     // - Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
     // inline    void  PathClear()                                                 { _Path.Size = 0; }
+    pub fn PathClear(&mut self) {
+        self._Path.Size = 0
+    }
     // inline    void  PathLineTo(const ImVec2& pos)                               { _Path.push_back(pos); }
+    pub fn PathLineTo(&mut self, pos: &ImVec2) {
+        self._Path.push(pos.clone())
+    }
     // inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size - 1], &pos, 8) != 0) _Path.push_back(pos); }
+    pub fn PathLineToMergeDuplicate(&mut self, pos: &ImVec2) {
+        if self._Path.len() == 0 || (self._Path[self._Path.len() - 1] != pos) {
+            self._Path.push(pos.clone())
+        }
+    }
     // inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
+    pub fn PathFillConvex(&mut self, col: u32) {
+        self.AddConvexPolyFilled(self._Path.as_slice(), self._Path.len(), col);
+        self._Path.clear()
+    }
     // inline    void  PathStroke(ImU32 col, ImDrawFlags flags = 0, float thickness = 1.0f) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
+    pub fn PathStroke(&mut self, col: u32, flags: ImDrawFlags, thickness: f32) {
+        self.AddPolyline(self._Path.as_slice(), self._Path.len(), col, flags, thickness);
+        self._Path.clear()
+    }
     // IMGUI_API void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 0);
+    pub fn PathArcTo(&mut self, center: &ImVec2, radius: f32, a_min: f32, a_max: f32, num_segments: i32) {
+        todo!()
+    }
     // IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
+    pub fn PathArcToFast(&mut self, center: &ImVec2, radius: f32, a_min_of_12: i32, a_max_of_12: i32) {
+        todo!()
+    }
     // IMGUI_API void  PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0); // Cubic Bezier (4 control points)
+    pub fn PathBezierCubicCurveTo(&mut self, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, num_segments: usize) {
+        todo!()
+    }
     // IMGUI_API void  PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, int num_segments = 0);               // Quadratic Bezier (3 control points)
+    pub fn PathBezierQuadraticCurveTo(&mut self, p2: &ImVec2, p3: &ImVec2, num_segments: usize) {
+        todo!()
+    }
     // IMGUI_API void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, float rounding = 0.0f, ImDrawFlags flags = 0);
+    pub fn PathRect(&mut self, rect_min: &ImVec2, rect_max: &ImVec2, rounding: f32, flags: ImDrawFlags) {
+        todo!()
+    }
 
     // Advanced
     // IMGUI_API void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
+    pub fn AddCallback(&mut self, callback: ImDrawCallback, callback_data: *mut c_void) {
+        todo!()
+    }
     // IMGUI_API void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
+    pub fn AddDrawCmd(&mut self) {
+        todo!()
+    }
     // IMGUI_API ImDrawList* CloneOutput() const;                                  // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
+    pub fn CloneOutput(&mut self) -> Vec<ImDrawList> {
+        todo!()
+    }
 
     // Advanced: Channels
     // - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
@@ -3375,13 +3458,43 @@ impl ImDrawList {
     // - We render triangles (three vertices)
     // - All primitives needs to be reserved via PrimReserve() beforehand.
     // IMGUI_API void  PrimReserve(int idx_count, int vtx_count);
+    pub fn PrimReserve(&mut self, idx_count: usize, vtx_count: usize) {
+        todo!()
+    }
     // IMGUI_API void  PrimUnreserve(int idx_count, int vtx_count);
+    pub fn PrimUnreserve(&mut self, idx_count: usize, vtx_count: usize) {
+        todo!()
+    }
     // IMGUI_API void  PrimRect(const ImVec2& a, const ImVec2& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
+    pub fn PrimRect(&mut self, a: &ImVec2, b: &ImVec2, col: u32) {
+        todo!()
+    }
     // IMGUI_API void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, ImU32 col);
+    pub fn PrimRectUV(&mut self, a: &ImVec2, b: &ImVec2, uv_a: &ImVec2, uv_b: &ImVec2, col: u32) {
+        todo!()
+    }
     // IMGUI_API void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col);
+    pub fn PrimQuadUV(&mut self, a: &ImVec2, b: &ImVec2, c: &ImVec2, d: &ImVec2, uv_a: &ImVec2, uv_b: &ImVec2, uv_c: &ImVec2, uv_d: &ImVec2, col: u32) {
+        todo!()
+    }
     // inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
+    pub fn PrimWriteVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
+        // TODO: replace VtxWritePtr with a vector of vertices
+        self.VtxBuffer.push(ImDrawVert{
+            pos: pos.clone(),
+            uv: uv.clone(),
+            col,
+        });
+    }
     // inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr++; }
+    pub fn PrimWriteIdx(&mut self, idx: ImDrawIdx) {
+        self.IdxBuffer.push(idx)
+    }
     // inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
+    pub fn PrimVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
+        self.PrimWriteVtx(pos, uv, col);
+        self.PrimWriteIdx(0)
+    }
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //     inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
@@ -3390,46 +3503,86 @@ impl ImDrawList {
 
     // [Internal helpers]
     // IMGUI_API void  _ResetForNewFrame();
+    fn ResetForNewFrame(&mut self) { todo!()}
     // IMGUI_API void  _ClearFreeMemory();
+    fn ClearFreeMemory(&mut self){todo!()}
     // IMGUI_API void  _PopUnusedDrawCmd();
+    fn PopUnusedDrawCmd(&mut self) {todo!()}
     // IMGUI_API void  _TryMergeDrawCmds();
+    fn TryMergeDrawCmds(&mut self) { todo!()}
     // IMGUI_API void  _OnChangedClipRect();
+    fn OnChangedClipRect(&mut self) {todo!()}
     // IMGUI_API void  _OnChangedTextureID();
+    fn OnChangedTextureID(&mut self) {todo!()}
     // IMGUI_API void  _OnChangedVtxOffset();
+    fn OnChangedVtxOffset(&mut self) {todo!()}
     // IMGUI_API int   _CalcCircleAutoSegmentCount(float radius) const;
+    fn CalCircleAUtoSegmentCount(&mut self, radius: f32) -> i32 {
+        todo!()
+    }
     // IMGUI_API void  _PathArcToFastEx(const ImVec2& center, float radius, int a_min_sample, int a_max_sample, int a_step);
+    fn PathArcToFastEx(&mut self, center: &ImVec2, radius: f32, a_min_simple: i32, a_max_sample: i32, a_step: i32) {
+        todo!()
+    }
     // IMGUI_API void  _PathArcToN(const ImVec2& center, float radius, float a_min, float a_max, int num_segments);
+    fn PathArcToN(&mut self, center: &ImVec2, radius: f32, a_min: f32, a_max: f32, num_segments: i32) {
+        todo!()
+    }
 }
 
 // All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
 // as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
-struct ImDrawData
+#[derive(Debug,Clone,Default)]
+pub struct ImDrawData
 {
     pub Valid: bool,                  // Only valid after Render() is called and before the next NewFrame() is called.
     pub CmdListsCount: i32,        // Number of ImDrawList* to render
     pub TotalIdxCount: i32,        // For convenience, sum of all ImDrawList's IdxBuffer.Size
     pub TotalVtxCount: i32,        // For convenience, sum of all ImDrawList's VtxBuffer.Size
-    ImDrawList**    CmdLists;               // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
+    // ImDrawList**    CmdLists;               // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
+    pub CmdLists: Vec<ImDrawList>,
     pub DisplayPos: ImVec2,             // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport()->Pos for the main viewport, == (0.0) in most single-viewport applications)
     pub DisplaySize: ImVec2,            // Size of the viewport to render (== GetMainViewport()->Size for the main viewport, == io.DisplaySize in most single-viewport applications)
     pub FramebufferScale: ImVec2,       // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
-    ImGuiViewport*  OwnerViewport;          // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
+    // ImGuiViewport*  OwnerViewport;          // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
+    pub OnwerViewport: ImGuiViewport,
 
-    // Functions
-    ImDrawData()    { Clear(); }
-    void Clear()    { memset(this, 0, sizeof(*this)); }     // The ImDrawList are owned by ImGuiContext!
-    IMGUI_API void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
-    IMGUI_API void  ScaleClipRects(const ImVec2& fb_scale); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
-};
+}
+
+impl ImDrawData {
+    // // Functions
+    //     ImDrawData()    { Clear(); }
+    //     void Clear()    { memset(this, 0, sizeof(*this)); }     // The ImDrawList are owned by ImGuiContext!
+    pub fn Clear(&mut self) {
+        self.Valid = false;
+        self.CmdListsCount = 0;
+        self.TotalIdxCount = 0;
+        self.TotalVtxCount = 0;
+        self.CmdLists.clear();
+        self.DisplayPos.clear();
+        self.DisplaySize.clear();
+        self.FramebufferScale.clear();
+        self.OnwerViewport.clear();
+    }
+    //     IMGUI_API void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
+    pub fn DeIndexAllBuffers(&mut self) {
+        todo!()
+    }
+    //     IMGUI_API void  ScaleClipRects(const ImVec2& fb_scale); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
+    pub fn ScaleClipRects(&mut self, fb_scale: &ImVec2) {
+        todo!()
+    }
+}
 
 //-----------------------------------------------------------------------------
 // [SECTION] Font API (ImFontConfig, ImFontGlyph, ImFontAtlasFlags, ImFontAtlas, ImFontGlyphRangesBuilder, ImFont)
 //-----------------------------------------------------------------------------
 
+#[derive(Clone,Debug,Default)]
 struct ImFontConfig
 {
-    void*           FontData;               //          // TTF/OTF data
+    pub FontData: *mut c_void, // void*           FontData;               //          // TTF/OTF data
     pub FontDataSize: i32,         //          // TTF/OTF data size
     pub FontDataOwnedByAtlas: bool,   // true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
     pub FontNo: i32,               // 0        // Index of font within TTF/OTF file
@@ -3439,70 +3592,141 @@ struct ImFontConfig
     pub PixelSnapH: bool,             // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
     pub GlyphExtraSpacing: ImVec2,      // 0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
     pub GlyphOffset: ImVec2,            // 0, 0     // Offset all glyphs from this font input.
-    const ImWchar*  GlyphRanges;            // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
+    pub GlyphRanges: Vec<ImWchar>, // const ImWchar*  GlyphRanges;            // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
     pub GlyphMinAdvanceX: f32,      // 0        // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
     pub GlyphMaxAdvanceX: f32,      // FLT_MAX  // Maximum AdvanceX for glyphs
     pub MergeMode: bool,              // false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
-    unsigned pub FontBuilderFlags: i32,     // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
+    pub FontBuilderFlags: u32,     // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
     pub RasterizerMultiply: f32,    // 1.0f     // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
-    ImWchar         EllipsisChar;           // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
+    // ImWchar         EllipsisChar;           // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
+    pub EllipsisChar: ImWchar,
 
     // [Internal]
-    char            Name[40];               // Name (strictly to ease debugging)
-    ImFont*         DstFont;
+    // char            Name[40];               // Name (strictly to ease debugging)
+    pub Name: String,
+    // ImFont*         DstFont;
+    pub DstFont: ImFont,
 
-    IMGUI_API ImFontConfig();
-};
+    // IMGUI_API ImFontConfig();
+}
 
 // Hold rendering data for one glyph.
 // (Note: some language parsers may fail to convert the 31+1 bitfield members, in this case maybe drop store a single u32 or we can rework this)
-struct ImFontGlyph
+#[derive(Clone,Debug,Default)]
+pub struct ImFontGlyph
 {
-    unsigned int    Colored : 1;        // Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
-    unsigned int    Visible : 1;        // Flag to indicate glyph has no visible pixels (e.g. space). Allow early out when rendering.
-    unsigned int    Codepoint : 30;     // 0x0000..0x10FFFF
-    pub AdvanceX: f32,          // Distance to next character (= data from font + ImFontConfig::GlyphExtraSpacing.x baked in)
-    float           X0, Y0, X1, Y1;     // Glyph corners
-    float           U0, V0, U1, V1;     // Texture coordinates
-};
+    // unsigned int    Colored : 1;        // Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
+    pub Colored: bool,
+    // unsigned int    Visible : 1;        // Flag to indicate glyph has no visible pixels (e.g. space). Allow early out when rendering.
+    pub Visible: bool,
+    // unsigned int    Codepoint : 30;     // 0x0000..0x10FFFF
+    pub Codepoint: u32,
+    // pub AdvanceX: f32,          // Distance to next character (= data from font + ImFontConfig::GlyphExtraSpacing.x baked in)
+    pub AdvanceX: f32,
+    // float           X0, Y0, X1, Y1;     // Glyph corners
+    pub X0: f32,
+    pub Y0: f32,
+    pub X1: f32,
+    pub Y1: f32,
+    // float           U0, V0, U1, V1;     // Texture coordinates
+    pub U0: f32,
+    pub V0: f32,
+    pub U1: f32,
+    pub V1: f32,
+}
 
 // Helper to build glyph ranges from text/string data. Feed your application strings/characters to it then call BuildRanges().
 // This is essentially a tightly packed of vector of 64k booleans = 8KB storage.
-struct ImFontGlyphRangesBuilder
+#[derive(Clone,Debug,Default)]
+pub struct ImFontGlyphRangesBuilder
 {
-    ImVector<ImU32> UsedChars;            // Store 1-bit per Unicode code point (0=unused, 1=used)
+    pub UsedChars: Vec<u32>, //ImVector<ImU32> UsedChars;            // Store 1-bit per Unicode code point (0=unused, 1=used)
 
-    ImFontGlyphRangesBuilder()              { Clear(); }
-    inline void     Clear()                 { int size_in_bytes = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / (int)sizeof(ImU32)); memset(UsedChars.Data, 0, (size_t)size_in_bytes); }
-    inline bool     GetBit(size_t n) const  { int off = (int)(n >> 5); ImU32 mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; }  // Get bit n in the array
-    inline void     SetBit(size_t n)        { int off = (int)(n >> 5); ImU32 mask = 1u << (n & 31); UsedChars[off] |= mask; }               // Set bit n in the array
-    inline void     AddChar(ImWchar c)      { SetBit(c); }                      // Add character
-    IMGUI_API void  AddText(const char* text, const char* text_end = NULL);     // Add string (each character of the UTF-8 string are added)
-    IMGUI_API void  AddRanges(const ImWchar* ranges);                           // Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
-    IMGUI_API void  BuildRanges(ImVector<ImWchar>* out_ranges);                 // Output new ranges
-};
+
+}
+
+impl ImFontGlyphRangesBuilder {
+    // ImFontGlyphRangesBuilder()              { Clear(); }
+    //     inline void     Clear()                 { int size_in_bytes = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / (int)sizeof(ImU32)); memset(UsedChars.Data, 0, (size_t)size_in_bytes); }
+    pub fn Clear(&mut self) {
+        self.UsedChars.clear()
+    }
+    //     inline bool     GetBit(size_t n) const  { int off = (int)(n >> 5); ImU32 mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; }  // Get bit n in the array
+    pub fn GetBit(&mut self, n: usize) -> bool {
+        let off = n >> 5;
+        let mask: u32 = 1 << (n * 31);
+        self.UsedChars[off] & mask != 0
+    }
+    //     inline void     SetBit(size_t n)        { int off = (int)(n >> 5); ImU32 mask = 1u << (n & 31); UsedChars[off] |= mask; }               // Set bit n in the array
+    pub fn SetBit(&mut self, n: usize) {
+        let off = n >> 5;
+        let mask: u32 = 1 << (n & 31);
+        self.UsedChars[off] |= mask;
+    }
+    //     inline void     AddChar(ImWchar c)      { SetBit(c); }                      // Add character
+    pub fn AddChar(&mut self, c: u8) {
+        self.SetBit(c as usize)
+    }
+    //     IMGUI_API void  AddText(const char* text, const char* text_end = NULL);     // Add string (each character of the UTF-8 string are added)
+    pub fn AddText(&mut self, text: &String) {
+        todo!()
+    }
+    //     IMGUI_API void  AddRanges(const ImWchar* ranges);                           // Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
+    pub fn AddRanges(&mut self, ranges: &[ImWchar]) {
+        todo!()
+    }
+    //     IMGUI_API void  BuildRanges(ImVector<ImWchar>* out_ranges);                 // Output new ranges
+    pub fn BuildRanges(&mut self, out_ranges: &mut Vec<ImWchar>) {
+        todo!()
+    }
+}
 
 // See ImFontAtlas::AddCustomRectXXX functions.
-struct ImFontAtlasCustomRect
+#[derive(Default,Debug,Clone)]
+pub struct ImFontAtlasCustomRect
 {
-    unsigned short  Width, Height;  // Input    // Desired rectangle dimension
-    unsigned short  X, Y;           // Output   // Packed position in Atlas
-    unsigned pub GlyphID: i32,      // Input    // For custom font glyphs only (ID < 0x110000)
+    // unsigned short  Width, Height;  // Input    // Desired rectangle dimension
+    pub Width: u16,
+    pub Height: u16,
+    // unsigned short  X, Y;           // Output   // Packed position in Atlas
+    pub X: u16,
+    pub Y: u16,
+    // unsigned pub GlyphID: i32,      // Input    // For custom font glyphs only (ID < 0x110000)
+    pub GlyphID: u32,
     pub GlyphAdvanceX: f32, // Input    // For custom font glyphs only: glyph xadvance
     pub GlyphOffset: ImVec2,    // Input    // For custom font glyphs only: glyph display offset
-    ImFont*         Font;           // Input    // For custom font glyphs only: target font
-    ImFontAtlasCustomRect()         { Width = Height = 0; X = Y = 0xFFFF; GlyphID = 0; GlyphAdvanceX = 0.0f; GlyphOffset = ImVec2(0, 0); Font = NULL; }
-    bool IsPacked() const           { return X != 0xFFFF; }
-};
+    pub Font: ImFont, // ImFont*         Font;           // Input    // For custom font glyphs only: target font
+
+}
+
+impl ImFontAtlasCustomRect {
+    // ImFontAtlasCustomRect()         { Width = Height = 0; X = Y = 0xFFFF; GlyphID = 0; GlyphAdvanceX = 0.0f; GlyphOffset = ImVec2(0, 0); Font = NULL;
+    pub fn new() -> Self {
+        Self {
+            Width: 0,
+            Height: 0,
+            X: 0xFFFF,
+            Y: 0xFFFF,
+            GlyphID: 0,
+            GlyphAdvanceX: 0.0,
+            GlyphOffset: Default::default(),
+            Font: Default::default(),
+        }
+    }
+    //     bool IsPacked() const           { return X != 0xFFFF; }
+    pub fn IsPacked(&self) -> bool {
+        self.X != 0xFFFF
+    }
+}
 
 // Flags for ImFontAtlas build
-enum ImFontAtlasFlags_
+pub enum ImFontAtlasFlags
 {
     ImFontAtlasFlags_None               = 0,
     ImFontAtlasFlags_NoPowerOfTwoHeight = 1 << 0,   // Don't round the height to next power of two
     ImFontAtlasFlags_NoMouseCursors     = 1 << 1,   // Don't build software mouse cursors into the atlas (save a little texture memory)
     ImFontAtlasFlags_NoBakedLines       = 1 << 2    // Don't build thick line textures into the atlas (save a little texture memory, allow support for point/nearest filtering). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
-};
+}
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
 //  - One or more fonts.
@@ -3521,73 +3745,15 @@ enum ImFontAtlasFlags_
 //   You can set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed,
 // - Even though many functions are suffixed with "TTF", OTF data is supported just as well.
 // - This is an old API and it is currently awkward for those and and various other reasons! We will address them in the future!
-struct ImFontAtlas
+#[derive(Clone,Debug,Default)]
+pub struct ImFontAtlas
 {
-    IMGUI_API ImFontAtlas();
-    IMGUI_API ~ImFontAtlas();
-    IMGUI_API ImFont*           AddFont(const ImFontConfig* font_cfg);
-    IMGUI_API ImFont*           AddFontDefault(const ImFontConfig* font_cfg = NULL);
-    IMGUI_API ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);
-    IMGUI_API ImFont*           AddFontFromMemoryTTF(void* font_data, int font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
-    IMGUI_API ImFont*           AddFontFromMemoryCompressedTTF(const void* compressed_font_data, int compressed_font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
-    IMGUI_API ImFont*           AddFontFromMemoryCompressedBase85TTF(const char* compressed_font_data_base85, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);              // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
-    IMGUI_API void              ClearInputData();           // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
-    IMGUI_API void              ClearTexData();             // Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
-    IMGUI_API void              ClearFonts();               // Clear output font data (glyphs storage, UV coordinates).
-    IMGUI_API void              Clear();                    // Clear all input and output.
-
-    // Build atlas, retrieve pixel data.
-    // User is in charge of copying the pixels into graphics memory (e.g. create a texture with your engine). Then store your texture handle with SetTexID().
-    // The pitch is always = Width * BytesPerPixels (1 or 4)
-    // Building in RGBA32 format is provided for convenience and compatibility, but note that unless you manually manipulate or copy color data into
-    // the texture (e.g. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
-    IMGUI_API bool              Build();                    // Build pixels data. This is called automatically for you by the GetTexData*** functions.
-    IMGUI_API void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 1 byte per-pixel
-    IMGUI_API void              GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 4 bytes-per-pixel
-    bool                        IsBuilt() const             { return Fonts.Size > 0 && TexReady; } // Bit ambiguous: used to detect when user didn't built texture but effectively we should check TexID != 0 except that would be backend dependent...
-    void                        SetTexID(ImTextureID id)    { TexID = id; }
-
-    //-------------------------------------------
-    // Glyph Ranges
-    //-------------------------------------------
-
-    // Helpers to retrieve list of common Unicode ranges (2 value per range, values are inclusive, zero-terminated list)
-    // NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
-    // NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
-    IMGUI_API const ImWchar*    GetGlyphRangesDefault();                // Basic Latin, Extended Latin
-    IMGUI_API const ImWchar*    GetGlyphRangesKorean();                 // Default + Korean characters
-    IMGUI_API const ImWchar*    GetGlyphRangesJapanese();               // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
-    IMGUI_API const ImWchar*    GetGlyphRangesChineseFull();            // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
-    IMGUI_API const ImWchar*    GetGlyphRangesChineseSimplifiedCommon();// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
-    IMGUI_API const ImWchar*    GetGlyphRangesCyrillic();               // Default + about 400 Cyrillic characters
-    IMGUI_API const ImWchar*    GetGlyphRangesThai();                   // Default + Thai characters
-    IMGUI_API const ImWchar*    GetGlyphRangesVietnamese();             // Default + Vietnamese characters
-
-    //-------------------------------------------
-    // [BETA] Custom Rectangles/Glyphs API
-    //-------------------------------------------
-
-    // You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
-    // - After calling Build(), you can query the rectangle position and render your pixels.
-    // - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
-    // - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
-    //   so you can render e.g. custom colorful icons and use them as regular glyphs.
-    // - Read docs/FONTS.md for more details about using colorful icons.
-    // - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
-    IMGUI_API int               AddCustomRectRegular(int width, int height);
-    IMGUI_API int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const ImVec2& offset = ImVec2(0, 0));
-    ImFontAtlasCustomRect*      GetCustomRectByIndex(int index) { IM_ASSERT(index >= 0); return &CustomRects[index]; }
-
-    // [Internal]
-    IMGUI_API void              CalcCustomRectUV(const ImFontAtlasCustomRect* rect, ImVec2* out_uv_min, ImVec2* out_uv_max) const;
-    IMGUI_API bool              GetMouseCursorTexData(ImGuiMouseCursor cursor, ImVec2* out_offset, ImVec2* out_size, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2]);
-
     //-------------------------------------------
     // Members
     //-------------------------------------------
 
-    ImFontAtlasFlags            Flags;              // Build flags (see ImFontAtlasFlags_)
-    ImTextureID                 TexID;              // User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
+    pub Flags: ImFontAtlasFlags, // ImFontAtlasFlags            Flags;              // Build flags (see ImFontAtlasFlags_)
+    pub TexID: ImTextureID, // ImTextureID                 TexID;              // User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
     pub TexDesiredWidth: i32,  // Texture width desired by user before Build(). Must be a power-of-two. If have many glyphs your graphics API have texture size restrictions you may want to increase texture width to decrease height.
     pub TexGlyphPadding: i32,  // Padding between glyphs within texture in pixels. Defaults to 1. If your rendering method doesn't rely on bilinear filtering you may set this to 0 (will also need to set AntiAliasedLinesUseTex = false).
     pub Locked: bool,             // Marked as Locked by ImGui::NewFrame() so attempt to modify the atlas will assert.
@@ -3596,29 +3762,109 @@ struct ImFontAtlas
     // NB: Access texture data via GetTexData*() calls! Which will setup a default font for you.
     pub TexReady: bool,           // Set when texture was built matching current font input
     pub TexPixelsUseColors: bool, // Tell whether our texture data is known to use colors (rather than just alpha channel), in order to help backend select a format.
-    unsigned char*              TexPixelsAlpha8;    // 1 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight
-    unsigned int*               TexPixelsRGBA32;    // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
+    pub TexPixelsAlpha8: Vec<u8>, // unsigned char*              TexPixelsAlpha8;    // 1 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight
+    pub TexPixelsRGBA32: Vec<u32>, // unsigned int*               TexPixelsRGBA32;    // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
     pub TexWidth: i32,         // Texture width calculated during Build().
     pub TexHeight: i32,        // Texture height calculated during Build().
     pub TexUvScale: ImVec2,         // = (1.0f/TexWidth, 1.0f/TexHeight)
     pub TexUvWhitePixel: ImVec2,    // Texture coordinates to a white pixel
-    ImVector<ImFont*>           Fonts;              // Hold all the fonts returned by AddFont*. Fonts[0] is the default font upon calling ImGui::NewFrame(), use ImGui::PushFont()/PopFont() to change the current font.
-    ImVector<ImFontAtlasCustomRect> CustomRects;    // Rectangles for packing custom texture data into the atlas.
-    ImVector<ImFontConfig>      ConfigData;         // Configuration data
-    ImVec4                      TexUvLines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
+    pub Fonts: Vec<ImFont>, // ImVector<ImFont*>           Fonts;              // Hold all the fonts returned by AddFont*. Fonts[0] is the default font upon calling ImGui::NewFrame(), use ImGui::PushFont()/PopFont() to change the current font.
+    // ImVector<ImFontAtlasCustomRect> CustomRects;    // Rectangles for packing custom texture data into the atlas.
+    pub CustomRects: Vec<ImFontAtlasCustomRect>,
+// ImVector<ImFontConfig>      ConfigData;         // Configuration data
+    pub ConfigData: Vec<ImFontConfig>,
+    // ImVec4                      TexUvLines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
+    pub TexUvLines: Vec<ImVec4>,
 
     // [Internal] Font builder
-    const ImFontBuilderIO*      FontBuilderIO;      // Opaque interface to a font builder (default to stb_truetype, can be changed to use FreeType by defining IMGUI_ENABLE_FREETYPE).
-    unsigned pub FontBuilderFlags: i32, // Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
+    // const ImFontBuilderIO*      FontBuilderIO;      // Opaque interface to a font builder (default to stb_truetype, can be changed to use FreeType by defining IMGUI_ENABLE_FREETYPE).
+    pub FontBuilderIO: ImFontBuilderIO,
+    // unsigned pub FontBuilderFlags: i32, // Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
+    pub FontBuilderFlags: i32,
 
     // [Internal] Packing data
-    int                         PackIdMouseCursors; // Custom texture rectangle ID for white pixel and mouse cursors
+    // int                         PackIdMouseCursors; // Custom texture rectangle ID for white pixel and mouse cursors
+    pub PackIdMouseCursors: i32,
     pub PackIdLines: i32,      // Custom texture rectangle ID for baked anti-aliased lines
 
     // [Obsolete]
     //typedef ImFontAtlasCustomRect    CustomRect;         // OBSOLETED in 1.72+
     //typedef ImFontGlyphRangesBuilder GlyphRangesBuilder; // OBSOLETED in 1.67+
-};
+}
+
+impl ImFontAtlas {
+    // IMGUI_API ImFontAtlas();
+    //     IMGUI_API ~ImFontAtlas();
+    //     IMGUI_API ImFont*           AddFont(const ImFontConfig* font_cfg);
+    pub fn AddFont(&mut self, font_cfg: &ImFontConfig) -> ImFont {
+        todo!()
+    }
+    //     IMGUI_API ImFont*           AddFontDefault(const ImFontConfig* font_cfg = NULL);
+    pub fn AddFontDefault(&mut self, font_cfg: &ImFontConfig) -> ImFont {
+        todo!()
+    }
+    //     IMGUI_API ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);
+    pub fn AddFontFileTTF(&mut self, filename: &String, size_pixels: f32, font_cfg: &ImFontConfig, glyph_ranges: &[ImWchar]) {
+        todo!()
+    }
+    //     IMGUI_API ImFont*           AddFontFromMemoryTTF(void* font_data, int font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
+    pub fn AddFontFromMemoryTTF(&mut self, font_data: &Vec<u8>, font_size: i32, size_pixels: f32, font_cfg: &ImFontConfig, glyph_ranges: &[ImWchar]) {
+        todo!()
+    }
+    //     IMGUI_API ImFont*           AddFontFromMemoryCompressedTTF(const void* compressed_font_data, int compressed_font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
+    //     IMGUI_API ImFont*           AddFontFromMemoryCompressedBase85TTF(const char* compressed_font_data_base85, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);              // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
+    //     IMGUI_API void              ClearInputData();           // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
+    //     IMGUI_API void              ClearTexData();             // Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
+    //     IMGUI_API void              ClearFonts();               // Clear output font data (glyphs storage, UV coordinates).
+    //     IMGUI_API void              Clear();                    // Clear all input and output.
+    //
+    //     // Build atlas, retrieve pixel data.
+    //     // User is in charge of copying the pixels into graphics memory (e.g. create a texture with your engine). Then store your texture handle with SetTexID().
+    //     // The pitch is always = Width * BytesPerPixels (1 or 4)
+    //     // Building in RGBA32 format is provided for convenience and compatibility, but note that unless you manually manipulate or copy color data into
+    //     // the texture (e.g. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
+    //     IMGUI_API bool              Build();                    // Build pixels data. This is called automatically for you by the GetTexData*** functions.
+    //     IMGUI_API void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 1 byte per-pixel
+    //     IMGUI_API void              GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 4 bytes-per-pixel
+    //     bool                        IsBuilt() const             { return Fonts.Size > 0 && TexReady; } // Bit ambiguous: used to detect when user didn't built texture but effectively we should check TexID != 0 except that would be backend dependent...
+    //     void                        SetTexID(ImTextureID id)    { TexID = id; }
+    //
+    //     //-------------------------------------------
+    //     // Glyph Ranges
+    //     //-------------------------------------------
+    //
+    //     // Helpers to retrieve list of common Unicode ranges (2 value per range, values are inclusive, zero-terminated list)
+    //     // NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
+    //     // NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
+    //     IMGUI_API const ImWchar*    GetGlyphRangesDefault();                // Basic Latin, Extended Latin
+    //     IMGUI_API const ImWchar*    GetGlyphRangesKorean();                 // Default + Korean characters
+    //     IMGUI_API const ImWchar*    GetGlyphRangesJapanese();               // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
+    //     IMGUI_API const ImWchar*    GetGlyphRangesChineseFull();            // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
+    //     IMGUI_API const ImWchar*    GetGlyphRangesChineseSimplifiedCommon();// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
+    //     IMGUI_API const ImWchar*    GetGlyphRangesCyrillic();               // Default + about 400 Cyrillic characters
+    //     IMGUI_API const ImWchar*    GetGlyphRangesThai();                   // Default + Thai characters
+    //     IMGUI_API const ImWchar*    GetGlyphRangesVietnamese();             // Default + Vietnamese characters
+    //
+    //     //-------------------------------------------
+    //     // [BETA] Custom Rectangles/Glyphs API
+    //     //-------------------------------------------
+    //
+    //     // You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
+    //     // - After calling Build(), you can query the rectangle position and render your pixels.
+    //     // - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
+    //     // - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
+    //     //   so you can render e.g. custom colorful icons and use them as regular glyphs.
+    //     // - Read docs/FONTS.md for more details about using colorful icons.
+    //     // - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
+    //     IMGUI_API int               AddCustomRectRegular(int width, int height);
+    //     IMGUI_API int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const ImVec2& offset = ImVec2(0, 0));
+    //     ImFontAtlasCustomRect*      GetCustomRectByIndex(int index) { IM_ASSERT(index >= 0); return &CustomRects[index]; }
+    //
+    //     // [Internal]
+    //     IMGUI_API void              CalcCustomRectUV(const ImFontAtlasCustomRect* rect, ImVec2* out_uv_min, ImVec2* out_uv_max) const;
+    //     IMGUI_API bool              GetMouseCursorTexData(ImGuiMouseCursor cursor, ImVec2* out_offset, ImVec2* out_size, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2]);
+}
+
 
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
