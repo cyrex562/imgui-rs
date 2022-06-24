@@ -2502,49 +2502,61 @@ impl ImGuiPayload {
 }
 
 // Sorting specification for one column of a table (sizeof == 12 bytes)
+#[derive(Default,Debug,Clone)]
 struct ImGuiTableColumnSortSpecs
 {
     pub ColumnUserID: ImGuiID,     // User id of the column (if specified by a TableSetupColumn() call)
-    ImS16                       ColumnIndex;        // Index of the column
-    ImS16                       SortOrder;          // Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
-    ImGuiSortDirection          SortDirection : 8;  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
+    pub ColumnIndex: i16,        // Index of the column
+    pub SortOrder: i16,          // Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
+    pub          SortDirection : ImGuiSortDirection,  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
 
-    ImGuiTableColumnSortSpecs() { memset(this, 0, sizeof(*this)); }
-};
+    // ImGuiTableColumnSortSpecs() { memset(this, 0, sizeof(*this)); }
+}
 
 // Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
 // Obtained by calling TableGetSortSpecs().
 // When 'SpecsDirty == true' you can sort your data. It will be true with sorting specs have changed since last call, or the first time.
 // Make sure to set 'SpecsDirty = false' after sorting, else you may wastefully sort your data every frame!
-struct ImGuiTableSortSpecs
+#[derive(Default,Debug,Clone)]
+pub struct ImGuiTableSortSpecs
 {
-    const ImGuiTableColumnSortSpecs* Specs;     // Pointer to sort spec array.
+    pub Specs: *mut ImGuiTableColumnSortSpecs, // const ImGuiTableColumnSortSpecs* Specs;     // Pointer to sort spec array.
     pub SpecsCount: i32,   // Sort spec count. Most often 1. May be > 1 when ImGuiTableFlags_SortMulti is enabled. May be == 0 when ImGuiTableFlags_SortTristate is enabled.
     pub SpecsDirty: bool,     // Set to true when specs have changed since last time! Use this to sort again, then clear the flag.
 
-    ImGuiTableSortSpecs()       { memset(this, 0, sizeof(*this)); }
-};
+    // ImGuiTableSortSpecs()       { memset(this, 0, sizeof(*this)); }
+}
 
 //-----------------------------------------------------------------------------
 // [SECTION] Helpers (ImGuiOnceUponAFrame, ImGuiTextFilter, ImGuiTextBuffer, ImGuiStorage, ImGuiListClipper, ImColor)
 //-----------------------------------------------------------------------------
 
 // Helper: Unicode defines
-#define IM_UNICODE_CODEPOINT_INVALID 0xFFFD     // Invalid Unicode code point (standard value).
-#ifdef IMGUI_USE_WCHAR32
-#define IM_UNICODE_CODEPOINT_MAX     0x10FFFF   // Maximum Unicode code point supported by this build.
-#else
-#define IM_UNICODE_CODEPOINT_MAX     0xFFFF     // Maximum Unicode code point supported by this build.
-#endif
+pub const IM_UNICODE_CODEPOINT_INVALID: u32 = 0xFFFD;     // Invalid Unicode code point (standard value).
+// #ifdef IMGUI_USE_WCHAR32
+pub const IM_UNICODE_CODEPOINT_MAX: u32     = 0x10FFFF;   // Maximum Unicode code point supported by this build.
+// #else
+// #define IM_UNICODE_CODEPOINT_MAX     0xFFFF     // Maximum Unicode code point supported by this build.
+// #endif
 
 // Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
 // Usage: static ImGuiOnceUponAFrame oaf; if (oaf) ImGui::Text("This will be called only once per frame");
-struct ImGuiOnceUponAFrame
+#[derive(Default,Debug,Clone,PartialEq)]
+pub struct ImGuiOnceUponAFrame
 {
-    ImGuiOnceUponAFrame() { RefFrame = -1; }
-    mutable int RefFrame;
-    operator bool() const { int current_frame = ImGui::GetFrameCount(); if (RefFrame == current_frame) return false; RefFrame = current_frame; return true; }
-};
+    pub RefFrame: i32,
+    // ImGuiOnceUponAFrame() { RefFrame = -1; }
+    // mutable int RefFrame;
+    // operator bool() const { int current_frame = ImGui::GetFrameCount(); if (RefFrame == current_frame) return false; RefFrame = current_frame; return true; }
+}
+
+impl ImGuiOnceUponAFrame {
+    pub fn new() -> Self {
+        Self {
+            RefFrame: -1,
+        }
+    }
+}
 
 // Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
 struct ImGuiTextFilter
