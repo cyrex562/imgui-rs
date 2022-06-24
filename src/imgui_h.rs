@@ -1,6 +1,11 @@
 // dear imgui, v1.88
+#![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
+use std::ffi::c_void;
+use std::ops::Index;
+use std::ptr;
+
 // (headers)
 
 // Help:
@@ -215,6 +220,7 @@ Index of this file:
 // - This can be whatever to you want it to be! read the FAQ about ImTextureID for details.
 // #ifndef ImTextureID
 // typedef void* ImTextureID;          // Default: store a pointer or an integer fitting in a pointer (most renderer backends are ok with that)
+type ImTextureID = *mut c_void;
 // #endif
 
 // ImDrawIdx: vertex index. [Compile-time configurable type]
@@ -224,8 +230,11 @@ Index of this file:
 // typedef unsigned short ImDrawIdx;   // Default: 16-bit (for maximum compatibility with renderer backends)
 // #endif
 
+
+
 // Scalar data types
 // typedef unsigned int        ImGuiID;// A unique ID used by widgets (typically the result of hashing a stack of string)
+type ImGuiID = i32;
 // typedef signed char         ImS8;   // 8-bit signed integer
 // typedef unsigned char       ImU8;   // 8-bit unsigned integer
 // typedef signed short        ImS16;  // 16-bit signed integer
@@ -1013,6 +1022,10 @@ impl ImVec4 {
 // [SECTION] Flags & Enumerations
 //-----------------------------------------------------------------------------
 
+
+//#define ImDrawIdx unsigned int
+pub type ImDrawIdx = u32;
+
 #[allow(non_camel_case_types)]// Flags for ImGui::Begin()
 pub enum ImGuiWindowFlags
 {
@@ -1055,11 +1068,11 @@ pub enum ImGuiWindowFlags
 }
 
 // ImGuiWindowFlags_NoNav                  = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
-pub const ImGuiWindowFlags_NoNav: i32 = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus;
+pub const ImGuiWindowFlags_NoNav: i32 = ImGuiWindowFlags::ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags::ImGuiWindowFlags_NoNavFocus;
 //     ImGuiWindowFlags_NoDecoration           = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
-pub const ImGuiWindowFlags_NoDecoration: i32 = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
+pub const ImGuiWindowFlags_NoDecoration: i32 = ImGuiWindowFlags::ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags::ImGuiWindowFlags_NoResize | ImGuiWindowFlags::ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags::ImGuiWindowFlags_NoCollapse;
 //     ImGuiWindowFlags_NoInputs               = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
-pub const ImGuiWindowFlags_NoInputs: i32 = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus;
+pub const ImGuiWindowFlags_NoInputs: i32 = ImGuiWindowFlags::ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags::ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags::ImGuiWindowFlags_NoNavFocus;
 
 #[allow(non_camel_case_types)]// Flags for ImGui::InputText()
 pub enum ImGuiInputTextFlags
@@ -2307,7 +2320,7 @@ impl ImGuiIO {
         todo!()
     }
     // IMGUI_API void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
-    pub fn AddInputCharacterUTF16(c: &Vec<u8> {
+    pub fn AddInputCharacterUTF16(c: &Vec<u8>) {
         todo!()
     }
     // IMGUI_API void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
@@ -2621,29 +2634,124 @@ impl ImGuiTextFilter {
         todo!()
     }
     // void                Clear()          { InputBuf[0] = 0; Build(); }
+    pub fn Clear(&mut self) {
+        self.InputBuf.clear();
+        self.Filters.clear();
+        self.CountGrep = 0;
+    }
     // bool                IsActive() const { return !Filters.empty(); }
+    pub fn IsActive(&self) -> bool {
+        !self.Filters.is_empty()
+    }
 }
 
 // Helper: Growable text buffer for logging/accumulating text
 // (this could be called 'ImGuiTextBuilder' / 'ImGuiStringBuilder')
-struct ImGuiTextBuffer
+#[derive(Default,Debug,Clone)]
+pub struct ImGuiTextBuffer
 {
-    ImVector<char>      Buf;
-    IMGUI_API static char EmptyString[1];
+    // ImVector<char>      Buf;
+    pub Buf: String,
+    // IMGUI_API static char EmptyString[1];
+    pub EmptyString: [u8;1],
 
-    ImGuiTextBuffer()   { }
-    inline char         operator[](int i) const { IM_ASSERT(Buf.Data != NULL); return Buf.Data[i]; }
-    const char*         begin() const           { return Buf.Data ? &Buf.front() : EmptyString; }
-    const char*         end() const             { return Buf.Data ? &Buf.back() : EmptyString; }   // Buf is zero-terminated, so end() will point on the zero-terminator
-    int                 size() const            { return Buf.Size ? Buf.Size - 1 : 0; }
-    bool                empty() const           { return Buf.Size <= 1; }
-    void                clear()                 { Buf.clear(); }
-    void                reserve(int capacity)   { Buf.reserve(capacity); }
-    const char*         c_str() const           { return Buf.Data ? Buf.Data : EmptyString; }
-    IMGUI_API void      append(const char* str, const char* str_end = NULL);
-    IMGUI_API void      appendf(const char* fmt, ...) IM_FMTARGS(2);
-    IMGUI_API void      appendfv(const char* fmt, va_list args) IM_FMTLIST(2);
-};
+}
+
+impl ImGuiTextBuffer {
+    // ImGuiTextBuffer()   { }
+    pub fn new() -> Self {
+        Self {
+            ..Default()
+        }
+    }
+
+    // const char*         begin() const           { return Buf.Data ? &Buf.front() : EmptyString; }
+    pub fn begin(&self) -> *const u8 {
+        &self.Buf[0]
+    }
+    // const char*         end() const             { return Buf.Data ? &Buf.back() : EmptyString; }   // Buf is zero-terminated, so end() will point on the zero-terminator
+    pub fn end(&self) -> *const u8 {
+        &self.Buf[self.Buf.len()]
+    }
+    // int                 size() const            { return Buf.Size ? Buf.Size - 1 : 0; }
+    pub fn size(&self) -> usize {
+        self.Buf.len()
+    }
+    // bool                empty() const           { return Buf.Size <= 1; }
+    pub fn empty(&self) -> bool {
+        self.Buf.is_empty()
+    }
+    // void                clear()                 { Buf.clear(); }
+    pub fn clear(&mut self) {
+        self.Buf.clear()
+    }
+    // void                reserve(int capacity)   { Buf.reserve(capacity); }
+    pub fn reserve(&mut self, capacity: usize) {
+        self.Buf.reserve(capacity)
+    }
+    // const char*         c_str() const           { return Buf.Data ? Buf.Data : EmptyString; }
+    pub fn c_str(&self) -> *const u8 {
+        self.Buf.as_ptr()
+    }
+    // IMGUI_API void      append(const char* str, const char* str_end = NULL);
+    pub fn append(&mut self, start_str: *const u8, end_str: *const u8) {
+        self.Buf.push_str(&String::from(start_str))
+    }
+    // IMGUI_API void      appendf(const char* fmt, ...) IM_FMTARGS(2);
+    // IMGUI_API void      appendfv(const char* fmt, va_list args) IM_FMTLIST(2);
+}
+
+pub enum ImGuiStoragePairValTypes {
+    Int(i32),
+    Float(f32),
+    VoidPtr(*mut c_void),
+    Bool(bool)
+}
+
+// inline char         operator[](int i) const { IM_ASSERT(Buf.Data != NULL); return Buf.Data[i]; }
+impl Index<i32> for ImGuiTextBuffer {
+    type Output = u8;
+
+    fn index(&self, index: i32) -> &Self::Output {
+        self.Buf[index]
+    }
+}
+
+union  ImGuiStoragePairVal {
+    pub val_i: i32,
+    pub val_f: f32,
+    pub val_p: *mut c_void,
+    pub val_b: bool
+}
+
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiStoragePair {
+    // ImGuiID key;
+    pub key: ImGuiID,
+    // union {
+    // int val_i; pub val_f: f32,
+    // void * val_p; };
+    pub val: ImGuiStoragePairVal,
+
+}
+
+impl ImGuiStoragePair {
+    //     ImGuiStoragePair(ImGuiID _key, int _val_i)      { key = _key; val_i = _val_i; }
+    pub fn new(key: ImGuiID, val_in: ImGuiStoragePairValTypes) -> Self {
+        let mut val: ImGuiStoragePairVal = match val_in {
+             ImGuiStoragePairValTypes::Int(i) => ImGuiStoragePairVal{val_i:i},
+            ImGuiStoragePairValTypes::Float(f) => ImGuiStoragePairVal{val_f:f},
+            ImGuiStoragePairValTypes::VoidPtr(x) =>  ImGuiStoragePairVal{val_p: x},
+            ImGuiStoragePairValTypes::Bool(b) => ImGuiStoragePairVal{val_b: b}
+        };
+        Self {
+            key,
+            val,
+        }
+    }
+    // ImGuiStoragePair(ImGuiID _key, float _val_f)    { key = _key; val_f = _val_f; }
+    // ImGuiStoragePair(ImGuiID _key, void* _val_p)    { key = _key; val_p = _val_p; }
+}
 
 // Helper: Key->Value storage
 // Typically you don't have to worry about this since a storage is held within each Window.
@@ -2653,48 +2761,93 @@ struct ImGuiTextBuffer
 // - You want to manipulate the open/close state of a particular sub-tree in your interface (tree node uses Int 0/1 to store their state).
 // - You want to store custom debug data easily without adding or editing structures in your code (probably not efficient, but convenient)
 // Types are NOT stored, so it is up to you to make sure your Key don't collide with different types.
-struct ImGuiStorage
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiStorage
 {
-    // [Internal]
-    struct ImGuiStoragePair
-    {
-        ImGuiID key;
-        union { int val_i; pub val_f: f32,void* val_p; };
-        ImGuiStoragePair(ImGuiID _key, int _val_i)      { key = _key; val_i = _val_i; }
-        ImGuiStoragePair(ImGuiID _key, float _val_f)    { key = _key; val_f = _val_f; }
-        ImGuiStoragePair(ImGuiID _key, void* _val_p)    { key = _key; val_p = _val_p; }
-    };
+    pub Data: Vec<ImGuiStoragePair>,
 
-    ImVector<ImGuiStoragePair>      Data;
+    // ImVector<ImGuiStoragePair>      Data;
 
     // - Get***() functions find pair, never add/allocate. Pairs are sorted so a query is O(log N)
     // - Set***() functions find pair, insertion on demand if missing.
     // - Sorted insertion is costly, paid once. A typical frame shouldn't need to insert any new pair.
-    void                Clear() { Data.clear(); }
-    IMGUI_API int       GetInt(ImGuiID key, int default_val = 0) const;
-    IMGUI_API void      SetInt(ImGuiID key, int val);
-    IMGUI_API bool      GetBool(ImGuiID key, bool default_val = false) const;
-    IMGUI_API void      SetBool(ImGuiID key, bool val);
-    IMGUI_API float     GetFloat(ImGuiID key, float default_val = 0.0f) const;
-    IMGUI_API void      SetFloat(ImGuiID key, float val);
-    IMGUI_API void*     GetVoidPtr(ImGuiID key) const; // default_val is NULL
-    IMGUI_API void      SetVoidPtr(ImGuiID key, void* val);
 
-    // - Get***Ref() functions finds pair, insert on demand if missing, return pointer. Useful if you intend to do Get+Set.
-    // - References are only valid until a new value is added to the storage. Calling a Set***() function or a Get***Ref() function invalidates the pointer.
-    // - A typical use case where this is convenient for quick hacking (e.g. add storage during a live Edit&Continue session if you can't modify existing struct)
-    //      float* pvar = ImGui::GetFloatRef(key); ImGui::SliderFloat("var", pvar, 0, 100.0f); some_var += *pvar;
-    IMGUI_API int*      GetIntRef(ImGuiID key, int default_val = 0);
-    IMGUI_API bool*     GetBoolRef(ImGuiID key, bool default_val = false);
-    IMGUI_API float*    GetFloatRef(ImGuiID key, float default_val = 0.0f);
-    IMGUI_API void**    GetVoidPtrRef(ImGuiID key, void* default_val = NULL);
+}
 
-    // Use on your own storage if you know only integer are being stored (open/close all tree nodes)
-    IMGUI_API void      SetAllInt(int val);
-
-    // For quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
-    IMGUI_API void      BuildSortByKey();
-};
+impl ImGuiStorage {
+    // void                Clear() { Data.clear(); }
+    pub fn Clear(&mut self) {
+        self.Data.clear()
+    }
+    // IMGUI_API int       GetInt(ImGuiID key, int default_val = 0) const;
+    pub fn GetInt(&self, key: ImGuiID, default_val: i32) -> i32 {
+        for x in self.Data.iter() {
+            if x.key == key {
+                return x.val.val_i
+            }
+        }
+        return default_val
+    }
+    // IMGUI_API void      SetInt(ImGuiID key, int val);
+    pub fn SetInt(&mut self, key: ImGuiID, val: i32) {
+        for x in self.Data.iter_mut() {
+            if x.key == key {
+                x.val.val_i = val
+            }
+        }
+    }
+    // IMGUI_API bool      GetBool(ImGuiID key, bool default_val = false) const;
+    pub fn GetBool(&self, key: ImGuiID, default_val: bool) -> bool {
+        for x in self.Data.iter() {
+            if x.key == key {
+                return x.val.val_b
+            }
+        }
+        return default_val
+    }
+    // IMGUI_API void      SetBool(ImGuiID key, bool val);
+    pub fn SetBool(&mut self, key: ImGuiID, val: bool) {
+        for x in self.Data.iter_mut() {
+            if x.key == key {
+                x.val.val_b = val
+            }
+        }
+    }
+    // IMGUI_API float     GetFloat(ImGuiID key, float default_val = 0.0f) const;
+    pub fn GetFloat(&self, key: ImGuiID, default_val: f32) -> f32 {
+        for x in self.Data.iter() {
+            if x.key == key {
+                return x.val.val_f
+            }
+        }
+        return default_val
+    }
+    // IMGUI_API void      SetFloat(ImGuiID key, float val);
+    pub fn SetFloat(&mut self, key: ImGuiID, val: f32) {
+        for x in self.Data.iter_mut() {
+            if x.key == key {
+                x.val.val_f = val
+            }
+        }
+    }
+    // IMGUI_API void*     GetVoidPtr(ImGuiID key) const; // default_val is NULL
+    // IMGUI_API void      SetVoidPtr(ImGuiID key, void* val);
+    //
+    // // - Get***Ref() functions finds pair, insert on demand if missing, return pointer. Useful if you intend to do Get+Set.
+    // // - References are only valid until a new value is added to the storage. Calling a Set***() function or a Get***Ref() function invalidates the pointer.
+    // // - A typical use case where this is convenient for quick hacking (e.g. add storage during a live Edit&Continue session if you can't modify existing struct)
+    // //      float* pvar = ImGui::GetFloatRef(key); ImGui::SliderFloat("var", pvar, 0, 100.0f); some_var += *pvar;
+    // IMGUI_API int*      GetIntRef(ImGuiID key, int default_val = 0);
+    // IMGUI_API bool*     GetBoolRef(ImGuiID key, bool default_val = false);
+    // IMGUI_API float*    GetFloatRef(ImGuiID key, float default_val = 0.0f);
+    // IMGUI_API void**    GetVoidPtrRef(ImGuiID key, void* default_val = NULL);
+    //
+    // // Use on your own storage if you know only integer are being stored (open/close all tree nodes)
+    // IMGUI_API void      SetAllInt(int val);
+    //
+    // // For quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
+    // IMGUI_API void      BuildSortByKey();
+}
 
 // Helper: Manually clip large list of items.
 // If you have lots evenly spaced items and you have a random access to the list, you can perform coarse
@@ -2716,73 +2869,144 @@ struct ImGuiStorage
 // - Clipper calculate the actual range of elements to display based on the current clipping rectangle, position the cursor before the first visible element.
 // - User code submit visible elements.
 // - The clipper also handles various subtleties related to keyboard/gamepad navigation, wrapping etc.
-struct ImGuiListClipper
+#[derive(Default,Debug,Clone)]
+pub struct ImGuiListClipper
 {
     pub DisplayStart: i32,     // First item to display, updated by each call to Step()
     pub DisplayEnd: i32,       // End of items to display (exclusive)
     pub ItemsCount: i32,       // [Internal] Number of items
     pub ItemsHeight: f32,       // [Internal] Height of item after a first step and item submission can calculate it
     pub StartPosY: f32,         // [Internal] Cursor position at the time of Begin() or after table frozen rows are all processed
-    void*           TempData;           // [Internal] Internal data
+    pub TempData: *mut c_void, // void*           TempData;           // [Internal] Internal data
 
+
+
+// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+//     inline ImGuiListClipper(int items_count, float items_height = -1.0f) { memset(this, 0, sizeof(*this)); ItemsCount = -1; Begin(items_count, items_height); } // [removed in 1.79]
+// #endif
+}
+
+impl ImGuiListClipper {
     // items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
     // items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
-    IMGUI_API ImGuiListClipper();
-    IMGUI_API ~ImGuiListClipper();
-    IMGUI_API void  Begin(int items_count, float items_height = -1.0f);
-    IMGUI_API void  End();             // Automatically called on the last call of Step() that returns false.
-    IMGUI_API bool  Step();            // Call until it returns false. The DisplayStart/DisplayEnd fields will be set and you can process/draw those items.
-
+    // IMGUI_API ImGuiListClipper();
+    // IMGUI_API ~ImGuiListClipper();
+    // IMGUI_API void  Begin(int items_count, float items_height = -1.0f);
+    pub fn Begin(&mut self, items_count: i32, items_height: f32) {
+        todo!()
+    }
+    // IMGUI_API void  End();             // Automatically called on the last call of Step() that returns false.
+    pub fn End(&mut self) {
+        todo!()
+    }
+    // IMGUI_API bool  Step();            // Call until it returns false. The DisplayStart/DisplayEnd fields will be set and you can process/draw those items.
+    pub fn Step(&mut self) -> bool {
+        todo!()
+    }
     // Call ForceDisplayRangeByIndices() before first call to Step() if you need a range of items to be displayed regardless of visibility.
-    IMGUI_API void  ForceDisplayRangeByIndices(int item_min, int item_max); // item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.
-
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    inline ImGuiListClipper(int items_count, float items_height = -1.0f) { memset(this, 0, sizeof(*this)); ItemsCount = -1; Begin(items_count, items_height); } // [removed in 1.79]
-#endif
-};
+    // IMGUI_API void  ForceDisplayRangeByIndices(int item_min, int item_max); // item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.
+    pub fn ForceDisplayRangeByIndices(&mut self, item_min: i32, item_max: i32) {
+        todo!()
+    }
+}
 
 // Helpers macros to generate 32-bit encoded colors
 // User can declare their own format by #defining the 5 _SHIFT/_MASK macros in their imconfig file.
-#ifndef IM_COL32_R_SHIFT
-#ifdef IMGUI_USE_BGRA_PACKED_COLOR
-#define IM_COL32_R_SHIFT    16
-#define IM_COL32_G_SHIFT    8
-#define IM_COL32_B_SHIFT    0
-#define IM_COL32_A_SHIFT    24
-#define IM_COL32_A_MASK     0xFF000000
-#else
-#define IM_COL32_R_SHIFT    0
-#define IM_COL32_G_SHIFT    8
-#define IM_COL32_B_SHIFT    16
-#define IM_COL32_A_SHIFT    24
-#define IM_COL32_A_MASK     0xFF000000
-#endif
-#endif
-#define IM_COL32(R,G,B,A)    (((ImU32)(A)<<IM_COL32_A_SHIFT) | ((ImU32)(B)<<IM_COL32_B_SHIFT) | ((ImU32)(G)<<IM_COL32_G_SHIFT) | ((ImU32)(R)<<IM_COL32_R_SHIFT))
-#define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
-#define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
-#define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
+// #ifndef IM_COL32_R_SHIFT
+// #ifdef IMGUI_USE_BGRA_PACKED_COLOR
+pub const IM_COL32_R_SHIFT: u32 =    0;
+pub const IM_COL32_G_SHIFT: u32 =    8;
+pub const IM_COL32_B_SHIFT: u32 =    16;
+pub const IM_COL32_A_SHIFT: u32 =    24;
+pub const IM_COL32_A_MASK: u32 =     0xFF000000;
+// #endif
+// #endif
+//#define IM_COL32(R,G,B,A)    (((ImU32)(A)<<IM_COL32_A_SHIFT) | ((ImU32)(B)<<IM_COL32_B_SHIFT) | ((ImU32)(G)<<IM_COL32_G_SHIFT) | ((ImU32)(R)<<IM_COL32_R_SHIFT))
+pub fn IM_COL32(R: u32, G: u32, B: u32, A: u32) -> u32 {
+    A << IM_COL32_A_SHIFT | B << IM_COL32_B_SHIFT | G << IM_COL32_G_SHIFT | R << IM_COL32_R_SHIFT
+}
+// #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
+pub const IM_COL32_WHITE: u32 = IM_COL32(255,255,255,255);
+// #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
+pub const IM_COL32_BLACK: u32 = IM_COL32(0,0,0,255);
+// #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
+pub const IM_COL32_BLACK_TRANS: u32 = IMCOL32(0,0,0,0);
 
 // Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or ImVec4 (4x1 float)
 // Prefer using IM_COL32() macros if you want a guaranteed compile-time ImU32 for usage with ImDrawList API.
 // **Avoid storing ImColor! Store either u32 of ImVec4. This is not a full-featured color class. MAY OBSOLETE.
 // **None of the ImGui API are using ImColor directly but you can use it as a convenience to pass colors in either ImU32 or ImVec4 formats. Explicitly cast to ImU32 or ImVec4 if needed.
-struct ImColor
+#[derive(Default,Debug,Clone)]
+pub struct ImColor
 {
-    ImVec4          Value;
+    // ImVec4          Value;
+    pub Value: ImVec4,
+}
 
-    constexpr ImColor()                                             { }
-    constexpr ImColor(float r, float g, float b, float a = 1.0f)    : Value(r, g, b, a) { }
-    constexpr ImColor(const ImVec4& col)                            : Value(col) {}
-    ImColor(int r, int g, int b, int a = 255)                       { float sc = 1.0f / 255.0f; Value.x = (float)r * sc; Value.y = (float)g * sc; Value.z = (float)b * sc; Value.w = (float)a * sc; }
-    ImColor(ImU32 rgba)                                             { float sc = 1.0f / 255.0f; Value.x = (float)((rgba >> IM_COL32_R_SHIFT) & 0xFF) * sc; Value.y = (float)((rgba >> IM_COL32_G_SHIFT) & 0xFF) * sc; Value.z = (float)((rgba >> IM_COL32_B_SHIFT) & 0xFF) * sc; Value.w = (float)((rgba >> IM_COL32_A_SHIFT) & 0xFF) * sc; }
-    inline operator ImU32() const                                   { return ImGui::ColorConvertFloat4ToU32(Value); }
-    inline operator ImVec4() const                                  { return Value; }
+impl ImColor {
+    // constexpr ImColor()                                             { }
+    // constexpr ImColor(float r, float g, float b, float a = 1.0f)    : Value(r, g, b, a) { }
+    pub fn new() -> Self {
+        Self {
+            ..Default()
+        }
+    }
+    pub fn new2(r: f32, g: f32, b: f32, a: f32) -> Self {
+        Self {
+            Value: ImVec4 {
+                x: r,
+                y: g,
+                z: b,
+                w: a
+            }
+        }
+    }
+    // constexpr ImColor(const ImVec4& col)                            : Value(col) {}
+    pub fn new3(col: &ImVec4) -> Self {
+        Self {
+            Value: col.clone()
+        }
+    }
+    // ImColor(int r, int g, int b, int a = 255)                       { float sc = 1.0f / 255.0f; Value.x = (float)r * sc; Value.y = (float)g * sc; Value.z = (float)b * sc; Value.w = (float)a * sc; }
+    pub fn new4(r: u32, g: u32, b: u32, a: u32) -> Self {
+        let sc: f32 = 1.0/255.0;
+        let Value = ImVec4 {
+            x: r * sc,
+            y: g * sc,
+            z: b * sc,
+            w: a * sc,
+        };
+        Self {
+            Value
+        }
+    }
+    // ImColor(ImU32 rgba)                                             { float sc = 1.0f / 255.0f; Value.x = (float)((rgba >> IM_COL32_R_SHIFT) & 0xFF) * sc; Value.y = (float)((rgba >> IM_COL32_G_SHIFT) & 0xFF) * sc; Value.z = (float)((rgba >> IM_COL32_B_SHIFT) & 0xFF) * sc; Value.w = (float)((rgba >> IM_COL32_A_SHIFT) & 0xFF) * sc; }
+    pub fn new5(rgba: u32) -> Self {
+        let sc: f32 = 1.0/255.0;
+        let Value = ImVec4 {
+            x: (rgba >> IM_COL32_R_SHIFT & 0xff) * sc,
+            y: (rgba >> IM_COL32_G_SHIFT & 0xff) * sc,
+            z: (rgba >> IM_COL32_B_SHIFT & 0xff) * sc,
+            w: (rgba >> IM_COL32_A_SHIFT & 0xff) * sc
+        };
+        Self {
+            Value
+        }
+    }
 
-    // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
-    inline void    SetHSV(float h, float s, float v, float a = 1.0f){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
-    static ImColor HSV(float h, float s, float v, float a = 1.0f)   { float r, g, b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
-};
+    // inline operator ImU32() const                                   { return ImGui::ColorConvertFloat4ToU32(Value); }
+    pub fn get_u32(&self) -> u32 {
+        ColorConvertFloat4ToU32(&self.Value)
+    }
+    // inline operator ImVec4() const                                  { return Value; }
+    pub fn get_vec4(&self) -> ImVec4 {
+        self.Value.clone()
+    }
+    //
+    // // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
+    // inline void    SetHSV(float h, float s, float v, float a = 1.0f){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
+    // static ImColor HSV(float h, float s, float v, float a = 1.0f)   { float r, g, b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
+}
 
 //-----------------------------------------------------------------------------
 // [SECTION] Drawing API (ImDrawCmd, ImDrawIdx, ImDrawVert, ImDrawChannel, ImDrawListSplitter, ImDrawListFlags, ImDrawList, ImDrawData)
@@ -2790,9 +3014,11 @@ struct ImColor
 //-----------------------------------------------------------------------------
 
 // The maximum line width to bake anti-aliased textures for. Build atlas with ImFontAtlasFlags_NoBakedLines to disable baking.
-#ifndef IM_DRAWLIST_TEX_LINES_WIDTH_MAX
-#define IM_DRAWLIST_TEX_LINES_WIDTH_MAX     (63)
-#endif
+// #ifndef IM_DRAWLIST_TEX_LINES_WIDTH_MAX
+// #define IM_DRAWLIST_TEX_LINES_WIDTH_MAX     (63)
+// #endif
+pub const IM_DRAWLIST_TEX_LINES_WIDTH_MAX: usize = 63;
+
 
 // ImDrawCallback: Draw callbacks for advanced uses [configurable type: override in imconfig.h]
 // NB: You most likely do NOT need to use draw callbacks just to create your own widget or customized UI rendering,
@@ -2801,89 +3027,146 @@ struct ImColor
 //  B) render a complex 3D scene inside a UI element without an intermediate texture/render target, etc.
 // The expected behavior from your rendering function is 'if (cmd.UserCallback != NULL) { cmd.UserCallback(parent_list, cmd); } else { RenderTriangles() }'
 // If you want to override the signature of ImDrawCallback, you can simply use e.g. '#define ImDrawCallback MyDrawCallback' (in imconfig.h) + update rendering backend accordingly.
-#ifndef ImDrawCallback
-typedef void (*ImDrawCallback)(const ImDrawList* parent_list, const ImDrawCmd* cmd);
-#endif
+// #ifndef ImDrawCallback
+// typedef void (*ImDrawCallback)(const ImDrawList* parent_list, const ImDrawCmd* cmd);
+// #endif
 
+type ImDrawCallback = fn(*mut ImDrawList, *const ImDrawCmd);
+
+pub fn im_draw_callback_nop(_: *mut ImDrawList, _: *const ImDrawCmd) {
+
+}
+
+// TODO
 // Special Draw callback value to request renderer backend to reset the graphics/render state.
 // The renderer backend needs to handle this special value, otherwise it will crash trying to call a function at this address.
 // This is useful for example if you submitted callbacks which you know have altered the render state and you want it to be restored.
 // It is not done by default because they are many perfectly useful way of altering render state for imgui contents (e.g. changing shader/blending settings before an Image call).
-#define ImDrawCallback_ResetRenderState     (ImDrawCallback)(-1)
+// #define ImDrawCallback_ResetRenderState     (ImDrawCallback)(-1)
 
 // Typically, 1 command = 1 GPU draw call (unless command is a callback)
 // - VtxOffset: When 'io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset' is enabled,
 //   this fields allow us to render meshes larger than 64K vertices while keeping 16-bit indices.
 //   Backends made for <1.71. will typically ignore the VtxOffset fields.
 // - The ClipRect/TextureId/VtxOffset fields must be contiguous as we memcmp() them together (this is asserted for).
-struct ImDrawCmd
+#[derive(Default,Debug,Clone)]
+pub struct ImDrawCmd
 {
-    ImVec4          ClipRect;           // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData->DisplayPos to get clipping rectangle in "viewport" coordinates
-    ImTextureID     TextureId;          // 4-8  // User-provided texture ID. Set by user in ImfontAtlas::SetTexID() for fonts or passed to Image*() functions. Ignore if never using images or multiple fonts atlas.
-    unsigned pub VtxOffset: i32,        // 4    // Start offset in vertex buffer. ImGuiBackendFlags_RendererHasVtxOffset: always 0, otherwise may be >0 to support meshes larger than 64K vertices with 16-bit indices.
-    unsigned pub IdxOffset: i32,        // 4    // Start offset in index buffer.
-    unsigned pub ElemCount: i32,        // 4    // Number of indices (multiple of 3) to be rendered as triangles. Vertices are stored in the callee ImDrawList's vtx_buffer[] array, indices in idx_buffer[].
-    ImDrawCallback  UserCallback;       // 4-8  // If != NULL, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
-    void*           UserCallbackData;   // 4-8  // The draw callback code can access this.
+    pub          ClipRect: ImVec4,           // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData->DisplayPos to get clipping rectangle in "viewport" coordinates
+    // ImTextureID     TextureId,          // 4-8  // User-provided texture ID. Set by user in ImfontAtlas::SetTexID() for fonts or passed to Image*() functions. Ignore if never using images or multiple fonts atlas.
+    pub TextureId: ImTextureID,    
+pub VtxOffset: i32,        // 4    // Start offset in vertex buffer. ImGuiBackendFlags_RendererHasVtxOffset: always 0, otherwise may be >0 to support meshes larger than 64K vertices with 16-bit indices.
+    pub IdxOffset: i32,        // 4    // Start offset in index buffer.
+    pub ElemCount: i32,        // 4    // Number of indices (multiple of 3) to be rendered as triangles. Vertices are stored in the callee ImDrawList's vtx_buffer[] array, indices in idx_buffer[].
+    // ImDrawCallback  UserCallback;       // 4-8  // If != NULL, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
+    pub UserCallback: ImDrawCallback,
+    // void*           UserCallbackData;   // 4-8  // The draw callback code can access this.
+    pub UserCallbackData: *mut c_void,
+}
 
-    ImDrawCmd() { memset(this, 0, sizeof(*this)); } // Also ensure our padding fields are zeroed
-
-    // Since 1.83: returns ImTextureID associated with this draw call. Warning: DO NOT assume this is always same as 'TextureId' (we will change this function for an upcoming feature)
-    inline ImTextureID GetTexID() const { return TextureId; }
-};
+impl ImDrawCmd {
+    // ImDrawCmd() { memset(this, 0, sizeof(*this)); } // Also ensure our padding fields are zeroed
+    //
+    pub fn new() -> Self {
+        Self {
+            ClipRect: Default::default(),
+            TextureId: ptr::null_mut(),
+            VtxOffset: 0,
+            IdxOffset: 0,
+            ElemCount: 0,
+            UserCallback: im_draw_callback_nop,
+            UserCallbackData: ptr::null_mut()
+        }
+    }
+    //     // Since 1.83: returns ImTextureID associated with this draw call. Warning: DO NOT assume this is always same as 'TextureId' (we will change this function for an upcoming feature)
+    //     inline ImTextureID GetTexID() const { return TextureId; }
+    pub fn GetTexID(&self) -> ImTextureID {
+        self.TextureId
+    }
+}
 
 // Vertex layout
-#ifndef IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT
-struct ImDrawVert
+// #ifndef IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT
+#[derive(Debug,Clone,Default)]
+pub struct ImDrawVert
 {
     pub pos: ImVec2,
     pub uv: ImVec2,
-    ImU32   col;
-};
-#else
+    pub col: u32,
+}
+// #else
 // You can override the vertex format layout by defining IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT in imconfig.h
 // The code expect ImVec2 pos (8 bytes), ImVec2 uv (8 bytes), ImU32 col (4 bytes), but you can re-order them or add other fields as needed to simplify integration in your engine.
 // The type has to be described within the macro (you can either declare the struct or use a typedef). This is because ImVec2/ImU32 are likely not declared a the time you'd want to set your type up.
 // NOTE: IMGUI DOESN'T CLEAR THE STRUCTURE AND DOESN'T CALL A CONSTRUCTOR SO ANY CUSTOM FIELD WILL BE UNINITIALIZED. IF YOU ADD EXTRA FIELDS (SUCH AS A 'Z' COORDINATES) YOU WILL NEED TO CLEAR THEM DURING RENDER OR TO IGNORE THEM.
-IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT;
-#endif
+// IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT;
+// #endif
 
 // [Internal] For use by ImDrawList
-struct ImDrawCmdHeader
+#[derive(Debug,Clone,Default)]
+pub struct ImDrawCmdHeader
 {
-    ImVec4          ClipRect;
-    ImTextureID     TextureId;
-    unsigned int    VtxOffset;
-};
+    // ImVec4          ClipRect;
+    pub ClipRect: ImVec4,
+    // ImTextureID     TextureId;
+    pub TextureId: ImTextureID,
+    // unsigned int    VtxOffset;
+    pub VtxOffset: u32,
+}
 
 // [Internal] For use by ImDrawListSplitter
-struct ImDrawChannel
+#[derive(Debug,Clone,Default)]
+pub struct ImDrawChannel
 {
-    ImVector<ImDrawCmd>         _CmdBuffer;
-    ImVector<ImDrawIdx>         _IdxBuffer;
-};
+    // ImVector<ImDrawCmd>         _CmdBuffer;
+    pub _CmdBuffer: Vec<ImDrawCmd>,
+    // ImVector<ImDrawIdx>         _IdxBuffer;
+    pub _IdxBuffer: Vec<u32>,
+}
 
 
 // Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order.
 // This is used by the Columns/Tables API, so items of each column can be batched together in a same draw call.
-struct ImDrawListSplitter
+#[derive(Debug,Clone,Default)]
+pub struct ImDrawListSplitter
 {
     pub _Current: i32,  // Current channel number (0)
     pub _Count: i32,    // Number of active channels (1+)
-    ImVector<ImDrawChannel>     _Channels;   // Draw channels (not resized down so _Count might be < Channels.Size)
+    // ImVector<ImDrawChannel>     _Channels;   // Draw channels (not resized down so _Count might be < Channels.Size)
+    pub _Channels: Vec<ImDrawChannel>,
 
-    inline ImDrawListSplitter()  { memset(this, 0, sizeof(*this)); }
-    inline ~ImDrawListSplitter() { ClearFreeMemory(); }
-    inline void                 Clear() { _Current = 0; _Count = 1; } // Do not clear Channels[] so our allocations are reused next frame
-    IMGUI_API void              ClearFreeMemory();
-    IMGUI_API void              Split(ImDrawList* draw_list, int count);
-    IMGUI_API void              Merge(ImDrawList* draw_list);
-    IMGUI_API void              SetCurrentChannel(ImDrawList* draw_list, int channel_idx);
-};
+
+}
+
+impl ImDrawListSplitter {
+    // inline ImDrawListSplitter()  { memset(this, 0, sizeof(*this)); }
+    //     inline ~ImDrawListSplitter() { ClearFreeMemory(); }
+    //     inline void                 Clear() { _Current = 0; _Count = 1; } // Do not clear Channels[] so our allocations are reused next frame
+    pub fn Clear(&mut self) {
+        self._Current = 0;
+        self._Count = 1;
+    }
+    //     IMGUI_API void              ClearFreeMemory();
+    pub fn ClearFreeMemory(&mut self) {
+        todo!()
+    }
+    //     IMGUI_API void              Split(ImDrawList* draw_list, int count);
+    pub fn Split(&mut self, draw_list: *const ImDrawList, count: i32) {
+        todo!()
+    }
+    //     IMGUI_API void              Merge(ImDrawList* draw_list);
+    pub fn Merge(&mut self, draw_list: *const ImDrawList) {
+        todo!()
+    }
+    //     IMGUI_API void              SetCurrentChannel(ImDrawList* draw_list, int channel_idx);
+    pub fn SetCurrentChannel(&mut self, draw_list: *const ImDrawList, channel_idx: i32) {
+        todo!()
+    }
+}
 
 // Flags for ImDrawList functions
 // (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
-enum ImDrawFlags_
+pub enum ImDrawFlags
 {
     ImDrawFlags_None                        = 0,
     ImDrawFlags_Closed                      = 1 << 0, // PathStroke(), AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
@@ -2892,25 +3175,27 @@ enum ImDrawFlags_
     ImDrawFlags_RoundCornersBottomLeft      = 1 << 6, // AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f, we default to all corners). Was 0x04.
     ImDrawFlags_RoundCornersBottomRight     = 1 << 7, // AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f, we default to all corners). Wax 0x08.
     ImDrawFlags_RoundCornersNone            = 1 << 8, // AddRect(), AddRectFilled(), PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero, NOT an implicit flag!
-    ImDrawFlags_RoundCornersTop             = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight,
-    ImDrawFlags_RoundCornersBottom          = ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight,
-    ImDrawFlags_RoundCornersLeft            = ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersTopLeft,
-    ImDrawFlags_RoundCornersRight           = ImDrawFlags_RoundCornersBottomRight | ImDrawFlags_RoundCornersTopRight,
-    ImDrawFlags_RoundCornersAll             = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight,
-    ImDrawFlags_RoundCornersDefault_        = ImDrawFlags_RoundCornersAll, // Default to ALL corners if none of the _RoundCornersXX flags are specified.
-    ImDrawFlags_RoundCornersMask_           = ImDrawFlags_RoundCornersAll | ImDrawFlags_RoundCornersNone
-};
+
+}
+
+pub const ImDrawFlags_RoundCornersTop: u32             = ImDrawFlags::ImDrawFlags_RoundCornersTopLeft | ImDrawFlags::ImDrawFlags_RoundCornersTopRight;
+    pub const ImDrawFlags_RoundCornersBottom: u32          = ImDrawFlags::ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags::ImDrawFlags_RoundCornersBottomRight;
+    pub const ImDrawFlags_RoundCornersLeft: u32            = ImDrawFlags::ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags::ImDrawFlags_RoundCornersTopLeft;
+    pub const ImDrawFlags_RoundCornersRight: u32           = ImDrawFlags::ImDrawFlags_RoundCornersBottomRight | ImDrawFlags::ImDrawFlags_RoundCornersTopRight;
+    pub const ImDrawFlags_RoundCornersAll: u32             = ImDrawFlags::ImDrawFlags_RoundCornersTopLeft | ImDrawFlags::ImDrawFlags_RoundCornersTopRight | ImDrawFlags::ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags::ImDrawFlags_RoundCornersBottomRight;
+    pub const ImDrawFlags_RoundCornersDefault_: u32        = ImDrawFlags_RoundCornersAll; // Default to ALL corners if none of the _RoundCornersXX flags are specified.
+    pub const ImDrawFlags_RoundCornersMask_: u32           = ImDrawFlags_RoundCornersAll | ImDrawFlags::ImDrawFlags_RoundCornersNone;
 
 // Flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
 // It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
-enum ImDrawListFlags_
+pub enum ImDrawListFlags
 {
     ImDrawListFlags_None                    = 0,
     ImDrawListFlags_AntiAliasedLines        = 1 << 0,  // Enable anti-aliased lines/borders (*2 the number of triangles for 1.0f wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
     ImDrawListFlags_AntiAliasedLinesUseTex  = 1 << 1,  // Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
     ImDrawListFlags_AntiAliasedFill         = 1 << 2,  // Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
     ImDrawListFlags_AllowVtxOffset          = 1 << 3   // Can emit 'VtxOffset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
-};
+}
 
 // Draw command list
 // This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,
@@ -2921,39 +3206,79 @@ enum ImDrawListFlags_
 // In single viewport mode, top-left is == GetMainViewport()->Pos (generally 0,0), bottom-right is == GetMainViewport()->Pos+Size (generally io.DisplaySize).
 // You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to ClipRect as well!)
 // Important: Primitives are always added to the list and not culled (culling is done at higher-level by ImGui:: functions), if you use this API a lot consider coarse culling your drawn objects.
-struct ImDrawList
+#[derive(Default,Debug,Clone)]
+pub struct ImDrawList
 {
     // This is what you have to render
-    ImVector<ImDrawCmd>     CmdBuffer;          // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
-    ImVector<ImDrawIdx>     IdxBuffer;          // Index buffer. Each command consume ImDrawCmd::ElemCount of those
-    ImVector<ImDrawVert>    VtxBuffer;          // Vertex buffer.
-    ImDrawListFlags         Flags;              // Flags, you may poke into these to adjust anti-aliasing settings per-primitive.
-
+    // ImVector<ImDrawCmd>     CmdBuffer;          // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
+    pub CmdBuffer: Vec<ImDrawCmd>,
+    // ImVector<ImDrawIdx>     IdxBuffer;          // Index buffer. Each command consume ImDrawCmd::ElemCount of those
+    pub IdxBuffer: Vec<ImDrawIdx>,
+    // ImVector<ImDrawVert>    VtxBuffer;          // Vertex buffer.
+    pub VtxBuffer: Vec<ImDrawVert>,
+    // ImDrawListFlags         Flags;              // Flags, you may poke into these to adjust anti-aliasing settings per-primitive.
+    pub Flags: ImDrawListFlags,
     // [Internal, used while building lists]
-    unsigned pub _VtxCurrentIdx: i32,   // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
-    const ImDrawListSharedData* _Data;          // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
-    const char*             _OwnerName;         // Pointer to owner window's name for debugging
-    ImDrawVert*             _VtxWritePtr;       // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    ImDrawIdx*              _IdxWritePtr;       // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    ImVector<ImVec4>        _ClipRectStack;     // [Internal]
-    ImVector<ImTextureID>   _TextureIdStack;    // [Internal]
-    ImVector<ImVec2>        _Path;              // [Internal] current path building
-    ImDrawCmdHeader         _CmdHeader;         // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
-    ImDrawListSplitter      _Splitter;          // [Internal] for channels api (note: prefer using your own persistent instance of ImDrawListSplitter!)
-    pub _FringeScale: f32,      // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
+    // unsigned pub _VtxCurrentIdx: i32,   // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
+    pub _VtxCurrentIdx: u32,
+    // const ImDrawListSharedData* _Data;          // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
+    pub _Data: *const ImDrawListSharedData,
+    // const char*             _OwnerName;         // Pointer to owner window's name for debugging
+    pub _OwnerName: String,
+    // ImDrawVert*             _VtxWritePtr;       // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+    pub _VxWritePtr: *mut ImDrawVert,
+    // ImDrawIdx*              _IdxWritePtr;       // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+    pub _IdxWritePtr: *mut ImDrawIdx,
+    // ImVector<ImVec4>        _ClipRectStack;     // [Internal]
+    pub _ClipRectStack: Vec<ImVec4>,
+    // ImVector<ImTextureID>   _TextureIdStack;    // [Internal]
+    pub _TextureIdStack: Vec<ImTextureID>,
+    // ImVector<ImVec2>        _Path;              // [Internal] current path building
+    pub _Path: Vec<ImVec2>,
+    // ImDrawCmdHeader         _CmdHeader;         // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
+    pub _CmdHeader: ImDrawCmdHeader,
+    // ImDrawListSplitter      _Splitter;          // [Internal] for channels api (note: prefer using your own persistent instance of ImDrawListSplitter!)
+    pub _Splitter: ImDrawListSplitter,
+    // pub _FringeScale: f32,      // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
+    pub _FringeScale: f32,
+}
 
-    // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
-    ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
-
-    ~ImDrawList() { _ClearFreeMemory(); }
-    IMGUI_API void  PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
-    IMGUI_API void  PushClipRectFullScreen();
-    IMGUI_API void  PopClipRect();
-    IMGUI_API void  PushTextureID(ImTextureID texture_id);
-    IMGUI_API void  PopTextureID();
-    inline ImVec2   GetClipRectMin() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.x, cr.y); }
-    inline ImVec2   GetClipRectMax() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.z, cr.w); }
-
+impl ImDrawList {
+     // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
+    // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
+    pub fn new(shared_data: *mut ImDrawListSharedData) -> Self {
+         Self {
+             _Data: shared_data,
+             ..Default()
+         }
+     }
+    // ~ImDrawList() { _ClearFreeMemory(); }
+    // IMGUI_API void  PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
+    pub fn PushClipRect(&mut self, clip_rect_min: &ImVec2, clip_rect_max: &ImVec2, intersect_with_current_clip_rect: bool) {
+        todo!()
+    }
+    // IMGUI_API void  PushClipRectFullScreen();
+    pub fn PushClipRectFullScreen(&mut self) {
+        todo!()
+    }
+    // IMGUI_API void  PopClipRect();
+    pub fn PopClipRect(&mut self) {
+        todo!()
+    }
+    // IMGUI_API void  PushTextureID(ImTextureID texture_id);
+    pub fn PushTextureID(&mut self, texture_id: ImTextureID) {todo!()}
+    // IMGUI_API void  PopTextureID();
+    pub fn PopTextureID(&mut self) {todo!()}
+    // inline ImVec2   GetClipRectMin() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.x, cr.y); }
+    pub fn GetClipRectMin(&self) -> ImVec2 {
+        let cr = self._ClipRectStack.back();
+        ImVec2::new(cr.x,cry.y)
+    }
+    // inline ImVec2   GetClipRectMax() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.z, cr.w); }
+    pub fn GetClipRectMax(&self) -> ImVec2 {
+        let cr = self._ClipRectStack.back();
+        ImVec2::new(cr.z,cr.w)
+    }
     // Primitives
     // - Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
     // - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
@@ -2961,50 +3286,80 @@ struct ImDrawList
     //   In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
     //   In future versions we will use textures to provide cheaper and higher-quality circles.
     //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
-    IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
-    IMGUI_API void  AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawFlags flags = 0, float thickness = 1.0f);   // a: upper-left, b: lower-right (== upper-left + size)
-    IMGUI_API void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
-    IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
-    IMGUI_API void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 1.0f);
-    IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);
-    IMGUI_API void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness = 1.0f);
-    IMGUI_API void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col);
-    IMGUI_API void  AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments = 0, float thickness = 1.0f);
-    IMGUI_API void  AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments = 0);
-    IMGUI_API void  AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness = 1.0f);
-    IMGUI_API void  AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments);
-    IMGUI_API void  AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
-    IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL);
-    IMGUI_API void  AddPolyline(const ImVec2* points, int num_points, ImU32 col, ImDrawFlags flags, float thickness);
-    IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col);
-    IMGUI_API void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
-    IMGUI_API void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
+    // IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
+    pub fn AddLine(&mut self, p1: &ImVec2, p2: &ImVec2, col: u32, thickness: f32) {
+        todo!()
+    }
+    // IMGUI_API void  AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawFlags flags = 0, float thickness = 1.0f);   // a: upper-left, b: lower-right (== upper-left + size)
+    pub fn AddRect(&mut self, p_min: &ImVec2, p_max: ImVec2, col: u32, rounding: f32, flags: ImDrawFlags, thickness: f32) {
+        todo!()
+    }
+    // IMGUI_API void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0f, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
+    pub fn AddRectFilled(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: f32, flags: f32) {
+        todo!()
+    }
+    // IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
+    pub fn AddRectFilledMultiColor(&mut self, p_min: &ImVec2, p_max: &ImVec2, col_upr_left: u32, col_upr_right: u32, col_bot_right: u32, col_bot_left: u32) {
+        todo!()
+    }
+    // IMGUI_API void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 1.0f);
+    pub fn AddQuad(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32, thickness: f32) {
+        todo!()
+    }
+    // IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);
+    pub fn AddQuadFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32) {
+        todo!()
+    }
+    // IMGUI_API void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness = 1.0f);
+    pub fn AddTriangle(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32, thickness: f32) {
+        todo!()
+    }
+    // IMGUI_API void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col);
+    pub fn AddTriangleFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32) {
+        todo!()
+    }
+    // IMGUI_API void  AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments = 0, float thickness = 1.0f);
+    pub fn AddCircle(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32, thickness: f32) {
+        todo!()
+    }
+    // IMGUI_API void  AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments = 0);
+    pub fn AddCircleFilled(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32) {
+        todo!()
+    }
+    // IMGUI_API void  AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness = 1.0f);
+    // IMGUI_API void  AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments);
+    // IMGUI_API void  AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
+    // IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL);
+    // IMGUI_API void  AddPolyline(const ImVec2* points, int num_points, ImU32 col, ImDrawFlags flags, float thickness);
+    // IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col);
+    // IMGUI_API void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
+    // IMGUI_API void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
 
     // Image primitives
     // - Read FAQ to understand what ImTextureID is.
     // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
     // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-    IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
-    IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
-    IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawFlags flags = 0);
+    // IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
+    // IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
+    // IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawFlags flags = 0);
 
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     // - Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
-    inline    void  PathClear()                                                 { _Path.Size = 0; }
-    inline    void  PathLineTo(const ImVec2& pos)                               { _Path.push_back(pos); }
-    inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size - 1], &pos, 8) != 0) _Path.push_back(pos); }
-    inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
-    inline    void  PathStroke(ImU32 col, ImDrawFlags flags = 0, float thickness = 1.0f) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
-    IMGUI_API void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 0);
-    IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
-    IMGUI_API void  PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0); // Cubic Bezier (4 control points)
-    IMGUI_API void  PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, int num_segments = 0);               // Quadratic Bezier (3 control points)
-    IMGUI_API void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, float rounding = 0.0f, ImDrawFlags flags = 0);
+    // inline    void  PathClear()                                                 { _Path.Size = 0; }
+    // inline    void  PathLineTo(const ImVec2& pos)                               { _Path.push_back(pos); }
+    // inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size - 1], &pos, 8) != 0) _Path.push_back(pos); }
+    // inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
+    // inline    void  PathStroke(ImU32 col, ImDrawFlags flags = 0, float thickness = 1.0f) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
+    // IMGUI_API void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 0);
+    // IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
+    // IMGUI_API void  PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0); // Cubic Bezier (4 control points)
+    // IMGUI_API void  PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, int num_segments = 0);               // Quadratic Bezier (3 control points)
+    // IMGUI_API void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, float rounding = 0.0f, ImDrawFlags flags = 0);
 
     // Advanced
-    IMGUI_API void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
-    IMGUI_API void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
-    IMGUI_API ImDrawList* CloneOutput() const;                                  // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
+    // IMGUI_API void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
+    // IMGUI_API void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
+    // IMGUI_API ImDrawList* CloneOutput() const;                                  // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
 
     // Advanced: Channels
     // - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
@@ -3012,39 +3367,39 @@ struct ImDrawList
     // - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
     //   Prefer using your own persistent instance of ImDrawListSplitter as you can stack them.
     //   Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.
-    inline void     ChannelsSplit(int count)    { _Splitter.Split(this, count); }
-    inline void     ChannelsMerge()             { _Splitter.Merge(this); }
-    inline void     ChannelsSetCurrent(int n)   { _Splitter.SetCurrentChannel(this, n); }
+    // inline void     ChannelsSplit(int count)    { _Splitter.Split(this, count); }
+    // inline void     ChannelsMerge()             { _Splitter.Merge(this); }
+    // inline void     ChannelsSetCurrent(int n)   { _Splitter.SetCurrentChannel(this, n); }
 
     // Advanced: Primitives allocations
     // - We render triangles (three vertices)
     // - All primitives needs to be reserved via PrimReserve() beforehand.
-    IMGUI_API void  PrimReserve(int idx_count, int vtx_count);
-    IMGUI_API void  PrimUnreserve(int idx_count, int vtx_count);
-    IMGUI_API void  PrimRect(const ImVec2& a, const ImVec2& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
-    IMGUI_API void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, ImU32 col);
-    IMGUI_API void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col);
-    inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
-    inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr++; }
-    inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
+    // IMGUI_API void  PrimReserve(int idx_count, int vtx_count);
+    // IMGUI_API void  PrimUnreserve(int idx_count, int vtx_count);
+    // IMGUI_API void  PrimRect(const ImVec2& a, const ImVec2& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
+    // IMGUI_API void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, ImU32 col);
+    // IMGUI_API void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col);
+    // inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
+    // inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr++; }
+    // inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
-    inline    void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
-#endif
+// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+//     inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
+//     inline    void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
+// #endif
 
     // [Internal helpers]
-    IMGUI_API void  _ResetForNewFrame();
-    IMGUI_API void  _ClearFreeMemory();
-    IMGUI_API void  _PopUnusedDrawCmd();
-    IMGUI_API void  _TryMergeDrawCmds();
-    IMGUI_API void  _OnChangedClipRect();
-    IMGUI_API void  _OnChangedTextureID();
-    IMGUI_API void  _OnChangedVtxOffset();
-    IMGUI_API int   _CalcCircleAutoSegmentCount(float radius) const;
-    IMGUI_API void  _PathArcToFastEx(const ImVec2& center, float radius, int a_min_sample, int a_max_sample, int a_step);
-    IMGUI_API void  _PathArcToN(const ImVec2& center, float radius, float a_min, float a_max, int num_segments);
-};
+    // IMGUI_API void  _ResetForNewFrame();
+    // IMGUI_API void  _ClearFreeMemory();
+    // IMGUI_API void  _PopUnusedDrawCmd();
+    // IMGUI_API void  _TryMergeDrawCmds();
+    // IMGUI_API void  _OnChangedClipRect();
+    // IMGUI_API void  _OnChangedTextureID();
+    // IMGUI_API void  _OnChangedVtxOffset();
+    // IMGUI_API int   _CalcCircleAutoSegmentCount(float radius) const;
+    // IMGUI_API void  _PathArcToFastEx(const ImVec2& center, float radius, int a_min_sample, int a_max_sample, int a_step);
+    // IMGUI_API void  _PathArcToN(const ImVec2& center, float radius, float a_min, float a_max, int num_segments);
+}
 
 // All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
@@ -3323,7 +3678,7 @@ struct ImFont
 //-----------------------------------------------------------------------------
 
 // Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
-enum ImGuiViewportFlags_
+pub enum ImGuiViewportFlags_
 {
     ImGuiViewportFlags_None                     = 0,
     ImGuiViewportFlags_IsPlatformWindow         = 1 << 0,   // Represent a Platform Window
@@ -3339,7 +3694,7 @@ enum ImGuiViewportFlags_
     ImGuiViewportFlags_Minimized                = 1 << 10,  // Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
     ImGuiViewportFlags_NoAutoMerge              = 1 << 11,  // Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
     ImGuiViewportFlags_CanHostOtherWindows      = 1 << 12   // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
-};
+}
 
 // - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
 // - With multi-viewport enabled, we extend this concept to have multiple active viewports.
@@ -3518,115 +3873,122 @@ struct ImGuiPlatformImeData
 // Please keep your copy of dear imgui up to date! Occasionally set '#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS' in imconfig.h to stay ahead.
 //-----------------------------------------------------------------------------
 
-namespace ImGui
-{
-#ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-    IMGUI_API int       GetKeyIndex(ImGuiKey key);  // map ImGuiKey_* values into legacy native key index. == io.KeyMap[key]
-#else
-    static inline int   GetKeyIndex(ImGuiKey key)   { IM_ASSERT(key >= ImGuiKey_NamedKey_BEGIN && key < ImGuiKey_NamedKey_END && "ImGuiKey and native_index was merged together and native_index is disabled by IMGUI_DISABLE_OBSOLETE_KEYIO. Please switch to ImGuiKey."); return key; }
-#endif
-}
+// namespace ImGui
+// {
+// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+//     IMGUI_API int       GetKeyIndex(ImGuiKey key);  // map ImGuiKey_* values into legacy native key index. == io.KeyMap[key]
+// #else
+//     static inline int   GetKeyIndex(ImGuiKey key)   { IM_ASSERT(key >= ImGuiKey_NamedKey_BEGIN && key < ImGuiKey_NamedKey_END && "ImGuiKey and native_index was merged together and native_index is disabled by IMGUI_DISABLE_OBSOLETE_KEYIO. Please switch to ImGuiKey."); return key; }
+// #endif
+// }
+//
+// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+// namespace ImGui
+// {
+//     // OBSOLETED in 1.88 (from May 2022)
+//     static inline void  CaptureKeyboardFromApp(bool want_capture_keyboard = true)   { SetNextFrameWantCaptureKeyboard(want_capture_keyboard); } // Renamed as name was misleading + removed default value.
+//     static inline void  CaptureMouseFromApp(bool want_capture_mouse = true)         { SetNextFrameWantCaptureMouse(want_capture_mouse); }       // Renamed as name was misleading + removed default value.
+//     // OBSOLETED in 1.86 (from November 2021)
+//     IMGUI_API void      CalcListClipping(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end); // Calculate coarse clipping for large list of evenly sized items. Prefer using ImGuiListClipper.
+//     // OBSOLETED in 1.85 (from August 2021)
+//     static inline float GetWindowContentRegionWidth()                               { return GetWindowContentRegionMax().x - GetWindowContentRegionMin().x; }
+//     // OBSOLETED in 1.81 (from February 2021)
+//     IMGUI_API bool      ListBoxHeader(const char* label, int items_count, int height_in_items = -1); // Helper to calculate size from items_count and height_in_items
+//     static inline bool  ListBoxHeader(const char* label, const ImVec2& size = ImVec2(0, 0))         { return BeginListBox(label, size); }
+//     static inline void  ListBoxFooter() { EndListBox(); }
+//     // OBSOLETED in 1.79 (from August 2020)
+//     static inline void  OpenPopupContextItem(const char* str_id = NULL, ImGuiMouseButton mb = 1)    { OpenPopupOnItemClick(str_id, mb); } // Bool return value removed. Use IsWindowAppearing() in BeginPopup() instead. Renamed in 1.77, renamed back in 1.79. Sorry!
+//     // OBSOLETED in 1.78 (from June 2020)
+//     // Old drag/sliders functions that took a 'float power = 1.0' argument instead of flags.
+//     // For shared code, you can version check at compile-time with `#if IMGUI_VERSION_NUM >= 17704`.
+//     IMGUI_API bool      DragScalar(const char* label, ImGuiDataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, float power);
+//     IMGUI_API bool      DragScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, float power);
+//     static inline bool  DragFloat(const char* label, float* v, float v_speed, float v_min, float v_max, const char* format, float power)    { return DragScalar(label, ImGuiDataType_Float, v, v_speed, &v_min, &v_max, format, power); }
+//     static inline bool  DragFloat2(const char* label, float v[2], float v_speed, float v_min, float v_max, const char* format, float power) { return DragScalarN(label, ImGuiDataType_Float, v, 2, v_speed, &v_min, &v_max, format, power); }
+//     static inline bool  DragFloat3(const char* label, float v[3], float v_speed, float v_min, float v_max, const char* format, float power) { return DragScalarN(label, ImGuiDataType_Float, v, 3, v_speed, &v_min, &v_max, format, power); }
+//     static inline bool  DragFloat4(const char* label, float v[4], float v_speed, float v_min, float v_max, const char* format, float power) { return DragScalarN(label, ImGuiDataType_Float, v, 4, v_speed, &v_min, &v_max, format, power); }
+//     IMGUI_API bool      SliderScalar(const char* label, ImGuiDataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, float power);
+//     IMGUI_API bool      SliderScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, const void* p_min, const void* p_max, const char* format, float power);
+//     static inline bool  SliderFloat(const char* label, float* v, float v_min, float v_max, const char* format, float power)                 { return SliderScalar(label, ImGuiDataType_Float, v, &v_min, &v_max, format, power); }
+//     static inline bool  SliderFloat2(const char* label, float v[2], float v_min, float v_max, const char* format, float power)              { return SliderScalarN(label, ImGuiDataType_Float, v, 2, &v_min, &v_max, format, power); }
+//     static inline bool  SliderFloat3(const char* label, float v[3], float v_min, float v_max, const char* format, float power)              { return SliderScalarN(label, ImGuiDataType_Float, v, 3, &v_min, &v_max, format, power); }
+//     static inline bool  SliderFloat4(const char* label, float v[4], float v_min, float v_max, const char* format, float power)              { return SliderScalarN(label, ImGuiDataType_Float, v, 4, &v_min, &v_max, format, power); }
+//     // OBSOLETED in 1.77 (from June 2020)
+//     static inline bool  BeginPopupContextWindow(const char* str_id, ImGuiMouseButton mb, bool over_items) { return BeginPopupContextWindow(str_id, mb | (over_items ? 0 : ImGuiPopupFlags_NoOpenOverItems)); }
+//
+//     // Some of the older obsolete names along with their replacement (commented out so they are not reported in IDE)
+//     //static inline void  TreeAdvanceToLabelPos()               { SetCursorPosX(GetCursorPosX() + GetTreeNodeToLabelSpacing()); }   // OBSOLETED in 1.72 (from July 2019)
+//     //static inline void  SetNextTreeNodeOpen(bool open, ImGuiCond cond = 0) { SetNextItemOpen(open, cond); }                       // OBSOLETED in 1.71 (from June 2019)
+//     //static inline float GetContentRegionAvailWidth()          { return GetContentRegionAvail().x; }                               // OBSOLETED in 1.70 (from May 2019)
+//     //static inline ImDrawList* GetOverlayDrawList()            { return GetForegroundDrawList(); }                                 // OBSOLETED in 1.69 (from Mar 2019)
+//     //static inline void  SetScrollHere(float ratio = 0.5f)     { SetScrollHereY(ratio); }                                          // OBSOLETED in 1.66 (from Nov 2018)
+//     //static inline bool  IsItemDeactivatedAfterChange()        { return IsItemDeactivatedAfterEdit(); }                            // OBSOLETED in 1.63 (from Aug 2018)
+//     //static inline bool  IsAnyWindowFocused()                  { return IsWindowFocused(ImGuiFocusedFlags_AnyWindow); }            // OBSOLETED in 1.60 (from Apr 2018)
+//     //static inline bool  IsAnyWindowHovered()                  { return IsWindowHovered(ImGuiHoveredFlags_AnyWindow); }            // OBSOLETED in 1.60 (between Dec 2017 and Apr 2018)
+//     //static inline void  ShowTestWindow()                      { return ShowDemoWindow(); }                                        // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
+//     //static inline bool  IsRootWindowFocused()                 { return IsWindowFocused(ImGuiFocusedFlags_RootWindow); }           // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
+//     //static inline bool  IsRootWindowOrAnyChildFocused()       { return IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows); }  // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
+//     //static inline void  SetNextWindowContentWidth(float w)    { SetNextWindowContentSize(ImVec2(w, 0.0f)); }                      // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
+//     //static inline float GetItemsLineHeightWithSpacing()       { return GetFrameHeightWithSpacing(); }                             // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
+// }
+//
+// // OBSOLETED in 1.82 (from Mars 2021): flags for AddRect(), AddRectFilled(), AddImageRounded(), PathRect()
+// // typedef ImDrawFlags ImDrawCornerFlags;
+// type
+//
+// enum ImDrawCornerFlags_
+//
+// {
+//     ImDrawCornerFlags_None      = ImDrawFlags_RoundCornersNone,         // Was == 0 prior to 1.82, this is now == ImDrawFlags_RoundCornersNone which is != 0 and not implicit
+//     ImDrawCornerFlags_TopLeft   = ImDrawFlags_RoundCornersTopLeft,      // Was == 0x01 (1 << 0) prior to 1.82. Order matches ImDrawFlags_NoRoundCorner* flag (we exploit this internally).
+//     ImDrawCornerFlags_TopRight  = ImDrawFlags_RoundCornersTopRight,     // Was == 0x02 (1 << 1) prior to 1.82.
+//     ImDrawCornerFlags_BotLeft   = ImDrawFlags_RoundCornersBottomLeft,   // Was == 0x04 (1 << 2) prior to 1.82.
+//     ImDrawCornerFlags_BotRight  = ImDrawFlags_RoundCornersBottomRight,  // Was == 0x08 (1 << 3) prior to 1.82.
+//     ImDrawCornerFlags_All       = ImDrawFlags_RoundCornersAll,          // Was == 0x0F prior to 1.82
+//     ImDrawCornerFlags_Top       = ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight,
+//     ImDrawCornerFlags_Bot       = ImDrawCornerFlags_BotLeft | ImDrawCornerFlags_BotRight,
+//     ImDrawCornerFlags_Left      = ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_BotLeft,
+//     ImDrawCornerFlags_Right     = ImDrawCornerFlags_TopRight | ImDrawCornerFlags_BotRight
+// };
+//
+// // RENAMED ImGuiKeyModFlags -> ImGuiModFlags in 1.88 (from April 2022)
+// // typedef int ImGuiKeyModFlags;
+//
+// pub type ImGuiKeyModFlags = i32;
+//
+// enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyModFlags_Ctrl = ImGuiModFlags_Ctrl, ImGuiKeyModFlags_Shift = ImGuiModFlags_Shift, ImGuiKeyModFlags_Alt = ImGuiModFlags_Alt, ImGuiKeyModFlags_Super = ImGuiModFlags_Super };
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-namespace ImGui
-{
-    // OBSOLETED in 1.88 (from May 2022)
-    static inline void  CaptureKeyboardFromApp(bool want_capture_keyboard = true)   { SetNextFrameWantCaptureKeyboard(want_capture_keyboard); } // Renamed as name was misleading + removed default value.
-    static inline void  CaptureMouseFromApp(bool want_capture_mouse = true)         { SetNextFrameWantCaptureMouse(want_capture_mouse); }       // Renamed as name was misleading + removed default value.
-    // OBSOLETED in 1.86 (from November 2021)
-    IMGUI_API void      CalcListClipping(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end); // Calculate coarse clipping for large list of evenly sized items. Prefer using ImGuiListClipper.
-    // OBSOLETED in 1.85 (from August 2021)
-    static inline float GetWindowContentRegionWidth()                               { return GetWindowContentRegionMax().x - GetWindowContentRegionMin().x; }
-    // OBSOLETED in 1.81 (from February 2021)
-    IMGUI_API bool      ListBoxHeader(const char* label, int items_count, int height_in_items = -1); // Helper to calculate size from items_count and height_in_items
-    static inline bool  ListBoxHeader(const char* label, const ImVec2& size = ImVec2(0, 0))         { return BeginListBox(label, size); }
-    static inline void  ListBoxFooter() { EndListBox(); }
-    // OBSOLETED in 1.79 (from August 2020)
-    static inline void  OpenPopupContextItem(const char* str_id = NULL, ImGuiMouseButton mb = 1)    { OpenPopupOnItemClick(str_id, mb); } // Bool return value removed. Use IsWindowAppearing() in BeginPopup() instead. Renamed in 1.77, renamed back in 1.79. Sorry!
-    // OBSOLETED in 1.78 (from June 2020)
-    // Old drag/sliders functions that took a 'float power = 1.0' argument instead of flags.
-    // For shared code, you can version check at compile-time with `#if IMGUI_VERSION_NUM >= 17704`.
-    IMGUI_API bool      DragScalar(const char* label, ImGuiDataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, float power);
-    IMGUI_API bool      DragScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, float power);
-    static inline bool  DragFloat(const char* label, float* v, float v_speed, float v_min, float v_max, const char* format, float power)    { return DragScalar(label, ImGuiDataType_Float, v, v_speed, &v_min, &v_max, format, power); }
-    static inline bool  DragFloat2(const char* label, float v[2], float v_speed, float v_min, float v_max, const char* format, float power) { return DragScalarN(label, ImGuiDataType_Float, v, 2, v_speed, &v_min, &v_max, format, power); }
-    static inline bool  DragFloat3(const char* label, float v[3], float v_speed, float v_min, float v_max, const char* format, float power) { return DragScalarN(label, ImGuiDataType_Float, v, 3, v_speed, &v_min, &v_max, format, power); }
-    static inline bool  DragFloat4(const char* label, float v[4], float v_speed, float v_min, float v_max, const char* format, float power) { return DragScalarN(label, ImGuiDataType_Float, v, 4, v_speed, &v_min, &v_max, format, power); }
-    IMGUI_API bool      SliderScalar(const char* label, ImGuiDataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, float power);
-    IMGUI_API bool      SliderScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, const void* p_min, const void* p_max, const char* format, float power);
-    static inline bool  SliderFloat(const char* label, float* v, float v_min, float v_max, const char* format, float power)                 { return SliderScalar(label, ImGuiDataType_Float, v, &v_min, &v_max, format, power); }
-    static inline bool  SliderFloat2(const char* label, float v[2], float v_min, float v_max, const char* format, float power)              { return SliderScalarN(label, ImGuiDataType_Float, v, 2, &v_min, &v_max, format, power); }
-    static inline bool  SliderFloat3(const char* label, float v[3], float v_min, float v_max, const char* format, float power)              { return SliderScalarN(label, ImGuiDataType_Float, v, 3, &v_min, &v_max, format, power); }
-    static inline bool  SliderFloat4(const char* label, float v[4], float v_min, float v_max, const char* format, float power)              { return SliderScalarN(label, ImGuiDataType_Float, v, 4, &v_min, &v_max, format, power); }
-    // OBSOLETED in 1.77 (from June 2020)
-    static inline bool  BeginPopupContextWindow(const char* str_id, ImGuiMouseButton mb, bool over_items) { return BeginPopupContextWindow(str_id, mb | (over_items ? 0 : ImGuiPopupFlags_NoOpenOverItems)); }
-
-    // Some of the older obsolete names along with their replacement (commented out so they are not reported in IDE)
-    //static inline void  TreeAdvanceToLabelPos()               { SetCursorPosX(GetCursorPosX() + GetTreeNodeToLabelSpacing()); }   // OBSOLETED in 1.72 (from July 2019)
-    //static inline void  SetNextTreeNodeOpen(bool open, ImGuiCond cond = 0) { SetNextItemOpen(open, cond); }                       // OBSOLETED in 1.71 (from June 2019)
-    //static inline float GetContentRegionAvailWidth()          { return GetContentRegionAvail().x; }                               // OBSOLETED in 1.70 (from May 2019)
-    //static inline ImDrawList* GetOverlayDrawList()            { return GetForegroundDrawList(); }                                 // OBSOLETED in 1.69 (from Mar 2019)
-    //static inline void  SetScrollHere(float ratio = 0.5f)     { SetScrollHereY(ratio); }                                          // OBSOLETED in 1.66 (from Nov 2018)
-    //static inline bool  IsItemDeactivatedAfterChange()        { return IsItemDeactivatedAfterEdit(); }                            // OBSOLETED in 1.63 (from Aug 2018)
-    //static inline bool  IsAnyWindowFocused()                  { return IsWindowFocused(ImGuiFocusedFlags_AnyWindow); }            // OBSOLETED in 1.60 (from Apr 2018)
-    //static inline bool  IsAnyWindowHovered()                  { return IsWindowHovered(ImGuiHoveredFlags_AnyWindow); }            // OBSOLETED in 1.60 (between Dec 2017 and Apr 2018)
-    //static inline void  ShowTestWindow()                      { return ShowDemoWindow(); }                                        // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
-    //static inline bool  IsRootWindowFocused()                 { return IsWindowFocused(ImGuiFocusedFlags_RootWindow); }           // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
-    //static inline bool  IsRootWindowOrAnyChildFocused()       { return IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows); }  // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
-    //static inline void  SetNextWindowContentWidth(float w)    { SetNextWindowContentSize(ImVec2(w, 0.0f)); }                      // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
-    //static inline float GetItemsLineHeightWithSpacing()       { return GetFrameHeightWithSpacing(); }                             // OBSOLETED in 1.53 (between Oct 2017 and Dec 2017)
-}
-
-// OBSOLETED in 1.82 (from Mars 2021): flags for AddRect(), AddRectFilled(), AddImageRounded(), PathRect()
-typedef ImDrawFlags ImDrawCornerFlags;
-enum ImDrawCornerFlags_
-{
-    ImDrawCornerFlags_None      = ImDrawFlags_RoundCornersNone,         // Was == 0 prior to 1.82, this is now == ImDrawFlags_RoundCornersNone which is != 0 and not implicit
-    ImDrawCornerFlags_TopLeft   = ImDrawFlags_RoundCornersTopLeft,      // Was == 0x01 (1 << 0) prior to 1.82. Order matches ImDrawFlags_NoRoundCorner* flag (we exploit this internally).
-    ImDrawCornerFlags_TopRight  = ImDrawFlags_RoundCornersTopRight,     // Was == 0x02 (1 << 1) prior to 1.82.
-    ImDrawCornerFlags_BotLeft   = ImDrawFlags_RoundCornersBottomLeft,   // Was == 0x04 (1 << 2) prior to 1.82.
-    ImDrawCornerFlags_BotRight  = ImDrawFlags_RoundCornersBottomRight,  // Was == 0x08 (1 << 3) prior to 1.82.
-    ImDrawCornerFlags_All       = ImDrawFlags_RoundCornersAll,          // Was == 0x0F prior to 1.82
-    ImDrawCornerFlags_Top       = ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight,
-    ImDrawCornerFlags_Bot       = ImDrawCornerFlags_BotLeft | ImDrawCornerFlags_BotRight,
-    ImDrawCornerFlags_Left      = ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_BotLeft,
-    ImDrawCornerFlags_Right     = ImDrawCornerFlags_TopRight | ImDrawCornerFlags_BotRight
-};
-
-// RENAMED ImGuiKeyModFlags -> ImGuiModFlags in 1.88 (from April 2022)
-typedef int ImGuiKeyModFlags;
-enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyModFlags_Ctrl = ImGuiModFlags_Ctrl, ImGuiKeyModFlags_Shift = ImGuiModFlags_Shift, ImGuiKeyModFlags_Alt = ImGuiModFlags_Alt, ImGuiKeyModFlags_Super = ImGuiModFlags_Super };
-
-#endif // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+// #endif // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 // RENAMED IMGUI_DISABLE_METRICS_WINDOW > IMGUI_DISABLE_DEBUG_TOOLS in 1.88 (from June 2022)
-#if defined(IMGUI_DISABLE_METRICS_WINDOW) && !defined(IMGUI_DISABLE_OBSOLETE_FUNCTIONS) && !defined(IMGUI_DISABLE_DEBUG_TOOLS)
-#define IMGUI_DISABLE_DEBUG_TOOLS
-#endif
-#if defined(IMGUI_DISABLE_METRICS_WINDOW) && defined(IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
-#error IMGUI_DISABLE_METRICS_WINDOW was renamed to IMGUI_DISABLE_DEBUG_TOOLS, please use std::default::default;
-use std::ffi::c_void;
-use std::ptr;
-use new
-use crate::imgui_h::ImGuiCol::ImGuiCol_COUNT;
-use crate::imgui_h::ImGuiWindowFlags::{ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar}; name.
-#endif
+// #if defined(IMGUI_DISABLE_METRICS_WINDOW) && !defined(IMGUI_DISABLE_OBSOLETE_FUNCTIONS) && !defined(IMGUI_DISABLE_DEBUG_TOOLS)
+// #define IMGUI_DISABLE_DEBUG_TOOLS
+// #endif
+// #if defined(IMGUI_DISABLE_METRICS_WINDOW) && defined(IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+// #error IMGUI_DISABLE_METRICS_WINDOW was renamed to IMGUI_DISABLE_DEBUG_TOOLS, please use std::default::default;
+// use std::ffi::c_void;
+// use std::ops::Index;
+// use std::ptr;
+// use new
+// use crate::imgui_h::ImGuiCol::ImGuiCol_COUNT;
+// use crate::imgui_h::ImGuiWindowFlags::{ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar}; name.
+// #endif
 
 //-----------------------------------------------------------------------------
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+// #if defined(__clang__)
+// #pragma clang diagnostic pop
+// #elif defined(__GNUC__)
+// #pragma GCC diagnostic pop
+// #endif
 
-#ifdef _MSC_VER
-#pragma warning (pop)
-#endif
+// #ifdef _MSC_VER
+// #pragma warning (pop)
+// #endif
 
 // Include imgui_user.h at the end of imgui.h (convenient for user to only explicitly include vanilla imgui.h)
-#ifdef IMGUI_INCLUDE_IMGUI_USER_H
-#include "imgui_user.h"
-#endif
-
-#endif // #ifndef IMGUI_DISABLE
+// #ifdef IMGUI_INCLUDE_IMGUI_USER_H
+// #include "imgui_user.h"
+// #endif
+//
+// #endif // #ifndef IMGUI_DISABLE
