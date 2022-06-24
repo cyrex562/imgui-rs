@@ -2558,31 +2558,71 @@ impl ImGuiOnceUponAFrame {
     }
 }
 
+#[derive(Clone,Debug,Default)]
+pub struct ImGuiTextRange
+    {
+        // const char*     b;
+        // const char*     e;
+        pub b: String,
+        pub e: String,
+
+
+    }
+
+impl ImGuiTextRange {
+    // ImGuiTextRange()                                { b = e = NULL; }
+    pub fn new(b: &String, e: &String) -> Self {
+        Self {
+            b: b.clone(),
+            e: e.clone()
+        }
+    }
+    //     ImGuiTextRange(const char* _b, const char* _e)  { b = _b; e = _e; }
+    //     bool            empty() const                   { return b == e; }
+    pub fn empty(&self) -> bool {
+        self.b == self.e
+    }
+    //     IMGUI_API void  split(char separator, ImVector<ImGuiTextRange>* out) const;
+    pub fn split(&mut self, separator: char) -> Vec<String> {
+        todo!()
+    }
+}
+
 // Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
-struct ImGuiTextFilter
+#[derive(Default,Debug,Clone)]
+pub struct ImGuiTextFilter
 {
-    IMGUI_API           ImGuiTextFilter(const char* default_filter = "");
-    IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0f);  // Helper calling InputText+Build
-    IMGUI_API bool      PassFilter(const char* text, const char* text_end = NULL) const;
-    IMGUI_API void      Build();
-    void                Clear()          { InputBuf[0] = 0; Build(); }
-    bool                IsActive() const { return !Filters.empty(); }
+    pub InputBuf: String,
+    pub Filters: Vec<ImGuiTextRange>,
+    pub CountGrep: i32,
 
     // [Internal]
-    struct ImGuiTextRange
-    {
-        const char*     b;
-        const char*     e;
 
-        ImGuiTextRange()                                { b = e = NULL; }
-        ImGuiTextRange(const char* _b, const char* _e)  { b = _b; e = _e; }
-        bool            empty() const                   { return b == e; }
-        IMGUI_API void  split(char separator, ImVector<ImGuiTextRange>* out) const;
-    };
-    char                    InputBuf[256];
-    ImVector<ImGuiTextRange>Filters;
-    int                     CountGrep;
-};
+    // char                    InputBuf[256];
+    // ImVector<ImGuiTextRange>Filters;
+    // int                     CountGrep;
+}
+
+impl ImGuiTextFilter {
+    // IMGUI_API           ImGuiTextFilter(const char* default_filter = "");
+    pub fn new(default_filter: &String) {
+        todo!()
+    }
+    // IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0f);  // Helper calling InputText+Build
+    pub fn Draw(&self, label: Option<&String>, width: Option<f32>) -> bool {
+        todo!()
+    }
+    // IMGUI_API bool      PassFilter(const char* text, const char* text_end = NULL) const;
+    pub fn PassFilter(&mut self, text: &String, text_end: &String) -> bool {
+        todo!()
+    }
+    // IMGUI_API void      Build();
+    pub fn Build(&mut self) {
+        todo!()
+    }
+    // void                Clear()          { InputBuf[0] = 0; Build(); }
+    // bool                IsActive() const { return !Filters.empty(); }
+}
 
 // Helper: Growable text buffer for logging/accumulating text
 // (this could be called 'ImGuiTextBuilder' / 'ImGuiStringBuilder')
@@ -3564,7 +3604,8 @@ enum ImGuiKeyModFlags_ { ImGuiKeyModFlags_None = ImGuiModFlags_None, ImGuiKeyMod
 #define IMGUI_DISABLE_DEBUG_TOOLS
 #endif
 #if defined(IMGUI_DISABLE_METRICS_WINDOW) && defined(IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
-#error IMGUI_DISABLE_METRICS_WINDOW was renamed to IMGUI_DISABLE_DEBUG_TOOLS, please use std::ffi::c_void;
+#error IMGUI_DISABLE_METRICS_WINDOW was renamed to IMGUI_DISABLE_DEBUG_TOOLS, please use std::default::default;
+use std::ffi::c_void;
 use std::ptr;
 use new
 use crate::imgui_h::ImGuiCol::ImGuiCol_COUNT;
