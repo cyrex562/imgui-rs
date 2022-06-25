@@ -1228,24 +1228,7 @@ struct ImGuiInputEventKey           { ImGuiKey Key; bool Down; float AnalogValue
 struct ImGuiInputEventText          { unsigned int Char; };
 struct ImGuiInputEventAppFocused    { bool Focused; };
 
-struct ImGuiInputEvent
-{
-    ImGuiInputEventType             Type;
-    ImGuiInputSource                Source;
-    union
-    {
-        ImGuiInputEventMousePos     MousePos;       // if Type == ImGuiInputEventType_MousePos
-        ImGuiInputEventMouseWheel   MouseWheel;     // if Type == ImGuiInputEventType_MouseWheel
-        ImGuiInputEventMouseButton  MouseButton;    // if Type == ImGuiInputEventType_MouseButton
-        ImGuiInputEventMouseViewport MouseViewport; // if Type == ImGuiInputEventType_MouseViewport
-        ImGuiInputEventKey          Key;            // if Type == ImGuiInputEventType_Key
-        ImGuiInputEventText         Text;           // if Type == ImGuiInputEventType_Text
-        ImGuiInputEventAppFocused   AppFocused;     // if Type == ImGuiInputEventType_Focus
-    };
-    bool                            AddedByTestEngine;
 
-    ImGuiInputEvent() { memset(this, 0, sizeof(*this)); }
-};
 
 // FIXME-NAV: Clarify/expose various repeat delay/rate
 enum ImGuiNavReadMode

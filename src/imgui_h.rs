@@ -293,6 +293,14 @@ impl ImVec2 {
             y
         }
     }
+    
+    pub fn new2() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0
+        }
+    }
+    
     pub fn clear(&mut self) {
         self.x = 0.0;
         self.y = 0.0;
@@ -421,7 +429,7 @@ impl ImVec4 {
 //     IMGUI_API void          SetWindowSize(const ImVec2& size, ImGuiCond cond = 0);                      // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
 //     IMGUI_API void          SetWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                     // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
 //     IMGUI_API void          SetWindowFocus();                                                           // (not recommended) set current window to be focused / top-most. prefer using SetNextWindowFocus().
-//     IMGUI_API void          SetWindowFontScale(float scale);                                            // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
+//     IMGUI_API void          SetWindowFontScale(float scale);                                            // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.scale_all_sizes().
 //     IMGUI_API void          SetWindowPos(const char* name, const ImVec2& pos, ImGuiCond cond = 0);      // set named window position.
 //     IMGUI_API void          SetWindowSize(const char* name, const ImVec2& size, ImGuiCond cond = 0);    // set named window size. set axis to 0.0f to force an auto-fit on this axis.
 //     IMGUI_API void          SetWindowCollapsed(const char* name, bool collapsed, ImGuiCond cond = 0);   // set named window collapsed state
@@ -2045,56 +2053,6 @@ enum ImGuiCond
 // and ImGui::PushStyleColor(ImGuiCol_XXX)/PopStyleColor() for colors.
 //-----------------------------------------------------------------------------
 
-#[allow(non_snake_case)]
-pub struct ImGuiStyle
-{
-    pub Alpha: f32,                     // Global alpha applies to everything in Dear ImGui.
-    pub DisabledAlpha: f32,             // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
-    pub WindowPadding: ImVec2,              // Padding within a window.
-    pub WindowRounding: f32,            // Radius of window corners rounding. Set to 0.0f to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
-    pub WindowBorderSize: f32,          // Thickness of border around windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-    pub WindowMinSize: ImVec2,              // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
-    pub WindowTitleAlign: ImVec2,           // Alignment for title bar text. Defaults to (0.0f,0.5f) for left-aligned,vertically centered.
-    pub WindowMenuButtonPosition: ImGuiDir,   // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
-    pub ChildRounding: f32,             // Radius of child window corners rounding. Set to 0.0f to have rectangular windows.
-    pub ChildBorderSize: f32,           // Thickness of border around child windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-    pub PopupRounding: f32,             // Radius of popup window corners rounding. (Note that tooltip windows use WindowRounding)
-    pub PopupBorderSize: f32,           // Thickness of border around popup/tooltip windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-    pub FramePadding: ImVec2,               // Padding within a framed rectangle (used by most widgets).
-    pub FrameRounding: f32,             // Radius of frame corners rounding. Set to 0.0f to have rectangular frame (used by most widgets).
-    pub FrameBorderSize: f32,           // Thickness of border around frames. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-    pub ItemSpacing: ImVec2,                // Horizontal and vertical spacing between widgets/lines.
-    pub ItemInnerSpacing: ImVec2,           // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label).
-    pub CellPadding: ImVec2,                // Padding within a table cell
-    pub TouchExtraPadding: ImVec2,          // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
-    pub IndentSpacing: f32,             // Horizontal indentation when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
-    pub ColumnsMinSpacing: f32,         // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
-    pub ScrollbarSize: f32,             // Width of the vertical scrollbar, Height of the horizontal scrollbar.
-    pub ScrollbarRounding: f32,         // Radius of grab corners for scrollbar.
-    pub GrabMinSize: f32,               // Minimum width/height of a grab box for slider/scrollbar.
-    pub GrabRounding: f32,              // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
-    pub LogSliderDeadzone: f32,         // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
-    pub TabRounding: f32,               // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
-    pub TabBorderSize: f32,             // Thickness of border around tabs.
-    pub TabMinWidthForCloseButton: f32, // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
-    pub ColorButtonPosition: ImGuiDir,        // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-    pub ButtonTextAlign: ImVec2,            // Alignment of button text when button is larger than text. Defaults to (0.5f, 0.5f) (centered).
-    pub SelectableTextAlign: ImVec2,        // Alignment of selectable text. Defaults to (0.0f, 0.0f) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-    pub DisplayWindowPadding: ImVec2,       // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-    pub DisplaySafeAreaPadding: ImVec2,     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
-    pub MouseCursorScale: f32,          // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
-    pub AntiAliasedLines: bool,           // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-    pub AntiAliasedLinesUseTex: bool,     // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering). Latched at the beginning of the frame (copied to ImDrawList).
-    pub AntiAliasedFill: bool,            // Enable anti-aliased edges around filled shapes (rounded rectangles, circles, etc.). Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-    pub CurveTessellationTol: f32,      // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
-    pub CircleTessellationMaxError: f32,// Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
-    // ImVec4      Colors[ImGuiCol_COUNT];
-    pub Colors: Vec<ImGuiCol>,
-
-    // IMGUI_API ImGuiStyle();
-    // IMGUI_API void ScaleAllSizes(float scale_factor);
-}
-
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiIO
 //-----------------------------------------------------------------------------
@@ -2110,247 +2068,6 @@ pub struct ImGuiKeyData
     pub DownDuration: f32,      // Duration the key has been down (<0.0f: not pressed, 0.0f: just pressed, >0.0f: time held)
     pub DownDurationPrev: f32,  // Last frame duration the key has been down
     pub AnalogValue: f32,       // 0.0f..1.0f for gamepad values
-}
-
-#[allow(non_snake_case)]
-pub struct ImGuiIO
-{
-    //------------------------------------------------------------------
-    // Configuration                            // Default value
-    //------------------------------------------------------------------
-
-    pub ConfigFlags: ImGuiConfigFlags,             // = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
-    pub BackendFlags: ImGuiBackendFlags,            // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
-    pub DisplaySize: ImVec2,                    // <unset>          // Main display size, in pixels (generally == GetMainViewport()->Size). May change every frame.
-    pub DeltaTime: f32,                     // = 1.0f/60.0f     // Time elapsed since last frame, in seconds. May change every frame.
-    pub IniSavingRate: f32,                 // = 5.0f           // Minimum time between saving positions/sizes to .ini file, in seconds.
-    pub IniFilename: String, // const char* IniFilename;                    // = "imgui.ini"    // Path to .ini file (important: default "imgui.ini" is relative to current working dir!). Set NULL to disable automatic .ini loading/saving or if you want to manually call LoadIniSettingsXXX() / SaveIniSettingsXXX() functions.
-    pub LogFilename: String, // const char* LogFilename;                    // = "imgui_log.txt"// Path to .log file (default parameter to ImGui::LogToFile when no file is specified).
-    pub MouseDoubleClickTime: f32,          // = 0.30f          // Time for a double-click, in seconds.
-    pub MouseDoubleClickMaxDist: f32,       // = 6.0f           // Distance threshold to stay in to validate a double-click, in pixels.
-    pub MouseDragThreshold: f32,            // = 6.0f           // Distance threshold before considering we are dragging.
-    pub KeyRepeatDelay: f32,                // = 0.250f         // When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).
-    pub KeyRepeatRate: f32,                 // = 0.050f         // When holding a key/button, rate at which it repeats, in seconds.
-    pub UserData: *mut c_void,// void*       UserData;                       // = NULL           // Store your own data for retrieval by callbacks.
-    pub Fonts: *mut ImFontAtlas, // ImFontAtlas*Fonts;                          // <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
-    pub FontGlobalScale: f32,               // = 1.0f           // Global scale all fonts
-    pub FontAllowUserScaling: bool,           // = false          // Allow user scaling text of individual window with CTRL+Wheel.
-    pub FontDefault: *mut ImFont, // ImFont*     FontDefault;                    // = NULL           // Font to use on NewFrame(). Use NULL to uses Fonts->Fonts[0].
-    pub DisplayFramebufferScale: ImVec2,        // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::FramebufferScale.
-
-    // Docking options (when ImGuiConfigFlags_DockingEnable is set)
-    pub ConfigDockingNoSplit: bool,           // = false          // Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.
-    pub ConfigDockingWithShift: bool,         // = false          // Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)
-    pub ConfigDockingAlwaysTabBar: bool,      // = false          // [BETA] [FIXME: This currently creates regression with auto-sizing and general overhead] Make every single floating window display within a docking node.
-    pub ConfigDockingTransparentPayload: bool,// = false          // [BETA] Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge.
-
-    // Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
-    pub ConfigViewportsNoAutoMerge: bool,     // = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImGuiViewportFlags_NoAutoMerge on individual viewport.
-    pub ConfigViewportsNoTaskBarIcon: bool,   // = false          // Disable default OS task bar icon flag for secondary viewports. When a viewport doesn't want a task bar icon, ImGuiViewportFlags_NoTaskBarIcon will be set on it.
-    pub ConfigViewportsNoDecoration: bool,    // = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
-    pub ConfigViewportsNoDefaultParent: bool, // = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
-
-    // Miscellaneous options
-    pub MouseDrawCursor: bool,                // = false          // Request ImGui to draw a mouse cursor for you (if you are on a platform without a mouse cursor). Cannot be easily renamed to 'io.ConfigXXX' because this is frequently used by backend implementations.
-    pub ConfigMacOSXBehaviors: bool,          // = defined(__APPLE__) // OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.
-    pub ConfigInputTrickleEventQueue: bool,   // = true           // Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.
-    pub ConfigInputTextCursorBlink: bool,     // = true           // Enable blinking cursor (optional as some users consider it to be distracting).
-    pub ConfigDragClickToInputText: bool,     // = false          // [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
-    pub ConfigWindowsResizeFromEdges: bool,   // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
-    pub ConfigWindowsMoveFromTitleBarOnly: bool, // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
-    pub ConfigMemoryCompactTimer: f32,      // = 60.0f          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
-
-    //------------------------------------------------------------------
-    // Platform Functions
-    // (the imgui_impl_xxxx backend files are setting those up for you)
-    //------------------------------------------------------------------
-
-    // Optional: Platform/Renderer backend name (informational only! will be displayed in About Window) + User data for backend/wrappers to store their own stuff.
-    // const char* BackendPlatformName;            // = NULL
-    pub BackendPlatformName: String,
-    // const char* BackendRendererName;            // = NULL
-    pub BackendRendererName: String,
-    // void*       BackendPlatformUserData;        // = NULL           // User data for platform backend
-    pub BackendPlatformUserData: *mut c_void,
-    // void*       BackendRendererUserData;        // = NULL           // User data for renderer backend
-    pub BackendRendererUserData: *mut c_void,
-    // void*       BackendLanguageUserData;        // = NULL           // User data for non C++ programming language backend
-    pub BackendLanguageUserData: *mut c_void,
-
-    // Optional: Access OS clipboard
-    // (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
-    // const char* (*GetClipboardTextFn)(void* user_data);
-    // void        (*SetClipboardTextFn)(void* user_data, const char* text);
-    // void*       ClipboardUserData;
-
-    // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
-    // (default to use native imm32 api on Windows)
-    // void        (*SetPlatformImeDataFn)(ImGuiViewport* viewport, ImGuiPlatformImeData* data);
-// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//     void*       ImeWindowHandle;                // = NULL           // [Obsolete] Set ImGuiViewport::PlatformHandleRaw instead. Set this to your HWND to get automatic IME cursor positioning.
-    pub ImeWindowHandle: *mut c_void,
-// #else
-//     void*       _UnusedPadding;                                     // Unused field to keep data structure the same size.
-// #endif
-
-    //------------------------------------------------------------------
-    // Input - Call before calling NewFrame()
-    //------------------------------------------------------------------
-
-    // // Input Functions
-    // IMGUI_API void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
-    // IMGUI_API void  AddKeyAnalogEvent(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
-    // IMGUI_API void  AddMousePosEvent(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
-    // IMGUI_API void  AddMouseButtonEvent(int button, bool down);             // Queue a mouse button change
-    // IMGUI_API void  AddMouseWheelEvent(float wh_x, float wh_y);             // Queue a mouse wheel update
-    // IMGUI_API void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
-    // IMGUI_API void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
-    // IMGUI_API void  AddInputCharacter(unsigned int c);                      // Queue a new character input
-    // IMGUI_API void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
-    // IMGUI_API void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
-    // 
-    // IMGUI_API void  SetKeyEventNativeData(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
-    // IMGUI_API void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
-    // IMGUI_API void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
-    // IMGUI_API void  ClearInputKeys();                                       // [Internal] Release all keys
-
-    //------------------------------------------------------------------
-    // Output - Updated by NewFrame() or EndFrame()/Render()
-    // (when reading from the io.WantCaptureMouse, io.WantCaptureKeyboard flags to dispatch your inputs, it is
-    //  generally easier and more correct to use their state BEFORE calling NewFrame(). See FAQ for details!)
-    //------------------------------------------------------------------
-
-    pub WantCaptureMouse: bool,                   // Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
-    pub WantCaptureKeyboard: bool,                // Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to your main game/application (either way, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
-    pub WantTextInput: bool,                      // Mobile/console: when set, you may display an on-screen keyboard. This is set by Dear ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
-    pub WantSetMousePos: bool,                    // MousePos has been altered, backend should reposition mouse on next frame. Rarely used! Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
-    pub WantSaveIniSettings: bool,                // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.WantSaveIniSettings yourself after saving!
-    pub NavActive: bool,                          // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
-    pub NavVisible: bool,                         // Keyboard/Gamepad navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
-    pub Framerate: f32,                         // Rough estimate of application framerate, in frame per second. Solely for convenience. Rolling average estimation based on io.DeltaTime over 120 frames.
-    pub MetricsRenderVertices: i32,            // Vertices output during last call to Render()
-    pub MetricsRenderIndices: i32,             // Indices output during last call to Render() = number of triangles * 3
-    pub MetricsRenderWindows: i32,             // Number of visible windows
-    pub MetricsActiveWindows: i32,             // Number of active windows
-    pub MetricsActiveAllocations: i32,         // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-    pub MouseDelta: ImVec2,                         // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
-
-    // Legacy: before 1.87, we required backend to fill io.KeyMap[] (imgui->native map) during initialization and io.KeysDown[] (native indices) every frame.
-    // This is still temporarily supported as a legacy feature. However the new preferred scheme is for backend to call io.AddKeyEvent().
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     int         KeyMap[ImGuiKey_COUNT];             // [LEGACY] Input: map of indices into the KeysDown[512] entries array which represent your "native" keyboard state. The first 512 are now unused and should be kept zero. Legacy backend will write into KeyMap[] using ImGuiKey_ indices which are always >512.
-//     bool        KeysDown[ImGuiKey_COUNT];           // [LEGACY] Input: Keyboard keys that are pressed (ideally left in the "native" order your engine has access to keyboard keys, so you can use your own defines/enums for keys). This used to be [512] sized. It is now ImGuiKey_COUNT to allow legacy io.KeysDown[GetKeyIndex(...)] to work without an overflow.
-// #endif
-
-    //------------------------------------------------------------------
-    // [Internal] Dear ImGui will maintain those fields. Forward compatibility not guaranteed!
-    //------------------------------------------------------------------
-
-    // Main Input State
-    // (this block used to be written by backend, since 1.87 it is best to NOT write to those directly, call the AddXXX functions above instead)
-    // (reading from those variables is fair game, as they are extremely unlikely to be moving anywhere)
-    pub MousePos: ImVec2,                           // Mouse position, in pixels. Set to ImVec2(-FLT_MAX, -FLT_MAX) if mouse is unavailable (on another screen, etc.)
-    pub MouseDown: [bool;5], // bool        MouseDown[5];                       // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
-    pub MouseWheel: f32,                        // Mouse wheel Vertical: 1 unit scrolls about 5 lines text.
-    pub MouseWheelH: f32,                       // Mouse wheel Horizontal. Most users don't have a mouse with an horizontal wheel, may not be filled by all backends.
-    pub MouseHoveredViewport: ImGuiID,             // (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
-    pub KeyCtrl: bool,                            // Keyboard modifier down: Control
-    pub KeyShift: bool,                           // Keyboard modifier down: Shift
-    pub KeyAlt: bool,                             // Keyboard modifier down: Alt
-    pub KeySuper: bool,                           // Keyboard modifier down: Cmd/Super/Windows
-    // float       NavInputs[ImGuiNavInput_COUNT];     // Gamepad inputs. Cleared back to zero by EndFrame(). Keyboard keys will be auto-mapped and be written here by NewFrame().
-    pub NavInputs: Vec<f32>,
-
-    // Other state maintained from data above + IO function calls
-    pub  KeyMods: ImGuiModFlags,                          // Key mods flags (same as io.KeyCtrl/KeyShift/KeyAlt/KeySuper but merged into flags), updated by NewFrame()
-    pub KeysData: Vec<ImGuiKeyData>,  // Key state for all known keys. Use IsKeyXXX() functions to access this.
-    pub WantCaptureMouseUnlessPopupClose: bool,   // Alternative to WantCaptureMouse: (WantCaptureMouse == true && WantCaptureMouseUnlessPopupClose == false) when a click over void is expected to close a popup.
-    pub MousePosPrev: ImVec2,                       // Previous mouse position (note that MouseDelta is not necessary == MousePos-MousePosPrev, in case either position is invalid)
-    pub      MouseClickedPos: [ImVec2;5],                 // Position at time of clicking
-    pub      MouseClickedTime: [f64;5],                // Time of last click (used to figure out double-click)
-    pub        MouseClicked: [bool;5],                    // Mouse button went from !Down to Down (same as MouseClickedCount[x] != 0)
-    pub        MouseDoubleClicked: [bool;5],           // Has mouse button been double-clicked? (same as MouseClickedCount[x] == 2)
-    pub       MouseClickedCount: [u16;5],               // == 0 (not clicked), == 1 (same as MouseClicked[]), == 2 (double-clicked), == 3 (triple-clicked) etc. when going from !Down to Down
-    pub       MouseClickedLastCount: [u16;5],           // Count successive number of clicks. Stays valid after mouse release. Reset after another click is done.
-    pub        MouseReleased: [bool;5],                   // Mouse button went from Down to !Down
-    pub        MouseDownOwned: [bool;5],                  // Track if button was clicked inside a dear imgui window or over void blocked by a popup. We don't request mouse capture from the application if click started outside ImGui bounds.
-    pub        MouseDownOwnedUnlessPopupClose: [bool;5],  // Track if button was clicked inside a dear imgui window.
-    pub       MouseDownDuration: [f32;5],               // Duration the mouse button has been down (0.0f == just clicked)
-    pub       MouseDownDurationPrev: [f32;5],           // Previous time the mouse button has been down
-    pub      MouseDragMaxDistanceAbs: [ImVec2;5],         // Maximum distance, absolute, on each axis, of how much mouse has traveled from the clicking point
-    pub       MouseDragMaxDistanceSqr: [f32;5],         // Squared maximum distance of how much mouse has traveled from the clicking point (used for moving thresholds)
-    pub       NavInputsDownDuration: Vec<f32>,
-    pub       NavInputsDownDurationPrev: Vec<f32>,
-    pub PenPressure: f32,                       // Touch/Pen pressure (0.0f to 1.0f, should be >0.0f only when MouseDown[0] == true). Helper storage currently unused by Dear ImGui.
-    pub AppFocusLost: bool,                       // Only modify via AddFocusEvent()
-    pub AppAcceptingEvents: bool,                 // Only modify via SetAppAcceptingEvents()
-    pub        BackendUsingLegacyKeyArrays: i8,        // -1: unknown, 0: using AddKeyEvent(), 1: using legacy io.KeysDown[]
-    pub BackendUsingLegacyNavInputArray: bool,    // 0: using AddKeyAnalogEvent(), 1: writing to legacy io.NavInputs[] directly
-    pub  InputQueueSurrogate: Vec<u8>,                // For AddInputCharacterUTF16()
-    pub InputQueueCharacters: Vec<u8>,         // Queue of _characters_ input (obtained by platform backend). Fill using AddInputCharacter() helper.
-
-    // IMGUI_API   ImGuiIO();
-}
-
-impl ImGuiIO {
-    // Input Functions
-    // IMGUI_API void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
-    pub fn AddKeyEvent(key: ImGuiKey, down: bool) {
-        todo!()
-    }
-    // IMGUI_API void  AddKeyAnalogEvent(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
-    pub fn AddKeyAnalogEvent(key: ImGuiKey, down: bool, v: f32) {
-        todo!()
-    }
-    // IMGUI_API void  AddMousePosEvent(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
-    pub fn AddMousePosEvent(x: f32, y: f32) {
-        todo!()
-    }
-    // IMGUI_API void  AddMouseButtonEvent(int button, bool down);             // Queue a mouse button change
-    pub fn AddMouseButtonEvent(button: i32, down: bool) {
-        todo!()
-    }
-    // IMGUI_API void  AddMouseWheelEvent(float wh_x, float wh_y);             // Queue a mouse wheel update
-    pub fn AddMouseWheelEvent(wh_x: f32, wh_y: f32) {
-        todo!()
-    }
-    // IMGUI_API void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
-    pub fn AddMouseViewportEvent(id: ImGuiID) {
-        todo!()
-    }
-    // IMGUI_API void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
-    pub fn AddFocusEvent(focused: bool) {
-        todo!()
-    }
-    // IMGUI_API void  AddInputCharacter(unsigned int c);                      // Queue a new character input
-    pub fn AddInputCharacter(c: u32) {
-        todo!()
-    }
-    // IMGUI_API void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
-    pub fn AddInputCharacterUTF16(c: &Vec<u8>) {
-        todo!()
-    }
-    // IMGUI_API void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
-    pub fn AddInputCharactersUTF8(in_str: &str) {
-        todo!()
-    }
-
-    // IMGUI_API void  SetKeyEventNativeData(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
-    pub fn SetKeyEventNativeData(key: ImGuiKey, native_keycode: i32, native_scancode: i32, native_legacy_index: i32, ) {
-        todo!()
-    }
-    // IMGUI_API void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
-    pub fn SetAppAcceptingEvents(accepting_events: bool) {
-        todo!()
-    }
-    // IMGUI_API void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
-    pub fn ClearInputCharacters() {
-        todo!()
-    }
-    // IMGUI_API void  ClearInputKeys();                                       // [Internal] Release all keys
-    pub fn ClearInputKeys() {
-        todo!()
-    }
 }
 
 //-----------------------------------------------------------------------------
