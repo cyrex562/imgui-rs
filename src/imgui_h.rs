@@ -294,8 +294,8 @@ impl ImVec2 {
         }
     }
     pub fn clear(&mut self) {
-        self.x = 0;
-        self.y = 0;
+        self.x = 0.0;
+        self.y = 0.0;
     }
 }
 
@@ -3804,19 +3804,37 @@ impl ImFontAtlas {
         todo!()
     }
     //     IMGUI_API ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);
-    pub fn AddFontFileTTF(&mut self, filename: &String, size_pixels: f32, font_cfg: &ImFontConfig, glyph_ranges: &[ImWchar]) {
+    pub fn AddFontFileTTF(&mut self, filename: &String, size_pixels: f32, font_cfg: &ImFontConfig, glyph_ranges: &[ImWchar]) -> ImFont {
         todo!()
     }
     //     IMGUI_API ImFont*           AddFontFromMemoryTTF(void* font_data, int font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
-    pub fn AddFontFromMemoryTTF(&mut self, font_data: &Vec<u8>, font_size: i32, size_pixels: f32, font_cfg: &ImFontConfig, glyph_ranges: &[ImWchar]) {
+    pub fn AddFontFromMemoryTTF(&mut self, font_data: &Vec<u8>, font_size: i32, size_pixels: f32, font_cfg: &ImFontConfig, glyph_ranges: &[ImWchar]) -> ImFont {
         todo!()
     }
     //     IMGUI_API ImFont*           AddFontFromMemoryCompressedTTF(const void* compressed_font_data, int compressed_font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
+    pub fn AddFontFromMemoryCompressedTTF(&mut self, compressed_font_data: &Vec<u8>, compressed_font_size: usize, size_pixels: f32, font_config: &ImFontConfig, glyph_ranges: &Vec<ImWchar>) -> ImFont {
+        todo!()
+    }
     //     IMGUI_API ImFont*           AddFontFromMemoryCompressedBase85TTF(const char* compressed_font_data_base85, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);              // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
+    pub fn AddFontFromMemoryCompressedBase85TTF(&mut self, compressed_font_data_base85: &String, size_pixels: f32, font_cfg: &ImFontConfig, glyph_ranges: &Vec<ImWchar>) -> ImFont {
+        todo!()
+    }
     //     IMGUI_API void              ClearInputData();           // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
+    pub fn ClearInputData(&mut self) {
+        todo!()
+    }
     //     IMGUI_API void              ClearTexData();             // Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
+    pub fn ClearTexData(&mut self) {
+        todo!()
+    }
     //     IMGUI_API void              ClearFonts();               // Clear output font data (glyphs storage, UV coordinates).
+    pub fn ClearFonts(&mut self) {
+        todo!()
+    }
     //     IMGUI_API void              Clear();                    // Clear all input and output.
+    pub fn Clear(&mut self) {
+        todo!()
+    }
     //
     //     // Build atlas, retrieve pixel data.
     //     // User is in charge of copying the pixels into graphics memory (e.g. create a texture with your engine). Then store your texture handle with SetTexID().
@@ -3824,10 +3842,25 @@ impl ImFontAtlas {
     //     // Building in RGBA32 format is provided for convenience and compatibility, but note that unless you manually manipulate or copy color data into
     //     // the texture (e.g. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
     //     IMGUI_API bool              Build();                    // Build pixels data. This is called automatically for you by the GetTexData*** functions.
+    pub fn Build(&mut self) {
+        todo!()
+    }
     //     IMGUI_API void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 1 byte per-pixel
+    pub fn GetTextDataAsAlpha8(&mut self, out_pixels: &Vec<Vec<u8>>, out_width: &mut i32, out_height: &mut i32, out_bytes_per_pixel: &mut i32) {
+        todo!()
+    }
     //     IMGUI_API void              GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 4 bytes-per-pixel
+    pub fn GetTextDataAsRGBA32(&mut self, out_pixels: &Vec<Vec<u8>>, out_width: &mut i32, out_height: &mut i32, out_bytes_per_pixel: &mut i32) {
+        todo!()
+    }
     //     bool                        IsBuilt() const             { return Fonts.Size > 0 && TexReady; } // Bit ambiguous: used to detect when user didn't built texture but effectively we should check TexID != 0 except that would be backend dependent...
+    pub fn IsBuilt(&self) -> bool {
+        self.Fonts.len() > 0 && self.TexReady
+    }
     //     void                        SetTexID(ImTextureID id)    { TexID = id; }
+    pub fn SetTexID(&mut self, id: ImTextureID) {
+        self.TexID = id
+    }
     //
     //     //-------------------------------------------
     //     // Glyph Ranges
@@ -3837,13 +3870,37 @@ impl ImFontAtlas {
     //     // NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
     //     // NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
     //     IMGUI_API const ImWchar*    GetGlyphRangesDefault();                // Basic Latin, Extended Latin
+    pub fn GetGlyphRangesDefault(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //     IMGUI_API const ImWchar*    GetGlyphRangesKorean();                 // Default + Korean characters
+    pub fn GetGlyphRangesKorean(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //     IMGUI_API const ImWchar*    GetGlyphRangesJapanese();               // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
+    pub fn GetGlyphRangesJapanese(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //     IMGUI_API const ImWchar*    GetGlyphRangesChineseFull();            // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
+    pub fn GetGlyphRangesChineseFull(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //     IMGUI_API const ImWchar*    GetGlyphRangesChineseSimplifiedCommon();// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
+    pub fn GetGlyphRangesChineseSimplifiedCommon(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //     IMGUI_API const ImWchar*    GetGlyphRangesCyrillic();               // Default + about 400 Cyrillic characters
+    pub fn GetGlyphRangesCyrillic(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //     IMGUI_API const ImWchar*    GetGlyphRangesThai();                   // Default + Thai characters
+    pub fn GetGlyphRangesThai(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //     IMGUI_API const ImWchar*    GetGlyphRangesVietnamese();             // Default + Vietnamese characters
+    pub fn GetGlyphRangesVietnamese(&self) -> Vec<ImWchar> {
+        todo!()
+    }
     //
     //     //-------------------------------------------
     //     // [BETA] Custom Rectangles/Glyphs API
@@ -3857,74 +3914,160 @@ impl ImFontAtlas {
     //     // - Read docs/FONTS.md for more details about using colorful icons.
     //     // - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
     //     IMGUI_API int               AddCustomRectRegular(int width, int height);
+    pub fn AddCustomRegular(&mut self, width: i32, height: i32) -> i32 {
+        todo!()
+    }
     //     IMGUI_API int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const ImVec2& offset = ImVec2(0, 0));
+    pub fn AddCustomRectFontGlyph(&mut self, font: &ImFont, id: ImWchar, width: i32, height: i32, advance_x: f32, offset: &ImVec2) -> i32 {
+        todo!()
+    }
     //     ImFontAtlasCustomRect*      GetCustomRectByIndex(int index) { IM_ASSERT(index >= 0); return &CustomRects[index]; }
+    pub fn GetCustomRectByIndex(&mut self, index: i32) -> Result<ImFontAtlasCustomRect, String> {
+        if index >= 0 {
+            Ok(self.CustomRects[index])
+        }
+        Err(format!("Invalid index arg: {}", index))
+    }
     //
     //     // [Internal]
     //     IMGUI_API void              CalcCustomRectUV(const ImFontAtlasCustomRect* rect, ImVec2* out_uv_min, ImVec2* out_uv_max) const;
+    pub fn CalcCustomRectUV(&mut self, rect: &ImFontAtlastCustomRect, out_uv_min: &ImVec2, out_uv_max: &ImVec2) {
+        todo!()
+    }
     //     IMGUI_API bool              GetMouseCursorTexData(ImGuiMouseCursor cursor, ImVec2* out_offset, ImVec2* out_size, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2]);
+    pub fn GetMouseCursorTexData(&mut self, cursor: ImGuiMouseCursor, out_offset: &mut ImVec2, out_size: &mut ImVec2, out_uv_border: &mut [ImVec2;2], out_uv_fill: &mut [ImVec2;2] ) -> bool {
+        todo!()
+    }
 }
 
 
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
-struct ImFont
+#[derive(Debug,Clone,Default)]
+pub struct ImFont
 {
     // Members: Hot ~20/24 bytes (for CalcTextSize)
-    ImVector<float>             IndexAdvanceX;      // 12-16 // out //            // Sparse. Glyphs->AdvanceX in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
+    pub IndexAdvanceX: Vec<f32>, // ImVector<float>             IndexAdvanceX;      // 12-16 // out //            // Sparse. Glyphs->AdvanceX in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
     pub FallbackAdvanceX: f32,  // 4     // out // = FallbackGlyph->AdvanceX
     pub FontSize: f32,          // 4     // in  //            // Height of characters/line, set during loading (don't change after loading)
 
     // Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
-    ImVector<ImWchar>           IndexLookup;        // 12-16 // out //            // Sparse. Index glyphs by Unicode code-point.
-    ImVector<ImFontGlyph>       Glyphs;             // 12-16 // out //            // All glyphs.
-    const ImFontGlyph*          FallbackGlyph;      // 4-8   // out // = FindGlyph(FontFallbackChar)
+    pub IndexLookup: Vec<ImWchar>, //ImVector<ImWchar>           IndexLookup;        // 12-16 // out //            // Sparse. Index glyphs by Unicode code-point.
+    pub Glyphs: Vec<ImFontGlyph>, // ImVector<ImFontGlyph>       Glyphs;             // 12-16 // out //            // All glyphs.
+    pub FallbackGlyph: ImFontGlyph, // const ImFontGlyph*          FallbackGlyph;      // 4-8   // out // = FindGlyph(FontFallbackChar)
 
     // Members: Cold ~32/40 bytes
-    ImFontAtlas*                ContainerAtlas;     // 4-8   // out //            // What we has been loaded into
-    const ImFontConfig*         ConfigData;         // 4-8   // in  //            // Pointer within ContainerAtlas->ConfigData
-    short                       ConfigDataCount;    // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
-    ImWchar                     FallbackChar;       // 2     // out // = FFFD/'?' // Character used if a glyph isn't found.
-    ImWchar                     EllipsisChar;       // 2     // out // = '...'    // Character used for ellipsis rendering.
-    ImWchar                     DotChar;            // 2     // out // = '.'      // Character used for ellipsis rendering (if a single '...' character isn't found)
+    pub ContainerAtlas: Option<ImFontAtlas>, // ImFontAtlas*                ContainerAtlas;     // 4-8   // out //            // What we has been loaded into
+    // const ImFontConfig*         ConfigData;         // 4-8   // in  //            // Pointer within ContainerAtlas->ConfigData
+    pub ConfigData: Option<ImFontConfig>,
+// short                       ConfigDataCount;    // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
+    pub ConfigDataCount: isize,
+    // ImWchar                     FallbackChar;       // 2     // out // = FFFD/'?' // Character used if a glyph isn't found.
+    pub FallbackChar: ImWchar,
+    // ImWchar                     EllipsisChar;       // 2     // out // = '...'    // Character used for ellipsis rendering.
+    pub EllipsisChar: ImWchar,
+    // ImWchar                     DotChar;            // 2     // out // = '.'      // Character used for ellipsis rendering (if a single '...' character isn't found)
+    pub DotChar: ImWchar,
     pub DirtyLookupTables: bool,  // 1     // out //
     pub Scale: f32,             // 4     // in  // = 1.f      // Base font scale, multiplied by the per-window font scale which you can adjust with SetWindowFontScale()
-    float                       Ascent, Descent;    // 4+4   // out //            // Ascent: distance from top to bottom of e.g. 'A' [0..FontSize]
-    int                         MetricsTotalSurface;// 4     // out //            // Total surface in pixels to get an idea of the font rasterization/texture cost (not exact, we approximate the cost of padding between glyphs)
-    ImU8                        Used4kPagesMap[(IM_UNICODE_CODEPOINT_MAX+1)/4096/8]; // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K codepoints that has one active glyph. This is mainly used to facilitate iterations across all used codepoints.
-
+    // float                       Ascent, Descent;    // 4+4   // out //            // Ascent: distance from top to bottom of e.g. 'A' [0..FontSize]
+    pub Ascent: f32,
+    pub Descent: f32,
+// int                         MetricsTotalSurface;// 4     // out //            // Total surface in pixels to get an idea of the font rasterization/texture cost (not exact, we approximate the cost of padding between glyphs)
+    pub MetricsTotalSurface: i32,
+    // ImU8                        Used4kPagesMap[(IM_UNICODE_CODEPOINT_MAX+1)/4096/8]; // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K
+    // codepoints that has one active glyph. This is mainly used to facilitate iterations across all used codepoints.
+    pub Used4kPagesMap: Vec<u8>,
     // Methods
-    IMGUI_API ImFont();
-    IMGUI_API ~ImFont();
-    IMGUI_API const ImFontGlyph*FindGlyph(ImWchar c) const;
-    IMGUI_API const ImFontGlyph*FindGlyphNoFallback(ImWchar c) const;
-    float                       GetCharAdvance(ImWchar c) const     { return ((int)c < IndexAdvanceX.Size) ? IndexAdvanceX[(int)c] : FallbackAdvanceX; }
-    bool                        IsLoaded() const                    { return ContainerAtlas != NULL; }
-    const char*                 GetDebugName() const                { return ConfigData ? ConfigData->Name : "<unknown>"; }
 
-    // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
-    // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
-    IMGUI_API ImVec2            CalcTextSizeA(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-    IMGUI_API const char*       CalcWordWrapPositionA(float scale, const char* text, const char* text_end, float wrap_width) const;
-    IMGUI_API void              RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const;
-    IMGUI_API void              RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
+}
 
-    // [Internal] Don't use!
-    IMGUI_API void              BuildLookupTable();
-    IMGUI_API void              ClearOutputData();
-    IMGUI_API void              GrowIndex(int new_size);
-    IMGUI_API void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
-    IMGUI_API void              AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
-    IMGUI_API void              SetGlyphVisible(ImWchar c, bool visible);
-    IMGUI_API bool              IsGlyphRangeUnused(unsigned int c_begin, unsigned int c_last);
-};
+impl ImFont {
+    // IMGUI_API ImFont();
+    //     IMGUI_API ~ImFont();
+    //     IMGUI_API const ImFontGlyph*FindGlyph(ImWchar c) const;
+    pub fn FindGlyph(&self, c: ImWchar) -> ImFontGlyph {
+        todo!()
+    }
+    //     IMGUI_API const ImFontGlyph*FindGlyphNoFallback(ImWchar c) const;
+    pub fn FindGlyphNoFallback(&self, c: ImWchar) -> ImFontGlyph {
+        todo!()
+    }
+    //     float                       GetCharAdvance(ImWchar c) const     { return ((int)c < IndexAdvanceX.Size) ? IndexAdvanceX[(int)c] : FallbackAdvanceX; }
+    pub fn GetCharAdvance(&self, c: ImWchar) -> f32 {
+        if c < self.IndexAdvanceX.len() as ImWchar {
+            self.IndexAdvanceX[c]
+        }
+        self.FallbackAdvanceX
+    }
+    //     bool                        IsLoaded() const                    { return ContainerAtlas != NULL; }
+    pub fn IsLoaded(&self) -> bool {
+        self.ContainerAtlas.is_some()
+    }
+    //     const char*                 GetDebugName() const                { return ConfigData ? ConfigData->Name : "<unknown>"; }
+    pub fn GetDebugName(&self) -> String {
+        if self.ConfigData.is_some() {
+            self.ConfigData.unwrap().Name
+        }
+        "<unknown>".to_string()
+    }
+    //
+    //     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
+    //     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
+    //     IMGUI_API ImVec2            CalcTextSizeA(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
+    pub fn CalcTextSizeA(&self, size: f32, max_width: f32, wrap_width: f32, text: &String) -> ImVec2 {
+        todo!()
+    }
+    //     IMGUI_API const char*       CalcWordWrapPositionA(float scale, const char* text, const char* text_end, float wrap_width) const;
+    pub fn CalcWordWrapPositionA(&self, scale: f32, text: &String, wrap_width: f32) -> String{
+        todo!()
+    }
+    //     IMGUI_API void              RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const;
+    pub fn RenderChar(&self, draw_list: &ImDrawList, size: f32, pos: &ImVec2, col: u32, c: ImWchar) {
+        todo!()
+    }
+    //     IMGUI_API void              RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
+    pub fn RenderText(&self, draw_list: &mut DrawList, size: f32, pos: &ImVec2, col: u32, clip_rect: &ImVec4, text: &String, wrap_width: f32, cpu_fine_clip: bool) {
+        todo!()
+    }
+    //
+    //     // [Internal] Don't use!
+    //     IMGUI_API void              BuildLookupTable();
+    pub fn BuildLookupTable(&mut self) {
+        todo!()
+    }
+    //     IMGUI_API void              ClearOutputData();
+    pub fn ClearOutputData(&mut self) {
+        todo!()
+    }
+    //     IMGUI_API void              GrowIndex(int new_size);
+    pub fn GrowIndex(&mut self) {
+        todo!()
+    }
+    //     IMGUI_API void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
+    pub fn AddGlyph(&mut self, src_cfg: &ImFontConfig, c: ImWchar, x0: f32, y0: f32, x1: f32, y1: f32, u0: f32, v0: f32, u1: f32, v1: f32, advance_x: f32) {
+        todo!()
+    }
+    //     IMGUI_API void              AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+    pub fn AddRemapChar(&mut self, dst: ImWchar, src: ImWchar, overwrite_dst: bool){
+        todo!()
+    }
+    //     IMGUI_API void              SetGlyphVisible(ImWchar c, bool visible);
+    pub fn SetGlyphVisible(&mut self, c: ImWchar, visible: bool) {
+        todo!()
+    }
+    //     IMGUI_API bool              IsGlyphRangeUnused(unsigned int c_begin, unsigned int c_last);
+    pub fn IsGlyphRangeUnused(&mut self, c_begin: u32, c_lst: u32) -> bool {
+        todo!()
+    }
+}
 
 //-----------------------------------------------------------------------------
 // [SECTION] Viewports
 //-----------------------------------------------------------------------------
 
 // Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
-pub enum ImGuiViewportFlags_
+pub enum ImGuiViewportFlags
 {
     ImGuiViewportFlags_None                     = 0,
     ImGuiViewportFlags_IsPlatformWindow         = 1 << 0,   // Represent a Platform Window
@@ -3949,38 +4092,61 @@ pub enum ImGuiViewportFlags_
 //   - Main Area = entire viewport.
 //   - Work Area = entire viewport minus sections used by main menu bars (for platform windows), or by task bar (for platform monitor).
 //   - Windows are generally trying to stay within the Work Area of their host viewport.
-struct ImGuiViewport
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiViewport
 {
     pub ID: ImGuiID,                   // Unique identifier for the viewport
-    ImGuiViewportFlags  Flags;                  // See ImGuiViewportFlags_
+    pub Flags: ImGuiViewportFlags, //ImGuiViewportFlags  Flags;                  // See ImGuiViewportFlags_
     pub Pos: ImVec2,                    // Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
     pub Size: ImVec2,                   // Main Area: Size of the viewport.
     pub WorkPos: ImVec2,                // Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
     pub WorkSize: ImVec2,               // Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
     pub DpiScale: f32,              // 1.0f = 96 DPI = No extra scale.
     pub ParentViewportId: ImGuiID,     // (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
-    ImDrawData*         DrawData;               // The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame().
+    // ImDrawData*         DrawData;               // The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame().
+    pub DrawData: ImDrawData,
 
     // Platform/Backend Dependent Data
     // Our design separate the Renderer and Platform backends to facilitate combining default backends with each others.
     // When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled
     // by the same system and you may not need to use all the UserData/Handle fields.
     // The library never uses those fields, they are merely storage to facilitate backend implementation.
-    void*               RendererUserData;       // void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
-    void*               PlatformUserData;       // void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
-    void*               PlatformHandle;         // void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
-    void*               PlatformHandleRaw;      // void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
+    // void*               RendererUserData;       // void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
+    pub RendererUserData: Vec<u8>,
+    // void*               PlatformUserData;       // void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
+    pub PlatformuserData: Vec<u8>,
+    // void*               PlatformHandle;         // void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
+    pub PlatformHandle: Vec<u8>,
+    // void*               PlatformHandleRaw;      // void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
+    pub PlatformHandleRaw: Vec<u8>,
     pub PlatformRequestMove: bool,    // Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
     pub PlatformRequestResize: bool,  // Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)
     pub PlatformRequestClose: bool,   // Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
 
-    ImGuiViewport()     { memset(this, 0, sizeof(*this)); }
-    ~ImGuiViewport()    { IM_ASSERT(PlatformUserData == NULL && RendererUserData == NULL); }
+    // ImGuiViewport()     { memset(this, 0, sizeof(*this)); }
+    // ~ImGuiViewport()    { IM_ASSERT(PlatformUserData == NULL && RendererUserData == NULL); }
 
     // Helpers
-    ImVec2              GetCenter() const       { return ImVec2(Pos.x + Size.x * 0.5f, Pos.y + Size.y * 0.5f); }
-    ImVec2              GetWorkCenter() const   { return ImVec2(WorkPos.x + WorkSize.x * 0.5f, WorkPos.y + WorkSize.y * 0.5f); }
-};
+
+}
+
+impl ImGuiViewport {
+    // ImVec2              GetCenter() const       { return ImVec2(Pos.x + Size.x * 0.5f, Pos.y + Size.y * 0.5f); }
+    // ImVec2              GetWorkCenter() const   { return ImVec2(WorkPos.x + WorkSize.x * 0.5f, WorkPos.y + WorkSize.y * 0.5f); }
+    pub fn GetCenter(&self) -> ImVec2 {
+        ImVec2 {
+            x: self.Pos.x + self.Size.x * 0.5,
+            y: self.Pos.y + self.Size.y * 0.5
+        }
+    }
+
+    pub fn GetWorkCenter(&self) -> ImVec2 {
+        ImVec2 {
+            x: self.WorkPos.x + self.WorkSize.x * 0.5,
+            y: self.WorkPos.y + self.WorkSize.y * 0.5
+        }
+    }
+}
 
 //-----------------------------------------------------------------------------
 // [SECTION] Platform Dependent Interfaces (for e.g. multi-viewport support)
@@ -4032,7 +4198,8 @@ struct ImGuiViewport
 //-----------------------------------------------------------------------------
 
 // (Optional) Access via ImGui::GetPlatformIO()
-struct ImGuiPlatformIO
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiPlatformIO
 {
     //------------------------------------------------------------------
     // Input - Backend interface/functions + Monitor List
@@ -4052,36 +4219,13 @@ struct ImGuiPlatformIO
     // Platform functions are typically called before their Renderer counterpart, apart from Destroy which are called the other way.
 
     // Platform function --------------------------------------------------- Called by -----
-    void    (*Platform_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
-    void    (*Platform_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  //
-    void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
-    void    (*Platform_SetWindowPos)(ImGuiViewport* vp, ImVec2 pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
-    ImVec2  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
-    void    (*Platform_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
-    ImVec2  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
-    void    (*Platform_SetWindowFocus)(ImGuiViewport* vp);                  // N . . . .  // Move window to front and set input focus
-    bool    (*Platform_GetWindowFocus)(ImGuiViewport* vp);                  // . . U . .  //
-    bool    (*Platform_GetWindowMinimized)(ImGuiViewport* vp);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
-    void    (*Platform_SetWindowTitle)(ImGuiViewport* vp, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
-    void    (*Platform_SetWindowAlpha)(ImGuiViewport* vp, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
-    void    (*Platform_UpdateWindow)(ImGuiViewport* vp);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
-    void    (*Platform_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    void    (*Platform_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    float   (*Platform_GetWindowDpiScale)(ImGuiViewport* vp);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0f = 96 DPI.
-    void    (*Platform_OnChangedViewport)(ImGuiViewport* vp);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
-    int     (*Platform_CreateVkSurface)(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
 
-    // (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)
-    void    (*Renderer_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
-    void    (*Renderer_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
-    void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
-    void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    void    (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
     // (Optional) Monitor list
     // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.
     // - Used by: dear imgui to query DPI info, clamp popups/tooltips within same monitor and not have them straddle monitors.
-    ImVector<ImGuiPlatformMonitor>  Monitors;
+    // ImVector<ImGuiPlatformMonitor>  Monitors;
+    pub Monitors: Vec<ImGuiPlatformMonitor>,
 
     //------------------------------------------------------------------
     // Output - List of viewports to render into platform windows
@@ -4089,29 +4233,148 @@ struct ImGuiPlatformIO
 
     // Viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
     // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
-    ImVector<ImGuiViewport*>        Viewports;                              // Main viewports, followed by all secondary viewports.
-    ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
-};
+    // ImVector<ImGuiViewport*>        Viewports;                              // Main viewports, followed by all secondary viewports.
+    pub Viewports: Vec<ImGuiViewport>,
+    // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
+}
+
+impl ImGuiPlatformIO {
+    // void    (*Platform_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
+    pub fn Platform_CreateWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  //
+    pub fn Platform_DestroyWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
+    pub fn Platform_ShowWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowPos)(ImGuiViewport* vp, ImVec2 pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    pub fn Platform_SetWindowPos(&mut self, vp: &mut ImGuiViewport, pos: ImVec2) {
+        todo!()
+    }
+    //     ImVec2  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
+    pub fn Platform_GetWindowPos(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    pub fn Platform_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: &ImVec2) {
+        todo!()
+    }
+    //     ImVec2  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
+    pub fn Platform_GetWindowSize(&mut self, vp: &mut ImGuiViewport) -> ImVec2 {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowFocus)(ImGuiViewport* vp);                  // N . . . .  // Move window to front and set input focus
+    pub fn Platform_SetWindowFocus(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+
+    //     bool    (*Platform_GetWindowFocus)(ImGuiViewport* vp);                  // . . U . .  //
+    pub fn Platform_GetWindowFocus(&mut self, vp: &mut ImGuiViewport) -> bool {
+        todo!()
+    }
+    //     bool    (*Platform_GetWindowMinimized)(ImGuiViewport* vp);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
+    pub fn Platform_GetWindowMinimized(&mut self, vp: &mut ImGuiViewport) -> bool {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowTitle)(ImGuiViewport* vp, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
+    pub fn Platform_SetWindowTitle(&mut self, vp: &mut ImGuiViewport, in_str: &String) {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowAlpha)(ImGuiViewport* vp, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
+    pub fn Platform_SetWindowAlpha(&mut self, vp: &mut ImGuiViewport, alpha: f32) {
+        todo!()
+    }
+    //     void    (*Platform_UpdateWindow)(ImGuiViewport* vp);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
+    pub fn Platform_UpdateWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Platform_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+        todo!()
+    }
+    //     void    (*Platform_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Platform_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+        todo!()
+    }
+    //     float   (*Platform_GetWindowDpiScale)(ImGuiViewport* vp);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0f = 96 DPI.
+    pub fn Platform_GetWindowDpiScale(&mut self, vp: &mut ImGuiViewport) -> f32 {
+        todo!()
+    }
+
+    //     void    (*Platform_OnChangedViewport)(ImGuiViewport* vp);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
+    pub fn Platform_OnChangedViewport(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     int     (*Platform_CreateVkSurface)(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
+    pub fn Platform_CreateVkSurface(&mut self, vp: &mut ImGuiViewport, vk_inst: u64, vk_allocators: *const c_void, out_vk_surface: &mut u64) -> i32 {
+        todo!()
+    }
+
+    //
+    //     // (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)
+    //     void    (*Renderer_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
+    pub fn Platform_CreateWindow2(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Renderer_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
+    pub fn Platform_DestroyWindow2(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
+    pub fn Renderer_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: ImVec2) {
+        todo!()
+    }
+    //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Renderer_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+        todo!()
+    }
+    //     void    (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Renderer_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: &mut c_void) {
+        todo!()
+    }
+}
 
 // (Optional) This is required when enabling multi-viewport. Represent the bounds of each connected monitor/display and their DPI.
 // We use this information for multiple DPI support + clamping the position of popups and tooltips so they don't straddle multiple monitors.
+#[derive(Debug,Clone,Default)]
 struct ImGuiPlatformMonitor
 {
-    ImVec2  MainPos, MainSize;      // Coordinates of the area displayed on this monitor (Min = upper left, Max = bottom right)
-    ImVec2  WorkPos, WorkSize;      // Coordinates without task bars / side bars / menu bars. Used to avoid positioning popups/tooltips inside this region. If you don't have this info, please copy the value for MainPos/MainSize.
+    // ImVec2  MainPos, MainSize;      // Coordinates of the area displayed on this monitor (Min = upper left, Max = bottom right)
+    pub MainPos: ImVec2,
+    pub MainSize: ImVec2,
+    // ImVec2  WorkPos, WorkSize;      // Coordinates without task bars / side bars / menu bars. Used to avoid positioning popups/tooltips inside this region. If you don't have this info, please copy the value for MainPos/MainSize.
+    pub WorkPos: ImVec2,
+    pub WorkSize: ImVec2,
     pub DpiScale: f32,              // 1.0f = 96 DPI
-    ImGuiPlatformMonitor()          { MainPos = MainSize = WorkPos = WorkSize = ImVec2(0, 0); DpiScale = 1.0f; }
-};
+    // ImGuiPlatformMonitor()          { MainPos = MainSize = WorkPos = WorkSize = ImVec2(0, 0); DpiScale = 1.0f; }
+}
+
+impl ImGuiPlatformMonitor {
+    pub fn new() -> Self {
+        Self {
+            MainPos: Default::default(),
+            MainSize: Default::default(),
+            WorkPos: Default::default(),
+            WorkSize: Default::default(),
+            DpiScale: 1.0
+        }
+    }
+}
 
 // (Optional) Support for IME (Input Method Editor) via the io.SetPlatformImeDataFn() function.
+#[derive(Debug,Default,Clone)]
 struct ImGuiPlatformImeData
 {
     pub WantVisible: bool,        // A widget wants the IME to be visible
     pub InputPos: ImVec2,           // Position of the input cursor
     pub InputLineHeight: f32,   // Line height
 
-    ImGuiPlatformImeData() { memset(this, 0, sizeof(*this)); }
-};
+    // ImGuiPlatformImeData() { memset(this, 0, sizeof(*this)); }
+}
 
 //-----------------------------------------------------------------------------
 // [SECTION] Obsolete functions and types
