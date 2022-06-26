@@ -9,3 +9,4 @@ mod imgui_geometry;
 mod imgui_vec2;
 mod imgui_hash;
 mod im_file;
+mod imgui_text;
