@@ -25,7 +25,7 @@
 // Read comments in imgui_impl_vulkan.h.
 
 #pragma once
-#include "imgui_h.rs"      // IMGUI_IMPL_API
+#include "img_h.rs"      // IMGUI_IMPL_API
 
 // [Configuration] in order to use a custom Vulkan function loader:
 // (1) You'll need to disable default Vulkan function prototypes.

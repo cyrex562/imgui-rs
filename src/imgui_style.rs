@@ -1,5 +1,5 @@
 use std::intrinsics::floorf32;
-use crate::imgui_h::{ImGuiCol, ImGuiDir, ImVec2};
+use crate::img_h::{ImGuiCol, ImGuiDir, ImVec2};
 
 #[allow(non_snake_case)]
 pub struct ImGuiStyle {

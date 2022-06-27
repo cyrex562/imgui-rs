@@ -12,7 +12,7 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #pragma once
-#include "imgui_h.rs"      // IMGUI_IMPL_API
+#include "img_h.rs"      // IMGUI_IMPL_API
 
 struct IDirect3DDevice9;
 

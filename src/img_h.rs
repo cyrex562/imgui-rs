@@ -5,7 +5,7 @@
 use std::ffi::c_void;
 use std::ops::Index;
 use std::ptr;
-use crate::imgui_vec2::ImVec2;
+use crate::img_vec2::ImVec2;
 
 // (headers)
 

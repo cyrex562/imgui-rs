@@ -1,6 +1,6 @@
 #include "node_editor.h"
 
-#include <imgui_h.rs>
+#include "../src/img_h.rs"
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
 #include <imnodes.h>

@@ -76,7 +76,8 @@ Index of this file:
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "imgui_h.rs"
+#include "img_h.rs"
+
 #ifndef IMGUI_DISABLE
 
 // System includes

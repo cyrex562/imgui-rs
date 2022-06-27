@@ -15,7 +15,7 @@
 //  [ ] Renderer: Multi-viewport support (multiple windows).
 
 #pragma once
-#include "imgui_h.rs"      // IMGUI_IMPL_API
+#include "img_h.rs"      // IMGUI_IMPL_API
 
 struct SDL_Renderer;
 

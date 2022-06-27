@@ -1,13 +1,13 @@
 use std::os::raw::c_char;
 use std::ptr;
-use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX};
+use crate::img_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX};
 
 // Convert UTF-8 to 32-bit character, process single character input.
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCharFromUtf8(out_char: *mut u32, in_text: *const c_char, mut in_text_end: *mut c_char) -> i32
-{
+
+pub unsafe fn ImTextCharFromUtf8(out_char: *mut u32, in_text: *const c_char, mut in_text_end: *mut c_char) -> i32 {
     const lengths: [u8;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
     2, 2, 2, 2, 3, 3, 4, 0 ];
     const masks: [i32;5]  = [ 0x00, 0x7f, 0x1f, 0x0f, 0x07 ];
@@ -61,7 +61,7 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut u32, in_text: *const c_char, mut
 }
 
 // int ImTextStrFromUtf8(ImWchar* buf, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
-pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, mut in_text: *mut c_char, in_text_end: *mut c_char, in_text_remaining: *mut *const in_text_remaining)
+pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, mut in_text: *mut c_char, in_text_end: *mut c_char, in_text_remaining: *mut *const in_text_remaining) -> i32
 {
     // ImWchar* buf_out = buf;
     let mut buf_out: *mut ImWchar = buf;
@@ -145,47 +145,67 @@ pub fn ImTextCharToUtf8(mut out_buf: [c_char;5], c: u32) -> *const c_char
 
 // Not optimal but we very rarely use this function.
 // int ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
-pub fn ImTextCountUtf8BytesFromChar(in_text: &)
+pub unsafe fn ImTextCountUtf8BytesFromChar(in_text: *const c_char, in_text_end: *mut c_char) -> i32
 {
-    unsigned int unused = 0;
-    return ImTextCharFromUtf8(&unused, in_text, in_text_end);
+    // unsigned int unused = 0;
+    let mut unused = 0u32;
+    ImTextCharFromUtf8(&mut unused, in_text, in_text_end)
 }
 
-static inline int ImTextCountUtf8BytesFromChar(unsigned int c)
+// static inline int ImTextCountUtf8BytesFromChar(unsigned int c)
+pub fn ImTextCountUtf8BytesFromChar2(c: u32) -> u32
 {
-    if (c < 0x80) return 1;
-    if (c < 0x800) return 2;
-    if (c < 0x10000) return 3;
-    if (c <= 0x10FFFF) return 4;
-    return 3;
+    if c < 0x80 {1}
+    if c < 0x800 {2}
+    if c < 0x10000 { 3 }
+    if c <= 0x10FFFF { 4 }
+    3
 }
 
-int ImTextStrToUtf8(char* out_buf, int out_buf_size, const ImWchar* in_text, const ImWchar* in_text_end)
+// int ImTextStrToUtf8(char* out_buf, int out_buf_size, const ImWchar* in_text, const ImWchar* in_text_end)
+pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: i32, mut in_text: *const ImWchar, in_text_end: *const ImWchar) -> i32
 {
-    char* buf_p = out_buf;
-    const char* buf_end = out_buf + out_buf_size;
-    while (buf_p < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text)
+    // char* buf_p = out_buf;
+    let mut buf_p = out_buf;
+    // const char* buf_end = out_buf + out_buf_size;
+    let buf_end = out_buf + out_buf_size;
+    // while (buf_p < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text)
+    while buf_p < (buf_end - 1) && (!in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
     {
-        unsigned int c = (unsigned int)(*in_text++);
-        if (c < 0x80)
-            *buf_p++ = (char)c;
-        else
+        // unsigned int c = (unsigned int)(*in_text++);
+        let mut c = *in_text as u32;
+        in_text += 1;
+        if (c < 0x80) {
+            // *buf_p + + = (char)
+            // c;
+            *buf_p = c as c_char;
+            buf_p += 1;
+        }
+        else {
             buf_p += ImTextCharToUtf8_inline(buf_p, (int)(buf_end - buf_p - 1), c);
+        }
     }
     *buf_p = 0;
     return (int)(buf_p - out_buf);
 }
 
-int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end)
+// int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end)
+pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_end: *const ImWchar) -> i32
 {
-    int bytes_count = 0;
-    while ((!in_text_end || in_text < in_text_end) && *in_text)
+    // int bytes_count = 0;
+    let mut bytes_count = 0i32;
+    while ((in_text_end.is_nul() || in_text < in_text_end) && *in_text != 0)
     {
-        unsigned int c = (unsigned int)(*in_text++);
-        if (c < 0x80)
-            bytes_count++;
-        else
-            bytes_count += ImTextCountUtf8BytesFromChar(c);
+        // unsigned int c = (unsigned int)(*in_text++);
+        let mut c = *in_text as u32;
+        in_text += 1;
+        if c < 0x80 {
+            // bytes_count + +;
+            bytes_count += 1;
+        }
+        else {
+            bytes_count += ImTextCountUtf8BytesFromChar2(c);
+        }
     }
     return bytes_count;
 }

@@ -4,7 +4,8 @@
 // Changelog:
 // - v0.10: Initial version. Added InputText() / InputTextMultiline() calls with std::string
 
-#include "imgui_h.rs"
+#include "img_h.rs"
+
 #include "imgui_stdlib.h"
 
 struct InputTextCallback_UserData

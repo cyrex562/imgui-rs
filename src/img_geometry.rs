@@ -1,5 +1,5 @@
-use crate::imgui_h::ImVec2;
-use crate::imgui_vec2::{ImLengthSqr, ImVec2};
+use crate::img_h::ImVec2;
+use crate::img_vec2::{ImLengthSqr, ImVec2};
 
 // pub fn ImBezierCubicClosestPoint(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, int num_segments) -> ImVec2
 pub fn ImBezierCubicClosestPoint(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &ImVec2, num_segments: usize) -> ImVec2 {
