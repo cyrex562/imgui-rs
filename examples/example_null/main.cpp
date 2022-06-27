@@ -19,13 +19,13 @@ int main(int, char**)
     {
         printf("NewFrame() %d\n", n);
         io.DisplaySize = ImVec2(1920, 1080);
-        io.DeltaTime = 1.0f / 60.0f;
+        io.DeltaTime = 1.0 / 60.0;
         ImGui::NewFrame();
 
-        static float f = 0.0f;
+        static float f = 0.0;
         ImGui::Text("Hello, world!");
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::SliderFloat("float", &f, 0.0, 1.0);
+        ImGui::Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / io.Framerate, io.Framerate);
         ImGui::ShowDemoWindow(NULL);
 
         ImGui::Render();

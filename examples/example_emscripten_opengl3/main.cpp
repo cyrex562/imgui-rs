@@ -88,11 +88,11 @@ int main(int, char**)
     // - Emscripten allows preloading a file or folder to be accessible at runtime. See Makefile for details.
     //io.Fonts->AddFontDefault();
 #ifndef IMGUI_DISABLE_FILE_FUNCTIONS
-    io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0f);
-    //io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("fonts/ProggyTiny.ttf", 10.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 16.0);
+    //io.Fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0);
+    //io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0);
+    //io.Fonts->AddFontFromFileTTF("fonts/ProggyTiny.ttf", 10.0);
+    //ImFont* font = io.Fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 #endif
 
@@ -108,7 +108,7 @@ static void main_loop(void* arg)
     // Our state (make them static = more or less global) as a convenience to keep the example terse.
     static bool show_demo_window = true;
     static bool show_another_window = false;
-    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    static ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
 
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -133,7 +133,7 @@ static void main_loop(void* arg)
 
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
     {
-        static float f = 0.0f;
+        static float f = 0.0;
         static int counter = 0;
 
         ImGui::Begin("Hello, world!");                                // Create a window called "Hello, world!" and append into it.
@@ -142,7 +142,7 @@ static void main_loop(void* arg)
         ImGui::Checkbox("Demo Window", &show_demo_window);            // Edit bools storing our window open/close state
         ImGui::Checkbox("Another Window", &show_another_window);
 
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);                  // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::SliderFloat("float", &f, 0.0, 1.0);                  // Edit 1 float using a slider from 0.0 to 1.0
         ImGui::ColorEdit3("clear color", (float*)&clear_color);       // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                                  // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -150,7 +150,7 @@ static void main_loop(void* arg)
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
 
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
     }
 

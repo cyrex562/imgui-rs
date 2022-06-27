@@ -1,3 +1,5 @@
+use crate::imgui_h::ImVec4;
+use crate::imgui_vec2::ImVec2;
 
 // Helpers: Maths
 // IM_MSVC_RUNTIME_CHECKS_OFF
@@ -63,7 +65,7 @@ pub fn ImAbsFloat(x: f32) -> f32 {
     f32::abs(x)
 }
 // static inline double ImAbs(double x)            { return fabs(x); }
-// static inline float  ImSign(float x)            { return (x < 0.0f) ? -1.0f : (x > 0.0f) ? 1.0f : 0.0f; } // Sign operator - returns -1, 0 or 1 based on sign of argument
+// static inline float  ImSign(float x)            { return (x < 0.0) ? -1.0 : (x > 0.0) ? 1.0 : 0.0; } // Sign operator - returns -1, 0 or 1 based on sign of argument
 pub fn ImSignFloat(x: f32) -> f32 {
     if x == 0.0 {
         0.0
@@ -78,7 +80,7 @@ pub fn ImSignFloat(x: f32) -> f32 {
 // #ifdef IMGUI_ENABLE_SSE
 // static inline float  ImRsqrt(float x)           { return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_set_ss(x))); }
 // #else
-//static inline float  ImRsqrt(float x)           { return 1.0f / sqrtf(x); }
+//static inline float  ImRsqrt(float x)           { return 1.0 / sqrtf(x); }
 pub fn ImRsqrt(x: f32) -> f32 {
     1.0 / f32::sqrt(x)
 }
@@ -231,21 +233,136 @@ pub fn ImClampVec2(v: &ImVec2, min_v: &ImVec2, max_v: &ImVec2) -> ImVec2 {
     }
 }
 
-static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, float t)          { return ImVec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
-static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, const ImVec2& t)  { return ImVec2(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
-static inline ImVec4 ImLerp(const ImVec4& a, const ImVec4& b, float t)          { return ImVec4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t); }
-static inline float  ImSaturate(float f)                                        { return (f < 0.0f) ? 0.0f : (f > 1.0f) ? 1.0f : f; }
+// static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, float t)          { return ImVec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
+pub fn ImLerpVec2(a: &ImVec2, b: &ImVec2, t: f32) -> ImVec2 {
+    Imvec2 {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) & t
+    }
+}
 
-static inline float  ImLengthSqr(const ImVec4& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
-static inline float  ImInvLength(const ImVec2& lhs, float fail_value)           { float d = (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0.0f) return ImRsqrt(d); return fail_value; }
-static inline float  ImFloor(float f)                                           { return (float)(int)(f); }
-static inline float  ImFloorSigned(float f)                                     { return (float)((f >= 0 || (float)(int)f == f) ? (int)f : (int)f - 1); } // Decent replacement for floorf()
-static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((float)(int)(v.x), (float)(int)(v.y)); }
-static inline ImVec2 ImFloorSigned(const ImVec2& v)                             { return ImVec2(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
-static inline int    ImModPositive(int a, int b)                                { return (a + b) % b; }
-static inline float  ImDot(const ImVec2& a, const ImVec2& b)                    { return a.x * b.x + a.y * b.y; }
-static inline ImVec2 ImRotate(const ImVec2& v, float cos_a, float sin_a)        { return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
-static inline float  ImLinearSweep(float current, float target, float speed)    { if (current < target) return ImMin(current + speed, target); if (current > target) return ImMax(current - speed, target); return current; }
-static inline ImVec2 ImMul(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
-static inline bool   ImIsFloatAboveGuaranteedIntegerPrecision(float f)          { return f <= -16777216 || f >= 16777216; }
-IM_MSVC_RUNTIME_CHECKS_RESTORE
+// static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, const ImVec2& t)  { return ImVec2(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
+pub fn ImLerpVec22(a: &ImVec2, b: &ImVec2, t: &ImVec2) -> ImVec2 {
+    ImVec2 {
+        x: a.x + (b.x - a.x) * t.x,
+        y: a.y + (b.y - a.y) * t.y,
+    }
+}
+
+// static inline ImVec4 ImLerp(const ImVec4& a, const ImVec4& b, float t)          { return ImVec4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t); }
+pub fn ImLerpVec4(a: &ImVec4, b: &ImVec4, t: f32) -> ImVec4 {
+    ImVec4 {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        z: a.z + (b.z - a.z) * t,
+        w: a.w + (b.w - a.w) * t
+    }
+}
+
+// static inline float  ImSaturate(float f)                                        { return (f < 0.0) ? 0.0 : (f > 1.0) ? 1.0 : f; }
+pub fn ImSaturate(f: f32) -> f32 {
+    if f < 0.0 {
+        0.0
+    } else {
+        if f > 1.0 {
+            1.0
+        } else {
+            f
+        }
+    }
+}
+
+// static inline float  ImLengthSqr(const ImVec4& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
+pub fn ImLengthSqr(lhs: &ImVec4) -> f32 {
+    (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w)
+}
+
+// static inline float  ImInvLength(const ImVec2& lhs, float fail_value)           { float d = (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0.0) return ImRsqrt(d); return fail_value; }
+pub fn ImInvLength(lhs: &ImVec2, fail_value: f32) -> f32 {
+    let mut d = (lhs.x * lhs.x) +  (lhs.y * lhs.y);
+    if d > 0.0 {
+        return ImRsqrt(d)
+    }
+    fail_value
+}
+
+// static inline float  ImFloor(float f)                                           { return (float)(int)(f); }
+pub fn ImFloor(f: f32) -> f32 {
+    f32::floor(f)
+}
+
+// static inline float  ImFloorSigned(float f)                                     { return (float)((f >= 0 || (float)(int)f == f) ? (int)f : (int)f - 1); } // Decent replacement for floorf()
+// pub fn ImFloorSigned(f: f32) -> f32 {
+//     f32::floor
+// }
+
+// static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((float)(int)(v.x), (float)(int)(v.y)); }
+pub fn ImFloorVec2(v: &ImVec2) -> ImVec2 {
+    ImVec2 {
+        x: f32::floor(v.x),
+        y: f32::floor(v.y)
+    }
+}
+
+
+// static inline ImVec2 ImFloorSigned(const ImVec2& v)                             { return ImVec2(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
+
+// static inline int    ImModPositive(int a, int b)                                { return (a + b) % b; }
+pub fn ImModPositive(a: i32, b: i32) -> i32 {
+    (a + b) % b
+}
+
+// static inline float  ImDot(const ImVec2& a, const ImVec2& b)                    { return a.x * b.x + a.y * b.y; }
+pub fn ImDot(a: &ImVec2, b: &ImVec2) -> f32 {
+    a.x * b.x + a.y * b.y
+}
+
+// static inline ImVec2 ImRotate(const ImVec2& v, float cos_a, float sin_a)        { return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
+pub fn ImRotate(v: &ImVec2, cos_a: f32, sin_a: f32) -> ImVec2 {
+    ImVec2{
+        x: v.x * cos_a - v.y * sin_a,
+        y: v.x * sin_a + v.y * cos_a
+    }
+}
+
+// static inline float  ImLinearSweep(float current, float target, float speed)    { if (current < target) return ImMin(current + speed, target); if (current > target) return ImMax(current - speed, target); return current; }
+pub fn ImLinearSweep(current: f32, target: f32, speed: f32) -> f32 {
+    if current < target {
+        ImMin(current + speed, target)
+    } else if current > target {
+        ImMax(current - speed, target)
+    } else {
+        current
+    }
+}
+
+// static inline ImVec2 ImMul(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
+pub fn ImMulVec2(lhs: &ImVec2, rhs: &ImVec2) -> ImVec2 {
+    ImVec2 {
+        x: lhs.x * rhs.x,
+        y: lhs.y * rhs.y
+    }
+}
+
+// static inline bool   ImIsFloatAboveGuaranteedIntegerPrecision(float f)          { return f <= -16777216 || f >= 16777216; }
+pub fn ImIsFloatAboveGuranteedIntegerPrecision(f: f32) -> bool {
+    f <= -16777216.0 || f >= 16777216.0
+}
+// IM_MSVC_RUNTIME_CHECKS_RESTORE
+
+
+// #define IM_F32_TO_INT8_UNBOUND(_VAL)    ((int)((_VAL) * 255.0 + ((_VAL)>=0 ? 0.5 : -0.5)))   // Unsaturated, for display purpose
+pub fn IM_F32_TO_INT8_UNBOUND(x: f32) -> i8 {
+    x * 255.0 + if x >= 0.0 { 0.5} else { -0.5 } as i8
+}
+
+// #define IM_F32_TO_INT8_SAT(_VAL)        ((int)(ImSaturate(_VAL) * 255.0 + 0.5))               // Saturated, always output 0..255
+pub fn IM_F32_TO_INT8_SAT(x: f32) -> i8 {
+    ImSaturate(x) * 255.0 + 0.5 as i8
+}
+
+// #define IM_FLOOR(_VAL)                  ((float)(int)(_VAL))                                    // ImFloor() is not inlined in MSVC debug builds
+// #define IM_ROUND(_VAL)                  ((float)(int)((_VAL) + 0.5))                           //
+pub fn IM_ROUND(x: f32) -> f32{
+    f32::round(x)
+}

@@ -2,7 +2,8 @@
 
 #include "imnodes.h"
 
-#include "img_h.rs"
+#include "imgui_h.rs"
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal_h.rs>
 
@@ -152,8 +153,8 @@ struct ImNodeData
     bool          Draggable;
 
     ImNodeData(const int node_id)
-        : Id(node_id), Origin(0.0f, 0.0f), TitleBarContentRect(),
-          Rect(ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f)), ColorStyle(), LayoutStyle(), PinIndices(),
+        : Id(node_id), Origin(0.0, 0.0), TitleBarContentRect(),
+          Rect(ImVec2(0.0, 0.0), ImVec2(0.0, 0.0)), ColorStyle(), LayoutStyle(), PinIndices(),
           Draggable(true)
     {
     }
@@ -285,9 +286,9 @@ struct ImNodesEditorContext
     ImNodesEditorContext()
         : Nodes(), Pins(), Links(), Panning(0.f, 0.f), SelectedNodeIndices(), SelectedLinkIndices(),
           SelectedNodeOffsets(), PrimaryNodeOffset(0.f, 0.f), ClickInteraction(),
-          MiniMapEnabled(false), MiniMapSizeFraction(0.0f),
+          MiniMapEnabled(false), MiniMapSizeFraction(0.0),
           MiniMapNodeHoveringCallback(NULL), MiniMapNodeHoveringCallbackUserData(NULL),
-          MiniMapScaling(0.0f)
+          MiniMapScaling(0.0)
     {
     }
 };

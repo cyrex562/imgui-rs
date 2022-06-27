@@ -1,7 +1,8 @@
 #include "node_editor.h"
 
 #include <imnodes.h>
-#include "../src/img_h.rs"
+#include "../src/imgui_h.rs"
+
 #include <SDL_keycode.h>
 
 #include <algorithm>
@@ -68,7 +69,7 @@ public:
 
             ImNodes::BeginStaticAttribute(node.id << 16);
             ImGui::PushItemWidth(120.f);
-            ImGui::DragFloat("value", &node.value, 0.01f);
+            ImGui::DragFloat("value", &node.value, 0.01);
             ImGui::PopItemWidth();
             ImNodes::EndStaticAttribute();
 

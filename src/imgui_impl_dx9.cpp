@@ -32,7 +32,7 @@
 //  2018-02-16: Misc: Obsoleted the io.RenderDrawListsFn callback and exposed ImGui_ImplDX9_RenderDrawData() in the .h file so you can call it yourself.
 //  2018-02-06: Misc: Removed call to ImGui::Shutdown() which is not available from 1.60 WIP, user needs to call CreateContext/DestroyContext themselves.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_dx9.h"
 
@@ -89,8 +89,8 @@ static void ImGui_ImplDX9_SetupRenderState(ImDrawData* draw_data)
     vp.X = vp.Y = 0;
     vp.Width = (DWORD)draw_data->DisplaySize.x;
     vp.Height = (DWORD)draw_data->DisplaySize.y;
-    vp.MinZ = 0.0f;
-    vp.MaxZ = 1.0f;
+    vp.MinZ = 0.0;
+    vp.MaxZ = 1.0;
     bd->pd3dDevice->SetViewport(&vp);
 
     // Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing, shade mode (for gradient), bilinear sampling.
@@ -131,17 +131,17 @@ static void ImGui_ImplDX9_SetupRenderState(ImDrawData* draw_data)
     // Our visible imgui space lies from draw_data->DisplayPos (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
     // Being agnostic of whether <d3dx9.h> or <DirectXMath.h> can be used, we aren't relying on D3DXMatrixIdentity()/D3DXMatrixOrthoOffCenterLH() or DirectX::XMMatrixIdentity()/DirectX::XMMatrixOrthographicOffCenterLH()
     {
-        float L = draw_data->DisplayPos.x + 0.5f;
-        float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x + 0.5f;
-        float T = draw_data->DisplayPos.y + 0.5f;
-        float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y + 0.5f;
-        D3DMATRIX mat_identity = { { { 1.0f, 0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f } } };
+        float L = draw_data->DisplayPos.x + 0.5;
+        float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x + 0.5;
+        float T = draw_data->DisplayPos.y + 0.5;
+        float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y + 0.5;
+        D3DMATRIX mat_identity = { { { 1.0, 0.0, 0.0, 0.0,  0.0, 1.0, 0.0, 0.0,  0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 1.0 } } };
         D3DMATRIX mat_projection =
         { { {
-            2.0f/(R-L),   0.0f,         0.0f,  0.0f,
-            0.0f,         2.0f/(T-B),   0.0f,  0.0f,
-            0.0f,         0.0f,         0.5f,  0.0f,
-            (L+R)/(L-R),  (T+B)/(B-T),  0.5f,  1.0f
+            2.0/(R-L),   0.0,         0.0,  0.0,
+            0.0,         2.0/(T-B),   0.0,  0.0,
+            0.0,         0.0,         0.5,  0.0,
+            (L+R)/(L-R),  (T+B)/(B-T),  0.5,  1.0
         } } };
         bd->pd3dDevice->SetTransform(D3DTS_WORLD, &mat_identity);
         bd->pd3dDevice->SetTransform(D3DTS_VIEW, &mat_identity);
@@ -153,7 +153,7 @@ static void ImGui_ImplDX9_SetupRenderState(ImDrawData* draw_data)
 void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
 {
     // Avoid rendering when minimized
-    if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
+    if (draw_data->DisplaySize.x <= 0.0 || draw_data->DisplaySize.y <= 0.0)
         return;
 
     // Create and grow buffers if needed
@@ -216,7 +216,7 @@ void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
         {
             vtx_dst->pos[0] = vtx_src->pos.x;
             vtx_dst->pos[1] = vtx_src->pos.y;
-            vtx_dst->pos[2] = 0.0f;
+            vtx_dst->pos[2] = 0.0;
             vtx_dst->col = IMGUI_COL_TO_DX9_ARGB(vtx_src->col);
             vtx_dst->uv[0] = vtx_src->uv.x;
             vtx_dst->uv[1] = vtx_src->uv.y;
@@ -474,7 +474,7 @@ static void ImGui_ImplDX9_RenderWindow(ImGuiViewport* viewport, void*)
 {
     ImGui_ImplDX9_Data* bd = ImGui_ImplDX9_GetBackendData();
     ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->RendererUserData;
-    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    ImVec4 clear_color = ImVec4(0.0, 0.0, 0.0, 1.0);
 
     LPDIRECT3DSURFACE9 render_target = NULL;
     LPDIRECT3DSURFACE9 last_render_target = NULL;
@@ -487,8 +487,8 @@ static void ImGui_ImplDX9_RenderWindow(ImGuiViewport* viewport, void*)
 
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
     {
-        D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_color.x*255.0f), (int)(clear_color.y*255.0f), (int)(clear_color.z*255.0f), (int)(clear_color.w*255.0f));
-        bd->pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET, clear_col_dx, 1.0f, 0);
+        D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_color.x*255.0), (int)(clear_color.y*255.0), (int)(clear_color.z*255.0), (int)(clear_color.w*255.0));
+        bd->pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET, clear_col_dx, 1.0, 0);
     }
 
     ImGui_ImplDX9_RenderDrawData(viewport->DrawData);

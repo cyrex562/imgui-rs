@@ -37,7 +37,7 @@
 //  2016-09-10: OpenGL: Uploading font texture as RGBA32 to increase compatibility with users shaders (not ideal).
 //  2016-09-05: OpenGL: Fixed save and restore of current scissor rectangle.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_opengl2.h"
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
@@ -156,7 +156,7 @@ static void ImGui_ImplOpenGL2_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(draw_data->DisplayPos.x, draw_data->DisplayPos.x + draw_data->DisplaySize.x, draw_data->DisplayPos.y + draw_data->DisplaySize.y, draw_data->DisplayPos.y, -1.0f, +1.0f);
+    glOrtho(draw_data->DisplayPos.x, draw_data->DisplayPos.x + draw_data->DisplaySize.x, draw_data->DisplayPos.y + draw_data->DisplaySize.y, draw_data->DisplayPos.y, -1.0, +1.0);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -307,7 +307,7 @@ static void ImGui_ImplOpenGL2_RenderWindow(ImGuiViewport* viewport, void*)
 {
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
     {
-        ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+        ImVec4 clear_color = ImVec4(0.0, 0.0, 0.0, 1.0);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
     }

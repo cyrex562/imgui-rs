@@ -458,10 +458,10 @@ ImDrawList* draw_list = ImGui::GetWindowDrawList();
 ImVec2 p = ImGui::GetCursorScreenPos();
 
 // Draw a red circle
-draw_list->AddCircleFilled(ImVec2(p.x + 50, p.y + 50), 30.0f, IM_COL32(255, 0, 0, 255), 16);
+draw_list->AddCircleFilled(ImVec2(p.x + 50, p.y + 50), 30.0, IM_COL32(255, 0, 0, 255), 16);
 
 // Draw a 3 pixel thick yellow line
-draw_list->AddLine(ImVec2(p.x, p.y), ImVec2(p.x + 100.0f, p.y + 100.0f), IM_COL32(255, 255, 0, 255), 3.0f);
+draw_list->AddLine(ImVec2(p.x, p.y), ImVec2(p.x + 100.0, p.y + 100.0), IM_COL32(255, 255, 0, 255), 3.0);
 
 // Advance the ImGui cursor to claim space in the window (otherwise the window will appear small and needs to be resized)
 ImGui::Dummy(ImVec2(200, 200));
@@ -471,7 +471,7 @@ ImGui::End();
 ![ImDrawList usage](https://raw.githubusercontent.com/wiki/ocornut/imgui/tutorials/CustomRendering01.png)
 
 - Refer to "Demo > Examples > Custom Rendering" in the demo window and read the code of `ShowExampleAppCustomRendering()` in `imgui_demo.cpp` from more examples.
-- To generate colors: you can use the macro `IM_COL32(255,255,255,255)` to generate them at compile time, or use `ImGui::GetColorU32(IM_COL32(255,255,255,255))` or `ImGui::GetColorU32(ImVec4(1.0f,1.0f,1.0f,1.0f))` to generate a color that is multiplied by the current value of `style.Alpha`.
+- To generate colors: you can use the macro `IM_COL32(255,255,255,255)` to generate them at compile time, or use `ImGui::GetColorU32(IM_COL32(255,255,255,255))` or `ImGui::GetColorU32(ImVec4(1.0,1.0,1.0,1.0))` to generate a color that is multiplied by the current value of `style.Alpha`.
 - Math operators: if you have setup `IM_VEC2_CLASS_EXTRA` in `imconfig.h` to bind your own math types, you can use your own math types and their natural operators instead of ImVec2. ImVec2 by default doesn't export any math operators in the public API. You may use `#define IMGUI_DEFINE_MATH_OPERATORS` `#include "imgui_internal.h"` to use the internally defined math operators, but instead prefer using your own math library and set it up in `imconfig.h`.
 - You can use `ImGui::GetBackgroundDrawList()` or `ImGui::GetForegroundDrawList()` to access draw lists which will be displayed behind and over every other dear imgui windows (one bg/fg drawlist per viewport). This is very convenient if you need to quickly display something on the screen that is not associated to a dear imgui window.
 - You can also create your own empty window and draw inside it. Call Begin() with the NoBackground | NoDecoration | NoSavedSettings | NoInputs flags (The `ImGuiWindowFlags_NoDecoration` flag itself is a shortcut for NoTitleBar | NoResize | NoScrollbar | NoCollapse). Then you can retrieve the ImDrawList* via `GetWindowDrawList()` and draw to it in any way you like.
@@ -564,8 +564,8 @@ io.Fonts->GetTexDataAsRGBA32() or GetTexDataAsAlpha8()
 ImFontConfig config;
 config.OversampleH = 2;
 config.OversampleV = 1;
-config.GlyphOffset.y -= 1.0f;      // Move everything by 1 pixels up
-config.GlyphExtraSpacing.x = 1.0f; // Increase spacing between characters
+config.GlyphOffset.y -= 1.0;      // Move everything by 1 pixels up
+config.GlyphExtraSpacing.x = 1.0; // Increase spacing between characters
 io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, &config);
 
 // Combine multiple fonts into one (e.g. for icon fonts)
@@ -573,7 +573,7 @@ static ImWchar ranges[] = { 0xf000, 0xf3ff, 0 };
 ImFontConfig config;
 config.MergeMode = true;
 io.Fonts->AddFontDefault();
-io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0f, &config, ranges); // Merge icon font
+io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0, &config, ranges); // Merge icon font
 io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.Fonts->GetGlyphRangesJapanese()); // Merge japanese glyphs
 ```
 
@@ -595,7 +595,7 @@ builder.AddText("Hello world");                        // Add a string (here "He
 builder.AddChar(0x7262);                               // Add a specific character
 builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // Add one of the default ranges
 builder.BuildRanges(&ranges);                          // Build the final result (ordered ranges with all the unique characters submitted)
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0f, NULL, ranges.Data);
+io.Fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, NULL, ranges.Data);
 ```
 
 All your strings needs to use UTF-8 encoding. In C++11 you can encode a string literal in UTF-8

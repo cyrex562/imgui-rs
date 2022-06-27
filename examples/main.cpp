@@ -1,6 +1,7 @@
 #include "node_editor.h"
 
-#include "../src/img_h.rs"
+#include "../src/imgui_h.rs"
+
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
 #include <imnodes.h>
@@ -81,7 +82,7 @@ int main(int, char**)
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
 
     // Main loop
     bool done = false;

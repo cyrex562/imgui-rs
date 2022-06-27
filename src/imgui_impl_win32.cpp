@@ -13,7 +13,7 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_win32.h"
 #ifndef WIN32_LEAN_AND_MEAN
@@ -340,9 +340,9 @@ static void ImGui_ImplWin32_UpdateGamepads()
         return;
     io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 
-    #define IM_SATURATE(V)                      (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
+    #define IM_SATURATE(V)                      (V < 0.0 ? 0.0 : V > 1.0 ? 1.0 : V)
     #define MAP_BUTTON(KEY_NO, BUTTON_ENUM)     { io.AddKeyEvent(KEY_NO, (gamepad.wButtons & BUTTON_ENUM) != 0); }
-    #define MAP_ANALOG(KEY_NO, VALUE, V0, V1)   { float vn = (float)(VALUE - V0) / (float)(V1 - V0); io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); }
+    #define MAP_ANALOG(KEY_NO, VALUE, V0, V1)   { float vn = (float)(VALUE - V0) / (float)(V1 - V0); io.AddKeyAnalogEvent(KEY_NO, vn > 0.10, IM_SATURATE(vn)); }
     MAP_BUTTON(ImGuiKey_GamepadStart,           XINPUT_GAMEPAD_START);
     MAP_BUTTON(ImGuiKey_GamepadBack,            XINPUT_GAMEPAD_BACK);
     MAP_BUTTON(ImGuiKey_GamepadFaceDown,        XINPUT_GAMEPAD_A);
@@ -638,10 +638,10 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
         return 0;
     }
     case WM_MOUSEWHEEL:
-        io.AddMouseWheelEvent(0.0f, (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA);
+        io.AddMouseWheelEvent(0.0, (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA);
         return 0;
     case WM_MOUSEHWHEEL:
-        io.AddMouseWheelEvent((float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, 0.0f);
+        io.AddMouseWheelEvent((float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, 0.0);
         return 0;
     case WM_KEYDOWN:
     case WM_KEYUP:
@@ -815,7 +815,7 @@ float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
 		{
 			GetDpiForMonitorFn((HMONITOR)monitor, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
             IM_ASSERT(xdpi == ydpi); // Please contact me if you hit this assert!
-			return xdpi / 96.0f;
+			return xdpi / 96.0;
 		}
     }
 #ifndef NOGDI
@@ -825,7 +825,7 @@ float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
     IM_ASSERT(xdpi == ydpi); // Please contact me if you hit this assert!
     ::ReleaseDC(NULL, dc);
 #endif
-    return xdpi / 96.0f;
+    return xdpi / 96.0;
 }
 
 float ImGui_ImplWin32_GetDpiScaleForHwnd(void* hwnd)
@@ -1027,8 +1027,8 @@ static void ImGui_ImplWin32_SetWindowAlpha(ImGuiViewport* viewport, float alpha)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
-    IM_ASSERT(alpha >= 0.0f && alpha <= 1.0f);
-    if (alpha < 1.0f)
+    IM_ASSERT(alpha >= 0.0 && alpha <= 1.0);
+    if (alpha < 1.0)
     {
         DWORD style = ::GetWindowLongW(vd->Hwnd, GWL_EXSTYLE) | WS_EX_LAYERED;
         ::SetWindowLongW(vd->Hwnd, GWL_EXSTYLE, style);
@@ -1055,8 +1055,8 @@ static void ImGui_ImplWin32_OnChangedViewport(ImGuiViewport* viewport)
 #if 0
     ImGuiStyle default_style;
     //default_style.WindowPadding = ImVec2(0, 0);
-    //default_style.WindowBorderSize = 0.0f;
-    //default_style.ItemSpacing.y = 3.0f;
+    //default_style.WindowBorderSize = 0.0;
+    //default_style.ItemSpacing.y = 3.0;
     //default_style.FramePadding = ImVec2(0, 0);
     default_style.ScaleAllSizes(viewport->DpiScale);
     ImGuiStyle& style = ImGui::GetStyle();

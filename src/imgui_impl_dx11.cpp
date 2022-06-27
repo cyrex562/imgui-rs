@@ -31,7 +31,7 @@
 //  2018-02-06: Misc: Removed call to ImGui::Shutdown() which is not available from 1.60 WIP, user needs to call CreateContext/DestroyContext themselves.
 //  2016-05-07: DirectX11: Disabling depth-write.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_dx11.h"
 
@@ -92,8 +92,8 @@ static void ImGui_ImplDX11_SetupRenderState(ImDrawData* draw_data, ID3D11DeviceC
     memset(&vp, 0, sizeof(D3D11_VIEWPORT));
     vp.Width = draw_data->DisplaySize.x;
     vp.Height = draw_data->DisplaySize.y;
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
+    vp.MinDepth = 0.0;
+    vp.MaxDepth = 1.0;
     vp.TopLeftX = vp.TopLeftY = 0;
     ctx->RSSetViewports(1, &vp);
 
@@ -124,7 +124,7 @@ static void ImGui_ImplDX11_SetupRenderState(ImDrawData* draw_data, ID3D11DeviceC
 void ImGui_ImplDX11_RenderDrawData(ImDrawData* draw_data)
 {
     // Avoid rendering when minimized
-    if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
+    if (draw_data->DisplaySize.x <= 0.0 || draw_data->DisplaySize.y <= 0.0)
         return;
 
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
@@ -191,10 +191,10 @@ void ImGui_ImplDX11_RenderDrawData(ImDrawData* draw_data)
         float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
         float mvp[4][4] =
         {
-            { 2.0f/(R-L),   0.0f,           0.0f,       0.0f },
-            { 0.0f,         2.0f/(T-B),     0.0f,       0.0f },
-            { 0.0f,         0.0f,           0.5f,       0.0f },
-            { (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
+            { 2.0/(R-L),   0.0,           0.0,       0.0 },
+            { 0.0,         2.0/(T-B),     0.0,       0.0 },
+            { 0.0,         0.0,           0.5,       0.0 },
+            { (R+L)/(L-R),  (T+B)/(B-T),    0.5,       1.0 },
         };
         memcpy(&constant_buffer->mvp, mvp, sizeof(mvp));
         ctx->Unmap(bd->pVertexConstantBuffer, 0);
@@ -701,7 +701,7 @@ static void ImGui_ImplDX11_RenderWindow(ImGuiViewport* viewport, void*)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;
-    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    ImVec4 clear_color = ImVec4(0.0, 0.0, 0.0, 1.0);
     bd->pd3dDeviceContext->OMSetRenderTargets(1, &vd->RTView, NULL);
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
         bd->pd3dDeviceContext->ClearRenderTargetView(vd->RTView, (float*)&clear_color);

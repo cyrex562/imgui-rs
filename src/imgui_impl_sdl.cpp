@@ -63,7 +63,7 @@
 //  2017-08-25: Inputs: MousePos set to -FLT_MAX,-FLT_MAX when mouse is unavailable/missing (instead of -1,-1).
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_sdl.h"
 
@@ -285,8 +285,8 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         }
         case SDL_MOUSEWHEEL:
         {
-            float wheel_x = (event->wheel.x > 0) ? 1.0f : (event->wheel.x < 0) ? -1.0f : 0.0f;
-            float wheel_y = (event->wheel.y > 0) ? 1.0f : (event->wheel.y < 0) ? -1.0f : 0.0f;
+            float wheel_x = (event->wheel.x > 0) ? 1.0 : (event->wheel.x < 0) ? -1.0 : 0.0;
+            float wheel_y = (event->wheel.y > 0) ? 1.0 : (event->wheel.y < 0) ? -1.0 : 0.0;
             io.AddMouseWheelEvent(wheel_x, wheel_y);
             return true;
         }
@@ -592,9 +592,9 @@ static void ImGui_ImplSDL2_UpdateGamepads()
     io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 
     // Update gamepad inputs
-    #define IM_SATURATE(V)                      (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
+    #define IM_SATURATE(V)                      (V < 0.0 ? 0.0 : V > 1.0 ? 1.0 : V)
     #define MAP_BUTTON(KEY_NO, BUTTON_NO)       { io.AddKeyEvent(KEY_NO, SDL_GameControllerGetButton(game_controller, BUTTON_NO) != 0); }
-    #define MAP_ANALOG(KEY_NO, AXIS_NO, V0, V1) { float vn = (float)(SDL_GameControllerGetAxis(game_controller, AXIS_NO) - V0) / (float)(V1 - V0); vn = IM_SATURATE(vn); io.AddKeyAnalogEvent(KEY_NO, vn > 0.1f, vn); }
+    #define MAP_ANALOG(KEY_NO, AXIS_NO, V0, V1) { float vn = (float)(SDL_GameControllerGetAxis(game_controller, AXIS_NO) - V0) / (float)(V1 - V0); vn = IM_SATURATE(vn); io.AddKeyAnalogEvent(KEY_NO, vn > 0.1, vn); }
     const int thumb_dead_zone = 8000;           // SDL_gamecontroller.h suggests using this value.
     MAP_BUTTON(ImGuiKey_GamepadStart,           SDL_CONTROLLER_BUTTON_START);
     MAP_BUTTON(ImGuiKey_GamepadBack,            SDL_CONTROLLER_BUTTON_BACK);
@@ -608,8 +608,8 @@ static void ImGui_ImplSDL2_UpdateGamepads()
     MAP_BUTTON(ImGuiKey_GamepadDpadDown,        SDL_CONTROLLER_BUTTON_DPAD_DOWN);
     MAP_BUTTON(ImGuiKey_GamepadL1,              SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
     MAP_BUTTON(ImGuiKey_GamepadR1,              SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
-    MAP_ANALOG(ImGuiKey_GamepadL2,              SDL_CONTROLLER_AXIS_TRIGGERLEFT,  0.0f, 32767);
-    MAP_ANALOG(ImGuiKey_GamepadR2,              SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0.0f, 32767);
+    MAP_ANALOG(ImGuiKey_GamepadL2,              SDL_CONTROLLER_AXIS_TRIGGERLEFT,  0.0, 32767);
+    MAP_ANALOG(ImGuiKey_GamepadR2,              SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0.0, 32767);
     MAP_BUTTON(ImGuiKey_GamepadL3,              SDL_CONTROLLER_BUTTON_LEFTSTICK);
     MAP_BUTTON(ImGuiKey_GamepadR3,              SDL_CONTROLLER_BUTTON_RIGHTSTICK);
     MAP_ANALOG(ImGuiKey_GamepadLStickLeft,      SDL_CONTROLLER_AXIS_LEFTX,  -thumb_dead_zone, -32768);
@@ -646,9 +646,9 @@ static void ImGui_ImplSDL2_UpdateMonitors()
 #if SDL_HAS_PER_MONITOR_DPI
         // FIXME-VIEWPORT: On MacOS SDL reports actual monitor DPI scale, ignoring OS configuration. We may want to set
         //  DpiScale to cocoa_window.backingScaleFactor here.
-        float dpi = 0.0f;
+        float dpi = 0.0;
         if (!SDL_GetDisplayDPI(n, &dpi, NULL, NULL))
-            monitor.DpiScale = dpi / 96.0f;
+            monitor.DpiScale = dpi / 96.0;
 #endif
         platform_io.Monitors.push_back(monitor);
     }
@@ -677,7 +677,7 @@ void ImGui_ImplSDL2_NewFrame()
     // Setup time step (we don't use SDL_GetTicks() because it is using millisecond resolution)
     static Uint64 frequency = SDL_GetPerformanceFrequency();
     Uint64 current_time = SDL_GetPerformanceCounter();
-    io.DeltaTime = bd->Time > 0 ? (float)((double)(current_time - bd->Time) / frequency) : (float)(1.0f / 60.0f);
+    io.DeltaTime = bd->Time > 0 ? (float)((double)(current_time - bd->Time) / frequency) : (float)(1.0 / 60.0);
     bd->Time = current_time;
 
     if (bd->PendingMouseLeaveFrame && bd->PendingMouseLeaveFrame >= ImGui::GetFrameCount() && bd->MouseButtonsDown == 0)

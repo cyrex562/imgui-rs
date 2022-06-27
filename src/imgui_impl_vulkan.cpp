@@ -439,8 +439,8 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
         viewport.y = 0;
         viewport.width = (float)fb_width;
         viewport.height = (float)fb_height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+        viewport.minDepth = 0.0;
+        viewport.maxDepth = 1.0;
         vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     }
 
@@ -448,11 +448,11 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
     // Our visible imgui space lies from draw_data->DisplayPps (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
     {
         float scale[2];
-        scale[0] = 2.0f / draw_data->DisplaySize.x;
-        scale[1] = 2.0f / draw_data->DisplaySize.y;
+        scale[0] = 2.0 / draw_data->DisplaySize.x;
+        scale[1] = 2.0 / draw_data->DisplaySize.y;
         float translate[2];
-        translate[0] = -1.0f - draw_data->DisplayPos.x * scale[0];
-        translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
+        translate[0] = -1.0 - draw_data->DisplayPos.x * scale[0];
+        translate[1] = -1.0 - draw_data->DisplayPos.y * scale[1];
         vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 0, sizeof(float) * 2, scale);
         vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 2, sizeof(float) * 2, translate);
     }
@@ -558,8 +558,8 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
                 ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
 
                 // Clamp to viewport as vkCmdSetScissor() won't accept values that are off bounds
-                if (clip_min.x < 0.0f) { clip_min.x = 0.0f; }
-                if (clip_min.y < 0.0f) { clip_min.y = 0.0f; }
+                if (clip_min.x < 0.0) { clip_min.x = 0.0; }
+                if (clip_min.y < 0.0) { clip_min.y = 0.0; }
                 if (clip_max.x > fb_width) { clip_max.x = (float)fb_width; }
                 if (clip_max.y > fb_height) { clip_max.y = (float)fb_height; }
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
@@ -784,7 +784,7 @@ static void ImGui_ImplVulkan_CreateFontSampler(VkDevice device, const VkAllocati
     info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     info.minLod = -1000;
     info.maxLod = 1000;
-    info.maxAnisotropy = 1.0f;
+    info.maxAnisotropy = 1.0;
     VkResult err = vkCreateSampler(device, &info, allocator, &bd->FontSampler);
     check_vk_result(err);
 }
@@ -887,7 +887,7 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
     raster_info.polygonMode = VK_POLYGON_MODE_FILL;
     raster_info.cullMode = VK_CULL_MODE_NONE;
     raster_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    raster_info.lineWidth = 1.0f;
+    raster_info.lineWidth = 1.0;
 
     VkPipelineMultisampleStateCreateInfo ms_info = {};
     ms_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -957,7 +957,7 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
         info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         info.minLod = -1000;
         info.maxLod = 1000;
-        info.maxAnisotropy = 1.0f;
+        info.maxAnisotropy = 1.0;
         err = vkCreateSampler(v->Device, &info, v->Allocator, &bd->FontSampler);
         check_vk_result(err);
     }
@@ -1672,7 +1672,7 @@ static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
             check_vk_result(err);
         }
         {
-            ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+            ImVec4 clear_color = ImVec4(0.0, 0.0, 0.0, 1.0);
             memcpy(&wd->ClearValue.color.float32[0], &clear_color, 4 * sizeof(float));
 
             VkRenderPassBeginInfo info = {};

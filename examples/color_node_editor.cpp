@@ -2,7 +2,7 @@
 #include "graph.h"
 
 #include <imnodes.h>
-#include "../src/img_h.rs"
+#include "../src/imgui_h.rs"
 
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_timer.h>
@@ -110,11 +110,11 @@ ImU32 evaluate(const Graph<Node>& graph, const int root_node)
     // The final output node isn't evaluated in the loop -- instead we just pop
     // the three values which should be in the stack.
     assert(value_stack.size() == 3ull);
-    const int b = static_cast<int>(255.f * clamp(value_stack.top(), 0.f, 1.f) + 0.5f);
+    const int b = static_cast<int>(255.f * clamp(value_stack.top(), 0.f, 1.f) + 0.5);
     value_stack.pop();
-    const int g = static_cast<int>(255.f * clamp(value_stack.top(), 0.f, 1.f) + 0.5f);
+    const int g = static_cast<int>(255.f * clamp(value_stack.top(), 0.f, 1.f) + 0.5);
     value_stack.pop();
-    const int r = static_cast<int>(255.f * clamp(value_stack.top(), 0.f, 1.f) + 0.5f);
+    const int r = static_cast<int>(255.f * clamp(value_stack.top(), 0.f, 1.f) + 0.5);
     value_stack.pop();
 
     return IM_COL32(r, g, b, 255);
@@ -132,7 +132,7 @@ public:
     void show()
     {
         // Update timer context
-        current_time_seconds = 0.001f * SDL_GetTicks();
+        current_time_seconds = 0.001 * SDL_GetTicks();
 
         auto flags = ImGuiWindowFlags_MenuBar;
 
@@ -327,7 +327,7 @@ public:
                     {
                         ImGui::SameLine();
                         ImGui::PushItemWidth(node_width - label_width);
-                        ImGui::DragFloat("##hidelabel", &graph_.node(node.ui.add.lhs).value, 0.01f);
+                        ImGui::DragFloat("##hidelabel", &graph_.node(node.ui.add.lhs).value, 0.01);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -341,7 +341,7 @@ public:
                     {
                         ImGui::SameLine();
                         ImGui::PushItemWidth(node_width - label_width);
-                        ImGui::DragFloat("##hidelabel", &graph_.node(node.ui.add.rhs).value, 0.01f);
+                        ImGui::DragFloat("##hidelabel", &graph_.node(node.ui.add.rhs).value, 0.01);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -362,7 +362,7 @@ public:
             break;
             case UiNodeType::multiply:
             {
-                const float node_width = 100.0f;
+                const float node_width = 100.0;
                 ImNodes::BeginNode(node.id);
 
                 ImNodes::BeginNodeTitleBar();
@@ -378,7 +378,7 @@ public:
                         ImGui::SameLine();
                         ImGui::PushItemWidth(node_width - label_width);
                         ImGui::DragFloat(
-                            "##hidelabel", &graph_.node(node.ui.multiply.lhs).value, 0.01f);
+                            "##hidelabel", &graph_.node(node.ui.multiply.lhs).value, 0.01);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -393,7 +393,7 @@ public:
                         ImGui::SameLine();
                         ImGui::PushItemWidth(node_width - label_width);
                         ImGui::DragFloat(
-                            "##hidelabel", &graph_.node(node.ui.multiply.rhs).value, 0.01f);
+                            "##hidelabel", &graph_.node(node.ui.multiply.rhs).value, 0.01);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -414,7 +414,7 @@ public:
             break;
             case UiNodeType::output:
             {
-                const float node_width = 100.0f;
+                const float node_width = 100.0;
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(11, 109, 191, 255));
                 ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(45, 126, 194, 255));
                 ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(81, 148, 204, 255));
@@ -434,7 +434,7 @@ public:
                         ImGui::SameLine();
                         ImGui::PushItemWidth(node_width - label_width);
                         ImGui::DragFloat(
-                            "##hidelabel", &graph_.node(node.ui.output.r).value, 0.01f, 0.f, 1.0f);
+                            "##hidelabel", &graph_.node(node.ui.output.r).value, 0.01, 0.f, 1.0);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -451,7 +451,7 @@ public:
                         ImGui::SameLine();
                         ImGui::PushItemWidth(node_width - label_width);
                         ImGui::DragFloat(
-                            "##hidelabel", &graph_.node(node.ui.output.g).value, 0.01f, 0.f, 1.f);
+                            "##hidelabel", &graph_.node(node.ui.output.g).value, 0.01, 0.f, 1.f);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -468,7 +468,7 @@ public:
                         ImGui::SameLine();
                         ImGui::PushItemWidth(node_width - label_width);
                         ImGui::DragFloat(
-                            "##hidelabel", &graph_.node(node.ui.output.b).value, 0.01f, 0.f, 1.0f);
+                            "##hidelabel", &graph_.node(node.ui.output.b).value, 0.01, 0.f, 1.0);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -481,7 +481,7 @@ public:
             break;
             case UiNodeType::sine:
             {
-                const float node_width = 100.0f;
+                const float node_width = 100.0;
                 ImNodes::BeginNode(node.id);
 
                 ImNodes::BeginNodeTitleBar();
@@ -499,9 +499,9 @@ public:
                         ImGui::DragFloat(
                             "##hidelabel",
                             &graph_.node(node.ui.sine.input).value,
-                            0.01f,
+                            0.01,
                             0.f,
-                            1.0f);
+                            1.0);
                         ImGui::PopItemWidth();
                     }
                     ImNodes::EndInputAttribute();
@@ -549,7 +549,7 @@ public:
             ImNodes::Link(edge.id, edge.from, edge.to);
         }
 
-        ImNodes::MiniMap(0.2f, minimap_location_);
+        ImNodes::MiniMap(0.2, minimap_location_);
         ImNodes::EndNodeEditor();
 
         // Handle new links

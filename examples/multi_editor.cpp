@@ -1,6 +1,7 @@
 #include "node_editor.h"
 #include <imnodes.h>
-#include "../src/img_h.rs"
+#include "../src/imgui_h.rs"
+
 #include <SDL_scancode.h>
 
 #include <algorithm>
@@ -63,8 +64,8 @@ void show_editor(const char* editor_name, Editor& editor)
         ImNodes::EndInputAttribute();
 
         ImNodes::BeginStaticAttribute(node.id << 16);
-        ImGui::PushItemWidth(120.0f);
-        ImGui::DragFloat("value", &node.value, 0.01f);
+        ImGui::PushItemWidth(120.0);
+        ImGui::DragFloat("value", &node.value, 0.01);
         ImGui::PopItemWidth();
         ImNodes::EndStaticAttribute();
 

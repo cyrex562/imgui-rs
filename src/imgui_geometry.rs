@@ -1,5 +1,5 @@
-use crate::img_h::ImVec2;
-use crate::img_vec2::{ImLengthSqr, ImVec2};
+use crate::imgui_h::ImVec2;
+use crate::imgui_vec2::{ImLengthSqr, ImVec2};
 
 // pub fn ImBezierCubicClosestPoint(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, int num_segments) -> ImVec2
 pub fn ImBezierCubicClosestPoint(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &ImVec2, num_segments: usize) -> ImVec2 {
@@ -10,7 +10,7 @@ pub fn ImBezierCubicClosestPoint(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImV
     let mut p_closest = ImVec2::new2();
     // float p_closest_dist2 = FLT_MAX;
     let mut p_closest_dist2: f32 = f32::MAX;
-    // float t_step = 1.0f / (float)num_segments;
+    // float t_step = 1.0 / (float)num_segments;
     let mut t_step = 1.0 / num_segments as f32;
     // for (int i_step = 1; i_step <= num_segments; i_step++)
     let mut i_step = 1;
@@ -58,22 +58,22 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &ImVec2, p_closest: &mut ImVec2
         }
         *p_last = p_current.clone();
     } else if level < 10 {
-        // float x12 = (x1 + x2)*0.5f,       y12 = (y1 + y2)*0.5f;
+        // float x12 = (x1 + x2)*0.5,       y12 = (y1 + y2)*0.5;
         let mut x12 = (x1 + x2) * 0.5;
         let mut y12 = (y1 + y2) * 0.5;
-        // float x23 = (x2 + x3)*0.5f,       y23 = (y2 + y3)*0.5f;
+        // float x23 = (x2 + x3)*0.5,       y23 = (y2 + y3)*0.5;
         let mut x23 = (x2 + x3) * 0.5;
         let mut y23 = (y2 + y3) * 0.5;
-        // float x34 = (x3 + x4)*0.5f,       y34 = (y3 + y4)*0.5f;
+        // float x34 = (x3 + x4)*0.5,       y34 = (y3 + y4)*0.5;
         let mut x34 = (x3 + x4) * 0.5;
         let mut y34 = (y3 + y4) * 0.5;
-        // float x123 = (x12 + x23)*0.5f,    y123 = (y12 + y23)*0.5f;
+        // float x123 = (x12 + x23)*0.5,    y123 = (y12 + y23)*0.5;
         let mut x123 = (x12 + x23) * 0.5;
         let mut y123 = (y12 + y23) * 0.5;
-        // float x234 = (x23 + x34)*0.5f,    y234 = (y23 + y34)*0.5f;
+        // float x234 = (x23 + x34)*0.5,    y234 = (y23 + y34)*0.5;
         let mut x234 = (x23 + x34) * 0.5;
         let mut y234 = (y23 + y34) * 0.5;
-        // float x1234 = (x123 + x234)*0.5f, y1234 = (y123 + y234)*0.5f;
+        // float x1234 = (x123 + x234)*0.5, y1234 = (y123 + y234)*0.5;
         let mut x1234 = (x123 + x234) * 0.5;
         let mut y1234 = (y123 + y234) * 0.5;
         ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last, p_closest_dist2, x1, y1, x12, y12, x123, y123, x1234, y1234, tess_tol, level + 1);
@@ -85,7 +85,7 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &ImVec2, p_closest: &mut ImVec2
 // Because those ImXXX functions are lower-level than ImGui:: we cannot access this value automatically.
 // ImVec2 ImBezierCubicClosestPointCasteljau(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, float tess_tol)
 pub fn ImBezierCubicClosestPointCasteljau(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &ImVec2, tess_tol: f32) -> ImVec2 {
-    // IM_ASSERT(tess_tol > 0.0f);
+    // IM_ASSERT(tess_tol > 0.0);
     // ImVec2 p_last = p1;
     let mut p_last = p1.clone();
     // ImVec2 p_closest;
@@ -117,11 +117,11 @@ pub fn ImLineClosestPoint(a: &ImVec2, b: &ImVec2, p: &ImVec2) -> ImVec2 {
 
 // bool ImTriangleContainsPoint(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p)
 pub fn ImTriangleContainsPoint(a: &ImVec2, b: &ImVec2, c: &ImVec2, p: &ImVec2) -> bool {
-    // bool b1 = ((p.x - b.x) * (a.y - b.y) - (p.y - b.y) * (a.x - b.x)) < 0.0f;
+    // bool b1 = ((p.x - b.x) * (a.y - b.y) - (p.y - b.y) * (a.x - b.x)) < 0.0;
     let b1 = ((p.x - b.x) * (a.y - b.y) - (p.y - b.y) * (a.x - b.x)) < 0.0;
-    // bool b2 = ((p.x - c.x) * (b.y - c.y) - (p.y - c.y) * (b.x - c.x)) < 0.0f;
+    // bool b2 = ((p.x - c.x) * (b.y - c.y) - (p.y - c.y) * (b.x - c.x)) < 0.0;
     let b2 = ((p.x - c.x) * (b.y - c.y) - (p.y - c.y) * (b.x - c.x)) < 0.0;
-    // bool b3 = ((p.x - a.x) * (c.y - a.y) - (p.y - a.y) * (c.x - a.x)) < 0.0f;
+    // bool b3 = ((p.x - a.x) * (c.y - a.y) - (p.y - a.y) * (c.x - a.x)) < 0.0;
     let b3 = ((p.x - a.x) * (c.y - a.y) - (p.y - a.y) * (c.x - a.x)) < 0.0;
     return (b1 == b2) && (b2 == b3);
 }

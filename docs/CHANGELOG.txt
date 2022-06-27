@@ -182,14 +182,14 @@ Other Changes:
   level of a popup with a child menu opened.
 - Menus: Menus emitted from the main/scrolling layer are not part of the same menu-set as menus emitted
   from the menu-bar, avoiding  accidental hovering from one to the other. (#3496, #4797) [@rokups]
-- Style: Adjust default value of GrabMinSize from 10.0f to 12.0f.
+- Style: Adjust default value of GrabMinSize from 10.0 to 12.0.
 - Stack Tool: Added option to copy item path to clipboard. (#4631)
 - Settings: Fixed out-of-bounds read when .ini file on disk is empty. (#5351) [@quantum5]
 - Settings: Fixed some SetNextWindowPos/SetNextWindowSize API calls not marking settings as dirty.
 - DrawList: Fixed PathArcTo() emitting terminating vertices too close to arc vertices. (#4993) [@thedmd]
 - DrawList: Fixed texture-based anti-aliasing path with RGBA textures (#5132, #3245) [@cfillion]
 - DrawList: Fixed divide-by-zero or glitches with Radius/Rounding values close to zero. (#5249, #5293, #3491)
-- DrawList: Circle with a radius smaller than 0.5f won't appear, to be consistent with other primitives. [@thedmd]
+- DrawList: Circle with a radius smaller than 0.5 won't appear, to be consistent with other primitives. [@thedmd]
 - Debug: Added ShowDebugLogWindow() showing an opt-in synthetic log of principal events (focus, popup,
   active id changes) helping to diagnose issues.
 - Debug: Added DebugTextEncoding() function to facilitate diagnosing issues when not sure about whether
@@ -597,8 +597,8 @@ Other Changes:
 - ColorEdit4: Fixed hue resetting to 0 when it is set to 255. [@rokups]
 - ColorEdit4: Fixed hue value jitter when source color is stored as RGB in 32-bit integer and perform
   RGB<>HSV round trips every frames. [@rokups]
-- ColorPicker4: Fixed picker being unable to select exact 1.0f color when dragging toward the edges
-  of the SV square (previously picked 0.999989986f). (#3517) [@rokups]
+- ColorPicker4: Fixed picker being unable to select exact 1.0 color when dragging toward the edges
+  of the SV square (previously picked 0.999989986). (#3517) [@rokups]
 - Menus: Fixed vertical alignments of MenuItem() calls within a menu bar (broken in 1.84). (#4538)
 - Menus: Improve closing logic when moving diagonally in empty between between parent and child menus to
   accommodate for varying font size and dpi.
@@ -703,7 +703,7 @@ Other Changes:
 - IO: Added io.AddFocusEvent() api for backend to tell when host window has gained/lost focus. (#4388) [@thedmd]
   If you use a custom backend, consider adding support for this!
 - Disabled: added BeginDisabled()/EndDisabled() api to create a scope where interactions are disabled. (#211)
-  - Added style.DisabledAlpha (default to 0.60f) and ImGuiStyleVar_DisabledAlpha. (#211)
+  - Added style.DisabledAlpha (default to 0.60) and ImGuiStyleVar_DisabledAlpha. (#211)
   - Unlike the internal-and-undocumented-but-somehow-known PushItemFlag(ImGuiItemFlags_Disabled), this also alters
     visuals. Currently this is done by lowering alpha of all widgets. Future styling system may do that differently.
   - Disabled items set HoveredId, allowing e.g. HoveredIdTimer to run. (#211, #3419) [@rokups]
@@ -835,7 +835,7 @@ Other Changes:
 - TabBar: Fixed mouse reordering with very fast movements (e.g. crossing multiple tabs in a single
   frame and then immediately standing still (would only affect automation/bots). [@rokups]
 - Menus: made MenuItem() in a menu bar reflect the 'selected' argument with a highlight. (#4128) [@mattelegende]
-- Drags, Sliders, Inputs: Specifying a NULL format to Float functions default them to "%.3f" to be
+- Drags, Sliders, Inputs: Specifying a NULL format to Float functions default them to "%.3" to be
   consistent with the compile-time default. (#3922)
 - DragScalar: Add default value for v_speed argument to match higher-level functions. (#3922) [@eliasdaler]
 - ColorEdit4: Alpha default to 255 (instead of 0) when omitted in hex input. (#3973) [@squadack]
@@ -853,7 +853,7 @@ Other Changes:
 - Tweak computation of io.Framerate so it is less biased toward high-values in the first 120 frames. (#4138)
 - Optimization: Disabling some of MSVC most aggressive Debug runtime checks for some simple/low-level functions
   (e.g. ImVec2, ImVector) leading to a 10-20% increase of performances with MSVC "default" Debug settings.
-- ImDrawList: Add and use SSE-enabled ImRsqrt() in place of 1.0f / ImSqrt(). (#4091) [@wolfpld]
+- ImDrawList: Add and use SSE-enabled ImRsqrt() in place of 1.0 / ImSqrt(). (#4091) [@wolfpld]
 - ImDrawList: Fixed/improved thickness of thick strokes with sharp angles. (#4053, #3366, #2964, #2868, #2518, #2183)
   Effectively introduced a regression in 1.67 (Jan 2019), and a fix in 1.70 (Apr 2019) but the fix wasn't actually on
   par with original version. Now incorporating the correct revert.
@@ -921,25 +921,25 @@ Breaking Changes:
     - ImDrawCornerFlags_BotRight --> use ImDrawFlags_RoundCornersBottomRight
     - ImDrawCornerFlags_None     --> use ImDrawFlags_RoundCornersNone etc.
   Flags now sanely defaults to 0 instead of 0x0F, consistent with all other flags in the API.
-  IMPORTANT: The default with rounding > 0.0f is now "round all corners" vs old implicit "round no corners":
-    - rounding == 0.0f + flags == 0 --> meant no rounding  --> unchanged (common use)
-    - rounding  > 0.0f + flags != 0 --> meant rounding     --> unchanged (common use)
-    - rounding == 0.0f + flags != 0 --> meant no rounding  --> unchanged (unlikely use)
-    - rounding  > 0.0f + flags == 0 --> meant no rounding  --> BREAKING (unlikely use)!
-       - this ONLY matters for hardcoded use of 0 with rounding > 0.0f.
-       - fix by using named ImDrawFlags_RoundCornersNone or rounding == 0.0f!
+  IMPORTANT: The default with rounding > 0.0 is now "round all corners" vs old implicit "round no corners":
+    - rounding == 0.0 + flags == 0 --> meant no rounding  --> unchanged (common use)
+    - rounding  > 0.0 + flags != 0 --> meant rounding     --> unchanged (common use)
+    - rounding == 0.0 + flags != 0 --> meant no rounding  --> unchanged (unlikely use)
+    - rounding  > 0.0 + flags == 0 --> meant no rounding  --> BREAKING (unlikely use)!
+       - this ONLY matters for hardcoded use of 0 with rounding > 0.0.
+       - fix by using named ImDrawFlags_RoundCornersNone or rounding == 0.0!
        - this is technically the only real breaking change which we can't solve automatically (it's also uncommon).
   The old ImDrawCornersFlags used awkward default values of ~0 or 0xF (4 lower bits set) to signify "round all corners"
   and we sometimes encouraged using them as shortcuts. As a result the legacy path still support use of hardcoded ~0
   or any value from 0x1 or 0xF. They will behave the same with legacy paths enabled (will assert otherwise).
   Courtesy of legacy untangling commity: [@rokups, @ocornut, @thedmd]
-- ImDrawList: clarified that PathArcTo()/PathArcToFast() won't render with radius < 0.0f. Previously it sorts
+- ImDrawList: clarified that PathArcTo()/PathArcToFast() won't render with radius < 0.0. Previously it sorts
   of accidentally worked but would lead to counter-clockwise paths which and have an effect on anti-aliasing.
 - InputText: renamed ImGuiInputTextFlags_AlwaysInsertMode to ImGuiInputTextFlags_AlwaysOverwrite, old name was an
   incorrect description of behavior. Was ostly used by memory editor. Kept inline redirection function. (#2863)
 - Moved 'misc/natvis/imgui.natvis' to 'misc/debuggers/imgui.natvis' as we will provide scripts for other debuggers.
-- Style: renamed rarely used style.CircleSegmentMaxError (old default = 1.60f)
-  to style.CircleTessellationMaxError (new default = 0.30f) as its meaning changed. (#3808) [@thedmd]
+- Style: renamed rarely used style.CircleSegmentMaxError (old default = 1.60)
+  to style.CircleTessellationMaxError (new default = 0.30) as its meaning changed. (#3808) [@thedmd]
 - Win32+MinGW: Re-enabled IME functions by default even under MinGW. In July 2016, issue #738 had me incorrectly
   disable those default functions for MinGW. MinGW users should: either link with -limm32, either set their
   imconfig file with '#define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS'. (#2590, #738) [@actboy168]
@@ -1065,7 +1065,7 @@ Other Changes:
   variety of code is currently on it so we are first fixing current behavior before we'll eventually change it.
 - Log/Capture: Fix various new line/spacing issue when logging widgets. [@Xipiryon, @ocornut]
 - Log/Capture: Improved the ASCII look of various widgets, making large dumps more easily human readable.
-- ImDrawList: Fixed AddCircle()/AddCircleFilled() with (rad > 0.0f && rad < 1.0f && num_segments == 0). (#3738)
+- ImDrawList: Fixed AddCircle()/AddCircleFilled() with (rad > 0.0 && rad < 1.0 && num_segments == 0). (#3738)
   Would lead to a buffer read overflow.
 - ImDrawList: Clarified PathArcTo() need for a_min <= a_max with an assert.
 - ImDrawList: Fixed PathArcToFast() handling of a_min > a_max.
@@ -1188,7 +1188,7 @@ Other Changes:
 - Misc: Made EndFrame() assertion for key modifiers being unchanged during the frame (added in 1.76) more
   lenient, allowing full mid-frame releases. This is to accommodate the use of mid-frame modal native
   windows calls, which leads backends such as GLFW to send key clearing events on focus loss. (#3575)
-- Style: Changed default style.WindowRounding value to 0.0f (matches default for multi-viewports).
+- Style: Changed default style.WindowRounding value to 0.0 (matches default for multi-viewports).
 - Style: Reduced the size of the resizing grip, made alpha less prominent.
 - Style: Classic: Increase the default alpha value of WindowBg to be closer to other styles.
 - Demo: Clarify usage of right-aligned items in Demo>Layout>Widgets Width.
@@ -1339,29 +1339,29 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 
 Breaking Changes:
 
-- Obsoleted use of the trailing 'float power=1.0f' parameter for those functions: [@Shironekoben, @ocornut]
+- Obsoleted use of the trailing 'float power=1.0' parameter for those functions: [@Shironekoben, @ocornut]
   - DragFloat(), DragFloat2(), DragFloat3(), DragFloat4(), DragFloatRange2(), DragScalar(), DragScalarN()
   - SliderFloat(), SliderFloat2(), SliderFloat3(), SliderFloat4(), SliderScalar(), SliderScalarN()
   - VSliderFloat(), VSliderScalar()
-  Replaced the final 'float power=1.0f' argument with ImGuiSliderFlags defaulting to 0 (as with all our flags).
+  Replaced the final 'float power=1.0' argument with ImGuiSliderFlags defaulting to 0 (as with all our flags).
   Worked out a backward-compatibility scheme so hopefully most C++ codebase should not be affected.
   In short, when calling those functions:
   - If you omitted the 'power' parameter (likely!), you are not affected.
-  - If you set the 'power' parameter to 1.0f (same as previous default value):
+  - If you set the 'power' parameter to 1.0 (same as previous default value):
     - Your compiler may warn on float>int conversion.
     - Everything else will work (but will assert if IMGUI_DISABLE_OBSOLETE_FUNCTIONS is defined).
-    - You can replace the 1.0f value with 0 to fix the warning, and be technically correct.
-  - If you set the 'power' parameter to >1.0f (to enable non-linear editing):
+    - You can replace the 1.0 value with 0 to fix the warning, and be technically correct.
+  - If you set the 'power' parameter to >1.0 (to enable non-linear editing):
     - Your compiler may warn on float>int conversion.
-    - Code will assert at runtime for IM_ASSERT(power == 1.0f) with the following assert description:
+    - Code will assert at runtime for IM_ASSERT(power == 1.0) with the following assert description:
       "Call Drag function with ImGuiSliderFlags_Logarithmic instead of using the old 'float power' function!".
     - In case asserts are disabled, the code will not crash and enable the _Logarithmic flag.
-    - You can replace the >1.0f value with ImGuiSliderFlags_Logarithmic to fix the warning/assert
-      and get a _similar_ effect as previous uses of power >1.0f.
+    - You can replace the >1.0 value with ImGuiSliderFlags_Logarithmic to fix the warning/assert
+      and get a _similar_ effect as previous uses of power >1.0.
   See https://github.com/ocornut/imgui/issues/3361 for all details.
   For shared code, you can version check at compile-time with `#if IMGUI_VERSION_NUM >= 17704`.
   Kept inline redirection functions (will obsolete) apart for: DragFloatRange2(), VSliderFloat(), VSliderScalar().
-  For those three the 'float power=1.0f' version was removed directly as they were most unlikely ever used.
+  For those three the 'float power=1.0' version was removed directly as they were most unlikely ever used.
 - DragInt, DragFloat, DragScalar: Obsoleted use of v_min > v_max to lock edits (introduced in 1.73, this was not
   demoed nor documented much, will be replaced a more generic ReadOnly feature).
 
@@ -1409,7 +1409,7 @@ Other Changes:
 - Fonts: Fixed ImFontConfig::GlyphExtraSpacing and ImFontConfig::PixelSnapH settings being pulled
   from the merged/target font settings when merging fonts, instead of being pulled from the source
   font settings.
-- ImDrawList: Thick anti-aliased strokes (> 1.0f) with integer thickness now use a texture-based
+- ImDrawList: Thick anti-aliased strokes (> 1.0) with integer thickness now use a texture-based
   path, reducing the amount of vertices/indices and CPU/GPU usage. (#3245) [@Shironekoben]
   - This change will facilitate the wider use of thick borders in future style changes.
   - Requires an extra bit of texture space (~64x64 by default), relies on GPU bilinear filtering.
@@ -1476,7 +1476,7 @@ Other Changes:
   or _OpenOnArrow would open the node. (#143)
 - Windows: Fix unintended feedback loops when resizing windows close to main viewport edges. [@rokups]
 - Tabs: Added style.TabMinWidthForUnselectedCloseButton settings:
-  - Set to 0.0f (default) to always make a close button appear on hover (same as Chrome, VS).
+  - Set to 0.0 (default) to always make a close button appear on hover (same as Chrome, VS).
   - Set to FLT_MAX to only display a close button when selected (merely hovering is not enough).
   - Set to an intermediary value to toggle behavior based on width (same as Firefox).
 - Tabs: Added a ImGuiTabItemFlags_NoTooltip flag to disable the tooltip for individual tab item
@@ -1498,7 +1498,7 @@ Other Changes:
 - Modals: BeginPopupModal() doesn't set the ImGuiWindowFlags_NoSavedSettings flag anymore, and will
   not always be auto-centered. Note that modals are more similar to regular windows than they are to
   popups, so api and behavior may evolve further toward embracing this. (#915, #3091)
-  Enforce centering using e.g. SetNextWindowPos(io.DisplaySize * 0.5f, ImGuiCond_Appearing, ImVec2(0.5f,0.5f)).
+  Enforce centering using e.g. SetNextWindowPos(io.DisplaySize * 0.5, ImGuiCond_Appearing, ImVec2(0.5,0.5)).
 - Metrics: Added a "Settings" section with some details about persistent ini settings.
 - Nav, Menus: Fix vertical wrap-around in menus or popups created with multiple appending calls to
   BeginMenu()/EndMenu() or BeginPopup(0/EndPopup(). (#3223, #1207) [@rokups]
@@ -1649,7 +1649,7 @@ Breaking Changes:
   - ShowTestWindow()                    -> use ShowDemoWindow()
   - IsRootWindowFocused()               -> use IsWindowFocused(ImGuiFocusedFlags_RootWindow)
   - IsRootWindowOrAnyChildFocused()     -> use IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)
-  - SetNextWindowContentWidth(w)        -> use SetNextWindowContentSize(ImVec2(w, 0.0f)
+  - SetNextWindowContentWidth(w)        -> use SetNextWindowContentSize(ImVec2(w, 0.0)
   - GetItemsLineHeightWithSpacing()     -> use GetFrameHeightWithSpacing()
   - ImGuiCol_ChildWindowBg              -> use ImGuiCol_ChildBg
   - ImGuiStyleVar_ChildWindowRounding   -> use ImGuiStyleVar_ChildRounding
@@ -1670,7 +1670,7 @@ Breaking Changes:
 - Limiting Columns()/BeginColumns() api to 64 columns with an assert. While the current code
   technically supports it, future code may not so we're putting the restriction ahead.
   [Undid that change in 1.76]
-- imgui_internal.h: changed ImRect() default constructor initializes all fields to 0.0f instead
+- imgui_internal.h: changed ImRect() default constructor initializes all fields to 0.0 instead
   of (FLT_MAX,FLT_MAX,-FLT_MAX,-FLT_MAX). If you used ImRect::Add() to create bounding boxes by
   adding points into it without explicit initialization, you may need to fix your initial value.
 
@@ -1693,7 +1693,7 @@ Other Changes:
   user-side storage. Previously if you had e.g. a local unsaved std::string and reading result back
   from the widget, the user string object wouldn't be resized when Enter key was pressed. (#3009)
 - MenuBar: Fix minor clipping issue where occasionally a menu text can overlap the right-most border.
-- Window: Fix SetNextWindowBgAlpha(1.0f) failing to override alpha component. (#3007) [@Albog]
+- Window: Fix SetNextWindowBgAlpha(1.0) failing to override alpha component. (#3007) [@Albog]
 - Window: When testing for the presence of the ImGuiWindowFlags_NoBringToFrontOnFocus flag we
   test both the focused/clicked window (which could be a child window) and the root window.
 - ImDrawList: AddCircle(), AddCircleFilled() API can now auto-tessellate when provided a segment
@@ -1762,7 +1762,7 @@ Breaking Changes:
   - Begin() [old 5 args version]     -> use Begin() [3 args], use SetNextWindowSize() SetNextWindowBgAlpha() if needed
   - IsRootWindowOrAnyChildHovered()  -> use IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows)
   - AlignFirstTextHeightToWidgets()  -> use AlignTextToFramePadding()
-  - SetNextWindowPosCenter()         -> use SetNextWindowPos() with a pivot of (0.5f, 0.5f)
+  - SetNextWindowPosCenter()         -> use SetNextWindowPos() with a pivot of (0.5, 0.5)
   - ImFont::Glyph                    -> use ImFontGlyph
   If you were still using the old names, read "API Breaking Changes" section of imgui.cpp to find out
   the new names or equivalent features, or see how they were implemented until 1.73.
@@ -1883,7 +1883,7 @@ Other Changes:
 - Using offsetof() when available in C++11. Avoids Clang sanitizer complaining about old-style macros. (#94)
 - ImVector: Added find(), find_erase(), find_erase_unsorted() helpers.
 - Added a mechanism to compact/free the larger allocations of unused windows (buffers are compacted when
-  a window is unused for 60 seconds, as per io.ConfigWindowsMemoryCompactTimer = 60.0f). Note that memory
+  a window is unused for 60 seconds, as per io.ConfigWindowsMemoryCompactTimer = 60.0). Note that memory
   usage has never been reported as a problem, so this is merely a touch of overzealous luxury. (#2636)
 - Documentation: Various tweaks and improvements to the README page. [@ker0chan]
 - Backends: OpenGL3: Tweaked initialization code allow application calling ImGui_ImplOpenGL3_CreateFontsTexture()
@@ -1965,7 +1965,7 @@ Other Changes:
   SetScrollX()/SetScrollY(), making it possible to use a simpler stateless pattern for auto-scrolling:
      // (Submit items..)
      if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())  // If scrolling at the already at the bottom..
-         ImGui::SetScrollHereY(1.0f);                    // ..make last item fully visible
+         ImGui::SetScrollHereY(1.0);                    // ..make last item fully visible
 - Scrolling: Added SetScrollHereX(), SetScrollFromPosX() for completeness. (#1580) [@kevreco]
 - Scrolling: Mouse wheel scrolling while hovering a child window is automatically forwarded to parent window
   if ScrollMax is zero on the scrolling axis.
@@ -2068,7 +2068,7 @@ Other Changes:
 - Window: Fixed auto-resize with AlwaysVerticalScrollbar or AlwaysHorizontalScrollbar flags.
 - Window: Fixed one case where auto-resize by double-clicking the resize grip would make either scrollbar
   appear for a single frame after the resize.
-- Separator: Revert 1.70 "Declare its thickness (1.0f) to the layout" change. It's not incorrect
+- Separator: Revert 1.70 "Declare its thickness (1.0) to the layout" change. It's not incorrect
   but it breaks existing some layout patterns. Will return back to it when we expose Separator flags.
 - Fixed InputScalar, InputScalarN, SliderScalarN, DragScalarN with non-visible label from inserting
   style.ItemInnerSpacing.x worth of trailing spacing.
@@ -2185,7 +2185,7 @@ Other Changes:
 - Inputs: Also add support for horizontal scroll with Shift+Mouse Wheel. (#2424, #1463) [@LucaRood]
 - PlotLines, PlotHistogram: Ignore NaN values when calculating min/max bounds. (#2485)
 - Columns: Fixed boundary of clipping being off by 1 pixel within the left column. (#125)
-- Separator: Declare its thickness (1.0f) to the layout, making items around separator more symmetrical.
+- Separator: Declare its thickness (1.0) to the layout, making items around separator more symmetrical.
 - Combo, Slider, Scrollbar: Improve rendering in situation when there's only a few pixels available (<3 pixels).
 - Nav: Fixed Drag/Slider functions going into text input mode when keyboard CTRL is held while pressing NavActivate.
 - Drag and Drop: Fixed drag source with ImGuiDragDropFlags_SourceAllowNullID and null ID from receiving click
@@ -2282,7 +2282,7 @@ Other Changes:
   tree depth instead of a relative one.
 - Log/Capture: Fixed CollapsingHeader trailing ascii representation being "#" instead of "##".
 - ImFont: Added GetGlyphRangesVietnamese() helper. (#2403)
-- Misc: Asserting in NewFrame() if style.WindowMinSize is zero or smaller than (1.0f,1.0f).
+- Misc: Asserting in NewFrame() if style.WindowMinSize is zero or smaller than (1.0,1.0).
 - Demo: Using GetBackgroundDrawList() and GetForegroundDrawList() in "Custom Rendering" demo.
 - Demo: InputText: Demonstrating use of ImGuiInputTextFlags_CallbackResize. (#2006, #1443, #1008).
 - Examples: GLFW, SDL: Preserve DisplayFramebufferScale when main viewport is minimized.
@@ -2304,7 +2304,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - Removed io.DisplayVisibleMin/DisplayVisibleMax (which were marked obsolete and removed from viewport/docking branch already).
-- Made it illegal/assert when io.DisplayTime == 0.0f (with an exception for the first frame).
+- Made it illegal/assert when io.DisplayTime == 0.0 (with an exception for the first frame).
   If for some reason your time step calculation gives you a zero value, replace it with a arbitrarily small value!
 
 Other Changes:
@@ -2337,7 +2337,7 @@ Other Changes:
   small window, as well as reducing visual noise/overlap.
 - ListBox: Better optimized when clipped / non-visible.
 - InputTextMultiline: Better optimized when clipped / non-visible.
-- Font: Fixed high-level ImGui::CalcTextSize() used by most widgets from erroneously subtracting 1.0f*scale to
+- Font: Fixed high-level ImGui::CalcTextSize() used by most widgets from erroneously subtracting 1.0*scale to
   calculated text width. Among noticeable side-effects, it would make sequences of repeated Text/SameLine calls
   not align the same as a single call, and create mismatch between high-level size calculation and those performed
   with the lower-level ImDrawList api. (#792) [@SlNPacifist]
@@ -2481,7 +2481,7 @@ Other Changes:
   of root floating windows outside the window, making it easier to resize windows. Resize grips are also
   extended accordingly so there are no discontinuity when hovering between borders and corners. (#1495, #822)
 - Window: Added ImGuiWindowFlags_NoBackground flag to avoid rendering window background. This is mostly to allow
-  the creation of new flag combinations, as we could already use SetNextWindowBgAlpha(0.0f). (#1660) [@biojppm, @ocornut]
+  the creation of new flag combinations, as we could already use SetNextWindowBgAlpha(0.0). (#1660) [@biojppm, @ocornut]
 - Window: Added ImGuiWindowFlags_NoDecoration helper flag which is essentially NoTitleBar+NoResize+NoScrollbar+NoCollapse.
 - Window: Added ImGuiWindowFlags_NoMouseInputs which is basically the old ImGuiWindowFlags_NoInputs (essentially
   we have renamed ImGuiWindowFlags_NoInputs to ImGuiWindowFlags_NoMouseInputs). Made the new ImGuiWindowFlags_NoInputs
@@ -2495,7 +2495,7 @@ Other Changes:
 - ListBox(): Fixed frame sizing when items_count==1 unnecessarily showing a scrollbar. (#2173) [@luk1337, @ocornut]
 - ListBox(): Tweaked frame sizing so list boxes will look more consistent when FramePadding is far from ItemSpacing.
 - RenderText(): Some optimization for very large text buffers, useful for non-optimized builds.
-- BeginMenu(): Fixed menu popup horizontal offset being off the item in the menu bar when WindowPadding=0.0f.
+- BeginMenu(): Fixed menu popup horizontal offset being off the item in the menu bar when WindowPadding=0.0.
 - ArrowButton(): Fixed arrow shape being horizontally misaligned by (FramePadding.y-FramePadding.x) if they are different.
 - Demo: Split the contents of ShowDemoWindow() into smaller functions as it appears to speed up link time with VS. (#2152)
 - Drag and Drop: Added GetDragDropPayload() to peek directly into the payload (if any) from anywhere. (#143)
@@ -2712,7 +2712,7 @@ Other Changes:
 - InputTextMultiline(): Fixed double navigation highlight when scrollbar is active. (#787)
 - InputText(): Fixed Undo corruption after pasting large amount of text (Redo will still fail when undo buffers are exhausted,
   but text won't be corrupted).
-- SliderFloat(): When using keyboard/gamepad and a zero precision format string (e.g. "%.0f"), always step in integer units. (#1866)
+- SliderFloat(): When using keyboard/gamepad and a zero precision format string (e.g. "%.0"), always step in integer units. (#1866)
 - ImFontConfig: Added GlyphMinAdvanceX/GlyphMaxAdvanceX settings useful to make a font appears monospaced, particularly useful
   for icon fonts. (#1869)
 - ImFontAtlas: Added GetGlyphRangesChineseSimplifiedCommon() helper that returns a list of ~2500 most common Simplified Chinese
@@ -2744,7 +2744,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 
 Breaking Changes:
 
-- DragInt(): The default compile-time format string has been changed from "%.0f" to "%d", as we are not using integers internally
+- DragInt(): The default compile-time format string has been changed from "%.0" to "%d", as we are not using integers internally
   any more. If you used DragInt() with custom format strings, make sure you change them to use %d or an integer-compatible format.
   To honor backward-compatibility, the DragInt() code will currently parse and modify format strings to replace %*f with %d,
   giving time to users to upgrade their code.
@@ -2772,7 +2772,7 @@ Other Changes:
   to manually load/save .ini settings. (#923, #993)
 - Settings: Added io.WantSaveIniSettings flag, which is set to notify the application that e.g. SaveIniSettingsToMemory()
   should be called. (#923, #993)
-- Scrolling: Fixed a case where using SetScrollHere(1.0f) at the bottom of a window on the same frame the window height
+- Scrolling: Fixed a case where using SetScrollHere(1.0) at the bottom of a window on the same frame the window height
   has been growing would have the scroll clamped using the previous height. (#1804)
 - MenuBar: Made BeginMainMenuBar() honor style.DisplaySafeAreaPadding so the text can be made visible on TV settings that
   don't display all pixels. (#1439) [@dougbinks]
@@ -2887,7 +2887,7 @@ Other Changes:
 - Window: Clicking on a window with the ImGuiWIndowFlags_NoMove flags takes an ActiveId so we can't hover something else when dragging afterwards. (#1381, #1337)
 - Window: IsWindowHovered(): Added ImGuiHoveredFlags_AnyWindow, ImGuiFocusedFlags_AnyWindow flags (See Breaking Changes). Added to demo. (#1382)
 - Window: Added SetNextWindowBgAlpha() helper. Particularly helpful since the legacy 5-parameters version of Begin() has been marked as obsolete in 1.53. (#1567)
-- Window: Fixed SetNextWindowContentSize() with 0.0f on Y axis (or SetNextWindowContentWidth()) overwriting the contents size. Got broken on Dec 10 (1.53). (#1363)
+- Window: Fixed SetNextWindowContentSize() with 0.0 on Y axis (or SetNextWindowContentWidth()) overwriting the contents size. Got broken on Dec 10 (1.53). (#1363)
 - ArrowButton: Added ArrowButton() given a cardinal direction (e.g. ImGuiDir_Left).
 - InputText: Added alternative clipboard shortcuts: Shift+Delete (cut), CTRL+Insert (copy), Shift+Insert (paste). (#1541)
 - InputText: Fixed losing Cursor X position when clicking outside on an item that's submitted after the InputText(). It was only noticeable when restoring focus programmatically. (#1418, #1554)
@@ -3296,10 +3296,10 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - Added a void* user_data parameter to Clipboard function handlers. (#875)
-- SameLine(x) with x>0.0f is now relative to left of column/group if any, and not always to left of window. This was sort of always the intent and hopefully breakage should be minimal.
+- SameLine(x) with x>0.0 is now relative to left of column/group if any, and not always to left of window. This was sort of always the intent and hopefully breakage should be minimal.
 - Renamed ImDrawList::PathFill() - rarely used directly - to ImDrawList::PathFillConvex() for clarity and consistency.
 - Removed ImFontConfig::MergeGlyphCenterV in favor of a more multipurpose ImFontConfig::GlyphOffset.
-- Style: style.WindowTitleAlign is now a ImVec2 (ImGuiAlign enum was removed). set to (0.5f,0.5f) for horizontal+vertical centering, (0.0f,0.0f) for upper-left, etc.
+- Style: style.WindowTitleAlign is now a ImVec2 (ImGuiAlign enum was removed). set to (0.5,0.5) for horizontal+vertical centering, (0.0,0.0) for upper-left, etc.
 - BeginChild(const char*) now applies the stack id to the provided label, consistently with other functions as it should always have been. It shouldn't affect you unless (extremely unlikely) you were appending multiple times to a same child from different locations of the stack id. If that's the case, generate an id with GetId() and use it instead of passing string to BeginChild().
 
 Other Changes:
@@ -3395,12 +3395,12 @@ Breaking Changes:
 - Removed confusing set of `GetInternalState()`, `GetInternalStateSize()`, `SetInternalState()` functions. Now using `CreateContext()`, `DestroyContext()`, `GetCurrentContext()`, `SetCurrentContext()`. If you were using multiple contexts the change should be obvious and trivial.
 - Obsoleted old signature of `CollapsingHeader(const char* label, const char* str_id = NULL, bool display_frame = true, bool default_open = false)`, as extra parameters were badly designed and rarely used. Most uses were using 1 parameter and shouldn't affect you. You can replace the "default_open = true" flag in new API with `CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)`.
 - Changed `ImDrawList::PushClipRect(ImVec4 rect)` to `ImDraw::PushClipRect(ImVec2 min,ImVec2 max,bool intersect_with_current_clip_rect=false)`. Note that higher-level `ImGui::PushClipRect()` is preferable because it will clip at logic/widget level, whereas `ImDrawList::PushClipRect()` only affect your renderer.
-- Title bar (using ImGuiCol_TitleBg/ImGuiCol_TitleBgActive colors) isn't rendered over a window background (ImGuiCol_WindowBg color) anymore (see #655). If your TitleBg/TitleBgActive alpha was 1.0f or you are using the default theme it will not affect you. However if your TitleBg/TitleBgActive alpha was <1.0f you need to tweak your custom theme to readjust for the fact that we don't draw a WindowBg background behind the title bar.
+- Title bar (using ImGuiCol_TitleBg/ImGuiCol_TitleBgActive colors) isn't rendered over a window background (ImGuiCol_WindowBg color) anymore (see #655). If your TitleBg/TitleBgActive alpha was 1.0 or you are using the default theme it will not affect you. However if your TitleBg/TitleBgActive alpha was <1.0 you need to tweak your custom theme to readjust for the fact that we don't draw a WindowBg background behind the title bar.
   This helper function will convert an old TitleBg/TitleBgActive color into a new one with the same visual output, given the OLD color and the OLD WindowBg color. (Or If this is confusing, just pick the RGB value from title bar from an old screenshot and apply this as TitleBg/TitleBgActive. Or you may just create TitleBgActive from a tweaked TitleBg color.)
 
     ImVec4 ConvertTitleBgCol(const ImVec4& win_bg_col, const ImVec4& title_bg_col)
     {
-       float new_a = 1.0f - ((1.0f - win_bg_col.w) * (1.0f - title_bg_col.w));
+       float new_a = 1.0 - ((1.0 - win_bg_col.w) * (1.0 - title_bg_col.w));
        float k = title_bg_col.w / new_a;
        return ImVec4((win_bg_col.x * win_bg_col.w + title_bg_col.x) * k, (win_bg_col.y * win_bg_col.w + title_bg_col.y) * k, (win_bg_col.z * win_bg_col.w + title_bg_col.z) * k, new_a);
     }
@@ -3430,7 +3430,7 @@ Other changes:
 - InputText(): Fixed clipping of cursor rendering in case it gets out of the box (which can be forced w/ ImGuiInputTextFlags_NoHorizontalScroll. (#601)
 - Style: Changed default IndentSpacing from 22 to 21. (#581, #324)
 - Style: Fixed TitleBg/TitleBgActive color being rendered above WindowBg color, which was inconsistent and causing visual artifact. (#655)
-  This broke the meaning of TitleBg and TitleBgActive. Only affect values where Alpha<1.0f. Fixed default theme. Read comments in "API BREAKING CHANGES" section to convert.
+  This broke the meaning of TitleBg and TitleBgActive. Only affect values where Alpha<1.0. Fixed default theme. Read comments in "API BREAKING CHANGES" section to convert.
 - Relative rendering of order of Child windows creation is preserved, to allow more control with overlapping children. (#595)
 - Fixed GetWindowContentRegionMax() being off by ScrollbarSize amount when explicit SizeContents is set.
 - Indent(), Unindent(): optional non-default indenting width. (#324, #581)
@@ -3510,7 +3510,7 @@ Other Changes:
 - ImDrawList: AddCircle(), AddRect() takes optional thickness parameter.
 - ImDrawList: Added AddTriangle().
 - ImDrawList: Added PrimQuadUV() helper to ease custom rendering of textured quads (require primitive reserve).
-- ImDrawList: Allow AddText(ImFont\* font, float font_size, ...) variant to take NULL/0.0f as default.
+- ImDrawList: Allow AddText(ImFont\* font, float font_size, ...) variant to take NULL/0.0 as default.
 - ImFontAtlas: heuristic increase default texture width up for large number of glyphs. (#491)
 - ImTextBuffer: Fixed empty() helper which was utterly broken.
 - Metrics: allow to inspect individual triangles in draw calls.
@@ -3649,7 +3649,7 @@ Breaking Changes:
   are now incorporating the scrolling amount. They were incorrectly not incorporating this amount previously.
   It PROBABLY shouldn't break anything, but that depends on how you used them. Namely:
   - If you always used SetCursorPos() with values relative to GetCursorPos() there shouldn't be a problem.
-    However if you used absolute coordinates, note that SetCursorPosY(100.0f) will put you at +100 from the initial Y position (which may be scrolled out of the view), NOT at +100 from the window top border. Since there wasn't any official scrolling value on X axis (past just manually moving the cursor) this can only affect you if you used to set absolute coordinates on the Y axis which is hopefully rare/unlikely, and trivial to fix.
+    However if you used absolute coordinates, note that SetCursorPosY(100.0) will put you at +100 from the initial Y position (which may be scrolled out of the view), NOT at +100 from the window top border. Since there wasn't any official scrolling value on X axis (past just manually moving the cursor) this can only affect you if you used to set absolute coordinates on the Y axis which is hopefully rare/unlikely, and trivial to fix.
   - The value of GetWindowContentRegionMax() isn't necessarily close to GetWindowWidth() if horizontally scrolling.
     Previously they were roughly interchangeable (roughly because the content region exclude window padding).
 
@@ -3687,7 +3687,7 @@ Other Changes:
 - Style: made scrollbars rounded by default. Because nice. Minor menu bar background alpha tweak. (#246)
 - Metrics: display indices along with triangles count (#299) and some internal state.
 - ImGuiTextFilter::PassFilter() supports string range. Added [] helper to ImGuiTextBuffer.
-- ImGuiTextFilter::Draw() default parameter width=0.0f for no override, allow override with negative values.
+- ImGuiTextFilter::Draw() default parameter width=0.0 for no override, allow override with negative values.
 - Examples: OpenGL2/OpenGL3: fix for retina displays. Default font current lack crispness.
 - Examples: OpenGL2/OpenGL3: save/restore more GL state correctly.
 - Examples: DirectX9/DirectX11: resizing buffers dynamically (#299).
@@ -3839,7 +3839,7 @@ Other Changes:
 - Added GetKeyIndex() helper for converting from ImGuiKey_\* enum to user's keycodes. Basically pulls from io.KeysMap[].
 - Added missing ImGuiKey_PageUp, ImGuiKey_PageDown so more UI code can be written without referring to implementation-side keycodes.
 - MenuItem() can be activated on release. (#245)
-- Allowing NewFrame() with DeltaTime==0.0f to not assert.
+- Allowing NewFrame() with DeltaTime==0.0 to not assert.
 - Fixed IsMouseDragging(). (#260)
 - Fixed PlotLines(), PlotHistogram() using incorrect hovering test so they would show their tooltip even when there is
   a popup between mouse and the graph.

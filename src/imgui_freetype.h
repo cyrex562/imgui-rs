@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "img_h.rs"      // IMGUI_API
+#include "imgui_h.rs"      // IMGUI_API
 
 // Forward declarations
 struct ImFontAtlas;

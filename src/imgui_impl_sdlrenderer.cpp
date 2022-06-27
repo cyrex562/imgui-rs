@@ -24,7 +24,7 @@
 //  2021-10-06: Backup and restore modified ClipRect/Viewport.
 //  2021-09-21: Initial version.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_sdlrenderer.h"
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
@@ -111,12 +111,12 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
 	// If there's a scale factor set by the user, use that instead
     // If the user has specified a scale factor to SDL_Renderer already via SDL_RenderSetScale(), SDL will scale whatever we pass
     // to SDL_RenderGeometryRaw() by that scale factor. In that case we don't want to be also scaling it ourselves here.
-    float rsx = 1.0f;
-	float rsy = 1.0f;
+    float rsx = 1.0;
+	float rsy = 1.0;
 	SDL_RenderGetScale(bd->SDLRenderer, &rsx, &rsy);
     ImVec2 render_scale;
-	render_scale.x = (rsx == 1.0f) ? draw_data->FramebufferScale.x : 1.0f;
-	render_scale.y = (rsy == 1.0f) ? draw_data->FramebufferScale.y : 1.0f;
+	render_scale.x = (rsx == 1.0) ? draw_data->FramebufferScale.x : 1.0;
+	render_scale.y = (rsy == 1.0) ? draw_data->FramebufferScale.y : 1.0;
 
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 	int fb_width = (int)(draw_data->DisplaySize.x * render_scale.x);
@@ -165,8 +165,8 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
                 // Project scissor/clipping rectangles into framebuffer space
                 ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
                 ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
-                if (clip_min.x < 0.0f) { clip_min.x = 0.0f; }
-                if (clip_min.y < 0.0f) { clip_min.y = 0.0f; }
+                if (clip_min.x < 0.0) { clip_min.x = 0.0; }
+                if (clip_min.y < 0.0) { clip_min.y = 0.0; }
                 if (clip_max.x > fb_width) { clip_max.x = (float)fb_width; }
                 if (clip_max.y > fb_height) { clip_max.y = (float)fb_height; }
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)

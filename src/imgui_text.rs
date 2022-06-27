@@ -1,6 +1,6 @@
 use std::os::raw::c_char;
 use std::ptr;
-use crate::img_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX};
+use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX};
 
 // Convert UTF-8 to 32-bit character, process single character input.
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).

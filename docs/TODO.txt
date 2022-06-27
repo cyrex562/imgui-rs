@@ -25,7 +25,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - window: investigate better auto-positioning for new windows.
  - window: top most window flag? more z-order contrl? (#2574)
  - window/size: manually triggered auto-fit (double-click on grip) shouldn't resize window down to viewport size?
- - window/size: how to allow to e.g. auto-size vertically to fit contents, but be horizontally resizable? Assuming SetNextWindowSize() is modified to treat -1.0f on each axis as "keep as-is" (would be good but might break erroneous code): Problem is UpdateWindowManualResize() and lots of code treat (window->AutoFitFramesX > 0 || window->AutoFitFramesY > 0) together.
+ - window/size: how to allow to e.g. auto-size vertically to fit contents, but be horizontally resizable? Assuming SetNextWindowSize() is modified to treat -1.0 on each axis as "keep as-is" (would be good but might break erroneous code): Problem is UpdateWindowManualResize() and lots of code treat (window->AutoFitFramesX > 0 || window->AutoFitFramesY > 0) together.
  - window/opt: freeze window flag: if not focused/hovered, return false, render with previous ImDrawList. and/or reduce refresh rate. -> this may require enforcing that it is illegal to submit contents if Begin returns false.
  - window/child: background options for child windows, border option (disable rounding).
  - window/child: allow resizing of child windows (possibly given min/max for each axis?.)
@@ -65,7 +65,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - widgets: checkbox: checkbox with custom glyph inside frame.
  - widgets: coloredit: keep reporting as active when picker is on?
  - widgets: group/scalarn functions: expose more per-component information. e.g. store NextItemData.ComponentIdx set by scalarn function, groups can expose them back somehow.
- - selectable: using (size.x == 0.0f) and (SelectableTextAlign.x > 0.0f) followed by SameLine() is currently not supported.
+ - selectable: using (size.x == 0.0) and (SelectableTextAlign.x > 0.0) followed by SameLine() is currently not supported.
  - selectable: generic BeginSelectable()/EndSelectable() mechanism. (work out alongside range-select branch)
  - selectable: a way to visualize partial/mixed selection (e.g. parent tree node has children with mixed selection)
 
@@ -129,7 +129,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - plot: option/feature: draw the zero line
  - plot: option/feature: draw grid, vertical markers
  - plot: option/feature: draw unit
- - plot: add a helper e.g. Plot(char* label, float value, float time_span=2.0f) that stores values and Plot them for you - probably another function name. and/or automatically allow to plot ANY displayed value (more reliance on stable ID)
+ - plot: add a helper e.g. Plot(char* label, float value, float time_span=2.0) that stores values and Plot them for you - probably another function name. and/or automatically allow to plot ANY displayed value (more reliance on stable ID)
 
  - clipper: ability to disable the clipping through a simple flag/bool.
  - clipper: ability to run without knowing full count in advance.
@@ -185,14 +185,14 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - slider: allow using the [-]/[+] buttons used by InputFloat()/InputInt()
  - slider: initial absolute click is imprecise. change to relative movement slider (same as scrollbar). (#1946)
  - slider: add dragging-based widgets to edit values with mouse (on 2 axises), saving screen real-estate.
- - slider: tint background based on value (e.g. v_min -> v_max, or use 0.0f either side of the sign)
+ - slider: tint background based on value (e.g. v_min -> v_max, or use 0.0 either side of the sign)
  - slider: relative dragging? + precision dragging
  - slider: step option (#1183)
  - slider: style: fill % of the bar instead of positioning a drag.
  - knob: rotating knob widget (#942)
  - drag float: support for reversed drags (min > max) (removed is_locked, also see fdc526e)
  - drag float: up/down axis
- - drag float: power != 0.0f with current value being outside the range keeps the value stuck.
+ - drag float: power != 0.0 with current value being outside the range keeps the value stuck.
  - drag float: added leeway on edge (e.g. a few invisible steps past the clamp limits)
 
  - combo: use clipper.

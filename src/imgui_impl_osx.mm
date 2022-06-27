@@ -15,7 +15,7 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#import "img_h.rs"
+#import "imgui_h.rs"
 
 #import "imgui_impl_osx.h"
 #import <Cocoa/Cocoa.h>
@@ -534,10 +534,10 @@ static void ImGui_ImplOSX_UpdateGamepads()
     GCExtendedGamepad* gp = controller.extendedGamepad;
 
     // Update gamepad inputs
-    #define IM_SATURATE(V)                        (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
+    #define IM_SATURATE(V)                        (V < 0.0 ? 0.0 : V > 1.0 ? 1.0 : V)
     #define MAP_BUTTON(KEY_NO, BUTTON_NAME)       { io.AddKeyEvent(KEY_NO, gp.BUTTON_NAME.isPressed); }
-    #define MAP_ANALOG(KEY_NO, AXIS_NAME, V0, V1) { float vn = (float)(gp.AXIS_NAME.value - V0) / (float)(V1 - V0); vn = IM_SATURATE(vn); io.AddKeyAnalogEvent(KEY_NO, vn > 0.1f, vn); }
-    const float thumb_dead_zone = 0.0f;
+    #define MAP_ANALOG(KEY_NO, AXIS_NAME, V0, V1) { float vn = (float)(gp.AXIS_NAME.value - V0) / (float)(V1 - V0); vn = IM_SATURATE(vn); io.AddKeyAnalogEvent(KEY_NO, vn > 0.1, vn); }
+    const float thumb_dead_zone = 0.0;
 
 #if APPLE_HAS_BUTTON_OPTIONS
     MAP_BUTTON(ImGuiKey_GamepadBack,            buttonOptions);
@@ -550,22 +550,22 @@ static void ImGui_ImplOSX_UpdateGamepads()
     MAP_BUTTON(ImGuiKey_GamepadDpadRight,       dpad.right);
     MAP_BUTTON(ImGuiKey_GamepadDpadUp,          dpad.up);
     MAP_BUTTON(ImGuiKey_GamepadDpadDown,        dpad.down);
-    MAP_ANALOG(ImGuiKey_GamepadL1,              leftShoulder, 0.0f, 1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadR1,              rightShoulder, 0.0f, 1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadL2,              leftTrigger,  0.0f, 1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadR2,              rightTrigger, 0.0f, 1.0f);
+    MAP_ANALOG(ImGuiKey_GamepadL1,              leftShoulder, 0.0, 1.0);
+    MAP_ANALOG(ImGuiKey_GamepadR1,              rightShoulder, 0.0, 1.0);
+    MAP_ANALOG(ImGuiKey_GamepadL2,              leftTrigger,  0.0, 1.0);
+    MAP_ANALOG(ImGuiKey_GamepadR2,              rightTrigger, 0.0, 1.0);
 #if APPLE_HAS_THUMBSTICKS
     MAP_BUTTON(ImGuiKey_GamepadL3,              leftThumbstickButton);
     MAP_BUTTON(ImGuiKey_GamepadR3,              rightThumbstickButton);
 #endif
-    MAP_ANALOG(ImGuiKey_GamepadLStickLeft,      leftThumbstick.xAxis,  -thumb_dead_zone, -1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadLStickRight,     leftThumbstick.xAxis,  +thumb_dead_zone, +1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadLStickUp,        leftThumbstick.yAxis,  +thumb_dead_zone, +1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadLStickDown,      leftThumbstick.yAxis,  -thumb_dead_zone, -1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadRStickLeft,      rightThumbstick.xAxis, -thumb_dead_zone, -1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadRStickRight,     rightThumbstick.xAxis, +thumb_dead_zone, +1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadRStickUp,        rightThumbstick.yAxis, +thumb_dead_zone, +1.0f);
-    MAP_ANALOG(ImGuiKey_GamepadRStickDown,      rightThumbstick.yAxis, -thumb_dead_zone, -1.0f);
+    MAP_ANALOG(ImGuiKey_GamepadLStickLeft,      leftThumbstick.xAxis,  -thumb_dead_zone, -1.0);
+    MAP_ANALOG(ImGuiKey_GamepadLStickRight,     leftThumbstick.xAxis,  +thumb_dead_zone, +1.0);
+    MAP_ANALOG(ImGuiKey_GamepadLStickUp,        leftThumbstick.yAxis,  +thumb_dead_zone, +1.0);
+    MAP_ANALOG(ImGuiKey_GamepadLStickDown,      leftThumbstick.yAxis,  -thumb_dead_zone, -1.0);
+    MAP_ANALOG(ImGuiKey_GamepadRStickLeft,      rightThumbstick.xAxis, -thumb_dead_zone, -1.0);
+    MAP_ANALOG(ImGuiKey_GamepadRStickRight,     rightThumbstick.xAxis, +thumb_dead_zone, +1.0);
+    MAP_ANALOG(ImGuiKey_GamepadRStickUp,        rightThumbstick.yAxis, +thumb_dead_zone, +1.0);
+    MAP_ANALOG(ImGuiKey_GamepadRStickDown,      rightThumbstick.yAxis, -thumb_dead_zone, -1.0);
     #undef MAP_BUTTON
     #undef MAP_ANALOG
 
@@ -684,7 +684,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
             wheel_dy = [event deltaY];
         }
         if (wheel_dx != 0.0 || wheel_dy != 0.0)
-            io.AddMouseWheelEvent((float)wheel_dx * 0.1f, (float)wheel_dy * 0.1f);
+            io.AddMouseWheelEvent((float)wheel_dx * 0.1, (float)wheel_dy * 0.1);
 
         return io.WantCaptureMouse;
     }
@@ -957,7 +957,7 @@ static void ImGui_ImplOSX_SetWindowAlpha(ImGuiViewport* viewport, float alpha)
 {
     ImGuiViewportDataOSX* data = (ImGuiViewportDataOSX*)viewport->PlatformUserData;
     IM_ASSERT(data->Window != 0);
-    IM_ASSERT(alpha >= 0.0f && alpha <= 1.0f);
+    IM_ASSERT(alpha >= 0.0 && alpha <= 1.0);
 
     data->Window.alphaValue = alpha;
 }

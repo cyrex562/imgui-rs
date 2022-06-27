@@ -94,30 +94,30 @@ void init(struct android_app* app)
     // FIXME: Put some effort into DPI awareness.
     // Important: when calling AddFontFromMemoryTTF(), ownership of font_data is transfered by Dear ImGui by default (deleted is handled by Dear ImGui), unless we set FontDataOwnedByAtlas=false in ImFontConfig
     ImFontConfig font_cfg;
-    font_cfg.SizePixels = 22.0f;
+    font_cfg.SizePixels = 22.0;
     io.Fonts->AddFontDefault(&font_cfg);
     //void* font_data;
     //int font_data_size;
     //ImFont* font;
     //font_data_size = GetAssetData("Roboto-Medium.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0f);
+    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("Cousine-Regular.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 15.0f);
+    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 15.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("DroidSans.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0f);
+    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("ProggyTiny.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 10.0f);
+    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 10.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("ArialUni.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 18.0, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
     // Arbitrary scale-up
     // FIXME: Put some effort into DPI awareness
-    ImGui::GetStyle().ScaleAllSizes(3.0f);
+    ImGui::GetStyle().ScaleAllSizes(3.0);
 
     g_Initialized = true;
 }
@@ -131,7 +131,7 @@ void tick()
     // Our state
     static bool show_demo_window = true;
     static bool show_another_window = false;
-    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    static ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
 
     // Poll Unicode characters via JNI
     // FIXME: do not call this every frame because of JNI overhead
@@ -154,7 +154,7 @@ void tick()
 
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
     {
-        static float f = 0.0f;
+        static float f = 0.0;
         static int counter = 0;
 
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
@@ -163,7 +163,7 @@ void tick()
         ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
         ImGui::Checkbox("Another Window", &show_another_window);
 
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::SliderFloat("float", &f, 0.0, 1.0);            // Edit 1 float using a slider from 0.0 to 1.0
         ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -171,7 +171,7 @@ void tick()
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
 
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
     }
 

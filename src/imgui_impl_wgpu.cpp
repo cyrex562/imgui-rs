@@ -21,7 +21,7 @@
 //  2021-02-18: Change blending equation to preserve alpha in output buffer.
 //  2021-01-28: Initial version.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_wgpu.h"
 #include <limits.h>
@@ -303,10 +303,10 @@ static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPas
         float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
         float mvp[4][4] =
         {
-            { 2.0f/(R-L),   0.0f,           0.0f,       0.0f },
-            { 0.0f,         2.0f/(T-B),     0.0f,       0.0f },
-            { 0.0f,         0.0f,           0.5f,       0.0f },
-            { (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
+            { 2.0/(R-L),   0.0,           0.0,       0.0 },
+            { 0.0,         2.0/(T-B),     0.0,       0.0 },
+            { 0.0,         0.0,           0.5,       0.0 },
+            { (R+L)/(L-R),  (T+B)/(B-T),    0.5,       1.0 },
         };
         wgpuQueueWriteBuffer(g_defaultQueue, g_resources.Uniforms, 0, mvp, sizeof(mvp));
     }
@@ -330,7 +330,7 @@ static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPas
 void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder pass_encoder)
 {
     // Avoid rendering when minimized
-    if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
+    if (draw_data->DisplaySize.x <= 0.0 || draw_data->DisplaySize.y <= 0.0)
         return;
 
     // FIXME: Assuming that this only gets called once per frame!

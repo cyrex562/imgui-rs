@@ -10,7 +10,7 @@ pub struct ImVec2
     pub x: f32,
     pub y: f32,
 
-    // constexpr ImVec2()                      : x(0.0f), y(0.0f) { }
+    // constexpr ImVec2()                      : x(0.0), y(0.0) { }
     // constexpr ImVec2(float _x, float _y)    : x(_x), y(_y) { }
     // float  operator[] (size_t idx) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
     // float& operator[] (size_t idx)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.

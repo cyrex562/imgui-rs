@@ -92,7 +92,7 @@ ImGui::PopFont();
 ImFontConfig config;
 config.OversampleH = 2;
 config.OversampleV = 1;
-config.GlyphExtraSpacing.x = 1.0f;
+config.GlyphExtraSpacing.x = 1.0;
 ImFont* font = io.Fonts->AddFontFromFileTTF("font.ttf", size_pixels, &config);
 ```
 
@@ -108,8 +108,8 @@ ImFont* font = io.Fonts->AddFontDefault();
 static const ImWchar icons_ranges[] = { 0xf000, 0xf3ff, 0 }; // Will not be copied by AddFont* so keep in scope.
 ImFontConfig config;
 config.MergeMode = true;
-io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 18.0f, &config, io.Fonts->GetGlyphRangesJapanese()); // Merge into first font
-io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 18.0f, &config, icons_ranges);             // Merge into first font
+io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 18.0, &config, io.Fonts->GetGlyphRangesJapanese()); // Merge into first font
+io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 18.0, &config, icons_ranges);             // Merge into first font
 io.Fonts->Build();
 ```
 
@@ -132,7 +132,7 @@ See [Using Custom Glyph Ranges](#using-custom-glyph-ranges) section to create yo
 
 ```cpp
 ImGuiIO& io = ImGui::GetIO();
-io.Fonts->AddFontFromFileTTF("NotoSansCJKjp-Medium.otf", 20.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+io.Fonts->AddFontFromFileTTF("NotoSansCJKjp-Medium.otf", 20.0, NULL, io.Fonts->GetGlyphRangesJapanese());
 ```
 ```cpp
 ImGui::Text(u8"こんにちは！テスト %d", 123);
@@ -141,7 +141,7 @@ if (ImGui::Button(u8"ロード"))
     // do stuff
 }
 ImGui::InputText("string", buf, IM_ARRAYSIZE(buf));
-ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+ImGui::SliderFloat("float", &f, 0.0, 1.0);
 ```
 
 ![sample code output](https://raw.githubusercontent.com/wiki/ocornut/imgui/web/v160/code_sample_02_jp.png)
@@ -183,9 +183,9 @@ io.Fonts->AddFontDefault();
 
 ImFontConfig config;
 config.MergeMode = true;
-config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
+config.GlyphMinAdvanceX = 13.0; // Use if you want to make the icon monospaced
 static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
-io.Fonts->AddFontFromFileTTF("fonts/fontawesome-webfont.ttf", 13.0f, &config, icon_ranges);
+io.Fonts->AddFontFromFileTTF("fonts/fontawesome-webfont.ttf", 13.0, &config, icon_ranges);
 ```
 Example Usage:
 ```cpp
@@ -223,13 +223,13 @@ Here's an application using icons ("Avoyd", https://www.avoyd.com):
 ![colored glyphs](https://user-images.githubusercontent.com/8225057/106171241-9dc4ba80-6191-11eb-8a69-ca1467b206d1.png)
 
 ```cpp
-io.Fonts->AddFontFromFileTTF("../../../imgui_dev/data/fonts/NotoSans-Regular.ttf", 16.0f);
+io.Fonts->AddFontFromFileTTF("../../../imgui_dev/data/fonts/NotoSans-Regular.ttf", 16.0);
 static ImWchar ranges[] = { 0x1, 0x1FFFF, 0 };
 static ImFontConfig cfg;
 cfg.OversampleH = cfg.OversampleV = 1;
 cfg.MergeMode = true;
 cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
-io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\seguiemj.ttf", 16.0f, &cfg, ranges);
+io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\seguiemj.ttf", 16.0, &cfg, ranges);
 ```
 
 ##### [Return to Index](#index)

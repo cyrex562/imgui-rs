@@ -28,7 +28,7 @@
 //  2018-11-30: Misc: Setting up io.BackendPlatformName so it can be displayed in the About Window.
 //  2018-03-22: Added GLUT Platform binding.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_glut.h"
 #ifdef __APPLE__
@@ -198,7 +198,7 @@ void ImGui_ImplGLUT_NewFrame()
     int delta_time_ms = (current_time - g_Time);
     if (delta_time_ms <= 0)
         delta_time_ms = 1;
-    io.DeltaTime = delta_time_ms / 1000.0f;
+    io.DeltaTime = delta_time_ms / 1000.0;
     g_Time = current_time;
 
     // Start the frame
@@ -280,7 +280,7 @@ void ImGui_ImplGLUT_MouseWheelFunc(int button, int dir, int x, int y)
     ImGuiIO& io = ImGui::GetIO();
     io.AddMousePosEvent((float)x, (float)y);
     if (dir != 0)
-        io.AddMouseWheelEvent(0.0f, dir > 0 ? 1.0f : -1.0f);
+        io.AddMouseWheelEvent(0.0, dir > 0 ? 1.0 : -1.0);
     (void)button; // Unused
 }
 #endif

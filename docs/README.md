@@ -53,7 +53,7 @@ ImGui::Text("Hello, world %d", 123);
 if (ImGui::Button("Save"))
     MySaveFunction();
 ImGui::InputText("string", buf, IM_ARRAYSIZE(buf));
-ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+ImGui::SliderFloat("float", &f, 0.0, 1.0);
 ```
 Result:
 <br>![sample code output (dark)](https://raw.githubusercontent.com/wiki/ocornut/imgui/web/v175/capture_readme_styles_0001.png) ![sample code output (light)](https://raw.githubusercontent.com/wiki/ocornut/imgui/web/v175/capture_readme_styles_0002.png)
@@ -78,7 +78,7 @@ if (ImGui::BeginMenuBar())
 ImGui::ColorEdit4("Color", my_color);
 
 // Plot some values
-const float my_values[] = { 0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f };
+const float my_values[] = { 0.2, 0.1, 1.0, 0.5, 0.9, 2.2 };
 ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
 
 // Display contents in a scrolling region

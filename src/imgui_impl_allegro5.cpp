@@ -45,7 +45,7 @@
 
 #include <stdint.h>     // uint64_t
 #include <cstring>      // memcpy
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_allegro5.h"
 
@@ -102,7 +102,7 @@ static void ImGui_ImplAllegro5_SetupRenderState(ImDrawData* draw_data)
         ALLEGRO_TRANSFORM transform;
         al_identity_transform(&transform);
         al_use_transform(&transform);
-        al_orthographic_transform(&transform, L, T, 1.0f, R, B, -1.0f);
+        al_orthographic_transform(&transform, L, T, 1.0, R, B, -1.0);
         al_use_projection_transform(&transform);
     }
 }
@@ -111,7 +111,7 @@ static void ImGui_ImplAllegro5_SetupRenderState(ImDrawData* draw_data)
 void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
 {
     // Avoid rendering when minimized
-    if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
+    if (draw_data->DisplaySize.x <= 0.0 || draw_data->DisplaySize.y <= 0.0)
         return;
 
     // Backup Allegro state that will be modified
@@ -574,7 +574,7 @@ void ImGui_ImplAllegro5_NewFrame()
 
     // Setup time step
     double current_time = al_get_time();
-    io.DeltaTime = bd->Time > 0.0 ? (float)(current_time - bd->Time) : (float)(1.0f / 60.0f);
+    io.DeltaTime = bd->Time > 0.0 ? (float)(current_time - bd->Time) : (float)(1.0 / 60.0);
     bd->Time = current_time;
 
     // Setup mouse cursor shape

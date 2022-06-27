@@ -12,7 +12,7 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #pragma once
-#include "img_h.rs"          // IMGUI_IMPL_API
+#include "imgui_h.rs"          // IMGUI_IMPL_API
 #include <webgpu/webgpu.h>
 
 IMGUI_IMPL_API bool ImGui_ImplWGPU_Init(WGPUDevice device, int num_frames_in_flight, WGPUTextureFormat rt_format);

@@ -1,6 +1,6 @@
 #include "node_editor.h"
 #include <imnodes.h>
-#include "../src/img_h.rs"
+#include "../src/imgui_h.rs"
 
 namespace example
 {
@@ -39,7 +39,7 @@ public:
 static HelloWorldNodeEditor editor;
 } // namespace
 
-void NodeEditorInitialize() { ImNodes::SetNodeGridSpacePos(1, ImVec2(200.0f, 200.0f)); }
+void NodeEditorInitialize() { ImNodes::SetNodeGridSpacePos(1, ImVec2(200.0, 200.0)); }
 
 void NodeEditorShow() { editor.show(); }
 

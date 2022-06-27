@@ -28,7 +28,7 @@
 //  2018-11-30: Misc: Setting up io.BackendRendererName so it can be displayed in the About Window.
 //  2018-07-05: Metal: Added new Metal backend implementation.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_metal.h"
 #import <time.h>
@@ -191,10 +191,10 @@ static void ImGui_ImplMetal_SetupRenderState(ImDrawData* drawData, id<MTLCommand
     float F = (float)viewport.zfar;
     const float ortho_projection[4][4] =
     {
-        { 2.0f/(R-L),   0.0f,           0.0f,   0.0f },
-        { 0.0f,         2.0f/(T-B),     0.0f,   0.0f },
-        { 0.0f,         0.0f,        1/(F-N),   0.0f },
-        { (R+L)/(L-R),  (T+B)/(B-T), N/(F-N),   1.0f },
+        { 2.0/(R-L),   0.0,           0.0,   0.0 },
+        { 0.0,         2.0/(T-B),     0.0,   0.0 },
+        { 0.0,         0.0,        1/(F-N),   0.0 },
+        { (R+L)/(L-R),  (T+B)/(B-T), N/(F-N),   1.0 },
     };
     [commandEncoder setVertexBytes:&ortho_projection length:sizeof(ortho_projection) atIndex:1];
 
@@ -268,8 +268,8 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* drawData, id<MTLCommandBuffer> c
                 ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
 
                 // Clamp to viewport as setScissorRect() won't accept values that are off bounds
-                if (clip_min.x < 0.0f) { clip_min.x = 0.0f; }
-                if (clip_min.y < 0.0f) { clip_min.y = 0.0f; }
+                if (clip_min.x < 0.0) { clip_min.x = 0.0; }
+                if (clip_min.y < 0.0) { clip_min.y = 0.0; }
                 if (clip_max.x > fb_width) { clip_max.x = (float)fb_width; }
                 if (clip_max.y > fb_height) { clip_max.y = (float)fb_height; }
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)

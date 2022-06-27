@@ -91,7 +91,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
@@ -395,10 +395,10 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
 #endif
     const float ortho_projection[4][4] =
     {
-        { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
-        { 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
-        { 0.0f,         0.0f,        -1.0f,   0.0f },
-        { (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
+        { 2.0/(R-L),   0.0,         0.0,   0.0 },
+        { 0.0,         2.0/(T-B),   0.0,   0.0 },
+        { 0.0,         0.0,        -1.0,   0.0 },
+        { (R+L)/(L-R),  (T+B)/(B-T),  0.0,   1.0 },
     };
     glUseProgram(bd->ShaderHandle);
     glUniform1i(bd->AttribLocationTex, 0);
@@ -888,7 +888,7 @@ static void ImGui_ImplOpenGL3_RenderWindow(ImGuiViewport* viewport, void*)
 {
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
     {
-        ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+        ImVec4 clear_color = ImVec4(0.0, 0.0, 0.0, 1.0);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
     }

@@ -319,7 +319,7 @@ namespace
         case FT_PIXEL_MODE_BGRA:
             {
                 // FIXME: Converting pre-multiplied alpha to straight. Doesn't smell good.
-                #define DE_MULTIPLY(color, alpha) (ImU32)(255.0f * (float)color / (float)alpha + 0.5f)
+                #define DE_MULTIPLY(color, alpha) (ImU32)(255.0 * (float)color / (float)alpha + 0.5)
                 if (multiply_table == NULL)
                 {
                     for (uint32_t y = 0; y < h; y++, src += src_pitch, dst += dst_pitch)
@@ -401,8 +401,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // Clear atlas
     atlas->TexID = (ImTextureID)NULL;
     atlas->TexWidth = atlas->TexHeight = 0;
-    atlas->TexUvScale = ImVec2(0.0f, 0.0f);
-    atlas->TexUvWhitePixel = ImVec2(0.0f, 0.0f);
+    atlas->TexUvScale = ImVec2(0.0, 0.0);
+    atlas->TexUvWhitePixel = ImVec2(0.0, 0.0);
     atlas->ClearTexData();
 
     // Temporary storage for building
@@ -529,7 +529,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         buf_rects_out_n += src_tmp.GlyphsCount;
 
         // Compute multiply table if requested
-        const bool multiply_enabled = (cfg.RasterizerMultiply != 1.0f);
+        const bool multiply_enabled = (cfg.RasterizerMultiply != 1.0);
         unsigned char multiply_table[256];
         if (multiply_enabled)
             ImFontAtlasBuildMultiplyCalcLookupTable(multiply_table, cfg.RasterizerMultiply);
@@ -576,7 +576,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     if (atlas->TexDesiredWidth > 0)
         atlas->TexWidth = atlas->TexDesiredWidth;
     else
-        atlas->TexWidth = (surface_sqrt >= 4096 * 0.7f) ? 4096 : (surface_sqrt >= 2048 * 0.7f) ? 2048 : (surface_sqrt >= 1024 * 0.7f) ? 1024 : 512;
+        atlas->TexWidth = (surface_sqrt >= 4096 * 0.7) ? 4096 : (surface_sqrt >= 2048 * 0.7) ? 2048 : (surface_sqrt >= 1024 * 0.7) ? 1024 : 512;
 
     // 5. Start packing
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
@@ -606,7 +606,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
     // 7. Allocate texture
     atlas->TexHeight = (atlas->Flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas->TexHeight + 1) : ImUpperPowerOfTwo(atlas->TexHeight);
-    atlas->TexUvScale = ImVec2(1.0f / atlas->TexWidth, 1.0f / atlas->TexHeight);
+    atlas->TexUvScale = ImVec2(1.0 / atlas->TexWidth, 1.0 / atlas->TexHeight);
     if (src_load_color)
     {
         size_t tex_size = (size_t)atlas->TexWidth * atlas->TexHeight * 4;

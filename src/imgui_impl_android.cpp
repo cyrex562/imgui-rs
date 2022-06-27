@@ -24,7 +24,7 @@
 //  2022-01-10: Inputs: calling new io.AddKeyEvent(), io.AddKeyModsEvent() + io.SetKeyEventNativeData() API (1.87+). Support for full ImGuiKey range.
 //  2021-03-04: Initial version.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_android.h"
 #include <time.h>
@@ -272,6 +272,6 @@ void ImGui_ImplAndroid_NewFrame()
     struct timespec current_timespec;
     clock_gettime(CLOCK_MONOTONIC, &current_timespec);
     double current_time = (double)(current_timespec.tv_sec) + (current_timespec.tv_nsec / 1000000000.0);
-    io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
+    io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0 / 60.0);
     g_Time = current_time;
 }

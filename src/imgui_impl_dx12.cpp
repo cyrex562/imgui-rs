@@ -40,7 +40,7 @@
 //  2018-06-08: DirectX12: Use draw_data->DisplayPos and draw_data->DisplaySize to setup projection matrix and clipping rectangle (to ease support for future multi-viewport).
 //  2018-02-22: Merged into master with all Win32 code synchronized to other examples.
 
-#include "img_h.rs"
+#include "imgui_h.rs"
 
 #include "imgui_impl_dx12.h"
 
@@ -181,10 +181,10 @@ static void ImGui_ImplDX12_SetupRenderState(ImDrawData* draw_data, ID3D12Graphic
         float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
         float mvp[4][4] =
         {
-            { 2.0f/(R-L),   0.0f,           0.0f,       0.0f },
-            { 0.0f,         2.0f/(T-B),     0.0f,       0.0f },
-            { 0.0f,         0.0f,           0.5f,       0.0f },
-            { (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
+            { 2.0/(R-L),   0.0,           0.0,       0.0 },
+            { 0.0,         2.0/(T-B),     0.0,       0.0 },
+            { 0.0,         0.0,           0.5,       0.0 },
+            { (R+L)/(L-R),  (T+B)/(B-T),    0.5,       1.0 },
         };
         memcpy(&vertex_constant_buffer.mvp, mvp, sizeof(mvp));
     }
@@ -194,9 +194,9 @@ static void ImGui_ImplDX12_SetupRenderState(ImDrawData* draw_data, ID3D12Graphic
     memset(&vp, 0, sizeof(D3D12_VIEWPORT));
     vp.Width = draw_data->DisplaySize.x;
     vp.Height = draw_data->DisplaySize.y;
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
-    vp.TopLeftX = vp.TopLeftY = 0.0f;
+    vp.MinDepth = 0.0;
+    vp.MaxDepth = 1.0;
+    vp.TopLeftX = vp.TopLeftY = 0.0;
     ctx->RSSetViewports(1, &vp);
 
     // Bind shader and vertex buffers
@@ -236,7 +236,7 @@ static inline void SafeRelease(T*& res)
 void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandList* ctx)
 {
     // Avoid rendering when minimized
-    if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
+    if (draw_data->DisplaySize.x <= 0.0 || draw_data->DisplaySize.y <= 0.0)
         return;
 
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
@@ -1018,7 +1018,7 @@ static void ImGui_ImplDX12_RenderWindow(ImGuiViewport* viewport, void*)
     ImGui_ImplDX12_FrameContext* frame_context = &vd->FrameCtx[vd->FrameIndex % bd->numFramesInFlight];
     UINT back_buffer_idx = vd->SwapChain->GetCurrentBackBufferIndex();
 
-    const ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    const ImVec4 clear_color = ImVec4(0.0, 0.0, 0.0, 1.0);
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
