@@ -4,7 +4,7 @@
 //-----------------------------------------------------------------------------
 
 use std::ffi::c_void;
-use crate::imgui_h::{ImFont, ImGuiConfigFlags, ImGuiPlatformIO, ImGuiStyleVar, ImGuiViewport};
+use crate::imgui_h::{ImFont, ImGuiConfigFlags, ImGuiDir, ImGuiModFlags, ImGuiPayload, ImGuiPlatformIO, ImGuiStyleVar, ImGuiViewport};
 use crate::imgui_input_event::ImGuiInputEvent;
 use crate::imgui_io::ImGuiIO;
 use crate::imgui_kv_store::ImGuiStorage;
@@ -81,7 +81,7 @@ pub struct ImGuiContext
     // ImGuiWindow*            HoveredWindow;                      // Window the mouse is hovering. Will typically catch mouse inputs.
     pub HoveredWindow: *mut ImGuiWindow,
     // ImGuiWindow*            HoveredWindowUnderMovingWindow;     // Hovered window ignoring MovingWindow. Only set if MovingWindow is set.
-    pub HoveredWindowUnderMovingWindow: &mut ImGuiWindow,
+    pub HoveredWindowUnderMovingWindow: *mut ImGuiWindow,
     // ImGuiDockNode*          HoveredDockNode;                    // [Debug] Hovered dock node.
     pub HoveredDockNode: *mut ImGuiDockNode,
     // ImGuiWindow*            MovingWindow;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally MovingWindow->RootWindowDockTree.
@@ -104,7 +104,7 @@ pub struct ImGuiContext
     // bool                    HoveredIdUsingMouseWheel;           // Hovered widget will use mouse wheel. Blocks scrolling the underlying window.
     pub HoveredIdUsingMouseWheel: bool,
     // bool                    HoveredIdPreviousFrameUsingMouseWheel;
-    pub HoveredIdPreviousFrameUsingMouseWheel,
+    pub HoveredIdPreviousFrameUsingMouseWheel: bool,
     // bool                    HoveredIdDisabled;                  // At least one widget passed the rect test, but has been discarded by disabled flag or popup inhibit. May be true even if HoveredId == 0.
     pub HoveredIdDisabled: bool,
     // float                   HoveredIdTimer;                     // Measure contiguous hovering time
@@ -128,7 +128,7 @@ pub struct ImGuiContext
     // bool                    ActiveIdHasBeenEditedBefore;        // Was the value associated to the widget Edited over the course of the Active state.
     pub ActiveIdHassBeenEditedBefore: bool,
     // bool                    ActiveIdHasBeenEditedThisFrame;
-    pub ActiveIdHasBeenEditedThisFrame: bool
+    pub ActiveIdHasBeenEditedThisFrame: bool,
     // ImVec2                  ActiveIdClickOffset;                // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
     pub ActiveIdClockOffset: ImVec2,
     // ImGuiWindow*            ActiveIdWindow;
@@ -190,105 +190,177 @@ pub struct ImGuiContext
 
     // Viewports
     // ImVector<ImGuiViewportP*> Viewports;                        // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
-    pub Viewports: Vec<*mut ImGuiViewport>
+    pub Viewports: Vec<*mut ImGuiViewport>,
     // float                   CurrentDpiScale;                    // == CurrentViewport->DpiScale
     pub CurrentDpiScale: f32,
     // ImGuiViewportP*         CurrentViewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
-    pub CurrentViewport
-    ImGuiViewportP*         MouseViewport;
-    ImGuiViewportP*         MouseLastHoveredViewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
-    ImGuiID                 PlatformLastFocusedViewportId;
-    ImGuiPlatformMonitor    FallbackMonitor;                    // Virtual monitor used as fallback if backend doesn't provide monitor information.
-    int                     ViewportFrontMostStampCount;        // Every time the front-most window changes, we stamp its viewport with an incrementing counter
-
+    pub CurrentViewport: *mut ImGuiViewport,
+    // ImGuiViewportP*         MouseViewport;
+    pub MouseViewport: *mut ImGuiViewport,
+    // ImGuiViewportP*         MouseLastHoveredViewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
+    pub MouseLastHoveredViewport: *mut ImGuiViewport,
+    // ImGuiID                 PlatformLastFocusedViewportId;
+        pub PlatformLastFocusedViewportId: ImGuiID,
+// ImGuiPlatformMonitor    FallbackMonitor;                    // Virtual monitor used as fallback if backend doesn't provide monitor information.
+    pub FallbackMonitor: ImGuiPlatformMonitor,
+    // int                     ViewportFrontMostStampCount;        // Every time the front-most window changes, we stamp its viewport with an incrementing counter
+    pub ViewportFrontMostStampCount: i32,
     // Gamepad/keyboard Navigation
-    ImGuiWindow*            NavWindow;                          // Focused window for navigation. Could be called 'FocusedWindow'
-    ImGuiID                 NavId;                              // Focused item for navigation
-    ImGuiID                 NavFocusScopeId;                    // Identify a selection scope (selection code often wants to "clear other items" when landing on an item of the selection set)
-    ImGuiID                 NavActivateId;                      // ~~ (g.ActiveId == 0) && IsNavInputPressed(ImGuiNavInput_Activate) ? NavId : 0, also set when calling ActivateItem()
-    ImGuiID                 NavActivateDownId;                  // ~~ IsNavInputDown(ImGuiNavInput_Activate) ? NavId : 0
-    ImGuiID                 NavActivatePressedId;               // ~~ IsNavInputPressed(ImGuiNavInput_Activate) ? NavId : 0
-    ImGuiID                 NavActivateInputId;                 // ~~ IsNavInputPressed(ImGuiNavInput_Input) ? NavId : 0; ImGuiActivateFlags_PreferInput will be set and NavActivateId will be 0.
-    ImGuiActivateFlags      NavActivateFlags;
-    ImGuiID                 NavJustMovedToId;                   // Just navigated to this id (result of a successfully MoveRequest).
-    ImGuiID                 NavJustMovedToFocusScopeId;         // Just navigated to this focus scope id (result of a successfully MoveRequest).
-    ImGuiModFlags           NavJustMovedToKeyMods;
-    ImGuiID                 NavNextActivateId;                  // Set by ActivateItem(), queued until next frame.
-    ImGuiActivateFlags      NavNextActivateFlags;
-    ImGuiInputSource        NavInputSource;                     // Keyboard or Gamepad mode? THIS WILL ONLY BE None or NavGamepad or NavKeyboard.
-    ImGuiNavLayer           NavLayer;                           // Layer we are navigating on. For now the system is hard-coded for 0=main contents and 1=menu/title bar, may expose layers later.
-    bool                    NavIdIsAlive;                       // Nav widget has been seen this frame ~~ NavRectRel is valid
-    bool                    NavMousePosDirty;                   // When set we will update mouse position if (io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos) if set (NB: this not enabled by default)
-    bool                    NavDisableHighlight;                // When user starts using mouse, we hide gamepad/keyboard highlight (NB: but they are still available, which is why NavDisableHighlight isn't always != NavDisableMouseHover)
-    bool                    NavDisableMouseHover;               // When user starts using gamepad/keyboard, we hide mouse hovering highlight until mouse is touched again.
-
+    // ImGuiWindow*            NavWindow;                          // Focused window for navigation. Could be called 'FocusedWindow'
+    pub NavWindow: *mut ImGuiWindow,
+    // ImGuiID                 NavId;                              // Focused item for navigation
+    pub NavId: ImGuiID,
+    // ImGuiID                 NavFocusScopeId;                    // Identify a selection scope (selection code often wants to "clear other items" when landing on an item of the selection set)
+    pub NavFocusScopeId: ImGuiID,
+    // ImGuiID                 NavActivateId;                      // ~~ (g.ActiveId == 0) && IsNavInputPressed(ImGuiNavInput_Activate) ? NavId : 0, also set when calling ActivateItem()
+    pub NavActivateId: ImGuiID,
+    // ImGuiID                 NavActivateDownId;                  // ~~ IsNavInputDown(ImGuiNavInput_Activate) ? NavId : 0
+    pub NavActivateDownId: ImGuiID,
+    // ImGuiID                 NavActivatePressedId;               // ~~ IsNavInputPressed(ImGuiNavInput_Activate) ? NavId : 0
+    pub NavActivatePressedId: ImGuiID,
+    // ImGuiID                 NavActivateInputId;                 // ~~ IsNavInputPressed(ImGuiNavInput_Input) ? NavId : 0; ImGuiActivateFlags_PreferInput will be set and NavActivateId will be 0.
+    pub NavActivateInputId: ImGuiID,
+    // ImGuiActivateFlags      NavActivateFlags;
+    pub NavActivateFlags: ImGuiActivateFlags,
+    // ImGuiID                 NavJustMovedToId;                   // Just navigated to this id (result of a successfully MoveRequest).
+    pub NavJustMovedToId: ImGuiID,
+    // ImGuiID                 NavJustMovedToFocusScopeId;         // Just navigated to this focus scope id (result of a successfully MoveRequest).
+    pub NavJustMovedToFocusScopeId: ImGuiID,
+    // ImGuiModFlags           NavJustMovedToKeyMods;
+    pub NavJustMovedToKeyMods: ImGuiModFlags,
+    // ImGuiID                 NavNextActivateId;                  // Set by ActivateItem(), queued until next frame.
+    pub NavNextActivateId: ImGuiID,
+    // ImGuiActivateFlags      NavNextActivateFlags;
+    pub NavNextActivateFlags: ImGuiActivateFlags,
+    // ImGuiInputSource        NavInputSource;                     // Keyboard or Gamepad mode? THIS WILL ONLY BE None or NavGamepad or NavKeyboard.
+    pub NavInputSource: ImGuiInputSource,
+    // ImGuiNavLayer           NavLayer;                           // Layer we are navigating on. For now the system is hard-coded for 0=main contents and 1=menu/title bar, may expose layers later.
+    pub NavLayer: ImGuiNavLayer,
+    // bool                    NavIdIsAlive;                       // Nav widget has been seen this frame ~~ NavRectRel is valid
+    pub NavIdIsAlive: bool,
+    // bool                    NavMousePosDirty;                   // When set we will update mouse position if (io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos) if set (NB: this not enabled by default)
+    pub NavMousePosDirty: bool,
+    // bool                    NavDisableHighlight;                // When user starts using mouse, we hide gamepad/keyboard highlight (NB: but they are still available, which is why NavDisableHighlight isn't always != NavDisableMouseHover)
+    pub NavDisableHighLight: bool,
+    // bool                    NavDisableMouseHover;               // When user starts using gamepad/keyboard, we hide mouse hovering highlight until mouse is touched again.
+    pub NavDisableMouseHover: bool,
     // Navigation: Init & Move Requests
-    bool                    NavAnyRequest;                      // ~~ NavMoveRequest || NavInitRequest this is to perform early out in ItemAdd()
-    bool                    NavInitRequest;                     // Init request for appearing window to select first item
-    bool                    NavInitRequestFromMove;
-    ImGuiID                 NavInitResultId;                    // Init request result (first item of the window, or one for which SetItemDefaultFocus() was called)
-    ImRect                  NavInitResultRectRel;               // Init request result rectangle (relative to parent window)
-    bool                    NavMoveSubmitted;                   // Move request submitted, will process result on next NewFrame()
-    bool                    NavMoveScoringItems;                // Move request submitted, still scoring incoming items
-    bool                    NavMoveForwardToNextFrame;
-    ImGuiNavMoveFlags       NavMoveFlags;
-    ImGuiScrollFlags        NavMoveScrollFlags;
-    ImGuiModFlags           NavMoveKeyMods;
-    ImGuiDir                NavMoveDir;                         // Direction of the move request (left/right/up/down)
-    ImGuiDir                NavMoveDirForDebug;
-    ImGuiDir                NavMoveClipDir;                     // FIXME-NAV: Describe the purpose of this better. Might want to rename?
-    ImRect                  NavScoringRect;                     // Rectangle used for scoring, in screen space. Based of window->NavRectRel[], modified for directional navigation scoring.
-    ImRect                  NavScoringNoClipRect;               // Some nav operations (such as PageUp/PageDown) enforce a region which clipper will attempt to always keep submitted
-    int                     NavScoringDebugCount;               // Metrics for debugging
-    int                     NavTabbingDir;                      // Generally -1 or +1, 0 when tabbing without a nav id
-    int                     NavTabbingCounter;                  // >0 when counting items for tabbing
-    ImGuiNavItemData        NavMoveResultLocal;                 // Best move request candidate within NavWindow
-    ImGuiNavItemData        NavMoveResultLocalVisible;          // Best move request candidate within NavWindow that are mostly visible (when using ImGuiNavMoveFlags_AlsoScoreVisibleSet flag)
-    ImGuiNavItemData        NavMoveResultOther;                 // Best move request candidate within NavWindow's flattened hierarchy (when using ImGuiWindowFlags_NavFlattened flag)
-    ImGuiNavItemData        NavTabbingResultFirst;              // First tabbing request candidate within NavWindow and flattened hierarchy
-
+    // bool                    NavAnyRequest;                      // ~~ NavMoveRequest || NavInitRequest this is to perform early out in ItemAdd()
+    pub NavAnyRequest: bool,
+    // bool                    NavInitRequest;                     // Init request for appearing window to select first item
+    pub NavInitRequest: bool,
+    // bool                    NavInitRequestFromMove;
+    pub NavInitRequestFromMove: bool,
+    // ImGuiID                 NavInitResultId;                    // Init request result (first item of the window, or one for which SetItemDefaultFocus() was called)
+    pub NavInitResultId: ImGuiID,
+    // ImRect                  NavInitResultRectRel;               // Init request result rectangle (relative to parent window)
+    pub NavInitResultRectRel: ImRect,
+    // bool                    NavMoveSubmitted;                   // Move request submitted, will process result on next NewFrame()
+    pub NavMoveSubmitted: bool,
+    // bool                    NavMoveScoringItems;                // Move request submitted, still scoring incoming items
+    pub NavMoveScoringItems: bool,
+    // bool                    NavMoveForwardToNextFrame;
+    pub NavMoveForwardToNextFrame: bool,
+    // ImGuiNavMoveFlags       NavMoveFlags;
+    pub NavMoveFlags: ImGuiNavMoveFlags,
+    // ImGuiScrollFlags        NavMoveScrollFlags;
+    pub NavMoveScrollFlags: ImGuiScrollFlags,
+    // ImGuiModFlags           NavMoveKeyMods;
+    pub NavMoveKeyMods: ImGuiModFlags,
+    // ImGuiDir                NavMoveDir;                         // Direction of the move request (left/right/up/down)
+    pub NavMoveDir: ImGuiDir,
+    // ImGuiDir                NavMoveDirForDebug;
+    pub NavMOveDirForDebug: ImGuiDir,
+    // ImGuiDir                NavMoveClipDir;                     // FIXME-NAV: Describe the purpose of this better. Might want to rename?
+    pub NavMoveClipDir: ImGuiDir,
+    // ImRect                  NavScoringRect;                     // Rectangle used for scoring, in screen space. Based of window->NavRectRel[], modified for directional navigation scoring.
+    pub NavScoringRect: ImRect,
+    // ImRect                  NavScoringNoClipRect;               // Some nav operations (such as PageUp/PageDown) enforce a region which clipper will attempt to always keep submitted
+    pub NavScoringNoClipRect: ImRect,
+    // int                     NavScoringDebugCount;               // Metrics for debugging
+    pub NavScoringDebugCount: i32,
+    // int                     NavTabbingDir;                      // Generally -1 or +1, 0 when tabbing without a nav id
+    pub NavTabbingDir: i32,
+    // int                     NavTabbingCounter;                  // >0 when counting items for tabbing
+    pub NavTabbingCounter: i32,
+    // ImGuiNavItemData        NavMoveResultLocal;                 // Best move request candidate within NavWindow
+    pub NavMoveResultLocal: ImGuiNavItemData,
+    // ImGuiNavItemData        NavMoveResultLocalVisible;          // Best move request candidate within NavWindow that are mostly visible (when using ImGuiNavMoveFlags_AlsoScoreVisibleSet flag)
+    pub NavMoveResultLocalVisible: ImGuiNavItemData,
+    // ImGuiNavItemData        NavMoveResultOther;                 // Best move request candidate within NavWindow's flattened hierarchy (when using ImGuiWindowFlags_NavFlattened flag)
+    pub NavMoveResultOther: ImGuiNavItemData,
+    // ImGuiNavItemData        NavTabbingResultFirst;              // First tabbing request candidate within NavWindow and flattened hierarchy
+    pub NavTabbingResultFirst: ImGuiNavItemData,
     // Navigation: Windowing (CTRL+TAB for list, or Menu button + keys or directional pads to move/resize)
-    ImGuiWindow*            NavWindowingTarget;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
-    ImGuiWindow*            NavWindowingTargetAnim;             // Record of last valid NavWindowingTarget until DimBgRatio and NavWindowingHighlightAlpha becomes 0.0, so the fade-out can stay on it.
-    ImGuiWindow*            NavWindowingListWindow;             // Internal window actually listing the CTRL+Tab contents
-    float                   NavWindowingTimer;
-    float                   NavWindowingHighlightAlpha;
-    bool                    NavWindowingToggleLayer;
-
+    // ImGuiWindow*            NavWindowingTarget;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
+    pub NavWindowingTarget: *mut ImGuiWindow,
+    // ImGuiWindow*            NavWindowingTargetAnim;             // Record of last valid NavWindowingTarget until DimBgRatio and NavWindowingHighlightAlpha becomes 0.0, so the fade-out can stay on it.
+    pub NavWindowingTargetAnim: *mut ImGuiWindow,
+    // ImGuiWindow*            NavWindowingListWindow;             // Internal window actually listing the CTRL+Tab contents
+    pub NavWindowingListWindow: *mut ImGuiWindow,
+    // float                   NavWindowingTimer;
+    pub NavWindowingTimer: f32,
+    // float                   NavWindowingHighlightAlpha;
+    pub NavWindowingHighlightAlpha: f32,
+    // bool                    NavWindowingToggleLayer;
+    pub NavWindowingToggleLayer: bool,
     // Render
-    float                   DimBgRatio;                         // 0.0..1.0 animation when fading in a dimming background (for modal window and CTRL+TAB list)
-    ImGuiMouseCursor        MouseCursor;
-
+    // float                   DimBgRatio;                         // 0.0..1.0 animation when fading in a dimming background (for modal window and CTRL+TAB list)
+    pub DimBgRation: f32,
+    // ImGuiMouseCursor        MouseCursor;
+    pub MouseCursor: ImGuiMouseCursor,
     // Drag and Drop
-    bool                    DragDropActive;
-    bool                    DragDropWithinSource;               // Set when within a BeginDragDropXXX/EndDragDropXXX block for a drag source.
-    bool                    DragDropWithinTarget;               // Set when within a BeginDragDropXXX/EndDragDropXXX block for a drag target.
-    ImGuiDragDropFlags      DragDropSourceFlags;
-    int                     DragDropSourceFrameCount;
-    int                     DragDropMouseButton;
-    ImGuiPayload            DragDropPayload;
-    ImRect                  DragDropTargetRect;                 // Store rectangle of current target candidate (we favor small targets when overlapping)
-    ImGuiID                 DragDropTargetId;
-    ImGuiDragDropFlags      DragDropAcceptFlags;
-    float                   DragDropAcceptIdCurrRectSurface;    // Target item surface (we resolve overlapping targets by prioritizing the smaller surface)
-    ImGuiID                 DragDropAcceptIdCurr;               // Target item id (set at the time of accepting the payload)
-    ImGuiID                 DragDropAcceptIdPrev;               // Target item id from previous frame (we need to store this to allow for overlapping drag and drop targets)
-    int                     DragDropAcceptFrameCount;           // Last time a target expressed a desire to accept the source
-    ImGuiID                 DragDropHoldJustPressedId;          // Set when holding a payload just made ButtonBehavior() return a press.
-    ImVector<unsigned char> DragDropPayloadBufHeap;             // We don't expose the ImVector<> directly, ImGuiPayload only holds pointer+size
-    unsigned char           DragDropPayloadBufLocal[16];        // Local buffer for small payloads
-
+    // bool                    DragDropActive;
+    pub DragDropActive: bool,
+    // bool                    DragDropWithinSource;               // Set when within a BeginDragDropXXX/EndDragDropXXX block for a drag source.
+    pub DragDropWithinSource: bool,
+    // bool                    DragDropWithinTarget;               // Set when within a BeginDragDropXXX/EndDragDropXXX block for a drag target.
+    pub DragDropWithinTarget: bool,
+    // ImGuiDragDropFlags      DragDropSourceFlags;
+    pub DragDropSourceFlags: ImGuiDragDropFlags,
+    // int                     DragDropSourceFrameCount;
+    pub DragDropSourceFrameCount: i32,
+    // int                     DragDropMouseButton;
+    pub DragDropMouseButton: i32,
+    // ImGuiPayload            DragDropPayload;
+    pub DragDropPayload: ImGuiPayload,
+    // ImRect                  DragDropTargetRect;                 // Store rectangle of current target candidate (we favor small targets when overlapping)
+    pub DragDropTargetRect: ImRect,
+    // ImGuiID                 DragDropTargetId;
+    pub DragDropTargetId: ImGuiID,
+    // ImGuiDragDropFlags      DragDropAcceptFlags;
+    pub DragDropAcceptFlags: ImGuiDragDropFlags,
+    // float                   DragDropAcceptIdCurrRectSurface;    // Target item surface (we resolve overlapping targets by prioritizing the smaller surface)
+    pub DragDropAcceptIdCurrRectSurface: f32,
+    // ImGuiID                 DragDropAcceptIdCurr;               // Target item id (set at the time of accepting the payload)
+    pub DragDropAcceptIdCurr: ImGuiID,
+    // ImGuiID                 DragDropAcceptIdPrev;               // Target item id from previous frame (we need to store this to allow for overlapping drag and drop targets)
+    pub DragDropAcceptIdPrev: ImGuiID.
+    // int                     DragDropAcceptFrameCount;           // Last time a target expressed a desire to accept the source
+    pub DragDropAcceptFrameCount: i32,
+    // ImGuiID                 DragDropHoldJustPressedId;          // Set when holding a payload just made ButtonBehavior() return a press.
+    pub DragDropHoldJustPressedId: ImGuiID,
+    // ImVector<unsigned char> DragDropPayloadBufHeap;             // We don't expose the ImVector<> directly, ImGuiPayload only holds pointer+size
+    pub DragDropPayloadBufHeap: Vec<u8>,
+    // unsigned char           DragDropPayloadBufLocal[16];        // Local buffer for small payloads
+    pub DragDropPayloadBufLocal: [u8;16],
     // Clipper
-    int                             ClipperTempDataStacked;
-    ImVector<ImGuiListClipperData>  ClipperTempData;
-
+    // int                             ClipperTempDataStacked;
+    pub ClipperTempDataStacked: i32,
+    // ImVector<ImGuiListClipperData>  ClipperTempData;
+    pub ClipperTempData: Vec<ImGuiListCliiperData>,
     // Tables
-    ImGuiTable*                     CurrentTable;
-    int                             TablesTempDataStacked;      // Temporary table data size (because we leave previous instances undestructed, we generally don't use TablesTempData.Size)
-    ImVector<ImGuiTableTempData>    TablesTempData;             // Temporary table data (buffers reused/shared across instances, support nesting)
-    ImPool<ImGuiTable>              Tables;                     // Persistent table data
-    ImVector<float>                 TablesLastTimeActive;       // Last used timestamp of each tables (SOA, for efficient GC)
-    ImVector<ImDrawChannel>         DrawChannelsTempMergeBuffer;
+    // ImGuiTable*                     CurrentTable;
+    pub CurrentTable: *mut ImGuiTable,
+    // int                             TablesTempDataStacked;      // Temporary table data size (because we leave previous instances undestructed, we generally don't use TablesTempData.Size)
+    pub TablesTempDataStacked: i32,
+    // ImVector<ImGuiTableTempData>    TablesTempData;             // Temporary table data (buffers reused/shared across instances, support nesting)
+    pub TablesTempData: Vec<ImGuiTableTempData>,
+    // ImPool<ImGuiTable>              Tables;                     // Persistent table data
+    pub Tables: ImPool<ImGuiTable>,
+    // ImVector<float>                 TablesLastTimeActive;       // Last used timestamp of each tables (SOA, for efficient GC)
+    pub TablesLastTimeActive: Vec<f32>,
+    // ImVector<ImDrawChannel>         DrawChannelsTempMergeBuffer;
 
     // Tab bars
     ImGuiTabBar*                    CurrentTabBar;
