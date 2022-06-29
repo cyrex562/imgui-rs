@@ -12,7 +12,7 @@ use crate::imgui_io::{ImGuiIO, ImGuiPlatformIO};
 use crate::imgui_kv_store::ImGuiStorage;
 use crate::imgui_log::{ImGuiDebugLogFlags, ImGuiLogType};
 use crate::imgui_style::ImGuiStyle;
-use crate::imgui_vec2::ImVec2;
+use crate::imgui_vec::ImVec2;
 
 pub struct ImGuiContext
 {

@@ -6,7 +6,7 @@ use std::ffi::c_void;
 use std::ops::Index;
 use std::ptr;
 use crate::imgui_color::ColorConvertFloat4ToU32;
-use crate::imgui_vec2::ImVec2;
+use crate::imgui_vec::ImVec2;
 
 // (headers)
 
@@ -259,7 +259,6 @@ pub type ImWchar32 = u32;
 // typedef ImWchar16 ImWchar;
 // #endif
 pub type ImWchar = ImWchar32;
-
 // Callback and functions types
 // typedef int     (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    // Callback function for ImGui::InputText()
 pub type ImGuiInputTextCallback = fn(*mut ImGuiInputCallbackData) -> i32;
@@ -1185,19 +1184,6 @@ pub const ImGuiTabBarFlags_FittingPolicyMask_ : i32            = ImGuiTabBarFlag
 #[allow(non_upper_case_globals)]
 pub const     ImGuiTabBarFlags_FittingPolicyDefault_: i32          = ImGuiTabBarFlags::ImGuiTabBarFlags_FittingPolicyResizeDown as i32;
 
-#[allow(non_camel_case_types)]// Flags for ImGui::BeginTabItem()
-pub enum ImGuiTabItemFlags
-{
-    ImGuiTabItemFlags_None                          = 0,
-    ImGuiTabItemFlags_UnsavedDocument               = 1 << 0,   // Display a dot next to the title + tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
-    ImGuiTabItemFlags_SetSelected                   = 1 << 1,   // Trigger flag to programmatically make the tab selected when calling BeginTabItem()
-    ImGuiTabItemFlags_NoCloseWithMiddleMouseButton  = 1 << 2,   // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
-    ImGuiTabItemFlags_NoPushId                      = 1 << 3,   // Don't call PushID(tab->ID)/PopID() on BeginTabItem()/EndTabItem()
-    ImGuiTabItemFlags_NoTooltip                     = 1 << 4,   // Disable tooltip for the given tab
-    ImGuiTabItemFlags_NoReorder                     = 1 << 5,   // Disable reordering this tab or having another tab cross over this tab
-    ImGuiTabItemFlags_Leading                       = 1 << 6,   // Enforce the tab position to the left of the tab bar (after the tab list popup button)
-    ImGuiTabItemFlags_Trailing                      = 1 << 7    // Enforce the tab position to the right of the tab bar (before the scrolling buttons)
-}
 
 
 
@@ -1406,20 +1392,6 @@ pub enum ImGuiHoveredFlags
     #[allow(non_upper_case_globals)]
     pub const ImGuiHoveredFlags_RootAndChildWindows: i32           = ImGuiHoveredFlags::ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags::ImGuiHoveredFlags_ChildWindows;
 
-#[allow(non_camel_case_types)]// Flags for ImGui::DockSpace(), shared/inherited by child nodes.
-// (Some flags can be applied to individual nodes directly)
-// FIXME-DOCK: Also see ImGuiDockNodeFlagsPrivate_ which may involve using the WIP and internal DockBuilder api.
-pub enum ImGuiDockNodeFlags
-{
-    ImGuiDockNodeFlags_None                         = 0,
-    ImGuiDockNodeFlags_KeepAliveOnly                = 1 << 0,   // Shared       // Don't display the dockspace node but keep it alive. Windows docked into this dockspace node won't be undocked.
-    //ImGuiDockNodeFlags_NoCentralNode              = 1 << 1,   // Shared       // Disable Central Node (the node which can stay empty)
-    ImGuiDockNodeFlags_NoDockingInCentralNode       = 1 << 2,   // Shared       // Disable docking inside the Central Node, which will be always kept empty.
-    ImGuiDockNodeFlags_PassthruCentralNode          = 1 << 3,   // Shared       // Enable passthru dockspace: 1) DockSpace() will render a ImGuiCol_WindowBg background covering everything excepted the Central Node when empty. Meaning the host window should probably use SetNextWindowBgAlpha(0.0) prior to Begin() when using this. 2) When Central Node is empty: let inputs pass-through + won't display a DockingEmptyBg background. See demo for details.
-    ImGuiDockNodeFlags_NoSplit                      = 1 << 4,   // Shared/Local // Disable splitting the node into smaller nodes. Useful e.g. when embedding dockspaces into a main root one (the root one may have splitting disabled to reduce confusion). Note: when turned off, existing splits will be preserved.
-    ImGuiDockNodeFlags_NoResize                     = 1 << 5,   // Shared/Local // Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.
-    ImGuiDockNodeFlags_AutoHideTabBar               = 1 << 6    // Shared/Local // Tab bar will automatically hide when there is a single window in the dock node.
-}
 
 #[allow(non_camel_case_types)]// Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
 pub enum ImGuiDragDropFlags
@@ -2033,68 +2005,6 @@ pub struct ImGuiKeyData
 //-----------------------------------------------------------------------------
 // [SECTION] Misc data structures
 //-----------------------------------------------------------------------------
-
-// Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
-// The callback function should return 0 by default.
-// Callbacks (follow a flag name and see comments in ImGuiInputTextFlags_ declarations for more details)
-// - ImGuiInputTextFlags_CallbackEdit:        Callback on buffer edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
-// - ImGuiInputTextFlags_CallbackAlways:      Callback on each iteration
-// - ImGuiInputTextFlags_CallbackCompletion:  Callback on pressing TAB
-// - ImGuiInputTextFlags_CallbackHistory:     Callback on pressing Up/Down arrows
-// - ImGuiInputTextFlags_CallbackCharFilter:  Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.
-// - ImGuiInputTextFlags_CallbackResize:      Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow.
-pub struct ImGuiInputTextCallbackData
-{
-    pub EventFlag: ImGuiInputTextFlags,      // One ImGuiInputTextFlags_Callback*    // Read-only
-    pub Flags: ImGuiInputTextFlags,          // What user passed to InputText()      // Read-only
-    pub UserData: *mut c_void,       // What user passed to InputText()      // Read-only
-
-    // Arguments for the different callback events
-    // - To modify the text buffer in a callback, prefer using the InsertChars() / DeleteChars() function. InsertChars() will take care of calling the resize callback if necessary.
-    // - If you know your edits are not going to resize the underlying buffer allocation, you may modify the contents of 'Buf[]' directly. You need to update 'BufTextLen' accordingly (0 <= BufTextLen < BufSize) and set 'BufDirty'' to true so InputText can update its internal state.
-    pub EventChar: u8,      // Character input                      // Read-write   // [CharFilter] Replace character with another one, or set to zero to drop. return 1 is equivalent to setting EventChar=0;
-    pub            EventKey: ImGuiKey,       // Key pressed (Up/Down/TAB)            // Read-only    // [Completion,History]
-    pub               Buf: String,            // Text buffer                          // Read-write   // [Resize] Can replace pointer / [Completion,History,Always] Only write to pointed data, don't replace the actual pointer!
-    pub BufTextLen: i32,   // Text length (in bytes)               // Read-write   // [Resize,Completion,History,Always] Exclude zero-terminator storage. In C land: == strlen(some_text), in C++ land: string.length()
-    pub BufSize: i32,      // Buffer size (in bytes) = capacity+1  // Read-only    // [Resize,Completion,History,Always] Include zero-terminator storage. In C land == ARRAYSIZE(my_char_array), in C++ land: string.capacity()+1
-    pub BufDirty: bool,       // Set if you modify Buf/BufTextLen!    // Write        // [Completion,History,Always]
-    pub CursorPos: i32,    //                                      // Read-write   // [Completion,History,Always]
-    pub                 SelectionStart: i32, //                                      // Read-write   // [Completion,History,Always] == to SelectionEnd when no selection)
-    pub SelectionEnd: i32, //                                      // Read-write   // [Completion,History,Always]
-
-    // Helper functions for text manipulation.
-    // Use those function to benefit from the CallbackResize behaviors. Calling those function reset the selection.
-
-}
-
-impl ImGuiInputTextCallbackData {
-    //  ImGuiInputTextCallbackData();
-    pub fn ImGuiInputTextCallbackData() {
-        todo!();
-    }
-    //  void      DeleteChars(int pos, int bytes_count);
-    pub fn DeleteChars(pos: i32, bytes_count: i32) {
-        todo!();
-    }
-    //  void      InsertChars(int pos, const char* text, const char* text_end = NULL);
-    pub fn InsertChars(pos: i32, text: &str, text_end: &str) {
-        todo!();
-    }
-    // void                SelectAll()             { SelectionStart = 0; SelectionEnd = BufTextLen; }
-    pub fn SelectAll(&mut self) {
-        self.SelectionStart = 0;
-        self.SelectionEnd = self.BufTextLen;
-    }
-    // void                ClearSelection()        { SelectionStart = SelectionEnd = BufTextLen; }
-    pub fn ClearSelection(&mut self) {
-        self.SelectionStart = self.BufTextLen;
-        self.SelectionEnd = self.BufTextLen;
-    }
-    // bool                HasSelection() const    { return SelectionStart != SelectionEnd; }
-    pub fn HasSelection(&self) -> bool {
-        self.SelectionStart != self.SelectionEnd
-    }
-}
 
 // Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().
 // NB: For basic min/max size constraint on each axis you don't need to use the callback! The SetNextWindowSizeConstraints() parameters are enough.
@@ -3738,3 +3648,99 @@ impl ImGuiPlatformImeData {
 // #endif
 //
 // #endif // #ifndef IMGUI_DISABLE
+
+pub enum ImGuiNavLayer
+{
+    Main,    // Main scrolling layer
+    Menu,    // Menu layer (access with Alt/ImGuiNavInput_Menu)
+
+}
+
+
+// Simple column measurement, currently used for MenuItem() only.. This is very short-sighted/throw-away code and NOT a generic helper.
+#[derive(Debug,Clone,Default)]
+pub struct  ImGuiMenuColumns
+{
+    // ImU32       TotalWidth;
+    pub TotalWidth: u32,
+    // ImU32       NextTotalWidth;
+    pub NextTotalWidth: u32,
+    // ImU16       Spacing;
+    pub Spacing: u16,
+    // ImU16       OffsetIcon;         // Always zero for now
+    pub OffsetIcon: u16,
+    // ImU16       OffsetLabel;        // Offsets are locked in Update()
+    pub OffsetLabel: u16,
+    // ImU16       OffsetShortcut;
+    pub OffsetShortcut: u16,
+    // pImU16       OffsetMark;
+    pub OffsetMark: *mut u16,
+    // ImU16       Widths[4];          // Width of:   Icon, Label, Shortcut, Mark  (accumulators for current frame)
+    pub Widths: [u16;4],
+}
+
+impl ImGuiMenuColumns {
+    // ImGuiMenuColumns() { memset(this, 0, sizeof(*this)); }
+    pub fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    // void        Update(float spacing, bool window_reappearing);
+    pub fn Update(&mut self, spacing: f32, window_reappearing: bool) {
+        todo!()
+    }
+    // float       DeclColumns(float w_icon, float w_label, float w_shortcut, float w_mark);
+    pub fn DeclColumns(&mut self, w_icon: f32, w_label: f32, w_shortcut: f32, w_mark: f32) -> f32 {
+        todo!()
+    }
+    // void        CalcNextTotalWidth(bool update_offsets);
+    pub fn CalcNextTotalWidth(&mut self, update_offsets: bool) {
+        todo!()
+    }
+}
+
+// FIXME: this is in development, not exposed/functional as a generic feature yet.
+// Horizontal/Vertical enums are fixed to 0/1 so they may be used to index ImVec2
+pub enum ImGuiLayoutType
+{
+    Horizontal,
+    Vertical
+}
+
+// X/Y enums are fixed to 0/1 so they may be used to index ImVec2
+pub enum ImGuiAxis
+{
+    None = -1,
+    X = 0,
+    Y = 1
+}
+
+// Store the source authority (dock node vs window) of a field
+pub enum ImGuiDataAuthority
+{
+    Auto,
+    DockNode,
+    Window
+}
+
+pub enum ImGuiItemStatusFlags
+{
+    None               = 0,
+    HoveredRect        = 1 << 0,   // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!, this is only one part of the most-common IsItemHovered test)
+    HasDisplayRect     = 1 << 1,   // g.LastItemData.DisplayRect is valid
+    Edited             = 1 << 2,   // Value exposed by item was edited in the current frame (should match the bool return value of most widgets)
+    ToggledSelection   = 1 << 3,   // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
+    ToggledOpen        = 1 << 4,   // Set when TreeNode() reports toggling their open state.
+    HasDeactivated     = 1 << 5,   // Set if the widget/group is able to provide data for the Deactivated flag.
+    Deactivated        = 1 << 6,   // Only valid if HasDeactivated is set.
+    HoveredWindow      = 1 << 7,   // Override the HoveredWindow test to allow cross-window hover testing.
+    FocusedByTabbing   = 1 << 8,    // Set when the Focusable item just got focused by Tabbing (FIXME: to be removed soon)
+// #ifdef IMGUI_ENABLE_TEST_ENGINE
+     // [imgui_tests only]
+    Openable           = 1 << 20,  // Item is an openable (e.g. TreeNode)
+    Opened             = 1 << 21,  //
+    Checkable          = 1 << 22,  // Item is a checkable (e.g. CheckBox, MenuItem)
+    Checked            = 1 << 23   //
+// #endif
+}

@@ -1,5 +1,5 @@
 use crate::imgui_h::ImVec4;
-use crate::imgui_vec2::ImVec2;
+use crate::imgui_vec::ImVec2;
 
 // Helpers: Maths
 // IM_MSVC_RUNTIME_CHECKS_OFF

@@ -1,5 +1,5 @@
 use crate::imgui_h::{ImDrawListFlags, ImFont, ImVec4};
-use crate::imgui_vec2::ImVec2;
+use crate::imgui_vec::ImVec2;
 
 pub struct ImDrawListSharedData
 {
@@ -26,9 +26,9 @@ pub struct ImDrawListSharedData
     pub CircleSegmentCounts: [u8;64],
     // const ImVec4*   TexUvLines;                 // UV of anti-aliased lines in the atlas
     pub TexUvLines: *const ImVec4,
-    
+
     // ImDrawListSharedData();
-    
+
     // void SetCircleTessellationMaxError(float max_error);
 }
 
@@ -38,7 +38,7 @@ impl ImDrawListSharedData {
             ..Default::default()
         }
     }
-    
+
     pub fn SetCircleTesselationMaxError(&mut self, max_error: f32) {
         todo!()
     }

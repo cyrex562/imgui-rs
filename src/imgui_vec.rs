@@ -64,3 +64,27 @@ impl Add for ImVec2 {
 
 
 pub fn ImLengthSqr(lhs: &ImVec2) -> f32 { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
+
+#[derive(Default,Debug,Clone)]
+pub struct ImVec1
+{
+    // float   x;
+    pub x: f32,
+    // constexpr ImVec1()         : x(0.0) { }
+
+    // constexpr ImVec1(float _x) : x(_x) { }
+}
+
+impl ImVec1 {
+    pub fn new() -> Self {
+        Self {
+            x: 0.0
+        }
+    }
+
+    pub fn new2(x: f32) -> Self {
+        Self {
+            x
+        }
+    }
+}
