@@ -488,7 +488,7 @@ Other Changes:
 - Misc: Added missing ImGuiMouseCursor_NotAllowed cursor for software rendering (when the
   io.MouseDrawCursor flag is enabled). (#4713) [@nobody-special666]
 - Misc: Fixed software mouse cursor being rendered multiple times if Render() is called more than once.
-- Misc: Fix MinGW DLL build issue (when IMGUI_API is defined). [@rokups]
+- Misc: Fix MinGW DLL build issue (when  is defined). [@rokups]
 - CI: Add MinGW DLL build to test suite. [@rokups]
 - Backends: Vulkan: Call vkCmdSetScissor() at the end of render with a full-viewport to reduce
   likehood of issues with people using VK_DYNAMIC_STATE_SCISSOR in their app without calling
@@ -2728,7 +2728,7 @@ Other Changes:
 - Examples: Vulkan: Reordered parameters ImGui_ImplVulkan_RenderDrawData() to be consistent with other backends,
   a good occasion since we refactored the code.
 - Examples: FreeGLUT: Added FreeGLUT backends. Added FreeGLUT+OpenGL2 example. (#801)
-- Examples: The functions in imgui_impl_xxx.cpp are prefixed with IMGUI_IMPL_API (which defaults to IMGUI_API) to facilitate
+- Examples: The functions in imgui_impl_xxx.cpp are prefixed with IMGUI_IMPL_API (which defaults to ) to facilitate
   some uses. (#1888)
 - Examples: Fixed backends to use ImGuiMouseCursor_COUNT instead of old name ImGuiMouseCursor_Count_ so they can compile
   with IMGUI_DISABLE_OBSOLETE_FUNCTIONS. (#1887)
@@ -3626,7 +3626,7 @@ Changes:
 - ColorConvertFloat4ToU32() round the floats instead of truncating them.
 - Window: Fixed window lower-right clipping limit so it plays more friendly with both OpenGL and DirectX coordinates.
 - Internal: Extracted a EndFrame() function out of Render() but kept it internal/private + clarified some asserts. (#335)
-- Internal: Added missing IMGUI_API definitions in imgui_internal.h (#326)
+- Internal: Added missing  definitions in imgui_internal.h (#326)
 - Internal: ImLoadFileToMemory() return void\* instead of taking void*\* + allow optional int\* file_size.
 - Demo: Horizontal scrollbar demo allows to enable simultanaeous scrollbars on both axises.
 - Tools: binary_to_compressed_c.cpp: added -nocompress option.

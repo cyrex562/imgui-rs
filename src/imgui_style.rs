@@ -86,8 +86,8 @@ pub struct ImGuiStyle {
     // ImVec4      Colors[ImGuiCol_COUNT];
     pub Colors: Vec<ImGuiCol>,
 
-    // IMGUI_API ImGuiStyle();
-    // IMGUI_API void ScaleAllSizes(float scale_factor);
+    //  ImGuiStyle();
+    //  void ScaleAllSizes(float scale_factor);
 }
 
 impl ImGuiStyle {

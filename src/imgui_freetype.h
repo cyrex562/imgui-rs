@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "imgui_h.rs"      // IMGUI_API
+#include "imgui_h.rs"      //
 
 // Forward declarations
 struct ImFontAtlas;
@@ -36,11 +36,11 @@ namespace ImGuiFreeType
     // If you need to dynamically select between multiple builders:
     // - you can manually assign this builder with 'atlas->FontBuilderIO = ImGuiFreeType::GetBuilderForFreeType()'
     // - prefer deep-copying this into your own ImFontBuilderIO instance if you use hot-reloading that messes up static data.
-    IMGUI_API const ImFontBuilderIO*    GetBuilderForFreeType();
+     const ImFontBuilderIO*    GetBuilderForFreeType();
 
     // Override allocators. By default ImGuiFreeType will use IM_ALLOC()/IM_FREE()
     // However, as FreeType does lots of allocations we provide a way for the user to redirect it to a separate memory heap if desired.
-    IMGUI_API void                      SetAllocatorFunctions(void* (*alloc_func)(size_t sz, void* user_data), void (*free_func)(void* ptr, void* user_data), void* user_data = NULL);
+     void                      SetAllocatorFunctions(void* (*alloc_func)(size_t sz, void* user_data), void (*free_func)(void* ptr, void* user_data), void* user_data = NULL);
 
     // Obsolete names (will be removed soon)
     // Prefer using '#define IMGUI_ENABLE_FREETYPE'

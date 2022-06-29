@@ -2,12 +2,15 @@
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
-
-use std::ffi::c_void;
-use crate::imgui_h::{ImFont, ImGuiConfigFlags, ImGuiDir, ImGuiModFlags, ImGuiPayload, ImGuiPlatformIO, ImGuiStyleVar, ImGuiViewport};
+use std::ffi::{c_void};
+use std::os::raw::c_char;
+use std::ptr::null_mut;
+use crate::imgui_draw_list::ImDrawListSharedData;
+use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiModFlags, ImGuiMouseCursor, ImGuiPayload, ImGuiPlatformImeData, ImGuiStyleVar, ImGuiTextBuffer, ImGuiViewport, ImVec4};
 use crate::imgui_input_event::ImGuiInputEvent;
-use crate::imgui_io::ImGuiIO;
+use crate::imgui_io::{ImGuiIO, ImGuiPlatformIO};
 use crate::imgui_kv_store::ImGuiStorage;
+use crate::imgui_log::{ImGuiDebugLogFlags, ImGuiLogType};
 use crate::imgui_style::ImGuiStyle;
 use crate::imgui_vec2::ImVec2;
 
@@ -22,7 +25,7 @@ pub struct ImGuiContext
     // ImGuiPlatformIO         PlatformIO;
     pub PlatformIO: ImGuiPlatformIO,
     // ImVector<ImGuiInputEvent> InputEventsQueue;                 // Input events which will be tricked/written into IO structure.
-    pub InputEventsQueue: Vec<InputEventsQueue>,
+    pub InputEventsQueue: Vec<ImGuiInputEvent>,
     // ImVector<ImGuiInputEvent> InputEventsTrail;                 // Past input events processed in NewFrame(). This is to allow domain-specific application to access e.g mouse/pen trail.
     pub InputEventsTrail: Vec<ImGuiInputEvent>,
     // ImGuiStyle              Style;
@@ -335,7 +338,7 @@ pub struct ImGuiContext
     // ImGuiID                 DragDropAcceptIdCurr;               // Target item id (set at the time of accepting the payload)
     pub DragDropAcceptIdCurr: ImGuiID,
     // ImGuiID                 DragDropAcceptIdPrev;               // Target item id from previous frame (we need to store this to allow for overlapping drag and drop targets)
-    pub DragDropAcceptIdPrev: ImGuiID.
+    pub DragDropAcceptIdPrev: ImGuiID,
     // int                     DragDropAcceptFrameCount;           // Last time a target expressed a desire to accept the source
     pub DragDropAcceptFrameCount: i32,
     // ImGuiID                 DragDropHoldJustPressedId;          // Set when holding a payload just made ButtonBehavior() return a press.
@@ -363,244 +366,410 @@ pub struct ImGuiContext
     // ImVector<ImDrawChannel>         DrawChannelsTempMergeBuffer;
 
     // Tab bars
-    ImGuiTabBar*                    CurrentTabBar;
-    ImPool<ImGuiTabBar>             TabBars;
-    ImVector<ImGuiPtrOrIndex>       CurrentTabBarStack;
-    ImVector<ImGuiShrinkWidthItem>  ShrinkWidthBuffer;
-
+    // ImGuiTabBar*                    CurrentTabBar;
+    pub CurrentTabBar: *mut ImGuiTabBar,
+    // ImPool<ImGuiTabBar>             TabBars;
+    pub TabBars: ImPool<ImGuiTabBar>,
+    // ImVector<ImGuiPtrOrIndex>       CurrentTabBarStack;
+    pub CurrentTabBarStack: Vec<ImGuiPtrOrIndex>,
+    // ImVector<ImGuiShrinkWidthItem>  ShrinkWidthBuffer;
+    pub ShrinkWidthBuffer: Vec<ImGuiShrinkWidthItem>,
     // Widget state
-    ImVec2                  MouseLastValidPos;
-    ImGuiInputTextState     InputTextState;
-    ImFont                  InputTextPasswordFont;
-    ImGuiID                 TempInputId;                        // Temporary text input when CTRL+clicking on a slider, etc.
-    ImGuiColorEditFlags     ColorEditOptions;                   // Store user options for color edit widgets
-    float                   ColorEditLastHue;                   // Backup of last Hue associated to LastColor, so we can restore Hue in lossy RGB<>HSV round trips
-    float                   ColorEditLastSat;                   // Backup of last Saturation associated to LastColor, so we can restore Saturation in lossy RGB<>HSV round trips
-    ImU32                   ColorEditLastColor;                 // RGB value with alpha set to 0.
-    ImVec4                  ColorPickerRef;                     // Initial/reference color at the time of opening the color picker.
-    ImGuiComboPreviewData   ComboPreviewData;
-    float                   SliderGrabClickOffset;
-    float                   SliderCurrentAccum;                 // Accumulated slider delta when using navigation controls.
-    bool                    SliderCurrentAccumDirty;            // Has the accumulated slider delta changed since last time we tried to apply it?
-    bool                    DragCurrentAccumDirty;
-    float                   DragCurrentAccum;                   // Accumulator for dragging modification. Always high-precision, not rounded by end-user precision settings
-    float                   DragSpeedDefaultRatio;              // If speed == 0.0, uses (max-min) * DragSpeedDefaultRatio
-    float                   ScrollbarClickDeltaToGrabCenter;    // Distance between mouse and center of grab box, normalized in parent space. Use storage?
-    float                   DisabledAlphaBackup;                // Backup for style.Alpha for BeginDisabled()
-    short                   DisabledStackSize;
-    short                   TooltipOverrideCount;
-    float                   TooltipSlowDelay;                   // Time before slow tooltips appears (FIXME: This is temporary until we merge in tooltip timer+priority work)
-    ImVector<char>          ClipboardHandlerData;               // If no custom clipboard handler is defined
-    ImVector<ImGuiID>       MenusIdSubmittedThisFrame;          // A list of menu IDs that were rendered at least once
-
+    // ImVec2                  MouseLastValidPos;
+    pub MouseLastValidPos: ImVec2,
+    // ImGuiInputTextState     InputTextState;
+    pub InputTextState: ImGuiInputTextState,
+    // ImFont                  InputTextPasswordFont;
+    pub InputTextPasswordFont: ImFont,
+    // ImGuiID                 TempInputId;                        // Temporary text input when CTRL+clicking on a slider, etc.
+    pub TempInputId: ImGuiID,
+    // ImGuiColorEditFlags     ColorEditOptions;                   // Store user options for color edit widgets
+    pub ColorEditOptions: ImGuiColorEditFlags,
+    // float                   ColorEditLastHue;                   // Backup of last Hue associated to LastColor, so we can restore Hue in lossy RGB<>HSV round trips
+    pub ColorEditLastHue: f32,
+    // float                   ColorEditLastSat;                   // Backup of last Saturation associated to LastColor, so we can restore Saturation in lossy RGB<>HSV round trips
+    pub ColorEditLastSat: f32,
+    // ImU32                   ColorEditLastColor;                 // RGB value with alpha set to 0.
+    pub ColorEditLastColor: u32,
+    // ImVec4                  ColorPickerRef;                     // Initial/reference color at the time of opening the color picker.
+    pub ColorPickerRef: ImVec4,
+    // ImGuiComboPreviewData   ComboPreviewData;
+    pub ComboPreviewData: ImGuiComboPreviewData,
+    // float                   SliderGrabClickOffset;
+    pub SliderGrabClickOffset: f32,
+    // float                   SliderCurrentAccum;                 // Accumulated slider delta when using navigation controls.
+    pub SliderCurrentAccum: f32,
+    // bool                    SliderCurrentAccumDirty;            // Has the accumulated slider delta changed since last time we tried to apply it?
+    pub SliderCurrentAccumDirty: bool,
+    // bool                    DragCurrentAccumDirty;
+    pub DragCurrentAccumDirty: bool,
+    // float                   DragCurrentAccum;                   // Accumulator for dragging modification. Always high-precision, not rounded by end-user precision settings
+    pub DragCurrentAccum: f32,
+    // float                   DragSpeedDefaultRatio;              // If speed == 0.0, uses (max-min) * DragSpeedDefaultRatio
+    pub DragSpeedDefaultRatio: f32,
+    // float                   ScrollbarClickDeltaToGrabCenter;    // Distance between mouse and center of grab box, normalized in parent space. Use storage?
+    pub ScrollbarClickDeltaToGrabCenter: f32,
+    // float                   DisabledAlphaBackup;                // Backup for style.Alpha for BeginDisabled()
+    pub DisabledAlphaBackup: f32,
+    // short                   DisabledStackSize;
+    pub DisabledStackSize: i16,
+    // short                   TooltipOverrideCount;
+    pub TooltipOverrideCount: i16,
+    // float                   TooltipSlowDelay;                   // Time before slow tooltips appears (FIXME: This is temporary until we merge in tooltip timer+priority work)
+    pub TooltipSlowDelay: f32,
+    // ImVector<char>          ClipboardHandlerData;               // If no custom clipboard handler is defined
+    pub ClipboardHandlerData: Vec<char>,
+    // ImVector<ImGuiID>       MenusIdSubmittedThisFrame;          // A list of menu IDs that were rendered at least once
+    pub MenusIdSubmittedThisFrame: Vec<ImGuiID>,
     // Platform support
-    ImGuiPlatformImeData    PlatformImeData;                    // Data updated by current frame
-    ImGuiPlatformImeData    PlatformImeDataPrev;                // Previous frame data (when changing we will call io.SetPlatformImeDataFn
-    ImGuiID                 PlatformImeViewport;
-    char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv()->decimal_point
-
+    // ImGuiPlatformImeData    PlatformImeData;                    // Data updated by current frame
+    pub PlatformImeData: ImGuiPlatformImeData,
+    // ImGuiPlatformImeData    PlatformImeDataPrev;                // Previous frame data (when changing we will call io.SetPlatformImeDataFn
+    pub PlatformImeDataPrev: ImGuiPlatformImeData,
+    // ImGuiID                 PlatformImeViewport;
+    pub PlatformImeViewport: ImGuiID,
+    // char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv()->decimal_point
+    pub PlatformLocalDecimalPoint: char,
     // Extensions
     // FIXME: We could provide an API to register one slot in an array held in ImGuiContext?
-    ImGuiDockContext        DockContext;
-
+    // ImGuiDockContext        DockContext;
+    pub DockContext: ImGuiDockContext,
     // Settings
-    bool                    SettingsLoaded;
-    float                   SettingsDirtyTimer;                 // Save .ini Settings to memory when time reaches zero
-    ImGuiTextBuffer         SettingsIniData;                    // In memory .ini settings
-    ImVector<ImGuiSettingsHandler>      SettingsHandlers;       // List of .ini settings handlers
-    ImChunkStream<ImGuiWindowSettings>  SettingsWindows;        // ImGuiWindow .ini settings entries
-    ImChunkStream<ImGuiTableSettings>   SettingsTables;         // ImGuiTable .ini settings entries
-    ImVector<ImGuiContextHook>          Hooks;                  // Hooks for extensions (e.g. test engine)
-    ImGuiID                             HookIdNext;             // Next available HookId
-
+    // bool                    SettingsLoaded;
+    pub SettingsLoaded: bool,
+    // float                   SettingsDirtyTimer;                 // Save .ini Settings to memory when time reaches zero
+    pub SettingsDirtyTimer: f32,
+    // ImGuiTextBuffer         SettingsIniData;                    // In memory .ini settings
+    pub SettingsIniData: ImGuiTextBuffer,
+    // ImVector<ImGuiSettingsHandler>      SettingsHandlers;       // List of .ini settings handlers
+    pub SettingsHandlers: Vec<ImGuiSettingsHandler>,
+    // ImChunkStream<ImGuiWindowSettings>  SettingsWindows;        // ImGuiWindow .ini settings entries
+    pub SettingsWindows: ImChunkStream<ImGuiWindowSettings>,
+    // ImChunkStream<ImGuiTableSettings>   SettingsTables;         // ImGuiTable .ini settings entries
+    pub SettingsTabls: ImChunkStream<ImGuiTableSettings>,
+    // ImVector<ImGuiContextHook>          Hooks;                  // Hooks for extensions (e.g. test engine)
+    pub Hooks: Vec<ImGuiContextHook>,
+    // ImGuiID                             HookIdNext;             // Next available HookId
+    pub HookIdNext: ImGuiID,
     // Capture/Logging
-    bool                    LogEnabled;                         // Currently capturing
-    ImGuiLogType            LogType;                            // Capture target
-    ImFileHandle            LogFile;                            // If != NULL log to stdout/ file
-    ImGuiTextBuffer         LogBuffer;                          // Accumulation buffer when log to clipboard. This is pointer so our GImGui static constructor doesn't call heap allocators.
-    const char*             LogNextPrefix;
-    const char*             LogNextSuffix;
-    float                   LogLinePosY;
-    bool                    LogLineFirstItem;
-    int                     LogDepthRef;
-    int                     LogDepthToExpand;
-    int                     LogDepthToExpandDefault;            // Default/stored value for LogDepthMaxExpand if not specified in the LogXXX function call.
-
+    // bool                    LogEnabled;                         // Currently capturing
+    pub LogEnabled: bool,
+    // ImGuiLogType            LogType;                            // Capture target
+    pub LogType: ImGuiLogType,
+    // ImFileHandle            LogFile;                            // If != NULL log to stdout/ file
+    pub LogFile: ImFileHandle,
+    // ImGuiTextBuffer         LogBuffer;                          // Accumulation buffer when log to clipboard. This is pointer so our GImGui static constructor doesn't call heap allocators.
+    pub LogBuffer: ImGuiTextBuffer,
+    // const char*             LogNextPrefix;
+    pub LogNextPrefix:*const c_char,
+    // const char*             LogNextSuffix;
+    pub LogNextSuffix: *const c_char,
+    // float                   LogLinePosY;
+    pub LogLinePosY: f32,
+    // bool                    LogLineFirstItem;
+    pub LogLineFirstLine: bool,
+    // int                     LogDepthRef;
+    pub LogDepthRef: i32,
+    // int                     LogDepthToExpand;
+    pub LogDepthToExpand: i32,
+    // int                     LogDepthToExpandDefault;            // Default/stored value for LogDepthMaxExpand if not specified in the LogXXX function call.
+    pub LogDepthToExpandDefault: i32,
     // Debug Tools
-    ImGuiDebugLogFlags      DebugLogFlags;
-    ImGuiTextBuffer         DebugLogBuf;
-    bool                    DebugItemPickerActive;              // Item picker is active (started with DebugStartItemPicker())
-    ImGuiID                 DebugItemPickerBreakId;             // Will call IM_DEBUG_BREAK() when encountering this ID
-    ImGuiMetricsConfig      DebugMetricsConfig;
-    ImGuiStackTool          DebugStackTool;
+    // ImGuiDebugLogFlags      DebugLogFlags;
+    pub DebugLogFlags: ImGuiDebugLogFlags,
+    // ImGuiTextBuffer         DebugLogBuf;
+    pub DebugLogBuf: ImGuiTextBuffer,
+    // bool                    DebugItemPickerActive;              // Item picker is active (started with DebugStartItemPicker())
+    pub DebugItemPickerActive: bool,
+    // ImGuiID                 DebugItemPickerBreakId;             // Will call IM_DEBUG_BREAK() when encountering this ID
+    pub DebugItemPickerBreakId: ImGuiID,
+    // ImGuiMetricsConfig      DebugMetricsConfig;
+    pub DebugMetricsConfig: ImGuiMetricsConfig,
+    // ImGuiStackTool          DebugStackTool;
+    pub DebugStackTool: ImGuiStackTool,
 
     // Misc
-    float                   FramerateSecPerFrame[120];          // Calculate estimate of framerate for user over the last 2 seconds.
-    int                     FramerateSecPerFrameIdx;
-    int                     FramerateSecPerFrameCount;
-    float                   FramerateSecPerFrameAccum;
-    int                     WantCaptureMouseNextFrame;          // Explicit capture override via SetNextFrameWantCaptureMouse()/SetNextFrameWantCaptureKeyboard(). Default to -1.
-    int                     WantCaptureKeyboardNextFrame;       // "
-    int                     WantTextInputNextFrame;
-    ImVector<char>          TempBuffer;                         // Temporary text buffer
+    // float                   FramerateSecPerFrame[120];          // Calculate estimate of framerate for user over the last 2 seconds.
+    pub FramerateSecPerFrame: [f32;128],
+    // int                     FramerateSecPerFrameIdx;
+    pub FramerateSecPerFrameIdx: i32,
+    // int                     FramerateSecPerFrameCount;
+    pub FramerateSecPerFrameCount: i32,
+    // float                   FramerateSecPerFrameAccum;
+    pub FramerateSecPerFrameAccum: f32,
+    // int                     WantCaptureMouseNextFrame;          // Explicit capture override via SetNextFrameWantCaptureMouse()/SetNextFrameWantCaptureKeyboard(). Default to -1.
+    pub WantCaptureMouseNextFrame: i32,
+    // int                     WantCaptureKeyboardNextFrame;       // "
+    pub WantCaptureKeyboardNextFrame: i32,
+    // int                     WantTextInputNextFrame;
+    pub WantInputNextFrame: i32,
+    // ImVector<char>          TempBuffer;                         // Temporary text buffer
+    pub TempBuffer: Vec<u8>,
 
-    ImGuiContext(ImFontAtlas* shared_font_atlas)
+}
+
+impl ImGuiContext {
+    // ImGuiContext(ImFontAtlas* shared_font_atlas)
+    pub fn new(shared_font_alias: *mut ImFontAtlas) -> Self
     {
-        Initialized = false;
-        ConfigFlagsCurrFrame = ConfigFlagsLastFrame = ImGuiConfigFlags_None;
-        FontAtlasOwnedByContext = shared_font_atlas ? false : true;
-        Font = NULL;
-        FontSize = FontBaseSize = 0.0;
-        IO.Fonts = shared_font_atlas ? shared_font_atlas : IM_NEW(ImFontAtlas)();
-        Time = 0.0;
-        FrameCount = 0;
-        FrameCountEnded = FrameCountPlatformEnded = FrameCountRendered = -1;
-        WithinFrameScope = WithinFrameScopeWithImplicitWindow = WithinEndChild = false;
-        GcCompactAll = false;
-        TestEngineHookItems = false;
-        TestEngine = NULL;
+        Self {
+            Initialized: false,
+            ConfigFlagsCurrFrame: ImGuiConfigFlags::ImGuiConfigFlags_None,
+            ConfigFlagsLastFrame: ImGuiConfigFlags::ImGuiConfigFlags_None,
+            FontAtlasOwnedByContext: if shared_font_atlas.is_null() { false } else { true }, Font: null_mut(),
+            FontSize: 0.0,
+            FontBaseSize: 0.0,
+            IO: ImGuiIO::new(),
+            PlatformIO: ImGuiPlatformIO::new(),
+            InputEventsQueue: vec![],
+            InputEventsTrail: vec![],
+            Time: 0.0,
+            FrameCount: 0,
+            FrameCountEnded: -1,
+            FrameCountPlatformEnded: -1,
+            FrameCountRendered: -1,
+            WithinFrameScope: false,
+            WithinFrameScopeWithImplicitWindow: false,
+            WithinEndChild: false,
+            GcCompactAll: false,
+            // TestEngineHookItems: false,
+            TestEngine: null_mut(),
+            Windows: vec![],
+            WindowsFocusOrder: vec![],
+            WindowsTempSortBuffer: vec![],
+            CurrentWindowStack: vec![],
+            WindowsById: Default::default(),
+            WindowsActiveCount: 0,
+            WindowsHoverPadding: Default::default(),
+            CurrentWindow: NULL,
+            HoveredWindow: NULL,
+            HoveredWindowUnderMovingWindow: NULL,
+            HoveredDockNode: NULL,
+            MovingWindow: NULL,
+            WheelingWindow: NULL,
+            WheelingWindowRefMousePos: Default::default(),
+            WheelingWindowTimer: 0.0,
 
-        WindowsActiveCount = 0;
-        CurrentWindow = NULL;
-        HoveredWindow = NULL;
-        HoveredWindowUnderMovingWindow = NULL;
-        HoveredDockNode = NULL;
-        MovingWindow = NULL;
-        WheelingWindow = NULL;
-        WheelingWindowTimer = 0.0;
+            DebugHookIdInfo: 0,
+            HoveredId: HoveredIdPreviousFrame = 0,
+            HoveredIdPreviousFrame: (),
+            HoveredIdAllowOverlap: false,
+            HoveredIdUsingMouseWheel: false,
+            HoveredIdPreviousFrameUsingMouseWheel: false,
+            HoveredIdDisabled: false,
+            HoveredIdTimer: 0.0,
+            HoveredIdNotActiveTimer: 0.0,
+            ActiveId: 0,
+            ActiveIdIsAlive: 0,
+            ActiveIdTimer: 0.0,
+            ActiveIdIsJustActivated: false,
+            ActiveIdAllowOverlap: false,
+            ActiveIdNoClearOnFocusLoss: false,
+            ActiveIdHasBeenPressedBefore: false,
+            // ActiveIdHasBeenEditedBefore: false,
+            ActiveIdHasBeenEditedThisFrame: false,
+            // ActiveIdClickOffset: ImVec2::new( - 1, -1),
+            ActiveIdWindow: null_mut(),
+            ActiveIdSource: ImGuiInputSource::ImGuiInputSource_None,
+            ActiveIdMouseButton: - 1,
+            ActiveIdPreviousFrame: 0,
+            ActiveIdPreviousFrameIsAlive: false,
+            ActiveIdPreviousFrameHasBeenEditedBefore: false,
+            ActiveIdPreviousFrameWindow: null_mut(),
+            LastActiveId: 0,
+            LastActiveIdTimer: 0.0,
+            ActiveIdUsingMouseWheel: false,
+            ActiveIdUsingNavDirMask: 0x00,
+            ActiveIdUsingNavInputMask: 0x00,
+            // ActiveIdUsingKeyInputMask.ClearAllBits(),
+            CurrentItemFlags: ImGuiItemFlags_None,
+            NextItemData: (),
+            LastItemData: (),
+            NextWindowData: (),
+            ColorStack: vec![],
+            StyleVarStack: vec![],
+            FontStack: vec![],
+            FocusScopeStack: vec![],
+            ItemFlagsStack: vec![],
+            GroupStack: vec![],
+            OpenPopupStack: vec![],
+            BeginPopupStack: vec![],
+            BeginMenuCount: 0,
 
-        DebugHookIdInfo = 0;
-        HoveredId = HoveredIdPreviousFrame = 0;
-        HoveredIdAllowOverlap = false;
-        HoveredIdUsingMouseWheel = HoveredIdPreviousFrameUsingMouseWheel = false;
-        HoveredIdDisabled = false;
-        HoveredIdTimer = HoveredIdNotActiveTimer = 0.0;
-        ActiveId = 0;
-        ActiveIdIsAlive = 0;
-        ActiveIdTimer = 0.0;
-        ActiveIdIsJustActivated = false;
-        ActiveIdAllowOverlap = false;
-        ActiveIdNoClearOnFocusLoss = false;
-        ActiveIdHasBeenPressedBefore = false;
-        ActiveIdHasBeenEditedBefore = false;
-        ActiveIdHasBeenEditedThisFrame = false;
-        ActiveIdClickOffset = ImVec2(-1, -1);
-        ActiveIdWindow = NULL;
-        ActiveIdSource = ImGuiInputSource_None;
-        ActiveIdMouseButton = -1;
-        ActiveIdPreviousFrame = 0;
-        ActiveIdPreviousFrameIsAlive = false;
-        ActiveIdPreviousFrameHasBeenEditedBefore = false;
-        ActiveIdPreviousFrameWindow = NULL;
-        LastActiveId = 0;
-        LastActiveIdTimer = 0.0;
+            Viewports: vec![],
+            CurrentDpiScale: 0.0,
+            CurrentViewport: NULL,
+            MouseViewport: null_mut(),
+            // MouseLastHoveredViewport: NULL,
+            MouseLastHoveredViewport: null_mut(),
+            PlatformLastFocusedViewportId: 0,
+            FallbackMonitor: (),
+            ViewportFrontMostStampCount: 0,
+            NavWindow: null_mut(),
+            NavId: 0,
+            NavFocusScopeId: (),
+            NavActivateId: (),
+            NavActivateDownId: (),
+            NavActivatePressedId: (),
+            NavJustMovedToId: 0,
+            NavActivateFlags: ImGuiActivateFlags::ImGuiActivateFlags_None,
+            NavJustMovedToKeyMods: ImGuiModeFlags::ImGuiModFlags_None,
+            NavNextActivateId: (),
+            NavNextActivateFlags: (),
+            NavInputSource: ImGuiInputSource::ImGuiInputSource_None,
+            NavLayer: ImGuiNavLayer::ImGuiNavLayer_Main,
+            NavIdIsAlive: false,
+            NavMousePosDirty: false,
+            // NavDisableHighlight: true,
+            NavDisableMouseHover: false,
+            NavAnyRequest: false,
+            NavInitRequest: false,
+            NavInitRequestFromMove: false,
+            NavInitResultId: 0,
+            NavMoveSubmitted: false,
+            NavMoveScoringItems: false,
+            NavMoveForwardToNextFrame: false,
+            NavMoveFlags: ImGuiNavMoveFlags::ImGuiNavMoveFlags_None,
+            NavMoveScrollFlags: ImGuiScrollFlags::ImGuiScrollFlags_None,
+            NavMoveKeyMods: ImGuiModFlags::None,
+            NavMoveDir: NavMoveDirForDebug: NavMoveClipDir: ImGuiDir_None,
+            NavMOveDirForDebug: ImGuiDir::None,
+            NavMoveClipDir: ImGuiDir::None,
+            NavScoringRect: (),
+            NavScoringNoClipRect: (),
+            NavScoringDebugCount: 0,
+            NavTabbingDir: 0,
+            NavTabbingCounter: 0,
 
-        ActiveIdUsingMouseWheel = false;
-        ActiveIdUsingNavDirMask = 0x00;
-        ActiveIdUsingNavInputMask = 0x00;
-        ActiveIdUsingKeyInputMask.ClearAllBits();
+            NavMoveResultLocal: (),
+            NavMoveResultLocalVisible: (),
+            NavMoveResultOther: (),
+            NavTabbingResultFirst: (),
+            NavWindowingTarget: null_mut(),
+            NavWindowingTargetAnim: null_mut(),
+            NavWindowingListWindow: null_mut(),
+            // NavWindowingTargetAnim: (),
+            // NavWindowingListWindow: (),
+            NavWindowingTimer: 0.0,
+            NavWindowingHighlightAlpha: 0.0,
+            NavWindowingToggleLayer: false,
+            // DimBgRatio: 0.0,
+            MouseCursor: ImGuiMouseCursor::Arrow,
+            DragDropActive: false,
+            DragDropWithinSource: false,
+            DragDropWithinTarget: false,
+            // DragDropWithinSource: false,
+            // DragDropWithinTarget: false,
+            DragDropSourceFlags: ImGuiDragDropFlags::None,
+            DragDropSourceFrameCount: - 1,
+            DragDropMouseButton: - 1,
+            DragDropPayload: Default::default(),
+            DragDropTargetRect: (),
+            DragDropTargetId: 0,
+            DragDropAcceptFlags: ImGuiDragDropFlags::None,
+            DragDropAcceptIdCurrRectSurface: 0.0,
+            DragDropAcceptIdCurr: (),
+            DragDropAcceptIdPrev: 0,
+            // DragDropAcceptIdCurr: 0,
+            DragDropAcceptFrameCount: - 1,
+            DragDropHoldJustPressedId: 0,
+            DragDropPayloadBufLocal: [0;16],
 
-        CurrentItemFlags = ImGuiItemFlags_None;
-        BeginMenuCount = 0;
+            ClipperTempDataStacked: 0,
 
-        CurrentDpiScale = 0.0;
-        CurrentViewport = NULL;
-        MouseViewport = MouseLastHoveredViewport = NULL;
-        PlatformLastFocusedViewportId = 0;
-        ViewportFrontMostStampCount = 0;
+            ClipperTempData: vec![],
+            CurrentTable: null_mut(),
+            TablesTempDataStacked: 0,
+            TablesTempData: vec![],
+            Tables: (),
+            TablesLastTimeActive: vec![],
+            CurrentTabBar: null_mut(),
 
-        NavWindow = NULL;
-        NavId = NavFocusScopeId = NavActivateId = NavActivateDownId = NavActivatePressedId = NavActivateInputId = 0;
-        NavJustMovedToId = NavJustMovedToFocusScopeId = NavNextActivateId = 0;
-        NavActivateFlags = NavNextActivateFlags = ImGuiActivateFlags_None;
-        NavJustMovedToKeyMods = ImGuiModFlags_None;
-        NavInputSource = ImGuiInputSource_None;
-        NavLayer = ImGuiNavLayer_Main;
-        NavIdIsAlive = false;
-        NavMousePosDirty = false;
-        NavDisableHighlight = true;
-        NavDisableMouseHover = false;
-        NavAnyRequest = false;
-        NavInitRequest = false;
-        NavInitRequestFromMove = false;
-        NavInitResultId = 0;
-        NavMoveSubmitted = false;
-        NavMoveScoringItems = false;
-        NavMoveForwardToNextFrame = false;
-        NavMoveFlags = ImGuiNavMoveFlags_None;
-        NavMoveScrollFlags = ImGuiScrollFlags_None;
-        NavMoveKeyMods = ImGuiModFlags_None;
-        NavMoveDir = NavMoveDirForDebug = NavMoveClipDir = ImGuiDir_None;
-        NavScoringDebugCount = 0;
-        NavTabbingDir = 0;
-        NavTabbingCounter = 0;
+            TabBars: (),
+            CurrentTabBarStack: vec![],
+            ShrinkWidthBuffer: vec![],
+            MouseLastValidPos: Default::default(),
+            InputTextState: (),
+            InputTextPasswordFont: Default::default(),
+            TempInputId: 0,
+            ColorEditOptions: ImGuiColorEditFlags::DefaultOptions,
+            ColorEditLastHue: 0.0,
+            ColorEditLastSat: 0.0,
+            ColorEditLastColor: 0,
+            ColorPickerRef: Default::default(),
+            ComboPreviewData: (),
+            SliderGrabClickOffset: 0.0,
+            SliderCurrentAccum: 0.0,
+            SliderCurrentAccumDirty: false, DragCurrentAccumDirty: false, DragCurrentAccum: 0.0,
+            DragSpeedDefaultRatio: 1.0 / 100.0,
+            DisabledAlphaBackup: 0.0,
+            DisabledStackSize: 0,
+            ScrollbarClickDeltaToGrabCenter: 0.0,
+            TooltipOverrideCount: 0,
+            TooltipSlowDelay: 0.50,
 
-        NavWindowingTarget = NavWindowingTargetAnim = NavWindowingListWindow = NULL;
-        NavWindowingTimer = NavWindowingHighlightAlpha = 0.0;
-        NavWindowingToggleLayer = false;
+            ClipboardHandlerData: vec![],
+            MenusIdSubmittedThisFrame: vec![],
+            PlatformImeData: ImGuiPlatformImeData::new(ImVec2::new(0.0,0.0)),
+            // PlatformImeDataPrev.InputPos: ImVec2( - 1.0,
+            // -1.0), // Different to ensure initial submission
+            PlatformImeDataPrev: ImGuiPlatformImeData::new(ImVec2::new(-1.0,-1.0)),
+            PlatformImeViewport: 0,
+            PlatformLocalDecimalPoint: '.',
+            // PlatformLocaleDecimalPoint: '.',
+            SettingsLoaded: false,
+            SettingsDirtyTimer: 0.0,
+            SettingsIniData: Default::default(),
+            SettingsHandlers: vec![],
+            SettingsWindows: (),
+            SettingsTabls: (),
+            Hooks: vec![],
+            HookIdNext: 0,
+            LogEnabled: false,
+            LogType: ImGuiLogType::None,
+            LogNextPrefix: null_mut(),
+            LogNextSuffix: null_mut(),
+            LogFile: null_mut(),
+            LogLinePosY: f32::MAX,
+            // LogLineFirstItem: false,
+            LogDepthRef: 0,
+            LogDepthToExpand: 2,
+            LogDepthToExpandDefault: 2,
+            DebugLogFlags: ImGuiDebugLogFlags::OutputToTTY,
+            DebugLogBuf: Default::default(),
+            DebugItemPickerActive: false, DebugItemPickerBreakId: 0,
 
-        DimBgRatio = 0.0;
-        MouseCursor = ImGuiMouseCursor_Arrow;
-
-        DragDropActive = DragDropWithinSource = DragDropWithinTarget = false;
-        DragDropSourceFlags = ImGuiDragDropFlags_None;
-        DragDropSourceFrameCount = -1;
-        DragDropMouseButton = -1;
-        DragDropTargetId = 0;
-        DragDropAcceptFlags = ImGuiDragDropFlags_None;
-        DragDropAcceptIdCurrRectSurface = 0.0;
-        DragDropAcceptIdPrev = DragDropAcceptIdCurr = 0;
-        DragDropAcceptFrameCount = -1;
-        DragDropHoldJustPressedId = 0;
-        memset(DragDropPayloadBufLocal, 0, sizeof(DragDropPayloadBufLocal));
-
-        ClipperTempDataStacked = 0;
-
-        CurrentTable = NULL;
-        TablesTempDataStacked = 0;
-        CurrentTabBar = NULL;
-
-        TempInputId = 0;
-        ColorEditOptions = ImGuiColorEditFlags_DefaultOptions_;
-        ColorEditLastHue = ColorEditLastSat = 0.0;
-        ColorEditLastColor = 0;
-        SliderGrabClickOffset = 0.0;
-        SliderCurrentAccum = 0.0;
-        SliderCurrentAccumDirty = false;
-        DragCurrentAccumDirty = false;
-        DragCurrentAccum = 0.0;
-        DragSpeedDefaultRatio = 1.0 / 100.0;
-        DisabledAlphaBackup = 0.0;
-        DisabledStackSize = 0;
-        ScrollbarClickDeltaToGrabCenter = 0.0;
-        TooltipOverrideCount = 0;
-        TooltipSlowDelay = 0.50;
-
-        PlatformImeData.InputPos = ImVec2(0.0, 0.0);
-        PlatformImeDataPrev.InputPos = ImVec2(-1.0, -1.0); // Different to ensure initial submission
-        PlatformImeViewport = 0;
-        PlatformLocaleDecimalPoint = '.';
-
-        SettingsLoaded = false;
-        SettingsDirtyTimer = 0.0;
-        HookIdNext = 0;
-
-        LogEnabled = false;
-        LogType = ImGuiLogType_None;
-        LogNextPrefix = LogNextSuffix = NULL;
-        LogFile = NULL;
-        LogLinePosY = FLT_MAX;
-        LogLineFirstItem = false;
-        LogDepthRef = 0;
-        LogDepthToExpand = LogDepthToExpandDefault = 2;
-
-        DebugLogFlags = ImGuiDebugLogFlags_OutputToTTY;
-        DebugItemPickerActive = false;
-        DebugItemPickerBreakId = 0;
-
-        memset(FramerateSecPerFrame, 0, sizeof(FramerateSecPerFrame));
-        FramerateSecPerFrameIdx = FramerateSecPerFrameCount = 0;
-        FramerateSecPerFrameAccum = 0.0;
-        WantCaptureMouseNextFrame = WantCaptureKeyboardNextFrame = WantTextInputNextFrame = -1;
+            DebugMetricsConfig: (),
+            FramerateSecPerFrame: [0.0;128],
+            FramerateSecPerFrameIdx: 0,
+            FramerateSecPerFrameCount: 0,
+            FramerateSecPerFrameAccum: 0.0,
+            WantCaptureMouseNextFrame: -1,
+            WantCaptureKeyboardNextFrame: -1,
+            // WantTextInputNextFrame: - 1,
+            // WantCaptureKeyboardNextFrame: 0,
+            WantInputNextFrame: 0,
+            Style: ImGuiStyle::new(),
+            DrawListSharedData: (),
+            TestENgineHookItems: false,
+            ActiveIdHassBeenEditedBefore: false,
+            ActiveIdClockOffset: Default::default(),
+            NavActivateInputId: (),
+            NavJustMovedToFocusScopeId: (),
+            NavDisableHighLight: false,
+            NavInitResultRectRel: (),
+            // NavWindowingHighlightAlpha: 0.0,
+            DimBgRation: 0.0,
+            DragDropPayloadBufHeap: vec![],
+            // ColorEditLastSat: 0.0,
+            DockContext: (),
+            LogBuffer: Default::default(),
+            // LogNextSuffix: (),
+            LogLineFirstLine: false,
+            // LogDepthToExpandDefault: 0,
+            DebugStackTool: (),
+            // FramerateSecPerFrameCount: 0,
+            TempBuffer: vec![]
+        }
     }
-};
+}

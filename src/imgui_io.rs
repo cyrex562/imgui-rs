@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 use crate::imgui::GImGui;
-use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, ImFont, ImFontAtlas, ImGuiBackendFlags, ImGuiConfigFlags, ImGuiKey, ImGuiKeyData, ImGuiModFlags, ImVec2};
+use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, ImFont, ImFontAtlas, ImGuiBackendFlags, ImGuiConfigFlags, ImGuiKey, ImGuiKeyData, ImGuiModFlags, ImGuiViewport, ImVec2};
 use crate::imgui_h::ImGuiBackendFlags::ImGuiBackendFlags_None;
 use crate::imgui_h::ImGuiConfigFlags::ImGuiConfigFlags_None;
 use crate::imgui_h::ImGuiKey::ImGuiKey_None;
@@ -122,21 +122,21 @@ pub struct ImGuiIO {
     //------------------------------------------------------------------
 
     // // Input Functions
-    // IMGUI_API void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
-    // IMGUI_API void  AddKeyAnalogEvent(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
-    // IMGUI_API void  AddMousePosEvent(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
-    // IMGUI_API void  AddMouseButtonEvent(int button, bool down);             // Queue a mouse button change
-    // IMGUI_API void  AddMouseWheelEvent(float wh_x, float wh_y);             // Queue a mouse wheel update
-    // IMGUI_API void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
-    // IMGUI_API void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
-    // IMGUI_API void  AddInputCharacter(unsigned int c);                      // Queue a new character input
-    // IMGUI_API void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
-    // IMGUI_API void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
+    //  void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
+    //  void  AddKeyAnalogEvent(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
+    //  void  AddMousePosEvent(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
+    //  void  AddMouseButtonEvent(int button, bool down);             // Queue a mouse button change
+    //  void  AddMouseWheelEvent(float wh_x, float wh_y);             // Queue a mouse wheel update
+    //  void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+    //  void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
+    //  void  AddInputCharacter(unsigned int c);                      // Queue a new character input
+    //  void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
+    //  void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
     // 
-    // IMGUI_API void  SetKeyEventNativeData(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
-    // IMGUI_API void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
-    // IMGUI_API void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
-    // IMGUI_API void  ClearInputKeys();                                       // [Internal] Release all keys
+    //  void  SetKeyEventNativeData(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
+    //  void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
+    //  void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
+    //  void  ClearInputKeys();                                       // [Internal] Release all keys
 
     //------------------------------------------------------------------
     // Output - Updated by NewFrame() or EndFrame()/Render()
@@ -258,7 +258,7 @@ pub struct ImGuiIO {
     // For AddInputCharacterUTF16()
     pub InputQueueCharacters: Vec<u8>,         // Queue of _characters_ input (obtained by platform backend). Fill using AddInputCharacter() helper.
 
-    // IMGUI_API   ImGuiIO();
+    //    ImGuiIO();
 }
 
 impl ImGuiIO {
@@ -351,14 +351,14 @@ impl ImGuiIO {
 
 
     // Input Functions
-    // IMGUI_API void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
+    //  void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
     pub fn AddKeyEvent(&mut self, key: &ImGuiKey, down: bool) {
         if !AppAcceptingEvents {
             return;
         }
         self.AddKeyAnalogEvent(key, down, if down { 1.0 } else { 0.0 });
     }
-    // IMGUI_API void  AddKeyAnalogEvent(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
+    //  void  AddKeyAnalogEvent(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
     // Queue a new key down/up event.
 // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
 // - bool down:          Is the key down? use false to signify a key release.
@@ -411,7 +411,7 @@ impl ImGuiIO {
         e.Key.AnalogValue = analog_value;
         GImGui.InputEventsQueue.push_back(e);
     }
-    // IMGUI_API void  AddMousePosEvent(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
+    //  void  AddMousePosEvent(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
     pub fn AddMousePosEvent(&mut self, x: f32, y: f32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
@@ -426,7 +426,7 @@ impl ImGuiIO {
         e.MousePos.PosY = y;
         GImGui.InputEventsQueue.push_back(e);
     }
-    // IMGUI_API void  AddMouseButtonEvent(int button, bool down);             // Queue a mouse button change
+    //  void  AddMouseButtonEvent(int button, bool down);             // Queue a mouse button change
     pub fn AddMouseButtonEvent(&mut self, button: i32, down: bool) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
@@ -442,7 +442,7 @@ impl ImGuiIO {
         e.MouseButton.Down = down;
         GImGui.InputEventsQueue.push_back(e);
     }
-    // IMGUI_API void  AddMouseWheelEvent(float wh_x, float wh_y);             // Queue a mouse wheel update
+    //  void  AddMouseWheelEvent(float wh_x, float wh_y);             // Queue a mouse wheel update
     pub fn AddMouseWheelEvent(&mut self, wh_x: f32, wh_y: f32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
@@ -458,7 +458,7 @@ impl ImGuiIO {
         e.MouseWheel.WheelY = wheel_y;
         GImGui.InputEventsQueue.push_back(e);
     }
-    // IMGUI_API void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+    //  void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
     pub fn AddMouseViewportEvent(&mut self, id: ImGuiID) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
@@ -471,7 +471,7 @@ impl ImGuiIO {
         e.MouseViewport.HoveredViewportID = viewport_id;
         GImGui.InputEventsQueue.push_back(e);
     }
-    // IMGUI_API void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
+    //  void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
     pub fn AddFocusEvent(&mut self, focused: bool) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
@@ -482,7 +482,7 @@ impl ImGuiIO {
         e.AppFocused.Focused = focused;
         GImGui.InputEventsQueue.push_back(e);
     }
-    // IMGUI_API void  AddInputCharacter(unsigned int c);                      // Queue a new character input
+    //  void  AddInputCharacter(unsigned int c);                      // Queue a new character input
 
     // Pass in translated ASCII characters for text input.
 // - with glfw you can get those from the callback set in glfwSetCharCallback()
@@ -502,7 +502,7 @@ impl ImGuiIO {
         };
         GImGui.InputEventsQueue.push_back(e);
     }
-    // IMGUI_API void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
+    //  void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
     // UTF16 strings use surrogate pairs to encode codepoints >= 0x10000, so
 // we should save the high surrogate.
     pub fn AddInputCharacterUTF16(&mut self, c: ImWchar16) {
@@ -536,7 +536,7 @@ impl ImGuiIO {
         self.AddInputCharacter(cp);
     }
 
-    // IMGUI_API void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
+    //  void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
     pub fn AddInputCharactersUTF8(&mut self, in_str: &str) {
         if !self.AppAcceptingEvents {
             return;
@@ -550,7 +550,7 @@ impl ImGuiIO {
         }
     }
 
-    // IMGUI_API void  SetKeyEventNativeData(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
+    //  void  SetKeyEventNativeData(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
     // [Optional] Call after AddKeyEvent().
 // Specify native keycode, scancode + Specify index for legacy <1.87 IsKeyXXX() functions with native indices.
 // If you are writing a backend in 2022 or don't use IsKeyXXX() with native values that are not ImGuiKey values, you can avoid calling this.
@@ -575,16 +575,16 @@ impl ImGuiIO {
 //     IM_UNUSED(native_legacy_index);
 // #endif
     }
-    // IMGUI_API void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
+    //  void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
     // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
     pub fn SetAppAcceptingEvents(&mut self, accepting_events: bool) {
         self.AppAcceptingEvents = accepting_events;
     }
-    // IMGUI_API void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
+    //  void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
     pub fn ClearInputCharacters(&mut self) {
         self.InputQueueCharacters.resize(0, 0);
     }
-    // IMGUI_API void  ClearInputKeys();                                       // [Internal] Release all keys
+    //  void  ClearInputKeys();                                       // [Internal] Release all keys
     pub fn ClearInputKeys(&mut self) {
         for n in 0..self.KeysData.len() {
             self.KeysData[n].Down = false;
@@ -601,5 +601,152 @@ impl ImGuiIO {
             self.NavInputsDownDuration[n] = -1.0;
             self.NavInputsDownDurationPrev[n] = -1.0;
         }
+    }
+}
+
+
+// (Optional) Access via ImGui::GetPlatformIO()
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiPlatformIO
+{
+    //------------------------------------------------------------------
+    // Input - Backend interface/functions + Monitor List
+    //------------------------------------------------------------------
+
+    // (Optional) Platform functions (e.g. Win32, GLFW, SDL2)
+    // For reference, the second column shows which function are generally calling the Platform Functions:
+    //   N = ImGui::NewFrame()                        ~ beginning of the dear imgui frame: read info from platform/OS windows (latest size/position)
+    //   F = ImGui::Begin(), ImGui::EndFrame()        ~ during the dear imgui frame
+    //   U = ImGui::UpdatePlatformWindows()           ~ after the dear imgui frame: create and update all platform/OS windows
+    //   R = ImGui::RenderPlatformWindowsDefault()    ~ render
+    //   D = ImGui::DestroyPlatformWindows()          ~ shutdown
+    // The general idea is that NewFrame() we will read the current Platform/OS state, and UpdatePlatformWindows() will write to it.
+    //
+    // The functions are designed so we can mix and match 2 imgui_impl_xxxx files, one for the Platform (~window/input handling), one for Renderer.
+    // Custom engine backends will often provide both Platform and Renderer interfaces and so may not need to use all functions.
+    // Platform functions are typically called before their Renderer counterpart, apart from Destroy which are called the other way.
+
+    // Platform function --------------------------------------------------- Called by -----
+
+
+    // (Optional) Monitor list
+    // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.
+    // - Used by: dear imgui to query DPI info, clamp popups/tooltips within same monitor and not have them straddle monitors.
+    // ImVector<ImGuiPlatformMonitor>  Monitors;
+    pub Monitors: Vec<ImGuiPlatformMonitor>,
+
+    //------------------------------------------------------------------
+    // Output - List of viewports to render into platform windows
+    //------------------------------------------------------------------
+
+    // Viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
+    // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
+    // ImVector<ImGuiViewport*>        Viewports;                              // Main viewports, followed by all secondary viewports.
+    pub Viewports: Vec<ImGuiViewport>,
+    // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
+}
+
+impl ImGuiPlatformIO {
+    pub fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    // void    (*Platform_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
+    pub fn Platform_CreateWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  //
+    pub fn Platform_DestroyWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
+    pub fn Platform_ShowWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowPos)(ImGuiViewport* vp, ImVec2 pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    pub fn Platform_SetWindowPos(&mut self, vp: &mut ImGuiViewport, pos: ImVec2) {
+        todo!()
+    }
+    //     ImVec2  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
+    pub fn Platform_GetWindowPos(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    pub fn Platform_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: &ImVec2) {
+        todo!()
+    }
+    //     ImVec2  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
+    pub fn Platform_GetWindowSize(&mut self, vp: &mut ImGuiViewport) -> ImVec2 {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowFocus)(ImGuiViewport* vp);                  // N . . . .  // Move window to front and set input focus
+    pub fn Platform_SetWindowFocus(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+
+    //     bool    (*Platform_GetWindowFocus)(ImGuiViewport* vp);                  // . . U . .  //
+    pub fn Platform_GetWindowFocus(&mut self, vp: &mut ImGuiViewport) -> bool {
+        todo!()
+    }
+    //     bool    (*Platform_GetWindowMinimized)(ImGuiViewport* vp);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
+    pub fn Platform_GetWindowMinimized(&mut self, vp: &mut ImGuiViewport) -> bool {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowTitle)(ImGuiViewport* vp, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
+    pub fn Platform_SetWindowTitle(&mut self, vp: &mut ImGuiViewport, in_str: &String) {
+        todo!()
+    }
+    //     void    (*Platform_SetWindowAlpha)(ImGuiViewport* vp, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
+    pub fn Platform_SetWindowAlpha(&mut self, vp: &mut ImGuiViewport, alpha: f32) {
+        todo!()
+    }
+    //     void    (*Platform_UpdateWindow)(ImGuiViewport* vp);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
+    pub fn Platform_UpdateWindow(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Platform_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Platform_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+        todo!()
+    }
+    //     void    (*Platform_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Platform_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+        todo!()
+    }
+    //     float   (*Platform_GetWindowDpiScale)(ImGuiViewport* vp);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0 = 96 DPI.
+    pub fn Platform_GetWindowDpiScale(&mut self, vp: &mut ImGuiViewport) -> f32 {
+        todo!()
+    }
+
+    //     void    (*Platform_OnChangedViewport)(ImGuiViewport* vp);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
+    pub fn Platform_OnChangedViewport(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     int     (*Platform_CreateVkSurface)(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
+    pub fn Platform_CreateVkSurface(&mut self, vp: &mut ImGuiViewport, vk_inst: u64, vk_allocators: *const c_void, out_vk_surface: &mut u64) -> i32 {
+        todo!()
+    }
+
+    //
+    //     // (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)
+    //     void    (*Renderer_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
+    pub fn Platform_CreateWindow2(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Renderer_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
+    pub fn Platform_DestroyWindow2(&mut self, vp: &mut ImGuiViewport) {
+        todo!()
+    }
+    //     void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
+    pub fn Renderer_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: ImVec2) {
+        todo!()
+    }
+    //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Renderer_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+        todo!()
+    }
+    //     void    (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub fn Renderer_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: &mut c_void) {
+        todo!()
     }
 }

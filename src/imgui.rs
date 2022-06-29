@@ -414,7 +414,7 @@ impl ImGuiTextRange {
     pub fn empty(&self) -> bool {
         self.b == self.e
     }
-    //     IMGUI_API void  split(char separator, ImVector<ImGuiTextRange>* out) const;
+    //      void  split(char separator, ImVector<ImGuiTextRange>* out) const;
     pub fn split(&mut self, separator: char) -> Vec<String> {
         todo!()
     }
@@ -436,7 +436,7 @@ pub struct ImGuiTextFilter
 }
 
 impl ImGuiTextFilter {
-    // IMGUI_API           ImGuiTextFilter(const char* default_filter = "");
+    //            ImGuiTextFilter(const char* default_filter = "");
     pub fn new(default_filter: &String) -> Self {
         let mut out = Self {
             ..Default()
@@ -450,7 +450,7 @@ impl ImGuiTextFilter {
         }
         out
     }
-    // IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0);  // Helper calling InputText+Build
+    //  bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0);  // Helper calling InputText+Build
     pub fn Draw(&mut self, label: &String, width: f32) -> bool {
         if width != 0.0 {
             SetNextItemWidth(width);
@@ -461,11 +461,11 @@ impl ImGuiTextFilter {
         }
         return value_changed;
     }
-    // IMGUI_API bool      PassFilter(const char* text, const char* text_end = NULL) const;
+    //  bool      PassFilter(const char* text, const char* text_end = NULL) const;
     pub fn PassFilter(&mut self, text: &String, text_end: &String) -> bool {
         todo!()
     }
-    // IMGUI_API void      Build();
+    //  void      Build();
     pub fn Build(&mut self) {
         todo!()
     }

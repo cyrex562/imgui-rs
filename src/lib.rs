@@ -1,3 +1,5 @@
+extern crate core;
+
 pub mod imgui_config;
 pub mod imgui;
 mod imgui_h;
@@ -15,3 +17,6 @@ mod imgui_math;
 mod imgui_kv_store;
 mod imgui_sort;
 mod imgui_context;
+mod imgui_log;
+mod imgui_draw_list;
+mod imgui_window;

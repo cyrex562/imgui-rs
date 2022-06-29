@@ -74,7 +74,7 @@ impl ImGuiStorage {
     pub fn Clear(&mut self) {
         self.Data.clear()
     }
-    // IMGUI_API int       GetInt(ImGuiID key, int default_val = 0) const;
+    //  int       GetInt(ImGuiID key, int default_val = 0) const;
     pub fn GetInt(&self, key: ImGuiID, default_val: i32) -> i32 {
         for x in self.Data.iter() {
             if x.key == key {
@@ -83,7 +83,7 @@ impl ImGuiStorage {
         }
         return default_val
     }
-    // IMGUI_API void      SetInt(ImGuiID key, int val);
+    //  void      SetInt(ImGuiID key, int val);
     pub fn SetInt(&mut self, key: ImGuiID, val: i32) {
         for x in self.Data.iter_mut() {
             if x.key == key {
@@ -91,7 +91,7 @@ impl ImGuiStorage {
             }
         }
     }
-    // IMGUI_API bool      GetBool(ImGuiID key, bool default_val = false) const;
+    //  bool      GetBool(ImGuiID key, bool default_val = false) const;
     pub fn GetBool(&self, key: ImGuiID, default_val: bool) -> bool {
         for x in self.Data.iter() {
             if x.key == key {
@@ -100,7 +100,7 @@ impl ImGuiStorage {
         }
         return default_val
     }
-    // IMGUI_API void      SetBool(ImGuiID key, bool val);
+    //  void      SetBool(ImGuiID key, bool val);
     pub fn SetBool(&mut self, key: ImGuiID, val: bool) {
         for x in self.Data.iter_mut() {
             if x.key == key {
@@ -108,7 +108,7 @@ impl ImGuiStorage {
             }
         }
     }
-    // IMGUI_API float     GetFloat(ImGuiID key, float default_val = 0.0) const;
+    //  float     GetFloat(ImGuiID key, float default_val = 0.0) const;
     pub fn GetFloat(&self, key: ImGuiID, default_val: f32) -> f32 {
         for x in self.Data.iter() {
             if x.key == key {
@@ -117,7 +117,7 @@ impl ImGuiStorage {
         }
         return default_val
     }
-    // IMGUI_API void      SetFloat(ImGuiID key, float val);
+    //  void      SetFloat(ImGuiID key, float val);
     pub fn SetFloat(&mut self, key: ImGuiID, val: f32) {
         for x in self.Data.iter_mut() {
             if x.key == key {
@@ -125,23 +125,23 @@ impl ImGuiStorage {
             }
         }
     }
-    // IMGUI_API void*     GetVoidPtr(ImGuiID key) const; // default_val is NULL
-    // IMGUI_API void      SetVoidPtr(ImGuiID key, void* val);
+    //  void*     GetVoidPtr(ImGuiID key) const; // default_val is NULL
+    //  void      SetVoidPtr(ImGuiID key, void* val);
     //
     // // - Get***Ref() functions finds pair, insert on demand if missing, return pointer. Useful if you intend to do Get+Set.
     // // - References are only valid until a new value is added to the storage. Calling a Set***() function or a Get***Ref() function invalidates the pointer.
     // // - A typical use case where this is convenient for quick hacking (e.g. add storage during a live Edit&Continue session if you can't modify existing struct)
     // //      float* pvar = ImGui::GetFloatRef(key); ImGui::SliderFloat("var", pvar, 0, 100.0); some_var += *pvar;
-    // IMGUI_API int*      GetIntRef(ImGuiID key, int default_val = 0);
-    // IMGUI_API bool*     GetBoolRef(ImGuiID key, bool default_val = false);
-    // IMGUI_API float*    GetFloatRef(ImGuiID key, float default_val = 0.0);
-    // IMGUI_API void**    GetVoidPtrRef(ImGuiID key, void* default_val = NULL);
+    //  int*      GetIntRef(ImGuiID key, int default_val = 0);
+    //  bool*     GetBoolRef(ImGuiID key, bool default_val = false);
+    //  float*    GetFloatRef(ImGuiID key, float default_val = 0.0);
+    //  void**    GetVoidPtrRef(ImGuiID key, void* default_val = NULL);
     //
     // // Use on your own storage if you know only integer are being stored (open/close all tree nodes)
-    // IMGUI_API void      SetAllInt(int val);
+    //  void      SetAllInt(int val);
     //
     // // For quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
-    // IMGUI_API void      BuildSortByKey();
+    //  void      BuildSortByKey();
 
 
 // std::lower_bound but without the bullshit
