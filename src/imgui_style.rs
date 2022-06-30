@@ -1,5 +1,5 @@
 use std::intrinsics::floorf32;
-use crate::imgui_h::{ImGuiCol, ImGuiDir, ImVec2};
+use crate::imgui_h::{ImGuiCol, ImGuiDir, ImGuiStyleVar, ImVec2};
 
 #[allow(non_snake_case)]
 pub struct ImGuiStyle {
@@ -170,5 +170,44 @@ impl ImGuiStyle {
         self.DisplayWindowPadding = ImFloor(DisplayWindowPadding * scale_factor);
         self.DisplaySafeAreaPadding = ImFloor(DisplaySafeAreaPadding * scale_factor);
         self.MouseCursorScale = ImFloor(MouseCursorScale * scale_factor);
+    }
+}
+
+pub union ImGuiStyleModUnion1 {
+    // union           { int BackupInt[2]; float BackupFloat[2]; };
+    pub BackupInt: [i32;2],
+    pub BackupFloat: [f32;2]
+}
+
+// Stacked style modifier, backup of modified data so we can restore it. Data type inferred from the variable.
+#[derive(Debug,Default,Clone)]
+pub struct ImGuiStyleMod
+{
+    // ImGuiStyleVar   VarIdx;
+    pub VarIdx: ImGuiStyleVar,
+    pub Backup: ImGuiStyleModUnion1,
+}
+
+impl ImGuiStyleMod {
+    // ImGuiStyleMod(ImGuiStyleVar idx, int v)     { VarIdx = idx; BackupInt[0] = v; }
+    pub fn new(idx: ImGuiStyleVar, v: i32) -> Self {
+        Self {
+            VarIdx: idx,
+            Backup: ImGuiStyleModUnion1{BackupInt: [v,0]}
+        }
+    }
+    //     ImGuiStyleMod(ImGuiStyleVar idx, float v)   { VarIdx = idx; BackupFloat[0] = v; }
+    pub fn new2(idx: ImGuiStyleVar, v: f32) -> Self {
+        Self {
+            VarIdx: idx,
+            Backup: ImGuiStyleModUnion1{BackupFloat: [v,0]}
+        }
+    }
+    //     ImGuiStyleMod(ImGuiStyleVar idx, ImVec2 v)  { VarIdx = idx; BackupFloat[0] = v.x; BackupFloat[1] = v.y; }
+    pub fn new3(idx: ImGuiStyleVar, v: ImVec2) -> Self {
+        Self {
+            VarIdx: idx,
+            Backup: ImGuiStyleModUnion1{BackupFloat: [v.x,v.y]}
+        }
     }
 }

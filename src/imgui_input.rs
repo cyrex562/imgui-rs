@@ -1,5 +1,5 @@
 use std::ffi::c_void;
-use crate::imgui_h::{ImGuiInputTextFlags, ImGuiKey};
+use crate::imgui_h::{ImGuiCond, ImGuiID, ImGuiInputTextFlags, ImGuiKey};
 
 // Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
 // The callback function should return 0 by default.
@@ -61,4 +61,19 @@ impl ImGuiInputTextCallbackData {
     pub fn HasSelection(&self) -> bool {
         self.SelectionStart != self.SelectionEnd
     }
+}
+
+pub enum ImGuiInputSource
+{
+    None = 0,
+    Mouse,
+    Keyboard,
+    Gamepad,
+    Clipboard,     // Currently only used by InputText()
+    Nav,           // Stored in g.ActiveIdSource only
+}
+
+#[derive(Default,Debug,Clone)]
+pub struct ImGuiInputCallbackData {
+
 }

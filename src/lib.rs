@@ -25,3 +25,7 @@ mod imgui_rect;
 mod imgui_dock;
 mod imgui_tab_bar;
 mod imgui_input;
+mod imgui_item;
+mod imgui_group;
+mod imgui_popup;
+mod imgui_nav;

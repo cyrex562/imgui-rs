@@ -1,7 +1,8 @@
 use std::os::raw::c_char;
 use crate::imgui_column::ImGuiOldColumns;
 use crate::imgui_dock::ImGuiDockNode;
-use crate::imgui_h::{ImDrawList, ImGuiCond, ImGuiDir, ImGuiID, ImGuiItemStatusFlags, ImGuiLayoutType, ImGuiMenuColumns, ImGuiNavLayer, ImGuiViewport, ImGuiWindowClass, ImGuiWindowFlags};
+use crate::imgui_h::{ImDrawList, ImGuiCond, ImGuiDir, ImGuiID, ImGuiLayoutType, ImGuiMenuColumns, ImGuiNavLayer, ImGuiSizeCallback, ImGuiStackSizes, ImGuiViewport, ImGuiWindowClass, ImGuiWindowFlags};
+use crate::imgui_item::{ImGuiItemStatusFlags, ImGuiLastItemData};
 use crate::imgui_kv_store::ImGuiStorage;
 use crate::imgui_rect::ImRect;
 use crate::imgui_vec::{ImVec1, ImVec2};
@@ -319,4 +320,114 @@ pub struct ImGuiWindowDockStyle
     // ImU32 Colors[ImGuiWindowDockStyleCol_COUNT];
     pub Colors: Vec<u32>,
 }
+
+// Data saved for each window pushed into the stack
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiWindowStackData
+{
+    // ImGuiWindow*            Window;
+    pub Window: *mut ImGuiWindow,
+    // ImGuiLastItemData       ParentLastItemDataBackup;
+    pub ParentLastItemDataBackup: ImGuiLastItemData,
+    // ImGuiStackSizes         StackSizesOnBegin;      // Store size of various stacks for asserting
+    pub StackSizesOnBegin: ImGuiStackSizes,
+}
+
+
+// Transient per-window flags, reset at the beginning of the frame. For child window, inherited from parent on first Begin().
+// This is going to be exposed in imgui.h when stabilized enough.
+pub enum ImGuiItemFlags
+{
+    None                     = 0,
+    NoTabStop                = 1 << 0,  // false     // Disable keyboard tabbing (FIXME: should merge with _NoNav)
+    ButtonRepeat             = 1 << 1,  // false     // Button() will return true multiple times based on io.KeyRepeatDelay and io.KeyRepeatRate settings.
+    Disabled                 = 1 << 2,  // false     // Disable interactions but doesn't affect visuals. See BeginDisabled()/EndDisabled(). See github.com/ocornut/imgui/issues/211
+    NoNav                    = 1 << 3,  // false     // Disable keyboard/gamepad directional navigation (FIXME: should merge with _NoTabStop)
+    NoNavDefaultFocus        = 1 << 4,  // false     // Disable item being a candidate for default focus (e.g. used by title bar items)
+    SelectableDontClosePopup = 1 << 5,  // false     // Disable MenuItem/Selectable() automatically closing their popup window
+    MixedValue               = 1 << 6,  // false     // [BETA] Represent a mixed/indeterminate value, generally multi-selection where values differ. Currently only supported by Checkbox() (later should support all sorts of widgets)
+    ReadOnly                 = 1 << 7,  // false     // [ALPHA] Allow hovering interactions but underlying value is not changed.
+    Inputable                = 1 << 8   // false     // [WIP] Auto-activate input mode when tab focused. Currently only used and supported by a few items before it becomes a generic feature.
+}
+
+
+// Storage for SetNexWindow** functions
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiNextWindowData
+{
+    // ImGuiNextWindowDataFlags    Flags;
+    pub Flags: ImGuiNextWindowDataFlags,
+    // ImGuiCond                   PosCond;
+    pub PosCond: ImGuiCond,
+    // ImGuiCond                   SizeCond;
+    pub SizeCond: ImGuiCond,
+    // ImGuiCond                   CollapsedCond;
+    pub CollapseCond: ImGuiCond,
+    // ImGuiCond                   DockCond;
+    pub DockCond: ImGuiCond,
+    // ImVec2                      PosVal;
+    pub PosVal: ImVec2,
+    // ImVec2                      PosPivotVal;
+    pub PosPivotVal: ImVec2,
+    // ImVec2                      SizeVal;
+    pub SizeVal: ImVec2,
+    // ImVec2                      ContentSizeVal;
+    pub ContentSizeVal: ImVec2,
+    // ImVec2                      ScrollVal;
+    pub ScrollVal: ImVec2,
+    // bool                        PosUndock;
+    pub PosUndock: bool,
+    // bool                        CollapsedVal;
+    pub CollapsedVal: bool,
+    // ImRect                      SizeConstraintRect;
+    pub SizeConstraintRect: ImRect,
+    // ImGuiSizeCallback           SizeCallback;
+    pub SizeCallback: ImGuiSizeCallback,
+    // void*                       SizeCallbackUserData;
+    pub SizeCallbackUserData: Vec<u8>,
+    // float                       BgAlphaVal;             // Override background alpha
+    pub BgAlphaVal: f32,
+    // ImGuiID                     ViewportId;
+    pub ViewportId: ImGuiID,
+    // ImGuiID                     DockId;
+    pub DockId: ImGuiID,
+    // ImGuiWindowClass            WindowClass;
+    pub WindowClass: ImGuiWindowClass,
+    // ImVec2                      MenuBarOffsetMinVal;    // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)
+    pub MenuBarOffsetMinVal: ImVec2,
+
+}
+
+impl ImGuiNextWindowData{
+    // ImGuiNextWindowData()       { memset(this, 0, sizeof(*this)); }
+    pub fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    //     inline void ClearFlags()    { Flags = ImGuiNextWindowDataFlags_None; }
+    pub fn ClearFlags(&mut self) {
+        self.Flags = ImGuiNextWindowDataFlags::None
+    }
+}
+
+
+pub enum ImGuiNextWindowDataFlags
+{
+    None               = 0,
+    HasPos             = 1 << 0,
+    HasSize            = 1 << 1,
+    HasContentSize     = 1 << 2,
+    HasCollapsed       = 1 << 3,
+    HasSizeConstraint  = 1 << 4,
+    HasFocus           = 1 << 5,
+    HasBgAlpha         = 1 << 6,
+    HasScroll          = 1 << 7,
+    HasViewport        = 1 << 8,
+    HasDock            = 1 << 9,
+    HasWindowClass     = 1 << 10
+}
+
+
+
 

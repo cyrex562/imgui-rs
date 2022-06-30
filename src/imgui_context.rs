@@ -5,17 +5,27 @@
 use std::ffi::{c_void};
 use std::os::raw::c_char;
 use std::ptr::null_mut;
+use crate::imgui_color::ImGuiColorMod;
+use crate::imgui_dock::ImGuiDockNode;
 use crate::imgui_draw_list::ImDrawListSharedData;
-use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiModFlags, ImGuiMouseCursor, ImGuiPayload, ImGuiPlatformImeData, ImGuiStyleVar, ImGuiTextBuffer, ImGuiViewport, ImVec4};
+use crate::imgui_group::ImGuiGroupData;
+use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavLayer, ImGuiPayload, ImGuiPlatformImeData, ImGuiPlatformMonitor, ImGuiStyleVar, ImGuiTextBuffer, ImGuiViewport, ImVec4};
+use crate::imgui_input::ImGuiInputSource;
 use crate::imgui_input_event::ImGuiInputEvent;
 use crate::imgui_io::{ImGuiIO, ImGuiPlatformIO};
+use crate::imgui_item::{ImGuiLastItemData, ImGuiNextItemData};
 use crate::imgui_kv_store::ImGuiStorage;
 use crate::imgui_log::{ImGuiDebugLogFlags, ImGuiLogType};
-use crate::imgui_style::ImGuiStyle;
+use crate::imgui_nav::{ImGuiActivateFlags, ImGuiNavItemData, ImGuiNavMoveFlags, ImGuiScrollFlags};
+use crate::imgui_popup::ImGuiPopupData;
+use crate::imgui_rect::ImRect;
+use crate::imgui_style::{ImGuiStyle, ImGuiStyleMod};
+use crate::imgui_tab_bar::ImGuiTabBar;
 use crate::imgui_vec::ImVec2;
+use crate::imgui_window::{ImGuiItemFlags, ImGuiNextWindowData, ImGuiWindow, ImGuiWindowStackData};
 
-pub struct ImGuiContext
-{
+#[derive()]
+pub struct ImGuiContext {
     // bool                    Initialized;
     pub Initialized: bool,
     // bool                    FontAtlasOwnedByContext;            // IO.Fonts-> is owned by the ImGuiContext and will be destructed along with it.
@@ -160,7 +170,7 @@ pub struct ImGuiContext
     // ImU32                   ActiveIdUsingNavInputMask;          // Active widget will want to read those nav inputs.
     pub ActiveIdUsingNavInputMask: u32,
     // ImBitArrayForNamedKeys  ActiveIdUsingKeyInputMask;          // Active widget will want to read those key inputs. When we grow the ImGuiKey enum we'll need to either to order the enum to make useful keys come first, either redesign this into e.g. a small array.
-    pub ActiveIdUsingKeyInputMask: ImBitArrayForNamedKeys,
+    pub ActiveIdUsingKeyInputMask: Vec<ImGuiKey>,
     // Next window/item data
     // ImGuiItemFlags          CurrentItemFlags;                      // == g.ItemFlagsStack.back()
     pub CurrentItemFlags: ImGuiItemFlags,
@@ -203,8 +213,8 @@ pub struct ImGuiContext
     // ImGuiViewportP*         MouseLastHoveredViewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
     pub MouseLastHoveredViewport: *mut ImGuiViewport,
     // ImGuiID                 PlatformLastFocusedViewportId;
-        pub PlatformLastFocusedViewportId: ImGuiID,
-// ImGuiPlatformMonitor    FallbackMonitor;                    // Virtual monitor used as fallback if backend doesn't provide monitor information.
+    pub PlatformLastFocusedViewportId: ImGuiID,
+    // ImGuiPlatformMonitor    FallbackMonitor;                    // Virtual monitor used as fallback if backend doesn't provide monitor information.
     pub FallbackMonitor: ImGuiPlatformMonitor,
     // int                     ViewportFrontMostStampCount;        // Every time the front-most window changes, we stamp its viewport with an incrementing counter
     pub ViewportFrontMostStampCount: i32,
@@ -346,7 +356,7 @@ pub struct ImGuiContext
     // ImVector<unsigned char> DragDropPayloadBufHeap;             // We don't expose the ImVector<> directly, ImGuiPayload only holds pointer+size
     pub DragDropPayloadBufHeap: Vec<u8>,
     // unsigned char           DragDropPayloadBufLocal[16];        // Local buffer for small payloads
-    pub DragDropPayloadBufLocal: [u8;16],
+    pub DragDropPayloadBufLocal: [u8; 16],
     // Clipper
     // int                             ClipperTempDataStacked;
     pub ClipperTempDataStacked: i32,
@@ -461,7 +471,7 @@ pub struct ImGuiContext
     // ImGuiTextBuffer         LogBuffer;                          // Accumulation buffer when log to clipboard. This is pointer so our GImGui static constructor doesn't call heap allocators.
     pub LogBuffer: ImGuiTextBuffer,
     // const char*             LogNextPrefix;
-    pub LogNextPrefix:*const c_char,
+    pub LogNextPrefix: *const c_char,
     // const char*             LogNextSuffix;
     pub LogNextSuffix: *const c_char,
     // float                   LogLinePosY;
@@ -490,7 +500,7 @@ pub struct ImGuiContext
 
     // Misc
     // float                   FramerateSecPerFrame[120];          // Calculate estimate of framerate for user over the last 2 seconds.
-    pub FramerateSecPerFrame: [f32;128],
+    pub FramerateSecPerFrame: [f32; 128],
     // int                     FramerateSecPerFrameIdx;
     pub FramerateSecPerFrameIdx: i32,
     // int                     FramerateSecPerFrameCount;

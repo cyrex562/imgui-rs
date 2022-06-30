@@ -1,4 +1,4 @@
-use crate::imgui_h::{ImVec4};
+use crate::imgui_h::{ImGuiCol, ImVec4};
 use crate::imgui_math::{IM_F32_TO_INT8_SAT, ImFabs, ImFmod, ImLerpU32, ImSwapF32};
 
 //  ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b)
@@ -206,4 +206,14 @@ impl ImColor {
     // // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
     // inline void    SetHSV(float h, float s, float v, float a = 1.0){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
     // static ImColor HSV(float h, float s, float v, float a = 1.0)   { float r, g, b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
+}
+
+/// Stacked color modifier, backup of modified data so we can restore it
+#[derive(Default,Debug,Clone)]
+pub struct ImGuiColorMod
+{
+    // ImGuiCol        Col;
+    pub Col: ImGuiCol,
+    // ImVec4          BackupValue;
+    pub BackupValue: ImVec4,
 }

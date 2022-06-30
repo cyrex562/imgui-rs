@@ -3724,23 +3724,42 @@ pub enum ImGuiDataAuthority
     Window
 }
 
-pub enum ImGuiItemStatusFlags
+#[derive(Debug,Default,Clone)]
+pub struct  ImGuiStackSizes
 {
-    None               = 0,
-    HoveredRect        = 1 << 0,   // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!, this is only one part of the most-common IsItemHovered test)
-    HasDisplayRect     = 1 << 1,   // g.LastItemData.DisplayRect is valid
-    Edited             = 1 << 2,   // Value exposed by item was edited in the current frame (should match the bool return value of most widgets)
-    ToggledSelection   = 1 << 3,   // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
-    ToggledOpen        = 1 << 4,   // Set when TreeNode() reports toggling their open state.
-    HasDeactivated     = 1 << 5,   // Set if the widget/group is able to provide data for the Deactivated flag.
-    Deactivated        = 1 << 6,   // Only valid if HasDeactivated is set.
-    HoveredWindow      = 1 << 7,   // Override the HoveredWindow test to allow cross-window hover testing.
-    FocusedByTabbing   = 1 << 8,    // Set when the Focusable item just got focused by Tabbing (FIXME: to be removed soon)
-// #ifdef IMGUI_ENABLE_TEST_ENGINE
-     // [imgui_tests only]
-    Openable           = 1 << 20,  // Item is an openable (e.g. TreeNode)
-    Opened             = 1 << 21,  //
-    Checkable          = 1 << 22,  // Item is a checkable (e.g. CheckBox, MenuItem)
-    Checked            = 1 << 23   //
-// #endif
+    // short   SizeOfIDStack;
+    pub SizeofIDStack: i16,
+    // short   SizeOfColorStack;
+    pub SizeOfColorStack: i16,
+    // short   SizeOfStyleVarStack;
+    pub SizeOfStyleVarStack: i16,
+    // short   SizeOfFontStack;
+    pub SizeOfFontStack: i16,
+    // short   SizeOfFocusScopeStack;
+    pub SizeOfFocusScopeStack: i16,
+    // short   SizeOfGroupStack;
+    pub SizeOfGroupStack: i16,
+    // short   SizeOfItemFlagsStack;
+    pub SizeOfItemFlagsStack: i16,
+    // short   SizeOfBeginPopupStack;
+    pub SizeOfBeginPopupStack: i16,
+    // short   SizeOfDisabledStack;
+    pub SizeOfDisabledStack: i16,
+}
+
+impl ImGuiStackSizes {
+    // ImGuiStackSizes() { memset(this, 0, sizeof(*this)); }
+    pub fn new()-> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    //     void SetToCurrentState();
+    pub fn SetToCurrentState(&mut self) {
+        todo!()
+    }
+    //     void CompareWithCurrentState();
+    pub fn CompareWithCurrentState(&self) {
+
+    }
 }
