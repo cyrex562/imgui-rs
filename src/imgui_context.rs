@@ -5,11 +5,12 @@
 use std::ffi::{c_void};
 use std::os::raw::c_char;
 use std::ptr::null_mut;
+use crate::imgui_clipper::ImGuiListClipperData;
 use crate::imgui_color::ImGuiColorMod;
 use crate::imgui_dock::ImGuiDockNode;
 use crate::imgui_draw_list::ImDrawListSharedData;
 use crate::imgui_group::ImGuiGroupData;
-use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavLayer, ImGuiPayload, ImGuiPlatformImeData, ImGuiPlatformMonitor, ImGuiStyleVar, ImGuiTextBuffer, ImGuiViewport, ImVec4};
+use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavLayer, ImGuiPayload, ImGuiPlatformImeData, ImGuiPlatformMonitor, ImGuiPtrOrIndex, ImGuiShrinkWidthItem, ImGuiStyleVar, ImGuiTextBuffer, ImGuiViewport, ImVec4};
 use crate::imgui_input::ImGuiInputSource;
 use crate::imgui_input_event::ImGuiInputEvent;
 use crate::imgui_io::{ImGuiIO, ImGuiPlatformIO};
@@ -17,10 +18,13 @@ use crate::imgui_item::{ImGuiLastItemData, ImGuiNextItemData};
 use crate::imgui_kv_store::ImGuiStorage;
 use crate::imgui_log::{ImGuiDebugLogFlags, ImGuiLogType};
 use crate::imgui_nav::{ImGuiActivateFlags, ImGuiNavItemData, ImGuiNavMoveFlags, ImGuiScrollFlags};
+use crate::imgui_pool::ImGuiPool;
 use crate::imgui_popup::ImGuiPopupData;
 use crate::imgui_rect::ImRect;
 use crate::imgui_style::{ImGuiStyle, ImGuiStyleMod};
 use crate::imgui_tab_bar::ImGuiTabBar;
+use crate::imgui_table::{ImGuiTable, ImGuiTableTempData};
+use crate::imgui_text::ImGuiInputTextState;
 use crate::imgui_vec::ImVec2;
 use crate::imgui_window::{ImGuiItemFlags, ImGuiNextWindowData, ImGuiWindow, ImGuiWindowStackData};
 
@@ -361,7 +365,7 @@ pub struct ImGuiContext {
     // int                             ClipperTempDataStacked;
     pub ClipperTempDataStacked: i32,
     // ImVector<ImGuiListClipperData>  ClipperTempData;
-    pub ClipperTempData: Vec<ImGuiListCliiperData>,
+    pub ClipperTempData: Vec<ImGuiListClipperData>,
     // Tables
     // ImGuiTable*                     CurrentTable;
     pub CurrentTable: *mut ImGuiTable,
@@ -369,8 +373,8 @@ pub struct ImGuiContext {
     pub TablesTempDataStacked: i32,
     // ImVector<ImGuiTableTempData>    TablesTempData;             // Temporary table data (buffers reused/shared across instances, support nesting)
     pub TablesTempData: Vec<ImGuiTableTempData>,
-    // ImPool<ImGuiTable>              Tables;                     // Persistent table data
-    pub Tables: ImPool<ImGuiTable>,
+    // ImGuiPool<ImGuiTable>              Tables;                     // Persistent table data
+    pub Tables: ImGuiPool<ImGuiTable>,
     // ImVector<float>                 TablesLastTimeActive;       // Last used timestamp of each tables (SOA, for efficient GC)
     pub TablesLastTimeActive: Vec<f32>,
     // ImVector<ImDrawChannel>         DrawChannelsTempMergeBuffer;
@@ -378,8 +382,8 @@ pub struct ImGuiContext {
     // Tab bars
     // ImGuiTabBar*                    CurrentTabBar;
     pub CurrentTabBar: *mut ImGuiTabBar,
-    // ImPool<ImGuiTabBar>             TabBars;
-    pub TabBars: ImPool<ImGuiTabBar>,
+    // ImGuiPool<ImGuiTabBar>             TabBars;
+    pub TabBars: ImGuiPool<ImGuiTabBar>,
     // ImVector<ImGuiPtrOrIndex>       CurrentTabBarStack;
     pub CurrentTabBarStack: Vec<ImGuiPtrOrIndex>,
     // ImVector<ImGuiShrinkWidthItem>  ShrinkWidthBuffer;

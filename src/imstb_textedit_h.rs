@@ -273,8 +273,8 @@
 ////
 ////
 
-#ifndef INCLUDE_STB_TEXTEDIT_H
-#define INCLUDE_STB_TEXTEDIT_H
+// #ifndef INCLUDE_STB_TEXTEDIT_H
+// #define INCLUDE_STB_TEXTEDIT_H
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -285,74 +285,110 @@
 // and undo state.
 //
 
-#ifndef STB_TEXTEDIT_UNDOSTATECOUNT
-#define STB_TEXTEDIT_UNDOSTATECOUNT   99
-#endif
-#ifndef STB_TEXTEDIT_UNDOCHARCOUNT
-#define STB_TEXTEDIT_UNDOCHARCOUNT   999
-#endif
-#ifndef STB_TEXTEDIT_CHARTYPE
-#define STB_TEXTEDIT_CHARTYPE        int
-#endif
-#ifndef STB_TEXTEDIT_POSITIONTYPE
-#define STB_TEXTEDIT_POSITIONTYPE    int
-#endif
+use std::os::raw::c_char;
 
-typedef struct
+// #ifndef STB_TEXTEDIT_UNDOSTATECOUNT
+// #define STB_TEXTEDIT_UNDOSTATECOUNT   99
+pub const STB_TEXTEDIT_UNDOSTATECOUNT: u32 = 99;
+// #endif
+// #ifndef STB_TEXTEDIT_UNDOCHARCOUNT
+// #define STB_TEXTEDIT_UNDOCHARCOUNT   999
+pub const STB_TEXTEDIT_UNDOCHARCOUNT: u32 = 999;
+// #endif
+// #ifndef STB_TEXTEDIT_CHARTYPE
+// #define STB_TEXTEDIT_CHARTYPE        int
+pub type STB_TEXTEDIT_CHARTYPE = i32;
+// #endif
+// #ifndef STB_TEXTEDIT_POSITIONTYPE
+// #define STB_TEXTEDIT_POSITIONTYPE    int
+// #endif
+pub type STB_TEXTEDIT_POSITIONTYPE = i32;
+
+#[derive(Debug,Clone,Default)]
+pub struct StbUndoRecord
 {
    // private data
-   STB_TEXTEDIT_POSITIONTYPE  where;
-   STB_TEXTEDIT_POSITIONTYPE  insert_length;
-   STB_TEXTEDIT_POSITIONTYPE  delete_length;
-   int                        char_storage;
-} StbUndoRecord;
+   // STB_TEXTEDIT_POSITIONTYPE  where;
+   pub loc: i32,
+   // STB_TEXTEDIT_POSITIONTYPE  insert_length;
+   pub insert_length: i32,
+   // STB_TEXTEDIT_POSITIONTYPE  delete_length;
+   pub delete_length: i32,
+   // int                        char_storage;
+    pub char_storage: i32,
+}
 
-typedef struct
+// typedef struct
+#[derive(Debug,Clone,Default)]
+pub struct StbUndoState
 {
    // private data
-   StbUndoRecord          undo_rec [STB_TEXTEDIT_UNDOSTATECOUNT];
-   STB_TEXTEDIT_CHARTYPE  undo_char[STB_TEXTEDIT_UNDOCHARCOUNT];
-   short undo_point, redo_point;
-   int undo_char_point, redo_char_point;
-} StbUndoState;
+   // StbUndoRecord          undo_rec [STB_TEXTEDIT_UNDOSTATECOUNT];
+   pub undo_rect: [StbUndoRecord;STB_TEXTEDIT_UNDOSTATECOUNT as usize],
+   // STB_TEXTEDIT_CHARTYPE  undo_char[STB_TEXTEDIT_UNDOCHARCOUNT];
+   pub undo_char: [STB_TEXTEDIT_CHARTYPE;STB_TEXTEDIT_UNDOCHARCOUNT as usize],
+   // short undo_point, redo_point;
+   pub undo_point: i16,
+   pub redo_point: i16,
+   // int undo_char_point, redo_char_point;
+   pub redo_char_point: i32,
+    pub undo_char_point: i32,
+}
 
-typedef struct
+
+// typedef struct
+#[derive(Debug,Default,Clone)]
+pub struct STB_TexteditState
 {
    /////////////////////
    //
    // public data
    //
 
-   int cursor;
-   // position of the text cursor within the string
+   // int cursor;
+   pub cursor: i32,
+    // position of the text cursor within the string
 
-   int select_start;          // selection start point
-   int select_end;
-   // selection start and end point in characters; if equal, no selection.
+   // int select_start;          // selection start point
+   pub select_start: i32,
+   // int select_end;
+   pub select_end: i32,
+    // selection start and end point in characters; if equal, no selection.
    // note that start may be less than or greater than end (e.g. when
    // dragging the mouse, start is where the initial click was, and you
    // can drag in either direction)
 
-   unsigned char insert_mode;
-   // each textfield keeps its own insert mode state. to keep an app-wide
+   // unsigned char insert_mode;
+   pub insert_mode: u8,
+    // each textfield keeps its own insert mode state. to keep an app-wide
    // insert mode, copy this value in/out of the app state
 
-   int row_count_per_page;
-   // page size in number of row.
+   // int row_count_per_page;
+   pub row_count_per_page: i32,
+    // page size in number of row.
    // this value MUST be set to >0 for pageup or pagedown in multilines documents.
 
    /////////////////////
    //
    // private data
    //
-   unsigned char cursor_at_end_of_line; // not implemented yet
-   unsigned char initialized;
-   unsigned char has_preferred_x;
-   unsigned char single_line;
-   unsigned char padding1, padding2, padding3;
-   float preferred_x; // this determines where the cursor up/down tries to seek to along x
-   StbUndoState undostate;
-} STB_TexteditState;
+   // unsigned char cursor_at_end_of_line; // not implemented yet
+   pub cursor_at_end_of_line: u8,
+   // unsigned char initialized;
+   pub initialized: u8,
+   // unsigned char has_preferred_x;
+   pub has_preferred_x: u8,
+   // unsigned char single_line;
+   pub single_line: u8,
+   // unsigned char padding1, padding2, padding3;
+   pub padding1: u8,
+   pub padding2: u8,
+   pub padding3: u8,
+   // float preferred_x; // this determines where the cursor up/down tries to seek to along x
+   pub preferred_x: f32,
+   // StbUndoState undostate;
+   pub undostate: StbUndoState
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -363,14 +399,23 @@ typedef struct
 // the text in each row is.
 
 // result of layout query
-typedef struct
+// typedef struct
+#[derive(Default,Debug,Clone)]
+pub struct StbTexteditRow
 {
-   float x0,x1;             // starting x location, end x location (allows for align=right, etc)
-   float baseline_y_delta;  // position of baseline relative to previous row's baseline
-   float ymin,ymax;         // height of row above and below baseline
-   int num_chars;
-} StbTexteditRow;
-#endif //INCLUDE_STB_TEXTEDIT_H
+   // float x0,x1;             // starting x location, end x location (allows for align=right, etc)
+   pub x0: f32,
+   pub x1: f32,
+   // float baseline_y_delta;  // position of baseline relative to previous row's baseline
+   pub baseline_y_delta: f32,
+   // float ymin,ymax;         // height of row above and below baseline
+   pub ymin: f32,
+   pub ymax: f32,
+   // int num_chars;
+   pub num_chars: i32,
+}
+
+// #endif //INCLUDE_STB_TEXTEDIT_H
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -383,12 +428,12 @@ typedef struct
 
 // implementation isn't include-guarded, since it might have indirectly
 // included just the "header" portion
-#ifdef STB_TEXTEDIT_IMPLEMENTATION
+// #ifdef STB_TEXTEDIT_IMPLEMENTATION
 
-#ifndef STB_TEXTEDIT_memmove
-#include <string.h>
-#define STB_TEXTEDIT_memmove memmove
-#endif
+// #ifndef STB_TEXTEDIT_memmove
+// #include <string.h>
+// #define STB_TEXTEDIT_memmove memmove
+// #endif
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -397,52 +442,70 @@ typedef struct
 //
 
 // traverse the layout to locate the nearest character to a display position
-static int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, float x, float y)
+// static int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, float x, float y)
+pub fn stb_text_locate_coord(in_str: &mut String, x: f32, y: f32) -> i32
 {
-   StbTexteditRow r;
-   int n = STB_TEXTEDIT_STRINGLEN(str);
-   float base_y = 0, prev_x;
-   int i=0, k;
+   // StbTexteditRow r;
+   let mut r: StbTexteditRow = StbTexteditRow::new();
+    // int n = STB_TEXTEDIT_STRINGLEN(str);
+   let n = in_str.len();
+    // float base_y = 0, prev_x;
+   let mut base_y: f32 = 0.0;
+    let mut prev_x: f32 = 0.0;
+    // int i=0, k;
+    let mut i = 0u32;
+    let mut k = 0u32;
 
-   r.x0 = r.x1 = 0;
-   r.ymin = r.ymax = 0;
+   r.x0 = 0.0;
+    r.x1 = 0.0;
+    r.ymin = 0.0;
+    r.ymax = 0.0;
    r.num_chars = 0;
 
    // search rows to find one that straddles 'y'
-   while (i < n) {
+   while i < n as u32 {
       STB_TEXTEDIT_LAYOUTROW(&r, str, i);
-      if (r.num_chars <= 0)
-         return n;
+      if r.num_chars <= 0 {
+          return n as i32;
+      }
 
-      if (i==0 && y < base_y + r.ymin)
-         return 0;
+      if i==0 && y < base_y + r.ymin {
+          return 0;
+      }
 
-      if (y < base_y + r.ymax)
-         break;
+      if y < base_y + r.ymax {
+          break;
+      }
 
       i += r.num_chars;
       base_y += r.baseline_y_delta;
    }
 
    // below all text, return 'after' last character
-   if (i >= n)
-      return n;
+   if i >= n {
+       return n as i32;
+   }
 
    // check if it's before the beginning of the line
-   if (x < r.x0)
-      return i;
+   if (x < r.x0) {
+       return i as i32;
+   }
 
    // check if it's before the end of the line
-   if (x < r.x1) {
+   if x < r.x1 {
       // search characters in row for one that straddles 'x'
       prev_x = r.x0;
-      for (k=0; k < r.num_chars; ++k) {
-         float w = STB_TEXTEDIT_GETWIDTH(str, i, k);
-         if (x < prev_x+w) {
-            if (x < prev_x+w/2)
-               return k+i;
-            else
-               return k+i+1;
+      // for (k=0; k < r.num_chars; ++k) {
+      for k in 0.. r.num_chars {
+         // float w = STB_TEXTEDIT_GETWIDTH(str, i, k);
+         let mut w = STB_TEXTEDIT_GETWIDTH(in_str, i, k);
+          if x < prev_x+w {
+            if x < prev_x+w/2 {
+                return k + i;
+            }
+            else {
+                return k + i + 1;
+            }
          }
          prev_x += w;
       }
@@ -450,10 +513,12 @@ static int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, float x, float y)
    }
 
    // if the last character is a newline, return that. otherwise return 'after' the last character
-   if (STB_TEXTEDIT_GETCHAR(str, i+r.num_chars-1) == STB_TEXTEDIT_NEWLINE)
-      return i+r.num_chars-1;
-   else
-      return i+r.num_chars;
+   if (STB_TEXTEDIT_GETCHAR(str, i+r.num_chars-1) == STB_TEXTEDIT_NEWLINE) {
+       return (i + r.num_chars - 1) as i32;
+   }
+   else {
+       return (i + r.num_chars) as i32;
+   }
 }
 
 // API click: on mouse down, move the cursor to the clicked location, and reset the selection

@@ -5,6 +5,7 @@
 use std::ffi::c_void;
 use std::ops::Index;
 use std::ptr;
+use std::ptr::null_mut;
 use crate::imgui_color::ColorConvertFloat4ToU32;
 use crate::imgui_vec::ImVec2;
 
@@ -1447,9 +1448,9 @@ pub enum ImGuiDir
 // A sorting direction
 pub enum ImGuiSortDirection
 {
-    ImGuiSortDirection_None         = 0,
-    ImGuiSortDirection_Ascending    = 1,    // Ascending = 0->9, A->Z etc.
-    ImGuiSortDirection_Descending   = 2     // Descending = 9->0, Z->A etc.
+    None         = 0,
+    Ascending    = 1,    // Ascending = 0->9, A->Z etc.
+    Descending   = 2     // Descending = 9->0, Z->A etc.
 }
 
 #[allow(non_camel_case_types)]// Keys value 0 to 511 are left unused as legacy native/opaque key values (< 1.87)
@@ -3763,3 +3764,44 @@ impl ImGuiStackSizes {
 
     }
 }
+
+
+#[derive(Debug,Default,Clone)]
+pub struct ImGuiPtrOrIndex
+{
+    // void*       Ptr;            // Either field can be set, not both. e.g. Dock node tab bars are loose while BeginTabBar() ones are in a pool.
+    Ptr: *mut c_void,
+    // int         Index;          // Usually index in a main pool.
+    Index: i32,
+
+}
+
+impl ImGuiPtrOrIndex {
+    // ImGuiPtrOrIndex(void* ptr)  { Ptr = ptr; Index = -1; }
+    pub fn new(ptr:*mut c_void) -> Self {
+        Self {
+            Ptr: ptr,
+            Index: -1,
+        }
+    }
+    //     ImGuiPtrOrIndex(int index)  { Ptr = NULL; Index = index; }
+    pub fn new2(index: i32) -> Self {
+        Self {
+            Ptr: null_mut(),
+            Index: index
+        }
+    }
+}
+
+#[derive(Debug,Clone,Default)]
+pub struct ImGuiShrinkWidthItem
+{
+    // int         Index;
+    pub Index: i32,
+    // float       Width;
+    pub Width: f32,
+    // float       InitialWidth;
+    pub InitialWidth: f32,
+}
+
+

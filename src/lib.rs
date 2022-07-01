@@ -29,3 +29,7 @@ mod imgui_item;
 mod imgui_group;
 mod imgui_popup;
 mod imgui_nav;
+mod imgui_clipper;
+mod imgui_table;
+mod imgui_pool;
+mod imstb_textedit_h;
