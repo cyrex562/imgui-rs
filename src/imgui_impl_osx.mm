@@ -434,7 +434,7 @@ bool ImGui_ImplOSX_Init(NSView* view)
         const char* string_c = (const char*)[string UTF8String];
         size_t string_len = strlen(string_c);
         static ImVector<char> s_clipboard;
-        s_clipboard.resize((int)string_len + 1);
+        s_clipboard.resize(string_len + 1);
         strcpy(s_clipboard.Data, string_c);
         return s_clipboard.Data;
     };
@@ -612,7 +612,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
 
     if (event.type == NSEventTypeLeftMouseDown || event.type == NSEventTypeRightMouseDown || event.type == NSEventTypeOtherMouseDown)
     {
-        int button = (int)[event buttonNumber];
+        int button = [event buttonNumber];
         if (button >= 0 && button < ImGuiMouseButton_COUNT)
             io.AddMouseButtonEvent(button, true);
         return io.WantCaptureMouse;
@@ -620,7 +620,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
 
     if (event.type == NSEventTypeLeftMouseUp || event.type == NSEventTypeRightMouseUp || event.type == NSEventTypeOtherMouseUp)
     {
-        int button = (int)[event buttonNumber];
+        int button = [event buttonNumber];
         if (button >= 0 && button < ImGuiMouseButton_COUNT)
             io.AddMouseButtonEvent(button, false);
         return io.WantCaptureMouse;
@@ -694,7 +694,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
         if ([event isARepeat])
             return io.WantCaptureKeyboard;
 
-        int key_code = (int)[event keyCode];
+        int key_code = [event keyCode];
         ImGuiKey key = ImGui_ImplOSX_KeyCodeToImGuiKey(key_code);
         io.AddKeyEvent(key, event.type == NSEventTypeKeyDown);
         io.SetKeyEventNativeData(key, key_code, -1); // To support legacy indexing (<1.87 user code)

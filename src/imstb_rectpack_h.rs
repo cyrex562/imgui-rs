@@ -266,7 +266,7 @@ STBRP_DEF void stbrp_init_target(stbrp_context *context, int width, int height, 
 {
    int i;
 
-   for (i=0; i < num_nodes-1; ++i)
+   for (i=0; i < num_nodes-1; i += 1)
       nodes[i].next = &nodes[i+1];
    nodes[i].next = NULL;
    context->init_mode = STBRP__INIT_skyline;
@@ -301,7 +301,7 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
    #if 0
    // skip in case we're past the node
    while (node->next->x <= x0)
-      ++node;
+      node += 1;
    #else
    STBRP_ASSERT(node->next->x > x0); // we ended up handling this in the caller for efficiency
    #endif
@@ -511,12 +511,12 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
       cur = context->active_head;
       while (cur) {
          cur = cur->next;
-         ++count;
+         count += 1;
       }
       cur = context->free_head;
       while (cur) {
          cur = cur->next;
-         ++count;
+         count += 1;
       }
       STBRP_ASSERT(count == context->num_nodes+2);
    }
@@ -548,14 +548,14 @@ STBRP_DEF int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, int nu
    int i, all_rects_packed = 1;
 
    // we use the 'was_packed' field internally to allow sorting/unsorting
-   for (i=0; i < num_rects; ++i) {
+   for (i=0; i < num_rects; i += 1) {
       rects[i].was_packed = i;
    }
 
    // sort according to heuristic
    STBRP_SORT(rects, num_rects, sizeof(rects[0]), rect_height_compare);
 
-   for (i=0; i < num_rects; ++i) {
+   for (i=0; i < num_rects; i += 1) {
       if (rects[i].w == 0 || rects[i].h == 0) {
          rects[i].x = rects[i].y = 0;  // empty rect needs no space
       } else {
@@ -573,7 +573,7 @@ STBRP_DEF int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, int nu
    STBRP_SORT(rects, num_rects, sizeof(rects[0]), rect_original_order);
 
    // set was_packed flags and all_rects_packed status
-   for (i=0; i < num_rects; ++i) {
+   for (i=0; i < num_rects; i += 1) {
       rects[i].was_packed = !(rects[i].x == STBRP__MAXVAL && rects[i].y == STBRP__MAXVAL);
       if (!rects[i].was_packed)
          all_rects_packed = 0;

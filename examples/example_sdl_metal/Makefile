@@ -17,7 +17,7 @@ LIBS = -framework Metal -framework MetalKit -framework Cocoa -framework IOKit -f
 LIBS += `sdl2-config --libs`
 LIBS += -L/usr/local/lib
 
-CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I/usr/local/include
+CXXFLAGS = -std=c += 111 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I/usr/local/include
 CXXFLAGS += `sdl2-config --cflags`
 CXXFLAGS += -Wall -Wformat
 CFLAGS = $(CXXFLAGS)
@@ -32,10 +32,10 @@ CFLAGS = $(CXXFLAGS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:%.mm
-	$(CXX) $(CXXFLAGS) -ObjC++ -fobjc-weak -fobjc-arc -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -ObjC += 1 -fobjc-weak -fobjc-arc -c -o $@ $<
 
 %.o:$(IMGUI_DIR)/backends/%.mm
-	$(CXX) $(CXXFLAGS) -ObjC++ -fobjc-weak -fobjc-arc -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -ObjC += 1 -fobjc-weak -fobjc-arc -c -o $@ $<
 
 all: $(EXE)
 	@echo Build complete

@@ -1,5 +1,5 @@
 use std::ffi::c_void;
-use crate::imgui::GImGui;
+use crate::imgui_globals::GImGui;
 use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, ImFont, ImFontAtlas, ImGuiBackendFlags, ImGuiConfigFlags, ImGuiKey, ImGuiKeyData, ImGuiModFlags, ImGuiViewport, ImVec2};
 use crate::imgui_h::ImGuiBackendFlags::ImGuiBackendFlags_None;
 use crate::imgui_h::ImGuiConfigFlags::ImGuiConfigFlags_None;

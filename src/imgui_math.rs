@@ -286,17 +286,17 @@ pub fn ImInvLength(lhs: &ImVec2, fail_value: f32) -> f32 {
     fail_value
 }
 
-// static inline float  ImFloor(float f)                                           { return (float)(int)(f); }
+// static inline float  ImFloor(float f)                                           { return (float)(f); }
 pub fn ImFloor(f: f32) -> f32 {
     f32::floor(f)
 }
 
-// static inline float  ImFloorSigned(float f)                                     { return (float)((f >= 0 || (float)(int)f == f) ? (int)f : (int)f - 1); } // Decent replacement for floorf()
+// static inline float  ImFloorSigned(float f)                                     { return (float)((f >= 0 || (float)f == f) ? f : f - 1); } // Decent replacement for floorf()
 // pub fn ImFloorSigned(f: f32) -> f32 {
 //     f32::floor
 // }
 
-// static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((float)(int)(v.x), (float)(int)(v.y)); }
+// static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((float)(v.x), (float)(v.y)); }
 pub fn ImFloorVec2(v: &ImVec2) -> ImVec2 {
     ImVec2 {
         x: f32::floor(v.x),
@@ -351,18 +351,18 @@ pub fn ImIsFloatAboveGuranteedIntegerPrecision(f: f32) -> bool {
 // IM_MSVC_RUNTIME_CHECKS_RESTORE
 
 
-// #define IM_F32_TO_INT8_UNBOUND(_VAL)    ((int)((_VAL) * 255.0 + ((_VAL)>=0 ? 0.5 : -0.5)))   // Unsaturated, for display purpose
+// #define IM_F32_TO_INT8_UNBOUND(_VAL)    (((_VAL) * 255.0 + ((_VAL)>=0 ? 0.5 : -0.5)))   // Unsaturated, for display purpose
 pub fn IM_F32_TO_INT8_UNBOUND(x: f32) -> i8 {
     x * 255.0 + if x >= 0.0 { 0.5} else { -0.5 } as i8
 }
 
-// #define IM_F32_TO_INT8_SAT(_VAL)        ((int)(ImSaturate(_VAL) * 255.0 + 0.5))               // Saturated, always output 0..255
+// #define IM_F32_TO_INT8_SAT(_VAL)        ((ImSaturate(_VAL) * 255.0 + 0.5))               // Saturated, always output 0..255
 pub fn IM_F32_TO_INT8_SAT(x: f32) -> i8 {
     ImSaturate(x) * 255.0 + 0.5 as i8
 }
 
-// #define IM_FLOOR(_VAL)                  ((float)(int)(_VAL))                                    // ImFloor() is not inlined in MSVC debug builds
-// #define IM_ROUND(_VAL)                  ((float)(int)((_VAL) + 0.5))                           //
+// #define IM_FLOOR(_VAL)                  ((float)(_VAL))                                    // ImFloor() is not inlined in MSVC debug builds
+// #define IM_ROUND(_VAL)                  ((float)((_VAL) + 0.5))                           //
 pub fn IM_ROUND(x: f32) -> f32{
     f32::round(x)
 }

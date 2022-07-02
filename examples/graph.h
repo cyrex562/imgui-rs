@@ -252,7 +252,7 @@ size_t Graph<NodeType>::num_edges_from_node(const int id) const
 template<typename NodeType>
 int Graph<NodeType>::insert_node(const NodeType& node)
 {
-    const int id = current_id_++;
+    const int id = current_id_ += 1;
     assert(!nodes_.contains(id));
     nodes_.insert(id, node);
     edges_from_node_.insert(id, 0);
@@ -292,7 +292,7 @@ void Graph<NodeType>::erase_node(const int id)
 template<typename NodeType>
 int Graph<NodeType>::insert_edge(const int from, const int to)
 {
-    const int id = current_id_++;
+    const int id = current_id_ += 1;
     assert(!edges_.contains(id));
     assert(nodes_.contains(from));
     assert(nodes_.contains(to));

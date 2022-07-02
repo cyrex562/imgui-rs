@@ -376,7 +376,7 @@ static inline int ObjectPoolFind(const ImObjectPool<T>& objects, const int id)
 template<typename T>
 static inline void ObjectPoolUpdate(ImObjectPool<T>& objects)
 {
-    for (int i = 0; i < objects.InUse.size(); ++i)
+    for (int i = 0; i < objects.InUse.size();  += 1i)
     {
         const int id = objects.Pool[i].Id;
 
@@ -392,7 +392,7 @@ static inline void ObjectPoolUpdate(ImObjectPool<T>& objects)
 template<>
 inline void ObjectPoolUpdate(ImObjectPool<ImNodeData>& nodes)
 {
-    for (int i = 0; i < nodes.InUse.size(); ++i)
+    for (int i = 0; i < nodes.InUse.size();  += 1i)
     {
         if (nodes.InUse[i])
         {

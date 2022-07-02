@@ -127,7 +127,7 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
     ImGui_ImplAllegro5_SetupRenderState(draw_data);
 
     // Render command lists
-    for (int n = 0; n < draw_data->CmdListsCount; n++)
+    for (int n = 0; n < draw_data->CmdListsCount; n += 1)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
 
@@ -135,7 +135,7 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
         // FIXME-OPT: Unfortunately Allegro doesn't support 32-bit packed colors so we have to convert them to 4 float as well..
         static ImVector<ImDrawVertAllegro> vertices;
         vertices.resize(cmd_list->IdxBuffer.Size);
-        for (int i = 0; i < cmd_list->IdxBuffer.Size; i++)
+        for (int i = 0; i < cmd_list->IdxBuffer.Size; i += 1)
         {
             const ImDrawVert* src_v = &cmd_list->VtxBuffer[cmd_list->IdxBuffer[i]];
             ImDrawVertAllegro* dst_v = &vertices[i];
@@ -152,8 +152,8 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
             // Otherwise, we convert them from 16-bit to 32-bit at runtime here, which works perfectly but is a little wasteful.
             static ImVector<int> indices_converted;
             indices_converted.resize(cmd_list->IdxBuffer.Size);
-            for (int i = 0; i < cmd_list->IdxBuffer.Size; ++i)
-                indices_converted[i] = (int)cmd_list->IdxBuffer.Data[i];
+            for (int i = 0; i < cmd_list->IdxBuffer.Size;  += 1i)
+                indices_converted[i] = cmd_list->IdxBuffer.Data[i];
             indices = indices_converted.Data;
         }
         else if (sizeof(ImDrawIdx) == 4)
@@ -163,7 +163,7 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
 
         // Render command lists
         ImVec2 clip_off = draw_data->DisplayPos;
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
+        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i += 1)
         {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
             if (pcmd->UserCallback)
@@ -225,7 +225,7 @@ bool ImGui_ImplAllegro5_CreateDeviceObjects()
         al_destroy_bitmap(img);
         return false;
     }
-    memcpy(locked_img->data, pixels, sizeof(int) * width * height);
+    memcpy(locked_img->data, pixels, sizeof * width * height);
     al_unlock_bitmap(img);
 
     // Convert software texture to hardware texture.

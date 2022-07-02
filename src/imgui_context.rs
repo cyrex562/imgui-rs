@@ -24,7 +24,7 @@ use crate::imgui_rect::ImRect;
 use crate::imgui_style::{ImGuiStyle, ImGuiStyleMod};
 use crate::imgui_tab_bar::ImGuiTabBar;
 use crate::imgui_table::{ImGuiTable, ImGuiTableTempData};
-use crate::imgui_text::ImGuiInputTextState;
+use crate::imgui_text_input_state::ImGuiInputTextState;
 use crate::imgui_vec::ImVec2;
 use crate::imgui_window::{ImGuiItemFlags, ImGuiNextWindowData, ImGuiWindow, ImGuiWindowStackData};
 

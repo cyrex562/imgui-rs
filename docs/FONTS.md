@@ -31,7 +31,7 @@ In the [misc/fonts/](https://github.com/ocornut/imgui/tree/master/misc/fonts) fo
 
 ![Fonts debugging](https://user-images.githubusercontent.com/8225057/135429892-0e41ef8d-33c5-4991-bcf6-f997a0bcfd6b.png)
 
-- You can use the `UTF-8 Encoding viewer` in `Metrics/Debugger` to verify the content of your UTF-8 strings. From C/C++ code, you can call `ImGui::DebugTextEncoding("my string");` function to verify that your UTF-8 encoding is correct.
+- You can use the `UTF-8 Encoding viewer` in `Metrics/Debugger` to verify the content of your UTF-8 strings. From C/C += 1 code, you can call `ImGui::DebugTextEncoding("my string");` function to verify that your UTF-8 encoding is correct.
 
 ![UTF-8 Encoding viewer](https://user-images.githubusercontent.com/8225057/166505963-8a0d7899-8ee8-4558-abb2-1ae523dc02f9.png)
 
@@ -39,7 +39,7 @@ In the [misc/fonts/](https://github.com/ocornut/imgui/tree/master/misc/fonts) fo
 
 - Make sure your font ranges data are persistent (available during the calls to `GetTexDataAsAlpha8()`/`GetTexDataAsRGBA32()/`Build()`.
 
-- Use C++11 u8"my text" syntax to encode literal strings as UTF-8. e.g.:
+- Use C += 111 u8"my text" syntax to encode literal strings as UTF-8. e.g.:
 ```cpp
 u8"hello"
 u8"こんにちは"   // this will be encoded as UTF-8
@@ -170,7 +170,7 @@ Some solutions:
 Using an icon font (such as [FontAwesome](http://fontawesome.io) or [OpenFontIcons](https://github.com/traverseda/OpenFontIcons)) is an easy and practical way to use icons in your Dear ImGui application.
 A common pattern is to merge the icon font within your main font, so you can embed icons directly from your strings without having to change fonts back and forth.
 
-To refer to the icon UTF-8 codepoints from your C++ code, you may use those headers files created by Juliette Foucaut: https://github.com/juliettef/IconFontCppHeaders.
+To refer to the icon UTF-8 codepoints from your C += 1 code, you may use those headers files created by Juliette Foucaut: https://github.com/juliettef/IconFontCppHeaders.
 
 So you can use `ICON_FA_SEARCH` as a string that will render as a "Search" icon.
 
@@ -256,7 +256,7 @@ io.Fonts->Build();                                     // Build the atlas while 
 As an alternative to rendering colorful glyphs using imgui_freetype with `ImGuiFreeTypeBuilderFlags_LoadColor`, you may allocate your own space in the texture atlas and write yourself into it. **(This is a BETA api, use if you are familiar with dear imgui and with your rendering backend)**
 
 - You can use the `ImFontAtlas::AddCustomRect()` and `ImFontAtlas::AddCustomRectFontGlyph()` api to register rectangles that will be packed into the font atlas texture. Register them before building the atlas, then call Build()`.
-- You can then use `ImFontAtlas::GetCustomRectByIndex(int)` to query the position/size of your rectangle within the texture, and blit/copy any graphics data of your choice into those rectangles.
+- You can then use `ImFontAtlas::GetCustomRectByIndex` to query the position/size of your rectangle within the texture, and blit/copy any graphics data of your choice into those rectangles.
 - This API is beta because it is likely to change in order to support multi-dpi (multiple viewports on multiple monitors with varying DPI scale).
 
 #### Pseudo-code:
@@ -313,7 +313,7 @@ ImFont* font = io.Fonts->AddFontFromMemoryCompressedBase85TTF(compressed_data_ba
 
 ## About filenames
 
-**Please note that many new C/C++ users have issues loading their files _because the filename they provide is wrong_.**
+**Please note that many new C/C += 1 users have issues loading their files _because the filename they provide is wrong_.**
 
 Two things to watch for:
 - Make sure your IDE/debugger settings starts your executable from the right working directory. In Visual Studio you can change your working directory in project `Properties > General > Debugging > Working Directory`. People assume that their execution will start from the root folder of the project, where by default it oftens start from the folder where object or executable files are stored.
@@ -324,7 +324,7 @@ io.Fonts->AddFontFromFileTTF("MyImage01.jpg", ...);
 // Load from the parent folder of your Working Directory
 io.Fonts->AddFontFromFileTTF("../MyImage01.jpg", ...);
 ```
-- In C/C++ and most programming languages if you want to use a backslash `\` within a string literal, you need to write it double backslash `\\`. At it happens, Windows uses backslashes as a path separator, so be mindful.
+- In C/C += 1 and most programming languages if you want to use a backslash `\` within a string literal, you need to write it double backslash `\\`. At it happens, Windows uses backslashes as a path separator, so be mindful.
 ```cpp
 io.Fonts->AddFontFromFileTTF("MyFiles\MyImage01.jpg", ...);   // This is INCORRECT!!
 io.Fonts->AddFontFromFileTTF("MyFiles\\MyImage01.jpg", ...);  // This is CORRECT
@@ -369,7 +369,7 @@ Some fonts files are available in the `misc/fonts/` folder:
 
 #### ICON FONTS
 
-- C/C++ header for icon fonts (#define with code points to use in source code string literals) https://github.com/juliettef/IconFontCppHeaders
+- C/C += 1 header for icon fonts (#define with code points to use in source code string literals) https://github.com/juliettef/IconFontCppHeaders
 - FontAwesome https://fortawesome.github.io/Font-Awesome
 - OpenFontIcons https://github.com/traverseda/OpenFontIcons
 - Google Icon Fonts https://design.google.com/icons/

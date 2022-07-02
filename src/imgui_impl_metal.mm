@@ -89,7 +89,7 @@ static inline CFTimeInterval    GetMachAbsoluteTimeInSeconds()      { return (CF
 
 #ifdef IMGUI_IMPL_METAL_CPP
 
-#pragma mark - Dear ImGui Metal C++ Backend API
+#pragma mark - Dear ImGui Metal C += 1 Backend API
 
 bool ImGui_ImplMetal_Init(MTL::Device* device)
 {
@@ -211,8 +211,8 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* drawData, id<MTLCommandBuffer> c
     MetalContext* ctx = bd->SharedMetalContext;
 
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
-    int fb_width = (int)(drawData->DisplaySize.x * drawData->FramebufferScale.x);
-    int fb_height = (int)(drawData->DisplaySize.y * drawData->FramebufferScale.y);
+    int fb_width = (drawData->DisplaySize.x * drawData->FramebufferScale.x);
+    int fb_height = (drawData->DisplaySize.y * drawData->FramebufferScale.y);
     if (fb_width <= 0 || fb_height <= 0 || drawData->CmdListsCount == 0)
         return;
 
@@ -228,8 +228,8 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* drawData, id<MTLCommandBuffer> c
         ctx.renderPipelineStateCache[ctx.framebufferDescriptor] = renderPipelineState;
     }
 
-    size_t vertexBufferLength = (size_t)drawData->TotalVtxCount * sizeof(ImDrawVert);
-    size_t indexBufferLength = (size_t)drawData->TotalIdxCount * sizeof(ImDrawIdx);
+    size_t vertexBufferLength = drawData->TotalVtxCount * sizeof(ImDrawVert);
+    size_t indexBufferLength = drawData->TotalIdxCount * sizeof(ImDrawIdx);
     MetalBuffer* vertexBuffer = [ctx dequeueReusableBufferOfLength:vertexBufferLength device:commandBuffer.device];
     MetalBuffer* indexBuffer = [ctx dequeueReusableBufferOfLength:indexBufferLength device:commandBuffer.device];
 
@@ -242,14 +242,14 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* drawData, id<MTLCommandBuffer> c
     // Render command lists
     size_t vertexBufferOffset = 0;
     size_t indexBufferOffset = 0;
-    for (int n = 0; n < drawData->CmdListsCount; n++)
+    for (int n = 0; n < drawData->CmdListsCount; n += 1)
     {
         const ImDrawList* cmd_list = drawData->CmdLists[n];
 
-        memcpy((char*)vertexBuffer.buffer.contents + vertexBufferOffset, cmd_list->VtxBuffer.Data, (size_t)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
-        memcpy((char*)indexBuffer.buffer.contents + indexBufferOffset, cmd_list->IdxBuffer.Data, (size_t)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+        memcpy((char*)vertexBuffer.buffer.contents + vertexBufferOffset, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+        memcpy((char*)indexBuffer.buffer.contents + indexBufferOffset, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
 
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
+        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i += 1)
         {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
             if (pcmd->UserCallback)
@@ -300,8 +300,8 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* drawData, id<MTLCommandBuffer> c
             }
         }
 
-        vertexBufferOffset += (size_t)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert);
-        indexBufferOffset += (size_t)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx);
+        vertexBufferOffset += cmd_list->VtxBuffer.Size * sizeof(ImDrawVert);
+        indexBufferOffset += cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx);
     }
 
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>)
@@ -508,7 +508,7 @@ static void ImGui_ImplMetal_ShutdownPlatformInterface()
 static void ImGui_ImplMetal_CreateDeviceObjectsForPlatformWindows()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    for (int i = 1; i < platform_io.Viewports.Size; i++)
+    for (int i = 1; i < platform_io.Viewports.Size; i += 1)
         if (!platform_io.Viewports[i]->RendererUserData)
             ImGui_ImplMetal_CreateWindow(platform_io.Viewports[i]);
 }
@@ -516,7 +516,7 @@ static void ImGui_ImplMetal_CreateDeviceObjectsForPlatformWindows()
 static void ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    for (int i = 1; i < platform_io.Viewports.Size; i++)
+    for (int i = 1; i < platform_io.Viewports.Size; i += 1)
         if (platform_io.Viewports[i]->RendererUserData)
             ImGui_ImplMetal_DestroyWindow(platform_io.Viewports[i]);
 }

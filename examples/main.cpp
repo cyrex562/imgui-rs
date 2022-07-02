@@ -108,7 +108,7 @@ int main(int, char**)
 
         // Rendering
         ImGui::Render();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+        glViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y);
         glClearColor(
             clear_color.x * clear_color.w,
             clear_color.y * clear_color.w,

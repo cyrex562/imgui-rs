@@ -15,7 +15,7 @@ int main(int, char**)
     int tex_w, tex_h;
     io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_w, &tex_h);
 
-    for (int n = 0; n < 20; n++)
+    for (int n = 0; n < 20; n += 1)
     {
         printf("NewFrame() %d\n", n);
         io.DisplaySize = ImVec2(1920, 1080);

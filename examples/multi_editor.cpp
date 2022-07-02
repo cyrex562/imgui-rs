@@ -45,7 +45,7 @@ void show_editor(const char* editor_name, Editor& editor)
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
         ImNodes::IsEditorHovered() && ImGui::IsKeyReleased(SDL_SCANCODE_A))
     {
-        const int node_id = ++editor.current_id;
+        const int node_id =  += 1editor.current_id;
         ImNodes::SetNodeScreenSpacePos(node_id, ImGui::GetMousePos());
         ImNodes::SnapNodeToGrid(node_id);
         editor.nodes.push_back(Node(node_id, 0.f));
@@ -89,7 +89,7 @@ void show_editor(const char* editor_name, Editor& editor)
         Link link;
         if (ImNodes::IsLinkCreated(&link.start_attr, &link.end_attr))
         {
-            link.id = ++editor.current_id;
+            link.id =  += 1editor.current_id;
             editor.links.push_back(link);
         }
     }

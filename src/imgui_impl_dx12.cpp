@@ -126,7 +126,7 @@ struct ImGui_ImplDX12_ViewportData
         FrameIndex = UINT_MAX;
         FrameRenderBuffers = new ImGui_ImplDX12_RenderBuffers[NumFramesInFlight];
 
-        for (UINT i = 0; i < NumFramesInFlight; ++i)
+        for (UINT i = 0; i < NumFramesInFlight;  += 1i)
         {
             FrameCtx[i].CommandAllocator = NULL;
             FrameCtx[i].RenderTarget = NULL;
@@ -146,7 +146,7 @@ struct ImGui_ImplDX12_ViewportData
         IM_ASSERT(Fence == NULL);
         IM_ASSERT(FenceEvent == NULL);
 
-        for (UINT i = 0; i < NumFramesInFlight; ++i)
+        for (UINT i = 0; i < NumFramesInFlight;  += 1i)
         {
             IM_ASSERT(FrameCtx[i].CommandAllocator == NULL && FrameCtx[i].RenderTarget == NULL);
             IM_ASSERT(FrameRenderBuffers[i].IndexBuffer == NULL && FrameRenderBuffers[i].VertexBuffer == NULL);
@@ -241,7 +241,7 @@ void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandL
 
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
     ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)draw_data->OwnerViewport->RendererUserData;
-    vd->FrameIndex++;
+    vd->FrameIndex += 1;
     ImGui_ImplDX12_RenderBuffers* fr = &vd->FrameRenderBuffers[vd->FrameIndex % bd->numFramesInFlight];
 
     // Create and grow vertex/index buffers if needed
@@ -302,7 +302,7 @@ void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandL
         return;
     ImDrawVert* vtx_dst = (ImDrawVert*)vtx_resource;
     ImDrawIdx* idx_dst = (ImDrawIdx*)idx_resource;
-    for (int n = 0; n < draw_data->CmdListsCount; n++)
+    for (int n = 0; n < draw_data->CmdListsCount; n += 1)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
         memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
@@ -321,10 +321,10 @@ void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandL
     int global_vtx_offset = 0;
     int global_idx_offset = 0;
     ImVec2 clip_off = draw_data->DisplayPos;
-    for (int n = 0; n < draw_data->CmdListsCount; n++)
+    for (int n = 0; n < draw_data->CmdListsCount; n += 1)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
+        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i += 1)
         {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
             if (pcmd->UserCallback != NULL)
@@ -420,7 +420,7 @@ static void ImGui_ImplDX12_CreateFontsTexture()
         D3D12_RANGE range = { 0, uploadSize };
         hr = uploadBuffer->Map(0, &range, &mapped);
         IM_ASSERT(SUCCEEDED(hr));
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < height; y += 1)
             memcpy((void*) ((uintptr_t) mapped + y * uploadPitch), pixels + y * width * 4, width * 4);
         uploadBuffer->Unmap(0, &range);
 
@@ -582,7 +582,7 @@ bool    ImGui_ImplDX12_CreateDeviceObjects()
             // (2) there exists a version of d3d12.dll for Windows 7 (D3D12On7) in one of the following directories.
             // See https://github.com/ocornut/imgui/pull/3696 for details.
             const char* localD3d12Paths[] = { ".\\d3d12.dll", ".\\d3d12on7\\d3d12.dll", ".\\12on7\\d3d12.dll" }; // A. current directory, B. used by some games, C. used in Microsoft D3D12On7 sample
-            for (int i = 0; i < IM_ARRAYSIZE(localD3d12Paths); i++)
+            for (int i = 0; i < IM_ARRAYSIZE(localD3d12Paths); i += 1)
                 if ((d3d12_dll = ::LoadLibraryA(localD3d12Paths[i])) != NULL)
                     break;
 
@@ -810,7 +810,7 @@ void ImGui_ImplDX12_Shutdown()
     if (ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)main_viewport->RendererUserData)
     {
         // We could just call ImGui_ImplDX12_DestroyWindow(main_viewport) as a convenience but that would be misleading since we only use data->Resources[]
-        for (UINT i = 0; i < bd->numFramesInFlight; i++)
+        for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
             ImGui_ImplDX12_DestroyRenderBuffers(&vd->FrameRenderBuffers[i]);
         IM_DELETE(vd);
         main_viewport->RendererUserData = NULL;
@@ -863,7 +863,7 @@ static void ImGui_ImplDX12_CreateWindow(ImGuiViewport* viewport)
     IM_ASSERT(res == S_OK);
 
     // Create command allocator.
-    for (UINT i = 0; i < bd->numFramesInFlight; ++i)
+    for (UINT i = 0; i < bd->numFramesInFlight;  += 1i)
     {
         res = bd->pd3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&vd->FrameCtx[i].CommandAllocator));
         IM_ASSERT(res == S_OK);
@@ -926,14 +926,14 @@ static void ImGui_ImplDX12_CreateWindow(ImGuiViewport* viewport)
 
         SIZE_T rtv_descriptor_size = bd->pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = vd->RtvDescHeap->GetCPUDescriptorHandleForHeapStart();
-        for (UINT i = 0; i < bd->numFramesInFlight; i++)
+        for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
         {
             vd->FrameCtx[i].RenderTargetCpuDescriptors = rtv_handle;
             rtv_handle.ptr += rtv_descriptor_size;
         }
 
         ID3D12Resource* back_buffer;
-        for (UINT i = 0; i < bd->numFramesInFlight; i++)
+        for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
         {
             IM_ASSERT(vd->FrameCtx[i].RenderTarget == NULL);
             vd->SwapChain->GetBuffer(i, IID_PPV_ARGS(&back_buffer));
@@ -942,7 +942,7 @@ static void ImGui_ImplDX12_CreateWindow(ImGuiViewport* viewport)
         }
     }
 
-    for (UINT i = 0; i < bd->numFramesInFlight; i++)
+    for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
         ImGui_ImplDX12_DestroyRenderBuffers(&vd->FrameRenderBuffers[i]);
 }
 
@@ -951,7 +951,7 @@ static void ImGui_WaitForPendingOperations(ImGui_ImplDX12_ViewportData* vd)
     HRESULT hr = S_FALSE;
     if (vd && vd->CommandQueue && vd->Fence && vd->FenceEvent)
     {
-        hr = vd->CommandQueue->Signal(vd->Fence, ++vd->FenceSignaledValue);
+        hr = vd->CommandQueue->Signal(vd->Fence,  += 1vd->FenceSignaledValue);
         IM_ASSERT(hr == S_OK);
         ::WaitForSingleObject(vd->FenceEvent, 0); // Reset any forgotten waits
         hr = vd->Fence->SetEventOnCompletion(vd->FenceSignaledValue, vd->FenceEvent);
@@ -976,7 +976,7 @@ static void ImGui_ImplDX12_DestroyWindow(ImGuiViewport* viewport)
         ::CloseHandle(vd->FenceEvent);
         vd->FenceEvent = NULL;
 
-        for (UINT i = 0; i < bd->numFramesInFlight; i++)
+        for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
         {
             SafeRelease(vd->FrameCtx[i].RenderTarget);
             SafeRelease(vd->FrameCtx[i].CommandAllocator);
@@ -994,14 +994,14 @@ static void ImGui_ImplDX12_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
 
     ImGui_WaitForPendingOperations(vd);
 
-    for (UINT i = 0; i < bd->numFramesInFlight; i++)
+    for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
         SafeRelease(vd->FrameCtx[i].RenderTarget);
 
     if (vd->SwapChain)
     {
         ID3D12Resource* back_buffer = NULL;
         vd->SwapChain->ResizeBuffers(0, (UINT)size.x, (UINT)size.y, DXGI_FORMAT_UNKNOWN, 0);
-        for (UINT i = 0; i < bd->numFramesInFlight; i++)
+        for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
         {
             vd->SwapChain->GetBuffer(i, IID_PPV_ARGS(&back_buffer));
             bd->pd3dDevice->CreateRenderTargetView(back_buffer, NULL, vd->FrameCtx[i].RenderTargetCpuDescriptors);
@@ -1047,7 +1047,7 @@ static void ImGui_ImplDX12_RenderWindow(ImGuiViewport* viewport, void*)
 
     vd->CommandQueue->Wait(vd->Fence, vd->FenceSignaledValue);
     vd->CommandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&cmd_list);
-    vd->CommandQueue->Signal(vd->Fence, ++vd->FenceSignaledValue);
+    vd->CommandQueue->Signal(vd->Fence,  += 1vd->FenceSignaledValue);
 }
 
 static void ImGui_ImplDX12_SwapBuffers(ImGuiViewport* viewport, void*)

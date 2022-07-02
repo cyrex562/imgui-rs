@@ -26,7 +26,7 @@ or view this file with any Markdown viewer.
 | **[About the ID Stack system..<br>Why is my widget not reacting when I click on it?<br>How can I have widgets with an empty label?<br>How can I have multiple widgets with the same label?<br>How can I have multiple windows with the same label?](#q-about-the-id-stack-system)** |
 | [How can I display an image? What is ImTextureID, how does it work?](#q-how-can-i-display-an-image-what-is-imtextureid-how-does-it-work)|
 | [How can I use my own math types instead of ImVec2/ImVec4?](#q-how-can-i-use-my-own-math-types-instead-of-imvec2imvec4) |
-| [How can I interact with standard C++ types (such as std::string and std::vector)?](#q-how-can-i-interact-with-standard-c-types-such-as-stdstring-and-stdvector) |
+| [How can I interact with standard C += 1 types (such as std::string and std::vector)?](#q-how-can-i-interact-with-standard-c-types-such-as-stdstring-and-stdvector) |
 | [How can I display custom shapes? (using low-level ImDrawList API)](#q-how-can-i-display-custom-shapes-using-low-level-imdrawlist-api) |
 | **Q&A: Fonts, Text** |
 | [How should I handle DPI in my application?](#q-how-should-i-handle-dpi-in-my-application) |
@@ -38,7 +38,7 @@ or view this file with any Markdown viewer.
 | [Who uses Dear ImGui?](#q-who-uses-dear-imgui) |
 | [Can you create elaborate/serious tools with Dear ImGui?](#q-can-you-create-elaborateserious-tools-with-dear-imgui)  |
 | [Can you reskin the look of Dear ImGui?](#q-can-you-reskin-the-look-of-dear-imgui) |
-| [Why using C++ (as opposed to C)?](#q-why-using-c-as-opposed-to-c) |
+| [Why using C += 1 (as opposed to C)?](#q-why-using-c-as-opposed-to-c) |
 | **Q&A: Community** |
 | [How can I help?](#q-how-can-i-help) |
 
@@ -47,7 +47,7 @@ or view this file with any Markdown viewer.
 
 ### Q: Where is the documentation?
 
-**This library is poorly documented at the moment and expects the user to be acquainted with C/C++.**
+**This library is poorly documented at the moment and expects the user to be acquainted with C/C += 1.**
 - The [Wiki](https://github.com/ocornut/imgui/wiki) is a hub to many resources and links.
 - Dozens of standalone example applications using e.g. OpenGL/DirectX are provided in the [examples/](https://github.com/ocornut/imgui/blob/master/examples/) folder to explain how to integrate Dear ImGui with your own engine/application. You can run those applications and explore them.
 - See demo code in [imgui_demo.cpp](https://github.com/ocornut/imgui/blob/master/imgui_demo.cpp) and particularly the `ImGui::ShowDemoWindow()` function. The demo covers most features of Dear ImGui, so you can read the code and see its output.
@@ -393,7 +393,7 @@ If you want to display an image file (e.g. PNG file) into the screen, please ref
 
 Refer to [Image Loading and Displaying Examples](https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples) on the [Wiki](https://github.com/ocornut/imgui/wiki) to find simplified examples for loading textures with OpenGL, DirectX9 and DirectX11.
 
-C/C++ tip: a void* is pointer-sized storage. You may safely store any pointer or integer into it by casting your value to ImTextureID / void*, and vice-versa.
+C/C += 1 tip: a void* is pointer-sized storage. You may safely store any pointer or integer into it by casting your value to ImTextureID / void*, and vice-versa.
 Because both end-points (user code and rendering function) are under your control, you know exactly what is stored inside the ImTextureID / void*.
 Examples:
 ```cpp
@@ -422,8 +422,8 @@ This way you'll be able to use your own types everywhere, e.g. passing `MyVector
 
 ---
 
-### Q: How can I interact with standard C++ types (such as std::string and std::vector)?
-- Being highly portable (backends/bindings for several languages, frameworks, programming style, obscure or older platforms/compilers), and aiming for compatibility & performance suitable for every modern real-time game engines, dear imgui does not use any of std C++ types. We use raw types (e.g. char* instead of std::string) because they adapt to more use cases.
+### Q: How can I interact with standard C += 1 types (such as std::string and std::vector)?
+- Being highly portable (backends/bindings for several languages, frameworks, programming style, obscure or older platforms/compilers), and aiming for compatibility & performance suitable for every modern real-time game engines, dear imgui does not use any of std C += 1 types. We use raw types (e.g. char* instead of std::string) because they adapt to more use cases.
 - To use ImGui::InputText() with a std::string or any resizable string class, see [misc/cpp/imgui_stdlib.h](https://github.com/ocornut/imgui/blob/master/misc/cpp/imgui_stdlib.h).
 - To use combo boxes and list boxes with `std::vector` or any other data structure: the `BeginCombo()/EndCombo()` API
 lets you iterate and submit items yourself, so does the `ListBoxHeader()/ListBoxFooter()` API.
@@ -431,7 +431,7 @@ Prefer using them over the old and awkward `Combo()/ListBox()` api.
 - Generally for most high-level types you should be able to access the underlying data type.
 You may write your own one-liner wrappers to facilitate user code (tip: add new functions in ImGui:: namespace from your code).
 - Dear ImGui applications often need to make intensive use of strings. It is expected that many of the strings you will pass
-to the API are raw literals (free in C/C++) or allocated in a manner that won't incur a large cost on your application.
+to the API are raw literals (free in C/C += 1) or allocated in a manner that won't incur a large cost on your application.
 Please bear in mind that using `std::string` on applications with large amount of UI may incur unsatisfactory performances.
 Modern implementations of `std::string` often include small-string optimization (which is often a local buffer) but those
 are not configurable and not the same across implementations.
@@ -522,7 +522,7 @@ Default is ProggyClean.ttf, monospace, rendered at size 13, embedded in dear img
 
 (Read the [docs/FONTS.md](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md) file for more details about font loading.)
 
-New programmers: remember that in C/C++ and most programming languages if you want to use a
+New programmers: remember that in C/C += 1 and most programming languages if you want to use a
 backslash \ within a string literal, you need to write it double backslash "\\":
 
 ```cpp
@@ -598,7 +598,7 @@ builder.BuildRanges(&ranges);                          // Build the final result
 io.Fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, NULL, ranges.Data);
 ```
 
-All your strings needs to use UTF-8 encoding. In C++11 you can encode a string literal in UTF-8
+All your strings needs to use UTF-8 encoding. In C += 111 you can encode a string literal in UTF-8
 by using the u8"hello" syntax. Specifying literal in your source code using a local code page
 (such as CP-923 for Japanese or CP-1251 for Cyrillic) will NOT work!
 Otherwise you can convert yourself to UTF-8 or load text data from file already saved as UTF-8.
@@ -652,11 +652,11 @@ A reasonably skinned application may look like (screenshot from [#2529](https://
 
 ---
 
-### Q: Why using C++ (as opposed to C)?
+### Q: Why using C += 1 (as opposed to C)?
 
-Dear ImGui takes advantage of a few C++ languages features for convenience but nothing anywhere Boost insanity/quagmire. Dear ImGui doesn't use any C++ header file. Dear ImGui uses a very small subset of C++11 features. In particular, function overloading and default parameters are used to make the API easier to use and code more terse. Doing so I believe the API is sitting on a sweet spot and giving up on those features would make the API more cumbersome. Other features such as namespace, constructors and templates (in the case of the ImVector<> class) are also relied on as a convenience.
+Dear ImGui takes advantage of a few C += 1 languages features for convenience but nothing anywhere Boost insanity/quagmire. Dear ImGui doesn't use any C += 1 header file. Dear ImGui uses a very small subset of C += 111 features. In particular, function overloading and default parameters are used to make the API easier to use and code more terse. Doing so I believe the API is sitting on a sweet spot and giving up on those features would make the API more cumbersome. Other features such as namespace, constructors and templates (in the case of the ImVector<> class) are also relied on as a convenience.
 
-There is an auto-generated [c-api for Dear ImGui (cimgui)](https://github.com/cimgui/cimgui) by Sonoro1234 and Stephan Dilly. It is designed for creating bindings to other languages. If possible, I would suggest using your target language functionalities to try replicating the function overloading and default parameters used in C++ else the API may be harder to use. Also see [Bindings](https://github.com/ocornut/imgui/wiki/Bindings) for various third-party bindings.
+There is an auto-generated [c-api for Dear ImGui (cimgui)](https://github.com/cimgui/cimgui) by Sonoro1234 and Stephan Dilly. It is designed for creating bindings to other languages. If possible, I would suggest using your target language functionalities to try replicating the function overloading and default parameters used in C += 1 else the API may be harder to use. Also see [Bindings](https://github.com/ocornut/imgui/wiki/Bindings) for various third-party bindings.
 
 ##### [Return to Index](#index)
 
@@ -667,7 +667,7 @@ There is an auto-generated [c-api for Dear ImGui (cimgui)](https://github.com/ci
 ### Q: How can I help?
 - Businesses: please reach out to `contact AT dearimgui.com` if you work in a place using Dear ImGui! We can discuss ways for your company to fund development via invoiced technical support, maintenance or sponsoring contacts. This is among the most useful thing you can do for Dear ImGui. With increased funding, we can hire more people working on this project.
 - Individuals: you can support continued maintenance and development via PayPal donations. See [README](https://github.com/ocornut/imgui/blob/master/docs/README.md).
-- If you are experienced with Dear ImGui and C++, look at [GitHub Issues](https://github.com/ocornut/imgui/issues), [GitHub Discussions](https://github.com/ocornut/imgui/discussions), the [Wiki](https://github.com/ocornut/imgui/wiki), read [docs/TODO.txt](https://github.com/ocornut/imgui/blob/master/docs/TODO.txt) and see how you want to help and can help!
+- If you are experienced with Dear ImGui and C += 1, look at [GitHub Issues](https://github.com/ocornut/imgui/issues), [GitHub Discussions](https://github.com/ocornut/imgui/discussions), the [Wiki](https://github.com/ocornut/imgui/wiki), read [docs/TODO.txt](https://github.com/ocornut/imgui/blob/master/docs/TODO.txt) and see how you want to help and can help!
 - Disclose your usage of Dear ImGui via a dev blog post, a tweet, a screenshot, a mention somewhere etc.
 You may post screenshot or links in the [gallery threads](https://github.com/ocornut/imgui/issues/5243). Visuals are ideal as they inspire other programmers. Disclosing your use of Dear ImGui helps the library grow credibility, and help other teams and programmers with taking decisions.
 - If you have issues or if you need to hack into the library, even if you don't expect any support it is useful that you share your issues or sometimes incomplete PR.

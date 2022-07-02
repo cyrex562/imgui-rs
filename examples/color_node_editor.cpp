@@ -156,7 +156,7 @@ public:
                     ImNodesMiniMapLocation_BottomRight,
                 };
 
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 4; i += 1)
                 {
                     bool selected = minimap_location_ == locations[i];
                     if (ImGui::MenuItem(names[i], NULL, &selected))

@@ -50,7 +50,7 @@ public:
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
             ImNodes::IsEditorHovered() && ImGui::IsKeyReleased(SDL_SCANCODE_A))
         {
-            const int node_id = ++current_id_;
+            const int node_id =  += 1current_id_;
             ImNodes::SetNodeScreenSpacePos(node_id, ImGui::GetMousePos());
             nodes_.push_back(Node(node_id, 0.f));
         }
@@ -93,7 +93,7 @@ public:
             Link link;
             if (ImNodes::IsLinkCreated(&link.start_attr, &link.end_attr))
             {
-                link.id = ++current_id_;
+                link.id =  += 1current_id_;
                 links_.push_back(link);
             }
         }
@@ -128,7 +128,7 @@ public:
         const size_t num_nodes = nodes_.size();
         fout.write(
             reinterpret_cast<const char*>(&num_nodes),
-            static_cast<std::streamsize>(sizeof(size_t)));
+            static_cast<std::streamsize>(sizeof));
         fout.write(
             reinterpret_cast<const char*>(nodes_.data()),
             static_cast<std::streamsize>(sizeof(Node) * num_nodes));
@@ -137,14 +137,14 @@ public:
         const size_t num_links = links_.size();
         fout.write(
             reinterpret_cast<const char*>(&num_links),
-            static_cast<std::streamsize>(sizeof(size_t)));
+            static_cast<std::streamsize>(sizeof));
         fout.write(
             reinterpret_cast<const char*>(links_.data()),
             static_cast<std::streamsize>(sizeof(Link) * num_links));
 
         // copy the current_id to file
         fout.write(
-            reinterpret_cast<const char*>(&current_id_), static_cast<std::streamsize>(sizeof(int)));
+            reinterpret_cast<const char*>(&current_id_), static_cast<std::streamsize>(sizeof));
     }
 
     void load()
@@ -163,7 +163,7 @@ public:
 
         // copy nodes into memory
         size_t num_nodes;
-        fin.read(reinterpret_cast<char*>(&num_nodes), static_cast<std::streamsize>(sizeof(size_t)));
+        fin.read(reinterpret_cast<char*>(&num_nodes), static_cast<std::streamsize>(sizeof));
         nodes_.resize(num_nodes);
         fin.read(
             reinterpret_cast<char*>(nodes_.data()),
@@ -171,14 +171,14 @@ public:
 
         // copy links into memory
         size_t num_links;
-        fin.read(reinterpret_cast<char*>(&num_links), static_cast<std::streamsize>(sizeof(size_t)));
+        fin.read(reinterpret_cast<char*>(&num_links), static_cast<std::streamsize>(sizeof));
         links_.resize(num_links);
         fin.read(
             reinterpret_cast<char*>(links_.data()),
             static_cast<std::streamsize>(sizeof(Link) * num_links));
 
         // copy current_id into memory
-        fin.read(reinterpret_cast<char*>(&current_id_), static_cast<std::streamsize>(sizeof(int)));
+        fin.read(reinterpret_cast<char*>(&current_id_), static_cast<std::streamsize>(sizeof));
     }
 
 private:

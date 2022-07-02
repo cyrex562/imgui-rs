@@ -128,7 +128,7 @@ int main(int, char**)
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
+                counter += 1;
             ImGui::SameLine();
             ImGui::Text("counter = %d", counter);
 
@@ -151,7 +151,7 @@ int main(int, char**)
         g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
         g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
         g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
-        D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_color.x*clear_color.w*255.0), (int)(clear_color.y*clear_color.w*255.0), (int)(clear_color.z*clear_color.w*255.0), (int)(clear_color.w*255.0));
+        D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((clear_color.x*clear_color.w*255.0), (clear_color.y*clear_color.w*255.0), (clear_color.z*clear_color.w*255.0), (clear_color.w*255.0));
         g_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, clear_col_dx, 1.0, 0);
         if (g_pd3dDevice->BeginScene() >= 0)
         {

@@ -31,7 +31,7 @@ impl ImGuiListClipperRange {
             PosToIndexOffsetMax: 0
         }
     }
-    //     static ImGuiListClipperRange    FromPositions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { (int)y1, (int)y2, true, (ImS8)off_min, (ImS8)off_max }; return r; }
+    //     static ImGuiListClipperRange    FromPositions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { y1, y2, true, (ImS8)off_min, (ImS8)off_max }; return r; }
     pub fn FromPositions(y1: f32, y2: f32, off_min: i32, off_max: i32) -> Self {
         Self {
             Min: y1 as i32,

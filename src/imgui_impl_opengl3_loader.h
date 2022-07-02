@@ -776,7 +776,7 @@ GL3W_API union GL3WProcs imgl3wProcs;
 static void load_procs(GL3WGetProcAddressProc proc)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(proc_names); i++)
+    for (i = 0; i < ARRAY_SIZE(proc_names); i += 1)
         imgl3wProcs.ptr[i] = proc(proc_names[i]);
 }
 

@@ -33,3 +33,7 @@ mod imgui_clipper;
 mod imgui_table;
 mod imgui_pool;
 mod imstb_textedit_h;
+mod imguI_string;
+mod imgui_text_input_state;
+mod imstb_text_edit_state;
+mod imgui_globals;

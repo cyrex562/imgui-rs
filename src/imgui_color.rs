@@ -6,11 +6,11 @@ pub fn ImAlphaBlendColors(col_a: u32, col_b: u32) -> u32
 {
     // float t = ((col_b >> IM_COL32_A_SHIFT) & 0xFF) / 255.f;
     let t = ((col_b >> IM_COL32_A_SHIFT) & 0xff) as f32 / 255.0;
-    // int r = ImLerp((int)(col_a >> IM_COL32_R_SHIFT) & 0xFF, (int)(col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
+    // int r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
     let r = ImLerpU32((col_a >> IM_COL32_R_SHIFT) & 0xff, (col_b >> IM_COL32_R_SHIFT) & 0xff, t);
-    // int g = ImLerp((int)(col_a >> IM_COL32_G_SHIFT) & 0xFF, (int)(col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
+    // int g = ImLerp((col_a >> IM_COL32_G_SHIFT) & 0xFF, (col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
     let g = ImLerpU32((col_a >> IM_COL32_G_SHIFT) & 0xff, (col_b >> IM_COL32_G_SHIFT) & 0xff, t);
-    // int b = ImLerp((int)(col_a >> IM_COL32_B_SHIFT) & 0xFF, (int)(col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
+    // int b = ImLerp((col_a >> IM_COL32_B_SHIFT) & 0xFF, (col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
     let b = ImLerpU32((col_a >> IM_COL32_B_SHIFT) & 0xff, (col_b >> IM_COL32_B_SHIFT) & 0xff, t);
     IM_COL32(r, g, b, 0xFF)
 }
@@ -79,7 +79,7 @@ pub fn ColorConvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: 
     }
 
     h = ImFmod(h, 1.0) / (60.0 / 360.0);
-    // int   i = (int)h;
+    // int   i = h;
     let mut i: i32 = h as i32;
     // float f = h - (float)i;
     let mut f: f32 = h - i as f32;

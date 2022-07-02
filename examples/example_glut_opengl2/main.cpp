@@ -53,7 +53,7 @@ void my_display_code()
         ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
+            counter += 1;
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
 

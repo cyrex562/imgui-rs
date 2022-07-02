@@ -14,7 +14,7 @@
 # All three are needed to run the demo.
 
 CC = emcc
-CXX = em++
+CXX = em += 1
 WEB_DIR = web
 EXE = $(WEB_DIR)/index.js
 IMGUI_DIR = ../..

@@ -2,7 +2,17 @@ use std::os::raw::c_char;
 use std::ptr;
 use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX, ImGuiID, ImGuiInputTextFlags, ImWchar};
 use crate::imgui_math::ImMinI32;
-use crate::imstb_textedit_h::STB_TexteditState;
+use crate::imstb_text_edit_state::STB_TexteditState;
+
+
+// Extend ImGuiInputTextFlags_
+pub enum ImGuiInputTextFlags2
+{
+    // [Internal]
+    Multiline           = 1 << 26,  // For internal use by InputTextMultiline()
+    NoMarkEdited        = 1 << 27,  // For internal use by functions using InputText() before reformatting data
+    MergedItem          = 1 << 28   // For internal use by TempInputText(), will skip calling ItemAdd(). Require bounding-box to strictly match.
+}
 
 // Convert UTF-8 to 32-bit character, process single character input.
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
@@ -213,127 +223,48 @@ pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_e
 }
 
 
-// Internal state of the currently focused/edited text input box
-// For a given item ID, access with ImGui::GetInputTextState()
-#[derive(Debug,Default,Clone)]
-pub struct  ImGuiInputTextState
+
+static ImVec2 InputTextCalcTextSizeW(const ImWchar* text_begin, const ImWchar* text_end, const ImWchar** remaining, ImVec2* out_offset, bool stop_on_new_line)
 {
-    // ImGuiID                 ID;                     // widget id owning the text state
-    pub ID: ImGuiID,
-    // int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
-    pub CurLenW: i32,
-    pub CurLenA: i32,
-    // ImVector<ImWchar>       TextW;                  // edit buffer, we need to persist but can't guarantee the persistence of the user-provided buffer. so we copy into own buffer.
-    pub TextW: Vec<ImWchar>,
-    // ImVector<char>          TextA;                  // temporary UTF8 buffer for callbacks and other operations. this is not updated in every code-path! size=capacity.
-    pub TextA: Vec<c_char>,
-    // ImVector<char>          InitialTextA;           // backup of end-user buffer at the time of focus (in UTF-8, unaltered)
-    pub InitialText: Vec<c_char>,
-    // bool                    TextAIsValid;           // temporary UTF8 buffer is not initially valid before we make the widget active (until then we pull the data from user argument)
-    pub TextAIsValid: bool,
-    // int                     BufCapacityA;           // end-user buffer capacity
-    pub BufCapacityA: i32,
-    // float                   ScrollX;                // horizontal scrolling/offset
-    pub ScrollX: f32,
-    // ImStb::STB_TexteditState Stb;                   // state for stb_textedit.h
-    pub Stb: STB_TexteditState,
-    // float                   CursorAnim;             // timer for cursor blink, reset on every user action so the cursor reappears immediately
-    pub CursorAnim: f32,
-    // bool                    CursorFollow;           // set when we want scrolling to follow the current cursor position (not always!)
-    pub CursorFollow: bool,
-    // bool                    SelectedAllMouseLock;   // after a double-click to select all, we ignore further mouse drags to update selection
-    pub SelectedAllMouseLock: bool,
-    // bool                    Edited;                 // edited this frame
-    pub Edited: bool,
-    // ImGuiInputTextFlags     Flags;                  // copy of InputText() flags
-    pub Flags: ImGuiInputTextFlags,
-}
+    ImGuiContext& g = *GImGui;
+    ImFont* font = g.Font;
+    const float line_height = g.FontSize;
+    const float scale = line_height / font->FontSize;
 
-impl ImGuiInputTextState {
-    // ImGuiInputTextState()                   { memset(this, 0, sizeof(*this)); }
-    pub fn new() -> Self {
-        Self {
-            ..Default::default()
+    ImVec2 text_size = ImVec2(0, 0);
+    float line_width = 0.0;
+
+    const ImWchar* s = text_begin;
+    while (s < text_end)
+    {
+        unsigned int c = (unsigned int)(*s += 1);
+        if (c == '\n')
+        {
+            text_size.x = ImMax(text_size.x, line_width);
+            text_size.y += line_height;
+            line_width = 0.0;
+            if (stop_on_new_line)
+                break;
+            continue;
         }
-    }
-    //     void        ClearText()                 { CurLenW = CurLenA = 0; TextW[0] = 0; TextA[0] = 0; CursorClamp(); }
-    pub fn ClearText(&mut self) {
-        self.CurLenW = 0;
-        self.CurLenA = 0;
-        self.TextW[0] = 0;
-        self.TextA[0] = 0;
-        self.CursorClamp();
-    }
-    //     void        ClearFreeMemory()           { TextW.clear(); TextA.clear(); InitialTextA.clear(); }
-    pub fn ClearFreeMemory(&mut self) {
-        self.TextW.clear();
-        self.TextA.clear();
-    }
-    //     int         GetUndoAvailCount() const   { return Stb.undostate.undo_point; }
-    pub fn GetUndoAvailCount(&mut self) -> i32 {
-        self.Stb.undostate.undo_point
+        if (c == '\r')
+            continue;
+
+        const float char_width = font->GetCharAdvance((ImWchar)c) * scale;
+        line_width += char_width;
     }
 
-    //     int         GetRedoAvailCount() const   { return STB_TEXTEDIT_UNDOSTATECOUNT - Stb.undostate.redo_point; }
-    pub fn GetRedoAvailCount(&mut self) -> i32 {
-        STB_TEXTEDIT_UNDOSTATECOUNT - self.Stb.undostate.redo_point
-    }
-    //     void        OnKeyPressed(int key);      // Cannot be inline because we call in code in stb_textedit.h implementation
-    pub fn OnKeyPressed(&mut self, key: i32) {
-        todo!()
-    }
-    //
-    //     // Cursor & Selection
-    //     void        CursorAnimReset()           { CursorAnim = -0.30; }
-    pub fn CursorAnimReset(&mut self) {
-        self.CursorAdnim = -0.30
-    }
-    // After a user-input the cursor stays on for a while without blinking
-    //     void        CursorClamp()               { Stb.cursor = ImMin(Stb.cursor, CurLenW); Stb.select_start = ImMin(Stb.select_start, CurLenW); Stb.select_end = ImMin(Stb.select_end, CurLenW); }
-    pub fn CursorClamp(&mut self) {
-        self.Stb.cursor = ImMinI32(self.Stb.cursor, self.CurLenW);
-        self.Stb.select_start = ImMinI32(self.Stb.select_start, self.CurLenW)
-    }
-    //     bool        HasSelection() const        { return Stb.select_start != Stb.select_end; }
-    pub fn HasSelection(&self) -> bool {
-        self.Stb.select_start != self.Stb.select_end
-    }
-    //     void        ClearSelection()            { Stb.select_start = Stb.select_end = Stb.cursor; }
-    pub fn ClearSelection(&mut self) {
-        self.Stb.select_start = self.Stb.cursor;
-        self.Stb.select_end = self.Stb.cursor;
-    }
-    //     int         GetCursorPos() const        { return Stb.cursor; }
-    pub fn GetCursorPos(&self) -> i32 {
-        self.Stb.cursor
-    }
-    //     int         GetSelectionStart() const   { return Stb.select_start; }
-    pub fn GetSelectionStart(&self) -> i32 {
-        self.Stb.select_start
-    }
-    //     int         GetSelectionEnd() const     { return Stb.select_end; }
-    pub fn GetSelectionEnd(&self) -> i32 {
-        self.Stb.select_end
-    }
-    //     void        SelectAll()                 { Stb.select_start = 0; Stb.cursor = Stb.select_end = CurLenW; Stb.has_preferred_x = 0; }
-    pub fn SelectAll(&mut self) {
-        self.Stb.select_start = 0;
-        self.Stb.cursor = 0;
-        self.Stb.select_end = 0;
-        self.CurLenW = 0;
-        self.Stb.has_preferred_x = 0;
-    }
+    if (text_size.x < line_width)
+        text_size.x = line_width;
+
+    if (out_offset)
+        *out_offset = ImVec2(line_width, text_size.y + line_height);  // offset allow for the possibility of sitting after a trailing \n
+
+    if (line_width > 0 || text_size.y == 0.0)                        // whereas size.y will ignore the trailing \n
+        text_size.y += line_height;
+
+    if (remaining)
+        *remaining = s;
+
+    return text_size;
 }
-
-// #undef STB_TEXTEDIT_STRING
-// #undef STB_TEXTEDIT_CHARTYPE
-// #define STB_TEXTEDIT_STRING             ImGuiInputTextState
-pub type STB_TEXTEDIT_STRING = ImGuiInputTextState;
-// #define STB_TEXTEDIT_CHARTYPE           ImWchar
-pub type STB_TEXTEDIT_CHARTYPE = ImWchar;
-// #define STB_TEXTEDIT_GETWIDTH_NEWLINE   (-1.0)
-pub const STB_TEXTEDIT_GETWIDTH_NEWLINE: f32 = -1.0;
-// #define STB_TEXTEDIT_UNDOSTATECOUNT     99
-pub const STB_TEXTEDIT_UNDOSTATECOUNT: i32 = 99;
-// #define STB_TEXTEDIT_UNDOCHARCOUNT      999
-pub const STB_TEXTEDIT_UNDOCHARCOUNT: i32 = 999;

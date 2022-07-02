@@ -92,7 +92,7 @@ static void sAddString(uSynergyContext *context, const char *string)
 **/
 static void sAddUInt8(uSynergyContext *context, uint8_t value)
 {
-	*context->m_replyCur++ = value;
+	*context->m_replyCur += 1 = value;
 }
 
 
@@ -103,8 +103,8 @@ static void sAddUInt8(uSynergyContext *context, uint8_t value)
 static void sAddUInt16(uSynergyContext *context, uint16_t value)
 {
 	uint8_t *reply = context->m_replyCur;
-	*reply++ = (uint8_t)(value >> 8);
-	*reply++ = (uint8_t)value;
+	*reply += 1 = (uint8_t)(value >> 8);
+	*reply += 1 = (uint8_t)value;
 	context->m_replyCur = reply;
 }
 
@@ -116,10 +116,10 @@ static void sAddUInt16(uSynergyContext *context, uint16_t value)
 static void sAddUInt32(uSynergyContext *context, uint32_t value)
 {
 	uint8_t *reply = context->m_replyCur;
-	*reply++ = (uint8_t)(value >> 24);
-	*reply++ = (uint8_t)(value >> 16);
-	*reply++ = (uint8_t)(value >> 8);
-	*reply++ = (uint8_t)value;
+	*reply += 1 = (uint8_t)(value >> 24);
+	*reply += 1 = (uint8_t)(value >> 16);
+	*reply += 1 = (uint8_t)(value >> 8);
+	*reply += 1 = (uint8_t)value;
 	context->m_replyCur = reply;
 }
 

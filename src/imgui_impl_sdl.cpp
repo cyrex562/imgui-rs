@@ -366,7 +366,7 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
 #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE
     const char* sdl_backend = SDL_GetCurrentVideoDriver();
     const char* global_mouse_whitelist[] = { "windows", "cocoa", "x11", "DIVE", "VMAN" };
-    for (int n = 0; n < IM_ARRAYSIZE(global_mouse_whitelist); n++)
+    for (int n = 0; n < IM_ARRAYSIZE(global_mouse_whitelist); n += 1)
         if (strncmp(sdl_backend, global_mouse_whitelist[n], strlen(global_mouse_whitelist[n])) == 0)
             mouse_can_use_global_state = true;
 #endif
@@ -485,7 +485,7 @@ void ImGui_ImplSDL2_Shutdown()
 
     if (bd->ClipboardTextData)
         SDL_free(bd->ClipboardTextData);
-    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
+    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n += 1)
         SDL_FreeCursor(bd->MouseCursors[cursor_n]);
 
     io.BackendPlatformName = NULL;
@@ -517,10 +517,10 @@ static void ImGui_ImplSDL2_UpdateMouseData()
         {
 #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-                SDL_WarpMouseGlobal((int)io.MousePos.x, (int)io.MousePos.y);
+                SDL_WarpMouseGlobal(io.MousePos.x, io.MousePos.y);
             else
 #endif
-                SDL_WarpMouseInWindow(bd->Window, (int)io.MousePos.x, (int)io.MousePos.y);
+                SDL_WarpMouseInWindow(bd->Window, io.MousePos.x, io.MousePos.y);
         }
 
         // (Optional) Fallback to provide mouse position when focused (SDL_MOUSEMOTION already provides this when hovered or captured)
@@ -630,7 +630,7 @@ static void ImGui_ImplSDL2_UpdateMonitors()
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     platform_io.Monitors.resize(0);
     int display_count = SDL_GetNumVideoDisplays();
-    for (int n = 0; n < display_count; n++)
+    for (int n = 0; n < display_count; n += 1)
     {
         // Warning: the validity of monitor DPI information on Windows depends on the application DPI awareness settings, which generally needs to be set in the manifest or at runtime.
         ImGuiPlatformMonitor monitor;
@@ -744,7 +744,7 @@ static void ImGui_ImplSDL2_CreateWindow(ImGuiViewport* viewport)
 #if SDL_HAS_ALWAYS_ON_TOP
     sdl_flags |= (viewport->Flags & ImGuiViewportFlags_TopMost) ? SDL_WINDOW_ALWAYS_ON_TOP : 0;
 #endif
-    vd->Window = SDL_CreateWindow("No Title Yet", (int)viewport->Pos.x, (int)viewport->Pos.y, (int)viewport->Size.x, (int)viewport->Size.y, sdl_flags);
+    vd->Window = SDL_CreateWindow("No Title Yet", viewport->Pos.x, viewport->Pos.y, viewport->Size.x, viewport->Size.y, sdl_flags);
     vd->WindowOwned = true;
     if (use_opengl)
     {
@@ -820,7 +820,7 @@ static ImVec2 ImGui_ImplSDL2_GetWindowPos(ImGuiViewport* viewport)
 static void ImGui_ImplSDL2_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
 {
     ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
-    SDL_SetWindowPosition(vd->Window, (int)pos.x, (int)pos.y);
+    SDL_SetWindowPosition(vd->Window, pos.x, pos.y);
 }
 
 static ImVec2 ImGui_ImplSDL2_GetWindowSize(ImGuiViewport* viewport)
@@ -834,7 +834,7 @@ static ImVec2 ImGui_ImplSDL2_GetWindowSize(ImGuiViewport* viewport)
 static void ImGui_ImplSDL2_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
 {
     ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
-    SDL_SetWindowSize(vd->Window, (int)size.x, (int)size.y);
+    SDL_SetWindowSize(vd->Window, size.x, size.y);
 }
 
 static void ImGui_ImplSDL2_SetWindowTitle(ImGuiViewport* viewport, const char* title)
