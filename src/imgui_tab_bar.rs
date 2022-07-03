@@ -1,5 +1,6 @@
-use crate::imgui_h::{ImGuiID, ImGuiTabBarFlags, ImGuiTextBuffer};
+use crate::imgui_h::{ImGuiID, ImGuiTabBarFlags};
 use crate::imgui_rect::ImRect;
+use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_vec::ImVec2;
 use crate::imgui_window::ImGuiWindow;
 

@@ -37,3 +37,7 @@ mod imguI_string;
 mod imgui_text_input_state;
 mod imstb_text_edit_state;
 mod imgui_globals;
+mod imgui_text_filter;
+mod imgui_text_range;
+mod imgui_text_buffer;
+mod imgui_list_clipper;

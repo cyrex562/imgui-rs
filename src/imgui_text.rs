@@ -1,7 +1,9 @@
 use std::os::raw::c_char;
 use std::ptr;
+use crate::imgui_globals::GImGui;
 use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX, ImGuiID, ImGuiInputTextFlags, ImWchar};
 use crate::imgui_math::ImMinI32;
+use crate::imgui_vec::ImVec2;
 use crate::imstb_text_edit_state::STB_TexteditState;
 
 
@@ -224,47 +226,62 @@ pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_e
 
 
 
-static ImVec2 InputTextCalcTextSizeW(const ImWchar* text_begin, const ImWchar* text_end, const ImWchar** remaining, ImVec2* out_offset, bool stop_on_new_line)
+// static ImVec2 InputTextCalcTextSizeW(const ImWchar* text_begin, const ImWchar* text_end, const ImWchar** remaining, ImVec2* out_offset, bool stop_on_new_line)
+pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut ImWchar, mut remaining: *mut *mut ImWchar, out_offset: *mut ImVec2, stop_on_new_line: bool) -> ImVec2
 {
-    ImGuiContext& g = *GImGui;
-    ImFont* font = g.Font;
-    const float line_height = g.FontSize;
-    const float scale = line_height / font->FontSize;
+    // ImGuiContext& g = *GImGui;
+    // ImFont* font = g.Font;
+    let font = GImGui.Font;
+    // const float line_height = g.FontSize;
+    let line_height = GImGui.FontSize;
+    // const float scale = line_height / font->FontSize;
+    let scale = line_height / font.FontSize;
+    // ImVec2 text_size = ImVec2(0, 0);
+    let mut text_size = ImVec2::default();
+    // float line_width = 0.0;
+    let mut line_width = 0.0f32;
 
-    ImVec2 text_size = ImVec2(0, 0);
-    float line_width = 0.0;
-
-    const ImWchar* s = text_begin;
-    while (s < text_end)
+    // const ImWchar* s = text_begin;
+    let mut s: *mut ImWchar = text_begin;
+    while s < text_end
     {
-        unsigned int c = (unsigned int)(*s += 1);
-        if (c == '\n')
+        // unsigned int c = (unsigned int)(*s += 1);
+        let mut c = *s;
+        s += 1;
+        if c == ImWchar::from('\n')
         {
             text_size.x = ImMax(text_size.x, line_width);
             text_size.y += line_height;
             line_width = 0.0;
-            if (stop_on_new_line)
+            if stop_on_new_line {
                 break;
+            }
             continue;
         }
-        if (c == '\r')
+        if (c == ImWchar::from('\r')) {
             continue;
+        }
 
-        const float char_width = font->GetCharAdvance((ImWchar)c) * scale;
+        // const float char_width = font->GetCharAdvance((ImWchar)c) * scale;
+        let char_width = font.GetCharAdvance(c * scale);
         line_width += char_width;
     }
 
-    if (text_size.x < line_width)
+    if (text_size.x < line_width) {
         text_size.x = line_width;
+    }
 
-    if (out_offset)
+    if (out_offset) {
         *out_offset = ImVec2(line_width, text_size.y + line_height);  // offset allow for the possibility of sitting after a trailing \n
+        }
 
-    if (line_width > 0 || text_size.y == 0.0)                        // whereas size.y will ignore the trailing \n
+    if line_width > 0.0 || text_size.y == 0.0 {                       // whereas size.y will ignore the trailing \n
         text_size.y += line_height;
+    }
 
-    if (remaining)
+    if remaining {
         *remaining = s;
+    }
 
     return text_size;
 }

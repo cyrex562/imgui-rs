@@ -1,6 +1,7 @@
 use crate::imgui_color::ImColor;
-use crate::imgui_h::{ImDrawListSplitter, ImGuiID, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs, ImGuiTextBuffer};
+use crate::imgui_h::{ImDrawListSplitter, ImGuiID, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
 use crate::imgui_rect::ImRect;
+use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_vec::{ImVec1, ImVec2};
 use crate::imgui_window::ImGuiWindow;
 

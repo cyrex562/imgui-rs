@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
-use std::ffi::{c_void};
+use std::ffi::c_void;
 use std::os::raw::c_char;
 use std::ptr::null_mut;
 use crate::imgui_clipper::ImGuiListClipperData;
@@ -10,7 +10,7 @@ use crate::imgui_color::ImGuiColorMod;
 use crate::imgui_dock::ImGuiDockNode;
 use crate::imgui_draw_list::ImDrawListSharedData;
 use crate::imgui_group::ImGuiGroupData;
-use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavLayer, ImGuiPayload, ImGuiPlatformImeData, ImGuiPlatformMonitor, ImGuiPtrOrIndex, ImGuiShrinkWidthItem, ImGuiStyleVar, ImGuiTextBuffer, ImGuiViewport, ImVec4};
+use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavLayer, ImGuiPayload, ImGuiPlatformImeData, ImGuiPlatformMonitor, ImGuiPtrOrIndex, ImGuiShrinkWidthItem, ImGuiStyleVar, ImGuiViewport, ImVec4};
 use crate::imgui_input::ImGuiInputSource;
 use crate::imgui_input_event::ImGuiInputEvent;
 use crate::imgui_io::{ImGuiIO, ImGuiPlatformIO};
@@ -23,7 +23,8 @@ use crate::imgui_popup::ImGuiPopupData;
 use crate::imgui_rect::ImRect;
 use crate::imgui_style::{ImGuiStyle, ImGuiStyleMod};
 use crate::imgui_tab_bar::ImGuiTabBar;
-use crate::imgui_table::{ImGuiTable, ImGuiTableTempData};
+use crate::imgui_table::{ImGuiTable, ImGuiTableSettings, ImGuiTableTempData};
+use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_text_input_state::ImGuiInputTextState;
 use crate::imgui_vec::ImVec2;
 use crate::imgui_window::{ImGuiItemFlags, ImGuiNextWindowData, ImGuiWindow, ImGuiWindowStackData};
@@ -565,8 +566,9 @@ impl ImGuiContext {
             WheelingWindowTimer: 0.0,
 
             DebugHookIdInfo: 0,
-            HoveredId: HoveredIdPreviousFrame = 0,
-            HoveredIdPreviousFrame: (),
+            HoveredId: 0,
+            HoveredIdPreviousFrame: 0,
+            // HoveredIdPreviousFrame: (),
             HoveredIdAllowOverlap: false,
             HoveredIdUsingMouseWheel: false,
             HoveredIdPreviousFrameUsingMouseWheel: false,
@@ -596,10 +598,11 @@ impl ImGuiContext {
             ActiveIdUsingNavDirMask: 0x00,
             ActiveIdUsingNavInputMask: 0x00,
             // ActiveIdUsingKeyInputMask.ClearAllBits(),
-            CurrentItemFlags: ImGuiItemFlags_None,
-            NextItemData: (),
-            LastItemData: (),
-            NextWindowData: (),
+            ActiveIdUsingKeyInputMask: vec![],
+            CurrentItemFlags: ImGuiItemFlags::None,
+            NextItemData: ImGuiNextItemData::default(),
+            LastItemData: ImGuiLastItemData::default(),
+            NextWindowData: ImGuiNextWindowData::default(),
             ColorStack: vec![],
             StyleVarStack: vec![],
             FontStack: vec![],
@@ -617,20 +620,20 @@ impl ImGuiContext {
             // MouseLastHoveredViewport: NULL,
             MouseLastHoveredViewport: null_mut(),
             PlatformLastFocusedViewportId: 0,
-            FallbackMonitor: (),
+            FallbackMonitor: ImGuiPlatformMonitor::default(),
             ViewportFrontMostStampCount: 0,
             NavWindow: null_mut(),
             NavId: 0,
-            NavFocusScopeId: (),
-            NavActivateId: (),
-            NavActivateDownId: (),
-            NavActivatePressedId: (),
+            NavFocusScopeId: 0,
+            NavActivateId: 0,
+            NavActivateDownId: 0,
+            NavActivatePressedId: 0,
             NavJustMovedToId: 0,
-            NavActivateFlags: ImGuiActivateFlags::ImGuiActivateFlags_None,
-            NavJustMovedToKeyMods: ImGuiModeFlags::ImGuiModFlags_None,
-            NavNextActivateId: (),
-            NavNextActivateFlags: (),
-            NavInputSource: ImGuiInputSource::ImGuiInputSource_None,
+            NavActivateFlags: ImGuiActivateFlags::None,
+            NavJustMovedToKeyMods: ImGuiModeFlags::None,
+            NavNextActivateId: 0,
+            NavNextActivateFlags: ImGuiActivateFlags::None,
+            NavInputSource: ImGuiInputSource::None,
             NavLayer: ImGuiNavLayer::ImGuiNavLayer_Main,
             NavIdIsAlive: false,
             NavMousePosDirty: false,
@@ -649,16 +652,15 @@ impl ImGuiContext {
             NavMoveDir: NavMoveDirForDebug: NavMoveClipDir: ImGuiDir_None,
             NavMOveDirForDebug: ImGuiDir::None,
             NavMoveClipDir: ImGuiDir::None,
-            NavScoringRect: (),
-            NavScoringNoClipRect: (),
+            NavScoringRect: ImRect::default(),
+            NavScoringNoClipRect: ImRect::default(),
             NavScoringDebugCount: 0,
             NavTabbingDir: 0,
             NavTabbingCounter: 0,
-
-            NavMoveResultLocal: (),
-            NavMoveResultLocalVisible: (),
-            NavMoveResultOther: (),
-            NavTabbingResultFirst: (),
+            NavMoveResultLocal: ImGuiNavItemData::default(),
+            NavMoveResultLocalVisible: ImGuiNavItemData::default(),
+            NavMoveResultOther: ImGuiNavItemData::default(),
+            NavTabbingResultFirst: ImGuiNavItemData::default(),
             NavWindowingTarget: null_mut(),
             NavWindowingTargetAnim: null_mut(),
             NavWindowingListWindow: null_mut(),
@@ -678,11 +680,11 @@ impl ImGuiContext {
             DragDropSourceFrameCount: - 1,
             DragDropMouseButton: - 1,
             DragDropPayload: Default::default(),
-            DragDropTargetRect: (),
+            DragDropTargetRect: ImRect::default(),
             DragDropTargetId: 0,
             DragDropAcceptFlags: ImGuiDragDropFlags::None,
             DragDropAcceptIdCurrRectSurface: 0.0,
-            DragDropAcceptIdCurr: (),
+            DragDropAcceptIdCurr: 0,
             DragDropAcceptIdPrev: 0,
             // DragDropAcceptIdCurr: 0,
             DragDropAcceptFrameCount: - 1,
@@ -695,15 +697,15 @@ impl ImGuiContext {
             CurrentTable: null_mut(),
             TablesTempDataStacked: 0,
             TablesTempData: vec![],
-            Tables: (),
+            Tables: ImGuiPool::default(),
             TablesLastTimeActive: vec![],
             CurrentTabBar: null_mut(),
 
-            TabBars: (),
+            TabBars: ImGuiPool::default(),
             CurrentTabBarStack: vec![],
             ShrinkWidthBuffer: vec![],
             MouseLastValidPos: Default::default(),
-            InputTextState: (),
+            InputTextState: ImGuiInputTextState::default(),
             InputTextPasswordFont: Default::default(),
             TempInputId: 0,
             ColorEditOptions: ImGuiColorEditFlags::DefaultOptions,
@@ -764,14 +766,14 @@ impl ImGuiContext {
             // WantCaptureKeyboardNextFrame: 0,
             WantInputNextFrame: 0,
             Style: ImGuiStyle::new(),
-            DrawListSharedData: (),
+            DrawListSharedData: ImDrawListSharedData::default(),
             TestENgineHookItems: false,
             ActiveIdHassBeenEditedBefore: false,
             ActiveIdClockOffset: Default::default(),
-            NavActivateInputId: (),
-            NavJustMovedToFocusScopeId: (),
+            NavActivateInputId: 0,
+            NavJustMovedToFocusScopeId: 0,
             NavDisableHighLight: false,
-            NavInitResultRectRel: (),
+            NavInitResultRectRel: ImRect::default(),
             // NavWindowingHighlightAlpha: 0.0,
             DimBgRation: 0.0,
             DragDropPayloadBufHeap: vec![],
