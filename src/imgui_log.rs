@@ -1,8 +1,11 @@
 use std::os::raw::c_char;
-use std::ptr::null;
+use std::ptr::{null, null_mut};
+use crate::imgui::SetNextItemWidth;
+use crate::imgui_clipboard::SetClipboardText;
 use crate::imgui_context::ImGuiContext;
-use crate::imgui_file::{ImFileOpen, ImFileWrite};
+use crate::imgui_file::{ImFileClose, ImFileOpen, ImFileWrite};
 use crate::imgui_globals::GImGui;
+use crate::imgui_h::ImGuiColor::Button;
 use crate::imgui_render::FindRenderedTextEnd;
 use crate::imguI_string::ImStreolRange;
 use crate::imgui_vec::ImVec2;
@@ -193,7 +196,7 @@ pub fn LogToTTY(auto_open_depth: i32)
 
 // Start logging/capturing text output to given file
 // void ImGui::LogToFile(int auto_open_depth, const char* filename)
-pub fn LogToFile(auto_open_depth: i32, filename: *const c_char)
+pub fn LogToFile(auto_open_depth: i32, mut filename: *const c_char)
     {
     let g = GImGui;
     if (g.LogEnabled) {
@@ -203,10 +206,10 @@ pub fn LogToFile(auto_open_depth: i32, filename: *const c_char)
     // FIXME: We could probably open the file in text mode "at", however note that clipboard/buffer logging will still
     // be subject to outputting OS-incompatible carriage return if within strings the user doesn't use IM_NEWLINE.
     // By opening the file in binary mode "ab" we have consistent output everywhere.
-    if (!filename) {
-        filename = g.IO.LogFilename;
+    if !filename {
+        filename = g.IO.LogFilename.as_ptr() as *const c_char;
     }
-    if (!filename || !filename[0]) {
+    if !filename || !filename[0] {
         return;
     }
     let f = ImFileOpen(&String::from(filename), &String::from("ab"));
@@ -232,78 +235,103 @@ pub fn LogToClipboard(auto_open_depth: i32)
     LogBegin(ImGuiLogType::Clipboard, auto_open_depth);
 }
 
-void ImGui::LogToBuffer(int auto_open_depth)
-{
-    ImGuiContext& g = *GImGui;
-    if (g.LogEnabled)
-        return;
-    LogBegin(ImGuiLogType_Buffer, auto_open_depth);
+// void ImGui::LogToBuffer(int auto_open_depth)
+pub fn LogToBuffer(auto_open_depth: i32)
+    {
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+        if (g.LogEnabled) {
+            return;
+        }
+    LogBegin(ImGuiLogType::Buffer, auto_open_depth);
 }
 
-void ImGui::LogFinish()
-{
-    ImGuiContext& g = *GImGui;
-    if (!g.LogEnabled)
-        return;
-
-    LogText(IM_NEWLINE);
-    switch (g.LogType)
+// void ImGui::LogFinish()
+pub fn LogFinish()
     {
-    case ImGuiLogType_TTY:
-#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
-        fflush(g.LogFile);
-#endif
-        break;
-    case ImGuiLogType_File:
-        ImFileClose(g.LogFile);
-        break;
-    case ImGuiLogType_Buffer:
-        break;
-    case ImGuiLogType_Clipboard:
-        if (!g.LogBuffer.empty())
-            SetClipboardText(g.LogBuffer.begin());
-        break;
-    case ImGuiLogType_None:
-        IM_ASSERT(0);
-        break;
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+        if (!g.LogEnabled) {
+            return;
+        }
+
+    LogText(&String::from("\n"));
+    // switch (g.LogType)
+    match g.LogType
+        {
+//     case ImGuiLogType_TTY:
+// #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+//         fflush(g.LogFile);
+// #endif
+//         break;
+            ImGuiLogType::TTY => {
+
+            },
+    // case ImGuiLogType_File:
+    ImGuiLogType::File => {
+        ImFileClose(g.LogFile); }
+
+    // case ImGuiLogType_Buffer:
+    //     break;
+    ImGuiLogType::Buffer => { },
+            // case ImGuiLogType_Clipboard:
+            ImGuiLogType::Clipboard => {
+                if (!g.LogBuffer.empty()) {
+                    SetClipboardText(g, g.LogBuffer.begin() as *const c_char);
+                }
+            }
+        // break;
+    // case ImGuiLogType_None:
+    //     IM_ASSERT(0);
+    //     break;
+            ImGuiLogType::None => {}
     }
 
     g.LogEnabled = false;
-    g.LogType = ImGuiLogType_None;
-    g.LogFile = NULL;
+    g.LogType = ImGuiLogType::None;
+    g.LogFile = null_mut();
     g.LogBuffer.clear();
 }
 
 // Helper to display logging buttons
 // FIXME-OBSOLETE: We should probably obsolete this and let the user have their own helper (this is one of the oldest function alive!)
-void ImGui::LogButtons()
-{
-    ImGuiContext& g = *GImGui;
+// void ImGui::LogButtons()
+pub fn LogButtons(g: *mut ImGuiContext)
+    {
+    // ImGuiContext& g = *GImGui;
 
     PushID("LogButtons");
-#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
-    const bool log_to_tty = Button("Log To TTY"); SameLine();
-#else
-    const bool log_to_tty = false;
-#endif
-    const bool log_to_file = Button("Log To File"); SameLine();
-    const bool log_to_clipboard = Button("Log To Clipboard"); SameLine();
+// #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+//     const bool log_to_tty = Button("Log To TTY"); SameLine();
+// #else
+//     const bool log_to_tty = false;
+// #endif
+//     const bool log_to_file = Button("Log To File"); SameLine();
+    let log_to_file = Button("Log To File");
+        SameLine();
+// const bool log_to_clipboard = Button("Log To Clipboard"); SameLine();
+    let log_to_clipboard = Button("Log To Clipboard");
+        SameLine();
     PushAllowKeyboardFocus(false);
     SetNextItemWidth(80.0);
-    SliderInt("Default Depth", &g.LogDepthToExpandDefault, 0, 9, NULL);
+    SliderInt("Default Depth", &g.LogDepthToExpandDefault, 0, 9, null());
     PopAllowKeyboardFocus();
     PopID();
 
     // Start logging at the end of the function so that the buttons don't appear in the log
-    if (log_to_tty)
-        LogToTTY();
-    if (log_to_file)
-        LogToFile();
-    if (log_to_clipboard)
-        LogToClipboard();
+    if (log_to_tty) {
+        LogToTTY(0);
+    }
+    if (log_to_file) {
+        LogToFile(0);
+    }
+    if (log_to_clipboard) {
+        LogToClipboard(0);
+    }
 }
 
 
-    if (suffix)
-        LogRenderedText(ref_pos, suffix, suffix + strlen(suffix));
+    if (suffix) {
+        LogRenderedText(ref_pos, suffix, suffix + String::from(suffix).len());
+    }
 }

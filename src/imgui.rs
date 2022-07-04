@@ -894,12 +894,7 @@ const char* ImGui::GetClipboardText()
     return g.IO.GetClipboardTextFn ? g.IO.GetClipboardTextFn(g.IO.ClipboardUserData) : "";
 }
 
-void ImGui::SetClipboardText(const char* text)
-{
-    ImGuiContext& g = *GImGui;
-    if (g.IO.SetClipboardTextFn)
-        g.IO.SetClipboardTextFn(g.IO.ClipboardUserData, text);
-}
+
 
 const char* ImGui::GetVersion()
 {
