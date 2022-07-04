@@ -3041,7 +3041,7 @@ Other Changes:
 - InputText: Added ImGuiInputTextFlags_NoUndoRedo flag. (#1506, #1508) [@ibachar]
 - Window: Fixed auto-resize allocating too much space for scrollbar when SizeContents is bigger than maximum window size (fixes c0547d3). (#1417)
 - Window: Child windows with MenuBar use regular WindowPadding.y so layout look consistent as child or as a regular window.
-- Window: Begin(): Fixed appending into a child window with a second Begin() from a different window stack querying the wrong window for the window->Collapsed test.
+- Window: Begin(): Fixed appending into a child window with a second Begin() from a different window stack querying the wrong window for the window.Collapsed test.
 - Window: Calling IsItemActive(), IsItemHovered() etc. after a call to Begin() provides item data for the title bar, so you can easily test if the title bar is being hovered, etc. (#823)
 - Window: Made it possible to use SetNextWindowPos() on a child window.
 - Window: Fixed a one frame glitch. When an appearing window claimed the focus themselves, the title bar wouldn't use the focused color for one frame.
@@ -3239,7 +3239,7 @@ Work on dear imgui has been gradually resuming. It means that fixes and new feat
 - Renamed `ImGuiCol_Columns***` enums to `ImGuiCol_Separator***`. Kept redirection enums (will obsolete).
 - Renamed `ImGuiSetCond***` types and enums to `ImGuiCond***`. Kept redirection enums (will obsolete).
 - Renamed `GetStyleColName()` to `GetStyleColorName()` for consistency. Unlikely to be used by end-user!
-- Added `PushStyleColor(ImGuiCol idx, ImU32 col)` overload, which _might_ cause an "ambiguous call" compilation error if you are using ImColor() with implicit cast. Cast to ImU32 or ImVec4 explicitly to fix.
+- Added `PushStyleColor(ImGuiColor idx, ImU32 col)` overload, which _might_ cause an "ambiguous call" compilation error if you are using ImColor() with implicit cast. Cast to ImU32 or ImVec4 explicitly to fix.
 - Marked the weird `IMGUI_ONCE_UPON_A_FRAME` helper macro as obsolete. Prefer using the more explicit `ImGuiOnceUponAFrame`.
 - Changed `ColorEdit4(const char* label, float col[4], bool show_alpha = true)` signature to `ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flags = 0)`, where flags 0x01 is a safe no-op (hello dodgy backward compatibility!). The new `ColorEdit4`/`ColorPicker4` functions have lots of available flags! Check and run the demo window, under "Color/Picker Widgets", to understand the various new options.
 - Changed signature of `ColorButton(ImVec4 col, bool small_height = false, bool outline_border = true)` to `ColorButton(const char* desc_id, ImVec4 col, ImGuiColorEditFlags flags = 0, ImVec2 size = ImVec2(0,0))`. This function was rarely used and was very dodgy (no explicit ID!).
@@ -3256,8 +3256,8 @@ Other Changes:
 - Added `SetColorEditOptions()` to set default color options (e.g. if you want HSV over RGBA, float over u8, select a default picker mode etc. at startup time without a user intervention. Note that the user can still change options with the context menu unless disabled with `ImGuiColorFlags_NoOptions` or explicitly enforcing a display type/picker mode etc.).
 - Added user-facing `IsPopupOpen()` function. (#891) [@mkeeter]
 - Added `GetColorU32(u32)` variant that perform the style alpha multiply without a floating-point round trip, and helps makes code more consistent when using ImDrawList APIs.
-- Added `PushStyleColor(ImGuiCol idx, ImU32 col)` overload.
-- Added `GetStyleColorVec4(ImGuiCol idx)` which is equivalent to accessing `ImGui::GetStyle().Colors[idx]` (aka return the raw style color without alpha alteration).
+- Added `PushStyleColor(ImGuiColor idx, ImU32 col)` overload.
+- Added `GetStyleColorVec4(ImGuiColor idx)` which is equivalent to accessing `ImGui::GetStyle().Colors[idx]` (aka return the raw style color without alpha alteration).
 - ImFontAtlas: Added `GlyphRangesBuilder` helper class, which makes it easier to build custom glyph ranges from your app/game localization data, or add into existing glyph ranges.
 - ImFontAtlas: Added `TexGlyphPadding` option. (#1282) [@jadwallis]
 - ImFontAtlas: Made it possible to override size of AddFontDefault() (even if it isn't really recommended!).

@@ -375,7 +375,7 @@ IM_MSVC_RUNTIME_CHECKS_RESTORE
 typedef void* ImFileHandle;
 static inline ImFileHandle  ImFileOpen(const char*, const char*)                    { return NULL; }
 static inline bool          ImFileClose(ImFileHandle)                               { return false; }
-static inline ImU64         ImFileGetSize(ImFileHandle)                             { return (ImU64)-1; }
+static inline ImU64         ImFileGetSize(ImFileHandle)                             { return -1; }
 static inline ImU64         ImFileRead(void*, ImU64, ImU64, ImFileHandle)           { return 0; }
 static inline ImU64         ImFileWrite(const void*, ImU64, ImU64, ImFileHandle)    { return 0; }
 #endif
@@ -419,9 +419,9 @@ struct ImVec2ih
 };
 
 // Helper: ImBitArray
-inline bool     ImBitArrayTestBit(const ImU32* arr, int n)      { ImU32 mask = (ImU32)1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
-inline void     ImBitArrayClearBit(ImU32* arr, int n)           { ImU32 mask = (ImU32)1 << (n & 31); arr[n >> 5] &= ~mask; }
-inline void     ImBitArraySetBit(ImU32* arr, int n)             { ImU32 mask = (ImU32)1 << (n & 31); arr[n >> 5] |= mask; }
+inline bool     ImBitArrayTestBit(const ImU32* arr, int n)      { ImU32 mask = 1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
+inline void     ImBitArrayClearBit(ImU32* arr, int n)           { ImU32 mask = 1 << (n & 31); arr[n >> 5] &= ~mask; }
+inline void     ImBitArraySetBit(ImU32* arr, int n)             { ImU32 mask = 1 << (n & 31); arr[n >> 5] |= mask; }
 inline void     ImBitArraySetBitRange(ImU32* arr, int n, int n2) // Works on range [n..n2)
 {
     n2--;
@@ -429,7 +429,7 @@ inline void     ImBitArraySetBitRange(ImU32* arr, int n, int n2) // Works on ran
     {
         int a_mod = (n & 31);
         int b_mod = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
-        ImU32 mask = (ImU32)(((ImU64)1 << b_mod) - 1) & ~(ImU32)(((ImU64)1 << a_mod) - 1);
+        ImU32 mask = ((1 << b_mod) - 1) & ~((1 << a_mod) - 1);
         arr[n >> 5] |= mask;
         n = (n + 32) & ~31;
     }
@@ -698,13 +698,7 @@ struct ImGuiDataTypeInfo
     const char* ScanFmt;        // Default scanf format for the type
 };
 
-// Extend ImGuiDataType_
-enum ImGuiDataTypePrivate_
-{
-    ImGuiDataType_String = ImGuiDataType_COUNT + 1,
-    ImGuiDataType_Pointer,
-    ImGuiDataType_ID
-};
+
 
 
 
@@ -1082,8 +1076,8 @@ namespace ImGui
      void          SetWindowSize(ImGuiWindow* window, const ImVec2& size, ImGuiCond cond = 0);
      void          SetWindowCollapsed(ImGuiWindow* window, bool collapsed, ImGuiCond cond = 0);
      void          SetWindowHitTestHole(ImGuiWindow* window, const ImVec2& pos, const ImVec2& size);
-    inline ImRect           WindowRectAbsToRel(ImGuiWindow* window, const ImRect& r) { ImVec2 off = window->DC.CursorStartPos; return ImRect(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y); }
-    inline ImRect           WindowRectRelToAbs(ImGuiWindow* window, const ImRect& r) { ImVec2 off = window->DC.CursorStartPos; return ImRect(r.Min.x + off.x, r.Min.y + off.y, r.Max.x + off.x, r.Max.y + off.y); }
+    inline ImRect           WindowRectAbsToRel(ImGuiWindow* window, const ImRect& r) { ImVec2 off = window.DC.CursorStartPos; return ImRect(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y); }
+    inline ImRect           WindowRectRelToAbs(ImGuiWindow* window, const ImRect& r) { ImVec2 off = window.DC.CursorStartPos; return ImRect(r.Min.x + off.x, r.Min.y + off.y, r.Max.x + off.x, r.Max.y + off.y); }
 
     // Windows: Display Order and Focus Order
      void          FocusWindow(ImGuiWindow* window);
@@ -1098,7 +1092,7 @@ namespace ImGui
     // Fonts, drawing
      void          SetCurrentFont(ImFont* font);
     inline ImFont*          GetDefaultFont() { ImGuiContext& g = *GImGui; return g.IO.FontDefault ? g.IO.FontDefault : g.IO.Fonts->Fonts[0]; }
-    inline ImDrawList*      GetForegroundDrawList(ImGuiWindow* window) { return GetForegroundDrawList(window->Viewport); }
+    inline ImDrawList*      GetForegroundDrawList(ImGuiWindow* window) { return GetForegroundDrawList(window.Viewport); }
 
     // Init
      void          Initialize();
@@ -1200,7 +1194,7 @@ namespace ImGui
     // Logging/Capture
      void          LogBegin(ImGuiLogType type, int auto_open_depth);           // -> BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
      void          LogToBuffer(int auto_open_depth = -1);                      // Start logging/capturing to internal buffer
-     void          LogRenderedText(const ImVec2* ref_pos, const char* text, const char* text_end = NULL);
+     // void          LogRenderedText(const ImVec2* ref_pos, const char* text, const char* text_end = NULL);
      void          LogSetNextTextDecoration(const char* prefix, const char* suffix);
 
     // Popups, Modals, Tooltips

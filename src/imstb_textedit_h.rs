@@ -294,7 +294,7 @@ use std::ptr::null_mut;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{ImGuiInputTextFlags, ImWchar};
 use crate::imguI_string::{ImCharIsBlankW, is_separator, is_word_boundary_from_right};
-use crate::imgui_text::ImTextCountUtf8BytesFromStr;
+use crate::imgui_text::{ImTextCountUtf8BytesFromStr, InputTextCalcTextSizeW};
 use crate::imgui_text_input_state::ImGuiInputTextState;
 use crate::imstb_text_edit_state::STB_TexteditState;
 
@@ -423,7 +423,7 @@ pub fn STB_TEXTEDIT_GETCHAR(obj: *const ImGuiInputTextState, idx: usize) -> ImWc
 
 // traverse the layout to locate the nearest character to a display position
 // static int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, float x, float y)
-pub fn stb_text_locate_coord(stb_str: *mut STB_TEXTEDIT_STRING, x: f32, y: f32) -> usize
+pub unsafe fn stb_text_locate_coord(stb_str: *mut STB_TEXTEDIT_STRING, x: f32, y: f32) -> usize
 {
    // StbTexteditRow r;
    let mut r: StbTexteditRow = StbTexteditRow::new();
@@ -503,7 +503,7 @@ pub fn stb_text_locate_coord(stb_str: *mut STB_TEXTEDIT_STRING, x: f32, y: f32) 
 
 // API click: on mouse down, move the cursor to the clicked location, and reset the selection
 // static void stb_textedit_click(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, float x, float y)
-pub fn stb_textedit_click(stb_str: *mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, x: f32, mut y: f32)
+pub unsafe fn stb_textedit_click(stb_str: *mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, x: f32, mut y: f32)
 {
    // In single-line mode, just always make y = 0. This lets the drag keep working if the mouse
    // goes off the top or bottom of the text
@@ -523,7 +523,7 @@ pub fn stb_textedit_click(stb_str: *mut STB_TEXTEDIT_STRING, state: &mut STB_Tex
 
 // API drag: on mouse drag, move the cursor and selection endpoint to the clicked location
 // static void stb_textedit_drag(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, float x, float y)
-pub fn stb_textedit_drag(stb_str: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, x: f32, mut y: f32) {
+pub unsafe fn stb_textedit_drag(stb_str: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, x: f32, mut y: f32) {
     // int p = 0;
     let mut p = 0usize;
 
@@ -575,7 +575,7 @@ pub struct StbFindState
 // find the x/y location of a character, and remember info about the previous row in
 // case we get a move-up event (for page up, we'll have to rescan)
 // static void stb_textedit_find_charpos(StbFindState *find, STB_TEXTEDIT_STRING *str, int n, int single_line)
-pub fn stb_textedit_find_charpos(find: *mut StbFindState, stb_str: *mut STB_TEXTEDIT_STRING, n: usize, single_line: bool)
+pub unsafe fn stb_textedit_find_charpos(find: *mut StbFindState, stb_str: *mut STB_TEXTEDIT_STRING, n: usize, single_line: bool)
 {
    // StbTexteditRow r;
    let mut r = StbTexteditRow::default();
@@ -1488,7 +1488,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_TEXTSTART2:
 // #endif
 //       case STB_TEXTEDIT_K_TEXTSTART:
-       STB_TEXTEDIT_K_TEXTSTART2 | STB_TEXTEDIT_K_TEXTSTART => {
+       STB_TEXTEDIT_K_TEXTSTART => {
            state.cursor = 0;
            state.select_start = 0;
            state.select_end = 0;
@@ -1500,7 +1500,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_TEXTEND2:
 // #endif
 //       case STB_TEXTEDIT_K_TEXTEND:
-       STB_TEXTEDIT_K_TEXTEND2 | STB_TEXTEDIT_K_TEXTEND => {
+       STB_TEXTEDIT_K_TEXTEND => {
            state.cursor = in_str.len();
            state.select_start = 0;
            state.select_end = 0;
@@ -1511,7 +1511,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_TEXTSTART2 | STB_TEXTEDIT_K_SHIFT:
 // #endif
 //       case STB_TEXTEDIT_K_TEXTSTART | STB_TEXTEDIT_K_SHIFT:
-       STB_TEXTEDIT_K_TEXTSTART2 | STB_TEXTEDIT_K_SHIFT |  STB_TEXTEDIT_K_TEXTSTART => {
+       STB_TEXTEDIT_K_SHIFT |  STB_TEXTEDIT_K_TEXTSTART => {
            stb_textedit_prep_selection_at_cursor(state);
            state.cursor = 0;
            state.select_end = 0;
@@ -1523,7 +1523,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_TEXTEND2 | STB_TEXTEDIT_K_SHIFT:
 // #endif
 //       case STB_TEXTEDIT_K_TEXTEND | STB_TEXTEDIT_K_SHIFT:
-           STB_TEXTEDIT_K_TEXTEND2 | STB_TEXTEDIT_K_SHIFT | STB_TEXTEDIT_K_TEXTEND => {
+           STB_TEXTEDIT_K_SHIFT | STB_TEXTEDIT_K_TEXTEND => {
                stb_textedit_prep_selection_at_cursor(state);
                state.cursor = in_str.len();
                state.select_end = in_str.len();
@@ -1536,7 +1536,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_LINESTART2:
 // #endif
 //       case STB_TEXTEDIT_K_LINESTART:
-           STB_TEXTEDIT_K_LINESTART2 | STB_TEXTEDIT_K_LINESTART => {
+           STB_TEXTEDIT_K_LINESTART => {
                stb_textedit_clamp(in_str, state);
                stb_textedit_move_to_first(state);
                if state.single_line {
@@ -1555,7 +1555,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_LINEEND2:
 // #endif
 //       case STB_TEXTEDIT_K_LINEEND:
-          STB_TEXTEDIT_K_LINEEND2 |  STB_TEXTEDIT_K_LINEEND => {
+          STB_TEXTEDIT_K_LINEEND => {
          let mut  n = in_str.len();
          stb_textedit_clamp(in_str, state);
          stb_textedit_move_to_first(state);
@@ -1575,7 +1575,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_LINESTART2 | STB_TEXTEDIT_K_SHIFT:
 // #endif
 //       case STB_TEXTEDIT_K_LINESTART | STB_TEXTEDIT_K_SHIFT:
-          STB_TEXTEDIT_K_LINESTART2 | STB_TEXTEDIT_K_SHIFT | STB_TEXTEDIT_K_LINESTART=> {
+          STB_TEXTEDIT_K_SHIFT | STB_TEXTEDIT_K_LINESTART=> {
               stb_textedit_clamp(in_str, state);
               stb_textedit_prep_selection_at_cursor(state);
               if state.single_line {
@@ -1595,7 +1595,7 @@ pub unsafe fn stb_textedit_key(in_str: *mut STB_TEXTEDIT_STRING, state: *mut STB
 //       case STB_TEXTEDIT_K_LINEEND2 | STB_TEXTEDIT_K_SHIFT:
 // #endif
 //       case STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT:
-       STB_TEXTEDIT_K_LINEEND2 | STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT =>
+       STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT =>
        {
          // int n = STB_TEXTEDIT_STRINGLEN(in_str);
          let mut n = in_str.len();
@@ -1726,14 +1726,14 @@ pub fn STB_TEXTEDIT_KEYTOTEXT(key: i32) -> i32 {
 }
 pub const STB_TEXTEDIT_NEWLINE: ImWchar = ImWchar::from('\n');
 // static void    STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, ImGuiInputTextState* obj, int line_start_idx)
-pub fn STB_TEXTEDIT_LAYOUTROW(r: *mut StbTexteditRow, obj: *mut ImGuiInputTextState, line_start_idx: usize)
+pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: *mut StbTexteditRow, obj: *mut ImGuiInputTextState, line_start_idx: usize)
 {
     // const ImWchar* text = obj.TextW.Data;
     let text = &mut obj.TextW;
     // const ImWchar* text_remaining = NULL;
-    let text_remaining: *mut ImWchar = null_mut();
+    let mut text_remaining: *mut ImWchar = null_mut();
     // const ImVec2 size = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &text_remaining, NULL, true);
-    let mut size = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &text_remaining, null_mut(), true);
+    let mut size = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &mut text_remaining, null_mut(), true);
     r.x0 = 0.0;
     r.x1 = size.x;
     r.baseline_y_delta = size.y;
@@ -1749,7 +1749,7 @@ pub fn STB_TEXTEDIT_LAYOUTROW(r: *mut StbTexteditRow, obj: *mut ImGuiInputTextSt
 // static int  is_word_boundary_from_left(ImGuiInputTextState* obj, int idx)
 pub fn is_word_boundary_from_left(obj: *mut ImGuiInputTextState, idx: usize) -> bool
 {
-    if &obj.Flags & ImGuiInputTextFlags_Password { return false; };
+    if &obj.Flags & ImGuiInputTextFlags::Password { return false; };
     return if idx > 0 { (!is_separator(obj.TextW[idx - 1]) && is_separator(obj.TextW[idx])) }else { true };
 }
 
@@ -1821,11 +1821,12 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: *mut ImGuiInputTextState, pos: usize
             return false;
         }
         // IM_ASSERT(text_len < obj.TextW.Size);
-        obj.TextW.reserve(text_len + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1);
+        obj.TextW.reserve(text_len + usize::clamp(new_text_len * 4, 32, usize::max(256, new_text_len)) + 1);
     }
 
-    ImWchar* text = obj.TextW.Data;
-    if pos != text_len {
+    // ImWchar* text = obj.TextW.Data;
+    let text = obj.TextW.Data;
+        if pos != text_len {
         // TODO
         // memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof(ImWchar));
     }
@@ -1866,17 +1867,17 @@ pub const STB_TEXTEDIT_K_SHIFT: u32 =        0x400000;
 // stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
 // the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
 // static void stb_textedit_replace(ImGuiInputTextState* in_str, STB_TexteditState* state, const STB_TEXTEDIT_CHARTYPE* text, int text_len)
-    pub fn stb_textedit_replace(tis: *mut ImGuiInputTextState, state: *mut STB_TexteditState, text: *const STB_TEXTEDIT_CHARTYPE, text_len: usize)
+    pub unsafe fn stb_textedit_replace(tis: *mut ImGuiInputTextState, state: *mut STB_TexteditState, text: *mut STB_TEXTEDIT_CHARTYPE, text_len: usize)
 {
     stb_text_makeundo_replace(tis, state, 0, tis.CurLenW, text_len);
-    ImStb::STB_TEXTEDIT_DELETECHARS(in_str, 0, tis.CurLenW);
+    STB_TEXTEDIT_DELETECHARS(tis, 0, tis.CurLenW);
     if (text_len <= 0) {
         return;
     }
-    if (ImStb::STB_TEXTEDIT_INSERTCHARS(in_str, 0, text, text_len))
+    if STB_TEXTEDIT_INSERTCHARS(tis, 0, text, text_len)
     {
         state.cursor = text_len;
-        state.has_preferred_x = 0;
+        state.has_preferred_x = false;
         return;
     }
     // IM_ASSERT(0); // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()

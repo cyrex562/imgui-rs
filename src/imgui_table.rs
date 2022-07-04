@@ -7,7 +7,7 @@ use crate::imgui_window::ImGuiWindow;
 
 // #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
 pub const IM_COL_32_DISABLE: ImColor = ImColor::new4(0,0,0,1);
-// #define IMGUI_TABLE_MAX_COLUMNS         64                  // sizeof(ImU64) * 8. This is solely because we frequently encode columns set in a ImU64.
+// #define IMGUI_TABLE_MAX_COLUMNS         64                  // sizeof * 8. This is solely because we frequently encode columns set in a ImU64.
 pub const IMGUI_TABLE_MAX_COLUMNS: usize = 64;
 // #define IMGUI_TABLE_MAX_DRAW_CHANNELS   (4 + 64 * 2)        // See TableSetupDrawChannels()
 pub const IMGUI_TABLE_MAX_DRAW_CHANNELS: u32 = 4 + 64 *2;

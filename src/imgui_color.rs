@@ -1,5 +1,6 @@
-use crate::imgui_h::{ImGuiCol, ImVec4};
+use crate::imgui_h::ImGuiColor;
 use crate::imgui_math::{IM_F32_TO_INT8_SAT, ImFabs, ImFmod, ImLerpU32, ImSwapF32};
+use crate::imgui_vec::ImVec4;
 
 //  ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b)
 pub fn ImAlphaBlendColors(col_a: u32, col_b: u32) -> u32
@@ -121,7 +122,7 @@ pub const IM_COL32_A_SHIFT: u32 =    24;
 pub const IM_COL32_A_MASK: u32 =     0xFF000000;
 // #endif
 // #endif
-//#define IM_COL32(R,G,B,A)    (((ImU32)(A)<<IM_COL32_A_SHIFT) | ((ImU32)(B)<<IM_COL32_B_SHIFT) | ((ImU32)(G)<<IM_COL32_G_SHIFT) | ((ImU32)(R)<<IM_COL32_R_SHIFT))
+//#define IM_COL32(R,G,B,A)    (((A)<<IM_COL32_A_SHIFT) | ((B)<<IM_COL32_B_SHIFT) | ((G)<<IM_COL32_G_SHIFT) | ((R)<<IM_COL32_R_SHIFT))
 pub fn IM_COL32(R: u32, G: u32, B: u32, A: u32) -> u32 {
     A << IM_COL32_A_SHIFT | B << IM_COL32_B_SHIFT | G << IM_COL32_G_SHIFT | R << IM_COL32_R_SHIFT
 }
@@ -213,7 +214,7 @@ impl ImColor {
 pub struct ImGuiColorMod
 {
     // ImGuiCol        Col;
-    pub Col: ImGuiCol,
+    pub Col: ImGuiColor,
     // ImVec4          BackupValue;
     pub BackupValue: ImVec4,
 }

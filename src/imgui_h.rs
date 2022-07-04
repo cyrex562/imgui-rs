@@ -7,7 +7,8 @@ use std::ops::Index;
 use std::ptr;
 use std::ptr::null_mut;
 use crate::imgui_color::ColorConvertFloat4ToU32;
-use crate::imgui_vec::ImVec2;
+use crate::imgui_draw_list::ImDrawList;
+use crate::imgui_vec::{ImVec2, ImVec4};
 
 // (headers)
 
@@ -269,29 +270,6 @@ pub type ImGuiSizeCallback = fn(*mut ImGuiSizeCallbackData);
 pub type ImGuiMemAllocFunc = fn(usize, *mut c_void) -> *mut c_void;
 // typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for ImGui::SetAllocatorFunctions()
 pub type ImGuiMemFreeFunc = fn(*mut c_void, *mut c_void);
-// ImVec4: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
-#[derive(Default,Debug,Clone)]
-pub struct ImVec4
-{
-    // float                                                     x, y, z, w;
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub w: f32
-    // constexpr ImVec4()                                        : x(0.0), y(0.0), z(0.0), w(0.0) { }
-    // constexpr ImVec4(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
-// #ifdef IM_VEC4_CLASS_EXTRA
-//     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
-// #endif
-}
-
-impl ImVec4 {
-    pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
-        Self {
-            x, y, z, w
-        }
-    }
-}
 
 // IM_MSVC_RUNTIME_CHECKS_RESTORE
 
@@ -1661,65 +1639,65 @@ pub enum ImGuiBackendFlags
     ImGuiBackendFlags_RendererHasViewports  = 1 << 12   // Backend Renderer supports multiple viewports.
 }
 
-#[allow(non_camel_case_types)]// Enumeration for PushStyleColor() / PopStyleColor()
-pub enum ImGuiCol
+/// Enumeration for PushStyleColor() / PopStyleColor()
+#[derive(Debug,Clone)]
+pub enum ImGuiColor
 {
-    ImGuiCol_Text,
-    ImGuiCol_TextDisabled,
-    ImGuiCol_WindowBg,              // Background of normal windows
-    ImGuiCol_ChildBg,               // Background of child windows
-    ImGuiCol_PopupBg,               // Background of popups, menus, tooltips windows
-    ImGuiCol_Border,
-    ImGuiCol_BorderShadow,
-    ImGuiCol_FrameBg,               // Background of checkbox, radio button, plot, slider, text input
-    ImGuiCol_FrameBgHovered,
-    ImGuiCol_FrameBgActive,
-    ImGuiCol_TitleBg,
-    ImGuiCol_TitleBgActive,
-    ImGuiCol_TitleBgCollapsed,
-    ImGuiCol_MenuBarBg,
-    ImGuiCol_ScrollbarBg,
-    ImGuiCol_ScrollbarGrab,
-    ImGuiCol_ScrollbarGrabHovered,
-    ImGuiCol_ScrollbarGrabActive,
-    ImGuiCol_CheckMark,
-    ImGuiCol_SliderGrab,
-    ImGuiCol_SliderGrabActive,
-    ImGuiCol_Button,
-    ImGuiCol_ButtonHovered,
-    ImGuiCol_ButtonActive,
-    ImGuiCol_Header,                // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
-    ImGuiCol_HeaderHovered,
-    ImGuiCol_HeaderActive,
-    ImGuiCol_Separator,
-    ImGuiCol_SeparatorHovered,
-    ImGuiCol_SeparatorActive,
-    ImGuiCol_ResizeGrip,            // Resize grip in lower-right and lower-left corners of windows.
-    ImGuiCol_ResizeGripHovered,
-    ImGuiCol_ResizeGripActive,
-    ImGuiCol_Tab,                   // TabItem in a TabBar
-    ImGuiCol_TabHovered,
-    ImGuiCol_TabActive,
-    ImGuiCol_TabUnfocused,
-    ImGuiCol_TabUnfocusedActive,
-    ImGuiCol_DockingPreview,        // Preview overlay color when about to docking something
-    ImGuiCol_DockingEmptyBg,        // Background color for empty node (e.g. CentralNode with no window docked into it)
-    ImGuiCol_PlotLines,
-    ImGuiCol_PlotLinesHovered,
-    ImGuiCol_PlotHistogram,
-    ImGuiCol_PlotHistogramHovered,
-    ImGuiCol_TableHeaderBg,         // Table header background
-    ImGuiCol_TableBorderStrong,     // Table outer and header borders (prefer using Alpha=1.0 here)
-    ImGuiCol_TableBorderLight,      // Table inner borders (prefer using Alpha=1.0 here)
-    ImGuiCol_TableRowBg,            // Table row background (even rows)
-    ImGuiCol_TableRowBgAlt,         // Table row background (odd rows)
-    ImGuiCol_TextSelectedBg,
-    ImGuiCol_DragDropTarget,        // Rectangle highlighting a drop target
-    ImGuiCol_NavHighlight,          // Gamepad/keyboard: current highlighted item
-    ImGuiCol_NavWindowingHighlight, // Highlight window when using CTRL+TAB
-    ImGuiCol_NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
-    ImGuiCol_ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
-    ImGuiCol_COUNT
+    Text,
+    TextDisabled,
+    WindowBg,              // Background of normal windows
+    ChildBg,               // Background of child windows
+    PopupBg,               // Background of popups, menus, tooltips windows
+    Border,
+    BorderShadow,
+    FrameBg,               // Background of checkbox, radio button, plot, slider, text input
+    FrameBgHovered,
+    FrameBgActive,
+    TitleBg,
+    TitleBgActive,
+    TitleBgCollapsed,
+    MenuBarBg,
+    ScrollbarBg,
+    ScrollbarGrab,
+    ScrollbarGrabHovered,
+    ScrollbarGrabActive,
+    CheckMark,
+    SliderGrab,
+    SliderGrabActive,
+    Button,
+    ButtonHovered,
+    ButtonActive,
+    Header,                // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+    HeaderHovered,
+    HeaderActive,
+    Separator,
+    SeparatorHovered,
+    SeparatorActive,
+    ResizeGrip,            // Resize grip in lower-right and lower-left corners of windows.
+    ResizeGripHovered,
+    ResizeGripActive,
+    Tab,                   // TabItem in a TabBar
+    TabHovered,
+    TabActive,
+    TabUnfocused,
+    TabUnfocusedActive,
+    DockingPreview,        // Preview overlay color when about to docking something
+    DockingEmptyBg,        // Background color for empty node (e.g. CentralNode with no window docked into it)
+    PlotLines,
+    PlotLinesHovered,
+    PlotHistogram,
+    PlotHistogramHovered,
+    TableHeaderBg,         // Table header background
+    TableBorderStrong,     // Table outer and header borders (prefer using Alpha=1.0 here)
+    TableBorderLight,      // Table inner borders (prefer using Alpha=1.0 here)
+    TableRowBg,            // Table row background (even rows)
+    TableRowBgAlt,         // Table row background (odd rows)
+    TextSelectedBg,
+    DragDropTarget,        // Rectangle highlighting a drop target
+    NavHighlight,          // Gamepad/keyboard: current highlighted item
+    NavWindowingHighlight, // Highlight window when using CTRL+TAB
+    NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+    ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
 }
 
 // Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
@@ -2355,332 +2333,6 @@ pub enum ImDrawListFlags
     ImDrawListFlags_AllowVtxOffset          = 1 << 3   // Can emit 'VtxOffset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
 }
 
-// Draw command list
-// This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,
-// all command lists are passed to your ImGuiIO::RenderDrawListFn function for rendering.
-// Each dear imgui window contains its own ImDrawList. You can use ImGui::GetWindowDrawList() to
-// access the current window draw list and draw custom primitives.
-// You can interleave normal ImGui:: calls and adding primitives to the current draw list.
-// In single viewport mode, top-left is == GetMainViewport()->Pos (generally 0,0), bottom-right is == GetMainViewport()->Pos+Size (generally io.DisplaySize).
-// You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to ClipRect as well!)
-// Important: Primitives are always added to the list and not culled (culling is done at higher-level by ImGui:: functions), if you use this API a lot consider coarse culling your drawn objects.
-#[derive(Default,Debug,Clone)]
-pub struct ImDrawList
-{
-    // This is what you have to render
-    // ImVector<ImDrawCmd>     CmdBuffer;          // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
-    pub CmdBuffer: Vec<ImDrawCmd>,
-    // ImVector<ImDrawIdx>     IdxBuffer;          // Index buffer. Each command consume ImDrawCmd::ElemCount of those
-    pub IdxBuffer: Vec<ImDrawIdx>,
-    // ImVector<ImDrawVert>    VtxBuffer;          // Vertex buffer.
-    pub VtxBuffer: Vec<ImDrawVert>,
-    // ImDrawListFlags         Flags;              // Flags, you may poke into these to adjust anti-aliasing settings per-primitive.
-    pub Flags: ImDrawListFlags,
-    // [Internal, used while building lists]
-    // unsigned pub _VtxCurrentIdx: i32,   // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
-    // pub _VtxCurrentIdx: u32,
-    // const ImDrawListSharedData* _Data;          // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
-    pub _Data: *const ImDrawListSharedData,
-    // const char*             _OwnerName;         // Pointer to owner window's name for debugging
-    pub _OwnerName: String,
-    // ImDrawVert*             _VtxWritePtr;       // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    // pub _VxWritePtr: *mut ImDrawVert,
-    // ImDrawIdx*              _IdxWritePtr;       // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    // pub _IdxWritePtr: *mut ImDrawIdx,
-    // ImVector<ImVec4>        _ClipRectStack;     // [Internal]
-    pub _ClipRectStack: Vec<ImVec4>,
-    // ImVector<ImTextureID>   _TextureIdStack;    // [Internal]
-    pub _TextureIdStack: Vec<ImTextureID>,
-    // ImVector<ImVec2>        _Path;              // [Internal] current path building
-    pub _Path: Vec<ImVec2>,
-    // ImDrawCmdHeader         _CmdHeader;         // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
-    pub _CmdHeader: ImDrawCmdHeader,
-    // ImDrawListSplitter      _Splitter;          // [Internal] for channels api (note: prefer using your own persistent instance of ImDrawListSplitter!)
-    pub _Splitter: ImDrawListSplitter,
-    // pub _FringeScale: f32,      // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
-    pub _FringeScale: f32,
-}
-
-impl ImDrawList {
-     // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
-    // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
-    pub fn new(shared_data: *mut ImDrawListSharedData) -> Self {
-         Self {
-             _Data: shared_data,
-             ..Default()
-         }
-     }
-    // ~ImDrawList() { _ClearFreeMemory(); }
-    //  void  PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
-    pub fn PushClipRect(&mut self, clip_rect_min: &ImVec2, clip_rect_max: &ImVec2, intersect_with_current_clip_rect: bool) {
-        todo!()
-    }
-    //  void  PushClipRectFullScreen();
-    pub fn PushClipRectFullScreen(&mut self) {
-        todo!()
-    }
-    //  void  PopClipRect();
-    pub fn PopClipRect(&mut self) {
-        todo!()
-    }
-    //  void  PushTextureID(ImTextureID texture_id);
-    pub fn PushTextureID(&mut self, texture_id: ImTextureID) {todo!()}
-    //  void  PopTextureID();
-    pub fn PopTextureID(&mut self) {todo!()}
-    // inline ImVec2   GetClipRectMin() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.x, cr.y); }
-    pub fn GetClipRectMin(&self) -> ImVec2 {
-        let cr = self._ClipRectStack.back();
-        ImVec2::new(cr.x,cry.y)
-    }
-    // inline ImVec2   GetClipRectMax() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.z, cr.w); }
-    pub fn GetClipRectMax(&self) -> ImVec2 {
-        let cr = self._ClipRectStack.back();
-        ImVec2::new(cr.z,cr.w)
-    }
-    // Primitives
-    // - Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
-    // - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
-    // - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
-    //   In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
-    //   In future versions we will use textures to provide cheaper and higher-quality circles.
-    //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
-    //  void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0);
-    pub fn AddLine(&mut self, p1: &ImVec2, p2: &ImVec2, col: u32, thickness: f32) {
-        todo!()
-    }
-    //  void  AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0, float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
-    pub fn AddRect(&mut self, p_min: &ImVec2, p_max: ImVec2, col: u32, rounding: f32, flags: ImDrawFlags, thickness: f32) {
-        todo!()
-    }
-    //  void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
-    pub fn AddRectFilled(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: f32, flags: f32) {
-        todo!()
-    }
-    //  void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
-    pub fn AddRectFilledMultiColor(&mut self, p_min: &ImVec2, p_max: &ImVec2, col_upr_left: u32, col_upr_right: u32, col_bot_right: u32, col_bot_left: u32) {
-        todo!()
-    }
-    //  void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 1.0);
-    pub fn AddQuad(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32, thickness: f32) {
-        todo!()
-    }
-    //  void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);
-    pub fn AddQuadFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32) {
-        todo!()
-    }
-    //  void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness = 1.0);
-    pub fn AddTriangle(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32, thickness: f32) {
-        todo!()
-    }
-    //  void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col);
-    pub fn AddTriangleFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32) {
-        todo!()
-    }
-    //  void  AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments = 0, float thickness = 1.0);
-    pub fn AddCircle(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32, thickness: f32) {
-        todo!()
-    }
-    //  void  AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments = 0);
-    pub fn AddCircleFilled(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32) {
-        todo!()
-    }
-    //  void  AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness = 1.0);
-    pub fn AddNgon(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32, thickness: f32) {
-        todo!()
-    }
-    //  void  AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments);
-    pub fn AddNgonFilled(&mut self, center: &ImVec2, radius: f32, col: u32, num_segments: i32) {
-        todo!()
-    }
-    //  void  AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
-    pub fn AddText(&mut self, pos: &ImVec2, col: u32, text_begin: &String, text_end: &String) {
-        todo!()
-    }
-    //  void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0, const ImVec4* cpu_fine_clip_rect = NULL);
-    pub fn AddText2(&mut self, font: &ImFont, font_size: f32, pos: &ImVec2, col: u32, text: &String, wrap_width: f32, cpu_fine_clip_rect: &ImVec4) {
-        todo!()
-    }
-    //  void  AddPolyline(const ImVec2* points, int num_points, ImU32 col, ImDrawFlags flags, float thickness);
-    pub fn AddPolyline(&mut self, points: &[ImVec2], num_points: usize, col: u32, flags: ImDrawFlags, thickness: f32) {
-        todo!()
-    }
-    //  void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col);
-    pub fn AddConvexPolyFilled(&mut self, points: &[ImVec2], num_points: usize, col: u32) {
-        todo!()
-    }
-    //  void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
-    pub fn AddBezierCubic(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32, thickness: f32, num_segments: i32) {
-        todo!()
-    }
-    //  void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
-    pub fn AddBezierQuadratic(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32, thickness: f32, num_segments: i32) {
-        todo!()
-    }
-
-    // Image primitives
-    // - Read FAQ to understand what ImTextureID is.
-    // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
-    // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-    //  void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
-    pub fn AddImage(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_min: &ImVec2, uv_max: &ImVec2, col: u32) {
-        todo!()
-    }
-    //  void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
-    pub fn AddImageQuad(&mut self, user_texture_id: ImTextureID, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, uv1: &ImVec2, uv2: &ImVec2, uv3: &ImVec2, uv4: &ImVec2, col: u32) {
-        todo!()
-    }
-    //  void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawFlags flags = 0);
-    pub fn AddImageRounded(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_min: &ImVec2, uv_max: &ImVec2, col: u32, rounding: f32, flags: ImDrawFlags) {
-        todo!()
-    }
-
-    // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
-    // - Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
-    // inline    void  PathClear()                                                 { _Path.Size = 0; }
-    pub fn PathClear(&mut self) {
-        self._Path.Size = 0
-    }
-    // inline    void  PathLineTo(const ImVec2& pos)                               { _Path.push_back(pos); }
-    pub fn PathLineTo(&mut self, pos: &ImVec2) {
-        self._Path.push(pos.clone())
-    }
-    // inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size - 1], &pos, 8) != 0) _Path.push_back(pos); }
-    pub fn PathLineToMergeDuplicate(&mut self, pos: &ImVec2) {
-        if self._Path.len() == 0 || (self._Path[self._Path.len() - 1] != pos) {
-            self._Path.push(pos.clone())
-        }
-    }
-    // inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
-    pub fn PathFillConvex(&mut self, col: u32) {
-        self.AddConvexPolyFilled(self._Path.as_slice(), self._Path.len(), col);
-        self._Path.clear()
-    }
-    // inline    void  PathStroke(ImU32 col, ImDrawFlags flags = 0, float thickness = 1.0) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
-    pub fn PathStroke(&mut self, col: u32, flags: ImDrawFlags, thickness: f32) {
-        self.AddPolyline(self._Path.as_slice(), self._Path.len(), col, flags, thickness);
-        self._Path.clear()
-    }
-    //  void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 0);
-    pub fn PathArcTo(&mut self, center: &ImVec2, radius: f32, a_min: f32, a_max: f32, num_segments: i32) {
-        todo!()
-    }
-    //  void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
-    pub fn PathArcToFast(&mut self, center: &ImVec2, radius: f32, a_min_of_12: i32, a_max_of_12: i32) {
-        todo!()
-    }
-    //  void  PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0); // Cubic Bezier (4 control points)
-    pub fn PathBezierCubicCurveTo(&mut self, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, num_segments: usize) {
-        todo!()
-    }
-    //  void  PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, int num_segments = 0);               // Quadratic Bezier (3 control points)
-    pub fn PathBezierQuadraticCurveTo(&mut self, p2: &ImVec2, p3: &ImVec2, num_segments: usize) {
-        todo!()
-    }
-    //  void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, float rounding = 0.0, ImDrawFlags flags = 0);
-    pub fn PathRect(&mut self, rect_min: &ImVec2, rect_max: &ImVec2, rounding: f32, flags: ImDrawFlags) {
-        todo!()
-    }
-
-    // Advanced
-    //  void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
-    pub fn AddCallback(&mut self, callback: ImDrawCallback, callback_data: *mut c_void) {
-        todo!()
-    }
-    //  void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
-    pub fn AddDrawCmd(&mut self) {
-        todo!()
-    }
-    //  ImDrawList* CloneOutput() const;                                  // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
-    pub fn CloneOutput(&mut self) -> Vec<ImDrawList> {
-        todo!()
-    }
-
-    // Advanced: Channels
-    // - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
-    // - Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end)
-    // - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
-    //   Prefer using your own persistent instance of ImDrawListSplitter as you can stack them.
-    //   Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.
-    // inline void     ChannelsSplit(int count)    { _Splitter.Split(this, count); }
-    // inline void     ChannelsMerge()             { _Splitter.Merge(this); }
-    // inline void     ChannelsSetCurrent(int n)   { _Splitter.SetCurrentChannel(this, n); }
-
-    // Advanced: Primitives allocations
-    // - We render triangles (three vertices)
-    // - All primitives needs to be reserved via PrimReserve() beforehand.
-    //  void  PrimReserve(int idx_count, int vtx_count);
-    pub fn PrimReserve(&mut self, idx_count: usize, vtx_count: usize) {
-        todo!()
-    }
-    //  void  PrimUnreserve(int idx_count, int vtx_count);
-    pub fn PrimUnreserve(&mut self, idx_count: usize, vtx_count: usize) {
-        todo!()
-    }
-    //  void  PrimRect(const ImVec2& a, const ImVec2& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
-    pub fn PrimRect(&mut self, a: &ImVec2, b: &ImVec2, col: u32) {
-        todo!()
-    }
-    //  void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, ImU32 col);
-    pub fn PrimRectUV(&mut self, a: &ImVec2, b: &ImVec2, uv_a: &ImVec2, uv_b: &ImVec2, col: u32) {
-        todo!()
-    }
-    //  void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col);
-    pub fn PrimQuadUV(&mut self, a: &ImVec2, b: &ImVec2, c: &ImVec2, d: &ImVec2, uv_a: &ImVec2, uv_b: &ImVec2, uv_c: &ImVec2, uv_d: &ImVec2, col: u32) {
-        todo!()
-    }
-    // inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
-    pub fn PrimWriteVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
-        // TODO: replace VtxWritePtr with a vector of vertices
-        self.VtxBuffer.push(ImDrawVert{
-            pos: pos.clone(),
-            uv: uv.clone(),
-            col,
-        });
-    }
-    // inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr++; }
-    pub fn PrimWriteIdx(&mut self, idx: ImDrawIdx) {
-        self.IdxBuffer.push(idx)
-    }
-    // inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
-    pub fn PrimVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
-        self.PrimWriteVtx(pos, uv, col);
-        self.PrimWriteIdx(0)
-    }
-
-// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//     inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
-//     inline    void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
-// #endif
-
-    // [Internal helpers]
-    //  void  _ResetForNewFrame();
-    fn ResetForNewFrame(&mut self) { todo!()}
-    //  void  _ClearFreeMemory();
-    fn ClearFreeMemory(&mut self){todo!()}
-    //  void  _PopUnusedDrawCmd();
-    fn PopUnusedDrawCmd(&mut self) {todo!()}
-    //  void  _TryMergeDrawCmds();
-    fn TryMergeDrawCmds(&mut self) { todo!()}
-    //  void  _OnChangedClipRect();
-    fn OnChangedClipRect(&mut self) {todo!()}
-    //  void  _OnChangedTextureID();
-    fn OnChangedTextureID(&mut self) {todo!()}
-    //  void  _OnChangedVtxOffset();
-    fn OnChangedVtxOffset(&mut self) {todo!()}
-    //  int   _CalcCircleAutoSegmentCount(float radius) const;
-    fn CalCircleAUtoSegmentCount(&mut self, radius: f32) -> i32 {
-        todo!()
-    }
-    //  void  _PathArcToFastEx(const ImVec2& center, float radius, int a_min_sample, int a_max_sample, int a_step);
-    fn PathArcToFastEx(&mut self, center: &ImVec2, radius: f32, a_min_simple: i32, a_max_sample: i32, a_step: i32) {
-        todo!()
-    }
-    //  void  _PathArcToN(const ImVec2& center, float radius, float a_min, float a_max, int num_segments);
-    fn PathArcToN(&mut self, center: &ImVec2, radius: f32, a_min: f32, a_max: f32, num_segments: i32) {
-        todo!()
-    }
-}
-
 // All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
 // as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
@@ -2798,7 +2450,7 @@ pub struct ImFontGlyphRangesBuilder
 
 impl ImFontGlyphRangesBuilder {
     // ImFontGlyphRangesBuilder()              { Clear(); }
-    //     inline void     Clear()                 { int size_in_bytes = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / sizeof(ImU32)); memset(UsedChars.Data, 0, (size_t)size_in_bytes); }
+    //     inline void     Clear()                 { int size_in_bytes = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / sizeof); memset(UsedChars.Data, 0, (size_t)size_in_bytes); }
     pub fn Clear(&mut self) {
         self.UsedChars.clear()
     }
@@ -3677,3 +3329,10 @@ pub struct ImGuiShrinkWidthItem
 }
 
 
+// Extend ImGuiDataType_
+pub enum ImGuiDataType
+{
+    String,
+    Pointer,
+    ID
+}

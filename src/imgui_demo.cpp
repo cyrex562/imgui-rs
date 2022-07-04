@@ -2062,9 +2062,9 @@ static void ShowDemoWindowWidgets()
         static short  s16_v = 32767;
         static ImU16  u16_v = 65535;
         static ImS32  s32_v = -1;
-        static ImU32  u32_v = (ImU32)-1;
+        static ImU32  u32_v = -1;
         static ImS64  s64_v = -1;
-        static ImU64  u64_v = (ImU64)-1;
+        static ImU64  u64_v = -1;
         static float  f32_v = 0.123;
         static double f64_v = 90000.01234567890123456789;
 
@@ -6564,9 +6564,9 @@ static void ShowExampleMenuFile()
         float sz = ImGui::GetTextLineHeight();
         for (int i = 0; i < ImGuiCol_COUNT; i += 1)
         {
-            const char* name = ImGui::GetStyleColorName((ImGuiCol)i);
+            const char* name = ImGui::GetStyleColorName((ImGuiColor)i);
             ImVec2 p = ImGui::GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol)i));
+            ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiColor)i));
             ImGui::Dummy(ImVec2(sz, sz));
             ImGui::SameLine();
             ImGui::MenuItem(name);

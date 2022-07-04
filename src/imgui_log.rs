@@ -1,3 +1,12 @@
+use std::os::raw::c_char;
+use std::ptr::null;
+use crate::imgui_context::ImGuiContext;
+use crate::imgui_file::{ImFileOpen, ImFileWrite};
+use crate::imgui_globals::GImGui;
+use crate::imgui_render::FindRenderedTextEnd;
+use crate::imguI_string::ImStreolRange;
+use crate::imgui_vec::ImVec2;
+
 pub enum ImGuiLogType
 {
     None = 0,
@@ -22,3 +31,279 @@ pub enum ImGuiDebugLogFlags
 }
 
 pub const ImGuiDebugLogFlags_EventMask: u32 = ImGuiDebugLogFlags::EventActiveId | ImGuiDebugLogFlags::EventFocus | ImGuiDebugLogFlags::EventPopup | ImGuiDebugLogFlags::EventNav | ImGuiDebugLogFlags::EventIO | ImGuiDebugLogFlags::EventDocking | ImGuiDebugLogFlags::EventViewport;
+
+
+
+// Internal version that takes a position to decide on newline placement and pad items according to their depth.
+// We split text into individual lines to add current tree level padding
+// FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
+// void ImGui::LogRenderedText(const ImVec2* ref_pos, const char* text, const char* text_end)
+pub unsafe fn LogRenderedText(ref_pos: &ImVec2, text: *const c_char, mut text_end: *const c_char)
+{
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+    // ImGuiWindow* window = g.CurrentWindow;
+    let window = g.CurrentWindow;
+
+    // const char* prefix = g.LogNextPrefix;
+    let prefix = g.LogNextPrefix;
+    // const char* suffix = g.LogNextSuffix;
+    let suffix = g.LogNextSuffix;
+    g.LogNextPrefix =  null();
+    g.LogNextSuffix = null();
+
+    if (!text_end) {
+        text_end = FindRenderedTextEnd(text, text_end);
+    }
+
+    let log_new_line = ref_pos != ImVec2::new(0.0,0.0) && (ref_pos.y > g.LogLinePosY + g.Style.FramePadding.y + 1);
+    if (ref_pos) {
+        g.LogLinePosY = ref_pos.y;
+    }
+    if (log_new_line)
+    {
+        LogText(IM_NEWLINE);
+        g.LogLineFirstItem = true;
+    }
+
+    if (prefix) {
+        LogRenderedText(ref_pos, prefix, prefix + (prefix.len())); // Calculate end ourself to ensure "##" are included here.
+        }
+
+    // Re-adjust padding if we have popped out of our starting depth
+    if (g.LogDepthRef > window.DC.TreeDepth) {
+        g.LogDepthRef = window.DC.TreeDepth;
+    }
+    let tree_depth = (window.DC.TreeDepth - g.LogDepthRef);
+
+    let mut text_remaining = text;
+    loop
+    {
+        // Split the string. Each new line (after a '\n') is followed by indentation corresponding to the current depth of our log entry.
+        // We don't add a trailing \n yet to allow a subsequent item on the same line to be captured.
+        let line_start = text_remaining;
+        let line_end = ImStreolRange(line_start, text_end);
+        let is_last_line = (line_end == text_end);
+        if line_start != line_end || !is_last_line
+        {
+            let line_length = (line_end - line_start);
+            let indentation = if(g.LogLineFirstItem) { tree_depth * 4 } else { 1 };
+            LogText("%*s%.*s", indentation, "", line_length, line_start);
+            g.LogLineFirstItem = false;
+            if (*line_end == '\n')
+            {
+                LogText(IM_NEWLINE);
+                g.LogLineFirstItem = true;
+            }
+        }
+        if (is_last_line) {
+            break;
+        }
+        text_remaining = line_end + 1;
+    }
+
+    // Pass text data straight to log (without being displayed)
+// static inline void LogTextV(ImGuiContext& g, const char* fmt, va_list args)
+pub fn LogTextV(g: &mut ImGuiContext, msg: &String)
+    {
+    if (g.LogFile)
+    {
+        g.LogBuffer.Buf.resize(0);
+        // g.LogBuffer.appendfv(fmt, args);
+        g.LogBuffer.append(msg.as_ptr(), null());
+        ImFileWrite(g.LogBuffer.Buf.as_vec(), g.LogBuffer.size(), g.LogBuffer.size(), g.LogFile);
+    }
+    else
+    {
+        g.LogBuffer.appendfv(msg);
+    }
+}
+
+
+
+// void ImGui::LogText(const char* fmt, ...)
+pub fn LogText(msg: &String)
+    {
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+        if (!g.LogEnabled) {
+            return;
+        }
+
+    // va_list args;
+    // va_start(args, fmt);
+    // LogTextV(g, fmt, args);
+    // va_end(args);
+}
+
+// void ImGui::LogTextV(const char* fmt, va_list args)
+// {
+//     ImGuiContext& g = *GImGui;
+//     if (!g.LogEnabled)
+//         return;
+//
+//     LogTextV(g, fmt, args);
+// }
+
+// Start logging/capturing text output
+// void ImGui::LogBegin(ImGuiLogType type, int auto_open_depth)
+pub fn LogBegin(log_type: ImGuiLogType, auto_open_depth: i32)
+    {
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+        // ImGuiWindow* window = g.CurrentWindow;
+    let window = g.CurrentWindow;
+        // IM_ASSERT(g.LogEnabled == false);
+    // IM_ASSERT(g.LogFile == NULL);
+    // IM_ASSERT(g.LogBuffer.empty());
+    g.LogEnabled = true;
+    g.LogType = log_type;
+    g.LogNextPrefix = null();
+        g.LogNextSuffix = null();
+    g.LogDepthRef = window.DC.TreeDepth;
+    g.LogDepthToExpand = if auto_open_depth >= 0 { auto_open_depth } else { g.LogDepthToExpandDefault };
+    g.LogLinePosY = f32::MAX;
+    g.LogLineFirstItem = true;
+}
+
+// Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
+// void ImGui::LogSetNextTextDecoration(const char* prefix, const char* suffix)
+pub fn LogSetNextTextDecoration(prefix: *const c_char, suffix: *const c_char)
+    {
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+        g.LogNextPrefix = prefix;
+    g.LogNextSuffix = suffix;
+}
+
+// void ImGui::LogToTTY(int auto_open_depth)
+pub fn LogToTTY(auto_open_depth: i32)
+    {
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+        if (g.LogEnabled) {
+            return;
+        }
+    // IM_UNUSED(auto_open_depth);
+// #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+//     LogBegin(ImGuiLogType_TTY, auto_open_depth);
+//     g.LogFile = stdout;
+// #endif
+}
+
+// Start logging/capturing text output to given file
+// void ImGui::LogToFile(int auto_open_depth, const char* filename)
+pub fn LogToFile(auto_open_depth: i32, filename: *const c_char)
+    {
+    let g = GImGui;
+    if (g.LogEnabled) {
+        return;
+    }
+
+    // FIXME: We could probably open the file in text mode "at", however note that clipboard/buffer logging will still
+    // be subject to outputting OS-incompatible carriage return if within strings the user doesn't use IM_NEWLINE.
+    // By opening the file in binary mode "ab" we have consistent output everywhere.
+    if (!filename) {
+        filename = g.IO.LogFilename;
+    }
+    if (!filename || !filename[0]) {
+        return;
+    }
+    let f = ImFileOpen(&String::from(filename), &String::from("ab"));
+    if (!f)
+    {
+        // IM_ASSERT(0);
+        return;
+    }
+
+    LogBegin(ImGuiLogType::File, auto_open_depth);
+    g.LogFile = f;
+}
+
+// Start logging/capturing text output to clipboard
+// void ImGui::LogToClipboard(int auto_open_depth)
+pub fn LogToClipboard(auto_open_depth: i32)
+    {
+    // ImGuiContext& g = *GImGui;
+    let g = GImGui;
+        if (g.LogEnabled) {
+            return;
+        }
+    LogBegin(ImGuiLogType::Clipboard, auto_open_depth);
+}
+
+void ImGui::LogToBuffer(int auto_open_depth)
+{
+    ImGuiContext& g = *GImGui;
+    if (g.LogEnabled)
+        return;
+    LogBegin(ImGuiLogType_Buffer, auto_open_depth);
+}
+
+void ImGui::LogFinish()
+{
+    ImGuiContext& g = *GImGui;
+    if (!g.LogEnabled)
+        return;
+
+    LogText(IM_NEWLINE);
+    switch (g.LogType)
+    {
+    case ImGuiLogType_TTY:
+#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+        fflush(g.LogFile);
+#endif
+        break;
+    case ImGuiLogType_File:
+        ImFileClose(g.LogFile);
+        break;
+    case ImGuiLogType_Buffer:
+        break;
+    case ImGuiLogType_Clipboard:
+        if (!g.LogBuffer.empty())
+            SetClipboardText(g.LogBuffer.begin());
+        break;
+    case ImGuiLogType_None:
+        IM_ASSERT(0);
+        break;
+    }
+
+    g.LogEnabled = false;
+    g.LogType = ImGuiLogType_None;
+    g.LogFile = NULL;
+    g.LogBuffer.clear();
+}
+
+// Helper to display logging buttons
+// FIXME-OBSOLETE: We should probably obsolete this and let the user have their own helper (this is one of the oldest function alive!)
+void ImGui::LogButtons()
+{
+    ImGuiContext& g = *GImGui;
+
+    PushID("LogButtons");
+#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+    const bool log_to_tty = Button("Log To TTY"); SameLine();
+#else
+    const bool log_to_tty = false;
+#endif
+    const bool log_to_file = Button("Log To File"); SameLine();
+    const bool log_to_clipboard = Button("Log To Clipboard"); SameLine();
+    PushAllowKeyboardFocus(false);
+    SetNextItemWidth(80.0);
+    SliderInt("Default Depth", &g.LogDepthToExpandDefault, 0, 9, NULL);
+    PopAllowKeyboardFocus();
+    PopID();
+
+    // Start logging at the end of the function so that the buttons don't appear in the log
+    if (log_to_tty)
+        LogToTTY();
+    if (log_to_file)
+        LogToFile();
+    if (log_to_clipboard)
+        LogToClipboard();
+}
+
+
+    if (suffix)
+        LogRenderedText(ref_pos, suffix, suffix + strlen(suffix));
+}

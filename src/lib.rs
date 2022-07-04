@@ -41,3 +41,4 @@ mod imgui_text_filter;
 mod imgui_text_range;
 mod imgui_text_buffer;
 mod imgui_list_clipper;
+mod imgui_render;

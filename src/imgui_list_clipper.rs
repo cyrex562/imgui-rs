@@ -287,7 +287,7 @@ bool ImGuiListClipper::Step()
     bool calc_clipping = false;
     if (data->StepNo == 0)
     {
-        StartPosY = window->DC.CursorPos.y;
+        StartPosY = window.DC.CursorPos.y;
         if (ItemsHeight <= 0.0)
         {
             // Submit the first item (or range) so we can measure its height (generally the first range is 0..1)
@@ -307,12 +307,12 @@ bool ImGuiListClipper::Step()
     {
         IM_ASSERT(data->StepNo == 1);
         if (table)
-            IM_ASSERT(table->RowPosY1 == StartPosY && table->RowPosY2 == window->DC.CursorPos.y);
+            IM_ASSERT(table->RowPosY1 == StartPosY && table->RowPosY2 == window.DC.CursorPos.y);
 
-        ItemsHeight = (window->DC.CursorPos.y - StartPosY) / (float)(DisplayEnd - DisplayStart);
-        bool affected_by_floating_point_precision = ImIsFloatAboveGuaranteedIntegerPrecision(StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window->DC.CursorPos.y);
+        ItemsHeight = (window.DC.CursorPos.y - StartPosY) / (float)(DisplayEnd - DisplayStart);
+        bool affected_by_floating_point_precision = ImIsFloatAboveGuaranteedIntegerPrecision(StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.DC.CursorPos.y);
         if (affected_by_floating_point_precision)
-            ItemsHeight = window->DC.PrevLineSize.y + g.Style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
+            ItemsHeight = window.DC.PrevLineSize.y + g.Style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
 
         IM_ASSERT(ItemsHeight > 0.0 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
         calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.
@@ -330,21 +330,21 @@ bool ImGuiListClipper::Step()
         else
         {
             // Add range selected to be included for navigation
-            const bool is_nav_request = (g.NavMoveScoringItems && g.NavWindow && g.NavWindow->RootWindowForNav == window->RootWindowForNav);
+            const bool is_nav_request = (g.NavMoveScoringItems && g.NavWindow && g.NavWindow->RootWindowForNav == window.RootWindowForNav);
             if (is_nav_request)
                 data->Ranges.push_back(ImGuiListClipperRange::FromPositions(g.NavScoringNoClipRect.Min.y, g.NavScoringNoClipRect.Max.y, 0, 0));
             if (is_nav_request && (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && g.NavTabbingDir == -1)
                 data->Ranges.push_back(ImGuiListClipperRange::FromIndices(ItemsCount - 1, ItemsCount));
 
             // Add focused/active item
-            ImRect nav_rect_abs = ImGui::WindowRectRelToAbs(window, window->NavRectRel[0]);
-            if (g.NavId != 0 && window->NavLastIds[0] == g.NavId)
+            ImRect nav_rect_abs = ImGui::WindowRectRelToAbs(window, window.NavRectRel[0]);
+            if (g.NavId != 0 && window.NavLastIds[0] == g.NavId)
                 data->Ranges.push_back(ImGuiListClipperRange::FromPositions(nav_rect_abs.Min.y, nav_rect_abs.Max.y, 0, 0));
 
             // Add visible range
             const int off_min = (is_nav_request && g.NavMoveClipDir == ImGuiDir_Up) ? -1 : 0;
             const int off_max = (is_nav_request && g.NavMoveClipDir == ImGuiDir_Down) ? 1 : 0;
-            data->Ranges.push_back(ImGuiListClipperRange::FromPositions(window->ClipRect.Min.y, window->ClipRect.Max.y, off_min, off_max));
+            data->Ranges.push_back(ImGuiListClipperRange::FromPositions(window.ClipRect.Min.y, window.ClipRect.Max.y, off_min, off_max));
         }
 
         // Convert position ranges to item index ranges
@@ -354,8 +354,8 @@ bool ImGuiListClipper::Step()
         for (int i = 0; i < data->Ranges.Size; i += 1)
             if (data->Ranges[i].PosToIndexConvert)
             {
-                int m1 = (((double)data->Ranges[i].Min - window->DC.CursorPos.y - data->LossynessOffset) / ItemsHeight);
-                int m2 = ((((double)data->Ranges[i].Max - window->DC.CursorPos.y - data->LossynessOffset) / ItemsHeight) + 0.999999);
+                int m1 = (((double)data->Ranges[i].Min - window.DC.CursorPos.y - data->LossynessOffset) / ItemsHeight);
+                int m2 = ((((double)data->Ranges[i].Max - window.DC.CursorPos.y - data->LossynessOffset) / ItemsHeight) + 0.999999);
                 data->Ranges[i].Min = ImClamp(already_submitted + m1 + data->Ranges[i].PosToIndexOffsetMin, already_submitted, ItemsCount - 1);
                 data->Ranges[i].Max = ImClamp(already_submitted + m2 + data->Ranges[i].PosToIndexOffsetMax, data->Ranges[i].Min + 1, ItemsCount);
                 data->Ranges[i].PosToIndexConvert = false;

@@ -10,7 +10,7 @@ use crate::imgui_color::ImGuiColorMod;
 use crate::imgui_dock::ImGuiDockNode;
 use crate::imgui_draw_list::ImDrawListSharedData;
 use crate::imgui_group::ImGuiGroupData;
-use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavLayer, ImGuiPayload, ImGuiPlatformImeData, ImGuiPlatformMonitor, ImGuiPtrOrIndex, ImGuiShrinkWidthItem, ImGuiStyleVar, ImGuiViewport, ImVec4};
+use crate::imgui_h::{ImFont, ImFontAtlas, ImGuiColorEditFlags, ImGuiComboFlags, ImGuiConfigFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavLayer, ImGuiPayload, ImGuiPlatformImeData, ImGuiPlatformMonitor, ImGuiPtrOrIndex, ImGuiShrinkWidthItem, ImGuiStyleVar, ImGuiViewport};
 use crate::imgui_input::ImGuiInputSource;
 use crate::imgui_input_event::ImGuiInputEvent;
 use crate::imgui_io::{ImGuiIO, ImGuiPlatformIO};
@@ -26,7 +26,7 @@ use crate::imgui_tab_bar::ImGuiTabBar;
 use crate::imgui_table::{ImGuiTable, ImGuiTableSettings, ImGuiTableTempData};
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_text_input_state::ImGuiInputTextState;
-use crate::imgui_vec::ImVec2;
+use crate::imgui_vec::{ImVec2, ImVec4};
 use crate::imgui_window::{ImGuiItemFlags, ImGuiNextWindowData, ImGuiWindow, ImGuiWindowStackData};
 
 #[derive()]

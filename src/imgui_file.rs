@@ -27,7 +27,7 @@ pub fn ImFileClose(f: &fs::File) -> bool {
     todo!()
 }
 
-// ImU64   ImFileGetSize(ImFileHandle f)   { long off = 0, sz = 0; return ((off = ftell(f)) != -1 && !fseek(f, 0, SEEK_END) && (sz = ftell(f)) != -1 && !fseek(f, off, SEEK_SET)) ? (ImU64)sz : (ImU64)-1; }
+// ImU64   ImFileGetSize(ImFileHandle f)   { long off = 0, sz = 0; return ((off = ftell(f)) != -1 && !fseek(f, 0, SEEK_END) && (sz = ftell(f)) != -1 && !fseek(f, off, SEEK_SET)) ? sz : -1; }
 pub fn ImFileGetSize(f: &fs::File) -> usize {
     let mut off = 0;
     let mut sz = 0;

@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub};
+use std::ops::{Add, Mul, Sub};
 
 // ImVec2: 2D vector used to store positions, sizes etc. [Compile-time configurable type]
 // This is a frequently used type in the API. Consider using IM_VEC2_CLASS_EXTRA to create implicit cast from/to our preferred type.
@@ -38,6 +38,13 @@ impl ImVec2 {
         self.x = 0.0;
         self.y = 0.0;
     }
+
+    pub fn floor(&mut self) -> Self {
+        Self {
+            x: f32::floor(self.x),
+            y: f32::flor(self.y)
+        }
+    }
 }
 
 impl Sub for ImVec2 {
@@ -62,6 +69,19 @@ impl Add for ImVec2 {
     }
 }
 
+impl Mul<f32> for ImVec2 {
+    type Output = ImVec2;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self {
+            x: self.x * rhs,
+            y: self.y * rhs
+        }
+    }
+}
+
+
+
 
 pub fn ImLengthSqr(lhs: &ImVec2) -> f32 { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
 
@@ -85,6 +105,30 @@ impl ImVec1 {
     pub fn new2(x: f32) -> Self {
         Self {
             x
+        }
+    }
+}
+
+/// ImVec4: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
+#[derive(Default,Debug,Clone)]
+pub struct ImVec4
+{
+    // float                                                     x, y, z, w;
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32
+    // constexpr ImVec4()                                        : x(0.0), y(0.0), z(0.0), w(0.0) { }
+    // constexpr ImVec4(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
+// #ifdef IM_VEC4_CLASS_EXTRA
+//     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
+// #endif
+}
+
+impl ImVec4 {
+    pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self {
+            x, y, z, w
         }
     }
 }

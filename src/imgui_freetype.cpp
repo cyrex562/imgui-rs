@@ -319,7 +319,7 @@ namespace
         case FT_PIXEL_MODE_BGRA:
             {
                 // FIXME: Converting pre-multiplied alpha to straight. Doesn't smell good.
-                #define DE_MULTIPLY(color, alpha) (ImU32)(255.0 * (float)color / (float)alpha + 0.5)
+                #define DE_MULTIPLY(color, alpha) (255.0 * (float)color / (float)alpha + 0.5)
                 if (multiply_table == NULL)
                 {
                     for (uint32_t y = 0; y < h; y += 1, src += src_pitch, dst += dst_pitch)
@@ -479,13 +479,13 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         ImFontBuildSrcDataFT& src_tmp = src_tmp_array[src_i];
         src_tmp.GlyphsList.reserve(src_tmp.GlyphsCount);
 
-        IM_ASSERT(sizeof(src_tmp.GlyphsSet.Storage.Data[0]) == sizeof(ImU32));
+        IM_ASSERT(sizeof(src_tmp.GlyphsSet.Storage.Data[0]) == sizeof);
         const ImU32* it_begin = src_tmp.GlyphsSet.Storage.begin();
         const ImU32* it_end = src_tmp.GlyphsSet.Storage.end();
         for (const ImU32* it = it_begin; it < it_end; it += 1)
             if (ImU32 entries_32 = *it)
                 for (ImU32 bit_n = 0; bit_n < 32; bit_n += 1)
-                    if (entries_32 & ((ImU32)1 << bit_n))
+                    if (entries_32 & (1 << bit_n))
                     {
                         ImFontBuildSrcGlyphFT src_glyph;
                         src_glyph.Codepoint = (ImWchar)(((it - it_begin) << 5) + bit_n);
