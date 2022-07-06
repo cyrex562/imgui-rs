@@ -1,8 +1,8 @@
 #include "node_editor.h"
 #include "graph.h"
 
-#include <imnodes.h>
-#include "../src/imgui_h.rs"
+#include <nodes_h.rs>
+#include "../src/defines.rs"
 
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_timer.h>

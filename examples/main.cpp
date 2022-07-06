@@ -1,10 +1,10 @@
 #include "node_editor.h"
 
-#include "../src/imgui_h.rs"
+#include "../src/defines.rs"
 
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
-#include <imnodes.h>
+#include <nodes_h.rs>
 #include <SDL2/SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL2/SDL_opengles2.h>

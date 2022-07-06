@@ -10,9 +10,9 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
         ../../src/imgui.rs
         ../../src/imgui_demo.cpp
-        ../../src/imgui_draw.cpp
-        ../../src/imgui_tables.cpp
-        ../../src/imgui_widgets.cpp
+        ../../src/draw.cpp
+        ../../src/tables.rs
+        ../../src/widgets.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../backends/imgui_impl_android.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../backends/imgui_impl_opengl3.cpp
   ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c

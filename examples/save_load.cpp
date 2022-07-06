@@ -1,7 +1,7 @@
 #include "node_editor.h"
 
-#include <imnodes.h>
-#include "../src/imgui_h.rs"
+#include <nodes_h.rs>
+#include "../src/defines.rs"
 
 #include <SDL_keycode.h>
 
