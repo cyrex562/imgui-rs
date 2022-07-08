@@ -19,15 +19,15 @@ In the [misc/fonts/](https://github.com/ocornut/imgui/tree/master/misc/fonts) fo
 - [Using Colorful Glyphs/Emojis](#using-colorful-glyphsemojis)
 - [Using Custom Glyph Ranges](#using-custom-glyph-ranges)
 - [Using Custom Colorful Icons](#using-custom-colorful-icons)
-- [Using Font Data Embedded In Source Code](#using-font-data-embedded-in-source-code)
+- [Using font data Embedded In Source Code](#using-font-data-embedded-in-source-code)
 - [About filenames](#about-filenames)
 - [Credits/Licenses For Fonts Included In Repository](#creditslicenses-for-fonts-included-in-repository)
-- [Font Links](#font-links)
+- [font Links](#font-links)
 
 ---------------------------------------
  ## Readme First
 
-- You can use the `Metrics/Debugger` window (available in `Demo>Tools`) to browse your fonts and understand what's going on if you have an issue. You can also reach it in `Demo->Tools->Style Editor->Fonts`. The same information are also available in the Style Editor under Fonts.
+- You can use the `Metrics/Debugger` window (available in `Demo>Tools`) to browse your fonts and understand what's going on if you have an issue. You can also reach it in `Demo->Tools->style Editor->Fonts`. The same information are also available in the style Editor under Fonts.
 
 ![Fonts debugging](https://user-images.githubusercontent.com/8225057/135429892-0e41ef8d-33c5-4991-bcf6-f997a0bcfd6b.png)
 
@@ -54,7 +54,7 @@ See [FAQ entry](https://github.com/ocornut/imgui/blob/master/docs/FAQ.md#q-how-s
 ##### [Return to Index](#index)
 
 
-## Font Loading Instructions
+## font Loading Instructions
 
 **Load default font:**
 ```cpp
@@ -108,8 +108,8 @@ ImFont* font = io.Fonts->AddFontDefault();
 static const ImWchar icons_ranges[] = { 0xf000, 0xf3ff, 0 }; // Will not be copied by AddFont* so keep in scope.
 ImFontConfig config;
 config.MergeMode = true;
-io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 18.0, &config, io.Fonts->GetGlyphRangesJapanese()); // Merge into first font
-io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 18.0, &config, icons_ranges);             // Merge into first font
+io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 18.0, &config, io.Fonts->GetGlyphRangesJapanese()); // merge into first font
+io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 18.0, &config, icons_ranges);             // merge into first font
 io.Fonts->Build();
 ```
 
@@ -145,9 +145,9 @@ ImGui::SliderFloat("float", &f, 0.0, 1.0);
 ```
 
 ![sample code output](https://raw.githubusercontent.com/wiki/ocornut/imgui/web/v160/code_sample_02_jp.png)
-<br>_(settings: Dark style (left), Light style (right) / Font: NotoSansCJKjp-Medium, 20px / Rounding: 5)_
+<br>_(settings: Dark style (left), Light style (right) / font: NotoSansCJKjp-Medium, 20px / Rounding: 5)_
 
-**Font Atlas too large?**
+**font Atlas too large?**
 
 - If you have very large number of glyphs or multiple fonts, the texture may become too big for your graphics API. The typical result of failing to upload a texture is if every glyphs appears as white rectangles.
 - Mind the fact that some graphics drivers have texture size limitation. If you are building a PC application, mind the fact that your users may use hardware with lower limitations than yours.
@@ -159,7 +159,7 @@ Some solutions:
 2. You may reduce oversampling, e.g. `font_config.OversampleH = 2`, this will largely reduce your texture size.
    Note that while OversampleH = 2 looks visibly very close to 3 in most situations, with OversampleH = 1 the quality drop will be noticeable.
 3. Set `io.Fonts.TexDesiredWidth` to specify a texture width to minimize texture height (see comment in `ImFontAtlas::Build()` function).
-4. Set `io.Fonts.Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;` to disable rounding the texture height to the next power of two.
+4. Set `io.Fonts.flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;` to disable rounding the texture height to the next power of two.
 5. Read about oversampling [here](https://github.com/nothings/stb/blob/master/tests/oversample).
 6. To support the extended range of unicode beyond 0xFFFF (e.g. emoticons, dingbats, symbols, shapes, ancient languages, etc...) add `#define IMGUI_USE_WCHAR32`in your `imconfig.h`.
 
@@ -176,7 +176,7 @@ So you can use `ICON_FA_SEARCH` as a string that will render as a "Search" icon.
 
 Example Setup:
 ```cpp
-// Merge icons into default tool font
+// merge icons into default tool font
 #include "IconsFontAwesome.h"
 ImGuiIO& io = ImGui::GetIO();
 io.Fonts->AddFontDefault();
@@ -229,7 +229,7 @@ static ImFontConfig cfg;
 cfg.OversampleH = cfg.OversampleV = 1;
 cfg.MergeMode = true;
 cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
-io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\seguiemj.ttf", 16.0, &cfg, ranges);
+io.Fonts->AddFontFromFileTTF("C:\\windows\\Fonts\\seguiemj.ttf", 16.0, &cfg, ranges);
 ```
 
 ##### [Return to Index](#index)
@@ -245,7 +245,7 @@ builder.AddChar(0x7262);                               // Add a specific charact
 builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // Add one of the default ranges
 builder.BuildRanges(&ranges);                          // Build the final result (ordered ranges with all the unique characters submitted)
 
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, NULL, ranges.Data);
+io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, NULL, ranges.data);
 io.Fonts->Build();                                     // Build the atlas while 'ranges' is still in scope and not deleted.
 ```
 
@@ -293,11 +293,11 @@ for (int rect_n = 0; rect_n < IM_ARRAYSIZE(rect_ids); rect_n++)
 
 ##### [Return to Index](#index)
 
-## Using Font Data Embedded In Source Code
+## Using font data Embedded In Source Code
 
 - Compile and use [binary_to_compressed_c.cpp](https://github.com/ocornut/imgui/blob/master/misc/fonts/binary_to_compressed_c.cpp) to create a compressed C style array that you can embed in source code.
 - See the documentation in [binary_to_compressed_c.cpp](https://github.com/ocornut/imgui/blob/master/misc/fonts/binary_to_compressed_c.cpp) for instructions on how to use the tool.
-- You may find a precompiled version binary_to_compressed_c.exe for Windows inside the demo binaries package (see [README](https://github.com/ocornut/imgui/blob/master/docs/README.md)).
+- You may find a precompiled version binary_to_compressed_c.exe for windows inside the demo binaries package (see [README](https://github.com/ocornut/imgui/blob/master/docs/README.md)).
 - The tool can optionally output Base85 encoding to reduce the size of _source code_ but the read-only arrays in the actual binary will be about 20% bigger.
 
 Then load the font with:
@@ -324,12 +324,12 @@ io.Fonts->AddFontFromFileTTF("MyImage01.jpg", ...);
 // Load from the parent folder of your Working Directory
 io.Fonts->AddFontFromFileTTF("../MyImage01.jpg", ...);
 ```
-- In C/C += 1 and most programming languages if you want to use a backslash `\` within a string literal, you need to write it double backslash `\\`. At it happens, Windows uses backslashes as a path separator, so be mindful.
+- In C/C += 1 and most programming languages if you want to use a backslash `\` within a string literal, you need to write it double backslash `\\`. At it happens, windows uses backslashes as a path separator, so be mindful.
 ```cpp
 io.Fonts->AddFontFromFileTTF("MyFiles\MyImage01.jpg", ...);   // This is INCORRECT!!
 io.Fonts->AddFontFromFileTTF("MyFiles\\MyImage01.jpg", ...);  // This is CORRECT
 ```
-In some situations, you may also use `/` path separator under Windows.
+In some situations, you may also use `/` path separator under windows.
 
 ##### [Return to Index](#index)
 
@@ -343,7 +343,7 @@ Some fonts files are available in the `misc/fonts/` folder:
 
 **Cousine-Regular.ttf**, by Steve Matteson
 <br>Digitized data copyright (c) 2010 Google Corporation.
-<br>Licensed under the SIL Open Font License, Version 1.1
+<br>Licensed under the SIL Open font License, Version 1.1
 <br>https://fonts.google.com/specimen/Cousine
 
 **DroidSans.ttf**, by Steve Matteson
@@ -352,12 +352,12 @@ Some fonts files are available in the `misc/fonts/` folder:
 
 **ProggyClean.ttf**, by Tristan Grimmer
 <br>MIT License
-<br>(recommended loading setting: Size = 13.0, GlyphOffset.y = +1)
+<br>(recommended loading setting: size = 13.0, GlyphOffset.y = +1)
 <br>http://www.proggyfonts.net/
 
 **ProggyTiny.ttf**, by Tristan Grimmer
 <br>MIT License
-<br>(recommended loading setting: Size = 10.0, GlyphOffset.y = +1)
+<br>(recommended loading setting: size = 10.0, GlyphOffset.y = +1)
 <br>http://www.proggyfonts.net/
 
 **Karla-Regular.ttf**, by Jonathan Pinhorn
@@ -365,15 +365,15 @@ Some fonts files are available in the `misc/fonts/` folder:
 
 ##### [Return to Index](#index)
 
-## Font Links
+## font Links
 
 #### ICON FONTS
 
 - C/C += 1 header for icon fonts (#define with code points to use in source code string literals) https://github.com/juliettef/IconFontCppHeaders
-- FontAwesome https://fortawesome.github.io/Font-Awesome
+- FontAwesome https://fortawesome.github.io/font-Awesome
 - OpenFontIcons https://github.com/traverseda/OpenFontIcons
 - Google Icon Fonts https://design.google.com/icons/
-- Kenney Icon Font (Game Controller Icons) https://github.com/nicodinh/kenney-icon-font
+- Kenney Icon font (Game Controller Icons) https://github.com/nicodinh/kenney-icon-font
 - IcoMoon - Custom Icon font builder https://icomoon.io/app
 
 #### REGULAR FONTS
@@ -396,6 +396,6 @@ Regular:
 - Adobe Source Code Pro: Monospaced font family for ui & coding environments https://github.com/adobe-fonts/source-code-pro
 - Monospace/Fixed Width Programmer's Fonts http://www.lowing.org/fonts/
 
-Or use Arial Unicode or other Unicode fonts provided with Windows for full characters coverage (not sure of their licensing).
+Or use Arial Unicode or other Unicode fonts provided with windows for full characters coverage (not sure of their licensing).
 
 ##### [Return to Index](#index)

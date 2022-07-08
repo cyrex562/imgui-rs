@@ -5,7 +5,7 @@ use crate::imstb_text_edit_state::STB_TexteditState;
 
 /// Internal state of the currently focused/edited text input box For a given item ID, access with ImGui::GetInputTextState()
 #[derive(Debug,Default,Clone)]
-pub struct  ImGuiInputTextState
+pub struct DimgInputTextState
 {
     // ImGuiID                 ID;                     // widget id owning the text state
     pub ID: ImGuiID,
@@ -34,11 +34,11 @@ pub struct  ImGuiInputTextState
     pub SelectedAllMouseLock: bool,
     // bool                    Edited;                 // edited this frame
     pub Edited: bool,
-    // ImGuiInputTextFlags     Flags;                  // copy of InputText() flags
+    // ImGuiInputTextFlags     flags;                  // copy of InputText() flags
     pub Flags: ImGuiInputTextFlags,
 }
 
-impl ImGuiInputTextState {
+impl DimgInputTextState {
     // ImGuiInputTextState()                   { memset(this, 0, sizeof(*this)); }
     pub fn new() -> Self {
         Self {
@@ -53,7 +53,7 @@ impl ImGuiInputTextState {
         self.TextA[0] = 0;
         self.CursorClamp();
     }
-    //     void        ClearFreeMemory()           { TextW.clear(); TextA.clear(); InitialTextA.clear(); }
+    //     void        clear_free_memory()           { TextW.clear(); TextA.clear(); InitialTextA.clear(); }
     pub fn ClearFreeMemory(&mut self) {
         self.TextW.clear();
         self.TextA.clear();

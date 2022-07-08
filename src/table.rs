@@ -1,3 +1,4 @@
+use crate::defines::{DimgId, DimgSortDirection};
 use crate::imgui_color::ImColor;
 use crate::imgui_h::{ImDrawListSplitter, ImGuiID, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
 use crate::imgui_rect::ImRect;
@@ -19,13 +20,13 @@ pub type ImGuiTableColumnIdx = i8;
 pub type ImGuiTableDrawChannelIdx = i8;
 
 // [Internal] sizeof() ~ 104
-// We use the terminology "Enabled" to refer to a column that is not Hidden by user/api.
+// We use the terminology "Enabled" to refer to a column that is not hidden by user/api.
 // We use the terminology "Clipped" to refer to a column that is out of sight because of scrolling/clipping.
 // This is in contrast with some user-facing api such as IsItemVisible() / IsRectVisible() which use "Visible" to mean "not clipped".
 #[derive(Default,Debug,Clone)]
 pub struct ImGuiTableColumn
 {
-    // ImGuiTableColumnFlags   Flags;                          // Flags after some patching (not directly same as provided by user). See ImGuiTableColumnFlags_
+    // ImGuiTableColumnFlags   flags;                          // flags after some patching (not directly same as provided by user). See ImGuiTableColumnFlags_
     pub Flags: ImGuiTableColumnFlags,
     // float                   WidthGiven;                     // Final/actual width visible == (MaxX - MinX), locked in TableUpdateLayout(). May be > WidthRequest to honor minimum width, may be < WidthRequest to honor shrinking columns down in tight space.
     pub WidthGiven: f32,
@@ -33,15 +34,15 @@ pub struct ImGuiTableColumn
     pub MinX: f32,
     // float                   MaxX;
     pub MaxX: f32,
-    // float                   WidthRequest;                   // Master width absolute value when !(Flags & _WidthStretch). When Stretch this is derived every frame from StretchWeight in TableUpdateLayout()
+    // float                   WidthRequest;                   // Master width absolute value when !(flags & _WidthStretch). When Stretch this is derived every frame from StretchWeight in TableUpdateLayout()
     pub WidthRequest: f32,
     // float                   WidthAuto;                      // Automatic width
     pub WidthAuto: f32,
-    // float                   StretchWeight;                  // Master width weight when (Flags & _WidthStretch). Often around ~1.0 initially.
+    // float                   StretchWeight;                  // Master width weight when (flags & _WidthStretch). Often around ~1.0 initially.
     pub StretchWeight: f32,
     // float                   InitStretchWeightOrWidth;       // Value passed to TableSetupColumn(). For Width it is a content width (_without padding_).
     pub InitStretchWeightOrWidth: f32,
-    // ImRect                  ClipRect;                       // Clipping rectangle for the column
+    // ImRect                  clip_rect;                       // Clipping rectangle for the column
     pub ClipRect: ImRect,
     // ImGuiID                 UserID;                         // Optional, value passed to TableSetupColumn()
     pub UserID: ImGuiID,
@@ -69,7 +70,7 @@ pub struct ImGuiTableColumn
     pub PrevEnabledColumn: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx     NextEnabledColumn;              // Index of next enabled/visible column within Columns[], -1 if last enabled/visible column
     pub NextEnabledColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx     SortOrder;                      // Index of this column within sort specs, -1 if not sorting on this column, 0 for single-sort, may be >0 on multi-sort
+    // ImGuiTableColumnIdx     sort_order;                      // Index of this column within sort specs, -1 if not sorting on this column, 0 for single-sort, may be >0 on multi-sort
     pub SortOrder: ImGuiTableColumnIdx,
     // ImGuiTableDrawChannelIdx DrawChannelCurrent;            // Index within DrawSplitter.Channels[]
     pub DrawChannelCurrent: ImGuiTableDrawChannelIdx,
@@ -77,9 +78,9 @@ pub struct ImGuiTableColumn
     pub DrawChannelFrozen: ImGuiTableDrawChannelIdx,
     // ImGuiTableDrawChannelIdx DrawChannelUnfrozen;           // Draw channels for unfrozen rows
     pub DrawChannelUnFrozen: ImGuiTableDrawChannelIdx,
-    // bool                    IsEnabled;                      // IsUserEnabled && (Flags & ImGuiTableColumnFlags_Disabled) == 0
+    // bool                    IsEnabled;                      // IsUserEnabled && (flags & ImGuiTableColumnFlags_Disabled) == 0
     pub IsEnabled: bool,
-    // bool                    IsUserEnabled;                  // Is the column not marked Hidden by the user? (unrelated to being off view, e.g. clipped by scrolling).
+    // bool                    IsUserEnabled;                  // Is the column not marked hidden by the user? (unrelated to being off view, e.g. clipped by scrolling).
     pub IsUserEnabled: bool,
     // bool                    IsUserEnabledNextFrame;
     pub IsUserEnabledNextFrame: bool,
@@ -99,7 +100,7 @@ pub struct ImGuiTableColumn
     pub AutoFitQueue: i8,
     // ImU8                    CannotSkipItemsQueue;           // Queue of 8 values for the next 8 frames to disable Clipped/SkipItem
     pub CannotSKipItemsQueue: i8,
-    // ImU8                    SortDirection : 2;              // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
+    // ImU8                    sort_direction : 2;              // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
     pub SortDIrection: ImGuiSortDirection,
     // ImU8                    SortDirectionsAvailCount : 2;   // Number of available sort directions (0 to 3)
     pub SortDirectionsAvailCount: i8,
@@ -117,8 +118,8 @@ impl ImGuiTableColumn {
     //         NameOffset = -1;
     //         DisplayOrder = IndexWithinEnabledSet = -1;
     //         PrevEnabledColumn = NextEnabledColumn = -1;
-    //         SortOrder = -1;
-    //         SortDirection = ImGuiSortDirection_None;
+    //         sort_order = -1;
+    //         sort_direction = ImGuiSortDirection_None;
     //         DrawChannelCurrent = DrawChannelFrozen = DrawChannelUnfrozen = (ImU8)-1;
     //     }
     pub fn new() -> Self {
@@ -175,7 +176,7 @@ pub struct ImGuiTableCellData
 {
     // ImU32                       BgColor;    // Actual color
     pub BgColor: u32,
-    // ImGuiTableColumnIdx         Column;     // Column number
+    // ImGuiTableColumnIdx         column;     // column number
     pub Column: ImGuiTableColumnIdx,
 }
 
@@ -200,35 +201,35 @@ impl ImGuiTableInstanceData {
 }
 
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
-pub struct  ImGuiTable
+pub struct DimgTable
 {
     // ImGuiID                     ID;
     pub ID: ImGuiID,
-    // ImGuiTableFlags             Flags;
+    // ImGuiTableFlags             flags;
     pub Flags: ImGuiTableFlags,
     // void*                       RawData;                    // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
     pub RawData: Vec<u8>,
     // ImGuiTableTempData*         TempData;                   // Transient data while table is active. Point within g.CurrentTableStack[]
-    pub TempData: *mut ImGuiTableTempData,
+    pub TempData: *mut DimgTableTempData,
     // ImSpan<ImGuiTableColumn>    Columns;                    // Point within RawData[]
     pub Columns: Vec<ImGuiTableColumn>,
     // ImSpan<ImGuiTableColumnIdx> DisplayOrderToIndex;        // Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
     pub DisplayOrderToIndex: Vec<ImGuiTableColumnIdx>,
     // ImSpan<ImGuiTableCellData>  RowCellData;                // Point within RawData[]. Store cells background requests for current row.
     pub RowCellData: Vec<ImGuiTableCellData>,
-    // ImU64                       EnabledMaskByDisplayOrder;  // Column DisplayOrder -> IsEnabled map
+    // ImU64                       EnabledMaskByDisplayOrder;  // column DisplayOrder -> IsEnabled map
     pub EnabledMaskByDisplayOrder: u64,
-    // ImU64                       EnabledMaskByIndex;         // Column Index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
+    // ImU64                       EnabledMaskByIndex;         // column Index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
     pub EnabledMaskByIndex: u64,
-    // ImU64                       VisibleMaskByIndex;         // Column Index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
+    // ImU64                       VisibleMaskByIndex;         // column Index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
     pub VisibleMaskByIndex: u64,
-    // ImU64                       RequestOutputMaskByIndex;   // Column Index -> IsVisible || AutoFit (== expect user to submit items)
+    // ImU64                       RequestOutputMaskByIndex;   // column Index -> IsVisible || AutoFit (== expect user to submit items)
     pub RequestOutputMaskByIndex: u64,
     // ImGuiTableFlags             SettingsLoadedFlags;        // Which data were loaded from the .ini file (e.g. when order is not altered we won't save order)
     pub SettingsLoadedFlags: ImGuiTableFlags,
-    // int                         SettingsOffset;             // Offset in g.SettingsTables
+    // int                         settings_offset;             // Offset in g.SettingsTables
     pub SettingsOffset: i32,
-    // int                         LastFrameActive;
+    // int                         last_frame_active;
     pub LastFrameActive: i32,
     // int                         ColumnsCount;               // Number of columns declared in BeginTable()
     pub ColumnsCount: i32,
@@ -236,7 +237,7 @@ pub struct  ImGuiTable
     pub CurrentRow: i32,
     // int                         CurrentColumn;
     pub CurrentColumn: i32,
-    // ImS16                       InstanceCurrent;            // Count of BeginTable() calls with same ID in the same frame (generally 0). This is a little bit similar to BeginCount for a window, but multiple table with same ID look are multiple tables, they are just synched.
+    // ImS16                       InstanceCurrent;            // Count of BeginTable() calls with same ID in the same frame (generally 0). This is a little bit similar to begin_count for a window, but multiple table with same ID look are multiple tables, they are just synched.
     pub InstanceCurrent: i16,
     // ImS16                       InstanceInteracted;         // Mark which instance (generally 0) of the same ID is being interacted with
     pub InstanceInteracted: i16,
@@ -296,21 +297,21 @@ pub struct  ImGuiTable
     pub RefScale: f32,
     // ImRect                      OuterRect;                  // Note: for non-scrolling table, OuterRect.Max.y is often FLT_MAX until EndTable(), unless a height has been specified in BeginTable().
     pub OuterRect: ImRect,
-    // ImRect                      InnerRect;                  // InnerRect but without decoration. As with OuterRect, for non-scrolling tables, InnerRect.Max.y is
+    // ImRect                      inner_rect;                  // inner_rect but without decoration. As with OuterRect, for non-scrolling tables, inner_rect.Max.y is
     pub InnerRect: ImRect,
-    // ImRect                      WorkRect;
+    // ImRect                      work_rect;
     pub WorkRect: ImRect,
-    // ImRect                      InnerClipRect;
+    // ImRect                      inner_clip_rect;
     pub InnerClipRect: ImRect,
     // ImRect                      BgClipRect;                 // We use this to cpu-clip cell background color fill, evolve during the frame as we cross frozen rows boundaries
     pub BgClipRect: ImRect,
-    // ImRect                      Bg0ClipRectForDrawCmd;      // Actual ImDrawCmd clip rect for BG0/1 channel. This tends to be == OuterWindow->ClipRect at BeginTable() because output in BG0/BG1 is cpu-clipped
+    // ImRect                      Bg0ClipRectForDrawCmd;      // Actual ImDrawCmd clip rect for BG0/1 channel. This tends to be == OuterWindow->clip_rect at BeginTable() because output in BG0/BG1 is cpu-clipped
     pub BgClipRectForDrawCmd: ImRect,
-    // ImRect                      Bg2ClipRectForDrawCmd;      // Actual ImDrawCmd clip rect for BG2 channel. This tends to be a correct, tight-fit, because output to BG2 are done by widgets relying on regular ClipRect.
+    // ImRect                      Bg2ClipRectForDrawCmd;      // Actual ImDrawCmd clip rect for BG2 channel. This tends to be a correct, tight-fit, because output to BG2 are done by widgets relying on regular clip_rect.
     pub Bg2ClipRectForDrawCmd: ImRect,
     // ImRect                      HostClipRect;               // This is used to check if we can eventually merge our columns draw calls into the current draw call of the current window.
     pub HostClipRect: ImRect,
-    // ImRect                      HostBackupInnerClipRect;    // Backup of InnerWindow->ClipRect during PushTableBackground()/PopTableBackground()
+    // ImRect                      HostBackupInnerClipRect;    // Backup of InnerWindow->clip_rect during PushTableBackground()/PopTableBackground()
     pub HostBackupInnerClipRect: ImRect,
     // ImGuiWindow*                OuterWindow;                // Parent window for the table
     pub OuterWindow: *mut ImGuiWindow,
@@ -362,7 +363,7 @@ pub struct  ImGuiTable
     pub LeftMostStretchedColumn: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         RightMostStretchedColumn;   // Index of right-most stretched column.
     pub RightMostStretchedColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         ContextPopupColumn;         // Column right-clicked on, of -1 if opening context menu from a neutral/empty spot
+    // ImGuiTableColumnIdx         ContextPopupColumn;         // column right-clicked on, of -1 if opening context menu from a neutral/empty spot
     pub ContextPopupColumn: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         FreezeRowsRequest;          // Requested frozen rows count
     pub FreezeRowsRequest: ImGuiTableColumnIdx,
@@ -406,14 +407,14 @@ pub struct  ImGuiTable
     pub IsUnfrozenRows: bool,
     // bool                        IsDefaultSizingPolicy;      // Set if user didn't explicitly set a sizing policy in BeginTable()
     pub IsDefaultSizingPolicy: bool,
-    // bool                        MemoryCompacted;
+    // bool                        memory_compacted;
     pub MemoryCompacted: bool,
     // bool                        HostSkipItems;              // Backup of InnerWindow->SkipItem at the end of BeginTable(), because we will overwrite InnerWindow->SkipItem on a per-column basis
     pub HostSkipItems: bool,
 }
 
-impl ImGuiTable {
-    // ImGuiTable()                { memset(this, 0, sizeof(*this)); LastFrameActive = -1; }
+impl DimgTable {
+    // ImGuiTable()                { memset(this, 0, sizeof(*this)); last_frame_active = -1; }
     pub fn new() -> Self {
         Self {
             LastFrameActive: -1,
@@ -427,11 +428,11 @@ impl ImGuiTable {
 // - Accessing those requires chasing an extra pointer so for very frequently used data we leave them in the main table structure.
 // - We also leave out of this structure data that tend to be particularly useful for debugging/metrics.
 #[derive(Default,Debug,Clone)]
-pub struct  ImGuiTableTempData
+pub struct DimgTableTempData
 {
-    // int                         TableIndex;                 // Index in g.Tables.Buf[] pool
+    // int                         TableIndex;                 // Index in g.tables.Buf[] pool
     pub TableIndex: i32,
-    // float                       LastTimeActive;             // Last timestamp this structure was used
+    // float                       last_time_active;             // Last timestamp this structure was used
     pub LastTimeActive: f32,
 
     // ImVec2                      UserOuterSize;              // outer_size.x passed to BeginTable()
@@ -439,26 +440,26 @@ pub struct  ImGuiTableTempData
     // ImDrawListSplitter          DrawSplitter;
     pub DrawSplitter: ImDrawListSplitter,
 
-    // ImRect                      HostBackupWorkRect;         // Backup of InnerWindow->WorkRect at the end of BeginTable()
+    // ImRect                      HostBackupWorkRect;         // Backup of InnerWindow->work_rect at the end of BeginTable()
     pub HostBackupWorkRect: ImRect,
-    // ImRect                      HostBackupParentWorkRect;   // Backup of InnerWindow->ParentWorkRect at the end of BeginTable()
+    // ImRect                      HostBackupParentWorkRect;   // Backup of InnerWindow->parent_work_rect at the end of BeginTable()
     pub HostBackupParentWorkRect: ImRect,
-    // ImVec2                      HostBackupPrevLineSize;     // Backup of InnerWindow->DC.PrevLineSize at the end of BeginTable()
+    // ImVec2                      HostBackupPrevLineSize;     // Backup of InnerWindow->dc.PrevLineSize at the end of BeginTable()
     pub HostBackupPrevLineSize: ImVec2,
-    // ImVec2                      HostBackupCurrLineSize;     // Backup of InnerWindow->DC.CurrLineSize at the end of BeginTable()
+    // ImVec2                      HostBackupCurrLineSize;     // Backup of InnerWindow->dc.CurrLineSize at the end of BeginTable()
     pub HostBackupCurrLineSize: ImVec2,
-    // ImVec2                      HostBackupCursorMaxPos;     // Backup of InnerWindow->DC.CursorMaxPos at the end of BeginTable()
+    // ImVec2                      HostBackupCursorMaxPos;     // Backup of InnerWindow->dc.CursorMaxPos at the end of BeginTable()
     pub HostBackupCursorMaxPOs: ImVec2,
-    // ImVec1                      HostBackupColumnsOffset;    // Backup of OuterWindow->DC.ColumnsOffset at the end of BeginTable()
+    // ImVec1                      HostBackupColumnsOffset;    // Backup of OuterWindow->dc.ColumnsOffset at the end of BeginTable()
     pub HostBackupColumnOffset: ImVec1,
-    // float                       HostBackupItemWidth;        // Backup of OuterWindow->DC.ItemWidth at the end of BeginTable()
+    // float                       HostBackupItemWidth;        // Backup of OuterWindow->dc.ItemWidth at the end of BeginTable()
     pub HostBackupItemWidth: f32,
-    // int                         HostBackupItemWidthStackSize;//Backup of OuterWindow->DC.ItemWidthStack.Size at the end of BeginTable()
+    // int                         HostBackupItemWidthStackSize;//Backup of OuterWindow->dc.ItemWidthStack.size at the end of BeginTable()
     pub HostBackupItemWidthStackSize: i32,
 }
 
-impl ImGuiTableTempData {
-    // ImGuiTableTempData()        { memset(this, 0, sizeof(*this)); LastTimeActive = -1.0; }
+impl DimgTableTempData {
+    // ImGuiTableTempData()        { memset(this, 0, sizeof(*this)); last_time_active = -1.0; }
     pub fn new() -> Self {
         Self {
             LastTimeActive: -1.0,
@@ -479,9 +480,9 @@ pub struct ImGuiTableColumnSettings
     pub Index: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx     DisplayOrder;
     pub DisplayOrder: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx     SortOrder;
+    // ImGuiTableColumnIdx     sort_order;
     pub SortOrder: ImGuiTableColumnIdx,
-    // ImU8                    SortDirection : 2;
+    // ImU8                    sort_direction : 2;
     pub SortDirection: ImGuiSortDirection,
     // ImU8                    IsEnabled : 1; // "Visible" in ini file
     pub IsEnabled: u8,
@@ -535,4 +536,30 @@ impl ImGuiTableSettings {
     pub fn GetColumnSettings(&self) -> *mut Self {
         todo!()
     }
+}
+
+/// Sorting specification for one column of a table (sizeof == 12 bytes)
+#[derive(Default,Debug,Clone)]
+pub struct DimgTableColumnSortSpecs
+{
+    pub column_user_id: DimgId,     // User id of the column (if specified by a TableSetupColumn() call)
+    pub column_index: i16,        // Index of the column
+    pub sort_order: i16,          // Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
+    pub sort_direction: DimgSortDirection,  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
+
+    // ImGuiTableColumnSortSpecs() { memset(this, 0, sizeof(*this)); }
+}
+
+/// Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
+/// Obtained by calling TableGetSortSpecs().
+/// When 'specs_dirty == true' you can sort your data. It will be true with sorting specs have changed since last call, or the first time.
+/// Make sure to set 'specs_dirty = false' after sorting, else you may wastefully sort your data every frame!
+#[derive(Default,Debug,Clone)]
+pub struct DimgTableSortSpecs
+{
+    pub specs: DimgTableColumnSortSpecs, // const ImGuiTableColumnSortSpecs* specs;     // Pointer to sort spec array.
+    pub specs_count: i32,   // Sort spec count. Most often 1. May be > 1 when ImGuiTableFlags_SortMulti is enabled. May be == 0 when ImGuiTableFlags_SortTristate is enabled.
+    pub specs_dirty: bool,     // Set to true when specs have changed since last time! Use this to sort again, then clear the flag.
+
+    // ImGuiTableSortSpecs()       { memset(this, 0, sizeof(*this)); }
 }

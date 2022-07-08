@@ -45,7 +45,7 @@ pub unsafe fn LogRenderedText(ref_pos: &ImVec2, text: *const c_char, mut text_en
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
-    // ImGuiWindow* window = g.CurrentWindow;
+    // ImGuiWindow* window = g.current_window;
     let window = g.CurrentWindow;
 
     // const char* prefix = g.LogNextPrefix;
@@ -82,7 +82,7 @@ pub unsafe fn LogRenderedText(ref_pos: &ImVec2, text: *const c_char, mut text_en
     let mut text_remaining = text;
     loop
     {
-        // Split the string. Each new line (after a '\n') is followed by indentation corresponding to the current depth of our log entry.
+        // split the string. Each new line (after a '\n') is followed by indentation corresponding to the current depth of our log entry.
         // We don't add a trailing \n yet to allow a subsequent item on the same line to be captured.
         let line_start = text_remaining;
         let line_end = ImStreolRange(line_start, text_end);
@@ -142,7 +142,7 @@ pub fn LogText(msg: &String)
 // void ImGui::LogTextV(const char* fmt, va_list args)
 // {
 //     ImGuiContext& g = *GImGui;
-//     if (!g.LogEnabled)
+//     if (!g.log_enabled)
 //         return;
 //
 //     LogTextV(g, fmt, args);
@@ -154,10 +154,10 @@ pub fn LogBegin(log_type: ImGuiLogType, auto_open_depth: i32)
     {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
-        // ImGuiWindow* window = g.CurrentWindow;
+        // ImGuiWindow* window = g.current_window;
     let window = g.CurrentWindow;
-        // IM_ASSERT(g.LogEnabled == false);
-    // IM_ASSERT(g.LogFile == NULL);
+        // IM_ASSERT(g.log_enabled == false);
+    // IM_ASSERT(g.log_file == NULL);
     // IM_ASSERT(g.LogBuffer.empty());
     g.LogEnabled = true;
     g.LogType = log_type;
@@ -190,7 +190,7 @@ pub fn LogToTTY(auto_open_depth: i32)
     // IM_UNUSED(auto_open_depth);
 // #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
 //     LogBegin(ImGuiLogType_TTY, auto_open_depth);
-//     g.LogFile = stdout;
+//     g.log_file = stdout;
 // #endif
 }
 
@@ -256,12 +256,12 @@ pub fn LogFinish()
         }
 
     LogText(&String::from("\n"));
-    // switch (g.LogType)
+    // switch (g.log_type)
     match g.LogType
         {
 //     case ImGuiLogType_TTY:
 // #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
-//         fflush(g.LogFile);
+//         fflush(g.log_file);
 // #endif
 //         break;
             ImGuiLogType::TTY => {

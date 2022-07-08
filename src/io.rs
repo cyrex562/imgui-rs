@@ -8,7 +8,7 @@ use crate::imgui_h::ImGuiModFlags::ImGuiModFlags_None;
 use crate::imgui_input_event::{ImGuiInputEvent, ImGuiInputEventVal};
 
 #[allow(non_snake_case)]
-pub struct ImGuiIO {
+pub struct DimgIo {
     //------------------------------------------------------------------
     // Configuration                            // Default value
     //------------------------------------------------------------------
@@ -18,9 +18,9 @@ pub struct ImGuiIO {
     pub BackendFlags: ImGuiBackendFlags,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
     pub DisplaySize: ImVec2,
-    // <unset>          // Main display size, in pixels (generally == GetMainViewport()->Size). May change every frame.
+    // <unset>          // Main display size, in pixels (generally == GetMainViewport()->size). May change every frame.
     pub DeltaTime: f32,
-    // = 1.0/60.0     // Time elapsed since last frame, in seconds. May change every frame.
+    // = 1.0/60.0     // time elapsed since last frame, in seconds. May change every frame.
     pub IniSavingRate: f32,
     // = 5.0           // Minimum time between saving positions/sizes to .ini file, in seconds.
     pub IniFilename: String,
@@ -28,7 +28,7 @@ pub struct ImGuiIO {
     pub LogFilename: String,
     // const char* LogFilename;                    // = "imgui_log.txt"// Path to .log file (default parameter to ImGui::LogToFile when no file is specified).
     pub MouseDoubleClickTime: f32,
-    // = 0.30          // Time for a double-click, in seconds.
+    // = 0.30          // time for a double-click, in seconds.
     pub MouseDoubleClickMaxDist: f32,
     // = 6.0           // Distance threshold to stay in to validate a double-click, in pixels.
     pub MouseDragThreshold: f32,
@@ -38,15 +38,15 @@ pub struct ImGuiIO {
     pub KeyRepeatRate: f32,
     // = 0.050         // When holding a key/button, rate at which it repeats, in seconds.
     pub UserData: *mut c_void,
-    // void*       UserData;                       // = NULL           // Store your own data for retrieval by callbacks.
+    // void*       user_data;                       // = NULL           // Store your own data for retrieval by callbacks.
     pub Fonts: *mut ImFontAtlas,
-    // ImFontAtlas*Fonts;                          // <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
+    // ImFontAtlas*Fonts;                          // <auto>           // font atlas: load, rasterize and pack one or more fonts into a single texture.
     pub FontGlobalScale: f32,
     // = 1.0           // Global scale all fonts
     pub FontAllowUserScaling: bool,
     // = false          // Allow user scaling text of individual window with CTRL+Wheel.
     pub FontDefault: *mut ImFont,
-    // ImFont*     FontDefault;                    // = NULL           // Font to use on NewFrame(). Use NULL to uses Fonts->Fonts[0].
+    // ImFont*     FontDefault;                    // = NULL           // font to use on NewFrame(). Use NULL to uses Fonts->Fonts[0].
     pub DisplayFramebufferScale: ImVec2,        // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::FramebufferScale.
 
     // Docking options (when ImGuiConfigFlags_DockingEnable is set)
@@ -58,14 +58,14 @@ pub struct ImGuiIO {
     // = false          // [BETA] [FIXME: This currently creates regression with auto-sizing and general overhead] Make every single floating window display within a docking node.
     pub ConfigDockingTransparentPayload: bool,// = false          // [BETA] Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge.
 
-    // Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
+    // viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
     pub ConfigViewportsNoAutoMerge: bool,
     // = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImGuiViewportFlags_NoAutoMerge on individual viewport.
     pub ConfigViewportsNoTaskBarIcon: bool,
     // = false          // Disable default OS task bar icon flag for secondary viewports. When a viewport doesn't want a task bar icon, ImGuiViewportFlags_NoTaskBarIcon will be set on it.
     pub ConfigViewportsNoDecoration: bool,
     // = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
-    pub ConfigViewportsNoDefaultParent: bool, // = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
+    pub ConfigViewportsNoDefaultParent: bool, // = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with parent_viewport_id = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
 
     // Miscellaneous options
     pub MouseDrawCursor: bool,
@@ -102,13 +102,13 @@ pub struct ImGuiIO {
     pub BackendLanguageUserData: Vec<u8>,
 
     // Optional: Access OS clipboard
-    // (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
+    // (default to use native Win32 clipboard on windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
     // const char* (*GetClipboardTextFn)(void* user_data);
     // void        (*SetClipboardTextFn)(void* user_data, const char* text);
     // void*       ClipboardUserData;
 
-    // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
-    // (default to use native imm32 api on Windows)
+    // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on windows)
+    // (default to use native imm32 api on windows)
     // void        (*SetPlatformImeDataFn)(ImGuiViewport* viewport, ImGuiPlatformImeData* data);
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //     void*       ImeWindowHandle;                // = NULL           // [Obsolete] Set ImGuiViewport::PlatformHandleRaw instead. Set this to your HWND to get automatic IME cursor positioning.
@@ -135,7 +135,7 @@ pub struct ImGuiIO {
     // 
     //  void  SetKeyEventNativeData(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
     //  void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
-    //  void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
+    //  void  ClearInputCharacters();                                 // [Internal] clear the text input buffer manually
     //  void  ClearInputKeys();                                       // [Internal] Release all keys
 
     //------------------------------------------------------------------
@@ -203,11 +203,11 @@ pub struct ImGuiIO {
     pub KeyAlt: bool,
     // Keyboard modifier down: Alt
     pub KeySuper: bool,
-    // Keyboard modifier down: Cmd/Super/Windows
+    // Keyboard modifier down: Cmd/Super/windows
     // float       NavInputs[ImGuiNavInput_COUNT];     // Gamepad inputs. Cleared back to zero by EndFrame(). Keyboard keys will be auto-mapped and be written here by NewFrame().
     pub NavInputs: Vec<f32>,
 
-    // Other state maintained from data above + IO function calls
+    // Other state maintained from data above + io function calls
     pub KeyMods: ImGuiModFlags,
     // Key mods flags (same as io.KeyCtrl/KeyShift/KeyAlt/KeySuper but merged into flags), updated by NewFrame()
     pub KeysData: Vec<ImGuiKeyData>,
@@ -219,17 +219,17 @@ pub struct ImGuiIO {
     pub MouseClickedPos: [ImVec2; 5],
     // Position at time of clicking
     pub MouseClickedTime: [f64; 5],
-    // Time of last click (used to figure out double-click)
+    // time of last click (used to figure out double-click)
     pub MouseClicked: [bool; 5],
-    // Mouse button went from !Down to Down (same as MouseClickedCount[x] != 0)
+    // Mouse button went from !down to down (same as MouseClickedCount[x] != 0)
     pub MouseDoubleClicked: [bool; 5],
     // Has mouse button been double-clicked? (same as MouseClickedCount[x] == 2)
     pub MouseClickedCount: [u16; 5],
-    // == 0 (not clicked), == 1 (same as MouseClicked[]), == 2 (double-clicked), == 3 (triple-clicked) etc. when going from !Down to Down
+    // == 0 (not clicked), == 1 (same as MouseClicked[]), == 2 (double-clicked), == 3 (triple-clicked) etc. when going from !down to down
     pub MouseClickedLastCount: [u16; 5],
     // Count successive number of clicks. Stays valid after mouse release. Reset after another click is done.
     pub MouseReleased: [bool; 5],
-    // Mouse button went from Down to !Down
+    // Mouse button went from down to !down
     pub MouseDownOwned: [bool; 5],
     // Track if button was clicked inside a dear imgui window or over void blocked by a popup. We don't request mouse capture from the application if click started outside ImGui bounds.
     pub MouseDownOwnedUnlessPopupClose: [bool; 5],
@@ -261,7 +261,7 @@ pub struct ImGuiIO {
     //    ImGuiIO();
 }
 
-impl ImGuiIO {
+impl DimgIo {
     pub fn new() -> Self {
         let mut out = Self { ..Default() };
 
@@ -300,7 +300,7 @@ impl ImGuiIO {
         out.ConfigDockingAlwaysTabBar = false;
         out.ConfigDockingTransparentPayload = false;
 
-        // Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
+        // viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
         out.ConfigViewportsNoAutoMerge = false;
         out.ConfigViewportsNoTaskBarIcon = false;
         out.ConfigViewportsNoDecoration = true;
@@ -338,7 +338,7 @@ impl ImGuiIO {
         out.MouseDownDurationPrev = [-1.0; 5];
         out.MouseDownDuration = [-1.0; 5];
         // TODO
-        // for (int i = 0; i < IM_ARRAYSIZE(KeysData); i+ +) { KeysData[i].DownDuration = KeysData[i].DownDurationPrev = -1.0; }
+        // for (int i = 0; i < IM_ARRAYSIZE(KeysData); i+ +) { KeysData[i].down_duration = KeysData[i].down_duration_prev = -1.0; }
         //out.KeysData =
 
         // for (int i = 0; i < IM_ARRAYSIZE(NavInputsDownDuration); i+ +) NavInputsDownDuration[i] = -1.0;
@@ -364,12 +364,12 @@ impl ImGuiIO {
 // - bool down:          Is the key down? use false to signify a key release.
 // - float analog_value: 0.0..1.0
     pub fn AddKeyAnalogEvent(&mut self, key: &ImGuiKey, down: bool, v: f32) {
-        //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
+        //if (e->down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->down, e->NativeKeycode, e->NativeScancode); }
         if key == ImGuiKey_None || !self.AppAcceptingEvents {
             return;
         }
         //ImGuiContext& g = *GImGui;
-        // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+        // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         // IM_ASSERT(ImGui::IsNamedKey(key)); // Backend needs to pass a valid ImGuiKey_ constant. 0..511 values are legacy native key codes which are not accepted by this API.
 
         // Verify that backend isn't mixing up using new io.AddKeyEvent() api and old io.KeysDown[] + io.KeyMap[] data.
@@ -388,7 +388,7 @@ impl ImGuiIO {
         let key_data = GetKeyData(key);
         if key_data.Down == down && key_data.AnalogValue == analog_value {
             let mut found = false;
-            // for (int n = g.InputEventsQueue.Size - 1; n >= 0 && !found; n--){
+            // for (int n = g.input_events_queue.size - 1; n >= 0 && !found; n--){
             let mut n = GImGui.InputEventsQueue.Size - 1;
             while n >= 0 && !found {
                 if GImGui.InputEventsQueue[n].Type == ImGuiInputEventType_Key && GImGui.InputEventsQueue[n].Key.Key == key {
@@ -414,7 +414,7 @@ impl ImGuiIO {
     //  void  AddMousePosEvent(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
     pub fn AddMousePosEvent(&mut self, x: f32, y: f32) {
         // ImGuiContext& g = *GImGui;
-        // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+        // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         if !AppAcceptingEvents {
             return;
         }
@@ -429,7 +429,7 @@ impl ImGuiIO {
     //  void  AddMouseButtonEvent(int button, bool down);             // Queue a mouse button change
     pub fn AddMouseButtonEvent(&mut self, button: i32, down: bool) {
         // ImGuiContext& g = *GImGui;
-        // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+        // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         // IM_ASSERT(mouse_button >= 0 && mouse_button < ImGuiMouseButton_COUNT);
         if !self.AppAcceptingEvents {
             return;
@@ -445,7 +445,7 @@ impl ImGuiIO {
     //  void  AddMouseWheelEvent(float wh_x, float wh_y);             // Queue a mouse wheel update
     pub fn AddMouseWheelEvent(&mut self, wh_x: f32, wh_y: f32) {
         // ImGuiContext& g = *GImGui;
-        // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+        // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         if (wheel_x == 0.0 && wheel_y == 0.0) || !AppAcceptingEvents {
             return;
         }
@@ -461,8 +461,8 @@ impl ImGuiIO {
     //  void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
     pub fn AddMouseViewportEvent(&mut self, id: ImGuiID) {
         // ImGuiContext& g = *GImGui;
-        // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
-        // IM_ASSERT(g.IO.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport);
+        // IM_ASSERT(&g.io == this && "Can only add events to current context.");
+        // IM_ASSERT(g.io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport);
 
         // ImGuiInputEvent e;
         let mut e = ImGuiInputEvent::new();
@@ -474,7 +474,7 @@ impl ImGuiIO {
     //  void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
     pub fn AddFocusEvent(&mut self, focused: bool) {
         // ImGuiContext& g = *GImGui;
-        // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+        // IM_ASSERT(&g.io == this && "Can only add events to current context.");
 
         // ImGuiInputEvent e;
         let mut e = ImGuiInputEvent::new();
@@ -486,11 +486,11 @@ impl ImGuiIO {
 
     // Pass in translated ASCII characters for text input.
 // - with glfw you can get those from the callback set in glfwSetCharCallback()
-// - on Windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
+// - on windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
 // FIXME: Should in theory be called "AddCharacterEvent()" to be consistent with new API
     pub fn AddInputCharacter(c: u32) {
         // ImGuiContext & g = *;
-        // IM_ASSERT(&g.IO == this && "Can only add events to current context.".to_string());
+        // IM_ASSERT(&g.io == this && "Can only add events to current context.".to_string());
         if c == 0 || !AppAcceptingEvents {
             return;
         }
@@ -580,7 +580,7 @@ impl ImGuiIO {
     pub fn SetAppAcceptingEvents(&mut self, accepting_events: bool) {
         self.AppAcceptingEvents = accepting_events;
     }
-    //  void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
+    //  void  ClearInputCharacters();                                 // [Internal] clear the text input buffer manually
     pub fn ClearInputCharacters(&mut self) {
         self.InputQueueCharacters.resize(0, 0);
     }
@@ -607,7 +607,7 @@ impl ImGuiIO {
 
 // (Optional) Access via ImGui::GetPlatformIO()
 #[derive(Debug,Clone,Default)]
-pub struct ImGuiPlatformIO
+pub struct DimgPlatformIo
 {
     //------------------------------------------------------------------
     // Input - Backend interface/functions + Monitor List
@@ -639,14 +639,14 @@ pub struct ImGuiPlatformIO
     // Output - List of viewports to render into platform windows
     //------------------------------------------------------------------
 
-    // Viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
+    // viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
     // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
-    // ImVector<ImGuiViewport*>        Viewports;                              // Main viewports, followed by all secondary viewports.
+    // ImVector<ImGuiViewport*>        viewports;                              // Main viewports, followed by all secondary viewports.
     pub Viewports: Vec<ImGuiViewport>,
     // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
 }
 
-impl ImGuiPlatformIO {
+impl DimgPlatformIo {
     pub fn new() -> Self {
         Self {
             ..Default::default()
@@ -660,7 +660,7 @@ impl ImGuiPlatformIO {
     pub fn Platform_DestroyWindow(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
-    //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
+    //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/size/Title can be called on them before showing the window
     pub fn Platform_ShowWindow(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
@@ -741,7 +741,7 @@ impl ImGuiPlatformIO {
     pub fn Renderer_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: ImVec2) {
         todo!()
     }
-    //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
     pub fn Renderer_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
         todo!()
     }

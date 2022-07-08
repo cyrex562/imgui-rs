@@ -53,7 +53,7 @@ impl ImGuiTextFilter {
         *text = String::from("");
     }
 
-    // for (int i = 0; i != Filters.Size; i += 1)
+    // for (int i = 0; i != Filters.size; i += 1)
     for i in 0 .. self.Filters.size
         {
         // const ImGuiTextRange& f = Filters[i];
@@ -95,7 +95,7 @@ impl ImGuiTextFilter {
         text_filter_text_range_split(',', &mut self.Filters);
 
         self.CountGrep = 0;
-        // for (int i = 0; i != Filters.Size; i += 1)
+        // for (int i = 0; i != Filters.size; i += 1)
         for i in 0..self.Filters.Size {
             let f = Filters[i];
             while (f.b < f.e && ImCharIsBlankA(f.b[0])) {
@@ -112,7 +112,7 @@ impl ImGuiTextFilter {
             }
         }
     }
-    // void                Clear()          { InputBuf[0] = 0; Build(); }
+    // void                clear()          { InputBuf[0] = 0; Build(); }
     pub fn Clear(&mut self) {
         self.InputBuf.clear();
         self.Filters.clear();

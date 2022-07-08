@@ -18,7 +18,7 @@
 // requirements (this library is not recommended for use for editing large
 // texts, as its performance does not scale and it has limited undo).
 //
-// Non-trivial behaviors are modelled after Windows text controls.
+// Non-trivial behaviors are modelled after windows text controls.
 //
 //
 // LICENSE
@@ -185,7 +185,7 @@ pub fn STB_TEXTEDIT_IS_SPACE(ch: ImWchar) -> bool {
 //
 // You can encode other things, such as CONTROL or ALT, in additional bits, and
 // then test for their presence in e.g. STB_TEXTEDIT_K_WORDLEFT. For example,
-// my Windows implementations add an additional CONTROL bit, and an additional KEYDOWN
+// my windows implementations add an additional CONTROL bit, and an additional KEYDOWN
 // bit. Then all of the STB_TEXTEDIT_K_ values bitwise-or in the KEYDOWN bit,
 // and I pass both WM_KEYDOWN and WM_CHAR events to the "key" function in the
 // API below. The control keys will only match WM_KEYDOWN events because of the
@@ -1707,7 +1707,7 @@ pub unsafe fn stb_textedit_paste(stb_str: *mut STB_TEXTEDIT_STRING, state: *mut 
 obj.CurLenW}
     }
 
-// static float   STB_TEXTEDIT_GETWIDTH(ImGuiInputTextState* obj, int line_start_idx, int char_idx)  { ImWchar c = obj.TextW[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; ImGuiContext& g = *GImGui; return g.Font->GetCharAdvance(c) * (g.FontSize / g.Font->FontSize); }
+// static float   STB_TEXTEDIT_GETWIDTH(ImGuiInputTextState* obj, int line_start_idx, int char_idx)  { ImWchar c = obj.TextW[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; ImGuiContext& g = *GImGui; return g.font->GetCharAdvance(c) * (g.font_size / g.font->font_size); }
 pub fn STB_TEXTEDIT_GETWIDTH(obj: *mut ImGuiInputTextState, line_start_idx: usize, char_idx: usize) -> f32 {
     let mut c = obj.TextW[line_start_idx + char_idx];
     if c == ImWchar::from('\n') {
@@ -1728,7 +1728,7 @@ pub const STB_TEXTEDIT_NEWLINE: ImWchar = ImWchar::from('\n');
 // static void    STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, ImGuiInputTextState* obj, int line_start_idx)
 pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: *mut StbTexteditRow, obj: *mut ImGuiInputTextState, line_start_idx: usize)
 {
-    // const ImWchar* text = obj.TextW.Data;
+    // const ImWchar* text = obj.TextW.data;
     let text = &mut obj.TextW;
     // const ImWchar* text_remaining = NULL;
     let mut text_remaining: *mut ImWchar = null_mut();
@@ -1771,7 +1771,7 @@ pub fn STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: *mut ImGuiInputTextState, mut idx: us
 
 // #define STB_TEXTEDIT_MOVEWORDLEFT   STB_TEXTEDIT_MOVEWORDLEFT_IMPL    // They need to be #define for stb_textedit.h
 // pub type STB_TEXTEDIT_MOVEWORDLEFT = STB_TEXTEDIT_MOVEWORDLEFT_IMPL;
-// #ifdef __APPLE__    // FIXME: Move setting to IO structure
+// #ifdef __APPLE__    // FIXME: Move setting to io structure
 // #define STB_TEXTEDIT_MOVEWORDRIGHT  STB_TEXTEDIT_MOVEWORDRIGHT_MAC
 // #else
 // static int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(ImGuiInputTextState* obj, int idx)   { idx += 1; int len = obj.CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx += 1; return idx > len ? len : idx; }
@@ -1780,7 +1780,7 @@ pub fn STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: *mut ImGuiInputTextState, mut idx: us
 
 // static void STB_TEXTEDIT_DELETECHARS(ImGuiInputTextState* obj, int pos, int n)
 pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: *mut ImGuiInputTextState, pos: usize, n: usize) {
-    // ImWchar* dst = obj.TextW.Data + pos;
+    // ImWchar* dst = obj.TextW.data + pos;
     let mut dst: *mut ImWchar = &obj.TextW + pos;
 
     // We maintain our buffer length in both UTF-8 and wchar formats
@@ -1789,7 +1789,7 @@ pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: *mut ImGuiInputTextState, pos: usize
     obj.CurLenW -= n;
 
     // Offset remaining text (FIXME-OPT: Use memmove)
-    // const ImWchar* src = obj.TextW.Data + pos + n;
+    // const ImWchar* src = obj.TextW.data + pos + n;
     let mut src: *mut ImWchar = &mut obj.TextW + pos + n;
     let mut c: ImWchar = *src;
     while c != 0 {
@@ -1803,7 +1803,7 @@ pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: *mut ImGuiInputTextState, pos: usize
 // static bool STB_TEXTEDIT_INSERTCHARS(ImGuiInputTextState* obj, int pos, const ImWchar* new_text, int new_text_len)
 pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: *mut ImGuiInputTextState, pos: usize, new_text: *mut ImWchar, new_text_len: usize) -> bool
     {
-    // const bool is_resizable = (obj.Flags & ImGuiInputTextFlags_CallbackResize) != 0;
+    // const bool is_resizable = (obj.flags & ImGuiInputTextFlags_CallbackResize) != 0;
     let is_resizable = obj.flags & ImGuiInputTextFlags::CallbackResize != 0;
     // const int text_len = obj.CurLenW;
     let text_len = obj.CurLenW;
@@ -1820,11 +1820,11 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: *mut ImGuiInputTextState, pos: usize
         if (!is_resizable) {
             return false;
         }
-        // IM_ASSERT(text_len < obj.TextW.Size);
+        // IM_ASSERT(text_len < obj.TextW.size);
         obj.TextW.reserve(text_len + usize::clamp(new_text_len * 4, 32, usize::max(256, new_text_len)) + 1);
     }
 
-    // ImWchar* text = obj.TextW.Data;
+    // ImWchar* text = obj.TextW.data;
     let text = obj.TextW.Data;
         if pos != text_len {
         // TODO

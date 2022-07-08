@@ -1,10 +1,11 @@
-use crate::imgui_vec::ImVec4;
-use crate::imgui_math::{ImClampVec2, ImFloor, ImMaxVec2, ImMinVec2};
-use crate::imgui_vec::ImVec2;
+use crate::vec_nd::ImVec4;
+use crate::math::{ImClampVec2, ImFloor, ImMaxVec2, ImMinVec2};
+use crate::vec_nd::ImVec2;
 
 // Helper: ImRect (2D axis aligned bounding-box)
 // NB: we can't rely on ImVec2 math operators being available here!
-pub struct  ImRect
+#[derive(Default,Clone,Debug)]
+pub struct DimgRect
 {
     // ImVec2      Min;    // Upper-left
     pub Min: ImVec2,
@@ -12,7 +13,7 @@ pub struct  ImRect
     pub Max: ImVec2,
 }
 
-impl ImRect {
+impl DimgRect {
     //  constexpr ImRect()                                        : Min(0.0, 0.0), Max(0.0, 0.0)  {}
     pub fn new() -> Self {
         Self {

@@ -118,7 +118,7 @@ enum uSynergyClipboardFormat
 #define				USYNERGY_MODIFIER_CTRL			0x0002			/* Ctrl key modifier */
 #define				USYNERGY_MODIFIER_ALT			0x0004			/* Alt key modifier */
 #define				USYNERGY_MODIFIER_META			0x0008			/* Meta key modifier */
-#define				USYNERGY_MODIFIER_WIN			0x0010			/* Windows key modifier */
+#define				USYNERGY_MODIFIER_WIN			0x0010			/* windows key modifier */
 #define				USYNERGY_MODIFIER_ALT_GR		0x0020			/* AltGr key modifier */
 #define				USYNERGY_MODIFIER_LEVEL5LOCK	0x0040			/* Level5Lock key modifier */
 #define				USYNERGY_MODIFIER_CAPSLOCK		0x1000			/* CapsLock key modifier */
@@ -190,7 +190,7 @@ is mostly used when a socket times out or disconnect occurs to prevent uSynergy 
 network connection in case the network is down.
 
 @param cookie		Cookie supplied in the Synergy context
-@param timeMs		Time to sleep the current thread (in milliseconds)
+@param timeMs		time to sleep the current thread (in milliseconds)
 **/
 typedef void		(*uSynergySleepFunc)(uSynergyCookie cookie, int timeMs);
 
@@ -202,7 +202,7 @@ typedef void		(*uSynergySleepFunc)(uSynergyCookie cookie, int timeMs);
 This function is called when uSynergy needs to know the current time. This is used to determine when timeouts
 have occured. The time base should be a cyclic millisecond time value.
 
-@returns			Time value in milliseconds
+@returns			time value in milliseconds
 **/
 typedef uint32_t	(*uSynergyGetTimeFunc)();
 
@@ -263,7 +263,7 @@ This callback is called when a key is pressed or released.
 @param cookie		Cookie supplied in the Synergy context
 @param key			Key code of key that was pressed or released
 @param modifiers	Status of modifier keys (alt, shift, etc.)
-@param down			Down or up status, 1 is key is pressed down, 0 if key is released (up)
+@param down			down or up status, 1 is key is pressed down, 0 if key is released (up)
 @param repeat		Repeat flag, 1 if the key is down because the key is repeating, 0 if the key is initially pressed by the user
 **/
 typedef void		(*uSynergyKeyboardCallback)(uSynergyCookie cookie, uint16_t key, uint16_t modifiers, uSynergyBool down, uSynergyBool repeat);
@@ -300,7 +300,7 @@ by the application.
 @param cookie		Cookie supplied in the Synergy context
 @param format		Clipboard format
 @param data			Memory area containing the clipboard raw data
-@param size			Size of clipboard data
+@param size			size of clipboard data
 **/
 typedef void		(*uSynergyClipboardCallback)(uSynergyCookie cookie, enum uSynergyClipboardFormat format, const uint8_t *data, uint32_t size);
 
@@ -340,7 +340,7 @@ typedef struct
 	uSynergyBool					m_connected;									/* Is our socket connected? */
 	uSynergyBool					m_hasReceivedHello;								/* Have we received a 'Hello' from the server? */
 	uSynergyBool					m_isCaptured;									/* Is Synergy active (i.e. this client is receiving input messages?) */
-	uint32_t						m_lastMessageTime;								/* Time at which last message was received */
+	uint32_t						m_lastMessageTime;								/* time at which last message was received */
 	uint32_t						m_sequenceNumber;								/* Packet sequence number */
 	uint8_t							m_receiveBuffer[USYNERGY_RECEIVE_BUFFER_SIZE];	/* Receive buffer */
 	int								m_receiveOfs;									/* Receive buffer offset */

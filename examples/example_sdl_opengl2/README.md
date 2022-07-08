@@ -1,11 +1,11 @@
 
 # How to Build
 
-- On Windows with Visual Studio's IDE
+- On windows with Visual Studio's IDE
 
 Use the provided project file (.vcxproj). Add to solution (imgui_examples.sln) if necessary.
 
-- On Windows with Visual Studio's CLI
+- On windows with Visual Studio's CLI
 
 ```
 set SDL2_DIR=path_to_your_sdl2_folder

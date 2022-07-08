@@ -52,7 +52,7 @@
 #endif
 
 //-------------------------------------------------------------------------
-// Data
+// data
 //-------------------------------------------------------------------------
 
 // Default memory allocators
@@ -112,10 +112,10 @@ namespace
         bool        IsColored;          // The glyph is colored
     };
 
-    // Font parameters and metrics.
+    // font parameters and metrics.
     struct FontInfo
     {
-        uint32_t    PixelHeight;        // Size this font was generated with.
+        uint32_t    PixelHeight;        // size this font was generated with.
         float       Ascender;           // The pixel extents above the baseline in pixels (typically positive).
         float       Descender;          // The extents below the baseline in pixels (typically negative).
         float       LineSpacing;        // The baseline-to-baseline distance. Note that it usually is larger than the sum of the ascender and descender taken as absolute values. There is also no guarantee that no glyphs extend above or below subsequent baselines when using this distance. Think of it as a value the designer of the font finds appropriate.
@@ -136,7 +136,7 @@ namespace
         ~FreeTypeFont()         { CloseFont(); }
 
         // [Internals]
-        FontInfo        Info;               // Font descriptor of the current font.
+        FontInfo        Info;               // font descriptor of the current font.
         FT_Face         Face;
         unsigned int    UserFlags;          // = ImFontConfig::RasterizerFlags
         FT_Int32        LoadFlags;
@@ -399,7 +399,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
     ImFontAtlasBuildInit(atlas);
 
-    // Clear atlas
+    // clear atlas
     atlas->TexID = (ImTextureID)NULL;
     atlas->TexWidth = atlas->TexHeight = 0;
     atlas->TexUvScale = ImVec2(0.0, 0.0);

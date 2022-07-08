@@ -1,41 +1,41 @@
 use crate::context::ImGuiContext;
-use crate::window::ImGuiWindow;
+use crate::window::DimgWindow;
 
 // void ImGui::GcCompactTransientMiscBuffers()
 pub fn GcCompactTransientMiscBuffers(g: &mut ImGuiContext)
 {
     // ImGuiContext& g = *GImGui;
-    g.ItemFlagsStack.clear();
-    g.GroupStack.clear();
+    g.item_flags_stack.clear();
+    g.group_stack.clear();
     TableGcCompactSettings();
 }
 
 
 // Free up/compact internal window buffers, we can use this when a window becomes unused.
 // Not freed:
-// - ImGuiWindow, ImGuiWindowSettings, Name, StateStorage, ColumnsStorage (may hold useful data)
+// - ImGuiWindow, ImGuiWindowSettings, Name, state_storage, ColumnsStorage (may hold useful data)
 // This should have no noticeable visual effect. When the window reappear however, expect new allocation/buffer growth/copy cost.
 // void ImGui::GcCompactTransientWindowBuffers(ImGuiWindow* window)
-pub fn GcCompactTransientWindowBufufers(window: &mut ImGuiWindow)
+pub fn GcCompactTransientWindowBufufers(window: &mut DimgWindow)
 {
-    window.MemoryCompacted = true;
-    window.MemoryDrawListIdxCapacity = window.DrawList.IdxBuffer.Capacity;
-    window.MemoryDrawListVtxCapacity = window.DrawList.VtxBuffer.Capacity;
-    window.IDStack.clear();
-    window.DrawList._ClearFreeMemory();
-    window.DC.ChildWindows.clear();
-    window.DC.ItemWidthStack.clear();
-    window.DC.TextWrapPosStack.clear();
+    window.memory_compacted = true;
+    window.memory_draw_list_idx_capacity = window.draw_list.IdxBuffer.Capacity;
+    window.memory_draw_list_vtx_capacity = window.draw_list.VtxBuffer.Capacity;
+    window.id_stack.clear();
+    window.draw_list._ClearFreeMemory();
+    window.dc.ChildWindows.clear();
+    window.dc.ItemWidthStack.clear();
+    window.dc.TextWrapPosStack.clear();
 }
 
 // void ImGui::GcAwakeTransientWindowBuffers(ImGuiWindow* window)
-pub fn GcAwakeTransientWindowBuffers(window: &mut ImGuiWindow)
+pub fn GcAwakeTransientWindowBuffers(window: &mut DimgWindow)
 {
     // We stored capacity of the ImDrawList buffer to reduce growth-caused allocation/copy when awakening.
     // The other buffers tends to amortize much faster.
-    window.MemoryCompacted = false;
-    window.DrawList.IdxBuffer.reserve(window.MemoryDrawListIdxCapacity);
-    window.DrawList.VtxBuffer.reserve(window.MemoryDrawListVtxCapacity);
-    window.MemoryDrawListIdxCapacity = 0;
-    window.MemoryDrawListVtxCapacity = 0;
+    window.memory_compacted = false;
+    window.draw_list.IdxBuffer.reserve(window.memory_draw_list_idx_capacity);
+    window.draw_list.VtxBuffer.reserve(window.memory_draw_list_vtx_capacity);
+    window.memory_draw_list_idx_capacity = 0;
+    window.memory_draw_list_vtx_capacity = 0;
 }

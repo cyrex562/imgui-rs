@@ -7,7 +7,7 @@ use crate::imgui_h::{ImGuiCond, ImGuiID, ImGuiInputTextFlags, ImGuiKey};
 // - ImGuiInputTextFlags_CallbackEdit:        Callback on buffer edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
 // - ImGuiInputTextFlags_CallbackAlways:      Callback on each iteration
 // - ImGuiInputTextFlags_CallbackCompletion:  Callback on pressing TAB
-// - ImGuiInputTextFlags_CallbackHistory:     Callback on pressing Up/Down arrows
+// - ImGuiInputTextFlags_CallbackHistory:     Callback on pressing Up/down arrows
 // - ImGuiInputTextFlags_CallbackCharFilter:  Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.
 // - ImGuiInputTextFlags_CallbackResize:      Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow.
 pub struct ImGuiInputTextCallbackData
@@ -20,7 +20,7 @@ pub struct ImGuiInputTextCallbackData
     // - To modify the text buffer in a callback, prefer using the InsertChars() / DeleteChars() function. InsertChars() will take care of calling the resize callback if necessary.
     // - If you know your edits are not going to resize the underlying buffer allocation, you may modify the contents of 'Buf[]' directly. You need to update 'BufTextLen' accordingly (0 <= BufTextLen < BufSize) and set 'BufDirty'' to true so InputText can update its internal state.
     pub EventChar: u8,      // Character input                      // Read-write   // [CharFilter] Replace character with another one, or set to zero to drop. return 1 is equivalent to setting EventChar=0;
-    pub            EventKey: ImGuiKey,       // Key pressed (Up/Down/TAB)            // Read-only    // [Completion,History]
+    pub            EventKey: ImGuiKey,       // Key pressed (Up/down/TAB)            // Read-only    // [Completion,History]
     pub               Buf: String,            // Text buffer                          // Read-write   // [Resize] Can replace pointer / [Completion,History,Always] Only write to pointed data, don't replace the actual pointer!
     pub BufTextLen: i32,   // Text length (in bytes)               // Read-write   // [Resize,Completion,History,Always] Exclude zero-terminator storage. In C land: == strlen(some_text), in C++ land: string.length()
     pub BufSize: i32,      // Buffer size (in bytes) = capacity+1  // Read-only    // [Resize,Completion,History,Always] Include zero-terminator storage. In C land == ARRAYSIZE(my_char_array), in C++ land: string.capacity()+1
@@ -63,14 +63,14 @@ impl ImGuiInputTextCallbackData {
     }
 }
 
-pub enum ImGuiInputSource
+pub enum DimgInputSource
 {
     None = 0,
     Mouse,
     Keyboard,
     Gamepad,
     Clipboard,     // Currently only used by InputText()
-    Nav,           // Stored in g.ActiveIdSource only
+    Nav,           // Stored in g.active_id_source only
 }
 
 #[derive(Default,Debug,Clone)]

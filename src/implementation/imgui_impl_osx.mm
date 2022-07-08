@@ -61,7 +61,7 @@
 @class ImGuiObserver;
 @class KeyEventResponder;
 
-// Data
+// data
 struct ImGui_ImplOSX_Data
 {
     CFTimeInterval              Time;
@@ -659,7 +659,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
         // 2. A scroll wheel NSEvent, with a phase == NSEventPhaseCancelled, when the user releases the
         // two-finger tap. It is this event that sometimes contains large values for scrollingDeltaX and
         // scrollingDeltaY. When these are added to the current x and y positions of the scrolling view,
-        // it appears to jump up or down. It can be observed in Preview, various JetBrains IDEs and here.
+        // it appears to jump up or down. It can be observed in preview, various JetBrains IDEs and here.
         if (event.phase == NSEventPhaseCancelled)
             return false;
 

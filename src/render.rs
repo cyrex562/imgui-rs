@@ -25,7 +25,7 @@ pub unsafe fn RenderText(pos: &ImVec2, text: *const c_char, mut text_end: *const
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
-    // ImGuiWindow* window = g.CurrentWindow;
+    // ImGuiWindow* window = g.current_window;
     let window = g.CurrentWindow;
 
     // Hide anything after a '##' string
@@ -57,7 +57,7 @@ pub fn RenderTextWrapped(pos: &ImVec2, text: *const c_char, mut text_end: *const
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
-    // ImGuiWindow* window = g.CurrentWindow;
+    // ImGuiWindow* window = g.current_window;
     let window = g.CurrentWindow;
 
     if !text_end {
@@ -264,7 +264,7 @@ void ImGui::RenderMouseCursor(ImVec2 base_pos, float base_scale, ImGuiMouseCurso
     ImFontAtlas* font_atlas = g.DrawListSharedData.Font->ContainerAtlas;
     for (int n = 0; n < g.Viewports.Size; n += 1)
     {
-        // We scale cursor with current viewport/monitor, however Windows 10 for its own hardware cursor seems to be using a different scale factor.
+        // We scale cursor with current viewport/monitor, however windows 10 for its own hardware cursor seems to be using a different scale factor.
         ImVec2 offset, size, uv[4];
         if (!font_atlas->GetMouseCursorTexData(mouse_cursor, &offset, &size, &uv[0], &uv[2]))
             continue;

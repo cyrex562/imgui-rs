@@ -10,8 +10,8 @@
 //  [X] Platform: Mouse cursor shape and visibility. Disable with 'io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange'.
 //  [X] Platform: Multi-viewport support (multiple windows). Enable with 'io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable'.
 // Missing features:
-//  [ ] Platform: SDL2 handling of IME under Windows appears to be broken and it explicitly disable the regular Windows IME. You can restore Windows IME by compiling SDL with SDL_DISABLE_WINDOWS_IME.
-//  [ ] Platform: Multi-viewport + Minimized windows seems to break mouse wheel events (at least under Windows).
+//  [ ] Platform: SDL2 handling of IME under windows appears to be broken and it explicitly disable the regular windows IME. You can restore windows IME by compiling SDL with SDL_DISABLE_WINDOWS_IME.
+//  [ ] Platform: Multi-viewport + Minimized windows seems to break mouse wheel events (at least under windows).
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
 // Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
@@ -90,7 +90,7 @@
 static const Uint32 SDL_WINDOW_VULKAN = 0x10000000;
 #endif
 
-// SDL Data
+// SDL data
 struct ImGui_ImplSDL2_Data
 {
     SDL_Window*     Window;
@@ -632,7 +632,7 @@ static void ImGui_ImplSDL2_UpdateMonitors()
     int display_count = SDL_GetNumVideoDisplays();
     for (int n = 0; n < display_count; n += 1)
     {
-        // Warning: the validity of monitor DPI information on Windows depends on the application DPI awareness settings, which generally needs to be set in the manifest or at runtime.
+        // Warning: the validity of monitor DPI information on windows depends on the application DPI awareness settings, which generally needs to be set in the manifest or at runtime.
         ImGuiPlatformMonitor monitor;
         SDL_Rect r;
         SDL_GetDisplayBounds(n, &r);
@@ -789,7 +789,7 @@ static void ImGui_ImplSDL2_ShowWindow(ImGuiViewport* viewport)
     HWND hwnd = (HWND)viewport->PlatformHandleRaw;
 
     // SDL hack: Hide icon from task bar
-    // Note: SDL 2.0.6+ has a SDL_WINDOW_SKIP_TASKBAR flag which is supported under Windows but the way it create the window breaks our seamless transition.
+    // Note: SDL 2.0.6+ has a SDL_WINDOW_SKIP_TASKBAR flag which is supported under windows but the way it create the window breaks our seamless transition.
     if (viewport->Flags & ImGuiViewportFlags_NoTaskBarIcon)
     {
         LONG ex_style = ::GetWindowLong(hwnd, GWL_EXSTYLE);

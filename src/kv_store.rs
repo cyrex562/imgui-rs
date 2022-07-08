@@ -57,11 +57,11 @@ impl ImGuiStoragePair {
 // - You want to store custom debug data easily without adding or editing structures in your code (probably not efficient, but convenient)
 // Types are NOT stored, so it is up to you to make sure your Key don't collide with different types.
 #[derive(Debug,Clone,Default)]
-pub struct ImGuiStorage
+pub struct DimgStorage
 {
     pub Data: Vec<ImGuiStoragePair>,
 
-    // ImVector<ImGuiStoragePair>      Data;
+    // ImVector<ImGuiStoragePair>      data;
 
     // - Get***() functions find pair, never add/allocate. Pairs are sorted so a query is O(log N)
     // - Set***() functions find pair, insertion on demand if missing.
@@ -69,8 +69,8 @@ pub struct ImGuiStorage
 
 }
 
-impl ImGuiStorage {
-    // void                Clear() { Data.clear(); }
+impl DimgStorage {
+    // void                clear() { data.clear(); }
     pub fn Clear(&mut self) {
         self.Data.clear()
     }
@@ -148,9 +148,9 @@ impl ImGuiStorage {
 // static ImGuiStorage::ImGuiStoragePair* LowerBound(ImVector<ImGuiStorage::ImGuiStoragePair>& data, ImGuiID key)
 pub fn LowerBound(data: &mut Vec<ImGuiStoragePair>, key: ImGuiID) -> *mut ImGuiStoragePair
     {
-    // ImGuiStorage::ImGuiStoragePair* first = data.Data;
+    // ImGuiStorage::ImGuiStoragePair* first = data.data;
     let mut first: *mut ImGuiStoragePair = data.first_mut().unwrap();
-        // ImGuiStorage::ImGuiStoragePair* last = data.Data + data.Size;
+        // ImGuiStorage::ImGuiStoragePair* last = data.data + data.size;
         let mut last: *mut ImGuiStoragePair = data.last_mut().unwrap();
     // size_t count = (size_t)(last - first);
     let mut count: usize = data.len();
@@ -199,8 +199,8 @@ pub unsafe fn BuildSortByKey(&mut self)
 
 // int ImGuiStorage::GetInt(ImGuiID key, int default_val) const
 // {
-//     ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(Data), key);
-//     if (it == Data.end() || it->key != key)
+//     ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(data), key);
+//     if (it == data.end() || it->key != key)
 //         return default_val;
 //     return it->val_i;
 // }
@@ -212,16 +212,16 @@ pub unsafe fn BuildSortByKey(&mut self)
 
 // float ImGuiStorage::GetFloat(ImGuiID key, float default_val) const
 // {
-//     ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(Data), key);
-//     if (it == Data.end() || it->key != key)
+//     ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(data), key);
+//     if (it == data.end() || it->key != key)
 //         return default_val;
 //     return it->val_f;
 // }
 
 // void* ImGuiStorage::GetVoidPtr(ImGuiID key) const
 // {
-//     ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(Data), key);
-//     if (it == Data.end() || it->key != key)
+//     ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(data), key);
+//     if (it == data.end() || it->key != key)
 //         return NULL;
 //     return it->val_p;
 // }
@@ -230,9 +230,9 @@ pub unsafe fn BuildSortByKey(&mut self)
 // int* ImGuiStorage::GetIntRef(ImGuiID key, int default_val)
 pub fn GetIntRef(&mut self, key: ImGuiID, default_val: i32) -> *mut i32
     {
-    // ImGuiStoragePair* it = LowerBound(Data, key);
-    // if (it == Data.end() || it->key != key)
-    //     it = Data.insert(it, ImGuiStoragePair(key, default_val));
+    // ImGuiStoragePair* it = LowerBound(data, key);
+    // if (it == data.end() || it->key != key)
+    //     it = data.insert(it, ImGuiStoragePair(key, default_val));
     // return &it->val_i;
         for x in self.Data.iter_mut() {
             if x.Key == key {
@@ -261,9 +261,9 @@ pub fn GetBoolRef(&mut self, key: ImGuiID, default_val: bool) -> *mut bool
 // float* ImGuiStorage::GetFloatRef(ImGuiID key, float default_val)
 pub fn GetFloatRef(&mut self, key: ImGuiID, default_val: f32) -> *mut f32
     {
-    // ImGuiStoragePair* it = LowerBound(Data, key);
-    // if (it == Data.end() || it->key != key)
-    //     it = Data.insert(it, ImGuiStoragePair(key, default_val));
+    // ImGuiStoragePair* it = LowerBound(data, key);
+    // if (it == data.end() || it->key != key)
+    //     it = data.insert(it, ImGuiStoragePair(key, default_val));
     // return &it->val_f;
         for x in self.Data.iter_mut() {
             if x.Key == key {
@@ -278,9 +278,9 @@ pub fn GetFloatRef(&mut self, key: ImGuiID, default_val: f32) -> *mut f32
 // void** ImGuiStorage::GetVoidPtrRef(ImGuiID key, void* default_val)
 pub fn GetVoidPtrRef(&mut self, key: ImGuiID, default_val: *mut c_void) -> *mut *mut c_void
     {
-    // ImGuiStoragePair* it = LowerBound(Data, key);
-    // if (it == Data.end() || it->key != key)
-    //     it = Data.insert(it, ImGuiStoragePair(key, default_val));
+    // ImGuiStoragePair* it = LowerBound(data, key);
+    // if (it == data.end() || it->key != key)
+    //     it = data.insert(it, ImGuiStoragePair(key, default_val));
     // return &it->val_p;
         for x in self.Data.iter_mut() {
             if x.Key == key {
@@ -295,10 +295,10 @@ pub fn GetVoidPtrRef(&mut self, key: ImGuiID, default_val: *mut c_void) -> *mut 
 // FIXME-OPT: Need a way to reuse the result of lower_bound when doing GetInt()/SetInt() - not too bad because it only happens on explicit interaction (maximum one a frame)
 // void ImGuiStorage::SetInt(ImGuiID key, int val)
 // {
-//     ImGuiStoragePair* it = LowerBound(Data, key);
-//     if (it == Data.end() || it->key != key)
+//     ImGuiStoragePair* it = LowerBound(data, key);
+//     if (it == data.end() || it->key != key)
 //     {
-//         Data.insert(it, ImGuiStoragePair(key, val));
+//         data.insert(it, ImGuiStoragePair(key, val));
 //         return;
 //     }
 //     it->val_i = val;
@@ -311,10 +311,10 @@ pub fn GetVoidPtrRef(&mut self, key: ImGuiID, default_val: *mut c_void) -> *mut 
 
 // void ImGuiStorage::SetFloat(ImGuiID key, float val)
 // {
-//     ImGuiStoragePair* it = LowerBound(Data, key);
-//     if (it == Data.end() || it->key != key)
+//     ImGuiStoragePair* it = LowerBound(data, key);
+//     if (it == data.end() || it->key != key)
 //     {
-//         Data.insert(it, ImGuiStoragePair(key, val));
+//         data.insert(it, ImGuiStoragePair(key, val));
 //         return;
 //     }
 //     it->val_f = val;
@@ -322,10 +322,10 @@ pub fn GetVoidPtrRef(&mut self, key: ImGuiID, default_val: *mut c_void) -> *mut 
 
 // void ImGuiStorage::SetVoidPtr(ImGuiID key, void* val)
 // {
-//     ImGuiStoragePair* it = LowerBound(Data, key);
-//     if (it == Data.end() || it->key != key)
+//     ImGuiStoragePair* it = LowerBound(data, key);
+//     if (it == data.end() || it->key != key)
 //     {
-//         Data.insert(it, ImGuiStoragePair(key, val));
+//         data.insert(it, ImGuiStoragePair(key, val));
 //         return;
 //     }
 //     it->val_p = val;
@@ -333,8 +333,8 @@ pub fn GetVoidPtrRef(&mut self, key: ImGuiID, default_val: *mut c_void) -> *mut 
 
 // void ImGuiStorage::SetAllInt(int v)
 // {
-//     for (int i = 0; i < Data.Size; i++)
-//         Data[i].val_i = v;
+//     for (int i = 0; i < data.size; i++)
+//         data[i].val_i = v;
 // }
 }
 

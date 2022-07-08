@@ -318,13 +318,13 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, const int num_channels)
         return;
     }
 
-    // NOTE: this logic has been lifted from ImDrawListSplitter::Split with slight modifications
+    // NOTE: this logic has been lifted from ImDrawListSplitter::split with slight modifications
     // to allow nested splits. The main modification is that we only create new ImDrawChannel
-    // instances after splitter._Count, instead of over the whole splitter._Channels array like
-    // the regular ImDrawListSplitter::Split method does.
+    // instances after splitter._count, instead of over the whole splitter._channels array like
+    // the regular ImDrawListSplitter::split method does.
 
     const int old_channel_capacity = splitter._Channels.Size;
-    // NOTE: _Channels is not resized down, and therefore _Count <= _Channels.size()!
+    // NOTE: _channels is not resized down, and therefore _count <= _channels.size()!
     const int old_channel_count = splitter._Count;
     const int requested_channel_count = old_channel_count + num_channels;
     if (old_channel_capacity < old_channel_count + num_channels)
@@ -960,7 +960,7 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
 
             if ((selected_idxs.Size > 0) && (selected_idxs.Size < depth_stack.Size))
             {
-                int num_moved = 0; // The number of indices moved. Stop after selected_idxs.Size
+                int num_moved = 0; // The number of indices moved. Stop after selected_idxs.size
                 for (int i = 0; i < depth_stack.Size - selected_idxs.Size;  += 1i)
                 {
                     for (int node_idx = depth_stack[i]; selected_idxs.contains(node_idx);
@@ -1183,7 +1183,7 @@ ImOptionalIndex ResolveHoveredPin(
         const ImVec2& pin_pos = pins.Pool[idx].Pos;
         const float   distance_sqr = ImLengthSqr(pin_pos - GImNodes->MousePos);
 
-        // TODO: GImNodes->Style.PinHoverRadius needs to be copied into pin data and the pin-local
+        // TODO: GImNodes->style.PinHoverRadius needs to be copied into pin data and the pin-local
         // value used here. This is no longer called in BeginAttribute/EndAttribute scope and the
         // detected pin might have a different hover radius than what the user had when calling
         // BeginAttribute/EndAttribute.
@@ -1283,7 +1283,7 @@ ImOptionalIndex ResolveHoveredLink(
                 const float distance = GetDistanceToCubicBezier(
                     GImNodes->MousePos, cubic_bezier, cubic_bezier.NumSegments);
 
-                // TODO: GImNodes->Style.LinkHoverDistance could be also copied into ImLinkData,
+                // TODO: GImNodes->style.LinkHoverDistance could be also copied into ImLinkData,
                 // since we're not calling this function in the same scope as ImNodes::Link(). The
                 // rendered/detected link might have a different hover distance than what the user
                 // had specified when calling Link()

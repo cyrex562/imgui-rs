@@ -259,7 +259,7 @@ ImNodesIO& GetIO();
 
 // Returns the global style struct. See the struct declaration for default values.
 ImNodesStyle& GetStyle();
-// Style presets matching the dear imgui styles of the same name. If dest is NULL, the active
+// style presets matching the dear imgui styles of the same name. If dest is NULL, the active
 // context's ImNodesStyle instance will be used as the destination.
 void StyleColorsDark(ImNodesStyle* dest = NULL); // on by default
 void StyleColorsClassic(ImNodesStyle* dest = NULL);
@@ -375,7 +375,7 @@ void ClearLinkSelection();
 // Use the following functions to add or remove individual nodes or links from the current editors
 // selection. Note that all functions require the id to be an existing valid id for this editor.
 // Select-functions has the precondition that the object is currently considered unselected.
-// Clear-functions has the precondition that the object is currently considered selected.
+// clear-functions has the precondition that the object is currently considered selected.
 // Preconditions listed above can be checked via IsNodeSelected/IsLinkSelected if not already
 // known.
 void SelectNode(int node_id);

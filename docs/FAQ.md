@@ -178,7 +178,7 @@ Rectangles provided by Dear ImGui are defined as
 `(x1=left,y1=top,x2=right,y2=bottom)`
 and **NOT** as
 `(x1,y1,width,height)`
-Refer to rendering backends in the [examples/](https://github.com/ocornut/imgui/tree/master/examples) folder for references of how to handle the `ClipRect` field.
+Refer to rendering backends in the [examples/](https://github.com/ocornut/imgui/tree/master/examples) folder for references of how to handle the `clip_rect` field.
 
 ##### [Return to Index](#index)
 
@@ -384,7 +384,7 @@ ImGui::Image((void*)texture, ImVec2(texture->Width, texture->Height));
 The renderer function called after ImGui::Render() will receive that same value that the user code passed:
 ```cpp
 // Cast ImTextureID / void* stored in the draw command as our texture type
-MyTexture* texture = (MyTexture*)pcmd->GetTexID();
+MyTexture* texture = (MyTexture*)pcmd->get_tex_id();
 MyEngineBindTexture2D(texture);
 ```
 Once you understand this design you will understand that loading image files and turning them into displayable textures is not within the scope of Dear ImGui.
@@ -486,13 +486,13 @@ ImGui::End();
 
 ### Q: How should I handle DPI in my application?
 
-The short answer is: obtain the desired DPI scale, load your fonts resized with that scale (always round down fonts size to nearest integer), and scale your Style structure accordingly using `style.ScaleAllSizes()`.
+The short answer is: obtain the desired DPI scale, load your fonts resized with that scale (always round down fonts size to nearest integer), and scale your style structure accordingly using `style.ScaleAllSizes()`.
 
 Your application may want to detect DPI change and reload the fonts and reset style between frames.
 
 Your ui code  should avoid using hardcoded constants for size and positioning. Prefer to express values as multiple of reference values such as `ImGui::GetFontSize()` or `ImGui::GetFrameHeight()`. So e.g. instead of seeing a hardcoded height of 500 for a given item/window, you may want to use `30*ImGui::GetFontSize()` instead.
 
-Down the line Dear ImGui will provide a variety of standardized reference values to facilitate using this.
+down the line Dear ImGui will provide a variety of standardized reference values to facilitate using this.
 
 Applications in the `examples/` folder are not DPI aware partly because they are unable to load a custom font from the file-system (may change that in the future).
 
@@ -503,7 +503,7 @@ The reason DPI is not auto-magically solved in stock examples is that we don't y
 
 This approach is relatively easy and functional but come with two issues:
 - It's not possibly to reliably size or position a window ahead of `Begin()` without knowing on which monitor it'll land.
-- Style override may be lost during the `Begin()` call crossing monitor boundaries. You may need to do some custom scaling mumbo-jumbo if you want your `OnChangedViewport()` handler to preserve style overrides.
+- style override may be lost during the `Begin()` call crossing monitor boundaries. You may need to do some custom scaling mumbo-jumbo if you want your `OnChangedViewport()` handler to preserve style overrides.
 
 Please note that if you are not using multi-viewports with multi-monitors using different DPI scale, you can ignore all of this and use the simpler technique recommended at the top.
 
@@ -527,7 +527,7 @@ backslash \ within a string literal, you need to write it double backslash "\\":
 
 ```cpp
 io.Fonts->AddFontFromFileTTF("MyFolder\MyFont.ttf", size);  // WRONG (you are escaping the M here!)
-io.Fonts->AddFontFromFileTTF("MyFolder\\MyFont.ttf", size;  // CORRECT (Windows only)
+io.Fonts->AddFontFromFileTTF("MyFolder\\MyFont.ttf", size;  // CORRECT (windows only)
 io.Fonts->AddFontFromFileTTF("MyFolder/MyFont.ttf", size);  // ALSO CORRECT
 ```
 
@@ -573,8 +573,8 @@ static ImWchar ranges[] = { 0xf000, 0xf3ff, 0 };
 ImFontConfig config;
 config.MergeMode = true;
 io.Fonts->AddFontDefault();
-io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0, &config, ranges); // Merge icon font
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.Fonts->GetGlyphRangesJapanese()); // Merge japanese glyphs
+io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0, &config, ranges); // merge icon font
+io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.Fonts->GetGlyphRangesJapanese()); // merge japanese glyphs
 ```
 
 ##### [Return to Index](#index)
@@ -595,7 +595,7 @@ builder.AddText("Hello world");                        // Add a string (here "He
 builder.AddChar(0x7262);                               // Add a specific character
 builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // Add one of the default ranges
 builder.BuildRanges(&ranges);                          // Build the final result (ordered ranges with all the unique characters submitted)
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, NULL, ranges.Data);
+io.Fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, NULL, ranges.data);
 ```
 
 All your strings needs to use UTF-8 encoding. In C += 111 you can encode a string literal in UTF-8
@@ -605,9 +605,9 @@ Otherwise you can convert yourself to UTF-8 or load text data from file already 
 
 Text input: it is up to your application to pass the right character code by calling `io.AddInputCharacter()`.
 The applications in examples/ are doing that.
-Windows: you can use the WM_CHAR or WM_UNICHAR or WM_IME_CHAR message (depending if your app is built using Unicode or MultiByte mode).
+windows: you can use the WM_CHAR or WM_UNICHAR or WM_IME_CHAR message (depending if your app is built using Unicode or MultiByte mode).
 You may also use MultiByteToWideChar() or ToUnicode() to retrieve Unicode codepoints from MultiByte characters or keyboard state.
-Windows: if your language is relying on an Input Method Editor (IME), you can write your HWND to ImGui::GetMainViewport()->PlatformHandleRaw
+windows: if your language is relying on an Input Method Editor (IME), you can write your HWND to ImGui::GetMainViewport()->PlatformHandleRaw
 in order for the default the default implementation of io.SetPlatformImeDataFn() to set your Microsoft IME position correctly.
 
 ##### [Return to Index](#index)

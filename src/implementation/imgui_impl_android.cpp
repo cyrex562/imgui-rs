@@ -173,7 +173,7 @@ int32_t ImGui_ImplAndroid_HandleInputEvent(AInputEvent* input_event)
         {
         // FIXME: AKEY_EVENT_ACTION_DOWN and AKEY_EVENT_ACTION_UP occur at once as soon as a touch pointer
         // goes up from a key. We use a simple key event queue/ and process one event per key per frame in
-        // ImGui_ImplAndroid_NewFrame()...or consider using IO queue, if suitable: https://github.com/ocornut/imgui/issues/2787
+        // ImGui_ImplAndroid_NewFrame()...or consider using io queue, if suitable: https://github.com/ocornut/imgui/issues/2787
         case AKEY_EVENT_ACTION_DOWN:
         case AKEY_EVENT_ACTION_UP:
         {

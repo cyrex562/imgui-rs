@@ -6,7 +6,7 @@ _(You may browse this at https://github.com/ocornut/imgui/blob/master/docs/BACKE
 your application or engine to easily integrate Dear ImGui.** Each backend is typically self-contained in a pair of files: imgui_impl_XXXX.cpp + imgui_impl_XXXX.h.
 
 - The 'Platform' backends are in charge of: mouse/keyboard/gamepad inputs, cursor shape, timing, windowing.<BR>
-  e.g. Windows ([imgui_impl_win32.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_win32.cpp)), GLFW ([imgui_impl_glfw.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_glfw.cpp)), SDL2 ([imgui_impl_sdl.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_sdl.cpp)), etc.
+  e.g. windows ([imgui_impl_win32.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_win32.cpp)), GLFW ([imgui_impl_glfw.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_glfw.cpp)), SDL2 ([imgui_impl_sdl.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_sdl.cpp)), etc.
 
 - The 'Renderer' backends are in charge of: creating atlas texture, rendering imgui draw data.<BR>
   e.g. DirectX11 ([imgui_impl_dx11.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_dx11.cpp)), OpenGL/WebGL ([imgui_impl_opengl3.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_opengl3.cpp)), Vulkan ([imgui_impl_vulkan.cpp](https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_vulkan.cpp)), etc.
@@ -60,10 +60,10 @@ In the [backends/](https://github.com/ocornut/imgui/blob/master/backends) folder
 List of Platforms Backends:
 
     imgui_impl_android.cpp    ; Android native app API
-    imgui_impl_glfw.cpp       ; GLFW (Windows, macOS, Linux, etc.) http://www.glfw.org/
+    imgui_impl_glfw.cpp       ; GLFW (windows, macOS, Linux, etc.) http://www.glfw.org/
     imgui_impl_osx.mm         ; macOS native API (not as feature complete as glfw/sdl backends)
-    imgui_impl_sdl.cpp        ; SDL2 (Windows, macOS, Linux, iOS, Android) https://www.libsdl.org
-    imgui_impl_win32.cpp      ; Win32 native API (Windows)
+    imgui_impl_sdl.cpp        ; SDL2 (windows, macOS, Linux, iOS, Android) https://www.libsdl.org
+    imgui_impl_win32.cpp      ; Win32 native API (windows)
     imgui_impl_glut.cpp       ; GLUT/FreeGLUT (this is prehistoric software and absolutely not recommended today!)
 
 List of Renderer Backends:
@@ -113,13 +113,13 @@ In most situations, custom backends have less features and more bugs than the st
 If you want portability, you can use multiple backends and choose between them either at compile time
 or at runtime.
 
-**Example A**: your engine is built over Windows + DirectX11 but you have your own high-level rendering
+**Example A**: your engine is built over windows + DirectX11 but you have your own high-level rendering
 system layered over DirectX11.<BR>
 Suggestion: try using imgui_impl_win32.cpp + imgui_impl_dx11.cpp first.
 Once it works, if you really need it you can replace the imgui_impl_dx11.cpp code with a
 custom renderer using your own rendering functions, and keep using the standard Win32 code etc.
 
-**Example B**: your engine runs on Windows, Mac, Linux and uses DirectX11, Metal, Vulkan respectively.<BR>
+**Example B**: your engine runs on windows, Mac, Linux and uses DirectX11, Metal, Vulkan respectively.<BR>
 Suggestion: use multiple generic backends!
 Once it works, if you really need it you can replace parts of backends with your own abstractions.
 

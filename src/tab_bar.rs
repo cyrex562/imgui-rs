@@ -5,8 +5,8 @@ use crate::imgui_vec::ImVec2;
 use crate::imgui_window::ImGuiWindow;
 
 
-#[allow(non_camel_case_types)]// Flags for ImGui::BeginTabItem()
-pub enum ImGuiTabItemFlags {
+#[allow(non_camel_case_types)]// flags for ImGui::BeginTabItem()
+pub enum DimgTabItemFlags {
     None = 0,
     UnsavedDocument = 1 << 0,
     // Display a dot next to the title + tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
@@ -31,9 +31,9 @@ pub enum ImGuiTabItemFlags {
 pub struct ImGuiTabItem {
     // ImGuiID             ID;
     pub ID: ImGuiID,
-    // ImGuiTabItemFlags   Flags;
-    pub Flags: ImGuiTabItemFlags,
-    // ImGuiWindow*        Window;                 // When TabItem is part of a DockNode's TabBar, we hold on to a window.
+    // ImGuiTabItemFlags   flags;
+    pub Flags: DimgTabItemFlags,
+    // ImGuiWindow*        Window;                 // When TabItem is part of a dock_node's TabBar, we hold on to a window.
     pub Window: *mut ImGuiWindow,
     // int                 LastFrameVisible;
     pub LastFrameVisible: i32,
@@ -69,10 +69,10 @@ impl ImGuiTabItem {
 
 // Storage for a tab bar (sizeof() 152 bytes)
 #[derive(Clone, Debug, Default)]
-pub struct ImGuiTabBar {
+pub struct DimgTabBar {
     // ImVector<ImGuiTabItem> Tabs;
     pub Tabs: Vec<ImGuiTabItem>,
-    // ImGuiTabBarFlags    Flags;
+    // ImGuiTabBarFlags    flags;
     pub Flags: ImGuiTabBarFlags,
     // ImGuiID             ID;                     // Zero for tab-bars used by docking
     pub ID: ImGuiID,
@@ -112,7 +112,7 @@ pub struct ImGuiTabBar {
     pub ReorderRequestTabId: ImGuiID,
     // ImS16               ReorderRequestOffset;
     pub ReorderRequestOffset: i16,
-    // ImS8                BeginCount;
+    // ImS8                begin_count;
     pub BeginCount: i8,
     // bool                WantLayout;
     pub WantLayout: bool,

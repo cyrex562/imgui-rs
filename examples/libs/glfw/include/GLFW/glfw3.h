@@ -84,14 +84,14 @@ extern "C" {
  * Compiler- and platform-specific preprocessor work
  *************************************************************************/
 
-/* If we are we on Windows, we want a single define for it.
+/* If we are we on windows, we want a single define for it.
  */
 #if !defined(_WIN32) && (defined(__WIN32__) || defined(WIN32) || defined(__MINGW32__))
  #define _WIN32
 #endif /* _WIN32 */
 
 /* It is customary to use APIENTRY for OpenGL function pointer declarations on
- * all platforms.  Additionally, the Windows OpenGL header needs APIENTRY.
+ * all platforms.  Additionally, the windows OpenGL header needs APIENTRY.
  */
 #ifndef APIENTRY
  #ifdef _WIN32
@@ -101,21 +101,21 @@ extern "C" {
  #endif
 #endif /* APIENTRY */
 
-/* Some Windows OpenGL headers need this.
+/* Some windows OpenGL headers need this.
  */
 #if !defined(WINGDIAPI) && defined(_WIN32)
  #define WINGDIAPI __declspec(dllimport)
  #define GLFW_WINGDIAPI_DEFINED
 #endif /* WINGDIAPI */
 
-/* Some Windows GLU headers need this.
+/* Some windows GLU headers need this.
  */
 #if !defined(CALLBACK) && defined(_WIN32)
  #define CALLBACK __stdcall
  #define GLFW_CALLBACK_DEFINED
 #endif /* CALLBACK */
 
-/* Most Windows GLU headers need wchar_t.
+/* Most windows GLU headers need wchar_t.
  * The OS X OpenGL header blocks the definition of ptrdiff_t by glext.h.
  * Include it unconditionally to avoid surprising side-effects.
  */
@@ -276,7 +276,7 @@ extern "C" {
  *
  *  See [key input](@ref input_key) for how these are used.
  *
- *  These key codes are inspired by the _USB HID Usage Tables v1.12_ (p. 53-60),
+ *  These key codes are inspired by the _USB HID Usage tables v1.12_ (p. 53-60),
  *  but re-arranged to map to 7-bit ASCII for printable keys (function keys are
  *  put in the 256+ range).
  *
@@ -555,7 +555,7 @@ extern "C" {
  *  Below are a few examples.
  *
  *  @par
- *  Some pre-installed Windows graphics drivers do not support OpenGL.  AMD only
+ *  Some pre-installed windows graphics drivers do not support OpenGL.  AMD only
  *  supports OpenGL ES via EGL, while Nvidia and Intel only support it via
  *  a WGL or GLX extension.  OS X does not provide OpenGL ES at all.  The Mesa
  *  EGL, OpenGL and OpenGL ES libraries do not interface with the Nvidia binary
@@ -3306,7 +3306,7 @@ GLFWAPI GLFWkeyfun glfwSetKeyCallback(GLFWwindow* window, GLFWkeyfun cbfun);
  *  The character callback behaves as system text input normally does and will
  *  not be called if modifier keys are held down that would prevent normal text
  *  input on that platform, for example a Super (Command) key on OS X or Alt key
- *  on Windows.  There is a
+ *  on windows.  There is a
  *  [character with modifiers callback](@ref glfwSetCharModsCallback) that
  *  receives these events.
  *

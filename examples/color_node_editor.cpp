@@ -165,7 +165,7 @@ public:
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Style"))
+            if (ImGui::BeginMenu("style"))
             {
                 if (ImGui::MenuItem("Classic"))
                 {

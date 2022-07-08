@@ -59,7 +59,7 @@ impl ImGuiListClipper {
 
         // ImGuiContext& g = *GImGui;
         let g = GImGui;
-        // ImGuiWindow* window = g.CurrentWindow;
+        // ImGuiWindow* window = g.current_window;
         let window = g.CurrentWindow;
 
         let table = g.CurrentTable;
@@ -78,7 +78,7 @@ impl ImGuiListClipper {
     if (g.ClipperTempDataStacked += 1 > g.ClipperTempData.Size) {
         g.ClipperTempData.resize(g.ClipperTempDataStacked as usize, ImGuiListClipperData());
     }
-    // ImGuiListClipperData* data = &g.ClipperTempData[g.ClipperTempDataStacked - 1];
+    // ImGuiListClipperData* data = &g.clipper_temp_data[g.clipper_temp_data_stacked - 1];
     let data = &g.ClipperTempData[g.ClipperTempDataStacked - 1];
         data.Reset(this);
     data.LossynessOffset = window.DC.CursorStartPosLossyness.y;
@@ -127,7 +127,7 @@ impl ImGuiListClipper {
 pub fn GetSkipItemForListClipping() -> bool
 {
     // ImGuiContext& g = *GImGui;
-    // return (g.CurrentTable ? g.CurrentTable->HostSkipItems : g.CurrentWindow->SkipItems);
+    // return (g.current_table ? g.current_table->HostSkipItems : g.current_window->skip_items);
     if GImGui.CurrentTable {
         GImGui.CurrentTable.HostSkipItems
     } else {
@@ -146,7 +146,7 @@ pub fn sort_and_fuse_ranges(ranges: &mut Vec<ImGuiListClipper>, offset: usize)
     }
 
     // Helper to order ranges and fuse them together if possible (bubble sort is fine as we are only sorting 2-3 entries)
-    // for (int sort_end = ranges.Size - offset - 1; sort_end > 0; sort_end -= 1){
+    // for (int sort_end = ranges.size - offset - 1; sort_end > 0; sort_end -= 1){
     let mut sort_end = ranges.len() - offset -1;
    while (sort_end > 0) {
         // for (int i = offset; i < sort_end + offset; i += 1){
@@ -159,7 +159,7 @@ pub fn sort_and_fuse_ranges(ranges: &mut Vec<ImGuiListClipper>, offset: usize)
     }
 
     // Now fuse ranges together as much as possible.
-    // for (int i = 1 + offset; i < ranges.Size; i += 1)
+    // for (int i = 1 + offset; i < ranges.size; i += 1)
     for i in (1 + offset) .. ranges.Size
     {
         // IM_ASSERT(!ranges[i].PosToIndexConvert && !ranges[i - 1].PosToIndexConvert);
@@ -180,23 +180,23 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
     // FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* window = g.CurrentWindow;
+    // ImGuiWindow* window = g.current_window;
     let window = GImGui.CurrentWindow;
-    // float off_y = pos_y - window->DC.CursorPos.y;
+    // float off_y = pos_y - window->dc.CursorPos.y;
     let off_y = pos_y - window.DC.CursorPos.y;
-    // window->DC.CursorPos.y = pos_y;
+    // window->dc.CursorPos.y = pos_y;
     *window.DC.CursorPos.y = pos_y;
-    // window->DC.CursorMaxPos.y = ImMax(window->DC.CursorMaxPos.y, pos_y - g.Style.ItemSpacing.y);
+    // window->dc.CursorMaxPos.y = ImMax(window->dc.CursorMaxPos.y, pos_y - g.style.ItemSpacing.y);
     *window.DC.CursorMaxPos.y = ImMaxF32(window.DC.CursorMaxPos.y, pos_y - GImGui.Style.ItemSpacing.y);
-    // window->DC.CursorPosPrevLine.y = window->DC.CursorPos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
+    // window->dc.CursorPosPrevLine.y = window->dc.CursorPos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
     *window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height;
-    // window->DC.PrevLineSize.y = (line_height - g.Style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
+    // window->dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
     *window.DC.PrevLineSize.y = (line_height - GImGui.Style.ItemSpacing.y);
     let columns = window.DC.CurrentColumns;
     if (columns.is_null() == false) {
         columns.LineMinY = window.DC.CursorPos.y;
     }                         // Setting this so that cell Y position are set properly
-    // if (ImGuiTable* table = g.CurrentTable)
+    // if (ImGuiTable* table = g.current_table)
     let table = GImGui.CurrentTable;
     if table.is_null() == false
     {

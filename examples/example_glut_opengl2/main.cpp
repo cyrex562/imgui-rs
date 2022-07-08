@@ -6,7 +6,7 @@
 // !!! If someone or something is teaching you GLUT today, you are being abused. Please show some resistance. !!!
 // !!! Nowadays, prefer using GLFW or SDL instead!
 
-// On Windows, you can install Freeglut using vcpkg:
+// On windows, you can install Freeglut using vcpkg:
 //   git clone https://github.com/Microsoft/vcpkg
 //   cd vcpkg
 //   bootstrap - vcpkg.bat
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0, NULL, io.Fonts->GetGlyphRangesJapanese());
+    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\windows\\Fonts\\ArialUni.ttf", 18.0, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
     glutMainLoop();

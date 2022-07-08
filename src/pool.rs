@@ -27,7 +27,7 @@ impl<T> ImGuiPool<T> {
             ..Default::default()
         }
     }
-    //     ~ImPool()   { Clear(); }
+    //     ~ImPool()   { clear(); }
     //     T*          GetByKey(ImGuiID key)               { int idx = Map.GetInt(key, -1); return (idx != -1) ? &Buf[idx] : NULL; }
     pub fn GetByKey(&self, key: ImGuiID) -> *mut T {
         let idx = self.Map.GetInt(key, -1);
@@ -41,7 +41,7 @@ impl<T> ImGuiPool<T> {
     pub fn GetByIndex(&self, n: usize) -> T {
         self.Buf[n]
     }
-    //     ImPoolIdx   GetIndex(const T* p) const          { IM_ASSERT(p >= Buf.Data && p < Buf.Data + Buf.Size); return (ImPoolIdx)(p - Buf.Data); }
+    //     ImPoolIdx   GetIndex(const T* p) const          { IM_ASSERT(p >= Buf.data && p < Buf.data + Buf.size); return (ImPoolIdx)(p - Buf.data); }
     pub fn GetIndex(&self, p: *const T) -> ImGuiPoolIdx {
         let mut out_idx: isize = -1;
         for x in self.Buf.iter() {
@@ -63,7 +63,7 @@ impl<T> ImGuiPool<T> {
     }
 
 
-    //     bool        Contains(const T* p) const          { return (p >= Buf.Data && p < Buf.Data + Buf.Size); }
+    //     bool        Contains(const T* p) const          { return (p >= Buf.data && p < Buf.data + Buf.size); }
     pub fn Contains(&self, p: *const T) -> bool {
         for x in self.Buf.iter() {
             if p == x {
@@ -72,14 +72,14 @@ impl<T> ImGuiPool<T> {
         }
         return false;
     }
-    //     void        Clear()                             { for (int n = 0; n < Map.Data.Size; n++) { int idx = Map.Data[n].val_i; if (idx != -1) Buf[idx].~T(); } Map.Clear(); Buf.clear(); FreeIdx = AliveCount = 0; }
+    //     void        clear()                             { for (int n = 0; n < Map.data.size; n++) { int idx = Map.data[n].val_i; if (idx != -1) Buf[idx].~T(); } Map.clear(); Buf.clear(); FreeIdx = AliveCount = 0; }
     pub fn Clear(&mut self) {
         self.Buf.clear();
         self.FreeIdx = 0;
         self.AliveCount = 0;
     }
 
-    //     T*          Add()                               { int idx = FreeIdx; if (idx == Buf.Size) { Buf.resize(Buf.Size + 1); FreeIdx++; } else { FreeIdx = *(int*)&Buf[idx]; } IM_PLACEMENT_NEW(&Buf[idx]) T(); AliveCount++; return &Buf[idx]; }
+    //     T*          Add()                               { int idx = FreeIdx; if (idx == Buf.size) { Buf.resize(Buf.size + 1); FreeIdx++; } else { FreeIdx = *(int*)&Buf[idx]; } IM_PLACEMENT_NEW(&Buf[idx]) T(); AliveCount++; return &Buf[idx]; }
     pub fn  Add(&mut self) -> *mut T {
     let mut idx = self.FreeIdx;
         if idx == self.Buf.len() as ImGuiPoolIdx {
@@ -104,7 +104,7 @@ impl<T> ImGuiPool<T> {
         self.Map.SetInt(key, -1);
     }
 
-    //     void        Reserve(int capacity)               { Buf.reserve(capacity); Map.Data.reserve(capacity); }
+    //     void        Reserve(int capacity)               { Buf.reserve(capacity); Map.data.reserve(capacity); }
     pub fn Reserve(&mut self, capacity: i32) {
         self.Buf.reserve(capacity as usize);
         self.Map.Data.reserve(capacity as usize)
@@ -113,9 +113,9 @@ impl<T> ImGuiPool<T> {
     //     // To iterate a ImPool: for (int n = 0; n < pool.GetMapSize(); n++) if (T* t = pool.TryGetMapData(n)) { ... }
     //     // Can be avoided if you know .Remove() has never been called on the pool, or AliveCount == GetMapSize()
     //     int         GetAliveCount() const               { return AliveCount; }      // Number of active/alive items in the pool (for display purpose)
-    //     int         GetBufSize() const                  { return Buf.Size; }
-    //     int         GetMapSize() const                  { return Map.Data.Size; }   // It is the map we need iterate to find valid items, since we don't have "alive" storage anywhere
-    //     T*          TryGetMapData(ImPoolIdx n)          { int idx = Map.Data[n].val_i; if (idx == -1) return NULL; return GetByIndex(idx); }
+    //     int         GetBufSize() const                  { return Buf.size; }
+    //     int         GetMapSize() const                  { return Map.data.size; }   // It is the map we need iterate to find valid items, since we don't have "alive" storage anywhere
+    //     T*          TryGetMapData(ImPoolIdx n)          { int idx = Map.data[n].val_i; if (idx == -1) return NULL; return GetByIndex(idx); }
     pub fn TryGetMapData(&mut self, n: ImGuiPoolIdx) -> *mut T {
         let mut idx = self.Map.Data[n].val.val_i;
         if idx == -1 {

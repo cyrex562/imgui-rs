@@ -342,7 +342,7 @@ struct ImNodesContext
     int  ActiveAttributeId;
     bool ActiveAttribute;
 
-    // ImGui::IO cache
+    // ImGui::io cache
 
     ImVec2 MousePos;
 

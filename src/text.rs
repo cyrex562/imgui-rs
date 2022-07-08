@@ -230,11 +230,11 @@ pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_e
 pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut ImWchar, mut remaining: *mut *mut ImWchar, out_offset: *mut ImVec2, stop_on_new_line: bool) -> ImVec2
 {
     // ImGuiContext& g = *GImGui;
-    // ImFont* font = g.Font;
+    // ImFont* font = g.font;
     let font = GImGui.Font;
-    // const float line_height = g.FontSize;
+    // const float line_height = g.font_size;
     let line_height = GImGui.FontSize;
-    // const float scale = line_height / font->FontSize;
+    // const float scale = line_height / font->font_size;
     let scale = line_height / font.FontSize;
     // ImVec2 text_size = ImVec2(0, 0);
     let mut text_size = ImVec2::default();

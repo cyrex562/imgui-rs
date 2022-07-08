@@ -2,7 +2,7 @@
 // (Requires: SDL 2.0.17+)
 
 // Important to understand: SDL_Renderer is an _optional_ component of SDL.
-// For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
+// For a multi-platform app consider using e.g. SDL+DirectX on windows and SDL+OpenGL on Linux/OSX.
 // If your application will want to render any non trivial amount of graphics other than UI,
 // please be aware that SDL_Renderer offers a limited graphic API to the end-user and it might
 // be difficult to step out of those boundaries.

@@ -10,7 +10,7 @@
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 
-// Data
+// data
 static EGLDisplay           g_EglDisplay = EGL_NO_DISPLAY;
 static EGLSurface           g_EglSurface = EGL_NO_SURFACE;
 static EGLContext           g_EglContext = EGL_NO_CONTEXT;

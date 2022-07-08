@@ -20,19 +20,19 @@ impl ImGuiTextBuffer {
         }
     }
 
-    // const char*         begin() const           { return Buf.Data ? &Buf.front() : EmptyString; }
+    // const char*         begin() const           { return Buf.data ? &Buf.front() : EmptyString; }
     pub fn begin(&self) -> *const u8 {
         &self.Buf[0]
     }
-    // const char*         end() const             { return Buf.Data ? &Buf.back() : EmptyString; }   // Buf is zero-terminated, so end() will point on the zero-terminator
+    // const char*         end() const             { return Buf.data ? &Buf.back() : EmptyString; }   // Buf is zero-terminated, so end() will point on the zero-terminator
     pub fn end(&self) -> *const u8 {
         &self.Buf[self.Buf.len()]
     }
-    // int                 size() const            { return Buf.Size ? Buf.Size - 1 : 0; }
+    // int                 size() const            { return Buf.size ? Buf.size - 1 : 0; }
     pub fn size(&self) -> usize {
         self.Buf.len()
     }
-    // bool                empty() const           { return Buf.Size <= 1; }
+    // bool                empty() const           { return Buf.size <= 1; }
     pub fn empty(&self) -> bool {
         self.Buf.is_empty()
     }
@@ -44,7 +44,7 @@ impl ImGuiTextBuffer {
     pub fn reserve(&mut self, capacity: usize) {
         self.Buf.reserve(capacity)
     }
-    // const char*         c_str() const           { return Buf.Data ? Buf.Data : EmptyString; }
+    // const char*         c_str() const           { return Buf.data ? Buf.data : EmptyString; }
     pub fn c_str(&self) -> *const u8 {
         self.Buf.as_ptr()
     }
@@ -54,7 +54,7 @@ impl ImGuiTextBuffer {
         //  int len = str_end ? (str_end - str) : strlen(str);
         //
         //     // Add zero-terminator the first time
-        //     const int write_off = (Buf.Size != 0) ? Buf.Size : 1;
+        //     const int write_off = (Buf.size != 0) ? Buf.size : 1;
         //     const int needed_sz = write_off + len;
         //     if (write_off + len >= Buf.Capacity)
         //     {
@@ -71,7 +71,7 @@ impl ImGuiTextBuffer {
 }
 
 
-// inline char         operator[](int i) const { IM_ASSERT(Buf.Data != NULL); return Buf.Data[i]; }
+// inline char         operator[](int i) const { IM_ASSERT(Buf.data != NULL); return Buf.data[i]; }
 impl Index<i32> for ImGuiTextBuffer {
     type Output = u8;
 
@@ -105,7 +105,7 @@ impl Index<i32> for ImGuiTextBuffer {
 //     }
 //
 //     // Add zero-terminator the first time
-//     const int write_off = (Buf.Size != 0) ? Buf.Size : 1;
+//     const int write_off = (Buf.size != 0) ? Buf.size : 1;
 //     const int needed_sz = write_off + len;
 //     if (write_off + len >= Buf.Capacity)
 //     {

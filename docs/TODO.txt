@@ -25,7 +25,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - window: investigate better auto-positioning for new windows.
  - window: top most window flag? more z-order contrl? (#2574)
  - window/size: manually triggered auto-fit (double-click on grip) shouldn't resize window down to viewport size?
- - window/size: how to allow to e.g. auto-size vertically to fit contents, but be horizontally resizable? Assuming SetNextWindowSize() is modified to treat -1.0 on each axis as "keep as-is" (would be good but might break erroneous code): Problem is UpdateWindowManualResize() and lots of code treat (window.AutoFitFramesX > 0 || window.AutoFitFramesY > 0) together.
+ - window/size: how to allow to e.g. auto-size vertically to fit contents, but be horizontally resizable? Assuming SetNextWindowSize() is modified to treat -1.0 on each axis as "keep as-is" (would be good but might break erroneous code): Problem is UpdateWindowManualResize() and lots of code treat (window.auto_fit_frames_x > 0 || window.auto_fit_frames_y > 0) together.
  - window/opt: freeze window flag: if not focused/hovered, return false, render with previous ImDrawList. and/or reduce refresh rate. -> this may require enforcing that it is illegal to submit contents if Begin returns false.
  - window/child: background options for child windows, border option (disable rounding).
  - window/child: allow resizing of child windows (possibly given min/max for each axis?.)
@@ -64,7 +64,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - widgets: a way to represent "mixed" values, so e.g. all values replaced with *, including check-boxes, colors, etc. with support for multi-components widgets (e.g. SliderFloat3, make only "Y" mixed) (#2644)
  - widgets: checkbox: checkbox with custom glyph inside frame.
  - widgets: coloredit: keep reporting as active when picker is on?
- - widgets: group/scalarn functions: expose more per-component information. e.g. store NextItemData.ComponentIdx set by scalarn function, groups can expose them back somehow.
+ - widgets: group/scalarn functions: expose more per-component information. e.g. store next_item_data.ComponentIdx set by scalarn function, groups can expose them back somehow.
  - selectable: using (size.x == 0.0) and (SelectableTextAlign.x > 0.0) followed by SameLine() is currently not supported.
  - selectable: generic BeginSelectable()/EndSelectable() mechanism. (work out alongside range-select branch)
  - selectable: a way to visualize partial/mixed selection (e.g. parent tree node has children with mixed selection)
@@ -109,7 +109,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - layout: more generic alignment state (left/right/centered) for single items?
  - layout: clean up the InputFloatN/SliderFloatN/ColorEdit4 layout code. item width should include frame padding.
  - layout: vertical alignment of mixed height items (e.g. buttons) within a same line (#1284)
- - layout: null layout mode were items are not rendered but user can query GetItemRectMin()/Max/Size.
+ - layout: null layout mode were items are not rendered but user can query GetItemRectMin()/Max/size.
  - layout: (R&D) local multi-pass layout mode.
  - layout: (R&D) bind authored layout data (created by an off-line tool), items fetch their pos/size at submission, self-optimize data structures to stable linear access.
 
@@ -142,8 +142,8 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
 
  - docking: merge docking branch (#2109)
  - docking: B: ordering currently held in tab bar should be implicitly held by windows themselves (also see #2304)
- - docking: B- tab bar: the order/focus restoring code could be part of TabBar and not DockNode? (#8)
- - docking: B~ rework code to be able to lazily create tab bar instance in a single place. The _Unsorted tab flag could be replacing a trailing-counter in DockNode?
+ - docking: B- tab bar: the order/focus restoring code could be part of TabBar and not dock_node? (#8)
+ - docking: B~ rework code to be able to lazily create tab bar instance in a single place. The _Unsorted tab flag could be replacing a trailing-counter in dock_node?
  - docking: B~ fully track windows/settings reference in dock nodes. perhaps find a representation that allows facilitate use of dock builder functions.
  - docking: B~ Unreal style document system (requires low-level controls of dockspace serialization fork/copy/delete). this is mostly working but the DockBuilderXXX api are not exposed/finished.
  - docking: B: when docking outer, perform size locking on neighbors nodes the same way we do it with splitters, so other nodes are not resized.
@@ -152,7 +152,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - docking: B- dock node inside its own viewports creates 1 temporary viewport per window on startup before ditching them (doesn't affect the user nor request platform windows to be created, but unnecessary)
  - docking: B- resize sibling locking behavior may be less desirable if we merged same-axis sibling in a same node level?
  - docking: B- single visible node part of a hidden split hierarchy (OnlyNodeWithWindows != NULL) should show a normal title bar (not a tab bar)
- - docking: B~ SetNextWindowDock() calls (with conditional) -> defer everything to DockContextUpdate (repro: Documents->[X]Windows->Dock 1 elsewhere->Click Redock All
+ - docking: B~ SetNextWindowDock() calls (with conditional) -> defer everything to DockContextUpdate (repro: Documents->[X]windows->Dock 1 elsewhere->Click Redock All
  - docking: B~ tidy up tab list popup buttons features (available with manual tab-bar, see ImGuiTabBarFlags_NoTabListPopupButton code, not used by docking nodes)
  - docking: B- SetNextWindowDockId(0) with a second Begin() in the frame will asserts
  - docking: B: resize grip drawn in host window typically appears under scrollbar.
@@ -228,7 +228,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - menus: menu-bar: main menu-bar could affect clamping of windows position (~ akin to modifying DisplayMin)
  - menus: hovering from menu to menu on a menu-bar has 1 frame without any menu, which is a little annoying. ideally either 0 either longer.
  - menus: could merge draw call in most cases (how about storing an optional aabb in ImDrawCmd to move the burden of merging in a single spot).
- - menus: would be nice if the Selectable() supported horizontal alignment (must be given the equivalent of WorkRect.Max.x matching the position of the shortcut column)
+ - menus: would be nice if the Selectable() supported horizontal alignment (must be given the equivalent of work_rect.Max.x matching the position of the shortcut column)
 
  - tree node: add treenode/treepush int variants? not there because (void*) cast from int warns on some platforms/settings?
  - tree node: try to apply scrolling at time of TreePop() if node was just opened and end of node is past scrolling limits?
@@ -251,7 +251,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - style: try to make PushStyleVar() more robust to incorrect parameters (to be more friendly to edit & continues situation).
  - style: global scale setting.
  - style: FramePadding could be different for up vs down (#584)
- - style: WindowPadding needs to be EVEN as the 0.5 multiplier used on this value probably have a subtle effect on clip rectangle
+ - style: window_padding needs to be EVEN as the 0.5 multiplier used on this value probably have a subtle effect on clip rectangle
  - style: have a more global HSV setter (e.g. alter hue on all elements). consider replacing active/hovered by offset in HSV space? (#438, #707, #1223)
  - style: gradients fill (#1223) ~ 2 bg colors for each fill? tricky with rounded shapes and using textures for corners.
  - style editor: color child window height expressed in multiple of line height.
@@ -325,15 +325,15 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - font/opt: Considering storing standalone AdvanceX table as 16-bit fixed point integer?
  - font/opt: Glyph currently 40 bytes (2+9*4). Consider storing UV as 16 bits integer? (->32 bytes). X0/Y0/X1/Y1 as 16 fixed-point integers? Or X0/Y0 as float and X1/Y1 as fixed8_8?
 
- - nav: some features such as PageUp/Down/Home/End should probably work without ImGuiConfigFlags_NavEnableKeyboard? (where do we draw the line? how about CTRL+Tab)
- ! nav: never clear NavId on some setup (e.g. gamepad centric)
+ - nav: some features such as PageUp/down/Home/End should probably work without ImGuiConfigFlags_NavEnableKeyboard? (where do we draw the line? how about CTRL+Tab)
+ ! nav: never clear nav_id on some setup (e.g. gamepad centric)
  - nav: there's currently no way to completely clear focus with the keyboard. depending on patterns used by the application to dispatch inputs, it may be desirable.
- - nav: code to focus child-window on restoring NavId appears to have issue: e.g. when focus change is implicit because of window closure.
+ - nav: code to focus child-window on restoring nav_id appears to have issue: e.g. when focus change is implicit because of window closure.
  - nav: Home/End behavior when navigable item is not fully visible at the edge of scrolling? should be backtrack to keep item into view?
  - nav: NavScrollToBringItemIntoView() with item bigger than view should focus top-right? Repro: using Nav in "About Window"
  - nav: wrap around logic to allow e.g. grid based layout (pressing NavRight on the right-most element would go to the next row, etc.). see internal's NavMoveRequestTryWrapping().
  - nav: patterns to make it possible for arrows key to update selection (see JustMovedTo in range_select branch)
- - nav: restore/find nearest NavId when current one disappear (e.g. pressed a button that disappear, or perhaps auto restoring when current button change name)
+ - nav: restore/find nearest nav_id when current one disappear (e.g. pressed a button that disappear, or perhaps auto restoring when current button change name)
  - nav: SetItemDefaultFocus() level of priority, so widget like Selectable when inside a popup could claim a low-priority default focus on the first selected iem
  - nav: NavFlattened: init requests don't work properly on flattened siblings.
  - nav: NavFlattened: pageup/pagedown/home/end don't work properly on flattened siblings.
@@ -347,12 +347,12 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - nav/menus: allow pressing Menu to leave a sub-menu.
  - nav/menus: a way to access the main menu bar with Alt? (currently needs CTRL+TAB) or last focused window menu bar?
  - nav/menus: when using the main menu bar, even though we restore focus after, the underlying window loses its title bar highlight during menu manipulation. could we prevent it?
- - nav/menus: main menu bar currently cannot restore a NULL focus. Could save NavWindow at the time of being focused, similarly to what popup do?
+ - nav/menus: main menu bar currently cannot restore a NULL focus. Could save nav_window at the time of being focused, similarly to what popup do?
  - nav/menus: Alt,Up could open the first menu (e.g. "File") currently it tends to nav into the window/collapse menu. Do do that we would need custom transition?
  - nav/windowing: configure fade-in/fade-out delay on Ctrl+Tab?
- - nav/windowing: when CTRL+Tab/windowing is active, the HoveredWindow detection doesn't take account of the window display re-ordering.
+ - nav/windowing: when CTRL+Tab/windowing is active, the hovered_window detection doesn't take account of the window display re-ordering.
  - nav/windowing: Resizing window will currently fail with certain types of resizing constraints/callback applied
- - focus: preserve ActiveId/focus stack state, e.g. when opening a menu and close it, previously selected InputText() focus gets restored (#622)
+ - focus: preserve active_id/focus stack state, e.g. when opening a menu and close it, previously selected InputText() focus gets restored (#622)
 
  - viewport: make it possible to have no main/hosting viewport
  - viewport: We set ImGuiViewportFlags_NoFocusOnAppearing in a way that is required for GLFW/SDL binding, but could be handled better without
@@ -408,6 +408,6 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - optimization: replace vsnprintf with stb_printf? using IMGUI_USE_STB_SPRINTF. (#1038 + needed for string_view)
  - optimization: add clipping for multi-component widgets (SliderFloatX, ColorEditX, etc.). one problem is that nav branch can't easily clip parent group when there is a move request.
  - optimization: add a flag to disable most of rendering, for the case where the user expect to skip it (#335)
- - optimization: fully covered window (covered by another with non-translucent bg + WindowRounding worth of padding) may want to clip rendering.
+ - optimization: fully covered window (covered by another with non-translucent bg + window_rounding worth of padding) may want to clip rendering.
  - optimization: use another hash function than crc32, e.g. FNV1a
  - optimization: turn some the various stack vectors into statically-sized arrays

@@ -17,7 +17,7 @@ g++ -DIMGUI_USER_CONFIG=\"examples/example_allegro5/imconfig_allegro5.h\" -I .. 
 
 On macOS, install Allegro with homebrew: `brew install allegro`.
 
-### On Windows with Visual Studio's CLI
+### On windows with Visual Studio's CLI
 
 You may install Allegro using vcpkg:
 ```

@@ -1,12 +1,14 @@
-use crate::imgui_h::{ImDrawListSplitter, ImGuiID};
-use crate::imgui_rect::ImRect;
+use std::collections::HashSet;
+use crate::defines::{DimgId, ImDrawListSplitter};
+use crate::rect::DimgRect;
 
-pub struct ImGuiOldColumns
+#[derive(Debug,Default,Clone)]
+pub struct DimgOldColumns
 {
-    // ImGuiID             ID;
-    pub ID: ImGuiID,
-    // ImGuiOldColumnFlags Flags;
-    pub Flags: ImGuiOldColumnFlags,
+    // DimgId             ID;
+    pub ID: DimgId,
+    // ImGuiOldColumnFlags flags;
+    pub Flags: DimgOldColumnFlags,
     // bool                IsFirstFrame;
     pub IsFirstFrame: bool,
     // bool                IsBeingResized;
@@ -25,12 +27,12 @@ pub struct ImGuiOldColumns
     pub HostCursorPosY: f32,
     // float               HostCursorMaxPosX;      // Backup of CursorMaxPos at the time of BeginColumns()
     pub HostCursorMaxPosX: f32,
-    // ImRect              HostInitialClipRect;    // Backup of ClipRect at the time of BeginColumns()
-    pub HostInitialClipRect: ImRect,
-    // ImRect              HostBackupClipRect;     // Backup of ClipRect during PushColumnsBackground()/PopColumnsBackground()
-    pub HostBackupClipRect: ImRect,
-    // ImRect              HostBackupParentWorkRect;//Backup of WorkRect at the time of BeginColumns()
-    pub HostBackupParentWorkRect: ImRect,
+    // DimgRect              HostInitialClipRect;    // Backup of clip_rect at the time of BeginColumns()
+    pub HostInitialClipRect: DimgRect,
+    // DimgRect              HostBackupClipRect;     // Backup of clip_rect during PushColumnsBackground()/PopColumnsBackground()
+    pub HostBackupClipRect: DimgRect,
+    // DimgRect              HostBackupParentWorkRect;//Backup of work_rect at the time of BeginColumns()
+    pub HostBackupParentWorkRect: DimgRect,
     // ImVector<ImGuiOldColumnData> Columns;
     pub Columns: Vec<ImGuiOldColumnData>,
     // ImDrawListSplitter  Splitter;
@@ -38,7 +40,7 @@ pub struct ImGuiOldColumns
     // ImGuiOldColumns()   { memset(this, 0, sizeof(*this)); }
 }
 
-impl ImGuiOldColumns {
+impl DimgOldColumns {
     pub fn new() -> Self {
         Self {
             ..Default::default()
@@ -47,8 +49,9 @@ impl ImGuiOldColumns {
 }
 
 
-// Flags for internal's BeginColumns(). Prefix using BeginTable() nowadays!
-enum ImGuiOldColumnFlags
+// flags for internal's BeginColumns(). Prefix using BeginTable() nowadays!
+#[derive(Debug,Clone)]
+enum DimgOldColumnFlags
 {
     None                    = 0,
     NoBorder                = 1 << 0,   // Disable column dividers
@@ -68,17 +71,23 @@ enum ImGuiOldColumnFlags
 // #endif
 }
 
+impl Default for DimgOldColumnFlags {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
 #[derive(Default,Debug,Clone)]
 pub struct ImGuiOldColumnData
 {
-    // float               OffsetNorm;         // Column start offset, normalized 0.0 (far left) -> 1.0 (far right)
-    pub OffsetNorm: f32,
-    // float               OffsetNormBeforeResize;
-    pub OffsetNormBeforeResize: f32,
-    // ImGuiOldColumnFlags Flags;              // Not exposed
-    pub Flags: ImGuiOldColumnFlags,
-    // ImRect              ClipRect;
-    pub ClipRect: ImRect,
+    // float               offset_norm;         // column start offset, normalized 0.0 (far left) -> 1.0 (far right)
+    pub offset_norm: f32,
+    // float               offset_norm_before_resize;
+    pub offset_norm_before_resize: f32,
+    // ImGuiOldColumnFlags flags;              // Not exposed
+    pub flags: HashSet<DimgOldColumnFlags>,
+    // DimgRect              clip_rect;
+    pub clip_rect: DimgRect,
     // ImGuiOldColumnData() { memset(this, 0, sizeof(*this)); }
 }
 

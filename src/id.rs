@@ -1,68 +1,68 @@
 use crate::context::ImGuiContext;
-use crate::defines::{ImGuiHoveredFlags, ImGuiID};
-use crate::window::ImGuiWindow;
+use crate::defines::{DimgHoveredFlags, DimgId};
+use crate::window::DimgWindow;
 
 // void ImGui::SetActiveID(ImGuiID id, ImGuiWindow* window)
-pub fn SetActiveID(g: &mut ImGuiContext, id: ImGuiID, window: &mut ImGuiWindow)
+pub fn SetActiveID(g: &mut ImGuiContext, id: DimgId, window: &mut DimgWindow)
 {
     // ImGuiContext& g = *GImGui;
 
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
     // we at least need to be resilient to it. Cancelling the move is rather aggressive and users of 'master' branch
     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.
-    if g.MovingWindow != NULL && g.ActiveId == g.MovingWindow.MoveId
+    if g.moving_window != NULL && g.active_id == g.moving_window.MoveId
     {
-        IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() cancel MovingWindow\n");
-        g.MovingWindow = NULL;
+        IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() cancel moving_window\n");
+        g.moving_window = NULL;
     }
 
     // Set active id
-    g.ActiveIdIsJustActivated = (g.ActiveId != id);
-    if g.ActiveIdIsJustActivated
+    g.active_id_is_just_activated = (g.active_id != id);
+    if g.active_id_is_just_activated
     {
-        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.ActiveId, g.ActiveIdWindow ? g.ActiveIdWindow->Name : "", id, window ? window.Name : "");
-        g.ActiveIdTimer = 0.0;
-        g.ActiveIdHasBeenPressedBefore = false;
+        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.active_id, g.active_id_window ? g.active_id_window->Name : "", id, window ? window.Name : "");
+        g.active_id_timer = 0.0;
+        g.active_id_has_been_pressed_before = false;
         g.ActiveIdHasBeenEditedBefore = false;
-        g.ActiveIdMouseButton = -1;
+        g.active_id_mouse_button = -1;
         if id != 0
         {
-            g.LastActiveId = id;
-            g.LastActiveIdTimer = 0.0;
+            g.last_active_id = id;
+            g.last_active_id_timer = 0.0;
         }
     }
-    g.ActiveId = id;
-    g.ActiveIdAllowOverlap = false;
-    g.ActiveIdNoClearOnFocusLoss = false;
-    g.ActiveIdWindow = window;
-    g.ActiveIdHasBeenEditedThisFrame = false;
+    g.active_id = id;
+    g.active_id_allow_overlap = false;
+    g.active_id_no_clear_on_focus_loss = false;
+    g.active_id_window = window;
+    g.active_id_has_been_edited_this_frame = false;
     if id
     {
-        g.ActiveIdIsAlive = id;
-        g.ActiveIdSource = (g.NavActivateId == id || g.NavActivateInputId == id || g.NavJustMovedToId == id) ? (ImGuiInputSource)ImGuiInputSource_Nav : ImGuiInputSource_Mouse;
+        g.active_id_is_alive = id;
+        g.active_id_source = (g.nav_activate_id == id || g.nav_activate_input_id == id || g.nav_just_moved_to_id == id) ? (ImGuiInputSource)ImGuiInputSource_Nav : ImGuiInputSource_Mouse;
     }
 
-    // Clear declaration of inputs claimed by the widget
+    // clear declaration of inputs claimed by the widget
     // (Please note that this is WIP and not all keys/inputs are thoroughly declared by all widgets yet)
-    g.ActiveIdUsingMouseWheel = false;
-    g.ActiveIdUsingNavDirMask = 0x00;
-    g.ActiveIdUsingNavInputMask = 0x00;
-    g.ActiveIdUsingKeyInputMask.ClearAllBits();
+    g.active_id_using_mouse_wheel = false;
+    g.active_id_using_nav_dir_mask = 0x00;
+    g.active_id_using_nav_input_mask = 0x00;
+    g.active_id_using_key_input_mask.ClearAllBits();
 }
 
 
 // void ImGui::MarkItemEdited(ImGuiID id)
-pub fn MarkItemEdited(g: &mut ImGuiContext, id: ImGuiID)
+pub fn MarkItemEdited(g: &mut ImGuiContext, id: DimgId)
 {
     // This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
-    // ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
+    // active_id might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
     // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive);
+    // IM_ASSERT(g.active_id == id || g.active_id == 0 || g.drag_drop_active);
     // IM_UNUSED(id); // Avoid unused variable warnings when asserts are compiled out.
-    //IM_ASSERT(g.CurrentWindow->DC.LastItemId == id);
-    g.ActiveIdHasBeenEditedThisFrame = true;
+    //IM_ASSERT(g.current_window->dc.LastItemId == id);
+    g.active_id_has_been_edited_this_frame = true;
     g.ActiveIdHasBeenEditedBefore = true;
-    g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited;
+    g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_Edited;
 }
 
 
@@ -71,7 +71,7 @@ pub fn MarkItemEdited(g: &mut ImGuiContext, id: ImGuiID)
 
 void ImGui::ClearActiveID()
 {
-    SetActiveID(0, NULL); // g.ActiveId = 0;
+    SetActiveID(0, NULL); // g.active_id = 0;
 }
 
 void ImGui::SetHoveredID(ImGuiID id)
@@ -91,7 +91,7 @@ ImGuiID ImGui::GetHoveredID()
 }
 
 // This is called by ItemAdd().
-// Code not using ItemAdd() may need to call this manually otherwise ActiveId will be cleared. In IMGUI_VERSION_NUM < 18717 this was called by GetID().
+// Code not using ItemAdd() may need to call this manually otherwise active_id will be cleared. In IMGUI_VERSION_NUM < 18717 this was called by GetID().
 void ImGui::KeepAliveID(ImGuiID id)
 {
     ImGuiContext& g = *GImGui;

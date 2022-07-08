@@ -2,7 +2,7 @@
 // (Requires: SDL 2.0.17+)
 
 // Important to understand: SDL_Renderer is an _optional_ component of SDL.
-// For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
+// For a multi-platform app consider using e.g. SDL+DirectX on windows and SDL+OpenGL on Linux/OSX.
 // If your application will want to render any non trivial amount of graphics other than UI,
 // please be aware that SDL_Renderer offers a limited graphic API to the end-user and it might
 // be difficult to step out of those boundaries.
@@ -21,7 +21,7 @@
 // CHANGELOG
 //  2021-12-21: Update SDL_RenderGeometryRaw() format to work with SDL 2.0.19.
 //  2021-12-03: Added support for large mesh (64K+ vertices), enable ImGuiBackendFlags_RendererHasVtxOffset flag.
-//  2021-10-06: Backup and restore modified ClipRect/Viewport.
+//  2021-10-06: Backup and restore modified clip_rect/viewport.
 //  2021-09-21: Initial version.
 
 #include "defines.rs"
@@ -65,7 +65,7 @@ bool ImGui_ImplSDLRenderer_Init(SDL_Renderer* renderer)
     ImGui_ImplSDLRenderer_Data* bd = IM_NEW(ImGui_ImplSDLRenderer_Data)();
     io.BackendRendererUserData = (void*)bd;
     io.BackendRendererName = "imgui_impl_sdlrenderer";
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::vtx_offset field, allowing for large meshes.
 
     bd->SDLRenderer = renderer;
 
@@ -89,7 +89,7 @@ static void ImGui_ImplSDLRenderer_SetupRenderState()
 {
 	ImGui_ImplSDLRenderer_Data* bd = ImGui_ImplSDLRenderer_GetBackendData();
 
-	// Clear out any viewports and cliprect set by the user
+	// clear out any viewports and cliprect set by the user
     // FIXME: Technically speaking there are lots of other things we could backup/setup/restore during our render process.
 	SDL_RenderSetViewport(bd->SDLRenderer, NULL);
 	SDL_RenderSetClipRect(bd->SDLRenderer, NULL);
@@ -178,7 +178,7 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
                 const float* xy = (const float*)((const char*)(vtx_buffer + pcmd->VtxOffset) + IM_OFFSETOF(ImDrawVert, pos));
                 const float* uv = (const float*)((const char*)(vtx_buffer + pcmd->VtxOffset) + IM_OFFSETOF(ImDrawVert, uv));
 #if SDL_VERSION_ATLEAST(2,0,19)
-                const SDL_Color* color = (const SDL_Color*)((const char*)(vtx_buffer + pcmd->VtxOffset) + IM_OFFSETOF(ImDrawVert, col)); // SDL 2.0.19+
+                const SDL_Color* color = (const SDL_Color*)((const char*)(vtx_buffer + pcmd->vtx_offset) + IM_OFFSETOF(ImDrawVert, col)); // SDL 2.0.19+
 #else
                 const int* color = (const int*)((const char*)(vtx_buffer + pcmd->VtxOffset) + IM_OFFSETOF(ImDrawVert, col)); // SDL 2.0.17 and 2.0.18
 #endif
@@ -212,7 +212,7 @@ bool ImGui_ImplSDLRenderer_CreateFontsTexture()
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bit (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
 
     // Upload texture to graphics system
-    // (Bilinear sampling is required by default. Set 'io.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
+    // (Bilinear sampling is required by default. Set 'io.Fonts->flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
     bd->FontTexture = SDL_CreateTexture(bd->SDLRenderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC, width, height);
     if (bd->FontTexture == NULL)
     {

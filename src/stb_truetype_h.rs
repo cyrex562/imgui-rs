@@ -173,11 +173,11 @@
 //         which is the origin of each character. The current point's vertical
 //         position is the baseline. Even "baked fonts" use this model.
 //
-//      Vertical Font Metrics
+//      Vertical font Metrics
 //         The vertical qualities of the font, used to vertically position
 //         and space the characters. See docs for stbtt_GetFontVMetrics.
 //
-//      Font Size in Pixels or Points
+//      font size in Pixels or Points
 //         The preferred interface for specifying font sizes in stb_truetype
 //         is to specify how tall the font's vertical extent should be in pixels.
 //         If that sounds good enough, skip the next paragraph.
@@ -187,7 +187,7 @@
 //         stb_truetype provides a point API for compatibility. However, true
 //         "per inch" conventions don't make much sense on computer displays
 //         since different monitors have different number of pixels per
-//         inch. For example, Windows traditionally uses a convention that
+//         inch. For example, windows traditionally uses a convention that
 //         there are 96 pixels per inch, thus making 'inch' measurements have
 //         nothing to do with inches, and thus effectively defining a point to
 //         be 1.333 pixels. Additionally, the TrueType font data provides
@@ -611,7 +611,7 @@ STBTT_DEF int  stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char 
 // Creates character bitmaps from the font_index'th font found in fontdata (use
 // font_index=0 if you don't know what that is). It creates num_chars_in_range
 // bitmaps for characters with unicode values starting at first_unicode_char_in_range
-// and increasing. Data for how to render them is stored in chardata_for_range;
+// and increasing. data for how to render them is stored in chardata_for_range;
 // pass these to stbtt_GetPackedQuad to get back renderable quads.
 //
 // font_size is the full height of the character from ascender to descender,
@@ -783,7 +783,7 @@ STBTT_DEF void stbtt_GetFontVMetrics(const stbtt_fontinfo *info, int *ascent, in
 
 STBTT_DEF int  stbtt_GetFontVMetricsOS2(const stbtt_fontinfo *info, int *typoAscent, int *typoDescent, int *typoLineGap);
 // analogous to GetFontVMetrics, but returns the "typographic" values from the OS/2
-// table (specific to MS/Windows TTF files).
+// table (specific to MS/windows TTF files).
 //
 // Returns 1 on success (table present), 0 on failure.
 

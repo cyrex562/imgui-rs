@@ -133,7 +133,7 @@ static uSynergyBool sSendReply(uSynergyContext *context)
 	// Set header size
 	uint8_t		*reply_buf	= context->m_replyBuffer;
 	uint32_t	reply_len	= (uint32_t)(context->m_replyCur - reply_buf);				/* Total size of reply */
-	uint32_t	body_len	= reply_len - 4;											/* Size of body */
+	uint32_t	body_len	= reply_len - 4;											/* size of body */
 	uSynergyBool ret;
 	reply_buf[0] = (uint8_t)(body_len >> 24);
 	reply_buf[1] = (uint8_t)(body_len >> 16);

@@ -4,7 +4,7 @@ use std::ops::{Add, Mul, Sub};
 // This is a frequently used type in the API. Consider using IM_VEC2_CLASS_EXTRA to create implicit cast from/to our preferred type.
 // IM_MSVC_RUNTIME_CHECKS_OFF
 #[derive(Default,Debug,Clone)]
-pub struct ImVec2
+pub struct DimgVec2D
 {
     // float                                   x, y;
     pub x: f32,
@@ -19,7 +19,7 @@ pub struct ImVec2
 // #endif
 }
 
-impl ImVec2 {
+impl DimgVec2D {
     pub fn new(x: f32, y: f32) -> Self {
         Self {
             x,
@@ -47,8 +47,8 @@ impl ImVec2 {
     }
 }
 
-impl Sub for ImVec2 {
-    type Output = ImVec2;
+impl Sub for DimgVec2D {
+    type Output = DimgVec2D;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
@@ -58,8 +58,8 @@ impl Sub for ImVec2 {
     }
 }
 
-impl Add for ImVec2 {
-    type Output = ImVec2;
+impl Add for DimgVec2D {
+    type Output = DimgVec2D;
 
     fn add(self, rhs: Self) -> Self::Output {
         Self {
@@ -69,8 +69,8 @@ impl Add for ImVec2 {
     }
 }
 
-impl Mul<f32> for ImVec2 {
-    type Output = ImVec2;
+impl Mul<f32> for DimgVec2D {
+    type Output = DimgVec2D;
 
     fn mul(self, rhs: f32) -> Self::Output {
         Self {
@@ -83,7 +83,7 @@ impl Mul<f32> for ImVec2 {
 
 
 
-pub fn ImLengthSqr(lhs: &ImVec2) -> f32 { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
+pub fn ImLengthSqr(lhs: &DimgVec2D) -> f32 { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
 
 #[derive(Default,Debug,Clone)]
 pub struct ImVec1
@@ -111,7 +111,7 @@ impl ImVec1 {
 
 /// ImVec4: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
 #[derive(Default,Debug,Clone)]
-pub struct ImVec4
+pub struct DimgVec4
 {
     // float                                                     x, y, z, w;
     pub x: f32,
@@ -125,7 +125,7 @@ pub struct ImVec4
 // #endif
 }
 
-impl ImVec4 {
+impl DimgVec4 {
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
         Self {
             x, y, z, w

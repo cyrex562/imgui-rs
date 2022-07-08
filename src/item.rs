@@ -1,56 +1,56 @@
 use crate::context::ImGuiContext;
-use crate::defines::{ImGuiCond, ImGuiHoveredFlags, ImGuiID};
-use crate::rect::ImRect;
-use crate::window::ImGuiItemFlags;
+use crate::defines::{DimgCond, DimgHoveredFlags, DimgId};
+use crate::rect::DimgRect;
+use crate::window::DimgItemFlags;
 
-impl ImGuiNextItemData {
+impl DimgNextItemData {
     // ImGuiNextItemData()         { memset(this, 0, sizeof(*this)); }
     pub fn new() -> Self {
         Self {
             ..Default::default()
         }
     }
-    //     inline void ClearFlags()    { Flags = ImGuiNextItemDataFlags_None; } // Also cleared manually by ItemAdd()!
+    //     inline void ClearFlags()    { flags = ImGuiNextItemDataFlags_None; } // Also cleared manually by ItemAdd()!
     pub fn ClearFlags(&mut self) {
         self.Flags = ImGuiNextItemDataFlags::None
     }
 }
 
 #[derive(Debug,Clone,Default)]
-pub struct ImGuiNextItemData
+pub struct DimgNextItemData
 {
-    // ImGuiNextItemDataFlags      Flags;
+    // ImGuiNextItemDataFlags      flags;
     pub Flags: ImGuiNextItemDataFlags,
     // float                       Width;          // Set by SetNextItemWidth()
     pub Width: f32,
-    // ImGuiID                     FocusScopeId;   // Set by SetNextItemMultiSelectData() (!= 0 signify value has been set, so it's an alternate version of HasSelectionData, we don't use Flags for this because they are cleared too early. This is mostly used for debugging)
-    pub FocusScopeId: ImGuiID,
+    // ImGuiID                     FocusScopeId;   // Set by SetNextItemMultiSelectData() (!= 0 signify value has been set, so it's an alternate version of HasSelectionData, we don't use flags for this because they are cleared too early. This is mostly used for debugging)
+    pub FocusScopeId: DimgId,
     // ImGuiCond                   OpenCond;
-    pub OpenCond: ImGuiCond,
+    pub OpenCond: DimgCond,
     // bool                        OpenVal;        // Set by SetNextItemOpen()
     pub OpenVal: bool,
 }
 
 /// Status storage for the last submitted item
 #[derive(Debug,Clone,Default)]
-pub struct ImGuiLastItemData
+pub struct DimgLastItemData
 {
     // ImGuiID                 ID;
-    pub ID: ImGuiID,
+    pub ID: DimgId,
     // ImGuiItemFlags          InFlags;            // See ImGuiItemFlags_
-    pub InFlags: ImGuiItemFlags,
+    pub InFlags: DimgItemFlags,
     // ImGuiItemStatusFlags    StatusFlags;        // See ImGuiItemStatusFlags_
-    pub StatusFlags: ImGuiItemStatusFlags,
+    pub StatusFlags: DimgItemStatusFlags,
     // ImRect                  Rect;               // Full rectangle
-    pub Rect: ImRect,
+    pub Rect: DimgRect,
     // ImRect                  NavRect;            // Navigation scoring rectangle (not displayed)
-    pub NavRect: ImRect,
+    pub NavRect: DimgRect,
     // ImRect                  DisplayRect;        // Display rectangle (only if ImGuiItemStatusFlags_HasDisplayRect is set)
-    pub DisplayRect: ImRect,
+    pub DisplayRect: DimgRect,
     // ImGuiLastItemData()     { memset(this, 0, sizeof(*this)); }
 }
 
-impl ImGuiLastItemData {
+impl DimgLastItemData {
     pub fn new() -> Self {
         Self {
             ..Default::default()
@@ -58,17 +58,17 @@ impl ImGuiLastItemData {
     }
 }
 
-pub enum ImGuiItemStatusFlags
+pub enum DimgItemStatusFlags
 {
     None               = 0,
     HoveredRect        = 1 << 0,   // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!, this is only one part of the most-common IsItemHovered test)
-    HasDisplayRect     = 1 << 1,   // g.LastItemData.DisplayRect is valid
+    HasDisplayRect     = 1 << 1,   // g.last_item_data.DisplayRect is valid
     Edited             = 1 << 2,   // Value exposed by item was edited in the current frame (should match the bool return value of most widgets)
     ToggledSelection   = 1 << 3,   // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
     ToggledOpen        = 1 << 4,   // Set when TreeNode() reports toggling their open state.
     HasDeactivated     = 1 << 5,   // Set if the widget/group is able to provide data for the Deactivated flag.
     Deactivated        = 1 << 6,   // Only valid if HasDeactivated is set.
-    HoveredWindow      = 1 << 7,   // Override the HoveredWindow test to allow cross-window hover testing.
+    HoveredWindow      = 1 << 7,   // Override the hovered_window test to allow cross-window hover testing.
     FocusedByTabbing   = 1 << 8,    // Set when the Focusable item just got focused by Tabbing (FIXME: to be removed soon)
 // #ifdef IMGUI_ENABLE_TEST_ENGINE
      // [imgui_tests only]

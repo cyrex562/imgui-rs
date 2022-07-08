@@ -1,7 +1,7 @@
 
 # How to Build
 
-- On Windows with Visual Studio's CLI
+- On windows with Visual Studio's CLI
 
 ```
 set SDL2_DIR=path_to_your_sdl2_folder

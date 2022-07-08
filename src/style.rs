@@ -6,7 +6,7 @@ use crate::imgui_math::ImLerpF32;
 use crate::imgui_vec::{ImVec2, ImVec4};
 
 #[allow(non_snake_)]
-pub struct ImGuiStyle {
+pub struct DimgStyle {
     pub Alpha: f32,
     // Global alpha applies to everything in Dear ImGui.
     pub DisabledAlpha: f32,
@@ -28,7 +28,7 @@ pub struct ImGuiStyle {
     pub ChildBorderSize: f32,
     // Thickness of border around child windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
     pub PopupRounding: f32,
-    // Radius of popup window corners rounding. (Note that tooltip windows use WindowRounding)
+    // Radius of popup window corners rounding. (Note that tooltip windows use window_rounding)
     pub PopupBorderSize: f32,
     // Thickness of border around popup/tooltip windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
     pub FramePadding: ImVec2,
@@ -46,7 +46,7 @@ pub struct ImGuiStyle {
     pub TouchExtraPadding: ImVec2,
     // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
     pub IndentSpacing: f32,
-    // Horizontal indentation when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
+    // Horizontal indentation when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
     pub ColumnsMinSpacing: f32,
     // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
     pub ScrollbarSize: f32,
@@ -94,7 +94,7 @@ pub struct ImGuiStyle {
     //  void ScaleAllSizes(float scale_factor);
 }
 
-impl ImGuiStyle {
+impl DimgStyle {
     pub fn new() -> Self {
         let mut out = Self {..Default::default()};
         out.Alpha = 1.0;             // Global alpha applies to everything in Dear ImGui.
@@ -116,7 +116,7 @@ impl ImGuiStyle {
         out.ItemInnerSpacing = ImVec2::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
         out.CellPadding = ImVec2::new(4.0, 2.0);      // Padding within a table cell
         out.TouchExtraPadding = ImVec2::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
-        out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
+        out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
         out.ColumnsMinSpacing = 6.0;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
         out.ScrollbarSize = 14.0;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
         out.ScrollbarRounding = 9.0;             // Radius of grab corners rounding for scrollbar
@@ -183,16 +183,16 @@ pub union ImGuiStyleModUnion1 {
     pub BackupFloat: [f32;2]
 }
 
-// Stacked style modifier, backup of modified data so we can restore it. Data type inferred from the variable.
+// Stacked style modifier, backup of modified data so we can restore it. data type inferred from the variable.
 #[derive(Debug,Default,Clone)]
-pub struct ImGuiStyleMod
+pub struct DimgStyleMod
 {
     // ImGuiStyleVar   VarIdx;
     pub VarIdx: ImGuiStyleVar,
     pub Backup: ImGuiStyleModUnion1,
 }
 
-impl ImGuiStyleMod {
+impl DimgStyleMod {
     // ImGuiStyleMod(ImGuiStyleVar idx, int v)     { VarIdx = idx; BackupInt[0] = v; }
     pub fn new(idx: ImGuiStyleVar, v: i32) -> Self {
         Self {
@@ -220,7 +220,7 @@ impl ImGuiStyleMod {
 // pub fn GetStyle() -> &mut ImGuiStyle
 // {
 //     // IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
-//     return &mut GImGui.Style;
+//     return &mut GImGui.style;
 // }
 
 // ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
@@ -244,7 +244,7 @@ pub fn GetColorU32_2(col: &mut ImVec4) -> u32
 // const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol idx)
 pub fn GetStyleColorVec4(idx: ImGuiColor) -> ImVec4
 {
-    // ImGuiStyle& style = GImGui.Style;
+    // ImGuiStyle& style = GImGui.style;
     let style = &GImGui.Style;
     style.Colors[idx]
 }
@@ -257,7 +257,7 @@ pub fn GetColorU32_3(col: u32) -> u32
         return col;
     }
     let mut a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
-    a = (a * style.Alpha); // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
+    a = (a * style.Alpha); // We don't need to clamp 0..255 because style.Alpha is in 0..1 range.
     (col & !IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT)
 }
 
@@ -299,7 +299,7 @@ pub fn PopStyleColor(mut count: i32)
     let g = &GImGui;
     while count > 0
     {
-        // ImGuiColorMod& backup = g.ColorStack.back();
+        // ImGuiColorMod& backup = g.color_stack.back();
         let backup = g.ColorStack.last().unwrap();
         g.Style.Colors[backup.Col.clone()] = backup.BackupValue.clone();
         g.ColorStack.pop_back();
@@ -342,8 +342,8 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 // [
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, Alpha) ),               // ImGuiStyleVar_Alpha
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, DisabledAlpha) ),       // ImGuiStyleVar_DisabledAlpha
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowPadding) ),       // ImGuiStyleVar_WindowPadding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, WindowRounding) ),      // ImGuiStyleVar_WindowRounding
+//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, window_padding) ),       // ImGuiStyleVar_WindowPadding
+//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, window_rounding) ),      // ImGuiStyleVar_WindowRounding
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, WindowBorderSize) ),    // ImGuiStyleVar_WindowBorderSize
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowMinSize) ),       // ImGuiStyleVar_WindowMinSize
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowTitleAlign) ),    // ImGuiStyleVar_WindowTitleAlign
@@ -380,8 +380,8 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 //     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 1)
 //     {
 //         ImGuiContext& g = *GImGui;
-//         float* pvar = (float*)var_info->GetVarPtr(&g.Style);
-//         g.StyleVarStack.push_back(ImGuiStyleMod(idx, *pvar));
+//         float* pvar = (float*)var_info->GetVarPtr(&g.style);
+//         g.style_var_stack.push_back(ImGuiStyleMod(idx, *pvar));
 //         *pvar = val;
 //         return;
 //     }
@@ -394,8 +394,8 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 //     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 2)
 //     {
 //         ImGuiContext& g = *GImGui;
-//         ImVec2* pvar = (ImVec2*)var_info->GetVarPtr(&g.Style);
-//         g.StyleVarStack.push_back(ImGuiStyleMod(idx, *pvar));
+//         ImVec2* pvar = (ImVec2*)var_info->GetVarPtr(&g.style);
+//         g.style_var_stack.push_back(ImGuiStyleMod(idx, *pvar));
 //         *pvar = val;
 //         return;
 //     }
@@ -408,12 +408,12 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 //     while (count > 0)
 //     {
 //         // We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info->Type] * info->Count), the overhead in Debug is not worth it.
-//         ImGuiStyleMod& backup = g.StyleVarStack.back();
+//         ImGuiStyleMod& backup = g.style_var_stack.back();
 //         const ImGuiStyleVarInfo* info = GetStyleVarInfo(backup.VarIdx);
-//         void* data = info->GetVarPtr(&g.Style);
+//         void* data = info->GetVarPtr(&g.style);
 //         if (info->Type == ImGuiDataType_Float && info->Count == 1)      { ((float*)data)[0] = backup.BackupFloat[0]; }
 //         else if (info->Type == ImGuiDataType_Float && info->Count == 2) { ((float*)data)[0] = backup.BackupFloat[0]; ((float*)data)[1] = backup.BackupFloat[1]; }
-//         g.StyleVarStack.pop_back();
+//         g.style_var_stack.pop_back();
 //         count--;
 //     }
 // }
@@ -484,7 +484,7 @@ pub fn GetStyleColorName(idx: &ImGuiColor) -> String
 
 
 // void ImGui::StyleColorsDark(ImGuiStyle* dst)
-pub fn StyleColorsDark(dst: *mut ImGuiStyle)
+pub fn StyleColorsDark(dst: *mut DimgStyle)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.Style };
@@ -549,7 +549,7 @@ pub fn StyleColorsDark(dst: *mut ImGuiStyle)
 }
 
 // void ImGui::StyleColorsClassic(ImGuiStyle* dst)
-pub fn StyleColorsClassic(dst: *mut ImGuiStyle)
+pub fn StyleColorsClassic(dst: *mut DimgStyle)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.Style };
@@ -615,7 +615,7 @@ pub fn StyleColorsClassic(dst: *mut ImGuiStyle)
 
 // Those light colors are better suited with a thicker font than the default one + FrameBorder
 // void ImGui::StyleColorsLight(ImGuiStyle* dst)
-pub fn StyleColorsLight(dst: *mut ImGuiStyle)
+pub fn StyleColorsLight(dst: *mut DimgStyle)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.Style };

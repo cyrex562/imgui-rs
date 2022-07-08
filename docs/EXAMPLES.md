@@ -9,7 +9,7 @@ The purpose of Examples is to showcase integration with backends, let you try De
 integrating Dear ImGui in your own application/game/engine.
 **Once Dear ImGui is setup and running, run and refer to `ImGui::ShowDemoWindow()` in imgui_demo.cpp for usage of the end-user API.**
 
-You can find Windows binaries for some of those example applications at:
+You can find windows binaries for some of those example applications at:
   http://www.dearimgui.org/binaries
 
 
@@ -96,13 +96,13 @@ OSX & iOS + Metal example. <BR>
 = main.m + imgui_impl_osx.mm + imgui_impl_metal.mm <BR>
 It is based on the "cross-platform" game template provided with Xcode as of Xcode 9.
 (NB: imgui_impl_osx.mm is currently not as feature complete as other platforms backends.
-You may prefer to use the GLFW Or SDL backends, which will also support Windows and Linux.)
+You may prefer to use the GLFW Or SDL backends, which will also support windows and Linux.)
 
 [example_apple_opengl2/](https://github.com/ocornut/imgui/blob/master/examples/example_apple_opengl2/) <BR>
 OSX + OpenGL2 example. <BR>
 = main.mm + imgui_impl_osx.mm + imgui_impl_opengl2.cpp <BR>
 (NB: imgui_impl_osx.mm is currently not as feature complete as other platforms backends.
- You may prefer to use the GLFW Or SDL backends, which will also support Windows and Linux.)
+ You may prefer to use the GLFW Or SDL backends, which will also support windows and Linux.)
 
 [example_emscripten_opengl3/](https://github.com/ocornut/imgui/blob/master/examples/example_emscripten_opengl3/) <BR>
 Emcripten + SDL2 + OpenGL3+/ES2/ES3 example. <BR>
@@ -141,7 +141,7 @@ This is quite long and tedious, because: Vulkan.
 For this example, the main.cpp file exceptionally use helpers function from imgui_impl_vulkan.h/cpp.
 
 [example_glut_opengl2/](https://github.com/ocornut/imgui/blob/master/examples/example_glut_opengl2/) <BR>
-GLUT (e.g., FreeGLUT on Linux/Windows, GLUT framework on OSX) + OpenGL2 example. <BR>
+GLUT (e.g., FreeGLUT on Linux/windows, GLUT framework on OSX) + OpenGL2 example. <BR>
 = main.cpp + imgui_impl_glut.cpp + imgui_impl_opengl2.cpp <BR>
 Note that GLUT/FreeGLUT is largely obsolete software, prefer using GLFW or SDL.
 
@@ -152,7 +152,7 @@ This is used to quickly test compilation of core imgui files in as many setups a
 Because this application doesn't create a window nor a graphic context, there's no graphics output.
 
 [example_sdl_directx11/](https://github.com/ocornut/imgui/blob/master/examples/example_sdl_directx11/) <BR>
-SDL2 + DirectX11 example, Windows only. <BR>
+SDL2 + DirectX11 example, windows only. <BR>
 = main.cpp + imgui_impl_sdl.cpp + imgui_impl_dx11.cpp <BR>
 This to demonstrate usage of DirectX with SDL.
 
@@ -188,19 +188,19 @@ This is quite long and tedious, because: Vulkan. <BR>
 For this example, the main.cpp file exceptionally use helpers function from imgui_impl_vulkan.h/cpp.
 
 [example_win32_directx9/](https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx9/) <BR>
-DirectX9 example, Windows only. <BR>
+DirectX9 example, windows only. <BR>
 = main.cpp + imgui_impl_win32.cpp + imgui_impl_dx9.cpp
 
 [example_win32_directx10/](https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx10/) <BR>
-DirectX10 example, Windows only. <BR>
+DirectX10 example, windows only. <BR>
 = main.cpp + imgui_impl_win32.cpp + imgui_impl_dx10.cpp
 
 [example_win32_directx11/](https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx11/) <BR>
-DirectX11 example, Windows only. <BR>
+DirectX11 example, windows only. <BR>
 = main.cpp + imgui_impl_win32.cpp + imgui_impl_dx11.cpp
 
 [example_win32_directx12/](https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx12/) <BR>
-DirectX12 example, Windows only. <BR>
+DirectX12 example, windows only. <BR>
 = main.cpp + imgui_impl_win32.cpp + imgui_impl_dx12.cpp <BR>
 This is quite long and tedious, because: DirectX12.
 
