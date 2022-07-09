@@ -82,17 +82,17 @@ void init(struct android_app* app)
     ImGui_ImplAndroid_Init(g_App->window);
     ImGui_ImplOpenGL3_Init("#version 300 es");
 
-    // Load Fonts
+    // Load fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     // - Android: The TTF files have to be placed into the assets/ directory (android/app/src/main/assets), we use our GetAssetData() helper to retrieve them.
 
     // We load the default font with increased size to improve readability on many devices with "high" DPI.
     // FIXME: Put some effort into DPI awareness.
-    // Important: when calling AddFontFromMemoryTTF(), ownership of font_data is transfered by Dear ImGui by default (deleted is handled by Dear ImGui), unless we set FontDataOwnedByAtlas=false in ImFontConfig
+    // Important: when calling add_font_from_memory_ttf(), ownership of font_data is transfered by Dear ImGui by default (deleted is handled by Dear ImGui), unless we set font_data_owned_by_atlas=false in ImFontConfig
     ImFontConfig font_cfg;
     font_cfg.SizePixels = 22.0;
     io.Fonts->AddFontDefault(&font_cfg);
@@ -100,19 +100,19 @@ void init(struct android_app* app)
     //int font_data_size;
     //ImFont* font;
     //font_data_size = GetAssetData("Roboto-Medium.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0);
+    //font = io.fonts->add_font_from_memory_ttf(font_data, font_data_size, 16.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("Cousine-Regular.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 15.0);
+    //font = io.fonts->add_font_from_memory_ttf(font_data, font_data_size, 15.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("DroidSans.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 16.0);
+    //font = io.fonts->add_font_from_memory_ttf(font_data, font_data_size, 16.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("ProggyTiny.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 10.0);
+    //font = io.fonts->add_font_from_memory_ttf(font_data, font_data_size, 10.0);
     //IM_ASSERT(font != NULL);
     //font_data_size = GetAssetData("ArialUni.ttf", &font_data);
-    //font = io.Fonts->AddFontFromMemoryTTF(font_data, font_data_size, 18.0, NULL, io.Fonts->GetGlyphRangesJapanese());
+    //font = io.fonts->add_font_from_memory_ttf(font_data, font_data_size, 18.0, NULL, io.fonts->get_glyph_ranges_japanese());
     //IM_ASSERT(font != NULL);
 
     // Arbitrary scale-up

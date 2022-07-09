@@ -8,7 +8,7 @@
 // (minor and older changes stripped away, please see git history for details)
 //  2021/08/23: fixed crash when FT_Render_Glyph() fails to render a glyph and returns NULL.
 //  2021/03/05: added ImGuiFreeTypeBuilderFlags_Bitmap to load bitmap glyphs.
-//  2021/03/02: set 'atlas->TexPixelsUseColors = true' to help some backends with deciding of a prefered texture format.
+//  2021/03/02: set 'atlas->tex_pixels_use_colors = true' to help some backends with deciding of a prefered texture format.
 //  2021/01/28: added support for color-layered glyphs via ImGuiFreeTypeBuilderFlags_LoadColor (require Freetype 2.10+).
 //  2021/01/26: simplified integration by using '#define IMGUI_ENABLE_FREETYPE'.
 //              renamed ImGuiFreeType::XXX flags to ImGuiFreeTypeBuilderFlags_XXX for consistency with other API. removed ImGuiFreeType::BuildFontAtlas().
@@ -16,12 +16,12 @@
 //  2019/02/09: added RasterizerFlags::Monochrome flag to disable font anti-aliasing (combine with ::MonoHinting for best results!)
 //  2019/01/15: added support for imgui allocators + added FreeType only override function SetAllocatorFunctions().
 //  2019/01/10: re-factored to match big update in STB builder. fixed texture height waste. fixed redundant glyphs when merging. support for glyph padding.
-//  2018/06/08: added support for ImFontConfig::GlyphMinAdvanceX, GlyphMaxAdvanceX.
+//  2018/06/08: added support for ImFontConfig::glyph_min_advance_x, glyph_max_advance_x.
 //  2018/02/04: moved to main imgui repository (away from http://www.github.com/ocornut/imgui_club)
 //  2018/01/22: fix for addition of ImFontAtlas::TexUvscale member.
 //  2017/10/22: minor inconsequential change to match change in master (removed an unnecessary statement).
 //  2017/09/26: fixes for imgui internal changes.
-//  2017/08/26: cleanup, optimizations, support for ImFontConfig::RasterizerFlags, ImFontConfig::RasterizerMultiply.
+//  2017/08/26: cleanup, optimizations, support for ImFontConfig::RasterizerFlags, ImFontConfig::rasterizer_multiply.
 //  2017/08/16: imported from https://github.com/Vuhdo/imgui_freetype into http://www.github.com/ocornut/imgui_club, updated for latest changes in ImFontAtlas, minor tweaks.
 
 // About Gamma Correct Blending:
@@ -30,7 +30,7 @@
 // - For correct results you need to be using sRGB and convert to linear space in the pixel shader output.
 // - The default dear imgui styles will be impacted by this change (alpha values will need tweaking).
 
-// FIXME: cfg.OversampleH, OversampleV are not supported (but perhaps not so necessary with this rasterizer).
+// FIXME: cfg.oversample_h, oversample_v are not supported (but perhaps not so necessary with this rasterizer).
 
 #include "freetype.h"
 #include "internal_h.rs"     // ImMin,ImMax,ImFontAtlasBuild*,
@@ -377,7 +377,7 @@ struct ImFontBuildSrcDataFT
     FreeTypeFont        Font;
     stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
     const ImWchar*      SrcRanges;          // Ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFFF)
-    int                 DstIndex;           // Index into atlas->Fonts[] and dst_tmp_array[]
+    int                 DstIndex;           // Index into atlas->fonts[] and dst_tmp_array[]
     int                 GlyphsHighest;      // Highest requested codepoint
     int                 GlyphsCount;        // Glyph count (excluding missing glyphs and glyphs already set by an earlier source font)
     ImBitVector         GlyphsSet;          // Glyph bit map (random access, 1-bit per codepoint. This will be a maximum of 8KB)
@@ -402,8 +402,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // clear atlas
     atlas->TexID = (ImTextureID)NULL;
     atlas->TexWidth = atlas->TexHeight = 0;
-    atlas->TexUvScale = ImVec2(0.0, 0.0);
-    atlas->TexUvWhitePixel = ImVec2(0.0, 0.0);
+    atlas->TexUvScale = DimgVec2D::new(0.0, 0.0);
+    atlas->TexUvWhitePixel = DimgVec2D::new(0.0, 0.0);
     atlas->ClearTexData();
 
     // Temporary storage for building
@@ -423,12 +423,12 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         FreeTypeFont& font_face = src_tmp.Font;
         IM_ASSERT(cfg.DstFont && (!cfg.DstFont->IsLoaded() || cfg.DstFont->ContainerAtlas == atlas));
 
-        // Find index from cfg.DstFont (we allow the user to set cfg.DstFont. Also it makes casual debugging nicer than when storing indices)
+        // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
         for (int output_i = 0; output_i < atlas->Fonts.Size && src_tmp.DstIndex == -1; output_i += 1)
             if (cfg.DstFont == atlas->Fonts[output_i])
                 src_tmp.DstIndex = output_i;
-        IM_ASSERT(src_tmp.DstIndex != -1); // cfg.DstFont not pointing within atlas->Fonts[] array?
+        IM_ASSERT(src_tmp.DstIndex != -1); // cfg.dst_font not pointing within atlas->fonts[] array?
         if (src_tmp.DstIndex == -1)
             return false;
 
@@ -571,7 +571,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
     // We need a width for the skyline algorithm, any width!
     // The exact width doesn't really matter much, but some API/GPU have texture size limitations and increasing width can decrease height.
-    // User can override TexDesiredWidth and TexGlyphPadding if they wish, otherwise we use a simple heuristic to select the width based on expected surface.
+    // User can override tex_desired_width and tex_glyph_padding if they wish, otherwise we use a simple heuristic to select the width based on expected surface.
     const int surface_sqrt = ImSqrt((float)total_surface) + 1;
     atlas->TexHeight = 0;
     if (atlas->TexDesiredWidth > 0)
@@ -599,7 +599,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         stbrp_pack_rects(&pack_context, src_tmp.Rects, src_tmp.GlyphsCount);
 
         // Extend texture height and mark missing glyphs as non-packed so we won't render them.
-        // FIXME: We are not handling packing failure here (would happen if we got off TEX_HEIGHT_MAX or if a single if larger than TexWidth?)
+        // FIXME: We are not handling packing failure here (would happen if we got off TEX_HEIGHT_MAX or if a single if larger than tex_width?)
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1)
             if (src_tmp.Rects[glyph_i].was_packed)
                 atlas->TexHeight = ImMax(atlas->TexHeight, src_tmp.Rects[glyph_i].y + src_tmp.Rects[glyph_i].h);
@@ -607,7 +607,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
     // 7. Allocate texture
     atlas->TexHeight = (atlas->Flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas->TexHeight + 1) : ImUpperPowerOfTwo(atlas->TexHeight);
-    atlas->TexUvScale = ImVec2(1.0 / atlas->TexWidth, 1.0 / atlas->TexHeight);
+    atlas->TexUvScale = DimgVec2D::new(1.0 / atlas->TexWidth, 1.0 / atlas->TexHeight);
     if (src_load_color)
     {
         size_t tex_size = atlas->TexWidth * atlas->TexHeight * 4;
@@ -630,9 +630,9 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         if (src_tmp.GlyphsCount == 0)
             continue;
 
-        // When merging fonts with MergeMode=true:
+        // When merging fonts with merge_mode=true:
         // - We can have multiple input fonts writing into a same destination font.
-        // - dst_font->ConfigData is != from cfg which is our source configuration.
+        // - dst_font->config_data is != from cfg which is our source configuration.
         ImFontConfig& cfg = atlas->ConfigData[src_i];
         ImFont* dst_font = cfg.DstFont;
 

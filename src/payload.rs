@@ -1,4 +1,4 @@
-use crate::defines::DimgId;
+use crate::types::DimgId;
 
 /// data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 #[derive(Default,Debug,Clone)]

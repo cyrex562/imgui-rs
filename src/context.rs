@@ -1,43 +1,54 @@
-use std::cell::RefCell;
+
 use std::collections::HashMap;
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
-use std::ffi::c_void;
-use std::os::raw::c_char;
+
+
 use std::ptr::null_mut;
-use std::rc::Rc;
+
 use crate::clipper::DimgListClipperData;
-use crate::color::DimgColorMod;
-use crate::defines::{DimgColorEditFlags, DimgConfigFlags, DimgDir, DimgDragDropFlags, DimgDrawChannel, DimgFont, DimgId, DimgKey, DimgModFlags, DimgMouseCursor, DimgNavLayer, DimgPlatformImeData, DimgPlatformMonitor, DimgPtrOrIndex, DimgShrinkWidthItem, DimgViewport, ImFontAtlas};
-use crate::dock::ImGuiDockNode;
+use crate::color::{DimgColorEditFlags, DimgColorMod};
+use crate::combo::DimgComboPreviewData;
+use crate::config::DimgConfigFlags;
+use crate::window::DimgShrinkWidthItem;
+use crate::direction::DimgDirection;
+use crate::dock_context::DimgDockContext;
+use crate::drag_drop::DimgDragDropFlags;
+use crate::draw_channel::DimgDrawChannel;
+
 use crate::draw_list::DimgDrawListSharedData;
+use crate::font::DimgFont;
+use crate::font_atlas::DimgFontAtlas;
 use crate::group::DimgGroupData;
-use crate::input::DimgInputSource;
+use crate::input::{DimgInputSource, DimgKey, DimgModFlags, DimgMouseCursor, DimgNavLayer};
 use crate::input_event::DimgInputEvent;
 use crate::io::{DimgIo, DimgPlatformIo};
 use crate::item::{DimgLastItemData, DimgNextItemData};
-use crate::kv_store::DimgStorage;
-use crate::log::{ImGuiDebugLogFlags, ImGuiLogType};
+
+use crate::log::ImGuiLogType;
 use crate::nav::{DimgActivateFlags, DimgNavItemData, DimgNavMoveFlags, DimgScrollFlags};
 use crate::payload::DimgPayload;
+use crate::platform::{DimgPlatformImeData, DimgPlatformMonitor};
 use crate::pool::ImGuiPool;
 use crate::popup::DimgPopupData;
 use crate::rect::DimgRect;
+use crate::settings::DimgSettingsHandler;
 use crate::style::{DimgStyle, DimgStyleMod};
 use crate::tab_bar::DimgTabBar;
 use crate::table::{DimgTable, DimgTableTempData, ImGuiTableSettings};
-use crate::text_buffer::ImGuiTextBuffer;
+
 use crate::text_input_state::DimgInputTextState;
-use crate::types::DIMG_ID_INVALID;
+use crate::types::{DIMG_ID_INVALID, DimgId, DimgPtrOrIndex};
 use crate::vec_nd::{DimgVec2D, DimgVec4};
-use crate::window::{DimgItemFlags, DimgNextWindowData, DimgWindow, DimgWindowStackData};
+use crate::viewport::DimgViewport;
+use crate::window::{DimgItemFlags, DimgNextWindowData, DimgWindow, DimgWindowSettings, DimgWindowStackData};
 
 #[derive()]
-pub struct ImGuiContext {
+pub struct DimgContext {
     // bool                    Initialized;
     pub initialized: bool,
-    // bool                    font_atlas_owned_by_context;            // io.Fonts-> is owned by the ImGuiContext and will be destructed along with it.
+    // bool                    font_atlas_owned_by_context;            // io.fonts-> is owned by the ImGuiContext and will be destructed along with it.
     pub font_atlas_owned_by_context: bool,
     // ImGuiIO                 io;
     pub io: DimgIo,
@@ -49,7 +60,7 @@ pub struct ImGuiContext {
     pub input_events_trail: Vec<DimgInputEvent>,
     // ImGuiStyle              style;
     pub style: DimgStyle,
-    // ImGuiConfigFlags        config_flags_curr_frame;               // = g.io.ConfigFlags at the time of NewFrame()
+    // ImGuiConfigFlags        config_flags_curr_frame;               // = g.io.config_flags at the time of NewFrame()
     pub config_flags_curr_frame: DimgConfigFlags,
     // ImGuiConfigFlags        config_flags_last_frame;
     pub config_flags_last_frame: DimgConfigFlags,
@@ -57,7 +68,7 @@ pub struct ImGuiContext {
     pub font: DimgFont,
     // float                   font_size;                           // (Shortcut) == font_base_size * g.current_window->font_window_scale == window->font_size(). Text height for current window.
     pub font_size: f32,
-    // float                   font_base_size;                       // (Shortcut) == io.FontGlobalScale * font->Scale * font->font_size. Base text height.
+    // float                   font_base_size;                       // (Shortcut) == io.font_global_scale * font->scale * font->font_size. Base text height.
     pub font_base_size: f32,
     // ImDrawListSharedData    draw_list_shared_data;
     pub draw_list_shared_data: DimgDrawListSharedData,
@@ -218,7 +229,7 @@ pub struct ImGuiContext {
     // viewports
     // ImVector<ImGuiViewportP*> viewports;                        // active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
     pub viewports: Vec<DimgViewport>,
-    // float                   current_dpi_scale;                    // == current_viewport->DpiScale
+    // float                   current_dpi_scale;                    // == current_viewport->dpi_scale
     pub current_dpi_scale: f32,
     // ImGuiViewportP*         current_viewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
     pub current_viewport: DimgId,
@@ -265,7 +276,7 @@ pub struct ImGuiContext {
     pub nav_layer: DimgNavLayer,
     // bool                    nav_id_is_alive;                       // Nav widget has been seen this frame ~~ nav_rect_rel is valid
     pub nav_id_is_alive: bool,
-    // bool                    nav_mouse_pos_dirty;                   // When set we will update mouse position if (io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos) if set (NB: this not enabled by default)
+    // bool                    nav_mouse_pos_dirty;                   // When set we will update mouse position if (io.config_flags & ImGuiConfigFlags_NavEnableSetMousePos) if set (NB: this not enabled by default)
     pub nav_mouse_pos_dirty: bool,
     // bool                    NavDisableHighlight;                // When user starts using mouse, we hide gamepad/keyboard highlight (NB: but they are still available, which is why NavDisableHighlight isn't always != nav_disable_mouse_hover)
     pub nav_disable_high_light: bool,
@@ -295,11 +306,11 @@ pub struct ImGuiContext {
     // ImGuiModFlags           nav_move_key_mods;
     pub nav_move_key_mods: DimgModFlags,
     // ImGuiDir                nav_move_dir;                         // Direction of the move request (left/right/up/down)
-    pub nav_move_dir: DimgDir,
+    pub nav_move_dir: DimgDirection,
     // ImGuiDir                NavMoveDirForDebug;
-    pub nav_move_dir_for_debug: DimgDir,
+    pub nav_move_dir_for_debug: DimgDirection,
     // ImGuiDir                nav_move_clip_dir;                     // FIXME-NAV: Describe the purpose of this better. Might want to rename?
-    pub nav_move_clip_dir: DimgDir,
+    pub nav_move_clip_dir: DimgDirection,
     // ImRect                  nav_scoring_rect;                     // Rectangle used for scoring, in screen space. Based of window->nav_rect_rel[], modified for directional navigation scoring.
     pub nav_scoring_rect: DimgRect,
     // ImRect                  nav_scoring_no_clip_rect;               // Some nav operations (such as PageUp/PageDown) enforce a region which clipper will attempt to always keep submitted
@@ -418,7 +429,7 @@ pub struct ImGuiContext {
     // ImVec4                  color_picker_ref;                     // Initial/reference color at the time of opening the color picker.
     pub color_picker_ref: DimgVec4,
     // ImGuiComboPreviewData   combo_preview_data;
-    pub combo_preview_data: ImGuiComboPreviewData,
+    pub combo_preview_data: DimgComboPreviewData,
     // float                   slider_grab_click_offset;
     pub slider_grab_click_offset: f32,
     // float                   slider_current_accum;                 // Accumulated slider delta when using navigation controls.
@@ -457,7 +468,7 @@ pub struct ImGuiContext {
     // Extensions
     // FIXME: We could provide an API to register one slot in an array held in ImGuiContext?
     // ImGuiDockContext        dock_context;
-    pub dock_context: ImGuiDockContext,
+    pub dock_context: DimgDockContext,
     // Settings
     // bool                    settings_loaded;
     pub settings_loaded: bool,
@@ -466,13 +477,13 @@ pub struct ImGuiContext {
     // ImGuiTextBuffer         settings_ini_data;                    // In memory .ini settings
     pub settings_ini_data: Vec<u8>,
     // ImVector<ImGuiSettingsHandler>      settings_handlers;       // List of .ini settings handlers
-    pub settings_handlers: Vec<ImGuiSettingsHandler>,
+    pub settings_handlers: Vec<DimgSettingsHandler>,
     // ImChunkStream<ImGuiWindowSettings>  settings_windows;        // ImGuiWindow .ini settings entries
-    pub settings_windows: ImChunkStream<ImGuiWindowSettings>,
+    pub settings_windows: Vec<DimgWindowSettings>,
     // ImChunkStream<ImGuiTableSettings>   SettingsTables;         // ImGuiTable .ini settings entries
-    pub settings_tabls: ImChunkStream<ImGuiTableSettings>,
+    pub settings_tabls: Vec<DimgTableSettings>,
     // ImVector<ImGuiContextHook>          hooks;                  // hooks for extensions (e.g. test engine)
-    pub hooks: Vec<ImGuiContextHook>,
+    pub hooks: Vec<DimgContextHook>,
     // ImGuiID                             hook_id_next;             // Next available HookId
     pub hook_id_next: DimgId,
     // Capture/Logging
@@ -505,7 +516,7 @@ pub struct ImGuiContext {
     // pub DebugLogBuf: ImGuiTextBuffer,
     // bool                    debug_item_picker_active;              // Item picker is active (started with DebugStartItemPicker())
     pub debug_item_picker_active: bool,
-    // ImGuiID                 debug_item_picker_break_id;             // Will call IM_DEBUG_BREAK() when encountering this ID
+    // ImGuiID                 debug_item_picker_break_id;             // Will call IM_DEBUG_BREAK() when encountering this id
     pub debug_item_picker_break_id: DimgId,
     // ImGuiMetricsConfig      debug_metrics_config;
     pub debug_metrics_config: ImGuiMetricsConfig,
@@ -532,9 +543,9 @@ pub struct ImGuiContext {
 
 }
 
-impl ImGuiContext {
+impl DimgContext {
     // ImGuiContext(ImFontAtlas* shared_font_atlas)
-    pub fn new(shared_font_atlas: &mut ImFontAtlas) -> Self
+    pub fn new(shared_font_atlas: &mut DimgFontAtlas) -> Self
     {
         Self {
             initialized: false,
@@ -658,10 +669,10 @@ impl ImGuiContext {
             nav_move_flags: DimgNavMoveFlags::None,
             nav_move_scroll_flags: DimgScrollFlags::None,
             nav_move_key_mods: DimgModFlags::None,
-            nav_move_dir: DimgDir::None,
+            nav_move_dir: DimgDirection::None,
             // NavMoveDirForDebug: NavMoveClipDir: ImGuiDir_None,
-            nav_move_dir_for_debug: DimgDir::None,
-            nav_move_clip_dir: DimgDir::None,
+            nav_move_dir_for_debug: DimgDirection::None,
+            nav_move_clip_dir: DimgDirection::None,
             nav_scoring_rect: DimgRect::default(),
             nav_scoring_no_clip_rect: DimgRect::default(),
             nav_scoring_debug_count: 0,
@@ -796,4 +807,25 @@ impl ImGuiContext {
             temp_buffer: vec![]
         }
     }
+}
+
+pub enum DimgContextHookType { NewFramePre, NewFramePost, EndFramePre, EndFramePost, RenderPre, RenderPost, Shutdown, PendingRemoval_ }
+
+//-----------------------------------------------------------------------------
+// [SECTION] Generic context hooks
+//-----------------------------------------------------------------------------
+#[derive(Default,Debug,Clone)]
+pub struct DimgContextHook
+{
+    // ImGuiID                     HookId;     // A unique id assigned by AddContextHook()
+    pub hook_id: DimgId,
+    // ImGuiContextHookType        Type;
+    pub hook_type: DimgContextHookType,
+    // ImGuiID                     Owner;
+    pub owner: DimgId,
+    // ImGuiContextHookCallback    Callback;
+    pub callback: Option<DimgContextHookCallback>,
+    // void*                       user_data;
+    pub user_data: Vec<u8>,
+    // ImGuiContextHook()          { memset(this, 0, sizeof(*this)); }
 }

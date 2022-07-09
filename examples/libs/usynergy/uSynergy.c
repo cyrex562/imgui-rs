@@ -604,7 +604,7 @@ void uSynergySendClipboard(uSynergyContext *context, const char *text)
 {
 	// Calculate maximum size that will fit in a reply packet
 	uint32_t overhead_size =	4 +					/* Message size */
-								4 +					/* Message ID */
+								4 +					/* Message id */
 								1 +					/* Clipboard index */
 								4 +					/* Sequence number */
 								4 +					/* Rest of message size (because it's a Synergy string from here on) */

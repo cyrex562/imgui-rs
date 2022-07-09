@@ -43,7 +43,7 @@ impl DimgRect {
         }
     }
     //
-    //     ImVec2      GetCenter() const                   { return ImVec2((Min.x + Max.x) * 0.5, (Min.y + Max.y) * 0.5); }
+    //     ImVec2      get_center() const                   { return ImVec2((Min.x + Max.x) * 0.5, (Min.y + Max.y) * 0.5); }
     pub fn GetCenter(&self) -> ImVec2 {
         ImVec2 {
             x: (self.Min.x + self.Max.x) * 0.5,

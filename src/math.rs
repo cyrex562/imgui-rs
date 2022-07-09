@@ -5,31 +5,31 @@ use crate::imgui_vec::ImVec2;
 // IM_MSVC_RUNTIME_CHECKS_OFF
 // - Wrapper for standard libs functions. (Note that imgui_demo.cpp does _not_ use them to keep the code easy to copy)
 // #ifndef IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
-// #define ImFabs(X)           fabsf(X)
+// #define ImFabs(x)           fabsf(x)
 pub fn ImFabs(x: f32) -> f32 {
     f32::abs(x)
 }
-// #define ImSqrt(X)           sqrtf(X)
+// #define ImSqrt(x)           sqrtf(x)
 pub fn ImSqrt(x: f32) -> f32 {
     f32::sqrt(x)
 }
-// #define ImFmod(X, Y)        fmodf((X), (Y))
+// #define ImFmod(x, Y)        fmodf((x), (Y))
 pub fn ImFmod(x: f32, y: f32) -> f32 {
     x % y
 }
-// #define ImCos(X)            cosf(X)
+// #define ImCos(x)            cosf(x)
 pub fn ImCos(x: f32) -> f32 {
     f32::cos(x)
 }
-// #define ImSin(X)            sinf(X)
+// #define ImSin(x)            sinf(x)
 pub fn ImSin(x: f32) -> f32 {
     f32::sin(x)
 }
-// #define ImAcos(X)           acosf(X)
+// #define ImAcos(x)           acosf(x)
 pub fn ImAcos(x: f32) -> f32 {
     f32::acos(x)
 }
-// #define ImAtan2(Y, X)       atan2f((Y), (X))
+// #define ImAtan2(Y, x)       atan2f((Y), (x))
 pub fn ImAtan2(y: f32, x: f32) -> f32{
     f32::atan2(y,x)
 }
@@ -37,11 +37,11 @@ pub fn ImAtan2(y: f32, x: f32) -> f32{
 pub fn ImAtof(x: &String) -> f32 {
     f32::try_from(x).unwrap()
 }
-//#define ImFloorStd(X)     floorf(X)           // We use our own, see ImFloor() and ImFloorSigned()
+//#define ImFloorStd(x)     floorf(x)           // We use our own, see ImFloor() and ImFloorSigned()
 pub fn ImFloorStd(x: f32) -> f32 {
     f32::floor(x)
 }
-// #define ImCeil(X)           ceilf(X)
+// #define ImCeil(x)           ceilf(x)
 pub fn ImCeil(x: f32) -> f32 {
     f32::ceil(x)
 }

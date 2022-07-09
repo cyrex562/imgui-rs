@@ -3,12 +3,12 @@
 // [ALPHA] Early backend, not well tested. If you want a portable application, prefer using the GLFW or SDL platform Backends on Mac.
 
 // Implemented features:
-//  [X] Platform: Mouse cursor shape and visibility. Disable with 'io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange'.
-//  [X] Platform: Keyboard support. Since 1.87 we are using the io.AddKeyEvent() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy kVK_* values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
-//  [X] Platform: OSX clipboard is supported within core Dear ImGui (no specific code in this backend).
-//  [X] Platform: Gamepad support. Enabled with 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad'.
-//  [X] Platform: IME support.
-//  [X] Platform: Multi-viewport / platform windows.
+//  [x] Platform: Mouse cursor shape and visibility. Disable with 'io.config_flags |= ImGuiConfigFlags_NoMouseCursorChange'.
+//  [x] Platform: Keyboard support. Since 1.87 we are using the io.add_key_event() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy kVK_* values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
+//  [x] Platform: OSX clipboard is supported within core Dear ImGui (no specific code in this backend).
+//  [x] Platform: Gamepad support. Enabled with 'io.config_flags |= ImGuiConfigFlags_NavEnableGamepad'.
+//  [x] Platform: IME support.
+//  [x] Platform: Multi-viewport / platform windows.
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
 // Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
@@ -31,15 +31,15 @@
 //  2022-03-22: Inputs: Monitor NSKeyUp events to catch missing keyUp for key when user press Cmd + key
 //  2022-02-07: Inputs: Forward keyDown/keyUp events to OS when unused by dear imgui.
 //  2022-01-31: Fix building with old Xcode versions that are missing gamepad features.
-//  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago)with io.AddKeyEvent() using ImGuiKey_ModXXX flags. Sorry for the confusion.
-//  2021-01-20: Inputs: calling new io.AddKeyAnalogEvent() for gamepad support, instead of writing directly to io.NavInputs[].
-//  2022-01-17: Inputs: calling new io.AddMousePosEvent(), io.AddMouseButtonEvent(), io.AddMouseWheelEvent() API (1.87+).
+//  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago)with io.add_key_event() using ImGuiKey_ModXXX flags. Sorry for the confusion.
+//  2021-01-20: Inputs: calling new io.add_key_analog_event() for gamepad support, instead of writing directly to io.nav_inputs[].
+//  2022-01-17: Inputs: calling new io.add_mouse_pos_event(), io.add_mouse_button_event(), io.add_mouse_wheel_event() API (1.87+).
 //  2022-01-12: Inputs: Added basic Platform IME support, hooking the io.SetPlatformImeDataFn() function.
-//  2022-01-10: Inputs: calling new io.AddKeyEvent(), io.AddKeyModsEvent() + io.SetKeyEventNativeData() API (1.87+). Support for full ImGuiKey range.
+//  2022-01-10: Inputs: calling new io.add_key_event(), io.AddKeyModsEvent() + io.set_key_event_native_data() API (1.87+). Support for full ImGuiKey range.
 //  2021-12-13: *BREAKING CHANGE* Add NSView parameter to ImGui_ImplOSX_Init(). Generally fix keyboard support. Using kVK_* codes for keyboard keys.
 //  2021-12-13: Add game controller support.
 //  2021-09-21: Use mach_absolute_time as CFAbsoluteTimeGetCurrent can jump backwards.
-//  2021-08-17: Calling io.AddFocusEvent() on NSApplicationDidBecomeActiveNotification/NSApplicationDidResignActiveNotification events.
+//  2021-08-17: Calling io.add_focus_event() on NSApplicationDidBecomeActiveNotification/NSApplicationDidResignActiveNotification events.
 //  2021-06-23: Inputs: Added a fix for shortcuts using CTRL key instead of CMD key.
 //  2021-04-19: Inputs: Added a fix for keys remaining stuck in pressed state when CMD-tabbing into different application.
 //  2021-01-27: Inputs: Added a fix for mouse position not being reported when mouse buttons other than left one are down.
@@ -50,8 +50,8 @@
 //  2019-07-21: Re-added clipboard handlers as they are not enabled by default in core imgui.cpp (reverted 2019-05-18 change).
 //  2019-05-28: Inputs: Added mouse cursor shape and visibility support.
 //  2019-05-18: Misc: Removed clipboard handlers as they are now supported by core imgui.cpp.
-//  2019-05-11: Inputs: Don't filter character values before calling AddInputCharacter() apart from 0xF700..0xFFFF range.
-//  2018-11-30: Misc: Setting up io.BackendPlatformName so it can be displayed in the About Window.
+//  2019-05-11: Inputs: Don't filter character values before calling add_input_character() apart from 0xF700..0xFFFF range.
+//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About Window.
 //  2018-07-07: Initial version.
 
 #define APPLE_HAS_BUTTON_OPTIONS (__IPHONE_OS_VERSION_MIN_REQUIRED >= 130000 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500 || __TV_OS_VERSION_MIN_REQUIRED >= 130000)
@@ -386,9 +386,9 @@ bool ImGui_ImplOSX_Init(NSView* view)
 
     // Setup backend capabilities flags
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;           // We can honor GetMouseCursor() values (optional)
-    //io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
+    //io.backend_flags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.want_set_mouse_pos requests (optional, rarely used)
     io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;      // We can create multi-viewports on the Platform side (optional)
-    //io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport; // We can call io.AddMouseViewportEvent() with correct data (optional)
+    //io.backend_flags |= ImGuiBackendFlags_HasMouseHoveredViewport; // We can call io.add_mouse_viewport_event() with correct data (optional)
     io.BackendPlatformName = "imgui_impl_osx";
 
     bd->Observer = [ImGuiObserver new];
@@ -544,7 +544,7 @@ static void ImGui_ImplOSX_UpdateGamepads()
 #endif
     MAP_BUTTON(ImGuiKey_GamepadFaceDown,        buttonA);              // Xbox A, PS Cross
     MAP_BUTTON(ImGuiKey_GamepadFaceRight,       buttonB);              // Xbox B, PS Circle
-    MAP_BUTTON(ImGuiKey_GamepadFaceLeft,        buttonX);              // Xbox X, PS Square
+    MAP_BUTTON(ImGuiKey_GamepadFaceLeft,        buttonX);              // Xbox x, PS Square
     MAP_BUTTON(ImGuiKey_GamepadFaceUp,          buttonY);              // Xbox Y, PS Triangle
     MAP_BUTTON(ImGuiKey_GamepadDpadLeft,        dpad.left);
     MAP_BUTTON(ImGuiKey_GamepadDpadRight,       dpad.right);
@@ -589,8 +589,8 @@ void ImGui_ImplOSX_NewFrame(NSView* view)
     if (view)
     {
         const float dpi = (float)[view.window backingScaleFactor];
-        io.DisplaySize = ImVec2((float)view.bounds.size.width, (float)view.bounds.size.height);
-        io.DisplayFramebufferScale = ImVec2(dpi, dpi);
+        io.DisplaySize = DimgVec2D::new((float)view.bounds.size.width, (float)view.bounds.size.height);
+        io.DisplayFramebufferScale = DimgVec2D::new(dpi, dpi);
     }
 
     // Setup time step
@@ -882,7 +882,7 @@ static ImVec2 ImGui_ImplOSX_GetWindowPos(ImGuiViewport* viewport)
     NSSize size = screen.frame.size;
     NSRect frame = window.frame;
     NSRect rect = window.contentLayoutRect;
-    return ImVec2(frame.origin.x, size.height - frame.origin.y - rect.size.height);
+    return DimgVec2D::new(frame.origin.x, size.height - frame.origin.y - rect.size.height);
 }
 
 static void ImGui_ImplOSX_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
@@ -905,7 +905,7 @@ static ImVec2 ImGui_ImplOSX_GetWindowSize(ImGuiViewport* viewport)
 
     NSWindow* window = data->Window;
     NSSize size = window.contentLayoutRect.size;
-    return ImVec2(size.width, size.width);
+    return DimgVec2D::new(size.width, size.width);
 }
 
 static void ImGui_ImplOSX_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
@@ -981,10 +981,10 @@ static void ImGui_ImplOSX_UpdateMonitors()
         NSRect visibleFrame = screen.visibleFrame;
 
         ImGuiPlatformMonitor imgui_monitor;
-        imgui_monitor.MainPos = ImVec2(frame.origin.x, frame.origin.y);
-        imgui_monitor.MainSize = ImVec2(frame.size.width, frame.size.height);
-        imgui_monitor.WorkPos = ImVec2(visibleFrame.origin.x, visibleFrame.origin.y);
-        imgui_monitor.WorkSize = ImVec2(visibleFrame.size.width, visibleFrame.size.height);
+        imgui_monitor.MainPos = DimgVec2D::new(frame.origin.x, frame.origin.y);
+        imgui_monitor.MainSize = DimgVec2D::new(frame.size.width, frame.size.height);
+        imgui_monitor.WorkPos = DimgVec2D::new(visibleFrame.origin.x, visibleFrame.origin.y);
+        imgui_monitor.WorkSize = DimgVec2D::new(visibleFrame.size.width, visibleFrame.size.height);
         imgui_monitor.DpiScale = screen.backingScaleFactor;
 
         platform_io.Monitors.push_back(imgui_monitor);

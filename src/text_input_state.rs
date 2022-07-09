@@ -3,11 +3,11 @@ use crate::imgui_h::{ImGuiID, ImGuiInputTextFlags, ImWchar};
 use crate::imgui_math::ImMinI32;
 use crate::imstb_text_edit_state::STB_TexteditState;
 
-/// Internal state of the currently focused/edited text input box For a given item ID, access with ImGui::GetInputTextState()
+/// Internal state of the currently focused/edited text input box For a given item id, access with ImGui::GetInputTextState()
 #[derive(Debug,Default,Clone)]
 pub struct DimgInputTextState
 {
-    // ImGuiID                 ID;                     // widget id owning the text state
+    // ImGuiID                 id;                     // widget id owning the text state
     pub ID: ImGuiID,
     // int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
     pub CurLenW: usize,

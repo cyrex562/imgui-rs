@@ -1,6 +1,6 @@
 #
 # Cross Platform Makefile
-# Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS X
+# Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS x
 #
 # Linux:
 #   apt-get install freeglut3-dev

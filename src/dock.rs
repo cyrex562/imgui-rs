@@ -1,174 +1,257 @@
-use crate::imgui_h::{ImGuiAxis, ImGuiDataAuthority, ImGuiID, ImGuiWindowClass};
-use crate::imgui_rect::ImRect;
-use crate::imgui_tab_bar::ImGuiTabBar;
-use crate::imgui_vec::ImVec2;
-use crate::imgui_window::ImGuiWindow;
+use crate::config::DimgConfigFlags;
+use crate::context::DimgContext;
+use crate::types::DimgId;
+use crate::direction::DimgDirection;
+use crate::dock_context::{DimgDockContext, dock_context_clear_nodes, dock_context_rebuild_nodes};
+use crate::dock_node::{DimgDockNodeFlags, DimgDockNodeSettings};
+use crate::rect::DimgRect;
+use crate::settings::DimgSettingsHandler;
+use crate::types::DIMG_ID_INVALID;
 
 
-#[allow(non_camel_case_types)]// flags for ImGui::DockSpace(), shared/inherited by child nodes.
-// (Some flags can be applied to individual nodes directly)
-// FIXME-DOCK: Also see ImGuiDockNodeFlagsPrivate_ which may involve using the WIP and internal DockBuilder api.
-pub enum DimgDockNodeFlags
+
+/// List of colors that are stored at the time of Begin() into Docked windows.
+/// We currently store the packed colors in a simple array window->dock_style.Colors[].
+/// A better solution may involve appending into a log of colors in ImGuiContext + store offsets into those arrays in ImGuiWindow,
+/// but it would be more complex as we'd need to double-buffer both as e.g. drop target may refer to window from last frame.
+pub enum DimgWindowDockStyleCol
 {
-    None                         = 0,
-    KeepAliveOnly                = 1 << 0,   // Shared       // Don't display the dockspace node but keep it alive. windows docked into this dockspace node won't be undocked.
-    //NoCentralNode              = 1 << 1,   // Shared       // Disable Central Node (the node which can stay empty)
-    NoDockingInCentralNode       = 1 << 2,   // Shared       // Disable docking inside the Central Node, which will be always kept empty.
-    PassthruCentralNode          = 1 << 3,   // Shared       // Enable passthru dockspace: 1) DockSpace() will render a ImGuiCol_WindowBg background covering everything excepted the Central Node when empty. Meaning the host window should probably use SetNextWindowBgAlpha(0.0) prior to Begin() when using this. 2) When Central Node is empty: let inputs pass-through + won't display a DockingEmptyBg background. See demo for details.
-    NoSplit                      = 1 << 4,   // Shared/Local // Disable splitting the node into smaller nodes. Useful e.g. when embedding dockspaces into a main root one (the root one may have splitting disabled to reduce confusion). Note: when turned off, existing splits will be preserved.
-    NoResize                     = 1 << 5,   // Shared/Local // Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.
-    AutoHideTabBar               = 1 << 6    // Shared/Local // Tab bar will automatically hide when there is a single window in the dock node.
+    Text,
+    Tab,
+    TabHovered,
+    TabActive,
+    TabUnfocused,
+    TabUnfocusedActive,
+    LastItem
 }
 
-pub struct  ImGuiDockNode
+// void ImGui::DockContextInitialize(ImGuiContext* ctx)
+
+// Docking context update function, called by NewFrame()
+// void ImGui::DockContextNewFrameUpdateDocking(ImGuiContext* ctx)
+pub fn dock_context_new_frame_update_docking(ctx: &mut DimgContext)
 {
-    // ImGuiID                 ID;
-    pub ID: ImGuiID,
-    // ImGuiDockNodeFlags      SharedFlags;                // (Write) flags shared by all nodes of a same dockspace hierarchy (inherited from the root node)
-    pub SharedFlags: DimgDockNodeFlags,
-    // ImGuiDockNodeFlags      LocalFlags;                 // (Write) flags specific to this node
-    pub LocalFlags: DimgDockNodeFlags,
-    // ImGuiDockNodeFlags      LocalFlagsInWindows;        // (Write) flags specific to this node, applied from windows
-    pub LocalFlagsInWindows: DimgDockNodeFlags,
-    // ImGuiDockNodeFlags      MergedFlags;                // (Read)  Effective flags (== SharedFlags | LocalFlagsInNode | LocalFlagsInWindows)
-    pub MergedFlags: DimgDockNodeFlags,
-    // ImGuiDockNodeState      State;
-    pub State: ImGuiDockNodeState,
-    // ImGuiDockNode*          ParentNode;
-    pub ParentNode: *mut ImGuiDockNode,
-    // ImGuiDockNode*          ChildNodes[2];              // [split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
-    pub ChildNodes: [*mut ImGuiDockNode;2],
-    // ImVector<ImGuiWindow*>  windows;                    // Note: unordered list! Iterate TabBar->Tabs for user-order.
-    pub Windows: Vec<ImGuiWindow>,
-    // ImGuiTabBar*            TabBar;
-    pub TabBar: *mut ImGuiTabBar,
-    // ImVec2                  pos;                        // Current position
-    pub Pos: ImVec2,
-    // ImVec2                  size;                       // Current size
-    pub Size: ImVec2,
-    // ImVec2                  SizeRef;                    // [split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate size.
-    pub SizeRef: ImVec2,
-    // ImGuiAxis               SplitAxis;                  // [split node only] split axis (X or Y)
-    pub SplitAxis: ImGuiAxis,
-    // ImGuiWindowClass        window_class;                // [Root node only]
-    pub WindowClass: ImGuiWindowClass,
-    // ImU32                   LastBgColor;
-    pub LastBgColor: u32,
-    // ImGuiWindow*            HostWindow;
-    pub HostWindow: *mut ImGuiWindow,
-    // ImGuiWindow*            VisibleWindow;              // Generally point to window which is ID is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
-    pub VisibleWindow: *mut ImGuiWindow,
-    // ImGuiDockNode*          CentralNode;                // [Root node only] Pointer to central node.
-    pub CentralNode: *mut ImGuiDockNode,
-    // ImGuiDockNode*          OnlyNodeWithWindows;        // [Root node only] Set when there is a single visible node within the hierarchy.
-    pub OnlyNodeWithWindow: *mut ImGuiDockNode,
-    // int                     CountNodeWithWindows;       // [Root node only]
-    pub CountNodeWithWindows: i32,
-    // int                     LastFrameAlive;             // Last frame number the node was updated or kept alive explicitly with DockSpace() + ImGuiDockNodeFlags_KeepAliveOnly
-    pub LastFrameAlive: i32,
-    // int                     last_frame_active;            // Last frame number the node was updated.
-    pub LastFrameActive: i32,
-    // int                     LastFrameFocused;           // Last frame number the node was focused.
-    pub LastGrameFocused: i32,
-    // ImGuiID                 LastFocusedNodeId;          // [Root node only] Which of our child docking node (any ancestor in the hierarchy) was last focused.
-    pub LastFocusedNodeId: ImGuiID,
-    // ImGuiID                 SelectedTabId;              // [Leaf node only] Which of our tab/window is selected.
-    pub SelectedTabId: ImGuiID,
-    // ImGuiID                 WantCloseTabId;             // [Leaf node only] Set when closing a specific tab/window.
-    pub WantCloseTabId: ImGuiID,
-    // ImGuiDataAuthority      AuthorityForPos         :3;
-    pub AuthorityForPos: ImGuiDataAuthority,
-    // ImGuiDataAuthority      AuthorityForSize        :3;
-    pub AuthorityForSize: ImGuiDataAuthority,
-    // ImGuiDataAuthority      AuthorityForViewport    :3;
-    pub AuthorityForViewport: ImGuiDataAuthority,
-    // bool                    IsVisible               :1; // Set to false when the node is hidden (usually disabled as it has no active window)
-    pub IsVisible: bool,
-    // bool                    IsFocused               :1;
-    pub IsFocused: bool,
-    // bool                    IsBgDrawnThisFrame      :1;
-    pub IsBgDrawnThisFrame: bool,
-    // bool                    has_close_button          :1; // Provide space for a close button (if any of the docked window has one). Note that button may be hidden on window without one.
-    pub HasCloseButton: bool,
-    // bool                    HasWindowMenuButton     :1;
-    pub HasWindowMenuButton: bool,
-    // bool                    HasCentralNodeChild     :1;
-    pub HasCentralNodeChild: bool,
-    // bool                    WantCloseAll            :1; // Set when closing all tabs at once.
-    pub WantCloseAll: bool,
-    // bool                    WantLockSizeOnce        :1;
-    pub WanLockSizeOnce: bool,
-    // bool                    WantMouseMove           :1; // After a node extraction we need to transition toward moving the newly created host window
-    pub WantMouseMOve: bool,
-    // bool                    WantHiddenTabBarUpdate  :1;
-    pub WantHiddenTabBarUpdate: bool,
-    // bool                    WantHiddenTabBarToggle  :1;
-    pub WantHiddenTabBarToggle: bool,
+    // ImGuiContext& g = *ctx;
+    // ImGuiDockContext* dc  = &ctx->DockContext;
+    let mut dc: &mut DimgDockContext = &mut ctx.dock_context;
+    if !(ctx.io.config_flags.contains(DimgConfigFlags::DockingEnable)) {
+        return;
+    }
+
+    // [DEBUG] Store hovered dock node.
+    // We could in theory use DockNodeTreeFindVisibleNodeByPos() on the root host dock node, but using ->dock_node is a good shortcut.
+    // Note this is mostly a debug thing and isn't actually used for docking target, because docking involve more detailed filtering.
+    g.HoveredDockNode = NULL;
+    if (ImGuiWindow* hovered_window = g.HoveredWindowUnderMovingWindow)
+    {
+        if (hovered_window.DockNodeAsHost)
+            g.HoveredDockNode = DockNodeTreeFindVisibleNodeByPos(hovered_window.DockNodeAsHost, g.IO.MousePos);
+        else if (hovered_window.RootWindow->DockNode)
+            g.HoveredDockNode = hovered_window.RootWindow->DockNode;
+    }
+
+    // Process Docking requests
+    for (int n = 0; n < dc->Requests.Size; n += 1)
+        if (dc->Requests[n].Type == ImGuiDockRequestType_Dock)
+            DockContextProcessDock(ctx, &dc->Requests[n]);
+    dc->Requests.resize(0);
+
+    // Create windows for each automatic docking nodes
+    // We can have NULL pointers when we delete nodes, but because id are recycled this should amortize nicely (and our node count will never be very high)
+    for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
+        if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.Data[n].val_p)
+            if (node->IsFloatingNode())
+                DockNodeUpdate(node);
 }
 
-impl ImGuiDockNode {
-    // ImGuiDockNode(ImGuiID id);
-    pub fn new(id: ImGuiID) -> Self {
-        todo!()
-    }
-    //     ~ImGuiDockNode();
-    //     bool                    IsRootNode() const      { return ParentNode == NULL; }
-    pub fn IsRootNode(&self) -> bool {
-        self.ParentNode.is_null()
-    }
-    //     bool                    IsDockSpace() const     { return (MergedFlags & ImGuiDockNodeFlags_DockSpace) != 0; }
-    pub fn IsDockSpace(&self) -> bool {
-        (&self.MergedFlags & DimgDockNodeFlags::DockSpace) != 0
-    }
-    //     bool                    IsFloatingNode() const  { return ParentNode == NULL && (MergedFlags & ImGuiDockNodeFlags_DockSpace) == 0; }
-    pub fn IsFloatingNode(&self) -> bool {
-        self.ParentNode.is_null() && &self.MergedFlags & DimgDockNodeFlags::DockSpace == 0
-    }
-    //     bool                    IsCentralNode() const   { return (MergedFlags & ImGuiDockNodeFlags_CentralNode) != 0; }
-    pub fn IsCentralNode(&self) -> bool {
-        &self.MergedFlags & DimgDockNodeFlags::CentralNode != 0
-    }
-    //     bool                    IsHiddenTabBar() const  { return (MergedFlags & ImGuiDockNodeFlags_HiddenTabBar) != 0; } // hidden tab bar can be shown back by clicking the small triangle
-    pub fn IsHiddenTabBar(&self) -> bool {
-        &self.MergedFlags & DimgDockNodeFlags::HiddenTabBar != 0
-    }
-    //     bool                    IsNoTabBar() const      { return (MergedFlags & ImGuiDockNodeFlags_NoTabBar) != 0; }     // Never show a tab bar
-    pub fn IsNoTabBar(&self) -> bool {
-        &self.MergedFlags & DimgDockNodeFlags::NoTabBar
-    }
-    //     bool                    IsSplitNode() const     { return ChildNodes[0] != NULL; }
-    pub fn IsSplitNode(&self) -> bool {
-        self.ChildNodes[0].is_null() == false
-    }
-    //     bool                    IsLeafNode() const      { return ChildNodes[0] == NULL; }
-    pub fn IsLeafNode(&self) -> bool {
-        self.ChildNodes[0].is_null()
-    }
-    //     bool                    IsEmpty() const         { return ChildNodes[0] == NULL && windows.size == 0; }
-    pub fn IsEmpty(&self) -> bool {
-        self.ChildNodes[0].is_null() && self.Windows.is_empty()
-    }
-    //     ImRect                  Rect() const            { return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
-    pub fn Rect(&self) -> ImRect {
-        ImRect::new4(self.Pos.x, self.Pos.y, self.Pos.x + self.Size.x, self.Pox.y + self.Size.y)
-    }
-    //
-    //     void                    SetLocalFlags(ImGuiDockNodeFlags flags) { LocalFlags = flags; UpdateMergedFlags(); }
-    pub fn SetLocalFlags(&mut self, flags: DimgDockNodeFlags) {
-        self.LocalFlags = flags;
-        self.UpdatemergedFlags();
-    }
-    //     void                    UpdateMergedFlags()     { MergedFlags = SharedFlags | LocalFlags | LocalFlagsInWindows; }
-    pub fn UpdateMergedFlags(&mut self) {
-        self.MergedFlags = &self.SharedFlags | &self.LocalFlags | &self.LocalFlagsInWindows;
-    }
-}
-
-pub enum ImGuiDockNodeState
+void ImGui::DockContextEndFrame(ImGuiContext* ctx)
 {
-    Unknown,
-    HostWindowHiddenBecauseSingleWindow,
-    HostWindowHiddenBecauseWindowsAreResizing,
-    HostWindowVisible
+    // Draw backgrounds of node missing their window
+    ImGuiContext& g = *ctx;
+    ImGuiDockContext* dc = &g.DockContext;
+    for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
+        if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.Data[n].val_p)
+            if (node->LastFrameActive == g.FrameCount && node->IsVisible && node->HostWindow && node->IsLeafNode() && !node->IsBgDrawnThisFrame)
+            {
+                ImRect bg_rect(node->Pos + DimgVec2D::new(0.0, GetFrameHeight()), node->Pos + node->Size);
+                ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node->HostWindow->Rect(), DOCKING_SPLITTER_SIZE);
+                node->HostWindow->DrawList->ChannelsSetCurrent(0);
+                node->HostWindow->DrawList->AddRectFilled(bg_rect.Min, bg_rect.Max, node->LastBgColor, node->HostWindow->WindowRounding, bg_rounding_flags);
+            }
 }
 
+static ImGuiDockNode* ImGui::DockContextFindNodeByID(ImGuiContext* ctx, ImGuiID id)
+{
+    return (ImGuiDockNode*)ctx->DockContext.Nodes.GetVoidPtr(id);
+}
+
+ImGuiID ImGui::DockContextGenNodeID(ImGuiContext* ctx)
+{
+    // Generate an id for new node (the exact id value doesn't matter as long as it is not already used)
+    // FIXME-OPT FIXME-DOCK: This is suboptimal, even if the node count is small enough not to be a worry.0
+    // We should poke in ctx->Nodes to find a suitable id faster. Even more so trivial that ctx->Nodes lookup is already sorted.
+    ImGuiID id = 0x0001;
+    while (DockContextFindNodeByID(ctx, id) != NULL)
+        id += 1;
+    return id;
+}
+
+static ImGuiDockNode* ImGui::DockContextAddNode(ImGuiContext* ctx, ImGuiID id)
+{
+    // Generate an id for the new node (the exact id value doesn't matter as long as it is not already used) and add the first window.
+    ImGuiContext& g = *ctx;
+    if (id == 0)
+        id = DockContextGenNodeID(ctx);
+    else
+        IM_ASSERT(DockContextFindNodeByID(ctx, id) == NULL);
+
+    // We don't set node->last_frame_alive on construction. Nodes are always created at all time to reflect .ini settings!
+    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextAddNode 0x%08X\n", id);
+    ImGuiDockNode* node = IM_NEW(ImGuiDockNode)(id);
+    ctx->DockContext.Nodes.SetVoidPtr(node->ID, node);
+    return node;
+}
+
+static void ImGui::DockContextRemoveNode(ImGuiContext* ctx, ImGuiDockNode* node, bool merge_sibling_into_parent_node)
+{
+    ImGuiContext& g = *ctx;
+    ImGuiDockContext* dc  = &ctx->DockContext;
+
+    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x%08X\n", node->ID);
+    IM_ASSERT(DockContextFindNodeByID(ctx, node->ID) == node);
+    IM_ASSERT(node->ChildNodes[0] == NULL && node->ChildNodes[1] == NULL);
+    IM_ASSERT(node->Windows.Size == 0);
+
+    if (node->HostWindow)
+        node->HostWindow->DockNodeAsHost = NULL;
+
+    ImGuiDockNode* parent_node = node->ParentNode;
+    const bool merge = (merge_sibling_into_parent_node && parent_node != NULL);
+    if (merge)
+    {
+        IM_ASSERT(parent_node->ChildNodes[0] == node || parent_node->ChildNodes[1] == node);
+        ImGuiDockNode* sibling_node = (parent_node->ChildNodes[0] == node ? parent_node->ChildNodes[1] : parent_node->ChildNodes[0]);
+        DockNodeTreeMerge(&g, parent_node, sibling_node);
+    }
+    else
+    {
+        for (int n = 0; parent_node && n < IM_ARRAYSIZE(parent_node->ChildNodes); n += 1)
+            if (parent_node->ChildNodes[n] == node)
+                node->ParentNode->ChildNodes[n] = NULL;
+        dc->Nodes.SetVoidPtr(node->ID, NULL);
+        IM_DELETE(node);
+    }
+}
+
+
+#[derive(Debug,Clone,Default)]
+pub struct DimgDockRequest
+{
+    // ImGuiDockRequestType    Type;
+    pub request_type: DimgDockRequestType,
+    // ImGuiWindow*            DockTargetWindow;   // Destination/Target Window to dock into (may be a loose window or a dock_node, might be NULL in which case DockTargetNode cannot be NULL)
+    pub dock_target_window: DimgId,
+    // ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
+    pub dock_target_node: DimgId,
+    // ImGuiWindow*            DockPayload;        // Source/Payload window to dock (may be a loose window or a dock_node), [Optional]
+    pub dock_payload: DimgId,
+    // ImGuiDir                DockSplitDir;
+    pub dock_split_dir: DimgDirection,
+    // float                   DockSplitRatio;
+    pub dock_split_ratio: f32,
+    // bool                    DockSplitOuter;
+    pub dock_split_outer: bool,
+    // ImGuiWindow*            UndockTargetWindow;
+    pub undock_target_window: DimgId,
+    // ImGuiDockNode*          UndockTargetNode;
+    pub undock_target_node: DimgId,
+}
+
+impl DimgDockRequest {
+    //ImGuiDockRequest()
+    pub fn new() -> Self
+    {
+        // Type = None;
+        // DockTargetWindow = DockPayload = UndockTargetWindow = NULL;
+        // DockTargetNode = UndockTargetNode = NULL;
+        // DockSplitDir = ImGuiDir_None;
+        // DockSplitRatio = 0.5;
+        // DockSplitOuter = false;
+        Self {
+            request_type: DimgDockRequestType::None,
+            dock_target_window: DIMG_ID_INVALID,
+            dock_payload: DIMG_ID_INVALID,
+            undock_target_window: DIMG_ID_INVALID,
+            dock_target_node: DIMG_ID_INVALID,
+            undock_target_node: DIMG_ID_INVALID,
+            dock_split_dir: DimgDirection::None,
+            dock_split_ratio: 0.5,
+            dock_split_outer: false,
+        }
+    }
+}
+
+
+#[derive(Debug,Clone)]
+pub enum DimgDockRequestType
+{
+    None = 0,
+    Dock,
+    Undock,
+    Split                  // split is the same as Dock but without a DockPayload
+}
+
+impl Default for DimgDockRequestType {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+#[derive(Debug,Default,Clone)]
+pub struct DimgDockPreviewData
+{
+    // ImGuiDockNode   FutureNode;
+    pub future_node: DimgDockNode,
+    // bool            IsDropAllowed;
+    pub is_drop_allowed: bool,
+    // bool            IsCenterAvailable;
+    pub is_center_available: bool,
+    // bool            IsSidesAvailable;           // Hold your breath, grammar freaks..
+    pub is_sides_available: bool,
+    // bool            IsSplitDirExplicit;         // Set when hovered the drop rect (vs. implicit SplitDir==None when hovered the window)
+    pub is_split_dir_explicit: bool,
+    // ImGuiDockNode*  SplitNode;
+    pub split_node: DimgId,
+    // ImGuiDir        SplitDir;
+    pub split_dir: DimgDirection,
+    // float           SplitRatio;
+    pub split_ratio: f32,
+    // ImRect          DropRectsDraw[ImGuiDir_COUNT + 1];  // May be slightly different from hit-testing drop rects used in DockNodeCalcDropRects()
+    pub drop_rects_draw: [DimgRect; 5 ],
+}
+
+impl DimgDockPreviewData {
+
+    // ImGuiDockPreviewData() : FutureNode(0) {
+    pub fn new() -> Self {
+    // IsDropAllowed = IsCenterAvailable = IsSidesAvailable = IsSplitDirExplicit = false; SplitNode = NULL; SplitDir = ImGuiDir_None; SplitRatio = 0.f; for (int n = 0; n < IM_ARRAYSIZE(DropRectsDraw); n += 1) DropRectsDraw[n] = ImRect(+FLT_MAX, +FLT_MAX, -FLT_MAX, -FLT_MAX);
+    Self {
+        future_node: (),
+        is_drop_allowed: false,
+        is_center_available: false,
+        is_sides_available: false,
+        is_split_dir_explicit: false,
+        split_node: 0,
+        split_dir: DimgDirection::None,
+        split_ratio: 0.0,
+        drop_rects_draw: [DimgRect::new();5]
+    }
+    }
+}
+
+// Docking
+// static const float DOCKING_TRANSPARENT_PAYLOAD_ALPHA        = 0.50;    // For use with io.config_docking_transparent_payload. Apply to viewport _or_ WindowBg in host viewport.
+pub const DOCKING_TRANSPARENT_PAYLOAD_ALPHA: f32 = 0.50;
+
+// static const float DOCKING_SPLITTER_SIZE                    = 2.0;
+pub const DOCKING_SPLITTER_SIZE: f32 = 2.0;

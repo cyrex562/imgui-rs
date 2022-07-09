@@ -23,12 +23,12 @@ or view this file with any Markdown viewer.
 | [I integrated Dear ImGui in my engine and some elements are clipping or disappearing when I move windows around...](#q-i-integrated-dear-imgui-in-my-engine-and-some-elements-are-clipping-or-disappearing-when-i-move-windows-around) |
 | [I integrated Dear ImGui in my engine and some elements are displaying outside their expected windows boundaries...](#q-i-integrated-dear-imgui-in-my-engine-and-some-elements-are-displaying-outside-their-expected-windows-boundaries) |
 | **Q&A: Usage** |
-| **[About the ID Stack system..<br>Why is my widget not reacting when I click on it?<br>How can I have widgets with an empty label?<br>How can I have multiple widgets with the same label?<br>How can I have multiple windows with the same label?](#q-about-the-id-stack-system)** |
+| **[About the id Stack system..<br>Why is my widget not reacting when I click on it?<br>How can I have widgets with an empty label?<br>How can I have multiple widgets with the same label?<br>How can I have multiple windows with the same label?](#q-about-the-id-stack-system)** |
 | [How can I display an image? What is ImTextureID, how does it work?](#q-how-can-i-display-an-image-what-is-imtextureid-how-does-it-work)|
 | [How can I use my own math types instead of ImVec2/ImVec4?](#q-how-can-i-use-my-own-math-types-instead-of-imvec2imvec4) |
 | [How can I interact with standard C += 1 types (such as std::string and std::vector)?](#q-how-can-i-interact-with-standard-c-types-such-as-stdstring-and-stdvector) |
 | [How can I display custom shapes? (using low-level ImDrawList API)](#q-how-can-i-display-custom-shapes-using-low-level-imdrawlist-api) |
-| **Q&A: Fonts, Text** |
+| **Q&A: fonts, Text** |
 | [How should I handle DPI in my application?](#q-how-should-i-handle-dpi-in-my-application) |
 | [How can I load a different font than the default?](#q-how-can-i-load-a-different-font-than-the-default) |
 | [How can I easily use icons in my application?](#q-how-can-i-easily-use-icons-in-my-application) |
@@ -51,7 +51,7 @@ or view this file with any Markdown viewer.
 - The [Wiki](https://github.com/ocornut/imgui/wiki) is a hub to many resources and links.
 - Dozens of standalone example applications using e.g. OpenGL/DirectX are provided in the [examples/](https://github.com/ocornut/imgui/blob/master/examples/) folder to explain how to integrate Dear ImGui with your own engine/application. You can run those applications and explore them.
 - See demo code in [imgui_demo.cpp](https://github.com/ocornut/imgui/blob/master/imgui_demo.cpp) and particularly the `ImGui::ShowDemoWindow()` function. The demo covers most features of Dear ImGui, so you can read the code and see its output.
-- See documentation: [Backends](https://github.com/ocornut/imgui/blob/master/docs/BACKENDS.md), [Examples](https://github.com/ocornut/imgui/blob/master/docs/EXAMPLES.md), [Fonts](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md).
+- See documentation: [Backends](https://github.com/ocornut/imgui/blob/master/docs/BACKENDS.md), [Examples](https://github.com/ocornut/imgui/blob/master/docs/EXAMPLES.md), [fonts](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md).
 - See documentation and comments at the top of [imgui.cpp](https://github.com/ocornut/imgui/blob/master/imgui.cpp) + general API comments in [imgui.h](https://github.com/ocornut/imgui/blob/master/imgui.h).
 - The [Glossary](https://github.com/ocornut/imgui/wiki/Glossary) page may be useful.
 - The [Issues](https://github.com/ocornut/imgui/issues) and [Discussions](https://github.com/ocornut/imgui/discussions) sections can be searched for past questions and issues.
@@ -102,34 +102,34 @@ For first-time users having issues compiling/linking/running or issues loading f
 
 ### Q: How can I tell whether to dispatch mouse/keyboard to Dear ImGui or my application?
 
-You can read the `io.WantCaptureMouse`, `io.WantCaptureKeyboard` and `io.WantTextInput` flags from the ImGuiIO structure.
-- When `io.WantCaptureMouse` is set, you need to discard/hide the mouse inputs from your underlying application.
-- When `io.WantCaptureKeyboard` is set, you need to discard/hide the keyboard inputs from your underlying application.
-- When `io.WantTextInput` is set, you can notify your OS/engine to popup an on-screen keyboard, if available (e.g. on a mobile phone, or console OS).
+You can read the `io.want_capture_mouse`, `io.want_capture_keyboard` and `io.want_text_input` flags from the ImGuiIO structure.
+- When `io.want_capture_mouse` is set, you need to discard/hide the mouse inputs from your underlying application.
+- When `io.want_capture_keyboard` is set, you need to discard/hide the keyboard inputs from your underlying application.
+- When `io.want_text_input` is set, you can notify your OS/engine to popup an on-screen keyboard, if available (e.g. on a mobile phone, or console OS).
 
-Important: you should always pass your mouse/keyboard inputs to Dear ImGui, regardless of the value `io.WantCaptureMouse`/`io.WantCaptureKeyboard`. This is because e.g. we need to detect that you clicked in the void to unfocus its own windows, and other reasons.
+Important: you should always pass your mouse/keyboard inputs to Dear ImGui, regardless of the value `io.want_capture_mouse`/`io.want_capture_keyboard`. This is because e.g. we need to detect that you clicked in the void to unfocus its own windows, and other reasons.
 
 ```cpp
 void MyLowLevelMouseButtonHandler(int button, bool down)
 {
     // (1) ALWAYS forward mouse data to ImGui! This is automatic with default backends. With your own backend:
     ImGuiIO& io = ImGui::GetIO();
-    io.AddMouseButtonEvent(button, down);
+    io.add_mouse_button_event(button, down);
 
     // (2) ONLY forward mouse data to your underlying app/game.
-    if (!io.WantCaptureMouse)
+    if (!io.want_capture_mouse)
         my_game->HandleMouseData(...);
 }
 ```
 
 
-**Note:** The `io.WantCaptureMouse` is more correct that any manual attempt to "check if the mouse is hovering a window" (don't do that!). It handle mouse dragging correctly (both dragging that started over your application or over a Dear ImGui window) and handle e.g. popup and modal windows blocking inputs.
+**Note:** The `io.want_capture_mouse` is more correct that any manual attempt to "check if the mouse is hovering a window" (don't do that!). It handle mouse dragging correctly (both dragging that started over your application or over a Dear ImGui window) and handle e.g. popup and modal windows blocking inputs.
 
 **Note:** Those flags are updated by `ImGui::NewFrame()`. However it is generally more correct and easier that you poll flags from the previous frame, then submit your inputs, then call `NewFrame()`. If you attempt to do the opposite (which is generally harder) you are likely going to submit your inputs after `NewFrame()`, and therefore too late.
 
 **Note:** If you are using a touch device, you may find use for an early call to `UpdateHoveredWindowAndCaptureFlags()` to correctly dispatch your initial touch. We will work on better out-of-the-box touch support in the future.
 
-**Note:** Text input widget releases focus on the "KeyDown" event of the Return key, so the subsequent "KeyUp" event that your application receive will typically have `io.WantCaptureKeyboard == false`. Depending on your application logic it may or not be inconvenient to receive that KeyUp event. You might want to track which key-downs were targeted for Dear ImGui, e.g. with an array of bool, and filter out the corresponding key-ups.)
+**Note:** Text input widget releases focus on the "KeyDown" event of the Return key, so the subsequent "KeyUp" event that your application receive will typically have `io.want_capture_keyboard == false`. Depending on your application logic it may or not be inconvenient to receive that KeyUp event. You might want to track which key-downs were targeted for Dear ImGui, e.g. with an array of bool, and filter out the corresponding key-ups.)
 
 ##### [Return to Index](#index)
 
@@ -137,8 +137,8 @@ void MyLowLevelMouseButtonHandler(int button, bool down)
 
 ### Q: How can I enable keyboard or gamepad controls?
 - The gamepad/keyboard navigation is fairly functional and keeps being improved. The initial focus was to support game controllers, but keyboard is becoming increasingly and decently usable. Gamepad support is particularly useful to use Dear ImGui on a game console (e.g. PS4, Switch, XB1) without a mouse connected!
-- Keyboard: set `io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard` to enable.
-- Gamepad: set `io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad` to enable (with a supporting backend).
+- Keyboard: set `io.config_flags |= ImGuiConfigFlags_NavEnableKeyboard` to enable.
+- Gamepad: set `io.config_flags |= ImGuiConfigFlags_NavEnableGamepad` to enable (with a supporting backend).
 - See [Control Sheets for Gamepads](http://www.dearimgui.org/controls_sheets) (reference PNG/PSD for PS4, XB1, Switch gamepads).
 - See `USING GAMEPAD/KEYBOARD NAVIGATION CONTROLS` section of [imgui.cpp](https://github.com/ocornut/imgui/blob/master/imgui.cpp) for more details.
 
@@ -186,38 +186,38 @@ Refer to rendering backends in the [examples/](https://github.com/ocornut/imgui/
 
 # Q&A: Usage
 
-### Q: About the ID Stack system...
+### Q: About the id Stack system...
 ### Q: Why is my widget not reacting when I click on it?
 ### Q: How can I have widgets with an empty label?
 ### Q: How can I have multiple widgets with the same label?
 ### Q: How can I have multiple windows with the same label?
 
-A primer on labels and the ID Stack...
+A primer on labels and the id Stack...
 
 Dear ImGui internally needs to uniquely identify UI elements.
-Elements that are typically not clickable (such as calls to the Text functions) don't need an ID.
-Interactive widgets (such as calls to Button buttons) need a unique ID.
+Elements that are typically not clickable (such as calls to the Text functions) don't need an id.
+Interactive widgets (such as calls to Button buttons) need a unique id.
 
-**Unique ID are used internally to track active widgets and occasionally associate state to widgets.<BR>
-Unique ID are implicitly built from the hash of multiple elements that identify the "path" to the UI element.**
+**Unique id are used internally to track active widgets and occasionally associate state to widgets.<BR>
+Unique id are implicitly built from the hash of multiple elements that identify the "path" to the UI element.**
 
-Since Dear ImGui 1.85 you can use `Demo>Tools>Stack Tool` or call `ImGui::ShowStackToolWindow()`. The tool display intermediate values leading to the creation of a unique ID, making things easier to debug and understand.
+Since Dear ImGui 1.85 you can use `Demo>Tools>Stack Tool` or call `ImGui::ShowStackToolWindow()`. The tool display intermediate values leading to the creation of a unique id, making things easier to debug and understand.
 
 ![Stack tool](https://user-images.githubusercontent.com/8225057/136235657-a0ea5665-dcd1-423f-9be6-dc3f8ced8f12.png)
 
-- Unique ID are often derived from a string label and at minimum scoped within their host window:
+- Unique id are often derived from a string label and at minimum scoped within their host window:
 ```cpp
 Begin("MyWindow");
-Button("OK");          // Label = "OK",     ID = hash of ("MyWindow", "OK")
-Button("Cancel");      // Label = "Cancel", ID = hash of ("MyWindow", "Cancel")
+Button("OK");          // Label = "OK",     id = hash of ("MyWindow", "OK")
+Button("Cancel");      // Label = "Cancel", id = hash of ("MyWindow", "Cancel")
 End();
 ```
-- Other elements such as tree nodes, etc. also pushes to the ID stack:
+- Other elements such as tree nodes, etc. also pushes to the id stack:
 ```cpp
 Begin("MyWindow");
 if (TreeNode("MyTreeNode"))
 {
-    Button("OK");      // Label = "OK",     ID = hash of ("MyWindow", "MyTreeNode", "OK")
+    Button("OK");      // Label = "OK",     id = hash of ("MyWindow", "MyTreeNode", "OK")
     TreePop();
 }
 End();
@@ -225,106 +225,106 @@ End();
 - Two items labeled "OK" in different windows or different tree locations won't collide:
 ```cpp
 Begin("MyFirstWindow");
-Button("OK");          // Label = "OK",     ID = hash of ("MyFirstWindow", "OK")
+Button("OK");          // Label = "OK",     id = hash of ("MyFirstWindow", "OK")
 End();
 Begin("MyOtherWindow");
-Button("OK");          // Label = "OK",     ID = hash of ("MyOtherWindow", "OK")
+Button("OK");          // Label = "OK",     id = hash of ("MyOtherWindow", "OK")
 End();
 ```
 
-- If you have a same ID twice in the same location, you'll have a conflict:
+- If you have a same id twice in the same location, you'll have a conflict:
 ```cpp
 Begin("MyWindow");
 Button("OK");
-Button("OK");      // ERROR: ID collision with the first button! Interacting with either button will trigger the first one.
-Button("");        // ERROR: ID collision with Begin("MyWindow")!
+Button("OK");      // ERROR: id collision with the first button! Interacting with either button will trigger the first one.
+Button("");        // ERROR: id collision with Begin("MyWindow")!
 End();
 ```
 Fear not! this is easy to solve and there are many ways to solve it!
 
-- Solving ID conflict in a simple/local context:
-When passing a label you can optionally specify extra ID information within string itself.
-Use "##" to pass a complement to the ID that won't be visible to the end-user.
+- Solving id conflict in a simple/local context:
+When passing a label you can optionally specify extra id information within string itself.
+Use "##" to pass a complement to the id that won't be visible to the end-user.
 This helps solving the simple collision cases when you know e.g. at compilation time which items
 are going to be created:
 ```cpp
 Begin("MyWindow");
-Button("Play");        // Label = "Play",   ID = hash of ("MyWindow", "Play")
-Button("Play##foo1");  // Label = "Play",   ID = hash of ("MyWindow", "Play##foo1")  // Different from other buttons
-Button("Play##foo2");  // Label = "Play",   ID = hash of ("MyWindow", "Play##foo2")  // Different from other buttons
-Button("##foo");       // Label = "",       ID = hash of ("MyWindow", "##foo")       // Different from window
+Button("Play");        // Label = "Play",   id = hash of ("MyWindow", "Play")
+Button("Play##foo1");  // Label = "Play",   id = hash of ("MyWindow", "Play##foo1")  // Different from other buttons
+Button("Play##foo2");  // Label = "Play",   id = hash of ("MyWindow", "Play##foo2")  // Different from other buttons
+Button("##foo");       // Label = "",       id = hash of ("MyWindow", "##foo")       // Different from window
 End();
 ```
-- If you want to completely hide the label, but still need an ID:
+- If you want to completely hide the label, but still need an id:
 ```cpp
-Checkbox("##On", &b);  // Label = "",       ID = hash of (..., "##On")   // No visible label, just a checkbox!
+Checkbox("##On", &b);  // Label = "",       id = hash of (..., "##On")   // No visible label, just a checkbox!
 ```
-- Occasionally/rarely you might want change a label while preserving a constant ID. This allows
+- Occasionally/rarely you might want change a label while preserving a constant id. This allows
 you to animate labels. For example you may want to include varying information in a window title bar,
-but windows are uniquely identified by their ID. Use "###" to pass a label that isn't part of ID:
+but windows are uniquely identified by their id. Use "###" to pass a label that isn't part of id:
 ```cpp
-Button("Hello###ID");  // Label = "Hello",  ID = hash of (..., "###ID")
-Button("World###ID");  // Label = "World",  ID = hash of (..., "###ID")  // Same ID, different label
+Button("Hello###id");  // Label = "Hello",  id = hash of (..., "###id")
+Button("World###id");  // Label = "World",  id = hash of (..., "###id")  // Same id, different label
 
 sprintf(buf, "My game (%f FPS)###MyGame", fps);
-Begin(buf);            // Variable title,   ID = hash of "MyGame"
+Begin(buf);            // Variable title,   id = hash of "MyGame"
 ```
-- Solving ID conflict in a more general manner:
-Use `PushID()` / `PopID()` to create scopes and manipulate the ID stack, as to avoid ID conflicts
-within the same window. This is the most convenient way of distinguishing ID when iterating and
+- Solving id conflict in a more general manner:
+Use `PushID()` / `PopID()` to create scopes and manipulate the id stack, as to avoid id conflicts
+within the same window. This is the most convenient way of distinguishing id when iterating and
 creating many UI elements programmatically.
-You can push a pointer, a string or an integer value into the ID stack.
-Remember that ID are formed from the concatenation of _everything_ pushed into the ID stack.
-At each level of the stack we store the seed used for items at this level of the ID stack.
+You can push a pointer, a string or an integer value into the id stack.
+Remember that id are formed from the concatenation of _everything_ pushed into the id stack.
+At each level of the stack we store the seed used for items at this level of the id stack.
 ```cpp
 Begin("Window");
 for (int i = 0; i < 100; i++)
 {
   PushID(i);           // Push i to the id tack
-  Button("Click");     // Label = "Click",  ID = hash of ("Window", i, "Click")
+  Button("Click");     // Label = "Click",  id = hash of ("Window", i, "Click")
   PopID();
 }
 for (int i = 0; i < 100; i++)
 {
   MyObject* obj = Objects[i];
   PushID(obj);
-  Button("Click");     // Label = "Click",  ID = hash of ("Window", obj pointer, "Click")
+  Button("Click");     // Label = "Click",  id = hash of ("Window", obj pointer, "Click")
   PopID();
 }
 for (int i = 0; i < 100; i++)
 {
   MyObject* obj = Objects[i];
-  PushID(obj->Name);
-  Button("Click");     // Label = "Click",  ID = hash of ("Window", obj->Name, "Click")
+  PushID(obj->name);
+  Button("Click");     // Label = "Click",  id = hash of ("Window", obj->name, "Click")
   PopID();
 }
 End();
 ```
-- You can stack multiple prefixes into the ID stack:
+- You can stack multiple prefixes into the id stack:
 ```cpp
-Button("Click");       // Label = "Click",  ID = hash of (..., "Click")
+Button("Click");       // Label = "Click",  id = hash of (..., "Click")
 PushID("node");
-  Button("Click");     // Label = "Click",  ID = hash of (..., "node", "Click")
+  Button("Click");     // Label = "Click",  id = hash of (..., "node", "Click")
   PushID(my_ptr);
-    Button("Click");   // Label = "Click",  ID = hash of (..., "node", my_ptr, "Click")
+    Button("Click");   // Label = "Click",  id = hash of (..., "node", my_ptr, "Click")
   PopID();
 PopID();
 ```
 - Tree nodes implicitly creates a scope for you by calling `PushID()`:
 ```cpp
-Button("Click");       // Label = "Click",  ID = hash of (..., "Click")
+Button("Click");       // Label = "Click",  id = hash of (..., "Click")
 if (TreeNode("node"))  // <-- this function call will do a PushID() for you (unless instructed not to, with a special flag)
 {
-  Button("Click");     // Label = "Click",  ID = hash of (..., "node", "Click")
+  Button("Click");     // Label = "Click",  id = hash of (..., "node", "Click")
   TreePop();
 }
 ```
 
-When working with trees, ID are used to preserve the open/close state of each tree node.
-Depending on your use cases you may want to use strings, indices or pointers as ID.
-- e.g. when following a single pointer that may change over time, using a static string as ID
+When working with trees, id are used to preserve the open/close state of each tree node.
+Depending on your use cases you may want to use strings, indices or pointers as id.
+- e.g. when following a single pointer that may change over time, using a static string as id
 will preserve your node open/closed state when the targeted object change.
-- e.g. when displaying a list of objects, using indices or pointers as ID will preserve the
+- e.g. when displaying a list of objects, using indices or pointers as id will preserve the
 node open/closed state differently. See what makes more sense in your situation!
 
 ##### [Return to Index](#index)
@@ -379,7 +379,7 @@ User code may do:
 ```cpp
 // Cast our texture type to ImTextureID / void*
 MyTexture* texture = g_CoffeeTableTexture;
-ImGui::Image((void*)texture, ImVec2(texture->Width, texture->Height));
+ImGui::Image((void*)texture, ImVec2(texture->width, texture->height));
 ```
 The renderer function called after ImGui::Render() will receive that same value that the user code passed:
 ```cpp
@@ -482,7 +482,7 @@ ImGui::End();
 
 ---
 
-# Q&A: Fonts, Text
+# Q&A: fonts, Text
 
 ### Q: How should I handle DPI in my application?
 
@@ -512,8 +512,8 @@ Use the font atlas to load the TTF/OTF file you want:
 
 ```cpp
 ImGuiIO& io = ImGui::GetIO();
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels);
-io.Fonts->GetTexDataAsRGBA32() or GetTexDataAsAlpha8()
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels);
+io.fonts->GetTexDataAsRGBA32() or GetTexDataAsAlpha8()
 ```
 
 Default is ProggyClean.ttf, monospace, rendered at size 13, embedded in dear imgui's source code.
@@ -526,9 +526,9 @@ New programmers: remember that in C/C += 1 and most programming languages if you
 backslash \ within a string literal, you need to write it double backslash "\\":
 
 ```cpp
-io.Fonts->AddFontFromFileTTF("MyFolder\MyFont.ttf", size);  // WRONG (you are escaping the M here!)
-io.Fonts->AddFontFromFileTTF("MyFolder\\MyFont.ttf", size;  // CORRECT (windows only)
-io.Fonts->AddFontFromFileTTF("MyFolder/MyFont.ttf", size);  // ALSO CORRECT
+io.fonts->AddFontFromFileTTF("MyFolder\MyFont.ttf", size);  // WRONG (you are escaping the M here!)
+io.fonts->AddFontFromFileTTF("MyFolder\\MyFont.ttf", size;  // CORRECT (windows only)
+io.fonts->AddFontFromFileTTF("MyFolder/MyFont.ttf", size);  // ALSO CORRECT
 ```
 
 ##### [Return to Index](#index)
@@ -538,10 +538,10 @@ io.Fonts->AddFontFromFileTTF("MyFolder/MyFont.ttf", size);  // ALSO CORRECT
 ### Q: How can I easily use icons in my application?
 The most convenient and practical way is to merge an icon font such as FontAwesome inside you
 main font. Then you can refer to icons within your strings.
-You may want to see `ImFontConfig::GlyphMinAdvanceX` to make your icon look monospace to facilitate alignment.
+You may want to see `ImFontConfig::glyph_min_advance_x` to make your icon look monospace to facilitate alignment.
 (Read the [docs/FONTS.md](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md) file for more details about icons font loading.)
 With some extra effort, you may use colorful icon by registering custom rectangle space inside the font atlas,
-and copying your own graphics data into it. See docs/FONTS.md about using the AddCustomRectFontGlyph API.
+and copying your own graphics data into it. See docs/FONTS.md about using the add_custom_rect_font_glyph API.
 
 ##### [Return to Index](#index)
 
@@ -553,28 +553,28 @@ Use the font atlas to pack them into a single texture:
 
 ```cpp
 ImGuiIO& io = ImGui::GetIO();
-ImFont* font0 = io.Fonts->AddFontDefault();
-ImFont* font1 = io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels);
-ImFont* font2 = io.Fonts->AddFontFromFileTTF("myfontfile2.ttf", size_in_pixels);
-io.Fonts->GetTexDataAsRGBA32() or GetTexDataAsAlpha8()
+ImFont* font0 = io.fonts->add_font_default();
+ImFont* font1 = io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels);
+ImFont* font2 = io.fonts->AddFontFromFileTTF("myfontfile2.ttf", size_in_pixels);
+io.fonts->GetTexDataAsRGBA32() or GetTexDataAsAlpha8()
 // the first loaded font gets used by default
 // use ImGui::PushFont()/ImGui::PopFont() to change the font at runtime
 
 // Options
 ImFontConfig config;
-config.OversampleH = 2;
-config.OversampleV = 1;
-config.GlyphOffset.y -= 1.0;      // Move everything by 1 pixels up
-config.GlyphExtraSpacing.x = 1.0; // Increase spacing between characters
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, &config);
+config.oversample_h = 2;
+config.oversample_v = 1;
+config.glyph_offset.y -= 1.0;      // Move everything by 1 pixels up
+config.glyph_extra_spacing.x = 1.0; // Increase spacing between characters
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, &config);
 
 // Combine multiple fonts into one (e.g. for icon fonts)
 static ImWchar ranges[] = { 0xf000, 0xf3ff, 0 };
 ImFontConfig config;
-config.MergeMode = true;
-io.Fonts->AddFontDefault();
-io.Fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0, &config, ranges); // merge icon font
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.Fonts->GetGlyphRangesJapanese()); // merge japanese glyphs
+config.merge_mode = true;
+io.fonts->add_font_default();
+io.fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0, &config, ranges); // merge icon font
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.fonts->get_glyph_ranges_japanese()); // merge japanese glyphs
 ```
 
 ##### [Return to Index](#index)
@@ -586,16 +586,16 @@ When loading a font, pass custom Unicode ranges to specify the glyphs to load.
 
 ```cpp
 // Add default Japanese ranges
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, NULL, io.Fonts->GetGlyphRangesJapanese());
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, NULL, io.fonts->get_glyph_ranges_japanese());
 
 // Or create your own custom ranges (e.g. for a game you can feed your entire game script and only build the characters the game need)
 ImVector<ImWchar> ranges;
 ImFontGlyphRangesBuilder builder;
-builder.AddText("Hello world");                        // Add a string (here "Hello world" contains 7 unique characters)
-builder.AddChar(0x7262);                               // Add a specific character
-builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // Add one of the default ranges
-builder.BuildRanges(&ranges);                          // Build the final result (ordered ranges with all the unique characters submitted)
-io.Fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, NULL, ranges.data);
+builder.add_text("Hello world");                        // Add a string (here "Hello world" contains 7 unique characters)
+builder.add_char(0x7262);                               // Add a specific character
+builder.add_ranges(io.fonts->get_glyph_ranges_japanese()); // Add one of the default ranges
+builder.build_ranges(&ranges);                          // build the final result (ordered ranges with all the unique characters submitted)
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, NULL, ranges.data);
 ```
 
 All your strings needs to use UTF-8 encoding. In C += 111 you can encode a string literal in UTF-8
@@ -603,11 +603,11 @@ by using the u8"hello" syntax. Specifying literal in your source code using a lo
 (such as CP-923 for Japanese or CP-1251 for Cyrillic) will NOT work!
 Otherwise you can convert yourself to UTF-8 or load text data from file already saved as UTF-8.
 
-Text input: it is up to your application to pass the right character code by calling `io.AddInputCharacter()`.
+Text input: it is up to your application to pass the right character code by calling `io.add_input_character()`.
 The applications in examples/ are doing that.
 windows: you can use the WM_CHAR or WM_UNICHAR or WM_IME_CHAR message (depending if your app is built using Unicode or MultiByte mode).
 You may also use MultiByteToWideChar() or ToUnicode() to retrieve Unicode codepoints from MultiByte characters or keyboard state.
-windows: if your language is relying on an Input Method Editor (IME), you can write your HWND to ImGui::GetMainViewport()->PlatformHandleRaw
+windows: if your language is relying on an Input Method Editor (IME), you can write your HWND to ImGui::GetMainViewport()->platform_handle_raw
 in order for the default the default implementation of io.SetPlatformImeDataFn() to set your Microsoft IME position correctly.
 
 ##### [Return to Index](#index)

@@ -3,19 +3,28 @@ use std::cell::RefCell;
 use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
 use std::rc::Rc;
+use std::collections::HashSet;
 use crate::column::DimgOldColumns;
-use crate::context::ImGuiContext;
-use crate::defines::{DimgCond, ImGuiDataType, DimgDir, DimgHoveredFlags, DimgId, ImGuiLayoutType, ImGuiMenuColumns, DimgNavLayer, ImGuiSizeCallback, ImGuiStackSizes, DimgViewport, DimgWindowFlags, DimgViewportFlags};
-use crate::dock::{DimgDockNodeFlags, ImGuiDockNode};
+use crate::condition::DimgCond;
+use crate::context::DimgContext;
+use crate::defines::ImGuiSizeCallback;
+use crate::direction::DimgDirection;
+use crate::dock::DimgDockNodeFlags;
+use crate::dock_node::DimgDockNode;
 use crate::draw_list::DimgDrawList;
 use crate::globals::GImGui;
 use crate::hash::{ImHashData, ImHashStr};
+use crate::input::DimgNavLayer;
 use crate::item::{DimgItemStatusFlags, DimgLastItemData};
 use crate::kv_store::DimgStorage;
+use crate::layout::ImGuiLayoutType;
+use crate::menu::ImGuiMenuColumns;
 use crate::rect::DimgRect;
+use crate::stack::ImGuiStackSizes;
 use crate::tab_bar::DimgTabItemFlags;
-use crate::vec_nd::{ImVec1, DimgVec2D};
-use crate::types::{DimgWindowHandle};
+use crate::vec_nd::{DimgVec2D, ImVec1};
+use crate::types::{DimgId, DimgWindowHandle, ImGuiDataType};
+use crate::viewport::{DimgViewport, DimgViewportFlags};
 
 
 // Transient per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the dc variable name in ImGuiWindow.
@@ -58,7 +67,7 @@ pub struct DimgWindowTempData {
     pub NavLayersActiveMask: i16,
     // short                   NavLayersActiveMaskNext;// Which layers have been written to (accumulator for current frame)
     pub NavLayersActiveMaskNext: i16,
-    // ImGuiID                 NavFocusScopeIdCurrent; // Current focus scope ID while appending
+    // ImGuiID                 NavFocusScopeIdCurrent; // Current focus scope id while appending
     pub NavFocusScopeIdCurrent: DimgId,
     // bool                    NavHideHighlightOneFrame;
     pub NavHideHiglightOneFrame: bool,
@@ -103,10 +112,10 @@ pub struct DimgWindowTempData {
 // Storage for one window
 #[derive(Default,Debug,Clone)]
 pub struct DimgWindow {
-    // char*                   Name;                               // Window name, owned by the window.
+    // char*                   name;                               // Window name, owned by the window.
     pub name: String,
     //*mut c_char,
-    // ImGuiID                 ID;                                 // == ImHashStr(Name)
+    // ImGuiID                 id;                                 // == ImHashStr(name)
     pub id: DimgId,
     // ImGuiWindowFlags        flags, flags_previous_frame;          // See enum ImGuiWindowFlags_
     pub flags: DimgWindowFlags,
@@ -138,12 +147,12 @@ pub struct DimgWindow {
     // float                   window_rounding;                     // Window rounding at the time of Begin(). May be clamped lower to avoid rendering artifacts with title bar, menu bar etc.
     pub window_rounding: f32,
     // float                   WindowBorderSize;                   // Window border size at the time of Begin().
-    // int                     NameBufLen;                         // size of buffer storing Name. May be larger than strlen(Name)!
+    // int                     NameBufLen;                         // size of buffer storing name. May be larger than strlen(name)!
     // ImGuiID                 move_id;                             // == window->GetID("#MOVE")
     pub move_id: DimgId,
     // ImGuiID                 tab_id;                              // == window->GetID("#TAB")
     pub tab_id: DimgId,
-    // ImGuiID                 child_id;                            // ID of corresponding item in parent window (for navigation to return from child window to parent window)
+    // ImGuiID                 child_id;                            // id of corresponding item in parent window (for navigation to return from child window to parent window)
     pub child_id: DimgId,
     // ImVec2                  scroll;
     pub scroll: DimgVec2D,
@@ -194,7 +203,7 @@ pub struct DimgWindow {
     pub begin_order_within_context: i16,
     // short                   focus_order;                         // Order within windows_focus_order[], altered when windows are focused.
     pub focus_order: i16,
-    // ImGuiID                 popup_id;                            // ID in the popup stack when this window is used as a popup/menu (because we use generic Name/ID for recycling)
+    // ImGuiID                 popup_id;                            // id in the popup stack when this window is used as a popup/menu (because we use generic name/id for recycling)
     pub popup_id: DimgId,
     // ImS8                    auto_fit_frames_x, auto_fit_frames_y;
     pub auto_fit_frames_x: i8,
@@ -204,7 +213,7 @@ pub struct DimgWindow {
     // bool                    auto_fit_only_grows;
     pub auto_fit_only_grows: bool,
     // ImGuiDir                auto_pos_last_direction;
-    pub auto_pos_last_direction: DimgDir,
+    pub auto_pos_last_direction: DimgDirection,
     // ImS8                    hidden_frames_can_skip_items;           // Hide the window for N frames
     pub hidden_frames_can_skip_items: i8,
     // ImS8                    hidden_frames_cannot_skip_items;        // Hide the window for N frames while allowing items to be submitted so we can measure their size
@@ -225,14 +234,14 @@ pub struct DimgWindow {
     // ImVec2                  set_window_pos_pivot;                  // store window pivot for positioning. ImVec2(0, 0) when positioning from top-left corner; ImVec2(0.5, 0.5) for centering; ImVec2(1, 1) for bottom right.
     pub set_window_pos_pivot: DimgVec2D,
 
-    // ImVector<ImGuiID>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
+    // ImVector<ImGuiID>       IDStack;                            // id stack. id are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
     pub id_stack: Vec<DimgId>,
     // ImGuiWindowTempData     dc;                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "dc" variable name.
     pub dc: DimgWindowTempData,
 
     // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show windows Rectangles' viewer.
-    // The main 'OuterRect', omitted as a field, is window->Rect().
-    // ImRect                  outer_rect_clipped;                   // == Window->Rect() just after setup in Begin(). == window->Rect() for root window.
+    // The main 'OuterRect', omitted as a field, is window->rect().
+    // ImRect                  outer_rect_clipped;                   // == Window->rect() just after setup in Begin(). == window->rect() for root window.
     pub outer_rect_clipped: DimgRect,
     // ImRect                  inner_rect;                          // Inner rectangle (omit title bar, menu bar, scroll bar)
     pub inner_rect: DimgRect,
@@ -315,7 +324,7 @@ pub struct DimgWindow {
     pub dock_node: DimgId, // *mut ImGuiDockNode,
     // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
     pub dock_node_as_host: DimgId, // *mut ImGuiDockNode,
-    // ImGuiID                 dock_id;                             // Backup of last valid dock_node->ID, so single window remember their dock node id even when they are not bound any more
+    // ImGuiID                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
     pub dock_id: DimgId,
     // ImGuiItemStatusFlags    dock_tab_item_status_flags;
     pub dock_tab_item_status_flags: DimgItemStatusFlags,
@@ -328,14 +337,14 @@ pub struct DimgWindow {
 impl DimgWindow {
     // // ImGuiWindow is mostly a dumb struct. It merely has a constructor and a few helper methods
     // ImGuiWindow::ImGuiWindow(ImGuiContext* context, const char* name) : DrawListInst(NULL)
-    pub unsafe fn new(context: *mut ImGuiContext, name: &mut String) -> Self {
+    pub unsafe fn new(context: *mut DimgContext, name: &mut String) -> Self {
         let mut out = Self {
-            //     Name = ImStrdup(name);
+            //     name = ImStrdup(name);
             //     NameBufLen = strlen(name) + 1;
             name: name.clone(),
-            //     ID = ImHashStr(name);
+            //     id = ImHashStr(name);
             id: ImHashStr(name.as_vec(), 0),
-            //     IDStack.push_back(ID);
+            //     IDStack.push_back(id);
             id_stack: Vec::new(),
             //     viewport_allow_platform_monitor_extend = -1;
             viewport_allow_platform_monitor_extend: -1,
@@ -353,7 +362,7 @@ impl DimgWindow {
             auto_fit_frames_x: -1,
             auto_fit_frames_y: -1,
             //     auto_pos_last_direction = ImGuiDir_None;
-            auto_pos_last_direction: DimgDir::None,
+            auto_pos_last_direction: DimgDirection::None,
             //     set_window_pos_allow_flags = set_window_size_allow_flags = set_window_collapsed_allow_flags = SetWindowDockAllowFlags = ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing;
             set_window_pos_allow_flags: DimgCond::Always | DimgCond::Once | ImGuiCond::FirstUserEver | DimgCond::Appearing,
             set_window_size_allow_flags: DimgCond::Always | DimgCond::Once | ImGuiCond::FirstUserEver | DimgCond::Appearing,
@@ -383,7 +392,7 @@ impl DimgWindow {
         &out.id_stack.push(out.id);
         //     draw_list->_Data = &context->draw_list_shared_data;
         &out.draw_list.data = context.draw_list_shared_data.clone();
-        //     draw_list->_OwnerName = Name;
+        //     draw_list->_OwnerName = name;
         &out.draw_list.owner_name = &out.name;
         //     IM_PLACEMENT_NEW(&window_class) ImGuiWindowClass();
         // TODO
@@ -393,12 +402,12 @@ impl DimgWindow {
     // ImGuiWindow::~ImGuiWindow()
     // {
     //     IM_ASSERT(draw_list == &DrawListInst);
-    //     IM_DELETE(Name);
+    //     IM_DELETE(name);
     //     ColumnsStorage.clear_destruct();
     // }
 
     // ImGuiID ImGuiWindow::GetID(const char* str, const char* str_end)
-    pub unsafe fn GetID(&mut self, g: &mut ImGuiContext, in_str: &mut String) -> DimgId {
+    pub unsafe fn GetID(&mut self, g: &mut DimgContext, in_str: &mut String) -> DimgId {
 
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
@@ -412,7 +421,7 @@ impl DimgWindow {
     }
 
     // ImGuiID ImGuiWindow::GetID(const void* ptr)
-    pub unsafe fn GetID2(&mut self, g: &mut ImGuiContext, ptr: &mut Vec<u8>) -> DimgId {
+    pub unsafe fn GetID2(&mut self, g: &mut DimgContext, ptr: &mut Vec<u8>) -> DimgId {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
         // ImGuiID id = ImHashData(&ptr, sizeof(void*), seed);
@@ -425,7 +434,7 @@ impl DimgWindow {
     }
 
     // ImGuiID ImGuiWindow::GetID(int n)
-    pub unsafe fn GetID3(&mut self, g: &mut ImGuiContext, n: i32) -> DimgId {
+    pub unsafe fn GetID3(&mut self, g: &mut DimgContext, n: i32) -> DimgId {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
         // ImGuiID id = ImHashData(&n, sizeof(n), seed);
@@ -444,9 +453,9 @@ impl DimgWindow {
         return id;
     }
 
-    // This is only used in rare/specific situations to manufacture an ID out of nowhere.
+    // This is only used in rare/specific situations to manufacture an id out of nowhere.
     // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
-    pub unsafe fn GetIDFromRectangle(&mut self, g: &mut ImGuiContext, r_abs: &DimgRect) -> DimgId {
+    pub unsafe fn GetIDFromRectangle(&mut self, g: &mut DimgContext, r_abs: &DimgRect) -> DimgId {
         // ImGuiID seed = IDStack.back();
         let seed = self.id_stack.back();
         // ImRect r_rel = ImGui::WindowRectAbsToRel(this, r_abs);
@@ -458,7 +467,7 @@ impl DimgWindow {
 }
 
 // static void SetCurrentWindow(ImGuiWindow* window)
-pub fn SetCurrentWindow(g: &mut ImGuiContext, window_handle: DimgWindowHandle) {
+pub fn SetCurrentWindow(g: &mut DimgContext, window_handle: DimgWindowHandle) {
     // ImGuiContext& g = *GImGui;
     g.current_window = window_handle;
     // if window
@@ -492,7 +501,7 @@ pub enum DimgItemFlags {
     NoTabStop = 1 << 0,
     // false     // Disable keyboard tabbing (FIXME: should merge with _NoNav)
     ButtonRepeat = 1 << 1,
-    // false     // Button() will return true multiple times based on io.KeyRepeatDelay and io.KeyRepeatRate settings.
+    // false     // Button() will return true multiple times based on io.key_repeat_delay and io.key_repeat_rate settings.
     Disabled = 1 << 2,
     // false     // Disable interactions but doesn't affect visuals. See BeginDisabled()/EndDisabled(). See github.com/ocornut/imgui/issues/211
     NoNav = 1 << 3,
@@ -586,7 +595,7 @@ pub enum ImGuiNextWindowDataFlags {
 
 
 // static inline bool IsWindowContentHoverable(ImGuiWindow* window, ImGuiHoveredFlags flags)
-pub fn IsWindowContentHoverable(g: &mut ImGuiContext, window: &mut DimgWindow, flags: DimgHoveredFlags) -> bool {
+pub fn IsWindowContentHoverable(g: &mut DimgContext, window: &mut DimgWindow, flags: DimgHoveredFlags) -> bool {
     // An active popup disable hovering on other windows (apart from its own children)
     // FIXME-OPT: This could be cached/stored within the window.
     // ImGuiContext& g = *GImGui;
@@ -617,9 +626,9 @@ pub fn IsWindowContentHoverable(g: &mut ImGuiContext, window: &mut DimgWindow, f
 
 // This is roughly matching the behavior of internal-facing ItemHoverable()
 // - we allow hovering to be true when active_id==window->MoveID, so that clicking on non-interactive items such as a Text() item still returns true with IsItemHovered()
-// - this should work even for non-interactive items that have no ID, so we cannot use LastItemId
+// - this should work even for non-interactive items that have no id, so we cannot use LastItemId
 // bool ImGui::IsItemHovered(ImGuiHoveredFlags flags)
-pub fn IsItemHovered(g: &mut ImGuiContext, flags: &DimgHoveredFlags) -> bool
+pub fn IsItemHovered(g: &mut DimgContext, flags: &DimgHoveredFlags) -> bool
 {
     // ImGuiContext& g = *GImGui;
     let window = &mut g.current_window;
@@ -698,7 +707,7 @@ pub struct DimgWindowClass
     pub viewport_flags_override_clear: DimgViewportFlags, // viewport flags to clear when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
     pub tab_item_flags_override_set: DimgTabItemFlags,    // [EXPERIMENTAL] TabItem flags to set when a window of this class gets submitted into a dock node tab bar. May use with ImGuiTabItemFlags_Leading or ImGuiTabItemFlags_Trailing.
     pub dock_node_flags_override_set: DimgDockNodeFlags,   // [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)
-    pub docking_always_tab_bar: bool,        // Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.ConfigDockingAlwaysTabBar)
+    pub docking_always_tab_bar: bool,        // Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.config_docking_always_tab_bar)
     pub docking_allow_unclassed: bool,      // Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
 
 }
@@ -712,4 +721,177 @@ impl DimgWindowClass {
             ..Default::default()
         }
     }
+}
+
+/// windows data saved in imgui.ini file
+/// Because we never destroy or rename ImGuiWindowSettings, we can store the names in a separate buffer easily.
+/// (this is designed to be stored in a ImChunkStream buffer, with the variable-length name following our structure)
+#[derive(Default,Debug,Clone)]
+pub struct DimgWindowSettings
+{
+    //ImGuiID     id;
+    pub id: DimgId,
+    // ImVec2ih    pos;            // NB: Settings position are stored RELATIVE to the viewport! Whereas runtime ones are absolute positions.
+    pub pos: DimgVec2D,
+    // ImVec2ih    size;
+    pub size: DimgVec2D,
+    // ImVec2ih    ViewportPos;
+    pub viewport_pos: DimgVec2D,
+    // ImGuiID     ViewportId;
+    pub viewport_id: DimgId,
+    // ImGuiID     DockId;         // id of last known dock_node (even if the dock_node is invisible because it has only 1 active window), or 0 if none.
+    pub dock_id: DimgId,
+    // ImGuiID     ClassId;        // id of window class if specified
+    pub class_id: DimgId,
+    // short       DockOrder;      // Order of the last time the window was visible within its dock_node. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
+    pub dock_order: i16,
+    // bool        Collapsed;
+    pub collapsed: bool,
+    // bool        WantApply;      // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
+    pub want_apply: bool,
+    // ImGuiWindowSettings()       { memset(this, 0, sizeof(*this)); DockOrder = -1; }
+    // char* GetName()             { return (char*)(this + 1); }
+}
+
+//     ImGuiWindowFlags_NoDecoration           = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
+// pub const NoDecoration: i32 = DimgWindowFlags::NoTitleBar | DimgWindowFlags::NoResize | DimgWindowFlags::NoScrollbar | DimgWindowFlags::NoCollapse;
+pub const DIMG_WIN_FLAGS_NO_DECORATION: HashSet<DimgWindowFlags> = HashSet::from([
+    DimgWindowFlags::NoTitleBar, DimgWindowFlags::NoResize, DimgWindowFlags::NoScrollbar, DimgWindowFlags::NoCollapse
+]);
+
+// ImGuiWindowFlags_NoNav                  = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
+// pub const ImGuiWindowFlags_NoNav: i32 = DimgWindowFlags::NoNavInputs | DimgWindowFlags::NoNavFocus;
+pub const DIMG_WIN_FLAGS_NO_NAV: HashSet<DimgWindowFlags> = HashSet::from([DimgWindowFlags::NoNavInputs, DimgWindowFlags::NoNavFocus]);
+
+//     ImGuiWindowFlags_NoInputs               = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
+// pub const NoInputs: i32 = DimgWindowFlags::NoMouseInputs | DimgWindowFlags::NoNavInputs | DimgWindowFlags::NoNavFocus;
+pub const DIMG_WIN_FLAGS_NO_INPUTS: HashSet<DimgWindowFlags> = HashSet::from([
+    DimgWindowFlags::NoMouseInputs, DimgWindowFlags::NoNavInputs, DimgWindowFlags::NoNavFocus
+]);
+
+// When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
+// static const float NAV_WINDOWING_HIGHLIGHT_DELAY            = 0.20;    // time before the highlight and screen dimming starts fading in
+pub const NAV_WINDOWING_HIGHLIGHT_DELAY: f32 = 0.20;
+
+// static const float NAV_WINDOWING_LIST_APPEAR_DELAY          = 0.15;    // time before the window list starts to appear
+pub const NAV_WINDOWING_LIST_APPEAR_DELAY: f32 = 0.15;
+
+// Window resizing from edges (when io.config_windows_resize_from_edges = true and ImGuiBackendFlags_HasMouseCursors is set in io.backend_flags by backend)
+// static const float WINDOWS_HOVER_PADDING                    = 4.0;     // Extend outside window for hovering/resizing (maxxed with TouchPadding) and inside windows for borders. Affect FindHoveredWindow().
+pub const WINDOWS_HOVER_PADDING: f32 = 4.0;
+
+// static const float WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER = 0.04;    // Reduce visual noise by only highlighting the border after a certain time.
+pub const WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER: f32 = 0.04;
+
+// typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);              // Callback function for ImGui::SetNextWindowSizeConstraints()
+pub type ImGuiSizeCallback = fn(*mut DimgSizeCallbackData);
+
+// flags for ImGui::Begin()
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgWindowFlags
+{
+    None                   = 0,
+    NoTitleBar             = 1 << 0,   // Disable title-bar
+    NoResize               = 1 << 1,   // Disable user resizing with the lower-right grip
+    NoMove                 = 1 << 2,   // Disable user moving the window
+    NoScrollbar            = 1 << 3,   // Disable scrollbars (window can still scroll with mouse or programmatically)
+    NoScrollWithMouse      = 1 << 4,   // Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.
+    NoCollapse             = 1 << 5,   // Disable user collapsing window by double-clicking on it. Also referred to as Window Menu Button (e.g. within a docking node).
+    AlwaysAutoResize       = 1 << 6,   // Resize every window to its content every frame
+    NoBackground           = 1 << 7,   // Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0).
+    NoSavedSettings        = 1 << 8,   // Never load/save settings in .ini file
+    NoMouseInputs          = 1 << 9,   // Disable catching mouse, hovering test with pass through.
+    MenuBar                = 1 << 10,  // Has a menu-bar
+    HorizontalScrollbar    = 1 << 11,  // Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2(width,0.0)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
+    NoFocusOnAppearing     = 1 << 12,  // Disable taking focus when transitioning from hidden to visible state
+    NoBringToFrontOnFocus  = 1 << 13,  // Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)
+    AlwaysVerticalScrollbar= 1 << 14,  // Always show vertical scrollbar (even if content_size.y < size.y)
+    AlwaysHorizontalScrollbar=1<< 15,  // Always show horizontal scrollbar (even if content_size.x < size.x)
+    AlwaysUseWindowPadding = 1 << 16,  // Ensure child windows without border uses style.window_padding (ignored by default for non-bordered child windows, because more convenient)
+    NoNavInputs            = 1 << 18,  // No gamepad/keyboard navigation within the window
+    NoNavFocus             = 1 << 19,  // No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)
+    UnsavedDocument        = 1 << 20,  // Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the x + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the x, so if you keep submitting the tab may reappear at end of tab bar.
+    NoDocking              = 1 << 21,  // Disable docking of this window
+    // [Internal]
+    NavFlattened           = 1 << 23,  // [BETA] On child window: allow gamepad/keyboard navigation to cross over parent border to this child or between sibling child windows.
+    ChildWindow            = 1 << 24,  // Don't use! For internal use by BeginChild()
+    Tooltip                = 1 << 25,  // Don't use! For internal use by BeginTooltip()
+    Popup                  = 1 << 26,  // Don't use! For internal use by BeginPopup()
+    Modal                  = 1 << 27,  // Don't use! For internal use by BeginPopupModal()
+    ChildMenu              = 1 << 28,  // Don't use! For internal use by BeginMenu()
+    DockNodeHost           = 1 << 29   // Don't use! For internal use by Begin()/NewFrame()
+    // [Obsolete]
+    //ImGuiWindowFlags_ResizeFromAnySide    = 1 << 17,  // [Obsolete] --> Set io.config_windows_resize_from_edges=true and make sure mouse cursors are supported by backend (io.backend_flags & ImGuiBackendFlags_HasMouseCursors)
+}
+
+// flags for ImGui::IsWindowFocused()
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgFocusedFlags
+{
+    None                          = 0,
+    ChildWindows                  = 1 << 0,   // Return true if any children of the window is focused
+    RootWindow                    = 1 << 1,   // Test from root window (top most parent of the current hierarchy)
+    AnyWindow                     = 1 << 2,   // Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.want_capture_mouse' instead! Please read the FAQ!
+    NoPopupHierarchy              = 1 << 3,   // Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
+    DockHierarchy                 = 1 << 4,   // Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
+    // ImGuiFocusedFlags_RootAndChildWindows           = ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows
+}
+
+
+// flags for ImGui::IsItemHovered(), ImGui::IsWindowHovered()
+// Note: if you are trying to check whether your mouse should be dispatched to Dear ImGui or to your app, you should use 'io.want_capture_mouse' instead! Please read the FAQ!
+// Note: windows with the ImGuiWindowFlags_NoInputs flag are ignored by IsWindowHovered() calls.
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgHoveredFlags
+{
+    None                          = 0,        // Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.
+    ChildWindows                  = 1 << 0,   // IsWindowHovered() only: Return true if any children of the window is hovered
+    RootWindow                    = 1 << 1,   // IsWindowHovered() only: Test from root window (top most parent of the current hierarchy)
+    AnyWindow                     = 1 << 2,   // IsWindowHovered() only: Return true if any window is hovered
+    NoPopupHierarchy              = 1 << 3,   // IsWindowHovered() only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
+    DockHierarchy                 = 1 << 4,   // IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
+    AllowWhenBlockedByPopup       = 1 << 5,   // Return true even if a popup window is normally blocking access to this item/window
+    //ImGuiHoveredFlags_AllowWhenBlockedByModal     = 1 << 6,   // Return true even if a modal popup window is normally blocking access to this item/window. FIXME-TODO: Unavailable yet.
+    AllowWhenBlockedByActiveItem  = 1 << 7,   // Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.
+    AllowWhenOverlapped           = 1 << 8,   // IsItemHovered() only: Return true even if the position is obstructed or overlapped by another window
+    AllowWhenDisabled             = 1 << 9,   // IsItemHovered() only: Return true even if the item is disabled
+    NoNavOverride                 = 1 << 10,  // Disable using gamepad/keyboard navigation state when active, always query mouse.
+    // ImGuiHoveredFlags_RectOnly                      = ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped,
+    // ImGuiHoveredFlags_RootAndChildWindows           = ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows
+}
+
+// pub const RootAndChildWindows: i32           = DimgHoveredFlags::RootWindow | DimgHoveredFlags::ChildWindows;
+pub const ROOT_AND_CHILD_WINDOWS: HashSet<DimgHoveredFlags> = HashSet::from([
+    DimgHoveredFlags::RootWindow, DimgHoveredFlags::ChildWindows
+]);
+
+
+// pub const RectOnly : i32                     = DimgHoveredFlags::AllowWhenBlockedByPopup | DimgHoveredFlags::AllowWhenBlockedByActiveItem | DimgHoveredFlags::AllowWhenOverlapped;
+ pub const RECT_ONLY: HashSet<DimgHoveredFlags> = HashSet::from([
+     DimgHoveredFlags::AllowWhenBlockedByPopup, DimgHoveredFlags::AllowWhenBlockedByActiveItem, DimgHoveredFlags::AllowWhenOverlapped
+ ]);
+
+// Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().
+// NB: For basic min/max size constraint on each axis you don't need to use the callback! The SetNextWindowSizeConstraints() parameters are enough.
+pub struct DimgSizeCallbackData
+{
+    // void*   user_data;       // Read-only.   What user passed to SetNextWindowSizeConstraints()
+    pub user_data: Vec<u8>,
+    // pub pos: ImVec2,            // Read-only.   Window position, for reference.
+    pub pos: DimgVec2D,
+    // pub current_size: ImVec2,    // Read-only.   Current window size.
+    pub current_size: DimgVec2D,
+    // pub desired_size: ImVec2,    // Read-write.  Desired size, based on user's mouse position. Write to this field to restrain resizing.
+    pub desired_size: DimgVec2D,
+}
+
+#[derive(Debug,Clone,Default)]
+pub struct DimgShrinkWidthItem
+{
+    // int         Index;
+    pub Index: i32,
+    // float       width;
+    pub Width: f32,
+    // float       InitialWidth;
+    pub InitialWidth: f32,
 }

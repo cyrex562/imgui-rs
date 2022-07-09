@@ -1,11 +1,12 @@
 use std::collections::HashSet;
-use crate::defines::{DimgId, ImDrawListSplitter};
+use crate::types::DimgId;
+use crate::draw_list::ImDrawListSplitter;
 use crate::rect::DimgRect;
 
 #[derive(Debug,Default,Clone)]
 pub struct DimgOldColumns
 {
-    // DimgId             ID;
+    // DimgId             id;
     pub ID: DimgId,
     // ImGuiOldColumnFlags flags;
     pub Flags: DimgOldColumnFlags,

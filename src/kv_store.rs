@@ -188,7 +188,7 @@ pub unsafe fn BuildSortByKey(&mut self)
     // {
     //     static int IMGUI_CDECL PairComparerByID(const void* lhs, const void* rhs)
     //     {
-    //         // We can't just do a subtraction because qsort uses signed integers and subtracting our ID doesn't play well with that.
+    //         // We can't just do a subtraction because qsort uses signed integers and subtracting our id doesn't play well with that.
     //         if (((const ImGuiStoragePair*)lhs)->key > ((const ImGuiStoragePair*)rhs)->key) return +1;
     //         if (((const ImGuiStoragePair*)lhs)->key < ((const ImGuiStoragePair*)rhs)->key) return -1;
     //         return 0;

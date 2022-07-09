@@ -16,11 +16,11 @@ pub enum DimgActivateFlags
 pub enum DimgScrollFlags
 {
     None                   = 0,
-    KeepVisibleEdgeX       = 1 << 0,       // If item is not visible: scroll as little as possible on X axis to bring item back into view [default for X axis]
+    KeepVisibleEdgeX       = 1 << 0,       // If item is not visible: scroll as little as possible on x axis to bring item back into view [default for x axis]
     KeepVisibleEdgeY       = 1 << 1,       // If item is not visible: scroll as little as possible on Y axis to bring item back into view [default for Y axis for windows that are already visible]
-    KeepVisibleCenterX     = 1 << 2,       // If item is not visible: scroll to make the item centered on X axis [rarely used]
+    KeepVisibleCenterX     = 1 << 2,       // If item is not visible: scroll to make the item centered on x axis [rarely used]
     KeepVisibleCenterY     = 1 << 3,       // If item is not visible: scroll to make the item centered on Y axis
-    AlwaysCenterX          = 1 << 4,       // Always center the result item on X axis [rarely used]
+    AlwaysCenterX          = 1 << 4,       // Always center the result item on x axis [rarely used]
     AlwaysCenterY          = 1 << 5,       // Always center the result item on Y axis [default for Y axis for appearing window)
     NoScrollParent         = 1 << 6,       // Disable forwarding scrolling to parent window if required to keep item/rect visible (only scroll window the function was applied to).
     
@@ -70,9 +70,9 @@ pub struct DimgNavItemData
 {
     // ImGuiWindow*        Window;         // Init,Move    // Best candidate window (result->ItemWindow->root_window_for_nav == request->Window)
     pub Window: *mut ImGuiWindow,
-    // ImGuiID             ID;             // Init,Move    // Best candidate item ID
+    // ImGuiID             id;             // Init,Move    // Best candidate item id
     pub ID: ImGuiID,
-    // ImGuiID             FocusScopeId;   // Init,Move    // Best candidate focus scope ID
+    // ImGuiID             FocusScopeId;   // Init,Move    // Best candidate focus scope id
     pub FocusScopeId: ImGuiID,
     // ImRect              RectRel;        // Init,Move    // Best candidate bounding box in window relative space
     pub RectRel: ImRect,
@@ -93,7 +93,7 @@ impl DimgNavItemData {
             ..Default::default()
         }
     }
-    //     void clear()        { Window = NULL; ID = FocusScopeId = 0; InFlags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
+    //     void clear()        { Window = NULL; id = FocusScopeId = 0; InFlags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
     pub fn Clear(&mut self) {
         self.Window = null_mut();
         self.ID = 0;
@@ -103,4 +103,16 @@ impl DimgNavItemData {
         self.DistCenter = f32::MAX;
         self.DistAxial = f32::MAX;
     }
+}
+
+
+// FIXME-NAV: Clarify/expose various repeat delay/rate
+pub enum DimgNavReadMode
+{
+    Down,
+    Pressed,
+    Released,
+    Repeat,
+    RepeatSlow,
+    RepeatFast
 }

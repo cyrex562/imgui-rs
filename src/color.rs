@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::imgui_h::ImGuiColor;
 use crate::imgui_math::{IM_F32_TO_INT8_SAT, ImFabs, ImFmod, ImLerpU32, ImSwapF32};
 use crate::imgui_vec::ImVec4;
@@ -217,4 +218,131 @@ pub struct DimgColorMod
     pub Col: ImGuiColor,
     // ImVec4          BackupValue;
     pub BackupValue: ImVec4,
+}
+
+/// Enumeration for PushStyleColor() / PopStyleColor()
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgColor
+{
+    Text,
+    TextDisabled,
+    WindowBg,              // Background of normal windows
+    ChildBg,               // Background of child windows
+    PopupBg,               // Background of popups, menus, tooltips windows
+    Border,
+    BorderShadow,
+    FrameBg,               // Background of checkbox, radio button, plot, slider, text input
+    FrameBgHovered,
+    FrameBgActive,
+    TitleBg,
+    TitleBgActive,
+    TitleBgCollapsed,
+    MenuBarBg,
+    ScrollbarBg,
+    ScrollbarGrab,
+    ScrollbarGrabHovered,
+    ScrollbarGrabActive,
+    CheckMark,
+    SliderGrab,
+    SliderGrabActive,
+    Button,
+    ButtonHovered,
+    ButtonActive,
+    Header,                // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+    HeaderHovered,
+    HeaderActive,
+    Separator,
+    SeparatorHovered,
+    SeparatorActive,
+    ResizeGrip,            // Resize grip in lower-right and lower-left corners of windows.
+    ResizeGripHovered,
+    ResizeGripActive,
+    Tab,                   // TabItem in a tab_bar
+    TabHovered,
+    TabActive,
+    TabUnfocused,
+    TabUnfocusedActive,
+    DockingPreview,        // preview overlay color when about to docking something
+    DockingEmptyBg,        // Background color for empty node (e.g. central_node with no window docked into it)
+    PlotLines,
+    PlotLinesHovered,
+    PlotHistogram,
+    PlotHistogramHovered,
+    TableHeaderBg,         // Table header background
+    TableBorderStrong,     // Table outer and header borders (prefer using Alpha=1.0 here)
+    TableBorderLight,      // Table inner borders (prefer using Alpha=1.0 here)
+    TableRowBg,            // Table row background (even rows)
+    TableRowBgAlt,         // Table row background (odd rows)
+    TextSelectedBg,
+    DragDropTarget,        // Rectangle highlighting a drop target
+    NavHighlight,          // Gamepad/keyboard: current highlighted item
+    NavWindowingHighlight, // Highlight window when using CTRL+TAB
+    NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+    ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
+}
+
+// pub const DefaultOptions_: i32 = DimgColorEditFlags::Uint8 | DimgColorEditFlags::DisplayRGB | DimgColorEditFlags::InputRGB | DimgColorEditFlags::PickerHueBar;
+pub const DFLT_OPTS: HashSet<DimgColorEditFlags> = HashSet::from([
+    DimgColorEditFlags::Uint8, DimgColorEditFlags::DisplayRGB, DimgColorEditFlags::InputRGB, DimgColorEditFlags::PickerHueBar
+]);
+
+// [Internal] Masks
+    // pub const DisplayMask_: i32    = DimgColorEditFlags::DisplayRGB | DimgColorEditFlags::DisplayHSV | DimgColorEditFlags::DisplayHex;
+   pub const DISPLAY_MASK: HashSet<DimgColorEditFlags> = HashSet::from([
+        DimgColorEditFlags::DisplayRGB, DimgColorEditFlags::DisplayHSV, DimgColorEditFlags::DisplayHex
+    ]);
+
+// pub const PickerMask_: i32     = DimgColorEditFlags::PickerHueWheel | DimgColorEditFlags::PickerHueBar;
+pub const PICKER_MASK: HashSet<DimgColorEditFlags> = HashSet::from([
+    DimgColorEditFlags::PickerHueWheel, DimgColorEditFlags::PickerHueBar
+]);
+
+// pub const InputMask_: i32      = DimgColorEditFlags::InputRGB | DimgColorEditFlags::InputHSV;
+    pub const INPUT_MASK: HashSet<DimgColorEditFlags> = HashSet::from([
+        DimgColorEditFlags::InputRGB, DimgColorEditFlags::InputHSV
+    ]);
+
+// flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgColorEditFlags
+{
+    None            = 0,
+    NoAlpha         = 1 << 1,   //              // ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).
+    NoPicker        = 1 << 2,   //              // ColorEdit: disable picker when clicking on color square.
+    NoOptions       = 1 << 3,   //              // ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.
+    NoSmallPreview  = 1 << 4,   //              // ColorEdit, ColorPicker: disable color square preview next to the inputs. (e.g. to show only the inputs)
+    NoInputs        = 1 << 5,   //              // ColorEdit, ColorPicker: disable inputs sliders/text widgets (e.g. to show only the small preview color square).
+    NoTooltip       = 1 << 6,   //              // ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.
+    NoLabel         = 1 << 7,   //              // ColorEdit, ColorPicker: disable display of inline text label (the label is still forwarded to the tooltip and picker).
+    NoSidePreview   = 1 << 8,   //              // ColorPicker: disable bigger color preview on right side of the picker, use small color square preview instead.
+    NoDragDrop      = 1 << 9,   //              // ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.
+    NoBorder        = 1 << 10,  //              // ColorButton: disable border (which is enforced by default)
+
+    // User Options (right-click on widget to change some of them).
+    AlphaBar        = 1 << 16,  //              // ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
+    AlphaPreview    = 1 << 17,  //              // ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a checkerboard, instead of opaque.
+    AlphaPreviewHalf= 1 << 18,  //              // ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead of opaque.
+    HDR             = 1 << 19,  //              // (WIP) ColorEdit: Currently only disable 0.0..1.0 limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).
+    DisplayRGB      = 1 << 20,  // [Display]    // ColorEdit: override _display_ type among RGB/HSV/Hex. ColorPicker: select any combination using one or more of RGB/HSV/Hex.
+    DisplayHSV      = 1 << 21,  // [Display]    // "
+    DisplayHex      = 1 << 22,  // [Display]    // "
+    Uint8           = 1 << 23,  // [data_type]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.
+    Float           = 1 << 24,  // [data_type]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0..1.0 floats instead of 0..255 integers. No round-trip of value via integers.
+    PickerHueBar    = 1 << 25,  // [Picker]     // ColorPicker: bar for Hue, rectangle for Sat/Value.
+    PickerHueWheel  = 1 << 26,  // [Picker]     // ColorPicker: wheel for Hue, triangle for Sat/Value.
+    InputRGB        = 1 << 27,  // [Input]      // ColorEdit, ColorPicker: input and output data in RGB format.
+    InputHSV        = 1 << 28,  // [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
+
+    // Defaults Options. You can set application defaults using SetColorEditOptions(). The intent is that you probably don't want to
+    // override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.
+    // ImGuiColorEditFlags_DefaultOptions_ = ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_PickerHueBar,
+    //
+    // // [Internal] Masks
+    // ImGuiColorEditFlags_DisplayMask_    = ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex,
+    // ImGuiColorEditFlags_DataTypeMask_   = ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_Float,
+    // ImGuiColorEditFlags_PickerMask_     = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_PickerHueBar,
+    // ImGuiColorEditFlags_InputMask_      = ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_InputHSV
+
+    // Obsolete names (will be removed)
+    // ImGuiColorEditFlags_RGB = ImGuiColorEditFlags_DisplayRGB, ImGuiColorEditFlags_HSV = ImGuiColorEditFlags_DisplayHSV, ImGuiColorEditFlags_HEX = ImGuiColorEditFlags_DisplayHex  // [renamed in 1.69]
 }

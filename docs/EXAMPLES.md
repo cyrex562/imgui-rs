@@ -41,7 +41,7 @@ Example (using [backends/imgui_impl_win32.cpp](https://github.com/ocornut/imgui/
 // Create a Dear ImGui context, setup some options
 ImGui::CreateContext();
 ImGuiIO& io = ImGui::GetIO();
-io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable some options
+io.config_flags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable some options
 
 // Initialize Platform + Renderer backends (here: using imgui_impl_win32.cpp + imgui_impl_dx11.cpp)
 ImGui_ImplWin32_Init(my_hwnd);
@@ -226,14 +226,14 @@ If you are interested in using Cmake to build and links examples, see:
 **About mouse cursor latency**
 
 Dear ImGui has no particular extra lag for most behaviors,
-e.g. the last value passed to 'io.AddMousePosEvent()' before NewFrame() will result in windows being moved
+e.g. the last value passed to 'io.add_mouse_pos_event()' before NewFrame() will result in windows being moved
 to the right spot at the time of EndFrame()/Render(). At 60 FPS your experience should be pleasant.
 
 However, consider that OS mouse cursors are typically drawn through a very specific hardware accelerated
 path and will feel smoother than the majority of contents rendered via regular graphics API (including,
 but not limited to Dear ImGui windows). Because UI rendering and interaction happens on the same plane
 as the mouse, that disconnect may be jarring to particularly sensitive users.
-You may experiment with enabling the io.MouseDrawCursor flag to request Dear ImGui to draw a mouse cursor
+You may experiment with enabling the io.mouse_draw_cursor flag to request Dear ImGui to draw a mouse cursor
 using the regular graphics API, to help you visualize the difference between a "hardware" cursor and a
 regularly rendered software cursor.
 However, rendering a mouse cursor at 60 FPS will feel sluggish so you likely won't want to enable that at

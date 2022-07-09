@@ -2,9 +2,9 @@
 // This needs to be used along with a Platform Backend (e.g. OSX)
 
 // Implemented features:
-//  [X] Renderer: User texture binding. Use 'MTLTexture' as ImTextureID. Read the FAQ about ImTextureID!
-//  [X] Renderer: Large meshes support (64k+ vertices) with 16-bit indices.
-//  [X] Renderer: Multi-viewport support (multiple windows). Enable with 'io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable'.
+//  [x] Renderer: User texture binding. Use 'MTLTexture' as ImTextureID. Read the FAQ about ImTextureID!
+//  [x] Renderer: Large meshes support (64k+ vertices) with 16-bit indices.
+//  [x] Renderer: Multi-viewport support (multiple windows). Enable with 'io.config_flags |= ImGuiConfigFlags_ViewportsEnable'.
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
 // Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
@@ -24,8 +24,8 @@
 //  2021-01-25: Metal: Fixed texture storage mode when building on Mac Catalyst.
 //  2019-05-29: Metal: Added support for large mesh (64K+ vertices), enable ImGuiBackendFlags_RendererHasVtxOffset flag.
 //  2019-04-30: Metal: Added support for special ImDrawCallback_ResetRenderState callback to reset render state.
-//  2019-02-11: Metal: Projecting clipping rectangles correctly using draw_data->FramebufferScale to allow multi-viewports for retina display.
-//  2018-11-30: Misc: Setting up io.BackendRendererName so it can be displayed in the About Window.
+//  2019-02-11: Metal: Projecting clipping rectangles correctly using draw_data->framebuffer_scale to allow multi-viewports for retina display.
+//  2018-11-30: Misc: Setting up io.backend_renderer_name so it can be displayed in the About Window.
 //  2018-07-05: Metal: Added new Metal backend implementation.
 
 #include "defines.rs"
@@ -170,8 +170,8 @@ static void ImGui_ImplMetal_SetupRenderState(ImDrawData* drawData, id<MTLCommand
     [commandEncoder setDepthStencilState:bd->SharedMetalContext.depthStencilState];
 
     // Setup viewport, orthographic projection matrix
-    // Our visible imgui space lies from draw_data->DisplayPos (top left) to
-    // draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayMin is typically (0,0) for single viewport apps.
+    // Our visible imgui space lies from draw_data->display_pos (top left) to
+    // draw_data->display_pos+data_data->display_size (bottom right). DisplayMin is typically (0,0) for single viewport apps.
     MTLViewport viewport =
     {
         .originX = 0.0,
@@ -405,8 +405,8 @@ static void ImGui_ImplMetal_CreateWindow(ImGuiViewport* viewport)
     ImGuiViewportDataMetal* data = IM_NEW(ImGuiViewportDataMetal)();
     viewport->RendererUserData = data;
 
-    // PlatformHandleRaw should always be a NSWindow*, whereas PlatformHandle might be a higher-level handle (e.g. GLFWWindow*, SDL_Window*).
-    // Some back-ends will leave PlatformHandleRaw NULL, in which case we assume PlatformHandle will contain the NSWindow*.
+    // platform_handle_raw should always be a NSWindow*, whereas platform_handle might be a higher-level handle (e.g. GLFWWindow*, SDL_Window*).
+    // Some back-ends will leave platform_handle_raw NULL, in which case we assume platform_handle will contain the NSWindow*.
     void* handle = viewport->PlatformHandleRaw ? viewport->PlatformHandleRaw : viewport->PlatformHandle;
     IM_ASSERT(handle != NULL);
 
@@ -429,7 +429,7 @@ static void ImGui_ImplMetal_CreateWindow(ImGuiViewport* viewport)
 
 static void ImGui_ImplMetal_DestroyWindow(ImGuiViewport* viewport)
 {
-    // The main viewport (owned by the application) will always have RendererUserData == NULL since we didn't create the data for it.
+    // The main viewport (owned by the application) will always have renderer_user_data == NULL since we didn't create the data for it.
     if (ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->RendererUserData)
         IM_DELETE(data);
     viewport->RendererUserData = NULL;
@@ -451,7 +451,7 @@ static void ImGui_ImplMetal_RenderWindow(ImGuiViewport* viewport, void*)
     ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->RendererUserData;
 
 #if TARGET_OS_OSX
-    void* handle = viewport->PlatformHandleRaw ? viewport->PlatformHandleRaw : viewport->PlatformHandle;
+    void* handle = viewport->platform_handle_raw ? viewport->platform_handle_raw : viewport->platform_handle;
     NSWindow* window = (__bridge NSWindow*)handle;
 
     // Always render the first frame, regardless of occlusionState, to avoid an initial flicker
@@ -469,7 +469,7 @@ static void ImGui_ImplMetal_RenderWindow(ImGuiViewport* viewport, void*)
         data->MetalLayer.contentsScale = viewport->DpiScale;
         data->MetalLayer.drawableSize = MakeScaledSize(window.frame.size, viewport->DpiScale);
     }
-    viewport->DrawData->FramebufferScale = ImVec2(viewport->DpiScale, viewport->DpiScale);
+    viewport->DrawData->framebuffer_scale = DimgVec2D::new(viewport->DpiScale, viewport->DpiScale);
 #endif
 
     id <CAMetalDrawable> drawable = [data->MetalLayer nextDrawable];
@@ -630,7 +630,7 @@ static void ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows()
     return [[MetalBuffer alloc] initWithBuffer:backing];
 }
 
-// Bilinear sampling is required by default. Set 'io.Fonts->flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling.
+// Bilinear sampling is required by default. Set 'io.fonts->flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling.
 - (id<MTLRenderPipelineState>)renderPipelineStateForFramebufferDescriptor:(FramebufferDescriptor*)descriptor device:(id<MTLDevice>)device
 {
     NSError* error = nil;

@@ -50,7 +50,7 @@ pub struct DimgStyle {
     pub ColumnsMinSpacing: f32,
     // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
     pub ScrollbarSize: f32,
-    // Width of the vertical scrollbar, Height of the horizontal scrollbar.
+    // width of the vertical scrollbar, height of the horizontal scrollbar.
     pub ScrollbarRounding: f32,
     // Radius of grab corners for scrollbar.
     pub GrabMinSize: f32,
@@ -76,7 +76,7 @@ pub struct DimgStyle {
     pub DisplaySafeAreaPadding: ImVec2,
     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
     pub MouseCursorScale: f32,
-    // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
+    // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
     pub AntiAliasedLines: bool,
     // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
     pub AntiAliasedLinesUseTex: bool,
@@ -118,7 +118,7 @@ impl DimgStyle {
         out.TouchExtraPadding = ImVec2::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
         out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
         out.ColumnsMinSpacing = 6.0;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
-        out.ScrollbarSize = 14.0;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
+        out.ScrollbarSize = 14.0;            // width of the vertical scrollbar, height of the horizontal scrollbar
         out.ScrollbarRounding = 9.0;             // Radius of grab corners rounding for scrollbar
         out.GrabMinSize = 12.0;            // Minimum width/height of a grab box for slider/scrollbar
         out.GrabRounding = 0.0;             // Radius of grabs corners rounding. Set to 0.0 to have rectangular slider grabs.
@@ -131,7 +131,7 @@ impl DimgStyle {
         out.SelectableTextAlign = ImVec2::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
         out.DisplayWindowPadding = ImVec2::new(19.0, 19.0);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
         out.DisplaySafeAreaPadding = ImVec2::new(3.0, 3.0);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
-        out.MouseCursorScale = 1.0;             // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later.
+        out.MouseCursorScale = 1.0;             // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). May be removed later.
         out.AntiAliasedLines = true;             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
         out.AntiAliasedLinesUseTex = true;             // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
         out.AntiAliasedFill = true;             // Enable anti-aliased filled shapes (rounded rectangles, circles, etc.).
@@ -677,4 +677,43 @@ pub fn StyleColorsLight(dst: *mut DimgStyle)
     colors[ImGuiColor::NavWindowingHighlight]  = ImVec4::new(0.70, 0.70, 0.70, 0.70);
     colors[ImGuiColor::NavWindowingDimBg]      = ImVec4::new(0.20, 0.20, 0.20, 0.20);
     colors[ImGuiColor::ModalWindowDimBg]       = ImVec4::new(0.20, 0.20, 0.20, 0.35);
+}
+
+// Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
+// - The enum only refers to fields of ImGuiStyle which makes sense to be pushed/popped inside UI code.
+//   During initialization or between frames, feel free to just poke into ImGuiStyle directly.
+// - Tip: Use your programming IDE navigation facilities on the names in the _second column_ below to find the actual members and their description.
+//   In Visual Studio IDE: CTRL+comma ("Edit.GoToAll") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
+//   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
+// - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link enum values to members offset/type.
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgStyleVar
+{
+    // Enum name --------------------- // Member in ImGuiStyle structure (see ImGuiStyle for descriptions)
+    Alpha,               // float     Alpha
+    DisabledAlpha,       // float     DisabledAlpha
+    WindowPadding,       // ImVec2    window_padding
+    WindowRounding,      // float     window_rounding
+    WindowBorderSize,    // float     WindowBorderSize
+    WindowMinSize,       // ImVec2    WindowMinSize
+    WindowTitleAlign,    // ImVec2    WindowTitleAlign
+    ChildRounding,       // float     ChildRounding
+    ChildBorderSize,     // float     ChildBorderSize
+    PopupRounding,       // float     PopupRounding
+    PopupBorderSize,     // float     PopupBorderSize
+    FramePadding,        // ImVec2    FramePadding
+    FrameRounding,       // float     FrameRounding
+    FrameBorderSize,     // float     FrameBorderSize
+    ItemSpacing,         // ImVec2    ItemSpacing
+    ItemInnerSpacing,    // ImVec2    ItemInnerSpacing
+    IndentSpacing,       // float     IndentSpacing
+    CellPadding,         // ImVec2    CellPadding
+    ScrollbarSize,       // float     ScrollbarSize
+    ScrollbarRounding,   // float     ScrollbarRounding
+    GrabMinSize,         // float     GrabMinSize
+    GrabRounding,        // float     GrabRounding
+    TabRounding,         // float     TabRounding
+    ButtonTextAlign,     // ImVec2    ButtonTextAlign
+    SelectableTextAlign, // ImVec2    SelectableTextAlign
+    COUNT
 }

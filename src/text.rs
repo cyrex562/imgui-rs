@@ -262,7 +262,7 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
             continue;
         }
 
-        // const float char_width = font->GetCharAdvance((ImWchar)c) * scale;
+        // const float char_width = font->get_char_advance((ImWchar)c) * scale;
         let char_width = font.GetCharAdvance(c * scale);
         line_width += char_width;
     }
@@ -272,7 +272,7 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
     }
 
     if (out_offset) {
-        *out_offset = ImVec2(line_width, text_size.y + line_height);  // offset allow for the possibility of sitting after a trailing \n
+        *out_offset = DimgVec2D::new(line_width, text_size.y + line_height);  // offset allow for the possibility of sitting after a trailing \n
         }
 
     if line_width > 0.0 || text_size.y == 0.0 {                       // whereas size.y will ignore the trailing \n
@@ -285,3 +285,15 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
 
     return text_size;
 }
+
+pub enum DimgTextFlags
+{
+    None = 0,
+    NoWidthForLargeClippedText = 1 << 0
+}
+
+// Helper: Unicode defines
+pub const IM_UNICODE_CODEPOINT_INVALID: u32 = 0xFFFD;
+// Invalid Unicode code point (standard value).
+// #ifdef IMGUI_USE_WCHAR32
+pub const IM_UNICODE_CODEPOINT_MAX: u32     = 0x10FFFF;

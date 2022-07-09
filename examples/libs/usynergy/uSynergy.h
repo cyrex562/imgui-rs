@@ -238,14 +238,14 @@ typedef void		(*uSynergyScreenActiveCallback)(uSynergyCookie cookie, uSynergyBoo
 /**
 @brief Mouse callback
 
-This callback is called when a mouse events happens. The mouse X and Y position,
+This callback is called when a mouse events happens. The mouse x and Y position,
 wheel and button state is communicated in the message. It's up to the user to
 interpret if this is a mouse up, down, double-click or other message.
 
 @param cookie		Cookie supplied in the Synergy context
-@param x			Mouse X position
+@param x			Mouse x position
 @param y			Mouse Y position
-@param wheelX		Mouse wheel X position
+@param wheelX		Mouse wheel x position
 @param wheelY		Mouse wheel Y position
 @param buttonLeft	Left button pressed status, 0 for released, 1 for pressed
 @param buttonMiddle	Middle button pressed status, 0 for released, 1 for pressed
@@ -281,9 +281,9 @@ represent the most current joystick state.
 @param cookie		Cookie supplied in the Synergy context
 @param joyNum		Joystick number, always in the range [0 ... USYNERGY_NUM_JOYSTICKS>
 @param buttons		Button pressed mask
-@param leftStickX	Left stick X position, in range [-127 ... 127]
+@param leftStickX	Left stick x position, in range [-127 ... 127]
 @param leftStickY	Left stick Y position, in range [-127 ... 127]
-@param rightStickX	Right stick X position, in range [-127 ... 127]
+@param rightStickX	Right stick x position, in range [-127 ... 127]
 @param rightStickY	Right stick Y position, in range [-127 ... 127]
 **/
 typedef void		(*uSynergyJoystickCallback)(uSynergyCookie cookie, uint8_t joyNum, uint16_t buttons, int8_t leftStickX, int8_t leftStickY, int8_t rightStickX, int8_t rightStickY);
@@ -323,9 +323,9 @@ typedef struct
 	uSynergyReceiveFunc				m_receiveFunc;									/* Receive data function */
 	uSynergySleepFunc				m_sleepFunc;									/* Thread sleep function */
 	uSynergyGetTimeFunc				m_getTimeFunc;									/* Get current time function */
-	const char*						m_clientName;									/* Name of Synergy Screen / Client */
-	uint16_t						m_clientWidth;									/* Width of screen */
-	uint16_t						m_clientHeight;									/* Height of screen */
+	const char*						m_clientName;									/* name of Synergy Screen / Client */
+	uint16_t						m_clientWidth;									/* width of screen */
+	uint16_t						m_clientHeight;									/* height of screen */
 
 	/* Optional configuration data, filled in by client */
 	uSynergyCookie					m_cookie;										/* Cookie pointer passed to callback functions (can be NULL) */
@@ -336,7 +336,7 @@ typedef struct
 	uSynergyJoystickCallback		m_joystickCallback;								/* Callback for joystick events */
 	uSynergyClipboardCallback		m_clipboardCallback;							/* Callback for clipboard events */
 
-	/* State data, used internall by client, initialized by uSynergyInit() */
+	/* state data, used internall by client, initialized by uSynergyInit() */
 	uSynergyBool					m_connected;									/* Is our socket connected? */
 	uSynergyBool					m_hasReceivedHello;								/* Have we received a 'Hello' from the server? */
 	uSynergyBool					m_isCaptured;									/* Is Synergy active (i.e. this client is receiving input messages?) */
@@ -346,9 +346,9 @@ typedef struct
 	int								m_receiveOfs;									/* Receive buffer offset */
 	uint8_t							m_replyBuffer[USYNERGY_REPLY_BUFFER_SIZE];		/* Reply buffer */
 	uint8_t*						m_replyCur;										/* Write offset into reply buffer */
-	uint16_t						m_mouseX;										/* Mouse X position */
+	uint16_t						m_mouseX;										/* Mouse x position */
 	uint16_t						m_mouseY;										/* Mouse Y position */
-	int16_t							m_mouseWheelX;									/* Mouse wheel X position */
+	int16_t							m_mouseWheelX;									/* Mouse wheel x position */
 	int16_t							m_mouseWheelY;									/* Mouse wheel Y position */
 	uSynergyBool					m_mouseButtonLeft;								/* Mouse left button */
 	uSynergyBool					m_mouseButtonRight;								/* Mouse right button */

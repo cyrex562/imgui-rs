@@ -6,7 +6,7 @@
 // !!! Nowadays, prefer using GLFW or SDL instead!
 
 // Implemented features:
-//  [X] Platform: Partial keyboard support. Since 1.87 we are using the io.AddKeyEvent() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy GLUT values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
+//  [x] Platform: Partial keyboard support. Since 1.87 we are using the io.add_key_event() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy GLUT values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
 // Issues:
 //  [ ] Platform: GLUT is unable to distinguish e.g. Backspace from CTRL+H or TAB from CTRL+I
 //  [ ] Platform: Missing mouse cursor shape/visibility support.
@@ -28,7 +28,7 @@ IMGUI_IMPL_API void     ImGui_ImplGLUT_NewFrame();
 
 // You can call ImGui_ImplGLUT_InstallFuncs() to get all those functions installed automatically,
 // or call them yourself from your own GLUT handlers. We are using the same weird names as GLUT for consistency..
-//---------------------------------------- GLUT name --------------------------------------------- Decent Name ---------
+//---------------------------------------- GLUT name --------------------------------------------- Decent name ---------
 IMGUI_IMPL_API void     ImGui_ImplGLUT_ReshapeFunc(int w, int h);                           // ~ ResizeFunc
 IMGUI_IMPL_API void     ImGui_ImplGLUT_MotionFunc(int x, int y);                            // ~ MouseMoveFunc
 IMGUI_IMPL_API void     ImGui_ImplGLUT_MouseFunc(int button, int state, int x, int y);      // ~ MouseButtonFunc

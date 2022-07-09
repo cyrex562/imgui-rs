@@ -1,11 +1,11 @@
 #
 # Cross Platform Makefile
-# Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS X
+# Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS x
 #
 # You will need SDL2 (http://www.libsdl.org):
 # Linux:
 #   apt-get install libsdl2-dev
-# Mac OS X:
+# Mac OS x:
 #   brew install sdl2
 # MSYS2:
 #   pacman -S mingw-w64-i686-SDL2

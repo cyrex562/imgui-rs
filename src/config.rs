@@ -28,7 +28,7 @@
 
 //---- Don't define obsolete functions/enums/behaviors. Consider enabling from time to time after updating to avoid using soon-to-be obsolete function/names.
 //#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//#define IMGUI_DISABLE_OBSOLETE_KEYIO                      // 1.87: disable legacy io.KeyMap[]+io.KeysDown[] in favor io.AddKeyEvent(). This will be folded into IMGUI_DISABLE_OBSOLETE_FUNCTIONS in a few versions.
+//#define IMGUI_DISABLE_OBSOLETE_KEYIO                      // 1.87: disable legacy io.KeyMap[]+io.KeysDown[] in favor io.add_key_event(). This will be folded into IMGUI_DISABLE_OBSOLETE_FUNCTIONS in a few versions.
 
 //---- Disable all of Dear ImGui or don't implement standard windows/tools.
 // It is very strongly recommended to NOT disable the demo windows and debug tool during development. They are extremely useful in day to day work. Please read comments in imgui_demo.cpp.
@@ -123,3 +123,48 @@ namespace ImGui
     void MyFunction(const char* name, const MyMatrix44& v);
 }
 */
+
+// Configuration flags stored in io.config_flags. Set by user/application.
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgConfigFlags
+{
+    None                   = 0,
+    NavEnableKeyboard      = 1 << 0,   // Master keyboard navigation enable flag. NewFrame() will automatically fill io.nav_inputs[] based on io.add_key_event() calls
+    NavEnableGamepad       = 1 << 1,   // Master gamepad navigation enable flag. This is mostly to instruct your imgui backend to fill io.nav_inputs[]. Backend also needs to set ImGuiBackendFlags_HasGamepad.
+    NavEnableSetMousePos   = 1 << 2,   // Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward. Will update io.mouse_pos and set io.want_set_mouse_pos=true. If enabled you MUST honor io.want_set_mouse_pos requests in your backend, otherwise ImGui will react as if the mouse is jumping around back and forth.
+    NavNoCaptureKeyboard   = 1 << 3,   // Instruct navigation to not set the io.want_capture_keyboard flag when io.nav_active is set.
+    NoMouse                = 1 << 4,   // Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.
+    NoMouseCursorChange    = 1 << 5,   // Instruct backend to not alter mouse cursor shape and visibility. Use if the backend cursor changes are interfering with yours and you don't want to use SetMouseCursor() to change mouse cursor. You may want to honor requests from imgui by reading GetMouseCursor() yourself instead.
+
+    // [BETA] Docking
+    DockingEnable          = 1 << 6,   // Docking enable flags.
+
+    // [BETA] viewports
+    // When using viewports it is recommended that your default value for ImGuiCol_WindowBg is opaque (Alpha=1.0) so transition to a viewport won't be noticeable.
+    ViewportsEnable        = 1 << 10,  // viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
+    DpiEnableScaleViewports= 1 << 14,  // [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the dpi_scale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
+    DpiEnableScaleFonts    = 1 << 15,  // [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match dpi_scale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback, but this is all early work in progress.
+
+    // User storage (to allow your backend/engine to communicate to code that may be shared between multiple projects. Those flags are NOT used by core Dear ImGui)
+    IsSRGB                 = 1 << 20,  // Application is SRGB-aware.
+    IsTouchScreen          = 1 << 21   // Application is using a touch screen instead of a mouse.
+}
+
+// Backend capabilities flags stored in io.backend_flags. Set by imgui_impl_xxx or custom backend.
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgBackendFlags
+{
+    None                  = 0,
+    HasGamepad            = 1 << 0,   // Backend Platform supports gamepad and currently has one connected.
+    HasMouseCursors       = 1 << 1,   // Backend Platform supports honoring GetMouseCursor() value to change the OS cursor shape.
+    HasSetMousePos        = 1 << 2,   // Backend Platform supports io.want_set_mouse_pos requests to reposition the OS mouse position (only used if ImGuiConfigFlags_NavEnableSetMousePos is set).
+    RendererHasVtxOffset  = 1 << 3,   // Backend Renderer supports ImDrawCmd::vtx_offset. This enables output of large meshes (64K+ vertices) while still using 16-bit indices.
+
+    // [BETA] viewports
+    PlatformHasViewports  = 1 << 10,  // Backend Platform supports multiple viewports.
+    HasMouseHoveredViewport=1 << 11,  // Backend Platform supports calling io.add_mouse_viewport_event() with the viewport under the mouse. IF POSSIBLE, ignore viewports with the NoInputs flag (Win32 backend, GLFW 3.30+ backend can do this, SDL backend cannot). If this cannot be done, Dear ImGui needs to use a flawed heuristic to find the viewport under.
+    RendererHasViewports  = 1 << 12   // Backend Renderer supports multiple viewports.
+}
+
+// #define IMGUI_DEBUG_INI_SETTINGS    0   // Save additional comments in .ini file (particularly helps for Docking, but makes saving slower)
+pub const IMGUI_DEBUG_INI_SETINGS: bool = false;

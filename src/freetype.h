@@ -14,8 +14,8 @@ struct ImFontBuilderIO;
 // - When disabled, FreeType generates blurrier glyphs, more or less matches the stb_truetype.h
 // - The Default hinting mode usually looks good, but may distort glyphs in an unusual way.
 // - The Light hinting mode generates fuzzier glyphs but better matches Microsoft's rasterizer.
-// You can set those flags globaly in ImFontAtlas::FontBuilderFlags
-// You can set those flags on a per font basis in ImFontConfig::FontBuilderFlags
+// You can set those flags globaly in ImFontAtlas::font_builder_flags
+// You can set those flags on a per font basis in ImFontConfig::font_builder_flags
 enum ImGuiFreeTypeBuilderFlags
 {
     ImGuiFreeTypeBuilderFlags_NoHinting     = 1 << 0,   // Disable hinting. This generally generates 'blurrier' bitmap glyphs when the glyph are rendered in any of the anti-aliased modes.
@@ -34,7 +34,7 @@ namespace ImGuiFreeType
 {
     // This is automatically assigned when using '#define IMGUI_ENABLE_FREETYPE'.
     // If you need to dynamically select between multiple builders:
-    // - you can manually assign this builder with 'atlas->FontBuilderIO = ImGuiFreeType::GetBuilderForFreeType()'
+    // - you can manually assign this builder with 'atlas->font_builder_io = ImGuiFreeType::GetBuilderForFreeType()'
     // - prefer deep-copying this into your own ImFontBuilderIO instance if you use hot-reloading that messes up static data.
      const ImFontBuilderIO*    GetBuilderForFreeType();
 

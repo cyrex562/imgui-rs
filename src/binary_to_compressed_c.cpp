@@ -6,9 +6,9 @@
 // then encoded in Base85 to fit in a string so we can fit roughly 4 bytes of compressed data into 5 bytes of source code (suggested by @mmalex)
 // (If we used 32-bit constants it would require take 11 bytes of source code to encode 4 bytes, and be endianness dependent)
 // Note that even with compression, the output array is likely to be bigger than the binary file..
-// Load compressed TTF fonts with ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF()
+// Load compressed TTF fonts with ImGui::GetIO().fonts->add_font_from_memory_compressed_ttf()
 
-// Build with, e.g:
+// build with, e.g:
 //   # cl.exe binary_to_compressed_c.cpp
 //   # g++ binary_to_compressed_c.cpp
 //   # clang++ binary_to_compressed_c.cpp
@@ -100,7 +100,7 @@ bool binary_to_compressed_c(const char* filename, const char* symbol, bool use_b
         char prev_c = 0;
         for (int src_i = 0; src_i < compressed_sz; src_i += 4)
         {
-            // This is made a little more complicated by the fact that ??X sequences are interpreted as trigraphs by old C/C++ compilers. So we need to escape pairs of ??.
+            // This is made a little more complicated by the fact that ??x sequences are interpreted as trigraphs by old C/C++ compilers. So we need to escape pairs of ??.
             unsigned int d = *(unsigned int*)(compressed + src_i);
             for (unsigned int n5 = 0; n5 < 5; n5 += 1, d /= 85)
             {

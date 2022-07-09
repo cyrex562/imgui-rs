@@ -53,7 +53,7 @@
 //       Walter van Niftrik         Ryan Griege
 //       David Gow                  Peter LaValle
 //       David Given                Sergey Popov
-//       Ivan-Assen Ivanov          Giumo X. Clanjor
+//       Ivan-Assen Ivanov          Giumo x. Clanjor
 //       Anthony Pesch              Higor Euripedes
 //       Johan Duparc               Thomas Fields
 //       Hou Qiming                 Derek Vinyard
@@ -151,7 +151,7 @@
 //
 //   Some important concepts to understand to use this library:
 //
-//      Codepoint
+//      codepoint
 //         Characters are defined by unicode codepoints, e.g. 65 is
 //         uppercase A, 231 is lowercase c with a cedilla, 0x7e30 is
 //         the hiragana for "ma".
@@ -161,7 +161,7 @@
 //         some glyph)
 //
 //      Glyph index
-//         A font-specific integer ID representing a glyph
+//         A font-specific integer id representing a glyph
 //
 //      Baseline
 //         Glyph shapes are defined relative to a baseline, which is the
@@ -198,7 +198,7 @@
 //
 // DETAILED USAGE:
 //
-//  Scale:
+//  scale:
 //    Select how high you want the font to be, in points or pixels.
 //    Call ScaleForPixelHeight or ScaleForMappingEmToPixels to compute
 //    a scale factor SF that will be used by all other functions.
@@ -762,7 +762,7 @@ STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, int unicode_codep
 
 STBTT_DEF float stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, float pixels);
 // computes a scale factor to produce a font whose "height" is 'pixels' tall.
-// Height is measured as the distance from the highest ascender to the lowest
+// height is measured as the distance from the highest ascender to the lowest
 // descender; in other words, it's equivalent to calling stbtt_GetFontVMetrics
 // and computing:
 //       scale = pixels / (ascent - descent)

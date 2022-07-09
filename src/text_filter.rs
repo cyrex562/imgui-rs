@@ -31,7 +31,7 @@ impl ImGuiTextFilter {
         }
         out
     }
-    //  bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0);  // Helper calling InputText+Build
+    //  bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0);  // Helper calling InputText+build
     pub fn Draw(&mut self, label: &String, width: f32) -> bool {
         if width != 0.0 {
             imgui::SetNextItemWidth(width);
@@ -85,7 +85,7 @@ impl ImGuiTextFilter {
 
 
     }
-    //  void      Build();
+    //  void      build();
     pub fn Build(&mut self) {
         // Filters.resize(0);
         self.Filters.reserve(0);
@@ -112,7 +112,7 @@ impl ImGuiTextFilter {
             }
         }
     }
-    // void                clear()          { InputBuf[0] = 0; Build(); }
+    // void                clear()          { InputBuf[0] = 0; build(); }
     pub fn Clear(&mut self) {
         self.InputBuf.clear();
         self.Filters.clear();

@@ -1,15 +1,21 @@
 use std::ffi::c_void;
 use std::os::raw::c_char;
-use crate::defines::{DimgDrawCallback, DimgDrawCmd, ImDrawCmdHeader, DimgDrawFlags, ImDrawIdx, ImDrawListFlags, ImDrawListSplitter, DimgDrawVert, DimgFont, DimgTextureId};
+use std::f32::consts::PI;
+use crate::defines::{DimgDrawCallback, DimgDrawFlags, ImDrawIdx};
+use crate::draw_channel::DimgDrawChannel;
+use crate::draw_cmd::{DimgDrawCmd, ImDrawCmdHeader};
+use crate::draw_vert::DimgDrawVert;
+use crate::font::DimgFont;
+use crate::texture::DimgTextureId;
 use crate::vec_nd::{DimgVec2D, DimgVec4};
 
 pub struct DimgDrawListSharedData
 {
-    // ImVec2          TexUvWhitePixel;            // UV of white pixel in the atlas
+    // ImVec2          tex_uv_white_pixel;            // UV of white pixel in the atlas
     pub TextUvWhitePixel: DimgVec2D,
-    // ImFont*         font;                       // Current/default font (optional, for simplified AddText overload)
+    // ImFont*         font;                       // Current/default font (optional, for simplified add_text overload)
     pub Font: *mut DimgFont,
-    // float           font_size;                   // Current/default font size (optional, for simplified AddText overload)
+    // float           font_size;                   // Current/default font size (optional, for simplified add_text overload)
     pub FontSize: f32,
     // float           CurveTessellationTol;       // Tessellation tolerance when using PathBezierCurveTo()
     pub CurveTesselationTol: f32,
@@ -18,7 +24,7 @@ pub struct DimgDrawListSharedData
     // ImVec4          ClipRectFullscreen;         // Value for PushClipRectFullscreen()
     pub ClipRectFullScreen: DimgVec4,
     // ImDrawListFlags InitialFlags;               // Initial flags at the beginning of the frame (it is possible to alter flags on a per-drawlist basis afterwards)
-    pub InitialFlags: ImDrawListFlags,
+    pub InitialFlags: DimgDrawListFlags,
     // [Internal] Lookup tables
     // ImVec2          ArcFastVtx[IM_DRAWLIST_ARCFAST_TABLE_SIZE]; // Sample points on the quarter of the circle.
     pub ArcFastVtx: Vec<DimgVec2D>,
@@ -26,7 +32,7 @@ pub struct DimgDrawListSharedData
     pub ArcFastRadiusCutoff: f32,
     // ImU8            CircleSegmentCounts[64];    // Precomputed segment count for given radius before we calculate it dynamically (to avoid calculation overhead)
     pub CircleSegmentCounts: [u8;64],
-    // const ImVec4*   TexUvLines;                 // UV of anti-aliased lines in the atlas
+    // const ImVec4*   tex_uv_lines;                 // UV of anti-aliased lines in the atlas
     pub TexUvLines: *const DimgVec4,
 
     // ImDrawListSharedData();
@@ -52,7 +58,7 @@ impl DimgDrawListSharedData {
 /// Each dear imgui window contains its own ImDrawList. You can use ImGui::GetWindowDrawList() to
 /// access the current window draw list and draw custom primitives.
 /// You can interleave normal ImGui:: calls and adding primitives to the current draw list.
-/// In single viewport mode, top-left is == GetMainViewport()->pos (generally 0,0), bottom-right is == GetMainViewport()->pos+size (generally io.DisplaySize).
+/// In single viewport mode, top-left is == GetMainViewport()->pos (generally 0,0), bottom-right is == GetMainViewport()->pos+size (generally io.display_size).
 /// You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to clip_rect as well!)
 /// Important: Primitives are always added to the list and not culled (culling is done at higher-level by ImGui:: functions), if you use this API a lot consider coarse culling your drawn objects.
 #[derive(Default,Debug,Clone)]
@@ -66,7 +72,7 @@ pub struct DimgDrawList
     // ImVector<ImDrawVert>    VtxBuffer;          // Vertex buffer.
     pub VtxBuffer: Vec<DimgDrawVert>,
     // ImDrawListFlags         flags;              // flags, you may poke into these to adjust anti-aliasing settings per-primitive.
-    pub Flags: ImDrawListFlags,
+    pub Flags: DimgDrawListFlags,
     // [Internal, used while building lists]
     // unsigned pub _VtxCurrentIdx: i32,   // [Internal] generally == VtxBuffer.size unless we are past 64K vertices, in which case this gets reset to 0.
     // pub _VtxCurrentIdx: u32,
@@ -183,11 +189,11 @@ impl DimgDrawList {
     pub fn AddNgonFilled(&mut self, center: &DimgVec2D, radius: f32, col: u32, num_segments: i32) {
         todo!()
     }
-    //  void  AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
+    //  void  add_text(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
     pub fn AddText(&mut self, pos: &DimgVec2D, col: u32, text_begin: &String, text_end: &String) {
         todo!()
     }
-    //  void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0, const ImVec4* cpu_fine_clip_rect = NULL);
+    //  void  add_text(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0, const ImVec4* cpu_fine_clip_rect = NULL);
     pub fn AddText2(&mut self, font: &DimgFont, font_size: f32, pos: &DimgVec2D, col: u32, text_begin: *const c_char, text_end: *const c_char, wrap_width: f32, cpu_fine_clip_rect: Option<&DimgVec4>) {
         todo!()
     }
@@ -371,3 +377,119 @@ impl DimgDrawList {
         todo!()
     }
 }
+
+// ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
+// Estimation of number of circle segment based on error is derived using method described in https://stackoverflow.com/a/2244088/15194693
+// Number of segments (N) is calculated using equation:
+//   N = ceil ( pi / acos(1 - error / r) )     where r > 0, error <= r
+// Our equation is significantly simpler that one in the post thanks for choosing segment that is
+// perpendicular to x axis. Follow steps in the article from this starting condition and you will
+// will get this result.
+//
+// Rendering circles with an odd number of segments, while mathematically correct will produce
+// asymmetrical results on the raster grid. Therefore we're rounding N to next even number (7->8, 8->8, 9->10 etc.)
+// #define IM_ROUNDUP_TO_EVEN(_V)                                  ((((_V) + 1) / 2) * 2)
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN                     4
+pub const DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN: f32 = 4.0;
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX                     512
+pub const DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX: f32 = 512.0;
+
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD,_MAXERROR)    ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(IM_PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
+pub fn dimg_drawlist_circle_auto_segment_calc(radius: f32, max_error: f32) -> f32 {
+    f32::clamp(f32::round(f32::ceil(PI / f32::acos(1 - f32::min(max_error, (radius)) / (radius)))), DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX)
+}
+
+// Raw equation from IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC rewritten for 'r' and 'error'.
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(_N,_MAXERROR)    ((_MAXERROR) / (1 - ImCos(IM_PI / ImMax((float)(_N), IM_PI))))
+pub fn drawlist_circle_auto_segment_calc_r(n: f32, max_error: f32) -> f32 {
+    ((max_error) / (1 - f32::cos(f32::PI / f32::max(n, f32::PI))))
+}
+
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(_N,_RAD)     ((1 - ImCos(IM_PI / ImMax((float)(_N), IM_PI))) / (_RAD))
+pub fn drawlist_circl_auto_segment_calc_error(n: f32, rad: f32) -> f32 {
+    ((1 - f32::cos(f32::PI / f32::max(n, f32::PI))) / rad)
+}
+
+// ImDrawList: Lookup table size for adaptive arc drawing, cover full circle.
+// #ifndef IM_DRAWLIST_ARCFAST_TABLE_SIZE
+// #define IM_DRAWLIST_ARCFAST_TABLE_SIZE                          48 // Number of samples in lookup table.
+pub const DIMG_DRAW_LIST_ARCFAST_TABLE_SIZE: usize = 48usize;
+// #endif
+// #define IM_DRAWLIST_ARCFAST_SAMPLE_MAX                          IM_DRAWLIST_ARCFAST_TABLE_SIZE // Sample index _PathArcToFastEx() for 360 angle.
+pub const DIMG_DRAW_LIST_ARCFAST_SAMPLE_MAX: usize = DIMG_DRAW_LIST_ARCFAST_TABLE_SIZE;
+
+impl DimgDrawDataBuilder {
+    // void clear()                    { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].resize(0); }
+    //     void ClearFreeMemory()          { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].clear(); }
+    //     int  GetDrawListCount() const   { int count = 0; for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) count += Layers[n].size; return count; }
+    pub fn get_draw_list_count(&self) -> usize {
+        self.layers[0].len() + self.layers[1].len()
+    }
+    //      void FlattenIntoSingleLayer();
+    pub fn flatten_into_single_layer(&mut self) {
+        todo!()
+    }
+}
+
+#[derive(Debug,Clone,Default)]
+pub struct DimgDrawDataBuilder
+{
+    // ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
+    pub layers: [Vec<DimgDrawList>; 2],
+}
+
+// flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
+// It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
+#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+pub enum DimgDrawListFlags
+{
+    None                    = 0,
+    AntiAliasedLines        = 1 << 0,  // Enable anti-aliased lines/borders (*2 the number of triangles for 1.0 wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
+    AntiAliasedLinesUseTex  = 1 << 1,  // Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
+    AntiAliasedFill         = 1 << 2,  // Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
+    AllowVtxOffset          = 1 << 3   // Can emit 'vtx_offset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
+}
+
+
+// split/merge functions are used to split the draw list into different layers which can be drawn into out of order.
+// This is used by the Columns/tables API, so items of each column can be batched together in a same draw call.
+#[derive(Debug,Clone,Default)]
+pub struct ImDrawListSplitter
+{
+    pub current: i32,  // Current channel number (0)
+    pub count: i32,    // Number of active channels (1+)
+    // ImVector<ImDrawChannel>     _channels;   // Draw channels (not resized down so _count might be < Channels.size)
+    pub channels: Vec<DimgDrawChannel>,
+}
+
+impl ImDrawListSplitter {
+    // inline ImDrawListSplitter()  { memset(this, 0, sizeof(*this)); }
+    //     inline ~ImDrawListSplitter() { clear_free_memory(); }
+    //     inline void                 clear() { _current = 0; _count = 1; } // Do not clear Channels[] so our allocations are reused next frame
+    pub fn clear(&mut self) {
+        self.current = 0;
+        self.count = 1;
+    }
+    //      void              clear_free_memory();
+    pub fn clear_free_memory(&mut self) {
+        todo!()
+    }
+    //      void              split(ImDrawList* draw_list, int count);
+    pub fn split(&mut self, draw_list: &DimgDrawList, count: i32) {
+        todo!()
+    }
+    //      void              merge(ImDrawList* draw_list);
+    pub fn merge(&mut self, draw_list: &DimgDrawList) {
+        todo!()
+    }
+    //      void              SetCurrentChannel(ImDrawList* draw_list, int channel_idx);
+    pub fn set_current_channel(&mut self, draw_list: &DimgDrawList, channel_idx: i32) {
+        todo!()
+    }
+}
+
+// The maximum line width to bake anti-aliased textures for. build atlas with NoBakedLines to disable baking.
+// #ifndef IM_DRAWLIST_TEX_LINES_WIDTH_MAX
+// #define IM_DRAWLIST_TEX_LINES_WIDTH_MAX     (63)
+// #endif
+pub const IM_DRAWLIST_TEX_LINES_WIDTH_MAX: usize = 63;

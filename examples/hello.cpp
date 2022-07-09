@@ -39,7 +39,7 @@ public:
 static HelloWorldNodeEditor editor;
 } // namespace
 
-void NodeEditorInitialize() { ImNodes::SetNodeGridSpacePos(1, ImVec2(200.0, 200.0)); }
+void NodeEditorInitialize() { ImNodes::SetNodeGridSpacePos(1, DimgVec2D::new(200.0, 200.0)); }
 
 void NodeEditorShow() { editor.show(); }
 

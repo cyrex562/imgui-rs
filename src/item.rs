@@ -1,6 +1,8 @@
-use crate::context::ImGuiContext;
-use crate::defines::{DimgCond, DimgHoveredFlags, DimgId};
+use crate::condition::DimgCond;
+use crate::context::DimgContext;
+use crate::window::DimgHoveredFlags;
 use crate::rect::DimgRect;
+use crate::types::DimgId;
 use crate::window::DimgItemFlags;
 
 impl DimgNextItemData {
@@ -21,7 +23,7 @@ pub struct DimgNextItemData
 {
     // ImGuiNextItemDataFlags      flags;
     pub Flags: ImGuiNextItemDataFlags,
-    // float                       Width;          // Set by SetNextItemWidth()
+    // float                       width;          // Set by SetNextItemWidth()
     pub Width: f32,
     // ImGuiID                     FocusScopeId;   // Set by SetNextItemMultiSelectData() (!= 0 signify value has been set, so it's an alternate version of HasSelectionData, we don't use flags for this because they are cleared too early. This is mostly used for debugging)
     pub FocusScopeId: DimgId,
@@ -35,13 +37,13 @@ pub struct DimgNextItemData
 #[derive(Debug,Clone,Default)]
 pub struct DimgLastItemData
 {
-    // ImGuiID                 ID;
+    // ImGuiID                 id;
     pub ID: DimgId,
     // ImGuiItemFlags          InFlags;            // See ImGuiItemFlags_
     pub InFlags: DimgItemFlags,
     // ImGuiItemStatusFlags    StatusFlags;        // See ImGuiItemStatusFlags_
     pub StatusFlags: DimgItemStatusFlags,
-    // ImRect                  Rect;               // Full rectangle
+    // ImRect                  rect;               // Full rectangle
     pub Rect: DimgRect,
     // ImRect                  NavRect;            // Navigation scoring rectangle (not displayed)
     pub NavRect: DimgRect,

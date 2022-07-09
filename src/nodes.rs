@@ -59,7 +59,7 @@ inline ImVec2 EvalCubicBezier(
     const float b1 = 3 * u * u * t;
     const float b2 = 3 * u * t * t;
     const float b3 = t * t * t;
-    return ImVec2(
+    return DimgVec2D::new(
         b0 * P0.x + b1 * P1.x + b2 * P2.x + b3 * P3.x,
         b0 * P0.y + b1 * P1.y + b2 * P2.y + b3 * P3.y);
 }
@@ -100,15 +100,15 @@ inline float GetDistanceToCubicBezier(
 
 inline ImRect GetContainingRectForCubicBezier(const CubicBezier& cb)
 {
-    const ImVec2 min = ImVec2(ImMin(cb.P0.x, cb.P3.x), ImMin(cb.P0.y, cb.P3.y));
-    const ImVec2 max = ImVec2(ImMax(cb.P0.x, cb.P3.x), ImMax(cb.P0.y, cb.P3.y));
+    const ImVec2 min = DimgVec2D::new(ImMin(cb.P0.x, cb.P3.x), ImMin(cb.P0.y, cb.P3.y));
+    const ImVec2 max = DimgVec2D::new(ImMax(cb.P0.x, cb.P3.x), ImMax(cb.P0.y, cb.P3.y));
 
     const float hover_distance = GImNodes->Style.LinkHoverDistance;
 
     ImRect rect(min, max);
     rect.Add(cb.P1);
     rect.Add(cb.P2);
-    rect.Expand(ImVec2(hover_distance, hover_distance));
+    rect.Expand(DimgVec2D::new(hover_distance, hover_distance));
 
     return rect;
 }
@@ -127,7 +127,7 @@ inline CubicBezier GetCubicBezier(
     }
 
     const float  link_length = ImSqrt(ImLengthSqr(end - start));
-    const ImVec2 offset = ImVec2(0.25 * link_length, 0.f);
+    const ImVec2 offset = DimgVec2D::new(0.25 * link_length, 0.f);
     CubicBezier  cubic_bezier;
     cubic_bezier.P0 = start;
     cubic_bezier.P1 = start + offset;
@@ -176,8 +176,8 @@ inline bool RectangleOverlapsLineSegment(const ImRect& rect, const ImVec2& p1, c
 
     const int corner_signs[4] = {
         Sign(EvalImplicitLineEq(p1, p2, flip_rect.Min)),
-        Sign(EvalImplicitLineEq(p1, p2, ImVec2(flip_rect.Max.x, flip_rect.Min.y))),
-        Sign(EvalImplicitLineEq(p1, p2, ImVec2(flip_rect.Min.x, flip_rect.Max.y))),
+        Sign(EvalImplicitLineEq(p1, p2, DimgVec2D::new(flip_rect.Max.x, flip_rect.Min.y))),
+        Sign(EvalImplicitLineEq(p1, p2, DimgVec2D::new(flip_rect.Min.x, flip_rect.Max.y))),
         Sign(EvalImplicitLineEq(p1, p2, flip_rect.Max))};
 
     int sum = 0;
@@ -555,7 +555,7 @@ ImVec2 GetScreenSpacePinCoordinates(
     const float x = type == ImNodesAttributeType_Input
                         ? (node_rect.Min.x - GImNodes->Style.PinOffset)
                         : (node_rect.Max.x + GImNodes->Style.PinOffset);
-    return ImVec2(x, 0.5 * (attribute_rect.Min.y + attribute_rect.Max.y));
+    return DimgVec2D::new(x, 0.5 * (attribute_rect.Min.y + attribute_rect.Max.y));
 }
 
 ImVec2 GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
@@ -1311,7 +1311,7 @@ inline ImVec2 GetNodeTitleBarOrigin(const ImNodeData& node)
 inline ImVec2 GetNodeContentOrigin(const ImNodeData& node)
 {
     const ImVec2 title_bar_height =
-        ImVec2(0.f, node.TitleBarContentRect.GetHeight() + 2.0 * node.LayoutStyle.Padding.y);
+        DimgVec2D::new(0.f, node.TitleBarContentRect.GetHeight() + 2.0 * node.LayoutStyle.Padding.y);
     return node.Origin + title_bar_height + node.LayoutStyle.Padding;
 }
 
@@ -1322,8 +1322,8 @@ inline ImRect GetNodeTitleRect(const ImNodeData& node)
 
     return ImRect(
         expanded_title_rect.Min,
-        expanded_title_rect.Min + ImVec2(node.Rect.GetWidth(), 0.f) +
-            ImVec2(0.f, expanded_title_rect.GetHeight()));
+        expanded_title_rect.Min + DimgVec2D::new(node.Rect.GetWidth(), 0.f) +
+            DimgVec2D::new(0.f, expanded_title_rect.GetHeight()));
 }
 
 void DrawGrid(ImNodesEditorContext& editor, const ImVec2& canvas_size)
@@ -1337,8 +1337,8 @@ void DrawGrid(ImNodesEditorContext& editor, const ImVec2& canvas_size)
          x += GImNodes->Style.GridSpacing)
     {
         GImNodes->CanvasDrawList->AddLine(
-            EditorSpaceToScreenSpace(ImVec2(x, 0.0)),
-            EditorSpaceToScreenSpace(ImVec2(x, canvas_size.y)),
+            EditorSpaceToScreenSpace(DimgVec2D::new(x, 0.0)),
+            EditorSpaceToScreenSpace(DimgVec2D::new(x, canvas_size.y)),
             offset.x - x == 0.f && draw_primary ? line_color_prim : line_color);
     }
 
@@ -1346,8 +1346,8 @@ void DrawGrid(ImNodesEditorContext& editor, const ImVec2& canvas_size)
          y += GImNodes->Style.GridSpacing)
     {
         GImNodes->CanvasDrawList->AddLine(
-            EditorSpaceToScreenSpace(ImVec2(0.0, y)),
-            EditorSpaceToScreenSpace(ImVec2(canvas_size.x, y)),
+            EditorSpaceToScreenSpace(DimgVec2D::new(0.0, y)),
+            EditorSpaceToScreenSpace(DimgVec2D::new(canvas_size.x, y)),
             offset.y - y == 0.f && draw_primary ? line_color_prim : line_color);
     }
 }
@@ -1363,10 +1363,10 @@ QuadOffsets CalculateQuadOffsets(const float side_length)
 
     QuadOffsets offset;
 
-    offset.TopLeft = ImVec2(-half_side, half_side);
-    offset.BottomLeft = ImVec2(-half_side, -half_side);
-    offset.BottomRight = ImVec2(half_side, -half_side);
-    offset.TopRight = ImVec2(half_side, half_side);
+    offset.TopLeft = DimgVec2D::new(-half_side, half_side);
+    offset.BottomLeft = DimgVec2D::new(-half_side, -half_side);
+    offset.BottomRight = DimgVec2D::new(half_side, -half_side);
+    offset.TopRight = DimgVec2D::new(half_side, half_side);
 
     return offset;
 }
@@ -1393,9 +1393,9 @@ TriangleOffsets CalculateTriangleOffsets(const float side_length)
     const float vertical_offset = 0.5 * side_length;
 
     TriangleOffsets offset;
-    offset.TopLeft = ImVec2(left_offset, vertical_offset);
-    offset.BottomLeft = ImVec2(left_offset, -vertical_offset);
-    offset.Right = ImVec2(right_offset, 0.f);
+    offset.TopLeft = DimgVec2D::new(left_offset, vertical_offset);
+    offset.BottomLeft = DimgVec2D::new(left_offset, -vertical_offset);
+    offset.Right = DimgVec2D::new(right_offset, 0.f);
 
     return offset;
 }
@@ -1684,8 +1684,8 @@ void EndPinAttribute()
 
 void Initialize(ImNodesContext* context)
 {
-    context->CanvasOriginScreenSpace = ImVec2(0.0, 0.0);
-    context->CanvasRectScreenSpace = ImRect(ImVec2(0.f, 0.f), ImVec2(0.f, 0.f));
+    context->CanvasOriginScreenSpace = DimgVec2D::new(0.0, 0.0);
+    context->CanvasRectScreenSpace = ImRect(DimgVec2D::new(0.f, 0.f), DimgVec2D::new(0.f, 0.f));
     context->CurrentScope = ImNodesScope_None;
 
     context->CurrentPinIdx = INT_MAX;
@@ -1738,8 +1738,8 @@ static inline void CalcMiniMapLayout()
         const float grid_content_aspect_ratio = grid_content_size.x / grid_content_size.y;
         mini_map_size = ImFloor(
             grid_content_aspect_ratio > max_size_aspect_ratio
-                ? ImVec2(max_size.x, max_size.x / grid_content_aspect_ratio)
-                : ImVec2(max_size.y * grid_content_aspect_ratio, max_size.y));
+                ? DimgVec2D::new(max_size.x, max_size.x / grid_content_aspect_ratio)
+                : DimgVec2D::new(max_size.y * grid_content_aspect_ratio, max_size.y));
         mini_map_scaling = mini_map_size.x / grid_content_size.x;
     }
 
@@ -2207,7 +2207,7 @@ void BeginNodeEditor()
     // Reset state from previous pass
 
     ImNodesEditorContext& editor = EditorContextGet();
-    editor.AutoPanningDelta = ImVec2(0, 0);
+    editor.AutoPanningDelta = DimgVec2D::new(0, 0);
     editor.GridContentBounds = ImRect(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX);
     editor.MiniMapEnabled = false;
     ObjectPoolReset(editor.Nodes);
@@ -2246,12 +2246,12 @@ void BeginNodeEditor()
 
     ImGui::BeginGroup();
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 1.f));
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, DimgVec2D::new(1.f, 1.f));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, DimgVec2D::new(0.f, 0.f));
         ImGui::PushStyleColor(ImGuiCol_ChildBg, GImNodes->Style.Colors[ImNodesCol_GridBackground]);
         ImGui::BeginChild(
             "scrolling_region",
-            ImVec2(0.f, 0.f),
+            DimgVec2D::new(0.f, 0.f),
             true,
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove |
                 ImGuiWindowFlags_NoScrollWithMouse);
@@ -2265,7 +2265,7 @@ void BeginNodeEditor()
         {
             const ImVec2 canvas_size = ImGui::GetWindowSize();
             GImNodes->CanvasRectScreenSpace = ImRect(
-                EditorSpaceToScreenSpace(ImVec2(0.f, 0.f)), EditorSpaceToScreenSpace(canvas_size));
+                EditorSpaceToScreenSpace(DimgVec2D::new(0.f, 0.f)), EditorSpaceToScreenSpace(canvas_size));
 
             if (GImNodes->Style.Flags & ImNodesStyleFlags_GridLines)
             {
@@ -3114,7 +3114,7 @@ void NodeLineHandler(ImNodesEditorContext& editor, const char* const line)
     else if (sscanf(line, "origin=%i,%i", &x, &y) == 2)
     {
         ImNodeData& node = editor.Nodes.Pool[GImNodes->CurrentNodeIdx];
-        node.Origin = SnapOriginToGrid(ImVec2((float)x, (float)y));
+        node.Origin = SnapOriginToGrid(DimgVec2D::new((float)x, (float)y));
     }
 }
 

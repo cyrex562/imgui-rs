@@ -19,8 +19,8 @@ pub unsafe fn FindRenderedTextEnd(text: *const c_char, text_end: *const c_char) 
 }
 
 // Internal ImGui functions to render text
-// RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
-// void ImGui::RenderText(ImVec2 pos, const char* text, const char* text_end, bool hide_text_after_hash)
+// render_text***() functions calls ImDrawList::add_text() calls ImBitmapFont::render_text()
+// void ImGui::render_text(ImVec2 pos, const char* text, const char* text_end, bool hide_text_after_hash)
 pub unsafe fn RenderText(pos: &ImVec2, text: *const c_char, mut text_end: *const c_char, hide_text_after_hash: bool)
 {
     // ImGuiContext& g = *GImGui;
@@ -132,7 +132,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, con
     //draw_list->AddLine(ImVec2(pos_max.x, pos_min.y - 4), ImVec2(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list->AddLine(ImVec2(ellipsis_max_x, pos_min.y-2), ImVec2(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
     //draw_list->AddLine(ImVec2(clip_max_x, pos_min.y), ImVec2(clip_max_x, pos_max.y), IM_COL32(255, 0, 0, 255));
-    // FIXME: We could technically remove (last_glyph->AdvanceX - last_glyph->X1) from text_size.x here and save a few pixels.
+    // FIXME: We could technically remove (last_glyph->advance_x - last_glyph->x1) from text_size.x here and save a few pixels.
     if (text_size.x > pos_max.x - pos_min.x)
     {
         // Hello wo...
@@ -153,7 +153,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, con
         }
         const ImFontGlyph* glyph = font->FindGlyph(ellipsis_char);
 
-        float ellipsis_glyph_width = glyph->X1;                 // Width of the glyph with no padding on either side
+        float ellipsis_glyph_width = glyph->X1;                 // width of the glyph with no padding on either side
         float ellipsis_total_width = ellipsis_glyph_width;      // Full width of entire ellipsis
 
         if (ellipsis_char_count > 1)
@@ -181,18 +181,18 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, con
         }
 
         // Render text, render ellipsis
-        RenderTextClippedEx(draw_list, pos_min, ImVec2(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, ImVec2(0.0, 0.0));
+        RenderTextClippedEx(draw_list, pos_min, DimgVec2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, DimgVec2D::new(0.0, 0.0));
         float ellipsis_x = pos_min.x + text_size_clipped_x;
         if (ellipsis_x + ellipsis_total_width <= ellipsis_max_x)
             for (int i = 0; i < ellipsis_char_count; i += 1)
             {
-                font->RenderChar(draw_list, font_size, ImVec2(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text), ellipsis_char);
+                font->RenderChar(draw_list, font_size, DimgVec2D::new(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
     }
     else
     {
-        RenderTextClippedEx(draw_list, pos_min, ImVec2(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2(0.0, 0.0));
+        RenderTextClippedEx(draw_list, pos_min, DimgVec2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, DimgVec2D::new(0.0, 0.0));
     }
 
     if (g.LogEnabled)
@@ -208,7 +208,7 @@ void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border,
     const float border_size = g.Style.FrameBorderSize;
     if (border && border_size > 0.0)
     {
-        window.DrawList->AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
+        window.DrawList->AddRect(p_min + DimgVec2D::new(1, 1), p_max + DimgVec2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
         window.DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
     }
 }
@@ -220,7 +220,7 @@ void ImGui::RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, float rounding)
     const float border_size = g.Style.FrameBorderSize;
     if (border_size > 0.0)
     {
-        window.DrawList->AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
+        window.DrawList->AddRect(p_min + DimgVec2D::new(1, 1), p_max + DimgVec2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
         window.DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
     }
 }
@@ -243,11 +243,11 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
     {
         const float THICKNESS = 2.0;
         const float DISTANCE = 3.0 + THICKNESS * 0.5;
-        display_rect.Expand(ImVec2(DISTANCE, DISTANCE));
+        display_rect.Expand(DimgVec2D::new(DISTANCE, DISTANCE));
         bool fully_visible = window.ClipRect.Contains(display_rect);
         if (!fully_visible)
             window.DrawList->PushClipRect(display_rect.Min, display_rect.Max);
-        window.DrawList->AddRect(display_rect.Min + ImVec2(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - ImVec2(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight), rounding, 0, THICKNESS);
+        window.DrawList->AddRect(display_rect.Min + DimgVec2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - DimgVec2D::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight), rounding, 0, THICKNESS);
         if (!fully_visible)
             window.DrawList->PopClipRect();
     }
@@ -271,13 +271,13 @@ void ImGui::RenderMouseCursor(ImVec2 base_pos, float base_scale, ImGuiMouseCurso
         ImGuiViewportP* viewport = g.Viewports[n];
         const ImVec2 pos = base_pos - offset;
         const float scale = base_scale * viewport->DpiScale;
-        if (!viewport->GetMainRect().Overlaps(ImRect(pos, pos + ImVec2(size.x + 2, size.y + 2) * scale)))
+        if (!viewport->GetMainRect().Overlaps(ImRect(pos, pos + DimgVec2D::new(size.x + 2, size.y + 2) * scale)))
             continue;
         ImDrawList* draw_list = GetForegroundDrawList(viewport);
         ImTextureID tex_id = font_atlas->TexID;
         draw_list->PushTextureID(tex_id);
-        draw_list->AddImage(tex_id, pos + ImVec2(1, 0) * scale, pos + (ImVec2(1, 0) + size) * scale, uv[2], uv[3], col_shadow);
-        draw_list->AddImage(tex_id, pos + ImVec2(2, 0) * scale, pos + (ImVec2(2, 0) + size) * scale, uv[2], uv[3], col_shadow);
+        draw_list->AddImage(tex_id, pos + DimgVec2D::new(1, 0) * scale, pos + (DimgVec2D::new(1, 0) + size) * scale, uv[2], uv[3], col_shadow);
+        draw_list->AddImage(tex_id, pos + DimgVec2D::new(2, 0) * scale, pos + (DimgVec2D::new(2, 0) + size) * scale, uv[2], uv[3], col_shadow);
         draw_list->AddImage(tex_id, pos,                        pos + size * scale,                  uv[2], uv[3], col_border);
         draw_list->AddImage(tex_id, pos,                        pos + size * scale,                  uv[0], uv[1], col_fill);
         draw_list->PopTextureID();

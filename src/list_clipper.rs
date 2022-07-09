@@ -29,7 +29,7 @@ pub struct ImGuiListClipper
     pub DisplayStart: i32,     // First item to display, updated by each call to Step()
     pub DisplayEnd: i32,       // End of items to display (exclusive)
     pub ItemsCount: i32,       // [Internal] Number of items
-    pub ItemsHeight: f32,       // [Internal] Height of item after a first step and item submission can calculate it
+    pub ItemsHeight: f32,       // [Internal] height of item after a first step and item submission can calculate it
     pub StartPosY: f32,         // [Internal] Cursor position at the time of Begin() or after table frozen rows are all processed
     pub TempData: *mut c_void, // void*           TempData;           // [Internal] Internal data
 

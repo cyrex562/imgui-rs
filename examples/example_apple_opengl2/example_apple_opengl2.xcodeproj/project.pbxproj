@@ -110,7 +110,7 @@
 /* Begin PBXNativeTarget section */
 		4080A96A20B029B00036BA46 /* example_osx_opengl2 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4080A97220B029B00036BA46 /* Build configuration list for PBXNativeTarget "example_osx_opengl2" */;
+			buildConfigurationList = 4080A97220B029B00036BA46 /* build configuration list for PBXNativeTarget "example_osx_opengl2" */;
 			buildPhases = (
 				4080A96720B029B00036BA46 /* Sources */,
 				4080A96820B029B00036BA46 /* Frameworks */,
@@ -140,7 +140,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4080A96620B029B00036BA46 /* Build configuration list for PBXProject "example_apple_opengl2" */;
+			buildConfigurationList = 4080A96620B029B00036BA46 /* build configuration list for PBXProject "example_apple_opengl2" */;
 			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -308,7 +308,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4080A96620B029B00036BA46 /* Build configuration list for PBXProject "example_apple_opengl2" */ = {
+		4080A96620B029B00036BA46 /* build configuration list for PBXProject "example_apple_opengl2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4080A97020B029B00036BA46 /* Debug */,
@@ -317,7 +317,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4080A97220B029B00036BA46 /* Build configuration list for PBXNativeTarget "example_osx_opengl2" */ = {
+		4080A97220B029B00036BA46 /* build configuration list for PBXNativeTarget "example_osx_opengl2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4080A97320B029B00036BA46 /* Debug */,

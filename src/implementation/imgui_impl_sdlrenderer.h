@@ -9,8 +9,8 @@
 // However, we understand it is a convenient choice to get an app started easily.
 
 // Implemented features:
-//  [X] Renderer: User texture binding. Use 'SDL_Texture*' as ImTextureID. Read the FAQ about ImTextureID!
-//  [X] Renderer: Large meshes support (64k+ vertices) with 16-bit indices.
+//  [x] Renderer: User texture binding. Use 'SDL_Texture*' as ImTextureID. Read the FAQ about ImTextureID!
+//  [x] Renderer: Large meshes support (64k+ vertices) with 16-bit indices.
 // Missing features:
 //  [ ] Renderer: Multi-viewport support (multiple windows).
 

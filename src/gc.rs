@@ -1,8 +1,8 @@
-use crate::context::ImGuiContext;
+use crate::context::DimgContext;
 use crate::window::DimgWindow;
 
 // void ImGui::GcCompactTransientMiscBuffers()
-pub fn GcCompactTransientMiscBuffers(g: &mut ImGuiContext)
+pub fn GcCompactTransientMiscBuffers(g: &mut DimgContext)
 {
     // ImGuiContext& g = *GImGui;
     g.item_flags_stack.clear();
@@ -13,7 +13,7 @@ pub fn GcCompactTransientMiscBuffers(g: &mut ImGuiContext)
 
 // Free up/compact internal window buffers, we can use this when a window becomes unused.
 // Not freed:
-// - ImGuiWindow, ImGuiWindowSettings, Name, state_storage, ColumnsStorage (may hold useful data)
+// - ImGuiWindow, ImGuiWindowSettings, name, state_storage, ColumnsStorage (may hold useful data)
 // This should have no noticeable visual effect. When the window reappear however, expect new allocation/buffer growth/copy cost.
 // void ImGui::GcCompactTransientWindowBuffers(ImGuiWindow* window)
 pub fn GcCompactTransientWindowBufufers(window: &mut DimgWindow)

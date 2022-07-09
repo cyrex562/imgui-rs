@@ -23,8 +23,8 @@
 ## Issues vs Discussions
 
 If:
-- You cannot Build or Link examples.
-- You cannot Build or Link or Run Dear ImGui in your application or custom engine.
+- You cannot build or Link examples.
+- You cannot build or Link or Run Dear ImGui in your application or custom engine.
 - You are failing to load a font.
 
 Then please [use the Discussions forums](https://github.com/ocornut/imgui/discussions) instead of opening an Issue.

@@ -6,7 +6,7 @@
 // !!! Nowadays, prefer using GLFW or SDL instead!
 
 // Implemented features:
-//  [X] Platform: Partial keyboard support. Since 1.87 we are using the io.AddKeyEvent() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy GLUT values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
+//  [x] Platform: Partial keyboard support. Since 1.87 we are using the io.add_key_event() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy GLUT values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
 // Issues:
 //  [ ] Platform: GLUT is unable to distinguish e.g. Backspace from CTRL+H or TAB from CTRL+I
 //  [ ] Platform: Missing mouse cursor shape/visibility support.
@@ -20,12 +20,12 @@
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
-//  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago) with io.AddKeyEvent() using ImGuiKey_ModXXX flags. Sorry for the confusion.
-//  2022-01-17: Inputs: calling new io.AddMousePosEvent(), io.AddMouseButtonEvent(), io.AddMouseWheelEvent() API (1.87+).
-//  2022-01-10: Inputs: calling new io.AddKeyEvent(), io.AddKeyModsEvent() + io.SetKeyEventNativeData() API (1.87+). Support for full ImGuiKey range.
+//  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago) with io.add_key_event() using ImGuiKey_ModXXX flags. Sorry for the confusion.
+//  2022-01-17: Inputs: calling new io.add_mouse_pos_event(), io.add_mouse_button_event(), io.add_mouse_wheel_event() API (1.87+).
+//  2022-01-10: Inputs: calling new io.add_key_event(), io.AddKeyModsEvent() + io.set_key_event_native_data() API (1.87+). Support for full ImGuiKey range.
 //  2019-04-03: Misc: Renamed imgui_impl_freeglut.cpp/.h to imgui_impl_glut.cpp/.h.
-//  2019-03-25: Misc: Made io.DeltaTime always above zero.
-//  2018-11-30: Misc: Setting up io.BackendPlatformName so it can be displayed in the About Window.
+//  2019-03-25: Misc: Made io.delta_time always above zero.
+//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About Window.
 //  2018-03-22: Added GLUT Platform binding.
 
 #include "defines.rs"
@@ -162,7 +162,7 @@ bool ImGui_ImplGLUT_Init()
     ImGuiIO& io = ImGui::GetIO();
 
 #ifdef FREEGLUT
-    io.BackendPlatformName = "imgui_impl_glut (freeglut)";
+    io.backend_platform_name = "imgui_impl_glut (freeglut)";
 #else
     io.BackendPlatformName = "imgui_impl_glut";
 #endif
@@ -278,9 +278,9 @@ void ImGui_ImplGLUT_MouseFunc(int glut_button, int state, int x, int y)
 void ImGui_ImplGLUT_MouseWheelFunc(int button, int dir, int x, int y)
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.AddMousePosEvent((float)x, (float)y);
+    io.add_mouse_pos_event((float)x, (float)y);
     if (dir != 0)
-        io.AddMouseWheelEvent(0.0, dir > 0 ? 1.0 : -1.0);
+        io.add_mouse_wheel_event(0.0, dir > 0 ? 1.0 : -1.0);
     (void)button; // Unused
 }
 #endif
@@ -288,7 +288,7 @@ void ImGui_ImplGLUT_MouseWheelFunc(int button, int dir, int x, int y)
 void ImGui_ImplGLUT_ReshapeFunc(int w, int h)
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2((float)w, (float)h);
+    io.DisplaySize = DimgVec2D::new((float)w, (float)h);
 }
 
 void ImGui_ImplGLUT_MotionFunc(int x, int y)

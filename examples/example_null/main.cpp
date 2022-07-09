@@ -10,7 +10,7 @@ int main(int, char**)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 
-    // Build atlas
+    // build atlas
     unsigned char* tex_pixels = NULL;
     int tex_w, tex_h;
     io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_w, &tex_h);
@@ -18,7 +18,7 @@ int main(int, char**)
     for (int n = 0; n < 20; n += 1)
     {
         printf("NewFrame() %d\n", n);
-        io.DisplaySize = ImVec2(1920, 1080);
+        io.DisplaySize = DimgVec2D::new(1920, 1080);
         io.DeltaTime = 1.0 / 60.0;
         ImGui::NewFrame();
 

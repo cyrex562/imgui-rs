@@ -1,9 +1,10 @@
-use crate::context::ImGuiContext;
-use crate::defines::{DimgHoveredFlags, DimgId};
+use crate::context::DimgContext;
+use crate::window::DimgHoveredFlags;
+use crate::types::DimgId;
 use crate::window::DimgWindow;
 
 // void ImGui::SetActiveID(ImGuiID id, ImGuiWindow* window)
-pub fn SetActiveID(g: &mut ImGuiContext, id: DimgId, window: &mut DimgWindow)
+pub fn SetActiveID(g: &mut DimgContext, id: DimgId, window: &mut DimgWindow)
 {
     // ImGuiContext& g = *GImGui;
 
@@ -20,7 +21,7 @@ pub fn SetActiveID(g: &mut ImGuiContext, id: DimgId, window: &mut DimgWindow)
     g.active_id_is_just_activated = (g.active_id != id);
     if g.active_id_is_just_activated
     {
-        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.active_id, g.active_id_window ? g.active_id_window->Name : "", id, window ? window.Name : "");
+        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.active_id, g.active_id_window ? g.active_id_window->name : "", id, window ? window.name : "");
         g.active_id_timer = 0.0;
         g.active_id_has_been_pressed_before = false;
         g.ActiveIdHasBeenEditedBefore = false;
@@ -52,7 +53,7 @@ pub fn SetActiveID(g: &mut ImGuiContext, id: DimgId, window: &mut DimgWindow)
 
 
 // void ImGui::MarkItemEdited(ImGuiID id)
-pub fn MarkItemEdited(g: &mut ImGuiContext, id: DimgId)
+pub fn MarkItemEdited(g: &mut DimgContext, id: DimgId)
 {
     // This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
     // active_id might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.

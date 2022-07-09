@@ -117,7 +117,7 @@ struct ImNodesIO
         // Set to NULL by default. To enable this feature, set the modifier to point to a boolean
         // indicating the state of a modifier. For example,
         //
-        // ImNodes::GetIO().EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().KeyAlt;
+        // ImNodes::GetIO().EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().key_alt;
         const bool* Modifier;
     } EmulateThreeButtonMouse;
 
@@ -129,7 +129,7 @@ struct ImNodesIO
         // by default. To enable the feature, set the modifier to point to a boolean indicating the
         // state of a modifier. For example,
         //
-        // ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyCtrl;
+        // ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().key_ctrl;
         //
         // Left-clicking a link with this modifier pressed will detach that link. NOTE: the user has
         // to actually delete the link for this to work. A deleted link can be detected by calling
@@ -145,7 +145,7 @@ struct ImNodesIO
         // by default. To enable the feature, set the modifier to point to a boolean indicating the
         // state of a modifier. For example,
         //
-        // ImNodes::GetIO().MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
+        // ImNodes::GetIO().MultipleSelectModifier.Modifier = &ImGui::GetIO().key_ctrl;
         //
         // Left-clicking a node with this modifier pressed will add the node to the list of
         // currently selected nodes. If this value is NULL, the Ctrl key will be used.

@@ -375,9 +375,9 @@ GLFWAPI struct wl_surface* glfwGetWaylandWindow(GLFWwindow* window);
  */
 GLFWAPI MirConnection* glfwGetMirDisplay(void);
 
-/*! @brief Returns the Mir output ID of the specified monitor.
+/*! @brief Returns the Mir output id of the specified monitor.
  *
- *  @return The Mir output ID of the specified monitor, or zero if an
+ *  @return The Mir output id of the specified monitor, or zero if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not

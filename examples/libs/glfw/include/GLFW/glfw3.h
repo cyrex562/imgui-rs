@@ -116,7 +116,7 @@ extern "C" {
 #endif /* CALLBACK */
 
 /* Most windows GLU headers need wchar_t.
- * The OS X OpenGL header blocks the definition of ptrdiff_t by glext.h.
+ * The OS x OpenGL header blocks the definition of ptrdiff_t by glext.h.
  * Include it unconditionally to avoid surprising side-effects.
  */
 #include <stddef.h>
@@ -557,7 +557,7 @@ extern "C" {
  *  @par
  *  Some pre-installed windows graphics drivers do not support OpenGL.  AMD only
  *  supports OpenGL ES via EGL, while Nvidia and Intel only support it via
- *  a WGL or GLX extension.  OS X does not provide OpenGL ES at all.  The Mesa
+ *  a WGL or GLX extension.  OS x does not provide OpenGL ES at all.  The Mesa
  *  EGL, OpenGL and OpenGL ES libraries do not interface with the Nvidia binary
  *  driver.  Older graphics drivers do not support Vulkan.
  */
@@ -1790,7 +1790,7 @@ GLFWAPI void glfwWindowHint(int hint, int value);
  *  menu bar can be disabled with a
  *  [compile-time option](@ref compile_options_osx).
  *
- *  @remark @osx On OS X 10.10 and later the window frame will not be rendered
+ *  @remark @osx On OS x 10.10 and later the window frame will not be rendered
  *  at full resolution on Retina displays unless the `NSHighResolutionCapable`
  *  key is enabled in the application bundle's `Info.plist`.  For more
  *  information, see
@@ -3143,7 +3143,7 @@ GLFWAPI void glfwSetCursorPos(GLFWwindow* window, double xpos, double ypos);
  *  starting from the top-left corner.
  *
  *  The cursor hotspot is specified in pixels, relative to the upper-left corner
- *  of the cursor image.  Like all other coordinate systems in GLFW, the X-axis
+ *  of the cursor image.  Like all other coordinate systems in GLFW, the x-axis
  *  points to the right and the Y-axis points down.
  *
  *  @param[in] image The desired cursor image.
@@ -3305,7 +3305,7 @@ GLFWAPI GLFWkeyfun glfwSetKeyCallback(GLFWwindow* window, GLFWkeyfun cbfun);
  *
  *  The character callback behaves as system text input normally does and will
  *  not be called if modifier keys are held down that would prevent normal text
- *  input on that platform, for example a Super (Command) key on OS X or Alt key
+ *  input on that platform, for example a Super (Command) key on OS x or Alt key
  *  on windows.  There is a
  *  [character with modifiers callback](@ref glfwSetCharModsCallback) that
  *  receives these events.

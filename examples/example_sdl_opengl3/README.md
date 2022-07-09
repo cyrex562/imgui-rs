@@ -1,5 +1,5 @@
 
-# How to Build
+# How to build
 
 - On windows with Visual Studio's IDE
 
@@ -21,7 +21,7 @@ cl /Zi /MD /I.. /I..\.. /I%SDL2_DIR%\include main.cpp ..\..\backends\imgui_impl_
 c++ `sdl2-config --cflags` -I .. -I ../.. -I ../../backends main.cpp ../../backends/imgui_impl_sdl.cpp ../../backends/imgui_impl_opengl3.cpp ../../imgui*.cpp `sdl2-config --libs` -lGL -ldl
 ```
 
-- On Mac OS X
+- On Mac OS x
 
 ```
 brew install sdl2

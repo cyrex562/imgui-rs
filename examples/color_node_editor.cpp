@@ -191,7 +191,7 @@ public:
         ImGui::TextUnformatted("Edit the color of the output color window using nodes.");
         ImGui::Columns(2);
         ImGui::TextUnformatted("A -- add node");
-        ImGui::TextUnformatted("X -- delete selected node or link");
+        ImGui::TextUnformatted("x -- delete selected node or link");
         ImGui::NextColumn();
         if (ImGui::Checkbox("emulate_three_button_mouse", &emulate_three_button_mouse))
         {
@@ -209,7 +209,7 @@ public:
                                     ImNodes::IsEditorHovered() &&
                                     ImGui::IsKeyReleased(SDL_SCANCODE_A);
 
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.f, 8.f));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, DimgVec2D::new(8.f, 8.f));
             if (!ImGui::IsAnyItemHovered() && open_popup)
             {
                 ImGui::OpenPopup("add node");
@@ -424,7 +424,7 @@ public:
                 ImGui::TextUnformatted("output");
                 ImNodes::EndNodeTitleBar();
 
-                ImGui::Dummy(ImVec2(node_width, 0.f));
+                ImGui::Dummy(DimgVec2D::new(node_width, 0.f));
                 {
                     ImNodes::BeginInputAttribute(node.ui.output.r);
                     const float label_width = ImGui::CalcTextSize("r").x;

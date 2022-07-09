@@ -63,7 +63,7 @@ int main(int, char**)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    //io.config_flags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
 
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
@@ -78,21 +78,21 @@ int main(int, char**)
     ImGui_ImplSDL2_InitForOpenGL(g_Window, g_GLContext);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Load Fonts
+    // Load fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
     // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     // - Emscripten allows preloading a file or folder to be accessible at runtime. See Makefile for details.
-    //io.Fonts->AddFontDefault();
+    //io.fonts->add_font_default();
 #ifndef IMGUI_DISABLE_FILE_FUNCTIONS
     io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 16.0);
-    //io.Fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0);
-    //io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0);
-    //io.Fonts->AddFontFromFileTTF("fonts/ProggyTiny.ttf", 10.0);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0, NULL, io.Fonts->GetGlyphRangesJapanese());
+    //io.fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0);
+    //io.fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0);
+    //io.fonts->AddFontFromFileTTF("fonts/ProggyTiny.ttf", 10.0);
+    //ImFont* font = io.fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0, NULL, io.fonts->get_glyph_ranges_japanese());
     //IM_ASSERT(font != NULL);
 #endif
 
@@ -111,15 +111,15 @@ static void main_loop(void* arg)
     static ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
 
     // Poll and handle events (inputs, window resize, etc.)
-    // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-    // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-    // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+    // You can read the io.want_capture_mouse, io.want_capture_keyboard flags to tell if dear imgui wants to use your inputs.
+    // - When io.want_capture_mouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+    // - When io.want_capture_keyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
     // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
         ImGui_ImplSDL2_ProcessEvent(&event);
-        // Capture events here, based on io.WantCaptureMouse and io.WantCaptureKeyboard
+        // Capture events here, based on io.want_capture_mouse and io.want_capture_keyboard
     }
 
     // Start the Dear ImGui frame

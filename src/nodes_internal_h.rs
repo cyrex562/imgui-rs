@@ -154,7 +154,7 @@ struct ImNodeData
 
     ImNodeData(const int node_id)
         : Id(node_id), Origin(0.0, 0.0), TitleBarContentRect(),
-          Rect(ImVec2(0.0, 0.0), ImVec2(0.0, 0.0)), ColorStyle(), LayoutStyle(), PinIndices(),
+          Rect(DimgVec2D::new(0.0, 0.0), DimgVec2D::new(0.0, 0.0)), ColorStyle(), LayoutStyle(), PinIndices(),
           Draggable(true)
     {
     }
@@ -255,7 +255,7 @@ struct ImNodesEditorContext
     // ui related fields
     ImVec2 Panning;
     ImVec2 AutoPanningDelta;
-    // Minimum and maximum extents of all content in grid space. Valid after final
+    // Minimum and maximum extents of all content in grid space. valid after final
     // ImNodes::EndNode() call.
     ImRect GridContentBounds;
 

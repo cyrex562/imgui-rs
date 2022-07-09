@@ -184,7 +184,7 @@
 /* Begin PBXNativeTarget section */
 		8307E7C320E9F9C900473790 /* example_apple_metal_ios */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8307E7F020E9F9C900473790 /* Build configuration list for PBXNativeTarget "example_apple_metal_ios" */;
+			buildConfigurationList = 8307E7F020E9F9C900473790 /* build configuration list for PBXNativeTarget "example_apple_metal_ios" */;
 			buildPhases = (
 				8307E7C020E9F9C900473790 /* Sources */,
 				8307E7C120E9F9C900473790 /* Frameworks */,
@@ -201,7 +201,7 @@
 		};
 		8307E7D920E9F9C900473790 /* example_apple_metal_macos */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8307E7F320E9F9C900473790 /* Build configuration list for PBXNativeTarget "example_apple_metal_macos" */;
+			buildConfigurationList = 8307E7F320E9F9C900473790 /* build configuration list for PBXNativeTarget "example_apple_metal_macos" */;
 			buildPhases = (
 				8307E7D620E9F9C900473790 /* Sources */,
 				8307E7D720E9F9C900473790 /* Frameworks */,
@@ -235,7 +235,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 8307E7B920E9F9C700473790 /* Build configuration list for PBXProject "example_apple_metal" */;
+			buildConfigurationList = 8307E7B920E9F9C700473790 /* build configuration list for PBXProject "example_apple_metal" */;
 			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -483,7 +483,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8307E7B920E9F9C700473790 /* Build configuration list for PBXProject "example_apple_metal" */ = {
+		8307E7B920E9F9C700473790 /* build configuration list for PBXProject "example_apple_metal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8307E7EE20E9F9C900473790 /* Debug */,
@@ -492,7 +492,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8307E7F020E9F9C900473790 /* Build configuration list for PBXNativeTarget "example_apple_metal_ios" */ = {
+		8307E7F020E9F9C900473790 /* build configuration list for PBXNativeTarget "example_apple_metal_ios" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8307E7F120E9F9C900473790 /* Debug */,
@@ -501,7 +501,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8307E7F320E9F9C900473790 /* Build configuration list for PBXNativeTarget "example_apple_metal_macos" */ = {
+		8307E7F320E9F9C900473790 /* build configuration list for PBXNativeTarget "example_apple_metal_macos" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8307E7F420E9F9C900473790 /* Debug */,

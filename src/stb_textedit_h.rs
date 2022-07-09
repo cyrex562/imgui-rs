@@ -44,7 +44,7 @@
 //   1.8  (2016-04-02) better keyboard handling when mouse button is down
 //   1.7  (2015-09-13) change y range handling in case baseline is non-0
 //   1.6  (2015-04-15) allow STB_TEXTEDIT_memmove
-//   1.5  (2014-09-10) add support for secondary keys for OS X
+//   1.5  (2014-09-10) add support for secondary keys for OS x
 //   1.4  (2014-08-17) fix signed/unsigned warnings
 //   1.3  (2014-06-19) fix mouse clicking to round to nearest char boundary
 //   1.2  (2014-05-27) fix some RAD types that had crept into the new code
@@ -259,8 +259,8 @@ pub fn STB_TEXTEDIT_IS_SPACE(ch: ImWchar) -> bool {
 // reason, it provides an interface that is compatible with computing the
 // layout incrementally--we try to make sure we make as few passes through
 // as possible. (For example, to locate the mouse pointer in the text, we
-// could define functions that return the X and Y positions of characters
-// and binary search Y and then X, but if we're doing dynamic layout this
+// could define functions that return the x and Y positions of characters
+// and binary search Y and then x, but if we're doing dynamic layout this
 // will run the layout algorithm many times, so instead we manually search
 // forward in one pass. Similar logic applies to e.g. up-arrow and
 // down-arrow movement.)
@@ -1707,7 +1707,7 @@ pub unsafe fn stb_textedit_paste(stb_str: *mut STB_TEXTEDIT_STRING, state: *mut 
 obj.CurLenW}
     }
 
-// static float   STB_TEXTEDIT_GETWIDTH(ImGuiInputTextState* obj, int line_start_idx, int char_idx)  { ImWchar c = obj.TextW[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; ImGuiContext& g = *GImGui; return g.font->GetCharAdvance(c) * (g.font_size / g.font->font_size); }
+// static float   STB_TEXTEDIT_GETWIDTH(ImGuiInputTextState* obj, int line_start_idx, int char_idx)  { ImWchar c = obj.TextW[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; ImGuiContext& g = *GImGui; return g.font->get_char_advance(c) * (g.font_size / g.font->font_size); }
 pub fn STB_TEXTEDIT_GETWIDTH(obj: *mut ImGuiInputTextState, line_start_idx: usize, char_idx: usize) -> f32 {
     let mut c = obj.TextW[line_start_idx + char_idx];
     if c == ImWchar::from('\n') {

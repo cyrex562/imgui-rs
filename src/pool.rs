@@ -3,7 +3,7 @@ use crate::imgui_h::ImGuiID;
 use crate::imgui_kv_store::ImGuiStorage;
 
 // Helper: ImPool<>
-// Basic keyed storage for contiguous instances, slow/amortized insertion, O(1) indexable, O(Log N) queries by ID over a dense/hot buffer,
+// Basic keyed storage for contiguous instances, slow/amortized insertion, O(1) indexable, O(Log N) queries by id over a dense/hot buffer,
 // Honor constructor/destructor. Add/remove invalidate all pointers. Indexes have the same lifetime as the associated object.
 // typedef int ImPoolIdx;
 pub type ImGuiPoolIdx = isize;
@@ -12,7 +12,7 @@ pub struct ImGuiPool<T>
 {
     // ImVector<T>     Buf;        // Contiguous data
     pub Buf: Vec<T>,
-    // ImGuiStorage    Map;        // ID->Index
+    // ImGuiStorage    Map;        // id->Index
     pub Map: ImGuiStorage,
     // ImPoolIdx       FreeIdx;    // Next free idx to use
     pub FreeIdx: ImGuiPoolIdx,

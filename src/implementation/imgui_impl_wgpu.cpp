@@ -3,8 +3,8 @@
 // (Please note that WebGPU is currently experimental, will not run on non-beta browsers, and may break.)
 
 // Implemented features:
-//  [X] Renderer: User texture binding. Use 'WGPUTextureView' as ImTextureID. Read the FAQ about ImTextureID!
-//  [X] Renderer: Large meshes support (64k+ vertices) with 16-bit indices.
+//  [x] Renderer: User texture binding. Use 'WGPUTextureView' as ImTextureID. Read the FAQ about ImTextureID!
+//  [x] Renderer: Large meshes support (64k+ vertices) with 16-bit indices.
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
 // Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
@@ -15,7 +15,7 @@
 // (minor and older changes stripped away, please see git history for details)
 //  2021-11-29: Passing explicit buffer sizes to wgpuRenderPassEncoderSetVertexBuffer()/wgpuRenderPassEncoderSetIndexBuffer().
 //  2021-08-24: Fix for latest specs.
-//  2021-05-24: Add support for draw_data->FramebufferScale.
+//  2021-05-24: Add support for draw_data->framebuffer_scale.
 //  2021-05-19: Replaced direct access to ImDrawCmd::texture_id with a call to ImDrawCmd::get_tex_id(). (will become a requirement)
 //  2021-05-16: Update to latest WebGPU specs (compatible with Emscripten 2.0.20 and Chrome Canary 92).
 //  2021-02-18: Change blending equation to preserve alpha in output buffer.
@@ -295,7 +295,7 @@ static WGPUBindGroup ImGui_ImplWGPU_CreateImageBindGroup(WGPUBindGroupLayout lay
 static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPassEncoder ctx, FrameResources* fr)
 {
     // Setup orthographic projection matrix into our constant buffer
-    // Our visible imgui space lies from draw_data->DisplayPos (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right).
+    // Our visible imgui space lies from draw_data->display_pos (top left) to draw_data->display_pos+data_data->display_size (bottom right).
     {
         float L = draw_data->DisplayPos.x;
         float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
@@ -463,7 +463,7 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
 
 static void ImGui_ImplWGPU_CreateFontsTexture()
 {
-    // Build texture atlas
+    // build texture atlas
     ImGuiIO& io = ImGui::GetIO();
     unsigned char* pixels;
     int width, height, size_pp;
@@ -510,7 +510,7 @@ static void ImGui_ImplWGPU_CreateFontsTexture()
     }
 
     // Create the associated sampler
-    // (Bilinear sampling is required by default. Set 'io.Fonts->flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
+    // (Bilinear sampling is required by default. Set 'io.fonts->flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
     {
         WGPUSamplerDescriptor sampler_desc = {};
         sampler_desc.minFilter = WGPUFilterMode_Linear;
@@ -524,7 +524,7 @@ static void ImGui_ImplWGPU_CreateFontsTexture()
     }
 
     // Store our identifier
-    static_assert(sizeof(ImTextureID) >= sizeof(g_resources.FontTexture), "Can't pack descriptor handle into TexID, 32-bit not supported yet.");
+    static_assert(sizeof(ImTextureID) >= sizeof(g_resources.FontTexture), "Can't pack descriptor handle into tex_id, 32-bit not supported yet.");
     io.Fonts->SetTexID((ImTextureID)g_resources.FontTextureView);
 }
 
@@ -606,7 +606,7 @@ bool ImGui_ImplWGPU_CreateDeviceObjects()
 
     graphics_pipeline_desc.fragment = &fragment_state;
 
-    // Create depth-stencil State
+    // Create depth-stencil state
     WGPUDepthStencilState depth_stencil_state = {};
     depth_stencil_state.depthBias = 0;
     depth_stencil_state.depthBiasClamp = 0;
@@ -658,7 +658,7 @@ void ImGui_ImplWGPU_InvalidateDeviceObjects()
     SafeRelease(g_resources);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->SetTexID(NULL); // We copied g_pFontTextureView to io.Fonts->TexID so let's clear that as well.
+    io.Fonts->SetTexID(NULL); // We copied g_pFontTextureView to io.fonts->tex_id so let's clear that as well.
 
     for (unsigned int i = 0; i < g_numFramesInFlight; i += 1)
         SafeRelease(g_pFrameResources[i]);
