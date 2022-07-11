@@ -1,10 +1,10 @@
-use crate::types::DimgId;
+use crate::types::Id32;
 
 #[derive(Default,Debug,Clone)]
 struct ImGuiStackLevelInfo
 {
     //ImGuiID                 id;
-    pub id: DimgId,
+    pub id: Id32,
     //ImS8                    QueryFrameCount;            // >= 1: Query in progress
     pub query_frame_count: i8,
     // bool                    QuerySuccess;               // Obtained result from debug_hook_id_info()
@@ -18,14 +18,14 @@ struct ImGuiStackLevelInfo
 
 // state for Stack tool queries
 #[derive(Default,Debug,Clone)]
-pub struct ImGuiStackTool
+pub struct StackTool
 {
     // int                     LastActiveFrame;
     pub last_active_frame: i32,
     // int                     StackLevel;                 // -1: query stack and resize Results, >= 0: individual stack level
     pub stack_level: i32,
     // ImGuiID                 QueryId;                    // id to query details for
-    pub query_id: DimgId,
+    pub query_id: Id32,
     // ImVector<ImGuiStackLevelInfo> Results;
     pub results: Vec<DimgStackLevelInfo>,
     // bool                    CopyToClipboardOnCtrlC;

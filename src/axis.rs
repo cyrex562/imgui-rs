@@ -1,4 +1,4 @@
-// x/Y enums are fixed to 0/1 so they may be used to index ImVec2
+// x/Y enums are fixed to 0/1 so they may be used to index Vector2D
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
 pub enum DimgAxis
 {

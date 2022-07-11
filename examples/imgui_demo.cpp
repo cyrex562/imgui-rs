@@ -33,7 +33,7 @@
 // - We never omit the ImGui:: prefix when calling functions, even though most code here is in the same namespace.
 // - We try to declare static variables in the local scope, as close as possible to the code using them.
 // - We never use any of the helpers/facilities used internally by Dear ImGui, unless available in the public API.
-// - We never use maths operators on ImVec2/ImVec4. For our other sources files we use them, and they are provided
+// - We never use maths operators on Vector2D/Vector4D. For our other sources files we use them, and they are provided
 //   by imgui_internal.h using the IMGUI_DEFINE_MATH_OPERATORS define. For your own sources file they are optional
 //   and require you either enable those, either provide your own via IM_VEC2_CLASS_EXTRA in imconfig.h.
 //   Because we can't assume anything about your support of maths operators, we cannot use them in imgui_demo.cpp.
@@ -663,9 +663,9 @@ static void ShowDemoWindowWidgets()
             if (i > 0)
                 ImGui::SameLine();
             ImGui::PushID(i);
-            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0, 0.6, 0.6));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(i / 7.0, 0.7, 0.7));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(i / 7.0, 0.8, 0.8));
+            ImGui::PushStyleColor(ImGuiCol_Button, (Vector4D)ImColor::HSV(i / 7.0, 0.6, 0.6));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (Vector4D)ImColor::HSV(i / 7.0, 0.7, 0.7));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (Vector4D)ImColor::HSV(i / 7.0, 0.8, 0.8));
             ImGui::Button("Click");
             ImGui::PopStyleColor(3);
             ImGui::PopID();
@@ -992,8 +992,8 @@ static void ShowDemoWindowWidgets()
         if (ImGui::TreeNode("Colorful Text"))
         {
             // Using shortcut. You can use PushStyleColor()/PopStyleColor() for more flexibility.
-            ImGui::TextColored(ImVec4(1.0, 0.0, 1.0, 1.0), "Pink");
-            ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "Yellow");
+            ImGui::TextColored(Vector4D(1.0, 0.0, 1.0, 1.0), "Pink");
+            ImGui::TextColored(Vector4D(1.0, 1.0, 0.0, 1.0), "Yellow");
             ImGui::TextDisabled("Disabled");
             ImGui::SameLine(); HelpMarker("The TextDisabled color is stored in ImGuiStyle.");
             ImGui::TreePop();
@@ -1015,9 +1015,9 @@ static void ShowDemoWindowWidgets()
             for (int n = 0; n < 2; n += 1)
             {
                 ImGui::Text("Test paragraph %d:", n);
-                ImVec2 pos = ImGui::GetCursorScreenPos();
-                ImVec2 marker_min = DimgVec2D::new(pos.x + wrap_width, pos.y);
-                ImVec2 marker_max = DimgVec2D::new(pos.x + wrap_width + 10, pos.y + ImGui::GetTextLineHeight());
+                Vector2D pos = ImGui::GetCursorScreenPos();
+                Vector2D marker_min = DimgVec2D::new(pos.x + wrap_width, pos.y);
+                Vector2D marker_max = DimgVec2D::new(pos.x + wrap_width + 10, pos.y + ImGui::GetTextLineHeight());
                 ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + wrap_width);
                 if (n == 0)
                     ImGui::Text("The lazy dog is a good dog. This paragraph should fit within %.0 pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", wrap_width);
@@ -1089,11 +1089,11 @@ static void ShowDemoWindowWidgets()
         float my_tex_h = (float)io.Fonts->TexHeight;
         {
             ImGui::Text("%.0x%.0", my_tex_w, my_tex_h);
-            ImVec2 pos = ImGui::GetCursorScreenPos();
-            ImVec2 uv_min = DimgVec2D::new(0.0, 0.0);                 // Top-left
-            ImVec2 uv_max = DimgVec2D::new(1.0, 1.0);                 // Lower-right
-            ImVec4 tint_col = ImVec4(1.0, 1.0, 1.0, 1.0);   // No tint
-            ImVec4 border_col = ImVec4(1.0, 1.0, 1.0, 0.5); // 50% opaque white
+            Vector2D pos = ImGui::GetCursorScreenPos();
+            Vector2D uv_min = DimgVec2D::new(0.0, 0.0);                 // Top-left
+            Vector2D uv_max = DimgVec2D::new(1.0, 1.0);                 // Lower-right
+            Vector4D tint_col = Vector4D(1.0, 1.0, 1.0, 1.0);   // No tint
+            Vector4D border_col = Vector4D(1.0, 1.0, 1.0, 0.5); // 50% opaque white
             ImGui::Image(my_tex_id, DimgVec2D::new(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
             if (ImGui::IsItemHovered())
             {
@@ -1106,10 +1106,10 @@ static void ShowDemoWindowWidgets()
                 else if (region_x > my_tex_w - region_sz) { region_x = my_tex_w - region_sz; }
                 if (region_y < 0.0) { region_y = 0.0; }
                 else if (region_y > my_tex_h - region_sz) { region_y = my_tex_h - region_sz; }
-                ImGui::Text("Min: (%.2, %.2)", region_x, region_y);
-                ImGui::Text("Max: (%.2, %.2)", region_x + region_sz, region_y + region_sz);
-                ImVec2 uv0 = DimgVec2D::new((region_x) / my_tex_w, (region_y) / my_tex_h);
-                ImVec2 uv1 = DimgVec2D::new((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
+                ImGui::Text("min: (%.2, %.2)", region_x, region_y);
+                ImGui::Text("max: (%.2, %.2)", region_x + region_sz, region_y + region_sz);
+                Vector2D uv0 = DimgVec2D::new((region_x) / my_tex_w, (region_y) / my_tex_h);
+                Vector2D uv1 = DimgVec2D::new((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
                 ImGui::Image(my_tex_id, DimgVec2D::new(region_sz * zoom, region_sz * zoom), uv0, uv1, tint_col, border_col);
                 ImGui::EndTooltip();
             }
@@ -1122,11 +1122,11 @@ static void ShowDemoWindowWidgets()
         {
             ImGui::PushID(i);
             int frame_padding = -1 + i;                             // -1 == uses default padding (style.FramePadding)
-            ImVec2 size = DimgVec2D::new(32.0, 32.0);                     // size of the image we want to make visible
-            ImVec2 uv0 = DimgVec2D::new(0.0, 0.0);                        // UV coordinates for lower-left
-            ImVec2 uv1 = DimgVec2D::new(32.0 / my_tex_w, 32.0 / my_tex_h);// UV coordinates for (32,32) in our texture
-            ImVec4 bg_col = ImVec4(0.0, 0.0, 0.0, 1.0);         // Black background
-            ImVec4 tint_col = ImVec4(1.0, 1.0, 1.0, 1.0);       // No tint
+            Vector2D size = DimgVec2D::new(32.0, 32.0);                     // size of the image we want to make visible
+            Vector2D uv0 = DimgVec2D::new(0.0, 0.0);                        // UV coordinates for lower-left
+            Vector2D uv1 = DimgVec2D::new(32.0 / my_tex_w, 32.0 / my_tex_h);// UV coordinates for (32,32) in our texture
+            Vector4D bg_col = Vector4D(0.0, 0.0, 0.0, 1.0);         // Black background
+            Vector4D tint_col = Vector4D(1.0, 1.0, 1.0, 1.0);       // No tint
             if (ImGui::ImageButton(my_tex_id, size, uv0, uv1, frame_padding, bg_col, tint_col))
                 pressed_count += 1;
             ImGui::PopID();
@@ -1375,7 +1375,7 @@ static void ShowDemoWindowWidgets()
             {
                 for (int x = 0; x < 3; x += 1)
                 {
-                    ImVec2 alignment = DimgVec2D::new((float)x / 2.0, (float)y / 2.0);
+                    Vector2D alignment = DimgVec2D::new((float)x / 2.0, (float)y / 2.0);
                     char name[32];
                     sprintf(name, "(%.1,%.1)", alignment.x, alignment.y);
                     if (x > 0) ImGui::SameLine();
@@ -1535,7 +1535,7 @@ static void ShowDemoWindowWidgets()
 
                 // Note: Because ImGui:: is a namespace you would typically add your own function into the namespace.
                 // For example, you code may declare a function 'ImGui::InputText(const char* label, MyString* my_str)'
-                static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = DimgVec2D::new(0, 0), ImGuiInputTextFlags flags = 0)
+                static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const Vector2D& size = DimgVec2D::new(0, 0), ImGuiInputTextFlags flags = 0)
                 {
                     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
                     return ImGui::InputTextMultiline(label, my_str->begin(), my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
@@ -1772,8 +1772,8 @@ static void ShowDemoWindowWidgets()
             if (progress <= -0.1) { progress = -0.1; progress_dir *= -1.0; }
         }
 
-        // Typically we would use ImVec2(-1.0,0.0) or ImVec2(-FLT_MIN,0.0) to use all available width,
-        // or ImVec2(width,0.0) for a specified width. ImVec2(0.0,0.0) uses ItemWidth.
+        // Typically we would use Vector2D(-1.0,0.0) or Vector2D(-FLT_MIN,0.0) to use all available width,
+        // or Vector2D(width,0.0) for a specified width. Vector2D(0.0,0.0) uses ItemWidth.
         ImGui::ProgressBar(progress, DimgVec2D::new(0.0, 0.0));
         ImGui::SameLine(0.0, ImGui::GetStyle().ItemInnerSpacing.x);
         ImGui::Text("Progress Bar");
@@ -1788,7 +1788,7 @@ static void ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Color");
     if (ImGui::TreeNode("Color/Picker Widgets"))
     {
-        static ImVec4 color = ImVec4(114.0 / 255.0, 144.0 / 255.0, 154.0 / 255.0, 200.0 / 255.0);
+        static Vector4D color = Vector4D(114.0 / 255.0, 144.0 / 255.0, 154.0 / 255.0, 200.0 / 255.0);
 
         static bool alpha_preview = true;
         static bool alpha_half_preview = false;
@@ -1830,7 +1830,7 @@ static void ShowDemoWindowWidgets()
 
         // Generate a default palette. The palette will persist and can be edited.
         static bool saved_palette_init = true;
-        static ImVec4 saved_palette[32] = {};
+        static Vector4D saved_palette[32] = {};
         if (saved_palette_init)
         {
             for (int n = 0; n < IM_ARRAYSIZE(saved_palette); n += 1)
@@ -1842,7 +1842,7 @@ static void ShowDemoWindowWidgets()
             saved_palette_init = false;
         }
 
-        static ImVec4 backup_color;
+        static Vector4D backup_color;
         bool open_popup = ImGui::ColorButton("MyColor##3b", color, misc_flags);
         ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
         open_popup |= ImGui::Button("Palette");
@@ -1874,7 +1874,7 @@ static void ShowDemoWindowWidgets()
 
                 ImGuiColorEditFlags palette_button_flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoTooltip;
                 if (ImGui::ColorButton("##palette", saved_palette[n], palette_button_flags, DimgVec2D::new(20, 20)))
-                    color = ImVec4(saved_palette[n].x, saved_palette[n].y, saved_palette[n].z, color.w); // Preserve alpha!
+                    color = Vector4D(saved_palette[n].x, saved_palette[n].y, saved_palette[n].z, color.w); // Preserve alpha!
 
                 // Allow user to drop colors into each palette entry. Note that ColorButton() is already a
                 // drag source by default, unless specifying the ImGuiColorEditFlags_NoDragDrop flag.
@@ -1897,7 +1897,7 @@ static void ShowDemoWindowWidgets()
         ImGui::Text("Color button only:");
         static bool no_border = false;
         ImGui::Checkbox("ImGuiColorEditFlags_NoBorder", &no_border);
-        ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color, misc_flags | (no_border ? ImGuiColorEditFlags_NoBorder : 0), DimgVec2D::new(80, 80));
+        ImGui::ColorButton("MyColor##3c", *(Vector4D*)&color, misc_flags | (no_border ? ImGuiColorEditFlags_NoBorder : 0), DimgVec2D::new(80, 80));
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorPicker");
         ImGui::Text("Color picker:");
@@ -1905,7 +1905,7 @@ static void ShowDemoWindowWidgets()
         static bool alpha_bar = true;
         static bool side_preview = true;
         static bool ref_color = false;
-        static ImVec4 ref_color_v(1.0, 0.0, 1.0, 0.5);
+        static Vector4D ref_color_v(1.0, 0.0, 1.0, 0.5);
         static int display_mode = 0;
         static int picker_mode = 0;
         ImGui::Checkbox("With Alpha", &alpha);
@@ -1960,7 +1960,7 @@ static void ShowDemoWindowWidgets()
         ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 
         // HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
-        static ImVec4 color_hsv(0.23, 1.0, 1.0, 1.0); // Stored as HSV!
+        static Vector4D color_hsv(0.23, 1.0, 1.0, 1.0); // Stored as HSV!
         ImGui::Spacing();
         ImGui::Text("HSV encoded colors");
         ImGui::SameLine(); HelpMarker(
@@ -2014,9 +2014,9 @@ static void ShowDemoWindowWidgets()
     {
         static float begin = 10, end = 90;
         static int begin_i = 100, end_i = 1000;
-        ImGui::DragFloatRange2("range float", &begin, &end, 0.25, 0.0, 100.0, "Min: %.1 %%", "Max: %.1 %%", ImGuiSliderFlags_AlwaysClamp);
-        ImGui::DragIntRange2("range int", &begin_i, &end_i, 5, 0, 1000, "Min: %d units", "Max: %d units");
-        ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %d units", "Max: %d units");
+        ImGui::DragFloatRange2("range float", &begin, &end, 0.25, 0.0, 100.0, "min: %.1 %%", "max: %.1 %%", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::DragIntRange2("range int", &begin_i, &end_i, 5, 0, 1000, "min: %d units", "max: %d units");
+        ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "min: %d units", "max: %d units");
         ImGui::TreePop();
     }
 
@@ -2192,10 +2192,10 @@ static void ShowDemoWindowWidgets()
         {
             if (i > 0) ImGui::SameLine();
             ImGui::PushID(i);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0, 0.5, 0.5));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0, 0.6, 0.5));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0, 0.7, 0.5));
-            ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0, 0.9, 0.9));
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, (Vector4D)ImColor::HSV(i / 7.0, 0.5, 0.5));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (Vector4D)ImColor::HSV(i / 7.0, 0.6, 0.5));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (Vector4D)ImColor::HSV(i / 7.0, 0.7, 0.5));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, (Vector4D)ImColor::HSV(i / 7.0, 0.9, 0.9));
             ImGui::VSliderFloat("##v", DimgVec2D::new(18, 160), &values[i], 0.0, 1.0, "");
             if (ImGui::IsItemActive() || ImGui::IsItemHovered())
                 ImGui::SetTooltip("%.3", values[i]);
@@ -2208,7 +2208,7 @@ static void ShowDemoWindowWidgets()
         ImGui::PushID("set2");
         static float values2[4] = { 0.20, 0.80, 0.40, 0.25 };
         const int rows = 3;
-        const ImVec2 small_slider_size(18, (float)((160.0 - (rows - 1) * spacing) / rows));
+        const Vector2D small_slider_size(18, (float)((160.0 - (rows - 1) * spacing) / rows));
         for (int nx = 0; nx < 4; nx += 1)
         {
             if (nx > 0) ImGui::SameLine();
@@ -2630,7 +2630,7 @@ static void ShowDemoWindowLayout()
         // - Using SetCursorPos() to position child window (the child window is an item from the POV of parent window)
         //   You can also call SetNextWindowPos() to position the child window. The parent window will effectively
         //   layout from this position.
-        // - Using ImGui::GetItemRectMin/Max() to query the "item" state (because the child window is an item from
+        // - Using ImGui::GetItemRectMin/max() to query the "item" state (because the child window is an item from
         //   the POV of the parent window). See 'Demo->Querying Status (Edited/active/Hovered etc.)' for details.
         {
             static int offset_x = 0;
@@ -2644,8 +2644,8 @@ static void ShowDemoWindowLayout()
                 ImGui::Text("Some test %d", n);
             ImGui::EndChild();
             bool child_is_hovered = ImGui::IsItemHovered();
-            ImVec2 child_rect_min = ImGui::GetItemRectMin();
-            ImVec2 child_rect_max = ImGui::GetItemRectMax();
+            Vector2D child_rect_min = ImGui::GetItemRectMin();
+            Vector2D child_rect_max = ImGui::GetItemRectMax();
             ImGui::PopStyleColor();
             ImGui::Text("Hovered: %d", child_is_hovered);
             ImGui::Text("rect of child window is: (%.0,%.0) (%.0,%.0)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
@@ -2739,11 +2739,11 @@ static void ShowDemoWindowLayout()
         // Text
         IMGUI_DEMO_MARKER("Layout/Basic Horizontal Layout/SameLine");
         ImGui::Text("Two items: Hello"); ImGui::SameLine();
-        ImGui::TextColored(ImVec4(1,1,0,1), "Sailor");
+        ImGui::TextColored(Vector4D(1,1,0,1), "Sailor");
 
         // Adjust spacing
         ImGui::Text("More spacing: Hello"); ImGui::SameLine(0, 20);
-        ImGui::TextColored(ImVec4(1,1,0,1), "Sailor");
+        ImGui::TextColored(Vector4D(1,1,0,1), "Sailor");
 
         // Button
         ImGui::AlignTextToFramePadding();
@@ -2800,7 +2800,7 @@ static void ShowDemoWindowLayout()
 
         // Dummy
         IMGUI_DEMO_MARKER("Layout/Basic Horizontal Layout/Dummy");
-        ImVec2 button_sz(40, 40);
+        Vector2D button_sz(40, 40);
         ImGui::Button("A", button_sz); ImGui::SameLine();
         ImGui::Dummy(button_sz); ImGui::SameLine();
         ImGui::Button("B", button_sz);
@@ -2851,7 +2851,7 @@ static void ShowDemoWindowLayout()
                 ImGui::SetTooltip("First group hovered");
         }
         // Capture the group size and create widgets using the same size
-        ImVec2 size = ImGui::GetItemRectSize();
+        Vector2D size = ImGui::GetItemRectSize();
         const float values[5] = { 0.5, 0.20, 0.80, 0.60, 0.25 };
         ImGui::PlotHistogram("##values", values, IM_ARRAYSIZE(values), 0, NULL, 0.0, 1.0, size);
 
@@ -3052,7 +3052,7 @@ static void ShowDemoWindowLayout()
                 {
                     if (enable_track && item == track_item)
                     {
-                        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
+                        ImGui::TextColored(Vector4D(1, 1, 0, 1), "Item %d", item);
                         ImGui::SetScrollHereY(i * 0.25); // 0.0:top, 0.5:center, 1.0:bottom
                     }
                     else
@@ -3096,7 +3096,7 @@ static void ShowDemoWindowLayout()
                         ImGui::SameLine();
                     if (enable_track && item == track_item)
                     {
-                        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
+                        ImGui::TextColored(Vector4D(1, 1, 0, 1), "Item %d", item);
                         ImGui::SetScrollHereX(i * 0.25); // 0.0:left, 0.5:center, 1.0:right
                     }
                     else
@@ -3124,7 +3124,7 @@ static void ShowDemoWindowLayout()
         ImGui::SliderInt("Lines", &lines, 1, 15);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, DimgVec2D::new(2.0, 1.0));
-        ImVec2 scrolling_child_size = DimgVec2D::new(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
+        Vector2D scrolling_child_size = DimgVec2D::new(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
         ImGui::BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
         for (int line = 0; line < lines; line += 1)
         {
@@ -3141,9 +3141,9 @@ static void ShowDemoWindowLayout()
                 sprintf(num_buf, "%d", n);
                 const char* label = (!(n % 15)) ? "FizzBuzz" : (!(n % 3)) ? "Fizz" : (!(n % 5)) ? "Buzz" : num_buf;
                 float hue = n * 0.05;
-                ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6, 0.6));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.7, 0.7));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(hue, 0.8, 0.8));
+                ImGui::PushStyleColor(ImGuiCol_Button, (Vector4D)ImColor::HSV(hue, 0.6, 0.6));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (Vector4D)ImColor::HSV(hue, 0.7, 0.7));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, (Vector4D)ImColor::HSV(hue, 0.8, 0.8));
                 ImGui::Button(label, DimgVec2D::new(40.0 + sinf((float)(line + n)) * 20.0, 0.0));
                 ImGui::PopStyleColor(3);
                 ImGui::PopID();
@@ -3209,7 +3209,7 @@ static void ShowDemoWindowLayout()
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(100);
                 ImGui::DragFloat("##csx", &contents_size_x);
-                ImVec2 p = ImGui::GetCursorScreenPos();
+                Vector2D p = ImGui::GetCursorScreenPos();
                 ImGui::GetWindowDrawList()->AddRectFilled(p, DimgVec2D::new(p.x + 10, p.y + 10), IM_COL32_WHITE);
                 ImGui::GetWindowDrawList()->AddRectFilled(DimgVec2D::new(p.x + contents_size_x - 10, p.y), DimgVec2D::new(p.x + contents_size_x, p.y + 10), IM_COL32_WHITE);
                 ImGui::Dummy(DimgVec2D::new(0, 10));
@@ -3281,16 +3281,16 @@ static void ShowDemoWindowLayout()
     IMGUI_DEMO_MARKER("Layout/Clipping");
     if (ImGui::TreeNode("Clipping"))
     {
-        static ImVec2 size(100.0, 100.0);
-        static ImVec2 offset(30.0, 30.0);
+        static Vector2D size(100.0, 100.0);
+        static Vector2D offset(30.0, 30.0);
         ImGui::DragFloat2("size", (float*)&size, 0.5, 1.0, 200.0, "%.0");
         ImGui::TextWrapped("(Click and drag to scroll)");
 
         HelpMarker(
-            "(Left) Using ImGui::PushClipRect():\n"
+            "(Left) Using ImGui::push_clip_rect():\n"
             "Will alter ImGui hit-testing logic + ImDrawList rendering.\n"
             "(use this if you want your clipping rectangle to affect interactions)\n\n"
-            "(Center) Using ImDrawList::PushClipRect():\n"
+            "(Center) Using ImDrawList::push_clip_rect():\n"
             "Will alter ImDrawList rendering only.\n"
             "(use this as a shortcut if you are only using ImDrawList calls)\n\n"
             "(Right) Using ImDrawList::add_text() with a fine clip_rect:\n"
@@ -3313,10 +3313,10 @@ static void ShowDemoWindowLayout()
             if (!ImGui::IsItemVisible()) // Skip rendering as ImDrawList elements are not clipped.
                 continue;
 
-            const ImVec2 p0 = ImGui::GetItemRectMin();
-            const ImVec2 p1 = ImGui::GetItemRectMax();
+            const Vector2D p0 = ImGui::GetItemRectMin();
+            const Vector2D p1 = ImGui::GetItemRectMax();
             const char* text_str = "Line 1 hello\nLine 2 clip me!";
-            const ImVec2 text_pos = DimgVec2D::new(p0.x + offset.x, p0.y + offset.y);
+            const Vector2D text_pos = DimgVec2D::new(p0.x + offset.x, p0.y + offset.y);
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             switch (n)
             {
@@ -3333,7 +3333,7 @@ static void ShowDemoWindowLayout()
                 draw_list->PopClipRect();
                 break;
             case 2:
-                ImVec4 clip_rect(p0.x, p0.y, p1.x, p1.y); // add_text() takes a ImVec4* here so let's convert.
+                Vector4D clip_rect(p0.x, p0.y, p1.x, p1.y); // add_text() takes a Vector4D* here so let's convert.
                 draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
                 draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize(), text_pos, IM_COL32_WHITE, text_str, NULL, 0.0, &clip_rect);
                 break;
@@ -3557,7 +3557,7 @@ static void ShowDemoWindowPopups()
             ImGui::OpenPopup("Delete?");
 
         // Always center this window when appearing
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        Vector2D center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, DimgVec2D::new(0.5, 0.5));
 
         if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -4207,7 +4207,7 @@ static void ShowDemoWindowTables()
         // FIXME-TABLE: Vertical border effectively not displayed the same way as horizontal one...
         HelpMarker("Setting style.CellPadding to (0,0) or a custom value.");
         static ImGuiTableFlags flags2 = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
-        static ImVec2 cell_padding(0.0, 0.0);
+        static Vector2D cell_padding(0.0, 0.0);
         static bool show_widget_frame_bg = true;
 
         PushStyleCompact();
@@ -4367,7 +4367,7 @@ static void ShowDemoWindowTables()
 
         // When using ScrollX or ScrollY we need to specify a size for our table container!
         // Otherwise by default the table will fit all available space, like a BeginChild() call.
-        ImVec2 outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 8);
+        Vector2D outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 8);
         if (ImGui::BeginTable("table_scrolly", 3, flags, outer_size))
         {
             ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
@@ -4422,7 +4422,7 @@ static void ShowDemoWindowTables()
 
         // When using ScrollX or ScrollY we need to specify a size for our table container!
         // Otherwise by default the table will fit all available space, like a BeginChild() call.
-        ImVec2 outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 8);
+        Vector2D outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 8);
         if (ImGui::BeginTable("table_scrollx", 7, flags, outer_size))
         {
             ImGui::TableSetupScrollFreeze(freeze_cols, freeze_rows);
@@ -4526,7 +4526,7 @@ static void ShowDemoWindowTables()
             = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY
             | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV
             | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable;
-        ImVec2 outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 9);
+        Vector2D outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 9);
         if (ImGui::BeginTable("table_columns_flags", column_count, flags, outer_size))
         {
             for (int column = 0; column < column_count; column += 1)
@@ -4699,7 +4699,7 @@ static void ShowDemoWindowTables()
         ImGui::SameLine(); HelpMarker("Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. data below the limit will be clipped and not visible.");
         PopStyleCompact();
 
-        ImVec2 outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 5.5);
+        Vector2D outer_size = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 5.5);
         if (ImGui::BeginTable("table1", 3, flags, outer_size))
         {
             for (int row = 0; row < 10; row += 1)
@@ -4782,7 +4782,7 @@ static void ShowDemoWindowTables()
                 // We use a transparent color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
                 if (row_bg_type != 0)
                 {
-                    ImU32 row_bg_color = ImGui::GetColorU32(row_bg_type == 1 ? ImVec4(0.7, 0.3, 0.3, 0.65) : ImVec4(0.2 + row * 0.1, 0.2, 0.2, 0.65)); // Flat or Gradient?
+                    ImU32 row_bg_color = ImGui::GetColorU32(row_bg_type == 1 ? Vector4D(0.7, 0.3, 0.3, 0.65) : Vector4D(0.2 + row * 0.1, 0.2, 0.2, 0.65)); // Flat or Gradient?
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0 + row_bg_target, row_bg_color);
                 }
 
@@ -4798,7 +4798,7 @@ static void ShowDemoWindowTables()
                     // We can also pass a column number as a third parameter to TableSetBgColor() and do this outside the column loop.
                     if (row >= 1 && row <= 2 && column >= 1 && column <= 2 && cell_bg_type == 1)
                     {
-                        ImU32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.3, 0.3, 0.7, 0.65));
+                        ImU32 cell_bg_color = ImGui::GetColorU32(Vector4D(0.3, 0.3, 0.7, 0.65));
                         ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
                     }
                 }
@@ -5223,7 +5223,7 @@ static void ShowDemoWindowTables()
         static int freeze_cols = 1;
         static int freeze_rows = 1;
         static int items_count = IM_ARRAYSIZE(template_items_names) * 2;
-        static ImVec2 outer_size_value = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 12);
+        static Vector2D outer_size_value = DimgVec2D::new(0.0, TEXT_BASE_HEIGHT * 12);
         static float row_min_height = 0.0; // Auto
         static float inner_width_with_scroll = 0.0; // Auto-extend
         static bool outer_size_enabled = true;
@@ -5362,7 +5362,7 @@ static void ShowDemoWindowTables()
 
         const ImDrawList* parent_draw_list = ImGui::GetWindowDrawList();
         const int parent_draw_list_draw_cmd_count = parent_draw_list->CmdBuffer.Size;
-        ImVec2 table_scroll_cur, table_scroll_max; // For debug display
+        Vector2D table_scroll_cur, table_scroll_max; // For debug display
         const ImDrawList* table_draw_list = NULL;  // "
 
         // Submit table
@@ -5543,7 +5543,7 @@ static void ShowDemoWindowColumns()
             char label[32];
             sprintf(label, "Item %d", n);
             if (ImGui::Selectable(label)) {}
-            //if (ImGui::Button(label, ImVec2(-FLT_MIN,0.0))) {}
+            //if (ImGui::Button(label, Vector2D(-FLT_MIN,0.0))) {}
             ImGui::NextColumn();
         }
         ImGui::Columns(1);
@@ -5664,7 +5664,7 @@ static void ShowDemoWindowColumns()
     if (ImGui::TreeNode("Horizontal Scrolling"))
     {
         ImGui::SetNextWindowContentSize(DimgVec2D::new(1500.0, 0.0));
-        ImVec2 child_size = DimgVec2D::new(0, ImGui::GetFontSize() * 20.0);
+        Vector2D child_size = DimgVec2D::new(0, ImGui::GetFontSize() * 20.0);
         ImGui::BeginChild("##ScrollingRegion", child_size, false, ImGuiWindowFlags_HorizontalScrollbar);
         ImGui::Columns(10);
 
@@ -5810,18 +5810,18 @@ static void ShowDemoWindowMisc()
 
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
-                const ImVec2 key_size = DimgVec2D::new(35.0, 35.0);
+                const Vector2D key_size = DimgVec2D::new(35.0, 35.0);
                 const float  key_rounding = 3.0;
-                const ImVec2 key_face_size = DimgVec2D::new(25.0, 25.0);
-                const ImVec2 key_face_pos = DimgVec2D::new(5.0, 3.0);
+                const Vector2D key_face_size = DimgVec2D::new(25.0, 25.0);
+                const Vector2D key_face_pos = DimgVec2D::new(5.0, 3.0);
                 const float  key_face_rounding = 2.0;
-                const ImVec2 key_label_pos = DimgVec2D::new(7.0, 4.0);
-                const ImVec2 key_step = DimgVec2D::new(key_size.x - 1.0, key_size.y - 1.0);
+                const Vector2D key_label_pos = DimgVec2D::new(7.0, 4.0);
+                const Vector2D key_step = DimgVec2D::new(key_size.x - 1.0, key_size.y - 1.0);
                 const float  key_row_offset = 9.0;
 
-                ImVec2 board_min = ImGui::GetCursorScreenPos();
-                ImVec2 board_max = DimgVec2D::new(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10.0, board_min.y + 3 * key_step.y + 10.0);
-                ImVec2 start_pos = DimgVec2D::new(board_min.x + 5.0 - key_step.x, board_min.y);
+                Vector2D board_min = ImGui::GetCursorScreenPos();
+                Vector2D board_max = DimgVec2D::new(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10.0, board_min.y + 3 * key_step.y + 10.0);
+                Vector2D start_pos = DimgVec2D::new(board_min.x + 5.0 - key_step.x, board_min.y);
 
                 struct KeyLayoutData { int Row, Col; const char* Label; ImGuiKey Key; };
                 const KeyLayoutData keys_to_display[] =
@@ -5841,15 +5841,15 @@ static void ShowDemoWindowMisc()
                     for (int n = 0; n < IM_ARRAYSIZE(keys_to_display); n += 1)
                     {
                         const KeyLayoutData* key_data = &keys_to_display[n];
-                        ImVec2 key_min = DimgVec2D::new(start_pos.x + key_data->Col * key_step.x + key_data->Row * key_row_offset, start_pos.y + key_data->Row * key_step.y);
-                        ImVec2 key_max = DimgVec2D::new(key_min.x + key_size.x, key_min.y + key_size.y);
+                        Vector2D key_min = DimgVec2D::new(start_pos.x + key_data->Col * key_step.x + key_data->Row * key_row_offset, start_pos.y + key_data->Row * key_step.y);
+                        Vector2D key_max = DimgVec2D::new(key_min.x + key_size.x, key_min.y + key_size.y);
                         draw_list->AddRectFilled(key_min, key_max, IM_COL32(204, 204, 204, 255), key_rounding);
                         draw_list->AddRect(key_min, key_max, IM_COL32(24, 24, 24, 255), key_rounding);
-                        ImVec2 face_min = DimgVec2D::new(key_min.x + key_face_pos.x, key_min.y + key_face_pos.y);
-                        ImVec2 face_max = DimgVec2D::new(face_min.x + key_face_size.x, face_min.y + key_face_size.y);
+                        Vector2D face_min = DimgVec2D::new(key_min.x + key_face_pos.x, key_min.y + key_face_pos.y);
+                        Vector2D face_max = DimgVec2D::new(face_min.x + key_face_size.x, face_min.y + key_face_size.y);
                         draw_list->AddRect(face_min, face_max, IM_COL32(193, 193, 193, 255), key_face_rounding, ImDrawFlags_None, 2.0);
                         draw_list->AddRectFilled(face_min, face_max, IM_COL32(252, 252, 252, 255), key_face_rounding);
-                        ImVec2 label_min = DimgVec2D::new(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
+                        Vector2D label_min = DimgVec2D::new(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
                         draw_list->AddText(label_min, IM_COL32(64, 64, 64, 255), key_data->Label);
                         if (ImGui::IsKeyDown(key_data->Key))
                             draw_list->AddRectFilled(key_min, key_max, IM_COL32(255, 0, 0, 128), key_rounding);
@@ -5885,7 +5885,7 @@ static void ShowDemoWindowMisc()
             ImGui::SetNextItemWidth(ImGui::GetFontSize() * 15);
             ImGui::SliderInt("SetNextFrameWantCaptureKeyboard()", &capture_override_keyboard, -1, +1, capture_override_desc[capture_override_keyboard + 1], ImGuiSliderFlags_AlwaysClamp);
 
-            ImGui::ColorButton("##panel", ImVec4(0.7, 0.1, 0.7, 1.0), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, DimgVec2D::new(256.0, 192.0)); // Dummy item
+            ImGui::ColorButton("##panel", Vector4D(0.7, 0.1, 0.7, 1.0), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, DimgVec2D::new(256.0, 192.0)); // Dummy item
             if (ImGui::IsItemHovered() && capture_override_mouse != -1)
                 ImGui::SetNextFrameWantCaptureMouse(capture_override_mouse == 1);
             if (ImGui::IsItemHovered() && capture_override_keyboard != -1)
@@ -5971,9 +5971,9 @@ static void ShowDemoWindowMisc()
             // Drag operations gets "unlocked" when the mouse has moved past a certain threshold
             // (the default threshold is stored in io.mouse_drag_threshold). You can request a lower or higher
             // threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
-            ImVec2 value_raw = ImGui::GetMouseDragDelta(0, 0.0);
-            ImVec2 value_with_lock_threshold = ImGui::GetMouseDragDelta(0);
-            ImVec2 mouse_delta = io.MouseDelta;
+            Vector2D value_raw = ImGui::GetMouseDragDelta(0, 0.0);
+            Vector2D value_with_lock_threshold = ImGui::GetMouseDragDelta(0);
+            Vector2D mouse_delta = io.MouseDelta;
             ImGui::Text("GetMouseDragDelta(0):");
             ImGui::Text("  w/ default threshold: (%.1, %.1)", value_with_lock_threshold.x, value_with_lock_threshold.y);
             ImGui::Text("  w/ zero threshold: (%.1, %.1)", value_raw.x, value_raw.y);
@@ -6033,7 +6033,7 @@ void ImGui::ShowAboutWindow(bool* p_open)
         ImGuiStyle& style = ImGui::GetStyle();
 
         bool copy_to_clipboard = ImGui::Button("Copy to clipboard");
-        ImVec2 child_size = DimgVec2D::new(0, ImGui::GetTextLineHeightWithSpacing() * 18);
+        Vector2D child_size = DimgVec2D::new(0, ImGui::GetTextLineHeightWithSpacing() * 18);
         ImGui::BeginChildFrame(ImGui::GetID("cfg_infos"), child_size, ImGuiWindowFlags_NoMove);
         if (copy_to_clipboard)
         {
@@ -6328,13 +6328,13 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
                     ImGui::LogToClipboard();
                 else
                     ImGui::LogToTTY();
-                ImGui::LogText("ImVec4* colors = ImGui::GetStyle().Colors;" IM_NEWLINE);
+                ImGui::LogText("Vector4D* colors = ImGui::GetStyle().Colors;" IM_NEWLINE);
                 for (int i = 0; i < ImGuiCol_COUNT; i += 1)
                 {
-                    const ImVec4& col = style.Colors[i];
+                    const Vector4D& col = style.Colors[i];
                     const char* name = ImGui::GetStyleColorName(i);
-                    if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(ImVec4)) != 0)
-                        ImGui::LogText("colors[ImGuiCol_%s]%*s= ImVec4(%.2f, %.2f, %.2f, %.2f);" IM_NEWLINE,
+                    if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(Vector4D)) != 0)
+                        ImGui::LogText("colors[ImGuiCol_%s]%*s= Vector4D(%.2f, %.2f, %.2f, %.2f);" IM_NEWLINE,
                             name, 23 - strlen(name), "", col.x, col.y, col.z, col.w);
                 }
                 ImGui::LogFinish();
@@ -6363,7 +6363,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
                     continue;
                 ImGui::PushID(i);
                 ImGui::ColorEdit4("##color", (float*)&style.Colors[i], ImGuiColorEditFlags_AlphaBar | alpha_flags);
-                if (memcmp(&style.Colors[i], &ref->Colors[i], sizeof(ImVec4)) != 0)
+                if (memcmp(&style.Colors[i], &ref->Colors[i], sizeof(Vector4D)) != 0)
                 {
                     // Tips: in a real user application, you may want to merge and use an icon font into the main font,
                     // so instead of "Save"/"Revert" you'd use icons!
@@ -6422,8 +6422,8 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
             ImGui::DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02, 0.10, 10.0, "%.2");
             if (style.CurveTessellationTol < 0.10) style.CurveTessellationTol = 0.10;
 
-            // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
-            ImGui::DragFloat("Circle Tessellation Max Error", &style.CircleTessellationMaxError , 0.005, 0.10, 5.0, "%.2", ImGuiSliderFlags_AlwaysClamp);
+            // When editing the "Circle Segment max Error" value, draw a preview of its effect on auto-tessellated circles.
+            ImGui::DragFloat("Circle Tessellation max Error", &style.CircleTessellationMaxError , 0.005, 0.10, 5.0, "%.2", ImGuiSliderFlags_AlwaysClamp);
             if (ImGui::IsItemActive())
             {
                 ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos());
@@ -6446,14 +6446,14 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
                     const float offset_x     = floorf(canvas_width * 0.5);
                     const float offset_y     = floorf(RAD_MAX);
 
-                    const ImVec2 p1 = ImGui::GetCursorScreenPos();
+                    const Vector2D p1 = ImGui::GetCursorScreenPos();
                     draw_list->AddCircle(DimgVec2D::new(p1.x + offset_x, p1.y + offset_y), rad, ImGui::GetColorU32(ImGuiCol_Text));
                     ImGui::Dummy(DimgVec2D::new(canvas_width, RAD_MAX * 2));
 
                     /*
-                    const ImVec2 p2 = ImGui::GetCursorScreenPos();
-                    draw_list->AddCircleFilled(ImVec2(p2.x + offset_x, p2.y + offset_y), rad, ImGui::GetColorU32(ImGuiCol_Text));
-                    ImGui::Dummy(ImVec2(canvas_width, RAD_MAX * 2));
+                    const Vector2D p2 = ImGui::GetCursorScreenPos();
+                    draw_list->add_circle_filled(Vector2D(p2.x + offset_x, p2.y + offset_y), rad, ImGui::GetColorU32(ImGuiCol_Text));
+                    ImGui::Dummy(Vector2D(canvas_width, RAD_MAX * 2));
                     */
 
                     ImGui::EndGroup();
@@ -6565,7 +6565,7 @@ static void ShowExampleMenuFile()
         for (int i = 0; i < ImGuiCol_COUNT; i += 1)
         {
             const char* name = ImGui::GetStyleColorName((ImGuiColor)i);
-            ImVec2 p = ImGui::GetCursorScreenPos();
+            Vector2D p = ImGui::GetCursorScreenPos();
             ImGui::GetWindowDrawList()->AddRectFilled(p, DimgVec2D::new(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiColor)i));
             ImGui::Dummy(DimgVec2D::new(sz, sz));
             ImGui::SameLine();
@@ -6753,10 +6753,10 @@ struct ExampleAppConsole
 
             // Normally you would store more information in your item than just a string.
             // (e.g. make Items[] an array of structure, store color/type etc.)
-            ImVec4 color;
+            Vector4D color;
             bool has_color = false;
-            if (strstr(item, "[error]"))          { color = ImVec4(1.0, 0.4, 0.4, 1.0); has_color = true; }
-            else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0, 0.8, 0.6, 1.0); has_color = true; }
+            if (strstr(item, "[error]"))          { color = Vector4D(1.0, 0.4, 0.4, 1.0); has_color = true; }
+            else if (strncmp(item, "# ", 2) == 0) { color = Vector4D(1.0, 0.8, 0.6, 1.0); has_color = true; }
             if (has_color)
                 ImGui::PushStyleColor(ImGuiCol_Text, color);
             ImGui::TextUnformatted(item);
@@ -7420,9 +7420,9 @@ static void ShowExampleAppSimpleOverlay(bool* p_open)
     {
         const float PAD = 10.0;
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-        ImVec2 work_size = viewport->WorkSize;
-        ImVec2 window_pos, window_pos_pivot;
+        Vector2D work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+        Vector2D work_size = viewport->WorkSize;
+        Vector2D window_pos, window_pos_pivot;
         window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
         window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
         window_pos_pivot.x = (corner & 1) ? 1.0 : 0.0;
@@ -7501,7 +7501,7 @@ static void ShowExampleAppFullscreen(bool* p_open)
 static void ShowExampleAppWindowTitles(bool*)
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
+    const Vector2D base_pos = viewport->Pos;
 
     // By default, windows are uniquely identified by their title.
     // You can use the "##" and "###" markers to manipulate the display/id.
@@ -7543,7 +7543,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
 
     // Tip: If you do a lot of custom rendering, you probably want to use your own geometrical types and benefit of
     // overloaded operators, etc. Define IM_VEC2_CLASS_EXTRA in imconfig.h to create implicit conversions between your
-    // types and ImVec2/ImVec4. Dear ImGui defines overloaded operators but they are internal to imgui.cpp and not
+    // types and Vector2D/Vector4D. Dear ImGui defines overloaded operators but they are internal to imgui.cpp and not
     // exposed outside (to avoid messing with your types) In this example we are not using the maths operators!
 
     if (ImGui::BeginTabBar("##tab_bar"))
@@ -7557,18 +7557,18 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             // (note that those are currently exacerbating our sRGB/Linear issues)
             // Calling ImGui::GetColorU32() multiplies the given colors by the current style Alpha, but you may pass the IM_COL32() directly as well..
             ImGui::Text("Gradients");
-            ImVec2 gradient_size = DimgVec2D::new(ImGui::CalcItemWidth(), ImGui::GetFrameHeight());
+            Vector2D gradient_size = DimgVec2D::new(ImGui::CalcItemWidth(), ImGui::GetFrameHeight());
             {
-                ImVec2 p0 = ImGui::GetCursorScreenPos();
-                ImVec2 p1 = DimgVec2D::new(p0.x + gradient_size.x, p0.y + gradient_size.y);
+                Vector2D p0 = ImGui::GetCursorScreenPos();
+                Vector2D p1 = DimgVec2D::new(p0.x + gradient_size.x, p0.y + gradient_size.y);
                 ImU32 col_a = ImGui::GetColorU32(IM_COL32(0, 0, 0, 255));
                 ImU32 col_b = ImGui::GetColorU32(IM_COL32(255, 255, 255, 255));
                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
                 ImGui::InvisibleButton("##gradient1", gradient_size);
             }
             {
-                ImVec2 p0 = ImGui::GetCursorScreenPos();
-                ImVec2 p1 = DimgVec2D::new(p0.x + gradient_size.x, p0.y + gradient_size.y);
+                Vector2D p0 = ImGui::GetCursorScreenPos();
+                Vector2D p1 = DimgVec2D::new(p0.x + gradient_size.x, p0.y + gradient_size.y);
                 ImU32 col_a = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
                 ImU32 col_b = ImGui::GetColorU32(IM_COL32(255, 0, 0, 255));
                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
@@ -7584,7 +7584,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             static int circle_segments_override_v = 12;
             static bool curve_segments_override = false;
             static int curve_segments_override_v = 8;
-            static ImVec4 colf = ImVec4(1.0, 1.0, 0.4, 1.0);
+            static Vector4D colf = Vector4D(1.0, 1.0, 0.4, 1.0);
             ImGui::DragFloat("size", &sz, 0.2, 2.0, 100.0, "%.0");
             ImGui::DragFloat("Thickness", &thickness, 0.05, 1.0, 8.0, "%.02");
             ImGui::SliderInt("N-gon sides", &ngon_sides, 3, 12);
@@ -7596,7 +7596,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             curve_segments_override |= ImGui::SliderInt("Curves segments override", &curve_segments_override_v, 3, 40);
             ImGui::ColorEdit4("Color", &colf.x);
 
-            const ImVec2 p = ImGui::GetCursorScreenPos();
+            const Vector2D p = ImGui::GetCursorScreenPos();
             const ImU32 col = ImColor(colf);
             const float spacing = 10.0;
             const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
@@ -7615,17 +7615,17 @@ static void ShowExampleAppCustomRendering(bool* p_open)
                 draw_list->AddRect(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + sz), col, rounding, ImDrawFlags_None, th);      x += sz + spacing;  // Square with all rounded corners
                 draw_list->AddRect(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + sz), col, rounding, corners_tl_br, th);         x += sz + spacing;  // Square with two rounded corners
                 draw_list->AddTriangle(DimgVec2D::new(x+sz*0.5,y), DimgVec2D::new(x+sz, y+sz-0.5), DimgVec2D::new(x, y+sz-0.5), col, th);x += sz + spacing;  // Triangle
-                //draw_list->AddTriangle(ImVec2(x+sz*0.2,y), ImVec2(x, y+sz-0.5), ImVec2(x+sz*0.4, y+sz-0.5), col, th);x+= sz*0.4 + spacing; // Thin triangle
+                //draw_list->add_triangle(Vector2D(x+sz*0.2,y), Vector2D(x, y+sz-0.5), Vector2D(x+sz*0.4, y+sz-0.5), col, th);x+= sz*0.4 + spacing; // Thin triangle
                 draw_list->AddLine(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y), col, th);                                       x += sz + spacing;  // Horizontal line (note: drawing a filled rectangle will be faster!)
                 draw_list->AddLine(DimgVec2D::new(x, y), DimgVec2D::new(x, y + sz), col, th);                                       x += spacing;       // Vertical line (note: drawing a filled rectangle will be faster!)
                 draw_list->AddLine(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + sz), col, th);                                  x += sz + spacing;  // Diagonal line
 
                 // Quadratic Bezier Curve (3 control points)
-                ImVec2 cp3[3] = { DimgVec2D::new(x, y + sz * 0.6), DimgVec2D::new(x + sz * 0.5, y - sz * 0.4), DimgVec2D::new(x + sz, y + sz) };
+                Vector2D cp3[3] = { DimgVec2D::new(x, y + sz * 0.6), DimgVec2D::new(x + sz * 0.5, y - sz * 0.4), DimgVec2D::new(x + sz, y + sz) };
                 draw_list->AddBezierQuadratic(cp3[0], cp3[1], cp3[2], col, th, curve_segments); x += sz + spacing;
 
                 // Cubic Bezier Curve (4 control points)
-                ImVec2 cp4[4] = { DimgVec2D::new(x, y), DimgVec2D::new(x + sz * 1.3, y + sz * 0.3), DimgVec2D::new(x + sz - sz * 1.3, y + sz - sz * 0.3), DimgVec2D::new(x + sz, y + sz) };
+                Vector2D cp4[4] = { DimgVec2D::new(x, y), DimgVec2D::new(x + sz * 1.3, y + sz * 0.3), DimgVec2D::new(x + sz - sz * 1.3, y + sz - sz * 0.3), DimgVec2D::new(x + sz, y + sz) };
                 draw_list->AddBezierCubic(cp4[0], cp4[1], cp4[2], cp4[3], col, th, curve_segments);
 
                 x = p.x + 4;
@@ -7637,10 +7637,10 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + sz), col, 10.0);                             x += sz + spacing;  // Square with all rounded corners
             draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + sz), col, 10.0, corners_tl_br);              x += sz + spacing;  // Square with two rounded corners
             draw_list->AddTriangleFilled(DimgVec2D::new(x+sz*0.5,y), DimgVec2D::new(x+sz, y+sz-0.5), DimgVec2D::new(x, y+sz-0.5), col);  x += sz + spacing;  // Triangle
-            //draw_list->AddTriangleFilled(ImVec2(x+sz*0.2,y), ImVec2(x, y+sz-0.5), ImVec2(x+sz*0.4, y+sz-0.5), col); x += sz*0.4 + spacing; // Thin triangle
-            draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + thickness), col);                             x += sz + spacing;  // Horizontal line (faster than AddLine, but only handle integer thickness)
-            draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + thickness, y + sz), col);                             x += spacing * 2.0;// Vertical line (faster than AddLine, but only handle integer thickness)
-            draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + 1, y + 1), col);                                      x += sz;            // Pixel (faster than AddLine)
+            //draw_list->add_triangle_filled(Vector2D(x+sz*0.2,y), Vector2D(x, y+sz-0.5), Vector2D(x+sz*0.4, y+sz-0.5), col); x += sz*0.4 + spacing; // Thin triangle
+            draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + thickness), col);                             x += sz + spacing;  // Horizontal line (faster than add_line, but only handle integer thickness)
+            draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + thickness, y + sz), col);                             x += spacing * 2.0;// Vertical line (faster than add_line, but only handle integer thickness)
+            draw_list->AddRectFilled(DimgVec2D::new(x, y), DimgVec2D::new(x + 1, y + 1), col);                                      x += sz;            // Pixel (faster than add_line)
             draw_list->AddRectFilledMultiColor(DimgVec2D::new(x, y), DimgVec2D::new(x + sz, y + sz), IM_COL32(0, 0, 0, 255), IM_COL32(255, 0, 0, 255), IM_COL32(255, 255, 0, 255), IM_COL32(0, 255, 0, 255));
 
             ImGui::Dummy(DimgVec2D::new((sz + spacing) * 10.2, (sz + spacing) * 3.0));
@@ -7650,8 +7650,8 @@ static void ShowExampleAppCustomRendering(bool* p_open)
 
         if (ImGui::BeginTabItem("Canvas"))
         {
-            static ImVector<ImVec2> points;
-            static ImVec2 scrolling(0.0, 0.0);
+            static ImVector<Vector2D> points;
+            static Vector2D scrolling(0.0, 0.0);
             static bool opt_enable_grid = true;
             static bool opt_enable_context_menu = true;
             static bool adding_line = false;
@@ -7661,22 +7661,22 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             ImGui::Text("Mouse Left: drag to add lines,\nMouse Right: drag to scroll, click for context menu.");
 
             // Typically you would use a BeginChild()/EndChild() pair to benefit from a clipping region + own scrolling.
-            // Here we demonstrate that this can be replaced by simple offsetting + custom drawing + PushClipRect/PopClipRect() calls.
+            // Here we demonstrate that this can be replaced by simple offsetting + custom drawing + push_clip_rect/pop_clip_rect() calls.
             // To use a child window instead we could use, e.g:
-            //      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));      // Disable padding
+            //      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2D(0, 0));      // Disable padding
             //      ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(50, 50, 50, 255));  // Set a background color
-            //      ImGui::BeginChild("canvas", ImVec2(0.0, 0.0), true, ImGuiWindowFlags_NoMove);
+            //      ImGui::BeginChild("canvas", Vector2D(0.0, 0.0), true, ImGuiWindowFlags_NoMove);
             //      ImGui::PopStyleColor();
             //      ImGui::PopStyleVar();
             //      [...]
             //      ImGui::EndChild();
 
             // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
-            ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
-            ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
+            Vector2D canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
+            Vector2D canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
             if (canvas_sz.x < 50.0) canvas_sz.x = 50.0;
             if (canvas_sz.y < 50.0) canvas_sz.y = 50.0;
-            ImVec2 canvas_p1 = DimgVec2D::new(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
+            Vector2D canvas_p1 = DimgVec2D::new(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
             // Draw border and background color
             ImGuiIO& io = ImGui::GetIO();
@@ -7688,8 +7688,8 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             ImGui::InvisibleButton("canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
             const bool is_hovered = ImGui::IsItemHovered(); // Hovered
             const bool is_active = ImGui::IsItemActive();   // Held
-            const ImVec2 origin(canvas_p0.x + scrolling.x, canvas_p0.y + scrolling.y); // Lock scrolled origin
-            const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
+            const Vector2D origin(canvas_p0.x + scrolling.x, canvas_p0.y + scrolling.y); // Lock scrolled origin
+            const Vector2D mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
 
             // Add first and second point
             if (is_hovered && !adding_line && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
@@ -7715,7 +7715,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             }
 
             // Context menu (under default mouse threshold)
-            ImVec2 drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
+            Vector2D drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
             if (opt_enable_context_menu && drag_delta.x == 0.0 && drag_delta.y == 0.0)
                 ImGui::OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
             if (ImGui::BeginPopup("context"))
@@ -7753,9 +7753,9 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             ImGui::SameLine(); HelpMarker("The Background draw list will be rendered below every Dear ImGui windows.");
             ImGui::Checkbox("Draw in Foreground draw list", &draw_fg);
             ImGui::SameLine(); HelpMarker("The Foreground draw list will be rendered over every Dear ImGui windows.");
-            ImVec2 window_pos = ImGui::GetWindowPos();
-            ImVec2 window_size = ImGui::GetWindowSize();
-            ImVec2 window_center = DimgVec2D::new(window_pos.x + window_size.x * 0.5, window_pos.y + window_size.y * 0.5);
+            Vector2D window_pos = ImGui::GetWindowPos();
+            Vector2D window_size = ImGui::GetWindowSize();
+            Vector2D window_center = DimgVec2D::new(window_pos.x + window_size.x * 0.5, window_pos.y + window_size.y * 0.5);
             if (draw_bg)
                 ImGui::GetBackgroundDrawList()->AddCircle(window_center, window_size.x * 0.6, IM_COL32(255, 0, 0, 200), 0, 10 + 4);
             if (draw_fg)
@@ -7906,9 +7906,9 @@ struct MyDocument
     bool        OpenPrev;   // Copy of Open from last update.
     bool        Dirty;      // Set when the document has been modified
     bool        WantClose;  // Set when the document
-    ImVec4      Color;      // An arbitrary variable associated to the document
+    Vector4D      Color;      // An arbitrary variable associated to the document
 
-    MyDocument(const char* name, bool open = true, const ImVec4& color = ImVec4(1.0, 1.0, 1.0, 1.0))
+    MyDocument(const char* name, bool open = true, const Vector4D& color = Vector4D(1.0, 1.0, 1.0, 1.0))
     {
         Name = name;
         Open = OpenPrev = open;
@@ -7960,10 +7960,10 @@ struct ExampleAppDocuments
 
     ExampleAppDocuments()
     {
-        Documents.push_back(MyDocument("Lettuce",             true,  ImVec4(0.4, 0.8, 0.4, 1.0)));
-        Documents.push_back(MyDocument("Eggplant",            true,  ImVec4(0.8, 0.5, 1.0, 1.0)));
-        Documents.push_back(MyDocument("Carrot",              true,  ImVec4(1.0, 0.8, 0.5, 1.0)));
-        Documents.push_back(MyDocument("Tomato",              false, ImVec4(1.0, 0.3, 0.4, 1.0)));
+        Documents.push_back(MyDocument("Lettuce",             true,  Vector4D(0.4, 0.8, 0.4, 1.0)));
+        Documents.push_back(MyDocument("Eggplant",            true,  Vector4D(0.8, 0.5, 1.0, 1.0)));
+        Documents.push_back(MyDocument("Carrot",              true,  Vector4D(1.0, 0.8, 0.5, 1.0)));
+        Documents.push_back(MyDocument("Tomato",              false, Vector4D(1.0, 0.3, 0.4, 1.0)));
         Documents.push_back(MyDocument("A Rather Long Title", false));
         Documents.push_back(MyDocument("Some Document",       false));
     }
@@ -8213,7 +8213,7 @@ void ShowExampleAppDocuments(bool* p_open)
                     ImGui::EndChildFrame();
                 }
 
-                ImVec2 button_size(ImGui::GetFontSize() * 7.0, 0.0);
+                Vector2D button_size(ImGui::GetFontSize() * 7.0, 0.0);
                 if (ImGui::Button("Yes", button_size))
                 {
                     for (int n = 0; n < close_queue.Size; n += 1)

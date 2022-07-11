@@ -114,7 +114,7 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
     float rsx = 1.0;
 	float rsy = 1.0;
 	SDL_RenderGetScale(bd->SDLRenderer, &rsx, &rsy);
-    ImVec2 render_scale;
+    Vector2D render_scale;
 	render_scale.x = (rsx == 1.0) ? draw_data->FramebufferScale.x : 1.0;
 	render_scale.y = (rsy == 1.0) ? draw_data->FramebufferScale.y : 1.0;
 
@@ -137,8 +137,8 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
     SDL_RenderGetClipRect(bd->SDLRenderer, &old.ClipRect);
 
 	// Will project scissor/clipping rectangles into framebuffer space
-	ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
-	ImVec2 clip_scale = render_scale;
+	Vector2D clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
+	Vector2D clip_scale = render_scale;
 
     // Render command lists
     ImGui_ImplSDLRenderer_SetupRenderState();
@@ -163,8 +163,8 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
             else
             {
                 // Project scissor/clipping rectangles into framebuffer space
-                ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
-                ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
+                Vector2D clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
+                Vector2D clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
                 if (clip_min.x < 0.0) { clip_min.x = 0.0; }
                 if (clip_min.y < 0.0) { clip_min.y = 0.0; }
                 if (clip_max.x > fb_width) { clip_max.x = (float)fb_width; }

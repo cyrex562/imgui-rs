@@ -16,7 +16,7 @@
 #define MINIMUM_COMPATIBLE_IMGUI_VERSION 17400
 #if IMGUI_VERSION_NUM < MINIMUM_COMPATIBLE_IMGUI_VERSION
 #error "Minimum ImGui version requirement not met -- please use a newer version!"
-#endif
+
 
 #include <limits.h>
 #include <math.h>
@@ -29,7 +29,7 @@
 // Use secure CRT function variants to avoid MSVC compiler errors
 #ifdef _MSC_VER
 #define sscanf sscanf_s
-#endif
+
 
 ImNodesContext* GImNodes = NULL;
 
@@ -41,16 +41,16 @@ namespace
 
 struct CubicBezier
 {
-    ImVec2 P0, P1, P2, P3;
+    Vector2D P0, P1, P2, P3;
     int    NumSegments;
 };
 
-inline ImVec2 EvalCubicBezier(
+inline Vector2D EvalCubicBezier(
     const float   t,
-    const ImVec2& P0,
-    const ImVec2& P1,
-    const ImVec2& P2,
-    const ImVec2& P3)
+    const Vector2D& P0,
+    const Vector2D& P1,
+    const Vector2D& P2,
+    const Vector2D& P3)
 {
     // B(t) = (1-t)**3 p0 + 3(1 - t)**2 t P1 + 3(1-t)t**2 P2 + t**3 P3
 
@@ -65,17 +65,17 @@ inline ImVec2 EvalCubicBezier(
 }
 
 // Calculates the closest point along each bezier curve segment.
-ImVec2 GetClosestPointOnCubicBezier(const int num_segments, const ImVec2& p, const CubicBezier& cb)
+Vector2D GetClosestPointOnCubicBezier(const int num_segments, const Vector2D& p, const CubicBezier& cb)
 {
     IM_ASSERT(num_segments > 0);
-    ImVec2 p_last = cb.P0;
-    ImVec2 p_closest;
+    Vector2D p_last = cb.P0;
+    Vector2D p_closest;
     float  p_closest_dist = FLT_MAX;
     float  t_step = 1.0 / (float)num_segments;
     for (int i = 1; i <= num_segments;  += 1i)
     {
-        ImVec2 p_current = EvalCubicBezier(t_step * i, cb.P0, cb.P1, cb.P2, cb.P3);
-        ImVec2 p_line = ImLineClosestPoint(p_last, p_current, p);
+        Vector2D p_current = EvalCubicBezier(t_step * i, cb.P0, cb.P1, cb.P2, cb.P3);
+        Vector2D p_line = ImLineClosestPoint(p_last, p_current, p);
         float  dist = ImLengthSqr(p - p_line);
         if (dist < p_closest_dist)
         {
@@ -88,20 +88,20 @@ ImVec2 GetClosestPointOnCubicBezier(const int num_segments, const ImVec2& p, con
 }
 
 inline float GetDistanceToCubicBezier(
-    const ImVec2&      pos,
+    const Vector2D&      pos,
     const CubicBezier& cubic_bezier,
     const int          num_segments)
 {
-    const ImVec2 point_on_curve = GetClosestPointOnCubicBezier(num_segments, pos, cubic_bezier);
+    const Vector2D point_on_curve = GetClosestPointOnCubicBezier(num_segments, pos, cubic_bezier);
 
-    const ImVec2 to_curve = point_on_curve - pos;
+    const Vector2D to_curve = point_on_curve - pos;
     return ImSqrt(ImLengthSqr(to_curve));
 }
 
 inline ImRect GetContainingRectForCubicBezier(const CubicBezier& cb)
 {
-    const ImVec2 min = DimgVec2D::new(ImMin(cb.P0.x, cb.P3.x), ImMin(cb.P0.y, cb.P3.y));
-    const ImVec2 max = DimgVec2D::new(ImMax(cb.P0.x, cb.P3.x), ImMax(cb.P0.y, cb.P3.y));
+    const Vector2D min = DimgVec2D::new(ImMin(cb.P0.x, cb.P3.x), ImMin(cb.P0.y, cb.P3.y));
+    const Vector2D max = DimgVec2D::new(ImMax(cb.P0.x, cb.P3.x), ImMax(cb.P0.y, cb.P3.y));
 
     const float hover_distance = GImNodes->Style.LinkHoverDistance;
 
@@ -114,8 +114,8 @@ inline ImRect GetContainingRectForCubicBezier(const CubicBezier& cb)
 }
 
 inline CubicBezier GetCubicBezier(
-    ImVec2                     start,
-    ImVec2                     end,
+    Vector2D                     start,
+    Vector2D                     end,
     const ImNodesAttributeType start_type,
     const float                line_segments_per_length)
 {
@@ -127,7 +127,7 @@ inline CubicBezier GetCubicBezier(
     }
 
     const float  link_length = ImSqrt(ImLengthSqr(end - start));
-    const ImVec2 offset = DimgVec2D::new(0.25 * link_length, 0.f);
+    const Vector2D offset = DimgVec2D::new(0.25 * link_length, 0.f);
     CubicBezier  cubic_bezier;
     cubic_bezier.P0 = start;
     cubic_bezier.P1 = start + offset;
@@ -137,14 +137,14 @@ inline CubicBezier GetCubicBezier(
     return cubic_bezier;
 }
 
-inline float EvalImplicitLineEq(const ImVec2& p1, const ImVec2& p2, const ImVec2& p)
+inline float EvalImplicitLineEq(const Vector2D& p1, const Vector2D& p2, const Vector2D& p)
 {
     return (p2.y - p1.y) * p.x + (p1.x - p2.x) * p.y + (p2.x * p1.y - p1.x * p2.y);
 }
 
 inline int Sign(float val) { return int(val > 0.0) - int(val < 0.0); }
 
-inline bool RectangleOverlapsLineSegment(const ImRect& rect, const ImVec2& p1, const ImVec2& p2)
+inline bool RectangleOverlapsLineSegment(const ImRect& rect, const Vector2D& p1, const Vector2D& p2)
 {
     // Trivial case: rectangle contains an endpoint
     if (rect.Contains(p1) || rect.Contains(p2))
@@ -195,12 +195,12 @@ inline bool RectangleOverlapsLineSegment(const ImRect& rect, const ImVec2& p1, c
 
 inline bool RectangleOverlapsBezier(const ImRect& rectangle, const CubicBezier& cubic_bezier)
 {
-    ImVec2 current =
+    Vector2D current =
         EvalCubicBezier(0.f, cubic_bezier.P0, cubic_bezier.P1, cubic_bezier.P2, cubic_bezier.P3);
     const float dt = 1.0 / cubic_bezier.NumSegments;
     for (int s = 0; s < cubic_bezier.NumSegments;  += 1s)
     {
-        ImVec2 next = EvalCubicBezier(
+        Vector2D next = EvalCubicBezier(
             static_cast<float>((s + 1) * dt),
             cubic_bezier.P0,
             cubic_bezier.P1,
@@ -217,8 +217,8 @@ inline bool RectangleOverlapsBezier(const ImRect& rectangle, const CubicBezier& 
 
 inline bool RectangleOverlapsLink(
     const ImRect&              rectangle,
-    const ImVec2&              start,
-    const ImVec2&              end,
+    const Vector2D&              start,
+    const Vector2D&              end,
     const ImNodesAttributeType start_type)
 {
     // First level: simple rejection test via rectangle overlap:
@@ -257,7 +257,7 @@ inline bool RectangleOverlapsLink(
 
 // [SECTION] coordinate space conversion helpers
 
-inline ImVec2 ScreenSpaceToGridSpace(const ImNodesEditorContext& editor, const ImVec2& v)
+inline Vector2D ScreenSpaceToGridSpace(const ImNodesEditorContext& editor, const Vector2D& v)
 {
     return v - GImNodes->CanvasOriginScreenSpace - editor.Panning;
 }
@@ -267,33 +267,33 @@ inline ImRect ScreenSpaceToGridSpace(const ImNodesEditorContext& editor, const I
     return ImRect(ScreenSpaceToGridSpace(editor, r.Min), ScreenSpaceToGridSpace(editor, r.Max));
 }
 
-inline ImVec2 GridSpaceToScreenSpace(const ImNodesEditorContext& editor, const ImVec2& v)
+inline Vector2D GridSpaceToScreenSpace(const ImNodesEditorContext& editor, const Vector2D& v)
 {
     return v + GImNodes->CanvasOriginScreenSpace + editor.Panning;
 }
 
-inline ImVec2 GridSpaceToEditorSpace(const ImNodesEditorContext& editor, const ImVec2& v)
+inline Vector2D GridSpaceToEditorSpace(const ImNodesEditorContext& editor, const Vector2D& v)
 {
     return v + editor.Panning;
 }
 
-inline ImVec2 EditorSpaceToGridSpace(const ImNodesEditorContext& editor, const ImVec2& v)
+inline Vector2D EditorSpaceToGridSpace(const ImNodesEditorContext& editor, const Vector2D& v)
 {
     return v - editor.Panning;
 }
 
-inline ImVec2 EditorSpaceToScreenSpace(const ImVec2& v)
+inline Vector2D EditorSpaceToScreenSpace(const Vector2D& v)
 {
     return GImNodes->CanvasOriginScreenSpace + v;
 }
 
-inline ImVec2 MiniMapSpaceToGridSpace(const ImNodesEditorContext& editor, const ImVec2& v)
+inline Vector2D MiniMapSpaceToGridSpace(const ImNodesEditorContext& editor, const Vector2D& v)
 {
     return (v - editor.MiniMapContentScreenSpace.Min) / editor.MiniMapScaling +
            editor.GridContentBounds.Min;
 }
 
-inline ImVec2 ScreenSpaceToMiniMapSpace(const ImNodesEditorContext& editor, const ImVec2& v)
+inline Vector2D ScreenSpaceToMiniMapSpace(const ImNodesEditorContext& editor, const Vector2D& v)
 {
     return (ScreenSpaceToGridSpace(editor, v) - editor.GridContentBounds.Min) *
                editor.MiniMapScaling +
@@ -546,7 +546,7 @@ void DrawListSortChannelsByDepth(const ImVector<int>& node_idx_depth_order)
 
 // [SECTION] ui state logic
 
-ImVec2 GetScreenSpacePinCoordinates(
+Vector2D GetScreenSpacePinCoordinates(
     const ImRect&              node_rect,
     const ImRect&              attribute_rect,
     const ImNodesAttributeType type)
@@ -558,7 +558,7 @@ ImVec2 GetScreenSpacePinCoordinates(
     return DimgVec2D::new(x, 0.5 * (attribute_rect.Min.y + attribute_rect.Max.y));
 }
 
-ImVec2 GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
+Vector2D GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
 {
     const ImRect& parent_node_rect = editor.Nodes.Pool[pin.ParentNodeIdx].Rect;
     return GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
@@ -620,7 +620,7 @@ void BeginNodeSelection(ImNodesEditorContext& editor, const int node_idx)
 
     // To support snapping of multiple nodes, we need to store the offset of
     // each node in the selection to the origin of the dragged node.
-    const ImVec2 ref_origin = editor.Nodes.Pool[node_idx].Origin;
+    const Vector2D ref_origin = editor.Nodes.Pool[node_idx].Origin;
     editor.PrimaryNodeOffset =
         ref_origin + GImNodes->CanvasOriginScreenSpace + editor.Panning - GImNodes->MousePos;
 
@@ -628,7 +628,7 @@ void BeginNodeSelection(ImNodesEditorContext& editor, const int node_idx)
     for (int idx = 0; idx < editor.SelectedNodeIndices.Size; idx += 1)
     {
         const int    node = editor.SelectedNodeIndices[idx];
-        const ImVec2 node_origin = editor.Nodes.Pool[node].Origin - ref_origin;
+        const Vector2D node_origin = editor.Nodes.Pool[node].Origin - ref_origin;
         editor.SelectedNodeOffsets.push_back(node_origin);
     }
 }
@@ -680,7 +680,7 @@ void BeginLinkInteraction(
         const ImLinkData& link = editor.Links.Pool[link_idx];
         const ImPinData&  start_pin = editor.Pins.Pool[link.StartPinIdx];
         const ImPinData&  end_pin = editor.Pins.Pool[link.EndPinIdx];
-        const ImVec2&     mouse_pos = GImNodes->MousePos;
+        const Vector2D&     mouse_pos = GImNodes->MousePos;
         const float       dist_to_start = ImLengthSqr(start_pin.Pos - mouse_pos);
         const float       dist_to_end = ImLengthSqr(end_pin.Pos - mouse_pos);
         const int closest_pin_idx = dist_to_start < dist_to_end ? link.StartPinIdx : link.EndPinIdx;
@@ -792,9 +792,9 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, ImRect box_rect)
             const ImRect&    node_start_rect = editor.Nodes.Pool[pin_start.ParentNodeIdx].Rect;
             const ImRect&    node_end_rect = editor.Nodes.Pool[pin_end.ParentNodeIdx].Rect;
 
-            const ImVec2 start = GetScreenSpacePinCoordinates(
+            const Vector2D start = GetScreenSpacePinCoordinates(
                 node_start_rect, pin_start.AttributeRect, pin_start.Type);
-            const ImVec2 end =
+            const Vector2D end =
                 GetScreenSpacePinCoordinates(node_end_rect, pin_end.AttributeRect, pin_end.Type);
 
             // Test
@@ -806,7 +806,7 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, ImRect box_rect)
     }
 }
 
-ImVec2 SnapOriginToGrid(ImVec2 origin)
+Vector2D SnapOriginToGrid(Vector2D origin)
 {
     if (GImNodes->Style.Flags & ImNodesStyleFlags_GridSnapping)
     {
@@ -833,12 +833,12 @@ void TranslateSelectedNodes(ImNodesEditorContext& editor)
                                          ? ImGui::GetIO().MouseDragMaxDistanceSqr[0] > 5.0
                                          : true;
 
-        const ImVec2 origin = SnapOriginToGrid(
+        const Vector2D origin = SnapOriginToGrid(
             GImNodes->MousePos - GImNodes->CanvasOriginScreenSpace - editor.Panning +
             editor.PrimaryNodeOffset);
         for (int i = 0; i < editor.SelectedNodeIndices.size();  += 1i)
         {
-            const ImVec2 node_rel = editor.SelectedNodeOffsets[i];
+            const Vector2D node_rel = editor.SelectedNodeOffsets[i];
             const int    node_idx = editor.SelectedNodeIndices[i];
             ImNodeData&  node = editor.Nodes.Pool[node_idx];
             if (node.Draggable && shouldTranslate)
@@ -1033,10 +1033,10 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
                 editor.ClickInteraction.LinkCreation.EndPinIdx.Value());
         }
 
-        const ImVec2 start_pos = GetScreenSpacePinCoordinates(editor, start_pin);
+        const Vector2D start_pos = GetScreenSpacePinCoordinates(editor, start_pin);
         // If we are within the hover radius of a receiving pin, snap the link
         // endpoint to it
-        const ImVec2 end_pos = should_snap
+        const Vector2D end_pos = should_snap
                                    ? GetScreenSpacePinCoordinates(
                                          editor, editor.Pins.Pool[GImNodes->HoveredPinIdx.Value()])
                                    : GImNodes->MousePos;
@@ -1047,7 +1047,7 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
         GImNodes->CanvasDrawList->AddBezierCurve(
 #else
         GImNodes->CanvasDrawList->AddBezierCubic(
-#endif
+
             cubic_bezier.P0,
             cubic_bezier.P1,
             cubic_bezier.P2,
@@ -1148,7 +1148,7 @@ void ResolveOccludedPins(const ImNodesEditorContext& editor, ImVector<int>& occl
             for (int idx = 0; idx < node_below.PinIndices.Size;  += 1idx)
             {
                 const int     pin_idx = node_below.PinIndices[idx];
-                const ImVec2& pin_pos = editor.Pins.Pool[pin_idx].Pos;
+                const Vector2D& pin_pos = editor.Pins.Pool[pin_idx].Pos;
 
                 if (rect_above.Contains(pin_pos))
                 {
@@ -1180,7 +1180,7 @@ ImOptionalIndex ResolveHoveredPin(
             continue;
         }
 
-        const ImVec2& pin_pos = pins.Pool[idx].Pos;
+        const Vector2D& pin_pos = pins.Pool[idx].Pos;
         const float   distance_sqr = ImLengthSqr(pin_pos - GImNodes->MousePos);
 
         // TODO: GImNodes->style.PinHoverRadius needs to be copied into pin data and the pin-local
@@ -1303,14 +1303,14 @@ ImOptionalIndex ResolveHoveredLink(
 
 inline ImRect GetItemRect() { return ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()); }
 
-inline ImVec2 GetNodeTitleBarOrigin(const ImNodeData& node)
+inline Vector2D GetNodeTitleBarOrigin(const ImNodeData& node)
 {
     return node.Origin + node.LayoutStyle.Padding;
 }
 
-inline ImVec2 GetNodeContentOrigin(const ImNodeData& node)
+inline Vector2D GetNodeContentOrigin(const ImNodeData& node)
 {
-    const ImVec2 title_bar_height =
+    const Vector2D title_bar_height =
         DimgVec2D::new(0.f, node.TitleBarContentRect.GetHeight() + 2.0 * node.LayoutStyle.Padding.y);
     return node.Origin + title_bar_height + node.LayoutStyle.Padding;
 }
@@ -1326,9 +1326,9 @@ inline ImRect GetNodeTitleRect(const ImNodeData& node)
             DimgVec2D::new(0.f, expanded_title_rect.GetHeight()));
 }
 
-void DrawGrid(ImNodesEditorContext& editor, const ImVec2& canvas_size)
+void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
 {
-    const ImVec2 offset = editor.Panning;
+    const Vector2D offset = editor.Panning;
     ImU32        line_color = GImNodes->Style.Colors[ImNodesCol_GridLine];
     ImU32        line_color_prim = GImNodes->Style.Colors[ImNodesCol_GridLinePrimary];
     bool         draw_primary = GImNodes->Style.Flags & ImNodesStyleFlags_GridLinesPrimary;
@@ -1354,7 +1354,7 @@ void DrawGrid(ImNodesEditorContext& editor, const ImVec2& canvas_size)
 
 struct QuadOffsets
 {
-    ImVec2 TopLeft, BottomLeft, BottomRight, TopRight;
+    Vector2D TopLeft, BottomLeft, BottomRight, TopRight;
 };
 
 QuadOffsets CalculateQuadOffsets(const float side_length)
@@ -1373,7 +1373,7 @@ QuadOffsets CalculateQuadOffsets(const float side_length)
 
 struct TriangleOffsets
 {
-    ImVec2 TopLeft, BottomLeft, Right;
+    Vector2D TopLeft, BottomLeft, Right;
 };
 
 TriangleOffsets CalculateTriangleOffsets(const float side_length)
@@ -1400,7 +1400,7 @@ TriangleOffsets CalculateTriangleOffsets(const float side_length)
     return offset;
 }
 
-void DrawPinShape(const ImVec2& pin_pos, const ImPinData& pin, const ImU32 pin_color)
+void DrawPinShape(const Vector2D& pin_pos, const ImPinData& pin, const ImU32 pin_color)
 {
     static const int CIRCLE_NUM_SEGMENTS = 8;
 
@@ -1454,8 +1454,8 @@ void DrawPinShape(const ImVec2& pin_pos, const ImPinData& pin, const ImU32 pin_c
             pin_pos + offset.BottomLeft,
             pin_pos + offset.Right,
             pin_color,
-            // NOTE: for some weird reason, the line drawn by AddTriangle is
-            // much thinner than the lines drawn by AddCircle or AddQuad.
+            // NOTE: for some weird reason, the line drawn by add_triangle is
+            // much thinner than the lines drawn by add_circle or add_quad.
             // Multiplying the line thickness by two seemed to solve the
             // problem at a few different thickness values.
             2.f * GImNodes->Style.PinLineThickness);
@@ -1543,7 +1543,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
                 node.LayoutStyle.CornerRounding,
                 ImDrawFlags_RoundCornersTop);
 
-#endif
+
         }
 
         if ((GImNodes->Style.Flags & ImNodesStyleFlags_NodeOutline) != 0)
@@ -1564,7 +1564,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
                 node.LayoutStyle.CornerRounding,
                 ImDrawFlags_RoundCornersAll,
                 node.LayoutStyle.BorderThickness);
-#endif
+
         }
     }
 
@@ -1621,7 +1621,7 @@ void DrawLink(ImNodesEditorContext& editor, const int link_idx)
     GImNodes->CanvasDrawList->AddBezierCurve(
 #else
     GImNodes->CanvasDrawList->AddBezierCubic(
-#endif
+
         cubic_bezier.P0,
         cubic_bezier.P1,
         cubic_bezier.P2,
@@ -1721,18 +1721,18 @@ static inline bool IsMiniMapHovered()
 static inline void CalcMiniMapLayout()
 {
     ImNodesEditorContext& editor = EditorContextGet();
-    const ImVec2          offset = GImNodes->Style.MiniMapOffset;
-    const ImVec2          border = GImNodes->Style.MiniMapPadding;
+    const Vector2D          offset = GImNodes->Style.MiniMapOffset;
+    const Vector2D          border = GImNodes->Style.MiniMapPadding;
     const ImRect          editor_rect = GImNodes->CanvasRectScreenSpace;
 
     // Compute the size of the mini-map area
-    ImVec2 mini_map_size;
+    Vector2D mini_map_size;
     float  mini_map_scaling;
     {
-        const ImVec2 max_size =
+        const Vector2D max_size =
             ImFloor(editor_rect.GetSize() * editor.MiniMapSizeFraction - border * 2.0);
         const float  max_size_aspect_ratio = max_size.x / max_size.y;
-        const ImVec2 grid_content_size = editor.GridContentBounds.IsInverted()
+        const Vector2D grid_content_size = editor.GridContentBounds.IsInverted()
                                              ? max_size
                                              : ImFloor(editor.GridContentBounds.GetSize());
         const float grid_content_aspect_ratio = grid_content_size.x / grid_content_size.y;
@@ -1744,9 +1744,9 @@ static inline void CalcMiniMapLayout()
     }
 
     // Compute location of the mini-map
-    ImVec2 mini_map_pos;
+    Vector2D mini_map_pos;
     {
-        ImVec2 align;
+        Vector2D align;
 
         switch (editor.MiniMapLocation)
         {
@@ -1769,8 +1769,8 @@ static inline void CalcMiniMapLayout()
             break;
         }
 
-        const ImVec2 top_left_pos = editor_rect.Min + offset + border;
-        const ImVec2 bottom_right_pos = editor_rect.Max - offset - border - mini_map_size;
+        const Vector2D top_left_pos = editor_rect.Min + offset + border;
+        const Vector2D bottom_right_pos = editor_rect.Max - offset - border - mini_map_size;
         mini_map_pos = ImFloor(ImLerp(top_left_pos, bottom_right_pos, align));
     }
 
@@ -1852,7 +1852,7 @@ static void MiniMapDrawLink(ImNodesEditorContext& editor, const int link_idx)
     GImNodes->CanvasDrawList->AddBezierCurve(
 #else
     GImNodes->CanvasDrawList->AddBezierCubic(
-#endif
+
         cubic_bezier.P0,
         cubic_bezier.P1,
         cubic_bezier.P2,
@@ -1934,8 +1934,8 @@ static void MiniMapUpdate()
                            !GImNodes->NodeIdxSubmissionOrder.empty();
     if (center_on_click)
     {
-        ImVec2 target = MiniMapSpaceToGridSpace(editor, ImGui::GetMousePos());
-        ImVec2 center = GImNodes->CanvasRectScreenSpace.GetSize() * 0.5;
+        Vector2D target = MiniMapSpaceToGridSpace(editor, ImGui::GetMousePos());
+        Vector2D center = GImNodes->CanvasRectScreenSpace.GetSize() * 0.5;
         editor.Panning = ImFloor(center - target);
     }
 
@@ -2041,13 +2041,13 @@ void EditorContextFree(ImNodesEditorContext* ctx)
 
 void EditorContextSet(ImNodesEditorContext* ctx) { GImNodes->EditorCtx = ctx; }
 
-ImVec2 EditorContextGetPanning()
+Vector2D EditorContextGetPanning()
 {
     const ImNodesEditorContext& editor = EditorContextGet();
     return editor.Panning;
 }
 
-void EditorContextResetPanning(const ImVec2& pos)
+void EditorContextResetPanning(const Vector2D& pos)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     editor.Panning = pos;
@@ -2263,7 +2263,7 @@ void BeginNodeEditor()
         DrawListSet(ImGui::GetWindowDrawList());
 
         {
-            const ImVec2 canvas_size = ImGui::GetWindowSize();
+            const Vector2D canvas_size = ImGui::GetWindowSize();
             GImNodes->CanvasRectScreenSpace = ImRect(
                 EditorSpaceToScreenSpace(DimgVec2D::new(0.f, 0.f)), EditorSpaceToScreenSpace(canvas_size));
 
@@ -2391,9 +2391,9 @@ void EndNodeEditor()
             editor.ClickInteraction.Type == ImNodesClickInteractionType_Node;
         if (should_auto_pan && !MouseInCanvas())
         {
-            ImVec2 mouse = ImGui::GetMousePos();
-            ImVec2 center = GImNodes->CanvasRectScreenSpace.GetCenter();
-            ImVec2 direction = (center - mouse);
+            Vector2D mouse = ImGui::GetMousePos();
+            Vector2D center = GImNodes->CanvasRectScreenSpace.GetCenter();
+            Vector2D direction = (center - mouse);
             direction = direction * ImInvLength(direction, 0.0);
 
             editor.AutoPanningDelta =
@@ -2512,7 +2512,7 @@ void EndNode()
     }
 }
 
-ImVec2 GetNodeDimensions(int node_id)
+Vector2D GetNodeDimensions(int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);
@@ -2699,17 +2699,17 @@ void PushStyleVar(const ImNodesStyleVar item, const float value)
     IM_ASSERT(0 && "Called PushStyleVar() float variant but variable is not a float!");
 }
 
-void PushStyleVar(const ImNodesStyleVar item, const ImVec2& value)
+void PushStyleVar(const ImNodesStyleVar item, const Vector2D& value)
 {
     const ImNodesStyleVarInfo* var_info = GetStyleVarInfo(item);
     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 2)
     {
-        ImVec2& style_var = *(ImVec2*)var_info->GetVarPtr(&GImNodes->Style);
+        Vector2D& style_var = *(Vector2D*)var_info->GetVarPtr(&GImNodes->Style);
         GImNodes->StyleModifierStack.push_back(ImNodesStyleVarElement(item, style_var));
         style_var = value;
         return;
     }
-    IM_ASSERT(0 && "Called PushStyleVar() ImVec2 variant but variable is not a ImVec2!");
+    IM_ASSERT(0 && "Called PushStyleVar() Vector2D variant but variable is not a Vector2D!");
 }
 
 void PopStyleVar(int count)
@@ -2734,21 +2734,21 @@ void PopStyleVar(int count)
     }
 }
 
-void SetNodeScreenSpacePos(const int node_id, const ImVec2& screen_space_pos)
+void SetNodeScreenSpacePos(const int node_id, const Vector2D& screen_space_pos)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     ImNodeData&           node = ObjectPoolFindOrCreateObject(editor.Nodes, node_id);
     node.Origin = ScreenSpaceToGridSpace(editor, screen_space_pos);
 }
 
-void SetNodeEditorSpacePos(const int node_id, const ImVec2& editor_space_pos)
+void SetNodeEditorSpacePos(const int node_id, const Vector2D& editor_space_pos)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     ImNodeData&           node = ObjectPoolFindOrCreateObject(editor.Nodes, node_id);
     node.Origin = EditorSpaceToGridSpace(editor, editor_space_pos);
 }
 
-void SetNodeGridSpacePos(const int node_id, const ImVec2& grid_pos)
+void SetNodeGridSpacePos(const int node_id, const Vector2D& grid_pos)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     ImNodeData&           node = ObjectPoolFindOrCreateObject(editor.Nodes, node_id);
@@ -2762,7 +2762,7 @@ void SetNodeDraggable(const int node_id, const bool draggable)
     node.Draggable = draggable;
 }
 
-ImVec2 GetNodeScreenSpacePos(const int node_id)
+Vector2D GetNodeScreenSpacePos(const int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);
@@ -2771,7 +2771,7 @@ ImVec2 GetNodeScreenSpacePos(const int node_id)
     return GridSpaceToScreenSpace(editor, node.Origin);
 }
 
-ImVec2 GetNodeEditorSpacePos(const int node_id)
+Vector2D GetNodeEditorSpacePos(const int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);
@@ -2780,7 +2780,7 @@ ImVec2 GetNodeEditorSpacePos(const int node_id)
     return GridSpaceToEditorSpace(editor, node.Origin);
 }
 
-ImVec2 GetNodeGridSpacePos(const int node_id)
+Vector2D GetNodeGridSpacePos(const int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);

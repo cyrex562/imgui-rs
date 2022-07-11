@@ -202,7 +202,7 @@ Other Changes:
 - Misc: Fixed IsAnyItemHovered() returning false when using navigation.
 - Misc: Allow redefining IM_COL32_XXX layout macros to facilitate use on big-endian systems. (#5190, #767, #844)
 - Misc: Added IMGUI_STB_SPRINTF_FILENAME to support custom path to stb_sprintf. (#5068, #2954) [@jakubtomsu]
-- Misc: Added constexpr to ImVec2/ImVec4 inline constructors. (#4995) [@Myriachan]
+- Misc: Added constexpr to Vector2D/Vector4D inline constructors. (#4995) [@Myriachan]
 - Misc: Updated stb_truetype.h from 1.20 to 1.26 (many fixes). (#5075)
 - Misc: Updated stb_textedit.h from 1.13 to 1.14 (our changes so this effectively is a no-op). (#5075)
 - Misc: Updated stb_rect_pack.h from 1.00 to 1.01 (minor). (#5075)
@@ -619,7 +619,7 @@ Other Changes:
 - Backends: WebGPU: Fixed for latest specs. (#4472, #4512) [@Kangz, @bfierz]
 - Backends: SDL_Renderer: Added SDL_Renderer backend compatible with upcoming SDL 2.0.18. (#3926) [@1bsyl]
 - Backends: Metal: Fixed a crash when clipping rect larger than framebuffer is submitted via
-  a direct unclipped PushClipRect() call. (#4464)
+  a direct unclipped push_clip_rect() call. (#4464)
 - Backends: OSX: Use mach_absolute_time as CFAbsoluteTimeGetCurrent can jump backwards. (#4557, #4563) [@lfnoise]
 - Backends: All renderers: Normalize clipping rect handling across backends. (#4464)
 - Examples: Added SDL + SDL_Renderer example in "examples/example_sdl_sdlrenderer/" folder. (#3926) [@1bsyl]
@@ -737,8 +737,8 @@ Other Changes:
 - fonts: Use U+FF0E dot character to construct an ellipsis if U+002E '.' is not available. (#4269)
 - fonts: Added U+FFFD ("replacement character") to default asian glyphs ranges. (#4269)
 - fonts: Fixed calling clear_tex_data() (clearing CPU side font data) triggering an assert in NewFrame(). (#3487)
-- draw_list: Fixed AddCircle/AddCircleFilled() with auto-tesselation not using accelerated paths for small circles.
-  Fixed AddCircle/AddCircleFilled() with 12 segments which had a broken edge. (#4419, #4421) [@thedmd]
+- draw_list: Fixed add_circle/add_circle_filled() with auto-tesselation not using accelerated paths for small circles.
+  Fixed add_circle/add_circle_filled() with 12 segments which had a broken edge. (#4419, #4421) [@thedmd]
 - Demo: Fixed requirement in 1.83 to link with imgui_demo.cpp if IMGUI_DISABLE_METRICS_WINDOW is not set. (#4171)
   Normally the right way to disable compiling the demo is to set IMGUI_DISABLE_DEMO_WINDOWS, but we want to avoid
   implying that the file is required.
@@ -852,7 +852,7 @@ Other Changes:
 - Popups: Added 'OpenPopup(ImGuiID id)' overload to facilitate calling from nested stacks. (#3993, #331) [@zlash]
 - Tweak computation of io.framerate so it is less biased toward high-values in the first 120 frames. (#4138)
 - Optimization: Disabling some of MSVC most aggressive Debug runtime checks for some simple/low-level functions
-  (e.g. ImVec2, ImVector) leading to a 10-20% increase of performances with MSVC "default" Debug settings.
+  (e.g. Vector2D, ImVector) leading to a 10-20% increase of performances with MSVC "default" Debug settings.
 - ImDrawList: Add and use SSE-enabled ImRsqrt() in place of 1.0 / ImSqrt(). (#4091) [@wolfpld]
 - ImDrawList: Fixed/improved thickness of thick strokes with sharp angles. (#4053, #3366, #2964, #2868, #2518, #2183)
   Effectively introduced a regression in 1.67 (Jan 2019), and a fix in 1.70 (Apr 2019) but the fix wasn't actually on
@@ -916,7 +916,7 @@ Breaking Changes:
     - bool closed = true     --> use ImDrawFlags_Closed
   The matching ImDrawFlags_Closed value is guaranteed to always stay == 1 in the future.
   Difference may not be noticeable for most but zealous type-checking tools may report a need to change.
-- ImDrawList: upgraded AddRect(), AddRectFilled(), PathRect() to use ImDrawFlags instead of ImDrawCornersFlags.
+- ImDrawList: upgraded add_rect(), add_rect_filled(), PathRect() to use ImDrawFlags instead of ImDrawCornersFlags.
     - ImDrawCornerFlags_TopLeft  --> use ImDrawFlags_RoundCornersTopLeft
     - ImDrawCornerFlags_BotRight --> use ImDrawFlags_RoundCornersBottomRight
     - ImDrawCornerFlags_None     --> use ImDrawFlags_RoundCornersNone etc.
@@ -938,7 +938,7 @@ Breaking Changes:
 - InputText: renamed ImGuiInputTextFlags_AlwaysInsertMode to ImGuiInputTextFlags_AlwaysOverwrite, old name was an
   incorrect description of behavior. Was ostly used by memory editor. Kept inline redirection function. (#2863)
 - Moved 'misc/natvis/imgui.natvis' to 'misc/debuggers/imgui.natvis' as we will provide scripts for other debuggers.
-- style: renamed rarely used style.CircleSegmentMaxError (old default = 1.60)
+- style: renamed rarely used style.circle_segment_max_error (old default = 1.60)
   to style.CircleTessellationMaxError (new default = 0.30) as its meaning changed. (#3808) [@thedmd]
 - Win32+MinGW: Re-enabled IME functions by default even under MinGW. In July 2016, issue #738 had me incorrectly
   disable those default functions for MinGW. MinGW users should: either link with -limm32, either set their
@@ -975,7 +975,7 @@ Other Changes:
   quality for large arcs (tessellation quality derived from "style.CircleTessellationMaxError") (#3491) [@thedmd]
 - ImDrawList: PathArcToFast() also adaptively tessellate efficiently. This means that large rounded corners
   in e.g. hi-dpi settings will generally look better. (#3491) [@thedmd]
-- ImDrawList: AddCircle, AddCircleFilled(): Tweaked default segment count calculation to honor MaxError
+- ImDrawList: add_circle, add_circle_filled(): Tweaked default segment count calculation to honor MaxError
   with more accuracy. Made default segment count always even for better looking result. (#3808) [@thedmd]
 - Misc: Added GetAllocatorFunctions() to facilitate sharing allocators across DLL boundaries. (#3836)
 - Misc: Added 'debuggers/imgui.gdb' and 'debuggers/imgui.natstepfilter' (along with existing 'imgui.natvis')
@@ -1012,7 +1012,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - ListBox helpers:
-  - Renamed ListBoxHeader(const char* label, ImVec2 size) to BeginListBox().
+  - Renamed ListBoxHeader(const char* label, Vector2D size) to BeginListBox().
   - Renamed ListBoxFooter() to EndListBox().
   - Removed ListBoxHeader(const char* label, int items_count, int height_in_items = -1) in favor of specifying size.
     In the redirection function, made vertical padding consistent regardless of (items_count <= height_in_items) or not.
@@ -1065,7 +1065,7 @@ Other Changes:
   variety of code is currently on it so we are first fixing current behavior before we'll eventually change it.
 - Log/Capture: Fix various new line/spacing issue when logging widgets. [@Xipiryon, @ocornut]
 - Log/Capture: Improved the ASCII look of various widgets, making large dumps more easily human readable.
-- ImDrawList: Fixed AddCircle()/AddCircleFilled() with (rad > 0.0 && rad < 1.0 && num_segments == 0). (#3738)
+- ImDrawList: Fixed add_circle()/add_circle_filled() with (rad > 0.0 && rad < 1.0 && num_segments == 0). (#3738)
   Would lead to a buffer read overflow.
 - ImDrawList: Clarified PathArcTo() need for a_min <= a_max with an assert.
 - ImDrawList: Fixed PathArcToFast() handling of a_min > a_max.
@@ -1415,10 +1415,10 @@ Other Changes:
   - Requires an extra bit of texture space (~64x64 by default), relies on GPU bilinear filtering.
   - Set `io.AntiAliasedLinesUseTex = false` to disable rendering using this method.
   - clear `ImFontAtlasFlags_NoBakedLines` in ImFontAtlas::flags to disable baking data in texture.
-- ImDrawList: changed AddCircle(), AddCircleFilled() default num_segments from 12 to 0, effectively
+- ImDrawList: changed add_circle(), add_circle_filled() default num_segments from 12 to 0, effectively
   enabling auto-tessellation by default. Tweak tessellation in style Editor->Rendering section, or
-  by modifying the 'style.CircleSegmentMaxError' value. [@ShironekoBen]
-- ImDrawList: Fixed minor bug introduced in 1.75 where AddCircle() with 12 segments would generate
+  by modifying the 'style.circle_segment_max_error' value. [@ShironekoBen]
+- ImDrawList: Fixed minor bug introduced in 1.75 where add_circle() with 12 segments would generate
   an extra vertex. (This bug was mistakenly marked as fixed in earlier 1.77 release). [@ShironekoBen]
 - Demo: Improved "Custom Rendering"->"Canvas" demo with a grid, scrolling and context menu.
   Also showcase using InvisibleButton() with multiple mouse buttons flags.
@@ -1666,7 +1666,7 @@ Breaking Changes:
   documented (can only unreserve from the last reserve call). If you suspect you ever
   used that feature before (very unlikely, but grep for call to PrimReserve in your code),
   you can #define IMGUI_DEBUG_PARANOID in imconfig.h to catch existing calls. [@ShironekoBen]
-- ImDrawList::AddCircle()/AddCircleFilled() functions don't accept negative radius.
+- ImDrawList::add_circle()/add_circle_filled() functions don't accept negative radius.
 - Limiting Columns()/BeginColumns() api to 64 columns with an assert. While the current code
   technically supports it, future code may not so we're putting the restriction ahead.
   [Undid that change in 1.76]
@@ -1696,10 +1696,10 @@ Other Changes:
 - Window: Fix SetNextWindowBgAlpha(1.0) failing to override alpha component. (#3007) [@Albog]
 - Window: When testing for the presence of the ImGuiWindowFlags_NoBringToFrontOnFocus flag we
   test both the focused/clicked window (which could be a child window) and the root window.
-- ImDrawList: AddCircle(), AddCircleFilled() API can now auto-tessellate when provided a segment
-  count of zero. Alter tessellation quality with 'style.CircleSegmentMaxError'. [@ShironekoBen]
-- ImDrawList: Add AddNgon(), AddNgonFilled() API with a guarantee on the explicit segment count.
-  In the current branch they are essentially the same as AddCircle(), AddCircleFilled() but as
+- ImDrawList: add_circle(), add_circle_filled() API can now auto-tessellate when provided a segment
+  count of zero. Alter tessellation quality with 'style.circle_segment_max_error'. [@ShironekoBen]
+- ImDrawList: Add add_ngon(), AddNgonFilled() API with a guarantee on the explicit segment count.
+  In the current branch they are essentially the same as add_circle(), add_circle_filled() but as
   we will rework the circle rendering functions to use textures and automatic segment count
   selection, those new api can fill a gap. [@ShironekoBen]
 - Columns: ImDrawList::Channels* functions now work inside columns. Added extra comments to
@@ -2342,7 +2342,7 @@ Other Changes:
   not align the same as a single call, and create mismatch between high-level size calculation and those performed
   with the lower-level ImDrawList api. (#792) [@SlNPacifist]
 - font: Fixed building atlas when specifying duplicate/overlapping ranges within a same font. (#2353, #2233)
-- ImDrawList: Fixed AddCircle(), AddCircleFilled() angle step being off, which was visible when drawing a "circle"
+- ImDrawList: Fixed add_circle(), add_circle_filled() angle step being off, which was visible when drawing a "circle"
   with a small number of segments (e.g. an hexagon). (#2287) [@baktery]
 - ImGuiTextBuffer: Added append() function (unformatted).
 - ImFontAtlas: Added 0x2000-0x206F general punctuation range to default ChineseFull/ChineseSimplifiedCommon ranges. (#2093)
@@ -2931,10 +2931,10 @@ Other Changes:
 - ImFontAtlas: Moved mouse cursor data out of ImGuiContext, fix drawing them with multiple contexts. Also remove the last remaining undesirable dependency on ImGui in imgui_draw.cpp. (#939)
 - ImFontAtlas: Added ImFontAtlasFlags_NoPowerOfTwoHeight flag to disable padding font height to nearest power of two. (#1613)
 - ImFontAtlas: Added ImFontAtlasFlags_NoMouseCursors flag to disable baking software mouse cursors, mostly to save texture memory on very low end hardware. (#1613)
-- ImDrawList: Fixed AddRect() with anti-aliasing disabled (lower-right corner pixel was often missing, rounding looks a little better.) (#1646)
+- ImDrawList: Fixed add_rect() with anti-aliasing disabled (lower-right corner pixel was often missing, rounding looks a little better.) (#1646)
 - ImDrawList: Added CloneOutput() helper to facilitate the cloning of ImDrawData or ImDrawList for multi-threaded rendering.
 - Misc: Functions passed to libc qsort are explicitly marked cdecl to support compiling with vectorcall as the default calling convention. (#1230, #1611) [@RandyGaul]
-- Misc: ImVec2: added [] operator. This is becoming desirable for some code working of either axes independently. Better adding it sooner than later.
+- Misc: Vector2D: added [] operator. This is becoming desirable for some code working of either axes independently. Better adding it sooner than later.
 - Misc: NewFrame(): Added an assert to detect incorrect filling of the io.KeyMap[] array earlier. (#1555)
 - Misc: Added IM_OFFSETOF() helper in imgui.h (previously was in imgui_internal.h)
 - Misc: Added IM_NEW(), IM_DELETE() helpers in imgui.h (previously were in imgui_internal.h)
@@ -3239,10 +3239,10 @@ Work on dear imgui has been gradually resuming. It means that fixes and new feat
 - Renamed `ImGuiCol_Columns***` enums to `ImGuiCol_Separator***`. Kept redirection enums (will obsolete).
 - Renamed `ImGuiSetCond***` types and enums to `ImGuiCond***`. Kept redirection enums (will obsolete).
 - Renamed `GetStyleColName()` to `GetStyleColorName()` for consistency. Unlikely to be used by end-user!
-- Added `PushStyleColor(ImGuiColor idx, ImU32 col)` overload, which _might_ cause an "ambiguous call" compilation error if you are using ImColor() with implicit cast. Cast to ImU32 or ImVec4 explicitly to fix.
+- Added `PushStyleColor(ImGuiColor idx, ImU32 col)` overload, which _might_ cause an "ambiguous call" compilation error if you are using ImColor() with implicit cast. Cast to ImU32 or Vector4D explicitly to fix.
 - Marked the weird `IMGUI_ONCE_UPON_A_FRAME` helper macro as obsolete. Prefer using the more explicit `ImGuiOnceUponAFrame`.
 - Changed `ColorEdit4(const char* label, float col[4], bool show_alpha = true)` signature to `ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flags = 0)`, where flags 0x01 is a safe no-op (hello dodgy backward compatibility!). The new `ColorEdit4`/`ColorPicker4` functions have lots of available flags! Check and run the demo window, under "Color/Picker Widgets", to understand the various new options.
-- Changed signature of `ColorButton(ImVec4 col, bool small_height = false, bool outline_border = true)` to `ColorButton(const char* desc_id, ImVec4 col, ImGuiColorEditFlags flags = 0, ImVec2 size = DimgVec2D::new(0,0))`. This function was rarely used and was very dodgy (no explicit id!).
+- Changed signature of `ColorButton(Vector4D col, bool small_height = false, bool outline_border = true)` to `ColorButton(const char* desc_id, Vector4D col, ImGuiColorEditFlags flags = 0, Vector2D size = DimgVec2D::new(0,0))`. This function was rarely used and was very dodgy (no explicit id!).
 - Changed `BeginPopupContextWindow(bool also_over_items=true, const char* str_id=NULL, int mouse_button=1)` signature to `(const char* str_id=NULL, int mouse_button=1, bool also_over_items=true)`. This is perhaps the most aggressive change in this update, but note that the majority of users relied on default parameters completely, so this will affect only a fraction of users of this already rarely used function.
 - Removed `IsPosHoveringAnyWindow()`, which was partly broken and misleading. In the vast majority of cases, people using that function wanted to use `io.want_capture_mouse` flag. Replaced with IM_ASSERT + comment redirecting user to `io.want_capture_mouse`. (#1237)
 - Removed the old `ValueColor()` helpers, they are equivalent to calling `Text(label)` + `SameLine()` + `ColorButton()`.
@@ -3261,7 +3261,7 @@ Other Changes:
 - ImFontAtlas: Added `GlyphRangesBuilder` helper class, which makes it easier to build custom glyph ranges from your app/game localization data, or add into existing glyph ranges.
 - ImFontAtlas: Added `tex_glyph_padding` option. (#1282) [@jadwallis]
 - ImFontAtlas: Made it possible to override size of add_font_default() (even if it isn't really recommended!).
-- ImDrawList: Added `GetClipRectMin()`, `GetClipRectMax()` helpers.
+- ImDrawList: Added `get_clip_rect_min()`, `get_clip_rect_max()` helpers.
 - Fixed Ini saving crash if the ImGuiWindowFlags_NoSavedSettings gets removed from a window after its creation (unlikely!). (#1000)
 - Fixed `PushID()`/`PopID()` from marking parent window as Accessed (which needlessly woke up the root "Debug" window when used outside of a regular window). (#747)
 - Fixed an assert when calling `CloseCurrentPopup()` twice in a row. [@nem0]
@@ -3299,7 +3299,7 @@ Breaking Changes:
 - SameLine(x) with x>0.0 is now relative to left of column/group if any, and not always to left of window. This was sort of always the intent and hopefully breakage should be minimal.
 - Renamed ImDrawList::PathFill() - rarely used directly - to ImDrawList::PathFillConvex() for clarity and consistency.
 - Removed ImFontConfig::MergeGlyphCenterV in favor of a more multipurpose ImFontConfig::glyph_offset.
-- style: style.WindowTitleAlign is now a ImVec2 (ImGuiAlign enum was removed). set to (0.5,0.5) for horizontal+vertical centering, (0.0,0.0) for upper-left, etc.
+- style: style.WindowTitleAlign is now a Vector2D (ImGuiAlign enum was removed). set to (0.5,0.5) for horizontal+vertical centering, (0.0,0.0) for upper-left, etc.
 - BeginChild(const char*) now applies the stack id to the provided label, consistently with other functions as it should always have been. It shouldn't affect you unless (extremely unlikely) you were appending multiple times to a same child from different locations of the stack id. If that's the case, generate an id with GetId() and use it instead of passing string to BeginChild().
 
 Other Changes:
@@ -3357,7 +3357,7 @@ Other Changes:
 - Updated stb_rect_pack.h to 0.10 (removed warnings). (#883)
 - Added ImGuiMouseCursor_None enum value for convenient usage by app/backends.
 - Clipboard: Added a void* user_data parameter to Clipboard function handlers. (#875) (BREAKING API)
-- Internals: Refactor internal text alignment options to use ImVec2, removed ImGuiAlign. (#842, #222)
+- Internals: Refactor internal text alignment options to use Vector2D, removed ImGuiAlign. (#842, #222)
 - Internals: Renamed ImLoadFileToMemory to ImFileLoadToMemory to be consistent with ImFileOpen + fix mismatching .h name. (#917)
 - OS/windows: Fixed windows default clipboard handler leaving its buffer unfreed on application's exit. (#714)
 - OS/windows: No default IME handler when compiling for windows using GCC. (#738)
@@ -3394,22 +3394,22 @@ Breaking Changes:
 - Renamed `SetNextTreeNodeOpened()` to `SetNextTreeNodeOpen()` for consistency, no redirection.
 - Removed confusing set of `GetInternalState()`, `GetInternalStateSize()`, `SetInternalState()` functions. Now using `CreateContext()`, `DestroyContext()`, `GetCurrentContext()`, `SetCurrentContext()`. If you were using multiple contexts the change should be obvious and trivial.
 - Obsoleted old signature of `CollapsingHeader(const char* label, const char* str_id = NULL, bool display_frame = true, bool default_open = false)`, as extra parameters were badly designed and rarely used. Most uses were using 1 parameter and shouldn't affect you. You can replace the "default_open = true" flag in new API with `CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)`.
-- Changed `ImDrawList::PushClipRect(ImVec4 rect)` to `ImDraw::PushClipRect(ImVec2 min,ImVec2 max,bool intersect_with_current_clip_rect=false)`. Note that higher-level `ImGui::PushClipRect()` is preferable because it will clip at logic/widget level, whereas `ImDrawList::PushClipRect()` only affect your renderer.
+- Changed `ImDrawList::push_clip_rect(Vector4D rect)` to `ImDraw::push_clip_rect(Vector2D min,Vector2D max,bool intersect_with_current_clip_rect=false)`. Note that higher-level `ImGui::push_clip_rect()` is preferable because it will clip at logic/widget level, whereas `ImDrawList::push_clip_rect()` only affect your renderer.
 - Title bar (using ImGuiCol_TitleBg/ImGuiCol_TitleBgActive colors) isn't rendered over a window background (ImGuiCol_WindowBg color) anymore (see #655). If your TitleBg/TitleBgActive alpha was 1.0 or you are using the default theme it will not affect you. However if your TitleBg/TitleBgActive alpha was <1.0 you need to tweak your custom theme to readjust for the fact that we don't draw a WindowBg background behind the title bar.
   This helper function will convert an old TitleBg/TitleBgActive color into a new one with the same visual output, given the OLD color and the OLD WindowBg color. (Or If this is confusing, just pick the RGB value from title bar from an old screenshot and apply this as TitleBg/TitleBgActive. Or you may just create TitleBgActive from a tweaked TitleBg color.)
 
-    ImVec4 ConvertTitleBgCol(const ImVec4& win_bg_col, const ImVec4& title_bg_col)
+    Vector4D ConvertTitleBgCol(const Vector4D& win_bg_col, const Vector4D& title_bg_col)
     {
        float new_a = 1.0 - ((1.0 - win_bg_col.w) * (1.0 - title_bg_col.w));
        float k = title_bg_col.w / new_a;
-       return ImVec4((win_bg_col.x * win_bg_col.w + title_bg_col.x) * k, (win_bg_col.y * win_bg_col.w + title_bg_col.y) * k, (win_bg_col.z * win_bg_col.w + title_bg_col.z) * k, new_a);
+       return Vector4D((win_bg_col.x * win_bg_col.w + title_bg_col.x) * k, (win_bg_col.y * win_bg_col.w + title_bg_col.y) * k, (win_bg_col.z * win_bg_col.w + title_bg_col.z) * k, new_a);
     }
 
 Other changes:
 
 - New version of ImGuiListClipper helper calculates item height automatically. See comments and demo code. (#662, #661, #660)
 - Added SetNextWindowSizeConstraints() to enable basic min/max and programmatic size constraints on window. Added demo. (#668)
-- Added PushClipRect()/PopClipRect() (previously part of imgui_internal.h). Changed ImDrawList::PushClipRect() prototype. (#610)
+- Added push_clip_rect()/pop_clip_rect() (previously part of imgui_internal.h). Changed ImDrawList::push_clip_rect() prototype. (#610)
 - Added IsRootWindowOrAnyChildHovered() helper. (#615)
 - Added TreeNodeEx() functions. (#581, #600, #190)
 - Added ImGuiTreeNodeFlags_Selected flag to display TreeNode as "selected". (#581, #190)
@@ -3444,7 +3444,7 @@ Other changes:
 - MenuItem(): the check mark renders in disabled color when menu item is disabled.
 - Fixed clipping rectangle floating point representation to ensure renderer-side float point operations yield correct results in typical DirectX/GL settings. (#582, 597)
 - Fixed GetFrontMostModalRootWindow(), fixing missing fade-out when a combo pop was used stacked over a modal window. (#604)
-- ImDrawList: Added AddQuad(), AddQuadFilled() helpers.
+- ImDrawList: Added add_quad(), add_quad_filled() helpers.
 - ImDrawList: add_text() refactor, moving some code to ImFont, reserving less unused vertices when large vertical clipping occurs.
 - ImFont: Added render_char() helper.
 - ImFont: Added add_remap_char() helper. (#609)
@@ -3505,10 +3505,10 @@ Other Changes:
 - ImDrawList: Fixed index-overflow check broken by add_text() casting current index back to ImDrawIdx. (#514)
 - ImDrawList: Fixed incorrect removal of trailing draw command if it is a callback command.
 - ImDrawList: Allow windows with only a callback only to be functional. (#524)
-- ImDrawList: Fixed ImDrawList::AddRect() which used to render a rectangle 1 px too large on each axis. (#457)
-- ImDrawList: Fixed ImDrawList::AddCircle() to fit precisely within bounding box like AddCircleFilled() and AddRectFilled(). (#457)
-- ImDrawList: AddCircle(), AddRect() takes optional thickness parameter.
-- ImDrawList: Added AddTriangle().
+- ImDrawList: Fixed ImDrawList::add_rect() which used to render a rectangle 1 px too large on each axis. (#457)
+- ImDrawList: Fixed ImDrawList::add_circle() to fit precisely within bounding box like add_circle_filled() and add_rect_filled(). (#457)
+- ImDrawList: add_circle(), add_rect() takes optional thickness parameter.
+- ImDrawList: Added add_triangle().
 - ImDrawList: Added PrimQuadUV() helper to ease custom rendering of textured quads (require primitive reserve).
 - ImDrawList: Allow add_text(ImFont\* font, float font_size, ...) variant to take NULL/0.0 as default.
 - ImFontAtlas: heuristic increase default texture width up for large number of glyphs. (#491)
@@ -3544,9 +3544,9 @@ Changes:
 - InputText(): Added ImGuiInputTextFlags_Password mode: hide display, disable logging/copying to clipboard. (#237, #363, #374)
 - Added GetColorU32() helper to retrieve color given enum with global alpha and extra applied.
 - Added ImGuiIO::clear_input_characters() superfluous helper.
-- Fixed ImDrawList draw command merging bug where using PopClipRect() along with PushTextureID()/PopTextureID() functions
+- Fixed ImDrawList draw command merging bug where using pop_clip_rect() along with push_texture_id()/pop_texture_id() functions
   would occasionally restore an incorrect clipping rectangle.
-- Fixed ImDrawList draw command merging so PushTextureID(XXX)/PopTextureID()/PushTextureID(XXX) sequence are now properly merged.
+- Fixed ImDrawList draw command merging so push_texture_id(XXX)/pop_texture_id()/push_texture_id(XXX) sequence are now properly merged.
 - Fixed large popups positioning issues when their contents on either axis is larger than display_size,
   and window_padding < DisplaySafeAreaPadding.
 - Fixed border rendering in various situations when using non-pixel aligned glyphs.
@@ -3668,7 +3668,7 @@ Other Changes:
 - ImDrawList: Allow to override ImDrawIdx type (#292).
 - ImDrawList: Added an assert on overflowing index value (#292).
 - ImDrawList: Fixed issues with channels split/merge. Now functional without manually adding a draw cmd. Added comments.
-- ImDrawData: Added ScaleClipRects() helper useful when rendering scaled. (#287).
+- ImDrawData: Added scale_clip_rects() helper useful when rendering scaled. (#287).
 - Fixed Bullet() inconsistent layout behaviour when clipped.
 - Fixed IsWindowHovered() not taking account of window hoverability (may be disabled because of a popup).
 - Fixed InvisibleButton() not honoring negative size consistently with other widgets that do so.
@@ -3760,14 +3760,14 @@ Breaking Changes:
   To:    ImGui_XXXX_RenderDrawLists(ImDrawData* draw_data)
   With:  argument   'cmd_lists'        -> 'draw_data->cmd_lists'
          argument   'cmd_lists_count'  -> 'draw_data->cmd_lists_count'
-         ImDrawList 'commands'         -> 'CmdBuffer'
-         ImDrawList 'vtx_buffer'       -> 'VtxBuffer'
-         ImDrawList  n/a               -> 'IdxBuffer' (new)
+         ImDrawList 'commands'         -> 'cmd_buffer'
+         ImDrawList 'vtx_buffer'       -> 'vtx_buffer'
+         ImDrawList  n/a               -> 'idx_buffer' (new)
          ImDrawCmd  'vtx_count'        -> 'elem_count'
          ImDrawCmd  'clip_rect'        -> 'clip_rect'
          ImDrawCmd  'user_callback'    -> 'user_callback'
          ImDrawCmd  'texture_id'       -> 'texture_id'
-- If you REALLY cannot render indexed primitives, you can call the draw_data->DeIndexAllBuffers() method to de-index
+- If you REALLY cannot render indexed primitives, you can call the draw_data->de_index_all_buffers() method to de-index
   the buffers. This is slow and a waste of CPU/GPU. Prefer using indexed rendering!
   Refer to code in the examples/ folder or ask on the GitHub if you are unsure of how to upgrade. Please upgrade!
 
@@ -3781,12 +3781,12 @@ Other Changes:
 - ImDrawList: Added AddPolyline(), AddConvexPolyFilled() with optional anti-aliasing.
 - ImDrawList: Added stateful path building and stroking API. PathLineTo(), PathArcTo(), PathRect(), PathFill(), PathStroke()
   with optional anti-aliasing.
-- ImDrawList: Added AddRectFilledMultiColor() helper.
+- ImDrawList: Added add_rect_filled_multi_color() helper.
 - ImDrawList: Added multi-channel rendering so out of order elements can be rendered in separate channels and then merged
   back together (used by columns).
 - ImDrawList: Fixed merging draw commands when equal clip rectangles are in the two first commands.
 - ImDrawList: Fixed window draw lists not destructed properly on Shutdown().
-- ImDrawData: Added DeIndexAllBuffers() helper.
+- ImDrawData: Added de_index_all_buffers() helper.
 - Added lots of new font options ImFontAtlas::add_font() and the new ImFontConfig structure.
   - Added support for oversampling (ImFontConfig: oversample_h, oversample_v) and sub-pixel positioning (ImFontConfig: pixel_snap_h).
     Oversampling allows sub-pixel positioning but can also be used as a way to get some leeway with scaling fonts without re-rasterizing.

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use crate::imgui_h::ImGuiID;
-use crate::imgui_vec::ImVec2;
+use crate::imgui_vec::Vector2D;
 use crate::imgui_window::ImGuiWindow;
 
 // Storage for current popup stack
@@ -19,10 +19,10 @@ pub struct DimgPopupData
     pub OpenFrameCount: i32,
     // ImGuiID             OpenParentId;   // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
     pub OpenParentId: ImGuiID,
-    // ImVec2              OpenPopupPos;   // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)
-    pub OpenPopupPos: ImVec2,
-    // ImVec2              OpenMousePos;   // Set on OpenPopup(), copy of mouse position at the time of opening popup
-    pub OpenMousePos: ImVec2,
+    // Vector2D              OpenPopupPos;   // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)
+    pub OpenPopupPos: Vector2D,
+    // Vector2D              OpenMousePos;   // Set on OpenPopup(), copy of mouse position at the time of opening popup
+    pub OpenMousePos: Vector2D,
 }
 
 impl DimgPopupData {

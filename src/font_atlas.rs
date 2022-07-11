@@ -1,9 +1,9 @@
 use crate::types::DimgWchar;
-use crate::font::{DimgFont, DimgFontConfig, ImFontBuilderIO};
-use crate::input::DimgMouseCursor;
-use crate::rect::DimgRect;
-use crate::texture::DimgTextureId;
-use crate::vec_nd::{DimgVec2D, DimgVec4};
+use crate::font::{Font, DimgFontConfig, ImFontBuilderIO};
+use crate::input::MouseCursor;
+use crate::rect::Rect;
+use crate::texture::TextureId;
+use crate::vectors::{Vector2D, Vector4D};
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
 //  - One or more fonts.
@@ -23,14 +23,14 @@ use crate::vec_nd::{DimgVec2D, DimgVec4};
 // - Even though many functions are suffixed with "TTF", OTF data is supported just as well.
 // - This is an old API and it is currently awkward for those and and various other reasons! We will address them in the future!
 #[derive(Clone, Debug, Default)]
-pub struct DimgFontAtlas {
+pub struct FontAtlas {
     //-------------------------------------------
     // Members
     //-------------------------------------------
 
     pub flags: ImFontAtlasFlags,
     // ImFontAtlasFlags            flags;              // build flags (see )
-    pub tex_id: DimgTextureId,
+    pub tex_id: TextureId,
     // ImTextureID                 tex_id;              // User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
     pub tex_desired_width: i32,
     // Texture width desired by user before build(). Must be a power-of-two. If have many glyphs your graphics API have texture size restrictions you may want to increase texture width to decrease height.
@@ -52,18 +52,18 @@ pub struct DimgFontAtlas {
     // Texture width calculated during build().
     pub tex_height: i32,
     // Texture height calculated during build().
-    pub tex_uv_scale: DimgVec2D,
+    pub tex_uv_scale: Vector2D,
     // = (1.0/tex_width, 1.0/tex_height)
-    pub tex_uv_white_pixel: DimgVec2D,
+    pub tex_uv_white_pixel: Vector2D,
     // Texture coordinates to a white pixel
-    pub fonts: Vec<DimgFont>,
+    pub fonts: Vec<Font>,
     // ImVector<ImFont*>           fonts;              // Hold all the fonts returned by add_font*. fonts[0] is the default font upon calling ImGui::NewFrame(), use ImGui::PushFont()/PopFont() to change the current font.
     // ImVector<ImFontAtlasCustomRect> custom_rects;    // Rectangles for packing custom texture data into the atlas.
     pub custom_rects: Vec<ImFontAtlasCustomRect>,
     // ImVector<ImFontConfig>      config_data;         // Configuration data
     pub config_data: Vec<DimgFontConfig>,
-    // ImVec4                      tex_uv_lines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
-    pub tex_uv_lines: Vec<DimgVec4>,
+    // Vector4D                      tex_uv_lines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
+    pub tex_uv_lines: Vec<Vector4D>,
     // [Internal] font builder
     // const ImFontBuilderIO*      font_builder_io;      // Opaque interface to a font builder (default to stb_truetype, can be changed to use FreeType by defining IMGUI_ENABLE_FREETYPE).
     pub font_builder_io: ImFontBuilderIO,
@@ -80,31 +80,31 @@ pub struct DimgFontAtlas {
     //typedef ImFontGlyphRangesBuilder GlyphRangesBuilder; // OBSOLETED in 1.67+
 }
 
-impl DimgFontAtlas {
+impl FontAtlas {
     //  ImFontAtlas();
     //      ~ImFontAtlas();
     //      ImFont*           add_font(const ImFontConfig* font_cfg);
-    pub fn add_font(&mut self, font_cfg: &DimgFontConfig) -> DimgFont {
+    pub fn add_font(&mut self, font_cfg: &DimgFontConfig) -> Font {
         todo!()
     }
     //      ImFont*           add_font_default(const ImFontConfig* font_cfg = NULL);
-    pub fn add_font_default(&mut self, font_cfg: &DimgFontConfig) -> DimgFont {
+    pub fn add_font_default(&mut self, font_cfg: &DimgFontConfig) -> Font {
         todo!()
     }
     //      ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);
-    pub fn add_font_file_ttf(&mut self, filename: &String, size_pixels: f32, font_cfg: &DimgFontConfig, glyph_ranges: &[DimgWchar]) -> DimgFont {
+    pub fn add_font_file_ttf(&mut self, filename: &String, size_pixels: f32, font_cfg: &DimgFontConfig, glyph_ranges: &[DimgWchar]) -> Font {
         todo!()
     }
     //      ImFont*           add_font_from_memory_ttf(void* font_data, int font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->font_data_owned_by_atlas=false to keep ownership of your data and it won't be freed.
-    pub fn add_font_from_memory_ttf(&mut self, font_data: &Vec<u8>, font_size: i32, size_pixels: f32, font_cfg: &DimgFontConfig, glyph_ranges: &[DimgWchar]) -> DimgFont {
+    pub fn add_font_from_memory_ttf(&mut self, font_data: &Vec<u8>, font_size: i32, size_pixels: f32, font_cfg: &DimgFontConfig, glyph_ranges: &[DimgWchar]) -> Font {
         todo!()
     }
     //      ImFont*           add_font_from_memory_compressed_ttf(const void* compressed_font_data, int compressed_font_size, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
-    pub fn add_font_from_memory_compressed_ttf(&mut self, compressed_font_data: &Vec<u8>, compressed_font_size: usize, size_pixels: f32, font_config: &DimgFontConfig, glyph_ranges: &Vec<DimgWchar>) -> DimgFont {
+    pub fn add_font_from_memory_compressed_ttf(&mut self, compressed_font_data: &Vec<u8>, compressed_font_size: usize, size_pixels: f32, font_config: &DimgFontConfig, glyph_ranges: &Vec<DimgWchar>) -> Font {
         todo!()
     }
     //      ImFont*           add_font_from_memory_compressed_base85ttf(const char* compressed_font_data_base85, float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);              // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
-    pub fn add_font_from_memory_compressed_base85ttf(&mut self, compressed_font_data_base85: &String, size_pixels: f32, font_cfg: &DimgFontConfig, glyph_ranges: &Vec<DimgWchar>) -> DimgFont {
+    pub fn add_font_from_memory_compressed_base85ttf(&mut self, compressed_font_data_base85: &String, size_pixels: f32, font_cfg: &DimgFontConfig, glyph_ranges: &Vec<DimgWchar>) -> Font {
         todo!()
     }
     //      void              clear_input_data();           // clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
@@ -146,7 +146,7 @@ impl DimgFontAtlas {
         self.fonts.len() > 0 && self.tex_ready
     }
     //     void                        set_tex_id(ImTextureID id)    { tex_id = id; }
-    pub fn set_tex_id(&mut self, id: DimgTextureId) {
+    pub fn set_tex_id(&mut self, id: TextureId) {
         self.tex_id = id
     }
     //
@@ -205,8 +205,8 @@ impl DimgFontAtlas {
     pub fn add_custom_regular(&mut self, width: i32, height: i32) -> i32 {
         todo!()
     }
-    //      int               add_custom_rect_font_glyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const ImVec2& offset = ImVec2(0, 0));
-    pub fn add_custom_rect_font_glyph(&mut self, font: &DimgFont, id: DimgWchar, width: i32, height: i32, advance_x: f32, offset: &DimgVec2D) -> i32 {
+    //      int               add_custom_rect_font_glyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const Vector2D& offset = Vector2D(0, 0));
+    pub fn add_custom_rect_font_glyph(&mut self, font: &Font, id: DimgWchar, width: i32, height: i32, advance_x: f32, offset: &Vector2D) -> i32 {
         todo!()
     }
     //     ImFontAtlasCustomRect*      get_custom_rect_by_index(int index) { IM_ASSERT(index >= 0); return &custom_rects[index]; }
@@ -218,12 +218,12 @@ impl DimgFontAtlas {
     }
     //
     //     // [Internal]
-    //      void              calc_custom_rect_uv(const ImFontAtlasCustomRect* rect, ImVec2* out_uv_min, ImVec2* out_uv_max) const;
-    pub fn calc_custom_rect_uv(&mut self, rect: &DimgRect, out_uv_min: &DimgVec2D, out_uv_max: &DimgVec2D) {
+    //      void              calc_custom_rect_uv(const ImFontAtlasCustomRect* rect, Vector2D* out_uv_min, Vector2D* out_uv_max) const;
+    pub fn calc_custom_rect_uv(&mut self, rect: &Rect, out_uv_min: &Vector2D, out_uv_max: &Vector2D) {
         todo!()
     }
-    //      bool              get_mouse_cursor_tex_data(ImGuiMouseCursor cursor, ImVec2* out_offset, ImVec2* out_size, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2]);
-    pub fn get_mouse_cursor_tex_data(&mut self, cursor: DimgMouseCursor, out_offset: &mut DimgVec2D, out_size: &mut DimgVec2D, out_uv_border: &mut [DimgVec2D; 2], out_uv_fill: &mut [DimgVec2D; 2]) -> bool {
+    //      bool              get_mouse_cursor_tex_data(ImGuiMouseCursor cursor, Vector2D* out_offset, Vector2D* out_size, Vector2D out_uv_border[2], Vector2D out_uv_fill[2]);
+    pub fn get_mouse_cursor_tex_data(&mut self, cursor: MouseCursor, out_offset: &mut Vector2D, out_size: &mut Vector2D, out_uv_border: &mut [Vector2D; 2], out_uv_fill: &mut [Vector2D; 2]) -> bool {
         todo!()
     }
 }
@@ -252,13 +252,13 @@ pub struct ImFontAtlasCustomRect {
     pub glyph_id: u32,
     pub glyph_advance_x: f32,
     // Input    // For custom font glyphs only: glyph xadvance
-    pub glyph_offset: DimgVec2D,
+    pub glyph_offset: Vector2D,
     // Input    // For custom font glyphs only: glyph display offset
-    pub font: DimgFont, // ImFont*         font;           // Input    // For custom font glyphs only: target font
+    pub font: Font, // ImFont*         font;           // Input    // For custom font glyphs only: target font
 }
 
 impl ImFontAtlasCustomRect {
-    // ImFontAtlasCustomRect()         { width = height = 0; x = Y = 0xFFFF; glyph_id = 0; glyph_advance_x = 0.0; glyph_offset = ImVec2(0, 0); font = NULL;
+    // ImFontAtlasCustomRect()         { width = height = 0; x = Y = 0xFFFF; glyph_id = 0; glyph_advance_x = 0.0; glyph_offset = Vector2D(0, 0); font = NULL;
     pub fn new() -> Self {
         Self {
             width: 0,

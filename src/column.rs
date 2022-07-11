@@ -1,13 +1,13 @@
 use std::collections::HashSet;
-use crate::types::DimgId;
-use crate::draw_list::ImDrawListSplitter;
-use crate::rect::DimgRect;
+use crate::types::Id32;
+use crate::draw_list_splitter::DrawListSplitter;
+use crate::rect::Rect;
 
 #[derive(Debug,Default,Clone)]
 pub struct DimgOldColumns
 {
     // DimgId             id;
-    pub ID: DimgId,
+    pub ID: Id32,
     // ImGuiOldColumnFlags flags;
     pub Flags: DimgOldColumnFlags,
     // bool                IsFirstFrame;
@@ -18,7 +18,7 @@ pub struct DimgOldColumns
     pub Current: i32,
     // int                 Count;
     pub Count: i32,
-    // float               OffMinX, OffMaxX;       // Offsets from HostWorkRect.Min.x
+    // float               OffMinX, OffMaxX;       // Offsets from HostWorkRect.min.x
     pub OffMinX: f32,
     pub OffMaxX: f32,
     // float               LineMinY, LineMaxY;
@@ -29,15 +29,15 @@ pub struct DimgOldColumns
     // float               HostCursorMaxPosX;      // Backup of CursorMaxPos at the time of BeginColumns()
     pub HostCursorMaxPosX: f32,
     // DimgRect              HostInitialClipRect;    // Backup of clip_rect at the time of BeginColumns()
-    pub HostInitialClipRect: DimgRect,
+    pub HostInitialClipRect: Rect,
     // DimgRect              HostBackupClipRect;     // Backup of clip_rect during PushColumnsBackground()/PopColumnsBackground()
-    pub HostBackupClipRect: DimgRect,
+    pub HostBackupClipRect: Rect,
     // DimgRect              HostBackupParentWorkRect;//Backup of work_rect at the time of BeginColumns()
-    pub HostBackupParentWorkRect: DimgRect,
+    pub HostBackupParentWorkRect: Rect,
     // ImVector<ImGuiOldColumnData> Columns;
     pub Columns: Vec<ImGuiOldColumnData>,
     // ImDrawListSplitter  Splitter;
-    pub Splitter: ImDrawListSplitter,
+    pub Splitter: DrawListSplitter,
     // ImGuiOldColumns()   { memset(this, 0, sizeof(*this)); }
 }
 
@@ -88,7 +88,7 @@ pub struct ImGuiOldColumnData
     // ImGuiOldColumnFlags flags;              // Not exposed
     pub flags: HashSet<DimgOldColumnFlags>,
     // DimgRect              clip_rect;
-    pub clip_rect: DimgRect,
+    pub clip_rect: Rect,
     // ImGuiOldColumnData() { memset(this, 0, sizeof(*this)); }
 }
 

@@ -272,7 +272,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
     {
         case SDL_MOUSEMOTION:
         {
-            ImVec2 mouse_pos((float)event->motion.x, (float)event->motion.y);
+            Vector2D mouse_pos((float)event->motion.x, (float)event->motion.y);
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
                 int window_x, window_y;
@@ -809,7 +809,7 @@ static void ImGui_ImplSDL2_ShowWindow(ImGuiViewport* viewport)
     SDL_ShowWindow(vd->Window);
 }
 
-static ImVec2 ImGui_ImplSDL2_GetWindowPos(ImGuiViewport* viewport)
+static Vector2D ImGui_ImplSDL2_GetWindowPos(ImGuiViewport* viewport)
 {
     ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
     int x = 0, y = 0;
@@ -817,13 +817,13 @@ static ImVec2 ImGui_ImplSDL2_GetWindowPos(ImGuiViewport* viewport)
     return DimgVec2D::new((float)x, (float)y);
 }
 
-static void ImGui_ImplSDL2_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
+static void ImGui_ImplSDL2_SetWindowPos(ImGuiViewport* viewport, Vector2D pos)
 {
     ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
     SDL_SetWindowPosition(vd->Window, pos.x, pos.y);
 }
 
-static ImVec2 ImGui_ImplSDL2_GetWindowSize(ImGuiViewport* viewport)
+static Vector2D ImGui_ImplSDL2_GetWindowSize(ImGuiViewport* viewport)
 {
     ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
     int w = 0, h = 0;
@@ -831,7 +831,7 @@ static ImVec2 ImGui_ImplSDL2_GetWindowSize(ImGuiViewport* viewport)
     return DimgVec2D::new((float)w, (float)h);
 }
 
-static void ImGui_ImplSDL2_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+static void ImGui_ImplSDL2_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 {
     ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
     SDL_SetWindowSize(vd->Window, size.x, size.y);

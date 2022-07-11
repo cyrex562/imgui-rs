@@ -952,7 +952,7 @@ static void ImGui_ImplWin32_UpdateWindow(ImGuiViewport* viewport)
     }
 }
 
-static ImVec2 ImGui_ImplWin32_GetWindowPos(ImGuiViewport* viewport)
+static Vector2D ImGui_ImplWin32_GetWindowPos(ImGuiViewport* viewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -961,7 +961,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowPos(ImGuiViewport* viewport)
     return DimgVec2D::new((float)pos.x, (float)pos.y);
 }
 
-static void ImGui_ImplWin32_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
+static void ImGui_ImplWin32_SetWindowPos(ImGuiViewport* viewport, Vector2D pos)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -970,7 +970,7 @@ static void ImGui_ImplWin32_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
     ::SetWindowPos(vd->Hwnd, NULL, rect.left, rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
-static ImVec2 ImGui_ImplWin32_GetWindowSize(ImGuiViewport* viewport)
+static Vector2D ImGui_ImplWin32_GetWindowSize(ImGuiViewport* viewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -979,7 +979,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowSize(ImGuiViewport* viewport)
     return DimgVec2D::new(float(rect.right - rect.left), float(rect.bottom - rect.top));
 }
 
-static void ImGui_ImplWin32_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+static void ImGui_ImplWin32_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -1054,10 +1054,10 @@ static void ImGui_ImplWin32_OnChangedViewport(ImGuiViewport* viewport)
     (void)viewport;
 #if 0
     ImGuiStyle default_style;
-    //default_style.window_padding = ImVec2(0, 0);
+    //default_style.window_padding = Vector2D(0, 0);
     //default_style.WindowBorderSize = 0.0;
     //default_style.ItemSpacing.y = 3.0;
-    //default_style.FramePadding = ImVec2(0, 0);
+    //default_style.FramePadding = Vector2D(0, 0);
     default_style.ScaleAllSizes(viewport->DpiScale);
     ImGuiStyle& style = ImGui::GetStyle();
     style = default_style;

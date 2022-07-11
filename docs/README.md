@@ -82,7 +82,7 @@ const float my_values[] = { 0.2, 0.1, 1.0, 0.5, 0.9, 2.2 };
 ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
 
 // Display contents in a scrolling region
-ImGui::TextColored(ImVec4(1,1,0,1), "Important Stuff");
+ImGui::TextColored(Vector4D(1,1,0,1), "Important Stuff");
 ImGui::BeginChild("Scrolling");
 for (int n = 0; n < 50; n++)
     ImGui::Text("%04d: Some text", n);

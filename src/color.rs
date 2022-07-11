@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use crate::imgui_h::ImGuiColor;
 use crate::imgui_math::{IM_F32_TO_INT8_SAT, ImFabs, ImFmod, ImLerpU32, ImSwapF32};
-use crate::imgui_vec::ImVec4;
+use crate::imgui_vec::Vector4D;
 
 //  ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b)
 pub fn ImAlphaBlendColors(col_a: u32, col_b: u32) -> u32
@@ -14,23 +14,23 @@ pub fn ImAlphaBlendColors(col_a: u32, col_b: u32) -> u32
     let g = ImLerpU32((col_a >> IM_COL32_G_SHIFT) & 0xff, (col_b >> IM_COL32_G_SHIFT) & 0xff, t);
     // int b = ImLerp((col_a >> IM_COL32_B_SHIFT) & 0xFF, (col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
     let b = ImLerpU32((col_a >> IM_COL32_B_SHIFT) & 0xff, (col_b >> IM_COL32_B_SHIFT) & 0xff, t);
-    IM_COL32(r, g, b, 0xFF)
+    make_color_32(r, g, b, 0xFF)
 }
 
-// ImVec4 ImGui::ColorConvertU32ToFloat4(ImU32 in)
-pub fn ColorCovertU32ToFloat(in_u32: u32) -> ImVec4
+// Vector4D ImGui::ColorConvertU32ToFloat4(ImU32 in)
+pub fn ColorCovertU32ToFloat(in_u32: u32) -> Vector4D
 {
     // float s = 1.0 / 255.0;
     let mut s: f32 = 1.0 / 255.0;
-    return ImVec4{
+    return Vector4D{
         x:((in_u32 >> IM_COL32_R_SHIFT) & 0xFF) as f32 * s,
         y:((in_u32 >> IM_COL32_G_SHIFT) & 0xFF) as f32 * s,
         z:((in_u32 >> IM_COL32_B_SHIFT) & 0xFF) as f32 * s,
         w:((in_u32 >> IM_COL32_A_SHIFT) & 0xFF) as f32 * s};
 }
 
-// ImU32 ImGui::ColorConvertFloat4ToU32(const ImVec4& in)
-pub fn ColorConvertFloat4ToU32(in_vec: &ImVec4) -> u32
+// ImU32 ImGui::ColorConvertFloat4ToU32(const Vector4D& in)
+pub fn ColorConvertFloat4ToU32(in_vec: &Vector4D) -> u32
 {
     // ImU32 out;
 
@@ -124,25 +124,25 @@ pub const IM_COL32_A_MASK: u32 =     0xFF000000;
 // #endif
 // #endif
 //#define IM_COL32(R,G,B,A)    (((A)<<IM_COL32_A_SHIFT) | ((B)<<IM_COL32_B_SHIFT) | ((G)<<IM_COL32_G_SHIFT) | ((R)<<IM_COL32_R_SHIFT))
-pub fn IM_COL32(R: u32, G: u32, B: u32, A: u32) -> u32 {
+pub fn make_color_32(R: u32, G: u32, B: u32, A: u32) -> u32 {
     A << IM_COL32_A_SHIFT | B << IM_COL32_B_SHIFT | G << IM_COL32_G_SHIFT | R << IM_COL32_R_SHIFT
 }
 // #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
-pub const IM_COL32_WHITE: u32 = IM_COL32(255,255,255,255);
+pub const IM_COL32_WHITE: u32 = make_color_32(255, 255, 255, 255);
 // #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
-pub const IM_COL32_BLACK: u32 = IM_COL32(0,0,0,255);
+pub const IM_COL32_BLACK: u32 = make_color_32(0, 0, 0, 255);
 // #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
-pub const IM_COL32_BLACK_TRANS: u32 = IM_COL32(0,0,0,0);
+pub const IM_COL32_BLACK_TRANS: u32 = make_color_32(0, 0, 0, 0);
 
-// Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or ImVec4 (4x1 float)
+// Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or Vector4D (4x1 float)
 // Prefer using IM_COL32() macros if you want a guaranteed compile-time ImU32 for usage with ImDrawList API.
-// **Avoid storing ImColor! Store either u32 of ImVec4. This is not a full-featured color class. MAY OBSOLETE.
-// **None of the ImGui API are using ImColor directly but you can use it as a convenience to pass colors in either ImU32 or ImVec4 formats. Explicitly cast to ImU32 or ImVec4 if needed.
+// **Avoid storing ImColor! Store either u32 of Vector4D. This is not a full-featured color class. MAY OBSOLETE.
+// **None of the ImGui API are using ImColor directly but you can use it as a convenience to pass colors in either ImU32 or Vector4D formats. Explicitly cast to ImU32 or Vector4D if needed.
 #[derive(Default,Debug,Clone)]
 pub struct ImColor
 {
-    // ImVec4          Value;
-    pub Value: ImVec4,
+    // Vector4D          Value;
+    pub Value: Vector4D,
 }
 
 impl ImColor {
@@ -155,7 +155,7 @@ impl ImColor {
     }
     pub fn new2(r: f32, g: f32, b: f32, a: f32) -> Self {
         Self {
-            Value: ImVec4 {
+            Value: Vector4D {
                 x: r,
                 y: g,
                 z: b,
@@ -163,8 +163,8 @@ impl ImColor {
             }
         }
     }
-    // constexpr ImColor(const ImVec4& col)                            : Value(col) {}
-    pub fn new3(col: &ImVec4) -> Self {
+    // constexpr ImColor(const Vector4D& col)                            : Value(col) {}
+    pub fn new3(col: &Vector4D) -> Self {
         Self {
             Value: col.clone()
         }
@@ -172,7 +172,7 @@ impl ImColor {
     // ImColor(int r, int g, int b, int a = 255)                       { float sc = 1.0 / 255.0; Value.x = (float)r * sc; Value.y = (float)g * sc; Value.z = (float)b * sc; Value.w = (float)a * sc; }
     pub fn new4(r: i32, g: i32, b: i32, a: i32) -> Self {
         let sc: f32 = 1.0/255.0;
-        let Value = ImVec4 {
+        let Value = Vector4D {
             x: r as f32 * sc,
             y: g as f32 * sc,
             z: b as f32 * sc,
@@ -185,7 +185,7 @@ impl ImColor {
     // ImColor(ImU32 rgba)                                             { float sc = 1.0 / 255.0; Value.x = (float)((rgba >> IM_COL32_R_SHIFT) & 0xFF) * sc; Value.y = (float)((rgba >> IM_COL32_G_SHIFT) & 0xFF) * sc; Value.z = (float)((rgba >> IM_COL32_B_SHIFT) & 0xFF) * sc; Value.w = (float)((rgba >> IM_COL32_A_SHIFT) & 0xFF) * sc; }
     pub fn new5(rgba: u32) -> Self {
         let sc: f32 = 1.0/255.0;
-        let Value = ImVec4 {
+        let Value = Vector4D {
             x: (rgba >> IM_COL32_R_SHIFT & 0xff) as f32 * sc,
             y: (rgba >> IM_COL32_G_SHIFT & 0xff) as f32 * sc,
             z: (rgba >> IM_COL32_B_SHIFT & 0xff) as f32 * sc,
@@ -200,8 +200,8 @@ impl ImColor {
     pub fn get_u32(&self) -> u32 {
         ColorConvertFloat4ToU32(&self.Value)
     }
-    // inline operator ImVec4() const                                  { return Value; }
-    pub fn get_vec4(&self) -> ImVec4 {
+    // inline operator Vector4D() const                                  { return Value; }
+    pub fn get_vec4(&self) -> Vector4D {
         self.Value.clone()
     }
     //
@@ -216,8 +216,8 @@ pub struct DimgColorMod
 {
     // ImGuiCol        Col;
     pub Col: ImGuiColor,
-    // ImVec4          BackupValue;
-    pub BackupValue: ImVec4,
+    // Vector4D          BackupValue;
+    pub BackupValue: Vector4D,
 }
 
 /// Enumeration for PushStyleColor() / PopStyleColor()
@@ -282,29 +282,29 @@ pub enum DimgColor
 }
 
 // pub const DefaultOptions_: i32 = DimgColorEditFlags::Uint8 | DimgColorEditFlags::DisplayRGB | DimgColorEditFlags::InputRGB | DimgColorEditFlags::PickerHueBar;
-pub const DFLT_OPTS: HashSet<DimgColorEditFlags> = HashSet::from([
-    DimgColorEditFlags::Uint8, DimgColorEditFlags::DisplayRGB, DimgColorEditFlags::InputRGB, DimgColorEditFlags::PickerHueBar
+pub const DFLT_OPTS: HashSet<ColorEditFlags> = HashSet::from([
+    ColorEditFlags::Uint8, ColorEditFlags::DisplayRGB, ColorEditFlags::InputRGB, ColorEditFlags::PickerHueBar
 ]);
 
 // [Internal] Masks
     // pub const DisplayMask_: i32    = DimgColorEditFlags::DisplayRGB | DimgColorEditFlags::DisplayHSV | DimgColorEditFlags::DisplayHex;
-   pub const DISPLAY_MASK: HashSet<DimgColorEditFlags> = HashSet::from([
-        DimgColorEditFlags::DisplayRGB, DimgColorEditFlags::DisplayHSV, DimgColorEditFlags::DisplayHex
+   pub const DISPLAY_MASK: HashSet<ColorEditFlags> = HashSet::from([
+        ColorEditFlags::DisplayRGB, ColorEditFlags::DisplayHSV, ColorEditFlags::DisplayHex
     ]);
 
 // pub const PickerMask_: i32     = DimgColorEditFlags::PickerHueWheel | DimgColorEditFlags::PickerHueBar;
-pub const PICKER_MASK: HashSet<DimgColorEditFlags> = HashSet::from([
-    DimgColorEditFlags::PickerHueWheel, DimgColorEditFlags::PickerHueBar
+pub const PICKER_MASK: HashSet<ColorEditFlags> = HashSet::from([
+    ColorEditFlags::PickerHueWheel, ColorEditFlags::PickerHueBar
 ]);
 
 // pub const InputMask_: i32      = DimgColorEditFlags::InputRGB | DimgColorEditFlags::InputHSV;
-    pub const INPUT_MASK: HashSet<DimgColorEditFlags> = HashSet::from([
-        DimgColorEditFlags::InputRGB, DimgColorEditFlags::InputHSV
+    pub const INPUT_MASK: HashSet<ColorEditFlags> = HashSet::from([
+        ColorEditFlags::InputRGB, ColorEditFlags::InputHSV
     ]);
 
 // flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgColorEditFlags
+pub enum ColorEditFlags
 {
     None            = 0,
     NoAlpha         = 1 << 1,   //              // ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).

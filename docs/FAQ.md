@@ -25,7 +25,7 @@ or view this file with any Markdown viewer.
 | **Q&A: Usage** |
 | **[About the id Stack system..<br>Why is my widget not reacting when I click on it?<br>How can I have widgets with an empty label?<br>How can I have multiple widgets with the same label?<br>How can I have multiple windows with the same label?](#q-about-the-id-stack-system)** |
 | [How can I display an image? What is ImTextureID, how does it work?](#q-how-can-i-display-an-image-what-is-imtextureid-how-does-it-work)|
-| [How can I use my own math types instead of ImVec2/ImVec4?](#q-how-can-i-use-my-own-math-types-instead-of-imvec2imvec4) |
+| [How can I use my own math types instead of Vector2D/Vector4D?](#q-how-can-i-use-my-own-math-types-instead-of-imvec2imvec4) |
 | [How can I interact with standard C += 1 types (such as std::string and std::vector)?](#q-how-can-i-interact-with-standard-c-types-such-as-stdstring-and-stdvector) |
 | [How can I display custom shapes? (using low-level ImDrawList API)](#q-how-can-i-display-custom-shapes-using-low-level-imdrawlist-api) |
 | **Q&A: fonts, Text** |
@@ -379,7 +379,7 @@ User code may do:
 ```cpp
 // Cast our texture type to ImTextureID / void*
 MyTexture* texture = g_CoffeeTableTexture;
-ImGui::Image((void*)texture, ImVec2(texture->width, texture->height));
+ImGui::Image((void*)texture, Vector2D(texture->width, texture->height));
 ```
 The renderer function called after ImGui::Render() will receive that same value that the user code passed:
 ```cpp
@@ -413,10 +413,10 @@ Finally, you may call `ImGui::ShowMetricsWindow()` to explore/visualize/understa
 
 ---
 
-### Q: How can I use my own math types instead of ImVec2/ImVec4?
+### Q: How can I use my own math types instead of Vector2D/Vector4D?
 
 You can edit [imconfig.h](https://github.com/ocornut/imgui/blob/master/imconfig.h) and setup the `IM_VEC2_CLASS_EXTRA`/`IM_VEC4_CLASS_EXTRA` macros to add implicit type conversions.
-This way you'll be able to use your own types everywhere, e.g. passing `MyVector2` or `glm::vec2` to ImGui functions instead of `ImVec2`.
+This way you'll be able to use your own types everywhere, e.g. passing `MyVector2` or `glm::vec2` to ImGui functions instead of `Vector2D`.
 
 ##### [Return to Index](#index)
 
@@ -455,24 +455,24 @@ ImGui::Begin("My shapes");
 ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
 // Get the current ImGui cursor position
-ImVec2 p = ImGui::GetCursorScreenPos();
+Vector2D p = ImGui::GetCursorScreenPos();
 
 // Draw a red circle
-draw_list->AddCircleFilled(ImVec2(p.x + 50, p.y + 50), 30.0, IM_COL32(255, 0, 0, 255), 16);
+draw_list->add_circle_filled(Vector2D(p.x + 50, p.y + 50), 30.0, IM_COL32(255, 0, 0, 255), 16);
 
 // Draw a 3 pixel thick yellow line
-draw_list->AddLine(ImVec2(p.x, p.y), ImVec2(p.x + 100.0, p.y + 100.0), IM_COL32(255, 255, 0, 255), 3.0);
+draw_list->add_line(Vector2D(p.x, p.y), Vector2D(p.x + 100.0, p.y + 100.0), IM_COL32(255, 255, 0, 255), 3.0);
 
 // Advance the ImGui cursor to claim space in the window (otherwise the window will appear small and needs to be resized)
-ImGui::Dummy(ImVec2(200, 200));
+ImGui::Dummy(Vector2D(200, 200));
 
 ImGui::End();
 ```
 ![ImDrawList usage](https://raw.githubusercontent.com/wiki/ocornut/imgui/tutorials/CustomRendering01.png)
 
 - Refer to "Demo > Examples > Custom Rendering" in the demo window and read the code of `ShowExampleAppCustomRendering()` in `imgui_demo.cpp` from more examples.
-- To generate colors: you can use the macro `IM_COL32(255,255,255,255)` to generate them at compile time, or use `ImGui::GetColorU32(IM_COL32(255,255,255,255))` or `ImGui::GetColorU32(ImVec4(1.0,1.0,1.0,1.0))` to generate a color that is multiplied by the current value of `style.Alpha`.
-- Math operators: if you have setup `IM_VEC2_CLASS_EXTRA` in `imconfig.h` to bind your own math types, you can use your own math types and their natural operators instead of ImVec2. ImVec2 by default doesn't export any math operators in the public API. You may use `#define IMGUI_DEFINE_MATH_OPERATORS` `#include "imgui_internal.h"` to use the internally defined math operators, but instead prefer using your own math library and set it up in `imconfig.h`.
+- To generate colors: you can use the macro `IM_COL32(255,255,255,255)` to generate them at compile time, or use `ImGui::GetColorU32(IM_COL32(255,255,255,255))` or `ImGui::GetColorU32(Vector4D(1.0,1.0,1.0,1.0))` to generate a color that is multiplied by the current value of `style.Alpha`.
+- Math operators: if you have setup `IM_VEC2_CLASS_EXTRA` in `imconfig.h` to bind your own math types, you can use your own math types and their natural operators instead of Vector2D. Vector2D by default doesn't export any math operators in the public API. You may use `#define IMGUI_DEFINE_MATH_OPERATORS` `#include "imgui_internal.h"` to use the internally defined math operators, but instead prefer using your own math library and set it up in `imconfig.h`.
 - You can use `ImGui::GetBackgroundDrawList()` or `ImGui::GetForegroundDrawList()` to access draw lists which will be displayed behind and over every other dear imgui windows (one bg/fg drawlist per viewport). This is very convenient if you need to quickly display something on the screen that is not associated to a dear imgui window.
 - You can also create your own empty window and draw inside it. Call Begin() with the NoBackground | NoDecoration | NoSavedSettings | NoInputs flags (The `ImGuiWindowFlags_NoDecoration` flag itself is a shortcut for NoTitleBar | NoResize | NoScrollbar | NoCollapse). Then you can retrieve the ImDrawList* via `GetWindowDrawList()` and draw to it in any way you like.
 - You can create your own ImDrawList instance. You'll need to initialize them with `ImGui::GetDrawListSharedData()`, or create your own instancing `ImDrawListSharedData`, and then call your renderer function with your own ImDrawList or ImDrawData data.

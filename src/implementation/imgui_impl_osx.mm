@@ -872,7 +872,7 @@ static void ImGui_ImplOSX_ShowWindow(ImGuiViewport* viewport)
     [data->Window setIsVisible:YES];
 }
 
-static ImVec2 ImGui_ImplOSX_GetWindowPos(ImGuiViewport* viewport)
+static Vector2D ImGui_ImplOSX_GetWindowPos(ImGuiViewport* viewport)
 {
     ImGuiViewportDataOSX* data = (ImGuiViewportDataOSX*)viewport->PlatformUserData;
     IM_ASSERT(data->Window != 0);
@@ -885,7 +885,7 @@ static ImVec2 ImGui_ImplOSX_GetWindowPos(ImGuiViewport* viewport)
     return DimgVec2D::new(frame.origin.x, size.height - frame.origin.y - rect.size.height);
 }
 
-static void ImGui_ImplOSX_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
+static void ImGui_ImplOSX_SetWindowPos(ImGuiViewport* viewport, Vector2D pos)
 {
     ImGuiViewportDataOSX* data = (ImGuiViewportDataOSX*)viewport->PlatformUserData;
     IM_ASSERT(data->Window != 0);
@@ -898,7 +898,7 @@ static void ImGui_ImplOSX_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
     [window setFrameOrigin:r.origin];
 }
 
-static ImVec2 ImGui_ImplOSX_GetWindowSize(ImGuiViewport* viewport)
+static Vector2D ImGui_ImplOSX_GetWindowSize(ImGuiViewport* viewport)
 {
     ImGuiViewportDataOSX* data = (ImGuiViewportDataOSX*)viewport->PlatformUserData;
     IM_ASSERT(data->Window != 0);
@@ -908,7 +908,7 @@ static ImVec2 ImGui_ImplOSX_GetWindowSize(ImGuiViewport* viewport)
     return DimgVec2D::new(size.width, size.width);
 }
 
-static void ImGui_ImplOSX_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+static void ImGui_ImplOSX_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 {
     ImGuiViewportDataOSX* data = (ImGuiViewportDataOSX*)viewport->PlatformUserData;
     IM_ASSERT(data->Window != 0);

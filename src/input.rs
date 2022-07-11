@@ -63,7 +63,7 @@ impl ImGuiInputTextCallbackData {
     }
 }
 
-pub enum DimgInputSource
+pub enum InputSource
 {
     None = 0,
     Mouse,
@@ -104,7 +104,7 @@ pub enum DimgInputEventType
 
 
 // FIXME: Structures in the union below need to be declared as anonymous unions appears to be an extension?
-// Using ImVec2() would fail on Clang 'union member 'mouse_pos' has a non-trivial default constructor'
+// Using Vector2D() would fail on Clang 'union member 'mouse_pos' has a non-trivial default constructor'
 pub struct DimgInputEventMousePos { 
     pub pos_x: f32,
     pub pos_y: f32,
@@ -271,7 +271,7 @@ pub const DIMG_KEYS_DATA_OFFSET: usize        = 0    ;
 
 // Helper "flags" version of key-mods to store and compare multiple key-mods easily. Sometimes used for storage (e.g. io.key_mods) but otherwise not much used in public API.
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgModFlags
+pub enum ModFlags
 {
     None,
     Ctrl,
@@ -329,7 +329,7 @@ pub enum DimgMouseButton
 // Enumeration for GetMouseCursor()
 // User code may request backend to display given cursor by calling SetMouseCursor(), which is why we have some cursors that are marked unused here
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgMouseCursor
+pub enum MouseCursor
 {
     None,
     Arrow,
@@ -374,7 +374,7 @@ pub struct DimgKeyData
 //
 // #endif // #ifndef IMGUI_DISABLE
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgNavLayer
+pub enum NavLayer
 {
     Main,    // Main scrolling layer
     Menu,    // Menu layer (access with Alt/ImGuiNavInput_Menu)

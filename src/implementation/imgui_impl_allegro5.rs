@@ -54,13 +54,13 @@
 #include <allegro5/allegro_primitives.h>
 #ifdef _WIN32
 #include <allegro5/allegro_windows.h>
-#endif
+
 #define ALLEGRO_HAS_CLIPBOARD   (ALLEGRO_VERSION_INT >= ((5 << 24) | (1 << 16) | (12 << 8)))    // Clipboard only supported from Allegro 5.1.12
 
 // Visual Studio warnings
 #ifdef _MSC_VER
 #pragma warning (disable: 4127) // condition expression is constant
-#endif
+
 
 // Allegro data
 struct ImGui_ImplAllegro5_Data
@@ -82,8 +82,8 @@ static ImGui_ImplAllegro5_Data* ImGui_ImplAllegro5_GetBackendData()     { return
 
 struct ImDrawVertAllegro
 {
-    ImVec2 pos;
-    ImVec2 uv;
+    Vector2D pos;
+    Vector2D uv;
     ALLEGRO_COLOR col;
 };
 
@@ -162,7 +162,7 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
         }
 
         // Render command lists
-        ImVec2 clip_off = draw_data->DisplayPos;
+        Vector2D clip_off = draw_data->DisplayPos;
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i += 1)
         {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
@@ -178,8 +178,8 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
             else
             {
                 // Project scissor/clipping rectangles into framebuffer space
-                ImVec2 clip_min(pcmd->ClipRect.x - clip_off.x, pcmd->ClipRect.y - clip_off.y);
-                ImVec2 clip_max(pcmd->ClipRect.z - clip_off.x, pcmd->ClipRect.w - clip_off.y);
+                Vector2D clip_min(pcmd->ClipRect.x - clip_off.x, pcmd->ClipRect.y - clip_off.y);
+                Vector2D clip_max(pcmd->ClipRect.z - clip_off.x, pcmd->ClipRect.w - clip_off.y);
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
@@ -279,7 +279,7 @@ static void ImGui_ImplAllegro5_SetClipboardText(void*, const char* text)
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
     al_set_clipboard_text(bd->Display, text);
 }
-#endif
+
 
 static ImGuiKey ImGui_ImplAllegro5_KeyCodeToImGuiKey(int key_code)
 {
@@ -423,7 +423,7 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
     io.SetClipboardTextFn = ImGui_ImplAllegro5_SetClipboardText;
     io.GetClipboardTextFn = ImGui_ImplAllegro5_GetClipboardText;
     io.ClipboardUserData = NULL;
-#endif
+
 
     return true;
 }
@@ -519,7 +519,7 @@ bool ImGui_ImplAllegro5_ProcessEvent(ALLEGRO_EVENT* ev)
             io.AddFocusEvent(true);
 #if defined(ALLEGRO_UNSTABLE)
             al_clear_keyboard_state(bd->Display);
-#endif
+
         }
         return true;
     }

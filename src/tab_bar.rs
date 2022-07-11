@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use crate::imgui_h::{ImGuiID, ImGuiTabBarFlags};
 use crate::imgui_rect::ImRect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
-use crate::imgui_vec::ImVec2;
+use crate::imgui_vec::Vector2D;
 use crate::imgui_window::ImGuiWindow;
 
 
@@ -70,7 +70,7 @@ impl ImGuiTabItem {
 
 // Storage for a tab bar (sizeof() 152 bytes)
 #[derive(Clone, Debug, Default)]
-pub struct DimgTabBar {
+pub struct TabBar {
     // ImVector<ImGuiTabItem> Tabs;
     pub Tabs: Vec<ImGuiTabItem>,
     // ImGuiTabBarFlags    flags;
@@ -127,10 +127,10 @@ pub struct DimgTabBar {
     pub LastTabItemIdx: i16,
     // float               ItemSpacingY;
     pub ItemSpacingY: f32,
-    // ImVec2              FramePadding;           // style.FramePadding locked at the time of BeginTabBar()
-    pub FramePadding: ImVec2,
-    // ImVec2              BackupCursorPos;
-    pub BackupCursorPos: ImVec2,
+    // Vector2D              FramePadding;           // style.FramePadding locked at the time of BeginTabBar()
+    pub FramePadding: Vector2D,
+    // Vector2D              BackupCursorPos;
+    pub BackupCursorPos: Vector2D,
     // ImGuiTextBuffer     TabsNames;              // For non-docking tab bar we re-append names in a contiguous buffer.
     pub TabsNames: ImGuiTextBuffer,
 

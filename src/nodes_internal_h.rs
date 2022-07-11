@@ -132,7 +132,7 @@ private:
 struct ImNodeData
 {
     int    Id;
-    ImVec2 Origin; // The node origin is in editor space
+    Vector2D Origin; // The node origin is in editor space
     ImRect TitleBarContentRect;
     ImRect Rect;
 
@@ -145,7 +145,7 @@ struct ImNodeData
     struct
     {
         float  CornerRounding;
-        ImVec2 Padding;
+        Vector2D Padding;
         float  BorderThickness;
     } LayoutStyle;
 
@@ -169,7 +169,7 @@ struct ImPinData
     ImRect               AttributeRect;
     ImNodesAttributeType Type;
     ImNodesPinShape      Shape;
-    ImVec2               Pos; // screen-space coordinates
+    Vector2D               Pos; // screen-space coordinates
     int                  Flags;
 
     struct
@@ -235,7 +235,7 @@ struct ImNodesStyleVarElement
         FloatValue[0] = value;
     }
 
-    ImNodesStyleVarElement(const ImNodesStyleVar variable, const ImVec2 value) : Item(variable)
+    ImNodesStyleVarElement(const ImNodesStyleVar variable, const Vector2D value) : Item(variable)
     {
         FloatValue[0] = value.x;
         FloatValue[1] = value.y;
@@ -253,8 +253,8 @@ struct ImNodesEditorContext
     ImVector<int> NodeDepthOrder;
 
     // ui related fields
-    ImVec2 Panning;
-    ImVec2 AutoPanningDelta;
+    Vector2D Panning;
+    Vector2D AutoPanningDelta;
     // Minimum and maximum extents of all content in grid space. valid after final
     // ImNodes::EndNode() call.
     ImRect GridContentBounds;
@@ -263,9 +263,9 @@ struct ImNodesEditorContext
     ImVector<int> SelectedLinkIndices;
 
     // Relative origins of selected nodes for snapping of dragged nodes
-    ImVector<ImVec2> SelectedNodeOffsets;
+    ImVector<Vector2D> SelectedNodeOffsets;
     // Offset of the primary node origin relative to the mouse cursor.
-    ImVec2           PrimaryNodeOffset;
+    Vector2D           PrimaryNodeOffset;
 
     ImClickInteractionState ClickInteraction;
 
@@ -306,7 +306,7 @@ struct ImNodesContext
     ImVector<int> OccludedPinIndices;
 
     // Canvas extents
-    ImVec2 CanvasOriginScreenSpace;
+    Vector2D CanvasOriginScreenSpace;
     ImRect CanvasRectScreenSpace;
 
     // Debug helpers
@@ -344,7 +344,7 @@ struct ImNodesContext
 
     // ImGui::io cache
 
-    ImVec2 MousePos;
+    Vector2D MousePos;
 
     bool  LeftMouseClicked;
     bool  LeftMouseReleased;

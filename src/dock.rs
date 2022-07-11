@@ -1,12 +1,12 @@
-use crate::config::DimgConfigFlags;
-use crate::context::DimgContext;
-use crate::types::DimgId;
-use crate::direction::DimgDirection;
-use crate::dock_context::{DimgDockContext, dock_context_clear_nodes, dock_context_rebuild_nodes};
+use crate::config::ConfigFlags;
+use crate::context::Context;
+use crate::types::Id32;
+use crate::direction::Direction;
+use crate::dock_context::{DockContext, dock_context_clear_nodes, dock_context_rebuild_nodes};
 use crate::dock_node::{DimgDockNodeFlags, DimgDockNodeSettings};
-use crate::rect::DimgRect;
-use crate::settings::DimgSettingsHandler;
-use crate::types::DIMG_ID_INVALID;
+use crate::rect::Rect;
+use crate::settings::SettingsHandler;
+use crate::types::ID_INVALID;
 
 
 
@@ -29,12 +29,12 @@ pub enum DimgWindowDockStyleCol
 
 // Docking context update function, called by NewFrame()
 // void ImGui::DockContextNewFrameUpdateDocking(ImGuiContext* ctx)
-pub fn dock_context_new_frame_update_docking(ctx: &mut DimgContext)
+pub fn dock_context_new_frame_update_docking(ctx: &mut Context)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc  = &ctx->DockContext;
-    let mut dc: &mut DimgDockContext = &mut ctx.dock_context;
-    if !(ctx.io.config_flags.contains(DimgConfigFlags::DockingEnable)) {
+    let mut dc: &mut DockContext = &mut ctx.dock_context;
+    if !(ctx.io.config_flags.contains(ConfigFlags::DockingEnable)) {
         return;
     }
 
@@ -150,21 +150,21 @@ pub struct DimgDockRequest
     // ImGuiDockRequestType    Type;
     pub request_type: DimgDockRequestType,
     // ImGuiWindow*            DockTargetWindow;   // Destination/Target Window to dock into (may be a loose window or a dock_node, might be NULL in which case DockTargetNode cannot be NULL)
-    pub dock_target_window: DimgId,
+    pub dock_target_window: Id32,
     // ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
-    pub dock_target_node: DimgId,
+    pub dock_target_node: Id32,
     // ImGuiWindow*            DockPayload;        // Source/Payload window to dock (may be a loose window or a dock_node), [Optional]
-    pub dock_payload: DimgId,
+    pub dock_payload: Id32,
     // ImGuiDir                DockSplitDir;
-    pub dock_split_dir: DimgDirection,
+    pub dock_split_dir: Direction,
     // float                   DockSplitRatio;
     pub dock_split_ratio: f32,
     // bool                    DockSplitOuter;
     pub dock_split_outer: bool,
     // ImGuiWindow*            UndockTargetWindow;
-    pub undock_target_window: DimgId,
+    pub undock_target_window: Id32,
     // ImGuiDockNode*          UndockTargetNode;
-    pub undock_target_node: DimgId,
+    pub undock_target_node: Id32,
 }
 
 impl DimgDockRequest {
@@ -179,12 +179,12 @@ impl DimgDockRequest {
         // DockSplitOuter = false;
         Self {
             request_type: DimgDockRequestType::None,
-            dock_target_window: DIMG_ID_INVALID,
-            dock_payload: DIMG_ID_INVALID,
-            undock_target_window: DIMG_ID_INVALID,
-            dock_target_node: DIMG_ID_INVALID,
-            undock_target_node: DIMG_ID_INVALID,
-            dock_split_dir: DimgDirection::None,
+            dock_target_window: ID_INVALID,
+            dock_payload: ID_INVALID,
+            undock_target_window: ID_INVALID,
+            dock_target_node: ID_INVALID,
+            undock_target_node: ID_INVALID,
+            dock_split_dir: Direction::None,
             dock_split_ratio: 0.5,
             dock_split_outer: false,
         }
@@ -221,13 +221,13 @@ pub struct DimgDockPreviewData
     // bool            IsSplitDirExplicit;         // Set when hovered the drop rect (vs. implicit SplitDir==None when hovered the window)
     pub is_split_dir_explicit: bool,
     // ImGuiDockNode*  SplitNode;
-    pub split_node: DimgId,
+    pub split_node: Id32,
     // ImGuiDir        SplitDir;
-    pub split_dir: DimgDirection,
+    pub split_dir: Direction,
     // float           SplitRatio;
     pub split_ratio: f32,
     // ImRect          DropRectsDraw[ImGuiDir_COUNT + 1];  // May be slightly different from hit-testing drop rects used in DockNodeCalcDropRects()
-    pub drop_rects_draw: [DimgRect; 5 ],
+    pub drop_rects_draw: [Rect; 5 ],
 }
 
 impl DimgDockPreviewData {
@@ -242,9 +242,9 @@ impl DimgDockPreviewData {
         is_sides_available: false,
         is_split_dir_explicit: false,
         split_node: 0,
-        split_dir: DimgDirection::None,
+        split_dir: Direction::None,
         split_ratio: 0.0,
-        drop_rects_draw: [DimgRect::new();5]
+        drop_rects_draw: [Rect::new();5]
     }
     }
 }

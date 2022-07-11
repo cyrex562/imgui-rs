@@ -1,5 +1,5 @@
 use crate::imgui_h::ImGuiID;
-use crate::imgui_vec::{ImVec1, ImVec2};
+use crate::imgui_vec::{ImVec1, Vector2D};
 
 // Stacked storage data for BeginGroup()/EndGroup()
 #[derive(Default,Debug,Clone)]
@@ -7,16 +7,16 @@ pub struct DimgGroupData
 {
     // ImGuiID     WindowID;
     pub WindowID: ImGuiID,
-    // ImVec2      BackupCursorPos;
-    pub BackupCursorPos: ImVec2,
-    // ImVec2      BackupCursorMaxPos;
-    pub BackupCursorMaxPos: ImVec2,
+    // Vector2D      BackupCursorPos;
+    pub BackupCursorPos: Vector2D,
+    // Vector2D      BackupCursorMaxPos;
+    pub BackupCursorMaxPos: Vector2D,
     // ImVec1      BackupIndent;
     pub BackupIndent: ImVec1,
     // ImVec1      BackupGroupOffset;
     pub BackupGroupOffset: ImVec1,
-    // ImVec2      BackupCurrLineSize;
-    pub BackupCurrLineSize: ImVec2,
+    // Vector2D      BackupCurrLineSize;
+    pub BackupCurrLineSize: Vector2D,
     // float       BackupCurrLineTextBaseOffset;
     pub BackupCurrLineTextBaseOffset: f32,
     // ImGuiID     BackupActiveIdIsAlive;

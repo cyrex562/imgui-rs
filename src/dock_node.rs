@@ -1,13 +1,13 @@
 use std::collections::HashSet;
 use crate::axis::DimgAxis;
 use crate::data_authority::DimgDataAuthority;
-use crate::types::DimgId;
+use crate::types::Id32;
 use crate::dock;
-use crate::rect::DimgRect;
-use crate::tab_bar::DimgTabBar;
-use crate::types::DIMG_ID_INVALID;
+use crate::rect::Rect;
+use crate::tab_bar::TabBar;
+use crate::types::ID_INVALID;
 use crate::utils::extend_hash_set;
-use crate::vec_nd::DimgVec2D;
+use crate::vectors::Vector2D;
 use crate::window::DimgWindowClass;
 
 
@@ -60,7 +60,7 @@ pub const SAVED_FLAGS_MASK: HashSet<DimgDockNodeFlags>          = HashSet::from(
 pub struct DimgDockNode
 {
     // DimgId                 id;
-    pub id: DimgId,
+    pub id: Id32,
     // ImGuiDockNodeFlags      shared_flags;                // (Write) flags shared by all nodes of a same dockspace hierarchy (inherited from the root node)
     pub shared_flags: HashSet<DimgDockNodeFlags>,
     // ImGuiDockNodeFlags      local_flags;                 // (Write) flags specific to this node
@@ -72,20 +72,20 @@ pub struct DimgDockNode
     // ImGuiDockNodeState      state;
     pub state: DimgDockNodeState,
     // ImGuiDockNode*          parent_node;
-    pub parent_node: DimgId, //*mut ImGuiDockNode,
+    pub parent_node: Id32, //*mut ImGuiDockNode,
     // ImGuiDockNode*          child_nodes[2];              // [split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
-    pub child_nodes: Vec<DimgId>, //[*mut ImGuiDockNode;2],
+    pub child_nodes: Vec<Id32>, //[*mut ImGuiDockNode;2],
     // ImVector<ImGuiWindow*>  windows;                    // Note: unordered list! Iterate tab_bar->Tabs for user-order.
-    pub windows: Vec<DimgId>,
+    pub windows: Vec<Id32>,
     // ImGuiTabBar*            tab_bar;
-    pub tab_bar: DimgTabBar, //*mut ImGuiTabBar,
+    pub tab_bar: TabBar, //*mut ImGuiTabBar,
     // DimgVec2D                  pos;                        // Current position
     // pub pos: DimgVec2D,
-    pub pos: DimgVec2D,
+    pub pos: Vector2D,
 // DimgVec2D                  size;                       // Current size
-    pub size: DimgVec2D,
+    pub size: Vector2D,
     // DimgVec2D                  size_ref;                    // [split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate size.
-    pub size_ref: DimgVec2D,
+    pub size_ref: Vector2D,
     // ImGuiAxis               split_axis;                  // [split node only] split axis (x or Y)
     pub split_axis: DimgAxis,
     // ImGuiWindowClass        window_class;                // [Root node only]
@@ -93,13 +93,13 @@ pub struct DimgDockNode
     // ImU32                   last_bg_color;
     pub last_bg_color: u32,
     // ImGuiWindow*            host_window;
-    pub host_window: DimgId, //*mut ImGuiWindow,
+    pub host_window: Id32, //*mut ImGuiWindow,
     // ImGuiWindow*            visible_window;              // Generally point to window which is id is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
-    pub visible_window: DimgId, //*mut ImGuiWindow,
+    pub visible_window: Id32, //*mut ImGuiWindow,
     // ImGuiDockNode*          central_node;                // [Root node only] Pointer to central node.
-    pub central_node: DimgId, // *mut ImGuiDockNode,
+    pub central_node: Id32, // *mut ImGuiDockNode,
     // ImGuiDockNode*          OnlyNodeWithWindows;        // [Root node only] Set when there is a single visible node within the hierarchy.
-    pub only_node_with_window: DimgId, // *mut ImGuiDockNode,
+    pub only_node_with_window: Id32, // *mut ImGuiDockNode,
     // int                     count_node_with_windows;       // [Root node only]
     pub count_node_with_windows: i32,
     // int                     last_frame_alive;             // Last frame number the node was updated or kept alive explicitly with DockSpace() + ImGuiDockNodeFlags_KeepAliveOnly
@@ -109,11 +109,11 @@ pub struct DimgDockNode
     // int                     LastFrameFocused;           // Last frame number the node was focused.
     pub last_grame_focused: i32,
     // DimgId                 last_focused_node_id;          // [Root node only] Which of our child docking node (any ancestor in the hierarchy) was last focused.
-    pub last_focused_node_id: DimgId,
+    pub last_focused_node_id: Id32,
     // DimgId                 selected_tab_id;              // [Leaf node only] Which of our tab/window is selected.
-    pub selected_tab_id: DimgId,
+    pub selected_tab_id: Id32,
     // DimgId                 want_close_tab_id;             // [Leaf node only] Set when closing a specific tab/window.
-    pub want_close_tab_id: DimgId,
+    pub want_close_tab_id: Id32,
     // ImGuiDataAuthority      authority_for_pos         :3;
     pub authority_for_pos: DimgDataAuthority,
     // ImGuiDataAuthority      authority_for_size        :3;
@@ -146,13 +146,13 @@ pub struct DimgDockNode
 
 impl DimgDockNode {
     // ImGuiDockNode(DimgId id);
-    pub fn new(id: DimgId) -> Self {
+    pub fn new(id: Id32) -> Self {
         todo!()
     }
     //     ~ImGuiDockNode();
     //     bool                    is_root_node() const      { return parent_node == NULL; }
     pub fn is_root_node(&self) -> bool {
-        self.parent_node > 0 && self.parent_node < DimgId::MAX
+        self.parent_node > 0 && self.parent_node < Id32::MAX
     }
     //     bool                    is_dock_space() const     { return (merged_flags & ImGuiDockNodeFlags_DockSpace) != 0; }
     pub fn is_dock_space(&self) -> bool {
@@ -178,20 +178,20 @@ impl DimgDockNode {
     }
     //     bool                    is_split_node() const     { return child_nodes[0] != NULL; }
     pub fn is_split_node(&self) -> bool {
-        self.child_nodes[0] != DIMG_ID_INVALID
+        self.child_nodes[0] != ID_INVALID
     }
     //     bool                    is_leaf_node() const      { return child_nodes[0] == NULL; }
     pub fn is_leaf_node(&self) -> bool {
-        self.child_nodes[0] == DIMG_ID_INVALID
+        self.child_nodes[0] == ID_INVALID
     }
     //     bool                    is_empty() const         { return child_nodes[0] == NULL && windows.size == 0; }
     pub fn is_empty(&self) -> bool {
         // self.child_nodes[0].is_null() && self.windows.is_empty()
-        self.child_nodes[0] == DIMG_ID_INVALID && self.child_nodes[1] == DIMG_ID_INVALID && self.windows.is_empty()
+        self.child_nodes[0] == ID_INVALID && self.child_nodes[1] == ID_INVALID && self.windows.is_empty()
     }
     //     ImRect                  rect() const            { return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
-    pub fn rect(&self) -> DimgRect {
-        DimgRect::new4(self.pos.x, self.pos.y, self.pos.x + self.size.x, self.pos.y + self.size.y)
+    pub fn rect(&self) -> Rect {
+        Rect::new4(self.pos.x, self.pos.y, self.pos.x + self.size.x, self.pos.y + self.size.y)
     }
     //
     //     void                    set_local_flags(ImGuiDockNodeFlags flags) { local_flags = flags; UpdateMergedFlags(); }
@@ -232,24 +232,24 @@ impl Default for DimgDockNodeState {
 pub struct DimgDockNodeSettings
 {
     // ImGuiID             id;
-    pub id: DimgId,
+    pub id: Id32,
     // ImGuiID             ParentNodeId;
-    pub parent_node_id: DimgId,
+    pub parent_node_id: Id32,
     // ImGuiID             ParentWindowId;
-    pub parent_window_id: DimgId,
+    pub parent_window_id: Id32,
     // ImGuiID             SelectedTabId;
-    pub selected_tab_id: DimgId,
+    pub selected_tab_id: Id32,
     // signed char         SplitAxis;
     pub split_axis: i8,
     // char                Depth;
     pub depth: i8,
     // ImGuiDockNodeFlags  flags;                  // NB: We save individual flags one by one in ascii format (ImGuiDockNodeFlags_SavedFlagsMask_)
     pub flags: DimgDockNodeFlags,
-    // ImVec2ih            pos;
-    pub pos: DimgVec2D,
-    // ImVec2ih            size;
-    pub size: DimgVec2D,
-    // ImVec2ih            SizeRef;
-    pub size_ref: DimgVec2D,
+    // Vector2Dih            pos;
+    pub pos: Vector2D,
+    // Vector2Dih            size;
+    pub size: Vector2D,
+    // Vector2Dih            SizeRef;
+    pub size_ref: Vector2D,
     // ImGuiDockNodeSettings() { memset(this, 0, sizeof(*this)); SplitAxis = ImGuiAxis_None; }
 }

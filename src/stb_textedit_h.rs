@@ -1732,7 +1732,7 @@ pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: *mut StbTexteditRow, obj: *mut ImGuiInpu
     let text = &mut obj.TextW;
     // const ImWchar* text_remaining = NULL;
     let mut text_remaining: *mut ImWchar = null_mut();
-    // const ImVec2 size = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &text_remaining, NULL, true);
+    // const Vector2D size = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &text_remaining, NULL, true);
     let mut size = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &mut text_remaining, null_mut(), true);
     r.x0 = 0.0;
     r.x1 = size.x;

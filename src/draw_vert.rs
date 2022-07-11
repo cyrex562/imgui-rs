@@ -1,11 +1,11 @@
-use crate::vec_nd::DimgVec2D;
+use crate::vectors::Vector2D;
 
 // Vertex layout
 // #ifndef IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT
 #[derive(Debug,Clone,Default)]
-pub struct DimgDrawVert
+pub struct DrawVertex
 {
-    pub pos: DimgVec2D,
-    pub uv: DimgVec2D,
+    pub pos: Vector2D,
+    pub uv: Vector2D,
     pub col: u32,
 }

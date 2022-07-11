@@ -1,6 +1,6 @@
 // A cardinal direction
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub enum DimgDirection {
+pub enum Direction {
     None,
     Left,
     Right,
@@ -8,7 +8,7 @@ pub enum DimgDirection {
     Down,
 }
 
-impl Default for DimgDirection {
+impl Default for Direction {
     fn default() -> Self {
         Self::None
     }

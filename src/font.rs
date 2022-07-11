@@ -1,23 +1,23 @@
 use crate::defines::DimgFontConfig;
-use crate::draw_list::DimgDrawList;
-use crate::font_atlas::DimgFontAtlas;
+use crate::draw_list::DrawList;
+use crate::font_atlas::FontAtlas;
 use crate::font_glyph::DimgFontGlyph;
-use crate::types::{DimgId, DimgWchar};
-use crate::vec_nd::DimgVec2D;
+use crate::types::{Id32, DimgWchar};
+use crate::vectors::Vector2D;
 
 // This structure is likely to evolve as we add support for incremental atlas updates
 #[derive(Default,Debug,Clone)]
 pub struct ImFontBuilderIO
 {
     // bool    (*FontBuilder_Build)(ImFontAtlas* atlas);
-    pub font_builder_build_fn: Option<fn(atlas: &mut DimgFontAtlas)>,
+    pub font_builder_build_fn: Option<fn(atlas: &mut FontAtlas)>,
 }
 
 
 // font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
 #[derive(Debug,Clone,Default)]
-pub struct DimgFont
+pub struct Font
 {
     // Members: Hot ~20/24 bytes (for CalcTextSize)
     pub index_advance_x: Vec<f32>, // ImVector<float>             index_advance_x;      // 12-16 // out //            // Sparse. glyphs->advance_x in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
@@ -30,7 +30,7 @@ pub struct DimgFont
     pub fallback_glyph: DimgFontGlyph, // const ImFontGlyph*          fallback_glyph;      // 4-8   // out // = find_glyph(FontFallbackChar)
 
     // Members: Cold ~32/40 bytes
-    pub container_atlas: Option<DimgFontAtlas>, // ImFontAtlas*                container_atlas;     // 4-8   // out //            // What we has been loaded into
+    pub container_atlas: Option<FontAtlas>, // ImFontAtlas*                container_atlas;     // 4-8   // out //            // What we has been loaded into
     // const ImFontConfig*         config_data;         // 4-8   // in  //            // Pointer within container_atlas->config_data
     pub config_data: Option<DimgFontConfig>,
 // short                       config_data_count;    // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
@@ -55,7 +55,7 @@ pub struct DimgFont
 
 }
 
-impl DimgFont {
+impl Font {
     //  ImFont();
     //      ~ImFont();
     //      const ImFontGlyph*find_glyph(ImWchar c) const;
@@ -87,20 +87,20 @@ impl DimgFont {
     //
     //     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
     //     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0 to disable.
-    //      ImVec2            calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-    pub fn calc_text_size_a(&self, size: f32, max_width: f32, wrap_width: f32, text: &String) -> DimgVec2D {
+    //      Vector2D            calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
+    pub fn calc_text_size_a(&self, size: f32, max_width: f32, wrap_width: f32, text: &String) -> Vector2D {
         todo!()
     }
     //      const char*       calc_word_wrap_position_a(float scale, const char* text, const char* text_end, float wrap_width) const;
     pub fn calc_word_wrap_position_a(&self, scale: f32, text: &String, wrap_width: f32) -> String{
         todo!()
     }
-    //      void              render_char(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const;
-    pub fn render_char(&self, draw_list: &DimgDrawList, size: f32, pos: &DimgVec2D, col: u32, c: DimgWchar) {
+    //      void              render_char(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, ImWchar c) const;
+    pub fn render_char(&self, draw_list: &DrawList, size: f32, pos: &Vector2D, col: u32, c: DimgWchar) {
         todo!()
     }
-    //      void              render_text(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0, bool cpu_fine_clip = false) const;
-    pub fn render_text(&self, draw_list: &mut DimgDrawList, size: f32, pos: &DimgVec2D, col: u32, clip_rect: &ImVec4, text: &String, wrap_width: f32, cpu_fine_clip: bool) {
+    //      void              render_text(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0, bool cpu_fine_clip = false) const;
+    pub fn render_text(&self, draw_list: &mut DrawList, size: f32, pos: &Vector2D, col: u32, clip_rect: &Vector4D, text: &String, wrap_width: f32, cpu_fine_clip: bool) {
         todo!()
     }
     //
@@ -184,7 +184,7 @@ impl ImFontGlyphRangesBuilder {
 #[derive(Clone,Debug,Default)]
 pub struct DimgFontConfig
 {
-    pub id: DimgId,
+    pub id: Id32,
     pub font_data: Vec<u8>, // void*           font_data;               //          // TTF/OTF data
     pub font_data_size: i32,         //          // TTF/OTF data size
     pub font_data_owned_by_atlas: bool,   // true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
@@ -193,10 +193,10 @@ pub struct DimgFontConfig
     pub oversample_h: i32,          // 3        // Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal so you can reduce this to 2 to save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
     pub oversample_v: i32,          // 1        // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
     pub pixel_snap_h: bool,             // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set oversample_h/V to 1.
-    pub glyph_extra_spacing: DimgVec2D,      // 0, 0     // Extra spacing (in pixels) between glyphs. Only x axis is supported for now.
-    pub glyph_offset: DimgVec2D,            // 0, 0     // Offset all glyphs from this font input.
+    pub glyph_extra_spacing: Vector2D,      // 0, 0     // Extra spacing (in pixels) between glyphs. Only x axis is supported for now.
+    pub glyph_offset: Vector2D,            // 0, 0     // Offset all glyphs from this font input.
     pub glyph_ranges: Vec<DimgWchar>, // const ImWchar*  glyph_ranges;            // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
-    pub glyph_min_advance_x: f32,      // 0        // Minimum advance_x for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
+    pub glyph_min_advance_x: f32,      // 0        // Minimum advance_x for glyphs, set min to align font icons, set both min/max to enforce mono-space font
     pub glyph_max_advance_x: f32,      // FLT_MAX  // Maximum advance_x for glyphs
     pub merge_mode: bool,              // false    // merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use glyph_offset.y when merge font of different heights.
     pub font_builder_flags: u32,     // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
@@ -207,6 +207,6 @@ pub struct DimgFontConfig
     // char            name[40];               // name (strictly to ease debugging)
     pub name: String,
     // ImFont*         dst_font;
-    pub dst_font: DimgId,
+    pub dst_font: Id32,
     //  ImFontConfig();
 }

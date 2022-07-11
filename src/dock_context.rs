@@ -1,13 +1,13 @@
-use crate::config::DimgConfigFlags;
-use crate::context::DimgContext;
+use crate::config::ConfigFlags;
+use crate::context::Context;
 use crate::dock::{DimgDockRequest, DimgDockRequestType};
 use crate::dock_node::{DimgDockNode, DimgDockNodeSettings};
-use crate::settings::DimgSettingsHandler;
-use crate::types::DimgId;
+use crate::settings::SettingsHandler;
+use crate::types::Id32;
 
 
 #[derive(Default,Debug,Clone)]
-pub struct DimgDockContext {
+pub struct DockContext {
     //ImGuiStorage                    Nodes;          // Map id -> ImGuiDockNode*: active nodes
     pub nodes: Vec<DimgDockNode>,
     // ImVector<ImGuiDockRequest>      Requests;
@@ -20,18 +20,18 @@ pub struct DimgDockContext {
 }
 
 
-impl DimgDockContext {
+impl DockContext {
 
 
 }
 
-pub fn dock_ctx_initialize(ctx: &mut DimgContext)
+pub fn dock_ctx_initialize(ctx: &mut Context)
     {
     // ImGuiContext& g = *ctx;
 
     // Add .ini handle for persistent docking data
     // ImGuiSettingsHandler ini_handler;
-        let mut ini_handler = DimgSettingsHandler {
+        let mut ini_handler = SettingsHandler {
             type_name: String::from("Docking"),
             type_hash: DimgHashStr(String::from("Docking")),
             clear_all_fn: DockSettingsHandler_ClearAll,
@@ -46,7 +46,7 @@ pub fn dock_ctx_initialize(ctx: &mut DimgContext)
 }
 
 //void ImGui::DockContextShutdown(ImGuiContext* ctx)
-pub fn dock_context_shutdown(ctx: &mut DimgContext)
+pub fn dock_context_shutdown(ctx: &mut Context)
 {
     // ImGuiDockContext* dc  = &ctx->DockContext;
     //for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
@@ -64,7 +64,7 @@ pub fn dock_context_shutdown(ctx: &mut DimgContext)
 }
 
 // void ImGui::DockContextClearNodes(ImGuiContext* ctx, ImGuiID root_id, bool clear_settings_refs)
-pub fn dock_context_clear_nodes(ctx:&mut DimgContext, root_id: DimgId, clear_settings_refs: bool)
+pub fn dock_context_clear_nodes(ctx:&mut Context, root_id: Id32, clear_settings_refs: bool)
 {
     // IM_UNUSED(ctx);
     // IM_ASSERT(ctx == GImGui);
@@ -77,14 +77,14 @@ pub fn dock_context_clear_nodes(ctx:&mut DimgContext, root_id: DimgId, clear_set
 // [DEBUG] This function also acts as a defacto test to make sure we can rebuild from scratch without a glitch
 // (Different from DockSettingsHandler_ClearAll() + DockSettingsHandler_ApplyAll() because this reuses current settings!)
 // void ImGui::DockContextRebuildNodes(ImGuiContext* ctx)
-pub fn dock_context_rebuild_nodes(ctx: &mut DimgContext)
+pub fn dock_context_rebuild_nodes(ctx: &mut Context)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc = &ctx->DockContext;
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRebuildNodes\n");
     SaveIniSettingsToMemory();
     // ImGuiID root_id = 0; // Rebuild all
-    let mut root_id: DimgId = 0;
+    let mut root_id: Id32 = 0;
     dock_context_clear_nodes(ctx, root_id, false);
     dock_context_build_nodes_from_settings(ctx, &mut ctx.dock_context.nodes_settings);
     dock_context_build_add_windows_to_nodes(ctx, root_id);
@@ -92,12 +92,12 @@ pub fn dock_context_rebuild_nodes(ctx: &mut DimgContext)
 
 // Docking context update function, called by NewFrame()
 // void ImGui::DockContextNewFrameUpdateUndocking(ImGuiContext* ctx)
-pub fn dock_context_new_frame_update_undocking(ctx: &mut DimgContext)
+pub fn dock_context_new_frame_update_undocking(ctx: &mut Context)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc = &ctx->DockContext;
     let mut dc = &mut ctx.dock_context;
-    if !(ctx.io.config_flags.contains(&DimgConfigFlags::DockingEnable))
+    if !(ctx.io.config_flags.contains(&ConfigFlags::DockingEnable))
     {
         if dc.nodes.len() > 0 || dc.requests.len() > 0 {
             dock_context_clear_nodes(ctx, 0, true);

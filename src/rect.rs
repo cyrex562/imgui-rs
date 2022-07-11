@@ -1,197 +1,196 @@
-use crate::vec_nd::ImVec4;
+use crate::vectors::Vector4D;
 use crate::math::{ImClampVec2, ImFloor, ImMaxVec2, ImMinVec2};
-use crate::vec_nd::ImVec2;
+use crate::vectors::Vector2D;
 
 // Helper: ImRect (2D axis aligned bounding-box)
-// NB: we can't rely on ImVec2 math operators being available here!
-#[derive(Default,Clone,Debug)]
-pub struct DimgRect
-{
-    // ImVec2      Min;    // Upper-left
-    pub Min: ImVec2,
-    // ImVec2      Max;    // Lower-right
-    pub Max: ImVec2,
+// NB: we can't rely on Vector2D math operators being available here!
+#[derive(Default, Clone, Debug)]
+pub struct Rect {
+    // Vector2D      min;    // Upper-left
+    pub min: Vector2D,
+    // Vector2D      max;    // Lower-right
+    pub max: Vector2D,
 }
 
-impl DimgRect {
-    //  constexpr ImRect()                                        : Min(0.0, 0.0), Max(0.0, 0.0)  {}
+impl Rect {
+    //  constexpr ImRect()                                        : min(0.0, 0.0), max(0.0, 0.0)  {}
     pub fn new() -> Self {
         Self {
-            Min: ImVec2::new2(),
-            Max: ImVec2::new2()
+            min: Vector2D::new2(),
+            max: Vector2D::new2(),
         }
     }
-    //     constexpr ImRect(const ImVec2& min, const ImVec2& max)    : Min(min), Max(max)                {}
-    pub fn new2(min: &ImVec2, max: &ImVec2) -> Self {
+    //     constexpr ImRect(const Vector2D& min, const Vector2D& max)    : min(min), max(max)                {}
+    pub fn new2(min: &Vector2D, max: &Vector2D) -> Self {
         Self {
-            Min: min.clone(),
-            Max: max.clone()
+            min: min.clone(),
+            max: max.clone(),
         }
     }
-    //     constexpr ImRect(const ImVec4& v)                         : Min(v.x, v.y), Max(v.z, v.w)      {}
-    pub fn new3(v: &ImVec4) -> Self {
+    //     constexpr ImRect(const Vector4D& v)                         : min(v.x, v.y), max(v.z, v.w)      {}
+    pub fn new3(v: &Vector4D) -> Self {
         Self {
-            Min: ImVec2::new(v.y, v.y),
-            Max: ImVec2::new(v.z,v.w),
+            min: Vector2D::new(v.y, v.y),
+            max: Vector2D::new(v.z, v.w),
         }
     }
-    //     constexpr ImRect(float x1, float y1, float x2, float y2)  : Min(x1, y1), Max(x2, y2)          {}
+    //     constexpr ImRect(float x1, float y1, float x2, float y2)  : min(x1, y1), max(x2, y2)          {}
     pub fn new4(x1: f32, y1: f32, x2: f32, y2: f32) -> Self {
         Self {
-            Min: ImVec2::new(x1, y1),
-            Max: ImVec2::new(x2,y2)
+            min: Vector2D::new(x1, y1),
+            max: Vector2D::new(x2, y2),
         }
     }
     //
-    //     ImVec2      get_center() const                   { return ImVec2((Min.x + Max.x) * 0.5, (Min.y + Max.y) * 0.5); }
-    pub fn GetCenter(&self) -> ImVec2 {
-        ImVec2 {
-            x: (self.Min.x + self.Max.x) * 0.5,
-            y: (self.Min.y + self.Max.y) * 0.5
+    //     Vector2D      get_center() const                   { return Vector2D((min.x + max.x) * 0.5, (min.y + max.y) * 0.5); }
+    pub fn get_center(&self) -> Vector2D {
+        Vector2D {
+            x: (self.min.x + self.max.x) * 0.5,
+            y: (self.min.y + self.max.y) * 0.5,
         }
     }
-    //     ImVec2      GetSize() const                     { return ImVec2(Max.x - Min.x, Max.y - Min.y); }
-    pub fn GetSize(&self) -> ImVec2 {
-        ImVec2 {
-            x: (self.Max.x - self.Min.x),
-            y: (self.Max.y - self.Min.y)
+    //     Vector2D      get_size() const                     { return Vector2D(max.x - min.x, max.y - min.y); }
+    pub fn get_size(&self) -> Vector2D {
+        Vector2D {
+            x: (self.max.x - self.min.x),
+            y: (self.max.y - self.min.y),
         }
     }
-    //     float       GetWidth() const                    { return Max.x - Min.x; }
-    pub fn GetWidth(&self) -> f32 {
-        self.Max.x - self.Min.x
+    //     float       get_width() const                    { return max.x - min.x; }
+    pub fn get_width(&self) -> f32 {
+        self.max.x - self.min.x
     }
-    //     float       GetHeight() const                   { return Max.y - Min.y; }
-    pub fn GetHeight(&self) -> f32 {
-        self.Max.y - self.Min.y
+    //     float       get_height() const                   { return max.y - min.y; }
+    pub fn get_height(&self) -> f32 {
+        self.max.y - self.min.y
     }
-    //     float       GetArea() const                     { return (Max.x - Min.x) * (Max.y - Min.y); }
-    pub fn GetArea(&self) -> f32 {
-        (self.Max.x - self.Min.x) * (self.Max.y - self.Min.y)
+    //     float       get_area() const                     { return (max.x - min.x) * (max.y - min.y); }
+    pub fn get_area(&self) -> f32 {
+        (self.max.x - self.min.x) * (self.max.y - self.min.y)
     }
-    //     ImVec2      GetTL() const                       { return Min; }                   // Top-left
-    pub fn GetTL(&self) -> ImVec2 {
-        self.Min.clone()
+    //     Vector2D      get_tl() const                       { return min; }                   // Top-left
+    pub fn get_tl(&self) -> Vector2D {
+        self.min.clone()
     }
-    //     ImVec2      GetTR() const                       { return ImVec2(Max.x, Min.y); }  // Top-right
-    pub fn GetTR(&self) -> ImVec2 {
-        ImVec2 {
-            x: self.Max.x,
-            y: self.Min.y
+    //     Vector2D      get_tr() const                       { return Vector2D(max.x, min.y); }  // Top-right
+    pub fn get_tr(&self) -> Vector2D {
+        Vector2D {
+            x: self.max.x,
+            y: self.min.y,
         }
     }
-    //     ImVec2      GetBL() const                       { return ImVec2(Min.x, Max.y); }  // Bottom-left
-    pub fn GetBL(&self) -> ImVec2 {
-        ImVec2 {
-            x: self.Min.x,
-            y: self.Max.y
+    //     Vector2D      get_bl() const                       { return Vector2D(min.x, max.y); }  // Bottom-left
+    pub fn get_bl(&self) -> Vector2D {
+        Vector2D {
+            x: self.min.x,
+            y: self.max.y,
         }
     }
-    //     ImVec2      GetBR() const                       { return Max; }                   // Bottom-right
-    pub fn GetBR(&self) -> ImVec2 {
-        self.Max.clone()
+    //     Vector2D      get_br() const                       { return max; }                   // Bottom-right
+    pub fn get_br(&self) -> Vector2D {
+        self.max.clone()
     }
-    //     bool        Contains(const ImVec2& p) const     { return p.x     >= Min.x && p.y     >= Min.y && p.x     <  Max.x && p.y     <  Max.y; }
-    pub fn Contains(&self, p: &ImVec2) -> bool {
-        p.x >= self.Min.x && p.y >= self.Min.y && p.x < self.Max.x && p.y < self.Max.y
+    //     bool        contains(const Vector2D& p) const     { return p.x     >= min.x && p.y     >= min.y && p.x     <  max.x && p.y     <  max.y; }
+    pub fn contains_vector(&self, p: &Vector2D) -> bool {
+        p.x >= self.min.x && p.y >= self.min.y && p.x < self.max.x && p.y < self.max.y
     }
-    //     bool        Contains(const ImRect& r) const     { return r.Min.x >= Min.x && r.Min.y >= Min.y && r.Max.x <= Max.x && r.Max.y <= Max.y; }
-    pub fn Contains2(&self, r: &Self) -> bool {
-        r.Min.x >= self.Min.x && r.Min.y >= self.Min.y && r.Max.x <= self.max.x && r.Max.y <= self.Max.y
+    //     bool        contains(const ImRect& r) const     { return r.min.x >= min.x && r.min.y >= min.y && r.max.x <= max.x && r.max.y <= max.y; }
+    pub fn contains_rect(&self, r: &Self) -> bool {
+        r.min.x >= self.min.x && r.min.y >= self.min.y && r.max.x <= self.max.x && r.max.y <= self.max.y
     }
-    //     bool        Overlaps(const ImRect& r) const     { return r.Min.y <  Max.y && r.Max.y >  Min.y && r.Min.x <  Max.x && r.Max.x >  Min.x; }
-    pub fn Overlaps(&self, r: &Self) -> bool {
-        r.Min.y < self.Max.y && r.Max.y > self.Min.y && r.Min.x < self.Max.x && r.Max.x > self.Min.x
+    //     bool        Overlaps(const ImRect& r) const     { return r.min.y <  max.y && r.max.y >  min.y && r.min.x <  max.x && r.max.x >  min.x; }
+    pub fn overlaps_rect(&self, r: &Self) -> bool {
+        r.min.y < self.max.y && r.max.y > self.min.y && r.min.x < self.max.x && r.max.x > self.min.x
     }
-    //     void        Add(const ImVec2& p)                { if (Min.x > p.x)     Min.x = p.x;     if (Min.y > p.y)     Min.y = p.y;     if (Max.x < p.x)     Max.x = p.x;     if (Max.y < p.y)     Max.y = p.y; }
-    pub fn Add(&mut self, p: &ImVec2) {
-        if self.Min.x > p.x {
-            self.Min.x = p.x
+    //     void        Add(const Vector2D& p)                { if (min.x > p.x)     min.x = p.x;     if (min.y > p.y)     min.y = p.y;     if (max.x < p.x)     max.x = p.x;     if (max.y < p.y)     max.y = p.y; }
+    pub fn add_vector(&mut self, p: &Vector2D) {
+        if self.min.x > p.x {
+            self.min.x = p.x
         }
-        if self.Min.y > p.y {
-            self.Min.y = p.y
+        if self.min.y > p.y {
+            self.min.y = p.y
         }
-        if self.Max.x < p.x {
-            self.Max.x = p.x
+        if self.max.x < p.x {
+            self.max.x = p.x
         }
-        if self.Max.y < p.y {
-            self.Max.y = p.y
-        }
-    }
-    //     void        Add(const ImRect& r)                { if (Min.x > r.Min.x) Min.x = r.Min.x; if (Min.y > r.Min.y) Min.y = r.Min.y; if (Max.x < r.Max.x) Max.x = r.Max.x; if (Max.y < r.Max.y) Max.y = r.Max.y; }
-    pub fn Add2(&mut self, r: &Self) {
-        if self.Min.x > r.Min.x {
-            self.Min.x = r.Min.x
-        }
-        if self.Miny > r.Min.y {
-            self.Min.y = r.Min.y
-        }
-        if self.Max.x < r.Max.x {
-            self.Max.x = r.Max.x
-        }
-        if self.Max.y < r.Max.y {
-            self.max.y = r.Max.y
+        if self.max.y < p.y {
+            self.max.y = p.y
         }
     }
-    //     void        Expand(const float amount)          { Min.x -= amount;   Min.y -= amount;   Max.x += amount;   Max.y += amount; }
-    pub fn Expand(&mut self, amount: f32) {
-        self.Min.x -= amount;
-        self.Min.y -= amount;
-        self.Max.x += amount;
-        self.Max.y += amount;
+    //     void        Add(const ImRect& r)                { if (min.x > r.min.x) min.x = r.min.x; if (min.y > r.min.y) min.y = r.min.y; if (max.x < r.max.x) max.x = r.max.x; if (max.y < r.max.y) max.y = r.max.y; }
+    pub fn add_rect(&mut self, r: &Self) {
+        if self.min.x > r.min.x {
+            self.min.x = r.min.x
+        }
+        if self.Miny > r.min.y {
+            self.min.y = r.min.y
+        }
+        if self.max.x < r.max.x {
+            self.max.x = r.max.x
+        }
+        if self.max.y < r.max.y {
+            self.max.y = r.max.y
+        }
     }
-    //     void        Expand(const ImVec2& amount)        { Min.x -= amount.x; Min.y -= amount.y; Max.x += amount.x; Max.y += amount.y; }
-    pub fn Expand2(&mut self, amount: &ImVec2) {
-        self.Min.x -= amount.x;
-        self.Min.y -= amount.y;
-        self.Max.x += amount.x;
-        self.Max.y += amount.y;
+    //     void        Expand(const float amount)          { min.x -= amount;   min.y -= amount;   max.x += amount;   max.y += amount; }
+    pub fn expand_float(&mut self, amount: f32) {
+        self.min.x -= amount;
+        self.min.y -= amount;
+        self.max.x += amount;
+        self.max.y += amount;
     }
-    //     void        Translate(const ImVec2& d)          { Min.x += d.x; Min.y += d.y; Max.x += d.x; Max.y += d.y; }
-    pub fn Translate(&mut self, d: &ImVec2) {
-        self.Min.x += d.x;
-        self.Min.y += d.y;
-        self.Max.x += d.x;
-        self.Max.y += d.y;
+    //     void        Expand(const Vector2D& amount)        { min.x -= amount.x; min.y -= amount.y; max.x += amount.x; max.y += amount.y; }
+    pub fn expand_vector(&mut self, amount: &Vector2D) {
+        self.min.x -= amount.x;
+        self.min.y -= amount.y;
+        self.max.x += amount.x;
+        self.max.y += amount.y;
     }
-    //     void        TranslateX(float dx)                { Min.x += dx; Max.x += dx; }
-    pub fn TranslateX(&mut self, dx: f32) {
-        self.Min.x += dx;
-        self.Max.x += dx;
+    //     void        Translate(const Vector2D& d)          { min.x += d.x; min.y += d.y; max.x += d.x; max.y += d.y; }
+    pub fn translate_vector(&mut self, d: &Vector2D) {
+        self.min.x += d.x;
+        self.min.y += d.y;
+        self.max.x += d.x;
+        self.max.y += d.y;
     }
-    //     void        TranslateY(float dy)                { Min.y += dy; Max.y += dy; }
-    pub fn TranslateY(&mut self, dy: f32) {
-        self.Min.y += dy;
-        self.Max.y += dy;
+    //     void        TranslateX(float dx)                { min.x += dx; max.x += dx; }
+    pub fn translate_x_f32(&mut self, dx: f32) {
+        self.min.x += dx;
+        self.max.x += dx;
     }
-    //     void        ClipWith(const ImRect& r)           { Min = ImMax(Min, r.Min); Max = ImMin(Max, r.Max); }                   // Simple version, may lead to an inverted rectangle, which is fine for Contains/Overlaps test but not for display.
-    pub fn ClipWidth(&mut self, r: &Self) {
-        self.Min = ImMaxVec2(&self.Min, &r.Min);
-        self.Max = ImMinVec2(&self.Max, &r.Max);
+    //     void        TranslateY(float dy)                { min.y += dy; max.y += dy; }
+    pub fn translate_y_f32(&mut self, dy: f32) {
+        self.min.y += dy;
+        self.max.y += dy;
     }
-    //     void        ClipWithFull(const ImRect& r)       { Min = ImClamp(Min, r.Min, r.Max); Max = ImClamp(Max, r.Min, r.Max); } // Full version, ensure both points are fully clipped.
-    pub fn ClipWithFull(&mut self, r: &Self) {
-        self.Min = ImClampVec2(&self.Min, &r.Min, &r.Max);
-        self.Max = ImClampVec2(&self.Max, &r.Min, &r.Max);
+    //     void        ClipWith(const ImRect& r)           { min = ImMax(min, r.min); max = ImMin(max, r.max); }                   // Simple version, may lead to an inverted rectangle, which is fine for contains/Overlaps test but not for display.
+    pub fn clip_width(&mut self, r: &Self) {
+        self.min = ImMaxVec2(&self.min, &r.min);
+        self.max = ImMinVec2(&self.max, &r.max);
     }
-    //     void        Floor()                             { Min.x = IM_FLOOR(Min.x); Min.y = IM_FLOOR(Min.y); Max.x = IM_FLOOR(Max.x); Max.y = IM_FLOOR(Max.y); }
-    pub fn Floor(&mut self) {
-        self.Min.x = ImFloor(self.Min.x);
-        self.Min.y = ImFloor(self.Min.y);
-        self.Max.x = ImFloor(self.Max.x);
-        self.Max.y = ImFloor(self.Max.y);
+    //     void        ClipWithFull(const ImRect& r)       { min = ImClamp(min, r.min, r.max); max = ImClamp(max, r.min, r.max); } // Full version, ensure both points are fully clipped.
+    pub fn clip_with_full(&mut self, r: &Self) {
+        self.min = ImClampVec2(&self.min, &r.min, &r.max);
+        self.max = ImClampVec2(&self.max, &r.min, &r.max);
     }
-    //     bool        IsInverted() const                  { return Min.x > Max.x || Min.y > Max.y; }
-    pub fn IsInverted(&mut self) -> bool {
-        self.Min.x > self.Max.x || self.Min.y > self.Max.y
+    //     void        Floor()                             { min.x = IM_FLOOR(min.x); min.y = IM_FLOOR(min.y); max.x = IM_FLOOR(max.x); max.y = IM_FLOOR(max.y); }
+    pub fn floor(&mut self) {
+        self.min.x = ImFloor(self.min.x);
+        self.min.y = ImFloor(self.min.y);
+        self.max.x = ImFloor(self.max.x);
+        self.max.y = ImFloor(self.max.y);
     }
-    //     ImVec4      ToVec4() const                      { return ImVec4(Min.x, Min.y, Max.x, Max.y); }
-    pub fn ToVec4(&self) -> ImVec4 {
-        ImVec4 {
-            x: self.Min.x,
-            y: self.Min.y,
-            z: self.Max.x,
-            w: self.Max.y
+    //     bool        IsInverted() const                  { return min.x > max.x || min.y > max.y; }
+    pub fn is_inverted(&mut self) -> bool {
+        self.min.x > self.max.x || self.min.y > self.max.y
+    }
+    //     Vector4D      ToVec4() const                      { return Vector4D(min.x, min.y, max.x, max.y); }
+    pub fn to_vector_4d(&self) -> Vector4D {
+        Vector4D {
+            x: self.min.x,
+            y: self.min.y,
+            z: self.max.x,
+            w: self.max.y,
         }
     }
 }

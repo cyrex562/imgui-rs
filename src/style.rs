@@ -3,23 +3,23 @@ use crate::imgui_color::{ColorConvertFloat4ToU32, IM_COL32_A_MASK, IM_COL32_A_SH
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{ImGuiColor, ImGuiDataType, ImGuiDir, ImGuiStyleVar};
 use crate::imgui_math::ImLerpF32;
-use crate::imgui_vec::{ImVec2, ImVec4};
+use crate::imgui_vec::{Vector2D, Vector4D};
 
 #[allow(non_snake_)]
-pub struct DimgStyle {
+pub struct Style {
     pub Alpha: f32,
     // Global alpha applies to everything in Dear ImGui.
     pub DisabledAlpha: f32,
     // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
-    pub WindowPadding: ImVec2,
+    pub WindowPadding: Vector2D,
     // Padding within a window.
     pub WindowRounding: f32,
     // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
     pub WindowBorderSize: f32,
     // Thickness of border around windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
-    pub WindowMinSize: ImVec2,
+    pub WindowMinSize: Vector2D,
     // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
-    pub WindowTitleAlign: ImVec2,
+    pub WindowTitleAlign: Vector2D,
     // Alignment for title bar text. Defaults to (0.0,0.5) for left-aligned,vertically centered.
     pub WindowMenuButtonPosition: ImGuiDir,
     // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
@@ -31,19 +31,19 @@ pub struct DimgStyle {
     // Radius of popup window corners rounding. (Note that tooltip windows use window_rounding)
     pub PopupBorderSize: f32,
     // Thickness of border around popup/tooltip windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
-    pub FramePadding: ImVec2,
+    pub FramePadding: Vector2D,
     // Padding within a framed rectangle (used by most widgets).
     pub FrameRounding: f32,
     // Radius of frame corners rounding. Set to 0.0 to have rectangular frame (used by most widgets).
     pub FrameBorderSize: f32,
     // Thickness of border around frames. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
-    pub ItemSpacing: ImVec2,
+    pub ItemSpacing: Vector2D,
     // Horizontal and vertical spacing between widgets/lines.
-    pub ItemInnerSpacing: ImVec2,
+    pub ItemInnerSpacing: Vector2D,
     // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label).
-    pub CellPadding: ImVec2,
+    pub CellPadding: Vector2D,
     // Padding within a table cell
-    pub TouchExtraPadding: ImVec2,
+    pub TouchExtraPadding: Vector2D,
     // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
     pub IndentSpacing: f32,
     // Horizontal indentation when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
@@ -67,13 +67,13 @@ pub struct DimgStyle {
     // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to FLT_MAX to never show close button unless selected.
     pub ColorButtonPosition: ImGuiDir,
     // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-    pub ButtonTextAlign: ImVec2,
+    pub ButtonTextAlign: Vector2D,
     // Alignment of button text when button is larger than text. Defaults to (0.5, 0.5) (centered).
-    pub SelectableTextAlign: ImVec2,
+    pub SelectableTextAlign: Vector2D,
     // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-    pub DisplayWindowPadding: ImVec2,
+    pub DisplayWindowPadding: Vector2D,
     // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-    pub DisplaySafeAreaPadding: ImVec2,
+    pub DisplaySafeAreaPadding: Vector2D,
     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
     pub MouseCursorScale: f32,
     // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
@@ -86,36 +86,36 @@ pub struct DimgStyle {
     pub CurveTessellationTol: f32,
     // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
     pub CircleTessellationMaxError: f32,
-    // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
-    // ImVec4      Colors[ImGuiColor::COUNT];
+    // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
+    // Vector4D      Colors[ImGuiColor::COUNT];
     pub Colors: Vec<ImGuiColor>,
 
     //  ImGuiStyle();
     //  void ScaleAllSizes(float scale_factor);
 }
 
-impl DimgStyle {
+impl Style {
     pub fn new() -> Self {
         let mut out = Self {..Default::default()};
         out.Alpha = 1.0;             // Global alpha applies to everything in Dear ImGui.
         out.DisabledAlpha = 0.60;            // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
-        out.WindowPadding = ImVec2::new(8.0, 8.0);      // Padding within a window
+        out.WindowPadding = Vector2D::new(8.0, 8.0);      // Padding within a window
         out.WindowRounding = 0.0;             // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
         out.WindowBorderSize = 1.0;             // Thickness of border around windows. Generally set to 0.0 or 1.0. Other values not well tested.
-        out.WindowMinSize = ImVec2::new(32.0, 32.0);    // Minimum window size
-        out.WindowTitleAlign = ImVec2::new(0.0, 0.5);// Alignment for title bar text
+        out.WindowMinSize = Vector2D::new(32.0, 32.0);    // Minimum window size
+        out.WindowTitleAlign = Vector2D::new(0.0, 0.5);// Alignment for title bar text
         out.WindowMenuButtonPosition = ImGuiDir::ImGuiDir_Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
         out.ChildRounding = 0.0;             // Radius of child window corners rounding. Set to 0.0 to have rectangular child windows
         out.ChildBorderSize = 1.0;             // Thickness of border around child windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.PopupRounding = 0.0;             // Radius of popup window corners rounding. Set to 0.0 to have rectangular child windows
         out.PopupBorderSize = 1.0;             // Thickness of border around popup or tooltip windows. Generally set to 0.0 or 1.0. Other values not well tested.
-        out.FramePadding = ImVec2::new(4.0, 3.0);      // Padding within a framed rectangle (used by most widgets)
+        out.FramePadding = Vector2D::new(4.0, 3.0);      // Padding within a framed rectangle (used by most widgets)
         out.FrameRounding = 0.0;             // Radius of frame corners rounding. Set to 0.0 to have rectangular frames (used by most widgets).
         out.FrameBorderSize = 0.0;             // Thickness of border around frames. Generally set to 0.0 or 1.0. Other values not well tested.
-        out.ItemSpacing = ImVec2::new(8.0, 4.0);      // Horizontal and vertical spacing between widgets/lines
-        out.ItemInnerSpacing = ImVec2::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
-        out.CellPadding = ImVec2::new(4.0, 2.0);      // Padding within a table cell
-        out.TouchExtraPadding = ImVec2::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
+        out.ItemSpacing = Vector2D::new(8.0, 4.0);      // Horizontal and vertical spacing between widgets/lines
+        out.ItemInnerSpacing = Vector2D::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
+        out.CellPadding = Vector2D::new(4.0, 2.0);      // Padding within a table cell
+        out.TouchExtraPadding = Vector2D::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
         out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
         out.ColumnsMinSpacing = 6.0;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
         out.ScrollbarSize = 14.0;            // width of the vertical scrollbar, height of the horizontal scrollbar
@@ -127,16 +127,16 @@ impl DimgStyle {
         out.TabBorderSize = 0.0;             // Thickness of border around tabs.
         out.TabMinWidthForCloseButton = 0.0;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to FLT_MAX to never show close button unless selected.
         out.ColorButtonPosition = ImGuiDir::Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-        out.ButtonTextAlign = ImVec2::new(0.5, 0.5);// Alignment of button text when button is larger than text.
-        out.SelectableTextAlign = ImVec2::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-        out.DisplayWindowPadding = ImVec2::new(19.0, 19.0);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-        out.DisplaySafeAreaPadding = ImVec2::new(3.0, 3.0);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
+        out.ButtonTextAlign = Vector2D::new(0.5, 0.5);// Alignment of button text when button is larger than text.
+        out.SelectableTextAlign = Vector2D::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
+        out.DisplayWindowPadding = Vector2D::new(19.0, 19.0);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
+        out.DisplaySafeAreaPadding = Vector2D::new(3.0, 3.0);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
         out.MouseCursorScale = 1.0;             // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). May be removed later.
         out.AntiAliasedLines = true;             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
         out.AntiAliasedLinesUseTex = true;             // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
         out.AntiAliasedFill = true;             // Enable anti-aliased filled shapes (rounded rectangles, circles, etc.).
         out.CurveTessellationTol = 1.25;            // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
-        out.CircleTessellationMaxError = 0.30;         // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
+        out.CircleTessellationMaxError = 0.30;         // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 
         // Default theme
         StyleColorsDark(&mut out);
@@ -146,17 +146,17 @@ impl DimgStyle {
     // To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
 // Important: This operation is lossy because we round all sizes to integer. If you need to change your scale multiples, call this over a freshly initialized ImGuiStyle structure rather than scaling multiple times.
     pub fn scale_all_sizes(&mut self, scale_factor: f32) {
-        self.WindowPadding = ImVec2::floor(&self.WindowPadding * scale_factor);
+        self.WindowPadding = Vector2D::floor(&self.WindowPadding * scale_factor);
         self.WindowRounding = f32::floor(&self.WindowRounding * scale_factor);
-        self.WindowMinSize = ImVec2::floor(&self.WindowMinSize * scale_factor);
+        self.WindowMinSize = Vector2D::floor(&self.WindowMinSize * scale_factor);
         self.ChildRounding = f32::floor(&self.ChildRounding * scale_factor);
         self.PopupRounding = f32::floor(&self.PopupRounding * scale_factor);
-        self.FramePadding = ImVec2::floor(&self.FramePadding * scale_factor);
+        self.FramePadding = Vector2D::floor(&self.FramePadding * scale_factor);
         self.FrameRounding = f32::floor(&self.FrameRounding * scale_factor);
-        self.ItemSpacing = ImVec2::floor(&self.ItemSpacing * scale_factor);
-        self.ItemInnerSpacing = ImVec2::floor(&self.ItemInnerSpacing * scale_factor);
-        self.CellPadding = ImVec2::floor(&self.CellPadding * scale_factor);
-        self.TouchExtraPadding = ImVec2::floor(&self.TouchExtraPadding * scale_factor);
+        self.ItemSpacing = Vector2D::floor(&self.ItemSpacing * scale_factor);
+        self.ItemInnerSpacing = Vector2D::floor(&self.ItemInnerSpacing * scale_factor);
+        self.CellPadding = Vector2D::floor(&self.CellPadding * scale_factor);
+        self.TouchExtraPadding = Vector2D::floor(&self.TouchExtraPadding * scale_factor);
         self.IndentSpacing = f32::floor(self.IndentSpacing * scale_factor);
         self.ColumnsMinSpacing = f32::floor(self.ColumnsMinSpacing * scale_factor);
         self.ScrollbarSize = f32::floor(self.ScrollbarSize * scale_factor);
@@ -171,8 +171,8 @@ impl DimgStyle {
             } else {
                 f32::MAX
             };
-        self.DisplayWindowPadding = ImVec2::floor(&self.DisplayWindowPadding * scale_factor);
-        self.DisplaySafeAreaPadding = ImVec2::floor(&self.DisplaySafeAreaPadding * scale_factor);
+        self.DisplayWindowPadding = Vector2D::floor(&self.DisplayWindowPadding * scale_factor);
+        self.DisplaySafeAreaPadding = Vector2D::floor(&self.DisplaySafeAreaPadding * scale_factor);
         self.MouseCursorScale = f32::floor(self.MouseCursorScale * scale_factor);
     }
 }
@@ -207,8 +207,8 @@ impl DimgStyleMod {
             Backup: ImGuiStyleModUnion1{BackupFloat: [v,0]}
         }
     }
-    //     ImGuiStyleMod(ImGuiStyleVar idx, ImVec2 v)  { VarIdx = idx; BackupFloat[0] = v.x; BackupFloat[1] = v.y; }
-    pub fn new3(idx: ImGuiStyleVar, v: ImVec2) -> Self {
+    //     ImGuiStyleMod(ImGuiStyleVar idx, Vector2D v)  { VarIdx = idx; BackupFloat[0] = v.x; BackupFloat[1] = v.y; }
+    pub fn new3(idx: ImGuiStyleVar, v: Vector2D) -> Self {
         Self {
             VarIdx: idx,
             Backup: ImGuiStyleModUnion1{BackupFloat: [v.x,v.y]}
@@ -232,8 +232,8 @@ pub fn GetColorU32(idx: ImGuiColor, alpha_mul: f32) -> u32
     return ColorConvertFloat4ToU32(c);
 }
 
-// ImU32 ImGui::GetColorU32(const ImVec4& col)
-pub fn GetColorU32_2(col: &mut ImVec4) -> u32
+// ImU32 ImGui::GetColorU32(const Vector4D& col)
+pub fn GetColorU32_2(col: &mut Vector4D) -> u32
 {
     let style = &mut GImGui.Style;
     let mut c = col;
@@ -241,8 +241,8 @@ pub fn GetColorU32_2(col: &mut ImVec4) -> u32
     return ColorConvertFloat4ToU32(c);
 }
 
-// const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol idx)
-pub fn GetStyleColorVec4(idx: ImGuiColor) -> ImVec4
+// const Vector4D& ImGui::GetStyleColorVec4(ImGuiCol idx)
+pub fn GetStyleColorVec4(idx: ImGuiColor) -> Vector4D
 {
     // ImGuiStyle& style = GImGui.style;
     let style = &GImGui.Style;
@@ -261,7 +261,7 @@ pub fn GetColorU32_3(col: u32) -> u32
     (col & !IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT)
 }
 
-pub fn ColorConvertU32ToFloat4(col: u32) -> ImVec4 {
+pub fn ColorConvertU32ToFloat4(col: u32) -> Vector4D {
     todo!()
 }
 
@@ -279,8 +279,8 @@ pub fn PushStyleColor(idx: &ImGuiColor, col: u32)
     g.Style.Colors[idx] = ColorConvertU32ToFloat4(col);
 }
 
-// void ImGui::PushStyleColor(ImGuiCol idx, const ImVec4& col)
-pub fn PushStyleColor2(idx: &ImGuiColor, col: &mut ImVec4)
+// void ImGui::PushStyleColor(ImGuiCol idx, const Vector4D& col)
+pub fn PushStyleColor2(idx: &ImGuiColor, col: &mut Vector4D)
 {
     // ImGuiContext& g = *GImGui;
     let g = &GImGui;
@@ -388,18 +388,18 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 //     IM_ASSERT(0 && "Called PushStyleVar() float variant but variable is not a float!");
 // }
 
-// void ImGui::PushStyleVar(ImGuiStyleVar idx, const ImVec2& val)
+// void ImGui::PushStyleVar(ImGuiStyleVar idx, const Vector2D& val)
 // {
 //     const ImGuiStyleVarInfo* var_info = GetStyleVarInfo(idx);
 //     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 2)
 //     {
 //         ImGuiContext& g = *GImGui;
-//         ImVec2* pvar = (ImVec2*)var_info->GetVarPtr(&g.style);
+//         Vector2D* pvar = (Vector2D*)var_info->GetVarPtr(&g.style);
 //         g.style_var_stack.push_back(ImGuiStyleMod(idx, *pvar));
 //         *pvar = val;
 //         return;
 //     }
-//     IM_ASSERT(0 && "Called PushStyleVar() ImVec2 variant but variable is not a ImVec2!");
+//     IM_ASSERT(0 && "Called PushStyleVar() Vector2D variant but variable is not a Vector2D!");
 // }
 
 // void ImGui::PopStyleVar(int count)
@@ -484,199 +484,199 @@ pub fn GetStyleColorName(idx: &ImGuiColor) -> String
 
 
 // void ImGui::StyleColorsDark(ImGuiStyle* dst)
-pub fn StyleColorsDark(dst: *mut DimgStyle)
+pub fn StyleColorsDark(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.Style };
-    // ImVec4* colors = style->Colors;
+    // Vector4D* colors = style->Colors;
     let colors = &mut style.Colors;
 
-    colors[ImGuiColor::Text]                   = ImVec4::new(1.00, 1.00, 1.00, 1.00);
-    colors[ImGuiColor::TextDisabled]           = ImVec4::new(0.50, 0.50, 0.50, 1.00);
-    colors[ImGuiColor::WindowBg]               = ImVec4::new(0.06, 0.06, 0.06, 0.94);
-    colors[ImGuiColor::ChildBg]                = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::PopupBg]                = ImVec4::new(0.08, 0.08, 0.08, 0.94);
-    colors[ImGuiColor::Border]                 = ImVec4::new(0.43, 0.43, 0.50, 0.50);
-    colors[ImGuiColor::BorderShadow]           = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::FrameBg]                = ImVec4::new(0.16, 0.29, 0.48, 0.54);
-    colors[ImGuiColor::FrameBgHovered]         = ImVec4::new(0.26, 0.59, 0.98, 0.40);
-    colors[ImGuiColor::FrameBgActive]          = ImVec4::new(0.26, 0.59, 0.98, 0.67);
-    colors[ImGuiColor::TitleBg]                = ImVec4::new(0.04, 0.04, 0.04, 1.00);
-    colors[ImGuiColor::TitleBgActive]          = ImVec4::new(0.16, 0.29, 0.48, 1.00);
-    colors[ImGuiColor::TitleBgCollapsed]       = ImVec4::new(0.00, 0.00, 0.00, 0.51);
-    colors[ImGuiColor::MenuBarBg]              = ImVec4::new(0.14, 0.14, 0.14, 1.00);
-    colors[ImGuiColor::ScrollbarBg]            = ImVec4::new(0.02, 0.02, 0.02, 0.53);
-    colors[ImGuiColor::ScrollbarGrab]          = ImVec4::new(0.31, 0.31, 0.31, 1.00);
-    colors[ImGuiColor::ScrollbarGrabHovered]   = ImVec4::new(0.41, 0.41, 0.41, 1.00);
-    colors[ImGuiColor::ScrollbarGrabActive]    = ImVec4::new(0.51, 0.51, 0.51, 1.00);
-    colors[ImGuiColor::CheckMark]              = ImVec4::new(0.26, 0.59, 0.98, 1.00);
-    colors[ImGuiColor::SliderGrab]             = ImVec4::new(0.24, 0.52, 0.88, 1.00);
-    colors[ImGuiColor::SliderGrabActive]       = ImVec4::new(0.26, 0.59, 0.98, 1.00);
-    colors[ImGuiColor::Button]                 = ImVec4::new(0.26, 0.59, 0.98, 0.40);
-    colors[ImGuiColor::ButtonHovered]          = ImVec4::new(0.26, 0.59, 0.98, 1.00);
-    colors[ImGuiColor::ButtonActive]           = ImVec4::new(0.06, 0.53, 0.98, 1.00);
-    colors[ImGuiColor::Header]                 = ImVec4::new(0.26, 0.59, 0.98, 0.31);
-    colors[ImGuiColor::HeaderHovered]          = ImVec4::new(0.26, 0.59, 0.98, 0.80);
-    colors[ImGuiColor::HeaderActive]           = ImVec4::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::Text]                   = Vector4D::new(1.00, 1.00, 1.00, 1.00);
+    colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.50, 0.50, 0.50, 1.00);
+    colors[ImGuiColor::WindowBg]               = Vector4D::new(0.06, 0.06, 0.06, 0.94);
+    colors[ImGuiColor::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::PopupBg]                = Vector4D::new(0.08, 0.08, 0.08, 0.94);
+    colors[ImGuiColor::Border]                 = Vector4D::new(0.43, 0.43, 0.50, 0.50);
+    colors[ImGuiColor::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::FrameBg]                = Vector4D::new(0.16, 0.29, 0.48, 0.54);
+    colors[ImGuiColor::FrameBgHovered]         = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::FrameBgActive]          = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::TitleBg]                = Vector4D::new(0.04, 0.04, 0.04, 1.00);
+    colors[ImGuiColor::TitleBgActive]          = Vector4D::new(0.16, 0.29, 0.48, 1.00);
+    colors[ImGuiColor::TitleBgCollapsed]       = Vector4D::new(0.00, 0.00, 0.00, 0.51);
+    colors[ImGuiColor::MenuBarBg]              = Vector4D::new(0.14, 0.14, 0.14, 1.00);
+    colors[ImGuiColor::ScrollbarBg]            = Vector4D::new(0.02, 0.02, 0.02, 0.53);
+    colors[ImGuiColor::ScrollbarGrab]          = Vector4D::new(0.31, 0.31, 0.31, 1.00);
+    colors[ImGuiColor::ScrollbarGrabHovered]   = Vector4D::new(0.41, 0.41, 0.41, 1.00);
+    colors[ImGuiColor::ScrollbarGrabActive]    = Vector4D::new(0.51, 0.51, 0.51, 1.00);
+    colors[ImGuiColor::CheckMark]              = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::SliderGrab]             = Vector4D::new(0.24, 0.52, 0.88, 1.00);
+    colors[ImGuiColor::SliderGrabActive]       = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::Button]                 = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::ButtonHovered]          = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::ButtonActive]           = Vector4D::new(0.06, 0.53, 0.98, 1.00);
+    colors[ImGuiColor::Header]                 = Vector4D::new(0.26, 0.59, 0.98, 0.31);
+    colors[ImGuiColor::HeaderHovered]          = Vector4D::new(0.26, 0.59, 0.98, 0.80);
+    colors[ImGuiColor::HeaderActive]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
     colors[ImGuiColor::Separator]              = colors[ImGuiColor::Border];
-    colors[ImGuiColor::SeparatorHovered]       = ImVec4::new(0.10, 0.40, 0.75, 0.78);
-    colors[ImGuiColor::SeparatorActive]        = ImVec4::new(0.10, 0.40, 0.75, 1.00);
-    colors[ImGuiColor::ResizeGrip]             = ImVec4::new(0.26, 0.59, 0.98, 0.20);
-    colors[ImGuiColor::ResizeGripHovered]      = ImVec4::new(0.26, 0.59, 0.98, 0.67);
-    colors[ImGuiColor::ResizeGripActive]       = ImVec4::new(0.26, 0.59, 0.98, 0.95);
+    colors[ImGuiColor::SeparatorHovered]       = Vector4D::new(0.10, 0.40, 0.75, 0.78);
+    colors[ImGuiColor::SeparatorActive]        = Vector4D::new(0.10, 0.40, 0.75, 1.00);
+    colors[ImGuiColor::ResizeGrip]             = Vector4D::new(0.26, 0.59, 0.98, 0.20);
+    colors[ImGuiColor::ResizeGripHovered]      = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::ResizeGripActive]       = Vector4D::new(0.26, 0.59, 0.98, 0.95);
     colors[ImGuiColor::Tab]                    = ImLerpF32(colors[ImGuiColor::Header],       colors[ImGuiColor::TitleBgActive], 0.80);
     colors[ImGuiColor::TabHovered]             = colors[ImGuiColor::HeaderHovered];
     colors[ImGuiColor::TabActive]              = ImLerpF32(colors[ImGuiColor::HeaderActive], colors[ImGuiColor::TitleBgActive], 0.60);
     colors[ImGuiColor::TabUnfocused]           = ImLerpF32(colors[ImGuiColor::Tab],          colors[ImGuiColor::TitleBg], 0.80);
     colors[ImGuiColor::TabUnfocusedActive]     = ImLerpF32(colors[ImGuiColor::TabActive],    colors[ImGuiColor::TitleBg], 0.40);
-    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::HeaderActive] * ImVec4::new(1.0, 1.0, 1.0, 0.7);
-    colors[ImGuiColor::DockingEmptyBg]         = ImVec4::new(0.20, 0.20, 0.20, 1.00);
-    colors[ImGuiColor::PlotLines]              = ImVec4::new(0.61, 0.61, 0.61, 1.00);
-    colors[ImGuiColor::PlotLinesHovered]       = ImVec4::new(1.00, 0.43, 0.35, 1.00);
-    colors[ImGuiColor::PlotHistogram]          = ImVec4::new(0.90, 0.70, 0.00, 1.00);
-    colors[ImGuiColor::PlotHistogramHovered]   = ImVec4::new(1.00, 0.60, 0.00, 1.00);
-    colors[ImGuiColor::TableHeaderBg]          = ImVec4::new(0.19, 0.19, 0.20, 1.00);
-    colors[ImGuiColor::TableBorderStrong]      = ImVec4::new(0.31, 0.31, 0.35, 1.00);   // Prefer using Alpha=1.0 here
-    colors[ImGuiColor::TableBorderLight]       = ImVec4::new(0.23, 0.23, 0.25, 1.00);   // Prefer using Alpha=1.0 here
-    colors[ImGuiColor::TableRowBg]             = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::TableRowBgAlt]          = ImVec4::new(1.00, 1.00, 1.00, 0.06);
-    colors[ImGuiColor::TextSelectedBg]         = ImVec4::new(0.26, 0.59, 0.98, 0.35);
-    colors[ImGuiColor::DragDropTarget]         = ImVec4::new(1.00, 1.00, 0.00, 0.90);
-    colors[ImGuiColor::NavHighlight]           = ImVec4::new(0.26, 0.59, 0.98, 1.00);
-    colors[ImGuiColor::NavWindowingHighlight]  = ImVec4::new(1.00, 1.00, 1.00, 0.70);
-    colors[ImGuiColor::NavWindowingDimBg]      = ImVec4::new(0.80, 0.80, 0.80, 0.20);
-    colors[ImGuiColor::ModalWindowDimBg]       = ImVec4::new(0.80, 0.80, 0.80, 0.35);
+    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::HeaderActive] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
+    colors[ImGuiColor::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
+    colors[ImGuiColor::PlotLines]              = Vector4D::new(0.61, 0.61, 0.61, 1.00);
+    colors[ImGuiColor::PlotLinesHovered]       = Vector4D::new(1.00, 0.43, 0.35, 1.00);
+    colors[ImGuiColor::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogramHovered]   = Vector4D::new(1.00, 0.60, 0.00, 1.00);
+    colors[ImGuiColor::TableHeaderBg]          = Vector4D::new(0.19, 0.19, 0.20, 1.00);
+    colors[ImGuiColor::TableBorderStrong]      = Vector4D::new(0.31, 0.31, 0.35, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableBorderLight]       = Vector4D::new(0.23, 0.23, 0.25, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::TableRowBgAlt]          = Vector4D::new(1.00, 1.00, 1.00, 0.06);
+    colors[ImGuiColor::TextSelectedBg]         = Vector4D::new(0.26, 0.59, 0.98, 0.35);
+    colors[ImGuiColor::DragDropTarget]         = Vector4D::new(1.00, 1.00, 0.00, 0.90);
+    colors[ImGuiColor::NavHighlight]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::NavWindowingHighlight]  = Vector4D::new(1.00, 1.00, 1.00, 0.70);
+    colors[ImGuiColor::NavWindowingDimBg]      = Vector4D::new(0.80, 0.80, 0.80, 0.20);
+    colors[ImGuiColor::ModalWindowDimBg]       = Vector4D::new(0.80, 0.80, 0.80, 0.35);
 }
 
 // void ImGui::StyleColorsClassic(ImGuiStyle* dst)
-pub fn StyleColorsClassic(dst: *mut DimgStyle)
+pub fn StyleColorsClassic(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.Style };
-    // ImVec4* colors = style->Colors;
+    // Vector4D* colors = style->Colors;
     let colors = &mut style.Colors;
     
-    colors[ImGuiColor::Text]                   = ImVec4::new(0.90, 0.90, 0.90, 1.00);
-    colors[ImGuiColor::TextDisabled]           = ImVec4::new(0.60, 0.60, 0.60, 1.00);
-    colors[ImGuiColor::WindowBg]               = ImVec4::new(0.00, 0.00, 0.00, 0.85);
-    colors[ImGuiColor::ChildBg]                = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::PopupBg]                = ImVec4::new(0.11, 0.11, 0.14, 0.92);
-    colors[ImGuiColor::Border]                 = ImVec4::new(0.50, 0.50, 0.50, 0.50);
-    colors[ImGuiColor::BorderShadow]           = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::FrameBg]                = ImVec4::new(0.43, 0.43, 0.43, 0.39);
-    colors[ImGuiColor::FrameBgHovered]         = ImVec4::new(0.47, 0.47, 0.69, 0.40);
-    colors[ImGuiColor::FrameBgActive]          = ImVec4::new(0.42, 0.41, 0.64, 0.69);
-    colors[ImGuiColor::TitleBg]                = ImVec4::new(0.27, 0.27, 0.54, 0.83);
-    colors[ImGuiColor::TitleBgActive]          = ImVec4::new(0.32, 0.32, 0.63, 0.87);
-    colors[ImGuiColor::TitleBgCollapsed]       = ImVec4::new(0.40, 0.40, 0.80, 0.20);
-    colors[ImGuiColor::MenuBarBg]              = ImVec4::new(0.40, 0.40, 0.55, 0.80);
-    colors[ImGuiColor::ScrollbarBg]            = ImVec4::new(0.20, 0.25, 0.30, 0.60);
-    colors[ImGuiColor::ScrollbarGrab]          = ImVec4::new(0.40, 0.40, 0.80, 0.30);
-    colors[ImGuiColor::ScrollbarGrabHovered]   = ImVec4::new(0.40, 0.40, 0.80, 0.40);
-    colors[ImGuiColor::ScrollbarGrabActive]    = ImVec4::new(0.41, 0.39, 0.80, 0.60);
-    colors[ImGuiColor::CheckMark]              = ImVec4::new(0.90, 0.90, 0.90, 0.50);
-    colors[ImGuiColor::SliderGrab]             = ImVec4::new(1.00, 1.00, 1.00, 0.30);
-    colors[ImGuiColor::SliderGrabActive]       = ImVec4::new(0.41, 0.39, 0.80, 0.60);
-    colors[ImGuiColor::Button]                 = ImVec4::new(0.35, 0.40, 0.61, 0.62);
-    colors[ImGuiColor::ButtonHovered]          = ImVec4::new(0.40, 0.48, 0.71, 0.79);
-    colors[ImGuiColor::ButtonActive]           = ImVec4::new(0.46, 0.54, 0.80, 1.00);
-    colors[ImGuiColor::Header]                 = ImVec4::new(0.40, 0.40, 0.90, 0.45);
-    colors[ImGuiColor::HeaderHovered]          = ImVec4::new(0.45, 0.45, 0.90, 0.80);
-    colors[ImGuiColor::HeaderActive]           = ImVec4::new(0.53, 0.53, 0.87, 0.80);
-    colors[ImGuiColor::Separator]              = ImVec4::new(0.50, 0.50, 0.50, 0.60);
-    colors[ImGuiColor::SeparatorHovered]       = ImVec4::new(0.60, 0.60, 0.70, 1.00);
-    colors[ImGuiColor::SeparatorActive]        = ImVec4::new(0.70, 0.70, 0.90, 1.00);
-    colors[ImGuiColor::ResizeGrip]             = ImVec4::new(1.00, 1.00, 1.00, 0.10);
-    colors[ImGuiColor::ResizeGripHovered]      = ImVec4::new(0.78, 0.82, 1.00, 0.60);
-    colors[ImGuiColor::ResizeGripActive]       = ImVec4::new(0.78, 0.82, 1.00, 0.90);
+    colors[ImGuiColor::Text]                   = Vector4D::new(0.90, 0.90, 0.90, 1.00);
+    colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);
+    colors[ImGuiColor::WindowBg]               = Vector4D::new(0.00, 0.00, 0.00, 0.85);
+    colors[ImGuiColor::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::PopupBg]                = Vector4D::new(0.11, 0.11, 0.14, 0.92);
+    colors[ImGuiColor::Border]                 = Vector4D::new(0.50, 0.50, 0.50, 0.50);
+    colors[ImGuiColor::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::FrameBg]                = Vector4D::new(0.43, 0.43, 0.43, 0.39);
+    colors[ImGuiColor::FrameBgHovered]         = Vector4D::new(0.47, 0.47, 0.69, 0.40);
+    colors[ImGuiColor::FrameBgActive]          = Vector4D::new(0.42, 0.41, 0.64, 0.69);
+    colors[ImGuiColor::TitleBg]                = Vector4D::new(0.27, 0.27, 0.54, 0.83);
+    colors[ImGuiColor::TitleBgActive]          = Vector4D::new(0.32, 0.32, 0.63, 0.87);
+    colors[ImGuiColor::TitleBgCollapsed]       = Vector4D::new(0.40, 0.40, 0.80, 0.20);
+    colors[ImGuiColor::MenuBarBg]              = Vector4D::new(0.40, 0.40, 0.55, 0.80);
+    colors[ImGuiColor::ScrollbarBg]            = Vector4D::new(0.20, 0.25, 0.30, 0.60);
+    colors[ImGuiColor::ScrollbarGrab]          = Vector4D::new(0.40, 0.40, 0.80, 0.30);
+    colors[ImGuiColor::ScrollbarGrabHovered]   = Vector4D::new(0.40, 0.40, 0.80, 0.40);
+    colors[ImGuiColor::ScrollbarGrabActive]    = Vector4D::new(0.41, 0.39, 0.80, 0.60);
+    colors[ImGuiColor::CheckMark]              = Vector4D::new(0.90, 0.90, 0.90, 0.50);
+    colors[ImGuiColor::SliderGrab]             = Vector4D::new(1.00, 1.00, 1.00, 0.30);
+    colors[ImGuiColor::SliderGrabActive]       = Vector4D::new(0.41, 0.39, 0.80, 0.60);
+    colors[ImGuiColor::Button]                 = Vector4D::new(0.35, 0.40, 0.61, 0.62);
+    colors[ImGuiColor::ButtonHovered]          = Vector4D::new(0.40, 0.48, 0.71, 0.79);
+    colors[ImGuiColor::ButtonActive]           = Vector4D::new(0.46, 0.54, 0.80, 1.00);
+    colors[ImGuiColor::Header]                 = Vector4D::new(0.40, 0.40, 0.90, 0.45);
+    colors[ImGuiColor::HeaderHovered]          = Vector4D::new(0.45, 0.45, 0.90, 0.80);
+    colors[ImGuiColor::HeaderActive]           = Vector4D::new(0.53, 0.53, 0.87, 0.80);
+    colors[ImGuiColor::Separator]              = Vector4D::new(0.50, 0.50, 0.50, 0.60);
+    colors[ImGuiColor::SeparatorHovered]       = Vector4D::new(0.60, 0.60, 0.70, 1.00);
+    colors[ImGuiColor::SeparatorActive]        = Vector4D::new(0.70, 0.70, 0.90, 1.00);
+    colors[ImGuiColor::ResizeGrip]             = Vector4D::new(1.00, 1.00, 1.00, 0.10);
+    colors[ImGuiColor::ResizeGripHovered]      = Vector4D::new(0.78, 0.82, 1.00, 0.60);
+    colors[ImGuiColor::ResizeGripActive]       = Vector4D::new(0.78, 0.82, 1.00, 0.90);
     colors[ImGuiColor::Tab]                    = ImLerpF32(colors[ImGuiColor::Header],       colors[ImGuiColor::TitleBgActive], 0.80);
     colors[ImGuiColor::TabHovered]             = colors[ImGuiColor::HeaderHovered];
     colors[ImGuiColor::TabActive]              = ImLerpF32(colors[ImGuiColor::HeaderActive], colors[ImGuiColor::TitleBgActive], 0.60);
     colors[ImGuiColor::TabUnfocused]           = ImLerpF32(colors[ImGuiColor::Tab],          colors[ImGuiColor::TitleBg], 0.80);
     colors[ImGuiColor::TabUnfocusedActive]     = ImLerpF32(colors[ImGuiColor::TabActive],    colors[ImGuiColor::TitleBg], 0.40);
-    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::Header] * ImVec4::new(1.0, 1.0, 1.0, 0.7);
-    colors[ImGuiColor::DockingEmptyBg]         = ImVec4::new(0.20, 0.20, 0.20, 1.00);
-    colors[ImGuiColor::PlotLines]              = ImVec4::new(1.00, 1.00, 1.00, 1.00);
-    colors[ImGuiColor::PlotLinesHovered]       = ImVec4::new(0.90, 0.70, 0.00, 1.00);
-    colors[ImGuiColor::PlotHistogram]          = ImVec4::new(0.90, 0.70, 0.00, 1.00);
-    colors[ImGuiColor::PlotHistogramHovered]   = ImVec4::new(1.00, 0.60, 0.00, 1.00);
-    colors[ImGuiColor::TableHeaderBg]          = ImVec4::new(0.27, 0.27, 0.38, 1.00);
-    colors[ImGuiColor::TableBorderStrong]      = ImVec4::new(0.31, 0.31, 0.45, 1.00);   // Prefer using Alpha=1.0 here
-    colors[ImGuiColor::TableBorderLight]       = ImVec4::new(0.26, 0.26, 0.28, 1.00);   // Prefer using Alpha=1.0 here
-    colors[ImGuiColor::TableRowBg]             = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::TableRowBgAlt]          = ImVec4::new(1.00, 1.00, 1.00, 0.07);
-    colors[ImGuiColor::TextSelectedBg]         = ImVec4::new(0.00, 0.00, 1.00, 0.35);
-    colors[ImGuiColor::DragDropTarget]         = ImVec4::new(1.00, 1.00, 0.00, 0.90);
+    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::Header] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
+    colors[ImGuiColor::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
+    colors[ImGuiColor::PlotLines]              = Vector4D::new(1.00, 1.00, 1.00, 1.00);
+    colors[ImGuiColor::PlotLinesHovered]       = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogramHovered]   = Vector4D::new(1.00, 0.60, 0.00, 1.00);
+    colors[ImGuiColor::TableHeaderBg]          = Vector4D::new(0.27, 0.27, 0.38, 1.00);
+    colors[ImGuiColor::TableBorderStrong]      = Vector4D::new(0.31, 0.31, 0.45, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableBorderLight]       = Vector4D::new(0.26, 0.26, 0.28, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::TableRowBgAlt]          = Vector4D::new(1.00, 1.00, 1.00, 0.07);
+    colors[ImGuiColor::TextSelectedBg]         = Vector4D::new(0.00, 0.00, 1.00, 0.35);
+    colors[ImGuiColor::DragDropTarget]         = Vector4D::new(1.00, 1.00, 0.00, 0.90);
     colors[ImGuiColor::NavHighlight]           = colors[ImGuiColor::HeaderHovered];
-    colors[ImGuiColor::NavWindowingHighlight]  = ImVec4::new(1.00, 1.00, 1.00, 0.70);
-    colors[ImGuiColor::NavWindowingDimBg]      = ImVec4::new(0.80, 0.80, 0.80, 0.20);
-    colors[ImGuiColor::ModalWindowDimBg]       = ImVec4::new(0.20, 0.20, 0.20, 0.35);
+    colors[ImGuiColor::NavWindowingHighlight]  = Vector4D::new(1.00, 1.00, 1.00, 0.70);
+    colors[ImGuiColor::NavWindowingDimBg]      = Vector4D::new(0.80, 0.80, 0.80, 0.20);
+    colors[ImGuiColor::ModalWindowDimBg]       = Vector4D::new(0.20, 0.20, 0.20, 0.35);
 }
 
 // Those light colors are better suited with a thicker font than the default one + FrameBorder
 // void ImGui::StyleColorsLight(ImGuiStyle* dst)
-pub fn StyleColorsLight(dst: *mut DimgStyle)
+pub fn StyleColorsLight(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.Style };
-    // ImVec4* colors = style->Colors;
+    // Vector4D* colors = style->Colors;
     let colors = &mut style.Colors;
 
-    colors[ImGuiColor::Text]                   = ImVec4::new(0.00, 0.00, 0.00, 1.00);
-    colors[ImGuiColor::TextDisabled]           = ImVec4::new(0.60, 0.60, 0.60, 1.00);
-    colors[ImGuiColor::WindowBg]               = ImVec4::new(0.94, 0.94, 0.94, 1.00);
-    colors[ImGuiColor::ChildBg]                = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::PopupBg]                = ImVec4::new(1.00, 1.00, 1.00, 0.98);
-    colors[ImGuiColor::Border]                 = ImVec4::new(0.00, 0.00, 0.00, 0.30);
-    colors[ImGuiColor::BorderShadow]           = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::FrameBg]                = ImVec4::new(1.00, 1.00, 1.00, 1.00);
-    colors[ImGuiColor::FrameBgHovered]         = ImVec4::new(0.26, 0.59, 0.98, 0.40);
-    colors[ImGuiColor::FrameBgActive]          = ImVec4::new(0.26, 0.59, 0.98, 0.67);
-    colors[ImGuiColor::TitleBg]                = ImVec4::new(0.96, 0.96, 0.96, 1.00);
-    colors[ImGuiColor::TitleBgActive]          = ImVec4::new(0.82, 0.82, 0.82, 1.00);
-    colors[ImGuiColor::TitleBgCollapsed]       = ImVec4::new(1.00, 1.00, 1.00, 0.51);
-    colors[ImGuiColor::MenuBarBg]              = ImVec4::new(0.86, 0.86, 0.86, 1.00);
-    colors[ImGuiColor::ScrollbarBg]            = ImVec4::new(0.98, 0.98, 0.98, 0.53);
-    colors[ImGuiColor::ScrollbarGrab]          = ImVec4::new(0.69, 0.69, 0.69, 0.80);
-    colors[ImGuiColor::ScrollbarGrabHovered]   = ImVec4::new(0.49, 0.49, 0.49, 0.80);
-    colors[ImGuiColor::ScrollbarGrabActive]    = ImVec4::new(0.49, 0.49, 0.49, 1.00);
-    colors[ImGuiColor::CheckMark]              = ImVec4::new(0.26, 0.59, 0.98, 1.00);
-    colors[ImGuiColor::SliderGrab]             = ImVec4::new(0.26, 0.59, 0.98, 0.78);
-    colors[ImGuiColor::SliderGrabActive]       = ImVec4::new(0.46, 0.54, 0.80, 0.60);
-    colors[ImGuiColor::Button]                 = ImVec4::new(0.26, 0.59, 0.98, 0.40);
-    colors[ImGuiColor::ButtonHovered]          = ImVec4::new(0.26, 0.59, 0.98, 1.00);
-    colors[ImGuiColor::ButtonActive]           = ImVec4::new(0.06, 0.53, 0.98, 1.00);
-    colors[ImGuiColor::Header]                 = ImVec4::new(0.26, 0.59, 0.98, 0.31);
-    colors[ImGuiColor::HeaderHovered]          = ImVec4::new(0.26, 0.59, 0.98, 0.80);
-    colors[ImGuiColor::HeaderActive]           = ImVec4::new(0.26, 0.59, 0.98, 1.00);
-    colors[ImGuiColor::Separator]              = ImVec4::new(0.39, 0.39, 0.39, 0.62);
-    colors[ImGuiColor::SeparatorHovered]       = ImVec4::new(0.14, 0.44, 0.80, 0.78);
-    colors[ImGuiColor::SeparatorActive]        = ImVec4::new(0.14, 0.44, 0.80, 1.00);
-    colors[ImGuiColor::ResizeGrip]             = ImVec4::new(0.35, 0.35, 0.35, 0.17);
-    colors[ImGuiColor::ResizeGripHovered]      = ImVec4::new(0.26, 0.59, 0.98, 0.67);
-    colors[ImGuiColor::ResizeGripActive]       = ImVec4::new(0.26, 0.59, 0.98, 0.95);
+    colors[ImGuiColor::Text]                   = Vector4D::new(0.00, 0.00, 0.00, 1.00);
+    colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);
+    colors[ImGuiColor::WindowBg]               = Vector4D::new(0.94, 0.94, 0.94, 1.00);
+    colors[ImGuiColor::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::PopupBg]                = Vector4D::new(1.00, 1.00, 1.00, 0.98);
+    colors[ImGuiColor::Border]                 = Vector4D::new(0.00, 0.00, 0.00, 0.30);
+    colors[ImGuiColor::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::FrameBg]                = Vector4D::new(1.00, 1.00, 1.00, 1.00);
+    colors[ImGuiColor::FrameBgHovered]         = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::FrameBgActive]          = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::TitleBg]                = Vector4D::new(0.96, 0.96, 0.96, 1.00);
+    colors[ImGuiColor::TitleBgActive]          = Vector4D::new(0.82, 0.82, 0.82, 1.00);
+    colors[ImGuiColor::TitleBgCollapsed]       = Vector4D::new(1.00, 1.00, 1.00, 0.51);
+    colors[ImGuiColor::MenuBarBg]              = Vector4D::new(0.86, 0.86, 0.86, 1.00);
+    colors[ImGuiColor::ScrollbarBg]            = Vector4D::new(0.98, 0.98, 0.98, 0.53);
+    colors[ImGuiColor::ScrollbarGrab]          = Vector4D::new(0.69, 0.69, 0.69, 0.80);
+    colors[ImGuiColor::ScrollbarGrabHovered]   = Vector4D::new(0.49, 0.49, 0.49, 0.80);
+    colors[ImGuiColor::ScrollbarGrabActive]    = Vector4D::new(0.49, 0.49, 0.49, 1.00);
+    colors[ImGuiColor::CheckMark]              = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::SliderGrab]             = Vector4D::new(0.26, 0.59, 0.98, 0.78);
+    colors[ImGuiColor::SliderGrabActive]       = Vector4D::new(0.46, 0.54, 0.80, 0.60);
+    colors[ImGuiColor::Button]                 = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::ButtonHovered]          = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::ButtonActive]           = Vector4D::new(0.06, 0.53, 0.98, 1.00);
+    colors[ImGuiColor::Header]                 = Vector4D::new(0.26, 0.59, 0.98, 0.31);
+    colors[ImGuiColor::HeaderHovered]          = Vector4D::new(0.26, 0.59, 0.98, 0.80);
+    colors[ImGuiColor::HeaderActive]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::Separator]              = Vector4D::new(0.39, 0.39, 0.39, 0.62);
+    colors[ImGuiColor::SeparatorHovered]       = Vector4D::new(0.14, 0.44, 0.80, 0.78);
+    colors[ImGuiColor::SeparatorActive]        = Vector4D::new(0.14, 0.44, 0.80, 1.00);
+    colors[ImGuiColor::ResizeGrip]             = Vector4D::new(0.35, 0.35, 0.35, 0.17);
+    colors[ImGuiColor::ResizeGripHovered]      = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::ResizeGripActive]       = Vector4D::new(0.26, 0.59, 0.98, 0.95);
     colors[ImGuiColor::Tab]                    = ImLerpF32(colors[ImGuiColor::Header],       colors[ImGuiColor::TitleBgActive], 0.90);
     colors[ImGuiColor::TabHovered]             = colors[ImGuiColor::HeaderHovered];
     colors[ImGuiColor::TabActive]              = ImLerpF32(colors[ImGuiColor::HeaderActive], colors[ImGuiColor::TitleBgActive], 0.60);
     colors[ImGuiColor::TabUnfocused]           = ImLerpF32(colors[ImGuiColor::Tab],          colors[ImGuiColor::TitleBg], 0.80);
     colors[ImGuiColor::TabUnfocusedActive]     = ImLerpF32(colors[ImGuiColor::TabActive],    colors[ImGuiColor::TitleBg], 0.40);
-    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::Header] * ImVec4::new(1.0, 1.0, 1.0, 0.7);
-    colors[ImGuiColor::DockingEmptyBg]         = ImVec4::new(0.20, 0.20, 0.20, 1.00);
-    colors[ImGuiColor::PlotLines]              = ImVec4::new(0.39, 0.39, 0.39, 1.00);
-    colors[ImGuiColor::PlotLinesHovered]       = ImVec4::new(1.00, 0.43, 0.35, 1.00);
-    colors[ImGuiColor::PlotHistogram]          = ImVec4::new(0.90, 0.70, 0.00, 1.00);
-    colors[ImGuiColor::PlotHistogramHovered]   = ImVec4::new(1.00, 0.45, 0.00, 1.00);
-    colors[ImGuiColor::TableHeaderBg]          = ImVec4::new(0.78, 0.87, 0.98, 1.00);
-    colors[ImGuiColor::TableBorderStrong]      = ImVec4::new(0.57, 0.57, 0.64, 1.00);   // Prefer using Alpha=1.0 here
-    colors[ImGuiColor::TableBorderLight]       = ImVec4::new(0.68, 0.68, 0.74, 1.00);   // Prefer using Alpha=1.0 here
-    colors[ImGuiColor::TableRowBg]             = ImVec4::new(0.00, 0.00, 0.00, 0.00);
-    colors[ImGuiColor::TableRowBgAlt]          = ImVec4::new(0.30, 0.30, 0.30, 0.09);
-    colors[ImGuiColor::TextSelectedBg]         = ImVec4::new(0.26, 0.59, 0.98, 0.35);
-    colors[ImGuiColor::DragDropTarget]         = ImVec4::new(0.26, 0.59, 0.98, 0.95);
+    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::Header] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
+    colors[ImGuiColor::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
+    colors[ImGuiColor::PlotLines]              = Vector4D::new(0.39, 0.39, 0.39, 1.00);
+    colors[ImGuiColor::PlotLinesHovered]       = Vector4D::new(1.00, 0.43, 0.35, 1.00);
+    colors[ImGuiColor::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogramHovered]   = Vector4D::new(1.00, 0.45, 0.00, 1.00);
+    colors[ImGuiColor::TableHeaderBg]          = Vector4D::new(0.78, 0.87, 0.98, 1.00);
+    colors[ImGuiColor::TableBorderStrong]      = Vector4D::new(0.57, 0.57, 0.64, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableBorderLight]       = Vector4D::new(0.68, 0.68, 0.74, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::TableRowBgAlt]          = Vector4D::new(0.30, 0.30, 0.30, 0.09);
+    colors[ImGuiColor::TextSelectedBg]         = Vector4D::new(0.26, 0.59, 0.98, 0.35);
+    colors[ImGuiColor::DragDropTarget]         = Vector4D::new(0.26, 0.59, 0.98, 0.95);
     colors[ImGuiColor::NavHighlight]           = colors[ImGuiColor::HeaderHovered];
-    colors[ImGuiColor::NavWindowingHighlight]  = ImVec4::new(0.70, 0.70, 0.70, 0.70);
-    colors[ImGuiColor::NavWindowingDimBg]      = ImVec4::new(0.20, 0.20, 0.20, 0.20);
-    colors[ImGuiColor::ModalWindowDimBg]       = ImVec4::new(0.20, 0.20, 0.20, 0.35);
+    colors[ImGuiColor::NavWindowingHighlight]  = Vector4D::new(0.70, 0.70, 0.70, 0.70);
+    colors[ImGuiColor::NavWindowingDimBg]      = Vector4D::new(0.20, 0.20, 0.20, 0.20);
+    colors[ImGuiColor::ModalWindowDimBg]       = Vector4D::new(0.20, 0.20, 0.20, 0.35);
 }
 
 // Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
@@ -692,28 +692,28 @@ pub enum DimgStyleVar
     // Enum name --------------------- // Member in ImGuiStyle structure (see ImGuiStyle for descriptions)
     Alpha,               // float     Alpha
     DisabledAlpha,       // float     DisabledAlpha
-    WindowPadding,       // ImVec2    window_padding
+    WindowPadding,       // Vector2D    window_padding
     WindowRounding,      // float     window_rounding
     WindowBorderSize,    // float     WindowBorderSize
-    WindowMinSize,       // ImVec2    WindowMinSize
-    WindowTitleAlign,    // ImVec2    WindowTitleAlign
+    WindowMinSize,       // Vector2D    WindowMinSize
+    WindowTitleAlign,    // Vector2D    WindowTitleAlign
     ChildRounding,       // float     ChildRounding
     ChildBorderSize,     // float     ChildBorderSize
     PopupRounding,       // float     PopupRounding
     PopupBorderSize,     // float     PopupBorderSize
-    FramePadding,        // ImVec2    FramePadding
+    FramePadding,        // Vector2D    FramePadding
     FrameRounding,       // float     FrameRounding
     FrameBorderSize,     // float     FrameBorderSize
-    ItemSpacing,         // ImVec2    ItemSpacing
-    ItemInnerSpacing,    // ImVec2    ItemInnerSpacing
+    ItemSpacing,         // Vector2D    ItemSpacing
+    ItemInnerSpacing,    // Vector2D    ItemInnerSpacing
     IndentSpacing,       // float     IndentSpacing
-    CellPadding,         // ImVec2    CellPadding
+    CellPadding,         // Vector2D    CellPadding
     ScrollbarSize,       // float     ScrollbarSize
     ScrollbarRounding,   // float     ScrollbarRounding
     GrabMinSize,         // float     GrabMinSize
     GrabRounding,        // float     GrabRounding
     TabRounding,         // float     TabRounding
-    ButtonTextAlign,     // ImVec2    ButtonTextAlign
-    SelectableTextAlign, // ImVec2    SelectableTextAlign
+    ButtonTextAlign,     // Vector2D    ButtonTextAlign
+    SelectableTextAlign, // Vector2D    SelectableTextAlign
     COUNT
 }

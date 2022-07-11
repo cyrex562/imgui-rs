@@ -3,7 +3,7 @@ use std::ptr;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX, ImGuiID, ImGuiInputTextFlags, ImWchar};
 use crate::imgui_math::ImMinI32;
-use crate::imgui_vec::ImVec2;
+use crate::imgui_vec::Vector2D;
 use crate::imstb_text_edit_state::STB_TexteditState;
 
 
@@ -33,7 +33,7 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut u32, in_text: *const c_char, mut
 
     if in_text_end.is_null() {
         in_text_end = in_text + wanted;
-    }// Max length, nulls will be taken into account.
+    }// max length, nulls will be taken into account.
 
     // Copy at most 'len' bytes, stop copying at 0 or past in_text_end. Branch predictor does a good job here,
     // so it is fast even with excessive branching.
@@ -226,8 +226,8 @@ pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_e
 
 
 
-// static ImVec2 InputTextCalcTextSizeW(const ImWchar* text_begin, const ImWchar* text_end, const ImWchar** remaining, ImVec2* out_offset, bool stop_on_new_line)
-pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut ImWchar, mut remaining: *mut *mut ImWchar, out_offset: *mut ImVec2, stop_on_new_line: bool) -> ImVec2
+// static Vector2D InputTextCalcTextSizeW(const ImWchar* text_begin, const ImWchar* text_end, const ImWchar** remaining, Vector2D* out_offset, bool stop_on_new_line)
+pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut ImWchar, mut remaining: *mut *mut ImWchar, out_offset: *mut Vector2D, stop_on_new_line: bool) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
     // ImFont* font = g.font;
@@ -236,8 +236,8 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
     let line_height = GImGui.FontSize;
     // const float scale = line_height / font->font_size;
     let scale = line_height / font.FontSize;
-    // ImVec2 text_size = ImVec2(0, 0);
-    let mut text_size = ImVec2::default();
+    // Vector2D text_size = Vector2D(0, 0);
+    let mut text_size = Vector2D::default();
     // float line_width = 0.0;
     let mut line_width = 0.0f32;
 

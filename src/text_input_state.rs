@@ -5,7 +5,7 @@ use crate::imstb_text_edit_state::STB_TexteditState;
 
 /// Internal state of the currently focused/edited text input box For a given item id, access with ImGui::GetInputTextState()
 #[derive(Debug,Default,Clone)]
-pub struct DimgInputTextState
+pub struct InputTextState
 {
     // ImGuiID                 id;                     // widget id owning the text state
     pub ID: ImGuiID,
@@ -38,7 +38,7 @@ pub struct DimgInputTextState
     pub Flags: ImGuiInputTextFlags,
 }
 
-impl DimgInputTextState {
+impl InputTextState {
     // ImGuiInputTextState()                   { memset(this, 0, sizeof(*this)); }
     pub fn new() -> Self {
         Self {

@@ -108,7 +108,7 @@ static void main_loop(void* arg)
     // Our state (make them static = more or less global) as a convenience to keep the example terse.
     static bool show_demo_window = true;
     static bool show_another_window = false;
-    static ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
+    static Vector4D clear_color = Vector4D(0.45, 0.55, 0.60, 1.00);
 
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.want_capture_mouse, io.want_capture_keyboard flags to tell if dear imgui wants to use your inputs.

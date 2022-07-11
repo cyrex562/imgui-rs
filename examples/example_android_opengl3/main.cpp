@@ -131,7 +131,7 @@ void tick()
     // Our state
     static bool show_demo_window = true;
     static bool show_another_window = false;
-    static ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
+    static Vector4D clear_color = Vector4D(0.45, 0.55, 0.60, 1.00);
 
     // Poll Unicode characters via JNI
     // FIXME: do not call this every frame because of JNI overhead

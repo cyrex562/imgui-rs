@@ -3,7 +3,7 @@ use crate::imgui_h::ImGuiID;
 use crate::imgui_rect::ImRect;
 use crate::imgui_window::{ImGuiItemFlags, ImGuiWindow};
 
-pub enum DimgActivateFlags
+pub enum ActivateFlags
 {
     None                 = 0,
     PreferInput          = 1 << 0,       // Favor activation that requires keyboard text input (e.g. for Slider/Drag). Default if keyboard is available.
@@ -13,7 +13,7 @@ pub enum DimgActivateFlags
 
 
 // Early work-in-progress API for ScrollToItem()
-pub enum DimgScrollFlags
+pub enum ScrollFlags
 {
     None                   = 0,
     KeepVisibleEdgeX       = 1 << 0,       // If item is not visible: scroll as little as possible on x axis to bring item back into view [default for x axis]
@@ -26,8 +26,8 @@ pub enum DimgScrollFlags
     
 }
 
-pub const ImGuiScrollFlags_MaskX: DimgScrollFlags = DimgScrollFlags::KeepVisibleEdgeX | DimgScrollFlags::KeepVisibleCenterX | DimgScrollFlags::AlwaysCenterX;
-pub const ImGuiScrollFlags_MaskY: DimgScrollFlags = DimgScrollFlags::KeepVisibleEdgeY | DimgScrollFlags::KeepVisibleCenterY | DimgScrollFlags::AlwaysCenterY;
+pub const ImGuiScrollFlags_MaskX: ScrollFlags = ScrollFlags::KeepVisibleEdgeX | ScrollFlags::KeepVisibleCenterX | ScrollFlags::AlwaysCenterX;
+pub const ImGuiScrollFlags_MaskY: ScrollFlags = ScrollFlags::KeepVisibleEdgeY | ScrollFlags::KeepVisibleCenterY | ScrollFlags::AlwaysCenterY;
 
 pub enum ImGuiNavHighlightFlags
 {
@@ -47,7 +47,7 @@ pub enum ImGuiNavDirSourceFlags
     PadLStick        = 1 << 3
 }
 
-pub enum DimgNavMoveFlags
+pub enum NavMoveFlags
 {
     None                  = 0,
     LoopX                 = 1 << 0,   // On failed request, restart from opposite side
@@ -66,17 +66,17 @@ pub enum DimgNavMoveFlags
 }
 
 #[derive(Default,Debug,Clone)]
-pub struct DimgNavItemData
+pub struct NavItemData
 {
     // ImGuiWindow*        Window;         // Init,Move    // Best candidate window (result->ItemWindow->root_window_for_nav == request->Window)
     pub Window: *mut ImGuiWindow,
     // ImGuiID             id;             // Init,Move    // Best candidate item id
     pub ID: ImGuiID,
-    // ImGuiID             FocusScopeId;   // Init,Move    // Best candidate focus scope id
+    // ImGuiID             focus_scope_id;   // Init,Move    // Best candidate focus scope id
     pub FocusScopeId: ImGuiID,
     // ImRect              RectRel;        // Init,Move    // Best candidate bounding box in window relative space
     pub RectRel: ImRect,
-    // ImGuiItemFlags      InFlags;        // ????,Move    // Best candidate item flags
+    // ImGuiItemFlags      in_flags;        // ????,Move    // Best candidate item flags
     pub InFlags: ImGuiItemFlags,
     // float               DistBox;        //      Move    // Best candidate box distance to current nav_id
     pub DistBox: f32,
@@ -86,14 +86,14 @@ pub struct DimgNavItemData
     pub DistAxial: f32,
 }
 
-impl DimgNavItemData {
+impl NavItemData {
     // ImGuiNavItemData()  { clear(); }
     pub fn new() -> Self {
         Self {
             ..Default::default()
         }
     }
-    //     void clear()        { Window = NULL; id = FocusScopeId = 0; InFlags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
+    //     void clear()        { Window = NULL; id = focus_scope_id = 0; in_flags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
     pub fn Clear(&mut self) {
         self.Window = null_mut();
         self.ID = 0;

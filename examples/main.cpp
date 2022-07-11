@@ -82,7 +82,7 @@ int main(int, char**)
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
+    Vector4D clear_color = Vector4D(0.45, 0.55, 0.60, 1.00);
 
     // Main loop
     bool done = false;

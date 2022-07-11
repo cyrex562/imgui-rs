@@ -1,12 +1,12 @@
 pub type DimgWindowHandle = u32;
 
 pub const DIMG_WINDOW_HANDLE_INVALID: u32 = u32::MAX;
-pub const DIMG_ID_INVALID: u32 = u32::MAX;
+pub const ID_INVALID: u32 = u32::MAX;
 
 
 // Scalar data types
 // typedef unsigned int        ImGuiID;// A unique id used by widgets (typically the result of hashing a stack of string)
-pub type DimgId = u32;
+pub type Id32 = u32;
 
 // Character types
 // (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)
@@ -23,7 +23,7 @@ pub type DimgWchar = ImWchar32;
 
 
 #[derive(Debug,Default,Clone)]
-pub struct DimgPtrOrIndex
+pub struct PtrOrIndex
 {
     // void*       Ptr;            // Either field can be set, not both. e.g. Dock node tab bars are loose while BeginTabBar() ones are in a pool.
     Ptr: *mut c_void,
@@ -32,7 +32,7 @@ pub struct DimgPtrOrIndex
 
 }
 
-impl DimgPtrOrIndex {
+impl PtrOrIndex {
     // ImGuiPtrOrIndex(void* ptr)  { Ptr = ptr; Index = -1; }
     pub fn new(ptr:*mut c_void) -> Self {
         Self {
@@ -58,3 +58,7 @@ pub enum ImGuiDataType
     Pointer,
     ID
 }
+
+
+//#define ImDrawIdx unsigned int
+pub type DrawIndex = u32;

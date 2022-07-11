@@ -1,4 +1,4 @@
-use crate::types::DimgId;
+use crate::types::Id32;
 
 /// data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 #[derive(Default,Debug,Clone)]
@@ -9,8 +9,8 @@ pub struct DimgPayload
     pub data_size: usize,         // data size
 
     // [Internal]
-    pub source_id: DimgId,         // Source item id
-    pub source_parent_id: DimgId,   // Source parent id (if available)
+    pub source_id: Id32,         // Source item id
+    pub source_parent_id: Id32,   // Source parent id (if available)
     pub data_frame_count: usize,   // data timestamp
     pub data_type: String, // char            data_type[32 + 1];   // data type tag (short user-supplied string, 32 characters max)
     pub preview: bool,            // Set when AcceptDragDropPayload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)

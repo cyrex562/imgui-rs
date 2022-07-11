@@ -5,11 +5,11 @@
 
 #ifdef IMNODES_USER_CONFIG
 #include IMNODES_USER_CONFIG
-#endif
+
 
 #ifndef IMNODES_NAMESPACE
 #define IMNODES_NAMESPACE ImNodes
-#endif
+
 
 typedef int ImNodesCol;             // -> enum ImNodesCol_
 typedef int ImNodesStyleVar;        // -> enum ImNodesStyleVar_
@@ -167,7 +167,7 @@ struct ImNodesStyle
     float GridSpacing;
 
     float  NodeCornerRounding;
-    ImVec2 NodePadding;
+    Vector2D NodePadding;
     float  NodeBorderThickness;
 
     float LinkThickness;
@@ -195,9 +195,9 @@ struct ImNodesStyle
     float PinOffset;
 
     // Mini-map padding size between mini-map edge and mini-map content.
-    ImVec2 MiniMapPadding;
+    Vector2D MiniMapPadding;
     // Mini-map offset from the screen side.
-    ImVec2 MiniMapOffset;
+    Vector2D MiniMapOffset;
 
     // By default, ImNodesStyleFlags_NodeOutline and ImNodesStyleFlags_Gridlines are enabled.
     ImNodesStyleFlags Flags;
@@ -217,7 +217,7 @@ enum ImNodesMiniMapLocation_
 };
 
 struct ImGuiContext;
-struct ImVec2;
+struct Vector2D;
 
 struct ImNodesContext;
 
@@ -231,11 +231,11 @@ struct ImNodesEditorContext;
 // Callback type used to specify special behavior when hovering a node in the minimap
 #ifndef ImNodesMiniMapNodeHoveringCallback
 typedef void (*ImNodesMiniMapNodeHoveringCallback)(int, void*);
-#endif
+
 
 #ifndef ImNodesMiniMapNodeHoveringCallbackUserData
 typedef void* ImNodesMiniMapNodeHoveringCallbackUserData;
-#endif
+
 
 namespace IMNODES_NAMESPACE
 {
@@ -251,8 +251,8 @@ void            SetCurrentContext(ImNodesContext* ctx);
 ImNodesEditorContext* EditorContextCreate();
 void                  EditorContextFree(ImNodesEditorContext*);
 void                  EditorContextSet(ImNodesEditorContext*);
-ImVec2                EditorContextGetPanning();
-void                  EditorContextResetPanning(const ImVec2& pos);
+Vector2D                EditorContextGetPanning();
+void                  EditorContextResetPanning(const Vector2D& pos);
 void                  EditorContextMoveToNode(const int node_id);
 
 ImNodesIO& GetIO();
@@ -282,14 +282,14 @@ void MiniMap(
 void PushColorStyle(ImNodesCol item, unsigned int color);
 void PopColorStyle();
 void PushStyleVar(ImNodesStyleVar style_item, float value);
-void PushStyleVar(ImNodesStyleVar style_item, const ImVec2& value);
+void PushStyleVar(ImNodesStyleVar style_item, const Vector2D& value);
 void PopStyleVar(int count = 1);
 
 // id can be any positive or negative integer, but INT_MIN is currently reserved for internal use.
 void BeginNode(int id);
 void EndNode();
 
-ImVec2 GetNodeDimensions(int id);
+Vector2D GetNodeDimensions(int id);
 
 // Place your node title bar content (such as the node title, using ImGui::Text) between the
 // following function calls. These functions have to be called before adding any attributes, or the
@@ -339,13 +339,13 @@ void SetNodeDraggable(int node_id, const bool draggable);
 
 // Use the following functions to get and set the node's coordinates in these coordinate systems.
 
-void SetNodeScreenSpacePos(int node_id, const ImVec2& screen_space_pos);
-void SetNodeEditorSpacePos(int node_id, const ImVec2& editor_space_pos);
-void SetNodeGridSpacePos(int node_id, const ImVec2& grid_pos);
+void SetNodeScreenSpacePos(int node_id, const Vector2D& screen_space_pos);
+void SetNodeEditorSpacePos(int node_id, const Vector2D& editor_space_pos);
+void SetNodeGridSpacePos(int node_id, const Vector2D& grid_pos);
 
-ImVec2 GetNodeScreenSpacePos(const int node_id);
-ImVec2 GetNodeEditorSpacePos(const int node_id);
-ImVec2 GetNodeGridSpacePos(const int node_id);
+Vector2D GetNodeScreenSpacePos(const int node_id);
+Vector2D GetNodeEditorSpacePos(const int node_id);
+Vector2D GetNodeGridSpacePos(const int node_id);
 
 // If ImNodesStyleFlags_GridSnapping is enabled, snap the specified node's origin to the grid.
 void SnapNodeToGrid(int node_id);

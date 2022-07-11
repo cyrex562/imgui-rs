@@ -1,4 +1,4 @@
-impl DimgMetricsConfig {
+impl MetricsConfig {
     // ImGuiMetricsConfig()
     pub fn new() -> Self
     {
@@ -24,7 +24,7 @@ impl DimgMetricsConfig {
 
 
 #[derive(Default,Debug,Clone)]
-pub struct DimgMetricsConfig
+pub struct MetricsConfig
 {
     //bool        ShowDebugLog;
     pub show_debug_log: bool,

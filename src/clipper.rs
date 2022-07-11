@@ -3,15 +3,15 @@ use crate::imgui_list_clipper::ImGuiListClipper;
 #[derive(Debug,Clone,Default)]
 pub struct ImGuiListClipperRange
 {
-    // int     Min;
+    // int     min;
     pub Min: i32,
-    // int     Max;
+    // int     max;
     pub Max: i32,
     // bool    PosToIndexConvert;      // Begin/End are absolute position (will be converted to indices later)
     pub PosToIndexConvert: bool,
-    // ImS8    PosToIndexOffsetMin;    // Add to Min after converting to indices
+    // ImS8    PosToIndexOffsetMin;    // Add to min after converting to indices
     pub PosToIndexOffsetMin: i8,
-    // ImS8    PosToIndexOffsetMax;    // Add to Min after converting to indices
+    // ImS8    PosToIndexOffsetMax;    // Add to min after converting to indices
     pub PosToIndexOffsetMax: i8,
 }
 

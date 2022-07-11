@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 // pub const AcceptPeekOnly: i32               = DimgDragDropFlags::AcceptBeforeDelivery | DimgDragDropFlags::AcceptNoDrawDefaultRect;
-pub const ACCEPT_PEEK_ONLY: HashSet<DimgDragDropFlags> = HashSet::from([
-    DimgDragDropFlags::AcceptBeforeDelivery, DimgDragDropFlags::AcceptNoDrawDefaultRect
+pub const ACCEPT_PEEK_ONLY: HashSet<DragDropFlags> = HashSet::from([
+    DragDropFlags::AcceptBeforeDelivery, DragDropFlags::AcceptNoDrawDefaultRect
 ]);
 
 // Standard Drag and Drop payload types. You can define you own payload types using short strings. Types starting with '_' are defined by Dear ImGui.
@@ -13,7 +13,7 @@ pub const IMGUI_PAYLOAD_TYPE_COLOR_4F: String =     String::from("_COL4F");
 
 // flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgDragDropFlags
+pub enum DragDropFlags
 {
     None                         = 0,
     // BeginDragDropSource() flags

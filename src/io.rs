@@ -1,26 +1,26 @@
 use std::collections::HashSet;
 use crate::clipboard::{get_clipboard_text_fn_dflt_impl, set_clipboard_text_fn_dflt_impl};
-use crate::config::{DimgBackendFlags, DimgConfigFlags};
-use crate::context::DimgContext;
-use crate::font::DimgFont;
-use crate::font_atlas::DimgFontAtlas;
-use crate::input::{DimgInputEventType, DimgInputSource, DimgKey, DimgKeyData, DimgModFlags};
+use crate::config::{DimgBackendFlags, ConfigFlags};
+use crate::context::Context;
+use crate::font::Font;
+use crate::font_atlas::FontAtlas;
+use crate::input::{DimgInputEventType, InputSource, DimgKey, DimgKeyData, ModFlags};
 use crate::input_event::DimgInputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
-use crate::types::{DimgId, DimgWchar};
-use crate::vec_nd::DimgVec2D;
+use crate::types::{Id32, DimgWchar};
+use crate::vectors::Vector2D;
 
 #[derive(Debug,Default,Clone)]
-pub struct DimgIo {
+pub struct Io {
     //------------------------------------------------------------------
     // Configuration                            // Default value
     //------------------------------------------------------------------
 
-    pub config_flags: HashSet<DimgConfigFlags>,
+    pub config_flags: HashSet<ConfigFlags>,
     // = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
     pub backend_flags: HashSet<DimgBackendFlags>,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
-    pub display_size: DimgVec2D,
+    pub display_size: Vector2D,
     // <unset>          // Main display size, in pixels (generally == GetMainViewport()->size). May change every frame.
     pub delta_time: f32,
     // = 1.0/60.0     // time elapsed since last frame, in seconds. May change every frame.
@@ -42,15 +42,15 @@ pub struct DimgIo {
     // = 0.050         // When holding a key/button, rate at which it repeats, in seconds.
     pub user_data: Vec<u8>,
     // void*       user_data;                       // = NULL           // Store your own data for retrieval by callbacks.
-    pub fonts: Vec<DimgFontAtlas>,
+    pub fonts: Vec<FontAtlas>,
     // ImFontAtlas*fonts;                          // <auto>           // font atlas: load, rasterize and pack one or more fonts into a single texture.
     pub font_global_scale: f32,
     // = 1.0           // Global scale all fonts
     pub font_allow_user_scaling: bool,
     // = false          // Allow user scaling text of individual window with CTRL+Wheel.
-    pub font_default: DimgFont,
+    pub font_default: Font,
     // ImFont*     font_default;                    // = NULL           // font to use on NewFrame(). Use NULL to uses fonts->fonts[0].
-    pub display_framebuffer_scale: DimgVec2D,        // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::framebuffer_scale.
+    pub display_framebuffer_scale: Vector2D,        // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::framebuffer_scale.
 
     // Docking options (when ImGuiConfigFlags_DockingEnable is set)
     pub config_docking_no_split: bool,
@@ -115,7 +115,7 @@ pub struct DimgIo {
     // void        (*SetPlatformImeDataFn)(ImGuiViewport* viewport, ImGuiPlatformImeData* data);
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //     void*       ime_window_handle;                // = NULL           // [Obsolete] Set ImGuiViewport::platform_handle_raw instead. Set this to your HWND to get automatic IME cursor positioning.
-    pub ime_window_handle: DimgId,
+    pub ime_window_handle: Id32,
 // #else
 //     void*       _UnusedPadding;                                     // Unused field to keep data structure the same size.
 // #endif
@@ -173,7 +173,7 @@ pub struct DimgIo {
     // Number of active windows
     pub metrics_active_allocations: i32,
     // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-    pub mouse_delta: DimgVec2D,                         // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+    pub mouse_delta: Vector2D,                         // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
 
     // Legacy: before 1.87, we required backend to fill io.KeyMap[] (imgui->native map) during initialization and io.KeysDown[] (native indices) every frame.
     // This is still temporarily supported as a legacy feature. However the new preferred scheme is for backend to call io.add_key_event().
@@ -189,15 +189,15 @@ pub struct DimgIo {
     // Main Input state
     // (this block used to be written by backend, since 1.87 it is best to NOT write to those directly, call the AddXXX functions above instead)
     // (reading from those variables is fair game, as they are extremely unlikely to be moving anywhere)
-    pub mouse_pos: DimgVec2D,
-    // Mouse position, in pixels. Set to ImVec2(-FLT_MAX, -FLT_MAX) if mouse is unavailable (on another screen, etc.)
+    pub mouse_pos: Vector2D,
+    // Mouse position, in pixels. Set to Vector2D(-FLT_MAX, -FLT_MAX) if mouse is unavailable (on another screen, etc.)
     pub mouse_down: [bool; 5],
     // bool        mouse_down[5];                       // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
     pub mouse_wheel: f32,
     // Mouse wheel Vertical: 1 unit scrolls about 5 lines text.
     pub mouse_wheel_h: f32,
     // Mouse wheel Horizontal. Most users don't have a mouse with an horizontal wheel, may not be filled by all backends.
-    pub mouse_hovered_viewport: DimgId,
+    pub mouse_hovered_viewport: Id32,
     // (Optional) Modify using io.add_mouse_viewport_event(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.backend_flags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
     pub key_ctrl: bool,
     // Keyboard modifier down: Control
@@ -211,15 +211,15 @@ pub struct DimgIo {
     pub nav_inputs: Vec<f32>,
 
     // Other state maintained from data above + io function calls
-    pub key_mods: DimgModFlags,
+    pub key_mods: ModFlags,
     // Key mods flags (same as io.key_ctrl/key_shift/key_alt/key_super but merged into flags), updated by NewFrame()
     pub keys_data: Vec<DimgKeyData>,
     // Key state for all known keys. Use IsKeyXXX() functions to access this.
     pub want_capture_mouse_unless_popup_close: bool,
     // Alternative to want_capture_mouse: (want_capture_mouse == true && want_capture_mouse_unless_popup_close == false) when a click over void is expected to close a popup.
-    pub mouse_pos_prev: DimgVec2D,
+    pub mouse_pos_prev: Vector2D,
     // Previous mouse position (note that mouse_delta is not necessary == mouse_pos-mouse_pos_prev, in case either position is invalid)
-    pub mouse_clicked_pos: [DimgVec2D; 5],
+    pub mouse_clicked_pos: [Vector2D; 5],
     // Position at time of clicking
     pub mouse_clicked_time: [f64; 5],
     // time of last click (used to figure out double-click)
@@ -241,7 +241,7 @@ pub struct DimgIo {
     // Duration the mouse button has been down (0.0 == just clicked)
     pub mouse_down_duration_prev: [f32; 5],
     // Previous time the mouse button has been down
-    pub mouse_drag_max_distance_abs: [DimgVec2D; 5],
+    pub mouse_drag_max_distance_abs: [Vector2D; 5],
     // Maximum distance, absolute, on each axis, of how much mouse has traveled from the clicking point
     pub mouse_drag_max_distance_sqr: [f32; 5],
     // Squared maximum distance of how much mouse has traveled from the clicking point (used for moving thresholds)
@@ -264,7 +264,7 @@ pub struct DimgIo {
     //    ImGuiIO();
 }
 
-impl DimgIo {
+impl Io {
     pub fn new() -> Self {
         let mut out = Self { ..Default::default() };
 
@@ -273,9 +273,9 @@ impl DimgIo {
         // IM_STATIC_ASSERT(IM_ARRAYSIZE(ImGuiIO::mouse_down) == ImGuiMouseButton_COUNT && IM_ARRAYSIZE(ImGuiIO::mouse_clicked) == ImGuiMouseButton_COUNT);
 
         // Settings
-        out.config_flags.insert(DimgConfigFlags::None);
+        out.config_flags.insert(ConfigFlags::None);
         out.backend_flags.insert(DimgBackendFlags::None);
-        out.display_size = DimgVec2D::new(-1.0, -1.0);
+        out.display_size = Vector2D::new(-1.0, -1.0);
         out.delta_time = 1.0 / 60.0;
         out.ini_saving_rate = 5.0;
         out.ini_filename = "imgui.ini".to_string(); // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
@@ -295,7 +295,7 @@ impl DimgIo {
         out.font_global_scale = 1.0;
         // out.font_default = NULL;
         out.font_allow_user_scaling = false;
-        out.display_framebuffer_scale = DimgVec2D::new(1.0, 1.0);
+        out.display_framebuffer_scale = Vector2D::new(1.0, 1.0);
 
         // Docking options (when ImGuiConfigFlags_DockingEnable is set)
         out.config_docking_no_split = false;
@@ -334,8 +334,8 @@ impl DimgIo {
         out.set_platform_ime_data_fn = SetPlatformImeDataFn_DefaultImpl;
 
         // Input (NB: we already have memset zero the entire structure!)
-        out.mouse_pos = DimgVec2D::new(-FLT_MAX, -FLT_MAX);
-        out.mouse_pos_prev = DimgVec2D::new(-FLT_MAX, -FLT_MAX);
+        out.mouse_pos = Vector2D::new(-FLT_MAX, -FLT_MAX);
+        out.mouse_pos_prev = Vector2D::new(-FLT_MAX, -FLT_MAX);
         out.mouse_drag_threshold = 6.0;
         // for (int i = 0; i < IM_ARRAYSIZE(mouse_down_duration); i+ +) mouse_down_duration[i] = mouse_down_duration_prev[i] = -1.0;
         out.mouse_down_duration_prev = [-1.0; 5];
@@ -366,7 +366,7 @@ impl DimgIo {
 // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
 // - bool down:          Is the key down? use false to signify a key release.
 // - float analog_value: 0.0..1.0
-    pub fn add_key_analog_event(&mut self, ctx: &mut DimgContext, key: &DimgKey, down: bool, v: f32) {
+    pub fn add_key_analog_event(&mut self, ctx: &mut Context, key: &DimgKey, down: bool, v: f32) {
         //if (e->down) { IMGUI_DEBUG_LOG_IO("add_key_event() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->down, e->NativeKeycode, e->NativeScancode); }
         if key == DimgKey::None || !self.app_accepting_events {
             return;
@@ -407,15 +407,15 @@ impl DimgIo {
         let mut e: DimgInputEvent = DimgInputEvent::new();
         e.input_event_type = DimgInputEventType::Key;
         e.source = if self.is_gamepad_key(key) {
-            DimgInputSource::Gamepad
-        } else { DimgInputSource::Keyboard };
+            InputSource::Gamepad
+        } else { InputSource::Keyboard };
         e.Key.Key = key;
         e.Key.Down = down;
         e.Key.AnalogValue = analog_value;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_pos_event(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
-    pub fn add_mouse_pos_event(&mut self, ctx: &mut DimgContext, x: f32, y: f32) {
+    pub fn add_mouse_pos_event(&mut self, ctx: &mut Context, x: f32, y: f32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         if !self.app_accepting_events {
@@ -424,13 +424,13 @@ impl DimgIo {
 
         let mut e = DimgInputEvent::new();
         e.input_event_type = DimgInputEventType::MousePos;
-        e.source = DimgInputSource::Mouse;
+        e.source = InputSource::Mouse;
         e.MousePos.PosX = x;
         e.MousePos.PosY = y;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_button_event(int button, bool down);             // Queue a mouse button change
-    pub fn add_mouse_button_event(&mut self, ctx: &mut DimgContext, button: i32, down: bool) {
+    pub fn add_mouse_button_event(&mut self, ctx: &mut Context, button: i32, down: bool) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         // IM_ASSERT(mouse_button >= 0 && mouse_button < ImGuiMouseButton_COUNT);
@@ -440,13 +440,13 @@ impl DimgIo {
 
         let mut e = DimgInputEvent::new();
         e.input_event_type = DimgInputEventType::MouseButton;
-        e.source = DimgInputSource::Mouse;
+        e.source = InputSource::Mouse;
         e.MouseButton.Button = button;
         e.MouseButton.Down = down;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_wheel_event(float wh_x, float wh_y);             // Queue a mouse wheel update
-    pub fn add_mouse_wheel_event(&mut self, ctx: &mut DimgContext, wheel_x: f32, wheel_y: f32) {
+    pub fn add_mouse_wheel_event(&mut self, ctx: &mut Context, wheel_x: f32, wheel_y: f32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         if (wheel_x == 0.0 && wheel_y == 0.0) || !self.app_accepting_events {
@@ -456,13 +456,13 @@ impl DimgIo {
         //DimgInputEvent e;
         let mut e = DimgInputEvent::new();
         e.input_event_type = DimgInputEventType::MouseWheel;
-        e.source = DimgInputSource::Mouse;
+        e.source = InputSource::Mouse;
         e.MouseWheel.WheelX = wheel_x;
         e.MouseWheel.WheelY = wheel_y;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_viewport_event(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
-    pub fn add_mouse_viewport_event(&mut self, ctx: &mut DimgContext, id: DimgId) {
+    pub fn add_mouse_viewport_event(&mut self, ctx: &mut Context, id: Id32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         // IM_ASSERT(g.io.backend_flags & ImGuiBackendFlags_HasMouseHoveredViewport);
@@ -470,12 +470,12 @@ impl DimgIo {
         // DimgInputEvent e;
         let mut e = DimgInputEvent::new();
         e.input_event_type = DimgInputEventType::MouseViewport;
-        e.source = DimgInputSource::Mouse;
+        e.source = InputSource::Mouse;
         e.MouseViewport.HoveredViewportID = id;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_focus_event(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
-    pub fn add_focus_event(&mut self, ctx: &mut DimgContext, focused: bool) {
+    pub fn add_focus_event(&mut self, ctx: &mut Context, focused: bool) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
 
@@ -491,7 +491,7 @@ impl DimgIo {
 // - with glfw you can get those from the callback set in glfwSetCharCallback()
 // - on windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
 // FIXME: Should in theory be called "AddCharacterEvent()" to be consistent with new API
-    pub fn add_input_character(&mut self, c: u32, ctx: &mut DimgContext) {
+    pub fn add_input_character(&mut self, c: u32, ctx: &mut Context) {
         // ImGuiContext & g = *;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.".to_string());
         if c == 0 || !self.app_accepting_events {
@@ -499,7 +499,7 @@ impl DimgIo {
         }
         let e: DimgInputEvent = DimgInputEvent {
             input_event_type: DimgInputEventType::Text,
-            source: DimgInputSource::Keyboard,
+            source: InputSource::Keyboard,
             val: DimgInputEventVal::new(),
             added_byt_test_engine: false
         };
@@ -600,7 +600,7 @@ impl DimgIo {
         self.key_shift = false;
         self.key_alt = false;
         self.key_super = false;
-        self.key_mods = DimgModFlags::None;
+        self.key_mods = ModFlags::None;
         // for (int n = 0; n < IM_ARRAYSIZE(nav_inputs_down_duration); n++)
         for n in 0..self.nav_inputs_down_duration.len() {
             self.nav_inputs_down_duration[n] = -1.0;
@@ -612,7 +612,7 @@ impl DimgIo {
 
 // (Optional) Access via ImGui::GetPlatformIO()
 #[derive(Debug,Clone,Default)]
-pub struct DimgPlatformIo
+pub struct PlatformIo
 {
     //------------------------------------------------------------------
     // Input - Backend interface/functions + Monitor List
@@ -651,7 +651,7 @@ pub struct DimgPlatformIo
     // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
 }
 
-impl DimgPlatformIo {
+impl PlatformIo {
     pub fn new() -> Self {
         Self {
             ..Default::default()
@@ -669,20 +669,20 @@ impl DimgPlatformIo {
     pub fn Platform_ShowWindow(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
-    //     void    (*Platform_SetWindowPos)(ImGuiViewport* vp, ImVec2 pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
-    pub fn Platform_SetWindowPos(&mut self, vp: &mut ImGuiViewport, pos: ImVec2) {
+    //     void    (*Platform_SetWindowPos)(ImGuiViewport* vp, Vector2D pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    pub fn Platform_SetWindowPos(&mut self, vp: &mut ImGuiViewport, pos: Vector2D) {
         todo!()
     }
-    //     ImVec2  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
+    //     Vector2D  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
     pub fn Platform_GetWindowPos(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
-    //     void    (*Platform_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
-    pub fn Platform_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: &ImVec2) {
+    //     void    (*Platform_SetWindowSize)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    pub fn Platform_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: &Vector2D) {
         todo!()
     }
-    //     ImVec2  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
-    pub fn Platform_GetWindowSize(&mut self, vp: &mut ImGuiViewport) -> ImVec2 {
+    //     Vector2D  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
+    pub fn Platform_GetWindowSize(&mut self, vp: &mut ImGuiViewport) -> Vector2D {
         todo!()
     }
     //     void    (*Platform_SetWindowFocus)(ImGuiViewport* vp);                  // N . . . .  // Move window to front and set input focus
@@ -742,8 +742,8 @@ impl DimgPlatformIo {
     pub fn Platform_DestroyWindow2(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
-    //     void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
-    pub fn Renderer_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: ImVec2) {
+    //     void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
+    pub fn Renderer_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: Vector2D) {
         todo!()
     }
     //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) clear framebuffer, setup render target, then render the viewport->draw_data. 'render_arg' is the value passed to RenderPlatformWindowsDefault().

@@ -4,7 +4,7 @@
 // You may use this file to debug, understand or extend ImGui features but we don't provide any guarantee of forward compatibility!
 // Set:
 //   #define IMGUI_DEFINE_MATH_OPERATORS
-// To implement maths operators for ImVec2 (disabled by default to not collide with using IM_VEC2_CLASS_EXTRA along with your own math types+operators)
+// To implement maths operators for Vector2D (disabled by default to not collide with using IM_VEC2_CLASS_EXTRA along with your own math types+operators)
 
 /*
 
@@ -40,14 +40,15 @@ Index of this file:
 
 use std::collections::HashSet;
 use std::f32::consts::PI;
-use crate::context::DimgContextHookType;
-use crate::types::DimgId;
+use crate::context::ContextHookType;
+use crate::types::Id32;
 use crate::input::DimgKey::{GamepadRStickRight, GamepadStart};
 use crate::dock_node::DimgDockNodeFlags;
-use crate::draw_list::{DIMG_DRAW_LIST_ARCFAST_TABLE_SIZE, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN, DimgDrawDataBuilder, DimgDrawList};
+use crate::draw_data_builder::DrawDataBuilder;
+use crate::draw_list::{DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN, DRAW_LIST_ARCFAST_TABLE_SIZE, DrawList};
 use crate::input::DimgKey;
-use crate::rect::DimgRect;
-use crate::vec_nd::DimgVec2D;
+use crate::rect::Rect;
+use crate::vectors::Vector2D;
 
 
 // Use your programming IDE "Go to definition" facility on the names of the center columns to find the actual flags/enum lists.
@@ -184,11 +185,11 @@ use crate::vec_nd::DimgVec2D;
 // - Helpers: String
 // - Helpers: Formatting
 // - Helpers: UTF-8 <> wchar conversions
-// - Helpers: ImVec2/ImVec4 operators
+// - Helpers: Vector2D/Vector4D operators
 // - Helpers: Maths
 // - Helpers: Geometry
 // - Helper: ImVec1
-// - Helper: ImVec2ih
+// - Helper: Vector2Dih
 // - Helper: ImRect
 // - Helper: ImBitArray
 // - Helper: ImBitVector
@@ -245,9 +246,9 @@ use crate::vec_nd::DimgVec2D;
 //  int           ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end);                             // return number of bytes to express one char in UTF-8
 //  int           ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end);                        // return number of bytes to express string in UTF-8
 
-// Helpers: ImVec2/ImVec4 operators
-// We are keeping those disabled by default so they don't leak in user space, to allow user enabling implicit cast operators between ImVec2 and their own types (using IM_VEC2_CLASS_EXTRA etc.)
-// We unfortunately don't have a unary- operator for ImVec2 because this would needs to be defined inside the class itself.
+// Helpers: Vector2D/Vector4D operators
+// We are keeping those disabled by default so they don't leak in user space, to allow user enabling implicit cast operators between Vector2D and their own types (using IM_VEC2_CLASS_EXTRA etc.)
+// We unfortunately don't have a unary- operator for Vector2D because this would needs to be defined inside the class itself.
 // #ifdef IMGUI_DEFINE_MATH_OPERATORS
 // IM_MSVC_RUNTIME_CHECKS_OFF
 
@@ -284,13 +285,13 @@ use crate::vec_nd::DimgVec2D;
 // IM_MSVC_RUNTIME_CHECKS_OFF
 
 
-// Helper: ImVec2ih (2D vector, half-size integer, for long-term packed storage)
-// struct ImVec2ih
+// Helper: Vector2Dih (2D vector, half-size integer, for long-term packed storage)
+// struct Vector2Dih
 // {
 //     short   x, y;
-//     constexpr ImVec2ih()                           : x(0), y(0) {}
-//     constexpr ImVec2ih(short _x, short _y)         : x(_x), y(_y) {}
-//     constexpr explicit ImVec2ih(const ImVec2& rhs) : x((short)rhs.x), y((short)rhs.y) {}
+//     constexpr Vector2Dih()                           : x(0), y(0) {}
+//     constexpr Vector2Dih(short _x, short _y)         : x(_x), y(_y) {}
+//     constexpr explicit Vector2Dih(const Vector2D& rhs) : x((short)rhs.x), y((short)rhs.y) {}
 // };
 
 // Helper: ImBitArray
@@ -504,17 +505,17 @@ use crate::vec_nd::DimgVec2D;
     //  ImGuiWindow*  FindWindowByID(ImGuiID id);
     //  ImGuiWindow*  FindWindowByName(const char* name);
     //  void          UpdateWindowParentAndRootLinks(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window);
-    //  ImVec2        CalcWindowNextAutoFitSize(ImGuiWindow* window);
+    //  Vector2D        CalcWindowNextAutoFitSize(ImGuiWindow* window);
     //  bool          IsWindowChildOf(ImGuiWindow* window, ImGuiWindow* potential_parent, bool popup_hierarchy, bool dock_hierarchy);
     //  bool          IsWindowWithinBeginStackOf(ImGuiWindow* window, ImGuiWindow* potential_parent);
     //  bool          IsWindowAbove(ImGuiWindow* potential_above, ImGuiWindow* potential_below);
     //  bool          IsWindowNavFocusable(ImGuiWindow* window);
-    //  void          SetWindowPos(ImGuiWindow* window, const ImVec2& pos, ImGuiCond cond = 0);
-    //  void          SetWindowSize(ImGuiWindow* window, const ImVec2& size, ImGuiCond cond = 0);
+    //  void          SetWindowPos(ImGuiWindow* window, const Vector2D& pos, ImGuiCond cond = 0);
+    //  void          SetWindowSize(ImGuiWindow* window, const Vector2D& size, ImGuiCond cond = 0);
     //  void          SetWindowCollapsed(ImGuiWindow* window, bool collapsed, ImGuiCond cond = 0);
-    //  void          SetWindowHitTestHole(ImGuiWindow* window, const ImVec2& pos, const ImVec2& size);
-    // inline ImRect           WindowRectAbsToRel(ImGuiWindow* window, const ImRect& r) { ImVec2 off = window.DC.CursorStartPos; return ImRect(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y); }
-    // inline ImRect           WindowRectRelToAbs(ImGuiWindow* window, const ImRect& r) { ImVec2 off = window.DC.CursorStartPos; return ImRect(r.Min.x + off.x, r.Min.y + off.y, r.Max.x + off.x, r.Max.y + off.y); }
+    //  void          SetWindowHitTestHole(ImGuiWindow* window, const Vector2D& pos, const Vector2D& size);
+    // inline ImRect           WindowRectAbsToRel(ImGuiWindow* window, const ImRect& r) { Vector2D off = window.DC.CursorStartPos; return ImRect(r.min.x - off.x, r.min.y - off.y, r.max.x - off.x, r.max.y - off.y); }
+    // inline ImRect           WindowRectRelToAbs(ImGuiWindow* window, const ImRect& r) { Vector2D off = window.DC.CursorStartPos; return ImRect(r.min.x + off.x, r.min.y + off.y, r.max.x + off.x, r.max.y + off.y); }
 
     // windows: Display Order and Focus Order
     //  void          FocusWindow(ImGuiWindow* window);
@@ -549,13 +550,13 @@ use crate::vec_nd::DimgVec2D;
     //  void          CallContextHooks(ImGuiContext* context, ImGuiContextHookType type);
 
     // viewports
-    //  void          TranslateWindowsInViewport(ImGuiViewportP* viewport, const ImVec2& old_pos, const ImVec2& new_pos);
+    //  void          TranslateWindowsInViewport(ImGuiViewportP* viewport, const Vector2D& old_pos, const Vector2D& new_pos);
     //  void          ScaleWindowsInViewport(ImGuiViewportP* viewport, float scale);
     //  void          DestroyPlatformWindow(ImGuiViewportP* viewport);
     //  void          SetWindowViewport(ImGuiWindow* window, ImGuiViewportP* viewport);
     //  void          SetCurrentViewport(ImGuiWindow* window, ImGuiViewportP* viewport);
     //  const ImGuiPlatformMonitor*   GetViewportPlatformMonitor(ImGuiViewport* viewport);
-    //  ImGuiViewportP*               FindHoveredViewportFromPlatformWindowStack(const ImVec2& mouse_platform_pos);
+    //  ImGuiViewportP*               FindHoveredViewportFromPlatformWindowStack(const Vector2D& mouse_platform_pos);
 
     // Settings
     //  void                  MarkIniSettingsDirty();
@@ -569,7 +570,7 @@ use crate::vec_nd::DimgVec2D;
     //  ImGuiSettingsHandler* FindSettingsHandler(const char* type_name);
 
     // Scrolling
-    //  void          SetNextWindowScroll(const ImVec2& scroll); // Use -1.0 on one axis to leave as-is
+    //  void          SetNextWindowScroll(const Vector2D& scroll); // Use -1.0 on one axis to leave as-is
     //  void          SetScrollX(ImGuiWindow* window, float scroll_x);
     //  void          SetScrollY(ImGuiWindow* window, float scroll_y);
     //  void          SetScrollFromPosX(ImGuiWindow* window, float local_x, float center_x_ratio);
@@ -578,15 +579,15 @@ use crate::vec_nd::DimgVec2D;
     // Early work-in-progress API (ScrollToItem() will become public)
     //  void          ScrollToItem(ImGuiScrollFlags flags = 0);
     //  void          ScrollToRect(ImGuiWindow* window, const ImRect& rect, ImGuiScrollFlags flags = 0);
-    //  ImVec2        ScrollToRectEx(ImGuiWindow* window, const ImRect& rect, ImGuiScrollFlags flags = 0);
+    //  Vector2D        ScrollToRectEx(ImGuiWindow* window, const ImRect& rect, ImGuiScrollFlags flags = 0);
 //#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //     inline void             ScrollToBringRectIntoView(ImGuiWindow* window, const ImRect& rect) { ScrollToRect(window, rect, ImGuiScrollFlags_KeepVisibleEdgeY); }
 //#endif
 
     // Basic Accessors
     // inline ImGuiID          GetItemID()     { ImGuiContext& g = *GImGui; return g.LastItemData.id; }   // Get id of last item (~~ often same ImGui::GetID(label) beforehand)
-    // inline ImGuiItemStatusFlags GetItemStatusFlags(){ ImGuiContext& g = *GImGui; return g.LastItemData.StatusFlags; }
-    // inline ImGuiItemFlags   GetItemFlags()  { ImGuiContext& g = *GImGui; return g.LastItemData.InFlags; }
+    // inline ImGuiItemStatusFlags GetItemStatusFlags(){ ImGuiContext& g = *GImGui; return g.LastItemData.status_flags; }
+    // inline ImGuiItemFlags   GetItemFlags()  { ImGuiContext& g = *GImGui; return g.LastItemData.in_flags; }
     // inline ImGuiID          GetActiveID()   { ImGuiContext& g = *GImGui; return g.ActiveId; }
     // inline ImGuiID          GetFocusID()    { ImGuiContext& g = *GImGui; return g.NavId; }
     //  void          SetActiveID(ImGuiID id, ImGuiWindow* window);
@@ -600,17 +601,17 @@ use crate::vec_nd::DimgVec2D;
     //  ImGuiID       GetIDWithSeed(const char* str_id_begin, const char* str_id_end, ImGuiID seed);
 
     // Basic Helpers for widget code
-    //  void          ItemSize(const ImVec2& size, float text_baseline_y = -1.0);
-    // inline void             ItemSize(const ImRect& bb, float text_baseline_y = -1.0) { ItemSize(bb.GetSize(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
+    //  void          ItemSize(const Vector2D& size, float text_baseline_y = -1.0);
+    // inline void             ItemSize(const ImRect& bb, float text_baseline_y = -1.0) { ItemSize(bb.get_size(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.min.
     //  bool          ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb = NULL, ImGuiItemFlags extra_flags = 0);
     //  bool          ItemHoverable(const ImRect& bb, ImGuiID id);
     //  bool          IsClippedEx(const ImRect& bb, ImGuiID id);
     //  void          SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags status_flags, const ImRect& item_rect);
-    //  ImVec2        CalcItemSize(ImVec2 size, float default_w, float default_h);
-    //  float         CalcWrapWidthForPos(const ImVec2& pos, float wrap_pos_x);
+    //  Vector2D        CalcItemSize(Vector2D size, float default_w, float default_h);
+    //  float         CalcWrapWidthForPos(const Vector2D& pos, float wrap_pos_x);
     //  void          PushMultiItemsWidths(int components, float width_full);
     //  bool          IsItemToggledSelection();                                   // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
-    //  ImVec2        GetContentRegionMaxAbs();
+    //  Vector2D        GetContentRegionMaxAbs();
     //  void          ShrinkWidths(ImGuiShrinkWidthItem* items, int count, float width_excess);
 
     // Parameter stacks
@@ -631,11 +632,11 @@ use crate::vec_nd::DimgVec2D;
     // Logging/Capture
     //  void          LogBegin(ImGuiLogType type, int auto_open_depth);           // -> BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
     //  void          LogToBuffer(int auto_open_depth = -1);                      // Start logging/capturing to internal buffer
-    //  void          LogRenderedText(const ImVec2* ref_pos, const char* text, const char* text_end = NULL);
+    //  void          LogRenderedText(const Vector2D* ref_pos, const char* text, const char* text_end = NULL);
      // void          LogSetNextTextDecoration(const char* prefix, const char* suffix);
     //
     // Popups, Modals, Tooltips
-     // bool          BeginChildEx(const char* name, ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags flags);
+     // bool          BeginChildEx(const char* name, ImGuiID id, const Vector2D& size_arg, bool border, ImGuiWindowFlags flags);
      // void          OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags = ImGuiPopupFlags_None);
      // void          ClosePopupToLevel(int remaining, bool restore_focus_to_window_under_popup);
      // void          ClosePopupsOverWindow(ImGuiWindow* ref_window, bool restore_focus_to_window_under_popup);
@@ -646,8 +647,8 @@ use crate::vec_nd::DimgVec2D;
      // ImRect        GetPopupAllowedExtentRect(ImGuiWindow* window);
      // ImGuiWindow*  GetTopMostPopupModal();
      // ImGuiWindow*  GetTopMostAndVisiblePopupModal();
-     // ImVec2        FindBestWindowPosForPopup(ImGuiWindow* window);
-     // ImVec2        FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, ImGuiDir* last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy);
+     // Vector2D        FindBestWindowPosForPopup(ImGuiWindow* window);
+     // Vector2D        FindBestWindowPosForPopupEx(const Vector2D& ref_pos, const Vector2D& size, ImGuiDir* last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy);
     //
     // Menus
     //  bool          BeginViewportSideBar(const char* name, ImGuiViewport* viewport, ImGuiDir dir, float size, ImGuiWindowFlags window_flags);
@@ -671,7 +672,7 @@ use crate::vec_nd::DimgVec2D;
      // void          NavMoveRequestTryWrapping(ImGuiWindow* window, ImGuiNavMoveFlags move_flags);
      // const char*   GetNavInputName(ImGuiNavInput n);
      // float         GetNavInputAmount(ImGuiNavInput n, ImGuiNavReadMode mode);
-     // ImVec2        GetNavInputAmount2d(ImGuiNavDirSourceFlags dir_sources, ImGuiNavReadMode mode, float slow_factor = 0.0, float fast_factor = 0.0);
+     // Vector2D        GetNavInputAmount2d(ImGuiNavDirSourceFlags dir_sources, ImGuiNavReadMode mode, float slow_factor = 0.0, float fast_factor = 0.0);
      // int           CalcTypematicRepeatAmount(float t0, float t1, float repeat_delay, float repeat_rate);
      // void          ActivateItem(ImGuiID id);   // Remotely activate a button, checkbox, tree node etc. given its unique id. activation is queued and processed on the next frame when the item is encountered again.
      // void          SetNavWindow(ImGuiWindow* window);
@@ -718,7 +719,7 @@ use crate::vec_nd::DimgVec2D;
     //  void          DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, float split_ratio, bool split_outer);
     //  void          DockContextQueueUndockWindow(ImGuiContext* ctx, ImGuiWindow* window);
     //  void          DockContextQueueUndockNode(ImGuiContext* ctx, ImGuiDockNode* node);
-    //  bool          DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, ImVec2* out_pos);
+    //  bool          DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos);
     //  bool          DockNodeBeginAmendTabBar(ImGuiDockNode* node);
     //  void          DockNodeEndAmendTabBar();
     // inline ImGuiDockNode*   DockNodeGetRootNode(ImGuiDockNode* node)                 { while (node->parent_node) node = node->parent_node; return node; }
@@ -748,8 +749,8 @@ use crate::vec_nd::DimgVec2D;
     //  void          DockBuilderRemoveNode(ImGuiID node_id);                 // Remove node and all its child, undock all windows
     //  void          DockBuilderRemoveNodeDockedWindows(ImGuiID node_id, bool clear_settings_refs = true);
     //  void          DockBuilderRemoveNodeChildNodes(ImGuiID node_id);       // Remove all split/hierarchy. All remaining docked windows will be re-docked to the remaining root node (node_id).
-    //  void          DockBuilderSetNodePos(ImGuiID node_id, ImVec2 pos);
-    //  void          DockBuilderSetNodeSize(ImGuiID node_id, ImVec2 size);
+    //  void          DockBuilderSetNodePos(ImGuiID node_id, Vector2D pos);
+    //  void          DockBuilderSetNodeSize(ImGuiID node_id, Vector2D size);
     //  ImGuiID       DockBuilderSplitNode(ImGuiID node_id, ImGuiDir split_dir, float size_ratio_for_node_at_dir, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir); // Create 2 child nodes in this parent node.
     //  void          DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_id, ImVector<const char*>* in_window_remap_pairs);
     //  void          DockBuilderCopyNode(ImGuiID src_node_id, ImGuiID dst_node_id, ImVector<ImGuiID>* out_node_remap_pairs);
@@ -786,7 +787,7 @@ use crate::vec_nd::DimgVec2D;
     // tables: Internals
     // inline    ImGuiTable*   GetCurrentTable() { ImGuiContext& g = *GImGui; return g.CurrentTable; }
     //  ImGuiTable*   TableFindByID(ImGuiID id);
-    //  bool          BeginTableEx(const char* name, ImGuiID id, int columns_count, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0, 0), float inner_width = 0.0);
+    //  bool          BeginTableEx(const char* name, ImGuiID id, int columns_count, ImGuiTableFlags flags = 0, const Vector2D& outer_size = Vector2D(0, 0), float inner_width = 0.0);
     //  void          TableBeginInitMemory(ImGuiTable* table, int columns_count);
     //  void          TableBeginApplyRequests(ImGuiTable* table);
     //  void          TableSetupDrawChannels(ImGuiTable* table);
@@ -834,47 +835,47 @@ use crate::vec_nd::DimgVec2D;
     //  void          TabBarRemoveTab(ImGuiTabBar* tab_bar, ImGuiID tab_id);
     //  void          TabBarCloseTab(ImGuiTabBar* tab_bar, ImGuiTabItem* tab);
     //  void          TabBarQueueReorder(ImGuiTabBar* tab_bar, const ImGuiTabItem* tab, int offset);
-    //  void          TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, const ImGuiTabItem* tab, ImVec2 mouse_pos);
+    //  void          TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, const ImGuiTabItem* tab, Vector2D mouse_pos);
     //  bool          TabBarProcessReorder(ImGuiTabBar* tab_bar);
     //  bool          TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags, ImGuiWindow* docked_window);
-    //  ImVec2        TabItemCalcSize(const char* label, bool has_close_button);
+    //  Vector2D        TabItemCalcSize(const char* label, bool has_close_button);
     //  void          TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col);
-    //  void          TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped);
+    //  void          TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, Vector2D frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped);
     //
     // Render helpers
     // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
     // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
-    //  void          render_text(ImVec2 pos, const char* text, const char* text_end = NULL, bool hide_text_after_hash = true);
-    //  void          RenderTextWrapped(ImVec2 pos, const char* text, const char* text_end, float wrap_width);
-    //  void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align = ImVec2(0, 0), const ImRect* clip_rect = NULL);
-    //  void          RenderTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align = ImVec2(0, 0), const ImRect* clip_rect = NULL);
-    //  void          RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end, const ImVec2* text_size_if_known);
-    //  void          RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border = true, float rounding = 0.0);
-    //  void          RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, float rounding = 0.0);
-    //  void          RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, float grid_step, ImVec2 grid_off, float rounding = 0.0, ImDrawFlags flags = 0);
+    //  void          render_text(Vector2D pos, const char* text, const char* text_end = NULL, bool hide_text_after_hash = true);
+    //  void          RenderTextWrapped(Vector2D pos, const char* text, const char* text_end, float wrap_width);
+    //  void          RenderTextClipped(const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_end, const Vector2D* text_size_if_known, const Vector2D& align = Vector2D(0, 0), const ImRect* clip_rect = NULL);
+    //  void          RenderTextClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_end, const Vector2D* text_size_if_known, const Vector2D& align = Vector2D(0, 0), const ImRect* clip_rect = NULL);
+    //  void          RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end, const Vector2D* text_size_if_known);
+    //  void          RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool border = true, float rounding = 0.0);
+    //  void          RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding = 0.0);
+    //  void          RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D p_min, Vector2D p_max, ImU32 fill_col, float grid_step, Vector2D grid_off, float rounding = 0.0, ImDrawFlags flags = 0);
     //  void          RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags = ImGuiNavHighlightFlags_TypeDefault); // Navigation highlight
     //  const char*   FindRenderedTextEnd(const char* text, const char* text_end = NULL); // Find the optional ## from which we stop displaying text.
-    //  void          RenderMouseCursor(ImVec2 pos, float scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow);
+    //  void          RenderMouseCursor(Vector2D pos, float scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow);
 
     // Render helpers (those functions don't access any ImGui state!)
-    //  void          RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir dir, float scale = 1.0);
-    //  void          RenderBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col);
-    //  void          RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, ImU32 col, float sz);
-    //  void          RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, ImU32 col);
-    //  void          RenderArrowDockMenu(ImDrawList* draw_list, ImVec2 p_min, float sz, ImU32 col);
+    //  void          RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir dir, float scale = 1.0);
+    //  void          RenderBullet(ImDrawList* draw_list, Vector2D pos, ImU32 col);
+    //  void          RenderCheckMark(ImDrawList* draw_list, Vector2D pos, ImU32 col, float sz);
+    //  void          RenderArrowPointingAt(ImDrawList* draw_list, Vector2D pos, Vector2D half_sz, ImGuiDir direction, ImU32 col);
+    //  void          RenderArrowDockMenu(ImDrawList* draw_list, Vector2D p_min, float sz, ImU32 col);
     //  void          RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, ImU32 col, float x_start_norm, float x_end_norm, float rounding);
     //  void          RenderRectFilledWithHole(ImDrawList* draw_list, const ImRect& outer, const ImRect& inner, ImU32 col, float rounding);
     //  ImDrawFlags   CalcRoundingFlagsForRectInRect(const ImRect& r_in, const ImRect& r_outer, float threshold);
 
     // Widgets
     //  void          TextEx(const char* text, const char* text_end = NULL, ImGuiTextFlags flags = 0);
-    //  bool          ButtonEx(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
-    //  bool          CloseButton(ImGuiID id, const ImVec2& pos);
-    //  bool          CollapseButton(ImGuiID id, const ImVec2& pos, ImGuiDockNode* dock_node);
-    //  bool          ArrowButtonEx(const char* str_id, ImGuiDir dir, ImVec2 size_arg, ImGuiButtonFlags flags = 0);
+    //  bool          ButtonEx(const char* label, const Vector2D& size_arg = Vector2D(0, 0), ImGuiButtonFlags flags = 0);
+    //  bool          CloseButton(ImGuiID id, const Vector2D& pos);
+    //  bool          CollapseButton(ImGuiID id, const Vector2D& pos, ImGuiDockNode* dock_node);
+    //  bool          ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size_arg, ImGuiButtonFlags flags = 0);
     //  void          Scrollbar(ImGuiAxis axis);
     //  bool          ScrollbarEx(const ImRect& bb, ImGuiID id, ImGuiAxis axis, ImS64* p_scroll_v, ImS64 avail_v, ImS64 contents_v, ImDrawFlags flags);
-    //  bool          ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& bg_col, const ImVec4& tint_col);
+    //  bool          ImageButtonEx(ImGuiID id, ImTextureID texture_id, const Vector2D& size, const Vector2D& uv0, const Vector2D& uv1, const Vector2D& padding, const Vector4D& bg_col, const Vector4D& tint_col);
     //  ImRect        GetWindowScrollbarRect(ImGuiWindow* window, ImGuiAxis axis);
     //  ImGuiID       GetWindowScrollbarID(ImGuiWindow* window, ImGuiAxis axis);
     //  ImGuiID       GetWindowResizeCornerID(ImGuiWindow* window, int n); // 0..3: corners
@@ -911,7 +912,7 @@ use crate::vec_nd::DimgVec2D;
     //  bool          DataTypeClamp(ImGuiDataType data_type, void* p_data, const void* p_min, const void* p_max);
     //
     // InputText
-    //  bool          InputTextEx(const char* label, const char* hint, char* buf, int buf_size, const ImVec2& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = NULL, void* user_data = NULL);
+    //  bool          InputTextEx(const char* label, const char* hint, char* buf, int buf_size, const Vector2D& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = NULL, void* user_data = NULL);
     //  bool          TempInputText(const ImRect& bb, ImGuiID id, const char* label, char* buf, int buf_size, ImGuiInputTextFlags flags);
     //  bool          TempInputScalar(const ImRect& bb, ImGuiID id, const char* label, ImGuiDataType data_type, void* p_data, const char* format, const void* p_clamp_min = NULL, const void* p_clamp_max = NULL);
     // inline bool             TempInputIsActive(ImGuiID id)       { ImGuiContext& g = *GImGui; return (g.ActiveId == id && g.TempInputId == id); }
@@ -923,11 +924,11 @@ use crate::vec_nd::DimgVec2D;
     //  void          ColorPickerOptionsPopup(const float* ref_col, ImGuiColorEditFlags flags);
 
     // Plot
-    //  int           PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 frame_size);
+    //  int           PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, Vector2D frame_size);
     //
     // Shade functions (write over already created vertices)
-    //  void          ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, ImVec2 gradient_p0, ImVec2 gradient_p1, ImU32 col0, ImU32 col1);
-    //  void          ShadeVertsLinearUV(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, bool clamp);
+    //  void          ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, Vector2D gradient_p0, Vector2D gradient_p1, ImU32 col0, ImU32 col1);
+    //  void          ShadeVertsLinearUV(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, const Vector2D& a, const Vector2D& b, const Vector2D& uv_a, const Vector2D& uv_b, bool clamp);
 
     // Garbage collection
     //  void          GcCompactTransientMiscBuffers();
@@ -941,7 +942,7 @@ use crate::vec_nd::DimgVec2D;
     // Debug Tools
     //  void          ErrorCheckEndFrameRecover(ImGuiErrorLogCallback log_callback, void* user_data = NULL);
     //  void          ErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback, void* user_data = NULL);
-    // inline void             DebugDrawItemRect(ImU32 col = IM_COL32(255,0,0,255))    { ImGuiContext& g = *GImGui; ImGuiWindow* window = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.rect.Min, g.LastItemData.rect.Max, col); }
+    // inline void             DebugDrawItemRect(ImU32 col = IM_COL32(255,0,0,255))    { ImGuiContext& g = *GImGui; ImGuiWindow* window = g.CurrentWindow; GetForegroundDrawList(window)->add_rect(g.LastItemData.rect.min, g.LastItemData.rect.max, col); }
     // inline void             DebugStartItemPicker()                                  { ImGuiContext& g = *GImGui; g.DebugItemPickerActive = true; }
     //  void          ShowFontAtlas(ImFontAtlas* atlas);
     //  void          DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, const void* data_id, const void* data_id_end);

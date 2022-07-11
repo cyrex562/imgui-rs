@@ -1,5 +1,5 @@
 use std::os::raw::c_char;
-use crate::context::DimgContext;
+use crate::context::Context;
 use crate::imgui_context::ImGuiContext;
 
 // void ImGui::SetClipboardText(const char* text)
@@ -13,7 +13,7 @@ pub fn SetClipboardText(g: *mut ImGuiContext, text: *const c_char) {
 // Win32 clipboard implementation
 // We use g.clipboard_handler_data for temporary storage to ensure it is freed on Shutdown()
 // static const char* GetClipboardTextFn_DefaultImpl(void*)
-pub fn get_clipboard_text_fn_dflt_impl(ctx: &mut DimgContext) -> String {
+pub fn get_clipboard_text_fn_dflt_impl(ctx: &mut Context) -> String {
     todo!()
     // ImGuiContext& g = *GImGui;
     // ctx.clipboard_handler_data.clear();

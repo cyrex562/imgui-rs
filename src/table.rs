@@ -1,11 +1,11 @@
 use std::collections::HashSet;
-use crate::types::DimgId;
+use crate::types::Id32;
 use crate::direction::DimgSortDirection;
 use crate::imgui_color::ImColor;
 use crate::imgui_h::{ImDrawListSplitter, ImGuiID, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
 use crate::imgui_rect::ImRect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
-use crate::imgui_vec::{ImVec1, ImVec2};
+use crate::imgui_vec::{ImVec1, Vector2D};
 use crate::imgui_window::ImGuiWindow;
 
 // #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
@@ -203,7 +203,7 @@ impl ImGuiTableInstanceData {
 }
 
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
-pub struct DimgTable
+pub struct Table
 {
     // ImGuiID                     id;
     pub ID: ImGuiID,
@@ -212,7 +212,7 @@ pub struct DimgTable
     // void*                       RawData;                    // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
     pub RawData: Vec<u8>,
     // ImGuiTableTempData*         TempData;                   // Transient data while table is active. Point within g.CurrentTableStack[]
-    pub TempData: *mut DimgTableTempData,
+    pub TempData: *mut TableTempData,
     // ImSpan<ImGuiTableColumn>    Columns;                    // Point within RawData[]
     pub Columns: Vec<ImGuiTableColumn>,
     // ImSpan<ImGuiTableColumnIdx> DisplayOrderToIndex;        // Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
@@ -297,9 +297,9 @@ pub struct DimgTable
     pub ResizeLockMinContentsX2: f32,
     // float                       RefScale;                   // Reference scale to be able to rescale columns on font/dpi changes.
     pub RefScale: f32,
-    // ImRect                      OuterRect;                  // Note: for non-scrolling table, OuterRect.Max.y is often FLT_MAX until EndTable(), unless a height has been specified in BeginTable().
+    // ImRect                      OuterRect;                  // Note: for non-scrolling table, OuterRect.max.y is often FLT_MAX until EndTable(), unless a height has been specified in BeginTable().
     pub OuterRect: ImRect,
-    // ImRect                      inner_rect;                  // inner_rect but without decoration. As with OuterRect, for non-scrolling tables, inner_rect.Max.y is
+    // ImRect                      inner_rect;                  // inner_rect but without decoration. As with OuterRect, for non-scrolling tables, inner_rect.max.y is
     pub InnerRect: ImRect,
     // ImRect                      work_rect;
     pub WorkRect: ImRect,
@@ -415,7 +415,7 @@ pub struct DimgTable
     pub HostSkipItems: bool,
 }
 
-impl DimgTable {
+impl Table {
     // ImGuiTable()                { memset(this, 0, sizeof(*this)); last_frame_active = -1; }
     pub fn new() -> Self {
         Self {
@@ -430,15 +430,15 @@ impl DimgTable {
 // - Accessing those requires chasing an extra pointer so for very frequently used data we leave them in the main table structure.
 // - We also leave out of this structure data that tend to be particularly useful for debugging/metrics.
 #[derive(Default,Debug,Clone)]
-pub struct DimgTableTempData
+pub struct TableTempData
 {
     // int                         TableIndex;                 // Index in g.tables.Buf[] pool
     pub TableIndex: i32,
     // float                       last_time_active;             // Last timestamp this structure was used
     pub LastTimeActive: f32,
 
-    // ImVec2                      UserOuterSize;              // outer_size.x passed to BeginTable()
-    pub UserOuterSize: ImVec2,
+    // Vector2D                      UserOuterSize;              // outer_size.x passed to BeginTable()
+    pub UserOuterSize: Vector2D,
     // ImDrawListSplitter          DrawSplitter;
     pub DrawSplitter: ImDrawListSplitter,
 
@@ -446,12 +446,12 @@ pub struct DimgTableTempData
     pub HostBackupWorkRect: ImRect,
     // ImRect                      HostBackupParentWorkRect;   // Backup of InnerWindow->parent_work_rect at the end of BeginTable()
     pub HostBackupParentWorkRect: ImRect,
-    // ImVec2                      HostBackupPrevLineSize;     // Backup of InnerWindow->dc.PrevLineSize at the end of BeginTable()
-    pub HostBackupPrevLineSize: ImVec2,
-    // ImVec2                      HostBackupCurrLineSize;     // Backup of InnerWindow->dc.CurrLineSize at the end of BeginTable()
-    pub HostBackupCurrLineSize: ImVec2,
-    // ImVec2                      HostBackupCursorMaxPos;     // Backup of InnerWindow->dc.CursorMaxPos at the end of BeginTable()
-    pub HostBackupCursorMaxPOs: ImVec2,
+    // Vector2D                      HostBackupPrevLineSize;     // Backup of InnerWindow->dc.PrevLineSize at the end of BeginTable()
+    pub HostBackupPrevLineSize: Vector2D,
+    // Vector2D                      HostBackupCurrLineSize;     // Backup of InnerWindow->dc.CurrLineSize at the end of BeginTable()
+    pub HostBackupCurrLineSize: Vector2D,
+    // Vector2D                      HostBackupCursorMaxPos;     // Backup of InnerWindow->dc.CursorMaxPos at the end of BeginTable()
+    pub HostBackupCursorMaxPOs: Vector2D,
     // ImVec1                      HostBackupColumnsOffset;    // Backup of OuterWindow->dc.ColumnsOffset at the end of BeginTable()
     pub HostBackupColumnOffset: ImVec1,
     // float                       HostBackupItemWidth;        // Backup of OuterWindow->dc.ItemWidth at the end of BeginTable()
@@ -460,7 +460,7 @@ pub struct DimgTableTempData
     pub HostBackupItemWidthStackSize: i32,
 }
 
-impl DimgTableTempData {
+impl TableTempData {
     // ImGuiTableTempData()        { memset(this, 0, sizeof(*this)); last_time_active = -1.0; }
     pub fn new() -> Self {
         Self {
@@ -511,7 +511,7 @@ impl ImGuiTableColumnSettings {
 
 // This is designed to be stored in a single ImChunkStream (1 header followed by N ImGuiTableColumnSettings, etc.)
 #[derive(Debug,Clone,Default)]
-pub struct ImGuiTableSettings
+pub struct TableSettings
 {
     // ImGuiID                     id;                     // Set to 0 to invalidate/delete the setting
     pub ID: ImGuiID,
@@ -527,7 +527,7 @@ pub struct ImGuiTableSettings
     pub WantApply: bool,
 }
 
-impl ImGuiTableSettings {
+impl TableSettings {
     // ImGuiTableSettings()        { memset(this, 0, sizeof(*this)); }
     pub fn new() -> Self {
         Self {
@@ -544,7 +544,7 @@ impl ImGuiTableSettings {
 #[derive(Default,Debug,Clone)]
 pub struct DimgTableColumnSortSpecs
 {
-    pub column_user_id: DimgId,     // User id of the column (if specified by a TableSetupColumn() call)
+    pub column_user_id: Id32,     // User id of the column (if specified by a TableSetupColumn() call)
     pub column_index: i16,        // Index of the column
     pub sort_order: i16,          // Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
     pub sort_direction: DimgSortDirection,  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)

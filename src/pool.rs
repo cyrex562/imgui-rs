@@ -63,7 +63,7 @@ impl<T> ImGuiPool<T> {
     }
 
 
-    //     bool        Contains(const T* p) const          { return (p >= Buf.data && p < Buf.data + Buf.size); }
+    //     bool        contains(const T* p) const          { return (p >= Buf.data && p < Buf.data + Buf.size); }
     pub fn Contains(&self, p: *const T) -> bool {
         for x in self.Buf.iter() {
             if p == x {

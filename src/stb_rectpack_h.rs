@@ -76,11 +76,11 @@
 #define STBRP_DEF static
 #else
 #define STBRP_DEF extern
-#endif
+
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+
 
 typedef struct stbrp_context stbrp_context;
 typedef struct stbrp_node    stbrp_node;
@@ -197,9 +197,9 @@ struct stbrp_context
 
 #ifdef __cplusplus
 }
-#endif
 
-#endif
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -210,12 +210,12 @@ struct stbrp_context
 #ifndef STBRP_SORT
 #include <stdlib.h>
 #define STBRP_SORT qsort
-#endif
+
 
 #ifndef STBRP_ASSERT
 #include <assert.h>
 #define STBRP_ASSERT assert
-#endif
+
 
 #ifdef _MSC_VER
 #define STBRP__NOTUSED(v)  (void)(v)
@@ -223,7 +223,7 @@ struct stbrp_context
 #else
 #define STBRP__NOTUSED(v)  (void)sizeof(v)
 #define STBRP__CDECL
-#endif
+
 
 enum
 {
@@ -304,7 +304,7 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
       node += 1;
    #else
    STBRP_ASSERT(node->next->x > x0); // we ended up handling this in the caller for efficiency
-   #endif
+
 
    STBRP_ASSERT(node->x <= x0);
 
@@ -520,7 +520,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
       }
       STBRP_ASSERT(count == context->num_nodes+2);
    }
-#endif
+
 
    return res;
 }
@@ -582,7 +582,7 @@ STBRP_DEF int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, int nu
    // return the all_rects_packed status
    return all_rects_packed;
 }
-#endif
+
 
 /*
 ------------------------------------------------------------------------------

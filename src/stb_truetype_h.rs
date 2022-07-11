@@ -322,7 +322,7 @@ void my_stbtt_print(float x, float y, char *text)
    }
    glEnd();
 }
-#endif
+
 //
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
    }
    return 0;
 }
-#endif
+
 //
 // Output:
 //
@@ -415,7 +415,7 @@ int main(int arg, char **argv)
 
    return 0;
 }
-#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -436,7 +436,7 @@ int main(int arg, char **argv)
    typedef signed   short  stbtt_int16;
    typedef unsigned int    stbtt_uint32;
    typedef signed   int    stbtt_int32;
-   #endif
+
 
    typedef char stbtt__check_size32[sizeof(stbtt_int32)==4 ? 1 : -1];
    typedef char stbtt__check_size16[sizeof(stbtt_int16)==2 ? 1 : -1];
@@ -446,53 +446,53 @@ int main(int arg, char **argv)
    #include <math.h>
    #define STBTT_ifloor(x)   ( floor(x))
    #define STBTT_iceil(x)    ( ceil(x))
-   #endif
+
 
    #ifndef STBTT_sqrt
    #include <math.h>
    #define STBTT_sqrt(x)      sqrt(x)
    #define STBTT_pow(x,y)     pow(x,y)
-   #endif
+
 
    #ifndef STBTT_fmod
    #include <math.h>
    #define STBTT_fmod(x,y)    fmod(x,y)
-   #endif
+
 
    #ifndef STBTT_cos
    #include <math.h>
    #define STBTT_cos(x)       cos(x)
    #define STBTT_acos(x)      acos(x)
-   #endif
+
 
    #ifndef STBTT_fabs
    #include <math.h>
    #define STBTT_fabs(x)      fabs(x)
-   #endif
+
 
    // #define your own functions "STBTT_malloc" / "STBTT_free" to avoid malloc.h
    #ifndef STBTT_malloc
    #include <stdlib.h>
    #define STBTT_malloc(x,u)  ((void)(u),malloc(x))
    #define STBTT_free(x,u)    ((void)(u),free(x))
-   #endif
+
 
    #ifndef STBTT_assert
    #include <assert.h>
    #define STBTT_assert(x)    assert(x)
-   #endif
+
 
    #ifndef STBTT_strlen
    #include <string.h>
    #define STBTT_strlen(x)    strlen(x)
-   #endif
+
 
    #ifndef STBTT_memcpy
    #include <string.h>
    #define STBTT_memcpy       memcpy
    #define STBTT_memset       memset
-   #endif
-#endif
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -508,11 +508,11 @@ int main(int arg, char **argv)
 #define STBTT_DEF static
 #else
 #define STBTT_DEF extern
-#endif
+
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+
 
 // private structure
 typedef struct
@@ -588,7 +588,7 @@ typedef struct stbtt_pack_context stbtt_pack_context;
 typedef struct stbtt_fontinfo stbtt_fontinfo;
 #ifndef STB_RECT_PACK_VERSION
 typedef struct stbrp_rect stbrp_rect;
-#endif
+
 
 STBTT_DEF int  stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, int width, int height, int stride_in_bytes, int padding, void *alloc_context);
 // Initializes a packing context stored in the passed-in stbtt_pack_context.
@@ -832,7 +832,7 @@ STBTT_DEF int  stbtt_GetKerningTable(const stbtt_fontinfo *info, stbtt_kerningen
       STBTT_vcurve,
       STBTT_vcubic
    };
-#endif
+
 
 #ifndef stbtt_vertex // you can predefine this to use different values
                    // (we share this with other code at RAD)
@@ -842,7 +842,7 @@ STBTT_DEF int  stbtt_GetKerningTable(const stbtt_fontinfo *info, stbtt_kerningen
       stbtt_vertex_type x,y,cx,cy,cx1,cy1;
       unsigned char type,padding;
    } stbtt_vertex;
-#endif
+
 
 STBTT_DEF int stbtt_IsGlyphEmpty(const stbtt_fontinfo *info, int glyph_index);
 // returns non-zero if nothing is drawn for this glyph
@@ -1097,9 +1097,9 @@ enum { // languageID for STBTT_PLATFORM_ID_MAC
 
 #ifdef __cplusplus
 }
-#endif
 
-#endif // __STB_INCLUDE_STB_TRUETYPE_H__
+
+ // __STB_INCLUDE_STB_TRUETYPE_H__
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -1112,23 +1112,23 @@ enum { // languageID for STBTT_PLATFORM_ID_MAC
 
 #ifndef STBTT_MAX_OVERSAMPLE
 #define STBTT_MAX_OVERSAMPLE   8
-#endif
+
 
 #if STBTT_MAX_OVERSAMPLE > 255
 #error "STBTT_MAX_OVERSAMPLE cannot be > 255"
-#endif
+
 
 typedef int stbtt__test_oversample_pow2[(STBTT_MAX_OVERSAMPLE & (STBTT_MAX_OVERSAMPLE-1)) == 0 ? 1 : -1];
 
 #ifndef STBTT_RASTERIZER_VERSION
 #define STBTT_RASTERIZER_VERSION 2
-#endif
+
 
 #ifdef _MSC_VER
 #define STBTT__NOTUSED(v)  (void)(v)
 #else
 #define STBTT__NOTUSED(v)  (void)sizeof(v)
-#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -2829,7 +2829,7 @@ typedef struct stbtt__active_edge
    float ey;
    #else
    #error "Unrecognized value of STBTT_RASTERIZER_VERSION"
-   #endif
+
 } stbtt__active_edge;
 
 #if STBTT_RASTERIZER_VERSION == 1
@@ -2878,7 +2878,7 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, i
 }
 #else
 #error "Unrecognized value of STBTT_RASTERIZER_VERSION"
-#endif
+
 
 #if STBTT_RASTERIZER_VERSION == 1
 // note: this routine clips fills that extend off the edges... ideally this
@@ -3400,7 +3400,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
 }
 #else
 #error "Unrecognized value of STBTT_RASTERIZER_VERSION"
-#endif
+
 
 #define STBTT__COMPARE(a,b)  ((a)->y0 < (b)->y0)
 
@@ -3506,7 +3506,7 @@ static void stbtt__rasterize(stbtt__bitmap *result, stbtt__point *pts, int *wcou
    int vsubsample = 1;
 #else
    #error "Unrecognized value of STBTT_RASTERIZER_VERSION"
-#endif
+
    // vsubsample should divide 255 evenly; otherwise we won't reach full opacity
 
    // now we have to blow out the windings into explicit edge lists
@@ -3953,7 +3953,7 @@ static void stbrp_pack_rects(stbrp_context *con, stbrp_rect *rects, int num_rect
    for (   ; i < num_rects; i += 1)
       rects[i].was_packed = 0;
 }
-#endif
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -4938,7 +4938,7 @@ static int stbtt_FindMatchingFont_internal(unsigned char *font_collection, char 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-qual"
-#endif
+
 
 STBTT_DEF int stbtt_BakeFontBitmap(const unsigned char *data, int offset,
                                 float pixel_height, unsigned char *pixels, int pw, int ph,
@@ -4974,9 +4974,9 @@ STBTT_DEF int stbtt_CompareUTF8toUTF16_bigendian(const char *s1, int len1, const
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
-#endif
 
-#endif // STB_TRUETYPE_IMPLEMENTATION
+
+ // STB_TRUETYPE_IMPLEMENTATION
 
 
 // FULL VERSION HISTORY

@@ -217,7 +217,7 @@ public:
 
             if (ImGui::BeginPopup("add node"))
             {
-                const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+                const Vector2D click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 
                 if (ImGui::MenuItem("add"))
                 {

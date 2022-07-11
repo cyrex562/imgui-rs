@@ -87,7 +87,7 @@ int main(int, char**)
     // Our state
     bool show_demo_window = true;
     bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45, 0.55, 0.60, 1.00);
+    Vector4D clear_color = Vector4D(0.45, 0.55, 0.60, 1.00);
 
     // Main loop
     bool done = false;

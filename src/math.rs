@@ -1,5 +1,5 @@
-use crate::imgui_vec::ImVec4;
-use crate::imgui_vec::ImVec2;
+use crate::imgui_vec::Vector4D;
+use crate::imgui_vec::Vector2D;
 
 // Helpers: Maths
 // IM_MSVC_RUNTIME_CHECKS_OFF
@@ -209,49 +209,49 @@ pub fn ImSubClampOverflowI32(a: i32, b: i32, c: i32) -> i32 {
 }
 
 // - Misc maths helpers
-// static inline ImVec2 ImMin(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y); }
-pub fn ImMinVec2(lhs: &ImVec2, rhs: &ImVec2) -> ImVec2 {
-    ImVec2 {
+// static inline Vector2D ImMin(const Vector2D& lhs, const Vector2D& rhs)                { return Vector2D(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y); }
+pub fn ImMinVec2(lhs: &Vector2D, rhs: &Vector2D) -> Vector2D {
+    Vector2D {
         x: if lhs.x < rhs.x { lhs.x } else {rhs.x},
         y: if lhs.y < rhs.y {lhs.y} else { rhs.y}
     }
 }
 
-// static inline ImVec2 ImMax(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x >= rhs.x ? lhs.x : rhs.x, lhs.y >= rhs.y ? lhs.y : rhs.y); }
-pub fn ImMaxVec2(lhs: &ImVec2, rhs: &ImVec2) -> ImVec2 {
-    ImVec2 {
+// static inline Vector2D ImMax(const Vector2D& lhs, const Vector2D& rhs)                { return Vector2D(lhs.x >= rhs.x ? lhs.x : rhs.x, lhs.y >= rhs.y ? lhs.y : rhs.y); }
+pub fn ImMaxVec2(lhs: &Vector2D, rhs: &Vector2D) -> Vector2D {
+    Vector2D {
         x: if lhs.x >rhs.x {lhs.x} else {rhs.x},
         y: if lhs.y > rhs.y {lhs.y} else {rhs.y}
     }
 }
 
-// static inline ImVec2 ImClamp(const ImVec2& v, const ImVec2& mn, ImVec2 mx)      { return ImVec2((v.x < mn.x) ? mn.x : (v.x > mx.x) ? mx.x : v.x, (v.y < mn.y) ? mn.y : (v.y > mx.y) ? mx.y : v.y); }
-pub fn ImClampVec2(v: &ImVec2, min_v: &ImVec2, max_v: &ImVec2) -> ImVec2 {
-    ImVec2 {
+// static inline Vector2D ImClamp(const Vector2D& v, const Vector2D& mn, Vector2D mx)      { return Vector2D((v.x < mn.x) ? mn.x : (v.x > mx.x) ? mx.x : v.x, (v.y < mn.y) ? mn.y : (v.y > mx.y) ? mx.y : v.y); }
+pub fn ImClampVec2(v: &Vector2D, min_v: &Vector2D, max_v: &Vector2D) -> Vector2D {
+    Vector2D {
         x: if v.x < min_v.x { min_v.x} else if v.x > max_v.x { max_v.x} else {v.x},
         y: if v.y < min_v.y { min_v.y} else if v.y > max_v.y { max_v.y} else {v.y}
     }
 }
 
-// static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, float t)          { return ImVec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
-pub fn ImLerpVec2(a: &ImVec2, b: &ImVec2, t: f32) -> ImVec2 {
+// static inline Vector2D ImLerp(const Vector2D& a, const Vector2D& b, float t)          { return Vector2D(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
+pub fn ImLerpVec2(a: &Vector2D, b: &Vector2D, t: f32) -> Vector2D {
     Imvec2 {
         x: a.x + (b.x - a.x) * t,
         y: a.y + (b.y - a.y) & t
     }
 }
 
-// static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, const ImVec2& t)  { return ImVec2(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
-pub fn ImLerpVec22(a: &ImVec2, b: &ImVec2, t: &ImVec2) -> ImVec2 {
-    ImVec2 {
+// static inline Vector2D ImLerp(const Vector2D& a, const Vector2D& b, const Vector2D& t)  { return Vector2D(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
+pub fn ImLerpVec22(a: &Vector2D, b: &Vector2D, t: &Vector2D) -> Vector2D {
+    Vector2D {
         x: a.x + (b.x - a.x) * t.x,
         y: a.y + (b.y - a.y) * t.y,
     }
 }
 
-// static inline ImVec4 ImLerp(const ImVec4& a, const ImVec4& b, float t)          { return ImVec4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t); }
-pub fn ImLerpVec4(a: &ImVec4, b: &ImVec4, t: f32) -> ImVec4 {
-    ImVec4 {
+// static inline Vector4D ImLerp(const Vector4D& a, const Vector4D& b, float t)          { return Vector4D(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t); }
+pub fn ImLerpVec4(a: &Vector4D, b: &Vector4D, t: f32) -> Vector4D {
+    Vector4D {
         x: a.x + (b.x - a.x) * t,
         y: a.y + (b.y - a.y) * t,
         z: a.z + (b.z - a.z) * t,
@@ -272,13 +272,13 @@ pub fn ImSaturate(f: f32) -> f32 {
     }
 }
 
-// static inline float  ImLengthSqr(const ImVec4& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
-pub fn ImLengthSqr(lhs: &ImVec4) -> f32 {
+// static inline float  ImLengthSqr(const Vector4D& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
+pub fn ImLengthSqr(lhs: &Vector4D) -> f32 {
     (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w)
 }
 
-// static inline float  ImInvLength(const ImVec2& lhs, float fail_value)           { float d = (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0.0) return ImRsqrt(d); return fail_value; }
-pub fn ImInvLength(lhs: &ImVec2, fail_value: f32) -> f32 {
+// static inline float  ImInvLength(const Vector2D& lhs, float fail_value)           { float d = (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0.0) return ImRsqrt(d); return fail_value; }
+pub fn ImInvLength(lhs: &Vector2D, fail_value: f32) -> f32 {
     let mut d = (lhs.x * lhs.x) +  (lhs.y * lhs.y);
     if d > 0.0 {
         return ImRsqrt(d)
@@ -296,30 +296,30 @@ pub fn ImFloor(f: f32) -> f32 {
 //     f32::floor
 // }
 
-// static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((float)(v.x), (float)(v.y)); }
-pub fn ImFloorVec2(v: &ImVec2) -> ImVec2 {
-    ImVec2 {
+// static inline Vector2D ImFloor(const Vector2D& v)                                   { return Vector2D((float)(v.x), (float)(v.y)); }
+pub fn ImFloorVec2(v: &Vector2D) -> Vector2D {
+    Vector2D {
         x: f32::floor(v.x),
         y: f32::floor(v.y)
     }
 }
 
 
-// static inline ImVec2 ImFloorSigned(const ImVec2& v)                             { return ImVec2(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
+// static inline Vector2D ImFloorSigned(const Vector2D& v)                             { return Vector2D(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
 
 // static inline int    ImModPositive(int a, int b)                                { return (a + b) % b; }
 pub fn ImModPositive(a: i32, b: i32) -> i32 {
     (a + b) % b
 }
 
-// static inline float  ImDot(const ImVec2& a, const ImVec2& b)                    { return a.x * b.x + a.y * b.y; }
-pub fn ImDot(a: &ImVec2, b: &ImVec2) -> f32 {
+// static inline float  ImDot(const Vector2D& a, const Vector2D& b)                    { return a.x * b.x + a.y * b.y; }
+pub fn ImDot(a: &Vector2D, b: &Vector2D) -> f32 {
     a.x * b.x + a.y * b.y
 }
 
-// static inline ImVec2 ImRotate(const ImVec2& v, float cos_a, float sin_a)        { return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
-pub fn ImRotate(v: &ImVec2, cos_a: f32, sin_a: f32) -> ImVec2 {
-    ImVec2{
+// static inline Vector2D ImRotate(const Vector2D& v, float cos_a, float sin_a)        { return Vector2D(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
+pub fn ImRotate(v: &Vector2D, cos_a: f32, sin_a: f32) -> Vector2D {
+    Vector2D{
         x: v.x * cos_a - v.y * sin_a,
         y: v.x * sin_a + v.y * cos_a
     }
@@ -336,9 +336,9 @@ pub fn ImLinearSweep(current: f32, target: f32, speed: f32) -> f32 {
     }
 }
 
-// static inline ImVec2 ImMul(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
-pub fn ImMulVec2(lhs: &ImVec2, rhs: &ImVec2) -> ImVec2 {
-    ImVec2 {
+// static inline Vector2D ImMul(const Vector2D& lhs, const Vector2D& rhs)                { return Vector2D(lhs.x * rhs.x, lhs.y * rhs.y); }
+pub fn ImMulVec2(lhs: &Vector2D, rhs: &Vector2D) -> Vector2D {
+    Vector2D {
         x: lhs.x * rhs.x,
         y: lhs.y * rhs.y
     }

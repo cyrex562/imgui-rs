@@ -32,7 +32,7 @@
 
 // FIXME: cfg.oversample_h, oversample_v are not supported (but perhaps not so necessary with this rasterizer).
 
-#include "freetype.h"
+#include "freetype_h.rs"
 #include "internal_h.rs"     // ImMin,ImMax,ImFontAtlasBuild*,
 #include <stdint.h>
 #include <ft2build.h>
@@ -44,12 +44,12 @@
 #ifdef _MSC_VER
 #pragma warning (disable: 4505)     // unreferenced local function has been removed (stb stuff)
 #pragma warning (disable: 26812)    // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
-#endif
+
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wpragmas"                  // warning: unknown option after '#pragma GCC diagnostic' kind
 #pragma GCC diagnostic ignored "-Wunused-function"          // warning: 'xxxx' defined but not used
-#endif
+
 
 //-------------------------------------------------------------------------
 // data
@@ -354,14 +354,14 @@ namespace
 #define STBRP_ASSERT(x)     do { IM_ASSERT(x); } while (0)
 #define STBRP_STATIC
 #define STB_RECT_PACK_IMPLEMENTATION
-#endif
+
 #ifdef IMGUI_STB_RECT_PACK_FILENAME
 #include IMGUI_STB_RECT_PACK_FILENAME
 #else
 #include "stb_rectpack_h.rs"
 
-#endif
-#endif
+
+
 
 struct ImFontBuildSrcGlyphFT
 {

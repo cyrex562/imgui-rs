@@ -8,7 +8,7 @@ use crate::imgui_globals::GImGui;
 use crate::imgui_h::ImGuiColor::Button;
 use crate::imgui_render::FindRenderedTextEnd;
 use crate::imguI_string::ImStreolRange;
-use crate::imgui_vec::ImVec2;
+use crate::imgui_vec::Vector2D;
 
 pub enum ImGuiLogType
 {
@@ -40,8 +40,8 @@ pub const ImGuiDebugLogFlags_EventMask: u32 = ImGuiDebugLogFlags::EventActiveId 
 // Internal version that takes a position to decide on newline placement and pad items according to their depth.
 // We split text into individual lines to add current tree level padding
 // FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
-// void ImGui::LogRenderedText(const ImVec2* ref_pos, const char* text, const char* text_end)
-pub unsafe fn LogRenderedText(ref_pos: &ImVec2, text: *const c_char, mut text_end: *const c_char)
+// void ImGui::LogRenderedText(const Vector2D* ref_pos, const char* text, const char* text_end)
+pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: *const c_char, mut text_end: *const c_char)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -59,7 +59,7 @@ pub unsafe fn LogRenderedText(ref_pos: &ImVec2, text: *const c_char, mut text_en
         text_end = FindRenderedTextEnd(text, text_end);
     }
 
-    let log_new_line = ref_pos != ImVec2::new(0.0,0.0) && (ref_pos.y > g.LogLinePosY + g.Style.FramePadding.y + 1);
+    let log_new_line = ref_pos != Vector2D::new(0.0,0.0) && (ref_pos.y > g.LogLinePosY + g.Style.FramePadding.y + 1);
     if (ref_pos) {
         g.LogLinePosY = ref_pos.y;
     }
