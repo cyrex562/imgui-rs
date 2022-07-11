@@ -376,7 +376,7 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
         WGPUBufferDescriptor ib_desc =
         {
             NULL,
-            "Dear ImGui Index buffer",
+            "Dear ImGui index buffer",
             WGPUBufferUsage_CopyDst | WGPUBufferUsage_Index,
             fr->IndexBufferSize * sizeof(ImDrawIdx),
             false

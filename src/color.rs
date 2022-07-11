@@ -333,9 +333,18 @@ pub enum ColorEditFlags
     InputRGB        = 1 << 27,  // [Input]      // ColorEdit, ColorPicker: input and output data in RGB format.
     InputHSV        = 1 << 28,  // [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
 
+
+}
+
     // Defaults Options. You can set application defaults using SetColorEditOptions(). The intent is that you probably don't want to
     // override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.
     // ImGuiColorEditFlags_DefaultOptions_ = ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_PickerHueBar,
+pub const COLOR_EDIT_FLAGS_DFLT_OPTS: HashSet<ColorEditFlags> = HashSet::from([
+        ColorEditFlags::Uint8,
+        ColorEditFlags::DisplayRGB,
+        ColorEditFlags::InputRGB,
+        ColorEditFlags::PickerHueBar
+    ]);
     //
     // // [Internal] Masks
     // ImGuiColorEditFlags_DisplayMask_    = ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex,
@@ -345,4 +354,3 @@ pub enum ColorEditFlags
 
     // Obsolete names (will be removed)
     // ImGuiColorEditFlags_RGB = ImGuiColorEditFlags_DisplayRGB, ImGuiColorEditFlags_HSV = ImGuiColorEditFlags_DisplayHSV, ImGuiColorEditFlags_HEX = ImGuiColorEditFlags_DisplayHex  // [renamed in 1.69]
-}

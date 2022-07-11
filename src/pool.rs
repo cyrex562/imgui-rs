@@ -12,7 +12,7 @@ pub struct ImGuiPool<T>
 {
     // ImVector<T>     Buf;        // Contiguous data
     pub Buf: Vec<T>,
-    // ImGuiStorage    Map;        // id->Index
+    // ImGuiStorage    Map;        // id->index
     pub Map: ImGuiStorage,
     // ImPoolIdx       FreeIdx;    // Next free idx to use
     pub FreeIdx: ImGuiPoolIdx,

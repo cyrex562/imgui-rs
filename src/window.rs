@@ -4,33 +4,37 @@ use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
 use std::rc::Rc;
 use std::collections::HashSet;
-use crate::column::DimgOldColumns;
+use crate::column::OldColumns;
 use crate::condition::Cond;
+use crate::config::ConfigFlags;
 use crate::context::Context;
 use crate::defines::ImGuiSizeCallback;
 use crate::direction::Direction;
-use crate::dock::DimgDockNodeFlags;
-use crate::dock_node::DimgDockNode;
+use crate::dock::DockNodeFlags;
+use crate::dock_node::{dock_node_get_root_node, DockNode};
 use crate::draw_list::DrawList;
 use crate::globals::GImGui;
 use crate::hash::{ImHashData, ImHashStr};
+use crate::id::set_active_id;
 use crate::input::NavLayer;
 use crate::item::{ItemStatusFlags, LastItemData};
-use crate::kv_store::DimgStorage;
+use crate::kv_store::Storage;
 use crate::layout::LayoutType;
 use crate::menu::ImGuiMenuColumns;
 use crate::rect::Rect;
+use crate::size_callback_data::SizeCallbackData;
 use crate::stack::ImGuiStackSizes;
 use crate::tab_bar::DimgTabItemFlags;
 use crate::vectors::{Vector1D, Vector2D};
-use crate::types::{DimgWindowHandle, Id32, ImGuiDataType};
-use crate::viewport::{Viewport, DimgViewportFlags};
+use crate::types::{Id32, ImGuiDataType, INVALID_ID, WindowHandle};
+use crate::utils::remove_hash_set_val;
+use crate::viewport::{Viewport, ViewportFlags};
 
 
 // Transient per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the dc variable name in ImGuiWindow.
 // (That's theory, in practice the delimitation between ImGuiWindow and ImGuiWindowTempData is quite tenuous and could be reconsidered..)
 // (This doesn't need a constructor because we zero-clear it as part of ImGuiWindow and all frame-temporary data are setup on Begin)
-pub struct DimgWindowTempData {
+pub struct WindowTempData {
     // Layout
     // Vector2D                  CursorPos;              // Current emitting position, in absolute coordinates.
     pub CursorPos: Vector2D,
@@ -89,7 +93,7 @@ pub struct DimgWindowTempData {
     // ImGuiStorage*           state_storage;           // Current persistent per-window storage (store e.g. tree node open/close state)
     pub StateStorage: Vec<u8>,
     // ImGuiOldColumns*        CurrentColumns;         // Current columns set
-    pub CurrentColumns: DimgOldColumns,
+    pub CurrentColumns: OldColumns,
     // int                     CurrentTableIdx;        // Current table index (into g.tables)
     pub CurrentTableIdx: usize,
     // ImGuiLayoutType         LayoutType;
@@ -118,10 +122,10 @@ pub struct Window {
     // ImGuiID                 id;                                 // == ImHashStr(name)
     pub id: Id32,
     // ImGuiWindowFlags        flags, flags_previous_frame;          // See enum ImGuiWindowFlags_
-    pub flags: DimgWindowFlags,
-    pub flags_previous_frame: DimgWindowFlags,
+    pub flags: HashSet<WindowFlags>,
+    pub flags_previous_frame: HashSet<WindowFlags>,
     // ImGuiWindowClass        window_class;                        // Advanced users only. Set with SetNextWindowClass()
-    pub window_class: DimgWindowClass,
+    pub window_class: WindowClass,
     // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
     pub viewport: Id32,
     // ImGuiID                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
@@ -228,7 +232,7 @@ pub struct Window {
     pub set_window_size_allow_flags: Cond,
     // ImGuiCond               set_window_collapsed_allow_flags : 8;   // store acceptable condition flags for SetNextWindowCollapsed() use.
     pub set_window_collapsed_allow_flags: Cond,
-    // ImGuiCond               SetWindowDockAllowFlags : 8;        // store acceptable condition flags for SetNextWindowDock() use.
+    // ImGuiCond               set_window_dock_allow_flags : 8;        // store acceptable condition flags for SetNextWindowDock() use.
     // Vector2D                  set_window_pos_val;                    // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
     pub set_window_pos_val: Vector2D,
     // Vector2D                  set_window_pos_pivot;                  // store window pivot for positioning. Vector2D(0, 0) when positioning from top-left corner; Vector2D(0.5, 0.5) for centering; Vector2D(1, 1) for bottom right.
@@ -237,7 +241,7 @@ pub struct Window {
     // ImVector<ImGuiID>       IDStack;                            // id stack. id are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
     pub id_stack: Vec<Id32>,
     // ImGuiWindowTempData     dc;                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "dc" variable name.
-    pub dc: DimgWindowTempData,
+    pub dc: WindowTempData,
 
     // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show windows Rectangles' viewer.
     // The main 'OuterRect', omitted as a field, is window->rect().
@@ -268,9 +272,9 @@ pub struct Window {
     // float                   item_width_default;
     pub item_width_default: f32,
     // ImGuiStorage            state_storage;
-    pub state_storage: DimgStorage,
+    pub state_storage: Storage,
     // ImVector<ImGuiOldColumns> ColumnsStorage;
-    pub column: Vec<DimgOldColumns>,
+    pub column: Vec<OldColumns>,
     // float                   font_window_scale;                    // User scale multiplier per-window, via SetWindowFontScale()
     pub font_window_scale: f32,
     // float                   font_dpi_scale;
@@ -282,21 +286,21 @@ pub struct Window {
     // ImDrawList              DrawListInst;
     pub draw_list_inst: DrawList,
     // ImGuiWindow*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
-    pub parent_window: DimgWindowHandle,
+    pub parent_window: WindowHandle,
     // ImGuiWindow*            parent_window_in_begin_stack;
-    pub parent_window_in_begin_stack: DimgWindowHandle,
+    pub parent_window_in_begin_stack: WindowHandle,
     // ImGuiWindow*            root_window;                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
-    pub root_window: DimgWindowHandle,
+    pub root_window: WindowHandle,
     // ImGuiWindow*            root_window_popup_tree;                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
-    pub root_window_popup_tree: DimgWindowHandle,
+    pub root_window_popup_tree: WindowHandle,
     // ImGuiWindow*            root_window_dock_tree;                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
-    pub root_window_dock_tree: DimgWindowHandle,
+    pub root_window_dock_tree: WindowHandle,
     // ImGuiWindow*            root_window_for_title_bar_highlight;     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
-    pub root_window_for_title_bar_highlight: DimgWindowHandle,
+    pub root_window_for_title_bar_highlight: WindowHandle,
     // ImGuiWindow*            root_window_for_nav;                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
-    pub root_window_for_nav: DimgWindowHandle,
+    pub root_window_for_nav: WindowHandle,
     // ImGuiWindow*            nav_last_child_nav_window;              // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.windows sorted by last focused including child window.)
-    pub nav_last_child_nav_window: DimgWindowHandle,
+    pub nav_last_child_nav_window: WindowHandle,
     // ImGuiID                 nav_last_ids[ImGuiNavLayer_COUNT];    // Last known nav_id for this window, per layer (0/1)
     pub nav_last_ids: Vec<Id32>,
     // ImRect                  nav_rect_rel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
@@ -319,18 +323,18 @@ pub struct Window {
     // short                   dock_order;                          // Order of the last time the window was visible within its dock_node. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
     pub dock_order: i16,
     // ImGuiWindowDockStyle    dock_style;
-    pub dock_style: DimgWindowDockStyle,
+    pub dock_style: WindowDockStyle,
     // ImGuiDockNode*          dock_node;                           // Which node are we docked into. Important: Prefer testing dock_is_active in many cases as this will still be set when the dock node is hidden.
-    pub dock_node: Id32, // *mut ImGuiDockNode,
+    pub dock_node: DockNode, //Id32, // *mut ImGuiDockNode,
     // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
-    pub dock_node_as_host: Id32, // *mut ImGuiDockNode,
+    pub dock_node_as_host: DockNode,// Id32, // *mut ImGuiDockNode,
     // ImGuiID                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
     pub dock_id: Id32,
     // ImGuiItemStatusFlags    dock_tab_item_status_flags;
-    pub dock_tab_item_status_flags: ItemStatusFlags,
-    // ImRect                  DockTabItemRect;
-    pub DockTabItemRect: Rect,
-    pub SetWindowDockAllowFlags: Cond,
+    pub dock_tab_item_status_flags: HashSet<ItemStatusFlags>,
+    // ImRect                  dock_tab_item_rect;
+    pub dock_tab_item_rect: Rect,
+    pub set_window_dock_allow_flags: Cond,
 
 }
 
@@ -363,11 +367,11 @@ impl Window {
             auto_fit_frames_y: -1,
             //     auto_pos_last_direction = ImGuiDir_None;
             auto_pos_last_direction: Direction::None,
-            //     set_window_pos_allow_flags = set_window_size_allow_flags = set_window_collapsed_allow_flags = SetWindowDockAllowFlags = ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing;
-            set_window_pos_allow_flags: Cond::Always | Cond::Once | ImGuiCond::FirstUserEver | Cond::Appearing,
-            set_window_size_allow_flags: Cond::Always | Cond::Once | ImGuiCond::FirstUserEver | Cond::Appearing,
-            set_window_collapsed_allow_flags: Cond::Always | Cond::Once | ImGuiCond::FirstUserEver | Cond::Appearing,
-            SetWindowDockAllowFlags: Cond::ImGuiCondAlways | Cond::Once | ImGuiCond:: FirstUserEver | Cond::Appearing,
+            //     set_window_pos_allow_flags = set_window_size_allow_flags = set_window_collapsed_allow_flags = set_window_dock_allow_flags = Cond::Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing;
+            set_window_pos_allow_flags: Cond::Always | Cond::Once | Cond::FirstUserEver | Cond::Appearing,
+            set_window_size_allow_flags: Cond::Always | Cond::Once | Cond::FirstUserEver | Cond::Appearing,
+            set_window_collapsed_allow_flags: Cond::Always | Cond::Once | Cond::FirstUserEver | Cond::Appearing,
+            set_window_dock_allow_flags: Cond::ImGuiCondAlways | Cond::Once | Cond:: FirstUserEver | Cond::Appearing,
             //     set_window_pos_val = set_window_pos_pivot = Vector2D(FLT_MAX, FLT_MAX);
             set_window_pos_val: Vector2D::new(f32::MAX, f32::MAX),
             set_window_pos_pivot: Vector2D::new(f32::MAX, f32::MAX),
@@ -391,7 +395,7 @@ impl Window {
         //     memset(this, 0, sizeof(*this));
         &out.id_stack.push(out.id);
         //     draw_list->_Data = &context->draw_list_shared_data;
-        &out.draw_list.data = context.draw_list_shared_data.clone();
+        out.draw_list.data = context.draw_list_shared_data.clone();
         //     draw_list->_OwnerName = name;
         &out.draw_list.owner_name = &out.name;
         //     IM_PLACEMENT_NEW(&window_class) ImGuiWindowClass();
@@ -464,10 +468,14 @@ impl Window {
         let id = ImHashData(&r_rel, seed);
         return id;
     }
+
+    pub fn get_node(&mut self, node_id: Id32) -> &mut DockNode {
+        for n in self.node
+    }
 }
 
 // static void set_current_window(ImGuiWindow* window)
-pub fn set_current_window(ctx: &mut Context, window_handle: DimgWindowHandle) {
+pub fn set_current_window(ctx: &mut Context, window_handle: WindowHandle) {
     // ImGuiContext& g = *GImGui;
     ctx.current_window_id = window_handle;
     // if window
@@ -477,7 +485,7 @@ pub fn set_current_window(ctx: &mut Context, window_handle: DimgWindowHandle) {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct DimgWindowDockStyle {
+pub struct WindowDockStyle {
     // ImU32 Colors[ImGuiWindowDockStyleCol_COUNT];
     pub Colors: Vec<u32>,
 }
@@ -558,7 +566,7 @@ pub struct NextWindowData {
     // ImGuiID                     dock_id;
     pub DockId: Id32,
     // ImGuiWindowClass            window_class;
-    pub WindowClass: DimgWindowClass,
+    pub WindowClass: WindowClass,
     // Vector2D                      MenuBarOffsetMinVal;    // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)
     pub MenuBarOffsetMinVal: Vector2D,
 
@@ -604,10 +612,10 @@ pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: 
             if focused_root_window.WasActive && focused_root_window != window.root_window_dock_tree {
                 // For the purpose of those flags we differentiate "standard popup" from "modal popup"
                 // NB: The order of those two tests is important because Modal windows are also Popups.
-                if focused_root_window.Flags & DimgWindowFlags::Modal {
+                if focused_root_window.Flags & WindowFlags::Modal {
                     return false;
                 }
-                if (focused_root_window.Flags & DimgWindowFlags::Popup) && !(flags & HoveredFlags::AllowWhenBlockedByPopup) {
+                if (focused_root_window.Flags & WindowFlags::Popup) && !(flags & HoveredFlags::AllowWhenBlockedByPopup) {
                     return false;
                 }
             }
@@ -699,20 +707,20 @@ pub fn IsItemHovered(g: &mut Context, flags: &HoveredFlags) -> bool
 /// - To the platform backend for OS level parent/child relationships of viewport.
 /// - To the docking system for various options and filtering.
 #[derive(Default,Debug,Clone)]
-pub struct DimgWindowClass
+pub struct WindowClass
 {
     pub class_id: Id32,                  // User data. 0 = Default class (unclassed). windows of different classes cannot be docked with each others.
     pub parent_viewport_id: Id32,         // Hint for the platform backend. -1: use default. 0: request platform backend to not parent the platform. != 0: request platform backend to create a parent<>child relationship between the platform windows. Not conforming backends are free to e.g. parent every viewport to the main viewport or not.
-    pub viewport_flags_override_set: DimgViewportFlags,   // viewport flags to set when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
-    pub viewport_flags_override_clear: DimgViewportFlags, // viewport flags to clear when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
+    pub viewport_flags_override_set: ViewportFlags,   // viewport flags to set when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
+    pub viewport_flags_override_clear: ViewportFlags, // viewport flags to clear when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
     pub tab_item_flags_override_set: DimgTabItemFlags,    // [EXPERIMENTAL] TabItem flags to set when a window of this class gets submitted into a dock node tab bar. May use with ImGuiTabItemFlags_Leading or ImGuiTabItemFlags_Trailing.
-    pub dock_node_flags_override_set: DimgDockNodeFlags,   // [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)
+    pub dock_node_flags_override_set: DockNodeFlags,   // [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)
     pub docking_always_tab_bar: bool,        // Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.config_docking_always_tab_bar)
     pub docking_allow_unclassed: bool,      // Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
 
 }
 
-impl DimgWindowClass {
+impl WindowClass {
     // ImGuiWindowClass() { memset(this, 0, sizeof(*this)); parent_viewport_id = (ImGuiID)-1; docking_allow_unclassed = true;
     pub fn new() -> Self {
         Self {
@@ -755,18 +763,18 @@ pub struct WindowSettings
 
 //     ImGuiWindowFlags_NoDecoration           = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
 // pub const NoDecoration: i32 = DimgWindowFlags::NoTitleBar | DimgWindowFlags::NoResize | DimgWindowFlags::NoScrollbar | DimgWindowFlags::NoCollapse;
-pub const DIMG_WIN_FLAGS_NO_DECORATION: HashSet<DimgWindowFlags> = HashSet::from([
-    DimgWindowFlags::NoTitleBar, DimgWindowFlags::NoResize, DimgWindowFlags::NoScrollbar, DimgWindowFlags::NoCollapse
+pub const DIMG_WIN_FLAGS_NO_DECORATION: HashSet<WindowFlags> = HashSet::from([
+    WindowFlags::NoTitleBar, WindowFlags::NoResize, WindowFlags::NoScrollbar, WindowFlags::NoCollapse
 ]);
 
 // ImGuiWindowFlags_NoNav                  = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
 // pub const ImGuiWindowFlags_NoNav: i32 = DimgWindowFlags::NoNavInputs | DimgWindowFlags::NoNavFocus;
-pub const DIMG_WIN_FLAGS_NO_NAV: HashSet<DimgWindowFlags> = HashSet::from([DimgWindowFlags::NoNavInputs, DimgWindowFlags::NoNavFocus]);
+pub const DIMG_WIN_FLAGS_NO_NAV: HashSet<WindowFlags> = HashSet::from([WindowFlags::NoNavInputs, WindowFlags::NoNavFocus]);
 
 //     ImGuiWindowFlags_NoInputs               = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
 // pub const NoInputs: i32 = DimgWindowFlags::NoMouseInputs | DimgWindowFlags::NoNavInputs | DimgWindowFlags::NoNavFocus;
-pub const DIMG_WIN_FLAGS_NO_INPUTS: HashSet<DimgWindowFlags> = HashSet::from([
-    DimgWindowFlags::NoMouseInputs, DimgWindowFlags::NoNavInputs, DimgWindowFlags::NoNavFocus
+pub const DIMG_WIN_FLAGS_NO_INPUTS: HashSet<WindowFlags> = HashSet::from([
+    WindowFlags::NoMouseInputs, WindowFlags::NoNavInputs, WindowFlags::NoNavFocus
 ]);
 
 // When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
@@ -784,11 +792,11 @@ pub const WINDOWS_HOVER_PADDING: f32 = 4.0;
 pub const WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER: f32 = 0.04;
 
 // typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);              // Callback function for ImGui::SetNextWindowSizeConstraints()
-pub type ImGuiSizeCallback = fn(*mut DimgSizeCallbackData);
+pub type ImGuiSizeCallback = fn(*mut SizeCallbackData);
 
 // flags for ImGui::Begin()
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgWindowFlags
+pub enum WindowFlags
 {
     None                   = 0,
     NoTitleBar             = 1 << 0,   // Disable title-bar
@@ -871,25 +879,11 @@ pub const ROOT_AND_CHILD_WINDOWS: HashSet<HoveredFlags> = HashSet::from([
      HoveredFlags::AllowWhenBlockedByPopup, HoveredFlags::AllowWhenBlockedByActiveItem, HoveredFlags::AllowWhenOverlapped
  ]);
 
-// Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().
-// NB: For basic min/max size constraint on each axis you don't need to use the callback! The SetNextWindowSizeConstraints() parameters are enough.
-pub struct DimgSizeCallbackData
-{
-    // void*   user_data;       // Read-only.   What user passed to SetNextWindowSizeConstraints()
-    pub user_data: Vec<u8>,
-    // pub pos: Vector2D,            // Read-only.   Window position, for reference.
-    pub pos: Vector2D,
-    // pub current_size: Vector2D,    // Read-only.   Current window size.
-    pub current_size: Vector2D,
-    // pub desired_size: Vector2D,    // Read-write.  Desired size, based on user's mouse position. Write to this field to restrain resizing.
-    pub desired_size: Vector2D,
-}
-
 #[derive(Debug,Clone,Default)]
 pub struct ShrinkWidthItem
 {
-    // int         Index;
-    pub Index: i32,
+    // int         index;
+    pub index: i32,
     // float       width;
     pub Width: f32,
     // float       InitialWidth;
@@ -903,7 +897,7 @@ pub fn is_clipped_ex(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'sta
     // ImGuiWindow* window = g.CurrentWindow;
     let window = g.get_current_window()?;
     if !bb.Overlaps(window.ClipRect) {
-        if id == 0 || (id != g.ActiveId && id != g.NavId) {
+        if id == 0 || (id != g.active_id && id != g.NavId) {
             if !g.LogEnabled {
                 return Ok(true);
             }
@@ -938,4 +932,154 @@ pub fn calc_wrap_width_for_pos(g: &mut Context, pos: &Vector2D, wrap_pox_x: f32)
 
     let out = f32::max(wrap_pos_x - pos.x, 1.0)
     Ok(out)
+}
+
+/// void ImGui::start_mouse_moving_window(ImGuiWindow* window)
+pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
+{
+    // Set active_id even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
+    // We _also_ call this when clicking in a window empty space when io.config_windows_move_from_title_bar_only is set, but clear g.moving_window afterward.
+    // This is because we want active_id to be set even when the window is not permitted to move.
+    // ImGuiContext& g = *GImGui;
+    // focus_window(window);
+    focus_window(window);
+    // SetActiveID(window.MoveId, window);
+    set_active_id(ctx, window.id, window);
+    g.nav_disable_highlight = true;
+    g.active_id_click_offset = &g.io.mouse_clicked_pos[0] - window.root_window_dock_tree.pos;
+    g.ActiveIdNoClearOnFocusLoss = true;
+    // SetActiveIdUsingNavAndKeys();
+    set_active_id_using_nav_and_keys();
+
+    // bool can_move_window = true;
+    let mut can_move_window= true;
+    if window.flags.contains(WindowFlags::NoMove) || (window.root_window_dock_tree.flags.contains(WindowFlags::NoMove) {
+        can_move_window = false;
+    }
+    let node = window.dock_node_as_host;
+    if node != INVALID_ID {
+        if node.visible_window && (node.visible_window.flags.contains(WindowFlags::NoMove)) {
+        can_move_window = false;}
+    }
+    if can_move_window {
+        g.moving_window = window;
+    }
+}
+
+/// We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
+/// - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
+/// - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
+/// void ImGui::StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock_floating_node)
+pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, node: &mut DockNode, undock_floating_node: bool)
+{
+    // ImGuiContext& g = *GImGui;
+    // bool can_undock_node = false;
+    let mut can_undock_node = false;
+    // if (node != NULL && node->VisibleWindow && (node->VisibleWindow.flags & ImGuiWindowFlags_NoMove) == 0)
+    if node.visible_window != INVALID_ID && node.visible_window.flags.contains(WindowFlags::NoMove) == false
+    {
+        // Can undock if:
+        // - part of a floating node hierarchy with more than one visible node (if only one is visible, we'll just move the whole hierarchy)
+        // - part of a dockspace node hierarchy (trivia: undocking from a fixed/central node will create a new node and copy windows)
+        // ImGuiDockNode* root_node = DockNodeGetRootNode(node);
+        let mut root_node = dock_node_get_root_node(g, node);
+        //if (root_node->OnlyNodeWithWindows != node || root_node->CentralNode != NULL)
+        if root_node.only_node_with_window != node.id || root_node.central_node != INVALID_ID
+        {  // -V1051 PVS-Studio thinks node should be root_node and is wrong about that.
+        // if (undock_floating_node || root_node -> IsDockSpace())
+        if undock_floating_node || root_node.is_dock_space()
+            {
+            can_undock_node = true;
+        }
+    }
+    }
+
+    // const bool clicked = IsMouseClicked(0);
+    let clicked = is_mouse_clicked(g, 0);
+    // const bool dragging = IsMouseDragging(0, g.io.MouseDragThreshold * 1.70);
+    let dragging = is_mouse_dragging(g, 0, g.io.mouse_drag_threshold * 1.70);
+    if can_undock_node && dragging {
+        dock_context_queue_undock_node(&g, node); // Will lead to DockNodeStartMouseMovingWindow() -> start_mouse_moving_window() being called next frame
+    }
+    else if !can_undock_node && (clicked || dragging) && g.moving_window != window.id {
+        start_mouse_moving_window(g, window);
+    }
+}
+
+/// Handle mouse moving window
+/// Note: moving window with the navigation keys (Square + d-pad / CTRL+TAB + Arrows) are processed in NavUpdateWindowing()
+/// FIXME: We don't have strong guarantee that g.moving_window stay synched with g.active_id == g.moving_window->move_id.
+/// This is currently enforced by the fact that BeginDragDropSource() is setting all g.ActiveIdUsingXXXX flags to inhibit navigation inputs,
+/// but if we should more thoroughly test cases where g.active_id or g.moving_window gets changed and not the other.
+/// void ImGui::UpdateMouseMovingWindowNewFrame()
+pub fn update_mouse_moving_window_new_frame(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    if (g.moving_window != INVALID_ID)
+    {
+        // We actually want to move the root window. g.moving_window == window we clicked on (could be a child window).
+        // We track it to preserve Focus and so that generally active_id_window == moving_window and active_id == moving_window->move_id for consistency.
+        keep_alive_id(g.active_id);
+        // IM_ASSERT(g.moving_window && g.moving_window->RootWindowDockTree);
+        // ImGuiWindow* moving_window = g.moving_window->RootWindowDockTree;
+        let moving_window_id = g.get_window(g.moving_window).unwrap().root_window_dock_tree;
+        let moving_window = g.get_window(moving_window_id).unwrap();
+
+        // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
+        // const bool window_disappared = ((!moving_window.WasActive && !moving_window.Active) || moving_window.viewport == NULL);
+        let window_disappeared = !moving
+        if (g.io.mouse_down[0] && is_mouse_pos_valid(&g.io.MousePos) && !window_disappared)
+        {
+            // Vector2D pos = g.io.MousePos - g.ActiveIdClickOffset;
+            let mut pos = g.io.mouse_pos.clone() - g.active_id_click_offset.clone();
+            if (moving_window.pos.x != pos.x || moving_window.pos.y != pos.y)
+            {
+                set_window_pos(moving_window, pos, Cond::Always);
+                if (moving_window.viewport_owned) // Synchronize viewport immediately because some overlays may relies on clipping rectangle before we Begin() into the window.
+                {
+                    moving_window.viewport.pos = pos.clone();
+                    moving_window.viewport.update_work_rect();
+                }
+            }
+            focus_window(g.moving_window);
+        }
+        else
+        {
+            if !window_disappared
+            {
+                // Try to merge the window back into the main viewport.
+                // This works because mouse_viewport should be != moving_window->viewport on release (as per code in UpdateViewports)
+                if g.config_flags_curr_frame.contains(ConfigFlags::ViewportsEnable) {
+                    update_try_merge_window_into_host_viewport(moving_window, g.mouse_viewport);
+                }
+
+                // Restore the mouse viewport so that we don't hover the viewport _under_ the moved window during the frame we released the mouse button.
+                if !is_drag_drop_payload_being_accepted() {
+                    g.mouse_viewport = moving_window.viewport;
+                }
+
+                // clear the NoInput window flag set by the viewport system
+                // moving_window.viewport.flags &= ~ViewportFlags::NoInputs; // FIXME-VIEWPORT: Test engine managed to crash here because viewport was NULL.
+                let mut viewport: &mut Viewport = g.get_viewport(moving_window.viewport_id).unwrap();
+                remove_hash_set_val(&mut viewport.flags, &ViewportFlags::NoInputs)
+            }
+
+            g.moving_window = INVALID_ID;
+            clear_active_id();
+        }
+    }
+    else
+    {
+        // When clicking/dragging from a window that has the _NoMove flag, we still set the active_id in order to prevent hovering others.
+        if (g.active_id_window != INVALID_ID) // && g.active_id_window.move_id == g.active_id)
+        {
+            let active_id_win = g.get_window(g.active_id_window).unwrap();
+            if active_id_win.move_id == g.active_id {
+                keep_alive_id(g.active_id);
+                if (!g.io.mouse_down[0]) {
+                    clear_active_id();
+                }
+            }
+        }
+    }
 }

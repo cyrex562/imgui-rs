@@ -77,7 +77,7 @@ pub enum ItemStatusFlags {
     // Set if the widget/group is able to provide data for the Deactivated flag.
     Deactivated = 1 << 6,
     // Only valid if HasDeactivated is set.
-    HoveredWindow = 1 << 7,
+    hovered_window = 1 << 7,
     // Override the hovered_window test to allow cross-window hover testing.
     FocusedByTabbing = 1 << 8,
     // Set when the Focusable item just got focused by Tabbing (FIXME: to be removed soon)
@@ -135,8 +135,8 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
     g.LastItemData.InFlags: g.CurrentItemFlags);
     if item_flags & ImGuiItemFlags_Disabled {
         // Release active id if turning disabled
-        if g.ActiveId == id {
-            ClearActiveID();
+        if g.active_id == id {
+            clear_active_id();
         }
         g.HoveredIdDisabled = true;
         return false;

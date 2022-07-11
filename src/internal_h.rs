@@ -8,7 +8,7 @@
 
 /*
 
-Index of this file:
+index of this file:
 
 // [SECTION] Header mess
 // [SECTION] Forward declarations
@@ -40,10 +40,10 @@ Index of this file:
 
 use std::collections::HashSet;
 use std::f32::consts::PI;
-use crate::context::ContextHookType;
-use crate::types::Id32;
+use crate::context::{Context, ContextHookType};
+use crate::types::{Id32, INVALID_ID};
 use crate::input::DimgKey::{GamepadRStickRight, GamepadStart};
-use crate::dock_node::DimgDockNodeFlags;
+use crate::dock_node::{DockNode, DockNodeFlags};
 use crate::draw_data_builder::DrawDataBuilder;
 use crate::draw_list::{DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN, DRAW_LIST_ARCFAST_TABLE_SIZE, DrawList};
 use crate::input::DimgKey;
@@ -510,7 +510,7 @@ use crate::vectors::Vector2D;
     //  bool          IsWindowWithinBeginStackOf(ImGuiWindow* window, ImGuiWindow* potential_parent);
     //  bool          IsWindowAbove(ImGuiWindow* potential_above, ImGuiWindow* potential_below);
     //  bool          IsWindowNavFocusable(ImGuiWindow* window);
-    //  void          SetWindowPos(ImGuiWindow* window, const Vector2D& pos, ImGuiCond cond = 0);
+    //  void          set_window_pos(ImGuiWindow* window, const Vector2D& pos, ImGuiCond cond = 0);
     //  void          SetWindowSize(ImGuiWindow* window, const Vector2D& size, ImGuiCond cond = 0);
     //  void          SetWindowCollapsed(ImGuiWindow* window, bool collapsed, ImGuiCond cond = 0);
     //  void          SetWindowHitTestHole(ImGuiWindow* window, const Vector2D& pos, const Vector2D& size);
@@ -518,7 +518,7 @@ use crate::vectors::Vector2D;
     // inline ImRect           WindowRectRelToAbs(ImGuiWindow* window, const ImRect& r) { Vector2D off = window.DC.CursorStartPos; return ImRect(r.min.x + off.x, r.min.y + off.y, r.max.x + off.x, r.max.y + off.y); }
 
     // windows: Display Order and Focus Order
-    //  void          FocusWindow(ImGuiWindow* window);
+    //  void          focus_window(ImGuiWindow* window);
     //  void          FocusTopMostWindowUnderOne(ImGuiWindow* under_this_window, ImGuiWindow* ignore_window);
     //  void          BringWindowToFocusFront(ImGuiWindow* window);
     //  void          BringWindowToDisplayFront(ImGuiWindow* window);
@@ -529,8 +529,8 @@ use crate::vectors::Vector2D;
 
     // fonts, drawing
     //  void          SetCurrentFont(ImFont* font);
-    // inline ImFont*          GetDefaultFont() { ImGuiContext& g = *GImGui; return g.IO.font_default ? g.IO.font_default : g.IO.fonts->fonts[0]; }
-    // inline ImDrawList*      GetForegroundDrawList(ImGuiWindow* window) { return GetForegroundDrawList(window.Viewport); }
+    // inline ImFont*          GetDefaultFont() { ImGuiContext& g = *GImGui; return g.io.font_default ? g.io.font_default : g.io.fonts->fonts[0]; }
+    // inline ImDrawList*      GetForegroundDrawList(ImGuiWindow* window) { return GetForegroundDrawList(window.viewport); }
 
     // Init
     //  void          Initialize();
@@ -539,7 +539,7 @@ use crate::vectors::Vector2D;
     // NewFrame
     //  void          UpdateInputEvents(bool trickle_fast_inputs);
     //  void          UpdateHoveredWindowAndCaptureFlags();
-    //  void          StartMouseMovingWindow(ImGuiWindow* window);
+    //  void          start_mouse_moving_window(ImGuiWindow* window);
     //  void          StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock_floating_node);
     //  void          UpdateMouseMovingWindowNewFrame();
     //  void          UpdateMouseMovingWindowEndFrame();
@@ -588,14 +588,14 @@ use crate::vectors::Vector2D;
     // inline ImGuiID          GetItemID()     { ImGuiContext& g = *GImGui; return g.LastItemData.id; }   // Get id of last item (~~ often same ImGui::GetID(label) beforehand)
     // inline ImGuiItemStatusFlags GetItemStatusFlags(){ ImGuiContext& g = *GImGui; return g.LastItemData.status_flags; }
     // inline ImGuiItemFlags   GetItemFlags()  { ImGuiContext& g = *GImGui; return g.LastItemData.in_flags; }
-    // inline ImGuiID          GetActiveID()   { ImGuiContext& g = *GImGui; return g.ActiveId; }
+    // inline ImGuiID          GetActiveID()   { ImGuiContext& g = *GImGui; return g.active_id; }
     // inline ImGuiID          GetFocusID()    { ImGuiContext& g = *GImGui; return g.NavId; }
     //  void          SetActiveID(ImGuiID id, ImGuiWindow* window);
     //  void          SetFocusID(ImGuiID id, ImGuiWindow* window);
-    //  void          ClearActiveID();
+    //  void          clear_active_id();
     //  ImGuiID       GetHoveredID();
     //  void          SetHoveredID(ImGuiID id);
-    //  void          KeepAliveID(ImGuiID id);
+    //  void          keep_alive_id(ImGuiID id);
     //  void          MarkItemEdited(ImGuiID id);     // Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
     //  void          PushOverrideID(ImGuiID id);     // Push given value as-is at the top of the id stack (whereas PushID combines old and new hashes)
     //  ImGuiID       GetIDWithSeed(const char* str_id_begin, const char* str_id_end, ImGuiID seed);
@@ -699,31 +699,14 @@ use crate::vectors::Vector2D;
     // inline bool             IsActiveIdUsingKey(ImGuiKey key)                            { ImGuiContext& g = *GImGui; return g.ActiveIdUsingKeyInputMask[key]; }
     // inline void             SetActiveIdUsingKey(ImGuiKey key)                           { ImGuiContext& g = *GImGui; g.ActiveIdUsingKeyInputMask.set_bit(key); }
     //  bool          IsMouseDragPastThreshold(ImGuiMouseButton button, float lock_threshold = -1.0);
-    // inline bool             IsNavInputDown(ImGuiNavInput n)                             { ImGuiContext& g = *GImGui; return g.IO.nav_inputs[n] > 0.0; }
+    // inline bool             IsNavInputDown(ImGuiNavInput n)                             { ImGuiContext& g = *GImGui; return g.io.nav_inputs[n] > 0.0; }
     // inline bool             IsNavInputTest(ImGuiNavInput n, ImGuiNavReadMode rm)        { return (GetNavInputAmount(n, rm) > 0.0); }
     //  ImGuiModFlags GetMergedModFlags();
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
 //     inline bool             IsKeyPressedMap(ImGuiKey key, bool repeat = true)           { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // [removed in 1.87]
 // #endif
 
-    // Docking
-    // (some functions are only declared in imgui.cpp, see Docking section)
-    //  void          DockContextInitialize(ImGuiContext* ctx);
-    //  void          DockContextShutdown(ImGuiContext* ctx);
-    //  void          DockContextClearNodes(ImGuiContext* ctx, ImGuiID root_id, bool clear_settings_refs); // Use root_id==0 to clear all
-    //  void          DockContextRebuildNodes(ImGuiContext* ctx);
-    //  void          DockContextNewFrameUpdateUndocking(ImGuiContext* ctx);
-    //  void          DockContextNewFrameUpdateDocking(ImGuiContext* ctx);
-    //  void          DockContextEndFrame(ImGuiContext* ctx);
-    //  ImGuiID       DockContextGenNodeID(ImGuiContext* ctx);
-    //  void          DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, float split_ratio, bool split_outer);
-    //  void          DockContextQueueUndockWindow(ImGuiContext* ctx, ImGuiWindow* window);
-    //  void          DockContextQueueUndockNode(ImGuiContext* ctx, ImGuiDockNode* node);
-    //  bool          DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos);
-    //  bool          DockNodeBeginAmendTabBar(ImGuiDockNode* node);
-    //  void          DockNodeEndAmendTabBar();
-    // inline ImGuiDockNode*   DockNodeGetRootNode(ImGuiDockNode* node)                 { while (node->parent_node) node = node->parent_node; return node; }
-    // inline bool             DockNodeIsInHierarchyOf(ImGuiDockNode* node, ImGuiDockNode* parent) { while (node) { if (node == parent) return true; node = node->parent_node; } return false; }
+// inline bool             DockNodeIsInHierarchyOf(ImGuiDockNode* node, ImGuiDockNode* parent) { while (node) { if (node == parent) return true; node = node->parent_node; } return false; }
     // inline int              DockNodeGetDepth(const ImGuiDockNode* node)              { int depth = 0; while (node->parent_node) { node = node->parent_node; depth += 1; } return depth; }
     // inline ImGuiID          DockNodeGetWindowMenuButtonId(const ImGuiDockNode* node) { return ImHashStr("#COLLAPSE", 0, node->id); }
     // inline ImGuiDockNode*   GetWindowDockNode()                                      { ImGuiContext& g = *GImGui; return g.CurrentWindow->DockNode; }
@@ -761,7 +744,7 @@ use crate::vectors::Vector2D;
     //  bool          IsDragDropActive();
     //  bool          BeginDragDropTargetCustom(const ImRect& bb, ImGuiID id);
     //  void          ClearDragDrop();
-    //  bool          IsDragDropPayloadBeingAccepted();
+    //  bool          is_drag_drop_payload_being_accepted();
 
     // Internal Columns API (this is not exposed because we will encourage transitioning to the tables API)
     //  void          SetWindowClipRectBeforeSetChannel(ImGuiWindow* window, const ImRect& clip_rect);
@@ -915,7 +898,7 @@ use crate::vectors::Vector2D;
     //  bool          InputTextEx(const char* label, const char* hint, char* buf, int buf_size, const Vector2D& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = NULL, void* user_data = NULL);
     //  bool          TempInputText(const ImRect& bb, ImGuiID id, const char* label, char* buf, int buf_size, ImGuiInputTextFlags flags);
     //  bool          TempInputScalar(const ImRect& bb, ImGuiID id, const char* label, ImGuiDataType data_type, void* p_data, const char* format, const void* p_clamp_min = NULL, const void* p_clamp_max = NULL);
-    // inline bool             TempInputIsActive(ImGuiID id)       { ImGuiContext& g = *GImGui; return (g.ActiveId == id && g.TempInputId == id); }
+    // inline bool             TempInputIsActive(ImGuiID id)       { ImGuiContext& g = *GImGui; return (g.active_id == id && g.TempInputId == id); }
     // inline ImGuiInputTextState* GetInputTextState(ImGuiID id)   { ImGuiContext& g = *GImGui; return (g.InputTextState.id == id) ? &g.InputTextState : NULL; } // Get input text state if active
 
     // Color

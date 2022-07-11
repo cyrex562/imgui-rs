@@ -57,7 +57,7 @@ impl ImGuiStoragePair {
 // - You want to store custom debug data easily without adding or editing structures in your code (probably not efficient, but convenient)
 // Types are NOT stored, so it is up to you to make sure your Key don't collide with different types.
 #[derive(Debug,Clone,Default)]
-pub struct DimgStorage
+pub struct Storage
 {
     pub Data: Vec<ImGuiStoragePair>,
 
@@ -69,7 +69,7 @@ pub struct DimgStorage
 
 }
 
-impl DimgStorage {
+impl Storage {
     // void                clear() { data.clear(); }
     pub fn Clear(&mut self) {
         self.Data.clear()

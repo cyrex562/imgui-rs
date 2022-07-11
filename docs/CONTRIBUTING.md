@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-## Index
+## index
 
 - [Getting Started & General Advices](#getting-started--general-advices)
 - [Issues vs Discussions](#issues-vs-discussions)

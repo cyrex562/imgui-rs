@@ -3,7 +3,7 @@
 
 /*
 
-Index of this file:
+index of this file:
 
 // [SECTION] Forward Declarations
 // [SECTION] Widgets: Text, etc.

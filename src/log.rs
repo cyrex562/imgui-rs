@@ -207,7 +207,7 @@ pub fn LogToFile(auto_open_depth: i32, mut filename: *const c_char)
     // be subject to outputting OS-incompatible carriage return if within strings the user doesn't use IM_NEWLINE.
     // By opening the file in binary mode "ab" we have consistent output everywhere.
     if !filename {
-        filename = g.IO.LogFilename.as_ptr() as *const c_char;
+        filename = g.io.LogFilename.as_ptr() as *const c_char;
     }
     if !filename || !filename[0] {
         return;

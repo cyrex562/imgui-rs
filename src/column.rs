@@ -4,7 +4,7 @@ use crate::draw_list_splitter::DrawListSplitter;
 use crate::rect::Rect;
 
 #[derive(Debug,Default,Clone)]
-pub struct DimgOldColumns
+pub struct OldColumns
 {
     // DimgId             id;
     pub ID: Id32,
@@ -41,7 +41,7 @@ pub struct DimgOldColumns
     // ImGuiOldColumns()   { memset(this, 0, sizeof(*this)); }
 }
 
-impl DimgOldColumns {
+impl OldColumns {
     pub fn new() -> Self {
         Self {
             ..Default::default()

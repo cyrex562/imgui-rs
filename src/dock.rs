@@ -3,10 +3,10 @@ use crate::context::Context;
 use crate::types::Id32;
 use crate::direction::Direction;
 use crate::dock_context::{DockContext, dock_context_clear_nodes, dock_context_rebuild_nodes};
-use crate::dock_node::{DimgDockNodeFlags, DimgDockNodeSettings};
+use crate::dock_node::{DockNodeFlags, DockNodeSettings};
 use crate::rect::Rect;
 use crate::settings::SettingsHandler;
-use crate::types::ID_INVALID;
+use crate::types::INVALID_ID;
 
 
 
@@ -45,7 +45,7 @@ pub fn dock_context_new_frame_update_docking(ctx: &mut Context)
     if (ImGuiWindow* hovered_window = g.HoveredWindowUnderMovingWindow)
     {
         if (hovered_window.DockNodeAsHost)
-            g.HoveredDockNode = DockNodeTreeFindVisibleNodeByPos(hovered_window.DockNodeAsHost, g.IO.MousePos);
+            g.HoveredDockNode = DockNodeTreeFindVisibleNodeByPos(hovered_window.DockNodeAsHost, g.io.MousePos);
         else if (hovered_window.RootWindow->DockNode)
             g.HoveredDockNode = hovered_window.RootWindow->DockNode;
     }
@@ -73,7 +73,7 @@ void ImGui::DockContextEndFrame(ImGuiContext* ctx)
         if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.Data[n].val_p)
             if (node->LastFrameActive == g.FrameCount && node->IsVisible && node->HostWindow && node->IsLeafNode() && !node->IsBgDrawnThisFrame)
             {
-                ImRect bg_rect(node->Pos + DimgVec2D::new(0.0, GetFrameHeight()), node->Pos + node->Size);
+                ImRect bg_rect(node.pos + DimgVec2D::new(0.0, GetFrameHeight()), node.pos + node->Size);
                 ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node->HostWindow->Rect(), DOCKING_SPLITTER_SIZE);
                 node->HostWindow->DrawList->ChannelsSetCurrent(0);
                 node->HostWindow->DrawList->AddRectFilled(bg_rect.Min, bg_rect.Max, node->LastBgColor, node->HostWindow->WindowRounding, bg_rounding_flags);
@@ -179,11 +179,11 @@ impl DimgDockRequest {
         // DockSplitOuter = false;
         Self {
             request_type: DimgDockRequestType::None,
-            dock_target_window: ID_INVALID,
-            dock_payload: ID_INVALID,
-            undock_target_window: ID_INVALID,
-            dock_target_node: ID_INVALID,
-            undock_target_node: ID_INVALID,
+            dock_target_window: INVALID_ID,
+            dock_payload: INVALID_ID,
+            undock_target_window: INVALID_ID,
+            dock_target_node: INVALID_ID,
+            undock_target_node: INVALID_ID,
             dock_split_dir: Direction::None,
             dock_split_ratio: 0.5,
             dock_split_outer: false,

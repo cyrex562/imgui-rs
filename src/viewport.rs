@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use crate::draw_data::DrawData;
 use crate::draw_data_builder::DrawDataBuilder;
+use crate::draw_list::DrawList;
 use crate::types::Id32;
 use crate::vectors::Vector2D;
 
@@ -42,7 +43,7 @@ use crate::vectors::Vector2D;
 
 // flags stored in ImGuiViewport::flags, giving indications to the platform backends.
 #[derive(Debug,Clone)]
-pub enum DimgViewportFlags
+pub enum ViewportFlags
 {
     None                     = 0,
     IsPlatformWindow         = 1 << 0,   // Represent a Platform Window
@@ -60,7 +61,7 @@ pub enum DimgViewportFlags
     CanHostOtherWindows      = 1 << 12   // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
 }
 
-impl Default for DimgViewportFlags {
+impl Default for ViewportFlags {
     fn default() -> Self {
         Self::None
     }
@@ -77,7 +78,7 @@ impl Default for DimgViewportFlags {
 pub struct Viewport
 {
     pub id: Id32,                   // Unique identifier for the viewport
-    pub flags: HashSet<DimgViewportFlags>, //ImGuiViewportFlags  flags;                  // See
+    pub flags: HashSet<ViewportFlags>, //ImGuiViewportFlags  flags;                  // See
     pub pos: Vector2D,                    // Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
     pub size: Vector2D,                   // Main Area: size of the viewport.
     pub work_pos: Vector2D,                // Work Area: Position of the viewport minus task bars, menus bars, status bars (>= pos)
@@ -131,7 +132,7 @@ pub struct Viewport
     // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
     pub draw_lists_last_frame: [i32;2],
     // ImDrawList*         DrawLists[2];           // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.mouse_draw_cursor is set and to draw most debug overlays.
-    pub draw_lists: [Id32;2],
+    pub draw_lists: [DrawList;2],
     // ImDrawData          DrawDataP;
     pub draw_data_p: DrawData,
     // ImDrawDataBuilder   DrawDataBuilder;

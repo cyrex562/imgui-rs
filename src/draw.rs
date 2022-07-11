@@ -3,7 +3,7 @@
 
 /*
 
-Index of this file:
+index of this file:
 
 // [SECTION] STB libraries implementation
 // [SECTION] style functions
@@ -267,7 +267,7 @@ ImDrawList* ImDrawList::CloneOutput() const
     dst->CmdBuffer = CmdBuffer;
     dst->IdxBuffer = IdxBuffer;
     dst->VtxBuffer = VtxBuffer;
-    dst->Flags = Flags;
+    dst.flags = Flags;
     return dst;
 }
 
@@ -580,7 +580,7 @@ void ImDrawList::AddPolyline(const Vector2D* points, const int points_count, ImU
         const bool use_texture = (Flags & ImDrawListFlags_AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0);
 
         // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-        IM_ASSERT_PARANOID(!use_texture || !(_Data->Font->ContainerAtlas->Flags & ImFontAtlasFlags_NoBakedLines));
+        IM_ASSERT_PARANOID(!use_texture || !(_Data->Font->ContainerAtlas.flags & ImFontAtlasFlags_NoBakedLines));
 
         const int idx_count = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
         const int vtx_count = use_texture ? (points_count * 2) : (thick_line ? points_count * 4 : points_count * 3);
@@ -2149,7 +2149,7 @@ struct ImFontBuildSrcData
     stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
     stbtt_packedchar*   PackedChars;        // Output glyphs
     const ImWchar*      SrcRanges;          // Ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFFF)
-    int                 DstIndex;           // Index into atlas->fonts[] and dst_tmp_array[]
+    int                 DstIndex;           // index into atlas->fonts[] and dst_tmp_array[]
     int                 GlyphsHighest;      // Highest requested codepoint
     int                 GlyphsCount;        // Glyph count (excluding missing glyphs and glyphs already set by an earlier source font)
     ImBitVector         GlyphsSet;          // Glyph bit map (random access, 1-bit per codepoint. This will be a maximum of 8KB)
@@ -2353,7 +2353,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     }
 
     // 7. Allocate texture
-    atlas->TexHeight = (atlas->Flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas->TexHeight + 1) : ImUpperPowerOfTwo(atlas->TexHeight);
+    atlas->TexHeight = (atlas.flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas->TexHeight + 1) : ImUpperPowerOfTwo(atlas->TexHeight);
     atlas->TexUvScale = Vector2D::new(1.0 / atlas->TexWidth, 1.0 / atlas->TexHeight);
     atlas->TexPixelsAlpha8 = (unsigned char*)IM_ALLOC(atlas->TexWidth * atlas->TexHeight);
     memset(atlas->TexPixelsAlpha8, 0, atlas->TexWidth * atlas->TexHeight);
@@ -2506,7 +2506,7 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
     IM_ASSERT(r->IsPacked());
 
     const int w = atlas->TexWidth;
-    if (!(atlas->Flags & ImFontAtlasFlags_NoMouseCursors))
+    if (!(atlas.flags & ImFontAtlasFlags_NoMouseCursors))
     {
         // Render/copy pixels
         IM_ASSERT(r->Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r->Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
@@ -2542,7 +2542,7 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
 
 static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
 {
-    if (atlas->Flags & ImFontAtlasFlags_NoBakedLines)
+    if (atlas.flags & ImFontAtlasFlags_NoBakedLines)
         return;
 
     // This generates a triangular shape in the texture, with the various line widths stacked on top of each other to allow interpolation between them
@@ -2597,7 +2597,7 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
     // Register texture region for mouse cursors or standard white pixels
     if (atlas->PackIdMouseCursors < 0)
     {
-        if (!(atlas->Flags & ImFontAtlasFlags_NoMouseCursors))
+        if (!(atlas.flags & ImFontAtlasFlags_NoMouseCursors))
             atlas->PackIdMouseCursors = atlas->AddCustomRectRegular(FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1, FONT_ATLAS_DEFAULT_TEX_DATA_H);
         else
             atlas->PackIdMouseCursors = atlas->AddCustomRectRegular(2, 2);
@@ -2607,7 +2607,7 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
     // The +2 here is to give space for the end caps, whilst height +1 is to accommodate the fact we have a zero-width row
     if (atlas->PackIdLines < 0)
     {
-        if (!(atlas->Flags & ImFontAtlasFlags_NoBakedLines))
+        if (!(atlas.flags & ImFontAtlasFlags_NoBakedLines))
             atlas->PackIdLines = atlas->AddCustomRectRegular(IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 2, IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1);
     }
 }

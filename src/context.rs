@@ -1,5 +1,6 @@
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::fmt::{Debug, Formatter};
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
@@ -8,12 +9,13 @@ use std::collections::HashMap;
 use std::ptr::null_mut;
 
 use crate::clipper::DimgListClipperData;
-use crate::color::{ColorEditFlags, DimgColorMod};
+use crate::color::{COLOR_EDIT_FLAGS_DFLT_OPTS, ColorEditFlags, DimgColorMod};
 use crate::combo::ComboPreviewData;
 use crate::config::ConfigFlags;
 use crate::window::ShrinkWidthItem;
 use crate::direction::Direction;
 use crate::dock_context::DockContext;
+use crate::dock_node::DockNode;
 use crate::drag_drop::DragDropFlags;
 use crate::draw_channel::DrawChannel;
 
@@ -41,7 +43,7 @@ use crate::tab_bar::TabBar;
 use crate::table::{Table, TableSettings, TableTempData};
 
 use crate::text_input_state::InputTextState;
-use crate::types::{Id32, ID_INVALID, PtrOrIndex};
+use crate::types::{Id32, INVALID_ID, PtrOrIndex};
 use crate::vectors::{Vector2D, Vector4D};
 use crate::viewport::Viewport;
 use crate::window::{DimgWindowStackData, ItemFlags, NextWindowData, Window, WindowSettings};
@@ -170,7 +172,7 @@ pub struct Context {
     // bool                    active_id_has_been_edited_this_frame;
     pub active_id_has_been_edited_this_frame: bool,
     // Vector2D                  ActiveIdClickOffset;                // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
-    pub active_id_clock_offset: Vector2D,
+    pub active_id_click_offset: Vector2D,
     // ImGuiWindow*            active_id_window;
     pub active_id_window: Id32,
     // ImGuiInputSource        active_id_source;                     // Activating with mouse or nav (gamepad/keyboard)
@@ -281,7 +283,7 @@ pub struct Context {
     // bool                    nav_mouse_pos_dirty;                   // When set we will update mouse position if (io.config_flags & ImGuiConfigFlags_NavEnableSetMousePos) if set (NB: this not enabled by default)
     pub nav_mouse_pos_dirty: bool,
     // bool                    NavDisableHighlight;                // When user starts using mouse, we hide gamepad/keyboard highlight (NB: but they are still available, which is why NavDisableHighlight isn't always != nav_disable_mouse_hover)
-    pub nav_disable_high_light: bool,
+    pub nav_disable_highlight: bool,
     // bool                    nav_disable_mouse_hover;               // When user starts using gamepad/keyboard, we hide mouse hovering highlight until mouse is touched again.
     pub nav_disable_mouse_hover: bool,
     // Navigation: Init & Move Requests
@@ -421,7 +423,7 @@ pub struct Context {
     // ImGuiID                 temp_input_id;                        // Temporary text input when CTRL+clicking on a slider, etc.
     pub temp_input_id: Id32,
     // ImGuiColorEditFlags     color_edit_options;                   // Store user options for color edit widgets
-    pub color_edit_options: ColorEditFlags,
+    pub color_edit_options: HashSet<ColorEditFlags>,
     // float                   color_edit_last_hue;                   // Backup of last Hue associated to LastColor, so we can restore Hue in lossy RGB<>HSV round trips
     pub color_edit_last_hue: f32,
     // float                   color_edit_last_sat;                   // Backup of last Saturation associated to LastColor, so we can restore Saturation in lossy RGB<>HSV round trips
@@ -542,7 +544,7 @@ pub struct Context {
     pub want_input_next_frame: i32,
     // ImVector<char>          temp_buffer;                         // Temporary text buffer
     pub temp_buffer: Vec<u8>,
-
+    pub dock_nodes: HashMap<Id32, DockNode>
 }
 
 impl Context {
@@ -578,12 +580,12 @@ impl Context {
             // WindowsById: vec![],
             windows_active_count: 0,
             windows_hover_padding: Default::default(),
-            current_window_id: ID_INVALID,
-            hovered_window_id: ID_INVALID,
-            hovered_window_under_moving_window: ID_INVALID,
-            hovered_dock_node: ID_INVALID,
-            moving_window: ID_INVALID,
-            wheeling_window: ID_INVALID,
+            current_window_id: INVALID_ID,
+            hovered_window_id: INVALID_ID,
+            hovered_window_under_moving_window: INVALID_ID,
+            hovered_dock_node: INVALID_ID,
+            moving_window: INVALID_ID,
+            wheeling_window: INVALID_ID,
             wheeling_window_ref_mouse_pos: Default::default(),
             wheeling_window_timer: 0.0,
 
@@ -637,10 +639,10 @@ impl Context {
 
             viewports: vec![],
             current_dpi_scale: 0.0,
-            current_viewport: ID_INVALID,
-            mouse_viewport: ID_INVALID,
+            current_viewport: INVALID_ID,
+            mouse_viewport: INVALID_ID,
             // mouse_last_hovered_viewport: NULL,
-            mouse_last_hovered_viewport: ID_INVALID,
+            mouse_last_hovered_viewport: INVALID_ID,
             platform_last_focused_viewport_id: 0,
             fallback_monitor: PlatformMonitor::default(),
             viewport_front_most_stamp_count: 0,
@@ -729,7 +731,7 @@ impl Context {
             input_text_state: InputTextState::default(),
             input_text_password_font: Default::default(),
             temp_input_id: 0,
-            color_edit_options: ColorEditFlags::DefaultOptions,
+            color_edit_options: COLOR_EDIT_FLAGS_DFLT_OPTS.clone(),
             color_edit_last_hue: 0.0,
             color_edit_last_sat: 0.0,
             color_edit_last_color: 0,
@@ -790,10 +792,10 @@ impl Context {
             draw_list_shared_data: DrawListSharedData::default(),
             test_engine_hook_items: false,
             active_id_hass_been_edited_before: false,
-            active_id_clock_offset: Default::default(),
+            active_id_click_offset: Default::default(),
             nav_activate_input_id: 0,
             nav_just_moved_to_focus_scope_id: 0,
-            nav_disable_high_light: false,
+            nav_disable_highlight: false,
             nav_init_result_rect_rel: Rect::default(),
             // nav_windowing_highlight_alpha: 0.0,
             dim_bg_ration: 0.0,
@@ -807,27 +809,52 @@ impl Context {
             debug_stack_tool: StackTool::default(),
             // framerate_sec_per_frame_count: 0,
             temp_buffer: vec![],
-            font: Default::default()
+            font: Default::default(),
+            dock_nodes: Default::default()
         }
     }
 
     pub fn get_current_window(&mut self) -> Result<&mut Window, &'static str> {
         let result = self.windows.get_mut(&self.current_window_id);
         if result.is_some() {
-            Ok(result.unwrap())
+            return Ok(result.unwrap());
         }
         Err("failed to get current window")
     }
+
+    pub fn get_viewport(&mut self, vp_id: Id32) -> Option<&mut Viewport> {
+        for vp in self.viewports.iter_mut() {
+            if vp.id == vp_id {
+                return Some(vp);
+            }
+        }
+
+        return None;
+    }
+
+    pub fn get_window(&mut self, win_id: Id32) -> Option<&mut Window> {
+        self.windows.get_mut(&win_id)
+    }
+
+    pub fn get_dock_node(&mut self, dock_node_id: Id32) -> Option<&mut DockNode> {
+        self.dock_nodes.get_mut(&dock_node_id)
+    }
 }
 
-pub enum ContextHookType { NewFramePre, NewFramePost, EndFramePre, EndFramePost, RenderPre, RenderPost, Shutdown, PendingRemoval_ }
+#[derive(Debug,Clone, Eq, PartialEq)]
+pub enum ContextHookType { None, NewFramePre, NewFramePost, EndFramePre, EndFramePost, RenderPre, RenderPost, Shutdown, PendingRemoval }
+impl Default for ContextHookType {
+    fn default() -> Self {
+        Self::None
+    }
+}
 
 pub type ContextHookCallback = fn(ctx: &mut Context, hook: &mut ContextHook);
 
 //-----------------------------------------------------------------------------
 // [SECTION] Generic context hooks
 //-----------------------------------------------------------------------------
-#[derive(Default,Debug,Clone)]
+#[derive(Default,Clone)]
 pub struct ContextHook
 {
     // ImGuiID                     HookId;     // A unique id assigned by AddContextHook()
@@ -841,6 +868,18 @@ pub struct ContextHook
     // void*                       user_data;
     pub user_data: Vec<u8>,
     // ImGuiContextHook()          { memset(this, 0, sizeof(*this)); }
+}
+
+impl Debug for ContextHook {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ContextHook")
+            .field("hook_id", &self.hook_id)
+            .field("hook_type", &self.hook_type)
+            .field("owner", &self.owner)
+            .field("callback", &format!("is_some: {}", &self.callback.is_some()))
+            .field("user_data", &format!("{:x} {:x} {:x} {:x} {:x} {:x} {:x} {:x}",&self.user_data[0], &self.user_data[1], &self.user_data[2], &self.user_data[3], &self.user_data[4], &self.user_data[5], &self.user_data[6], &self.user_data[7]))
+            .finish()
+    }
 }
 
 // Deferred removal, avoiding issue with changing vector while iterating it
@@ -862,9 +901,10 @@ pub fn remove_context_hook(g: &mut Context, hook_id: Id32)
 pub fn add_context_hook(g: &mut Context, hook: &ContextHook) -> Id32 {
     // ImGuiContext& g = *ctx;
     // IM_ASSERT(hook->Callback != NULL && hook->HookId == 0 && hook->Type != ImGuiContextHookType_PendingRemoval_);
-    g.hooks.push_back(hook.clone());
+    g.hooks.push(hook.clone());
     g.hook_id_next += 1;
-    g.hooks.back().hook_id = g.hook_id_next;
+    // g.hooks.last().hook_id = g.hook_id_next;
+    g.hooks[g.hooks.len()-1].hook_id = g.hook_id_next;
     return g.hook_id_next;
 }
 
@@ -875,9 +915,9 @@ pub fn call_context_hooks(g: &mut Context, hook_type: ContextHookType)
 {
     // ImGuiContext& g = *ctx;
     // for (int n = 0; n < g.Hooks.Size; n += 1){
-    for n in 0 .. g.hooks.size {
-        if g.hooks[n].Type == hook_type {
-            g.hooks[n].Callback(&g, &g.hooks[n]);
+    for n in 0 .. g.hooks.len() {
+        if g.hooks[n].hook_type == hook_type && g.hooks[n].callback.is_some() {
+            g.hooks[n].callback.unwrap()(g, &mut g.hooks[n]);
         }
     }
 }

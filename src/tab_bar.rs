@@ -52,7 +52,7 @@ pub struct ImGuiTabItem {
     pub NameOffset: i32,
     // ImS16               BeginOrder;             // BeginTabItem() order, used to re-order tabs after toggling ImGuiTabBarFlags_Reorderable
     pub BeginOrder: i16,
-    // ImS16               IndexDuringLayout;      // Index only used during TabBarLayout()
+    // ImS16               IndexDuringLayout;      // index only used during TabBarLayout()
     pub IndexDuringLayout: i16,
     // bool                WantClose;              // Marked as closed by SetTabItemClosed()
     pub WantClose: bool,
@@ -123,7 +123,7 @@ pub struct TabBar {
     pub TabsAddedNew: bool,
     // ImS16               TabsActiveCount;        // Number of tabs submitted this frame.
     pub TabsActiveCount: i16,
-    // ImS16               LastTabItemIdx;         // Index of last BeginTabItem() tab for use by EndTabItem()
+    // ImS16               LastTabItemIdx;         // index of last BeginTabItem() tab for use by EndTabItem()
     pub LastTabItemIdx: i16,
     // float               ItemSpacingY;
     pub ItemSpacingY: f32,

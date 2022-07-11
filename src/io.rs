@@ -61,7 +61,7 @@ pub struct Io {
     // = false          // [BETA] [FIXME: This currently creates regression with auto-sizing and general overhead] Make every single floating window display within a docking node.
     pub config_docking_transparent_payload: bool,// = false          // [BETA] Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with config_viewports_no_auto_merge.
 
-    // viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
+    // viewport options (when ConfigFlags::ViewportsEnable is set)
     pub config_viewports_no_auto_merge: bool,
     // = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImGuiViewportFlags_NoAutoMerge on individual viewport.
     pub config_viewports_no_task_bar_icon: bool,
@@ -198,7 +198,7 @@ pub struct Io {
     pub mouse_wheel_h: f32,
     // Mouse wheel Horizontal. Most users don't have a mouse with an horizontal wheel, may not be filled by all backends.
     pub mouse_hovered_viewport: Id32,
-    // (Optional) Modify using io.add_mouse_viewport_event(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.backend_flags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
+    // (Optional) Modify using io.add_mouse_viewport_event(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ViewportFlags::NoInputs flag is much better (few backends can handle that). Set io.backend_flags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
     pub key_ctrl: bool,
     // Keyboard modifier down: Control
     pub key_shift: bool,
@@ -303,7 +303,7 @@ impl Io {
         out.config_docking_always_tab_bar = false;
         out.config_docking_transparent_payload = false;
 
-        // viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
+        // viewport options (when ConfigFlags::ViewportsEnable is set)
         out.config_viewports_no_auto_merge = false;
         out.config_viewports_no_task_bar_icon = false;
         out.config_viewports_no_decoration = true;
@@ -469,9 +469,9 @@ impl Io {
 
         // DimgInputEvent e;
         let mut e = DimgInputEvent::new();
-        e.input_event_type = DimgInputEventType::MouseViewport;
+        e.input_event_type = DimgInputEventType::mouse_viewport;
         e.source = InputSource::Mouse;
-        e.MouseViewport.HoveredViewportID = id;
+        e.mouse_viewport.HoveredViewportID = id;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_focus_event(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
@@ -665,7 +665,7 @@ impl PlatformIo {
     pub fn Platform_DestroyWindow(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
-    //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/size/Title can be called on them before showing the window
+    //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so set_window_pos/size/Title can be called on them before showing the window
     pub fn Platform_ShowWindow(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }

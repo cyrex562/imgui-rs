@@ -24,10 +24,10 @@ pub fn is_mouse_hovering_rect(g: &mut Context, r_min: &Vector2D, r_max: &Vector2
     let min_1 = rect_clipped.min - g.style.TouchExtraPadding;
     let max_1 = rect_clipped.max - g.style.TouchExtraPadding;
     let rect_for_touch = Rect::new2(&min_1, &max_1);
-    if !rect_for_touch.Contains(g.IO.MousePos) {
+    if !rect_for_touch.Contains(g.io.MousePos) {
         return false;
     }
-    if !g.MouseViewport.GetMainRect().Overlaps(&rect_clipped){
+    if !g.mouse_viewport.GetMainRect().Overlaps(&rect_clipped){
         return false;
     }
     return true;

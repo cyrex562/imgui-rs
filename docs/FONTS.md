@@ -10,7 +10,7 @@ In the [misc/fonts/](https://github.com/ocornut/imgui/tree/master/misc/fonts) fo
 
 **Also read the FAQ:** https://www.dearimgui.org/faq (there is a fonts section!)
 
-## Index
+## index
 - [Readme First](#readme-first)
 - [How should I handle DPI in my application?](#how-should-i-handle-dpi-in-my-application)
 - [fonts Loading Instructions](#font-loading-instructions)
@@ -45,13 +45,13 @@ u8"hello"
 u8"こんにちは"   // this will be encoded as UTF-8
 ```
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## How should I handle DPI in my application?
 
 See [FAQ entry](https://github.com/ocornut/imgui/blob/master/docs/FAQ.md#q-how-should-i-handle-dpi-in-my-application).
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 
 ## font Loading Instructions
@@ -163,7 +163,7 @@ Some solutions:
 5. Read about oversampling [here](https://github.com/nothings/stb/blob/master/tests/oversample).
 6. To support the extended range of unicode beyond 0xFFFF (e.g. emoticons, dingbats, symbols, shapes, ancient languages, etc...) add `#define IMGUI_USE_WCHAR32`in your `imconfig.h`.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## Using Icon fonts
 
@@ -200,7 +200,7 @@ See Links below for other icons fonts and related tools.
 Here's an application using icons ("Avoyd", https://www.avoyd.com):
 ![avoyd](https://user-images.githubusercontent.com/8225057/81696852-c15d9e80-9464-11ea-9cab-2a4d4fc84396.jpg)
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## Using FreeType Rasterizer (imgui_freetype)
 
@@ -210,7 +210,7 @@ Here's an application using icons ("Avoyd", https://www.avoyd.com):
 - Read documentation in the [misc/freetype/](https://github.com/ocornut/imgui/tree/master/misc/freetype) folder.
 - Correct sRGB space blending will have an important effect on your font rendering quality.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## Using Colorful glyphs/Emojis
 
@@ -232,7 +232,7 @@ cfg.font_builder_flags |= ImGuiFreeTypeBuilderFlags_LoadColor;
 io.fonts->AddFontFromFileTTF("C:\\windows\\fonts\\seguiemj.ttf", 16.0, &cfg, ranges);
 ```
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## Using Custom Glyph Ranges
 
@@ -249,7 +249,7 @@ io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, NULL, ranges.data
 io.fonts->build();                                     // build the atlas while 'ranges' is still in scope and not deleted.
 ```
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## Using Custom Colorful Icons
 
@@ -291,7 +291,7 @@ for (int rect_n = 0; rect_n < IM_ARRAYSIZE(rect_ids); rect_n++)
 }
 ```
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## Using font data Embedded In Source Code
 
@@ -309,7 +309,7 @@ or
 ImFont* font = io.fonts->add_font_from_memory_compressed_base85ttf(compressed_data_base85, size_pixels, ...);
 ```
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## About filenames
 
@@ -331,7 +331,7 @@ io.fonts->AddFontFromFileTTF("MyFiles\\MyImage01.jpg", ...);  // This is CORRECT
 ```
 In some situations, you may also use `/` path separator under windows.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## Credits/Licenses For fonts Included In Repository
 
@@ -363,7 +363,7 @@ Some fonts files are available in the `misc/fonts/` folder:
 **Karla-Regular.ttf**, by Jonathan Pinhorn
 <br>SIL OPEN FONT LICENSE Version 1.1
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ## font Links
 
@@ -398,4 +398,4 @@ Regular:
 
 Or use Arial Unicode or other Unicode fonts provided with windows for full characters coverage (not sure of their licensing).
 
-##### [Return to Index](#index)
+##### [Return to index](#index)

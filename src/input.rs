@@ -95,7 +95,7 @@ pub enum DimgInputEventType
     MousePos,
     MouseWheel,
     MouseButton,
-    MouseViewport,
+    mouse_viewport,
     Key,
     Text,
     Focus,

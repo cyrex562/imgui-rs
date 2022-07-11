@@ -1,7 +1,7 @@
-pub type DimgWindowHandle = u32;
+pub type WindowHandle = u32;
 
 pub const DIMG_WINDOW_HANDLE_INVALID: u32 = u32::MAX;
-pub const ID_INVALID: u32 = u32::MAX;
+pub const INVALID_ID: u32 = u32::MAX;
 
 
 // Scalar data types
@@ -27,20 +27,20 @@ pub struct PtrOrIndex
 {
     // void*       Ptr;            // Either field can be set, not both. e.g. Dock node tab bars are loose while BeginTabBar() ones are in a pool.
     Ptr: *mut c_void,
-    // int         Index;          // Usually index in a main pool.
+    // int         index;          // Usually index in a main pool.
     Index: i32,
 
 }
 
 impl PtrOrIndex {
-    // ImGuiPtrOrIndex(void* ptr)  { Ptr = ptr; Index = -1; }
+    // ImGuiPtrOrIndex(void* ptr)  { Ptr = ptr; index = -1; }
     pub fn new(ptr:*mut c_void) -> Self {
         Self {
             Ptr: ptr,
             Index: -1,
         }
     }
-    //     ImGuiPtrOrIndex(int index)  { Ptr = NULL; Index = index; }
+    //     ImGuiPtrOrIndex(int index)  { Ptr = NULL; index = index; }
     pub fn new2(index: i32) -> Self {
         Self {
             Ptr: null_mut(),

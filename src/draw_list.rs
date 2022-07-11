@@ -2,9 +2,10 @@ use std::collections::HashSet;
 use std::ffi::c_void;
 use std::os::raw::c_char;
 use std::f32::consts::PI;
+use crate::context::Context;
 use crate::draw_defines::DrawFlags;
-use crate::types::DrawIndex;
-use crate::draw_cmd::{DrawCmd, CmdHeader};
+use crate::types::{DrawIndex, INVALID_ID};
+use crate::draw_cmd::{CmdHeader, DrawCmd};
 use crate::draw_list_shared_data::DrawListSharedData;
 use crate::draw_list_splitter::DrawListSplitter;
 use crate::draw_vert::DrawVertex;
@@ -12,6 +13,7 @@ use crate::font::Font;
 use crate::texture::TextureId;
 use crate::utils::set_hash_set;
 use crate::vectors::{Vector2D, Vector4D};
+use crate::viewport::Viewport;
 
 /// Draw command list
 /// This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,
@@ -28,7 +30,7 @@ pub struct DrawList
     // This is what you have to render
     // ImVector<ImDrawCmd>     cmd_buffer;          // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
     pub cmd_buffer: Vec<DrawCmd>,
-    // ImVector<ImDrawIdx>     idx_buffer;          // Index buffer. Each command consume ImDrawCmd::elem_count of those
+    // ImVector<ImDrawIdx>     idx_buffer;          // index buffer. Each command consume ImDrawCmd::elem_count of those
     pub idx_buffer: Vec<DrawIndex>,
     // ImVector<ImDrawVert>    vtx_buffer;          // Vertex buffer.
     pub vtx_buffer: Vec<DrawVertex>,
@@ -429,3 +431,64 @@ pub enum DrawListFlags
 // #define IM_DRAWLIST_TEX_LINES_WIDTH_MAX     (63)
 // #endif
 pub const IM_DRAWLIST_TEX_LINES_WIDTH_MAX: usize = 63;
+
+/// static ImDrawList* get_viewport_draw_list(ImGuiViewportP* viewport, size_t drawlist_no, const char* drawlist_name)
+pub fn get_viewport_draw_list(g: &mut Context, viewport: &mut Viewport, drawlist_no: usize, drawlist_name: &String) -> &mut DrawList
+{
+    // Create the draw list on demand, because they are not frequently used for all viewports
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(drawlist_no < IM_ARRAYSIZE(viewport->DrawLists));
+    // ImDrawList* draw_list = viewport->DrawLists[drawlist_no];
+    let draw_list = &mut viewport.draw_lists[drawlist_no];
+    if draw_list.id == INVALID_ID
+    {
+        // draw_list = IM_NEW(ImDrawList)(&g.DrawListSharedData);
+        viewport.draw_lists[drawlist_no] = DrawList::new(&mut g.draw_list_shared_data);
+        // draw_list->_OwnerName = drawlist_name;
+        viewport.draw_lists[drawlist_no].owner_name = drawlist_name.clone();
+        // viewport.draw_lists[drawlist_no] = draw_list;
+    }
+
+    // Our ImDrawList system requires that there is always a command
+    if viewport.draw_lists_last_frame[drawlist_no] != g.frame_count
+    {
+        draw_list.ResetForNewFrame();
+        draw_list.PushTextureID(g.io.fonts.TexID);
+        draw_list.PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, false);
+        viewport.draw_lists_last_frame[drawlist_no] = g.FrameCount;
+    }
+    return draw_list;
+}
+
+/// ImDrawList* ImGui::GetBackgroundDrawList(ImGuiViewport* viewport)
+pub fn get_background_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList
+{
+    return get_viewport_draw_list(g, viewport, 0, &String::from("##Background"));
+}
+
+/// ImDrawList* ImGui::GetBackgroundDrawList()
+pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList
+{
+    // ImGuiContext& g = *GImGui;
+    //return GetBackgroundDrawList(g.CurrentWindow->Viewport);
+    let curr_win = g.get_current_window()?;
+    let vp = g.get_viewport(curr_win.viewport).unwrap();
+    get_background_draw_list(g, vp)
+}
+
+/// ImDrawList* ImGui::GetForegroundDrawList(ImGuiViewport* viewport)
+pub fn get_foreground_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList
+{
+    // return GetViewportDrawList((ImGuiViewportP*)viewport, 1, "##Foreground");
+    get_viewport_draw_list(g, viewport, 1, &String::from("##Foreground"))
+}
+
+/// ImDrawList* ImGui::GetForegroundDrawList()
+pub fn get_foreground_draw_list2(g: &mut Context) -> &mut DrawList
+{
+    // ImGuiContext& g = *GImGui;
+    // return GetForegroundDrawList(g.CurrentWindow->Viewport);
+    let curr_win = g.get_current_window()?;
+    let vp= g.get_viewport(curr_win.viewport_id).unwrap();
+    get_foreground_draw_list(g, vp)
+}

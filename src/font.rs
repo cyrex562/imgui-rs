@@ -25,7 +25,7 @@ pub struct Font
     pub font_size: f32,          // 4     // in  //            // height of characters/line, set during loading (don't change after loading)
 
     // Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
-    pub index_lookup: Vec<DimgWchar>, //ImVector<ImWchar>           index_lookup;        // 12-16 // out //            // Sparse. Index glyphs by Unicode code-point.
+    pub index_lookup: Vec<DimgWchar>, //ImVector<ImWchar>           index_lookup;        // 12-16 // out //            // Sparse. index glyphs by Unicode code-point.
     pub glyphs: Vec<DimgFontGlyph>, // ImVector<ImFontGlyph>       glyphs;             // 12-16 // out //            // All glyphs.
     pub fallback_glyph: DimgFontGlyph, // const ImFontGlyph*          fallback_glyph;      // 4-8   // out // = find_glyph(FontFallbackChar)
 
@@ -188,7 +188,7 @@ pub struct DimgFontConfig
     pub font_data: Vec<u8>, // void*           font_data;               //          // TTF/OTF data
     pub font_data_size: i32,         //          // TTF/OTF data size
     pub font_data_owned_by_atlas: bool,   // true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
-    pub font_no: i32,               // 0        // Index of font within TTF/OTF file
+    pub font_no: i32,               // 0        // index of font within TTF/OTF file
     pub size_pixels: f32,            //          // size in pixels for rasterizer (more or less maps to the resulting font height).
     pub oversample_h: i32,          // 3        // Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal so you can reduce this to 2 to save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
     pub oversample_v: i32,          // 1        // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.

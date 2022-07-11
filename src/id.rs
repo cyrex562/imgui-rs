@@ -70,7 +70,7 @@ pub fn MarkItemEdited(g: &mut Context, id: Id32)
 
 
 
-void ImGui::ClearActiveID()
+void ImGui::clear_active_id()
 {
     SetActiveID(0, NULL); // g.active_id = 0;
 }
@@ -78,7 +78,7 @@ void ImGui::ClearActiveID()
 void ImGui::SetHoveredID(ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
-    g.HoveredId = id;
+    g.hovered_id = id;
     g.HoveredIdAllowOverlap = false;
     g.HoveredIdUsingMouseWheel = false;
     if (id != 0 && g.HoveredIdPreviousFrame != id)
@@ -88,15 +88,15 @@ void ImGui::SetHoveredID(ImGuiID id)
 ImGuiID ImGui::GetHoveredID()
 {
     ImGuiContext& g = *GImGui;
-    return g.HoveredId ? g.HoveredId : g.HoveredIdPreviousFrame;
+    return g.hovered_id ? g.hovered_id : g.HoveredIdPreviousFrame;
 }
 
 // This is called by ItemAdd().
 // Code not using ItemAdd() may need to call this manually otherwise active_id will be cleared. In IMGUI_VERSION_NUM < 18717 this was called by GetID().
-void ImGui::KeepAliveID(ImGuiID id)
+void ImGui::keep_alive_id(ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
-    if (g.ActiveId == id)
+    if (g.active_id == id)
         g.ActiveIdIsAlive = id;
     if (g.ActiveIdPreviousFrame == id)
         g.ActiveIdPreviousFrameIsAlive = true;

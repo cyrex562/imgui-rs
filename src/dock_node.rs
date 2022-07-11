@@ -1,19 +1,20 @@
 use std::collections::HashSet;
 use crate::axis::DimgAxis;
-use crate::data_authority::DimgDataAuthority;
+use crate::context::Context;
+use crate::data_authority::DataAuthority;
 use crate::types::Id32;
 use crate::dock;
 use crate::rect::Rect;
 use crate::tab_bar::TabBar;
-use crate::types::ID_INVALID;
+use crate::types::INVALID_ID;
 use crate::utils::extend_hash_set;
 use crate::vectors::Vector2D;
-use crate::window::DimgWindowClass;
+use crate::window::WindowClass;
 
 
 
 #[derive(Clone,Debug,Eq, PartialEq,Hash)]
-pub enum DimgDockNodeFlags
+pub enum DockNodeFlags
 {
     None                         = 0,
     KeepAliveOnly                = 1 << 0,   // Shared       // Don't display the dockspace node but keep it alive. windows docked into this dockspace node won't be undocked.
@@ -41,36 +42,36 @@ pub enum DimgDockNodeFlags
     SharedFlagsInheritMask,
 }
 
-impl Default for DimgDockNodeFlags {
+impl Default for DockNodeFlags {
     fn default() -> Self {
         Self::None
     }
 }
 
-pub const NO_RESIZE_FLAGS_MASK: HashSet<DimgDockNodeFlags>       = HashSet::from([DimgDockNodeFlags::NoResize, DimgDockNodeFlags::NoResizeX, DimgDockNodeFlags::NoResizeY]);
+pub const NO_RESIZE_FLAGS_MASK: HashSet<DockNodeFlags>       = HashSet::from([DockNodeFlags::NoResize, DockNodeFlags::NoResizeX, DockNodeFlags::NoResizeY]);
 
-pub const LOCAL_FLAGS_MASK: HashSet<DimgDockNodeFlags> = HashSet::from([DimgDockNodeFlags::NoSplit, DimgDockNodeFlags::AutoHideTabBar, DimgDockNodeFlags::DockSpace, DimgDockNodeFlags::CentralNode, DimgDockNodeFlags::NoTabBar, DimgDockNodeFlags::HiddenTabBar, DimgDockNodeFlags::NoWindowMenuButton, DimgDockNodeFlags::NoCloseButton, DimgDockNodeFlags::NoDocking, DimgDockNodeFlags::NoResize, DimgDockNodeFlags::NoResizeX, DimgDockNodeFlags::NoResizeY]);
+pub const LOCAL_FLAGS_MASK: HashSet<DockNodeFlags> = HashSet::from([DockNodeFlags::NoSplit, DockNodeFlags::AutoHideTabBar, DockNodeFlags::DockSpace, DockNodeFlags::CentralNode, DockNodeFlags::NoTabBar, DockNodeFlags::HiddenTabBar, DockNodeFlags::NoWindowMenuButton, DockNodeFlags::NoCloseButton, DockNodeFlags::NoDocking, DockNodeFlags::NoResize, DockNodeFlags::NoResizeX, DockNodeFlags::NoResizeY]);
 
-pub const LOCAL_FLAGS_TRANSFER_MASK: HashSet<DimgDockNodeFlags>  = LOCAL_FLAGS_MASK;
+pub const LOCAL_FLAGS_TRANSFER_MASK: HashSet<DockNodeFlags>  = LOCAL_FLAGS_MASK;
 
 // When splitting those flags are moved to the inheriting child, never duplicated
-pub const SAVED_FLAGS_MASK: HashSet<DimgDockNodeFlags>          = HashSet::from([DimgDockNodeFlags::NoResize, DimgDockNodeFlags::NoResizeX, DimgDockNodeFlags::NoResizeY, DimgDockNodeFlags::DockSpace, DimgDockNodeFlags::CentralNode, DimgDockNodeFlags::NoTabBar, DimgDockNodeFlags::HiddenTabBar, DimgDockNodeFlags::NoWindowMenuButton, DimgDockNodeFlags::NoCloseButton, DimgDockNodeFlags::NoDocking]);
+pub const SAVED_FLAGS_MASK: HashSet<DockNodeFlags>          = HashSet::from([DockNodeFlags::NoResize, DockNodeFlags::NoResizeX, DockNodeFlags::NoResizeY, DockNodeFlags::DockSpace, DockNodeFlags::CentralNode, DockNodeFlags::NoTabBar, DockNodeFlags::HiddenTabBar, DockNodeFlags::NoWindowMenuButton, DockNodeFlags::NoCloseButton, DockNodeFlags::NoDocking]);
 
 #[derive(Default,Debug,Clone)]
-pub struct DimgDockNode
+pub struct DockNode
 {
     // DimgId                 id;
     pub id: Id32,
     // ImGuiDockNodeFlags      shared_flags;                // (Write) flags shared by all nodes of a same dockspace hierarchy (inherited from the root node)
-    pub shared_flags: HashSet<DimgDockNodeFlags>,
+    pub shared_flags: HashSet<DockNodeFlags>,
     // ImGuiDockNodeFlags      local_flags;                 // (Write) flags specific to this node
-    pub local_flags: HashSet<DimgDockNodeFlags>,
+    pub local_flags: HashSet<DockNodeFlags>,
     // ImGuiDockNodeFlags      local_flags_in_windows;        // (Write) flags specific to this node, applied from windows
-    pub local_flags_in_windows: HashSet<DimgDockNodeFlags>,
+    pub local_flags_in_windows: HashSet<DockNodeFlags>,
     // ImGuiDockNodeFlags      merged_flags;                // (Read)  Effective flags (== shared_flags | LocalFlagsInNode | local_flags_in_windows)
-    pub merged_flags: HashSet<DimgDockNodeFlags>,
+    pub merged_flags: HashSet<DockNodeFlags>,
     // ImGuiDockNodeState      state;
-    pub state: DimgDockNodeState,
+    pub state: DockNodeState,
     // ImGuiDockNode*          parent_node;
     pub parent_node: Id32, //*mut ImGuiDockNode,
     // ImGuiDockNode*          child_nodes[2];              // [split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
@@ -89,7 +90,7 @@ pub struct DimgDockNode
     // ImGuiAxis               split_axis;                  // [split node only] split axis (x or Y)
     pub split_axis: DimgAxis,
     // ImGuiWindowClass        window_class;                // [Root node only]
-    pub window_class: DimgWindowClass,
+    pub window_class: WindowClass,
     // ImU32                   last_bg_color;
     pub last_bg_color: u32,
     // ImGuiWindow*            host_window;
@@ -115,11 +116,11 @@ pub struct DimgDockNode
     // DimgId                 want_close_tab_id;             // [Leaf node only] Set when closing a specific tab/window.
     pub want_close_tab_id: Id32,
     // ImGuiDataAuthority      authority_for_pos         :3;
-    pub authority_for_pos: DimgDataAuthority,
+    pub authority_for_pos: DataAuthority,
     // ImGuiDataAuthority      authority_for_size        :3;
-    pub authority_for_size: DimgDataAuthority,
+    pub authority_for_size: DataAuthority,
     // ImGuiDataAuthority      authority_for_viewport    :3;
-    pub authority_for_viewport: DimgDataAuthority,
+    pub authority_for_viewport: DataAuthority,
     // bool                    is_visible               :1; // Set to false when the node is hidden (usually disabled as it has no active window)
     pub is_visible: bool,
     // bool                    is_focused               :1;
@@ -144,7 +145,7 @@ pub struct DimgDockNode
     pub want_hidden_tab_bar_toggle: bool,
 }
 
-impl DimgDockNode {
+impl DockNode {
     // ImGuiDockNode(DimgId id);
     pub fn new(id: Id32) -> Self {
         todo!()
@@ -157,37 +158,37 @@ impl DimgDockNode {
     //     bool                    is_dock_space() const     { return (merged_flags & ImGuiDockNodeFlags_DockSpace) != 0; }
     pub fn is_dock_space(&self) -> bool {
         // (&self.merged_flags & DimgDockNodeFlags::DockSpace) != 0
-        self.merged_flags.contains(&DimgDockNodeFlags::DockSpace) == false
+        self.merged_flags.contains(&DockNodeFlags::DockSpace) == false
     }
     //     bool                    is_floating_node() const  { return parent_node == NULL && (merged_flags & ImGuiDockNodeFlags_DockSpace) == 0; }
     pub fn is_floating_node(&self) -> bool {
         // self.parent_node.is_null() && &self.merged_flags & DimgDockNodeFlags::DockSpace == 0
-        self.is_root_node() == false && self.merged_flags.contains(&DimgDockNodeFlags::DockSpace) == false
+        self.is_root_node() == false && self.merged_flags.contains(&DockNodeFlags::DockSpace) == false
     }
     //     bool                    is_central_node() const   { return (merged_flags & ImGuiDockNodeFlags_CentralNode) != 0; }
     pub fn is_central_node(&self) -> bool {
-        self.merged_flags.contains(&DimgDockNodeFlags::CentralNode) == false
+        self.merged_flags.contains(&DockNodeFlags::CentralNode) == false
     }
     //     bool                    is_hidden_tab_bar() const  { return (merged_flags & ImGuiDockNodeFlags_HiddenTabBar) != 0; } // hidden tab bar can be shown back by clicking the small triangle
     pub fn is_hidden_tab_bar(&self) -> bool {
-        self.merged_flags.contains(&DimgDockNodeFlags::HiddenTabBar) == false
+        self.merged_flags.contains(&DockNodeFlags::HiddenTabBar) == false
     }
     //     bool                    is_no_tab_bar() const      { return (merged_flags & ImGuiDockNodeFlags_NoTabBar) != 0; }     // Never show a tab bar
     pub fn is_no_tab_bar(&self) -> bool {
-        self.merged_flags.contains(&DimgDockNodeFlags::NoTabBar)
+        self.merged_flags.contains(&DockNodeFlags::NoTabBar)
     }
     //     bool                    is_split_node() const     { return child_nodes[0] != NULL; }
     pub fn is_split_node(&self) -> bool {
-        self.child_nodes[0] != ID_INVALID
+        self.child_nodes[0] != INVALID_ID
     }
     //     bool                    is_leaf_node() const      { return child_nodes[0] == NULL; }
     pub fn is_leaf_node(&self) -> bool {
-        self.child_nodes[0] == ID_INVALID
+        self.child_nodes[0] == INVALID_ID
     }
     //     bool                    is_empty() const         { return child_nodes[0] == NULL && windows.size == 0; }
     pub fn is_empty(&self) -> bool {
         // self.child_nodes[0].is_null() && self.windows.is_empty()
-        self.child_nodes[0] == ID_INVALID && self.child_nodes[1] == ID_INVALID && self.windows.is_empty()
+        self.child_nodes[0] == INVALID_ID && self.child_nodes[1] == INVALID_ID && self.windows.is_empty()
     }
     //     ImRect                  rect() const            { return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
     pub fn rect(&self) -> Rect {
@@ -195,7 +196,7 @@ impl DimgDockNode {
     }
     //
     //     void                    set_local_flags(ImGuiDockNodeFlags flags) { local_flags = flags; UpdateMergedFlags(); }
-    pub fn set_local_flags(&mut self, flags: HashSet<DimgDockNodeFlags>) {
+    pub fn set_local_flags(&mut self, flags: HashSet<DockNodeFlags>) {
         // self.local_flags = flags;
         for flag in flags {
             self.local_flags.insert(flag);
@@ -213,7 +214,7 @@ impl DimgDockNode {
 
 
 #[derive(Debug,Clone)]
-pub enum DimgDockNodeState
+pub enum DockNodeState
 {
     Unknown,
     HostWindowHiddenBecauseSingleWindow,
@@ -221,15 +222,15 @@ pub enum DimgDockNodeState
     HostWindowVisible
 }
 
-impl Default for DimgDockNodeState {
+impl Default for DockNodeState {
     fn default() -> Self {
         Self::Unknown
     }
 }
 
 // Persistent Settings data, stored contiguously in SettingsNodes (sizeof() ~32 bytes)
-#[derive(Debug,Clone)]
-pub struct DimgDockNodeSettings
+#[derive(Debug,Clone, Default)]
+pub struct DockNodeSettings
 {
     // ImGuiID             id;
     pub id: Id32,
@@ -244,7 +245,7 @@ pub struct DimgDockNodeSettings
     // char                Depth;
     pub depth: i8,
     // ImGuiDockNodeFlags  flags;                  // NB: We save individual flags one by one in ascii format (ImGuiDockNodeFlags_SavedFlagsMask_)
-    pub flags: DimgDockNodeFlags,
+    pub flags: DockNodeFlags,
     // Vector2Dih            pos;
     pub pos: Vector2D,
     // Vector2Dih            size;
@@ -252,4 +253,29 @@ pub struct DimgDockNodeSettings
     // Vector2Dih            SizeRef;
     pub size_ref: Vector2D,
     // ImGuiDockNodeSettings() { memset(this, 0, sizeof(*this)); SplitAxis = ImGuiAxis_None; }
+}
+
+// Docking
+// (some functions are only declared in imgui.cpp, see Docking section)
+//  void          DockContextInitialize(ImGuiContext* ctx);
+//  void          DockContextShutdown(ImGuiContext* ctx);
+//  void          DockContextClearNodes(ImGuiContext* ctx, ImGuiID root_id, bool clear_settings_refs); // Use root_id==0 to clear all
+//  void          DockContextRebuildNodes(ImGuiContext* ctx);
+//  void          DockContextNewFrameUpdateUndocking(ImGuiContext* ctx);
+//  void          DockContextNewFrameUpdateDocking(ImGuiContext* ctx);
+//  void          DockContextEndFrame(ImGuiContext* ctx);
+//  ImGuiID       DockContextGenNodeID(ImGuiContext* ctx);
+//  void          DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, float split_ratio, bool split_outer);
+//  void          DockContextQueueUndockWindow(ImGuiContext* ctx, ImGuiWindow* window);
+//  void          DockContextQueueUndockNode(ImGuiContext* ctx, ImGuiDockNode* node);
+//  bool          DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos);
+//  bool          DockNodeBeginAmendTabBar(ImGuiDockNode* node);
+//  void          DockNodeEndAmendTabBar();
+/// inline ImGuiDockNode*   DockNodeGetRootNode(ImGuiDockNode* node)                 { while (node->parent_node) node = node->parent_node; return node; }
+pub fn dock_node_get_root_node<'context>(g: &'context mut Context, node: &mut DockNode) -> &'context mut DockNode {
+    let mut out_node: &mut DockNode = node;
+    while out_node.parent_node != INVALID_ID {
+        out_node = g.get_dock_node(out_node.parent_node).unwrap()
+    }
+    node
 }

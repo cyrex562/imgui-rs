@@ -5,8 +5,8 @@ use crate::imgui_context::ImGuiContext;
 // void ImGui::SetClipboardText(const char* text)
 pub fn SetClipboardText(g: *mut ImGuiContext, text: *const c_char) {
     // ImGuiContext& g = *GImGui;
-    if g.IO.SetClipboardTextFn {
-        g.IO.SetClipboardTextFn(g.IO.ClipboardUserData, text);
+    if g.io.SetClipboardTextFn {
+        g.io.SetClipboardTextFn(g.io.ClipboardUserData, text);
     }
 }
 

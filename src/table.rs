@@ -64,17 +64,17 @@ pub struct ImGuiTableColumn
     pub ContentMaxXHeadersIdeal: f32,
     // ImS16                   NameOffset;                     // Offset into parent ColumnsNames[]
     pub NameOffset: i16,
-    // ImGuiTableColumnIdx     DisplayOrder;                   // Index within Table's IndexToDisplayOrder[] (column may be reordered by users)
+    // ImGuiTableColumnIdx     DisplayOrder;                   // index within Table's IndexToDisplayOrder[] (column may be reordered by users)
     pub DisplayOrder: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx     IndexWithinEnabledSet;          // Index within enabled/visible set (<= IndexToDisplayOrder)
+    // ImGuiTableColumnIdx     IndexWithinEnabledSet;          // index within enabled/visible set (<= IndexToDisplayOrder)
     pub IndexWithinEnabledSet: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx     PrevEnabledColumn;              // Index of prev enabled/visible column within Columns[], -1 if first enabled/visible column
+    // ImGuiTableColumnIdx     PrevEnabledColumn;              // index of prev enabled/visible column within Columns[], -1 if first enabled/visible column
     pub PrevEnabledColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx     NextEnabledColumn;              // Index of next enabled/visible column within Columns[], -1 if last enabled/visible column
+    // ImGuiTableColumnIdx     NextEnabledColumn;              // index of next enabled/visible column within Columns[], -1 if last enabled/visible column
     pub NextEnabledColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx     sort_order;                      // Index of this column within sort specs, -1 if not sorting on this column, 0 for single-sort, may be >0 on multi-sort
+    // ImGuiTableColumnIdx     sort_order;                      // index of this column within sort specs, -1 if not sorting on this column, 0 for single-sort, may be >0 on multi-sort
     pub SortOrder: ImGuiTableColumnIdx,
-    // ImGuiTableDrawChannelIdx DrawChannelCurrent;            // Index within DrawSplitter.Channels[]
+    // ImGuiTableDrawChannelIdx DrawChannelCurrent;            // index within DrawSplitter.Channels[]
     pub DrawChannelCurrent: ImGuiTableDrawChannelIdx,
     // ImGuiTableDrawChannelIdx DrawChannelFrozen;             // Draw channels for frozen rows (often headers)
     pub DrawChannelFrozen: ImGuiTableDrawChannelIdx,
@@ -221,11 +221,11 @@ pub struct Table
     pub RowCellData: Vec<ImGuiTableCellData>,
     // ImU64                       EnabledMaskByDisplayOrder;  // column DisplayOrder -> IsEnabled map
     pub EnabledMaskByDisplayOrder: u64,
-    // ImU64                       EnabledMaskByIndex;         // column Index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
+    // ImU64                       EnabledMaskByIndex;         // column index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
     pub EnabledMaskByIndex: u64,
-    // ImU64                       VisibleMaskByIndex;         // column Index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
+    // ImU64                       VisibleMaskByIndex;         // column index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
     pub VisibleMaskByIndex: u64,
-    // ImU64                       RequestOutputMaskByIndex;   // column Index -> is_visible || AutoFit (== expect user to submit items)
+    // ImU64                       RequestOutputMaskByIndex;   // column index -> is_visible || AutoFit (== expect user to submit items)
     pub RequestOutputMaskByIndex: u64,
     // ImGuiTableFlags             SettingsLoadedFlags;        // Which data were loaded from the .ini file (e.g. when order is not altered we won't save order)
     pub SettingsLoadedFlags: ImGuiTableFlags,
@@ -341,29 +341,29 @@ pub struct Table
     pub ColumnsEnabledFixedCount: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         DeclColumnsCount;           // Count calls to TableSetupColumn()
     pub DeclColumnsCount: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         HoveredColumnBody;          // Index of column whose visible region is being hovered. Important: == ColumnsCount when hovering empty region after the right-most column!
+    // ImGuiTableColumnIdx         HoveredColumnBody;          // index of column whose visible region is being hovered. Important: == ColumnsCount when hovering empty region after the right-most column!
     pub HoveredColumnBody: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         HoveredColumnBorder;        // Index of column whose right-border is being hovered (for resizing).
+    // ImGuiTableColumnIdx         HoveredColumnBorder;        // index of column whose right-border is being hovered (for resizing).
     pub HoveredColumnBorder: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         AutoFitSingleColumn;        // Index of single column requesting auto-fit.
+    // ImGuiTableColumnIdx         AutoFitSingleColumn;        // index of single column requesting auto-fit.
     pub AutoFitSingleColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         ResizedColumn;              // Index of column being resized. Reset when InstanceCurrent==0.
+    // ImGuiTableColumnIdx         ResizedColumn;              // index of column being resized. Reset when InstanceCurrent==0.
     pub ResizedColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         LastResizedColumn;          // Index of column being resized from previous frame.
+    // ImGuiTableColumnIdx         LastResizedColumn;          // index of column being resized from previous frame.
     pub LastResizedColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         HeldHeaderColumn;           // Index of column header being held.
+    // ImGuiTableColumnIdx         HeldHeaderColumn;           // index of column header being held.
     pub HeldHeaderColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         ReorderColumn;              // Index of column being reordered. (not cleared)
+    // ImGuiTableColumnIdx         ReorderColumn;              // index of column being reordered. (not cleared)
     pub ReorderColumn: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         ReorderColumnDir;           // -1 or +1
     pub ReorderColumnDir: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         LeftMostEnabledColumn;      // Index of left-most non-hidden column.
+    // ImGuiTableColumnIdx         LeftMostEnabledColumn;      // index of left-most non-hidden column.
     pub LeftMostEnabledColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         RightMostEnabledColumn;     // Index of right-most non-hidden column.
+    // ImGuiTableColumnIdx         RightMostEnabledColumn;     // index of right-most non-hidden column.
     pub RightMosstEnabledColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         LeftMostStretchedColumn;    // Index of left-most stretched column.
+    // ImGuiTableColumnIdx         LeftMostStretchedColumn;    // index of left-most stretched column.
     pub LeftMostStretchedColumn: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         RightMostStretchedColumn;   // Index of right-most stretched column.
+    // ImGuiTableColumnIdx         RightMostStretchedColumn;   // index of right-most stretched column.
     pub RightMostStretchedColumn: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         ContextPopupColumn;         // column right-clicked on, of -1 if opening context menu from a neutral/empty spot
     pub ContextPopupColumn: ImGuiTableColumnIdx,
@@ -375,11 +375,11 @@ pub struct Table
     pub FreezeColumnsRequest: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         FreezeColumnsCount;         // Actual frozen columns count (== FreezeColumnsRequest, or == 0 when no scrolling offset)
     pub FreezeColumnsCount: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         RowCellDataCurrent;         // Index of current RowCellData[] entry in current row
+    // ImGuiTableColumnIdx         RowCellDataCurrent;         // index of current RowCellData[] entry in current row
     pub RowCellDataCurrent: ImGuiTableColumnIdx,
     // ImGuiTableDrawChannelIdx    DummyDrawChannel;           // Redirect non-visible columns here.
     pub DummyDrawChannel: ImGuiTableDrawChannelIdx,
-    // ImGuiTableDrawChannelIdx    Bg2DrawChannelCurrent;      // For Selectable() and other widgets drawing across columns after the freezing line. Index within DrawSplitter.Channels[]
+    // ImGuiTableDrawChannelIdx    Bg2DrawChannelCurrent;      // For Selectable() and other widgets drawing across columns after the freezing line. index within DrawSplitter.Channels[]
     pub Bg2DrawChannelCurrent: ImGuiTableColumnIdx,
     // ImGuiTableDrawChannelIdx    Bg2DrawChannelUnfrozen;
     pub Bg2DrawChannelUnfrozen: ImGuiTableColumnIdx,
@@ -432,7 +432,7 @@ impl Table {
 #[derive(Default,Debug,Clone)]
 pub struct TableTempData
 {
-    // int                         TableIndex;                 // Index in g.tables.Buf[] pool
+    // int                         TableIndex;                 // index in g.tables.Buf[] pool
     pub TableIndex: i32,
     // float                       last_time_active;             // Last timestamp this structure was used
     pub LastTimeActive: f32,
@@ -478,7 +478,7 @@ pub struct ImGuiTableColumnSettings
     WidthOrWeight: f32,
     // ImGuiID                 UserID;
     pub UserID: ImGuiID,
-    // ImGuiTableColumnIdx     Index;
+    // ImGuiTableColumnIdx     index;
     pub Index: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx     DisplayOrder;
     pub DisplayOrder: ImGuiTableColumnIdx,
@@ -545,8 +545,8 @@ impl TableSettings {
 pub struct DimgTableColumnSortSpecs
 {
     pub column_user_id: Id32,     // User id of the column (if specified by a TableSetupColumn() call)
-    pub column_index: i16,        // Index of the column
-    pub sort_order: i16,          // Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
+    pub column_index: i16,        // index of the column
+    pub sort_order: i16,          // index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
     pub sort_direction: DimgSortDirection,  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
 
     // ImGuiTableColumnSortSpecs() { memset(this, 0, sizeof(*this)); }

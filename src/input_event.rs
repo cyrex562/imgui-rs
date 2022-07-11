@@ -9,7 +9,7 @@ pub union ImGuiInputEventVal {
     //     ImGuiInputEventMouseButton  MouseButton;    // if Type == ImGuiInputEventType_MouseButton
     pub MouseButton: ImGuiInputEventMouseButton,
     //     ImGuiInputEventMouseViewport mouse_viewport; // if Type == ImGuiInputEventType_MouseViewport
-    pub MouseViewport: ImGuiInputEventMouseViewport,
+    pub mouse_viewport: ImGuiInputEventMouseViewport,
     //     ImGuiInputEventKey          Key;            // if Type == ImGuiInputEventType_Key
     pub Key: ImGuiInputEventKey,
     //     ImGuiInputEventText         Text;           // if Type == ImGuiInputEventType_Text

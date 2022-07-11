@@ -7,7 +7,7 @@ or its real address:
 or view this file with any Markdown viewer.
 
 
-## Index
+## index
 
 | **Q&A: Basics** |
 :---------------------------------------------------------- |
@@ -58,7 +58,7 @@ or view this file with any Markdown viewer.
 - Your programming IDE is your friend, find the type or function declaration to find comments associated with it.
 - The `ImGui::ShowMetricsWindow()` function exposes lots of internal information and tools. Although it is primary designed as a debugging tool, having access to that information tends to help understands concepts.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -68,7 +68,7 @@ or view this file with any Markdown viewer.
 
 (The library misleadingly started its life in 2014 as "ImGui" due to the fact that I didn't give it a proper name when I released 1.0, and had no particular expectation that it would take off. However, the term IMGUI (immediate-mode graphical user interface) was coined before and is being used in variety of other situations e.g. Unity uses it own implementation of the IMGUI paradigm. To reduce the ambiguity without affecting existing code bases, I have decided in December 2015 a fully qualified name "Dear ImGui" for this library.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -81,7 +81,7 @@ You may use the [docking](https://github.com/ocornut/imgui/tree/docking) branch 
 
 Many projects are using this branch and it is kept in sync with master regularly.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ----
 
@@ -96,7 +96,7 @@ The [Wiki](https://github.com/ocornut/imgui/wiki) is a hub to many resources and
 
 For first-time users having issues compiling/linking/running or issues loading fonts, please use [GitHub Discussions](https://github.com/ocornut/imgui/discussions).
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -131,7 +131,7 @@ void MyLowLevelMouseButtonHandler(int button, bool down)
 
 **Note:** Text input widget releases focus on the "KeyDown" event of the Return key, so the subsequent "KeyUp" event that your application receive will typically have `io.want_capture_keyboard == false`. Depending on your application logic it may or not be inconvenient to receive that KeyUp event. You might want to track which key-downs were targeted for Dear ImGui, e.g. with an array of bool, and filter out the corresponding key-ups.)
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -142,7 +142,7 @@ void MyLowLevelMouseButtonHandler(int button, bool down)
 - See [Control Sheets for Gamepads](http://www.dearimgui.org/controls_sheets) (reference PNG/PSD for PS4, XB1, Switch gamepads).
 - See `USING GAMEPAD/KEYBOARD NAVIGATION CONTROLS` section of [imgui.cpp](https://github.com/ocornut/imgui/blob/master/imgui.cpp) for more details.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -157,7 +157,7 @@ Console SDK also sometimes provide equivalent tooling or wrapper for Synergy-lik
 - You may also use a third party solution such as [netImgui](https://github.com/sammyfreg/netImgui), [Remote ImGui](https://github.com/JordiRos/remoteimgui) or [imgui-ws](https://github.com/ggerganov/imgui-ws) which sends the vertices to render over the local network, allowing you to use Dear ImGui even on a screen-less machine. See [Wiki](https://github.com/ocornut/imgui/wiki) index for most details.
 - For touch inputs, you can increase the hit box of widgets (via the `style.TouchPadding` setting) to accommodate for the lack of precision of touch inputs, but it is recommended you use a mouse or gamepad to allow optimizing for screen real-estate and precision.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -166,7 +166,7 @@ Your renderer is not using the font texture correctly or it hasn't been uploaded
 - If this happens using the standard backends: A) have you modified the font atlas after `ImGui_ImplXXX_NewFrame()`? B) maybe the texture failed to upload, which could happens if for some reason your texture is too big. Also see [docs/FONTS.md](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md).
 - If this happens with a custom backend: make sure you have uploaded the font texture to the GPU, that all shaders are rendering states are setup properly (e.g. texture is bound). Compare your code to existing backends and use a graphics debugger such as [RenderDoc](https://renderdoc.org) to debug your rendering states.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -180,7 +180,7 @@ and **NOT** as
 `(x1,y1,width,height)`
 Refer to rendering backends in the [examples/](https://github.com/ocornut/imgui/tree/master/examples) folder for references of how to handle the `clip_rect` field.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -327,7 +327,7 @@ will preserve your node open/closed state when the targeted object change.
 - e.g. when displaying a list of objects, using indices or pointers as id will preserve the
 node open/closed state differently. See what makes more sense in your situation!
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -409,7 +409,7 @@ my_dx11_srv = (ID3D11ShaderResourceView*)my_void_ptr;   // cast a void* into a I
 ```
 Finally, you may call `ImGui::ShowMetricsWindow()` to explore/visualize/understand how the ImDrawList are generated.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -418,7 +418,7 @@ Finally, you may call `ImGui::ShowMetricsWindow()` to explore/visualize/understa
 You can edit [imconfig.h](https://github.com/ocornut/imgui/blob/master/imconfig.h) and setup the `IM_VEC2_CLASS_EXTRA`/`IM_VEC4_CLASS_EXTRA` macros to add implicit type conversions.
 This way you'll be able to use your own types everywhere, e.g. passing `MyVector2` or `glm::vec2` to ImGui functions instead of `Vector2D`.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -442,7 +442,7 @@ One possible implementation of a helper to facilitate printf-style building of s
 This is a small helper where you can instance strings with configurable local buffers length. Many game engines will
 provide similar or better string helpers.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -478,7 +478,7 @@ ImGui::End();
 - You can create your own ImDrawList instance. You'll need to initialize them with `ImGui::GetDrawListSharedData()`, or create your own instancing `ImDrawListSharedData`, and then call your renderer function with your own ImDrawList or ImDrawData data.
 - Looking for fun? The [ImDrawList coding party 2020](https://github.com/ocornut/imgui/issues/3606) thread is full of "don't do this at home" extreme uses of the ImDrawList API.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -531,7 +531,7 @@ io.fonts->AddFontFromFileTTF("MyFolder\\MyFont.ttf", size;  // CORRECT (windows 
 io.fonts->AddFontFromFileTTF("MyFolder/MyFont.ttf", size);  // ALSO CORRECT
 ```
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -543,7 +543,7 @@ You may want to see `ImFontConfig::glyph_min_advance_x` to make your icon look m
 With some extra effort, you may use colorful icon by registering custom rectangle space inside the font atlas,
 and copying your own graphics data into it. See docs/FONTS.md about using the add_custom_rect_font_glyph API.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -577,7 +577,7 @@ io.fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0, &config, ranges); 
 io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.fonts->get_glyph_ranges_japanese()); // merge japanese glyphs
 ```
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -610,7 +610,7 @@ You may also use MultiByteToWideChar() or ToUnicode() to retrieve Unicode codepo
 windows: if your language is relying on an Input Method Editor (IME), you can write your HWND to ImGui::GetMainViewport()->platform_handle_raw
 in order for the default the default implementation of io.SetPlatformImeDataFn() to set your Microsoft IME position correctly.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -625,7 +625,7 @@ You may take a look at:
 - [Sponsors](https://github.com/ocornut/imgui/wiki/Sponsors)
 - [Gallery](https://github.com/ocornut/imgui/issues/5243)
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -637,7 +637,7 @@ Dear ImGui is very programmer centric and the immediate-mode GUI paradigm might 
 
 Dear ImGui is built to be efficient and scalable toward the needs for AAA-quality applications running all day. The IMGUI paradigm offers different opportunities for optimization that the more typical RMGUI paradigm.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -648,7 +648,7 @@ Somehow. You can alter the look of the interface to some degree: changing colors
 A reasonably skinned application may look like (screenshot from [#2529](https://github.com/ocornut/imgui/issues/2529#issuecomment-524281119))
 ![minipars](https://user-images.githubusercontent.com/314805/63589441-d9794f00-c5b1-11e9-8d96-cfc1b93702f7.png)
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -658,7 +658,7 @@ Dear ImGui takes advantage of a few C += 1 languages features for convenience bu
 
 There is an auto-generated [c-api for Dear ImGui (cimgui)](https://github.com/cimgui/cimgui) by Sonoro1234 and Stephan Dilly. It is designed for creating bindings to other languages. If possible, I would suggest using your target language functionalities to try replicating the function overloading and default parameters used in C += 1 else the API may be harder to use. Also see [Bindings](https://github.com/ocornut/imgui/wiki/Bindings) for various third-party bindings.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 
 ---
 
@@ -672,5 +672,5 @@ There is an auto-generated [c-api for Dear ImGui (cimgui)](https://github.com/ci
 You may post screenshot or links in the [gallery threads](https://github.com/ocornut/imgui/issues/5243). Visuals are ideal as they inspire other programmers. Disclosing your use of Dear ImGui helps the library grow credibility, and help other teams and programmers with taking decisions.
 - If you have issues or if you need to hack into the library, even if you don't expect any support it is useful that you share your issues or sometimes incomplete PR.
 
-##### [Return to Index](#index)
+##### [Return to index](#index)
 

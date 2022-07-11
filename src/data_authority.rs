@@ -1,6 +1,6 @@
 // Store the source authority (dock node vs window) of a field
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgDataAuthority
+pub enum DataAuthority
 {
     None,
     Auto,
@@ -8,7 +8,7 @@ pub enum DimgDataAuthority
     Window
 }
 
-impl Default for DimgDataAuthority {
+impl Default for DataAuthority {
     fn default() -> Self {
         Self::None
     }

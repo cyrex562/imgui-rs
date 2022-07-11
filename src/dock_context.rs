@@ -1,7 +1,7 @@
 use crate::config::ConfigFlags;
 use crate::context::Context;
 use crate::dock::{DimgDockRequest, DimgDockRequestType};
-use crate::dock_node::{DimgDockNode, DimgDockNodeSettings};
+use crate::dock_node::{DockNode, DockNodeSettings};
 use crate::settings::SettingsHandler;
 use crate::types::Id32;
 
@@ -9,11 +9,11 @@ use crate::types::Id32;
 #[derive(Default,Debug,Clone)]
 pub struct DockContext {
     //ImGuiStorage                    Nodes;          // Map id -> ImGuiDockNode*: active nodes
-    pub nodes: Vec<DimgDockNode>,
+    pub nodes: Vec<DockNode>,
     // ImVector<ImGuiDockRequest>      Requests;
     pub requests: Vec<DimgDockRequest>,
     // ImVector<ImGuiDockNodeSettings> NodesSettings;
-    pub nodes_settings: Vec<DimgDockNodeSettings>,
+    pub nodes_settings: Vec<DockNodeSettings>,
     // bool                            WantFullRebuild;
     pub want_full_rebuild: bool,
     // ImGuiDockContext()              { memset(this, 0, sizeof(*this)); }
