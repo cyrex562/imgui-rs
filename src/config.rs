@@ -28,7 +28,7 @@
 
 //---- Don't define obsolete functions/enums/behaviors. Consider enabling from time to time after updating to avoid using soon-to-be obsolete function/names.
 //#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//#define IMGUI_DISABLE_OBSOLETE_KEYIO                      // 1.87: disable legacy io.KeyMap[]+io.KeysDown[] in favor io.add_key_event(). This will be folded into IMGUI_DISABLE_OBSOLETE_FUNCTIONS in a few versions.
+//#define IMGUI_DISABLE_OBSOLETE_KEYIO                      // 1.87: disable legacy io.key_map[]+io.keys_down[] in favor io.add_key_event(). This will be folded into IMGUI_DISABLE_OBSOLETE_FUNCTIONS in a few versions.
 
 //---- Disable all of Dear ImGui or don't implement standard windows/tools.
 // It is very strongly recommended to NOT disable the demo windows and debug tool during development. They are extremely useful in day to day work. Please read comments in imgui_demo.cpp.
@@ -130,7 +130,7 @@ pub enum ConfigFlags
 {
     None                   = 0,
     NavEnableKeyboard      = 1 << 0,   // Master keyboard navigation enable flag. NewFrame() will automatically fill io.nav_inputs[] based on io.add_key_event() calls
-    NavEnableGamepad       = 1 << 1,   // Master gamepad navigation enable flag. This is mostly to instruct your imgui backend to fill io.nav_inputs[]. Backend also needs to set ImGuiBackendFlags_HasGamepad.
+    NavEnableGamepad       = 1 << 1,   // Master gamepad navigation enable flag. This is mostly to instruct your imgui backend to fill io.nav_inputs[]. Backend also needs to set BackendFlags::HasGamepad.
     NavEnableSetMousePos   = 1 << 2,   // Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward. Will update io.mouse_pos and set io.want_set_mouse_pos=true. If enabled you MUST honor io.want_set_mouse_pos requests in your backend, otherwise ImGui will react as if the mouse is jumping around back and forth.
     NavNoCaptureKeyboard   = 1 << 3,   // Instruct navigation to not set the io.want_capture_keyboard flag when io.nav_active is set.
     NoMouse                = 1 << 4,   // Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.

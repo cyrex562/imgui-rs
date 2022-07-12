@@ -37,7 +37,7 @@ pub fn ImAtan2(y: f32, x: f32) -> f32{
 pub fn ImAtof(x: &String) -> f32 {
     f32::try_from(x).unwrap()
 }
-//#define ImFloorStd(x)     floorf(x)           // We use our own, see ImFloor() and ImFloorSigned()
+//#define ImFloorStd(x)     floorf(x)           // We use our own, see f32::floor() and f32::floor()
 pub fn ImFloorStd(x: f32) -> f32 {
     f32::floor(x)
 }
@@ -286,26 +286,21 @@ pub fn ImInvLength(lhs: &Vector2D, fail_value: f32) -> f32 {
     fail_value
 }
 
-// static inline float  ImFloor(float f)                                           { return (float)(f); }
-pub fn ImFloor(f: f32) -> f32 {
+// static inline float  f32::floor(float f)                                           { return (float)(f); }
+pub fn f32::floor(f: f32) -> f32 {
     f32::floor(f)
 }
 
-// static inline float  ImFloorSigned(float f)                                     { return (float)((f >= 0 || (float)f == f) ? f : f - 1); } // Decent replacement for floorf()
-// pub fn ImFloorSigned(f: f32) -> f32 {
+// static inline float  f32::floor(float f)                                     { return (float)((f >= 0 || (float)f == f) ? f : f - 1); } // Decent replacement for floorf()
+// pub fn f32::floor(f: f32) -> f32 {
 //     f32::floor
 // }
 
-// static inline Vector2D ImFloor(const Vector2D& v)                                   { return Vector2D((float)(v.x), (float)(v.y)); }
-pub fn ImFloorVec2(v: &Vector2D) -> Vector2D {
-    Vector2D {
-        x: f32::floor(v.x),
-        y: f32::floor(v.y)
-    }
-}
+// static inline Vector2D f32::floor(const Vector2D& v)                                   { return Vector2D((float)(v.x), (float)(v.y)); }
 
 
-// static inline Vector2D ImFloorSigned(const Vector2D& v)                             { return Vector2D(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
+
+// static inline Vector2D f32::floor(const Vector2D& v)                             { return Vector2D(f32::floor(v.x), f32::floor(v.y)); }
 
 // static inline int    ImModPositive(int a, int b)                                { return (a + b) % b; }
 pub fn ImModPositive(a: i32, b: i32) -> i32 {
@@ -361,7 +356,7 @@ pub fn IM_F32_TO_INT8_SAT(x: f32) -> i8 {
     ImSaturate(x) * 255.0 + 0.5 as i8
 }
 
-// #define IM_FLOOR(_VAL)                  ((float)(_VAL))                                    // ImFloor() is not inlined in MSVC debug builds
+// #define IM_FLOOR(_VAL)                  ((float)(_VAL))                                    // f32::floor() is not inlined in MSVC debug builds
 // #define IM_ROUND(_VAL)                  ((float)((_VAL) + 0.5))                           //
 pub fn IM_ROUND(x: f32) -> f32{
     f32::round(x)

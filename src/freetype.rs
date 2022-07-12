@@ -214,11 +214,11 @@ namespace
         // Update font info
         FT_Size_Metrics metrics = Face->size->metrics;
         Info.PixelHeight = (uint32_t)pixel_height;
-        Info.Ascender = (float)FT_CEIL(metrics.ascender);
-        Info.Descender = (float)FT_CEIL(metrics.descender);
-        Info.LineSpacing = (float)FT_CEIL(metrics.height);
-        Info.LineGap = (float)FT_CEIL(metrics.height - metrics.ascender + metrics.descender);
-        Info.MaxAdvanceWidth = (float)FT_CEIL(metrics.max_advance);
+        Info.Ascender = FT_CEIL(metrics.ascender);
+        Info.Descender = FT_CEIL(metrics.descender);
+        Info.LineSpacing = FT_CEIL(metrics.height);
+        Info.LineGap = FT_CEIL(metrics.height - metrics.ascender + metrics.descender);
+        Info.MaxAdvanceWidth = FT_CEIL(metrics.max_advance);
     }
 
     const FT_Glyph_Metrics* FreeTypeFont::LoadGlyph(uint32_t codepoint)
@@ -267,7 +267,7 @@ namespace
         out_glyph_info->Height = ft_bitmap->rows;
         out_glyph_info->OffsetX = Face->glyph->bitmap_left;
         out_glyph_info->OffsetY = -Face->glyph->bitmap_top;
-        out_glyph_info->AdvanceX = (float)FT_CEIL(slot->advance.x);
+        out_glyph_info->AdvanceX = FT_CEIL(slot->advance.x);
         out_glyph_info->IsColored = (ft_bitmap->pixel_mode == FT_PIXEL_MODE_BGRA);
 
         return ft_bitmap;
@@ -319,7 +319,7 @@ namespace
         case FT_PIXEL_MODE_BGRA:
             {
                 // FIXME: Converting pre-multiplied alpha to straight. Doesn't smell good.
-                #define DE_MULTIPLY(color, alpha) (255.0 * (float)color / (float)alpha + 0.5)
+                #define DE_MULTIPLY(color, alpha) (255.0 * color / alpha + 0.5)
                 if (multiply_table == NULL)
                 {
                     for (uint32_t y = 0; y < h; y += 1, src += src_pitch, dst += dst_pitch)
@@ -402,8 +402,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // clear atlas
     atlas->TexID = (ImTextureID)NULL;
     atlas->TexWidth = atlas->TexHeight = 0;
-    atlas->TexUvScale = DimgVec2D::new(0.0, 0.0);
-    atlas->TexUvWhitePixel = DimgVec2D::new(0.0, 0.0);
+    atlas->TexUvScale = Vector2D::new(0.0, 0.0);
+    atlas->TexUvWhitePixel = Vector2D::new(0.0, 0.0);
     atlas->ClearTexData();
 
     // Temporary storage for building
@@ -420,8 +420,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     {
         ImFontBuildSrcDataFT& src_tmp = src_tmp_array[src_i];
         ImFontConfig& cfg = atlas->ConfigData[src_i];
-        FreeTypeFont& font_face = src_tmp.Font;
-        IM_ASSERT(cfg.DstFont && (!cfg.DstFont->IsLoaded() || cfg.DstFont->ContainerAtlas == atlas));
+        FreeTypeFont& font_face = src_tmp.font;
+        IM_ASSERT(cfg.DstFont && (!cfg.DstFont->IsLoaded() || cfg.DstFont.container_atlas == atlas));
 
         // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
@@ -461,7 +461,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             {
                 if (dst_tmp.GlyphsSet.TestBit(codepoint))    // Don't overwrite existing glyphs. We could make this an option (e.g. MergeOverwrite)
                     continue;
-                uint32_t glyph_index = FT_Get_Char_Index(src_tmp.Font.Face, codepoint); // It is actually in the font? (FIXME-OPT: We are not storing the glyph_index..)
+                uint32_t glyph_index = FT_Get_Char_Index(src_tmp.font.Face, codepoint); // It is actually in the font? (FIXME-OPT: We are not storing the glyph_index..)
                 if (glyph_index == 0)
                     continue;
 
@@ -541,12 +541,12 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         {
             ImFontBuildSrcGlyphFT& src_glyph = src_tmp.GlyphsList[glyph_i];
 
-            const FT_Glyph_Metrics* metrics = src_tmp.Font.LoadGlyph(src_glyph.Codepoint);
+            const FT_Glyph_Metrics* metrics = src_tmp.font.LoadGlyph(src_glyph.Codepoint);
             if (metrics == NULL)
                 continue;
 
             // Render glyph into a bitmap (currently held by FreeType)
-            const FT_Bitmap* ft_bitmap = src_tmp.Font.RenderGlyphAndGetInfo(&src_glyph.Info);
+            const FT_Bitmap* ft_bitmap = src_tmp.font.RenderGlyphAndGetInfo(&src_glyph.Info);
             if (ft_bitmap == NULL)
                 continue;
 
@@ -561,7 +561,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             // Blit rasterized pixels to our temporary buffer and keep a pointer to it.
             src_glyph.BitmapData = (unsigned int*)(buf_bitmap_buffers.back() + buf_bitmap_current_used_bytes);
             buf_bitmap_current_used_bytes += bitmap_size_in_bytes;
-            src_tmp.Font.BlitGlyph(ft_bitmap, src_glyph.BitmapData, src_glyph.Info.Width, multiply_enabled ? multiply_table : NULL);
+            src_tmp.font.BlitGlyph(ft_bitmap, src_glyph.BitmapData, src_glyph.Info.Width, multiply_enabled ? multiply_table : NULL);
 
             src_tmp.Rects[glyph_i].w = (stbrp_coord)(src_glyph.Info.Width + padding);
             src_tmp.Rects[glyph_i].h = (stbrp_coord)(src_glyph.Info.Height + padding);
@@ -607,7 +607,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
     // 7. Allocate texture
     atlas->TexHeight = (atlas.flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas->TexHeight + 1) : ImUpperPowerOfTwo(atlas->TexHeight);
-    atlas->TexUvScale = DimgVec2D::new(1.0 / atlas->TexWidth, 1.0 / atlas->TexHeight);
+    atlas->TexUvScale = Vector2D::new(1.0 / atlas->TexWidth, 1.0 / atlas->TexHeight);
     if (src_load_color)
     {
         size_t tex_size = atlas->TexWidth * atlas->TexHeight * 4;
@@ -636,8 +636,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         ImFontConfig& cfg = atlas->ConfigData[src_i];
         ImFont* dst_font = cfg.DstFont;
 
-        const float ascent = src_tmp.Font.Info.Ascender;
-        const float descent = src_tmp.Font.Info.Descender;
+        const float ascent = src_tmp.font.Info.Ascender;
+        const float descent = src_tmp.font.Info.Descender;
         ImFontAtlasBuildSetupFont(atlas, dst_font, &cfg, ascent, descent);
         const float font_off_x = cfg.GlyphOffset.x;
         const float font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font->Ascent);
@@ -662,10 +662,10 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             float y0 = info.OffsetY + font_off_y;
             float x1 = x0 + info.Width;
             float y1 = y0 + info.Height;
-            float u0 = (tx) / (float)atlas->TexWidth;
-            float v0 = (ty) / (float)atlas->TexHeight;
-            float u1 = (tx + info.Width) / (float)atlas->TexWidth;
-            float v1 = (ty + info.Height) / (float)atlas->TexHeight;
+            float u0 = (tx) / atlas->TexWidth;
+            float v0 = (ty) / atlas->TexHeight;
+            float u1 = (tx + info.Width) / atlas->TexWidth;
+            float v1 = (ty + info.Height) / atlas->TexHeight;
             dst_font->AddGlyph(&cfg, (ImWchar)src_glyph.Codepoint, x0, y0, x1, y1, u0, v0, u1, v1, info.AdvanceX);
 
             ImFontGlyph* dst_glyph = &dst_font->Glyphs.back();

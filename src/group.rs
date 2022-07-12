@@ -3,7 +3,7 @@ use crate::imgui_vec::{ImVec1, Vector2D};
 
 // Stacked storage data for BeginGroup()/EndGroup()
 #[derive(Default,Debug,Clone)]
-pub struct DimgGroupData
+pub struct GroupData
 {
     // ImGuiID     WindowID;
     pub WindowID: ImGuiID,

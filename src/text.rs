@@ -231,7 +231,7 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
 {
     // ImGuiContext& g = *GImGui;
     // ImFont* font = g.font;
-    let font = GImGui.Font;
+    let font = GImGui.font;
     // const float line_height = g.font_size;
     let line_height = GImGui.FontSize;
     // const float scale = line_height / font->font_size;
@@ -272,7 +272,7 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
     }
 
     if (out_offset) {
-        *out_offset = DimgVec2D::new(line_width, text_size.y + line_height);  // offset allow for the possibility of sitting after a trailing \n
+        *out_offset = Vector2D::new(line_width, text_size.y + line_height);  // offset allow for the possibility of sitting after a trailing \n
         }
 
     if line_width > 0.0 || text_size.y == 0.0 {                       // whereas size.y will ignore the trailing \n

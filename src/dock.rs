@@ -42,12 +42,12 @@ pub fn dock_context_new_frame_update_docking(ctx: &mut Context)
     // We could in theory use DockNodeTreeFindVisibleNodeByPos() on the root host dock node, but using ->dock_node is a good shortcut.
     // Note this is mostly a debug thing and isn't actually used for docking target, because docking involve more detailed filtering.
     g.HoveredDockNode = NULL;
-    if (ImGuiWindow* hovered_window = g.HoveredWindowUnderMovingWindow)
+    if (ImGuiWindow* hovered_window = g.hovered_window_under_moving_window)
     {
         if (hovered_window.DockNodeAsHost)
-            g.HoveredDockNode = DockNodeTreeFindVisibleNodeByPos(hovered_window.DockNodeAsHost, g.io.MousePos);
-        else if (hovered_window.RootWindow->DockNode)
-            g.HoveredDockNode = hovered_window.RootWindow->DockNode;
+            g.HoveredDockNode = DockNodeTreeFindVisibleNodeByPos(hovered_window.DockNodeAsHost, g.io.mouse_pos);
+        else if (hovered_window.root_window->DockNode)
+            g.HoveredDockNode = hovered_window.root_window->DockNode;
     }
 
     // Process Docking requests
@@ -71,9 +71,9 @@ void ImGui::DockContextEndFrame(ImGuiContext* ctx)
     ImGuiDockContext* dc = &g.DockContext;
     for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
         if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.Data[n].val_p)
-            if (node->LastFrameActive == g.FrameCount && node->IsVisible && node->HostWindow && node->IsLeafNode() && !node->IsBgDrawnThisFrame)
+            if (node->LastFrameActive == g.frame_count && node->IsVisible && node->HostWindow && node->IsLeafNode() && !node->IsBgDrawnThisFrame)
             {
-                ImRect bg_rect(node.pos + DimgVec2D::new(0.0, GetFrameHeight()), node.pos + node->Size);
+                ImRect bg_rect(node.pos + Vector2D::new(0.0, GetFrameHeight()), node.pos + node->Size);
                 ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node->HostWindow->Rect(), DOCKING_SPLITTER_SIZE);
                 node->HostWindow->DrawList->ChannelsSetCurrent(0);
                 node->HostWindow->DrawList->AddRectFilled(bg_rect.Min, bg_rect.Max, node->LastBgColor, node->HostWindow->WindowRounding, bg_rounding_flags);

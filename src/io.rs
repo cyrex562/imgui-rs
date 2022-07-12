@@ -5,7 +5,7 @@ use crate::context::Context;
 use crate::font::Font;
 use crate::font_atlas::FontAtlas;
 use crate::input::{DimgInputEventType, InputSource, DimgKey, DimgKeyData, ModFlags};
-use crate::input_event::DimgInputEvent;
+use crate::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
 use crate::types::{Id32, DimgWchar};
 use crate::vectors::Vector2D;
@@ -175,11 +175,11 @@ pub struct Io {
     // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
     pub mouse_delta: Vector2D,                         // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
 
-    // Legacy: before 1.87, we required backend to fill io.KeyMap[] (imgui->native map) during initialization and io.KeysDown[] (native indices) every frame.
+    // Legacy: before 1.87, we required backend to fill io.key_map[] (imgui->native map) during initialization and io.keys_down[] (native indices) every frame.
     // This is still temporarily supported as a legacy feature. However the new preferred scheme is for backend to call io.add_key_event().
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     int         KeyMap[ImGuiKey_COUNT];             // [LEGACY] Input: map of indices into the KeysDown[512] entries array which represent your "native" keyboard state. The first 512 are now unused and should be kept zero. Legacy backend will write into KeyMap[] using ImGuiKey_ indices which are always >512.
-//     bool        KeysDown[ImGuiKey_COUNT];           // [LEGACY] Input: Keyboard keys that are pressed (ideally left in the "native" order your engine has access to keyboard keys, so you can use your own defines/enums for keys). This used to be [512] sized. It is now ImGuiKey_COUNT to allow legacy io.KeysDown[GetKeyIndex(...)] to work without an overflow.
+//     int         KeyMap[ImGuiKey_COUNT];             // [LEGACY] Input: map of indices into the keys_down[512] entries array which represent your "native" keyboard state. The first 512 are now unused and should be kept zero. Legacy backend will write into KeyMap[] using ImGuiKey_ indices which are always >512.
+//     bool        keys_down[ImGuiKey_COUNT];           // [LEGACY] Input: Keyboard keys that are pressed (ideally left in the "native" order your engine has access to keyboard keys, so you can use your own defines/enums for keys). This used to be [512] sized. It is now ImGuiKey_COUNT to allow legacy io.keys_down[GetKeyIndex(...)] to work without an overflow.
 // #endif
 
     //------------------------------------------------------------------
@@ -254,7 +254,7 @@ pub struct Io {
     pub app_accepting_events: bool,
     // Only modify via set_app_accepting_events()
     pub backend_using_legacy_key_arrays: i8,
-    // -1: unknown, 0: using add_key_event(), 1: using legacy io.KeysDown[]
+    // -1: unknown, 0: using add_key_event(), 1: using legacy io.keys_down[]
     pub backend_using_legacy_nav_input_array: bool,
     // 0: using add_key_analog_event(), 1: writing to legacy io.nav_inputs[] directly
     pub input_queue_surrogate: Vec<u8>,
@@ -375,12 +375,12 @@ impl Io {
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         // IM_ASSERT(ImGui::IsNamedKey(key)); // Backend needs to pass a valid ImGuiKey_ constant. 0..511 values are legacy native key codes which are not accepted by this API.
 
-        // Verify that backend isn't mixing up using new io.add_key_event() api and old io.KeysDown[] + io.KeyMap[] data.
+        // Verify that backend isn't mixing up using new io.add_key_event() api and old io.keys_down[] + io.key_map[] data.
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     IM_ASSERT((backend_using_legacy_key_arrays == -1 || backend_using_legacy_key_arrays == 0) && "Backend needs to either only use io.add_key_event(), either only fill legacy io.KeysDown[] + io.KeyMap[]. Not both!");
+//     IM_ASSERT((backend_using_legacy_key_arrays == -1 || backend_using_legacy_key_arrays == 0) && "Backend needs to either only use io.add_key_event(), either only fill legacy io.keys_down[] + io.key_map[]. Not both!");
 //     if (backend_using_legacy_key_arrays == -1)
 //         for (int n = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n++)
-//             IM_ASSERT(KeyMap[n] == -1 && "Backend needs to either only use io.add_key_event(), either only fill legacy io.KeysDown[] + io.KeyMap[]. Not both!");
+//             IM_ASSERT(KeyMap[n] == -1 && "Backend needs to either only use io.add_key_event(), either only fill legacy io.keys_down[] + io.key_map[]. Not both!");
 //     backend_using_legacy_key_arrays = 0;
 // #endif
         if self.is_gamepad_key(key) {
@@ -389,7 +389,7 @@ impl Io {
 
         // Partial filter of duplicates (not strictly needed, but makes data neater in particular for key mods and gamepad values which are most commonly spmamed)
         let key_data = self.get_key_data(key);
-        if key_data.Down == down && key_data.AnalogValue == analog_value {
+        if key_data.down == down && key_data.analog_value == analog_value {
             let mut found = false;
             // for (int n = g.input_events_queue.size - 1; n >= 0 && !found; n--){
             let mut n = ctx.InputEventsQueue.Size - 1;
@@ -404,14 +404,14 @@ impl Io {
         }
 
         // Add event
-        let mut e: DimgInputEvent = DimgInputEvent::new();
+        let mut e: InputEvent = InputEvent::new();
         e.input_event_type = DimgInputEventType::Key;
         e.source = if self.is_gamepad_key(key) {
             InputSource::Gamepad
         } else { InputSource::Keyboard };
         e.Key.Key = key;
-        e.Key.Down = down;
-        e.Key.AnalogValue = analog_value;
+        e.Key.down = down;
+        e.Key.analog_value = analog_value;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_pos_event(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
@@ -422,7 +422,7 @@ impl Io {
             return;
         }
 
-        let mut e = DimgInputEvent::new();
+        let mut e = InputEvent::new();
         e.input_event_type = DimgInputEventType::MousePos;
         e.source = InputSource::Mouse;
         e.MousePos.PosX = x;
@@ -438,11 +438,11 @@ impl Io {
             return;
         }
 
-        let mut e = DimgInputEvent::new();
+        let mut e = InputEvent::new();
         e.input_event_type = DimgInputEventType::MouseButton;
         e.source = InputSource::Mouse;
         e.MouseButton.Button = button;
-        e.MouseButton.Down = down;
+        e.MouseButton.down = down;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_wheel_event(float wh_x, float wh_y);             // Queue a mouse wheel update
@@ -454,11 +454,11 @@ impl Io {
         }
 
         //DimgInputEvent e;
-        let mut e = DimgInputEvent::new();
-        e.input_event_type = DimgInputEventType::MouseWheel;
+        let mut e = InputEvent::new();
+        e.input_event_type = DimgInputEventType::mouse_wheel;
         e.source = InputSource::Mouse;
-        e.MouseWheel.WheelX = wheel_x;
-        e.MouseWheel.WheelY = wheel_y;
+        e.mouse_wheel.WheelX = wheel_x;
+        e.mouse_wheel.WheelY = wheel_y;
         ctx.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_viewport_event(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
@@ -468,7 +468,7 @@ impl Io {
         // IM_ASSERT(g.io.backend_flags & ImGuiBackendFlags_HasMouseHoveredViewport);
 
         // DimgInputEvent e;
-        let mut e = DimgInputEvent::new();
+        let mut e = InputEvent::new();
         e.input_event_type = DimgInputEventType::mouse_viewport;
         e.source = InputSource::Mouse;
         e.mouse_viewport.HoveredViewportID = id;
@@ -480,7 +480,7 @@ impl Io {
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
 
         // DimgInputEvent e;
-        let mut e = DimgInputEvent::new();
+        let mut e = InputEvent::new();
         e.input_event_type = DimgInputEventType::Focus;
         e.AppFocused.Focused = focused;
         ctx.InputEventsQueue.push_back(e);
@@ -497,7 +497,7 @@ impl Io {
         if c == 0 || !self.app_accepting_events {
             return;
         }
-        let e: DimgInputEvent = DimgInputEvent {
+        let e: InputEvent = InputEvent {
             input_event_type: DimgInputEventType::Text,
             source: InputSource::Keyboard,
             val: DimgInputEventVal::new(),
@@ -592,9 +592,9 @@ impl Io {
     //  void  clear_input_keys();                                       // [Internal] Release all keys
     pub fn clear_input_keys(&mut self) {
         for n in 0..self.keys_data.len() {
-            self.keys_data[n].Down = false;
-            self.keys_data[n].DownDuration = -1.0;
-            self.keys_data[n].DownDurationPrev = -1.0;
+            self.keys_data[n].down = false;
+            self.keys_data[n].downDuration = -1.0;
+            self.keys_data[n].downDurationPrev = -1.0;
         }
         self.key_ctrl = false;
         self.key_shift = false;

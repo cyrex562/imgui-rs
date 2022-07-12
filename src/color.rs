@@ -212,7 +212,7 @@ impl ImColor {
 
 /// Stacked color modifier, backup of modified data so we can restore it
 #[derive(Default,Debug,Clone)]
-pub struct DimgColorMod
+pub struct ColorMod
 {
     // ImGuiCol        Col;
     pub Col: ImGuiColor,

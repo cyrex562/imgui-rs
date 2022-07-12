@@ -508,7 +508,7 @@ use crate::vectors::Vector2D;
     //  Vector2D        CalcWindowNextAutoFitSize(ImGuiWindow* window);
     //  bool          IsWindowChildOf(ImGuiWindow* window, ImGuiWindow* potential_parent, bool popup_hierarchy, bool dock_hierarchy);
     //  bool          IsWindowWithinBeginStackOf(ImGuiWindow* window, ImGuiWindow* potential_parent);
-    //  bool          IsWindowAbove(ImGuiWindow* potential_above, ImGuiWindow* potential_below);
+    //  bool          is_window_above(ImGuiWindow* potential_above, ImGuiWindow* potential_below);
     //  bool          IsWindowNavFocusable(ImGuiWindow* window);
     //  void          set_window_pos(ImGuiWindow* window, const Vector2D& pos, ImGuiCond cond = 0);
     //  void          SetWindowSize(ImGuiWindow* window, const Vector2D& size, ImGuiCond cond = 0);
@@ -639,13 +639,13 @@ use crate::vectors::Vector2D;
      // bool          BeginChildEx(const char* name, ImGuiID id, const Vector2D& size_arg, bool border, ImGuiWindowFlags flags);
      // void          OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags = ImGuiPopupFlags_None);
      // void          ClosePopupToLevel(int remaining, bool restore_focus_to_window_under_popup);
-     // void          ClosePopupsOverWindow(ImGuiWindow* ref_window, bool restore_focus_to_window_under_popup);
+     // void          close_popups_over_window(ImGuiWindow* ref_window, bool restore_focus_to_window_under_popup);
      // void          ClosePopupsExceptModals();
      // bool          IsPopupOpen(ImGuiID id, ImGuiPopupFlags popup_flags);
      // bool          BeginPopupEx(ImGuiID id, ImGuiWindowFlags extra_flags);
      // void          BeginTooltipEx(ImGuiTooltipFlags tooltip_flags, ImGuiWindowFlags extra_window_flags);
      // ImRect        GetPopupAllowedExtentRect(ImGuiWindow* window);
-     // ImGuiWindow*  GetTopMostPopupModal();
+     // ImGuiWindow*  get_top_most_popup_modal();
      // ImGuiWindow*  GetTopMostAndVisiblePopupModal();
      // Vector2D        FindBestWindowPosForPopup(ImGuiWindow* window);
      // Vector2D        FindBestWindowPosForPopupEx(const Vector2D& ref_pos, const Vector2D& size, ImGuiDir* last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy);
@@ -701,7 +701,7 @@ use crate::vectors::Vector2D;
     //  bool          IsMouseDragPastThreshold(ImGuiMouseButton button, float lock_threshold = -1.0);
     // inline bool             IsNavInputDown(ImGuiNavInput n)                             { ImGuiContext& g = *GImGui; return g.io.nav_inputs[n] > 0.0; }
     // inline bool             IsNavInputTest(ImGuiNavInput n, ImGuiNavReadMode rm)        { return (GetNavInputAmount(n, rm) > 0.0); }
-    //  ImGuiModFlags GetMergedModFlags();
+    //  ImGuiModFlags get_merged_mod_flags();
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
 //     inline bool             IsKeyPressedMap(ImGuiKey key, bool repeat = true)           { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // [removed in 1.87]
 // #endif

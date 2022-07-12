@@ -6,10 +6,10 @@ use std::fmt::{Debug, Formatter};
 //-----------------------------------------------------------------------------
 
 
-use std::ptr::null_mut;
 
-use crate::clipper::DimgListClipperData;
-use crate::color::{COLOR_EDIT_FLAGS_DFLT_OPTS, ColorEditFlags, DimgColorMod};
+
+use crate::clipper::ListClipperData;
+use crate::color::{COLOR_EDIT_FLAGS_DFLT_OPTS, ColorEditFlags, ColorMod};
 use crate::combo::ComboPreviewData;
 use crate::config::ConfigFlags;
 use crate::window::ShrinkWidthItem;
@@ -22,23 +22,23 @@ use crate::draw_channel::DrawChannel;
 use crate::draw_list_shared_data::DrawListSharedData;
 use crate::font::Font;
 use crate::font_atlas::FontAtlas;
-use crate::group::DimgGroupData;
+use crate::group::GroupData;
 use crate::input::{DimgKey, InputSource, ModFlags, MouseCursor, NavLayer};
-use crate::input_event::DimgInputEvent;
+use crate::input_event::InputEvent;
 use crate::io::{Io, PlatformIo};
 use crate::item::{LastItemData, NextItemData};
 
-use crate::log::ImGuiLogType;
+
 use crate::metrics::MetricsConfig;
 use crate::nav::{ActivateFlags, NavItemData, NavMoveFlags, ScrollFlags};
-use crate::payload::DimgPayload;
+use crate::payload::Payload;
 use crate::platform::{PlatformImeData, PlatformMonitor};
-use crate::pool::ImGuiPool;
-use crate::popup::DimgPopupData;
+
+use crate::popup::PopupData;
 use crate::rect::Rect;
 use crate::settings::SettingsHandler;
 use crate::stack::StackTool;
-use crate::style::{DimgStyleMod, Style};
+use crate::style::{StyleMod, Style};
 use crate::tab_bar::TabBar;
 use crate::table::{Table, TableSettings, TableTempData};
 
@@ -46,7 +46,7 @@ use crate::text_input_state::InputTextState;
 use crate::types::{Id32, INVALID_ID, PtrOrIndex};
 use crate::vectors::{Vector2D, Vector4D};
 use crate::viewport::Viewport;
-use crate::window::{DimgWindowStackData, ItemFlags, NextWindowData, Window, WindowSettings};
+use crate::window::{WindowStackData, ItemFlags, NextWindowData, Window, WindowSettings};
 
 #[derive()]
 pub struct Context {
@@ -59,15 +59,15 @@ pub struct Context {
     // ImGuiPlatformIO         platform_io;
     pub platform_io: PlatformIo,
     // ImVector<ImGuiInputEvent> input_events_queue;                 // Input events which will be tricked/written into io structure.
-    pub input_events_queue: Vec<DimgInputEvent>,
+    pub input_events_queue: Vec<InputEvent>,
     // ImVector<ImGuiInputEvent> input_events_trail;                 // Past input events processed in NewFrame(). This is to allow domain-specific application to access e.g mouse/pen trail.
-    pub input_events_trail: Vec<DimgInputEvent>,
+    pub input_events_trail: Vec<InputEvent>,
     // ImGuiStyle              style;
     pub style: Style,
     // ImGuiConfigFlags        config_flags_curr_frame;               // = g.io.config_flags at the time of NewFrame()
-    pub config_flags_curr_frame: ConfigFlags,
+    pub config_flags_curr_frame: HashSet<ConfigFlags>,
     // ImGuiConfigFlags        config_flags_last_frame;
-    pub config_flags_last_frame: ConfigFlags,
+    pub config_flags_last_frame: HashSet<ConfigFlags>,
     // ImFont*                 font;                               // (Shortcut) == font_stack.empty() ? io.font : font_stack.back()
     pub font: Font,
     // float                   font_size;                           // (Shortcut) == font_base_size * g.current_window->font_window_scale == window->font_size(). Text height for current window.
@@ -107,7 +107,7 @@ pub struct Context {
     // ImVector<ImGuiWindow*>  windows_temp_sort_buffer;              // Temporary buffer used in EndFrame() to reorder windows so parents are kept before their child
     pub windows_temp_sort_buffer: Vec<Id32>,
     // ImVector<ImGuiWindowStackData> current_window_stack;
-    pub current_window_stack: Vec<DimgWindowStackData>,
+    pub current_window_stack: Vec<WindowStackData>,
     // ImGuiStorage            WindowsById;                        // Map window's ImGuiID to ImGuiWindow*
     // pub WindowsById: ImGuiStorage,
     // int                     windows_active_count;                 // Number of unique windows submitted by frame
@@ -128,7 +128,7 @@ pub struct Context {
     // ImGuiWindow*            moving_window;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally moving_window->root_window_dock_tree.
     pub moving_window: Id32,
     // ImGuiWindow*            wheeling_window;                     // Track the window we started mouse-wheeling on. Until a timer elapse or mouse has moved, generally keep scrolling the same window even if during the course of scrolling the mouse ends up hovering a child window.
-    pub wheeling_window: Id32,
+    pub wheeling_window_id: Id32,
     //*mut ImGuiWindow,
     // Vector2D                  wheeling_window_ref_mouse_pos;
     pub wheeling_window_ref_mouse_pos: Vector2D,
@@ -202,7 +202,7 @@ pub struct Context {
     pub active_id_using_key_input_mask: Vec<DimgKey>,
     // Next window/item data
     // ImGuiItemFlags          current_item_flags;                      // == g.item_flags_stack.back()
-    pub current_item_flags: ItemFlags,
+    pub current_item_flags: HashSet<ItemFlags>,
     // ImGuiNextItemData       next_item_data;                       // Storage for SetNextItem** functions
     pub next_item_data: NextItemData,
     // ImGuiLastItemData       last_item_data;                       // Storage for last submitted item (setup by ItemAdd)
@@ -212,9 +212,9 @@ pub struct Context {
 
     // Shared stacks
     // ImVector<ImGuiColorMod> color_stack;                         // Stack for PushStyleColor()/PopStyleColor() - inherited by Begin()
-    pub color_stack: Vec<DimgColorMod>,
+    pub color_stack: Vec<ColorMod>,
     // ImVector<ImGuiStyleMod> style_var_stack;                      // Stack for PushStyleVar()/PopStyleVar() - inherited by Begin()
-    pub style_var_stack: Vec<DimgStyleMod>,
+    pub style_var_stack: Vec<StyleMod>,
     // ImVector<ImFont*>       font_stack;                          // Stack for PushFont()/PopFont() - inherited by Begin()
     pub font_stack: Vec<Font>,
     // ImVector<ImGuiID>       focus_scope_stack;                    // Stack for PushFocusScope()/PopFocusScope() - not inherited by Begin(), unless child window
@@ -222,11 +222,11 @@ pub struct Context {
     // ImVector<ImGuiItemFlags>item_flags_stack;                     // Stack for PushItemFlag()/PopItemFlag() - inherited by Begin()
     pub item_flags_stack: Vec<ItemFlags>,
     // ImVector<ImGuiGroupData>group_stack;                         // Stack for BeginGroup()/EndGroup() - not inherited by Begin()
-    pub group_stack: Vec<DimgGroupData>,
+    pub group_stack: Vec<GroupData>,
     // ImVector<ImGuiPopupData>open_popup_stack;                     // Which popups are open (persistent)
-    pub open_popup_stack: Vec<DimgPopupData>,
+    pub open_popup_stack: Vec<PopupData>,
     // ImVector<ImGuiPopupData>begin_popup_stack;                    // Which level of BeginPopup() we are in (reset every frame)
-    pub begin_popup_stack: Vec<DimgPopupData>,
+    pub begin_popup_stack: Vec<PopupData>,
     // int                     begin_menu_count;
     pub begin_menu_count: i32,
 
@@ -263,7 +263,7 @@ pub struct Context {
     // ImGuiID                 nav_activate_input_id;                 // ~~ IsNavInputPressed(ImGuiNavInput_Input) ? nav_id : 0; ImGuiActivateFlags_PreferInput will be set and nav_activate_id will be 0.
     pub nav_activate_input_id: Id32,
     // ImGuiActivateFlags      nav_activate_flags;
-    pub nav_activate_flags: ActivateFlags,
+    pub nav_activate_flags: HashSet<ActivateFlags>,
     // ImGuiID                 nav_just_moved_to_id;                   // Just navigated to this id (result of a successfully MoveRequest).
     pub nav_just_moved_to_id: Id32,
     // ImGuiID                 nav_just_moved_to_focus_scope_id;         // Just navigated to this focus scope id (result of a successfully MoveRequest).
@@ -273,7 +273,7 @@ pub struct Context {
     // ImGuiID                 nav_next_activate_id;                  // Set by ActivateItem(), queued until next frame.
     pub nav_next_activate_id: Id32,
     // ImGuiActivateFlags      nav_next_activate_flags;
-    pub nav_next_activate_flags: ActivateFlags,
+    pub nav_next_activate_flags: HashSet<ActivateFlags>,
     // ImGuiInputSource        nav_input_source;                     // Keyboard or Gamepad mode? THIS WILL ONLY BE None or NavGamepad or NavKeyboard.
     pub nav_input_source: InputSource,
     // ImGuiNavLayer           nav_layer;                           // Layer we are navigating on. For now the system is hard-coded for 0=main contents and 1=menu/title bar, may expose layers later.
@@ -304,11 +304,11 @@ pub struct Context {
     // bool                    nav_move_forward_to_next_frame;
     pub nav_move_forward_to_next_frame: bool,
     // ImGuiNavMoveFlags       nav_move_flags;
-    pub nav_move_flags: NavMoveFlags,
+    pub nav_move_flags: HashSet<NavMoveFlags>,
     // ImGuiScrollFlags        nav_move_scroll_flags;
-    pub nav_move_scroll_flags: ScrollFlags,
+    pub nav_move_scroll_flags: HashSet<ScrollFlags>,
     // ImGuiModFlags           nav_move_key_mods;
-    pub nav_move_key_mods: ModFlags,
+    pub nav_move_key_mods: HashSet<ModFlags>,
     // ImGuiDir                nav_move_dir;                         // Direction of the move request (left/right/up/down)
     pub nav_move_dir: Direction,
     // ImGuiDir                NavMoveDirForDebug;
@@ -348,7 +348,7 @@ pub struct Context {
     pub nav_windowing_toggle_layer: bool,
     // Render
     // float                   DimBgRatio;                         // 0.0..1.0 animation when fading in a dimming background (for modal window and CTRL+TAB list)
-    pub dim_bg_ration: f32,
+    pub dim_bg_ratio: f32,
     // ImGuiMouseCursor        mouse_cursor;
     pub mouse_cursor: MouseCursor,
     // Drag and Drop
@@ -359,19 +359,19 @@ pub struct Context {
     // bool                    drag_drop_within_target;               // Set when within a BeginDragDropXXX/EndDragDropXXX block for a drag target.
     pub drag_drop_within_target: bool,
     // ImGuiDragDropFlags      drag_drop_source_flags;
-    pub drag_drop_source_flags: DragDropFlags,
+    pub drag_drop_source_flags: HashSet<DragDropFlags>,
     // int                     drag_drop_source_frame_count;
     pub drag_drop_source_frame_count: i32,
     // int                     drag_drop_mouse_button;
     pub drag_drop_mouse_button: i32,
     // ImGuiPayload            drag_drop_payload;
-    pub drag_drop_payload: DimgPayload,
+    pub drag_drop_payload: Payload,
     // ImRect                  drag_drop_target_rect;                 // Store rectangle of current target candidate (we favor small targets when overlapping)
     pub drag_drop_target_rect: Rect,
     // ImGuiID                 drag_drop_target_id;
     pub drag_drop_target_id: Id32,
     // ImGuiDragDropFlags      drag_drop_accept_flags;
-    pub drag_drop_accept_flags: DragDropFlags,
+    pub drag_drop_accept_flags: HashSet<DragDropFlags>,
     // float                   drag_drop_accept_id_curr_rect_surface;    // Target item surface (we resolve overlapping targets by prioritizing the smaller surface)
     pub drag_drop_accept_id_curr_rect_surface: f32,
     // ImGuiID                 drag_drop_accept_id_curr;               // Target item id (set at the time of accepting the payload)
@@ -390,7 +390,7 @@ pub struct Context {
     // int                             clipper_temp_data_stacked;
     pub clipper_temp_data_stacked: i32,
     // ImVector<ImGuiListClipperData>  clipper_temp_data;
-    pub clipper_temp_data: Vec<DimgListClipperData>,
+    pub clipper_temp_data: Vec<ListClipperData>,
     // tables
     // ImGuiTable*                     current_table;
     pub current_table: Id32,
@@ -553,8 +553,8 @@ impl Context {
     {
         Self {
             initialized: false,
-            config_flags_curr_frame: ConfigFlags::None,
-            config_flags_last_frame: ConfigFlags::None,
+            config_flags_curr_frame: HashSet::new(),
+            config_flags_last_frame: HashSet::new(),
             font_atlas_owned_by_context: true,
             font_size: 0.0,
             font_base_size: 0.0,
@@ -585,7 +585,7 @@ impl Context {
             hovered_window_under_moving_window: INVALID_ID,
             hovered_dock_node: INVALID_ID,
             moving_window: INVALID_ID,
-            wheeling_window: INVALID_ID,
+            wheeling_window_id: INVALID_ID,
             wheeling_window_ref_mouse_pos: Default::default(),
             wheeling_window_timer: 0.0,
 
@@ -623,7 +623,7 @@ impl Context {
             active_id_using_nav_input_mask: 0x00,
             // active_id_using_key_input_mask.ClearAllBits(),
             active_id_using_key_input_mask: vec![],
-            current_item_flags: ItemFlags::None,
+            current_item_flags: HashSet::new(),
             next_item_data: NextItemData::default(),
             last_item_data: LastItemData::default(),
             next_window_data: NextWindowData::default(),
@@ -653,10 +653,10 @@ impl Context {
             nav_activate_down_id: 0,
             nav_activate_pressed_id: 0,
             nav_just_moved_to_id: 0,
-            nav_activate_flags: ActivateFlags::None,
+            nav_activate_flags: HashSet::new(),
             nav_just_moved_to_key_mods: ModFlags::None,
             nav_next_activate_id: 0,
-            nav_next_activate_flags: ActivateFlags::None,
+            nav_next_activate_flags: HashSet::new(),
             nav_input_source: InputSource::None,
             nav_layer: NavLayer::Main,
             nav_id_is_alive: false,
@@ -670,9 +670,9 @@ impl Context {
             nav_move_submitted: false,
             nav_move_scoring_items: false,
             nav_move_forward_to_next_frame: false,
-            nav_move_flags: NavMoveFlags::None,
-            nav_move_scroll_flags: ScrollFlags::None,
-            nav_move_key_mods: ModFlags::None,
+            nav_move_flags: HashSet::new(),
+            nav_move_scroll_flags: HashSet::new(),
+            nav_move_key_mods: HashSet::new(),
             nav_move_dir: Direction::None,
             // NavMoveDirForDebug: NavMoveClipDir: ImGuiDir_None,
             nav_move_dir_for_debug: Direction::None,
@@ -701,13 +701,13 @@ impl Context {
             drag_drop_within_target: false,
             // drag_drop_within_source: false,
             // drag_drop_within_target: false,
-            drag_drop_source_flags: DragDropFlags::None,
+            drag_drop_source_flags: HashSet::new(),
             drag_drop_source_frame_count: - 1,
             drag_drop_mouse_button: - 1,
             drag_drop_payload: Default::default(),
             drag_drop_target_rect: Rect::default(),
             drag_drop_target_id: 0,
-            drag_drop_accept_flags: DragDropFlags::None,
+            drag_drop_accept_flags: HashSet::new(),
             drag_drop_accept_id_curr_rect_surface: 0.0,
             drag_drop_accept_id_curr: 0,
             drag_drop_accept_id_prev: 0,
@@ -798,7 +798,7 @@ impl Context {
             nav_disable_highlight: false,
             nav_init_result_rect_rel: Rect::default(),
             // nav_windowing_highlight_alpha: 0.0,
-            dim_bg_ration: 0.0,
+            dim_bg_ratio: 0.0,
             drag_drop_payload_buf_heap: vec![],
             // color_edit_last_sat: 0.0,
             dock_context: DockContext::default(),

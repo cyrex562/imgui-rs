@@ -164,10 +164,10 @@ int32_t ImGui_ImplAndroid_HandleInputEvent(AInputEvent* input_event)
         int32_t event_action = AKeyEvent_getAction(input_event);
         int32_t event_meta_state = AKeyEvent_getMetaState(input_event);
 
-        io.AddKeyEvent(ImGuiKey_ModCtrl,  (event_meta_state & AMETA_CTRL_ON)  != 0);
-        io.AddKeyEvent(ImGuiKey_ModShift, (event_meta_state & AMETA_SHIFT_ON) != 0);
-        io.AddKeyEvent(ImGuiKey_ModAlt,   (event_meta_state & AMETA_ALT_ON)   != 0);
-        io.AddKeyEvent(ImGuiKey_ModSuper, (event_meta_state & AMETA_META_ON)  != 0);
+        io.AddKeyEvent(Key::ModCtrl,  (event_meta_state & AMETA_CTRL_ON)  != 0);
+        io.AddKeyEvent(Key::ModShift, (event_meta_state & AMETA_SHIFT_ON) != 0);
+        io.AddKeyEvent(Key::ModAlt,   (event_meta_state & AMETA_ALT_ON)   != 0);
+        io.AddKeyEvent(Key::ModSuper, (event_meta_state & AMETA_META_ON)  != 0);
 
         switch (event_action)
         {
@@ -264,14 +264,14 @@ void ImGui_ImplAndroid_NewFrame()
     int display_width = window_width;
     int display_height = window_height;
 
-    io.DisplaySize = DimgVec2D::new((float)window_width, (float)window_height);
+    io.DisplaySize = Vector2D::new((float)window_width, window_height);
     if (window_width > 0 && window_height > 0)
-        io.DisplayFramebufferScale = DimgVec2D::new((float)display_width / window_width, (float)display_height / window_height);
+        io.DisplayFramebufferScale = Vector2D::new((float)display_width / window_width, display_height / window_height);
 
     // Setup time step
     struct timespec current_timespec;
     clock_gettime(CLOCK_MONOTONIC, &current_timespec);
     double current_time = (double)(current_timespec.tv_sec) + (current_timespec.tv_nsec / 1000000000.0);
-    io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0 / 60.0);
+    io.delta_time = g_Time > 0.0 ? (current_time - g_Time) : (1.0 / 60.0);
     g_Time = current_time;
 }

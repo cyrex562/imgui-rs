@@ -5,7 +5,7 @@ pub union ImGuiInputEventVal {
     // ImGuiInputEventMousePos     mouse_pos;       // if Type == ImGuiInputEventType_MousePos
     pub MousePos: ImGuiInputEventMousePos,
     //     ImGuiInputEventMouseWheel   mouse_wheel;     // if Type == ImGuiInputEventType_MouseWheel
-    pub MouseWheel: ImGuiInputEventMouseWheel,
+    pub mouse_wheel: ImGuiInputEventMouseWheel,
     //     ImGuiInputEventMouseButton  MouseButton;    // if Type == ImGuiInputEventType_MouseButton
     pub MouseButton: ImGuiInputEventMouseButton,
     //     ImGuiInputEventMouseViewport mouse_viewport; // if Type == ImGuiInputEventType_MouseViewport
@@ -27,7 +27,7 @@ impl ImGuiInputEventVal {
 }
 
 #[derive(Default,Debug,Clone)]
-pub struct DimgInputEvent
+pub struct InputEvent
 {
     // ImGuiInputEventType             Type;
     pub input_event_type: ImGuiInputEventType,
@@ -40,7 +40,7 @@ pub struct DimgInputEvent
     // ImGuiInputEvent() { memset(this, 0, sizeof(*this)); }
 }
 
-impl DimgInputEvent {
+impl InputEvent {
     pub fn new() -> Self {
         Self {
             ..Default()

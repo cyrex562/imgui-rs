@@ -93,7 +93,7 @@ pub enum DimgInputEventType
 {
     None = 0,
     MousePos,
-    MouseWheel,
+    mouse_wheel,
     MouseButton,
     mouse_viewport,
     Key,
@@ -130,7 +130,7 @@ pub struct ImGuiInputEventMouseViewport {
 }
 
 pub struct ImGuiInputEventKey           { 
-    // ImGuiKey Key; bool Down; float AnalogValue; 
+    // ImGuiKey Key; bool Down; float analog_value;
     pub key: DimgKey,
     pub down: bool,
     pub analog_value: f32,
@@ -233,7 +233,7 @@ pub enum DimgKey
     // - This is mirroring the data also written to io.key_ctrl, io.key_shift, io.key_alt, io.key_super, in a format allowing
     //   them to be accessed via standard key API, allowing calls such as IsKeyPressed(), IsKeyReleased(), querying duration etc.
     // - Code polling every keys (e.g. an interface to detect a key press for input mapping) might want to ignore those
-    //   and prefer using the real keys (e.g. ImGuiKey_LeftCtrl, ImGuiKey_RightCtrl instead of ImGuiKey_ModCtrl).
+    //   and prefer using the real keys (e.g. ImGuiKey_LeftCtrl, ImGuiKey_RightCtrl instead of Key::ModCtrl).
     // - In theory the value of keyboard modifiers should be roughly equivalent to a logical or of the equivalent left/right keys.
     //   In practice: it's complicated; mods are often provided from different sources. Keyboard layout, IME, sticky keys and
     //   backends tend to interfere and break that equivalence. The safer decision is to relay that ambiguity down to the end-user...
@@ -242,17 +242,17 @@ pub enum DimgKey
     // End of list
     LastItem,                 // No valid ImGuiKey is ever greater than this value
 
-    // [Internal] Prior to 1.87 we required user to fill io.KeysDown[512] using their own native index + a io.KeyMap[] array.
+    // [Internal] Prior to 1.87 we required user to fill io.keys_down[512] using their own native index + a io.key_map[] array.
     // We are ditching this method but keeping a legacy path for user code doing e.g. IsKeyPressed(MY_NATIVE_KEY_CODE)
     // ImGuiKey_NamedKey_BEGIN         = 512,
     // ImGuiKey_NamedKey_END           = ImGuiKey_COUNT,
     // ImGuiKey_NamedKey_COUNT         = ImGuiKey_NamedKey_END - ImGuiKey_NamedKey_BEGIN,
 // #ifdef IMGUI_DISABLE_OBSOLETE_KEYIO
 //     ImGuiKey_KeysData_SIZE          = ImGuiKey_NamedKey_COUNT,          // size of keys_data[]: only hold named keys
-//     ImGuiKey_KeysData_OFFSET        = ImGuiKey_NamedKey_BEGIN           // First key stored in io.keys_data[0]. Accesses to io.keys_data[] must use (key - ImGuiKey_KeysData_OFFSET).
+//     Key::KeysDataOffset        = ImGuiKey_NamedKey_BEGIN           // First key stored in io.keys_data[0]. Accesses to io.keys_data[] must use (key - Key::KeysDataOffset).
 // #else
 //     ImGuiKey_KeysData_SIZE          = ImGuiKey_COUNT,                   // size of keys_data[]: hold legacy 0..512 keycodes + named keys
-//     ImGuiKey_KeysData_OFFSET        = 0                                 // First key stored in io.keys_data[0]. Accesses to io.keys_data[] must use (key - ImGuiKey_KeysData_OFFSET).
+//     Key::KeysDataOffset        = 0                                 // First key stored in io.keys_data[0]. Accesses to io.keys_data[] must use (key - Key::KeysDataOffset).
 // #endif
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
@@ -283,7 +283,7 @@ pub enum ModFlags
 // Gamepad/Keyboard navigation
 // Since >= 1.87 backends you generally don't need to care about this enum since io.nav_inputs[] is setup automatically. This might become private/internal some day.
 // Keyboard: Set io.config_flags |= ImGuiConfigFlags_NavEnableKeyboard to enable. NewFrame() will automatically fill io.nav_inputs[] based on your io.add_key_event() calls.
-// Gamepad:  Set io.config_flags |= ImGuiConfigFlags_NavEnableGamepad to enable. Backend: set ImGuiBackendFlags_HasGamepad and fill the io.nav_inputs[] fields before calling NewFrame(). Note that io.nav_inputs[] is cleared by EndFrame().
+// Gamepad:  Set io.config_flags |= ImGuiConfigFlags_NavEnableGamepad to enable. Backend: set BackendFlags::HasGamepad and fill the io.nav_inputs[] fields before calling NewFrame(). Note that io.nav_inputs[] is cleared by EndFrame().
 // Read instructions in imgui.cpp for more details. Download PNG/PSD at http://dearimgui.org/controls_sheets.
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
 pub enum ImGuiNavInput
@@ -358,7 +358,7 @@ pub const IMGUI_DEBUG_NAV_RECTS: bool = false;
 pub const WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER: f32 = 2.00;
 
 // [Internal] Storage used by IsKeyDown(), IsKeyPressed() etc functions.
-// If prior to 1.87 you used io.KeysDownDuration[] (which was marked as internal), you should use GetKeyData(key)->down_duration and not io.keys_data[key]->down_duration.
+// If prior to 1.87 you used io.keys_downDuration[] (which was marked as internal), you should use GetKeyData(key)->down_duration and not io.keys_data[key]->down_duration.
 pub struct DimgKeyData
 {
     pub down: bool,               // True for if key is down

@@ -59,7 +59,7 @@ inline Vector2D EvalCubicBezier(
     const float b1 = 3 * u * u * t;
     const float b2 = 3 * u * t * t;
     const float b3 = t * t * t;
-    return DimgVec2D::new(
+    return Vector2D::new(
         b0 * P0.x + b1 * P1.x + b2 * P2.x + b3 * P3.x,
         b0 * P0.y + b1 * P1.y + b2 * P2.y + b3 * P3.y);
 }
@@ -71,7 +71,7 @@ Vector2D GetClosestPointOnCubicBezier(const int num_segments, const Vector2D& p,
     Vector2D p_last = cb.P0;
     Vector2D p_closest;
     float  p_closest_dist = FLT_MAX;
-    float  t_step = 1.0 / (float)num_segments;
+    float  t_step = 1.0 / num_segments;
     for (int i = 1; i <= num_segments;  += 1i)
     {
         Vector2D p_current = EvalCubicBezier(t_step * i, cb.P0, cb.P1, cb.P2, cb.P3);
@@ -100,15 +100,15 @@ inline float GetDistanceToCubicBezier(
 
 inline ImRect GetContainingRectForCubicBezier(const CubicBezier& cb)
 {
-    const Vector2D min = DimgVec2D::new(ImMin(cb.P0.x, cb.P3.x), ImMin(cb.P0.y, cb.P3.y));
-    const Vector2D max = DimgVec2D::new(ImMax(cb.P0.x, cb.P3.x), ImMax(cb.P0.y, cb.P3.y));
+    const Vector2D min = Vector2D::new(ImMin(cb.P0.x, cb.P3.x), ImMin(cb.P0.y, cb.P3.y));
+    const Vector2D max = Vector2D::new(ImMax(cb.P0.x, cb.P3.x), ImMax(cb.P0.y, cb.P3.y));
 
     const float hover_distance = GImNodes->Style.LinkHoverDistance;
 
     ImRect rect(min, max);
     rect.Add(cb.P1);
     rect.Add(cb.P2);
-    rect.Expand(DimgVec2D::new(hover_distance, hover_distance));
+    rect.Expand(Vector2D::new(hover_distance, hover_distance));
 
     return rect;
 }
@@ -127,7 +127,7 @@ inline CubicBezier GetCubicBezier(
     }
 
     const float  link_length = ImSqrt(ImLengthSqr(end - start));
-    const Vector2D offset = DimgVec2D::new(0.25 * link_length, 0.f);
+    const Vector2D offset = Vector2D::new(0.25 * link_length, 0.f);
     CubicBezier  cubic_bezier;
     cubic_bezier.P0 = start;
     cubic_bezier.P1 = start + offset;
@@ -176,8 +176,8 @@ inline bool RectangleOverlapsLineSegment(const ImRect& rect, const Vector2D& p1,
 
     const int corner_signs[4] = {
         Sign(EvalImplicitLineEq(p1, p2, flip_rect.Min)),
-        Sign(EvalImplicitLineEq(p1, p2, DimgVec2D::new(flip_rect.Max.x, flip_rect.Min.y))),
-        Sign(EvalImplicitLineEq(p1, p2, DimgVec2D::new(flip_rect.Min.x, flip_rect.Max.y))),
+        Sign(EvalImplicitLineEq(p1, p2, Vector2D::new(flip_rect.Max.x, flip_rect.Min.y))),
+        Sign(EvalImplicitLineEq(p1, p2, Vector2D::new(flip_rect.Min.x, flip_rect.Max.y))),
         Sign(EvalImplicitLineEq(p1, p2, flip_rect.Max))};
 
     int sum = 0;
@@ -555,7 +555,7 @@ Vector2D GetScreenSpacePinCoordinates(
     const float x = type == ImNodesAttributeType_Input
                         ? (node_rect.Min.x - GImNodes->Style.PinOffset)
                         : (node_rect.Max.x + GImNodes->Style.PinOffset);
-    return DimgVec2D::new(x, 0.5 * (attribute_rect.Min.y + attribute_rect.Max.y));
+    return Vector2D::new(x, 0.5 * (attribute_rect.Min.y + attribute_rect.Max.y));
 }
 
 Vector2D GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
@@ -693,7 +693,7 @@ void BeginLinkInteraction(
     {
         if (pin_idx.HasValue())
         {
-            const int hovered_pin_flags = editor.Pins.Pool[pin_idx.Value()].Flags;
+            const int hovered_pin_flags = editor.Pins.Pool[pin_idx.Value()].flags;
 
             // Check the 'click and drag to detach' case.
             if (hovered_pin_flags & ImNodesAttributeFlags_EnableLinkDetachWithDragClick)
@@ -808,7 +808,7 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, ImRect box_rect)
 
 Vector2D SnapOriginToGrid(Vector2D origin)
 {
-    if (GImNodes->Style.Flags & ImNodesStyleFlags_GridSnapping)
+    if (GImNodes->Style.flags & ImNodesStyleFlags_GridSnapping)
     {
         const float spacing = GImNodes->Style.GridSpacing;
         const float spacing2 = spacing * 0.5;
@@ -829,8 +829,8 @@ void TranslateSelectedNodes(ImNodesEditorContext& editor)
     {
         // If we have grid snap enabled, don't start moving nodes until we've moved the mouse
         // slightly
-        const bool shouldTranslate = (GImNodes->Style.Flags & ImNodesStyleFlags_GridSnapping)
-                                         ? ImGui::GetIO().MouseDragMaxDistanceSqr[0] > 5.0
+        const bool shouldTranslate = (GImNodes->Style.flags & ImNodesStyleFlags_GridSnapping)
+                                         ? ImGui::GetIO().mouse_drag_max_distance_sqr[0] > 5.0
                                          : true;
 
         const Vector2D origin = SnapOriginToGrid(
@@ -1058,7 +1058,7 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
 
         const bool link_creation_on_snap =
             GImNodes->HoveredPinIdx.HasValue() &&
-            (editor.Pins.Pool[GImNodes->HoveredPinIdx.Value()].Flags &
+            (editor.Pins.Pool[GImNodes->HoveredPinIdx.Value()].flags &
              ImNodesAttributeFlags_EnableLinkCreationOnSnap);
 
         if (!should_snap)
@@ -1099,7 +1099,7 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
 
         if (dragging)
         {
-            editor.Panning += ImGui::GetIO().MouseDelta;
+            editor.Panning += ImGui::GetIO().mouse_delta;
         }
         else
         {
@@ -1311,7 +1311,7 @@ inline Vector2D GetNodeTitleBarOrigin(const ImNodeData& node)
 inline Vector2D GetNodeContentOrigin(const ImNodeData& node)
 {
     const Vector2D title_bar_height =
-        DimgVec2D::new(0.f, node.TitleBarContentRect.GetHeight() + 2.0 * node.LayoutStyle.Padding.y);
+        Vector2D::new(0.f, node.TitleBarContentRect.get_height() + 2.0 * node.LayoutStyle.Padding.y);
     return node.Origin + title_bar_height + node.LayoutStyle.Padding;
 }
 
@@ -1322,8 +1322,8 @@ inline ImRect GetNodeTitleRect(const ImNodeData& node)
 
     return ImRect(
         expanded_title_rect.Min,
-        expanded_title_rect.Min + DimgVec2D::new(node.Rect.GetWidth(), 0.f) +
-            DimgVec2D::new(0.f, expanded_title_rect.GetHeight()));
+        expanded_title_rect.Min + Vector2D::new(node.Rect.GetWidth(), 0.f) +
+            Vector2D::new(0.f, expanded_title_rect.get_height()));
 }
 
 void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
@@ -1331,14 +1331,14 @@ void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
     const Vector2D offset = editor.Panning;
     ImU32        line_color = GImNodes->Style.Colors[ImNodesCol_GridLine];
     ImU32        line_color_prim = GImNodes->Style.Colors[ImNodesCol_GridLinePrimary];
-    bool         draw_primary = GImNodes->Style.Flags & ImNodesStyleFlags_GridLinesPrimary;
+    bool         draw_primary = GImNodes->Style.flags & ImNodesStyleFlags_GridLinesPrimary;
 
     for (float x = fmodf(offset.x, GImNodes->Style.GridSpacing); x < canvas_size.x;
          x += GImNodes->Style.GridSpacing)
     {
         GImNodes->CanvasDrawList->AddLine(
-            EditorSpaceToScreenSpace(DimgVec2D::new(x, 0.0)),
-            EditorSpaceToScreenSpace(DimgVec2D::new(x, canvas_size.y)),
+            EditorSpaceToScreenSpace(Vector2D::new(x, 0.0)),
+            EditorSpaceToScreenSpace(Vector2D::new(x, canvas_size.y)),
             offset.x - x == 0.f && draw_primary ? line_color_prim : line_color);
     }
 
@@ -1346,8 +1346,8 @@ void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
          y += GImNodes->Style.GridSpacing)
     {
         GImNodes->CanvasDrawList->AddLine(
-            EditorSpaceToScreenSpace(DimgVec2D::new(0.0, y)),
-            EditorSpaceToScreenSpace(DimgVec2D::new(canvas_size.x, y)),
+            EditorSpaceToScreenSpace(Vector2D::new(0.0, y)),
+            EditorSpaceToScreenSpace(Vector2D::new(canvas_size.x, y)),
             offset.y - y == 0.f && draw_primary ? line_color_prim : line_color);
     }
 }
@@ -1363,10 +1363,10 @@ QuadOffsets CalculateQuadOffsets(const float side_length)
 
     QuadOffsets offset;
 
-    offset.TopLeft = DimgVec2D::new(-half_side, half_side);
-    offset.BottomLeft = DimgVec2D::new(-half_side, -half_side);
-    offset.BottomRight = DimgVec2D::new(half_side, -half_side);
-    offset.TopRight = DimgVec2D::new(half_side, half_side);
+    offset.TopLeft = Vector2D::new(-half_side, half_side);
+    offset.BottomLeft = Vector2D::new(-half_side, -half_side);
+    offset.BottomRight = Vector2D::new(half_side, -half_side);
+    offset.TopRight = Vector2D::new(half_side, half_side);
 
     return offset;
 }
@@ -1393,9 +1393,9 @@ TriangleOffsets CalculateTriangleOffsets(const float side_length)
     const float vertical_offset = 0.5 * side_length;
 
     TriangleOffsets offset;
-    offset.TopLeft = DimgVec2D::new(left_offset, vertical_offset);
-    offset.BottomLeft = DimgVec2D::new(left_offset, -vertical_offset);
-    offset.Right = DimgVec2D::new(right_offset, 0.f);
+    offset.TopLeft = Vector2D::new(left_offset, vertical_offset);
+    offset.BottomLeft = Vector2D::new(left_offset, -vertical_offset);
+    offset.Right = Vector2D::new(right_offset, 0.f);
 
     return offset;
 }
@@ -1524,7 +1524,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
             node.Rect.Min, node.Rect.Max, node_background, node.LayoutStyle.CornerRounding);
 
         // title bar:
-        if (node.TitleBarContentRect.GetHeight() > 0.f)
+        if (node.TitleBarContentRect.get_height() > 0.f)
         {
             ImRect title_bar_rect = GetNodeTitleRect(node);
 
@@ -1546,7 +1546,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
 
         }
 
-        if ((GImNodes->Style.Flags & ImNodesStyleFlags_NodeOutline) != 0)
+        if ((GImNodes->Style.flags & ImNodesStyleFlags_NodeOutline) != 0)
         {
 #if IMGUI_VERSION_NUM < 18200
             GImNodes->CanvasDrawList->AddRect(
@@ -1656,7 +1656,7 @@ void BeginPinAttribute(
     pin.ParentNodeIdx = node_idx;
     pin.Type = type;
     pin.Shape = shape;
-    pin.Flags = GImNodes->CurrentAttributeFlags;
+    pin.flags = GImNodes->CurrentAttributeFlags;
     pin.ColorStyle.Background = GImNodes->Style.Colors[ImNodesCol_Pin];
     pin.ColorStyle.Hovered = GImNodes->Style.Colors[ImNodesCol_PinHovered];
 }
@@ -1684,8 +1684,8 @@ void EndPinAttribute()
 
 void Initialize(ImNodesContext* context)
 {
-    context->CanvasOriginScreenSpace = DimgVec2D::new(0.0, 0.0);
-    context->CanvasRectScreenSpace = ImRect(DimgVec2D::new(0.f, 0.f), DimgVec2D::new(0.f, 0.f));
+    context->CanvasOriginScreenSpace = Vector2D::new(0.0, 0.0);
+    context->CanvasRectScreenSpace = ImRect(Vector2D::new(0.f, 0.f), Vector2D::new(0.f, 0.f));
     context->CurrentScope = ImNodesScope_None;
 
     context->CurrentPinIdx = INT_MAX;
@@ -1730,16 +1730,16 @@ static inline void CalcMiniMapLayout()
     float  mini_map_scaling;
     {
         const Vector2D max_size =
-            ImFloor(editor_rect.GetSize() * editor.MiniMapSizeFraction - border * 2.0);
+            f32::floor(editor_rect.GetSize() * editor.MiniMapSizeFraction - border * 2.0);
         const float  max_size_aspect_ratio = max_size.x / max_size.y;
         const Vector2D grid_content_size = editor.GridContentBounds.IsInverted()
                                              ? max_size
-                                             : ImFloor(editor.GridContentBounds.GetSize());
+                                             : f32::floor(editor.GridContentBounds.GetSize());
         const float grid_content_aspect_ratio = grid_content_size.x / grid_content_size.y;
-        mini_map_size = ImFloor(
+        mini_map_size = f32::floor(
             grid_content_aspect_ratio > max_size_aspect_ratio
-                ? DimgVec2D::new(max_size.x, max_size.x / grid_content_aspect_ratio)
-                : DimgVec2D::new(max_size.y * grid_content_aspect_ratio, max_size.y));
+                ? Vector2D::new(max_size.x, max_size.x / grid_content_aspect_ratio)
+                : Vector2D::new(max_size.y * grid_content_aspect_ratio, max_size.y));
         mini_map_scaling = mini_map_size.x / grid_content_size.x;
     }
 
@@ -1771,7 +1771,7 @@ static inline void CalcMiniMapLayout()
 
         const Vector2D top_left_pos = editor_rect.Min + offset + border;
         const Vector2D bottom_right_pos = editor_rect.Max - offset - border - mini_map_size;
-        mini_map_pos = ImFloor(ImLerp(top_left_pos, bottom_right_pos, align));
+        mini_map_pos = f32::floor(ImLerp(top_left_pos, bottom_right_pos, align));
     }
 
     editor.MiniMapRectScreenSpace =
@@ -1936,7 +1936,7 @@ static void MiniMapUpdate()
     {
         Vector2D target = MiniMapSpaceToGridSpace(editor, ImGui::GetMousePos());
         Vector2D center = GImNodes->CanvasRectScreenSpace.GetSize() * 0.5;
-        editor.Panning = ImFloor(center - target);
+        editor.Panning = f32::floor(center - target);
     }
 
     // Reset callback info after use
@@ -2207,7 +2207,7 @@ void BeginNodeEditor()
     // Reset state from previous pass
 
     ImNodesEditorContext& editor = EditorContextGet();
-    editor.AutoPanningDelta = DimgVec2D::new(0, 0);
+    editor.AutoPanningDelta = Vector2D::new(0, 0);
     editor.GridContentBounds = ImRect(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX);
     editor.MiniMapEnabled = false;
     ObjectPoolReset(editor.Nodes);
@@ -2236,25 +2236,25 @@ void BeginNodeEditor()
         (GImNodes->Io.EmulateThreeButtonMouse.Modifier != NULL && GImNodes->LeftMouseDragging &&
          (*GImNodes->Io.EmulateThreeButtonMouse.Modifier)) ||
         ImGui::IsMouseDragging(GImNodes->Io.AltMouseButton, 0.0);
-    GImNodes->AltMouseScrollDelta = ImGui::GetIO().MouseWheel;
+    GImNodes->AltMouseScrollDelta = ImGui::GetIO().mouse_wheel;
     GImNodes->MultipleSelectModifier =
         (GImNodes->Io.MultipleSelectModifier.Modifier != NULL
              ? *GImNodes->Io.MultipleSelectModifier.Modifier
-             : ImGui::GetIO().KeyCtrl);
+             : ImGui::GetIO().key_ctrl);
 
     GImNodes->ActiveAttribute = false;
 
     ImGui::BeginGroup();
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, DimgVec2D::new(1.f, 1.f));
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, DimgVec2D::new(0.f, 0.f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2D::new(1.f, 1.f));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2D::new(0.f, 0.f));
         ImGui::PushStyleColor(ImGuiCol_ChildBg, GImNodes->Style.Colors[ImNodesCol_GridBackground]);
         ImGui::BeginChild(
             "scrolling_region",
-            DimgVec2D::new(0.f, 0.f),
+            Vector2D::new(0.f, 0.f),
             true,
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove |
-                ImGuiWindowFlags_NoScrollWithMouse);
+                WindowFlags::NoScrollWithMouse);
         GImNodes->CanvasOriginScreenSpace = ImGui::GetCursorScreenPos();
 
         // NOTE: we have to fetch the canvas draw list *after* we call
@@ -2265,9 +2265,9 @@ void BeginNodeEditor()
         {
             const Vector2D canvas_size = ImGui::GetWindowSize();
             GImNodes->CanvasRectScreenSpace = ImRect(
-                EditorSpaceToScreenSpace(DimgVec2D::new(0.f, 0.f)), EditorSpaceToScreenSpace(canvas_size));
+                EditorSpaceToScreenSpace(Vector2D::new(0.f, 0.f)), EditorSpaceToScreenSpace(canvas_size));
 
-            if (GImNodes->Style.Flags & ImNodesStyleFlags_GridLines)
+            if (GImNodes->Style.flags & ImNodesStyleFlags_GridLines)
             {
                 DrawGrid(editor, canvas_size);
             }
@@ -2397,7 +2397,7 @@ void EndNodeEditor()
             direction = direction * ImInvLength(direction, 0.0);
 
             editor.AutoPanningDelta =
-                direction * ImGui::GetIO().DeltaTime * GImNodes->Io.AutoPanningSpeed;
+                direction * ImGui::GetIO().delta_time * GImNodes->Io.AutoPanningSpeed;
             editor.Panning += editor.AutoPanningDelta;
         }
     }
@@ -2614,7 +2614,7 @@ void Link(const int id, const int start_attr_id, const int end_attr_id)
 
     // Check if this link was created by the current link event
     if ((editor.ClickInteraction.Type == ImNodesClickInteractionType_LinkCreation &&
-         editor.Pins.Pool[link.EndPinIdx].Flags & ImNodesAttributeFlags_EnableLinkCreationOnSnap &&
+         editor.Pins.Pool[link.EndPinIdx].flags & ImNodesAttributeFlags_EnableLinkCreationOnSnap &&
          editor.ClickInteraction.LinkCreation.StartPinIdx == link.StartPinIdx &&
          editor.ClickInteraction.LinkCreation.EndPinIdx == link.EndPinIdx) ||
         (editor.ClickInteraction.LinkCreation.StartPinIdx == link.EndPinIdx &&
@@ -3114,7 +3114,7 @@ void NodeLineHandler(ImNodesEditorContext& editor, const char* const line)
     else if (sscanf(line, "origin=%i,%i", &x, &y) == 2)
     {
         ImNodeData& node = editor.Nodes.Pool[GImNodes->CurrentNodeIdx];
-        node.Origin = SnapOriginToGrid(DimgVec2D::new((float)x, (float)y));
+        node.Origin = SnapOriginToGrid(Vector2D::new((float)x, y));
     }
 }
 

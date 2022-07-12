@@ -393,7 +393,7 @@ int main(int arg, char **argv)
 
    while (text[ch]) {
       int advance,lsb,x0,y0,x1,y1;
-      float x_shift = xpos - (float) floor(xpos);
+      float x_shift = xpos -  floor(xpos);
       stbtt_GetCodepointHMetrics(&font, text[ch], &advance, &lsb);
       stbtt_GetCodepointBitmapBoxSubpixel(&font, text[ch], scale,scale,x_shift,0, &x0,&y0,&x1,&y1);
       stbtt_MakeCodepointBitmapSubpixel(&font, &screen[baseline + y0][ xpos + x0], x1-x0,y1-y0, 79, scale,scale,x_shift,0, text[ch]);
@@ -1857,8 +1857,8 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
          }
 
          // Find transformation scales.
-         m = (float) STBTT_sqrt(mtx[0]*mtx[0] + mtx[1]*mtx[1]);
-         n = (float) STBTT_sqrt(mtx[2]*mtx[2] + mtx[3]*mtx[3]);
+         m =  STBTT_sqrt(mtx[0]*mtx[0] + mtx[1]*mtx[1]);
+         n =  STBTT_sqrt(mtx[2]*mtx[2] + mtx[3]*mtx[3]);
 
          // Get indexed glyph.
          comp_num_verts = stbtt_GetGlyphShape(info, gidx, &comp_verts);
@@ -2254,10 +2254,10 @@ static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, st
 
          // push immediate
          if (b0 == 255) {
-            f = (float)(stbtt_int32)stbtt__buf_get32(&b) / 0x10000;
+            f = (stbtt_int32)stbtt__buf_get32(&b) / 0x10000;
          } else {
             stbtt__buf_skip(&b, -1);
-            f = (float)(stbtt_int16)stbtt__cff_int(&b);
+            f = (stbtt_int16)stbtt__cff_int(&b);
          }
          if (sp >= 48) return STBTT__CSERR("push stack overflow");
          s[sp += 1] = f;
@@ -2665,7 +2665,7 @@ STBTT_DEF void stbtt_GetFontBoundingBox(const stbtt_fontinfo *info, int *x0, int
 STBTT_DEF float stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, float height)
 {
    int fheight = ttSHORT(info->data + info->hhea + 4) - ttSHORT(info->data + info->hhea + 6);
-   return (float) height / fheight;
+   return  height / fheight;
 }
 
 STBTT_DEF float stbtt_ScaleForMappingEmToPixels(const stbtt_fontinfo *info, float pixels)
@@ -2941,7 +2941,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
       scanline = scanline_data;
 
    y = off_y * vsubsample;
-   e[n].y0 = (off_y + result->h) * (float) vsubsample + 1;
+   e[n].y0 = (off_y + result->h) *  vsubsample + 1;
 
    while (j < result->h) {
       STBTT_memset(scanline, 0, result->w);
@@ -3230,7 +3230,7 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
 
                // area covered in the last pixel is the rectangle from all the pixels to the left,
                // plus the trapezoid filled by the line segment in this pixel all the way to the right edge
-               scanline[x2] += area + sign * stbtt__position_trapezoid_area(sy1-y_final, (float) x2, x2+1.0, x_bottom, x2+1.0);
+               scanline[x2] += area + sign * stbtt__position_trapezoid_area(sy1-y_final,  x2, x2+1.0, x_bottom, x2+1.0);
 
                // the rest of the line is filled based on the total height of the line segment in this pixel
                scanline_fill[x2] += sign * (sy1-sy0);
@@ -3260,8 +3260,8 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
 
                // rename variables to clearly-defined pairs
                float y0 = y_top;
-               float x1 = (float) (x);
-               float x2 = (float) (x+1);
+               float x1 =  (x);
+               float x2 =  (x+1);
                float x3 = xb;
                float y3 = y_bottom;
 
@@ -3312,14 +3312,14 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
    STBTT__NOTUSED(vsubsample);
 
    if (result->w > 64)
-      scanline = (float *) STBTT_malloc((result->w*2+1) * sizeof(float), userdata);
+      scanline = (float *) STBTT_malloc((result->w*2+1) * sizeof, userdata);
    else
       scanline = scanline_data;
 
    scanline2 = scanline + result->w;
 
    y = off_y;
-   e[n].y0 = (float) (off_y + result->h) + 1;
+   e[n].y0 =  (off_y + result->h) + 1;
 
    while (j < result->h) {
       // find center of pixel for this scanline
@@ -3375,7 +3375,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
             int m;
             sum += scanline2[i];
             k = scanline[i] + sum;
-            k = (float) STBTT_fabs(k)*255 + 0.5;
+            k =  STBTT_fabs(k)*255 + 0.5;
             m =  k;
             if (m > 255) m = 255;
             result->pixels[j*result->stride + i] = (unsigned char) m;
@@ -3591,8 +3591,8 @@ static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points, float 
    float dy2 = y3-y2;
    float dx = x3-x0;
    float dy = y3-y0;
-   float longlen = (float) (STBTT_sqrt(dx0*dx0+dy0*dy0)+STBTT_sqrt(dx1*dx1+dy1*dy1)+STBTT_sqrt(dx2*dx2+dy2*dy2));
-   float shortlen = (float) STBTT_sqrt(dx*dx+dy*dy);
+   float longlen =  (STBTT_sqrt(dx0*dx0+dy0*dy0)+STBTT_sqrt(dx1*dx1+dy1*dy1)+STBTT_sqrt(dx2*dx2+dy2*dy2));
+   float shortlen =  STBTT_sqrt(dx*dx+dy*dy);
    float flatness_squared = longlen*longlen-shortlen*shortlen;
 
    if (n > 16) // 65536 segments on one curve better be enough!
@@ -3855,8 +3855,8 @@ static int stbtt_BakeFontBitmap_internal(unsigned char *data, int offset,  // fo
       chardata[i].x1 = (stbtt_int16) (x + gw);
       chardata[i].y1 = (stbtt_int16) (y + gh);
       chardata[i].xadvance = scale * advance;
-      chardata[i].xoff     = (float) x0;
-      chardata[i].yoff     = (float) y0;
+      chardata[i].xoff     =  x0;
+      chardata[i].yoff     =  y0;
       x = x + gw + 1;
       if (y+gh+1 > bottom_y)
          bottom_y = y+gh+1;
@@ -4150,7 +4150,7 @@ static float stbtt__oversample_shift(int oversample)
    // which shifts phase by (oversample - 1)/2 pixels in
    // oversampled space. We want to shift in the opposite
    // direction to counter this.
-   return (float)-(oversample - 1) / (2.0 * (float)oversample);
+   return -(oversample - 1) / (2.0 * oversample);
 }
 
 // rects array must be big enough to accommodate all characters in the given ranges
@@ -4276,8 +4276,8 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
             bc->x1       = (stbtt_int16) (r->x + r->w);
             bc->y1       = (stbtt_int16) (r->y + r->h);
             bc->xadvance =                scale * advance;
-            bc->xoff     =       (float)  x0 * recip_h + sub_x;
-            bc->yoff     =       (float)  y0 * recip_v + sub_y;
+            bc->xoff     =         x0 * recip_h + sub_x;
+            bc->yoff     =         y0 * recip_v + sub_y;
             bc->xoff2    =                (x0 + r->w) * recip_h + sub_x;
             bc->yoff2    =                (y0 + r->h) * recip_v + sub_y;
 
@@ -4363,9 +4363,9 @@ STBTT_DEF void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, int in
    stbtt_InitFont(&info, fontdata, stbtt_GetFontOffsetForIndex(fontdata, index));
    scale = size > 0 ? stbtt_ScaleForPixelHeight(&info, size) : stbtt_ScaleForMappingEmToPixels(&info, -size);
    stbtt_GetFontVMetrics(&info, &i_ascent, &i_descent, &i_lineGap);
-   *ascent  = (float) i_ascent  * scale;
-   *descent = (float) i_descent * scale;
-   *lineGap = (float) i_lineGap * scale;
+   *ascent  =  i_ascent  * scale;
+   *descent =  i_descent * scale;
+   *lineGap =  i_lineGap * scale;
 }
 
 STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int ph, int char_index, float *xpos, float *ypos, stbtt_aligned_quad *q, int align_to_integer)
@@ -4374,8 +4374,8 @@ STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int
    const stbtt_packedchar *b = chardata + char_index;
 
    if (align_to_integer) {
-      float x = (float) STBTT_ifloor((*xpos + b->xoff) + 0.5);
-      float y = (float) STBTT_ifloor((*ypos + b->yoff) + 0.5);
+      float x =  STBTT_ifloor((*xpos + b->xoff) + 0.5);
+      float y =  STBTT_ifloor((*ypos + b->yoff) + 0.5);
       q->x0 = x;
       q->y0 = y;
       q->x1 = x + b->xoff2 - b->xoff;
@@ -4421,7 +4421,7 @@ static int stbtt__ray_intersect_bezier(float orig[2], float ray[2], float q0[2],
       float discr = b*b - a*c;
       if (discr > 0.0) {
          float rcpna = -1 / a;
-         float d = (float) STBTT_sqrt(discr);
+         float d =  STBTT_sqrt(discr);
          s0 = (b+d) * rcpna;
          s1 = (b-d) * rcpna;
          if (s0 >= 0.0 && s0 <= 1.0)
@@ -4480,7 +4480,7 @@ static int stbtt__compute_crossings_x(float x, float y, int nverts, stbtt_vertex
    int winding = 0;
 
    // make sure y never passes through a vertex of the shape
-   y_frac = (float) STBTT_fmod(y, 1.0);
+   y_frac =  STBTT_fmod(y, 1.0);
    if (y_frac < 0.01)
       y += 0.01;
    else if (y_frac > 0.99)
@@ -4509,12 +4509,12 @@ static int stbtt__compute_crossings_x(float x, float y, int nverts, stbtt_vertex
          if (y > ay && y < by && x > ax) {
             float q0[2],q1[2],q2[2];
             float hits[2][2];
-            q0[0] = (float)x0;
-            q0[1] = (float)y0;
-            q1[0] = (float)x1;
-            q1[1] = (float)y1;
-            q2[0] = (float)x2;
-            q2[1] = (float)y2;
+            q0[0] = x0;
+            q0[1] = y0;
+            q1[0] = x1;
+            q1[1] = y1;
+            q2[0] = x2;
+            q2[1] = y2;
             if (equal(q0,q1) || equal(q1,q2)) {
                x0 = verts[i-1].x;
                y0 = verts[i-1].y;
@@ -4543,9 +4543,9 @@ static int stbtt__compute_crossings_x(float x, float y, int nverts, stbtt_vertex
 static float stbtt__cuberoot( float x )
 {
    if (x<0)
-      return -(float) STBTT_pow(-x,1.0/3.0);
+      return - STBTT_pow(-x,1.0/3.0);
    else
-      return  (float) STBTT_pow( x,1.0/3.0);
+      return   STBTT_pow( x,1.0/3.0);
 }
 
 // x^3 + a*x^2 + b*x + c = 0
@@ -4557,7 +4557,7 @@ static int stbtt__solve_cubic(float a, float b, float c, float* r)
    float p3 = p*p*p;
    float d = q*q + 4*p3 / 27;
    if (d >= 0) {
-      float z = (float) STBTT_sqrt(d);
+      float z =  STBTT_sqrt(d);
       float u = (-q + z) / 2;
       float v = (-q - z) / 2;
       u = stbtt__cuberoot(u);
@@ -4565,10 +4565,10 @@ static int stbtt__solve_cubic(float a, float b, float c, float* r)
       r[0] = s + u + v;
       return 1;
    } else {
-      float u = (float) STBTT_sqrt(-p/3);
-      float v = (float) STBTT_acos(-STBTT_sqrt(-27/p3) * q / 2) / 3; // p3 must be negative, since d is negative
-      float m = (float) STBTT_cos(v);
-      float n = (float) STBTT_cos(v-3.141592/2)*1.732050808;
+      float u =  STBTT_sqrt(-p/3);
+      float v =  STBTT_acos(-STBTT_sqrt(-27/p3) * q / 2) / 3; // p3 must be negative, since d is negative
+      float m =  STBTT_cos(v);
+      float n =  STBTT_cos(v-3.141592/2)*1.732050808;
       r[0] = s + u * 2 * m;
       r[1] = s - u * (m + n);
       r[2] = s - u * (m - n);
@@ -4617,13 +4617,13 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
       stbtt_vertex *verts;
       int num_verts = stbtt_GetGlyphShape(info, glyph, &verts);
       data = (unsigned char *) STBTT_malloc(w * h, info->userdata);
-      precompute = (float *) STBTT_malloc(num_verts * sizeof(float), info->userdata);
+      precompute = (float *) STBTT_malloc(num_verts * sizeof, info->userdata);
 
       for (i=0,j=num_verts-1; i < num_verts; j=i += 1) {
          if (verts[i].type == STBTT_vline) {
             float x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
             float x1 = verts[j].x*scale_x, y1 = verts[j].y*scale_y;
-            float dist = (float) STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
+            float dist =  STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
             precompute[i] = (dist == 0) ? 0.0 : 1.0 / dist;
          } else if (verts[i].type == STBTT_vcurve) {
             float x2 = verts[j].x *scale_x, y2 = verts[j].y *scale_y;
@@ -4643,8 +4643,8 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
          for (x=ix0; x < ix1; x += 1) {
             float val;
             float min_dist = 999999.0;
-            float sx = (float) x + 0.5;
-            float sy = (float) y + 0.5;
+            float sx =  x + 0.5;
+            float sy =  y + 0.5;
             float x_gspace = (sx / scale_x);
             float y_gspace = (sy / scale_y);
 
@@ -4658,12 +4658,12 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
 
                   float dist,dist2 = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy);
                   if (dist2 < min_dist*min_dist)
-                     min_dist = (float) STBTT_sqrt(dist2);
+                     min_dist =  STBTT_sqrt(dist2);
 
                   // coarse culling against bbox
                   //if (sx > STBTT_min(x0,x1)-min_dist && sx < STBTT_max(x0,x1)+min_dist &&
                   //    sy > STBTT_min(y0,y1)-min_dist && sy < STBTT_max(y0,y1)+min_dist)
-                  dist = (float) STBTT_fabs((x1-x0)*(y0-sy) - (y1-y0)*(x0-sx)) * precompute[i];
+                  dist =  STBTT_fabs((x1-x0)*(y0-sy) - (y1-y0)*(x0-sx)) * precompute[i];
                   STBTT_assert(i != 0);
                   if (dist < min_dist) {
                      // check position along line
@@ -4706,7 +4706,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
                            if (discriminant < 0)
                               num = 0;
                            else {
-                              float root = (float) STBTT_sqrt(discriminant);
+                              float root =  STBTT_sqrt(discriminant);
                               res[0] = (-b - root)/(2*a);
                               res[1] = (-b + root)/(2*a);
                               num = 2; // don't bother distinguishing 1-solution case, as code below will still work
@@ -4720,7 +4720,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
                      }
                      dist2 = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy);
                      if (dist2 < min_dist*min_dist)
-                        min_dist = (float) STBTT_sqrt(dist2);
+                        min_dist =  STBTT_sqrt(dist2);
 
                      if (num >= 1 && res[0] >= 0.0 && res[0] <= 1.0) {
                         t = res[0], it = 1.0 - t;
@@ -4728,7 +4728,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
                         py = it*it*y0 + 2*t*it*y1 + t*t*y2;
                         dist2 = (px-sx)*(px-sx) + (py-sy)*(py-sy);
                         if (dist2 < min_dist * min_dist)
-                           min_dist = (float) STBTT_sqrt(dist2);
+                           min_dist =  STBTT_sqrt(dist2);
                      }
                      if (num >= 2 && res[1] >= 0.0 && res[1] <= 1.0) {
                         t = res[1], it = 1.0 - t;
@@ -4736,7 +4736,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
                         py = it*it*y0 + 2*t*it*y1 + t*t*y2;
                         dist2 = (px-sx)*(px-sx) + (py-sy)*(py-sy);
                         if (dist2 < min_dist * min_dist)
-                           min_dist = (float) STBTT_sqrt(dist2);
+                           min_dist =  STBTT_sqrt(dist2);
                      }
                      if (num >= 3 && res[2] >= 0.0 && res[2] <= 1.0) {
                         t = res[2], it = 1.0 - t;
@@ -4744,7 +4744,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
                         py = it*it*y0 + 2*t*it*y1 + t*t*y2;
                         dist2 = (px-sx)*(px-sx) + (py-sy)*(py-sy);
                         if (dist2 < min_dist * min_dist)
-                           min_dist = (float) STBTT_sqrt(dist2);
+                           min_dist =  STBTT_sqrt(dist2);
                      }
                   }
                }

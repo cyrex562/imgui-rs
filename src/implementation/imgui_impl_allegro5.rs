@@ -67,7 +67,7 @@ struct ImGui_ImplAllegro5_Data
 {
     ALLEGRO_DISPLAY*            Display;
     ALLEGRO_BITMAP*             Texture;
-    double                      Time;
+    double                      time;
     ALLEGRO_MOUSE_CURSOR*       MouseCursorInvisible;
     ALLEGRO_VERTEX_DECL*        VertexDecl;
     char*                       ClipboardTextData;
@@ -205,7 +205,7 @@ bool ImGui_ImplAllegro5_CreateDeviceObjects()
     ImGuiIO& io = ImGui::GetIO();
     unsigned char* pixels;
     int width, height;
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+    io.fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     // Create texture
     // (Bilinear sampling is required by default. Set 'io.fonts->flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
@@ -235,7 +235,7 @@ bool ImGui_ImplAllegro5_CreateDeviceObjects()
         return false;
 
     // Store our identifier
-    io.Fonts->SetTexID((ImTextureID)(intptr_t)cloned_img);
+    io.fonts->SetTexID((ImTextureID)(intptr_t)cloned_img);
     bd->Texture = cloned_img;
 
     // Create an invisible mouse cursor
@@ -253,7 +253,7 @@ void ImGui_ImplAllegro5_InvalidateDeviceObjects()
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
     if (bd->Texture)
     {
-        io.Fonts->SetTexID(NULL);
+        io.fonts->SetTexID(NULL);
         al_destroy_bitmap(bd->Texture);
         bd->Texture = NULL;
     }
@@ -403,7 +403,7 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
     ImGui_ImplAllegro5_Data* bd = IM_NEW(ImGui_ImplAllegro5_Data)();
     io.BackendPlatformUserData = (void*)bd;
     io.BackendPlatformName = io.BackendRendererName = "imgui_impl_allegro5";
-    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;       // We can honor GetMouseCursor() values (optional)
+    io.backend_flags |= ImGuiBackendFlags_HasMouseCursors;       // We can honor GetMouseCursor() values (optional)
 
     bd->Display = display;
 
@@ -451,10 +451,10 @@ static void ImGui_ImplAllegro5_UpdateKeyModifiers()
     ImGuiIO& io = ImGui::GetIO();
     ALLEGRO_KEYBOARD_STATE keys;
     al_get_keyboard_state(&keys);
-    io.AddKeyEvent(ImGuiKey_ModCtrl, al_key_down(&keys, ALLEGRO_KEY_LCTRL) || al_key_down(&keys, ALLEGRO_KEY_RCTRL));
-    io.AddKeyEvent(ImGuiKey_ModShift, al_key_down(&keys, ALLEGRO_KEY_LSHIFT) || al_key_down(&keys, ALLEGRO_KEY_RSHIFT));
-    io.AddKeyEvent(ImGuiKey_ModAlt, al_key_down(&keys, ALLEGRO_KEY_ALT) || al_key_down(&keys, ALLEGRO_KEY_ALTGR));
-    io.AddKeyEvent(ImGuiKey_ModSuper, al_key_down(&keys, ALLEGRO_KEY_LWIN) || al_key_down(&keys, ALLEGRO_KEY_RWIN));
+    io.AddKeyEvent(Key::ModCtrl, al_key_down(&keys, ALLEGRO_KEY_LCTRL) || al_key_down(&keys, ALLEGRO_KEY_RCTRL));
+    io.AddKeyEvent(Key::ModShift, al_key_down(&keys, ALLEGRO_KEY_LSHIFT) || al_key_down(&keys, ALLEGRO_KEY_RSHIFT));
+    io.AddKeyEvent(Key::ModAlt, al_key_down(&keys, ALLEGRO_KEY_ALT) || al_key_down(&keys, ALLEGRO_KEY_ALTGR));
+    io.AddKeyEvent(Key::ModSuper, al_key_down(&keys, ALLEGRO_KEY_LWIN) || al_key_down(&keys, ALLEGRO_KEY_RWIN));
 }
 
 // You can read the io.want_capture_mouse, io.want_capture_keyboard flags to tell if dear imgui wants to use your inputs.
@@ -529,7 +529,7 @@ bool ImGui_ImplAllegro5_ProcessEvent(ALLEGRO_EVENT* ev)
 static void ImGui_ImplAllegro5_UpdateMouseCursor()
 {
     ImGuiIO& io = ImGui::GetIO();
-    if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
+    if (io.config_flags & ImGuiConfigFlags_NoMouseCursorChange)
         return;
 
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
@@ -570,12 +570,12 @@ void ImGui_ImplAllegro5_NewFrame()
     int w, h;
     w = al_get_display_width(bd->Display);
     h = al_get_display_height(bd->Display);
-    io.DisplaySize = DimgVec2D::new((float)w, (float)h);
+    io.DisplaySize = Vector2D::new((float)w, h);
 
     // Setup time step
     double current_time = al_get_time();
-    io.DeltaTime = bd->Time > 0.0 ? (float)(current_time - bd->Time) : (float)(1.0 / 60.0);
-    bd->Time = current_time;
+    io.delta_time = bd->time > 0.0 ? (current_time - bd->time) : (1.0 / 60.0);
+    bd->time = current_time;
 
     // Setup mouse cursor shape
     ImGui_ImplAllegro5_UpdateMouseCursor();

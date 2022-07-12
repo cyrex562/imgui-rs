@@ -175,10 +175,10 @@ impl Rect {
     }
     //     void        Floor()                             { min.x = IM_FLOOR(min.x); min.y = IM_FLOOR(min.y); max.x = IM_FLOOR(max.x); max.y = IM_FLOOR(max.y); }
     pub fn floor(&mut self) {
-        self.min.x = ImFloor(self.min.x);
-        self.min.y = ImFloor(self.min.y);
-        self.max.x = ImFloor(self.max.x);
-        self.max.y = ImFloor(self.max.y);
+        self.min.x = f32::floor(self.min.x);
+        self.min.y = f32::floor(self.min.y);
+        self.max.x = f32::floor(self.max.x);
+        self.max.y = f32::floor(self.max.y);
     }
     //     bool        IsInverted() const                  { return min.x > max.x || min.y > max.y; }
     pub fn is_inverted(&mut self) -> bool {

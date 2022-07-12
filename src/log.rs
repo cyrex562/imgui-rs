@@ -59,7 +59,7 @@ pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: *const c_char, mut text_
         text_end = FindRenderedTextEnd(text, text_end);
     }
 
-    let log_new_line = ref_pos != Vector2D::new(0.0,0.0) && (ref_pos.y > g.LogLinePosY + g.Style.FramePadding.y + 1);
+    let log_new_line = ref_pos != Vector2D::new(0.0,0.0) && (ref_pos.y > g.LogLinePosY + g.style.FramePadding.y + 1);
     if (ref_pos) {
         g.LogLinePosY = ref_pos.y;
     }

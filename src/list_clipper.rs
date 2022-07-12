@@ -55,7 +55,7 @@ impl ImGuiListClipper {
     //  ImGuiListClipper();
     //  ~ImGuiListClipper();
     //  void  Begin(int items_count, float items_height = -1.0);
-    pub fn Begin(&mut self, items_count: i32, items_height: f32) {
+    pub fn begin(&mut self, items_count: i32, items_height: f32) {
 
         // ImGuiContext& g = *GImGui;
         let g = GImGui;
@@ -187,11 +187,11 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
     // window->dc.CursorPos.y = pos_y;
     *window.DC.CursorPos.y = pos_y;
     // window->dc.CursorMaxPos.y = ImMax(window->dc.CursorMaxPos.y, pos_y - g.style.ItemSpacing.y);
-    *window.DC.CursorMaxPos.y = ImMaxF32(window.DC.CursorMaxPos.y, pos_y - GImGui.Style.ItemSpacing.y);
+    *window.DC.CursorMaxPos.y = ImMaxF32(window.DC.CursorMaxPos.y, pos_y - GImGui.style.ItemSpacing.y);
     // window->dc.CursorPosPrevLine.y = window->dc.CursorPos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
     *window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height;
     // window->dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
-    *window.DC.PrevLineSize.y = (line_height - GImGui.Style.ItemSpacing.y);
+    *window.DC.PrevLineSize.y = (line_height - GImGui.style.ItemSpacing.y);
     let columns = window.DC.CurrentColumns;
     if (columns.is_null() == false) {
         columns.LineMinY = window.DC.CursorPos.y;
@@ -309,10 +309,10 @@ bool ImGuiListClipper::Step()
         if (table)
             IM_ASSERT(table->RowPosY1 == StartPosY && table->RowPosY2 == window.DC.CursorPos.y);
 
-        ItemsHeight = (window.DC.CursorPos.y - StartPosY) / (float)(DisplayEnd - DisplayStart);
+        ItemsHeight = (window.DC.CursorPos.y - StartPosY) / (DisplayEnd - DisplayStart);
         bool affected_by_floating_point_precision = ImIsFloatAboveGuaranteedIntegerPrecision(StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.DC.CursorPos.y);
         if (affected_by_floating_point_precision)
-            ItemsHeight = window.DC.PrevLineSize.y + g.Style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
+            ItemsHeight = window.DC.PrevLineSize.y + g.style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
 
         IM_ASSERT(ItemsHeight > 0.0 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
         calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.

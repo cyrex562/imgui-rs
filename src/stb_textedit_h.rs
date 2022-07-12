@@ -1714,7 +1714,7 @@ pub fn STB_TEXTEDIT_GETWIDTH(obj: *mut ImGuiInputTextState, line_start_idx: usiz
         return STB_TEXTEDIT_GETWIDTH_NEWLINE;
     }
 
-    GImGui.Font.GetCharAdvance(c) * GImGui.FontSize / GImGui.Font.FontSize
+    GImGui.font.GetCharAdvance(c) * GImGui.FontSize / GImGui.font.FontSize
 }
 // static int     STB_TEXTEDIT_KEYTOTEXT(int key)                                                    { return key >= 0x200000 ? 0 : key; }
 pub fn STB_TEXTEDIT_KEYTOTEXT(key: i32) -> i32 {
@@ -1749,7 +1749,7 @@ pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: *mut StbTexteditRow, obj: *mut ImGuiInpu
 // static int  is_word_boundary_from_left(ImGuiInputTextState* obj, int idx)
 pub fn is_word_boundary_from_left(obj: *mut ImGuiInputTextState, idx: usize) -> bool
 {
-    if &obj.Flags & ImGuiInputTextFlags::Password { return false; };
+    if &obj.flags & ImGuiInputTextFlags::Password { return false; };
     return if idx > 0 { (!is_separator(obj.TextW[idx - 1]) && is_separator(obj.TextW[idx])) }else { true };
 }
 

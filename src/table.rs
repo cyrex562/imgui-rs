@@ -300,7 +300,7 @@ pub struct Table
     // ImRect                      OuterRect;                  // Note: for non-scrolling table, OuterRect.max.y is often FLT_MAX until EndTable(), unless a height has been specified in BeginTable().
     pub OuterRect: ImRect,
     // ImRect                      inner_rect;                  // inner_rect but without decoration. As with OuterRect, for non-scrolling tables, inner_rect.max.y is
-    pub InnerRect: ImRect,
+    pub inner_rect: ImRect,
     // ImRect                      work_rect;
     pub WorkRect: ImRect,
     // ImRect                      inner_clip_rect;

@@ -43,7 +43,7 @@ pub struct Style {
     // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label).
     pub CellPadding: Vector2D,
     // Padding within a table cell
-    pub TouchExtraPadding: Vector2D,
+    pub touch_extra_padding: Vector2D,
     // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
     pub IndentSpacing: f32,
     // Horizontal indentation when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
@@ -77,15 +77,15 @@ pub struct Style {
     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
     pub MouseCursorScale: f32,
     // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
-    pub AntiAliasedLines: bool,
+    pub anti_aliased_lines: bool,
     // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-    pub AntiAliasedLinesUseTex: bool,
+    pub anti_aliased_lines_use_tex: bool,
     // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering). Latched at the beginning of the frame (copied to ImDrawList).
-    pub AntiAliasedFill: bool,
+    pub anti_aliased_fill: bool,
     // Enable anti-aliased edges around filled shapes (rounded rectangles, circles, etc.). Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-    pub CurveTessellationTol: f32,
+    pub curve_tessellation_tol: f32,
     // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
-    pub CircleTessellationMaxError: f32,
+    pub circle_tessellation_max_error: f32,
     // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     // Vector4D      Colors[ImGuiColor::COUNT];
     pub Colors: Vec<ImGuiColor>,
@@ -115,7 +115,7 @@ impl Style {
         out.ItemSpacing = Vector2D::new(8.0, 4.0);      // Horizontal and vertical spacing between widgets/lines
         out.ItemInnerSpacing = Vector2D::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
         out.CellPadding = Vector2D::new(4.0, 2.0);      // Padding within a table cell
-        out.TouchExtraPadding = Vector2D::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
+        out.touch_extra_padding = Vector2D::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
         out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
         out.ColumnsMinSpacing = 6.0;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
         out.ScrollbarSize = 14.0;            // width of the vertical scrollbar, height of the horizontal scrollbar
@@ -132,11 +132,11 @@ impl Style {
         out.DisplayWindowPadding = Vector2D::new(19.0, 19.0);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
         out.DisplaySafeAreaPadding = Vector2D::new(3.0, 3.0);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
         out.MouseCursorScale = 1.0;             // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). May be removed later.
-        out.AntiAliasedLines = true;             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
-        out.AntiAliasedLinesUseTex = true;             // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
-        out.AntiAliasedFill = true;             // Enable anti-aliased filled shapes (rounded rectangles, circles, etc.).
-        out.CurveTessellationTol = 1.25;            // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
-        out.CircleTessellationMaxError = 0.30;         // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
+        out.anti_aliased_lines = true;             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
+        out.anti_aliased_lines_use_tex = true;             // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
+        out.anti_aliased_fill = true;             // Enable anti-aliased filled shapes (rounded rectangles, circles, etc.).
+        out.curve_tessellation_tol = 1.25;            // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
+        out.circle_tessellation_max_error = 0.30;         // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 
         // Default theme
         StyleColorsDark(&mut out);
@@ -156,7 +156,7 @@ impl Style {
         self.ItemSpacing = Vector2D::floor(&self.ItemSpacing * scale_factor);
         self.ItemInnerSpacing = Vector2D::floor(&self.ItemInnerSpacing * scale_factor);
         self.CellPadding = Vector2D::floor(&self.CellPadding * scale_factor);
-        self.TouchExtraPadding = Vector2D::floor(&self.TouchExtraPadding * scale_factor);
+        self.touch_extra_padding = Vector2D::floor(&self.touch_extra_padding * scale_factor);
         self.IndentSpacing = f32::floor(self.IndentSpacing * scale_factor);
         self.ColumnsMinSpacing = f32::floor(self.ColumnsMinSpacing * scale_factor);
         self.ScrollbarSize = f32::floor(self.ScrollbarSize * scale_factor);
@@ -185,14 +185,14 @@ pub union ImGuiStyleModUnion1 {
 
 // Stacked style modifier, backup of modified data so we can restore it. data type inferred from the variable.
 #[derive(Debug,Default,Clone)]
-pub struct DimgStyleMod
+pub struct StyleMod
 {
     // ImGuiStyleVar   VarIdx;
     pub VarIdx: ImGuiStyleVar,
     pub Backup: ImGuiStyleModUnion1,
 }
 
-impl DimgStyleMod {
+impl StyleMod {
     // ImGuiStyleMod(ImGuiStyleVar idx, int v)     { VarIdx = idx; BackupInt[0] = v; }
     pub fn new(idx: ImGuiStyleVar, v: i32) -> Self {
         Self {
@@ -226,7 +226,7 @@ impl DimgStyleMod {
 // ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
 pub fn GetColorU32(idx: ImGuiColor, alpha_mul: f32) -> u32
 {
-    let style = &GImGui.Style;
+    let style = &GImGui.style;
     let c = style.Colors[idx];
     c.w *= style.Alpha * alpha_mul;
     return ColorConvertFloat4ToU32(c);
@@ -235,7 +235,7 @@ pub fn GetColorU32(idx: ImGuiColor, alpha_mul: f32) -> u32
 // ImU32 ImGui::GetColorU32(const Vector4D& col)
 pub fn GetColorU32_2(col: &mut Vector4D) -> u32
 {
-    let style = &mut GImGui.Style;
+    let style = &mut GImGui.style;
     let mut c = col;
     *c.w *= style.Alpha;
     return ColorConvertFloat4ToU32(c);
@@ -245,14 +245,14 @@ pub fn GetColorU32_2(col: &mut Vector4D) -> u32
 pub fn GetStyleColorVec4(idx: ImGuiColor) -> Vector4D
 {
     // ImGuiStyle& style = GImGui.style;
-    let style = &GImGui.Style;
+    let style = &GImGui.style;
     style.Colors[idx]
 }
 
 // ImU32 ImGui::GetColorU32(ImU32 col)
 pub fn GetColorU32_3(col: u32) -> u32
 {
-    let style = &GImGui.Style;
+    let style = &GImGui.style;
     if style.Alpha >= 1.0 {
         return col;
     }
@@ -274,9 +274,9 @@ pub fn PushStyleColor(idx: &ImGuiColor, col: u32)
     // ImGuiColorMod backup;
     let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
-    backup.BackupValue = g.Style.Colors[idx];
+    backup.BackupValue = g.style.Colors[idx];
     g.ColorStack.push_back(backup);
-    g.Style.Colors[idx] = ColorConvertU32ToFloat4(col);
+    g.style.Colors[idx] = ColorConvertU32ToFloat4(col);
 }
 
 // void ImGui::PushStyleColor(ImGuiCol idx, const Vector4D& col)
@@ -287,9 +287,9 @@ pub fn PushStyleColor2(idx: &ImGuiColor, col: &mut Vector4D)
     // ImGuiColorMod backup;
     let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
-    backup.BackupValue = g.Style.Colors[idx];
+    backup.BackupValue = g.style.Colors[idx];
     g.ColorStack.push_back(backup);
-    g.Style.Colors[idx] = col;
+    g.style.Colors[idx] = col;
 }
 
 // void ImGui::PopStyleColor(int count)
@@ -301,7 +301,7 @@ pub fn PopStyleColor(mut count: i32)
     {
         // ImGuiColorMod& backup = g.color_stack.back();
         let backup = g.ColorStack.last().unwrap();
-        g.Style.Colors[backup.Col.clone()] = backup.BackupValue.clone();
+        g.style.Colors[backup.Col.clone()] = backup.BackupValue.clone();
         g.ColorStack.pop_back();
         count -= 1;
     }
@@ -487,7 +487,7 @@ pub fn GetStyleColorName(idx: &ImGuiColor) -> String
 pub fn StyleColorsDark(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-    let style = if dst.is_null() == false { dst } else { &GImGui.Style };
+    let style = if dst.is_null() == false { dst } else { &GImGui.style };
     // Vector4D* colors = style->Colors;
     let colors = &mut style.Colors;
 
@@ -552,7 +552,7 @@ pub fn StyleColorsDark(dst: *mut Style)
 pub fn StyleColorsClassic(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-    let style = if dst.is_null() == false { dst } else { &GImGui.Style };
+    let style = if dst.is_null() == false { dst } else { &GImGui.style };
     // Vector4D* colors = style->Colors;
     let colors = &mut style.Colors;
     
@@ -618,7 +618,7 @@ pub fn StyleColorsClassic(dst: *mut Style)
 pub fn StyleColorsLight(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-    let style = if dst.is_null() == false { dst } else { &GImGui.Style };
+    let style = if dst.is_null() == false { dst } else { &GImGui.style };
     // Vector4D* colors = style->Colors;
     let colors = &mut style.Colors;
 

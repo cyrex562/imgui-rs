@@ -24,7 +24,7 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
         // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.active_id, g.active_id_window ? g.active_id_window->name : "", id, window ? window.name : "");
         ctx.active_id_timer = 0.0;
         ctx.active_id_has_been_pressed_before = false;
-        ctx.ActiveIdHasBeenEditedBefore = false;
+        ctx.active_id_has_been_edited_before = false;
         ctx.active_id_mouse_button = -1;
         if id != 0
         {
@@ -62,7 +62,7 @@ pub fn MarkItemEdited(g: &mut Context, id: Id32)
     // IM_UNUSED(id); // Avoid unused variable warnings when asserts are compiled out.
     //IM_ASSERT(g.current_window->dc.LastItemId == id);
     g.active_id_has_been_edited_this_frame = true;
-    g.ActiveIdHasBeenEditedBefore = true;
+    g.active_id_has_been_edited_before = true;
     g.last_item_data.status_flags |= ImGuiItemStatusFlags_Edited;
 }
 
@@ -79,16 +79,16 @@ void ImGui::SetHoveredID(ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
     g.hovered_id = id;
-    g.HoveredIdAllowOverlap = false;
-    g.HoveredIdUsingMouseWheel = false;
-    if (id != 0 && g.HoveredIdPreviousFrame != id)
-        g.HoveredIdTimer = g.HoveredIdNotActiveTimer = 0.0;
+    g.hovered_id_allow_overlap = false;
+    g.hovered_id_using_mouse_wheel = false;
+    if (id != 0 && g.hovered_id_previous_frame != id)
+        g.hovered_id_timer = g.hovered_id_not_active_timer = 0.0;
 }
 
 ImGuiID ImGui::GetHoveredID()
 {
     ImGuiContext& g = *GImGui;
-    return g.hovered_id ? g.hovered_id : g.HoveredIdPreviousFrame;
+    return g.hovered_id ? g.hovered_id : g.hovered_id_previous_frame;
 }
 
 // This is called by ItemAdd().
@@ -97,7 +97,7 @@ void ImGui::keep_alive_id(ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
     if (g.active_id == id)
-        g.ActiveIdIsAlive = id;
-    if (g.ActiveIdPreviousFrame == id)
-        g.ActiveIdPreviousFrameIsAlive = true;
+        g.active_id_is_alive = id;
+    if (g.active_id_previous_frame == id)
+        g.active_id_previous_frame_is_alive = true;
 }

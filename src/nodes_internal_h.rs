@@ -154,7 +154,7 @@ struct ImNodeData
 
     ImNodeData(const int node_id)
         : Id(node_id), Origin(0.0, 0.0), TitleBarContentRect(),
-          Rect(DimgVec2D::new(0.0, 0.0), DimgVec2D::new(0.0, 0.0)), ColorStyle(), LayoutStyle(), PinIndices(),
+          Rect(Vector2D::new(0.0, 0.0), Vector2D::new(0.0, 0.0)), ColorStyle(), LayoutStyle(), PinIndices(),
           Draggable(true)
     {
     }

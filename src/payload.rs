@@ -2,7 +2,7 @@ use crate::types::Id32;
 
 /// data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 #[derive(Default,Debug,Clone)]
-pub struct DimgPayload
+pub struct Payload
 {
     // Members
     pub data: Vec<u8>,               // data (copied and owned by dear imgui)
@@ -19,7 +19,7 @@ pub struct DimgPayload
 
 }
 
-impl DimgPayload {
+impl Payload {
     // ImGuiPayload()  { clear(); }
     pub fn new() -> Self {
         Self {

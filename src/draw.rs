@@ -153,7 +153,7 @@ index of this file:
 // #define STBTT_sqrt(x)       ImSqrt(x)
 // #define STBTT_pow(x,y)      ImPow(x,y)
 // #define STBTT_fabs(x)       ImFabs(x)
-// #define STBTT_ifloor(x)     (ImFloorSigned(x))
+// #define STBTT_ifloor(x)     (f32::floor(x))
 // #define STBTT_iceil(x)      (ImCeil(x))
 // #define STBTT_STATIC
 // #define STB_TRUETYPE_IMPLEMENTATION
@@ -233,7 +233,7 @@ void ImDrawList::_ResetForNewFrame()
     CmdBuffer.resize(0);
     IdxBuffer.resize(0);
     VtxBuffer.resize(0);
-    Flags = _Data->InitialFlags;
+    Flags = _Data->initial_flags;
     memset(&_CmdHeader, 0, sizeof(_CmdHeader));
     _VtxCurrentIdx = 0;
     _VtxWritePtr = NULL;
@@ -251,7 +251,7 @@ void ImDrawList::_ClearFreeMemory()
     CmdBuffer.clear();
     IdxBuffer.clear();
     VtxBuffer.clear();
-    Flags = ImDrawListFlags_None;
+    Flags = DrawListFlags::None;
     _VtxCurrentIdx = 0;
     _VtxWritePtr = NULL;
     _IdxWritePtr = NULL;
@@ -436,13 +436,13 @@ void ImDrawList::PushClipRect(const Vector2D& cr_min, const Vector2D& cr_max, bo
 
 void ImDrawList::PushClipRectFullScreen()
 {
-    PushClipRect(Vector2D::new(_Data->ClipRectFullscreen.x, _Data->ClipRectFullscreen.y), Vector2D::new(_Data->ClipRectFullscreen.z, _Data->ClipRectFullscreen.w));
+    PushClipRect(Vector2D::new(_Data->clip_rect_full_screen.x, _Data->clip_rect_full_screen.y), Vector2D::new(_Data->clip_rect_full_screen.z, _Data->clip_rect_full_screen.w));
 }
 
 void ImDrawList::PopClipRect()
 {
     _ClipRectStack.pop_back();
-    _CmdHeader.ClipRect = (_ClipRectStack.Size == 0) ? _Data->ClipRectFullscreen : _ClipRectStack.Data[_ClipRectStack.Size - 1];
+    _CmdHeader.ClipRect = (_ClipRectStack.Size == 0) ? _Data->clip_rect_full_screen : _ClipRectStack.Data[_ClipRectStack.Size - 1];
     _OnChangedClipRect();
 }
 
@@ -467,7 +467,7 @@ void ImDrawList::PrimReserve(int idx_count, int vtx_count)
 {
     // Large mesh support (when enabled)
     IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
-    if (sizeof(ImDrawIdx) == 2 && (_VtxCurrentIdx + vtx_count >= (1 << 16)) && (Flags & ImDrawListFlags_AllowVtxOffset))
+    if (sizeof(ImDrawIdx) == 2 && (_VtxCurrentIdx + vtx_count >= (1 << 16)) && (Flags & DrawListFlags::AllowVtxOffset))
     {
         // FIXME: In theory we should be testing that vtx_count <64k here.
         // In practice, render_text() relies on reserving ahead for a worst case scenario so it is currently useful for us
@@ -563,7 +563,7 @@ void ImDrawList::AddPolyline(const Vector2D* points, const int points_count, ImU
     const int count = closed ? points_count : points_count - 1; // The number of line segments we need to draw
     const bool thick_line = (thickness > _FringeScale);
 
-    if (Flags & ImDrawListFlags_AntiAliasedLines)
+    if (Flags & DrawListFlags::AntiAliasedLines)
     {
         // Anti-aliased stroke
         const float AA_SIZE = _FringeScale;
@@ -577,10 +577,10 @@ void ImDrawList::AddPolyline(const Vector2D* points, const int points_count, ImU
         // Do we want to draw this line using a texture?
         // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
         // - If AA_SIZE is not 1.0 we cannot use the texture path.
-        const bool use_texture = (Flags & ImDrawListFlags_AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0);
+        const bool use_texture = (Flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0);
 
         // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-        IM_ASSERT_PARANOID(!use_texture || !(_Data->Font->ContainerAtlas.flags & ImFontAtlasFlags_NoBakedLines));
+        IM_ASSERT_PARANOID(!use_texture || !(_Data->Font.container_atlas.flags & FontAtlasFlags::NoBakedLines));
 
         const int idx_count = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
         const int vtx_count = use_texture ? (points_count * 2) : (thick_line ? points_count * 4 : points_count * 3);
@@ -817,7 +817,7 @@ void ImDrawList::AddConvexPolyFilled(const Vector2D* points, const int points_co
 
     const Vector2D uv = _Data->TexUvWhitePixel;
 
-    if (Flags & ImDrawListFlags_AntiAliasedFill)
+    if (Flags & DrawListFlags::AntiAliasedFill)
     {
         // Anti-aliased Fill
         const float AA_SIZE = _FringeScale;
@@ -996,7 +996,7 @@ void ImDrawList::_PathArcToN(const Vector2D& center, float radius, float a_min, 
     _Path.reserve(_Path.Size + (num_segments + 1));
     for (int i = 0; i <= num_segments; i += 1)
     {
-        const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
+        const float a = a_min + ((float)i / num_segments) * (a_max - a_min);
         _Path.push_back(Vector2D::new(center.x + ImCos(a) * radius, center.y + ImSin(a) * radius));
     }
 }
@@ -1036,8 +1036,8 @@ void ImDrawList::PathArcTo(const Vector2D& center, float radius, float a_min, fl
         const float a_min_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.0);
         const float a_max_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.0);
 
-        const int a_min_sample = a_is_reverse ? ImFloorSigned(a_min_sample_f) : ImCeil(a_min_sample_f);
-        const int a_max_sample = a_is_reverse ? ImCeil(a_max_sample_f) : ImFloorSigned(a_max_sample_f);
+        const int a_min_sample = a_is_reverse ? f32::floor(a_min_sample_f) : ImCeil(a_min_sample_f);
+        const int a_max_sample = a_is_reverse ? ImCeil(a_max_sample_f) : f32::floor(a_max_sample_f);
         const int a_mid_samples = a_is_reverse ? ImMax(a_min_sample - a_max_sample, 0) : ImMax(a_max_sample - a_min_sample, 0);
 
         const float a_min_segment_angle = a_min_sample * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
@@ -1130,11 +1130,11 @@ void ImDrawList::PathBezierCubicCurveTo(const Vector2D& p2, const Vector2D& p3, 
     Vector2D p1 = _Path.back();
     if (num_segments == 0)
     {
-        PathBezierCubicCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data->CurveTessellationTol, 0); // Auto-tessellated
+        PathBezierCubicCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data->curve_tessellation_tol, 0); // Auto-tessellated
     }
     else
     {
-        float t_step = 1.0 / (float)num_segments;
+        float t_step = 1.0 / num_segments;
         for (int i_step = 1; i_step <= num_segments; i_step += 1)
             _Path.push_back(ImBezierCubicCalc(p1, p2, p3, p4, t_step * i_step));
     }
@@ -1145,11 +1145,11 @@ void ImDrawList::PathBezierQuadraticCurveTo(const Vector2D& p2, const Vector2D& 
     Vector2D p1 = _Path.back();
     if (num_segments == 0)
     {
-        PathBezierQuadraticCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data->CurveTessellationTol, 0);// Auto-tessellated
+        PathBezierQuadraticCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data->curve_tessellation_tol, 0);// Auto-tessellated
     }
     else
     {
-        float t_step = 1.0 / (float)num_segments;
+        float t_step = 1.0 / num_segments;
         for (int i_step = 1; i_step <= num_segments; i_step += 1)
             _Path.push_back(ImBezierQuadraticCalc(p1, p2, p3, t_step * i_step));
     }
@@ -1230,7 +1230,7 @@ void ImDrawList::AddRect(const Vector2D& p_min, const Vector2D& p_max, ImU32 col
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
-    if (Flags & ImDrawListFlags_AntiAliasedLines)
+    if (Flags & DrawListFlags::AntiAliasedLines)
         PathRect(p_min + Vector2D::new(0.50, 0.50), p_max - Vector2D::new(0.50, 0.50), rounding, flags);
     else
         PathRect(p_min + Vector2D::new(0.50, 0.50), p_max - Vector2D::new(0.49, 0.49), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
@@ -1332,7 +1332,7 @@ void ImDrawList::AddCircle(const Vector2D& center, float radius, ImU32 col, int 
         num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
 
         // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / (float)num_segments;
+        const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
         PathArcTo(center, radius - 0.5, 0.0, a_max, num_segments - 1);
     }
 
@@ -1356,7 +1356,7 @@ void ImDrawList::AddCircleFilled(const Vector2D& center, float radius, ImU32 col
         num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
 
         // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / (float)num_segments;
+        const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
         PathArcTo(center, radius, 0.0, a_max, num_segments - 1);
     }
 
@@ -1370,7 +1370,7 @@ void ImDrawList::AddNgon(const Vector2D& center, float radius, ImU32 col, int nu
         return;
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
-    const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / (float)num_segments;
+    const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
     PathArcTo(center, radius - 0.5, 0.0, a_max, num_segments - 1);
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
@@ -1382,7 +1382,7 @@ void ImDrawList::AddNgonFilled(const Vector2D& center, float radius, ImU32 col, 
         return;
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
-    const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / (float)num_segments;
+    const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
     PathArcTo(center, radius, 0.0, a_max, num_segments - 1);
     PathFillConvex(col);
 }
@@ -1425,7 +1425,7 @@ void ImDrawList::AddText(const ImFont* font, float font_size, const Vector2D& po
     if (font_size == 0.0)
         font_size = _Data->FontSize;
 
-    IM_ASSERT(font->ContainerAtlas->TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
+    IM_ASSERT(font.container_atlas->TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
     Vector4D clip_rect = _CmdHeader.ClipRect;
     if (cpu_fine_clip_rect)
@@ -2059,7 +2059,7 @@ int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int
     r.GlyphID = id;
     r.GlyphAdvanceX = advance_x;
     r.GlyphOffset = offset;
-    r.Font = font;
+    r.font = font;
     CustomRects.push_back(r);
     return CustomRects.Size - 1; // Return index
 }
@@ -2068,8 +2068,8 @@ void ImFontAtlas::CalcCustomRectUV(const ImFontAtlasCustomRect* rect, Vector2D* 
 {
     IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // font atlas needs to be built before we can calculate UV coordinates
     IM_ASSERT(rect->IsPacked());                // Make sure the rectangle has been packed
-    *out_uv_min = Vector2D::new((float)rect->X * TexUvScale.x, (float)rect->Y * TexUvScale.y);
-    *out_uv_max = Vector2D::new((float)(rect->X + rect->Width) * TexUvScale.x, (float)(rect->Y + rect->Height) * TexUvScale.y);
+    *out_uv_min = Vector2D::new((float)rect->X * TexUvScale.x, rect->Y * TexUvScale.y);
+    *out_uv_max = Vector2D::new((float)(rect->X + rect->Width) * TexUvScale.x, (rect->Y + rect->Height) * TexUvScale.y);
 }
 
 bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* out_offset, Vector2D* out_size, Vector2D out_uv_border[2], Vector2D out_uv_fill[2])
@@ -2081,7 +2081,7 @@ bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* 
 
     IM_ASSERT(PackIdMouseCursors != -1);
     ImFontAtlasCustomRect* r = GetCustomRectByIndex(PackIdMouseCursors);
-    Vector2D pos = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + Vector2D::new((float)r->X, (float)r->Y);
+    Vector2D pos = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + Vector2D::new((float)r->X, r->Y);
     Vector2D size = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
     *out_size = size;
     *out_offset = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][2];
@@ -2203,7 +2203,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     {
         ImFontBuildSrcData& src_tmp = src_tmp_array[src_i];
         ImFontConfig& cfg = atlas->ConfigData[src_i];
-        IM_ASSERT(cfg.DstFont && (!cfg.DstFont->IsLoaded() || cfg.DstFont->ContainerAtlas == atlas));
+        IM_ASSERT(cfg.DstFont && (!cfg.DstFont->IsLoaded() || cfg.DstFont.container_atlas == atlas));
 
         // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
@@ -2404,8 +2404,8 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         int unscaled_ascent, unscaled_descent, unscaled_line_gap;
         stbtt_GetFontVMetrics(&src_tmp.FontInfo, &unscaled_ascent, &unscaled_descent, &unscaled_line_gap);
 
-        const float ascent = ImFloor(unscaled_ascent * font_scale + ((unscaled_ascent > 0.0) ? +1 : -1));
-        const float descent = ImFloor(unscaled_descent * font_scale + ((unscaled_descent > 0.0) ? +1 : -1));
+        const float ascent = f32::floor(unscaled_ascent * font_scale + ((unscaled_ascent > 0.0) ? +1 : -1));
+        const float descent = f32::floor(unscaled_descent * font_scale + ((unscaled_descent > 0.0) ? +1 : -1));
         ImFontAtlasBuildSetupFont(atlas, dst_font, &cfg, ascent, descent);
         const float font_off_x = cfg.GlyphOffset.x;
         const float font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font->Ascent);
@@ -2446,7 +2446,7 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
         font->FontSize = font_config->SizePixels;
         font->ConfigData = font_config;
         font->ConfigDataCount = 0;
-        font->ContainerAtlas = atlas;
+        font.container_atlas = atlas;
         font->Ascent = ascent;
         font->Descent = descent;
     }
@@ -2542,7 +2542,7 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
 
 static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
 {
-    if (atlas.flags & ImFontAtlasFlags_NoBakedLines)
+    if (atlas.flags & FontAtlasFlags::NoBakedLines)
         return;
 
     // This generates a triangular shape in the texture, with the various line widths stacked on top of each other to allow interpolation between them
@@ -2584,8 +2584,8 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         }
 
         // Calculate UVs for this line
-        Vector2D uv0 = Vector2D::new((float)(r->X + pad_left - 1), (float)(r->Y + y)) * atlas->TexUvScale;
-        Vector2D uv1 = Vector2D::new((float)(r->X + pad_left + line_width + 1), (float)(r->Y + y + 1)) * atlas->TexUvScale;
+        Vector2D uv0 = Vector2D::new((float)(r->X + pad_left - 1), (r->Y + y)) * atlas->TexUvScale;
+        Vector2D uv1 = Vector2D::new((float)(r->X + pad_left + line_width + 1), (r->Y + y + 1)) * atlas->TexUvScale;
         float half_v = (uv0.y + uv1.y) * 0.5; // Calculate a constant V in the middle of the row to avoid sampling artifacts
         atlas->TexUvLines[n] = Vector4D(uv0.x, half_v, uv1.x, half_v);
     }
@@ -2607,7 +2607,7 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
     // The +2 here is to give space for the end caps, whilst height +1 is to accommodate the fact we have a zero-width row
     if (atlas->PackIdLines < 0)
     {
-        if (!(atlas.flags & ImFontAtlasFlags_NoBakedLines))
+        if (!(atlas.flags & FontAtlasFlags::NoBakedLines))
             atlas->PackIdLines = atlas->AddCustomRectRegular(IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 2, IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1);
     }
 }
@@ -2628,7 +2628,7 @@ void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
             continue;
 
         // Will ignore ImFontConfig settings: glyph_min_advance_x, GlyphMinAdvanceY, glyph_extra_spacing, pixel_snap_h
-        IM_ASSERT(r->Font->ContainerAtlas == atlas);
+        IM_ASSERT(r->Font.container_atlas == atlas);
         Vector2D uv0, uv1;
         atlas->CalcCustomRectUV(r, &uv0, &uv1);
         r->Font->AddGlyph(NULL, (ImWchar)r->GlyphID, r->GlyphOffset.x, r->GlyphOffset.y, r->GlyphOffset.x + r->Width, r->GlyphOffset.y + r->Height, uv0.x, uv0.y, uv1.x, uv1.y, r->GlyphAdvanceX);
@@ -3017,7 +3017,7 @@ void ImFont::BuildLookupTable()
         tab_glyph = *FindGlyph((ImWchar)' ');
         tab_glyph.Codepoint = '\t';
         tab_glyph.AdvanceX *= IM_TABSIZE;
-        IndexAdvanceX[tab_glyph.Codepoint] = (float)tab_glyph.AdvanceX;
+        IndexAdvanceX[tab_glyph.Codepoint] = tab_glyph.AdvanceX;
         IndexLookup[tab_glyph.Codepoint] = (ImWchar)(Glyphs.Size - 1);
     }
 
@@ -3095,7 +3095,7 @@ void ImFont::AddGlyph(const ImFontConfig* cfg, ImWchar codepoint, float x0, floa
         advance_x = ImClamp(advance_x, cfg->GlyphMinAdvanceX, cfg->GlyphMaxAdvanceX);
         if (advance_x != advance_x_original)
         {
-            float char_off_x = cfg->PixelSnapH ? ImFloor((advance_x - advance_x_original) * 0.5) : (advance_x - advance_x_original) * 0.5;
+            float char_off_x = cfg->PixelSnapH ? f32::floor((advance_x - advance_x_original) * 0.5) : (advance_x - advance_x_original) * 0.5;
             x0 += char_off_x;
             x1 += char_off_x;
         }

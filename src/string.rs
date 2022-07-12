@@ -11,7 +11,7 @@ pub fn is_separator(c: u32) -> bool {
 
 // static int  is_word_boundary_from_right(ImGuiInputTextState* obj, int idx)
 pub fn is_word_boundary_from_right(obj: *mut ImGuiInputTextState, idx: usize) -> bool {
-    if &obj.Flags & ImGuiInputTextFlags::Password { return false; } else {};
+    if &obj.flags & ImGuiInputTextFlags::Password { return false; } else {};
     return if idx > 0 { (is_separator(obj.TextW[idx - 1]) && !is_separator(obj.TextW[idx])) } else { 1 };
 }
 

@@ -45,7 +45,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     if text != text_display_end
     {
-        window.DrawList.AddText2(&g.Font, g.FontSize, pos, GetColorU32_3(ImGuiColor::Text as u32), text, text_display_end, 0.0, None);
+        window.DrawList.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(ImGuiColor::Text as u32), text, text_display_end, 0.0, None);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
         }
@@ -66,7 +66,7 @@ pub fn RenderTextWrapped(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     if text != text_end
     {
-        window.DrawList.AddText2(&g.Font, g.FontSize, pos, GetColorU32_3(ImGuiCol_Text), text, text_end, wrap_width);
+        window.DrawList.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(ImGuiCol_Text), text, text_end, wrap_width);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_end);
         }
@@ -161,7 +161,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
             // Full ellipsis size without free spacing after it.
             const float spacing_between_dots = 1.0 * (draw_list->_Data->FontSize / font->FontSize);
             ellipsis_glyph_width = glyph->X1 - glyph->X0 + spacing_between_dots;
-            ellipsis_total_width = ellipsis_glyph_width * (float)ellipsis_char_count - spacing_between_dots;
+            ellipsis_total_width = ellipsis_glyph_width * ellipsis_char_count - spacing_between_dots;
         }
 
         // We can now claim the space between pos_max.x and ellipsis_max.x
@@ -181,18 +181,18 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         }
 
         // Render text, render ellipsis
-        RenderTextClippedEx(draw_list, pos_min, DimgVec2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, DimgVec2D::new(0.0, 0.0));
+        RenderTextClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, Vector2D::new(0.0, 0.0));
         float ellipsis_x = pos_min.x + text_size_clipped_x;
         if (ellipsis_x + ellipsis_total_width <= ellipsis_max_x)
             for (int i = 0; i < ellipsis_char_count; i += 1)
             {
-                font->RenderChar(draw_list, font_size, DimgVec2D::new(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text), ellipsis_char);
+                font->RenderChar(draw_list, font_size, Vector2D::new(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
     }
     else
     {
-        RenderTextClippedEx(draw_list, pos_min, DimgVec2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, DimgVec2D::new(0.0, 0.0));
+        RenderTextClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, Vector2D::new(0.0, 0.0));
     }
 
     if (g.LogEnabled)
@@ -205,10 +205,10 @@ void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool bor
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
     window.DrawList->AddRectFilled(p_min, p_max, fill_col, rounding);
-    const float border_size = g.Style.FrameBorderSize;
+    const float border_size = g.style.FrameBorderSize;
     if (border && border_size > 0.0)
     {
-        window.DrawList->AddRect(p_min + DimgVec2D::new(1, 1), p_max + DimgVec2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
+        window.DrawList->AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
         window.DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
     }
 }
@@ -217,10 +217,10 @@ void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
-    const float border_size = g.Style.FrameBorderSize;
+    const float border_size = g.style.FrameBorderSize;
     if (border_size > 0.0)
     {
-        window.DrawList->AddRect(p_min + DimgVec2D::new(1, 1), p_max + DimgVec2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
+        window.DrawList->AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
         window.DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
     }
 }
@@ -236,18 +236,18 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
     if (window.DC.NavHideHighlightOneFrame)
         return;
 
-    float rounding = (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.Style.FrameRounding;
+    float rounding = (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.style.FrameRounding;
     ImRect display_rect = bb;
     display_rect.ClipWith(window.ClipRect);
     if (flags & ImGuiNavHighlightFlags_TypeDefault)
     {
         const float THICKNESS = 2.0;
         const float DISTANCE = 3.0 + THICKNESS * 0.5;
-        display_rect.Expand(DimgVec2D::new(DISTANCE, DISTANCE));
+        display_rect.Expand(Vector2D::new(DISTANCE, DISTANCE));
         bool fully_visible = window.ClipRect.Contains(display_rect);
         if (!fully_visible)
             window.DrawList->PushClipRect(display_rect.Min, display_rect.Max);
-        window.DrawList->AddRect(display_rect.Min + DimgVec2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - DimgVec2D::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight), rounding, 0, THICKNESS);
+        window.DrawList->AddRect(display_rect.Min + Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight), rounding, 0, THICKNESS);
         if (!fully_visible)
             window.DrawList->PopClipRect();
     }
@@ -261,23 +261,23 @@ void ImGui::RenderMouseCursor(Vector2D base_pos, float base_scale, ImGuiMouseCur
 {
     ImGuiContext& g = *GImGui;
     IM_ASSERT(mouse_cursor > ImGuiMouseCursor_None && mouse_cursor < ImGuiMouseCursor_COUNT);
-    ImFontAtlas* font_atlas = g.DrawListSharedData.Font->ContainerAtlas;
-    for (int n = 0; n < g.Viewports.Size; n += 1)
+    ImFontAtlas* font_atlas = g.draw_list_shared_data.font.container_atlas;
+    for (int n = 0; n < g.viewports.Size; n += 1)
     {
         // We scale cursor with current viewport/monitor, however windows 10 for its own hardware cursor seems to be using a different scale factor.
         Vector2D offset, size, uv[4];
         if (!font_atlas->GetMouseCursorTexData(mouse_cursor, &offset, &size, &uv[0], &uv[2]))
             continue;
-        ImGuiViewportP* viewport = g.Viewports[n];
+        ImGuiViewportP* viewport = g.viewports[n];
         const Vector2D pos = base_pos - offset;
         const float scale = base_scale * viewport->DpiScale;
-        if (!viewport->GetMainRect().Overlaps(ImRect(pos, pos + DimgVec2D::new(size.x + 2, size.y + 2) * scale)))
+        if (!viewport->get_main_rect().Overlaps(ImRect(pos, pos + Vector2D::new(size.x + 2, size.y + 2) * scale)))
             continue;
         ImDrawList* draw_list = GetForegroundDrawList(viewport);
         ImTextureID tex_id = font_atlas->TexID;
         draw_list->PushTextureID(tex_id);
-        draw_list->AddImage(tex_id, pos + DimgVec2D::new(1, 0) * scale, pos + (DimgVec2D::new(1, 0) + size) * scale, uv[2], uv[3], col_shadow);
-        draw_list->AddImage(tex_id, pos + DimgVec2D::new(2, 0) * scale, pos + (DimgVec2D::new(2, 0) + size) * scale, uv[2], uv[3], col_shadow);
+        draw_list->AddImage(tex_id, pos + Vector2D::new(1, 0) * scale, pos + (Vector2D::new(1, 0) + size) * scale, uv[2], uv[3], col_shadow);
+        draw_list->AddImage(tex_id, pos + Vector2D::new(2, 0) * scale, pos + (Vector2D::new(2, 0) + size) * scale, uv[2], uv[3], col_shadow);
         draw_list->AddImage(tex_id, pos,                        pos + size * scale,                  uv[2], uv[3], col_border);
         draw_list->AddImage(tex_id, pos,                        pos + size * scale,                  uv[0], uv[1], col_fill);
         draw_list->PopTextureID();

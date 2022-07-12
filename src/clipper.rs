@@ -45,7 +45,7 @@ impl ImGuiListClipperRange {
 
 // Temporary clipper data, buffers shared/reused between instances
 #[derive(Debug,Clone,Default)]
-pub struct DimgListClipperData
+pub struct ListClipperData
 {
     // ImGuiListClipper*               ListClipper;
     pub ListClipper: *mut ImGuiListClipper,
@@ -59,7 +59,7 @@ pub struct DimgListClipperData
     pub Ranges: Vec<ImGuiListClipperRange>,
 }
 
-impl DimgListClipperData {
+impl ListClipperData {
     // ImGuiListClipperData()          { memset(this, 0, sizeof(*this)); }
     pub fn new() -> Self {
         Self {

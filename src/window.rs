@@ -12,6 +12,7 @@ use crate::defines::ImGuiSizeCallback;
 use crate::direction::Direction;
 use crate::dock::DockNodeFlags;
 use crate::dock_node::{dock_node_get_root_node, DockNode};
+use crate::drag_drop::DragDropFlags;
 use crate::draw_list::DrawList;
 use crate::globals::GImGui;
 use crate::hash::{ImHashData, ImHashStr};
@@ -286,7 +287,7 @@ pub struct Window {
     // ImDrawList              DrawListInst;
     pub draw_list_inst: DrawList,
     // ImGuiWindow*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
-    pub parent_window: WindowHandle,
+    pub parent_window_id: WindowHandle,
     // ImGuiWindow*            parent_window_in_begin_stack;
     pub parent_window_in_begin_stack: WindowHandle,
     // ImGuiWindow*            root_window;                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
@@ -479,7 +480,7 @@ pub fn set_current_window(ctx: &mut Context, window_handle: WindowHandle) {
     // ImGuiContext& g = *GImGui;
     ctx.current_window_id = window_handle;
     // if window
-    ctx.current_table = if window_handle.DC.CurrentTableIdx != -1 { ctx.tables.GetByIndex(window_handle.DC.CurrentTableIdx) } else { null_mut() };
+    ctx.current_table = if window_handle.DC.CurrentTableIdx != -1 { ctx.tables.get_by_index(window_handle.DC.CurrentTableIdx) } else { null_mut() };
     ctx.font_size = window_handle.CalcFontSize();
     ctx.draw_list_shared_data.font_size = window_handle.CalcFontSize();
 }
@@ -492,7 +493,7 @@ pub struct WindowDockStyle {
 
 // data saved for each window pushed into the stack
 #[derive(Debug, Clone, Default)]
-pub struct DimgWindowStackData {
+pub struct WindowStackData {
     // ImGuiWindow*            Window;
     pub Window: *mut Window,
     // ImGuiLastItemData       ParentLastItemDataBackup;
@@ -581,7 +582,7 @@ impl NextWindowData {
     }
     //     inline void ClearFlags()    { flags = ImGuiNextWindowDataFlags_None; }
     pub fn ClearFlags(&mut self) {
-        self.Flags = ImGuiNextWindowDataFlags::None
+        self.flags = ImGuiNextWindowDataFlags::None
     }
 }
 
@@ -609,13 +610,13 @@ pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: 
     // ImGuiContext& g = *GImGui;
     if g.nav_window {
         if ImGuiWindow * focused_root_window = g.nav_window.RootWindowDockTree {
-            if focused_root_window.WasActive && focused_root_window != window.root_window_dock_tree {
+            if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree {
                 // For the purpose of those flags we differentiate "standard popup" from "modal popup"
                 // NB: The order of those two tests is important because Modal windows are also Popups.
-                if focused_root_window.Flags & WindowFlags::Modal {
+                if focused_root_window.flags & WindowFlags::Modal {
                     return false;
                 }
-                if (focused_root_window.Flags & WindowFlags::Popup) && !(flags & HoveredFlags::AllowWhenBlockedByPopup) {
+                if (focused_root_window.flags & WindowFlags::Popup) && !(flags & HoveredFlags::AllowWhenBlockedByPopup) {
                     return false;
                 }
             }
@@ -761,7 +762,7 @@ pub struct WindowSettings
     // char* GetName()             { return (char*)(this + 1); }
 }
 
-//     ImGuiWindowFlags_NoDecoration           = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
+//     ImGuiWindowFlags_NoDecoration           = WindowFlags::NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
 // pub const NoDecoration: i32 = DimgWindowFlags::NoTitleBar | DimgWindowFlags::NoResize | DimgWindowFlags::NoScrollbar | DimgWindowFlags::NoCollapse;
 pub const DIMG_WIN_FLAGS_NO_DECORATION: HashSet<WindowFlags> = HashSet::from([
     WindowFlags::NoTitleBar, WindowFlags::NoResize, WindowFlags::NoScrollbar, WindowFlags::NoCollapse
@@ -838,7 +839,7 @@ pub enum DimgFocusedFlags
 {
     None                          = 0,
     ChildWindows                  = 1 << 0,   // Return true if any children of the window is focused
-    RootWindow                    = 1 << 1,   // Test from root window (top most parent of the current hierarchy)
+    root_window                    = 1 << 1,   // Test from root window (top most parent of the current hierarchy)
     AnyWindow                     = 1 << 2,   // Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.want_capture_mouse' instead! Please read the FAQ!
     NoPopupHierarchy              = 1 << 3,   // Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
     DockHierarchy                 = 1 << 4,   // Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
@@ -854,7 +855,7 @@ pub enum HoveredFlags
 {
     None                          = 0,        // Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.
     ChildWindows                  = 1 << 0,   // IsWindowHovered() only: Return true if any children of the window is hovered
-    RootWindow                    = 1 << 1,   // IsWindowHovered() only: Test from root window (top most parent of the current hierarchy)
+    root_window                    = 1 << 1,   // IsWindowHovered() only: Test from root window (top most parent of the current hierarchy)
     AnyWindow                     = 1 << 2,   // IsWindowHovered() only: Return true if any window is hovered
     NoPopupHierarchy              = 1 << 3,   // IsWindowHovered() only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
     DockHierarchy                 = 1 << 4,   // IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
@@ -870,7 +871,7 @@ pub enum HoveredFlags
 
 // pub const RootAndChildWindows: i32           = DimgHoveredFlags::RootWindow | DimgHoveredFlags::ChildWindows;
 pub const ROOT_AND_CHILD_WINDOWS: HashSet<HoveredFlags> = HashSet::from([
-    HoveredFlags::RootWindow, HoveredFlags::ChildWindows
+    HoveredFlags::root_window, HoveredFlags::ChildWindows
 ]);
 
 
@@ -1028,9 +1029,9 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
         // const bool window_disappared = ((!moving_window.WasActive && !moving_window.Active) || moving_window.viewport == NULL);
         let window_disappeared = !moving
-        if (g.io.mouse_down[0] && is_mouse_pos_valid(&g.io.MousePos) && !window_disappared)
+        if (g.io.mouse_down[0] && is_mouse_pos_valid(&g.io.mouse_pos) && !window_disappared)
         {
-            // Vector2D pos = g.io.MousePos - g.ActiveIdClickOffset;
+            // Vector2D pos = g.io.mouse_pos - g.ActiveIdClickOffset;
             let mut pos = g.io.mouse_pos.clone() - g.active_id_click_offset.clone();
             if (moving_window.pos.x != pos.x || moving_window.pos.y != pos.y)
             {
@@ -1082,4 +1083,221 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
             }
         }
     }
+}
+
+/// Initiate moving window when clicking on empty space or title bar.
+/// Handle left-click and right-click focus.
+/// void ImGui::UpdateMouseMovingWindowEndFrame()
+pub fn update_mouse_moving_window_end_frame(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    if g.active_id != INVALID_ID || g.hovered_id != INVALID_ID {
+        return;
+    }
+
+    // Unless we just made a window/popup appear
+    // if (g.nav_window && g.nav_window.appearing) {
+    //     return;
+    // }
+    if g.nav_window != INVALID_ID {
+        let win = g.get_window(g.nav_window).unwrap();
+        if win.appearing {
+            return;
+        }
+    }
+
+    // Click on empty space to focus window and start moving
+    // (after we're done with all our widgets, so e.g. clicking on docking tab-bar which have set hovered_id already and not get us here!)
+    if g.io.mouse_clicked[0]
+    {
+        // Handle the edge case of a popup being closed while clicking in its empty space.
+        // If we try to focus it, focus_window() > close_popups_over_window() will accidentally close any parent popups because they are not linked together any more.
+        // ImGuiWindow* root_window = g.hovered_window ? g.hovered_window->RootWindow : NULL;
+        let root_window = if g.hovered_window_id != INVALID_ID {
+            let hov_win = g.get_window(g.hovered_window_id).unwrap();
+            Some(g.get_window(hov_win.root_window).unwrap())
+        } else {
+            None
+        };
+        // const bool is_closed_popup = root_window && (root_window.Flags & ImGuiWindowFlags_Popup) && !IsPopupOpen(root_window.PopupId, ImGuiPopupFlags_AnyPopupLevel);
+        let is_closed_popup: bool = if root_window.is_some() {
+            let root_win = root_window.unwrap();
+            if root_win.flags.contains(&WindowFlags::Popup) {
+                if is_popup_open(root_win.popup_id, PopupFlags::AnyPopupLevel) {
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+
+        // if (root_window != NULL && !is_closed_popup)
+
+        if root_window != INVALID_ID && is_closed_popup == false
+        {
+            let root_win = root_window.unwrap();
+            start_mouse_moving_window(g, g.hovered_window); //-V595
+
+            // Cancel moving if clicked outside of title bar
+            if g.io.config_windows_move_from_title_bar_only {
+                if !(root_win.flags.contains(&WindowFlags::NoTitleBar)) || root_win.dock_is_active {
+                    if !root_win.title_bar_rect().Contains(&g.io.mouse_clicked_pos[0]) {
+                        g.moving_window = NULL;
+                    }
+                }
+            }
+
+            // Cancel moving if clicked over an item which was disabled or inhibited by popups (note that we know hovered_id == 0 already)
+            if g.hovered_id_disabled {
+                g.moving_window = NULL;
+            }
+        }
+        else if root_window == INVALID_ID && g.nav_window != NULL && get_top_most_popup_modal() == NULL
+        {
+            // Clicking on void disable focus
+            focus_window(NULL);
+        }
+    }
+
+    // With right mouse button we close popups without changing focus based on where the mouse is aimed
+    // Instead, focus will be restored to the window under the bottom-most closed popup.
+    // (The left mouse button path calls focus_window on the hovered window, which will lead NewFrame->close_popups_over_window to trigger)
+    if g.io.mouse_clicked[1]
+    {
+        // Find the top-most window between hovered_window and the top-most Modal Window.
+        // This is where we can trim the popup stack.
+        let modal = get_top_most_popup_modal();
+        let hovered_window_above_modal = g.hovered_window && (modal == NULL || is_window_above(g.hovered_window, modal));
+        close_popups_over_window(if hovered_window_above_modal { g.hovered_window } else { modal}, true);
+    }
+}
+
+/// This is called during NewFrame()->UpdateViewportsNewFrame() only.
+/// Need to keep in sync with set_window_pos()
+/// static void TranslateWindow(ImGuiWindow* window, const Vector2D& delta)
+pub fn translate_window(window: &mut Window, delta: &Vector2D)
+{
+    window.pos += delta;
+    window.ClipRect.Translate(delta);
+    window.OuterRectClipped.Translate(delta);
+    window.inner_rect.Translate(delta);
+    window.DC.CursorPos += delta;
+    window.DC.CursorStartPos += delta;
+    window.DC.CursorMaxPos += delta;
+    window.DC.IdealMaxPos += delta;
+}
+
+/// static void ScaleWindow(ImGuiWindow* window, float scale)
+pub fn scale_window(window: &mut Window, scale: f32)
+{
+    // Vector2D origin = window.viewport.pos;
+    let mut origin = window.viewport.pos;
+    window.pos = f32::floor((window.pos - origin) * scale + origin);
+    window.size = f32::floor(window.size * scale);
+    window.size_full = f32::floor(window.size_full * scale);
+    window.ContentSize = f32::floor(window.ContentSize * scale);
+}
+
+// static bool IsWindowActiveAndVisible(ImGuiWindow* window)
+pub fn is_window_active_and_visible(window: &mut Window)
+{
+    return (window.active) && (!window.hidden);
+}
+
+/// The reason this is exposed in imgui_internal.h is: on touch-based system that don't have hovering, we want to dispatch inputs to the right target (imgui vs imgui+app)
+/// void ImGui::UpdateHoveredWindowAndCaptureFlags()
+pub fn update_hovered_window_and_capture_flags(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    // ImGuiIO& io = g.io;
+    let io = &mut g.io;
+    g.windows_hover_padding = Vector2D::max(g.style.touch_extra_padding, Vector2D::new(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
+
+    // Find the window hovered by mouse:
+    // - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from hovered_window.
+    // - When moving a window we can skip the search, which also conveniently bypasses the fact that window->WindowRectClipped is lagging as this point of the frame.
+    // - We also support the moved window toggling the NoInputs flag after moving has started in order to be able to detect windows below it, which is useful for e.g. docking mechanisms.
+    let mut clear_hovered_windows = false;
+    find_hovered_window();
+    // IM_ASSERT(g.hovered_window == NULL || g.hovered_window == g.moving_window || g.hovered_window->Viewport == g.mouse_viewport);
+
+    // Modal windows prevents mouse from hovering behind them.
+    // ImGuiWindow* modal_window = get_top_most_popup_modal();
+    let modal_window = get_top_most_popup_modal();
+    let hov_win = g.get_window(g.hovered_window_id).unwrap();
+    if modal_window && hovered_window_id != INVALID_ID && !is_window_within_begin_stack_of(g.get_window(g.hovered_window).unwrap().root_window, modal_window) { // FIXME-MERGE: root_window_dock_tree ?
+        clear_hovered_windows = true;
+    }
+
+    // Disabled mouse?
+    if io.config_flags.contains(&ConfigFlags::NoMouse) {
+        clear_hovered_windows = true;
+    }
+
+    // We track click ownership. When clicked outside of a window the click is owned by the application and
+    // won't report hovering nor request capture even while dragging over our windows afterward.
+    // const bool has_open_popup = (g.OpenPopupStack.Size > 0);
+    let has_open_popup = g.open_popup_stack.size > 0;
+    let has_open_modal = (modal_window != NULL);
+    let mut mouse_earliest_down = -1;
+    let mut mouse_any_down = false;
+    // for (int i = 0; i < IM_ARRAYSIZE(io.mouse_down); i += 1)
+    for i in 0 .. io.mouse_down.len()
+    {
+        if (io.mouse_clicked[i])
+        {
+            io.mouse_down_owned[i] = (g.hovered_window_id != INVALID_ID) || has_open_popup;
+            io.mouse_down_owned_unless_popup_close[i] = (g.hovered_window_id != INVALID_ID) || has_open_modal;
+        }
+        mouse_any_down |= io.mouse_down[i];
+        if (io.mouse_down[i]) {
+            if (mouse_earliest_down == -1 || io.mouse_clicked_time[i] < io.mouse_clicked_time[mouse_earliest_down]) {
+                mouse_earliest_down = i;
+            }
+        }
+    }
+    let mouse_avail = (mouse_earliest_down == -1) || io.mouse_down_owned[mouse_earliest_down];
+    let mouse_avail_unless_popup_close = (mouse_earliest_down == -1) || io.mouse_down_owned_unless_popup_close[mouse_earliest_down];
+
+    // If mouse was first clicked outside of ImGui bounds we also cancel out hovering.
+    // FIXME: For patterns of drag and drop across OS windows, we may need to rework/remove this test (first committed 311c0ca9 on 2015/02)
+    let mouse_dragging_extern_payload = g.drag_drop_active && (g.drag_drop_source_flags & DragDropFlags::SourceExtern) != 0;
+    if (!mouse_avail && !mouse_dragging_extern_payload) {
+        clear_hovered_windows = true;
+    }
+
+    if (clear_hovered_windows) {
+        g.hovered_window = g.hovered_window_under_moving_window = NULL;
+    }
+
+    // Update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
+    // Update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
+    if (g.want_capture_mouse_next_frame != -1)
+    {
+         io.want_capture_mouse_unless_popup_close = (g.want_capture_mouse_next_frame != 0);
+        io.want_capture_mouse = io.want_capture_mouse_unless_popup_close;
+    }
+    else
+    {
+        io.want_capture_mouse = (mouse_avail && (g.hovered_window_id != INVALID_ID || mouse_any_down)) || has_open_popup;
+        io.want_capture_mouse_unless_popup_close = (mouse_avail_unless_popup_close && (g.hovered_window_id != INVALID_ID || mouse_any_down)) || has_open_modal;
+    }
+
+    // Update io.want_capture_keyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
+    if (g.want_capture_keyboard_next_frame != -1) {
+        io.want_capture_keyboard = (g.want_capture_keyboard_next_frame != 0);
+    }
+    else{
+    io.want_capture_keyboard = (g.active_id != 0) || (modal_window != NULL);
+}
+    if (io.nav_active && (io.config_flags.contains(&ConfigFlags::NavEnableKeyboard)) && !(io.config_flags.contains(&ConfigFlags::NavNoCaptureKeyboard))) {
+        io.want_capture_keyboard = true;
+    }
+
+    // Update io.want_text_input flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
+    io.want_text_input = if g.want_text_input_next_frame != -1 { (g.want_text_input_next_frame != 0)} else { false };
 }

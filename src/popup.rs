@@ -5,7 +5,7 @@ use crate::imgui_window::ImGuiWindow;
 
 // Storage for current popup stack
 #[derive(Debug,Default,Clone)]
-pub struct DimgPopupData
+pub struct PopupData
 {
     // ImGuiID             popup_id;        // Set on OpenPopup()
     pub PopupId: ImGuiID,
@@ -25,7 +25,7 @@ pub struct DimgPopupData
     pub OpenMousePos: Vector2D,
 }
 
-impl DimgPopupData {
+impl PopupData {
     // ImGuiPopupData()    { memset(this, 0, sizeof(*this)); ParentNavLayer = OpenFrameCount = -1; }
     pub fn new() -> Self {
         Self {

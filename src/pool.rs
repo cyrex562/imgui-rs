@@ -38,7 +38,7 @@ impl<T> ImGuiPool<T> {
         }
     }
     //     T*          GetByIndex(ImPoolIdx n)             { return &Buf[n]; }
-    pub fn GetByIndex(&self, n: usize) -> T {
+    pub fn get_by_index(&self, n: usize) -> T {
         self.Buf[n]
     }
     //     ImPoolIdx   GetIndex(const T* p) const          { IM_ASSERT(p >= Buf.data && p < Buf.data + Buf.size); return (ImPoolIdx)(p - Buf.data); }
@@ -121,6 +121,6 @@ impl<T> ImGuiPool<T> {
         if idx == -1 {
             return null_mut();
         }
-        return self.GetByIndex(idx);
+        return self.get_by_index(idx);
     }
 }

@@ -138,7 +138,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
         if g.active_id == id {
             clear_active_id();
         }
-        g.HoveredIdDisabled = true;
+        g.hovered_id_disabled = true;
         return false;
     }
 
@@ -148,7 +148,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
         // the cost of this tool near-zero. We can get slightly better call-stack and support picking non-hovered
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
-        if (g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id) {
+        if (g.DebugItemPickerActive && g.hovered_id_previous_frame == id) {
             GetForegroundDrawList().AddRect(bb.min, bb.max, make_color_32(255, 255, 0, 255));
         }
         if (g.DebugItemPickerBreakId == id) {
@@ -156,7 +156,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
         }
     }
 
-    if (g.NavDisableMouseHover) {
+    if (g.nav_disable_mouse_hover) {
         return false;
     }
 
