@@ -52,7 +52,7 @@ pub struct ImGuiTableColumn
     pub WorkMinX: f32,
     // float                   WorkMaxX;                       // Contents region max ~(MaxX - CellPaddingX - CellSpacingX2)
     pub WorkMaxX: f32,
-    // float                   ItemWidth;                      // Current item width for the column, preserved across rows
+    // float                   item_width;                      // Current item width for the column, preserved across rows
     pub ItemWidth: f32,
     // float                   ContentMaxXFrozen;              // Contents maximum position for frozen rows (apart from headers), from which we can infer content width.
     pub ContextMaxXFrozen: f32,
@@ -454,9 +454,9 @@ pub struct TableTempData
     pub HostBackupCursorMaxPOs: Vector2D,
     // ImVec1                      HostBackupColumnsOffset;    // Backup of OuterWindow->dc.ColumnsOffset at the end of BeginTable()
     pub HostBackupColumnOffset: ImVec1,
-    // float                       HostBackupItemWidth;        // Backup of OuterWindow->dc.ItemWidth at the end of BeginTable()
+    // float                       HostBackupItemWidth;        // Backup of OuterWindow->dc.item_width at the end of BeginTable()
     pub HostBackupItemWidth: f32,
-    // int                         HostBackupItemWidthStackSize;//Backup of OuterWindow->dc.ItemWidthStack.size at the end of BeginTable()
+    // int                         HostBackupItemWidthStackSize;//Backup of OuterWindow->dc.item_width_stack.size at the end of BeginTable()
     pub HostBackupItemWidthStackSize: i32,
 }
 

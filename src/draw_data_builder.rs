@@ -1,4 +1,5 @@
 use crate::draw_list::DrawList;
+use crate::types::Id32;
 
 impl DrawDataBuilder {
     // void clear()                    { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].resize(0); }
@@ -17,5 +18,5 @@ impl DrawDataBuilder {
 pub struct DrawDataBuilder
 {
     // ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
-    pub layers: [Vec<DrawList>; 2],
+    pub layers: [Vec<Id32>; 2],
 }

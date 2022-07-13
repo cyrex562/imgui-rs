@@ -275,7 +275,7 @@ pub fn PushStyleColor(idx: &ImGuiColor, col: u32)
     let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
     backup.BackupValue = g.style.Colors[idx];
-    g.ColorStack.push_back(backup);
+    g.color_stack.push_back(backup);
     g.style.Colors[idx] = ColorConvertU32ToFloat4(col);
 }
 
@@ -288,7 +288,7 @@ pub fn PushStyleColor2(idx: &ImGuiColor, col: &mut Vector4D)
     let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
     backup.BackupValue = g.style.Colors[idx];
-    g.ColorStack.push_back(backup);
+    g.color_stack.push_back(backup);
     g.style.Colors[idx] = col;
 }
 
@@ -300,9 +300,9 @@ pub fn PopStyleColor(mut count: i32)
     while count > 0
     {
         // ImGuiColorMod& backup = g.color_stack.back();
-        let backup = g.ColorStack.last().unwrap();
+        let backup = g.color_stack.last().unwrap();
         g.style.Colors[backup.Col.clone()] = backup.BackupValue.clone();
-        g.ColorStack.pop_back();
+        g.color_stack.pop_back();
         count -= 1;
     }
 }

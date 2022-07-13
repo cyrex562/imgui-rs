@@ -132,7 +132,7 @@ pub struct Viewport
     // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
     pub draw_lists_last_frame: [i32;2],
     // ImDrawList*         DrawLists[2];           // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.mouse_draw_cursor is set and to draw most debug overlays.
-    pub draw_lists: [DrawList;2],
+    pub draw_lists: [Id32;2],
     // ImDrawData          DrawDataP;
     pub draw_data_p: DrawData,
     // ImDrawDataBuilder   DrawDataBuilder;

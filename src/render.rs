@@ -26,7 +26,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
     // ImGuiWindow* window = g.current_window;
-    let window = g.CurrentWindow;
+    let window = g.current_window;
 
     // Hide anything after a '##' string
     // const char* text_display_end;
@@ -58,7 +58,7 @@ pub fn RenderTextWrapped(pos: &Vector2D, text: *const c_char, mut text_end: *con
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
     // ImGuiWindow* window = g.current_window;
-    let window = g.CurrentWindow;
+    let window = g.current_window;
 
     if !text_end {
         text_end = text + strlen(text);
@@ -112,7 +112,7 @@ void ImGui::RenderTextClipped(const Vector2D& pos_min, const Vector2D& pos_max, 
         return;
 
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     RenderTextClippedEx(window.DrawList, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
     if (g.LogEnabled)
         LogRenderedText(&pos_min, text, text_display_end);
@@ -203,7 +203,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
 void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool border, float rounding)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     window.DrawList->AddRectFilled(p_min, p_max, fill_col, rounding);
     const float border_size = g.style.FrameBorderSize;
     if (border && border_size > 0.0)
@@ -216,7 +216,7 @@ void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool bor
 void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     const float border_size = g.style.FrameBorderSize;
     if (border_size > 0.0)
     {
@@ -232,7 +232,7 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
         return;
     if (g.NavDisableHighlight && !(flags & ImGuiNavHighlightFlags_AlwaysDraw))
         return;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     if (window.DC.NavHideHighlightOneFrame)
         return;
 

@@ -391,7 +391,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
         // Create scrolling region (without border and zero window padding)
         ImGuiWindowFlags child_flags = (flags & ImGuiTableFlags_ScrollX) ? ImGuiWindowFlags_HorizontalScrollbar : ImGuiWindowFlags_None;
         BeginChildEx(name, instance_id, outer_rect.GetSize(), false, child_flags);
-        table->InnerWindow = g.CurrentWindow;
+        table->InnerWindow = g.current_window;
         table->WorkRect = table->InnerWindow->WorkRect;
         table->OuterRect = table->InnerWindow->Rect();
         table->inner_rect = table->InnerWindow->inner_rect;
@@ -1217,7 +1217,7 @@ void    ImGui::EndTable()
     ImGuiWindow* inner_window = table->InnerWindow;
     ImGuiWindow* outer_window = table->OuterWindow;
     ImGuiTableTempData* temp_data = table->TempData;
-    IM_ASSERT(inner_window == g.CurrentWindow);
+    IM_ASSERT(inner_window == g.current_window);
     IM_ASSERT(outer_window == inner_window || outer_window == inner_window.parent_window);
 
     if (table->IsInsideRow)
@@ -1393,7 +1393,7 @@ void    ImGui::EndTable()
     table->IsInitializing = false;
 
     // clear or restore current table, if any
-    IM_ASSERT(g.CurrentWindow == outer_window && g.CurrentTable == table);
+    IM_ASSERT(g.current_window == outer_window && g.CurrentTable == table);
     IM_ASSERT(g.TablesTempDataStacked > 0);
     temp_data = (--g.TablesTempDataStacked > 0) ? &g.tables_temp_data[g.TablesTempDataStacked - 1] : NULL;
     g.CurrentTable = temp_data ? g.tables.get_by_index(temp_data->TableIndex) : NULL;
@@ -1741,7 +1741,7 @@ void ImGui::TableBeginRow(ImGuiTable* table)
 void ImGui::TableEndRow(ImGuiTable* table)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     IM_ASSERT(window == table->InnerWindow);
     IM_ASSERT(table->IsInsideRow);
 
@@ -2232,7 +2232,7 @@ void ImGui::TableUpdateColumnsWeightFromWidth(ImGuiTable* table)
 void ImGui::TablePushBackgroundChannel()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     ImGuiTable* table = g.CurrentTable;
 
     // Optimization: avoid SetCurrentChannel() + push_clip_rect()
@@ -2244,7 +2244,7 @@ void ImGui::TablePushBackgroundChannel()
 void ImGui::TablePopBackgroundChannel()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     ImGuiTable* table = g.CurrentTable;
     ImGuiTableColumn* column = &table->Columns[table->CurrentColumn];
 
@@ -2430,8 +2430,8 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
     {
         // We skip channel 0 (Bg0/Bg1) and 1 (Bg2 frozen) from the shuffling since they won't move - see channels allocation in TableSetupDrawChannels().
         const int LEADING_DRAW_CHANNELS = 2;
-        g.DrawChannelsTempMergeBuffer.resize(splitter->_Count - LEADING_DRAW_CHANNELS); // Use shared temporary storage so the allocation gets amortized
-        ImDrawChannel* dst_tmp = g.DrawChannelsTempMergeBuffer.Data;
+        g.draw_channels_temp_merge_buffer.resize(splitter->_Count - LEADING_DRAW_CHANNELS); // Use shared temporary storage so the allocation gets amortized
+        ImDrawChannel* dst_tmp = g.draw_channels_temp_merge_buffer.Data;
         ImBitArray<IMGUI_TABLE_MAX_DRAW_CHANNELS> remaining_mask;                       // We need 132-bit of storage
         remaining_mask.SetBitRange(LEADING_DRAW_CHANNELS, splitter->_Count);
         remaining_mask.ClearBit(table->Bg2DrawChannelUnfrozen);
@@ -2498,8 +2498,8 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
             memcpy(dst_tmp += 1, channel, sizeof(ImDrawChannel));
             remaining_count--;
         }
-        IM_ASSERT(dst_tmp == g.DrawChannelsTempMergeBuffer.Data + g.DrawChannelsTempMergeBuffer.Size);
-        memcpy(splitter->_Channels.Data + LEADING_DRAW_CHANNELS, g.DrawChannelsTempMergeBuffer.Data, (splitter->_Count - LEADING_DRAW_CHANNELS) * sizeof(ImDrawChannel));
+        IM_ASSERT(dst_tmp == g.draw_channels_temp_merge_buffer.Data + g.draw_channels_temp_merge_buffer.Size);
+        memcpy(splitter->_Channels.Data + LEADING_DRAW_CHANNELS, g.draw_channels_temp_merge_buffer.Data, (splitter->_Count - LEADING_DRAW_CHANNELS) * sizeof(ImDrawChannel));
     }
 }
 
@@ -2873,7 +2873,7 @@ void ImGui::TableHeadersRow()
 void ImGui::TableHeader(const char* label)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     if (window.SkipItems)
         return;
 
@@ -3041,7 +3041,7 @@ void ImGui::TableOpenContextMenu(int column_n)
 void ImGui::TableDrawContextMenu(ImGuiTable* table)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     if (window.SkipItems)
         return;
 
@@ -3441,17 +3441,17 @@ static void TableSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandle
     }
 }
 
-void ImGui::TableSettingsAddSettingsHandler()
+void ImGui::table_settings_add_settings_handler()
 {
     ImGuiSettingsHandler ini_handler;
     ini_handler.TypeName = "Table";
-    ini_handler.TypeHash = ImHashStr("Table");
-    ini_handler.ClearAllFn = TableSettingsHandler_ClearAll;
-    ini_handler.ReadOpenFn = TableSettingsHandler_ReadOpen;
-    ini_handler.ReadLineFn = TableSettingsHandler_ReadLine;
-    ini_handler.ApplyAllFn = TableSettingsHandler_ApplyAll;
-    ini_handler.WriteAllFn = TableSettingsHandler_WriteAll;
-    AddSettingsHandler(&ini_handler);
+    ini_handler.type_hash = ImHashStr("Table");
+    ini_handler.clear_all_fn = TableSettingsHandler_ClearAll;
+    ini_handler.read_open_fn = TableSettingsHandler_ReadOpen;
+    ini_handler.read_line_fn = TableSettingsHandler_ReadLine;
+    ini_handler.apply_all_fn = TableSettingsHandler_ApplyAll;
+    ini_handler.write_all_fn = TableSettingsHandler_WriteAll;
+    add_settings_handler(&ini_handler);
 }
 
 //-------------------------------------------------------------------------
@@ -3688,7 +3688,7 @@ static float GetDraggedColumnOffset(ImGuiOldColumns* columns, int column_index)
     // active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
     // window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     IM_ASSERT(column_index > 0); // We are not supposed to drag column 0.
     IM_ASSERT(g.active_id == columns->ID + ImGuiID(column_index));
 
@@ -3732,7 +3732,7 @@ static float GetColumnWidthEx(ImGuiOldColumns* columns, int column_index, bool b
 float ImGui::GetColumnWidth(int column_index)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     ImGuiOldColumns* columns = window.DC.CurrentColumns;
     if (columns == NULL)
         return GetContentRegionAvail().x;
@@ -3745,7 +3745,7 @@ float ImGui::GetColumnWidth(int column_index)
 void ImGui::SetColumnOffset(int column_index, float offset)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     ImGuiOldColumns* columns = window.DC.CurrentColumns;
     IM_ASSERT(columns != NULL);
 

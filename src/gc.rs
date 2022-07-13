@@ -23,9 +23,9 @@ pub fn GcCompactTransientWindowBufufers(window: &mut Window)
     window.memory_draw_list_vtx_capacity = window.draw_list.vtx_buffer.Capacity;
     window.id_stack.clear();
     window.draw_list._ClearFreeMemory();
-    window.dc.ChildWindows.clear();
-    window.dc.ItemWidthStack.clear();
-    window.dc.TextWrapPosStack.clear();
+    window.dc.child_windows.clear();
+    window.dc.item_width_stack.clear();
+    window.dc.text_wrap_pos_stack.clear();
 }
 
 // void ImGui::GcAwakeTransientWindowBuffers(ImGuiWindow* window)

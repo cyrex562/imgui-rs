@@ -60,7 +60,7 @@ impl ImGuiListClipper {
         // ImGuiContext& g = *GImGui;
         let g = GImGui;
         // ImGuiWindow* window = g.current_window;
-        let window = g.CurrentWindow;
+        let window = g.current_window;
 
         let table = g.CurrentTable;
     if table.is_null() == false {
@@ -75,11 +75,11 @@ impl ImGuiListClipper {
     self.DisplayEnd = 0;
 
     // Acquire temporary buffer
-    if (g.ClipperTempDataStacked += 1 > g.ClipperTempData.Size) {
-        g.ClipperTempData.resize(g.ClipperTempDataStacked as usize, ImGuiListClipperData());
+    if (g.ClipperTempDataStacked += 1 > g.clipper_temp_data.Size) {
+        g.clipper_temp_data.resize(g.ClipperTempDataStacked as usize, ImGuiListClipperData());
     }
     // ImGuiListClipperData* data = &g.clipper_temp_data[g.clipper_temp_data_stacked - 1];
-    let data = &g.ClipperTempData[g.ClipperTempDataStacked - 1];
+    let data = &g.clipper_temp_data[g.ClipperTempDataStacked - 1];
         data.Reset(this);
     data.LossynessOffset = window.DC.CursorStartPosLossyness.y;
     self.TempData = data as *mut c_void;
@@ -99,7 +99,7 @@ impl ImGuiListClipper {
         data->StepNo = data->Ranges.Size;
         if (g.ClipperTempDataStacked -= 1 > 0)
         {
-            data = &g.ClipperTempData[g.ClipperTempDataStacked - 1];
+            data = &g.clipper_temp_data[g.ClipperTempDataStacked - 1];
             data->ListClipper->TempData = data;
         }
         TempData = NULL;
@@ -131,7 +131,7 @@ pub fn GetSkipItemForListClipping() -> bool
     if GImGui.CurrentTable {
         GImGui.CurrentTable.HostSkipItems
     } else {
-        GImGui.CurrentWindow.SkipItems
+        GImGui.current_window.SkipItems
     }
 
 }
@@ -181,7 +181,7 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     // ImGuiContext& g = *GImGui;
     // ImGuiWindow* window = g.current_window;
-    let window = GImGui.CurrentWindow;
+    let window = GImGui.current_window;
     // float off_y = pos_y - window->dc.CursorPos.y;
     let off_y = pos_y - window.DC.CursorPos.y;
     // window->dc.CursorPos.y = pos_y;
@@ -259,7 +259,7 @@ void ImGuiListClipper::ForceDisplayRangeByIndices(int item_min, int item_max)
 bool ImGuiListClipper::Step()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window;
     ImGuiListClipperData* data = (ImGuiListClipperData*)TempData;
     IM_ASSERT(data != NULL && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
 

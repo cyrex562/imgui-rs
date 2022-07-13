@@ -143,7 +143,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     }
     g.last_active_id_timer += g.io.delta_time;
     g.active_id_previous_frame = g.active_id;
-    g.active_id_previous_frame_window = g.active_id_window;
+    g.active_id_previous_frame_window_id = g.active_id_window_id;
     g.active_id_previous_frame_has_been_edited_before = g.active_id_has_been_edited_before;
     g.active_id_is_alive = 0;
     g.active_id_has_been_edited_this_frame = false;
@@ -255,7 +255,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.gc_compact_all = false;
 
     // Closing the focused window restore focus to the first active root window in descending z-order
-    if (g.nav_window && !g.nav_window->WasActive){
+    if (g.nav_window_id && !g.nav_window_id ->WasActive){
     FocusTopMostWindowUnderOne(NULL, NULL);
 }
 

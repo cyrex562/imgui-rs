@@ -1041,7 +1041,7 @@ Other Changes:
      - For a Platform Monitor, the work area is generally the full area minus space used by task-bars.
   - All of this has been the case in 'docking' branch for a long time. What we've done is merely merging
     a small chunk of the multi-viewport logic into 'master' to standardize some concepts ahead of time.
-- tables: Fixed PopItemWidth() or multi-components items not restoring per-colum ItemWidth correctly. (#3760)
+- tables: Fixed PopItemWidth() or multi-components items not restoring per-colum item_width correctly. (#3760)
 - Window: Fixed minor title bar text clipping issue when FramePadding is small/zero and there are no
   close button in the window. (#3731)
 - SliderInt: Fixed click/drag when v_min==v_max from setting the value to zero. (#3774) [@erwincoumans]

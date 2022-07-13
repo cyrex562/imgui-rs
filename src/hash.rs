@@ -49,7 +49,7 @@ pub  fn ImHashData(data: &Vec<u8>, seed: u32) -> ImGuiID
 // - We don't do 'current += 2; continue;' after handling ### to keep the code smaller/faster (measured ~10% diff in Debug build)
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
 // ImGuiID ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
-pub fn ImHashStr(data: &Vec<u8>, mut seed: u32) -> ImGuiID
+pub fn hash_string(data: &Vec<u8>, mut seed: u32) -> ImGuiID
 {
     seed = !seed;
     // ImU32 crc = seed;

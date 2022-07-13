@@ -18,6 +18,7 @@ use crate::dock_context::DockContext;
 use crate::dock_node::DockNode;
 use crate::drag_drop::DragDropFlags;
 use crate::draw_channel::DrawChannel;
+use crate::draw_list::DrawList;
 
 use crate::draw_list_shared_data::DrawListSharedData;
 use crate::font::Font;
@@ -121,12 +122,12 @@ pub struct Context {
     pub hovered_window_id: Id32,
     //*mut ImGuiWindow,
     // ImGuiWindow*            hovered_window_under_moving_window;     // Hovered window ignoring moving_window. Only set if moving_window is set.
-    pub hovered_window_under_moving_window: Id32,
+    pub hovered_window_under_moving_window_id: Id32,
     //*mut ImGuiWindow,
     // ImGuiDockNode*          hovered_dock_node;                    // [Debug] Hovered dock node.
     pub hovered_dock_node: Id32,
     // ImGuiWindow*            moving_window;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally moving_window->root_window_dock_tree.
-    pub moving_window: Id32,
+    pub moving_window_id: Id32,
     // ImGuiWindow*            wheeling_window;                     // Track the window we started mouse-wheeling on. Until a timer elapse or mouse has moved, generally keep scrolling the same window even if during the course of scrolling the mouse ends up hovering a child window.
     pub wheeling_window_id: Id32,
     //*mut ImGuiWindow,
@@ -174,7 +175,7 @@ pub struct Context {
     // Vector2D                  ActiveIdClickOffset;                // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
     pub active_id_click_offset: Vector2D,
     // ImGuiWindow*            active_id_window;
-    pub active_id_window: Id32,
+    pub active_id_window_id: Id32,
     // ImGuiInputSource        active_id_source;                     // Activating with mouse or nav (gamepad/keyboard)
     pub active_id_source: InputSource,
     // int                     active_id_mouse_button;
@@ -186,7 +187,7 @@ pub struct Context {
     // bool                    active_id_previous_frame_has_been_edited_before;
     pub active_id_previous_frame_has_been_edited_before: bool,
     // ImGuiWindow*            active_id_previous_frame_window;
-    pub active_id_previous_frame_window: Id32,
+    pub active_id_previous_frame_window_id: Id32,
     // ImGuiID                 last_active_id;                       // Store the last non-zero active_id, useful for animation.
     pub last_active_id: Id32,
     // float                   last_active_id_timer;                  // Store the last non-zero active_id timer since the beginning of activation, useful for animation.
@@ -230,17 +231,19 @@ pub struct Context {
     // int                     begin_menu_count;
     pub begin_menu_count: i32,
 
+    pub draw_lists: HashMap<Id32, DrawList>,
+
     // viewports
     // ImVector<ImGuiViewportP*> viewports;                        // active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
     pub viewports: Vec<Viewport>,
     // float                   current_dpi_scale;                    // == current_viewport->dpi_scale
     pub current_dpi_scale: f32,
     // ImGuiViewportP*         current_viewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
-    pub current_viewport: Id32,
+    pub current_viewport_id: Id32,
     // ImGuiViewportP*         mouse_viewport;
-    pub mouse_viewport: Id32,
+    pub mouse_viewport_id: Id32,
     // ImGuiViewportP*         mouse_last_hovered_viewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
-    pub mouse_last_hovered_viewport: Id32,
+    pub mouse_last_hovered_viewport_id: Id32,
     // ImGuiID                 platform_last_focused_viewport_id;
     pub platform_last_focused_viewport_id: Id32,
     // ImGuiPlatformMonitor    fallback_monitor;                    // Virtual monitor used as fallback if backend doesn't provide monitor information.
@@ -249,7 +252,7 @@ pub struct Context {
     pub viewport_front_most_stamp_count: i32,
     // Gamepad/keyboard Navigation
     // ImGuiWindow*            nav_window;                          // Focused window for navigation. Could be called 'FocusedWindow'
-    pub nav_window: Id32,
+    pub nav_window_id: Id32,
     // ImGuiID                 nav_id;                              // Focused item for navigation
     pub nav_id: Id32,
     // ImGuiID                 nav_focus_scope_id;                    // Identify a selection scope (selection code often wants to "clear other items" when landing on an item of the selection set)
@@ -582,9 +585,9 @@ impl Context {
             windows_hover_padding: Default::default(),
             current_window_id: INVALID_ID,
             hovered_window_id: INVALID_ID,
-            hovered_window_under_moving_window: INVALID_ID,
+            hovered_window_under_moving_window_id: INVALID_ID,
             hovered_dock_node: INVALID_ID,
-            moving_window: INVALID_ID,
+            moving_window_id: INVALID_ID,
             wheeling_window_id: INVALID_ID,
             wheeling_window_ref_mouse_pos: Default::default(),
             wheeling_window_timer: 0.0,
@@ -609,13 +612,13 @@ impl Context {
             // ActiveIdHasBeenEditedBefore: false,
             active_id_has_been_edited_this_frame: false,
             // ActiveIdClickOffset: Vector2D::new( - 1, -1),
-            active_id_window: u32::MAX,
+            active_id_window_id: u32::MAX,
             active_id_source: InputSource::None,
             active_id_mouse_button: - 1,
             active_id_previous_frame: 0,
             active_id_previous_frame_is_alive: false,
             active_id_previous_frame_has_been_edited_before: false,
-            active_id_previous_frame_window: u32::MAX,
+            active_id_previous_frame_window_id: u32::MAX,
             last_active_id: 0,
             last_active_id_timer: 0.0,
             active_id_using_mouse_wheel: false,
@@ -637,16 +640,17 @@ impl Context {
             begin_popup_stack: vec![],
             begin_menu_count: 0,
 
+            draw_lists: Default::default(),
             viewports: vec![],
             current_dpi_scale: 0.0,
-            current_viewport: INVALID_ID,
-            mouse_viewport: INVALID_ID,
+            current_viewport_id: INVALID_ID,
+            mouse_viewport_id: INVALID_ID,
             // mouse_last_hovered_viewport: NULL,
-            mouse_last_hovered_viewport: INVALID_ID,
+            mouse_last_hovered_viewport_id: INVALID_ID,
             platform_last_focused_viewport_id: 0,
             fallback_monitor: PlatformMonitor::default(),
             viewport_front_most_stamp_count: 0,
-            nav_window: u32::MAX ,
+            nav_window_id: u32::MAX ,
             nav_id: 0,
             nav_focus_scope_id: 0,
             nav_activate_id: 0,
@@ -838,6 +842,10 @@ impl Context {
 
     pub fn get_dock_node(&mut self, dock_node_id: Id32) -> Option<&mut DockNode> {
         self.dock_nodes.get_mut(&dock_node_id)
+    }
+
+    pub fn get_draw_list(&mut self, draw_list_id: Id32) -> Option<&mut DrawList> {
+        self.draw_lists.get_mut(&draw_list_id)
     }
 }
 

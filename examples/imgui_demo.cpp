@@ -1773,7 +1773,7 @@ static void ShowDemoWindowWidgets()
         }
 
         // Typically we would use Vector2D(-1.0,0.0) or Vector2D(-FLT_MIN,0.0) to use all available width,
-        // or Vector2D(width,0.0) for a specified width. Vector2D(0.0,0.0) uses ItemWidth.
+        // or Vector2D(width,0.0) for a specified width. Vector2D(0.0,0.0) uses item_width.
         ImGui::ProgressBar(progress, DimgVec2D::new(0.0, 0.0));
         ImGui::SameLine(0.0, ImGui::GetStyle().ItemInnerSpacing.x);
         ImGui::Text("Progress Bar");
@@ -4900,7 +4900,7 @@ static void ShowDemoWindowTables()
                 ImGui::TableNextRow();
                 if (row == 0)
                 {
-                    // Setup ItemWidth once (instead of setting up every time, which is also possible but less efficient)
+                    // Setup item_width once (instead of setting up every time, which is also possible but less efficient)
                     ImGui::TableSetColumnIndex(0);
                     ImGui::PushItemWidth(TEXT_BASE_WIDTH * 3.0); // Small
                     ImGui::TableSetColumnIndex(1);

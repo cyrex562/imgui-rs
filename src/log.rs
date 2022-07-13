@@ -46,7 +46,7 @@ pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: *const c_char, mut text_
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
     // ImGuiWindow* window = g.current_window;
-    let window = g.CurrentWindow;
+    let window = g.current_window;
 
     // const char* prefix = g.LogNextPrefix;
     let prefix = g.LogNextPrefix;
@@ -109,12 +109,12 @@ pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: *const c_char, mut text_
 // static inline void LogTextV(ImGuiContext& g, const char* fmt, va_list args)
 pub fn LogTextV(g: &mut ImGuiContext, msg: &String)
     {
-    if (g.LogFile)
+    if (g.log_file)
     {
         g.LogBuffer.Buf.resize(0);
         // g.LogBuffer.appendfv(fmt, args);
         g.LogBuffer.append(msg.as_ptr(), null());
-        ImFileWrite(g.LogBuffer.Buf.as_vec(), g.LogBuffer.size(), g.LogBuffer.size(), g.LogFile);
+        ImFileWrite(g.LogBuffer.Buf.as_vec(), g.LogBuffer.size(), g.LogBuffer.size(), g.log_file);
     }
     else
     {
@@ -155,7 +155,7 @@ pub fn LogBegin(log_type: ImGuiLogType, auto_open_depth: i32)
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
         // ImGuiWindow* window = g.current_window;
-    let window = g.CurrentWindow;
+    let window = g.current_window;
         // IM_ASSERT(g.log_enabled == false);
     // IM_ASSERT(g.log_file == NULL);
     // IM_ASSERT(g.LogBuffer.empty());
@@ -220,7 +220,7 @@ pub fn LogToFile(auto_open_depth: i32, mut filename: *const c_char)
     }
 
     LogBegin(ImGuiLogType::File, auto_open_depth);
-    g.LogFile = f;
+    g.log_file = f;
 }
 
 // Start logging/capturing text output to clipboard
@@ -269,7 +269,7 @@ pub fn LogFinish()
             },
     // case ImGuiLogType_File:
     ImGuiLogType::File => {
-        ImFileClose(g.LogFile); }
+        ImFileClose(g.log_file); }
 
     // case ImGuiLogType_Buffer:
     //     break;
@@ -289,7 +289,7 @@ pub fn LogFinish()
 
     g.LogEnabled = false;
     g.LogType = ImGuiLogType::None;
-    g.LogFile = null_mut();
+    g.log_file = null_mut();
     g.LogBuffer.clear();
 }
 

@@ -32,7 +32,7 @@ pub fn is_mouse_hovering_rect(g: &mut Context, r_min: &Vector2D, r_max: &Vector2
     if !rect_for_touch.Contains(g.io.mouse_pos) {
         return false;
     }
-    if !g.mouse_viewport.get_main_rect().Overlaps(&rect_clipped){
+    if !g.mouse_viewport_id.get_main_rect().Overlaps(&rect_clipped){
         return false;
     }
     return true;

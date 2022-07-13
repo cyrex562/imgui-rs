@@ -15,7 +15,7 @@ use crate::dock_node::{dock_node_get_root_node, DockNode};
 use crate::drag_drop::DragDropFlags;
 use crate::draw_list::DrawList;
 use crate::globals::GImGui;
-use crate::hash::{ImHashData, ImHashStr};
+use crate::hash::{hash_string, ImHashData};
 use crate::id::set_active_id;
 use crate::input::NavLayer;
 use crate::item::{ItemStatusFlags, LastItemData};
@@ -38,79 +38,79 @@ use crate::viewport::{Viewport, ViewportFlags};
 pub struct WindowTempData {
     // Layout
     // Vector2D                  CursorPos;              // Current emitting position, in absolute coordinates.
-    pub CursorPos: Vector2D,
+    pub cursor_pos: Vector2D,
     // Vector2D                  CursorPosPrevLine;
-    pub CursorPosPrevLine: Vector2D,
+    pub cursor_pos_prev_line: Vector2D,
     // Vector2D                  CursorStartPos;         // Initial position after Begin(), generally ~ window position + window_padding.
-    pub CursorStartPos: Vector2D,
+    pub cursor_start_pos: Vector2D,
     // Vector2D                  CursorMaxPos;           // Used to implicitly calculate content_size at the beginning of next frame, for scrolling range and auto-resize. Always growing during the frame.
-    pub CursorMaxPos: Vector2D,
+    pub cursor_max_pos: Vector2D,
     // Vector2D                  IdealMaxPos;            // Used to implicitly calculate content_size_ideal at the beginning of next frame, for auto-resize only. Always growing during the frame.
-    pub IdealMaxPos: Vector2D,
+    pub ideal_max_pos: Vector2D,
     // Vector2D                  CurrLineSize;
-    pub CurrLineSize: Vector2D,
+    pub curr_line_size: Vector2D,
     // Vector2D                  PrevLineSize;
-    pub PrevLineSize: Vector2D,
+    pub prev_line_size: Vector2D,
     // float                   CurrLineTextBaseOffset; // Baseline offset (0.0 by default on a new line, generally == style.FramePadding.y when a framed item has been added).
-    pub CurrLineTextBaseOffset: f32,
+    pub curr_line_text_base_offset: f32,
     // float                   PrevLineTextBaseOffset;
-    pub PrevLineTextBaseOffset: f32,
+    pub prev_line_text_base_offset: f32,
     // bool                    IsSameLine;
-    pub IsSameLine: bool,
+    pub is_same_line: bool,
     // ImVec1                  Indent;                 // Indentation / start position from left of window (increased by TreePush/TreePop, etc.)
-    pub Indent: Vector1D,
+    pub indent: Vector1D,
     // ImVec1                  ColumnsOffset;          // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree->column->Tree. Need revamp columns API.
-    pub ColumnsOffset: Vector1D,
+    pub columns_offset: Vector1D,
     // ImVec1                  GroupOffset;
-    pub GroupOffset: Vector1D,
+    pub group_offset: Vector1D,
     // Vector2D                  CursorStartPosLossyness;// Record the loss of precision of CursorStartPos due to really large scrolling amount. This is used by clipper to compensentate and fix the most common use case of large scroll area.
-    pub CursortStartPosLossyness: Vector2D,
+    pub cursort_start_pos_lossyness: Vector2D,
     // Keyboard/Gamepad navigation
     // ImGuiNavLayer           NavLayerCurrent;        // Current layer, 0..31 (we currently only use 0..1)
-    pub NavLayerCurrent: NavLayer,
-    // short                   NavLayersActiveMask;    // Which layers have been written to (result from previous frame)
-    pub NavLayersActiveMask: i16,
-    // short                   NavLayersActiveMaskNext;// Which layers have been written to (accumulator for current frame)
-    pub NavLayersActiveMaskNext: i16,
-    // ImGuiID                 NavFocusScopeIdCurrent; // Current focus scope id while appending
-    pub NavFocusScopeIdCurrent: Id32,
+    pub nav_layer_current: NavLayer,
+    // short                   nav_layers_active_mask;    // Which layers have been written to (result from previous frame)
+    pub nav_layers_active_mask: i16,
+    // short                   nav_layers_active_mask_next;// Which layers have been written to (accumulator for current frame)
+    pub nav_layers_active_mask_next: i16,
+    // ImGuiID                 nav_focus_scope_id_current; // Current focus scope id while appending
+    pub nav_focus_scope_id_current: Id32,
     // bool                    NavHideHighlightOneFrame;
-    pub NavHideHiglightOneFrame: bool,
-    // bool                    NavHasScroll;           // Set when scrolling can be used (scroll_max > 0.0)
-    pub NavHasScroll: bool,
+    pub nav_hide_higlight_one_frame: bool,
+    // bool                    nav_has_scroll;           // Set when scrolling can be used (scroll_max > 0.0)
+    pub nav_has_scroll: bool,
     // Miscellaneous
-    // bool                    MenuBarAppending;       // FIXME: Remove this
-    pub MenuBarAppending: bool,
-    // Vector2D                  MenuBarOffset;          // MenuBarOffset.x is sort of equivalent of a per-layer CursorPos.x, saved/restored as we switch to the menu bar. The only situation when MenuBarOffset.y is > 0 if when (SafeAreaPadding.y > FramePadding.y), often used on TVs.
-    pub MenuBarOffset: Vector2D,
-    // ImGuiMenuColumns        MenuColumns;            // Simplified columns storage for menu items measurement
-    pub MenuColumns: ImGuiMenuColumns,
-    // int                     TreeDepth;              // Current tree depth.
-    pub TreeDepth: i32,
-    // ImU32                   TreeJumpToParentOnPopMask; // Store a copy of !g.nav_id_is_alive for TreeDepth 0..31.. Could be turned into a ImU64 if necessary.
-    pub TreeJumpToParentOnPopMask: u32,
+    // bool                    menu_bar_appending;       // FIXME: Remove this
+    pub menu_bar_appending: bool,
+    // Vector2D                  menu_bar_offset;          // menu_bar_offset.x is sort of equivalent of a per-layer CursorPos.x, saved/restored as we switch to the menu bar. The only situation when menu_bar_offset.y is > 0 if when (SafeAreaPadding.y > FramePadding.y), often used on TVs.
+    pub menu_bar_offset: Vector2D,
+    // ImGuiMenuColumns        menu_columns;            // Simplified columns storage for menu items measurement
+    pub menu_columns: ImGuiMenuColumns,
+    // int                     tree_depth;              // Current tree depth.
+    pub tree_depth: i32,
+    // ImU32                   tree_jump_to_parent_on_pop_mask; // Store a copy of !g.nav_id_is_alive for tree_depth 0..31.. Could be turned into a ImU64 if necessary.
+    pub tree_jump_to_parent_on_pop_mask: u32,
     // ImVector<ImGuiWindow*>  ChildWindows;
-    pub ChildWindows: Vec<Window>,
+    pub child_windows: Vec<Id32>,
     // ImGuiStorage*           state_storage;           // Current persistent per-window storage (store e.g. tree node open/close state)
-    pub StateStorage: Vec<u8>,
-    // ImGuiOldColumns*        CurrentColumns;         // Current columns set
-    pub CurrentColumns: OldColumns,
-    // int                     CurrentTableIdx;        // Current table index (into g.tables)
-    pub CurrentTableIdx: usize,
-    // ImGuiLayoutType         LayoutType;
-    pub LayoutType: LayoutType,
-    // ImGuiLayoutType         ParentLayoutType;       // Layout type of parent window at the time of Begin()
-    pub ParentLayoutType: LayoutType,
+    pub state_storage: Vec<u8>,
+    // ImGuiOldColumns*        current_columns;         // Current columns set
+    pub current_columns: OldColumns,
+    // int                     current_table_idx;        // Current table index (into g.tables)
+    pub current_table_idx: usize,
+    // ImGuiLayoutType         layout_type;
+    pub layout_type: LayoutType,
+    // ImGuiLayoutType         parent_layout_type;       // Layout type of parent window at the time of Begin()
+    pub parent_layout_type: LayoutType,
     // Local parameters stacks
     // We store the current settings outside of the vectors to increase memory locality (reduce cache misses). The vectors are rarely modified. Also it allows us to not heap allocate for short-lived windows which are not using those settings.
-    // float                   ItemWidth;              // Current item width (>0.0: width in pixels, <0.0: align xx pixels to the right of window).
-    pub ItemWidth: f32,
-    // float                   TextWrapPos;            // Current text wrap pos.
-    pub TextWrapPos: f32,
-    // ImVector<float>         ItemWidthStack;         // Store item widths to restore (attention: .back() is not == ItemWidth)
-    pub ItemWidthStack: Vec<f32>,
-    // ImVector<float>         TextWrapPosStack;       // Store text wrap pos to restore (attention: .back() is not == TextWrapPos)
-    pub TextWrapPosStack: Vec<f32>,
+    // float                   item_width;              // Current item width (>0.0: width in pixels, <0.0: align xx pixels to the right of window).
+    pub item_width: f32,
+    // float                   text_wrap_pos;            // Current text wrap pos.
+    pub text_wrap_pos: f32,
+    // ImVector<float>         item_width_stack;         // Store item widths to restore (attention: .back() is not == item_width)
+    pub item_width_stack: Vec<f32>,
+    // ImVector<float>         text_wrap_pos_stack;       // Store text wrap pos to restore (attention: .back() is not == text_wrap_pos)
+    pub text_wrap_pos_stack: Vec<f32>,
 }
 
 
@@ -283,9 +283,9 @@ pub struct Window {
     // int                     settings_offset;                     // Offset into settings_windows[] (offsets are always valid as we only grow the array from the back)
     pub settings_offset: i32,
     // ImDrawList*             draw_list;                           // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
-    pub draw_list: DrawList,
+    pub draw_list: Id32,
     // ImDrawList              DrawListInst;
-    pub draw_list_inst: DrawList,
+    pub draw_list_inst: Id32,
     // ImGuiWindow*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
     pub parent_window_id: WindowHandle,
     // ImGuiWindow*            parent_window_in_begin_stack;
@@ -348,7 +348,7 @@ impl Window {
             //     NameBufLen = strlen(name) + 1;
             name: name.clone(),
             //     id = ImHashStr(name);
-            id: ImHashStr(name.as_vec(), 0),
+            id: hash_string(name.as_vec(), 0),
             //     IDStack.push_back(id);
             id_stack: Vec::new(),
             //     viewport_allow_platform_monitor_extend = -1;
@@ -417,7 +417,7 @@ impl Window {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
         // ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
-        let id = ImHashStr(in_str.as_mut_vec(), 0);
+        let id = hash_string(in_str.as_mut_vec(), 0);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
             ImGui::DebugHookIdInfo(id, ImGuiDataType_String, str, str_end);
@@ -608,8 +608,8 @@ pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: 
     // An active popup disable hovering on other windows (apart from its own children)
     // FIXME-OPT: This could be cached/stored within the window.
     // ImGuiContext& g = *GImGui;
-    if g.nav_window {
-        if ImGuiWindow * focused_root_window = g.nav_window.RootWindowDockTree {
+    if g.nav_window_id {
+        if ImGuiWindow * focused_root_window = g.nav_window_id.RootWindowDockTree {
             if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree {
                 // For the purpose of those flags we differentiate "standard popup" from "modal popup"
                 // NB: The order of those two tests is important because Modal windows are also Popups.
@@ -623,8 +623,8 @@ pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: 
         }
     }
     // Filter by viewport
-    if window.viewport != g.mouse_viewport {
-        if g.moving_window == NULL || window.root_window_dock_tree != g.moving_window.RootWindowDockTree {
+    if window.viewport != g.mouse_viewport_id {
+        if g.moving_window_id == NULL || window.root_window_dock_tree != g.moving_window_id.RootWindowDockTree {
             return false;
         }
     }
@@ -963,7 +963,7 @@ pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
         can_move_window = false;}
     }
     if can_move_window {
-        g.moving_window = window;
+        g.moving_window_id = window;
     }
 }
 
@@ -1002,7 +1002,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
     if can_undock_node && dragging {
         dock_context_queue_undock_node(&g, node); // Will lead to DockNodeStartMouseMovingWindow() -> start_mouse_moving_window() being called next frame
     }
-    else if !can_undock_node && (clicked || dragging) && g.moving_window != window.id {
+    else if !can_undock_node && (clicked || dragging) && g.moving_window_id != window.id {
         start_mouse_moving_window(g, window);
     }
 }
@@ -1016,14 +1016,14 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
 pub fn update_mouse_moving_window_new_frame(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    if (g.moving_window != INVALID_ID)
+    if (g.moving_window_id != INVALID_ID)
     {
         // We actually want to move the root window. g.moving_window == window we clicked on (could be a child window).
         // We track it to preserve Focus and so that generally active_id_window == moving_window and active_id == moving_window->move_id for consistency.
         keep_alive_id(g.active_id);
         // IM_ASSERT(g.moving_window && g.moving_window->RootWindowDockTree);
         // ImGuiWindow* moving_window = g.moving_window->RootWindowDockTree;
-        let moving_window_id = g.get_window(g.moving_window).unwrap().root_window_dock_tree;
+        let moving_window_id = g.get_window(g.moving_window_id).unwrap().root_window_dock_tree;
         let moving_window = g.get_window(moving_window_id).unwrap();
 
         // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
@@ -1042,7 +1042,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
                     moving_window.viewport.update_work_rect();
                 }
             }
-            focus_window(g.moving_window);
+            focus_window(g.moving_window_id);
         }
         else
         {
@@ -1051,12 +1051,12 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
                 // Try to merge the window back into the main viewport.
                 // This works because mouse_viewport should be != moving_window->viewport on release (as per code in UpdateViewports)
                 if g.config_flags_curr_frame.contains(ConfigFlags::ViewportsEnable) {
-                    update_try_merge_window_into_host_viewport(moving_window, g.mouse_viewport);
+                    update_try_merge_window_into_host_viewport(moving_window, g.mouse_viewport_id);
                 }
 
                 // Restore the mouse viewport so that we don't hover the viewport _under_ the moved window during the frame we released the mouse button.
                 if !is_drag_drop_payload_being_accepted() {
-                    g.mouse_viewport = moving_window.viewport;
+                    g.mouse_viewport_id = moving_window.viewport;
                 }
 
                 // clear the NoInput window flag set by the viewport system
@@ -1065,16 +1065,16 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
                 remove_hash_set_val(&mut viewport.flags, &ViewportFlags::NoInputs)
             }
 
-            g.moving_window = INVALID_ID;
+            g.moving_window_id = INVALID_ID;
             clear_active_id();
         }
     }
     else
     {
         // When clicking/dragging from a window that has the _NoMove flag, we still set the active_id in order to prevent hovering others.
-        if (g.active_id_window != INVALID_ID) // && g.active_id_window.move_id == g.active_id)
+        if (g.active_id_window_id != INVALID_ID) // && g.active_id_window.move_id == g.active_id)
         {
-            let active_id_win = g.get_window(g.active_id_window).unwrap();
+            let active_id_win = g.get_window(g.active_id_window_id).unwrap();
             if active_id_win.move_id == g.active_id {
                 keep_alive_id(g.active_id);
                 if (!g.io.mouse_down[0]) {
@@ -1099,8 +1099,8 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
     // if (g.nav_window && g.nav_window.appearing) {
     //     return;
     // }
-    if g.nav_window != INVALID_ID {
-        let win = g.get_window(g.nav_window).unwrap();
+    if g.nav_window_id != INVALID_ID {
+        let win = g.get_window(g.nav_window_id).unwrap();
         if win.appearing {
             return;
         }
@@ -1146,17 +1146,17 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
             if g.io.config_windows_move_from_title_bar_only {
                 if !(root_win.flags.contains(&WindowFlags::NoTitleBar)) || root_win.dock_is_active {
                     if !root_win.title_bar_rect().Contains(&g.io.mouse_clicked_pos[0]) {
-                        g.moving_window = NULL;
+                        g.moving_window_id = NULL;
                     }
                 }
             }
 
             // Cancel moving if clicked over an item which was disabled or inhibited by popups (note that we know hovered_id == 0 already)
             if g.hovered_id_disabled {
-                g.moving_window = NULL;
+                g.moving_window_id = NULL;
             }
         }
-        else if root_window == INVALID_ID && g.nav_window != NULL && get_top_most_popup_modal() == NULL
+        else if root_window == INVALID_ID && g.nav_window_id != NULL && get_top_most_popup_modal() == NULL
         {
             // Clicking on void disable focus
             focus_window(NULL);
@@ -1271,7 +1271,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context)
     }
 
     if (clear_hovered_windows) {
-        g.hovered_window = g.hovered_window_under_moving_window = NULL;
+        g.hovered_window = g.hovered_window_under_moving_window_id = NULL;
     }
 
     // Update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
@@ -1300,4 +1300,45 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context)
 
     // Update io.want_text_input flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
     io.want_text_input = if g.want_text_input_next_frame != -1 { (g.want_text_input_next_frame != 0)} else { false };
+}
+
+
+/// static int IMGUI_CDECL ChildWindowComparer(const void* lhs, const void* rhs)
+pub fn child_window_comparer(lhs: &Window, rhs: &Window) -> i32
+{
+    // const ImGuiWindow* const a = *(const ImGuiWindow* const *)lhs;
+    // const ImGuiWindow* const b = *(const ImGuiWindow* const *)rhs;
+    if lhs.flags.contains(&WindowFlags::Popup) - rhs.flags.contains(& WindowFlags::Popup){
+        return 1;}
+    if lhs.flags.contains(&WindowFlags::Tooltip) - rhs.flags.contains(&WindowFlags::Tooltip) {
+        return 1;
+    }
+    return (lhs.begin_order_within_parent - rhs.begin_order_within_parent) as i32
+}
+
+// static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, ImGuiWindow* window)
+pub fn add_window_to_sort_buffer(ctx: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32)
+{
+    out_sorted_windows.push_back(window);
+    let win = ctx.get_window(window).unwrap();
+    if window.active
+    {
+        // int count = window.DC.ChildWindows.Size;
+        let count = win.dc.child_windows.len();
+        // ImQsort(window.DC.ChildWindows.Data, count, sizeof(ImGuiWindow*), ChildWindowComparer);
+        win.dc.child_windows.sort();
+        for child_win_id in win.dc.child_windows.iter() {
+            let child_win = ctx.get_window(*child_win_id).unwrap();
+            if child_win.active {
+                add_window_to_sort_buffer(ctx, out_sorted_windows, *child_win_id);
+            }
+        }
+
+        // for (int i = 0; i < count; i += 1)
+        // {
+        //     ImGuiWindow* child = window.DC.ChildWindows[i];
+        //     if (child->Active)
+        //         AddWindowToSortBuffer(out_sorted_windows, child);
+        // }
+    }
 }

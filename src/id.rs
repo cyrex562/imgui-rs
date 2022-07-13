@@ -11,10 +11,10 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
     // we at least need to be resilient to it. Cancelling the move is rather aggressive and users of 'master' branch
     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.
-    if ctx.moving_window != NULL && ctx.active_id == ctx.moving_window.MoveId
+    if ctx.moving_window_id != NULL && ctx.active_id == ctx.moving_window_id.MoveId
     {
         debug!("SetActiveID() cancel moving_window\n");
-        ctx.moving_window = NULL;
+        ctx.moving_window_id = NULL;
     }
 
     // Set active id
@@ -35,7 +35,7 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
     ctx.active_id = id;
     ctx.active_id_allow_overlap = false;
     ctx.active_id_no_clear_on_focus_loss = false;
-    ctx.active_id_window = window;
+    ctx.active_id_window_id = window;
     ctx.active_id_has_been_edited_this_frame = false;
     if id
     {

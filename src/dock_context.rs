@@ -39,10 +39,10 @@ pub fn dock_ctx_initialize(ctx: &mut Context)
             read_open_fn: DockSettingsHandler_ReadOpen,
             read_line_fn: DockSettingsHandler_ReadLine,
             apply_all_fn: DockSettingsHandler_ApplyAll,
-            write_all_fn: DockSettingsHandler_WriteAll,
+            apply_all_fn: DockSettingsHandler_WriteAll,
             user_data: vec![]
         };
-    ctx.SettingsHandlers.push_back(ini_handler);
+    ctx.settings_handlers.push_back(ini_handler);
 }
 
 //void ImGui::DockContextShutdown(ImGuiContext* ctx)
