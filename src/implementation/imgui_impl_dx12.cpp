@@ -324,9 +324,9 @@ void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandL
     for (int n = 0; n < draw_data->CmdListsCount; n += 1)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i += 1)
+        for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.Size; cmd_i += 1)
         {
-            const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
+            const ImDrawCmd* pcmd = &cmd_list.cmd_buffer[cmd_i];
             if (pcmd->UserCallback != NULL)
             {
                 // User callback, registered via ImDrawList::AddCallback()

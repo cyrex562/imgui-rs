@@ -2,9 +2,10 @@ use std::collections::HashSet;
 use std::ffi::c_void;
 use std::os::raw::c_char;
 use std::f32::consts::PI;
+use std::mem::size_of;
 use crate::context::Context;
 use crate::draw_defines::DrawFlags;
-use crate::types::{DrawIndex, INVALID_ID};
+use crate::types::{DrawIndex, Id32, INVALID_ID};
 use crate::draw_cmd::{CmdHeader, DrawCmd};
 use crate::draw_list_shared_data::DrawListSharedData;
 use crate::draw_list_splitter::DrawListSplitter;
@@ -491,4 +492,44 @@ pub fn get_foreground_draw_list2(g: &mut Context) -> &mut DrawList
     let curr_win = g.get_current_window()?;
     let vp= g.get_viewport(curr_win.viewport_id).unwrap();
     get_foreground_draw_list(g, vp)
+}
+
+// static void add_draw_list_to_draw_data(ImVector<ImDrawList*>* out_list, ImDrawList* draw_list)
+pub fn add_draw_list_to_draw_data(ctx: &mut Context, out_list: &mut Vec<Id32>, draw_list_id: Id32)
+{
+    let draw_list = ctx.get_draw_list(draw_list_id).unwrap();
+    if draw_list.cmd_buffer.is_empty() {return;}
+
+    if draw_list.cmd_buffer.Size == 1 && draw_list.cmd_buffer[0].elem_count == 0 && draw_list.cmd_buffer[0].user_callback.is_none() {
+        return;
+    }
+
+    // Draw list sanity check. Detect mismatch between PrimReserve() calls and incrementing _VtxCurrentIdx, _VtxWritePtr etc.
+    // May trigger for you if you are using PrimXXX functions incorrectly.
+    // IM_ASSERT(draw_list->VtxBuffer.Size == 0 || draw_list->_VtxWritePtr == draw_list->VtxBuffer.Data + draw_list->VtxBuffer.Size);
+    // IM_ASSERT(draw_list->IdxBuffer.Size == 0 || draw_list->_IdxWritePtr == draw_list->IdxBuffer.Data + draw_list->IdxBuffer.Size);
+    if !(draw_list.flags.contains(&DrawListFlags::AllowVtxOffset)) {
+        // IM_ASSERT(draw_list->_VtxCurrentIdx == draw_list->VtxBuffer.Size);
+    }
+
+    // Check that draw_list doesn't use more vertices than indexable (default ImDrawIdx = unsigned short = 2 bytes = 64K vertices per ImDrawList = per window)
+    // If this assert triggers because you are drawing lots of stuff manually:
+    // - First, make sure you are coarse clipping yourself and not trying to draw many things outside visible bounds.
+    //   Be mindful that the ImDrawList API doesn't filter vertices. Use the Metrics/Debugger window to inspect draw list contents.
+    // - If you want large meshes with more than 64K vertices, you can either:
+    //   (A) Handle the ImDrawCmd::vtx_offset value in your renderer backend, and set 'io.backend_flags |= ImGuiBackendFlags_RendererHasVtxOffset'.
+    //       Most example backends already support this from 1.71. Pre-1.71 backends won't.
+    //       Some graphics API such as GL ES 1/2 don't have a way to offset the starting vertex so it is not supported for them.
+    //   (B) Or handle 32-bit indices in your renderer backend, and uncomment '#define ImDrawIdx unsigned int' line in imconfig.h.
+    //       Most example backends already support this. For example, the OpenGL example code detect index size at compile-time:
+    //         glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->elem_count, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
+    //       Your own engine or render API may use different parameters or function calls to specify index sizes.
+    //       2 and 4 bytes indices are generally supported by most graphics API.
+    // - If for some reason neither of those solutions works for you, a workaround is to call BeginChild()/EndChild() before reaching
+    //   the 64K limit to split your draw commands in multiple draw lists.
+    if size_of::<DrawIdx>() == 2 {
+        // IM_ASSERT(draw_list->_VtxCurrentIdx < (1 << 16) && "Too many vertices in ImDrawList using 16-bit indices. Read comment above");
+    }
+
+    out_list.push_back(draw_list);
 }

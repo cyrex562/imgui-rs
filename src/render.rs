@@ -45,7 +45,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     if text != text_display_end
     {
-        window.DrawList.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(ImGuiColor::Text as u32), text, text_display_end, 0.0, None);
+        window.draw_list.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(ImGuiColor::Text as u32), text, text_display_end, 0.0, None);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
         }
@@ -66,7 +66,7 @@ pub fn RenderTextWrapped(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     if text != text_end
     {
-        window.DrawList.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(ImGuiCol_Text), text, text_end, wrap_width);
+        window.draw_list.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(ImGuiCol_Text), text, text_end, wrap_width);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_end);
         }
@@ -113,7 +113,7 @@ void ImGui::RenderTextClipped(const Vector2D& pos_min, const Vector2D& pos_max, 
 
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    RenderTextClippedEx(window.DrawList, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
+    RenderTextClippedEx(window.draw_list, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
     if (g.LogEnabled)
         LogRenderedText(&pos_min, text, text_display_end);
 }
@@ -204,12 +204,12 @@ void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool bor
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    window.DrawList->AddRectFilled(p_min, p_max, fill_col, rounding);
+    window.draw_list->AddRectFilled(p_min, p_max, fill_col, rounding);
     const float border_size = g.style.FrameBorderSize;
     if (border && border_size > 0.0)
     {
-        window.DrawList->AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
-        window.DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
+        window.draw_list->AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
+        window.draw_list->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
     }
 }
 
@@ -220,8 +220,8 @@ void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
     const float border_size = g.style.FrameBorderSize;
     if (border_size > 0.0)
     {
-        window.DrawList->AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
-        window.DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
+        window.draw_list->AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
+        window.draw_list->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
     }
 }
 
@@ -246,14 +246,14 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
         display_rect.Expand(Vector2D::new(DISTANCE, DISTANCE));
         bool fully_visible = window.ClipRect.Contains(display_rect);
         if (!fully_visible)
-            window.DrawList->PushClipRect(display_rect.Min, display_rect.Max);
-        window.DrawList->AddRect(display_rect.Min + Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight), rounding, 0, THICKNESS);
+            window.draw_list->PushClipRect(display_rect.Min, display_rect.Max);
+        window.draw_list->AddRect(display_rect.Min + Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight), rounding, 0, THICKNESS);
         if (!fully_visible)
-            window.DrawList->PopClipRect();
+            window.draw_list->PopClipRect();
     }
     if (flags & ImGuiNavHighlightFlags_TypeThin)
     {
-        window.DrawList->AddRect(display_rect.Min, display_rect.Max, GetColorU32(ImGuiCol_NavHighlight), rounding, 0, 1.0);
+        window.draw_list->AddRect(display_rect.Min, display_rect.Max, GetColorU32(ImGuiCol_NavHighlight), rounding, 0, 1.0);
     }
 }
 

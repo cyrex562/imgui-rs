@@ -264,7 +264,7 @@ void ImDrawList::_ClearFreeMemory()
 ImDrawList* ImDrawList::CloneOutput() const
 {
     ImDrawList* dst = IM_NEW(ImDrawList(_Data));
-    dst->CmdBuffer = CmdBuffer;
+    dst.cmd_buffer = CmdBuffer;
     dst->IdxBuffer = IdxBuffer;
     dst->VtxBuffer = VtxBuffer;
     dst.flags = Flags;
@@ -1564,12 +1564,12 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
     // Calculate our final buffer sizes. Also fix the incorrect idx_offset values in each command.
     int new_cmd_buffer_count = 0;
     int new_idx_buffer_count = 0;
-    ImDrawCmd* last_cmd = (_Count > 0 && draw_list->CmdBuffer.Size > 0) ? &draw_list->CmdBuffer.back() : NULL;
+    ImDrawCmd* last_cmd = (_Count > 0 && draw_list.cmd_buffer.Size > 0) ? &draw_list.cmd_buffer.back() : NULL;
     int idx_offset = last_cmd ? last_cmd->IdxOffset + last_cmd->ElemCount : 0;
     for (int i = 1; i < _Count; i += 1)
     {
         ImDrawChannel& ch = _Channels[i];
-        if (ch._CmdBuffer.Size > 0 && ch._CmdBuffer.back().ElemCount == 0 && ch._CmdBuffer.back().UserCallback == NULL) // Equivalent of PopUnusedDrawCmd()
+        if (ch._CmdBuffer.Size > 0 && ch._CmdBuffer.back().elem_count == 0 && ch._CmdBuffer.back().user_callback == NULL) // Equivalent of PopUnusedDrawCmd()
             ch._CmdBuffer.pop_back();
 
         if (ch._CmdBuffer.Size > 0 && last_cmd != NULL)
@@ -1592,14 +1592,14 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
         for (int cmd_n = 0; cmd_n < ch._CmdBuffer.Size; cmd_n += 1)
         {
             ch._CmdBuffer.Data[cmd_n].IdxOffset = idx_offset;
-            idx_offset += ch._CmdBuffer.Data[cmd_n].ElemCount;
+            idx_offset += ch._CmdBuffer.Data[cmd_n].elem_count;
         }
     }
-    draw_list->CmdBuffer.resize(draw_list->CmdBuffer.Size + new_cmd_buffer_count);
+    draw_list.cmd_buffer.resize(draw_list.cmd_buffer.Size + new_cmd_buffer_count);
     draw_list->IdxBuffer.resize(draw_list->IdxBuffer.Size + new_idx_buffer_count);
 
     // Write commands and indices in order (they are fairly small structures, we don't copy vertices only indices)
-    ImDrawCmd* cmd_write = draw_list->CmdBuffer.Data + draw_list->CmdBuffer.Size - new_cmd_buffer_count;
+    ImDrawCmd* cmd_write = draw_list.cmd_buffer.Data + draw_list.cmd_buffer.Size - new_cmd_buffer_count;
     ImDrawIdx* idx_write = draw_list->IdxBuffer.Data + draw_list->IdxBuffer.Size - new_idx_buffer_count;
     for (int i = 1; i < _Count; i += 1)
     {
@@ -1610,11 +1610,11 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
     draw_list->_IdxWritePtr = idx_write;
 
     // Ensure there's always a non-callback draw command trailing the command-buffer
-    if (draw_list->CmdBuffer.Size == 0 || draw_list->CmdBuffer.back().UserCallback != NULL)
+    if (draw_list.cmd_buffer.Size == 0 || draw_list.cmd_buffer.back().user_callback != NULL)
         draw_list->AddDrawCmd();
 
     // If current command is used with different settings we need to add a new command
-    ImDrawCmd* curr_cmd = &draw_list->CmdBuffer.Data[draw_list->CmdBuffer.Size - 1];
+    ImDrawCmd* curr_cmd = &draw_list.cmd_buffer.Data[draw_list.cmd_buffer.Size - 1];
     if (curr_cmd->ElemCount == 0)
         ImDrawCmd_HeaderCopy(curr_cmd, &draw_list->_CmdHeader); // Copy clip_rect, texture_id, vtx_offset
     else if (ImDrawCmd_HeaderCompare(curr_cmd, &draw_list->_CmdHeader) != 0)
@@ -1630,15 +1630,15 @@ void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
         return;
 
     // Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
-    memcpy(&_Channels.Data[_Current]._CmdBuffer, &draw_list->CmdBuffer, sizeof(draw_list->CmdBuffer));
+    memcpy(&_Channels.Data[_Current]._CmdBuffer, &draw_list.cmd_buffer, sizeof(draw_list.cmd_buffer));
     memcpy(&_Channels.Data[_Current]._IdxBuffer, &draw_list->IdxBuffer, sizeof(draw_list->IdxBuffer));
     _Current = idx;
-    memcpy(&draw_list->CmdBuffer, &_Channels.Data[idx]._CmdBuffer, sizeof(draw_list->CmdBuffer));
+    memcpy(&draw_list.cmd_buffer, &_Channels.Data[idx]._CmdBuffer, sizeof(draw_list.cmd_buffer));
     memcpy(&draw_list->IdxBuffer, &_Channels.Data[idx]._IdxBuffer, sizeof(draw_list->IdxBuffer));
     draw_list->_IdxWritePtr = draw_list->IdxBuffer.Data + draw_list->IdxBuffer.Size;
 
     // If current command is used with different settings we need to add a new command
-    ImDrawCmd* curr_cmd = (draw_list->CmdBuffer.Size == 0) ? NULL : &draw_list->CmdBuffer.Data[draw_list->CmdBuffer.Size - 1];
+    ImDrawCmd* curr_cmd = (draw_list.cmd_buffer.Size == 0) ? NULL : &draw_list.cmd_buffer.Data[draw_list.cmd_buffer.Size - 1];
     if (curr_cmd == NULL)
         draw_list->AddDrawCmd();
     else if (curr_cmd->ElemCount == 0)
@@ -1678,9 +1678,9 @@ void ImDrawData::ScaleClipRects(const Vector2D& fb_scale)
     for (int i = 0; i < CmdListsCount; i += 1)
     {
         ImDrawList* cmd_list = CmdLists[i];
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i += 1)
+        for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.Size; cmd_i += 1)
         {
-            ImDrawCmd* cmd = &cmd_list->CmdBuffer[cmd_i];
+            ImDrawCmd* cmd = &cmd_list.cmd_buffer[cmd_i];
             cmd->ClipRect = Vector4D(cmd->ClipRect.x * fb_scale.x, cmd->ClipRect.y * fb_scale.y, cmd->ClipRect.z * fb_scale.x, cmd->ClipRect.w * fb_scale.y);
         }
     }
@@ -3558,7 +3558,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
     // Give back unused vertices (clipped ones, blanks) ~ this is essentially a PrimUnreserve() action.
     draw_list->VtxBuffer.Size = (vtx_write - draw_list->VtxBuffer.Data); // Same as calling shrink()
     draw_list->IdxBuffer.Size = (idx_write - draw_list->IdxBuffer.Data);
-    draw_list->CmdBuffer[draw_list->CmdBuffer.Size - 1].ElemCount -= (idx_expected_size - draw_list->IdxBuffer.Size);
+    draw_list.cmd_buffer[draw_list.cmd_buffer.Size - 1].elem_count -= (idx_expected_size - draw_list->IdxBuffer.Size);
     draw_list->_VtxWritePtr = vtx_write;
     draw_list->_IdxWritePtr = idx_write;
     draw_list->_VtxCurrentIdx = vtx_current_idx;

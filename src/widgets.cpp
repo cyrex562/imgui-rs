@@ -409,7 +409,7 @@ void ImGui::BulletTextV(const char* fmt, va_list args)
 
     // Render
     ImU32 text_col = GetColorU32(ImGuiCol_Text);
-    RenderBullet(window.DrawList, bb.Min + DimgVec2D::new(style.FramePadding.x + g.FontSize * 0.5, g.FontSize * 0.5), text_col);
+    RenderBullet(window.draw_list, bb.Min + DimgVec2D::new(style.FramePadding.x + g.FontSize * 0.5, g.FontSize * 0.5), text_col);
     RenderText(bb.Min + DimgVec2D::new(g.FontSize + style.FramePadding.x * 2, 0.0), text_begin, text_end, false);
 }
 
@@ -783,7 +783,7 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size, ImGui
     const ImU32 text_col = GetColorU32(ImGuiCol_Text);
     RenderNavHighlight(bb, id);
     RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding);
-    RenderArrow(window.DrawList, bb.Min + DimgVec2D::new(ImMax(0.0, (size.x - g.FontSize) * 0.5), ImMax(0.0, (size.y - g.FontSize) * 0.5)), text_col, dir);
+    RenderArrow(window.draw_list, bb.Min + DimgVec2D::new(ImMax(0.0, (size.x - g.FontSize) * 0.5), ImMax(0.0, (size.y - g.FontSize) * 0.5)), text_col, dir);
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.LastItemData.StatusFlags);
     return pressed;
@@ -823,13 +823,13 @@ bool ImGui::CloseButton(ImGuiID id, const Vector2D& pos)
     ImU32 col = GetColorU32(held ? ImGuiCol_ButtonActive : ImGuiCol_ButtonHovered);
     Vector2D center = bb.GetCenter();
     if (hovered)
-        window.DrawList->AddCircleFilled(center, ImMax(2.0, g.FontSize * 0.5 + 1.0), col, 12);
+        window.draw_list->AddCircleFilled(center, ImMax(2.0, g.FontSize * 0.5 + 1.0), col, 12);
 
     float cross_extent = g.FontSize * 0.5 * 0.7071 - 1.0;
     ImU32 cross_col = GetColorU32(ImGuiCol_Text);
     center -= DimgVec2D::new(0.5, 0.5);
-    window.DrawList->AddLine(center + DimgVec2D::new(+cross_extent, +cross_extent), center + DimgVec2D::new(-cross_extent, -cross_extent), cross_col, 1.0);
-    window.DrawList->AddLine(center + DimgVec2D::new(+cross_extent, -cross_extent), center + DimgVec2D::new(-cross_extent, +cross_extent), cross_col, 1.0);
+    window.draw_list->AddLine(center + DimgVec2D::new(+cross_extent, +cross_extent), center + DimgVec2D::new(-cross_extent, -cross_extent), cross_col, 1.0);
+    window.draw_list->AddLine(center + DimgVec2D::new(+cross_extent, -cross_extent), center + DimgVec2D::new(-cross_extent, +cross_extent), cross_col, 1.0);
 
     return pressed;
 }
@@ -850,12 +850,12 @@ bool ImGui::CollapseButton(ImGuiID id, const Vector2D& pos, ImGuiDockNode* dock_
     ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     ImU32 text_col = GetColorU32(ImGuiCol_Text);
     if (hovered || held)
-        window.DrawList->AddCircleFilled(bb.GetCenter() + DimgVec2D::new(0,-0.5), g.FontSize * 0.5 + 1.0, bg_col, 12);
+        window.draw_list->AddCircleFilled(bb.GetCenter() + DimgVec2D::new(0,-0.5), g.FontSize * 0.5 + 1.0, bg_col, 12);
 
     if (dock_node)
-        RenderArrowDockMenu(window.DrawList, bb.Min + g.Style.FramePadding, g.FontSize, text_col);
+        RenderArrowDockMenu(window.draw_list, bb.Min + g.Style.FramePadding, g.FontSize, text_col);
     else
-        RenderArrow(window.DrawList, bb.Min + g.Style.FramePadding, text_col, window.Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 1.0);
+        RenderArrow(window.draw_list, bb.Min + g.Style.FramePadding, text_col, window.Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 1.0);
 
     // Switch to moving the window after mouse is moved beyond the initial drag threshold
     if (IsItemActive() && IsMouseDragging(0))
@@ -1000,13 +1000,13 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     // Render
     const ImU32 bg_col = GetColorU32(ImGuiCol_ScrollbarBg);
     const ImU32 grab_col = GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab, alpha);
-    window.DrawList->AddRectFilled(bb_frame.Min, bb_frame.Max, bg_col, window.WindowRounding, flags);
+    window.draw_list->AddRectFilled(bb_frame.Min, bb_frame.Max, bg_col, window.WindowRounding, flags);
     ImRect grab_rect;
     if (axis == ImGuiAxis_X)
         grab_rect = ImRect(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm), bb.Min.y, ImLerp(bb.Min.x, bb.Max.x, grab_v_norm) + grab_h_pixels, bb.Max.y);
     else
         grab_rect = ImRect(bb.Min.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm), bb.Max.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm) + grab_h_pixels);
-    window.DrawList->AddRectFilled(grab_rect.Min, grab_rect.Max, grab_col, style.ScrollbarRounding);
+    window.draw_list->AddRectFilled(grab_rect.Min, grab_rect.Max, grab_col, style.ScrollbarRounding);
 
     return held;
 }
@@ -1026,12 +1026,12 @@ void ImGui::Image(ImTextureID user_texture_id, const Vector2D& size, const Vecto
 
     if (border_col.w > 0.0)
     {
-        window.DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), 0.0);
-        window.DrawList->AddImage(user_texture_id, bb.Min + DimgVec2D::new(1, 1), bb.Max - DimgVec2D::new(1, 1), uv0, uv1, GetColorU32(tint_col));
+        window.draw_list->AddRect(bb.Min, bb.Max, GetColorU32(border_col), 0.0);
+        window.draw_list->AddImage(user_texture_id, bb.Min + DimgVec2D::new(1, 1), bb.Max - DimgVec2D::new(1, 1), uv0, uv1, GetColorU32(tint_col));
     }
     else
     {
-        window.DrawList->AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
+        window.draw_list->AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
     }
 }
 
@@ -1057,8 +1057,8 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const Vector2D& si
     RenderNavHighlight(bb, id);
     RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0, g.Style.FrameRounding));
     if (bg_col.w > 0.0)
-        window.DrawList->AddRectFilled(bb.Min + padding, bb.Max - padding, GetColorU32(bg_col));
-    window.DrawList->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
+        window.draw_list->AddRectFilled(bb.Min + padding, bb.Max - padding, GetColorU32(bg_col));
+    window.draw_list->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
 
     return pressed;
 }
@@ -1121,12 +1121,12 @@ bool ImGui::Checkbox(const char* label, bool* v)
         // Undocumented tristate/mixed/indeterminate checkbox (#2644)
         // This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
         Vector2D pad(ImMax(1.0, IM_FLOOR(square_sz / 3.6)), ImMax(1.0, IM_FLOOR(square_sz / 3.6)));
-        window.DrawList->AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.FrameRounding);
+        window.draw_list->AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.FrameRounding);
     }
     else if (*v)
     {
         const float pad = ImMax(1.0, IM_FLOOR(square_sz / 6.0));
-        RenderCheckMark(window.DrawList, check_bb.Min + DimgVec2D::new(pad, pad), check_col, square_sz - pad * 2.0);
+        RenderCheckMark(window.draw_list, check_bb.Min + DimgVec2D::new(pad, pad), check_col, square_sz - pad * 2.0);
     }
 
     Vector2D label_pos = DimgVec2D::new(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
@@ -1218,17 +1218,17 @@ bool ImGui::RadioButton(const char* label, bool active)
         MarkItemEdited(id);
 
     RenderNavHighlight(total_bb, id);
-    window.DrawList->AddCircleFilled(center, radius, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), 16);
+    window.draw_list->AddCircleFilled(center, radius, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), 16);
     if (active)
     {
         const float pad = ImMax(1.0, IM_FLOOR(square_sz / 6.0));
-        window.DrawList->AddCircleFilled(center, radius - pad, GetColorU32(ImGuiCol_CheckMark), 16);
+        window.draw_list->AddCircleFilled(center, radius - pad, GetColorU32(ImGuiCol_CheckMark), 16);
     }
 
     if (style.FrameBorderSize > 0.0)
     {
-        window.DrawList->AddCircle(center + DimgVec2D::new(1, 1), radius, GetColorU32(ImGuiCol_BorderShadow), 16, style.FrameBorderSize);
-        window.DrawList->AddCircle(center, radius, GetColorU32(ImGuiCol_Border), 16, style.FrameBorderSize);
+        window.draw_list->AddCircle(center + DimgVec2D::new(1, 1), radius, GetColorU32(ImGuiCol_BorderShadow), 16, style.FrameBorderSize);
+        window.draw_list->AddCircle(center, radius, GetColorU32(ImGuiCol_Border), 16, style.FrameBorderSize);
     }
 
     Vector2D label_pos = DimgVec2D::new(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
@@ -1272,7 +1272,7 @@ void ImGui::ProgressBar(float fraction, const Vector2D& size_arg, const char* ov
     RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
     bb.Expand(DimgVec2D::new(-style.FrameBorderSize, -style.FrameBorderSize));
     const Vector2D fill_br = DimgVec2D::new(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y);
-    RenderRectFilledRangeH(window.DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0, fraction, style.FrameRounding);
+    RenderRectFilledRangeH(window.draw_list, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0, fraction, style.FrameRounding);
 
     // Default displaying the fraction as percentage string, but user can override it
     char overlay_buf[32];
@@ -1306,7 +1306,7 @@ void ImGui::Bullet()
 
     // Render and stay on same line
     ImU32 text_col = GetColorU32(ImGuiCol_Text);
-    RenderBullet(window.DrawList, bb.Min + DimgVec2D::new(style.FramePadding.x + g.FontSize * 0.5, line_height * 0.5), text_col);
+    RenderBullet(window.draw_list, bb.Min + DimgVec2D::new(style.FramePadding.x + g.FontSize * 0.5, line_height * 0.5), text_col);
     SameLine(0, style.FramePadding.x * 2.0);
 }
 
@@ -1393,7 +1393,7 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
             return;
 
         // Draw
-        window.DrawList->AddLine(DimgVec2D::new(bb.Min.x, bb.Min.y), DimgVec2D::new(bb.Min.x, bb.Max.y), GetColorU32(ImGuiCol_Separator));
+        window.draw_list->AddLine(DimgVec2D::new(bb.Min.x, bb.Min.y), DimgVec2D::new(bb.Min.x, bb.Max.y), GetColorU32(ImGuiCol_Separator));
         if (g.LogEnabled)
             LogText(" |");
     }
@@ -1427,7 +1427,7 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
         if (item_visible)
         {
             // Draw
-            window.DrawList->AddLine(bb.Min, DimgVec2D::new(bb.Max.x, bb.Min.y), GetColorU32(ImGuiCol_Separator));
+            window.draw_list->AddLine(bb.Min, DimgVec2D::new(bb.Max.x, bb.Min.y), GetColorU32(ImGuiCol_Separator));
             if (g.LogEnabled)
                 LogRenderedText(&bb.Min, "--------------------------------\n");
 
@@ -1508,9 +1508,9 @@ bool ImGui::SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, float
 
     // Render at new position
     if (bg_col & IM_COL32_A_MASK)
-        window.DrawList->AddRectFilled(bb_render.Min, bb_render.Max, bg_col, 0.0);
+        window.draw_list->AddRectFilled(bb_render.Min, bb_render.Max, bg_col, 0.0);
     const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : (hovered && g.HoveredIdTimer >= hover_visibility_delay) ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
-    window.DrawList->AddRectFilled(bb_render.Min, bb_render.Max, col, 0.0);
+    window.draw_list->AddRectFilled(bb_render.Min, bb_render.Max, col, 0.0);
 
     return held;
 }
@@ -1626,14 +1626,14 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     const float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
     RenderNavHighlight(bb, id);
     if (!(flags & ImGuiComboFlags_NoPreview))
-        window.DrawList->AddRectFilled(bb.Min, DimgVec2D::new(value_x2, bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
+        window.draw_list->AddRectFilled(bb.Min, DimgVec2D::new(value_x2, bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
     if (!(flags & ImGuiComboFlags_NoArrowButton))
     {
         ImU32 bg_col = GetColorU32((popup_open || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
         ImU32 text_col = GetColorU32(ImGuiCol_Text);
-        window.DrawList->AddRectFilled(DimgVec2D::new(value_x2, bb.Min.y), bb.Max, bg_col, style.FrameRounding, (w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
+        window.draw_list->AddRectFilled(DimgVec2D::new(value_x2, bb.Min.y), bb.Max, bg_col, style.FrameRounding, (w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
         if (value_x2 + arrow_size - style.FramePadding.x <= bb.Max.x)
-            RenderArrow(window.DrawList, DimgVec2D::new(value_x2 + style.FramePadding.y, bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down, 1.0);
+            RenderArrow(window.draw_list, DimgVec2D::new(value_x2 + style.FramePadding.y, bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down, 1.0);
     }
     RenderFrameBorder(bb.Min, bb.Max, style.FrameRounding);
 
@@ -1762,11 +1762,11 @@ void ImGui::EndComboPreview()
     ImGuiComboPreviewData* preview_data = &g.ComboPreviewData;
 
     // FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
-    ImDrawList* draw_list = window.DrawList;
+    ImDrawList* draw_list = window.draw_list;
     if (window.DC.CursorMaxPos.x < preview_data->PreviewRect.Max.x && window.DC.CursorMaxPos.y < preview_data->PreviewRect.Max.y)
-        if (draw_list->CmdBuffer.Size > 1) // Unlikely case that the push_clip_rect() didn't create a command
+        if (draw_list.cmd_buffer.Size > 1) // Unlikely case that the push_clip_rect() didn't create a command
         {
-            draw_list->_CmdHeader.ClipRect = draw_list->CmdBuffer[draw_list->CmdBuffer.Size - 1].ClipRect = draw_list->CmdBuffer[draw_list->CmdBuffer.Size - 2].ClipRect;
+            draw_list->_CmdHeader.ClipRect = draw_list.cmd_buffer[draw_list.cmd_buffer.Size - 1].ClipRect = draw_list.cmd_buffer[draw_list.cmd_buffer.Size - 2].ClipRect;
             draw_list->_TryMergeDrawCmds();
         }
     PopClipRect();
@@ -3005,7 +3005,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
 
     // Render grab
     if (grab_bb.Max.x > grab_bb.Min.x)
-        window.DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+        window.draw_list->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     char value_buf[64];
@@ -3153,7 +3153,7 @@ bool ImGui::VSliderScalar(const char* label, const Vector2D& size, ImGuiDataType
 
     // Render grab
     if (grab_bb.Max.y > grab_bb.Min.y)
-        window.DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+        window.draw_list->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     // For the vertical slider we allow centered text to overlap the frame padding
@@ -4615,7 +4615,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                     ImRect rect(rect_pos + DimgVec2D::new(0.0, bg_offy_up - g.FontSize), rect_pos + DimgVec2D::new(rect_size.x, bg_offy_dn));
                     rect.ClipWith(clip_rect);
                     if (rect.Overlaps(clip_rect))
-                        draw_window.DrawList->AddRectFilled(rect.Min, rect.Max, bg_color);
+                        draw_window.draw_list->AddRectFilled(rect.Min, rect.Max, bg_color);
                 }
                 rect_pos.x = draw_pos.x - draw_scroll.x;
                 rect_pos.y += g.FontSize;
@@ -4626,7 +4626,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         if (is_multiline || (buf_display_end - buf_display) < buf_display_max_length)
         {
             ImU32 col = GetColorU32(is_displaying_hint ? ImGuiCol_TextDisabled : ImGuiCol_Text);
-            draw_window.DrawList->AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, buf_display, buf_display_end, 0.0, is_multiline ? NULL : &clip_rect);
+            draw_window.draw_list->AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, buf_display, buf_display_end, 0.0, is_multiline ? NULL : &clip_rect);
         }
 
         // Draw blinking cursor
@@ -4637,7 +4637,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             Vector2D cursor_screen_pos = ImFloor(draw_pos + cursor_offset - draw_scroll);
             ImRect cursor_screen_rect(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5, cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5);
             if (cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect))
-                draw_window.DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
+                draw_window.draw_list->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
 
             // Notify OS of text input position for advanced IME (-1 x offset so that windows IME can cover our cursor. Bit of an extra nicety.)
             if (!is_readonly)
@@ -4662,7 +4662,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         if (is_multiline || (buf_display_end - buf_display) < buf_display_max_length)
         {
             ImU32 col = GetColorU32(is_displaying_hint ? ImGuiCol_TextDisabled : ImGuiCol_Text);
-            draw_window.DrawList->AddText(g.Font, g.FontSize, draw_pos, col, buf_display, buf_display_end, 0.0, is_multiline ? NULL : &clip_rect);
+            draw_window.draw_list->AddText(g.Font, g.FontSize, draw_pos, col, buf_display, buf_display_end, 0.0, is_multiline ? NULL : &clip_rect);
         }
     }
 
@@ -5054,7 +5054,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
     if (window.SkipItems)
         return false;
 
-    ImDrawList* draw_list = window.DrawList;
+    ImDrawList* draw_list = window.draw_list;
     ImGuiStyle& style = g.Style;
     ImGuiIO& io = g.IO;
 
@@ -5456,17 +5456,17 @@ bool ImGui::ColorButton(const char* desc_id, const Vector4D& col, ImGuiColorEdit
     if ((flags & ImGuiColorEditFlags_AlphaPreviewHalf) && col_rgb.w < 1.0)
     {
         float mid_x = IM_ROUND((bb_inner.Min.x + bb_inner.Max.x) * 0.5);
-        RenderColorRectWithAlphaCheckerboard(window.DrawList, DimgVec2D::new(bb_inner.Min.x + grid_step, bb_inner.Min.y), bb_inner.Max, GetColorU32(col_rgb), grid_step, DimgVec2D::new(-grid_step + off, off), rounding, ImDrawFlags_RoundCornersRight);
-        window.DrawList->AddRectFilled(bb_inner.Min, DimgVec2D::new(mid_x, bb_inner.Max.y), GetColorU32(col_rgb_without_alpha), rounding, ImDrawFlags_RoundCornersLeft);
+        RenderColorRectWithAlphaCheckerboard(window.draw_list, DimgVec2D::new(bb_inner.Min.x + grid_step, bb_inner.Min.y), bb_inner.Max, GetColorU32(col_rgb), grid_step, DimgVec2D::new(-grid_step + off, off), rounding, ImDrawFlags_RoundCornersRight);
+        window.draw_list->AddRectFilled(bb_inner.Min, DimgVec2D::new(mid_x, bb_inner.Max.y), GetColorU32(col_rgb_without_alpha), rounding, ImDrawFlags_RoundCornersLeft);
     }
     else
     {
         // Because GetColorU32() multiplies by the global style Alpha and we don't want to display a checkerboard if the source code had no alpha
         Vector4D col_source = (flags & ImGuiColorEditFlags_AlphaPreview) ? col_rgb : col_rgb_without_alpha;
         if (col_source.w < 1.0)
-            RenderColorRectWithAlphaCheckerboard(window.DrawList, bb_inner.Min, bb_inner.Max, GetColorU32(col_source), grid_step, DimgVec2D::new(off, off), rounding);
+            RenderColorRectWithAlphaCheckerboard(window.draw_list, bb_inner.Min, bb_inner.Max, GetColorU32(col_source), grid_step, DimgVec2D::new(off, off), rounding);
         else
-            window.DrawList->AddRectFilled(bb_inner.Min, bb_inner.Max, GetColorU32(col_source), rounding);
+            window.draw_list->AddRectFilled(bb_inner.Min, bb_inner.Max, GetColorU32(col_source), rounding);
     }
     RenderNavHighlight(bb, id);
     if ((flags & ImGuiColorEditFlags_NoBorder) == 0)
@@ -5474,7 +5474,7 @@ bool ImGui::ColorButton(const char* desc_id, const Vector4D& col, ImGuiColorEdit
         if (g.Style.FrameBorderSize > 0.0)
             RenderFrameBorder(bb.Min, bb.Max, rounding);
         else
-            window.DrawList->AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), rounding); // Color button are often in need of some sort of border
+            window.draw_list->AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), rounding); // Color button are often in need of some sort of border
     }
 
     // Drag and Drop Source
@@ -5938,9 +5938,9 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         RenderFrame(frame_bb.Min, frame_bb.Max, bg_col, true, style.FrameRounding);
         RenderNavHighlight(frame_bb, id, nav_highlight_flags);
         if (flags & ImGuiTreeNodeFlags_Bullet)
-            RenderBullet(window.DrawList, DimgVec2D::new(text_pos.x - text_offset_x * 0.60, text_pos.y + g.FontSize * 0.5), text_col);
+            RenderBullet(window.draw_list, DimgVec2D::new(text_pos.x - text_offset_x * 0.60, text_pos.y + g.FontSize * 0.5), text_col);
         else if (!is_leaf)
-            RenderArrow(window.DrawList, DimgVec2D::new(text_pos.x - text_offset_x + padding.x, text_pos.y), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 1.0);
+            RenderArrow(window.draw_list, DimgVec2D::new(text_pos.x - text_offset_x + padding.x, text_pos.y), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 1.0);
         else // Leaf without bullet, left-adjusted text
             text_pos.x -= text_offset_x;
         if (flags & ImGuiTreeNodeFlags_ClipLabelForTrailingButton)
@@ -5960,9 +5960,9 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         }
         RenderNavHighlight(frame_bb, id, nav_highlight_flags);
         if (flags & ImGuiTreeNodeFlags_Bullet)
-            RenderBullet(window.DrawList, DimgVec2D::new(text_pos.x - text_offset_x * 0.5, text_pos.y + g.FontSize * 0.5), text_col);
+            RenderBullet(window.draw_list, DimgVec2D::new(text_pos.x - text_offset_x * 0.5, text_pos.y + g.FontSize * 0.5), text_col);
         else if (!is_leaf)
-            RenderArrow(window.DrawList, DimgVec2D::new(text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize * 0.15), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 0.70);
+            RenderArrow(window.draw_list, DimgVec2D::new(text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize * 0.15), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 0.70);
         if (g.LogEnabled)
             LogSetNextTextDecoration(">", NULL);
         RenderText(text_pos, label, label_end, false);
@@ -6483,13 +6483,13 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
             Vector2D pos1 = ImLerp(inner_bb.Min, inner_bb.Max, (plot_type == ImGuiPlotType_Lines) ? tp1 : DimgVec2D::new(tp1.x, histogram_zero_line_t));
             if (plot_type == ImGuiPlotType_Lines)
             {
-                window.DrawList->AddLine(pos0, pos1, idx_hovered == v1_idx ? col_hovered : col_base);
+                window.draw_list->AddLine(pos0, pos1, idx_hovered == v1_idx ? col_hovered : col_base);
             }
             else if (plot_type == ImGuiPlotType_Histogram)
             {
                 if (pos1.x >= pos0.x + 2.0)
                     pos1.x -= 1.0;
-                window.DrawList->AddRectFilled(pos0, pos1, idx_hovered == v1_idx ? col_hovered : col_base);
+                window.draw_list->AddRectFilled(pos0, pos1, idx_hovered == v1_idx ? col_hovered : col_base);
             }
 
             t0 = t1;
@@ -6892,7 +6892,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         RenderText(text_pos, label);
         if (icon_w > 0.0)
             RenderText(pos + DimgVec2D::new(offsets->OffsetIcon, 0.0), icon);
-        RenderArrow(window.DrawList, pos + DimgVec2D::new(offsets->OffsetMark + extra_w + g.FontSize * 0.30, 0.0), GetColorU32(ImGuiCol_Text), ImGuiDir_Right);
+        RenderArrow(window.draw_list, pos + DimgVec2D::new(offsets->OffsetMark + extra_w + g.FontSize * 0.30, 0.0), GetColorU32(ImGuiCol_Text), ImGuiDir_Right);
     }
     if (!enabled)
         EndDisabled();
@@ -7075,7 +7075,7 @@ bool ImGui::MenuItemEx(const char* label, const char* icon, const char* shortcut
             PopStyleColor();
         }
         if (selected)
-            RenderCheckMark(window.DrawList, pos + DimgVec2D::new(offsets->OffsetMark + stretch_w + g.FontSize * 0.40, g.FontSize * 0.134 * 0.5), GetColorU32(ImGuiCol_Text), g.FontSize  * 0.866);
+            RenderCheckMark(window.draw_list, pos + DimgVec2D::new(offsets->OffsetMark + stretch_w + g.FontSize * 0.40, g.FontSize * 0.134 * 0.5), GetColorU32(ImGuiCol_Text), g.FontSize  * 0.866);
     }
     IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (selected ? ImGuiItemStatusFlags_Checked : 0));
     if (!enabled)
@@ -7256,13 +7256,13 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
     {
         const float separator_min_x = dock_node->Pos.x + window.WindowBorderSize;
         const float separator_max_x = dock_node->Pos.x + dock_node->Size.x - window.WindowBorderSize;
-        window.DrawList->AddLine(DimgVec2D::new(separator_min_x, y), DimgVec2D::new(separator_max_x, y), col, 1.0);
+        window.draw_list->AddLine(DimgVec2D::new(separator_min_x, y), DimgVec2D::new(separator_max_x, y), col, 1.0);
     }
     else
     {
         const float separator_min_x = tab_bar->BarRect.Min.x - IM_FLOOR(window.WindowPadding.x * 0.5);
         const float separator_max_x = tab_bar->BarRect.Max.x + IM_FLOOR(window.WindowPadding.x * 0.5);
-        window.DrawList->AddLine(DimgVec2D::new(separator_min_x, y), DimgVec2D::new(separator_max_x, y), col, 1.0);
+        window.draw_list->AddLine(DimgVec2D::new(separator_min_x, y), DimgVec2D::new(separator_max_x, y), col, 1.0);
     }
     return true;
 }
@@ -8165,7 +8165,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
 #endif
 
     // Render tab shape
-    ImDrawList* display_draw_list = window.DrawList;
+    ImDrawList* display_draw_list = window.draw_list;
     const ImU32 tab_col = GetColorU32((held || hovered) ? ImGuiCol_TabHovered : tab_contents_visible ? (tab_bar_focused ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive) : (tab_bar_focused ? ImGuiCol_Tab : ImGuiCol_TabUnfocused));
     TabItemBackground(display_draw_list, bb, flags, tab_col);
     RenderNavHighlight(bb, id);

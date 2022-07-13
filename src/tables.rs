@@ -1128,9 +1128,9 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     // Initial state
     ImGuiWindow* inner_window = table->InnerWindow;
     if (table.flags & ImGuiTableFlags_NoClip)
-        table->DrawSplitter->SetCurrentChannel(inner_window.DrawList, TABLE_DRAW_CHANNEL_NOCLIP);
+        table->DrawSplitter->SetCurrentChannel(inner_window.draw_list, TABLE_DRAW_CHANNEL_NOCLIP);
     else
-        inner_window.DrawList->PushClipRect(inner_window.ClipRect.Min, inner_window.ClipRect.Max, false);
+        inner_window.draw_list->PushClipRect(inner_window.ClipRect.Min, inner_window.ClipRect.Max, false);
 }
 
 // Process hit-testing on resizing borders. Actual size change will be applied in EndTable()
@@ -1258,8 +1258,8 @@ void    ImGui::EndTable()
 
     // Pop clipping rect
     if (!(flags & ImGuiTableFlags_NoClip))
-        inner_window.DrawList->PopClipRect();
-    inner_window.ClipRect = inner_window.DrawList->_ClipRectStack.back();
+        inner_window.draw_list->PopClipRect();
+    inner_window.ClipRect = inner_window.draw_list->_ClipRectStack.back();
 
     // Draw borders
     if ((flags & ImGuiTableFlags_Borders) != 0)
@@ -1280,10 +1280,10 @@ void    ImGui::EndTable()
 
     // Flatten channels and merge draw calls
     ImDrawListSplitter* splitter = table->DrawSplitter;
-    splitter->SetCurrentChannel(inner_window.DrawList, 0);
+    splitter->SetCurrentChannel(inner_window.draw_list, 0);
     if ((table.flags & ImGuiTableFlags_NoClip) == 0)
         TableMergeDrawChannels(table);
-    splitter->Merge(inner_window.DrawList);
+    splitter->Merge(inner_window.draw_list);
 
     // Update ColumnsAutoFitWidth to get us ahead for host using our size to auto-resize without waiting for next BeginTable()
     float auto_fit_width_for_fixed = 0.0;
@@ -1791,8 +1791,8 @@ void ImGui::TableEndRow(ImGuiTable* table)
             // In theory we could call SetWindowClipRectBeforeSetChannel() but since we know TableEndRow() is
             // always followed by a change of clipping rectangle we perform the smallest overwrite possible here.
             if ((table.flags & ImGuiTableFlags_NoClip) == 0)
-                window.DrawList->_CmdHeader.ClipRect = table->Bg0ClipRectForDrawCmd.ToVec4();
-            table->DrawSplitter->SetCurrentChannel(window.DrawList, TABLE_DRAW_CHANNEL_BG0);
+                window.draw_list->_CmdHeader.ClipRect = table->Bg0ClipRectForDrawCmd.ToVec4();
+            table->DrawSplitter->SetCurrentChannel(window.draw_list, TABLE_DRAW_CHANNEL_BG0);
         }
 
         // Draw row background
@@ -1802,9 +1802,9 @@ void ImGui::TableEndRow(ImGuiTable* table)
             ImRect row_rect(table->WorkRect.Min.x, bg_y1, table->WorkRect.Max.x, bg_y2);
             row_rect.ClipWith(table->BgClipRect);
             if (bg_col0 != 0 && row_rect.Min.y < row_rect.Max.y)
-                window.DrawList->AddRectFilled(row_rect.Min, row_rect.Max, bg_col0);
+                window.draw_list->AddRectFilled(row_rect.Min, row_rect.Max, bg_col0);
             if (bg_col1 != 0 && row_rect.Min.y < row_rect.Max.y)
-                window.DrawList->AddRectFilled(row_rect.Min, row_rect.Max, bg_col1);
+                window.draw_list->AddRectFilled(row_rect.Min, row_rect.Max, bg_col1);
         }
 
         // Draw cell background color
@@ -1820,17 +1820,17 @@ void ImGui::TableEndRow(ImGuiTable* table)
                 cell_bg_rect.ClipWith(table->BgClipRect);
                 cell_bg_rect.Min.x = ImMax(cell_bg_rect.Min.x, column->ClipRect.Min.x);     // So that first column after frozen one gets clipped when scrolling
                 cell_bg_rect.Max.x = ImMin(cell_bg_rect.Max.x, column->MaxX);
-                window.DrawList->AddRectFilled(cell_bg_rect.Min, cell_bg_rect.Max, cell_data->BgColor);
+                window.draw_list->AddRectFilled(cell_bg_rect.Min, cell_bg_rect.Max, cell_data->BgColor);
             }
         }
 
         // Draw top border
         if (border_col && bg_y1 >= table->BgClipRect.Min.y && bg_y1 < table->BgClipRect.Max.y)
-            window.DrawList->AddLine(Vector2D::new(table->BorderX1, bg_y1), Vector2D::new(table->BorderX2, bg_y1), border_col, border_size);
+            window.draw_list->AddLine(Vector2D::new(table->BorderX1, bg_y1), Vector2D::new(table->BorderX2, bg_y1), border_col, border_size);
 
         // Draw bottom border at the row unfreezing mark (always strong)
         if (draw_strong_bottom_border && bg_y2 >= table->BgClipRect.Min.y && bg_y2 < table->BgClipRect.Max.y)
-            window.DrawList->AddLine(Vector2D::new(table->BorderX1, bg_y2), Vector2D::new(table->BorderX2, bg_y2), table->BorderColorStrong, border_size);
+            window.draw_list->AddLine(Vector2D::new(table->BorderX1, bg_y2), Vector2D::new(table->BorderX2, bg_y2), table->BorderColorStrong, border_size);
     }
 
     // End frozen rows (when we are past the last frozen row line, teleport cursor and alter clipping rectangle)
@@ -1866,7 +1866,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
 
         // Update cliprect ahead of TableBeginCell() so clipper can access to new clip_rect->min.y
         SetWindowClipRectBeforeSetChannel(window, table->Columns[0].ClipRect);
-        table->DrawSplitter->SetCurrentChannel(window.DrawList, table->Columns[0].DrawChannelCurrent);
+        table->DrawSplitter->SetCurrentChannel(window.draw_list, table->Columns[0].DrawChannelCurrent);
     }
 
     if (!(table->RowFlags & ImGuiTableRowFlags_Headers))
@@ -1982,14 +1982,14 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     if (table.flags & ImGuiTableFlags_NoClip)
     {
         // FIXME: if we end up drawing all borders/bg in EndTable, could remove this and just assert that channel hasn't changed.
-        table->DrawSplitter->SetCurrentChannel(window.DrawList, TABLE_DRAW_CHANNEL_NOCLIP);
+        table->DrawSplitter->SetCurrentChannel(window.draw_list, TABLE_DRAW_CHANNEL_NOCLIP);
         //IM_ASSERT(table->DrawSplitter._current == TABLE_DRAW_CHANNEL_NOCLIP);
     }
     else
     {
         // FIXME-TABLE: Could avoid this if draw channel is dummy channel?
         SetWindowClipRectBeforeSetChannel(window, column->ClipRect);
-        table->DrawSplitter->SetCurrentChannel(window.DrawList, column->DrawChannelCurrent);
+        table->DrawSplitter->SetCurrentChannel(window.draw_list, column->DrawChannelCurrent);
     }
 
     // Logging
@@ -2238,7 +2238,7 @@ void ImGui::TablePushBackgroundChannel()
     // Optimization: avoid SetCurrentChannel() + push_clip_rect()
     table->HostBackupInnerClipRect = window.ClipRect;
     SetWindowClipRectBeforeSetChannel(window, table->Bg2ClipRectForDrawCmd);
-    table->DrawSplitter->SetCurrentChannel(window.DrawList, table->Bg2DrawChannelCurrent);
+    table->DrawSplitter->SetCurrentChannel(window.draw_list, table->Bg2DrawChannelCurrent);
 }
 
 void ImGui::TablePopBackgroundChannel()
@@ -2250,7 +2250,7 @@ void ImGui::TablePopBackgroundChannel()
 
     // Optimization: avoid pop_clip_rect() + SetCurrentChannel()
     SetWindowClipRectBeforeSetChannel(window, table->HostBackupInnerClipRect);
-    table->DrawSplitter->SetCurrentChannel(window.DrawList, column->DrawChannelCurrent);
+    table->DrawSplitter->SetCurrentChannel(window.draw_list, column->DrawChannelCurrent);
 }
 
 // Allocate draw channels. Called by TableUpdateLayout()
@@ -2371,7 +2371,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
 
             // Don't attempt to merge if there are multiple draw calls within the column
             ImDrawChannel* src_channel = &splitter->_Channels[channel_no];
-            if (src_channel->_CmdBuffer.Size > 0 && src_channel->_CmdBuffer.back().ElemCount == 0 && src_channel->_CmdBuffer.back().UserCallback == NULL) // Equivalent of PopUnusedDrawCmd()
+            if (src_channel->_CmdBuffer.Size > 0 && src_channel->_CmdBuffer.back().elem_count == 0 && src_channel->_CmdBuffer.back().user_callback == NULL) // Equivalent of PopUnusedDrawCmd()
                 src_channel->_CmdBuffer.pop_back();
             if (src_channel->_CmdBuffer.Size != 1)
                 continue;
@@ -2510,7 +2510,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
     if (!table->OuterWindow->ClipRect.Overlaps(table->OuterRect))
         return;
 
-    ImDrawList* inner_drawlist = inner_window.DrawList;
+    ImDrawList* inner_drawlist = inner_window.draw_list;
     table->DrawSplitter->SetCurrentChannel(inner_drawlist, TABLE_DRAW_CHANNEL_BG0);
     inner_drawlist->PushClipRect(table->Bg0ClipRectForDrawCmd.Min, table->Bg0ClipRectForDrawCmd.Max, false);
 
@@ -2984,7 +2984,7 @@ void ImGui::TableHeader(const char* label)
                 PopStyleColor();
                 x += w_sort_text;
             }
-            RenderArrow(window.DrawList, Vector2D::new(x, y), GetColorU32(ImGuiCol_Text), column->SortDirection == ImGuiSortDirection_Ascending ? ImGuiDir_Up : ImGuiDir_Down, ARROW_SCALE);
+            RenderArrow(window.draw_list, Vector2D::new(x, y), GetColorU32(ImGuiCol_Text), column->SortDirection == ImGuiSortDirection_Ascending ? ImGuiDir_Up : ImGuiDir_Down, ARROW_SCALE);
         }
 
         // Handle clicking on column header to adjust Sort Order
@@ -2998,7 +2998,7 @@ void ImGui::TableHeader(const char* label)
     // Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
     // be merged into a single draw call.
     //window->draw_list->add_circle_filled(Vector2D(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
-    RenderTextEllipsis(window.DrawList, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.FramePadding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
+    RenderTextEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.FramePadding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
 
     const bool text_clipped = label_size.x > (ellipsis_max - label_pos.x);
     if (text_clipped && hovered && g.hovered_id_not_active_timer > g.TooltipSlowDelay)
@@ -3655,8 +3655,8 @@ void ImGui::SetWindowClipRectBeforeSetChannel(ImGuiWindow* window, const ImRect&
 {
     Vector4D clip_rect_vec4 = clip_rect.ToVec4();
     window.ClipRect = clip_rect;
-    window.DrawList->_CmdHeader.ClipRect = clip_rect_vec4;
-    window.DrawList->_ClipRectStack.Data[window.DrawList->_ClipRectStack.Size - 1] = clip_rect_vec4;
+    window.draw_list->_CmdHeader.ClipRect = clip_rect_vec4;
+    window.draw_list->_ClipRectStack.Data[window.draw_list->_ClipRectStack.Size - 1] = clip_rect_vec4;
 }
 
 int ImGui::GetColumnIndex()
@@ -3797,7 +3797,7 @@ void ImGui::PushColumnsBackground()
     // Optimization: avoid SetCurrentChannel() + push_clip_rect()
     columns->HostBackupClipRect = window.ClipRect;
     SetWindowClipRectBeforeSetChannel(window, columns->HostInitialClipRect);
-    columns->Splitter.SetCurrentChannel(window.DrawList, 0);
+    columns->Splitter.SetCurrentChannel(window.draw_list, 0);
 }
 
 void ImGui::PopColumnsBackground()
@@ -3809,7 +3809,7 @@ void ImGui::PopColumnsBackground()
 
     // Optimization: avoid pop_clip_rect() + SetCurrentChannel()
     SetWindowClipRectBeforeSetChannel(window, columns->HostBackupClipRect);
-    columns->Splitter.SetCurrentChannel(window.DrawList, columns->Current + 1);
+    columns->Splitter.SetCurrentChannel(window.draw_list, columns->Current + 1);
 }
 
 ImGuiOldColumns* ImGui::FindOrCreateColumns(ImGuiWindow* window, ImGuiID id)
@@ -3900,8 +3900,8 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
 
     if (columns->Count > 1)
     {
-        columns->Splitter.Split(window.DrawList, 1 + columns->Count);
-        columns->Splitter.SetCurrentChannel(window.DrawList, 1);
+        columns->Splitter.Split(window.draw_list, 1 + columns->Count);
+        columns->Splitter.SetCurrentChannel(window.draw_list, 1);
         PushColumnClipRect(0);
     }
 
@@ -3941,7 +3941,7 @@ void ImGui::NextColumn()
     // (which would needlessly attempt to update commands in the wrong channel, then pop or overwrite them),
     ImGuiOldColumnData* column = &columns->Columns[columns->Current];
     SetWindowClipRectBeforeSetChannel(window, column->ClipRect);
-    columns->Splitter.SetCurrentChannel(window.DrawList, columns->Current + 1);
+    columns->Splitter.SetCurrentChannel(window.draw_list, columns->Current + 1);
 
     const float column_padding = g.style.ItemSpacing.x;
     columns->LineMaxY = ImMax(columns->LineMaxY, window.DC.CursorPos.y);
@@ -3981,7 +3981,7 @@ void ImGui::EndColumns()
     if (columns->Count > 1)
     {
         PopClipRect();
-        columns->Splitter.Merge(window.DrawList);
+        columns->Splitter.Merge(window.draw_list);
     }
 
     const ImGuiOldColumnFlags flags = columns.flags;
@@ -4023,7 +4023,7 @@ void ImGui::EndColumns()
             // Draw column
             const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
             const float xi = IM_FLOOR(x);
-            window.DrawList->AddLine(Vector2D::new(xi, y1 + 1.0), Vector2D::new(xi, y2), col);
+            window.draw_list->AddLine(Vector2D::new(xi, y1 + 1.0), Vector2D::new(xi, y2), col);
         }
 
         // Apply dragging after drawing the column lines, so our rendered lines are in sync with how items were displayed during the frame.

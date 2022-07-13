@@ -148,9 +148,9 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
         const ImDrawVert* vtx_buffer = cmd_list->VtxBuffer.Data;
         const ImDrawIdx* idx_buffer = cmd_list->IdxBuffer.Data;
 
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i += 1)
+        for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.Size; cmd_i += 1)
         {
-            const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
+            const ImDrawCmd* pcmd = &cmd_list.cmd_buffer[cmd_i];
             if (pcmd->UserCallback)
             {
                 // User callback, registered via ImDrawList::AddCallback()
