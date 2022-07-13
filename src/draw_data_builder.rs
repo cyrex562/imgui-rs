@@ -11,18 +11,18 @@ impl DrawDataBuilder {
     //      void FlattenIntoSingleLayer();
     pub fn flatten_into_single_layer(&mut self) {
         // int n = Layers[0].Size;
-        let n = self.layers[0].len();
+        let mut n = self.layers[0].len();
         //     int size = n;
         let mut size = n;
         //     for (int i = 1; i < IM_ARRAYSIZE(Layers); i += 1)
         //         size += Layers[i].Size;
-        for i in 1 .. self.layers.len() {
+        for i in 1..self.layers.len() {
             size += self.layers[i].len();
         }
         //     Layers[0].resize(size);
         self.layers[0].reserve(size);
         //     for (int layer_n = 1; layer_n < IM_ARRAYSIZE(Layers); layer_n += 1)
-        for layer_n in 1 .. self.layers.len() {
+        for layer_n in 1..self.layers.len() {
             //     {
             //         ImVector<ImDrawList*>& layer = Layers[layer_n];
             let layer = &mut self.layers[layer_n];
@@ -34,6 +34,7 @@ impl DrawDataBuilder {
             //         memcpy(&Layers[0][n], &layer[0], layer.Size * sizeof(ImDrawList*));
             self.layers[0][n] = self.layer[0];
             n += layer.len();
+            layer.clear();
             //         n += layer.Size;
             //         layer.resize(0);
             //     }
@@ -41,9 +42,8 @@ impl DrawDataBuilder {
     }
 }
 
-#[derive(Debug,Clone,Default)]
-pub struct DrawDataBuilder
-{
+#[derive(Debug, Clone, Default)]
+pub struct DrawDataBuilder {
     // ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
     pub layers: [Vec<Id32>; 2],
 }

@@ -393,7 +393,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
         BeginChildEx(name, instance_id, outer_rect.GetSize(), false, child_flags);
         table->InnerWindow = g.current_window;
         table->WorkRect = table->InnerWindow->WorkRect;
-        table->OuterRect = table->InnerWindow->Rect();
+        table->OuterRect = table->InnerWindow.rect();
         table->inner_rect = table->InnerWindow->inner_rect;
         IM_ASSERT(table->InnerWindow->WindowPadding.x == 0.0 && table->InnerWindow->WindowPadding.y == 0.0 && table->InnerWindow->WindowBorderSize == 0.0);
     }
@@ -458,8 +458,8 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     table->DeclColumnsCount = 0;
 
     // Using opaque colors facilitate overlapping elements of the grid
-    table->BorderColorStrong = GetColorU32(ImGuiCol_TableBorderStrong);
-    table->BorderColorLight = GetColorU32(ImGuiCol_TableBorderLight);
+    table->BorderColorStrong = GetColorU32(Color::TableBorderStrong);
+    table->BorderColorLight = GetColorU32(Color::TableBorderLight);
 
     // Make table current
     g.CurrentTable = table;
@@ -1130,7 +1130,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     if (table.flags & ImGuiTableFlags_NoClip)
         table->DrawSplitter->SetCurrentChannel(inner_window.draw_list, TABLE_DRAW_CHANNEL_NOCLIP);
     else
-        inner_window.draw_list->PushClipRect(inner_window.ClipRect.Min, inner_window.ClipRect.Max, false);
+        inner_window.draw_list.push_clip_rect(inner_window.ClipRect.Min, inner_window.ClipRect.Max, false);
 }
 
 // Process hit-testing on resizing borders. Actual size change will be applied in EndTable()
@@ -1258,7 +1258,7 @@ void    ImGui::EndTable()
 
     // Pop clipping rect
     if (!(flags & ImGuiTableFlags_NoClip))
-        inner_window.draw_list->PopClipRect();
+        inner_window.draw_list.pop_clip_rect();
     inner_window.ClipRect = inner_window.draw_list->_ClipRectStack.back();
 
     // Draw borders
@@ -1731,7 +1731,7 @@ void ImGui::TableBeginRow(ImGuiTable* table)
     // Making the header BG color non-transparent will allow us to overlay it multiple times when handling smooth dragging.
     if (table->RowFlags & ImGuiTableRowFlags_Headers)
     {
-        TableSetBgColor(ImGuiTableBgTarget_RowBg0, GetColorU32(ImGuiCol_TableHeaderBg));
+        TableSetBgColor(ImGuiTableBgTarget_RowBg0, GetColorU32(Color::TableHeaderBg));
         if (table->CurrentRow == 0)
             table->IsUsingHeaders = true;
     }
@@ -1773,7 +1773,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
         if (table->RowBgColor[0] != IM_COL32_DISABLE)
             bg_col0 = table->RowBgColor[0];
         else if (table.flags & ImGuiTableFlags_RowBg)
-            bg_col0 = GetColorU32((table->RowBgColorCounter & 1) ? ImGuiCol_TableRowBgAlt : ImGuiCol_TableRowBg);
+            bg_col0 = GetColorU32((table->RowBgColorCounter & 1) ? Color::TableRowBgAlt : Color::TableRowBg);
         if (table->RowBgColor[1] != IM_COL32_DISABLE)
             bg_col1 = table->RowBgColor[1];
 
@@ -2512,7 +2512,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
 
     ImDrawList* inner_drawlist = inner_window.draw_list;
     table->DrawSplitter->SetCurrentChannel(inner_drawlist, TABLE_DRAW_CHANNEL_BG0);
-    inner_drawlist->PushClipRect(table->Bg0ClipRectForDrawCmd.Min, table->Bg0ClipRectForDrawCmd.Max, false);
+    inner_drawlist.push_clip_rect(table->Bg0ClipRectForDrawCmd.Min, table->Bg0ClipRectForDrawCmd.Max, false);
 
     // Draw inner border and resizing feedback
     ImGuiTableInstanceData* table_instance = TableGetInstanceData(table, table->InstanceCurrent);
@@ -2550,7 +2550,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
             if (is_hovered || is_resized || is_frozen_separator)
             {
                 draw_y2 = draw_y2_body;
-                col = is_resized ? GetColorU32(ImGuiCol_SeparatorActive) : is_hovered ? GetColorU32(ImGuiCol_SeparatorHovered) : table->BorderColorStrong;
+                col = is_resized ? GetColorU32(Color::SeparatorActive) : is_hovered ? GetColorU32(Color::SeparatorHovered) : table->BorderColorStrong;
             }
             else
             {
@@ -2597,7 +2597,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
             inner_drawlist->AddLine(Vector2D::new(table->BorderX1, border_y), Vector2D::new(table->BorderX2, border_y), table->BorderColorLight, border_size);
     }
 
-    inner_drawlist->PopClipRect();
+    inner_drawlist.pop_clip_rect();
 }
 
 //-------------------------------------------------------------------------
@@ -2933,7 +2933,7 @@ void ImGui::TableHeader(const char* label)
         SetItemAllowOverlap();
     if (held || hovered || selected)
     {
-        const ImU32 col = GetColorU32(held ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        const ImU32 col = GetColorU32(held ? Color::HeaderActive : hovered ? Color::HeaderHovered : Color::Header);
         //RenderFrame(bb.min, bb.max, col, false, 0.0);
         TableSetBgColor(ImGuiTableBgTarget_CellBg, col, table->CurrentColumn);
     }
@@ -2941,7 +2941,7 @@ void ImGui::TableHeader(const char* label)
     {
         // Submit single cell bg color in the case we didn't submit a full header row
         if ((table->RowFlags & ImGuiTableRowFlags_Headers) == 0)
-            TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(ImGuiCol_TableHeaderBg), table->CurrentColumn);
+            TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(Color::TableHeaderBg), table->CurrentColumn);
     }
     RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
     if (held)
@@ -2979,12 +2979,12 @@ void ImGui::TableHeader(const char* label)
             float y = label_pos.y;
             if (column->SortOrder > 0)
             {
-                PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text, 0.70));
+                PushStyleColor(Color::Text, GetColorU32(Color::Text, 0.70));
                 RenderText(Vector2D::new(x + g.style.ItemInnerSpacing.x, y), sort_order_suf);
                 PopStyleColor();
                 x += w_sort_text;
             }
-            RenderArrow(window.draw_list, Vector2D::new(x, y), GetColorU32(ImGuiCol_Text), column->SortDirection == ImGuiSortDirection_Ascending ? ImGuiDir_Up : ImGuiDir_Down, ARROW_SCALE);
+            RenderArrow(window.draw_list, Vector2D::new(x, y), GetColorU32(Color::Text), column->SortDirection == ImGuiSortDirection_Ascending ? ImGuiDir_Up : ImGuiDir_Down, ARROW_SCALE);
         }
 
         // Handle clicking on column header to adjust Sort Order
@@ -3540,7 +3540,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
     const char* buf_end = buf + IM_ARRAYSIZE(buf);
     const bool is_active = (table->LastFrameActive >= ImGui::GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
     ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table->ID, table->ColumnsCount, table->OuterWindow->Name, is_active ? "" : " *Inactive*");
-    if (!is_active) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
+    if (!is_active) { PushStyleColor(Color::Text, GetStyleColorVec4(Color::TextDisabled)); }
     bool open = TreeNode(table, "%s", buf);
     if (!is_active) { PopStyleColor(); }
     if (IsItemHovered())
@@ -4021,7 +4021,7 @@ void ImGui::EndColumns()
             }
 
             // Draw column
-            const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
+            const ImU32 col = GetColorU32(held ? Color::SeparatorActive : hovered ? Color::SeparatorHovered : Color::Separator);
             const float xi = IM_FLOOR(x);
             window.draw_list->AddLine(Vector2D::new(xi, y1 + 1.0), Vector2D::new(xi, y2), col);
         }

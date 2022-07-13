@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::io::stdout;
 use std::mem::size_of;
-use crate::color::make_color_32;
+use crate::color::{IM_COL32_A_MASK, make_color_32};
 use crate::condition::Cond;
 use crate::config::{ConfigFlags, IMGUI_DEBUG_INI_SETINGS};
 use crate::context::{call_context_hooks, Context, ContextHook, ContextHookType};
@@ -22,166 +22,49 @@ use crate::math::floor_vector_2d;
 use crate::mouse::start_lock_wheeling_window;
 use crate::rect::Rect;
 use crate::settings::SettingsHandler;
+use crate::style::get_color_u32;
 use crate::utils::{remove_hash_set_val, set_hash_set};
 use crate::vectors::{ImLengthSqr, Vector2D};
 use crate::viewport::{Viewport, ViewportFlags};
-use crate::window::{add_window_to_draw_data, get_window_display_layer, HoveredFlags, is_window_active_and_visible, is_window_content_hoverable, ItemFlags, start_mouse_moving_window, Window, WindowFlags, WINDOWS_HOVER_PADDING};
+use crate::window::{add_window_to_draw_data, find_bottom_most_visible_window_with_begin_stack, find_front_most_visible_child_window, get_window_display_layer, HoveredFlags, is_window_active_and_visible, is_window_content_hoverable, ItemFlags, render_dimmed_background_behind_window, start_mouse_moving_window, Window, WindowFlags, WINDOWS_HOVER_PADDING};
 
-void ImDrawDataBuilder::FlattenIntoSingleLayer()
+// static void ImGui::RenderDimmedBackgrounds()
+pub fn render_dimmed_backgrounds(g: &mut Context)
 {
-    int n = Layers[0].Size;
-    int size = n;
-    for (int i = 1; i < IM_ARRAYSIZE(Layers); i += 1)
-        size += Layers[i].Size;
-    Layers[0].resize(size);
-    for (int layer_n = 1; layer_n < IM_ARRAYSIZE(Layers); layer_n += 1)
-    {
-        ImVector<ImDrawList*>& layer = Layers[layer_n];
-        if (layer.empty())
-            continue;
-        memcpy(&Layers[0][n], &layer[0], layer.Size * sizeof(ImDrawList*));
-        n += layer.Size;
-        layer.resize(0);
-    }
-}
-
-static void SetupViewportDrawData(ImGuiViewportP* viewport, ImVector<ImDrawList*>* draw_lists)
-{
-    // When minimized, we report draw_data->display_size as zero to be consistent with non-viewport mode,
-    // and to allow applications/backends to easily skip rendering.
-    // FIXME: Note that we however do NOT attempt to report "zero drawlist / vertices" into the ImDrawData structure.
-    // This is because the work has been done already, and its wasted! We should fix that and add optimizations for
-    // it earlier in the pipeline, rather than pretend to hide the data at the end of the pipeline.
-    const bool is_minimized = (viewport.flags & ImGuiViewportFlags_Minimized) != 0;
-
-    ImGuiIO& io = ImGui::GetIO();
-    ImDrawData* draw_data = &viewport->DrawDataP;
-    viewport.draw_data = draw_data; // Make publicly accessible
-    draw_data->Valid = true;
-    draw_data->CmdLists = (draw_lists->Size > 0) ? draw_lists->Data : NULL;
-    draw_data->CmdListsCount = draw_lists->Size;
-    draw_data->TotalVtxCount = draw_data->TotalIdxCount = 0;
-    draw_data->DisplayPos = viewport.pos;
-    draw_data->DisplaySize = is_minimized ? Vector2D::new(0.0, 0.0) : viewport->Size;
-    draw_data->FramebufferScale = io.DisplayFramebufferScale; // FIXME-VIEWPORT: This may vary on a per-monitor/viewport basis?
-    draw_data->OwnerViewport = viewport;
-    for (int n = 0; n < draw_lists->Size; n += 1)
-    {
-        ImDrawList* draw_list = draw_lists->Data[n];
-        draw_list->_PopUnusedDrawCmd();
-        draw_data->TotalVtxCount += draw_list->VtxBuffer.Size;
-        draw_data->TotalIdxCount += draw_list->IdxBuffer.Size;
-    }
-}
-
-// Push a clipping rectangle for both ImGui logic (hit-testing etc.) and low-level ImDrawList rendering.
-// - When using this function it is sane to ensure that float are perfectly rounded to integer values,
-//   so that e.g. (max.x-min.x) in user's render produce correct result.
-// - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
-//   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
-//   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
-void ImGui::PushClipRect(const Vector2D& clip_rect_min, const Vector2D& clip_rect_max, bool intersect_with_current_clip_rect)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    window.draw_list->PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
-    window.ClipRect = window.draw_list->_ClipRectStack.back();
-}
-
-void ImGui::PopClipRect()
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    window.draw_list->PopClipRect();
-    window.ClipRect = window.draw_list->_ClipRectStack.back();
-}
-
-static ImGuiWindow* FindFrontMostVisibleChildWindow(ImGuiWindow* window)
-{
-    for (int n = window.DC.ChildWindows.Size - 1; n >= 0; n--)
-        if (IsWindowActiveAndVisible(window.DC.ChildWindows[n]))
-            return FindFrontMostVisibleChildWindow(window.DC.ChildWindows[n]);
-    return window;
-}
-
-static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col)
-{
-    if ((col & IM_COL32_A_MASK) == 0)
+    // ImGuiContext& g = *GImGui;
+    // ImGuiWindow* modal_window = GetTopMostAndVisiblePopupModal();
+    let modal_window: &mut Window = get_top_most_and_visible_popup_modal();
+    if g.dim_bg_ration <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0 {
         return;
-
-    ImGuiViewportP* viewport = window.viewport;
-    ImRect viewport_rect = viewport->get_main_rect();
-
-    // Draw behind window by moving the draw command at the FRONT of the draw list
-    {
-        // We've already called AddWindowToDrawData() which called draw_list->ChannelsMerge() on DockNodeHost windows,
-        // and draw list have been trimmed already, hence the explicit recreation of a draw command if missing.
-        // FIXME: This is creating complication, might be simpler if we could inject a drawlist in drawdata at a given position and not attempt to manipulate ImDrawCmd order.
-        ImDrawList* draw_list = window.RootWindowDockTree->DrawList;
-        if (draw_list.cmd_buffer.Size == 0)
-            draw_list->AddDrawCmd();
-        draw_list->PushClipRect(viewport_rect.Min - Vector2D::new(1, 1), viewport_rect.Max + Vector2D::new(1, 1), false); // Ensure ImDrawCmd are not merged
-        draw_list->AddRectFilled(viewport_rect.Min, viewport_rect.Max, col);
-        ImDrawCmd cmd = draw_list.cmd_buffer.back();
-        IM_ASSERT(cmd.elem_count == 6);
-        draw_list.cmd_buffer.pop_back();
-        draw_list.cmd_buffer.push_front(cmd);
-        draw_list->PopClipRect();
-        draw_list->AddDrawCmd(); // We need to create a command as cmd_buffer.back().idx_offset won't be correct if we append to same command.
     }
+    // const bool dim_bg_for_modal = (modal_window != NULL);
 
-    // Draw over sibling docking nodes in a same docking tree
-    if (window.root_window->dock_is_active)
-    {
-        ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.RootWindowDockTree)->DrawList;
-        if (draw_list.cmd_buffer.Size == 0)
-            draw_list->AddDrawCmd();
-        draw_list->PushClipRect(viewport_rect.Min, viewport_rect.Max, false);
-        RenderRectFilledWithHole(draw_list, window.RootWindowDockTree->Rect(), window.root_window->Rect(), col, 0.0);// window->root_window_dock_tree->window_rounding);
-        draw_list->PopClipRect();
-    }
-}
-
-ImGuiWindow* ImGui::FindBottomMostVisibleWindowWithinBeginStack(ImGuiWindow* parent_window)
-{
-    ImGuiContext& g = *GImGui;
-    ImGuiWindow* bottom_most_visible_window = parent_window;
-    for (int i = FindWindowDisplayIndex(parent_window); i >= 0; i--)
-    {
-        ImGuiWindow* window = g.windows[i];
-        if (window.flags & WindowFlags::ChildWindow)
-            continue;
-        if (!is_window_within_begin_stack_of(window, parent_window))
-            break;
-        if (IsWindowActiveAndVisible(window) && GetWindowDisplayLayer(window) <= GetWindowDisplayLayer(parent_window))
-            bottom_most_visible_window = window;
-    }
-    return bottom_most_visible_window;
-}
-
-static void ImGui::RenderDimmedBackgrounds()
-{
-    ImGuiContext& g = *GImGui;
-    ImGuiWindow* modal_window = GetTopMostAndVisiblePopupModal();
-    if (g.dim_bg_ration <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0)
+    // const bool dim_bg_for_window_list = (g.NavWindowingTargetAnim != NULL && g.NavWindowingTargetAnim->Active);
+    let dim_bg_for_window_list = true;
+    let nav_win_tgt_anim = g.get_window(g.nav_windowing_target_anim).unwrap();
+    let dim_bg_for_window_list = g.nav_windowing_target_anim != INVALID_ID && nav_win_tgt_anim.active;
+    if !dim_bg_for_modal && !dim_bg_for_window_list {
         return;
-    const bool dim_bg_for_modal = (modal_window != NULL);
-    const bool dim_bg_for_window_list = (g.NavWindowingTargetAnim != NULL && g.NavWindowingTargetAnim->Active);
-    if (!dim_bg_for_modal && !dim_bg_for_window_list)
-        return;
+    }
 
-    ImGuiViewport* viewports_already_dimmed[2] = { NULL, NULL };
-    if (dim_bg_for_modal)
+    // ImGuiViewport* viewports_already_dimmed[2] = { NULL, NULL };
+    let viewports_already_dimmedd: [Id32;2] = [0,0];
+    if dim_bg_for_modal
     {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
-        ImGuiWindow* dim_behind_window = FindBottomMostVisibleWindowWithinBeginStack(modal_window);
-        RenderDimmedBackgroundBehindWindow(dim_behind_window, GetColorU32(ImGuiCol_ModalWindowDimBg, g.dim_bg_ration));
-        viewports_already_dimmed[0] = modal_window.viewport;
+        // ImGuiWindow* dim_behind_window = FindBottomMostVisibleWindowWithinBeginStack(modal_window);
+        let dim_behind_window = find_bottom_most_visible_window_with_begin_stack(ctx, modal_window);
+        // RenderDimmedBackgroundBehindWindow(dim_behind_window, GetColorU32(ImGuiCol_ModalWindowDimBg, g.dim_bg_ration));
+        render_dimmed_background_behind_window(ctx, dim_behind_window, get_color_u32(Color::ModalWindowDimBg, g.dim_bg_ratio));
+        viewports_already_dimmed[0] = modal_window.viewport_id;
     }
-    else if (dim_bg_for_window_list)
+    else if dim_bg_for_window_list
     {
         // Draw dimming behind CTRL+Tab target window and behind CTRL+Tab UI window
-        RenderDimmedBackgroundBehindWindow(g.NavWindowingTargetAnim, GetColorU32(ImGuiCol_NavWindowingDimBg, g.dim_bg_ration));
-        if (g.NavWindowingListWindow != NULL && g.NavWindowingListWindow->Viewport && g.NavWindowingListWindow->Viewport != g.NavWindowingTargetAnim->Viewport)
-            RenderDimmedBackgroundBehindWindow(g.NavWindowingListWindow, GetColorU32(ImGuiCol_NavWindowingDimBg, g.dim_bg_ration));
+        RenderDimmedBackgroundBehindWindow(g.NavWindowingTargetAnim, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
+        if (g.NavWindowingListWindow != NULL && g.NavWindowingListWindow->Viewport && g.NavWindowingListWindow->Viewport != g.NavWindowingTargetAnim->Viewport){
+        RenderDimmedBackgroundBehindWindow(g.NavWindowingListWindow, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
+    }
         viewports_already_dimmed[0] = g.NavWindowingTargetAnim->Viewport;
         viewports_already_dimmed[1] = g.NavWindowingListWindow ? g.NavWindowingListWindow->Viewport : NULL;
 
@@ -194,10 +77,10 @@ static void ImGui::RenderDimmedBackgrounds()
         if (bb.GetWidth() >= viewport->Size.x && bb.get_height() >= viewport->Size.y)
             bb.Expand(-distance - 1.0); // If a window fits the entire viewport, adjust its highlight inward
         if (window.draw_list.cmd_buffer.Size == 0)
-            window.draw_list->AddDrawCmd();
-        window.draw_list->PushClipRect(viewport.pos, viewport.pos + viewport->Size);
-        window.draw_list->AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_NavWindowingHighlight, g.nav_windowing_highlight_alpha), window.WindowRounding, 0, 3.0);
-        window.draw_list->PopClipRect();
+            window.draw_list.add_draw_cmd();
+        window.draw_list.push_clip_rect(viewport.pos, viewport.pos + viewport->Size);
+        window.draw_list->AddRect(bb.Min, bb.Max, get_color_u32(Color::NavWindowingHighlight, g.nav_windowing_highlight_alpha), window.WindowRounding, 0, 3.0);
+        window.draw_list.pop_clip_rect();
     }
 
     // Draw dimming background on _other_ viewports than the ones our windows are in
@@ -209,7 +92,7 @@ static void ImGui::RenderDimmedBackgrounds()
         if (modal_window && viewport->Window && is_window_above(viewport->Window, modal_window))
             continue;
         ImDrawList* draw_list = GetForegroundDrawList(viewport);
-        const ImU32 dim_bg_col = GetColorU32(dim_bg_for_modal ? ImGuiCol_ModalWindowDimBg : ImGuiCol_NavWindowingDimBg, g.dim_bg_ration);
+        const ImU32 dim_bg_col = get_color_u32(dim_bg_for_modal ? Color::ModalWindowDimBg : Color::NavWindowingDimBg, g.dim_bg_ration);
         draw_list->AddRectFilled(viewport.pos, viewport.pos + viewport->Size, dim_bg_col);
     }
 }
@@ -338,11 +221,11 @@ void ImGui::Render()
     {
         ImGuiWindow* window = g.windows[n];
         IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
-        if (IsWindowActiveAndVisible(window) && (window.flags & WindowFlags::ChildWindow) == 0 && window != windows_to_render_top_most[0] && window != windows_to_render_top_most[1])
+        if (is_window_active_and_visible(window) && (window.flags & WindowFlags::ChildWindow) == 0 && window != windows_to_render_top_most[0] && window != windows_to_render_top_most[1])
             AddRootWindowToDrawData(window);
     }
     for (int n = 0; n < IM_ARRAYSIZE(windows_to_render_top_most); n += 1)
-        if (windows_to_render_top_most[n] && IsWindowActiveAndVisible(windows_to_render_top_most[n])) // nav_windowing_target is always temporarily displayed as the top-most window
+        if (windows_to_render_top_most[n] && is_window_active_and_visible(windows_to_render_top_most[n])) // nav_windowing_target is always temporarily displayed as the top-most window
             AddRootWindowToDrawData(windows_to_render_top_most[n]);
 
     // Draw modal/window whitening backgrounds
@@ -366,8 +249,8 @@ void ImGui::Render()
 
         SetupViewportDrawData(viewport, &viewport->DrawDataBuilder.layers[0]);
         ImDrawData* draw_data = viewport.draw_data;
-        g.io.MetricsRenderVertices += draw_data->TotalVtxCount;
-        g.io.MetricsRenderIndices += draw_data->TotalIdxCount;
+        g.io.MetricsRenderVertices += draw_data.total_vtx_count;
+        g.io.MetricsRenderIndices += draw_data.total_idx_count;
     }
 
     call_context_hooks(&g, ImGuiContextHookType_RenderPost);
@@ -728,7 +611,7 @@ bool ImGui::BeginChildFrame(ImGuiID id, const Vector2D& size, ImGuiWindowFlags e
 {
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.style;
-    PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_FrameBg]);
+    PushStyleColor(Color::ChildBg, style.Colors[Color::FrameBg]);
     PushStyleVar(ImGuiStyleVar_ChildRounding, style.FrameRounding);
     PushStyleVar(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize);
     PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
@@ -973,10 +856,10 @@ Vector2D ImGui::CalcWindowNextAutoFitSize(ImGuiWindow* window)
 static ImGuiColor GetWindowBgColorIdx(ImGuiWindow* window)
 {
     if (window.flags & (WindowFlags::Tooltip | WindowFlags::Popup))
-        return ImGuiCol_PopupBg;
+        return Color::PopupBg;
     if ((window.flags & WindowFlags::ChildWindow) && !window.dock_is_active)
-        return ImGuiCol_ChildBg;
-    return ImGuiCol_WindowBg;
+        return Color::ChildBg;
+    return Color::WindowBg;
 }
 
 static void CalcResizePosSizeFromAnyCorner(ImGuiWindow* window, const Vector2D& corner_target, const Vector2D& corner_norm, Vector2D* out_pos, Vector2D* out_size)
@@ -1130,7 +1013,7 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const Vector2D&
 
         // Only lower-left grip is visible before hovering/activating
         if (resize_grip_n == 0 || held || hovered)
-            resize_grip_col[resize_grip_n] = GetColorU32(held ? ImGuiCol_ResizeGripActive : hovered ? ImGuiCol_ResizeGripHovered : ImGuiCol_ResizeGrip);
+            resize_grip_col[resize_grip_n] = GetColorU32(held ? Color::ResizeGripActive : hovered ? Color::ResizeGripHovered : Color::ResizeGrip);
     }
     for (int border_n = 0; border_n < resize_border_count; border_n += 1)
     {
@@ -1179,7 +1062,7 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const Vector2D&
             nav_resize_delta = ImMax(nav_resize_delta, visibility_rect.Min - window.pos - window.size);
             g.NavWindowingToggleLayer = false;
             g.nav_disable_mouse_hover = true;
-            resize_grip_col[0] = GetColorU32(ImGuiCol_ResizeGripActive);
+            resize_grip_col[0] = GetColorU32(Color::ResizeGripActive);
             // FIXME-NAV: Should store and accumulate into a separate size buffer to handle sizing constraints properly, right now a constraint will make us stuck.
             size_target = CalcWindowSizeAfterConstraint(window, window.size_full + nav_resize_delta);
         }
@@ -1216,7 +1099,7 @@ static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
     float rounding = window.WindowRounding;
     float border_size = window.WindowBorderSize;
     if (border_size > 0.0 && !(window.flags & ImGuiWindowFlags_NoBackground))
-        window.draw_list->AddRect(window.pos, window.pos + window.size, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
+        window.draw_list->AddRect(window.pos, window.pos + window.size, GetColorU32(Color::Border), rounding, 0, border_size);
 
     int border_held = window.ResizeBorderHeld;
     if (border_held != -1)
@@ -1225,12 +1108,12 @@ static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
         ImRect border_r = GetResizeBorderRect(window, border_held, rounding, 0.0);
         window.draw_list->PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + Vector2D::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle);
         window.draw_list->PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + Vector2D::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25);
-        window.draw_list->PathStroke(GetColorU32(ImGuiCol_SeparatorActive), 0, ImMax(2.0, border_size)); // Thicker than usual
+        window.draw_list->PathStroke(GetColorU32(Color::SeparatorActive), 0, ImMax(2.0, border_size)); // Thicker than usual
     }
     if (g.style.FrameBorderSize > 0 && !(window.flags & WindowFlags::NoTitleBar) && !window.dock_is_active)
     {
         float y = window.pos.y + window.TitleBarHeight() - 1;
-        window.draw_list->AddLine(Vector2D::new(window.pos.x + border_size, y), Vector2D::new(window.pos.x + window.size.x - border_size, y), GetColorU32(ImGuiCol_Border), g.style.FrameBorderSize);
+        window.draw_list->AddLine(Vector2D::new(window.pos.x + border_size, y), Vector2D::new(window.pos.x + window.size.x - border_size, y), GetColorU32(Color::Border), g.style.FrameBorderSize);
     }
 }
 
@@ -1255,7 +1138,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         // Title bar only
         float backup_border_size = style.FrameBorderSize;
         g.style.FrameBorderSize = window.WindowBorderSize;
-        ImU32 title_bar_col = GetColorU32((title_bar_is_highlight && !g.NavDisableHighlight) ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBgCollapsed);
+        ImU32 title_bar_col = GetColorU32((title_bar_is_highlight && !g.NavDisableHighlight) ? Color::TitleBgActive : Color::TitleBgCollapsed);
         RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding);
         g.style.FrameBorderSize = backup_border_size;
     }
@@ -1316,7 +1199,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         // in order for their pos/size to be matching their undocking state.)
         if (!(flags & WindowFlags::NoTitleBar) && !window.dock_is_active)
         {
-            ImU32 title_bar_col = GetColorU32(title_bar_is_highlight ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
+            ImU32 title_bar_col = GetColorU32(title_bar_is_highlight ? Color::TitleBgActive : Color::TitleBg);
             window.draw_list->AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, window_rounding, ImDrawFlags_RoundCornersTop);
         }
 
@@ -1325,9 +1208,9 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         {
             ImRect menu_bar_rect = window.MenuBarRect();
             menu_bar_rect.ClipWith(window.Rect());  // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
-            window.draw_list->AddRectFilled(menu_bar_rect.Min + Vector2D::new(window_border_size, 0), menu_bar_rect.Max - Vector2D::new(window_border_size, 0), GetColorU32(ImGuiCol_MenuBarBg), (flags & WindowFlags::NoTitleBar) ? window_rounding : 0.0, ImDrawFlags_RoundCornersTop);
+            window.draw_list->AddRectFilled(menu_bar_rect.Min + Vector2D::new(window_border_size, 0), menu_bar_rect.Max - Vector2D::new(window_border_size, 0), GetColorU32(Color::MenuBarBg), (flags & WindowFlags::NoTitleBar) ? window_rounding : 0.0, ImDrawFlags_RoundCornersTop);
             if (style.FrameBorderSize > 0.0 && menu_bar_rect.Max.y < window.pos.y + window.size.y)
-                window.draw_list->AddLine(menu_bar_rect.GetBL(), menu_bar_rect.GetBR(), GetColorU32(ImGuiCol_Border), style.FrameBorderSize);
+                window.draw_list->AddLine(menu_bar_rect.GetBL(), menu_bar_rect.GetBR(), GetColorU32(Color::Border), style.FrameBorderSize);
         }
 
         // Docking: Unhide tab bar (small triangle in the corner), drag from small triangle to quickly undock
@@ -1347,7 +1230,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
                 StartMouseMovingWindowOrNode(window, node, true);
 
             // FIXME-DOCK: Ideally we'd use ImGuiCol_TitleBgActive/ImGuiCol_TitleBg here, but neither is guaranteed to be visible enough at this sort of size..
-            ImU32 col = GetColorU32(((held && hovered) || (node->IsFocused && !hovered)) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+            ImU32 col = GetColorU32(((held && hovered) || (node->IsFocused && !hovered)) ? Color::ButtonActive : hovered ? Color::ButtonHovered : Color::Button);
             window.draw_list->AddTriangleFilled(p, p + Vector2D::new(unhide_sz_draw, 0.0), p + Vector2D::new(0.0, unhide_sz_draw), col);
         }
 
@@ -1458,7 +1341,7 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
         marker_pos.y = (layout_r.Min.y + layout_r.Max.y) * 0.5;
         if (marker_pos.x > layout_r.Min.x)
         {
-            RenderBullet(window.draw_list, marker_pos, GetColorU32(ImGuiCol_Text));
+            RenderBullet(window.draw_list, marker_pos, GetColorU32(Color::Text));
             clip_r.Max.x = ImMin(clip_r.Max.x, marker_pos.x - (marker_size_x * 0.5));
         }
     }
@@ -2116,7 +1999,7 @@ bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
                 // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
                 // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
                 ImGuiWindow* previous_child = parent_window.DC.ChildWindows.Size >= 2 ? parent_window.DC.ChildWindows[parent_window.DC.ChildWindows.Size - 2] : NULL;
-                bool previous_child_overlapping = previous_child ? previous_child->Rect().Overlaps(window.Rect()) : false;
+                bool previous_child_overlapping = previous_child ? previous_child.rect().Overlaps(window.Rect()) : false;
                 bool parent_is_empty = parent_window.draw_list->VtxBuffer.Size > 0;
                 if (window.draw_list.cmd_buffer.back().elem_count == 0 && parent_is_empty && !previous_child_overlapping)
                     render_decorations_in_parent = true;
@@ -2736,7 +2619,7 @@ bool ImGui::is_window_above(ImGuiWindow* potential_above, ImGuiWindow* potential
     ImGuiContext& g = *GImGui;
 
     // It would be saner to ensure that display layer is always reflected in the g.windows[] order, which would likely requires altering all manipulations of that array
-    const int display_layer_delta = GetWindowDisplayLayer(potential_above) - GetWindowDisplayLayer(potential_below);
+    const int display_layer_delta = get_window_display_layer(potential_above) - get_window_display_layer(potential_below);
     if (display_layer_delta != 0)
         return display_layer_delta > 0;
 
@@ -3781,7 +3664,7 @@ static void ImGui::error_check_new_frame_sanity_checks()
     IM_ASSERT(g.initialized);
     IM_ASSERT((g.io.delta_time > 0.0 || g.frame_count == 0)              && "Need a positive delta_time!");
     IM_ASSERT((g.frame_count == 0 || g.FrameCountEnded == g.frame_count)  && "Forgot to call Render() or EndFrame() at the end of the previous frame?");
-    IM_ASSERT(g.io.DisplaySize.x >= 0.0 && g.io.DisplaySize.y >= 0.0  && "Invalid display_size value!");
+    IM_ASSERT(g.io.display_size.x >= 0.0 && g.io.display_size.y >= 0.0  && "Invalid display_size value!");
     IM_ASSERT(g.io.fonts->IsBuilt()                                     && "font Atlas not built! Make sure you called ImGui_ImplXXXX_NewFrame() function for renderer backend, which should call io.fonts->GetTexDataAsRGBA32() / GetTexDataAsAlpha8()");
     IM_ASSERT(g.style.curve_tessellation_tol > 0.0                       && "Invalid style setting!");
     IM_ASSERT(g.style.circle_tessellation_max_error > 0.0                 && "Invalid style setting!");
@@ -4773,7 +4656,7 @@ void ImGui::BeginTooltipEx(ImGuiTooltipFlags tooltip_flags, ImGuiWindowFlags ext
         //Vector2D tooltip_pos = g.io.mouse_pos - g.ActiveIdClickOffset - g.style.window_padding;
         Vector2D tooltip_pos = g.io.mouse_pos + Vector2D::new(16 * g.style.MouseCursorScale, 8 * g.style.MouseCursorScale);
         SetNextWindowPos(tooltip_pos);
-        SetNextWindowBgAlpha(g.style.Colors[ImGuiCol_PopupBg].w * 0.60);
+        SetNextWindowBgAlpha(g.style.Colors[Color::PopupBg].w * 0.60);
         //PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * 0.60); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(
         tooltip_flags |= ImGuiTooltipFlags_OverridePreviousTooltip;
     }
@@ -4874,7 +4757,7 @@ ImGuiWindow* ImGui::GetTopMostAndVisiblePopupModal()
     ImGuiContext& g = *GImGui;
     for (int n = g.open_popup_stack.Size - 1; n >= 0; n--)
         if (ImGuiWindow* popup = g.open_popup_stack.Data[n].Window)
-            if ((popup.flags & ImGuiWindowFlags_Modal) && IsWindowActiveAndVisible(popup))
+            if ((popup.flags & ImGuiWindowFlags_Modal) && is_window_active_and_visible(popup))
                 return popup;
     return NULL;
 }
@@ -7138,7 +7021,7 @@ const ImGuiPayload* ImGui::AcceptDragDropPayload(const char* type, ImGuiDragDrop
     payload.Preview = was_accepted_previously;
     flags |= (g.drag_drop_source_flags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
     if (!(flags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview)
-        window.draw_list->AddRect(r.Min - Vector2D::new(3.5,3.5), r.Max + Vector2D::new(3.5, 3.5), GetColorU32(ImGuiCol_DragDropTarget), 0.0, 0, 2.0);
+        window.draw_list->AddRect(r.Min - Vector2D::new(3.5,3.5), r.Max + Vector2D::new(3.5, 3.5), GetColorU32(Color::DragDropTarget), 0.0, 0, 2.0);
 
     g.DragDropAcceptFrameCount = g.frame_count;
     payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()
@@ -7750,7 +7633,7 @@ static void ImGui::update_viewports_new_frame()
     IM_ASSERT(main_viewport->ID == IMGUI_VIEWPORT_DEFAULT_ID);
     IM_ASSERT(main_viewport->Window == NULL);
     Vector2D main_viewport_pos = viewports_enabled ? g.platform_io.Platform_GetWindowPos(main_viewport) : Vector2D::new(0.0, 0.0);
-    Vector2D main_viewport_size = g.io.DisplaySize;
+    Vector2D main_viewport_size = g.io.display_size;
     if (viewports_enabled && (main_viewport.flags & ImGuiViewportFlags_Minimized))
     {
         main_viewport_pos = main_viewport.pos;    // Preserve last pos/size when minimized (FIXME: We don't do the same for size outside of the viewport path)
@@ -7906,7 +7789,7 @@ static void ImGui::UpdateViewportsEndFrame()
         if (viewport->LastFrameActive < g.frame_count || viewport->Size.x <= 0.0 || viewport->Size.y <= 0.0)
             if (i > 0) // Always include main viewport in the list
                 continue;
-        if (viewport->Window && !IsWindowActiveAndVisible(viewport->Window))
+        if (viewport->Window && !is_window_active_and_visible(viewport->Window))
             continue;
         if (i > 0)
             IM_ASSERT(viewport->Window != NULL);
@@ -8246,7 +8129,7 @@ void ImGui::UpdatePlatformWindows()
         // (the implicit/fallback Debug##Default window will be registering its viewport then be disabled, causing a dummy DestroyPlatformWindow to be made each frame)
         bool destroy_platform_window = false;
         destroy_platform_window |= (viewport->LastFrameActive < g.frame_count - 1);
-        destroy_platform_window |= (viewport->Window && !IsWindowActiveAndVisible(viewport->Window));
+        destroy_platform_window |= (viewport->Window && !is_window_active_and_visible(viewport->Window));
         if (destroy_platform_window)
         {
             DestroyPlatformWindow(viewport);
@@ -9785,7 +9668,7 @@ static void ImGui::DockNodeUpdate(ImGuiDockNode* node)
     if (host_window && node->IsEmpty() && node->IsVisible)
     {
         host_window.draw_list->ChannelsSetCurrent(0);
-        node->LastBgColor = (node_flags & ImGuiDockNodeFlags_PassthruCentralNode) ? 0 : GetColorU32(ImGuiCol_DockingEmptyBg);
+        node->LastBgColor = (node_flags & ImGuiDockNodeFlags_PassthruCentralNode) ? 0 : GetColorU32(Color::DockingEmptyBg);
         if (node->LastBgColor != 0)
             host_window.draw_list->AddRectFilled(node.pos, node.pos + node->Size, node->LastBgColor);
         node->IsBgDrawnThisFrame = true;
@@ -9799,9 +9682,9 @@ static void ImGui::DockNodeUpdate(ImGuiDockNode* node)
     {
         host_window.draw_list->ChannelsSetCurrent(0);
         if (central_node_hole)
-            RenderRectFilledWithHole(host_window.draw_list, node->Rect(), central_node->Rect(), GetColorU32(ImGuiCol_WindowBg), 0.0);
+            RenderRectFilledWithHole(host_window.draw_list, node.rect(), central_node.rect(), GetColorU32(Color::WindowBg), 0.0);
         else
-            host_window.draw_list->AddRectFilled(node.pos, node.pos + node->Size, GetColorU32(ImGuiCol_WindowBg), 0.0);
+            host_window.draw_list->AddRectFilled(node.pos, node.pos + node->Size, GetColorU32(Color::WindowBg), 0.0);
     }
 
     // Draw and populate Tab Bar
@@ -10026,7 +9909,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
     // Title bar
     if (is_focused)
         node->LastFrameFocused = g.frame_count;
-    ImU32 title_bar_col = GetColorU32(host_window.collapsed ? ImGuiCol_TitleBgCollapsed : is_focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
+    ImU32 title_bar_col = GetColorU32(host_window.collapsed ? Color::TitleBgCollapsed : is_focused ? Color::TitleBgActive : Color::TitleBg);
     ImDrawFlags rounding_flags = CalcRoundingFlagsForRectInRect(title_bar_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE);
     host_window.draw_list->AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, host_window.WindowRounding, rounding_flags);
 
@@ -10136,7 +10019,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
         if (!close_button_is_enabled)
         {
             PushItemFlag(ImGuiItemFlags_Disabled, true);
-            PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_Text] * Vector4D(1.0,1.0,1.0,0.4));
+            PushStyleColor(Color::Text, style.Colors[Color::Text] * Vector4D(1.0,1.0,1.0,0.4));
         }
         if (CloseButton(host_window.GetID("#CLOSE"), close_button_pos))
         {
@@ -10494,10 +10377,10 @@ static void ImGui::DockNodePreviewDockRender(ImGuiWindow* host_window, ImGuiDock
         overlay_draw_lists[overlay_draw_lists_count += 1] = GetForegroundDrawList(root_payload->Viewport);
 
     // Draw main preview rectangle
-    const ImU32 overlay_col_main = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.60 : 0.40);
-    const ImU32 overlay_col_drop = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.90 : 0.70);
-    const ImU32 overlay_col_drop_hovered = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 1.20 : 1.00);
-    const ImU32 overlay_col_lines = GetColorU32(ImGuiCol_NavWindowingHighlight, is_transparent_payload ? 0.80 : 0.60);
+    const ImU32 overlay_col_main = GetColorU32(Color::DockingPreview, is_transparent_payload ? 0.60 : 0.40);
+    const ImU32 overlay_col_drop = GetColorU32(Color::DockingPreview, is_transparent_payload ? 0.90 : 0.70);
+    const ImU32 overlay_col_drop_hovered = GetColorU32(Color::DockingPreview, is_transparent_payload ? 1.20 : 1.00);
+    const ImU32 overlay_col_lines = GetColorU32(Color::NavWindowingHighlight, is_transparent_payload ? 0.80 : 0.60);
 
     // Display area preview
     const bool can_preview_tabs = (root_payload->DockNodeAsHost == NULL || root_payload->DockNodeAsHost->Windows.Size > 0);
@@ -10550,16 +10433,16 @@ static void ImGui::DockNodePreviewDockRender(ImGuiWindow* host_window, ImGuiDock
             tab_pos.x += tab_size.x + g.style.ItemInnerSpacing.x;
             const ImU32 overlay_col_text = GetColorU32(payload_window.DockStyle.Colors[ImGuiWindowDockStyleCol_Text]);
             const ImU32 overlay_col_tabs = GetColorU32(payload_window.DockStyle.Colors[ImGuiWindowDockStyleCol_TabActive]);
-            PushStyleColor(ImGuiCol_Text, overlay_col_text);
+            PushStyleColor(Color::Text, overlay_col_text);
             for (int overlay_n = 0; overlay_n < overlay_draw_lists_count; overlay_n += 1)
             {
                 ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_Preview | ((payload_window.flags & ImGuiWindowFlags_UnsavedDocument) ? ImGuiTabItemFlags_UnsavedDocument : 0);
                 if (!tab_bar_rect.Contains(tab_bb))
-                    overlay_draw_lists[overlay_n]->PushClipRect(tab_bar_rect.Min, tab_bar_rect.Max);
+                    overlay_draw_lists[overlay_n].push_clip_rect(tab_bar_rect.Min, tab_bar_rect.Max);
                 TabItemBackground(overlay_draw_lists[overlay_n], tab_bb, tab_flags, overlay_col_tabs);
                 TabItemLabelAndCloseButton(overlay_draw_lists[overlay_n], tab_bb, tab_flags, g.style.FramePadding, payload_window.Name, 0, 0, false, NULL, NULL);
                 if (!tab_bar_rect.Contains(tab_bb))
-                    overlay_draw_lists[overlay_n]->PopClipRect();
+                    overlay_draw_lists[overlay_n].pop_clip_rect();
             }
             PopStyleColor();
         }
@@ -10839,7 +10722,7 @@ void ImGui::DockNodeTreeUpdateSplitter(ImGuiDockNode* node)
         if ((merged_flags & ImGuiDockNodeFlags_NoResize) || (merged_flags & no_resize_axis_flag))
         {
             ImGuiWindow* window = g.current_window;
-            window.draw_list->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Separator), g.style.FrameRounding);
+            window.draw_list->AddRectFilled(bb.Min, bb.Max, GetColorU32(Color::Separator), g.style.FrameRounding);
         }
         else
         {
@@ -10860,9 +10743,9 @@ void ImGui::DockNodeTreeUpdateSplitter(ImGuiDockNode* node)
                 DockNodeTreeUpdateSplitterFindTouchingNode(child_0, axis, 1, &touching_nodes[0]);
                 DockNodeTreeUpdateSplitterFindTouchingNode(child_1, axis, 0, &touching_nodes[1]);
                 for (int touching_node_n = 0; touching_node_n < touching_nodes[0].Size; touching_node_n += 1)
-                    resize_limits[0] = ImMax(resize_limits[0], touching_nodes[0][touching_node_n]->Rect().Min[axis] + min_size);
+                    resize_limits[0] = ImMax(resize_limits[0], touching_nodes[0][touching_node_n].rect().Min[axis] + min_size);
                 for (int touching_node_n = 0; touching_node_n < touching_nodes[1].Size; touching_node_n += 1)
-                    resize_limits[1] = ImMin(resize_limits[1], touching_nodes[1][touching_node_n]->Rect().Max[axis] - min_size);
+                    resize_limits[1] = ImMin(resize_limits[1], touching_nodes[1][touching_node_n].rect().Max[axis] - min_size);
 
                 // [DEBUG] Render touching nodes & limits
                 /*
@@ -10884,7 +10767,7 @@ void ImGui::DockNodeTreeUpdateSplitter(ImGuiDockNode* node)
             float cur_size_1 = child_1->Size[axis];
             float min_size_0 = resize_limits[0] - child_0.pos[axis];
             float min_size_1 = child_1.pos[axis] + child_1->Size[axis] - resize_limits[1];
-            ImU32 bg_col = GetColorU32(ImGuiCol_WindowBg);
+            ImU32 bg_col = GetColorU32(Color::WindowBg);
             if (SplitterBehavior(bb, GetID("##Splitter"), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col))
             {
                 if (touching_nodes[0].Size > 0 && touching_nodes[1].Size > 0)
@@ -12156,7 +12039,7 @@ void ImGui::DebugRenderViewportThumbnail(ImDrawList* draw_list, ImGuiViewportP* 
     Vector2D scale = bb.GetSize() / viewport->Size;
     Vector2D off = bb.Min - viewport.pos * scale;
     float alpha_mul = (viewport.flags & ImGuiViewportFlags_Minimized) ? 0.30 : 1.00;
-    window.draw_list->AddRectFilled(bb.Min, bb.Max, ImGui::GetColorU32(ImGuiCol_Border, alpha_mul * 0.40));
+    window.draw_list->AddRectFilled(bb.Min, bb.Max, ImGui::GetColorU32(Color::Border, alpha_mul * 0.40));
     for (int i = 0; i != g.windows.Size; i += 1)
     {
         ImGuiWindow* thumb_window = g.windows[i];
@@ -12172,12 +12055,12 @@ void ImGui::DebugRenderViewportThumbnail(ImDrawList* draw_list, ImGuiViewportP* 
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
         const bool window_is_focused = (g.nav_window && thumb_window.RootWindowForTitleBarHighlight == g.nav_window->RootWindowForTitleBarHighlight);
-        window.draw_list->AddRectFilled(thumb_r.Min, thumb_r.Max, GetColorU32(ImGuiCol_WindowBg, alpha_mul));
-        window.draw_list->AddRectFilled(title_r.Min, title_r.Max, GetColorU32(window_is_focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg, alpha_mul));
-        window.draw_list->AddRect(thumb_r.Min, thumb_r.Max, GetColorU32(ImGuiCol_Border, alpha_mul));
-        window.draw_list->AddText(g.font, g.FontSize * 1.0, title_r.Min, GetColorU32(ImGuiCol_Text, alpha_mul), thumb_window.Name, FindRenderedTextEnd(thumb_window.Name));
+        window.draw_list->AddRectFilled(thumb_r.Min, thumb_r.Max, GetColorU32(Color::WindowBg, alpha_mul));
+        window.draw_list->AddRectFilled(title_r.Min, title_r.Max, GetColorU32(window_is_focused ? Color::TitleBgActive : Color::TitleBg, alpha_mul));
+        window.draw_list->AddRect(thumb_r.Min, thumb_r.Max, GetColorU32(Color::Border, alpha_mul));
+        window.draw_list->AddText(g.font, g.FontSize * 1.0, title_r.Min, GetColorU32(Color::Text, alpha_mul), thumb_window.Name, FindRenderedTextEnd(thumb_window.Name));
     }
-    draw_list->AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_Border, alpha_mul));
+    draw_list->AddRect(bb.Min, bb.Max, GetColorU32(Color::Border, alpha_mul));
 }
 
 static void RenderViewportsThumbnails()
@@ -12834,7 +12717,7 @@ void ImGui::DebugNodeDockNode(ImGuiDockNode* node, const char* label)
     ImGuiContext& g = *GImGui;
     const bool is_alive = (g.frame_count - node->LastFrameAlive < 2);    // Submitted with ImGuiDockNodeFlags_KeepAliveOnly
     const bool is_active = (g.frame_count - node->LastFrameActive < 2);  // Submitted
-    if (!is_alive) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
+    if (!is_alive) { PushStyleColor(Color::Text, GetStyleColorVec4(Color::TextDisabled)); }
     bool open;
     ImGuiTreeNodeFlags tree_node_flags = node->IsFocused ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
     if (node->Windows.Size > 0)
@@ -13050,7 +12933,7 @@ void ImGui::DebugNodeFont(ImFont* font)
     if (TreeNode("glyphs", "glyphs (%d)", font->Glyphs.Size))
     {
         ImDrawList* draw_list = GetWindowDrawList();
-        const ImU32 glyph_col = GetColorU32(ImGuiCol_Text);
+        const ImU32 glyph_col = GetColorU32(Color::Text);
         const float cell_size = font->FontSize * 1;
         const float cell_spacing = GetStyle().ItemSpacing.y;
         for (unsigned int base = 0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
@@ -13141,7 +13024,7 @@ void ImGui::DebugNodeTabBar(ImGuiTabBar* tab_bar, const char* label)
             tab_n > 0 ? ", " : "", (tab->Window || tab->NameOffset != -1) ? tab_bar->GetTabName(tab) : "???");
     }
     p += ImFormatString(p, buf_end - p, (tab_bar->Tabs.Size > 3) ? " ... }" : " } ");
-    if (!is_active) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
+    if (!is_active) { PushStyleColor(Color::Text, GetStyleColorVec4(Color::TextDisabled)); }
     bool open = TreeNode(label, "%s", buf);
     if (!is_active) { PopStyleColor(); }
     if (is_active && IsItemHovered())
@@ -13210,7 +13093,7 @@ void ImGui::DebugNodeWindow(ImGuiWindow* window, const char* label)
     ImGuiContext& g = *GImGui;
     const bool is_active = window.was_active;
     ImGuiTreeNodeFlags tree_node_flags = (window == g.nav_window) ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
-    if (!is_active) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
+    if (!is_active) { PushStyleColor(Color::Text, GetStyleColorVec4(Color::TextDisabled)); }
     const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.Name, is_active ? "" : " *Inactive*");
     if (!is_active) { PopStyleColor(); }
     if (IsItemHovered() && is_active)
@@ -13385,7 +13268,7 @@ void ImGui::update_debug_tool_item_picker()
     BeginTooltip();
     Text("hovered_id: 0x%08X", hovered_id);
     Text("Press ESC to abort picking.");
-    TextColored(GetStyleColorVec4(hovered_id ? ImGuiCol_Text : ImGuiCol_TextDisabled), "Click to break in debugger!");
+    TextColored(GetStyleColorVec4(hovered_id ? Color::Text : Color::TextDisabled), "Click to break in debugger!");
     EndTooltip();
 }
 
@@ -13564,7 +13447,7 @@ void ImGui::ShowStackToolWindow(bool* p_open)
             TableNextColumn();
             Text("0x%08X", info->ID);
             if (n == tool->Results.Size - 1)
-                TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(ImGuiCol_Header));
+                TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(Color::Header));
         }
         EndTable();
     }

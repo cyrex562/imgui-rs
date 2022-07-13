@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use crate::Context;
 use crate::draw_data::DrawData;
 use crate::draw_data_builder::DrawDataBuilder;
 use crate::draw_list::DrawList;
@@ -134,7 +135,7 @@ pub struct Viewport
     // ImDrawList*         DrawLists[2];           // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.mouse_draw_cursor is set and to draw most debug overlays.
     pub draw_lists: [Id32;2],
     // ImDrawData          DrawDataP;
-    pub draw_data_p: DrawData,
+    // pub draw_data_p: DrawData,
     // ImDrawDataBuilder   DrawDataBuilder;
     pub draw_data_builder: DrawDataBuilder,
     // Vector2D              LastPlatformPos;
@@ -179,4 +180,45 @@ impl Viewport {
     //     ImRect  GetMainRect() const         { return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
     //     ImRect  GetWorkRect() const         { return ImRect(work_pos.x, work_pos.y, work_pos.x + work_size.x, work_pos.y + work_size.y); }
     //     ImRect  GetBuildWorkRect() const    { Vector2D pos = CalcWorkRectPos(BuildWorkOffsetMin); Vector2D size = CalcWorkRectSize(BuildWorkOffsetMin, BuildWorkOffsetMax); return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
+}
+
+
+/// static void SetupViewportDrawData(ImGuiViewportP* viewport, ImVector<ImDrawList*>* draw_lists)
+pub fn setup_viewport_draw_data(ctx: &mut Context, viewport: &mut Viewport, draw_lists: &Vec<Id32>)
+{
+    // When minimized, we report draw_data->display_size as zero to be consistent with non-viewport mode,
+    // and to allow applications/backends to easily skip rendering.
+    // FIXME: Note that we however do NOT attempt to report "zero drawlist / vertices" into the ImDrawData structure.
+    // This is because the work has been done already, and its wasted! We should fix that and add optimizations for
+    // it earlier in the pipeline, rather than pretend to hide the data at the end of the pipeline.
+    // const bool is_minimized = (viewport.flags & ImGuiViewportFlags_Minimized) != 0;
+    let is_minimized = viewport.flags.contains(&ViewportFlags::Minimized);
+
+    // ImGuiIO& io = ImGui::GetIO();
+    let io = get_io();
+    // ImDrawData* draw_data = &viewport->DrawDataP;
+    let draw_data: &mut DrawData = &mut viewport.draw_data;
+    // viewport.draw_data = draw_data; // Make publicly accessible
+    draw_data.valid = true;
+    draw_data.cmd_lists = if draw_lists.len() > 0 { draw_lists.data } else { vec![] };
+    draw_data.cmd_lists_count = draw_lists.Size;
+    draw_data.total_vtx_count = 0;
+    draw_data.total_idx_count = 0;
+    draw_data.display_pos = viewport.pos.clone();
+    draw_data.display_size = if is_minimized { Vector2D::new(0.0, 0.0) }else { viewport.size.clone() };
+    draw_data.FramebufferScale = io.DisplayFramebufferScale; // FIXME-VIEWPORT: This may vary on a per-monitor/viewport basis?
+    draw_data.OwnerViewport = viewport;
+    // for (int n = 0; n < draw_lists.Size; n += 1)
+    for ele in draw_lists {
+        // {
+        //     ImDrawList* draw_list = draw_lists.Data[n];
+        let draw_list = ctx.get_draw_list(*ele).unwrap()
+        //     draw_list->_PopUnusedDrawCmd();
+        draw_list.pop_unused_draw_cmd();
+        //     draw_data.total_vtx_count += draw_list->VtxBuffer.Size;
+        draw_data.total_vtx_count += draw_list.vtx_buffer.len();
+        //     draw_data.total_idx_count += draw_list->IdxBuffer.Size;
+        draw_data.total_idx_count += draw_list.idx_buffer.len();
+        // }
+    }
 }

@@ -19,10 +19,10 @@ pub fn GcCompactTransientMiscBuffers(g: &mut Context)
 pub fn GcCompactTransientWindowBufufers(window: &mut Window)
 {
     window.memory_compacted = true;
-    window.memory_draw_list_idx_capacity = window.draw_list.idx_buffer.Capacity;
-    window.memory_draw_list_vtx_capacity = window.draw_list.vtx_buffer.Capacity;
+    window.memory_draw_list_idx_capacity = window.draw_list_id.idx_buffer.Capacity;
+    window.memory_draw_list_vtx_capacity = window.draw_list_id.vtx_buffer.Capacity;
     window.id_stack.clear();
-    window.draw_list._ClearFreeMemory();
+    window.draw_list_id._ClearFreeMemory();
     window.dc.child_windows.clear();
     window.dc.item_width_stack.clear();
     window.dc.text_wrap_pos_stack.clear();
@@ -34,8 +34,8 @@ pub fn GcAwakeTransientWindowBuffers(window: &mut Window)
     // We stored capacity of the ImDrawList buffer to reduce growth-caused allocation/copy when awakening.
     // The other buffers tends to amortize much faster.
     window.memory_compacted = false;
-    window.draw_list.idx_buffer.reserve(window.memory_draw_list_idx_capacity);
-    window.draw_list.vtx_buffer.reserve(window.memory_draw_list_vtx_capacity);
+    window.draw_list_id.idx_buffer.reserve(window.memory_draw_list_idx_capacity);
+    window.draw_list_id.vtx_buffer.reserve(window.memory_draw_list_vtx_capacity);
     window.memory_draw_list_idx_capacity = 0;
     window.memory_draw_list_vtx_capacity = 0;
 }

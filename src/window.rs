@@ -4,6 +4,7 @@ use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
 use std::rc::Rc;
 use std::collections::HashSet;
+use crate::color::IM_COL32_A_MASK;
 use crate::column::OldColumns;
 use crate::condition::Cond;
 use crate::config::ConfigFlags;
@@ -128,7 +129,7 @@ pub struct Window {
     // ImGuiWindowClass        window_class;                        // Advanced users only. Set with SetNextWindowClass()
     pub window_class: WindowClass,
     // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
-    pub viewport: Id32,
+    pub viewport_id: Id32,
     // ImGuiID                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
     pub viewport_id: Id32,
     // Vector2D                  viewport_pos;                        // We backup the viewport position (since the viewport may disappear or never be created if the window is inactive)
@@ -283,7 +284,7 @@ pub struct Window {
     // int                     settings_offset;                     // Offset into settings_windows[] (offsets are always valid as we only grow the array from the back)
     pub settings_offset: i32,
     // ImDrawList*             draw_list;                           // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
-    pub draw_list: Id32,
+    pub draw_list_id: Id32,
     // ImDrawList              DrawListInst;
     pub draw_list_inst: Id32,
     // ImGuiWindow*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
@@ -291,11 +292,11 @@ pub struct Window {
     // ImGuiWindow*            parent_window_in_begin_stack;
     pub parent_window_in_begin_stack: WindowHandle,
     // ImGuiWindow*            root_window;                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
-    pub root_window: WindowHandle,
+    pub root_window_id: WindowHandle,
     // ImGuiWindow*            root_window_popup_tree;                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
     pub root_window_popup_tree: WindowHandle,
     // ImGuiWindow*            root_window_dock_tree;                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
-    pub root_window_dock_tree: WindowHandle,
+    pub root_window_dock_tree_id: WindowHandle,
     // ImGuiWindow*            root_window_for_title_bar_highlight;     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
     pub root_window_for_title_bar_highlight: WindowHandle,
     // ImGuiWindow*            root_window_for_nav;                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
@@ -390,15 +391,15 @@ impl Window {
             //     dock_order = -1;
             dock_order: -1,
             //     draw_list = &DrawListInst;
-            draw_list: DrawList::default(),
+            draw_list_id: DrawList::default(),
             ..Default::default()
         };
         //     memset(this, 0, sizeof(*this));
         &out.id_stack.push(out.id);
         //     draw_list->_Data = &context->draw_list_shared_data;
-        out.draw_list.data = context.draw_list_shared_data.clone();
+        out.draw_list_id.data = context.draw_list_shared_data.clone();
         //     draw_list->_OwnerName = name;
-        &out.draw_list.owner_name = &out.name;
+        &out.draw_list_id.owner_name = &out.name;
         //     IM_PLACEMENT_NEW(&window_class) ImGuiWindowClass();
         // TODO
         out
@@ -610,7 +611,7 @@ pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: 
     // ImGuiContext& g = *GImGui;
     if g.nav_window_id {
         if ImGuiWindow * focused_root_window = g.nav_window_id.RootWindowDockTree {
-            if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree {
+            if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree_id {
                 // For the purpose of those flags we differentiate "standard popup" from "modal popup"
                 // NB: The order of those two tests is important because Modal windows are also Popups.
                 if focused_root_window.flags & WindowFlags::Modal {
@@ -623,8 +624,8 @@ pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: 
         }
     }
     // Filter by viewport
-    if window.viewport != g.mouse_viewport_id {
-        if g.moving_window_id == NULL || window.root_window_dock_tree != g.moving_window_id.RootWindowDockTree {
+    if window.viewport_id != g.mouse_viewport_id {
+        if g.moving_window_id == NULL || window.root_window_dock_tree_id != g.moving_window_id.RootWindowDockTree {
             return false;
         }
     }
@@ -947,14 +948,14 @@ pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
     // SetActiveID(window.MoveId, window);
     set_active_id(ctx, window.id, window);
     g.nav_disable_highlight = true;
-    g.active_id_click_offset = &g.io.mouse_clicked_pos[0] - window.root_window_dock_tree.pos;
+    g.active_id_click_offset = &g.io.mouse_clicked_pos[0] - window.root_window_dock_tree_id.pos;
     g.ActiveIdNoClearOnFocusLoss = true;
     // SetActiveIdUsingNavAndKeys();
     set_active_id_using_nav_and_keys();
 
     // bool can_move_window = true;
     let mut can_move_window= true;
-    if window.flags.contains(WindowFlags::NoMove) || (window.root_window_dock_tree.flags.contains(WindowFlags::NoMove) {
+    if window.flags.contains(WindowFlags::NoMove) || (window.root_window_dock_tree_id.flags.contains(WindowFlags::NoMove) {
         can_move_window = false;
     }
     let node = window.dock_node_as_host;
@@ -1023,7 +1024,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         keep_alive_id(g.active_id);
         // IM_ASSERT(g.moving_window && g.moving_window->RootWindowDockTree);
         // ImGuiWindow* moving_window = g.moving_window->RootWindowDockTree;
-        let moving_window_id = g.get_window(g.moving_window_id).unwrap().root_window_dock_tree;
+        let moving_window_id = g.get_window(g.moving_window_id).unwrap().root_window_dock_tree_id;
         let moving_window = g.get_window(moving_window_id).unwrap();
 
         // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
@@ -1038,8 +1039,8 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
                 set_window_pos(moving_window, pos, Cond::Always);
                 if (moving_window.viewport_owned) // Synchronize viewport immediately because some overlays may relies on clipping rectangle before we Begin() into the window.
                 {
-                    moving_window.viewport.pos = pos.clone();
-                    moving_window.viewport.update_work_rect();
+                    moving_window.viewport_id.pos = pos.clone();
+                    moving_window.viewport_id.update_work_rect();
                 }
             }
             focus_window(g.moving_window_id);
@@ -1056,7 +1057,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
 
                 // Restore the mouse viewport so that we don't hover the viewport _under_ the moved window during the frame we released the mouse button.
                 if !is_drag_drop_payload_being_accepted() {
-                    g.mouse_viewport_id = moving_window.viewport;
+                    g.mouse_viewport_id = moving_window.viewport_id;
                 }
 
                 // clear the NoInput window flag set by the viewport system
@@ -1115,7 +1116,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
         // ImGuiWindow* root_window = g.hovered_window ? g.hovered_window->RootWindow : NULL;
         let root_window = if g.hovered_window_id != INVALID_ID {
             let hov_win = g.get_window(g.hovered_window_id).unwrap();
-            Some(g.get_window(hov_win.root_window).unwrap())
+            Some(g.get_window(hov_win.root_window_id).unwrap())
         } else {
             None
         };
@@ -1195,7 +1196,7 @@ pub fn translate_window(window: &mut Window, delta: &Vector2D)
 pub fn scale_window(window: &mut Window, scale: f32)
 {
     // Vector2D origin = window.viewport.pos;
-    let mut origin = window.viewport.pos;
+    let mut origin = window.viewport_id.pos;
     window.pos = f32::floor((window.pos - origin) * scale + origin);
     window.size = f32::floor(window.size * scale);
     window.size_full = f32::floor(window.size_full * scale);
@@ -1203,7 +1204,7 @@ pub fn scale_window(window: &mut Window, scale: f32)
 }
 
 // static bool IsWindowActiveAndVisible(ImGuiWindow* window)
-pub fn is_window_active_and_visible(window: &mut Window)
+pub fn is_window_active_and_visible(window: &mut Window) -> bool
 {
     return (window.active) && (!window.hidden);
 }
@@ -1229,7 +1230,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context)
     // ImGuiWindow* modal_window = get_top_most_popup_modal();
     let modal_window = get_top_most_popup_modal();
     let hov_win = g.get_window(g.hovered_window_id).unwrap();
-    if modal_window && hovered_window_id != INVALID_ID && !is_window_within_begin_stack_of(g.get_window(g.hovered_window).unwrap().root_window, modal_window) { // FIXME-MERGE: root_window_dock_tree ?
+    if modal_window && hovered_window_id != INVALID_ID && !is_window_within_begin_stack_of(g.get_window(g.hovered_window).unwrap().root_window_id, modal_window) { // FIXME-MERGE: root_window_dock_tree ?
         clear_hovered_windows = true;
     }
 
@@ -1352,9 +1353,9 @@ pub fn add_window_to_draw_data(ctx: &mut Context, window: &mut Window, layer: i3
     let viewport = ctx.get_viewport(viewport_id).unwrap();
     g.io.metrics_render_windows += 1;
     if window.flags.contains(&WindowFlags::DockNodeHost) {
-        window.draw_list.channels_merge();
+        window.draw_list_id.channels_merge();
     }
-    add_draw_list_to_draw_data(ctx, &mut viewport.draw_data_builder.layers[layer], window.draw_list);
+    add_draw_list_to_draw_data(ctx, &mut viewport.draw_data_builder.layers[layer], window.draw_list_id);
     // for (int i = 0; i < window.DC.ChildWindows.Size; i += 1)
     // {
     //     ImGuiWindow* child = window.DC.ChildWindows[i];
@@ -1386,4 +1387,125 @@ pub fn add_root_window_to_draw_data(ctx: &mut Context, window: &mut Window)
 {
     // AddWindowToDrawData(window, GetWindowDisplayLayer(window));
     add_window_to_draw_data(ctx, window, get_window_display_layer(window))
+}
+
+/// Push a clipping rectangle for both ImGui logic (hit-testing etc.) and low-level ImDrawList rendering.
+/// - When using this function it is sane to ensure that float are perfectly rounded to integer values,
+///   so that e.g. (max.x-min.x) in user's render produce correct result.
+/// - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
+///   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
+///   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
+// void ImGui::PushClipRect(const Vector2D& clip_rect_min, const Vector2D& clip_rect_max, bool intersect_with_current_clip_rect)
+pub fn push_clip_rect(ctx: &mut Context, clip_rect_min: &Vector2D, clip_rect_max: &Vector2D, intersect_with_current_clip_rect: bool)
+{
+    // ImGuiWindow* window = GetCurrentWindow();
+    let window = ctx.get_current_window().unwrap();
+    // window.draw_list->PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
+    let draw_list = ctx.get_draw_list(window.draw_list_id).unwrap();
+    draw_list.push_clip_rect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
+    // window.ClipRect = window.draw_list->_ClipRectStack.back();
+    window.clip_rect = draw_list.clip_rect_stack.last().unwrap().clone()
+}
+
+// void ImGui::PopClipRect()
+pub fn pop_clip_rect(ctx: &mut Context)
+{
+    // ImGuiWindow* window = GetCurrentWindow();
+    let window = ctx.get_current_window().unwrap();
+    // window.draw_list->PopClipRect();
+    let draw_list = ctx.get_draw_list(window.draw_list_id).unwrap();
+    draw_list.pop_clip_rect();
+    // window.ClipRect = window.draw_list->_ClipRectStack.back();
+    window.clip_rect = draw_list.clip_rect_stack.last().unwrap().clone();
+}
+
+// static ImGuiWindow* FindFrontMostVisibleChildWindow(ImGuiWindow* window)
+pub fn find_front_most_visible_child_window(ctx: &mut Context, window: &mut Window) -> &mut Window
+{
+    // for (int n = window.DC.ChildWindows.Size - 1; n >= 0; n--){
+    //     if (IsWindowActiveAndVisible(window.DC.ChildWindows[n])) {
+    //         return FindFrontMostVisibleChildWindow(window.DC.ChildWindows[n]);
+    //     }
+    // }
+    for child_win_id in window.dc.child_windows.iter() {
+        let child_win = ctx.get_window(*child_win_id).unwrap();
+        if is_window_active_and_visible(child_win) {
+            return find_front_most_visible_child_window(ctx, child_win);
+        }
+    }
+    return window;
+}
+
+// static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col)
+pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Window, color: u32)
+{
+    if (color & IM_COL32_A_MASK) == 0 {
+        return;
+    }
+
+    // ImGuiViewportP* viewport = window.viewport;
+    let viewport = ctx.get_viewport(window.viewport_id).unwrap();
+    // ImRect viewport_rect = viewport->get_main_rect();
+    let viewport_rect = viewport.get_main_rect();
+
+    // Draw behind window by moving the draw command at the FRONT of the draw list
+
+    // We've already called AddWindowToDrawData() which called draw_list->ChannelsMerge() on DockNodeHost windows,
+    // and draw list have been trimmed already, hence the explicit recreation of a draw command if missing.
+    // FIXME: This is creating complication, might be simpler if we could inject a drawlist in drawdata at a given position and not attempt to manipulate ImDrawCmd order.
+    // ImDrawList* draw_list = window.RootWindowDockTree->DrawList;
+    let root_win_dock_tree_win = ctx.get_window(window.root_window_dock_tree_id).unwrap();
+    let draw_list = ctx.get_draw_list(root_win_dock_tree_win.draw_list_id).unwrap();
+    if draw_list.cmd_buffer.len() == 0 {
+        draw_list.add_draw_cmd();
+    }
+    draw_list.push_clip_rect(viewport_rect.Min - Vector2D::new(1.0, 1.0), viewport_rect.Max + Vector2D::new(1.0, 1.0), false); // Ensure ImDrawCmd are not merged
+    draw_list.add_rect_filled(viewport_rect.Min, viewport_rect.Max, color);
+    // ImDrawCmd cmd = draw_list.cmd_buffer.back();
+    let cmd = draw_list.cmd_buffer.last().unwrap();
+    // IM_ASSERT(cmd.elem_count == 6);
+    draw_list.cmd_buffer.pop_back();
+    draw_list.cmd_buffer.push_front(cmd);
+    draw_list.pop_clip_rect();
+    draw_list.add_draw_cmd(); // We need to create a command as cmd_buffer.back().idx_offset won't be correct if we append to same command.
+
+
+    // Draw over sibling docking nodes in a same docking tree
+    let root_win = ctx.get_window(window.root_window_id).unwrap();
+    if root_win.dock_is_active
+    {
+        // ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.RootWindowDockTree)->DrawList;
+
+        let draw_list = ctx.get_draw_list(find_front_most_visible_child_window(ctx, root_win_dock_tree_win).draw_list_id).unwrap();
+        if draw_list.cmd_buffer.len() == 0 {
+            draw_list.add_draw_cmd();
+        }
+        draw_list.push_clip_rect(viewport_rect.Min, viewport_rect.Max, false);
+        RenderRectFilledWithHole(draw_list, root_win_dock_tree_win.rect(), root_win.rect(), color, 0.0);// window->root_window_dock_tree->window_rounding);
+        draw_list.pop_clip_rect();
+    }
+}
+
+// ImGuiWindow* ImGui::FindBottomMostVisibleWindowWithinBeginStack(ImGuiWindow* parent_window)
+pub fn find_bottom_most_visible_window_with_begin_stack(ctx: &mut Context, parent_window: &mut Window) -> &mut Window
+{
+    // ImGuiContext& g = *GImGui;
+    // ImGuiWindow* bottom_most_visible_window = parent_window;
+    let mut bottom_most_visible_window: &mut Window = parent_window;
+    // for (int i = FindWindowDisplayIndex(parent_window); i >= 0; i--)
+    for i in find_window_display_index(parent_window) .. 0
+    {
+        // ImGuiWindow* window = g.windows[i];
+        let window = ctx.get_window(i).unwrap();
+        if window.flags.contains(&WindowFlags::ChildWindow) {
+            continue;
+        }
+        if !is_window_within_begin_stack_of(window, parent_window) {
+            break;
+        }
+        if is_window_active_and_visible(window) && get_window_display_layer(window) <= get_window_display_layer(parent_window) {
+            bottom_most_visible_window = window;
+        }
+    }
+    return bottom_most_visible_window;
 }

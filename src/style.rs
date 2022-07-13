@@ -224,7 +224,7 @@ impl StyleMod {
 // }
 
 // ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
-pub fn GetColorU32(idx: ImGuiColor, alpha_mul: f32) -> u32
+pub fn get_color_u32(idx: ImGuiColor, alpha_mul: f32) -> u32
 {
     let style = &GImGui.style;
     let c = style.Colors[idx];

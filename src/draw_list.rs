@@ -11,6 +11,7 @@ use crate::draw_list_shared_data::DrawListSharedData;
 use crate::draw_list_splitter::DrawListSplitter;
 use crate::draw_vert::DrawVertex;
 use crate::font::Font;
+use crate::rect::Rect;
 use crate::texture::TextureId;
 use crate::utils::set_hash_set;
 use crate::vectors::{Vector2D, Vector4D};
@@ -49,7 +50,7 @@ pub struct DrawList
     // ImDrawIdx*              _IdxWritePtr;       // [Internal] point within idx_buffer.data after each add command (to avoid using the ImVector<> operators too much)
     // pub _IdxWritePtr: *mut ImDrawIdx,
     // ImVector<Vector4D>        _clip_rect_stack;     // [Internal]
-    pub clip_rect_stack: Vec<Vector4D>,
+    pub clip_rect_stack: Vec<Rect>,
     // ImVector<ImTextureID>   _texture_id_stack;    // [Internal]
     pub _texture_id_stack: Vec<TextureId>,
     // ImVector<Vector2D>        _path;              // [Internal] current path building
@@ -473,7 +474,7 @@ pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList
     // ImGuiContext& g = *GImGui;
     //return GetBackgroundDrawList(g.CurrentWindow->Viewport);
     let curr_win = g.get_current_window()?;
-    let vp = g.get_viewport(curr_win.viewport).unwrap();
+    let vp = g.get_viewport(curr_win.viewport_id).unwrap();
     get_background_draw_list(g, vp)
 }
 

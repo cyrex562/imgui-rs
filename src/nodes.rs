@@ -1892,7 +1892,7 @@ static void MiniMapUpdate()
         mini_map_rect.Min, mini_map_rect.Max, GImNodes->Style.Colors[ImNodesCol_MiniMapOutline]);
 
     // Clip draw list items to mini-map rect (after drawing background/outline)
-    GImNodes->CanvasDrawList->PushClipRect(
+    GImNodes->CanvasDrawList.push_clip_rect(
         mini_map_rect.Min, mini_map_rect.Max, true /* intersect with editor clip-rect */);
 
     // Draw links first so they appear under nodes, and we can use the same draw channel
@@ -1923,7 +1923,7 @@ static void MiniMapUpdate()
     }
 
     // Have to pop mini-map clip rect
-    GImNodes->CanvasDrawList->PopClipRect();
+    GImNodes->CanvasDrawList.pop_clip_rect();
 
     bool mini_map_is_hovered = ImGui::IsWindowHovered();
 
@@ -2248,7 +2248,7 @@ void BeginNodeEditor()
     {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2D::new(1.f, 1.f));
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2D::new(0.f, 0.f));
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, GImNodes->Style.Colors[ImNodesCol_GridBackground]);
+        ImGui::PushStyleColor(Color::ChildBg, GImNodes->Style.Colors[ImNodesCol_GridBackground]);
         ImGui::BeginChild(
             "scrolling_region",
             Vector2D::new(0.f, 0.f),

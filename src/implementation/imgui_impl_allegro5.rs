@@ -95,10 +95,10 @@ static void ImGui_ImplAllegro5_SetupRenderState(ImDrawData* draw_data)
     // Setup orthographic projection matrix
     // Our visible imgui space lies from draw_data->display_pos (top left) to draw_data->display_pos+data_data->display_size (bottom right).
     {
-        float L = draw_data->DisplayPos.x;
-        float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
-        float T = draw_data->DisplayPos.y;
-        float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
+        float L = draw_data.display_pos.x;
+        float R = draw_data.display_pos.x + draw_data.display_size.x;
+        float T = draw_data.display_pos.y;
+        float B = draw_data.display_pos.y + draw_data.display_size.y;
         ALLEGRO_TRANSFORM transform;
         al_identity_transform(&transform);
         al_use_transform(&transform);
@@ -111,7 +111,7 @@ static void ImGui_ImplAllegro5_SetupRenderState(ImDrawData* draw_data)
 void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
 {
     // Avoid rendering when minimized
-    if (draw_data->DisplaySize.x <= 0.0 || draw_data->DisplaySize.y <= 0.0)
+    if (draw_data.display_size.x <= 0.0 || draw_data.display_size.y <= 0.0)
         return;
 
     // Backup Allegro state that will be modified
@@ -127,9 +127,9 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
     ImGui_ImplAllegro5_SetupRenderState(draw_data);
 
     // Render command lists
-    for (int n = 0; n < draw_data->CmdListsCount; n += 1)
+    for (int n = 0; n < draw_data.cmd_lists_count; n += 1)
     {
-        const ImDrawList* cmd_list = draw_data->CmdLists[n];
+        const ImDrawList* cmd_list = draw_data.cmd_lists[n];
 
         // Allegro's implementation of al_draw_indexed_prim() for DX9 is completely broken. Unindex our buffers ourselves.
         // FIXME-OPT: Unfortunately Allegro doesn't support 32-bit packed colors so we have to convert them to 4 float as well..
@@ -162,7 +162,7 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
         }
 
         // Render command lists
-        Vector2D clip_off = draw_data->DisplayPos;
+        Vector2D clip_off = draw_data.display_pos;
         for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.Size; cmd_i += 1)
         {
             const ImDrawCmd* pcmd = &cmd_list.cmd_buffer[cmd_i];
@@ -570,7 +570,7 @@ void ImGui_ImplAllegro5_NewFrame()
     int w, h;
     w = al_get_display_width(bd->Display);
     h = al_get_display_height(bd->Display);
-    io.DisplaySize = Vector2D::new((float)w, h);
+    io.display_size = Vector2D::new((float)w, h);
 
     // Setup time step
     double current_time = al_get_time();

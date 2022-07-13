@@ -174,7 +174,7 @@ pub fn update_mouse_wheel(g: &mut Context)
         let new_font_scale = f32::clamp(window.font_window_scale + g.io.mouse_wheel * 0.10, 0.50, 2.50);
         let scale = new_font_scale / window.font_window_scale;
         window.font_window_scale = new_font_scale;
-        if window.id == window.root_window
+        if window.id == window.root_window_id
         {
             let offset = &window.size * (1.0 - scale) * (&g.io.mouse_pos - &window.pos) / &window.size;
             set_window_pos(window, &window.pos + offset, 0);

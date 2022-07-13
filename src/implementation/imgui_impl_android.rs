@@ -264,7 +264,7 @@ void ImGui_ImplAndroid_NewFrame()
     int display_width = window_width;
     int display_height = window_height;
 
-    io.DisplaySize = Vector2D::new((float)window_width, window_height);
+    io.display_size = Vector2D::new((float)window_width, window_height);
     if (window_width > 0 && window_height > 0)
         io.DisplayFramebufferScale = Vector2D::new((float)display_width / window_width, display_height / window_height);
 

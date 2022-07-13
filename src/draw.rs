@@ -1611,14 +1611,14 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
 
     // Ensure there's always a non-callback draw command trailing the command-buffer
     if (draw_list.cmd_buffer.Size == 0 || draw_list.cmd_buffer.back().user_callback != NULL)
-        draw_list->AddDrawCmd();
+        draw_list.add_draw_cmd();
 
     // If current command is used with different settings we need to add a new command
     ImDrawCmd* curr_cmd = &draw_list.cmd_buffer.Data[draw_list.cmd_buffer.Size - 1];
     if (curr_cmd->ElemCount == 0)
         ImDrawCmd_HeaderCopy(curr_cmd, &draw_list->_CmdHeader); // Copy clip_rect, texture_id, vtx_offset
     else if (ImDrawCmd_HeaderCompare(curr_cmd, &draw_list->_CmdHeader) != 0)
-        draw_list->AddDrawCmd();
+        draw_list.add_draw_cmd();
 
     _Count = 1;
 }
@@ -1640,11 +1640,11 @@ void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
     // If current command is used with different settings we need to add a new command
     ImDrawCmd* curr_cmd = (draw_list.cmd_buffer.Size == 0) ? NULL : &draw_list.cmd_buffer.Data[draw_list.cmd_buffer.Size - 1];
     if (curr_cmd == NULL)
-        draw_list->AddDrawCmd();
+        draw_list.add_draw_cmd();
     else if (curr_cmd->ElemCount == 0)
         ImDrawCmd_HeaderCopy(curr_cmd, &draw_list->_CmdHeader); // Copy clip_rect, texture_id, vtx_offset
     else if (ImDrawCmd_HeaderCompare(curr_cmd, &draw_list->_CmdHeader) != 0)
-        draw_list->AddDrawCmd();
+        draw_list.add_draw_cmd();
 }
 
 //-----------------------------------------------------------------------------
@@ -1655,8 +1655,8 @@ void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
 void ImDrawData::DeIndexAllBuffers()
 {
     ImVector<ImDrawVert> new_vtx_buffer;
-    TotalVtxCount = TotalIdxCount = 0;
-    for (int i = 0; i < CmdListsCount; i += 1)
+    total_vtx_count = total_idx_count = 0;
+    for (int i = 0; i < cmd_lists_count; i += 1)
     {
         ImDrawList* cmd_list = CmdLists[i];
         if (cmd_list->IdxBuffer.empty())
@@ -1666,7 +1666,7 @@ void ImDrawData::DeIndexAllBuffers()
             new_vtx_buffer[j] = cmd_list->VtxBuffer[cmd_list->IdxBuffer[j]];
         cmd_list->VtxBuffer.swap(new_vtx_buffer);
         cmd_list->IdxBuffer.resize(0);
-        TotalVtxCount += cmd_list->VtxBuffer.Size;
+        total_vtx_count += cmd_list->VtxBuffer.Size;
     }
 }
 
@@ -1675,7 +1675,7 @@ void ImDrawData::DeIndexAllBuffers()
 // or if there is a difference between your window resolution and framebuffer resolution.
 void ImDrawData::ScaleClipRects(const Vector2D& fb_scale)
 {
-    for (int i = 0; i < CmdListsCount; i += 1)
+    for (int i = 0; i < cmd_lists_count; i += 1)
     {
         ImDrawList* cmd_list = CmdLists[i];
         for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.Size; cmd_i += 1)
