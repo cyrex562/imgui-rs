@@ -25,38 +25,7 @@ use crate::settings::SettingsHandler;
 use crate::utils::{remove_hash_set_val, set_hash_set};
 use crate::vectors::{ImLengthSqr, Vector2D};
 use crate::viewport::{Viewport, ViewportFlags};
-use crate::window::{HoveredFlags, is_window_content_hoverable, ItemFlags, start_mouse_moving_window, Window, WindowFlags, WINDOWS_HOVER_PADDING};
-
-// static void AddWindowToDrawData(ImGuiWindow* window, int layer)
-pub fn add_window_to_draw_data(ctx: &mut Context, window: &mut Window, layer: i32)
-{
-    // ImGuiContext& g = *GImGui;
-    // ImGuiViewportP* viewport = window.viewport;
-    let viewport_id = window.viewport_id;
-    let viewport = ctx.get_viewport(viewport_id).unwrap();
-    g.io.metrics_render_windows += 1;
-    if (window.flags.contains(&WindowFlags::DockNodeHost)) {
-        window.draw_list.channels_merge();
-    }
-    add_draw_list_to_draw_data(&viewport.draw_data_builder.Layers[layer], window.draw_list);
-    for (int i = 0; i < window.DC.ChildWindows.Size; i += 1)
-    {
-        ImGuiWindow* child = window.DC.ChildWindows[i];
-        if (IsWindowActiveAndVisible(child)) // Clipped children may have been marked not active
-            AddWindowToDrawData(child, layer);
-    }
-}
-
-static inline int GetWindowDisplayLayer(ImGuiWindow* window)
-{
-    return (window.flags & WindowFlags::Tooltip) ? 1 : 0;
-}
-
-// Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
-static inline void AddRootWindowToDrawData(ImGuiWindow* window)
-{
-    AddWindowToDrawData(window, GetWindowDisplayLayer(window));
-}
+use crate::window::{add_window_to_draw_data, get_window_display_layer, HoveredFlags, is_window_active_and_visible, is_window_content_hoverable, ItemFlags, start_mouse_moving_window, Window, WindowFlags, WINDOWS_HOVER_PADDING};
 
 void ImDrawDataBuilder::FlattenIntoSingleLayer()
 {
@@ -358,7 +327,7 @@ void ImGui::Render()
         ImGuiViewportP* viewport = g.viewports[n];
         viewport->DrawDataBuilder.Clear();
         if (viewport->DrawLists[0] != NULL)
-            add_draw_list_to_draw_data(&viewport->DrawDataBuilder.Layers[0], GetBackgroundDrawList(viewport));
+            add_draw_list_to_draw_data(&viewport->DrawDataBuilder.layers[0], GetBackgroundDrawList(viewport));
     }
 
     // Add ImDrawList to render
@@ -393,9 +362,9 @@ void ImGui::Render()
 
         // Add foreground ImDrawList (for each active viewport)
         if (viewport->DrawLists[1] != NULL)
-            add_draw_list_to_draw_data(&viewport->DrawDataBuilder.Layers[0], GetForegroundDrawList(viewport));
+            add_draw_list_to_draw_data(&viewport->DrawDataBuilder.layers[0], GetForegroundDrawList(viewport));
 
-        SetupViewportDrawData(viewport, &viewport->DrawDataBuilder.Layers[0]);
+        SetupViewportDrawData(viewport, &viewport->DrawDataBuilder.layers[0]);
         ImDrawData* draw_data = viewport.draw_data;
         g.io.MetricsRenderVertices += draw_data->TotalVtxCount;
         g.io.MetricsRenderIndices += draw_data->TotalIdxCount;
@@ -12512,13 +12481,13 @@ void ImGui::ShowMetricsWindow(bool* p_open)
         {
             ImGuiViewportP* viewport = g.viewports[viewport_i];
             bool viewport_has_drawlist = false;
-            for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport->DrawDataBuilder.Layers); layer_i += 1)
-                for (int draw_list_i = 0; draw_list_i < viewport->DrawDataBuilder.Layers[layer_i].Size; draw_list_i += 1)
+            for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport->DrawDataBuilder.layers); layer_i += 1)
+                for (int draw_list_i = 0; draw_list_i < viewport->DrawDataBuilder.layers[layer_i].Size; draw_list_i += 1)
                 {
                     if (!viewport_has_drawlist)
                         Text("active DrawLists in viewport #%d, id: 0x%08X", viewport->Idx, viewport->ID);
                     viewport_has_drawlist = true;
-                    DebugNodeDrawList(NULL, viewport, viewport->DrawDataBuilder.Layers[layer_i][draw_list_i], "draw_list");
+                    DebugNodeDrawList(NULL, viewport, viewport->DrawDataBuilder.layers[layer_i][draw_list_i], "draw_list");
                 }
         }
         TreePop();
@@ -13223,9 +13192,9 @@ void ImGui::DebugNodeViewport(ImGuiViewportP* viewport)
             (flags & ImGuiViewportFlags_Minimized) ? " Minimized" : "",
             (flags & ImGuiViewportFlags_NoAutoMerge) ? " NoAutoMerge" : "",
             (flags & ImGuiViewportFlags_CanHostOtherWindows) ? " CanHostOtherWindows" : "");
-        for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport->DrawDataBuilder.Layers); layer_i += 1)
-            for (int draw_list_i = 0; draw_list_i < viewport->DrawDataBuilder.Layers[layer_i].Size; draw_list_i += 1)
-                DebugNodeDrawList(NULL, viewport, viewport->DrawDataBuilder.Layers[layer_i][draw_list_i], "draw_list");
+        for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport->DrawDataBuilder.layers); layer_i += 1)
+            for (int draw_list_i = 0; draw_list_i < viewport->DrawDataBuilder.layers[layer_i].Size; draw_list_i += 1)
+                DebugNodeDrawList(NULL, viewport, viewport->DrawDataBuilder.layers[layer_i][draw_list_i], "draw_list");
         TreePop();
     }
 }
