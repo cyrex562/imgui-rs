@@ -342,7 +342,7 @@ pub struct Context {
     // ImGuiWindow*            nav_windowing_target_anim;             // Record of last valid nav_windowing_target until DimBgRatio and nav_windowing_highlight_alpha becomes 0.0, so the fade-out can stay on it.
     pub nav_windowing_target_anim: Id32,
     // ImGuiWindow*            nav_windowing_list_window;             // Internal window actually listing the CTRL+Tab contents
-    pub nav_windowing_list_window: Id32,
+    pub nav_windowing_list_window_id: Id32,
     // float                   nav_windowing_timer;
     pub nav_windowing_timer: f32,
     // float                   nav_windowing_highlight_alpha;
@@ -692,7 +692,7 @@ impl Context {
             nav_tabbing_result_first: NavItemData::default(),
             nav_windowing_target: u32::MAX,
             nav_windowing_target_anim: u32::MAX,
-            nav_windowing_list_window: u32::MAX,
+            nav_windowing_list_window_id: u32::MAX,
             // nav_windowing_target_anim: (),
             // nav_windowing_list_window: (),
             nav_windowing_timer: 0.0,

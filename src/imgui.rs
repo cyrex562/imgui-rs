@@ -28,7 +28,7 @@ use crate::vectors::{ImLengthSqr, Vector2D};
 use crate::viewport::{Viewport, ViewportFlags};
 use crate::window::{add_window_to_draw_data, find_bottom_most_visible_window_with_begin_stack, find_front_most_visible_child_window, get_window_display_layer, HoveredFlags, is_window_active_and_visible, is_window_content_hoverable, ItemFlags, render_dimmed_background_behind_window, start_mouse_moving_window, Window, WindowFlags, WINDOWS_HOVER_PADDING};
 
-// static void ImGui::RenderDimmedBackgrounds()
+// static void ImGuis::RenderDimmedBackgrounds()
 pub fn render_dimmed_backgrounds(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
@@ -62,11 +62,19 @@ pub fn render_dimmed_backgrounds(g: &mut Context)
     {
         // Draw dimming behind CTRL+Tab target window and behind CTRL+Tab UI window
         RenderDimmedBackgroundBehindWindow(g.NavWindowingTargetAnim, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
-        if (g.NavWindowingListWindow != NULL && g.NavWindowingListWindow->Viewport && g.NavWindowingListWindow->Viewport != g.NavWindowingTargetAnim->Viewport){
-        RenderDimmedBackgroundBehindWindow(g.NavWindowingListWindow, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
+        if g.nav_windowing_list_window_id != INVALID_ID {
+            let nav_windowing_list_window = g.get_window(g.nav_windowing_list_window_id).unwrap();
+            if nav_windowing_list_window.viewport_id != INVALID_ID {
+                let vp = g.get_viewport(nav_windowing_list_window.viewport_id) {
+                    let nav_win_tgt_anim = g.get_window(g.nav_windowing_target_anim).unwrap();
+                    let vp2 = g.get_viewport(nav_win_tgt_anim.viewport_id)
+                }
+            }
+        } && g.nav_windowing_list_window_id ->Viewport && g.nav_windowing_list_window_id ->Viewport != g.NavWindowingTargetAnim->Viewport){
+        RenderDimmedBackgroundBehindWindow(g.nav_windowing_list_window_id, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
     }
         viewports_already_dimmed[0] = g.NavWindowingTargetAnim->Viewport;
-        viewports_already_dimmed[1] = g.NavWindowingListWindow ? g.NavWindowingListWindow->Viewport : NULL;
+        viewports_already_dimmed[1] = g.nav_windowing_list_window_id? g.nav_windowing_list_window_id ->Viewport : NULL;
 
         // Draw border around CTRL+Tab target window
         ImGuiWindow* window = g.NavWindowingTargetAnim;
@@ -216,7 +224,7 @@ void ImGui::Render()
     // Add ImDrawList to render
     ImGuiWindow* windows_to_render_top_most[2];
     windows_to_render_top_most[0] = (g.nav_windowing_target && !(g.nav_windowing_target.flags & ImGuiWindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target->RootWindowDockTree : NULL;
-    windows_to_render_top_most[1] = (g.nav_windowing_target ? g.NavWindowingListWindow : NULL);
+    windows_to_render_top_most[1] = (g.nav_windowing_target ? g.nav_windowing_list_window : NULL);
     for (int n = 0; n != g.windows.Size; n += 1)
     {
         ImGuiWindow* window = g.windows[n];
@@ -1616,7 +1624,7 @@ bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         bool window_title_visible_elsewhere = false;
         if ((window.viewport && window.viewport->Window == window) || (window.dock_is_active))
             window_title_visible_elsewhere = true;
-        else if (g.NavWindowingListWindow != NULL && (window.flags & ImGuiWindowFlags_NoNavFocus) == 0)   // Window titles visible when using CTRL+TAB
+        else if (g.nav_windowing_list_window != NULL && (window.flags & ImGuiWindowFlags_NoNavFocus) == 0)   // Window titles visible when using CTRL+TAB
             window_title_visible_elsewhere = true;
         if (window_title_visible_elsewhere && !window_just_created && strcmp(name, window.Name) != 0)
         {
@@ -6705,8 +6713,8 @@ void ImGui::NavUpdateWindowingOverlay()
     if (g.NavWindowingTimer < NAV_WINDOWING_LIST_APPEAR_DELAY)
         return;
 
-    if (g.NavWindowingListWindow == NULL)
-        g.NavWindowingListWindow = FindWindowByName("###NavWindowingList");
+    if (g.nav_windowing_list_window == NULL)
+        g.nav_windowing_list_window = FindWindowByName("###NavWindowingList");
     const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ GetMainViewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport->Size.x * 0.20, viewport->Size.y * 0.20), Vector2D::new(FLT_MAX, FLT_MAX));
     SetNextWindowPos(viewport->GetCenter(), Cond::Always, Vector2D::new(0.5, 0.5));
