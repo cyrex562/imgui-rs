@@ -30,56 +30,36 @@ use crate::vectors::{ImLengthSqr, Vector2D};
 use crate::viewport::{setup_viewport_draw_data, Viewport, ViewportFlags};
 use crate::window::{add_root_window_to_draw_data, add_window_to_draw_data, add_window_to_sort_buffer, find_bottom_most_visible_window_with_begin_stack, find_front_most_visible_child_window, get_window_display_layer, HoveredFlags, is_window_active_and_visible, is_window_content_hoverable, ItemFlags, render_dimmed_background_behind_window, start_mouse_moving_window, Window, WindowFlags, WINDOWS_HOVER_PADDING};
 
-// Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
-// CalcTextSize("") should return Vector2D(0.0, g.font_size)
-// Vector2D ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
-pub fn calc_text_size(g: &mut Context, text: &str, hide_text_after_double_hash: bool, wrap_width: f32) -> Vector2D
-{
-    // ImGuiContext& g = *GImGui;
-
-    // const char* text_display_end;
-    // if hide_text_after_double_hash {
-    //     text_display_end = find_rendered_text_end(text, text_end);
-    // }   // Hide anything after a '##' string
-    // else {
-    //     text_display_end = text_end;
-    // }
-
-    // ImFont* font = g.font;
-    let font = &g.font;
-    let font_size = &g.font_size;
-    if text.len() == 0 {
-        return Vector2D::new(0.0, *font_size);
-    }
-    let mut text_size = font.calc_text_size_a(*font_size, f32::MAX, wrap_width, text);
-
-    // Round
-    // FIXME: This has been here since Dec 2015 (7b0bf230) but down the line we want this out.
-    // FIXME: Investigate using ceilf or e.g.
-    // - https://git.musl-libc.org/cgit/musl/tree/src/math/ceilf.c
-    // - https://embarkstudios.github.io/rust-gpu/api/src/libm/math/ceilf.rs.html
-    text_size.x = f32::floor(text_size.x + 0.99999);
-
-    return text_size;
-}
-
 // Find window given position, search front-to-back
 // FIXME: Note that we have an inconsequential lag here: outer_rect_clipped is updated in Begin(), so windows moved programmatically
 // with set_window_pos() and not SetNextWindowPos() will have that rectangle lagging by a frame at the time FindHoveredWindow() is
 // called, aka before the next Begin(). Moving window isn't affected.
-static void find_hovered_window()
+// static void find_hovered_window()
+pub fn find_hovered_window(g: &mut Context)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
 
     // Special handling for the window being moved: Ignore the mouse viewport check (because it may reset/lose its viewport during the undocking frame)
-    ImGuiViewportP* moving_window_viewport = g.moving_window ? g.moving_window->Viewport : NULL;
-    if (g.moving_window)
-        g.moving_window->Viewport = g.mouse_viewport;
+    // ImGuiViewportP* moving_window_viewport = g.moving_window ? g.moving_window->Viewport : NULL;
 
-    ImGuiWindow* hovered_window = NULL;
-    ImGuiWindow* hovered_window_ignoring_moving_window = NULL;
-    if (g.moving_window && !(g.moving_window.flags & WindowFlags::NoMouseInputs))
+    let moving_window_viewport = if g.moving_window_id != INVALID_ID {
+        let mw_win = g.get_window(g.moving_window_id).unwrap();
+        Some(g.get_viewport(mw_win.viewport_id).unwrap())
+    } else {
+        None
+    };
+    if g.moving_window_id != INVALID_ID {
+        // g.moving_window.Viewport = g.mouse_viewport;
+        let mw_win = g.get_window(g.moving_window_id).unwrap();
+        mw_win.viewport_id = g.mouse_viewport_id;
+    }
+
+    // ImGuiWindow* hovered_window = NULL;
+    // ImGuiWindow* hovered_window_ignoring_moving_window = NULL;
+    let mut hovered_window: &mut Window;
+    if g.moving_window && !(g.moving_window.flags.contains(WindowFlags::NoMouseInputs)) {
         hovered_window = g.moving_window;
+    }
 
     Vector2D padding_regular = g.style.touch_extra_padding;
     Vector2D padding_for_resize = g.io.ConfigWindowsResizeFromEdges ? g.windows_hover_padding : padding_regular;

@@ -1,10 +1,12 @@
 use std::os::raw::c_char;
 use std::ptr;
+use crate::Context;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX, ImGuiID, ImGuiInputTextFlags, ImWchar};
 use crate::imgui_math::ImMinI32;
 use crate::imgui_vec::Vector2D;
 use crate::imstb_text_edit_state::STB_TexteditState;
+use crate::vectors::Vector2D;
 
 
 // Extend ImGuiInputTextFlags_
@@ -297,3 +299,36 @@ pub const IM_UNICODE_CODEPOINT_INVALID: u32 = 0xFFFD;
 // Invalid Unicode code point (standard value).
 // #ifdef IMGUI_USE_WCHAR32
 pub const IM_UNICODE_CODEPOINT_MAX: u32     = 0x10FFFF;
+
+// Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
+// CalcTextSize("") should return Vector2D(0.0, g.font_size)
+// Vector2D ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
+pub fn calc_text_size(g: &mut Context, text: &str, hide_text_after_double_hash: bool, wrap_width: f32) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+
+    // const char* text_display_end;
+    // if hide_text_after_double_hash {
+    //     text_display_end = find_rendered_text_end(text, text_end);
+    // }   // Hide anything after a '##' string
+    // else {
+    //     text_display_end = text_end;
+    // }
+
+    // ImFont* font = g.font;
+    let font = &g.font;
+    let font_size = &g.font_size;
+    if text.len() == 0 {
+        return Vector2D::new(0.0, *font_size);
+    }
+    let mut text_size = font.calc_text_size_a(*font_size, f32::MAX, wrap_width, text);
+
+    // Round
+    // FIXME: This has been here since Dec 2015 (7b0bf230) but down the line we want this out.
+    // FIXME: Investigate using ceilf or e.g.
+    // - https://git.musl-libc.org/cgit/musl/tree/src/math/ceilf.c
+    // - https://embarkstudios.github.io/rust-gpu/api/src/libm/math/ceilf.rs.html
+    text_size.x = f32::floor(text_size.x + 0.99999);
+
+    return text_size;
+}
