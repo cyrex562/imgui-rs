@@ -14,18 +14,18 @@ use crate::viewport::setup_viewport_draw_data;
 use crate::window::{add_root_window_to_draw_data, find_bottom_most_visible_window_with_begin_stack, is_window_active_and_visible, render_dimmed_background_behind_window, Window, WindowFlags};
 
 // const char* ImGui::FindRenderedTextEnd(const char* text, const char* text_end)
-pub unsafe fn FindRenderedTextEnd(text: *const c_char, text_end: *const c_char) -> *const c_char {
-    // const char* text_display_end = text;
-    let mut text_display_end = text;
-    // if text_end.is_null() {
-    //     text_end = -1;
-    // }
-
-    while text_display_end < text_end && *text_display_end != '\0' as c_char && (text_display_end[0] != '#' || text_display_end[1] != '#') {
-        text_display_end += 1;
-    }
-    return text_display_end;
-}
+// pub unsafe fn find_rendered_text_end(text: *const c_char, text_end: *const c_char) -> *const c_char {
+//     // const char* text_display_end = text;
+//     let mut text_display_end = text;
+//     // if text_end.is_null() {
+//     //     text_end = -1;
+//     // }
+//
+//     while text_display_end < text_end && *text_display_end != '\0' as c_char && (text_display_end[0] != '#' || text_display_end[1] != '#') {
+//         text_display_end += 1;
+//     }
+//     return text_display_end;
+// }
 
 // Internal ImGui functions to render text
 // render_text***() functions calls ImDrawList::add_text() calls ImBitmapFont::render_text()
@@ -42,7 +42,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
     let mut text_display_end: *const c_char = null_mut();
     if hide_text_after_hash
     {
-        text_display_end = FindRenderedTextEnd(text, text_end);
+        text_display_end = find_rendered_text_end(text, text_end);
     }
     else
     {
@@ -180,13 +180,13 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         {
             // Always display at least 1 character if there's no room for character + ellipsis
             text_end_ellipsis = text + ImTextCountUtf8BytesFromChar(text, text_end_full);
-            text_size_clipped_x = font->CalcTextSizeA(font_size, FLT_MAX, 0.0, text, text_end_ellipsis).x;
+            text_size_clipped_x = font->CalcTextSizeA(font_size, f32::MAX, 0.0, text, text_end_ellipsis).x;
         }
         while (text_end_ellipsis > text && ImCharIsBlankA(text_end_ellipsis[-1]))
         {
             // Trim trailing space before ellipsis (FIXME: Supporting non-ascii blanks would be nice, for this we need a function to backtrack in UTF-8 text)
             text_end_ellipsis--;
-            text_size_clipped_x -= font->CalcTextSizeA(font_size, FLT_MAX, 0.0, text_end_ellipsis, text_end_ellipsis + 1).x; // Ascii blanks are always 1 byte
+            text_size_clipped_x -= font->CalcTextSizeA(font_size, f32::MAX, 0.0, text_end_ellipsis, text_end_ellipsis + 1).x; // Ascii blanks are always 1 byte
         }
 
         // Render text, render ellipsis

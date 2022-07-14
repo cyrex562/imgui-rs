@@ -70,7 +70,7 @@ Vector2D GetClosestPointOnCubicBezier(const int num_segments, const Vector2D& p,
     IM_ASSERT(num_segments > 0);
     Vector2D p_last = cb.P0;
     Vector2D p_closest;
-    float  p_closest_dist = FLT_MAX;
+    float  p_closest_dist = f32::MAX;
     float  t_step = 1.0 / num_segments;
     for (int i = 1; i <= num_segments;  += 1i)
     {
@@ -1163,7 +1163,7 @@ ImOptionalIndex ResolveHoveredPin(
     const ImObjectPool<ImPinData>& pins,
     const ImVector<int>&           occluded_pin_indices)
 {
-    float           smallest_distance = FLT_MAX;
+    float           smallest_distance = f32::MAX;
     ImOptionalIndex pin_idx_with_smallest_distance;
 
     const float hover_radius_sqr = GImNodes->Style.PinHoverRadius * GImNodes->Style.PinHoverRadius;
@@ -1233,7 +1233,7 @@ ImOptionalIndex ResolveHoveredLink(
     const ImObjectPool<ImLinkData>& links,
     const ImObjectPool<ImPinData>&  pins)
 {
-    float           smallest_distance = FLT_MAX;
+    float           smallest_distance = f32::MAX;
     ImOptionalIndex link_idx_with_smallest_distance;
 
     // There are two ways a link can be detected as "hovered".
@@ -2208,7 +2208,7 @@ void BeginNodeEditor()
 
     ImNodesEditorContext& editor = EditorContextGet();
     editor.AutoPanningDelta = Vector2D::new(0, 0);
-    editor.GridContentBounds = ImRect(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX);
+    editor.GridContentBounds = ImRect(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     editor.MiniMapEnabled = false;
     ObjectPoolReset(editor.Nodes);
     ObjectPoolReset(editor.Pins);

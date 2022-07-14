@@ -370,7 +370,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     {
         // Ensure no vertical scrollbar appears if we only want horizontal one, to make flag consistent
         // (we have no other way to disable vertical scrollbar of a window while keeping the horizontal one showing)
-        Vector2D override_content_size(FLT_MAX, FLT_MAX);
+        Vector2D override_content_size(f32::MAX, f32::MAX);
         if ((flags & ImGuiTableFlags_ScrollX) && !(flags & ImGuiTableFlags_ScrollY))
             override_content_size.y = FLT_MIN;
 
@@ -381,8 +381,8 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
         if ((flags & ImGuiTableFlags_ScrollX) && inner_width > 0.0)
             override_content_size.x = inner_width;
 
-        if (override_content_size.x != FLT_MAX || override_content_size.y != FLT_MAX)
-            SetNextWindowContentSize(Vector2D::new(override_content_size.x != FLT_MAX ? override_content_size.x : 0.0, override_content_size.y != FLT_MAX ? override_content_size.y : 0.0));
+        if (override_content_size.x != f32::MAX || override_content_size.y != f32::MAX)
+            SetNextWindowContentSize(Vector2D::new(override_content_size.x != f32::MAX ? override_content_size.x : 0.0, override_content_size.y != f32::MAX ? override_content_size.y : 0.0));
 
         // Reset scroll if we are reactivating it
         if ((table_last_flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) == 0)
@@ -594,10 +594,10 @@ void ImGui::TableBeginApplyRequests(ImGuiTable* table)
     // FIXME-TABLE: contains columns if our work area doesn't allow for scrolling?
     if (table->InstanceCurrent == 0)
     {
-        if (table->ResizedColumn != -1 && table->ResizedColumnNextWidth != FLT_MAX)
+        if (table->ResizedColumn != -1 && table->ResizedColumnNextWidth != f32::MAX)
             TableSetColumnWidth(table->ResizedColumn, table->ResizedColumnNextWidth);
         table->LastResizedColumn = table->ResizedColumn;
-        table->ResizedColumnNextWidth = FLT_MAX;
+        table->ResizedColumnNextWidth = f32::MAX;
         table->ResizedColumn = -1;
 
         // Process auto-fit for single column, which is a special case for stretch columns and fixed columns with FixedSame policy.
@@ -975,7 +975,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             column->MinX = column->MaxX = column->WorkMinX = column->ClipRect.Min.x = column->ClipRect.Max.x = offset_x;
             column->WidthGiven = 0.0;
             column->ClipRect.Min.y = work_rect.Min.y;
-            column->ClipRect.Max.y = FLT_MAX;
+            column->ClipRect.Max.y = f32::MAX;
             column->ClipRect.ClipWithFull(host_clip_rect);
             column->IsVisibleX = column->IsVisibleY = column->IsRequestOutput = false;
             column->IsSkipItems = true;
@@ -1007,7 +1007,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         column->ClipRect.Min.x = column->MinX;
         column->ClipRect.Min.y = work_rect.Min.y;
         column->ClipRect.Max.x = column->MaxX; //column->WorkMaxX;
-        column->ClipRect.Max.y = FLT_MAX;
+        column->ClipRect.Max.y = f32::MAX;
         column->ClipRect.ClipWithFull(host_clip_rect);
 
         // Mark column as Clipped (not in sight)
@@ -1186,7 +1186,7 @@ void ImGui::TableUpdateBorders(ImGuiTable* table)
         if (held)
         {
             if (table->LastResizedColumn == -1)
-                table->ResizeLockMinContentsX2 = table->RightMostEnabledColumn != -1 ? table->Columns[table->RightMostEnabledColumn].MaxX : -FLT_MAX;
+                table->ResizeLockMinContentsX2 = table->RightMostEnabledColumn != -1 ? table->Columns[table->RightMostEnabledColumn].MaxX : -f32::MAX;
             table->ResizedColumn = (ImGuiTableColumnIdx)column_n;
             table->InstanceInteracted = table->InstanceCurrent;
         }
@@ -1997,7 +1997,7 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     if (g.LogEnabled && !column->IsSkipItems)
     {
         LogRenderedText(&window.DC.CursorPos, "|");
-        g.LogLinePosY = FLT_MAX;
+        g.LogLinePosY = f32::MAX;
     }
 }
 
@@ -2037,7 +2037,7 @@ void ImGui::TableEndCell(ImGuiTable* table)
 float ImGui::TableGetMaxColumnWidth(const ImGuiTable* table, int column_n)
 {
     const ImGuiTableColumn* column = &table->Columns[column_n];
-    float max_width = FLT_MAX;
+    float max_width = f32::MAX;
     const float min_column_distance = table->MinColumnWidth + table->CellPaddingX * 2.0 + table->CellSpacingX1 + table->CellSpacingX2;
     if (table.flags & ImGuiTableFlags_ScrollX)
     {
@@ -2395,7 +2395,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
             IM_ASSERT(channel_no < IMGUI_TABLE_MAX_DRAW_CHANNELS);
             MergeGroup* merge_group = &merge_groups[merge_group_n];
             if (merge_group->ChannelsCount == 0)
-                merge_group->ClipRect = ImRect(+FLT_MAX, +FLT_MAX, -FLT_MAX, -FLT_MAX);
+                merge_group->ClipRect = ImRect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
             merge_group->ChannelsMask.SetBit(channel_no);
             merge_group->ChannelsCount += 1;
             merge_group->ClipRect.Add(src_channel->_CmdBuffer[0].ClipRect);
@@ -3894,7 +3894,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
         ImGuiOldColumnData* column = &columns->Columns[n];
         float clip_x1 = IM_ROUND(window.pos.x + GetColumnOffset(n));
         float clip_x2 = IM_ROUND(window.pos.x + GetColumnOffset(n + 1) - 1.0);
-        column->ClipRect = ImRect(clip_x1, -FLT_MAX, clip_x2, +FLT_MAX);
+        column->ClipRect = ImRect(clip_x1, -f32::MAX, clip_x2, +f32::MAX);
         column->ClipRect.ClipWithFull(window.ClipRect);
     }
 

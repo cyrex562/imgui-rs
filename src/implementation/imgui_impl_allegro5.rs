@@ -492,7 +492,7 @@ bool ImGui_ImplAllegro5_ProcessEvent(ALLEGRO_EVENT* ev)
         return true;
     case ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY:
         if (ev->mouse.display == bd->Display)
-            io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+            io.AddMousePosEvent(-f32::MAX, -f32::MAX);
         return true;
     case ALLEGRO_EVENT_KEY_CHAR:
         if (ev->keyboard.display == bd->Display)

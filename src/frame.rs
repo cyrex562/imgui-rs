@@ -65,7 +65,7 @@ pub fn new_frame(g: &mut Context)
     g.frame_rate_sec_per_frame[g.frame_rate_sec_per_frame_idx] = g.io.delta_time;
     g.frame_rate_sec_per_frame_idx = (g.frame_rate_sec_per_frame_idx + 1) % (g.frame_rate_sec_per_frame.len());
     g.frame_rate_sec_per_frame_count = f32::min(g.frame_rate_sec_per_frame_count + 1, (g.frame_rate_sec_per_frame.len()));
-    g.io.frame_rate = if(g.frame_rate_sec_per_frame_accum > 0.0) { (1.0 / (g.frame_rate_sec_per_frame_accum / g.frame_rate_sec_per_frame_count)) } else {f32::FLT_MAX};
+    g.io.frame_rate = if(g.frame_rate_sec_per_frame_accum > 0.0) { (1.0 / (g.frame_rate_sec_per_frame_accum / g.frame_rate_sec_per_frame_count)) } else {f32::f32::MAX};
 
     update_viewports_new_frame();
 

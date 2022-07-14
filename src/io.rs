@@ -334,8 +334,8 @@ impl Io {
         out.set_platform_ime_data_fn = SetPlatformImeDataFn_DefaultImpl;
 
         // Input (NB: we already have memset zero the entire structure!)
-        out.mouse_pos = Vector2D::new(-FLT_MAX, -FLT_MAX);
-        out.mouse_pos_prev = Vector2D::new(-FLT_MAX, -FLT_MAX);
+        out.mouse_pos = Vector2D::new(-f32::MAX, -f32::MAX);
+        out.mouse_pos_prev = Vector2D::new(-f32::MAX, -f32::MAX);
         out.mouse_drag_threshold = 6.0;
         // for (int i = 0; i < IM_ARRAYSIZE(mouse_down_duration); i+ +) mouse_down_duration[i] = mouse_down_duration_prev[i] = -1.0;
         out.mouse_down_duration_prev = [-1.0; 5];

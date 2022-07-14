@@ -22,7 +22,7 @@ use crate::item::ItemStatusFlags;
 use crate::math::floor_vector_2d;
 use crate::mouse::start_lock_wheeling_window;
 use crate::rect::Rect;
-use crate::render::render_dimmed_backgrounds;
+use crate::render::{find_rendered_text_end, render_dimmed_backgrounds};
 use crate::settings::SettingsHandler;
 use crate::style::get_color_u32;
 use crate::utils::{remove_hash_set_val, set_hash_set};
@@ -32,28 +32,33 @@ use crate::window::{add_root_window_to_draw_data, add_window_to_draw_data, add_w
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
 // CalcTextSize("") should return Vector2D(0.0, g.font_size)
-Vector2D ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
+// Vector2D ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
+pub fn calc_text_size(g: &mut Context, text: &str, hide_text_after_double_hash: bool, wrap_width: f32) -> Vector2D
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
 
-    const char* text_display_end;
-    if (hide_text_after_double_hash)
-        text_display_end = FindRenderedTextEnd(text, text_end);      // Hide anything after a '##' string
-    else
-        text_display_end = text_end;
+    // const char* text_display_end;
+    // if hide_text_after_double_hash {
+    //     text_display_end = find_rendered_text_end(text, text_end);
+    // }   // Hide anything after a '##' string
+    // else {
+    //     text_display_end = text_end;
+    // }
 
-    ImFont* font = g.font;
-    const float font_size = g.FontSize;
-    if (text == text_display_end)
-        return Vector2D::new(0.0, font_size);
-    Vector2D text_size = font->CalcTextSizeA(font_size, FLT_MAX, wrap_width, text, text_display_end, NULL);
+    // ImFont* font = g.font;
+    let font = &g.font;
+    let font_size = &g.font_size;
+    if text.len() == 0 {
+        return Vector2D::new(0.0, *font_size);
+    }
+    let mut text_size = font.calc_text_size_a(*font_size, f32::MAX, wrap_width, text);
 
     // Round
     // FIXME: This has been here since Dec 2015 (7b0bf230) but down the line we want this out.
     // FIXME: Investigate using ceilf or e.g.
     // - https://git.musl-libc.org/cgit/musl/tree/src/math/ceilf.c
     // - https://embarkstudios.github.io/rust-gpu/api/src/libm/math/ceilf.rs.html
-    text_size.x = IM_FLOOR(text_size.x + 0.99999);
+    text_size.x = f32::floor(text_size.x + 0.99999);
 
     return text_size;
 }
@@ -377,7 +382,7 @@ void ImGui::EndChild()
             g.last_item_data.StatusFlags |= ItemStatusFlags::HoveredWindow;
     }
     g.WithinEndChild = false;
-    g.LogLinePosY = -FLT_MAX; // To enforce a carriage return
+    g.LogLinePosY = -f32::MAX; // To enforce a carriage return
 }
 
 // Helper to create a child window / scrolling region that looks like a normal widget frame.
@@ -598,7 +603,7 @@ static Vector2D CalcWindowAutoFitSize(ImGuiWindow* window, const Vector2D& size_
         // FIXME-VIEWPORT-WORKAREA: May want to use GetWorkSize() instead of size depending on the type of windows?
         Vector2D avail_size = window.viewport->Size;
         if (window.viewport_owned)
-            avail_size = Vector2D::new(FLT_MAX, FLT_MAX);
+            avail_size = Vector2D::new(f32::MAX, f32::MAX);
         const int monitor_idx = window.ViewportAllowPlatformMonitorExtend;
         if (monitor_idx >= 0 && monitor_idx < g.platform_io.Monitors.Size)
             avail_size = g.platform_io.Monitors[monitor_idx].WorkSize;
@@ -732,8 +737,8 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const Vector2D&
     const float grip_hover_inner_size = IM_FLOOR(grip_draw_size * 0.75);
     const float grip_hover_outer_size = g.io.ConfigWindowsResizeFromEdges ? WINDOWS_HOVER_PADDING : 0.0;
 
-    Vector2D pos_target(FLT_MAX, FLT_MAX);
-    Vector2D size_target(FLT_MAX, FLT_MAX);
+    Vector2D pos_target(f32::MAX, f32::MAX);
+    Vector2D size_target(f32::MAX, f32::MAX);
 
     // Clip mouse interaction rectangles within the viewport rectangle (in practice the narrowing is going to happen most of the time).
     // - Not narrowing would mostly benefit the situation where OS windows _without_ decoration have a threshold for hovering when outside their limits.
@@ -778,8 +783,8 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const Vector2D&
         {
             // Resize from any of the four corners
             // We don't use an incremental mouse_delta but rather compute an absolute target size based on mouse position
-            Vector2D clamp_min = Vector2D::new(def.CornerPosN.x == 1.0 ? visibility_rect.Min.x : -FLT_MAX, def.CornerPosN.y == 1.0 ? visibility_rect.Min.y : -FLT_MAX);
-            Vector2D clamp_max = Vector2D::new(def.CornerPosN.x == 0.0 ? visibility_rect.Max.x : +FLT_MAX, def.CornerPosN.y == 0.0 ? visibility_rect.Max.y : +FLT_MAX);
+            Vector2D clamp_min = Vector2D::new(def.CornerPosN.x == 1.0 ? visibility_rect.Min.x : -f32::MAX, def.CornerPosN.y == 1.0 ? visibility_rect.Min.y : -f32::MAX);
+            Vector2D clamp_max = Vector2D::new(def.CornerPosN.x == 0.0 ? visibility_rect.Max.x : +f32::MAX, def.CornerPosN.y == 0.0 ? visibility_rect.Max.y : +f32::MAX);
             Vector2D corner_target = g.io.mouse_pos - g.ActiveIdClickOffset + ImLerp(def.InnerDir * grip_hover_outer_size, def.InnerDir * -grip_hover_inner_size, def.CornerPosN); // Corner of the window corresponding to our corner grip
             corner_target = ImClamp(corner_target, clamp_min, clamp_max);
             CalcResizePosSizeFromAnyCorner(window, corner_target, def.CornerPosN, &pos_target, &size_target);
@@ -808,8 +813,8 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const Vector2D&
         }
         if (held)
         {
-            Vector2D clamp_min(border_n == ImGuiDir_Right ? visibility_rect.Min.x : -FLT_MAX, border_n == ImGuiDir_Down ? visibility_rect.Min.y : -FLT_MAX);
-            Vector2D clamp_max(border_n == ImGuiDir_Left  ? visibility_rect.Max.x : +FLT_MAX, border_n == ImGuiDir_Up   ? visibility_rect.Max.y : +FLT_MAX);
+            Vector2D clamp_min(border_n == ImGuiDir_Right ? visibility_rect.Min.x : -f32::MAX, border_n == ImGuiDir_Down ? visibility_rect.Min.y : -f32::MAX);
+            Vector2D clamp_max(border_n == ImGuiDir_Left  ? visibility_rect.Max.x : +f32::MAX, border_n == ImGuiDir_Up   ? visibility_rect.Max.y : +f32::MAX);
             Vector2D border_target = window.pos;
             border_target[axis] = g.io.mouse_pos[axis] - g.ActiveIdClickOffset[axis] + WINDOWS_HOVER_PADDING;
             border_target = ImClamp(border_target, clamp_min, clamp_max);
@@ -843,12 +848,12 @@ static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const Vector2D&
     }
 
     // Apply back modified position/size to window
-    if (size_target.x != FLT_MAX)
+    if (size_target.x != f32::MAX)
     {
         window.size_full = size_target;
         MarkIniSettingsDirty(window);
     }
-    if (pos_target.x != FLT_MAX)
+    if (pos_target.x != f32::MAX)
     {
         window.pos = f32::floor(pos_target);
         MarkIniSettingsDirty(window);
@@ -1371,7 +1376,7 @@ bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         const bool window_just_appearing_after_hidden_for_resize = (window.HiddenFramesCannotSkipItems > 0);
         window.active = true;
         window.HasCloseButton = (p_open != NULL);
-        window.ClipRect = Vector4D(-FLT_MAX, -FLT_MAX, +FLT_MAX, +FLT_MAX);
+        window.ClipRect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
         window.IDStack.resize(1);
         window.draw_list->_ResetForNewFrame();
         window.DC.CurrentTableIdx = -1;
@@ -1543,7 +1548,7 @@ bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
                 window.pos = parent_window.DC.CursorPos;
         }
 
-        const bool window_pos_with_pivot = (window.SetWindowPosVal.x != FLT_MAX && window.HiddenFramesCannotSkipItems == 0);
+        const bool window_pos_with_pivot = (window.SetWindowPosVal.x != f32::MAX && window.HiddenFramesCannotSkipItems == 0);
         if (window_pos_with_pivot)
             set_window_pos(window, window.SetWindowPosVal - window.size * window.SetWindowPosPivot, 0); // Position given a pivot (e.g. for centering)
         else if ((flags & ImGuiWindowFlags_ChildMenu) != 0)
@@ -1752,7 +1757,7 @@ bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
         // Apply scrolling
         window.scroll = CalcNextScrollFromScrollTargetAndClamp(window);
-        window.ScrollTarget = Vector2D::new(FLT_MAX, FLT_MAX);
+        window.ScrollTarget = Vector2D::new(f32::MAX, f32::MAX);
 
         // DRAWING
 
@@ -2512,7 +2517,7 @@ void ImGui::set_window_pos(ImGuiWindow* window, const Vector2D& pos, ImGuiCond c
 
     IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     window.SetWindowPosAllowFlags &= ~(ImGuiCond_Once | Cond::FirstUseEver | ImGuiCond_Appearing);
-    window.SetWindowPosVal = Vector2D::new(FLT_MAX, FLT_MAX);
+    window.SetWindowPosVal = Vector2D::new(f32::MAX, f32::MAX);
 
     // Set
     const Vector2D old_pos = window.pos;
@@ -4095,7 +4100,7 @@ void ImGui::BeginGroup()
     window.DC.CursorMaxPos = window.DC.CursorPos;
     window.DC.CurrLineSize = Vector2D::new(0.0, 0.0);
     if (g.LogEnabled)
-        g.LogLinePosY = -FLT_MAX; // To enforce a carriage return
+        g.LogLinePosY = -f32::MAX; // To enforce a carriage return
 }
 
 void ImGui::EndGroup()
@@ -4116,7 +4121,7 @@ void ImGui::EndGroup()
     window.DC.CurrLineSize = group_data.BackupCurrLineSize;
     window.DC.CurrLineTextBaseOffset = group_data.BackupCurrLineTextBaseOffset;
     if (g.LogEnabled)
-        g.LogLinePosY = -FLT_MAX; // To enforce a carriage return
+        g.LogLinePosY = -f32::MAX; // To enforce a carriage return
 
     if (!group_data.EmitItem)
     {
@@ -4179,7 +4184,7 @@ static float CalcScrollEdgeSnap(float target, float snap_min, float snap_max, fl
 static Vector2D CalcNextScrollFromScrollTargetAndClamp(ImGuiWindow* window)
 {
     Vector2D scroll = window.scroll;
-    if (window.ScrollTarget.x < FLT_MAX)
+    if (window.ScrollTarget.x < f32::MAX)
     {
         float decoration_total_width = window.ScrollbarSizes.x;
         float center_x_ratio = window.ScrollTargetCenterRatio.x;
@@ -4192,7 +4197,7 @@ static Vector2D CalcNextScrollFromScrollTargetAndClamp(ImGuiWindow* window)
         }
         scroll.x = scroll_target_x - center_x_ratio * (window.size_full.x - decoration_total_width);
     }
-    if (window.ScrollTarget.y < FLT_MAX)
+    if (window.ScrollTarget.y < f32::MAX)
     {
         float decoration_total_height = window.TitleBarHeight() + window.MenuBarHeight() + window.ScrollbarSizes.y;
         float center_y_ratio = window.ScrollTargetCenterRatio.y;
@@ -4997,9 +5002,9 @@ Vector2D ImGui::FindBestWindowPosForPopup(ImGuiWindow* window)
         float horizontal_overlap = g.style.ItemInnerSpacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
         ImRect r_avoid;
         if (parent_window.DC.MenuBarAppending)
-            r_avoid = ImRect(-FLT_MAX, parent_window.ClipRect.Min.y, FLT_MAX, parent_window.ClipRect.Max.y); // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a next_window_data.PosConstraintAvoidRect field
+            r_avoid = ImRect(-f32::MAX, parent_window.ClipRect.Min.y, f32::MAX, parent_window.ClipRect.Max.y); // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a next_window_data.PosConstraintAvoidRect field
         else
-            r_avoid = ImRect(parent_window.Pos.x + horizontal_overlap, -FLT_MAX, parent_window.Pos.x + parent_window.Size.x - horizontal_overlap - parent_window.ScrollbarSizes.x, FLT_MAX);
+            r_avoid = ImRect(parent_window.Pos.x + horizontal_overlap, -f32::MAX, parent_window.Pos.x + parent_window.Size.x - horizontal_overlap - parent_window.ScrollbarSizes.x, f32::MAX);
         return FindBestWindowPosForPopupEx(window.pos, window.size, &window.AutoPosLastDirection, r_outer, r_avoid, ImGuiPopupPositionPolicy_Default);
     }
     if (window.flags & WindowFlags::Popup)
@@ -5231,7 +5236,7 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result)
     // This is just to avoid buttons having no links in a particular direction when there's a suitable neighbor. you get good graphs without this too.
     // 2017/09/29: FIXME: This now currently only enabled inside menu bars, ideally we'd disable it everywhere. Menus in particular need to catch failure. For general navigation it feels awkward.
     // Disabling it may lead to disconnected graphs when nodes are very spaced out on different axis. Perhaps consider offering this as an option?
-    if (result->DistBox == FLT_MAX && dist_axial < result->DistAxial)  // Check axial match
+    if (result->DistBox == f32::MAX && dist_axial < result->DistAxial)  // Check axial match
         if (g.NavLayer == ImGuiNavLayer_Menu && !(g.nav_window.flags & ImGuiWindowFlags_ChildMenu))
             if ((move_dir == ImGuiDir_Left && dax < 0.0) || (move_dir == ImGuiDir_Right && dax > 0.0) || (move_dir == ImGuiDir_Up && day < 0.0) || (move_dir == ImGuiDir_Down && day > 0.0))
             {
@@ -5548,7 +5553,7 @@ static Vector2D ImGui::NavCalcPreferredRefPos()
         // When navigation is active and mouse is disabled, pick a position around the bottom left of the currently navigated item
         // Take account of upcoming scrolling (maybe set mouse pos should be done in EndFrame?)
         ImRect rect_rel = WindowRectRelToAbs(window, window.NavRectRel[g.NavLayer]);
-        if (window.LastFrameActive != g.frame_count && (window.ScrollTarget.x != FLT_MAX || window.ScrollTarget.y != FLT_MAX))
+        if (window.LastFrameActive != g.frame_count && (window.ScrollTarget.x != f32::MAX || window.ScrollTarget.y != f32::MAX))
         {
             Vector2D next_scroll = CalcNextScrollFromScrollTargetAndClamp(window);
             rect_rel.Translate(window.scroll - next_scroll);
@@ -5851,7 +5856,7 @@ void ImGui::NavUpdateCreateMoveRequest()
             if (!IsActiveIdUsingNavDir(ImGuiDir_Down)  && (IsNavInputTest(ImGuiNavInput_DpadDown,  read_mode) || IsNavInputTest(ImGuiNavInput_KeyDown_,  read_mode))) { g.NavMoveDir = ImGuiDir_Down; }
         }
         g.NavMoveClipDir = g.NavMoveDir;
-        g.NavScoringNoClipRect = ImRect(+FLT_MAX, +FLT_MAX, -FLT_MAX, -FLT_MAX);
+        g.NavScoringNoClipRect = ImRect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
     }
 
     // Update PageUp/PageDown/Home/End scroll
@@ -5904,10 +5909,10 @@ void ImGui::NavUpdateCreateMoveRequest()
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp nav_rect_rel for gamepad move\n");
             float pad_x = ImMin(inner_rect_rel.get_width(), window.CalcFontSize() * 0.5);
             float pad_y = ImMin(inner_rect_rel.get_height(), window.CalcFontSize() * 0.5); // Terrible approximation for the intent of starting navigation from first fully visible item
-            inner_rect_rel.Min.x = clamp_x ? (inner_rect_rel.Min.x + pad_x) : -FLT_MAX;
-            inner_rect_rel.Max.x = clamp_x ? (inner_rect_rel.Max.x - pad_x) : +FLT_MAX;
-            inner_rect_rel.Min.y = clamp_y ? (inner_rect_rel.Min.y + pad_y) : -FLT_MAX;
-            inner_rect_rel.Max.y = clamp_y ? (inner_rect_rel.Max.y - pad_y) : +FLT_MAX;
+            inner_rect_rel.Min.x = clamp_x ? (inner_rect_rel.Min.x + pad_x) : -f32::MAX;
+            inner_rect_rel.Max.x = clamp_x ? (inner_rect_rel.Max.x - pad_x) : +f32::MAX;
+            inner_rect_rel.Min.y = clamp_y ? (inner_rect_rel.Min.y + pad_y) : -f32::MAX;
+            inner_rect_rel.Max.y = clamp_y ? (inner_rect_rel.Max.y - pad_y) : +f32::MAX;
             window.NavRectRel[g.NavLayer].ClipWithFull(inner_rect_rel);
             g.NavId = g.NavFocusScopeId = 0;
         }
@@ -6482,7 +6487,7 @@ void ImGui::NavUpdateWindowingOverlay()
     if (g.nav_windowing_list_window == NULL)
         g.nav_windowing_list_window = FindWindowByName("###NavWindowingList");
     const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ GetMainViewport();
-    SetNextWindowSizeConstraints(Vector2D::new(viewport->Size.x * 0.20, viewport->Size.y * 0.20), Vector2D::new(FLT_MAX, FLT_MAX));
+    SetNextWindowSizeConstraints(Vector2D::new(viewport->Size.x * 0.20, viewport->Size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
     SetNextWindowPos(viewport->GetCenter(), Cond::Always, Vector2D::new(0.5, 0.5));
     PushStyleVar(ImGuiStyleVar_WindowPadding, g.style.WindowPadding * 2.0);
     begin("###NavWindowingList", NULL, WindowFlags::NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
@@ -6519,7 +6524,7 @@ void ImGui::clear_drag_drop()
     g.drag_drop_payload.Clear();
     g.DragDropAcceptFlags = ImGuiDragDropFlags_None;
     g.drag_drop_accept_id_curr = g.drag_drop_accept_id_prev = 0;
-    g.drag_drop_accept_id_curr_rect_surface = FLT_MAX;
+    g.drag_drop_accept_id_curr_rect_surface = f32::MAX;
     g.DragDropAcceptFrameCount = -1;
 
     g.DragDropPayloadBufHeap.clear();
@@ -7693,7 +7698,7 @@ static void ImGui::WindowSelectViewport(ImGuiWindow* window)
         if (window.viewport == NULL && window.ViewportId != 0)
         {
             window.viewport = (ImGuiViewportP*)FindViewportByID(window.ViewportId);
-            if (window.viewport == NULL && window.ViewportPos.x != FLT_MAX && window.ViewportPos.y != FLT_MAX)
+            if (window.viewport == NULL && window.ViewportPos.x != f32::MAX && window.ViewportPos.y != f32::MAX)
                 window.viewport = AddUpdateViewport(window, window.ID, window.ViewportPos, window.size, ImGuiViewportFlags_None);
         }
     }
@@ -7923,7 +7928,7 @@ void ImGui::UpdatePlatformWindows()
             if (g.platform_io.Renderer_CreateWindow != NULL)
                 g.platform_io.Renderer_CreateWindow(viewport);
             viewport->LastNameHash = 0;
-            viewport->LastPlatformPos = viewport->LastPlatformSize = Vector2D::new(FLT_MAX, FLT_MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/size below, before Platform_ShowWindow (FIXME: Is that necessary?)
+            viewport->LastPlatformPos = viewport->LastPlatformSize = Vector2D::new(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/size below, before Platform_ShowWindow (FIXME: Is that necessary?)
             viewport->LastRendererSize = viewport->Size;                                       // We don't need to call Renderer_SetWindowSize() as it is expected Renderer_CreateWindow() already did it.
             viewport->platform_window_created = true;
         }
@@ -11844,7 +11849,7 @@ static void RenderViewportsThumbnails()
 
     // We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
     float SCALE = 1.0 / 8.0;
-    ImRect bb_full(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX);
+    ImRect bb_full(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     for (int n = 0; n < g.viewports.Size; n += 1)
         bb_full.Add(g.viewports[n]->get_main_rect());
     Vector2D p = window.DC.CursorPos;
@@ -12643,7 +12648,7 @@ void ImGui::DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, co
 
     // Draw wire-frame version of all triangles
     ImRect clip_rect = draw_cmd->ClipRect;
-    ImRect vtxs_rect(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX);
+    ImRect vtxs_rect(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     ImDrawListFlags backup_flags = out_draw_list.flags;
     out_draw_list.flags &= ~DrawListFlags::AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
     for (unsigned int idx_n = draw_cmd->IdxOffset, idx_end = draw_cmd->IdxOffset + draw_cmd->ElemCount; idx_n < idx_end; )

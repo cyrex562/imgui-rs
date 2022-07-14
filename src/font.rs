@@ -88,7 +88,7 @@ impl Font {
     //     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
     //     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0 to disable.
     //      Vector2D            calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-    pub fn calc_text_size_a(&self, size: f32, max_width: f32, wrap_width: f32, text: &String) -> Vector2D {
+    pub fn calc_text_size_a(&self, size: f32, max_width: f32, wrap_width: f32, text: &str) -> Vector2D {
         todo!()
     }
     //      const char*       calc_word_wrap_position_a(float scale, const char* text, const char* text_end, float wrap_width) const;
