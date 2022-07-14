@@ -80,13 +80,13 @@ pub struct Context {
     // double                  time;
     pub time: f32,
     // int                     frame_count;
-    pub frame_count: i32,
+    pub frame_count: usize,
     //int                     frame_count_ended;
-    pub frame_count_ended: i32,
+    pub frame_count_ended: usize,
     // int                     frame_count_platform_ended;
-    pub frame_count_platform_ended: i32,
+    pub frame_count_platform_ended: usize,
     // int                     frame_count_rendered;
-    pub frame_count_rendered: i32,
+    pub frame_count_rendered: usize,
     // bool                    within_frame_scope;                   // Set by NewFrame(), cleared by EndFrame()
     pub within_frame_scope: bool,
     // bool                    within_frame_scope_with_implicit_window; // Set by NewFrame(), cleared by EndFrame() when the implicit debug window has been pushed
@@ -115,10 +115,10 @@ pub struct Context {
     pub windows_active_count: i32,
     // Vector2D                  windows_hover_padding;                // Padding around resizable windows for which hovering on counts as hovering the window == ImMax(style.TouchExtraPadding, WINDOWS_HOVER_PADDING)
     pub windows_hover_padding: Vector2D,
-    // ImGuiWindow*            current_window;                      // Window being drawn into
+    // ImGuiWindow*            current_window;                      // window being drawn into
     pub current_window_id: Id32,
     //*mut ImGuiWindow,
-    // ImGuiWindow*            hovered_window;                      // Window the mouse is hovering. Will typically catch mouse inputs.
+    // ImGuiWindow*            hovered_window;                      // window the mouse is hovering. Will typically catch mouse inputs.
     pub hovered_window_id: Id32,
     //*mut ImGuiWindow,
     // ImGuiWindow*            hovered_window_under_moving_window;     // Hovered window ignoring moving_window. Only set if moving_window is set.
@@ -338,7 +338,7 @@ pub struct Context {
     pub nav_tabbing_result_first: NavItemData,
     // Navigation: Windowing (CTRL+TAB for list, or Menu button + keys or directional pads to move/resize)
     // ImGuiWindow*            nav_windowing_target;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
-    pub nav_windowing_target: Id32,
+    pub nav_windowing_target_id: Id32,
     // ImGuiWindow*            nav_windowing_target_anim;             // Record of last valid nav_windowing_target until DimBgRatio and nav_windowing_highlight_alpha becomes 0.0, so the fade-out can stay on it.
     pub nav_windowing_target_anim: Id32,
     // ImGuiWindow*            nav_windowing_list_window;             // Internal window actually listing the CTRL+Tab contents
@@ -364,7 +364,7 @@ pub struct Context {
     // ImGuiDragDropFlags      drag_drop_source_flags;
     pub drag_drop_source_flags: HashSet<DragDropFlags>,
     // int                     drag_drop_source_frame_count;
-    pub drag_drop_source_frame_count: i32,
+    pub drag_drop_source_frame_count: usize,
     // int                     drag_drop_mouse_button;
     pub drag_drop_mouse_button: i32,
     // ImGuiPayload            drag_drop_payload;
@@ -382,7 +382,7 @@ pub struct Context {
     // ImGuiID                 drag_drop_accept_id_prev;               // Target item id from previous frame (we need to store this to allow for overlapping drag and drop targets)
     pub drag_drop_accept_id_prev: Id32,
     // int                     drag_drop_accept_frame_count;           // Last time a target expressed a desire to accept the source
-    pub drag_drop_accept_frame_count: i32,
+    pub drag_drop_accept_frame_count: usize,
     // ImGuiID                 drag_drop_hold_just_pressed_id;          // Set when holding a payload just made ButtonBehavior() return a press.
     pub drag_drop_hold_just_pressed_id: Id32,
     // ImVector<unsigned char> drag_drop_payload_buf_heap;             // We don't expose the ImVector<> directly, ImGuiPayload only holds pointer+size
@@ -690,7 +690,7 @@ impl Context {
             nav_move_result_local_visible: NavItemData::default(),
             nav_move_result_other: NavItemData::default(),
             nav_tabbing_result_first: NavItemData::default(),
-            nav_windowing_target: u32::MAX,
+            nav_windowing_target_id: u32::MAX,
             nav_windowing_target_anim: u32::MAX,
             nav_windowing_list_window_id: u32::MAX,
             // nav_windowing_target_anim: (),

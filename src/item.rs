@@ -133,7 +133,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
     ImGuiItemFlags
     item_flags = (g.LastItemData.ID == id?
     g.LastItemData.InFlags: g.CurrentItemFlags);
-    if item_flags & ImGuiItemFlags_Disabled {
+    if item_flags & ItemFlags::Disabled {
         // Release active id if turning disabled
         if g.active_id == id {
             clear_active_id();
@@ -149,7 +149,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if (g.DebugItemPickerActive && g.hovered_id_previous_frame == id) {
-            GetForegroundDrawList().AddRect(bb.min, bb.max, make_color_32(255, 255, 0, 255));
+            get_foreground_draw_list().AddRect(bb.min, bb.max, make_color_32(255, 255, 0, 255));
         }
         if (g.DebugItemPickerBreakId == id) {
             IM_DEBUG_BREAK();

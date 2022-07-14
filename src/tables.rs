@@ -894,7 +894,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     // [Part 4] Apply final widths based on requested widths
     const ImRect work_rect = table->WorkRect;
     const float width_spacings = (table->OuterPaddingX * 2.0) + (table->CellSpacingX1 + table->CellSpacingX2) * (table->ColumnsEnabledCount - 1);
-    const float width_avail = ((table.flags & ImGuiTableFlags_ScrollX) && table->InnerWidth == 0.0) ? table->InnerClipRect.GetWidth() : work_rect.GetWidth();
+    const float width_avail = ((table.flags & ImGuiTableFlags_ScrollX) && table->InnerWidth == 0.0) ? table->InnerClipRect.get_width() : work_rect.get_width();
     const float width_avail_for_stretched_columns = width_avail - width_spacings - sum_width_requests;
     float width_remaining_for_stretched_columns = width_avail_for_stretched_columns;
     table->ColumnsGivenWidth = width_spacings + (table->CellPaddingX * 2.0) * table->ColumnsEnabledCount;
@@ -2419,9 +2419,9 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
             ImFormatString(buf, 32, "MG%d:%d", merge_group_n, merge_group->ChannelsCount);
             Vector2D text_pos = merge_group->ClipRect.Min + Vector2D::new(4, 4);
             Vector2D text_size = CalcTextSize(buf, NULL);
-            GetForegroundDrawList()->AddRectFilled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
-            GetForegroundDrawList()->AddText(text_pos, IM_COL32(255, 255, 0, 255), buf, NULL);
-            GetForegroundDrawList()->AddRect(merge_group->ClipRect.Min, merge_group->ClipRect.Max, IM_COL32(255, 255, 0, 255));
+            get_foreground_draw_list()->AddRectFilled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
+            get_foreground_draw_list()->AddText(text_pos, IM_COL32(255, 255, 0, 255), buf, NULL);
+            get_foreground_draw_list()->AddRect(merge_group->ClipRect.Min, merge_group->ClipRect.Max, IM_COL32(255, 255, 0, 255));
         }
 
 
@@ -3544,15 +3544,15 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
     bool open = TreeNode(table, "%s", buf);
     if (!is_active) { PopStyleColor(); }
     if (IsItemHovered())
-        GetForegroundDrawList()->AddRect(table->OuterRect.Min, table->OuterRect.Max, IM_COL32(255, 255, 0, 255));
+        get_foreground_draw_list()->AddRect(table->OuterRect.Min, table->OuterRect.Max, IM_COL32(255, 255, 0, 255));
     if (IsItemVisible() && table->HoveredColumnBody != -1)
-        GetForegroundDrawList()->AddRect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+        get_foreground_draw_list()->AddRect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255));
     if (!open)
         return;
     if (table->InstanceCurrent > 0)
         ImGui::Text("** %d instances of same table! Some data below will refer to last instance.", table->InstanceCurrent + 1);
     bool clear_settings = SmallButton("clear settings");
-    BulletText("OuterRect: pos: (%.1,%.1) size: (%.1,%.1) Sizing: '%s'", table->OuterRect.Min.x, table->OuterRect.Min.y, table->OuterRect.GetWidth(), table->OuterRect.get_height(), DebugNodeTableGetSizingPolicyDesc(table.flags));
+    BulletText("OuterRect: pos: (%.1,%.1) size: (%.1,%.1) Sizing: '%s'", table->OuterRect.Min.x, table->OuterRect.Min.y, table->OuterRect.get_width(), table->OuterRect.get_height(), DebugNodeTableGetSizingPolicyDesc(table.flags));
     BulletText("ColumnsGivenWidth: %.1, ColumnsAutoFitWidth: %.1, InnerWidth: %.1%s", table->ColumnsGivenWidth, table->ColumnsAutoFitWidth, table->InnerWidth, table->InnerWidth == 0.0 ? " (auto)" : "");
     BulletText("CellPaddingX: %.1, CellSpacingX: %.1/%.1, OuterPaddingX: %.1", table->CellPaddingX, table->CellSpacingX1, table->CellSpacingX2, table->OuterPaddingX);
     BulletText("HoveredColumnBody: %d, HoveredColumnBorder: %d", table->HoveredColumnBody, table->HoveredColumnBorder);
@@ -3587,7 +3587,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
         if (IsItemHovered())
         {
             ImRect r(column->MinX, table->OuterRect.Min.y, column->MaxX, table->OuterRect.Max.y);
-            GetForegroundDrawList()->AddRect(r.Min, r.Max, IM_COL32(255, 255, 0, 255));
+            get_foreground_draw_list()->AddRect(r.Min, r.Max, IM_COL32(255, 255, 0, 255));
         }
     }
     if (ImGuiTableSettings* settings = TableGetBoundSettings(table))

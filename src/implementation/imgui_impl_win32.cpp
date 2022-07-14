@@ -63,7 +63,7 @@ typedef DWORD (WINAPI *PFN_XInputGetState)(DWORD, XINPUT_STATE*);
 //  2019-01-17: Misc: Using GetForegroundWindow()+IsChild() instead of GetActiveWindow() to be compatible with windows created in a different thread or parent.
 //  2019-01-17: Inputs: Added support for mouse buttons 4 and 5 via WM_XBUTTON* messages.
 //  2019-01-15: Inputs: Added support for XInput gamepads (if ImGuiConfigFlags_NavEnableGamepad is set by user application).
-//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About window.
 //  2018-06-29: Inputs: Added support for the ImGuiMouseCursor_Hand cursor.
 //  2018-06-10: Inputs: Fixed handling of mouse wheel messages to support fine position messages (typically sent by track-pads).
 //  2018-06-08: Misc: Extracted imgui_impl_win32.cpp/.h away from the old combined DX9/DX10/DX11/DX12 examples.
@@ -885,7 +885,7 @@ static void ImGui_ImplWin32_CreateWindow(ImGuiViewport* viewport)
     ::AdjustWindowRectEx(&rect, vd->DwStyle, FALSE, vd->DwExStyle);
     vd->Hwnd = ::CreateWindowEx(
         vd->DwExStyle, _T("ImGui Platform"), _T("Untitled"), vd->DwStyle,   // style, class name, window name
-        rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,    // Window area
+        rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,    // window area
         parent_window, NULL, ::GetModuleHandle(NULL), NULL);                    // Parent window, Menu, Instance, Param
     vd->HwndOwned = true;
     viewport->PlatformRequestResize = false;

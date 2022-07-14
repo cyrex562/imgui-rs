@@ -1,22 +1,21 @@
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::os::raw::c_char;
-use std::ptr::{null, null_mut};
-use std::rc::Rc;
+
+
+
+use std::ptr::{null_mut};
+
 use std::collections::HashSet;
 use crate::color::IM_COL32_A_MASK;
 use crate::column::OldColumns;
 use crate::condition::Cond;
 use crate::config::ConfigFlags;
 use crate::context::Context;
-use crate::defines::ImGuiSizeCallback;
+
 use crate::direction::Direction;
-use crate::dock::DockNodeFlags;
-use crate::dock_node::{dock_node_get_root_node, DockNode};
+use crate::dock_node::{dock_node_get_root_node, DockNode, DockNodeFlags};
 use crate::drag_drop::DragDropFlags;
-use crate::draw_list::{add_draw_list_to_draw_data, DrawList};
-use crate::globals::GImGui;
-use crate::hash::{hash_string, ImHashData};
+use crate::draw_list::{add_draw_list_to_draw_data};
+
+use crate::hash::{hash_string, hash_data};
 use crate::id::set_active_id;
 use crate::input::NavLayer;
 use crate::item::{ItemStatusFlags, LastItemData};
@@ -28,7 +27,7 @@ use crate::size_callback_data::SizeCallbackData;
 use crate::stack::ImGuiStackSizes;
 use crate::tab_bar::DimgTabItemFlags;
 use crate::vectors::{Vector1D, Vector2D};
-use crate::types::{Id32, ImGuiDataType, INVALID_ID, WindowHandle};
+use crate::types::{Id32, INVALID_ID, WindowHandle};
 use crate::utils::remove_hash_set_val;
 use crate::viewport::{Viewport, ViewportFlags};
 
@@ -118,7 +117,7 @@ pub struct WindowTempData {
 // Storage for one window
 #[derive(Default,Debug,Clone)]
 pub struct Window {
-    // char*                   name;                               // Window name, owned by the window.
+    // char*                   name;                               // window name, owned by the window.
     pub name: String,
     //*mut c_char,
     // ImGuiID                 id;                                 // == ImHashStr(name)
@@ -131,7 +130,7 @@ pub struct Window {
     // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
     pub viewport_id: Id32,
     // ImGuiID                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
-    pub viewport_id: Id32,
+    // pub viewport_id: Id32,
     // Vector2D                  viewport_pos;                        // We backup the viewport position (since the viewport may disappear or never be created if the window is inactive)
     pub viewport_pos: Vector2D,
     // int                     viewport_allow_platform_monitor_extend; // Reset to -1 every frame (index is guaranteed to be valid between NewFrame..EndFrame), only used in the appearing frame of a tooltip/popup to enforce clamping to a given monitor
@@ -148,11 +147,11 @@ pub struct Window {
     pub content_size_ideal: Vector2D,
     // Vector2D                  content_size_explicit;                // size of contents/scrollable client area explicitly request by the user via SetNextWindowContentSize().
     pub content_size_explicit: Vector2D,
-    // Vector2D                  window_padding;                      // Window padding at the time of Begin().
+    // Vector2D                  window_padding;                      // window padding at the time of Begin().
     pub window_padding: Vector2D,
-    // float                   window_rounding;                     // Window rounding at the time of Begin(). May be clamped lower to avoid rendering artifacts with title bar, menu bar etc.
+    // float                   window_rounding;                     // window rounding at the time of Begin(). May be clamped lower to avoid rendering artifacts with title bar, menu bar etc.
     pub window_rounding: f32,
-    // float                   WindowBorderSize;                   // Window border size at the time of Begin().
+    // float                   WindowBorderSize;                   // window border size at the time of Begin().
     // int                     NameBufLen;                         // size of buffer storing name. May be larger than strlen(name)!
     // ImGuiID                 move_id;                             // == window->GetID("#MOVE")
     pub move_id: Id32,
@@ -247,7 +246,7 @@ pub struct Window {
 
     // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show windows Rectangles' viewer.
     // The main 'OuterRect', omitted as a field, is window->rect().
-    // ImRect                  outer_rect_clipped;                   // == Window->rect() just after setup in Begin(). == window->rect() for root window.
+    // ImRect                  outer_rect_clipped;                   // == window->rect() just after setup in Begin(). == window->rect() for root window.
     pub outer_rect_clipped: Rect,
     // ImRect                  inner_rect;                          // Inner rectangle (omit title bar, menu bar, scroll bar)
     pub inner_rect: Rect,
@@ -343,7 +342,7 @@ pub struct Window {
 impl Window {
     // // ImGuiWindow is mostly a dumb struct. It merely has a constructor and a few helper methods
     // ImGuiWindow::ImGuiWindow(ImGuiContext* context, const char* name) : DrawListInst(NULL)
-    pub unsafe fn new(context: *mut Context, name: &mut String) -> Self {
+    pub unsafe fn new(g: &mut Context, name: &mut String) -> Self {
         let mut out = Self {
             //     name = ImStrdup(name);
             //     NameBufLen = strlen(name) + 1;
@@ -357,9 +356,7 @@ impl Window {
             //     viewport_pos = Vector2D(FLT_MAX, FLT_MAX);
             viewport_pos: Vector2D::new(f32::MAX, f32::MAX),
             //     move_id = GetID("#MOVE");
-            move_id: GetID("#MOVE"),
-            //     tab_id = GetID("#TAB");
-            tab_id: GetID("#TAB"),
+
             //     scroll_target = Vector2D(FLT_MAX, FLT_MAX);
             scroll_target: Vector2D::new(f32::MAX, f32::MAX),
             //     scroll_target_center_ratio = Vector2D(0.5, 0.5);
@@ -391,13 +388,20 @@ impl Window {
             //     dock_order = -1;
             dock_order: -1,
             //     draw_list = &DrawListInst;
-            draw_list_id: DrawList::default(),
+            draw_list_id: INVALID_ID,
             ..Default::default()
         };
+
+        // move_id: Self::get_id(g, "#MOVE"),
+        //             //     tab_id = GetID("#TAB");
+        //             tab_id: Self::get_id(g, "#TAB"),
+        out.move_id = out.get_id(g, "#MOVE");
+        out.tab_id = out.get_id(g, "#TAB");
+
         //     memset(this, 0, sizeof(*this));
         &out.id_stack.push(out.id);
         //     draw_list->_Data = &context->draw_list_shared_data;
-        out.draw_list_id.data = context.draw_list_shared_data.clone();
+        out.draw_list_id.data = g.draw_list_shared_data.clone();
         //     draw_list->_OwnerName = name;
         &out.draw_list_id.owner_name = &out.name;
         //     IM_PLACEMENT_NEW(&window_class) ImGuiWindowClass();
@@ -413,7 +417,7 @@ impl Window {
     // }
 
     // ImGuiID ImGuiWindow::GetID(const char* str, const char* str_end)
-    pub unsafe fn GetID(&mut self, g: &mut Context, in_str: &mut String) -> Id32 {
+    pub fn get_id(&mut self, g: &mut Context, in_str:&str) -> Id32 {
 
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
@@ -421,26 +425,26 @@ impl Window {
         let id = hash_string(in_str.as_mut_vec(), 0);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
-            ImGui::DebugHookIdInfo(id, ImGuiDataType_String, str, str_end);
+            // debug_hook_id_info(id, DataType::String, str, str_end);
         }
         return id;
     }
 
     // ImGuiID ImGuiWindow::GetID(const void* ptr)
-    pub unsafe fn GetID2(&mut self, g: &mut Context, ptr: &mut Vec<u8>) -> Id32 {
+    pub fn get_id2(&mut self, g: &mut Context, ptr: &mut Vec<u8>) -> Id32 {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
         // ImGuiID id = ImHashData(&ptr, sizeof(void*), seed);
-        let mut id = ImHashData(ptr, seed);
+        let mut id = hash_data(ptr, seed);
         // ImGuiContext& g = *GImGui;
-        if (g.debug_hook_id_info == id) {
-            ImGui::DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr, NULL);
+        if g.debug_hook_id_info == id {
+            // debug_hook_id_info(id, ImGuiDataType_Pointer, ptr, NULL);
         }
         return id;
     }
 
     // ImGuiID ImGuiWindow::GetID(int n)
-    pub unsafe fn GetID3(&mut self, g: &mut Context, n: i32) -> Id32 {
+    pub fn get_id3(&mut self, g: &mut Context, n: i32) -> Id32 {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
         // ImGuiID id = ImHashData(&n, sizeof(n), seed);
@@ -450,29 +454,29 @@ impl Window {
         n_bytes[1] = n_bytes_raw[1];
         n_bytes[2] = n_bytes_raw[2];
         n_bytes[3] = n_bytes_raw[3];
-        let mut id = ImHashData(&mut n_bytes.into_vec(), seed);
+        let mut id = hash_data(&mut n_bytes.into_vec(), seed);
         // TODO
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
-            DebugHookIdInfo(id, ImGuiDataType::S32, n, null());
+            // debug_hook_id_info(id, ImGuiDataType::S32, n, null());
         }
         return id;
     }
 
     // This is only used in rare/specific situations to manufacture an id out of nowhere.
     // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
-    pub unsafe fn GetIDFromRectangle(&mut self, g: &mut Context, r_abs: &Rect) -> Id32 {
+    pub unsafe fn get_id_from_rect(&mut self, g: &mut Context, r_abs: &Rect) -> Id32 {
         // ImGuiID seed = IDStack.back();
         let seed = self.id_stack.back();
         // ImRect r_rel = ImGui::WindowRectAbsToRel(this, r_abs);
-        let r_rel = WindowRectAbsToRel(self, r_abs);
+        let r_rel = window_rect_abs_to_rel(self, r_abs);
         // ImGuiID id = ImHashData(&r_rel, sizeof(r_rel), seed);
-        let id = ImHashData(&r_rel, seed);
+        let id = hash_data(&r_rel, seed);
         return id;
     }
 
     pub fn get_node(&mut self, node_id: Id32) -> &mut DockNode {
-        for n in self.node
+        todo!()
     }
 }
 
@@ -481,22 +485,22 @@ pub fn set_current_window(ctx: &mut Context, window_handle: WindowHandle) {
     // ImGuiContext& g = *GImGui;
     ctx.current_window_id = window_handle;
     // if window
-    ctx.current_table = if window_handle.DC.CurrentTableIdx != -1 { ctx.tables.get_by_index(window_handle.DC.CurrentTableIdx) } else { null_mut() };
+    ctx.current_table = if window_handle.DC.CurrentTableIdx != -1 { ctx.tables.get_by_index(window_handle.DC.CurrentTableIdx) } else { INVALID_ID };
     ctx.font_size = window_handle.CalcFontSize();
     ctx.draw_list_shared_data.font_size = window_handle.CalcFontSize();
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct WindowDockStyle {
-    // ImU32 Colors[ImGuiWindowDockStyleCol_COUNT];
-    pub Colors: Vec<u32>,
+    // ImU32 colors[ImGuiWindowDockStyleCol_COUNT];
+    pub colors: Vec<u32>,
 }
 
 // data saved for each window pushed into the stack
 #[derive(Debug, Clone, Default)]
 pub struct WindowStackData {
-    // ImGuiWindow*            Window;
-    pub Window: *mut Window,
+    // ImGuiWindow*            window;
+    pub window: WindowHandle,
     // ImGuiLastItemData       ParentLastItemDataBackup;
     pub ParentLastItemDataBackup: LastItemData,
     // ImGuiStackSizes         StackSizesOnBegin;      // Store size of various stacks for asserting
@@ -605,30 +609,39 @@ pub enum ImGuiNextWindowDataFlags {
 
 
 // static inline bool IsWindowContentHoverable(ImGuiWindow* window, ImGuiHoveredFlags flags)
-pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: HoveredFlags) -> bool {
+pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: &HashSet<HoveredFlags>) -> bool {
     // An active popup disable hovering on other windows (apart from its own children)
     // FIXME-OPT: This could be cached/stored within the window.
     // ImGuiContext& g = *GImGui;
     if g.nav_window_id {
-        if ImGuiWindow * focused_root_window = g.nav_window_id.RootWindowDockTree {
-            if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree_id {
-                // For the purpose of those flags we differentiate "standard popup" from "modal popup"
-                // NB: The order of those two tests is important because Modal windows are also Popups.
-                if focused_root_window.flags & WindowFlags::Modal {
-                    return false;
-                }
-                if (focused_root_window.flags & WindowFlags::Popup) && !(flags & HoveredFlags::AllowWhenBlockedByPopup) {
-                    return false;
-                }
+        let nav_win = g.get_window(g.nav_window_id).unwrap();
+        let focused_root_window = g.get_window(nav_win.root_window_dock_tree_id).unwrap();
+        if focused_root_window.was_active && focused_root_window.id != window.root_window_dock_tree_id {
+            if focused_root_window.flags.contains(&WindowFlags::Modal) {
+                return false;
+            }
+            if focused_root_window.flags.contains(&WindowFlags::Popup) && flags.contains(&HoveredFlags::AllowWhenBlockedByPopup) {
+                return false;
             }
         }
+        // if ImGuiWindow * focused_root_window = g.nav_window_id.RootWindowDockTree {
+        //     if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree_id {
+        //         // For the purpose of those flags we differentiate "standard popup" from "modal popup"
+        //         // NB: The order of those two tests is important because Modal windows are also Popups.
+        //         if focused_root_window.flags & WindowFlags::Modal {
+        //             return false;
+        //         }
+        //         if (focused_root_window.flags & WindowFlags::Popup) && !(flags & HoveredFlags::AllowWhenBlockedByPopup) {
+        //             return false;
+        //         }
+        //     }
+        // }
     }
     // Filter by viewport
-    if window.viewport_id != g.mouse_viewport_id {
-        if g.moving_window_id == NULL || window.root_window_dock_tree_id != g.moving_window_id.RootWindowDockTree {
-            return false;
-        }
-    }
+    let moving_win = g.get_window(g.moving_window_id).unwrap();
+    if window.viewport_id != g.mouse_viewport_id && (g.moving_window_id == INVALID_ID || window.root_window_dock_tree_id != moving_win.root_window_dock_tree) {
+        return false;
+    } else {}
 
     return true;
 }
@@ -638,24 +651,24 @@ pub fn is_window_content_hoverable(g: &mut Context, window: &mut Window, flags: 
 // - we allow hovering to be true when active_id==window->MoveID, so that clicking on non-interactive items such as a Text() item still returns true with IsItemHovered()
 // - this should work even for non-interactive items that have no id, so we cannot use LastItemId
 // bool ImGui::IsItemHovered(ImGuiHoveredFlags flags)
-pub fn IsItemHovered(g: &mut Context, flags: &HoveredFlags) -> bool
+pub fn is_item_hovered(g: &mut Context, flags: &HashSet<HoveredFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    let window = &mut g.current_window_id;
-    if g.nav_disable_mouse_hover && !g.NavDisableHighlight && !(flags & HoveredFlags::NoNavOverride)
+    let window = g.get_window(g.current_window_id).unwrap();
+    if g.nav_disable_mouse_hover && !g.nav_disable_highlight && !(flags.contains(&HoveredFlags::NoNavOverride))
     {
-        if (g.last_item_data.in_flags & ImGuiItemFlags_Disabled) && !(flags & HoveredFlags::AllowWhenDisabled) {
+        if (g.last_item_data.in_flags.contains(&ItemFlags::Disabled)) && !(flags.contains(&HoveredFlags::AllowWhenDisabled) ){
             return false;
         }
-        if (!IsItemFocused()) {
+        if !is_item_focused() {
             return false;
         }
     }
     else
     {
         // Test for bounding box overlap, as updated as ItemAdd()
-        let status_flags = g.last_item_data.status_flags;
-        if (!(status_flags & ItemStatusFlags::HoveredRect)) {
+        let status_flags = &g.last_item_data.status_flags;
+        if !(status_flags.contains(&ItemStatusFlags::HoveredRect)) {
             return false;
         }
         // IM_ASSERT((flags & (ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_NoPopupHierarchy | ImGuiHoveredFlags_DockHierarchy)) == 0);   // flags not supported by this function
@@ -665,37 +678,32 @@ pub fn IsItemHovered(g: &mut Context, flags: &HoveredFlags) -> bool
         // [2017/10/16] Reverted commit 344d48be3 and testing root_window instead. I believe it is correct to NOT test for root_window but this leaves us unable
         // to use IsItemHovered() after EndChild() itself. Until a solution is found I believe reverting to the test from 2017/09/27 is safe since this was
         // the test that has been running for a long while.
-        if (g.hovered_window_id != window && (status_flags & ImGuiItemStatusFlags_HoveredWindow) == 0) {
-            if ((flags & HoveredFlags::AllowWhenOverlapped) == 0) {
-                return false;
-            }
+        if (g.hovered_window_id != window.id && (!status_flags.contains(&ItemStatusFlags::HoveredWindow))) && (!flags.contains(&HoveredFlags::AllowWhenOverlapped)) {
+            return false;
         }
 
         // Test if another item is active (e.g. being dragged)
-        if ((flags & HoveredFlags::AllowWhenBlockedByActiveItem) == 0) {
-            if (g.active_id != 0 && g.active_id != g.last_item_data.id && !g.active_id_allow_overlap) {
-                if (g.active_id != window.MoveId && g.active_id != window.TabId) {
-                    return false;
-                }
-            }
+        if (!flags.contains(&HoveredFlags::AllowWhenBlockedByActiveItem)) && (g.active_id != 0 && g.active_id != g.last_item_data.id && !g.active_id_allow_overlap) && (g.active_id != window.move_id && g.active_id != window.TabId) {
+            return false;
         }
 
         // Test if interactions on this window are blocked by an active popup or modal.
         // The ImGuiHoveredFlags_AllowWhenBlockedByPopup flag will be tested here.
-        if (!is_window_content_hoverable(g, window, flags)) {
+        if !is_window_content_hoverable(g, window, flags) {
             return false;
         }
 
         // Test if the item is disabled
-        if ((g.last_item_data.in_flags & ImGuiItemFlags_Disabled) && !(flags & HoveredFlags::AllowWhenDisabled)) {
+        if (g.last_item_data.in_flags.contains(&ItemFlags::Disabled)) && !(flags.contains(&HoveredFlags::AllowWhenDisabled)) {
             return false;
         }
 
         // Special handling for calling after Begin() which represent the title bar or tab.
         // When the window is skipped/collapsed (skip_items==true) that last item (always ->move_id submitted by Begin)
         // will never be overwritten so we need to detect the case.
-        if (g.last_item_data.id == window.MoveId && window.WriteAccessed)
+        if g.last_item_data.id == window.move_id && window.write_accessed {
             return false;
+        }
     }
 
     return true;
@@ -786,7 +794,7 @@ pub const NAV_WINDOWING_HIGHLIGHT_DELAY: f32 = 0.20;
 // static const float NAV_WINDOWING_LIST_APPEAR_DELAY          = 0.15;    // time before the window list starts to appear
 pub const NAV_WINDOWING_LIST_APPEAR_DELAY: f32 = 0.15;
 
-// Window resizing from edges (when io.config_windows_resize_from_edges = true and ImGuiBackendFlags_HasMouseCursors is set in io.backend_flags by backend)
+// window resizing from edges (when io.config_windows_resize_from_edges = true and ImGuiBackendFlags_HasMouseCursors is set in io.backend_flags by backend)
 // static const float WINDOWS_HOVER_PADDING                    = 4.0;     // Extend outside window for hovering/resizing (maxxed with TouchPadding) and inside windows for borders. Affect FindHoveredWindow().
 pub const WINDOWS_HOVER_PADDING: f32 = 4.0;
 
@@ -806,7 +814,7 @@ pub enum WindowFlags
     NoMove                 = 1 << 2,   // Disable user moving the window
     NoScrollbar            = 1 << 3,   // Disable scrollbars (window can still scroll with mouse or programmatically)
     NoScrollWithMouse      = 1 << 4,   // Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.
-    NoCollapse             = 1 << 5,   // Disable user collapsing window by double-clicking on it. Also referred to as Window Menu Button (e.g. within a docking node).
+    NoCollapse             = 1 << 5,   // Disable user collapsing window by double-clicking on it. Also referred to as window Menu Button (e.g. within a docking node).
     AlwaysAutoResize       = 1 << 6,   // Resize every window to its content every frame
     NoBackground           = 1 << 7,   // Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0).
     NoSavedSettings        = 1 << 8,   // Never load/save settings in .ini file
@@ -909,7 +917,7 @@ pub fn is_clipped_ex(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'sta
 }
 
 // float ImGui::CalcWrapWidthForPos(const Vector2D& pos, float wrap_pos_x)
-pub fn calc_wrap_width_for_pos(g: &mut Context, pos: &Vector2D, wrap_pox_x: f32) -> Result<f32, &'static str>
+pub fn calc_wrap_width_for_pos(g: &mut Context, pos: &Vector2D, mut wrap_pos_x: f32) -> Result<f32, &'static str>
 {
     if wrap_pos_x < 0.0 {
         return Ok(0.0);
@@ -932,7 +940,7 @@ pub fn calc_wrap_width_for_pos(g: &mut Context, pos: &Vector2D, wrap_pox_x: f32)
         wrap_pos_x += window.pos.x - window.scroll.x; // wrap_pos_x is provided is window local space
     }
 
-    let out = f32::max(wrap_pos_x - pos.x, 1.0)
+    let out = f32::max(wrap_pos_x - pos.x, 1.0);
     Ok(out)
 }
 
@@ -946,7 +954,7 @@ pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
     // focus_window(window);
     focus_window(window);
     // SetActiveID(window.MoveId, window);
-    set_active_id(ctx, window.id, window);
+    set_active_id(g, window.id, window);
     g.nav_disable_highlight = true;
     g.active_id_click_offset = &g.io.mouse_clicked_pos[0] - window.root_window_dock_tree_id.pos;
     g.ActiveIdNoClearOnFocusLoss = true;
@@ -955,16 +963,14 @@ pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
 
     // bool can_move_window = true;
     let mut can_move_window= true;
-    if window.flags.contains(WindowFlags::NoMove) || (window.root_window_dock_tree_id.flags.contains(WindowFlags::NoMove) {
+    if window.flags.contains(&WindowFlags::NoMove) || window.root_window_dock_tree_id.flags.contains(&WindowFlags::NoMove) {
         can_move_window = false;
     }
-    let node = window.dock_node_as_host;
-    if node != INVALID_ID {
-        if node.visible_window && (node.visible_window.flags.contains(WindowFlags::NoMove)) {
-        can_move_window = false;}
-    }
+    let node = &window.dock_node_as_host;
+    if node.visible_window && (node.visible_window.flags.contains(WindowFlags::NoMove)) {
+    can_move_window = false;}
     if can_move_window {
-        g.moving_window_id = window;
+        g.moving_window_id = window.id;
     }
 }
 
@@ -1017,7 +1023,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
 pub fn update_mouse_moving_window_new_frame(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    if (g.moving_window_id != INVALID_ID)
+    if g.moving_window_id != INVALID_ID
     {
         // We actually want to move the root window. g.moving_window == window we clicked on (could be a child window).
         // We track it to preserve Focus and so that generally active_id_window == moving_window and active_id == moving_window->move_id for consistency.
@@ -1029,15 +1035,15 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
 
         // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
         // const bool window_disappared = ((!moving_window.WasActive && !moving_window.Active) || moving_window.viewport == NULL);
-        let window_disappeared = !moving
-        if (g.io.mouse_down[0] && is_mouse_pos_valid(&g.io.mouse_pos) && !window_disappared)
+        let window_disappeared = (!moving_window.was_active && !moving_window.active) || moving_window.viewport_id == INVALID_ID;
+        if g.io.mouse_down[0] && is_mouse_pos_valid(&g.io.mouse_pos) && !window_disappeared
         {
             // Vector2D pos = g.io.mouse_pos - g.ActiveIdClickOffset;
             let mut pos = g.io.mouse_pos.clone() - g.active_id_click_offset.clone();
-            if (moving_window.pos.x != pos.x || moving_window.pos.y != pos.y)
+            if moving_window.pos.x != pos.x || moving_window.pos.y != pos.y
             {
                 set_window_pos(moving_window, pos, Cond::Always);
-                if (moving_window.viewport_owned) // Synchronize viewport immediately because some overlays may relies on clipping rectangle before we Begin() into the window.
+                if moving_window.viewport_owned // Synchronize viewport immediately because some overlays may relies on clipping rectangle before we Begin() into the window.
                 {
                     moving_window.viewport_id.pos = pos.clone();
                     moving_window.viewport_id.update_work_rect();
@@ -1047,11 +1053,11 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         }
         else
         {
-            if !window_disappared
+            if !window_disappeared
             {
                 // Try to merge the window back into the main viewport.
                 // This works because mouse_viewport should be != moving_window->viewport on release (as per code in UpdateViewports)
-                if g.config_flags_curr_frame.contains(ConfigFlags::ViewportsEnable) {
+                if g.config_flags_curr_frame.contains(&ConfigFlags::ViewportsEnable) {
                     update_try_merge_window_into_host_viewport(moving_window, g.mouse_viewport_id);
                 }
 
@@ -1073,12 +1079,12 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
     else
     {
         // When clicking/dragging from a window that has the _NoMove flag, we still set the active_id in order to prevent hovering others.
-        if (g.active_id_window_id != INVALID_ID) // && g.active_id_window.move_id == g.active_id)
+        if g.active_id_window_id != INVALID_ID // && g.active_id_window.move_id == g.active_id)
         {
             let active_id_win = g.get_window(g.active_id_window_id).unwrap();
             if active_id_win.move_id == g.active_id {
                 keep_alive_id(g.active_id);
-                if (!g.io.mouse_down[0]) {
+                if !g.io.mouse_down[0] {
                     clear_active_id();
                 }
             }
@@ -1138,29 +1144,25 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
 
         // if (root_window != NULL && !is_closed_popup)
 
-        if root_window != INVALID_ID && is_closed_popup == false
+        if root_window.is_some() && is_closed_popup == false
         {
             let root_win = root_window.unwrap();
             start_mouse_moving_window(g, g.hovered_window); //-V595
 
             // Cancel moving if clicked outside of title bar
-            if g.io.config_windows_move_from_title_bar_only {
-                if !(root_win.flags.contains(&WindowFlags::NoTitleBar)) || root_win.dock_is_active {
-                    if !root_win.title_bar_rect().Contains(&g.io.mouse_clicked_pos[0]) {
-                        g.moving_window_id = NULL;
-                    }
-                }
+            if g.io.config_windows_move_from_title_bar_only && (!(root_win.flags.contains(&WindowFlags::NoTitleBar)) || root_win.unwrap().dock_is_active) && !root_win.unwrap().title_bar_rect().Contains(&g.io.mouse_clicked_pos[0]) {
+                g.moving_window_id = INVALID_ID
             }
 
             // Cancel moving if clicked over an item which was disabled or inhibited by popups (note that we know hovered_id == 0 already)
             if g.hovered_id_disabled {
-                g.moving_window_id = NULL;
+                g.moving_window_id = INVALID_ID;
             }
         }
-        else if root_window == INVALID_ID && g.nav_window_id != NULL && get_top_most_popup_modal() == NULL
+        else if root_window.is_none() && g.nav_window_id != INVALID_ID && get_top_most_popup_modal() == NULL
         {
             // Clicking on void disable focus
-            focus_window(NULL);
+            focus_window();
         }
     }
 
@@ -1169,7 +1171,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
     // (The left mouse button path calls focus_window on the hovered window, which will lead NewFrame->close_popups_over_window to trigger)
     if g.io.mouse_clicked[1]
     {
-        // Find the top-most window between hovered_window and the top-most Modal Window.
+        // Find the top-most window between hovered_window and the top-most Modal window.
         // This is where we can trim the popup stack.
         let modal = get_top_most_popup_modal();
         let hovered_window_above_modal = g.hovered_window && (modal == NULL || is_window_above(g.hovered_window, modal));
@@ -1196,11 +1198,11 @@ pub fn translate_window(window: &mut Window, delta: &Vector2D)
 pub fn scale_window(window: &mut Window, scale: f32)
 {
     // Vector2D origin = window.viewport.pos;
-    let mut origin = window.viewport_id.pos;
-    window.pos = f32::floor((window.pos - origin) * scale + origin);
-    window.size = f32::floor(window.size * scale);
-    window.size_full = f32::floor(window.size_full * scale);
-    window.ContentSize = f32::floor(window.ContentSize * scale);
+    let origin = window.viewport_id.pos;
+    window.pos = Vector2D::floor((&window.pos - origin) * scale + origin);
+    window.size = Vector2D::floor(&window.size * scale);
+    window.size_full = Vector2D::floor(&window.size_full * scale);
+    window.content_size = Vector2D::floor(window.ContentSize * scale);
 }
 
 // static bool IsWindowActiveAndVisible(ImGuiWindow* window)
@@ -1249,16 +1251,14 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context)
     // for (int i = 0; i < IM_ARRAYSIZE(io.mouse_down); i += 1)
     for i in 0 .. io.mouse_down.len()
     {
-        if (io.mouse_clicked[i])
+        if io.mouse_clicked[i]
         {
             io.mouse_down_owned[i] = (g.hovered_window_id != INVALID_ID) || has_open_popup;
             io.mouse_down_owned_unless_popup_close[i] = (g.hovered_window_id != INVALID_ID) || has_open_modal;
         }
         mouse_any_down |= io.mouse_down[i];
-        if (io.mouse_down[i]) {
-            if (mouse_earliest_down == -1 || io.mouse_clicked_time[i] < io.mouse_clicked_time[mouse_earliest_down]) {
-                mouse_earliest_down = i;
-            }
+        if (io.mouse_down[i]) && (mouse_earliest_down == -1 || io.mouse_clicked_time[i] < io.mouse_clicked_time[mouse_earliest_down]) {
+            mouse_earliest_down = i;
         }
     }
     let mouse_avail = (mouse_earliest_down == -1) || io.mouse_down_owned[mouse_earliest_down];
@@ -1267,17 +1267,18 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context)
     // If mouse was first clicked outside of ImGui bounds we also cancel out hovering.
     // FIXME: For patterns of drag and drop across OS windows, we may need to rework/remove this test (first committed 311c0ca9 on 2015/02)
     let mouse_dragging_extern_payload = g.drag_drop_active && (g.drag_drop_source_flags & DragDropFlags::SourceExtern) != 0;
-    if (!mouse_avail && !mouse_dragging_extern_payload) {
+    if !mouse_avail && !mouse_dragging_extern_payload {
         clear_hovered_windows = true;
     }
 
-    if (clear_hovered_windows) {
-        g.hovered_window = g.hovered_window_under_moving_window_id = NULL;
+    if clear_hovered_windows {
+        g.hovered_window_id  INVALID_ID;
+        g.hovered_window_under_moving_window_id = INVALID_ID;
     }
 
     // Update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
     // Update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
-    if (g.want_capture_mouse_next_frame != -1)
+    if g.want_capture_mouse_next_frame != -1
     {
          io.want_capture_mouse_unless_popup_close = (g.want_capture_mouse_next_frame != 0);
         io.want_capture_mouse = io.want_capture_mouse_unless_popup_close;
@@ -1289,13 +1290,13 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context)
     }
 
     // Update io.want_capture_keyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
-    if (g.want_capture_keyboard_next_frame != -1) {
+    if g.want_capture_keyboard_next_frame != -1 {
         io.want_capture_keyboard = (g.want_capture_keyboard_next_frame != 0);
     }
     else{
     io.want_capture_keyboard = (g.active_id != 0) || (modal_window != NULL);
 }
-    if (io.nav_active && (io.config_flags.contains(&ConfigFlags::NavEnableKeyboard)) && !(io.config_flags.contains(&ConfigFlags::NavNoCaptureKeyboard))) {
+    if io.nav_active && (io.config_flags.contains(&ConfigFlags::NavEnableKeyboard)) && !(io.config_flags.contains(&ConfigFlags::NavNoCaptureKeyboard)) {
         io.want_capture_keyboard = true;
     }
 
@@ -1481,7 +1482,7 @@ pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Wi
             draw_list.add_draw_cmd();
         }
         draw_list.push_clip_rect(viewport_rect.Min, viewport_rect.Max, false);
-        RenderRectFilledWithHole(draw_list, root_win_dock_tree_win.rect(), root_win.rect(), color, 0.0);// window->root_window_dock_tree->window_rounding);
+        render_rect_filled_with_hole(draw_list, root_win_dock_tree_win.rect(), root_win.rect(), color, 0.0);// window->root_window_dock_tree->window_rounding);
         draw_list.pop_clip_rect();
     }
 }

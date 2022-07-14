@@ -11,7 +11,7 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
     // we at least need to be resilient to it. Cancelling the move is rather aggressive and users of 'master' branch
     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.
-    if ctx.moving_window_id != NULL && ctx.active_id == ctx.moving_window_id.MoveId
+    if ctx.moving_window_id != NULL && ctx.active_id == ctx.moving_window_id.move_id
     {
         debug!("SetActiveID() cancel moving_window\n");
         ctx.moving_window_id = NULL;

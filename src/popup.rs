@@ -9,7 +9,7 @@ pub struct PopupData
 {
     // ImGuiID             popup_id;        // Set on OpenPopup()
     pub PopupId: ImGuiID,
-    // ImGuiWindow*        Window;         // Resolved on BeginPopup() - may stay unresolved if user never calls OpenPopup()
+    // ImGuiWindow*        window;         // Resolved on BeginPopup() - may stay unresolved if user never calls OpenPopup()
     pub Window: *mut ImGuiWindow,
     // ImGuiWindow*        SourceWindow;   // Set on OpenPopup() copy of nav_window at the time of opening the popup
     pub SourceWindow: *mut ImGuiWindow,

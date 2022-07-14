@@ -32,7 +32,7 @@
 //  2019-05-11: Inputs: Don't filter character value from ALLEGRO_EVENT_KEY_CHAR before calling add_input_character().
 //  2019-04-30: Renderer: Added support for special ImDrawCallback_ResetRenderState callback to reset render state.
 //  2018-11-30: Platform: Added touchscreen support.
-//  2018-11-30: Misc: Setting up io.backend_platform_name/io.backend_renderer_name so they can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_platform_name/io.backend_renderer_name so they can be displayed in the About window.
 //  2018-06-13: Platform: Added clipboard support (from Allegro 5.1.12).
 //  2018-06-13: Renderer: Use draw_data->display_pos and draw_data->display_size to setup projection matrix and clipping rectangle.
 //  2018-06-13: Renderer: Backup/restore transform and clipping rectangle.
@@ -534,7 +534,7 @@ static void ImGui_ImplAllegro5_UpdateMouseCursor()
 
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
+    if (io.mouse_draw_cursor || imgui_cursor == MouseCursor::None)
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
         al_set_mouse_cursor(bd->Display, bd->MouseCursorInvisible);

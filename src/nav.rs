@@ -68,7 +68,7 @@ pub enum NavMoveFlags
 #[derive(Default,Debug,Clone)]
 pub struct NavItemData
 {
-    // ImGuiWindow*        Window;         // Init,Move    // Best candidate window (result->ItemWindow->root_window_for_nav == request->Window)
+    // ImGuiWindow*        window;         // Init,Move    // Best candidate window (result->ItemWindow->root_window_for_nav == request->window)
     pub Window: *mut ImGuiWindow,
     // ImGuiID             id;             // Init,Move    // Best candidate item id
     pub ID: ImGuiID,
@@ -93,7 +93,7 @@ impl NavItemData {
             ..Default::default()
         }
     }
-    //     void clear()        { Window = NULL; id = focus_scope_id = 0; in_flags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
+    //     void clear()        { window = NULL; id = focus_scope_id = 0; in_flags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
     pub fn Clear(&mut self) {
         self.Window = null_mut();
         self.ID = 0;

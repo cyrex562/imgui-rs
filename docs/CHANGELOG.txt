@@ -393,7 +393,7 @@ Other Changes:
 Docking+viewports Branch:
 
 - Docking: Fixed a CTRL+TAB crash when aiming at an empty docked window. (#4792)
-- Docking: Tabs use their own identifier instead of the Window identifier.
+- Docking: Tabs use their own identifier instead of the window identifier.
   (This will invalidate some stored .ini data such as last selected tab, sorry!)
 - Docking: Fixed size constraints not working on single window holding on a dock id (still doesn't work on docked windows).
 - Docking: Fixed CTRL+TAB back into a docked window not selecting menu layer when no item are on main layer.
@@ -821,7 +821,7 @@ Other Changes:
 - Scrolling: Fix scroll tracking with e.g. SetScrollHereX/Y() when window_padding < ItemSpacing.
 - Scrolling: Fix scroll snapping on edge of scroll region when both scrollbars are enabled.
 - Scrolling: Fix mouse wheel axis swap when using SHIFT on macOS (system already does it). (#4010)
-- Window: Fix IsWindowAppearing() from returning true twice in most cases. (#3982, #1497, #1061)
+- window: Fix IsWindowAppearing() from returning true twice in most cases. (#3982, #1497, #1061)
 - Nav: Fixed toggling menu layer while an InputText() is active not stealing active id. (#787)
 - Nav: Fixed pressing Escape to leave menu layer while in a popup or child window. (#787)
 - Nav, InputText: Fixed accidental menu toggling while typing non-ascii characters using AltGR. [@rokups] (#370)
@@ -948,8 +948,8 @@ Breaking Changes:
 
 Other Changes:
 
-- Window, Nav: Fixed crash when calling SetWindowFocus(NULL) at the time a new window appears. (#3865) [@nem0]
-- Window: Shrink close button hit-testing region when it covers an abnormally high portion of the window visible
+- window, Nav: Fixed crash when calling SetWindowFocus(NULL) at the time a new window appears. (#3865) [@nem0]
+- window: Shrink close button hit-testing region when it covers an abnormally high portion of the window visible
   area (e.g. when window is collapsed + moved in a corner) to facilitate moving the window away. (#3825)
 - Nav: Various fixes for losing gamepad/keyboard navigation reference point when a window reappears or
   when it appears while gamepad/keyboard are not being used. (#787)
@@ -1031,18 +1031,18 @@ Other Changes:
     - GetMainViewport()->pos is always == (0,0)
     - GetMainViewport()->size is always == io.display_size
   - In 'docking' branch and with the multi-viewports feature enabled:
-    - GetMainViewport() will return information from your host Platform Window.
+    - GetMainViewport() will return information from your host Platform window.
     - In the future, we will support a "no main viewport" mode and this may return bounds of your main monitor.
   - For forward compatibility with multi-viewports/multi-monitors:
      - Code using (0,0) as a way to signify "upper-left of the host window" should use GetMainViewport()->pos.
      - Code using io.display_size as a way to signify "size of the host window" should use GetMainViewport()->size.
   - We are also exposing a work area in ImGuiViewport ('work_pos', 'work_size' vs 'pos', 'size' for full area):
-     - For a Platform Window, the work area is generally the full area minus space used by menu-bars.
+     - For a Platform window, the work area is generally the full area minus space used by menu-bars.
      - For a Platform Monitor, the work area is generally the full area minus space used by task-bars.
   - All of this has been the case in 'docking' branch for a long time. What we've done is merely merging
     a small chunk of the multi-viewport logic into 'master' to standardize some concepts ahead of time.
 - tables: Fixed PopItemWidth() or multi-components items not restoring per-colum item_width correctly. (#3760)
-- Window: Fixed minor title bar text clipping issue when FramePadding is small/zero and there are no
+- window: Fixed minor title bar text clipping issue when FramePadding is small/zero and there are no
   close button in the window. (#3731)
 - SliderInt: Fixed click/drag when v_min==v_max from setting the value to zero. (#3774) [@erwincoumans]
   Would also repro with DragFloat() when using ImGuiSliderFlags_Logarithmic with v_min==v_max.
@@ -1070,7 +1070,7 @@ Other Changes:
 - ImDrawList: Clarified PathArcTo() need for a_min <= a_max with an assert.
 - ImDrawList: Fixed PathArcToFast() handling of a_min > a_max.
 - Metrics: Back-ported "viewports" debug visualizer from 'docking' branch.
-- Demo: Added 'Examples->Fullscreen Window' demo using GetMainViewport() values. (#3789)
+- Demo: Added 'Examples->Fullscreen window' demo using GetMainViewport() values. (#3789)
 - Demo: 'Simple Overlay' demo now moves under main menu-bar (if any) using GetMainViewport()'s work area.
 - Backends: Win32: Dynamically loading XInput DLL instead of linking with it, facilitate compiling with
   old WindowSDK versions or running on windows 7. (#3646, #3645, #3248, #2716) [@Demonese]
@@ -1250,7 +1250,7 @@ Breaking Changes:
 
 Other Changes:
 
-- Window: Fixed using non-zero pivot in SetNextWindowPos() when the window is collapsed. (#3433)
+- window: Fixed using non-zero pivot in SetNextWindowPos() when the window is collapsed. (#3433)
 - Nav: Fixed navigation resuming on first visible item when using gamepad. [@rokups]
 - Nav: Fixed using Alt to toggle the Menu layer when inside a Modal window. (#787)
 - Scrolling: Fixed SetScrollHere(0) functions edge snapping when called during a frame where
@@ -1370,7 +1370,7 @@ Other Changes:
 - Nav: Fixed clicking on void (behind any windows) from not clearing the focused window.
   This would be problematic e.g. in situation where the application relies on io.want_capture_keyboard
   flag being cleared accordingly. (bug introduced in 1.77 WIP on 2020/06/16) (#3344, #2880)
-- Window: Fixed clicking over an item which hovering has been disabled (e.g inhibited by a popup)
+- window: Fixed clicking over an item which hovering has been disabled (e.g inhibited by a popup)
   from marking the window as moved.
 - Drag, Slider: Added ImGuiSliderFlags parameters.
   - For float functions they replace the old trailing 'float power=1.0' parameter.
@@ -1588,7 +1588,7 @@ Other Changes:
     is currently not particularly efficient.
 - Columns: undid the change in 1.75 were Columns()/BeginColumns() were preemptively limited
   to 64 columns with an assert. (#3037, #125)
-- Window: Fixed a bug with child window inheriting ItemFlags from their parent when the child
+- window: Fixed a bug with child window inheriting ItemFlags from their parent when the child
   window also manipulate the ItemFlags stack. (#3024) [@Stanbroek]
 - font: Fixed non-ASCII space occasionally creating unnecessary empty looking polygons.
 - Misc: Added an explicit compile-time test for non-scoped IM_ASSERT() macros to redirect users
@@ -1693,8 +1693,8 @@ Other Changes:
   user-side storage. Previously if you had e.g. a local unsaved std::string and reading result back
   from the widget, the user string object wouldn't be resized when Enter key was pressed. (#3009)
 - MenuBar: Fix minor clipping issue where occasionally a menu text can overlap the right-most border.
-- Window: Fix SetNextWindowBgAlpha(1.0) failing to override alpha component. (#3007) [@Albog]
-- Window: When testing for the presence of the ImGuiWindowFlags_NoBringToFrontOnFocus flag we
+- window: Fix SetNextWindowBgAlpha(1.0) failing to override alpha component. (#3007) [@Albog]
+- window: When testing for the presence of the ImGuiWindowFlags_NoBringToFrontOnFocus flag we
   test both the focused/clicked window (which could be a child window) and the root window.
 - ImDrawList: add_circle(), add_circle_filled() API can now auto-tessellate when provided a segment
   count of zero. Alter tessellation quality with 'style.circle_segment_max_error'. [@ShironekoBen]
@@ -1972,8 +1972,8 @@ Other Changes:
   Also still the case if ImGuiWindowFlags_NoScrollWithMouse is set (not new), but previously the forwarding
   would be disabled if ImGuiWindowFlags_NoScrollbar was set on the child window, which is not the case
   any more. Forwarding can still be disabled by setting ImGuiWindowFlags_NoInputs. (amend #1502, #1380).
-- Window: Fixed inner_clip_rect right-most coordinates using wrong padding setting (introduced in 1.71).
-- Window: Fixed old SetWindowFontScale() api value from not being inherited by child window. Added
+- window: Fixed inner_clip_rect right-most coordinates using wrong padding setting (introduced in 1.71).
+- window: Fixed old SetWindowFontScale() api value from not being inherited by child window. Added
   comments about the right way to scale your UI (load a font at the right side, rebuild atlas, scale style).
 - Scrollbar: Avoid overlapping the opposite side when window (often a child window) is forcibly too small.
 - Combo: Hide arrow when there's not enough space even for the square button.
@@ -2052,7 +2052,7 @@ Breaking Changes:
 
 - io: changed add_input_character(unsigned short c) signature to add_input_character(unsigned int c).
 - Renamed SetNextTreeNodeOpen() to SetNextItemOpen(). Kept inline redirection function (will obsolete).
-- Window: rendering of child windows outer decorations (e.g. bg color, border, scrollbars) is now
+- window: rendering of child windows outer decorations (e.g. bg color, border, scrollbars) is now
   performed as part of their parent window, avoiding the creation of an extraneous draw commands.
   If you have overlapping child windows with decorations, and relied on their relative z-order to be
   mapped to submission their order, this will affect your rendering. The optimization is disabled
@@ -2061,12 +2061,12 @@ Breaking Changes:
 
 Other Changes:
 
-- Window: clarified behavior of SetNextWindowContentSize(). Content size is defined as the size available
+- window: clarified behavior of SetNextWindowContentSize(). Content size is defined as the size available
   after removal of window_padding on each sides. So SetNextWindowContentSize(DimgVec2D::new(100,100)) + auto-resize
   will always allow submitting a 100x100 item without creating a scrollbar, regarding of window_padding.
   The exact meaning of content_size for decorated windows was previously ill-defined.
-- Window: Fixed auto-resize with AlwaysVerticalScrollbar or AlwaysHorizontalScrollbar flags.
-- Window: Fixed one case where auto-resize by double-clicking the resize grip would make either scrollbar
+- window: Fixed auto-resize with AlwaysVerticalScrollbar or AlwaysHorizontalScrollbar flags.
+- window: Fixed one case where auto-resize by double-clicking the resize grip would make either scrollbar
   appear for a single frame after the resize.
 - Separator: Revert 1.70 "Declare its thickness (1.0) to the layout" change. It's not incorrect
   but it breaks existing some layout patterns. Will return back to it when we expose Separator flags.
@@ -2164,13 +2164,13 @@ Other Changes:
 - Layout: Fixed PushItemWidth(-width) for right-side alignment laying out some items (button, listbox, etc.)
   with negative sizes if the 'width' argument was smaller than the available width at the time of item
   submission.
-- Window: Fixed window with the AlwaysAutoResize flag unnecessarily extending their hovering boundaries
+- window: Fixed window with the AlwaysAutoResize flag unnecessarily extending their hovering boundaries
   by a few pixels (this is used to facilitate resizing from borders when available for a given window).
   One of the noticeable minor side effect was that navigating menus would have had a tendency to disable
   highlight from parent menu items earlier than necessary while approaching the child menu.
-- Window: Close button is horizontally aligned with style.FramePadding.x.
-- Window: Fixed contents region being off by WindowBorderSize amount on the right when scrollbar is active.
-- Window: Fixed SetNextWindowSizeConstraints() with non-rounded positions making windows drift. (#2067, #2530)
+- window: Close button is horizontally aligned with style.FramePadding.x.
+- window: Fixed contents region being off by WindowBorderSize amount on the right when scrollbar is active.
+- window: Fixed SetNextWindowSizeConstraints() with non-rounded positions making windows drift. (#2067, #2530)
 - Popups: Closing a popup restores the focused/nav window in place at the time of the popup opening,
   instead of restoring the window that was in the window stack at the time of the OpenPopup call. (#2517)
   Among other things, this allows opening a popup while no window are focused, and pressing Escape to
@@ -2331,8 +2331,8 @@ Other Changes:
 - Menus: Tweaked horizontal overlap between parent and child menu (to help convey relative depth)
   from using style.ItemSpacing.x to style.ItemInnerSpacing.x, the later being expected to be smaller. (#1086)
 - RadioButton: Fixed label horizontal alignment to precisely match Checkbox().
-- Window: When resizing from an edge, the border is more visible and better follow the rounded corners.
-- Window: Fixed initial width of collapsed windows not taking account of contents width (broken in 1.67). (#2336, #176)
+- window: When resizing from an edge, the border is more visible and better follow the rounded corners.
+- window: Fixed initial width of collapsed windows not taking account of contents width (broken in 1.67). (#2336, #176)
 - Scrollbar: Fade out and disable interaction when too small, in order to facilitate using the resize grab on very
   small window, as well as reducing visual noise/overlap.
 - ListBox: Better optimized when clipped / non-visible.
@@ -2392,15 +2392,15 @@ Other Changes:
   (It does not provide the docking/splitting/merging of windows available in the Docking branch)
 - Added ImGuiWindowFlags_UnsavedDocument window flag to append '*' to title without altering the id, as a convenience
   to avoid using the ### operator. In the Docking branch this also has an effect on tab closing behavior.
-- Window, Focus, Popup: Fixed an issue where closing a popup by clicking another window with the _NoMove flag would refocus
+- window, Focus, Popup: Fixed an issue where closing a popup by clicking another window with the _NoMove flag would refocus
   the parent window of the popup instead of the newly clicked window.
-- Window: Contents size is preserved while a window collapsed. Fix auto-resizing window losing their size for one frame when uncollapsed.
-- Window: Contents size is preserved while a window contents is hidden (unless it is hidden for resizing purpose).
-- Window: Resizing windows from edge is now enabled by default (io.config_windows_resize_from_edges=true). Note that
+- window: Contents size is preserved while a window collapsed. Fix auto-resizing window losing their size for one frame when uncollapsed.
+- window: Contents size is preserved while a window contents is hidden (unless it is hidden for resizing purpose).
+- window: Resizing windows from edge is now enabled by default (io.config_windows_resize_from_edges=true). Note that
   it only works _if_ the backend sets ImGuiBackendFlags_HasMouseCursors, which the standard backends do.
-- Window: Added io.config_windows_move_from_title_bar_only option. This is ignored by window with no title bars (often popups).
+- window: Added io.config_windows_move_from_title_bar_only option. This is ignored by window with no title bars (often popups).
   This affects clamping window within the visible area: with this option enabled title bars need to be visible. (#899)
-- Window: Fixed using SetNextWindowPos() on a child window (which wasn't really documented) position the cursor as expected
+- window: Fixed using SetNextWindowPos() on a child window (which wasn't really documented) position the cursor as expected
   in the parent window, so there is no mismatch between the layout in parent and the position of the child window.
 - InputFloat: When using ImGuiInputTextFlags_ReadOnly the step buttons are disabled. (#2257)
 - DragFloat: Fixed broken mouse direction change with power!=1.0. (#2174, #2206) [@Joshhua5]
@@ -2477,16 +2477,16 @@ Other Changes:
 - DragFloat: Disabled using power curve when one edge is FLT_MAX (broken in 1.61). (#2024)
 - DragFloat: Disabled setting a default drag speed when one edge is FLT_MAX. (#2024)
 - SliderAngle: Added optional format argument to alter precision or localize the string. (#2150) [@podsvirov]
-- Window: Resizing from edges (with io.ConfigResizeWindowsFromEdges Beta flag) extends the hit region
+- window: Resizing from edges (with io.ConfigResizeWindowsFromEdges Beta flag) extends the hit region
   of root floating windows outside the window, making it easier to resize windows. Resize grips are also
   extended accordingly so there are no discontinuity when hovering between borders and corners. (#1495, #822)
-- Window: Added ImGuiWindowFlags_NoBackground flag to avoid rendering window background. This is mostly to allow
+- window: Added ImGuiWindowFlags_NoBackground flag to avoid rendering window background. This is mostly to allow
   the creation of new flag combinations, as we could already use SetNextWindowBgAlpha(0.0). (#1660) [@biojppm, @ocornut]
-- Window: Added ImGuiWindowFlags_NoDecoration helper flag which is essentially NoTitleBar+NoResize+NoScrollbar+NoCollapse.
-- Window: Added ImGuiWindowFlags_NoMouseInputs which is basically the old ImGuiWindowFlags_NoInputs (essentially
+- window: Added ImGuiWindowFlags_NoDecoration helper flag which is essentially NoTitleBar+NoResize+NoScrollbar+NoCollapse.
+- window: Added ImGuiWindowFlags_NoMouseInputs which is basically the old ImGuiWindowFlags_NoInputs (essentially
   we have renamed ImGuiWindowFlags_NoInputs to ImGuiWindowFlags_NoMouseInputs). Made the new ImGuiWindowFlags_NoInputs
   encompass both NoMouseInputs+NoNav, which is consistent with its description. (#1660, #787)
-- Window, Inputs: Fixed resizing from edges when io.mouse_pos is not pixel-rounded by rounding mouse position input. (#2110)
+- window, Inputs: Fixed resizing from edges when io.mouse_pos is not pixel-rounded by rounding mouse position input. (#2110)
 - BeginChild(): Fixed BeginChild(const char*, ...) variation erroneously not applying the id stack
   to the provided string to uniquely identify the child window. This was undoing an intentional change
   introduced in 1.50 and broken in 1.60. (#1698, #894, #713).
@@ -2593,10 +2593,10 @@ Other Changes:
 - Nav: Made CTRL+TAB skip menus + skip the current navigation window if is has the ImGuiWindow_NoNavFocus set. (#787)
   While it was previously possible, you won't be able to CTRL-TAB out and immediately back in a window with the
   ImGuiWindow_NoNavFocus flag.
-- Window: Allow menu and popups windows from ignoring the style.WindowMinSize values so short menus/popups are not padded. (#1909)
-- Window: Added global io.ConfigResizeWindowsFromEdges option to enable resizing windows from their edges and from
+- window: Allow menu and popups windows from ignoring the style.WindowMinSize values so short menus/popups are not padded. (#1909)
+- window: Added global io.ConfigResizeWindowsFromEdges option to enable resizing windows from their edges and from
   the lower-left corner. (#1495)
-- Window: Collapse button shows hovering highlight + clicking and dragging on it allows to drag the window as well.
+- window: Collapse button shows hovering highlight + clicking and dragging on it allows to drag the window as well.
 - Added IsItemEdited() to query if the last item modified its value (or was pressed). This is equivalent to the bool
   returned by most widgets.
   It is useful in some situation e.g. using InputText() with ImGuiInputTextFlags_EnterReturnsTrue. (#2034)
@@ -2760,11 +2760,11 @@ Other Changes:
 - Added DragScalar, DragScalarN: supports signed/unsigned, 32/64 bits, float/double data types. (#643, #320, #708, #1011)
 - Added InputScalar, InputScalarN: supports signed/unsigned, 32/64 bits, float/double data types. (#643, #320, #708, #1011)
 - Added SliderScalar, SliderScalarN: supports signed/unsigned, 32/64 bits, float/double data types. (#643, #320, #708, #1011)
-- Window: Fixed pop-ups/tooltips/menus not honoring style.DisplaySafeAreaPadding as well as it should have (part of menus
+- window: Fixed pop-ups/tooltips/menus not honoring style.DisplaySafeAreaPadding as well as it should have (part of menus
   displayed outside the safe area, etc.).
-- Window: Fixed windows using the ImGuiWindowFlags_NoSavedSettings flag from not using the same default position as other windows. (#1760)
-- Window: Relaxed the internal stack size checker to allow Push/Begin/Pop/.../End patterns to be used with PushStyleColor, PushStyleVar, PushFont without causing a false positive assert. (#1767)
-- Window: Fixed the default proportional item width lagging by one frame on resize.
+- window: Fixed windows using the ImGuiWindowFlags_NoSavedSettings flag from not using the same default position as other windows. (#1760)
+- window: Relaxed the internal stack size checker to allow Push/Begin/Pop/.../End patterns to be used with PushStyleColor, PushStyleVar, PushFont without causing a false positive assert. (#1767)
+- window: Fixed the default proportional item width lagging by one frame on resize.
 - Columns: Fixed a bug introduced in 1.51 where columns would affect the contents size of their container, often creating
   feedback loops when ImGuiWindowFlags_AlwaysAutoResize was used. (#1760)
 - Settings: Fixed saving an empty .ini file if CreateContext/DestroyContext are called without a single call to NewFrame(). (#1741)
@@ -2843,7 +2843,7 @@ Breaking Changes:
 - Removed ImGuiCol_CloseButton, ImGuiCol_CloseButtonActive, ImGuiCol_CloseButtonHovered style colors as the closing cross uses regular button colors now.
 - Renamed ImGuiSizeConstraintCallback to ImGuiSizeCallback, ImGuiSizeConstraintCallbackData to ImGuiSizeCallbackData.
 - Removed CalcItemRectClosestPoint() which was weird and not really used by anyone except demo code. If you need it should be easy to replicate on your side (you can find the code in 1.53).
-- [EDITED] Window: BeginChild() with an explicit name doesn't include the hash within the internal window name. (#1698)
+- [EDITED] window: BeginChild() with an explicit name doesn't include the hash within the internal window name. (#1698)
   This change was erroneously introduced, undoing the change done for #894, #713, and not documented properly in the original
   1.60 release Changelog. It was fixed on 2018-09-28 (1.66) and I wrote this paragraph the same day.
 
@@ -2884,10 +2884,10 @@ Other Changes:
 - io: Added ImGuiKey_Insert, ImGuiKey_Space keys. Setup in all example backends. (#1541)
 - io: Added Horizontal Mouse Wheel support for horizontal scrolling. (#1463) [@tseeker]
 - io: Added IsAnyMouseDown() helper which is helpful for backends to handle mouse capturing.
-- Window: Clicking on a window with the ImGuiWIndowFlags_NoMove flags takes an active_id so we can't hover something else when dragging afterwards. (#1381, #1337)
-- Window: IsWindowHovered(): Added ImGuiHoveredFlags_AnyWindow, ImGuiFocusedFlags_AnyWindow flags (See Breaking Changes). Added to demo. (#1382)
-- Window: Added SetNextWindowBgAlpha() helper. Particularly helpful since the legacy 5-parameters version of Begin() has been marked as obsolete in 1.53. (#1567)
-- Window: Fixed SetNextWindowContentSize() with 0.0 on Y axis (or SetNextWindowContentWidth()) overwriting the contents size. Got broken on Dec 10 (1.53). (#1363)
+- window: Clicking on a window with the ImGuiWIndowFlags_NoMove flags takes an active_id so we can't hover something else when dragging afterwards. (#1381, #1337)
+- window: IsWindowHovered(): Added ImGuiHoveredFlags_AnyWindow, ImGuiFocusedFlags_AnyWindow flags (See Breaking Changes). Added to demo. (#1382)
+- window: Added SetNextWindowBgAlpha() helper. Particularly helpful since the legacy 5-parameters version of Begin() has been marked as obsolete in 1.53. (#1567)
+- window: Fixed SetNextWindowContentSize() with 0.0 on Y axis (or SetNextWindowContentWidth()) overwriting the contents size. Got broken on Dec 10 (1.53). (#1363)
 - ArrowButton: Added ArrowButton() given a cardinal direction (e.g. ImGuiDir_Left).
 - InputText: Added alternative clipboard shortcuts: Shift+Delete (cut), CTRL+Insert (copy), Shift+Insert (paste). (#1541)
 - InputText: Fixed losing Cursor x position when clicking outside on an item that's submitted after the InputText(). It was only noticeable when restoring focus programmatically. (#1418, #1554)
@@ -3039,21 +3039,21 @@ Other Changes:
 - Combo: Offset popup position by border size so that a double border isn't so visible. (#707)
 - Combo: Recycling windows by using a stack number instead of a unique id, wasting less memory (like menus do).
 - InputText: Added ImGuiInputTextFlags_NoUndoRedo flag. (#1506, #1508) [@ibachar]
-- Window: Fixed auto-resize allocating too much space for scrollbar when SizeContents is bigger than maximum window size (fixes c0547d3). (#1417)
-- Window: Child windows with MenuBar use regular window_padding.y so layout look consistent as child or as a regular window.
-- Window: Begin(): Fixed appending into a child window with a second Begin() from a different window stack querying the wrong window for the window.collapsed test.
-- Window: Calling IsItemActive(), IsItemHovered() etc. after a call to Begin() provides item data for the title bar, so you can easily test if the title bar is being hovered, etc. (#823)
-- Window: Made it possible to use SetNextWindowPos() on a child window.
-- Window: Fixed a one frame glitch. When an appearing window claimed the focus themselves, the title bar wouldn't use the focused color for one frame.
-- Window: Added ImGuiWindowFlags_ResizeFromAnySide flag to resize from any borders or from the lower-left corner of a window. This requires your backend to honor GetMouseCursor() requests for full usability. (#822)
-- Window: Sizing fixes when using SetNextWindowSize() on individual axises.
-- Window: Hide new window for one frame until they calculate their size. Also fixes SetNextWindowPos() given a non-zero pivot. (#1694)
-- Window: Made mouse wheel scrolling accommodate better to windows that are smaller than the scroll step.
-- Window: SetNextWindowContentSize() adjust for the size of decorations (title bar/menu bar), but _not_ for borders are we consistently make borders not affect layout.
+- window: Fixed auto-resize allocating too much space for scrollbar when SizeContents is bigger than maximum window size (fixes c0547d3). (#1417)
+- window: Child windows with MenuBar use regular window_padding.y so layout look consistent as child or as a regular window.
+- window: Begin(): Fixed appending into a child window with a second Begin() from a different window stack querying the wrong window for the window.collapsed test.
+- window: Calling IsItemActive(), IsItemHovered() etc. after a call to Begin() provides item data for the title bar, so you can easily test if the title bar is being hovered, etc. (#823)
+- window: Made it possible to use SetNextWindowPos() on a child window.
+- window: Fixed a one frame glitch. When an appearing window claimed the focus themselves, the title bar wouldn't use the focused color for one frame.
+- window: Added ImGuiWindowFlags_ResizeFromAnySide flag to resize from any borders or from the lower-left corner of a window. This requires your backend to honor GetMouseCursor() requests for full usability. (#822)
+- window: Sizing fixes when using SetNextWindowSize() on individual axises.
+- window: Hide new window for one frame until they calculate their size. Also fixes SetNextWindowPos() given a non-zero pivot. (#1694)
+- window: Made mouse wheel scrolling accommodate better to windows that are smaller than the scroll step.
+- window: SetNextWindowContentSize() adjust for the size of decorations (title bar/menu bar), but _not_ for borders are we consistently make borders not affect layout.
   If you need a non-child window of an exact size with border enabled but zero window padding, you'll need to accommodate for the border size yourself.
-- Window: Using the ImGuiWindowFlags_NoScrollWithMouse flag on a child window forwards the mouse wheel event to the parent window, unless either ImGuiWindowFlags_NoInputs or ImGuiWindowFlags_NoScrollbar are also set. (#1380, #1502)
-- Window: active Modal window always set the want_capture_keyboard flag. (#744)
-- Window: Moving window doesn't use accumulating mouse_delta so straying out of imgui boundaries keeps moved imgui window at the same cursor-relative position.
+- window: Using the ImGuiWindowFlags_NoScrollWithMouse flag on a child window forwards the mouse wheel event to the parent window, unless either ImGuiWindowFlags_NoInputs or ImGuiWindowFlags_NoScrollbar are also set. (#1380, #1502)
+- window: active Modal window always set the want_capture_keyboard flag. (#744)
+- window: Moving window doesn't use accumulating mouse_delta so straying out of imgui boundaries keeps moved imgui window at the same cursor-relative position.
 - IsWindowFocused(): Added ImGuiFocusedFlags_ChildWindows flag to include child windows in the focused test. (#1382).
 - IsWindowFocused(): Added ImGuiFocusedFlags_RootWindow flag to start focused test from the root (top-most) window. Obsolete IsRootWindowFocused(). (#1382)
 - IsWindowHovered(): Added ImGuiHoveredFlags_ChildWindows flag to include child windows in the hovered test. (#1382).
@@ -3159,14 +3159,14 @@ Other Changes:
 - Trees: Fixed calling `SetNextTreeNodeOpen()` on a collapsed window leaking to the first tree node item of the next frame.
 - Layout: Horizontal layout is automatically enforced in a menu bar, so you can use non-MenuItem elements without calling SameLine().
 - Separator: Output a vertical separator when used inside a menu bar (or in general when horizontal layout is active, but that isn't exposed yet!).
-- Window: Added `IsWindowAppearing()` helper (helpful e.g. as a condition before initializing some of your own things.).
-- Window: Added pivot parameter to `SetNextWindowPos()`, making it possible to center or right align a window. Obsoleted `SetNextWindowPosCenter()`.
-- Window: Fixed title bar color of top-most window under a modal window.
-- Window: Fixed not being able to move a window by clicking on one of its child window. (#1337, #635)
-- Window: Fixed `Begin()` auto-fit calculation code that predict the presence of a scrollbar so it works better when window size constraints are used.
-- Window: Fixed calling `Begin()` more than once per frame setting `window_just_activated_by_user` which in turn would set enable the appearing condition for that frame.
-- Window: The implicit "Debug" window now uses a "Debug##Default" identifier instead of "Debug" to allow user creating a window called "Debug" without losing their custom flags.
-- Window: Made the `ImGuiWindowFlags_NoMove` flag properly inherited from parent to child. In a setup with ParentWindow (no flag) -> Child (NoMove) -> SubChild (no flag), the user won't be able to move the parent window by clicking on SubChild. (#1381)
+- window: Added `IsWindowAppearing()` helper (helpful e.g. as a condition before initializing some of your own things.).
+- window: Added pivot parameter to `SetNextWindowPos()`, making it possible to center or right align a window. Obsoleted `SetNextWindowPosCenter()`.
+- window: Fixed title bar color of top-most window under a modal window.
+- window: Fixed not being able to move a window by clicking on one of its child window. (#1337, #635)
+- window: Fixed `Begin()` auto-fit calculation code that predict the presence of a scrollbar so it works better when window size constraints are used.
+- window: Fixed calling `Begin()` more than once per frame setting `window_just_activated_by_user` which in turn would set enable the appearing condition for that frame.
+- window: The implicit "Debug" window now uses a "Debug##Default" identifier instead of "Debug" to allow user creating a window called "Debug" without losing their custom flags.
+- window: Made the `ImGuiWindowFlags_NoMove` flag properly inherited from parent to child. In a setup with ParentWindow (no flag) -> Child (NoMove) -> SubChild (no flag), the user won't be able to move the parent window by clicking on SubChild. (#1381)
 - Popups: Pop-ups can be closed with a right-click anywhere, without altering focus under the pop-up. (~#439)
 - Popups: `BeginPopupContextItem()`, `BeginPopupContextWindow()` are now setup to allow reopening a context menu by right-clicking again. (~#439)
 - Popups: `BeginPopupContextItem()` now supports a NULL string identifier and uses the last item id if available.
@@ -3257,7 +3257,7 @@ Other Changes:
 - Added user-facing `IsPopupOpen()` function. (#891) [@mkeeter]
 - Added `GetColorU32(u32)` variant that perform the style alpha multiply without a floating-point round trip, and helps makes code more consistent when using ImDrawList APIs.
 - Added `PushStyleColor(ImGuiColor idx, ImU32 col)` overload.
-- Added `GetStyleColorVec4(ImGuiColor idx)` which is equivalent to accessing `ImGui::GetStyle().Colors[idx]` (aka return the raw style color without alpha alteration).
+- Added `GetStyleColorVec4(ImGuiColor idx)` which is equivalent to accessing `ImGui::GetStyle().colors[idx]` (aka return the raw style color without alpha alteration).
 - ImFontAtlas: Added `GlyphRangesBuilder` helper class, which makes it easier to build custom glyph ranges from your app/game localization data, or add into existing glyph ranges.
 - ImFontAtlas: Added `tex_glyph_padding` option. (#1282) [@jadwallis]
 - ImFontAtlas: Made it possible to override size of add_font_default() (even if it isn't really recommended!).
@@ -3265,7 +3265,7 @@ Other Changes:
 - Fixed Ini saving crash if the ImGuiWindowFlags_NoSavedSettings gets removed from a window after its creation (unlikely!). (#1000)
 - Fixed `PushID()`/`PopID()` from marking parent window as Accessed (which needlessly woke up the root "Debug" window when used outside of a regular window). (#747)
 - Fixed an assert when calling `CloseCurrentPopup()` twice in a row. [@nem0]
-- Window size can be loaded from .ini data even if ImGuiWindowFlags_NoResize flag is set. (#1048, #1056)
+- window size can be loaded from .ini data even if ImGuiWindowFlags_NoResize flag is set. (#1048, #1056)
 - Columns: Added `SetColumnWidth()`. (#913) [@ggtucker]
 - Columns: Dragging a column preserve its width by default. (#913) [@ggtucker]
 - Columns: Fixed first column appearing wider than others. (#1266)
@@ -3624,7 +3624,7 @@ Changes:
 - ImGuiTextBuffer: added c_str() helper.
 - ColorEdit4(): fixed hovering the color button always showing 1.0 alpha. (#373)
 - ColorConvertFloat4ToU32() round the floats instead of truncating them.
-- Window: Fixed window lower-right clipping limit so it plays more friendly with both OpenGL and DirectX coordinates.
+- window: Fixed window lower-right clipping limit so it plays more friendly with both OpenGL and DirectX coordinates.
 - Internal: Extracted a EndFrame() function out of Render() but kept it internal/private + clarified some asserts. (#335)
 - Internal: Added missing  definitions in imgui_internal.h (#326)
 - Internal: ImLoadFileToMemory() return void\* instead of taking void*\* + allow optional int\* file_size.
@@ -3679,7 +3679,7 @@ Other Changes:
 - BeginChild() fixed missing rounding for child sizes which leaked into layout and have items misaligned.
 - Begin(): Removed default name = "Debug" parameter. We already have a "Debug" window pushed to the stack in the first place so it's not really a useful default.
 - Begin(): Minor fixes with windows main clipping rectangle (e.g. child window with border).
-- Begin(): Window flags are only read on the first call of the frame. Subsequent calls ignore flags, which allows appending to a window without worryin about flags.
+- Begin(): window flags are only read on the first call of the frame. Subsequent calls ignore flags, which allows appending to a window without worryin about flags.
 - InputText(): ignore character input when ctrl/alt are held. (Normally those text input are ignored by most wrappers.) (#279).
 - Demo: Fixed incorrectly formed string passed to Combo (#298).
 - Demo: Added simple Log demo.
@@ -3882,9 +3882,9 @@ Other Changes:
 - Added IsWindowHovered() helper.
 - Added IsMouseReleased(), IsKeyReleased() helpers to allow to user to avoid tracking them. (#248)
 - Allow Set*WindowSize() calls to be used with popups.
-- Window: AutoFit can be triggered on each axis separately via SetNextWindowSize(), etc.
-- Window: fixed scrolling with mouse wheel while window was collapsed.
-- Window: fixed mouse wheel scroll issues.
+- window: AutoFit can be triggered on each axis separately via SetNextWindowSize(), etc.
+- window: fixed scrolling with mouse wheel while window was collapsed.
+- window: fixed mouse wheel scroll issues.
 - DragFloat(), SliderFloat(): Fixed rounding of negative numbers which sometime made the negative lower bound unreachable.
 - InputText(): lifted character count limit.
 - InputText(): fixes in case of using per-window font scaling.
@@ -3956,15 +3956,15 @@ Other Changes:
 - ListBox: ListBox() function only use public API to encourage creating custom versions. ListBoxHeader() can return false.
 - ListBox: Uses ImGuiListClipper and assume items of matching height, so large lists can be handled.
 - Plot: overlay label clipped within frame when not fitting.
-- Window: Added ImGuiSetCond_Appearing to test the hidden->visible transition in SetWindow***/SetNextWindow*** functions.
-- Window: Auto-fitting cancel out one worth of vertical spacing for vertical symmetry (like what group and tooltip do).
-- Window: Default item width for auto-resizing windows expressed as a factor of font height, scales better with different font.
-- Window: Fixed auto-fit calculation mismatch of whether a scrollbar will be added by maximum height clamping. Also honor NoScrollBar in the case of height clamping, not adding extra horizontal space.
-- Window: Hovering require to hover same child window. Reverted 860cf57 (December 3). Might break something if you have
+- window: Added ImGuiSetCond_Appearing to test the hidden->visible transition in SetWindow***/SetNextWindow*** functions.
+- window: Auto-fitting cancel out one worth of vertical spacing for vertical symmetry (like what group and tooltip do).
+- window: Default item width for auto-resizing windows expressed as a factor of font height, scales better with different font.
+- window: Fixed auto-fit calculation mismatch of whether a scrollbar will be added by maximum height clamping. Also honor NoScrollBar in the case of height clamping, not adding extra horizontal space.
+- window: Hovering require to hover same child window. Reverted 860cf57 (December 3). Might break something if you have
   child overlapping items in parent window.
-- Window: Fixed appending multiple times to an existing child via multiple BeginChild/EndChild calls to same child name.
+- window: Fixed appending multiple times to an existing child via multiple BeginChild/EndChild calls to same child name.
   Allows a simple form of out-of-order appending.
-- Window: Fixed auto-filling child window using WindowMinSize at their minimum size, irrelevant.
+- window: Fixed auto-filling child window using WindowMinSize at their minimum size, irrelevant.
 - Metrics: Added io.metrics_active_windows counter. (#213.
 - Metrics: Added io.MetricsAllocs counter (number of active memory allocations).
 - Metrics: ShowMetricsWindow() shows popups stack, allocations.

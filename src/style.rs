@@ -72,7 +72,7 @@ pub struct Style {
     pub SelectableTextAlign: Vector2D,
     // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
     pub DisplayWindowPadding: Vector2D,
-    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
+    // window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
     pub DisplaySafeAreaPadding: Vector2D,
     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
     pub MouseCursorScale: f32,
@@ -87,7 +87,7 @@ pub struct Style {
     // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
     pub circle_tessellation_max_error: f32,
     // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
-    // Vector4D      Colors[ImGuiColor::COUNT];
+    // Vector4D      colors[ImGuiColor::COUNT];
     pub Colors: Vec<ImGuiColor>,
 
     //  ImGuiStyle();
@@ -129,7 +129,7 @@ impl Style {
         out.ColorButtonPosition = ImGuiDir::Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
         out.ButtonTextAlign = Vector2D::new(0.5, 0.5);// Alignment of button text when button is larger than text.
         out.SelectableTextAlign = Vector2D::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-        out.DisplayWindowPadding = Vector2D::new(19.0, 19.0);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
+        out.DisplayWindowPadding = Vector2D::new(19.0, 19.0);    // window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
         out.DisplaySafeAreaPadding = Vector2D::new(3.0, 3.0);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
         out.MouseCursorScale = 1.0;             // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). May be removed later.
         out.anti_aliased_lines = true;             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
@@ -488,7 +488,7 @@ pub fn StyleColorsDark(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.style };
-    // Vector4D* colors = style->Colors;
+    // Vector4D* colors = style->colors;
     let colors = &mut style.Colors;
 
     colors[ImGuiColor::Text]                   = Vector4D::new(1.00, 1.00, 1.00, 1.00);
@@ -553,7 +553,7 @@ pub fn StyleColorsClassic(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.style };
-    // Vector4D* colors = style->Colors;
+    // Vector4D* colors = style->colors;
     let colors = &mut style.Colors;
     
     colors[ImGuiColor::Text]                   = Vector4D::new(0.90, 0.90, 0.90, 1.00);
@@ -619,7 +619,7 @@ pub fn StyleColorsLight(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.style };
-    // Vector4D* colors = style->Colors;
+    // Vector4D* colors = style->colors;
     let colors = &mut style.Colors;
 
     colors[ImGuiColor::Text]                   = Vector4D::new(0.00, 0.00, 0.00, 1.00);

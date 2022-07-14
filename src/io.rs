@@ -92,7 +92,7 @@ pub struct Io {
     // (the imgui_impl_xxxx backend files are setting those up for you)
     //------------------------------------------------------------------
 
-    // Optional: Platform/Renderer backend name (informational only! will be displayed in About Window) + User data for backend/wrappers to store their own stuff.
+    // Optional: Platform/Renderer backend name (informational only! will be displayed in About window) + User data for backend/wrappers to store their own stuff.
     // const char* backend_platform_name;            // = NULL
     pub backend_platform_name: String,
     // const char* backend_renderer_name;            // = NULL

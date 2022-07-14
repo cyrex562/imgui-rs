@@ -330,7 +330,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - nav: there's currently no way to completely clear focus with the keyboard. depending on patterns used by the application to dispatch inputs, it may be desirable.
  - nav: code to focus child-window on restoring nav_id appears to have issue: e.g. when focus change is implicit because of window closure.
  - nav: Home/End behavior when navigable item is not fully visible at the edge of scrolling? should be backtrack to keep item into view?
- - nav: NavScrollToBringItemIntoView() with item bigger than view should focus top-right? Repro: using Nav in "About Window"
+ - nav: NavScrollToBringItemIntoView() with item bigger than view should focus top-right? Repro: using Nav in "About window"
  - nav: wrap around logic to allow e.g. grid based layout (pressing NavRight on the right-most element would go to the next row, etc.). see internal's NavMoveRequestTryWrapping().
  - nav: patterns to make it possible for arrows key to update selection (see JustMovedTo in range_select branch)
  - nav: restore/find nearest nav_id when current one disappear (e.g. pressed a button that disappear, or perhaps auto restoring when current button change name)

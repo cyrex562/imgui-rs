@@ -21,7 +21,7 @@
 //  2019-05-29: DirectX10: Added support for large mesh (64K+ vertices), enable ImGuiBackendFlags_RendererHasVtxOffset flag.
 //  2019-04-30: DirectX10: Added support for special ImDrawCallback_ResetRenderState callback to reset render state.
 //  2018-12-03: Misc: Added #pragma comment statement to automatically link with d3dcompiler.lib when using D3DCompile().
-//  2018-11-30: Misc: Setting up io.backend_renderer_name so it can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_renderer_name so it can be displayed in the About window.
 //  2018-07-13: DirectX10: Fixed unreleased resources in Init and Shutdown functions.
 //  2018-06-08: Misc: Extracted imgui_impl_dx10.cpp/.h away from the old combined DX10+Win32 example.
 //  2018-06-08: DirectX10: Use draw_data->display_pos and draw_data->display_size to setup projection matrix and clipping rectangle.

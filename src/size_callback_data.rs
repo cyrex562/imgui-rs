@@ -7,7 +7,7 @@ pub struct SizeCallbackData
 {
     // void*   user_data;       // Read-only.   What user passed to SetNextWindowSizeConstraints()
     pub user_data: Vec<u8>,
-    // pub pos: Vector2D,            // Read-only.   Window position, for reference.
+    // pub pos: Vector2D,            // Read-only.   window position, for reference.
     pub pos: Vector2D,
     // pub current_size: Vector2D,    // Read-only.   Current window size.
     pub current_size: Vector2D,

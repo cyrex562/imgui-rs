@@ -278,7 +278,7 @@ void MiniMap(
     const ImNodesMiniMapNodeHoveringCallback         node_hovering_callback = NULL,
     const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data = NULL);
 
-// Use PushColorStyle and PopColorStyle to modify ImNodesStyle::Colors mid-frame.
+// Use PushColorStyle and PopColorStyle to modify ImNodesStyle::colors mid-frame.
 void PushColorStyle(ImNodesCol item, unsigned int color);
 void PopColorStyle();
 void PushStyleVar(ImNodesStyleVar style_item, float value);

@@ -15,7 +15,7 @@ use crate::vectors::Vector2D;
 // }
 //
 // impl ViewportP {
-//     // // ImGuiViewportP()                    { Idx = -1; last_frame_active = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; LastNameHash = 0; Alpha = LastAlpha = 1.0; PlatformMonitor = -1; PlatformWindowCreated = false; Window = NULL; DrawLists[0] = DrawLists[1] = NULL; LastPlatformPos = LastPlatformSize = LastRendererSize = Vector2D(FLT_MAX, FLT_MAX); }
+//     // // ImGuiViewportP()                    { Idx = -1; last_frame_active = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; LastNameHash = 0; Alpha = LastAlpha = 1.0; PlatformMonitor = -1; PlatformWindowCreated = false; window = NULL; DrawLists[0] = DrawLists[1] = NULL; LastPlatformPos = LastPlatformSize = LastRendererSize = Vector2D(FLT_MAX, FLT_MAX); }
 //     pub fn new() -> Self {
 //         Self {
 //             idx: -1,
@@ -47,18 +47,18 @@ use crate::vectors::Vector2D;
 pub enum ViewportFlags
 {
     None                     = 0,
-    IsPlatformWindow         = 1 << 0,   // Represent a Platform Window
+    IsPlatformWindow         = 1 << 0,   // Represent a Platform window
     IsPlatformMonitor        = 1 << 1,   // Represent a Platform Monitor (unused yet)
-    OwnedByApp               = 1 << 2,   // Platform Window: is created/managed by the application (rather than a dear imgui backend)
-    NoDecoration             = 1 << 3,   // Platform Window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
-    NoTaskBarIcon            = 1 << 4,   // Platform Window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
-    NoFocusOnAppearing       = 1 << 5,   // Platform Window: Don't take focus when created.
-    NoFocusOnClick           = 1 << 6,   // Platform Window: Don't take focus when clicked on.
-    NoInputs                 = 1 << 7,   // Platform Window: Make mouse pass through so we can drag this window while peaking behind it.
-    NoRendererClear          = 1 << 8,   // Platform Window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
-    TopMost                  = 1 << 9,   // Platform Window: Display on top (for tooltips only).
-    Minimized                = 1 << 10,  // Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
-    NoAutoMerge              = 1 << 11,  // Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
+    OwnedByApp               = 1 << 2,   // Platform window: is created/managed by the application (rather than a dear imgui backend)
+    NoDecoration             = 1 << 3,   // Platform window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
+    NoTaskBarIcon            = 1 << 4,   // Platform window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
+    NoFocusOnAppearing       = 1 << 5,   // Platform window: Don't take focus when created.
+    NoFocusOnClick           = 1 << 6,   // Platform window: Don't take focus when clicked on.
+    NoInputs                 = 1 << 7,   // Platform window: Make mouse pass through so we can drag this window while peaking behind it.
+    NoRendererClear          = 1 << 8,   // Platform window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
+    TopMost                  = 1 << 9,   // Platform window: Display on top (for tooltips only).
+    Minimized                = 1 << 10,  // Platform window: window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
+    NoAutoMerge              = 1 << 11,  // Platform window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
     CanHostOtherWindows      = 1 << 12   // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
 }
 
@@ -68,7 +68,7 @@ impl Default for ViewportFlags {
     }
 }
 
-// - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
+// - Currently represents the Platform window created by the application which is hosting our Dear ImGui windows.
 // - With multi-viewport enabled, we extend this concept to have multiple active viewports.
 // - In the future we will extend this concept further to also represent Platform Monitor and support a "no main platform window" operation mode.
 // - About Main Area vs Work Area:
@@ -120,7 +120,7 @@ pub struct Viewport
     pub last_name_hash: Id32,
     // Vector2D              LastPos;
     pub last_pos: Vector2D,
-    // float               Alpha;                  // Window opacity (when dragging dockable windows/viewports we make them transparent)
+    // float               Alpha;                  // window opacity (when dragging dockable windows/viewports we make them transparent)
     pub alpha: f32,
     // float               LastAlpha;
     pub last_apha: f32,
@@ -128,7 +128,7 @@ pub struct Viewport
     pub platform_monitor: i16,
     // bool                PlatformWindowCreated;
     pub platform_window_created: bool,
-    // ImGuiWindow*        Window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
+    // ImGuiWindow*        window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
     pub window: Id32,
     // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
     pub draw_lists_last_frame: [i32;2],

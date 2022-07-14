@@ -47,13 +47,13 @@
 index of this file:
 
 // [SECTION] Forward Declarations, Helpers
-// [SECTION] Demo Window / ShowDemoWindow()
+// [SECTION] Demo window / ShowDemoWindow()
 // - sub section: ShowDemoWindowWidgets()
 // - sub section: ShowDemoWindowLayout()
 // - sub section: ShowDemoWindowPopups()
 // - sub section: ShowDemoWindowTables()
 // - sub section: ShowDemoWindowMisc()
-// [SECTION] About Window / ShowAboutWindow()
+// [SECTION] About window / ShowAboutWindow()
 // [SECTION] style Editor / ShowStyleEditor()
 // [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
@@ -254,7 +254,7 @@ void ImGui::ShowUserGuide()
 }
 
 //-----------------------------------------------------------------------------
-// [SECTION] Demo Window / ShowDemoWindow()
+// [SECTION] Demo window / ShowDemoWindow()
 //-----------------------------------------------------------------------------
 // - ShowDemoWindowWidgets()
 // - ShowDemoWindowLayout()
@@ -590,8 +590,8 @@ void ImGui::ShowDemoWindow(bool* p_open)
         }
     }
 
-    IMGUI_DEMO_MARKER("Window options");
-    if (ImGui::CollapsingHeader("Window options"))
+    IMGUI_DEMO_MARKER("window options");
+    if (ImGui::CollapsingHeader("window options"))
     {
         if (ImGui::BeginTable("split", 3))
         {
@@ -2453,8 +2453,8 @@ static void ShowDemoWindowWidgets()
         ImGui::TreePop();
     }
 
-    IMGUI_DEMO_MARKER("Widgets/Querying Window Status (Focused,Hovered etc.)");
-    if (ImGui::TreeNode("Querying Window Status (Focused/Hovered etc.)"))
+    IMGUI_DEMO_MARKER("Widgets/Querying window Status (Focused,Hovered etc.)");
+    if (ImGui::TreeNode("Querying window Status (Focused/Hovered etc.)"))
     {
         static bool embed_all_inside_a_child_window = false;
         ImGui::Checkbox("Embed everything inside a child window for testing _RootWindow flag.", &embed_all_inside_a_child_window);
@@ -3466,7 +3466,7 @@ static void ShowDemoWindowPopups()
     IMGUI_DEMO_MARKER("Popups/Context menus");
     if (ImGui::TreeNode("Context menus"))
     {
-        HelpMarker("\"Context\" functions are simple helpers to associate a Popup to a given Item or Window identifier.");
+        HelpMarker("\"Context\" functions are simple helpers to associate a Popup to a given Item or window identifier.");
 
         // BeginPopupContextItem() is a helper to provide common/simple popup behavior of essentially doing:
         //     if (id == 0)
@@ -3593,7 +3593,7 @@ static void ShowDemoWindowPopups()
                 }
                 ImGui::EndMenuBar();
             }
-            ImGui::Text("Hello from Stacked The First\nUsing style.Colors[ImGuiCol_ModalWindowDimBg] behind it.");
+            ImGui::Text("Hello from Stacked The First\nUsing style.colors[ImGuiCol_ModalWindowDimBg] behind it.");
 
             // Testing behavior of widgets stacking their own regular popups over the modal.
             static int item = 1;
@@ -3828,11 +3828,11 @@ static void ShowDemoWindowTables()
     // Most settings are configured on a per-table basis via the flags passed to BeginTable() and TableSetupColumns APIs.
     // There are however a few settings that a shared and part of the ImGuiStyle structure:
     //   style.CellPadding                          // Padding within each cell
-    //   style.Colors[ImGuiCol_TableHeaderBg]       // Table header background
-    //   style.Colors[ImGuiCol_TableBorderStrong]   // Table outer and header borders
-    //   style.Colors[ImGuiCol_TableBorderLight]    // Table inner borders
-    //   style.Colors[ImGuiCol_TableRowBg]          // Table row background when ImGuiTableFlags_RowBg is enabled (even rows)
-    //   style.Colors[ImGuiCol_TableRowBgAlt]       // Table row background when ImGuiTableFlags_RowBg is enabled (odds rows)
+    //   style.colors[ImGuiCol_TableHeaderBg]       // Table header background
+    //   style.colors[ImGuiCol_TableBorderStrong]   // Table outer and header borders
+    //   style.colors[ImGuiCol_TableBorderLight]    // Table inner borders
+    //   style.colors[ImGuiCol_TableRowBg]          // Table row background when ImGuiTableFlags_RowBg is enabled (even rows)
+    //   style.colors[ImGuiCol_TableRowBgAlt]       // Table row background when ImGuiTableFlags_RowBg is enabled (odds rows)
 
     // Demos
     if (open_action != -1)
@@ -6008,7 +6008,7 @@ static void ShowDemoWindowMisc()
 }
 
 //-----------------------------------------------------------------------------
-// [SECTION] About Window / ShowAboutWindow()
+// [SECTION] About window / ShowAboutWindow()
 // Access from Dear ImGui Demo -> Tools -> About
 //-----------------------------------------------------------------------------
 
@@ -6247,7 +6247,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
 
     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.50);
 
-    if (ImGui::ShowStyleSelector("Colors##Selector"))
+    if (ImGui::ShowStyleSelector("colors##Selector"))
         ref_saved_style = style;
     ImGui::ShowFontSelector("fonts##Selector");
 
@@ -6268,7 +6268,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
         style = *ref;
     ImGui::SameLine();
     HelpMarker(
-        "Save/Revert in local non-persistent storage. Default Colors definition are not affected. "
+        "Save/Revert in local non-persistent storage. Default colors definition are not affected. "
         "Use \"Export\" below to save them somewhere.");
 
     ImGui::Separator();
@@ -6318,7 +6318,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Colors"))
+        if (ImGui::BeginTabItem("colors"))
         {
             static int output_dest = 0;
             static bool output_only_modified = true;
@@ -6328,7 +6328,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
                     ImGui::LogToClipboard();
                 else
                     ImGui::LogToTTY();
-                ImGui::LogText("Vector4D* colors = ImGui::GetStyle().Colors;" IM_NEWLINE);
+                ImGui::LogText("Vector4D* colors = ImGui::GetStyle().colors;" IM_NEWLINE);
                 for (int i = 0; i < ImGuiCol_COUNT; i += 1)
                 {
                     const Vector4D& col = style.Colors[i];
@@ -6340,7 +6340,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
                 ImGui::LogFinish();
             }
             ImGui::SameLine(); ImGui::SetNextItemWidth(120); ImGui::Combo("##output_type", &output_dest, "To Clipboard\0To TTY\0");
-            ImGui::SameLine(); ImGui::Checkbox("Only Modified Colors", &output_only_modified);
+            ImGui::SameLine(); ImGui::Checkbox("Only Modified colors", &output_only_modified);
 
             static ImGuiTextFilter filter;
             filter.Draw("Filter colors", ImGui::GetFontSize() * 16);
@@ -6558,8 +6558,8 @@ static void ShowExampleMenuFile()
         ImGui::EndMenu();
     }
 
-    IMGUI_DEMO_MARKER("Examples/Menu/Colors");
-    if (ImGui::BeginMenu("Colors"))
+    IMGUI_DEMO_MARKER("Examples/Menu/colors");
+    if (ImGui::BeginMenu("colors"))
     {
         float sz = ImGui::GetTextLineHeight();
         for (int i = 0; i < ImGuiCol_COUNT; i += 1)
@@ -7340,7 +7340,7 @@ static void ShowExampleAppAutoResize(bool* p_open)
 
     static int lines = 10;
     ImGui::TextUnformatted(
-        "Window will resize every-frame to the size of its content.\n"
+        "window will resize every-frame to the size of its content.\n"
         "Note that you probably don't want to query the window size to\n"
         "output your content because that would create a feedback loop.");
     ImGui::SliderInt("Number of lines", &lines, 1, 20);
@@ -7492,7 +7492,7 @@ static void ShowExampleAppFullscreen(bool* p_open)
 }
 
 //-----------------------------------------------------------------------------
-// [SECTION] Example App: Manipulating Window Titles / ShowExampleAppWindowTitles()
+// [SECTION] Example App: Manipulating window Titles / ShowExampleAppWindowTitles()
 //-----------------------------------------------------------------------------
 
 // Demonstrate using "##" and "###" in identifiers to manipulate id generation.
@@ -8059,7 +8059,7 @@ void ShowExampleAppDocuments(bool* p_open)
         ImGui::PopID();
     }
     ImGui::PushItemWidth(ImGui::GetFontSize() * 12);
-    ImGui::Combo("Output", (int*)&opt_target, "None\0tab_bar+Tabs\0DockSpace+Window\0");
+    ImGui::Combo("Output", (int*)&opt_target, "None\0tab_bar+Tabs\0DockSpace+window\0");
     ImGui::PopItemWidth();
     bool redock_all = false;
     if (opt_target == Target_Tab)                { ImGui::SameLine(); ImGui::Checkbox("Reorderable Tabs", &opt_reorderable); }

@@ -1,10 +1,12 @@
 use std::collections::HashSet;
 use crate::condition::Cond;
 use crate::context::{call_context_hooks, Context, ContextHookType};
+use crate::drag_drop::DragDropFlags;
 use crate::draw_list::DrawListFlags;
 use crate::rect::Rect;
 use crate::types::INVALID_ID;
 use crate::vectors::Vector2D;
+use crate::window::{add_window_to_sort_buffer, WindowFlags};
 
 /// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
 /// Usage: static ImGuiOnceUponAFrame oaf; if (oaf) ImGui::Text("This will be called only once per frame");
@@ -201,7 +203,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     update_mouse_moving_window_new_frame();
 
     // Background darkening/whitening
-    if (get_top_most_popup_modal() != NULL || (g.nav_windowing_target != NULL && g.nav_windowing_highlight_alpha > 0.0)) {
+    if (get_top_most_popup_modal() != NULL || (g.nav_windowing_target_id != NULL && g.nav_windowing_highlight_alpha > 0.0)) {
         g.dim_bg_ratio = f32::min(g.dim_bg_ratio + g.io.delta_time * 6.0, 1.0);
     }
     else {
@@ -230,7 +232,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         window.was_active = window.active;
         window.begin_count = 0;
         window.active = false;
-        window.WriteAccessed = false;
+        window.write_accessed = false;
 
         // Garbage collect transient buffers of recently unused windows
         if (!window.was_active && !window.memory_compacted && window.last_time_active < memory_compact_start_time) {
@@ -283,4 +285,103 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     // IM_ASSERT(g.CurrentWindow->IsFallbackWindow == true);
 
     call_context_hooks(g, ContextHookType::NewFramePost);
+}
+
+// This is normally called by Render(). You may want to call it directly if you want to avoid calling Render() but the gain will be very minimal.
+// void ImGui::EndFrame()
+pub fn end_frame(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.initialized);
+
+    // Don't process EndFrame() multiple times.
+    if g.frame_count_ended == g.frame_count {
+        return;
+    }
+    // IM_ASSERT(g.within_frame_scope && "Forgot to call ImGui::NewFrame()?");
+
+    call_context_hooks(g, ContextHookType::EndFramePre);
+
+    error_check_end_frame_sanity_checks();
+
+    // Notify Platform/OS when our Input Method Editor cursor has moved (e.g. CJK inputs using Microsoft IME)
+    if g.io.set_platform_ime_data_fn.is_some() && (g.platform_ime_data == g.platform_ime_data_prev)
+    {
+        // ImGuiViewport* viewport = FindViewportByID(g.PlatformImeViewport);
+        let viewport = g.get_viewport(g.platform_ime_viewport);
+        g.io.set_platform_ime_data_fn(if viewport.is_some() {viewport} else { get_main_viewport() }, &g.platform_ime_data);
+    }
+
+    // Hide implicit/fallback "Debug" window if it hasn't been used
+    g.within_frame_scope_with_implicit_window = false;
+    if g.current_window && !g.current_window.write_accessed){
+        g.current_window.active = false;
+    }
+    end();
+
+    // Update navigation: CTRL+Tab, wrap-around requests
+    nav_end_frame();
+
+    // Update docking
+    dock_context_end_frame(g);
+
+    set_current_viewport(NULL, NULL);
+
+    // Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
+    if g.drag_drop_active
+    {
+        let is_delivered = g.drag_drop_payload.delivery;
+        let is_elapsed = (g.drag_drop_payload.data_frame_count + 1 < g.frame_count) && ((g.drag_drop_source_flags.contains(DragDropFlags::SourceAutoExpirePayload) ) || !is_mouse_down(g.drag_drop_mouse_button));
+        if is_delivered || is_elapsed {
+            clear_drag_drop();
+        }
+    }
+
+    // Drag and Drop: Fallback for source tooltip. This is not ideal but better than nothing.
+    if g.drag_drop_active && g.drag_drop_source_frame_count < g.frame_count && !g.drag_drop_source_flags.contains(&DragDropFlags::SourceNoPreviewTooltip)
+    {
+        g.drag_drop_within_source = true;
+        SetTooltip("...");
+        g.drag_drop_within_source = false;
+    }
+
+    // End frame
+    g.within_frame_scope = false;
+    g.frame_count_ended = g.frame_count;
+
+    // Initiate moving window + handle left-click and right-click focus
+    UpdateMouseMovingWindowEndFrame();
+
+    // Update user-facing viewport list (g.viewports -> g.platform_io.viewports after filtering out some)
+    UpdateViewportsEndFrame();
+
+    // Sort the window list so that all child windows are after their parent
+    // We cannot do that on focus_window() because children may not exist yet
+    // g.windows_temp_sort_buffer.resize(0);
+    g.windows_temp_sort_buffer.reserve(g.windows.Size);
+    // for (int i = 0; i != g.windows.Size; i += 1)
+    for win in g.windows.iter_mut()
+    {
+        // ImGuiWindow* window = g.windows[i];
+        if win.active && win.flags.contains(&WindowFlags::ChildWindow) {    // if a child is active its parent will add it
+            continue;
+        }
+        add_window_to_sort_buffer(&g.windows_temp_sort_buffer, window);
+    }
+
+    // This usually assert if there is a mismatch between the ImGuiWindowFlags_ChildWindow / ParentWindow values and dc.ChildWindows[] in parents, aka we've done something wrong.
+    // IM_ASSERT(g.windows.Size == g.windows_temp_sort_buffer.Size);
+    g.windows.swap(&mut g.windows_temp_sort_buffer);
+    g.io.metrics_active_windows = g.windows_active_count;
+
+    // Unlock font atlas
+    g.io.fonts.locked = false;
+
+    // clear Input data for next frame
+    g.io.mouse_wheel = 0.0;
+    g.io.mouse_wheel_h = 0.0;
+    g.io.input_queue_characters.resize(0);
+    memset(g.io.NavInputs, 0, sizeof(g.io.NavInputs));
+
+    call_context_hooks(g, ImGuiContextHookType_EndFramePost);
 }

@@ -1,8 +1,17 @@
 use std::os::raw::c_char;
 use std::ptr::null_mut;
+use crate::{call_context_hooks, Context, INVALID_ID};
+use crate::color::{IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
+use crate::draw_list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
+use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::ImGuiColor;
 use crate::imgui_style::{GetColorU32, GetColorU32_2, GetColorU32_3};
+use crate::input::MouseCursor;
+use crate::style::get_color_u32;
+use crate::types::Id32;
+use crate::viewport::setup_viewport_draw_data;
+use crate::window::{add_root_window_to_draw_data, find_bottom_most_visible_window_with_begin_stack, is_window_active_and_visible, render_dimmed_background_behind_window, Window, WindowFlags};
 
 // const char* ImGui::FindRenderedTextEnd(const char* text, const char* text_end)
 pub unsafe fn FindRenderedTextEnd(text: *const c_char, text_end: *const c_char) -> *const c_char {
@@ -230,7 +239,7 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
     ImGuiContext& g = *GImGui;
     if (id != g.NavId)
         return;
-    if (g.NavDisableHighlight && !(flags & ImGuiNavHighlightFlags_AlwaysDraw))
+    if (g.nav_disable_highlight && !(flags & ImGuiNavHighlightFlags_AlwaysDraw))
         return;
     ImGuiWindow* window = g.current_window;
     if (window.DC.NavHideHighlightOneFrame)
@@ -257,10 +266,10 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
     }
 }
 
-void ImGui::RenderMouseCursor(Vector2D base_pos, float base_scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow)
+void ImGui::render_mouse_cursor(Vector2D base_pos, float base_scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow)
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(mouse_cursor > ImGuiMouseCursor_None && mouse_cursor < ImGuiMouseCursor_COUNT);
+    IM_ASSERT(mouse_cursor > MouseCursor::None && mouse_cursor < ImGuiMouseCursor_COUNT);
     ImFontAtlas* font_atlas = g.draw_list_shared_data.font.container_atlas;
     for (int n = 0; n < g.viewports.Size; n += 1)
     {
@@ -273,7 +282,7 @@ void ImGui::RenderMouseCursor(Vector2D base_pos, float base_scale, ImGuiMouseCur
         const float scale = base_scale * viewport->DpiScale;
         if (!viewport->get_main_rect().Overlaps(ImRect(pos, pos + Vector2D::new(size.x + 2, size.y + 2) * scale)))
             continue;
-        ImDrawList* draw_list = GetForegroundDrawList(viewport);
+        ImDrawList* draw_list = get_foreground_draw_list(viewport);
         ImTextureID tex_id = font_atlas->TexID;
         draw_list->PushTextureID(tex_id);
         draw_list->AddImage(tex_id, pos + Vector2D::new(1, 0) * scale, pos + (Vector2D::new(1, 0) + size) * scale, uv[2], uv[3], col_shadow);
@@ -282,4 +291,183 @@ void ImGui::RenderMouseCursor(Vector2D base_pos, float base_scale, ImGuiMouseCur
         draw_list->AddImage(tex_id, pos,                        pos + size * scale,                  uv[0], uv[1], col_fill);
         draw_list->PopTextureID();
     }
+}
+
+// static void ImGuis::RenderDimmedBackgrounds()
+pub fn render_dimmed_backgrounds(g: &mut Context) {
+    // ImGuiContext& g = *GImGui;
+    // ImGuiWindow* modal_window = GetTopMostAndVisiblePopupModal();
+    let modal_window: &mut Window = get_top_most_and_visible_popup_modal();
+    if g.dim_bg_ration <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0 {
+        return;
+    }
+    // const bool dim_bg_for_modal = (modal_window != NULL);
+
+    // const bool dim_bg_for_window_list = (g.NavWindowingTargetAnim != NULL && g.NavWindowingTargetAnim->Active);
+    let dim_bg_for_window_list = true;
+    let nav_win_tgt_anim = g.get_window(g.nav_windowing_target_anim).unwrap();
+    let dim_bg_for_window_list = g.nav_windowing_target_anim != INVALID_ID && nav_win_tgt_anim.active;
+    if !dim_bg_for_modal && !dim_bg_for_window_list {
+        return;
+    }
+
+    // ImGuiViewport* viewports_already_dimmed[2] = { NULL, NULL };
+    let viewports_already_dimmedd: [Id32; 2] = [0, 0];
+    if dim_bg_for_modal {
+        // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
+        // ImGuiWindow* dim_behind_window = FindBottomMostVisibleWindowWithinBeginStack(modal_window);
+        let dim_behind_window = find_bottom_most_visible_window_with_begin_stack(ctx, modal_window);
+        // RenderDimmedBackgroundBehindWindow(dim_behind_window, GetColorU32(ImGuiCol_ModalWindowDimBg, g.dim_bg_ration));
+        render_dimmed_background_behind_window(ctx, dim_behind_window, get_color_u32(Color::ModalWindowDimBg, g.dim_bg_ratio));
+        viewports_already_dimmed[0] = modal_window.viewport_id;
+    } else if dim_bg_for_window_list {
+        // Draw dimming behind CTRL+Tab target window and behind CTRL+Tab UI window
+        let nwta_win = g.get_window(g.nav_windowing_target_anim).unwrap();
+        let nwl_win = g.get_window(g.nav_windowing_list_window_id).unwrap();
+        render_dimmed_background_behind_window(ctx, g.NavWindowingTargetAnim, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
+        if g.nav_windowing_list_window_id != INVALID_ID {
+
+            if nwl_win.viewport_id != INVALID_ID {
+                if nwl_win.viewport_id != nwta_win.viewport_id{
+                    render_dimmed_background_behind_window(ctx, nwl_win, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
+                }
+            }
+        }
+
+        viewports_already_dimmed[0] = nwta_win.viewport_id;
+        viewports_already_dimmed[1] = nwl_win.viewport_id;
+
+        // Draw border around CTRL+Tab target window
+        // ImGuiWindow * window = g.NavWindowingTargetAnim;
+        // ImGuiViewport * viewport = window.viewport;
+        let nwta_vp = g.get_viewport(nwta_win.viewport_id).unwrap();
+        let distance = g.font_size;
+        let bb = nwta_win.rect();
+        // float
+        // distance = g.FontSize;
+        // ImRect
+        // bb = window.Rect();
+        bb.expand(distance);
+        if bb.get_width() >= viewport.size.x && bb.get_height() >= viewport.size.y){
+            bb.Expand(-distance - 1.0);
+        } // If a window fits the entire viewport, adjust its highlight inward
+        if window.draw_list.cmd_buffer.size == 0 {
+            window.draw_list.add_draw_cmd();
+        }
+        window.draw_list.push_clip_rect(viewport.pos, viewport.pos + viewport.size);
+        window.draw_list.add_rect(bb.Min, bb.Max, get_color_u32(Color::NavWindowingHighlight, g.nav_windowing_highlight_alpha), window.WindowRounding, 0, 3.0);
+        window.draw_list.pop_clip_rect();
+     }
+
+    // Draw dimming background on _other_ viewports than the ones our windows are in
+    // for (int viewport_n = 0; viewport_n < g.viewports.Size; viewport_n += 1)
+    for vp_id in g.viewports.iter_mut()
+    {
+        // ImGuiViewportP* viewport = g.viewports[viewport_n];
+        if viewport.id == viewports_already_dimmed[0] || viewport == viewports_already_dimmed[1] {
+            continue;
+        }
+        if modal_window && viewport.window && is_window_above(viewport.window, modal_window){
+            continue;
+        }
+        // ImDrawList* draw_list = GetForegroundDrawList(viewport);
+        let draw_list = get_foreground_draw_list(g, viewport);
+        let dim_bg_col = get_color_u32(if dim_bg_for_modal { Color::ModalWindowDimBg } else { Color::NavWindowingDimBg }, g.dim_bg_ration);
+        draw_list.add_rect_filled(viewport.pos, viewport.pos + viewport.size, dim_bg_col, 0.0, 0.0);
+    }
+}
+
+// Prepare the data for rendering so you can call GetDrawData()
+// (As with anything within the ImGui:: namspace this doesn't touch your GPU or graphics API at all:
+// it is the role of the ImGui_ImplXXXX_RenderDrawData() function provided by the renderer backend)
+// void ImGui::Render()
+pub fn render(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.initialized);
+
+    if (g.frame_count_ended != g.frame_count) {
+        end_frame(g);
+    }
+    let first_render_of_frame = (g.frame_count_rendered != g.frame_count);
+    g.frame_count_rendered = g.frame_count;
+    g.io.metrics_render_windows = 0;
+
+    call_context_hooks(g, ImGuiContextHookType_RenderPre);
+
+    // Add background ImDrawList (for each active viewport)
+    // for (int n = 0; n != g.viewports.Size; n += 1)
+    for viewport in g.viewports.iter_mut()
+    {
+        // ImGuiViewportP* viewport = g.viewports[n];
+        viewport.draw_data_builder.clear();
+        if viewport.draw_lists[0] != INVALID_ID {
+            add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], get_background_draw_list(g, viewport).id);
+        }
+    }
+
+    // Add ImDrawList to render
+    // ImGuiWindow* windows_to_render_top_most[2];
+    let mut windows_to_render_top_most: [Id32;2] = [
+        if g.nav_windowing_target_id != INVALID_ID && !g.nav_windowing_target_id.flags.contains(WindowFlags::NoBringToFrontOnFocus) {
+            let nwt_win = g.get_window(g.nav_windowing_target_id).unwrap();
+            nwt_win.root_window_dock_tree_id
+        } else {
+            INVALID_ID
+        },
+        if g.nav_windowing_target_id != INVALID_ID {
+            g.nav_windowing_list_window_id
+        } else {
+            INVALID_ID
+        }
+    ];
+    // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & ImGuiWindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->RootWindowDockTree : NULL;
+    // windows_to_render_top_most[1] = (g.nav_windowing_target_id? g.nav_windowing_list_window : NULL);
+    // for (int n = 0; n != g.windows.Size; n += 1)
+    for (win_id, window) in g.windows.iter_mut()
+    {
+        // ImGuiWindow* window = g.windows[n];
+        // IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
+        if is_window_active_and_visible(window) && (!window.flags.contains(&WindowFlags::ChildWindow)) && window.id != windows_to_render_top_most[0] && window.id != windows_to_render_top_most[1] {
+            add_root_window_to_draw_data(g, window);
+        }
+    }
+    // for (int n = 0; n < IM_ARRAYSIZE(windows_to_render_top_most); n += 1)
+    for n in 0 .. windows_to_render_top_most.len() {
+        if windows_to_render_top_most[n] != INVALID_ID && is_window_active_and_visible(g.get_window(windows_to_render_top_most[n]).unwrap()) { // nav_windowing_target is always temporarily displayed as the top-most window
+            add_root_window_to_draw_data(g, g.get_window(windows_to_render_top_most[n]).unwrap());
+        }
+    }
+
+    // Draw modal/window whitening backgrounds
+    if first_render_of_frame {
+        render_dimmed_backgrounds();
+    }
+
+    // Draw software mouse cursor if requested by io.mouse_draw_cursor flag
+    if g.io.mouse_draw_cursor && first_render_of_frame && g.mouse_cursor != MouseCursor::None {
+        render_mouse_cursor(&g.io.mouse_pos, g.style.MouseCursorScale, &g.mouse_cursor, IM_COL32_WHITE, IM_COL32_BLACK, make_color_32(0, 0, 0, 48));
+    }
+
+    // Setup ImDrawData structures for end-user
+    g.io.metrics_render_vertices = 0;
+    g.io.metrics_render_indices = 0;
+    // for (int n = 0; n < g.viewports.Size; n += 1)
+    for viewport in g.viewports.iter_mut()
+    {
+        // ImGuiViewportP* viewport = g.viewports[n];
+        // viewport->DrawDataBuilder.FlattenIntoSingleLayer();
+        viewport.draw_data_builder.flatten_into_single_layer();
+
+        // Add foreground ImDrawList (for each active viewport)
+        if viewport.draw_lists[1] != INVALID_ID {
+        add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], get_foreground_draw_list(g,viewport));
+    }
+        setup_viewport_draw_data(g, viewport, &viewport.draw_data_builder.layers[0]);
+        let draw_data = &viewport.draw_data;
+        g.io.metrics_render_vertices += draw_data.total_vtx_count;
+        g.io.metrics_render_indices += draw_data.total_idx_count;
+    }
+
+    call_context_hooks(g, ImGuiContextHookType_RenderPost);
 }

@@ -11,7 +11,7 @@ use crate::types::INVALID_ID;
 
 
 /// List of colors that are stored at the time of Begin() into Docked windows.
-/// We currently store the packed colors in a simple array window->dock_style.Colors[].
+/// We currently store the packed colors in a simple array window->dock_style.colors[].
 /// A better solution may involve appending into a log of colors in ImGuiContext + store offsets into those arrays in ImGuiWindow,
 /// but it would be more complex as we'd need to double-buffer both as e.g. drop target may refer to window from last frame.
 pub enum DimgWindowDockStyleCol
@@ -149,7 +149,7 @@ pub struct DimgDockRequest
 {
     // ImGuiDockRequestType    Type;
     pub request_type: DimgDockRequestType,
-    // ImGuiWindow*            DockTargetWindow;   // Destination/Target Window to dock into (may be a loose window or a dock_node, might be NULL in which case DockTargetNode cannot be NULL)
+    // ImGuiWindow*            DockTargetWindow;   // Destination/Target window to dock into (may be a loose window or a dock_node, might be NULL in which case DockTargetNode cannot be NULL)
     pub dock_target_window: Id32,
     // ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
     pub dock_target_node: Id32,

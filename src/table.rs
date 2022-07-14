@@ -317,7 +317,7 @@ pub struct Table
     pub HostBackupInnerClipRect: ImRect,
     // ImGuiWindow*                OuterWindow;                // Parent window for the table
     pub OuterWindow: *mut ImGuiWindow,
-    // ImGuiWindow*                InnerWindow;                // Window holding the table data (== OuterWindow or a child window)
+    // ImGuiWindow*                InnerWindow;                // window holding the table data (== OuterWindow or a child window)
     pub InnerWindow: *mut ImGuiWindow,
     // ImGuiTextBuffer             ColumnsNames;               // Contiguous buffer holding columns names
     pub ColumnsNames: ImGuiTextBuffer,

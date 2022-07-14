@@ -1322,7 +1322,7 @@ inline ImRect GetNodeTitleRect(const ImNodeData& node)
 
     return ImRect(
         expanded_title_rect.Min,
-        expanded_title_rect.Min + Vector2D::new(node.Rect.GetWidth(), 0.f) +
+        expanded_title_rect.Min + Vector2D::new(node.Rect.get_width(), 0.f) +
             Vector2D::new(0.f, expanded_title_rect.get_height()));
 }
 

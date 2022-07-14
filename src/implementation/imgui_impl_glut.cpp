@@ -25,7 +25,7 @@
 //  2022-01-10: Inputs: calling new io.add_key_event(), io.AddKeyModsEvent() + io.set_key_event_native_data() API (1.87+). Support for full ImGuiKey range.
 //  2019-04-03: Misc: Renamed imgui_impl_freeglut.cpp/.h to imgui_impl_glut.cpp/.h.
 //  2019-03-25: Misc: Made io.delta_time always above zero.
-//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About window.
 //  2018-03-22: Added GLUT Platform binding.
 
 #include "defines.rs"

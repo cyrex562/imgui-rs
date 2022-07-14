@@ -25,7 +25,7 @@
 //  2019-05-29: Metal: Added support for large mesh (64K+ vertices), enable ImGuiBackendFlags_RendererHasVtxOffset flag.
 //  2019-04-30: Metal: Added support for special ImDrawCallback_ResetRenderState callback to reset render state.
 //  2019-02-11: Metal: Projecting clipping rectangles correctly using draw_data->framebuffer_scale to allow multi-viewports for retina display.
-//  2018-11-30: Misc: Setting up io.backend_renderer_name so it can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_renderer_name so it can be displayed in the About window.
 //  2018-07-05: Metal: Added new Metal backend implementation.
 
 #include "defines.rs"

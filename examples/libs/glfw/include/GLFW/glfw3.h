@@ -72,7 +72,7 @@ extern "C" {
  *  This is the reference documentation for monitor related functions and types.
  *  For more task-oriented information, see the @ref monitor_guide.
  */
-/*! @defgroup window Window reference
+/*! @defgroup window window reference
  *
  *  This is the reference documentation for window related functions and types,
  *  including creation, deletion and event polling.  For more task-oriented
@@ -1744,7 +1744,7 @@ GLFWAPI void glfwWindowHint(int hint, int value);
  *  As long as at least one full screen window is not iconified, the screensaver
  *  is prohibited from starting.
  *
- *  Window systems put limits on window sizes.  Very large or very small window
+ *  window systems put limits on window sizes.  Very large or very small window
  *  dimensions may be overridden by the window system on creation.  Check the
  *  actual [size](@ref window_size) after creation.
  *
@@ -1768,7 +1768,7 @@ GLFWAPI void glfwWindowHint(int hint, int value);
  *  GLFW_VERSION_UNAVAILABLE, @ref GLFW_FORMAT_UNAVAILABLE and @ref
  *  GLFW_PLATFORM_ERROR.
  *
- *  @remark @win32 Window creation will fail if the Microsoft GDI software
+ *  @remark @win32 window creation will fail if the Microsoft GDI software
  *  OpenGL implementation is the only one available.
  *
  *  @remark @win32 If the executable has an icon resource named `GLFW_ICON,`

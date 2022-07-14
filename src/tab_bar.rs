@@ -34,7 +34,7 @@ pub struct ImGuiTabItem {
     pub ID: ImGuiID,
     // ImGuiTabItemFlags   flags;
     pub Flags: DimgTabItemFlags,
-    // ImGuiWindow*        Window;                 // When TabItem is part of a dock_node's tab_bar, we hold on to a window.
+    // ImGuiWindow*        window;                 // When TabItem is part of a dock_node's tab_bar, we hold on to a window.
     pub Window: *mut ImGuiWindow,
     // int                 LastFrameVisible;
     pub LastFrameVisible: i32,
@@ -48,7 +48,7 @@ pub struct ImGuiTabItem {
     pub ContentWidth: f32,
     // float               RequestedWidth;         // width optionally requested by caller, -1.0 is unused
     pub RequestedWidth: f32,
-    // ImS32               NameOffset;             // When Window==NULL, offset to name within parent ImGuiTabBar::TabsNames
+    // ImS32               NameOffset;             // When window==NULL, offset to name within parent ImGuiTabBar::TabsNames
     pub NameOffset: i32,
     // ImS16               BeginOrder;             // BeginTabItem() order, used to re-order tabs after toggling ImGuiTabBarFlags_Reorderable
     pub BeginOrder: i16,

@@ -26,7 +26,7 @@ pub const GCrc32LookupTable: [u32;256] =
 // It is ok to call ImHashData on a string with known length but the ### operator won't be supported.
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
 // ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed)
-pub  fn ImHashData(data: &Vec<u8>, seed: u32) -> ImGuiID
+pub  fn hash_data(data: &Vec<u8>, seed: u32) -> ImGuiID
 {
     // ImU32 crc = ~seed;
     let mut crc: u32 = !seed;

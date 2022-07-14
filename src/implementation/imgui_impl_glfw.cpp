@@ -40,7 +40,7 @@
 //  2019-07-21: Inputs: Added mapping for ImGuiKey_KeyPadEnter.
 //  2019-05-11: Inputs: Don't filter value from character callback before calling add_input_character().
 //  2019-03-12: Misc: Preserve display_framebuffer_scale when main window is minimized.
-//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About window.
 //  2018-11-07: Inputs: When installing our GLFW callbacks, we save user's previously installed ones - if any - and chain call them.
 //  2018-08-01: Inputs: Workaround for Emscripten which doesn't seem to handle focus related calls.
 //  2018-06-29: Inputs: Added support for the ImGuiMouseCursor_Hand cursor.
@@ -544,9 +544,9 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     main_viewport->PlatformHandle = (void*)bd->Window;
 #ifdef _WIN32
-    main_viewport->PlatformHandleRaw = glfwGetWin32Window(bd->Window);
+    main_viewport->PlatformHandleRaw = glfwGetWin32Window(bd->window);
 #elif defined(__APPLE__)
-    main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->Window);
+    main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->window);
 #endif
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplGlfw_InitPlatformInterface();
@@ -885,9 +885,9 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
     vd->WindowOwned = true;
     viewport->PlatformHandle = (void*)vd->Window;
 #ifdef _WIN32
-    viewport->PlatformHandleRaw = glfwGetWin32Window(vd->Window);
+    viewport->PlatformHandleRaw = glfwGetWin32Window(vd->window);
 #elif defined(__APPLE__)
-    viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(vd->Window);
+    viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(vd->window);
 #endif
     glfwSetWindowPos(vd->Window, viewport->Pos.x, viewport->Pos.y);
 
@@ -1026,9 +1026,9 @@ static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
     // doesn't handle it when changing size. We are manually moving the window in order for changes of size to be based
     // on the upper-left corner.
     int x, y, width, height;
-    glfwGetWindowPos(vd->Window, &x, &y);
-    glfwGetWindowSize(vd->Window, &width, &height);
-    glfwSetWindowPos(vd->Window, x, y - height + size.y);
+    glfwGetWindowPos(vd->window, &x, &y);
+    glfwGetWindowSize(vd->window, &width, &height);
+    glfwSetWindowPos(vd->window, x, y - height + size.y);
 #endif
     vd->IgnoreWindowSizeEventFrame = ImGui::GetFrameCount();
     glfwSetWindowSize(vd->Window, size.x, size.y);
@@ -1044,7 +1044,7 @@ static void ImGui_ImplGlfw_SetWindowFocus(ImGuiViewport* viewport)
 {
 #if GLFW_HAS_FOCUS_WINDOW
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
-    glfwFocusWindow(vd->Window);
+    glfwFocusWindow(vd->window);
 #else
     // FIXME: What are the effect of not having this function? At the moment imgui doesn't actually call SetWindowFocus - we set that up ahead, will answer that question later.
     (void)viewport;
@@ -1067,7 +1067,7 @@ static bool ImGui_ImplGlfw_GetWindowMinimized(ImGuiViewport* viewport)
 static void ImGui_ImplGlfw_SetWindowAlpha(ImGuiViewport* viewport, float alpha)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
-    glfwSetWindowOpacity(vd->Window, alpha);
+    glfwSetWindowOpacity(vd->window, alpha);
 }
 #endif
 
@@ -1115,7 +1115,7 @@ static int ImGui_ImplGlfw_CreateVkSurface(ImGuiViewport* viewport, ImU64 vk_inst
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     IM_UNUSED(bd);
     IM_ASSERT(bd->ClientApi == GlfwClientApi_Vulkan);
-    VkResult err = glfwCreateWindowSurface((VkInstance)vk_instance, vd->Window, (const VkAllocationCallbacks*)vk_allocator, (VkSurfaceKHR*)out_vk_surface);
+    VkResult err = glfwCreateWindowSurface((VkInstance)vk_instance, vd->window, (const VkAllocationCallbacks*)vk_allocator, (VkSurfaceKHR*)out_vk_surface);
     return err;
 }
 #endif // GLFW_HAS_VULKAN

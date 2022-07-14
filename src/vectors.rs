@@ -39,10 +39,10 @@ impl Vector2D {
         self.y = 0.0;
     }
 
-    pub fn floor(&mut self) -> Self {
+    pub fn floor(item: Self) -> Self {
         Self {
-            x: f32::floor(self.x),
-            y: f32::floor(self.y)
+            x: f32::floor(item.x),
+            y: f32::floor(item.y)
         }
     }
 }

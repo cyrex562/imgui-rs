@@ -51,7 +51,7 @@
 //  2019-05-28: Inputs: Added mouse cursor shape and visibility support.
 //  2019-05-18: Misc: Removed clipboard handlers as they are now supported by core imgui.cpp.
 //  2019-05-11: Inputs: Don't filter character values before calling add_input_character() apart from 0xF700..0xFFFF range.
-//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_platform_name so it can be displayed in the About window.
 //  2018-07-07: Initial version.
 
 #define APPLE_HAS_BUTTON_OPTIONS (__IPHONE_OS_VERSION_MIN_REQUIRED >= 130000 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500 || __TV_OS_VERSION_MIN_REQUIRED >= 130000)

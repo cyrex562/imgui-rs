@@ -223,7 +223,7 @@ pub fn update_mouse_wheel(g: &mut Context)
         }
         if !(window.flags.contains(&WindowFlags::NoScrollWithMouse)) && !(window.flags.contains(&WindowFlags::NoMouseInputs))
         {
-            let max_step = window.inner_rect.GetWidth() * 0.67;
+            let max_step = window.inner_rect.get_width() * 0.67;
             let scroll_step = f32::floor(f32::min(2 * window.CalcFontSize(), max_step));
             set_scroll_x(window, window.scroll.x - wheel_x * scroll_step);
         }

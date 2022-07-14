@@ -49,7 +49,7 @@
 //  2019-04-04: Vulkan: Avoid passing negative coordinates to vkCmdSetScissor, which debug validation layers do not like.
 //  2019-04-01: Vulkan: Support for 32-bit index buffer (#define ImDrawIdx unsigned int).
 //  2019-02-16: Vulkan: viewport and clipping rectangles correctly using draw_data->framebuffer_scale to allow retina display.
-//  2018-11-30: Misc: Setting up io.backend_renderer_name so it can be displayed in the About Window.
+//  2018-11-30: Misc: Setting up io.backend_renderer_name so it can be displayed in the About window.
 //  2018-08-25: Vulkan: Fixed mishandled VkSurfaceCapabilitiesKHR::maxImageCount=0 case.
 //  2018-06-22: Inverted the parameters to ImGui_ImplVulkan_RenderDrawData() to be consistent with other backends.
 //  2018-06-08: Misc: Extracted imgui_impl_vulkan.cpp/.h away from the old combined GLFW+Vulkan example.
@@ -1085,7 +1085,7 @@ bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass rend
 
     ImGui_ImplVulkan_CreateDeviceObjects();
 
-    // Our render function expect renderer_user_data to be storing the window render buffer we need (for the main viewport we won't use ->Window)
+    // Our render function expect renderer_user_data to be storing the window render buffer we need (for the main viewport we won't use ->window)
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     main_viewport->RendererUserData = IM_NEW(ImGui_ImplVulkan_ViewportData)();
 
