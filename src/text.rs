@@ -6,7 +6,7 @@ use crate::imgui_h::{IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX, ImG
 use crate::imgui_math::ImMinI32;
 use crate::imgui_vec::Vector2D;
 use crate::imstb_text_edit_state::STB_TexteditState;
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 
 // Extend ImGuiInputTextFlags_

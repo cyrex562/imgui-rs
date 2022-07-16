@@ -1815,7 +1815,7 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: *mut ImGuiInputTextState, pos: usize
     }
 
     // Grow internal buffer if needed
-    if (new_text_len + text_len + 1 > obj.TextW.Size)
+    if (new_text_len + text_len + 1 > obj.TextW.size)
     {
         if (!is_resizable) {
             return false;
@@ -1825,7 +1825,7 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: *mut ImGuiInputTextState, pos: usize
     }
 
     // ImWchar* text = obj.TextW.data;
-    let text = obj.TextW.Data;
+    let text = obj.TextW.data;
         if pos != text_len {
         // TODO
         // memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof(ImWchar));

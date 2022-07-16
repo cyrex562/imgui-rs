@@ -4,7 +4,7 @@ use crate::draw_data::DrawData;
 use crate::draw_data_builder::DrawDataBuilder;
 use crate::draw_list::DrawList;
 use crate::types::Id32;
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 /// ImGuiViewport Private/Internals fields (cardinal sin: we are using inheritance!)
 /// Every instance of ImGuiViewport is in fact a ImGuiViewportP.
@@ -201,7 +201,7 @@ pub fn setup_viewport_draw_data(ctx: &mut Context, viewport: &mut Viewport, draw
     // viewport.draw_data = draw_data; // Make publicly accessible
     draw_data.valid = true;
     draw_data.cmd_lists = if draw_lists.len() > 0 { draw_lists.data } else { vec![] };
-    draw_data.cmd_lists_count = draw_lists.Size;
+    draw_data.cmd_lists_count = draw_lists.size;
     draw_data.total_vtx_count = 0;
     draw_data.total_idx_count = 0;
     draw_data.display_pos = viewport.pos.clone();

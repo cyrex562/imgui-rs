@@ -27,7 +27,7 @@ use crate::group::GroupData;
 use crate::input::{DimgKey, InputSource, ModFlags, MouseCursor, NavLayer};
 use crate::input_event::InputEvent;
 use crate::io::{Io, PlatformIo};
-use crate::item::{LastItemData, NextItemData};
+use crate::item::{ItemFlags, LastItemData, NextItemData};
 
 
 use crate::metrics::MetricsConfig;
@@ -39,15 +39,18 @@ use crate::popup::PopupData;
 use crate::rect::Rect;
 use crate::settings::SettingsHandler;
 use crate::stack::StackTool;
-use crate::style::{StyleMod, Style};
+use crate::style::{Style, StyleMod};
 use crate::tab_bar::TabBar;
 use crate::table::{Table, TableSettings, TableTempData};
 
 use crate::text_input_state::InputTextState;
 use crate::types::{Id32, INVALID_ID, PtrOrIndex};
-use crate::vectors::{Vector2D, Vector4D};
+use crate::vectors::Vector4D;
+use crate::vectors::two_d::Vector2D;
 use crate::viewport::Viewport;
-use crate::window::{WindowStackData, ItemFlags, NextWindowData, Window, WindowSettings};
+use crate::window::{Window, WindowStackData};
+use crate::window::next::NextWindowData;
+use crate::window::settings::WindowSettings;
 
 #[derive()]
 pub struct Context {
@@ -332,7 +335,7 @@ pub struct Context {
     pub nav_move_result_local: NavItemData,
     // ImGuiNavItemData        nav_move_result_local_visible;          // Best move request candidate within nav_window that are mostly visible (when using ImGuiNavMoveFlags_AlsoScoreVisibleSet flag)
     pub nav_move_result_local_visible: NavItemData,
-    // ImGuiNavItemData        nav_move_result_other;                 // Best move request candidate within nav_window's flattened hierarchy (when using ImGuiWindowFlags_NavFlattened flag)
+    // ImGuiNavItemData        nav_move_result_other;                 // Best move request candidate within nav_window's flattened hierarchy (when using WindowFlags::NavFlattened flag)
     pub nav_move_result_other: NavItemData,
     // ImGuiNavItemData        nav_tabbing_result_first;              // First tabbing request candidate within nav_window and flattened hierarchy
     pub nav_tabbing_result_first: NavItemData,
@@ -818,12 +821,8 @@ impl Context {
         }
     }
 
-    pub fn get_current_window(&mut self) -> Result<&mut Window, &'static str> {
-        let result = self.windows.get_mut(&self.current_window_id);
-        if result.is_some() {
-            return Ok(result.unwrap());
-        }
-        Err("failed to get current window")
+    pub fn get_current_window(&mut self) -> Option<&mut Window> {
+         self.windows.get_mut(&self.current_window_id)
     }
 
     pub fn get_viewport(&mut self, vp_id: Id32) -> Option<&mut Viewport> {
@@ -928,4 +927,15 @@ pub fn call_context_hooks(g: &mut Context, hook_type: ContextHookType)
             g.hooks[n].callback.unwrap()(g, &mut g.hooks[n]);
         }
     }
+}
+
+// void ImGui::SetActiveIdUsingNavAndKeys()
+pub fn set_active_id_using_nav_and_keys(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.active_id != 0);
+    g.active_id_using_nav_dir_mask = !0;
+    g.active_id_using_nav_input_mask = !0;
+    g.active_id_using_key_input_mask.SetAllBits();
+    nav_move_request_cancel();
 }

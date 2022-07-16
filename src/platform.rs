@@ -1,4 +1,4 @@
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 // (Optional) This is required when enabling multi-viewport. Represent the bounds of each connected monitor/display and their DPI.
 // We use this information for multiple DPI support + clamping the position of popups and tooltips so they don't straddle multiple monitors.

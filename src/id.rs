@@ -3,7 +3,7 @@ use crate::window::HoveredFlags;
 use crate::types::Id32;
 use crate::window::Window;
 
-// void ImGui::SetActiveID(ImGuiID id, ImGuiWindow* window)
+// void ImGui::set_active_id(ImGuiID id, ImGuiWindow* window)
 pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -13,7 +13,7 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.
     if ctx.moving_window_id != NULL && ctx.active_id == ctx.moving_window_id.move_id
     {
-        debug!("SetActiveID() cancel moving_window\n");
+        debug!("set_active_id() cancel moving_window\n");
         ctx.moving_window_id = NULL;
     }
 
@@ -21,7 +21,7 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
     ctx.active_id_is_just_activated = (ctx.active_id != id);
     if ctx.active_id_is_just_activated
     {
-        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.active_id, g.active_id_window ? g.active_id_window->name : "", id, window ? window.name : "");
+        // IMGUI_DEBUG_LOG_ACTIVEID("set_active_id() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.active_id, g.active_id_window ? g.active_id_window->name : "", id, window ? window.name : "");
         ctx.active_id_timer = 0.0;
         ctx.active_id_has_been_pressed_before = false;
         ctx.active_id_has_been_edited_before = false;
@@ -40,7 +40,7 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
     if id
     {
         ctx.active_id_is_alive = id;
-        ctx.active_id_source = (ctx.nav_activate_id == id || ctx.nav_activate_input_id == id || ctx.nav_just_moved_to_id == id) ? (ImGuiInputSource)ImGuiInputSource_Nav : ImGuiInputSource_Mouse;
+        ctx.active_id_source = (ctx.nav_activate_id == id || ctx.nav_activate_input_id == id || ctx.nav_just_moved_to_id == id) ? (ImGuiInputSource)InputSource::Nav : ImGuiInputSource_Mouse;
     }
 
     // clear declaration of inputs claimed by the widget
@@ -72,7 +72,7 @@ pub fn MarkItemEdited(g: &mut Context, id: Id32)
 
 void ImGui::clear_active_id()
 {
-    SetActiveID(0, NULL); // g.active_id = 0;
+    set_active_id(0, NULL); // g.active_id = 0;
 }
 
 void ImGui::SetHoveredID(ImGuiID id)

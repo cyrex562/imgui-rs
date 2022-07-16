@@ -46,21 +46,21 @@ pub fn dock_context_new_frame_update_docking(ctx: &mut Context)
     {
         if (hovered_window.DockNodeAsHost)
             g.HoveredDockNode = DockNodeTreeFindVisibleNodeByPos(hovered_window.DockNodeAsHost, g.io.mouse_pos);
-        else if (hovered_window.root_window->DockNode)
-            g.HoveredDockNode = hovered_window.root_window->DockNode;
+        else if (hovered_window.root_window.DockNode)
+            g.HoveredDockNode = hovered_window.root_window.DockNode;
     }
 
     // Process Docking requests
-    for (int n = 0; n < dc->Requests.Size; n += 1)
-        if (dc->Requests[n].Type == ImGuiDockRequestType_Dock)
-            DockContextProcessDock(ctx, &dc->Requests[n]);
-    dc->Requests.resize(0);
+    for (int n = 0; n < dc.Requests.size; n += 1)
+        if (dc.Requests[n].Type == ImGuiDockRequestType_Dock)
+            DockContextProcessDock(ctx, &dc.Requests[n]);
+    dc.Requests.resize(0);
 
     // Create windows for each automatic docking nodes
     // We can have NULL pointers when we delete nodes, but because id are recycled this should amortize nicely (and our node count will never be very high)
-    for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
-        if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.Data[n].val_p)
-            if (node->IsFloatingNode())
+    for (int n = 0; n < dc.Nodes.data.size; n += 1)
+        if (ImGuiDockNode* node = (ImGuiDockNode*)dc.Nodes.data[n].val_p)
+            if (node.IsFloatingNode())
                 DockNodeUpdate(node);
 }
 
@@ -69,20 +69,20 @@ void ImGui::DockContextEndFrame(ImGuiContext* ctx)
     // Draw backgrounds of node missing their window
     ImGuiContext& g = *ctx;
     ImGuiDockContext* dc = &g.DockContext;
-    for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
-        if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.Data[n].val_p)
-            if (node->LastFrameActive == g.frame_count && node->IsVisible && node->HostWindow && node->IsLeafNode() && !node->IsBgDrawnThisFrame)
+    for (int n = 0; n < dc.Nodes.data.size; n += 1)
+        if (ImGuiDockNode* node = (ImGuiDockNode*)dc.Nodes.data[n].val_p)
+            if (node.LastFrameActive == g.frame_count && node.IsVisible && node.HostWindow && node.IsLeafNode() && !node.IsBgDrawnThisFrame)
             {
-                ImRect bg_rect(node.pos + Vector2D::new(0.0, GetFrameHeight()), node.pos + node->Size);
-                ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node->HostWindow.rect(), DOCKING_SPLITTER_SIZE);
-                node->HostWindow->DrawList->ChannelsSetCurrent(0);
-                node->HostWindow->DrawList->AddRectFilled(bg_rect.Min, bg_rect.Max, node->LastBgColor, node->HostWindow->WindowRounding, bg_rounding_flags);
+                Rect bg_rect(node.pos + Vector2D::new(0.0, GetFrameHeight()), node.pos + node.size);
+                ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node.HostWindow.rect(), DOCKING_SPLITTER_SIZE);
+                node.HostWindow.DrawList.ChannelsSetCurrent(0);
+                node.HostWindow.DrawList.AddRectFilled(bg_rect.min, bg_rect.max, node.LastBgColor, node.HostWindow.WindowRounding, bg_rounding_flags);
             }
 }
 
 static ImGuiDockNode* ImGui::DockContextFindNodeByID(ImGuiContext* ctx, ImGuiID id)
 {
-    return (ImGuiDockNode*)ctx->DockContext.Nodes.GetVoidPtr(id);
+    return (ImGuiDockNode*)ctx.DockContext.Nodes.GetVoidPtr(id);
 }
 
 ImGuiID ImGui::DockContextGenNodeID(ImGuiContext* ctx)
@@ -108,37 +108,37 @@ static ImGuiDockNode* ImGui::DockContextAddNode(ImGuiContext* ctx, ImGuiID id)
     // We don't set node->last_frame_alive on construction. Nodes are always created at all time to reflect .ini settings!
     IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextAddNode 0x%08X\n", id);
     ImGuiDockNode* node = IM_NEW(ImGuiDockNode)(id);
-    ctx->DockContext.Nodes.SetVoidPtr(node->ID, node);
+    ctx.DockContext.Nodes.SetVoidPtr(node.ID, node);
     return node;
 }
 
 static void ImGui::DockContextRemoveNode(ImGuiContext* ctx, ImGuiDockNode* node, bool merge_sibling_into_parent_node)
 {
     ImGuiContext& g = *ctx;
-    ImGuiDockContext* dc  = &ctx->DockContext;
+    ImGuiDockContext* dc  = &ctx.DockContext;
 
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x%08X\n", node->ID);
-    IM_ASSERT(DockContextFindNodeByID(ctx, node->ID) == node);
-    IM_ASSERT(node->ChildNodes[0] == NULL && node->ChildNodes[1] == NULL);
-    IM_ASSERT(node->Windows.Size == 0);
+    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x%08X\n", node.ID);
+    IM_ASSERT(DockContextFindNodeByID(ctx, node.ID) == node);
+    IM_ASSERT(node.ChildNodes[0] == NULL && node.ChildNodes[1] == NULL);
+    IM_ASSERT(node.Windows.size == 0);
 
-    if (node->HostWindow)
-        node->HostWindow->DockNodeAsHost = NULL;
+    if (node.HostWindow)
+        node.HostWindow.DockNodeAsHost = NULL;
 
-    ImGuiDockNode* parent_node = node->ParentNode;
+    ImGuiDockNode* parent_node = node.ParentNode;
     const bool merge = (merge_sibling_into_parent_node && parent_node != NULL);
     if (merge)
     {
-        IM_ASSERT(parent_node->ChildNodes[0] == node || parent_node->ChildNodes[1] == node);
-        ImGuiDockNode* sibling_node = (parent_node->ChildNodes[0] == node ? parent_node->ChildNodes[1] : parent_node->ChildNodes[0]);
+        IM_ASSERT(parent_node.ChildNodes[0] == node || parent_node.ChildNodes[1] == node);
+        ImGuiDockNode* sibling_node = (parent_node.ChildNodes[0] == node ? parent_node.ChildNodes[1] : parent_node.ChildNodes[0]);
         DockNodeTreeMerge(&g, parent_node, sibling_node);
     }
     else
     {
-        for (int n = 0; parent_node && n < IM_ARRAYSIZE(parent_node->ChildNodes); n += 1)
-            if (parent_node->ChildNodes[n] == node)
-                node->ParentNode->ChildNodes[n] = NULL;
-        dc->Nodes.SetVoidPtr(node->ID, NULL);
+        for (int n = 0; parent_node && n < IM_ARRAYSIZE(parent_node.ChildNodes); n += 1)
+            if (parent_node.ChildNodes[n] == node)
+                node.ParentNode.ChildNodes[n] = NULL;
+        dc.Nodes.SetVoidPtr(node.ID, NULL);
         IM_DELETE(node);
     }
 }

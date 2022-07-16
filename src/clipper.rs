@@ -4,7 +4,7 @@ use crate::imgui_list_clipper::ImGuiListClipper;
 pub struct ImGuiListClipperRange
 {
     // int     min;
-    pub Min: i32,
+    pub min: i32,
     // int     max;
     pub Max: i32,
     // bool    PosToIndexConvert;      // Begin/End are absolute position (will be converted to indices later)
@@ -24,17 +24,17 @@ impl ImGuiListClipperRange {
     // static ImGuiListClipperRange    FromIndices(int min, int max)                               { ImGuiListClipperRange r = { min, max, false, 0, 0 }; return r; }
     pub fn FromIndices(min: i32, max: i32) -> Self {
         Self {
-            Min: min,
+            min: min,
             Max: max,
             PosToIndexConvert: false,
             PosToIndexOffsetMin: 0,
             PosToIndexOffsetMax: 0
         }
     }
-    //     static ImGuiListClipperRange    FromPositions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { y1, y2, true, (ImS8)off_min, (ImS8)off_max }; return r; }
+    //     static ImGuiListClipperRange    FromPositions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { y1, y2, true, off_min, off_max }; return r; }
     pub fn FromPositions(y1: f32, y2: f32, off_min: i32, off_max: i32) -> Self {
         Self {
-            Min: y1 as i32,
+            min: y1 as i32,
             Max: y2 as i32,
             PosToIndexConvert: true,
             PosToIndexOffsetMin: off_min as i8,

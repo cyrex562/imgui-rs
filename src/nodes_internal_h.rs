@@ -133,8 +133,8 @@ struct ImNodeData
 {
     int    Id;
     Vector2D Origin; // The node origin is in editor space
-    ImRect TitleBarContentRect;
-    ImRect Rect;
+    Rect TitleBarContentRect;
+    Rect Rect;
 
     struct
     {
@@ -166,7 +166,7 @@ struct ImPinData
 {
     int                  Id;
     int                  ParentNodeIdx;
-    ImRect               AttributeRect;
+    Rect               AttributeRect;
     ImNodesAttributeType Type;
     ImNodesPinShape      Shape;
     Vector2D               Pos; // screen-space coordinates
@@ -211,7 +211,7 @@ struct ImClickInteractionState
 
     struct
     {
-        ImRect Rect; // Coordinates in grid space
+        Rect Rect; // Coordinates in grid space
     } BoxSelector;
 
     ImClickInteractionState() : Type(ImNodesClickInteractionType_None) {}
@@ -257,7 +257,7 @@ struct ImNodesEditorContext
     Vector2D AutoPanningDelta;
     // Minimum and maximum extents of all content in grid space. valid after final
     // ImNodes::EndNode() call.
-    ImRect GridContentBounds;
+    Rect GridContentBounds;
 
     ImVector<int> SelectedNodeIndices;
     ImVector<int> SelectedLinkIndices;
@@ -279,8 +279,8 @@ struct ImNodesEditorContext
 
     // Mini-map state set during EndNodeEditor() call
 
-    ImRect MiniMapRectScreenSpace;
-    ImRect MiniMapContentScreenSpace;
+    Rect MiniMapRectScreenSpace;
+    Rect MiniMapContentScreenSpace;
     float  MiniMapScaling;
 
     ImNodesEditorContext()
@@ -307,7 +307,7 @@ struct ImNodesContext
 
     // Canvas extents
     Vector2D CanvasOriginScreenSpace;
-    ImRect CanvasRectScreenSpace;
+    Rect CanvasRectScreenSpace;
 
     // Debug helpers
     ImNodesScope CurrentScope;
@@ -360,8 +360,8 @@ namespace IMNODES_NAMESPACE
 static inline ImNodesEditorContext& EditorContextGet()
 {
     // No editor context was set! Did you forget to call ImNodes::CreateContext()?
-    IM_ASSERT(GImNodes->EditorCtx != NULL);
-    return *GImNodes->EditorCtx;
+    IM_ASSERT(GImNodes.EditorCtx != NULL);
+    return *GImNodes.EditorCtx;
 }
 
 // [SECTION] ObjectPool implementation
@@ -384,7 +384,7 @@ static inline void ObjectPoolUpdate(ImObjectPool<T>& objects)
         {
             objects.IdMap.SetInt(id, -1);
             objects.FreeList.push_back(i);
-            (objects.Pool.Data + i)->~T();
+            (objects.Pool.data + i)->~T();
         }
     }
 }
@@ -413,7 +413,7 @@ inline void ObjectPoolUpdate(ImObjectPool<ImNodeData>& nodes)
 
                 nodes.IdMap.SetInt(id, -1);
                 nodes.FreeList.push_back(i);
-                (nodes.Pool.Data + i)->~ImNodeData();
+                (nodes.Pool.data + i)->~ImNodeData();
             }
         }
     }
@@ -424,7 +424,7 @@ static inline void ObjectPoolReset(ImObjectPool<T>& objects)
 {
     if (!objects.InUse.empty())
     {
-        memset(objects.InUse.Data, 0, objects.InUse.size_in_bytes());
+        memset(objects.InUse.data, 0, objects.InUse.size_in_bytes());
     }
 }
 
@@ -449,7 +449,7 @@ static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const in
             index = objects.FreeList.back();
             objects.FreeList.pop_back();
         }
-        IM_PLACEMENT_NEW(objects.Pool.Data + index) T(id);
+        IM_PLACEMENT_NEW(objects.Pool.data + index) T(id);
         objects.IdMap.SetInt(static_cast<ImGuiID>(id), index);
     }
 
@@ -480,7 +480,7 @@ inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const in
             node_idx = nodes.FreeList.back();
             nodes.FreeList.pop_back();
         }
-        IM_PLACEMENT_NEW(nodes.Pool.Data + node_idx) ImNodeData(node_id);
+        IM_PLACEMENT_NEW(nodes.Pool.data + node_idx) ImNodeData(node_id);
         nodes.IdMap.SetInt(static_cast<ImGuiID>(node_id), node_idx);
 
         ImNodesEditorContext& editor = EditorContextGet();

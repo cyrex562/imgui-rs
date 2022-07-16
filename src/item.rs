@@ -1,12 +1,14 @@
 use std::collections::HashSet;
 
-use crate::condition::Cond;
+use crate::condition::Condition;
 use crate::context::Context;
+use crate::input::MouseButton;
+use crate::INVALID_ID;
 use crate::window::{HoveredFlags, is_window_content_hoverable};
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::utils::set_hash_set;
-use crate::window::ItemFlags;
+use crate::vectors::two_d::Vector2D;
 
 impl NextItemData {
     // ImGuiNextItemData()         { memset(this, 0, sizeof(*this)); }
@@ -30,7 +32,7 @@ pub struct NextItemData {
     // ImGuiID                     focus_scope_id;   // Set by SetNextItemMultiSelectData() (!= 0 signify value has been set, so it's an alternate version of HasSelectionData, we don't use flags for this because they are cleared too early. This is mostly used for debugging)
     pub focus_scope_id: Id32,
     // ImGuiCond                   open_cond;
-    pub open_cond: Cond,
+    pub open_cond: Condition,
     // bool                        open_val;        // Set by SetNextItemOpen()
     pub open_val: bool,
 }
@@ -131,7 +133,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
 
     // When disabled we'll return false but still set hovered_id
     ImGuiItemFlags
-    item_flags = (g.LastItemData.ID == id?
+    item_flags = (g.LastItemData.id == id?
     g.LastItemData.InFlags: g.CurrentItemFlags);
     if item_flags & ItemFlags::Disabled {
         // Release active id if turning disabled
@@ -175,5 +177,269 @@ pub fn set_last_item_data(g: &mut Context, item_id: Id32, in_flags: &HashSet<Ite
     // g.last_item_data.status_flags = item_flags;
     set_hash_set(&mut g.last_item_data.status_flags, item_flags);
     g.last_item_data.rect.clone_from(item_rect);
+}
+
+// bool ImGui::IsItemActive()
+pub fn is_item_active(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    if g.active_id {
+        return g.active_id == g.last_item_data.id;
+    }
+    return false;
+}
+
+// bool ImGui::IsItemActivated()
+pub fn is_item_activated(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    if g.active_id != INVALID_ID {
+        if g.active_id == g.last_item_data.id && g.active_id_previous_frame != g.last_item_data.id {
+            return true;
+        }
+    }
+    return false;
+}
+
+// bool ImGui::is_item_deactivated()
+pub fn is_item_deactivated(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    if g.last_item_data.status_flags.contains(&ImGuiItemStatusFlags_HasDeactivated) {
+        return g.last_item_data.status_flags.contains(ImGuiItemStatusFlags_Deactivated);
+    }
+    return g.active_id_previous_frame == g.last_item_data.id && g.active_id_previous_frame != 0 && g.active_id != g.last_item_data.id;
+}
+
+// bool ImGui::IsItemDeactivatedAfterEdit()
+pub fn is_item_deactivated_after_edit(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    return is_item_deactivated(g) && (g.active_id_previous_frame_has_been_edited_before || (g.active_id == INVALID_ID && g.active_id_has_been_edited_before));
+}
+
+// == GetItemID() == GetFocusID()
+// bool ImGui::is_item_focused()
+pub fn is_item_focused(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    if g.nav_id != g.last_item_data.id || g.nav_id == 0 {
+        return false;
+    }
+
+    // Special handling for the dummy item after Begin() which represent the title bar or tab.
+    // When the window is collapsed (skip_items==true) that last item will never be overwritten so we need to detect the case.
+    // ImGuiWindow* window = g.current_window;
+    let window = g.get_current_window().unwrap();
+    if g.last_item_data.id == window.id && window.write_accessed {
+        return false;
+    }
+
+    return true;
+}
+
+// Important: this can be useful but it is NOT equivalent to the behavior of e.g.Button()!
+// Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
+// bool ImGui::IsItemClicked(ImGuiMouseButton mouse_button)
+pub fn is_item_clicked(g: &mut Context, mouse_button: &MouseButton) -> bool
+{
+    return is_mouse_clicked(mouse_button) && is_item_hovered(g, &HashSet::from([HoveredFlags::None]));
+}
+
+// bool ImGui::IsItemToggledOpen()
+pub fn is_item_toggled_open(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    g.last_item_data.status_flags.contains(&ImGuiItemStatusFlags_ToggledOpen)
+}
+
+// bool ImGui::IsItemToggledSelection()
+pub fn is_item_toggled_selection(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    let x = g.last_item_data.status_flags.contains(&ItemStatusFlags::ToggledSelection);
+    x
+}
+
+// bool ImGui::IsAnyItemHovered()
+pub fn is_any_item_hovered(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // return g.hovered_id != 0 || g.hovered_id_previous_frame != 0;
+    g.hovered_id != INVALID_ID || g.hovered_id_previous_frame != INVALID_ID
+}
+
+// bool ImGui::IsAnyItemActive()
+pub fn is_any_item_active(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // return g.active_id != 0;
+    g.active_id != INVALID_ID
+}
+
+// bool ImGui::IsAnyItemFocused()
+pub fn is_any_item_focused(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // return g.nav_id != 0 && !g.nav_disable_highlight;
+    g.nav_id != INVALID_ID && g.nav_disable_highlight == false
+}
+
+// bool ImGui::IsItemVisible()
+pub fn is_item_visible(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // return g.current_window->ClipRect.Overlaps(g.last_item_data.Rect);
+    let curr_win = g.get_current_window().unwrap();
+    curr_win.clip_rect.overlaps_rect(&g.last_item_data.rect)
+}
+
+// bool ImGui::IsItemEdited()
+pub fn is_item_edited(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // return (g.last_item_data.status_flags & ImGuiItemStatusFlags_Edited) != 0;
+    g.last_item_data.status_flags.contains(&ItemStatusFlags::Edited)
+}
+
+// Allow last item to be overlapped by a subsequent item. Both may be activated during the same frame before the later one takes priority.
+// FIXME: Although this is exposed, its interaction and ideal idiom with using ImGuiButtonFlags_AllowItemOverlap flag are extremely confusing, need rework.
+// void ImGui::SetItemAllowOverlap()
+pub fn sest_item_allow_overlap(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    // ImGuiID id = g.last_item_data.id;
+    let id = g.last_item_data.id;
+    if (g.hovered_id == id) {
+        g.hovered_id_allow_overlap = true;
+    }
+    if (g.active_id == id) {
+        g.ActiveIdAllowOverlap = true;
+    }
+}
+
+// void ImGui::SetItemUsingMouseWheel()
+pub fn set_item_using_mouse_wheel(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    // ImGuiID id = g.last_item_data.id;
+    let id = g.last_item_data.id;
+    if g.hovered_id == id {
+        g.hovered_id_using_mouse_wheel = true;
+    }
+    if g.active_id == id {
+        g.active_id_using_mouse_wheel = true;
+    }
+}
+
+// Vector2D ImGui::GetItemRectMin()
+pub fn get_item_rect_min(g: &mut Context) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+    // return g.last_item_data.Rect.Min;
+    g.last_item_data.rect.min.clone()
+}
+
+// Vector2D ImGui::GetItemRectMax()
+pub fn get_item_rect_max(g: &mut Context) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+    // return g.last_item_data.Rect.Max;
+    g.last_item_data.rect.max.clone()
+}
+
+// Vector2D ImGui::GetItemRectSize()
+pub fn get_item_rect_size(g: &mut Context) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+    // return g.last_item_data.Rect.GetSize();
+    g.last_item_data.rect.get_size()
+}
+
+
+// This is roughly matching the behavior of internal-facing ItemHoverable()
+// - we allow hovering to be true when active_id==window->MoveID, so that clicking on non-interactive items such as a Text() item still returns true with IsItemHovered()
+// - this should work even for non-interactive items that have no id, so we cannot use LastItemId
+// bool ImGui::IsItemHovered(ImGuiHoveredFlags flags)
+pub fn is_item_hovered(g: &mut Context, flags: &HashSet<HoveredFlags>) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    let window = g.get_window(g.current_window_id).unwrap();
+    if g.nav_disable_mouse_hover && !g.nav_disable_highlight && !(flags.contains(&HoveredFlags::NoNavOverride))
+    {
+        if (g.last_item_data.in_flags.contains(&ItemFlags::Disabled)) && !(flags.contains(&HoveredFlags::AllowWhenDisabled) ){
+            return false;
+        }
+        if !is_item_focused() {
+            return false;
+        }
+    }
+    else
+    {
+        // Test for bounding box overlap, as updated as ItemAdd()
+        let status_flags = &g.last_item_data.status_flags;
+        if !(status_flags.contains(&ItemStatusFlags::HoveredRect)) {
+            return false;
+        }
+        // IM_ASSERT((flags & (ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_NoPopupHierarchy | ImGuiHoveredFlags_DockHierarchy)) == 0);   // flags not supported by this function
+
+        // Test if we are hovering the right window (our window could be behind another window)
+        // [2021/03/02] Reworked / reverted the revert, finally. Note we want e.g. BeginGroup/ItemAdd/EndGroup to work as well. (#3851)
+        // [2017/10/16] Reverted commit 344d48be3 and testing RootWindow instead. I believe it is correct to NOT test for RootWindow but this leaves us unable
+        // to use IsItemHovered() after EndChild() itself. Until a solution is found I believe reverting to the test from 2017/09/27 is safe since this was
+        // the test that has been running for a long while.
+        if (g.hovered_window_id != window.id && (!status_flags.contains(&ItemStatusFlags::HoveredWindow))) && (!flags.contains(&HoveredFlags::AllowWhenOverlapped)) {
+            return false;
+        }
+
+        // Test if another item is active (e.g. being dragged)
+        if (!flags.contains(&HoveredFlags::AllowWhenBlockedByActiveItem)) && (g.active_id != 0 && g.active_id != g.last_item_data.id && !g.active_id_allow_overlap) && (g.active_id != window.move_id && g.active_id != window.TabId) {
+            return false;
+        }
+
+        // Test if interactions on this window are blocked by an active popup or modal.
+        // The ImGuiHoveredFlags_AllowWhenBlockedByPopup flag will be tested here.
+        if !is_window_content_hoverable(g, window, flags) {
+            return false;
+        }
+
+        // Test if the item is disabled
+        if (g.last_item_data.in_flags.contains(&ItemFlags::Disabled)) && !(flags.contains(&HoveredFlags::AllowWhenDisabled)) {
+            return false;
+        }
+
+        // Special handling for calling after Begin() which represent the title bar or tab.
+        // When the window is skipped/collapsed (skip_items==true) that last item (always ->move_id submitted by Begin)
+        // will never be overwritten so we need to detect the case.
+        if g.last_item_data.id == window.move_id && window.write_accessed {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+// Transient per-window flags, reset at the beginning of the frame. For child window, inherited from parent on first Begin().
+// This is going to be exposed in imgui.h when stabilized enough.
+pub enum ItemFlags {
+    None = 0,
+    NoTabStop = 1 << 0,
+    // false     // Disable keyboard tabbing (FIXME: should merge with _NoNav)
+    ButtonRepeat = 1 << 1,
+    // false     // Button() will return true multiple times based on io.key_repeat_delay and io.key_repeat_rate settings.
+    Disabled = 1 << 2,
+    // false     // Disable interactions but doesn't affect visuals. See BeginDisabled()/EndDisabled(). See github.com/ocornut/imgui/issues/211
+    NoNav = 1 << 3,
+    // false     // Disable keyboard/gamepad directional navigation (FIXME: should merge with _NoTabStop)
+    NoNavDefaultFocus = 1 << 4,
+    // false     // Disable item being a candidate for default focus (e.g. used by title bar items)
+    SelectableDontClosePopup = 1 << 5,
+    // false     // Disable MenuItem/Selectable() automatically closing their popup window
+    MixedValue = 1 << 6,
+    // false     // [BETA] Represent a mixed/indeterminate value, generally multi-selection where values differ. Currently only supported by Checkbox() (later should support all sorts of widgets)
+    ReadOnly = 1 << 7,
+    // false     // [ALPHA] Allow hovering interactions but underlying value is not changed.
+    Inputable = 1 << 8,   // false     // [WIP] Auto-activate input mode when tab focused. Currently only used and supported by a few items before it becomes a generic feature.
 }
 

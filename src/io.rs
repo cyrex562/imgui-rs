@@ -8,7 +8,7 @@ use crate::input::{DimgInputEventType, InputSource, DimgKey, DimgKeyData, ModFla
 use crate::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
 use crate::types::{Id32, DimgWchar};
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 #[derive(Debug,Default,Clone)]
 pub struct Io {
@@ -392,7 +392,7 @@ impl Io {
         if key_data.down == down && key_data.analog_value == analog_value {
             let mut found = false;
             // for (int n = g.input_events_queue.size - 1; n >= 0 && !found; n--){
-            let mut n = ctx.InputEventsQueue.Size - 1;
+            let mut n = ctx.InputEventsQueue.size - 1;
             while n >= 0 && !found {
                 if ctx.InputEventsQueue[n].Type == DimgInputEventType::Key && ctx.InputEventsQueue[n].Key.Key == key {
                     found = true;

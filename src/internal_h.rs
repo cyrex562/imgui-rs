@@ -48,7 +48,7 @@ use crate::draw_data_builder::DrawDataBuilder;
 use crate::draw_list::{DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN, DRAW_LIST_ARCFAST_TABLE_SIZE, DrawList};
 use crate::input::DimgKey;
 use crate::rect::Rect;
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 
 // Use your programming IDE "Go to definition" facility on the names of the center columns to find the actual flags/enum lists.
@@ -514,8 +514,8 @@ use crate::vectors::Vector2D;
     //  void          SetWindowSize(ImGuiWindow* window, const Vector2D& size, ImGuiCond cond = 0);
     //  void          SetWindowCollapsed(ImGuiWindow* window, bool collapsed, ImGuiCond cond = 0);
     //  void          SetWindowHitTestHole(ImGuiWindow* window, const Vector2D& pos, const Vector2D& size);
-    // inline ImRect           WindowRectAbsToRel(ImGuiWindow* window, const ImRect& r) { Vector2D off = window.DC.CursorStartPos; return ImRect(r.min.x - off.x, r.min.y - off.y, r.max.x - off.x, r.max.y - off.y); }
-    // inline ImRect           WindowRectRelToAbs(ImGuiWindow* window, const ImRect& r) { Vector2D off = window.DC.CursorStartPos; return ImRect(r.min.x + off.x, r.min.y + off.y, r.max.x + off.x, r.max.y + off.y); }
+    // inline ImRect           WindowRectAbsToRel(ImGuiWindow* window, const ImRect& r) { Vector2D off = window.dc.CursorStartPos; return ImRect(r.min.x - off.x, r.min.y - off.y, r.max.x - off.x, r.max.y - off.y); }
+    // inline ImRect           WindowRectRelToAbs(ImGuiWindow* window, const ImRect& r) { Vector2D off = window.dc.CursorStartPos; return ImRect(r.min.x + off.x, r.min.y + off.y, r.max.x + off.x, r.max.y + off.y); }
 
     // windows: Display Order and Focus Order
     //  void          focus_window(ImGuiWindow* window);
@@ -589,8 +589,8 @@ use crate::vectors::Vector2D;
     // inline ImGuiItemStatusFlags GetItemStatusFlags(){ ImGuiContext& g = *GImGui; return g.LastItemData.status_flags; }
     // inline ImGuiItemFlags   GetItemFlags()  { ImGuiContext& g = *GImGui; return g.LastItemData.in_flags; }
     // inline ImGuiID          GetActiveID()   { ImGuiContext& g = *GImGui; return g.active_id; }
-    // inline ImGuiID          GetFocusID()    { ImGuiContext& g = *GImGui; return g.NavId; }
-    //  void          SetActiveID(ImGuiID id, ImGuiWindow* window);
+    // inline ImGuiID          GetFocusID()    { ImGuiContext& g = *GImGui; return g.nav_id; }
+    //  void          set_active_id(ImGuiID id, ImGuiWindow* window);
     //  void          SetFocusID(ImGuiID id, ImGuiWindow* window);
     //  void          clear_active_id();
     //  ImGuiID       GetHoveredID();
@@ -636,7 +636,7 @@ use crate::vectors::Vector2D;
      // void          LogSetNextTextDecoration(const char* prefix, const char* suffix);
     //
     // Popups, Modals, Tooltips
-     // bool          BeginChildEx(const char* name, ImGuiID id, const Vector2D& size_arg, bool border, ImGuiWindowFlags flags);
+     // bool          begin_child_ex(const char* name, ImGuiID id, const Vector2D& size_arg, bool border, ImGuiWindowFlags flags);
      // void          OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags = ImGuiPopupFlags_None);
      // void          ClosePopupToLevel(int remaining, bool restore_focus_to_window_under_popup);
      // void          close_popups_over_window(ImGuiWindow* ref_window, bool restore_focus_to_window_under_popup);
@@ -661,7 +661,7 @@ use crate::vectors::Vector2D;
     //  void          EndComboPreview();
 
     // Gamepad/Keyboard Navigation
-    //  void          NavInitWindow(ImGuiWindow* window, bool force_reinit);
+    //  void          nav_init_window(ImGuiWindow* window, bool force_reinit);
      // void          NavInitRequestApplyResult();
      // bool          NavMoveRequestButNoResultYet();
      // void          NavMoveRequestSubmit(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags);

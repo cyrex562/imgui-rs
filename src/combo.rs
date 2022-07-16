@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use crate::layout::LayoutType;
 use crate::rect::Rect;
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 /// Storage data for BeginComboPreview()/EndComboPreview()
 #[derive(Default,Debug,Clone)]

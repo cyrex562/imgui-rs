@@ -1,6 +1,6 @@
 use std::ptr::{null, null_mut};
 use crate::imgui_h::ImGuiID;
-use crate::imgui_rect::ImRect;
+use crate::imgui_rect::Rect;
 use crate::imgui_window::{ImGuiItemFlags, ImGuiWindow};
 
 pub enum ActivateFlags
@@ -75,7 +75,7 @@ pub struct NavItemData
     // ImGuiID             focus_scope_id;   // Init,Move    // Best candidate focus scope id
     pub FocusScopeId: ImGuiID,
     // ImRect              RectRel;        // Init,Move    // Best candidate bounding box in window relative space
-    pub RectRel: ImRect,
+    pub RectRel: Rect,
     // ImGuiItemFlags      in_flags;        // ????,Move    // Best candidate item flags
     pub InFlags: ImGuiItemFlags,
     // float               DistBox;        //      Move    // Best candidate box distance to current nav_id
@@ -96,7 +96,7 @@ impl NavItemData {
     //     void clear()        { window = NULL; id = focus_scope_id = 0; in_flags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
     pub fn Clear(&mut self) {
         self.Window = null_mut();
-        self.ID = 0;
+        self.id = 0;
         self.FocusScopeId = 0;
         self.InFlags = ImGuiItemFlags::None;
         self.DistBox = f32::MAX;

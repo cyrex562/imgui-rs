@@ -1,4 +1,4 @@
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 // Vertex layout
 // #ifndef IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT

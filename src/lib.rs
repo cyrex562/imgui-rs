@@ -104,6 +104,9 @@ mod frame;
 mod draw_defines;
 mod size_callback_data;
 mod keyboard;
+mod child;
+mod resize;
+mod border;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context)

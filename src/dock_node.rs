@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use crate::axis::DimgAxis;
+use crate::axis::Axis;
 use crate::context::Context;
 use crate::data_authority::DataAuthority;
 use crate::types::Id32;
@@ -8,8 +8,8 @@ use crate::rect::Rect;
 use crate::tab_bar::TabBar;
 use crate::types::INVALID_ID;
 use crate::utils::extend_hash_set;
-use crate::vectors::Vector2D;
-use crate::window::WindowClass;
+use crate::vectors::two_d::Vector2D;
+use crate::window::class::WindowClass;
 
 
 
@@ -88,7 +88,7 @@ pub struct DockNode
     // DimgVec2D                  size_ref;                    // [split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate size.
     pub size_ref: Vector2D,
     // ImGuiAxis               split_axis;                  // [split node only] split axis (x or Y)
-    pub split_axis: DimgAxis,
+    pub split_axis: Axis,
     // ImGuiWindowClass        window_class;                // [Root node only]
     pub window_class: WindowClass,
     // ImU32                   last_bg_color;

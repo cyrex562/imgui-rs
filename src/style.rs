@@ -102,9 +102,9 @@ impl Style {
         out.WindowPadding = Vector2D::new(8.0, 8.0);      // Padding within a window
         out.WindowRounding = 0.0;             // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
         out.WindowBorderSize = 1.0;             // Thickness of border around windows. Generally set to 0.0 or 1.0. Other values not well tested.
-        out.WindowMinSize = Vector2D::new(32.0, 32.0);    // Minimum window size
+        out.window_min_size = Vector2D::new(32.0, 32.0);    // Minimum window size
         out.WindowTitleAlign = Vector2D::new(0.0, 0.5);// Alignment for title bar text
-        out.WindowMenuButtonPosition = ImGuiDir::ImGuiDir_Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
+        out.WindowMenuButtonPosition = ImGuiDir::Dir::Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
         out.ChildRounding = 0.0;             // Radius of child window corners rounding. Set to 0.0 to have rectangular child windows
         out.ChildBorderSize = 1.0;             // Thickness of border around child windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.PopupRounding = 0.0;             // Radius of popup window corners rounding. Set to 0.0 to have rectangular child windows
@@ -118,7 +118,7 @@ impl Style {
         out.touch_extra_padding = Vector2D::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
         out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
         out.ColumnsMinSpacing = 6.0;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
-        out.ScrollbarSize = 14.0;            // width of the vertical scrollbar, height of the horizontal scrollbar
+        out.scrollbar_size = 14.0;            // width of the vertical scrollbar, height of the horizontal scrollbar
         out.ScrollbarRounding = 9.0;             // Radius of grab corners rounding for scrollbar
         out.GrabMinSize = 12.0;            // Minimum width/height of a grab box for slider/scrollbar
         out.GrabRounding = 0.0;             // Radius of grabs corners rounding. Set to 0.0 to have rectangular slider grabs.
@@ -148,7 +148,7 @@ impl Style {
     pub fn scale_all_sizes(&mut self, scale_factor: f32) {
         self.WindowPadding = Vector2D::floor(&self.WindowPadding * scale_factor);
         self.WindowRounding = f32::floor(&self.WindowRounding * scale_factor);
-        self.WindowMinSize = Vector2D::floor(&self.WindowMinSize * scale_factor);
+        self.window_min_size = Vector2D::floor(&self.window_min_size * scale_factor);
         self.ChildRounding = f32::floor(&self.ChildRounding * scale_factor);
         self.PopupRounding = f32::floor(&self.PopupRounding * scale_factor);
         self.FramePadding = Vector2D::floor(&self.FramePadding * scale_factor);
@@ -159,7 +159,7 @@ impl Style {
         self.touch_extra_padding = Vector2D::floor(&self.touch_extra_padding * scale_factor);
         self.IndentSpacing = f32::floor(self.IndentSpacing * scale_factor);
         self.ColumnsMinSpacing = f32::floor(self.ColumnsMinSpacing * scale_factor);
-        self.ScrollbarSize = f32::floor(self.ScrollbarSize * scale_factor);
+        self.scrollbar_size = f32::floor(self.scrollbar_size * scale_factor);
         self.ScrollbarRounding = f32::floor(self.ScrollbarRounding * scale_factor);
         self.GrabMinSize = f32::floor(self.GrabMinSize * scale_factor);
         self.GrabRounding = f32::floor(self.GrabRounding * scale_factor);
@@ -227,7 +227,7 @@ impl StyleMod {
 pub fn get_color_u32(idx: ImGuiColor, alpha_mul: f32) -> u32
 {
     let style = &GImGui.style;
-    let c = style.Colors[idx];
+    let c = style.colors[idx];
     c.w *= style.Alpha * alpha_mul;
     return ColorConvertFloat4ToU32(c);
 }
@@ -246,7 +246,7 @@ pub fn GetStyleColorVec4(idx: ImGuiColor) -> Vector4D
 {
     // ImGuiStyle& style = GImGui.style;
     let style = &GImGui.style;
-    style.Colors[idx]
+    style.colors[idx]
 }
 
 // ImU32 ImGui::GetColorU32(ImU32 col)
@@ -267,16 +267,16 @@ pub fn ColorConvertU32ToFloat4(col: u32) -> Vector4D {
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
 // void ImGui::PushStyleColor(ImGuiCol idx, ImU32 col)
-pub fn PushStyleColor(idx: &ImGuiColor, col: u32)
+pub fn push_style_color(idx: &ImGuiColor, col: u32)
 {
     // ImGuiContext& g = *GImGui;
     let g = &GImGui;
     // ImGuiColorMod backup;
     let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
-    backup.BackupValue = g.style.Colors[idx];
+    backup.BackupValue = g.style.colors[idx];
     g.color_stack.push_back(backup);
-    g.style.Colors[idx] = ColorConvertU32ToFloat4(col);
+    g.style.colors[idx] = ColorConvertU32ToFloat4(col);
 }
 
 // void ImGui::PushStyleColor(ImGuiCol idx, const Vector4D& col)
@@ -287,13 +287,13 @@ pub fn PushStyleColor2(idx: &ImGuiColor, col: &mut Vector4D)
     // ImGuiColorMod backup;
     let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
-    backup.BackupValue = g.style.Colors[idx];
+    backup.BackupValue = g.style.colors[idx];
     g.color_stack.push_back(backup);
-    g.style.Colors[idx] = col;
+    g.style.colors[idx] = col;
 }
 
 // void ImGui::PopStyleColor(int count)
-pub fn PopStyleColor(mut count: i32)
+pub fn pop_style_color(mut count: i32)
 {
     // ImGuiContext& g = *GImGui;
     let g = &GImGui;
@@ -301,7 +301,7 @@ pub fn PopStyleColor(mut count: i32)
     {
         // ImGuiColorMod& backup = g.color_stack.back();
         let backup = g.color_stack.last().unwrap();
-        g.style.Colors[backup.Col.clone()] = backup.BackupValue.clone();
+        g.style.colors[backup.Col.clone()] = backup.BackupValue.clone();
         g.color_stack.pop_back();
         count -= 1;
     }
@@ -489,7 +489,7 @@ pub fn StyleColorsDark(dst: *mut Style)
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.style };
     // Vector4D* colors = style->colors;
-    let colors = &mut style.Colors;
+    let colors = &mut style.colors;
 
     colors[ImGuiColor::Text]                   = Vector4D::new(1.00, 1.00, 1.00, 1.00);
     colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.50, 0.50, 0.50, 1.00);
@@ -554,7 +554,7 @@ pub fn StyleColorsClassic(dst: *mut Style)
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.style };
     // Vector4D* colors = style->colors;
-    let colors = &mut style.Colors;
+    let colors = &mut style.colors;
     
     colors[ImGuiColor::Text]                   = Vector4D::new(0.90, 0.90, 0.90, 1.00);
     colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);
@@ -620,7 +620,7 @@ pub fn StyleColorsLight(dst: *mut Style)
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false { dst } else { &GImGui.style };
     // Vector4D* colors = style->colors;
-    let colors = &mut style.Colors;
+    let colors = &mut style.colors;
 
     colors[ImGuiColor::Text]                   = Vector4D::new(0.00, 0.00, 0.00, 1.00);
     colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);

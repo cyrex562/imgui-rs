@@ -281,9 +281,9 @@ void MiniMap(
 // Use PushColorStyle and PopColorStyle to modify ImNodesStyle::colors mid-frame.
 void PushColorStyle(ImNodesCol item, unsigned int color);
 void PopColorStyle();
-void PushStyleVar(ImNodesStyleVar style_item, float value);
-void PushStyleVar(ImNodesStyleVar style_item, const Vector2D& value);
-void PopStyleVar(int count = 1);
+void push_style_var(ImNodesStyleVar style_item, float value);
+void push_style_var(ImNodesStyleVar style_item, const Vector2D& value);
+void pop_style_var(int count = 1);
 
 // id can be any positive or negative integer, but INT_MIN is currently reserved for internal use.
 void BeginNode(int id);

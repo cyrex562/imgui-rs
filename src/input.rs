@@ -161,7 +161,7 @@ pub enum DimgKey
     PageUp,
     PageDown,
     Home,
-    End,
+    end,
     Insert,
     Delete,
     Backspace,
@@ -318,7 +318,7 @@ pub enum ImGuiNavInput
 // Identify a mouse button.
 // Those values are guaranteed to be stable and we frequently use 0/1 directly. Named enums provided for convenience.
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgMouseButton
+pub enum MouseButton
 {
     Left = 0,
     Right = 1,

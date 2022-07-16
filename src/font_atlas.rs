@@ -1,9 +1,10 @@
 use crate::types::DimgWchar;
-use crate::font::{Font, DimgFontConfig, ImFontBuilderIO};
+use crate::font::{DimgFontConfig, Font, ImFontBuilderIO};
 use crate::input::MouseCursor;
 use crate::rect::Rect;
 use crate::texture::TextureId;
-use crate::vectors::{Vector2D, Vector4D};
+use crate::vectors::Vector4D;
+use crate::vectors::two_d::Vector2D;
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
 //  - One or more fonts.

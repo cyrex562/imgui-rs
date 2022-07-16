@@ -68,24 +68,24 @@ impl ImGuiListClipper {
             TableEndRow(table);
         }
     }
-    self.StartPosY = window.DC.CursorPos.y;
+    self.StartPosY = window.dc.cursor_pos.y;
     self.ItemsHeight = items_height;
     self.ItemsCount = items_count;
     self.DisplayStart = -1;
     self.DisplayEnd = 0;
 
     // Acquire temporary buffer
-    if (g.ClipperTempDataStacked += 1 > g.clipper_temp_data.Size) {
+    if (g.ClipperTempDataStacked += 1 > g.clipper_temp_data.size) {
         g.clipper_temp_data.resize(g.ClipperTempDataStacked as usize, ImGuiListClipperData());
     }
     // ImGuiListClipperData* data = &g.clipper_temp_data[g.clipper_temp_data_stacked - 1];
     let data = &g.clipper_temp_data[g.ClipperTempDataStacked - 1];
         data.Reset(this);
-    data.LossynessOffset = window.DC.CursorStartPosLossyness.y;
+    data.LossynessOffset = window.dc.cursor_start_posLossyness.y;
     self.TempData = data as *mut c_void;
     }
     //  void  End();             // Automatically called on the last call of Step() that returns false.
-    pub fn End(&mut self) {
+    pub fn end(&mut self) {
 
         ImGuiContext& g = *GImGui;
     if (ImGuiListClipperData* data = (ImGuiListClipperData*)TempData)
@@ -95,12 +95,12 @@ impl ImGuiListClipper {
             ImGuiListClipper_SeekCursorForItem(this, ItemsCount);
 
         // Restore temporary buffer and fix back pointers which may be invalidated when nesting
-        IM_ASSERT(data->ListClipper == this);
-        data->StepNo = data->Ranges.Size;
+        IM_ASSERT(data.ListClipper == this);
+        data.StepNo = data.Ranges.size;
         if (g.ClipperTempDataStacked -= 1 > 0)
         {
             data = &g.clipper_temp_data[g.ClipperTempDataStacked - 1];
-            data->ListClipper->TempData = data;
+            data.ListClipper.TempData = data;
         }
         TempData = NULL;
     }
@@ -141,7 +141,7 @@ pub fn GetSkipItemForListClipping() -> bool
 //static void ImGuiListClipper_SortAndFuseRanges(ImVector<ImGuiListClipperRange>& ranges, int offset = 0)
 pub fn sort_and_fuse_ranges(ranges: &mut Vec<ImGuiListClipper>, offset: usize)
 {
-    if (ranges.Size - offset <= 1) {
+    if (ranges.size - offset <= 1) {
         return;
     }
 
@@ -151,7 +151,7 @@ pub fn sort_and_fuse_ranges(ranges: &mut Vec<ImGuiListClipper>, offset: usize)
    while (sort_end > 0) {
         // for (int i = offset; i < sort_end + offset; i += 1){
         for i in offset .. (sort_end + offset) {
-            if (ranges[i].Min > ranges[i + 1].Min) {
+            if (ranges[i].min > ranges[i + 1].min) {
                 ImSwap(ranges[i], ranges[i + 1]);
             }
         }
@@ -160,15 +160,15 @@ pub fn sort_and_fuse_ranges(ranges: &mut Vec<ImGuiListClipper>, offset: usize)
 
     // Now fuse ranges together as much as possible.
     // for (int i = 1 + offset; i < ranges.size; i += 1)
-    for i in (1 + offset) .. ranges.Size
+    for i in (1 + offset) .. ranges.size
     {
         // IM_ASSERT(!ranges[i].PosToIndexConvert && !ranges[i - 1].PosToIndexConvert);
-        if ranges[i - 1].Max < ranges[i].Min {
+        if ranges[i - 1].max < ranges[i].min {
             continue;
         }
-        ranges[i - 1].Min = ImMin(ranges[i - 1].Min, ranges[i].Min);
-        ranges[i - 1].Max = ImMax(ranges[i - 1].Max, ranges[i].Max);
-        ranges.erase(ranges.Data + i);
+        ranges[i - 1].min = ImMin(ranges[i - 1].min, ranges[i].min);
+        ranges[i - 1].max = ImMax(ranges[i - 1].max, ranges[i].max);
+        ranges.erase(ranges.data + i);
         // i -= 1;
     }
 }
@@ -182,19 +182,19 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
     // ImGuiContext& g = *GImGui;
     // ImGuiWindow* window = g.current_window;
     let window = GImGui.current_window;
-    // float off_y = pos_y - window->dc.CursorPos.y;
-    let off_y = pos_y - window.DC.CursorPos.y;
-    // window->dc.CursorPos.y = pos_y;
-    *window.DC.CursorPos.y = pos_y;
+    // float off_y = pos_y - window->dc.cursor_pos.y;
+    let off_y = pos_y - window.dc.cursor_pos.y;
+    // window->dc.cursor_pos.y = pos_y;
+    *window.dc.cursor_pos.y = pos_y;
     // window->dc.CursorMaxPos.y = ImMax(window->dc.CursorMaxPos.y, pos_y - g.style.ItemSpacing.y);
-    *window.DC.CursorMaxPos.y = ImMaxF32(window.DC.CursorMaxPos.y, pos_y - GImGui.style.ItemSpacing.y);
-    // window->dc.CursorPosPrevLine.y = window->dc.CursorPos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
-    *window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height;
+    *window.dc.cursor_max_pos.y = ImMaxF32(window.dc.cursor_max_pos.y, pos_y - GImGui.style.ItemSpacing.y);
+    // window->dc.CursorPosPrevLine.y = window->dc.cursor_pos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
+    *window.dc.CursorPosPrevLine.y = window.dc.cursor_pos.y - line_height;
     // window->dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
-    *window.DC.PrevLineSize.y = (line_height - GImGui.style.ItemSpacing.y);
-    let columns = window.DC.CurrentColumns;
+    *window.dc.PrevLineSize.y = (line_height - GImGui.style.ItemSpacing.y);
+    let columns = window.dc.CurrentColumns;
     if (columns.is_null() == false) {
-        columns.LineMinY = window.DC.CursorPos.y;
+        columns.LineMinY = window.dc.cursor_pos.y;
     }                         // Setting this so that cell Y position are set properly
     // if (ImGuiTable* table = g.current_table)
     let table = GImGui.CurrentTable;
@@ -203,7 +203,7 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
         if (table.IsInsideRow){
             TableEndRow(table);
     }
-        table.RowPosY2 = window.DC.CursorPos.y;
+        table.RowPosY2 = window.dc.cursor_pos.y;
         // const int row_increase = ((off_y / line_height) + 0.5);
         let row_increate = (off_y / line_height) + 0.5;
         //table->CurrentRow += row_increase; // Can't do without fixing TableEndRow()
@@ -253,7 +253,7 @@ void ImGuiListClipper::ForceDisplayRangeByIndices(int item_min, int item_max)
     IM_ASSERT(DisplayStart < 0); // Only allowed after Begin() and if there has not been a specified range yet.
     IM_ASSERT(item_min <= item_max);
     if (item_min < item_max)
-        data->Ranges.push_back(ImGuiListClipperRange::FromIndices(item_min, item_max));
+        data.Ranges.push_back(ImGuiListClipperRange::FromIndices(item_min, item_max));
 }
 
 bool ImGuiListClipper::Step()
@@ -264,39 +264,39 @@ bool ImGuiListClipper::Step()
     IM_ASSERT(data != NULL && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
 
     ImGuiTable* table = g.CurrentTable;
-    if (table && table->IsInsideRow)
+    if (table && table.IsInsideRow)
         ImGui::TableEndRow(table);
 
     // No items
     if (ItemsCount == 0 || GetSkipItemForListClipping())
-        return (void)End(), false;
+        return (void)end(), false;
 
     // While we are in frozen row state, keep displaying items one by one, unclipped
     // FIXME: Could be stored as a table-agnostic state.
-    if (data->StepNo == 0 && table != NULL && !table->IsUnfrozenRows)
+    if (data.StepNo == 0 && table != NULL && !table.IsUnfrozenRows)
     {
-        DisplayStart = data->ItemsFrozen;
-        DisplayEnd = data->ItemsFrozen + 1;
+        DisplayStart = data.ItemsFrozen;
+        DisplayEnd = data.ItemsFrozen + 1;
         if (DisplayStart >= ItemsCount)
-            return (void)End(), false;
-        data->ItemsFrozen += 1;
+            return (void)end(), false;
+        data.ItemsFrozen += 1;
         return true;
     }
 
     // Step 0: Let you process the first element (regardless of it being visible or not, so we can measure the element height)
     bool calc_clipping = false;
-    if (data->StepNo == 0)
+    if (data.StepNo == 0)
     {
-        StartPosY = window.DC.CursorPos.y;
+        StartPosY = window.dc.cursor_pos.y;
         if (ItemsHeight <= 0.0)
         {
             // Submit the first item (or range) so we can measure its height (generally the first range is 0..1)
-            data->Ranges.push_front(ImGuiListClipperRange::FromIndices(data->ItemsFrozen, data->ItemsFrozen + 1));
-            DisplayStart = ImMax(data->Ranges[0].Min, data->ItemsFrozen);
-            DisplayEnd = ImMin(data->Ranges[0].Max, ItemsCount);
+            data.Ranges.push_front(ImGuiListClipperRange::FromIndices(data.ItemsFrozen, data.ItemsFrozen + 1));
+            DisplayStart = ImMax(data.Ranges[0].min, data.ItemsFrozen);
+            DisplayEnd = ImMin(data.Ranges[0].max, ItemsCount);
             if (DisplayStart == DisplayEnd)
-                return (void)End(), false;
-            data->StepNo = 1;
+                return (void)end(), false;
+            data.StepNo = 1;
             return true;
         }
         calc_clipping = true;   // If on the first step with known item height, calculate clipping.
@@ -305,14 +305,14 @@ bool ImGuiListClipper::Step()
     // Step 1: Let the clipper infer height from first range
     if (ItemsHeight <= 0.0)
     {
-        IM_ASSERT(data->StepNo == 1);
+        IM_ASSERT(data.StepNo == 1);
         if (table)
-            IM_ASSERT(table->RowPosY1 == StartPosY && table->RowPosY2 == window.DC.CursorPos.y);
+            IM_ASSERT(table.RowPosY1 == StartPosY && table.RowPosY2 == window.dc.cursor_pos.y);
 
-        ItemsHeight = (window.DC.CursorPos.y - StartPosY) / (DisplayEnd - DisplayStart);
-        bool affected_by_floating_point_precision = ImIsFloatAboveGuaranteedIntegerPrecision(StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.DC.CursorPos.y);
+        ItemsHeight = (window.dc.cursor_pos.y - StartPosY) / (DisplayEnd - DisplayStart);
+        bool affected_by_floating_point_precision = ImIsFloatAboveGuaranteedIntegerPrecision(StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.dc.cursor_pos.y);
         if (affected_by_floating_point_precision)
-            ItemsHeight = window.DC.PrevLineSize.y + g.style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
+            ItemsHeight = window.dc.PrevLineSize.y + g.style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
 
         IM_ASSERT(ItemsHeight > 0.0 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
         calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.
@@ -325,52 +325,52 @@ bool ImGuiListClipper::Step()
         if (g.LogEnabled)
         {
             // If logging is active, do not perform any clipping
-            data->Ranges.push_back(ImGuiListClipperRange::FromIndices(0, ItemsCount));
+            data.Ranges.push_back(ImGuiListClipperRange::FromIndices(0, ItemsCount));
         }
         else
         {
             // Add range selected to be included for navigation
-            const bool is_nav_request = (g.NavMoveScoringItems && g.nav_window && g.nav_window->RootWindowForNav == window.RootWindowForNav);
+            const bool is_nav_request = (g.NavMoveScoringItems && g.nav_window && g.nav_window.RootWindowForNav == window.RootWindowForNav);
             if (is_nav_request)
-                data->Ranges.push_back(ImGuiListClipperRange::FromPositions(g.NavScoringNoClipRect.Min.y, g.NavScoringNoClipRect.Max.y, 0, 0));
+                data.Ranges.push_back(ImGuiListClipperRange::FromPositions(g.NavScoringNoClipRect.min.y, g.NavScoringNoClipRect.max.y, 0, 0));
             if (is_nav_request && (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && g.NavTabbingDir == -1)
-                data->Ranges.push_back(ImGuiListClipperRange::FromIndices(ItemsCount - 1, ItemsCount));
+                data.Ranges.push_back(ImGuiListClipperRange::FromIndices(ItemsCount - 1, ItemsCount));
 
             // Add focused/active item
-            ImRect nav_rect_abs = ImGui::WindowRectRelToAbs(window, window.NavRectRel[0]);
-            if (g.NavId != 0 && window.NavLastIds[0] == g.NavId)
-                data->Ranges.push_back(ImGuiListClipperRange::FromPositions(nav_rect_abs.Min.y, nav_rect_abs.Max.y, 0, 0));
+            Rect nav_rect_abs = ImGui::WindowRectRelToAbs(window, window.NavRectRel[0]);
+            if (g.nav_id != 0 && window.NavLastIds[0] == g.nav_id)
+                data.Ranges.push_back(ImGuiListClipperRange::FromPositions(nav_rect_abs.min.y, nav_rect_abs.max.y, 0, 0));
 
             // Add visible range
-            const int off_min = (is_nav_request && g.NavMoveClipDir == ImGuiDir_Up) ? -1 : 0;
-            const int off_max = (is_nav_request && g.NavMoveClipDir == ImGuiDir_Down) ? 1 : 0;
-            data->Ranges.push_back(ImGuiListClipperRange::FromPositions(window.ClipRect.Min.y, window.ClipRect.Max.y, off_min, off_max));
+            const int off_min = (is_nav_request && g.NavMoveClipDir == Dir::Up) ? -1 : 0;
+            const int off_max = (is_nav_request && g.NavMoveClipDir == Dir::Down) ? 1 : 0;
+            data.Ranges.push_back(ImGuiListClipperRange::FromPositions(window.clip_rect.min.y, window.clip_rect.max.y, off_min, off_max));
         }
 
         // Convert position ranges to item index ranges
         // - Very important: when a starting position is after our maximum item, we set min to (ItemsCount - 1). This allows us to handle most forms of wrapping.
         // - Due to how Selectable extra padding they tend to be "unaligned" with exact unit in the item list,
         //   which with the flooring/ceiling tend to lead to 2 items instead of one being submitted.
-        for (int i = 0; i < data->Ranges.Size; i += 1)
-            if (data->Ranges[i].PosToIndexConvert)
+        for (int i = 0; i < data.Ranges.size; i += 1)
+            if (data.Ranges[i].PosToIndexConvert)
             {
-                int m1 = (((double)data->Ranges[i].Min - window.DC.CursorPos.y - data->LossynessOffset) / ItemsHeight);
-                int m2 = ((((double)data->Ranges[i].Max - window.DC.CursorPos.y - data->LossynessOffset) / ItemsHeight) + 0.999999);
-                data->Ranges[i].Min = ImClamp(already_submitted + m1 + data->Ranges[i].PosToIndexOffsetMin, already_submitted, ItemsCount - 1);
-                data->Ranges[i].Max = ImClamp(already_submitted + m2 + data->Ranges[i].PosToIndexOffsetMax, data->Ranges[i].Min + 1, ItemsCount);
-                data->Ranges[i].PosToIndexConvert = false;
+                int m1 = (((double)data.Ranges[i].min - window.dc.cursor_pos.y - data.LossynessOffset) / ItemsHeight);
+                int m2 = ((((double)data.Ranges[i].max - window.dc.cursor_pos.y - data.LossynessOffset) / ItemsHeight) + 0.999999);
+                data.Ranges[i].min = ImClamp(already_submitted + m1 + data.Ranges[i].PosToIndexOffsetMin, already_submitted, ItemsCount - 1);
+                data.Ranges[i].max = ImClamp(already_submitted + m2 + data.Ranges[i].PosToIndexOffsetMax, data.Ranges[i].min + 1, ItemsCount);
+                data.Ranges[i].PosToIndexConvert = false;
             }
-        ImGuiListClipper_SortAndFuseRanges(data->Ranges, data->StepNo);
+        ImGuiListClipper_SortAndFuseRanges(data.Ranges, data.StepNo);
     }
 
     // Step 0+ (if item height is given in advance) or 1+: Display the next range in line.
-    if (data->StepNo < data->Ranges.Size)
+    if (data.StepNo < data.Ranges.size)
     {
-        DisplayStart = ImMax(data->Ranges[data->StepNo].Min, already_submitted);
-        DisplayEnd = ImMin(data->Ranges[data->StepNo].Max, ItemsCount);
+        DisplayStart = ImMax(data.Ranges[data.StepNo].min, already_submitted);
+        DisplayEnd = ImMin(data.Ranges[data.StepNo].max, ItemsCount);
         if (DisplayStart > already_submitted) //-V1051
             ImGuiListClipper_SeekCursorForItem(this, DisplayStart);
-        data->StepNo += 1;
+        data.StepNo += 1;
         return true;
     }
 
@@ -379,6 +379,6 @@ bool ImGuiListClipper::Step()
     if (ItemsCount < INT_MAX)
         ImGuiListClipper_SeekCursorForItem(this, ItemsCount);
 
-    End();
+    end();
     return false;
 }

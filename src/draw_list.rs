@@ -14,7 +14,8 @@ use crate::font::Font;
 use crate::rect::Rect;
 use crate::texture::TextureId;
 use crate::utils::set_hash_set;
-use crate::vectors::{Vector2D, Vector4D};
+use crate::vectors::Vector4D;
+use crate::vectors::two_d::Vector2D;
 use crate::viewport::Viewport;
 
 /// Draw command list
@@ -456,7 +457,7 @@ pub fn get_viewport_draw_list(g: &mut Context, viewport: &mut Viewport, drawlist
     {
         draw_list.ResetForNewFrame();
         draw_list.PushTextureID(g.io.fonts.TexID);
-        draw_list.PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, false);
+        draw_list.PushClipRect(viewport.Pos, viewport.Pos + viewport.size, false);
         viewport.draw_lists_last_frame[drawlist_no] = g.frame_count;
     }
     return draw_list;
@@ -501,7 +502,7 @@ pub fn add_draw_list_to_draw_data(ctx: &mut Context, out_list: &mut Vec<Id32>, d
     let draw_list = ctx.get_draw_list(draw_list_id).unwrap();
     if draw_list.cmd_buffer.is_empty() {return;}
 
-    if draw_list.cmd_buffer.Size == 1 && draw_list.cmd_buffer[0].elem_count == 0 && draw_list.cmd_buffer[0].user_callback.is_none() {
+    if draw_list.cmd_buffer.size == 1 && draw_list.cmd_buffer[0].elem_count == 0 && draw_list.cmd_buffer[0].user_callback.is_none() {
         return;
     }
 

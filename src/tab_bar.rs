@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use crate::imgui_h::{ImGuiID, ImGuiTabBarFlags};
-use crate::imgui_rect::ImRect;
+use crate::imgui_rect::Rect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_vec::Vector2D;
 use crate::imgui_window::ImGuiWindow;
@@ -88,7 +88,7 @@ pub struct TabBar {
     // int                 PrevFrameVisible;
     pub PrevFrameVisible: i32,
     // ImRect              BarRect;
-    pub BarRect: ImRect,
+    pub BarRect: Rect,
     // float               CurrTabsContentsHeight;
     pub CurrTabsContentsHeight: f32,
     // float               PrevTabsContentsHeight; // Record the height of contents submitted below the tab bar

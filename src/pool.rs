@@ -107,7 +107,7 @@ impl<T> ImGuiPool<T> {
     //     void        Reserve(int capacity)               { Buf.reserve(capacity); Map.data.reserve(capacity); }
     pub fn Reserve(&mut self, capacity: i32) {
         self.Buf.reserve(capacity as usize);
-        self.Map.Data.reserve(capacity as usize)
+        self.Map.data.reserve(capacity as usize)
     }
     //
     //     // To iterate a ImPool: for (int n = 0; n < pool.GetMapSize(); n++) if (T* t = pool.TryGetMapData(n)) { ... }
@@ -117,7 +117,7 @@ impl<T> ImGuiPool<T> {
     //     int         GetMapSize() const                  { return Map.data.size; }   // It is the map we need iterate to find valid items, since we don't have "alive" storage anywhere
     //     T*          TryGetMapData(ImPoolIdx n)          { int idx = Map.data[n].val_i; if (idx == -1) return NULL; return GetByIndex(idx); }
     pub fn TryGetMapData(&mut self, n: ImGuiPoolIdx) -> *mut T {
-        let mut idx = self.Map.Data[n].val.val_i;
+        let mut idx = self.Map.data[n].val.val_i;
         if idx == -1 {
             return null_mut();
         }

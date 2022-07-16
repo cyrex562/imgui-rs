@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::draw_list::DrawList;
 use crate::types::Id32;
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 
 /// All draw data to render a Dear ImGui frame
 /// (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,

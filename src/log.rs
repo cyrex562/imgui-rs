@@ -59,9 +59,9 @@ pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: *const c_char, mut text_
         text_end = FindRenderedTextEnd(text, text_end);
     }
 
-    let log_new_line = ref_pos != Vector2D::new(0.0,0.0) && (ref_pos.y > g.LogLinePosY + g.style.FramePadding.y + 1);
+    let log_new_line = ref_pos != Vector2D::new(0.0,0.0) && (ref_pos.y > g.log_line_pos_y + g.style.FramePadding.y + 1);
     if (ref_pos) {
-        g.LogLinePosY = ref_pos.y;
+        g.log_line_pos_y = ref_pos.y;
     }
     if (log_new_line)
     {
@@ -74,10 +74,10 @@ pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: *const c_char, mut text_
         }
 
     // Re-adjust padding if we have popped out of our starting depth
-    if (g.LogDepthRef > window.DC.TreeDepth) {
-        g.LogDepthRef = window.DC.TreeDepth;
+    if (g.LogDepthRef > window.dc.TreeDepth) {
+        g.LogDepthRef = window.dc.TreeDepth;
     }
-    let tree_depth = (window.DC.TreeDepth - g.LogDepthRef);
+    let tree_depth = (window.dc.TreeDepth - g.LogDepthRef);
 
     let mut text_remaining = text;
     loop
@@ -163,9 +163,9 @@ pub fn LogBegin(log_type: ImGuiLogType, auto_open_depth: i32)
     g.LogType = log_type;
     g.LogNextPrefix = null();
         g.LogNextSuffix = null();
-    g.LogDepthRef = window.DC.TreeDepth;
+    g.LogDepthRef = window.dc.TreeDepth;
     g.LogDepthToExpand = if auto_open_depth >= 0 { auto_open_depth } else { g.LogDepthToExpandDefault };
-    g.LogLinePosY = f32::MAX;
+    g.log_line_pos_y = f32::MAX;
     g.LogLineFirstItem = true;
 }
 

@@ -3,7 +3,7 @@ use crate::types::Id32;
 use crate::direction::DimgSortDirection;
 use crate::imgui_color::ImColor;
 use crate::imgui_h::{ImDrawListSplitter, ImGuiID, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
-use crate::imgui_rect::ImRect;
+use crate::imgui_rect::Rect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_vec::{ImVec1, Vector2D};
 use crate::imgui_window::ImGuiWindow;
@@ -45,7 +45,7 @@ pub struct ImGuiTableColumn
     // float                   InitStretchWeightOrWidth;       // Value passed to TableSetupColumn(). For width it is a content width (_without padding_).
     pub InitStretchWeightOrWidth: f32,
     // ImRect                  clip_rect;                       // Clipping rectangle for the column
-    pub ClipRect: ImRect,
+    pub ClipRect: Rect,
     // ImGuiID                 UserID;                         // Optional, value passed to TableSetupColumn()
     pub UserID: ImGuiID,
     // float                   WorkMinX;                       // Contents region min ~(MinX + CellPaddingX + CellSpacingX1) == cursor start position when entering column
@@ -131,7 +131,7 @@ impl ImGuiTableColumn {
             MinX: 0.0,
             StretchWeight: -1.0,
             InitStretchWeightOrWidth: 0.0,
-            ClipRect: ImRect::new(),
+            ClipRect: Rect::new(),
             UserID: 0,
             WorkMinX: 0.0,
             WorkMaxX: 0.0,
@@ -298,23 +298,23 @@ pub struct Table
     // float                       RefScale;                   // Reference scale to be able to rescale columns on font/dpi changes.
     pub RefScale: f32,
     // ImRect                      OuterRect;                  // Note: for non-scrolling table, OuterRect.max.y is often FLT_MAX until EndTable(), unless a height has been specified in BeginTable().
-    pub OuterRect: ImRect,
+    pub OuterRect: Rect,
     // ImRect                      inner_rect;                  // inner_rect but without decoration. As with OuterRect, for non-scrolling tables, inner_rect.max.y is
-    pub inner_rect: ImRect,
+    pub inner_rect: Rect,
     // ImRect                      work_rect;
-    pub WorkRect: ImRect,
+    pub WorkRect: Rect,
     // ImRect                      inner_clip_rect;
-    pub InnerClipRect: ImRect,
+    pub InnerClipRect: Rect,
     // ImRect                      BgClipRect;                 // We use this to cpu-clip cell background color fill, evolve during the frame as we cross frozen rows boundaries
-    pub BgClipRect: ImRect,
+    pub BgClipRect: Rect,
     // ImRect                      Bg0ClipRectForDrawCmd;      // Actual ImDrawCmd clip rect for BG0/1 channel. This tends to be == OuterWindow->clip_rect at BeginTable() because output in BG0/BG1 is cpu-clipped
-    pub BgClipRectForDrawCmd: ImRect,
+    pub BgClipRectForDrawCmd: Rect,
     // ImRect                      Bg2ClipRectForDrawCmd;      // Actual ImDrawCmd clip rect for BG2 channel. This tends to be a correct, tight-fit, because output to BG2 are done by widgets relying on regular clip_rect.
-    pub Bg2ClipRectForDrawCmd: ImRect,
+    pub Bg2ClipRectForDrawCmd: Rect,
     // ImRect                      HostClipRect;               // This is used to check if we can eventually merge our columns draw calls into the current draw call of the current window.
-    pub HostClipRect: ImRect,
+    pub HostClipRect: Rect,
     // ImRect                      HostBackupInnerClipRect;    // Backup of InnerWindow->clip_rect during PushTableBackground()/PopTableBackground()
-    pub HostBackupInnerClipRect: ImRect,
+    pub HostBackupInnerClipRect: Rect,
     // ImGuiWindow*                OuterWindow;                // Parent window for the table
     pub OuterWindow: *mut ImGuiWindow,
     // ImGuiWindow*                InnerWindow;                // window holding the table data (== OuterWindow or a child window)
@@ -443,9 +443,9 @@ pub struct TableTempData
     pub DrawSplitter: ImDrawListSplitter,
 
     // ImRect                      HostBackupWorkRect;         // Backup of InnerWindow->work_rect at the end of BeginTable()
-    pub HostBackupWorkRect: ImRect,
+    pub HostBackupWorkRect: Rect,
     // ImRect                      HostBackupParentWorkRect;   // Backup of InnerWindow->parent_work_rect at the end of BeginTable()
-    pub HostBackupParentWorkRect: ImRect,
+    pub HostBackupParentWorkRect: Rect,
     // Vector2D                      HostBackupPrevLineSize;     // Backup of InnerWindow->dc.PrevLineSize at the end of BeginTable()
     pub HostBackupPrevLineSize: Vector2D,
     // Vector2D                      HostBackupCurrLineSize;     // Backup of InnerWindow->dc.CurrLineSize at the end of BeginTable()

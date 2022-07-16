@@ -134,15 +134,15 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
         // Allegro's implementation of al_draw_indexed_prim() for DX9 is completely broken. Unindex our buffers ourselves.
         // FIXME-OPT: Unfortunately Allegro doesn't support 32-bit packed colors so we have to convert them to 4 float as well..
         static ImVector<ImDrawVertAllegro> vertices;
-        vertices.resize(cmd_list->IdxBuffer.Size);
-        for (int i = 0; i < cmd_list->IdxBuffer.Size; i += 1)
+        vertices.resize(cmd_list.IdxBuffer.size);
+        for (int i = 0; i < cmd_list.IdxBuffer.size; i += 1)
         {
-            const ImDrawVert* src_v = &cmd_list->VtxBuffer[cmd_list->IdxBuffer[i]];
+            const ImDrawVert* src_v = &cmd_list.VtxBuffer[cmd_list.IdxBuffer[i]];
             ImDrawVertAllegro* dst_v = &vertices[i];
-            dst_v->pos = src_v->pos;
-            dst_v->uv = src_v->uv;
-            unsigned char* c = (unsigned char*)&src_v->col;
-            dst_v->col = al_map_rgba(c[0], c[1], c[2], c[3]);
+            dst_v.pos = src_v.pos;
+            dst_v.uv = src_v.uv;
+            unsigned char* c = (unsigned char*)&src_v.col;
+            dst_v.col = al_map_rgba(c[0], c[1], c[2], c[3]);
         }
 
         const int* indices = NULL;
@@ -151,42 +151,42 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
             // FIXME-OPT: Unfortunately Allegro doesn't support 16-bit indices.. You can '#define ImDrawIdx int' in imconfig.h to request Dear ImGui to output 32-bit indices.
             // Otherwise, we convert them from 16-bit to 32-bit at runtime here, which works perfectly but is a little wasteful.
             static ImVector<int> indices_converted;
-            indices_converted.resize(cmd_list->IdxBuffer.Size);
-            for (int i = 0; i < cmd_list->IdxBuffer.Size;  += 1i)
-                indices_converted[i] = cmd_list->IdxBuffer.Data[i];
-            indices = indices_converted.Data;
+            indices_converted.resize(cmd_list.IdxBuffer.size);
+            for (int i = 0; i < cmd_list.IdxBuffer.size;  += 1i)
+                indices_converted[i] = cmd_list.IdxBuffer.data[i];
+            indices = indices_converted.data;
         }
         else if (sizeof(ImDrawIdx) == 4)
         {
-            indices = (const int*)cmd_list->IdxBuffer.Data;
+            indices = (const int*)cmd_list.IdxBuffer.data;
         }
 
         // Render command lists
         Vector2D clip_off = draw_data.display_pos;
-        for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.Size; cmd_i += 1)
+        for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.size; cmd_i += 1)
         {
             const ImDrawCmd* pcmd = &cmd_list.cmd_buffer[cmd_i];
-            if (pcmd->UserCallback)
+            if (pcmd.UserCallback)
             {
                 // User callback, registered via ImDrawList::AddCallback()
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
-                if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
+                if (pcmd.UserCallback == ImDrawCallback_ResetRenderState)
                     ImGui_ImplAllegro5_SetupRenderState(draw_data);
                 else
-                    pcmd->UserCallback(cmd_list, pcmd);
+                    pcmd.UserCallback(cmd_list, pcmd);
             }
             else
             {
                 // Project scissor/clipping rectangles into framebuffer space
-                Vector2D clip_min(pcmd->ClipRect.x - clip_off.x, pcmd->ClipRect.y - clip_off.y);
-                Vector2D clip_max(pcmd->ClipRect.z - clip_off.x, pcmd->ClipRect.w - clip_off.y);
+                Vector2D clip_min(pcmd.clip_rect.x - clip_off.x, pcmd.clip_rect.y - clip_off.y);
+                Vector2D clip_max(pcmd.clip_rect.z - clip_off.x, pcmd.clip_rect.w - clip_off.y);
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
                 // Apply scissor/clipping rectangle, Draw
-                ALLEGRO_BITMAP* texture = (ALLEGRO_BITMAP*)pcmd->GetTexID();
+                ALLEGRO_BITMAP* texture = (ALLEGRO_BITMAP*)pcmd.GetTexID();
                 al_set_clipping_rectangle(clip_min.x, clip_min.y, clip_max.x - clip_min.x, clip_max.y - clip_min.y);
-                al_draw_prim(&vertices[0], bd->VertexDecl, texture, pcmd->IdxOffset, pcmd->IdxOffset + pcmd->ElemCount, ALLEGRO_PRIM_TRIANGLE_LIST);
+                al_draw_prim(&vertices[0], bd.VertexDecl, texture, pcmd.IdxOffset, pcmd.IdxOffset + pcmd.ElemCount, ALLEGRO_PRIM_TRIANGLE_LIST);
             }
         }
     }
@@ -205,7 +205,7 @@ bool ImGui_ImplAllegro5_CreateDeviceObjects()
     ImGuiIO& io = ImGui::GetIO();
     unsigned char* pixels;
     int width, height;
-    io.fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+    io.fonts.GetTexDataAsRGBA32(&pixels, &width, &height);
 
     // Create texture
     // (Bilinear sampling is required by default. Set 'io.fonts->flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
@@ -225,7 +225,7 @@ bool ImGui_ImplAllegro5_CreateDeviceObjects()
         al_destroy_bitmap(img);
         return false;
     }
-    memcpy(locked_img->data, pixels, sizeof * width * height);
+    memcpy(locked_img.data, pixels, sizeof * width * height);
     al_unlock_bitmap(img);
 
     // Convert software texture to hardware texture.
@@ -235,13 +235,13 @@ bool ImGui_ImplAllegro5_CreateDeviceObjects()
         return false;
 
     // Store our identifier
-    io.fonts->SetTexID((ImTextureID)(intptr_t)cloned_img);
-    bd->Texture = cloned_img;
+    io.fonts.SetTexID((ImTextureID)(intptr_t)cloned_img);
+    bd.Texture = cloned_img;
 
     // Create an invisible mouse cursor
     // Because al_hide_mouse_cursor() seems to mess up with the actual inputs..
     ALLEGRO_BITMAP* mouse_cursor = al_create_bitmap(8, 8);
-    bd->MouseCursorInvisible = al_create_mouse_cursor(mouse_cursor, 0, 0);
+    bd.MouseCursorInvisible = al_create_mouse_cursor(mouse_cursor, 0, 0);
     al_destroy_bitmap(mouse_cursor);
 
     return true;
@@ -251,16 +251,16 @@ void ImGui_ImplAllegro5_InvalidateDeviceObjects()
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
-    if (bd->Texture)
+    if (bd.Texture)
     {
-        io.fonts->SetTexID(NULL);
-        al_destroy_bitmap(bd->Texture);
-        bd->Texture = NULL;
+        io.fonts.SetTexID(NULL);
+        al_destroy_bitmap(bd.Texture);
+        bd.Texture = NULL;
     }
-    if (bd->MouseCursorInvisible)
+    if (bd.MouseCursorInvisible)
     {
-        al_destroy_mouse_cursor(bd->MouseCursorInvisible);
-        bd->MouseCursorInvisible = NULL;
+        al_destroy_mouse_cursor(bd.MouseCursorInvisible);
+        bd.MouseCursorInvisible = NULL;
     }
 }
 
@@ -268,16 +268,16 @@ void ImGui_ImplAllegro5_InvalidateDeviceObjects()
 static const char* ImGui_ImplAllegro5_GetClipboardText(void*)
 {
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
-    if (bd->ClipboardTextData)
-        al_free(bd->ClipboardTextData);
-    bd->ClipboardTextData = al_get_clipboard_text(bd->Display);
-    return bd->ClipboardTextData;
+    if (bd.ClipboardTextData)
+        al_free(bd.ClipboardTextData);
+    bd.ClipboardTextData = al_get_clipboard_text(bd.Display);
+    return bd.ClipboardTextData;
 }
 
 static void ImGui_ImplAllegro5_SetClipboardText(void*, const char* text)
 {
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
-    al_set_clipboard_text(bd->Display, text);
+    al_set_clipboard_text(bd.Display, text);
 }
 
 
@@ -405,7 +405,7 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
     io.BackendPlatformName = io.BackendRendererName = "imgui_impl_allegro5";
     io.backend_flags |= ImGuiBackendFlags_HasMouseCursors;       // We can honor GetMouseCursor() values (optional)
 
-    bd->Display = display;
+    bd.Display = display;
 
     // Create custom vertex declaration.
     // Unfortunately Allegro doesn't support 32-bit packed colors so we have to convert them to 4 floats.
@@ -417,7 +417,7 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
         { ALLEGRO_PRIM_COLOR_ATTR, 0, IM_OFFSETOF(ImDrawVertAllegro, col) },
         { 0, 0, 0 }
     };
-    bd->VertexDecl = al_create_vertex_decl(elems, sizeof(ImDrawVertAllegro));
+    bd.VertexDecl = al_create_vertex_decl(elems, sizeof(ImDrawVertAllegro));
 
 #if ALLEGRO_HAS_CLIPBOARD
     io.SetClipboardTextFn = ImGui_ImplAllegro5_SetClipboardText;
@@ -435,10 +435,10 @@ void ImGui_ImplAllegro5_Shutdown()
     ImGuiIO& io = ImGui::GetIO();
 
     ImGui_ImplAllegro5_InvalidateDeviceObjects();
-    if (bd->VertexDecl)
-        al_destroy_vertex_decl(bd->VertexDecl);
-    if (bd->ClipboardTextData)
-        al_free(bd->ClipboardTextData);
+    if (bd.VertexDecl)
+        al_destroy_vertex_decl(bd.VertexDecl);
+    if (bd.ClipboardTextData)
+        al_free(bd.ClipboardTextData);
 
     io.BackendPlatformUserData = NULL;
     io.BackendPlatformName = io.BackendRendererName = NULL;
@@ -466,59 +466,59 @@ bool ImGui_ImplAllegro5_ProcessEvent(ALLEGRO_EVENT* ev)
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
 
-    switch (ev->type)
+    switch (ev.type)
     {
     case ALLEGRO_EVENT_MOUSE_AXES:
-        if (ev->mouse.display == bd->Display)
+        if (ev.mouse.display == bd.Display)
         {
-            io.AddMousePosEvent(ev->mouse.x, ev->mouse.y);
-            io.AddMouseWheelEvent(-ev->mouse.dw, ev->mouse.dz);
+            io.AddMousePosEvent(ev.mouse.x, ev.mouse.y);
+            io.AddMouseWheelEvent(-ev.mouse.dw, ev.mouse.dz);
         }
         return true;
     case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
     case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
-        if (ev->mouse.display == bd->Display && ev->mouse.button > 0 && ev->mouse.button <= 5)
-            io.AddMouseButtonEvent(ev->mouse.button - 1, ev->type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN);
+        if (ev.mouse.display == bd.Display && ev.mouse.button > 0 && ev.mouse.button <= 5)
+            io.AddMouseButtonEvent(ev.mouse.button - 1, ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN);
         return true;
     case ALLEGRO_EVENT_TOUCH_MOVE:
-        if (ev->touch.display == bd->Display)
-            io.AddMousePosEvent(ev->touch.x, ev->touch.y);
+        if (ev.touch.display == bd.Display)
+            io.AddMousePosEvent(ev.touch.x, ev.touch.y);
         return true;
     case ALLEGRO_EVENT_TOUCH_BEGIN:
     case ALLEGRO_EVENT_TOUCH_END:
     case ALLEGRO_EVENT_TOUCH_CANCEL:
-        if (ev->touch.display == bd->Display && ev->touch.primary)
-            io.AddMouseButtonEvent(0, ev->type == ALLEGRO_EVENT_TOUCH_BEGIN);
+        if (ev.touch.display == bd.Display && ev.touch.primary)
+            io.AddMouseButtonEvent(0, ev.type == ALLEGRO_EVENT_TOUCH_BEGIN);
         return true;
     case ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY:
-        if (ev->mouse.display == bd->Display)
+        if (ev.mouse.display == bd.Display)
             io.AddMousePosEvent(-f32::MAX, -f32::MAX);
         return true;
     case ALLEGRO_EVENT_KEY_CHAR:
-        if (ev->keyboard.display == bd->Display)
-            if (ev->keyboard.unichar != 0)
-                io.AddInputCharacter((unsigned int)ev->keyboard.unichar);
+        if (ev.keyboard.display == bd.Display)
+            if (ev.keyboard.unichar != 0)
+                io.AddInputCharacter((unsigned int)ev.keyboard.unichar);
         return true;
     case ALLEGRO_EVENT_KEY_DOWN:
     case ALLEGRO_EVENT_KEY_UP:
-        if (ev->keyboard.display == bd->Display)
+        if (ev.keyboard.display == bd.Display)
         {
             ImGui_ImplAllegro5_UpdateKeyModifiers();
-            ImGuiKey key = ImGui_ImplAllegro5_KeyCodeToImGuiKey(ev->keyboard.keycode);
-            io.AddKeyEvent(key, (ev->type == ALLEGRO_EVENT_KEY_DOWN));
-            io.SetKeyEventNativeData(key, ev->keyboard.keycode, -1); // To support legacy indexing (<1.87 user code)
+            ImGuiKey key = ImGui_ImplAllegro5_KeyCodeToImGuiKey(ev.keyboard.keycode);
+            io.AddKeyEvent(key, (ev.type == ALLEGRO_EVENT_KEY_DOWN));
+            io.SetKeyEventNativeData(key, ev.keyboard.keycode, -1); // To support legacy indexing (<1.87 user code)
         }
         return true;
     case ALLEGRO_EVENT_DISPLAY_SWITCH_OUT:
-        if (ev->display.source == bd->Display)
+        if (ev.display.source == bd.Display)
             io.AddFocusEvent(false);
         return true;
     case ALLEGRO_EVENT_DISPLAY_SWITCH_IN:
-        if (ev->display.source == bd->Display)
+        if (ev.display.source == bd.Display)
         {
             io.AddFocusEvent(true);
 #if defined(ALLEGRO_UNSTABLE)
-            al_clear_keyboard_state(bd->Display);
+            al_clear_keyboard_state(bd.Display);
 
         }
         return true;
@@ -537,7 +537,7 @@ static void ImGui_ImplAllegro5_UpdateMouseCursor()
     if (io.mouse_draw_cursor || imgui_cursor == MouseCursor::None)
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
-        al_set_mouse_cursor(bd->Display, bd->MouseCursorInvisible);
+        al_set_mouse_cursor(bd.Display, bd.MouseCursorInvisible);
     }
     else
     {
@@ -552,7 +552,7 @@ static void ImGui_ImplAllegro5_UpdateMouseCursor()
         case ImGuiMouseCursor_ResizeNWSE:   cursor_id = ALLEGRO_SYSTEM_MOUSE_CURSOR_RESIZE_NW; break;
         case ImGuiMouseCursor_NotAllowed:   cursor_id = ALLEGRO_SYSTEM_MOUSE_CURSOR_UNAVAILABLE; break;
         }
-        al_set_system_mouse_cursor(bd->Display, cursor_id);
+        al_set_system_mouse_cursor(bd.Display, cursor_id);
     }
 }
 
@@ -561,21 +561,21 @@ void ImGui_ImplAllegro5_NewFrame()
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
     IM_ASSERT(bd != NULL && "Did you call ImGui_ImplAllegro5_Init()?");
 
-    if (!bd->Texture)
+    if (!bd.Texture)
         ImGui_ImplAllegro5_CreateDeviceObjects();
 
     ImGuiIO& io = ImGui::GetIO();
 
     // Setup display size (every frame to accommodate for window resizing)
     int w, h;
-    w = al_get_display_width(bd->Display);
-    h = al_get_display_height(bd->Display);
+    w = al_get_display_width(bd.Display);
+    h = al_get_display_height(bd.Display);
     io.display_size = Vector2D::new((float)w, h);
 
     // Setup time step
     double current_time = al_get_time();
-    io.delta_time = bd->time > 0.0 ? (current_time - bd->time) : (1.0 / 60.0);
-    bd->time = current_time;
+    io.delta_time = bd.time > 0.0 ? (current_time - bd.time) : (1.0 / 60.0);
+    bd.time = current_time;
 
     // Setup mouse cursor shape
     ImGui_ImplAllegro5_UpdateMouseCursor();

@@ -1,11 +1,11 @@
 use std::collections::HashSet;
-use crate::condition::Cond;
+use crate::condition::Condition;
 use crate::context::{call_context_hooks, Context, ContextHookType};
 use crate::drag_drop::DragDropFlags;
 use crate::draw_list::DrawListFlags;
 use crate::rect::Rect;
 use crate::types::INVALID_ID;
-use crate::vectors::Vector2D;
+use crate::vectors::two_d::Vector2D;
 use crate::window::{add_window_to_sort_buffer, WindowFlags};
 
 /// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
@@ -241,12 +241,12 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     }
 
     // Garbage collect transient buffers of recently unused tables
-    for (int i = 0; i < g.tables_last_time_active.Size; i += 1){
+    for (int i = 0; i < g.tables_last_time_active.size; i += 1){
         if (g.tables_last_time_active[i] >= 0.0 && g.tables_last_time_active[i] < memory_compact_start_time) {
             table_gc_compact_transient_buffers(g.tables.get_by_index(i));
         }
     }
-    for (int i = 0; i < g.tables_temp_data.Size; i += 1){
+    for (int i = 0; i < g.tables_temp_data.size; i += 1){
         if (g.tables_temp_data[i].last_time_active >= 0.0 && g.tables_temp_data[i].last_time_active < memory_compact_start_time) {
             table_gc_compact_transient_buffers(&g.tables_temp_data[i]);
         }
@@ -257,7 +257,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.gc_compact_all = false;
 
     // Closing the focused window restore focus to the first active root window in descending z-order
-    if (g.nav_window_id && !g.nav_window_id ->WasActive){
+    if (g.nav_window_id && !g.nav_window_id .WasActive){
     FocusTopMostWindowUnderOne(NULL, NULL);
 }
 
@@ -280,7 +280,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid ImGui:: calls from crashing.
     g.within_frame_scope_with_implicit_window = true;
-    set_next_window_size(Vector2D::new(400, 400), Cond::FirstUseEver);
+    set_next_window_size(Vector2D::new(400, 400), Condition::FirstUseEver);
     begin("Debug##Default");
     // IM_ASSERT(g.CurrentWindow->IsFallbackWindow == true);
 
@@ -358,7 +358,7 @@ pub fn end_frame(g: &mut Context)
     // Sort the window list so that all child windows are after their parent
     // We cannot do that on focus_window() because children may not exist yet
     // g.windows_temp_sort_buffer.resize(0);
-    g.windows_temp_sort_buffer.reserve(g.windows.Size);
+    g.windows_temp_sort_buffer.reserve(g.windows.size);
     // for (int i = 0; i != g.windows.Size; i += 1)
     for win in g.windows.iter_mut()
     {

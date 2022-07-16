@@ -1,6 +1,7 @@
-use crate::draw_list::{drawlist_circle_auto_segment_calc, DRAW_LIST_ARCFAST_SAMPLE_MAX, DRAW_LIST_ARCFAST_TABLE_SIZE, drawlist_circle_auto_segment_calc_r, DrawListFlags};
+use crate::draw_list::{DRAW_LIST_ARCFAST_SAMPLE_MAX, DRAW_LIST_ARCFAST_TABLE_SIZE, drawlist_circle_auto_segment_calc, drawlist_circle_auto_segment_calc_r, DrawListFlags};
 use crate::font::Font;
-use crate::vectors::{Vector2D, Vector4D};
+use crate::vectors::Vector4D;
+use crate::vectors::two_d::Vector2D;
 
 #[derive(Default,Debug,Clone)]
 pub struct DrawListSharedData

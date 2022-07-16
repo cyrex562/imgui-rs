@@ -72,11 +72,11 @@ pub struct Storage
 impl Storage {
     // void                clear() { data.clear(); }
     pub fn Clear(&mut self) {
-        self.Data.clear()
+        self.data.clear()
     }
     //  int       GetInt(ImGuiID key, int default_val = 0) const;
     pub fn GetInt(&self, key: ImGuiID, default_val: i32) -> i32 {
-        for x in self.Data.iter() {
+        for x in self.data.iter() {
             if x.key == key {
                 return x.val.val_i
             }
@@ -85,7 +85,7 @@ impl Storage {
     }
     //  void      SetInt(ImGuiID key, int val);
     pub fn SetInt(&mut self, key: ImGuiID, val: i32) {
-        for x in self.Data.iter_mut() {
+        for x in self.data.iter_mut() {
             if x.key == key {
                 x.val.val_i = val
             }
@@ -93,7 +93,7 @@ impl Storage {
     }
     //  bool      GetBool(ImGuiID key, bool default_val = false) const;
     pub fn GetBool(&self, key: ImGuiID, default_val: bool) -> bool {
-        for x in self.Data.iter() {
+        for x in self.data.iter() {
             if x.key == key {
                 return x.val.val_b
             }
@@ -102,7 +102,7 @@ impl Storage {
     }
     //  void      SetBool(ImGuiID key, bool val);
     pub fn SetBool(&mut self, key: ImGuiID, val: bool) {
-        for x in self.Data.iter_mut() {
+        for x in self.data.iter_mut() {
             if x.key == key {
                 x.val.val_b = val
             }
@@ -110,7 +110,7 @@ impl Storage {
     }
     //  float     GetFloat(ImGuiID key, float default_val = 0.0) const;
     pub fn GetFloat(&self, key: ImGuiID, default_val: f32) -> f32 {
-        for x in self.Data.iter() {
+        for x in self.data.iter() {
             if x.key == key {
                 return x.val.val_f
             }
@@ -119,7 +119,7 @@ impl Storage {
     }
     //  void      SetFloat(ImGuiID key, float val);
     pub fn SetFloat(&mut self, key: ImGuiID, val: f32) {
-        for x in self.Data.iter_mut() {
+        for x in self.data.iter_mut() {
             if x.key == key {
                 x.val.val_f = val
             }
@@ -194,7 +194,7 @@ pub unsafe fn BuildSortByKey(&mut self)
     //         return 0;
     //     }
     // };
-    ImQsort(&mut self.Data as *mut c_void, self.Data.len(), mem::size_of::<ImGuiStoragePair>(), PairComparerByID);
+    ImQsort(&mut self.data as *mut c_void, self.data.len(), mem::size_of::<ImGuiStoragePair>(), PairComparerByID);
 }
 
 // int ImGuiStorage::GetInt(ImGuiID key, int default_val) const
@@ -234,28 +234,28 @@ pub fn GetIntRef(&mut self, key: ImGuiID, default_val: i32) -> *mut i32
     // if (it == data.end() || it->key != key)
     //     it = data.insert(it, ImGuiStoragePair(key, default_val));
     // return &it->val_i;
-        for x in self.Data.iter_mut() {
+        for x in self.data.iter_mut() {
             if x.Key == key {
                 return x.as_mut_ref();
             }
         }
         let mut new_pair = ImGuiStoragePair::new(key, ImGuiStoragePairValTypes::Int(default_val));
-        self.Data.push(new_pair);
-        self.Data.last_mut().unwrap().val.val_i.borrow_mut()
+        self.data.push(new_pair);
+        self.data.last_mut().unwrap().val.val_i.borrow_mut()
 }
 
 // bool* ImGuiStorage::GetBoolRef(ImGuiID key, bool default_val)
 pub fn GetBoolRef(&mut self, key: ImGuiID, default_val: bool) -> *mut bool
     {
     // return (bool*)GetIntRef(key, default_val ? 1 : 0);
-        for x in self.Data.iter_mut() {
+        for x in self.data.iter_mut() {
             if x.Key == key {
                 return x.as_mut_ref();
             }
         }
         let mut new_pair = ImGuiStoragePair::new(key, ImGuiStoragePairValTypes::Bool(default_val));
-        self.Data.push(new_pair);
-        self.Data.last_mut().unwrap().val.val_b.borrow_mut()
+        self.data.push(new_pair);
+        self.data.last_mut().unwrap().val.val_b.borrow_mut()
 }
 
 // float* ImGuiStorage::GetFloatRef(ImGuiID key, float default_val)
@@ -265,14 +265,14 @@ pub fn GetFloatRef(&mut self, key: ImGuiID, default_val: f32) -> *mut f32
     // if (it == data.end() || it->key != key)
     //     it = data.insert(it, ImGuiStoragePair(key, default_val));
     // return &it->val_f;
-        for x in self.Data.iter_mut() {
+        for x in self.data.iter_mut() {
             if x.Key == key {
                 return x.as_mut_ref();
             }
         }
         let mut new_pair = ImGuiStoragePair::new(key, ImGuiStoragePairValTypes::Float(default_val));
-        self.Data.push(new_pair);
-        self.Data.last_mut().unwrap().val.val_f.borrow_mut()
+        self.data.push(new_pair);
+        self.data.last_mut().unwrap().val.val_f.borrow_mut()
 }
 
 // void** ImGuiStorage::GetVoidPtrRef(ImGuiID key, void* default_val)
@@ -282,14 +282,14 @@ pub fn GetVoidPtrRef(&mut self, key: ImGuiID, default_val: *mut c_void) -> *mut 
     // if (it == data.end() || it->key != key)
     //     it = data.insert(it, ImGuiStoragePair(key, default_val));
     // return &it->val_p;
-        for x in self.Data.iter_mut() {
+        for x in self.data.iter_mut() {
             if x.Key == key {
                 return x.as_mut_ref();
             }
         }
         let mut new_pair = ImGuiStoragePair::new(key, ImGuiStoragePairValTypes::VoidPtr(default_val));
-        self.Data.push(new_pair);
-        self.Data.last_mut().unwrap().val.val_p.borrow_mut()
+        self.data.push(new_pair);
+        self.data.last_mut().unwrap().val.val_p.borrow_mut()
 }
 
 // FIXME-OPT: Need a way to reuse the result of lower_bound when doing GetInt()/SetInt() - not too bad because it only happens on explicit interaction (maximum one a frame)

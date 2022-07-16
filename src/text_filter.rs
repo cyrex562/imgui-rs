@@ -96,7 +96,7 @@ impl ImGuiTextFilter {
 
         self.CountGrep = 0;
         // for (int i = 0; i != Filters.size; i += 1)
-        for i in 0..self.Filters.Size {
+        for i in 0..self.Filters.size {
             let f = Filters[i];
             while (f.b < f.e && ImCharIsBlankA(f.b[0])) {
                 f.b += 1;
@@ -147,11 +147,11 @@ pub fn text_filter_text_range_split(separator: char, out: *mut Vec<ImGuiTextRang
     {
         if (*we == separator)
         {
-            out->push_back(ImGuiTextRange(wb, we));
+            out.push_back(ImGuiTextRange(wb, we));
             wb = we + 1;
         }
         we += 1;
     }
     if (wb != we)
-        out->push_back(ImGuiTextRange(wb, we));
+        out.push_back(ImGuiTextRange(wb, we));
 }
