@@ -1,6 +1,6 @@
 use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
-use crate::imgui::SetNextItemWidth;
+use crate::orig_imgui_single_file::SetNextItemWidth;
 use crate::imgui_clipboard::SetClipboardText;
 use crate::imgui_context::ImGuiContext;
 use crate::imgui_file::{ImFileClose, ImFileOpen, ImFileWrite};

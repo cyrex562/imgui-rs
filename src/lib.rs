@@ -10,7 +10,7 @@ use crate::types::INVALID_ID;
 use crate::viewport::{Viewport, ViewportFlags};
 
 pub mod config;
-pub mod imgui;
+pub mod orig_imgui_single_file;
 mod style;
 mod io;
 mod input_event;

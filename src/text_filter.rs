@@ -1,4 +1,4 @@
-use crate::imgui;
+use crate::orig_imgui_single_file;
 use crate::imgui_text_range::ImGuiTextRange;
 
 /// Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
@@ -34,7 +34,7 @@ impl ImGuiTextFilter {
     //  bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0);  // Helper calling InputText+build
     pub fn Draw(&mut self, label: &String, width: f32) -> bool {
         if width != 0.0 {
-            imgui::SetNextItemWidth(width);
+            orig_imgui_single_file::SetNextItemWidth(width);
         }
         let value_changed = InputText(label, self.InputBuf, IM_ARRAYSIZE(self.InputBuf));
         if (value_changed) {

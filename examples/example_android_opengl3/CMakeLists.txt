@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-        ../../src/imgui.rs
+        ../../src/orig_imgui_single_file.rs
         ../../src/imgui_demo.cpp
         ../../src/draw.rs
         ../../src/tables.rs
