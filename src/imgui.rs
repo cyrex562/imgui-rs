@@ -3,7 +3,7 @@ use std::io::SeekFrom::end;
 use std::io::stdout;
 use std::mem::size_of;
 use crate::axis::Axis;
-use crate::border::ResizeBorderDef;
+use crate::border::{get_resize_border_rect, ResizeBorderDef};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
 use crate::condition::Condition;
 use crate::config::{ConfigFlags, IMGUI_DEBUG_INI_SETINGS};
@@ -23,8 +23,9 @@ use crate::hash::hash_string;
 use crate::id::set_active_id;
 use crate::input::{InputSource, ModFlags, MouseButton, MouseCursor, NavLayer, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::item::{is_item_deactivated, is_item_hovered, ItemFlags, ItemStatusFlags};
-use crate::math::floor_vector_2d;
+use crate::math::{floor_vector_2d, swap_f32};
 use crate::mouse::{start_lock_wheeling_window, start_mouse_moving_window};
+use crate::nav::NAV_RESIZE_SPEED;
 use crate::rect::Rect;
 use crate::render::{find_rendered_text_end, render_dimmed_background_behind_window, render_dimmed_backgrounds};
 use crate::resize::{RESIZE_GRIP_DEF, ResizeGripDef};
@@ -35,9 +36,9 @@ use crate::utils::{add_hash_set, remove_hash_set_val, set_hash_set, sub_hash_set
 use crate::vectors::ImLengthSqr;
 use crate::vectors::two_d::Vector2D;
 use crate::viewport::{setup_viewport_draw_data, Viewport, ViewportFlags};
-use crate::window::{add_root_window_to_draw_data, add_window_to_draw_data, add_window_to_sort_buffer, calc_window_content_sizes, calc_window_size_after_constraint, find_bottom_most_visible_window_with_begin_stack, find_front_most_visible_child_window, get_window_display_layer, get_window_for_title_and_menu_height, HoveredFlags, is_window_active_and_visible, is_window_content_hoverable, set_window_condition_allow_flags, update_window_focus_order_list, Window, WindowFlags, WINDOWS_HOVER_PADDING};
+use crate::window::{add_root_window_to_draw_data, add_window_to_draw_data, add_window_to_sort_buffer, calc_window_content_sizes, calc_window_size_after_constraint, find_bottom_most_visible_window_with_begin_stack, find_front_most_visible_child_window, get_window_display_layer, get_window_for_title_and_menu_height, HoveredFlags, is_window_active_and_visible, is_window_content_hoverable, set_window_condition_allow_flags, update_window_focus_order_list, Window, WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::window::settings::{apply_window_settings, WindowSettings};
-use crate::window::size::calc_window_auto_fit_size;
+use crate::window::size::{calc_resize_pos_size_from_any_corner, calc_window_auto_fit_size};
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
@@ -67,9 +68,9 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     let grip_hover_outer_size = if g.io.config_windows_resize_from_edges { WINDOWS_HOVER_PADDING} else { 0.0};
 
     // Vector2D pos_target(f32::MAX, f32::MAX);
-    let pos_target = Vector2D::new(f32::MAX, f32::MAX);
+    let mut pos_target = Vector2D::new(f32::MAX, f32::MAX);
     // Vector2D size_target(f32::MAX, f32::MAX);
-    let size_target = Vector2D::new(f32::MAX, f32::MAX);
+    let mut size_target = Vector2D::new(f32::MAX, f32::MAX);
 
     // Clip mouse interaction rectangles within the viewport rectangle (in practice the narrowing is going to happen most of the time).
     // - Not narrowing would mostly benefit the situation where OS windows _without_ decoration have a threshold for hovering when outside their limits.
@@ -98,89 +99,134 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
         let cornder = Vector2D::lerp2(&window.pos, &window.pos + &window.size, &def.corner_pos_n);
 
         // Using the FlattenChilds button flag we make the resize button accessible even if we are hovering over a child window
-        bool hovered, held;
-        Rect resize_rect(corner - def.InnerDir * grip_hover_outer_size, corner + def.InnerDir * grip_hover_inner_size);
-        if (resize_rect.min.x > resize_rect.max.x) ImSwap(resize_rect.min.x, resize_rect.max.x);
-        if (resize_rect.min.y > resize_rect.max.y) ImSwap(resize_rect.min.y, resize_rect.max.y);
-        ImGuiID resize_grip_id = window.GetID(resize_grip_n); // == GetWindowResizeCornerID()
+        // bool hovered, held;
+        let mut hovered = false;
+        let mut held = false;
+        // Rect resize_rect(corner - def.InnerDir * grip_hover_outer_size, corner + def.InnerDir * grip_hover_inner_size);
+        let mut resize_rect = Rect::new2(corner - &def.inner_dir * grip_hover_outer_size, corner + &def.inner_dir * grip_hover_inner_size);
+        if resize_rect.min.x > resize_rect.max.x { swap_f32(&mut resize_rect.min.x, &mut resize_rect.max.x) };
+        if resize_rect.min.y > resize_rect.max.y { swap_f32(&mut resize_rect.min.y, &mut resize_rect.max.y) };
+        let resize_grip_id = window.get_id3(g, resize_grip_n); // == GetWindowResizeCornerID()
         keep_alive_id(resize_grip_id);
-        ButtonBehavior(resize_rect, resize_grip_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_NoNavFocus);
+        button_behavior(resize_rect, resize_grip_id, &hovered, &held, ButtonFlags::FlattenChildren | ButtonFlags::NoNavFocus);
         //GetForegroundDrawList(window)->add_rect(resize_rect.min, resize_rect.max, IM_COL32(255, 255, 0, 255));
-        if (hovered || held)
-            g.mouse_cursor = (resize_grip_n & 1) ? ImGuiMouseCursor_ResizeNESW : ImGuiMouseCursor_ResizeNWSE;
+        if hovered || held {
+            g.mouse_cursor = if resize_grip_n & 1 {
+                ImGuiMouseCursor_ResizeNESW
+            } else { ImGuiMouseCursor_ResizeNWSE };
+        }
 
-        if (held && g.io.mouse_clicked_count[0] == 2 && resize_grip_n == 0)
+        if held && g.io.mouse_clicked_count[0] == 2 && resize_grip_n == 0
         {
             // Manual auto-fit when double-clicking
-            size_target = CalcWindowSizeAfterConstraint(window, size_auto_fit);
+            size_target = calc_window_size_after_constraint(g, window, size_auto_fit);
             ret_auto_fit = true;
             clear_active_id();
         }
-        else if (held)
+        else if held
         {
             // Resize from any of the four corners
             // We don't use an incremental mouse_delta but rather compute an absolute target size based on mouse position
-            Vector2D clamp_min = Vector2D::new(def.CornerPosN.x == 1.0 ? visibility_rect.min.x : -f32::MAX, def.CornerPosN.y == 1.0 ? visibility_rect.min.y : -f32::MAX);
-            Vector2D clamp_max = Vector2D::new(def.CornerPosN.x == 0.0 ? visibility_rect.max.x : +f32::MAX, def.CornerPosN.y == 0.0 ? visibility_rect.max.y : +f32::MAX);
-            Vector2D corner_target = g.io.mouse_pos - g.ActiveIdClickOffset + ImLerp(def.InnerDir * grip_hover_outer_size, def.InnerDir * -grip_hover_inner_size, def.CornerPosN); // Corner of the window corresponding to our corner grip
-            corner_target = ImClamp(corner_target, clamp_min, clamp_max);
-            CalcResizePosSizeFromAnyCorner(window, corner_target, def.CornerPosN, &pos_target, &size_target);
+            // Vector2D clamp_min = Vector2D::new(def.CornerPosN.x == 1.0 ? visibility_rect.min.x : -f32::MAX, def.CornerPosN.y == 1.0 ? visibility_rect.min.y : -f32::MAX);
+            let in_x
+            let clamp_min = Vector2D::new(if def.corner_pos_n.x == 1.0 { visibility_rect.min.x }  else {-f32::MAX}, if def.corner_pos_n.y == 1.0 { visibility_rect.min.y } else { -f32::MAX});
+
+            // Vector2D clamp_max = Vector2D::new(def.CornerPosN.x == 0.0 ? visibility_rect.max.x : +f32::MAX, def.CornerPosN.y == 0.0 ? visibility_rect.max.y : +f32::MAX);
+            let clamp_max = Vector2D::new(
+                if def.corner_pos_n.x == 0.0 { visibility_rect.max.x } else {f32::MAX},
+                if def.corner_pos_n.y == 0.0 { visibility_rect.max.y} else {f32::MAX}
+            );
+
+            // Vector2D corner_target = g.io.mouse_pos - g.ActiveIdClickOffset + ImLerp(def.InnerDir * grip_hover_outer_size, def.InnerDir * -grip_hover_inner_size, def.CornerPosN); // Corner of the window corresponding to our corner grip
+            let corner_target = &g.io.mouse_pos - &g.active_id_click_offset + Vector2D::lerp2(&(&def.inner_dir * grip_hover_outer_size), (&def.inner_dir * -grop_hover_inner_size), &def.corner_pos_n);
+
+            // corner_target = ImClamp(corner_target, clamp_min, clamp_max);
+            let corner_target = Vector2D::clamp(corner_target, &clamp_min, &clamp_max);
+            // CalcResizePosSizeFromAnyCorner(window, corner_target, def.CornerPosN, &pos_target, &size_target);
+            calc_resize_pos_size_from_any_corner(g, window, &corner_target, &def.corner_pos_n, &mut pos_target, &mut size_target);
         }
 
         // Only lower-left grip is visible before hovering/activating
-        if (resize_grip_n == 0 || held || hovered)
-            resize_grip_col[resize_grip_n] = GetColorU32(held ? Color::ResizeGripActive : hovered ? Color::ResizeGripHovered : Color::ResizeGrip);
+        if resize_grip_n == 0 || held || hovered {
+            resize_grip_col[resize_grip_n] = get_color_u32(if held { Color::ResizeGripActive } else { if hovered { Color::ResizeGripHovered } else { Color::ResizeGrip }}, 0.0);
+        }
     }
-    for (int border_n = 0; border_n < resize_border_count; border_n += 1)
+    // for (int border_n = 0; border_n < resize_border_count; border_n += 1)
+    for border_n in 0 .. resize_border_count
     {
-        const ImGuiResizeBorderDef& def = resize_border_def[border_n];
-        const ImGuiAxis axis = (border_n == Dir::Left || border_n == Dir::Right) ? Axis::X : Axis::Y;
+        // const ImGuiResizeBorderDef& def = resize_border_def[border_n];
+        let def = resize_border_def[border_n];
+        // const ImGuiAxis axis = (border_n == Dir::Left || border_n == Dir::Right) ? Axis::X : Axis::Y;
+        let axis = if border_n == Dir::Left || border_n == Dir::Right { Axis::X } else { Axis::Y};
 
-        bool hovered, held;
-        Rect border_rect = GetResizeBorderRect(window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
-        ImGuiID border_id = window.GetID(border_n + 4); // == GetWindowResizeBorderID()
+        // bool hovered, held;
+        let mut hovered = false;
+        let mut held = false;
+        // Rect border_rect = GetResizeBorderRect(window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
+        let mut border_rect = get_resize_border_rect(g, window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
+        // ImGuiID border_id = window.GetID(border_n + 4); // == GetWindowResizeBorderID()
+        let border_id = window.get_id3(g, border_n + 4);
         keep_alive_id(border_id);
-        ButtonBehavior(border_rect, border_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_NoNavFocus);
+        button_behavior(border_rect, border_id, &hovered, &held, ButtonFlags::FlattenChildren | ButtonFlags::NoNavFocus);
         //GetForegroundDrawLists(window)->add_rect(border_rect.min, border_rect.max, IM_COL32(255, 255, 0, 255));
-        if ((hovered && g.hovered_id_timer > WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER) || held)
+        if (hovered && g.hovered_id_timer > WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER) || held
         {
-            g.mouse_cursor = (axis == Axis::X) ? ImGuiMouseCursor_ResizeEW : ImGuiMouseCursor_ResizeNS;
-            if (held)
+            // g.mouse_cursor = (axis == Axis::X) ? ImGuiMouseCursor_ResizeEW : ImGuiMouseCursor_ResizeNS;
+            g.mouse_cursor = if axis == Axis::X { MouseCursor::ResizeEW} else { MouseCurosr::ResizeNS};
+            if held {
                 *border_held = border_n;
+            }
         }
-        if (held)
+        if held
         {
-            Vector2D clamp_min(border_n == Dir::Right ? visibility_rect.min.x : -f32::MAX, border_n == Dir::Down ? visibility_rect.min.y : -f32::MAX);
-            Vector2D clamp_max(border_n == Dir::Left  ? visibility_rect.max.x : +f32::MAX, border_n == Dir::Up   ? visibility_rect.max.y : +f32::MAX);
-            Vector2D border_target = window.pos;
-            border_target[axis] = g.io.mouse_pos[axis] - g.ActiveIdClickOffset[axis] + WINDOWS_HOVER_PADDING;
-            border_target = ImClamp(border_target, clamp_min, clamp_max);
-            CalcResizePosSizeFromAnyCorner(window, border_target, ImMin(def.SegmentN1, def.SegmentN2), &pos_target, &size_target);
+            // Vector2D clamp_min(border_n == Dir::Right ? visibility_rect.min.x : -f32::MAX, border_n == Dir::Down ? visibility_rect.min.y : -f32::MAX);
+            let clamp_min = Vector2D::new(
+                if border_n == Direction::Right as i32 { visibility_rect.min_x } else { -f32::MAX },
+                if border_n == Direction::Down as i32 { visibility_rect.min_y } else { -f32::MAX }
+            );
+
+            // Vector2D clamp_max(border_n == Dir::Left  ? visibility_rect.max.x : +f32::MAX, border_n == Dir::Up   ? visibility_rect.max.y : +f32::MAX);
+            let clamp_max = Vector2D::new(
+                if border_n == Direction::Left as i32 { visibility_rect.max.x } else { f32::MAX},
+                if border_n == Direction::Up as i32 { visibility_rect.max.y } else { f32::MAX}
+            );
+
+            // Vector2D border_target = window.pos;
+            let mut border_target = window.pos.clone();
+            // border_target[axis] = g.io.mouse_pos[axis] - g.ActiveIdClickOffset[axis] + WINDOWS_HOVER_PADDING;
+            border_target[&axis] = g.io.mouse_pos[&axis] - g.active_id_click_offset[&axis] + WINDOWS_HOVER_PADDING;
+            // border_target = ImClamp(border_target, clamp_min, clamp_max);
+            border_target = Vector2D::clamp(&border_target, &clamp_min, &clamp_max);
+            calc_resize_pos_size_from_any_corner(g, window, &border_target, &Vector2D::min(&def.segment_n1, &def.segment_n2), &mut pos_target, &mut size_target);
         }
     }
-    PopID();
+    pop_id();
 
     // Restore nav layer
     window.dcnav_layer_current = NavLayer::Main;
 
     // Navigation resize (keyboard/gamepad)
-    if (g.nav_windowing_target && g.nav_windowing_target.RootWindowDockTree == window)
+    if g.nav_windowing_target && g.nav_windowing_target.RootWindowDockTree == window
     {
-        Vector2D nav_resize_delta;
-        if (g.NavInputSource == ImGuiInputSource_Keyboard && g.io.key_shift)
-            nav_resize_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_RawKeyboard, ImGuiNavReadMode_Down);
-        if (g.NavInputSource == ImGuiInputSource_Gamepad)
-            nav_resize_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_PadDPad, ImGuiNavReadMode_Down);
-        if (nav_resize_delta.x != 0.0 || nav_resize_delta.y != 0.0)
+        // Vector2D nav_resize_delta;
+        let mut nav_resize_delta = Vector2D::default();
+        if g.nav_input_source == InputSource::Keyboard && g.io.key_shift {
+            nav_resize_delta = get_nav_input_amount_2d(NavDirSourceFlags::RawKeyboard, NavReadMode::Down);
+        }
+        if g.nav_input_source == InputSource::Gamepad {
+            nav_resize_delta = get_nav_input_amount_2d(NavDirSourceFlags::PadDPad, NavReadMode::Down);
+        }
+        if nav_resize_delta.x != 0.0 || nav_resize_delta.y != 0.0
         {
-            const float NAV_RESIZE_SPEED = 600.0;
-            nav_resize_delta *= f32::floor(NAV_RESIZE_SPEED * g.io.delta_time * ImMin(g.io.DisplayFramebufferScale.x, g.io.DisplayFramebufferScale.y));
-            nav_resize_delta = ImMax(nav_resize_delta, visibility_rect.min - window.pos - window.size);
+            // const float NAV_RESIZE_SPEED = 600.0;
+
+            nav_resize_delta *= f32::floor(NAV_RESIZE_SPEED * g.io.delta_time * ImMin(g.io.display_frame_buffer_scale.x, g.io.display_frame_buffer_scale.y));
+            nav_resize_delta = ImMax(nav_resize_delta, &visibility_rect.min - &window.pos - &window.size);
             g.NavWindowingToggleLayer = false;
             g.nav_disable_mouse_hover = true;
             resize_grip_col[0] = GetColorU32(Color::ResizeGripActive);
             // FIXME-NAV: Should store and accumulate into a separate size buffer to handle sizing constraints properly, right now a constraint will make us stuck.
-            size_target = CalcWindowSizeAfterConstraint(window, window.size_full + nav_resize_delta);
+            size_target = calc_window_size_after_constraint(window, window.size_full + nav_resize_delta);
         }
     }
 
@@ -340,7 +386,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const Rect& title_bar_r
             ImGuiID unhide_id = window.GetID("#UNHIDE");
             keep_alive_id(unhide_id);
             bool hovered, held;
-            if (ButtonBehavior(r, unhide_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren))
+            if (button_behavior(r, unhide_id, &hovered, &held, ButtonFlags::FlattenChildren))
                 node.WantHiddenTabBarToggle = true;
             else if (held && IsMouseDragging(0))
                 StartMouseMovingWindowOrNode(window, node, true);
@@ -859,7 +905,7 @@ bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         }
 
         // Apply minimum/maximum window size constraints and final size
-        window.size_full = CalcWindowSizeAfterConstraint(window, window.size_full);
+        window.size_full = calc_window_size_after_constraint(window, window.size_full);
         window.size = window.collapsed && !(flags & WindowFlags::ChildWindow) ? window.title_bar_rect().GetSize() : window.size_full;
 
         // Decoration size
@@ -2577,7 +2623,7 @@ void ImGui::SetNextFrameWantCaptureMouse(bool want_capture_mouse)
 static const char* GetInputSourceName(ImGuiInputSource source)
 {
     const char* input_source_names[] = { "None", "Mouse", "Keyboard", "Gamepad", "Nav", "Clipboard" };
-    IM_ASSERT(IM_ARRAYSIZE(input_source_names) == ImGuiInputSource_COUNT && source >= 0 && source < ImGuiInputSource_COUNT);
+    IM_ASSERT(IM_ARRAYSIZE(input_source_names) == InputSource::COUNT && source >= 0 && source < InputSource::COUNT);
     return input_source_names[source];
 }
 
@@ -4916,35 +4962,35 @@ const char* ImGui::GetNavInputName(ImGuiNavInput n)
 float ImGui::GetNavInputAmount(ImGuiNavInput n, ImGuiNavReadMode mode)
 {
     ImGuiContext& g = *GImGui;
-    if (mode == ImGuiNavReadMode_Down)
+    if (mode == NavReadMode::Down)
         return g.io.NavInputs[n];                         // Instant, read analog input (0.0..1.0, as provided by user)
 
     const float t = g.io.NavInputsDownDuration[n];
-    if (t < 0.0 && mode == ImGuiNavReadMode_Released)  // Return 1.0 when just released, no repeat, ignore analog input.
+    if (t < 0.0 && mode == NavReadMode::Released)  // Return 1.0 when just released, no repeat, ignore analog input.
         return (g.io.NavInputsDownDurationPrev[n] >= 0.0 ? 1.0 : 0.0);
     if (t < 0.0)
         return 0.0;
-    if (mode == ImGuiNavReadMode_Pressed)               // Return 1.0 when just pressed, no repeat, ignore analog input.
+    if (mode == NavReadMode::Pressed)               // Return 1.0 when just pressed, no repeat, ignore analog input.
         return (t == 0.0) ? 1.0 : 0.0;
-    if (mode == ImGuiNavReadMode_Repeat)
+    if (mode == NavReadMode::Repeat)
         return CalcTypematicRepeatAmount(t - g.io.delta_time, t, g.io.KeyRepeatDelay * 0.72, g.io.KeyRepeatRate * 0.80);
-    if (mode == ImGuiNavReadMode_RepeatSlow)
+    if (mode == NavReadMode::RepeatSlow)
         return CalcTypematicRepeatAmount(t - g.io.delta_time, t, g.io.KeyRepeatDelay * 1.25, g.io.KeyRepeatRate * 2.00);
-    if (mode == ImGuiNavReadMode_RepeatFast)
+    if (mode == NavReadMode::RepeatFast)
         return CalcTypematicRepeatAmount(t - g.io.delta_time, t, g.io.KeyRepeatDelay * 0.72, g.io.KeyRepeatRate * 0.30);
     return 0.0;
 }
 
-Vector2D ImGui::GetNavInputAmount2d(ImGuiNavDirSourceFlags dir_sources, ImGuiNavReadMode mode, float slow_factor, float fast_factor)
+Vector2D ImGui::get_nav_input_amount_2d(ImGuiNavDirSourceFlags dir_sources, ImGuiNavReadMode mode, float slow_factor, float fast_factor)
 {
     Vector2D delta(0.0, 0.0);
-    if (dir_sources & ImGuiNavDirSourceFlags_RawKeyboard)
+    if (dir_sources & NavDirSourceFlags::RawKeyboard)
         delta += Vector2D::new((float)IsKeyDown(ImGuiKey_RightArrow) - IsKeyDown(ImGuiKey_LeftArrow), IsKeyDown(ImGuiKey_DownArrow) - IsKeyDown(ImGuiKey_UpArrow));
-    if (dir_sources & ImGuiNavDirSourceFlags_Keyboard)
+    if (dir_sources & NavDirSourceFlags::Keyboard)
         delta += Vector2D::new(GetNavInputAmount(ImGuiNavInput_KeyRight_, mode)   - GetNavInputAmount(ImGuiNavInput_KeyLeft_,   mode), GetNavInputAmount(ImGuiNavInput_KeyDown_,   mode) - GetNavInputAmount(ImGuiNavInput_KeyUp_,   mode));
-    if (dir_sources & ImGuiNavDirSourceFlags_PadDPad)
+    if (dir_sources & NavDirSourceFlags::PadDPad)
         delta += Vector2D::new(GetNavInputAmount(ImGuiNavInput_DpadRight, mode)   - GetNavInputAmount(ImGuiNavInput_DpadLeft,   mode), GetNavInputAmount(ImGuiNavInput_DpadDown,   mode) - GetNavInputAmount(ImGuiNavInput_DpadUp,   mode));
-    if (dir_sources & ImGuiNavDirSourceFlags_PadLStick)
+    if (dir_sources & NavDirSourceFlags::PadLStick)
         delta += Vector2D::new(GetNavInputAmount(ImGuiNavInput_LStickRight, mode) - GetNavInputAmount(ImGuiNavInput_LStickLeft, mode), GetNavInputAmount(ImGuiNavInput_LStickDown, mode) - GetNavInputAmount(ImGuiNavInput_LStickUp, mode));
     if (slow_factor != 0.0 && IsNavInputDown(ImGuiNavInput_TweakSlow))
         delta *= slow_factor;
@@ -4968,7 +5014,7 @@ static void ImGui::nav_update()
     {
         for (int n = 0; n < ImGuiNavInput_COUNT; n += 1)
             IM_ASSERT(io.NavInputs[n] == 0.0 && "Backend needs to either only use io.add_key_event()/io.add_key_analog_event(), either only fill legacy io.nav_inputs[]. Not both!");
-        #define NAV_MAP_KEY(_KEY, _NAV_INPUT, _ACTIVATE_NAV)  do { io.NavInputs[_NAV_INPUT] = io.keys_data[_KEY - Key::KeysDataOffset].analog_value; if (_ACTIVATE_NAV && io.NavInputs[_NAV_INPUT] > 0.0) { g.NavInputSource = ImGuiInputSource_Gamepad; } } while (0)
+        #define NAV_MAP_KEY(_KEY, _NAV_INPUT, _ACTIVATE_NAV)  do { io.NavInputs[_NAV_INPUT] = io.keys_data[_KEY - Key::KeysDataOffset].analog_value; if (_ACTIVATE_NAV && io.NavInputs[_NAV_INPUT] > 0.0) { g.nav_input_source = InputSource::Gamepad; } } while (0)
         NAV_MAP_KEY(ImGuiKey_GamepadFaceDown, ImGuiNavInput_Activate, true);
         NAV_MAP_KEY(ImGuiKey_GamepadFaceRight, ImGuiNavInput_Cancel, true);
         NAV_MAP_KEY(ImGuiKey_GamepadFaceLeft, ImGuiNavInput_Menu, true);
@@ -4992,7 +5038,7 @@ static void ImGui::nav_update()
     const bool nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
     if (nav_keyboard_active)
     {
-        #define NAV_MAP_KEY(_KEY, _NAV_INPUT)  do { if (IsKeyDown(_KEY)) { io.NavInputs[_NAV_INPUT] = 1.0; g.NavInputSource = ImGuiInputSource_Keyboard; } } while (0)
+        #define NAV_MAP_KEY(_KEY, _NAV_INPUT)  do { if (IsKeyDown(_KEY)) { io.NavInputs[_NAV_INPUT] = 1.0; g.nav_input_source = InputSource::Keyboard; } } while (0)
         NAV_MAP_KEY(ImGuiKey_Space,     ImGuiNavInput_Activate );
         NAV_MAP_KEY(ImGuiKey_Enter,     ImGuiNavInput_Input    );
         NAV_MAP_KEY(ImGuiKey_Escape,    ImGuiNavInput_Cancel   );
@@ -5055,8 +5101,8 @@ static void ImGui::nav_update()
     {
         bool activate_down = IsNavInputDown(ImGuiNavInput_Activate);
         bool input_down = IsNavInputDown(ImGuiNavInput_Input);
-        bool activate_pressed = activate_down && IsNavInputTest(ImGuiNavInput_Activate, ImGuiNavReadMode_Pressed);
-        bool input_pressed = input_down && IsNavInputTest(ImGuiNavInput_Input, ImGuiNavReadMode_Pressed);
+        bool activate_pressed = activate_down && IsNavInputTest(ImGuiNavInput_Activate, NavReadMode::Pressed);
+        bool input_pressed = input_down && IsNavInputTest(ImGuiNavInput_Input, NavReadMode::Pressed);
         if (g.active_id == 0 && activate_pressed)
         {
             g.nav_activate_id = g.nav_id;
@@ -5113,7 +5159,7 @@ static void ImGui::nav_update()
 
         // *Normal* Manual scroll with NavScrollXXX keys
         // Next movement request will clamp the nav_id reference rectangle to the visible area, so navigation will resume within those bounds.
-        Vector2D scroll_dir = GetNavInputAmount2d(ImGuiNavDirSourceFlags_PadLStick, ImGuiNavReadMode_Down, 1.0 / 10.0, 10.0);
+        Vector2D scroll_dir = get_nav_input_amount_2d(NavDirSourceFlags::PadLStick, NavReadMode::Down, 1.0 / 10.0, 10.0);
         if (scroll_dir.x != 0.0 && window.ScrollbarX)
             set_scroll_x(window, f32::floor(window.scroll.x + scroll_dir.x * scroll_speed));
         if (scroll_dir.y != 0.0)
@@ -5186,7 +5232,7 @@ void ImGui::NavUpdateCreateMoveRequest()
         g.NavMoveScrollFlags = ImGuiScrollFlags_None;
         if (window && !g.nav_windowing_target && !(window.flags & WindowFlags::NoNavInputs))
         {
-            const ImGuiNavReadMode read_mode = ImGuiNavReadMode_Repeat;
+            const ImGuiNavReadMode read_mode = NavReadMode::Repeat;
             if (!IsActiveIdUsingNavDir(Dir::Left)  && (IsNavInputTest(ImGuiNavInput_DpadLeft,  read_mode) || IsNavInputTest(ImGuiNavInput_KeyLeft_,  read_mode))) { g.NavMoveDir = Dir::Left; }
             if (!IsActiveIdUsingNavDir(Dir::Right) && (IsNavInputTest(ImGuiNavInput_DpadRight, read_mode) || IsNavInputTest(ImGuiNavInput_KeyRight_, read_mode))) { g.NavMoveDir = Dir::Right; }
             if (!IsActiveIdUsingNavDir(Dir::Up)    && (IsNavInputTest(ImGuiNavInput_DpadUp,    read_mode) || IsNavInputTest(ImGuiNavInput_KeyUp_,    read_mode))) { g.NavMoveDir = Dir::Up; }
@@ -5236,7 +5282,7 @@ void ImGui::NavUpdateCreateMoveRequest()
     // When using gamepad, we project the reference nav bounding box into window visible area.
     // This is to allow resuming navigation inside the visible area after doing a large amount of scrolling, since with gamepad every movements are relative
     // (can't focus a visible object like we can with the mouse).
-    if (g.NavMoveSubmitted && g.NavInputSource == ImGuiInputSource_Gamepad && g.NavLayer == NavLayer::Main && window != NULL)// && (g.nav_move_flags & ImGuiNavMoveFlags_Forwarded))
+    if (g.NavMoveSubmitted && g.nav_input_source == InputSource::Gamepad && g.NavLayer == NavLayer::Main && window != NULL)// && (g.nav_move_flags & ImGuiNavMoveFlags_Forwarded))
     {
         bool clamp_x = (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         bool clamp_y = (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
@@ -5396,7 +5442,7 @@ void ImGui::NavMoveRequestApplyResult()
 static void ImGui::NavUpdateCancelRequest()
 {
     ImGuiContext& g = *GImGui;
-    if (!IsNavInputTest(ImGuiNavInput_Cancel, ImGuiNavReadMode_Pressed))
+    if (!IsNavInputTest(ImGuiNavInput_Cancel, NavReadMode::Pressed))
         return;
 
     IMGUI_DEBUG_LOG_NAV("[nav] ImGuiNavInput_Cancel\n");
@@ -5645,7 +5691,7 @@ static void ImGui::NavUpdateWindowing()
     }
 
     // Start CTRL+Tab or Square+L/R window selection
-    const bool start_windowing_with_gamepad = allow_windowing && !g.nav_windowing_target && IsNavInputTest(ImGuiNavInput_Menu, ImGuiNavReadMode_Pressed);
+    const bool start_windowing_with_gamepad = allow_windowing && !g.nav_windowing_target && IsNavInputTest(ImGuiNavInput_Menu, NavReadMode::Pressed);
     const bool start_windowing_with_keyboard = allow_windowing && !g.nav_windowing_target && io.key_ctrl && IsKeyPressed(ImGuiKey_Tab);
     if (start_windowing_with_gamepad || start_windowing_with_keyboard)
         if (ImGuiWindow* window = g.nav_window ? g.nav_window : FindWindowNavFocusable(g.windows_focus_order.size - 1, -INT_MAX, -1))
@@ -5653,18 +5699,18 @@ static void ImGui::NavUpdateWindowing()
             g.nav_windowing_target = g.NavWindowingTargetAnim = window.root_window;
             g.NavWindowingTimer = g.nav_windowing_highlight_alpha = 0.0;
             g.NavWindowingToggleLayer = start_windowing_with_gamepad ? true : false; // Gamepad starts toggling layer
-            g.NavInputSource = start_windowing_with_keyboard ? ImGuiInputSource_Keyboard : ImGuiInputSource_Gamepad;
+            g.nav_input_source = start_windowing_with_keyboard ? InputSource::Keyboard : InputSource::Gamepad;
         }
 
     // Gamepad update
     g.NavWindowingTimer += io.delta_time;
-    if (g.nav_windowing_target && g.NavInputSource == ImGuiInputSource_Gamepad)
+    if (g.nav_windowing_target && g.nav_input_source == InputSource::Gamepad)
     {
         // Highlight only appears after a brief time holding the button, so that a fast tap on PadMenu (to toggle nav_layer) doesn't add visual noise
         g.nav_windowing_highlight_alpha = ImMax(g.nav_windowing_highlight_alpha, ImSaturate((g.NavWindowingTimer - NAV_WINDOWING_HIGHLIGHT_DELAY) / 0.05));
 
         // Select window to focus
-        const int focus_change_dir = IsNavInputTest(ImGuiNavInput_FocusPrev, ImGuiNavReadMode_RepeatSlow) - IsNavInputTest(ImGuiNavInput_FocusNext, ImGuiNavReadMode_RepeatSlow);
+        const int focus_change_dir = IsNavInputTest(ImGuiNavInput_FocusPrev, NavReadMode::RepeatSlow) - IsNavInputTest(ImGuiNavInput_FocusNext, NavReadMode::RepeatSlow);
         if (focus_change_dir != 0)
         {
             NavUpdateWindowingHighlightWindow(focus_change_dir);
@@ -5684,7 +5730,7 @@ static void ImGui::NavUpdateWindowing()
     }
 
     // Keyboard: Focus
-    if (g.nav_windowing_target && g.NavInputSource == ImGuiInputSource_Keyboard)
+    if (g.nav_windowing_target && g.nav_input_source == InputSource::Keyboard)
     {
         // Visuals only appears after a brief time after pressing TAB the first time, so that a fast CTRL+TAB doesn't add visual noise
         g.nav_windowing_highlight_alpha = ImMax(g.nav_windowing_highlight_alpha, ImSaturate((g.NavWindowingTimer - NAV_WINDOWING_HIGHLIGHT_DELAY) / 0.05)); // 1.0
@@ -5701,9 +5747,9 @@ static void ImGui::NavUpdateWindowing()
     if (nav_keyboard_active && IsKeyPressed(Key::ModAlt))
     {
         g.NavWindowingToggleLayer = true;
-        g.NavInputSource = ImGuiInputSource_Keyboard;
+        g.nav_input_source = InputSource::Keyboard;
     }
-    if (g.NavWindowingToggleLayer && g.NavInputSource == ImGuiInputSource_Keyboard)
+    if (g.NavWindowingToggleLayer && g.nav_input_source == InputSource::Keyboard)
     {
         // We cancel toggling nav layer when any text has been typed (generally while holding Alt). (See #370)
         // We cancel toggling nav layer when other modifiers are pressed. (See #4439)
@@ -5724,14 +5770,14 @@ static void ImGui::NavUpdateWindowing()
     if (g.nav_windowing_target && !(g.nav_windowing_target.flags & WindowFlags::NoMove))
     {
         Vector2D move_delta;
-        if (g.NavInputSource == ImGuiInputSource_Keyboard && !io.key_shift)
-            move_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_RawKeyboard, ImGuiNavReadMode_Down);
-        if (g.NavInputSource == ImGuiInputSource_Gamepad)
-            move_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_PadLStick, ImGuiNavReadMode_Down);
+        if (g.nav_input_source == InputSource::Keyboard && !io.key_shift)
+            move_delta = get_nav_input_amount_2d(NavDirSourceFlags::RawKeyboard, NavReadMode::Down);
+        if (g.nav_input_source == InputSource::Gamepad)
+            move_delta = get_nav_input_amount_2d(NavDirSourceFlags::PadLStick, NavReadMode::Down);
         if (move_delta.x != 0.0 || move_delta.y != 0.0)
         {
             const float NAV_MOVE_SPEED = 800.0;
-            const float move_speed = f32::floor(NAV_MOVE_SPEED * io.delta_time * ImMin(io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y)); // FIXME: Doesn't handle variable framerate very well
+            const float move_speed = f32::floor(NAV_MOVE_SPEED * io.delta_time * ImMin(io.display_frame_buffer_scale.x, io.display_frame_buffer_scale.y)); // FIXME: Doesn't handle variable framerate very well
             ImGuiWindow* moving_window = g.nav_windowing_target.RootWindowDockTree;
             set_window_pos(moving_window, moving_window.Pos + move_delta * move_speed, Cond::Always);
             g.nav_disable_mouse_hover = true;
@@ -9158,7 +9204,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
     if (g.hovered_id == 0 || g.hovered_id == title_bar_id || g.active_id == title_bar_id)
     {
         bool held;
-        ButtonBehavior(title_bar_rect, title_bar_id, NULL, &held, ImGuiButtonFlags_AllowItemOverlap);
+        button_behavior(title_bar_rect, title_bar_id, NULL, &held, ButtonFlags::AllowItemOverlap);
         if (g.hovered_id == title_bar_id)
         {
             // ImGuiButtonFlags_AllowItemOverlap + SetItemAllowOverlap() required for appending into dock node tab bar,
@@ -11701,7 +11747,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
         Indent();
         Text("nav_window: '%s'", g.nav_window ? g.nav_window->Name : "NULL");
         Text("nav_id: 0x%08X, nav_layer: %d", g.nav_id, g.NavLayer);
-        Text("nav_input_source: %s", GetInputSourceName(g.NavInputSource));
+        Text("nav_input_source: %s", GetInputSourceName(g.nav_input_source));
         Text("nav_active: %d, nav_visible: %d", g.io.nav_active, g.io.NavVisible);
         Text("nav_activate_id/DownId/PressedId/InputId: %08X/%08X/%08X/%08X", g.nav_activate_id, g.NavActivateDownId, g.NavActivatePressedId, g.NavActivateInputId);
         Text("nav_activate_flags: %04X", g.NavActivateFlags);

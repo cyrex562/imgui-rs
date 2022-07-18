@@ -156,7 +156,7 @@ pub fn ImSwapU32(a: &mut u32, b: &mut u32) {
     *b = tmp;
 }
 
-pub fn ImSwapF32(a: &mut f32, b: &mut f32) {
+pub fn swap_f32(a: &mut f32, b: &mut f32) {
     let mut tmp = *a;
     *a = *b;
     *b = tmp;

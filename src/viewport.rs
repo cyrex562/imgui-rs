@@ -206,7 +206,7 @@ pub fn setup_viewport_draw_data(ctx: &mut Context, viewport: &mut Viewport, draw
     draw_data.total_idx_count = 0;
     draw_data.display_pos = viewport.pos.clone();
     draw_data.display_size = if is_minimized { Vector2D::new(0.0, 0.0) }else { viewport.size.clone() };
-    draw_data.FramebufferScale = io.DisplayFramebufferScale; // FIXME-VIEWPORT: This may vary on a per-monitor/viewport basis?
+    draw_data.FramebufferScale = io.display_frame_buffer_scale; // FIXME-VIEWPORT: This may vary on a per-monitor/viewport basis?
     draw_data.OwnerViewport = viewport;
     // for (int n = 0; n < draw_lists.Size; n += 1)
     for ele in draw_lists {

@@ -40,7 +40,7 @@ pub fn set_active_id(ctx: &mut Context, id: Id32, window: &mut Window)
     if id
     {
         ctx.active_id_is_alive = id;
-        ctx.active_id_source = (ctx.nav_activate_id == id || ctx.nav_activate_input_id == id || ctx.nav_just_moved_to_id == id) ? (ImGuiInputSource)InputSource::Nav : ImGuiInputSource_Mouse;
+        ctx.active_id_source = (ctx.nav_activate_id == id || ctx.nav_activate_input_id == id || ctx.nav_just_moved_to_id == id) ? (ImGuiInputSource)InputSource::Nav : InputSource::Mouse;
     }
 
     // clear declaration of inputs claimed by the widget

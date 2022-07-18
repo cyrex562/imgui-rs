@@ -60,7 +60,7 @@ use crate::vectors::two_d::Vector2D;
 // typedef int ImGuiItemStatusFlags;       // -> enum ImGuiItemStatusFlags_    // flags: for dc.LastItemStatusFlags
 // typedef int ImGuiOldColumnFlags;        // -> enum ImGuiOldColumnFlags_     // flags: for BeginColumns()
 // typedef int ImGuiNavHighlightFlags;     // -> enum ImGuiNavHighlightFlags_  // flags: for RenderNavHighlight()
-// typedef int ImGuiNavDirSourceFlags;     // -> enum ImGuiNavDirSourceFlags_  // flags: for GetNavInputAmount2d()
+// typedef int ImGuiNavDirSourceFlags;     // -> enum NavDirSourceFlags::  // flags: for get_nav_input_amount_2d()
 // typedef int ImGuiNavMoveFlags;          // -> enum ImGuiNavMoveFlags_       // flags: for navigation requests
 // typedef int ImGuiNextItemDataFlags;     // -> enum ImGuiNextItemDataFlags_  // flags: for SetNextItemXXX() functions
 // typedef int ImGuiNextWindowDataFlags;   // -> enum ImGuiNextWindowDataFlags_// flags: for SetNextWindowXXX() functions
@@ -672,7 +672,7 @@ use crate::vectors::two_d::Vector2D;
      // void          NavMoveRequestTryWrapping(ImGuiWindow* window, ImGuiNavMoveFlags move_flags);
      // const char*   GetNavInputName(ImGuiNavInput n);
      // float         GetNavInputAmount(ImGuiNavInput n, ImGuiNavReadMode mode);
-     // Vector2D        GetNavInputAmount2d(ImGuiNavDirSourceFlags dir_sources, ImGuiNavReadMode mode, float slow_factor = 0.0, float fast_factor = 0.0);
+     // Vector2D        get_nav_input_amount_2d(ImGuiNavDirSourceFlags dir_sources, ImGuiNavReadMode mode, float slow_factor = 0.0, float fast_factor = 0.0);
      // int           CalcTypematicRepeatAmount(float t0, float t1, float repeat_delay, float repeat_rate);
      // void          ActivateItem(ImGuiID id);   // Remotely activate a button, checkbox, tree node etc. given its unique id. activation is queued and processed on the next frame when the item is encountered again.
      // void          SetNavWindow(ImGuiWindow* window);

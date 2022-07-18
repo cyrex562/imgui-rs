@@ -266,7 +266,7 @@ void ImGui_ImplAndroid_NewFrame()
 
     io.display_size = Vector2D::new((float)window_width, window_height);
     if (window_width > 0 && window_height > 0)
-        io.DisplayFramebufferScale = Vector2D::new((float)display_width / window_width, display_height / window_height);
+        io.display_frame_buffer_scale = Vector2D::new((float)display_width / window_width, display_height / window_height);
 
     // Setup time step
     struct timespec current_timespec;

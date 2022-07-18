@@ -1176,7 +1176,7 @@ void ImGui::TableUpdateBorders(ImGuiTable* table)
         keep_alive_id(column_id);
 
         bool hovered = false, held = false;
-        bool pressed = ButtonBehavior(hit_rect, column_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_AllowItemOverlap | ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_PressedOnDoubleClick | ImGuiButtonFlags_NoNavFocus);
+        bool pressed = button_behavior(hit_rect, column_id, &hovered, &held, ButtonFlags::FlattenChildren | ButtonFlags::AllowItemOverlap | ButtonFlags::PressedOnClick | ButtonFlags::PressedOnDoubleClick | ButtonFlags::NoNavFocus);
         if (pressed && IsMouseDoubleClicked(0))
         {
             TableSetColumnWidthAutoSingle(table, column_n);
@@ -2928,7 +2928,7 @@ void ImGui::TableHeader(const char* label)
 
     // Using AllowItemOverlap mode because we cover the whole cell, and we want user to be able to submit subsequent items.
     bool hovered, held;
-    bool pressed = ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_AllowItemOverlap);
+    bool pressed = button_behavior(bb, id, &hovered, &held, ButtonFlags::AllowItemOverlap);
     if (g.active_id != id)
         SetItemAllowOverlap();
     if (held || hovered || selected)
@@ -4013,7 +4013,7 @@ void ImGui::EndColumns()
             bool hovered = false, held = false;
             if (!(flags & ImGuiOldColumnFlags_NoResize))
             {
-                ButtonBehavior(column_hit_rect, column_id, &hovered, &held);
+                button_behavior(column_hit_rect, column_id, &hovered, &held);
                 if (hovered || held)
                     g.mouse_cursor = ImGuiMouseCursor_ResizeEW;
                 if (held && !(column.flags & ImGuiOldColumnFlags_NoResize))

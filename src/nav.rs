@@ -116,3 +116,5 @@ pub enum DimgNavReadMode
     RepeatSlow,
     RepeatFast
 }
+
+pub const NAV_RESIZE_SPEED: f32 = 600.0;
