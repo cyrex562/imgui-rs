@@ -117,7 +117,7 @@ impl DrawList {
         todo!()
     }
     //  void  add_rect_filled(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
-    pub fn add_rect_filled(&mut self, p_min: &Vector2D, p_max: &Vector2D, col: u32, rounding: f32, flags: f32) {
+    pub fn add_rect_filled(&mut self, p_min: &Vector2D, p_max: &Vector2D, col: u32, rounding: f32, flags: &HashSet<DrawFlags>) {
         todo!()
     }
     //  void  add_rect_filled_multi_color(const Vector2D& p_min, const Vector2D& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
@@ -215,7 +215,7 @@ impl DrawList {
         }
     }
     // inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_path.data, _path.size, col); _path.size = 0; }
-    pub fn PathFillConvex(&mut self, col: u32) {
+    pub fn path_fill_convex(&mut self, col: u32) {
         self.AddConvexPolyFilled(self.path.as_slice(), self.path.len(), col);
         self.path.clear()
     }
@@ -229,7 +229,7 @@ impl DrawList {
         todo!()
     }
     //  void  PathArcToFast(const Vector2D& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
-    pub fn PathArcToFast(&mut self, center: &Vector2D, radius: f32, a_min_of_12: i32, a_max_of_12: i32) {
+    pub fn path_arc_to_fast(&mut self, center: &Vector2D, radius: f32, a_min_of_12: i32, a_max_of_12: i32) {
         todo!()
     }
     //  void  PathBezierCubicCurveTo(const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, int num_segments = 0); // Cubic Bezier (4 control points)
@@ -393,18 +393,18 @@ pub const DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN: f32 = 4.0;
 // #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX                     512
 pub const DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX: f32 = 512.0;
 
-// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD,_MAXERROR)    ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(IM_PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD,_MAXERROR)    ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(f32::PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
 pub fn drawlist_circle_auto_segment_calc(radius: f32, max_error: f32) -> f32 {
     f32::clamp(f32::round(f32::ceil(PI / f32::acos(1 - f32::min(max_error, (radius)) / (radius)))), DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX)
 }
 
 // Raw equation from IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC rewritten for 'r' and 'error'.
-// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(_N,_MAXERROR)    ((_MAXERROR) / (1 - ImCos(IM_PI / ImMax((float)(_N), IM_PI))))
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(_N,_MAXERROR)    ((_MAXERROR) / (1 - ImCos(f32::PI / ImMax((float)(_N), f32::PI))))
 pub fn drawlist_circle_auto_segment_calc_r(n: f32, max_error: f32) -> f32 {
     ((max_error) / (1 - f32::cos(f32::PI / f32::max(n, f32::PI))))
 }
 
-// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(_N,_RAD)     ((1 - ImCos(IM_PI / ImMax((float)(_N), IM_PI))) / (_RAD))
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(_N,_RAD)     ((1 - ImCos(f32::PI / ImMax((float)(_N), f32::PI))) / (_RAD))
 pub fn drawlist_circl_auto_segment_calc_error(n: f32, rad: f32) -> f32 {
     ((1 - f32::cos(f32::PI / f32::max(n, f32::PI))) / rad)
 }

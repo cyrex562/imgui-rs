@@ -29,7 +29,7 @@ pub fn is_mouse_hovering_rect(g: &mut Context, r_min: &Vector2D, r_max: &Vector2
 
     if clip {
         let curr_win = g.get_current_window()?;
-        rect_clipped.ClipWith(&curr_win.clip_rect);
+        rect_clipped.clip_with(&curr_win.clip_rect);
     }
 
     // Expand for touch input

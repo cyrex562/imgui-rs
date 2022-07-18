@@ -6,7 +6,7 @@ use crate::draw_list::{add_draw_list_to_draw_data, get_background_draw_list, get
 use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::ImGuiColor;
-use crate::imgui_style::{GetColorU32, GetColorU32_2, GetColorU32_3};
+use crate::imgui_style::{get_color_u32, GetColorU32_2, GetColorU32_3};
 use crate::input::MouseCursor;
 use crate::style::get_color_u32;
 use crate::types::Id32;
@@ -55,7 +55,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     if text != text_display_end
     {
-        window.draw_list.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(ImGuiColor::Text as u32), text, text_display_end, 0.0, None);
+        window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(ImGuiColor::Text as u32), text, text_display_end, 0.0, None);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
         }
@@ -76,7 +76,7 @@ pub fn RenderTextWrapped(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     if text != text_end
     {
-        window.draw_list.AddText2(&g.font, g.FontSize, pos, GetColorU32_3(Color::Text), text, text_end, wrap_width);
+        window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(StyleColor::Text), text, text_end, wrap_width);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_end);
         }
@@ -105,11 +105,11 @@ void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, 
     if (need_clipping)
     {
         Vector4D fine_clip_rect(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
-        draw_list.AddText(NULL, 0.0, pos, GetColorU32(Color::Text), text, text_display_end, 0.0, &fine_clip_rect);
+        draw_list.AddText(NULL, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, &fine_clip_rect);
     }
     else
     {
-        draw_list.AddText(NULL, 0.0, pos, GetColorU32(Color::Text), text, text_display_end, 0.0, NULL);
+        draw_list.AddText(NULL, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, NULL);
     }
 }
 
@@ -151,7 +151,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         //          <-> this is generally some padding value
 
         const ImFont* font = draw_list->_Data.Font;
-        const float font_size = draw_list->_Data.FontSize;
+        const float font_size = draw_list->_Data.font_size;
         const char* text_end_ellipsis = NULL;
 
         ImWchar ellipsis_char = font.EllipsisChar;
@@ -169,7 +169,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         if (ellipsis_char_count > 1)
         {
             // Full ellipsis size without free spacing after it.
-            const float spacing_between_dots = 1.0 * (draw_list->_Data.FontSize / font.FontSize);
+            const float spacing_between_dots = 1.0 * (draw_list->_Data.font_size / font.font_size);
             ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots;
             ellipsis_total_width = ellipsis_glyph_width * ellipsis_char_count - spacing_between_dots;
         }
@@ -196,7 +196,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         if (ellipsis_x + ellipsis_total_width <= ellipsis_max_x)
             for (int i = 0; i < ellipsis_char_count; i += 1)
             {
-                font.RenderChar(draw_list, font_size, Vector2D::new(ellipsis_x, pos_min.y), GetColorU32(Color::Text), ellipsis_char);
+                font.RenderChar(draw_list, font_size, Vector2D::new(ellipsis_x, pos_min.y), get_color_u32(StyleColor::Text), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
     }
@@ -214,12 +214,12 @@ void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool bor
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    window.draw_list.AddRectFilled(p_min, p_max, fill_col, rounding);
-    const float border_size = g.style.FrameBorderSize;
+    window.draw_list.add_rect_filled(p_min, p_max, fill_col, rounding);
+    const float border_size = g.style.frame_border_size;
     if (border && border_size > 0.0)
     {
-        window.draw_list.AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(Color::BorderShadow), rounding, 0, border_size);
-        window.draw_list.AddRect(p_min, p_max, GetColorU32(Color::Border), rounding, 0, border_size);
+        window.draw_list.AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), get_color_u32(StyleColor::BorderShadow), rounding, 0, border_size);
+        window.draw_list.AddRect(p_min, p_max, get_color_u32(StyleColor::Border), rounding, 0, border_size);
     }
 }
 
@@ -227,11 +227,11 @@ void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    const float border_size = g.style.FrameBorderSize;
+    const float border_size = g.style.frame_border_size;
     if (border_size > 0.0)
     {
-        window.draw_list.AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), GetColorU32(Color::BorderShadow), rounding, 0, border_size);
-        window.draw_list.AddRect(p_min, p_max, GetColorU32(Color::Border), rounding, 0, border_size);
+        window.draw_list.AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), get_color_u32(StyleColor::BorderShadow), rounding, 0, border_size);
+        window.draw_list.AddRect(p_min, p_max, get_color_u32(StyleColor::Border), rounding, 0, border_size);
     }
 }
 
@@ -248,7 +248,7 @@ void ImGui::render_nav_highlight(const Rect& bb, ImGuiID id, ImGuiNavHighlightFl
 
     float rounding = (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.style.FrameRounding;
     Rect display_rect = bb;
-    display_rect.ClipWith(window.clip_rect);
+    display_rect.clip_with(window.clip_rect);
     if (flags & ImGuiNavHighlightFlags_TypeDefault)
     {
         const float THICKNESS = 2.0;
@@ -257,13 +257,13 @@ void ImGui::render_nav_highlight(const Rect& bb, ImGuiID id, ImGuiNavHighlightFl
         bool fully_visible = window.clip_rect.Contains(display_rect);
         if (!fully_visible)
             window.draw_list.push_clip_rect(display_rect.min, display_rect.max);
-        window.draw_list.AddRect(display_rect.min + Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.max - Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(Color::NavHighlight), rounding, 0, THICKNESS);
+        window.draw_list.AddRect(display_rect.min + Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.max - Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), get_color_u32(StyleColor::NavHighlight), rounding, 0, THICKNESS);
         if (!fully_visible)
             window.draw_list.pop_clip_rect();
     }
     if (flags & NavHighlightingFlags::TypeThin)
     {
-        window.draw_list.AddRect(display_rect.min, display_rect.max, GetColorU32(Color::NavHighlight), rounding, 0, 1.0);
+        window.draw_list.AddRect(display_rect.min, display_rect.max, get_color_u32(StyleColor::NavHighlight), rounding, 0, 1.0);
     }
 }
 
@@ -318,19 +318,19 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
         // ImGuiWindow* dim_behind_window = FindBottomMostVisibleWindowWithinBeginStack(modal_window);
         let dim_behind_window = find_bottom_most_visible_window_with_begin_stack(ctx, modal_window);
-        // RenderDimmedBackgroundBehindWindow(dim_behind_window, GetColorU32(ImGuiCol_ModalWindowDimBg, g.dim_bg_ration));
-        render_dimmed_background_behind_window(ctx, dim_behind_window, get_color_u32(Color::ModalWindowDimBg, g.dim_bg_ratio));
+        // RenderDimmedBackgroundBehindWindow(dim_behind_window, get_color_u32(ImGuiCol_ModalWindowDimBg, g.dim_bg_ration));
+        render_dimmed_background_behind_window(ctx, dim_behind_window, get_color_u32(StyleColor::ModalWindowDimBg, g.dim_bg_ratio));
         viewports_already_dimmed[0] = modal_window.viewport_id;
     } else if dim_bg_for_window_list {
         // Draw dimming behind CTRL+Tab target window and behind CTRL+Tab UI window
         let nwta_win = g.get_window(g.nav_windowing_target_anim).unwrap();
         let nwl_win = g.get_window(g.nav_windowing_list_window_id).unwrap();
-        render_dimmed_background_behind_window(ctx, g.NavWindowingTargetAnim, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
+        render_dimmed_background_behind_window(ctx, g.NavWindowingTargetAnim, get_color_u32(StyleColor::NavWindowingDimBg, g.dim_bg_ration));
         if g.nav_windowing_list_window_id != INVALID_ID {
 
             if nwl_win.viewport_id != INVALID_ID {
                 if nwl_win.viewport_id != nwta_win.viewport_id{
-                    render_dimmed_background_behind_window(ctx, nwl_win, get_color_u32(Color::NavWindowingDimBg, g.dim_bg_ration));
+                    render_dimmed_background_behind_window(ctx, nwl_win, get_color_u32(StyleColor::NavWindowingDimBg, g.dim_bg_ration));
                 }
             }
         }
@@ -356,7 +356,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
             window.draw_list.add_draw_cmd();
         }
         window.draw_list.push_clip_rect(viewport.pos, viewport.pos + viewport.size);
-        window.draw_list.add_rect(bb.min, bb.max, get_color_u32(Color::NavWindowingHighlight, g.nav_windowing_highlight_alpha), window.WindowRounding, 0, 3.0);
+        window.draw_list.add_rect(bb.min, bb.max, get_color_u32(StyleColor::NavWindowingHighlight, g.nav_windowing_highlight_alpha), window.WindowRounding, 0, 3.0);
         window.draw_list.pop_clip_rect();
      }
 
@@ -373,7 +373,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
         }
         // ImDrawList* draw_list = GetForegroundDrawList(viewport);
         let draw_list = get_foreground_draw_list(g, viewport);
-        let dim_bg_col = get_color_u32(if dim_bg_for_modal { Color::ModalWindowDimBg } else { Color::NavWindowingDimBg }, g.dim_bg_ration);
+        let dim_bg_col = get_color_u32(if dim_bg_for_modal { StyleColor::ModalWindowDimBg } else { StyleColor::NavWindowingDimBg }, g.dim_bg_ration);
         draw_list.add_rect_filled(viewport.pos, viewport.pos + viewport.size, dim_bg_col, 0.0, 0.0);
     }
 }

@@ -70,7 +70,7 @@ pub enum ItemStatusFlags {
     HasDisplayRect = 1 << 1,
     // g.last_item_data.display_rect is valid
     Edited = 1 << 2,
-    // Value exposed by item was edited in the current frame (should match the bool return value of most widgets)
+    // value exposed by item was edited in the current frame (should match the bool return value of most widgets)
     ToggledSelection = 1 << 3,
     // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
     ToggledOpen = 1 << 4,

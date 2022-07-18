@@ -16,7 +16,7 @@ pub struct DrawListSharedData
     pub curve_tesselation_tol: f32,
     // float           circle_segment_max_error;      // Number of circle segments to use per pixel of radius for add_circle() etc
     pub circle_segment_max_error: f32,
-    // Vector4D          ClipRectFullscreen;         // Value for PushClipRectFullscreen()
+    // Vector4D          ClipRectFullscreen;         // value for PushClipRectFullscreen()
     pub clip_rect_full_screen: Vector4D,
     // ImDrawListFlags initial_flags;               // Initial flags at the beginning of the frame (it is possible to alter flags on a per-drawlist basis afterwards)
     pub initial_flags: HashSet<DrawListFlags>,

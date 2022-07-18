@@ -31,10 +31,10 @@ impl ResizeBorderDef {
 // static const ImGuiResizeBorderDef resize_border_def[4] =
 pub const RESIZE_BORDER_DEF: [ResizeBorderDef;4] =
 [
-    ImGuiResizeBorderDef::new( Vector2D::new(+1, 0), Vector2D::new(0, 1), Vector2D::new(0, 0), IM_PI * 1.00 ), // Left
-    ImGuiResizeBorderDef::new( Vector2D::new(-1, 0), Vector2D::new(1, 0), Vector2D::new(1, 1), IM_PI * 0.00 ), // Right
-    ImGuiResizeBorderDef::new( Vector2D::new(0, +1), Vector2D::new(0, 0), Vector2D::new(1, 0), IM_PI * 1.50 ), // Up
-    ImGuiResizeBorderDef::new( Vector2D::new(0, -1), Vector2D::new(1, 1), Vector2D::new(0, 1), IM_PI * 0.50 )  // down
+    ImGuiResizeBorderDef::new( Vector2D::new(+1, 0), Vector2D::new(0, 1), Vector2D::new(0, 0), f32::PI * 1.00 ), // Left
+    ImGuiResizeBorderDef::new( Vector2D::new(-1, 0), Vector2D::new(1, 0), Vector2D::new(1, 1), f32::PI * 0.00 ), // Right
+    ImGuiResizeBorderDef::new( Vector2D::new(0, +1), Vector2D::new(0, 0), Vector2D::new(1, 0), f32::PI * 1.50 ), // Up
+    ImGuiResizeBorderDef::new( Vector2D::new(0, -1), Vector2D::new(1, 1), Vector2D::new(0, 1), f32::PI * 0.50 )  // down
 ];
 
 // static ImRect GetResizeBorderRect(ImGuiWindow* window, int border_n, float perp_padding, float thickness)

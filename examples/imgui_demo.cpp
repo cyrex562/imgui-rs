@@ -707,7 +707,7 @@ static void ShowDemoWindowWidgets()
         }
 
         ImGui::Separator();
-        ImGui::LabelText("label", "Value");
+        ImGui::LabelText("label", "value");
 
         {
             // Using the _simplified_ one-liner Combo() api here
@@ -3503,13 +3503,13 @@ static void ShowDemoWindowPopups()
         {
             HelpMarker("Text() elements don't have stable identifiers so we need to provide one.");
             static float value = 0.5;
-            ImGui::Text("Value = %.3 <-- (1) right-click this text", value);
+            ImGui::Text("value = %.3 <-- (1) right-click this text", value);
             if (ImGui::BeginPopupContextItem("my popup"))
             {
                 if (ImGui::Selectable("Set to zero")) value = 0.0;
                 if (ImGui::Selectable("Set to PI")) value = 3.1415;
                 ImGui::SetNextItemWidth(-FLT_MIN);
-                ImGui::DragFloat("##Value", &value, 0.1, 0.0, 0.0);
+                ImGui::DragFloat("##value", &value, 0.1, 0.0, 0.0);
                 ImGui::EndPopup();
             }
 
@@ -6552,7 +6552,7 @@ static void ShowExampleMenuFile()
         ImGui::EndChild();
         static float f = 0.5;
         static int n = 0;
-        ImGui::SliderFloat("Value", &f, 0.0, 1.0);
+        ImGui::SliderFloat("value", &f, 0.0, 1.0);
         ImGui::InputFloat("Input", &f, 0.1);
         ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
         ImGui::EndMenu();

@@ -235,9 +235,9 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
     // ImFont* font = g.font;
     let font = GImGui.font;
     // const float line_height = g.font_size;
-    let line_height = GImGui.FontSize;
+    let line_height = GImGui.font_size;
     // const float scale = line_height / font->font_size;
-    let scale = line_height / font.FontSize;
+    let scale = line_height / font.font_size;
     // Vector2D text_size = Vector2D(0, 0);
     let mut text_size = Vector2D::default();
     // float line_width = 0.0;

@@ -1,4 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
+use crate::math;
 
 // Vector2D: 2D vector used to store positions, sizes etc. [Compile-time configurable type]
 // This is a frequently used type in the API. Consider using IM_VEC2_CLASS_EXTRA to create implicit cast from/to our preferred type.
@@ -73,6 +74,13 @@ impl Vector2D {
             y: self.y + (b.y - self.y) * t.y,
         }
     }
+
+    pub fn max(&self, rhs: &Self) -> Self {
+        Self {
+            x: if self.x > rhs.x { self.x} else {rhs.x},
+            y: if self.y > rhs.y { self.y} else {rhs.y}
+        }
+    }
 }
 
 
@@ -138,5 +146,27 @@ impl Div for Vector2D {
             x: self.x / rhs.x,
             y: self.y / rhs.y
         }
+    }
+}
+
+// static inline float  ImInvLength(const Vector2D& lhs, float fail_value)           { float d = (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0.0) return ImRsqrt(d); return fail_value; }
+pub fn inv_length(lhs: &Vector2D, fail_value: f32) -> f32 {
+    let mut d = (lhs.x * lhs.x) +  (lhs.y * lhs.y);
+    if d > 0.0 {
+        return math::r_sqrt(d)
+    }
+    fail_value
+}
+
+// static inline float  ImDot(const Vector2D& a, const Vector2D& b)                    { return a.x * b.x + a.y * b.y; }
+pub fn dot_vector_2d(a: &Vector2D, b: &Vector2D) -> f32 {
+    a.x * b.x + a.y * b.y
+}
+
+// static inline Vector2D ImRotate(const Vector2D& v, float cos_a, float sin_a)        { return Vector2D(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
+pub fn rorate_vector2d(v: &Vector2D, cos_a: f32, sin_a: f32) -> Vector2D {
+    Vector2D{
+        x: v.x * cos_a - v.y * sin_a,
+        y: v.x * sin_a + v.y * cos_a
     }
 }

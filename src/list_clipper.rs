@@ -131,7 +131,7 @@ pub fn GetSkipItemForListClipping() -> bool
     if GImGui.CurrentTable {
         GImGui.CurrentTable.HostSkipItems
     } else {
-        GImGui.current_window.SkipItems
+        GImGui.current_window.skip_items
     }
 
 }

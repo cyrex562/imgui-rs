@@ -20,7 +20,7 @@ index of this file:
 // [SECTION] Widgets: Selectable
 // [SECTION] Widgets: ListBox
 // [SECTION] Widgets: PlotLines, PlotHistogram
-// [SECTION] Widgets: Value helpers
+// [SECTION] Widgets: value helpers
 // [SECTION] Widgets: MenuItem, BeginMenu, EndMenu, etc.
 // [SECTION] Widgets: BeginTabBar, EndTabBar, etc.
 // [SECTION] Widgets: BeginTabItem, EndTabItem, etc.
@@ -5087,7 +5087,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
     Vector2D picker_pos = window.DC.CursorPos;
     float square_sz = GetFrameHeight();
     float bars_width = square_sz; // Arbitrary smallish width of Hue/Alpha picking bars
-    float sv_picker_size = ImMax(bars_width * 1, width - (alpha_bar ? 2 : 1) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/Value picking box
+    float sv_picker_size = ImMax(bars_width * 1, width - (alpha_bar ? 2 : 1) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/value picking box
     float bar0_pos_x = picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
     float bar1_pos_x = bar0_pos_x + bars_width + style.ItemInnerSpacing.x;
     float bars_triangles_half_sz = IM_FLOOR(bars_width * 0.20);
@@ -6547,10 +6547,10 @@ void ImGui::PlotHistogram(const char* label, float (*values_getter)(void* data, 
 }
 
 //-------------------------------------------------------------------------
-// [SECTION] Widgets: Value helpers
+// [SECTION] Widgets: value helpers
 // Those is not very useful, legacy API.
 //-------------------------------------------------------------------------
-// - Value()
+// - value()
 //-------------------------------------------------------------------------
 
 void ImGui::Value(const char* prefix, bool b)

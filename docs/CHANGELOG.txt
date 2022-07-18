@@ -1682,7 +1682,7 @@ Other Changes:
   the current root window instead of always selecting the previous root window. (#787)
 - ColorEdit: Fix label alignment when using ImGuiColorEditFlags_NoInputs. (#2955) [@rokups]
 - ColorEdit: In HSV display of a RGB stored value, attempt to locally preserve Saturation
-  when Value==0.0 (similar to changes done in 1.73 for Hue). Removed Hue editing lock since
+  when value==0.0 (similar to changes done in 1.73 for Hue). Removed Hue editing lock since
   those improvements in 1.73 makes them unnecessary. (#2722, #2770). [@rokups]
 - ColorEdit: "Copy As" context-menu tool shows hex values with a '#' prefix instead of '0x'.
 - ColorEdit: "Copy As" content-menu tool shows hex values both with/without alpha when available.
@@ -3623,7 +3623,7 @@ Changes:
 - ImGuiTextFilter::Draw() helper return bool and build when filter is modified.
 - ImGuiTextBuffer: added c_str() helper.
 - ColorEdit4(): fixed hovering the color button always showing 1.0 alpha. (#373)
-- ColorConvertFloat4ToU32() round the floats instead of truncating them.
+- color_convert_float4to_u32() round the floats instead of truncating them.
 - window: Fixed window lower-right clipping limit so it plays more friendly with both OpenGL and DirectX coordinates.
 - Internal: Extracted a EndFrame() function out of Render() but kept it internal/private + clarified some asserts. (#335)
 - Internal: Added missing  definitions in imgui_internal.h (#326)

@@ -5,6 +5,8 @@ pub mod settings;
 pub mod class;
 pub mod ops;
 pub mod color;
+pub mod resize;
+pub mod render;
 
 use std::ptr::null_mut;
 
@@ -1183,4 +1185,20 @@ pub fn calc_window_content_sizes(g: &mut Context, window: &mut Window, content_s
     content_size_current.y = if window.content_size_explicit.y != 0.0 { window.content_size_explicit.y } else { f32::floor(window.dc.cursor_max_pos.y - window.dc.cursor_start_pos.y) };
     content_size_ideal.x = if window.content_size_explicit.x != 0.0 { window.content_size_explicit.x } else { f32::floor(ImMax(window.dc.cursor_max_pos.x, window.dc.ideal_max_pos.x) - window.dc.cursor_start_pos.x) };
     content_size_ideal.y = if window.content_size_explicit.y != 0.0 { window.content_size_explicit.y } else { f32::floor(ImMax(window.dc.cursor_max_pos.y, window.dc.ideal_max_pos.y) - window.dc.cursor_start_pos.y) };
+}
+
+// static inline void ClampWindowRect(ImGuiWindow* window, const Rect& visibility_rect)
+pub fn clamp_window_rect(g: &mut Context, window: &mut Window, visibility_rect: &Rect)
+{
+    // ImGuiContext& g = *GImGui;
+    // Vector2D size_for_clamping = window.size;
+    let mut size_for_clamping= window.size.clone();
+    // if g.io.config_windows_move_from_title_bar_only && (!(window.flags & WindowFlags::NoTitleBar) || window.DockNodeAsHost)
+    if g.io.config_windows_move_from_title_bar_only && !window.flags.contains(&WindowFlags::NoTitleBar) || window.dock_node_as_host.id != INVALID_ID
+    {
+        // size_for_clamping.y = ImGui::GetFrameHeight();
+        size_for_clamping.y = get_frame_height()
+    } // Not using window->TitleBarHeight() as dock_node_as_host will report 0.0 here.
+    // window.pos = ImClamp(window.pos, visibility_rect.min - size_for_clamping, visibility_rect.max);
+    window.pos = Vector2D::clamp(&window.pos, &visibility_rect.min - size_for_clamping, &visibility_rect.max);
 }

@@ -97,7 +97,7 @@ pub struct Style {
 impl Style {
     pub fn new() -> Self {
         let mut out = Self {..Default::default()};
-        out.Alpha = 1.0;             // Global alpha applies to everything in Dear ImGui.
+        out.alpha = 1.0;             // Global alpha applies to everything in Dear ImGui.
         out.DisabledAlpha = 0.60;            // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
         out.WindowPadding = Vector2D::new(8.0, 8.0);      // Padding within a window
         out.WindowRounding = 0.0;             // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
@@ -111,7 +111,7 @@ impl Style {
         out.PopupBorderSize = 1.0;             // Thickness of border around popup or tooltip windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.FramePadding = Vector2D::new(4.0, 3.0);      // Padding within a framed rectangle (used by most widgets)
         out.FrameRounding = 0.0;             // Radius of frame corners rounding. Set to 0.0 to have rectangular frames (used by most widgets).
-        out.FrameBorderSize = 0.0;             // Thickness of border around frames. Generally set to 0.0 or 1.0. Other values not well tested.
+        out.frame_border_size = 0.0;             // Thickness of border around frames. Generally set to 0.0 or 1.0. Other values not well tested.
         out.ItemSpacing = Vector2D::new(8.0, 4.0);      // Horizontal and vertical spacing between widgets/lines
         out.ItemInnerSpacing = Vector2D::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
         out.CellPadding = Vector2D::new(4.0, 2.0);      // Padding within a table cell
@@ -223,21 +223,25 @@ impl StyleMod {
 //     return &mut GImGui.style;
 // }
 
-// ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
+// ImU32 ImGui::get_color_u32(ImGuiCol idx, float alpha_mul)
 pub fn get_color_u32(idx: ImGuiColor, alpha_mul: f32) -> u32
 {
     let style = &GImGui.style;
     let c = style.colors[idx];
-    c.w *= style.Alpha * alpha_mul;
+    c.w *= style.alpha * alpha_mul;
     return ColorConvertFloat4ToU32(c);
 }
 
-// ImU32 ImGui::GetColorU32(const Vector4D& col)
+pub fn get_color_u32_no_alpha(idx: Color) -> u32 {
+    get_color_u32(color, 0.0)
+}
+
+// ImU32 ImGui::get_color_u32(const Vector4D& col)
 pub fn GetColorU32_2(col: &mut Vector4D) -> u32
 {
     let style = &mut GImGui.style;
     let mut c = col;
-    *c.w *= style.Alpha;
+    *c.w *= style.alpha;
     return ColorConvertFloat4ToU32(c);
 }
 
@@ -249,15 +253,15 @@ pub fn GetStyleColorVec4(idx: ImGuiColor) -> Vector4D
     style.colors[idx]
 }
 
-// ImU32 ImGui::GetColorU32(ImU32 col)
+// ImU32 ImGui::get_color_u32(ImU32 col)
 pub fn GetColorU32_3(col: u32) -> u32
 {
     let style = &GImGui.style;
-    if style.Alpha >= 1.0 {
+    if style.alpha >= 1.0 {
         return col;
     }
     let mut a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
-    a = (a * style.Alpha); // We don't need to clamp 0..255 because style.Alpha is in 0..1 range.
+    a = (a * style.alpha); // We don't need to clamp 0..255 because style.Alpha is in 0..1 range.
     (col & !IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT)
 }
 

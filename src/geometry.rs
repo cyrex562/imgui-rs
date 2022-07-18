@@ -174,5 +174,5 @@ pub fn ImTriangleClosestPoint(a: &Vector2D, b: &Vector2D, c: &Vector2D, p: &Vect
 // //  bool       ImTriangleContainsPoint(const Vector2D& a, const Vector2D& b, const Vector2D& c, const Vector2D& p);
 // //  Vector2D     ImTriangleClosestPoint(const Vector2D& a, const Vector2D& b, const Vector2D& c, const Vector2D& p);
 // //  void       ImTriangleBarycentricCoords(const Vector2D& a, const Vector2D& b, const Vector2D& c, const Vector2D& p, float& out_u, float& out_v, float& out_w);
-// // inline float         ImTriangleArea(const Vector2D& a, const Vector2D& b, const Vector2D& c) { return ImFabs((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))) * 0.5; }
+// // inline float         ImTriangleArea(const Vector2D& a, const Vector2D& b, const Vector2D& c) { return f32::abs((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))) * 0.5; }
 // //  ImGuiDir   ImGetDirQuadrantFromDelta(float dx, float dy);

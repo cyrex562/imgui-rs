@@ -312,7 +312,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* outer_window = GetCurrentWindow();
-    if (outer_window.SkipItems) // Consistent with other tables + beneficial side effect that assert on miscalling EndTable() will be more visible.
+    if (outer_window.skip_items) // Consistent with other tables + beneficial side effect that assert on miscalling EndTable() will be more visible.
         return false;
 
     // Sanity checks
@@ -411,7 +411,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     ImGuiWindow* inner_window = table.InnerWindow;
     table.HostIndentX = inner_window.dc.Indent.x;
     table.HostClipRect = inner_window.clip_rect;
-    table.HostSkipItems = inner_window.SkipItems;
+    table.HostSkipItems = inner_window.skip_items;
     temp_data.HostBackupWorkRect = inner_window.WorkRect;
     temp_data.HostBackupParentWorkRect = inner_window.ParentWorkRect;
     temp_data.HostBackupColumnsOffset = outer_window.dc.ColumnsOffset;
@@ -446,7 +446,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     table.RowBgColorCounter = 0;
     table.LastRowFlags = ImGuiTableRowFlags_None;
     table.InnerClipRect = (inner_window == outer_window) ? table.WorkRect : inner_window.clip_rect;
-    table.InnerClipRect.ClipWith(table.WorkRect);     // We need this to honor inner_width
+    table.InnerClipRect.clip_with(table.WorkRect);     // We need this to honor inner_width
     table.InnerClipRect.ClipWithFull(table.HostClipRect);
     table.InnerClipRect.max.y = (flags & ImGuiTableFlags_NoHostExtendY) ? ImMin(table.InnerClipRect.max.y, inner_window.WorkRect.max.y) : inner_window.clip_rect.max.y;
 
@@ -458,8 +458,8 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     table.DeclColumnsCount = 0;
 
     // Using opaque colors facilitate overlapping elements of the grid
-    table.BorderColorStrong = GetColorU32(Color::TableBorderStrong);
-    table.BorderColorLight = GetColorU32(Color::TableBorderLight);
+    table.BorderColorStrong = get_color_u32(StyleColor::TableBorderStrong);
+    table.BorderColorLight = get_color_u32(StyleColor::TableBorderLight);
 
     // Make table current
     g.CurrentTable = table;
@@ -536,7 +536,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     // It will also react to changing fonts with mixed results. It doesn't need to be perfect but merely provide a decent transition.
     // FIXME-DPI: Provide consistent standards for reference size. Perhaps using g.current_dpi_scale would be more self explanatory.
     // This is will lead us to non-rounded WidthRequest in columns, which should work but is a poorly tested path.
-    const float new_ref_scale_unit = g.FontSize; // g.font->get_char_advance('A') ?
+    const float new_ref_scale_unit = g.font_size; // g.font->get_char_advance('A') ?
     if (table.RefScale != 0.0 && table.RefScale != new_ref_scale_unit)
     {
         const float scale_factor = new_ref_scale_unit / table.RefScale;
@@ -549,7 +549,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     // Disable output until user calls TableNextRow() or TableNextColumn() leading to the TableUpdateLayout() call..
     // This is not strictly necessary but will reduce cases were "out of table" output will be misleading to the user.
     // Because we cannot safely assert in EndTable() when no rows have been created, this seems like our best option.
-    inner_window.SkipItems = true;
+    inner_window.skip_items = true;
 
     // clear names
     // At this point the ->NameOffset field of each column will be invalid until TableUpdateLayout() or the first call to TableSetupColumn()
@@ -827,7 +827,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     // to avoid the column fitting having to wait until the first visible frame of the child container (may or not be a good thing).
     // FIXME-TABLE: for always auto-resizing columns may not want to do that all the time.
     if (has_auto_fit_request && table.OuterWindow != table.InnerWindow)
-        table.InnerWindow.SkipItems = false;
+        table.InnerWindow.skip_items = false;
     if (has_auto_fit_request)
         table.IsSettingsDirty = true;
 
@@ -1309,7 +1309,7 @@ void    ImGui::EndTable()
     {
         inner_window.scroll.x = 0.0;
     }
-    else if (table.LastResizedColumn != -1 && table.ResizedColumn == -1 && inner_window.ScrollbarX && table.InstanceInteracted == table.InstanceCurrent)
+    else if (table.LastResizedColumn != -1 && table.ResizedColumn == -1 && inner_window.scrollbar_x && table.InstanceInteracted == table.InstanceCurrent)
     {
         // When releasing a column being resized, scroll to keep the resulting column in sight
         const float neighbor_width_to_keep_visible = table.MinColumnWidth + table.CellPaddingX * 2.0;
@@ -1338,7 +1338,7 @@ void    ImGui::EndTable()
     const Vector2D backup_outer_max_pos = outer_window.dc.cursor_max_pos;
     inner_window.WorkRect = temp_data.HostBackupWorkRect;
     inner_window.ParentWorkRect = temp_data.HostBackupParentWorkRect;
-    inner_window.SkipItems = table.HostSkipItems;
+    inner_window.skip_items = table.HostSkipItems;
     outer_window.dc.cursor_pos = table.OuterRect.min;
     outer_window.dc.ItemWidth = temp_data.HostBackupItemWidth;
     outer_window.dc.ItemWidthStack.size = temp_data.HostBackupItemWidthStackSize;
@@ -1701,7 +1701,7 @@ void ImGui::TableNextRow(ImGuiTableRowFlags row_flags, float row_min_height)
     table.RowPosY2 = ImMax(table.RowPosY2, table.RowPosY1 + row_min_height);
 
     // Disable output until user calls TableNextColumn()
-    table.InnerWindow.SkipItems = true;
+    table.InnerWindow.skip_items = true;
 }
 
 // [Internal] Called by TableNextRow()
@@ -1731,7 +1731,7 @@ void ImGui::TableBeginRow(ImGuiTable* table)
     // Making the header BG color non-transparent will allow us to overlay it multiple times when handling smooth dragging.
     if (table.RowFlags & ImGuiTableRowFlags_Headers)
     {
-        TableSetBgColor(ImGuiTableBgTarget_RowBg0, GetColorU32(Color::TableHeaderBg));
+        TableSetBgColor(ImGuiTableBgTarget_RowBg0, get_color_u32(StyleColor::TableHeaderBg));
         if (table.CurrentRow == 0)
             table.IsUsingHeaders = true;
     }
@@ -1773,7 +1773,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
         if (table.RowBgColor[0] != IM_COL32_DISABLE)
             bg_col0 = table.RowBgColor[0];
         else if (table.flags & ImGuiTableFlags_RowBg)
-            bg_col0 = GetColorU32((table.RowBgColorCounter & 1) ? Color::TableRowBgAlt : Color::TableRowBg);
+            bg_col0 = get_color_u32((table.RowBgColorCounter & 1) ? StyleColor::TableRowBgAlt : StyleColor::TableRowBg);
         if (table.RowBgColor[1] != IM_COL32_DISABLE)
             bg_col1 = table.RowBgColor[1];
 
@@ -1800,11 +1800,11 @@ void ImGui::TableEndRow(ImGuiTable* table)
         if (bg_col0 || bg_col1)
         {
             Rect row_rect(table.WorkRect.min.x, bg_y1, table.WorkRect.max.x, bg_y2);
-            row_rect.ClipWith(table.BgClipRect);
+            row_rect.clip_with(table.BgClipRect);
             if (bg_col0 != 0 && row_rect.min.y < row_rect.max.y)
-                window.draw_list.AddRectFilled(row_rect.min, row_rect.max, bg_col0);
+                window.draw_list.add_rect_filled(row_rect.min, row_rect.max, bg_col0);
             if (bg_col1 != 0 && row_rect.min.y < row_rect.max.y)
-                window.draw_list.AddRectFilled(row_rect.min, row_rect.max, bg_col1);
+                window.draw_list.add_rect_filled(row_rect.min, row_rect.max, bg_col1);
         }
 
         // Draw cell background color
@@ -1817,20 +1817,20 @@ void ImGui::TableEndRow(ImGuiTable* table)
                 // FIXME: This cancels the OuterPadding addition done by TableGetCellBgRect(), need to keep it while rendering correctly while scrolling.
                 const ImGuiTableColumn* column = &table.Columns[cell_data.Column];
                 Rect cell_bg_rect = TableGetCellBgRect(table, cell_data.Column);
-                cell_bg_rect.ClipWith(table.BgClipRect);
+                cell_bg_rect.clip_with(table.BgClipRect);
                 cell_bg_rect.min.x = ImMax(cell_bg_rect.min.x, column.clip_rect.min.x);     // So that first column after frozen one gets clipped when scrolling
                 cell_bg_rect.max.x = ImMin(cell_bg_rect.max.x, column.MaxX);
-                window.draw_list.AddRectFilled(cell_bg_rect.min, cell_bg_rect.max, cell_data.BgColor);
+                window.draw_list.add_rect_filled(cell_bg_rect.min, cell_bg_rect.max, cell_data.BgColor);
             }
         }
 
         // Draw top border
         if (border_col && bg_y1 >= table.BgClipRect.min.y && bg_y1 < table.BgClipRect.max.y)
-            window.draw_list.AddLine(Vector2D::new(table.BorderX1, bg_y1), Vector2D::new(table.BorderX2, bg_y1), border_col, border_size);
+            window.draw_list.add_line(Vector2D::new(table.BorderX1, bg_y1), Vector2D::new(table.BorderX2, bg_y1), border_col, border_size);
 
         // Draw bottom border at the row unfreezing mark (always strong)
         if (draw_strong_bottom_border && bg_y2 >= table.BgClipRect.min.y && bg_y2 < table.BgClipRect.max.y)
-            window.draw_list.AddLine(Vector2D::new(table.BorderX1, bg_y2), Vector2D::new(table.BorderX2, bg_y2), table.BorderColorStrong, border_size);
+            window.draw_list.add_line(Vector2D::new(table.BorderX1, bg_y2), Vector2D::new(table.BorderX2, bg_y2), table.BorderColorStrong, border_size);
     }
 
     // End frozen rows (when we are past the last frozen row line, teleport cursor and alter clipping rectangle)
@@ -1971,7 +1971,7 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     if (!column.IsEnabled)
         window.dc.cursor_pos.y = ImMax(window.dc.cursor_pos.y, table.RowPosY2);
 
-    window.SkipItems = column.IsSkipItems;
+    window.skip_items = column.IsSkipItems;
     if (column.IsSkipItems)
     {
         ImGuiContext& g = *GImGui;
@@ -2276,7 +2276,7 @@ void ImGui::TableSetupDrawChannels(ImGuiTable* table)
     const int channels_for_bg = 1 + 1 * freeze_row_multiplier;
     const int channels_for_dummy = (table.ColumnsEnabledCount < table.ColumnsCount || table.VisibleMaskByIndex != table.EnabledMaskByIndex) ? +1 : 0;
     const int channels_total = channels_for_bg + (channels_for_row * freeze_row_multiplier) + channels_for_dummy;
-    table.DrawSplitter.Split(table.InnerWindow.DrawList, channels_total);
+    table.DrawSplitter.Split(table.InnerWindow.draw_list, channels_total);
     table.DummyDrawChannel = (ImGuiTableDrawChannelIdx)((channels_for_dummy > 0) ? channels_total - 1 : -1);
     table.Bg2DrawChannelCurrent = TABLE_DRAW_CHANNEL_BG2_FROZEN;
     table.Bg2DrawChannelUnfrozen = (ImGuiTableDrawChannelIdx)((table.FreezeRowsCount > 0) ? 2 + channels_for_row : TABLE_DRAW_CHANNEL_BG2_FROZEN);
@@ -2419,7 +2419,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
             ImFormatString(buf, 32, "MG%d:%d", merge_group_n, merge_group.ChannelsCount);
             Vector2D text_pos = merge_group.clip_rect.min + Vector2D::new(4, 4);
             Vector2D text_size = CalcTextSize(buf, NULL);
-            get_foreground_draw_list().AddRectFilled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
+            get_foreground_draw_list().add_rect_filled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
             get_foreground_draw_list().AddText(text_pos, IM_COL32(255, 255, 0, 255), buf, NULL);
             get_foreground_draw_list().AddRect(merge_group.clip_rect.min, merge_group.clip_rect.max, IM_COL32(255, 255, 0, 255));
         }
@@ -2463,8 +2463,8 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
                     merge_clip_rect.max.y = ImMax(merge_clip_rect.max.y, host_rect.max.y);
 #if 0
                 GetOverlayDrawList().AddRect(merge_group.clip_rect.min, merge_group.clip_rect.max, IM_COL32(255, 0, 0, 200), 0.0, 0, 1.0);
-                GetOverlayDrawList().AddLine(merge_group.clip_rect.min, merge_clip_rect.min, IM_COL32(255, 100, 0, 200));
-                GetOverlayDrawList().AddLine(merge_group.clip_rect.max, merge_clip_rect.max, IM_COL32(255, 100, 0, 200));
+                GetOverlayDrawList().add_line(merge_group.clip_rect.min, merge_clip_rect.min, IM_COL32(255, 100, 0, 200));
+                GetOverlayDrawList().add_line(merge_group.clip_rect.max, merge_clip_rect.max, IM_COL32(255, 100, 0, 200));
 
                 remaining_count -= merge_group.ChannelsCount;
                 for (int n = 0; n < IM_ARRAYSIZE(remaining_mask.Storage); n += 1)
@@ -2550,7 +2550,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
             if (is_hovered || is_resized || is_frozen_separator)
             {
                 draw_y2 = draw_y2_body;
-                col = is_resized ? GetColorU32(Color::SeparatorActive) : is_hovered ? GetColorU32(Color::SeparatorHovered) : table.BorderColorStrong;
+                col = is_resized ? get_color_u32(StyleColor::SeparatorActive) : is_hovered ? get_color_u32(StyleColor::SeparatorHovered) : table.BorderColorStrong;
             }
             else
             {
@@ -2559,7 +2559,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
             }
 
             if (draw_y2 > draw_y1)
-                inner_drawlist.AddLine(Vector2D::new(column.MaxX, draw_y1), Vector2D::new(column.MaxX, draw_y2), col, border_size);
+                inner_drawlist.add_line(Vector2D::new(column.MaxX, draw_y1), Vector2D::new(column.MaxX, draw_y2), col, border_size);
         }
     }
 
@@ -2580,13 +2580,13 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
         }
         else if (table.flags & ImGuiTableFlags_BordersOuterV)
         {
-            inner_drawlist.AddLine(outer_border.min, Vector2D::new(outer_border.min.x, outer_border.max.y), outer_col, border_size);
-            inner_drawlist.AddLine(Vector2D::new(outer_border.max.x, outer_border.min.y), outer_border.max, outer_col, border_size);
+            inner_drawlist.add_line(outer_border.min, Vector2D::new(outer_border.min.x, outer_border.max.y), outer_col, border_size);
+            inner_drawlist.add_line(Vector2D::new(outer_border.max.x, outer_border.min.y), outer_border.max, outer_col, border_size);
         }
         else if (table.flags & ImGuiTableFlags_BordersOuterH)
         {
-            inner_drawlist.AddLine(outer_border.min, Vector2D::new(outer_border.max.x, outer_border.min.y), outer_col, border_size);
-            inner_drawlist.AddLine(Vector2D::new(outer_border.min.x, outer_border.max.y), outer_border.max, outer_col, border_size);
+            inner_drawlist.add_line(outer_border.min, Vector2D::new(outer_border.max.x, outer_border.min.y), outer_col, border_size);
+            inner_drawlist.add_line(Vector2D::new(outer_border.min.x, outer_border.max.y), outer_border.max, outer_col, border_size);
         }
     }
     if ((table.flags & ImGuiTableFlags_BordersInnerH) && table.RowPosY2 < table.OuterRect.max.y)
@@ -2594,7 +2594,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
         // Draw bottom-most row border
         const float border_y = table.RowPosY2;
         if (border_y >= table.BgClipRect.min.y && border_y < table.BgClipRect.max.y)
-            inner_drawlist.AddLine(Vector2D::new(table.BorderX1, border_y), Vector2D::new(table.BorderX2, border_y), table.BorderColorLight, border_size);
+            inner_drawlist.add_line(Vector2D::new(table.BorderX1, border_y), Vector2D::new(table.BorderX2, border_y), table.BorderColorLight, border_size);
     }
 
     inner_drawlist.pop_clip_rect();
@@ -2874,7 +2874,7 @@ void ImGui::TableHeader(const char* label)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    if (window.SkipItems)
+    if (window.skip_items)
         return;
 
     ImGuiTable* table = g.CurrentTable;
@@ -2902,7 +2902,7 @@ void ImGui::TableHeader(const char* label)
     const float ARROW_SCALE = 0.65;
     if ((table.flags & ImGuiTableFlags_Sortable) && !(column.flags & ImGuiTableColumnFlags_NoSort))
     {
-        w_arrow = f32::floor(g.FontSize * ARROW_SCALE + g.style.FramePadding.x);
+        w_arrow = f32::floor(g.font_size * ARROW_SCALE + g.style.FramePadding.x);
         if (column.SortOrder > 0)
         {
             ImFormatString(sort_order_suf, IM_ARRAYSIZE(sort_order_suf), "%d", column.SortOrder + 1);
@@ -2933,7 +2933,7 @@ void ImGui::TableHeader(const char* label)
         SetItemAllowOverlap();
     if (held || hovered || selected)
     {
-        const ImU32 col = GetColorU32(held ? Color::HeaderActive : hovered ? Color::HeaderHovered : Color::Header);
+        const ImU32 col = get_color_u32(held ? StyleColor::HeaderActive : hovered ? StyleColor::HeaderHovered : StyleColor::Header);
         //RenderFrame(bb.min, bb.max, col, false, 0.0);
         TableSetBgColor(ImGuiTableBgTarget_CellBg, col, table.CurrentColumn);
     }
@@ -2941,7 +2941,7 @@ void ImGui::TableHeader(const char* label)
     {
         // Submit single cell bg color in the case we didn't submit a full header row
         if ((table.RowFlags & ImGuiTableRowFlags_Headers) == 0)
-            TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(Color::TableHeaderBg), table.CurrentColumn);
+            TableSetBgColor(ImGuiTableBgTarget_CellBg, get_color_u32(StyleColor::TableHeaderBg), table.CurrentColumn);
     }
     render_nav_highlight(bb, id, NavHighlightingFlags::TypeThin | ImGuiNavHighlightFlags_NoRounding);
     if (held)
@@ -2950,7 +2950,7 @@ void ImGui::TableHeader(const char* label)
 
     // Drag and drop to re-order columns.
     // FIXME-TABLE: scroll request while reordering a column and it lands out of the scrolling zone.
-    if (held && (table.flags & ImGuiTableFlags_Reorderable) && IsMouseDragging(0) && !g.drag_drop_active)
+    if (held && (table.flags & ImGuiTableFlags_Reorderable) && is_mouse_dragging(0) && !g.drag_drop_active)
     {
         // While moving a column it will jump on the other side of the mouse, so we also test for mouse_delta.x
         table.ReorderColumn = (ImGuiTableColumnIdx)column_n;
@@ -2979,12 +2979,12 @@ void ImGui::TableHeader(const char* label)
             float y = label_pos.y;
             if (column.SortOrder > 0)
             {
-                push_style_color(Color::Text, GetColorU32(Color::Text, 0.70));
+                push_style_color(StyleColor::Text, get_color_u32(StyleColor::Text, 0.70));
                 RenderText(Vector2D::new(x + g.style.ItemInnerSpacing.x, y), sort_order_suf);
                 pop_style_color();
                 x += w_sort_text;
             }
-            RenderArrow(window.draw_list, Vector2D::new(x, y), GetColorU32(Color::Text), column.SortDirection == ImGuiSortDirection_Ascending ? Dir::Up : Dir::Down, ARROW_SCALE);
+            RenderArrow(window.draw_list, Vector2D::new(x, y), get_color_u32(StyleColor::Text), column.SortDirection == ImGuiSortDirection_Ascending ? Dir::Up : Dir::Down, ARROW_SCALE);
         }
 
         // Handle clicking on column header to adjust Sort Order
@@ -3042,7 +3042,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    if (window.SkipItems)
+    if (window.skip_items)
         return;
 
     bool want_separator = false;
@@ -3540,7 +3540,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
     const char* buf_end = buf + IM_ARRAYSIZE(buf);
     const bool is_active = (table.LastFrameActive >= ImGui::GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
     ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.ID, table.ColumnsCount, table.OuterWindow.Name, is_active ? "" : " *Inactive*");
-    if (!is_active) { push_style_color(Color::Text, GetStyleColorVec4(Color::TextDisabled)); }
+    if (!is_active) { push_style_color(StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open = TreeNode(table, "%s", buf);
     if (!is_active) { pop_style_color(); }
     if (IsItemHovered())
@@ -3918,7 +3918,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
 void ImGui::NextColumn()
 {
     ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems || window.dc.CurrentColumns == NULL)
+    if (window.skip_items || window.dc.CurrentColumns == NULL)
         return;
 
     ImGuiContext& g = *GImGui;
@@ -3993,7 +3993,7 @@ void ImGui::EndColumns()
     // Draw columns borders and handle resize
     // The IsBeingResized flag ensure we preserve pre-resize columns width so back-and-forth are not lossy
     bool is_being_resized = false;
-    if (!(flags & ImGuiOldColumnFlags_NoBorder) && !window.SkipItems)
+    if (!(flags & ImGuiOldColumnFlags_NoBorder) && !window.skip_items)
     {
         // We clip Y boundaries CPU side because very long triangles are mishandled by some GPU drivers.
         const float y1 = ImMax(columns.HostCursorPosY, window.clip_rect.min.y);
@@ -4021,9 +4021,9 @@ void ImGui::EndColumns()
             }
 
             // Draw column
-            const ImU32 col = GetColorU32(held ? Color::SeparatorActive : hovered ? Color::SeparatorHovered : Color::Separator);
+            const ImU32 col = get_color_u32(held ? StyleColor::SeparatorActive : hovered ? StyleColor::SeparatorHovered : StyleColor::Separator);
             const float xi = f32::floor(x);
-            window.draw_list.AddLine(Vector2D::new(xi, y1 + 1.0), Vector2D::new(xi, y2), col);
+            window.draw_list.add_line(Vector2D::new(xi, y1 + 1.0), Vector2D::new(xi, y2), col);
         }
 
         // Apply dragging after drawing the column lines, so our rendered lines are in sync with how items were displayed during the frame.

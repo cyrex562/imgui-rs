@@ -9,7 +9,7 @@ pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_cont
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;
     let style = &mut g.style;
-    // const float decoration_up_height = window.TitleBarHeight() + window.MenuBarHeight();
+    // const float decoration_up_height = window.title_bar_height() + window.MenuBarHeight();
     let decoration_up_height = window.title_bar_height() + window.menu_bar_height();
     // Vector2D size_pad = window.WindowPadding * 2.0;
     let size_pad = window.window_padding.clone() * 2.0;

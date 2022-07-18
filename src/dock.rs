@@ -46,8 +46,8 @@ pub fn dock_context_new_frame_update_docking(ctx: &mut Context)
     {
         if (hovered_window.DockNodeAsHost)
             g.HoveredDockNode = DockNodeTreeFindVisibleNodeByPos(hovered_window.DockNodeAsHost, g.io.mouse_pos);
-        else if (hovered_window.root_window.DockNode)
-            g.HoveredDockNode = hovered_window.root_window.DockNode;
+        else if (hovered_window.root_window.dock_node)
+            g.HoveredDockNode = hovered_window.root_window.dock_node;
     }
 
     // Process Docking requests
@@ -71,12 +71,12 @@ void ImGui::DockContextEndFrame(ImGuiContext* ctx)
     ImGuiDockContext* dc = &g.DockContext;
     for (int n = 0; n < dc.Nodes.data.size; n += 1)
         if (ImGuiDockNode* node = (ImGuiDockNode*)dc.Nodes.data[n].val_p)
-            if (node.LastFrameActive == g.frame_count && node.IsVisible && node.HostWindow && node.IsLeafNode() && !node.IsBgDrawnThisFrame)
+            if (node.LastFrameActive == g.frame_count && node.IsVisible && node.host_window && node.IsLeafNode() && !node.is_bg_drawn_this_frame)
             {
                 Rect bg_rect(node.pos + Vector2D::new(0.0, GetFrameHeight()), node.pos + node.size);
-                ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node.HostWindow.rect(), DOCKING_SPLITTER_SIZE);
-                node.HostWindow.DrawList.ChannelsSetCurrent(0);
-                node.HostWindow.DrawList.AddRectFilled(bg_rect.min, bg_rect.max, node.LastBgColor, node.HostWindow.WindowRounding, bg_rounding_flags);
+                ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node.host_window.rect(), DOCKING_SPLITTER_SIZE);
+                node.host_window.draw_list.channels_set_current(0);
+                node.host_window.draw_list.add_rect_filled(bg_rect.min, bg_rect.max, node.last_bg_color, node.host_window.WindowRounding, bg_rounding_flags);
             }
 }
 
@@ -122,8 +122,8 @@ static void ImGui::DockContextRemoveNode(ImGuiContext* ctx, ImGuiDockNode* node,
     IM_ASSERT(node.ChildNodes[0] == NULL && node.ChildNodes[1] == NULL);
     IM_ASSERT(node.Windows.size == 0);
 
-    if (node.HostWindow)
-        node.HostWindow.DockNodeAsHost = NULL;
+    if (node.host_window)
+        node.host_window.DockNodeAsHost = NULL;
 
     ImGuiDockNode* parent_node = node.ParentNode;
     const bool merge = (merge_sibling_into_parent_node && parent_node != NULL);

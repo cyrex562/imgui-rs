@@ -42,7 +42,7 @@ pub struct ImGuiTableColumn
     pub WidthAuto: f32,
     // float                   StretchWeight;                  // Master width weight when (flags & _WidthStretch). Often around ~1.0 initially.
     pub StretchWeight: f32,
-    // float                   InitStretchWeightOrWidth;       // Value passed to TableSetupColumn(). For width it is a content width (_without padding_).
+    // float                   InitStretchWeightOrWidth;       // value passed to TableSetupColumn(). For width it is a content width (_without padding_).
     pub InitStretchWeightOrWidth: f32,
     // ImRect                  clip_rect;                       // Clipping rectangle for the column
     pub ClipRect: Rect,

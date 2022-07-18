@@ -1,24 +1,26 @@
 use std::collections::HashSet;
 use crate::imgui_h::ImGuiColor;
-use crate::imgui_math::{IM_F32_TO_INT8_SAT, ImFabs, ImFmod, ImLerpU32, ImSwapF32};
+use crate::imgui_math::{IM_F32_TO_INT8_SAT};
 use crate::imgui_vec::Vector4D;
+use crate::math::{f32_mod, im_f32_to_int8_sat, lerp_u32};
+use crate::vectors::Vector4D;
 
-//  ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b)
-pub fn ImAlphaBlendColors(col_a: u32, col_b: u32) -> u32
+//  ImU32 im_alpha_blend_colors(ImU32 col_a, ImU32 col_b)
+pub fn im_alpha_blend_colors(col_a: u32, col_b: u32) -> u32
 {
     // float t = ((col_b >> IM_COL32_A_SHIFT) & 0xFF) / 255.f;
     let t = ((col_b >> IM_COL32_A_SHIFT) & 0xff) as f32 / 255.0;
     // int r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
-    let r = ImLerpU32((col_a >> IM_COL32_R_SHIFT) & 0xff, (col_b >> IM_COL32_R_SHIFT) & 0xff, t);
+    let r = lerp_u32((col_a >> IM_COL32_R_SHIFT) & 0xff, (col_b >> IM_COL32_R_SHIFT) & 0xff, t);
     // int g = ImLerp((col_a >> IM_COL32_G_SHIFT) & 0xFF, (col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
-    let g = ImLerpU32((col_a >> IM_COL32_G_SHIFT) & 0xff, (col_b >> IM_COL32_G_SHIFT) & 0xff, t);
+    let g = lerp_u32((col_a >> IM_COL32_G_SHIFT) & 0xff, (col_b >> IM_COL32_G_SHIFT) & 0xff, t);
     // int b = ImLerp((col_a >> IM_COL32_B_SHIFT) & 0xFF, (col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
-    let b = ImLerpU32((col_a >> IM_COL32_B_SHIFT) & 0xff, (col_b >> IM_COL32_B_SHIFT) & 0xff, t);
+    let b = lerp_u32((col_a >> IM_COL32_B_SHIFT) & 0xff, (col_b >> IM_COL32_B_SHIFT) & 0xff, t);
     make_color_32(r, g, b, 0xFF)
 }
 
 // Vector4D ImGui::ColorConvertU32ToFloat4(ImU32 in)
-pub fn ColorCovertU32ToFloat(in_u32: u32) -> Vector4D
+pub fn color_covert_u32to_float(in_u32: u32) -> Vector4D
 {
     // float s = 1.0 / 255.0;
     let mut s: f32 = 1.0 / 255.0;
@@ -29,46 +31,46 @@ pub fn ColorCovertU32ToFloat(in_u32: u32) -> Vector4D
         w:((in_u32 >> IM_COL32_A_SHIFT) & 0xFF) as f32 * s};
 }
 
-// ImU32 ImGui::ColorConvertFloat4ToU32(const Vector4D& in)
-pub fn ColorConvertFloat4ToU32(in_vec: &Vector4D) -> u32
+// ImU32 ImGui::color_convert_float4to_u32(const Vector4D& in)
+pub fn color_convert_float4to_u32(in_vec: &Vector4D) -> u32
 {
     // ImU32 out;
 
-    let mut out: u32  = ((IM_F32_TO_INT8_SAT(in_vec.x)) << IM_COL32_R_SHIFT )as u32;
-    out |= ((IM_F32_TO_INT8_SAT(in_vec.y)) << IM_COL32_G_SHIFT) as u32;
-    out |= ((IM_F32_TO_INT8_SAT(in_vec.z)) << IM_COL32_B_SHIFT) as u32;
-    out |= ((IM_F32_TO_INT8_SAT(in_vec.w)) << IM_COL32_A_SHIFT) as u32;
+    let mut out: u32  = ((im_f32_to_int8_sat(in_vec.x)) << IM_COL32_R_SHIFT )as u32;
+    out |= ((im_f32_to_int8_sat(in_vec.y)) << IM_COL32_G_SHIFT) as u32;
+    out |= ((im_f32_to_int8_sat(in_vec.z)) << IM_COL32_B_SHIFT) as u32;
+    out |= ((im_f32_to_int8_sat(in_vec.w)) << IM_COL32_A_SHIFT) as u32;
     out
 }
 
 // Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
 // Optimized http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
-// void ImGui::ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
-pub fn ColorConvertRGBtoHSV(mut r: f32, mut g: f32, mut b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
+// void ImGui::color_convert_rgbto_hsv(float r, float g, float b, float& out_h, float& out_s, float& out_v)
+pub fn color_convert_rgbto_hsv(mut r: f32, mut g: f32, mut b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
 {
     // float K = 0.f;
-    let mut K: f32 = 0.0;
+    let mut k: f32 = 0.0;
     if (g < b)
     {
-        ImSwapF32(&mut g, &mut b);
-        K = -1.0;
+        f32::swap(&mut g, &mut b);
+        k = -1.0;
     }
     if (r < g)
     {
-        ImSwapF32(&mut r, &mut g);
-        K = -2.0 / 6.0 - K;
+        f32::swap(&mut r, &mut g);
+        k = -2.0 / 6.0 - k;
     }
 
     let mut chroma: f32 = r - (if g < b { g } else { b });
-    *out_h = ImFabs(K + (g - b) / (6.0 * chroma + 1e-20));
+    *out_h = f32::abs(k + (g - b) / (6.0 * chroma + 1e-20));
     *out_s = chroma / (r + 1e-20);
     *out_v = r;
 }
 
 // Convert hsv floats ([0-1],[0-1],[0-1]) to rgb floats ([0-1],[0-1],[0-1]), from Foley & van Dam p593
 // also http://en.wikipedia.org/wiki/HSL_and_HSV
-// void ImGui::ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
-pub fn ColorConvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32)
+// void ImGui::color_convert_hsvto_rgb(float h, float s, float v, float& out_r, float& out_g, float& out_b)
+pub fn color_convert_hsvto_rgb(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32)
 {
     if s == 0.0
     {
@@ -80,7 +82,7 @@ pub fn ColorConvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: 
         return;
     }
 
-    h = ImFmod(h, 1.0) / (60.0 / 360.0);
+    h = f32_mod(h, 1.0) / (60.0 / 360.0);
     // int   i = h;
     let mut i: i32 = h as i32;
     // float f = h - (float)i;
@@ -124,8 +126,8 @@ pub const IM_COL32_A_MASK: u32 =     0xFF000000;
 // #endif
 // #endif
 //#define IM_COL32(R,G,B,A)    (((A)<<IM_COL32_A_SHIFT) | ((B)<<IM_COL32_B_SHIFT) | ((G)<<IM_COL32_G_SHIFT) | ((R)<<IM_COL32_R_SHIFT))
-pub fn make_color_32(R: u32, G: u32, B: u32, A: u32) -> u32 {
-    A << IM_COL32_A_SHIFT | B << IM_COL32_B_SHIFT | G << IM_COL32_G_SHIFT | R << IM_COL32_R_SHIFT
+pub fn make_color_32(red: u32, green: u32, blue: u32, alpha: u32) -> u32 {
+    alpha << IM_COL32_A_SHIFT | blue << IM_COL32_B_SHIFT | green << IM_COL32_G_SHIFT | red << IM_COL32_R_SHIFT
 }
 // #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
 pub const IM_COL32_WHITE: u32 = make_color_32(255, 255, 255, 255);
@@ -139,15 +141,15 @@ pub const IM_COL32_BLACK_TRANS: u32 = make_color_32(0, 0, 0, 0);
 // **Avoid storing ImColor! Store either u32 of Vector4D. This is not a full-featured color class. MAY OBSOLETE.
 // **None of the ImGui API are using ImColor directly but you can use it as a convenience to pass colors in either ImU32 or Vector4D formats. Explicitly cast to ImU32 or Vector4D if needed.
 #[derive(Default,Debug,Clone)]
-pub struct ImColor
+pub struct Color
 {
-    // Vector4D          Value;
-    pub Value: Vector4D,
+    // Vector4D          value;
+    pub value: Vector4D,
 }
 
-impl ImColor {
+impl Color {
     // constexpr ImColor()                                             { }
-    // constexpr ImColor(float r, float g, float b, float a = 1.0)    : Value(r, g, b, a) { }
+    // constexpr ImColor(float r, float g, float b, float a = 1.0)    : value(r, g, b, a) { }
     pub fn new() -> Self {
         Self {
             ..Default::default()
@@ -155,7 +157,7 @@ impl ImColor {
     }
     pub fn new2(r: f32, g: f32, b: f32, a: f32) -> Self {
         Self {
-            Value: Vector4D {
+            value: Vector4D {
                 x: r,
                 y: g,
                 z: b,
@@ -163,13 +165,13 @@ impl ImColor {
             }
         }
     }
-    // constexpr ImColor(const Vector4D& col)                            : Value(col) {}
+    // constexpr ImColor(const Vector4D& col)                            : value(col) {}
     pub fn new3(col: &Vector4D) -> Self {
         Self {
-            Value: col.clone()
+            value: col.clone()
         }
     }
-    // ImColor(int r, int g, int b, int a = 255)                       { float sc = 1.0 / 255.0; Value.x = (float)r * sc; Value.y = (float)g * sc; Value.z = (float)b * sc; Value.w = (float)a * sc; }
+    // ImColor(int r, int g, int b, int a = 255)                       { float sc = 1.0 / 255.0; value.x = (float)r * sc; value.y = (float)g * sc; value.z = (float)b * sc; value.w = (float)a * sc; }
     pub fn new4(r: i32, g: i32, b: i32, a: i32) -> Self {
         let sc: f32 = 1.0/255.0;
         let Value = Vector4D {
@@ -179,10 +181,10 @@ impl ImColor {
             w: a as f32 * sc,
         };
         Self {
-            Value
+            value: Value
         }
     }
-    // ImColor(ImU32 rgba)                                             { float sc = 1.0 / 255.0; Value.x = (float)((rgba >> IM_COL32_R_SHIFT) & 0xFF) * sc; Value.y = (float)((rgba >> IM_COL32_G_SHIFT) & 0xFF) * sc; Value.z = (float)((rgba >> IM_COL32_B_SHIFT) & 0xFF) * sc; Value.w = (float)((rgba >> IM_COL32_A_SHIFT) & 0xFF) * sc; }
+    // ImColor(ImU32 rgba)                                             { float sc = 1.0 / 255.0; value.x = (float)((rgba >> IM_COL32_R_SHIFT) & 0xFF) * sc; value.y = (float)((rgba >> IM_COL32_G_SHIFT) & 0xFF) * sc; value.z = (float)((rgba >> IM_COL32_B_SHIFT) & 0xFF) * sc; value.w = (float)((rgba >> IM_COL32_A_SHIFT) & 0xFF) * sc; }
     pub fn new5(rgba: u32) -> Self {
         let sc: f32 = 1.0/255.0;
         let Value = Vector4D {
@@ -192,37 +194,37 @@ impl ImColor {
             w: (rgba >> IM_COL32_A_SHIFT & 0xff) as f32 * sc
         };
         Self {
-            Value
+            value: Value
         }
     }
 
-    // inline operator ImU32() const                                   { return ImGui::ColorConvertFloat4ToU32(Value); }
+    // inline operator ImU32() const                                   { return ImGui::color_convert_float4to_u32(value); }
     pub fn get_u32(&self) -> u32 {
-        ColorConvertFloat4ToU32(&self.Value)
+        color_convert_float4to_u32(&self.value)
     }
-    // inline operator Vector4D() const                                  { return Value; }
+    // inline operator Vector4D() const                                  { return value; }
     pub fn get_vec4(&self) -> Vector4D {
-        self.Value.clone()
+        self.value.clone()
     }
     //
     // // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
-    // inline void    SetHSV(float h, float s, float v, float a = 1.0){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
-    // static ImColor HSV(float h, float s, float v, float a = 1.0)   { float r, g, b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
+    // inline void    SetHSV(float h, float s, float v, float a = 1.0){ ImGui::color_convert_hsvto_rgb(h, s, v, value.x, value.y, value.z); value.w = a; }
+    // static ImColor HSV(float h, float s, float v, float a = 1.0)   { float r, g, b; ImGui::color_convert_hsvto_rgb(h, s, v, r, g, b); return ImColor(r, g, b, a); }
 }
 
 /// Stacked color modifier, backup of modified data so we can restore it
 #[derive(Default,Debug,Clone)]
 pub struct ColorMod
 {
-    // ImGuiCol        Col;
-    pub Col: ImGuiColor,
-    // Vector4D          BackupValue;
-    pub BackupValue: Vector4D,
+    // ImGuiCol        col;
+    pub col: ImGuiColor,
+    // Vector4D          backup_value;
+    pub backup_value: Vector4D,
 }
 
 /// Enumeration for PushStyleColor() / PopStyleColor()
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgColor
+pub enum StyleColor
 {
     Text,
     TextDisabled,
@@ -328,8 +330,8 @@ pub enum ColorEditFlags
     DisplayHex      = 1 << 22,  // [Display]    // "
     Uint8           = 1 << 23,  // [data_type]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.
     Float           = 1 << 24,  // [data_type]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0..1.0 floats instead of 0..255 integers. No round-trip of value via integers.
-    PickerHueBar    = 1 << 25,  // [Picker]     // ColorPicker: bar for Hue, rectangle for Sat/Value.
-    PickerHueWheel  = 1 << 26,  // [Picker]     // ColorPicker: wheel for Hue, triangle for Sat/Value.
+    PickerHueBar    = 1 << 25,  // [Picker]     // ColorPicker: bar for Hue, rectangle for Sat/value.
+    PickerHueWheel  = 1 << 26,  // [Picker]     // ColorPicker: wheel for Hue, triangle for Sat/value.
     InputRGB        = 1 << 27,  // [Input]      // ColorEdit, ColorPicker: input and output data in RGB format.
     InputHSV        = 1 << 28,  // [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
 

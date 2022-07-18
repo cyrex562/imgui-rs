@@ -27,7 +27,6 @@ mod sort;
 mod context;
 mod log;
 mod draw_list;
-mod window;
 mod column;
 mod rect;
 mod dock;
@@ -51,7 +50,6 @@ mod text_buffer;
 mod list_clipper;
 mod render;
 mod clipboard;
-mod defines;
 mod gc;
 mod id;
 mod types;
@@ -107,6 +105,7 @@ mod keyboard;
 mod child;
 mod resize;
 mod border;
+mod window;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context)
@@ -155,7 +154,7 @@ pub fn shutdown(g: &mut Context)
 {
     // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
     // ImGuiContext& g = *GImGui;
-    if (g.io.fonts.is_empty() == false && g.font_atlas_owned_by_context)
+    if g.io.fonts.is_empty() == false && g.font_atlas_owned_by_context
     {
         g.io.fonts.locked = false;
         // IM_DELETE(g.io.fonts);
@@ -164,7 +163,7 @@ pub fn shutdown(g: &mut Context)
     // g.io.fonts = NULL;
 
     // Cleanup of other data are conditional on actually having initialized Dear ImGui.
-    if (!g.initialized) {
+    if !g.initialized {
         return;
     }
 
@@ -222,14 +221,14 @@ if (g.settings_loaded && g.io.ini_filename.is_empty() == false) {
     g.settings_windows.clear();
     g.settings_handlers.clear();
 
-    if g.log_file
-    {
-
-        if g.log_file != stdout {
-            ImFileClose(g.log_file);
-        }
-        g.log_file.clear();
-    }
+    // if g.log_file
+    // {
+    //
+    //     if g.log_file != stdout {
+    //         ImFileClose(g.log_file);
+    //     }
+    //     g.log_file.clear();
+    // }
     // g.LogBuffer.clear();
     // g.DebugLogBuf.clear();
 

@@ -149,10 +149,10 @@ index of this file:
 // #define STBTT_malloc(x,u)   ((void)(u), IM_ALLOC(x))
 // #define STBTT_free(x,u)     ((void)(u), IM_FREE(x))
 // #define STBTT_assert(x)     do { IM_ASSERT(x); } while(0)
-// #define STBTT_fmod(x,y)     ImFmod(x,y)
+// #define STBTT_fmod(x,y)     f32::mod(x,y)
 // #define STBTT_sqrt(x)       ImSqrt(x)
 // #define STBTT_pow(x,y)      ImPow(x,y)
-// #define STBTT_fabs(x)       ImFabs(x)
+// #define STBTT_fabs(x)       f32::abs(x)
 // #define STBTT_ifloor(x)     (f32::floor(x))
 // #define STBTT_iceil(x)      (ImCeil(x))
 // #define STBTT_STATIC
@@ -199,7 +199,7 @@ index of this file:
 //     memset(this, 0, sizeof(*this));
 //     for (int i = 0; i < IM_ARRAYSIZE(ArcFastVtx); i += 1)
 //     {
-//         const float a = ((float)i * 2 * IM_PI) / (float)IM_ARRAYSIZE(ArcFastVtx);
+//         const float a = ((float)i * 2 * f32::PI) / (float)IM_ARRAYSIZE(ArcFastVtx);
 //         ArcFastVtx[i] = Vector2D::new(ImCos(a), ImSin(a));
 //     }
 //     ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, CircleSegmentMaxError);
@@ -558,7 +558,7 @@ void ImDrawList::AddPolyline(const Vector2D* points, const int points_count, ImU
     if (points_count < 2)
         return;
 
-    const bool closed = (flags & ImDrawFlags_Closed) != 0;
+    const bool closed = (flags & DrawFlags::Closed) != 0;
     const Vector2D opaque_uv = _Data.TexUvWhitePixel;
     const int count = closed ? points_count : points_count - 1; // The number of line segments we need to draw
     const bool thick_line = (thickness > _FringeScale);
@@ -1002,7 +1002,7 @@ void ImDrawList::_PathArcToN(const Vector2D& center, float radius, float a_min, 
 }
 
 // 0: East, 3: South, 6: West, 9: North, 12: East
-void ImDrawList::PathArcToFast(const Vector2D& center, float radius, int a_min_of_12, int a_max_of_12)
+void ImDrawList::path_arc_to_fast(const Vector2D& center, float radius, int a_min_of_12, int a_max_of_12)
 {
     if (radius < 0.5)
     {
@@ -1033,15 +1033,15 @@ void ImDrawList::PathArcTo(const Vector2D& center, float radius, float a_min, fl
 
         // We are going to use precomputed values for mid samples.
         // Determine first and last sample in lookup table that belong to the arc.
-        const float a_min_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.0);
-        const float a_max_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.0);
+        const float a_min_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (f32::PI * 2.0);
+        const float a_max_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (f32::PI * 2.0);
 
         const int a_min_sample = a_is_reverse ? f32::floor(a_min_sample_f) : ImCeil(a_min_sample_f);
         const int a_max_sample = a_is_reverse ? ImCeil(a_max_sample_f) : f32::floor(a_max_sample_f);
         const int a_mid_samples = a_is_reverse ? ImMax(a_min_sample - a_max_sample, 0) : ImMax(a_max_sample - a_min_sample, 0);
 
-        const float a_min_segment_angle = a_min_sample * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
-        const float a_max_segment_angle = a_max_sample * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
+        const float a_min_segment_angle = a_min_sample * f32::PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
+        const float a_max_segment_angle = a_max_sample * f32::PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
         const bool a_emit_start = ImAbs(a_min_segment_angle - a_min) >= 1e-5f;
         const bool a_emit_end = ImAbs(a_max - a_max_segment_angle) >= 1e-5f;
 
@@ -1057,7 +1057,7 @@ void ImDrawList::PathArcTo(const Vector2D& center, float radius, float a_min, fl
     {
         const float arc_length = ImAbs(a_max - a_min);
         const int circle_segment_count = _CalcCircleAutoSegmentCount(radius);
-        const int arc_segment_count = ImMax(ImCeil(circle_segment_count * arc_length / (IM_PI * 2.0)), (2.0 * IM_PI / arc_length));
+        const int arc_segment_count = ImMax(ImCeil(circle_segment_count * arc_length / (f32::PI * 2.0)), (2.0 * f32::PI / arc_length));
         _PathArcToN(center, radius, a_min, a_max, arc_segment_count);
     }
 }
@@ -1155,14 +1155,14 @@ void ImDrawList::PathBezierQuadraticCurveTo(const Vector2D& p2, const Vector2D& 
     }
 }
 
-IM_STATIC_ASSERT(ImDrawFlags_RoundCornersTopLeft == (1 << 4));
+IM_STATIC_ASSERT(DrawFlags::RoundCornersTopLeft == (1 << 4));
 static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
 {
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     // Legacy Support for hard coded ~0 (used to be a suggested equivalent to ImDrawCornerFlags_All)
     //   ~0   --> ImDrawFlags_RoundCornersAll or 0
     if (flags == ~0)
-        return ImDrawFlags_RoundCornersAll;
+        return DrawFlags::RoundCornersAll;
 
     // Legacy Support for hard coded 0x01 to 0x0F (matching 15 out of 16 old flags combinations)
     //   0x01 --> ImDrawFlags_RoundCornersTopLeft (VALUE 0x01 OVERLAPS ImDrawFlags_Closed but ImDrawFlags_Closed is never valid in this path!)
@@ -1183,8 +1183,8 @@ static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
     // Note that ImDrawFlags_Closed (== 0x01) is an invalid flag for add_rect(), add_rect_filled(), PathRect() etc...
     IM_ASSERT((flags & 0x0F) == 0 && "Misuse of legacy hardcoded ImDrawCornerFlags values!");
 
-    if ((flags & ImDrawFlags_RoundCornersMask_) == 0)
-        flags |= ImDrawFlags_RoundCornersAll;
+    if ((flags & DrawFlags::RoundCornersMask_) == 0)
+        flags |= DrawFlags::RoundCornersAll;
 
     return flags;
 }
@@ -1192,10 +1192,10 @@ static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
 void ImDrawList::PathRect(const Vector2D& a, const Vector2D& b, float rounding, ImDrawFlags flags)
 {
     flags = FixRectCornerFlags(flags);
-    rounding = ImMin(rounding, ImFabs(b.x - a.x) * ( ((flags & ImDrawFlags_RoundCornersTop)  == ImDrawFlags_RoundCornersTop)  || ((flags & ImDrawFlags_RoundCornersBottom) == ImDrawFlags_RoundCornersBottom) ? 0.5 : 1.0 ) - 1.0);
-    rounding = ImMin(rounding, ImFabs(b.y - a.y) * ( ((flags & ImDrawFlags_RoundCornersLeft) == ImDrawFlags_RoundCornersLeft) || ((flags & ImDrawFlags_RoundCornersRight)  == ImDrawFlags_RoundCornersRight)  ? 0.5 : 1.0 ) - 1.0);
+    rounding = ImMin(rounding, f32::abs(b.x - a.x) * ( ((flags & DrawFlags::RoundCornersTop)  == DrawFlags::RoundCornersTop)  || ((flags & DrawFlags::RoundCornersBottom) == DrawFlags::RoundCornersBottom) ? 0.5 : 1.0 ) - 1.0);
+    rounding = ImMin(rounding, f32::abs(b.y - a.y) * ( ((flags & DrawFlags::RoundCornersLeft) == DrawFlags::RoundCornersLeft) || ((flags & DrawFlags::RoundCornersRight)  == DrawFlags::RoundCornersRight)  ? 0.5 : 1.0 ) - 1.0);
 
-    if (rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone)
+    if (rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone)
     {
         PathLineTo(a);
         PathLineTo(Vector2D::new(b.x, a.y));
@@ -1204,14 +1204,14 @@ void ImDrawList::PathRect(const Vector2D& a, const Vector2D& b, float rounding, 
     }
     else
     {
-        const float rounding_tl = (flags & ImDrawFlags_RoundCornersTopLeft)     ? rounding : 0.0;
-        const float rounding_tr = (flags & ImDrawFlags_RoundCornersTopRight)    ? rounding : 0.0;
-        const float rounding_br = (flags & ImDrawFlags_RoundCornersBottomRight) ? rounding : 0.0;
-        const float rounding_bl = (flags & ImDrawFlags_RoundCornersBottomLeft)  ? rounding : 0.0;
-        PathArcToFast(Vector2D::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
-        PathArcToFast(Vector2D::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
-        PathArcToFast(Vector2D::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
-        PathArcToFast(Vector2D::new(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
+        const float rounding_tl = (flags & DrawFlags::RoundCornersTopLeft)     ? rounding : 0.0;
+        const float rounding_tr = (flags & DrawFlags::RoundCornersTopRight)    ? rounding : 0.0;
+        const float rounding_br = (flags & DrawFlags::RoundCornersBottomRight) ? rounding : 0.0;
+        const float rounding_bl = (flags & DrawFlags::RoundCornersBottomLeft)  ? rounding : 0.0;
+        path_arc_to_fast(Vector2D::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
+        path_arc_to_fast(Vector2D::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
+        path_arc_to_fast(Vector2D::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
+        path_arc_to_fast(Vector2D::new(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
     }
 }
 
@@ -1234,14 +1234,14 @@ void ImDrawList::AddRect(const Vector2D& p_min, const Vector2D& p_max, ImU32 col
         PathRect(p_min + Vector2D::new(0.50, 0.50), p_max - Vector2D::new(0.50, 0.50), rounding, flags);
     else
         PathRect(p_min + Vector2D::new(0.50, 0.50), p_max - Vector2D::new(0.49, 0.49), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
-    PathStroke(col, ImDrawFlags_Closed, thickness);
+    PathStroke(col, DrawFlags::Closed, thickness);
 }
 
 void ImDrawList::AddRectFilled(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding, ImDrawFlags flags)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
-    if (rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone)
+    if (rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone)
     {
         PrimReserve(6, 4);
         PrimRect(p_min, p_max, col);
@@ -1249,7 +1249,7 @@ void ImDrawList::AddRectFilled(const Vector2D& p_min, const Vector2D& p_max, ImU
     else
     {
         PathRect(p_min, p_max, rounding, flags);
-        PathFillConvex(col);
+        path_fill_convex(col);
     }
 }
 
@@ -1278,7 +1278,7 @@ void ImDrawList::AddQuad(const Vector2D& p1, const Vector2D& p2, const Vector2D&
     PathLineTo(p2);
     PathLineTo(p3);
     PathLineTo(p4);
-    PathStroke(col, ImDrawFlags_Closed, thickness);
+    PathStroke(col, DrawFlags::Closed, thickness);
 }
 
 void ImDrawList::AddQuadFilled(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col)
@@ -1290,7 +1290,7 @@ void ImDrawList::AddQuadFilled(const Vector2D& p1, const Vector2D& p2, const Vec
     PathLineTo(p2);
     PathLineTo(p3);
     PathLineTo(p4);
-    PathFillConvex(col);
+    path_fill_convex(col);
 }
 
 void ImDrawList::AddTriangle(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col, float thickness)
@@ -1301,7 +1301,7 @@ void ImDrawList::AddTriangle(const Vector2D& p1, const Vector2D& p2, const Vecto
     PathLineTo(p1);
     PathLineTo(p2);
     PathLineTo(p3);
-    PathStroke(col, ImDrawFlags_Closed, thickness);
+    PathStroke(col, DrawFlags::Closed, thickness);
 }
 
 void ImDrawList::AddTriangleFilled(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col)
@@ -1312,7 +1312,7 @@ void ImDrawList::AddTriangleFilled(const Vector2D& p1, const Vector2D& p2, const
     PathLineTo(p1);
     PathLineTo(p2);
     PathLineTo(p3);
-    PathFillConvex(col);
+    path_fill_convex(col);
 }
 
 void ImDrawList::AddCircle(const Vector2D& center, float radius, ImU32 col, int num_segments, float thickness)
@@ -1332,11 +1332,11 @@ void ImDrawList::AddCircle(const Vector2D& center, float radius, ImU32 col, int 
         num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
 
         // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
+        const float a_max = (f32::PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
         PathArcTo(center, radius - 0.5, 0.0, a_max, num_segments - 1);
     }
 
-    PathStroke(col, ImDrawFlags_Closed, thickness);
+    PathStroke(col, DrawFlags::Closed, thickness);
 }
 
 void ImDrawList::AddCircleFilled(const Vector2D& center, float radius, ImU32 col, int num_segments)
@@ -1356,11 +1356,11 @@ void ImDrawList::AddCircleFilled(const Vector2D& center, float radius, ImU32 col
         num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
 
         // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
+        const float a_max = (f32::PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
         PathArcTo(center, radius, 0.0, a_max, num_segments - 1);
     }
 
-    PathFillConvex(col);
+    path_fill_convex(col);
 }
 
 // Guaranteed to honor 'num_segments'
@@ -1370,9 +1370,9 @@ void ImDrawList::AddNgon(const Vector2D& center, float radius, ImU32 col, int nu
         return;
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
-    const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
+    const float a_max = (f32::PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
     PathArcTo(center, radius - 0.5, 0.0, a_max, num_segments - 1);
-    PathStroke(col, ImDrawFlags_Closed, thickness);
+    PathStroke(col, DrawFlags::Closed, thickness);
 }
 
 // Guaranteed to honor 'num_segments'
@@ -1382,9 +1382,9 @@ void ImDrawList::AddNgonFilled(const Vector2D& center, float radius, ImU32 col, 
         return;
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
-    const float a_max = (IM_PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
+    const float a_max = (f32::PI * 2.0) * ((float)num_segments - 1.0) / num_segments;
     PathArcTo(center, radius, 0.0, a_max, num_segments - 1);
-    PathFillConvex(col);
+    path_fill_convex(col);
 }
 
 // Cubic Bezier takes 4 controls points
@@ -1423,7 +1423,7 @@ void ImDrawList::AddText(const ImFont* font, float font_size, const Vector2D& po
     if (font == NULL)
         font = _Data.Font;
     if (font_size == 0.0)
-        font_size = _Data.FontSize;
+        font_size = _Data.font_size;
 
     IM_ASSERT(font.container_atlas.TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
@@ -1481,7 +1481,7 @@ void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const Vector2D& p_
         return;
 
     flags = FixRectCornerFlags(flags);
-    if (rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone)
+    if (rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone)
     {
         AddImage(user_texture_id, p_min, p_max, uv_min, uv_max, col);
         return;
@@ -1493,7 +1493,7 @@ void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const Vector2D& p_
 
     int vert_start_idx = VtxBuffer.size;
     PathRect(p_min, p_max, rounding, flags);
-    PathFillConvex(col);
+    path_fill_convex(col);
     int vert_end_idx = VtxBuffer.size;
     ImGui::ShadeVertsLinearUV(this, vert_start_idx, vert_end_idx, p_min, p_max, uv_min, uv_max, true);
 
@@ -2443,7 +2443,7 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
     if (!font_config.MergeMode)
     {
         font.ClearOutputData();
-        font.FontSize = font_config.sizePixels;
+        font.font_size = font_config.sizePixels;
         font.ConfigData = font_config;
         font.ConfigDataCount = 0;
         font.container_atlas = atlas;
@@ -3583,7 +3583,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir dir, float scale)
 {
-    const float h = draw_list->_Data.FontSize * 1.00;
+    const float h = draw_list->_Data.font_size * 1.00;
     float r = h * 0.40 * scale;
     Vector2D center = pos + Vector2D::new(h * 0.50, h * 0.50 * scale);
 
@@ -3609,12 +3609,12 @@ void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir
         IM_ASSERT(0);
         break;
     }
-    draw_list.AddTriangleFilled(center + a, center + b, center + c, col);
+    draw_list.add_triangle_filled(center + a, center + b, center + c, col);
 }
 
 void ImGui::RenderBullet(ImDrawList* draw_list, Vector2D pos, ImU32 col)
 {
-    draw_list.AddCircleFilled(pos, draw_list->_Data.FontSize * 0.20, col, 8);
+    draw_list.AddCircleFilled(pos, draw_list->_Data.font_size * 0.20, col, 8);
 }
 
 void ImGui::RenderCheckMark(ImDrawList* draw_list, Vector2D pos, ImU32 col, float sz)
@@ -3626,10 +3626,10 @@ void ImGui::RenderCheckMark(ImDrawList* draw_list, Vector2D pos, ImU32 col, floa
     float third = sz / 3.0;
     float bx = pos.x + third;
     float by = pos.y + sz - third * 0.5;
-    draw_list.PathLineTo(Vector2D::new(bx - third, by - third));
-    draw_list.PathLineTo(Vector2D::new(bx, by));
-    draw_list.PathLineTo(Vector2D::new(bx + third * 2.0, by - third * 2.0));
-    draw_list.PathStroke(col, 0, thickness);
+    draw_list.path_line_to(Vector2D::new(bx - third, by - third));
+    draw_list.path_line_to(Vector2D::new(bx, by));
+    draw_list.path_line_to(Vector2D::new(bx + third * 2.0, by - third * 2.0));
+    draw_list.path_stroke(col, 0, thickness);
 }
 
 // Render an arrow. 'pos' is position of the arrow tip. half_sz.x is length from base to tip. half_sz.y is length on each side.
@@ -3637,10 +3637,10 @@ void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, Vector2D pos, Vector2D 
 {
     switch (direction)
     {
-    case Dir::Left:  draw_list.AddTriangleFilled(Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), pos, col); return;
-    case Dir::Right: draw_list.AddTriangleFilled(Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), pos, col); return;
-    case Dir::Up:    draw_list.AddTriangleFilled(Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), pos, col); return;
-    case Dir::Down:  draw_list.AddTriangleFilled(Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), pos, col); return;
+    case Dir::Left:  draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), pos, col); return;
+    case Dir::Right: draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), pos, col); return;
+    case Dir::Up:    draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), pos, col); return;
+    case Dir::Down:  draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), pos, col); return;
     case Dir::None: case Dir::COUNT: break; // Fix warnings
     }
 }
@@ -3649,13 +3649,13 @@ void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, Vector2D pos, Vector2D 
 // and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
 void ImGui::RenderArrowDockMenu(ImDrawList* draw_list, Vector2D p_min, float sz, ImU32 col)
 {
-    draw_list.AddRectFilled(p_min + Vector2D::new(sz * 0.20, sz * 0.15), p_min + Vector2D::new(sz * 0.80, sz * 0.30), col);
+    draw_list.add_rect_filled(p_min + Vector2D::new(sz * 0.20, sz * 0.15), p_min + Vector2D::new(sz * 0.80, sz * 0.30), col);
     RenderArrowPointingAt(draw_list, p_min + Vector2D::new(sz * 0.50, sz * 0.85), Vector2D::new(sz * 0.30, sz * 0.40), Dir::Down, col);
 }
 
 static inline float ImAcos01(float x)
 {
-    if (x <= 0.0) return IM_PI * 0.5;
+    if (x <= 0.0) return f32::PI * 0.5;
     if (x >= 1.0) return 0.0;
     return ImAcos(x);
     //return (-0.69813170079773212 * x * x - 0.87266462599716477) * x + 1.5707963267948966; // Cheap approximation, may be enough for what we do.
@@ -3673,7 +3673,7 @@ void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const Rect& rect, ImU3
     Vector2D p1 = Vector2D::new(ImLerp(rect.min.x, rect.max.x, x_end_norm), rect.max.y);
     if (rounding == 0.0)
     {
-        draw_list.AddRectFilled(p0, p1, col, 0.0);
+        draw_list.add_rect_filled(p0, p1, col, 0.0);
         return;
     }
 
@@ -3681,22 +3681,22 @@ void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const Rect& rect, ImU3
     const float inv_rounding = 1.0 / rounding;
     const float arc0_b = ImAcos01(1.0 - (p0.x - rect.min.x) * inv_rounding);
     const float arc0_e = ImAcos01(1.0 - (p1.x - rect.min.x) * inv_rounding);
-    const float half_pi = IM_PI * 0.5; // We will == compare to this because we know this is the exact value ImAcos01 can return.
+    const float half_pi = f32::PI * 0.5; // We will == compare to this because we know this is the exact value ImAcos01 can return.
     const float x0 = ImMax(p0.x, rect.min.x + rounding);
     if (arc0_b == arc0_e)
     {
-        draw_list.PathLineTo(Vector2D::new(x0, p1.y));
-        draw_list.PathLineTo(Vector2D::new(x0, p0.y));
+        draw_list.path_line_to(Vector2D::new(x0, p1.y));
+        draw_list.path_line_to(Vector2D::new(x0, p0.y));
     }
     else if (arc0_b == 0.0 && arc0_e == half_pi)
     {
-        draw_list.PathArcToFast(Vector2D::new(x0, p1.y - rounding), rounding, 3, 6); // BL
-        draw_list.PathArcToFast(Vector2D::new(x0, p0.y + rounding), rounding, 6, 9); // TR
+        draw_list.path_arc_to_fast(Vector2D::new(x0, p1.y - rounding), rounding, 3, 6); // BL
+        draw_list.path_arc_to_fast(Vector2D::new(x0, p0.y + rounding), rounding, 6, 9); // TR
     }
     else
     {
-        draw_list.PathArcTo(Vector2D::new(x0, p1.y - rounding), rounding, IM_PI - arc0_e, IM_PI - arc0_b, 3); // BL
-        draw_list.PathArcTo(Vector2D::new(x0, p0.y + rounding), rounding, IM_PI + arc0_b, IM_PI + arc0_e, 3); // TR
+        draw_listpath_arc_to(Vector2D::new(x0, p1.y - rounding), rounding, f32::PI - arc0_e, f32::PI - arc0_b, 3); // BL
+        draw_listpath_arc_to(Vector2D::new(x0, p0.y + rounding), rounding, f32::PI + arc0_b, f32::PI + arc0_e, 3); // TR
     }
     if (p1.x > rect.min.x + rounding)
     {
@@ -3705,21 +3705,21 @@ void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const Rect& rect, ImU3
         const float x1 = ImMin(p1.x, rect.max.x - rounding);
         if (arc1_b == arc1_e)
         {
-            draw_list.PathLineTo(Vector2D::new(x1, p0.y));
-            draw_list.PathLineTo(Vector2D::new(x1, p1.y));
+            draw_list.path_line_to(Vector2D::new(x1, p0.y));
+            draw_list.path_line_to(Vector2D::new(x1, p1.y));
         }
         else if (arc1_b == 0.0 && arc1_e == half_pi)
         {
-            draw_list.PathArcToFast(Vector2D::new(x1, p0.y + rounding), rounding, 9, 12); // TR
-            draw_list.PathArcToFast(Vector2D::new(x1, p1.y - rounding), rounding, 0, 3);  // BR
+            draw_list.path_arc_to_fast(Vector2D::new(x1, p0.y + rounding), rounding, 9, 12); // TR
+            draw_list.path_arc_to_fast(Vector2D::new(x1, p1.y - rounding), rounding, 0, 3);  // BR
         }
         else
         {
-            draw_list.PathArcTo(Vector2D::new(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
-            draw_list.PathArcTo(Vector2D::new(x1, p1.y - rounding), rounding, +arc1_b, +arc1_e, 3); // BR
+            draw_listpath_arc_to(Vector2D::new(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
+            draw_listpath_arc_to(Vector2D::new(x1, p1.y - rounding), rounding, +arc1_b, +arc1_e, 3); // BR
         }
     }
-    draw_list.PathFillConvex(col);
+    draw_list.path_fill_convex(col);
 }
 
 void ImGui::render_rect_filled_with_hole(ImDrawList* draw_list, const Rect& outer, const Rect& inner, ImU32 col, float rounding)
@@ -3728,14 +3728,14 @@ void ImGui::render_rect_filled_with_hole(ImDrawList* draw_list, const Rect& oute
     const bool fill_R = (inner.max.x < outer.max.x);
     const bool fill_U = (inner.min.y > outer.min.y);
     const bool fill_D = (inner.max.y < outer.max.y);
-    if (fill_L) draw_list.AddRectFilled(Vector2D::new(outer.min.x, inner.min.y), Vector2D::new(inner.min.x, inner.max.y), col, rounding, ImDrawFlags_RoundCornersNone | (fill_U ? 0 : ImDrawFlags_RoundCornersTopLeft)    | (fill_D ? 0 : ImDrawFlags_RoundCornersBottomLeft));
-    if (fill_R) draw_list.AddRectFilled(Vector2D::new(inner.max.x, inner.min.y), Vector2D::new(outer.max.x, inner.max.y), col, rounding, ImDrawFlags_RoundCornersNone | (fill_U ? 0 : ImDrawFlags_RoundCornersTopRight)   | (fill_D ? 0 : ImDrawFlags_RoundCornersBottomRight));
-    if (fill_U) draw_list.AddRectFilled(Vector2D::new(inner.min.x, outer.min.y), Vector2D::new(inner.max.x, inner.min.y), col, rounding, ImDrawFlags_RoundCornersNone | (fill_L ? 0 : ImDrawFlags_RoundCornersTopLeft)    | (fill_R ? 0 : ImDrawFlags_RoundCornersTopRight));
-    if (fill_D) draw_list.AddRectFilled(Vector2D::new(inner.min.x, inner.max.y), Vector2D::new(inner.max.x, outer.max.y), col, rounding, ImDrawFlags_RoundCornersNone | (fill_L ? 0 : ImDrawFlags_RoundCornersBottomLeft) | (fill_R ? 0 : ImDrawFlags_RoundCornersBottomRight));
-    if (fill_L && fill_U) draw_list.AddRectFilled(Vector2D::new(outer.min.x, outer.min.y), Vector2D::new(inner.min.x, inner.min.y), col, rounding, ImDrawFlags_RoundCornersTopLeft);
-    if (fill_R && fill_U) draw_list.AddRectFilled(Vector2D::new(inner.max.x, outer.min.y), Vector2D::new(outer.max.x, inner.min.y), col, rounding, ImDrawFlags_RoundCornersTopRight);
-    if (fill_L && fill_D) draw_list.AddRectFilled(Vector2D::new(outer.min.x, inner.max.y), Vector2D::new(inner.min.x, outer.max.y), col, rounding, ImDrawFlags_RoundCornersBottomLeft);
-    if (fill_R && fill_D) draw_list.AddRectFilled(Vector2D::new(inner.max.x, inner.max.y), Vector2D::new(outer.max.x, outer.max.y), col, rounding, ImDrawFlags_RoundCornersBottomRight);
+    if (fill_L) draw_list.add_rect_filled(Vector2D::new(outer.min.x, inner.min.y), Vector2D::new(inner.min.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_U ? 0 : DrawFlags::RoundCornersTopLeft)    | (fill_D ? 0 : DrawFlags::RoundCornersBottomLeft));
+    if (fill_R) draw_list.add_rect_filled(Vector2D::new(inner.max.x, inner.min.y), Vector2D::new(outer.max.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_U ? 0 : DrawFlags::RoundCornersTopRight)   | (fill_D ? 0 : DrawFlags::RoundCornersBottomRight));
+    if (fill_U) draw_list.add_rect_filled(Vector2D::new(inner.min.x, outer.min.y), Vector2D::new(inner.max.x, inner.min.y), col, rounding, DrawFlags::RoundCornersNone | (fill_L ? 0 : DrawFlags::RoundCornersTopLeft)    | (fill_R ? 0 : DrawFlags::RoundCornersTopRight));
+    if (fill_D) draw_list.add_rect_filled(Vector2D::new(inner.min.x, inner.max.y), Vector2D::new(inner.max.x, outer.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_L ? 0 : DrawFlags::RoundCornersBottomLeft) | (fill_R ? 0 : DrawFlags::RoundCornersBottomRight));
+    if (fill_L && fill_U) draw_list.add_rect_filled(Vector2D::new(outer.min.x, outer.min.y), Vector2D::new(inner.min.x, inner.min.y), col, rounding, DrawFlags::RoundCornersTopLeft);
+    if (fill_R && fill_U) draw_list.add_rect_filled(Vector2D::new(inner.max.x, outer.min.y), Vector2D::new(outer.max.x, inner.min.y), col, rounding, DrawFlags::RoundCornersTopRight);
+    if (fill_L && fill_D) draw_list.add_rect_filled(Vector2D::new(outer.min.x, inner.max.y), Vector2D::new(inner.min.x, outer.max.y), col, rounding, DrawFlags::RoundCornersBottomLeft);
+    if (fill_R && fill_D) draw_list.add_rect_filled(Vector2D::new(inner.max.x, inner.max.y), Vector2D::new(outer.max.x, outer.max.y), col, rounding, DrawFlags::RoundCornersBottomRight);
 }
 
 ImDrawFlags ImGui::CalcRoundingFlagsForRectInRect(const Rect& r_in, const Rect& r_outer, float threshold)
@@ -3744,24 +3744,24 @@ ImDrawFlags ImGui::CalcRoundingFlagsForRectInRect(const Rect& r_in, const Rect& 
     bool round_r = r_in.max.x >= r_outer.max.x - threshold;
     bool round_t = r_in.min.y <= r_outer.min.y + threshold;
     bool round_b = r_in.max.y >= r_outer.max.y - threshold;
-    return ImDrawFlags_RoundCornersNone
-        | ((round_t && round_l) ? ImDrawFlags_RoundCornersTopLeft : 0) | ((round_t && round_r) ? ImDrawFlags_RoundCornersTopRight : 0)
-        | ((round_b && round_l) ? ImDrawFlags_RoundCornersBottomLeft : 0) | ((round_b && round_r) ? ImDrawFlags_RoundCornersBottomRight : 0);
+    return DrawFlags::RoundCornersNone
+        | ((round_t && round_l) ? DrawFlags::RoundCornersTopLeft : 0) | ((round_t && round_r) ? DrawFlags::RoundCornersTopRight : 0)
+        | ((round_b && round_l) ? DrawFlags::RoundCornersBottomLeft : 0) | ((round_b && round_r) ? DrawFlags::RoundCornersBottomRight : 0);
 }
 
 // Helper for ColorPicker4()
 // NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
 // Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
-// FIXME: uses ImGui::GetColorU32
+// FIXME: uses ImGui::get_color_u32
 void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D p_min, Vector2D p_max, ImU32 col, float grid_step, Vector2D grid_off, float rounding, ImDrawFlags flags)
 {
-    if ((flags & ImDrawFlags_RoundCornersMask_) == 0)
-        flags = ImDrawFlags_RoundCornersDefault_;
+    if ((flags & DrawFlags::RoundCornersMask_) == 0)
+        flags = DrawFlags::RoundCornersDefault_;
     if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF)
     {
-        ImU32 col_bg1 = GetColorU32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
-        ImU32 col_bg2 = GetColorU32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));
-        draw_list.AddRectFilled(p_min, p_max, col_bg1, rounding, flags);
+        ImU32 col_bg1 = get_color_u32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
+        ImU32 col_bg2 = get_color_u32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));
+        draw_list.add_rect_filled(p_min, p_max, col_bg1, rounding, flags);
 
         int yi = 0;
         for (float y = p_min.y + grid_off.y; y < p_max.y; y += grid_step, yi += 1)
@@ -3774,19 +3774,19 @@ void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D
                 float x1 = ImClamp(x, p_min.x, p_max.x), x2 = ImMin(x + grid_step, p_max.x);
                 if (x2 <= x1)
                     continue;
-                ImDrawFlags cell_flags = ImDrawFlags_RoundCornersNone;
-                if (y1 <= p_min.y) { if (x1 <= p_min.x) cell_flags |= ImDrawFlags_RoundCornersTopLeft; if (x2 >= p_max.x) cell_flags |= ImDrawFlags_RoundCornersTopRight; }
-                if (y2 >= p_max.y) { if (x1 <= p_min.x) cell_flags |= ImDrawFlags_RoundCornersBottomLeft; if (x2 >= p_max.x) cell_flags |= ImDrawFlags_RoundCornersBottomRight; }
+                ImDrawFlags cell_flags = DrawFlags::RoundCornersNone;
+                if (y1 <= p_min.y) { if (x1 <= p_min.x) cell_flags |= DrawFlags::RoundCornersTopLeft; if (x2 >= p_max.x) cell_flags |= DrawFlags::RoundCornersTopRight; }
+                if (y2 >= p_max.y) { if (x1 <= p_min.x) cell_flags |= DrawFlags::RoundCornersBottomLeft; if (x2 >= p_max.x) cell_flags |= DrawFlags::RoundCornersBottomRight; }
 
                 // Combine flags
-                cell_flags = (flags == ImDrawFlags_RoundCornersNone || cell_flags == ImDrawFlags_RoundCornersNone) ? ImDrawFlags_RoundCornersNone : (cell_flags & flags);
-                draw_list.AddRectFilled(Vector2D::new(x1, y1), Vector2D::new(x2, y2), col_bg2, rounding, cell_flags);
+                cell_flags = (flags == DrawFlags::RoundCornersNone || cell_flags == DrawFlags::RoundCornersNone) ? DrawFlags::RoundCornersNone : (cell_flags & flags);
+                draw_list.add_rect_filled(Vector2D::new(x1, y1), Vector2D::new(x2, y2), col_bg2, rounding, cell_flags);
             }
         }
     }
     else
     {
-        draw_list.AddRectFilled(p_min, p_max, col, rounding, flags);
+        draw_list.add_rect_filled(p_min, p_max, col, rounding, flags);
     }
 }
 

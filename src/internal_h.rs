@@ -132,7 +132,7 @@ use crate::vectors::two_d::Vector2D;
 // #endif
 
 // Misc Macros
-// #define IM_PI                           3.14159265358979323846
+// #define f32::PI                           3.14159265358979323846
 // #ifdef _WIN32
 // #define IM_NEWLINE                      "\r\n"   // Play it nice with windows users (Update: since 2018-05, Notepad finally appears to support Unix-style carriage returns!)
 // #else
@@ -205,7 +205,7 @@ use crate::vectors::two_d::Vector2D;
 
 
 // Helpers: Color Blending
-//  ImU32         ImAlphaBlendColors(ImU32 col_a, ImU32 col_b);
+//  ImU32         im_alpha_blend_colors(ImU32 col_a, ImU32 col_b);
 
 // Helpers: Bit manipulation
 

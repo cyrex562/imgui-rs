@@ -80,3 +80,18 @@ impl Vector4D {
 // static inline Vector4D operator+(const Vector4D& lhs, const Vector4D& rhs)            { return Vector4D(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w); }
 // static inline Vector4D operator-(const Vector4D& lhs, const Vector4D& rhs)            { return Vector4D(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w); }
 // static inline Vector4D operator*(const Vector4D& lhs, const Vector4D& rhs)            { return Vector4D(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w); }
+
+// static inline Vector4D ImLerp(const Vector4D& a, const Vector4D& b, float t)          { return Vector4D(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t); }
+pub fn lerp_vector4d(a: &Vector4D, b: &Vector4D, t: f32) -> Vector4D {
+    Vector4D {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        z: a.z + (b.z - a.z) * t,
+        w: a.w + (b.w - a.w) * t
+    }
+}
+
+// static inline float  ImLengthSqr(const Vector4D& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
+pub fn length_sqr_vector4d(lhs: &Vector4D) -> f32 {
+    (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w)
+}

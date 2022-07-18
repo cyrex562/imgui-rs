@@ -946,7 +946,7 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
 
         const ImU32 box_selector_color = GImNodes.Style.colors[ImNodesCol_BoxSelector];
         const ImU32 box_selector_outline = GImNodes.Style.colors[ImNodesCol_BoxSelectorOutline];
-        GImNodes.CanvasDrawList.AddRectFilled(box_rect.min, box_rect.max, box_selector_color);
+        GImNodes.CanvasDrawList.add_rect_filled(box_rect.min, box_rect.max, box_selector_color);
         GImNodes.CanvasDrawList.AddRect(box_rect.min, box_rect.max, box_selector_outline);
 
         if (GImNodes.LeftMouseReleased)
@@ -1336,7 +1336,7 @@ void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
     for (float x = fmodf(offset.x, GImNodes.Style.GridSpacing); x < canvas_size.x;
          x += GImNodes.Style.GridSpacing)
     {
-        GImNodes.CanvasDrawList.AddLine(
+        GImNodes.CanvasDrawList.add_line(
             EditorSpaceToScreenSpace(Vector2D::new(x, 0.0)),
             EditorSpaceToScreenSpace(Vector2D::new(x, canvas_size.y)),
             offset.x - x == 0.f && draw_primary ? line_color_prim : line_color);
@@ -1345,7 +1345,7 @@ void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
     for (float y = fmodf(offset.y, GImNodes.Style.GridSpacing); y < canvas_size.y;
          y += GImNodes.Style.GridSpacing)
     {
-        GImNodes.CanvasDrawList.AddLine(
+        GImNodes.CanvasDrawList.add_line(
             EditorSpaceToScreenSpace(Vector2D::new(0.0, y)),
             EditorSpaceToScreenSpace(Vector2D::new(canvas_size.x, y)),
             offset.y - y == 0.f && draw_primary ? line_color_prim : line_color);
@@ -1465,7 +1465,7 @@ void DrawPinShape(const Vector2D& pin_pos, const ImPinData& pin, const ImU32 pin
     {
         const TriangleOffsets offset =
             CalculateTriangleOffsets(GImNodes.Style.PinTriangleSideLength);
-        GImNodes.CanvasDrawList.AddTriangleFilled(
+        GImNodes.CanvasDrawList.add_triangle_filled(
             pin_pos + offset.TopLeft,
             pin_pos + offset.BottomLeft,
             pin_pos + offset.Right,
@@ -1520,7 +1520,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
 
     {
         // node base
-        GImNodes.CanvasDrawList.AddRectFilled(
+        GImNodes.CanvasDrawList.add_rect_filled(
             node.Rect.min, node.Rect.max, node_background, node.LayoutStyle.CornerRounding);
 
         // title bar:
@@ -1529,19 +1529,19 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
             Rect title_bar_rect = GetNodeTitleRect(node);
 
 #if IMGUI_VERSION_NUM < 18200
-            GImNodes.CanvasDrawList.AddRectFilled(
+            GImNodes.CanvasDrawList.add_rect_filled(
                 title_bar_rect.min,
                 title_bar_rect.max,
                 titlebar_background,
                 node.LayoutStyle.CornerRounding,
                 ImDrawCornerFlags_Top);
 #else
-            GImNodes.CanvasDrawList.AddRectFilled(
+            GImNodes.CanvasDrawList.add_rect_filled(
                 title_bar_rect.min,
                 title_bar_rect.max,
                 titlebar_background,
                 node.LayoutStyle.CornerRounding,
-                ImDrawFlags_RoundCornersTop);
+                DrawFlags::RoundCornersTop);
 
 
         }
@@ -1562,7 +1562,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
                 node.Rect.max,
                 node.ColorStyle.Outline,
                 node.LayoutStyle.CornerRounding,
-                ImDrawFlags_RoundCornersAll,
+                DrawFlags::RoundCornersAll,
                 node.LayoutStyle.BorderThickness);
 
         }
@@ -1814,7 +1814,7 @@ static void MiniMapDrawNode(ImNodesEditorContext& editor, const int node_idx)
 
     const ImU32 mini_map_node_outline = GImNodes.Style.colors[ImNodesCol_MiniMapNodeOutline];
 
-    GImNodes.CanvasDrawList.AddRectFilled(
+    GImNodes.CanvasDrawList.add_rect_filled(
         node_rect.min, node_rect.max, mini_map_node_background, mini_map_node_rounding);
 
     GImNodes.CanvasDrawList.AddRect(
@@ -1885,7 +1885,7 @@ static void MiniMapUpdate()
     const Rect& mini_map_rect = editor.MiniMapRectScreenSpace;
 
     // Draw minimap background and border
-    GImNodes.CanvasDrawList.AddRectFilled(
+    GImNodes.CanvasDrawList.add_rect_filled(
         mini_map_rect.min, mini_map_rect.max, mini_map_background);
 
     GImNodes.CanvasDrawList.AddRect(
@@ -1918,7 +1918,7 @@ static void MiniMapUpdate()
         const ImU32  outline_color = GImNodes.Style.colors[ImNodesCol_MiniMapCanvasOutline];
         const Rect rect = ScreenSpaceToMiniMapSpace(editor, GImNodes.CanvasRectScreenSpace);
 
-        GImNodes.CanvasDrawList.AddRectFilled(rect.min, rect.max, canvas_color);
+        GImNodes.CanvasDrawList.add_rect_filled(rect.min, rect.max, canvas_color);
         GImNodes.CanvasDrawList.AddRect(rect.min, rect.max, outline_color);
     }
 
@@ -2227,7 +2227,7 @@ void BeginNodeEditor()
     GImNodes.MousePos = ImGui::GetIO().MousePos;
     GImNodes.LeftMouseClicked = ImGui::IsMouseClicked(0);
     GImNodes.LeftMouseReleased = ImGui::IsMouseReleased(0);
-    GImNodes.LeftMouseDragging = ImGui::IsMouseDragging(0, 0.0);
+    GImNodes.LeftMouseDragging = ImGui::is_mouse_dragging(0, 0.0);
     GImNodes.AltMouseClicked =
         (GImNodes.Io.EmulateThreeButtonMouse.Modifier != NULL &&
          *GImNodes.Io.EmulateThreeButtonMouse.Modifier && GImNodes.LeftMouseClicked) ||
@@ -2235,7 +2235,7 @@ void BeginNodeEditor()
     GImNodes.AltMouseDragging =
         (GImNodes.Io.EmulateThreeButtonMouse.Modifier != NULL && GImNodes.LeftMouseDragging &&
          (*GImNodes.Io.EmulateThreeButtonMouse.Modifier)) ||
-        ImGui::IsMouseDragging(GImNodes.Io.AltMouseButton, 0.0);
+        ImGui::is_mouse_dragging(GImNodes.Io.AltMouseButton, 0.0);
     GImNodes.AltMouseScrollDelta = ImGui::GetIO().mouse_wheel;
     GImNodes.MultipleSelectModifier =
         (GImNodes.Io.MultipleSelectModifier.Modifier != NULL
@@ -2248,7 +2248,7 @@ void BeginNodeEditor()
     {
         ImGui::push_style_var(StyleVar::FramePadding, Vector2D::new(1.f, 1.f));
         ImGui::push_style_var(StyleVar::WindowPadding, Vector2D::new(0.f, 0.f));
-        ImGui::push_style_color(Color::ChildBg, GImNodes.Style.colors[ImNodesCol_GridBackground]);
+        ImGui::push_style_color(StyleColor::ChildBg, GImNodes.Style.colors[ImNodesCol_GridBackground]);
         ImGui::begin_child(
             "scrolling_region",
             Vector2D::new(0.f, 0.f),
@@ -2337,7 +2337,7 @@ void EndNodeEditor()
 
     // In order to render the links underneath the nodes, we want to first select the bottom draw
     // channel.
-    GImNodes.CanvasDrawList.ChannelsSetCurrent(0);
+    GImNodes.CanvasDrawList.channels_set_current(0);
 
     for (int link_idx = 0; link_idx < editor.Links.Pool.size();  += 1link_idx)
     {

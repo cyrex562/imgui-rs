@@ -1714,7 +1714,7 @@ pub fn STB_TEXTEDIT_GETWIDTH(obj: *mut ImGuiInputTextState, line_start_idx: usiz
         return STB_TEXTEDIT_GETWIDTH_NEWLINE;
     }
 
-    GImGui.font.GetCharAdvance(c) * GImGui.FontSize / GImGui.font.FontSize
+    GImGui.font.GetCharAdvance(c) * GImGui.font_size / GImGui.font.font_size
 }
 // static int     STB_TEXTEDIT_KEYTOTEXT(int key)                                                    { return key >= 0x200000 ? 0 : key; }
 pub fn STB_TEXTEDIT_KEYTOTEXT(key: i32) -> i32 {
