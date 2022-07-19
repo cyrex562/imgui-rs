@@ -939,3 +939,40 @@ pub fn set_active_id_using_nav_and_keys(g: &mut Context)
     g.active_id_using_key_input_mask.SetAllBits();
     nav_move_request_cancel();
 }
+
+
+// BeginDisabled()/EndDisabled()
+// - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
+// - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
+// - Feedback welcome at https://github.com/ocornut/imgui/issues/211
+// - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
+// - Optimized shortcuts instead of PushStyleVar() + PushItemFlag()
+// void ImGui::BeginDisabled(bool disabled)
+pub fn begin_disabled(g: &mut Context, disabled: bool)
+{
+    ImGuiContext& g = *GImGui;
+    bool was_disabled = (g.current_item_flags & ItemFlags::Disabled) != 0;
+    if (!was_disabled && disabled)
+    {
+        g.DisabledAlphaBackup = g.style.alpha;
+        g.style.alpha *= g.style.DisabledAlpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * g.style.DisabledAlpha);
+    }
+    if (was_disabled || disabled)
+        g.current_item_flags |= ItemFlags::Disabled;
+    g.item_flags_stack.push_back(g.current_item_flags);
+    g.DisabledStackSize += 1;
+}
+
+// void ImGui::EndDisabled()
+pub fn end_disabled(g: &mut Context)
+{
+    ImGuiContext& g = *GImGui;
+    IM_ASSERT(g.DisabledStackSize > 0);
+    g.DisabledStackSize--;
+    bool was_disabled = (g.current_item_flags & ItemFlags::Disabled) != 0;
+    //PopItemFlag();
+    g.item_flags_stack.pop_back();
+    g.current_item_flags = g.item_flags_stack.back();
+    if (was_disabled && (g.current_item_flags & ItemFlags::Disabled) == 0)
+        g.style.alpha = g.DisabledAlphaBackup; //PopStyleVar();
+}

@@ -2,41 +2,43 @@ use std::collections::HashSet;
 use crate::imgui_h::ImGuiID;
 use crate::imgui_vec::Vector2D;
 use crate::imgui_window::ImGuiWindow;
+use crate::types::Id32;
+use crate::vectors::two_d::Vector2D;
 
 // Storage for current popup stack
 #[derive(Debug,Default,Clone)]
 pub struct PopupData
 {
     // ImGuiID             popup_id;        // Set on OpenPopup()
-    pub PopupId: ImGuiID,
+    pub popup_id: Id32,
     // ImGuiWindow*        window;         // Resolved on BeginPopup() - may stay unresolved if user never calls OpenPopup()
-    pub Window: *mut ImGuiWindow,
-    // ImGuiWindow*        SourceWindow;   // Set on OpenPopup() copy of nav_window at the time of opening the popup
-    pub SourceWindow: *mut ImGuiWindow,
-    // int                 ParentNavLayer; // Resolved on BeginPopup(). Actually a ImGuiNavLayer type (declared down below), initialized to -1 which is not part of an enum, but serves well-enough as "not any of layers" value
-    pub ParentNavLayer: i32,
-    // int                 OpenFrameCount; // Set on OpenPopup()
-    pub OpenFrameCount: i32,
-    // ImGuiID             OpenParentId;   // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
-    pub OpenParentId: ImGuiID,
-    // Vector2D              OpenPopupPos;   // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)
-    pub OpenPopupPos: Vector2D,
-    // Vector2D              OpenMousePos;   // Set on OpenPopup(), copy of mouse position at the time of opening popup
-    pub OpenMousePos: Vector2D,
+    pub window_id: Id32,
+    // ImGuiWindow*        source_window;   // Set on OpenPopup() copy of nav_window at the time of opening the popup
+    pub source_window_id:Id32,
+    // int                 parent_nav_layer; // Resolved on BeginPopup(). Actually a ImGuiNavLayer type (declared down below), initialized to -1 which is not part of an enum, but serves well-enough as "not any of layers" value
+    pub parent_nav_layer: i32,
+    // int                 open_frame_count; // Set on OpenPopup()
+    pub open_frame_count: i32,
+    // ImGuiID             open_parent_id;   // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
+    pub open_parent_id: Id32,
+    // Vector2D              open_popup_pos;   // Set on OpenPopup(), preferred popup position (typically == open_mouse_pos when using mouse)
+    pub open_popup_pos: Vector2D,
+    // Vector2D              open_mouse_pos;   // Set on OpenPopup(), copy of mouse position at the time of opening popup
+    pub open_mouse_pos: Vector2D,
 }
 
 impl PopupData {
-    // ImGuiPopupData()    { memset(this, 0, sizeof(*this)); ParentNavLayer = OpenFrameCount = -1; }
+    // ImGuiPopupData()    { memset(this, 0, sizeof(*this)); parent_nav_layer = open_frame_count = -1; }
     pub fn new() -> Self {
         Self {
-            ParentNavLayer: -1,
-            OpenFrameCount: -1,
+            parent_nav_layer: -1,
+            open_frame_count: -1,
             ..Default::default()
         }
     }
 }
 
-pub enum DimgPopupPositionPolicy
+pub enum PopupPositionPolicy
 {
     Default,
     ComboBox,
@@ -44,8 +46,8 @@ pub enum DimgPopupPositionPolicy
 }
 
 // pub const AnyPopup: i32                = DimgPopupFlags::AnyPopupId | DimgPopupFlags::AnyPopupLevel;
-pub const DIMG_POPUP_FLAGS_ANY_POPUP: HashSet<DimgPopupFlags> = HashSet::from([
-    DimgPopupFlags::AnyPopupId, DimgPopupFlags::AnyPopupLevel
+pub const POPUP_FLAGS_ANY_POPUP: HashSet<PopupFlags> = HashSet::from([
+    PopupFlags::AnyPopupId, PopupFlags::AnyPopupLevel
 ]);
 
 // flags for OpenPopup*(), BeginPopupContext*(), IsPopupOpen() functions.
@@ -57,7 +59,7 @@ pub const DIMG_POPUP_FLAGS_ANY_POPUP: HashSet<DimgPopupFlags> = HashSet::from([
 //   and want to another another flag, you need to pass in the ImGuiPopupFlags_MouseButtonRight flag.
 // - Multiple buttons currently cannot be combined/or-ed in those functions (we could allow it later).
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgPopupFlags
+pub enum PopupFlags
 {
     None                    = 0,
     // ImGuiPopupFlags_MouseButtonLeft         = 0,        // For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)

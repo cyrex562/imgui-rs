@@ -330,7 +330,7 @@ bool ImGuiListClipper::Step()
         else
         {
             // Add range selected to be included for navigation
-            const bool is_nav_request = (g.NavMoveScoringItems && g.nav_window && g.nav_window.RootWindowForNav == window.RootWindowForNav);
+            const bool is_nav_request = (g.NavMoveScoringItems && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
             if (is_nav_request)
                 data.Ranges.push_back(ImGuiListClipperRange::FromPositions(g.NavScoringNoClipRect.min.y, g.NavScoringNoClipRect.max.y, 0, 0));
             if (is_nav_request && (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && g.NavTabbingDir == -1)

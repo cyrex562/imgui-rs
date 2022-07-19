@@ -106,6 +106,8 @@ mod child;
 mod resize;
 mod border;
 mod window;
+mod modal;
+pub mod text_wrap;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context)

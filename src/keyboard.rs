@@ -96,3 +96,16 @@ pub fn get_merged_mod_flags(g: &mut Context) -> HashSet<ModFlags>
     if g.io.key_super { key_mods.insert(ModFlags::Super); }
     return key_mods;
 }
+
+// FIXME: Look into renaming this once we have settled the new Focus/Activation/TabStop system.
+// void ImGui::PushAllowKeyboardFocus(bool allow_keyboard_focus)
+pub fn push_allow_keyboard_focus(g: &mut Context, allow_keyboard_focus: bool)
+{
+    PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus);
+}
+
+// void ImGui::PopAllowKeyboardFocus()
+pub fn pop_allow_keyboard_focus(g: &mut Context)
+{
+    PopItemFlag();
+}

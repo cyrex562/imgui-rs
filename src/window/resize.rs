@@ -178,7 +178,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     window.dcnav_layer_current = NavLayer::Main;
 
     // Navigation resize (keyboard/gamepad)
-    if g.nav_windowing_target && g.nav_windowing_target.RootWindowDockTree == window
+    if g.nav_windowing_target && g.nav_windowing_target.root_window_dock_tree == window
     {
         // Vector2D nav_resize_delta;
         let mut nav_resize_delta = Vector2D::default();

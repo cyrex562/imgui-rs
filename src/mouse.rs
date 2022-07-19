@@ -321,8 +321,8 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         // We actually want to move the root window. g.moving_window == window we clicked on (could be a child window).
         // We track it to preserve Focus and so that generally active_id_window == moving_window and active_id == moving_window->move_id for consistency.
         keep_alive_id(g.active_id);
-        // IM_ASSERT(g.moving_window && g.moving_window->RootWindowDockTree);
-        // ImGuiWindow* moving_window = g.moving_window->RootWindowDockTree;
+        // IM_ASSERT(g.moving_window && g.moving_window->root_window_dock_tree);
+        // ImGuiWindow* moving_window = g.moving_window->root_window_dock_tree;
         let moving_window_id = g.get_window(g.moving_window_id).unwrap().root_window_dock_tree_id;
         let moving_window = g.get_window(moving_window_id).unwrap();
 
@@ -419,7 +419,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
         } else {
             None
         };
-        // const bool is_closed_popup = RootWindow && (RootWindow.Flags & ImGuiWindowFlags_Popup) && !IsPopupOpen(RootWindow.PopupId, ImGuiPopupFlags_AnyPopupLevel);
+        // const bool is_closed_popup = RootWindow && (RootWindow.Flags & ImGuiWindowFlags_Popup) && !IsPopupOpen(RootWindow.popup_id, ImGuiPopupFlags_AnyPopupLevel);
         let is_closed_popup: bool = if root_window.is_some() {
             let root_win = root_window.unwrap();
             if root_win.flags.contains(&WindowFlags::Popup) {

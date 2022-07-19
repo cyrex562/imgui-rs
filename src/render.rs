@@ -113,7 +113,7 @@ void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, 
     }
 }
 
-void ImGui::RenderTextClipped(const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
+void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
 {
     // Hide anything after a '##' string
     const char* text_display_end = FindRenderedTextEnd(text, text_end);
@@ -422,7 +422,7 @@ pub fn render(g: &mut Context)
             INVALID_ID
         }
     ];
-    // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & ImGuiWindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->RootWindowDockTree : NULL;
+    // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & ImGuiWindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->root_window_dock_tree : NULL;
     // windows_to_render_top_most[1] = (g.nav_windowing_target_id? g.nav_windowing_list_window : NULL);
     // for (int n = 0; n != g.windows.Size; n += 1)
     for (win_id, window) in g.windows.iter_mut()
@@ -490,7 +490,7 @@ pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Wi
     // We've already called AddWindowToDrawData() which called draw_list->ChannelsMerge() on DockNodeHost windows,
     // and draw list have been trimmed already, hence the explicit recreation of a draw command if missing.
     // FIXME: This is creating complication, might be simpler if we could inject a drawlist in drawdata at a given position and not attempt to manipulate ImDrawCmd order.
-    // ImDrawList* draw_list = window.RootWindowDockTree->DrawList;
+    // ImDrawList* draw_list = window.root_window_dock_tree->DrawList;
     let root_win_dock_tree_win = ctx.get_window(window.root_window_dock_tree_id).unwrap();
     let draw_list = ctx.get_draw_list(root_win_dock_tree_win.draw_list_id).unwrap();
     if draw_list.cmd_buffer.len() == 0 {
@@ -511,7 +511,7 @@ pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Wi
     let root_win = ctx.get_window(window.root_window_id).unwrap();
     if root_win.dock_is_active
     {
-        // ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.RootWindowDockTree)->DrawList;
+        // ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.root_window_dock_tree)->DrawList;
 
         let draw_list = ctx.get_draw_list(window::find_front_most_visible_child_window(ctx, root_win_dock_tree_win).draw_list_id).unwrap();
         if draw_list.cmd_buffer.len() == 0 {

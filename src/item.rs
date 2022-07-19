@@ -134,7 +134,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
     // When disabled we'll return false but still set hovered_id
     ImGuiItemFlags
     item_flags = (g.LastItemData.id == id?
-    g.LastItemData.InFlags: g.CurrentItemFlags);
+    g.LastItemData.InFlags: g.current_item_flags);
     if item_flags & ItemFlags::Disabled {
         // Release active id if turning disabled
         if g.active_id == id {
@@ -443,3 +443,25 @@ pub enum ItemFlags {
     Inputable = 1 << 8,   // false     // [WIP] Auto-activate input mode when tab focused. Currently only used and supported by a few items before it becomes a generic feature.
 }
 
+// void ImGui::PushItemFlag(ImGuiItemFlags option, bool enabled)
+pub fn push_item_flag(g: &mut Context, option: &ItemFlags, enabled: bool)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiItemFlags item_flags = g.current_item_flags;
+    IM_ASSERT(item_flags == g.item_flags_stack.back());
+    if (enabled)
+        item_flags |= option;
+    else
+        item_flags &= ~option;
+    g.current_item_flags = item_flags;
+    g.item_flags_stack.push_back(item_flags);
+}
+
+// void ImGui::PopItemFlag()
+pub fn pop_item_flag(g: &mut Context)
+{
+    ImGuiContext& g = *GImGui;
+    IM_ASSERT(g.item_flags_stack.size > 1); // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
+    g.item_flags_stack.pop_back();
+    g.current_item_flags = g.item_flags_stack.back();
+}

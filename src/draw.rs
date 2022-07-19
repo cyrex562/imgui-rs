@@ -3612,7 +3612,7 @@ void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir
     draw_list.add_triangle_filled(center + a, center + b, center + c, col);
 }
 
-void ImGui::RenderBullet(ImDrawList* draw_list, Vector2D pos, ImU32 col)
+void ImGui::render_bullet(ImDrawList* draw_list, Vector2D pos, ImU32 col)
 {
     draw_list.AddCircleFilled(pos, draw_list->_Data.font_size * 0.20, col, 8);
 }

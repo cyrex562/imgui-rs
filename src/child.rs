@@ -92,7 +92,7 @@ pub fn begin_child_frame(g: &mut Context, id: Id32, size: &Vector2D, extra_flags
     push_style_color(StyleColor::ChildBg, style.colors[StyleColor::FrameBg]);
     push_style_var(StyleVar::ChildRounding, style.FrameRounding);
     push_style_var(StyleVar::ChildBorderSize, style.frame_border_size);
-    push_style_var(StyleVar::WindowPadding, style.FramePadding);
+    push_style_var(StyleVar::WindowPadding, style.frame_padding);
     let mut flags: HashSet<WindowFlags> = HashSet::from([WindowFlags::NoMove, WindowFlags::AlwaysUseWindowPadding]);
     flags.extend(extra_flags.iter());
     let ret = begin_child2(g, id, size, true, &mut flags);

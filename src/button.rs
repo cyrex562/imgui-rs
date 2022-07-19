@@ -43,3 +43,15 @@ pub const MOUSE_BTN_MASK: HashSet<DimgButtonFlags> = HashSet::from([
 pub const MOUSE_BTN_DFLT: DimgButtonFlags = DimgButtonFlags::MouseButtonLeft;
 
 pub const    MouseButtonDefault_: i32    = DimgButtonFlags::MouseButtonLeft as i32;
+
+// void ImGui::PushButtonRepeat(bool repeat)
+pub fn push_button_repeat(g: &mut Context, repeat: bool)
+{
+    PushItemFlag(ImGuiItemFlags_ButtonRepeat, repeat);
+}
+
+// void ImGui::PopButtonRepeat()
+pub fn pop_button_repeat(g: &mut Context)
+{
+    PopItemFlag();
+}

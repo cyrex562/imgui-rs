@@ -1,6 +1,7 @@
 use std::collections::HashSet;
-use crate::{Context, Viewport, window};
+use crate::{Context, INVALID_ID, Viewport, window};
 use crate::condition::Condition;
+use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
 use crate::window::{settings, Window, WindowFlags};
 use crate::window::settings::WindowSettings;
@@ -64,7 +65,7 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
     else {
         g.windows.push_back(window);
     }
-    // UpdateWindowInFocusOrderList(window, true, window.flags);
+    // update_window_in_focus_order_list(window, true, window.flags);
     window::update_window_focus_order_list(g, &mut window, true, &mut window.flags);
 
     return &mut window;
@@ -94,4 +95,1144 @@ pub fn translate_window(window: &mut Window, delta: &Vector2D)
     window.dc.cursor_start_pos += delta;
     window.dc.cursor_max_pos += delta;
     window.dc.ideal_max_pos += delta;
+}
+
+// void ImGui::UpdateWindowParentAndRootLinks(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window)
+pub fn update_window_parent_and_root_links(g: &mut Context, window: &mut Window, flags: &mut HashSet<WindowFlags>, parent_window: &mut Window)
+{
+    // window.parent_window = parent_window;
+    window.parent_window_id = parent_window.id;
+    // window.root_window = window.root_window_popup_tree = window.root_window_dock_tree = window.root_window_for_title_bar_highlight = window.root_window_for_nav = window;
+    window.root_window_id = window.id;
+    window.root_window_popup_tree_id = window.id;
+    window.root_window_dock_tree_id = window.id;
+    window.root_window_for_title_bar_highlight_id = window.id;
+    window.root_window_for_nav_id = window.id;
+    // if (parent_window && (flags & WindowFlags::ChildWindow) && !(flags & WindowFlags::Tooltip))
+    if parent_window.id != INVALID_ID && flags.contains(&WindowFlags::ChildWindow) && flags.contains(&WindowFlags::Tooltip) == false
+    {
+        // window.root_window_dock_tree = parent_window.root_window_dock_tree;
+        window.root_window_dock_tree_id = parent_window.root_window_dock_tree_id;
+        // if !window.dock_is_active && !(parent_window.flags & WindowFlags::DockNodeHost)
+        if window.dock_is_active == false && parent.window.flags.contains(&WindowFlags::DockNodeHost) == false
+        {
+            window.root_window = parent_window.root_window;
+        }
+    }
+    // if parent_window && (flags & WindowFlags::Popup)
+    if parent_window.id != INVALID_ID && flags.contains(&WindowFlags::Popup)
+    {
+        window.root_window_popup_tree_id = parent_window.root_window_popup_tree_id;
+    }
+    // if (parent_window && !(flags & WindowFlags::Modal) && (flags & (WindowFlags::ChildWindow | WindowFlags::Popup))) // FIXME: simply use _NoTitleBar ?
+    if parent_window.id != INVALID_ID && flags.contains(&WindowFlags::Modal) == false && (flags.contains(&WindowFlags::ChildWindow) && flags.contains(&WindowFlags::Popup))
+    {
+        window.root_window_for_title_bar_highlight_id = parent_window.root_window_for_title_bar_highlight_id;
+    }
+    // while (window.root_window_for_nav_id.flags & WindowFlags::NavFlattened)
+    let mut root_window_for_nav = g.get_window(window.root_window_for_nav_id).unwrap();
+    while root_window_for_nav.flags.contains(&WindowFlags::NavFlattened)
+    {
+        // IM_ASSERT(window.root_window_for_nav_id.parent_window != NULL);
+        window.root_window_for_nav_id = root_window_for_nav.parent_window_id;
+        root_window_for_nav = g.get_window(window.root_window_for_nav_id).unwrap();
+    }
+}
+
+// ImGuiWindow* ImGui::FindWindowByName(const char* name)
+pub fn find_or_create_window_by_name(g: &mut Context, name: &str) -> (&mut Window, bool)
+{
+    // ImGuiID id = ImHashStr(name);
+    // return FindWindowByID(id);
+    for (_, win) in g.windows.iter_mut() {
+        if win.name.as_str() == name {
+            return (win, false);
+        }
+    }
+
+    let new_win = Window::new(g, name);
+    let new_win_id: Id32 = new_win.id;
+    g.windows.insert(new_win.id, new_win);
+    (g.windows.get_mut(&new_win_id).unwrap(), true)
+}
+
+pub fn find_window_by_name(g: &mut Context, name: &str) -> Option<&mut Window>
+{
+    for (_, win) in g.windows.iter_mut() {
+        if win.name == String::from(name) {
+            return Some(win);
+        }
+    }
+
+    return None;
+}
+
+
+// Push a new Dear ImGui window to add widgets to.
+// - A default window called "Debug" is automatically stacked at the beginning of every frame so you can use widgets without explicitly calling a Begin/End pair.
+// - Begin/End can be called multiple times during the frame with the same window name to append content.
+// - The window name is used as a unique identifier to preserve window information across frames (and save rudimentary information to the .ini file).
+//   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
+// - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
+// - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
+// bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
+pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut HashSet<WindowFlags>) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // const ImGuiStyle& style = g.style;
+    let style: &Style = &g.style;
+
+    // IM_ASSERT(name != NULL && name[0] != '\0');     // window name required
+    // IM_ASSERT(g.within_frame_scope);                  // Forgot to call ImGui::NewFrame()
+    // IM_ASSERT(g.frame_count_ended != g.frame_count);   // Called ImGui::Render() or ImGui::EndFrame() and haven't called ImGui::NewFrame() again yet
+
+    // Find or create
+    // ImGuiWindow* window = FindWindowByName(name);
+    // let (window, window_just_created) = find_or_create_window_by_name(g, name);
+    let mut window_opt = find_window_by_name(g, name);
+    let mut window_just_created = false;
+    let mut window: &mut Window = Window::default();
+    if window_opt.is_none() {
+        window_just_created = true;
+        window = create_window(g, name)
+    } else {
+        window = window_opt.unwrap();
+    }
+    if window_just_created == false {
+        update_window_in_focus_order_list(window, window_just_created, flags);
+    }
+
+
+    // Automatically disable manual moving/resizing when NoInputs is set
+    // if ((flags & WindowFlags::NoInputs) == WindowFlags::NoInputs)
+    //     flags |= WindowFlags::NoMove | WindowFlags::NoResize;
+    if flags.contains(&WindowFlags::NoInputs) {
+        flags.insert(WindowFlags::NoMove);
+        flags.insert(WindowFlags::NoResize);
+    }
+
+    // if (flags & WindowFlags::NavFlattened)
+    //     IM_ASSERT(flags & WindowFlags::ChildWindow);
+
+    // const int current_frame = g.frame_count;
+    let current_frame = g.frame_count;
+    // const bool first_begin_of_the_frame = (window.LastFrameActive != current_frame);
+    let first_begin_of_the_frame = window.last_frame_active != current_frame;
+    // window.IsFallbackWindow = (g.current_window_stack.size == 0 && g.within_frame_scope_with_implicit_window);
+    window.is_fallback_window = g.current_window_stack.is_empty && 
+    g.within_frame_scope_with_implicit_window;
+
+    // Update the appearing flag (note: the BeginDocked() path may also set this to true later)
+    // bool window_just_activated_by_user = (window.LastFrameActive < current_frame - 1); // Not using !was_active because the implicit "Debug" window would always toggle off->on
+    let window_just_activated_by_user = window.last_frame_active < current_frame - 1;
+    
+    // if (flags & WindowFlags::Popup)
+    if flags.contains(&WindowFlags::Popup)
+    {
+        ImGuiPopupData& popup_ref = g.open_popup_stack[g.begin_popup_stack.size];
+        window_just_activated_by_user |= (window.PopupId != popup_ref.PopupId); // We recycle popups so treat window as activated if popup id changed
+        window_just_activated_by_user |= (window != popup_ref.Window);
+    }
+
+    // Update flags, last_frame_active, BeginOrderXXX fields
+    const bool window_was_appearing = window.Appearing;
+    if (first_begin_of_the_frame)
+    {
+        window.Appearing = window_just_activated_by_user;
+        if (window.Appearing)
+            set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
+
+        window.FlagsPreviousFrame = window.flags;
+        window.flags = (ImGuiWindowFlags)flags;
+        window.LastFrameActive = current_frame;
+        window.last_time_active = g.time;
+        window.BeginOrderWithinParent = 0;
+        window.BeginOrderWithinContext = (g.windows_active_count += 1);
+    }
+    else
+    {
+        flags = window.flags;
+    }
+
+    // Docking
+    // (NB: during the frame dock nodes are created, it is possible that (window->dock_is_active == false) even though (window->dock_node->windows.size > 1)
+    IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL); // Cannot be both
+    if (g.next_window_data.flags & NextWindowDataFlags::HasDock)
+        SetWindowDock(window, g.next_window_data.DockId, g.next_window_data.DockCond);
+    if (first_begin_of_the_frame)
+    {
+        bool has_dock_node = (window.DockId != 0 || window.dock_node != NULL);
+        bool new_auto_dock_node = !has_dock_node && GetWindowAlwaysWantOwnTabBar(window);
+        bool dock_node_was_visible = window.DockNodeIsVisible;
+        bool dock_tab_was_visible = window.DockTabIsVisible;
+        if (has_dock_node || new_auto_dock_node)
+        {
+            BeginDocked(window, p_open);
+            flags = window.flags;
+            if (window.dock_is_active)
+            {
+                IM_ASSERT(window.dock_node != NULL);
+                g.next_window_data.flags &= ~NextWindowDataFlags::HasSizeConstraint; // Docking currently override constraints
+            }
+
+            // Amend the appearing flag
+            if (window.DockTabIsVisible && !dock_tab_was_visible && dock_node_was_visible && !window.Appearing && !window_was_appearing)
+            {
+                window.Appearing = true;
+                set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
+            }
+        }
+        else
+        {
+            window.dock_is_active = window.DockNodeIsVisible = window.DockTabIsVisible = false;
+        }
+    }
+
+    // Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
+    ImGuiWindow* parent_window_in_stack = (window.dock_is_active && window.dock_node.host_window) ? window.dock_node.host_window : g.current_window_stack.empty() ? NULL : g.current_window_stack.back().Window;
+    ImGuiWindow* parent_window = first_begin_of_the_frame ? ((flags & (WindowFlags::ChildWindow | WindowFlags::Popup)) ? parent_window_in_stack : NULL) : window.parent_window;
+    IM_ASSERT(parent_window != NULL || !(flags & WindowFlags::ChildWindow));
+
+    // We allow window memory to be compacted so recreate the base stack when needed.
+    if (window.IDStack.size == 0)
+        window.IDStack.push_back(window.id);
+
+    // Add to stack
+    // We intentionally set g.current_window to NULL to prevent usage until when the viewport is set, then will call set_current_window()
+    g.current_window = window;
+    ImGuiWindowStackData window_stack_data;
+    window_stack_data.Window = window;
+    window_stack_data.ParentLastItemDataBackup = g.last_item_data;
+    window_stack_data.StackSizesOnBegin.SetToCurrentState();
+    g.current_window_stack.push_back(window_stack_data);
+    g.current_window = NULL;
+    if (flags & WindowFlags::ChildMenu)
+        g.BeginMenuCount += 1;
+
+    if (flags & WindowFlags::Popup)
+    {
+        ImGuiPopupData& popup_ref = g.open_popup_stack[g.begin_popup_stack.size];
+        popup_ref.Window = window;
+        popup_ref.ParentNavLayer = parent_window_in_stack.DCnav_layer_current;
+        g.begin_popup_stack.push_back(popup_ref);
+        window.PopupId = popup_ref.PopupId;
+    }
+
+    // Update ->RootWindow and others pointers (before any possible call to focus_window)
+    if (first_begin_of_the_frame)
+    {
+        UpdateWindowParentAndRootLinks(window, flags, parent_window);
+        window.ParentWindowInBeginStack = parent_window_in_stack;
+    }
+
+    // Process SetNextWindow***() calls
+    // (FIXME: Consider splitting the HasXXX flags into x/Y components
+    bool window_pos_set_by_api = false;
+    bool window_size_x_set_by_api = false, window_size_y_set_by_api = false;
+    if (g.next_window_data.flags & NextWindowDataFlags::HasPos)
+    {
+        window_pos_set_by_api = (window.set_window_pos_allow_flags & g.next_window_data.PosCond) != 0;
+        if (window_pos_set_by_api && ImLengthSqr(g.next_window_data.PosPivotVal) > 0.00001)
+        {
+            // May be processed on the next frame if this is our first frame and we are measuring size
+            // FIXME: Look into removing the branch so everything can go through this same code path for consistency.
+            window.SetWindowPosVal = g.next_window_data.PosVal;
+            window.SetWindowPosPivot = g.next_window_data.PosPivotVal;
+            window.set_window_pos_allow_flags &= ~(ImGuiCond_Once | Cond::FirstUseEver | ImGuiCond_Appearing);
+        }
+        else
+        {
+            set_window_pos(window, g.next_window_data.PosVal, g.next_window_data.PosCond);
+        }
+    }
+    if (g.next_window_data.flags & NextWindowDataFlags::HasSize)
+    {
+        window_size_x_set_by_api = (window.set_window_size_allow_flags & g.next_window_data.sizeCond) != 0 && (g.next_window_data.sizeVal.x > 0.0);
+        window_size_y_set_by_api = (window.set_window_size_allow_flags & g.next_window_data.sizeCond) != 0 && (g.next_window_data.sizeVal.y > 0.0);
+        SetWindowSize(window, g.next_window_data.sizeVal, g.next_window_data.sizeCond);
+    }
+    if (g.next_window_data.flags & NextWindowDataFlags::HasScroll)
+    {
+        if (g.next_window_data.ScrollVal.x >= 0.0)
+        {
+            window.ScrollTarget.x = g.next_window_data.ScrollVal.x;
+            window.ScrollTargetCenterRatio.x = 0.0;
+        }
+        if (g.next_window_data.ScrollVal.y >= 0.0)
+        {
+            window.ScrollTarget.y = g.next_window_data.ScrollVal.y;
+            window.ScrollTargetCenterRatio.y = 0.0;
+        }
+    }
+    if (g.next_window_data.flags & NextWindowDataFlags::HasContentSize)
+        window.content_size_explicit = g.next_window_data.ContentSizeVal;
+    else if (first_begin_of_the_frame)
+        window.content_size_explicit = Vector2D::new(0.0, 0.0);
+    if (g.next_window_data.flags & NextWindowDataFlags::HasWindowClass)
+        window.WindowClass = g.next_window_data.WindowClass;
+    if (g.next_window_data.flags & NextWindowDataFlags::HasCollapsed)
+        SetWindowCollapsed(window, g.next_window_data.CollapsedVal, g.next_window_data.CollapsedCond);
+    if (g.next_window_data.flags & NextWindowDataFlags::HasFocus)
+        focus_window(window);
+    if (window.Appearing)
+        set_window_condition_allow_flags(window, ImGuiCond_Appearing, false);
+
+    // When reusing window again multiple times a frame, just append content (don't need to setup again)
+    if (first_begin_of_the_frame)
+    {
+        // Initialize
+        const bool window_is_child_tooltip = (flags & WindowFlags::ChildWindow) && (flags & WindowFlags::Tooltip); // FIXME-WIP: Undocumented behavior of Child+Tooltip for pinned tooltip (#1345)
+        const bool window_just_appearing_after_hidden_for_resize = (window.hidden_frames_cannot_skip_items > 0);
+        window.active = true;
+        window.HasCloseButton = (p_open != NULL);
+        window.clip_rect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
+        window.IDStack.resize(1);
+        window.draw_list->_ResetForNewFrame();
+        window.dc.CurrentTableIdx = -1;
+        if (flags & WindowFlags::DockNodeHost)
+        {
+            window.draw_list.ChannelsSplit(2);
+            window.draw_list.channels_set_current(1); // Render decorations on channel 1 as we will render the backgrounds manually later
+        }
+
+        // Restore buffer capacity when woken from a compacted state, to avoid
+        if (window.memory_compacted)
+            GcAwakeTransientWindowBuffers(window);
+
+        // Update stored window name when it changes (which can _only_ happen with the "###" operator, so the id would stay unchanged).
+        // The title bar always display the 'name' parameter, so we only update the string storage if it needs to be visible to the end-user elsewhere.
+        bool window_title_visible_elsewhere = false;
+        if ((window.viewport && window.viewport.Window == window) || (window.dock_is_active))
+            window_title_visible_elsewhere = true;
+        else if (g.nav_windowing_list_window != NULL && (window.flags & WindowFlags::NoNavFocus) == 0)   // window titles visible when using CTRL+TAB
+            window_title_visible_elsewhere = true;
+        if (window_title_visible_elsewhere && !window_just_created && strcmp(name, window.Name) != 0)
+        {
+            size_t buf_len = window.NameBufLen;
+            window.Name = ImStrdupcpy(window.Name, &buf_len, name);
+            window.NameBufLen = buf_len;
+        }
+
+        // UPDATE CONTENTS SIZE, UPDATE HIDDEN STATUS
+
+        // Update contents size from last frame for auto-fitting (or use explicit size)
+        CalcWindowContentSizes(window, &window.ContentSize, &window.ContentSizeIdeal);
+
+        // FIXME: These flags are decremented before they are used. This means that in order to have these fields produce their intended behaviors
+        // for one frame we must set them to at least 2, which is counter-intuitive. hidden_frames_cannot_skip_items is a more complicated case because
+        // it has a single usage before this code block and may be set below before it is finally checked.
+        if (window..hidden_frames_can_skip_items > 0)
+            window..hidden_frames_can_skip_items--;
+        if (window.hidden_frames_cannot_skip_items > 0)
+            window.hidden_frames_cannot_skip_items--;
+        if (window.hiddenFramesForRenderOnly > 0)
+            window.hiddenFramesForRenderOnly--;
+
+        // Hide new windows for one frame until they calculate their size
+        if (window_just_created && (!window_size_x_set_by_api || !window_size_y_set_by_api))
+            window.hidden_frames_cannot_skip_items = 1;
+
+        // Hide popup/tooltip window when re-opening while we measure size (because we recycle the windows)
+        // We reset size/content_size for reappearing popups/tooltips early in this function, so further code won't be tempted to use the old size.
+        if (window_just_activated_by_user && (flags & (WindowFlags::Popup | WindowFlags::Tooltip)) != 0)
+        {
+            window.hidden_frames_cannot_skip_items = 1;
+            if (flags & WindowFlags::AlwaysAutoResize)
+            {
+                if (!window_size_x_set_by_api)
+                    window.size.x = window.size_full.x = 0.f;
+                if (!window_size_y_set_by_api)
+                    window.size.y = window.size_full.y = 0.f;
+                window.ContentSize = window.ContentSizeIdeal = Vector2D::new(0.f, 0.f);
+            }
+        }
+
+        // SELECT VIEWPORT
+        // We need to do this before using any style/font sizes, as viewport with a different DPI may affect font sizes.
+
+        WindowSelectViewport(window);
+        SetCurrentViewport(window, window.viewport);
+        window.FontDpiScale = (g.io.config_flags & ImGuiConfigFlags_DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
+        SetCurrentWindow(window);
+        flags = window.flags;
+
+        // LOCK BORDER SIZE AND PADDING FOR THE FRAME (so that altering them doesn't cause inconsistencies)
+        // We read style data after the call to UpdateSelectWindowViewport() which might be swapping the style.
+
+        if (flags & WindowFlags::ChildWindow)
+            window.WindowBorderSize = style.ChildBorderSize;
+        else
+            window.WindowBorderSize = ((flags & (WindowFlags::Popup | WindowFlags::Tooltip)) && !(flags & WindowFlags::Modal)) ? style.PopupBorderSize : style.WindowBorderSize;
+        if (!window.dock_is_active && (flags & WindowFlags::ChildWindow) && !(flags & (WindowFlags::AlwaysUseWindowPadding | WindowFlags::Popup)) && window.WindowBorderSize == 0.0)
+            window.WindowPadding = Vector2D::new(0.0, (flags & WindowFlags::MenuBar) ? style.WindowPadding.y : 0.0);
+        else
+            window.WindowPadding = style.WindowPadding;
+
+        // Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
+        window.dc.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.ItemSpacing.x), g.next_window_data.MenuBarOffsetMinVal.x);
+        window.dc.MenuBarOffset.y = g.next_window_data.MenuBarOffsetMinVal.y;
+
+        // Collapse window by double-clicking on title bar
+        // At this point we don't have a clipping rectangle setup yet, so we can use the title bar area for hit detection and drawing
+        if (!(flags & WindowFlags::NoTitleBar) && !(flags & WindowFlags::NoCollapse) && !window.dock_is_active)
+        {
+            // We don't use a regular button+id to test for double-click on title bar (mostly due to legacy reason, could be fixed), so verify that we don't have items over the title bar.
+            Rect title_bar_rect = window.title_bar_rect();
+            if (g.hovered_window == window && g.hovered_id == 0 && g.hovered_id_previous_frame == 0 && IsMouseHoveringRect(title_bar_rect.min, title_bar_rect.max) && g.io.mouse_clicked_count[0] == 2)
+                window.WantCollapseToggle = true;
+            if (window.WantCollapseToggle)
+            {
+                window.collapsed = !window.collapsed;
+                MarkIniSettingsDirty(window);
+            }
+        }
+        else
+        {
+            window.collapsed = false;
+        }
+        window.WantCollapseToggle = false;
+
+        // SIZE
+
+        // Calculate auto-fit size, handle automatic resize
+        const Vector2D size_auto_fit = CalcWindowAutoFitSize(window, window.ContentSizeIdeal);
+        bool use_current_size_for_scrollbar_x = window_just_created;
+        bool use_current_size_for_scrollbar_y = window_just_created;
+        if ((flags & WindowFlags::AlwaysAutoResize) && !window.collapsed)
+        {
+            // Using SetNextWindowSize() overrides ImGuiWindowFlags_AlwaysAutoResize, so it can be used on tooltips/popups, etc.
+            if (!window_size_x_set_by_api)
+            {
+                window.size_full.x = size_auto_fit.x;
+                use_current_size_for_scrollbar_x = true;
+            }
+            if (!window_size_y_set_by_api)
+            {
+                window.size_full.y = size_auto_fit.y;
+                use_current_size_for_scrollbar_y = true;
+            }
+        }
+        else if (window.auto_fit_frames_x > 0 || window.auto_fit_frames_y > 0)
+        {
+            // Auto-fit may only grow window during the first few frames
+            // We still process initial auto-fit on collapsed windows to get a window width, but otherwise don't honor ImGuiWindowFlags_AlwaysAutoResize when collapsed.
+            if (!window_size_x_set_by_api && window.auto_fit_frames_x > 0)
+            {
+                window.size_full.x = window.auto_fit_only_grows ? ImMax(window.size_full.x, size_auto_fit.x) : size_auto_fit.x;
+                use_current_size_for_scrollbar_x = true;
+            }
+            if (!window_size_y_set_by_api && window.auto_fit_frames_y > 0)
+            {
+                window.size_full.y = window.auto_fit_only_grows ? ImMax(window.size_full.y, size_auto_fit.y) : size_auto_fit.y;
+                use_current_size_for_scrollbar_y = true;
+            }
+            if (!window.collapsed)
+                MarkIniSettingsDirty(window);
+        }
+
+        // Apply minimum/maximum window size constraints and final size
+        window.size_full = calc_window_size_after_constraint(window, window.size_full);
+        window.size = window.collapsed && !(flags & WindowFlags::ChildWindow) ? window.title_bar_rect().GetSize() : window.size_full;
+
+        // Decoration size
+        const float decoration_up_height = window.title_bar_height() + window.MenuBarHeight();
+
+        // POSITION
+
+        // Popup latch its initial position, will position itself when it appears next frame
+        if (window_just_activated_by_user)
+        {
+            window.AutoPosLastDirection = Dir::None;
+            if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: BeginPopup() could use SetNextWindowPos()
+                window.pos = g.begin_popup_stack.back().OpenPopupPos;
+        }
+
+        // Position child window
+        if (flags & WindowFlags::ChildWindow)
+        {
+            IM_ASSERT(parent_window && parent_window.active);
+            window.BeginOrderWithinParent = parent_window.dc.ChildWindows.size;
+            parent_window.dc.ChildWindows.push_back(window);
+            if (!(flags & WindowFlags::Popup) && !window_pos_set_by_api && !window_is_child_tooltip)
+                window.pos = parent_window.dc.cursor_pos;
+        }
+
+        const bool window_pos_with_pivot = (window.SetWindowPosVal.x != f32::MAX && window.hidden_frames_cannot_skip_items == 0);
+        if (window_pos_with_pivot)
+            set_window_pos(window, window.SetWindowPosVal - window.size * window.SetWindowPosPivot, 0); // Position given a pivot (e.g. for centering)
+        else if ((flags & WindowFlags::ChildMenu) != 0)
+            window.pos = FindBestWindowPosForPopup(window);
+        else if ((flags & WindowFlags::Popup) != 0 && !window_pos_set_by_api && window_just_appearing_after_hidden_for_resize)
+            window.pos = FindBestWindowPosForPopup(window);
+        else if ((flags & WindowFlags::Tooltip) != 0 && !window_pos_set_by_api && !window_is_child_tooltip)
+            window.pos = FindBestWindowPosForPopup(window);
+
+        // Late create viewport if we don't fit within our current host viewport.
+        if (window.ViewportAllowPlatformMonitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ImGuiViewportFlags_Minimized))
+            if (!window.viewport.get_main_rect().Contains(window.Rect()))
+            {
+                // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
+                //ImGuiViewport* old_viewport = window->viewport;
+                window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ImGuiViewportFlags_NoFocusOnAppearing);
+
+                // FIXME-DPI
+                //IM_ASSERT(old_viewport->dpi_scale == window->viewport->dpi_scale); // FIXME-DPI: Something went wrong
+                SetCurrentViewport(window, window.viewport);
+                window.FontDpiScale = (g.io.config_flags & ImGuiConfigFlags_DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
+                SetCurrentWindow(window);
+            }
+
+        if (window.viewport_owned)
+            WindowSyncOwnedViewport(window, parent_window_in_stack);
+
+        // Calculate the range of allowed position for that window (to be movable and visible past safe area padding)
+        // When clamping to stay visible, we will enforce that window->pos stays inside of visibility_rect.
+        Rect viewport_rect(window.viewport.get_main_rect());
+        Rect viewport_work_rect(window.viewport.GetWorkRect());
+        Vector2D visibility_padding = ImMax(style.DisplayWindowPadding, style.DisplaySafeAreaPadding);
+        Rect visibility_rect(viewport_work_rect.min + visibility_padding, viewport_work_rect.max - visibility_padding);
+
+        // Clamp position/size so window stays visible within its viewport or monitor
+        // Ignore zero-sized display explicitly to avoid losing positions if a window manager reports zero-sized window when initializing or minimizing.
+        // FIXME: Similar to code in GetWindowAllowedExtentRect()
+        if (!window_pos_set_by_api && !(flags & WindowFlags::ChildWindow) && window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0)
+        {
+            if (!window.viewport_owned && viewport_rect.get_width() > 0 && viewport_rect.get_height() > 0.0)
+            {
+                ClampWindowRect(window, visibility_rect);
+            }
+            else if (window.viewport_owned && g.platform_io.monitors.size > 0)
+            {
+                // Lost windows (e.g. a monitor disconnected) will naturally moved to the fallback/dummy monitor aka the main viewport.
+                const ImGuiPlatformMonitor* monitor = GetViewportPlatformMonitor(window.viewport);
+                visibility_rect.min = monitor.WorkPos + visibility_padding;
+                visibility_rect.max = monitor.WorkPos + monitor.work_size - visibility_padding;
+                ClampWindowRect(window, visibility_rect);
+            }
+        }
+        window.pos = f32::floor(window.pos);
+
+        // Lock window rounding for the frame (so that altering them doesn't cause inconsistencies)
+        // Large values tend to lead to variety of artifacts and are not recommended.
+        if (window.viewport_owned || window.dock_is_active)
+            window.WindowRounding = 0.0;
+        else
+            window.WindowRounding = (flags & WindowFlags::ChildWindow) ? style.ChildRounding : ((flags & WindowFlags::Popup) && !(flags & WindowFlags::Modal)) ? style.PopupRounding : style.WindowRounding;
+
+        // For windows with title bar or menu bar, we clamp to FrameHeight(font_size + FramePadding.y * 2.0) to completely hide artifacts.
+        //if ((window->flags & ImGuiWindowFlags_MenuBar) || !(window->flags & WindowFlags::NoTitleBar))
+        //    window->window_rounding = ImMin(window->window_rounding, g.font_size + style.FramePadding.y * 2.0);
+
+        // Apply window focus (new and reactivated windows are moved to front)
+        bool want_focus = false;
+        if (window_just_activated_by_user && !(flags & WindowFlags::NoFocusOnAppearing))
+        {
+            if (flags & WindowFlags::Popup)
+                want_focus = true;
+            else if ((window.dock_is_active || (flags & WindowFlags::ChildWindow) == 0) && !(flags & WindowFlags::Tooltip))
+                want_focus = true;
+
+            ImGuiWindow* modal = get_top_most_popup_modal();
+            if (modal != NULL && !is_window_within_begin_stack_of(window, modal))
+            {
+                // Avoid focusing a window that is created outside of active modal. This will prevent active modal from being closed.
+                // Since window is not focused it would reappear at the same display position like the last time it was visible.
+                // In case of completely new windows it would go to the top (over current modal), but input to such window would still be blocked by modal.
+                // Position window behind a modal that is not a begin-parent of this window.
+                want_focus = false;
+                if (window == window.root_window)
+                {
+                    ImGuiWindow* blocking_modal = FindBlockingModal(window);
+                    IM_ASSERT(blocking_modal != NULL);
+                    BringWindowToDisplayBehind(window, blocking_modal);
+                }
+            }
+        }
+
+        // [Test Engine] Register whole window in the item system
+#ifdef IMGUI_ENABLE_TEST_ENGINE
+        if (g.TestEngineHookItems)
+        {
+            IM_ASSERT(window.IDStack.size == 1);
+            window.IDStack.size = 0;
+            IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.id);
+            IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.Name, (g.hovered_window == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
+            window.IDStack.size = 1;
+        }
+
+
+        // Decide if we are going to handle borders and resize grips
+        const bool handle_borders_and_resize_grips = (window.DockNodeAsHost || !window.dock_is_active);
+
+        // Handle manual resize: Resize Grips, Borders, Gamepad
+        int border_held = -1;
+        ImU32 resize_grip_col[4] = {};
+        const int resize_grip_count = g.io.ConfigWindowsResizeFromEdges ? 2 : 1; // Allow resize from lower-left if we have the mouse cursor feedback for it.
+        const float resize_grip_draw_size = f32::floor(ImMax(g.font_size * 1.10, window.WindowRounding + 1.0 + g.font_size * 0.2));
+        if (handle_borders_and_resize_grips && !window.collapsed)
+            if (UpdateWindowManualResize(window, size_auto_fit, &border_held, resize_grip_count, &resize_grip_col[0], visibility_rect))
+                use_current_size_for_scrollbar_x = use_current_size_for_scrollbar_y = true;
+        window.ResizeBorderHeld = (signed char)border_held;
+
+        // Synchronize window --> viewport again and one last time (clamping and manual resize may have affected either)
+        if (window.viewport_owned)
+        {
+            if (!window.viewport.PlatformRequestMove)
+                window.viewport.pos = window.pos;
+            if (!window.viewport.PlatformRequestResize)
+                window.viewport.size = window.size;
+            window.viewport.update_work_rect();
+            viewport_rect = window.viewport.get_main_rect();
+        }
+
+        // Save last known viewport position within the window itself (so it can be saved in .ini file and restored)
+        window.viewport_pos = window.viewport.pos;
+
+        // SCROLLBAR VISIBILITY
+
+        // Update scrollbar visibility (based on the size that was effective during last frame or the auto-resized size).
+        if (!window.collapsed)
+        {
+            // When reading the current size we need to read it after size constraints have been applied.
+            // When we use inner_rect here we are intentionally reading last frame size, same for scrollbar_sizes values before we set them again.
+            Vector2D avail_size_from_current_frame = Vector2D::new(window.size_full.x, window.size_full.y - decoration_up_height);
+            Vector2D avail_size_from_last_frame = window.inner_rect.GetSize() + window.scrollbar_sizes;
+            Vector2D needed_size_from_last_frame = window_just_created ? Vector2D::new(0, 0) : window.ContentSize + window.WindowPadding * 2.0;
+            float size_x_for_scrollbars = use_current_size_for_scrollbar_x ? avail_size_from_current_frame.x : avail_size_from_last_frame.x;
+            float size_y_for_scrollbars = use_current_size_for_scrollbar_y ? avail_size_from_current_frame.y : avail_size_from_last_frame.y;
+            //bool scrollbar_y_from_last_frame = window->scrollbar_y; // FIXME: May want to use that in the scrollbar_x expression? How many pros vs cons?
+            window.scrollbar_y = (flags & WindowFlags::AlwaysVerticalScrollbar) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && !(flags & WindowFlags::NoScrollbar));
+            window.scrollbar_x = (flags & WindowFlags::AlwaysHorizontalScrollbar) || ((needed_size_from_last_frame.x > size_x_for_scrollbars - (window.scrollbar_y ? style.scrollbar_size : 0.0)) && !(flags & WindowFlags::NoScrollbar) && (flags & WindowFlags::HorizontalScrollbar));
+            if (window.scrollbar_x && !window.scrollbar_y)
+                window.scrollbar_y = (needed_size_from_last_frame.y > size_y_for_scrollbars) && !(flags & WindowFlags::NoScrollbar);
+            window.scrollbar_sizes = Vector2D::new(window.scrollbar_y ? style.scrollbar_size : 0.0, window.scrollbar_x ? style.scrollbar_size : 0.0);
+        }
+
+        // UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)
+        // Update various regions. Variables they depends on should be set above in this function.
+        // We set this up after processing the resize grip so that our rectangles doesn't lag by a frame.
+
+        // Outer rectangle
+        // Not affected by window border size. Used by:
+        // - FindHoveredWindow() (w/ extra padding when border resize is enabled)
+        // - Begin() initial clipping rect for drawing window background and borders.
+        // - Begin() clipping whole child
+        const Rect host_rect = ((flags & WindowFlags::ChildWindow) && !(flags & WindowFlags::Popup) && !window_is_child_tooltip) ? parent_window.clip_rect : viewport_rect;
+        const Rect outer_rect = window.Rect();
+        const Rect title_bar_rect = window.title_bar_rect();
+        window.OuterRectClipped = outer_rect;
+        if (window.dock_is_active)
+            window.OuterRectClipped.min.y += window.title_bar_height();
+        window.OuterRectClipped.clip_with(host_rect);
+
+        // Inner rectangle
+        // Not affected by window border size. Used by:
+        // - inner_clip_rect
+        // - ScrollToRectEx()
+        // - NavUpdatePageUpPageDown()
+        // - Scrollbar()
+        window.inner_rect.min.x = window.pos.x;
+        window.inner_rect.min.y = window.pos.y + decoration_up_height;
+        window.inner_rect.max.x = window.pos.x + window.size.x - window.scrollbar_sizes.x;
+        window.inner_rect.max.y = window.pos.y + window.size.y - window.scrollbar_sizes.y;
+
+        // Inner clipping rectangle.
+        // Will extend a little bit outside the normal work region.
+        // This is to allow e.g. Selectable or CollapsingHeader or some separators to cover that space.
+        // Force round operator last to ensure that e.g. (max.x-min.x) in user's render code produce correct result.
+        // Note that if our window is collapsed we will end up with an inverted (~null) clipping rectangle which is the correct behavior.
+        // Affected by window/frame border size. Used by:
+        // - Begin() initial clip rect
+        float top_border_size = (((flags & WindowFlags::MenuBar) || !(flags & WindowFlags::NoTitleBar)) ? style.frame_border_size : window.WindowBorderSize);
+        window.InnerClipRect.min.x = f32::floor(0.5 + window.inner_rect.min.x + ImMax(f32::floor(window.WindowPadding.x * 0.5), window.WindowBorderSize));
+        window.InnerClipRect.min.y = f32::floor(0.5 + window.inner_rect.min.y + top_border_size);
+        window.InnerClipRect.max.x = f32::floor(0.5 + window.inner_rect.max.x - ImMax(f32::floor(window.WindowPadding.x * 0.5), window.WindowBorderSize));
+        window.InnerClipRect.max.y = f32::floor(0.5 + window.inner_rect.max.y - window.WindowBorderSize);
+        window.InnerClipRect.ClipWithFull(host_rect);
+
+        // Default item width. Make it proportional to window size if window manually resizes
+        if (window.size.x > 0.0 && !(flags & WindowFlags::Tooltip) && !(flags & WindowFlags::AlwaysAutoResize))
+            window.ItemWidthDefault = f32::floor(window.size.x * 0.65);
+        else
+            window.ItemWidthDefault = f32::floor(g.font_size * 16.0);
+
+        // SCROLLING
+
+        // Lock down maximum scrolling
+        // The value of scroll_max are ahead from scrollbar_x/scrollbar_y which is intentionally using inner_rect from previous rect in order to accommodate
+        // for right/bottom aligned items without creating a scrollbar.
+        window.scroll_max.x = ImMax(0.0, window.ContentSize.x + window.WindowPadding.x * 2.0 - window.inner_rect.get_width());
+        window.scroll_max.y = ImMax(0.0, window.ContentSize.y + window.WindowPadding.y * 2.0 - window.inner_rect.get_height());
+
+        // Apply scrolling
+        window.scroll = CalcNextScrollFromScrollTargetAndClamp(window);
+        window.ScrollTarget = Vector2D::new(f32::MAX, f32::MAX);
+
+        // DRAWING
+
+        // Setup draw list and outer clipping rectangle
+        IM_ASSERT(window.draw_list.cmd_buffer.size == 1 && window.draw_list.cmd_buffer[0].elem_count == 0);
+        window.draw_list.PushTextureID(g.font.container_atlas.TexID);
+        PushClipRect(host_rect.min, host_rect.max, false);
+
+        // Child windows can render their decoration (bg color, border, scrollbars, etc.) within their parent to save a draw call (since 1.71)
+        // When using overlapping child windows, this will break the assumption that child z-order is mapped to submission order.
+        // FIXME: User code may rely on explicit sorting of overlapping child window and would need to disable this somehow. Please get in contact if you are affected (github #4493)
+        const bool is_undocked_or_docked_visible = !window.dock_is_active || window.DockTabIsVisible;
+        if (is_undocked_or_docked_visible)
+        {
+            bool render_decorations_in_parent = false;
+            if ((flags & WindowFlags::ChildWindow) && !(flags & WindowFlags::Popup) && !window_is_child_tooltip)
+            {
+                // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
+                // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
+                ImGuiWindow* previous_child = parent_window.dc.ChildWindows.size >= 2 ? parent_window.dc.ChildWindows[parent_window.dc.ChildWindows.size - 2] : NULL;
+                bool previous_child_overlapping = previous_child ? previous_child.rect().Overlaps(window.Rect()) : false;
+                bool parent_is_empty = parent_window.draw_list.VtxBuffer.size > 0;
+                if (window.draw_list.cmd_buffer.back().elem_count == 0 && parent_is_empty && !previous_child_overlapping)
+                    render_decorations_in_parent = true;
+            }
+            if (render_decorations_in_parent)
+                window.draw_list = parent_window.draw_list;
+
+            // Handle title bar, scrollbar, resize grips and resize borders
+            const ImGuiWindow* window_to_highlight = g.nav_windowing_target ? g.nav_windowing_target : g.nav_window;
+            const bool title_bar_is_highlight = want_focus || (window_to_highlight && (window.root_window_for_title_bar_highlight == window_to_highlight.root_window_for_title_bar_highlight || (window.dock_node && window.dock_node == window_to_highlight.dock_node)));
+            RenderWindowDecorations(window, title_bar_rect, title_bar_is_highlight, handle_borders_and_resize_grips, resize_grip_count, resize_grip_col, resize_grip_draw_size);
+
+            if (render_decorations_in_parent)
+                window.draw_list = &window.DrawListInst;
+        }
+
+        // UPDATE RECTANGLES (2- THOSE AFFECTED BY SCROLLING)
+
+        // Work rectangle.
+        // Affected by window padding and border size. Used by:
+        // - Columns() for right-most edge
+        // - TreeNode(), CollapsingHeader() for right-most edge
+        // - BeginTabBar() for right-most edge
+        const bool allow_scrollbar_x = !(flags & WindowFlags::NoScrollbar) && (flags & WindowFlags::HorizontalScrollbar);
+        const bool allow_scrollbar_y = !(flags & WindowFlags::NoScrollbar);
+        const float work_rect_size_x = (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : ImMax(allow_scrollbar_x ? window.ContentSize.x : 0.0, window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
+        const float work_rect_size_y = (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : ImMax(allow_scrollbar_y ? window.ContentSize.y : 0.0, window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
+        window.WorkRect.min.x = f32::floor(window.inner_rect.min.x - window.scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize));
+        window.WorkRect.min.y = f32::floor(window.inner_rect.min.y - window.scroll.y + ImMax(window.WindowPadding.y, window.WindowBorderSize));
+        window.WorkRect.max.x = window.WorkRect.min.x + work_rect_size_x;
+        window.WorkRect.max.y = window.WorkRect.min.y + work_rect_size_y;
+        window.ParentWorkRect = window.WorkRect;
+
+        // [LEGACY] Content Region
+        // FIXME-OBSOLETE: window->content_region_rect.max is currently very misleading / partly faulty, but some BeginChild() patterns relies on it.
+        // Used by:
+        // - Mouse wheel scrolling + many other things
+        window.ContentRegionRect.min.x = window.pos.x - window.scroll.x + window.WindowPadding.x;
+        window.ContentRegionRect.min.y = window.pos.y - window.scroll.y + window.WindowPadding.y + decoration_up_height;
+        window.ContentRegionRect.max.x = window.ContentRegionRect.min.x + (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : (window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
+        window.ContentRegionRect.max.y = window.ContentRegionRect.min.y + (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : (window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
+
+        // Setup drawing context
+        // (NB: That term "drawing context / dc" lost its meaning a long time ago. Initially was meant to hold transient data only. Nowadays difference between window-> and window->dc-> is dubious.)
+        window.dc.Indent.x = 0.0 + window.WindowPadding.x - window.scroll.x;
+        window.dc.GroupOffset.x = 0.0;
+        window.dc.ColumnsOffset.x = 0.0;
+
+        // Record the loss of precision of CursorStartPos which can happen due to really large scrolling amount.
+        // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or ImU64.
+        double start_pos_highp_x = (double)window.pos.x + window.WindowPadding.x - (double)window.scroll.x + window.dc.ColumnsOffset.x;
+        double start_pos_highp_y = (double)window.pos.y + window.WindowPadding.y - (double)window.scroll.y + decoration_up_height;
+        window.dc.cursor_start_pos  = Vector2D::new((float)start_pos_highp_x, start_pos_highp_y);
+        window.dc.cursor_start_posLossyness = Vector2D::new((float)(start_pos_highp_x - window.dc.cursor_start_pos.x), (start_pos_highp_y - window.dc.cursor_start_pos.y));
+        window.dc.cursor_pos = window.dc.cursor_start_pos;
+        window.dc.CursorPosPrevLine = window.dc.cursor_pos;
+        window.dc.cursor_max_pos = window.dc.cursor_start_pos;
+        window.dc.ideal_max_pos = window.dc.cursor_start_pos;
+        window.dc.CurrLineSize = window.dc.PrevLineSize = Vector2D::new(0.0, 0.0);
+        window.dc.CurrLineTextBaseOffset = window.dc.PrevLineTextBaseOffset = 0.0;
+        window.dc.IsSameLine = false;
+
+        window.dcnav_layer_current = NavLayer::Main;
+        window.dc.nav_layers_active_mask = window.dc.NavLayersActiveMaskNext;
+        window.dc.NavHideHighlightOneFrame = false;
+        window.dc.nav_has_scroll = (window.scroll_max.y > 0.0);
+
+        window.dc.MenuBarAppending = false;
+        window.dc.MenuColumns.Update(style.ItemSpacing.x, window_just_activated_by_user);
+        window.dc.TreeDepth = 0;
+        window.dc.TreeJumpToParentOnPopMask = 0x00;
+        window.dc.ChildWindows.resize(0);
+        window.dc.StateStorage = &window.StateStorage;
+        window.dc.CurrentColumns = NULL;
+        window.dc.LayoutType = ImGuiLayoutType_Vertical;
+        window.dc.ParentLayoutType = parent_window ? parent_window.dc.LayoutType : ImGuiLayoutType_Vertical;
+
+        window.dc.ItemWidth = window.ItemWidthDefault;
+        window.dc.TextWrapPos = -1.0; // disabled
+        window.dc.ItemWidthStack.resize(0);
+        window.dc.TextWrapPosStack.resize(0);
+
+        if (window.auto_fit_frames_x > 0)
+            window.auto_fit_frames_x--;
+        if (window.auto_fit_frames_y > 0)
+            window.auto_fit_frames_y--;
+
+        // Apply focus (we need to call focus_window() AFTER setting dc.CursorStartPos so our initial navigation reference rectangle can start around there)
+        if (want_focus)
+        {
+            focus_window(window);
+            nav_init_window(window, false); // <-- this is in the way for us to be able to defer and sort reappearing focus_window() calls
+        }
+
+        // Close requested by platform window
+        if (p_open != NULL && window.viewport.PlatformRequestClose && window.viewport != GetMainViewport())
+        {
+            if (!window.dock_is_active || window.DockTabIsVisible)
+            {
+                window.viewport.PlatformRequestClose = false;
+                g.NavWindowingToggleLayer = false; // Assume user mapped platform_request_close on ALT-F4 so we disable ALT for menu toggle. False positive not an issue.
+                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] window '%s' platform_request_close\n", window.Name);
+                *p_open = false;
+            }
+        }
+
+        // Title bar
+        if (!(flags & WindowFlags::NoTitleBar) && !window.dock_is_active)
+            RenderWindowTitleBarContents(window, Rect(title_bar_rect.min.x + window.WindowBorderSize, title_bar_rect.min.y, title_bar_rect.max.x - window.WindowBorderSize, title_bar_rect.max.y), name, p_open);
+
+        // clear hit test shape every frame
+        window.hit_test_hole_size.x = window.hit_test_hole_size.y = 0;
+
+        // Pressing CTRL+C while holding on a window copy its content to the clipboard
+        // This works but 1. doesn't handle multiple Begin/End pairs, 2. recursing into another Begin/End pair - so we need to work that out and add better logging scope.
+        // Maybe we can support CTRL+C on every element?
+        /*
+        //if (g.nav_window == window && g.active_id == 0)
+        if (g.active_id == window->move_id)
+            if (g.io.key_ctrl && IsKeyPressedMap(ImGuiKey_C))
+                LogToClipboard();
+        */
+
+        if (g.io.config_flags & ImGuiConfigFlags_DockingEnable)
+        {
+            // Docking: Dragging a dockable window (or any of its child) turns it into a drag and drop source.
+            // We need to do this _before_ we overwrite window->dc.LastItemId below because BeginDockableDragDropSource() also overwrites it.
+            if ((g.moving_window == window) && (g.io.ConfigDockingWithShift == g.io.key_shift))
+                if ((window.root_window_dock_tree.flags & WindowFlags::NoDocking) == 0)
+                    BeginDockableDragDropSource(window);
+
+            // Docking: Any dockable window can act as a target. For dock node hosts we call BeginDockableDragDropTarget() in DockNodeUpdate() instead.
+            if (g.drag_drop_active && !(flags & WindowFlags::NoDocking))
+                if (g.moving_window == NULL || g.moving_window.root_window_dock_tree != window)
+                    if ((window == window.root_window_dock_tree) && !(window.flags & WindowFlags::DockNodeHost))
+                        BeginDockableDragDropTarget(window);
+        }
+
+        // We fill last item data based on Title Bar/Tab, in order for IsItemHovered() and IsItemActive() to be usable after Begin().
+        // This is useful to allow creating context menus on title bar only, etc.
+        if (window.dock_is_active)
+            SetLastItemData(window.move_id, g.current_item_flags, window.DockTabItemStatusFlags, window.DockTabItemRect);
+        else
+            SetLastItemData(window.move_id, g.current_item_flags, IsMouseHoveringRect(title_bar_rect.min, title_bar_rect.max, false) ? ImGuiItemStatusFlags_HoveredRect : 0, title_bar_rect);
+
+        // [Test Engine] Register title bar / tab
+        if (!(window.flags & WindowFlags::NoTitleBar))
+            IMGUI_TEST_ENGINE_ITEM_ADD(g.last_item_data.Rect, g.last_item_data.id);
+    }
+    else
+    {
+        // Append
+        SetCurrentViewport(window, window.viewport);
+        SetCurrentWindow(window);
+    }
+
+    // Pull/inherit current state
+    window.dc.NavFocusScopeIdCurrent = (flags & WindowFlags::ChildWindow) ? parent_window.dc.NavFocusScopeIdCurrent : window.get_id("#FOCUSSCOPE"); // Inherit from parent only // -V595
+
+    if (!(flags & WindowFlags::DockNodeHost))
+        PushClipRect(window.InnerClipRect.min, window.InnerClipRect.max, true);
+
+    // clear 'accessed' flag last thing (After push_clip_rect which will set the flag. We want the flag to stay false when the default "Debug" window is unused)
+    window.write_accessed = false;
+    window.begin_count += 1;
+    g.next_window_data.ClearFlags();
+
+    // Update visibility
+    if (first_begin_of_the_frame)
+    {
+        // When we are about to select this tab (which will only be visible on the _next frame_), flag it with a non-zero hidden_frames_cannot_skip_items.
+        // This will have the important effect of actually returning true in Begin() and not setting skip_items, allowing an earlier submission of the window contents.
+        // This is analogous to regular windows being hidden from one frame.
+        // It is especially important as e.g. nested tab_bars would otherwise generate flicker in the form of one empty frame, or focus requests won't be processed.
+        if (window.dock_is_active && !window.DockTabIsVisible)
+        {
+            if (window.LastFrameJustFocused == g.frame_count)
+                window.hidden_frames_cannot_skip_items = 1;
+            else
+                window..hidden_frames_can_skip_items = 1;
+        }
+
+        if (flags & WindowFlags::ChildWindow)
+        {
+            // Child window can be out of sight and have "negative" clip windows.
+            // Mark them as collapsed so commands are skipped earlier (we can't manually collapse them because they have no title bar).
+            IM_ASSERT((flags& WindowFlags::NoTitleBar) != 0 || (window.dock_is_active));
+            if (!(flags & WindowFlags::AlwaysAutoResize) && window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0) // FIXME: Doesn't make sense for ChildWindow??
+            {
+                const bool nav_request = (flags & WindowFlags::NavFlattened) && (g.NavAnyRequest && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
+                if (!g.LogEnabled && !nav_request)
+                    if (window.OuterRectClipped.min.x >= window.OuterRectClipped.max.x || window.OuterRectClipped.min.y >= window.OuterRectClipped.max.y)
+                        window..hidden_frames_can_skip_items = 1;
+            }
+
+            // Hide along with parent or if parent is collapsed
+            if (parent_window && (parent_window.collapsed || parent_window..hidden_frames_can_skip_items > 0))
+                window..hidden_frames_can_skip_items = 1;
+            if (parent_window && (parent_window.collapsed || parent_window.hidden_frames_cannot_skip_items > 0))
+                window.hidden_frames_cannot_skip_items = 1;
+        }
+
+        // Don't render if style alpha is 0.0 at the time of Begin(). This is arbitrary and inconsistent but has been there for a long while (may remove at some point)
+        if (style.alpha <= 0.0)
+            window..hidden_frames_can_skip_items = 1;
+
+        // Update the hidden flag
+        bool hidden_regular = (window..hidden_frames_can_skip_items > 0) || (window.hidden_frames_cannot_skip_items > 0);
+        window.hidden = hidden_regular || (window.hiddenFramesForRenderOnly > 0);
+
+        // Disable inputs for requested number of frames
+        if (window.DisableInputsFrames > 0)
+        {
+            window.DisableInputsFrames--;
+            window.flags |= WindowFlags::NoInputs;
+        }
+
+        // Update the skip_items flag, used to early out of all items functions (no layout required)
+        bool skip_items = false;
+        if (window.collapsed || !window.active || hidden_regular)
+            if (window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0 && window.hidden_frames_cannot_skip_items <= 0)
+                skip_items = true;
+        window.skip_items = skip_items;
+
+        // Only clear nav_layers_active_mask_next when marked as visible, so a CTRL+Tab back can use a safe value.
+        if (!window.skip_items)
+            window.dc.NavLayersActiveMaskNext = 0x00;
+
+        // Sanity check: there are two spots which can set appearing = true
+        // - when 'window_just_activated_by_user' is set -> hidden_frames_cannot_skip_items is set -> skip_items always false
+        // - in BeginDocked() path when DockNodeIsVisible == dock_tab_is_visible == true -> hidden _should_ be all zero // FIXME: Not formally proven, hence the assert.
+        if (window.skip_items && !window.Appearing)
+            IM_ASSERT(window.Appearing == false); // Please report on GitHub if this triggers: https://github.com/ocornut/imgui/issues/4177
+    }
+
+    return !window.skip_items;
+}
+
+
+pub fn end(g: &mut Context)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+
+    // Error checking: verify that user hasn't called End() too many times!
+    if (g.current_window_stack.size <= 1 && g.within_frame_scope_with_implicit_window)
+    {
+        IM_ASSERT_USER_ERROR(g.current_window_stack.size > 1, "Calling End() too many times!");
+        return;
+    }
+    IM_ASSERT(g.current_window_stack.size > 0);
+
+    // Error checking: verify that user doesn't directly call End() on a child window.
+    if ((window.flags & WindowFlags::ChildWindow) && !(window.flags & WindowFlags::DockNodeHost) && !window.dock_is_active)
+        IM_ASSERT_USER_ERROR(g.within_end_child, "Must call EndChild() and not End()!");
+
+    // Close anything that is open
+    if (window.dc.CurrentColumns)
+        EndColumns();
+    if (!(window.flags & WindowFlags::DockNodeHost))   // Pop inner window clip rectangle
+        PopClipRect();
+
+    // Stop logging
+    if (!(window.flags & WindowFlags::ChildWindow))    // FIXME: add more options for scope of logging
+        LogFinish();
+
+    // Docking: report contents sizes to parent to allow for auto-resize
+    if (window.dock_node && window.DockTabIsVisible)
+        if (ImGuiWindow* host_window = window.dock_node.host_window)         // FIXME-DOCK
+            host_window.dc.cursor_max_pos = window.dc.cursor_max_pos + window.WindowPadding - host_window.WindowPadding;
+
+    // Pop from window stack
+    g.last_item_data = g.current_window_stack.back().ParentLastItemDataBackup;
+    if (window.flags & WindowFlags::ChildMenu)
+        g.BeginMenuCount--;
+    if (window.flags & WindowFlags::Popup)
+        g.begin_popup_stack.pop_back();
+    g.current_window_stack.back().StackSizesOnBegin.CompareWithCurrentState();
+    g.current_window_stack.pop_back();
+    SetCurrentWindow(g.current_window_stack.size == 0 ? NULL : g.current_window_stack.back().Window);
+    if (g.current_window)
+        SetCurrentViewport(g.current_window, g.current_window.Viewport);
+}
+
+// void ImGui::BringWindowToFocusFront(ImGuiWindow* window)
+pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
+{
+    ImGuiContext& g = *GImGui;
+    IM_ASSERT(window == window.root_window);
+
+    const int cur_order = window.focus_order;
+    IM_ASSERT(g.windows_focus_order[cur_order] == window);
+    if (g.windows_focus_order.back() == window)
+        return;
+
+    const int new_order = g.windows_focus_order.size - 1;
+    for (int n = cur_order; n < new_order; n += 1)
+    {
+        g.windows_focus_order[n] = g.windows_focus_order[n + 1];
+        g.windows_focus_order[n].FocusOrder--;
+        IM_ASSERT(g.windows_focus_order[n].FocusOrder == n);
+    }
+    g.windows_focus_order[new_order] = window;
+    window.focus_order = new_order;
+}
+
+
+// void ImGui::BringWindowToDisplayFront(ImGuiWindow* window)
+pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* current_front_window = g.windows.back();
+    if (current_front_window == window || current_front_window.root_window_dock_tree == window) // Cheap early out (could be better)
+        return;
+    for (int i = g.windows.size - 2; i >= 0; i--) // We can ignore the top-most window
+        if (g.windows[i] == window)
+        {
+            memmove(&g.windows[i], &g.windows[i + 1], (g.windows.size - i - 1) * sizeof(ImGuiWindow*));
+            g.windows[g.windows.size - 1] = window;
+            break;
+        }
+}
+
+// void ImGui::BringWindowToDisplayBack(ImGuiWindow* window)
+pub fn bring_window_to_display_back(ctx: &mut Context, window: &mut Window)
+{
+    ImGuiContext& g = *GImGui;
+    if (g.windows[0] == window)
+        return;
+    for (int i = 0; i < g.windows.size; i += 1)
+        if (g.windows[i] == window)
+        {
+            memmove(&g.windows[1], &g.windows[0], i * sizeof(ImGuiWindow*));
+            g.windows[0] = window;
+            break;
+        }
+}
+
+// void ImGui::BringWindowToDisplayBehind(ImGuiWindow* window, ImGuiWindow* behind_window)
+pub fn bring_window_to_display_behind(g: &mut Context, window: &mut Window, behind_window: &mut Window)
+{
+    IM_ASSERT(window != NULL && behind_window != NULL);
+    ImGuiContext& g = *GImGui;
+    window = window.root_window;
+    behind_window = behind_window.root_window;
+    int pos_wnd = FindWindowDisplayIndex(window);
+    int pos_beh = FindWindowDisplayIndex(behind_window);
+    if (pos_wnd < pos_beh)
+    {
+        size_t copy_bytes = (pos_beh - pos_wnd - 1) * sizeof(ImGuiWindow*);
+        memmove(&g.windows.data[pos_wnd], &g.windows.data[pos_wnd + 1], copy_bytes);
+        g.windows[pos_beh - 1] = window;
+    }
+    else
+    {
+        size_t copy_bytes = (pos_wnd - pos_beh) * sizeof(ImGuiWindow*);
+        memmove(&g.windows.data[pos_beh + 1], &g.windows.data[pos_beh], copy_bytes);
+        g.windows[pos_beh] = window;
+    }
+}
+
+
+// Moving window to front of display and set focus (which happens to be back of our sorted list)
+// void ImGui::focus_window(ImGuiWindow* window)
+pub fn focus_window(g: &mut Context, window: &mut Window)
+{
+    ImGuiContext& g = *GImGui;
+
+    if (g.nav_window != window)
+    {
+        SetNavWindow(window);
+        if (window && g.nav_disable_mouse_hover)
+            g.NavMousePosDirty = true;
+        g.nav_id = window ? window.NavLastIds[0] : 0; // Restore nav_id
+        g.NavLayer = NavLayer::Main;
+        g.NavFocusScopeId = 0;
+        g.NavIdIsAlive = false;
+    }
+
+    // Close popups if any
+    close_popups_over_window(window, false);
+
+    // Move the root window to the top of the pile
+    IM_ASSERT(window == NULL || window.root_window_dock_tree != NULL);
+    ImGuiWindow* focus_front_window = window ? window.root_window : NULL;
+    ImGuiWindow* display_front_window = window ? window.root_window_dock_tree : NULL;
+    ImGuiDockNode* dock_node = window ? window.dock_node : NULL;
+    bool active_id_window_is_dock_node_host = (g.active_id_window && dock_node && dock_node.host_window == g.active_id_window);
+
+    // Steal active widgets. Some of the cases it triggers includes:
+    // - Focus a window while an InputText in another window is active, if focus happens before the old InputText can run.
+    // - When using Nav to activate menu items (due to timing of activating on press->new window appears->losing active_id)
+    // - Using dock host items (tab, collapse button) can trigger this before we redirect the active_id_window toward the child window.
+    if (g.active_id != 0 && g.active_id_window && g.active_id_window.root_window != focus_front_window)
+        if (!g.ActiveIdNoClearOnFocusLoss && !active_id_window_is_dock_node_host)
+            clear_active_id();
+
+    // Passing NULL allow to disable keyboard focus
+    if (!window)
+        return;
+    window.LastFrameJustFocused = g.frame_count;
+
+    // Select in dock node
+    if (dock_node && dock_node.TabBar)
+        dock_node.TabBar.SelectedTabId = dock_node.TabBar.NextSelectedTabId = window.TabId;
+
+    // Bring to front
+    BringWindowToFocusFront(focus_front_window);
+    if (((window.flags | focus_front_window.flags | display_front_window.flags) & WindowFlags::NoBringToFrontOnFocus) == 0)
+        BringWindowToDisplayFront(display_front_window);
+}
+
+
+// void ImGui::FocusTopMostWindowUnderOne(ImGuiWindow* under_this_window, ImGuiWindow* ignore_window)
+pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_window, ignore_window: &mut Window)
+{
+    ImGuiContext& g = *GImGui;
+    int start_idx = g.windows_focus_order.size - 1;
+    if (under_this_window != NULL)
+    {
+        // Aim at root window behind us, if we are in a child window that's our own root (see #4640)
+        int offset = -1;
+        while (under_this_window.flags & WindowFlags::ChildWindow)
+        {
+            under_this_window = under_this_window.parent_window;
+            offset = 0;
+        }
+        start_idx = FindWindowFocusIndex(under_this_window) + offset;
+    }
+    for (int i = start_idx; i >= 0; i--)
+    {
+        // We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
+        ImGuiWindow* window = g.windows_focus_order[i];
+        IM_ASSERT(window == window.root_window);
+        if (window != ignore_window && window.was_active)
+            if ((window.flags & (WindowFlags::NoMouseInputs | WindowFlags::NoNavInputs)) != (WindowFlags::NoMouseInputs | WindowFlags::NoNavInputs))
+            {
+                // FIXME-DOCK: This is failing (lagging by one frame) for docked windows.
+                // If A and B are docked into window and B disappear, at the NewFrame() call site window->nav_last_child_nav_window will still point to B.
+                // We might leverage the tab order implicitly stored in window->dock_node_as_host->tab_bar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
+                // to tell which is the "previous" window. Or we may leverage 'LastFrameFocused/last_frame_just_focused' and have this function handle child window itself?
+                ImGuiWindow* focus_window = NavRestoreLastChildNavWindow(window);
+                focus_window(focus_window);
+                return;
+            }
+    }
+    focus_window(NULL);
 }

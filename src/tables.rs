@@ -725,7 +725,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     table.EnabledMaskByIndex = 0x00;
     table.EnabledMaskByDisplayOrder = 0x00;
     table.LeftMostEnabledColumn = -1;
-    table.MinColumnWidth = ImMax(1.0, g.style.FramePadding.x * 1.0); // g.style.ColumnsMinSpacing; // FIXME-TABLE
+    table.MinColumnWidth = ImMax(1.0, g.style.frame_padding.x * 1.0); // g.style.ColumnsMinSpacing; // FIXME-TABLE
 
     // [Part 1] Apply/lock Enabled and Order states. Calculate auto/ideal width for columns. Count fixed/stretch columns.
     // Process columns in their visible orders as we are building the Prev/Next indices.
@@ -2902,11 +2902,11 @@ void ImGui::TableHeader(const char* label)
     const float ARROW_SCALE = 0.65;
     if ((table.flags & ImGuiTableFlags_Sortable) && !(column.flags & ImGuiTableColumnFlags_NoSort))
     {
-        w_arrow = f32::floor(g.font_size * ARROW_SCALE + g.style.FramePadding.x);
+        w_arrow = f32::floor(g.font_size * ARROW_SCALE + g.style.frame_padding.x);
         if (column.SortOrder > 0)
         {
             ImFormatString(sort_order_suf, IM_ARRAYSIZE(sort_order_suf), "%d", column.SortOrder + 1);
-            w_sort_text = g.style.ItemInnerSpacing.x + CalcTextSize(sort_order_suf).x;
+            w_sort_text = g.style.item_inner_spacing.x + CalcTextSize(sort_order_suf).x;
         }
     }
 
@@ -2917,7 +2917,7 @@ void ImGui::TableHeader(const char* label)
 
     // Keep header highlighted when context menu is open.
     const bool selected = (table.IsContextPopupOpen && table.ContextPopupColumn == column_n && table.InstanceInteracted == table.InstanceCurrent);
-    ImGuiID id = window.GetID(label);
+    ImGuiID id = window.get_id(label);
     Rect bb(cell_r.min.x, cell_r.min.y, cell_r.max.x, ImMax(cell_r.max.y, cell_r.min.y + label_height + g.style.CellPadding.y * 2.0));
     item_size(Vector2D::new(0.0, label_height)); // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
     if (!item_add(bb, id))
@@ -2980,7 +2980,7 @@ void ImGui::TableHeader(const char* label)
             if (column.SortOrder > 0)
             {
                 push_style_color(StyleColor::Text, get_color_u32(StyleColor::Text, 0.70));
-                RenderText(Vector2D::new(x + g.style.ItemInnerSpacing.x, y), sort_order_suf);
+                RenderText(Vector2D::new(x + g.style.item_inner_spacing.x, y), sort_order_suf);
                 pop_style_color();
                 x += w_sort_text;
             }
@@ -2998,7 +2998,7 @@ void ImGui::TableHeader(const char* label)
     // Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
     // be merged into a single draw call.
     //window->draw_list->add_circle_filled(Vector2D(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
-    RenderTextEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.FramePadding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
+    RenderTextEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.frame_padding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
 
     const bool text_clipped = label_size.x > (ellipsis_max - label_pos.x);
     if (text_clipped && hovered && g.hovered_id_not_active_timer > g.TooltipSlowDelay)
@@ -3832,7 +3832,7 @@ ImGuiID ImGui::GetColumnsID(const char* str_id, int columns_count)
     // Differentiate column id with an arbitrary prefix for cases where users name their columns set the same as another widget.
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
     PushID(0x11223347 + (str_id ? 0 : columns_count));
-    ImGuiID id = window.GetID(str_id ? str_id : "columns");
+    ImGuiID id = window.get_id(str_id ? str_id : "columns");
     PopID();
 
     return id;

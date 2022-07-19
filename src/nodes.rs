@@ -2246,7 +2246,7 @@ void BeginNodeEditor()
 
     ImGui::BeginGroup();
     {
-        ImGui::push_style_var(StyleVar::FramePadding, Vector2D::new(1.f, 1.f));
+        ImGui::push_style_var(StyleVar::frame_padding, Vector2D::new(1.f, 1.f));
         ImGui::push_style_var(StyleVar::WindowPadding, Vector2D::new(0.f, 0.f));
         ImGui::push_style_color(StyleColor::ChildBg, GImNodes.Style.colors[ImNodesCol_GridBackground]);
         ImGui::begin_child(

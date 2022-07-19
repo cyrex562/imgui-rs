@@ -128,7 +128,7 @@ pub struct TabBar {
     // float               ItemSpacingY;
     pub ItemSpacingY: f32,
     // Vector2D              FramePadding;           // style.FramePadding locked at the time of BeginTabBar()
-    pub FramePadding: Vector2D,
+    pub frame_padding: Vector2D,
     // Vector2D              BackupCursorPos;
     pub BackupCursorPos: Vector2D,
     // ImGuiTextBuffer     TabsNames;              // For non-docking tab bar we re-append names in a contiguous buffer.

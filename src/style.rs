@@ -19,9 +19,9 @@ pub struct Style {
     // Thickness of border around windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
     pub WindowMinSize: Vector2D,
     // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
-    pub WindowTitleAlign: Vector2D,
+    pub window_title_align: Vector2D,
     // Alignment for title bar text. Defaults to (0.0,0.5) for left-aligned,vertically centered.
-    pub WindowMenuButtonPosition: ImGuiDir,
+    pub window_menu_button_position: ImGuiDir,
     // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
     pub ChildRounding: f32,
     // Radius of child window corners rounding. Set to 0.0 to have rectangular windows.
@@ -31,7 +31,7 @@ pub struct Style {
     // Radius of popup window corners rounding. (Note that tooltip windows use window_rounding)
     pub PopupBorderSize: f32,
     // Thickness of border around popup/tooltip windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
-    pub FramePadding: Vector2D,
+    pub frame_padding: Vector2D,
     // Padding within a framed rectangle (used by most widgets).
     pub FrameRounding: f32,
     // Radius of frame corners rounding. Set to 0.0 to have rectangular frame (used by most widgets).
@@ -39,7 +39,7 @@ pub struct Style {
     // Thickness of border around frames. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).
     pub ItemSpacing: Vector2D,
     // Horizontal and vertical spacing between widgets/lines.
-    pub ItemInnerSpacing: Vector2D,
+    pub item_inner_spacing: Vector2D,
     // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label).
     pub CellPadding: Vector2D,
     // Padding within a table cell
@@ -103,17 +103,17 @@ impl Style {
         out.WindowRounding = 0.0;             // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
         out.WindowBorderSize = 1.0;             // Thickness of border around windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.window_min_size = Vector2D::new(32.0, 32.0);    // Minimum window size
-        out.WindowTitleAlign = Vector2D::new(0.0, 0.5);// Alignment for title bar text
-        out.WindowMenuButtonPosition = ImGuiDir::Dir::Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
+        out.window_title_align = Vector2D::new(0.0, 0.5);// Alignment for title bar text
+        out.window_menu_button_position = ImGuiDir::Dir::Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
         out.ChildRounding = 0.0;             // Radius of child window corners rounding. Set to 0.0 to have rectangular child windows
         out.ChildBorderSize = 1.0;             // Thickness of border around child windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.PopupRounding = 0.0;             // Radius of popup window corners rounding. Set to 0.0 to have rectangular child windows
         out.PopupBorderSize = 1.0;             // Thickness of border around popup or tooltip windows. Generally set to 0.0 or 1.0. Other values not well tested.
-        out.FramePadding = Vector2D::new(4.0, 3.0);      // Padding within a framed rectangle (used by most widgets)
+        out.frame_padding = Vector2D::new(4.0, 3.0);      // Padding within a framed rectangle (used by most widgets)
         out.FrameRounding = 0.0;             // Radius of frame corners rounding. Set to 0.0 to have rectangular frames (used by most widgets).
         out.frame_border_size = 0.0;             // Thickness of border around frames. Generally set to 0.0 or 1.0. Other values not well tested.
         out.ItemSpacing = Vector2D::new(8.0, 4.0);      // Horizontal and vertical spacing between widgets/lines
-        out.ItemInnerSpacing = Vector2D::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
+        out.item_inner_spacing = Vector2D::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
         out.CellPadding = Vector2D::new(4.0, 2.0);      // Padding within a table cell
         out.touch_extra_padding = Vector2D::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
         out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
@@ -151,10 +151,10 @@ impl Style {
         self.window_min_size = Vector2D::floor(&self.window_min_size * scale_factor);
         self.ChildRounding = f32::floor(&self.ChildRounding * scale_factor);
         self.PopupRounding = f32::floor(&self.PopupRounding * scale_factor);
-        self.FramePadding = Vector2D::floor(&self.FramePadding * scale_factor);
+        self.frame_padding = Vector2D::floor(&self.frame_padding * scale_factor);
         self.FrameRounding = f32::floor(&self.FrameRounding * scale_factor);
         self.ItemSpacing = Vector2D::floor(&self.ItemSpacing * scale_factor);
-        self.ItemInnerSpacing = Vector2D::floor(&self.ItemInnerSpacing * scale_factor);
+        self.item_inner_spacing = Vector2D::floor(&self.item_inner_spacing * scale_factor);
         self.CellPadding = Vector2D::floor(&self.CellPadding * scale_factor);
         self.touch_extra_padding = Vector2D::floor(&self.touch_extra_padding * scale_factor);
         self.IndentSpacing = f32::floor(self.IndentSpacing * scale_factor);
@@ -700,16 +700,16 @@ pub enum DimgStyleVar
     WindowRounding,      // float     window_rounding
     WindowBorderSize,    // float     WindowBorderSize
     WindowMinSize,       // Vector2D    WindowMinSize
-    WindowTitleAlign,    // Vector2D    WindowTitleAlign
+    window_title_align,    // Vector2D    WindowTitleAlign
     ChildRounding,       // float     ChildRounding
     ChildBorderSize,     // float     ChildBorderSize
     PopupRounding,       // float     PopupRounding
     PopupBorderSize,     // float     PopupBorderSize
-    FramePadding,        // Vector2D    FramePadding
+    frame_padding,        // Vector2D    FramePadding
     FrameRounding,       // float     FrameRounding
     FrameBorderSize,     // float     FrameBorderSize
     ItemSpacing,         // Vector2D    ItemSpacing
-    ItemInnerSpacing,    // Vector2D    ItemInnerSpacing
+    item_inner_spacing,    // Vector2D    ItemInnerSpacing
     IndentSpacing,       // float     IndentSpacing
     CellPadding,         // Vector2D    CellPadding
     ScrollbarSize,       // float     ScrollbarSize

@@ -210,3 +210,41 @@ pub struct DimgFontConfig
     pub dst_font: Id32,
     //  ImFontConfig();
 }
+
+// Important: this alone doesn't alter current ImDrawList state. This is called by PushFont/PopFont only.
+// void ImGui::sec_current_font(ImFont* font)
+pub fn set_current_font(g: &mut Context, font: &mut Font)
+{
+    ImGuiContext& g = *GImGui;
+    IM_ASSERT(font && font.IsLoaded());    // font Atlas not created. Did you call io.fonts->GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
+    IM_ASSERT(font.Scale > 0.0);
+    g.font = font;
+    g.FontBaseSize = ImMax(1.0, g.io.FontGlobalScale * g.font.font_size * g.font.Scale);
+    g.font_size = g.current_window ? g.current_window.CalcFontSize() : 0.0;
+
+    ImFontAtlas* atlas = g.font.container_atlas;
+    g.draw_list_shared_data.TexUvWhitePixel = atlas.TexUvWhitePixel;
+    g.draw_list_shared_data.TexUvLines = atlas.TexUvLines;
+    g.draw_list_shared_data.font = g.font;
+    g.draw_list_shared_data.font_size = g.font_size;
+}
+
+// void ImGui::PushFont(ImFont* font)
+pub fn push_font(g: &mut Context, font: &mut Font)
+{
+    ImGuiContext& g = *GImGui;
+    if (!font)
+        font = get_default_font();
+    sec_current_font(font);
+    g.font_stack.push_back(font);
+    g.current_window.draw_list.PushTextureID(font.container_atlas.TexID);
+}
+
+// void  ImGui::PopFont()
+pub fn pop_font(g: &mut Context)
+{
+    ImGuiContext& g = *GImGui;
+    g.current_window.draw_list.PopTextureID();
+    g.font_stack.pop_back();
+    sec_current_font(g.font_stack.empty() ? get_default_font() : g.font_stack.back());
+}
