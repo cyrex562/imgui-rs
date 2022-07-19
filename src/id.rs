@@ -1,4 +1,6 @@
 use crate::context::Context;
+use crate::globals::GImGui;
+use crate::orig_imgui_single_file::ImGuiID;
 use crate::window::HoveredFlags;
 use crate::types::Id32;
 use crate::window::Window;
@@ -100,4 +102,17 @@ void ImGui::keep_alive_id(ImGuiID id)
         g.active_id_is_alive = id;
     if (g.active_id_previous_frame == id)
         g.active_id_previous_frame_is_alive = true;
+}
+
+// Helper to avoid a common series of PushOverrideID -> GetID() -> PopID() call
+// (note that when using this pattern, test_engine's "Stack Tool" will tend to not display the intermediate stack level.
+//  for that to work we would need to do PushOverrideID() -> ItemAdd() -> PopID() which would alter widget code a little more)
+// ImGuiID GetIDWithSeed(const char* str, const char* str_end, ImGuiID seed)
+pub fn get_id_with_seed(g: &mut Context, in_str: &str, seed: Id32) -> Id32
+{
+    ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
+    ImGuiContext& g = *GImGui;
+    if (g.debug_hook_id_info == id)
+        debug_hook_id_info(id, DataType::String, str, str_end);
+    return id;
 }

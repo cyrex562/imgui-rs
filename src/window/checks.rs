@@ -1,4 +1,8 @@
-
+use std::collections::HashSet;
+use crate::{Context, INVALID_ID};
+use crate::rect::Rect;
+use crate::types::Id32;
+use crate::window::{HoveredFlags, Window, WindowFlags};
 
 // bool ImGui::is_window_above(ImGuiWindow* potential_above, ImGuiWindow* potential_below)
 pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_below: &mut Window)
@@ -97,4 +101,87 @@ pub fn is_window_docked(g: &mut Context) -> bool
 pub fn is_window_nav_focusable(g: &mut Context, window: &mut Window) -> bool
 {
     return window.was_active && window == window.root_window && !(window.flags & WindowFlags::NoNavFocus);
+}
+
+// static inline bool IsWindowContentHoverable(ImGuiWindow* window, ImGuiHoveredFlags flags)
+pub fn is_window_content_hoverable(
+    g: &mut Context,
+    window: &mut Window,
+    flags: &HashSet<HoveredFlags>,
+) -> bool {
+    // An active popup disable hovering on other windows (apart from its own children)
+    // FIXME-OPT: This could be cached/stored within the window.
+    // ImGuiContext& g = *GImGui;
+    if g.nav_window_id {
+        let nav_win = g.get_window(g.nav_window_id).unwrap();
+        let focused_root_window = g.get_window(nav_win.root_window_dock_tree_id).unwrap();
+        if focused_root_window.was_active
+            && focused_root_window.id != window.root_window_dock_tree_id
+        {
+            if focused_root_window.flags.contains(&WindowFlags::Modal) {
+                return false;
+            }
+            if focused_root_window.flags.contains(&WindowFlags::Popup)
+                && flags.contains(&HoveredFlags::AllowWhenBlockedByPopup)
+            {
+                return false;
+            }
+        }
+        // if ImGuiWindow * focused_root_window = g.nav_window_id.root_window_dock_tree {
+        //     if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree_id {
+        //         // For the purpose of those flags we differentiate "standard popup" from "modal popup"
+        //         // NB: The order of those two tests is important because Modal windows are also Popups.
+        //         if focused_root_window.flags & WindowFlags::Modal {
+        //             return false;
+        //         }
+        //         if (focused_root_window.flags & WindowFlags::Popup) && !(flags & HoveredFlags::AllowWhenBlockedByPopup) {
+        //             return false;
+        //         }
+        //     }
+        // }
+    }
+    // Filter by viewport
+    let moving_win = g.get_window(g.moving_window_id).unwrap();
+    if window.viewport_id != g.mouse_viewport_id
+        && (g.moving_window_id == INVALID_ID
+            || window.root_window_dock_tree_id != moving_win.root_window_dock_tree)
+    {
+        return false;
+    } else {
+    }
+
+    return true;
+}
+
+// bool ImGui::IsClippedEx(const ImRect& bb, ImGuiID id)
+pub fn is_clipped_ex(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'static str> {
+    // ImGuiContext& g = *GImGui;
+    // ImGuiWindow* window = g.CurrentWindow;
+    let window = g.get_current_window()?;
+    if !bb.Overlaps(&window.clip_rect) {
+        if id == 0 || (id != g.active_id && id != g.nav_id) {
+            if !g.LogEnabled {
+                return Ok(true);
+            }
+        }
+    }
+    return Ok(false);
+}
+
+// static bool IsWindowActiveAndVisible(ImGuiWindow* window)
+pub fn is_window_active_and_visible(window: &mut Window) -> bool {
+    return (window.active) && (!window.hidden);
+}
+
+/// static int IMGUI_CDECL ChildWindowComparer(const void* lhs, const void* rhs)
+pub fn child_window_comparer(lhs: &Window, rhs: &Window) -> i32 {
+    // const ImGuiWindow* const a = *(const ImGuiWindow* const *)lhs;
+    // const ImGuiWindow* const b = *(const ImGuiWindow* const *)rhs;
+    if lhs.flags.contains(&WindowFlags::Popup) - rhs.flags.contains(&WindowFlags::Popup) {
+        return 1;
+    }
+    if lhs.flags.contains(&WindowFlags::Tooltip) - rhs.flags.contains(&WindowFlags::Tooltip) {
+        return 1;
+    }
+    return (lhs.begin_order_within_parent - rhs.begin_order_within_parent) as i32;
 }

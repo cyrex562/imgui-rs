@@ -2,13 +2,15 @@ use std::collections::HashSet;
 
 use crate::condition::Condition;
 use crate::context::Context;
+use crate::globals::GImGui;
 use crate::input::MouseButton;
 use crate::INVALID_ID;
-use crate::window::{HoveredFlags, is_window_content_hoverable};
+use crate::window::HoveredFlags;
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::utils::set_hash_set;
 use crate::vectors::two_d::Vector2D;
+use crate::window::checks::is_window_content_hoverable;
 
 impl NextItemData {
     // ImGuiNextItemData()         { memset(this, 0, sizeof(*this)); }
@@ -464,4 +466,12 @@ pub fn pop_item_flag(g: &mut Context)
     IM_ASSERT(g.item_flags_stack.size > 1); // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
     g.item_flags_stack.pop_back();
     g.current_item_flags = g.item_flags_stack.back();
+}
+
+// void ActivateItem(ImGuiID id)
+pub fn activate_item(g: &mut Context, id: Id32)
+{
+    ImGuiContext& g = *GImGui;
+    g.NavNextActivateId = id;
+    g.NavNextActivateFlags = ImGuiActivateFlags_None;
 }

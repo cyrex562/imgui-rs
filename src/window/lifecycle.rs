@@ -1,10 +1,160 @@
 use std::collections::HashSet;
 use crate::{Context, INVALID_ID, Viewport, window};
 use crate::condition::Condition;
+use crate::config::ConfigFlags;
+use crate::drag_drop::DragDropFlags;
+use crate::globals::GImGui;
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
-use crate::window::{settings, Window, WindowFlags};
+use crate::window::{get, layer, ops, settings, state, Window, WindowFlags, WINDOWS_HOVER_PADDING};
 use crate::window::settings::WindowSettings;
+
+/// The reason this is exposed in imgui_internal.h is: on touch-based system that don't have hovering, we want to dispatch inputs to the right target (imgui vs imgui+app)
+/// void ImGui::UpdateHoveredWindowAndCaptureFlags()
+pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
+    // ImGuiContext& g = *GImGui;
+    // ImGuiIO& io = g.io;
+    let io = &mut g.io;
+    g.windows_hover_padding = Vector2D::max(
+        g.style.touch_extra_padding,
+        Vector2D::new(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING),
+    );
+
+    // Find the window hovered by mouse:
+    // - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from hovered_window.
+    // - When moving a window we can skip the search, which also conveniently bypasses the fact that window->WindowRectClipped is lagging as this point of the frame.
+    // - We also support the moved window toggling the NoInputs flag after moving has started in order to be able to detect windows below it, which is useful for e.g. docking mechanisms.
+    let mut clear_hovered_windows = false;
+    get::find_hovered_window(g);
+    // IM_ASSERT(g.hovered_window == NULL || g.hovered_window == g.moving_window || g.hovered_window->Viewport == g.mouse_viewport);
+
+    // Modal windows prevents mouse from hovering behind them.
+    // ImGuiWindow* modal_window = get_top_most_popup_modal();
+    let modal_window = get_top_most_popup_modal();
+    let hov_win = g.get_window(g.hovered_window_id).unwrap();
+    if modal_window
+        && hovered_window_id != INVALID_ID
+        && !is_window_within_begin_stack_of(
+            g.get_window(g.hovered_window).unwrap().root_window_id,
+            modal_window,
+        )
+    {
+        // FIXME-MERGE: root_window_dock_tree ?
+        clear_hovered_windows = true;
+    }
+
+    // Disabled mouse?
+    if io.config_flags.contains(&ConfigFlags::NoMouse) {
+        clear_hovered_windows = true;
+    }
+
+    // We track click ownership. When clicked outside of a window the click is owned by the application and
+    // won't report hovering nor request capture even while dragging over our windows afterward.
+    // const bool has_open_popup = (g.OpenPopupStack.Size > 0);
+    let has_open_popup = g.open_popup_stack.size > 0;
+    let has_open_modal = (modal_window != NULL);
+    let mut mouse_earliest_down = -1;
+    let mut mouse_any_down = false;
+    // for (int i = 0; i < IM_ARRAYSIZE(io.mouse_down); i += 1)
+    for i in 0..io.mouse_down.len() {
+        if io.mouse_clicked[i] {
+            io.mouse_down_owned[i] = (g.hovered_window_id != INVALID_ID) || has_open_popup;
+            io.mouse_down_owned_unless_popup_close[i] =
+                (g.hovered_window_id != INVALID_ID) || has_open_modal;
+        }
+        mouse_any_down |= io.mouse_down[i];
+        if (io.mouse_down[i])
+            && (mouse_earliest_down == -1
+                || io.mouse_clicked_time[i] < io.mouse_clicked_time[mouse_earliest_down])
+        {
+            mouse_earliest_down = i;
+        }
+    }
+    let mouse_avail = (mouse_earliest_down == -1) || io.mouse_down_owned[mouse_earliest_down];
+    let mouse_avail_unless_popup_close =
+        (mouse_earliest_down == -1) || io.mouse_down_owned_unless_popup_close[mouse_earliest_down];
+
+    // If mouse was first clicked outside of ImGui bounds we also cancel out hovering.
+    // FIXME: For patterns of drag and drop across OS windows, we may need to rework/remove this test (first committed 311c0ca9 on 2015/02)
+    let mouse_dragging_extern_payload = g.drag_drop_active
+        && (g
+            .drag_drop_source_flags
+            .contains(&DragDropFlags::SourceExtern));
+    if !mouse_avail && !mouse_dragging_extern_payload {
+        clear_hovered_windows = true;
+    }
+
+    if clear_hovered_windows {
+        g.hovered_window_id = INVALID_ID;
+        g.hovered_window_under_moving_window_id = INVALID_ID;
+    }
+
+    // Update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
+    // Update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
+    if g.want_capture_mouse_next_frame != -1 {
+        io.want_capture_mouse_unless_popup_close = (g.want_capture_mouse_next_frame != 0);
+        io.want_capture_mouse = io.want_capture_mouse_unless_popup_close;
+    } else {
+        io.want_capture_mouse = (mouse_avail
+            && (g.hovered_window_id != INVALID_ID || mouse_any_down))
+            || has_open_popup;
+        io.want_capture_mouse_unless_popup_close = (mouse_avail_unless_popup_close
+            && (g.hovered_window_id != INVALID_ID || mouse_any_down))
+            || has_open_modal;
+    }
+
+    // Update io.want_capture_keyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
+    if g.want_capture_keyboard_next_frame != -1 {
+        io.want_capture_keyboard = (g.want_capture_keyboard_next_frame != 0);
+    } else {
+        io.want_capture_keyboard = (g.active_id != 0) || (modal_window != NULL);
+    }
+    if io.nav_active
+        && (io.config_flags.contains(&ConfigFlags::NavEnableKeyboard))
+        && !(io.config_flags.contains(&ConfigFlags::NavNoCaptureKeyboard))
+    {
+        io.want_capture_keyboard = true;
+    }
+
+    // Update io.want_text_input flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
+    io.want_text_input = if g.want_text_input_next_frame != -1 {
+        (g.want_text_input_next_frame != 0)
+    } else {
+        false
+    };
+}
+
+// static void UpdateWindowInFocusOrderList(ImGuiWindow* window, bool just_created, ImGuiWindowFlags new_flags)
+pub fn update_window_focus_order_list(
+    g: &mut Context,
+    window: &mut Window,
+    just_created: bool,
+    new_flags: &mut HashSet<WindowFlags>,
+) {
+    // ImGuiContext& g = *GImGui;
+
+    // const bool new_is_explicit_child = (new_flags & WindowFlags::ChildWindow) != 0;
+    let new_is_explicit_child = new_flags.contains(&WindowFlags::ChildWindow);
+    // const bool child_flag_changed = new_is_explicit_child != window.IsExplicitChild;
+    let child_flag_changed = new_is_explicit_child != window.is_explicit_child;
+    if (just_created || child_flag_changed) && !new_is_explicit_child {
+        // IM_ASSERT(!g.windows_focus_order.contains(window));
+        g.windows_focus_order.push_back(window);
+        window.focus_order = (g.windows_focus_order.size - 1);
+    } else if !just_created && child_flag_changed && new_is_explicit_child {
+        // IM_ASSERT(g.windows_focus_order[window.focus_order] == window);
+        // for (int n = window.focus_order + 1; n < g.windows_focus_order.size; n += 1)
+        for wfo in g.windows_focus_order.iter_mut() {
+            // g.windows_focus_order[n] -> FocusOrder - -;
+            *wfo = FocusOrder;
+            FocusOrder -= 1;
+        }
+        g.windows_focus_order
+            .erase(g.windows_focus_order.data + window.focus_order);
+        window.focus_order = -1;
+    }
+    window.is_explicit_child = new_is_explicit_child;
+}
 
 // static ImGuiWindow* CreateNewWindow(const char* name, ImGuiWindowFlags flags)
 pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<WindowFlags>) -> &mut Window
@@ -32,7 +182,7 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
         if settings.is_some(){
             // Retrieve settings from .ini file
             window.settings_offset = g.settings_windows.offset_from_ptr(settings);
-            window::set_window_condition_allow_flags(&mut window, &mut HashSet::from([Condition::FirstUseEver]), false);
+            state::set_window_condition_allow_flags(&mut window, &mut HashSet::from([Condition::FirstUseEver]), false);
             settings::apply_window_settings(g, &mut window, &mut(settings.some()));
         }
     }
@@ -66,35 +216,9 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
         g.windows.push_back(window);
     }
     // update_window_in_focus_order_list(window, true, window.flags);
-    window::update_window_focus_order_list(g, &mut window, true, &mut window.flags);
+    update_window_focus_order_list(g, &mut window, true, &mut window.flags);
 
     return &mut window;
-}
-
-/// static void ScaleWindow(ImGuiWindow* window, float scale)
-pub fn scale_window(window: &mut Window, scale: f32)
-{
-    // Vector2D origin = window.viewport.pos;
-    let origin = window.viewport_id.pos;
-    window.pos = Vector2D::floor((&window.pos - origin) * scale + origin);
-    window.size = Vector2D::floor(&window.size * scale);
-    window.size_full = Vector2D::floor(&window.size_full * scale);
-    window.content_size = Vector2D::floor(window.ContentSize * scale);
-}
-
-/// This is called during NewFrame()->UpdateViewportsNewFrame() only.
-/// Need to keep in sync with set_window_pos()
-/// static void TranslateWindow(ImGuiWindow* window, const Vector2D& delta)
-pub fn translate_window(window: &mut Window, delta: &Vector2D)
-{
-    window.pos += delta;
-    window.clip_rect.Translate(delta);
-    window.OuterRectClipped.Translate(delta);
-    window.inner_rect.Translate(delta);
-    window.dc.cursor_pos += delta;
-    window.dc.cursor_start_pos += delta;
-    window.dc.cursor_max_pos += delta;
-    window.dc.ideal_max_pos += delta;
 }
 
 // void ImGui::UpdateWindowParentAndRootLinks(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window)
@@ -139,34 +263,6 @@ pub fn update_window_parent_and_root_links(g: &mut Context, window: &mut Window,
     }
 }
 
-// ImGuiWindow* ImGui::FindWindowByName(const char* name)
-pub fn find_or_create_window_by_name(g: &mut Context, name: &str) -> (&mut Window, bool)
-{
-    // ImGuiID id = ImHashStr(name);
-    // return FindWindowByID(id);
-    for (_, win) in g.windows.iter_mut() {
-        if win.name.as_str() == name {
-            return (win, false);
-        }
-    }
-
-    let new_win = Window::new(g, name);
-    let new_win_id: Id32 = new_win.id;
-    g.windows.insert(new_win.id, new_win);
-    (g.windows.get_mut(&new_win_id).unwrap(), true)
-}
-
-pub fn find_window_by_name(g: &mut Context, name: &str) -> Option<&mut Window>
-{
-    for (_, win) in g.windows.iter_mut() {
-        if win.name == String::from(name) {
-            return Some(win);
-        }
-    }
-
-    return None;
-}
-
 
 // Push a new Dear ImGui window to add widgets to.
 // - A default window called "Debug" is automatically stacked at the beginning of every frame so you can use widgets without explicitly calling a Begin/End pair.
@@ -189,7 +285,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     // Find or create
     // ImGuiWindow* window = FindWindowByName(name);
     // let (window, window_just_created) = find_or_create_window_by_name(g, name);
-    let mut window_opt = find_window_by_name(g, name);
+    let mut window_opt = get::find_window_by_name(g, name);
     let mut window_just_created = false;
     let mut window: &mut Window = Window::default();
     if window_opt.is_none() {
@@ -219,13 +315,13 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     // const bool first_begin_of_the_frame = (window.LastFrameActive != current_frame);
     let first_begin_of_the_frame = window.last_frame_active != current_frame;
     // window.IsFallbackWindow = (g.current_window_stack.size == 0 && g.within_frame_scope_with_implicit_window);
-    window.is_fallback_window = g.current_window_stack.is_empty && 
+    window.is_fallback_window = g.current_window_stack.is_empty &&
     g.within_frame_scope_with_implicit_window;
 
     // Update the appearing flag (note: the BeginDocked() path may also set this to true later)
     // bool window_just_activated_by_user = (window.LastFrameActive < current_frame - 1); // Not using !was_active because the implicit "Debug" window would always toggle off->on
     let window_just_activated_by_user = window.last_frame_active < current_frame - 1;
-    
+
     // if (flags & WindowFlags::Popup)
     if flags.contains(&WindowFlags::Popup)
     {
@@ -240,7 +336,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     {
         window.Appearing = window_just_activated_by_user;
         if (window.Appearing)
-            set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
+            state::set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
 
         window.FlagsPreviousFrame = window.flags;
         window.flags = (ImGuiWindowFlags)flags;
@@ -279,7 +375,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
             if (window.DockTabIsVisible && !dock_tab_was_visible && dock_node_was_visible && !window.Appearing && !window_was_appearing)
             {
                 window.Appearing = true;
-                set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
+                state::set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
             }
         }
         else
@@ -373,9 +469,9 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     if (g.next_window_data.flags & NextWindowDataFlags::HasCollapsed)
         SetWindowCollapsed(window, g.next_window_data.CollapsedVal, g.next_window_data.CollapsedCond);
     if (g.next_window_data.flags & NextWindowDataFlags::HasFocus)
-        focus_window(window);
+        layer::focus_window(window);
     if (window.Appearing)
-        set_window_condition_allow_flags(window, ImGuiCond_Appearing, false);
+        state::set_window_condition_allow_flags(window, ImGuiCond_Appearing, false);
 
     // When reusing window again multiple times a frame, just append content (don't need to setup again)
     if (first_begin_of_the_frame)
@@ -878,7 +974,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // Apply focus (we need to call focus_window() AFTER setting dc.CursorStartPos so our initial navigation reference rectangle can start around there)
         if (want_focus)
         {
-            focus_window(window);
+            layer::focus_window(window);
             nav_init_window(window, false); // <-- this is in the way for us to be able to defer and sort reappearing focus_window() calls
         }
 
@@ -1072,167 +1168,27 @@ pub fn end(g: &mut Context)
         SetCurrentViewport(g.current_window, g.current_window.Viewport);
 }
 
-// void ImGui::BringWindowToFocusFront(ImGuiWindow* window)
-pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
-{
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(window == window.root_window);
-
-    const int cur_order = window.focus_order;
-    IM_ASSERT(g.windows_focus_order[cur_order] == window);
-    if (g.windows_focus_order.back() == window)
-        return;
-
-    const int new_order = g.windows_focus_order.size - 1;
-    for (int n = cur_order; n < new_order; n += 1)
-    {
-        g.windows_focus_order[n] = g.windows_focus_order[n + 1];
-        g.windows_focus_order[n].FocusOrder--;
-        IM_ASSERT(g.windows_focus_order[n].FocusOrder == n);
-    }
-    g.windows_focus_order[new_order] = window;
-    window.focus_order = new_order;
-}
-
-
-// void ImGui::BringWindowToDisplayFront(ImGuiWindow* window)
-pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
-{
-    ImGuiContext& g = *GImGui;
-    ImGuiWindow* current_front_window = g.windows.back();
-    if (current_front_window == window || current_front_window.root_window_dock_tree == window) // Cheap early out (could be better)
-        return;
-    for (int i = g.windows.size - 2; i >= 0; i--) // We can ignore the top-most window
-        if (g.windows[i] == window)
-        {
-            memmove(&g.windows[i], &g.windows[i + 1], (g.windows.size - i - 1) * sizeof(ImGuiWindow*));
-            g.windows[g.windows.size - 1] = window;
-            break;
-        }
-}
-
-// void ImGui::BringWindowToDisplayBack(ImGuiWindow* window)
-pub fn bring_window_to_display_back(ctx: &mut Context, window: &mut Window)
-{
-    ImGuiContext& g = *GImGui;
-    if (g.windows[0] == window)
-        return;
-    for (int i = 0; i < g.windows.size; i += 1)
-        if (g.windows[i] == window)
-        {
-            memmove(&g.windows[1], &g.windows[0], i * sizeof(ImGuiWindow*));
-            g.windows[0] = window;
-            break;
-        }
-}
-
-// void ImGui::BringWindowToDisplayBehind(ImGuiWindow* window, ImGuiWindow* behind_window)
-pub fn bring_window_to_display_behind(g: &mut Context, window: &mut Window, behind_window: &mut Window)
-{
-    IM_ASSERT(window != NULL && behind_window != NULL);
-    ImGuiContext& g = *GImGui;
-    window = window.root_window;
-    behind_window = behind_window.root_window;
-    int pos_wnd = FindWindowDisplayIndex(window);
-    int pos_beh = FindWindowDisplayIndex(behind_window);
-    if (pos_wnd < pos_beh)
-    {
-        size_t copy_bytes = (pos_beh - pos_wnd - 1) * sizeof(ImGuiWindow*);
-        memmove(&g.windows.data[pos_wnd], &g.windows.data[pos_wnd + 1], copy_bytes);
-        g.windows[pos_beh - 1] = window;
-    }
-    else
-    {
-        size_t copy_bytes = (pos_wnd - pos_beh) * sizeof(ImGuiWindow*);
-        memmove(&g.windows.data[pos_beh + 1], &g.windows.data[pos_beh], copy_bytes);
-        g.windows[pos_beh] = window;
-    }
-}
-
-
-// Moving window to front of display and set focus (which happens to be back of our sorted list)
-// void ImGui::focus_window(ImGuiWindow* window)
-pub fn focus_window(g: &mut Context, window: &mut Window)
-{
-    ImGuiContext& g = *GImGui;
-
-    if (g.nav_window != window)
-    {
-        SetNavWindow(window);
-        if (window && g.nav_disable_mouse_hover)
-            g.NavMousePosDirty = true;
-        g.nav_id = window ? window.NavLastIds[0] : 0; // Restore nav_id
-        g.NavLayer = NavLayer::Main;
-        g.NavFocusScopeId = 0;
-        g.NavIdIsAlive = false;
-    }
-
-    // Close popups if any
-    close_popups_over_window(window, false);
-
-    // Move the root window to the top of the pile
-    IM_ASSERT(window == NULL || window.root_window_dock_tree != NULL);
-    ImGuiWindow* focus_front_window = window ? window.root_window : NULL;
-    ImGuiWindow* display_front_window = window ? window.root_window_dock_tree : NULL;
-    ImGuiDockNode* dock_node = window ? window.dock_node : NULL;
-    bool active_id_window_is_dock_node_host = (g.active_id_window && dock_node && dock_node.host_window == g.active_id_window);
-
-    // Steal active widgets. Some of the cases it triggers includes:
-    // - Focus a window while an InputText in another window is active, if focus happens before the old InputText can run.
-    // - When using Nav to activate menu items (due to timing of activating on press->new window appears->losing active_id)
-    // - Using dock host items (tab, collapse button) can trigger this before we redirect the active_id_window toward the child window.
-    if (g.active_id != 0 && g.active_id_window && g.active_id_window.root_window != focus_front_window)
-        if (!g.ActiveIdNoClearOnFocusLoss && !active_id_window_is_dock_node_host)
-            clear_active_id();
-
-    // Passing NULL allow to disable keyboard focus
-    if (!window)
-        return;
-    window.LastFrameJustFocused = g.frame_count;
-
-    // Select in dock node
-    if (dock_node && dock_node.TabBar)
-        dock_node.TabBar.SelectedTabId = dock_node.TabBar.NextSelectedTabId = window.TabId;
-
-    // Bring to front
-    BringWindowToFocusFront(focus_front_window);
-    if (((window.flags | focus_front_window.flags | display_front_window.flags) & WindowFlags::NoBringToFrontOnFocus) == 0)
-        BringWindowToDisplayFront(display_front_window);
-}
-
-
-// void ImGui::FocusTopMostWindowUnderOne(ImGuiWindow* under_this_window, ImGuiWindow* ignore_window)
-pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_window, ignore_window: &mut Window)
-{
-    ImGuiContext& g = *GImGui;
-    int start_idx = g.windows_focus_order.size - 1;
-    if (under_this_window != NULL)
-    {
-        // Aim at root window behind us, if we are in a child window that's our own root (see #4640)
-        int offset = -1;
-        while (under_this_window.flags & WindowFlags::ChildWindow)
-        {
-            under_this_window = under_this_window.parent_window;
-            offset = 0;
-        }
-        start_idx = FindWindowFocusIndex(under_this_window) + offset;
-    }
-    for (int i = start_idx; i >= 0; i--)
-    {
-        // We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
-        ImGuiWindow* window = g.windows_focus_order[i];
-        IM_ASSERT(window == window.root_window);
-        if (window != ignore_window && window.was_active)
-            if ((window.flags & (WindowFlags::NoMouseInputs | WindowFlags::NoNavInputs)) != (WindowFlags::NoMouseInputs | WindowFlags::NoNavInputs))
-            {
-                // FIXME-DOCK: This is failing (lagging by one frame) for docked windows.
-                // If A and B are docked into window and B disappear, at the NewFrame() call site window->nav_last_child_nav_window will still point to B.
-                // We might leverage the tab order implicitly stored in window->dock_node_as_host->tab_bar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
-                // to tell which is the "previous" window. Or we may leverage 'LastFrameFocused/last_frame_just_focused' and have this function handle child window itself?
-                ImGuiWindow* focus_window = NavRestoreLastChildNavWindow(window);
-                focus_window(focus_window);
-                return;
+// static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, ImGuiWindow* window)
+pub fn add_window_to_sort_buffer(ctx: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32) {
+    out_sorted_windows.push_back(window);
+    let win = ctx.get_window(window).unwrap();
+    if window.active {
+        // int count = window.dc.ChildWindows.Size;
+        let count = win.dc.child_windows.len();
+        // ImQsort(window.dc.ChildWindows.Data, count, sizeof(ImGuiWindow*), ChildWindowComparer);
+        win.dc.child_windows.sort();
+        for child_win_id in win.dc.child_windows.iter() {
+            let child_win = ctx.get_window(*child_win_id).unwrap();
+            if child_win.active {
+                add_window_to_sort_buffer(ctx, out_sorted_windows, *child_win_id);
             }
+        }
+
+        // for (int i = 0; i < count; i += 1)
+        // {
+        //     ImGuiWindow* child = window.dc.ChildWindows[i];
+        //     if (child->Active)
+        //         AddWindowToSortBuffer(out_sorted_windows, child);
+        // }
     }
-    focus_window(NULL);
 }

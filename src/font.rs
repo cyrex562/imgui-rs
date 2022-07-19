@@ -1,8 +1,10 @@
+use crate::Context;
 use crate::defines::DimgFontConfig;
 use crate::draw_list::DrawList;
 use crate::font_atlas::FontAtlas;
 use crate::font_glyph::DimgFontGlyph;
-use crate::types::{Id32, DimgWchar};
+use crate::globals::GImGui;
+use crate::types::{DimgWchar, Id32};
 use crate::vectors::two_d::Vector2D;
 
 // This structure is likely to evolve as we add support for incremental atlas updates
@@ -247,4 +249,32 @@ pub fn pop_font(g: &mut Context)
     g.current_window.draw_list.PopTextureID();
     g.font_stack.pop_back();
     sec_current_font(g.font_stack.empty() ? get_default_font() : g.font_stack.back());
+}
+
+// ImFont* GetFont()
+pub fn get_font(g: &mut Context) -> &mut Font
+{
+    return GImGui.Font;
+}
+
+// float GetFontSize()
+pub fn get_font_size(g: &mut Context) -> f32
+{
+    return GImGui.font_size;
+}
+
+// Vector2D GetFontTexUvWhitePixel()
+pub fn get_font_tex_uv_white_pixel(g: &mut Context) -> Vector2D
+{
+    return GImGui.DrawListSharedData.TexUvWhitePixel;
+}
+
+// void SetWindowFontScale(float scale)
+pub fn set_window_font_scale(g: &mut Context, scale: f32)
+{
+    IM_ASSERT(scale > 0.0);
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = GetCurrentWindow();
+    window.font_window_scale = scale;
+    g.font_size = g.draw_list_shared_data.font_size = window.CalcFontSize();
 }

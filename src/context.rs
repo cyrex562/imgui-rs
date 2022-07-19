@@ -44,12 +44,12 @@ use crate::tab_bar::TabBar;
 use crate::table::{Table, TableSettings, TableTempData};
 
 use crate::text_input_state::InputTextState;
-use crate::types::{Id32, INVALID_ID, PtrOrIndex};
+use crate::types::{Id32, INVALID_ID, PtrOrIndex, WindowHandle};
 use crate::vectors::Vector4D;
 use crate::vectors::two_d::Vector2D;
 use crate::viewport::Viewport;
 use crate::window::{Window, WindowStackData};
-use crate::window::next::NextWindowData;
+use crate::window::next_window::NextWindowData;
 use crate::window::settings::WindowSettings;
 
 #[derive()]
@@ -975,4 +975,18 @@ pub fn end_disabled(g: &mut Context)
     g.current_item_flags = g.item_flags_stack.back();
     if (was_disabled && (g.current_item_flags & ItemFlags::Disabled) == 0)
         g.style.alpha = g.DisabledAlphaBackup; //PopStyleVar();
+}
+
+// static void set_current_window(ImGuiWindow* window)
+pub fn set_current_window(ctx: &mut Context, window_handle: WindowHandle) {
+    // ImGuiContext& g = *GImGui;
+    ctx.current_window_id = window_handle;
+    // if window
+    ctx.current_table = if window_handle.dc.CurrentTableIdx != -1 {
+        ctx.tables.get_by_index(window_handle.dc.CurrentTableIdx)
+    } else {
+        INVALID_ID
+    };
+    ctx.font_size = window_handle.CalcFontSize();
+    ctx.draw_list_shared_data.font_size = window_handle.CalcFontSize();
 }

@@ -22,10 +22,14 @@ use crate::style::{get_color_u32, get_color_u32_no_alpha, pop_style_color, push_
 use crate::text::calc_text_size;
 use crate::vectors::ImLengthSqr;
 use crate::vectors::two_d::Vector2D;
-use crate::window::{calc_window_size_after_constraint, get_window_display_layer, is_window_active_and_visible, set_window_condition_allow_flags, Window, WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
-use crate::window::color::get_window_bg_color_idx;
-use crate::window::next::NextWindowDataFlags;
+use crate::window::{Window, WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
+use crate::window::checks::is_window_active_and_visible;
+use crate::window::props::get_window_bg_color_idx;
+use crate::window::get::get_window_display_layer;
+use crate::window::next_window::NextWindowDataFlags;
+use crate::window::state::set_window_condition_allow_flags;
 use crate::window::settings::apply_window_settings;
+use crate::window::size::calc_window_size_after_constraint;
 
 // static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
 pub fn render_window_outer_borders(g: &mut Context, window: &mut Window)

@@ -2,6 +2,7 @@ use std::os::raw::c_char;
 use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, INVALID_ID, window};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
+use crate::draw_data::add_root_window_to_draw_data;
 use crate::draw_list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
 use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
@@ -12,7 +13,9 @@ use crate::style::get_color_u32;
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
 use crate::viewport::setup_viewport_draw_data;
-use crate::window::{add_root_window_to_draw_data, find_bottom_most_visible_window_with_begin_stack, is_window_active_and_visible, Window, WindowFlags};
+use crate::window::{get, Window, WindowFlags};
+use crate::window::checks::is_window_active_and_visible;
+use crate::window::get::find_bottom_most_visible_window_with_begin_stack;
 
 // const char* ImGui::FindRenderedTextEnd(const char* text, const char* text_end)
 // pub unsafe fn find_rendered_text_end(text: *const c_char, text_end: *const c_char) -> *const c_char {
@@ -513,7 +516,7 @@ pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Wi
     {
         // ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.root_window_dock_tree)->DrawList;
 
-        let draw_list = ctx.get_draw_list(window::find_front_most_visible_child_window(ctx, root_win_dock_tree_win).draw_list_id).unwrap();
+        let draw_list = ctx.get_draw_list(get::find_front_most_visible_child_window(ctx, root_win_dock_tree_win).draw_list_id).unwrap();
         if draw_list.cmd_buffer.len() == 0 {
             draw_list.add_draw_cmd();
         }

@@ -1,7 +1,8 @@
 use crate::context::Context;
-use crate::draw_list::DrawList;
+use crate::draw_list::{add_draw_list_to_draw_data, DrawList};
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
+use crate::window::{checks, get, Window, WindowFlags};
 
 /// All draw data to render a Dear ImGui frame
 /// (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
@@ -56,4 +57,40 @@ pub fn get_draw_data(ctx: &mut Context) -> Option<&mut DrawData>
     // ImGuiViewportP* viewport = g.Viewports[0];
     let viewport = &mut ctx.viewports[0];
     return if viewport.draw_data.valid { Some(&mut viewport.draw_data)} else { None}
+}
+
+/// static void AddWindowToDrawData(ImGuiWindow* window, int layer)
+pub fn add_window_to_draw_data(ctx: &mut Context, window: &mut Window, layer: i32) {
+    // ImGuiContext& g = *GImGui;
+    // ImGuiViewportP* viewport = window.viewport;
+    let viewport_id = window.viewport_id;
+    let viewport = ctx.get_viewport(viewport_id).unwrap();
+    g.io.metrics_render_windows += 1;
+    if window.flags.contains(&WindowFlags::DockNodeHost) {
+        window.draw_list_id.channels_merge();
+    }
+    add_draw_list_to_draw_data(
+        ctx,
+        &mut viewport.draw_data_builder.layers[layer],
+        window.draw_list_id,
+    );
+    // for (int i = 0; i < window.dc.ChildWindows.Size; i += 1)
+    // {
+    //     ImGuiWindow* child = window.dc.ChildWindows[i];
+    //     if (IsWindowActiveAndVisible(child)) // Clipped children may have been marked not active
+    //         AddWindowToDrawData(child, layer);
+    // }
+    for child_id in window.dc.child_windows.iter() {
+        let win_obj = ctx.get_window(*child_id).unwrap();
+        if checks::is_window_active_and_visible(win_obj) {
+            add_window_to_draw_data(ctx, win_obj, layer);
+        }
+    }
+}
+
+/// Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
+// static inline void AddRootWindowToDrawData(ImGuiWindow* window)
+pub fn add_root_window_to_draw_data(ctx: &mut Context, window: &mut Window) {
+    // AddWindowToDrawData(window, GetWindowDisplayLayer(window));
+    add_window_to_draw_data(ctx, window, get::get_window_display_layer(window))
 }

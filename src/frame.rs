@@ -6,7 +6,8 @@ use crate::draw_list::DrawListFlags;
 use crate::rect::Rect;
 use crate::types::INVALID_ID;
 use crate::vectors::two_d::Vector2D;
-use crate::window::{add_window_to_sort_buffer, WindowFlags};
+use crate::window::WindowFlags;
+use crate::window::lifecycle::add_window_to_sort_buffer;
 
 /// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
 /// Usage: static ImGuiOnceUponAFrame oaf; if (oaf) ImGui::Text("This will be called only once per frame");

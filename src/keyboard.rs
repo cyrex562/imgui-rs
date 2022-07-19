@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use crate::context::Context;
+use crate::globals::GImGui;
 use crate::input::ModFlags;
 
 // static void ImGui::UpdateKeyboardInputs()
@@ -108,4 +109,38 @@ pub fn push_allow_keyboard_focus(g: &mut Context, allow_keyboard_focus: bool)
 pub fn pop_allow_keyboard_focus(g: &mut Context)
 {
     PopItemFlag();
+}
+
+// Note: this will likely be called ActivateItem() once we rework our Focus/Activation system!
+// void SetKeyboardFocusHere(int offset)
+pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+    IM_ASSERT(offset >= -1);    // -1 is allowed but not below
+    IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere(%d) in window \"%s\"\n", offset, window.Name);
+
+    // It makes sense in the vast majority of cases to never interrupt a drag and drop.
+    // When we refactor this function into ActivateItem() we may want to make this an option.
+    // moving_window is protected from most user inputs using SetActiveIdUsingNavAndKeys(), but
+    // is also automatically dropped in the event g.active_id is stolen.
+    if (g.drag_drop_active || g.moving_window != NULL)
+    {
+        IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere() ignored while drag_drop_active!\n");
+        return;
+    }
+
+    SetNavWindow(window);
+
+    ImGuiScrollFlags scroll_flags = window.Appearing ? ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_KeepVisibleEdgeY;
+    NavMoveRequestSubmit(Dir::None, offset < 0 ? Dir::Up : Dir::Down, ImGuiNavMoveFlags_Tabbing | ImGuiNavMoveFlags_FocusApi, scroll_flags); // FIXME-NAV: Once we refactor tabbing, add LegacyApi flag to not activate non-inputable.
+    if (offset == -1)
+    {
+        NavMoveRequestResolveWithLastItem(&g.NavMoveResultLocal);
+    }
+    else
+    {
+        g.NavTabbingDir = 1;
+        g.NavTabbingCounter = offset + 1;
+    }
 }
