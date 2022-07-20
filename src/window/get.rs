@@ -57,21 +57,21 @@ pub fn is_window_within_begin_stack_of(g: &mut Context, window: &mut Window, pot
 // ImGuiID ImGui::GetWindowDockID()
 pub fn get_window_dock_id(g: &mut Context) -> Id32
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     return g.current_window.dock_id;
 }
 
 // float ImGui::GetWindowWidth()
 pub fn get_window_width(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = GImGui.CurrentWindow;
+    ImGuiWindow* window = g.CurrentWindow;
     return window.size.x;
 }
 
 // float ImGui::GetWindowHeight()
 pub fn get_window_height(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = GImGui.CurrentWindow;
+    ImGuiWindow* window = g.CurrentWindow;
     return window.size.y;
 }
 
@@ -79,7 +79,7 @@ pub fn get_window_height(g: &mut Context) -> f32
 // Vector2D ImGui::GetWindowPos()
 pub fn get_window_pos(g: &mut Context) -> Vector2D
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     return window.pos;
 }

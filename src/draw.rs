@@ -279,7 +279,7 @@ void ImDrawList::AddDrawCmd()
     draw_cmd.VtxOffset = _CmdHeader.VtxOffset;
     draw_cmd.IdxOffset = IdxBuffer.size;
 
-    IM_ASSERT(draw_cmd.clip_rect.x <= draw_cmd.clip_rect.z && draw_cmd.clip_rect.y <= draw_cmd.clip_rect.w);
+    // IM_ASSERT(draw_cmd.clip_rect.x <= draw_cmd.clip_rect.z && draw_cmd.clip_rect.y <= draw_cmd.clip_rect.w);
     CmdBuffer.push_back(draw_cmd);
 }
 
@@ -296,9 +296,9 @@ void ImDrawList::_PopUnusedDrawCmd()
 
 void ImDrawList::AddCallback(ImDrawCallback callback, void* callback_data)
 {
-    IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+    // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-    IM_ASSERT(curr_cmd.UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
     if (curr_cmd.ElemCount != 0)
     {
         AddDrawCmd();
@@ -319,7 +319,7 @@ void ImDrawList::AddCallback(ImDrawCallback callback, void* callback_data)
 // Try to merge two last draw commands
 void ImDrawList::_TryMergeDrawCmds()
 {
-    IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+    // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
     ImDrawCmd* prev_cmd = curr_cmd - 1;
     if (ImDrawCmd_HeaderCompare(curr_cmd, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && curr_cmd.UserCallback == NULL && prev_cmd.UserCallback == NULL)
@@ -334,14 +334,14 @@ void ImDrawList::_TryMergeDrawCmds()
 void ImDrawList::_OnChangedClipRect()
 {
     // If current command is used with different settings we need to add a new command
-    IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+    // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
     if (curr_cmd.ElemCount != 0 && memcmp(&curr_cmd.clip_rect, &_CmdHeader.clip_rect, sizeof(Vector4D)) != 0)
     {
         AddDrawCmd();
         return;
     }
-    IM_ASSERT(curr_cmd.UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
 
     // Try to merge with previous command if it matches, else use current command
     ImDrawCmd* prev_cmd = curr_cmd - 1;
@@ -357,14 +357,14 @@ void ImDrawList::_OnChangedClipRect()
 void ImDrawList::_OnChangedTextureID()
 {
     // If current command is used with different settings we need to add a new command
-    IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+    // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
     if (curr_cmd.ElemCount != 0 && curr_cmd.TextureId != _CmdHeader.TextureId)
     {
         AddDrawCmd();
         return;
     }
-    IM_ASSERT(curr_cmd.UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
 
     // Try to merge with previous command if it matches, else use current command
     ImDrawCmd* prev_cmd = curr_cmd - 1;
@@ -381,7 +381,7 @@ void ImDrawList::_OnChangedVtxOffset()
 {
     // We don't need to compare curr_cmd->vtx_offset != _cmd_header.vtx_offset because we know it'll be different at the time we call this.
     _VtxCurrentIdx = 0;
-    IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+    // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
     //IM_ASSERT(curr_cmd->vtx_offset != _cmd_header.vtx_offset); // See #3349
     if (curr_cmd.ElemCount != 0)
@@ -389,7 +389,7 @@ void ImDrawList::_OnChangedVtxOffset()
         AddDrawCmd();
         return;
     }
-    IM_ASSERT(curr_cmd.UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
     curr_cmd.VtxOffset = _CmdHeader.VtxOffset;
 }
 
@@ -466,7 +466,7 @@ void ImDrawList::PopTextureID()
 void ImDrawList::PrimReserve(int idx_count, int vtx_count)
 {
     // Large mesh support (when enabled)
-    IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
+    // IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
     if (sizeof(ImDrawIdx) == 2 && (_VtxCurrentIdx + vtx_count >= (1 << 16)) && (Flags & DrawListFlags::AllowVtxOffset))
     {
         // FIXME: In theory we should be testing that vtx_count <64k here.
@@ -491,7 +491,7 @@ void ImDrawList::PrimReserve(int idx_count, int vtx_count)
 // Release the a number of reserved vertices/indices from the end of the last reservation made with PrimReserve().
 void ImDrawList::PrimUnreserve(int idx_count, int vtx_count)
 {
-    IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
+    // IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
 
     ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
     draw_cmd.ElemCount -= idx_count;
@@ -580,7 +580,7 @@ void ImDrawList::AddPolyline(const Vector2D* points, const int points_count, ImU
         const bool use_texture = (Flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0);
 
         // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-        IM_ASSERT_PARANOID(!use_texture || !(_Data.Font.container_atlas.flags & FontAtlasFlags::NoBakedLines));
+        // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font.container_atlas.flags & FontAtlasFlags::NoBakedLines));
 
         const int idx_count = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
         const int vtx_count = use_texture ? (points_count * 2) : (thick_line ? points_count * 4 : points_count * 3);
@@ -980,7 +980,7 @@ void ImDrawList::_PathArcToFastEx(const Vector2D& center, float radius, int a_mi
         out_ptr += 1;
     }
 
-    IM_ASSERT_PARANOID(_Path.data + _Path.size == out_ptr);
+    // IM_ASSERT_PARANOID(_Path.data + _Path.size == out_ptr);
 }
 
 void ImDrawList::_PathArcToN(const Vector2D& center, float radius, float a_min, float a_max, int num_segments)
@@ -1181,7 +1181,7 @@ static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
 
     // If this triggers, please update your code replacing hardcoded values with new ImDrawFlags_RoundCorners* values.
     // Note that ImDrawFlags_Closed (== 0x01) is an invalid flag for add_rect(), add_rect_filled(), PathRect() etc...
-    IM_ASSERT((flags & 0x0F) == 0 && "Misuse of legacy hardcoded ImDrawCornerFlags values!");
+    // IM_ASSERT((flags & 0x0F) == 0 && "Misuse of legacy hardcoded ImDrawCornerFlags values!");
 
     if ((flags & DrawFlags::RoundCornersMask_) == 0)
         flags |= DrawFlags::RoundCornersAll;
@@ -1425,7 +1425,7 @@ void ImDrawList::AddText(const ImFont* font, float font_size, const Vector2D& po
     if (font_size == 0.0)
         font_size = _Data.font_size;
 
-    IM_ASSERT(font.container_atlas.TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
+    // IM_ASSERT(font.container_atlas.TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
     Vector4D clip_rect = _CmdHeader.clip_rect;
     if (cpu_fine_clip_rect)
@@ -1525,7 +1525,7 @@ void ImDrawListSplitter::ClearFreeMemory()
 void ImDrawListSplitter::Split(ImDrawList* draw_list, int channels_count)
 {
     IM_UNUSED(draw_list);
-    IM_ASSERT(_Current == 0 && _Count <= 1 && "Nested channel splitting is not supported. Please use separate instances of ImDrawListSplitter.");
+    // IM_ASSERT(_Current == 0 && _Count <= 1 && "Nested channel splitting is not supported. Please use separate instances of ImDrawListSplitter.");
     int old_channels_count = _Channels.size;
     if (old_channels_count < channels_count)
     {
@@ -1625,7 +1625,7 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
 
 void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
 {
-    IM_ASSERT(idx >= 0 && idx < _Count);
+    // IM_ASSERT(idx >= 0 && idx < _Count);
     if (_Current == idx)
         return;
 
@@ -1817,13 +1817,13 @@ ImFontAtlas::ImFontAtlas()
 
 ImFontAtlas::~ImFontAtlas()
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     Clear();
 }
 
 void    ImFontAtlas::ClearInputData()
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     for (int i = 0; i < ConfigData.size; i += 1)
         if (ConfigData[i].FontData && ConfigData[i].FontDataOwnedByAtlas)
         {
@@ -1846,7 +1846,7 @@ void    ImFontAtlas::ClearInputData()
 
 void    ImFontAtlas::ClearTexData()
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     if (TexPixelsAlpha8)
         IM_FREE(TexPixelsAlpha8);
     if (TexPixelsRGBA32)
@@ -1859,7 +1859,7 @@ void    ImFontAtlas::ClearTexData()
 
 void    ImFontAtlas::ClearFonts()
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     Fonts.clear_delete();
     TexReady = false;
 }
@@ -1909,15 +1909,15 @@ void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_wid
 
 ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    IM_ASSERT(font_cfg.FontData != NULL && font_cfg.FontDataSize > 0);
-    IM_ASSERT(font_cfg.sizePixels > 0.0);
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(font_cfg.FontData != NULL && font_cfg.FontDataSize > 0);
+    // IM_ASSERT(font_cfg.sizePixels > 0.0);
 
     // Create new font
     if (!font_cfg.MergeMode)
         Fonts.push_back(IM_NEW(ImFont));
     else
-        IM_ASSERT(!Fonts.empty() && "Cannot use merge_mode for the first font"); // When using merge_mode make sure that a font has already been added before. You can use ImGui::GetIO().fonts->add_font_default() to add the default imgui font.
+        // IM_ASSERT(!Fonts.empty() && "Cannot use merge_mode for the first font"); // When using merge_mode make sure that a font has already been added before. You can use ImGui::GetIO().fonts->add_font_default() to add the default imgui font.
 
     ConfigData.push_back(*font_cfg);
     ImFontConfig& new_font_cfg = ConfigData.back();
@@ -1979,12 +1979,12 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 
 ImFont* ImFontAtlas::AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     size_t data_size = 0;
     void* data = ImFileLoadToMemory(filename, "rb", &data_size, 0);
     if (!data)
     {
-        IM_ASSERT_USER_ERROR(0, "Could not load font file!");
+        // IM_ASSERT_USER_ERROR(0, "Could not load font file!");
         return NULL;
     }
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
@@ -2001,9 +2001,9 @@ ImFont* ImFontAtlas::AddFontFromFileTTF(const char* filename, float size_pixels,
 // NB: Transfer ownership of 'ttf_data' to ImFontAtlas, unless font_cfg_template->font_data_owned_by_atlas == false. Owned TTF buffer will be deleted after build().
 ImFont* ImFontAtlas::AddFontFromMemoryTTF(void* ttf_data, int ttf_size, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
-    IM_ASSERT(font_cfg.FontData == NULL);
+    // IM_ASSERT(font_cfg.FontData == NULL);
     font_cfg.FontData = ttf_data;
     font_cfg.FontDataSize = ttf_size;
     font_cfg.sizePixels = size_pixels > 0.0 ? size_pixels : font_cfg.sizePixels;
@@ -2019,7 +2019,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(const void* compressed_ttf_d
     stb_decompress(buf_decompressed_data, (const unsigned char*)compressed_ttf_data, (unsigned int)compressed_ttf_size);
 
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
-    IM_ASSERT(font_cfg.FontData == NULL);
+    // IM_ASSERT(font_cfg.FontData == NULL);
     font_cfg.FontDataOwnedByAtlas = true;
     return AddFontFromMemoryTTF(buf_decompressed_data, buf_decompressed_size, size_pixels, &font_cfg, glyph_ranges);
 }
@@ -2036,8 +2036,8 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedBase85TTF(const char* compressed
 
 int ImFontAtlas::AddCustomRectRegular(int width, int height)
 {
-    IM_ASSERT(width > 0 && width <= 0xFFFF);
-    IM_ASSERT(height > 0 && height <= 0xFFFF);
+    // IM_ASSERT(width > 0 && width <= 0xFFFF);
+    // IM_ASSERT(height > 0 && height <= 0xFFFF);
     ImFontAtlasCustomRect r;
     r.Width = (unsigned short)width;
     r.Height = (unsigned short)height;
@@ -2048,11 +2048,11 @@ int ImFontAtlas::AddCustomRectRegular(int width, int height)
 int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const Vector2D& offset)
 {
 #ifdef IMGUI_USE_WCHAR32
-    IM_ASSERT(id <= IM_UNICODE_CODEPOINT_MAX);
+    // IM_ASSERT(id <= IM_UNICODE_CODEPOINT_MAX);
 
-    IM_ASSERT(font != NULL);
-    IM_ASSERT(width > 0 && width <= 0xFFFF);
-    IM_ASSERT(height > 0 && height <= 0xFFFF);
+    // IM_ASSERT(font != NULL);
+    // IM_ASSERT(width > 0 && width <= 0xFFFF);
+    // IM_ASSERT(height > 0 && height <= 0xFFFF);
     ImFontAtlasCustomRect r;
     r.Width = (unsigned short)width;
     r.Height = (unsigned short)height;
@@ -2066,8 +2066,8 @@ int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int
 
 void ImFontAtlas::CalcCustomRectUV(const ImFontAtlasCustomRect* rect, Vector2D* out_uv_min, Vector2D* out_uv_max) const
 {
-    IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // font atlas needs to be built before we can calculate UV coordinates
-    IM_ASSERT(rect.IsPacked());                // Make sure the rectangle has been packed
+    // IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // font atlas needs to be built before we can calculate UV coordinates
+    // IM_ASSERT(rect.IsPacked());                // Make sure the rectangle has been packed
     *out_uv_min = Vector2D::new((float)rect.X * TexUvScale.x, rect.Y * TexUvScale.y);
     *out_uv_max = Vector2D::new((float)(rect.X + rect.Width) * TexUvScale.x, (rect.Y + rect.Height) * TexUvScale.y);
 }
@@ -2079,7 +2079,7 @@ bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* 
     if (Flags & ImFontAtlasFlags_NoMouseCursors)
         return false;
 
-    IM_ASSERT(PackIdMouseCursors != -1);
+    // IM_ASSERT(PackIdMouseCursors != -1);
     ImFontAtlasCustomRect* r = GetCustomRectByIndex(PackIdMouseCursors);
     Vector2D pos = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + Vector2D::new((float)r.X, r.Y);
     Vector2D size = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
@@ -2095,7 +2095,7 @@ bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* 
 
 bool    ImFontAtlas::Build()
 {
-    IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
 
     // Default font is none are specified
     if (ConfigData.size == 0)
@@ -2114,7 +2114,7 @@ bool    ImFontAtlas::Build()
 #elif defined(IMGUI_ENABLE_STB_TRUETYPE)
         builder_io = ImFontAtlasGetBuilderForStbTruetype();
 #else
-        IM_ASSERT(0); // Invalid build function
+        // IM_ASSERT(0); // Invalid build function
 
     }
 
@@ -2167,7 +2167,7 @@ struct ImFontBuildDstData
 
 static void UnpackBitVectorToFlatIndexList(const ImBitVector* in, ImVector<int>* out)
 {
-    IM_ASSERT(sizeof(in.Storage.data[0]) == sizeof);
+    // IM_ASSERT(sizeof(in.Storage.data[0]) == sizeof);
     const ImU32* it_begin = in.Storage.begin();
     const ImU32* it_end = in.Storage.end();
     for (const ImU32* it = it_begin; it < it_end; it += 1)
@@ -2179,7 +2179,7 @@ static void UnpackBitVectorToFlatIndexList(const ImBitVector* in, ImVector<int>*
 
 static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 {
-    IM_ASSERT(atlas.ConfigData.size > 0);
+    // IM_ASSERT(atlas.ConfigData.size > 0);
 
     ImFontAtlasBuildInit(atlas);
 
@@ -2203,7 +2203,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     {
         ImFontBuildSrcData& src_tmp = src_tmp_array[src_i];
         ImFontConfig& cfg = atlas.ConfigData[src_i];
-        IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.container_atlas == atlas));
+        // IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.container_atlas == atlas));
 
         // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
@@ -2212,12 +2212,12 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
                 src_tmp.DstIndex = output_i;
         if (src_tmp.DstIndex == -1)
         {
-            IM_ASSERT(src_tmp.DstIndex != -1); // cfg.dst_font not pointing within atlas->fonts[] array?
+            // IM_ASSERT(src_tmp.DstIndex != -1); // cfg.dst_font not pointing within atlas->fonts[] array?
             return false;
         }
         // Initialize helper structure for font loading and verify that the TTF/OTF data is correct
         const int font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)cfg.FontData, cfg.FontNo);
-        IM_ASSERT(font_offset >= 0 && "font_data is incorrect, or font_no cannot be found.");
+        // IM_ASSERT(font_offset >= 0 && "font_data is incorrect, or font_no cannot be found.");
         if (!stbtt_InitFont(&src_tmp.FontInfo, (unsigned char*)cfg.FontData, font_offset))
             return false;
 
@@ -2264,7 +2264,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         src_tmp.GlyphsList.reserve(src_tmp.GlyphsCount);
         UnpackBitVectorToFlatIndexList(&src_tmp.GlyphsSet, &src_tmp.GlyphsList);
         src_tmp.GlyphsSet.Clear();
-        IM_ASSERT(src_tmp.GlyphsList.size == src_tmp.GlyphsCount);
+        // IM_ASSERT(src_tmp.GlyphsList.size == src_tmp.GlyphsCount);
     }
     for (int dst_i = 0; dst_i < dst_tmp_array.size; dst_i += 1)
         dst_tmp_array[dst_i].GlyphsSet.Clear();
@@ -2311,7 +2311,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         {
             int x0, y0, x1, y1;
             const int glyph_index_in_font = stbtt_FindGlyphIndex(&src_tmp.FontInfo, src_tmp.GlyphsList[glyph_i]);
-            IM_ASSERT(glyph_index_in_font != 0);
+            // IM_ASSERT(glyph_index_in_font != 0);
             stbtt_GetGlyphBitmapBoxSubpixel(&src_tmp.FontInfo, glyph_index_in_font, scale * cfg.OversampleH, scale * cfg.OversampleV, 0, 0, &x0, &y0, &x1, &y1);
             src_tmp.Rects[glyph_i].w = (stbrp_coord)(x1 - x0 + padding + cfg.OversampleH - 1);
             src_tmp.Rects[glyph_i].h = (stbrp_coord)(y1 - y0 + padding + cfg.OversampleV - 1);
@@ -2456,10 +2456,10 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
 void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opaque)
 {
     stbrp_context* pack_context = (stbrp_context*)stbrp_context_opaque;
-    IM_ASSERT(pack_context != NULL);
+    // IM_ASSERT(pack_context != NULL);
 
     ImVector<ImFontAtlasCustomRect>& user_rects = atlas.CustomRects;
-    IM_ASSERT(user_rects.size >= 1); // We expect at least the default custom rects to be registered, else something went wrong.
+    // IM_ASSERT(user_rects.size >= 1); // We expect at least the default custom rects to be registered, else something went wrong.
 
     ImVector<stbrp_rect> pack_rects;
     pack_rects.resize(user_rects.size);
@@ -2475,15 +2475,15 @@ void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opa
         {
             user_rects[i].X = (unsigned short)pack_rects[i].x;
             user_rects[i].Y = (unsigned short)pack_rects[i].y;
-            IM_ASSERT(pack_rects[i].w == user_rects[i].Width && pack_rects[i].h == user_rects[i].Height);
+            // IM_ASSERT(pack_rects[i].w == user_rects[i].Width && pack_rects[i].h == user_rects[i].Height);
             atlas.TexHeight = ImMax(atlas.TexHeight, pack_rects[i].y + pack_rects[i].h);
         }
 }
 
 void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, int x, int y, int w, int h, const char* in_str, char in_marker_char, unsigned char in_marker_pixel_value)
 {
-    IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
-    IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
+    // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
+    // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
     unsigned char* out_pixel = atlas.TexPixelsAlpha8 + x + (y * atlas.TexWidth);
     for (int off_y = 0; off_y < h; off_y += 1, out_pixel += atlas.TexWidth, in_str += w)
         for (int off_x = 0; off_x < w; off_x += 1)
@@ -2492,8 +2492,8 @@ void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, int x, int y, 
 
 void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, int x, int y, int w, int h, const char* in_str, char in_marker_char, unsigned int in_marker_pixel_value)
 {
-    IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
-    IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
+    // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
+    // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
     unsigned int* out_pixel = atlas.TexPixelsRGBA32 + x + (y * atlas.TexWidth);
     for (int off_y = 0; off_y < h; off_y += 1, out_pixel += atlas.TexWidth, in_str += w)
         for (int off_x = 0; off_x < w; off_x += 1)
@@ -2503,13 +2503,13 @@ void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, int x, int y,
 static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
 {
     ImFontAtlasCustomRect* r = atlas.GetCustomRectByIndex(atlas.PackIdMouseCursors);
-    IM_ASSERT(r.IsPacked());
+    // IM_ASSERT(r.IsPacked());
 
     const int w = atlas.TexWidth;
     if (!(atlas.flags & ImFontAtlasFlags_NoMouseCursors))
     {
         // Render/copy pixels
-        IM_ASSERT(r.Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
+        // IM_ASSERT(r.Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
         const int x_for_white = r.X;
         const int x_for_black = r.X + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
         if (atlas.TexPixelsAlpha8 != NULL)
@@ -2526,7 +2526,7 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
     else
     {
         // Render 4 white pixels
-        IM_ASSERT(r.Width == 2 && r.Height == 2);
+        // IM_ASSERT(r.Width == 2 && r.Height == 2);
         const int offset = r.X + r.Y * w;
         if (atlas.TexPixelsAlpha8 != NULL)
         {
@@ -2547,7 +2547,7 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
 
     // This generates a triangular shape in the texture, with the various line widths stacked on top of each other to allow interpolation between them
     ImFontAtlasCustomRect* r = atlas.GetCustomRectByIndex(atlas.PackIdLines);
-    IM_ASSERT(r.IsPacked());
+    // IM_ASSERT(r.IsPacked());
     for (unsigned int n = 0; n < IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1; n += 1) // +1 because of the zero-width row
     {
         // Each line consists of at least two empty pixels at the ends, with a line of solid pixels in the middle
@@ -2557,7 +2557,7 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         unsigned int pad_right = r.Width - (pad_left + line_width);
 
         // Write each slice
-        IM_ASSERT(pad_left + line_width + pad_right == r.Width && y < r.Height); // Make sure we're inside the texture bounds before we start writing pixels
+        // IM_ASSERT(pad_left + line_width + pad_right == r.Width && y < r.Height); // Make sure we're inside the texture bounds before we start writing pixels
         if (atlas.TexPixelsAlpha8 != NULL)
         {
             unsigned char* write_ptr = &atlas.TexPixelsAlpha8[r.X + ((r.Y + y) * atlas.TexWidth)];
@@ -2616,7 +2616,7 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
 void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
 {
     // Render into our custom data blocks
-    IM_ASSERT(atlas.TexPixelsAlpha8 != NULL || atlas.TexPixelsRGBA32 != NULL);
+    // IM_ASSERT(atlas.TexPixelsAlpha8 != NULL || atlas.TexPixelsRGBA32 != NULL);
     ImFontAtlasBuildRenderDefaultTexData(atlas);
     ImFontAtlasBuildRenderLinesTexData(atlas);
 
@@ -2628,7 +2628,7 @@ void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
             continue;
 
         // Will ignore ImFontConfig settings: glyph_min_advance_x, GlyphMinAdvanceY, glyph_extra_spacing, pixel_snap_h
-        IM_ASSERT(r.Font.container_atlas == atlas);
+        // IM_ASSERT(r.Font.container_atlas == atlas);
         Vector2D uv0, uv1;
         atlas.CalcCustomRectUV(r, &uv0, &uv1);
         r.Font.AddGlyph(NULL, (ImWchar)r.GlyphID, r.GlyphOffset.x, r.GlyphOffset.y, r.GlyphOffset.x + r.Width, r.GlyphOffset.y + r.Height, uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX);
@@ -2990,7 +2990,7 @@ void ImFont::BuildLookupTable()
         max_codepoint = ImMax(max_codepoint, Glyphs[i].Codepoint);
 
     // build lookup table
-    IM_ASSERT(Glyphs.size < 0xFFFF); // -1 is reserved
+    // IM_ASSERT(Glyphs.size < 0xFFFF); // -1 is reserved
     IndexAdvanceX.clear();
     IndexLookup.clear();
     DirtyLookupTables = false;
@@ -3076,7 +3076,7 @@ void ImFont::SetGlyphVisible(ImWchar c, bool visible)
 
 void ImFont::GrowIndex(int new_size)
 {
-    IM_ASSERT(IndexAdvanceX.size == IndexLookup.size);
+    // IM_ASSERT(IndexAdvanceX.size == IndexLookup.size);
     if (new_size <= IndexLookup.size)
         return;
     IndexAdvanceX.resize(new_size, -1.0);
@@ -3132,7 +3132,7 @@ void ImFont::AddGlyph(const ImFontConfig* cfg, ImWchar codepoint, float x0, floa
 
 void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
 {
-    IM_ASSERT(IndexLookup.size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
+    // IM_ASSERT(IndexLookup.size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
     unsigned int index_size = (unsigned int)IndexLookup.size;
 
     if (dst < index_size && IndexLookup.data[dst] == (ImWchar)-1 && !overwrite_dst) // 'dst' already exists
@@ -3606,7 +3606,7 @@ void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir
         break;
     case Dir::None:
     case Dir::COUNT:
-        IM_ASSERT(0);
+        // IM_ASSERT(0);
         break;
     }
     draw_list.add_triangle_filled(center + a, center + b, center + c, col);
@@ -3810,7 +3810,7 @@ static unsigned char *stb__dout;
 static void stb__match(const unsigned char *data, unsigned int length)
 {
     // INVERSE of memmove... write each byte before copying the next...
-    IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
+    // IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
     if (stb__dout + length > stb__barrier_out_e) { stb__dout += length; return; }
     if (data < stb__barrier_out_b) { stb__dout = stb__barrier_out_e+1; return; }
     while (length--) *stb__dout += 1 = *data += 1;
@@ -3818,7 +3818,7 @@ static void stb__match(const unsigned char *data, unsigned int length)
 
 static void stb__lit(const unsigned char *data, unsigned int length)
 {
-    IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
+    // IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
     if (stb__dout + length > stb__barrier_out_e) { stb__dout += length; return; }
     if (data < stb__barrier_in_b) { stb__dout = stb__barrier_out_e+1; return; }
     memcpy(stb__dout, data, length);
@@ -3893,17 +3893,17 @@ static unsigned int stb_decompress(unsigned char *output, const unsigned char *i
         i = stb_decompress_token(i);
         if (i == old_i) {
             if (*i == 0x05 && i[1] == 0xfa) {
-                IM_ASSERT(stb__dout == output + olen);
+                // IM_ASSERT(stb__dout == output + olen);
                 if (stb__dout != output + olen) return 0;
                 if (stb_adler32(1, output, olen) != (unsigned int) stb__in4(2))
                     return 0;
                 return olen;
             } else {
-                IM_ASSERT(0); /* NOTREACHED */
+                // IM_ASSERT(0); /* NOTREACHED */
                 return 0;
             }
         }
-        IM_ASSERT(stb__dout <= output + olen);
+        // IM_ASSERT(stb__dout <= output + olen);
         if (stb__dout > output + olen)
             return 0;
     }

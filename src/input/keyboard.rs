@@ -115,9 +115,9 @@ pub fn pop_allow_keyboard_focus(g: &mut Context)
 // void SetKeyboardFocusHere(int offset)
 pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    IM_ASSERT(offset >= -1);    // -1 is allowed but not below
+    // IM_ASSERT(offset >= -1);    // -1 is allowed but not below
     IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere(%d) in window \"%s\"\n", offset, window.Name);
 
     // It makes sense in the vast majority of cases to never interrupt a drag and drop.
@@ -162,4 +162,11 @@ pub fn calc_typematic_repeat_amount(g: &mut Context, t0: f32, repeat_delay: f32,
     const int count_t1 = (t1 < repeat_delay) ? -1 : ((t1 - repeat_delay) / repeat_rate);
     const int count = count_t1 - count_t0;
     return count;
+}
+
+// void SetNextFrameWantCaptureKeyboard(bool want_capture_keyboard)
+pub fn set_next_frame_want_capture_keyboard(g: &mut Context, want_capture_keyboard: bool)
+{
+    // ImGuiContext& g = *GImGui;
+    g.want_capture_keyboard_next_frame = want_capture_keyboard ? 1 : 0;
 }

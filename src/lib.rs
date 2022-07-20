@@ -31,7 +31,6 @@ mod column;
 mod rect;
 mod dock;
 mod tab_bar;
-mod input;
 mod item;
 mod group;
 mod popup;
@@ -92,7 +91,6 @@ mod platform;
 mod menu;
 mod layout;
 mod dock_context;
-mod mouse;
 mod draw;
 mod draw_list_shared_data;
 mod draw_data_builder;
@@ -101,14 +99,18 @@ mod draw_data;
 mod frame;
 mod draw_defines;
 mod size_callback_data;
-mod keyboard;
 mod child;
 mod resize;
 mod border;
 mod window;
 mod modal;
 pub mod text_wrap;
-pub mod keys;
+pub mod components;
+pub mod input;
+pub mod error_handling;
+mod cursor;
+mod content;
+mod scrolling;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context)

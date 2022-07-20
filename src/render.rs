@@ -124,7 +124,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
     if (text_len == 0)
         return;
 
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     RenderTextClippedEx(window.draw_list, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
     if (g.LogEnabled)
@@ -137,7 +137,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
 void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end_full, const Vector2D* text_size_if_known)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     if (text_end_full == NULL)
         text_end_full = FindRenderedTextEnd(text);
     const Vector2D text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_end_full, false, 0.0);
@@ -215,7 +215,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
 // Render a rectangle shaped with optional rounding and borders
 void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool border, float rounding)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     window.draw_list.add_rect_filled(p_min, p_max, fill_col, rounding);
     const float border_size = g.style.frame_border_size;
@@ -228,7 +228,7 @@ void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool bor
 
 void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     const float border_size = g.style.frame_border_size;
     if (border_size > 0.0)
@@ -240,7 +240,7 @@ void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
 
 void ImGui::render_nav_highlight(const Rect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     if (id != g.nav_id)
         return;
     if (g.nav_disable_highlight && !(flags & ImGuiNavHighlightFlags_AlwaysDraw))
@@ -272,8 +272,8 @@ void ImGui::render_nav_highlight(const Rect& bb, ImGuiID id, ImGuiNavHighlightFl
 
 void ImGui::render_mouse_cursor(Vector2D base_pos, float base_scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(mouse_cursor > MouseCursor::None && mouse_cursor < ImGuiMouseCursor_COUNT);
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(mouse_cursor > MouseCursor::None && mouse_cursor < ImGuiMouseCursor_COUNT);
     ImFontAtlas* font_atlas = g.draw_list_shared_data.font.container_atlas;
     for (int n = 0; n < g.viewports.size; n += 1)
     {

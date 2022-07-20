@@ -10,7 +10,7 @@ use crate::window::ImGuiSizeCallback;
 // void ImGui::SetNextWindowSizeConstraints(const Vector2D& size_min, const Vector2D& size_max, ImGuiSizeCallback custom_callback, void* custom_callback_user_data)
 pub fn set_next_window_size_constraints(g: &mut Context, size_min: &Vector2D, size_max: &Vector2D, custom_callback: ImGuiSizeCallback, custom_callback_user_data: &mut Vec<u8>)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasSizeConstraint;
     g.next_window_data.sizeConstraintRect = Rect(size_min, size_max);
     g.next_window_data.sizeCallback = custom_callback;
@@ -20,8 +20,8 @@ pub fn set_next_window_size_constraints(g: &mut Context, size_min: &Vector2D, si
 // void ImGui::SetNextWindowPos(const Vector2D& pos, ImGuiCond cond, const Vector2D& pivot)
 pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, pivot: &Vector2D)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.next_window_data.flags |= NextWindowDataFlags::HasPos;
     g.next_window_data.PosVal = pos;
     g.next_window_data.PosPivotVal = pivot;
@@ -32,8 +32,8 @@ pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, piv
 // void ImGui::set_next_window_size(const Vector2D& size, ImGuiCond cond)
 pub fn set_next_window_size(g: &mut Context, size: &Vector2D, cond: Condition)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.next_window_data.flags |= NextWindowDataFlags::HasSize;
     g.next_window_data.sizeVal = size;
     g.next_window_data.sizeCond = cond ? cond : Cond::Always;
@@ -44,7 +44,7 @@ pub fn set_next_window_size(g: &mut Context, size: &Vector2D, cond: Condition)
 // void ImGui::SetNextWindowContentSize(const Vector2D& size)
 pub fn set_next_window_content_size(g: &mut Context, size: &Vector2D)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasContentSize;
     g.next_window_data.ContentSizeVal = f32::floor(size);
 }
@@ -52,7 +52,7 @@ pub fn set_next_window_content_size(g: &mut Context, size: &Vector2D)
 // void ImGui::SetNextWindowScroll(const Vector2D& scroll)
 pub fn set_next_window_scroll(g: &mut Context, scroll: &Vector2D)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasScroll;
     g.next_window_data.ScrollVal = scroll;
 }
@@ -60,8 +60,8 @@ pub fn set_next_window_scroll(g: &mut Context, scroll: &Vector2D)
 // void ImGui::SetNextWindowCollapsed(bool collapsed, ImGuiCond cond)
 pub fn set_next_window_collapsed(g: &mut Context, collapsed, cond:Condition)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.next_window_data.flags |= NextWindowDataFlags::HasCollapsed;
     g.next_window_data.CollapsedVal = collapsed;
     g.next_window_data.CollapsedCond = cond ? cond : Cond::Always;
@@ -70,14 +70,14 @@ pub fn set_next_window_collapsed(g: &mut Context, collapsed, cond:Condition)
 // void ImGui::SetNextWindowFocus()
 pub fn set_next_window_focus(g: &mut Context)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasFocus;
 }
 
 // void ImGui::SetNextWindowBgAlpha(float alpha)
 pub fn set_next_window_bg_alpha(g: &mut Context, alpha: f32)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasBgAlpha;
     g.next_window_data.BgAlphaVal = alpha;
 }
@@ -85,7 +85,7 @@ pub fn set_next_window_bg_alpha(g: &mut Context, alpha: f32)
 // void ImGui::SetNextWindowViewport(ImGuiID id)
 pub fn set_next_window_viewport(g: &mut Context, id: Id32)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasViewport;
     g.next_window_data.viewport_id = id;
 }
@@ -93,7 +93,7 @@ pub fn set_next_window_viewport(g: &mut Context, id: Id32)
 // void ImGui::SetNextWindowDockID(ImGuiID id, ImGuiCond cond)
 pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasDock;
     g.next_window_data.DockCond = cond ? cond : Cond::Always;
     g.next_window_data.DockId = id;
@@ -102,8 +102,8 @@ pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
 // void ImGui::SetNextWindowClass(const ImGuiWindowClass* window_class)
 pub fn set_next_window_class(g: &mut Context, window_class: &mut WindowClass)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT((window_class.ViewportFlagsOverrideSet & window_class.ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT((window_class.ViewportFlagsOverrideSet & window_class.ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
     g.next_window_data.flags |= NextWindowDataFlags::HasWindowClass;
     g.next_window_data.WindowClass = *window_class;
 }

@@ -397,7 +397,7 @@ static ImGuiKey ImGui_ImplAllegro5_KeyCodeToImGuiKey(int key_code)
 bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
 {
     ImGuiIO& io = ImGui::GetIO();
-    IM_ASSERT(io.BackendPlatformUserData == NULL && "Already initialized a platform backend!");
+    // IM_ASSERT(io.BackendPlatformUserData == NULL && "Already initialized a platform backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplAllegro5_Data* bd = IM_NEW(ImGui_ImplAllegro5_Data)();
@@ -431,7 +431,7 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
 void ImGui_ImplAllegro5_Shutdown()
 {
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
-    IM_ASSERT(bd != NULL && "No platform backend to shutdown, or already shutdown?");
+    // IM_ASSERT(bd != NULL && "No platform backend to shutdown, or already shutdown?");
     ImGuiIO& io = ImGui::GetIO();
 
     ImGui_ImplAllegro5_InvalidateDeviceObjects();
@@ -559,7 +559,7 @@ static void ImGui_ImplAllegro5_UpdateMouseCursor()
 void ImGui_ImplAllegro5_NewFrame()
 {
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
-    IM_ASSERT(bd != NULL && "Did you call ImGui_ImplAllegro5_Init()?");
+    // IM_ASSERT(bd != NULL && "Did you call ImGui_ImplAllegro5_Init()?");
 
     if (!bd.Texture)
         ImGui_ImplAllegro5_CreateDeviceObjects();

@@ -3,13 +3,14 @@ use crate::config::ConfigFlags;
 use crate::context::{Context, set_active_id_using_nav_and_keys};
 use crate::dock_node::{dock_node_get_root_node, DockNode};
 use crate::id::set_active_id;
-use crate::input::WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER;
+use crate::input::{MouseButton, MouseCursor, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::math::floor_vector_2d;
 use crate::rect::Rect;
 use crate::types::INVALID_ID;
 use crate::utils::remove_hash_set_val;
 use crate::vectors::ImLengthSqr;
 use crate::{Viewport, ViewportFlags};
+use crate::globals::GImGui;
 use crate::vectors::two_d::Vector2D;
 use crate::window::{Window, WindowFlags};
 
@@ -470,4 +471,159 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
         let hovered_window_above_modal = g.hovered_window && (modal == NULL || is_window_above(g.hovered_window, modal));
         close_popups_over_window(if hovered_window_above_modal { g.hovered_window } else { modal}, true);
     }
+}
+
+// bool IsMouseDown(ImGuiMouseButton button)
+pub fn is_mouse_down(g: &mut Context, button: MouseButton) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    return g.io.mouse_down[button];
+}
+
+// bool IsMouseClicked(ImGuiMouseButton button, bool repeat)
+pub fn is_mouse_clicked(g: &mut Context, button: MouseButton, repeat: bool) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    const float t = g.io.mouse_down_duration[button];
+    if (t == 0.0)
+        return true;
+    if (repeat && t > g.io.KeyRepeatDelay)
+        return CalcTypematicRepeatAmount(t - g.io.delta_time, t, g.io.KeyRepeatDelay, g.io.KeyRepeatRate) > 0;
+    return false;
+}
+
+// bool IsMouseReleased(ImGuiMouseButton button)
+pub fn is_mouse_released(g: &mut Context, button: MouseButton) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    return g.io.mouse_released[button];
+}
+
+// bool IsMouseDoubleClicked(ImGuiMouseButton button)
+pub fn is_mouse_double_clicked(g: &mut Context, button: MouseButton) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    return g.io.mouse_clicked_count[button] == 2;
+}
+
+// int GetMouseClickedCount(ImGuiMouseButton button)
+pub fn get_mouse_clicked_count(g: &mut Context, button: MouseButton) -> i32
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    return g.io.mouse_clicked_count[button];
+}
+
+// Return if a mouse click/drag went past the given threshold. valid to call during the mouse_released frame.
+// [Internal] This doesn't test if the button is pressed
+// bool IsMouseDragPastThreshold(ImGuiMouseButton button, float lock_threshold)
+pub fn is_mouse_drag_past_threshold(g: &mut Context, button: MouseButton, lock_threshold: f32) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    if (lock_threshold < 0.0)
+        lock_threshold = g.io.mouse_drag_threshold;
+    return g.io.mouse_drag_max_distance_sqr[button] >= lock_threshold * lock_threshold;
+}
+
+// bool is_mouse_dragging(ImGuiMouseButton button, float lock_threshold)
+pub fn is_mouse_dragging(g: &mut Context, button: MouseButton, lock_threshold: f32) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    if (!g.io.mouse_down[button])
+        return false;
+    return IsMouseDragPastThreshold(button, lock_threshold);
+}
+
+// Vector2D GetMousePos()
+pub fn get_mouse_pos(g: &mut Context) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+    return g.io.mouse_pos;
+}
+
+// NB: prefer to call right after BeginPopup(). At the time Selectable/MenuItem is activated, the popup is already closed!
+// Vector2D GetMousePosOnOpeningCurrentPopup()
+pub fn get_mouse_pos_on_opening_current_popup(g: &mut Context) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+    if (g.begin_popup_stack.size > 0)
+        return g.open_popup_stack[g.begin_popup_stack.size - 1].OpenMousePos;
+    return g.io.mouse_pos;
+}
+
+// We typically use Vector2D(-FLT_MAX,-FLT_MAX) to denote an invalid mouse position.
+// bool is_mouse_pos_valid(const Vector2D* mouse_pos)
+pub fn is_mouse_pos_valid(g: &mut Context, mouse_pos: &Vector2D) -> bool
+{
+    // The assert is only to silence a false-positive in XCode Static Analysis.
+    // Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be NULL (which it doesn't for other functions).
+    // IM_ASSERT(GImGui != NULL);
+    const float MOUSE_INVALID = -256000.0;
+    Vector2D p = mouse_pos ? *mouse_pos : g.IO.MousePos;
+    return p.x >= MOUSE_INVALID && p.y >= MOUSE_INVALID;
+}
+
+// [WILL OBSOLETE] This was designed for backends, but prefer having backend maintain a mask of held mouse buttons, because upcoming input queue system will make this invalid.
+// bool IsAnyMouseDown()
+pub fn is_any_mouse_down(g: &mut Context) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    for (int n = 0; n < IM_ARRAYSIZE(g.io.mouse_down); n += 1)
+        if (g.io.mouse_down[n])
+            return true;
+    return false;
+}
+
+// Return the delta from the initial clicking position while the mouse button is clicked or was just released.
+// This is locked and return 0.0 until the mouse moves past a distance threshold at least once.
+// NB: This is only valid if is_mouse_pos_valid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
+// Vector2D GetMouseDragDelta(ImGuiMouseButton button, float lock_threshold)
+pub fn get_mouse_drag_delta(g: &mut Context, button: MouseButton, lock_threshold: f32) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    if (lock_threshold < 0.0)
+        lock_threshold = g.io.mouse_drag_threshold;
+    if (g.io.mouse_down[button] || g.io.mouse_released[button])
+        if (g.io.mouse_drag_max_distance_sqr[button] >= lock_threshold * lock_threshold)
+            if (is_mouse_pos_valid(&g.io.mouse_pos) && is_mouse_pos_valid(&g.io.mouse_clicked_pos[button]))
+                return g.io.mouse_pos - g.io.mouse_clicked_pos[button];
+    return Vector2D::new(0.0, 0.0);
+}
+
+// void ResetMouseDragDelta(ImGuiMouseButton button)
+pub fn reset_mouse_drag_delta(g: &mut Context, button: MouseButton)
+{
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
+    // NB: We don't need to reset g.io.mouse_drag_max_distance_sqr
+    g.io.mouse_clicked_pos[button] = g.io.mouse_pos;
+}
+
+// ImGuiMouseCursor GetMouseCursor()
+pub fn get_mouse_cursor(g: &mut Context) -> MouseCursor
+{
+    // ImGuiContext& g = *GImGui;
+    return g.mouse_cursor;
+}
+
+// void SetMouseCursor(ImGuiMouseCursor cursor_type)
+pub fn set_mouse_cursor(g: &mut Context, cursor_type: MouseCursor)
+{
+    // ImGuiContext& g = *GImGui;
+    g.mouse_cursor = cursor_type;
+}
+
+
+// void SetNextFrameWantCaptureMouse(bool want_capture_mouse)
+pub fn set_next_frame_want_capture_mouse(g: &mut Context, want_capture_mouse: bool)
+{
+    // ImGuiContext& g = *GImGui;
+    g.want_capture_mouse_next_frame = want_capture_mouse ? 1 : 0;
 }

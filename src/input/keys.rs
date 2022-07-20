@@ -5,7 +5,7 @@ use crate::input::DimgKeyData;
 // ImGuiKeyData* GetKeyData(ImGuiKey key)
 pub fn get_key_data(g: &mut Context, key: Key) -> &mut DimgKeyData
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     int index;
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
 //     IM_ASSERT(key >= ImGuiKey_LegacyNativeKey_BEGIN && key < ImGuiKey_NamedKey_END);
@@ -14,7 +14,7 @@ pub fn get_key_data(g: &mut Context, key: Key) -> &mut DimgKeyData
 //     else
 //         index = key;
 // #else
-    IM_ASSERT(IsNamedKey(key) && "Support for user key indices was dropped in favor of ImGuiKey. Please update backend & user code.");
+    // IM_ASSERT(IsNamedKey(key) && "Support for user key indices was dropped in favor of ImGuiKey. Please update backend & user code.");
     index = key - ImGuiKey_NamedKey_BEGIN;
 
     return &g.io.keys_data[index];
@@ -24,8 +24,8 @@ pub fn get_key_data(g: &mut Context, key: Key) -> &mut DimgKeyData
 // int GetKeyIndex(ImGuiKey key)
 pub fn get_key_index(key: &Key) -> i32
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(IsNamedKey(key));
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(IsNamedKey(key));
     const ImGuiKeyData* key_data = GetKeyData(key);
     return (key_data - g.io.keys_data);
 }
@@ -64,7 +64,7 @@ pub fn get_key_name(g: &mut Context, key: Key) -> String
         ImGuiIO& io = GetIO();
         if (io.key_map[key] == -1)
             return "N/A";
-        IM_ASSERT(IsNamedKey((ImGuiKey)io.key_map[key]));
+        // IM_ASSERT(IsNamedKey((ImGuiKey)io.key_map[key]));
         key = (ImGuiKey)io.key_map[key];
     }
 
@@ -74,4 +74,47 @@ pub fn get_key_name(g: &mut Context, key: Key) -> String
         return "Unknown";
 
     return GKeyNames[key - ImGuiKey_NamedKey_BEGIN];
+}
+
+// int GetKeyPressedAmount(ImGuiKey key, float repeat_delay, float repeat_rate)
+pub fn get_key_pressed_amount(g: &mut Context, key: Key, repeat_delay: f32, repeat_rate: f32) -> i32
+{
+    // ImGuiContext& g = *GImGui;
+    const ImGuiKeyData* key_data = GetKeyData(key);
+    const float t = key_data.down_duration;
+    return CalcTypematicRepeatAmount(t - g.io.delta_time, t, repeat_delay, repeat_rate);
+}
+
+// Note that Dear ImGui doesn't know the meaning/semantic of ImGuiKey from 0..511: they are legacy native keycodes.
+// Consider transitioning from 'IsKeyDown(MY_ENGINE_KEY_A)' (<1.87) to IsKeyDown(ImGuiKey_A) (>= 1.87)
+// bool IsKeyDown(ImGuiKey key)
+pub fn is_key_down(g: &mut Context, key: Key) -> bool
+{
+    const ImGuiKeyData* key_data = GetKeyData(key);
+    if (!key_data.down)
+        return false;
+    return true;
+}
+
+// bool IsKeyPressed(ImGuiKey key, bool repeat)
+pub fn is_key_pressed(g: &mut Context, key: Key, repeat: bool) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    const ImGuiKeyData* key_data = GetKeyData(key);
+    const float t = key_data.down_duration;
+    if (t < 0.0)
+        return false;
+    const bool pressed = (t == 0.0) || (repeat && t > g.io.KeyRepeatDelay && GetKeyPressedAmount(key, g.io.KeyRepeatDelay, g.io.KeyRepeatRate) > 0);
+    if (!pressed)
+        return false;
+    return true;
+}
+
+// bool IsKeyReleased(ImGuiKey key)
+pub fn is_key_release(g: &mut Context, key: Key) -> bool
+{
+    const ImGuiKeyData* key_data = GetKeyData(key);
+    if (key_data.down_durationPrev < 0.0 || key_data.down)
+        return false;
+    return true;
 }

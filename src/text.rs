@@ -233,9 +233,9 @@ pub unsafe fn InputTextCalcTextSizeW(text_begins: *mut ImWchar, text_end: *mut I
 {
     // ImGuiContext& g = *GImGui;
     // ImFont* font = g.font;
-    let font = GImGui.font;
+    let font = g.font;
     // const float line_height = g.font_size;
-    let line_height = GImGui.font_size;
+    let line_height = g.font_size;
     // const float scale = line_height / font->font_size;
     let scale = line_height / font.font_size;
     // Vector2D text_size = Vector2D(0, 0);
@@ -331,4 +331,18 @@ pub fn calc_text_size(g: &mut Context, text: &str, hide_text_after_double_hash: 
     text_size.x = f32::floor(text_size.x + 0.99999);
 
     return text_size;
+}
+
+// float GetTextLineHeight()
+pub fn get_text_line_height(g: &mut Context) -> f32
+{
+    // ImGuiContext& g = *GImGui;
+    return g.font_size;
+}
+
+// float GetTextLineHeightWithSpacing()
+pub fn get_text_line_height_with_spacing(g: &mut Context) -> f32
+{
+    // ImGuiContext& g = *GImGui;
+    return g.font_size + g.style.ItemSpacing.y;
 }

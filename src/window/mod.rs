@@ -36,12 +36,12 @@ use crate::draw_list::add_draw_list_to_draw_data;
 
 use crate::hash::{hash_data, hash_string};
 use crate::id::set_active_id;
-use crate::input::NavLayer;
+use crate::input::{mouse, NavLayer};
 use crate::item::{ItemStatusFlags, LastItemData};
 use crate::kv_store::Storage;
 use crate::layout::LayoutType;
 use crate::menu::ImGuiMenuColumns;
-use crate::{draw_data, mouse};
+use crate::draw_data;
 use crate::rect::Rect;
 use crate::size_callback_data::SizeCallbackData;
 use crate::stack::ImGuiStackSizes;

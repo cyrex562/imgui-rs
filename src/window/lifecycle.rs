@@ -352,7 +352,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
     // Docking
     // (NB: during the frame dock nodes are created, it is possible that (window->dock_is_active == false) even though (window->dock_node->windows.size > 1)
-    IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL); // Cannot be both
+    // IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL); // Cannot be both
     if (g.next_window_data.flags & NextWindowDataFlags::HasDock)
         SetWindowDock(window, g.next_window_data.DockId, g.next_window_data.DockCond);
     if (first_begin_of_the_frame)
@@ -367,7 +367,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
             flags = window.flags;
             if (window.dock_is_active)
             {
-                IM_ASSERT(window.dock_node != NULL);
+                // IM_ASSERT(window.dock_node != NULL);
                 g.next_window_data.flags &= ~NextWindowDataFlags::HasSizeConstraint; // Docking currently override constraints
             }
 
@@ -387,7 +387,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     // Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
     ImGuiWindow* parent_window_in_stack = (window.dock_is_active && window.dock_node.host_window) ? window.dock_node.host_window : g.current_window_stack.empty() ? NULL : g.current_window_stack.back().Window;
     ImGuiWindow* parent_window = first_begin_of_the_frame ? ((flags & (WindowFlags::ChildWindow | WindowFlags::Popup)) ? parent_window_in_stack : NULL) : window.parent_window;
-    IM_ASSERT(parent_window != NULL || !(flags & WindowFlags::ChildWindow));
+    // IM_ASSERT(parent_window != NULL || !(flags & WindowFlags::ChildWindow));
 
     // We allow window memory to be compacted so recreate the base stack when needed.
     if (window.IDStack.size == 0)
@@ -646,7 +646,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // Position child window
         if (flags & WindowFlags::ChildWindow)
         {
-            IM_ASSERT(parent_window && parent_window.active);
+            // IM_ASSERT(parent_window && parent_window.active);
             window.BeginOrderWithinParent = parent_window.dc.ChildWindows.size;
             parent_window.dc.ChildWindows.push_back(window);
             if (!(flags & WindowFlags::Popup) && !window_pos_set_by_api && !window_is_child_tooltip)
@@ -739,7 +739,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
                 if (window == window.root_window)
                 {
                     ImGuiWindow* blocking_modal = FindBlockingModal(window);
-                    IM_ASSERT(blocking_modal != NULL);
+                    // IM_ASSERT(blocking_modal != NULL);
                     BringWindowToDisplayBehind(window, blocking_modal);
                 }
             }
@@ -749,7 +749,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 #ifdef IMGUI_ENABLE_TEST_ENGINE
         if (g.TestEngineHookItems)
         {
-            IM_ASSERT(window.IDStack.size == 1);
+            // IM_ASSERT(window.IDStack.size == 1);
             window.IDStack.size = 0;
             IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.id);
             IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.Name, (g.hovered_window == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
@@ -867,7 +867,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // DRAWING
 
         // Setup draw list and outer clipping rectangle
-        IM_ASSERT(window.draw_list.cmd_buffer.size == 1 && window.draw_list.cmd_buffer[0].elem_count == 0);
+        // IM_ASSERT(window.draw_list.cmd_buffer.size == 1 && window.draw_list.cmd_buffer[0].elem_count == 0);
         window.draw_list.PushTextureID(g.font.container_atlas.TexID);
         PushClipRect(host_rect.min, host_rect.max, false);
 
@@ -1070,7 +1070,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         {
             // Child window can be out of sight and have "negative" clip windows.
             // Mark them as collapsed so commands are skipped earlier (we can't manually collapse them because they have no title bar).
-            IM_ASSERT((flags& WindowFlags::NoTitleBar) != 0 || (window.dock_is_active));
+            // IM_ASSERT((flags& WindowFlags::NoTitleBar) != 0 || (window.dock_is_active));
             if (!(flags & WindowFlags::AlwaysAutoResize) && window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0) // FIXME: Doesn't make sense for ChildWindow??
             {
                 const bool nav_request = (flags & WindowFlags::NavFlattened) && (g.NavAnyRequest && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
@@ -1116,7 +1116,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // - when 'window_just_activated_by_user' is set -> hidden_frames_cannot_skip_items is set -> skip_items always false
         // - in BeginDocked() path when DockNodeIsVisible == dock_tab_is_visible == true -> hidden _should_ be all zero // FIXME: Not formally proven, hence the assert.
         if (window.skip_items && !window.Appearing)
-            IM_ASSERT(window.Appearing == false); // Please report on GitHub if this triggers: https://github.com/ocornut/imgui/issues/4177
+            // IM_ASSERT(window.Appearing == false); // Please report on GitHub if this triggers: https://github.com/ocornut/imgui/issues/4177
     }
 
     return !window.skip_items;
@@ -1125,20 +1125,20 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
 pub fn end(g: &mut Context)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
 
     // Error checking: verify that user hasn't called End() too many times!
     if (g.current_window_stack.size <= 1 && g.within_frame_scope_with_implicit_window)
     {
-        IM_ASSERT_USER_ERROR(g.current_window_stack.size > 1, "Calling End() too many times!");
+        // IM_ASSERT_USER_ERROR(g.current_window_stack.size > 1, "Calling End() too many times!");
         return;
     }
-    IM_ASSERT(g.current_window_stack.size > 0);
+    // IM_ASSERT(g.current_window_stack.size > 0);
 
     // Error checking: verify that user doesn't directly call End() on a child window.
     if ((window.flags & WindowFlags::ChildWindow) && !(window.flags & WindowFlags::DockNodeHost) && !window.dock_is_active)
-        IM_ASSERT_USER_ERROR(g.within_end_child, "Must call EndChild() and not End()!");
+        // IM_ASSERT_USER_ERROR(g.within_end_child, "Must call EndChild() and not End()!");
 
     // Close anything that is open
     if (window.dc.CurrentColumns)

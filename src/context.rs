@@ -950,7 +950,7 @@ pub fn set_active_id_using_nav_and_keys(g: &mut Context)
 // void ImGui::BeginDisabled(bool disabled)
 pub fn begin_disabled(g: &mut Context, disabled: bool)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     bool was_disabled = (g.current_item_flags & ItemFlags::Disabled) != 0;
     if (!was_disabled && disabled)
     {
@@ -966,8 +966,8 @@ pub fn begin_disabled(g: &mut Context, disabled: bool)
 // void ImGui::EndDisabled()
 pub fn end_disabled(g: &mut Context)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(g.DisabledStackSize > 0);
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.DisabledStackSize > 0);
     g.DisabledStackSize--;
     bool was_disabled = (g.current_item_flags & ItemFlags::Disabled) != 0;
     //PopItemFlag();

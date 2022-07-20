@@ -101,7 +101,7 @@ struct ImOptionalIndex
 
     inline int Value() const
     {
-        IM_ASSERT(HasValue());
+        // IM_ASSERT(HasValue());
         return _Index;
     }
 
@@ -360,7 +360,7 @@ namespace IMNODES_NAMESPACE
 static inline ImNodesEditorContext& EditorContextGet()
 {
     // No editor context was set! Did you forget to call ImNodes::CreateContext()?
-    IM_ASSERT(GImNodes.EditorCtx != NULL);
+    // IM_ASSERT(GImNodes.EditorCtx != NULL);
     return *GImNodes.EditorCtx;
 }
 
@@ -408,7 +408,7 @@ inline void ObjectPoolUpdate(ImObjectPool<ImNodeData>& nodes)
                 // unused
                 ImVector<int>&   depth_stack = EditorContextGet().NodeDepthOrder;
                 const int* const elem = depth_stack.find(i);
-                IM_ASSERT(elem != depth_stack.end());
+                // IM_ASSERT(elem != depth_stack.end());
                 depth_stack.erase(elem);
 
                 nodes.IdMap.SetInt(id, -1);
@@ -439,7 +439,7 @@ static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const in
         if (objects.FreeList.empty())
         {
             index = objects.Pool.size();
-            IM_ASSERT(objects.Pool.size() == objects.InUse.size());
+            // IM_ASSERT(objects.Pool.size() == objects.InUse.size());
             const int new_size = objects.Pool.size() + 1;
             objects.Pool.resize(new_size);
             objects.InUse.resize(new_size);
@@ -470,7 +470,7 @@ inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const in
         if (nodes.FreeList.empty())
         {
             node_idx = nodes.Pool.size();
-            IM_ASSERT(nodes.Pool.size() == nodes.InUse.size());
+            // IM_ASSERT(nodes.Pool.size() == nodes.InUse.size());
             const int new_size = nodes.Pool.size() + 1;
             nodes.Pool.resize(new_size);
             nodes.InUse.resize(new_size);

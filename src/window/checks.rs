@@ -7,7 +7,7 @@ use crate::window::{HoveredFlags, Window, WindowFlags};
 // bool ImGui::is_window_above(ImGuiWindow* potential_above, ImGuiWindow* potential_below)
 pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_below: &mut Window)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
 
     // It would be saner to ensure that display layer is always reflected in the g.windows[] order, which would likely requires altering all manipulations of that array
     const int display_layer_delta = get_window_display_layer(potential_above) - get_window_display_layer(potential_below);
@@ -29,8 +29,8 @@ pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_
 // bool ImGui::IsWindowHovered(ImGuiHoveredFlags flags)
 pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> bool
 {
-    IM_ASSERT((flags & (ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenDisabled)) == 0);   // flags not supported by this function
-    ImGuiContext& g = *GImGui;
+    // IM_ASSERT((flags & (ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenDisabled)) == 0);   // flags not supported by this function
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* ref_window = g.hovered_window;
     ImGuiWindow* cur_window = g.current_window;
     if (ref_window == NULL)
@@ -38,7 +38,7 @@ pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> 
 
     if ((flags & ImGuiHoveredFlags_AnyWindow) == 0)
     {
-        IM_ASSERT(cur_window); // Not inside a Begin()/End()
+        // IM_ASSERT(cur_window); // Not inside a Begin()/End()
         const bool popup_hierarchy = (flags & ImGuiHoveredFlags_NoPopupHierarchy) == 0;
         const bool dock_hierarchy = (flags & ImGuiHoveredFlags_DockHierarchy) != 0;
         if (flags & ImGuiHoveredFlags_RootWindow)
@@ -66,7 +66,7 @@ pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> 
 // bool ImGui::IsWindowFocused(ImGuiFocusedFlags flags)
 pub fn is_window_focused(g: &mut Context, flags: &mut HashSet<FocusedFlags>)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* ref_window = g.nav_window;
     ImGuiWindow* cur_window = g.current_window;
 
@@ -75,7 +75,7 @@ pub fn is_window_focused(g: &mut Context, flags: &mut HashSet<FocusedFlags>)
     if (flags & ImGuiFocusedFlags_AnyWindow)
         return true;
 
-    IM_ASSERT(cur_window); // Not inside a Begin()/End()
+    // IM_ASSERT(cur_window); // Not inside a Begin()/End()
     const bool popup_hierarchy = (flags & ImGuiFocusedFlags_NoPopupHierarchy) == 0;
     const bool dock_hierarchy = (flags & ImGuiFocusedFlags_DockHierarchy) != 0;
     if (flags & ImGuiHoveredFlags_RootWindow)
@@ -90,7 +90,7 @@ pub fn is_window_focused(g: &mut Context, flags: &mut HashSet<FocusedFlags>)
 // bool ImGui::IsWindowDocked()
 pub fn is_window_docked(g: &mut Context) -> bool
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     return g.current_window.dock_is_active;
 }
 

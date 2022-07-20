@@ -1,5 +1,12 @@
 use std::ffi::c_void;
+use crate::Context;
+use crate::globals::GImGui;
 use crate::imgui_h::{ImGuiCond, ImGuiID, ImGuiInputTextFlags, ImGuiKey};
+use crate::vectors::two_d::Vector2D;
+
+pub mod mouse;
+pub mod keyboard;
+pub mod keys;
 
 // Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
 // The callback function should return 0 by default.
@@ -379,4 +386,159 @@ pub enum NavLayer
     Main,    // Main scrolling layer
     Menu,    // Menu layer (access with Alt/ImGuiNavInput_Menu)
 
+}
+
+// #ifndef IMGUI_DISABLE_DEBUG_TOOLS
+// static const char* GetInputSourceName(ImGuiInputSource source)
+pub fn get_input_source_name(g: &mut Context, source: InputSource) -> String
+{
+    const char* input_source_names[] = { "None", "Mouse", "Keyboard", "Gamepad", "Nav", "Clipboard" };
+    // IM_ASSERT(IM_ARRAYSIZE(input_source_names) == InputSource::COUNT && source >= 0 && source < InputSource::COUNT);
+    return input_source_names[source];
+}
+
+// Process input queue
+// We always call this with the value of 'bool g.io.config_input_trickle_event_queue'.
+// - trickle_fast_inputs = false : process all events, turn into flattened input state (e.g. successive down/up/down/up will be lost)
+// - trickle_fast_inputs = true  : process as many events as possible (successive down/up/down/up will be trickled over several frames so nothing is lost) (new feature in 1.87)
+// void update_input_events(bool trickle_fast_inputs)
+pub fn update_input_events(g: &mut Context, trickle_fast_inputs: bool)
+{
+    // ImGuiContext& g = *GImGui;
+    ImGuiIO& io = g.io;
+
+    // Only trickle chars<>key when working with InputText()
+    // FIXME: InputText() could parse event trail?
+    // FIXME: Could specialize chars<>keys trickling rules for control keys (those not typically associated to characters)
+    const bool trickle_interleaved_keys_and_text = (trickle_fast_inputs && g.want_text_input_next_frame == 1);
+
+    bool mouse_moved = false, mouse_wheeled = false, key_changed = false, text_inputted = false;
+    int  mouse_button_changed = 0x00;
+    ImBitArray<ImGuiKey_KeysData_SIZE> key_changed_mask;
+
+    int event_n = 0;
+    for (; event_n < g.InputEventsQueue.size; event_n += 1)
+    {
+        const ImGuiInputEvent* e = &g.InputEventsQueue[event_n];
+        if (e.Type == ImGuiInputEventType_MousePos)
+        {
+            Vector2D event_pos(e.MousePos.PosX, e.MousePos.PosY);
+            if (is_mouse_pos_valid(&event_pos))
+                event_pos = Vector2D::new(f32::floor(event_pos.x), f32::floor(event_pos.y)); // Apply same flooring as UpdateMouseInputs()
+            if (io.mouse_pos.x != event_pos.x || io.mouse_pos.y != event_pos.y)
+            {
+                // Trickling Rule: Stop processing queued events if we already handled a mouse button change
+                if (trickle_fast_inputs && (mouse_button_changed != 0 || mouse_wheeled || key_changed || text_inputted))
+                    break;
+                io.mouse_pos = event_pos;
+                mouse_moved = true;
+            }
+        }
+        else if (e.Type == ImGuiInputEventType_MouseButton)
+        {
+            const ImGuiMouseButton button = e.MouseButton.Button;
+            // IM_ASSERT(button >= 0 && button < ImGuiMouseButton_COUNT);
+            if (io.mouse_down[button] != e.MouseButton.down)
+            {
+                // Trickling Rule: Stop processing queued events if we got multiple action on the same button
+                if (trickle_fast_inputs && ((mouse_button_changed & (1 << button)) || mouse_wheeled))
+                    break;
+                io.mouse_down[button] = e.MouseButton.down;
+                mouse_button_changed |= (1 << button);
+            }
+        }
+        else if (e.Type == ImGuiInputEventType_MouseWheel)
+        {
+            if (e.mouse_wheel.WheelX != 0.0 || e.mouse_wheel.WheelY != 0.0)
+            {
+                // Trickling Rule: Stop processing queued events if we got multiple action on the event
+                if (trickle_fast_inputs && (mouse_moved || mouse_button_changed != 0))
+                    break;
+                io.mouse_wheel_h += e.mouse_wheel.WheelX;
+                io.mouse_wheel += e.mouse_wheel.WheelY;
+                mouse_wheeled = true;
+            }
+        }
+        else if (e.Type == ImGuiInputEventType_MouseViewport)
+        {
+            io.MouseHoveredViewport = e.mouse_viewport.HoveredViewportID;
+        }
+        else if (e.Type == ImGuiInputEventType_Key)
+        {
+            ImGuiKey key = e.Key.Key;
+            // IM_ASSERT(key != ImGuiKey_None);
+            const int keydata_index = (key - Key::KeysDataOffset);
+            ImGuiKeyData* keydata = &io.keys_data[keydata_index];
+            if (keydata.down != e.Key.down || keydata.analog_value != e.Key.analog_value)
+            {
+                // Trickling Rule: Stop processing queued events if we got multiple action on the same button
+                if (trickle_fast_inputs && keydata.down != e.Key.down && (key_changed_mask.TestBit(keydata_index) || text_inputted || mouse_button_changed != 0))
+                    break;
+                keydata.down = e.Key.down;
+                keydata.analog_value = e.Key.analog_value;
+                key_changed = true;
+                key_changed_mask.SetBit(keydata_index);
+
+                if (key == Key::ModCtrl || key == Key::ModShift || key == Key::ModAlt || key == Key::ModSuper)
+                {
+                    if (key == Key::ModCtrl) { io.key_ctrl = keydata.down; }
+                    if (key == Key::ModShift) { io.key_shift = keydata.down; }
+                    if (key == Key::ModAlt) { io.key_alt = keydata.down; }
+                    if (key == Key::ModSuper) { io.key_super = keydata.down; }
+                    io.key_mods = get_merged_mod_flags();
+                }
+
+                // Allow legacy code using io.keys_down[GetKeyIndex()] with new backends
+#ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+                io.keys_down[key] = keydata.down;
+                if (io.key_map[key] != -1)
+                    io.keys_down[io.key_map[key]] = keydata.down;
+
+            }
+        }
+        else if (e.Type == ImGuiInputEventType_Text)
+        {
+            // Trickling Rule: Stop processing queued events if keys/mouse have been interacted with
+            if (trickle_fast_inputs && ((key_changed && trickle_interleaved_keys_and_text) || mouse_button_changed != 0 || mouse_moved || mouse_wheeled))
+                break;
+            unsigned int c = e.Text.Char;
+            io.input_queue_characters.push_back(c <= IM_UNICODE_CODEPOINT_MAX ? (ImWchar)c : IM_UNICODE_CODEPOINT_INVALID);
+            if (trickle_interleaved_keys_and_text)
+                text_inputted = true;
+        }
+        else if (e.Type == ImGuiInputEventType_Focus)
+        {
+            // We intentionally overwrite this and process lower, in order to give a chance
+            // to multi-viewports backends to queue add_focus_event(false) + add_focus_event(true) in same frame.
+            io.AppFocusLost = !e.AppFocused.Focused;
+        }
+        else
+        {
+            // IM_ASSERT(0 && "Unknown event!");
+        }
+    }
+
+    // Record trail (for domain-specific applications wanting to access a precise trail)
+    //if (event_n != 0) IMGUI_DEBUG_LOG_IO("Processed: %d / Remaining: %d\n", event_n, g.input_events_queue.size - event_n);
+    for (int n = 0; n < event_n; n += 1)
+        g.input_events_trail.push_back(g.InputEventsQueue[n]);
+
+    // [DEBUG]
+    /*if (event_n != 0)
+        for (int n = 0; n < g.input_events_queue.size; n++)
+            DebugPrintInputEvent(n < event_n ? "Processed" : "Remaining", &g.input_events_queue[n]);*/
+
+    // Remaining events will be processed on the next frame
+    if (event_n == g.InputEventsQueue.size)
+        g.InputEventsQueue.resize(0);
+    else
+        g.InputEventsQueue.erase(g.InputEventsQueue.data, g.InputEventsQueue.data + event_n);
+
+    // clear buttons state when focus is lost
+    // (this is useful so e.g. releasing Alt after focus loss on Alt-Tab doesn't trigger the Alt menu toggle)
+    if (g.io.AppFocusLost)
+    {
+        g.io.ClearInputKeys();
+        g.io.AppFocusLost = false;
+    }
 }

@@ -226,7 +226,7 @@ impl StyleMod {
 // ImU32 ImGui::get_color_u32(ImGuiCol idx, float alpha_mul)
 pub fn get_color_u32(idx: ImGuiColor, alpha_mul: f32) -> u32
 {
-    let style = &GImGui.style;
+    let style = &g.style;
     let c = style.colors[idx];
     c.w *= style.alpha * alpha_mul;
     return ColorConvertFloat4ToU32(c);
@@ -239,7 +239,7 @@ pub fn get_color_u32_no_alpha(idx: Color) -> u32 {
 // ImU32 ImGui::get_color_u32(const Vector4D& col)
 pub fn GetColorU32_2(col: &mut Vector4D) -> u32
 {
-    let style = &mut GImGui.style;
+    let style = &mut g.style;
     let mut c = col;
     *c.w *= style.alpha;
     return ColorConvertFloat4ToU32(c);
@@ -249,14 +249,14 @@ pub fn GetColorU32_2(col: &mut Vector4D) -> u32
 pub fn GetStyleColorVec4(idx: ImGuiColor) -> Vector4D
 {
     // ImGuiStyle& style = GImGui.style;
-    let style = &GImGui.style;
+    let style = &g.style;
     style.colors[idx]
 }
 
 // ImU32 ImGui::get_color_u32(ImU32 col)
 pub fn GetColorU32_3(col: u32) -> u32
 {
-    let style = &GImGui.style;
+    let style = &g.style;
     if style.alpha >= 1.0 {
         return col;
     }
@@ -491,7 +491,7 @@ pub fn GetStyleColorName(idx: &ImGuiColor) -> String
 pub fn StyleColorsDark(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-    let style = if dst.is_null() == false { dst } else { &GImGui.style };
+    let style = if dst.is_null() == false { dst } else { &g.style };
     // Vector4D* colors = style->colors;
     let colors = &mut style.colors;
 
@@ -556,7 +556,7 @@ pub fn StyleColorsDark(dst: *mut Style)
 pub fn StyleColorsClassic(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-    let style = if dst.is_null() == false { dst } else { &GImGui.style };
+    let style = if dst.is_null() == false { dst } else { &g.style };
     // Vector4D* colors = style->colors;
     let colors = &mut style.colors;
     
@@ -622,7 +622,7 @@ pub fn StyleColorsClassic(dst: *mut Style)
 pub fn StyleColorsLight(dst: *mut Style)
 {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-    let style = if dst.is_null() == false { dst } else { &GImGui.style };
+    let style = if dst.is_null() == false { dst } else { &g.style };
     // Vector4D* colors = style->colors;
     let colors = &mut style.colors;
 

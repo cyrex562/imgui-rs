@@ -25,7 +25,7 @@ pub fn set_window_pos(g: &mut Context, window: &mut Window, pos: &Vector2D, cond
     if (cond && (window.set_window_pos_allow_flags & cond) == 0)
         return;
 
-    IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
+    // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     window.set_window_pos_allow_flags &= ~(ImGuiCond_Once | Cond::FirstUseEver | ImGuiCond_Appearing);
     window.SetWindowPosVal = Vector2D::new(f32::MAX, f32::MAX);
 

@@ -87,7 +87,7 @@ impl ImGuiListClipper {
     //  void  End();             // Automatically called on the last call of Step() that returns false.
     pub fn end(&mut self) {
 
-        ImGuiContext& g = *GImGui;
+        // ImGuiContext& g = *GImGui;
     if (ImGuiListClipperData* data = (ImGuiListClipperData*)TempData)
     {
         // In theory here we should assert that we are already at the right position, but it seems saner to just seek at the end and not assert/crash the user.
@@ -95,7 +95,7 @@ impl ImGuiListClipper {
             ImGuiListClipper_SeekCursorForItem(this, ItemsCount);
 
         // Restore temporary buffer and fix back pointers which may be invalidated when nesting
-        IM_ASSERT(data.ListClipper == this);
+        // IM_ASSERT(data.ListClipper == this);
         data.StepNo = data.Ranges.size;
         if (g.ClipperTempDataStacked -= 1 > 0)
         {
@@ -128,10 +128,10 @@ pub fn GetSkipItemForListClipping() -> bool
 {
     // ImGuiContext& g = *GImGui;
     // return (g.current_table ? g.current_table->HostSkipItems : g.current_window->skip_items);
-    if GImGui.CurrentTable {
-        GImGui.CurrentTable.HostSkipItems
+    if g.CurrentTable {
+        g.CurrentTable.HostSkipItems
     } else {
-        GImGui.current_window.skip_items
+        g.current_window.skip_items
     }
 
 }
@@ -181,23 +181,23 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     // ImGuiContext& g = *GImGui;
     // ImGuiWindow* window = g.current_window;
-    let window = GImGui.current_window;
+    let window = g.current_window;
     // float off_y = pos_y - window->dc.cursor_pos.y;
     let off_y = pos_y - window.dc.cursor_pos.y;
     // window->dc.cursor_pos.y = pos_y;
     *window.dc.cursor_pos.y = pos_y;
     // window->dc.CursorMaxPos.y = ImMax(window->dc.CursorMaxPos.y, pos_y - g.style.ItemSpacing.y);
-    *window.dc.cursor_max_pos.y = ImMaxF32(window.dc.cursor_max_pos.y, pos_y - GImGui.style.ItemSpacing.y);
+    *window.dc.cursor_max_pos.y = ImMaxF32(window.dc.cursor_max_pos.y, pos_y - g.style.ItemSpacing.y);
     // window->dc.CursorPosPrevLine.y = window->dc.cursor_pos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
     *window.dc.CursorPosPrevLine.y = window.dc.cursor_pos.y - line_height;
     // window->dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
-    *window.dc.PrevLineSize.y = (line_height - GImGui.style.ItemSpacing.y);
+    *window.dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);
     let columns = window.dc.CurrentColumns;
     if (columns.is_null() == false) {
         columns.LineMinY = window.dc.cursor_pos.y;
     }                         // Setting this so that cell Y position are set properly
     // if (ImGuiTable* table = g.current_table)
-    let table = GImGui.CurrentTable;
+    let table = g.CurrentTable;
     if table.is_null() == false
     {
         if (table.IsInsideRow){
@@ -250,18 +250,18 @@ pub fn seek_cursor_for_item(clipper: *mut ImGuiListClipper, item_n: usize)
 void ImGuiListClipper::ForceDisplayRangeByIndices(int item_min, int item_max)
 {
     ImGuiListClipperData* data = (ImGuiListClipperData*)TempData;
-    IM_ASSERT(DisplayStart < 0); // Only allowed after Begin() and if there has not been a specified range yet.
-    IM_ASSERT(item_min <= item_max);
+    // IM_ASSERT(DisplayStart < 0); // Only allowed after Begin() and if there has not been a specified range yet.
+    // IM_ASSERT(item_min <= item_max);
     if (item_min < item_max)
         data.Ranges.push_back(ImGuiListClipperRange::FromIndices(item_min, item_max));
 }
 
 bool ImGuiListClipper::Step()
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     ImGuiListClipperData* data = (ImGuiListClipperData*)TempData;
-    IM_ASSERT(data != NULL && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
+    // IM_ASSERT(data != NULL && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
 
     ImGuiTable* table = g.CurrentTable;
     if (table && table.IsInsideRow)
@@ -305,16 +305,16 @@ bool ImGuiListClipper::Step()
     // Step 1: Let the clipper infer height from first range
     if (ItemsHeight <= 0.0)
     {
-        IM_ASSERT(data.StepNo == 1);
+        // IM_ASSERT(data.StepNo == 1);
         if (table)
-            IM_ASSERT(table.RowPosY1 == StartPosY && table.RowPosY2 == window.dc.cursor_pos.y);
+            // IM_ASSERT(table.RowPosY1 == StartPosY && table.RowPosY2 == window.dc.cursor_pos.y);
 
         ItemsHeight = (window.dc.cursor_pos.y - StartPosY) / (DisplayEnd - DisplayStart);
         bool affected_by_floating_point_precision = ImIsFloatAboveGuaranteedIntegerPrecision(StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.dc.cursor_pos.y);
         if (affected_by_floating_point_precision)
             ItemsHeight = window.dc.PrevLineSize.y + g.style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
 
-        IM_ASSERT(ItemsHeight > 0.0 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
+        // IM_ASSERT(ItemsHeight > 0.0 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
         calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.
     }
 

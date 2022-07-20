@@ -386,3 +386,17 @@ pub fn end_frame(g: &mut Context)
 
     call_context_hooks(g, ImGuiContextHookType_EndFramePost);
 }
+
+// float GetFrameHeight()
+pub fn get_frame_height(g: &mut Context) -> f32
+{
+    // ImGuiContext& g = *GImGui;
+    return g.font_size + g.style.frame_padding.y * 2.0;
+}
+
+// float GetFrameHeightWithSpacing()
+pub fn get_frame_height_with_spacing(g: &mut Context) -> f32
+{
+    // ImGuiContext& g = *GImGui;
+    return g.font_size + g.style.frame_padding.y * 2.0 + g.style.ItemSpacing.y;
+}

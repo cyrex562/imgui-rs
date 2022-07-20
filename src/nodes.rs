@@ -67,7 +67,7 @@ inline Vector2D EvalCubicBezier(
 // Calculates the closest point along each bezier curve segment.
 Vector2D GetClosestPointOnCubicBezier(const int num_segments, const Vector2D& p, const CubicBezier& cb)
 {
-    IM_ASSERT(num_segments > 0);
+    // IM_ASSERT(num_segments > 0);
     Vector2D p_last = cb.P0;
     Vector2D p_closest;
     float  p_closest_dist = f32::MAX;
@@ -119,7 +119,7 @@ inline CubicBezier GetCubicBezier(
     const ImNodesAttributeType start_type,
     const float                line_segments_per_length)
 {
-    IM_ASSERT(
+    // IM_ASSERT(
         (start_type == ImNodesAttributeType_Input) || (start_type == ImNodesAttributeType_Output));
     if (start_type == ImNodesAttributeType_Input)
     {
@@ -370,8 +370,8 @@ void ImDrawListSplitterSwapChannels(
         return;
     }
 
-    IM_ASSERT(lhs_idx >= 0 && lhs_idx < splitter._Count);
-    IM_ASSERT(rhs_idx >= 0 && rhs_idx < splitter._Count);
+    // IM_ASSERT(lhs_idx >= 0 && lhs_idx < splitter._Count);
+    // IM_ASSERT(rhs_idx >= 0 && rhs_idx < splitter._Count);
 
     ImDrawChannel& lhs_channel = splitter._Channels[lhs_idx];
     ImDrawChannel& rhs_channel = splitter._Channels[rhs_idx];
@@ -467,7 +467,7 @@ void DrawListActivateNodeBackground(const int node_idx)
     // * SetNodeGridSpacePos
     // * SetNodeDraggable
     // after the BeginNode/EndNode function calls?
-    IM_ASSERT(submission_idx != -1);
+    // IM_ASSERT(submission_idx != -1);
     const int background_channel_idx = DrawListSubmissionIdxToBackgroundChannelIdx(submission_idx);
     GImNodes.CanvasDrawList->_Splitter.SetCurrentChannel(
         GImNodes.CanvasDrawList, background_channel_idx);
@@ -475,7 +475,7 @@ void DrawListActivateNodeBackground(const int node_idx)
 
 void DrawListSwapSubmissionIndices(const int lhs_idx, const int rhs_idx)
 {
-    IM_ASSERT(lhs_idx != rhs_idx);
+    // IM_ASSERT(lhs_idx != rhs_idx);
 
     const int lhs_foreground_channel_idx = DrawListSubmissionIdxToForegroundChannelIdx(lhs_idx);
     const int lhs_background_channel_idx = DrawListSubmissionIdxToBackgroundChannelIdx(lhs_idx);
@@ -499,7 +499,7 @@ void DrawListSortChannelsByDepth(const ImVector<int>& node_idx_depth_order)
         return;
     }
 
-    IM_ASSERT(node_idx_depth_order.size == GImNodes.NodeIdxSubmissionOrder.size);
+    // IM_ASSERT(node_idx_depth_order.size == GImNodes.NodeIdxSubmissionOrder.size);
 
     int start_idx = node_idx_depth_order.size - 1;
 
@@ -529,7 +529,7 @@ void DrawListSortChannelsByDepth(const ImVector<int>& node_idx_depth_order)
                 break;
             }
         }
-        IM_ASSERT(submission_idx >= 0);
+        // IM_ASSERT(submission_idx >= 0);
 
         if (submission_idx == depth_idx)
         {
@@ -551,7 +551,7 @@ Vector2D GetScreenSpacePinCoordinates(
     const Rect&              attribute_rect,
     const ImNodesAttributeType type)
 {
-    IM_ASSERT(type == ImNodesAttributeType_Input || type == ImNodesAttributeType_Output);
+    // IM_ASSERT(type == ImNodesAttributeType_Input || type == ImNodesAttributeType_Output);
     const float x = type == ImNodesAttributeType_Input
                         ? (node_rect.min.x - GImNodes.Style.PinOffset)
                         : (node_rect.max.x + GImNodes.Style.PinOffset);
@@ -604,7 +604,7 @@ void BeginNodeSelection(ImNodesEditorContext& editor, const int node_idx)
         // Ensure that individually selected nodes get rendered on top
         ImVector<int>&   depth_stack = editor.NodeDepthOrder;
         const int* const elem = depth_stack.find(node_idx);
-        IM_ASSERT(elem != depth_stack.end());
+        // IM_ASSERT(elem != depth_stack.end());
         depth_stack.erase(elem);
         depth_stack.push_back(node_idx);
     }
@@ -1117,7 +1117,7 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
     case ImNodesClickInteractionType_None:
         break;
     default:
-        IM_ASSERT(!"Unreachable code!");
+        // IM_ASSERT(!"Unreachable code!");
         break;
     }
 }
@@ -1225,7 +1225,7 @@ ImOptionalIndex ResolveHoveredNode(const ImVector<int>& depth_stack)
         }
     }
 
-    IM_ASSERT(node_idx_on_top != -1);
+    // IM_ASSERT(node_idx_on_top != -1);
     return ImOptionalIndex(node_idx_on_top);
 }
 
@@ -1473,7 +1473,7 @@ void DrawPinShape(const Vector2D& pin_pos, const ImPinData& pin, const ImU32 pin
     }
     break;
     default:
-        IM_ASSERT(!"Invalid PinShape value!");
+        // IM_ASSERT(!"Invalid PinShape value!");
         break;
     }
 }
@@ -1639,7 +1639,7 @@ void BeginPinAttribute(
 {
     // Make sure to call BeginNode() before calling
     // BeginAttribute()
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
     GImNodes.CurrentScope = ImNodesScope_Attribute;
 
     ImGui::BeginGroup();
@@ -1663,7 +1663,7 @@ void BeginPinAttribute(
 
 void EndPinAttribute()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Attribute);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Attribute);
     GImNodes.CurrentScope = ImNodesScope_Node;
 
     ImGui::PopID();
@@ -1950,8 +1950,8 @@ template<typename T>
 void SelectObject(const ImObjectPool<T>& objects, ImVector<int>& selected_indices, const int id)
 {
     const int idx = ObjectPoolFind(objects, id);
-    IM_ASSERT(idx >= 0);
-    IM_ASSERT(selected_indices.find(idx) == selected_indices.end());
+    // IM_ASSERT(idx >= 0);
+    // IM_ASSERT(selected_indices.find(idx) == selected_indices.end());
     selected_indices.push_back(idx);
 }
 
@@ -1962,8 +1962,8 @@ void ClearObjectSelection(
     const int              id)
 {
     const int idx = ObjectPoolFind(objects, id);
-    IM_ASSERT(idx >= 0);
-    IM_ASSERT(selected_indices.find(idx) != selected_indices.end());
+    // IM_ASSERT(idx >= 0);
+    // IM_ASSERT(selected_indices.find(idx) != selected_indices.end());
     selected_indices.find_erase_unsorted(idx);
 }
 
@@ -2201,7 +2201,7 @@ void StyleColorsLight(ImNodesStyle* dest)
 
 void BeginNodeEditor()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
     GImNodes.CurrentScope = ImNodesScope_Editor;
 
     // Reset state from previous pass
@@ -2277,7 +2277,7 @@ void BeginNodeEditor()
 
 void EndNodeEditor()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
     GImNodes.CurrentScope = ImNodesScope_None;
 
     ImNodesEditorContext& editor = EditorContextGet();
@@ -2432,10 +2432,10 @@ void MiniMap(
     const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data)
 {
     // Check that editor size fraction is sane; must be in the range (0, 1]
-    IM_ASSERT(minimap_size_fraction > 0.f && minimap_size_fraction <= 1.f);
+    // IM_ASSERT(minimap_size_fraction > 0.f && minimap_size_fraction <= 1.f);
 
     // Remember to call before EndNodeEditor
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
 
     ImNodesEditorContext& editor = EditorContextGet();
 
@@ -2456,7 +2456,7 @@ void MiniMap(
 void BeginNode(const int node_id)
 {
     // Remember to call BeginNodeEditor before calling BeginNode
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
     GImNodes.CurrentScope = ImNodesScope_Node;
 
     ImNodesEditorContext& editor = EditorContextGet();
@@ -2490,7 +2490,7 @@ void BeginNode(const int node_id)
 
 void EndNode()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
     GImNodes.CurrentScope = ImNodesScope_Editor;
 
     ImNodesEditorContext& editor = EditorContextGet();
@@ -2516,20 +2516,20 @@ Vector2D GetNodeDimensions(int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);
-    IM_ASSERT(node_idx != -1); // invalid node_id
+    // IM_ASSERT(node_idx != -1); // invalid node_id
     const ImNodeData& node = editor.Nodes.Pool[node_idx];
     return node.Rect.GetSize();
 }
 
 void BeginNodeTitleBar()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
     ImGui::BeginGroup();
 }
 
 void EndNodeTitleBar()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
     ImGui::EndGroup();
 
     ImNodesEditorContext& editor = EditorContextGet();
@@ -2558,7 +2558,7 @@ void EndOutputAttribute() { EndPinAttribute(); }
 void BeginStaticAttribute(const int id)
 {
     // Make sure to call BeginNode() before calling BeginAttribute()
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Node);
     GImNodes.CurrentScope = ImNodesScope_Attribute;
 
     GImNodes.CurrentAttributeId = id;
@@ -2570,7 +2570,7 @@ void BeginStaticAttribute(const int id)
 void EndStaticAttribute()
 {
     // Make sure to call BeginNode() before calling BeginAttribute()
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Attribute);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Attribute);
     GImNodes.CurrentScope = ImNodesScope_Node;
 
     ImGui::PopID();
@@ -2593,7 +2593,7 @@ void PopAttributeFlag()
 {
     // PopAttributeFlag called without a matching PushAttributeFlag!
     // The bottom value is always the default value, pushed in Initialize().
-    IM_ASSERT(GImNodes.AttributeFlagStack.size() > 1);
+    // IM_ASSERT(GImNodes.AttributeFlagStack.size() > 1);
 
     GImNodes.AttributeFlagStack.pop_back();
     GImNodes.CurrentAttributeFlags = GImNodes.AttributeFlagStack.back();
@@ -2601,7 +2601,7 @@ void PopAttributeFlag()
 
 void Link(const int id, const int start_attr_id, const int end_attr_id)
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Editor);
 
     ImNodesEditorContext& editor = EditorContextGet();
     ImLinkData&           link = ObjectPoolFindOrCreateObject(editor.Links, id);
@@ -2632,7 +2632,7 @@ void PushColorStyle(const ImNodesCol item, unsigned int color)
 
 void PopColorStyle()
 {
-    IM_ASSERT(GImNodes.ColorModifierStack.size() > 0);
+    // IM_ASSERT(GImNodes.ColorModifierStack.size() > 0);
     const ImNodesColElement elem = GImNodes.ColorModifierStack.back();
     GImNodes.Style.colors[elem.Item] = elem.Color;
     GImNodes.ColorModifierStack.pop_back();
@@ -2681,8 +2681,8 @@ static const ImNodesStyleVarInfo GStyleVarInfo[] = {
 
 static const ImNodesStyleVarInfo* GetStyleVarInfo(ImNodesStyleVar idx)
 {
-    IM_ASSERT(idx >= 0 && idx < ImNodesStyleVar_COUNT);
-    IM_ASSERT(IM_ARRAYSIZE(GStyleVarInfo) == ImNodesStyleVar_COUNT);
+    // IM_ASSERT(idx >= 0 && idx < ImNodesStyleVar_COUNT);
+    // IM_ASSERT(IM_ARRAYSIZE(GStyleVarInfo) == ImNodesStyleVar_COUNT);
     return &GStyleVarInfo[idx];
 }
 
@@ -2696,7 +2696,7 @@ void push_style_var(const ImNodesStyleVar item, const float value)
         style_var = value;
         return;
     }
-    IM_ASSERT(0 && "Called PushStyleVar() float variant but variable is not a float!");
+    // IM_ASSERT(0 && "Called PushStyleVar() float variant but variable is not a float!");
 }
 
 void push_style_var(const ImNodesStyleVar item, const Vector2D& value)
@@ -2709,14 +2709,14 @@ void push_style_var(const ImNodesStyleVar item, const Vector2D& value)
         style_var = value;
         return;
     }
-    IM_ASSERT(0 && "Called PushStyleVar() Vector2D variant but variable is not a Vector2D!");
+    // IM_ASSERT(0 && "Called PushStyleVar() Vector2D variant but variable is not a Vector2D!");
 }
 
 void pop_style_var(int count)
 {
     while (count > 0)
     {
-        IM_ASSERT(GImNodes.StyleModifierStack.size() > 0);
+        // IM_ASSERT(GImNodes.StyleModifierStack.size() > 0);
         const ImNodesStyleVarElement style_backup = GImNodes.StyleModifierStack.back();
         GImNodes.StyleModifierStack.pop_back();
         const ImNodesStyleVarInfo* var_info = GetStyleVarInfo(style_backup.Item);
@@ -2766,7 +2766,7 @@ Vector2D GetNodeScreenSpacePos(const int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);
-    IM_ASSERT(node_idx != -1);
+    // IM_ASSERT(node_idx != -1);
     ImNodeData& node = editor.Nodes.Pool[node_idx];
     return GridSpaceToScreenSpace(editor, node.Origin);
 }
@@ -2775,7 +2775,7 @@ Vector2D GetNodeEditorSpacePos(const int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);
-    IM_ASSERT(node_idx != -1);
+    // IM_ASSERT(node_idx != -1);
     ImNodeData& node = editor.Nodes.Pool[node_idx];
     return GridSpaceToEditorSpace(editor, node.Origin);
 }
@@ -2784,7 +2784,7 @@ Vector2D GetNodeGridSpacePos(const int node_id)
 {
     ImNodesEditorContext& editor = EditorContextGet();
     const int             node_idx = ObjectPoolFind(editor.Nodes, node_id);
-    IM_ASSERT(node_idx != -1);
+    // IM_ASSERT(node_idx != -1);
     ImNodeData& node = editor.Nodes.Pool[node_idx];
     return node.Origin;
 }
@@ -2800,8 +2800,8 @@ bool IsEditorHovered() { return MouseInCanvas(); }
 
 bool IsNodeHovered(int* const node_id)
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
-    IM_ASSERT(node_id != NULL);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(node_id != NULL);
 
     const bool is_hovered = GImNodes.HoveredNodeIdx.HasValue();
     if (is_hovered)
@@ -2814,8 +2814,8 @@ bool IsNodeHovered(int* const node_id)
 
 bool IsLinkHovered(int* const link_id)
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
-    IM_ASSERT(link_id != NULL);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(link_id != NULL);
 
     const bool is_hovered = GImNodes.HoveredLinkIdx.HasValue();
     if (is_hovered)
@@ -2828,8 +2828,8 @@ bool IsLinkHovered(int* const link_id)
 
 bool IsPinHovered(int* const attr)
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
-    IM_ASSERT(attr != NULL);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(attr != NULL);
 
     const bool is_hovered = GImNodes.HoveredPinIdx.HasValue();
     if (is_hovered)
@@ -2842,21 +2842,21 @@ bool IsPinHovered(int* const attr)
 
 int NumSelectedNodes()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
     const ImNodesEditorContext& editor = EditorContextGet();
     return editor.SelectedNodeIndices.size();
 }
 
 int NumSelectedLinks()
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
     const ImNodesEditorContext& editor = EditorContextGet();
     return editor.SelectedLinkIndices.size();
 }
 
 void GetSelectedNodes(int* node_ids)
 {
-    IM_ASSERT(node_ids != NULL);
+    // IM_ASSERT(node_ids != NULL);
 
     const ImNodesEditorContext& editor = EditorContextGet();
     for (int i = 0; i < editor.SelectedNodeIndices.size();  += 1i)
@@ -2868,7 +2868,7 @@ void GetSelectedNodes(int* node_ids)
 
 void GetSelectedLinks(int* link_ids)
 {
-    IM_ASSERT(link_ids != NULL);
+    // IM_ASSERT(link_ids != NULL);
 
     const ImNodesEditorContext& editor = EditorContextGet();
     for (int i = 0; i < editor.SelectedLinkIndices.size();  += 1i)
@@ -2928,7 +2928,7 @@ bool IsLinkSelected(int link_id)
 
 bool IsAttributeActive()
 {
-    IM_ASSERT((GImNodes.CurrentScope & ImNodesScope_Node) != 0);
+    // IM_ASSERT((GImNodes.CurrentScope & ImNodesScope_Node) != 0);
 
     if (!GImNodes.ActiveAttribute)
     {
@@ -2940,7 +2940,7 @@ bool IsAttributeActive()
 
 bool IsAnyAttributeActive(int* const attribute_id)
 {
-    IM_ASSERT((GImNodes.CurrentScope & (ImNodesScope_Node | ImNodesScope_Attribute)) == 0);
+    // IM_ASSERT((GImNodes.CurrentScope & (ImNodesScope_Node | ImNodesScope_Attribute)) == 0);
 
     if (!GImNodes.ActiveAttribute)
     {
@@ -2958,8 +2958,8 @@ bool IsAnyAttributeActive(int* const attribute_id)
 bool IsLinkStarted(int* const started_at_id)
 {
     // Call this function after EndNodeEditor()!
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
-    IM_ASSERT(started_at_id != NULL);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(started_at_id != NULL);
 
     const bool is_started = (GImNodes.ImNodesUIState & ImNodesUIState_LinkStarted) != 0;
     if (is_started)
@@ -2975,7 +2975,7 @@ bool IsLinkStarted(int* const started_at_id)
 bool IsLinkDropped(int* const started_at_id, const bool including_detached_links)
 {
     // Call this function after EndNodeEditor()!
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
 
     const ImNodesEditorContext& editor = EditorContextGet();
 
@@ -2998,9 +2998,9 @@ bool IsLinkCreated(
     int* const  ended_at_pin_id,
     bool* const created_from_snap)
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
-    IM_ASSERT(started_at_pin_id != NULL);
-    IM_ASSERT(ended_at_pin_id != NULL);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(started_at_pin_id != NULL);
+    // IM_ASSERT(ended_at_pin_id != NULL);
 
     const bool is_created = (GImNodes.ImNodesUIState & ImNodesUIState_LinkCreated) != 0;
 
@@ -3040,11 +3040,11 @@ bool IsLinkCreated(
     int*  ended_at_pin_id,
     bool* created_from_snap)
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
-    IM_ASSERT(started_at_node_id != NULL);
-    IM_ASSERT(started_at_pin_id != NULL);
-    IM_ASSERT(ended_at_node_id != NULL);
-    IM_ASSERT(ended_at_pin_id != NULL);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(started_at_node_id != NULL);
+    // IM_ASSERT(started_at_pin_id != NULL);
+    // IM_ASSERT(ended_at_node_id != NULL);
+    // IM_ASSERT(ended_at_pin_id != NULL);
 
     const bool is_created = (GImNodes.ImNodesUIState & ImNodesUIState_LinkCreated) != 0;
 
@@ -3085,7 +3085,7 @@ bool IsLinkCreated(
 
 bool IsLinkDestroyed(int* const link_id)
 {
-    IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
+    // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_None);
 
     const bool link_destroyed = GImNodes.DeletedLinkIdx.HasValue();
     if (link_destroyed)
@@ -3133,7 +3133,7 @@ const char* SaveEditorStateToIniString(
     const ImNodesEditorContext* const editor_ptr,
     size_t* const                     data_size)
 {
-    IM_ASSERT(editor_ptr != NULL);
+    // IM_ASSERT(editor_ptr != NULL);
     const ImNodesEditorContext& editor = *editor_ptr;
 
     GImNodes.TextBuffer.clear();

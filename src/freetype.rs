@@ -238,7 +238,7 @@ namespace
 
         // Need an outline for this to work
         FT_GlyphSlot slot = Face.glyph;
-        IM_ASSERT(slot.format == FT_GLYPH_FORMAT_OUTLINE || slot.format == FT_GLYPH_FORMAT_BITMAP);
+        // IM_ASSERT(slot.format == FT_GLYPH_FORMAT_OUTLINE || slot.format == FT_GLYPH_FORMAT_BITMAP);
 
         // Apply convenience transform (this is not picking from real "Bold"/"Italic" fonts! Merely applying FreeType helper transform. Oblique == Slanting)
         if (UserFlags & ImGuiFreeTypeBuilderFlags_Bold)
@@ -275,7 +275,7 @@ namespace
 
     void FreeTypeFont::BlitGlyph(const FT_Bitmap* ft_bitmap, uint32_t* dst, uint32_t dst_pitch, unsigned char* multiply_table)
     {
-        IM_ASSERT(ft_bitmap != NULL);
+        // IM_ASSERT(ft_bitmap != NULL);
         const uint32_t w = ft_bitmap.width;
         const uint32_t h = ft_bitmap.rows;
         const uint8_t* src = ft_bitmap.buffer;
@@ -344,14 +344,14 @@ namespace
                 break;
             }
         default:
-            IM_ASSERT(0 && "FreeTypeFont::BlitGlyph(): Unknown bitmap pixel mode!");
+            // IM_ASSERT(0 && "FreeTypeFont::BlitGlyph(): Unknown bitmap pixel mode!");
         }
     }
 }
 
 #ifndef STB_RECT_PACK_IMPLEMENTATION                        // in case the user already have an implementation in the _same_ compilation unit (e.g. unity builds)
 #ifndef IMGUI_DISABLE_STB_RECT_PACK_IMPLEMENTATION
-#define STBRP_ASSERT(x)     do { IM_ASSERT(x); } while (0)
+#define STBRP_ASSERT(x)     do { // IM_ASSERT(x); } while (0)
 #define STBRP_STATIC
 #define STB_RECT_PACK_IMPLEMENTATION
 
@@ -395,7 +395,7 @@ struct ImFontBuildDstDataFT
 
 bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, unsigned int extra_flags)
 {
-    IM_ASSERT(atlas.ConfigData.size > 0);
+    // IM_ASSERT(atlas.ConfigData.size > 0);
 
     ImFontAtlasBuildInit(atlas);
 
@@ -421,14 +421,14 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         ImFontBuildSrcDataFT& src_tmp = src_tmp_array[src_i];
         ImFontConfig& cfg = atlas.ConfigData[src_i];
         FreeTypeFont& font_face = src_tmp.font;
-        IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.container_atlas == atlas));
+        // IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.container_atlas == atlas));
 
         // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
         for (int output_i = 0; output_i < atlas.Fonts.size && src_tmp.DstIndex == -1; output_i += 1)
             if (cfg.DstFont == atlas.Fonts[output_i])
                 src_tmp.DstIndex = output_i;
-        IM_ASSERT(src_tmp.DstIndex != -1); // cfg.dst_font not pointing within atlas->fonts[] array?
+        // IM_ASSERT(src_tmp.DstIndex != -1); // cfg.dst_font not pointing within atlas->fonts[] array?
         if (src_tmp.DstIndex == -1)
             return false;
 
@@ -480,7 +480,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         ImFontBuildSrcDataFT& src_tmp = src_tmp_array[src_i];
         src_tmp.GlyphsList.reserve(src_tmp.GlyphsCount);
 
-        IM_ASSERT(sizeof(src_tmp.GlyphsSet.Storage.data[0]) == sizeof);
+        // IM_ASSERT(sizeof(src_tmp.GlyphsSet.Storage.data[0]) == sizeof);
         const ImU32* it_begin = src_tmp.GlyphsSet.Storage.begin();
         const ImU32* it_end = src_tmp.GlyphsSet.Storage.end();
         for (const ImU32* it = it_begin; it < it_end; it += 1)
@@ -494,7 +494,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
                         src_tmp.GlyphsList.push_back(src_glyph);
                     }
         src_tmp.GlyphsSet.Clear();
-        IM_ASSERT(src_tmp.GlyphsList.size == src_tmp.GlyphsCount);
+        // IM_ASSERT(src_tmp.GlyphsList.size == src_tmp.GlyphsCount);
     }
     for (int dst_i = 0; dst_i < dst_tmp_array.size; dst_i += 1)
         dst_tmp_array[dst_i].GlyphsSet.Clear();
@@ -647,13 +647,13 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         {
             ImFontBuildSrcGlyphFT& src_glyph = src_tmp.GlyphsList[glyph_i];
             stbrp_rect& pack_rect = src_tmp.Rects[glyph_i];
-            IM_ASSERT(pack_rect.was_packed);
+            // IM_ASSERT(pack_rect.was_packed);
             if (pack_rect.w == 0 && pack_rect.h == 0)
                 continue;
 
             GlyphInfo& info = src_glyph.Info;
-            IM_ASSERT(info.Width + padding <= pack_rect.w);
-            IM_ASSERT(info.Height + padding <= pack_rect.h);
+            // IM_ASSERT(info.Width + padding <= pack_rect.w);
+            // IM_ASSERT(info.Height + padding <= pack_rect.h);
             const int tx = pack_rect.x + padding;
             const int ty = pack_rect.y + padding;
 
@@ -669,7 +669,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             dst_font.AddGlyph(&cfg, (ImWchar)src_glyph.Codepoint, x0, y0, x1, y1, u0, v0, u1, v1, info.AdvanceX);
 
             ImFontGlyph* dst_glyph = &dst_font.Glyphs.back();
-            IM_ASSERT(dst_glyph.Codepoint == src_glyph.Codepoint);
+            // IM_ASSERT(dst_glyph.Codepoint == src_glyph.Codepoint);
             if (src_glyph.Info.IsColored)
                 dst_glyph.Colored = tex_use_colors = true;
 

@@ -29,22 +29,22 @@ pub fn get_window_draw_list(g: &mut Context)
 // float ImGui::GetWindowDpiScale()
 pub fn get_window_dpi_scale(g: &mut Context) -> f32
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     return g.CurrentDpiScale;
 }
 
 // ImGuiViewport* ImGui::GetWindowViewport()
 pub fn get_window_viewport(g: &mut Context) -> &mut Viewport
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(g.current_viewport != NULL && g.current_viewport == g.current_window.Viewport);
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.current_viewport != NULL && g.current_viewport == g.current_window.Viewport);
     return g.current_viewport;
 }
 
 // void PushFocusScope(ImGuiID id)
 pub fn push_focus_scope(g: &mut Context, id: Id32)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     g.FocusScopeStack.push_back(window.dc.NavFocusScopeIdCurrent);
     window.dc.NavFocusScopeIdCurrent = id;

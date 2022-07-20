@@ -79,7 +79,7 @@ void ImGui::clear_active_id()
 
 void ImGui::SetHoveredID(ImGuiID id)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.hovered_id = id;
     g.hovered_id_allow_overlap = false;
     g.hovered_id_using_mouse_wheel = false;
@@ -89,7 +89,7 @@ void ImGui::SetHoveredID(ImGuiID id)
 
 ImGuiID ImGui::GetHoveredID()
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     return g.hovered_id ? g.hovered_id : g.hovered_id_previous_frame;
 }
 
@@ -97,7 +97,7 @@ ImGuiID ImGui::GetHoveredID()
 // Code not using ItemAdd() may need to call this manually otherwise active_id will be cleared. In IMGUI_VERSION_NUM < 18717 this was called by GetID().
 void ImGui::keep_alive_id(ImGuiID id)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     if (g.active_id == id)
         g.active_id_is_alive = id;
     if (g.active_id_previous_frame == id)
@@ -111,7 +111,7 @@ void ImGui::keep_alive_id(ImGuiID id)
 pub fn get_id_with_seed(g: &mut Context, in_str: &str, seed: Id32) -> Id32
 {
     ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     if (g.debug_hook_id_info == id)
         debug_hook_id_info(id, DataType::String, str, str_end);
     return id;

@@ -5,7 +5,7 @@ use crate::context::Context;
 use crate::globals::GImGui;
 use crate::input::MouseButton;
 use crate::INVALID_ID;
-use crate::window::HoveredFlags;
+use crate::window::{HoveredFlags, WindowFlags};
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::utils::set_hash_set;
@@ -448,9 +448,9 @@ pub enum ItemFlags {
 // void ImGui::PushItemFlag(ImGuiItemFlags option, bool enabled)
 pub fn push_item_flag(g: &mut Context, option: &ItemFlags, enabled: bool)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiItemFlags item_flags = g.current_item_flags;
-    IM_ASSERT(item_flags == g.item_flags_stack.back());
+    // IM_ASSERT(item_flags == g.item_flags_stack.back());
     if (enabled)
         item_flags |= option;
     else
@@ -462,8 +462,8 @@ pub fn push_item_flag(g: &mut Context, option: &ItemFlags, enabled: bool)
 // void ImGui::PopItemFlag()
 pub fn pop_item_flag(g: &mut Context)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(g.item_flags_stack.size > 1); // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.item_flags_stack.size > 1); // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
     g.item_flags_stack.pop_back();
     g.current_item_flags = g.item_flags_stack.back();
 }
@@ -471,7 +471,210 @@ pub fn pop_item_flag(g: &mut Context)
 // void ActivateItem(ImGuiID id)
 pub fn activate_item(g: &mut Context, id: Id32)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.NavNextActivateId = id;
     g.NavNextActivateFlags = ImGuiActivateFlags_None;
+}
+
+// Advance cursor given item size for layout.
+// Register minimum needed size so it can extend the bounding box used for auto-fit calculation.
+// See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
+// void item_size(const Vector2D& size, float text_baseline_y)
+pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
+{
+    // ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+    if (window.skip_items)
+        return;
+
+    // We increase the height in this function to accommodate for baseline offset.
+    // In theory we should be offsetting the starting position (window->dc.cursor_pos), that will be the topic of a larger refactor,
+    // but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
+    const float offset_to_match_baseline_y = (text_baseline_y >= 0) ? ImMax(0.0, window.dc.CurrLineTextBaseOffset - text_baseline_y) : 0.0;
+
+    const float line_y1 = window.dc.IsSameLine ? window.dc.CursorPosPrevLine.y : window.dc.cursor_pos.y;
+    const float line_height = ImMax(window.dc.CurrLineSize.y, /*ImMax(*/window.dc.cursor_pos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y);
+
+    // Always align ourselves on pixel boundaries
+    //if (g.io.key_alt) window->draw_list->add_rect(window->dc.cursor_pos, window->dc.cursor_pos + Vector2D(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
+    window.dc.CursorPosPrevLine.x = window.dc.cursor_pos.x + size.x;
+    window.dc.CursorPosPrevLine.y = line_y1;
+    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.Indent.x + window.dc.ColumnsOffset.x);    // Next line
+    window.dc.cursor_pos.y = f32::floor(line_y1 + line_height + g.style.ItemSpacing.y);                    // Next line
+    window.dc.cursor_max_pos.x = ImMax(window.dc.cursor_max_pos.x, window.dc.CursorPosPrevLine.x);
+    window.dc.cursor_max_pos.y = ImMax(window.dc.cursor_max_pos.y, window.dc.cursor_pos.y - g.style.ItemSpacing.y);
+    //if (g.io.key_alt) window->draw_list->add_circle(window->dc.CursorMaxPos, 3.0, IM_COL32(255,0,0,255), 4); // [DEBUG]
+
+    window.dc.PrevLineSize.y = line_height;
+    window.dc.CurrLineSize.y = 0.0;
+    window.dc.PrevLineTextBaseOffset = ImMax(window.dc.CurrLineTextBaseOffset, text_baseline_y);
+    window.dc.CurrLineTextBaseOffset = 0.0;
+    window.dc.IsSameLine = false;
+
+    // Horizontal layout mode
+    if (window.dc.LayoutType == ImGuiLayoutType_Horizontal)
+        SameLine();
+}
+
+// Declare item bounding box for clipping and interaction.
+// Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
+// declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
+// bool item_add(const Rect& bb, ImGuiID id, const Rect* nav_bb_arg, ImGuiItemFlags extra_flags)
+pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: &Rect, extra_flags: &HashSet<ItemFlags>) -> bool
+{
+    // ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+
+    // Set item data
+    // (display_rect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
+    g.last_item_data.id = id;
+    g.last_item_data.Rect = bb;
+    g.last_item_data.NavRect = nav_bb_arg ? *nav_bb_arg : bb;
+    g.last_item_data.InFlags = g.current_item_flags | extra_flags;
+    g.last_item_data.status_flags = ImGuiItemStatusFlags_None;
+
+    // Directional navigation processing
+    if (id != 0)
+    {
+        keep_alive_id(id);
+
+        // Runs prior to clipping early-out
+        //  (a) So that nav_init_request can be honored, for newly opened windows to select a default widget
+        //  (b) So that we can scroll up/down past clipped items. This adds a small O(N) cost to regular navigation requests
+        //      unfortunately, but it is still limited to one window. It may not scale very well for windows with ten of
+        //      thousands of item, but at least NavMoveRequest is only set on user interaction, aka maximum once a frame.
+        //      We could early out with "if (is_clipped && !g.nav_init_request) return false;" but when we wouldn't be able
+        //      to reach unclipped widgets. This would work if user had explicit scrolling control (e.g. mapped on a stick).
+        // We intentionally don't check if g.nav_window != NULL because g.nav_any_request should only be set when it is non null.
+        // If we crash on a NULL g.nav_window we need to fix the bug elsewhere.
+        window.dc.NavLayersActiveMaskNext |= (1 << window.dcnav_layer_current);
+        if (g.nav_id == id || g.NavAnyRequest)
+            if (g.nav_window.root_window_for_nav == window.root_window_for_nav)
+                if (window == g.nav_window || ((window.flags | g.nav_window.flags) & WindowFlags::NavFlattened))
+                    NavProcessItem();
+
+        // [DEBUG] People keep stumbling on this problem and using "" as identifier in the root of a window instead of "##something".
+        // Empty identifier are valid and useful in a small amount of cases, but 99.9% of the time you want to use "##something".
+        // READ THE FAQ: https://dearimgui.org/faq
+        // IM_ASSERT(id != window.id && "Cannot have an empty id at the root of a window. If you need an empty label, use ## and read the FAQ about how the id Stack works!");
+
+        // [DEBUG] Item Picker tool, when enabling the "extended" version we perform the check in ItemAdd()
+#ifdef IMGUI_DEBUG_TOOL_ITEM_PICKER_EX
+        if (id == g.DebugItemPickerBreakId)
+        {
+            IM_DEBUG_BREAK();
+            g.DebugItemPickerBreakId = 0;
+        }
+
+    }
+    g.NextItemData.flags = ImGuiNextItemDataFlags_None;
+
+#ifdef IMGUI_ENABLE_TEST_ENGINE
+    if (id != 0)
+        IMGUI_TEST_ENGINE_ITEM_ADD(nav_bb_arg ? *nav_bb_arg : bb, id);
+
+
+    // Clipping test
+    const bool is_clipped = IsClippedEx(bb, id);
+    if (is_clipped)
+        return false;
+    //if (g.io.key_alt) window->draw_list->add_rect(bb.min, bb.max, IM_COL32(255,255,0,120)); // [DEBUG]
+
+    // We need to calculate this now to take account of the current clipping rectangle (as items like Selectable may change them)
+    if (IsMouseHoveringRect(bb.min, bb.max))
+        g.last_item_data.status_flags |= ImGuiItemStatusFlags_HoveredRect;
+    return true;
+}
+
+// Affect large frame+labels widgets only.
+//void SetNextItemWidth(float item_width)
+// pub fn SetNextItemWidth(item_width: f32)
+pub fn set_next_item_width(g: &mut Context, )
+{
+    // ImGuiContext& g = *GImGui;
+    g.NextItemData.flags |= ImGuiNextItemDataFlags::ImGuiNextItemDataFlags_HasWidth;
+    g.NextItemData.Width = item_width;
+}
+
+// FIXME: Remove the == 0.0 behavior?
+// void PushItemWidth(float item_width)
+pub fn push_item_width(g: &mut Context, item_width: f32)
+{
+    // ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+    window.dc.ItemWidthStack.push_back(window.dc.ItemWidth); // Backup current width
+    window.dc.ItemWidth = (item_width == 0.0 ? window.ItemWidthDefault : item_width);
+    g.NextItemData.flags &= ~ImGuiNextItemDataFlags_HasWidth;
+}
+
+// void PushMultiItemsWidths(int components, float w_full)
+pub fn push_multi_items_widths(g: &mut Context, components: i32, w_full: f32)
+{
+    // ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+    const ImGuiStyle& style = g.style;
+    const float w_item_one  = ImMax(1.0, f32::floor((w_full - (style.item_inner_spacing.x) * (components - 1)) / components));
+    const float w_item_last = ImMax(1.0, f32::floor(w_full - (w_item_one + style.item_inner_spacing.x) * (components - 1)));
+    window.dc.ItemWidthStack.push_back(window.dc.ItemWidth); // Backup current width
+    window.dc.ItemWidthStack.push_back(w_item_last);
+    for (int i = 0; i < components - 2; i += 1)
+        window.dc.ItemWidthStack.push_back(w_item_one);
+    window.dc.ItemWidth = (components == 1) ? w_item_last : w_item_one;
+    g.NextItemData.flags &= ~ImGuiNextItemDataFlags_HasWidth;
+}
+
+// void PopItemWidth()
+pub fn pop_item_width(g: &mut Context)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    window.dc.ItemWidth = window.dc.ItemWidthStack.back();
+    window.dc.ItemWidthStack.pop_back();
+}
+
+// Calculate default item width given value passed to PushItemWidth() or SetNextItemWidth().
+// The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or next_item_data.ClearFlags()
+// float CalcItemWidth()
+pub fn calc_item_width(g: &mut Context)
+{
+    // ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+    float w;
+    if (g.NextItemData.flags & ImGuiNextItemDataFlags_HasWidth)
+        w = g.NextItemData.Width;
+    else
+        w = window.dc.ItemWidth;
+    if (w < 0.0)
+    {
+        float region_max_x = GetContentRegionMaxAbs().x;
+        w = ImMax(1.0, region_max_x - window.dc.cursor_pos.x + w);
+    }
+    w = f32::floor(w);
+    return w;
+}
+
+// [Internal] Calculate full item size given user provided 'size' parameter and default width/height. Default width is often == CalcItemWidth().
+// Those two functions CalcItemWidth vs CalcItemSize are awkwardly named because they are not fully symmetrical.
+// Note that only CalcItemWidth() is publicly exposed.
+// The 4.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
+// Vector2D CalcItemSize(Vector2D size, float default_w, float default_h)
+pub fn calc_item_size(g: &mut Context, size: Vector2D, default_w: f32, default_h: f32) -> Vector2D
+{
+    // ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.current_window;
+
+    Vector2D region_max;
+    if (size.x < 0.0 || size.y < 0.0)
+        region_max = GetContentRegionMaxAbs();
+
+    if (size.x == 0.0)
+        size.x = default_w;
+    else if (size.x < 0.0)
+        size.x = ImMax(4.0, region_max.x - window.dc.cursor_pos.x + size.x);
+
+    if (size.y == 0.0)
+        size.y = default_h;
+    else if (size.y < 0.0)
+        size.y = ImMax(4.0, region_max.y - window.dc.cursor_pos.y + size.y);
+
+    return size;
 }

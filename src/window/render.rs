@@ -15,7 +15,7 @@ use crate::id::set_active_id;
 use crate::input::{InputSource, NavLayer};
 use crate::item::{ItemFlags, ItemStatusFlags};
 use crate::math::{im_f32_to_int8_sat, saturate_f32};
-use crate::mouse::{start_mouse_moving_window, start_mouse_moving_window_or_node};
+use crate::input::mouse::{start_mouse_moving_window, start_mouse_moving_window_or_node};
 use crate::orig_imgui_single_file::{buf, buf_end, int};
 use crate::rect::Rect;
 use crate::style::{get_color_u32, get_color_u32_no_alpha, pop_style_color, push_style_color, Style};

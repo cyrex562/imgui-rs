@@ -308,7 +308,7 @@ pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, co
     if (cond && (window.set_window_size_allow_flags & cond) == 0)
         return;
 
-    IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
+    // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     window.set_window_size_allow_flags &= ~(ImGuiCond_Once | Cond::FirstUseEver | ImGuiCond_Appearing);
 
     // Set
@@ -330,7 +330,7 @@ pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, co
 // void ImGui::SetWindowSize(const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size2(g: &mut Context, size: &Vector2D, cond: Condition)
 {
-    SetWindowSize(GImGui.CurrentWindow, size, cond);
+    SetWindowSize(g.CurrentWindow, size, cond);
 }
 
 // Handle resize for: Resize Grips, Borders, Gamepad

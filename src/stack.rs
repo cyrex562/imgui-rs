@@ -65,6 +65,48 @@ impl ImGuiStackSizes {
             ..Default::default()
         }
     }
+
+    //
+// Save current stack sizes for later compare
+// void ImGuiStackSizes::SetToCurrentState()
+// {
+//     ImGuiContext& g = *GImGui;
+//     ImGuiWindow* window = g.current_window;
+//     SizeOfIDStack = window.IDStack.size;
+//     SizeOfColorStack = g.color_stack.size;
+//     SizeOfStyleVarStack = g.style_var_stack.size;
+//     SizeOfFontStack = g.font_stack.size;
+//     SizeOfFocusScopeStack = g.FocusScopeStack.size;
+//     SizeOfGroupStack = g.group_stack.size;
+//     SizeOfItemFlagsStack = g.item_flags_stack.size;
+//     SizeOfBeginPopupStack = g.begin_popup_stack.size;
+//     SizeOfDisabledStack = g.DisabledStackSize;
+// }
+
+// Compare to detect usage errors
+// void ImGuiStackSizes::CompareWithCurrentState()
+// {
+//     ImGuiContext& g = *GImGui;
+//     ImGuiWindow* window = g.current_window;
+//     IM_UNUSED(window);
+//
+//     // window stacks
+//     // NOT checking: dc.item_width, dc.text_wrap_pos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)
+//     IM_ASSERT(SizeOfIDStack         == window.IDStack.size     && "PushID/PopID or TreeNode/TreePop Mismatch!");
+//
+//     // Global stacks
+//     // For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.
+//     IM_ASSERT(SizeOfGroupStack      == g.group_stack.size        && "BeginGroup/EndGroup Mismatch!");
+//     IM_ASSERT(SizeOfBeginPopupStack == g.begin_popup_stack.size   && "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!");
+//     IM_ASSERT(SizeOfDisabledStack   == g.DisabledStackSize      && "BeginDisabled/EndDisabled Mismatch!");
+//     IM_ASSERT(SizeOfItemFlagsStack  >= g.item_flags_stack.size    && "PushItemFlag/PopItemFlag Mismatch!");
+//     IM_ASSERT(SizeOfColorStack      >= g.color_stack.size        && "PushStyleColor/PopStyleColor Mismatch!");
+//     IM_ASSERT(SizeOfStyleVarStack   >= g.style_var_stack.size     && "PushStyleVar/PopStyleVar Mismatch!");
+//     IM_ASSERT(SizeOfFontStack       >= g.font_stack.size         && "PushFont/PopFont Mismatch!");
+//     IM_ASSERT(SizeOfFocusScopeStack == g.FocusScopeStack.size   && "PushFocusScope/PopFocusScope Mismatch!");
+// }
+
+
     //     void SetToCurrentState();
     pub fn SetToCurrentState(&mut self) {
         todo!()

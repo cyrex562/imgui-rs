@@ -5,11 +5,11 @@ use crate::window::{Window, WindowFlags};
 // void ImGui::BringWindowToFocusFront(ImGuiWindow* window)
 pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(window == window.root_window);
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(window == window.root_window);
 
     const int cur_order = window.focus_order;
-    IM_ASSERT(g.windows_focus_order[cur_order] == window);
+    // IM_ASSERT(g.windows_focus_order[cur_order] == window);
     if (g.windows_focus_order.back() == window)
         return;
 
@@ -18,7 +18,7 @@ pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
     {
         g.windows_focus_order[n] = g.windows_focus_order[n + 1];
         g.windows_focus_order[n].FocusOrder--;
-        IM_ASSERT(g.windows_focus_order[n].FocusOrder == n);
+        // IM_ASSERT(g.windows_focus_order[n].FocusOrder == n);
     }
     g.windows_focus_order[new_order] = window;
     window.focus_order = new_order;
@@ -28,7 +28,7 @@ pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
 // void ImGui::BringWindowToDisplayFront(ImGuiWindow* window)
 pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* current_front_window = g.windows.back();
     if (current_front_window == window || current_front_window.root_window_dock_tree == window) // Cheap early out (could be better)
         return;
@@ -44,7 +44,7 @@ pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
 // void ImGui::BringWindowToDisplayBack(ImGuiWindow* window)
 pub fn bring_window_to_display_back(ctx: &mut Context, window: &mut Window)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     if (g.windows[0] == window)
         return;
     for (int i = 0; i < g.windows.size; i += 1)
@@ -59,8 +59,8 @@ pub fn bring_window_to_display_back(ctx: &mut Context, window: &mut Window)
 // void ImGui::BringWindowToDisplayBehind(ImGuiWindow* window, ImGuiWindow* behind_window)
 pub fn bring_window_to_display_behind(g: &mut Context, window: &mut Window, behind_window: &mut Window)
 {
-    IM_ASSERT(window != NULL && behind_window != NULL);
-    ImGuiContext& g = *GImGui;
+    // IM_ASSERT(window != NULL && behind_window != NULL);
+    // ImGuiContext& g = *GImGui;
     window = window.root_window;
     behind_window = behind_window.root_window;
     int pos_wnd = FindWindowDisplayIndex(window);
@@ -84,7 +84,7 @@ pub fn bring_window_to_display_behind(g: &mut Context, window: &mut Window, behi
 // void ImGui::focus_window(ImGuiWindow* window)
 pub fn focus_window(g: &mut Context, window: &mut Window)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
 
     if (g.nav_window != window)
     {
@@ -101,7 +101,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
     close_popups_over_window(window, false);
 
     // Move the root window to the top of the pile
-    IM_ASSERT(window == NULL || window.root_window_dock_tree != NULL);
+    // IM_ASSERT(window == NULL || window.root_window_dock_tree != NULL);
     ImGuiWindow* focus_front_window = window ? window.root_window : NULL;
     ImGuiWindow* display_front_window = window ? window.root_window_dock_tree : NULL;
     ImGuiDockNode* dock_node = window ? window.dock_node : NULL;
@@ -134,7 +134,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
 // void ImGui::FocusTopMostWindowUnderOne(ImGuiWindow* under_this_window, ImGuiWindow* ignore_window)
 pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_window, ignore_window: &mut Window)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     int start_idx = g.windows_focus_order.size - 1;
     if (under_this_window != NULL)
     {
@@ -151,7 +151,7 @@ pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_
     {
         // We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
         ImGuiWindow* window = g.windows_focus_order[i];
-        IM_ASSERT(window == window.root_window);
+        // IM_ASSERT(window == window.root_window);
         if (window != ignore_window && window.was_active)
             if ((window.flags & (WindowFlags::NoMouseInputs | WindowFlags::NoNavInputs)) != (WindowFlags::NoMouseInputs | WindowFlags::NoNavInputs))
             {

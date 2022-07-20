@@ -217,9 +217,9 @@ pub struct DimgFontConfig
 // void ImGui::sec_current_font(ImFont* font)
 pub fn set_current_font(g: &mut Context, font: &mut Font)
 {
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT(font && font.IsLoaded());    // font Atlas not created. Did you call io.fonts->GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
-    IM_ASSERT(font.Scale > 0.0);
+    // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(font && font.IsLoaded());    // font Atlas not created. Did you call io.fonts->GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
+    // IM_ASSERT(font.Scale > 0.0);
     g.font = font;
     g.FontBaseSize = ImMax(1.0, g.io.FontGlobalScale * g.font.font_size * g.font.Scale);
     g.font_size = g.current_window ? g.current_window.CalcFontSize() : 0.0;
@@ -234,7 +234,7 @@ pub fn set_current_font(g: &mut Context, font: &mut Font)
 // void ImGui::PushFont(ImFont* font)
 pub fn push_font(g: &mut Context, font: &mut Font)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     if (!font)
         font = get_default_font();
     sec_current_font(font);
@@ -245,7 +245,7 @@ pub fn push_font(g: &mut Context, font: &mut Font)
 // void  ImGui::PopFont()
 pub fn pop_font(g: &mut Context)
 {
-    ImGuiContext& g = *GImGui;
+    // ImGuiContext& g = *GImGui;
     g.current_window.draw_list.PopTextureID();
     g.font_stack.pop_back();
     sec_current_font(g.font_stack.empty() ? get_default_font() : g.font_stack.back());
@@ -254,26 +254,26 @@ pub fn pop_font(g: &mut Context)
 // ImFont* GetFont()
 pub fn get_font(g: &mut Context) -> &mut Font
 {
-    return GImGui.Font;
+    return g.Font;
 }
 
 // float GetFontSize()
 pub fn get_font_size(g: &mut Context) -> f32
 {
-    return GImGui.font_size;
+    return g.font_size;
 }
 
 // Vector2D GetFontTexUvWhitePixel()
 pub fn get_font_tex_uv_white_pixel(g: &mut Context) -> Vector2D
 {
-    return GImGui.DrawListSharedData.TexUvWhitePixel;
+    return g.DrawListSharedData.TexUvWhitePixel;
 }
 
 // void SetWindowFontScale(float scale)
 pub fn set_window_font_scale(g: &mut Context, scale: f32)
 {
-    IM_ASSERT(scale > 0.0);
-    ImGuiContext& g = *GImGui;
+    // IM_ASSERT(scale > 0.0);
+    // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
     window.font_window_scale = scale;
     g.font_size = g.draw_list_shared_data.font_size = window.CalcFontSize();
