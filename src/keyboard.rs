@@ -144,3 +144,22 @@ pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
         g.NavTabbingCounter = offset + 1;
     }
 }
+
+// t0 = previous time (e.g.: g.time - g.io.delta_time)
+// t1 = current time (e.g.: g.time)
+// An event is triggered at:
+//  t = 0.0     t = repeat_delay,    t = repeat_delay + repeat_rate*N
+// int CalcTypematicRepeatAmount(float t0, float t1, float repeat_delay, float repeat_rate)
+pub fn calc_typematic_repeat_amount(g: &mut Context, t0: f32, repeat_delay: f32, repeat_rate: f32) -> i32
+{
+    if (t1 == 0.0)
+        return 1;
+    if (t0 >= t1)
+        return 0;
+    if (repeat_rate <= 0.0)
+        return (t0 < repeat_delay) && (t1 >= repeat_delay);
+    const int count_t0 = (t0 < repeat_delay) ? -1 : ((t0 - repeat_delay) / repeat_rate);
+    const int count_t1 = (t1 < repeat_delay) ? -1 : ((t1 - repeat_delay) / repeat_rate);
+    const int count = count_t1 - count_t0;
+    return count;
+}
