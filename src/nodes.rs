@@ -14,7 +14,7 @@
 
 // Check minimum ImGui version
 #define MINIMUM_COMPATIBLE_IMGUI_VERSION 17400
-#if IMGUI_VERSION_NUM < MINIMUM_COMPATIBLE_IMGUI_VERSION
+// #ifIMGUI_VERSION_NUM < MINIMUM_COMPATIBLE_IMGUI_VERSION
 #error "Minimum ImGui version requirement not met -- please use a newer version!"
 
 
@@ -1043,7 +1043,7 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
 
         const CubicBezier cubic_bezier = GetCubicBezier(
             start_pos, end_pos, start_pin.Type, GImNodes.Style.LinkLineSegmentsPerLength);
-#if IMGUI_VERSION_NUM < 18000
+// #ifIMGUI_VERSION_NUM < 18000
         GImNodes.CanvasDrawList.AddBezierCurve(
 #else
         GImNodes.CanvasDrawList.AddBezierCubic(
@@ -1528,7 +1528,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
         {
             Rect title_bar_rect = GetNodeTitleRect(node);
 
-#if IMGUI_VERSION_NUM < 18200
+// #ifIMGUI_VERSION_NUM < 18200
             GImNodes.CanvasDrawList.add_rect_filled(
                 title_bar_rect.min,
                 title_bar_rect.max,
@@ -1548,7 +1548,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
 
         if ((GImNodes.Style.flags & ImNodesStyleFlags_NodeOutline) != 0)
         {
-#if IMGUI_VERSION_NUM < 18200
+// #ifIMGUI_VERSION_NUM < 18200
             GImNodes.CanvasDrawList.AddRect(
                 node.Rect.min,
                 node.Rect.max,
@@ -1617,7 +1617,7 @@ void DrawLink(ImNodesEditorContext& editor, const int link_idx)
         link_color = link.ColorStyle.Hovered;
     }
 
-#if IMGUI_VERSION_NUM < 18000
+// #ifIMGUI_VERSION_NUM < 18000
     GImNodes.CanvasDrawList.AddBezierCurve(
 #else
     GImNodes.CanvasDrawList.AddBezierCubic(
@@ -1848,7 +1848,7 @@ static void MiniMapDrawLink(ImNodesEditorContext& editor, const int link_idx)
             [editor.SelectedLinkIndices.contains(link_idx) ? ImNodesCol_MiniMapLinkSelected
                                                            : ImNodesCol_MiniMapLink];
 
-#if IMGUI_VERSION_NUM < 18000
+// #ifIMGUI_VERSION_NUM < 18000
     GImNodes.CanvasDrawList.AddBezierCurve(
 #else
     GImNodes.CanvasDrawList.AddBezierCubic(

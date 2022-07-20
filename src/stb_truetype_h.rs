@@ -279,7 +279,7 @@
 //
 //  Incomplete text-in-3d-api example, which draws quads properly aligned to be lossless.
 //  See "tests/truetype_demo_win32.c" for a complete version.
-#if 0
+// #if0
 #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
 #include "stb_truetype.h"
 
@@ -329,7 +329,7 @@ void my_stbtt_print(float x, float y, char *text)
 //
 // Complete program (this compiles): get a single bitmap, print as ASCII art
 //
-#if 0
+// #if0
 #include <stdio.h>
 #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
 #include "stb_truetype.h"
@@ -373,7 +373,7 @@ int main(int argc, char **argv)
 //
 // Complete program: print "Hello World!" banner, with bugs
 //
-#if 0
+// #if0
 char buffer[24<<20];
 unsigned char screen[20][79];
 
@@ -1114,7 +1114,7 @@ enum { // languageID for STBTT_PLATFORM_ID_MAC
 #define STBTT_MAX_OVERSAMPLE   8
 
 
-#if STBTT_MAX_OVERSAMPLE > 255
+// #ifSTBTT_MAX_OVERSAMPLE > 255
 #error "STBTT_MAX_OVERSAMPLE cannot be > 255"
 
 
@@ -2818,7 +2818,7 @@ typedef struct stbtt__edge {
 typedef struct stbtt__active_edge
 {
    struct stbtt__active_edge *next;
-   #if STBTT_RASTERIZER_VERSION==1
+   // #ifSTBTT_RASTERIZER_VERSION==1
    int x,dx;
    float ey;
    int direction;
@@ -2832,7 +2832,7 @@ typedef struct stbtt__active_edge
 
 } stbtt__active_edge;
 
-#if STBTT_RASTERIZER_VERSION == 1
+// #ifSTBTT_RASTERIZER_VERSION == 1
 #define STBTT_FIXSHIFT   10
 #define STBTT_FIX        (1 << STBTT_FIXSHIFT)
 #define STBTT_FIXMASK    (STBTT_FIX-1)
@@ -2880,7 +2880,7 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, i
 #error "Unrecognized value of STBTT_RASTERIZER_VERSION"
 
 
-#if STBTT_RASTERIZER_VERSION == 1
+// #ifSTBTT_RASTERIZER_VERSION == 1
 // note: this routine clips fills that extend off the edges... ideally this
 // wouldn't happen, but it could happen if the truetype glyph bounding boxes
 // are wrong, or if the user supplies a too-small bitmap
@@ -3500,7 +3500,7 @@ static void stbtt__rasterize(stbtt__bitmap *result, stbtt__point *pts, int *wcou
    float y_scale_inv = invert ? -scale_y : scale_y;
    stbtt__edge *e;
    int n,i,j,k,m;
-#if STBTT_RASTERIZER_VERSION == 1
+// #ifSTBTT_RASTERIZER_VERSION == 1
    int vsubsample = result.h < 8 ? 15 : 5;
 #elif STBTT_RASTERIZER_VERSION == 2
    int vsubsample = 1;
@@ -4935,7 +4935,7 @@ static int stbtt_FindMatchingFont_internal(unsigned char *font_collection, char 
    }
 }
 
-#if defined(__GNUC__) || defined(__clang__)
+// #ifdefined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-qual"
 
@@ -4972,7 +4972,7 @@ STBTT_DEF int stbtt_CompareUTF8toUTF16_bigendian(const char *s1, int len1, const
    return stbtt_CompareUTF8toUTF16_bigendian_internal((char *) s1, len1, (char *) s2, len2);
 }
 
-#if defined(__GNUC__) || defined(__clang__)
+// #ifdefined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
 
 

@@ -3,7 +3,7 @@ use std::ops::Index;
 // Helper: Growable text buffer for logging/accumulating text
 // (this could be called 'ImGuiTextBuilder' / 'ImGuiStringBuilder')
 #[derive(Default,Debug,Clone)]
-pub struct ImGuiTextBuffer
+pub struct TextBuffer
 {
     // ImVector<char>      Buf;
     pub Buf: String,
@@ -12,7 +12,7 @@ pub struct ImGuiTextBuffer
 
 }
 
-impl ImGuiTextBuffer {
+impl TextBuffer {
     // ImGuiTextBuffer()   { }
     pub fn new() -> Self {
         Self {
@@ -72,7 +72,7 @@ impl ImGuiTextBuffer {
 
 
 // inline char         operator[](int i) const { IM_ASSERT(Buf.data != NULL); return Buf.data[i]; }
-impl Index<i32> for ImGuiTextBuffer {
+impl Index<i32> for TextBuffer {
     type Output = u8;
 
     fn index(&self, index: i32) -> &Self::Output {

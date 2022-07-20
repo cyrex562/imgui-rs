@@ -264,7 +264,7 @@ void ImGui_ImplAllegro5_InvalidateDeviceObjects()
     }
 }
 
-#if ALLEGRO_HAS_CLIPBOARD
+// #ifALLEGRO_HAS_CLIPBOARD
 static const char* ImGui_ImplAllegro5_GetClipboardText(void*)
 {
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
@@ -419,7 +419,7 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
     };
     bd.VertexDecl = al_create_vertex_decl(elems, sizeof(ImDrawVertAllegro));
 
-#if ALLEGRO_HAS_CLIPBOARD
+// #ifALLEGRO_HAS_CLIPBOARD
     io.SetClipboardTextFn = ImGui_ImplAllegro5_SetClipboardText;
     io.GetClipboardTextFn = ImGui_ImplAllegro5_GetClipboardText;
     io.ClipboardUserData = NULL;
@@ -517,7 +517,7 @@ bool ImGui_ImplAllegro5_ProcessEvent(ALLEGRO_EVENT* ev)
         if (ev.display.source == bd.Display)
         {
             io.AddFocusEvent(true);
-#if defined(ALLEGRO_UNSTABLE)
+// #ifdefined(ALLEGRO_UNSTABLE)
             al_clear_keyboard_state(bd.Display);
 
         }

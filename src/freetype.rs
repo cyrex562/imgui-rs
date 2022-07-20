@@ -46,7 +46,7 @@
 #pragma warning (disable: 26812)    // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
 
 
-#if defined(__GNUC__)
+// #ifdefined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wpragmas"                  // warning: unknown option after '#pragma GCC diagnostic' kind
 #pragma GCC diagnostic ignored "-Wunused-function"          // warning: 'xxxx' defined but not used
 

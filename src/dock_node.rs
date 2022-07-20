@@ -146,6 +146,40 @@ pub struct DockNode
 }
 
 impl DockNode {
+    //
+// ImGuiDockNode::ImGuiDockNode(ImGuiID id)
+// {
+//     ID = id;
+//     SharedFlags = LocalFlags = LocalFlagsInWindows = MergedFlags = ImGuiDockNodeFlags_None;
+//     ParentNode = ChildNodes[0] = ChildNodes[1] = NULL;
+//     TabBar = NULL;
+//     SplitAxis = ImGuiAxis_None;
+//
+//     State = ImGuiDockNodeState_Unknown;
+//     LastBgColor = IM_COL32_WHITE;
+//     HostWindow = VisibleWindow = NULL;
+//     CentralNode = OnlyNodeWithWindows = NULL;
+//     CountNodeWithWindows = 0;
+//     LastFrameAlive = LastFrameActive = LastFrameFocused = -1;
+//     LastFocusedNodeId = 0;
+//     SelectedTabId = 0;
+//     WantCloseTabId = 0;
+//     AuthorityForPos = AuthorityForSize = ImGuiDataAuthority_DockNode;
+//     AuthorityForViewport = ImGuiDataAuthority_Auto;
+//     IsVisible = true;
+//     IsFocused = HasCloseButton = HasWindowMenuButton = HasCentralNodeChild = false;
+//     IsBgDrawnThisFrame = false;
+//     WantCloseAll = WantLockSizeOnce = WantMouseMove = WantHiddenTabBarUpdate = WantHiddenTabBarToggle = false;
+// }
+//
+// ImGuiDockNode::~ImGuiDockNode()
+// {
+//     IM_DELETE(TabBar);
+//     TabBar = NULL;
+//     ChildNodes[0] = ChildNodes[1] = NULL;
+// }
+
+
     // ImGuiDockNode(DimgId id);
     pub fn new(id: Id32) -> Self {
         todo!()

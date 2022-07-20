@@ -111,6 +111,8 @@ pub mod error_handling;
 mod cursor;
 mod content;
 mod scrolling;
+mod ime;
+mod debug;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context)
