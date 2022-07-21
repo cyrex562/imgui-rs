@@ -22,7 +22,7 @@ pub fn is_word_boundary_from_right(obj: *mut ImGuiInputTextState, idx: usize) ->
 //     const char* p = (const char*)memchr(str, '\n', str_end - str);
 //     return p ? p : str_end;
 // }
-pub fn ImStreolRange(str_begin: *const c_char, str_end: *const c_char) -> *const c_char {
+pub fn ImStreolRange(str_begin: &str, str_end: &str) -> &str {
     let test_str = String::from(str_begin);
     let eol_idx = test_str.find('\n');
     if eol_idx.is_some() {

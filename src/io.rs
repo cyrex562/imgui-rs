@@ -107,8 +107,8 @@ pub struct Io {
     // Optional: Access OS clipboard
     // (default to use native Win32 clipboard on windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
     // const char* (*GetClipboardTextFn)(void* user_data);
-    // void        (*SetClipboardTextFn)(void* user_data, const char* text);
-    // void*       ClipboardUserData;
+    // void        (*set_clipboard_text_fn)(void* user_data, const char* text);
+    // void*       clipboard_user_data;
 
     // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on windows)
     // (default to use native imm32 api on windows)
@@ -230,7 +230,7 @@ pub struct Io {
     pub mouse_clicked_count: [u16; 5],
     // == 0 (not clicked), == 1 (same as mouse_clicked[]), == 2 (double-clicked), == 3 (triple-clicked) etc. when going from !down to down
     pub mouse_clicked_last_count: [u16; 5],
-    // Count successive number of clicks. Stays valid after mouse release. Reset after another click is done.
+    // count successive number of clicks. Stays valid after mouse release. Reset after another click is done.
     pub mouse_released: [bool; 5],
     // Mouse button went from down to !down
     pub mouse_down_owned: [bool; 5],

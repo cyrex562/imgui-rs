@@ -3191,7 +3191,7 @@ Other Changes:
 - Misc: Improved warnings compilation for newer versions of Clang. (#1324) (@waywardmonkeys)
 - Misc: Added `io.WantMoveMouse flags` (from Nav branch) and honored in Examples applications. Currently unused but trying to spread Examples applications code that supports it.
 - Misc: Added `IMGUI_DISABLE_FORMAT_STRING_FUNCTIONS` support in imconfig.h to allow user reimplementing the `ImFormatString()` functions e.g. to use stb_printf(). (#1038)
-- Misc: [windows] Fixed default Win32 `SetClipboardText()` handler leaving the Win32 clipboard handler unclosed on failure. [@pdoane]
+- Misc: [windows] Fixed default Win32 `set_clipboard_text()` handler leaving the Win32 clipboard handler unclosed on failure. [@pdoane]
 - style: Added `ImGuiStyle::ScaleAllSizes(float)` helper to make it easier to have application transition e.g. from low to high DPI with a matching style.
 - Metrics: Draw window bounding boxes when hovering pos/size; List all draw layers; Trimming empty commands like Render() does.
 - Examples: OpenGL3: Save and restore sampler state. (#1145) [@nlguillemot]
@@ -3595,7 +3595,7 @@ Changes:
 - Begin*(): added ImGuiWindowFlags_NoFocusOnAppearing flag. (#314)
 - Begin*(): added ImGuiWindowFlags_NoBringToFrontOnFocus flag.
 - Added GetDrawData() alternative to setting a Render function pointer in ImGuiIO structure.
-- Added SetClipboardText(), GetClipboardText() helper shortcuts that user code can call directly without reading
+- Added set_clipboard_text(), GetClipboardText() helper shortcuts that user code can call directly without reading
   from the ImGuiIO structure (to match MemAlloc/MemFree)
 - Fixed handling of malformed UTF-8 at the end of a non-zero terminated string range.
 - Fixed mouse click detection when passing delta_time 0.0. (#338)

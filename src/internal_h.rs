@@ -77,7 +77,7 @@ use crate::vectors::two_d::Vector2D;
 //-----------------------------------------------------------------------------
 
 // #ifndef GImGui
-// extern  ImGuiContext* GImGui;  // Current implicit context pointer
+// extern  ImGuiContext* GImGui;  // current implicit context pointer
 // #endif
 
 //-------------------------------------------------------------------------

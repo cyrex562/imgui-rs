@@ -75,7 +75,7 @@ pub struct Window {
     pub viewport_allow_platform_monitor_extend: i32,
     // Vector2D                  pos;                                // Position (always rounded-up to nearest pixel)
     pub pos: Vector2D,
-    // Vector2D                  size;                               // Current size (==size_full or collapsed title bar size)
+    // Vector2D                  size;                               // current size (==size_full or collapsed title bar size)
     pub size: Vector2D,
     // Vector2D                  size_full;                           // size when non collapsed
     pub size_full: Vector2D,
@@ -136,7 +136,7 @@ pub struct Window {
     pub is_explicit_child: bool,
     // bool                    has_close_button;                     // Set when the window has a close button (p_open != NULL)
     pub has_close_button: bool,
-    // signed char             resize_border_held;                   // Current border being held for resize (-1: none, otherwise 0-3)
+    // signed char             resize_border_held;                   // current border being held for resize (-1: none, otherwise 0-3)
     pub resize_border_held: i8,
     // short                   begin_count;                         // Number of Begin() during the current frame (generally 0 or 1, 1+ if appending via multiple Begin/End pairs)
     pub begin_count: i16,
@@ -194,7 +194,7 @@ pub struct Window {
     pub work_rect: Rect,
     // ImRect                  parent_work_rect;                     // Backup of work_rect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
     pub parent_work_rect: Rect,
-    // ImRect                  clip_rect;                           // Current clipping/scissoring rectangle, evolve as we are using push_clip_rect(), etc. == draw_list->clip_rect_stack.back().
+    // ImRect                  clip_rect;                           // current clipping/scissoring rectangle, evolve as we are using push_clip_rect(), etc. == draw_list->clip_rect_stack.back().
     pub clip_rect: Rect,
     // ImRect                  content_region_rect;                  // FIXME: This is currently confusing/misleading. It is essentially work_rect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
     pub content_region_rect: Rect,

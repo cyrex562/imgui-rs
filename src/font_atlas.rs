@@ -152,7 +152,7 @@ impl FontAtlas {
     }
     //
     //     //-------------------------------------------
-    //     // Glyph Ranges
+    //     // Glyph ranges
     //     //-------------------------------------------
     //
     //     // Helpers to retrieve list of common Unicode ranges (2 value per range, values are inclusive, zero-terminated list)

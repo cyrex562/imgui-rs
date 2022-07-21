@@ -59,7 +59,7 @@ pub fn get_window_resize_border_id(g: &mut Context, window: &mut Window, dir: Di
 {
     // IM_ASSERT(dir >= 0 && dir < 4);
     // int n = dir + 4;
-    // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.ID : window.id;
+    // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.id : window.id;
     // id = ImHashStr("#RESIZE", 0, id);
     // id = ImHashData(&n, sizeof, id);
     // return id;

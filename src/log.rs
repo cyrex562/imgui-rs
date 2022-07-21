@@ -5,7 +5,7 @@ use crate::imgui_clipboard::SetClipboardText;
 use crate::imgui_context::ImGuiContext;
 use crate::imgui_file::{ImFileClose, ImFileOpen, ImFileWrite};
 use crate::imgui_globals::GImGui;
-use crate::imgui_h::ImGuiColor::Button;
+use crate::imgui_h::Color::Button;
 use crate::imgui_render::FindRenderedTextEnd;
 use crate::imguI_string::ImStreolRange;
 use crate::imgui_vec::Vector2D;
@@ -41,7 +41,7 @@ pub const ImGuiDebugLogFlags_EventMask: u32 = ImGuiDebugLogFlags::EventActiveId 
 // We split text into individual lines to add current tree level padding
 // FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
 // void ImGui::LogRenderedText(const Vector2D* ref_pos, const char* text, const char* text_end)
-pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: *const c_char, mut text_end: *const c_char)
+pub unsafe fn LogRenderedText(ref_pos: &Vector2D, text: &str, mut text_end: &str)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -171,7 +171,7 @@ pub fn LogBegin(log_type: ImGuiLogType, auto_open_depth: i32)
 
 // Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
 // void ImGui::LogSetNextTextDecoration(const char* prefix, const char* suffix)
-pub fn LogSetNextTextDecoration(prefix: *const c_char, suffix: *const c_char)
+pub fn LogSetNextTextDecoration(prefix: &str, suffix: &str)
     {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -196,7 +196,7 @@ pub fn LogToTTY(auto_open_depth: i32)
 
 // Start logging/capturing text output to given file
 // void ImGui::LogToFile(int auto_open_depth, const char* filename)
-pub fn LogToFile(auto_open_depth: i32, mut filename: *const c_char)
+pub fn LogToFile(auto_open_depth: i32, mut filename: &str)
     {
     let g = GImGui;
     if (g.LogEnabled) {
@@ -207,7 +207,7 @@ pub fn LogToFile(auto_open_depth: i32, mut filename: *const c_char)
     // be subject to outputting OS-incompatible carriage return if within strings the user doesn't use IM_NEWLINE.
     // By opening the file in binary mode "ab" we have consistent output everywhere.
     if !filename {
-        filename = g.io.LogFilename.as_ptr() as *const c_char;
+        filename = g.io.LogFilename.as_ptr() as &str;
     }
     if !filename || !filename[0] {
         return;
@@ -277,7 +277,7 @@ pub fn LogFinish()
             // case ImGuiLogType_Clipboard:
             ImGuiLogType::Clipboard => {
                 if (!g.LogBuffer.empty()) {
-                    SetClipboardText(g, g.LogBuffer.begin() as *const c_char);
+                    SetClipboardText(g, g.LogBuffer.begin() as &str);
                 }
             }
         // break;
@@ -296,7 +296,7 @@ pub fn LogFinish()
 // Helper to display logging buttons
 // FIXME-OBSOLETE: We should probably obsolete this and let the user have their own helper (this is one of the oldest function alive!)
 // void ImGui::LogButtons()
-pub fn LogButtons(g: *mut ImGuiContext)
+pub fn LogButtons(g: &mut Context)
     {
     // ImGuiContext& g = *GImGui;
 

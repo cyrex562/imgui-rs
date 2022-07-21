@@ -420,9 +420,9 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
     bd.VertexDecl = al_create_vertex_decl(elems, sizeof(ImDrawVertAllegro));
 
 #if ALLEGRO_HAS_CLIPBOARD
-    io.SetClipboardTextFn = ImGui_ImplAllegro5_SetClipboardText;
+    io.set_clipboard_text_fn = ImGui_ImplAllegro5_SetClipboardText;
     io.GetClipboardTextFn = ImGui_ImplAllegro5_GetClipboardText;
-    io.ClipboardUserData = NULL;
+    io.clipboard_user_data = NULL;
 
 
     return true;

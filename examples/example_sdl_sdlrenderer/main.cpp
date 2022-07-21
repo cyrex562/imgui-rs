@@ -42,7 +42,7 @@ int main(int, char**)
     }
     //SDL_RendererInfo info;
     //SDL_GetRendererInfo(renderer, &info);
-    //SDL_Log("Current SDL_Renderer: %s", info.name);
+    //SDL_Log("current SDL_Renderer: %s", info.name);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

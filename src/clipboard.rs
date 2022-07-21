@@ -2,18 +2,17 @@ use std::os::raw::c_char;
 use crate::context::Context;
 use crate::imgui_context::ImGuiContext;
 
-// void ImGui::SetClipboardText(const char* text)
-pub fn SetClipboardText(g: *mut ImGuiContext, text: *const c_char) {
-    // ImGuiContext& g = *GImGui;
-    if g.io.SetClipboardTextFn {
-        g.io.SetClipboardTextFn(g.io.ClipboardUserData, text);
+// void ImGui::set_clipboard_text(const char* text)
+pub fn set_clipboard_text(g: &mut Context, text: &str) {
+    if g.io.set_clipboard_text_fn {
+        g.io.set_clipboard_text_fn(g.io.clipboard_user_data, text);
     }
 }
 
 // Win32 clipboard implementation
 // We use g.clipboard_handler_data for temporary storage to ensure it is freed on Shutdown()
 // static const char* GetClipboardTextFn_DefaultImpl(void*)
-pub fn get_clipboard_text_fn_dflt_impl(ctx: &mut Context) -> String {
+pub fn get_clipboard_text_fn_dflt_impl(g: &mut Context) -> String {
     todo!()
     // ImGuiContext& g = *GImGui;
     // ctx.clipboard_handler_data.clear();
@@ -38,8 +37,8 @@ pub fn get_clipboard_text_fn_dflt_impl(ctx: &mut Context) -> String {
     // return g.ClipboardHandlerData.Data;
 }
 
-// static void SetClipboardTextFn_DefaultImpl(void*, const char* text)
-pub fn set_clipboard_text_fn_dflt_impl(text: &String) {
+// static void set_clipboard_text_fn_DefaultImpl(void*, const char* text)
+pub fn set_clipboard_text_fn_dflt_impl(text: &str) {
     todo!()
     // if (!::OpenClipboard(NULL))
     //     return;
@@ -79,7 +78,7 @@ pub fn set_clipboard_text_fn_dflt_impl(text: &String) {
 
 // OSX clipboard implementation
 // If you enable this you will need to add '-framework ApplicationServices' to your linker command-line!
-// static void SetClipboardTextFn_DefaultImpl(void*, const char* text)
+// static void set_clipboard_text_fn_DefaultImpl(void*, const char* text)
 // {
 //     if (!main_clipboard)
 //         PasteboardCreate(kPasteboardClipboard, &main_clipboard);
@@ -134,7 +133,7 @@ pub fn set_clipboard_text_fn_dflt_impl(text: &String) {
 //     return g.ClipboardHandlerData.empty() ? NULL : g.ClipboardHandlerData.begin();
 // }
 //
-// static void SetClipboardTextFn_DefaultImpl(void*, const char* text)
+// static void set_clipboard_text_fn_DefaultImpl(void*, const char* text)
 // {
 //     ImGuiContext& g = *GImGui;
 //     g.ClipboardHandlerData.clear();

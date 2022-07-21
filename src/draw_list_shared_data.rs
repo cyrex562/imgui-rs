@@ -8,9 +8,9 @@ pub struct DrawListSharedData
 {
     // Vector2D          tex_uv_white_pixel;            // UV of white pixel in the atlas
     pub text_uv_white_pixel: Vector2D,
-    // ImFont*         font;                       // Current/default font (optional, for simplified add_text overload)
+    // ImFont*         font;                       // current/default font (optional, for simplified add_text overload)
     pub font: *mut Font,
-    // float           font_size;                   // Current/default font size (optional, for simplified add_text overload)
+    // float           font_size;                   // current/default font size (optional, for simplified add_text overload)
     pub font_size: f32,
     // float           CurveTessellationTol;       // Tessellation tolerance when using PathBezierCurveTo()
     pub curve_tesselation_tol: f32,

@@ -23,7 +23,7 @@ pub enum ImGuiInputTextFlags2
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
 
-pub unsafe fn ImTextCharFromUtf8(out_char: *mut u32, in_text: *const c_char, mut in_text_end: *mut c_char) -> i32 {
+pub unsafe fn ImTextCharFromUtf8(out_char: *mut u32, in_text: &str, mut in_text_end: *mut c_char) -> i32 {
     const lengths: [u8;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
     2, 2, 2, 2, 3, 3, 4, 0 ];
     const masks: [i32;5]  = [ 0x00, 0x7f, 0x1f, 0x0f, 0x07 ];
@@ -77,7 +77,7 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut u32, in_text: *const c_char, mut
 }
 
 // int ImTextStrFromUtf8(ImWchar* buf, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
-pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, mut in_text: *mut c_char, in_text_end: *mut c_char, in_text_remaining: *mut *const c_char) -> i32
+pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, mut in_text: *mut c_char, in_text_end: *mut c_char, in_text_remaining: *mut &str) -> i32
 {
     // ImWchar* buf_out = buf;
     let mut buf_out: *mut ImWchar = buf;
@@ -152,7 +152,7 @@ pub fn ImTextCharToUtf8_inline(buf: *mut c_char, buf_size: i32, c: u32) -> i32 {
 }
 
 // const char* ImTextCharToUtf8(char out_buf[5], unsigned int c)
-pub fn ImTextCharToUtf8(mut out_buf: [c_char;5], c: u32) -> *const c_char
+pub fn ImTextCharToUtf8(mut out_buf: [c_char;5], c: u32) -> &str
 {
     let count = ImTextCharToUtf8_inline(out_buf.as_mut_ptr(), 5, c);
     out_buf[count] = 0;
@@ -161,7 +161,7 @@ pub fn ImTextCharToUtf8(mut out_buf: [c_char;5], c: u32) -> *const c_char
 
 // Not optimal but we very rarely use this function.
 // int ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountUtf8BytesFromChar(in_text: *const c_char, in_text_end: *mut c_char) -> i32
+pub unsafe fn ImTextCountUtf8BytesFromChar(in_text: &str, in_text_end: *mut c_char) -> i32
 {
     // unsigned int unused = 0;
     let mut unused = 0u32;

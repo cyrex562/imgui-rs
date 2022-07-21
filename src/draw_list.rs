@@ -161,7 +161,7 @@ impl DrawList {
         todo!()
     }
     //  void  add_text(const ImFont* font, float font_size, const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0, const Vector4D* cpu_fine_clip_rect = NULL);
-    pub fn AddText2(&mut self, font: &Font, font_size: f32, pos: &Vector2D, col: u32, text_begin: *const c_char, text_end: *const c_char, wrap_width: f32, cpu_fine_clip_rect: Option<&Vector4D>) {
+    pub fn AddText2(&mut self, font: &Font, font_size: f32, pos: &Vector2D, col: u32, text_begin: &str, text_end: &str, wrap_width: f32, cpu_fine_clip_rect: Option<&Vector4D>) {
         todo!()
     }
     //  void  AddPolyline(const Vector2D* points, int num_points, ImU32 col, ImDrawFlags flags, float thickness);

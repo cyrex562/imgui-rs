@@ -6,7 +6,7 @@ use crate::draw_list::DrawList;
 #[derive(Debug,Clone,Default)]
 pub struct DrawListSplitter
 {
-    pub current: i32,  // Current channel number (0)
+    pub current: i32,  // current channel number (0)
     pub count: i32,    // Number of active channels (1+)
     // ImVector<ImDrawChannel>     _channels;   // Draw channels (not resized down so _count might be < Channels.size)
     pub channels: Vec<DrawChannel>,

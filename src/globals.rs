@@ -1,7 +1,7 @@
 use std::ptr;
 use crate::imgui_context::ImGuiContext;
 
-// Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != NULL.
+// current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != NULL.
 // - ImGui::CreateContext() will automatically set this pointer if it is NULL.
 //   Change to a different context by calling ImGui::SetCurrentContext().
 // - Important: Dear ImGui functions are not thread-safe because of this pointer.

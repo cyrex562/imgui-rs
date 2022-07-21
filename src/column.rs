@@ -7,17 +7,17 @@ use crate::rect::Rect;
 pub struct OldColumns
 {
     // DimgId             id;
-    pub ID: Id32,
+    pub id: Id32,
     // ImGuiOldColumnFlags flags;
-    pub Flags: DimgOldColumnFlags,
-    // bool                IsFirstFrame;
-    pub IsFirstFrame: bool,
-    // bool                IsBeingResized;
-    pub IsBeingResized: bool,
-    // int                 Current;
-    pub Current: i32,
-    // int                 Count;
-    pub Count: i32,
+    pub flags: HashSet<OldColumnFlags>,
+    // bool                is_first_frame;
+    pub is_first_frame: bool,
+    // bool                is_being_resized;
+    pub is_being_resized: bool,
+    // int                 current;
+    pub current: i32,
+    // int                 count;
+    pub count: i32,
     // float               OffMinX, OffMaxX;       // Offsets from HostWorkRect.min.x
     pub OffMinX: f32,
     pub OffMaxX: f32,
@@ -52,7 +52,7 @@ impl OldColumns {
 
 // flags for internal's BeginColumns(). Prefix using BeginTable() nowadays!
 #[derive(Debug,Clone)]
-enum DimgOldColumnFlags
+enum OldColumnFlags
 {
     None                    = 0,
     NoBorder                = 1 << 0,   // Disable column dividers
@@ -72,7 +72,7 @@ enum DimgOldColumnFlags
 // #endif
 }
 
-impl Default for DimgOldColumnFlags {
+impl Default for OldColumnFlags {
     fn default() -> Self {
         Self::None
     }
@@ -86,7 +86,7 @@ pub struct ImGuiOldColumnData
     // float               offset_norm_before_resize;
     pub offset_norm_before_resize: f32,
     // ImGuiOldColumnFlags flags;              // Not exposed
-    pub flags: HashSet<DimgOldColumnFlags>,
+    pub flags: HashSet<OldColumnFlags>,
     // DimgRect              clip_rect;
     pub clip_rect: Rect,
     // ImGuiOldColumnData() { memset(this, 0, sizeof(*this)); }

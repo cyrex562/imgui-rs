@@ -24,7 +24,7 @@ use crate::imgui_math::ImMaxF32;
 // - User code submit visible elements.
 // - The clipper also handles various subtleties related to keyboard/gamepad navigation, wrapping etc.
 #[derive(Default,Debug,Clone)]
-pub struct ImGuiListClipper
+pub struct ListClipper
 {
     pub DisplayStart: i32,     // First item to display, updated by each call to Step()
     pub DisplayEnd: i32,       // End of items to display (exclusive)
@@ -40,7 +40,7 @@ pub struct ImGuiListClipper
 // #endif
 }
 
-impl ImGuiListClipper {
+impl ListClipper {
     pub fn new() -> Self {
         // memset(this, 0, sizeof(*this));
         //     ItemsCount = -1;
@@ -95,7 +95,7 @@ impl ImGuiListClipper {
             ImGuiListClipper_SeekCursorForItem(this, ItemsCount);
 
         // Restore temporary buffer and fix back pointers which may be invalidated when nesting
-        // IM_ASSERT(data.ListClipper == this);
+        // IM_ASSERT(data.list_clipper == this);
         data.StepNo = data.Ranges.size;
         if (g.ClipperTempDataStacked -= 1 > 0)
         {
@@ -139,7 +139,7 @@ pub fn GetSkipItemForListClipping() -> bool
 
 
 //static void ImGuiListClipper_SortAndFuseRanges(ImVector<ImGuiListClipperRange>& ranges, int offset = 0)
-pub fn sort_and_fuse_ranges(ranges: &mut Vec<ImGuiListClipper>, offset: usize)
+pub fn sort_and_fuse_ranges(ranges: &mut Vec<ListClipper>, offset: usize)
 {
     if (ranges.size - offset <= 1) {
         return;
@@ -162,7 +162,7 @@ pub fn sort_and_fuse_ranges(ranges: &mut Vec<ImGuiListClipper>, offset: usize)
     // for (int i = 1 + offset; i < ranges.size; i += 1)
     for i in (1 + offset) .. ranges.size
     {
-        // IM_ASSERT(!ranges[i].PosToIndexConvert && !ranges[i - 1].PosToIndexConvert);
+        // IM_ASSERT(!ranges[i].pos_to_index_convert && !ranges[i - 1].pos_to_index_convert);
         if ranges[i - 1].max < ranges[i].min {
             continue;
         }
@@ -212,13 +212,13 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
 }
 
 // static void ImGuiListClipper_SeekCursorForItem(ImGuiListClipper* clipper, int item_n)
-pub fn seek_cursor_for_item(clipper: *mut ImGuiListClipper, item_n: usize)
+pub fn seek_cursor_for_item(clipper: *mut ListClipper, item_n: usize)
 {
-    // StartPosY starts from ItemsFrozen hence the subtraction
+    // StartPosY starts from items_frozen hence the subtraction
     // Perform the add and multiply with double to allow seeking through larger ranges
     // ImGuiListClipperData* data = (ImGuiListClipperData*)clipper->TempData;
     let mut data = clipper.TempData as *mut ImGuiListClipperData;
-    // float pos_y = (float)((double)clipper->StartPosY + data->LossynessOffset + (double)(item_n - data->ItemsFrozen) * clipper->ItemsHeight);
+    // float pos_y = (float)((double)clipper->StartPosY + data->lossyness_offset + (double)(item_n - data->items_frozen) * clipper->ItemsHeight);
     let pos_y = clipper.StartPosY + data.LossynessOffset + (item_n - data.ItemsFrozen) * clipper.ItemsHeight;
     // ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y, clipper->ItemsHeight);
     seek_cursor_and_setup_prev_line(pos_y, clipper.ItemsHeight);
@@ -234,7 +234,7 @@ pub fn seek_cursor_for_item(clipper: *mut ImGuiListClipper, item_n: usize)
 //     End();
 // }
 
-// Use case A: Begin() called from constructor with items_height<0, then called again from Step() in StepNo 1
+// Use case A: Begin() called from constructor with items_height<0, then called again from Step() in step_no 1
 // Use case B: Begin() called from constructor with items_height>0
 // FIXME-LEGACY: Ideally we should remove the Begin/End functions but they are part of the legacy API we still support. This is why some of the code in Step() calling Begin() and reassign some fields, spaghetti style.
 // void ImGuiListClipper::Begin(int items_count, float items_height)
@@ -305,7 +305,7 @@ bool ImGuiListClipper::Step()
     // Step 1: Let the clipper infer height from first range
     if (ItemsHeight <= 0.0)
     {
-        // IM_ASSERT(data.StepNo == 1);
+        // IM_ASSERT(data.step_no == 1);
         if (table)
             // IM_ASSERT(table.RowPosY1 == StartPosY && table.RowPosY2 == window.dc.cursor_pos.y);
 
@@ -381,4 +381,70 @@ bool ImGuiListClipper::Step()
 
     end();
     return false;
+}
+
+#[derive(Debug,Clone,Default)]
+pub struct ListClipperRange
+{
+    // int     min;
+    pub min: i32,
+    // int     max;
+    pub max: i32,
+    // bool    pos_to_index_convert;      // Begin/End are absolute position (will be converted to indices later)
+    pub pos_to_index_convert: bool,
+    // ImS8    pos_to_index_offset_min;    // Add to min after converting to indices
+    pub pos_to_index_offset_min: i8,
+    // ImS8    pos_to_index_offset_max;    // Add to min after converting to indices
+    pub pos_to_index_offset_max: i8,
+}
+
+impl ListClipperRange {
+    // static ImGuiListClipperRange    from_indices(int min, int max)                               { ImGuiListClipperRange r = { min, max, false, 0, 0 }; return r; }
+    pub fn from_indices(min: i32, max: i32) -> Self {
+        Self {
+            min: min,
+            max: max,
+            pos_to_index_convert: false,
+            pos_to_index_offset_min: 0,
+            pos_to_index_offset_max: 0
+        }
+    }
+    //     static ImGuiListClipperRange    from_positions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { y1, y2, true, off_min, off_max }; return r; }
+    pub fn from_positions(y1: f32, y2: f32, off_min: i32, off_max: i32) -> Self {
+        Self {
+            min: y1 as i32,
+            max: y2 as i32,
+            pos_to_index_convert: true,
+            pos_to_index_offset_min: off_min as i8,
+            pos_to_index_offset_max: off_max as i8,
+        }
+    }
+}
+
+// Temporary clipper data, buffers shared/reused between instances
+#[derive(Debug,Clone,Default)]
+pub struct ListClipperData
+{
+    // ImGuiListClipper*               list_clipper;
+    pub list_clipper: ListClipper,
+    // float                           lossyness_offset;
+    pub lossyness_offset: f32,
+    // int                             step_no;
+    pub step_no: i32,
+    // int                             items_frozen;
+    pub items_frozen: i32,
+    // ImVector<ImGuiListClipperRange> ranges;
+    pub ranges: Vec<ListClipperRange>,
+}
+
+impl ListClipperData {
+    // ImGuiListClipperData()          { memset(this, 0, sizeof(*this)); }
+
+    //     void                            Reset(ImGuiListClipper* clipper) { list_clipper = clipper; step_no = items_frozen = 0; ranges.resize(0); }
+    pub fn reset(&mut self, clipper: &mut ListClipper) {
+        self.list_clipper = clipper.clone();
+        self.step_no = 0;
+        self.items_frozen = 0;
+        self.ranges.clear()
+    }
 }

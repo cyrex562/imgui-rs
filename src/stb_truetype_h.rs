@@ -168,7 +168,7 @@
 //         bottom of uppercase characters. Characters extend both above
 //         and below the baseline.
 //
-//      Current Point
+//      current Point
 //         As you draw text to the screen, you keep track of a "current point"
 //         which is the origin of each character. The current point's vertical
 //         position is the baseline. Even "baked fonts" use this model.
@@ -211,7 +211,7 @@
 //    you want the top edge of characters to appear at the top of the
 //    screen where y=0, then you would set the baseline to SF*-y0.
 //
-//  Current point:
+//  current point:
 //    Set the current point where the first character will appear. The
 //    first character could extend left of the current point; this is font
 //    dependent. You can either choose a current point that is the leftmost

@@ -118,7 +118,7 @@ static void ImGui::DockContextRemoveNode(ImGuiContext* ctx, ImGuiDockNode* node,
     ImGuiDockContext* dc  = &ctx.DockContext;
 
     IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x%08X\n", node.ID);
-    // IM_ASSERT(DockContextFindNodeByID(ctx, node.ID) == node);
+    // IM_ASSERT(DockContextFindNodeByID(ctx, node.id) == node);
     // IM_ASSERT(node.ChildNodes[0] == NULL && node.ChildNodes[1] == NULL);
     // IM_ASSERT(node.Windows.size == 0);
 

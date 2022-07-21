@@ -41,7 +41,7 @@
 #pragma warning (disable: 4505) // unreferenced local function has been removed (stb stuff)
 #endif
 
-static int g_Time = 0;          // Current time, in milliseconds
+static int g_Time = 0;          // current time, in milliseconds
 
 // Glut has 1 function for characters and one for "special keys". We map the characters in the 0..255 range and the keys above.
 static ImGuiKey ImGui_ImplGLUT_KeyToImGuiKey(int key)

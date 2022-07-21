@@ -52,7 +52,7 @@ pub struct ImGuiTableColumn
     pub WorkMinX: f32,
     // float                   WorkMaxX;                       // Contents region max ~(MaxX - CellPaddingX - CellSpacingX2)
     pub WorkMaxX: f32,
-    // float                   item_width;                      // Current item width for the column, preserved across rows
+    // float                   item_width;                      // current item width for the column, preserved across rows
     pub ItemWidth: f32,
     // float                   ContentMaxXFrozen;              // Contents maximum position for frozen rows (apart from headers), from which we can infer content width.
     pub ContextMaxXFrozen: f32,
@@ -215,7 +215,7 @@ pub struct Table
     pub TempData: *mut TableTempData,
     // ImSpan<ImGuiTableColumn>    Columns;                    // Point within RawData[]
     pub Columns: Vec<ImGuiTableColumn>,
-    // ImSpan<ImGuiTableColumnIdx> DisplayOrderToIndex;        // Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
+    // ImSpan<ImGuiTableColumnIdx> DisplayOrderToIndex;        // Point within RawData[]. Store display order of columns (when not reordered, the values are 0...count-1)
     pub DisplayOrderToIndex: Vec<ImGuiTableColumnIdx>,
     // ImSpan<ImGuiTableCellData>  RowCellData;                // Point within RawData[]. Store cells background requests for current row.
     pub RowCellData: Vec<ImGuiTableCellData>,
@@ -239,7 +239,7 @@ pub struct Table
     pub CurrentRow: i32,
     // int                         CurrentColumn;
     pub CurrentColumn: i32,
-    // ImS16                       InstanceCurrent;            // Count of BeginTable() calls with same id in the same frame (generally 0). This is a little bit similar to begin_count for a window, but multiple table with same id look are multiple tables, they are just synched.
+    // ImS16                       InstanceCurrent;            // count of BeginTable() calls with same id in the same frame (generally 0). This is a little bit similar to begin_count for a window, but multiple table with same id look are multiple tables, they are just synched.
     pub InstanceCurrent: i16,
     // ImS16                       InstanceInteracted;         // Mark which instance (generally 0) of the same id is being interacted with
     pub InstanceInteracted: i16,
@@ -253,7 +253,7 @@ pub struct Table
     pub RowTextBaseLine: f32,
     // float                       RowIndentOffsetX;
     pub RowIndentOffsetX: f32,
-    // ImGuiTableRowFlags          RowFlags : 16;              // Current row flags, see ImGuiTableRowFlags_
+    // ImGuiTableRowFlags          RowFlags : 16;              // current row flags, see ImGuiTableRowFlags_
     pub RowFlags: ImGuiTableRowFlags,
     // ImGuiTableRowFlags          LastRowFlags : 16;
     pub LastRowFlags: ImGuiTableRowFlags,
@@ -339,7 +339,7 @@ pub struct Table
     pub ColumnsEnabledCount: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         ColumnsEnabledFixedCount;   // Number of enabled columns (<= ColumnsCount)
     pub ColumnsEnabledFixedCount: ImGuiTableColumnIdx,
-    // ImGuiTableColumnIdx         DeclColumnsCount;           // Count calls to TableSetupColumn()
+    // ImGuiTableColumnIdx         DeclColumnsCount;           // count calls to TableSetupColumn()
     pub DeclColumnsCount: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx         HoveredColumnBody;          // index of column whose visible region is being hovered. Important: == ColumnsCount when hovering empty region after the right-most column!
     pub HoveredColumnBody: ImGuiTableColumnIdx,
@@ -399,7 +399,7 @@ pub struct Table
     pub IsSettingsRequestLoad: bool,
     // bool                        IsSettingsDirty;            // Set when table settings have changed and needs to be reported into ImGuiTableSetttings data.
     pub IsSettingsDirty: bool,
-    // bool                        IsDefaultDisplayOrder;      // Set when display order is unchanged from default (DisplayOrder contains 0...Count-1)
+    // bool                        IsDefaultDisplayOrder;      // Set when display order is unchanged from default (DisplayOrder contains 0...count-1)
     pub IsDefaultDisplayOrder: bool,
     // bool                        IsResetAllRequest;
     pub IsResetAllRequest: bool,

@@ -17,7 +17,7 @@ In the [misc/fonts/](https://github.com/ocornut/imgui/tree/master/misc/fonts) fo
 - [Using Icon fonts](#using-icon-fonts)
 - [Using FreeType Rasterizer (imgui_freetype)](#using-freetype-rasterizer-imgui_freetype)
 - [Using Colorful glyphs/Emojis](#using-colorful-glyphsemojis)
-- [Using Custom Glyph Ranges](#using-custom-glyph-ranges)
+- [Using Custom Glyph ranges](#using-custom-glyph-ranges)
 - [Using Custom Colorful Icons](#using-custom-colorful-icons)
 - [Using font data Embedded In Source Code](#using-font-data-embedded-in-source-code)
 - [About filenames](#about-filenames)
@@ -125,7 +125,7 @@ io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, NULL, io.fonts->get_glyph_
 // Default + Hiragana, Katakana, Half-width, Selection of 1946 Ideographs
 io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, NULL, io.fonts->get_glyph_ranges_japanese());
 ```
-See [Using Custom Glyph Ranges](#using-custom-glyph-ranges) section to create your own ranges.
+See [Using Custom Glyph ranges](#using-custom-glyph-ranges) section to create your own ranges.
 
 
 **Example loading and using a Japanese font:**
@@ -234,7 +234,7 @@ io.fonts->AddFontFromFileTTF("C:\\windows\\fonts\\seguiemj.ttf", 16.0, &cfg, ran
 
 ##### [Return to index](#index)
 
-## Using Custom Glyph Ranges
+## Using Custom Glyph ranges
 
 You can use the `ImFontGlyphRangesBuilder` helper to create glyph ranges based on text input. For example: for a game where your script is known, if you can feed your entire script to it and only build the characters the game needs.
 ```cpp

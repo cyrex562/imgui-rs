@@ -6,7 +6,7 @@ use crate::draw_data::add_root_window_to_draw_data;
 use crate::draw_list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
 use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
-use crate::imgui_h::ImGuiColor;
+use crate::imgui_h::Color;
 use crate::imgui_style::{get_color_u32, GetColorU32_2, GetColorU32_3};
 use crate::input::MouseCursor;
 use crate::style::get_color_u32;
@@ -34,7 +34,7 @@ use crate::window::get::find_bottom_most_visible_window_with_begin_stack;
 // Internal ImGui functions to render text
 // render_text***() functions calls ImDrawList::add_text() calls ImBitmapFont::render_text()
 // void ImGui::render_text(Vector2D pos, const char* text, const char* text_end, bool hide_text_after_hash)
-pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *const c_char, hide_text_after_hash: bool)
+pub unsafe fn RenderText(pos: &Vector2D, text: &str, mut text_end: &str, hide_text_after_hash: bool)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -43,7 +43,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     // Hide anything after a '##' string
     // const char* text_display_end;
-    let mut text_display_end: *const c_char = null_mut();
+    let mut text_display_end: &str = null_mut();
     if hide_text_after_hash
     {
         text_display_end = find_rendered_text_end(text, text_end);
@@ -58,7 +58,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
 
     if text != text_display_end
     {
-        window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(ImGuiColor::Text as u32), text, text_display_end, 0.0, None);
+        window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(Color::Text as u32), text, text_display_end, 0.0, None);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
         }
@@ -66,7 +66,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: *const c_char, mut text_end: *con
 }
 
 // void ImGui::RenderTextWrapped(Vector2D pos, const char* text, const char* text_end, float wrap_width)
-pub fn RenderTextWrapped(pos: &Vector2D, text: *const c_char, mut text_end: *const c_char, wrap_width: f32)
+pub fn RenderTextWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_width: f32)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;

@@ -8,8 +8,8 @@ use std::fmt::{Debug, Formatter};
 
 
 
-use crate::clipper::ListClipperData;
-use crate::color::{COLOR_EDIT_FLAGS_DFLT_OPTS, ColorEditFlags, ColorMod};
+use crate::list_clipper::ListClipperData;
+use crate::color::{COLOR_EDIT_FLAGS_DFLT_OPTS, ColorEditFlags, StackedColorModifier};
 use crate::combo::ComboPreviewData;
 use crate::config::ConfigFlags;
 use crate::window::ShrinkWidthItem;
@@ -216,7 +216,7 @@ pub struct Context {
 
     // Shared stacks
     // ImVector<ImGuiColorMod> color_stack;                         // Stack for PushStyleColor()/PopStyleColor() - inherited by Begin()
-    pub color_stack: Vec<ColorMod>,
+    pub color_stack: Vec<StackedColorModifier>,
     // ImVector<ImGuiStyleMod> style_var_stack;                      // Stack for PushStyleVar()/PopStyleVar() - inherited by Begin()
     pub style_var_stack: Vec<StyleMod>,
     // ImVector<ImFont*>       font_stack;                          // Stack for PushFont()/PopFont() - inherited by Begin()

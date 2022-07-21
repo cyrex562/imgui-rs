@@ -80,10 +80,10 @@ pub struct DockNode
     pub windows: Vec<Id32>,
     // ImGuiTabBar*            tab_bar;
     pub tab_bar: TabBar, //*mut ImGuiTabBar,
-    // DimgVec2D                  pos;                        // Current position
+    // DimgVec2D                  pos;                        // current position
     // pub pos: DimgVec2D,
     pub pos: Vector2D,
-// DimgVec2D                  size;                       // Current size
+// DimgVec2D                  size;                       // current size
     pub size: Vector2D,
     // DimgVec2D                  size_ref;                    // [split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate size.
     pub size_ref: Vector2D,

@@ -9,7 +9,7 @@ pub struct SizeCallbackData
     pub user_data: Vec<u8>,
     // pub pos: Vector2D,            // Read-only.   window position, for reference.
     pub pos: Vector2D,
-    // pub current_size: Vector2D,    // Read-only.   Current window size.
+    // pub current_size: Vector2D,    // Read-only.   current window size.
     pub current_size: Vector2D,
     // pub desired_size: Vector2D,    // Read-write.  Desired size, based on user's mouse position. Write to this field to restrain resizing.
     pub desired_size: Vector2D,

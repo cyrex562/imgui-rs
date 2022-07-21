@@ -727,7 +727,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     table.LeftMostEnabledColumn = -1;
     table.MinColumnWidth = ImMax(1.0, g.style.frame_padding.x * 1.0); // g.style.ColumnsMinSpacing; // FIXME-TABLE
 
-    // [Part 1] Apply/lock Enabled and Order states. Calculate auto/ideal width for columns. Count fixed/stretch columns.
+    // [Part 1] Apply/lock Enabled and Order states. Calculate auto/ideal width for columns. count fixed/stretch columns.
     // Process columns in their visible orders as we are building the Prev/Next indices.
     int count_fixed = 0;                // Number of columns that have fixed sizing policies
     int count_stretch = 0;              // Number of columns that have stretch sizing policies
@@ -1330,7 +1330,7 @@ void    ImGui::EndTable()
     }
 
     // Pop from id stack
-    // IM_ASSERT_USER_ERROR(inner_window.IDStack.back() == table.ID + table.InstanceCurrent, "Mismatching PushID/PopID!");
+    // IM_ASSERT_USER_ERROR(inner_window.IDStack.back() == table.id + table.InstanceCurrent, "Mismatching PushID/PopID!");
     // IM_ASSERT_USER_ERROR(outer_window.dc.ItemWidthStack.size >= temp_data.HostBackupItemWidthStackSize, "Too many PopItemWidth!");
     PopID();
 
@@ -3197,7 +3197,7 @@ ImGuiTableSettings* ImGui::TableGetBoundSettings(ImGuiTable* table)
     {
         // ImGuiContext& g = *GImGui;
         ImGuiTableSettings* settings = g.SettingsTables.ptr_from_offset(table.SettingsOffset);
-        // IM_ASSERT(settings.ID == table.ID);
+        // IM_ASSERT(settings.id == table.id);
         if (settings.ColumnsCountMax >= table.ColumnsCount)
             return settings; // OK
         settings.ID = 0; // Invalidate storage, we won't fit because of a count change
@@ -3231,7 +3231,7 @@ void ImGui::TableSaveSettings(ImGuiTable* table)
     settings.ColumnsCount = (ImGuiTableColumnIdx)table.ColumnsCount;
 
     // Serialize ImGuiTable/ImGuiTableColumn into ImGuiTableSettings/ImGuiTableColumnSettings
-    // IM_ASSERT(settings.ID == table.ID);
+    // IM_ASSERT(settings.id == table.id);
     // IM_ASSERT(settings.ColumnsCount == table.ColumnsCount && settings.ColumnsCountMax >= settings.ColumnsCount);
     ImGuiTableColumn* column = table.Columns.data;
     ImGuiTableColumnSettings* column_settings = settings.GetColumnSettings();
@@ -3690,7 +3690,7 @@ static float GetDraggedColumnOffset(ImGuiOldColumns* columns, int column_index)
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     // IM_ASSERT(column_index > 0); // We are not supposed to drag column 0.
-    // IM_ASSERT(g.active_id == columns.ID + ImGuiID(column_index));
+    // IM_ASSERT(g.active_id == columns.id + ImGuiID(column_index));
 
     float x = g.io.mouse_pos.x - g.ActiveIdClickOffset.x + COLUMNS_HIT_RECT_HALF_WIDTH - window.pos.x;
     x = ImMax(x, ImGui::GetColumnOffset(column_index - 1) + g.style.ColumnsMinSpacing);
@@ -3849,7 +3849,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
     // Acquire storage for the columns set
     ImGuiID id = GetColumnsID(str_id, columns_count);
     ImGuiOldColumns* columns = FindOrCreateColumns(window, id);
-    // IM_ASSERT(columns.ID == id);
+    // IM_ASSERT(columns.id == id);
     columns.Current = 0;
     columns.Count = columns_count;
     columns.flags = flags;
@@ -3927,7 +3927,7 @@ void ImGui::NextColumn()
     if (columns.Count == 1)
     {
         window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.Indent.x + window.dc.ColumnsOffset.x);
-        // IM_ASSERT(columns.Current == 0);
+        // IM_ASSERT(columns.current == 0);
         return;
     }
 
@@ -3991,7 +3991,7 @@ void ImGui::EndColumns()
         window.dc.cursor_max_pos.x = columns.HostCursorMaxPosX;  // Restore cursor max pos, as columns don't grow parent
 
     // Draw columns borders and handle resize
-    // The IsBeingResized flag ensure we preserve pre-resize columns width so back-and-forth are not lossy
+    // The is_being_resized flag ensure we preserve pre-resize columns width so back-and-forth are not lossy
     bool is_being_resized = false;
     if (!(flags & ImGuiOldColumnFlags_NoBorder) && !window.skip_items)
     {

@@ -346,7 +346,7 @@ pub fn get_item_rect_min(g: &mut Context) -> Vector2D
 pub fn get_item_rect_max(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
-    // return g.last_item_data.Rect.Max;
+    // return g.last_item_data.Rect.max;
     g.last_item_data.rect.max.clone()
 }
 
