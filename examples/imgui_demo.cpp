@@ -3199,7 +3199,7 @@ static void ShowDemoWindowLayout()
             ImGui::Checkbox("Button", &show_button);            // Will grow contents size (unless explicitly overwritten)
             ImGui::Checkbox("Tree nodes", &show_tree_nodes);    // Will grow contents size and display highlight over full width
             ImGui::Checkbox("Text wrapped", &show_text_wrapped);// Will grow and use contents size
-            ImGui::Checkbox("Columns", &show_columns);          // Will use contents size
+            ImGui::Checkbox("columns", &show_columns);          // Will use contents size
             ImGui::Checkbox("Tab bar", &show_tab_bar);          // Will use contents size
             ImGui::Checkbox("Child", &show_child);              // Will grow and use contents size
             ImGui::Checkbox("Explicit content size", &explicit_content_size);
@@ -3250,7 +3250,7 @@ static void ShowDemoWindowLayout()
                     }
                     ImGui::EndTable();
                 }
-                ImGui::Text("Columns:");
+                ImGui::Text("columns:");
                 ImGui::Columns(4);
                 for (int n = 0; n < 4; n += 1)
                 {
@@ -3726,10 +3726,10 @@ static void EditTableSizingFlags(ImGuiTableFlags* p_flags)
     static const EnumDesc policies[] =
     {
         { ImGuiTableFlags_None,               "Default",                            "Use default sizing policy:\n- ImGuiTableFlags_SizingFixedFit if ScrollX is on or if host window has ImGuiWindowFlags_AlwaysAutoResize.\n- ImGuiTableFlags_SizingStretchSame otherwise." },
-        { ImGuiTableFlags_SizingFixedFit,     "ImGuiTableFlags_SizingFixedFit",     "Columns default to _WidthFixed (if resizable) or _WidthAuto (if not resizable), matching contents width." },
-        { ImGuiTableFlags_SizingFixedSame,    "ImGuiTableFlags_SizingFixedSame",    "Columns are all the same width, matching the maximum contents width.\nImplicitly disable ImGuiTableFlags_Resizable and enable ImGuiTableFlags_NoKeepColumnsVisible." },
-        { ImGuiTableFlags_SizingStretchProp,  "ImGuiTableFlags_SizingStretchProp",  "Columns default to _WidthStretch with weights proportional to their widths." },
-        { ImGuiTableFlags_SizingStretchSame,  "ImGuiTableFlags_SizingStretchSame",  "Columns default to _WidthStretch with same weights." }
+        { ImGuiTableFlags_SizingFixedFit,     "ImGuiTableFlags_SizingFixedFit",     "columns default to _WidthFixed (if resizable) or _WidthAuto (if not resizable), matching contents width." },
+        { ImGuiTableFlags_SizingFixedSame,    "ImGuiTableFlags_SizingFixedSame",    "columns are all the same width, matching the maximum contents width.\nImplicitly disable ImGuiTableFlags_Resizable and enable ImGuiTableFlags_NoKeepColumnsVisible." },
+        { ImGuiTableFlags_SizingStretchProp,  "ImGuiTableFlags_SizingStretchProp",  "columns default to _WidthStretch with weights proportional to their widths." },
+        { ImGuiTableFlags_SizingStretchSame,  "ImGuiTableFlags_SizingStretchSame",  "columns default to _WidthStretch with same weights." }
     };
     int idx;
     for (idx = 0; idx < IM_ARRAYSIZE(policies); idx += 1)
@@ -3798,7 +3798,7 @@ static void ShowDemoWindowTables()
 {
     //ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     IMGUI_DEMO_MARKER("tables");
-    if (!ImGui::CollapsingHeader("tables & Columns"))
+    if (!ImGui::CollapsingHeader("tables & columns"))
         return;
 
     // Using those as a base value to create width/height that are factor of the size of our font
@@ -3883,7 +3883,7 @@ static void ShowDemoWindowTables()
         // This is generally more convenient when your cells all contains the same type of data.
         HelpMarker(
             "Only using TableNextColumn(), which tends to be convenient for tables where every cells contains the same type of contents.\n"
-            "This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->tables API transition.");
+            "This is also more similar to the old NextColumn() function of the columns API, and provided to facilitate the columns->tables API transition.");
         if (ImGui::BeginTable("table3", 3))
         {
             for (int item = 0; item < 14; item += 1)
@@ -4314,7 +4314,7 @@ static void ShowDemoWindowTables()
             ImGui::SameLine();
             HelpMarker("Be mindful that using right-alignment (e.g. size.x = -FLT_MIN) creates a feedback loop where contents width can feed into auto-column width can feed into contents width.");
         }
-        ImGui::DragInt("Columns", &column_count, 0.1, 1, 64, "%d", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::DragInt("columns", &column_count, 0.1, 1, 64, "%d", ImGuiSliderFlags_AlwaysClamp);
         ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
         ImGui::CheckboxFlags("ImGuiTableFlags_PreciseWidths", &flags, ImGuiTableFlags_PreciseWidths);
         ImGui::SameLine(); HelpMarker("Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.");
@@ -4487,8 +4487,8 @@ static void ShowDemoWindowTables()
 
     if (open_action != -1)
         ImGui::SetNextItemOpen(open_action != 0);
-    IMGUI_DEMO_MARKER("tables/Columns flags");
-    if (ImGui::TreeNode("Columns flags"))
+    IMGUI_DEMO_MARKER("tables/columns flags");
+    if (ImGui::TreeNode("columns flags"))
     {
         // Create a first table just to show all the options/flags we want to make visible in our example!
         const int column_count = 3;
@@ -4554,8 +4554,8 @@ static void ShowDemoWindowTables()
 
     if (open_action != -1)
         ImGui::SetNextItemOpen(open_action != 0);
-    IMGUI_DEMO_MARKER("tables/Columns widths");
-    if (ImGui::TreeNode("Columns widths"))
+    IMGUI_DEMO_MARKER("tables/columns widths");
+    if (ImGui::TreeNode("columns widths"))
     {
         HelpMarker("Using TableSetupColumn() to setup default width.");
 
@@ -5520,19 +5520,19 @@ static void ShowDemoWindowTables()
         ImGui::PopStyleVar();
 }
 
-// Demonstrate old/legacy Columns API!
-// [2020: Columns are under-featured and not maintained. Prefer using the more flexible and powerful BeginTable() API!]
+// Demonstrate old/legacy columns API!
+// [2020: columns are under-featured and not maintained. Prefer using the more flexible and powerful BeginTable() API!]
 static void ShowDemoWindowColumns()
 {
-    IMGUI_DEMO_MARKER("Columns (legacy API)");
-    bool open = ImGui::TreeNode("Legacy Columns API");
+    IMGUI_DEMO_MARKER("columns (legacy API)");
+    bool open = ImGui::TreeNode("Legacy columns API");
     ImGui::SameLine();
-    HelpMarker("Columns() is an old API! Prefer using the more flexible and powerful BeginTable() API!");
+    HelpMarker("columns() is an old API! Prefer using the more flexible and powerful BeginTable() API!");
     if (!open)
         return;
 
     // Basic columns
-    IMGUI_DEMO_MARKER("Columns (legacy API)/Basic");
+    IMGUI_DEMO_MARKER("columns (legacy API)/Basic");
     if (ImGui::TreeNode("Basic"))
     {
         ImGui::Text("Without border:");
@@ -5577,7 +5577,7 @@ static void ShowDemoWindowColumns()
         ImGui::TreePop();
     }
 
-    IMGUI_DEMO_MARKER("Columns (legacy API)/Borders");
+    IMGUI_DEMO_MARKER("columns (legacy API)/Borders");
     if (ImGui::TreeNode("Borders"))
     {
         // NB: Future columns API should allow automatic horizontal borders.
@@ -5613,7 +5613,7 @@ static void ShowDemoWindowColumns()
     }
 
     // Create multiple items in a same cell before switching to next column
-    IMGUI_DEMO_MARKER("Columns (legacy API)/Mixed items");
+    IMGUI_DEMO_MARKER("columns (legacy API)/Mixed items");
     if (ImGui::TreeNode("Mixed items"))
     {
         ImGui::Columns(3, "mixed");
@@ -5645,7 +5645,7 @@ static void ShowDemoWindowColumns()
     }
 
     // Word wrapping
-    IMGUI_DEMO_MARKER("Columns (legacy API)/Word-wrapping");
+    IMGUI_DEMO_MARKER("columns (legacy API)/Word-wrapping");
     if (ImGui::TreeNode("Word-wrapping"))
     {
         ImGui::Columns(2, "word-wrapping");
@@ -5660,7 +5660,7 @@ static void ShowDemoWindowColumns()
         ImGui::TreePop();
     }
 
-    IMGUI_DEMO_MARKER("Columns (legacy API)/Horizontal Scrolling");
+    IMGUI_DEMO_MARKER("columns (legacy API)/Horizontal Scrolling");
     if (ImGui::TreeNode("Horizontal Scrolling"))
     {
         ImGui::SetNextWindowContentSize(DimgVec2D::new(1500.0, 0.0));
@@ -5686,7 +5686,7 @@ static void ShowDemoWindowColumns()
         ImGui::TreePop();
     }
 
-    IMGUI_DEMO_MARKER("Columns (legacy API)/Tree");
+    IMGUI_DEMO_MARKER("columns (legacy API)/Tree");
     if (ImGui::TreeNode("Tree"))
     {
         ImGui::Columns(2, "tree", true);
@@ -7244,7 +7244,7 @@ static void ShowExampleAppPropertyEditor(bool* p_open)
         "This example shows how you may implement a property editor using two columns.\n"
         "All objects/fields data are dummies here.\n"
         "Remember that in many simple cases, you can use ImGui::SameLine(xxx) to position\n"
-        "your cursor horizontally instead of using the Columns() API.");
+        "your cursor horizontally instead of using the columns() API.");
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, DimgVec2D::new(2, 2));
     if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable))

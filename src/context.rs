@@ -1,11 +1,8 @@
-
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
-
-
 
 
 use crate::list_clipper::ListClipperData;
@@ -27,11 +24,11 @@ use crate::group::GroupData;
 use crate::input::{DimgKey, InputSource, ModFlags, MouseCursor, NavLayer};
 use crate::input_event::InputEvent;
 use crate::io::{Io, PlatformIo};
-use crate::item::{ItemFlags, LastItemData, NextItemData};
+use crate::item::{ItemFlags, LastItemData, NextItemData, pop_item_flag};
 
 
 use crate::metrics::MetricsConfig;
-use crate::nav::{ActivateFlags, NavItemData, NavMoveFlags, ScrollFlags};
+use crate::nav::{ActivateFlags, nav_move_request_cancel, NavItemData, NavMoveFlags, ScrollFlags};
 use crate::payload::Payload;
 use crate::platform::{PlatformImeData, PlatformMonitor};
 
@@ -550,13 +547,12 @@ pub struct Context {
     pub want_input_next_frame: i32,
     // ImVector<char>          temp_buffer;                         // Temporary text buffer
     pub temp_buffer: Vec<u8>,
-    pub dock_nodes: HashMap<Id32, DockNode>
+    pub dock_nodes: HashMap<Id32, DockNode>,
 }
 
 impl Context {
     // ImGuiContext(ImFontAtlas* shared_font_atlas)
-    pub fn new(shared_font_atlas: &mut FontAtlas) -> Self
-    {
+    pub fn new(shared_font_atlas: &mut FontAtlas) -> Self {
         Self {
             initialized: false,
             config_flags_curr_frame: HashSet::new(),
@@ -617,7 +613,7 @@ impl Context {
             // ActiveIdClickOffset: Vector2D::new( - 1, -1),
             active_id_window_id: u32::MAX,
             active_id_source: InputSource::None,
-            active_id_mouse_button: - 1,
+            active_id_mouse_button: -1,
             active_id_previous_frame: 0,
             active_id_previous_frame_is_alive: false,
             active_id_previous_frame_has_been_edited_before: false,
@@ -653,7 +649,7 @@ impl Context {
             platform_last_focused_viewport_id: 0,
             fallback_monitor: PlatformMonitor::default(),
             viewport_front_most_stamp_count: 0,
-            nav_window_id: u32::MAX ,
+            nav_window_id: u32::MAX,
             nav_id: 0,
             nav_focus_scope_id: 0,
             nav_activate_id: 0,
@@ -709,8 +705,8 @@ impl Context {
             // drag_drop_within_source: false,
             // drag_drop_within_target: false,
             drag_drop_source_flags: HashSet::new(),
-            drag_drop_source_frame_count: - 1,
-            drag_drop_mouse_button: - 1,
+            drag_drop_source_frame_count: -1,
+            drag_drop_mouse_button: -1,
             drag_drop_payload: Default::default(),
             drag_drop_target_rect: Rect::default(),
             drag_drop_target_id: 0,
@@ -719,9 +715,9 @@ impl Context {
             drag_drop_accept_id_curr: 0,
             drag_drop_accept_id_prev: 0,
             // drag_drop_accept_id_curr: 0,
-            drag_drop_accept_frame_count: - 1,
+            drag_drop_accept_frame_count: -1,
             drag_drop_hold_just_pressed_id: 0,
-            drag_drop_payload_buf_local: [0;16],
+            drag_drop_payload_buf_local: [0; 16],
             clipper_temp_data_stacked: 0,
             clipper_temp_data: vec![],
             current_table: Id32::MAX,
@@ -746,7 +742,9 @@ impl Context {
             combo_preview_data: ComboPreviewData::default(),
             slider_grab_click_offset: 0.0,
             slider_current_accum: 0.0,
-            slider_current_accum_dirty: false, drag_current_accum_dirty: false, drag_current_accum: 0.0,
+            slider_current_accum_dirty: false,
+            drag_current_accum_dirty: false,
+            drag_current_accum: 0.0,
             drag_speed_default_ratio: 1.0 / 100.0,
             disabled_alpha_backup: 0.0,
             disabled_stack_size: 0,
@@ -786,7 +784,7 @@ impl Context {
             debug_item_picker_active: false,
             debug_item_picker_break_id: 0,
             debug_metrics_config: MetricsConfig::default(),
-            framerate_sec_per_frame: [0.0;128],
+            framerate_sec_per_frame: [0.0; 128],
             framerate_sec_per_frame_idx: 0,
             framerate_sec_per_frame_count: 0,
             framerate_sec_per_frame_accum: 0.0,
@@ -817,12 +815,13 @@ impl Context {
             // framerate_sec_per_frame_count: 0,
             temp_buffer: vec![],
             font: Default::default(),
-            dock_nodes: Default::default()
+            dock_nodes: Default::default(),
         }
     }
 
-    pub fn get_current_window(&mut self) -> Option<&mut Window> {
-         self.windows.get_mut(&self.current_window_id)
+    /// Panics if a window in the window hash set for the global context does not contain a window matching the id set in the current_window_id field
+    pub fn get_current_window(&mut self) -> &mut Window {
+        self.windows.get_mut(&self.current_window_id).expect(format!("failed to get current window (id={})", self.current_window_id).as_str())
     }
 
     pub fn get_viewport(&mut self, vp_id: Id32) -> Option<&mut Viewport> {
@@ -835,21 +834,22 @@ impl Context {
         return None;
     }
 
-    pub fn get_window(&mut self, win_id: Id32) -> Option<&mut Window> {
-        self.windows.get_mut(&win_id)
+    pub fn get_window(&mut self, win_id: Id32) -> &mut Window {
+        self.windows.get_mut(&win_id).expect(format!("window not found in window stack for id={}", win_id).as_str())
     }
 
-    pub fn get_dock_node(&mut self, dock_node_id: Id32) -> Option<&mut DockNode> {
-        self.dock_nodes.get_mut(&dock_node_id)
+    pub fn get_dock_node(&mut self, dock_node_id: Id32) -> &mut DockNode {
+        self.dock_nodes.get_mut(&dock_node_id).expect(format!("dock node not found in dock node collection for id={}", dock_node_id).as_str())
     }
 
-    pub fn get_draw_list(&mut self, draw_list_id: Id32) -> Option<&mut DrawList> {
-        self.draw_lists.get_mut(&draw_list_id)
+    pub fn get_draw_list(&mut self, draw_list_id: Id32) -> &mut DrawList {
+        self.draw_lists.get_mut(&draw_list_id).expect(format!("draw list not found in collection for id={}", draw_list_id).as_str())
     }
 }
 
-#[derive(Debug,Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ContextHookType { None, NewFramePre, NewFramePost, EndFramePre, EndFramePost, RenderPre, RenderPost, Shutdown, PendingRemoval }
+
 impl Default for ContextHookType {
     fn default() -> Self {
         Self::None
@@ -858,12 +858,8 @@ impl Default for ContextHookType {
 
 pub type ContextHookCallback = fn(ctx: &mut Context, hook: &mut ContextHook);
 
-//-----------------------------------------------------------------------------
-// [SECTION] Generic context hooks
-//-----------------------------------------------------------------------------
-#[derive(Default,Clone)]
-pub struct ContextHook
-{
+#[derive(Default, Clone)]
+pub struct ContextHook {
     // ImGuiID                     HookId;     // A unique id assigned by AddContextHook()
     pub hook_id: Id32,
     // ImGuiContextHookType        Type;
@@ -879,114 +875,108 @@ pub struct ContextHook
 
 impl Debug for ContextHook {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ContextHook")
-            .field("hook_id", &self.hook_id)
-            .field("hook_type", &self.hook_type)
-            .field("owner", &self.owner)
-            .field("callback", &format!("is_some: {}", &self.callback.is_some()))
-            .field("user_data", &format!("{:x} {:x} {:x} {:x} {:x} {:x} {:x} {:x}",&self.user_data[0], &self.user_data[1], &self.user_data[2], &self.user_data[3], &self.user_data[4], &self.user_data[5], &self.user_data[6], &self.user_data[7]))
-            .finish()
+        f.debug_struct("ContextHook").field("hook_id", &self.hook_id).field("hook_type", &self.hook_type).field("owner", &self.owner).field("callback", &format!("is_some: {}", &self.callback.is_some())).field("user_data", &format!("{:x} {:x} {:x} {:x} {:x} {:x} {:x} {:x}", &self.user_data[0], &self.user_data[1], &self.user_data[2], &self.user_data[3], &self.user_data[4], &self.user_data[5], &self.user_data[6], &self.user_data[7])).finish()
     }
 }
 
-// Deferred removal, avoiding issue with changing vector while iterating it
-// void ImGui::RemoveContextHook(ImGuiContext* ctx, ImGuiID hook_id)
-pub fn remove_context_hook(g: &mut Context, hook_id: Id32)
-{
+/// Deferred removal, avoiding issue with changing vector while iterating it
+pub fn remove_context_hook(g: &mut Context, hook_id: Id32) {
     // ImGuiContext& g = *ctx;
     // IM_ASSERT(hook_id != 0);
     // for (int n = 0; n < g.Hooks.Size; n += 1){
-    for n in 0 .. g.hooks.len() {
+    for n in 0..g.hooks.len() {
         if g.hooks[n].hook_id == hook_id {
             g.hooks[n].hook_type = ContextHookType::PendingRemoval;
         }
     }
 }
 
-// No specific ordering/dependency support, will see as needed
-// ImGuiID ImGui::AddContextHook(ImGuiContext* ctx, const ImGuiContextHook* hook)
+/// No specific ordering/dependency support, will see as needed
 pub fn add_context_hook(g: &mut Context, hook: &ContextHook) -> Id32 {
     // ImGuiContext& g = *ctx;
     // IM_ASSERT(hook->Callback != NULL && hook->HookId == 0 && hook->Type != ImGuiContextHookType_PendingRemoval_);
     g.hooks.push(hook.clone());
     g.hook_id_next += 1;
     // g.hooks.last().hook_id = g.hook_id_next;
-    g.hooks[g.hooks.len()-1].hook_id = g.hook_id_next;
+    g.hooks[g.hooks.len() - 1].hook_id = g.hook_id_next;
     return g.hook_id_next;
 }
 
 /// Call context hooks (used by e.g. test engine)
 /// We assume a small number of hooks so all stored in same array
-/// void ImGui::CallContextHooks(ImGuiContext* ctx, ImGuiContextHookType hook_type)
-pub fn call_context_hooks(g: &mut Context, hook_type: ContextHookType)
-{
+pub fn call_context_hooks(g: &mut Context, hook_type: ContextHookType) {
     // ImGuiContext& g = *ctx;
     // for (int n = 0; n < g.Hooks.Size; n += 1){
-    for n in 0 .. g.hooks.len() {
+    for n in 0..g.hooks.len() {
         if g.hooks[n].hook_type == hook_type && g.hooks[n].callback.is_some() {
             g.hooks[n].callback.unwrap()(g, &mut g.hooks[n]);
         }
     }
 }
 
-// void ImGui::SetActiveIdUsingNavAndKeys()
-pub fn set_active_id_using_nav_and_keys(g: &mut Context)
-{
+pub fn set_active_id_using_nav_and_keys(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.active_id != 0);
     g.active_id_using_nav_dir_mask = !0;
     g.active_id_using_nav_input_mask = !0;
     g.active_id_using_key_input_mask.SetAllBits();
-    nav_move_request_cancel();
+    nav_move_request_cancel(g);
 }
 
 
-// BeginDisabled()/EndDisabled()
-// - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
-// - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
-// - Feedback welcome at https://github.com/ocornut/imgui/issues/211
-// - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
-// - Optimized shortcuts instead of PushStyleVar() + push_item_flag()
-// void ImGui::BeginDisabled(bool disabled)
-pub fn begin_disabled(g: &mut Context, disabled: bool)
-{
+/// BeginDisabled()/EndDisabled()
+/// - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
+/// - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
+/// - Feedback welcome at https://github.com/ocornut/imgui/issues/211
+/// - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
+/// - Optimized shortcuts instead of PushStyleVar() + push_item_flag()
+pub fn begin_disabled(g: &mut Context, disabled: bool) {
     // ImGuiContext& g = *GImGui;
-    bool was_disabled = (g.current_item_flags & ItemFlags::Disabled) != 0;
-    if (!was_disabled && disabled)
-    {
-        g.DisabledAlphaBackup = g.style.alpha;
-        g.style.alpha *= g.style.DisabledAlpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * g.style.DisabledAlpha);
+
+    let was_disabled = g.current_item_flags.contains(&ItemFlags::Disabled);
+    if !was_disabled && disabled {
+        g.disabled_alpha_backup = g.style.alpha;
+        g.style.alpha *= g.style.disabled_alpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * g.style.DisabledAlpha);
     }
-    if (was_disabled || disabled)
-        g.current_item_flags |= ItemFlags::Disabled;
-    g.item_flags_stack.push_back(g.current_item_flags);
-    g.DisabledStackSize += 1;
+    if was_disabled || disabled {
+        g.current_item_flags.insert(ItemFlags::Disabled);
+    }
+
+    // g.item_flags_stack.push_back(g.current_item_flags);
+    for f in g.current_item_flags.iter() {
+        let push_flag: ItemFlag = f.clone();
+        g.item_flags_stack.push(push_flag);
+    }
+    g.disabled_stack_size += 1;
 }
 
 // void ImGui::EndDisabled()
-pub fn end_disabled(g: &mut Context)
-{
+pub fn end_disabled(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.DisabledStackSize > 0);
-    g.DisabledStackSize--;
-    bool was_disabled = (g.current_item_flags & ItemFlags::Disabled) != 0;
+    g.disabled_stack_size -= 1;
+    let was_disabled = g.current_item_flags.contains(&ItemFlags::Disabled);
     //PopItemFlag();
+    pop_item_flag(g);
     g.item_flags_stack.pop_back();
     g.current_item_flags = g.item_flags_stack.back();
-    if (was_disabled && (g.current_item_flags & ItemFlags::Disabled) == 0)
-        g.style.alpha = g.DisabledAlphaBackup; //PopStyleVar();
+    // if (was_disabled && (g.current_item_flags & ItemFlags::Disabled) == 0)
+    if was_disabled {
+        g.style.alpha = g.disabled_alpha_backup; //PopStyleVar();}
+    }
 }
 
 // static void set_current_window(ImGuiWindow* window)
-pub fn set_current_window(ctx: &mut Context, window_handle: WindowHandle) {
+pub fn set_current_window(g: &mut Context, window_handle: WindowHandle) {
     // ImGuiContext& g = *GImGui;
-    ctx.current_window_id = window_handle;
+    g.current_window_id = window_handle;
     // if window
-    ctx.current_table = if window_handle.dc.CurrentTableIdx != -1 {
-        ctx.tables.get_by_index(window_handle.dc.CurrentTableIdx)
+    let current_window = g.get_window(window_handle);
+    g.current_table_id = if current_window.dc.current_table_idx != -1 {
+        g.tables.get_by_index(window_handle.dc.current_table_idx)
     } else {
         INVALID_ID
     };
-    ctx.font_size = window_handle.CalcFontSize();
-    ctx.draw_list_shared_data.font_size = window_handle.CalcFontSize();
+    g.font_size = current_window.calc_font_size();
+    g.draw_list_shared_data.font_size = g.font_size;
 }

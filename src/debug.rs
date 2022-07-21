@@ -222,10 +222,10 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             else if (rect_type == WRT_OuterRectClipped)     { return window.OuterRectClipped; }
             else if (rect_type == WRT_InnerRect)            { return window.inner_rect; }
             else if (rect_type == WRT_InnerClipRect)        { return window.InnerClipRect; }
-            else if (rect_type == WRT_WorkRect)             { return window.WorkRect; }
+            else if (rect_type == WRT_WorkRect)             { return window.work_rect; }
             else if (rect_type == WRT_Content)       { Vector2D min = window.inner_rect.min - window.scroll + window.WindowPadding; return Rect(min, min + window.ContentSize); }
             else if (rect_type == WRT_ContentIdeal)         { Vector2D min = window.inner_rect.min - window.scroll + window.WindowPadding; return Rect(min, min + window.ContentSizeIdeal); }
-            else if (rect_type == WRT_ContentRegionRect)    { return window.ContentRegionRect; }
+            else if (rect_type == WRT_ContentRegionRect)    { return window.content_region_rect; }
             // IM_ASSERT(0);
             return Rect();
         }
@@ -632,11 +632,11 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     end();
 }
 
-// [DEBUG] Display contents of Columns
+// [DEBUG] Display contents of columns
 // void DebugNodeColumns(ImGuiOldColumns* columns)
 pub fn debug_node_columns(g: &mut Context, columns: &mut OldColumns)
 {
-    if (!TreeNode((void*)(uintptr_t)columns->ID, "Columns Id: 0x%08X, Count: %d, flags: 0x%04X", columns->ID, columns->Count, columns.flags))
+    if (!TreeNode((void*)(uintptr_t)columns->ID, "columns Id: 0x%08X, Count: %d, flags: 0x%04X", columns->ID, columns->Count, columns.flags))
         return;
     BulletText("width: %.1 (MinX: %.1, MaxX: %.1)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (int column_n = 0; column_n < columns->Columns.size; column_n += 1)
@@ -1110,7 +1110,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     if (window.root_window_dock_tree != window.root_window) { DebugNodeWindow(window.root_window_dock_tree, "root_window_dock_tree"); }
     if (window.parent_window != NULL)       { DebugNodeWindow(window.parent_window, "ParentWindow"); }
     if (window.dc.ChildWindows.size > 0)   { DebugNodeWindowsList(&window.dc.ChildWindows, "ChildWindows"); }
-    if (window.ColumnsStorage.size > 0 && TreeNode("Columns", "Columns sets (%d)", window.ColumnsStorage.size))
+    if (window.ColumnsStorage.size > 0 && TreeNode("columns", "columns sets (%d)", window.ColumnsStorage.size))
     {
         for (int n = 0; n < window.ColumnsStorage.size; n += 1)
             DebugNodeColumns(&window.ColumnsStorage[n]);

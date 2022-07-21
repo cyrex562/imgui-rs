@@ -10,7 +10,7 @@ use crate::imgui_vec::{Vector2D, Vector4D};
 pub struct Style {
     pub Alpha: f32,
     // Global alpha applies to everything in Dear ImGui.
-    pub DisabledAlpha: f32,
+    pub disabled_alpha: f32,
     // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
     pub WindowPadding: Vector2D,
     // Padding within a window.
@@ -99,7 +99,7 @@ impl Style {
     pub fn new() -> Self {
         let mut out = Self {..Default::default()};
         out.alpha = 1.0;             // Global alpha applies to everything in Dear ImGui.
-        out.DisabledAlpha = 0.60;            // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
+        out.disabled_alpha = 0.60;            // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
         out.WindowPadding = Vector2D::new(8.0, 8.0);      // Padding within a window
         out.WindowRounding = 0.0;             // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
         out.WindowBorderSize = 1.0;             // Thickness of border around windows. Generally set to 0.0 or 1.0. Other values not well tested.
@@ -696,7 +696,7 @@ pub enum DimgStyleVar
 {
     // Enum name --------------------- // Member in ImGuiStyle structure (see ImGuiStyle for descriptions)
     Alpha,               // float     Alpha
-    DisabledAlpha,       // float     DisabledAlpha
+    disabled_alpha,       // float     DisabledAlpha
     WindowPadding,       // Vector2D    window_padding
     WindowRounding,      // float     window_rounding
     WindowBorderSize,    // float     WindowBorderSize

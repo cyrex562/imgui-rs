@@ -82,9 +82,9 @@ impl Default for NodesStyleVar {
 enum ImNodesStyleFlags_
 {
     ImNodesStyleFlags_None = 0,
-    ImNodesStyleFlags_NodeOutline = 1 << 0,
-    ImNodesStyleFlags_GridLines = 1 << 2,
-    ImNodesStyleFlags_GridLinesPrimary = 1 << 3,
+    ImNodesStyleFlags_NodeOutline,
+    ImNodesStyleFlags_GridLines,
+    ImNodesStyleFlags_GridLinesPrimary,
     ImNodesStyleFlags_GridSnapping = 1 << 4
 };
 
@@ -105,7 +105,7 @@ enum ImNodesAttributeFlags_
     // Allow detaching a link by left-clicking and dragging the link at a pin it is connected to.
     // NOTE: the user has to actually delete the link for this to work. A deleted link can be
     // detected by calling IsLinkDestroyed() after EndNodeEditor().
-    ImNodesAttributeFlags_EnableLinkDetachWithDragClick = 1 << 0,
+    ImNodesAttributeFlags_EnableLinkDetachWithDragClick,
     // Visual snapping of an in progress link will trigger IsLink Created/Destroyed events. Allows
     // for previewing the creation of a link while dragging it across attributes. See here for demo:
     // https://github.com/Nelarius/imnodes/issues/41#issuecomment-647132113 NOTE: the user has to

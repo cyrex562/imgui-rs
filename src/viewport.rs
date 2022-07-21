@@ -52,18 +52,18 @@ use crate::window::next_window::NextWindowDataFlags;
 pub enum ViewportFlags
 {
     None                     = 0,
-    IsPlatformWindow         = 1 << 0,   // Represent a Platform window
-    IsPlatformMonitor        = 1 << 1,   // Represent a Platform Monitor (unused yet)
-    OwnedByApp               = 1 << 2,   // Platform window: is created/managed by the application (rather than a dear imgui backend)
-    NoDecoration             = 1 << 3,   // Platform window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
-    NoTaskBarIcon            = 1 << 4,   // Platform window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
-    NoFocusOnAppearing       = 1 << 5,   // Platform window: Don't take focus when created.
-    NoFocusOnClick           = 1 << 6,   // Platform window: Don't take focus when clicked on.
-    NoInputs                 = 1 << 7,   // Platform window: Make mouse pass through so we can drag this window while peaking behind it.
-    NoRendererClear          = 1 << 8,   // Platform window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
-    TopMost                  = 1 << 9,   // Platform window: Display on top (for tooltips only).
-    Minimized                = 1 << 10,  // Platform window: window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
-    NoAutoMerge              = 1 << 11,  // Platform window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
+    IsPlatformWindow        ,   // Represent a Platform window
+    IsPlatformMonitor       ,   // Represent a Platform Monitor (unused yet)
+    OwnedByApp              ,   // Platform window: is created/managed by the application (rather than a dear imgui backend)
+    NoDecoration            ,   // Platform window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
+    NoTaskBarIcon           ,   // Platform window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
+    NoFocusOnAppearing      ,   // Platform window: Don't take focus when created.
+    NoFocusOnClick          ,   // Platform window: Don't take focus when clicked on.
+    NoInputs                ,   // Platform window: Make mouse pass through so we can drag this window while peaking behind it.
+    NoRendererClear         ,   // Platform window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
+    TopMost                 ,   // Platform window: Display on top (for tooltips only).
+    Minimized               ,  // Platform window: window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
+    NoAutoMerge             ,  // Platform window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
     CanHostOtherWindows      = 1 << 12   // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
 }
 

@@ -488,35 +488,35 @@ pub type ImGuiSizeCallback = fn(*mut SizeCallbackData);
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum WindowFlags {
     None = 0,
-    NoTitleBar = 1 << 0,                 // Disable title-bar
-    NoResize = 1 << 1,                   // Disable user resizing with the lower-right grip
-    NoMove = 1 << 2,                     // Disable user moving the window
-    NoScrollbar = 1 << 3, // Disable scrollbars (window can still scroll with mouse or programmatically)
-    NoScrollWithMouse = 1 << 4, // Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.
-    NoCollapse = 1 << 5, // Disable user collapsing window by double-clicking on it. Also referred to as window Menu Button (e.g. within a docking node).
-    AlwaysAutoResize = 1 << 6, // Resize every window to its content every frame
-    NoBackground = 1 << 7, // Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0).
-    NoSavedSettings = 1 << 8, // Never load/save settings in .ini file
-    NoMouseInputs = 1 << 9, // Disable catching mouse, hovering test with pass through.
-    MenuBar = 1 << 10,     // Has a menu-bar
-    HorizontalScrollbar = 1 << 11, // Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(Vector2D(width,0.0)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
-    NoFocusOnAppearing = 1 << 12, // Disable taking focus when transitioning from hidden to visible state
-    NoBringToFrontOnFocus = 1 << 13, // Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)
-    AlwaysVerticalScrollbar = 1 << 14, // Always show vertical scrollbar (even if content_size.y < size.y)
-    AlwaysHorizontalScrollbar = 1 << 15, // Always show horizontal scrollbar (even if content_size.x < size.x)
-    AlwaysUseWindowPadding = 1 << 16, // Ensure child windows without border uses style.window_padding (ignored by default for non-bordered child windows, because more convenient)
-    NoNavInputs = 1 << 18,            // No gamepad/keyboard navigation within the window
-    NoNavFocus = 1 << 19, // No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)
-    UnsavedDocument = 1 << 20, // Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the x + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the x, so if you keep submitting the tab may reappear at end of tab bar.
-    NoDocking = 1 << 21,       // Disable docking of this window
+    NoTitleBar,                 // Disable title-bar
+    NoResize,                   // Disable user resizing with the lower-right grip
+    NoMove,                     // Disable user moving the window
+    NoScrollbar, // Disable scrollbars (window can still scroll with mouse or programmatically)
+    NoScrollWithMouse, // Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.
+    NoCollapse, // Disable user collapsing window by double-clicking on it. Also referred to as window Menu Button (e.g. within a docking node).
+    AlwaysAutoResize, // Resize every window to its content every frame
+    NoBackground, // Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0).
+    NoSavedSettings, // Never load/save settings in .ini file
+    NoMouseInputs, // Disable catching mouse, hovering test with pass through.
+    MenuBar,     // Has a menu-bar
+    HorizontalScrollbar, // Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(Vector2D(width,0.0)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
+    NoFocusOnAppearing, // Disable taking focus when transitioning from hidden to visible state
+    NoBringToFrontOnFocus, // Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)
+    AlwaysVerticalScrollbar, // Always show vertical scrollbar (even if content_size.y < size.y)
+    AlwaysHorizontalScrollbar, // Always show horizontal scrollbar (even if content_size.x < size.x)
+    AlwaysUseWindowPadding, // Ensure child windows without border uses style.window_padding (ignored by default for non-bordered child windows, because more convenient)
+    NoNavInputs,            // No gamepad/keyboard navigation within the window
+    NoNavFocus, // No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)
+    UnsavedDocument, // Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the x + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the x, so if you keep submitting the tab may reappear at end of tab bar.
+    NoDocking,       // Disable docking of this window
     // [Internal]
-    NavFlattened = 1 << 23, // [BETA] On child window: allow gamepad/keyboard navigation to cross over parent border to this child or between sibling child windows.
-    ChildWindow = 1 << 24,  // Don't use! For internal use by BeginChild()
-    Tooltip = 1 << 25,      // Don't use! For internal use by BeginTooltip()
-    Popup = 1 << 26,        // Don't use! For internal use by BeginPopup()
-    Modal = 1 << 27,        // Don't use! For internal use by BeginPopupModal()
-    ChildMenu = 1 << 28,    // Don't use! For internal use by BeginMenu()
-    DockNodeHost = 1 << 29, // Don't use! For internal use by Begin()/NewFrame()
+    NavFlattened, // [BETA] On child window: allow gamepad/keyboard navigation to cross over parent border to this child or between sibling child windows.
+    ChildWindow,  // Don't use! For internal use by BeginChild()
+    Tooltip,      // Don't use! For internal use by BeginTooltip()
+    Popup,        // Don't use! For internal use by BeginPopup()
+    Modal,        // Don't use! For internal use by BeginPopupModal()
+    ChildMenu,    // Don't use! For internal use by BeginMenu()
+    DockNodeHost, // Don't use! For internal use by Begin()/NewFrame()
                             // [Obsolete]
                             //ImGuiWindowFlags_ResizeFromAnySide    = 1 << 17,  // [Obsolete] --> Set io.config_windows_resize_from_edges=true and make sure mouse cursors are supported by backend (io.backend_flags & ImGuiBackendFlags_HasMouseCursors)
 }
@@ -525,15 +525,15 @@ pub enum WindowFlags {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum FocusedFlags {
     None = 0,
-    ChildWindows = 1 << 0,
+    ChildWindows,
     // Return true if any children of the window is focused
-    RootWindow = 1 << 1,
+    RootWindow,
     // Test from root window (top most parent of the current hierarchy)
-    AnyWindow = 1 << 2,
+    AnyWindow,
     // Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.want_capture_mouse' instead! Please read the FAQ!
-    NoPopupHierarchy = 1 << 3,
+    NoPopupHierarchy,
     // Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
-    DockHierarchy = 1 << 4, // Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
+    DockHierarchy, // Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
                             // ImGuiFocusedFlags_RootAndChildWindows           = ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows
 }
 
@@ -544,26 +544,26 @@ pub enum FocusedFlags {
 pub enum HoveredFlags {
     None = 0,
     // Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.
-    ChildWindows = 1 << 0,
+    ChildWindows,
     // IsWindowHovered() only: Return true if any children of the window is hovered
-    RootWindow = 1 << 1,
+    RootWindow,
     // IsWindowHovered() only: Test from root window (top most parent of the current hierarchy)
-    AnyWindow = 1 << 2,
+    AnyWindow,
     // IsWindowHovered() only: Return true if any window is hovered
-    NoPopupHierarchy = 1 << 3,
+    NoPopupHierarchy,
     // IsWindowHovered() only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
-    DockHierarchy = 1 << 4,
+    DockHierarchy,
     // IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
-    AllowWhenBlockedByPopup = 1 << 5,
+    AllowWhenBlockedByPopup,
     // Return true even if a popup window is normally blocking access to this item/window
     //ImGuiHoveredFlags_AllowWhenBlockedByModal     = 1 << 6,   // Return true even if a modal popup window is normally blocking access to this item/window. FIXME-TODO: Unavailable yet.
-    AllowWhenBlockedByActiveItem = 1 << 7,
+    AllowWhenBlockedByActiveItem,
     // Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.
-    AllowWhenOverlapped = 1 << 8,
+    AllowWhenOverlapped,
     // IsItemHovered() only: Return true even if the position is obstructed or overlapped by another window
-    AllowWhenDisabled = 1 << 9,
+    AllowWhenDisabled,
     // IsItemHovered() only: Return true even if the item is disabled
-    NoNavOverride = 1 << 10, // Disable using gamepad/keyboard navigation state when active, always query mouse.
+    NoNavOverride, // Disable using gamepad/keyboard navigation state when active, always query mouse.
                              // ImGuiHoveredFlags_RectOnly                      = ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped,
                              // ImGuiHoveredFlags_RootAndChildWindows           = ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows
 }

@@ -2,7 +2,7 @@ use crate::draw_channel::DrawChannel;
 use crate::draw_list::DrawList;
 
 // split/merge functions are used to split the draw list into different layers which can be drawn into out of order.
-// This is used by the Columns/tables API, so items of each column can be batched together in a same draw call.
+// This is used by the columns/tables API, so items of each column can be batched together in a same draw call.
 #[derive(Debug,Clone,Default)]
 pub struct DrawListSplitter
 {

@@ -423,9 +423,9 @@ pub const DRAW_LIST_ARCFAST_SAMPLE_MAX: usize = DRAW_LIST_ARCFAST_TABLE_SIZE;
 pub enum DrawListFlags
 {
     None                    = 0,
-    anti_aliased_lines        = 1 << 0,  // Enable anti-aliased lines/borders (*2 the number of triangles for 1.0 wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
-    anti_aliased_lines_use_tex  = 1 << 1,  // Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
-    anti_aliased_fill         = 1 << 2,  // Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
+    anti_aliased_lines       ,  // Enable anti-aliased lines/borders (*2 the number of triangles for 1.0 wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
+    anti_aliased_lines_use_tex ,  // Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
+    anti_aliased_fill        ,  // Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
     AllowVtxOffset          = 1 << 3   // Can emit 'vtx_offset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
 }
 

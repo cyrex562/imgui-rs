@@ -6,30 +6,30 @@ pub enum DimgTableColumnFlags
 {
     // Input configuration flags
     None                  = 0,
-    Disabled              = 1 << 0,   // Overriding/master disable flag: hide column, won't show in context menu (unlike calling TableSetColumnEnabled() which manipulates the user accessible state)
-    DefaultHide           = 1 << 1,   // Default as a hidden/disabled column.
-    DefaultSort           = 1 << 2,   // Default as a sorting column.
-    WidthStretch          = 1 << 3,   // column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).
-    WidthFixed            = 1 << 4,   // column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).
-    NoResize              = 1 << 5,   // Disable manual resizing.
-    NoReorder             = 1 << 6,   // Disable manual reordering this column, this will also prevent other columns from crossing over this column.
-    NoHide                = 1 << 7,   // Disable ability to hide/disable this column.
-    NoClip                = 1 << 8,   // Disable clipping for this column (all NoClip columns will render in a same draw command).
-    NoSort                = 1 << 9,   // Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).
-    NoSortAscending       = 1 << 10,  // Disable ability to sort in the ascending direction.
-    NoSortDescending      = 1 << 11,  // Disable ability to sort in the descending direction.
-    NoHeaderLabel         = 1 << 12,  // TableHeadersRow() will not submit label for this column. Convenient for some small columns. name will still appear in context menu.
-    NoHeaderWidth         = 1 << 13,  // Disable header text width contribution to automatic column width.
-    PreferSortAscending   = 1 << 14,  // Make the initial sort direction Ascending when first sorting on this column (default).
-    PreferSortDescending  = 1 << 15,  // Make the initial sort direction Descending when first sorting on this column.
-    IndentEnable          = 1 << 16,  // Use current Indent value when entering cell (default for column 0).
-    IndentDisable         = 1 << 17,  // Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
+    Disabled             ,   // Overriding/master disable flag: hide column, won't show in context menu (unlike calling TableSetColumnEnabled() which manipulates the user accessible state)
+    DefaultHide          ,   // Default as a hidden/disabled column.
+    DefaultSort          ,   // Default as a sorting column.
+    WidthStretch         ,   // column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).
+    WidthFixed           ,   // column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).
+    NoResize             ,   // Disable manual resizing.
+    NoReorder            ,   // Disable manual reordering this column, this will also prevent other columns from crossing over this column.
+    NoHide               ,   // Disable ability to hide/disable this column.
+    NoClip               ,   // Disable clipping for this column (all NoClip columns will render in a same draw command).
+    NoSort               ,   // Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).
+    NoSortAscending      ,  // Disable ability to sort in the ascending direction.
+    NoSortDescending     ,  // Disable ability to sort in the descending direction.
+    NoHeaderLabel        ,  // TableHeadersRow() will not submit label for this column. Convenient for some small columns. name will still appear in context menu.
+    NoHeaderWidth        ,  // Disable header text width contribution to automatic column width.
+    PreferSortAscending  ,  // Make the initial sort direction Ascending when first sorting on this column (default).
+    PreferSortDescending ,  // Make the initial sort direction Descending when first sorting on this column.
+    IndentEnable         ,  // Use current Indent value when entering cell (default for column 0).
+    IndentDisable        ,  // Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
 
     // Output status flags, read-only via TableGetColumnFlags()
-    IsEnabled             = 1 << 24,  // Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
-    IsVisible             = 1 << 25,  // Status: is visible == is enabled AND not clipped by scrolling.
-    IsSorted              = 1 << 26,  // Status: is currently part of the sort specs
-    IsHovered             = 1 << 27,  // Status: is hovered by mouse
+    IsEnabled            ,  // Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
+    IsVisible            ,  // Status: is visible == is enabled AND not clipped by scrolling.
+    IsSorted             ,  // Status: is currently part of the sort specs
+    IsHovered            ,  // Status: is hovered by mouse
 
     // [Internal] Combinations and masks
     // ImGuiTableColumnFlags_WidthMask_            = ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_WidthFixed,

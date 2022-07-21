@@ -13,8 +13,8 @@ use crate::vectors::two_d::Vector2D;
 pub enum ImGuiInputTextFlags2
 {
     // [Internal]
-    Multiline           = 1 << 26,  // For internal use by InputTextMultiline()
-    NoMarkEdited        = 1 << 27,  // For internal use by functions using InputText() before reformatting data
+    Multiline          ,  // For internal use by InputTextMultiline()
+    NoMarkEdited       ,  // For internal use by functions using InputText() before reformatting data
     MergedItem          = 1 << 28   // For internal use by TempInputText(), will skip calling ItemAdd(). Require bounding-box to strictly match.
 }
 

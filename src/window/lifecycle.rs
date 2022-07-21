@@ -484,7 +484,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         window.clip_rect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
         window.IDStack.resize(1);
         window.draw_list->_ResetForNewFrame();
-        window.dc.CurrentTableIdx = -1;
+        window.dc.current_tableIdx = -1;
         if (flags & WindowFlags::DockNodeHost)
         {
             window.draw_list.ChannelsSplit(2);
@@ -904,27 +904,27 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
         // Work rectangle.
         // Affected by window padding and border size. Used by:
-        // - Columns() for right-most edge
+        // - columns() for right-most edge
         // - TreeNode(), CollapsingHeader() for right-most edge
         // - BeginTabBar() for right-most edge
         const bool allow_scrollbar_x = !(flags & WindowFlags::NoScrollbar) && (flags & WindowFlags::HorizontalScrollbar);
         const bool allow_scrollbar_y = !(flags & WindowFlags::NoScrollbar);
         const float work_rect_size_x = (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : ImMax(allow_scrollbar_x ? window.ContentSize.x : 0.0, window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
         const float work_rect_size_y = (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : ImMax(allow_scrollbar_y ? window.ContentSize.y : 0.0, window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
-        window.WorkRect.min.x = f32::floor(window.inner_rect.min.x - window.scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize));
-        window.WorkRect.min.y = f32::floor(window.inner_rect.min.y - window.scroll.y + ImMax(window.WindowPadding.y, window.WindowBorderSize));
-        window.WorkRect.max.x = window.WorkRect.min.x + work_rect_size_x;
-        window.WorkRect.max.y = window.WorkRect.min.y + work_rect_size_y;
-        window.ParentWorkRect = window.WorkRect;
+        window.work_rect.min.x = f32::floor(window.inner_rect.min.x - window.scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize));
+        window.work_rect.min.y = f32::floor(window.inner_rect.min.y - window.scroll.y + ImMax(window.WindowPadding.y, window.WindowBorderSize));
+        window.work_rect.max.x = window.work_rect.min.x + work_rect_size_x;
+        window.work_rect.max.y = window.work_rect.min.y + work_rect_size_y;
+        window.ParentWorkRect = window.work_rect;
 
         // [LEGACY] Content Region
         // FIXME-OBSOLETE: window->content_region_rect.max is currently very misleading / partly faulty, but some BeginChild() patterns relies on it.
         // Used by:
         // - Mouse wheel scrolling + many other things
-        window.ContentRegionRect.min.x = window.pos.x - window.scroll.x + window.WindowPadding.x;
-        window.ContentRegionRect.min.y = window.pos.y - window.scroll.y + window.WindowPadding.y + decoration_up_height;
-        window.ContentRegionRect.max.x = window.ContentRegionRect.min.x + (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : (window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
-        window.ContentRegionRect.max.y = window.ContentRegionRect.min.y + (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : (window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
+        window.content_region_rect.min.x = window.pos.x - window.scroll.x + window.WindowPadding.x;
+        window.content_region_rect.min.y = window.pos.y - window.scroll.y + window.WindowPadding.y + decoration_up_height;
+        window.content_region_rect.max.x = window.content_region_rect.min.x + (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : (window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
+        window.content_region_rect.max.y = window.content_region_rect.min.y + (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : (window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
 
         // Setup drawing context
         // (NB: That term "drawing context / dc" lost its meaning a long time ago. Initially was meant to hold transient data only. Nowadays difference between window-> and window->dc-> is dubious.)
@@ -957,7 +957,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         window.dc.TreeJumpToParentOnPopMask = 0x00;
         window.dc.ChildWindows.resize(0);
         window.dc.StateStorage = &window.StateStorage;
-        window.dc.CurrentColumns = NULL;
+        window.dc.current_columns = NULL;
         window.dc.LayoutType = ImGuiLayoutType_Vertical;
         window.dc.ParentLayoutType = parent_window ? parent_window.dc.LayoutType : ImGuiLayoutType_Vertical;
 
@@ -1141,7 +1141,7 @@ pub fn end(g: &mut Context)
         // IM_ASSERT_USER_ERROR(g.within_end_child, "Must call EndChild() and not End()!");
 
     // Close anything that is open
-    if (window.dc.CurrentColumns)
+    if (window.dc.current_columns)
         EndColumns();
     if (!(window.flags & WindowFlags::DockNodeHost))   // Pop inner window clip rectangle
         PopClipRect();

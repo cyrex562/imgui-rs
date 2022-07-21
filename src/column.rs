@@ -3,9 +3,8 @@ use crate::types::Id32;
 use crate::draw_list_splitter::DrawListSplitter;
 use crate::rect::Rect;
 
-#[derive(Debug,Default,Clone)]
-pub struct OldColumns
-{
+#[derive(Debug, Default, Clone)]
+pub struct OldColumns {
     // DimgId             id;
     pub id: Id32,
     // ImGuiOldColumnFlags flags;
@@ -18,58 +17,42 @@ pub struct OldColumns
     pub current: i32,
     // int                 count;
     pub count: i32,
-    // float               OffMinX, OffMaxX;       // Offsets from HostWorkRect.min.x
-    pub OffMinX: f32,
-    pub OffMaxX: f32,
-    // float               LineMinY, LineMaxY;
-    pub LineMinY: f32,
-    pub LineMaxY: f32,
-    // float               HostCursorPosY;         // Backup of CursorPos at the time of BeginColumns()
-    pub HostCursorPosY: f32,
-    // float               HostCursorMaxPosX;      // Backup of CursorMaxPos at the time of BeginColumns()
-    pub HostCursorMaxPosX: f32,
-    // DimgRect              HostInitialClipRect;    // Backup of clip_rect at the time of BeginColumns()
-    pub HostInitialClipRect: Rect,
-    // DimgRect              HostBackupClipRect;     // Backup of clip_rect during PushColumnsBackground()/PopColumnsBackground()
-    pub HostBackupClipRect: Rect,
-    // DimgRect              HostBackupParentWorkRect;//Backup of work_rect at the time of BeginColumns()
-    pub HostBackupParentWorkRect: Rect,
-    // ImVector<ImGuiOldColumnData> Columns;
-    pub Columns: Vec<ImGuiOldColumnData>,
-    // ImDrawListSplitter  Splitter;
-    pub Splitter: DrawListSplitter,
+    // float               off_min_x, off_max_x;       // Offsets from HostWorkRect.min.x
+    pub off_min_x: f32,
+    pub off_max_x: f32,
+    // float               line_min_y, line_max_y;
+    pub line_min_y: f32,
+    pub line_max_y: f32,
+    // float               host_cursor_pos_y;         // Backup of CursorPos at the time of BeginColumns()
+    pub host_cursor_pos_y: f32,
+    // float               host_cursor_max_pos_x;      // Backup of CursorMaxPos at the time of BeginColumns()
+    pub host_cursor_max_pos_x: f32,
+    // DimgRect              host_initial_clip_rect;    // Backup of clip_rect at the time of BeginColumns()
+    pub host_initial_clip_rect: Rect,
+    // DimgRect              host_backup_clip_rect;     // Backup of clip_rect during PushColumnsBackground()/PopColumnsBackground()
+    pub host_backup_clip_rect: Rect,
+    // DimgRect              host_backup_parent_work_rect;//Backup of work_rect at the time of BeginColumns()
+    pub host_backup_parent_work_rect: Rect,
+    // ImVector<ImGuiOldColumnData> columns;
+    pub columns: Vec<OldColumnData>,
+    // ImDrawListSplitter  splitter;
+    pub splitter: DrawListSplitter,
     // ImGuiOldColumns()   { memset(this, 0, sizeof(*this)); }
 }
 
-impl OldColumns {
-    pub fn new() -> Self {
-        Self {
-            ..Default::default()
-        }
-    }
-}
-
-
 // flags for internal's BeginColumns(). Prefix using BeginTable() nowadays!
-#[derive(Debug,Clone)]
-enum OldColumnFlags
-{
-    None                    = 0,
-    NoBorder                = 1 << 0,   // Disable column dividers
-    NoResize                = 1 << 1,   // Disable resizing columns when clicking on the dividers
-    NoPreserveWidths        = 1 << 2,   // Disable column width preservation when adjusting columns
-    NoForceWithinWindow     = 1 << 3,   // Disable forcing columns to fit within window
-    GrowParentContentsSize  = 1 << 4    // (WIP) Restore pre-1.51 behavior of extending the parent window contents size but _without affecting the columns width at all_. Will eventually remove.
-
-    // Obsolete names (will be removed)
-// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//     , ImGuiColumnsFlags_None                    = None,
-//     ImGuiColumnsFlags_NoBorder                  = NoBorder,
-//     ImGuiColumnsFlags_NoResize                  = NoResize,
-//     ImGuiColumnsFlags_NoPreserveWidths          = NoPreserveWidths,
-//     ImGuiColumnsFlags_NoForceWithinWindow       = NoForceWithinWindow,
-//     ImGuiColumnsFlags_GrowParentContentsSize    = GrowParentContentsSize
-// #endif
+#[derive(Debug, Clone)]
+pub enum OldColumnFlags {
+    None,
+    NoBorder,
+    // Disable column dividers
+    NoResize,
+    // Disable resizing columns when clicking on the dividers
+    NoPreserveWidths,
+    // Disable column width preservation when adjusting columns
+    NoForceWithinWindow,
+    // Disable forcing columns to fit within window
+    GrowParentContentsSize,      // (WIP) Restore pre-1.51 behavior of extending the parent window contents size but _without affecting the columns width at all_. Will eventually remove.
 }
 
 impl Default for OldColumnFlags {
@@ -78,9 +61,8 @@ impl Default for OldColumnFlags {
     }
 }
 
-#[derive(Default,Debug,Clone)]
-pub struct ImGuiOldColumnData
-{
+#[derive(Default, Debug, Clone)]
+pub struct OldColumnData {
     // float               offset_norm;         // column start offset, normalized 0.0 (far left) -> 1.0 (far right)
     pub offset_norm: f32,
     // float               offset_norm_before_resize;
@@ -92,13 +74,5 @@ pub struct ImGuiOldColumnData
     // ImGuiOldColumnData() { memset(this, 0, sizeof(*this)); }
 }
 
-impl ImGuiOldColumnData {
-    pub fn new() -> Self {
-        Self {
-            ..Default::default()
-        }
-
-    }
-}
 
 

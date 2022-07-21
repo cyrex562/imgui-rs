@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use crate::clipboard::{get_clipboard_text_fn_dflt_impl, set_clipboard_text_fn_dflt_impl};
-use crate::config::{DimgBackendFlags, ConfigFlags};
+use crate::config::{BackendFlags, ConfigFlags};
 use crate::context::Context;
 use crate::font::Font;
 use crate::font_atlas::FontAtlas;
@@ -18,7 +18,7 @@ pub struct Io {
 
     pub config_flags: HashSet<ConfigFlags>,
     // = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
-    pub backend_flags: HashSet<DimgBackendFlags>,
+    pub backend_flags: HashSet<BackendFlags>,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
     pub display_size: Vector2D,
     // <unset>          // Main display size, in pixels (generally == GetMainViewport()->size). May change every frame.
@@ -274,7 +274,7 @@ impl Io {
 
         // Settings
         out.config_flags.insert(ConfigFlags::None);
-        out.backend_flags.insert(DimgBackendFlags::None);
+        out.backend_flags.insert(BackendFlags::None);
         out.display_size = Vector2D::new(-1.0, -1.0);
         out.delta_time = 1.0 / 60.0;
         out.ini_saving_rate = 5.0;

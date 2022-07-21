@@ -18,7 +18,7 @@ pub fn set_window_collapsed(g: &mut Context, window: &mut Window, collapsed: boo
 // void ImGui::SetWindowCollapsed(bool collapsed, ImGuiCond cond)
 pub fn set_window_collapsed2(g: &mut Context, collapsed: bool, cond: Condition)
 {
-    set_window_collapsed(g.CurrentWindow, collapsed, cond);
+    set_window_collapsed(g.current_window_id, collapsed, cond);
 }
 
 // bool ImGui::IsWindowCollapsed()

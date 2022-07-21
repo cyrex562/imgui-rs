@@ -67,40 +67,40 @@ impl LastItemData {
 
 pub enum ItemStatusFlags {
     None = 0,
-    HoveredRect = 1 << 0,
+    HoveredRect,
     // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!, this is only one part of the most-common IsItemHovered test)
-    HasDisplayRect = 1 << 1,
+    HasDisplayRect,
     // g.last_item_data.display_rect is valid
-    Edited = 1 << 2,
+    Edited,
     // value exposed by item was edited in the current frame (should match the bool return value of most widgets)
-    ToggledSelection = 1 << 3,
+    ToggledSelection,
     // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
-    ToggledOpen = 1 << 4,
+    ToggledOpen,
     // Set when TreeNode() reports toggling their open state.
-    HasDeactivated = 1 << 5,
+    HasDeactivated,
     // Set if the widget/group is able to provide data for the Deactivated flag.
-    Deactivated = 1 << 6,
+    Deactivated,
     // Only valid if HasDeactivated is set.
-    hovered_window = 1 << 7,
+    hovered_window,
     // Override the hovered_window test to allow cross-window hover testing.
-    FocusedByTabbing = 1 << 8,
+    FocusedByTabbing,
     // Set when the Focusable item just got focused by Tabbing (FIXME: to be removed soon)
 // #ifdef IMGUI_ENABLE_TEST_ENGINE
     // [imgui_tests only]
-    Openable = 1 << 20,
+    Openable,
     // Item is an openable (e.g. TreeNode)
-    Opened = 1 << 21,
+    Opened,
     //
-    Checkable = 1 << 22,
+    Checkable,
     // Item is a checkable (e.g. CheckBox, MenuItem)
-    Checked = 1 << 23,   //
+    Checked,   //
 // #endif
 }
 
 pub enum NextItemDataFlags {
     None = 0,
-    HasWidth = 1 << 0,
-    HasOpen = 1 << 1,
+    HasWidth,
+    HasOpen,
 }
 
 
@@ -426,23 +426,23 @@ pub fn is_item_hovered(g: &mut Context, flags: &HashSet<HoveredFlags>) -> bool
 // This is going to be exposed in imgui.h when stabilized enough.
 pub enum ItemFlags {
     None = 0,
-    NoTabStop = 1 << 0,
+    NoTabStop,
     // false     // Disable keyboard tabbing (FIXME: should merge with _NoNav)
-    ButtonRepeat = 1 << 1,
+    ButtonRepeat,
     // false     // Button() will return true multiple times based on io.key_repeat_delay and io.key_repeat_rate settings.
-    Disabled = 1 << 2,
+    Disabled,
     // false     // Disable interactions but doesn't affect visuals. See BeginDisabled()/EndDisabled(). See github.com/ocornut/imgui/issues/211
-    NoNav = 1 << 3,
+    NoNav,
     // false     // Disable keyboard/gamepad directional navigation (FIXME: should merge with _NoTabStop)
-    NoNavDefaultFocus = 1 << 4,
+    NoNavDefaultFocus,
     // false     // Disable item being a candidate for default focus (e.g. used by title bar items)
-    SelectableDontClosePopup = 1 << 5,
+    SelectableDontClosePopup,
     // false     // Disable MenuItem/Selectable() automatically closing their popup window
-    MixedValue = 1 << 6,
+    MixedValue,
     // false     // [BETA] Represent a mixed/indeterminate value, generally multi-selection where values differ. Currently only supported by Checkbox() (later should support all sorts of widgets)
-    ReadOnly = 1 << 7,
+    ReadOnly,
     // false     // [ALPHA] Allow hovering interactions but underlying value is not changed.
-    Inputable = 1 << 8,   // false     // [WIP] Auto-activate input mode when tab focused. Currently only used and supported by a few items before it becomes a generic feature.
+    Inputable,   // false     // [WIP] Auto-activate input mode when tab focused. Currently only used and supported by a few items before it becomes a generic feature.
 }
 
 // void ImGui::push_item_flag(ImGuiItemFlags option, bool enabled)
@@ -645,7 +645,7 @@ pub fn calc_item_width(g: &mut Context)
         w = window.dc.ItemWidth;
     if (w < 0.0)
     {
-        float region_max_x = GetContentRegionMaxAbs().x;
+        float region_max_x = get_content_region_max_abs().x;
         w = ImMax(1.0, region_max_x - window.dc.cursor_pos.x + w);
     }
     w = f32::floor(w);
@@ -664,7 +664,7 @@ pub fn calc_item_size(g: &mut Context, size: Vector2D, default_w: f32, default_h
 
     Vector2D region_max;
     if (size.x < 0.0 || size.y < 0.0)
-        region_max = GetContentRegionMaxAbs();
+        region_max = get_content_region_max_abs();
 
     if (size.x == 0.0)
         size.x = default_w;

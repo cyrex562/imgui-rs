@@ -2439,7 +2439,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode)
             resize_limits[0] = node.ChildNodes[0].pos[axis] + min_size;
             resize_limits[1] = node.ChildNodes[1].pos[axis] + node.ChildNodes[1].size[axis] - min_size;
 
-            ImGuiID splitter_id = GetID("##Splitter");
+            ImGuiID splitter_id = GetID("##splitter");
             if (g.active_id == splitter_id) // Only process when splitter is active
             {
                 DockNodeTreeUpdateSplitterFindTouchingNode(child_0, axis, 1, &touching_nodes[0]);
@@ -2470,7 +2470,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode)
             float min_size_0 = resize_limits[0] - child_0.pos[axis];
             float min_size_1 = child_1.pos[axis] + child_1.size[axis] - resize_limits[1];
             ImU32 bg_col = get_color_u32(StyleColor::WindowBg);
-            if (SplitterBehavior(bb, GetID("##Splitter"), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col))
+            if (SplitterBehavior(bb, GetID("##splitter"), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col))
             {
                 if (touching_nodes[0].size > 0 && touching_nodes[1].size > 0)
                 {

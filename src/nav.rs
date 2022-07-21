@@ -18,8 +18,8 @@ use crate::window::{Window, WindowFlags};
 pub enum ActivateFlags
 {
     None                 = 0,
-    PreferInput          = 1 << 0,       // Favor activation that requires keyboard text input (e.g. for Slider/Drag). Default if keyboard is available.
-    PreferTweak          = 1 << 1,       // Favor activation for tweaking with arrows or gamepad (e.g. for Slider/Drag). Default if keyboard is not available.
+    PreferInput         ,       // Favor activation that requires keyboard text input (e.g. for Slider/Drag). Default if keyboard is available.
+    PreferTweak         ,       // Favor activation for tweaking with arrows or gamepad (e.g. for Slider/Drag). Default if keyboard is not available.
     TryToPreserveState   = 1 << 2        // Request widget to preserve state if it can (e.g. InputText will try to preserve cursor/selection)
 }
 
@@ -28,13 +28,13 @@ pub enum ActivateFlags
 pub enum ScrollFlags
 {
     None                   = 0,
-    KeepVisibleEdgeX       = 1 << 0,       // If item is not visible: scroll as little as possible on x axis to bring item back into view [default for x axis]
-    KeepVisibleEdgeY       = 1 << 1,       // If item is not visible: scroll as little as possible on Y axis to bring item back into view [default for Y axis for windows that are already visible]
-    KeepVisibleCenterX     = 1 << 2,       // If item is not visible: scroll to make the item centered on x axis [rarely used]
-    KeepVisibleCenterY     = 1 << 3,       // If item is not visible: scroll to make the item centered on Y axis
-    AlwaysCenterX          = 1 << 4,       // Always center the result item on x axis [rarely used]
-    AlwaysCenterY          = 1 << 5,       // Always center the result item on Y axis [default for Y axis for appearing window)
-    NoScrollParent         = 1 << 6,       // Disable forwarding scrolling to parent window if required to keep item/rect visible (only scroll window the function was applied to).
+    KeepVisibleEdgeX      ,       // If item is not visible: scroll as little as possible on x axis to bring item back into view [default for x axis]
+    KeepVisibleEdgeY      ,       // If item is not visible: scroll as little as possible on Y axis to bring item back into view [default for Y axis for windows that are already visible]
+    KeepVisibleCenterX    ,       // If item is not visible: scroll to make the item centered on x axis [rarely used]
+    KeepVisibleCenterY    ,       // If item is not visible: scroll to make the item centered on Y axis
+    AlwaysCenterX         ,       // Always center the result item on x axis [rarely used]
+    AlwaysCenterY         ,       // Always center the result item on Y axis [default for Y axis for appearing window)
+    NoScrollParent        ,       // Disable forwarding scrolling to parent window if required to keep item/rect visible (only scroll window the function was applied to).
     
 }
 
@@ -44,36 +44,36 @@ pub const ImGuiScrollFlags_MaskY: ScrollFlags = ScrollFlags::KeepVisibleEdgeY | 
 pub enum NavHighlightFlags
 {
     INone             = 0,
-    ITypeDefault      = 1 << 0,
-    ITypeThin         = 1 << 1,
-    IAlwaysDraw       = 1 << 2,       // Draw rectangular highlight if (g.nav_id == id) _even_ when using the mouse.
+    ITypeDefault     ,
+    ITypeThin        ,
+    IAlwaysDraw      ,       // Draw rectangular highlight if (g.nav_id == id) _even_ when using the mouse.
     INoRounding       = 1 << 3
 }
 
 pub enum NavDirSourceFlags
 {
     None             = 0,
-    RawKeyboard      = 1 << 0,   // Raw keyboard (not pulled from nav), facilitate use of some functions before we can unify nav and keys
-    Keyboard         = 1 << 1,
-    PadDPad          = 1 << 2,
+    RawKeyboard     ,   // Raw keyboard (not pulled from nav), facilitate use of some functions before we can unify nav and keys
+    Keyboard        ,
+    PadDPad         ,
     PadLStick        = 1 << 3
 }
 
 pub enum NavMoveFlags
 {
     None                  = 0,
-    LoopX                 = 1 << 0,   // On failed request, restart from opposite side
-    LoopY                 = 1 << 1,
-    WrapX                 = 1 << 2,   // On failed request, request from opposite side one line down (when NavDir==right) or one line up (when NavDir==left)
-    WrapY                 = 1 << 3,   // This is not super useful but provided for completeness
-    AllowCurrentNavId     = 1 << 4,   // Allow scoring and considering the current nav_id as a move target candidate. This is used when the move source is offset (e.g. pressing PageDown actually needs to send a Up move request, if we are pressing PageDown from the bottom-most item we need to stay in place)
-    AlsoScoreVisibleSet   = 1 << 5,   // Store alternate result in nav_move_result_local_visible that only comprise elements that are already fully visible (used by PageUp/PageDown)
-    ScrollToEdgeY         = 1 << 6,   // Force scrolling to min/max (used by Home/End) // FIXME-NAV: Aim to remove or reword, probably unnecessary
-    Forwarded             = 1 << 7,
-    DebugNoResult         = 1 << 8,   // Dummy scoring for debug purpose, don't apply result
-    FocusApi              = 1 << 9,
-    Tabbing               = 1 << 10,  // == Focus + Activate if item is Inputable + DontChangeNavHighlight
-    Activate              = 1 << 11,
+    LoopX                ,   // On failed request, restart from opposite side
+    LoopY                ,
+    WrapX                ,   // On failed request, request from opposite side one line down (when NavDir==right) or one line up (when NavDir==left)
+    WrapY                ,   // This is not super useful but provided for completeness
+    AllowCurrentNavId    ,   // Allow scoring and considering the current nav_id as a move target candidate. This is used when the move source is offset (e.g. pressing PageDown actually needs to send a Up move request, if we are pressing PageDown from the bottom-most item we need to stay in place)
+    AlsoScoreVisibleSet  ,   // Store alternate result in nav_move_result_local_visible that only comprise elements that are already fully visible (used by PageUp/PageDown)
+    ScrollToEdgeY        ,   // Force scrolling to min/max (used by Home/End) // FIXME-NAV: Aim to remove or reword, probably unnecessary
+    Forwarded            ,
+    DebugNoResult        ,   // Dummy scoring for debug purpose, don't apply result
+    FocusApi             ,
+    Tabbing              ,  // == Focus + Activate if item is Inputable + DontChangeNavHighlight
+    Activate             ,
     DontSetNavHighlight   = 1 << 12   // Do not alter the visible state of keyboard vs mouse nav highlight
 }
 

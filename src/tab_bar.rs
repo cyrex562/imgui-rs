@@ -9,21 +9,21 @@ use crate::imgui_window::ImGuiWindow;
 #[allow(non_camel_case_types)]// flags for ImGui::BeginTabItem()
 pub enum DimgTabItemFlags {
     None = 0,
-    UnsavedDocument = 1 << 0,
+    UnsavedDocument,
     // Display a dot next to the title + tab is selected when clicking the x + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the x, so if you keep submitting the tab may reappear at end of tab bar.
-    SetSelected = 1 << 1,
+    SetSelected,
     // Trigger flag to programmatically make the tab selected when calling BeginTabItem()
-    NoCloseWithMiddleMouseButton = 1 << 2,
+    NoCloseWithMiddleMouseButton,
     // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
-    NoPushId = 1 << 3,
+    NoPushId,
     // Don't call PushID(tab->id)/PopID() on BeginTabItem()/EndTabItem()
-    NoTooltip = 1 << 4,
+    NoTooltip,
     // Disable tooltip for the given tab
-    NoReorder = 1 << 5,
+    NoReorder,
     // Disable reordering this tab or having another tab cross over this tab
-    Leading = 1 << 6,
+    Leading,
     // Enforce the tab position to the left of the tab bar (after the tab list popup button)
-    Trailing = 1 << 7,    // Enforce the tab position to the right of the tab bar (before the scrolling buttons)
+    Trailing,    // Enforce the tab position to the right of the tab bar (before the scrolling buttons)
 }
 
 
@@ -139,8 +139,8 @@ pub struct TabBar {
 // Extend
 pub enum ImGuiTabBarFlags
 {
-    DockNode                   = 1 << 20,  // Part of a dock node [we don't use this in the master branch but it facilitate branch syncing to keep this around]
-    IsFocused                  = 1 << 21,
+    DockNode                  ,  // Part of a dock node [we don't use this in the master branch but it facilitate branch syncing to keep this around]
+    IsFocused                 ,
     SaveSettings               = 1 << 22   // FIXME: Settings are handled by the docking system, this only request the tab bar to mark settings dirty when reordering tabs
 }
 
@@ -158,14 +158,14 @@ pub const FITTING_POLICY_MASK: HashSet<DimgTabBarFlags> = HashSet::from([
 pub enum DimgTabBarFlags
 {
     None                           = 0,
-    Reorderable                    = 1 << 0,   // Allow manually dragging tabs to re-order them + New tabs are appended at the end of list
-    AutoSelectNewTabs              = 1 << 1,   // Automatically select new tabs when they appear
-    TabListPopupButton             = 1 << 2,   // Disable buttons to open the tab list popup
-    NoCloseWithMiddleMouseButton   = 1 << 3,   // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
-    NoTabListScrollingButtons      = 1 << 4,   // Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll)
-    NoTooltip                      = 1 << 5,   // Disable tooltips when hovering a tab
-    FittingPolicyResizeDown        = 1 << 6,   // Resize tabs when they don't fit
-    FittingPolicyScroll            = 1 << 7,   // Add scroll buttons when tabs don't fit
+    Reorderable                   ,   // Allow manually dragging tabs to re-order them + New tabs are appended at the end of list
+    AutoSelectNewTabs             ,   // Automatically select new tabs when they appear
+    TabListPopupButton            ,   // Disable buttons to open the tab list popup
+    NoCloseWithMiddleMouseButton  ,   // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
+    NoTabListScrollingButtons     ,   // Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll)
+    NoTooltip                     ,   // Disable tooltips when hovering a tab
+    FittingPolicyResizeDown       ,   // Resize tabs when they don't fit
+    FittingPolicyScroll           ,   // Add scroll buttons when tabs don't fit
     // ImGuiTabBarFlags_FittingPolicyMask_             = ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_FittingPolicyScroll,
     // ImGuiTabBarFlags_FittingPolicyDefault_          = ImGuiTabBarFlags_FittingPolicyResizeDown
 }

@@ -143,28 +143,28 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
 // float GetScrollX()
 pub fn get_Scroll_x(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     return window.scroll.x;
 }
 
 // float GetScrollY()
 pub fn get_scroll_y(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     return window.scroll.y;
 }
 
 // float GetScrollMaxX()
 pub fn get_scroll_max_x(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     return window.scroll_max.x;
 }
 
 // float GetScrollMaxY()
 pub fn get_scroll_max_y(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     return window.scroll_max.y;
 }
 

@@ -4,9 +4,8 @@ use crate::rect::Rect;
 use crate::vectors::two_d::Vector2D;
 
 /// Storage data for BeginComboPreview()/EndComboPreview()
-#[derive(Default,Debug,Clone)]
-pub struct ComboPreviewData
-{
+#[derive(Default, Debug, Clone)]
+pub struct ComboPreviewData {
     // ImRect          PreviewRect;
     pub preview_rect: Rect,
     // Vector2D          BackupCursorPos;
@@ -23,23 +22,35 @@ pub struct ComboPreviewData
 }
 
 // flags for ImGui::BeginCombo()
-#[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum ComboFlags
-{
-    None                    = 0,
-    CustomPreview           = 1 << 20 ,  // enable BeginComboPreview()
-    PopupAlignLeft          = 1 << 0,   // Align the popup toward the left by default
-    HeightSmall             = 1 << 1,   // max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints() prior to calling BeginCombo()
-    HeightRegular           = 1 << 2,   // max ~8 items visible (default)
-    HeightLarge             = 1 << 3,   // max ~20 items visible
-    HeightLargest           = 1 << 4,   // As many fitting items as possible
-    NoArrowButton           = 1 << 5,   // Display on the preview box without the square arrow button
-    NoPreview               = 1 << 6,   // Display only a square arrow button
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum ComboFlags {
+    None = 0,
+    CustomPreview,
+    // enable BeginComboPreview()
+    PopupAlignLeft,
+    // Align the popup toward the left by default
+    HeightSmall,
+    // max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints() prior to calling BeginCombo()
+    HeightRegular,
+    // max ~8 items visible (default)
+    HeightLarge,
+    // max ~20 items visible
+    HeightLargest,
+    // As many fitting items as possible
+    NoArrowButton,
+    // Display on the preview box without the square arrow button
+    NoPreview,   // Display only a square arrow button
     // ImGuiComboFlags_HeightMask_             = ImGuiComboFlags_HeightSmall | ImGuiComboFlags_HeightRegular | ImGuiComboFlags_HeightLarge | ImGuiComboFlags_HeightLargest
+}
+
+impl Default for ComboFlags {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 
 // pub const HeightMask: i32             = DimgComboFlags::HeightSmall | DimgComboFlags::HeightRegular | DimgComboFlags::HeightLarge | DimgComboFlags::HeightLargest;
-pub const HEIGHT_MASK: HashSet<ComboFlags> = HashSet::from([
+pub const COMBO_FLAGS_HEIGHT_MASK: HashSet<ComboFlags> = HashSet::from([
     ComboFlags::HeightSmall, ComboFlags::HeightRegular, ComboFlags::HeightLarge, ComboFlags::HeightLargest
 ]);

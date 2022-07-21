@@ -330,7 +330,7 @@ pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, co
 // void ImGui::SetWindowSize(const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size2(g: &mut Context, size: &Vector2D, cond: Condition)
 {
-    SetWindowSize(g.CurrentWindow, size, cond);
+    SetWindowSize(g.current_window_id, size, cond);
 }
 
 // Handle resize for: Resize Grips, Borders, Gamepad

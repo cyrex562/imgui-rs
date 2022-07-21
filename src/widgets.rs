@@ -24,7 +24,7 @@ index of this file:
 // [SECTION] Widgets: MenuItem, BeginMenu, EndMenu, etc.
 // [SECTION] Widgets: BeginTabBar, EndTabBar, etc.
 // [SECTION] Widgets: BeginTabItem, EndTabItem, etc.
-// [SECTION] Widgets: Columns, BeginColumns, EndColumns, etc.
+// [SECTION] Widgets: columns, BeginColumns, EndColumns, etc.
 
 */
 
@@ -330,7 +330,7 @@ void ImGui::TextWrapped(const char* fmt, ...)
 void ImGui::TextWrappedV(const char* fmt, va_list args)
 {
     ImGuiContext& g = *GImGui;
-    bool need_backup = (g.CurrentWindow->DC.TextWrapPos < 0.0);  // Keep existing wrap position if one is already set
+    bool need_backup = (g.current_window_id->DC.TextWrapPos < 0.0);  // Keep existing wrap position if one is already set
     if (need_backup)
         PushTextWrapPos(0.0);
     if (fmt[0] == '%' && fmt[1] == 's' && fmt[2] == 0)
@@ -799,7 +799,7 @@ bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
 bool ImGui::CloseButton(ImGuiID id, const Vector2D& pos)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
 
     // Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
@@ -838,7 +838,7 @@ bool ImGui::CloseButton(ImGuiID id, const Vector2D& pos)
 bool ImGui::CollapseButton(ImGuiID id, const Vector2D& pos, ImGuiDockNode* dock_node)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
 
     ImRect bb(pos, pos + DimgVec2D::new(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0);
     ItemAdd(bb, id);
@@ -886,7 +886,7 @@ ImRect ImGui::GetWindowScrollbarRect(ImGuiWindow* window, ImGuiAxis axis)
 void ImGui::Scrollbar(ImGuiAxis axis)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     const ImGuiID id = GetWindowScrollbarID(window, axis);
 
     // Calculate scrollbar bounding box
@@ -921,7 +921,7 @@ void ImGui::Scrollbar(ImGuiAxis axis)
 bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS64* p_scroll_v, ImS64 size_avail_v, ImS64 size_contents_v, ImDrawFlags flags)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return false;
 
@@ -1069,7 +1069,7 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const Vector2D& si
 bool ImGui::ImageButton(ImTextureID user_texture_id, const Vector2D& size, const Vector2D& uv0, const Vector2D& uv1, int frame_padding, const Vector4D& bg_col, const Vector4D& tint_col)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return false;
 
@@ -1409,13 +1409,13 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
 
         // FIXME-WORKRECT: In theory we should simply be using work_rect.min.x/max.x everywhere but it isn't aesthetically what we want,
         // need to introduce a variant of work_rect for that purpose. (#4787)
-        if (ImGuiTable* table = g.CurrentTable)
+        if (ImGuiTable* table = g.current_table)
         {
             x1 = table->Columns[table->CurrentColumn].MinX;
             x2 = table->Columns[table->CurrentColumn].MaxX;
         }
 
-        ImGuiOldColumns* columns = (flags & ImGuiSeparatorFlags_SpanAllColumns) ? window.DC.CurrentColumns : NULL;
+        ImGuiOldColumns* columns = (flags & ImGuiSeparatorFlags_SpanAllColumns) ? window.DC.current_columns : NULL;
         if (columns)
             PushColumnsBackground();
 
@@ -1443,13 +1443,13 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
 void ImGui::Separator()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return;
 
     // Those flags should eventually be overridable by the user
     ImGuiSeparatorFlags flags = (window.DC.LayoutType == ImGuiLayoutType_Horizontal) ? ImGuiSeparatorFlags_Vertical : ImGuiSeparatorFlags_Horizontal;
-    flags |= ImGuiSeparatorFlags_SpanAllColumns; // NB: this only applies to legacy Columns() api as they relied on Separator() a lot.
+    flags |= ImGuiSeparatorFlags_SpanAllColumns; // NB: this only applies to legacy columns() api as they relied on Separator() a lot.
     SeparatorEx(flags);
 }
 
@@ -1457,7 +1457,7 @@ void ImGui::Separator()
 bool ImGui::SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, float* size1, float* size2, float min_size1, float min_size2, float hover_extend, float hover_visibility_delay, ImU32 bg_col)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
 
     const ImGuiItemFlags item_flags_backup = g.CurrentItemFlags;
     g.CurrentItemFlags |= ItemFlags::NoNav | ItemFlags::NoNavDefaultFocus;
@@ -1731,7 +1731,7 @@ void ImGui::EndCombo()
 bool ImGui::BeginComboPreview()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     ImGuiComboPreviewData* preview_data = &g.ComboPreviewData;
 
     if (window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect)) // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
@@ -1758,7 +1758,7 @@ bool ImGui::BeginComboPreview()
 void ImGui::EndComboPreview()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     ImGuiComboPreviewData* preview_data = &g.ComboPreviewData;
 
     // FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
@@ -3360,7 +3360,7 @@ bool ImGui::TempInputText(const ImRect& bb, ImGuiID id, const char* label, char*
     if (init)
         ClearActiveID();
 
-    g.CurrentWindow->DC.CursorPos = bb.Min;
+    g.current_window_id->DC.CursorPos = bb.Min;
     bool value_changed = InputTextEx(label, NULL, buf, buf_size, bb.GetSize(), flags | ImGuiInputTextFlags_MergedItem);
     if (init)
     {
@@ -3890,7 +3890,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             EndGroup();
             return false;
         }
-        draw_window = g.CurrentWindow; // Child window
+        draw_window = g.current_window_id; // Child window
         draw_window.DC.NavLayersActiveMaskNext |= (1 << draw_window.DC.NavLayerCurrent); // This is to ensure that EndChild() will display a navigation highlight so we can "enter" into it.
         draw_window.DC.CursorPos += style.FramePadding;
         inner_size.x -= draw_window.ScrollbarSizes.x;
@@ -4946,7 +4946,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
 
         if (BeginPopup("picker"))
         {
-            picker_active_window = g.CurrentWindow;
+            picker_active_window = g.current_window_id;
             if (label != label_display_end)
             {
                 TextEx(label, label_display_end);
@@ -5748,7 +5748,7 @@ bool ImGui::TreeNodeBehaviorIsOpen(ImGuiID id, ImGuiTreeNodeFlags flags)
 
     // We only write to the tree storage if the user clicks (or explicitly use the SetNextItemOpen function)
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     ImGuiStorage* storage = window.DC.StateStorage;
 
     bool is_open;
@@ -5805,9 +5805,9 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     // We vertically grow up to current line height up the typical widget height.
     const float frame_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), label_size.y + padding.y * 2);
     ImRect frame_bb;
-    frame_bb.Min.x = (flags & ImGuiTreeNodeFlags_SpanFullWidth) ? window.WorkRect.Min.x : window.DC.CursorPos.x;
+    frame_bb.Min.x = (flags & ImGuiTreeNodeFlags_SpanFullWidth) ? window.work_rect.Min.x : window.DC.CursorPos.x;
     frame_bb.Min.y = window.DC.CursorPos.y;
-    frame_bb.Max.x = window.WorkRect.Max.x;
+    frame_bb.Max.x = window.work_rect.Max.x;
     frame_bb.Max.y = window.DC.CursorPos.y + frame_height;
     if (display_frame)
     {
@@ -5993,7 +5993,7 @@ void ImGui::TreePush(const void* ptr_id)
 void ImGui::TreePushOverrideID(ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     Indent();
     window.DC.TreeDepth += 1;
     PushOverrideID(id);
@@ -6002,7 +6002,7 @@ void ImGui::TreePushOverrideID(ImGuiID id)
 void ImGui::TreePop()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     Unindent();
 
     window.DC.TreeDepth--;
@@ -6032,7 +6032,7 @@ float ImGui::GetTreeNodeToLabelSpacing()
 void ImGui::SetNextItemOpen(bool is_open, ImGuiCond cond)
 {
     ImGuiContext& g = *GImGui;
-    if (g.CurrentWindow->SkipItems)
+    if (g.current_window_id->SkipItems)
         return;
     g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasOpen;
     g.NextItemData.OpenVal = is_open;
@@ -6118,7 +6118,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     // We don't support (size < 0.0) in Selectable() because the ItemSpacing extension would make explicitly right-aligned sizes not visibly match other widgets.
     const bool span_all_columns = (flags & ImGuiSelectableFlags_SpanAllColumns) != 0;
     const float min_x = span_all_columns ? window.ParentWorkRect.Min.x : pos.x;
-    const float max_x = span_all_columns ? window.ParentWorkRect.Max.x : window.WorkRect.Max.x;
+    const float max_x = span_all_columns ? window.ParentWorkRect.Max.x : window.work_rect.Max.x;
     if (size_arg.x == 0.0 || (flags & ImGuiSelectableFlags_SpanAvailWidth))
         size.x = ImMax(label_size.x, max_x - min_x);
 
@@ -6167,9 +6167,9 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
 
     // FIXME: We can standardize the behavior of those two, we could also keep the fast path of override clip_rect + full push on render only,
     // which would be advantageous since most selectable are not selected.
-    if (span_all_columns && window.DC.CurrentColumns)
+    if (span_all_columns && window.DC.current_columns)
         PushColumnsBackground();
-    else if (span_all_columns && g.CurrentTable)
+    else if (span_all_columns && g.current_table)
         TablePushBackgroundChannel();
 
     // We use NoHoldingActiveID on menus so user can click and _hold_ on a menu then drag to browse child entries
@@ -6224,9 +6224,9 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     }
     RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
 
-    if (span_all_columns && window.DC.CurrentColumns)
+    if (span_all_columns && window.DC.current_columns)
         PopColumnsBackground();
-    else if (span_all_columns && g.CurrentTable)
+    else if (span_all_columns && g.current_table)
         TablePopBackgroundChannel();
 
     RenderTextClipped(text_min, text_max, label, NULL, &label_size, style.SelectableTextAlign, &bb);
@@ -6318,7 +6318,7 @@ bool ImGui::ListBoxHeader(const char* label, int items_count, int height_in_item
 void ImGui::EndListBox()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     IM_ASSERT((window.Flags & ImGuiWindowFlags_ChildWindow) && "Mismatched BeginListBox/EndListBox calls. Did you test the return value of BeginListBox?");
     IM_UNUSED(window);
 
@@ -6784,7 +6784,7 @@ void ImGui::EndMainMenuBar()
     // When the user has left the menu layer (typically: closed menus through activation of an item), we restore focus to the previous window
     // FIXME: With this strategy we won't be able to restore a NULL focus.
     ImGuiContext& g = *GImGui;
-    if (g.CurrentWindow == g.NavWindow && g.NavLayer == ImGuiNavLayer_Main && !g.NavAnyRequest)
+    if (g.current_window_id == g.NavWindow && g.NavLayer == ImGuiNavLayer_Main && !g.NavAnyRequest)
         FocusTopMostWindowUnderOne(g.NavWindow, NULL);
 
     End();
@@ -6793,7 +6793,7 @@ void ImGui::EndMainMenuBar()
 static bool IsRootOfOpenMenuSet()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if ((g.OpenPopupStack.Size <= g.BeginPopupStack.Size) || (window.Flags & ImGuiWindowFlags_ChildMenu))
         return false;
 
@@ -7005,7 +7005,7 @@ void ImGui::EndMenu()
     // A menu doesn't close itself because EndMenuBar() wants the catch the last Left<>Right inputs.
     // However, it means that with the current code, a BeginMenu() from outside another menu or a menu-bar won't be closable with the Left direction.
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (g.NavMoveDir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.LayoutType == ImGuiLayoutType_Vertical)
         if (g.NavWindow && (g.NavWindow->RootWindowForNav->Flags & ImGuiWindowFlags_Popup) && g.NavWindow->RootWindowForNav->ParentWindow == window)
         {
@@ -7190,13 +7190,13 @@ static ImGuiPtrOrIndex GetTabBarRefFromTabBar(ImGuiTabBar* tab_bar)
 bool    ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return false;
 
     ImGuiID id = window.GetID(str_id);
     ImGuiTabBar* tab_bar = g.TabBars.GetOrAddByKey(id);
-    ImRect tab_bar_bb = ImRect(window.DC.CursorPos.x, window.DC.CursorPos.y, window.WorkRect.Max.x, window.DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y * 2);
+    ImRect tab_bar_bb = ImRect(window.DC.CursorPos.x, window.DC.CursorPos.y, window.work_rect.Max.x, window.DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y * 2);
     tab_bar->ID = id;
     return BeginTabBarEx(tab_bar, tab_bar_bb, flags | ImGuiTabBarFlags_IsFocused, NULL);
 }
@@ -7204,7 +7204,7 @@ bool    ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags)
 bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImGuiTabBarFlags flags, ImGuiDockNode* dock_node)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return false;
 
@@ -7270,7 +7270,7 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
 void    ImGui::EndTabBar()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return;
 
@@ -7535,7 +7535,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
     tab_bar->ScrollingRectMaxX = tab_bar->BarRect.Max.x - sections[2].Width - sections[1].Spacing;
 
     // Actual layout in host window (we don't do it in BeginTabBar() so as not to waste an extra frame)
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     window.DC.CursorPos = tab_bar->BarRect.Min;
     ItemSize(DimgVec2D::new(tab_bar->WidthAllTabs, tab_bar->BarRect.GetHeight()), tab_bar->FramePadding.y);
     window.DC.IdealMaxPos.x = ImMax(window.DC.IdealMaxPos.x, tab_bar->BarRect.Min.x + tab_bar->WidthAllTabsIdeal);
@@ -7761,7 +7761,7 @@ bool ImGui::TabBarProcessReorder(ImGuiTabBar* tab_bar)
 static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
 
     const Vector2D arrow_button_size(g.FontSize - 2.0, g.FontSize + g.Style.FramePadding.y * 2.0);
     const float scrolling_buttons_width = arrow_button_size.x * 2.0;
@@ -7822,7 +7822,7 @@ static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
 static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
 
     // We use g.style.FramePadding.y to match the square ArrowButton size
     const float tab_list_popup_button_width = g.FontSize + g.Style.FramePadding.y;
@@ -7873,7 +7873,7 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return false;
 
@@ -7897,7 +7897,7 @@ bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags f
 void    ImGui::EndTabItem()
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return;
 
@@ -7916,7 +7916,7 @@ void    ImGui::EndTabItem()
 bool    ImGui::TabItemButton(const char* label, ImGuiTabItemFlags flags)
 {
     ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return false;
 
@@ -7939,7 +7939,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
         TabBarLayout(tab_bar);
         g.NextItemData = backup_next_item_data;
     }
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     if (window.SkipItems)
         return false;
 

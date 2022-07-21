@@ -68,7 +68,7 @@ pub struct WindowTempData {
     // ImGuiStorage*           state_storage;           // current persistent per-window storage (store e.g. tree node open/close state)
     pub state_storage: Vec<u8>,
     // ImGuiOldColumns*        current_columns;         // current columns set
-    pub current_columns: OldColumns,
+    pub current_columns: Option<OldColumns>,
     // int                     current_table_idx;        // current table index (into g.tables)
     pub current_table_idx: usize,
     // ImGuiLayoutType         layout_type;

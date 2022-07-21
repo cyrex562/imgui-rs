@@ -1124,14 +1124,14 @@ Breaking Changes:
 - If you were still using the old names, while you are cleaning up, considering enabling
   IMGUI_DISABLE_OBSOLETE_FUNCTIONS in imconfig.h even temporarily to have a pass at finding
   and removing up old API calls, if any remaining.
-- Internals: Columns: renamed undocumented/internals ImGuiColumnsFlags_* to ImGuiOldColumnFlags_* to reduce
+- Internals: columns: renamed undocumented/internals ImGuiColumnsFlags_* to ImGuiOldColumnFlags_* to reduce
   confusion with tables API. Keep redirection enums (will obsolete). (#125, #513, #913, #1204, #1444, #2142, #2707)
 - Renamed io.ConfigWindowsMemoryCompactTimer to io.config_memory_compact_timer as the feature now applies
   to other data structures. (#2636)
 
 Other Changes:
 
-- tables: added new tables Beta API as a replacement for old Columns. (#3740, #2957, #125)
+- tables: added new tables Beta API as a replacement for old columns. (#3740, #2957, #125)
   Check out 'Demo->tables' for many demos.
   Read API comments in imgui.h for details. Read extra commentary in imgui_tables.cpp.
   - Added 16 functions:
@@ -1293,7 +1293,7 @@ Other Changes:
   generate an unnecessary extra draw call.
 - Tab Bar: Fixed a small bug where toggling a tab bar from Reorderable to not Reorderable would leave
   tabs reordered in the tab list popup. [@Xipiryon]
-- Columns: Fix inverted clip_rect being passed to renderer when using certain primitives inside of
+- columns: Fix inverted clip_rect being passed to renderer when using certain primitives inside of
   a fully clipped column. (#3475) [@szreder]
 - Popups, Tooltips: Fix edge cases issues with positioning popups and tooltips when they are larger than
   viewport on either or both axises. [@Rokups]
@@ -1504,18 +1504,18 @@ Other Changes:
   BeginMenu()/EndMenu() or BeginPopup(0/EndPopup(). (#3223, #1207) [@rokups]
 - Drag and Drop: Fixed unintended fallback "..." tooltip display during drag operation when
   drag source uses _SourceNoPreviewTooltip flags. (#3160) [@rokups]
-- Columns: Lower overhead on column switches and switching to background channel.
-  Benefits Columns but was primarily made with tables in mind!
+- columns: Lower overhead on column switches and switching to background channel.
+  Benefits columns but was primarily made with tables in mind!
 - fonts: Fix get_glyph_ranges_korean() end-range to end at 0xD7A3 (instead of 0xD79D). (#348, #3217) [@marukrap]
 - ImDrawList: Fixed an issue where draw command merging or primitive unreserve while crossing the
   vtx_offset boundary would lead to draw commands with wrong vtx_offset. (#3129, #3163, #3232, #2591)
   [@thedmd, @Shironekoben, @sergeyn, @ocornut]
-- ImDrawList, ImDrawListSplitter, Columns: Fixed an issue where changing channels with different
+- ImDrawList, ImDrawListSplitter, columns: Fixed an issue where changing channels with different
   texture_id, vtx_offset would incorrectly apply new settings to draw channels. (#3129, #3163)
   [@ocornut, @thedmd, @Shironekoben]
-- ImDrawList, ImDrawListSplitter, Columns: Fixed an issue where starting a split when current
+- ImDrawList, ImDrawListSplitter, columns: Fixed an issue where starting a split when current
   vtx_offset was not zero would lead to draw commands with wrong vtx_offset. (#2591)
-- ImDrawList, ImDrawListSplitter, Columns: Fixed an issue where starting a split right after
+- ImDrawList, ImDrawListSplitter, columns: Fixed an issue where starting a split right after
   a callback draw command would incorrectly override the callback draw command.
 - Misc, Freetype: Fix for rare case where FT_Get_Char_Index() succeeds but FT_Load_Glyph() fails.
 - Docs: Improved and moved font documentation to docs/FONTS.md so it can be readable on the web.
@@ -1586,7 +1586,7 @@ Other Changes:
   - sizeof(ImWchar) goes from 2 to 4. IM_UNICODE_CODEPOINT_MAX goes from 0xFFFF to 0x10FFFF.
   - Various structures such as ImFont, ImFontGlyphRangesBuilder will use more memory, this
     is currently not particularly efficient.
-- Columns: undid the change in 1.75 were Columns()/BeginColumns() were preemptively limited
+- columns: undid the change in 1.75 were columns()/BeginColumns() were preemptively limited
   to 64 columns with an assert. (#3037, #125)
 - window: Fixed a bug with child window inheriting ItemFlags from their parent when the child
   window also manipulate the ItemFlags stack. (#3024) [@Stanbroek]
@@ -1667,7 +1667,7 @@ Breaking Changes:
   used that feature before (very unlikely, but grep for call to PrimReserve in your code),
   you can #define IMGUI_DEBUG_PARANOID in imconfig.h to catch existing calls. [@ShironekoBen]
 - ImDrawList::add_circle()/add_circle_filled() functions don't accept negative radius.
-- Limiting Columns()/BeginColumns() api to 64 columns with an assert. While the current code
+- Limiting columns()/BeginColumns() api to 64 columns with an assert. While the current code
   technically supports it, future code may not so we're putting the restriction ahead.
   [Undid that change in 1.76]
 - imgui_internal.h: changed ImRect() default constructor initializes all fields to 0.0 instead
@@ -1702,7 +1702,7 @@ Other Changes:
   In the current branch they are essentially the same as add_circle(), add_circle_filled() but as
   we will rework the circle rendering functions to use textures and automatic segment count
   selection, those new api can fill a gap. [@ShironekoBen]
-- Columns: ImDrawList::Channels* functions now work inside columns. Added extra comments to
+- columns: ImDrawList::Channels* functions now work inside columns. Added extra comments to
   suggest using user-owned ImDrawListSplitter instead of ImDrawList functions. [@rokups]
 - Misc: Added ImGuiMouseCursor_NotAllowed enum so it can be used by more shared widgets. [@rokups]
 - Misc: Added IMGUI_DISABLE compile-time definition to make all headers and sources empty.
@@ -1858,7 +1858,7 @@ Other Changes:
   (before 1.71 tab bars fed the sum of current width which created feedback loops in certain situations).
 - tab_bar: Improved shrinking for large number of tabs to avoid leaving extraneous space on the right side.
   Individuals tabs are given integer-rounded width and remainder is spread between tabs left-to-right.
-- Columns, Separator: Fixed a bug where non-visible separators within columns would alter the next row position
+- columns, Separator: Fixed a bug where non-visible separators within columns would alter the next row position
   differently than visible ones.
 - SliderScalar: Improved assert when using U32 or U64 types with a large v_max value. (#2765) [@loicmouton]
 - DragInt, DragFloat, DragScalar: Using (v_min > v_max) allows locking any edits to the value.
@@ -1979,13 +1979,13 @@ Other Changes:
 - Combo: Hide arrow when there's not enough space even for the square button.
 - InputText: Testing for newly added ImGuiKey_KeyPadEnter key. (#2677, #2005) [@amc522]
 - tab_bar: Fixed unfocused tab bar separator color (was using ImGuiCol_Tab, should use ImGuiCol_TabUnfocusedActive).
-- Columns: Fixed a regression from 1.71 where the right-side of the contents rectangle within each column
+- columns: Fixed a regression from 1.71 where the right-side of the contents rectangle within each column
   would wrongly use a window_padding.x instead of ItemSpacing.x like it always did. (#125, #2666)
-- Columns: Made the right-most edge reaches up to the clipping rectangle (removing half of window_padding.x
+- columns: Made the right-most edge reaches up to the clipping rectangle (removing half of window_padding.x
   worth of asymmetrical/extraneous padding, note that there's another half that conservatively has to offset
   the right-most column, otherwise it's clipping width won't match the other columns). (#125, #2666)
-- Columns: Improved honoring alignment with various values of ItemSpacing.x and window_padding.x. (#125, #2666)
-- Columns: Made GetColumnOffset() and GetColumnWidth() behave when there's no column set, consistently with
+- columns: Improved honoring alignment with various values of ItemSpacing.x and window_padding.x. (#125, #2666)
+- columns: Made GetColumnOffset() and GetColumnWidth() behave when there's no column set, consistently with
   other column functions. (#2683)
 - InputTextMultiline: Fixed vertical scrolling tracking glitch.
 - Word-wrapping: Fixed overzealous word-wrapping when glyph edge lands exactly on the limit. Because
@@ -2094,10 +2094,10 @@ Other Changes:
   horizontal scrolling. (#2211, #2579)
 - tab_bar: Fixed BeginTabBar() within a window with horizontal scrolling from creating a feedback
   loop with the horizontal contents size.
-- Columns: Fixed Columns() within a window with horizontal scrolling from not covering the full
+- columns: Fixed columns() within a window with horizontal scrolling from not covering the full
   horizontal area (previously only worked with an explicit contents size). (#125)
-- Columns: Fixed Separator from creating an extraneous draw command. (#125)
-- Columns: Fixed Selectable with SpanAllColumns flag from creating an extraneous draw command. (#125)
+- columns: Fixed Separator from creating an extraneous draw command. (#125)
+- columns: Fixed Selectable with SpanAllColumns flag from creating an extraneous draw command. (#125)
 - style: Added style.WindowMenuButtonPosition (left/right, defaults to ImGuiDir_Left) to move the
   collapsing/docking button to the other side of the title bar.
 - style: Made window close button cross slightly smaller.
@@ -2184,7 +2184,7 @@ Other Changes:
 - GetMouseDragDelta(): verify that mouse positions are valid otherwise returns zero.
 - Inputs: Also add support for horizontal scroll with Shift+Mouse Wheel. (#2424, #1463) [@LucaRood]
 - PlotLines, PlotHistogram: Ignore NaN values when calculating min/max bounds. (#2485)
-- Columns: Fixed boundary of clipping being off by 1 pixel within the left column. (#125)
+- columns: Fixed boundary of clipping being off by 1 pixel within the left column. (#125)
 - Separator: Declare its thickness (1.0) to the layout, making items around separator more symmetrical.
 - Combo, Slider, Scrollbar: Improve rendering in situation when there's only a few pixels available (<3 pixels).
 - Nav: Fixed Drag/Slider functions going into text input mode when keyboard CTRL is held while pressing NavActivate.
@@ -2765,7 +2765,7 @@ Other Changes:
 - window: Fixed windows using the ImGuiWindowFlags_NoSavedSettings flag from not using the same default position as other windows. (#1760)
 - window: Relaxed the internal stack size checker to allow Push/Begin/Pop/.../End patterns to be used with PushStyleColor, PushStyleVar, PushFont without causing a false positive assert. (#1767)
 - window: Fixed the default proportional item width lagging by one frame on resize.
-- Columns: Fixed a bug introduced in 1.51 where columns would affect the contents size of their container, often creating
+- columns: Fixed a bug introduced in 1.51 where columns would affect the contents size of their container, often creating
   feedback loops when ImGuiWindowFlags_AlwaysAutoResize was used. (#1760)
 - Settings: Fixed saving an empty .ini file if CreateContext/DestroyContext are called without a single call to NewFrame(). (#1741)
 - Settings: Added LoadIniSettingsFromDisk(), LoadIniSettingsFromMemory(), SaveIniSettingsToDisk(), SaveIniSettingsToMemory()
@@ -2905,10 +2905,10 @@ Other Changes:
 - Tooltip: BeginTooltip() sets ImGuiWindowFlags_NoInputs flag.
 - Scrollbar: Fixed scrollbar_y enable test after scrollbar_x has been enabled being a little off (small regression from Nov 2017). (#1574)
 - Scrollbar: Fixed scrollbar_x enable test subtracting window_padding.x (this has been there since the addition of horizontal scroll bar!).
-- Columns: clear offsets data when columns count changed. (#1525)
-- Columns: Fixed a memory leak of ImGuiColumnsSet's Columns vector. (#1529) [@unprompted]
-- Columns: Fixed resizing a window very small breaking some columns positioning (broken in 1.53).
-- Columns: The available column extent takes consideration of the right-most clipped pixel, so the right-most column may look a little wider but will contain the same amount of visible contents.
+- columns: clear offsets data when columns count changed. (#1525)
+- columns: Fixed a memory leak of ImGuiColumnsSet's columns vector. (#1529) [@unprompted]
+- columns: Fixed resizing a window very small breaking some columns positioning (broken in 1.53).
+- columns: The available column extent takes consideration of the right-most clipped pixel, so the right-most column may look a little wider but will contain the same amount of visible contents.
 - MenuBar: Fixed menu bar pushing a clipping rect outside of its allocated bound (usually unnoticeable).
 - TreeNode: nodes with the ImGuiTreeNodeFlags_Leaf flag correctly disable highlight when DragDrop is active. (#143, #581)
 - Drag and Drop: Increased payload type string to 32 characters instead of 8. (#143)
@@ -2944,7 +2944,7 @@ Other Changes:
 - Misc: Added IMGUI_STB_TRUETYPE_FILENAME and IMGUI_STB_RECT_PACK_FILENAME compile time directives to use another version of the stb_ files.
 - Misc: Updated stb_rect_pack from 0.10 to 0.11 (minor changes).
   (Those flags are not used by ImGui itself, they only exists to make it easy for the engine/backend to pass information to the application in a standard manner.)
-- Metrics: Added display of Columns state.
+- Metrics: Added display of columns state.
 - Demo: Improved Selectable() examples. (#1528)
 - Demo: Tweaked the Child demos, added a menu bar to the second child to test some navigation functions.
 - Demo: Console: Using ImGuiCol_Text to be more friendly to color changes.
@@ -3068,10 +3068,10 @@ Other Changes:
 - MenuBar: Fixed minor rendering issues on the right size when resizing a window very small and using rounded window corners.
 - MenuBar: better software clipping to handle small windows, in particular child window don't have minimum constraints so we need to render clipped menus better.
 - BeginMenu(): Tweaked the Arrow/Triangle displayed on child menu items.
-- Columns: Clipping columns borders on Y axis on CPU because some Linux GPU drivers appears to be unhappy with triangle spanning large regions. (#125)
-- Columns: Added ImGuiColumnsFlags_GrowParentContentsSize to internal API to restore old content sizes behavior (may be obsolete). (#1444, #125)
-- Columns: Columns width is no longer lost when dragging a column to the right side of the window, until releasing the mouse button you have a chance to save them. (#1499, #125). [@ggtucker]
-- Columns: Fixed dragging when using a same of columns multiple times in the frame. (#125)
+- columns: Clipping columns borders on Y axis on CPU because some Linux GPU drivers appears to be unhappy with triangle spanning large regions. (#125)
+- columns: Added ImGuiColumnsFlags_GrowParentContentsSize to internal API to restore old content sizes behavior (may be obsolete). (#1444, #125)
+- columns: columns width is no longer lost when dragging a column to the right side of the window, until releasing the mouse button you have a chance to save them. (#1499, #125). [@ggtucker]
+- columns: Fixed dragging when using a same of columns multiple times in the frame. (#125)
 - Indent(), Unindent(): Allow passing negative values.
 - ColorEdit4(): Made IsItemActive() return true when picker pop-up is active. (#1489)
 - ColorEdit4(): Tweaked tooltip so that the color button aligns more correctly with text.
@@ -3266,12 +3266,12 @@ Other Changes:
 - Fixed `PushID()`/`PopID()` from marking parent window as Accessed (which needlessly woke up the root "Debug" window when used outside of a regular window). (#747)
 - Fixed an assert when calling `CloseCurrentPopup()` twice in a row. [@nem0]
 - window size can be loaded from .ini data even if ImGuiWindowFlags_NoResize flag is set. (#1048, #1056)
-- Columns: Added `SetColumnWidth()`. (#913) [@ggtucker]
-- Columns: Dragging a column preserve its width by default. (#913) [@ggtucker]
-- Columns: Fixed first column appearing wider than others. (#1266)
-- Columns: Fixed allocating space on the right-most side with the assumption of a vertical scrollbar. The space is only allocated when needed. (#125, #913, #893, #1138)
-- Columns: Fixed the right-most column from registering its content width to the parent window, which led to various issues when using auto-resizing window or e.g. horizontal scrolling. (#519, #125, #913)
-- Columns: Refactored some of the columns code internally toward a better API (not yet exposed) + minor optimizations. (#913) [@ggtucker, @ocornut]
+- columns: Added `SetColumnWidth()`. (#913) [@ggtucker]
+- columns: Dragging a column preserve its width by default. (#913) [@ggtucker]
+- columns: Fixed first column appearing wider than others. (#1266)
+- columns: Fixed allocating space on the right-most side with the assumption of a vertical scrollbar. The space is only allocated when needed. (#125, #913, #893, #1138)
+- columns: Fixed the right-most column from registering its content width to the parent window, which led to various issues when using auto-resizing window or e.g. horizontal scrolling. (#519, #125, #913)
+- columns: Refactored some of the columns code internally toward a better API (not yet exposed) + minor optimizations. (#913) [@ggtucker, @ocornut]
 - Popups: Most pop-ups windows can be moved by the user after appearing (if they don't have explicit positions provided by caller, or e.g. sub-menu pop-up). The previous restriction was totally arbitrary. (#1252)
 - Tooltip: `SetTooltip()` is expanded immediately into a window, honoring current font / styling setting. Add internal mechanism to override tooltips. (#862)
 - PlotHistogram: bars are drawn based on zero-line, so negative values are going under. (#828)
@@ -3281,7 +3281,7 @@ Other Changes:
 - [windows] Clipboard: Fixed not closing Win32 clipboard on early open failure path. (#1264)
 - Removed an unnecessary dependency on int64_t which failed on some older compilers.
 - Demo: Rearranged everything under Widgets in a more consistent way.
-- Demo: Columns: Added Horizontal Scrolling demo. Tweaked another Columns demo. (#519, #125, #913)
+- Demo: columns: Added Horizontal Scrolling demo. Tweaked another columns demo. (#519, #125, #913)
 - Examples: OpenGL: Various makefiles for MINGW, Linux. (#1209, #1229, #1209) [@fr500, @acda]
 - Examples: Enabled vsync by default in example applications, so it doesn't confuse people that the sample run at 2000+ fps and waste an entire CPU. (#1213, #1151).
 - Various other small fixes, tweaks, comments, optimizations.
@@ -3339,7 +3339,7 @@ Other Changes:
 - ImGuiListClipper: Fixed automatic-height calc path dumbly having user display element 0 twice. (#661, #716)
 - ImGuiListClipper: Fix to behave within column. (#661, #662, #716)
 - ImDrawList: Renamed ImDrawList::PathFill() to ImDrawList::PathFillConvex() for clarity. (BREAKING API)
-- Columns: End() avoid calling Columns(1) if no columns set is open, not sure why it wasn't the case already (pros: faster, cons: exercise less code).
+- columns: End() avoid calling columns(1) if no columns set is open, not sure why it wasn't the case already (pros: faster, cons: exercise less code).
 - ColorButton(): Fix ColorButton showing wrong hex value for alpha. (#1068) [@codecat]
 - ColorEdit4(): better preserve inputting value out of 0..255 range, display then clamped in Hexadecimal form.
 - Shutdown() clear out some remaining pointers for sanity. (#836)
@@ -3437,7 +3437,7 @@ Other changes:
 - Bullet(), BulletText(): Slightly bigger. Less polygons.
 - ButtonBehavior(): fixed subtle old bug when a repeating button would also return true on mouse release (barely noticeable unless RepeatRate is set to be very slow). (#656)
 - BeginMenu(): a menu that becomes disabled while open gets closed down, facilitate user's code. (#126)
-- BeginGroup(): fixed using within Columns set. (#630)
+- BeginGroup(): fixed using within columns set. (#630)
 - Fixed a lag in reading the currently hovered window when dragging a window. (#635)
 - Obsoleted 4 parameters version of CollapsingHeader(). Refactored code into TreeNodeBehavior. (#600, #579)
 - Scrollbar: minor fix for top-right rounding of scrollbar background when window has menu bar but no title bar.
@@ -3562,9 +3562,9 @@ Changes:
 - BeginPopupContextWindow() and BeginPopupContextVoid() reopen window on subsequent click. (#439)
 - ColorEdit4(): Fixed broken tooltip on hovering the color button. (actually fixes #373, #380)
 - ImageButton(): uses FrameRounding up to a maximum of available framing size. (#394)
-- Columns: Fixed bug with indentation within columns, also making code a bit shorter/faster. (#414, #125)
-- Columns: Columns set with no implicit id include the columns count within the id to reduce collisions. (#125)
-- Columns: Removed one unnecessary allocation when columns are not used by a window. (#125)
+- columns: Fixed bug with indentation within columns, also making code a bit shorter/faster. (#414, #125)
+- columns: columns set with no implicit id include the columns count within the id to reduce collisions. (#125)
+- columns: Removed one unnecessary allocation when columns are not used by a window. (#125)
 - ImFontAtlas: Tweaked get_glyph_ranges_japanese() so it is easier to modify.
 - ImFontAtlas: Updated stb_rect_pack.h to 0.08.
 - Metrics: Fixed computing ImDrawCmd bounding box when the draw buffer have been unindexed.
@@ -3615,7 +3615,7 @@ Changes:
 - Scrollbar: fixed rounding of background + child window consistenly have ChildWindowBg color under ScrollbarBg fill. (#355).
 - Scrollbar: background color less translucent in default style so it works better when changing background color.
 - Scrollbar: fixed minor rendering offset when borders are enabled. (#365)
-- ImDrawList: fixed 1 leak per ImDrawList using the ChannelsSplit() API (via Columns). (#318)
+- ImDrawList: fixed 1 leak per ImDrawList using the ChannelsSplit() API (via columns). (#318)
 - ImDrawList: fixed rectangle rendering glitches with width/height <= 1/2 and rounding enabled.
 - ImDrawList: AddImage() uv parameters default to (0,0) and (1,1).
 - ImFontAtlas: Added tex_desired_width and tweaked default cheapo best-width choice. (#327)
@@ -3724,7 +3724,7 @@ Other Changes:
 - InputInt() allow hexadecimal input (awkwardly via ImGuiInputTextFlags_CharsHexadecimal but we will allow format
   string in InputInt* later).
 - Checkbox(), RadioButton(): fixed scaling of checkbox and radio button for the filling of "active" visual.
-- Columns: never assume horizontal space for scrollbar if NoScrollbar flag is explicitly set.
+- columns: never assume horizontal space for scrollbar if NoScrollbar flag is explicitly set.
 - Slider: fixed using FramePadding between frame and grab visual. Scaling that spacing would look odd.
 - Fixed lower-right resize grip hit box not scaling along with its rendered size (#287)
 - ImDrawList: Fixed angles in ImDrawList::PathArcTo(), PathArcToFast() (v1.43) being off by an extra PI for no reason.
@@ -3798,7 +3798,7 @@ Other Changes:
 - InputText: Added ImGuiInputTextFlags_AlwaysInsertMode flag.
 - InputText: Added HasSelection() helper in ImGuiTextEditCallbackData as a clarification.
 - InputText: Fix for using END key on a multi-line text editor (#275)
-- Columns: Dispatch render of each column in a sub-draw list and merge on closure, saving a lot of draw calls! (#125)
+- columns: Dispatch render of each column in a sub-draw list and merge on closure, saving a lot of draw calls! (#125)
 - Popups: Fixed Combo boxes inside menus. (#272)
 - style: Added GrabRounding setting to make the sliders etc. grabs rounded.
 - Changed SameLine() parameters from int to float.
@@ -3952,7 +3952,7 @@ Other Changes:
 - Combo: Empty label doesn't add ItemInnerSpacing alignment, matching other widgets.
 - EndGroup: Carries the text base offset from the last line of the group (sort of incorrect but better than nothing,
   should use the first line of the group, will implement in the future).
-- Columns: distinguish columns-set id from other widgets as a convenience, added asserts and sailors.
+- columns: distinguish columns-set id from other widgets as a convenience, added asserts and sailors.
 - ListBox: ListBox() function only use public API to encourage creating custom versions. ListBoxHeader() can return false.
 - ListBox: Uses ImGuiListClipper and assume items of matching height, so large lists can be handled.
 - Plot: overlay label clipped within frame when not fitting.

@@ -181,9 +181,9 @@ pub fn error_check_end_frame_recover(g: &mut Context, log_callback: ErrorLogCall
 pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCallback, user_data: &Vec<u8>)
 {
     // ImGuiContext& g = *GImGui;
-    while (g.CurrentTable && (g.CurrentTable.OuterWindow == g.current_window || g.CurrentTable.InnerWindow == g.current_window))
+    while (g.current_table && (g.current_table.OuterWindow == g.current_window || g.current_table.InnerWindow == g.current_window))
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing EndTable() in '%s'", g.CurrentTable.OuterWindow.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing EndTable() in '%s'", g.current_table.OuterWindow.Name);
         EndTable();
     }
 
@@ -210,7 +210,7 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
         if (log_callback) log_callback(user_data, "Recovered from missing PopID() in '%s'", window.Name);
         PopID();
     }
-    while (g.DisabledStackSize > stack_sizes.sizeOfDisabledStack) //-V1044
+    while (g.disabled_stack_size > stack_sizes.sizeOfDisabledStack) //-V1044
     {
         if (log_callback) log_callback(user_data, "Recovered from missing EndDisabled() in '%s'", window.Name);
         EndDisabled();

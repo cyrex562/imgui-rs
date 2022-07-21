@@ -17,28 +17,28 @@ use crate::window::class::WindowClass;
 pub enum DockNodeFlags
 {
     None                         = 0,
-    KeepAliveOnly                = 1 << 0,   // Shared       // Don't display the dockspace node but keep it alive. windows docked into this dockspace node won't be undocked.
+    KeepAliveOnly               ,   // Shared       // Don't display the dockspace node but keep it alive. windows docked into this dockspace node won't be undocked.
     //NoCentralNode              = 1 << 1,   // Shared       // Disable Central Node (the node which can stay empty)
-    NoDockingInCentralNode       = 1 << 2,   // Shared       // Disable docking inside the Central Node, which will be always kept empty.
-    PassthruCentralNode          = 1 << 3,   // Shared       // Enable passthru dockspace: 1) DockSpace() will render a ImGuiCol_WindowBg background covering everything excepted the Central Node when empty. Meaning the host window should probably use SetNextWindowBgAlpha(0.0) prior to Begin() when using this. 2) When Central Node is empty: let inputs pass-through + won't display a DockingEmptyBg background. See demo for details.
-    NoSplit                      = 1 << 4,   // Shared/Local // Disable splitting the node into smaller nodes. Useful e.g. when embedding dockspaces into a main root one (the root one may have splitting disabled to reduce confusion). Note: when turned off, existing splits will be preserved.
-    NoResize                     = 1 << 5,   // Shared/Local // Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.
-    AutoHideTabBar               = 1 << 6,    // Shared/Local // Tab bar will automatically hide when there is a single window in the dock node.
+    NoDockingInCentralNode      ,   // Shared       // Disable docking inside the Central Node, which will be always kept empty.
+    PassthruCentralNode         ,   // Shared       // Enable passthru dockspace: 1) DockSpace() will render a ImGuiCol_WindowBg background covering everything excepted the Central Node when empty. Meaning the host window should probably use SetNextWindowBgAlpha(0.0) prior to Begin() when using this. 2) When Central Node is empty: let inputs pass-through + won't display a DockingEmptyBg background. See demo for details.
+    NoSplit                     ,   // Shared/Local // Disable splitting the node into smaller nodes. Useful e.g. when embedding dockspaces into a main root one (the root one may have splitting disabled to reduce confusion). Note: when turned off, existing splits will be preserved.
+    NoResize                    ,   // Shared/Local // Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.
+    AutoHideTabBar              ,    // Shared/Local // Tab bar will automatically hide when there is a single window in the dock node.
     // [Internal]
-    DockSpace                = 1 << 10,  // Local, Saved  // A dockspace is a node that occupy space within an existing user window. Otherwise the node is floating and create its own window.
-    CentralNode              = 1 << 11,  // Local, Saved  // The central node has 2 main properties: stay visible when empty, only use "remaining" spaces from its neighbor.
-    NoTabBar                 = 1 << 12,  // Local, Saved  // Tab bar is completely unavailable. No triangle in the corner to enable it back.
-    HiddenTabBar             = 1 << 13,  // Local, Saved  // Tab bar is hidden, with a triangle in the corner to show it again (NB: actual tab-bar instance may be destroyed as this is only used for single-window tab bar)
-    NoWindowMenuButton       = 1 << 14,  // Local, Saved  // Disable window/docking menu (that one that appears instead of the collapse button)
-    NoCloseButton            = 1 << 15,  // Local, Saved  //
-    NoDocking                = 1 << 16,  // Local, Saved  // Disable any form of docking in this dockspace or individual node. (On a whole dockspace, this pretty much defeat the purpose of using a dockspace at all). Note: when turned on, existing docked nodes will be preserved.
-    NoDockingSplitMe         = 1 << 17,  // [EXPERIMENTAL] Prevent another window/node from splitting this node.
-    NoDockingSplitOther      = 1 << 18,  // [EXPERIMENTAL] Prevent this node from splitting another window/node.
-    NoDockingOverMe          = 1 << 19,  // [EXPERIMENTAL] Prevent another window/node to be docked over this node.
-    NoDockingOverOther       = 1 << 20,  // [EXPERIMENTAL] Prevent this node to be docked over another window or non-empty node.
-    NoDockingOverEmpty       = 1 << 21,  // [EXPERIMENTAL] Prevent this node to be docked over an empty node (e.g. DockSpace with no other windows)
-    NoResizeX                = 1 << 22,  // [EXPERIMENTAL]
-    NoResizeY                = 1 << 23,  // [EXPERIMENTAL]
+    DockSpace               ,  // Local, Saved  // A dockspace is a node that occupy space within an existing user window. Otherwise the node is floating and create its own window.
+    CentralNode             ,  // Local, Saved  // The central node has 2 main properties: stay visible when empty, only use "remaining" spaces from its neighbor.
+    NoTabBar                ,  // Local, Saved  // Tab bar is completely unavailable. No triangle in the corner to enable it back.
+    HiddenTabBar            ,  // Local, Saved  // Tab bar is hidden, with a triangle in the corner to show it again (NB: actual tab-bar instance may be destroyed as this is only used for single-window tab bar)
+    NoWindowMenuButton      ,  // Local, Saved  // Disable window/docking menu (that one that appears instead of the collapse button)
+    NoCloseButton           ,  // Local, Saved  //
+    NoDocking               ,  // Local, Saved  // Disable any form of docking in this dockspace or individual node. (On a whole dockspace, this pretty much defeat the purpose of using a dockspace at all). Note: when turned on, existing docked nodes will be preserved.
+    NoDockingSplitMe        ,  // [EXPERIMENTAL] Prevent another window/node from splitting this node.
+    NoDockingSplitOther     ,  // [EXPERIMENTAL] Prevent this node from splitting another window/node.
+    NoDockingOverMe         ,  // [EXPERIMENTAL] Prevent another window/node to be docked over this node.
+    NoDockingOverOther      ,  // [EXPERIMENTAL] Prevent this node to be docked over another window or non-empty node.
+    NoDockingOverEmpty      ,  // [EXPERIMENTAL] Prevent this node to be docked over an empty node (e.g. DockSpace with no other windows)
+    NoResizeX               ,  // [EXPERIMENTAL]
+    NoResizeY               ,  // [EXPERIMENTAL]
     SharedFlagsInheritMask,
 }
 

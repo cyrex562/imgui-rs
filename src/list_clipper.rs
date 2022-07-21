@@ -62,7 +62,7 @@ impl ListClipper {
         // ImGuiWindow* window = g.current_window;
         let window = g.current_window;
 
-        let table = g.CurrentTable;
+        let table = g.current_table;
     if table.is_null() == false {
         if (table.IsInsideRow){
             TableEndRow(table);
@@ -128,8 +128,8 @@ pub fn GetSkipItemForListClipping() -> bool
 {
     // ImGuiContext& g = *GImGui;
     // return (g.current_table ? g.current_table->HostSkipItems : g.current_window->skip_items);
-    if g.CurrentTable {
-        g.CurrentTable.HostSkipItems
+    if g.current_table {
+        g.current_table.HostSkipItems
     } else {
         g.current_window.skip_items
     }
@@ -176,7 +176,7 @@ pub fn sort_and_fuse_ranges(ranges: &mut Vec<ListClipper>, offset: usize)
 // static void ImGuiListClipper_SeekCursorAndSetupPrevLine(float pos_y, float line_height)
 pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
 {
-    // Set cursor position and a few other things so that SetScrollHereY() and Columns() can work when seeking cursor.
+    // Set cursor position and a few other things so that SetScrollHereY() and columns() can work when seeking cursor.
     // FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     // ImGuiContext& g = *GImGui;
@@ -192,12 +192,12 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
     *window.dc.CursorPosPrevLine.y = window.dc.cursor_pos.y - line_height;
     // window->dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
     *window.dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);
-    let columns = window.dc.CurrentColumns;
+    let columns = window.dc.current_columns;
     if (columns.is_null() == false) {
         columns.LineMinY = window.dc.cursor_pos.y;
     }                         // Setting this so that cell Y position are set properly
     // if (ImGuiTable* table = g.current_table)
-    let table = g.CurrentTable;
+    let table = g.current_table;
     if table.is_null() == false
     {
         if (table.IsInsideRow){
@@ -263,7 +263,7 @@ bool ImGuiListClipper::Step()
     ImGuiListClipperData* data = (ImGuiListClipperData*)TempData;
     // IM_ASSERT(data != NULL && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
 
-    ImGuiTable* table = g.CurrentTable;
+    ImGuiTable* table = g.current_table;
     if (table && table.IsInsideRow)
         ImGui::TableEndRow(table);
 

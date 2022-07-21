@@ -75,10 +75,10 @@ pub enum PopupFlags
     MouseButtonMiddle       = 2,        // For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)
     MouseButtonMask_        = 0x1F,
     // ImGuiPopupFlags_MouseButtonDefault_     = 1,
-    NoOpenOverExistingPopup = 1 << 5,   // For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack
-    NoOpenOverItems         = 1 << 6,   // For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space
-    AnyPopupId              = 1 << 7,   // For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
-    AnyPopupLevel           = 1 << 8,   // For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
+    NoOpenOverExistingPopup,   // For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack
+    NoOpenOverItems        ,   // For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space
+    AnyPopupId             ,   // For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
+    AnyPopupLevel          ,   // For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
 
 }
 

@@ -31,8 +31,8 @@ typedef int ImNodesLinkCreationType;
 enum ImNodesScope_
 {
     ImNodesScope_None = 1,
-    ImNodesScope_Editor = 1 << 1,
-    ImNodesScope_Node = 1 << 2,
+    ImNodesScope_Editor,
+    ImNodesScope_Node,
     ImNodesScope_Attribute = 1 << 3
 };
 
@@ -46,8 +46,8 @@ enum ImNodesAttributeType_
 enum ImNodesUIState_
 {
     ImNodesUIState_None = 0,
-    ImNodesUIState_LinkStarted = 1 << 0,
-    ImNodesUIState_LinkDropped = 1 << 1,
+    ImNodesUIState_LinkStarted,
+    ImNodesUIState_LinkDropped,
     ImNodesUIState_LinkCreated = 1 << 2
 };
 

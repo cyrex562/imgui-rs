@@ -64,14 +64,14 @@ pub fn get_window_dock_id(g: &mut Context) -> Id32
 // float ImGui::GetWindowWidth()
 pub fn get_window_width(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     return window.size.x;
 }
 
 // float ImGui::GetWindowHeight()
 pub fn get_window_height(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiWindow* window = g.current_window_id;
     return window.size.y;
 }
 

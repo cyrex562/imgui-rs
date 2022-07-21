@@ -4,7 +4,7 @@ use crate::globals::GImGui;
 // void ImGui::SetWindowFocus()
 pub fn set_window_focus(g: &mut Context)
 {
-    focus_window(g.CurrentWindow);
+    focus_window(g.current_window_id);
 }
 
 // void ImGui::SetWindowFocus(const char* name)
