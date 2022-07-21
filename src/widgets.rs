@@ -767,7 +767,7 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size, ImGui
 
     const ImGuiID id = window.GetID(str_id);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
-    const float default_size = GetFrameHeight();
+    const float default_size = get_frame_height();
     ItemSize(size, (size.y >= default_size) ? g.Style.FramePadding.y : -1.0);
     if (!ItemAdd(bb, id))
         return false;
@@ -791,7 +791,7 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size, ImGui
 
 bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
 {
-    float sz = GetFrameHeight();
+    float sz = get_frame_height();
     return ArrowButtonEx(str_id, dir, DimgVec2D::new(sz, sz), ImGuiButtonFlags_None);
 }
 
@@ -1093,7 +1093,7 @@ bool ImGui::Checkbox(const char* label, bool* v)
     const ImGuiID id = window.GetID(label);
     const Vector2D label_size = CalcTextSize(label, NULL, true);
 
-    const float square_sz = GetFrameHeight();
+    const float square_sz = get_frame_height();
     const Vector2D pos = window.DC.CursorPos;
     const ImRect total_bb(pos, pos + DimgVec2D::new(square_sz + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), label_size.y + style.FramePadding.y * 2.0));
     ItemSize(total_bb, style.FramePadding.y);
@@ -1199,7 +1199,7 @@ bool ImGui::RadioButton(const char* label, bool active)
     const ImGuiID id = window.GetID(label);
     const Vector2D label_size = CalcTextSize(label, NULL, true);
 
-    const float square_sz = GetFrameHeight();
+    const float square_sz = get_frame_height();
     const Vector2D pos = window.DC.CursorPos;
     const ImRect check_bb(pos, pos + DimgVec2D::new(square_sz, square_sz));
     const ImRect total_bb(pos, pos + DimgVec2D::new(square_sz + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), label_size.y + style.FramePadding.y * 2.0));
@@ -1405,7 +1405,7 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
 
         // FIXME-WORKRECT: old hack (#205) until we decide of consistent behavior with work_rect/Indent and Separator
         if (g.GroupStack.Size > 0 && g.GroupStack.back().WindowID == window.ID)
-            x1 += window.DC.Indent.x;
+            x1 += window.DC.indent.x;
 
         // FIXME-WORKRECT: In theory we should simply be using work_rect.min.x/max.x everywhere but it isn't aesthetically what we want,
         // need to introduce a variant of work_rect for that purpose. (#4787)
@@ -1601,7 +1601,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     const ImGuiID id = window.GetID(label);
     IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)); // Can't use both flags together
 
-    const float arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0.0 : GetFrameHeight();
+    const float arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0.0 : get_frame_height();
     const Vector2D label_size = CalcTextSize(label, NULL, true);
     const float w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + DimgVec2D::new(w, label_size.y + style.FramePadding.y * 2.0));
@@ -3443,7 +3443,7 @@ bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data
     bool value_changed = false;
     if (p_step != NULL)
     {
-        const float button_size = GetFrameHeight();
+        const float button_size = get_frame_height();
 
         BeginGroup(); // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
         PushID(label);
@@ -4799,7 +4799,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
 
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const float square_sz = GetFrameHeight();
+    const float square_sz = get_frame_height();
     const float w_full = CalcItemWidth();
     const float w_button = (flags & ImGuiColorEditFlags_NoSmallPreview) ? 0.0 : (square_sz + style.ItemInnerSpacing.x);
     const float w_inputs = w_full - w_button;
@@ -5085,7 +5085,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
     int components = (flags & ImGuiColorEditFlags_NoAlpha) ? 3 : 4;
     bool alpha_bar = (flags & ImGuiColorEditFlags_AlphaBar) && !(flags & ImGuiColorEditFlags_NoAlpha);
     Vector2D picker_pos = window.DC.CursorPos;
-    float square_sz = GetFrameHeight();
+    float square_sz = get_frame_height();
     float bars_width = square_sz; // Arbitrary smallish width of Hue/Alpha picking bars
     float sv_picker_size = ImMax(bars_width * 1, width - (alpha_bar ? 2 : 1) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/value picking box
     float bar0_pos_x = picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
@@ -5426,7 +5426,7 @@ bool ImGui::ColorButton(const char* desc_id, const Vector4D& col, ImGuiColorEdit
 
     ImGuiContext& g = *GImGui;
     const ImGuiID id = window.GetID(desc_id);
-    const float default_size = GetFrameHeight();
+    const float default_size = get_frame_height();
     const Vector2D size(size_arg.x == 0.0 ? default_size : size_arg.x, size_arg.y == 0.0 ? default_size : size_arg.y);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
     ItemSize(bb, (size.y >= default_size) ? g.Style.FramePadding.y : 0.0);
@@ -5612,7 +5612,7 @@ void ImGui::ColorPickerOptionsPopup(const float* ref_col, ImGuiColorEditFlags fl
     ImGuiContext& g = *GImGui;
     if (allow_opt_picker)
     {
-        Vector2D picker_size(g.FontSize * 8, ImMax(g.FontSize * 8 - (GetFrameHeight() + g.Style.ItemInnerSpacing.x), 1.0)); // FIXME: Picker size copied from main picker function
+        Vector2D picker_size(g.FontSize * 8, ImMax(g.FontSize * 8 - (get_frame_height() + g.Style.ItemInnerSpacing.x), 1.0)); // FIXME: Picker size copied from main picker function
         PushItemWidth(picker_size.x);
         for (int picker_type = 0; picker_type < 2; picker_type += 1)
         {
@@ -6766,7 +6766,7 @@ bool ImGui::BeginMainMenuBar()
     // FIXME: Consider removing support for safe area down the line... it's messy. Nowadays consoles have support for TV calibration in OS settings.
     g.NextWindowData.MenuBarOffsetMinVal = DimgVec2D::new(g.Style.DisplaySafeAreaPadding.x, ImMax(g.Style.DisplaySafeAreaPadding.y - g.Style.FramePadding.y, 0.0));
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
-    float height = GetFrameHeight();
+    float height = get_frame_height();
     bool is_open = BeginViewportSideBar("##MainMenuBar", viewport, ImGuiDir_Up, height, window_flags);
     g.NextWindowData.MenuBarOffsetMinVal = DimgVec2D::new(0.0, 0.0);
 

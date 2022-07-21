@@ -2,7 +2,7 @@ use crate::{Context, INVALID_ID, ViewportFlags};
 use crate::axis::Axis;
 use crate::border::get_resize_border_rect;
 use crate::condition::Condition;
-use crate::direction::Direction;
+use crate::types::Direction;
 use crate::globals::GImGui;
 use crate::input::{InputSource, MouseCursor, NavLayer};
 use crate::math::swap_f32;

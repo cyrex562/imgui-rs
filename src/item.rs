@@ -499,7 +499,7 @@ pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
     //if (g.io.key_alt) window->draw_list->add_rect(window->dc.cursor_pos, window->dc.cursor_pos + Vector2D(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
     window.dc.CursorPosPrevLine.x = window.dc.cursor_pos.x + size.x;
     window.dc.CursorPosPrevLine.y = line_y1;
-    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.Indent.x + window.dc.ColumnsOffset.x);    // Next line
+    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);    // Next line
     window.dc.cursor_pos.y = f32::floor(line_y1 + line_height + g.style.ItemSpacing.y);                    // Next line
     window.dc.cursor_max_pos.x = ImMax(window.dc.cursor_max_pos.x, window.dc.CursorPosPrevLine.x);
     window.dc.cursor_max_pos.y = ImMax(window.dc.cursor_max_pos.y, window.dc.cursor_pos.y - g.style.ItemSpacing.y);

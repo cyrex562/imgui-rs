@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use crate::types::Id32;
-use crate::direction::DimgSortDirection;
+use crate::types::SortDirection;
 use crate::imgui_color::ImColor;
 use crate::imgui_h::{ImDrawListSplitter, ImGuiID, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
 use crate::imgui_rect::Rect;
@@ -452,7 +452,7 @@ pub struct TableTempData
     pub HostBackupCurrLineSize: Vector2D,
     // Vector2D                      HostBackupCursorMaxPos;     // Backup of InnerWindow->dc.CursorMaxPos at the end of BeginTable()
     pub HostBackupCursorMaxPOs: Vector2D,
-    // ImVec1                      HostBackupColumnsOffset;    // Backup of OuterWindow->dc.ColumnsOffset at the end of BeginTable()
+    // ImVec1                      HostBackupColumnsOffset;    // Backup of OuterWindow->dc.columns_offset at the end of BeginTable()
     pub HostBackupColumnOffset: ImVec1,
     // float                       HostBackupItemWidth;        // Backup of OuterWindow->dc.item_width at the end of BeginTable()
     pub HostBackupItemWidth: f32,
@@ -547,7 +547,7 @@ pub struct DimgTableColumnSortSpecs
     pub column_user_id: Id32,     // User id of the column (if specified by a TableSetupColumn() call)
     pub column_index: i16,        // index of the column
     pub sort_order: i16,          // index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
-    pub sort_direction: DimgSortDirection,  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
+    pub sort_direction: SortDirection,  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
 
     // ImGuiTableColumnSortSpecs() { memset(this, 0, sizeof(*this)); }
 }

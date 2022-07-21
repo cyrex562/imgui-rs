@@ -2,7 +2,7 @@ use std::ptr::{null, null_mut};
 use std::collections::HashSet;
 use crate::config::ConfigFlags;
 use crate::Context;
-use crate::direction::Direction;
+use crate::types::Direction;
 use crate::draw_list::get_foreground_draw_list;
 use crate::imgui_h::ImGuiID;
 use crate::imgui_rect::Rect;
@@ -574,8 +574,8 @@ pub fn nav_restore_last_child_nav_window(g: &mut Context, window: &mut Window)
 {
     if (window.NavLastChildNavWindow && window.NavLastChildNavWindow.WasActive)
         return window.NavLastChildNavWindow;
-    if (window.DockNodeAsHost && window.DockNodeAsHost.TabBar)
-        if (ImGuiTabItem* tab = TabBarFindMostRecentlySelectedTabForActiveWindow(window.DockNodeAsHost.TabBar))
+    if (window.dock_node_as_host && window.dock_node_as_host.TabBar)
+        if (ImGuiTabItem* tab = TabBarFindMostRecentlySelectedTabForActiveWindow(window.dock_node_as_host.TabBar))
             return tab.Window;
     return window;
 }
@@ -1589,7 +1589,7 @@ pub fn nav_update_windowing(g: &mut Context)
         if (new_nav_layer != g.NavLayer)
         {
             // Reinitialize navigation when entering menu bar with the Alt key (FIXME: could be a properly of the layer?)
-            const bool preserve_layer_1_nav_id = (new_nav_window.DockNodeAsHost != NULL);
+            const bool preserve_layer_1_nav_id = (new_nav_window.dock_node_as_host != NULL);
             if (new_nav_layer == NavLayer::Menu && !preserve_layer_1_nav_id)
                 g.nav_window.NavLastIds[new_nav_layer] = 0;
             NavRestoreLayer(new_nav_layer);
@@ -1606,7 +1606,7 @@ pub fn get_fallback_window_name_for_windowing_list(g: &mut Context, window: &mut
         return "(Popup)";
     if ((window.flags & WindowFlags::MenuBar) && strcmp(window.Name, "##MainMenuBar") == 0)
         return "(Main menu bar)";
-    if (window.DockNodeAsHost)
+    if (window.dock_node_as_host)
         return "(Dock node)";
     return "(Untitled)";
 }

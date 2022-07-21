@@ -27,7 +27,7 @@ pub fn same_line(g: &mut Context, offset_from_start_x: f32, spacing_w: f32)
     {
         if (spacing_w < 0.0)
             spacing_w = 0.0;
-        window.dc.cursor_pos.x = window.pos.x - window.scroll.x + offset_from_start_x + spacing_w + window.dc.GroupOffset.x + window.dc.ColumnsOffset.x;
+        window.dc.cursor_pos.x = window.pos.x - window.scroll.x + offset_from_start_x + spacing_w + window.dc.GroupOffset.x + window.dc.columns_offset.x;
         window.dc.cursor_pos.y = window.dc.CursorPosPrevLine.y;
     }
     else

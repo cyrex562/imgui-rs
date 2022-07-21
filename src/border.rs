@@ -1,5 +1,5 @@
 use crate::{Context, hash_string};
-use crate::direction::Direction;
+use crate::types::Direction;
 use crate::hash::hash_data;
 use crate::rect::Rect;
 use crate::types::Id32;

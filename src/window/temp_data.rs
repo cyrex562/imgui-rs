@@ -33,7 +33,7 @@ pub struct WindowTempData {
     pub is_same_line: bool,
     // ImVec1                  Indent;                 // Indentation / start position from left of window (increased by TreePush/TreePop, etc.)
     pub indent: Vector1D,
-    // ImVec1                  ColumnsOffset;          // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree->column->Tree. Need revamp columns API.
+    // ImVec1                  columns_offset;          // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree->column->Tree. Need revamp columns API.
     pub columns_offset: Vector1D,
     // ImVec1                  GroupOffset;
     pub group_offset: Vector1D,

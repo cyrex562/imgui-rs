@@ -29,8 +29,8 @@ use settings::WindowSettings;
 use std::collections::HashSet;
 use temp_data::WindowTempData;
 
-use crate::direction::Direction;
-use crate::dock_node::{dock_node_get_root_node, DockNode, DockNodeFlags};
+use crate::types::Direction;
+use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags};
 use crate::drag_drop::DragDropFlags;
 use crate::draw_list::add_draw_list_to_draw_data;
 
@@ -264,7 +264,7 @@ pub struct Window {
     // ImGuiWindowDockStyle    dock_style;
     pub dock_style: WindowDockStyle,
     // ImGuiDockNode*          dock_node;                           // Which node are we docked into. Important: Prefer testing dock_is_active in many cases as this will still be set when the dock node is hidden.
-    pub dock_node: DockNode, //Id32, // *mut ImGuiDockNode,
+    pub dock_node: Option<DockNode>, //Id32, // *mut ImGuiDockNode,
     // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
     pub dock_node_as_host: DockNode, // Id32, // *mut ImGuiDockNode,
     // ImGuiID                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more

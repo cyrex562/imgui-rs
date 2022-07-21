@@ -4,8 +4,8 @@ use crate::border::get_resize_border_rect;
 use crate::color::{IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_WHITE, StyleColor};
 use crate::config::ConfigFlags;
 use crate::{Context, ViewportFlags};
-use crate::data_authority::DataAuthority;
-use crate::direction::Direction;
+use crate::types::DataAuthority;
+use crate::types::Direction;
 use crate::dock::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
 use crate::draw_defines::DrawFlags;
@@ -257,7 +257,7 @@ pub fn render_window_decorations(g: &mut Context,
         }
 
         // Borders (for dock node host they will be rendered over after the tab bar)
-        if handle_borders_and_resize_grips && !window.DockNodeAsHost {
+        if handle_borders_and_resize_grips && !window.dock_node_as_host {
             RenderWindowOuterBorders(window);
         }
     }

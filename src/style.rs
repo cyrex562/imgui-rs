@@ -46,7 +46,7 @@ pub struct Style {
     // Padding within a table cell
     pub touch_extra_padding: Vector2D,
     // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
-    pub IndentSpacing: f32,
+    pub indent_spacing: f32,
     // Horizontal indentation when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
     pub ColumnsMinSpacing: f32,
     // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
@@ -117,7 +117,7 @@ impl Style {
         out.item_inner_spacing = Vector2D::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
         out.CellPadding = Vector2D::new(4.0, 2.0);      // Padding within a table cell
         out.touch_extra_padding = Vector2D::new(0.0, 0.0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
-        out.IndentSpacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
+        out.indent_spacing = 21.0;            // Horizontal spacing when e.g. entering a tree node. Generally == (font_size + FramePadding.x*2).
         out.ColumnsMinSpacing = 6.0;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
         out.scrollbar_size = 14.0;            // width of the vertical scrollbar, height of the horizontal scrollbar
         out.ScrollbarRounding = 9.0;             // Radius of grab corners rounding for scrollbar
@@ -158,7 +158,7 @@ impl Style {
         self.item_inner_spacing = Vector2D::floor(&self.item_inner_spacing * scale_factor);
         self.CellPadding = Vector2D::floor(&self.CellPadding * scale_factor);
         self.touch_extra_padding = Vector2D::floor(&self.touch_extra_padding * scale_factor);
-        self.IndentSpacing = f32::floor(self.IndentSpacing * scale_factor);
+        self.indent_spacing = f32::floor(self.indent_spacing * scale_factor);
         self.ColumnsMinSpacing = f32::floor(self.ColumnsMinSpacing * scale_factor);
         self.scrollbar_size = f32::floor(self.scrollbar_size * scale_factor);
         self.ScrollbarRounding = f32::floor(self.ScrollbarRounding * scale_factor);
@@ -361,7 +361,7 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, FrameBorderSize) ),     // ImGuiStyleVar_FrameBorderSize
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ItemSpacing) ),         // ImGuiStyleVar_ItemSpacing
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ItemInnerSpacing) ),    // ImGuiStyleVar_ItemInnerSpacing
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, IndentSpacing) ),       // ImGuiStyleVar_IndentSpacing
+//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, indent_spacing) ),       // ImGuiStyleVar_IndentSpacing
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, CellPadding) ),         // ImGuiStyleVar_CellPadding
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarSize) ),       // ImGuiStyleVar_ScrollbarSize
 //     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarRounding) ),   // ImGuiStyleVar_ScrollbarRounding
@@ -711,7 +711,7 @@ pub enum DimgStyleVar
     FrameBorderSize,     // float     FrameBorderSize
     ItemSpacing,         // Vector2D    ItemSpacing
     item_inner_spacing,    // Vector2D    ItemInnerSpacing
-    IndentSpacing,       // float     IndentSpacing
+    indent_spacing,       // float     indent_spacing
     CellPadding,         // Vector2D    CellPadding
     ScrollbarSize,       // float     ScrollbarSize
     ScrollbarRounding,   // float     ScrollbarRounding

@@ -1650,7 +1650,7 @@ Breaking Changes:
   - IsRootWindowFocused()               -> use IsWindowFocused(ImGuiFocusedFlags_RootWindow)
   - IsRootWindowOrAnyChildFocused()     -> use IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)
   - SetNextWindowContentWidth(w)        -> use SetNextWindowContentSize(DimgVec2D::new(w, 0.0)
-  - GetItemsLineHeightWithSpacing()     -> use GetFrameHeightWithSpacing()
+  - GetItemsLineHeightWithSpacing()     -> use get_frame_heightWithSpacing()
   - ImGuiCol_ChildWindowBg              -> use ImGuiCol_ChildBg
   - ImGuiStyleVar_ChildWindowRounding   -> use ImGuiStyleVar_ChildRounding
   - ImGuiTreeNodeFlags_AllowOverlapMode -> use ImGuiTreeNodeFlags_AllowItemOverlap
@@ -2938,7 +2938,7 @@ Other Changes:
 - Misc: NewFrame(): Added an assert to detect incorrect filling of the io.KeyMap[] array earlier. (#1555)
 - Misc: Added IM_OFFSETOF() helper in imgui.h (previously was in imgui_internal.h)
 - Misc: Added IM_NEW(), IM_DELETE() helpers in imgui.h (previously were in imgui_internal.h)
-- Misc: Added obsolete redirection function GetItemsLineHeightWithSpacing() (which redirects to GetFrameHeightWithSpacing()), as intended and stated in docs of 1.53.
+- Misc: Added obsolete redirection function GetItemsLineHeightWithSpacing() (which redirects to get_frame_heightWithSpacing()), as intended and stated in docs of 1.53.
 - Misc: Added misc/natvis/imgui.natvis for visual studio debugger users to easily visualize imgui internal types. Added to examples projects.
 - Misc: Added IMGUI_USER_CONFIG to define a custom configuration filename. (#255, #1573, #1144, #41)
 - Misc: Added IMGUI_STB_TRUETYPE_FILENAME and IMGUI_STB_RECT_PACK_FILENAME compile time directives to use another version of the stb_ files.
@@ -2987,7 +2987,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - Renamed the emblematic `ShowTestWindow()` function to `ShowDemoWindow()`. Kept redirection function (will obsolete).
-- Renamed `GetItemsLineHeightWithSpacing()` to `GetFrameHeightWithSpacing()` for consistency. Kept redirection function (will obsolete).
+- Renamed `GetItemsLineHeightWithSpacing()` to `get_frame_heightWithSpacing()` for consistency. Kept redirection function (will obsolete).
 - Renamed `ImGuiTreeNodeFlags_AllowOverlapMode` flag to `ImGuiTreeNodeFlags_AllowItemOverlap`. Kept redirection enum (will obsolete).
 - Obsoleted `IsRootWindowFocused()` in favor of using `IsWindowFocused(ImGuiFocusedFlags_RootWindow)`. Kept redirection function (will obsolete). (#1382)
 - Obsoleted `IsRootWindowOrAnyChildFocused()` in favor of using `IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)`. Kept redirection function (will obsolete). (#1382)
@@ -3010,7 +3010,7 @@ Other Changes:
 
 - Added `io.OptCursorBlink` option to allow disabling cursor blinking. (#1427) [renamed to io.ConfigCursorBlink in 1.63]
 - Added `GetOverlayDrawList()` helper to quickly get access to a ImDrawList that will be rendered in front of every windows.
-- Added `GetFrameHeight()` helper which returns `(font_size + style.FramePadding.y * 2)`.
+- Added `get_frame_height()` helper which returns `(font_size + style.FramePadding.y * 2)`.
 - Drag and Drop: Added Beta API to easily use drag and drop patterns between imgui widgets.
   - Setup a source on a widget with `BeginDragDropSource()`, `SetDragDropPayload()`, `EndDragDropSource()` functions.
   - Receive data with `BeginDragDropTarget()`, `AcceptDragDropPayload()`, `EndDragDropTarget()`.
@@ -3428,7 +3428,7 @@ Other changes:
 - Added CollapsingHeader() variant with close button. (#600)
 - Fixed MenuBar missing lower border when borders are enabled.
 - InputText(): Fixed clipping of cursor rendering in case it gets out of the box (which can be forced w/ ImGuiInputTextFlags_NoHorizontalScroll. (#601)
-- style: Changed default IndentSpacing from 22 to 21. (#581, #324)
+- style: Changed default indent_spacing from 22 to 21. (#581, #324)
 - style: Fixed TitleBg/TitleBgActive color being rendered above WindowBg color, which was inconsistent and causing visual artifact. (#655)
   This broke the meaning of TitleBg and TitleBgActive. Only affect values where Alpha<1.0. Fixed default theme. Read comments in "API BREAKING CHANGES" section to convert.
 - Relative rendering of order of Child windows creation is preserved, to allow more control with overlapping children. (#595)

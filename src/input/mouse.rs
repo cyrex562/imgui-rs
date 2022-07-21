@@ -1,7 +1,7 @@
 use crate::condition::Condition;
 use crate::config::ConfigFlags;
 use crate::context::{Context, set_active_id_using_nav_and_keys};
-use crate::dock_node::{dock_node_get_root_node, DockNode};
+use crate::dock::node::{dock_node_get_root_node, DockNode};
 use crate::id::set_active_id;
 use crate::input::{MouseButton, MouseCursor, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::math::floor_vector_2d;

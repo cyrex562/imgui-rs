@@ -1,4 +1,4 @@
-use crate::dock_node::DockNodeFlags;
+use crate::dock::node::DockNodeFlags;
 use crate::tab_bar::DimgTabItemFlags;
 use crate::types::Id32;
 use crate::ViewportFlags;

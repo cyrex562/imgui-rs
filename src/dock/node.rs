@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use crate::axis::Axis;
 use crate::context::Context;
-use crate::data_authority::DataAuthority;
+use crate::types::DataAuthority;
 use crate::types::Id32;
 use crate::dock;
 use crate::rect::Rect;

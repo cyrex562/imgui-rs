@@ -10,9 +10,9 @@ use crate::color::{COLOR_EDIT_FLAGS_DFLT_OPTS, ColorEditFlags, StackedColorModif
 use crate::combo::ComboPreviewData;
 use crate::config::ConfigFlags;
 use crate::window::ShrinkWidthItem;
-use crate::direction::Direction;
-use crate::dock_context::DockContext;
-use crate::dock_node::DockNode;
+use crate::types::Direction;
+use crate::dock::context::DockContext;
+use crate::dock::node::DockNode;
 use crate::drag_drop::DragDropFlags;
 use crate::draw_channel::DrawChannel;
 use crate::draw_list::DrawList;
@@ -125,7 +125,7 @@ pub struct Context {
     pub hovered_window_under_moving_window_id: Id32,
     //*mut ImGuiWindow,
     // ImGuiDockNode*          hovered_dock_node;                    // [Debug] Hovered dock node.
-    pub hovered_dock_node: Id32,
+    pub hovered_dock_node_id: Id32,
     // ImGuiWindow*            moving_window;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally moving_window->root_window_dock_tree.
     pub moving_window_id: Id32,
     // ImGuiWindow*            wheeling_window;                     // Track the window we started mouse-wheeling on. Until a timer elapse or mouse has moved, generally keep scrolling the same window even if during the course of scrolling the mouse ends up hovering a child window.
@@ -585,7 +585,7 @@ impl Context {
             current_window_id: INVALID_ID,
             hovered_window_id: INVALID_ID,
             hovered_window_under_moving_window_id: INVALID_ID,
-            hovered_dock_node: INVALID_ID,
+            hovered_dock_node_id: INVALID_ID,
             moving_window_id: INVALID_ID,
             wheeling_window_id: INVALID_ID,
             wheeling_window_ref_mouse_pos: Default::default(),

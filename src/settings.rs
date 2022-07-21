@@ -26,7 +26,7 @@ pub struct SettingsHandler
     // void        (*apply_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // Read: Called after reading (in registration order)
     pub apply_all_fn: Option<fn(ctx: &mut DimgContext, handler: &mut SettingsHandler)>,
     // void        (*write_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf);      // Write: Output every entries into 'out_buf'
-    pub apply_all_fn: Option<fn(ctx: &mut DimgContext, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
+    pub write_all_fn: Option<fn(ctx: &mut DimgContext, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
     // void*       user_data;
     pub user_data: Vec<u8>,
     //ImGuiSettingsHandler() { memset(this, 0, sizeof(*this)); }

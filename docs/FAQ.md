@@ -490,7 +490,7 @@ The short answer is: obtain the desired DPI scale, load your fonts resized with 
 
 Your application may want to detect DPI change and reload the fonts and reset style between frames.
 
-Your ui code  should avoid using hardcoded constants for size and positioning. Prefer to express values as multiple of reference values such as `ImGui::GetFontSize()` or `ImGui::GetFrameHeight()`. So e.g. instead of seeing a hardcoded height of 500 for a given item/window, you may want to use `30*ImGui::GetFontSize()` instead.
+Your ui code  should avoid using hardcoded constants for size and positioning. Prefer to express values as multiple of reference values such as `ImGui::GetFontSize()` or `ImGui::get_frame_height()`. So e.g. instead of seeing a hardcoded height of 500 for a given item/window, you may want to use `30*ImGui::GetFontSize()` instead.
 
 down the line Dear ImGui will provide a variety of standardized reference values to facilitate using this.
 

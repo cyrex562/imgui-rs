@@ -3124,7 +3124,7 @@ static void ShowDemoWindowLayout()
         ImGui::SliderInt("Lines", &lines, 1, 15);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, DimgVec2D::new(2.0, 1.0));
-        Vector2D scrolling_child_size = DimgVec2D::new(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
+        Vector2D scrolling_child_size = DimgVec2D::new(0, ImGui::get_frame_heightWithSpacing() * 7 + 30);
         ImGui::BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
         for (int line = 0; line < lines; line += 1)
         {
@@ -3754,7 +3754,7 @@ static void EditTableSizingFlags(ImGuiTableFlags* p_flags)
             ImGui::Separator();
             ImGui::Text("%s:", policies[m].Name);
             ImGui::Separator();
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().IndentSpacing * 0.5);
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().indent_spacing * 0.5);
             ImGui::TextUnformatted(policies[m].Tooltip);
         }
         ImGui::PopTextWrapPos();
@@ -4414,9 +4414,9 @@ static void ShowDemoWindowTables()
         ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
         ImGui::CheckboxFlags("ImGuiTableFlags_ScrollX", &flags, ImGuiTableFlags_ScrollX);
         ImGui::CheckboxFlags("ImGuiTableFlags_ScrollY", &flags, ImGuiTableFlags_ScrollY);
-        ImGui::SetNextItemWidth(ImGui::GetFrameHeight());
+        ImGui::SetNextItemWidth(ImGui::get_frame_height());
         ImGui::DragInt("freeze_cols", &freeze_cols, 0.2, 0, 9, NULL, ImGuiSliderFlags_NoInput);
-        ImGui::SetNextItemWidth(ImGui::GetFrameHeight());
+        ImGui::SetNextItemWidth(ImGui::get_frame_height());
         ImGui::DragInt("freeze_rows", &freeze_rows, 0.2, 0, 9, NULL, ImGuiSliderFlags_NoInput);
         PopStyleCompact();
 
@@ -5291,11 +5291,11 @@ static void ShowDemoWindowTables()
             {
                 ImGui::CheckboxFlags("ImGuiTableFlags_ScrollX", &flags, ImGuiTableFlags_ScrollX);
                 ImGui::SameLine();
-                ImGui::SetNextItemWidth(ImGui::GetFrameHeight());
+                ImGui::SetNextItemWidth(ImGui::get_frame_height());
                 ImGui::DragInt("freeze_cols", &freeze_cols, 0.2, 0, 9, NULL, ImGuiSliderFlags_NoInput);
                 ImGui::CheckboxFlags("ImGuiTableFlags_ScrollY", &flags, ImGuiTableFlags_ScrollY);
                 ImGui::SameLine();
-                ImGui::SetNextItemWidth(ImGui::GetFrameHeight());
+                ImGui::SetNextItemWidth(ImGui::get_frame_height());
                 ImGui::DragInt("freeze_rows", &freeze_rows, 0.2, 0, 9, NULL, ImGuiSliderFlags_NoInput);
                 ImGui::TreePop();
             }
@@ -6284,7 +6284,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
             ImGui::SliderFloat2("ItemSpacing", (float*)&style.ItemSpacing, 0.0, 20.0, "%.0");
             ImGui::SliderFloat2("ItemInnerSpacing", (float*)&style.ItemInnerSpacing, 0.0, 20.0, "%.0");
             ImGui::SliderFloat2("TouchExtraPadding", (float*)&style.TouchExtraPadding, 0.0, 10.0, "%.0");
-            ImGui::SliderFloat("IndentSpacing", &style.IndentSpacing, 0.0, 30.0, "%.0");
+            ImGui::SliderFloat("indent_spacing", &style.indent_spacing, 0.0, 30.0, "%.0");
             ImGui::SliderFloat("ScrollbarSize", &style.ScrollbarSize, 1.0, 20.0, "%.0");
             ImGui::SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0, 20.0, "%.0");
             ImGui::Text("Borders");
@@ -6710,7 +6710,7 @@ struct ExampleAppConsole
         ImGui::Separator();
 
         // Reserve enough left-over height for 1 separator + 1 input text
-        const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::get_frame_heightWithSpacing();
         ImGui::BeginChild("ScrollingRegion", DimgVec2D::new(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar);
         if (ImGui::BeginPopupContextWindow())
         {
@@ -7151,7 +7151,7 @@ static void ShowExampleAppLayout(bool* p_open)
         // Right
         {
             ImGui::BeginGroup();
-            ImGui::BeginChild("item view", DimgVec2D::new(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+            ImGui::BeginChild("item view", DimgVec2D::new(0, -ImGui::get_frame_heightWithSpacing())); // Leave room for 1 line below us
             ImGui::Text("MyObject: %d", selected);
             ImGui::Separator();
             if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
@@ -7557,7 +7557,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             // (note that those are currently exacerbating our sRGB/Linear issues)
             // Calling ImGui::GetColorU32() multiplies the given colors by the current style Alpha, but you may pass the IM_COL32() directly as well..
             ImGui::Text("Gradients");
-            Vector2D gradient_size = DimgVec2D::new(ImGui::CalcItemWidth(), ImGui::GetFrameHeight());
+            Vector2D gradient_size = DimgVec2D::new(ImGui::CalcItemWidth(), ImGui::get_frame_height());
             {
                 Vector2D p0 = ImGui::GetCursorScreenPos();
                 Vector2D p1 = DimgVec2D::new(p0.x + gradient_size.x, p0.y + gradient_size.y);

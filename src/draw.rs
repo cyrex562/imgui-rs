@@ -3738,7 +3738,7 @@ void ImGui::render_rect_filled_with_hole(ImDrawList* draw_list, const Rect& oute
     if (fill_R && fill_D) draw_list.add_rect_filled(Vector2D::new(inner.max.x, inner.max.y), Vector2D::new(outer.max.x, outer.max.y), col, rounding, DrawFlags::RoundCornersBottomRight);
 }
 
-ImDrawFlags ImGui::CalcRoundingFlagsForRectInRect(const Rect& r_in, const Rect& r_outer, float threshold)
+ImDrawFlags ImGui::calc_rounding_flags_for_rect_in_rect(const Rect& r_in, const Rect& r_outer, float threshold)
 {
     bool round_l = r_in.min.x <= r_outer.min.x + threshold;
     bool round_r = r_in.max.x >= r_outer.max.x - threshold;

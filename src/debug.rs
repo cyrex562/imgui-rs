@@ -3,8 +3,8 @@ use crate::color::StyleColor;
 use crate::{Context, Viewport, ViewportFlags, window};
 use crate::axis::Axis;
 use crate::column::OldColumns;
-use crate::data_authority::DataAuthority::Window;
-use crate::dock_node::{DockNode, DockNodeFlags};
+use crate::types::DataAuthority::Window;
+use crate::dock::node::{DockNode, DockNodeFlags};
 use crate::draw_cmd::DrawCmd;
 use crate::draw_defines::DrawFlags;
 use crate::draw_list::{DrawList, DrawListFlags, get_foreground_draw_list};
@@ -523,7 +523,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         Text("hovered_window: '%s'", g.hovered_window ? g.hovered_window->Name : "NULL");
         Text("hovered_window->Root: '%s'", g.hovered_window ? g.hovered_window->root_window_dock_tree->Name : "NULL");
         Text("hovered_window_under_moving_window: '%s'", g.hovered_window_under_moving_window ? g.hovered_window_under_moving_window->Name : "NULL");
-        Text("hovered_dock_node: 0x%08X", g.HoveredDockNode ? g.HoveredDockNode->ID : 0);
+        Text("hovered_dock_node: 0x%08X", g.hovered_dock_node ? g.hovered_dock_node->ID : 0);
         Text("moving_window: '%s'", g.moving_window ? g.moving_window->Name : "NULL");
         Text("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport->ID, g.io.MouseHoveredViewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
         Unindent();
@@ -611,11 +611,11 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
 // #ifdef IMGUI_HAS_DOCK
     // Overlay: Display Docking info
-    if (cfg->ShowDockingNodes && g.io.key_ctrl && g.HoveredDockNode)
+    if (cfg->ShowDockingNodes && g.io.key_ctrl && g.hovered_dock_node)
     {
         char buf[64] = "";
         char* p = buf;
-        ImGuiDockNode* node = g.HoveredDockNode;
+        ImGuiDockNode* node = g.hovered_dock_node;
         ImDrawList* overlay_draw_list = node->HostWindow ? get_foreground_draw_list(node->HostWindow) : get_foreground_draw_list(GetMainViewport());
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "dock_id: %x%s\n", node->ID, node->IsCentralNode() ? " *central_node*" : "");
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "window_class: %08X\n", node->WindowClass.ClassId);
@@ -1103,8 +1103,8 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     BulletText("viewport: %d%s, viewport_id: 0x%08X, viewport_pos: (%.1,%.1)", window.viewport ? window.viewport->Idx : -1, window.viewport_owned ? " (Owned)" : "", window.viewport_id, window.viewport_pos.x, window.viewport_pos.y);
     BulletText("ViewportMonitor: %d", window.viewport ? window.viewport->PlatformMonitor : -1);
     BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.DockId, window.DockOrder, window.dock_is_active, window.DockTabIsVisible);
-    if (window.dock_node || window.DockNodeAsHost)
-        DebugNodeDockNode(window.DockNodeAsHost ? window.DockNodeAsHost : window.dock_node, window.DockNodeAsHost ? "dock_node_as_host" : "dock_node");
+    if (window.dock_node || window.dock_node_as_host)
+        DebugNodeDockNode(window.dock_node_as_host ? window.dock_node_as_host : window.dock_node, window.dock_node_as_host ? "dock_node_as_host" : "dock_node");
 
     if (window.root_window != window)       { DebugNodeWindow(window.root_window, "RootWindow"); }
     if (window.root_window_dock_tree != window.root_window) { DebugNodeWindow(window.root_window_dock_tree, "root_window_dock_tree"); }

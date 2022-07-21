@@ -758,7 +758,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
 
         // Decide if we are going to handle borders and resize grips
-        const bool handle_borders_and_resize_grips = (window.DockNodeAsHost || !window.dock_is_active);
+        const bool handle_borders_and_resize_grips = (window.dock_node_as_host || !window.dock_is_active);
 
         // Handle manual resize: Resize Grips, Borders, Gamepad
         int border_held = -1;
@@ -928,13 +928,13 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
         // Setup drawing context
         // (NB: That term "drawing context / dc" lost its meaning a long time ago. Initially was meant to hold transient data only. Nowadays difference between window-> and window->dc-> is dubious.)
-        window.dc.Indent.x = 0.0 + window.WindowPadding.x - window.scroll.x;
+        window.dc.indent.x = 0.0 + window.WindowPadding.x - window.scroll.x;
         window.dc.GroupOffset.x = 0.0;
-        window.dc.ColumnsOffset.x = 0.0;
+        window.dc.columns_offset.x = 0.0;
 
         // Record the loss of precision of CursorStartPos which can happen due to really large scrolling amount.
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or ImU64.
-        double start_pos_highp_x = (double)window.pos.x + window.WindowPadding.x - (double)window.scroll.x + window.dc.ColumnsOffset.x;
+        double start_pos_highp_x = (double)window.pos.x + window.WindowPadding.x - (double)window.scroll.x + window.dc.columns_offset.x;
         double start_pos_highp_y = (double)window.pos.y + window.WindowPadding.y - (double)window.scroll.y + decoration_up_height;
         window.dc.cursor_start_pos  = Vector2D::new((float)start_pos_highp_x, start_pos_highp_y);
         window.dc.cursor_start_posLossyness = Vector2D::new((float)(start_pos_highp_x - window.dc.cursor_start_pos.x), (start_pos_highp_y - window.dc.cursor_start_pos.y));

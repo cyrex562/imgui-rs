@@ -409,12 +409,12 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
 
     // Backup a copy of host window members we will modify
     ImGuiWindow* inner_window = table.InnerWindow;
-    table.HostIndentX = inner_window.dc.Indent.x;
+    table.HostIndentX = inner_window.dc.indent.x;
     table.HostClipRect = inner_window.clip_rect;
     table.HostSkipItems = inner_window.skip_items;
     temp_data.HostBackupWorkRect = inner_window.work_rect;
     temp_data.HostBackupParentWorkRect = inner_window.ParentWorkRect;
-    temp_data.HostBackupColumnsOffset = outer_window.dc.ColumnsOffset;
+    temp_data.HostBackupColumnsOffset = outer_window.dc.columns_offset;
     temp_data.HostBackupPrevLineSize = inner_window.dc.PrevLineSize;
     temp_data.HostBackupCurrLineSize = inner_window.dc.CurrLineSize;
     temp_data.HostBackupCursorMaxPos = inner_window.dc.cursor_max_pos;
@@ -1342,7 +1342,7 @@ void    ImGui::EndTable()
     outer_window.dc.cursor_pos = table.OuterRect.min;
     outer_window.dc.ItemWidth = temp_data.HostBackupItemWidth;
     outer_window.dc.ItemWidthStack.size = temp_data.HostBackupItemWidthStackSize;
-    outer_window.dc.ColumnsOffset = temp_data.HostBackupColumnsOffset;
+    outer_window.dc.columns_offset = temp_data.HostBackupColumnsOffset;
 
     // Layout in outer window
     // (FIXME: To allow auto-fit and allow desirable effect of SameLine() we dissociate 'used' vs 'ideal' size by overriding
@@ -1724,7 +1724,7 @@ void ImGui::TableBeginRow(ImGuiTable* table)
 
     table.RowPosY1 = table.RowPosY2 = next_y1;
     table.RowTextBaseline = 0.0;
-    table.RowIndentOffsetX = window.dc.Indent.x - table.HostIndentX; // Lock indent
+    table.RowIndentOffsetX = window.dc.indent.x - table.HostIndentX; // Lock indent
     window.dc.PrevLineTextBaseOffset = 0.0;
     window.dc.cursor_max_pos.y = next_y1;
 
@@ -1953,12 +1953,12 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     // Start position is roughly ~~ CellRect.min + CellPadding + Indent
     float start_x = column.WorkMinX;
     if (column.flags & ImGuiTableColumnFlags_IndentEnable)
-        start_x += table.RowIndentOffsetX; // ~~ += window.dc.Indent.x - table->HostIndentX, except we locked it for the row.
+        start_x += table.RowIndentOffsetX; // ~~ += window.dc.indent.x - table->HostIndentX, except we locked it for the row.
 
     window.dc.cursor_pos.x = start_x;
     window.dc.cursor_pos.y = table.RowPosY1 + table.CellPaddingY;
     window.dc.cursor_max_pos.x = window.dc.cursor_pos.x;
-    window.dc.ColumnsOffset.x = start_x - window.pos.x - window.dc.Indent.x; // FIXME-WORKRECT
+    window.dc.columns_offset.x = start_x - window.pos.x - window.dc.indent.x; // FIXME-WORKRECT
     window.dc.CurrLineTextBaseOffset = table.RowTextBaseline;
     window.dcnav_layer_current = (ImGuiNavLayer)columnnav_layer_current;
 
@@ -3867,7 +3867,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
     const float half_clip_extend_x = f32::floor(ImMax(window.WindowPadding.x * 0.5, window.WindowBorderSize));
     const float max_1 = window.work_rect.max.x + column_padding - ImMax(column_padding - window.WindowPadding.x, 0.0);
     const float max_2 = window.work_rect.max.x + half_clip_extend_x;
-    columns.OffMinX = window.dc.Indent.x - column_padding + ImMax(column_padding - window.WindowPadding.x, 0.0);
+    columns.OffMinX = window.dc.indent.x - column_padding + ImMax(column_padding - window.WindowPadding.x, 0.0);
     columns.OffMaxX = ImMax(ImMin(max_1, max_2) - window.pos.x, columns.OffMinX + 1.0);
     columns.LineMinY = columns.LineMaxY = window.dc.cursor_pos.y;
 
@@ -3905,13 +3905,13 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
         PushColumnClipRect(0);
     }
 
-    // We don't generally store Indent.x inside ColumnsOffset because it may be manipulated by the user.
+    // We don't generally store Indent.x inside columns_offset because it may be manipulated by the user.
     float offset_0 = GetColumnOffset(columns.Current);
     float offset_1 = GetColumnOffset(columns.Current + 1);
     float width = offset_1 - offset_0;
     PushItemWidth(width * 0.65);
-    window.dc.ColumnsOffset.x = ImMax(column_padding - window.WindowPadding.x, 0.0);
-    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.Indent.x + window.dc.ColumnsOffset.x);
+    window.dc.columns_offset.x = ImMax(column_padding - window.WindowPadding.x, 0.0);
+    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);
     window.work_rect.max.x = window.pos.x + offset_1 - column_padding;
 }
 
@@ -3926,7 +3926,7 @@ void ImGui::NextColumn()
 
     if (columns.Count == 1)
     {
-        window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.Indent.x + window.dc.ColumnsOffset.x);
+        window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);
         // IM_ASSERT(columns.current == 0);
         return;
     }
@@ -3949,15 +3949,15 @@ void ImGui::NextColumn()
     {
         // columns 1+ ignore IndentX (by canceling it out)
         // FIXME-COLUMNS: Unnecessary, could be locked?
-        window.dc.ColumnsOffset.x = GetColumnOffset(columns.Current) - window.dc.Indent.x + column_padding;
+        window.dc.columns_offset.x = GetColumnOffset(columns.Current) - window.dc.indent.x + column_padding;
     }
     else
     {
         // New row/line: column 0 honor IndentX.
-        window.dc.ColumnsOffset.x = ImMax(column_padding - window.WindowPadding.x, 0.0);
+        window.dc.columns_offset.x = ImMax(column_padding - window.WindowPadding.x, 0.0);
         columns.LineMinY = columns.LineMaxY;
     }
-    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.Indent.x + window.dc.ColumnsOffset.x);
+    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);
     window.dc.cursor_pos.y = columns.LineMinY;
     window.dc.CurrLineSize = Vector2D::new(0.0, 0.0);
     window.dc.CurrLineTextBaseOffset = 0.0;
@@ -4042,8 +4042,8 @@ void ImGui::EndColumns()
     window.work_rect = window.ParentWorkRect;
     window.ParentWorkRect = columns.HostBackupParentWorkRect;
     window.dc.current_columns = NULL;
-    window.dc.ColumnsOffset.x = 0.0;
-    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.Indent.x + window.dc.ColumnsOffset.x);
+    window.dc.columns_offset.x = 0.0;
+    window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);
 }
 
 void ImGui::Columns(int columns_count, const char* id, bool border)

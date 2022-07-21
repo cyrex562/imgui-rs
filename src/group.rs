@@ -46,7 +46,7 @@ pub fn begin_group(g: &mut Context)
     group_data.WindowID = window.id;
     group_data.BackupCursorPos = window.dc.cursor_pos;
     group_data.BackupCursorMaxPos = window.dc.cursor_max_pos;
-    group_data.BackupIndent = window.dc.Indent;
+    group_data.BackupIndent = window.dc.indent;
     group_data.BackupGroupOffset = window.dc.GroupOffset;
     group_data.BackupCurrLineSize = window.dc.CurrLineSize;
     group_data.BackupCurrLineTextBaseOffset = window.dc.CurrLineTextBaseOffset;
@@ -55,8 +55,8 @@ pub fn begin_group(g: &mut Context)
     group_data.BackupActiveIdPreviousFrameIsAlive = g.active_id_previous_frame_is_alive;
     group_data.EmitItem = true;
 
-    window.dc.GroupOffset.x = window.dc.cursor_pos.x - window.pos.x - window.dc.ColumnsOffset.x;
-    window.dc.Indent = window.dc.GroupOffset;
+    window.dc.GroupOffset.x = window.dc.cursor_pos.x - window.pos.x - window.dc.columns_offset.x;
+    window.dc.indent = window.dc.GroupOffset;
     window.dc.cursor_max_pos = window.dc.cursor_pos;
     window.dc.CurrLineSize = Vector2D::new(0.0, 0.0);
     if (g.LogEnabled)
@@ -77,7 +77,7 @@ pub fn end_group(g: &mut Context)
 
     window.dc.cursor_pos = group_data.BackupCursorPos;
     window.dc.cursor_max_pos = ImMax(group_data.BackupCursorMaxPos, window.dc.cursor_max_pos);
-    window.dc.Indent = group_data.BackupIndent;
+    window.dc.indent = group_data.BackupIndent;
     window.dc.GroupOffset = group_data.BackupGroupOffset;
     window.dc.CurrLineSize = group_data.BackupCurrLineSize;
     window.dc.CurrLineTextBaseOffset = group_data.BackupCurrLineTextBaseOffset;

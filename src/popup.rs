@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use crate::Context;
-use crate::direction::Direction;
+use crate::types::Direction;
 use crate::imgui_h::ImGuiID;
 use crate::imgui_vec::Vector2D;
 use crate::imgui_window::ImGuiWindow;
