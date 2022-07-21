@@ -102,13 +102,13 @@ pub fn get_merged_mod_flags(g: &mut Context) -> HashSet<ModFlags>
 // void ImGui::PushAllowKeyboardFocus(bool allow_keyboard_focus)
 pub fn push_allow_keyboard_focus(g: &mut Context, allow_keyboard_focus: bool)
 {
-    PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus);
+    push_item_flag(ItemFlags::NoTabStop, !allow_keyboard_focus);
 }
 
 // void ImGui::PopAllowKeyboardFocus()
 pub fn pop_allow_keyboard_focus(g: &mut Context)
 {
-    PopItemFlag();
+    pop_item_flag();
 }
 
 // Note: this will likely be called ActivateItem() once we rework our Focus/Activation system!

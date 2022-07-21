@@ -52,25 +52,32 @@ enum ImNodesCol_
     ImNodesCol_COUNT
 };
 
-enum ImNodesStyleVar_
+#[derive(Clone,Debug)]
+pub enum NodesStyleVar
 {
-    ImNodesStyleVar_GridSpacing = 0,
-    ImNodesStyleVar_NodeCornerRounding,
-    ImNodesStyleVar_NodePadding,
-    ImNodesStyleVar_NodeBorderThickness,
-    ImNodesStyleVar_LinkThickness,
-    ImNodesStyleVar_LinkLineSegmentsPerLength,
-    ImNodesStyleVar_LinkHoverDistance,
-    ImNodesStyleVar_PinCircleRadius,
-    ImNodesStyleVar_PinQuadSideLength,
-    ImNodesStyleVar_PinTriangleSideLength,
-    ImNodesStyleVar_PinLineThickness,
-    ImNodesStyleVar_PinHoverRadius,
-    ImNodesStyleVar_PinOffset,
-    ImNodesStyleVar_MiniMapPadding,
-    ImNodesStyleVar_MiniMapOffset,
-    ImNodesStyleVar_COUNT
-};
+    None,
+    GridSpacing,
+    NodeCornerRounding,
+    NodePadding,
+    NodeBorderThickness,
+    LinkThickness,
+    LinkLineSegmentsPerLength,
+    LinkHoverDistance,
+    PinCircleRadius,
+    PinQuadSideLength,
+    PinTriangleSideLength,
+    PinLineThickness,
+    PinHoverRadius,
+    PinOffset,
+    MiniMapPadding,
+    MiniMapOffset,
+}
+
+impl Default for NodesStyleVar {
+    fn default() -> Self {
+        Self::None
+    }
+}
 
 enum ImNodesStyleFlags_
 {

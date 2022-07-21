@@ -223,7 +223,7 @@ pub struct Context {
     pub font_stack: Vec<Font>,
     // ImVector<ImGuiID>       focus_scope_stack;                    // Stack for PushFocusScope()/PopFocusScope() - not inherited by Begin(), unless child window
     pub focus_scope_stack: Vec<Id32>,
-    // ImVector<ImGuiItemFlags>item_flags_stack;                     // Stack for PushItemFlag()/PopItemFlag() - inherited by Begin()
+    // ImVector<ImGuiItemFlags>item_flags_stack;                     // Stack for push_item_flag()/PopItemFlag() - inherited by Begin()
     pub item_flags_stack: Vec<ItemFlags>,
     // ImVector<ImGuiGroupData>group_stack;                         // Stack for BeginGroup()/EndGroup() - not inherited by Begin()
     pub group_stack: Vec<GroupData>,
@@ -946,7 +946,7 @@ pub fn set_active_id_using_nav_and_keys(g: &mut Context)
 // - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
 // - Feedback welcome at https://github.com/ocornut/imgui/issues/211
 // - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
-// - Optimized shortcuts instead of PushStyleVar() + PushItemFlag()
+// - Optimized shortcuts instead of PushStyleVar() + push_item_flag()
 // void ImGui::BeginDisabled(bool disabled)
 pub fn begin_disabled(g: &mut Context, disabled: bool)
 {

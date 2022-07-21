@@ -1,4 +1,5 @@
-
+use crate::color::StyleColor;
+use crate::Context;
 use crate::imgui_color::{ColorConvertFloat4ToU32, IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiColorMod};
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{ImGuiColor, ImGuiDataType, ImGuiDir, ImGuiStyleVar};
@@ -271,16 +272,16 @@ pub fn ColorConvertU32ToFloat4(col: u32) -> Vector4D {
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
 // void ImGui::PushStyleColor(ImGuiCol idx, ImU32 col)
-pub fn push_style_color(idx: &ImGuiColor, col: u32)
+pub fn push_style_color(g: &mut Context, idx: StyleColor, color: u32)
 {
     // ImGuiContext& g = *GImGui;
-    let g = &GImGui;
+    // let g = &GImGui;
     // ImGuiColorMod backup;
     let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
     backup.BackupValue = g.style.colors[idx];
     g.color_stack.push_back(backup);
-    g.style.colors[idx] = ColorConvertU32ToFloat4(col);
+    g.style.colors[idx] = ColorConvertU32ToFloat4(color);
 }
 
 // void ImGui::PushStyleColor(ImGuiCol idx, const Vector4D& col)

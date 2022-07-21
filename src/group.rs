@@ -92,7 +92,7 @@ pub fn end_group(g: &mut Context)
 
     window.dc.CurrLineTextBaseOffset = ImMax(window.dc.PrevLineTextBaseOffset, group_data.BackupCurrLineTextBaseOffset);      // FIXME: Incorrect, we should grab the base offset from the *first line* of the group but it is hard to obtain now.
     item_size(group_bb.GetSize());
-    item_add(group_bb, 0, NULL, ImGuiItemFlags_NoTabStop);
+    item_add(group_bb, 0, NULL, ItemFlags::NoTabStop);
 
     // If the current active_id was declared within the boundary of our group, we copy it to LastItemId so IsItemActive(), is_item_deactivated() etc. will be functional on the entire group.
     // It would be be neater if we replaced window.dc.LastItemId by e.g. 'bool LastItemIsActive', but would put a little more burden on individual widgets.

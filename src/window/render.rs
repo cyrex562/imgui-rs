@@ -52,7 +52,7 @@ pub fn render_window_outer_borders(g: &mut Context, window: &mut Window)
         // const ImGuiResizeBorderDef& def = resize_border_def[border_held];
         let def = resize_border_def[border_held];
         // Rect border_r = GetResizeBorderRect(window, border_held, rounding, 0.0);
-        let mut border_r = get_resize_border_rect(g, window, border_held as i32, rounding, 0.0);
+        let mut border_r = get_resize_border_rect(window, border_held as i32, rounding, 0.0);
         window.draw_listpath_arc_to(Vector2D::lerp2(&border_r.min, &border_r.max, def.segment_n1) + Vector2D::new(0.5, 0.5) + def.inner_dir * rounding, rounding, def.outer_angle - f32::PI * 0.25, def.outer_angle);
         window.draw_listpath_arc_to(Vector2D::lerp2(&border_r.min, &border_r.max, def.segment_n2) + Vector2D::new(0.5, 0.5) + def.inner_dir * rounding, rounding, def.outer_angle, def.outer_angle + f32::PI * 0.25);
         window.draw_list.path_stroke(get_color_u32_no_alpha(StyleColor::SeparatorActive), 0, ImMax(2.0, border_size)); // Thicker than usual
@@ -151,7 +151,7 @@ pub fn render_window_decorations(g: &mut Context,
             // Render, for docked windows and host windows we ensure bg goes before decorations
             let bg_draw_list = if window.dock_is_active {
                 // window.dock_node.host_window.draw_list
-                let win = g.get_window(window.dock_node.host_window).unwrap();
+                let win = g.get_window(window.dock_node.host_window_id).unwrap();
                 g.get_draw_list(win.draw_list_id).unwrap()
             } else {
                 g.get_draw_list(window.draw_list_id).unwrap()

@@ -41,7 +41,7 @@ pub enum ScrollFlags
 pub const ImGuiScrollFlags_MaskX: ScrollFlags = ScrollFlags::KeepVisibleEdgeX | ScrollFlags::KeepVisibleCenterX | ScrollFlags::AlwaysCenterX;
 pub const ImGuiScrollFlags_MaskY: ScrollFlags = ScrollFlags::KeepVisibleEdgeY | ScrollFlags::KeepVisibleCenterY | ScrollFlags::AlwaysCenterY;
 
-pub enum ImGuiNavHighlightFlags
+pub enum NavHighlightFlags
 {
     INone             = 0,
     ITypeDefault      = 1 << 0,
@@ -377,7 +377,7 @@ pub fn nav_process_item(g: &mut Context)
     if (g.NavInitRequest && g.NavLayer == window.dcnav_layer_current && (item_flags & ItemFlags::Disabled) == 0)
     {
         // Even if 'ImGuiItemFlags_NoNavDefaultFocus' is on (typically collapse/close button) we record the first ResultId so they can be used as a fallback
-        const bool candidate_for_nav_default_focus = (item_flags & ImGuiItemFlags_NoNavDefaultFocus) == 0;
+        const bool candidate_for_nav_default_focus = (item_flags & ItemFlags::NoNavDefaultFocus) == 0;
         if (candidate_for_nav_default_focus || g.NavInitResultId == 0)
         {
             g.NavInitResultId = id;
@@ -394,14 +394,14 @@ pub fn nav_process_item(g: &mut Context)
     // FIXME-NAV: Consider policy for double scoring (scoring from nav_scoring_rect + scoring from a rect wrapped according to current wrapping policy)
     if (g.NavMoveScoringItems)
     {
-        const bool is_tab_stop = (item_flags & ImGuiItemFlags_Inputable) && (item_flags & (ImGuiItemFlags_NoTabStop | ItemFlags::Disabled)) == 0;
+        const bool is_tab_stop = (item_flags & ItemFlags::Inputable) && (item_flags & (ItemFlags::NoTabStop | ItemFlags::Disabled)) == 0;
         const bool is_tabbing = (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) != 0;
         if (is_tabbing)
         {
             if (is_tab_stop || (g.NavMoveFlags & ImGuiNavMoveFlags_FocusApi))
                 NavProcessItemForTabbingRequest(id);
         }
-        else if ((g.nav_id != id || (g.NavMoveFlags & ImGuiNavMoveFlags_AllowCurrentNavId)) && !(item_flags & (ItemFlags::Disabled | ImGuiItemFlags_NoNav)))
+        else if ((g.nav_id != id || (g.NavMoveFlags & ImGuiNavMoveFlags_AllowCurrentNavId)) && !(item_flags & (ItemFlags::Disabled | ItemFlags::NoNav)))
         {
             ImGuiNavItemData* result = (window == g.nav_window) ? &g.NavMoveResultLocal : &g.NavMoveResultOther;
             if (!is_tabbing)
@@ -1160,7 +1160,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
     SetNavID(result.ID, g.NavLayer, result.FocusScopeId, result.RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable
-    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result.InFlags & ImGuiItemFlags_Inputable))
+    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result.InFlags & ItemFlags::Inputable))
     {
         g.NavNextActivateId = result.ID;
         g.NavNextActivateFlags = ImGuiActivateFlags_PreferInput | ImGuiActivateFlags_TryToPreserveState;

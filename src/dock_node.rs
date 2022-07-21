@@ -94,7 +94,7 @@ pub struct DockNode
     // ImU32                   last_bg_color;
     pub last_bg_color: u32,
     // ImGuiWindow*            host_window;
-    pub host_window: Id32, //*mut ImGuiWindow,
+    pub host_window_id: Id32, //*mut ImGuiWindow,
     // ImGuiWindow*            visible_window;              // Generally point to window which is id is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
     pub visible_window: Id32, //*mut ImGuiWindow,
     // ImGuiDockNode*          central_node;                // [Root node only] Pointer to central node.

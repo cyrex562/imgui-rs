@@ -445,7 +445,7 @@ pub enum ItemFlags {
     Inputable = 1 << 8,   // false     // [WIP] Auto-activate input mode when tab focused. Currently only used and supported by a few items before it becomes a generic feature.
 }
 
-// void ImGui::PushItemFlag(ImGuiItemFlags option, bool enabled)
+// void ImGui::push_item_flag(ImGuiItemFlags option, bool enabled)
 pub fn push_item_flag(g: &mut Context, option: &ItemFlags, enabled: bool)
 {
     // ImGuiContext& g = *GImGui;
@@ -520,7 +520,7 @@ pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
 // Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
 // bool item_add(const Rect& bb, ImGuiID id, const Rect* nav_bb_arg, ImGuiItemFlags extra_flags)
-pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: &Rect, extra_flags: &HashSet<ItemFlags>) -> bool
+pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: Option<&Rect>, extra_flags: Option<&HashSet<ItemFlags>>) -> bool
 {
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;

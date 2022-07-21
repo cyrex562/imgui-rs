@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::os::raw::c_char;
 use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, INVALID_ID, window};
@@ -9,6 +10,7 @@ use crate::imgui_globals::GImGui;
 use crate::imgui_h::ImGuiColor;
 use crate::imgui_style::{get_color_u32, GetColorU32_2, GetColorU32_3};
 use crate::input::MouseCursor;
+use crate::nav::NavHighlightFlags;
 use crate::style::get_color_u32;
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
@@ -238,7 +240,8 @@ void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
     }
 }
 
-void ImGui::render_nav_highlight(const Rect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
+// void ImGui::render_nav_highlight(const Rect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
+pub fn render_nav_highlight(g: &mut Context, bb: &Rect, id: Id32, flags: Option<&HashSet<NavHighlightFlags>>)
 {
     // ImGuiContext& g = *GImGui;
     if (id != g.nav_id)

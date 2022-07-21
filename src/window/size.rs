@@ -126,7 +126,7 @@ pub fn get_window_resize_corner_id(g: &mut Context, window: &mut Window, n: i32)
 {
     // IM_ASSERT(n >= 0 && n < 4);
     // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.ID : window.id;
-    let mut id = if window.dock_is_active { window.dock_node.host_window } else { window.id};
+    let mut id = if window.dock_is_active { window.dock_node.host_window_id } else { window.id};
     // id = ImHashStr("#RESIZE", 0, id);
     // id = hash_string("#RESIZE", 0, id);
     // // id = ImHashData(&n, sizeof, id);
@@ -456,7 +456,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
         let mut hovered = false;
         let mut held = false;
         // Rect border_rect = GetResizeBorderRect(window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
-        let mut border_rect = get_resize_border_rect(g, window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
+        let mut border_rect = get_resize_border_rect(window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
         // ImGuiID border_id = window.GetID(border_n + 4); // == GetWindowResizeBorderID()
         let border_id = window.get_id3(g, border_n + 4);
         keep_alive_id(border_id);

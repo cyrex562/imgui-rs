@@ -99,7 +99,7 @@ impl ImGuiStackSizes {
 //     IM_ASSERT(SizeOfGroupStack      == g.group_stack.size        && "BeginGroup/EndGroup Mismatch!");
 //     IM_ASSERT(SizeOfBeginPopupStack == g.begin_popup_stack.size   && "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!");
 //     IM_ASSERT(SizeOfDisabledStack   == g.DisabledStackSize      && "BeginDisabled/EndDisabled Mismatch!");
-//     IM_ASSERT(SizeOfItemFlagsStack  >= g.item_flags_stack.size    && "PushItemFlag/PopItemFlag Mismatch!");
+//     IM_ASSERT(SizeOfItemFlagsStack  >= g.item_flags_stack.size    && "push_item_flag/PopItemFlag Mismatch!");
 //     IM_ASSERT(SizeOfColorStack      >= g.color_stack.size        && "PushStyleColor/PopStyleColor Mismatch!");
 //     IM_ASSERT(SizeOfStyleVarStack   >= g.style_var_stack.size     && "PushStyleVar/PopStyleVar Mismatch!");
 //     IM_ASSERT(SizeOfFontStack       >= g.font_stack.size         && "PushFont/PopFont Mismatch!");

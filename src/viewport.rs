@@ -744,14 +744,14 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
     else if ((flags & WindowFlags::ChildWindow) || (flags & WindowFlags::ChildMenu))
     {
         // Always inherit viewport from parent window
-        if (window.dock_node && window.dock_node.host_window)
+        if (window.dock_node && window.dock_node.host_window_id)
             // IM_ASSERT(window.dock_node.host_window.Viewport == window.parent_window.Viewport);
         window.viewport = window.parent_window.Viewport;
     }
-    else if (window.dock_node && window.dock_node.host_window)
+    else if (window.dock_node && window.dock_node.host_window_id)
     {
         // This covers the "always inherit viewport from parent window" case for when a window reattach to a node that was just created mid-frame
-        window.viewport = window.dock_node.host_window.Viewport;
+        window.viewport = window.dock_node.host_window_id.Viewport;
     }
     else if (flags & WindowFlags::Tooltip)
     {

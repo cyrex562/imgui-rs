@@ -385,7 +385,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     }
 
     // Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
-    ImGuiWindow* parent_window_in_stack = (window.dock_is_active && window.dock_node.host_window) ? window.dock_node.host_window : g.current_window_stack.empty() ? NULL : g.current_window_stack.back().Window;
+    ImGuiWindow* parent_window_in_stack = (window.dock_is_active && window.dock_node.host_window_id) ? window.dock_node.host_window_id: g.current_window_stack.empty() ? NULL : g.current_window_stack.back().Window;
     ImGuiWindow* parent_window = first_begin_of_the_frame ? ((flags & (WindowFlags::ChildWindow | WindowFlags::Popup)) ? parent_window_in_stack : NULL) : window.parent_window;
     // IM_ASSERT(parent_window != NULL || !(flags & WindowFlags::ChildWindow));
 

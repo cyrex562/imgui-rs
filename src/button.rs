@@ -1,7 +1,8 @@
 use std::collections::HashSet;
+use crate::Context;
+use crate::item::{ItemFlags, pop_item_flag, push_item_flag};
 
-// Extend
-pub enum DimgButtonFlags
+pub enum ButtonFlags
 {
     PressedOnClick         = 1 << 4,   // return true on click (mouse down event)
     PressedOnClickRelease  = 1 << 5,   // [Default] return true on click + release on same item <-- this is what the majority of Button are using
@@ -19,39 +20,29 @@ pub enum DimgButtonFlags
     NoHoldingActiveId      = 1 << 17,  // don't set active_id while holding the mouse (PressedOnClick only)
     NoNavFocus             = 1 << 18,  // don't override navigation focus when activated
     NoHoveredOnFocus       = 1 << 19,  // don't report as hovered when nav focus is on this item
-}
-
-// flags for InvisibleButton() [extended in imgui_internal.h]
-#[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgButtonFlags
-{
-    None                   = 0,
+None                   = 0,
     MouseButtonLeft        = 1 << 0,   // React on left mouse button (default)
     MouseButtonRight       = 1 << 1,   // React on right mouse button
     MouseButtonMiddle      = 1 << 2,   // React on center mouse button
-
-    // [Internal]
-    // ImGuiButtonFlags_MouseButtonMask_       = ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle,
-    // ImGuiButtonFlags_MouseButtonDefault_    = ImGuiButtonFlags_MouseButtonLeft
 }
 
-// pub const MouseButtonMask_: i32       = DimgButtonFlags::MouseButtonLeft | DimgButtonFlags::MouseButtonRight | DimgButtonFlags::MouseButtonMiddle;
-pub const MOUSE_BTN_MASK: HashSet<DimgButtonFlags> = HashSet::from([
-   DimgButtonFlags::MouseButtonLeft, DimgButtonFlags::MouseButtonRight, DimgButtonFlags::MouseButtonMiddle
+
+
+// pub const MouseButtonMask_: i32       = ButtonFlags::MouseButtonLeft | ButtonFlags::MouseButtonRight | ButtonFlags::MouseButtonMiddle;
+pub const MOUSE_BTN_MASK: HashSet<ButtonFlags> = HashSet::from([
+   ButtonFlags::MouseButtonLeft, ButtonFlags::MouseButtonRight, ButtonFlags::MouseButtonMiddle
 ]);
 
-pub const MOUSE_BTN_DFLT: DimgButtonFlags = DimgButtonFlags::MouseButtonLeft;
-
-pub const    MouseButtonDefault_: i32    = DimgButtonFlags::MouseButtonLeft as i32;
+pub const MOUSE_BTN_DFLT: ButtonFlags = ButtonFlags::MouseButtonLeft;
 
 // void ImGui::PushButtonRepeat(bool repeat)
 pub fn push_button_repeat(g: &mut Context, repeat: bool)
 {
-    PushItemFlag(ImGuiItemFlags_ButtonRepeat, repeat);
+    push_item_flag(g, &ItemFlags::ButtonRepeat, repeat);
 }
 
 // void ImGui::PopButtonRepeat()
 pub fn pop_button_repeat(g: &mut Context)
 {
-    PopItemFlag();
+    pop_item_flag(g);
 }

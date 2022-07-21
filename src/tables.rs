@@ -3105,7 +3105,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
             Separator();
         want_separator = true;
 
-        PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
+        push_item_flag(ItemFlags::SelectableDontClosePopup, true);
         for (int other_column_n = 0; other_column_n < table.ColumnsCount; other_column_n += 1)
         {
             ImGuiTableColumn* other_column = &table.Columns[other_column_n];
@@ -3123,7 +3123,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
             if (MenuItem(name, NULL, other_column.IsUserEnabled, menu_item_active))
                 other_column.IsUserEnabledNextFrame = !other_column.IsUserEnabled;
         }
-        PopItemFlag();
+        pop_item_flag();
     }
 }
 

@@ -680,7 +680,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
     // ImGuiContext& g = *GImGui;
     const bool is_alive = (g.frame_count - node->LastFrameAlive < 2);    // Submitted with ImGuiDockNodeFlags_KeepAliveOnly
     const bool is_active = (g.frame_count - node->LastFrameActive < 2);  // Submitted
-    if (!is_alive) { push_style_color(StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
+    if (!is_alive) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open;
     ImGuiTreeNodeFlags tree_node_flags = node->IsFocused ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
     if (node->Windows.size > 0)
@@ -993,7 +993,7 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
             tab_n > 0 ? ", " : "", (tab->Window || tab->NameOffset != -1) ? tab_bar->GetTabName(tab) : "???");
     }
     p += ImFormatString(p, buf_end - p, (tab_bar->Tabs.size > 3) ? " ... }" : " } ");
-    if (!is_active) { push_style_color(StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
+    if (!is_active) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open = TreeNode(label, "%s", buf);
     if (!is_active) { pop_style_color(); }
     if (is_active && IsItemHovered())
@@ -1064,7 +1064,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     // ImGuiContext& g = *GImGui;
     const bool is_active = window.was_active;
     ImGuiTreeNodeFlags tree_node_flags = (window == g.nav_window) ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
-    if (!is_active) { push_style_color(StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
+    if (!is_active) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.Name, is_active ? "" : " *Inactive*");
     if (!is_active) { pop_style_color(); }
     if (IsItemHovered() && is_active)

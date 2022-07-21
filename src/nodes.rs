@@ -39,6 +39,8 @@ namespace
 {
 // [SECTION] bezier curve helpers
 
+use crate::Context;
+
 struct CubicBezier
 {
     Vector2D P0, P1, P2, P3;
@@ -2686,7 +2688,8 @@ static const ImNodesStyleVarInfo* GetStyleVarInfo(ImNodesStyleVar idx)
     return &GStyleVarInfo[idx];
 }
 
-void push_style_var(const ImNodesStyleVar item, const float value)
+// void push_style_var(const ImNodesStyleVar item, const float value)
+pub fn push_style_var(g: &mut Context, item: NodesStyleVar, value: f32)
 {
     const ImNodesStyleVarInfo* var_info = GetStyleVarInfo(item);
     if (var_info.Type == ImGuiDataType_Float && var_info.Count == 1)
@@ -2712,9 +2715,10 @@ void push_style_var(const ImNodesStyleVar item, const Vector2D& value)
     // IM_ASSERT(0 && "Called PushStyleVar() Vector2D variant but variable is not a Vector2D!");
 }
 
-void pop_style_var(int count)
+// void pop_style_var(int count)
+pub fn pop_style_var(g: &mut Context, count: i32)
 {
-    while (count > 0)
+    while count > 0
     {
         // IM_ASSERT(GImNodes.StyleModifierStack.size() > 0);
         const ImNodesStyleVarElement style_backup = GImNodes.StyleModifierStack.back();
