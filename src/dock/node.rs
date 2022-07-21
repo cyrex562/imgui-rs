@@ -73,7 +73,7 @@ pub struct DockNode
     // ImGuiDockNodeState      state;
     pub state: DockNodeState,
     // ImGuiDockNode*          parent_node;
-    pub parent_node: Id32, //*mut ImGuiDockNode,
+    pub parent_node_id: Id32, //*mut ImGuiDockNode,
     // ImGuiDockNode*          child_nodes[2];              // [split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
     pub child_nodes: Vec<Id32>, //[*mut ImGuiDockNode;2],
     // ImVector<ImGuiWindow*>  windows;                    // Note: unordered list! Iterate tab_bar->Tabs for user-order.
@@ -187,7 +187,7 @@ impl DockNode {
     //     ~ImGuiDockNode();
     //     bool                    is_root_node() const      { return parent_node == NULL; }
     pub fn is_root_node(&self) -> bool {
-        self.parent_node > 0 && self.parent_node < Id32::MAX
+        self.parent_node_id > 0 && self.parent_node_id < Id32::MAX
     }
     //     bool                    is_dock_space() const     { return (merged_flags & ImGuiDockNodeFlags_DockSpace) != 0; }
     pub fn is_dock_space(&self) -> bool {
@@ -298,7 +298,7 @@ pub struct DockNodeSettings
 //  void          DockContextNewFrameUpdateUndocking(ImGuiContext* ctx);
 //  void          DockContextNewFrameUpdateDocking(ImGuiContext* ctx);
 //  void          DockContextEndFrame(ImGuiContext* ctx);
-//  ImGuiID       DockContextGenNodeID(ImGuiContext* ctx);
+//  ImGuiID       dock_context_gen_node_id(ImGuiContext* ctx);
 //  void          DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, float split_ratio, bool split_outer);
 //  void          DockContextQueueUndockWindow(ImGuiContext* ctx, ImGuiWindow* window);
 //  void          DockContextQueueUndockNode(ImGuiContext* ctx, ImGuiDockNode* node);
@@ -308,8 +308,16 @@ pub struct DockNodeSettings
 /// inline ImGuiDockNode*   DockNodeGetRootNode(ImGuiDockNode* node)                 { while (node->parent_node) node = node->parent_node; return node; }
 pub fn dock_node_get_root_node<'context>(g: &'context mut Context, node: &mut DockNode) -> &'context mut DockNode {
     let mut out_node: &mut DockNode = node;
-    while out_node.parent_node != INVALID_ID {
-        out_node = g.get_dock_node(out_node.parent_node).unwrap()
+    while out_node.parent_node_id != INVALID_ID {
+        out_node = g.get_dock_node(out_node.parent_node_id).unwrap()
     }
     node
+}
+
+// static int  DockNodeComparerDepthMostFirst(const void* lhs, const void* rhs)
+pub fn dock_node_comparer_depth_most_first(g: &mut Context, lhs: &Vec<u8>, rhs: &Vec<u8>) -> i32
+{
+    const ImGuiDockNode* a = *(const ImGuiDockNode* const*)lhs;
+    const ImGuiDockNode* b = *(const ImGuiDockNode* const*)rhs;
+    return DockNodeGetDepth(b) - DockNodeGetDepth(a);
 }

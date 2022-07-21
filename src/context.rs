@@ -838,8 +838,8 @@ impl Context {
         self.windows.get_mut(&win_id).expect(format!("window not found in window stack for id={}", win_id).as_str())
     }
 
-    pub fn get_dock_node(&mut self, dock_node_id: Id32) -> &mut DockNode {
-        self.dock_nodes.get_mut(&dock_node_id).expect(format!("dock node not found in dock node collection for id={}", dock_node_id).as_str())
+    pub fn get_dock_node(&mut self, dock_node_id: Id32) -> Option<&mut DockNode> {
+        self.dock_nodes.get_mut(&dock_node_id)
     }
 
     pub fn get_draw_list(&mut self, draw_list_id: Id32) -> &mut DrawList {

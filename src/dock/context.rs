@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use crate::config::ConfigFlags;
 use crate::context::Context;
-use crate::dock::{DimgDockRequestType, dock_builder_remove_node_child_nodes, dock_builder_remove_node_docked_windows, DOCKING_SPLITTER_SIZE, DockRequest, ImGuiDockNode};
+use crate::dock::{dock_builder_remove_node_child_nodes, dock_builder_remove_node_docked_windows, DOCKING_SPLITTER_SIZE, ImGuiDockNode};
 use crate::dock::node::{DockNode, DockNodeSettings};
 use crate::frame::get_frame_height;
 use crate::{dock, INVALID_ID};
+use crate::dock::request::{DockRequest, DockRequestType};
 use crate::rect::Rect;
 use crate::settings::SettingsHandler;
 use crate::types::Id32;
@@ -139,10 +140,10 @@ pub fn dock_context_new_frame_update_undocking(ctx: &mut Context)
     {
         // ImGuiDockRequest* req = &dc->Requests[n];
         let req = dc.requests.get(n).unwrap();
-        if req.Type == DimgDockRequestType::Undock && req.undock_target_window {
+        if req.Type == DockRequestType::Undock && req.undock_target_window {
             dock_context_process_undock_window(ctx, req.undock_target_window);
         }
-        else if req.requst_type == DimgDockRequestType::Undock && req.undock_target_node {
+        else if req.requst_type == DockRequestType::Undock && req.undock_target_node {
             dock_context_process_undock_node(ctx, req.undock_target_node);
         }
     }
@@ -227,4 +228,51 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context)
             dock::dock_node_update(g, node)
         }
     }
+}
+
+// ImGuiID ImGui::dock_context_gen_node_id(ImGuiContext* ctx)
+pub fn dock_context_gen_node_id(g: &mut Context) -> Id32
+{
+    // Generate an id for new node (the exact id value doesn't matter as long as it is not already used)
+    // FIXME-OPT FIXME-DOCK: This is suboptimal, even if the node count is small enough not to be a worry.0
+    // We should poke in ctx->Nodes to find a suitable id faster. Even more so trivial that ctx->Nodes lookup is already sorted.
+    // ImGuiID id = 0x0001;
+    let mut id = 0x0001;
+    while dock_context_find_node_by_id(g, id).is_some() {
+        id += 1;
+    }
+    return id;
+}
+
+// static ImGuiDockNode* ImGui::DockContextAddNode(ImGuiContext* ctx, ImGuiID id)
+pub fn dock_context_add_node(g: &mut Context, mut id: Id32) -> &mut DockNode
+{
+    // Generate an id for the new node (the exact id value doesn't matter as long as it is not already used) and add the first window.
+    // ImGuiContext& g = *ctx;
+    if id == INVALID_ID {
+        id = dock_context_gen_node_id(g);
+    }
+    // else
+        // IM_ASSERT(DockContextFindNodeByID(ctx, id) == NULL);
+
+    // We don't set node->last_frame_alive on construction. Nodes are always created at all time to reflect .ini settings!
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextAddNode 0x%08X\n", id);
+    // ImGuiDockNode* node = IM_NEW(ImGuiDockNode)(id);
+    let mut node = DockNode::new(id);
+    // ctx.DockContext.Nodes.SetVoidPtr(node.ID, node);
+    g.dock_context.nodes.insert(id, node);
+    return &mut node;
+}
+
+// Pre C++0x doesn't allow us to use a function-local type (without linkage) as template parameter, so we moved this here.
+#[derive(Default,Debug,Clone)]
+pub struct DockContextPruneNodeData
+{
+    // int         CountWindows, CountChildWindows, CountChildNodes;
+    pub count_windows: i32,
+    pub count_child_windows: i32,
+    pub count_child_nodes: i32,
+    // ImGuiID     RootId;
+    pub root_id: Id32
+    // ImGuiDockContextPruneNodeData() { CountWindows = CountChildWindows = CountChildNodes = 0; RootId = 0; }
 }

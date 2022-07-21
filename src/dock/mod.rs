@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use preview::DockPreviewData;
+use request::{DockRequest, DockRequestType};
 use crate::axis::Axis;
 use crate::color::StyleColor;
 use crate::config::ConfigFlags;
@@ -21,7 +23,7 @@ use crate::vectors::ImLengthSqr;
 use crate::vectors::two_d::Vector2D;
 use crate::{Viewport, window};
 use crate::condition::Condition;
-use crate::dock::context::{dock_context_find_node_by_id, DockContext};
+use crate::dock::context::{dock_context_find_node_by_id, dock_context_gen_node_id, DockContext};
 use crate::dock::dock_node::DockNode;
 use crate::dock::node::DockNode;
 use crate::frame::get_frame_height;
@@ -33,6 +35,9 @@ use crate::window::{WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGE
 
 pub mod node;
 pub mod context;
+mod dock_context;
+mod request;
+mod preview;
 
 
 /// List of colors that are stored at the time of Begin() into Docked windows.
@@ -58,173 +63,6 @@ impl Default for WindowDockStyleColor {
     }
 }
 
-// void ImGui::DockContextInitialize(ImGuiContext* ctx)
-
-// ImGuiID ImGui::DockContextGenNodeID(ImGuiContext* ctx)
-pub fn dock_context_gen_node_id(g: &mut Context)
-{
-    // Generate an id for new node (the exact id value doesn't matter as long as it is not already used)
-    // FIXME-OPT FIXME-DOCK: This is suboptimal, even if the node count is small enough not to be a worry.0
-    // We should poke in ctx->Nodes to find a suitable id faster. Even more so trivial that ctx->Nodes lookup is already sorted.
-    // ImGuiID id = 0x0001;
-    let id = 0x0001;
-    while (dock_context_find_node_by_id(g, id) != NULL)
-        id += 1;
-    return id;
-}
-
-static ImGuiDockNode* ImGui::DockContextAddNode(ImGuiContext* ctx, ImGuiID id)
-{
-    // Generate an id for the new node (the exact id value doesn't matter as long as it is not already used) and add the first window.
-    ImGuiContext& g = *ctx;
-    if (id == 0)
-        id = DockContextGenNodeID(ctx);
-    else
-        // IM_ASSERT(DockContextFindNodeByID(ctx, id) == NULL);
-
-    // We don't set node->last_frame_alive on construction. Nodes are always created at all time to reflect .ini settings!
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextAddNode 0x%08X\n", id);
-    ImGuiDockNode* node = IM_NEW(ImGuiDockNode)(id);
-    ctx.DockContext.Nodes.SetVoidPtr(node.ID, node);
-    return node;
-}
-
-static void ImGui::DockContextRemoveNode(ImGuiContext* ctx, ImGuiDockNode* node, bool merge_sibling_into_parent_node)
-{
-    ImGuiContext& g = *ctx;
-    ImGuiDockContext* dc  = &ctx.DockContext;
-
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x%08X\n", node.ID);
-    // IM_ASSERT(DockContextFindNodeByID(ctx, node.id) == node);
-    // IM_ASSERT(node.ChildNodes[0] == NULL && node.ChildNodes[1] == NULL);
-    // IM_ASSERT(node.Windows.size == 0);
-
-    if (node.host_window)
-        node.host_window.dock_node_as_host = NULL;
-
-    ImGuiDockNode* parent_node = node.ParentNode;
-    const bool merge = (merge_sibling_into_parent_node && parent_node != NULL);
-    if (merge)
-    {
-        // IM_ASSERT(parent_node.ChildNodes[0] == node || parent_node.ChildNodes[1] == node);
-        ImGuiDockNode* sibling_node = (parent_node.ChildNodes[0] == node ? parent_node.ChildNodes[1] : parent_node.ChildNodes[0]);
-        DockNodeTreeMerge(&g, parent_node, sibling_node);
-    }
-    else
-    {
-        for (int n = 0; parent_node && n < IM_ARRAYSIZE(parent_node.ChildNodes); n += 1)
-            if (parent_node.ChildNodes[n] == node)
-                node.ParentNode.ChildNodes[n] = NULL;
-        dc.Nodes.SetVoidPtr(node.ID, NULL);
-        IM_DELETE(node);
-    }
-}
-
-
-#[derive(Debug,Clone,Default)]
-pub struct DockRequest
-{
-    // ImGuiDockRequestType    Type;
-    pub request_type: DimgDockRequestType,
-    // ImGuiWindow*            DockTargetWindow;   // Destination/Target window to dock into (may be a loose window or a dock_node, might be NULL in which case DockTargetNode cannot be NULL)
-    pub dock_target_window: Id32,
-    // ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
-    pub dock_target_node: Id32,
-    // ImGuiWindow*            DockPayload;        // Source/Payload window to dock (may be a loose window or a dock_node), [Optional]
-    pub dock_payload: Id32,
-    // ImGuiDir                DockSplitDir;
-    pub dock_split_dir: Direction,
-    // float                   DockSplitRatio;
-    pub dock_split_ratio: f32,
-    // bool                    DockSplitOuter;
-    pub dock_split_outer: bool,
-    // ImGuiWindow*            UndockTargetWindow;
-    pub undock_target_window: Id32,
-    // ImGuiDockNode*          UndockTargetNode;
-    pub undock_target_node: Id32,
-}
-
-impl DockRequest {
-    //ImGuiDockRequest()
-    pub fn new() -> Self
-    {
-        // Type = None;
-        // DockTargetWindow = DockPayload = UndockTargetWindow = NULL;
-        // DockTargetNode = UndockTargetNode = NULL;
-        // DockSplitDir = ImGuiDir_None;
-        // DockSplitRatio = 0.5;
-        // DockSplitOuter = false;
-        Self {
-            request_type: DimgDockRequestType::None,
-            dock_target_window: INVALID_ID,
-            dock_payload: INVALID_ID,
-            undock_target_window: INVALID_ID,
-            dock_target_node: INVALID_ID,
-            undock_target_node: INVALID_ID,
-            dock_split_dir: Direction::None,
-            dock_split_ratio: 0.5,
-            dock_split_outer: false,
-        }
-    }
-}
-
-
-#[derive(Debug,Clone)]
-pub enum DimgDockRequestType
-{
-    None = 0,
-    Dock,
-    Undock,
-    Split                  // split is the same as Dock but without a DockPayload
-}
-
-impl Default for DimgDockRequestType {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
-#[derive(Debug,Default,Clone)]
-pub struct DockPreviewData
-{
-    // ImGuiDockNode   FutureNode;
-    pub future_node: DimgDockNode,
-    // bool            IsDropAllowed;
-    pub is_drop_allowed: bool,
-    // bool            IsCenterAvailable;
-    pub is_center_available: bool,
-    // bool            IsSidesAvailable;           // Hold your breath, grammar freaks..
-    pub is_sides_available: bool,
-    // bool            IsSplitDirExplicit;         // Set when hovered the drop rect (vs. implicit SplitDir==None when hovered the window)
-    pub is_split_dir_explicit: bool,
-    // ImGuiDockNode*  SplitNode;
-    pub split_node: Id32,
-    // ImGuiDir        SplitDir;
-    pub split_dir: Direction,
-    // float           SplitRatio;
-    pub split_ratio: f32,
-    // ImRect          DropRectsDraw[ImGuiDir_COUNT + 1];  // May be slightly different from hit-testing drop rects used in DockNodeCalcDropRects()
-    pub drop_rects_draw: [Rect; 5 ],
-}
-
-impl DockPreviewData {
-
-    // ImGuiDockPreviewData() : FutureNode(0) {
-    pub fn new() -> Self {
-    // IsDropAllowed = IsCenterAvailable = IsSidesAvailable = IsSplitDirExplicit = false; SplitNode = NULL; SplitDir = ImGuiDir_None; SplitRatio = 0.f; for (int n = 0; n < IM_ARRAYSIZE(DropRectsDraw); n += 1) DropRectsDraw[n] = ImRect(+FLT_MAX, +FLT_MAX, -FLT_MAX, -FLT_MAX);
-    Self {
-        future_node: (),
-        is_drop_allowed: false,
-        is_center_available: false,
-        is_sides_available: false,
-        is_split_dir_explicit: false,
-        split_node: 0,
-        split_dir: Direction::None,
-        split_ratio: 0.0,
-        drop_rects_draw: [Rect::new();5]
-    }
-    }
-}
 
 // Docking
 // static const float DOCKING_TRANSPARENT_PAYLOAD_ALPHA        = 0.50;    // For use with io.config_docking_transparent_payload. Apply to viewport _or_ WindowBg in host viewport.
@@ -233,32 +71,17 @@ pub const DOCKING_TRANSPARENT_PAYLOAD_ALPHA: f32 = 0.50;
 // static const float DOCKING_SPLITTER_SIZE                    = 2.0;
 pub const DOCKING_SPLITTER_SIZE: f32 = 2.0;
 
-// static int  DockNodeComparerDepthMostFirst(const void* lhs, const void* rhs)
-pub fn dock_node_comparer_depth_most_first(g: &mut Context, lhs: &Vec<u8>, rhs: &Vec<u8>) -> i32
-{
-    const ImGuiDockNode* a = *(const ImGuiDockNode* const*)lhs;
-    const ImGuiDockNode* b = *(const ImGuiDockNode* const*)rhs;
-    return DockNodeGetDepth(b) - DockNodeGetDepth(a);
-}
-
-// Pre C++0x doesn't allow us to use a function-local type (without linkage) as template parameter, so we moved this here.
-pub struct DockContextPruneNodeData
-{
-    int         CountWindows, CountChildWindows, CountChildNodes;
-    ImGuiID     RootId;
-    ImGuiDockContextPruneNodeData() { CountWindows = CountChildWindows = CountChildNodes = 0; RootId = 0; }
-}
-
 // Garbage collect unused nodes (run once at init time)
 // static void DockContextPruneUnusedSettingsNodes(ImGuiContext* ctx)
 pub fn dock_context_prune_unused_settings_nodes(g: &mut Context)
 {
-    ImGuiContext& g = *ctx;
-    ImGuiDockContext* dc  = &ctx.DockContext;
+    // ImGuiContext& g = *ctx;
+    // ImGuiDockContext* dc  = &ctx.DockContext;
+    let mut dc = &mut g.dock_context;
     // IM_ASSERT(g.windows.size == 0);
 
-    ImPool<ImGuiDockContextPruneNodeData> pool;
-    pool.Reserve(dc.NodesSettings.size);
+    // ImPool<ImGuiDockContextPruneNodeData> pool;
+    // pool.Reserve(dc.NodesSettings.size);
 
     // Count child nodes and compute RootID
     for (int settings_n = 0; settings_n < dc.NodesSettings.size; settings_n += 1)
@@ -621,7 +444,7 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode)
         // IM_ASSERT(node.ParentNode.ChildNodes[0] == node || node.ParentNode.ChildNodes[1] == node);
         int index_in_parent = (node.ParentNode.ChildNodes[0] == node) ? 0 : 1;
         node.ParentNode.ChildNodes[index_in_parent] = NULL;
-        DockNodeTreeMerge(ctx, node.ParentNode, node.ParentNode.ChildNodes[index_in_parent ^ 1]);
+        dock_node_tree_merge(ctx, node.ParentNode, node.ParentNode.ChildNodes[index_in_parent ^ 1]);
         node.ParentNode.AuthorityForViewport = ImGuiDataAuthority_Window; // The node that stays in place keeps the viewport, so our newly dragged out node will create a new viewport
         node.ParentNode = NULL;
     }
@@ -2188,7 +2011,7 @@ pub fn dock_node_tree_split(g: &mut Context, parent_node: &mut DockNode, split_a
 }
 
 // void DockNodeTreeMerge(ImGuiContext* ctx, ImGuiDockNode* parent_node, ImGuiDockNode* merge_lead_child)
-pub fn dock_node_tree_merge(g: &mut Context, parent_node: &mut DockNode, merge_lead_child: &mut DockNode)
+pub fn dock_node_tree_merge(g: &mut Context, parent_node: &mut DockNode, merge_lead_child: Option<&mut DockNode>)
 {
     // When called from DockContextProcessUndockNode() it is possible that one of the child is NULL.
     // ImGuiContext& g = *GImGui;
@@ -3126,7 +2949,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         if (window.DockId == 0)
         {
             // IM_ASSERT(window.dock_node == NULL);
-            window.DockId = DockContextGenNodeID(ctx);
+            window.DockId = dock_context_gen_node_id(ctx);
         }
     }
     else
