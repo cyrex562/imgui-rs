@@ -285,7 +285,7 @@ impl Window {
             //     NameBufLen = strlen(name) + 1;
             name: String::from(name),
             //     id = ImHashStr(name);
-            id: hash_string(name.as_vec(), 0),
+            id: hash_string(name.as_vec(), ),
             //     IDStack.push_back(id);
             id_stack: Vec::new(),
             //     viewport_allow_platform_monitor_extend = -1;
@@ -370,7 +370,7 @@ impl Window {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
         // ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
-        let id = hash_string(in_str.as_mut_vec(), 0);
+        let id = hash_string(in_str.as_mut_vec(), );
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
             // debug_hook_id_info(id, DataType::String, str, str_end);

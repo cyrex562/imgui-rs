@@ -2,9 +2,9 @@
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
 pub enum Axis
 {
-    None = -1,
-    X = 0,
-    Y = 1
+    None,
+    X,
+    Y
 }
 
 impl Default for Axis {

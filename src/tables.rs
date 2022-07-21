@@ -184,7 +184,7 @@ index of this file:
 // [SECTION] Header mess
 //-----------------------------------------------------------------------------
 
-#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
+// #ifdefined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 
 
@@ -198,7 +198,7 @@ index of this file:
 #include "internal_h.rs"
 
 // System includes
-#if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
+// #ifdefined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
 #include <stddef.h>     // intptr_t
 #else
 #include <stdint.h>     // intptr_t
@@ -208,7 +208,7 @@ index of this file:
 #ifdef _MSC_VER
 #pragma warning (disable: 4127)     // condition expression is constant
 #pragma warning (disable: 4996)     // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
-#if defined(_MSC_VER) && _MSC_VER >= 1922 // MSVC 2019 16.2 or later
+// #ifdefined(_MSC_VER) && _MSC_VER >= 1922 // MSVC 2019 16.2 or later
 #pragma warning (disable: 5054)     // operator '|': deprecated between enumerations of different types
 
 #pragma warning (disable: 26451)    // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
@@ -216,8 +216,8 @@ index of this file:
 
 
 // Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#if __has_warning("-Wunknown-warning-option")
+// #ifdefined(__clang__)
+// #if__has_warning("-Wunknown-warning-option")
 #pragma clang diagnostic ignored "-Wunknown-warning-option"         // warning: unknown warning group 'xxx'                      // not all warnings are known by all Clang versions and they tend to be rename-happy.. so ignoring warnings triggers new warnings on some configuration. Great!
 
 #pragma clang diagnostic ignored "-Wunknown-pragmas"                // warning: unknown warning group 'xxx'
@@ -1265,7 +1265,7 @@ void    ImGui::EndTable()
     if ((flags & ImGuiTableFlags_Borders) != 0)
         TableDrawBorders(table);
 
-#if 0
+// #if0
     // Strip out dummy channel draw calls
     // We have no way to prevent user submitting direct ImDrawList calls into a hidden column (but ImGui:: calls will be clipped out)
     // Pros: remove draw calls which will have no effect. since they'll have zero-size cliprect they may be early out anyway.
@@ -2408,7 +2408,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
     }
 
     // [DEBUG] Display merge groups
-#if 0
+// #if0
     if (g.io.key_shift)
         for (int merge_group_n = 0; merge_group_n < IM_ARRAYSIZE(merge_groups); merge_group_n += 1)
         {
@@ -2461,7 +2461,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
                     merge_clip_rect.max.x = ImMax(merge_clip_rect.max.x, host_rect.max.x);
                 if ((merge_group_n & 2) != 0 && (table.flags & ImGuiTableFlags_NoHostExtendY) == 0)
                     merge_clip_rect.max.y = ImMax(merge_clip_rect.max.y, host_rect.max.y);
-#if 0
+// #if0
                 GetOverlayDrawList().AddRect(merge_group.clip_rect.min, merge_group.clip_rect.max, IM_COL32(255, 0, 0, 200), 0.0, 0, 1.0);
                 GetOverlayDrawList().add_line(merge_group.clip_rect.min, merge_clip_rect.min, IM_COL32(255, 100, 0, 200));
                 GetOverlayDrawList().add_line(merge_group.clip_rect.max, merge_clip_rect.max, IM_COL32(255, 100, 0, 200));
@@ -3083,7 +3083,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
 
     // Sorting
     // (modify TableOpenContextMenu() to add _Sortable flag if enabling this)
-#if 0
+// #if0
     if ((table.flags & ImGuiTableFlags_Sortable) && column != NULL && (column.flags & ImGuiTableColumnFlags_NoSort) == 0)
     {
         if (want_separator)
@@ -3105,7 +3105,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
             Separator();
         want_separator = true;
 
-        PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
+        push_item_flag(ItemFlags::SelectableDontClosePopup, true);
         for (int other_column_n = 0; other_column_n < table.ColumnsCount; other_column_n += 1)
         {
             ImGuiTableColumn* other_column = &table.Columns[other_column_n];
@@ -3123,7 +3123,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
             if (MenuItem(name, NULL, other_column.IsUserEnabled, menu_item_active))
                 other_column.IsUserEnabledNextFrame = !other_column.IsUserEnabled;
         }
-        PopItemFlag();
+        pop_item_flag();
     }
 }
 

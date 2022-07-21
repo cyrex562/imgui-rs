@@ -223,7 +223,7 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
     while (g.item_flags_stack.size > stack_sizes.sizeOfItemFlagsStack) //-V1044
     {
         if (log_callback) log_callback(user_data, "Recovered from missing PopItemFlag() in '%s'", window.Name);
-        PopItemFlag();
+        pop_item_flag();
     }
     while (g.style_var_stack.size > stack_sizes.sizeOfStyleVarStack) //-V1044
     {

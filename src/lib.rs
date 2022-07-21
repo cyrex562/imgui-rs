@@ -111,6 +111,10 @@ pub mod error_handling;
 mod cursor;
 mod content;
 mod scrolling;
+mod ime;
+mod debug;
+mod nodes;
+mod nodes_h;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context)
@@ -123,7 +127,7 @@ pub fn initialize(g: &mut Context)
         // ImGuiSettingsHandler ini_handler;
         let mut ini_handler = SettingsHandler::default();
         ini_handler.type_name = String::from("window");
-        ini_handler.type_hash = hash_string(&ini_handler.type_name.into_bytes(), 0);
+        ini_handler.type_hash = hash_string(&ini_handler.type_name.into_bytes(), );
         ini_handler.clear_all_fn = WindowSettingsHandler_ClearAll;
         ini_handler.read_open_fn = WindowSettingsHandler_ReadOpen;
         ini_handler.read_line_fn = WindowSettingsHandler_ReadLine;

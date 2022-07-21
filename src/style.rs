@@ -1,7 +1,8 @@
-
-use crate::imgui_color::{ColorConvertFloat4ToU32, IM_COL32_A_MASK, IM_COL32_A_SHIFT, ColorMod};
+use crate::color::StyleColor;
+use crate::Context;
+use crate::imgui_color::{ColorConvertFloat4ToU32, IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiColorMod};
 use crate::imgui_globals::GImGui;
-use crate::imgui_h::{Color, ImGuiDataType, ImGuiDir, ImGuiStyleVar};
+use crate::imgui_h::{ImGuiColor, ImGuiDataType, ImGuiDir, ImGuiStyleVar};
 use crate::imgui_math::ImLerpF32;
 use crate::imgui_vec::{Vector2D, Vector4D};
 
@@ -88,7 +89,7 @@ pub struct Style {
     pub circle_tessellation_max_error: f32,
     // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     // Vector4D      colors[ImGuiColor::COUNT];
-    pub Colors: Vec<Color>,
+    pub Colors: Vec<ImGuiColor>,
 
     //  ImGuiStyle();
     //  void ScaleAllSizes(float scale_factor);
@@ -224,7 +225,7 @@ impl StyleMod {
 // }
 
 // ImU32 ImGui::get_color_u32(ImGuiCol idx, float alpha_mul)
-pub fn get_color_u32(idx: Color, alpha_mul: f32) -> u32
+pub fn get_color_u32(idx: ImGuiColor, alpha_mul: f32) -> u32
 {
     let style = &g.style;
     let c = style.colors[idx];
@@ -246,7 +247,7 @@ pub fn GetColorU32_2(col: &mut Vector4D) -> u32
 }
 
 // const Vector4D& ImGui::GetStyleColorVec4(ImGuiCol idx)
-pub fn GetStyleColorVec4(idx: Color) -> Vector4D
+pub fn GetStyleColorVec4(idx: ImGuiColor) -> Vector4D
 {
     // ImGuiStyle& style = GImGui.style;
     let style = &g.style;
@@ -271,25 +272,25 @@ pub fn ColorConvertU32ToFloat4(col: u32) -> Vector4D {
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
 // void ImGui::PushStyleColor(ImGuiCol idx, ImU32 col)
-pub fn push_style_color(idx: &Color, col: u32)
+pub fn push_style_color(g: &mut Context, idx: StyleColor, color: u32)
 {
     // ImGuiContext& g = *GImGui;
-    let g = &GImGui;
+    // let g = &GImGui;
     // ImGuiColorMod backup;
-    let mut backup = ColorMod::default();
+    let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
     backup.BackupValue = g.style.colors[idx];
     g.color_stack.push_back(backup);
-    g.style.colors[idx] = ColorConvertU32ToFloat4(col);
+    g.style.colors[idx] = ColorConvertU32ToFloat4(color);
 }
 
 // void ImGui::PushStyleColor(ImGuiCol idx, const Vector4D& col)
-pub fn PushStyleColor2(idx: &Color, col: &mut Vector4D)
+pub fn PushStyleColor2(idx: &ImGuiColor, col: &mut Vector4D)
 {
     // ImGuiContext& g = *GImGui;
     let g = &GImGui;
     // ImGuiColorMod backup;
-    let mut backup = ColorMod::default();
+    let mut backup = ImGuiColorMod::default();
     backup.Col = idx.clone();
     backup.BackupValue = g.style.colors[idx];
     g.color_stack.push_back(backup);
@@ -316,7 +317,7 @@ pub struct ImGuiStyleVarInfo
 {
     // ImGuiDataType   Type;
     pub data_type: ImGuiDataType,
-    // ImU32           count;
+    // ImU32           Count;
     pub count: u32,
     // ImU32           Offset;
     pub offset: u32,
@@ -338,8 +339,8 @@ pub struct ImGuiStyleVarInfo
 // }
 
 // static const ImGuiCol GWindowDockStyleColors[ImGuiWindowDockStyleCol_COUNT] =
-pub const GWindowDockStyleColors: [Color; 6] = [
-    Color::Text, Color::Tab, Color::TabHovered, Color::TabActive, Color::TabUnfocused, Color::TabUnfocusedActive
+pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
+    ImGuiColor::Text, ImGuiColor::Tab, ImGuiColor::TabHovered, ImGuiColor::TabActive, ImGuiColor::TabUnfocused, ImGuiColor::TabUnfocusedActive
 ];
 //
 // pub const GStyleVarInfo: [ImGuiStyleVarInfo;25] =
@@ -381,7 +382,7 @@ pub const GWindowDockStyleColors: [Color; 6] = [
 // void ImGui::PushStyleVar(ImGuiStyleVar idx, float val)
 // {
 //     const ImGuiStyleVarInfo* var_info = GetStyleVarInfo(idx);
-//     if (var_info->Type == ImGuiDataType_Float && var_info->count == 1)
+//     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 1)
 //     {
 //         ImGuiContext& g = *GImGui;
 //         float* pvar = (float*)var_info->GetVarPtr(&g.style);
@@ -395,7 +396,7 @@ pub const GWindowDockStyleColors: [Color; 6] = [
 // void ImGui::PushStyleVar(ImGuiStyleVar idx, const Vector2D& val)
 // {
 //     const ImGuiStyleVarInfo* var_info = GetStyleVarInfo(idx);
-//     if (var_info->Type == ImGuiDataType_Float && var_info->count == 2)
+//     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 2)
 //     {
 //         ImGuiContext& g = *GImGui;
 //         Vector2D* pvar = (Vector2D*)var_info->GetVarPtr(&g.style);
@@ -411,77 +412,77 @@ pub const GWindowDockStyleColors: [Color; 6] = [
 //     ImGuiContext& g = *GImGui;
 //     while (count > 0)
 //     {
-//         // We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info->Type] * info->count), the overhead in Debug is not worth it.
+//         // We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info->Type] * info->Count), the overhead in Debug is not worth it.
 //         ImGuiStyleMod& backup = g.style_var_stack.back();
 //         const ImGuiStyleVarInfo* info = GetStyleVarInfo(backup.VarIdx);
 //         void* data = info->GetVarPtr(&g.style);
-//         if (info->Type == ImGuiDataType_Float && info->count == 1)      { ((float*)data)[0] = backup.BackupFloat[0]; }
-//         else if (info->Type == ImGuiDataType_Float && info->count == 2) { ((float*)data)[0] = backup.BackupFloat[0]; ((float*)data)[1] = backup.BackupFloat[1]; }
+//         if (info->Type == ImGuiDataType_Float && info->Count == 1)      { ((float*)data)[0] = backup.BackupFloat[0]; }
+//         else if (info->Type == ImGuiDataType_Float && info->Count == 2) { ((float*)data)[0] = backup.BackupFloat[0]; ((float*)data)[1] = backup.BackupFloat[1]; }
 //         g.style_var_stack.pop_back();
 //         count--;
 //     }
 // }
 
-pub fn GetStyleColorName(idx: &Color) -> String
+pub fn GetStyleColorName(idx: &ImGuiColor) -> String
 {
     // Create switch- from enum with regexp: ImGuiColor::{.*}, -->  ImGuiColor::\1=> "\1";
     match idx
     {
-     Color::Text=> String::from("Text"),
-     Color::TextDisabled=> String::from("TextDisabled"),
-     Color::WindowBg=> String::from("WindowBg"),
-     Color::ChildBg=> String::from("ChildBg"),
-     Color::PopupBg=> String::from("PopupBg"),
-     Color::Border=> String::from("Border"),
-     Color::BorderShadow=> String::from("BorderShadow"),
-     Color::FrameBg=> String::from("FrameBg"),
-     Color::FrameBgHovered=> String::from("FrameBgHovered"),
-     Color::FrameBgActive=> String::from("FrameBgActive"),
-     Color::TitleBg=> String::from("TitleBg"),
-     Color::TitleBgActive=> String::from("TitleBgActive"),
-     Color::TitleBgCollapsed=> String::from("TitleBgCollapsed"),
-     Color::MenuBarBg=> String::from("MenuBarBg"),
-     Color::ScrollbarBg=> String::from("ScrollbarBg"),
-     Color::ScrollbarGrab=> String::from("ScrollbarGrab"),
-     Color::ScrollbarGrabHovered=> String::from("ScrollbarGrabHovered"),
-     Color::ScrollbarGrabActive=> String::from("ScrollbarGrabActive"),
-     Color::CheckMark=> String::from("CheckMark"),
-     Color::SliderGrab=> String::from("SliderGrab"),
-     Color::SliderGrabActive=> String::from("SliderGrabActive"),
-     Color::Button=> String::from("Button"),
-     Color::ButtonHovered=> String::from("ButtonHovered"),
-     Color::ButtonActive=> String::from("ButtonActive"),
-     Color::Header=> String::from("Header"),
-     Color::HeaderHovered=> String::from("HeaderHovered"),
-     Color::HeaderActive=> String::from("HeaderActive"),
-     Color::Separator=> String::from("Separator"),
-     Color::SeparatorHovered=> String::from("SeparatorHovered"),
-     Color::SeparatorActive=> String::from("SeparatorActive"),
-     Color::ResizeGrip=> String::from("ResizeGrip"),
-     Color::ResizeGripHovered=> String::from("ResizeGripHovered"),
-     Color::ResizeGripActive=> String::from("ResizeGripActive"),
-     Color::Tab=> String::from("Tab"),
-     Color::TabHovered=> String::from("TabHovered"),
-     Color::TabActive=> String::from("TabActive"),
-     Color::TabUnfocused=> String::from("TabUnfocused"),
-     Color::TabUnfocusedActive=> String::from("TabUnfocusedActive"),
-     Color::DockingPreview=> String::from("DockingPreview"),
-     Color::DockingEmptyBg=> String::from("DockingEmptyBg"),
-     Color::PlotLines=> String::from("PlotLines"),
-     Color::PlotLinesHovered=> String::from("PlotLinesHovered"),
-     Color::PlotHistogram=> String::from("PlotHistogram"),
-     Color::PlotHistogramHovered=> String::from("PlotHistogramHovered"),
-     Color::TableHeaderBg=> String::from("TableHeaderBg"),
-     Color::TableBorderStrong=> String::from("TableBorderStrong"),
-     Color::TableBorderLight=> String::from("TableBorderLight"),
-     Color::TableRowBg=> String::from("TableRowBg"),
-     Color::TableRowBgAlt=> String::from("TableRowBgAlt"),
-     Color::TextSelectedBg=> String::from("TextSelectedBg"),
-     Color::DragDropTarget=> String::from("DragDropTarget"),
-     Color::NavHighlight=> String::from("NavHighlight"),
-     Color::NavWindowingHighlight=> String::from("NavWindowingHighlight"),
-     Color::NavWindowingDimBg=> String::from("NavWindowingDimBg"),
-     Color::ModalWindowDimBg=> String::from("ModalWindowDimBg"),
+     ImGuiColor::Text=> String::from("Text"),
+     ImGuiColor::TextDisabled=> String::from("TextDisabled"),
+     ImGuiColor::WindowBg=> String::from("WindowBg"),
+     ImGuiColor::ChildBg=> String::from("ChildBg"),
+     ImGuiColor::PopupBg=> String::from("PopupBg"),
+     ImGuiColor::Border=> String::from("Border"),
+     ImGuiColor::BorderShadow=> String::from("BorderShadow"),
+     ImGuiColor::FrameBg=> String::from("FrameBg"),
+     ImGuiColor::FrameBgHovered=> String::from("FrameBgHovered"),
+     ImGuiColor::FrameBgActive=> String::from("FrameBgActive"),
+     ImGuiColor::TitleBg=> String::from("TitleBg"),
+     ImGuiColor::TitleBgActive=> String::from("TitleBgActive"),
+     ImGuiColor::TitleBgCollapsed=> String::from("TitleBgCollapsed"),
+     ImGuiColor::MenuBarBg=> String::from("MenuBarBg"),
+     ImGuiColor::ScrollbarBg=> String::from("ScrollbarBg"),
+     ImGuiColor::ScrollbarGrab=> String::from("ScrollbarGrab"),
+     ImGuiColor::ScrollbarGrabHovered=> String::from("ScrollbarGrabHovered"),
+     ImGuiColor::ScrollbarGrabActive=> String::from("ScrollbarGrabActive"),
+     ImGuiColor::CheckMark=> String::from("CheckMark"),
+     ImGuiColor::SliderGrab=> String::from("SliderGrab"),
+     ImGuiColor::SliderGrabActive=> String::from("SliderGrabActive"),
+     ImGuiColor::Button=> String::from("Button"),
+     ImGuiColor::ButtonHovered=> String::from("ButtonHovered"),
+     ImGuiColor::ButtonActive=> String::from("ButtonActive"),
+     ImGuiColor::Header=> String::from("Header"),
+     ImGuiColor::HeaderHovered=> String::from("HeaderHovered"),
+     ImGuiColor::HeaderActive=> String::from("HeaderActive"),
+     ImGuiColor::Separator=> String::from("Separator"),
+     ImGuiColor::SeparatorHovered=> String::from("SeparatorHovered"),
+     ImGuiColor::SeparatorActive=> String::from("SeparatorActive"),
+     ImGuiColor::ResizeGrip=> String::from("ResizeGrip"),
+     ImGuiColor::ResizeGripHovered=> String::from("ResizeGripHovered"),
+     ImGuiColor::ResizeGripActive=> String::from("ResizeGripActive"),
+     ImGuiColor::Tab=> String::from("Tab"),
+     ImGuiColor::TabHovered=> String::from("TabHovered"),
+     ImGuiColor::TabActive=> String::from("TabActive"),
+     ImGuiColor::TabUnfocused=> String::from("TabUnfocused"),
+     ImGuiColor::TabUnfocusedActive=> String::from("TabUnfocusedActive"),
+     ImGuiColor::DockingPreview=> String::from("DockingPreview"),
+     ImGuiColor::DockingEmptyBg=> String::from("DockingEmptyBg"),
+     ImGuiColor::PlotLines=> String::from("PlotLines"),
+     ImGuiColor::PlotLinesHovered=> String::from("PlotLinesHovered"),
+     ImGuiColor::PlotHistogram=> String::from("PlotHistogram"),
+     ImGuiColor::PlotHistogramHovered=> String::from("PlotHistogramHovered"),
+     ImGuiColor::TableHeaderBg=> String::from("TableHeaderBg"),
+     ImGuiColor::TableBorderStrong=> String::from("TableBorderStrong"),
+     ImGuiColor::TableBorderLight=> String::from("TableBorderLight"),
+     ImGuiColor::TableRowBg=> String::from("TableRowBg"),
+     ImGuiColor::TableRowBgAlt=> String::from("TableRowBgAlt"),
+     ImGuiColor::TextSelectedBg=> String::from("TextSelectedBg"),
+     ImGuiColor::DragDropTarget=> String::from("DragDropTarget"),
+     ImGuiColor::NavHighlight=> String::from("NavHighlight"),
+     ImGuiColor::NavWindowingHighlight=> String::from("NavWindowingHighlight"),
+     ImGuiColor::NavWindowingDimBg=> String::from("NavWindowingDimBg"),
+     ImGuiColor::ModalWindowDimBg=> String::from("ModalWindowDimBg"),
     }
     // String::from("Unknown")
 }
@@ -495,61 +496,61 @@ pub fn StyleColorsDark(dst: *mut Style)
     // Vector4D* colors = style->colors;
     let colors = &mut style.colors;
 
-    colors[Color::Text]                   = Vector4D::new(1.00, 1.00, 1.00, 1.00);
-    colors[Color::TextDisabled]           = Vector4D::new(0.50, 0.50, 0.50, 1.00);
-    colors[Color::WindowBg]               = Vector4D::new(0.06, 0.06, 0.06, 0.94);
-    colors[Color::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::PopupBg]                = Vector4D::new(0.08, 0.08, 0.08, 0.94);
-    colors[Color::Border]                 = Vector4D::new(0.43, 0.43, 0.50, 0.50);
-    colors[Color::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::FrameBg]                = Vector4D::new(0.16, 0.29, 0.48, 0.54);
-    colors[Color::FrameBgHovered]         = Vector4D::new(0.26, 0.59, 0.98, 0.40);
-    colors[Color::FrameBgActive]          = Vector4D::new(0.26, 0.59, 0.98, 0.67);
-    colors[Color::TitleBg]                = Vector4D::new(0.04, 0.04, 0.04, 1.00);
-    colors[Color::TitleBgActive]          = Vector4D::new(0.16, 0.29, 0.48, 1.00);
-    colors[Color::TitleBgCollapsed]       = Vector4D::new(0.00, 0.00, 0.00, 0.51);
-    colors[Color::MenuBarBg]              = Vector4D::new(0.14, 0.14, 0.14, 1.00);
-    colors[Color::ScrollbarBg]            = Vector4D::new(0.02, 0.02, 0.02, 0.53);
-    colors[Color::ScrollbarGrab]          = Vector4D::new(0.31, 0.31, 0.31, 1.00);
-    colors[Color::ScrollbarGrabHovered]   = Vector4D::new(0.41, 0.41, 0.41, 1.00);
-    colors[Color::ScrollbarGrabActive]    = Vector4D::new(0.51, 0.51, 0.51, 1.00);
-    colors[Color::CheckMark]              = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::SliderGrab]             = Vector4D::new(0.24, 0.52, 0.88, 1.00);
-    colors[Color::SliderGrabActive]       = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::Button]                 = Vector4D::new(0.26, 0.59, 0.98, 0.40);
-    colors[Color::ButtonHovered]          = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::ButtonActive]           = Vector4D::new(0.06, 0.53, 0.98, 1.00);
-    colors[Color::Header]                 = Vector4D::new(0.26, 0.59, 0.98, 0.31);
-    colors[Color::HeaderHovered]          = Vector4D::new(0.26, 0.59, 0.98, 0.80);
-    colors[Color::HeaderActive]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::Separator]              = colors[Color::Border];
-    colors[Color::SeparatorHovered]       = Vector4D::new(0.10, 0.40, 0.75, 0.78);
-    colors[Color::SeparatorActive]        = Vector4D::new(0.10, 0.40, 0.75, 1.00);
-    colors[Color::ResizeGrip]             = Vector4D::new(0.26, 0.59, 0.98, 0.20);
-    colors[Color::ResizeGripHovered]      = Vector4D::new(0.26, 0.59, 0.98, 0.67);
-    colors[Color::ResizeGripActive]       = Vector4D::new(0.26, 0.59, 0.98, 0.95);
-    colors[Color::Tab]                    = ImLerpF32(colors[Color::Header],       colors[Color::TitleBgActive], 0.80);
-    colors[Color::TabHovered]             = colors[Color::HeaderHovered];
-    colors[Color::TabActive]              = ImLerpF32(colors[Color::HeaderActive], colors[Color::TitleBgActive], 0.60);
-    colors[Color::TabUnfocused]           = ImLerpF32(colors[Color::Tab],          colors[Color::TitleBg], 0.80);
-    colors[Color::TabUnfocusedActive]     = ImLerpF32(colors[Color::TabActive],    colors[Color::TitleBg], 0.40);
-    colors[Color::DockingPreview]         = colors[Color::HeaderActive] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
-    colors[Color::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
-    colors[Color::PlotLines]              = Vector4D::new(0.61, 0.61, 0.61, 1.00);
-    colors[Color::PlotLinesHovered]       = Vector4D::new(1.00, 0.43, 0.35, 1.00);
-    colors[Color::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
-    colors[Color::PlotHistogramHovered]   = Vector4D::new(1.00, 0.60, 0.00, 1.00);
-    colors[Color::TableHeaderBg]          = Vector4D::new(0.19, 0.19, 0.20, 1.00);
-    colors[Color::TableBorderStrong]      = Vector4D::new(0.31, 0.31, 0.35, 1.00);   // Prefer using Alpha=1.0 here
-    colors[Color::TableBorderLight]       = Vector4D::new(0.23, 0.23, 0.25, 1.00);   // Prefer using Alpha=1.0 here
-    colors[Color::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::TableRowBgAlt]          = Vector4D::new(1.00, 1.00, 1.00, 0.06);
-    colors[Color::TextSelectedBg]         = Vector4D::new(0.26, 0.59, 0.98, 0.35);
-    colors[Color::DragDropTarget]         = Vector4D::new(1.00, 1.00, 0.00, 0.90);
-    colors[Color::NavHighlight]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::NavWindowingHighlight]  = Vector4D::new(1.00, 1.00, 1.00, 0.70);
-    colors[Color::NavWindowingDimBg]      = Vector4D::new(0.80, 0.80, 0.80, 0.20);
-    colors[Color::ModalWindowDimBg]       = Vector4D::new(0.80, 0.80, 0.80, 0.35);
+    colors[ImGuiColor::Text]                   = Vector4D::new(1.00, 1.00, 1.00, 1.00);
+    colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.50, 0.50, 0.50, 1.00);
+    colors[ImGuiColor::WindowBg]               = Vector4D::new(0.06, 0.06, 0.06, 0.94);
+    colors[ImGuiColor::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::PopupBg]                = Vector4D::new(0.08, 0.08, 0.08, 0.94);
+    colors[ImGuiColor::Border]                 = Vector4D::new(0.43, 0.43, 0.50, 0.50);
+    colors[ImGuiColor::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::FrameBg]                = Vector4D::new(0.16, 0.29, 0.48, 0.54);
+    colors[ImGuiColor::FrameBgHovered]         = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::FrameBgActive]          = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::TitleBg]                = Vector4D::new(0.04, 0.04, 0.04, 1.00);
+    colors[ImGuiColor::TitleBgActive]          = Vector4D::new(0.16, 0.29, 0.48, 1.00);
+    colors[ImGuiColor::TitleBgCollapsed]       = Vector4D::new(0.00, 0.00, 0.00, 0.51);
+    colors[ImGuiColor::MenuBarBg]              = Vector4D::new(0.14, 0.14, 0.14, 1.00);
+    colors[ImGuiColor::ScrollbarBg]            = Vector4D::new(0.02, 0.02, 0.02, 0.53);
+    colors[ImGuiColor::ScrollbarGrab]          = Vector4D::new(0.31, 0.31, 0.31, 1.00);
+    colors[ImGuiColor::ScrollbarGrabHovered]   = Vector4D::new(0.41, 0.41, 0.41, 1.00);
+    colors[ImGuiColor::ScrollbarGrabActive]    = Vector4D::new(0.51, 0.51, 0.51, 1.00);
+    colors[ImGuiColor::CheckMark]              = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::SliderGrab]             = Vector4D::new(0.24, 0.52, 0.88, 1.00);
+    colors[ImGuiColor::SliderGrabActive]       = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::Button]                 = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::ButtonHovered]          = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::ButtonActive]           = Vector4D::new(0.06, 0.53, 0.98, 1.00);
+    colors[ImGuiColor::Header]                 = Vector4D::new(0.26, 0.59, 0.98, 0.31);
+    colors[ImGuiColor::HeaderHovered]          = Vector4D::new(0.26, 0.59, 0.98, 0.80);
+    colors[ImGuiColor::HeaderActive]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::Separator]              = colors[ImGuiColor::Border];
+    colors[ImGuiColor::SeparatorHovered]       = Vector4D::new(0.10, 0.40, 0.75, 0.78);
+    colors[ImGuiColor::SeparatorActive]        = Vector4D::new(0.10, 0.40, 0.75, 1.00);
+    colors[ImGuiColor::ResizeGrip]             = Vector4D::new(0.26, 0.59, 0.98, 0.20);
+    colors[ImGuiColor::ResizeGripHovered]      = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::ResizeGripActive]       = Vector4D::new(0.26, 0.59, 0.98, 0.95);
+    colors[ImGuiColor::Tab]                    = ImLerpF32(colors[ImGuiColor::Header],       colors[ImGuiColor::TitleBgActive], 0.80);
+    colors[ImGuiColor::TabHovered]             = colors[ImGuiColor::HeaderHovered];
+    colors[ImGuiColor::TabActive]              = ImLerpF32(colors[ImGuiColor::HeaderActive], colors[ImGuiColor::TitleBgActive], 0.60);
+    colors[ImGuiColor::TabUnfocused]           = ImLerpF32(colors[ImGuiColor::Tab],          colors[ImGuiColor::TitleBg], 0.80);
+    colors[ImGuiColor::TabUnfocusedActive]     = ImLerpF32(colors[ImGuiColor::TabActive],    colors[ImGuiColor::TitleBg], 0.40);
+    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::HeaderActive] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
+    colors[ImGuiColor::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
+    colors[ImGuiColor::PlotLines]              = Vector4D::new(0.61, 0.61, 0.61, 1.00);
+    colors[ImGuiColor::PlotLinesHovered]       = Vector4D::new(1.00, 0.43, 0.35, 1.00);
+    colors[ImGuiColor::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogramHovered]   = Vector4D::new(1.00, 0.60, 0.00, 1.00);
+    colors[ImGuiColor::TableHeaderBg]          = Vector4D::new(0.19, 0.19, 0.20, 1.00);
+    colors[ImGuiColor::TableBorderStrong]      = Vector4D::new(0.31, 0.31, 0.35, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableBorderLight]       = Vector4D::new(0.23, 0.23, 0.25, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::TableRowBgAlt]          = Vector4D::new(1.00, 1.00, 1.00, 0.06);
+    colors[ImGuiColor::TextSelectedBg]         = Vector4D::new(0.26, 0.59, 0.98, 0.35);
+    colors[ImGuiColor::DragDropTarget]         = Vector4D::new(1.00, 1.00, 0.00, 0.90);
+    colors[ImGuiColor::NavHighlight]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::NavWindowingHighlight]  = Vector4D::new(1.00, 1.00, 1.00, 0.70);
+    colors[ImGuiColor::NavWindowingDimBg]      = Vector4D::new(0.80, 0.80, 0.80, 0.20);
+    colors[ImGuiColor::ModalWindowDimBg]       = Vector4D::new(0.80, 0.80, 0.80, 0.35);
 }
 
 // void ImGui::StyleColorsClassic(ImGuiStyle* dst)
@@ -560,61 +561,61 @@ pub fn StyleColorsClassic(dst: *mut Style)
     // Vector4D* colors = style->colors;
     let colors = &mut style.colors;
     
-    colors[Color::Text]                   = Vector4D::new(0.90, 0.90, 0.90, 1.00);
-    colors[Color::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);
-    colors[Color::WindowBg]               = Vector4D::new(0.00, 0.00, 0.00, 0.85);
-    colors[Color::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::PopupBg]                = Vector4D::new(0.11, 0.11, 0.14, 0.92);
-    colors[Color::Border]                 = Vector4D::new(0.50, 0.50, 0.50, 0.50);
-    colors[Color::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::FrameBg]                = Vector4D::new(0.43, 0.43, 0.43, 0.39);
-    colors[Color::FrameBgHovered]         = Vector4D::new(0.47, 0.47, 0.69, 0.40);
-    colors[Color::FrameBgActive]          = Vector4D::new(0.42, 0.41, 0.64, 0.69);
-    colors[Color::TitleBg]                = Vector4D::new(0.27, 0.27, 0.54, 0.83);
-    colors[Color::TitleBgActive]          = Vector4D::new(0.32, 0.32, 0.63, 0.87);
-    colors[Color::TitleBgCollapsed]       = Vector4D::new(0.40, 0.40, 0.80, 0.20);
-    colors[Color::MenuBarBg]              = Vector4D::new(0.40, 0.40, 0.55, 0.80);
-    colors[Color::ScrollbarBg]            = Vector4D::new(0.20, 0.25, 0.30, 0.60);
-    colors[Color::ScrollbarGrab]          = Vector4D::new(0.40, 0.40, 0.80, 0.30);
-    colors[Color::ScrollbarGrabHovered]   = Vector4D::new(0.40, 0.40, 0.80, 0.40);
-    colors[Color::ScrollbarGrabActive]    = Vector4D::new(0.41, 0.39, 0.80, 0.60);
-    colors[Color::CheckMark]              = Vector4D::new(0.90, 0.90, 0.90, 0.50);
-    colors[Color::SliderGrab]             = Vector4D::new(1.00, 1.00, 1.00, 0.30);
-    colors[Color::SliderGrabActive]       = Vector4D::new(0.41, 0.39, 0.80, 0.60);
-    colors[Color::Button]                 = Vector4D::new(0.35, 0.40, 0.61, 0.62);
-    colors[Color::ButtonHovered]          = Vector4D::new(0.40, 0.48, 0.71, 0.79);
-    colors[Color::ButtonActive]           = Vector4D::new(0.46, 0.54, 0.80, 1.00);
-    colors[Color::Header]                 = Vector4D::new(0.40, 0.40, 0.90, 0.45);
-    colors[Color::HeaderHovered]          = Vector4D::new(0.45, 0.45, 0.90, 0.80);
-    colors[Color::HeaderActive]           = Vector4D::new(0.53, 0.53, 0.87, 0.80);
-    colors[Color::Separator]              = Vector4D::new(0.50, 0.50, 0.50, 0.60);
-    colors[Color::SeparatorHovered]       = Vector4D::new(0.60, 0.60, 0.70, 1.00);
-    colors[Color::SeparatorActive]        = Vector4D::new(0.70, 0.70, 0.90, 1.00);
-    colors[Color::ResizeGrip]             = Vector4D::new(1.00, 1.00, 1.00, 0.10);
-    colors[Color::ResizeGripHovered]      = Vector4D::new(0.78, 0.82, 1.00, 0.60);
-    colors[Color::ResizeGripActive]       = Vector4D::new(0.78, 0.82, 1.00, 0.90);
-    colors[Color::Tab]                    = ImLerpF32(colors[Color::Header],       colors[Color::TitleBgActive], 0.80);
-    colors[Color::TabHovered]             = colors[Color::HeaderHovered];
-    colors[Color::TabActive]              = ImLerpF32(colors[Color::HeaderActive], colors[Color::TitleBgActive], 0.60);
-    colors[Color::TabUnfocused]           = ImLerpF32(colors[Color::Tab],          colors[Color::TitleBg], 0.80);
-    colors[Color::TabUnfocusedActive]     = ImLerpF32(colors[Color::TabActive],    colors[Color::TitleBg], 0.40);
-    colors[Color::DockingPreview]         = colors[Color::Header] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
-    colors[Color::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
-    colors[Color::PlotLines]              = Vector4D::new(1.00, 1.00, 1.00, 1.00);
-    colors[Color::PlotLinesHovered]       = Vector4D::new(0.90, 0.70, 0.00, 1.00);
-    colors[Color::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
-    colors[Color::PlotHistogramHovered]   = Vector4D::new(1.00, 0.60, 0.00, 1.00);
-    colors[Color::TableHeaderBg]          = Vector4D::new(0.27, 0.27, 0.38, 1.00);
-    colors[Color::TableBorderStrong]      = Vector4D::new(0.31, 0.31, 0.45, 1.00);   // Prefer using Alpha=1.0 here
-    colors[Color::TableBorderLight]       = Vector4D::new(0.26, 0.26, 0.28, 1.00);   // Prefer using Alpha=1.0 here
-    colors[Color::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::TableRowBgAlt]          = Vector4D::new(1.00, 1.00, 1.00, 0.07);
-    colors[Color::TextSelectedBg]         = Vector4D::new(0.00, 0.00, 1.00, 0.35);
-    colors[Color::DragDropTarget]         = Vector4D::new(1.00, 1.00, 0.00, 0.90);
-    colors[Color::NavHighlight]           = colors[Color::HeaderHovered];
-    colors[Color::NavWindowingHighlight]  = Vector4D::new(1.00, 1.00, 1.00, 0.70);
-    colors[Color::NavWindowingDimBg]      = Vector4D::new(0.80, 0.80, 0.80, 0.20);
-    colors[Color::ModalWindowDimBg]       = Vector4D::new(0.20, 0.20, 0.20, 0.35);
+    colors[ImGuiColor::Text]                   = Vector4D::new(0.90, 0.90, 0.90, 1.00);
+    colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);
+    colors[ImGuiColor::WindowBg]               = Vector4D::new(0.00, 0.00, 0.00, 0.85);
+    colors[ImGuiColor::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::PopupBg]                = Vector4D::new(0.11, 0.11, 0.14, 0.92);
+    colors[ImGuiColor::Border]                 = Vector4D::new(0.50, 0.50, 0.50, 0.50);
+    colors[ImGuiColor::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::FrameBg]                = Vector4D::new(0.43, 0.43, 0.43, 0.39);
+    colors[ImGuiColor::FrameBgHovered]         = Vector4D::new(0.47, 0.47, 0.69, 0.40);
+    colors[ImGuiColor::FrameBgActive]          = Vector4D::new(0.42, 0.41, 0.64, 0.69);
+    colors[ImGuiColor::TitleBg]                = Vector4D::new(0.27, 0.27, 0.54, 0.83);
+    colors[ImGuiColor::TitleBgActive]          = Vector4D::new(0.32, 0.32, 0.63, 0.87);
+    colors[ImGuiColor::TitleBgCollapsed]       = Vector4D::new(0.40, 0.40, 0.80, 0.20);
+    colors[ImGuiColor::MenuBarBg]              = Vector4D::new(0.40, 0.40, 0.55, 0.80);
+    colors[ImGuiColor::ScrollbarBg]            = Vector4D::new(0.20, 0.25, 0.30, 0.60);
+    colors[ImGuiColor::ScrollbarGrab]          = Vector4D::new(0.40, 0.40, 0.80, 0.30);
+    colors[ImGuiColor::ScrollbarGrabHovered]   = Vector4D::new(0.40, 0.40, 0.80, 0.40);
+    colors[ImGuiColor::ScrollbarGrabActive]    = Vector4D::new(0.41, 0.39, 0.80, 0.60);
+    colors[ImGuiColor::CheckMark]              = Vector4D::new(0.90, 0.90, 0.90, 0.50);
+    colors[ImGuiColor::SliderGrab]             = Vector4D::new(1.00, 1.00, 1.00, 0.30);
+    colors[ImGuiColor::SliderGrabActive]       = Vector4D::new(0.41, 0.39, 0.80, 0.60);
+    colors[ImGuiColor::Button]                 = Vector4D::new(0.35, 0.40, 0.61, 0.62);
+    colors[ImGuiColor::ButtonHovered]          = Vector4D::new(0.40, 0.48, 0.71, 0.79);
+    colors[ImGuiColor::ButtonActive]           = Vector4D::new(0.46, 0.54, 0.80, 1.00);
+    colors[ImGuiColor::Header]                 = Vector4D::new(0.40, 0.40, 0.90, 0.45);
+    colors[ImGuiColor::HeaderHovered]          = Vector4D::new(0.45, 0.45, 0.90, 0.80);
+    colors[ImGuiColor::HeaderActive]           = Vector4D::new(0.53, 0.53, 0.87, 0.80);
+    colors[ImGuiColor::Separator]              = Vector4D::new(0.50, 0.50, 0.50, 0.60);
+    colors[ImGuiColor::SeparatorHovered]       = Vector4D::new(0.60, 0.60, 0.70, 1.00);
+    colors[ImGuiColor::SeparatorActive]        = Vector4D::new(0.70, 0.70, 0.90, 1.00);
+    colors[ImGuiColor::ResizeGrip]             = Vector4D::new(1.00, 1.00, 1.00, 0.10);
+    colors[ImGuiColor::ResizeGripHovered]      = Vector4D::new(0.78, 0.82, 1.00, 0.60);
+    colors[ImGuiColor::ResizeGripActive]       = Vector4D::new(0.78, 0.82, 1.00, 0.90);
+    colors[ImGuiColor::Tab]                    = ImLerpF32(colors[ImGuiColor::Header],       colors[ImGuiColor::TitleBgActive], 0.80);
+    colors[ImGuiColor::TabHovered]             = colors[ImGuiColor::HeaderHovered];
+    colors[ImGuiColor::TabActive]              = ImLerpF32(colors[ImGuiColor::HeaderActive], colors[ImGuiColor::TitleBgActive], 0.60);
+    colors[ImGuiColor::TabUnfocused]           = ImLerpF32(colors[ImGuiColor::Tab],          colors[ImGuiColor::TitleBg], 0.80);
+    colors[ImGuiColor::TabUnfocusedActive]     = ImLerpF32(colors[ImGuiColor::TabActive],    colors[ImGuiColor::TitleBg], 0.40);
+    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::Header] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
+    colors[ImGuiColor::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
+    colors[ImGuiColor::PlotLines]              = Vector4D::new(1.00, 1.00, 1.00, 1.00);
+    colors[ImGuiColor::PlotLinesHovered]       = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogramHovered]   = Vector4D::new(1.00, 0.60, 0.00, 1.00);
+    colors[ImGuiColor::TableHeaderBg]          = Vector4D::new(0.27, 0.27, 0.38, 1.00);
+    colors[ImGuiColor::TableBorderStrong]      = Vector4D::new(0.31, 0.31, 0.45, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableBorderLight]       = Vector4D::new(0.26, 0.26, 0.28, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::TableRowBgAlt]          = Vector4D::new(1.00, 1.00, 1.00, 0.07);
+    colors[ImGuiColor::TextSelectedBg]         = Vector4D::new(0.00, 0.00, 1.00, 0.35);
+    colors[ImGuiColor::DragDropTarget]         = Vector4D::new(1.00, 1.00, 0.00, 0.90);
+    colors[ImGuiColor::NavHighlight]           = colors[ImGuiColor::HeaderHovered];
+    colors[ImGuiColor::NavWindowingHighlight]  = Vector4D::new(1.00, 1.00, 1.00, 0.70);
+    colors[ImGuiColor::NavWindowingDimBg]      = Vector4D::new(0.80, 0.80, 0.80, 0.20);
+    colors[ImGuiColor::ModalWindowDimBg]       = Vector4D::new(0.20, 0.20, 0.20, 0.35);
 }
 
 // Those light colors are better suited with a thicker font than the default one + FrameBorder
@@ -626,61 +627,61 @@ pub fn StyleColorsLight(dst: *mut Style)
     // Vector4D* colors = style->colors;
     let colors = &mut style.colors;
 
-    colors[Color::Text]                   = Vector4D::new(0.00, 0.00, 0.00, 1.00);
-    colors[Color::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);
-    colors[Color::WindowBg]               = Vector4D::new(0.94, 0.94, 0.94, 1.00);
-    colors[Color::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::PopupBg]                = Vector4D::new(1.00, 1.00, 1.00, 0.98);
-    colors[Color::Border]                 = Vector4D::new(0.00, 0.00, 0.00, 0.30);
-    colors[Color::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::FrameBg]                = Vector4D::new(1.00, 1.00, 1.00, 1.00);
-    colors[Color::FrameBgHovered]         = Vector4D::new(0.26, 0.59, 0.98, 0.40);
-    colors[Color::FrameBgActive]          = Vector4D::new(0.26, 0.59, 0.98, 0.67);
-    colors[Color::TitleBg]                = Vector4D::new(0.96, 0.96, 0.96, 1.00);
-    colors[Color::TitleBgActive]          = Vector4D::new(0.82, 0.82, 0.82, 1.00);
-    colors[Color::TitleBgCollapsed]       = Vector4D::new(1.00, 1.00, 1.00, 0.51);
-    colors[Color::MenuBarBg]              = Vector4D::new(0.86, 0.86, 0.86, 1.00);
-    colors[Color::ScrollbarBg]            = Vector4D::new(0.98, 0.98, 0.98, 0.53);
-    colors[Color::ScrollbarGrab]          = Vector4D::new(0.69, 0.69, 0.69, 0.80);
-    colors[Color::ScrollbarGrabHovered]   = Vector4D::new(0.49, 0.49, 0.49, 0.80);
-    colors[Color::ScrollbarGrabActive]    = Vector4D::new(0.49, 0.49, 0.49, 1.00);
-    colors[Color::CheckMark]              = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::SliderGrab]             = Vector4D::new(0.26, 0.59, 0.98, 0.78);
-    colors[Color::SliderGrabActive]       = Vector4D::new(0.46, 0.54, 0.80, 0.60);
-    colors[Color::Button]                 = Vector4D::new(0.26, 0.59, 0.98, 0.40);
-    colors[Color::ButtonHovered]          = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::ButtonActive]           = Vector4D::new(0.06, 0.53, 0.98, 1.00);
-    colors[Color::Header]                 = Vector4D::new(0.26, 0.59, 0.98, 0.31);
-    colors[Color::HeaderHovered]          = Vector4D::new(0.26, 0.59, 0.98, 0.80);
-    colors[Color::HeaderActive]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
-    colors[Color::Separator]              = Vector4D::new(0.39, 0.39, 0.39, 0.62);
-    colors[Color::SeparatorHovered]       = Vector4D::new(0.14, 0.44, 0.80, 0.78);
-    colors[Color::SeparatorActive]        = Vector4D::new(0.14, 0.44, 0.80, 1.00);
-    colors[Color::ResizeGrip]             = Vector4D::new(0.35, 0.35, 0.35, 0.17);
-    colors[Color::ResizeGripHovered]      = Vector4D::new(0.26, 0.59, 0.98, 0.67);
-    colors[Color::ResizeGripActive]       = Vector4D::new(0.26, 0.59, 0.98, 0.95);
-    colors[Color::Tab]                    = ImLerpF32(colors[Color::Header],       colors[Color::TitleBgActive], 0.90);
-    colors[Color::TabHovered]             = colors[Color::HeaderHovered];
-    colors[Color::TabActive]              = ImLerpF32(colors[Color::HeaderActive], colors[Color::TitleBgActive], 0.60);
-    colors[Color::TabUnfocused]           = ImLerpF32(colors[Color::Tab],          colors[Color::TitleBg], 0.80);
-    colors[Color::TabUnfocusedActive]     = ImLerpF32(colors[Color::TabActive],    colors[Color::TitleBg], 0.40);
-    colors[Color::DockingPreview]         = colors[Color::Header] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
-    colors[Color::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
-    colors[Color::PlotLines]              = Vector4D::new(0.39, 0.39, 0.39, 1.00);
-    colors[Color::PlotLinesHovered]       = Vector4D::new(1.00, 0.43, 0.35, 1.00);
-    colors[Color::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
-    colors[Color::PlotHistogramHovered]   = Vector4D::new(1.00, 0.45, 0.00, 1.00);
-    colors[Color::TableHeaderBg]          = Vector4D::new(0.78, 0.87, 0.98, 1.00);
-    colors[Color::TableBorderStrong]      = Vector4D::new(0.57, 0.57, 0.64, 1.00);   // Prefer using Alpha=1.0 here
-    colors[Color::TableBorderLight]       = Vector4D::new(0.68, 0.68, 0.74, 1.00);   // Prefer using Alpha=1.0 here
-    colors[Color::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
-    colors[Color::TableRowBgAlt]          = Vector4D::new(0.30, 0.30, 0.30, 0.09);
-    colors[Color::TextSelectedBg]         = Vector4D::new(0.26, 0.59, 0.98, 0.35);
-    colors[Color::DragDropTarget]         = Vector4D::new(0.26, 0.59, 0.98, 0.95);
-    colors[Color::NavHighlight]           = colors[Color::HeaderHovered];
-    colors[Color::NavWindowingHighlight]  = Vector4D::new(0.70, 0.70, 0.70, 0.70);
-    colors[Color::NavWindowingDimBg]      = Vector4D::new(0.20, 0.20, 0.20, 0.20);
-    colors[Color::ModalWindowDimBg]       = Vector4D::new(0.20, 0.20, 0.20, 0.35);
+    colors[ImGuiColor::Text]                   = Vector4D::new(0.00, 0.00, 0.00, 1.00);
+    colors[ImGuiColor::TextDisabled]           = Vector4D::new(0.60, 0.60, 0.60, 1.00);
+    colors[ImGuiColor::WindowBg]               = Vector4D::new(0.94, 0.94, 0.94, 1.00);
+    colors[ImGuiColor::ChildBg]                = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::PopupBg]                = Vector4D::new(1.00, 1.00, 1.00, 0.98);
+    colors[ImGuiColor::Border]                 = Vector4D::new(0.00, 0.00, 0.00, 0.30);
+    colors[ImGuiColor::BorderShadow]           = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::FrameBg]                = Vector4D::new(1.00, 1.00, 1.00, 1.00);
+    colors[ImGuiColor::FrameBgHovered]         = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::FrameBgActive]          = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::TitleBg]                = Vector4D::new(0.96, 0.96, 0.96, 1.00);
+    colors[ImGuiColor::TitleBgActive]          = Vector4D::new(0.82, 0.82, 0.82, 1.00);
+    colors[ImGuiColor::TitleBgCollapsed]       = Vector4D::new(1.00, 1.00, 1.00, 0.51);
+    colors[ImGuiColor::MenuBarBg]              = Vector4D::new(0.86, 0.86, 0.86, 1.00);
+    colors[ImGuiColor::ScrollbarBg]            = Vector4D::new(0.98, 0.98, 0.98, 0.53);
+    colors[ImGuiColor::ScrollbarGrab]          = Vector4D::new(0.69, 0.69, 0.69, 0.80);
+    colors[ImGuiColor::ScrollbarGrabHovered]   = Vector4D::new(0.49, 0.49, 0.49, 0.80);
+    colors[ImGuiColor::ScrollbarGrabActive]    = Vector4D::new(0.49, 0.49, 0.49, 1.00);
+    colors[ImGuiColor::CheckMark]              = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::SliderGrab]             = Vector4D::new(0.26, 0.59, 0.98, 0.78);
+    colors[ImGuiColor::SliderGrabActive]       = Vector4D::new(0.46, 0.54, 0.80, 0.60);
+    colors[ImGuiColor::Button]                 = Vector4D::new(0.26, 0.59, 0.98, 0.40);
+    colors[ImGuiColor::ButtonHovered]          = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::ButtonActive]           = Vector4D::new(0.06, 0.53, 0.98, 1.00);
+    colors[ImGuiColor::Header]                 = Vector4D::new(0.26, 0.59, 0.98, 0.31);
+    colors[ImGuiColor::HeaderHovered]          = Vector4D::new(0.26, 0.59, 0.98, 0.80);
+    colors[ImGuiColor::HeaderActive]           = Vector4D::new(0.26, 0.59, 0.98, 1.00);
+    colors[ImGuiColor::Separator]              = Vector4D::new(0.39, 0.39, 0.39, 0.62);
+    colors[ImGuiColor::SeparatorHovered]       = Vector4D::new(0.14, 0.44, 0.80, 0.78);
+    colors[ImGuiColor::SeparatorActive]        = Vector4D::new(0.14, 0.44, 0.80, 1.00);
+    colors[ImGuiColor::ResizeGrip]             = Vector4D::new(0.35, 0.35, 0.35, 0.17);
+    colors[ImGuiColor::ResizeGripHovered]      = Vector4D::new(0.26, 0.59, 0.98, 0.67);
+    colors[ImGuiColor::ResizeGripActive]       = Vector4D::new(0.26, 0.59, 0.98, 0.95);
+    colors[ImGuiColor::Tab]                    = ImLerpF32(colors[ImGuiColor::Header],       colors[ImGuiColor::TitleBgActive], 0.90);
+    colors[ImGuiColor::TabHovered]             = colors[ImGuiColor::HeaderHovered];
+    colors[ImGuiColor::TabActive]              = ImLerpF32(colors[ImGuiColor::HeaderActive], colors[ImGuiColor::TitleBgActive], 0.60);
+    colors[ImGuiColor::TabUnfocused]           = ImLerpF32(colors[ImGuiColor::Tab],          colors[ImGuiColor::TitleBg], 0.80);
+    colors[ImGuiColor::TabUnfocusedActive]     = ImLerpF32(colors[ImGuiColor::TabActive],    colors[ImGuiColor::TitleBg], 0.40);
+    colors[ImGuiColor::DockingPreview]         = colors[ImGuiColor::Header] * Vector4D::new(1.0, 1.0, 1.0, 0.7);
+    colors[ImGuiColor::DockingEmptyBg]         = Vector4D::new(0.20, 0.20, 0.20, 1.00);
+    colors[ImGuiColor::PlotLines]              = Vector4D::new(0.39, 0.39, 0.39, 1.00);
+    colors[ImGuiColor::PlotLinesHovered]       = Vector4D::new(1.00, 0.43, 0.35, 1.00);
+    colors[ImGuiColor::PlotHistogram]          = Vector4D::new(0.90, 0.70, 0.00, 1.00);
+    colors[ImGuiColor::PlotHistogramHovered]   = Vector4D::new(1.00, 0.45, 0.00, 1.00);
+    colors[ImGuiColor::TableHeaderBg]          = Vector4D::new(0.78, 0.87, 0.98, 1.00);
+    colors[ImGuiColor::TableBorderStrong]      = Vector4D::new(0.57, 0.57, 0.64, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableBorderLight]       = Vector4D::new(0.68, 0.68, 0.74, 1.00);   // Prefer using Alpha=1.0 here
+    colors[ImGuiColor::TableRowBg]             = Vector4D::new(0.00, 0.00, 0.00, 0.00);
+    colors[ImGuiColor::TableRowBgAlt]          = Vector4D::new(0.30, 0.30, 0.30, 0.09);
+    colors[ImGuiColor::TextSelectedBg]         = Vector4D::new(0.26, 0.59, 0.98, 0.35);
+    colors[ImGuiColor::DragDropTarget]         = Vector4D::new(0.26, 0.59, 0.98, 0.95);
+    colors[ImGuiColor::NavHighlight]           = colors[ImGuiColor::HeaderHovered];
+    colors[ImGuiColor::NavWindowingHighlight]  = Vector4D::new(0.70, 0.70, 0.70, 0.70);
+    colors[ImGuiColor::NavWindowingDimBg]      = Vector4D::new(0.20, 0.20, 0.20, 0.20);
+    colors[ImGuiColor::ModalWindowDimBg]       = Vector4D::new(0.20, 0.20, 0.20, 0.35);
 }
 
 // Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.

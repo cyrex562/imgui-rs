@@ -293,7 +293,7 @@ pub enum ModFlags
 // Gamepad:  Set io.config_flags |= ImGuiConfigFlags_NavEnableGamepad to enable. Backend: set BackendFlags::HasGamepad and fill the io.nav_inputs[] fields before calling NewFrame(). Note that io.nav_inputs[] is cleared by EndFrame().
 // Read instructions in imgui.cpp for more details. Download PNG/PSD at http://dearimgui.org/controls_sheets.
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum ImGuiNavInput
+pub enum NavInput
 {
     // Gamepad Mapping
     ImGuiNavInput_Activate,      // Activate / Open / Toggle / Tweak value       // e.g. Cross  (PS4), A (Xbox), A (Switch), Space (Keyboard)

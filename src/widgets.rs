@@ -693,7 +693,7 @@ bool ImGui::ButtonEx(const char* label, const Vector2D& size_arg, ImGuiButtonFla
     if (!ItemAdd(bb, id))
         return false;
 
-    if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
+    if (g.LastItemData.InFlags & ItemFlags::ButtonRepeat)
         flags |= ImGuiButtonFlags_Repeat;
 
     bool hovered, held;
@@ -772,7 +772,7 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size, ImGui
     if (!ItemAdd(bb, id))
         return false;
 
-    if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
+    if (g.LastItemData.InFlags & ItemFlags::ButtonRepeat)
         flags |= ImGuiButtonFlags_Repeat;
 
     bool hovered, held;
@@ -1115,7 +1115,7 @@ bool ImGui::Checkbox(const char* label, bool* v)
     RenderNavHighlight(total_bb, id);
     RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
     ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
-    bool mixed_value = (g.LastItemData.InFlags & ImGuiItemFlags_MixedValue) != 0;
+    bool mixed_value = (g.LastItemData.InFlags & ItemFlags::MixedValue) != 0;
     if (mixed_value)
     {
         // Undocumented tristate/mixed/indeterminate checkbox (#2644)
@@ -1149,7 +1149,7 @@ bool ImGui::CheckboxFlagsT(const char* label, T* flags, T flags_value)
     {
         ImGuiContext& g = *GImGui;
         ImGuiItemFlags backup_item_flags = g.CurrentItemFlags;
-        g.CurrentItemFlags |= ImGuiItemFlags_MixedValue;
+        g.CurrentItemFlags |= ItemFlags::MixedValue;
         pressed = Checkbox(label, &all_on);
         g.CurrentItemFlags = backup_item_flags;
     }
@@ -1460,7 +1460,7 @@ bool ImGui::SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, float
     ImGuiWindow* window = g.CurrentWindow;
 
     const ImGuiItemFlags item_flags_backup = g.CurrentItemFlags;
-    g.CurrentItemFlags |= ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus;
+    g.CurrentItemFlags |= ItemFlags::NoNav | ItemFlags::NoNavDefaultFocus;
     bool item_add = ItemAdd(bb, id);
     g.CurrentItemFlags = item_flags_backup;
     if (!item_add)
@@ -2295,7 +2295,7 @@ bool ImGui::DragBehavior(ImGuiID id, ImGuiDataType data_type, void* p_v, float v
     }
     if (g.ActiveId != id)
         return false;
-    if ((g.LastItemData.InFlags & ImGuiItemFlags_ReadOnly) || (flags & ImGuiSliderFlags_ReadOnly))
+    if ((g.LastItemData.InFlags & ItemFlags::ReadOnly) || (flags & ImGuiSliderFlags_ReadOnly))
         return false;
 
     switch (data_type)
@@ -2335,7 +2335,7 @@ bool ImGui::DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
 
     const bool temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
     ItemSize(total_bb, style.FramePadding.y);
-    if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ImGuiItemFlags_Inputable : 0))
+    if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ItemFlags::Inputable : 0))
         return false;
 
     // Default format string when passing NULL
@@ -2903,7 +2903,7 @@ bool ImGui::SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type
     IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
 
     ImGuiContext& g = *GImGui;
-    if ((g.LastItemData.InFlags & ImGuiItemFlags_ReadOnly) || (flags & ImGuiSliderFlags_ReadOnly))
+    if ((g.LastItemData.InFlags & ItemFlags::ReadOnly) || (flags & ImGuiSliderFlags_ReadOnly))
         return false;
 
     switch (data_type)
@@ -2955,7 +2955,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
 
     const bool temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
     ItemSize(total_bb, style.FramePadding.y);
-    if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ImGuiItemFlags_Inputable : 0))
+    if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ItemFlags::Inputable : 0))
         return false;
 
     // Default format string when passing NULL
@@ -3866,7 +3866,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     {
         Vector2D backup_pos = window.DC.CursorPos;
         ItemSize(total_bb, style.FramePadding.y);
-        if (!ItemAdd(total_bb, id, &frame_bb, ImGuiItemFlags_Inputable))
+        if (!ItemAdd(total_bb, id, &frame_bb, ItemFlags::Inputable))
         {
             EndGroup();
             return false;
@@ -3900,7 +3900,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // Support for internal ImGuiInputTextFlags_MergedItem flag, which could be redesigned as an ItemFlags if needed (with test performed in ItemAdd)
         ItemSize(total_bb, style.FramePadding.y);
         if (!(flags & ImGuiInputTextFlags_MergedItem))
-            if (!ItemAdd(total_bb, id, &frame_bb, ImGuiItemFlags_Inputable))
+            if (!ItemAdd(total_bb, id, &frame_bb, ItemFlags::Inputable))
                 return false;
         item_status_flags = g.LastItemData.StatusFlags;
     }
@@ -4674,7 +4674,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // For focus requests to work on our multiline we need to ensure our child ItemAdd() call specifies the ImGuiItemFlags_Inputable (ref issue #4761)...
         Dummy(DimgVec2D::new(text_size.x, text_size.y + style.FramePadding.y));
         ImGuiItemFlags backup_item_flags = g.CurrentItemFlags;
-        g.CurrentItemFlags |= ImGuiItemFlags_Inputable | ImGuiItemFlags_NoTabStop;
+        g.CurrentItemFlags |= ItemFlags::Inputable | ItemFlags::NoTabStop;
         EndChild();
         item_data_backup.StatusFlags |= (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredWindow);
         g.CurrentItemFlags = backup_item_flags;
@@ -5121,7 +5121,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
 
     bool value_changed = false, value_changed_h = false, value_changed_sv = false;
 
-    PushItemFlag(ImGuiItemFlags_NoNav, true);
+    push_item_flag(ItemFlags::NoNav, true);
     if (flags & ImGuiColorEditFlags_PickerHueWheel)
     {
         // Hue wheel + SV triangle logic
@@ -5195,7 +5195,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
             value_changed = true;
         }
     }
-    PopItemFlag(); // ImGuiItemFlags_NoNav
+    pop_item_flag(); // ImGuiItemFlags_NoNav
 
     if (!(flags & ImGuiColorEditFlags_NoSidePreview))
     {
@@ -5216,7 +5216,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
 
     if (!(flags & ImGuiColorEditFlags_NoSidePreview))
     {
-        PushItemFlag(ImGuiItemFlags_NoNavDefaultFocus, true);
+        push_item_flag(ItemFlags::NoNavDefaultFocus, true);
         Vector4D col_v4(col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1.0 : col[3]);
         if ((flags & ImGuiColorEditFlags_NoLabel))
             Text("current");
@@ -5233,7 +5233,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
                 value_changed = true;
             }
         }
-        PopItemFlag();
+        pop_item_flag();
         EndGroup();
     }
 
@@ -6151,7 +6151,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     }
 
     const bool disabled_item = (flags & ImGuiSelectableFlags_Disabled) != 0;
-    const bool item_add = ItemAdd(bb, id, NULL, disabled_item ? ImGuiItemFlags_Disabled : ImGuiItemFlags_None);
+    const bool item_add = ItemAdd(bb, id, NULL, disabled_item ? ItemFlags::Disabled : ItemFlags::None);
     if (span_all_columns)
     {
         window.ClipRect.Min.x = backup_clip_rect_min_x;
@@ -6161,7 +6161,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     if (!item_add)
         return false;
 
-    const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
+    const bool disabled_global = (g.CurrentItemFlags & ItemFlags::Disabled) != 0;
     if (disabled_item && !disabled_global) // Only testing this as an optimization
         BeginDisabled();
 
@@ -6232,7 +6232,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     RenderTextClipped(text_min, text_max, label, NULL, &label_size, style.SelectableTextAlign, &bb);
 
     // Automatically close popups
-    if (pressed && (window.Flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiSelectableFlags_DontClosePopups) && !(g.LastItemData.InFlags & ImGuiItemFlags_SelectableDontClosePopup))
+    if (pressed && (window.Flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiSelectableFlags_DontClosePopups) && !(g.LastItemData.InFlags & ItemFlags::SelectableDontClosePopup))
         CloseCurrentPopup();
 
     if (disabled_item && !disabled_global)
@@ -7951,7 +7951,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
     if (p_open && !*p_open)
     {
-        ItemAdd(ImRect(), id, NULL, ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus);
+        ItemAdd(ImRect(), id, NULL, ItemFlags::NoNav | ItemFlags::NoNavDefaultFocus);
         return false;
     }
 
@@ -8033,7 +8033,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     // and then gets submitted again, the tabs will have 'tab_appearing=true' but 'tab_is_new=false'.
     if (tab_appearing && (!tab_bar_appearing || tab_is_new))
     {
-        ItemAdd(ImRect(), id, NULL, ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus);
+        ItemAdd(ImRect(), id, NULL, ItemFlags::NoNav | ItemFlags::NoNavDefaultFocus);
         if (is_tab_button)
             return false;
         return tab_contents_visible;
