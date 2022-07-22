@@ -189,7 +189,7 @@ pub fn calc_window_size_after_constraint(
             // ImGuiSizeCallbackData data;
             let mut data = SizeCallbackData::default();
             data.user_data = g.next_window_data.size_callback_user_data;
-            data.Pos = window.pos.clone();
+            data.pos = window.pos.clone();
             data.CurrentSize = window.size_full.clone();
             data.desired_size = new_size;
             g.next_window_data.sizeCallback(&data);
@@ -277,7 +277,7 @@ pub fn clamp_window_rect(g: &mut Context, window: &mut Window, visibility_rect: 
     // if g.io.config_windows_move_from_title_bar_only && (!(window.flags & WindowFlags::NoTitleBar) || window.DockNodeAsHost)
     if g.io.config_windows_move_from_title_bar_only
         && !window.flags.contains(&WindowFlags::NoTitleBar)
-        || window.dock_node_as_host.id != INVALID_ID
+        || window.dock_node_as_host_id.id != INVALID_ID
     {
         // size_for_clamping.y = ImGui::GetFrameHeight();
         size_for_clamping.y = get_frame_height()
@@ -450,7 +450,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
         // const ImGuiResizeBorderDef& def = resize_border_def[border_n];
         let def = resize_border_def[border_n];
         // const ImGuiAxis axis = (border_n == Dir::Left || border_n == Dir::Right) ? Axis::X : Axis::Y;
-        let axis = if border_n == Dir::Left || border_n == Dir::Right { Axis::X } else { Axis::Y};
+        let axis = if border_n == Direction::Left || border_n == Direction::Right { Axis::X } else { Axis::Y};
 
         // bool hovered, held;
         let mut hovered = false;
@@ -542,7 +542,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
 // void ImGui::SetWindowSize(const char* name, const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size3(g: &mut Context, name: &str, size: &Vector2D, cond: Condition)
 {
-    if (ImGuiWindow* window = FindWindowByName(name)) {
+    if (ImGuiWindow* window = find_window_by_name(name)) {
         SetWindowSize(window, size, cond);
     }
 }

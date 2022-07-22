@@ -562,7 +562,7 @@ Vector2D GetScreenSpacePinCoordinates(
 
 Vector2D GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
 {
-    const Rect& parent_node_rect = editor.Nodes.Pool[pin.ParentNodeIdx].Rect;
+    const Rect& parent_node_rect = editor.Nodes.Pool[pin.parent_node_idx].Rect;
     return GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
 }
 
@@ -683,8 +683,8 @@ void BeginLinkInteraction(
         const ImPinData&  start_pin = editor.Pins.Pool[link.StartPinIdx];
         const ImPinData&  end_pin = editor.Pins.Pool[link.EndPinIdx];
         const Vector2D&     mouse_pos = GImNodes.MousePos;
-        const float       dist_to_start = ImLengthSqr(start_pin.Pos - mouse_pos);
-        const float       dist_to_end = ImLengthSqr(end_pin.Pos - mouse_pos);
+        const float       dist_to_start = ImLengthSqr(start_pin.pos - mouse_pos);
+        const float       dist_to_end = ImLengthSqr(end_pin.pos - mouse_pos);
         const int closest_pin_idx = dist_to_start < dist_to_end ? link.StartPinIdx : link.EndPinIdx;
 
         editor.ClickInteraction.Type = ImNodesClickInteractionType_LinkCreation;
@@ -791,8 +791,8 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, Rect box_rect)
 
             const ImPinData& pin_start = editor.Pins.Pool[link.StartPinIdx];
             const ImPinData& pin_end = editor.Pins.Pool[link.EndPinIdx];
-            const Rect&    node_start_rect = editor.Nodes.Pool[pin_start.ParentNodeIdx].Rect;
-            const Rect&    node_end_rect = editor.Nodes.Pool[pin_end.ParentNodeIdx].Rect;
+            const Rect&    node_start_rect = editor.Nodes.Pool[pin_start.parent_node_idx].Rect;
+            const Rect&    node_end_rect = editor.Nodes.Pool[pin_end.parent_node_idx].Rect;
 
             const Vector2D start = GetScreenSpacePinCoordinates(
                 node_start_rect, pin_start.AttributeRect, pin_start.Type);
@@ -909,7 +909,7 @@ bool ShouldLinkSnapToPin(
     const ImPinData& end_pin = editor.Pins.Pool[hovered_pin_idx];
 
     // The end pin must be in a different node
-    if (start_pin.ParentNodeIdx == end_pin.ParentNodeIdx)
+    if (start_pin.parent_node_idx == end_pin.parent_node_idx)
     {
         return false;
     }
@@ -1150,7 +1150,7 @@ void ResolveOccludedPins(const ImNodesEditorContext& editor, ImVector<int>& occl
             for (int idx = 0; idx < node_below.PinIndices.size;  += 1idx)
             {
                 const int     pin_idx = node_below.PinIndices[idx];
-                const Vector2D& pin_pos = editor.Pins.Pool[pin_idx].Pos;
+                const Vector2D& pin_pos = editor.Pins.Pool[pin_idx].pos;
 
                 if (rect_above.Contains(pin_pos))
                 {
@@ -1182,7 +1182,7 @@ ImOptionalIndex ResolveHoveredPin(
             continue;
         }
 
-        const Vector2D& pin_pos = pins.Pool[idx].Pos;
+        const Vector2D& pin_pos = pins.Pool[idx].pos;
         const float   distance_sqr = ImLengthSqr(pin_pos - GImNodes.MousePos);
 
         // TODO: GImNodes->style.PinHoverRadius needs to be copied into pin data and the pin-local
@@ -1272,7 +1272,7 @@ ImOptionalIndex ResolveHoveredLink(
         // rendering the links
 
         const CubicBezier cubic_bezier = GetCubicBezier(
-            start_pin.Pos, end_pin.Pos, start_pin.Type, GImNodes.Style.LinkLineSegmentsPerLength);
+            start_pin.pos, end_pin.pos, start_pin.Type, GImNodes.Style.LinkLineSegmentsPerLength);
 
         // The distance test
         {
@@ -1483,9 +1483,9 @@ void DrawPinShape(const Vector2D& pin_pos, const ImPinData& pin, const ImU32 pin
 void DrawPin(ImNodesEditorContext& editor, const int pin_idx)
 {
     ImPinData&    pin = editor.Pins.Pool[pin_idx];
-    const Rect& parent_node_rect = editor.Nodes.Pool[pin.ParentNodeIdx].Rect;
+    const Rect& parent_node_rect = editor.Nodes.Pool[pin.parent_node_idx].Rect;
 
-    pin.Pos = GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
+    pin.pos = GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
 
     ImU32 pin_color = pin.ColorStyle.Background;
 
@@ -1494,7 +1494,7 @@ void DrawPin(ImNodesEditorContext& editor, const int pin_idx)
         pin_color = pin.ColorStyle.Hovered;
     }
 
-    DrawPinShape(pin.Pos, pin, pin_color);
+    DrawPinShape(pin.pos, pin, pin_color);
 }
 
 void DrawNode(ImNodesEditorContext& editor, const int node_idx)
@@ -1588,7 +1588,7 @@ void DrawLink(ImNodesEditorContext& editor, const int link_idx)
     const ImPinData&  end_pin = editor.Pins.Pool[link.EndPinIdx];
 
     const CubicBezier cubic_bezier = GetCubicBezier(
-        start_pin.Pos, end_pin.Pos, start_pin.Type, GImNodes.Style.LinkLineSegmentsPerLength);
+        start_pin.pos, end_pin.pos, start_pin.Type, GImNodes.Style.LinkLineSegmentsPerLength);
 
     const bool link_hovered =
         GImNodes.HoveredLinkIdx == link_idx &&
@@ -1655,7 +1655,7 @@ void BeginPinAttribute(
     GImNodes.CurrentPinIdx = pin_idx;
     ImPinData& pin = editor.Pins.Pool[pin_idx];
     pin.Id = id;
-    pin.ParentNodeIdx = node_idx;
+    pin.parent_node_idx = node_idx;
     pin.Type = type;
     pin.Shape = shape;
     pin.flags = GImNodes.CurrentAttributeFlags;
@@ -1830,8 +1830,8 @@ static void MiniMapDrawLink(ImNodesEditorContext& editor, const int link_idx)
     const ImPinData&  end_pin = editor.Pins.Pool[link.EndPinIdx];
 
     const CubicBezier cubic_bezier = GetCubicBezier(
-        ScreenSpaceToMiniMapSpace(editor, start_pin.Pos),
-        ScreenSpaceToMiniMapSpace(editor, end_pin.Pos),
+        ScreenSpaceToMiniMapSpace(editor, start_pin.pos),
+        ScreenSpaceToMiniMapSpace(editor, end_pin.pos),
         start_pin.Type,
         GImNodes.Style.LinkLineSegmentsPerLength / editor.MiniMapScaling);
 
@@ -3058,9 +3058,9 @@ bool IsLinkCreated(
         const int                   start_idx = editor.ClickInteraction.LinkCreation.StartPinIdx;
         const int         end_idx = editor.ClickInteraction.LinkCreation.EndPinIdx.Value();
         const ImPinData&  start_pin = editor.Pins.Pool[start_idx];
-        const ImNodeData& start_node = editor.Nodes.Pool[start_pin.ParentNodeIdx];
+        const ImNodeData& start_node = editor.Nodes.Pool[start_pin.parent_node_idx];
         const ImPinData&  end_pin = editor.Pins.Pool[end_idx];
-        const ImNodeData& end_node = editor.Nodes.Pool[end_pin.ParentNodeIdx];
+        const ImNodeData& end_node = editor.Nodes.Pool[end_pin.parent_node_idx];
 
         if (start_pin.Type == ImNodesAttributeType_Output)
         {

@@ -333,7 +333,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
 
     // Acquire storage for the table
     ImGuiTable* table = g.tables.GetOrAddByKey(id);
-    const int instance_no = (table.LastFrameActive != g.frame_count) ? 0 : table.InstanceCurrent + 1;
+    const int instance_no = (table.last_frame_active != g.frame_count) ? 0 : table.InstanceCurrent + 1;
     const ImGuiID instance_id = id + instance_no;
     const ImGuiTableFlags table_last_flags = table.flags;
     if (instance_no > 0)
@@ -353,10 +353,10 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     flags = TableFixFlags(flags, outer_window);
 
     // Initialize
-    table.ID = id;
+    table.id = id;
     table.flags = flags;
     table.InstanceCurrent = (ImS16)instance_no;
-    table.LastFrameActive = g.frame_count;
+    table.last_frame_active = g.frame_count;
     table.OuterWindow = table.InnerWindow = outer_window;
     table.ColumnsCount = columns_count;
     table.IsLayoutLocked = false;
@@ -1108,7 +1108,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     // [Part 11] Context menu
     if (table.IsContextPopupOpen && table.InstanceCurrent == table.InstanceInteracted)
     {
-        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.ID);
+        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.id);
         if (BeginPopupEx(context_menu_id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings))
         {
             TableDrawContextMenu(table);
@@ -1315,9 +1315,9 @@ void    ImGui::EndTable()
         const float neighbor_width_to_keep_visible = table.MinColumnWidth + table.CellPaddingX * 2.0;
         ImGuiTableColumn* column = &table.Columns[table.LastResizedColumn];
         if (column.MaxX < table.InnerClipRect.min.x)
-            SetScrollFromPosX(inner_window, column.MaxX - inner_window.Pos.x - neighbor_width_to_keep_visible, 1.0);
+            SetScrollFromPosX(inner_window, column.MaxX - inner_window.pos.x - neighbor_width_to_keep_visible, 1.0);
         else if (column.MaxX > table.InnerClipRect.max.x)
-            SetScrollFromPosX(inner_window, column.MaxX - inner_window.Pos.x + neighbor_width_to_keep_visible, 1.0);
+            SetScrollFromPosX(inner_window, column.MaxX - inner_window.pos.x + neighbor_width_to_keep_visible, 1.0);
     }
 
     // Apply resizing/dragging at the end of the frame
@@ -1604,7 +1604,7 @@ Rect ImGui::TableGetCellBgRect(const ImGuiTable* table, int column_n)
 ImGuiID ImGui::TableGetColumnResizeID(const ImGuiTable* table, int column_n, int instance_no)
 {
     // IM_ASSERT(column_n >= 0 && column_n < table.ColumnsCount);
-    ImGuiID id = table.ID + 1 + (instance_no * table.ColumnsCount) + column_n;
+    ImGuiID id = table.id + 1 + (instance_no * table.ColumnsCount) + column_n;
     return id;
 }
 
@@ -2984,7 +2984,7 @@ void ImGui::TableHeader(const char* label)
                 pop_style_color();
                 x += w_sort_text;
             }
-            RenderArrow(window.draw_list, Vector2D::new(x, y), get_color_u32(StyleColor::Text), column.SortDirection == ImGuiSortDirection_Ascending ? Dir::Up : Dir::Down, ARROW_SCALE);
+            RenderArrow(window.draw_list, Vector2D::new(x, y), get_color_u32(StyleColor::Text), column.SortDirection == ImGuiSortDirection_Ascending ? Direction::Up : Direction::Down, ARROW_SCALE);
         }
 
         // Handle clicking on column header to adjust Sort Order
@@ -3031,7 +3031,7 @@ void ImGui::TableOpenContextMenu(int column_n)
         table.IsContextPopupOpen = true;
         table.ContextPopupColumn = (ImGuiTableColumnIdx)column_n;
         table.InstanceInteracted = table.InstanceCurrent;
-        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.ID);
+        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.id);
         OpenPopupEx(context_menu_id, ImGuiPopupFlags_None);
     }
 }
@@ -3160,7 +3160,7 @@ static void TableSettingsInit(ImGuiTableSettings* settings, ImGuiID id, int colu
     ImGuiTableColumnSettings* settings_column = settings.GetColumnSettings();
     for (int n = 0; n < columns_count_max; n += 1, settings_column += 1)
         IM_PLACEMENT_NEW(settings_column) ImGuiTableColumnSettings();
-    settings.ID = id;
+    settings.id = id;
     settings.ColumnsCount = (ImGuiTableColumnIdx)columns_count;
     settings.ColumnsCountMax = (ImGuiTableColumnIdx)columns_count_max;
     settings.WantApply = true;
@@ -3185,7 +3185,7 @@ ImGuiTableSettings* ImGui::TableSettingsFindByID(ImGuiID id)
     // FIXME-OPT: Might want to store a lookup map for this?
     // ImGuiContext& g = *GImGui;
     for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != NULL; settings = g.SettingsTables.next_chunk(settings))
-        if (settings.ID == id)
+        if (settings.id == id)
             return settings;
     return NULL;
 }
@@ -3200,7 +3200,7 @@ ImGuiTableSettings* ImGui::TableGetBoundSettings(ImGuiTable* table)
         // IM_ASSERT(settings.id == table.id);
         if (settings.ColumnsCountMax >= table.ColumnsCount)
             return settings; // OK
-        settings.ID = 0; // Invalidate storage, we won't fit because of a count change
+        settings.id = 0; // Invalidate storage, we won't fit because of a count change
     }
     return NULL;
 }
@@ -3225,7 +3225,7 @@ void ImGui::TableSaveSettings(ImGuiTable* table)
     ImGuiTableSettings* settings = TableGetBoundSettings(table);
     if (settings == NULL)
     {
-        settings = TableSettingsCreate(table.ID, table.ColumnsCount);
+        settings = TableSettingsCreate(table.id, table.ColumnsCount);
         table.SettingsOffset = g.SettingsTables.offset_from_ptr(settings);
     }
     settings.ColumnsCount = (ImGuiTableColumnIdx)table.ColumnsCount;
@@ -3280,7 +3280,7 @@ void ImGui::TableLoadSettings(ImGuiTable* table)
     ImGuiTableSettings* settings;
     if (table.SettingsOffset == -1)
     {
-        settings = TableSettingsFindByID(table.ID);
+        settings = TableSettingsFindByID(table.id);
         if (settings == NULL)
             return;
         if (settings.ColumnsCount != table.ColumnsCount) // Allow settings if columns count changed. We could otherwise decide to return...
@@ -3369,7 +3369,7 @@ static void* TableSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*,
             TableSettingsInit(settings, id, columns_count, settings.ColumnsCountMax); // Recycle
             return settings;
         }
-        settings.ID = 0; // Invalidate storage, we won't fit because of a count change
+        settings.id = 0; // Invalidate storage, we won't fit because of a count change
     }
     return ImGui::TableSettingsCreate(id, columns_count);
 }
@@ -3405,7 +3405,7 @@ static void TableSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandle
     ImGuiContext& g = *ctx;
     for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != NULL; settings = g.SettingsTables.next_chunk(settings))
     {
-        if (settings.ID == 0) // Skip ditched settings
+        if (settings.id == 0) // Skip ditched settings
             continue;
 
         // TableSaveSettings() may clear some of those flags when we establish that the data can be stripped
@@ -3418,7 +3418,7 @@ static void TableSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandle
             continue;
 
         buf.reserve(buf->size() + 30 + settings.ColumnsCount * 50); // ballpark reserve
-        buf.appendf("[%s][0x%08X,%d]\n", handler.TypeName, settings.ID, settings.ColumnsCount);
+        buf.appendf("[%s][0x%08X,%d]\n", handler.TypeName, settings.id, settings.ColumnsCount);
         if (settings.RefScale != 0.0)
             buf.appendf("RefScale=%g\n", settings.RefScale);
         ImGuiTableColumnSettings* column = settings.GetColumnSettings();
@@ -3470,7 +3470,7 @@ void ImGui::TableRemove(ImGuiTable* table)
     int table_idx = g.tables.GetIndex(table);
     //memset(table->RawData.data, 0, table->RawData.size_in_bytes());
     //memset(table, 0, sizeof(ImGuiTable));
-    g.tables.Remove(table.ID, table);
+    g.tables.Remove(table.id, table);
     g.tables_last_time_active[table_idx] = -1.0;
 }
 
@@ -3502,14 +3502,14 @@ void ImGui::TableGcCompactSettings()
     // ImGuiContext& g = *GImGui;
     int required_memory = 0;
     for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != NULL; settings = g.SettingsTables.next_chunk(settings))
-        if (settings.ID != 0)
+        if (settings.id != 0)
             required_memory += TableSettingsCalcChunkSize(settings.ColumnsCount);
     if (required_memory == g.SettingsTables.Buf.size)
         return;
     ImChunkStream<ImGuiTableSettings> new_chunk_stream;
     new_chunk_stream.Buf.reserve(required_memory);
     for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != NULL; settings = g.SettingsTables.next_chunk(settings))
-        if (settings.ID != 0)
+        if (settings.id != 0)
             memcpy(new_chunk_stream.alloc_chunk(TableSettingsCalcChunkSize(settings.ColumnsCount)), settings, TableSettingsCalcChunkSize(settings.ColumnsCount));
     g.SettingsTables.swap(new_chunk_stream);
 }
@@ -3538,8 +3538,8 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
     char buf[512];
     char* p = buf;
     const char* buf_end = buf + IM_ARRAYSIZE(buf);
-    const bool is_active = (table.LastFrameActive >= ImGui::GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
-    ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.ID, table.ColumnsCount, table.OuterWindow.Name, is_active ? "" : " *Inactive*");
+    const bool is_active = (table.last_frame_active >= ImGui::GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
+    ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.id, table.ColumnsCount, table.OuterWindow.Name, is_active ? "" : " *Inactive*");
     if (!is_active) { push_style_color(StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open = TreeNode(table, "%s", buf);
     if (!is_active) { pop_style_color(); }
@@ -3599,7 +3599,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
 
 void ImGui::DebugNodeTableSettings(ImGuiTableSettings* settings)
 {
-    if (!TreeNode((void*)(intptr_t)settings.ID, "Settings 0x%08X (%d columns)", settings.ID, settings.ColumnsCount))
+    if (!TreeNode((void*)(intptr_t)settings.id, "Settings 0x%08X (%d columns)", settings.id, settings.ColumnsCount))
         return;
     BulletText("SaveFlags: 0x%08X", settings.SaveFlags);
     BulletText("ColumnsCount: %d (max %d)", settings.ColumnsCount, settings.ColumnsCountMax);
@@ -3821,7 +3821,7 @@ ImGuiOldColumns* ImGui::FindOrCreateColumns(ImGuiWindow* window, ImGuiID id)
 
     window.ColumnsStorage.push_back(ImGuiOldColumns());
     ImGuiOldColumns* columns = &window.ColumnsStorage.back();
-    columns.ID = id;
+    columns.id = id;
     return columns;
 }
 
@@ -4003,7 +4003,7 @@ void ImGui::EndColumns()
         {
             ImGuiOldColumnData* column = &columns.Columns[n];
             float x = window.pos.x + GetColumnOffset(n);
-            const ImGuiID column_id = columns.ID + ImGuiID(n);
+            const ImGuiID column_id = columns.id + ImGuiID(n);
             const float column_hit_hw = COLUMNS_HIT_RECT_HALF_WIDTH;
             const Rect column_hit_rect(Vector2D::new(x - column_hit_hw, y1), Vector2D::new(x + column_hit_hw, y2));
             keep_alive_id(column_id);

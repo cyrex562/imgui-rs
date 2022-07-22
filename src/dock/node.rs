@@ -79,7 +79,7 @@ pub struct DockNode
     // ImVector<ImGuiWindow*>  windows;                    // Note: unordered list! Iterate tab_bar->Tabs for user-order.
     pub windows: Vec<Id32>,
     // ImGuiTabBar*            tab_bar;
-    pub tab_bar: TabBar, //*mut ImGuiTabBar,
+    pub tab_bar: Option<TabBar>, //*mut ImGuiTabBar,
     // DimgVec2D                  pos;                        // current position
     // pub pos: DimgVec2D,
     pub pos: Vector2D,
@@ -268,7 +268,7 @@ pub struct DockNodeSettings
 {
     // ImGuiID             id;
     pub id: Id32,
-    // ImGuiID             ParentNodeId;
+    // ImGuiID             parent_node_id;
     pub parent_node_id: Id32,
     // ImGuiID             ParentWindowId;
     pub parent_window_id: Id32,

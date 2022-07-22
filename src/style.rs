@@ -105,7 +105,7 @@ impl Style {
         out.WindowBorderSize = 1.0;             // Thickness of border around windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.window_min_size = Vector2D::new(32.0, 32.0);    // Minimum window size
         out.window_title_align = Vector2D::new(0.0, 0.5);// Alignment for title bar text
-        out.window_menu_button_position = ImGuiDir::Dir::Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
+        out.window_menu_button_position = ImGuiDirection::Direction::Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
         out.ChildRounding = 0.0;             // Radius of child window corners rounding. Set to 0.0 to have rectangular child windows
         out.ChildBorderSize = 1.0;             // Thickness of border around child windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.PopupRounding = 0.0;             // Radius of popup window corners rounding. Set to 0.0 to have rectangular child windows
@@ -127,7 +127,7 @@ impl Style {
         out.TabRounding = 4.0;             // Radius of upper corners of a tab. Set to 0.0 to have rectangular tabs.
         out.TabBorderSize = 0.0;             // Thickness of border around tabs.
         out.TabMinWidthForCloseButton = 0.0;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to FLT_MAX to never show close button unless selected.
-        out.ColorButtonPosition = ImGuiDir::Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
+        out.ColorButtonPosition = ImGuiDirection::Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
         out.ButtonTextAlign = Vector2D::new(0.5, 0.5);// Alignment of button text when button is larger than text.
         out.SelectableTextAlign = Vector2D::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
         out.DisplayWindowPadding = Vector2D::new(19.0, 19.0);    // window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.

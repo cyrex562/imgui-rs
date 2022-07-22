@@ -5,11 +5,11 @@ use crate::axis::Axis;
 use crate::column::OldColumns;
 use crate::types::DataAuthority::Window;
 use crate::dock::node::{DockNode, DockNodeFlags};
-use crate::draw_cmd::DrawCmd;
-use crate::draw_defines::DrawFlags;
-use crate::draw_list::{DrawList, DrawListFlags, get_foreground_draw_list};
+use crate::draw::draw_cmd::DrawCmd;
+use crate::draw::draw_defines::DrawFlags;
+use crate::draw::draw_list::{DrawList, DrawListFlags, get_foreground_draw_list};
 use crate::font::Font;
-use crate::font_atlas::FontAtlas;
+use crate::font::font_atlas::FontAtlas;
 use crate::globals::GImGui;
 use crate::input::NavLayer;
 use crate::orig_imgui_single_file::int;
@@ -289,7 +289,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             for (int table_n = 0; table_n < g.tables.GetMapSize(); table_n += 1)
             {
                 ImGuiTable* table = g.tables.TryGetMapData(table_n);
-                if (table == NULL || table->LastFrameActive < g.frame_count - 1 || (table->OuterWindow != g.nav_window && table->InnerWindow != g.nav_window))
+                if (table == NULL || table->last_frame_active < g.frame_count - 1 || (table->OuterWindow != g.nav_window && table->InnerWindow != g.nav_window))
                     continue;
 
                 BulletText("Table 0x%08X (%d columns, in '%s')", table->ID, table->ColumnsCount, table->OuterWindow->Name);
@@ -340,7 +340,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             ImVector<ImGuiWindow*>& temp_buffer = g.windows_temp_sort_buffer;
             temp_buffer.resize(0);
             for (int i = 0; i < g.windows.size; i += 1)
-                if (g.windows[i]->LastFrameActive + 1 >= g.frame_count)
+                if (g.windows[i]->last_frame_active + 1 >= g.frame_count)
                     temp_buffer.push_back(g.windows[i]);
             struct Func { static int  WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((*(const ImGuiWindow* const *)lhs)->BeginOrderWithinContext - (*(const ImGuiWindow* const*)rhs)->BeginOrderWithinContext); } };
             ImQsort(temp_buffer.data, temp_buffer.size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
@@ -469,7 +469,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     if (TreeNode("Docking"))
     {
         static bool root_nodes_only = true;
-        ImGuiDockContext* dc = &g.DockContext;
+        ImGuiDockContext* dc = &g.dock_context;
         Checkbox("List root nodes", &root_nodes_only);
         Checkbox("Ctrl shows window dock info", &cfg->ShowDockingNodes);
         if (SmallButton("clear nodes")) { DockContextClearNodes(&g, 0, true); }
@@ -484,7 +484,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
         if (TreeNode("SettingsDocking", "Settings packed data: Docking"))
         {
-            ImGuiDockContext* dc = &g.DockContext;
+            ImGuiDockContext* dc = &g.dock_context;
             Text("In settings_windows:");
             for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
                 if (settings.dock_id != 0)
@@ -501,7 +501,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                     else if (ImGuiWindowSettings* window_settings = FindWindowSettings(settings->SelectedTabId))
                         selected_tab_name = window_settings->GetName();
                 }
-                BulletText("Node %08X, Parent %08X, SelectedTab %08X ('%s')", settings->ID, settings->ParentNodeId, settings->SelectedTabId, selected_tab_name ? selected_tab_name : settings->SelectedTabId ? "N/A" : "");
+                BulletText("Node %08X, Parent %08X, SelectedTab %08X ('%s')", settings->ID, settings->parent_node_id, settings->SelectedTabId, selected_tab_name ? selected_tab_name : settings->SelectedTabId ? "N/A" : "");
             }
             TreePop();
         }
@@ -588,7 +588,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         for (int table_n = 0; table_n < g.tables.GetMapSize(); table_n += 1)
         {
             ImGuiTable* table = g.tables.TryGetMapData(table_n);
-            if (table == NULL || table->LastFrameActive < g.frame_count - 1)
+            if (table == NULL || table->last_frame_active < g.frame_count - 1)
                 continue;
             ImDrawList* draw_list = get_foreground_draw_list(table->OuterWindow);
             if (cfg->ShowTablesRectsType >= TRT_ColumnsRect)
@@ -617,10 +617,10 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         char* p = buf;
         ImGuiDockNode* node = g.hovered_dock_node;
         ImDrawList* overlay_draw_list = node->HostWindow ? get_foreground_draw_list(node->HostWindow) : get_foreground_draw_list(GetMainViewport());
-        p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "dock_id: %x%s\n", node->ID, node->IsCentralNode() ? " *central_node*" : "");
+        p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "dock_id: %x%s\n", node->ID, node->is_central_node() ? " *central_node*" : "");
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "window_class: %08X\n", node->WindowClass.ClassId);
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size: (%.0, %.0)\n", node.size.x, node.size.y);
-        p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size_ref: (%.0, %.0)\n", node.sizeRef.x, node.sizeRef.y);
+        p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size_ref: (%.0, %.0)\n", node.size_ref.x, node.size_ref.y);
         int depth = DockNodeGetDepth(node);
         overlay_draw_list->AddRect(node.pos + Vector2D::new(3, 3) * depth, node.pos + node.size - Vector2D::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
         Vector2D pos = node.pos + Vector2D::new(3, 3) * depth;
@@ -653,20 +653,20 @@ pub fn debug_node_dock_node_flags(g: &mut Context, p_flags: &HashSet<DockNodeFla
     Text("%s:", label);
     if (!enabled)
         BeginDisabled();
-    CheckboxFlags("NoSplit", p_flags, ImGuiDockNodeFlags_NoSplit);
-    CheckboxFlags("NoResize", p_flags, ImGuiDockNodeFlags_NoResize);
-    CheckboxFlags("NoResizeX", p_flags, ImGuiDockNodeFlags_NoResizeX);
-    CheckboxFlags("NoResizeY",p_flags, ImGuiDockNodeFlags_NoResizeY);
-    CheckboxFlags("NoTabBar", p_flags, ImGuiDockNodeFlags_NoTabBar);
-    CheckboxFlags("HiddenTabBar", p_flags, ImGuiDockNodeFlags_HiddenTabBar);
-    CheckboxFlags("NoWindowMenuButton", p_flags, ImGuiDockNodeFlags_NoWindowMenuButton);
-    CheckboxFlags("NoCloseButton", p_flags, ImGuiDockNodeFlags_NoCloseButton);
-    CheckboxFlags("NoDocking", p_flags, ImGuiDockNodeFlags_NoDocking);
-    CheckboxFlags("NoDockingSplitMe", p_flags, ImGuiDockNodeFlags_NoDockingSplitMe);
-    CheckboxFlags("NoDockingSplitOther", p_flags, ImGuiDockNodeFlags_NoDockingSplitOther);
-    CheckboxFlags("NoDockingOverMe", p_flags, ImGuiDockNodeFlags_NoDockingOverMe);
-    CheckboxFlags("NoDockingOverOther", p_flags, ImGuiDockNodeFlags_NoDockingOverOther);
-    CheckboxFlags("NoDockingOverEmpty", p_flags, ImGuiDockNodeFlags_NoDockingOverEmpty);
+    CheckboxFlags("NoSplit", p_flags, DockNodeFlags::NoSplit);
+    CheckboxFlags("NoResize", p_flags, DockNodeFlags::NoResize);
+    CheckboxFlags("NoResizeX", p_flags, DockNodeFlags::NoResizeX);
+    CheckboxFlags("NoResizeY",p_flags, DockNodeFlags::NoResizeY);
+    CheckboxFlags("NoTabBar", p_flags, DockNodeFlags::NoTabBar);
+    CheckboxFlags("HiddenTabBar", p_flags, DockNodeFlags::HiddenTabBar);
+    CheckboxFlags("NoWindowMenuButton", p_flags, DockNodeFlags::NoWindowMenuButton);
+    CheckboxFlags("NoCloseButton", p_flags, DockNodeFlags::NoCloseButton);
+    CheckboxFlags("NoDocking", p_flags, DockNodeFlags::NoDocking);
+    CheckboxFlags("NoDockingSplitMe", p_flags, DockNodeFlags::NoDockingSplitMe);
+    CheckboxFlags("NoDockingSplitOther", p_flags, DockNodeFlags::NoDockingSplitOther);
+    CheckboxFlags("NoDockingOverMe", p_flags, DockNodeFlags::NoDockingOverMe);
+    CheckboxFlags("NoDockingOverOther", p_flags, DockNodeFlags::NoDockingOverOther);
+    CheckboxFlags("NoDockingOverEmpty", p_flags, DockNodeFlags::NoDockingOverEmpty);
     if (!enabled)
         EndDisabled();
     pop_style_var();
@@ -679,7 +679,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
 {
     // ImGuiContext& g = *GImGui;
     const bool is_alive = (g.frame_count - node->LastFrameAlive < 2);    // Submitted with ImGuiDockNodeFlags_KeepAliveOnly
-    const bool is_active = (g.frame_count - node->LastFrameActive < 2);  // Submitted
+    const bool is_active = (g.frame_count - node->last_frame_active < 2);  // Submitted
     if (!is_alive) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open;
     ImGuiTreeNodeFlags tree_node_flags = node->IsFocused ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
@@ -696,13 +696,13 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
         // IM_ASSERT(node->ChildNodes[0] == NULL || node->ChildNodes[0]->ParentNode == node);
         // IM_ASSERT(node->ChildNodes[1] == NULL || node->ChildNodes[1]->ParentNode == node);
         BulletText("pos (%.0,%.0), size (%.0, %.0) Ref (%.0, %.0)",
-            node.pos.x, node.pos.y, node.size.x, node.size.y, node.sizeRef.x, node.sizeRef.y);
+            node.pos.x, node.pos.y, node.size.x, node.size.y, node.size_ref.x, node.size_ref.y);
         DebugNodeWindow(node->HostWindow, "host_window");
         DebugNodeWindow(node->VisibleWindow, "visible_window");
         BulletText("SelectedTabID: 0x%08X, LastFocusedNodeID: 0x%08X", node->SelectedTabId, node->LastFocusedNodeId);
         BulletText("Misc:%s%s%s%s%s%s%s",
             node->IsDockSpace() ? " is_dock_space" : "",
-            node->IsCentralNode() ? " is_central_node" : "",
+            node->is_central_node() ? " is_central_node" : "",
             is_alive ? " IsAlive" : "", is_active ? " IsActive" : "", node->IsFocused ? " is_focused" : "",
             node->WantLockSizeOnce ? " WantLockSizeOnce" : "",
             node->HasCentralNodeChild ? " has_central_node_child" : "");
@@ -1102,9 +1102,9 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
 
     BulletText("viewport: %d%s, viewport_id: 0x%08X, viewport_pos: (%.1,%.1)", window.viewport ? window.viewport->Idx : -1, window.viewport_owned ? " (Owned)" : "", window.viewport_id, window.viewport_pos.x, window.viewport_pos.y);
     BulletText("ViewportMonitor: %d", window.viewport ? window.viewport->PlatformMonitor : -1);
-    BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.DockId, window.DockOrder, window.dock_is_active, window.DockTabIsVisible);
-    if (window.dock_node || window.dock_node_as_host)
-        DebugNodeDockNode(window.dock_node_as_host ? window.dock_node_as_host : window.dock_node, window.dock_node_as_host ? "dock_node_as_host" : "dock_node");
+    BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.dock_id, window.DockOrder, window.dock_is_active, window.DockTabIsVisible);
+    if (window.dock_node || window.dock_node_as_host_id)
+        DebugNodeDockNode(window.dock_node_as_host_id? window.dock_node_as_host_id: window.dock_node, window.dock_node_as_host_id? "dock_node_as_host": "dock_node");
 
     if (window.root_window != window)       { DebugNodeWindow(window.root_window, "RootWindow"); }
     if (window.root_window_dock_tree != window.root_window) { DebugNodeWindow(window.root_window_dock_tree, "root_window_dock_tree"); }
@@ -1240,15 +1240,15 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: ImGuiDataType, d
     if (tool->StackLevel == -1)
     {
         tool->StackLevel += 1;
-        tool->Results.resize(window.IDStack.size + 1, ImGuiStackLevelInfo());
-        for (int n = 0; n < window.IDStack.size + 1; n += 1)
-            tool->Results[n].id = (n < window.IDStack.size) ? window.IDStack[n] : id;
+        tool->Results.resize(window.idStack.size + 1, ImGuiStackLevelInfo());
+        for (int n = 0; n < window.idStack.size + 1; n += 1)
+            tool->Results[n].id = (n < window.idStack.size) ? window.idStack[n] : id;
         return;
     }
 
     // Step 1+: query for individual level
     // IM_ASSERT(tool->StackLevel >= 0);
-    if (tool->StackLevel != window.IDStack.size)
+    if (tool->StackLevel != window.idStack.size)
         return;
     ImGuiStackLevelInfo* info = &tool->Results[tool->StackLevel];
     // IM_ASSERT(info->ID == id && info->QueryFrameCount > 0);

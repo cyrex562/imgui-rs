@@ -12,7 +12,7 @@ pub fn set_window_focus2(g: &mut Context, name: &str)
 {
     if (name)
     {
-        if (ImGuiWindow* window = FindWindowByName(name))
+        if (ImGuiWindow* window = find_window_by_name(name))
             focus_window(window);
     }
     else

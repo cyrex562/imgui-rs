@@ -7,11 +7,11 @@ pub struct DockRequest
     // ImGuiDockRequestType    Type;
     pub request_type: DockRequestType,
     // ImGuiWindow*            DockTargetWindow;   // Destination/Target window to dock into (may be a loose window or a dock_node, might be NULL in which case DockTargetNode cannot be NULL)
-    pub dock_target_window: Id32,
+    pub dock_target_window_id: Id32,
     // ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
-    pub dock_target_node: Id32,
+    pub dock_target_node_id: Id32,
     // ImGuiWindow*            DockPayload;        // Source/Payload window to dock (may be a loose window or a dock_node), [Optional]
-    pub dock_payload: Id32,
+    pub dock_payload_id: Id32,
     // ImGuiDir                DockSplitDir;
     pub dock_split_dir: Direction,
     // float                   DockSplitRatio;
@@ -19,9 +19,9 @@ pub struct DockRequest
     // bool                    DockSplitOuter;
     pub dock_split_outer: bool,
     // ImGuiWindow*            UndockTargetWindow;
-    pub undock_target_window: Id32,
+    pub undock_target_window_id: Id32,
     // ImGuiDockNode*          UndockTargetNode;
-    pub undock_target_node: Id32,
+    pub undock_target_node_id: Id32,
 }
 
 impl DockRequest {
@@ -36,11 +36,11 @@ impl DockRequest {
         // DockSplitOuter = false;
         Self {
             request_type: DockRequestType::None,
-            dock_target_window: INVALID_ID,
-            dock_payload: INVALID_ID,
-            undock_target_window: INVALID_ID,
-            dock_target_node: INVALID_ID,
-            undock_target_node: INVALID_ID,
+            dock_target_window_id: INVALID_ID,
+            dock_payload_id: INVALID_ID,
+            undock_target_window_id: INVALID_ID,
+            dock_target_node_id: INVALID_ID,
+            undock_target_node_id: INVALID_ID,
             dock_split_dir: Direction::None,
             dock_split_ratio: 0.5,
             dock_split_outer: false,

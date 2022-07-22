@@ -43,10 +43,10 @@ pub fn get_resize_border_rect(window: &mut Window, border_n: i32, perp_padding: 
     if thickness == 0.0 {
         rect.max -= Vector2D::new(1.0, 1.0);
     }
-    if border_n == Dir::Left { return Rect(rect.min.x - thickness, rect.min.y + perp_padding, rect.min.x + thickness, rect.max.y - perp_padding); }
-    if border_n == Dir::Right { return Rect(rect.max.x - thickness, rect.min.y + perp_padding, rect.max.x + thickness, rect.max.y - perp_padding); }
-    if border_n == Dir::Up { return Rect(rect.min.x + perp_padding, rect.min.y - thickness, rect.max.x - perp_padding, rect.min.y + thickness); }
-    if border_n == Dir::Down { return Rect(rect.min.x + perp_padding, rect.max.y - thickness, rect.max.x - perp_padding, rect.max.y + thickness); }
+    if border_n == Direction::Left { return Rect(rect.min.x - thickness, rect.min.y + perp_padding, rect.min.x + thickness, rect.max.y - perp_padding); }
+    if border_n == Direction::Right { return Rect(rect.max.x - thickness, rect.min.y + perp_padding, rect.max.x + thickness, rect.max.y - perp_padding); }
+    if border_n == Direction::Up { return Rect(rect.min.x + perp_padding, rect.min.y - thickness, rect.max.x - perp_padding, rect.min.y + thickness); }
+    if border_n == Direction::Down { return Rect(rect.min.x + perp_padding, rect.max.y - thickness, rect.max.x - perp_padding, rect.max.y + thickness); }
     // IM_ASSERT(0);
     return Rect();
 }

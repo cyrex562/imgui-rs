@@ -1,11 +1,14 @@
 use crate::Context;
 use crate::defines::DimgFontConfig;
-use crate::draw_list::DrawList;
-use crate::font_atlas::FontAtlas;
-use crate::font_glyph::DimgFontGlyph;
+use crate::draw::draw_list::DrawList;
+use font_atlas::FontAtlas;
+use font_glyph::DimgFontGlyph;
 use crate::globals::GImGui;
 use crate::types::{DimgWchar, Id32};
 use crate::vectors::two_d::Vector2D;
+
+pub mod font_atlas;
+mod font_glyph;
 
 // This structure is likely to evolve as we add support for incremental atlas updates
 #[derive(Default,Debug,Clone)]

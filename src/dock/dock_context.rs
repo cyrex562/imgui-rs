@@ -16,7 +16,7 @@ pub fn dock_context_remove_node(g: &mut Context, node: &mut DockNode, merge_sibl
     if node.host_window_id != INVALID_ID {
         let win = g.get_window(node.host_window_id);
         // node.host_window.dock_node_as_host = NULL;
-        win.dock_node_as_host = None;
+        win.dock_node_as_host_id = None;
     }
 
     // ImGuiDockNode* parent_node = node.ParentNode;

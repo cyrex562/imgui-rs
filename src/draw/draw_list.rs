@@ -4,12 +4,12 @@ use std::os::raw::c_char;
 use std::f32::consts::PI;
 use std::mem::size_of;
 use crate::context::Context;
-use crate::draw_defines::DrawFlags;
+use crate::draw::draw_defines::DrawFlags;
 use crate::types::{DrawIndex, Id32, INVALID_ID};
-use crate::draw_cmd::{CmdHeader, DrawCmd};
-use crate::draw_list_shared_data::DrawListSharedData;
-use crate::draw_list_splitter::DrawListSplitter;
-use crate::draw_vert::DrawVertex;
+use crate::draw::draw_cmd::{CmdHeader, DrawCmd};
+use crate::draw::draw_list_shared_data::DrawListSharedData;
+use crate::draw::draw_list_splitter::DrawListSplitter;
+use crate::draw::draw_vert::DrawVertex;
 use crate::font::Font;
 use crate::rect::Rect;
 use crate::texture::TextureId;
@@ -457,7 +457,7 @@ pub fn get_viewport_draw_list(g: &mut Context, viewport: &mut Viewport, drawlist
     {
         draw_list.ResetForNewFrame();
         draw_list.PushTextureID(g.io.fonts.TexID);
-        draw_list.PushClipRect(viewport.Pos, viewport.Pos + viewport.size, false);
+        draw_list.PushClipRect(viewport.pos, viewport.pos + viewport.size, false);
         viewport.draw_lists_last_frame[drawlist_no] = g.frame_count;
     }
     return draw_list;

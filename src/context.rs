@@ -15,11 +15,11 @@ use crate::dock::context::DockContext;
 use crate::dock::node::DockNode;
 use crate::drag_drop::DragDropFlags;
 use crate::draw_channel::DrawChannel;
-use crate::draw_list::DrawList;
+use crate::draw::draw_list::DrawList;
 
-use crate::draw_list_shared_data::DrawListSharedData;
+use crate::draw::draw_list_shared_data::DrawListSharedData;
 use crate::font::Font;
-use crate::font_atlas::FontAtlas;
+use crate::font::font_atlas::FontAtlas;
 use crate::group::GroupData;
 use crate::input::{DimgKey, InputSource, ModFlags, MouseCursor, NavLayer};
 use crate::input_event::InputEvent;

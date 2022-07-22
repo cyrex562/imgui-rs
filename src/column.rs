@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use crate::types::Id32;
-use crate::draw_list_splitter::DrawListSplitter;
+use crate::draw::draw_list_splitter::DrawListSplitter;
 use crate::rect::Rect;
 
 #[derive(Debug, Default, Clone)]

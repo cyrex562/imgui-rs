@@ -8,8 +8,8 @@ use crate::types::DataAuthority;
 use crate::types::Direction;
 use crate::dock::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
-use crate::draw_defines::DrawFlags;
-use crate::draw_list::{DrawListFlags, get_foreground_draw_list};
+use crate::draw::draw_defines::DrawFlags;
+use crate::draw::draw_list::{DrawListFlags, get_foreground_draw_list};
 use crate::globals::GImGui;
 use crate::id::set_active_id;
 use crate::input::{InputSource, NavLayer};
@@ -257,7 +257,7 @@ pub fn render_window_decorations(g: &mut Context,
         }
 
         // Borders (for dock node host they will be rendered over after the tab bar)
-        if handle_borders_and_resize_grips && !window.dock_node_as_host {
+        if handle_borders_and_resize_grips && !window.dock_node_as_host_id {
             RenderWindowOuterBorders(window);
         }
     }
@@ -306,12 +306,12 @@ pub fn render_window_title_bar_contents(g: &mut Context, window: &mut Window, ti
         pad_r += button_sz;
         close_button_pos = Vector2D::new(title_bar_rect.max.x - pad_r - style.frame_padding.x, title_bar_rect.min.y);
     }
-    if has_collapse_button && style.window_menu_button_position == Dir::Right
+    if has_collapse_button && style.window_menu_button_position == Direction::Right
     {
         pad_r += button_sz;
         collapse_button_pos = Vector2D::new(title_bar_rect.max.x - pad_r - style.frame_padding.x, title_bar_rect.min.y);
     }
-    if has_collapse_button && style.window_menu_button_position == Dir::Left
+    if has_collapse_button && style.window_menu_button_position == Direction::Left
     {
         collapse_button_pos = Vector2D::new(title_bar_rect.min.x + pad_l - style.frame_padding.x, title_bar_rect.min.y);
         pad_l += button_sz;

@@ -1,5 +1,5 @@
 use crate::draw_channel::DrawChannel;
-use crate::draw_list::DrawList;
+use crate::draw::draw_list::DrawList;
 
 // split/merge functions are used to split the draw list into different layers which can be drawn into out of order.
 // This is used by the columns/tables API, so items of each column can be batched together in a same draw call.

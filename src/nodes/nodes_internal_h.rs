@@ -165,7 +165,7 @@ struct ImNodeData
 struct ImPinData
 {
     int                  Id;
-    int                  ParentNodeIdx;
+    int                  parent_node_idx;
     Rect               AttributeRect;
     ImNodesAttributeType Type;
     ImNodesPinShape      Shape;
@@ -178,7 +178,7 @@ struct ImPinData
     } ColorStyle;
 
     ImPinData(const int pin_id)
-        : Id(pin_id), ParentNodeIdx(), AttributeRect(), Type(ImNodesAttributeType_None),
+        : Id(pin_id), parent_node_idx(), AttributeRect(), Type(ImNodesAttributeType_None),
           Shape(ImNodesPinShape_CircleFilled), Pos(), Flags(ImNodesAttributeFlags_None),
           ColorStyle()
     {

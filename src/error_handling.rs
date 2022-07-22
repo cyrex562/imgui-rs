@@ -205,7 +205,7 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
         if (log_callback) log_callback(user_data, "Recovered from missing EndGroup() in '%s'", window.Name);
         EndGroup();
     }
-    while (window.IDStack.size > 1)
+    while (window.idStack.size > 1)
     {
         if (log_callback) log_callback(user_data, "Recovered from missing PopID() in '%s'", window.Name);
         PopID();

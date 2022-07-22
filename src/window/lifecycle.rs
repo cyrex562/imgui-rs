@@ -340,7 +340,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
         window.FlagsPreviousFrame = window.flags;
         window.flags = (ImGuiWindowFlags)flags;
-        window.LastFrameActive = current_frame;
+        window.last_frame_active = current_frame;
         window.last_time_active = g.time;
         window.BeginOrderWithinParent = 0;
         window.BeginOrderWithinContext = (g.windows_active_count += 1);
@@ -354,10 +354,10 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     // (NB: during the frame dock nodes are created, it is possible that (window->dock_is_active == false) even though (window->dock_node->windows.size > 1)
     // IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL); // Cannot be both
     if (g.next_window_data.flags & NextWindowDataFlags::HasDock)
-        SetWindowDock(window, g.next_window_data.DockId, g.next_window_data.DockCond);
+        SetWindowDock(window, g.next_window_data.dock_id, g.next_window_data.DockCond);
     if (first_begin_of_the_frame)
     {
-        bool has_dock_node = (window.DockId != 0 || window.dock_node != NULL);
+        bool has_dock_node = (window.dock_id != 0 || window.dock_node != NULL);
         bool new_auto_dock_node = !has_dock_node && GetWindowAlwaysWantOwnTabBar(window);
         bool dock_node_was_visible = window.DockNodeIsVisible;
         bool dock_tab_was_visible = window.DockTabIsVisible;
@@ -390,8 +390,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     // IM_ASSERT(parent_window != NULL || !(flags & WindowFlags::ChildWindow));
 
     // We allow window memory to be compacted so recreate the base stack when needed.
-    if (window.IDStack.size == 0)
-        window.IDStack.push_back(window.id);
+    if (window.idStack.size == 0)
+        window.idStack.push_back(window.id);
 
     // Add to stack
     // We intentionally set g.current_window to NULL to prevent usage until when the viewport is set, then will call set_current_window()
@@ -482,7 +482,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         window.active = true;
         window.HasCloseButton = (p_open != NULL);
         window.clip_rect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
-        window.IDStack.resize(1);
+        window.idStack.resize(1);
         window.draw_list->_ResetForNewFrame();
         window.dc.current_tableIdx = -1;
         if (flags & WindowFlags::DockNodeHost)
@@ -638,7 +638,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // Popup latch its initial position, will position itself when it appears next frame
         if (window_just_activated_by_user)
         {
-            window.AutoPosLastDirection = Dir::None;
+            window.AutoPosLastDirection = Direction::None;
             if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: BeginPopup() could use SetNextWindowPos()
                 window.pos = g.begin_popup_stack.back().OpenPopupPos;
         }
@@ -750,15 +750,15 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         if (g.TestEngineHookItems)
         {
             // IM_ASSERT(window.IDStack.size == 1);
-            window.IDStack.size = 0;
+            window.idStack.size = 0;
             IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.id);
             IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.Name, (g.hovered_window == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
-            window.IDStack.size = 1;
+            window.idStack.size = 1;
         }
 
 
         // Decide if we are going to handle borders and resize grips
-        const bool handle_borders_and_resize_grips = (window.dock_node_as_host || !window.dock_is_active);
+        const bool handle_borders_and_resize_grips = (window.dock_node_as_host_id || !window.dock_is_active);
 
         // Handle manual resize: Resize Grips, Borders, Gamepad
         int border_held = -1;

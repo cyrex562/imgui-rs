@@ -121,8 +121,8 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
     window.LastFrameJustFocused = g.frame_count;
 
     // Select in dock node
-    if (dock_node && dock_node.TabBar)
-        dock_node.TabBar.SelectedTabId = dock_node.TabBar.NextSelectedTabId = window.TabId;
+    if (dock_node && dock_node.tab_bar)
+        dock_node.tab_bar.selected_tab_id = dock_node.tab_bar.next_selected_tab_id = window.tab_id;
 
     // Bring to front
     BringWindowToFocusFront(focus_front_window);

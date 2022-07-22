@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use crate::config::ConfigFlags;
 use crate::Context;
-use crate::draw_data::DrawData;
-use crate::draw_data_builder::DrawDataBuilder;
-use crate::draw_list::DrawList;
+use crate::draw::draw_data::DrawData;
+use crate::draw::draw_data_builder::DrawDataBuilder;
+use crate::draw::draw_list::DrawList;
 use crate::orig_imgui_single_file::{ImGuiID, ImGuiWindow};
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
@@ -242,7 +242,7 @@ pub fn find_viewport_by_id(g: &mut Context, id: Id32) -> &mut Viewport
 {
     // ImGuiContext& g = *GImGui;
     for (int n = 0; n < g.viewports.size; n += 1)
-        if (g.viewports[n].ID == id)
+        if (g.viewports[n].id == id)
             return g.viewports[n];
     return NULL;
 }
@@ -264,7 +264,7 @@ pub fn set_current_viewport(g: &mut Context, current_window: &mut Window, viewpo
     (void)current_window;
 
     if (viewport)
-        viewport.LastFrameActive = g.frame_count;
+        viewport.last_frame_active = g.frame_count;
     if (g.current_viewport == viewport)
         return;
     g.CurrentDpiScale = viewport ? viewport.DpiScale : 1.0;
@@ -285,7 +285,7 @@ pub fn set_window_viewport(g: &mut Context, window: &mut Window, viewport: &mut 
         window.viewport.size = Vector2D::new(0.0, 0.0);
 
     window.viewport = viewport;
-    window.viewport_id = viewport.ID;
+    window.viewport_id = viewport.id;
     window.viewport_owned = (viewport.Window == window);
 }
 
@@ -455,7 +455,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
         viewport.Idx = n;
 
         // Erase unused viewports
-        if (n > 0 && viewport.LastFrameActive < g.frame_count - 2)
+        if (n > 0 && viewport.last_frame_active < g.frame_count - 2)
         {
             DestroyViewport(viewport);
             n--;
@@ -592,7 +592,7 @@ pub fn update_viewports_ends_frame(g: &mut Context)
     {
         ImGuiViewportP* viewport = g.viewports[i];
         viewport.LastPos = viewport.pos;
-        if (viewport.LastFrameActive < g.frame_count || viewport.size.x <= 0.0 || viewport.size.y <= 0.0)
+        if (viewport.last_frame_active < g.frame_count || viewport.size.x <= 0.0 || viewport.size.y <= 0.0)
             if (i > 0) // Always include main viewport in the list
                 continue;
         if (viewport.Window && !is_window_active_and_visible(viewport.Window))
@@ -626,9 +626,9 @@ pub fn add_update_viewport(g: &mut Context, window: &mut Window, id: Id32, pos: 
     if (viewport)
     {
         // Always update for main viewport as we are already pulling correct platform pos/size (see #4900)
-        if (!viewport.PlatformRequestMove || viewport.ID == IMGUI_VIEWPORT_DEFAULT_ID)
+        if (!viewport.PlatformRequestMove || viewport.id == IMGUI_VIEWPORT_DEFAULT_ID)
             viewport.pos = pos;
-        if (!viewport.PlatformRequestResize || viewport.ID == IMGUI_VIEWPORT_DEFAULT_ID)
+        if (!viewport.PlatformRequestResize || viewport.id == IMGUI_VIEWPORT_DEFAULT_ID)
             viewport.size = size;
         viewport.flags = flags | (viewport.flags & ImGuiViewportFlags_Minimized); // Preserve existing flags
     }
@@ -636,7 +636,7 @@ pub fn add_update_viewport(g: &mut Context, window: &mut Window, id: Id32, pos: 
     {
         // New viewport
         viewport = IM_NEW(ImGuiViewportP)();
-        viewport.ID = id;
+        viewport.id = id;
         viewport.Idx = g.viewports.size;
         viewport.pos = viewport.LastPos = pos;
         viewport.size = size;
@@ -659,7 +659,7 @@ pub fn add_update_viewport(g: &mut Context, window: &mut Window, id: Id32, pos: 
     }
 
     viewport.Window = window;
-    viewport.LastFrameActive = g.frame_count;
+    viewport.last_frame_active = g.frame_count;
     viewport.update_work_rect();
     // IM_ASSERT(window == NULL || viewport.ID == window.id);
 
@@ -686,7 +686,7 @@ pub fn destroy_viewport(g: &mut Context, viewport: &mut Viewport)
         g.mouse_last_hovered_viewport = NULL;
 
     // Destroy
-    IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete viewport %08X '%s'\n", viewport.ID, viewport.Window ? viewport.Window.Name : "n/a");
+    IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete viewport %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.Name : "n/a");
     DestroyPlatformWindow(viewport); // In most circumstances the platform window will already be destroyed here.
     // IM_ASSERT(g.platform_io.viewports.contains(viewport) == false);
     // IM_ASSERT(g.viewports[viewport.Idx] == viewport);
@@ -800,12 +800,12 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
         {
             // When called from Begin() we don't have access to a proper version of the hidden flag yet, so we replicate this code.
             const bool will_be_visible = (window.dock_is_active && !window.DockTabIsVisible) ? false : true;
-            if ((window.flags & WindowFlags::DockNodeHost) && window.viewport.LastFrameActive < g.frame_count && will_be_visible)
+            if ((window.flags & WindowFlags::DockNodeHost) && window.viewport.last_frame_active < g.frame_count && will_be_visible)
             {
                 // Steal/transfer ownership
-                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] window '%s' steal viewport %08X from window '%s'\n", window.Name, window.viewport.ID, window.viewport.Window.Name);
+                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] window '%s' steal viewport %08X from window '%s'\n", window.Name, window.viewport.id, window.viewport.Window.Name);
                 window.viewport.Window = window;
-                window.viewport.ID = window.id;
+                window.viewport.id = window.id;
                 window.viewport.LastNameHash = 0;
             }
             else if (!UpdateTryMergeWindowIntoHostViewports(window)) // merge?
@@ -824,7 +824,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
 
     // Update flags
     window.viewport_owned = (window == window.viewport.Window);
-    window.viewport_id = window.viewport.ID;
+    window.viewport_id = window.viewport.id;
 
     // If the OS window has a title bar, hide our imgui title bar
     //if (window->viewport_owned && !(window->viewport->flags & ImGuiViewportFlags_NoDecoration))
@@ -913,7 +913,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     if (window.WindowClass.ParentViewportId != (ImGuiID)-1)
         window.viewport.ParentViewportId = window.WindowClass.ParentViewportId;
     else if ((window_flags & (WindowFlags::Popup | WindowFlags::Tooltip)) && parent_window_in_stack && (!parent_window_in_stack.IsFallbackWindow || parent_window_in_stack.WasActive))
-        window.viewport.ParentViewportId = parent_window_in_stack.Viewport.ID;
+        window.viewport.ParentViewportId = parent_window_in_stack.Viewport.id;
     else
         window.viewport.ParentViewportId = g.io.ConfigViewportsNoDefaultParent ? 0 : IMGUI_VIEWPORT_DEFAULT_ID;
 }

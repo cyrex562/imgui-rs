@@ -74,7 +74,7 @@ pub fn update_platform_windows(g: &mut Context)
         // Destroy platform window if the viewport hasn't been submitted or if it is hosting a hidden window
         // (the implicit/fallback Debug##Default window will be registering its viewport then be disabled, causing a dummy DestroyPlatformWindow to be made each frame)
         bool destroy_platform_window = false;
-        destroy_platform_window |= (viewport.LastFrameActive < g.frame_count - 1);
+        destroy_platform_window |= (viewport.last_frame_active < g.frame_count - 1);
         destroy_platform_window |= (viewport.Window && !is_window_active_and_visible(viewport.Window));
         if (destroy_platform_window)
         {
@@ -83,14 +83,14 @@ pub fn update_platform_windows(g: &mut Context)
         }
 
         // New windows that appears directly in a new viewport won't always have a size on their first frame
-        if (viewport.LastFrameActive < g.frame_count || viewport.size.x <= 0 || viewport.size.y <= 0)
+        if (viewport.last_frame_active < g.frame_count || viewport.size.x <= 0 || viewport.size.y <= 0)
             continue;
 
         // Create window
         bool is_new_platform_window = (viewport.platform_window_created == false);
         if (is_new_platform_window)
         {
-            IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform window %08X '%s'\n", viewport.ID, viewport.Window ? viewport.Window.Name : "n/a");
+            IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform window %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.Name : "n/a");
             g.platform_io.Platform_CreateWindow(viewport);
             if (g.platform_io.Renderer_CreateWindow != NULL)
                 g.platform_io.Renderer_CreateWindow(viewport);
@@ -171,11 +171,11 @@ pub fn update_platform_windows(g: &mut Context)
         // Store a tag so we can infer z-order easily from all our windows
         // We compare platform_last_focused_viewport_id so newly created viewports with _NoFocusOnAppearing flag
         // will keep the front most stamp instead of losing it back to their parent viewport.
-        if (focused_viewport && g.PlatformLastFocusedViewportId != focused_viewport.ID)
+        if (focused_viewport && g.PlatformLastFocusedViewportId != focused_viewport.id)
         {
             if (focused_viewport.LastFrontMostStampCount != g.ViewportFrontMostStampCount)
                 focused_viewport.LastFrontMostStampCount = g.ViewportFrontMostStampCount += 1;
-            g.PlatformLastFocusedViewportId = focused_viewport.ID;
+            g.PlatformLastFocusedViewportId = focused_viewport.id;
         }
     }
 }
@@ -296,7 +296,7 @@ pub fn destroy_platform_window(g: &mut Context, viewport: &mut Viewport)
 
         // Don't clear PlatformWindowCreated for the main viewport, as we initially set that up to true in Initialize()
         // The righter way may be to leave it to the backend to set this flag all-together, and made the flag public.
-        if (viewport.ID != IMGUI_VIEWPORT_DEFAULT_ID)
+        if (viewport.id != IMGUI_VIEWPORT_DEFAULT_ID)
             viewport.platform_window_created = false;
     }
     else

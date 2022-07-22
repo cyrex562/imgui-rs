@@ -3,7 +3,7 @@ use crate::clipboard::{get_clipboard_text_fn_dflt_impl, set_clipboard_text_fn_df
 use crate::config::{BackendFlags, ConfigFlags};
 use crate::context::Context;
 use crate::font::Font;
-use crate::font_atlas::FontAtlas;
+use crate::font::font_atlas::FontAtlas;
 use crate::input::{DimgInputEventType, InputSource, DimgKey, DimgKeyData, ModFlags};
 use crate::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;

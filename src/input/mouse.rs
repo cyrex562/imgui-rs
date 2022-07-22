@@ -260,7 +260,7 @@ pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
     if window.flags.contains(&WindowFlags::NoMove) || window.root_window_dock_tree_id.flags.contains(&WindowFlags::NoMove) {
         can_move_window = false;
     }
-    let node = &window.dock_node_as_host;
+    let node = &window.dock_node_as_host_id;
     if node.visible_window && (node.visible_window.flags.contains(WindowFlags::NoMove)) {
     can_move_window = false;}
     if can_move_window {

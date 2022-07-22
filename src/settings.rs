@@ -95,7 +95,7 @@ pub fn create_new_window_settings(g: &mut Context, name: &String) -> &mut Window
     const size_t chunk_size = sizeof(ImGuiWindowSettings) + name_len + 1;
     ImGuiWindowSettings* settings = g.settings_windows.alloc_chunk(chunk_size);
     IM_PLACEMENT_NEW(settings) ImGuiWindowSettings();
-    settings.ID = ImHashStr(name, name_len);
+    settings.id = ImHashStr(name, name_len);
     memcpy(settings.GetName(), name, name_len + 1);   // Store with zero terminator
 
     return settings;
@@ -106,7 +106,7 @@ pub fn find_window_settings(g: &mut Context, id: Id32) -> &mut WindowSettings
 {
     // ImGuiContext& g = *GImGui;
     for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
-        if (settings.ID == id)
+        if (settings.id == id)
             return settings;
     return NULL;
 }
@@ -288,9 +288,9 @@ pub fn window_settings_handler_clear_all(g: &mut Context, handler: &mut Settings
 pub fn window_settings_handler_read_open(g: &mut Context, handler: &mut SettingsHandler, name: &str) -> WindowSettings
 {
     ImGuiWindowSettings* settings = FindOrCreateWindowSettings(name);
-    ImGuiID id = settings.ID;
+    ImGuiID id = settings.id;
     *settings = ImGuiWindowSettings(); // clear existing if recycling previous entry
-    settings.ID = id;
+    settings.id = id;
     settings.WantApply = true;
     return (void*)settings;
 }
@@ -320,7 +320,7 @@ pub fn window_handler_apply_all(g: &mut Context, handler: &mut SettingsHandler)
     for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
         if (settings.WantApply)
         {
-            if (ImGuiWindow* window = FindWindowByID(settings.ID))
+            if (ImGuiWindow* window = FindWindowByID(settings.id))
                 apply_window_settings(window, settings);
             settings.WantApply = false;
         }
@@ -350,7 +350,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         settings.viewport_id = window.viewport_id;
         settings.viewport_pos = Vector2Dih(window.viewport_pos);
         // IM_ASSERT(window.dock_node == NULL || window.dock_node.ID == window.DockId);
-        settings.dock_id = window.DockId;
+        settings.dock_id = window.dock_id;
         settings.ClassId = window.WindowClass.ClassId;
         settings.dock_order = window.DockOrder;
         settings.collapsed = window.collapsed;

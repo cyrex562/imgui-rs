@@ -395,7 +395,7 @@ pub fn is_item_hovered(g: &mut Context, flags: &HashSet<HoveredFlags>) -> bool
         }
 
         // Test if another item is active (e.g. being dragged)
-        if (!flags.contains(&HoveredFlags::AllowWhenBlockedByActiveItem)) && (g.active_id != 0 && g.active_id != g.last_item_data.id && !g.active_id_allow_overlap) && (g.active_id != window.move_id && g.active_id != window.TabId) {
+        if (!flags.contains(&HoveredFlags::AllowWhenBlockedByActiveItem)) && (g.active_id != 0 && g.active_id != g.last_item_data.id && !g.active_id_allow_overlap) && (g.active_id != window.move_id && g.active_id != window.tab_id) {
             return false;
         }
 

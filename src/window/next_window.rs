@@ -96,7 +96,7 @@ pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
     // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasDock;
     g.next_window_data.DockCond = cond ? cond : Cond::Always;
-    g.next_window_data.DockId = id;
+    g.next_window_data.dock_id = id;
 }
 
 // void ImGui::SetNextWindowClass(const ImGuiWindowClass* window_class)
@@ -146,7 +146,7 @@ pub struct NextWindowData {
     // ImGuiID                     viewport_id;
     pub ViewportId: Id32,
     // ImGuiID                     dock_id;
-    pub DockId: Id32,
+    pub dock_id: Id32,
     // ImGuiWindowClass            window_class;
     pub WindowClass: WindowClass,
     // Vector2D                      MenuBarOffsetMinVal;    // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)

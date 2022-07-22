@@ -50,6 +50,6 @@ pub fn apply_window_settings(g: &mut Context, window: &mut Window, settings: &mu
         window.size = window.size_full.clone();
     }
     window.collapsed = settings.collapsed;
-    window.DockId = settings.dock_id;
+    window.dock_id = settings.dock_id;
     window.DockOrder = settings.dock_order;
 }

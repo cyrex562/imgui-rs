@@ -8,6 +8,7 @@ pub const INVALID_ID: u32 = u32::MAX;
 // typedef unsigned int        ImGuiID;// A unique id used by widgets (typically the result of hashing a stack of string)
 pub type Id32 = u32;
 
+
 // Character types
 // (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)
 // typedef unsigned short ImWchar16;   // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.

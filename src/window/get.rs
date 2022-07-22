@@ -262,9 +262,9 @@ pub fn find_window_id(g: &mut Context, id: Id32) -> &mut Window {
 // static ImGuiWindow* GetWindowForTitleDisplay(ImGuiWindow* window)
 pub fn get_window_for_title_display(g: &mut Context, window: &mut Window) -> &mut Window {
     // return window.DockNodeAsHost ? window.DockNodeAsHost->VisibleWindow : window;
-    if window.dock_node_as_host.id != INVALID_ID {
+    if window.dock_node_as_host_id.id != INVALID_ID {
         return g
-            .get_window(window.dock_node_as_host.visible_window)
+            .get_window(window.dock_node_as_host_id.visible_window)
             .unwrap();
     }
     return window;
@@ -273,10 +273,10 @@ pub fn get_window_for_title_display(g: &mut Context, window: &mut Window) -> &mu
 // static ImGuiWindow* GetWindowForTitleAndMenuHeight(ImGuiWindow* window)
 pub fn get_window_for_title_and_menu_height(g: &mut Context, window: &mut Window) -> &mut Window {
     // return (window.DockNodeAsHost && window.DockNodeAsHost->VisibleWindow) ? window.DockNodeAsHost->VisibleWindow : window;
-    if window.dock_node_as_host.id != INVALID_ID
-        && window.dock_node_as_host.visible_window != INVALID_ID
+    if window.dock_node_as_host_id.id != INVALID_ID
+        && window.dock_node_as_host_id.visible_window != INVALID_ID
     {
-        g.get_window(window.dock_node_as_host.visible_window)
+        g.get_window(window.dock_node_as_host_id.visible_window)
             .unwrap()
     }
     window

@@ -53,6 +53,6 @@ pub fn set_window_pos_2(g: &mut Window, pos: &Vector2D, condition: Condition)
 // void ImGui::set_window_pos(const char* name, const Vector2D& pos, ImGuiCond cond)
 pub fn set_window_pos3(g: &mut Context, name: &str, pos: &Vector2D, condition: Condition)
 {
-    if (ImGuiWindow* window = FindWindowByName(name))
+    if (ImGuiWindow* window = find_window_by_name(name))
         set_window_pos(window, pos, cond);
 }

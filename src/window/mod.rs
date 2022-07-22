@@ -32,7 +32,7 @@ use temp_data::WindowTempData;
 use crate::types::Direction;
 use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags};
 use crate::drag_drop::DragDropFlags;
-use crate::draw_list::add_draw_list_to_draw_data;
+use crate::draw::draw_list::add_draw_list_to_draw_data;
 
 use crate::hash::{hash_data, hash_string};
 use crate::id::set_active_id;
@@ -41,7 +41,7 @@ use crate::item::{ItemStatusFlags, LastItemData};
 use crate::kv_store::Storage;
 use crate::layout::LayoutType;
 use crate::menu::ImGuiMenuColumns;
-use crate::draw_data;
+use crate::draw::draw_data;
 use crate::rect::Rect;
 use crate::size_callback_data::SizeCallbackData;
 use crate::stack::ImGuiStackSizes;
@@ -203,7 +203,7 @@ pub struct Window {
     // Vector2Dih                hit_test_hole_offset;
     pub hit_test_hole_offset: Vector2D,
     // int                     last_frame_active;                    // Last frame number the window was active.
-    pub last_frame_active: i32,
+    pub last_frame_active: usize,
     // int                     last_frame_just_focused;               // Last frame number the window was made Focused.
     pub last_frame_just_focused: i32,
     // float                   last_time_active;                     // Last timestamp the window was active (using float as we don't need high precision there)
@@ -264,9 +264,9 @@ pub struct Window {
     // ImGuiWindowDockStyle    dock_style;
     pub dock_style: WindowDockStyle,
     // ImGuiDockNode*          dock_node;                           // Which node are we docked into. Important: Prefer testing dock_is_active in many cases as this will still be set when the dock node is hidden.
-    pub dock_node: Option<DockNode>, //Id32, // *mut ImGuiDockNode,
+    pub dock_node: Id32, //Id32, // *mut ImGuiDockNode,
     // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
-    pub dock_node_as_host: Option<DockNode>, // Id32, // *mut ImGuiDockNode,
+    pub dock_node_as_host_id: Id32, // Id32, // *mut ImGuiDockNode,
     // ImGuiID                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
     pub dock_id: Id32,
     // ImGuiItemStatusFlags    dock_tab_item_status_flags;
@@ -285,7 +285,7 @@ impl Window {
             //     NameBufLen = strlen(name) + 1;
             name: String::from(name),
             //     id = ImHashStr(name);
-            id: hash_string(name.as_vec(), ),
+            id: hash_string(name.as_vec(), 0),
             //     IDStack.push_back(id);
             id_stack: Vec::new(),
             //     viewport_allow_platform_monitor_extend = -1;
@@ -370,7 +370,7 @@ impl Window {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
         // ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
-        let id = hash_string(in_str.as_mut_vec(), );
+        let id = hash_string(in_str.as_mut_vec(), 0);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
             // debug_hook_id_info(id, DataType::String, str, str_end);

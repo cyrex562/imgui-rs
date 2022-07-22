@@ -183,7 +183,7 @@ pub fn begin_child_ex(g: &mut Context, name: &str, id: Id32, size_arg: &Vector2D
     // Set the cursor to handle case where the user called SetNextWindowPos()+BeginChild() manually.
     // While this is not really documented/defined, it seems that the expected thing to do.
     if child_window.begin_count == 1 {
-        parent_window.dc.cursor_pos = child_window.Pos;
+        parent_window.dc.cursor_pos = child_window.pos;
     }
 
     // Process navigation-in immediately so NavInit can run on first frame

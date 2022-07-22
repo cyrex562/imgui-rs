@@ -182,7 +182,7 @@ pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags
     popup_ref.Window = NULL;
     popup_ref.SourceWindow = g.nav_window;
     popup_ref.OpenFrameCount = g.frame_count;
-    popup_ref.OpenParentId = parent_window.IDStack.back();
+    popup_ref.OpenParentId = parent_window.idStack.back();
     popup_ref.OpenPopupPos = NavCalcPreferredRefPos();
     popup_ref.OpenMousePos = is_mouse_pos_valid(&g.io.mouse_pos) ? g.io.mouse_pos : popup_ref.OpenPopupPos;
 
@@ -524,17 +524,17 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
     // Combo Box policy (we want a connecting edge)
     if (policy == ImGuiPopupPositionPolicy_ComboBox)
     {
-        const ImGuiDir dir_prefered_order[Dir::COUNT] = { Dir::Down, Dir::Right, Dir::Left, Dir::Up };
-        for (int n = (*last_dir != Dir::None) ? -1 : 0; n < Dir::COUNT; n += 1)
+        const ImGuiDir dir_prefered_order[Direction::COUNT] = { Direction::Down, Direction::Right, Direction::Left, Direction::Up };
+        for (int n = (*last_dir != Direction::None) ? -1 : 0; n < Direction::COUNT; n += 1)
         {
             const ImGuiDir dir = (n == -1) ? *last_dir : dir_prefered_order[n];
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
             Vector2D pos;
-            if (dir == Dir::Down)  pos = Vector2D::new(r_avoid.min.x, r_avoid.max.y);          // Below, Toward Right (default)
-            if (dir == Dir::Right) pos = Vector2D::new(r_avoid.min.x, r_avoid.min.y - size.y); // Above, Toward Right
-            if (dir == Dir::Left)  pos = Vector2D::new(r_avoid.max.x - size.x, r_avoid.max.y); // Below, Toward Left
-            if (dir == Dir::Up)    pos = Vector2D::new(r_avoid.max.x - size.x, r_avoid.min.y - size.y); // Above, Toward Left
+            if (dir == Direction::Down)  pos = Vector2D::new(r_avoid.min.x, r_avoid.max.y);          // Below, Toward Right (default)
+            if (dir == Direction::Right) pos = Vector2D::new(r_avoid.min.x, r_avoid.min.y - size.y); // Above, Toward Right
+            if (dir == Direction::Left)  pos = Vector2D::new(r_avoid.max.x - size.x, r_avoid.max.y); // Below, Toward Left
+            if (dir == Direction::Up)    pos = Vector2D::new(r_avoid.max.x - size.x, r_avoid.min.y - size.y); // Above, Toward Left
             if (!r_outer.Contains(Rect(pos, pos + size)))
                 continue;
             *last_dir = dir;
@@ -546,25 +546,25 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
     // (Always first try the direction we used on the last frame, if any)
     if (policy == ImGuiPopupPositionPolicy_Tooltip || policy == ImGuiPopupPositionPolicy_Default)
     {
-        const ImGuiDir dir_prefered_order[Dir::COUNT] = { Dir::Right, Dir::Down, Dir::Up, Dir::Left };
-        for (int n = (*last_dir != Dir::None) ? -1 : 0; n < Dir::COUNT; n += 1)
+        const ImGuiDir dir_prefered_order[Direction::COUNT] = { Direction::Right, Direction::Down, Direction::Up, Direction::Left };
+        for (int n = (*last_dir != Direction::None) ? -1 : 0; n < Direction::COUNT; n += 1)
         {
             const ImGuiDir dir = (n == -1) ? *last_dir : dir_prefered_order[n];
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
 
-            const float avail_w = (dir == Dir::Left ? r_avoid.min.x : r_outer.max.x) - (dir == Dir::Right ? r_avoid.max.x : r_outer.min.x);
-            const float avail_h = (dir == Dir::Up ? r_avoid.min.y : r_outer.max.y) - (dir == Dir::Down ? r_avoid.max.y : r_outer.min.y);
+            const float avail_w = (dir == Direction::Left ? r_avoid.min.x : r_outer.max.x) - (dir == Direction::Right ? r_avoid.max.x : r_outer.min.x);
+            const float avail_h = (dir == Direction::Up ? r_avoid.min.y : r_outer.max.y) - (dir == Direction::Down ? r_avoid.max.y : r_outer.min.y);
 
             // If there not enough room on one axis, there's no point in positioning on a side on this axis (e.g. when not enough width, use a top/bottom position to maximize available width)
-            if (avail_w < size.x && (dir == Dir::Left || dir == Dir::Right))
+            if (avail_w < size.x && (dir == Direction::Left || dir == Direction::Right))
                 continue;
-            if (avail_h < size.y && (dir == Dir::Up || dir == Dir::Down))
+            if (avail_h < size.y && (dir == Direction::Up || dir == Direction::Down))
                 continue;
 
             Vector2D pos;
-            pos.x = (dir == Dir::Left) ? r_avoid.min.x - size.x : (dir == Dir::Right) ? r_avoid.max.x : base_pos_clamped.x;
-            pos.y = (dir == Dir::Up) ? r_avoid.min.y - size.y : (dir == Dir::Down) ? r_avoid.max.y : base_pos_clamped.y;
+            pos.x = (dir == Direction::Left) ? r_avoid.min.x - size.x : (dir == Direction::Right) ? r_avoid.max.x : base_pos_clamped.x;
+            pos.y = (dir == Direction::Up) ? r_avoid.min.y - size.y : (dir == Direction::Down) ? r_avoid.max.y : base_pos_clamped.y;
 
             // Clamp top-left corner of popup
             pos.x = ImMax(pos.x, r_outer.min.x);
@@ -576,7 +576,7 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
     }
 
     // Fallback when not enough room:
-    *last_dir = Dir::None;
+    *last_dir = Direction::None;
 
     // For tooltip we prefer avoiding the cursor at all cost even if it means that part of the tooltip won't be visible.
     if (policy == ImGuiPopupPositionPolicy_Tooltip)
@@ -628,7 +628,7 @@ pub fn find_best_window_pos_for_popup(g: &mut Context, window: &mut Window) -> V
         if (parent_window.dc.MenuBarAppending)
             r_avoid = Rect(-f32::MAX, parent_window.clip_rect.min.y, f32::MAX, parent_window.clip_rect.max.y); // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a next_window_data.PosConstraintAvoidRect field
         else
-            r_avoid = Rect(parent_window.Pos.x + horizontal_overlap, -f32::MAX, parent_window.Pos.x + parent_window.size.x - horizontal_overlap - parent_window.scrollbar_sizes.x, f32::MAX);
+            r_avoid = Rect(parent_window.pos.x + horizontal_overlap, -f32::MAX, parent_window.pos.x + parent_window.size.x - horizontal_overlap - parent_window.scrollbar_sizes.x, f32::MAX);
         return FindBestWindowPosForPopupEx(window.pos, window.size, &window.AutoPosLastDirection, r_outer, r_avoid, ImGuiPopupPositionPolicy_Default);
     }
     if (window.flags & WindowFlags::Popup)

@@ -232,7 +232,7 @@ pub struct Table
     // int                         settings_offset;             // Offset in g.SettingsTables
     pub SettingsOffset: i32,
     // int                         last_frame_active;
-    pub LastFrameActive: i32,
+    pub last_frame_active: i32,
     // int                         ColumnsCount;               // Number of columns declared in BeginTable()
     pub ColumnsCount: i32,
     // int                         CurrentRow;
@@ -419,7 +419,7 @@ impl Table {
     // ImGuiTable()                { memset(this, 0, sizeof(*this)); last_frame_active = -1; }
     pub fn new() -> Self {
         Self {
-            LastFrameActive: -1,
+            last_frame_active: -1,
             ..Default::default()
         }
     }

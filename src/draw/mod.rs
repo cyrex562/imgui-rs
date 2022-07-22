@@ -401,10 +401,19 @@ use imgui_rs::draw_cmd::DimgDrawCmd;
 use imgui_rs::draw_list::DimgDrawList;
 use imgui_rs::vec_nd::Vector2D;
 use std::collections::hash::set::HashSet;
-use crate::draw_defines::DrawFlags;
-use crate::draw_list::DrawList;
+use draw_defines::DrawFlags;
+use draw_list::DrawList;
 use crate::types::Id32;
 use crate::viewport::Viewport;
+
+pub mod draw_list;
+pub mod draw_cmd;
+mod draw_vert;
+pub mod draw_list_shared_data;
+pub mod draw_data_builder;
+pub mod draw_list_splitter;
+pub mod draw_data;
+pub mod draw_defines;
 
 // Automatic segment count
     const int radius_idx = (radius + 0.999999); // ceil to never reduce accuracy
@@ -3590,22 +3599,22 @@ void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir
     Vector2D a, b, c;
     switch (dir)
     {
-    case Dir::Up:
-    case Dir::Down:
-        if (dir == Dir::Up) r = -r;
+    case Direction::Up:
+    case Direction::Down:
+        if (dir == Direction::Up) r = -r;
         a = Vector2D::new(+0.000, +0.750) * r;
         b = Vector2D::new(-0.866, -0.750) * r;
         c = Vector2D::new(+0.866, -0.750) * r;
         break;
-    case Dir::Left:
-    case Dir::Right:
-        if (dir == Dir::Left) r = -r;
+    case Direction::Left:
+    case Direction::Right:
+        if (dir == Direction::Left) r = -r;
         a = Vector2D::new(+0.750, +0.000) * r;
         b = Vector2D::new(-0.750, +0.866) * r;
         c = Vector2D::new(-0.750, -0.866) * r;
         break;
-    case Dir::None:
-    case Dir::COUNT:
+    case Direction::None:
+    case Direction::COUNT:
         // IM_ASSERT(0);
         break;
     }
@@ -3637,11 +3646,11 @@ void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, Vector2D pos, Vector2D 
 {
     switch (direction)
     {
-    case Dir::Left:  draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), pos, col); return;
-    case Dir::Right: draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), pos, col); return;
-    case Dir::Up:    draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), pos, col); return;
-    case Dir::Down:  draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), pos, col); return;
-    case Dir::None: case Dir::COUNT: break; // Fix warnings
+    case Direction::Left:  draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), pos, col); return;
+    case Direction::Right: draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), pos, col); return;
+    case Direction::Up:    draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), pos, col); return;
+    case Direction::Down:  draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), pos, col); return;
+    case Direction::None: case Direction::COUNT: break; // Fix warnings
     }
 }
 
@@ -3650,7 +3659,7 @@ void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, Vector2D pos, Vector2D 
 void ImGui::RenderArrowDockMenu(ImDrawList* draw_list, Vector2D p_min, float sz, ImU32 col)
 {
     draw_list.add_rect_filled(p_min + Vector2D::new(sz * 0.20, sz * 0.15), p_min + Vector2D::new(sz * 0.80, sz * 0.30), col);
-    RenderArrowPointingAt(draw_list, p_min + Vector2D::new(sz * 0.50, sz * 0.85), Vector2D::new(sz * 0.30, sz * 0.40), Dir::Down, col);
+    RenderArrowPointingAt(draw_list, p_min + Vector2D::new(sz * 0.50, sz * 0.85), Vector2D::new(sz * 0.30, sz * 0.40), Direction::Down, col);
 }
 
 static inline float ImAcos01(float x)

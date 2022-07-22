@@ -38,6 +38,6 @@ pub fn is_window_appearing(g: &mut Context) -> bool
 // void ImGui::SetWindowCollapsed(const char* name, bool collapsed, ImGuiCond cond)
 pub fn set_window_collapsed3(g: &mut Context, name: &str, collapsed: bool, cond: Condition)
 {
-    if (ImGuiWindow* window = FindWindowByName(name))
+    if (ImGuiWindow* window = find_window_by_name(name))
         SetWindowCollapsed(window, collapsed, cond);
 }

@@ -37,7 +37,7 @@ pub fn begin_tooltip_ex(g: &mut Context, tooltip_flags: &HashSet<TooltipFlags>, 
     char window_name[16];
     ImFormatString(window_name, IM_ARRAYSIZE(window_name), "##Tooltip_%02d", g.tool_tip_override_count);
     if (tooltip_flags & TooltipFlags::OverridePreviousTooltip)
-        if (ImGuiWindow* window = FindWindowByName(window_name))
+        if (ImGuiWindow* window = find_window_by_name(window_name))
             if (window.active)
             {
                 // Hide previous tooltip from being displayed. We can't easily "reset" the content of a window so we create a new one.

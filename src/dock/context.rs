@@ -2,20 +2,24 @@ use std::collections::HashMap;
 use crate::config::ConfigFlags;
 use crate::context::Context;
 use crate::dock::{dock_builder_remove_node_child_nodes, dock_builder_remove_node_docked_windows, DOCKING_SPLITTER_SIZE, ImGuiDockNode};
-use crate::dock::node::{DockNode, DockNodeSettings};
+use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags, DockNodeSettings};
 use crate::frame::get_frame_height;
-use crate::{dock, INVALID_ID};
+use crate::{dock, INVALID_ID, window};
 use crate::dock::request::{DockRequest, DockRequestType};
 use crate::rect::Rect;
-use crate::settings::SettingsHandler;
-use crate::types::Id32;
+use crate::settings::{find_window_settings, SettingsHandler};
+use crate::types::{DataAuthority, Direction, Id32};
+use crate::utils::get_or_add;
 use crate::vectors::two_d::Vector2D;
+use crate::window::get::find_window_by_name;
+use crate::window::Window;
 
 
 #[derive(Default,Debug,Clone)]
 pub struct DockContext {
     //ImGuiStorage                    Nodes;          // Map id -> ImGuiDockNode*: active nodes
-    pub nodes: HashMap<Id32, DockNode>,
+    // pub nodes: HashMap<Id32, DockNode>,
+    pub nodes: Vec<Id32>,
     // ImVector<ImGuiDockRequest>      Requests;
     pub requests: Vec<DockRequest>,
     // ImVector<ImGuiDockNodeSettings> NodesSettings;
@@ -140,11 +144,11 @@ pub fn dock_context_new_frame_update_undocking(ctx: &mut Context)
     {
         // ImGuiDockRequest* req = &dc->Requests[n];
         let req = dc.requests.get(n).unwrap();
-        if req.Type == DockRequestType::Undock && req.undock_target_window {
-            dock_context_process_undock_window(ctx, req.undock_target_window);
+        if req.Type == DockRequestType::Undock && req.undock_target_window_id {
+            dock_context_process_undock_window(ctx, req.undock_target_window_id);
         }
-        else if req.requst_type == DockRequestType::Undock && req.undock_target_node {
-            dock_context_process_undock_node(ctx, req.undock_target_node);
+        else if req.requst_type == DockRequestType::Undock && req.undock_target_node_id {
+            dock_context_process_undock_node(ctx, req.undock_target_node_id);
         }
     }
 }
@@ -160,7 +164,7 @@ pub fn dock_context_end_frame(g: &mut Context)
 for node in dc.nodes.iter_mut()
 {
     if ImGuiDockNode * node = dc.Nodes.data[n].val_p {
-        if node.LastFrameActive == g.frame_count && node.IsVisible && node.host_window && node.IsLeafNode() && ! node.is_bg_drawn_this_frame {
+        if node.last_frame_active == g.frame_count && node.IsVisible && node.host_window && node.is_leaf_node() && ! node.is_bg_drawn_this_frame {
             let mut bg_rect = Rect::new2(
                 &node.pos + &Vector2D::new(0.0, get_frame_height(g)),
                 &node.pos + &node.size);
@@ -196,8 +200,8 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context)
     {
         let hovered_window = g.get_window(g.hovered_window_under_moving_window_id);
         let hovered_window_root_window = g.get_window(hovered_window.root_window_id);
-        if hovered_window.dock_node_as_host.is_some() {
-            g.hovered_dock_node = dock_node_tree_find_visible_node_by_pos(&hovered_window.dock_node_as_host.unwrap(), &g.io.mouse_pos);
+        if hovered_window.dock_node_as_host_id.is_some() {
+            g.hovered_dock_node = dock_node_tree_find_visible_node_by_pos(&hovered_window.dock_node_as_host_id.unwrap(), &g.io.mouse_pos);
         }
         else if hovered_window_root_window.dock_node.is_some() {
             g.hovered_dock_node = hovered_window.root_window.dock_node;
@@ -275,4 +279,253 @@ pub struct DockContextPruneNodeData
     // ImGuiID     RootId;
     pub root_id: Id32
     // ImGuiDockContextPruneNodeData() { CountWindows = CountChildWindows = CountChildNodes = 0; RootId = 0; }
+}
+
+// Garbage collect unused nodes (run once at init time)
+// static void DockContextPruneUnusedSettingsNodes(ImGuiContext* ctx)
+pub fn dock_context_prune_unused_settings_nodes(g: &mut Context)
+{
+    // ImGuiContext& g = *ctx;
+    // ImGuiDockContext* dc  = &ctx.DockContext;
+    let mut dc = &mut g.dock_context;
+    // IM_ASSERT(g.windows.size == 0);
+
+    // ImPool<ImGuiDockContextPruneNodeData> pool;
+    let mut pool: HashMap<Id32, DockContextPruneNodeData> = HashMap::new();
+
+    // Count child nodes and compute RootID
+    // for (int settings_n = 0; settings_n < dc.NodesSettings.size; settings_n += 1)
+    for settings_n in 0 .. dc.nodes_settings.len()
+    {
+        // ImGuiDockNodeSettings* settings = &dc.NodesSettings[settings_n];
+        let settings = &dc.nodes_settings[settings_n];
+        // ImGuiDockContextPruneNodeData* parent_data = settings.parent_node_id ? pool.GetByKey(settings.parent_node_id) : 0;
+        let mut parent_data = pool.get_mut(&settings.parent_node_id);
+
+        // pool.GetOrAddByKey(settings.ID).RootId = parent_data ? parent_data.RootId : settings.ID;
+        let mut pool_val = get_or_add(&mut pool, &settings.id);
+        pool_val.root_id = if parent_data.is_some() {
+            parent_data.unwrap().root_id
+        } else {
+            settings.id
+        };
+
+        if settings.parent_node_id != INVALID_ID {
+            // pool.GetOrAddByKey(settings.parent_node_id).CountChildNodes += 1;
+            pool_val.count_child_nodes += 1;
+        }
+    }
+
+    // Count reference to dock ids from dockspaces
+    // We track the 'auto-dock_node <- manual-window <- manual-DockSpace' in order to avoid 'auto-dock_node' being ditched by DockContextPruneUnusedSettingsNodes()
+    // for (int settings_n = 0; settings_n < dc.NodesSettings.size; settings_n += 1)
+    for settings_n in 0 .. dc.nodes_settings.len()
+    {
+        // ImGuiDockNodeSettings* settings = &dc.NodesSettings[settings_n];
+        let settings = &mut dc.nodes_settings[settings_n];
+        // if (settings.ParentWindowId != 0)
+        if settings.parent_window_id != INVALID_ID
+        {
+            let window_settings = find_window_settings(g, settings.parent_window_id);
+            // if (ImGuiWindowSettings * window_settings = FindWindowSettings(settings.ParentWindowId))
+            if window_settings.id != INVALID_ID
+            {
+                // if (window_settings.dock_id)
+                if window_settings.dock_id != INVALID_ID
+                {
+                    // if (ImGuiDockContextPruneNodeData * data = pool.GetByKey(window_settings.dock_id))
+                    let data = pool.get_mut(&window_settings.dock_id)
+                    if data.is_some()
+                    {
+                        // data.CountChildNodes += 1;
+                        data.unwrap().count_child_nodes += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // Count reference to dock ids from window settings
+    // We guard against the possibility of an invalid .ini file (RootID may point to a missing node)
+    // for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
+    for settings in g.settings_windows.iter_mut() {
+        let dock_id = settings.dock_id;
+        // if (ImGuiID dock_id = settings.dock_id){
+        if dock_id != INVALID_ID {
+            // if (ImGuiDockContextPruneNodeData * data = pool.GetByKey(dock_id)) {
+            let data = pool.get_mut(&dock_id);
+            if data.is_some() {
+                data.unwrap().count_windows += 1;
+                // if (ImGuiDockContextPruneNodeData * data_root = (data.RootId == dock_id)? data: pool.GetByKey(data.RootId)){
+                let data_root = if data.unwrap().root_id == dock_id {
+                   data }
+                        else {
+                         pool.get_mut(&data.unwrap().root_id)
+                    };
+                    if data_root.is_some() {
+                    data_root.unwrap().child_count_windows += 1;
+                }
+            }
+        }
+    }
+
+    // Prune
+    // for (int settings_n = 0; settings_n < dc.NodesSettings.size; settings_n += 1)
+    for settings_n in 0 .. dc.nodes_settings.len()
+    {
+        // ImGuiDockNodeSettings* settings = &dc.NodesSettings[settings_n];
+        let settings = &mut dc.nodes_settings[settings_n];
+        // ImGuiDockContextPruneNodeData* data = pool.GetByKey(settings.ID);
+        let data = pool.get_mut(&settings.id);
+        if data.unwrap().count_windows > 1 {
+            continue;
+        }
+        // ImGuiDockContextPruneNodeData* data_root = (data.RootId == settings.ID) ? data : pool.GetByKey(data.RootId);
+        let data_root = if data.unwrap().root_id == settings.id { data} else {
+            pool.get_mut(&data.unwrap().root_id)
+        };
+
+        let mut remove = false;
+        remove |= (data.count_windows == 1 && settings.parent_node_id == 0 && data.count_child_nodes == 0 && !(settings.flags.contains(&DockNodeFlags::CentralNode)));  // Floating root node with only 1 window
+        remove |= (data.count_windows == 0 && settings.parent_node_id == 0 && data.count_child_nodes == 0); // Leaf nodes with 0 window
+        remove |= (data_root.count_child_windows == 0);
+        if remove
+        {
+            // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextPruneUnusedSettingsNodes: Prune 0x%08X\n", settings.ID);
+            dock::dock_settings_remove_node_references(g, &settings.id, 1);
+            settings.id = 0;
+        }
+    }
+}
+
+// static void DockContextBuildNodesFromSettings(ImGuiContext* ctx, ImGuiDockNodeSettings* node_settings_array, int node_settings_count)
+pub fn dock_context_buld_nodes_from_settings(g: &mut Context, node_settings_array: &mut Vec<DockNodeSettings>, node_settings_count: i32)
+{
+    // build nodes
+    // for (int node_n = 0; node_n < node_settings_count; node_n += 1)
+    for node_n in 0 .. node_settings_count
+    {
+        // ImGuiDockNodeSettings* settings = &node_settings_array[node_n];
+        let settings = node_settings_array.get_mut(node_n).unwrap();
+
+        if settings.id == INVALID_ID {
+            continue;
+        }
+        // ImGuiDockNode* node = DockContextAddNode(ctx, settings.id);
+        let mut node = dock_context_add_node(g, settings.id);
+        // node.ParentNode = settings.parent_node_id ? dock_context_find_node_by_id(ctx, settings.parent_node_id) : NULL;
+        node.parent_node_id = settings.parent_node_id;
+        node.pos = Vector2D::new(settings.pos.x, settings.pos.y);
+        node.size = Vector2D::new(settings.size.x, settings.size.y);
+        node.size_ref = Vector2D::new(settings.size_ref.x, settings.size_ref.y);
+        node.authority_for_pos = DataAuthority::DockNode;
+        node.authority_for_size = DataAuthority::DockNode;
+            node.authority_for_viewport = DataAuthority::DockNode;
+        if node.parent_node && node.parent_node.child_nodes[0] == NULL {
+            node.parent_node.child_nodes[0] = node;
+        }
+        else if node.parent_node && node.parent_node.child_nodes[1] == NULL {
+            node.parent_node.child_nodes[1] = node;
+        }
+        node.selected_tab_id = settings.selected_tab_id;
+        node.split_axis = settings.split_axis;
+        node.set_local_flags(settings.flags & DockNodeFlags::SavedFlagsMask);
+
+        // Bind host window immediately if it already exist (in case of a rebuild)
+        // This is useful as the root_window_for_title_bar_highlight links necessary to highlight the currently focused node requires node->host_window to be set.
+        // char host_window_title[20];
+        let mut host_window_tile = String::from("");
+        // ImGuiDockNode* root_node = DockNodeGetRootNode(node);
+        let root_node = dock_node_get_root_node(g, node);
+        node.host_window_id = find_window_by_name(g, dock_node_get_host_window_title(root_node, host_window_title, (host_window_title.len()))).unwrap().id;
+    }
+}
+
+// void DockContextBuildAddWindowsToNodes(ImGuiContext* ctx, ImGuiID root_id)
+pub fn dock_context_build_add_windows_to_nodes(g: &mut Context, root_id: Id32)
+{
+    // Rebind all windows to nodes (they can also lazily rebind but we'll have a visible glitch during the first frame)
+    // ImGuiContext& g = *ctx;
+    // for (int n = 0; n < g.windows.size; n += 1)
+    // for n in 0 .. g.windows.len()
+    for (_, window) in g.windows.iter_mut()
+    {
+        // ImGuiWindow* window = g.windows[n];
+        // let window = g.windows.get_mut(n).unwrap();
+        if window.dock_id == INVALID_ID || window.last_frame_active < g.frame_count - 1 {
+            continue;
+        }
+        if window.dock_node_id != INVALID_ID {
+            continue;
+        }
+
+        // ImGuiDockNode* node = dock_context_find_node_by_id(ctx, window.dock_id);
+        let node = dock_context_find_node_by_id(g, window.dock_id);
+        // IM_ASSERT(node != NULL);   // This should have been called after DockContextBuildNodesFromSettings()
+        if root_id == INVALID_ID || dock_node_get_root_node(g, node.unwrap()).id == root_id {
+            dock::dock_node_add_window(g, node.unwrap(), window, true);
+        }
+    }
+}
+
+// void DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, float split_ratio, bool split_outer)
+pub fn dock_context_queue_dock(g: &mut Context, target: &mut Window, target_node: &mut DockNode, payload: &mut window::Window, split_dir: Direction, split_ratio: f32, split_outer: bool)
+{
+    // IM_ASSERT(target != payload);
+    // ImGuiDockRequest req;
+    let mut req = DockRequest::default();
+    req.request_type = DockRequestType::Dock;
+    req.dock_target_window_id = target.id;
+    req.dock_target_node_id = target_node.id;
+    req.dock_payload_id = payload.id;
+    req.dock_split_dir = split_dir;
+    req.dock_split_ratio = split_ratio;
+    req.dock_split_outer = split_outer;
+    g.dock_context.requests.push_back(req);
+}
+
+// void DockContextQueueUndockWindow(ImGuiContext* ctx, ImGuiWindow* window)
+pub fn dock_context_queue_undock_window(g: &mut Context, window: &mut Window)
+{
+    // ImGuiDockRequest req;
+    let mut req = DockRequest::default();
+    // req.Type = DockRequestType::Undock;
+    req.request_type = DockRequestType::Undock;
+    // req.UndockTargetWindow = window;
+    req.undock_target_window_id = window.id;
+    // ctx.dock_context.requests.push_back(req);
+    g.dock_context.requests.push(req);
+}
+
+// void DockContextQueueUndockNode(ImGuiContext* ctx, ImGuiDockNode* node)
+pub fn dock_context_queue_undock_node(g: &mut Context, node: &mut DockNode)
+{
+    // ImGuiDockRequest req;
+    // req.Type = DockRequestType::Undock;
+    // req.UndockTargetNode = node;
+    // ctx.dock_context.requests.push_back(req);
+    let req = DockRequest {
+        request_type: DockRequestType::Undock,
+        undock_target_node_id: node.id,
+        ..Default::default()
+    };
+    g.dock_context.requests.push(req);
+}
+
+// void DockContextQueueNotifyRemovedNode(ImGuiContext* ctx, ImGuiDockNode* node)
+pub fn dock_context_queue_notify_remove_node(g: &mut Context, node: &mut DockNode)
+{
+    // ImGuiDockContext* dc  = &ctx.dock_context;
+    let dc = &mut g.dock_context;
+    // for (int n = 0; n < dc.requests.size; n += 1
+    for req in dc.requests.iter_mut()
+    {
+
+        // if (dc.requests[n].dock_target_node == node)
+        if req.dock_target_node_id == node.id
+        {
+            // dc.requests[n].Type = DockRequestType::None;
+            req.request_type = DockRequestType::None;
+        }
+    }
 }

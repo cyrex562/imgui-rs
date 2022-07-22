@@ -130,7 +130,7 @@ pub fn begin_drag_drop_source(g: &mut Context, flags: &HashSet<DragDropFlags>) -
         }
         if (g.active_id != source_id)
             return false;
-        source_parent_id = window.IDStack.back();
+        source_parent_id = window.idStack.back();
         source_drag_active = is_mouse_dragging(mouse_button);
 
         // Disable navigation and key inputs while dragging + cancel existing request if any
