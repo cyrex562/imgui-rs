@@ -42,7 +42,7 @@ pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
 }
 
 // void ImGui::BringWindowToDisplayBack(ImGuiWindow* window)
-pub fn bring_window_to_display_back(ctx: &mut Context, window: &mut Window)
+pub fn bring_window_to_display_back(.g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
     if (g.windows[0] == window)
@@ -104,7 +104,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
     // IM_ASSERT(window == NULL || window.root_window_dock_tree != NULL);
     ImGuiWindow* focus_front_window = window ? window.root_window : NULL;
     ImGuiWindow* display_front_window = window ? window.root_window_dock_tree : NULL;
-    ImGuiDockNode* dock_node = window ? window.dock_node : NULL;
+    ImGuiDockNode* dock_node = window ? window.dock_node_id: NULL;
     bool active_id_window_is_dock_node_host = (g.active_id_window && dock_node && dock_node.host_window == g.active_id_window);
 
     // Steal active widgets. Some of the cases it triggers includes:

@@ -9,15 +9,15 @@ use crate::vectors::two_d::Vector2D;
 ///   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
 // void ImGui::PushClipRect(const Vector2D& clip_rect_min, const Vector2D& clip_rect_max, bool intersect_with_current_clip_rect)
 pub fn push_clip_rect(
-    ctx: &mut Context,
+    .g: &mut Context,
     clip_rect_min: &Vector2D,
     clip_rect_max: &Vector2D,
     intersect_with_current_clip_rect: bool,
 ) {
     // ImGuiWindow* window = GetCurrentWindow();
-    let window = ctx.get_current_window().unwrap();
+    let window = .g.get_current_window().unwrap();
     // window.draw_list->PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
-    let draw_list = ctx.get_draw_list(window.draw_list_id).unwrap();
+    let draw_list = .g.get_draw_list(window.draw_list_id).unwrap();
     draw_list.push_clip_rect(
         clip_rect_min,
         clip_rect_max,
@@ -28,11 +28,11 @@ pub fn push_clip_rect(
 }
 
 // void ImGui::PopClipRect()
-pub fn pop_clip_rect(ctx: &mut Context) {
+pub fn pop_clip_rect(.g: &mut Context) {
     // ImGuiWindow* window = GetCurrentWindow();
-    let window = ctx.get_current_window().unwrap();
+    let window = .g.get_current_window().unwrap();
     // window.draw_list->PopClipRect();
-    let draw_list = ctx.get_draw_list(window.draw_list_id).unwrap();
+    let draw_list = .g.get_draw_list(window.draw_list_id).unwrap();
     draw_list.pop_clip_rect();
     // window.ClipRect = window.draw_list->_ClipRectStack.back();
     window.clip_rect = draw_list.clip_rect_stack.last().unwrap().clone();

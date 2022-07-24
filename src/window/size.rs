@@ -126,7 +126,7 @@ pub fn get_window_resize_corner_id(g: &mut Context, window: &mut Window, n: i32)
 {
     // IM_ASSERT(n >= 0 && n < 4);
     // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.ID : window.id;
-    let mut id = if window.dock_is_active { window.dock_node.host_window_id } else { window.id};
+    let mut id = if window.dock_is_active { window.dock_node_id.host_window_id } else { window.id};
     // id = ImHashStr("#RESIZE", 0, id);
     // id = hash_string("#RESIZE", 0, id);
     // // id = ImHashData(&n, sizeof, id);
@@ -324,7 +324,7 @@ pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, co
     else
         window.size_full.y = f32::floor(size.y);
     if (old_size.x != window.size_full.x || old_size.y != window.size_full.y)
-        MarkIniSettingsDirty(window);
+        mark_ini_settings_dirty(window);
 }
 
 // void ImGui::SetWindowSize(const Vector2D& size, ImGuiCond cond)
@@ -527,12 +527,12 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     if size_target.x != f32::MAX
     {
         window.size_full = size_target;
-        MarkIniSettingsDirty(window);
+        mark_ini_settings_dirty(window);
     }
     if pos_target.x != f32::MAX
     {
         window.pos = Vector2D::floor(pos_target);
-        MarkIniSettingsDirty(window);
+        mark_ini_settings_dirty(window);
     }
 
     window.size = window.size_full.clone();

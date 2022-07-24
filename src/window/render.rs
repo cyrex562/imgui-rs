@@ -151,7 +151,7 @@ pub fn render_window_decorations(g: &mut Context,
             // Render, for docked windows and host windows we ensure bg goes before decorations
             let bg_draw_list = if window.dock_is_active {
                 // window.dock_node.host_window.draw_list
-                let win = g.get_window(window.dock_node.host_window_id).unwrap();
+                let win = g.get_window(window.dock_node_id.host_window_id).unwrap();
                 g.get_draw_list(win.draw_list_id).unwrap()
             } else {
                 g.get_draw_list(window.draw_list_id).unwrap()
@@ -161,7 +161,7 @@ pub fn render_window_decorations(g: &mut Context,
                 bg_draw_list.channels_set_current(0);
             }
             if window.dock_is_active {
-                window.dock_node.last_bg_color = bg_col;
+                window.dock_node_id.last_bg_color = bg_col;
             }
 
             bg_draw_list.add_rect_filled(&window.pos + Vector2D::new(0.0, window.title_bar_height()),
@@ -175,7 +175,7 @@ pub fn render_window_decorations(g: &mut Context,
             }
         }
         if window.dock_is_active {
-            window.dock_node.is_bg_drawn_this_frame = true;
+            window.dock_node_id.is_bg_drawn_this_frame = true;
         }
 
         // Title bar
@@ -207,7 +207,7 @@ pub fn render_window_decorations(g: &mut Context,
 
         // Docking: Unhide tab bar (small triangle in the corner), drag from small triangle to quickly undock
         // ImGuiDockNode* node = window.dock_node;
-        let node = &mut window.dock_node;
+        let node = &mut window.dock_node_id;
         if window.dock_is_active && node.is_hidden_tab_bar() && !node.is_no_tab_bar()
         {
             // float unhide_sz_draw = f32::floor(g.FontSize * 0.70);

@@ -366,7 +366,7 @@ impl Io {
 // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
 // - bool down:          Is the key down? use false to signify a key release.
 // - float analog_value: 0.0..1.0
-    pub fn add_key_analog_event(&mut self, ctx: &mut Context, key: &DimgKey, down: bool, v: f32) {
+    pub fn add_key_analog_event(&mut self, .g: &mut Context, key: &DimgKey, down: bool, v: f32) {
         //if (e->down) { IMGUI_DEBUG_LOG_IO("add_key_event() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->down, e->NativeKeycode, e->NativeScancode); }
         if key == DimgKey::None || !self.app_accepting_events {
             return;
@@ -392,9 +392,9 @@ impl Io {
         if key_data.down == down && key_data.analog_value == analog_value {
             let mut found = false;
             // for (int n = g.input_events_queue.size - 1; n >= 0 && !found; n--){
-            let mut n = ctx.InputEventsQueue.size - 1;
+            let mut n = .g.InputEventsQueue.size - 1;
             while n >= 0 && !found {
-                if ctx.InputEventsQueue[n].Type == DimgInputEventType::Key && ctx.InputEventsQueue[n].Key.Key == key {
+                if .g.InputEventsQueue[n].Type == DimgInputEventType::Key && .g.InputEventsQueue[n].Key.Key == key {
                     found = true;
                 }
             }
@@ -412,10 +412,10 @@ impl Io {
         e.Key.Key = key;
         e.Key.down = down;
         e.Key.analog_value = analog_value;
-        ctx.InputEventsQueue.push_back(e);
+        .g.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_pos_event(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
-    pub fn add_mouse_pos_event(&mut self, ctx: &mut Context, x: f32, y: f32) {
+    pub fn add_mouse_pos_event(&mut self, .g: &mut Context, x: f32, y: f32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         if !self.app_accepting_events {
@@ -427,10 +427,10 @@ impl Io {
         e.source = InputSource::Mouse;
         e.MousePos.PosX = x;
         e.MousePos.PosY = y;
-        ctx.InputEventsQueue.push_back(e);
+        .g.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_button_event(int button, bool down);             // Queue a mouse button change
-    pub fn add_mouse_button_event(&mut self, ctx: &mut Context, button: i32, down: bool) {
+    pub fn add_mouse_button_event(&mut self, .g: &mut Context, button: i32, down: bool) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         // IM_ASSERT(mouse_button >= 0 && mouse_button < ImGuiMouseButton_COUNT);
@@ -443,10 +443,10 @@ impl Io {
         e.source = InputSource::Mouse;
         e.MouseButton.Button = button;
         e.MouseButton.down = down;
-        ctx.InputEventsQueue.push_back(e);
+        .g.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_wheel_event(float wh_x, float wh_y);             // Queue a mouse wheel update
-    pub fn add_mouse_wheel_event(&mut self, ctx: &mut Context, wheel_x: f32, wheel_y: f32) {
+    pub fn add_mouse_wheel_event(&mut self, .g: &mut Context, wheel_x: f32, wheel_y: f32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         if (wheel_x == 0.0 && wheel_y == 0.0) || !self.app_accepting_events {
@@ -459,10 +459,10 @@ impl Io {
         e.source = InputSource::Mouse;
         e.mouse_wheel.WheelX = wheel_x;
         e.mouse_wheel.WheelY = wheel_y;
-        ctx.InputEventsQueue.push_back(e);
+        .g.InputEventsQueue.push_back(e);
     }
     //  void  add_mouse_viewport_event(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
-    pub fn add_mouse_viewport_event(&mut self, ctx: &mut Context, id: Id32) {
+    pub fn add_mouse_viewport_event(&mut self, .g: &mut Context, id: Id32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
         // IM_ASSERT(g.io.backend_flags & ImGuiBackendFlags_HasMouseHoveredViewport);
@@ -472,10 +472,10 @@ impl Io {
         e.input_event_type = DimgInputEventType::mouse_viewport;
         e.source = InputSource::Mouse;
         e.mouse_viewport.HoveredViewportID = id;
-        ctx.InputEventsQueue.push_back(e);
+        .g.InputEventsQueue.push_back(e);
     }
     //  void  add_focus_event(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
-    pub fn add_focus_event(&mut self, ctx: &mut Context, focused: bool) {
+    pub fn add_focus_event(&mut self, .g: &mut Context, focused: bool) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
 
@@ -483,7 +483,7 @@ impl Io {
         let mut e = InputEvent::new();
         e.input_event_type = DimgInputEventType::Focus;
         e.AppFocused.Focused = focused;
-        ctx.InputEventsQueue.push_back(e);
+        .g.InputEventsQueue.push_back(e);
     }
     //  void  add_input_character(unsigned int c);                      // Queue a new character input
 
@@ -491,7 +491,7 @@ impl Io {
 // - with glfw you can get those from the callback set in glfwSetCharCallback()
 // - on windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
 // FIXME: Should in theory be called "AddCharacterEvent()" to be consistent with new API
-    pub fn add_input_character(&mut self, c: u32, ctx: &mut Context) {
+    pub fn add_input_character(&mut self, c: u32, .g: &mut Context) {
         // ImGuiContext & g = *;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.".to_string());
         if c == 0 || !self.app_accepting_events {
@@ -503,7 +503,7 @@ impl Io {
             val: DimgInputEventVal::new(),
             added_byt_test_engine: false
         };
-        ctx.InputEventsQueue.push_back(e);
+        .g.InputEventsQueue.push_back(e);
     }
     //  void  add_input_character_utf16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
     // UTF16 strings use surrogate pairs to encode codepoints >= 0x10000, so

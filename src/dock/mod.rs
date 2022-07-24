@@ -16,7 +16,7 @@ use crate::input::NavLayer;
 use crate::item::ItemFlags;
 use crate::orig_imgui_single_file::{int, Rect};
 use crate::rect::Rect;
-use crate::settings::{find_window_settings, SettingsHandler};
+use crate::settings::{find_window_settings, mark_ini_settings_dirty, SettingsHandler};
 use crate::style::{get_color_u32, pop_style_color, push_style_color};
 use crate::types::INVALID_ID;
 use crate::vectors::ImLengthSqr;
@@ -24,17 +24,20 @@ use crate::vectors::two_d::Vector2D;
 use crate::{Viewport, window};
 use crate::condition::Condition;
 use crate::dock::context::{dock_context_add_node, dock_context_find_node_by_id, dock_context_gen_node_id, DockContext, DockContextPruneNodeData};
+use crate::dock::dock_context::dock_context_remove_node;
 use crate::dock::dock_node::DockNode;
 use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags, DockNodeSettings};
 use crate::frame::get_frame_height;
+use crate::platform::get_viewport_platform_monitor;
 use crate::popup::PopupPositionPolicy::Default;
 use crate::tab_bar::TabBar;
 use crate::text_buffer::TextBuffer;
-use crate::utils::get_or_add;
+use crate::utils::{add_hash_set, get_or_add};
 use crate::window::class::WindowClass;
 use crate::window::next_window::NextWindowDataFlags;
 use crate::window::{WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::window::get::find_window_by_name;
+use crate::window::lifecycle::update_window_parent_and_root_links;
 use crate::window::Window;
 
 pub mod node;
@@ -75,179 +78,6 @@ pub const DOCKING_TRANSPARENT_PAYLOAD_ALPHA: f32 = 0.50;
 // static const float DOCKING_SPLITTER_SIZE                    = 2.0;
 pub const DOCKING_SPLITTER_SIZE: f32 = 2.0;
 
-// void dock_context_process_dock(ImGuiContext* ctx, ImGuiDockRequest* req)
-pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest)
-{
-    // IM_ASSERT((req.Type == DockRequestType::Dock && req.DockPayload != NULL) || (req.Type == DockRequestType::Split && req.DockPayload == NULL));
-    // IM_ASSERT(req.DockTargetWindow != NULL || req.DockTargetNode != NULL);
-
-    // ImGuiContext& g = *ctx;
-    // IM_UNUSED(g);
-
-    // ImGuiWindow* payload_window = req.dock_payload_id;     // Optional
-    let payload_window_id = req.dock_payload_id;
-    let payload_window = g.get_window(payload_window_id);
-    // ImGuiWindow* target_window = req.dock_target_window_id;
-    let target_window_id = req.dock_target_window_id;
-    let target_window = g.get_window(target_window_id);
-    // ImGuiDockNode* node = req.dock_target_node_id;
-    let node_id = req.dock_target_node_id;
-    let mut node = g.get_dock_node(node_id);
-
-    if payload_window.id != INVALID_ID {}
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X target '%s' dock window '%s', split_dir %d\n", node ? node.ID : 0, target_window ? target_window.Name : "NULL", payload_window ? payload_window.Name : "NULL", req.DockSplitDir);
-    else {}
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X, split_dir %d\n", node ? node.ID : 0, req.DockSplitDir);
-
-    // Decide which Tab will be selected at the end of the operation
-    // ImGuiID next_selected_id = 0;
-    let mut next_selected_id: Id32 = 0;
-    // ImGuiDockNode* payload_node = NULL;
-    let mut payload_node: &mut DockNode = &mut Default::default();
-    if payload_window.id != INVALID_ID
-    {
-        payload_node = g.get_dock_node(payload_window.dock_node_as_host_id).unwrap();
-        payload_window.dock_node_as_host_id = INVALID_ID; // Important to clear this as the node will have its life as a child which might be merged/deleted later.
-        if payload_node.is_some() && payload_node.unwrap().is_leaf_node() {
-            next_selected_id = if payload_node.tab_bar.next_selected_tab_id != INVALID_ID {
-                payload_node.tab_bar.next_selected_tab_id
-            } else { payload_node.tab_bar.selected_tab_id };
-        }
-        if payload_node.is_none() {
-            next_selected_id = payload_window.tab_id;
-        }
-    }
-
-    // FIXME-DOCK: When we are trying to dock an existing single-window node into a loose window, transfer Node id as well
-    // When processing an interactive split, usually last_frame_alive will be < g.frame_count. But DockBuilder operations can make it ==.
-    if node.is_some() {}
-        // IM_ASSERT(node.LastFrameAlive <= g.frame_count);
-    if node.is_some() && target_window.id != INVALID_ID && node.unwrap().id == target_window.dock_node_as_host_id {}
-        // IM_ASSERT(node.Windows.size > 0 || node.IsSplitNode() || node.IsCentralNode());
-
-    // Create new node and add existing window to it
-    if node.is_none()
-    {
-        node = Some(dock_context_add_node(g, 0));
-        node.unwrap().pos = target_window.pos.clone();
-        node.unwrap().size = target_window.size.clone();
-        if target_window.dock_node_as_host_id == INVALID_ID
-        {
-            dock_node_add_window(g, node.unwrap(), target_window, true);
-            node.unwrap().tab_bar.tabs[0].flags.remove(TabItemFlags::Unsorted);
-            target_window.dock_is_active = true;
-        }
-    }
-
-    let split_dir = req.dock_split_dir.clone();
-    if split_dir != Direction::None
-    {
-        // split into two, one side will be our payload node unless we are dropping a loose window
-        // const ImGuiAxis split_axis = (split_dir == Direction::Left || split_dir == Direction::Right) ? Axis::X : Axis::Y;
-        let split_axis = if split_dir == Direction::Left || split_dir == Direction::Right {
-            Axis::X
-        } else {
-            Axis::Y
-        };
-
-        // const int split_inheritor_child_idx = (split_dir == Direction::Left || split_dir == Direction::Up) ? 1 : 0; // Current contents will be moved to the opposite side
-        let split_inheritor_child_idx = if split_dir == Direction::Left || split_dir == Direction::Up {
-            1
-        } else { 0 };
-
-        // const float split_ratio = req.dock_split_ratio;
-        let split_ratio = req.dock_split_ratio;
-        // let mut payload_node: &mut DockNode;
-        dock_node_tree_split(g, node.unwrap(), split_axis, split_inheritor_child_idx, split_ratio, payload_node);  // payload_node may be NULL here!
-        // ImGuiDockNode* new_node = node.child_nodes[split_inheritor_child_idx ^ 1];
-        let new_node = node.unwrap().child_nodes[split_inheritor_child_idx ^ 1];
-        new_node.host_window = node.unwrap().host_window;
-        node = Some(new_node);
-    }
-    // node.set_local_flags(node.LocalFlags & ~DockNodeFlags::HiddenTabBar);
-    node.unwrap().local_flags.remove(&DockNodeFlags::HiddenTabBar);
-
-    if node.unwrap().id != payload_node.id
-    {
-        // Create tab bar before we call DockNodeMoveWindows (which would attempt to move the old tab-bar, which would lead us to payload tabs wrongly appearing before target tabs!)
-        if node.unwrap().windows.len() > 0 && node.unwrap().tab_bar.is_none()
-        {
-            dock_node_add_tab_bar(g, node.unwrap());
-            // for (int n = 0; n < node.windows.size; n += 1)
-            for win_id in node.unwrap().windows.iter_mut()
-            {
-                let win = g.get_window(*win_id).unwrap();
-                tab_bar_add_tab(&mut node.unwrap().tab_bar.unwrwap(), TabItemFlags::None, win);
-            }
-        }
-
-        if payload_node.id != INVALID_ID
-        {
-            // Transfer full payload node (with 1+ child windows or child nodes)
-            if payload_node.is_split_node()
-            {
-                if node.unwrap().windows.len() > 0
-                {
-                    // We can dock a split payload into a node that already has windows _only_ if our payload is a node tree with a single visible node.
-                    // In this situation, we move the windows of the target node into the currently visible node of the payload.
-                    // This allows us to preserve some of the underlying dock tree settings nicely.
-                    // IM_ASSERT(payload_node.OnlyNodeWithWindows != NULL); // The docking should have been blocked by DockNodePreviewDockSetup() early on and never submitted.
-                    // ImGuiDockNode* visible_node = payload_node.OnlyNodeWithWindows;
-                    let visible_node = g.get_dock_node(payload_node.only_node_with_window).unwrap();
-                    if visible_node.tab_bar.is_some() {}
-                        // IM_ASSERT(visible_node.TabBar.Tabs.size > 0);
-                    dock_node_move_windows(g, node.unwrap(), visible_node);
-                    dock_node_move_windows(g, visible_node, node.unwrap());
-                    dock_settings_rename_node_references(g, node.unwrap().id, visible_node.id);
-                }
-                if node.is_central_node()
-                {
-                    // Central node property needs to be moved to a leaf node, pick the last focused one.
-                    // FIXME-DOCK: If we had to transfer other flags here, what would the policy be?
-                    // ImGuiDockNode* last_focused_node = dock_context_find_node_by_id(ctx, payload_node.LastFocusedNodeId);
-                    let last_focused_node = dock_context_find_node_by_id(g, payload_node.last_focused_node_id);
-                    // IM_ASSERT(last_focused_node != NULL);
-                    // ImGuiDockNode* last_focused_root_node = dock_node_get_root_node(g, last_focused_node);
-                    let last_focused_root_node = dock_node_get_root_node(g, g.last_focused_node);
-                    // IM_ASSERT(last_focused_root_node == DockNodeGetRootNode(payload_node));
-                    last_focused_node.set_local_flags(last_focused_node.LocalFlags | DockNodeFlags::CentralNode);
-                    node.set_local_flags(node.LocalFlags & ~DockNodeFlags::CentralNode);
-                    last_focused_root_node.CentralNode = last_focused_node;
-                }
-
-                // IM_ASSERT(node.Windows.size == 0);
-                DockNodeMoveChildNodes(node, payload_node);
-            }
-            else
-            {
-                const ImGuiID payload_dock_id = payload_node.id;
-                dock_node_move_windows(node, payload_node);
-                dock_settings_rename_node_references(payload_dock_id, node.id);
-            }
-            DockContextRemoveNode(ctx, payload_node, true);
-        }
-        else if payload_window
-        {
-            // Transfer single window
-            const ImGuiID payload_dock_id = payload_window.dock_id;
-            node.VisibleWindow = payload_window;
-            dock_node_add_window(node, payload_window, true);
-            if (payload_dock_id != 0)
-                dock_settings_rename_node_references(payload_dock_id, node.id);
-        }
-    }
-    else
-    {
-        // When docking a floating single window node we want to reevaluate auto-hiding of the tab bar
-        node.WantHiddenTabBarUpdate = true;
-    }
-
-    // Update selection immediately
-    if (ImGuiTabBar* tab_bar = node.tab_bar)
-        tab_bar.next_selected_tab_id = next_selected_id;
-    MarkIniSettingsDirty();
-}
-
 // Problem:
 //   Undocking a large (~full screen) window would leave it so large that the bottom right sizing corner would more
 //   than likely be off the screen and the window would be hard to resize to fit on screen. This can be particularly problematic
@@ -257,101 +87,59 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest)
 //   When undocking a window we currently force its maximum size to 90% of the host viewport or monitor.
 // Reevaluate this when we implement preserving docked/undocked size ("docking_wip/undocked_size" branch).
 // static Vector2D FixLargeWindowsWhenUndocking(const Vector2D& size, ImGuiViewport* ref_viewport)
-pub fn fix_large_windows_when_undocking(g: &mut Context, size: &Vector2D, ref_viewport: &mut Viewport) -> Vector2D
+pub fn fix_large_windows_when_undocking(g: &mut Context, size: &Vector2D, ref_viewport: Option<&mut Viewport>) -> Vector2D
 {
-    if (ref_viewport == NULL)
-        return size;
+    // if (ref_viewport == NULL)
+    //     return size;
+    if ref_viewport.is_none() {
+        return size.clone();
+    }
 
     // ImGuiContext& g = *GImGui;
-    Vector2D max_size = f32::floor(ref_viewport.work_size * 0.90);
-    if (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable)
+    // Vector2D max_size = f32::floor(ref_viewport.work_size * 0.90);
+    let max_size = Vector2D::floor(ref_viewport.unwrap().work_size.clone() * 0.90);
+    // if (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable)
+    if g.config_flags_curr_frame.contains(&ConfigFlags::ViewportsEnable)
     {
-        const ImGuiPlatformMonitor* monitor = GetViewportPlatformMonitor(ref_viewport);
-        max_size = f32::floor(monitor.work_size * 0.90);
+        // const ImGuiPlatformMonitor* monitor = GetViewportPlatformMonitor(ref_viewport);
+        let monitor = get_viewport_platform_monitor(g, ref_viewport.unwrap());
+        let max_size = Vector2D::floor(&monitor.work_size * 0.90);
     }
-    return ImMin(size, max_size);
-}
-
-// void DockContextProcessUndockWindow(ImGuiContext* ctx, ImGuiWindow* window, bool clear_persistent_docking_ref)
-pub fn dock_context_process_undock_window(g: &mut Context, window: &mut window::Window, clear_persistent_docking_ref: bool)
-{
-    ImGuiContext& g = *ctx;
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockWindow window '%s', clear_persistent_docking_ref = %d\n", window.Name, clear_persistent_docking_ref);
-    if (window.dock_node)
-        DockNodeRemoveWindow(window.dock_node, window, clear_persistent_docking_ref ? 0 : window.dock_id);
-    else
-        window.dock_id = 0;
-    window.collapsed = false;
-    window.dock_is_active = false;
-    window.DockNodeIsVisible = window.DockTabIsVisible = false;
-    window.size = window.size_full = FixLargeWindowsWhenUndocking(window.size_full, window.viewport);
-
-    MarkIniSettingsDirty();
-}
-
-// void DockContextProcessUndockNode(ImGuiContext* ctx, ImGuiDockNode* node)
-pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode)
-{
-    ImGuiContext& g = *ctx;
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockNode node %08X\n", node.ID);
-    // IM_ASSERT(node.IsLeafNode());
-    // IM_ASSERT(node.Windows.size >= 1);
-
-    if (node.IsRootNode() || node.is_central_node())
-    {
-        // In the case of a root node or central node, the node will have to stay in place. Create a new node to receive the payload.
-        ImGuiDockNode* new_node = dock_context_add_node(ctx, 0);
-        new_node.pos = node.pos;
-        new_node.size = node.size;
-        new_node.size_ref = node.size_ref;
-        dock_node_move_windows(new_node, node);
-        dock_settings_rename_node_references(node.id, new_node.id);
-        for (int n = 0; n < new_node.windows.size; n += 1)
-        {
-            ImGuiWindow* window = new_node.windows[n];
-            window.flags &= ~WindowFlags::ChildWindow;
-            if (window.parent_window)
-                window.parent_window.DC.ChildWindows.find_erase(window);
-            UpdateWindowParentAndRootLinks(window, window.flags, NULL);
-        }
-        node = new_node;
-    }
-    else
-    {
-        // Otherwise extract our node and merge our sibling back into the parent node.
-        // IM_ASSERT(node.ParentNode.ChildNodes[0] == node || node.ParentNode.ChildNodes[1] == node);
-        int index_in_parent = (node.parent_node.child_nodes[0] == node) ? 0 : 1;
-        node.parent_node.child_nodes[index_in_parent] = NULL;
-        dock_node_tree_merge(ctx, node.parent_node, node.parent_node.child_nodes[index_in_parent ^ 1]);
-        node.parent_node.authority_for_viewport = DataAuthority::Window; // The node that stays in place keeps the viewport, so our newly dragged out node will create a new viewport
-        node.parent_node = NULL;
-    }
-    node.authority_for_pos = node.authority_for_size = DataAuthority::DockNode;
-    node.size = FixLargeWindowsWhenUndocking(node.size, node.windows[0].Viewport);
-    node.WantMouseMove = true;
-    MarkIniSettingsDirty();
+    return Vector2D::min(size, &max_size);
 }
 
 // This is mostly used for automation.
 // bool DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos)
-pub fn dock_context_calc_drop_pos_for_docking(g: &mut Context, target: &mut window::Window, target_node: &mut DockNode, payload: &mut window::Window, split_dir: Direction, split_outer: bool, out_pos: &Vector2D) -> bool
+pub fn dock_context_calc_drop_pos_for_docking(
+    g: &mut Context,
+    target: &mut Window,
+    target_node: Option<&mut DockNode>,
+    payload: &mut Window,
+    split_dir: Direction,
+    mut split_outer: bool,
+    out_pos: &mut Vector2D) -> bool
 {
-    // In DockNodePreviewDockSetup() for a root central node instead of showing both "inner" and "outer" drop rects
+    // In dock_node_preview_dock_setup() for a root central node instead of showing both "inner" and "outer" drop rects
     // (which would be functionally identical) we only show the outer one. Reflect this here.
-    if (target_node && target_node.parent_node == NULL && target_node.is_central_node() && split_dir != Direction::None)
+    // if (target_node && target_node.parent_node == NULL && target_node.is_central_node() && split_dir != Direction::None)
+    if target_node.is_some() && target_node.unwrap().parent_node_id != INVALID_ID && split_idr != Direction::None
+    {
         split_outer = true;
-    ImGuiDockPreviewData split_data;
-    DockNodePreviewDockSetup(target, target_node, payload, &split_data, false, split_outer);
-    if (split_data.DropRectsDraw[split_dir+1].IsInverted())
+    }
+    // ImGuiDockPreviewData split_data;
+    let mut split_data = DockPreviewData::default();
+    dock_node_preview_dock_setup(g , target, target_node.unwrap(), payload, &mut split_data, false, split_outer);
+    if split_data.drop_rects_draw[&split_dir+1].is_inverted() {
         return false;
-    *out_pos = split_data.DropRectsDraw[split_dir+1].GetCenter();
+    }   
+    *out_pos = split_data.drop_rects_draw[&split_dir+1].get_center().clone();
     return true;
 }
 
 // int DockNodeGetTabOrder(ImGuiWindow* window)
 pub fn dock_node_get_tab_order(g: &mut Context, window: &mut window::Window) -> i32
 {
-    ImGuiTabBar* tab_bar = window.dock_node.tab_bar;
+    ImGuiTabBar* tab_bar = window.dock_node_id.tab_bar;
     if (tab_bar == NULL)
         return -1;
     ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, window.tab_id);
@@ -369,11 +157,11 @@ pub fn dock_node_hide_window_during_host_window_creation(g: &mut Context, window
 pub fn dock_node_add_window(g: &mut Context, node: &mut DockNode, window: &mut window::Window, add_to_tab_bar: bool)
 {
     // ImGuiContext& g = *GImGui; (void)g;
-    if (window.dock_node)
+    if (window.dock_node_id)
     {
         // Can overwrite an existing window->dock_node (e.g. pointing to a disabled DockSpace node)
         // IM_ASSERT(window.dock_node.ID != node.ID);
-        DockNodeRemoveWindow(window.dock_node, window, 0);
+        dock_node_remove_window(window.dock_node_id, window, 0);
     }
     // IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL);
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeAddWindow node 0x%08X window '%s'\n", node.ID, window.Name);
@@ -385,8 +173,8 @@ pub fn dock_node_add_window(g: &mut Context, node: &mut DockNode, window: &mut w
         DockNodeHideWindowDuringHostWindowCreation(node.windows[0]);
 
     node.windows.push_back(window);
-    node.WantHiddenTabBarUpdate = true;
-    window.dock_node = node;
+    node.want_hiddent_tab_bar_update = true;
+    window.dock_node_id = node;
     window.dock_id = node.id;
     window.dock_is_active = (node.windows.size > 1);
     window.DockTabWantClose = false;
@@ -435,7 +223,7 @@ pub fn dock_node_remove_window(g: &mut Context, node: &mut DockNode, window: &mu
     // IM_ASSERT(save_dock_id == 0 || save_dock_id == node.ID);
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeRemoveWindow node 0x%08X window '%s'\n", node.ID, window.Name);
 
-    window.dock_node = NULL;
+    window.dock_node_id = NULL;
     window.dock_is_active = window.DockTabWantClose = false;
     window.dock_id = save_dock_id;
     window.flags &= ~WindowFlags::ChildWindow;
@@ -454,11 +242,11 @@ pub fn dock_node_remove_window(g: &mut Context, node: &mut DockNode, window: &mu
         }
     if (!erased)
         // IM_ASSERT(erased);
-    if (node.VisibleWindow == window)
-        node.VisibleWindow = NULL;
+    if (node.visible_window == window)
+        node.visible_window = NULL;
 
     // Remove tab and possibly tab bar
-    node.WantHiddenTabBarUpdate = true;
+    node.want_hiddent_tab_bar_update = true;
     if (node.tab_bar)
     {
         TabBarRemoveTab(node.tab_bar, window.tab_id);
@@ -470,14 +258,14 @@ pub fn dock_node_remove_window(g: &mut Context, node: &mut DockNode, window: &mu
     if (node.windows.size == 0 && !node.is_central_node() && !node.IsDockSpace() && window.dock_id != node.id)
     {
         // Automatic dock node delete themselves if they are not holding at least one tab
-        DockContextRemoveNode(&g, node, true);
+        dock_context_remove_node(&g, node, true);
         return;
     }
 
     if (node.windows.size == 1 && !node.is_central_node() && node.host_window_id)
     {
         ImGuiWindow* remaining_window = node.windows[0];
-        if (node.host_window_id.ViewportOwned && node.IsRootNode())
+        if (node.host_window_id.ViewportOwned && node.is_root_node())
         {
             // Transfer viewport back to the remaining loose window
             IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Node %08X transfer viewport %08X=>%08X for window '%s'\n", node.id, node.host_window_id.Viewport.id, remaining_window.id, remaining_window.Name);
@@ -492,7 +280,7 @@ pub fn dock_node_remove_window(g: &mut Context, node: &mut DockNode, window: &mu
     DockNodeUpdateVisibleFlag(node);
 }
 
-// static void DockNodeMoveChildNodes(ImGuiDockNode* dst_node, ImGuiDockNode* src_node)
+// static void dock_node_move_child_nodes(ImGuiDockNode* dst_node, ImGuiDockNode* src_node)
 pub fn dock_node_move_child_nodes(g: &mut Context, dst_node: &mut DockNode, src_node: &DockNode)
 {
     // IM_ASSERT(dst_node.Windows.size == 0);
@@ -566,7 +354,7 @@ pub fn dock_node_hide_host_window(g: &mut Context, node: &mut DockNode)
 
     if (node.windows.size == 1)
     {
-        node.VisibleWindow = node.windows[0];
+        node.visible_window = node.windows[0];
         node.windows[0].dock_is_active = false;
     }
 
@@ -660,10 +448,10 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
             {
                 DockNodeHideHostWindow(node);
                 node.State = ImGuiDockNodeState_HostWindowHiddenBecauseSingleWindow;
-                DockNodeRemoveWindow(node, window, node.id); // Will delete the node so it'll be invalid on return
+                dock_node_remove_window(node, window, node.id); // Will delete the node so it'll be invalid on return
                 return;
             }
-            DockNodeRemoveWindow(node, window, node.id);
+            dock_node_remove_window(node, window, node.id);
             window_n--;
             continue;
         }
@@ -676,12 +464,12 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
 
     // Auto-hide tab bar option
     ImGuiDockNodeFlags node_flags = node.MergedFlags;
-    if (node.WantHiddenTabBarUpdate && node.windows.size == 1 && (node_flags & DockNodeFlags::AutoHideTabBar) && !node.is_hidden_tab_bar())
+    if (node.want_hiddent_tab_bar_update && node.windows.size == 1 && (node_flags & DockNodeFlags::AutoHideTabBar) && !node.is_hidden_tab_bar())
         node.want_hidden_tab_bar_toggle = true;
-    node.WantHiddenTabBarUpdate = false;
+    node.want_hiddent_tab_bar_update = false;
 
     // Cancel toggling if we know our tab bar is enforced to be hidden at all times
-    if (node.want_hidden_tab_bar_toggle && node.VisibleWindow && (node.VisibleWindow.WindowClass.DockNodeFlagsOverrideSet & DockNodeFlags::HiddenTabBar))
+    if (node.want_hidden_tab_bar_toggle && node.visible_window && (node.visible_window.WindowClass.DockNodeFlagsOverrideSet & DockNodeFlags::HiddenTabBar))
         node.want_hidden_tab_bar_toggle = false;
 
     // Apply toggles at a single point of the frame (here!)
@@ -703,7 +491,7 @@ pub fn dock_node_update_has_central_node_child(g: &mut Context, node: &mut DockN
         DockNodeUpdateHasCentralNodeChild(node.child_nodes[0]);
     if (node.child_nodes[1])
         DockNodeUpdateHasCentralNodeChild(node.child_nodes[1]);
-    if (node.IsRootNode())
+    if (node.is_root_node())
     {
         ImGuiDockNode* mark_node = node.CentralNode;
         while (mark_node)
@@ -733,7 +521,7 @@ pub fn dock_node_start_mouse_moving_window(g: &mut Context, node: &mut DockNode,
     start_mouse_moving_window(window);
     g.ActiveIdClickOffset = g.io.mouse_clicked_pos[0] - node.pos;
     g.moving_window = window; // If we are docked into a non moveable root window, start_mouse_moving_window() won't set g.moving_window. Override that decision.
-    node.WantMouseMove = false;
+    nodewant_mouse_move = false;
 }
 
 // Update central_node, OnlyNodeWithWindows, LastFocusedNodeID. Copy window class.
@@ -799,7 +587,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
     node.is_bg_drawn_this_frame = false;
 
     node.CentralNode = node.OnlyNodeWithWindows = NULL;
-    if (node.IsRootNode())
+    if (node.is_root_node())
         DockNodeUpdateForRootNode(node);
 
     // Remove tab bar if not needed
@@ -848,7 +636,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
         node.HasCloseButton = node.HasWindowMenuButton = false;
         node.last_frame_active = g.frame_count;
 
-        if (node.WantMouseMove && node.windows.size == 1)
+        if (nodewant_mouse_move && node.windows.size == 1)
             DockNodeStartMouseMovingWindow(node, node.windows[0]);
         return;
     }
@@ -905,7 +693,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
     else
     {
         // [Automatic root or child nodes]
-        if (node.IsRootNode() && node.IsVisible)
+        if (node.is_root_node() && node.IsVisible)
         {
             ImGuiWindow* ref_window = (node.windows.size > 0) ? node.windows[0] : NULL;
 
@@ -967,20 +755,20 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
             node.host_window_id = host_window = node.parent_node.host_window;
             node.authority_for_pos = node.authority_for_size = node.authority_for_viewport = DataAuthority::Auto;
         }
-        if (node.WantMouseMove && node.host_window_id)
+        if (nodewant_mouse_move && node.host_window_id)
             DockNodeStartMouseMovingWindow(node, node.host_window_id);
     }
 
     // Update focused node (the one whose title bar is highlight) within a node tree
     if (node.is_split_node())
         // IM_ASSERT(node.TabBar == NULL);
-    if (node.IsRootNode())
+    if (node.is_root_node())
         if (g.nav_window && g.nav_window.root_window.dock_node && g.nav_window.root_window.parent_window == host_window)
             node.LastFocusedNodeId = g.nav_window.root_window.dock_node.id;
 
     // Register a hit-test hole in the window unless we are currently dragging a window that is compatible with our dockspace
     ImGuiDockNode* central_node = node.CentralNode;
-    const bool central_node_hole = node.IsRootNode() && host_window && (node_flags & DockNodeFlags::PassthruCentralNode) != 0 && central_node != NULL && central_node.IsEmpty();
+    const bool central_node_hole = node.is_root_node() && host_window && (node_flags & DockNodeFlags::PassthruCentralNode) != 0 && central_node != NULL && central_node.IsEmpty();
     bool central_node_hole_register_hit_test_hole = central_node_hole;
     if (central_node_hole)
         if (const ImGuiPayload* payload = GetDragDropPayload())
@@ -1000,7 +788,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
         if (hole_rect.min.y > root_rect.min.y) { hole_rect.min.y += WINDOWS_HOVER_PADDING; }
         if (hole_rect.max.y < root_rect.max.y) { hole_rect.max.y -= WINDOWS_HOVER_PADDING; }
         //GetForegroundDrawList()->add_rect(hole_rect.min, hole_rect.max, IM_COL32(255, 0, 0, 255));
-        if (central_node_hole && !hole_rect.IsInverted())
+        if (central_node_hole && !hole_rect.is_inverted())
         {
             SetWindowHitTestHole(host_window, hole_rect.min, hole_rect.max - hole_rect.min);
             if (host_window.parent_window)
@@ -1009,7 +797,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
     }
 
     // Update position/size, process and draw resizing splitters
-    if (node.IsRootNode() && host_window)
+    if (node.is_root_node() && host_window)
     {
         host_window.draw_list.channels_set_current(1);
         DockNodeTreeUpdatePosSize(node, host_window.pos, host_window.size);
@@ -1029,7 +817,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
     // Draw whole dockspace background if ImGuiDockNodeFlags_PassthruCentralNode if set.
     // We need to draw a background at the root level if requested by ImGuiDockNodeFlags_PassthruCentralNode, but we will only know the correct pos/size
     // _after_ processing the resizing splitters. So we are using the draw_list channel splitting facility to submit drawing primitives out of order!
-    const bool render_dockspace_bg = node.IsRootNode() && host_window && (node_flags & DockNodeFlags::PassthruCentralNode) != 0;
+    const bool render_dockspace_bg = node.is_root_node() && host_window && (node_flags & DockNodeFlags::PassthruCentralNode) != 0;
     if (render_dockspace_bg && node.IsVisible)
     {
         host_window.draw_list.channels_set_current(0);
@@ -1059,7 +847,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
 
     // Draw payload drop target
     if (host_window && node.IsVisible)
-        if (node.IsRootNode() && (g.moving_window == NULL || g.moving_window.root_window_dock_tree != host_window))
+        if (node.is_root_node() && (g.moving_window == NULL || g.moving_window.root_window_dock_tree != host_window))
             BeginDockableDragDropTarget(host_window);
 
     // We update this after DockNodeUpdateTabBar()
@@ -1075,7 +863,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
             DockNodeUpdate(node.child_nodes[1]);
 
         // Render outer borders last (after the tab bar)
-        if (node.IsRootNode())
+        if (node.is_root_node())
         {
             host_window.draw_list.channels_set_current(1);
             RenderWindowOuterBorders(host_window);
@@ -1106,7 +894,7 @@ pub fn dock_node_update_window_menu(g: &mut Context, node: &mut DockNode, tab_ba
 {
     // Try to position the menu so it is more likely to stays within the same viewport
     // ImGuiContext& g = *GImGui;
-    ImGuiID ret_tab_id = 0;
+    ImGuiID ret_tab_id = INVALID_ID;
     if (g.style.window_menu_button_position == Direction::Left)
         SetNextWindowPos(Vector2D::new(node.pos.x, node.pos.y + get_frame_height()), Cond::Always, Vector2D::new(0.0, 0.0));
     else
@@ -1199,17 +987,17 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     // hidden tab bar will show a triangle on the upper-left (in Begin)
     if (node.is_hidden_tab_bar() || node.is_no_tab_bar())
     {
-        node.VisibleWindow = (node.windows.size > 0) ? node.windows[0] : NULL;
+        node.visible_window = (node.windows.size > 0) ? node.windows[0] : NULL;
         node.IsFocused = is_focused;
         if (is_focused)
             node.LastFrameFocused = g.frame_count;
-        if (node.VisibleWindow)
+        if (node.visible_window)
         {
             // Notify root of visible window (used to display title in OS task bar)
-            if (is_focused || root_node.VisibleWindow == NULL)
-                root_node.VisibleWindow = node.VisibleWindow;
+            if (is_focused || root_node.visible_window == NULL)
+                root_node.visible_window = node.visible_window;
             if (node.tab_bar)
-                node.tab_bar.VisibleTabId = node.VisibleWindow.tab_id;
+                node.tab_bar.VisibleTabId = node.visible_window.tab_id;
         }
         return;
     }
@@ -1234,7 +1022,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         tab_bar = node.tab_bar;
     }
 
-    ImGuiID focus_tab_id = 0;
+    ImGuiID focus_tab_id = INVALID_ID;
     node.IsFocused = is_focused;
 
     const ImGuiDockNodeFlags node_flags = node.MergedFlags;
@@ -1321,7 +1109,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         backup_style_cols[color_n] = g.style.colors[GWindowDockStyleColors[color_n]];
 
     // Submit actual tabs
-    node.VisibleWindow = NULL;
+    node.visible_window = NULL;
     for (int window_n = 0; window_n < node.windows.size; window_n += 1)
     {
         ImGuiWindow* window = node.windows[window_n];
@@ -1346,7 +1134,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
             if (!tab_open)
                 node.WantCloseTabId = window.tab_id;
             if (tab_bar.VisibleTabId == window.tab_id)
-                node.VisibleWindow = window;
+                node.visible_window = window;
 
             // Store last item data so it can be queried with IsItemXXX functions after the user Begin() call
             window.DockTabItemStatusFlags = g.last_item_data.status_flags;
@@ -1363,13 +1151,13 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         g.style.colors[GWindowDockStyleColors[color_n]] = backup_style_cols[color_n];
 
     // Notify root of visible window (used to display title in OS task bar)
-    if (node.VisibleWindow)
-        if (is_focused || root_node.VisibleWindow == NULL)
-            root_node.VisibleWindow = node.VisibleWindow;
+    if (node.visible_window)
+        if (is_focused || root_node.visible_window == NULL)
+            root_node.visible_window = node.visible_window;
 
     // Close button (after visible_window was updated)
     // Note that visible_window may have been overrided by CTRL+Tabbing, so visible_window->tab_id may be != from tab_bar->selected_tab_id
-    const bool close_button_is_enabled = node.HasCloseButton && node.VisibleWindow && node.VisibleWindow.HasCloseButton;
+    const bool close_button_is_enabled = node.HasCloseButton && node.visible_window && node.visible_window.HasCloseButton;
     const bool close_button_is_visible = node.HasCloseButton;
     //const bool close_button_is_visible = close_button_is_enabled; // Most people would expect this behavior of not even showing the button (leaving a hole since we can't claim that space as other windows in the tba bar have one)
     if (close_button_is_visible)
@@ -1609,7 +1397,7 @@ pub fn dock_node_calc_drop_rects_and_test_mouse_pos(g: &mut Context, parent: &Re
         off = Vector2D::new(f32::floor(hs_w * 2.40), f32::floor(hs_w * 2.40));
     }
 
-    Vector2D c = f32::floor(parent.GetCenter());
+    Vector2D c = f32::floor(parent.get_center());
     if      (dir == Direction::None)  { out_r = Rect(c.x - hs_w, c.y - hs_w,         c.x + hs_w, c.y + hs_w);         }
     else if (dir == Direction::Up)    { out_r = Rect(c.x - hs_w, c.y - off.y - hs_h, c.x + hs_w, c.y - off.y + hs_h); }
     else if (dir == Direction::Down)  { out_r = Rect(c.x - hs_w, c.y + off.y - hs_h, c.x + hs_w, c.y + off.y + hs_h); }
@@ -1638,7 +1426,7 @@ pub fn dock_node_calc_drop_rects_and_test_mouse_pos(g: &mut Context, parent: &Re
 
 // host_node may be NULL if the window doesn't have a dock_node already.
 // FIXME-DOCK: This is misnamed since it's also doing the filtering.
-// static void DockNodePreviewDockSetup(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* root_payload, ImGuiDockPreviewData* data, bool is_explicit_target, bool is_outer_docking)
+// static void dock_node_preview_dock_setup(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* root_payload, ImGuiDockPreviewData* data, bool is_explicit_target, bool is_outer_docking)
 pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut window::Window, host_node: &mut DockNode, root_payload: &mut window::Window, data: &mut DockPreviewData, is_explicit_target: bool, is_outer_docking: bool)
 {
     // ImGuiContext& g = *GImGui;
@@ -1696,7 +1484,7 @@ pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut window::W
                 continue;
             if (dir != Direction::None && !data.IsSidesAvailable)
                 continue;
-            if (DockNodeCalcDropRectsAndTestMousePos(data.FutureNode.Rect(), (ImGuiDir)dir, data.DropRectsDraw[dir+1], is_outer_docking, &g.io.mouse_pos))
+            if (DockNodeCalcDropRectsAndTestMousePos(data.FutureNode.Rect(), (ImGuiDir)dir, data.drop_rects_draw[dir+1], is_outer_docking, &g.io.mouse_pos))
             {
                 data.SplitDir = (ImGuiDir)dir;
                 data.IsSplitDirExplicit = true;
@@ -1819,15 +1607,15 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     const float overlay_rounding = ImMax(3.0, g.style.FrameRounding);
     for (int dir = Direction::None; dir < Direction::COUNT; dir += 1)
     {
-        if (!data.DropRectsDraw[dir + 1].IsInverted())
+        if (!data.drop_rects_draw[dir + 1].is_inverted())
         {
-            Rect draw_r = data.DropRectsDraw[dir + 1];
+            Rect draw_r = data.drop_rects_draw[dir + 1];
             Rect draw_r_in = draw_r;
             draw_r_in.Expand(-2.0);
             ImU32 overlay_col = (data.SplitDir == (ImGuiDir)dir && data.IsSplitDirExplicit) ? overlay_col_drop_hovered : overlay_col_drop;
             for (int overlay_n = 0; overlay_n < overlay_draw_lists_count; overlay_n += 1)
             {
-                Vector2D center = f32::floor(draw_r_in.GetCenter());
+                Vector2D center = f32::floor(draw_r_in.get_center());
                 overlay_draw_lists[overlay_n].add_rect_filled(draw_r.min, draw_r.max, overlay_col, overlay_rounding);
                 overlay_draw_lists[overlay_n].AddRect(draw_r_in.min, draw_r_in.max, overlay_col_lines, overlay_rounding);
                 if (dir == Direction::Left || dir == Direction::Right)
@@ -1849,19 +1637,19 @@ pub fn dock_node_tree_split(g: &mut Context, parent_node: &mut DockNode, split_a
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_axis != ImGuiAxis_None);
 
-    ImGuiDockNode* child_0 = (new_node && split_inheritor_child_idx != 0) ? new_node : dock_context_add_node(ctx, 0);
+    ImGuiDockNode* child_0 = (new_node && split_inheritor_child_idx != 0) ? new_node : dock_context_add_node(.g, 0);
     child_0parent_node = parent_node;
 
-    ImGuiDockNode* child_1 = (new_node && split_inheritor_child_idx != 1) ? new_node : dock_context_add_node(ctx, 0);
+    ImGuiDockNode* child_1 = (new_node && split_inheritor_child_idx != 1) ? new_node : dock_context_add_node(.g, 0);
     child_1parent_node = parent_node;
 
     ImGuiDockNode* child_inheritor = (split_inheritor_child_idx == 0) ? child_0 : child_1;
-    DockNodeMoveChildNodes(child_inheritor, parent_node);
+    dock_node_move_child_nodes(child_inheritor, parent_node);
     parent_node.child_nodes[0] = child_0;
     parent_node.child_nodes[1] = child_1;
-    parent_node.child_nodes[split_inheritor_child_idx].VisibleWindow = parent_node.VisibleWindow;
+    parent_node.child_nodes[split_inheritor_child_idx].visible_window = parent_node.visible_window;
     parent_node.split_axis = split_axis;
-    parent_node.VisibleWindow = NULL;
+    parent_node.visible_window = NULL;
     parent_node.authority_for_pos = parent_node.authority_for_size = DataAuthority::DockNode;
 
     float size_avail = (parent_node.size[split_axis] - DOCKING_SPLITTER_SIZE);
@@ -1905,7 +1693,7 @@ pub fn dock_node_tree_merge(g: &mut Context, parent_node: &mut DockNode, merge_l
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x%08X + 0x%08X back into parent 0x%08X\n", child_0 ? child_0.ID : 0, child_1 ? child_1.ID : 0, parent_node.ID);
 
     Vector2D backup_last_explicit_size = parent_node.size_ref;
-    DockNodeMoveChildNodes(parent_node, merge_lead_child);
+    dock_node_move_child_nodes(parent_node, merge_lead_child);
     if (child_0)
     {
         dock_node_move_windows(parent_node, child_0); // Generally only 1 of the 2 child node will have windows
@@ -1918,7 +1706,7 @@ pub fn dock_node_tree_merge(g: &mut Context, parent_node: &mut DockNode, merge_l
     }
     DockNodeApplyPosSizeToWindows(parent_node);
     parent_node.authority_for_pos = parent_node.authority_for_size = parent_node.authority_for_viewport = DataAuthority::Auto;
-    parent_node.VisibleWindow = merge_lead_child.VisibleWindow;
+    parent_node.visible_window = merge_lead_child.visible_window;
     parent_node.size_ref = backup_last_explicit_size;
 
     // flags transfer
@@ -1930,12 +1718,12 @@ pub fn dock_node_tree_merge(g: &mut Context, parent_node: &mut DockNode, merge_l
 
     if (child_0)
     {
-        ctx.dock_context.Nodes.SetVoidPtr(child_0.id, NULL);
+        .g.dock_context.Nodes.SetVoidPtr(child_0.id, NULL);
         IM_DELETE(child_0);
     }
     if (child_1)
     {
-        ctx.dock_context.Nodes.SetVoidPtr(child_1.id, NULL);
+        .g.dock_context.Nodes.SetVoidPtr(child_1.id, NULL);
         IM_DELETE(child_1);
     }
 }
@@ -2160,7 +1948,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode)
 
                     DockNodeTreeUpdatePosSize(child_0, child_0.pos, child_0.size);
                     DockNodeTreeUpdatePosSize(child_1, child_1.pos, child_1.size);
-                    MarkIniSettingsDirty();
+                    mark_ini_settings_dirty();
                 }
             }
             PopID();
@@ -2186,8 +1974,8 @@ pub fn set_window_dock(g: &mut Context, window: &mut window::Window, dock_id: Id
         return;
 
     // If the user attempt to set a dock id that is a split node, we'll dig within to find a suitable docking spot
-    ImGuiContext* ctx = GImGui;
-    if (ImGuiDockNode* new_node = dock_context_find_node_by_id(ctx, dock_id))
+    ImGuiContext* .g = GImGui;
+    if (ImGuiDockNode* new_node = dock_context_find_node_by_id(.g, dock_id))
         if (new_node.is_split_node())
         {
             // Policy: Find central node or latest focused node. We first move back to our root node.
@@ -2206,8 +1994,8 @@ pub fn set_window_dock(g: &mut Context, window: &mut window::Window, dock_id: Id
     if (window.dock_id == dock_id)
         return;
 
-    if (window.dock_node)
-        DockNodeRemoveWindow(window.dock_node, window, 0);
+    if (window.dock_node_id)
+        dock_node_remove_window(window.dock_node_id, window, 0);
     window.dock_id = dock_id;
 }
 
@@ -2217,8 +2005,8 @@ pub fn set_window_dock(g: &mut Context, window: &mut window::Window, dock_id: Id
 // ImGuiID DockSpace(ImGuiID id, const Vector2D& size_arg, ImGuiDockNodeFlags flags, const ImGuiWindowClass* window_class)
 pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut HashSet<DockNodeFlags>, window_class: &WindowClass) -> Id32
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ImGuiContext* .g = GImGui;
+    // ImGuiContext& g = *.g;
     ImGuiWindow* window = GetCurrentWindow();
     if (!(g.io.config_flags & ImGuiConfigFlags_DockingEnable))
         return 0;
@@ -2231,11 +2019,11 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
 
     // IM_ASSERT((flags & ImGuiDockNodeFlags_DockSpace) == 0);
     // IM_ASSERT(id != 0);
-    ImGuiDockNode* node = dock_context_find_node_by_id(ctx, id);
+    ImGuiDockNode* node = dock_context_find_node_by_id(.g, id);
     if (!node)
     {
         // IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X created\n", id);
-        node = dock_context_add_node(ctx, id);
+        node = dock_context_add_node(.g, id);
         node.set_local_flags(DockNodeFlags::CentralNode);
     }
     if (window_class && window_class.ClassId != node.WindowClass.ClassId)
@@ -2373,15 +2161,15 @@ pub fn dock_builder_dock_window(g: &mut Context, window_name: &str, node_id: Id3
 // ImGuiDockNode* DockBuilderGetNode(ImGuiID node_id)
 pub fn dock_builder_get_node(g: &mut Context, node_id: Id32) -> &mut DockNode
 {
-    ImGuiContext* ctx = GImGui;
-    return dock_context_find_node_by_id(ctx, node_id);
+    ImGuiContext* .g = GImGui;
+    return dock_context_find_node_by_id(.g, node_id);
 }
 
 // void DockBuilderSetNodePos(ImGuiID node_id, Vector2D pos)
 pub fn dock_builder_set_node_pos(g: &mut Context, node_id: Id32, pos: Vector2D)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockNode* node = dock_context_find_node_by_id(ctx, node_id);
+    ImGuiContext* .g = GImGui;
+    ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_id);
     if (node == NULL)
         return;
     node.pos = pos;
@@ -2391,8 +2179,8 @@ pub fn dock_builder_set_node_pos(g: &mut Context, node_id: Id32, pos: Vector2D)
 // void DockBuilderSetNodeSize(ImGuiID node_id, Vector2D size)
 pub fn dock_builder_set_node_size(g: &mut Context, node_id: Id32, size: Vector2D)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockNode* node = dock_context_find_node_by_id(ctx, node_id);
+    ImGuiContext* .g = GImGui;
+    ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_id);
     if (node == NULL)
         return;
     // IM_ASSERT(size.x > 0.0 && size.y > 0.0);
@@ -2410,7 +2198,7 @@ pub fn dock_builder_set_node_size(g: &mut Context, node_id: Id32, size: Vector2D
 // ImGuiID DockBuilderAddNode(ImGuiID id, ImGuiDockNodeFlags flags)
 pub fn dock_builder_add_node(g: &mut Context, id: Id32, flags: &HashSet<DockNodeFlags>) -> Id32
 {
-    ImGuiContext* ctx = GImGui;
+    ImGuiContext* .g = GImGui;
 
     if (id != 0)
         DockBuilderRemoveNode(id);
@@ -2419,43 +2207,43 @@ pub fn dock_builder_add_node(g: &mut Context, id: Id32, flags: &HashSet<DockNode
     if (flags & DockNodeFlags::DockSpace)
     {
         DockSpace(id, Vector2D::new(0, 0), (flags & ~DockNodeFlags::DockSpace) | DockNodeFlags::KeepAliveOnly);
-        node = dock_context_find_node_by_id(ctx, id);
+        node = dock_context_find_node_by_id(.g, id);
     }
     else
     {
-        node = dock_context_add_node(ctx, id);
+        node = dock_context_add_node(.g, id);
         node.set_local_flags(flags);
     }
-    node.LastFrameAlive = ctx.frame_count;   // Set this otherwise BeginDocked will undock during the same frame.
+    node.LastFrameAlive = .g.frame_count;   // Set this otherwise BeginDocked will undock during the same frame.
     return node.id;
 }
 
 // void DockBuilderRemoveNode(ImGuiID node_id)
 pub fn dock_builder_remove_node(g: &mut Context, node_id: Id32)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockNode* node = dock_context_find_node_by_id(ctx, node_id);
+    ImGuiContext* .g = GImGui;
+    ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_id);
     if (node == NULL)
         return;
     DockBuilderRemoveNodeDockedWindows(node_id, true);
     DockBuilderRemoveNodeChildNodes(node_id);
     // Node may have moved or deleted if e.g. any merge happened
-    node = dock_context_find_node_by_id(ctx, node_id);
+    node = dock_context_find_node_by_id(.g, node_id);
     if (node == NULL)
         return;
     if (node.is_central_node() && node.parent_node)
         node.parent_node.set_local_flags(node.parent_node.LocalFlags | DockNodeFlags::CentralNode);
-    DockContextRemoveNode(ctx, node, true);
+    dock_context_remove_node(.g, node, true);
 }
 
 // root_id = 0 to remove all, root_id != 0 to remove child of given node.
 // void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
 pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockContext* dc  = &ctx.dock_context;
+    ImGuiContext* .g = GImGui;
+    ImGuiDockContext* dc  = &.g.dock_context;
 
-    ImGuiDockNode* root_node = root_id ? dock_context_find_node_by_id(ctx, root_id) : NULL;
+    ImGuiDockNode* root_node = root_id ? dock_context_find_node_by_id(.g, root_id) : NULL;
     if (root_id && root_node == NULL)
         return;
     bool has_central_node = false;
@@ -2474,7 +2262,7 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
                 if (node.is_central_node())
                     has_central_node = true;
                 if (root_id != 0)
-                    DockContextQueueNotifyRemovedNode(ctx, node);
+                    DockContextQueueNotifyRemovedNode(.g, node);
                 if (root_node)
                 {
                     dock_node_move_windows(root_node, node);
@@ -2493,7 +2281,7 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
     }
 
     // Apply to settings
-    for (ImGuiWindowSettings* settings = ctx.SettingsWindows.begin(); settings != NULL; settings = ctx.SettingsWindows.next_chunk(settings))
+    for (ImGuiWindowSettings* settings = .g.SettingsWindows.begin(); settings != NULL; settings = .g.SettingsWindows.next_chunk(settings))
         if (ImGuiID window_settings_dock_id = settings.dock_id)
             for (int n = 0; n < nodes_to_remove.size; n += 1)
                 if (nodes_to_remove[n].id == window_settings_dock_id)
@@ -2502,11 +2290,11 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
                     break;
                 }
 
-    // Not really efficient, but easier to destroy a whole hierarchy considering DockContextRemoveNode is attempting to merge nodes
+    // Not really efficient, but easier to destroy a whole hierarchy considering dock_context_remove_node is attempting to merge nodes
     if (nodes_to_remove.size > 1)
         ImQsort(nodes_to_remove.data, nodes_to_remove.size, sizeof(ImGuiDockNode*), DockNodeComparerDepthMostFirst);
     for (int n = 0; n < nodes_to_remove.size; n += 1)
-        DockContextRemoveNode(ctx, nodes_to_remove[n], false);
+        dock_context_remove_node(.g, nodes_to_remove[n], false);
 
     if (root_id == 0)
     {
@@ -2524,19 +2312,19 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
 pub fn dock_builder_remove_node_docked_windows(g: &mut Context, root_id: Id32, clear_settings_refs: bool)
 {
     // clear references in settings
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ImGuiContext* .g = GImGui;
+    // ImGuiContext& g = *.g;
     if (clear_settings_refs)
     {
         for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
         {
             bool want_removal = (root_id == 0) || (settings.dock_id == root_id);
             if (!want_removal && settings.dock_id != 0)
-                if (ImGuiDockNode* node = dock_context_find_node_by_id(ctx, settings.dock_id))
+                if (ImGuiDockNode* node = dock_context_find_node_by_id(.g, settings.dock_id))
                     if (dock_node_get_root_node(node).id == root_id)
                         want_removal = true;
             if (want_removal)
-                settings.dock_id = 0;
+                settings.dock_id = INVALID_ID;
         }
     }
 
@@ -2549,7 +2337,7 @@ pub fn dock_builder_remove_node_docked_windows(g: &mut Context, root_id: Id32, c
         {
             const ImGuiID backup_dock_id = window.dock_id;
             IM_UNUSED(backup_dock_id);
-            DockContextProcessUndockWindow(ctx, window, clear_settings_refs);
+            DockContextProcessUndockWindow(.g, window, clear_settings_refs);
             if (!clear_settings_refs)
                 // IM_ASSERT(window.DockId == backup_dock_id);
         }
@@ -2583,7 +2371,7 @@ pub fn dock_builder_split_node(g: &mut Context, id: Id32, split_dir: Direction, 
     req.dock_split_dir = split_dir;
     req.dock_split_ratio = ImSaturate((split_dir == Direction::Left || split_dir == Direction::Up) ? size_ratio_for_node_at_dir : 1.0 - size_ratio_for_node_at_dir);
     req.dock_split_outer = false;
-    dock_context_process_dock(&g, &req);
+    context::dock_context_process_dock(&g, &req);
 
     ImGuiID id_at_dir = node.child_nodes[(split_dir == Direction::Left || split_dir == Direction::Up) ? 0 : 1].id;
     ImGuiID id_at_opposite_dir = node.child_nodes[(split_dir == Direction::Left || split_dir == Direction::Up) ? 1 : 0].id;
@@ -2625,14 +2413,14 @@ pub fn dock_builder_copy_node_rec(g: &mut Context, src_node: &mut DockNode, dst_
 // void DockBuilderCopyNode(ImGuiID src_node_id, ImGuiID dst_node_id, ImVector<ImGuiID>* out_node_remap_pairs)
 pub fn dock_builder_copy_node(g: &mut Context, src_node_id: Id32, dst_node_id: Id32, out_node_remap_pairs: &mut Vec<Id32>)
 {
-    ImGuiContext* ctx = GImGui;
+    ImGuiContext* .g = GImGui;
     // IM_ASSERT(src_node_id != 0);
     // IM_ASSERT(dst_node_id != 0);
     // IM_ASSERT(out_node_remap_pairs != NULL);
 
     DockBuilderRemoveNode(dst_node_id);
 
-    ImGuiDockNode* src_node = dock_context_find_node_by_id(ctx, src_node_id);
+    ImGuiDockNode* src_node = dock_context_find_node_by_id(.g, src_node_id);
     // IM_ASSERT(src_node != NULL);
 
     out_node_remap_pairs.clear();
@@ -2699,12 +2487,12 @@ pub fn dock_builder_copy_dock_space(g: &mut Context, src_dockspace_id: Id32, dst
         src_windows.push_back(src_window_id);
 
         // Search in the remapping tables
-        ImGuiID src_dock_id = 0;
+        ImGuiID src_dock_id = INVALID_ID;
         if (ImGuiWindow* src_window = FindWindowByID(src_window_id))
             src_dock_id = src_window.dock_id;
         else if (ImGuiWindowSettings* src_window_settings = FindWindowSettings(src_window_id))
             src_dock_id = src_window_settings.dock_id;
-        ImGuiID dst_dock_id = 0;
+        ImGuiID dst_dock_id = INVALID_ID;
         for (int dock_remap_n = 0; dock_remap_n < node_remap_pairs.size; dock_remap_n += 2)
             if (node_remap_pairs[dock_remap_n] == src_dock_id)
             {
@@ -2752,9 +2540,9 @@ pub fn dock_builder_copy_dock_space(g: &mut Context, src_dockspace_id: Id32, dst
 // void DockBuilderFinish(ImGuiID root_id)
 pub fn dock_builder_finish(g: &mut Context, root_id: Id32)
 {
-    ImGuiContext* ctx = GImGui;
+    ImGuiContext* .g = GImGui;
     //DockContextRebuild(ctx);
-    DockContextBuildAddWindowsToNodes(ctx, root_id);
+    DockContextBuildAddWindowsToNodes(.g, root_id);
 }
 
 // bool GetWindowAlwaysWantOwnTabBar(ImGuiWindow* window)
@@ -2771,21 +2559,21 @@ pub fn get_window_always_want_own_tab_bar(g: &mut Context, window: &mut window::
 // static ImGuiDockNode* DockContextBindNodeToWindow(ImGuiContext* ctx, ImGuiWindow* window)
 pub fn dock_context_bind_node_to_window(g: &mut Context, window: &mut window::Window) -> &mut DockNode
 {
-    ImGuiContext& g = *ctx;
-    ImGuiDockNode* node = dock_context_find_node_by_id(ctx, window.dock_id);
+    // ImGuiContext& g = *.g;
+    ImGuiDockNode* node = dock_context_find_node_by_id(.g, window.dock_id);
     // IM_ASSERT(window.dock_node == NULL);
 
     // We should not be docking into a split node (SetWindowDock should avoid this)
     if (node && node.is_split_node())
     {
-        DockContextProcessUndockWindow(ctx, window);
+        DockContextProcessUndockWindow(.g, window);
         return NULL;
     }
 
     // Create node
     if (node == NULL)
     {
-        node = dock_context_add_node(ctx, window.dock_id);
+        node = dock_context_add_node(.g, window.dock_id);
         node.authority_for_pos = node.authority_for_size = node.authority_for_viewport = DataAuthority::Window;
         node.LastFrameAlive = g.frame_count;
     }
@@ -2815,11 +2603,11 @@ pub fn dock_context_bind_node_to_window(g: &mut Context, window: &mut window::Wi
 // void BeginDocked(ImGuiWindow* window, bool* p_open)
 pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut bool)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ImGuiContext* .g = GImGui;
+    // ImGuiContext& g = *.g;
 
     // clear fields ahead so most early-out paths don't have to do it
-    window.dock_is_active = window.DockNodeIsVisible = window.DockTabIsVisible = false;
+    window.dock_is_active = window.dock_node_is_visible = window.dock_tab_is_visible = false;
 
     const bool auto_dock_node = GetWindowAlwaysWantOwnTabBar(window);
     if (auto_dock_node)
@@ -2827,7 +2615,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         if (window.dock_id == 0)
         {
             // IM_ASSERT(window.dock_node == NULL);
-            window.dock_id = dock_context_gen_node_id(ctx);
+            window.dock_id = dock_context_gen_node_id(.g);
         }
     }
     else
@@ -2838,18 +2626,18 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         want_undock |= (g.next_window_data.flags & NextWindowDataFlags::HasPos) && (window.set_window_pos_allow_flags & g.next_window_data.PosCond) && g.next_window_data.PosUndock;
         if (want_undock)
         {
-            DockContextProcessUndockWindow(ctx, window);
+            DockContextProcessUndockWindow(.g, window);
             return;
         }
     }
 
     // Bind to our dock node
-    ImGuiDockNode* node = window.dock_node;
+    ImGuiDockNode* node = window.dock_node_id;
     if (node != NULL)
         // IM_ASSERT(window.DockId == node.ID);
     if (window.dock_id != 0 && node == NULL)
     {
-        node = DockContextBindNodeToWindow(ctx, window);
+        node = DockContextBindNodeToWindow(.g, window);
         if (node == NULL)
             return;
     }
@@ -2858,7 +2646,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     // Undock if the ImGuiDockNodeFlags_NoDockingInCentralNode got set
     if (node.is_central_node && (node.flags & DockNodeFlags::NoDockingInCentralNode))
     {
-        DockContextProcessUndockWindow(ctx, window);
+        DockContextProcessUndockWindow(.g, window);
         return;
     }
 
@@ -2870,7 +2658,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         // If the window has been orphaned, transition the docknode to an implicit node processed in DockContextNewFrameUpdateDocking()
         ImGuiDockNode* root_node = dock_node_get_root_node(node);
         if (root_node.LastFrameAlive < g.frame_count)
-            DockContextProcessUndockWindow(ctx, window);
+            DockContextProcessUndockWindow(.g, window);
         else
             window.dock_is_active = true;
         return;
@@ -2901,7 +2689,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     // Undock if we are submitted earlier than the host window
     if (!(node.MergedFlags & DockNodeFlags::KeepAliveOnly) && window.BeginOrderWithinContext < node.host_window.BeginOrderWithinContext)
     {
-        DockContextProcessUndockWindow(ctx, window);
+        DockContextProcessUndockWindow(.g, window);
         return;
     }
 
@@ -2910,14 +2698,14 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     set_next_window_size(node.size);
     g.next_window_data.PosUndock = false; // Cancel implicit undocking of SetNextWindowPos()
     window.dock_is_active = true;
-    window.DockNodeIsVisible = true;
-    window.DockTabIsVisible = false;
+    window.dock_node_is_visible = true;
+    window.dock_tab_is_visible = false;
     if (node.MergedFlags & DockNodeFlags::KeepAliveOnly)
         return;
 
     // When the window is selected we mark it as visible.
-    if (node.VisibleWindow == window)
-        window.DockTabIsVisible = true;
+    if (node.visible_window == window)
+        window.dock_tab_is_visible = true;
 
     // Update window flag
     // IM_ASSERT((window.flags & WindowFlags::ChildWindow) == 0);
@@ -2936,7 +2724,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         *p_open = false;
 
     // Update child_id to allow returning from Child to Parent with Escape
-    ImGuiWindow* parent_window = window.dock_node.host_window_id;
+    ImGuiWindow* parent_window = window.dock_node_id.host_window_id;
     windowchild_id = parent_window.get_id(window.Name);
 }
 
@@ -2966,8 +2754,8 @@ pub fn begin_dockable_drag_drop_source(g: &mut Context, window: &mut window::Win
 // void BeginDockableDragDropTarget(ImGuiWindow* window)
 pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Window)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ImGuiContext* .g = GImGui;
+    // ImGuiContext& g = *.g;
 
     //IM_ASSERT(window->root_window_dock_tree == window); // May also be a DockSpace
     // IM_ASSERT((window.flags & WindowFlags::NoDocking) == 0);
@@ -3001,13 +2789,13 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
             // There is an edge case when docking into a dockspace which only has _inactive_ nodes (because none of the windows are active)
             // In this case we need to fallback into any leaf mode, possibly the central node.
             // FIXME-20181220: We should not have to test for is_leaf_node() here but we have another bug to fix first.
-            if (node && node.IsDockSpace() && node.IsRootNode())
+            if (node && node.IsDockSpace() && node.is_root_node())
                 node = (node.CentralNode && node.is_leaf_node()) ? node.CentralNode : DockNodeTreeFindFallbackLeafNode(node);
         }
         else
         {
-            if (window.dock_node)
-                node = window.dock_node;
+            if (window.dock_node_id)
+                node = window.dock_node_id;
             else
                 dock_into_floating_window = true; // Dock into a regular window
         }
@@ -3026,11 +2814,11 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
             if (node && (node.parent_node || node.is_central_node()))
                 if (ImGuiDockNode* root_node = dock_node_get_root_node(node))
                 {
-                    DockNodePreviewDockSetup(window, root_node, payload_window, &split_outer, is_explicit_target, true);
+                    dock_node_preview_dock_setup(window, root_node, payload_window, &split_outer, is_explicit_target, true);
                     if (split_outer.IsSplitDirExplicit)
                         split_data = &split_outer;
                 }
-            DockNodePreviewDockSetup(window, node, payload_window, &split_inner, is_explicit_target, false);
+            dock_node_preview_dock_setup(window, node, payload_window, &split_inner, is_explicit_target, false);
             if (split_data == &split_outer)
                 split_inner.IsDropAllowed = false;
 
@@ -3040,7 +2828,7 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
 
             // Queue docking request
             if (split_data.IsDropAllowed && payload.IsDelivery())
-                DockContextQueueDock(ctx, window, split_data.SplitNode, payload_window, split_data.SplitDir, split_data.SplitRatio, split_data == &split_outer);
+                DockContextQueueDock(.g, window, split_data.SplitNode, payload_window, split_data.SplitDir, split_data.SplitRatio, split_data == &split_outer);
         }
     }
     EndDragDropTarget();
@@ -3074,7 +2862,7 @@ pub fn dock_settings_remove_node_references(g: &mut Context, node_ids: &mut Id32
         for (int node_n = 0; node_n < node_ids_count; node_n += 1)
             if (settings.dock_id == node_ids[node_n])
             {
-                settings.dock_id = 0;
+                settings.dock_id = INVALID_ID;
                 settings.dock_order = -1;
                 if (found += 1 < node_ids_count)
                     break;
@@ -3086,7 +2874,7 @@ pub fn dock_settings_remove_node_references(g: &mut Context, node_ids: &mut Id32
 pub fn dock_settings_find_node_settings(g: &mut Context, id: Id32) -> &mut DockNodeSettings
 {
     // FIXME-OPT
-    ImGuiDockContext* dc  = &ctx.dock_context;
+    ImGuiDockContext* dc  = &.g.dock_context;
     for (int n = 0; n < dc.NodesSettings.size; n += 1)
         if (dc.NodesSettings[n].id == id)
             return &dc.NodesSettings[n];
@@ -3097,9 +2885,9 @@ pub fn dock_settings_find_node_settings(g: &mut Context, id: Id32) -> &mut DockN
 // static void DockSettingsHandler_ClearAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
 pub fn dock_settings_handler_clear_all(g: &mut Context, handler: &mut SettingsHandler)
 {
-    ImGuiDockContext* dc  = &ctx.dock_context;
+    ImGuiDockContext* dc  = &.g.dock_context;
     dc.NodesSettings.clear();
-    DockContextClearNodes(ctx, 0, true);
+    DockContextClearNodes(.g, 0, true);
 }
 
 // Recreate nodes based on settings data
@@ -3107,11 +2895,11 @@ pub fn dock_settings_handler_clear_all(g: &mut Context, handler: &mut SettingsHa
 pub fn dock_settings_handler_apply_all(g: &mut Context, handler: &mut SettingsHandler)
 {
     // Prune settings at boot time only
-    ImGuiDockContext* dc  = &ctx.dock_context;
-    if (ctx.windows.size == 0)
-        DockContextPruneUnusedSettingsNodes(ctx);
-    DockContextBuildNodesFromSettings(ctx, dc.NodesSettings.data, dc.NodesSettings.size);
-    DockContextBuildAddWindowsToNodes(ctx, 0);
+    ImGuiDockContext* dc  = &.g.dock_context;
+    if (.g.windows.size == 0)
+        DockContextPruneUnusedSettingsNodes(.g);
+    DockContextBuildNodesFromSettings(.g, dc.NodesSettings.data, dc.NodesSettings.size);
+    DockContextBuildAddWindowsToNodes(.g, 0);
 }
 
 // static void* DockSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name)
@@ -3159,9 +2947,9 @@ pub fn dock_settings_handler_read_line(g: &mut Context, handler: &mut SettingsHa
     if (sscanf(line, " NoCloseButton=%d%n", &x, &r) == 1)           { line += r; if (x != 0) node.flags |= DockNodeFlags::NoCloseButton; }
     if (sscanf(line, " Selected=0x%08X%n", &node.selected_tab_id,&r) == 1) { line += r; }
     if (node.parent_node_id != 0)
-        if (ImGuiDockNodeSettings* parent_settings = DockSettingsFindNodeSettings(ctx, node.parent_node_id))
+        if (ImGuiDockNodeSettings* parent_settings = DockSettingsFindNodeSettings(.g, node.parent_node_id))
             node.Depth = parent_settings.Depth + 1;
-    ctx.dock_context.NodesSettings.push_back(node);
+    .g.dock_context.NodesSettings.push_back(node);
 }
 
 // static void DockSettingsHandler_DockNodeToSettings(ImGuiDockContext* dc, ImGuiDockNode* node, int depth)
@@ -3189,8 +2977,8 @@ pub fn dock_settings_handler_dock_node_to_settings(g: &mut Context, dc: &mut Doc
 // static void DockSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHandler, bug: &mut TextBuffer)
 {
-    ImGuiContext& g = *ctx;
-    ImGuiDockContext* dc = &ctx.dock_context;
+    // ImGuiContext& g = *.g;
+    ImGuiDockContext* dc = &.g.dock_context;
     if (!(g.io.config_flags & ImGuiConfigFlags_DockingEnable))
         return;
 
@@ -3200,7 +2988,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
     dc.NodesSettings.reserve(dc.Nodes.data.size);
     for (int n = 0; n < dc.Nodes.data.size; n += 1)
         if (ImGuiDockNode* node = (ImGuiDockNode*)dc.Nodes.data[n].val_p)
-            if (node.IsRootNode())
+            if (node.is_root_node())
                 DockSettingsHandler::DockNodeToSettings(dc, node, 0);
 
     int max_depth = 0;
@@ -3244,7 +3032,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
 
 // #ifIMGUI_DEBUG_INI_SETTINGS
         // [DEBUG] Include comments in the .ini file to ease debugging
-        if (ImGuiDockNode* node = dock_context_find_node_by_id(ctx, node_settings->ID))
+        if (ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_settings->ID))
         {
             buf->appendf("%*s", ImMax(2, (line_start_pos + 92) - buf->size()), "");     // Align everything
             if (node->IsDockSpace() && node->HostWindow && node->HostWindow->parent_window)

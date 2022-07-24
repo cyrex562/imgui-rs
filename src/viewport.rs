@@ -189,7 +189,7 @@ impl Viewport {
 
 
 /// static void SetupViewportDrawData(ImGuiViewportP* viewport, ImVector<ImDrawList*>* draw_lists)
-pub fn setup_viewport_draw_data(ctx: &mut Context, viewport: &mut Viewport, draw_lists: &Vec<Id32>)
+pub fn setup_viewport_draw_data(.g: &mut Context, viewport: &mut Viewport, draw_lists: &Vec<Id32>)
 {
     // When minimized, we report draw_data->display_size as zero to be consistent with non-viewport mode,
     // and to allow applications/backends to easily skip rendering.
@@ -217,7 +217,7 @@ pub fn setup_viewport_draw_data(ctx: &mut Context, viewport: &mut Viewport, draw
     for ele in draw_lists {
         // {
         //     ImDrawList* draw_list = draw_lists.Data[n];
-        let draw_list = ctx.get_draw_list(*ele).unwrap()
+        let draw_list = .g.get_draw_list(*ele).unwrap()
         //     draw_list->_PopUnusedDrawCmd();
         draw_list.pop_unused_draw_cmd();
         //     draw_data.total_vtx_count += draw_list->VtxBuffer.Size;
@@ -715,7 +715,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
     if ((flags & (WindowFlags::Popup | WindowFlags::Tooltip)) && window.Appearing)
     {
         window.viewport = NULL;
-        window.viewport_id = 0;
+        window.viewport_id = INVALID_ID;
     }
 
     if ((g.next_window_data.flags & NextWindowDataFlags::HasViewport) == 0)
@@ -744,14 +744,14 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
     else if ((flags & WindowFlags::ChildWindow) || (flags & WindowFlags::ChildMenu))
     {
         // Always inherit viewport from parent window
-        if (window.dock_node && window.dock_node.host_window_id)
+        if (window.dock_node_id && window.dock_node_id.host_window_id)
             // IM_ASSERT(window.dock_node.host_window.Viewport == window.parent_window.Viewport);
         window.viewport = window.parent_window.Viewport;
     }
-    else if (window.dock_node && window.dock_node.host_window_id)
+    else if (window.dock_node_id && window.dock_node_id.host_window_id)
     {
         // This covers the "always inherit viewport from parent window" case for when a window reattach to a node that was just created mid-frame
-        window.viewport = window.dock_node.host_window_id.Viewport;
+        window.viewport = window.dock_node_id.host_window_id.Viewport;
     }
     else if (flags & WindowFlags::Tooltip)
     {
@@ -796,10 +796,10 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
             else
                 window.ViewportAllowPlatformMonitorExtend = window.viewport.PlatformMonitor;
         }
-        else if (window.viewport && window != window.viewport.Window && window.viewport.Window && !(flags & WindowFlags::ChildWindow) && window.dock_node == NULL)
+        else if (window.viewport && window != window.viewport.Window && window.viewport.Window && !(flags & WindowFlags::ChildWindow) && window.dock_node_id == NULL)
         {
             // When called from Begin() we don't have access to a proper version of the hidden flag yet, so we replicate this code.
-            const bool will_be_visible = (window.dock_is_active && !window.DockTabIsVisible) ? false : true;
+            const bool will_be_visible = (window.dock_is_active && !window.dock_tab_is_visible) ? false : true;
             if ((window.flags & WindowFlags::DockNodeHost) && window.viewport.last_frame_active < g.frame_count && will_be_visible)
             {
                 // Steal/transfer ownership
@@ -843,7 +843,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     if (window.viewport.PlatformRequestMove)
     {
         window.pos = window.viewport.pos;
-        MarkIniSettingsDirty(window);
+        mark_ini_settings_dirty(window);
     }
     else if (memcmp(&window.viewport.pos, &window.pos, sizeof(window.pos)) != 0)
     {
@@ -854,7 +854,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     if (window.viewport.PlatformRequestResize)
     {
         window.size = window.size_full = window.viewport.size;
-        MarkIniSettingsDirty(window);
+        mark_ini_settings_dirty(window);
     }
     else if (memcmp(&window.viewport.size, &window.size, sizeof(window.size)) != 0)
     {

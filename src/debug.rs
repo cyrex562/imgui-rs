@@ -1102,8 +1102,8 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
 
     BulletText("viewport: %d%s, viewport_id: 0x%08X, viewport_pos: (%.1,%.1)", window.viewport ? window.viewport->Idx : -1, window.viewport_owned ? " (Owned)" : "", window.viewport_id, window.viewport_pos.x, window.viewport_pos.y);
     BulletText("ViewportMonitor: %d", window.viewport ? window.viewport->PlatformMonitor : -1);
-    BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.dock_id, window.DockOrder, window.dock_is_active, window.DockTabIsVisible);
-    if (window.dock_node || window.dock_node_as_host_id)
+    BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.dock_id, window.DockOrder, window.dock_is_active, window.dock_tab_is_visible);
+    if (window.dock_node_id || window.dock_node_as_host_id)
         DebugNodeDockNode(window.dock_node_as_host_id? window.dock_node_as_host_id: window.dock_node, window.dock_node_as_host_id? "dock_node_as_host": "dock_node");
 
     if (window.root_window != window)       { DebugNodeWindow(window.root_window, "RootWindow"); }
@@ -1296,7 +1296,7 @@ pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format
 
 // Stack Tool: Display UI
 // void ShowStackToolWindow(bool* p_open)
-pub fn show_stack_tool_window(ctx: &mut Context, p_open: &mut bool)
+pub fn show_stack_tool_window(.g: &mut Context, p_open: &mut bool)
 {
     // ImGuiContext& g = *GImGui;
     if (!(g.next_window_data.flags & NextWindowDataFlags::HasSize))

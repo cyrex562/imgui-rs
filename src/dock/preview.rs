@@ -20,6 +20,6 @@ pub struct DockPreviewData
     pub split_dir: Direction,
     // float           SplitRatio;
     pub split_ratio: f32,
-    // ImRect          DropRectsDraw[ImGuiDir_COUNT + 1];  // May be slightly different from hit-testing drop rects used in DockNodeCalcDropRects()
+    // ImRect          drop_rects_draw[ImGuiDir_COUNT + 1];  // May be slightly different from hit-testing drop rects used in DockNodeCalcDropRects()
     pub drop_rects_draw: [Rect; 5 ],
 }

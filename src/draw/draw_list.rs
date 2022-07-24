@@ -497,9 +497,9 @@ pub fn get_foreground_draw_list2(g: &mut Context) -> &mut DrawList
 }
 
 // static void add_draw_list_to_draw_data(ImVector<ImDrawList*>* out_list, ImDrawList* draw_list)
-pub fn add_draw_list_to_draw_data(ctx: &mut Context, out_list: &mut Vec<Id32>, draw_list_id: Id32)
+pub fn add_draw_list_to_draw_data(.g: &mut Context, out_list: &mut Vec<Id32>, draw_list_id: Id32)
 {
-    let draw_list = ctx.get_draw_list(draw_list_id).unwrap();
+    let draw_list = .g.get_draw_list(draw_list_id).unwrap();
     if draw_list.cmd_buffer.is_empty() {return;}
 
     if draw_list.cmd_buffer.size == 1 && draw_list.cmd_buffer[0].elem_count == 0 && draw_list.cmd_buffer[0].user_callback.is_none() {

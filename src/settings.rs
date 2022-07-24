@@ -16,17 +16,17 @@ pub struct SettingsHandler
     // ImGuiID     type_hash;       // == ImHashStr(TypeName)
     pub type_hash: Id32,
     // void        (*clear_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // clear all settings data
-    pub clear_all_fn: Option<fn(ctx: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub clear_all_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler)>,
     // void        (*ReadInitFn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // Read: Called before reading (in registration order)
-    pub read_init_fn: Option<fn(ctx: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub read_init_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler)>,
     // void*       (*read_open_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name);              // Read: Called when entering into a new ini entry e.g. "[window][name]"
-    pub read_open_fn: Option<fn(ctx: &mut DimgContext, handler: &mut SettingsHandler, name: &String)>,
+    pub read_open_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler, name: &String)>,
     // void        (*read_line_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line); // Read: Called for every line of text within an ini entry
-    pub read_line_fn: Option<fn(ctx: &mut DimgContext, handler: &mut SettingsHandler, entry: &mut Vec<u8>, line: &String)>,
+    pub read_line_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler, entry: &mut Vec<u8>, line: &String)>,
     // void        (*apply_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // Read: Called after reading (in registration order)
-    pub apply_all_fn: Option<fn(ctx: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub apply_all_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler)>,
     // void        (*write_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf);      // Write: Output every entries into 'out_buf'
-    pub write_all_fn: Option<fn(ctx: &mut DimgContext, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
+    pub write_all_fn: Option<fn(.g: &mut DimgContext, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
     // void*       user_data;
     pub user_data: Vec<u8>,
     //ImGuiSettingsHandler() { memset(this, 0, sizeof(*this)); }
@@ -278,7 +278,7 @@ pub fn save_init_settings(g: &mut Context, out_size: &mut usize) -> String
 // static void WindowSettingsHandler_ClearAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
 pub fn window_settings_handler_clear_all(g: &mut Context, handler: &mut SettingsHandler)
 {
-    ImGuiContext& g = *ctx;
+    // ImGuiContext& g = *.g;
     for (int i = 0; i != g.windows.size; i += 1)
         g.windows[i].SettingsOffset = -1;
     g.settings_windows.clear();
@@ -316,7 +316,7 @@ pub fn window_settings_handler_read_line(g: &mut Context, handler: &mut Settings
 // static void WindowSettingsHandler_ApplyAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
 pub fn window_handler_apply_all(g: &mut Context, handler: &mut SettingsHandler)
 {
-    ImGuiContext& g = *ctx;
+    // ImGuiContext& g = *.g;
     for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
         if (settings.WantApply)
         {
@@ -331,7 +331,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
 {
     // Gather data from windows that were active during this session
     // (if a window wasn't opened in this session we preserve its settings)
-    ImGuiContext& g = *ctx;
+    // ImGuiContext& g = *.g;
     for (int i = 0; i != g.windows.size; i += 1)
     {
         ImGuiWindow* window = g.windows[i];

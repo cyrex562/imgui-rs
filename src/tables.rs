@@ -1975,7 +1975,7 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     if (column.IsSkipItems)
     {
         // ImGuiContext& g = *GImGui;
-        g.LastItemData.id = 0;
+        g.LastItemData.id = INVALID_ID;
         g.LastItemData.status_flags = 0;
     }
 
@@ -3200,7 +3200,7 @@ ImGuiTableSettings* ImGui::TableGetBoundSettings(ImGuiTable* table)
         // IM_ASSERT(settings.id == table.id);
         if (settings.ColumnsCountMax >= table.ColumnsCount)
             return settings; // OK
-        settings.id = 0; // Invalidate storage, we won't fit because of a count change
+        settings.id = INVALID_ID; // Invalidate storage, we won't fit because of a count change
     }
     return NULL;
 }
@@ -3266,7 +3266,7 @@ void ImGui::TableSaveSettings(ImGuiTable* table)
     settings.SaveFlags &= table.flags;
     settings.RefScale = save_ref_scale ? table.RefScale : 0.0;
 
-    MarkIniSettingsDirty();
+    mark_ini_settings_dirty();
 }
 
 void ImGui::TableLoadSettings(ImGuiTable* table)
@@ -3334,9 +3334,9 @@ void ImGui::TableLoadSettings(ImGuiTable* table)
         table.DisplayOrderToIndex[table.Columns[column_n].DisplayOrder] = (ImGuiTableColumnIdx)column_n;
 }
 
-static void TableSettingsHandler_ClearAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
+static void TableSettingsHandler_ClearAll(ImGuiContext* .g, ImGuiSettingsHandler*)
 {
-    ImGuiContext& g = *ctx;
+    // ImGuiContext& g = *.g;
     for (int i = 0; i != g.tables.GetMapSize(); i += 1)
         if (ImGuiTable* table = g.tables.TryGetMapData(i))
             table.SettingsOffset = -1;
@@ -3344,9 +3344,9 @@ static void TableSettingsHandler_ClearAll(ImGuiContext* ctx, ImGuiSettingsHandle
 }
 
 // Apply to existing windows (if any)
-static void TableSettingsHandler_ApplyAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
+static void TableSettingsHandler_ApplyAll(ImGuiContext* .g, ImGuiSettingsHandler*)
 {
-    ImGuiContext& g = *ctx;
+    // ImGuiContext& g = *.g;
     for (int i = 0; i != g.tables.GetMapSize(); i += 1)
         if (ImGuiTable* table = g.tables.TryGetMapData(i))
         {
@@ -3357,7 +3357,7 @@ static void TableSettingsHandler_ApplyAll(ImGuiContext* ctx, ImGuiSettingsHandle
 
 static void* TableSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name)
 {
-    ImGuiID id = 0;
+    ImGuiID id = INVALID_ID;
     int columns_count = 0;
     if (sscanf(name, "0x%08X,%d", &id, &columns_count) < 2)
         return NULL;
@@ -3369,7 +3369,7 @@ static void* TableSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*,
             TableSettingsInit(settings, id, columns_count, settings.ColumnsCountMax); // Recycle
             return settings;
         }
-        settings.id = 0; // Invalidate storage, we won't fit because of a count change
+        settings.id = INVALID_ID; // Invalidate storage, we won't fit because of a count change
     }
     return ImGui::TableSettingsCreate(id, columns_count);
 }
@@ -3400,9 +3400,9 @@ static void TableSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, 
     }
 }
 
-static void TableSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
+static void TableSettingsHandler_WriteAll(ImGuiContext* .g, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 {
-    ImGuiContext& g = *ctx;
+    // ImGuiContext& g = *.g;
     for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != NULL; settings = g.SettingsTables.next_chunk(settings))
     {
         if (settings.id == 0) // Skip ditched settings

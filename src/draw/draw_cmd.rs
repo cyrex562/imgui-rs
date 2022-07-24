@@ -69,7 +69,7 @@ pub struct CmdHeader {
 impl CmdHeader {
     pub fn clear(&mut self) {
         self.clip_rect.clear();
-        self.texture_id = 0;
+        self.texture_id = INVALID_ID;
         self.vtx_offset = 0;
     }
 }

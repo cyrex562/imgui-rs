@@ -31,8 +31,8 @@ impl Payload {
     }
     // void clear()    { source_id = source_parent_id = 0; data = NULL; data_size = 0; memset(data_type, 0, sizeof(data_type)); data_frame_count = -1; preview = delivery = false; }
     pub fn clear(&mut self) {
-        self.source_id = 0;
-        self.source_parent_id = 0;
+        self.source_id = INVALID_ID;
+        self.source_parent_id = INVALID_ID;
         self.data = vec![];
         self.data_size = 0;
         self.data_type = String::from("");

@@ -180,7 +180,7 @@ impl Rect {
         self.max.x = f32::floor(self.max.x);
         self.max.y = f32::floor(self.max.y);
     }
-    //     bool        IsInverted() const                  { return min.x > max.x || min.y > max.y; }
+    //     bool        is_inverted() const                  { return min.x > max.x || min.y > max.y; }
     pub fn is_inverted(&mut self) -> bool {
         self.min.x > self.max.x || self.min.y > self.max.y
     }

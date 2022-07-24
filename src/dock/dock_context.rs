@@ -1,14 +1,14 @@
 use crate::{Context, dock, INVALID_ID};
 use crate::dock::node::DockNode;
 
-// static void ImGui::DockContextRemoveNode(ImGuiContext* ctx, ImGuiDockNode* node, bool merge_sibling_into_parent_node)
+// static void ImGui::dock_context_remove_node(ImGuiContext* ctx, ImGuiDockNode* node, bool merge_sibling_into_parent_node)
 pub fn dock_context_remove_node(g: &mut Context, node: &mut DockNode, merge_sibling_into_parent_node: bool)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc  = &ctx.DockContext;
     let dc = &mut g.dock_context;
 
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x%08X\n", node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_remove_node 0x%08X\n", node.ID);
     // IM_ASSERT(DockContextFindNodeByID(ctx, node.id) == node);
     // IM_ASSERT(node.ChildNodes[0] == NULL && node.ChildNodes[1] == NULL);
     // IM_ASSERT(node.Windows.size == 0);

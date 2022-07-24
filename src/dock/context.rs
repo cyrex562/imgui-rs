@@ -1,18 +1,21 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use crate::config::ConfigFlags;
 use crate::context::Context;
 use crate::dock::{dock_builder_remove_node_child_nodes, dock_builder_remove_node_docked_windows, DOCKING_SPLITTER_SIZE, ImGuiDockNode};
 use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags, DockNodeSettings};
 use crate::frame::get_frame_height;
 use crate::{dock, INVALID_ID, window};
+use crate::axis::Axis;
+use crate::dock::dock_context::dock_context_remove_node;
 use crate::dock::request::{DockRequest, DockRequestType};
 use crate::rect::Rect;
-use crate::settings::{find_window_settings, SettingsHandler};
+use crate::settings::{find_window_settings, mark_ini_settings_dirty, SettingsHandler};
 use crate::types::{DataAuthority, Direction, Id32};
-use crate::utils::get_or_add;
+use crate::utils::{add_hash_set, get_or_add};
 use crate::vectors::two_d::Vector2D;
 use crate::window::get::find_window_by_name;
-use crate::window::Window;
+use crate::window::{Window, WindowFlags};
+use crate::window::lifecycle::update_window_parent_and_root_links;
 
 
 #[derive(Default,Debug,Clone)]
@@ -29,7 +32,7 @@ pub struct DockContext {
     // ImGuiDockContext()              { memset(this, 0, sizeof(*this)); }
 }
 
-pub fn dock_ctx_initialize(ctx: &mut Context)
+pub fn dock_ctx_initialize(.g: &mut Context)
     {
     // ImGuiContext& g = *ctx;
 
@@ -46,19 +49,19 @@ pub fn dock_ctx_initialize(ctx: &mut Context)
             write_all_fn: DockSettingsHandler::WriteAll,
             user_data: vec![]
         };
-    ctx.settings_handlers.push_back(ini_handler);
+    .g.settings_handlers.push_back(ini_handler);
 }
 
 //void ImGui::DockContextShutdown(ImGuiContext* ctx)
-pub fn dock_context_shutdown(ctx: &mut Context)
+pub fn dock_context_shutdown(.g: &mut Context)
 {
     // ImGuiDockContext* dc  = &ctx->DockContext;
     //for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
-    for n in 0 .. ctx.dock_context.nodes.len()
+    for n in 0 .. .g.dock_context.nodes.len()
     {
-        let node_id = ctx.dock_context.nodes.get(n);
+        let node_id = .g.dock_context.nodes.get(n);
         if node_id.is_some() {
-            ctx.dock_context.nodes.remove(n);
+            .g.dock_context.nodes.remove(n);
         }
         // if (ImGuiDockNode * node = (ImGuiDockNode *)
         // dc -> Nodes.Data[n].val_p){
@@ -81,7 +84,7 @@ pub fn dock_context_clear_nodes(g: &mut Context, root_id: Id32, clear_settings_r
 // [DEBUG] This function also acts as a defacto test to make sure we can rebuild from scratch without a glitch
 // (Different from DockSettingsHandler_ClearAll() + DockSettingsHandler_ApplyAll() because this reuses current settings!)
 // void ImGui::DockContextRebuildNodes(ImGuiContext* ctx)
-pub fn dock_context_rebuild_nodes(ctx: &mut Context)
+pub fn dock_context_rebuild_nodes(.g: &mut Context)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc = &ctx->DockContext;
@@ -89,28 +92,28 @@ pub fn dock_context_rebuild_nodes(ctx: &mut Context)
     SaveIniSettingsToMemory();
     // ImGuiID root_id = 0; // Rebuild all
     let mut root_id: Id32 = 0;
-    dock_context_clear_nodes(ctx, root_id, false);
-    dock_context_build_nodes_from_settings(ctx, &mut ctx.dock_context.nodes_settings);
-    dock_context_build_add_windows_to_nodes(ctx, root_id);
+    dock_context_clear_nodes(.g, root_id, false);
+    dock_context_build_nodes_from_settings(.g, &mut .g.dock_context.nodes_settings);
+    dock_context_build_add_windows_to_nodes(.g, root_id);
 }
 
 // Docking context update function, called by NewFrame()
 // void ImGui::DockContextNewFrameUpdateUndocking(ImGuiContext* ctx)
-pub fn dock_context_new_frame_update_undocking(ctx: &mut Context)
+pub fn dock_context_new_frame_update_undocking(.g: &mut Context)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc = &ctx->DockContext;
-    let mut dc = &mut ctx.dock_context;
-    if !(ctx.io.config_flags.contains(&ConfigFlags::DockingEnable))
+    let mut dc = &mut .g.dock_context;
+    if !(.g.io.config_flags.contains(&ConfigFlags::DockingEnable))
     {
         if dc.nodes.len() > 0 || dc.requests.len() > 0 {
-            dock_context_clear_nodes(ctx, 0, true);
+            dock_context_clear_nodes(.g, 0, true);
         }
         return;
     }
 
     // Setting NoSplit at runtime merges all nodes
-    if ctx.io.config_docking_no_split {
+    if .g.io.config_docking_no_split {
         // for (int n = 0; n < dc->Nodes.Data.Size; n += 1){
         for n in 0 .. dc.nodes.len() {
             // if (ImGuiDockNode * node = (ImGuiDockNode *)
@@ -134,7 +137,7 @@ pub fn dock_context_new_frame_update_undocking(ctx: &mut Context)
 // #endif
     if dc.want_full_rebuild
     {
-        dock_context_rebuild_nodes(ctx);
+        dock_context_rebuild_nodes(.g);
         dc.want_full_rebuild = false;
     }
 
@@ -145,10 +148,10 @@ pub fn dock_context_new_frame_update_undocking(ctx: &mut Context)
         // ImGuiDockRequest* req = &dc->Requests[n];
         let req = dc.requests.get(n).unwrap();
         if req.Type == DockRequestType::Undock && req.undock_target_window_id {
-            dock_context_process_undock_window(ctx, req.undock_target_window_id);
+            dock_context_process_undock_window(.g, req.undock_target_window_id);
         }
         else if req.requst_type == DockRequestType::Undock && req.undock_target_node_id {
-            dock_context_process_undock_node(ctx, req.undock_target_node_id);
+            dock_context_process_undock_node(.g, req.undock_target_node_id);
         }
     }
 }
@@ -203,7 +206,7 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context)
         if hovered_window.dock_node_as_host_id.is_some() {
             g.hovered_dock_node = dock_node_tree_find_visible_node_by_pos(&hovered_window.dock_node_as_host_id.unwrap(), &g.io.mouse_pos);
         }
-        else if hovered_window_root_window.dock_node.is_some() {
+        else if hovered_window_root_window.dock_node_id.is_some() {
             g.hovered_dock_node = hovered_window.root_window.dock_node;
         }
     }
@@ -213,7 +216,7 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context)
     for req in dc.requests.iter_mut()
     {
         if req.request_type == DockRequestType::Dock {
-            dock::dock_context_process_dock(g, req);
+            dock_context_process_dock(g, req);
         }
     }
     // dc.Requests.resize(0);
@@ -241,7 +244,7 @@ pub fn dock_context_gen_node_id(g: &mut Context) -> Id32
     // FIXME-OPT FIXME-DOCK: This is suboptimal, even if the node count is small enough not to be a worry.0
     // We should poke in ctx->Nodes to find a suitable id faster. Even more so trivial that ctx->Nodes lookup is already sorted.
     // ImGuiID id = 0x0001;
-    let mut id = 0x0001;
+    let mut id = INVALID_IDx0001;
     while dock_context_find_node_by_id(g, id).is_some() {
         id += 1;
     }
@@ -393,7 +396,7 @@ pub fn dock_context_prune_unused_settings_nodes(g: &mut Context)
         {
             // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextPruneUnusedSettingsNodes: Prune 0x%08X\n", settings.ID);
             dock::dock_settings_remove_node_references(g, &settings.id, 1);
-            settings.id = 0;
+            settings.id = INVALID_ID;
         }
     }
 }
@@ -528,4 +531,275 @@ pub fn dock_context_queue_notify_remove_node(g: &mut Context, node: &mut DockNod
             req.request_type = DockRequestType::None;
         }
     }
+}
+
+// void dock_context_process_dock(ImGuiContext* ctx, ImGuiDockRequest* req)
+pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest)
+{
+    // IM_ASSERT((req.Type == DockRequestType::Dock && req.DockPayload != NULL) || (req.Type == DockRequestType::Split && req.DockPayload == NULL));
+    // IM_ASSERT(req.DockTargetWindow != NULL || req.DockTargetNode != NULL);
+
+    // ImGuiContext& g = *ctx;
+    // IM_UNUSED(g);
+
+    // ImGuiWindow* payload_window = req.dock_payload_id;     // Optional
+    let payload_window_id = req.dock_payload_id;
+    let payload_window = g.get_window(payload_window_id);
+    // ImGuiWindow* target_window = req.dock_target_window_id;
+    let target_window_id = req.dock_target_window_id;
+    let target_window = g.get_window(target_window_id);
+    // ImGuiDockNode* node = req.dock_target_node_id;
+    let node_id = req.dock_target_node_id;
+    let mut node = g.get_dock_node(node_id);
+
+    if payload_window.id != INVALID_ID {}
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X target '%s' dock window '%s', split_dir %d\n", node ? node.ID : 0, target_window ? target_window.Name : "NULL", payload_window ? payload_window.Name : "NULL", req.DockSplitDir);
+    else {}
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X, split_dir %d\n", node ? node.ID : 0, req.DockSplitDir);
+
+    // Decide which Tab will be selected at the end of the operation
+    // ImGuiID next_selected_id = 0;
+    let mut next_selected_id: Id32 = 0;
+    // ImGuiDockNode* payload_node = NULL;
+    let mut payload_node: &mut DockNode = &mut Default::default();
+    if payload_window.id != INVALID_ID
+    {
+        payload_node = g.get_dock_node(payload_window.dock_node_as_host_id).unwrap();
+        payload_window.dock_node_as_host_id = INVALID_ID; // Important to clear this as the node will have its life as a child which might be merged/deleted later.
+        if payload_node.is_some() && payload_node.unwrap().is_leaf_node() {
+            next_selected_id = if payload_node.tab_bar.next_selected_tab_id != INVALID_ID {
+                payload_node.tab_bar.next_selected_tab_id
+            } else { payload_node.tab_bar.selected_tab_id };
+        }
+        if payload_node.is_none() {
+            next_selected_id = payload_window.tab_id;
+        }
+    }
+
+    // FIXME-DOCK: When we are trying to dock an existing single-window node into a loose window, transfer Node id as well
+    // When processing an interactive split, usually last_frame_alive will be < g.frame_count. But DockBuilder operations can make it ==.
+    if node.is_some() {}
+        // IM_ASSERT(node.LastFrameAlive <= g.frame_count);
+    if node.is_some() && target_window.id != INVALID_ID && node.unwrap().id == target_window.dock_node_as_host_id {}
+        // IM_ASSERT(node.Windows.size > 0 || node.IsSplitNode() || node.IsCentralNode());
+
+    // Create new node and add existing window to it
+    if node.is_none()
+    {
+        node = Some(dock_context_add_node(g, 0));
+        node.unwrap().pos = target_window.pos.clone();
+        node.unwrap().size = target_window.size.clone();
+        if target_window.dock_node_as_host_id == INVALID_ID
+        {
+            dock::dock_node_add_window(g, node.unwrap(), target_window, true);
+            node.unwrap().tab_bar.tabs[0].flags.remove(TabItemFlags::Unsorted);
+            target_window.dock_is_active = true;
+        }
+    }
+
+    let split_dir = req.dock_split_dir.clone();
+    if split_dir != Direction::None
+    {
+        // split into two, one side will be our payload node unless we are dropping a loose window
+        // const ImGuiAxis split_axis = (split_dir == Direction::Left || split_dir == Direction::Right) ? Axis::X : Axis::Y;
+        let split_axis = if split_dir == Direction::Left || split_dir == Direction::Right {
+            Axis::X
+        } else {
+            Axis::Y
+        };
+
+        // const int split_inheritor_child_idx = (split_dir == Direction::Left || split_dir == Direction::Up) ? 1 : 0; // Current contents will be moved to the opposite side
+        let split_inheritor_child_idx = if split_dir == Direction::Left || split_dir == Direction::Up {
+            1
+        } else { 0 };
+
+        // const float split_ratio = req.dock_split_ratio;
+        let split_ratio = req.dock_split_ratio;
+        // let mut payload_node: &mut DockNode;
+        dock::dock_node_tree_split(g, node.unwrap(), split_axis, split_inheritor_child_idx, split_ratio, payload_node);  // payload_node may be NULL here!
+        // ImGuiDockNode* new_node = node.child_nodes[split_inheritor_child_idx ^ 1];
+        let new_node = node.unwrap().child_nodes[split_inheritor_child_idx ^ 1];
+        new_node.host_window = node.unwrap().host_window;
+        node = Some(new_node);
+    }
+    // node.set_local_flags(node.LocalFlags & ~DockNodeFlags::HiddenTabBar);
+    node.unwrap().local_flags.remove(&DockNodeFlags::HiddenTabBar);
+
+    if node.unwrap().id != payload_node.id
+    {
+        // Create tab bar before we call DockNodeMoveWindows (which would attempt to move the old tab-bar, which would lead us to payload tabs wrongly appearing before target tabs!)
+        if node.unwrap().windows.len() > 0 && node.unwrap().tab_bar.is_none()
+        {
+            dock::dock_node_add_tab_bar(g, node.unwrap());
+            // for (int n = 0; n < node.windows.size; n += 1)
+            for win_id in node.unwrap().windows.iter_mut()
+            {
+                let win = g.get_window(*win_id).unwrap();
+                tab_bar_add_tab(&mut node.unwrap().tab_bar.unwrwap(), TabItemFlags::None, win);
+            }
+        }
+
+        if payload_node.id != INVALID_ID
+        {
+            // Transfer full payload node (with 1+ child windows or child nodes)
+            if payload_node.is_split_node()
+            {
+                if node.unwrap().windows.len() > 0
+                {
+                    // We can dock a split payload into a node that already has windows _only_ if our payload is a node tree with a single visible node.
+                    // In this situation, we move the windows of the target node into the currently visible node of the payload.
+                    // This allows us to preserve some of the underlying dock tree settings nicely.
+                    // IM_ASSERT(payload_node.OnlyNodeWithWindows != NULL); // The docking should have been blocked by dock_node_preview_dock_setup() early on and never submitted.
+                    // ImGuiDockNode* visible_node = payload_node.OnlyNodeWithWindows;
+                    let visible_node = g.get_dock_node(payload_node.only_node_with_window).unwrap();
+                    if visible_node.tab_bar.is_some() {}
+                        // IM_ASSERT(visible_node.TabBar.Tabs.size > 0);
+                    dock::dock_node_move_windows(g, node.unwrap(), visible_node);
+                    dock::dock_node_move_windows(g, visible_node, node.unwrap());
+                    dock::dock_settings_rename_node_references(g, node.unwrap().id, visible_node.id);
+                }
+                if node.is_central_node()
+                {
+                    // Central node property needs to be moved to a leaf node, pick the last focused one.
+                    // FIXME-DOCK: If we had to transfer other flags here, what would the policy be?
+                    // ImGuiDockNode* last_focused_node = dock_context_find_node_by_id(ctx, payload_node.LastFocusedNodeId);
+                    let last_focused_node = dock_context_find_node_by_id(g, payload_node.last_focused_node_id);
+                    // IM_ASSERT(last_focused_node != NULL);
+                    // ImGuiDockNode* last_focused_root_node = dock_node_get_root_node(g, last_focused_node);
+                    let last_focused_root_node = dock_node_get_root_node(g, g.last_focused_node);
+                    // IM_ASSERT(last_focused_root_node == DockNodeGetRootNode(payload_node));
+                    // last_focused_node.set_local_flags(last_focused_node.LocalFlags | DockNodeFlags::CentralNode);
+                    let mut flags_to_add = HashSet::from([DockNodeFlags::CentralNode]);
+                    flags_to_add = add_hash_set(&flags_to_add, &last_focused_node.unwrap().local_flags);
+                    last_focused_node.unwrap().set_local_flags(&flags_to_add);
+                    flags_to_add.clone_from(&node.local_flags);
+                    flags_to_add.remove(&DockNodeFlags::CentralNode);
+                    node.set_local_flags(flags_to_add);
+                    last_focused_root_node.CentralNode = last_focused_node;
+                }
+
+                // IM_ASSERT(node.Windows.size == 0);
+                dock::dock_node_move_child_nodes(g, node.unwrap(), payload_node);
+            }
+            else
+            {
+                // const ImGuiID payload_dock_id = payload_node.id;
+                let payload_dock_id = payload_node.id;
+                dock::dock_node_move_windows(g, node.unwrap(), payload_node);
+                dock::dock_settings_rename_node_references(g, payload_dock_id, node.id);
+            }
+            dock_context_remove_node(g, payload_node, true);
+        }
+        else if payload_window
+        {
+            // Transfer single window
+            // const ImGuiID payload_dock_id = payload_window.dock_id;
+            let payload_dock_id = payload_window.dock_id;
+            node.unwrap().visible_window = payload_window.id;
+            dock::dock_node_add_window(g, node.unwrap(), payload_window, true);
+            if payload_dock_id != 0 {
+                dock::dock_settings_rename_node_references(g, payload_dock_id, node.unwrap().id);
+            }
+        }
+    }
+    else
+    {
+        // When docking a floating single window node we want to reevaluate auto-hiding of the tab bar
+        node.unwrap().want_hiddent_tab_bar_update = true;
+    }
+
+    // Update selection immediately
+    // if ImGuiTabBar* tab_bar = node.tab_bar {
+    let mut tab_bar = &mut node.unwrap().tab_bar;
+    if tab_bar.is_some() {
+        tab_bar.unwrap().next_selected_tab_id = next_selected_id;
+    }
+    mark_ini_settings_dirty(g);
+}
+
+// void DockContextProcessUndockWindow(ImGuiContext* ctx, ImGuiWindow* window, bool clear_persistent_docking_ref)
+pub fn dock_context_process_undock_window(g: &mut Context, window: &mut Window, clear_persistent_docking_ref: bool)
+{
+    // ImGuiContext& g = *.g;
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockWindow window '%s', clear_persistent_docking_ref = %d\n", window.Name, clear_persistent_docking_ref);
+    // if (window.dock_node)
+    if window.dock_node_id != INVALID_ID {
+        let win_dock_node = g.get_dock_node(window.dock_node_id);
+        dock::dock_node_remove_window(g, win_dock_node.unwrap(), window, if clear_persistent_docking_ref { 0} else{ window.dock_id});
+    }
+    else {
+        window.dock_id = INVALID_ID;
+    }
+    window.collapsed = false;
+    window.dock_is_active = false;
+    window.dock_node_is_visible = false;
+    window.dock_tab_is_visible = false;
+    let ref_vp = g.get_viewport(window.viewport_id);
+    window.size_full = dock::fix_large_windows_when_undocking(g, &window.size_full, ref_vp);
+    window.size = window.size_full.clone();
+
+    mark_ini_settings_dirty(g);
+}
+
+// void DockContextProcessUndockNode(ImGuiContext* ctx, ImGuiDockNode* node)
+pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode)
+{
+    // ImGuiContext& g = *.g;
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockNode node %08X\n", node.ID);
+    // IM_ASSERT(node.IsLeafNode());
+    // IM_ASSERT(node.Windows.size >= 1);
+
+    if node.is_root_node() || node.is_central_node()
+    {
+        // In the case of a root node or central node, the node will have to stay in place. Create a new node to receive the payload.
+        // ImGuiDockNode* new_node = dock_context_add_node(.g, 0);
+        let new_node =dock_context_add_node(g, INVALID_ID);
+        new_node.pos = node.pos.clone();
+        new_node.size = node.size.clone();
+        new_node.size_ref = node.size_ref.clone();
+        dock::dock_node_move_windows(g, new_node, node);
+        dock::dock_settings_rename_node_references(g, node.id, new_node.id);
+        // for (int n = 0; n < new_node.windows.size; n += 1)
+        for win_id in new_node.windows.iter()
+        {
+            // ImGuiWindow* window = new_node.windows[n];
+            let mut win = g.get_window(*win_id);
+            window.flags.remove(WindowFlags::ChildWindow);
+            if window.parent_window_id != INVALID_ID {
+                let parent_win = g.get_window(window.parent_window_id);
+                // window.parent_window.DC.ChildWindows.find_erase(window);
+                parent_win.dc.child_windows.retain(|x| x != window.id);
+            }
+            // UpdateWindowParentAndRootLinks(window, window.flags, NULL);
+            update_window_parent_and_root_links(g, window, window.flags, None);
+        }
+        node.clone_from(&new_node);
+    }
+    else
+    {
+        // Otherwise extract our node and merge our sibling back into the parent node.
+        // IM_ASSERT(node.ParentNode.ChildNodes[0] == node || node.ParentNode.ChildNodes[1] == node);
+        // int index_in_parent = (node.parent_node.child_nodes[0] == node) ? 0 : 1;
+        let parent_node = g.get_dock_node(node.parent_node_id);
+        let index_in_parent = if parent_node.unwrap().child_nodes[0] == node.id {
+            0
+        } else {1};
+        // node.parent_node.child_nodes[index_in_parent] = NULL;
+        parent_node.unwrap().child_nodes[index_in_parent] = INVALID_ID;
+        dock::dock_node_tree_merge(g,
+                                   parent_node.unwrap(),
+                                   g.get_dock_node(parent_node.unwrap().child_nodes[index_in_parent ^ 1]));
+        // node.parent_node.authority_for_viewport = DataAuthority::Window; // The node that stays in place keeps the viewport, so our newly dragged out node will create a new viewport
+        parent_node.unwrap().authority_for_viewport = DataAuthority::Window;
+        // node.parent_node = NULL;
+        node.parent_node_id = INVALID_ID;
+    }
+
+    node.authority_for_pos = DataAuthority::DockNode;
+    node.authority_for_size = DataAuthority::DockNode;
+    let node_win_0 = g.get_window(node.windows[0]);
+    let node_win_0_vp = g.get_viewport(node_win_0.viewport_id);
+    node.size = dock::fix_large_windows_when_undocking(g, &node.size, node_win_0_vp);
+    nodewant_mouse_move = true;
+    mark_ini_settings_dirty(g);
 }

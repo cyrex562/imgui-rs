@@ -230,10 +230,10 @@ impl DockNode {
     }
     //
     //     void                    set_local_flags(ImGuiDockNodeFlags flags) { local_flags = flags; UpdateMergedFlags(); }
-    pub fn set_local_flags(&mut self, flags: HashSet<DockNodeFlags>) {
+    pub fn set_local_flags(&mut self, flags: &HashSet<DockNodeFlags>) {
         // self.local_flags = flags;
         for flag in flags {
-            self.local_flags.insert(flag);
+            self.local_flags.insert(flag.clone());
         }
         self.update_merged_flags();
     }

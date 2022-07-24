@@ -108,7 +108,7 @@ impl NavItemData {
     //     void clear()        { window = NULL; id = focus_scope_id = 0; in_flags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
     pub fn Clear(&mut self) {
         self.Window = null_mut();
-        self.id = 0;
+        self.id = INVALID_ID;
         self.FocusScopeId = 0;
         self.InFlags = ImGuiItemFlags::None;
         self.DistBox = f32::MAX;
@@ -1047,14 +1047,14 @@ pub fn nav_update_create_move_request(g: &mut Context)
     Rect scoring_rect;
     if (window != NULL)
     {
-        Rect nav_rect_rel = !window.NavRectRel[g.NavLayer].IsInverted() ? window.NavRectRel[g.NavLayer] : Rect(0, 0, 0, 0);
+        Rect nav_rect_rel = !window.NavRectRel[g.NavLayer].is_inverted() ? window.NavRectRel[g.NavLayer] : Rect(0, 0, 0, 0);
         scoring_rect = WindowRectRelToAbs(window, nav_rect_rel);
         scoring_rect.TranslateY(scoring_rect_offset_y);
         scoring_rect.min.x = ImMin(scoring_rect.min.x + 1.0, scoring_rect.max.x);
         scoring_rect.max.x = scoring_rect.min.x;
-        // IM_ASSERT(!scoring_rect.IsInverted()); // Ensure if we have a finite, non-inverted bounding box here will allows us to remove extraneous f32::abs() calls in NavScoreItem().
+        // IM_ASSERT(!scoring_rect.is_inverted()); // Ensure if we have a finite, non-inverted bounding box here will allows us to remove extraneous f32::abs() calls in NavScoreItem().
         //GetForegroundDrawList()->add_rect(scoring_rect.min, scoring_rect.max, IM_COL32(255,200,0,255)); // [DEBUG]
-        //if (!g.nav_scoring_no_clip_rect.IsInverted()) { GetForegroundDrawList()->add_rect(g.nav_scoring_no_clip_rect.min, g.nav_scoring_no_clip_rect.max, IM_COL32(255, 200, 0, 255)); } // [DEBUG]
+        //if (!g.nav_scoring_no_clip_rect.is_inverted()) { GetForegroundDrawList()->add_rect(g.nav_scoring_no_clip_rect.min, g.nav_scoring_no_clip_rect.max, IM_COL32(255, 200, 0, 255)); } // [DEBUG]
     }
     g.NavScoringRect = scoring_rect;
     g.NavScoringNoClipRect.Add(scoring_rect);
@@ -1286,7 +1286,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
             // Scrolling will be handled via the ImGuiNavMoveFlags_ScrollToEdgeY flag, we don't scroll immediately to avoid scrolling happening before nav result.
             // Preserve current horizontal position if we have any.
             nav_rect_rel.min.y = nav_rect_rel.max.y = 0.0;
-            if (nav_rect_rel.IsInverted())
+            if (nav_rect_rel.is_inverted())
                 nav_rect_rel.min.x = nav_rect_rel.max.x = 0.0;
             g.NavMoveDir = Direction::Down;
             g.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdgeY;
@@ -1295,7 +1295,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
         else if (end_pressed)
         {
             nav_rect_rel.min.y = nav_rect_rel.max.y = window.ContentSize.y;
-            if (nav_rect_rel.IsInverted())
+            if (nav_rect_rel.is_inverted())
                 nav_rect_rel.min.x = nav_rect_rel.max.x = 0.0;
             g.NavMoveDir = Direction::Up;
             g.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdgeY;
@@ -1625,7 +1625,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
         g.nav_windowing_list_window = find_window_by_name("###NavWindowingList");
     const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ GetMainViewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport.size.x * 0.20, viewport.size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
-    SetNextWindowPos(viewport.GetCenter(), Cond::Always, Vector2D::new(0.5, 0.5));
+    SetNextWindowPos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
     begin("###NavWindowingList", NULL, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
     for (int n = g.windows_focus_order.size - 1; n >= 0; n--)

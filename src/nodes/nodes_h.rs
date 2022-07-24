@@ -248,12 +248,12 @@ namespace IMNODES_NAMESPACE
 {
 // Call this function if you are compiling imnodes in to a dll, separate from ImGui. Calling this
 // function sets the GImGui global variable, which is not shared across dll boundaries.
-void SetImGuiContext(ImGuiContext* ctx);
+void SetImGuiContext(ImGuiContext* .g);
 
 ImNodesContext* CreateContext();
-void            DestroyContext(ImNodesContext* ctx = NULL); // NULL = destroy current context
+void            DestroyContext(ImNodesContext* .g = NULL); // NULL = destroy current context
 ImNodesContext* GetCurrentContext();
-void            SetCurrentContext(ImNodesContext* ctx);
+void            SetCurrentContext(ImNodesContext* .g);
 
 ImNodesEditorContext* EditorContextCreate();
 void                  EditorContextFree(ImNodesEditorContext*);

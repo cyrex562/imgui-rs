@@ -323,20 +323,20 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
     if dim_bg_for_modal {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
         // ImGuiWindow* dim_behind_window = FindBottomMostVisibleWindowWithinBeginStack(modal_window);
-        let dim_behind_window = find_bottom_most_visible_window_with_begin_stack(ctx, modal_window);
+        let dim_behind_window = find_bottom_most_visible_window_with_begin_stack(.g, modal_window);
         // RenderDimmedBackgroundBehindWindow(dim_behind_window, get_color_u32(ImGuiCol_ModalWindowDimBg, g.dim_bg_ration));
-        render_dimmed_background_behind_window(ctx, dim_behind_window, get_color_u32(StyleColor::ModalWindowDimBg, g.dim_bg_ratio));
+        render_dimmed_background_behind_window(.g, dim_behind_window, get_color_u32(StyleColor::ModalWindowDimBg, g.dim_bg_ratio));
         viewports_already_dimmed[0] = modal_window.viewport_id;
     } else if dim_bg_for_window_list {
         // Draw dimming behind CTRL+Tab target window and behind CTRL+Tab UI window
         let nwta_win = g.get_window(g.nav_windowing_target_anim).unwrap();
         let nwl_win = g.get_window(g.nav_windowing_list_window_id).unwrap();
-        render_dimmed_background_behind_window(ctx, g.NavWindowingTargetAnim, get_color_u32(StyleColor::NavWindowingDimBg, g.dim_bg_ration));
+        render_dimmed_background_behind_window(.g, g.NavWindowingTargetAnim, get_color_u32(StyleColor::NavWindowingDimBg, g.dim_bg_ration));
         if g.nav_windowing_list_window_id != INVALID_ID {
 
             if nwl_win.viewport_id != INVALID_ID {
                 if nwl_win.viewport_id != nwta_win.viewport_id{
-                    render_dimmed_background_behind_window(ctx, nwl_win, get_color_u32(StyleColor::NavWindowingDimBg, g.dim_bg_ration));
+                    render_dimmed_background_behind_window(.g, nwl_win, get_color_u32(StyleColor::NavWindowingDimBg, g.dim_bg_ration));
                 }
             }
         }
@@ -480,14 +480,14 @@ pub fn render(g: &mut Context)
 }
 
 // static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col)
-pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Window, color: u32)
+pub fn render_dimmed_background_behind_window(.g: &mut Context, window: &mut Window, color: u32)
 {
     if (color & IM_COL32_A_MASK) == 0 {
         return;
     }
 
     // ImGuiViewportP* viewport = window.viewport;
-    let viewport = ctx.get_viewport(window.viewport_id).unwrap();
+    let viewport = .g.get_viewport(window.viewport_id).unwrap();
     // ImRect viewport_rect = viewport->get_main_rect();
     let viewport_rect = viewport.get_main_rect();
 
@@ -497,8 +497,8 @@ pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Wi
     // and draw list have been trimmed already, hence the explicit recreation of a draw command if missing.
     // FIXME: This is creating complication, might be simpler if we could inject a drawlist in drawdata at a given position and not attempt to manipulate ImDrawCmd order.
     // ImDrawList* draw_list = window.root_window_dock_tree->DrawList;
-    let root_win_dock_tree_win = ctx.get_window(window.root_window_dock_tree_id).unwrap();
-    let draw_list = ctx.get_draw_list(root_win_dock_tree_win.draw_list_id).unwrap();
+    let root_win_dock_tree_win = .g.get_window(window.root_window_dock_tree_id).unwrap();
+    let draw_list = .g.get_draw_list(root_win_dock_tree_win.draw_list_id).unwrap();
     if draw_list.cmd_buffer.len() == 0 {
         draw_list.add_draw_cmd();
     }
@@ -514,12 +514,12 @@ pub fn render_dimmed_background_behind_window(ctx: &mut Context, window: &mut Wi
 
 
     // Draw over sibling docking nodes in a same docking tree
-    let root_win = ctx.get_window(window.root_window_id).unwrap();
+    let root_win = .g.get_window(window.root_window_id).unwrap();
     if root_win.dock_is_active
     {
         // ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.root_window_dock_tree)->DrawList;
 
-        let draw_list = ctx.get_draw_list(get::find_front_most_visible_child_window(ctx, root_win_dock_tree_win).draw_list_id).unwrap();
+        let draw_list = .g.get_draw_list(get::find_front_most_visible_child_window(.g, root_win_dock_tree_win).draw_list_id).unwrap();
         if draw_list.cmd_buffer.len() == 0 {
             draw_list.add_draw_cmd();
         }

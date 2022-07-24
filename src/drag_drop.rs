@@ -80,8 +80,8 @@ pub fn begin_drag_drop_source(g: &mut Context, flags: &HashSet<DragDropFlags>) -
     ImGuiMouseButton mouse_button = ImGuiMouseButton_Left;
 
     bool source_drag_active = false;
-    ImGuiID source_id = 0;
-    ImGuiID source_parent_id = 0;
+    ImGuiID source_id = INVALID_ID;
+    ImGuiID source_parent_id = INVALID_ID;
     if (!(flags & DragDropFlags::SourceExtern))
     {
         source_id = g.last_item_data.id;

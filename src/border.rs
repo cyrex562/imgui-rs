@@ -58,7 +58,7 @@ pub fn get_window_resize_border_id(g: &mut Context, window: &mut Window, dir: Di
     let n: u32 = dir + 4;
     // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.ID : window.id;
     let mut id = if window.dock_is_active {
-        window.dock_node.host_window_id
+        window.dock_node_id.host_window_id
     } else {
         window.id
     };

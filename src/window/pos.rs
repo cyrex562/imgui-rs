@@ -35,7 +35,7 @@ pub fn set_window_pos(g: &mut Context, window: &mut Window, pos: &Vector2D, cond
     Vector2D offset = window.pos - old_pos;
     if (offset.x == 0.0 && offset.y == 0.0)
         return;
-    MarkIniSettingsDirty(window);
+    mark_ini_settings_dirty(window);
     // FIXME: share code with TranslateWindow(), need to confirm whether the 3 rect modified by TranslateWindow() are desirable here.
     window.dc.cursor_pos += offset;         // As we happen to move the window while it is being appended to (which is a bad idea - will smear) let's at least offset the cursor
     window.dc.cursor_max_pos += offset;      // And more importantly we need to offset CursorMaxPos/CursorStartPos this so content_size calculation doesn't get affected.

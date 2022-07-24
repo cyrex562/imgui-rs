@@ -222,7 +222,11 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
 }
 
 // void ImGui::UpdateWindowParentAndRootLinks(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window)
-pub fn update_window_parent_and_root_links(g: &mut Context, window: &mut Window, flags: &mut HashSet<WindowFlags>, parent_window: &mut Window)
+pub fn update_window_parent_and_root_links(
+    g: &mut Context,
+    window: &mut Window,
+    flags: &mut HashSet<WindowFlags>,
+    parent_window: Option<&mut Window>)
 {
     // window.parent_window = parent_window;
     window.parent_window_id = parent_window.id;
@@ -357,10 +361,10 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         SetWindowDock(window, g.next_window_data.dock_id, g.next_window_data.DockCond);
     if (first_begin_of_the_frame)
     {
-        bool has_dock_node = (window.dock_id != 0 || window.dock_node != NULL);
+        bool has_dock_node = (window.dock_id != 0 || window.dock_node_id != NULL);
         bool new_auto_dock_node = !has_dock_node && GetWindowAlwaysWantOwnTabBar(window);
-        bool dock_node_was_visible = window.DockNodeIsVisible;
-        bool dock_tab_was_visible = window.DockTabIsVisible;
+        bool dock_node_was_visible = window.dock_node_is_visible;
+        bool dock_tab_was_visible = window.dock_tab_is_visible;
         if (has_dock_node || new_auto_dock_node)
         {
             BeginDocked(window, p_open);
@@ -372,7 +376,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
             }
 
             // Amend the appearing flag
-            if (window.DockTabIsVisible && !dock_tab_was_visible && dock_node_was_visible && !window.Appearing && !window_was_appearing)
+            if (window.dock_tab_is_visible && !dock_tab_was_visible && dock_node_was_visible && !window.Appearing && !window_was_appearing)
             {
                 window.Appearing = true;
                 state::set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
@@ -380,12 +384,12 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         }
         else
         {
-            window.dock_is_active = window.DockNodeIsVisible = window.DockTabIsVisible = false;
+            window.dock_is_active = window.dock_node_is_visible = window.dock_tab_is_visible = false;
         }
     }
 
     // Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
-    ImGuiWindow* parent_window_in_stack = (window.dock_is_active && window.dock_node.host_window_id) ? window.dock_node.host_window_id: g.current_window_stack.empty() ? NULL : g.current_window_stack.back().Window;
+    ImGuiWindow* parent_window_in_stack = (window.dock_is_active && window.dock_node_id.host_window_id) ? window.dock_node_id.host_window_id: g.current_window_stack.empty() ? NULL : g.current_window_stack.back().Window;
     ImGuiWindow* parent_window = first_begin_of_the_frame ? ((flags & (WindowFlags::ChildWindow | WindowFlags::Popup)) ? parent_window_in_stack : NULL) : window.parent_window;
     // IM_ASSERT(parent_window != NULL || !(flags & WindowFlags::ChildWindow));
 
@@ -579,7 +583,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
             if (window.WantCollapseToggle)
             {
                 window.collapsed = !window.collapsed;
-                MarkIniSettingsDirty(window);
+                mark_ini_settings_dirty(window);
             }
         }
         else
@@ -623,7 +627,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
                 use_current_size_for_scrollbar_y = true;
             }
             if (!window.collapsed)
-                MarkIniSettingsDirty(window);
+                mark_ini_settings_dirty(window);
         }
 
         // Apply minimum/maximum window size constraints and final size
@@ -874,7 +878,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // Child windows can render their decoration (bg color, border, scrollbars, etc.) within their parent to save a draw call (since 1.71)
         // When using overlapping child windows, this will break the assumption that child z-order is mapped to submission order.
         // FIXME: User code may rely on explicit sorting of overlapping child window and would need to disable this somehow. Please get in contact if you are affected (github #4493)
-        const bool is_undocked_or_docked_visible = !window.dock_is_active || window.DockTabIsVisible;
+        const bool is_undocked_or_docked_visible = !window.dock_is_active || window.dock_tab_is_visible;
         if (is_undocked_or_docked_visible)
         {
             bool render_decorations_in_parent = false;
@@ -893,7 +897,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
             // Handle title bar, scrollbar, resize grips and resize borders
             const ImGuiWindow* window_to_highlight = g.nav_windowing_target ? g.nav_windowing_target : g.nav_window;
-            const bool title_bar_is_highlight = want_focus || (window_to_highlight && (window.root_window_for_title_bar_highlight == window_to_highlight.root_window_for_title_bar_highlight || (window.dock_node && window.dock_node == window_to_highlight.dock_node)));
+            const bool title_bar_is_highlight = want_focus || (window_to_highlight && (window.root_window_for_title_bar_highlight == window_to_highlight.root_window_for_title_bar_highlight || (window.dock_node_id && window.dock_node_id == window_to_highlight.dock_node)));
             RenderWindowDecorations(window, title_bar_rect, title_bar_is_highlight, handle_borders_and_resize_grips, resize_grip_count, resize_grip_col, resize_grip_draw_size);
 
             if (render_decorations_in_parent)
@@ -981,7 +985,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // Close requested by platform window
         if (p_open != NULL && window.viewport.PlatformRequestClose && window.viewport != GetMainViewport())
         {
-            if (!window.dock_is_active || window.DockTabIsVisible)
+            if (!window.dock_is_active || window.dock_tab_is_visible)
             {
                 window.viewport.PlatformRequestClose = false;
                 g.NavWindowingToggleLayer = false; // Assume user mapped platform_request_close on ALT-F4 so we disable ALT for menu toggle. False positive not an issue.
@@ -1058,7 +1062,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         // This will have the important effect of actually returning true in Begin() and not setting skip_items, allowing an earlier submission of the window contents.
         // This is analogous to regular windows being hidden from one frame.
         // It is especially important as e.g. nested tab_bars would otherwise generate flicker in the form of one empty frame, or focus requests won't be processed.
-        if (window.dock_is_active && !window.DockTabIsVisible)
+        if (window.dock_is_active && !window.dock_tab_is_visible)
         {
             if (window.LastFrameJustFocused == g.frame_count)
                 window.hidden_frames_cannot_skip_items = 1;
@@ -1151,7 +1155,7 @@ pub fn end(g: &mut Context)
         LogFinish();
 
     // Docking: report contents sizes to parent to allow for auto-resize
-    if (window.dock_node && window.DockTabIsVisible)
+    if (window.dock_node && window.dock_tab_is_visible)
         if (ImGuiWindow* host_window = window.dock_node.host_window)         // FIXME-DOCK
             host_window.dc.cursor_max_pos = window.dc.cursor_max_pos + window.WindowPadding - host_window.WindowPadding;
 
@@ -1169,18 +1173,18 @@ pub fn end(g: &mut Context)
 }
 
 // static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, ImGuiWindow* window)
-pub fn add_window_to_sort_buffer(ctx: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32) {
+pub fn add_window_to_sort_buffer(.g: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32) {
     out_sorted_windows.push_back(window);
-    let win = ctx.get_window(window).unwrap();
+    let win = .g.get_window(window).unwrap();
     if window.active {
         // int count = window.dc.ChildWindows.Size;
         let count = win.dc.child_windows.len();
         // ImQsort(window.dc.ChildWindows.Data, count, sizeof(ImGuiWindow*), ChildWindowComparer);
         win.dc.child_windows.sort();
         for child_win_id in win.dc.child_windows.iter() {
-            let child_win = ctx.get_window(*child_win_id).unwrap();
+            let child_win = .g.get_window(*child_win_id).unwrap();
             if child_win.active {
-                add_window_to_sort_buffer(ctx, out_sorted_windows, *child_win_id);
+                add_window_to_sort_buffer(.g, out_sorted_windows, *child_win_id);
             }
         }
 

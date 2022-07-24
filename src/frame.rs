@@ -126,7 +126,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     }
     g.hovered_id_previous_frame = g.hovered_id;
     g.hovered_id_previous_frame_using_mouse_wheel = g.hovered_id_using_mouse_wheel;
-    g.hovered_id = 0;
+    g.hovered_id = INVALID_ID;
     g.hovered_id_allow_overlap = false;
     g.hovered_id_using_mouse_wheel = false;
     g.hovered_id_disabled = false;
@@ -153,7 +153,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.active_id_previous_frame_is_alive = false;
     g.active_id_is_just_activated = false;
     if (g.temp_input_id != 0 && g.active_id != g.temp_input_id) {
-        g.temp_input_id = 0;
+        g.temp_input_id = INVALID_ID;
     }
     if (g.active_id == 0)
     {
@@ -168,7 +168,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.drag_drop_accept_id_curr_rect_surface = f32::MAX;
     g.drag_drop_within_source = false;
     g.drag_drop_within_target = false;
-    g.drag_drop_hold_just_pressed_id = 0;
+    g.drag_drop_hold_just_pressed_id = INVALID_ID;
 
     // Close popups on focus lost (currently wip/opt-in)
     //if (g.io.app_focus_lost)

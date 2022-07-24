@@ -1702,7 +1702,7 @@ void Initialize(ImNodesContext* context)
     StyleColorsDark(&context.Style);
 }
 
-void Shutdown(ImNodesContext* ctx) { EditorContextFree(ctx.DefaultEditorCtx); }
+void Shutdown(ImNodesContext* .g) { EditorContextFree(.g.DefaultEditorCtx); }
 
 // [SECTION] minimap
 
@@ -1734,7 +1734,7 @@ static inline void CalcMiniMapLayout()
         const Vector2D max_size =
             f32::floor(editor_rect.GetSize() * editor.MiniMapSizeFraction - border * 2.0);
         const float  max_size_aspect_ratio = max_size.x / max_size.y;
-        const Vector2D grid_content_size = editor.GridContentBounds.IsInverted()
+        const Vector2D grid_content_size = editor.GridContentBounds.is_inverted()
                                              ? max_size
                                              : f32::floor(editor.GridContentBounds.GetSize());
         const float grid_content_aspect_ratio = grid_content_size.x / grid_content_size.y;
@@ -2007,26 +2007,26 @@ namespace IMNODES_NAMESPACE
 {
 ImNodesContext* CreateContext()
 {
-    ImNodesContext* ctx = IM_NEW(ImNodesContext)();
+    ImNodesContext* .g = IM_NEW(ImNodesContext)();
     if (GImNodes == NULL)
-        SetCurrentContext(ctx);
-    Initialize(ctx);
-    return ctx;
+        SetCurrentContext(.g);
+    Initialize(.g);
+    return .g;
 }
 
-void DestroyContext(ImNodesContext* ctx)
+void DestroyContext(ImNodesContext* .g)
 {
-    if (ctx == NULL)
-        ctx = GImNodes;
-    Shutdown(ctx);
-    if (GImNodes == ctx)
+    if (.g == NULL)
+        .g = GImNodes;
+    Shutdown(.g);
+    if (GImNodes == .g)
         SetCurrentContext(NULL);
-    IM_DELETE(ctx);
+    IM_DELETE(.g);
 }
 
 ImNodesContext* GetCurrentContext() { return GImNodes; }
 
-void SetCurrentContext(ImNodesContext* ctx) { GImNodes = ctx; }
+void SetCurrentContext(ImNodesContext* .g) { GImNodes = .g; }
 
 ImNodesEditorContext* EditorContextCreate()
 {
@@ -2035,13 +2035,13 @@ ImNodesEditorContext* EditorContextCreate()
     return (ImNodesEditorContext*)mem;
 }
 
-void EditorContextFree(ImNodesEditorContext* ctx)
+void EditorContextFree(ImNodesEditorContext* .g)
 {
-    ctx->~ImNodesEditorContext();
-    ImGui::MemFree(ctx);
+    .g->~ImNodesEditorContext();
+    ImGui::MemFree(.g);
 }
 
-void EditorContextSet(ImNodesEditorContext* ctx) { GImNodes.EditorCtx = ctx; }
+void EditorContextSet(ImNodesEditorContext* .g) { GImNodes.EditorCtx = .g; }
 
 Vector2D EditorContextGetPanning()
 {
@@ -2064,7 +2064,7 @@ void EditorContextMoveToNode(const int node_id)
     editor.Panning.y = -node.Origin.y;
 }
 
-void SetImGuiContext(ImGuiContext* ctx) { ImGui::SetCurrentContext(ctx); }
+void SetImGuiContext(ImGuiContext* .g) { ImGui::SetCurrentContext(.g); }
 
 ImNodesIO& GetIO() { return GImNodes.Io; }
 
@@ -2284,7 +2284,7 @@ void EndNodeEditor()
 
     ImNodesEditorContext& editor = EditorContextGet();
 
-    bool no_grid_content = editor.GridContentBounds.IsInverted();
+    bool no_grid_content = editor.GridContentBounds.is_inverted();
     if (no_grid_content)
     {
         editor.GridContentBounds = ScreenSpaceToGridSpace(editor, GImNodes.CanvasRectScreenSpace);
@@ -2394,7 +2394,7 @@ void EndNodeEditor()
         if (should_auto_pan && !MouseInCanvas())
         {
             Vector2D mouse = ImGui::GetMousePos();
-            Vector2D center = GImNodes.CanvasRectScreenSpace.GetCenter();
+            Vector2D center = GImNodes.CanvasRectScreenSpace.get_center();
             Vector2D direction = (center - mouse);
             direction = direction * ImInvLength(direction, 0.0);
 

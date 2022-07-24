@@ -264,7 +264,7 @@ pub struct Window {
     // ImGuiWindowDockStyle    dock_style;
     pub dock_style: WindowDockStyle,
     // ImGuiDockNode*          dock_node;                           // Which node are we docked into. Important: Prefer testing dock_is_active in many cases as this will still be set when the dock node is hidden.
-    pub dock_node: Id32, //Id32, // *mut ImGuiDockNode,
+    pub dock_node_id: Id32, //Id32, // *mut ImGuiDockNode,
     // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
     pub dock_node_as_host_id: Id32, // Id32, // *mut ImGuiDockNode,
     // ImGuiID                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
