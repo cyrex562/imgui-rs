@@ -33,7 +33,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
     Vector2D off = bb.min - viewport.pos * scale;
     float alpha_mul = (viewport.flags & ImGuiViewportFlags_Minimized) ? 0.30 : 1.00;
     window.draw_list->AddRectFilled(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul * 0.40));
-    for (int i = 0; i != g.windows.size; i += 1)
+    for (int i = 0; i != g.windows.len(); i += 1)
     {
         ImGuiWindow* thumb_window = g.windows[i];
         if (!thumb_window.was_active || (thumb_window.flags & WindowFlags::ChildWindow))
@@ -329,7 +329,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     }
 
     // windows
-    if (TreeNode("windows", "windows (%d)", g.windows.size))
+    if (TreeNode("windows", "windows (%d)", g.windows.len()))
     {
         //SetNextItemOpen(true, ImGuiCond_Once);
         DebugNodeWindowsList(&g.windows, "By display order");
@@ -339,7 +339,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             // Here we display windows in their submitted order/hierarchy, however note that the Begin stack doesn't constitute a Parent<>Child relationship!
             ImVector<ImGuiWindow*>& temp_buffer = g.windows_temp_sort_buffer;
             temp_buffer.resize(0);
-            for (int i = 0; i < g.windows.size; i += 1)
+            for (int i = 0; i < g.windows.len(); i += 1)
                 if (g.windows[i]->last_frame_active + 1 >= g.frame_count)
                     temp_buffer.push_back(g.windows[i]);
             struct Func { static int  WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((*(const ImGuiWindow* const *)lhs)->BeginOrderWithinContext - (*(const ImGuiWindow* const*)rhs)->BeginOrderWithinContext); } };
@@ -560,7 +560,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     // Overlay: Display windows Rectangles and Begin Order
     if (cfg->ShowWindowsRects || cfg->ShowWindowsBeginOrder)
     {
-        for (int n = 0; n < g.windows.size; n += 1)
+        for (int n = 0; n < g.windows.len(); n += 1)
         {
             ImGuiWindow* window = g.windows[n];
             if (!window.was_active)
@@ -684,9 +684,9 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
     bool open;
     ImGuiTreeNodeFlags tree_node_flags = node->IsFocused ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
     if (node->Windows.size > 0)
-        open = TreeNodeEx((void*)(intptr_t)node->ID, tree_node_flags, "%s 0x%04X%s: %d windows (vis: '%s')", label, node->ID, node->IsVisible ? "" : " (hidden)", node->Windows.size, node->VisibleWindow ? node->VisibleWindow->Name : "NULL");
+        open = TreeNodeEx((void*)(intptr_t)node->ID, tree_node_flags, "%s 0x%04X%s: %d windows (vis: '%s')", label, node->ID, node->is_visible ? "" : " (hidden)", node->Windows.size, node->VisibleWindow ? node->VisibleWindow->Name : "NULL");
     else
-        open = TreeNodeEx((void*)(intptr_t)node->ID, tree_node_flags, "%s 0x%04X%s: %s split (vis: '%s')", label, node->ID, node->IsVisible ? "" : " (hidden)", (node->SplitAxis == Axis::X) ? "horizontal" : (node->SplitAxis == Axis::Y) ? "vertical" : "n/a", node->VisibleWindow ? node->VisibleWindow->Name : "NULL");
+        open = TreeNodeEx((void*)(intptr_t)node->ID, tree_node_flags, "%s 0x%04X%s: %s split (vis: '%s')", label, node->ID, node->is_visible ? "" : " (hidden)", (node->SplitAxis == Axis::X) ? "horizontal" : (node->SplitAxis == Axis::Y) ? "vertical" : "n/a", node->VisibleWindow ? node->VisibleWindow->Name : "NULL");
     if (!is_alive) { pop_style_color(); }
     if (is_active && IsItemHovered())
         if (ImGuiWindow* window = node->HostWindow ? node->HostWindow : node->VisibleWindow)
@@ -699,7 +699,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
             node.pos.x, node.pos.y, node.size.x, node.size.y, node.size_ref.x, node.size_ref.y);
         DebugNodeWindow(node->HostWindow, "host_window");
         DebugNodeWindow(node->VisibleWindow, "visible_window");
-        BulletText("SelectedTabID: 0x%08X, LastFocusedNodeID: 0x%08X", node->SelectedTabId, node->LastFocusedNodeId);
+        BulletText("SelectedTabID: 0x%08X, LastFocusedNodeID: 0x%08X", node->SelectedTabId, node->last_focused_node_id);
         BulletText("Misc:%s%s%s%s%s%s%s",
             node->is_dock_space() ? " is_dock_space" : "",
             node->is_central_node() ? " is_central_node" : "",
@@ -1082,7 +1082,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
         (flags & WindowFlags::ChildWindow)  ? "Child " : "",      (flags & WindowFlags::Tooltip)     ? "Tooltip "   : "",  (flags & WindowFlags::Popup) ? "Popup " : "",
         (flags & WindowFlags::Modal)        ? "Modal " : "",      (flags & WindowFlags::ChildMenu)   ? "ChildMenu " : "",  (flags & WindowFlags::NoSavedSettings) ? "NoSavedSettings " : "",
         (flags & WindowFlags::NoMouseInputs)? "NoMouseInputs":"", (flags & WindowFlags::NoNavInputs) ? "NoNavInputs" : "", (flags & WindowFlags::AlwaysAutoResize) ? "AlwaysAutoResize" : "");
-    BulletText("WindowClassId: 0x%08X", window.WindowClass.ClassId);
+    BulletText("WindowClassId: 0x%08X", window.window_class.ClassId);
     BulletText("scroll: (%.2/%.2,%.2/%.2) Scrollbar:%s%s", window.scroll.x, window.scroll_max.x, window.scroll.y, window.scroll_max.y, window.scrollbar_x ? "x" : "", window.scrollbar_y ? "Y" : "");
     BulletText("active: %d/%d, write_accessed: %d, begin_order_within_context: %d", window.active, window.was_active, window.write_accessed, (window.active || window.was_active) ? window.BeginOrderWithinContext : -1);
     BulletText("appearing: %d, hidden: %d (CanSkip %d Cannot %d), skip_items: %d", window.Appearing, window.hidden, window..hidden_frames_can_skip_items, window.hidden_frames_cannot_skip_items, window.skip_items);
@@ -1130,9 +1130,9 @@ pub fn debug_node_window_Settings(g: &mut Context, settings: &mut WindowSettings
 // void DebugNodeWindowsList(ImVector<ImGuiWindow*>* windows, const char* label)
 pub fn debug_node_windows_list(g: &mut Context, windows: &mut Vec<Id32>, label: &str)
 {
-    if (!TreeNode(label, "%s (%d)", label, windows.size))
+    if (!TreeNode(label, "%s (%d)", label, windows.len()))
         return;
-    for (int i = windows.size - 1; i >= 0; i--) // Iterate front to back
+    for (int i = windows.len() - 1; i >= 0; i--) // Iterate front to back
     {
         PushID((*windows)[i]);
         DebugNodeWindow((*windows)[i], "window");

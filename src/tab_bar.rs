@@ -4,11 +4,14 @@ use crate::imgui_rect::Rect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_vec::Vector2D;
 use crate::imgui_window::ImGuiWindow;
+use crate::rect::Rect;
+use crate::types::Id32;
+use crate::vectors::two_d::Vector2D;
 
 
 #[allow(non_camel_case_types)]// flags for ImGui::BeginTabItem()
-pub enum DimgTabItemFlags {
-    None = 0,
+pub enum TabItemFlags {
+    None,
     UnsavedDocument,
     // Display a dot next to the title + tab is selected when clicking the x + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the x, so if you keep submitting the tab may reappear at end of tab bar.
     SetSelected,
@@ -29,42 +32,33 @@ pub enum DimgTabItemFlags {
 
 // Storage for one active tab item (sizeof() 48 bytes)
 #[derive(Clone, Debug, Default)]
-pub struct ImGuiTabItem {
+pub struct TabItem {
     // ImGuiID             id;
-    pub ID: ImGuiID,
+    pub id: Id32,
     // ImGuiTabItemFlags   flags;
-    pub Flags: DimgTabItemFlags,
+    pub flags: HashSet<TabItemFlags>,
     // ImGuiWindow*        window;                 // When TabItem is part of a dock_node's tab_bar, we hold on to a window.
-    pub Window: *mut ImGuiWindow,
+    pub window_id: Id32,
     // int                 LastFrameVisible;
-    pub LastFrameVisible: i32,
+    pub last_frame_visible: i32,
     // int                 LastFrameSelected;      // This allows us to infer an ordered list of the last activated tabs with little maintenance
-    pub LastFrameSelected: i32,
+    pub last_frame_selected: i32,
     // float               Offset;                 // Position relative to beginning of tab
-    pub Offset: f32,
+    pub offset: f32,
     // float               width;                  // width currently displayed
-    pub Width: f32,
+    pub width: f32,
     // float               ContentWidth;           // width of label, stored during BeginTabItem() call
-    pub ContentWidth: f32,
+    pub content_width: f32,
     // float               RequestedWidth;         // width optionally requested by caller, -1.0 is unused
-    pub RequestedWidth: f32,
+    pub requested_width: f32,
     // ImS32               NameOffset;             // When window==NULL, offset to name within parent ImGuiTabBar::TabsNames
-    pub NameOffset: i32,
+    pub name_offset: i32,
     // ImS16               BeginOrder;             // BeginTabItem() order, used to re-order tabs after toggling ImGuiTabBarFlags_Reorderable
-    pub BeginOrder: i16,
+    pub begin_order: i16,
     // ImS16               IndexDuringLayout;      // index only used during TabBarLayout()
-    pub IndexDuringLayout: i16,
+    pub index_during_layout: i16,
     // bool                WantClose;              // Marked as closed by SetTabItemClosed()
-    pub WantClose: bool,
-}
-
-impl ImGuiTabItem {
-    //     ImGuiTabItem()      { memset(this, 0, sizeof(*this)); LastFrameVisible = LastFrameSelected = -1; NameOffset = -1; BeginOrder = IndexDuringLayout = -1; }
-    pub fn new() -> Self {
-        Self {
-            ..Default::default()
-        }
-    }
+    pub want_close: bool,
 }
 
 
@@ -72,100 +66,103 @@ impl ImGuiTabItem {
 #[derive(Clone, Debug, Default)]
 pub struct TabBar {
     // ImVector<ImGuiTabItem> Tabs;
-    pub Tabs: Vec<ImGuiTabItem>,
+    pub tabs: Vec<TabItem>,
     // ImGuiTabBarFlags    flags;
-    pub Flags: ImGuiTabBarFlags,
+    pub flags: HashSet<TabBarFlags>,
     // ImGuiID             id;                     // Zero for tab-bars used by docking
-    pub ID: ImGuiID,
+    pub id: Id32,
     // ImGuiID             selected_tab_id;          // Selected tab/window
-    pub SelectedTabId: ImGuiID,
+    pub selected_tab_id: Id32,
     // ImGuiID             NextSelectedTabId;      // Next selected tab/window. Will also trigger a scrolling animation
-    pub NextSelectedTabId: ImGuiID,
+    pub next_selected_tab_id: Id32,
     // ImGuiID             VisibleTabId;           // Can occasionally be != selected_tab_id (e.g. when previewing contents for CTRL+TAB preview)
-    pub VisibleTabId: ImGuiID,
+    pub visible_tab_id: Id32,
     // int                 CurrFrameVisible;
-    pub CurrFrameVisible: i32,
+    pub curr_frame_visible: i32,
     // int                 PrevFrameVisible;
-    pub PrevFrameVisible: i32,
+    pub prev_frame_visible: i32,
     // ImRect              BarRect;
-    pub BarRect: Rect,
+    pub bar_rect: Rect,
     // float               CurrTabsContentsHeight;
-    pub CurrTabsContentsHeight: f32,
+    pub curr_tabs_contents_height: f32,
     // float               PrevTabsContentsHeight; // Record the height of contents submitted below the tab bar
-    pub PrevTabsContentsHeight: f32,
+    pub prev_tabs_contents_height: f32,
     // float               WidthAllTabs;           // Actual width of all tabs (locked during layout)
-    pub WidthAllTabs: f32,
+    pub width_all_tabs: f32,
     // float               WidthAllTabsIdeal;      // Ideal width if all tabs were visible and not clipped
-    pub WidthAllTabsIdeal: f32,
+    pub width_all_tabs_ideal: f32,
     // float               ScrollingAnim;
-    pub ScrollingAnim: f32,
+    pub scrolling_anim: f32,
     // float               ScrollingTarget;
-    pub ScrollingTarget: f32,
+    pub scrolling_target: f32,
     // float               ScrollingTargetDistToVisibility;
-    pub ScrollingTargetDistToVisibility: f32,
+    pub scrolling_target_dist_to_visibility: f32,
     // float               ScrollingSpeed;
-    pub ScrollingSpeed: f32,
+    pub scrolling_speed: f32,
     // float               ScrollingRectMinX;
-    pub ScrollingRectMinX: f32,
+    pub scrolling_rect_min_x: f32,
     // float               ScrollingRectMaxX;
-    pub ScrollingRectMaxX: f32,
+    pub scrolling_rect_max_x: f32,
     // ImGuiID             ReorderRequestTabId;
-    pub ReorderRequestTabId: ImGuiID,
+    pub reorder_request_tab_id: Id32,
     // ImS16               ReorderRequestOffset;
-    pub ReorderRequestOffset: i16,
+    pub reorder_request_offset: i16,
     // ImS8                begin_count;
-    pub BeginCount: i8,
+    pub begin_count: i8,
     // bool                WantLayout;
-    pub WantLayout: bool,
+    pub want_layout: bool,
     // bool                VisibleTabWasSubmitted;
-    pub VisibleTabWasSubmitted: bool,
+    pub visible_tab_was_submitted: bool,
     // bool                TabsAddedNew;           // Set to true when a new tab item or button has been added to the tab bar during last frame
-    pub TabsAddedNew: bool,
+    pub tabs_add_new: bool,
     // ImS16               TabsActiveCount;        // Number of tabs submitted this frame.
-    pub TabsActiveCount: i16,
+    pub tabs_active_count: i16,
     // ImS16               LastTabItemIdx;         // index of last BeginTabItem() tab for use by EndTabItem()
-    pub LastTabItemIdx: i16,
+    pub last_tab_item_idx: i16,
     // float               ItemSpacingY;
-    pub ItemSpacingY: f32,
+    pub item_spacing_y: f32,
     // Vector2D              FramePadding;           // style.FramePadding locked at the time of BeginTabBar()
     pub frame_padding: Vector2D,
     // Vector2D              BackupCursorPos;
-    pub BackupCursorPos: Vector2D,
+    pub backup_cursor_pos: Vector2D,
     // ImGuiTextBuffer     TabsNames;              // For non-docking tab bar we re-append names in a contiguous buffer.
-    pub TabsNames: ImGuiTextBuffer,
+    pub tabs_names: String,
 
 }
 
-// Extend
-pub enum ImGuiTabBarFlags
-{
-    DockNode                  ,  // Part of a dock node [we don't use this in the master branch but it facilitate branch syncing to keep this around]
-    IsFocused                 ,
-    SaveSettings               = 1 << 22   // FIXME: Settings are handled by the docking system, this only request the tab bar to mark settings dirty when reordering tabs
-}
-
-// pub const     FittingPolicyDefault_: i32          = DimgTabBarFlags::FittingPolicyResizeDown as i32;
-pub const FITTING_POLICY_DFLT: DimgTabBarFlags = DimgTabBarFlags::FittingPolicyResizeDown;
+// pub const     FittingPolicyDefault_: i32          = tab_bar_flags::FittingPolicyResizeDown as i32;
+pub const FITTING_POLICY_DFLT: TabBarFlags = TabBarFlags::FittingPolicyResizeDown;
 
 
-// pub const FittingPolicyMask_ : i32            = DimgTabBarFlags::FittingPolicyResizeDown | DimgTabBarFlags::FittingPolicyScroll;
-pub const FITTING_POLICY_MASK: HashSet<DimgTabBarFlags> = HashSet::from([
-    DimgTabBarFlags::FittingPolicyResizeDown, DimgTabBarFlags::FittingPolicyScroll
+// pub const FittingPolicyMask_ : i32            = tab_bar_flags::FittingPolicyResizeDown | tab_bar_flags::FittingPolicyScroll;
+pub const FITTING_POLICY_MASK: HashSet<TabBarFlags> = HashSet::from([
+    TabBarFlags::FittingPolicyResizeDown, TabBarFlags::FittingPolicyScroll
 ]);
 
 // flags for ImGui::BeginTabBar()
-#[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgTabBarFlags
-{
-    None                           = 0,
-    Reorderable                   ,   // Allow manually dragging tabs to re-order them + New tabs are appended at the end of list
-    AutoSelectNewTabs             ,   // Automatically select new tabs when they appear
-    TabListPopupButton            ,   // Disable buttons to open the tab list popup
-    NoCloseWithMiddleMouseButton  ,   // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
-    NoTabListScrollingButtons     ,   // Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll)
-    NoTooltip                     ,   // Disable tooltips when hovering a tab
-    FittingPolicyResizeDown       ,   // Resize tabs when they don't fit
-    FittingPolicyScroll           ,   // Add scroll buttons when tabs don't fit
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum TabBarFlags {
+    None = 0,
+    Reorderable,
+    // Allow manually dragging tabs to re-order them + New tabs are appended at the end of list
+    AutoSelectNewTabs,
+    // Automatically select new tabs when they appear
+    TabListPopupButton,
+    // Disable buttons to open the tab list popup
+    NoCloseWithMiddleMouseButton,
+    // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
+    NoTabListScrollingButtons,
+    // Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll)
+    NoTooltip,
+    // Disable tooltips when hovering a tab
+    FittingPolicyResizeDown,
+    // Resize tabs when they don't fit
+    FittingPolicyScroll,
+    // Add scroll buttons when tabs don't fit
     // ImGuiTabBarFlags_FittingPolicyMask_             = ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_FittingPolicyScroll,
     // ImGuiTabBarFlags_FittingPolicyDefault_          = ImGuiTabBarFlags_FittingPolicyResizeDown
+    DockNode,
+    // Part of a dock node [we don't use this in the master branch but it facilitate branch syncing to keep this around]
+    IsFocused,
+    SaveSettings,                 // FIXME: Settings are handled by the docking system, this only request the tab bar to mark settings dirty when reordering tabs
 }

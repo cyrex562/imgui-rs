@@ -172,7 +172,7 @@ pub struct Context {
     pub active_id_hass_been_edited_before: bool,
     // bool                    active_id_has_been_edited_this_frame;
     pub active_id_has_been_edited_this_frame: bool,
-    // Vector2D                  ActiveIdClickOffset;                // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
+    // Vector2D                  active_id_click_offset;                // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
     pub active_id_click_offset: Vector2D,
     // ImGuiWindow*            active_id_window;
     pub active_id_window_id: Id32,
@@ -610,7 +610,7 @@ impl Context {
             active_id_has_been_pressed_before: false,
             // ActiveIdHasBeenEditedBefore: false,
             active_id_has_been_edited_this_frame: false,
-            // ActiveIdClickOffset: Vector2D::new( - 1, -1),
+            // active_id_click_offset: Vector2D::new( - 1, -1),
             active_id_window_id: u32::MAX,
             active_id_source: InputSource::None,
             active_id_mouse_button: -1,

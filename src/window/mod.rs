@@ -45,7 +45,7 @@ use crate::draw::draw_data;
 use crate::rect::Rect;
 use crate::size_callback_data::SizeCallbackData;
 use crate::stack::ImGuiStackSizes;
-use crate::tab_bar::DimgTabItemFlags;
+use crate::tab_bar::TabItemFlags;
 use crate::types::{Id32, INVALID_ID, WindowHandle};
 use crate::utils::{add_hash_set, remove_hash_set_val, sub_hash_set};
 use crate::vectors::two_d::Vector2D;
@@ -251,9 +251,9 @@ pub struct Window {
     // bool                    memory_compacted;                    // Set when window extraneous data have been garbage collected
     pub memory_compacted: bool,
     // Docking
-    // bool                    dock_is_active        :1;             // When docking artifacts are actually visible. When this is set, dock_node is guaranteed to be != NULL. ~~ (dock_node != NULL) && (dock_node->windows.size > 1).
+    // bool                    dock_is_active        :1;             // When docking artifacts are actually visible. When this is set, dock_node is guaranteed to be != NULL. ~~ (dock_node != NULL) && (dock_node->windows.len() > 1).
     pub dock_is_active: bool,
-    // bool                    DockNodeIsVisible   :1;
+    // bool                    DockNodeis_visible   :1;
     pub doc_node_is_visible: bool,
     // bool                    dock_tab_is_visible    :1;             // Is our window visible this frame? ~~ is the corresponding tab selected?
     pub dock_tab_is_visible: bool,

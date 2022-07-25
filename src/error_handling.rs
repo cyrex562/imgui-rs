@@ -83,7 +83,7 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
             // IM_ASSERT(g.platform_io.Platform_GetWindowPos  != NULL && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.Platform_SetWindowPos  != NULL && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.Platform_GetWindowSize != NULL && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_SetWindowSize != NULL && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.Platform_set_window_size != NULL && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.monitors.size > 0 && "Platform init didn't setup Monitors list?");
             // IM_ASSERT((g.viewports[0].PlatformUserData != NULL || g.viewports[0].PlatformHandle != NULL) && "Platform init didn't setup main viewport.");
             if (g.io.config_docking_transparent_payload && (g.io.config_flags & ImGuiConfigFlags_DockingEnable))

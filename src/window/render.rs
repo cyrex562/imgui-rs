@@ -6,7 +6,7 @@ use crate::config::ConfigFlags;
 use crate::{Context, ViewportFlags};
 use crate::types::DataAuthority;
 use crate::types::Direction;
-use crate::dock::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
+use crate::dock::defines::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::draw_list::{DrawListFlags, get_foreground_draw_list};

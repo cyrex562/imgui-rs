@@ -355,7 +355,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     }
 
     // Docking
-    // (NB: during the frame dock nodes are created, it is possible that (window->dock_is_active == false) even though (window->dock_node->windows.size > 1)
+    // (NB: during the frame dock nodes are created, it is possible that (window->dock_is_active == false) even though (window->dock_node->windows.len() > 1)
     // IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL); // Cannot be both
     if (g.next_window_data.flags & NextWindowDataFlags::HasDock)
         SetWindowDock(window, g.next_window_data.dock_id, g.next_window_data.DockCond);
@@ -449,7 +449,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     {
         window_size_x_set_by_api = (window.set_window_size_allow_flags & g.next_window_data.sizeCond) != 0 && (g.next_window_data.sizeVal.x > 0.0);
         window_size_y_set_by_api = (window.set_window_size_allow_flags & g.next_window_data.sizeCond) != 0 && (g.next_window_data.sizeVal.y > 0.0);
-        SetWindowSize(window, g.next_window_data.sizeVal, g.next_window_data.sizeCond);
+        set_window_size(window, g.next_window_data.sizeVal, g.next_window_data.sizeCond);
     }
     if (g.next_window_data.flags & NextWindowDataFlags::HasScroll)
     {
@@ -469,7 +469,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     else if (first_begin_of_the_frame)
         window.content_size_explicit = Vector2D::new(0.0, 0.0);
     if (g.next_window_data.flags & NextWindowDataFlags::HasWindowClass)
-        window.WindowClass = g.next_window_data.WindowClass;
+        window.window_class = g.next_window_data.window_class;
     if (g.next_window_data.flags & NextWindowDataFlags::HasCollapsed)
         SetWindowCollapsed(window, g.next_window_data.CollapsedVal, g.next_window_data.CollapsedCond);
     if (g.next_window_data.flags & NextWindowDataFlags::HasFocus)
@@ -484,7 +484,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         const bool window_is_child_tooltip = (flags & WindowFlags::ChildWindow) && (flags & WindowFlags::Tooltip); // FIXME-WIP: Undocumented behavior of Child+Tooltip for pinned tooltip (#1345)
         const bool window_just_appearing_after_hidden_for_resize = (window.hidden_frames_cannot_skip_items > 0);
         window.active = true;
-        window.HasCloseButton = (p_open != NULL);
+        window.has_close_button = (p_open != NULL);
         window.clip_rect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
         window.idStack.resize(1);
         window.draw_list->_ResetForNewFrame();
@@ -1118,7 +1118,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
         // Sanity check: there are two spots which can set appearing = true
         // - when 'window_just_activated_by_user' is set -> hidden_frames_cannot_skip_items is set -> skip_items always false
-        // - in BeginDocked() path when DockNodeIsVisible == dock_tab_is_visible == true -> hidden _should_ be all zero // FIXME: Not formally proven, hence the assert.
+        // - in BeginDocked() path when DockNodeis_visible == dock_tab_is_visible == true -> hidden _should_ be all zero // FIXME: Not formally proven, hence the assert.
         if (window.skip_items && !window.Appearing)
             // IM_ASSERT(window.Appearing == false); // Please report on GitHub if this triggers: https://github.com/ocornut/imgui/issues/4177
     }

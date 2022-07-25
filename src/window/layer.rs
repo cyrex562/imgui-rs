@@ -32,11 +32,11 @@ pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
     ImGuiWindow* current_front_window = g.windows.back();
     if (current_front_window == window || current_front_window.root_window_dock_tree == window) // Cheap early out (could be better)
         return;
-    for (int i = g.windows.size - 2; i >= 0; i--) // We can ignore the top-most window
+    for (int i = g.windows.len() - 2; i >= 0; i--) // We can ignore the top-most window
         if (g.windows[i] == window)
         {
-            memmove(&g.windows[i], &g.windows[i + 1], (g.windows.size - i - 1) * sizeof(ImGuiWindow*));
-            g.windows[g.windows.size - 1] = window;
+            memmove(&g.windows[i], &g.windows[i + 1], (g.windows.len() - i - 1) * sizeof(ImGuiWindow*));
+            g.windows[g.windows.len() - 1] = window;
             break;
         }
 }
@@ -47,7 +47,7 @@ pub fn bring_window_to_display_back(.g: &mut Context, window: &mut Window)
     // ImGuiContext& g = *GImGui;
     if (g.windows[0] == window)
         return;
-    for (int i = 0; i < g.windows.size; i += 1)
+    for (int i = 0; i < g.windows.len(); i += 1)
         if (g.windows[i] == window)
         {
             memmove(&g.windows[1], &g.windows[0], i * sizeof(ImGuiWindow*));

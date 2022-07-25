@@ -631,7 +631,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
         if (g.ActiveIdSource == ImGuiInputSource_Mouse)
         {
             if (g.ActiveIdIsJustActivated)
-                g.ActiveIdClickOffset = g.IO.MousePos - bb.Min;
+                g.active_id_click_offset = g.IO.MousePos - bb.Min;
 
             const int mouse_button = g.ActiveIdMouseButton;
             IM_ASSERT(mouse_button >= 0 && mouse_button < ImGuiMouseButton_COUNT);
@@ -1481,7 +1481,7 @@ bool ImGui::SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, float
     ImRect bb_render = bb;
     if (held)
     {
-        Vector2D mouse_delta_2d = g.IO.MousePos - g.ActiveIdClickOffset - bb_interact.Min;
+        Vector2D mouse_delta_2d = g.IO.MousePos - g.active_id_click_offset - bb_interact.Min;
         float mouse_delta = (axis == ImGuiAxis_Y) ? mouse_delta_2d.y : mouse_delta_2d.x;
 
         // Minimum pane size
@@ -7596,7 +7596,7 @@ void ImGui::tab_bar_add_tab(ImGuiTabBar* tab_bar, ImGuiTabItemFlags tab_flags, I
     IM_ASSERT(TabBarFindTabByID(tab_bar, window.tab_id) == NULL);
     IM_ASSERT(g.CurrentTabBar != tab_bar);  // Can't work while the tab bar is active as our tab doesn't have an x offset yet, in theory we could/should test something like (tab_bar->CurrFrameVisible < g.frame_count) but we'd need to solve why triggers the commented early-out assert in BeginTabBarEx() (probably dock node going from implicit to explicit in same frame)
 
-    if (!window.HasCloseButton)
+    if (!window.has_close_button)
         tab_flags |= TabItemFlags::NoCloseButton;       // Set _NoCloseButton immediately because it will be used for first-frame width calculation.
 
     ImGuiTabItem new_tab;
@@ -8147,7 +8147,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
                 DockContextQueueUndockWindow(&g, docked_window);
                 g.MovingWindow = docked_window;
                 SetActiveID(g.MovingWindow->MoveId, g.MovingWindow);
-                g.ActiveIdClickOffset -= g.MovingWindow->Pos - bb.Min;
+                g.active_id_click_offset -= g.MovingWindow->Pos - bb.Min;
                 g.ActiveIdNoClearOnFocusLoss = true;
                 SetActiveIdUsingNavAndKeys();
             }

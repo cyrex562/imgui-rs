@@ -105,7 +105,7 @@ pub fn set_next_window_class(g: &mut Context, window_class: &mut WindowClass)
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT((window_class.ViewportFlagsOverrideSet & window_class.ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
     g.next_window_data.flags |= NextWindowDataFlags::HasWindowClass;
-    g.next_window_data.WindowClass = *window_class;
+    g.next_window_data.window_class = *window_class;
 }
 
 // Storage for SetNexWindow** functions

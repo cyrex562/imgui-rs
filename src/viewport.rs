@@ -294,7 +294,7 @@ pub fn get_window_always_want_own_viewport(g: &mut Context, window: &mut Window)
 {
     // Tooltips and menus are not automatically forced into their own viewport when the NoMerge flag is set, however the multiplication of viewports makes them more likely to protrude and create their own.
     // ImGuiContext& g = *GImGui;
-    if (g.io.ConfigViewportsNoAutoMerge || (window.WindowClass.ViewportFlagsOverrideSet & ImGuiViewportFlags_NoAutoMerge))
+    if (g.io.ConfigViewportsNoAutoMerge || (window.window_class.ViewportFlagsOverrideSet & ImGuiViewportFlags_NoAutoMerge))
         if (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable)
             if (!window.dock_is_active)
                 if ((window.flags & (WindowFlags::ChildWindow | WindowFlags::ChildMenu | WindowFlags::Tooltip)) == 0)
@@ -319,7 +319,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
         return false;
 
     // FIXME: Can't use g.windows_focus_order[] for root windows only as we care about Z order. If we maintained a DisplayOrder along with focus_order we could..
-    for (int n = 0; n < g.windows.size; n += 1)
+    for (int n = 0; n < g.windows.len(); n += 1)
     {
         ImGuiWindow* window_behind = g.windows[n];
         if (window_behind == window)
@@ -332,7 +332,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
     // Move to the existing viewport, Move child/hosted windows as well (FIXME-OPT: iterate child)
     ImGuiViewportP* old_viewport = window.viewport;
     if (window.viewport_owned)
-        for (int n = 0; n < g.windows.size; n += 1)
+        for (int n = 0; n < g.windows.len(); n += 1)
             if (g.windows[n].Viewport == old_viewport)
                 SetWindowViewport(g.windows[n], viewport);
     SetWindowViewport(window, viewport);
@@ -365,7 +365,7 @@ pub fn translate_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, o
     const bool translate_all_windows = (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != (g.config_flags_last_frame & ConfigFlags::ViewportsEnable);
     Rect test_still_fit_rect(old_pos, old_pos + viewport.size);
     Vector2D delta_pos = new_pos - old_pos;
-    for (int window_n = 0; window_n < g.windows.size; window_n += 1) // FIXME-OPT
+    for (int window_n = 0; window_n < g.windows.len(); window_n += 1) // FIXME-OPT
         if (translate_all_windows || (g.windows[window_n].Viewport == viewport && test_still_fit_rect.Contains(g.windows[window_n].Rect())))
             TranslateWindow(g.windows[window_n], delta_pos);
 }
@@ -381,7 +381,7 @@ pub fn scale_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, scale
     }
     else
     {
-        for (int i = 0; i != g.windows.size; i += 1)
+        for (int i = 0; i != g.windows.len(); i += 1)
             if (g.windows[i].Viewport == viewport)
                 ScaleWindow(g.windows[i], scale);
     }
@@ -509,13 +509,13 @@ pub fn update_viewports_new_frame(g: &mut Context)
             if (g.io.config_flags & ImGuiConfigFlags_DpiEnableScaleViewports)
                 ScaleWindowsInViewport(viewport, scale_factor);
             //if (viewport == GetMainViewport())
-            //    g.PlatformInterface.SetWindowSize(viewport, viewport->size * scale_factor);
+            //    g.PlatformInterface.set_window_size(viewport, viewport->size * scale_factor);
 
             // scale our window moving pivot so that the window will rescale roughly around the mouse position.
             // FIXME-VIEWPORT: This currently creates a resizing feedback loop when a window is straddling a DPI transition border.
             // (Minor: since our sizes do not perfectly linearly scale, deferring the click offset scale until we know the actual window scale ratio may get us slightly more precise mouse positioning.)
             //if (g.moving_window != NULL && g.moving_window->viewport == viewport)
-            //    g.ActiveIdClickOffset = f32::floor(g.ActiveIdClickOffset * scale_factor);
+            //    g.active_id_click_offset = f32::floor(g.active_id_click_offset * scale_factor);
         }
         viewport.DpiScale = new_dpi_scale;
     }
@@ -674,7 +674,7 @@ pub fn destroy_viewport(g: &mut Context, viewport: &mut Viewport)
 {
     // clear references to this viewport in windows (window->viewport_id becomes the master data)
     // ImGuiContext& g = *GImGui;
-    for (int window_n = 0; window_n < g.windows.size; window_n += 1)
+    for (int window_n = 0; window_n < g.windows.len(); window_n += 1)
     {
         ImGuiWindow* window = g.windows[window_n];
         if (window.viewport != viewport)
@@ -895,10 +895,10 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
         viewport_flags |= ImGuiViewportFlags_NoFocusOnAppearing | ImGuiViewportFlags_NoFocusOnClick;
 
     // We can overwrite viewport flags using ImGuiWindowClass (advanced users)
-    if (window.WindowClass.ViewportFlagsOverrideSet)
-        viewport_flags |= window.WindowClass.ViewportFlagsOverrideSet;
-    if (window.WindowClass.ViewportFlagsOverrideClear)
-        viewport_flags &= ~window.WindowClass.ViewportFlagsOverrideClear;
+    if (window.window_class.ViewportFlagsOverrideSet)
+        viewport_flags |= window.window_class.ViewportFlagsOverrideSet;
+    if (window.window_class.ViewportFlagsOverrideClear)
+        viewport_flags &= ~window.window_class.ViewportFlagsOverrideClear;
 
     // We can also tell the backend that clearing the platform window won't be necessary,
     // as our window background is filling the viewport and we have disabled BgAlpha.
@@ -910,8 +910,8 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
 
     // Update parent viewport id
     // (the !is_fallback_window test mimic the one done in WindowSelectViewport())
-    if (window.WindowClass.ParentViewportId != (ImGuiID)-1)
-        window.viewport.ParentViewportId = window.WindowClass.ParentViewportId;
+    if (window.window_class.ParentViewportId != (ImGuiID)-1)
+        window.viewport.ParentViewportId = window.window_class.ParentViewportId;
     else if ((window_flags & (WindowFlags::Popup | WindowFlags::Tooltip)) && parent_window_in_stack && (!parent_window_in_stack.IsFallbackWindow || parent_window_in_stack.WasActive))
         window.viewport.ParentViewportId = parent_window_in_stack.Viewport.id;
     else

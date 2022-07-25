@@ -977,7 +977,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             column.clip_rect.min.y = work_rect.min.y;
             column.clip_rect.max.y = f32::MAX;
             column.clip_rect.ClipWithFull(host_clip_rect);
-            column.IsVisibleX = column.IsVisibleY = column.IsRequestOutput = false;
+            column.is_visibleX = column.is_visibleY = column.IsRequestOutput = false;
             column.IsSkipItems = true;
             column.ItemWidth = 1.0;
             continue;
@@ -1011,15 +1011,15 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         column.clip_rect.ClipWithFull(host_clip_rect);
 
         // Mark column as Clipped (not in sight)
-        // Note that scrolling tables (where inner_window != outer_window) handle Y clipped earlier in BeginTable() so IsVisibleY really only applies to non-scrolling tables.
-        // FIXME-TABLE: Because inner_clip_rect.max.y is conservatively ==outer_window->clip_rect.max.y, we never can mark columns _Above_ the scroll line as not IsVisibleY.
+        // Note that scrolling tables (where inner_window != outer_window) handle Y clipped earlier in BeginTable() so is_visibleY really only applies to non-scrolling tables.
+        // FIXME-TABLE: Because inner_clip_rect.max.y is conservatively ==outer_window->clip_rect.max.y, we never can mark columns _Above_ the scroll line as not is_visibleY.
         // Taking advantage of LastOuterHeight would yield good results there...
         // FIXME-TABLE: Y clipping is disabled because it effectively means not submitting will reduce contents width which is fed to outer_window->dc.CursorMaxPos.x,
         // and this may be used (e.g. typically by outer_window using AlwaysAutoResize or outer_window's horizontal scrollbar, but could be something else).
         // Possible solution to preserve last known content width for clipped column. Test 'table_reported_size' fails when enabling Y clipping and window is resized small.
-        column.IsVisibleX = (column.clip_rect.max.x > column.clip_rect.min.x);
-        column.IsVisibleY = true; // (column->clip_rect.max.y > column->clip_rect.min.y);
-        const bool is_visible = column.IsVisibleX; //&& column->IsVisibleY;
+        column.is_visibleX = (column.clip_rect.max.x > column.clip_rect.min.x);
+        column.is_visibleY = true; // (column->clip_rect.max.y > column->clip_rect.min.y);
+        const bool is_visible = column.is_visibleX; //&& column->is_visibleY;
         if (is_visible)
             table.VisibleMaskByIndex |= (1 << column_n);
 
@@ -1036,7 +1036,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         // Update status flags
         column.flags |= ImGuiTableColumnFlags_IsEnabled;
         if (is_visible)
-            column.flags |= ImGuiTableColumnFlags_IsVisible;
+            column.flags |= ImGuiTableColumnFlags_is_visible;
         if (column.SortOrder != -1)
             column.flags |= ImGuiTableColumnFlags_IsSorted;
         if (table.HoveredColumnBody == column_n)
@@ -1167,7 +1167,7 @@ void ImGui::TableUpdateBorders(ImGuiTable* table)
         if ((table.flags & ImGuiTableFlags_NoBordersInBody) && table.IsUsingHeaders == false)
             continue;
 
-        if (!column.IsVisibleX && table.LastResizedColumn != column_n)
+        if (!column.is_visibleX && table.LastResizedColumn != column_n)
             continue;
 
         ImGuiID column_id = TableGetColumnResizeID(table, column_n, table.InstanceCurrent);
@@ -1324,7 +1324,7 @@ void    ImGui::EndTable()
     if (table.ResizedColumn != -1 && table.InstanceCurrent == table.InstanceInteracted)
     {
         ImGuiTableColumn* column = &table.Columns[table.ResizedColumn];
-        const float new_x2 = (g.io.mouse_pos.x - g.ActiveIdClickOffset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS);
+        const float new_x2 = (g.io.mouse_pos.x - g.active_id_click_offset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS);
         const float new_width = f32::floor(new_x2 - column.MinX - table.CellSpacingX1 - table.CellPaddingX * 2.0);
         table.ResizedColumnNextWidth = new_width;
     }
@@ -2285,7 +2285,7 @@ void ImGui::TableSetupDrawChannels(ImGuiTable* table)
     for (int column_n = 0; column_n < table.ColumnsCount; column_n += 1)
     {
         ImGuiTableColumn* column = &table.Columns[column_n];
-        if (column.IsVisibleX && column.IsVisibleY)
+        if (column.is_visibleX && column.is_visibleY)
         {
             column.DrawChannelFrozen = (ImGuiTableDrawChannelIdx)(draw_channel_current);
             column.DrawChannelUnfrozen = (ImGuiTableDrawChannelIdx)(draw_channel_current + (table.FreezeRowsCount > 0 ? channels_for_row + 1 : 0));
@@ -3574,7 +3574,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
             "ContentWidth: %.1,%.1, HeadersUsed/Ideal %.1/%.1\n"
             "Sort: %d%s, UserID: 0x%08X, flags: 0x%04X: %s%s%s..",
             n, column.DisplayOrder, name, column.MinX - table.work_rect.min.x, column.MaxX - table.work_rect.min.x, (n < table.FreezeColumnsRequest) ? " (Frozen)" : "",
-            column.IsEnabled, column.IsVisibleX, column.IsVisibleY, column.IsRequestOutput, column.IsSkipItems, column.DrawChannelFrozen, column.DrawChannelUnfrozen,
+            column.IsEnabled, column.is_visibleX, column.is_visibleY, column.IsRequestOutput, column.IsSkipItems, column.DrawChannelFrozen, column.DrawChannelUnfrozen,
             column.WidthGiven, column.WidthRequest, column.WidthAuto, column.StretchWeight, column.StretchWeight > 0.0 ? (column.StretchWeight / sum_weights) * 100.0 : 0.0,
             column.MinX, column.MaxX, column.MaxX - column.MinX, column.clip_rect.min.x, column.clip_rect.max.x, column.clip_rect.max.x - column.clip_rect.min.x,
             column.ContentMaxXFrozen - column.WorkMinX, column.ContentMaxXUnfrozen - column.WorkMinX, column.ContentMaxXHeadersUsed - column.WorkMinX, column.ContentMaxXHeadersIdeal - column.WorkMinX,
@@ -3692,7 +3692,7 @@ static float GetDraggedColumnOffset(ImGuiOldColumns* columns, int column_index)
     // IM_ASSERT(column_index > 0); // We are not supposed to drag column 0.
     // IM_ASSERT(g.active_id == columns.id + ImGuiID(column_index));
 
-    float x = g.io.mouse_pos.x - g.ActiveIdClickOffset.x + COLUMNS_HIT_RECT_HALF_WIDTH - window.pos.x;
+    float x = g.io.mouse_pos.x - g.active_id_click_offset.x + COLUMNS_HIT_RECT_HALF_WIDTH - window.pos.x;
     x = ImMax(x, ImGui::GetColumnOffset(column_index - 1) + g.style.ColumnsMinSpacing);
     if ((columns.flags & ImGuiOldColumnFlags_NoPreserveWidths))
         x = ImMin(x, ImGui::GetColumnOffset(column_index + 1) - g.style.ColumnsMinSpacing);

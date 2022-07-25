@@ -279,7 +279,7 @@ pub fn save_init_settings(g: &mut Context, out_size: &mut usize) -> String
 pub fn window_settings_handler_clear_all(g: &mut Context, handler: &mut SettingsHandler)
 {
     // ImGuiContext& g = *.g;
-    for (int i = 0; i != g.windows.size; i += 1)
+    for (int i = 0; i != g.windows.len(); i += 1)
         g.windows[i].SettingsOffset = -1;
     g.settings_windows.clear();
 }
@@ -332,7 +332,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
     // Gather data from windows that were active during this session
     // (if a window wasn't opened in this session we preserve its settings)
     // ImGuiContext& g = *.g;
-    for (int i = 0; i != g.windows.size; i += 1)
+    for (int i = 0; i != g.windows.len(); i += 1)
     {
         ImGuiWindow* window = g.windows[i];
         if (window.flags & WindowFlags::NoSavedSettings)
@@ -351,13 +351,13 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         settings.viewport_pos = Vector2Dih(window.viewport_pos);
         // IM_ASSERT(window.dock_node == NULL || window.dock_node.ID == window.DockId);
         settings.dock_id = window.dock_id;
-        settings.ClassId = window.WindowClass.ClassId;
+        settings.ClassId = window.window_class.ClassId;
         settings.dock_order = window.DockOrder;
         settings.collapsed = window.collapsed;
     }
 
     // Write to text buffer
-    buf.reserve(buf->size() + g.settings_windows.size() * 6); // ballpark reserve
+    buf.reserve(buf->size() + g.settings_windows.len()() * 6); // ballpark reserve
     for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
     {
         const char* settings_name = settings.GetName();

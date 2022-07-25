@@ -359,7 +359,7 @@ pub fn end_frame(g: &mut Context)
     // Sort the window list so that all child windows are after their parent
     // We cannot do that on focus_window() because children may not exist yet
     // g.windows_temp_sort_buffer.resize(0);
-    g.windows_temp_sort_buffer.reserve(g.windows.size);
+    g.windows_temp_sort_buffer.reserve(g.windows.len());
     // for (int i = 0; i != g.windows.Size; i += 1)
     for win in g.windows.iter_mut()
     {

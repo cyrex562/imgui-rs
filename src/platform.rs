@@ -96,7 +96,7 @@ pub fn update_platform_windows(g: &mut Context)
                 g.platform_io.Renderer_CreateWindow(viewport);
             viewport.LastNameHash = 0;
             viewport.LastPlatformPos = viewport.LastPlatformSize = Vector2D::new(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/size below, before Platform_ShowWindow (FIXME: Is that necessary?)
-            viewport.LastRendererSize = viewport.size;                                       // We don't need to call Renderer_SetWindowSize() as it is expected Renderer_CreateWindow() already did it.
+            viewport.LastRendererSize = viewport.size;                                       // We don't need to call Renderer_set_window_size() as it is expected Renderer_CreateWindow() already did it.
             viewport.platform_window_created = true;
         }
 
@@ -104,9 +104,9 @@ pub fn update_platform_windows(g: &mut Context)
         if ((viewport.LastPlatformPos.x != viewport.pos.x || viewport.LastPlatformPos.y != viewport.pos.y) && !viewport.PlatformRequestMove)
             g.platform_io.Platform_SetWindowPos(viewport, viewport.pos);
         if ((viewport.LastPlatformSize.x != viewport.size.x || viewport.LastPlatformSize.y != viewport.size.y) && !viewport.PlatformRequestResize)
-            g.platform_io.Platform_SetWindowSize(viewport, viewport.size);
-        if ((viewport.LastRendererSize.x != viewport.size.x || viewport.LastRendererSize.y != viewport.size.y) && g.platform_io.Renderer_SetWindowSize)
-            g.platform_io.Renderer_SetWindowSize(viewport, viewport.size);
+            g.platform_io.Platform_set_window_size(viewport, viewport.size);
+        if ((viewport.LastRendererSize.x != viewport.size.x || viewport.LastRendererSize.y != viewport.size.y) && g.platform_io.Renderer_set_window_size)
+            g.platform_io.Renderer_set_window_size(viewport, viewport.size);
         viewport.LastPlatformPos = viewport.pos;
         viewport.LastPlatformSize = viewport.LastRendererSize = viewport.size;
 

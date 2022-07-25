@@ -86,10 +86,10 @@ pub struct ImGuiTableColumn
     pub IsUserEnabled: bool,
     // bool                    IsUserEnabledNextFrame;
     pub IsUserEnabledNextFrame: bool,
-    // bool                    IsVisibleX;                     // Is actually in view (e.g. overlapping the host window clipping rectangle, not scrolled).
-    pub IsVisibleX: bool,
-    // bool                    IsVisibleY;
-    pub IsVisibleY: bool,
+    // bool                    is_visibleX;                     // Is actually in view (e.g. overlapping the host window clipping rectangle, not scrolled).
+    pub is_visibleX: bool,
+    // bool                    is_visibleY;
+    pub is_visibleY: bool,
     // bool                    IsRequestOutput;                // Return value for TableSetColumnIndex() / TableNextColumn(): whether we request user to output contents or not.
     pub IsRequestOutput: bool,
     // bool                    IsSkipItems;                    // Do we want item submissions to this column to be completely ignored (no layout will happen).
@@ -155,8 +155,8 @@ impl ImGuiTableColumn {
             IsEnabled: false,
             IsUserEnabled: false,
             IsUserEnabledNextFrame: false,
-            IsVisibleX: false,
-            IsVisibleY: false,
+            is_visibleX: false,
+            is_visibleY: false,
             IsRequestOutput: false,
             IsSkipItems: false,
             IsPreserveWidthAutio: false,
@@ -223,7 +223,7 @@ pub struct Table
     pub EnabledMaskByDisplayOrder: u64,
     // ImU64                       EnabledMaskByIndex;         // column index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
     pub EnabledMaskByIndex: u64,
-    // ImU64                       VisibleMaskByIndex;         // column index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
+    // ImU64                       VisibleMaskByIndex;         // column index -> is_visibleX|is_visibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
     pub VisibleMaskByIndex: u64,
     // ImU64                       RequestOutputMaskByIndex;   // column index -> is_visible || AutoFit (== expect user to submit items)
     pub RequestOutputMaskByIndex: u64,

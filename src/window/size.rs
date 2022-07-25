@@ -301,7 +301,7 @@ pub fn scale_window(window: &mut Window, scale: f32)
     window.content_size = Vector2D::floor(window.ContentSize * scale);
 }
 
-// void ImGui::SetWindowSize(ImGuiWindow* window, const Vector2D& size, ImGuiCond cond)
+// void ImGui::set_window_size(ImGuiWindow* window, const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, condition: Condition)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
@@ -327,10 +327,10 @@ pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, co
         mark_ini_settings_dirty(window);
 }
 
-// void ImGui::SetWindowSize(const Vector2D& size, ImGuiCond cond)
+// void ImGui::set_window_size(const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size2(g: &mut Context, size: &Vector2D, cond: Condition)
 {
-    SetWindowSize(g.current_window_id, size, cond);
+    set_window_size(g.current_window_id, size, cond);
 }
 
 // Handle resize for: Resize Grips, Borders, Gamepad
@@ -430,7 +430,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
                 if def.corner_pos_n.y == 0.0 { visibility_rect.max.y} else {f32::MAX}
             );
 
-            // Vector2D corner_target = g.io.mouse_pos - g.ActiveIdClickOffset + ImLerp(def.inner_dir * grip_hover_outer_size, def.inner_dir * -grip_hover_inner_size, def.CornerPosN); // Corner of the window corresponding to our corner grip
+            // Vector2D corner_target = g.io.mouse_pos - g.active_id_click_offset + ImLerp(def.inner_dir * grip_hover_outer_size, def.inner_dir * -grip_hover_inner_size, def.CornerPosN); // Corner of the window corresponding to our corner grip
             let corner_target = &g.io.mouse_pos - &g.active_id_click_offset + Vector2D::lerp2(&(&def.inner_dir * grip_hover_outer_size), (&def.inner_dir * -grop_hover_inner_size), &def.corner_pos_n);
 
             // corner_target = ImClamp(corner_target, clamp_min, clamp_max);
@@ -486,7 +486,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
 
             // Vector2D border_target = window.pos;
             let mut border_target = window.pos.clone();
-            // border_target[axis] = g.io.mouse_pos[axis] - g.ActiveIdClickOffset[axis] + WINDOWS_HOVER_PADDING;
+            // border_target[axis] = g.io.mouse_pos[axis] - g.active_id_click_offset[axis] + WINDOWS_HOVER_PADDING;
             border_target[&axis] = g.io.mouse_pos[&axis] - g.active_id_click_offset[&axis] + WINDOWS_HOVER_PADDING;
             // border_target = ImClamp(border_target, clamp_min, clamp_max);
             border_target = Vector2D::clamp(&border_target, &clamp_min, &clamp_max);
@@ -539,10 +539,10 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     return ret_auto_fit;
 }
 
-// void ImGui::SetWindowSize(const char* name, const Vector2D& size, ImGuiCond cond)
+// void ImGui::set_window_size(const char* name, const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size3(g: &mut Context, name: &str, size: &Vector2D, cond: Condition)
 {
     if (ImGuiWindow* window = find_window_by_name(name)) {
-        SetWindowSize(window, size, cond);
+        set_window_size(window, size, cond);
     }
 }

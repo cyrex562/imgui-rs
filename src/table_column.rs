@@ -27,14 +27,14 @@ pub enum DimgTableColumnFlags
 
     // Output status flags, read-only via TableGetColumnFlags()
     IsEnabled            ,  // Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
-    IsVisible            ,  // Status: is visible == is enabled AND not clipped by scrolling.
+    is_visible            ,  // Status: is visible == is enabled AND not clipped by scrolling.
     IsSorted             ,  // Status: is currently part of the sort specs
     IsHovered            ,  // Status: is hovered by mouse
 
     // [Internal] Combinations and masks
     // ImGuiTableColumnFlags_WidthMask_            = ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_WidthFixed,
     // ImGuiTableColumnFlags_IndentMask_           = ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_IndentDisable,
-    // ImGuiTableColumnFlags_StatusMask_           = ImGuiTableColumnFlags_IsEnabled | ImGuiTableColumnFlags_IsVisible | ImGuiTableColumnFlags_IsSorted | ImGuiTableColumnFlags_IsHovered,
+    // ImGuiTableColumnFlags_StatusMask_           = ImGuiTableColumnFlags_IsEnabled | ImGuiTableColumnFlags_is_visible | ImGuiTableColumnFlags_IsSorted | ImGuiTableColumnFlags_IsHovered,
     NoDirectResize_       = 1 << 30   // [Internal] Disable user resizing this column directly (it may however we resized indirectly from its left edge)
 
     // Obsolete names (will be removed soon)
@@ -55,5 +55,5 @@ pub const INDENT_MASK: HashSet<DimgTableColumnFlags> = HashSet::from([
 ]);
 
 pub const STATUS_MASK: HashSet<DimgTableColumnFlags> = HashSet::from([
-    DimgTableColumnFlags::IsEnabled, DimgTableColumnFlags::IsVisible, DimgTableColumnFlags::IsSorted, DimgTableColumnFlags::IsHovered
+    DimgTableColumnFlags::IsEnabled, DimgTableColumnFlags::is_visible, DimgTableColumnFlags::IsSorted, DimgTableColumnFlags::IsHovered
 ]);

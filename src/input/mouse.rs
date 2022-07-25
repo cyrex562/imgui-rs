@@ -278,15 +278,15 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
     // bool can_undock_node = false;
     let mut can_undock_node = false;
     // if (node != NULL && node->VisibleWindow && (node->VisibleWindow.flags & ImGuiWindowFlags_NoMove) == 0)
-    if node.visible_window != INVALID_ID && node.visible_window.flags.contains(WindowFlags::NoMove) == false
+    if node.visible_window_id != INVALID_ID && node.visible_window_id.flags.contains(WindowFlags::NoMove) == false
     {
         // Can undock if:
         // - part of a floating node hierarchy with more than one visible node (if only one is visible, we'll just move the whole hierarchy)
         // - part of a dockspace node hierarchy (trivia: undocking from a fixed/central node will create a new node and copy windows)
         // ImGuiDockNode* root_node = DockNodeGetRootNode(node);
         let mut root_node = dock_node_get_root_node(g, node);
-        //if (root_node->OnlyNodeWithWindows != node || root_node->CentralNode != NULL)
-        if root_node.only_node_with_window != node.id || root_node.central_node != INVALID_ID
+        //if (root_node->only_node_with_windows != node || root_node->CentralNode != NULL)
+        if root_node.only_node_with_window != node.id || root_node.central_node_id != INVALID_ID
         {  // -V1051 PVS-Studio thinks node should be root_node and is wrong about that.
         // if (undock_floating_node || root_node -> is_dock_space())
         if undock_floating_node || root_node.is_dock_space()
@@ -332,7 +332,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         let window_disappeared = (!moving_window.was_active && !moving_window.active) || moving_window.viewport_id == INVALID_ID;
         if g.io.mouse_down[0] && is_mouse_pos_valid(&g.io.mouse_pos) && !window_disappeared
         {
-            // Vector2D pos = g.io.mouse_pos - g.ActiveIdClickOffset;
+            // Vector2D pos = g.io.mouse_pos - g.active_id_click_offset;
             let mut pos = g.io.mouse_pos.clone() - g.active_id_click_offset.clone();
             if moving_window.pos.x != pos.x || moving_window.pos.y != pos.y
             {

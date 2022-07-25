@@ -677,8 +677,8 @@ impl PlatformIo {
     pub fn Platform_GetWindowPos(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
-    //     void    (*Platform_SetWindowSize)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
-    pub fn Platform_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: &Vector2D) {
+    //     void    (*Platform_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    pub fn Platform_set_window_size(&mut self, vp: &mut ImGuiViewport, size: &Vector2D) {
         todo!()
     }
     //     Vector2D  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
@@ -742,8 +742,8 @@ impl PlatformIo {
     pub fn Platform_DestroyWindow2(&mut self, vp: &mut ImGuiViewport) {
         todo!()
     }
-    //     void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
-    pub fn Renderer_SetWindowSize(&mut self, vp: &mut ImGuiViewport, size: Vector2D) {
+    //     void    (*Renderer_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_set_window_size)
+    pub fn Renderer_set_window_size(&mut self, vp: &mut ImGuiViewport, size: Vector2D) {
         todo!()
     }
     //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) clear framebuffer, setup render target, then render the viewport->draw_data. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
