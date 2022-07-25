@@ -787,7 +787,7 @@ Docking+viewports Branch:
 
 - Docking: Clicking on the right-most close button of a docking node closes all windows. (#4186)
 - Docking: Fix IsWindowAppearing() and ImGuiCond_Appearing on docked windows. (#4177, #3982, #1497, #1061)
-- Docking: Fix crash using DockBuilderRemoveNode() in some situations. (#3111, #3179, #3203, #4295) [@hsimyu]
+- Docking: Fix crash using dock_builder_remove_node() in some situations. (#3111, #3179, #3203, #4295) [@hsimyu]
 - Docking: Fix crash when a dock node gets re-qualified as dockspace>floating>dockspace, which tends to happen
   when incorrectly calling DockBuilderAddNode() without ImGuiDockNodeFlags_Dockspace and using it as a Dockspace
   on the next frame after the floating window hosting the node has been automatically created. (#3203, #4295)
@@ -1433,7 +1433,7 @@ Other Changes:
 
 Docking+viewports Branch:
 
-- Docking: Made DockBuilderAddNode() automatically call DockBuilderRemoveNode(). (#3399, #2109)
+- Docking: Made DockBuilderAddNode() automatically call dock_builder_remove_node(). (#3399, #2109)
 - Docking: Storing hovered_dock_node in context which can be useful for easily detecting e.g. hovering an
   empty node. (#3398)
 - Docking: Fixed docking overlay bits appearing at (0,0), because of 43bd80a. Most typically noticeable

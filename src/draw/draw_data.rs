@@ -51,26 +51,26 @@ impl DrawData {
 
 /// Pass this to your backend rendering function! valid after Render() and until the next call to NewFrame()
 /// ImDrawData* ImGui::GetDrawData()
-pub fn get_draw_data(.g: &mut Context) -> Option<&mut DrawData>
+pub fn get_draw_data(g: &mut Context) -> Option<&mut DrawData>
 {
     // ImGuiContext& g = *GImGui;
     // ImGuiViewportP* viewport = g.Viewports[0];
-    let viewport = &mut .g.viewports[0];
+    let viewport = &mut g.viewports[0];
     return if viewport.draw_data.valid { Some(&mut viewport.draw_data)} else { None}
 }
 
 /// static void AddWindowToDrawData(ImGuiWindow* window, int layer)
-pub fn add_window_to_draw_data(.g: &mut Context, window: &mut Window, layer: i32) {
+pub fn add_window_to_draw_data(g: &mut Context, window: &mut Window, layer: i32) {
     // ImGuiContext& g = *GImGui;
     // ImGuiViewportP* viewport = window.viewport;
     let viewport_id = window.viewport_id;
-    let viewport = .g.get_viewport(viewport_id).unwrap();
+    let viewport = g.get_viewport(viewport_id).unwrap();
     g.io.metrics_render_windows += 1;
     if window.flags.contains(&WindowFlags::DockNodeHost) {
         window.draw_list_id.channels_merge();
     }
     add_draw_list_to_draw_data(
-        .g,
+        g,
         &mut viewport.draw_data_builder.layers[layer],
         window.draw_list_id,
     );
@@ -81,16 +81,16 @@ pub fn add_window_to_draw_data(.g: &mut Context, window: &mut Window, layer: i32
     //         AddWindowToDrawData(child, layer);
     // }
     for child_id in window.dc.child_windows.iter() {
-        let win_obj = .g.get_window(*child_id).unwrap();
+        let win_obj = g.get_window(*child_id).unwrap();
         if checks::is_window_active_and_visible(win_obj) {
-            add_window_to_draw_data(.g, win_obj, layer);
+            add_window_to_draw_data(g, win_obj, layer);
         }
     }
 }
 
 /// Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
 // static inline void AddRootWindowToDrawData(ImGuiWindow* window)
-pub fn add_root_window_to_draw_data(.g: &mut Context, window: &mut Window) {
+pub fn add_root_window_to_draw_data(g: &mut Context, window: &mut Window) {
     // AddWindowToDrawData(window, GetWindowDisplayLayer(window));
-    add_window_to_draw_data(.g, window, get::get_window_display_layer(window))
+    add_window_to_draw_data(g, window, get::get_window_display_layer(window))
 }

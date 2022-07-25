@@ -903,7 +903,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(node.LastFrameActive != g.frame_count);
-    node.LastFrameAlive = g.frame_count;
+    node.last_frame_alive = g.frame_count;
     node.is_bg_drawn_this_frame = false;
 
     node.central_node_id = node.only_node_with_windows = NULL;
@@ -976,7 +976,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
         // IM_ASSERT(node.Windows.size > 0);
         ImGuiWindow* ref_window = NULL;
         if (node.selected_tab_id != 0) // Note that we prune single-window-node settings on .ini loading, so this is generally 0 for them!
-            ref_window = DockNodeFindWindowByID(node, node.selected_tab_id);
+            ref_window = DockNodefind_window_by_id(node, node.selected_tab_id);
         if (ref_window == NULL)
             ref_window = node.windows[0];
         if (ref_window.auto_fit_frames_x > 0 || ref_window.auto_fit_frames_y > 0)
@@ -1946,10 +1946,10 @@ pub fn dock_node_tree_split(g: &mut Context, parent_node: &mut DockNode, split_a
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_axis != ImGuiAxis_None);
 
-    ImGuiDockNode* child_0 = (new_node && split_inheritor_child_idx != 0) ? new_node : dock_context_add_node(.g, 0);
+    ImGuiDockNode* child_0 = (new_node && split_inheritor_child_idx != 0) ? new_node : dock_context_add_node(g, 0);
     child_0parent_node = parent_node;
 
-    ImGuiDockNode* child_1 = (new_node && split_inheritor_child_idx != 1) ? new_node : dock_context_add_node(.g, 0);
+    ImGuiDockNode* child_1 = (new_node && split_inheritor_child_idx != 1) ? new_node : dock_context_add_node(g, 0);
     child_1parent_node = parent_node;
 
     ImGuiDockNode* child_inheritor = (split_inheritor_child_idx == 0) ? child_0 : child_1;
@@ -1976,8 +1976,8 @@ pub fn dock_node_tree_split(g: &mut Context, parent_node: &mut DockNode, split_a
     // flags transfer (e.g. this is where we transfer the ImGuiDockNodeFlags_CentralNode property)
     child_0.shared_flags = parent_node.shared_flags & DockNodeFlags::SharedFlagsInheritMask_;
     child_1.shared_flags = parent_node.shared_flags & DockNodeFlags::SharedFlagsInheritMask_;
-    child_inheritor.LocalFlags = parent_node.LocalFlags & DockNodeFlags::LocalFlagsTransferMask_;
-    parent_node.LocalFlags &= ~DockNodeFlags::LocalFlagsTransferMask_;
+    child_inheritor.local_flags = parent_node.local_flags & DockNodeFlags::LocalFlagsTransferMask_;
+    parent_node.local_flags &= ~DockNodeFlags::LocalFlagsTransferMask_;
     child_0.update_merged_flags();
     child_1.update_merged_flags();
     parent_node.update_merged_flags();
@@ -2019,20 +2019,20 @@ pub fn dock_node_tree_merge(g: &mut Context, parent_node: &mut DockNode, merge_l
     parent_node.size_ref = backup_last_explicit_size;
 
     // flags transfer
-    parent_node.LocalFlags &= ~DockNodeFlags::LocalFlagsTransferMask_; // Preserve Dockspace flag
-    parent_node.LocalFlags |= (child_0 ? child_0.LocalFlags : 0) & DockNodeFlags::LocalFlagsTransferMask_;
-    parent_node.LocalFlags |= (child_1 ? child_1.LocalFlags : 0) & DockNodeFlags::LocalFlagsTransferMask_;
+    parent_node.local_flags &= ~DockNodeFlags::LocalFlagsTransferMask_; // Preserve Dockspace flag
+    parent_node.local_flags |= (child_0 ? child_0.local_flags : 0) & DockNodeFlags::LocalFlagsTransferMask_;
+    parent_node.local_flags |= (child_1 ? child_1.local_flags : 0) & DockNodeFlags::LocalFlagsTransferMask_;
     parent_node.local_flags_in_windows = (child_0 ? child_0.local_flags_in_windows : 0) | (child_1 ? child_1.local_flags_in_windows : 0); // FIXME: Would be more consistent to update from actual windows
     parent_node.update_merged_flags();
 
     if (child_0)
     {
-        .g.dock_context.Nodes.SetVoidPtr(child_0.id, NULL);
+        g.dock_context.Nodes.SetVoidPtr(child_0.id, NULL);
         IM_DELETE(child_0);
     }
     if (child_1)
     {
-        .g.dock_context.Nodes.SetVoidPtr(child_1.id, NULL);
+        g.dock_context.Nodes.SetVoidPtr(child_1.id, NULL);
         IM_DELETE(child_1);
     }
 }

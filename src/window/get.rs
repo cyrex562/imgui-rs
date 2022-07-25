@@ -102,16 +102,16 @@ pub fn get_window_display_layer(window: &Window) -> i32 {
 }
 
 // static ImGuiWindow* FindFrontMostVisibleChildWindow(ImGuiWindow* window)
-pub fn find_front_most_visible_child_window(.g: &mut Context, window: &mut Window) -> &mut Window {
+pub fn find_front_most_visible_child_window(g: &mut Context, window: &mut Window) -> &mut Window {
     // for (int n = window.dc.ChildWindows.Size - 1; n >= 0; n--){
     //     if (IsWindowActiveAndVisible(window.dc.ChildWindows[n])) {
     //         return FindFrontMostVisibleChildWindow(window.dc.ChildWindows[n]);
     //     }
     // }
     for child_win_id in window.dc.child_windows.iter() {
-        let child_win = .g.get_window(*child_win_id).unwrap();
+        let child_win = g.get_window(*child_win_id).unwrap();
         if checks::is_window_active_and_visible(child_win) {
-            return find_front_most_visible_child_window(.g, child_win);
+            return find_front_most_visible_child_window(g, child_win);
         }
     }
     return window;
@@ -119,7 +119,7 @@ pub fn find_front_most_visible_child_window(.g: &mut Context, window: &mut Windo
 
 // ImGuiWindow* ImGui::FindBottomMostVisibleWindowWithinBeginStack(ImGuiWindow* parent_window)
 pub fn find_bottom_most_visible_window_with_begin_stack(
-    .g: &mut Context,
+    g: &mut Context,
     parent_window: &mut Window,
 ) -> &mut Window {
     // ImGuiContext& g = *GImGui;
@@ -128,7 +128,7 @@ pub fn find_bottom_most_visible_window_with_begin_stack(
     // for (int i = FindWindowDisplayIndex(parent_window); i >= 0; i--)
     for i in find_window_display_index(parent_window)..0 {
         // ImGuiWindow* window = g.windows[i];
-        let window = .g.get_window(i).unwrap();
+        let window = g.get_window(i).unwrap();
         if window.flags.contains(&WindowFlags::ChildWindow) {
             continue;
         }

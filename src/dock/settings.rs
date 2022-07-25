@@ -45,7 +45,7 @@ pub fn dock_settings_remove_node_references(g: &mut Context, node_ids: &mut Id32
 pub fn dock_settings_find_node_settings(g: &mut Context, id: Id32) -> &mut DockNodeSettings
 {
     // FIXME-OPT
-    ImGuiDockContext* dc  = &.g.dock_context;
+    ImGuiDockContext* dc  = &g.dock_context;
     for (int n = 0; n < dc.NodesSettings.size; n += 1)
         if (dc.NodesSettings[n].id == id)
             return &dc.NodesSettings[n];
@@ -56,9 +56,9 @@ pub fn dock_settings_find_node_settings(g: &mut Context, id: Id32) -> &mut DockN
 // static void DockSettingsHandler_ClearAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
 pub fn dock_settings_handler_clear_all(g: &mut Context, handler: &mut SettingsHandler)
 {
-    ImGuiDockContext* dc  = &.g.dock_context;
+    ImGuiDockContext* dc  = &g.dock_context;
     dc.NodesSettings.clear();
-    DockContextClearNodes(.g, 0, true);
+    DockContextClearNodes(g, 0, true);
 }
 
 // Recreate nodes based on settings data
@@ -66,11 +66,11 @@ pub fn dock_settings_handler_clear_all(g: &mut Context, handler: &mut SettingsHa
 pub fn dock_settings_handler_apply_all(g: &mut Context, handler: &mut SettingsHandler)
 {
     // Prune settings at boot time only
-    ImGuiDockContext* dc  = &.g.dock_context;
-    if (.g.windows.len() == 0)
-        DockContextPruneUnusedSettingsNodes(.g);
-    DockContextBuildNodesFromSettings(.g, dc.NodesSettings.data, dc.NodesSettings.size);
-    DockContextBuildAddWindowsToNodes(.g, 0);
+    ImGuiDockContext* dc  = &g.dock_context;
+    if (g.windows.len() == 0)
+        DockContextPruneUnusedSettingsNodes(g);
+    DockContextBuildNodesFromSettings(g, dc.NodesSettings.data, dc.NodesSettings.size);
+    DockContextBuildAddWindowsToNodes(g, 0);
 }
 
 // static void* DockSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name)
@@ -118,9 +118,9 @@ pub fn dock_settings_handler_read_line(g: &mut Context, handler: &mut SettingsHa
     if (sscanf(line, " NoCloseButton=%d%n", &x, &r) == 1)           { line += r; if (x != 0) node.flags |= DockNodeFlags::NoCloseButton; }
     if (sscanf(line, " Selected=0x%08X%n", &node.selected_tab_id,&r) == 1) { line += r; }
     if (node.parent_node_id != 0)
-        if (ImGuiDockNodeSettings* parent_settings = DockSettingsFindNodeSettings(.g, node.parent_node_id))
+        if (ImGuiDockNodeSettings* parent_settings = DockSettingsFindNodeSettings(g, node.parent_node_id))
             node.Depth = parent_settings.Depth + 1;
-    .g.dock_context.NodesSettings.push_back(node);
+    g.dock_context.NodesSettings.push_back(node);
 }
 
 // static void DockSettingsHandler_DockNodeToSettings(ImGuiDockContext* dc, ImGuiDockNode* node, int depth)
@@ -134,7 +134,7 @@ pub fn dock_settings_handler_dock_node_to_settings(g: &mut Context, dc: &mut Doc
     node_settings.selected_tab_id = node.selected_tab_id;
     node_settings.split_axis = (signed char)(node.is_split_node() ? node.split_axis : ImGuiAxis_None);
     node_settings.Depth = (char)depth;
-    node_settings.flags = (node.LocalFlags & DockNodeFlags::SavedFlagsMask_);
+    node_settings.flags = (node.local_flags & DockNodeFlags::SavedFlagsMask_);
     node_settings.pos = Vector2Dih(node.pos);
     node_settings.size = Vector2Dih(node.size);
     node_settings.size_ref = Vector2Dih(node.size_ref);
@@ -149,7 +149,7 @@ pub fn dock_settings_handler_dock_node_to_settings(g: &mut Context, dc: &mut Doc
 pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHandler, bug: &mut TextBuffer)
 {
     // ImGuiContext& g = *.g;
-    ImGuiDockContext* dc = &.g.dock_context;
+    ImGuiDockContext* dc = &g.dock_context;
     if (!(g.io.config_flags & ImGuiConfigFlags_DockingEnable))
         return;
 
@@ -203,7 +203,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
 
 // #ifIMGUI_DEBUG_INI_SETTINGS
         // [DEBUG] Include comments in the .ini file to ease debugging
-        if (ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_settings->ID))
+        if (ImGuiDockNode* node = dock_context_find_node_by_id(g, node_settings->ID))
         {
             buf->appendf("%*s", ImMax(2, (line_start_pos + 92) - buf->size()), "");     // Align everything
             if (node->is_dock_space() && node->HostWindow && node->HostWindow->parent_window)

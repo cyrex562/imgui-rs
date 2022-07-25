@@ -358,7 +358,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     // (NB: during the frame dock nodes are created, it is possible that (window->dock_is_active == false) even though (window->dock_node->windows.len() > 1)
     // IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL); // Cannot be both
     if (g.next_window_data.flags & NextWindowDataFlags::HasDock)
-        SetWindowDock(window, g.next_window_data.dock_id, g.next_window_data.DockCond);
+        set_window_dock(window, g.next_window_data.dock_id, g.next_window_data.DockCond);
     if (first_begin_of_the_frame)
     {
         bool has_dock_node = (window.dock_id != 0 || window.dock_node_id != NULL);
@@ -1173,18 +1173,18 @@ pub fn end(g: &mut Context)
 }
 
 // static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, ImGuiWindow* window)
-pub fn add_window_to_sort_buffer(.g: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32) {
+pub fn add_window_to_sort_buffer(g: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32) {
     out_sorted_windows.push_back(window);
-    let win = .g.get_window(window).unwrap();
+    let win = g.get_window(window).unwrap();
     if window.active {
         // int count = window.dc.ChildWindows.Size;
         let count = win.dc.child_windows.len();
         // ImQsort(window.dc.ChildWindows.Data, count, sizeof(ImGuiWindow*), ChildWindowComparer);
         win.dc.child_windows.sort();
         for child_win_id in win.dc.child_windows.iter() {
-            let child_win = .g.get_window(*child_win_id).unwrap();
+            let child_win = g.get_window(*child_win_id).unwrap();
             if child_win.active {
-                add_window_to_sort_buffer(.g, out_sorted_windows, *child_win_id);
+                add_window_to_sort_buffer(g, out_sorted_windows, *child_win_id);
             }
         }
 

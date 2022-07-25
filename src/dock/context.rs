@@ -34,7 +34,7 @@ pub struct DockContext {
     // ImGuiDockContext()              { memset(this, 0, sizeof(*this)); }
 }
 
-pub fn dock_ctx_initialize(.g: &mut Context)
+pub fn dock_ctx_initialize(g: &mut Context)
     {
     // ImGuiContext& g = *ctx;
 
@@ -51,19 +51,19 @@ pub fn dock_ctx_initialize(.g: &mut Context)
             write_all_fn: DockSettingsHandler::WriteAll,
             user_data: vec![]
         };
-    .g.settings_handlers.push_back(ini_handler);
+    g.settings_handlers.push_back(ini_handler);
 }
 
 //void ImGui::DockContextShutdown(ImGuiContext* ctx)
-pub fn dock_context_shutdown(.g: &mut Context)
+pub fn dock_context_shutdown(g: &mut Context)
 {
     // ImGuiDockContext* dc  = &ctx->DockContext;
     //for (int n = 0; n < dc->Nodes.Data.Size; n += 1)
-    for n in 0 .. .g.dock_context.nodes.len()
+    for n in 0 .. g.dock_context.nodes.len()
     {
-        let node_id = .g.dock_context.nodes.get(n);
+        let node_id = g.dock_context.nodes.get(n);
         if node_id.is_some() {
-            .g.dock_context.nodes.remove(n);
+            g.dock_context.nodes.remove(n);
         }
         // if (ImGuiDockNode * node = (ImGuiDockNode *)
         // dc -> Nodes.Data[n].val_p){
@@ -86,7 +86,7 @@ pub fn dock_context_clear_nodes(g: &mut Context, root_id: Id32, clear_settings_r
 // [DEBUG] This function also acts as a defacto test to make sure we can rebuild from scratch without a glitch
 // (Different from DockSettingsHandler_ClearAll() + DockSettingsHandler_ApplyAll() because this reuses current settings!)
 // void ImGui::DockContextRebuildNodes(ImGuiContext* ctx)
-pub fn dock_context_rebuild_nodes(.g: &mut Context)
+pub fn dock_context_rebuild_nodes(g: &mut Context)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc = &ctx->DockContext;
@@ -94,28 +94,28 @@ pub fn dock_context_rebuild_nodes(.g: &mut Context)
     SaveIniSettingsToMemory();
     // ImGuiID root_id = 0; // Rebuild all
     let mut root_id: Id32 = 0;
-    dock_context_clear_nodes(.g, root_id, false);
-    dock_context_build_nodes_from_settings(.g, &mut .g.dock_context.nodes_settings);
-    dock_context_build_add_windows_to_nodes(.g, root_id);
+    dock_context_clear_nodes(g, root_id, false);
+    dock_context_build_nodes_from_settings(g, &mut g.dock_context.nodes_settings);
+    dock_context_build_add_windows_to_nodes(g, root_id);
 }
 
 // Docking context update function, called by NewFrame()
 // void ImGui::DockContextNewFrameUpdateUndocking(ImGuiContext* ctx)
-pub fn dock_context_new_frame_update_undocking(.g: &mut Context)
+pub fn dock_context_new_frame_update_undocking(g: &mut Context)
 {
     // ImGuiContext& g = *ctx;
     // ImGuiDockContext* dc = &ctx->DockContext;
-    let mut dc = &mut .g.dock_context;
-    if !(.g.io.config_flags.contains(&ConfigFlags::DockingEnable))
+    let mut dc = &mut g.dock_context;
+    if !(g.io.config_flags.contains(&ConfigFlags::DockingEnable))
     {
         if dc.nodes.len() > 0 || dc.requests.len() > 0 {
-            dock_context_clear_nodes(.g, 0, true);
+            dock_context_clear_nodes(g, 0, true);
         }
         return;
     }
 
     // Setting NoSplit at runtime merges all nodes
-    if .g.io.config_docking_no_split {
+    if g.io.config_docking_no_split {
         // for (int n = 0; n < dc->Nodes.Data.Size; n += 1){
         for n in 0 .. dc.nodes.len() {
             // if (ImGuiDockNode * node = (ImGuiDockNode *)
@@ -139,7 +139,7 @@ pub fn dock_context_new_frame_update_undocking(.g: &mut Context)
 // #endif
     if dc.want_full_rebuild
     {
-        dock_context_rebuild_nodes(.g);
+        dock_context_rebuild_nodes(g);
         dc.want_full_rebuild = false;
     }
 
@@ -150,10 +150,10 @@ pub fn dock_context_new_frame_update_undocking(.g: &mut Context)
         // ImGuiDockRequest* req = &dc->Requests[n];
         let req = dc.requests.get(n).unwrap();
         if req.Type == DockRequestType::Undock && req.undock_target_window_id {
-            dock_context_process_undock_window(.g, req.undock_target_window_id);
+            dock_context_process_undock_window(g, req.undock_target_window_id);
         }
         else if req.requst_type == DockRequestType::Undock && req.undock_target_node_id {
-            dock_context_process_undock_node(.g, req.undock_target_node_id);
+            dock_context_process_undock_node(g, req.undock_target_node_id);
         }
     }
 }
@@ -888,22 +888,22 @@ pub fn dock_context_remove_node(g: &mut Context, node: &mut DockNode, merge_sibl
 pub fn dock_context_bind_node_to_window(g: &mut Context, window: &mut window::Window) -> &mut DockNode
 {
     // ImGuiContext& g = *.g;
-    ImGuiDockNode* node = dock_context_find_node_by_id(.g, window.dock_id);
+    ImGuiDockNode* node = dock_context_find_node_by_id(g, window.dock_id);
     // IM_ASSERT(window.dock_node == NULL);
 
     // We should not be docking into a split node (SetWindowDock should avoid this)
     if (node && node.is_split_node())
     {
-        DockContextProcessUndockWindow(.g, window);
+        dock_context_process_undock_window(g, window);
         return NULL;
     }
 
     // Create node
     if (node == NULL)
     {
-        node = dock_context_add_node(.g, window.dock_id);
+        node = dock_context_add_node(g, window.dock_id);
         node.authority_for_pos = node.authority_for_size = node.authority_for_viewport = DataAuthority::Window;
-        node.LastFrameAlive = g.frame_count;
+        node.last_frame_alive = g.frame_count;
     }
 
     // If the node just turned visible and is part of a hierarchy, it doesn't have a size assigned by DockNodeTreeUpdatePosSize() yet,

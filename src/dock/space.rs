@@ -14,7 +14,7 @@ use crate::window::WindowFlags;
 // ImGuiID DockSpace(ImGuiID id, const Vector2D& size_arg, ImGuiDockNodeFlags flags, const ImGuiWindowClass* window_class)
 pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut HashSet<DockNodeFlags>, window_class: &WindowClass) -> Id32
 {
-    ImGuiContext* .g = GImGui;
+    ImGuiContext* g = GImGui;
     // ImGuiContext& g = *.g;
     ImGuiWindow* window = GetCurrentWindow();
     if (!(g.io.config_flags & ImGuiConfigFlags_DockingEnable))
@@ -28,11 +28,11 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
 
     // IM_ASSERT((flags & ImGuiDockNodeFlags_DockSpace) == 0);
     // IM_ASSERT(id != 0);
-    ImGuiDockNode* node = dock_context_find_node_by_id(.g, id);
+    ImGuiDockNode* node = dock_context_find_node_by_id(g, id);
     if (!node)
     {
         // IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X created\n", id);
-        node = dock_context_add_node(.g, id);
+        node = dock_context_add_node(g, id);
         node.set_local_flags(DockNodeFlags::CentralNode);
     }
     if (window_class && window_class.ClassId != node.window_class.ClassId)
@@ -45,15 +45,15 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     if (node.last_frame_active == g.frame_count && !(flags & DockNodeFlags::KeepAliveOnly))
     {
         // IM_ASSERT(node.is_dock_space() == false && "Cannot call DockSpace() twice a frame with the same id");
-        node.set_local_flags(node.LocalFlags | DockNodeFlags::DockSpace);
+        node.set_local_flags(node.local_flags | DockNodeFlags::DockSpace);
         return id;
     }
-    node.set_local_flags(node.LocalFlags | DockNodeFlags::DockSpace);
+    node.set_local_flags(node.local_flags | DockNodeFlags::DockSpace);
 
     // Keep alive mode, this is allow windows docked into this node so stay docked even if they are not visible
     if (flags & DockNodeFlags::KeepAliveOnly)
     {
-        node.LastFrameAlive = g.frame_count;
+        node.last_frame_alive = g.frame_count;
         return id;
     }
 
@@ -99,7 +99,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     // The specific sub-property of _CentralNode we are interested in recovering here is the "Don't delete when empty" property,
     // as it doesn't make sense for an empty dockspace to not have this property.
     if (node.is_leaf_node() && !node.is_central_node())
-        node.set_local_flags(node.LocalFlags | DockNodeFlags::CentralNode);
+        node.set_local_flags(node.local_flags | DockNodeFlags::CentralNode);
 
     // Update the node
     DockNodeUpdate(node);

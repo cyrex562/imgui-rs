@@ -1702,7 +1702,7 @@ void Initialize(ImNodesContext* context)
     StyleColorsDark(&context.Style);
 }
 
-void Shutdown(ImNodesContext* .g) { EditorContextFree(.g.DefaultEditorCtx); }
+void Shutdown(ImNodesContext* g) { EditorContextFree(g.DefaultEditorCtx); }
 
 // [SECTION] minimap
 
@@ -2007,26 +2007,26 @@ namespace IMNODES_NAMESPACE
 {
 ImNodesContext* CreateContext()
 {
-    ImNodesContext* .g = IM_NEW(ImNodesContext)();
+    ImNodesContext* g = IM_NEW(ImNodesContext)();
     if (GImNodes == NULL)
-        SetCurrentContext(.g);
-    Initialize(.g);
-    return .g;
+        SetCurrentContext(g);
+    Initialize(g);
+    return g;
 }
 
-void DestroyContext(ImNodesContext* .g)
+void DestroyContext(ImNodesContext* g)
 {
-    if (.g == NULL)
-        .g = GImNodes;
-    Shutdown(.g);
-    if (GImNodes == .g)
+    if (g == NULL)
+        g = GImNodes;
+    Shutdown(g);
+    if (GImNodes == g)
         SetCurrentContext(NULL);
-    IM_DELETE(.g);
+    IM_DELETE(g);
 }
 
 ImNodesContext* GetCurrentContext() { return GImNodes; }
 
-void SetCurrentContext(ImNodesContext* .g) { GImNodes = .g; }
+void SetCurrentContext(ImNodesContext* g) { GImNodes = g; }
 
 ImNodesEditorContext* EditorContextCreate()
 {
@@ -2035,13 +2035,13 @@ ImNodesEditorContext* EditorContextCreate()
     return (ImNodesEditorContext*)mem;
 }
 
-void EditorContextFree(ImNodesEditorContext* .g)
+void EditorContextFree(ImNodesEditorContext* g)
 {
-    .g->~ImNodesEditorContext();
-    ImGui::MemFree(.g);
+    g->~ImNodesEditorContext();
+    ImGui::MemFree(g);
 }
 
-void EditorContextSet(ImNodesEditorContext* .g) { GImNodes.EditorCtx = .g; }
+void EditorContextSet(ImNodesEditorContext* g) { GImNodes.EditorCtx = g; }
 
 Vector2D EditorContextGetPanning()
 {
@@ -2064,7 +2064,7 @@ void EditorContextMoveToNode(const int node_id)
     editor.Panning.y = -node.Origin.y;
 }
 
-void SetImGuiContext(ImGuiContext* .g) { ImGui::SetCurrentContext(.g); }
+void SetImGuiContext(ImGuiContext* g) { ImGui::SetCurrentContext(g); }
 
 ImNodesIO& GetIO() { return GImNodes.Io; }
 

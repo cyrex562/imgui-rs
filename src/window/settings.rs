@@ -51,5 +51,5 @@ pub fn apply_window_settings(g: &mut Context, window: &mut Window, settings: &mu
     }
     window.collapsed = settings.collapsed;
     window.dock_id = settings.dock_id;
-    window.DockOrder = settings.dock_order;
+    window.dock_order = settings.dock_order;
 }

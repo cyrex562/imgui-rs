@@ -1938,36 +1938,36 @@ static void stbtt__csctx_v(stbtt__csctx *c, stbtt_uint8 type, stbtt_int32 x, stb
    c.num_vertices += 1;
 }
 
-static void stbtt__csctx_close_shape(stbtt__csctx *.g)
+static void stbtt__csctx_close_shape(stbtt__csctx *g)
 {
-   if (.g.first_x != .g.x || .g.first_y != .g.y)
-      stbtt__csctx_v(.g, STBTT_vline, .g.first_x, .g.first_y, 0, 0, 0, 0);
+   if (g.first_x != g.x || g.first_y != g.y)
+      stbtt__csctx_v(g, STBTT_vline, g.first_x, g.first_y, 0, 0, 0, 0);
 }
 
-static void stbtt__csctx_rmove_to(stbtt__csctx *.g, float dx, float dy)
+static void stbtt__csctx_rmove_to(stbtt__csctx *g, float dx, float dy)
 {
-   stbtt__csctx_close_shape(.g);
-   .g.first_x = .g.x = .g.x + dx;
-   .g.first_y = .g.y = .g.y + dy;
-   stbtt__csctx_v(.g, STBTT_vmove, .g.x, .g.y, 0, 0, 0, 0);
+   stbtt__csctx_close_shape(g);
+   g.first_x = g.x = g.x + dx;
+   g.first_y = g.y = g.y + dy;
+   stbtt__csctx_v(g, STBTT_vmove, g.x, g.y, 0, 0, 0, 0);
 }
 
-static void stbtt__csctx_rline_to(stbtt__csctx *.g, float dx, float dy)
+static void stbtt__csctx_rline_to(stbtt__csctx *g, float dx, float dy)
 {
-   .g.x += dx;
-   .g.y += dy;
-   stbtt__csctx_v(.g, STBTT_vline, .g.x, .g.y, 0, 0, 0, 0);
+   g.x += dx;
+   g.y += dy;
+   stbtt__csctx_v(g, STBTT_vline, g.x, g.y, 0, 0, 0, 0);
 }
 
-static void stbtt__csctx_rccurve_to(stbtt__csctx *.g, float dx1, float dy1, float dx2, float dy2, float dx3, float dy3)
+static void stbtt__csctx_rccurve_to(stbtt__csctx *g, float dx1, float dy1, float dx2, float dy2, float dx3, float dy3)
 {
-   float cx1 = .g.x + dx1;
-   float cy1 = .g.y + dy1;
+   float cx1 = g.x + dx1;
+   float cy1 = g.y + dy1;
    float cx2 = cx1 + dx2;
    float cy2 = cy1 + dy2;
-   .g.x = cx2 + dx3;
-   .g.y = cy2 + dy3;
-   stbtt__csctx_v(.g, STBTT_vcubic, .g.x, .g.y, cx1, cy1, cx2, cy2);
+   g.x = cx2 + dx3;
+   g.y = cy2 + dy3;
+   stbtt__csctx_v(g, STBTT_vcubic, g.x, g.y, cx1, cy1, cx2, cy2);
 }
 
 static stbtt__buf stbtt__get_subr(stbtt__buf idx, int n)

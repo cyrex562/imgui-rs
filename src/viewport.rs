@@ -189,7 +189,7 @@ impl Viewport {
 
 
 /// static void SetupViewportDrawData(ImGuiViewportP* viewport, ImVector<ImDrawList*>* draw_lists)
-pub fn setup_viewport_draw_data(.g: &mut Context, viewport: &mut Viewport, draw_lists: &Vec<Id32>)
+pub fn setup_viewport_draw_data(g: &mut Context, viewport: &mut Viewport, draw_lists: &Vec<Id32>)
 {
     // When minimized, we report draw_data->display_size as zero to be consistent with non-viewport mode,
     // and to allow applications/backends to easily skip rendering.
@@ -217,7 +217,7 @@ pub fn setup_viewport_draw_data(.g: &mut Context, viewport: &mut Viewport, draw_
     for ele in draw_lists {
         // {
         //     ImDrawList* draw_list = draw_lists.Data[n];
-        let draw_list = .g.get_draw_list(*ele).unwrap()
+        let draw_list = g.get_draw_list(*ele).unwrap()
         //     draw_list->_PopUnusedDrawCmd();
         draw_list.pop_unused_draw_cmd();
         //     draw_data.total_vtx_count += draw_list->VtxBuffer.Size;

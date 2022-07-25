@@ -16,17 +16,17 @@ pub struct SettingsHandler
     // ImGuiID     type_hash;       // == ImHashStr(TypeName)
     pub type_hash: Id32,
     // void        (*clear_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // clear all settings data
-    pub clear_all_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub clear_all_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
     // void        (*ReadInitFn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // Read: Called before reading (in registration order)
-    pub read_init_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub read_init_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
     // void*       (*read_open_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name);              // Read: Called when entering into a new ini entry e.g. "[window][name]"
-    pub read_open_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler, name: &String)>,
+    pub read_open_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler, name: &String)>,
     // void        (*read_line_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line); // Read: Called for every line of text within an ini entry
-    pub read_line_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler, entry: &mut Vec<u8>, line: &String)>,
+    pub read_line_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler, entry: &mut Vec<u8>, line: &String)>,
     // void        (*apply_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // Read: Called after reading (in registration order)
-    pub apply_all_fn: Option<fn(.g: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub apply_all_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
     // void        (*write_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf);      // Write: Output every entries into 'out_buf'
-    pub write_all_fn: Option<fn(.g: &mut DimgContext, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
+    pub write_all_fn: Option<fn(g: &mut DimgContext, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
     // void*       user_data;
     pub user_data: Vec<u8>,
     //ImGuiSettingsHandler() { memset(this, 0, sizeof(*this)); }
@@ -79,7 +79,7 @@ pub fn mark_ini_settings_dirty2(g: &mut Context, window: &mut Window)
 }
 
 // ImGuiWindowSettings* CreateNewWindowSettings(const char* name)
-pub fn create_new_window_settings(g: &mut Context, name: &String) -> &mut WindowSettings
+pub fn create_new_window_settings(g: &mut Context, name: &str) -> &mut WindowSettings
 {
     // ImGuiContext& g = *GImGui;
 
@@ -102,13 +102,20 @@ pub fn create_new_window_settings(g: &mut Context, name: &String) -> &mut Window
 }
 
 // ImGuiWindowSettings* FindWindowSettings(ImGuiID id)
-pub fn find_window_settings(g: &mut Context, id: Id32) -> &mut WindowSettings
+pub fn find_window_settings(g: &mut Context, id: Id32) -> Option<&mut WindowSettings>
 {
     // ImGuiContext& g = *GImGui;
-    for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
-        if (settings.id == id)
-            return settings;
-    return NULL;
+    // for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
+    for settings in g.settings_windows.iter_mut()
+    {
+        // if (settings.id == id) {
+        //     return settings;
+        // }
+        if settings.id == id {
+            return Some(settings)
+        }
+    }
+    return None;
 }
 
 // ImGuiWindowSettings* FindOrCreateWindowSettings(const char* name)
@@ -116,7 +123,7 @@ pub fn find_or_create_window_settings(g: &mut Context, name: &str) -> &mut Windo
 {
     if (ImGuiWindowSettings* settings = FindWindowSettings(ImHashStr(name)))
         return settings;
-    return CreateNewWindowSettings(name);
+    return create_new_window_settings(name);
 }
 
 // void add_settings_handler(const ImGuiSettingsHandler* handler)
@@ -320,7 +327,7 @@ pub fn window_handler_apply_all(g: &mut Context, handler: &mut SettingsHandler)
     for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
         if (settings.WantApply)
         {
-            if (ImGuiWindow* window = FindWindowByID(settings.id))
+            if (ImGuiWindow* window = find_window_by_id(settings.id))
                 apply_window_settings(window, settings);
             settings.WantApply = false;
         }
@@ -341,7 +348,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         ImGuiWindowSettings* settings = (window.settings_offset != -1) ? g.settings_windows.ptr_from_offset(window.settings_offset) : FindWindowSettings(window.id);
         if (!settings)
         {
-            settings = CreateNewWindowSettings(window.Name);
+            settings = create_new_window_settings(window.Name);
             window.settings_offset = g.settings_windows.offset_from_ptr(settings);
         }
         // IM_ASSERT(settings.ID == window.id);
@@ -352,7 +359,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         // IM_ASSERT(window.dock_node == NULL || window.dock_node.ID == window.DockId);
         settings.dock_id = window.dock_id;
         settings.ClassId = window.window_class.ClassId;
-        settings.dock_order = window.DockOrder;
+        settings.dock_order = window.dock_order;
         settings.collapsed = window.collapsed;
     }
 

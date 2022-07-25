@@ -3334,7 +3334,7 @@ void ImGui::TableLoadSettings(ImGuiTable* table)
         table.DisplayOrderToIndex[table.Columns[column_n].DisplayOrder] = (ImGuiTableColumnIdx)column_n;
 }
 
-static void TableSettingsHandler_ClearAll(ImGuiContext* .g, ImGuiSettingsHandler*)
+static void TableSettingsHandler_ClearAll(ImGuiContext* g, ImGuiSettingsHandler*)
 {
     // ImGuiContext& g = *.g;
     for (int i = 0; i != g.tables.GetMapSize(); i += 1)
@@ -3344,7 +3344,7 @@ static void TableSettingsHandler_ClearAll(ImGuiContext* .g, ImGuiSettingsHandler
 }
 
 // Apply to existing windows (if any)
-static void TableSettingsHandler_ApplyAll(ImGuiContext* .g, ImGuiSettingsHandler*)
+static void TableSettingsHandler_ApplyAll(ImGuiContext* g, ImGuiSettingsHandler*)
 {
     // ImGuiContext& g = *.g;
     for (int i = 0; i != g.tables.GetMapSize(); i += 1)
@@ -3400,7 +3400,7 @@ static void TableSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, 
     }
 }
 
-static void TableSettingsHandler_WriteAll(ImGuiContext* .g, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
+static void TableSettingsHandler_WriteAll(ImGuiContext* g, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 {
     // ImGuiContext& g = *.g;
     for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != NULL; settings = g.SettingsTables.next_chunk(settings))

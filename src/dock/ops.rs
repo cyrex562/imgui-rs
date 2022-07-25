@@ -69,8 +69,8 @@ pub fn set_window_dock(g: &mut Context, window: &mut window::Window, dock_id: Id
         return;
 
     // If the user attempt to set a dock id that is a split node, we'll dig within to find a suitable docking spot
-    ImGuiContext* .g = GImGui;
-    if (ImGuiDockNode* new_node = dock_context_find_node_by_id(.g, dock_id))
+    ImGuiContext* g = GImGui;
+    if (ImGuiDockNode* new_node = dock_context_find_node_by_id(g, dock_id))
         if (new_node.is_split_node())
         {
             // Policy: Find central node or latest focused node. We first move back to our root node.
@@ -108,7 +108,7 @@ pub fn get_window_always_want_own_tab_bar(g: &mut Context, window: &mut window::
 // void BeginDocked(ImGuiWindow* window, bool* p_open)
 pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut bool)
 {
-    ImGuiContext* .g = GImGui;
+    ImGuiContext* g = GImGui;
     // ImGuiContext& g = *.g;
 
     // clear fields ahead so most early-out paths don't have to do it
@@ -120,7 +120,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         if (window.dock_id == 0)
         {
             // IM_ASSERT(window.dock_node == NULL);
-            window.dock_id = dock_context_gen_node_id(.g);
+            window.dock_id = dock_context_gen_node_id(g);
         }
     }
     else
@@ -131,7 +131,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         want_undock |= (g.next_window_data.flags & NextWindowDataFlags::HasPos) && (window.set_window_pos_allow_flags & g.next_window_data.PosCond) && g.next_window_data.PosUndock;
         if (want_undock)
         {
-            DockContextProcessUndockWindow(.g, window);
+            dock_context_process_undock_window(g, window);
             return;
         }
     }
@@ -142,7 +142,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         // IM_ASSERT(window.DockId == node.ID);
     if (window.dock_id != 0 && node == NULL)
     {
-        node = DockContextBindNodeToWindow(.g, window);
+        node = DockContextBindNodeToWindow(g, window);
         if (node == NULL)
             return;
     }
@@ -151,19 +151,19 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     // Undock if the ImGuiDockNodeFlags_NoDockingInCentralNode got set
     if (node.is_central_node && (node.flags & DockNodeFlags::NoDockingInCentralNode))
     {
-        DockContextProcessUndockWindow(.g, window);
+        dock_context_process_undock_window(g, window);
         return;
     }
 
 
     // Undock if our dockspace node disappeared
     // Note how we are testing for last_frame_alive and NOT last_frame_active. A DockSpace node can be maintained alive while being inactive with ImGuiDockNodeFlags_KeepAliveOnly.
-    if (node.LastFrameAlive < g.frame_count)
+    if (node.last_frame_alive < g.frame_count)
     {
         // If the window has been orphaned, transition the docknode to an implicit node processed in DockContextNewFrameUpdateDocking()
         ImGuiDockNode* root_node = dock_node_get_root_node(node);
-        if (root_node.LastFrameAlive < g.frame_count)
-            DockContextProcessUndockWindow(.g, window);
+        if (root_node.last_frame_alive < g.frame_count)
+            dock_context_process_undock_window(g, window);
         else
             window.dock_is_active = true;
         return;
@@ -194,7 +194,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     // Undock if we are submitted earlier than the host window
     if (!(node.MergedFlags & DockNodeFlags::KeepAliveOnly) && window.BeginOrderWithinContext < node.host_window.BeginOrderWithinContext)
     {
-        DockContextProcessUndockWindow(.g, window);
+        dock_context_process_undock_window(g, window);
         return;
     }
 
@@ -223,7 +223,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     // Save new dock order only if the window has been visible once already
     // This allows multiple windows to be created in the same frame and have their respective dock orders preserved.
     if (node.tab_bar && window.was_active)
-        window.DockOrder = DockNodeGetTabOrder(window);
+        window.dock_order = DockNodeGetTabOrder(window);
 
     if ((node.want_close_all || node.want_close_tab_id == window.tab_id) && p_open != NULL)
         *p_open = false;
@@ -259,7 +259,7 @@ pub fn begin_dockable_drag_drop_source(g: &mut Context, window: &mut window::Win
 // void BeginDockableDragDropTarget(ImGuiWindow* window)
 pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Window)
 {
-    ImGuiContext* .g = GImGui;
+    ImGuiContext* g = GImGui;
     // ImGuiContext& g = *.g;
 
     //IM_ASSERT(window->root_window_dock_tree == window); // May also be a DockSpace
@@ -333,7 +333,7 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
 
             // Queue docking request
             if (split_data.IsDropAllowed && payload.IsDelivery())
-                DockContextQueueDock(.g, window, split_data.SplitNode, payload_window, split_data.SplitDir, split_data.SplitRatio, split_data == &split_outer);
+                DockContextQueueDock(g, window, split_data.SplitNode, payload_window, split_data.SplitDir, split_data.SplitRatio, split_data == &split_outer);
         }
     }
     EndDragDropTarget();

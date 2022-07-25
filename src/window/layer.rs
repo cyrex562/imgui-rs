@@ -42,7 +42,7 @@ pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
 }
 
 // void ImGui::BringWindowToDisplayBack(ImGuiWindow* window)
-pub fn bring_window_to_display_back(.g: &mut Context, window: &mut Window)
+pub fn bring_window_to_display_back(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
     if (g.windows[0] == window)

@@ -856,7 +856,7 @@ impl Default for ContextHookType {
     }
 }
 
-pub type ContextHookCallback = fn(.g: &mut Context, hook: &mut ContextHook);
+pub type ContextHookCallback = fn(g: &mut Context, hook: &mut ContextHook);
 
 #[derive(Default, Clone)]
 pub struct ContextHook {

@@ -496,7 +496,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 const char* selected_tab_name = NULL;
                 if (settings->SelectedTabId)
                 {
-                    if (ImGuiWindow* window = FindWindowByID(settings->SelectedTabId))
+                    if (ImGuiWindow* window = find_window_by_id(settings->SelectedTabId))
                         selected_tab_name = window.Name;
                     else if (ImGuiWindowSettings* window_settings = FindWindowSettings(settings->SelectedTabId))
                         selected_tab_name = window_settings->GetName();
@@ -678,7 +678,7 @@ pub fn debug_node_dock_node_flags(g: &mut Context, p_flags: &HashSet<DockNodeFla
 pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
 {
     // ImGuiContext& g = *GImGui;
-    const bool is_alive = (g.frame_count - node->LastFrameAlive < 2);    // Submitted with ImGuiDockNodeFlags_KeepAliveOnly
+    const bool is_alive = (g.frame_count - node->last_frame_alive < 2);    // Submitted with ImGuiDockNodeFlags_KeepAliveOnly
     const bool is_active = (g.frame_count - node->last_frame_active < 2);  // Submitted
     if (!is_alive) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open;
@@ -1102,7 +1102,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
 
     BulletText("viewport: %d%s, viewport_id: 0x%08X, viewport_pos: (%.1,%.1)", window.viewport ? window.viewport->Idx : -1, window.viewport_owned ? " (Owned)" : "", window.viewport_id, window.viewport_pos.x, window.viewport_pos.y);
     BulletText("ViewportMonitor: %d", window.viewport ? window.viewport->PlatformMonitor : -1);
-    BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.dock_id, window.DockOrder, window.dock_is_active, window.dock_tab_is_visible);
+    BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.dock_id, window.dock_order, window.dock_is_active, window.dock_tab_is_visible);
     if (window.dock_node_id || window.dock_node_as_host_id)
         DebugNodeDockNode(window.dock_node_as_host_id? window.dock_node_as_host_id: window.dock_node, window.dock_node_as_host_id? "dock_node_as_host": "dock_node");
 
@@ -1280,7 +1280,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: ImGuiDataType, d
 pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format_for_ui: bool, buf: &mut String, buf_size: usize) -> i32
 {
     ImGuiStackLevelInfo* info = &tool->Results[n];
-    ImGuiWindow* window = (info->Desc[0] == 0 && n == 0) ? FindWindowByID(info->ID) : NULL;
+    ImGuiWindow* window = (info->Desc[0] == 0 && n == 0) ? find_window_by_id(info->ID) : NULL;
     if (window)                                                                 // Source: window name (because the root id don't call GetID() and so doesn't get hooked)
         return ImFormatString(buf, buf_size, format_for_ui ? "\"%s\" [window]" : "%s", window.Name);
     if (info->QuerySuccess)                                                     // Source: GetID() hooks (prioritize over ItemInfo() because we frequently use patterns like: PushID(str), Button("") where they both have same id)
@@ -1296,7 +1296,7 @@ pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format
 
 // Stack Tool: Display UI
 // void ShowStackToolWindow(bool* p_open)
-pub fn show_stack_tool_window(.g: &mut Context, p_open: &mut bool)
+pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
 {
     // ImGuiContext& g = *GImGui;
     if (!(g.next_window_data.flags & NextWindowDataFlags::HasSize))
