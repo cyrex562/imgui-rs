@@ -221,7 +221,7 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
     return &mut window;
 }
 
-// void ImGui::UpdateWindowParentAndRootLinks(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window)
+// void ImGui::update_window_parent_and_root_links(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window)
 pub fn update_window_parent_and_root_links(
     g: &mut Context,
     window: &mut Window,
@@ -421,7 +421,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
     // Update ->RootWindow and others pointers (before any possible call to focus_window)
     if (first_begin_of_the_frame)
     {
-        UpdateWindowParentAndRootLinks(window, flags, parent_window);
+        update_window_parent_and_root_links(window, flags, parent_window);
         window.ParentWindowInBeginStack = parent_window_in_stack;
     }
 

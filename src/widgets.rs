@@ -7114,7 +7114,7 @@ bool ImGui::MenuItem(const char* label, const char* shortcut, bool* p_selected, 
 // - TabBarCalcMaxTabWidth() [Internal]
 // - TabBarFindTabById() [Internal]
 // - TabBarAddTab() [Internal]
-// - TabBarRemoveTab() [Internal]
+// - tab_bar_remove_tab() [Internal]
 // - TabBarCloseTab() [Internal]
 // - TabBarScrollClamp() [Internal]
 // - TabBarScrollToTab() [Internal]
@@ -7610,7 +7610,7 @@ void ImGui::tab_bar_add_tab(ImGuiTabBar* tab_bar, ImGuiTabItemFlags tab_flags, I
 }
 
 // The *tab_id fields be already set by the docking system _before_ the actual TabItem was created, so we clear them regardless.
-void ImGui::TabBarRemoveTab(ImGuiTabBar* tab_bar, ImGuiID tab_id)
+void ImGui::tab_bar_remove_tab(ImGuiTabBar* tab_bar, ImGuiID tab_id)
 {
     if (ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, tab_id))
         tab_bar->Tabs.erase(tab);
@@ -8092,7 +8092,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
 
     // Drag and drop a single floating window node moves it
     ImGuiDockNode* node = docked_window ? docked_window.DockNode : NULL;
-    const bool single_floating_window_node = node && node->IsFloatingNode() && (node->Windows.Size == 1);
+    const bool single_floating_window_node = node && node->is_floating_node() && (node->Windows.Size == 1);
     if (held && single_floating_window_node && IsMouseDragging(0, 0.0))
     {
         // Move
@@ -8235,8 +8235,8 @@ void    ImGui::SetTabItemClosed(const char* label)
             if (ImGuiDockNode* node = window.DockNode)
             {
                 ImGuiID tab_id = TabBarCalcTabID(node->TabBar, label, window);
-                TabBarRemoveTab(node->TabBar, tab_id);
-                window.DockTabWantClose = true;
+                tab_bar_remove_tab(node->TabBar, tab_id);
+                window.dock_tab_want_close = true;
             }
     }
 }

@@ -10,7 +10,7 @@ use crate::types::INVALID_ID;
 use crate::utils::extend_hash_set;
 use crate::vectors::two_d::Vector2D;
 use crate::window::class::WindowClass;
-
+use crate::window::Window;
 
 
 #[derive(Clone,Debug,Eq, PartialEq,Hash)]
@@ -320,4 +320,31 @@ pub fn dock_node_comparer_depth_most_first(g: &mut Context, lhs: &Vec<u8>, rhs: 
     const ImGuiDockNode* a = *(const ImGuiDockNode* const*)lhs;
     const ImGuiDockNode* b = *(const ImGuiDockNode* const*)rhs;
     return DockNodeGetDepth(b) - DockNodeGetDepth(a);
+}
+
+// int DockNodeGetTabOrder(ImGuiWindow* window)
+pub fn dock_node_get_tab_order(g: &mut Context, window: &mut Window) -> i32
+{
+    // ImGuiTabBar* tab_bar = window.dock_node_id.tab_bar;
+    let tab_bar = &mut g.get_dock_node(window.dock_node_id).unwrap().tab_bar;
+    // if (tab_bar == NULL)
+    //     return -1
+    if tab_bar == INVALID_ID {
+        return -1;
+    }
+    // ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, window.tab_id);
+    let tab = tab_bar_find_tab_by_id(g, tab_bar, window.tab_id);
+    // return tab ? tab_bar.GetTabOrder(tab) : -1;
+    return if tab != INVALID_ID {
+        tab_bar.get_tab_order(g, tab)
+    } else {
+        -1
+    }
+}
+
+// static void dock_node_hide_window_during_host_window_creation(ImGuiWindow* window)
+pub fn dock_node_hide_window_during_host_window_creation(g: &mut Context, window: &mut Window)
+{
+    window.hidden = true;
+    window.hidden_frames_can_skip_items = if window.active { 1 } else { 2 };
 }

@@ -24,9 +24,9 @@ use crate::vectors::two_d::Vector2D;
 use crate::{Viewport, window};
 use crate::condition::Condition;
 use crate::dock::context::{dock_context_add_node, dock_context_find_node_by_id, dock_context_gen_node_id, DockContext, DockContextPruneNodeData};
-use crate::dock::dock_context::dock_context_remove_node;
+use context::dock_context_remove_node;
 use crate::dock::dock_node::DockNode;
-use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags, DockNodeSettings};
+use crate::dock::node::{dock_node_get_root_node, dock_node_hide_window_during_host_window_creation, DockNode, DockNodeFlags, DockNodeSettings};
 use crate::frame::get_frame_height;
 use crate::platform::get_viewport_platform_monitor;
 use crate::popup::PopupPositionPolicy::Default;
@@ -108,109 +108,77 @@ pub fn fix_large_windows_when_undocking(g: &mut Context, size: &Vector2D, ref_vi
     return Vector2D::min(size, &max_size);
 }
 
-// This is mostly used for automation.
-// bool DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos)
-pub fn dock_context_calc_drop_pos_for_docking(
-    g: &mut Context,
-    target: &mut Window,
-    target_node: Option<&mut DockNode>,
-    payload: &mut Window,
-    split_dir: Direction,
-    mut split_outer: bool,
-    out_pos: &mut Vector2D) -> bool
-{
-    // In dock_node_preview_dock_setup() for a root central node instead of showing both "inner" and "outer" drop rects
-    // (which would be functionally identical) we only show the outer one. Reflect this here.
-    // if (target_node && target_node.parent_node == NULL && target_node.is_central_node() && split_dir != Direction::None)
-    if target_node.is_some() && target_node.unwrap().parent_node_id != INVALID_ID && split_idr != Direction::None
-    {
-        split_outer = true;
-    }
-    // ImGuiDockPreviewData split_data;
-    let mut split_data = DockPreviewData::default();
-    dock_node_preview_dock_setup(g , target, target_node.unwrap(), payload, &mut split_data, false, split_outer);
-    if split_data.drop_rects_draw[&split_dir+1].is_inverted() {
-        return false;
-    }   
-    *out_pos = split_data.drop_rects_draw[&split_dir+1].get_center().clone();
-    return true;
-}
-
-// int DockNodeGetTabOrder(ImGuiWindow* window)
-pub fn dock_node_get_tab_order(g: &mut Context, window: &mut window::Window) -> i32
-{
-    ImGuiTabBar* tab_bar = window.dock_node_id.tab_bar;
-    if (tab_bar == NULL)
-        return -1;
-    ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, window.tab_id);
-    return tab ? tab_bar.GetTabOrder(tab) : -1;
-}
-
-// static void DockNodeHideWindowDuringHostWindowCreation(ImGuiWindow* window)
-pub fn dock_node_hide_window_during_host_window_creation(g: &mut Context, window: &mut window::Window)
-{
-    window.hidden = true;
-    window..hidden_frames_can_skip_items = window.active ? 1 : 2;
-}
-
 // static void DockNodeAddWindow(ImGuiDockNode* node, ImGuiWindow* window, bool add_to_tab_bar)
-pub fn dock_node_add_window(g: &mut Context, node: &mut DockNode, window: &mut window::Window, add_to_tab_bar: bool)
+pub fn dock_node_add_window(g: &mut Context, node: &mut DockNode, window: &mut Window, add_to_tab_bar: bool)
 {
     // ImGuiContext& g = *GImGui; (void)g;
-    if (window.dock_node_id)
+    if window.dock_node_id != INVALID_ID
     {
         // Can overwrite an existing window->dock_node (e.g. pointing to a disabled DockSpace node)
         // IM_ASSERT(window.dock_node.ID != node.ID);
-        dock_node_remove_window(window.dock_node_id, window, 0);
+        let dock_node_a = g.get_dock_node(window.dock_node_id);
+        dock_node_remove_window(g, dock_node_a.unwrap(), window, 0);
     }
     // IM_ASSERT(window.dock_node == NULL || window.DockNodeAsHost == NULL);
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeAddWindow node 0x%08X window '%s'\n", node.ID, window.Name);
 
     // If more than 2 windows appeared on the same frame leading to the creation of a new hosting window,
     // we'll hide windows until the host window is ready. Hide the 1st window after its been output (so it is not visible for one frame).
-    // We will call DockNodeHideWindowDuringHostWindowCreation() on ourselves in Begin()
-    if (node.host_window_id == NULL && node.windows.size == 1 && node.windows[0].WasActive == false)
-        DockNodeHideWindowDuringHostWindowCreation(node.windows[0]);
+    // We will call dock_node_hide_window_during_host_window_creation() on ourselves in Begin()
+    if node.host_window_id == INVALID_ID && node.windows.len() == 1 && g.get_window(node.windows[0]).unwrap().was_active == false {
+        dock_node_hide_window_during_host_window_creation(g, g.get_window(node.windows[0]).unwrap());
+    }
 
     node.windows.push_back(window);
     node.want_hiddent_tab_bar_update = true;
-    window.dock_node_id = node;
+    window.dock_node_id = node.id;
     window.dock_id = node.id;
-    window.dock_is_active = (node.windows.size > 1);
-    window.DockTabWantClose = false;
+    window.dock_is_active = (node.windows.len() > 1);
+    window.dock_tab_want_close = false;
 
     // When reactivating a node with one or two loose window, the window pos/size/viewport are authoritative over the node storage.
     // In particular it is important we init the viewport from the first window so we don't create two viewports and drop one.
-    if (node.host_window_id == NULL && node.IsFloatingNode())
+    if node.host_window_id == INVALID_ID && node.is_floating_node()
     {
-        if (node.authority_for_pos == DataAuthority::Auto)
+        if node.authority_for_pos == DataAuthority::Auto {
             node.authority_for_pos = DataAuthority::Window;
-        if (node.authority_for_size == DataAuthority::Auto)
+        }
+        if node.authority_for_size == DataAuthority::Auto {
             node.authority_for_size = DataAuthority::Window;
-        if (node.authority_for_viewport == DataAuthority::Auto)
+        }
+        if node.authority_for_viewport == DataAuthority::Auto {
             node.authority_for_viewport = DataAuthority::Window;
+        }
     }
 
     // Add to tab bar if requested
-    if (add_to_tab_bar)
+    if add_to_tab_bar
     {
-        if (node.tab_bar == NULL)
+        if node.tab_bar == None
         {
-            dock_node_add_tab_bar(node);
-            node.tab_bar.selected_tab_id = node.tab_bar.next_selected_tab_id = node.selected_tab_id;
+            dock_node_add_tab_bar(g, node);
+            node.tab_bar.selected_tab_id = node.selected_tab_id;
+            node.tab_bar.next_selected_tab_id = node.selected_tab_id;
 
             // Add existing windows
-            for (int n = 0; n < node.windows.size - 1; n += 1)
-                tab_bar_add_tab(node.tab_bar, TabItemFlags::None, node.windows[n]);
+            // for (int n = 0; n < node.windows.size - 1; n += 1){
+            for win_id in node.windows.iter() {
+                let win_a = g.get_window(win_id)
+                tab_bar_add_tab(g, &mut node.tab_bar, TabItemFlags::None, win_a);
+            }
         }
-        tab_bar_add_tab(node.tab_bar, TabItemFlags::Unsorted, window);
+        tab_bar_add_tab(&mut node.tab_bar, TabItemFlags::Unsorted, window);
     }
 
-    DockNodeUpdateVisibleFlag(node);
+    dock_node_update_visible_flag(g, node);
 
     // Update this without waiting for the next time we Begin() in the window, so our host window will have the proper title bar color on its first frame.
-    if (node.host_window_id)
-        UpdateWindowParentAndRootLinks(window, window.flags | WindowFlags::ChildWindow, node.host_window_id);
+    if node.host_window_id != INVALID_ID {
+        let mut flags = window.flags.clone();
+        flags.insert(WindowFlags::ChildWIndow);
+        let mut parent_win = g.get_window(node.host_window_id);
+        update_window_parent_and_root_links(g, window, &mut flags, Some(parent_win));
+    }
 }
 
 // static void DockNodeRemoveWindow(ImGuiDockNode* node, ImGuiWindow* window, ImGuiID save_dock_id)
@@ -223,61 +191,76 @@ pub fn dock_node_remove_window(g: &mut Context, node: &mut DockNode, window: &mu
     // IM_ASSERT(save_dock_id == 0 || save_dock_id == node.ID);
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeRemoveWindow node 0x%08X window '%s'\n", node.ID, window.Name);
 
-    window.dock_node_id = NULL;
-    window.dock_is_active = window.DockTabWantClose = false;
+    window.dock_node_id = INVALID_ID;
+    window.dock_is_active = false;
+    window.dock_tab_want_close = false;
     window.dock_id = save_dock_id;
-    window.flags &= ~WindowFlags::ChildWindow;
-    if (window.parent_window)
-        window.parent_window.DC.ChildWindows.find_erase(window);
-    UpdateWindowParentAndRootLinks(window, window.flags, NULL); // Update immediately
+    window.flags.remove(&WindowFlags::ChildWindow); // &= ~WindowFlags::ChildWindow;
+    if window.parent_window_id != INVALID_ID {
+        let mut parent_win = g.get_window(window.parent_window_id).unwrap();
+        // window.parent_window.DC.ChildWindows.find_erase(window);
+        parent_win.dc.child_windows.find_erase(window);
+    }
+    update_window_parent_and_root_links(g, window, &mut window.flags, None); // Update immediately
 
     // Remove window
-    bool erased = false;
-    for (int n = 0; n < node.windows.size; n += 1)
-        if (node.windows[n] == window)
-        {
+    // bool erased = false;
+    let mut erased = false;
+    // for (int n = 0; n < node.windows.size; n += 1){
+    for win_id in node.windows.iter() {
+        if win_id = window.id {
+        // if (node.windows[n] == window) {
             node.windows.erase(node.windows.data + n);
             erased = true;
             break;
         }
-    if (!erased)
+    }
+    if !erased {}
         // IM_ASSERT(erased);
-    if (node.visible_window == window)
-        node.visible_window = NULL;
+    if node.visible_window_id == window.id {
+        node.visible_window_id = INVALID_ID;
+    }
 
     // Remove tab and possibly tab bar
     node.want_hiddent_tab_bar_update = true;
-    if (node.tab_bar)
+    if node.tab_bar.is_some()
     {
-        TabBarRemoveTab(node.tab_bar, window.tab_id);
-        const int tab_count_threshold_for_tab_bar = node.is_central_node() ? 1 : 2;
-        if (node.windows.size < tab_count_threshold_for_tab_bar)
-            DockNodeRemoveTabBar(node);
+        tab_bar_remove_tab(node.tab_bar, window.tab_id);
+        // const int tab_count_threshold_for_tab_bar = node.is_central_node() ? 1 : 2;
+        let tab_count_threshold_for_tab_bar: i32 = if node.is_central_node() {1} else {2};
+        if (node.windows.size < tab_count_threshold_for_tab_bar) {
+            dock_node_remove_tab_bar(g, node);
+        }
     }
 
-    if (node.windows.size == 0 && !node.is_central_node() && !node.IsDockSpace() && window.dock_id != node.id)
+    if node.windows.len() == 0 && !node.is_central_node() && !node.is_dock_space() && window.dock_id != node.id
     {
         // Automatic dock node delete themselves if they are not holding at least one tab
-        dock_context_remove_node(&g, node, true);
+        dock_context_remove_node(g, node, true);
         return;
     }
 
-    if (node.windows.size == 1 && !node.is_central_node() && node.host_window_id)
+    if node.windows.len() == 1 && !node.is_central_node() && node.host_window_id != INVALID_ID
     {
-        ImGuiWindow* remaining_window = node.windows[0];
-        if (node.host_window_id.ViewportOwned && node.is_root_node())
+        // ImGuiWindow* remaining_window = node.windows[0];
+        let remaining_window = g.get_window(node.windows[0]);
+        if node.host_window_id.viewport_owned && node.is_root_node()
         {
             // Transfer viewport back to the remaining loose window
-            IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Node %08X transfer viewport %08X=>%08X for window '%s'\n", node.id, node.host_window_id.Viewport.id, remaining_window.id, remaining_window.Name);
+            // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Node %08X transfer viewport %08X=>%08X for window '%s'\n", node.id, node.host_window_id.Viewport.id, remaining_window.id, remaining_window.Name);
             // IM_ASSERT(node.host_window.Viewport.Window == node.host_window);
-            node.host_window_id.Viewport.Window = remaining_window;
-            node.host_window_id.Viewport.id = remaining_window.id;
+            // node.host_window_id.Viewport.Window = remaining_window;
+            // node.host_window_id.Viewport.id = remaining_window.id;
+            let host_win = g.get_window(node.host_window_id);
+            let vp_a = g.get_viewport(host_win.viewport_id).unwrap();
+            vp_a.window_id = remaining_window.id;
+            vp_a.id = remaining_window.id;
         }
         remaining_window.collapsed = node.host_window_id.collapsed;
     }
 
     // Update visibility immediately is required so the DockNodeUpdateRemoveInactiveChilds() processing can reflect changes up the tree
-    DockNodeUpdateVisibleFlag(node);
+    dock_node_update_visible_flag(g, node);
 }
 
 // static void dock_node_move_child_nodes(ImGuiDockNode* dst_node, ImGuiDockNode* src_node)
@@ -286,10 +269,15 @@ pub fn dock_node_move_child_nodes(g: &mut Context, dst_node: &mut DockNode, src_
     // IM_ASSERT(dst_node.Windows.size == 0);
     dst_node.child_nodes[0] = src_node.child_nodes[0];
     dst_node.child_nodes[1] = src_node.child_nodes[1];
-    if (dst_node.child_nodes[0])
-        dst_node.child_nodes[0]parent_node = dst_node;
-    if (dst_node.child_nodes[1])
-        dst_node.child_nodes[1]parent_node = dst_node;
+    if dst_node.child_nodes[0] != INVALID_ID {
+        // dst_node.child_nodes[0].parent_node = dst_node;
+        let node = g.get_dock_node(dst_node.child_nodes[0]).unwrap();
+        node.parent_node_id = dst_node.id;
+
+    }
+    if dst_node.child_nodes[1] {
+        dst_node.child_nodes[1].parent_node = dst_node;
+    }
     dst_node.split_axis = src_node.split_axis;
     dst_node.size_ref = src_node.size_ref;
     src_node.child_nodes[0] = src_node.child_nodes[1] = NULL;
@@ -328,7 +316,7 @@ pub fn dock_node_move_windows(g: &mut Context, dst_node: &mut DockNode, src_node
     {
         if (dst_node.tab_bar)
             dst_node.tab_bar.selected_tab_id = src_node.tab_bar.selected_tab_id;
-        DockNodeRemoveTabBar(src_node);
+        dock_node_remove_tab_bar(src_node);
     }
 }
 
@@ -359,7 +347,7 @@ pub fn dock_node_hide_host_window(g: &mut Context, node: &mut DockNode)
     }
 
     if (node.tab_bar)
-        DockNodeRemoveTabBar(node);
+        dock_node_remove_tab_bar(node);
 }
 
 // Search function called once by root node in DockNodeUpdate()
@@ -440,10 +428,10 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
         bool remove = false;
         remove |= node_was_active && (window.last_frame_active + 1 < g.frame_count);
         remove |= node_was_active && (node.WantCloseAll || node.WantCloseTabId == window.tab_id) && window.HasCloseButton && !(window.flags & WindowFlags::UnsavedDocument);  // Submit all _expected_ closure from last frame
-        remove |= (window.DockTabWantClose);
+        remove |= (window.dock_tab_want_close);
         if (remove)
         {
-            window.DockTabWantClose = false;
+            window.dock_tab_want_close = false;
             if (node.windows.size == 1 && !node.is_central_node())
             {
                 DockNodeHideHostWindow(node);
@@ -479,7 +467,7 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
         node.set_local_flags(node.LocalFlags ^ DockNodeFlags::HiddenTabBar);
     node.want_hidden_tab_bar_toggle = false;
 
-    DockNodeUpdateVisibleFlag(node);
+    dock_node_update_visible_flag(node);
 }
 
 // This is rarely called as DockNodeUpdateForRootNode() generally does it most frames.
@@ -502,11 +490,11 @@ pub fn dock_node_update_has_central_node_child(g: &mut Context, node: &mut DockN
     }
 }
 
-// static void DockNodeUpdateVisibleFlag(ImGuiDockNode* node)
+// static void dock_node_update_visible_flag(ImGuiDockNode* node)
 pub fn dock_node_update_visible_flag(g: &mut Context, node: &mut DockNode)
 {
     // Update visibility flag
-    bool is_visible = (node.parent_node == NULL) ? node.IsDockSpace() : node.is_central_node();
+    bool is_visible = (node.parent_node == NULL) ? node.is_dock_space() : node.is_central_node();
     is_visible |= (node.windows.size > 0);
     is_visible |= (node.child_nodes[0] && node.child_nodes[0].IsVisible);
     is_visible |= (node.child_nodes[1] && node.child_nodes[1].IsVisible);
@@ -592,11 +580,11 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
 
     // Remove tab bar if not needed
     if (node.tab_bar && node.is_no_tab_bar())
-        DockNodeRemoveTabBar(node);
+        dock_node_remove_tab_bar(node);
 
     // Early out for hidden root dock nodes (when all dock_id references are in inactive windows, or there is only 1 floating window holding on the dock_id)
     bool want_to_hide_host_window = false;
-    if (node.IsFloatingNode())
+    if (node.is_floating_node())
     {
         if (node.windows.size <= 1 && node.is_leaf_node())
             if (!g.io.ConfigDockingAlwaysTabBar && (node.windows.size == 0 || !node.windows[0].WindowClass.DockingAlwaysTabBar))
@@ -621,7 +609,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
             {
                 single_window.viewport = node.host_window_id.Viewport;
                 single_window.viewport_id = node.host_window_id.viewport_id;
-                if (node.host_window_id.ViewportOwned)
+                if (node.host_window_id.viewport_owned)
                 {
                     single_window.viewport.Window = single_window;
                     single_window.viewport_owned = true;
@@ -651,7 +639,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
     // We could remove this frame if we could reliably calculate the expected window size during node update, before the Begin() code.
     // It would require a generalization of CalcWindowExpectedSize(), probably extracting code away from Begin().
     // In reality it isn't very important as user quickly ends up with size data in .ini file.
-    if (node.IsVisible && node.host_window_id == NULL && node.IsFloatingNode() && node.is_leaf_node())
+    if (node.IsVisible && node.host_window_id == NULL && node.is_floating_node() && node.is_leaf_node())
     {
         // IM_ASSERT(node.Windows.size > 0);
         ImGuiWindow* ref_window = NULL;
@@ -684,7 +672,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
     // Bind or create host window
     ImGuiWindow* host_window = NULL;
     bool beginned_into_host_window = false;
-    if (node.IsDockSpace())
+    if (node.is_dock_space())
     {
         // [Explicit root dockspace node]
         // IM_ASSERT(node.host_window);
@@ -779,7 +767,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
         // We add a little padding to match the "resize from edges" behavior and allow grabbing the splitter easily.
         // (But we only add it if there's something else on the other side of the hole, otherwise for e.g. fullscreen
         // covering passthru node we'd have a gap on the edge not covered by the hole)
-        // IM_ASSERT(node.IsDockSpace()); // We cannot pass this flag without the DockSpace() api. Testing this because we also setup the hole in host_window->parent_node
+        // IM_ASSERT(node.is_dock_space()); // We cannot pass this flag without the DockSpace() api. Testing this because we also setup the hole in host_window->parent_node
         ImGuiDockNode* root_node = dock_node_get_root_node(central_node);
         Rect root_rect(root_node.pos, root_node.pos + root_node.size);
         Rect hole_rect(central_node.pos, central_node.pos + central_node.size);
@@ -1004,7 +992,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
 
     // Move ourselves to the Menu layer (so we can be accessed by tapping Alt) + undo skip_items flag in order to draw over the title bar even if the window is collapsed
     bool backup_skip_item = host_window.skip_items;
-    if (!node.IsDockSpace())
+    if (!node.is_dock_space())
     {
         host_window.skip_items = false;
         host_window.dcnav_layer_current = NavLayer::Menu;
@@ -1229,7 +1217,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     PopID();
 
     // Restore skip_items flag
-    if (!node.IsDockSpace())
+    if (!node.is_dock_space())
     {
         host_window.dcnav_layer_current = NavLayer::Main;
         host_window.skip_items = backup_skip_item;
@@ -1243,7 +1231,7 @@ pub fn dock_node_add_tab_bar(g: &mut Context, node: &mut DockNode)
     node.tab_bar = IM_NEW(ImGuiTabBar);
 }
 
-// static void DockNodeRemoveTabBar(ImGuiDockNode* node)
+// static void dock_node_remove_tab_bar(ImGuiDockNode* node)
 pub fn dock_node_remove_tab_bar(g: &mut Context, node: &mut DockNode)
 {
     if (node.tab_bar == NULL)
@@ -1255,7 +1243,7 @@ pub fn dock_node_remove_tab_bar(g: &mut Context, node: &mut DockNode)
 // static bool DockNodeIsDropAllowedOne(ImGuiWindow* payload, ImGuiWindow* host_window)
 pub fn dock_node_is_drop_allowed_one(g: &mut Context, payload: &mut window::Window, host_window: &mut window::Window) -> bool
 {
-    if (host_window.dock_node_as_host_id && host_window.dock_node_as_host_id.IsDockSpace() && payload.BeginOrderWithinContext < host_window.BeginOrderWithinContext)
+    if (host_window.dock_node_as_host_id && host_window.dock_node_as_host_id.is_dock_space() && payload.BeginOrderWithinContext < host_window.BeginOrderWithinContext)
         return false;
 
     ImGuiWindowClass* host_class = host_window.dock_node_as_host_id? &host_window.dock_node_as_host_id.WindowClass : &host_window.WindowClass;
@@ -2035,7 +2023,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     // It is possible that the node has already been claimed by a docked window which appeared before the DockSpace() node, so we overwrite is_dock_space again.
     if (node.last_frame_active == g.frame_count && !(flags & DockNodeFlags::KeepAliveOnly))
     {
-        // IM_ASSERT(node.IsDockSpace() == false && "Cannot call DockSpace() twice a frame with the same id");
+        // IM_ASSERT(node.is_dock_space() == false && "Cannot call DockSpace() twice a frame with the same id");
         node.set_local_flags(node.LocalFlags | DockNodeFlags::DockSpace);
         return id;
     }
@@ -2676,7 +2664,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
         if (node.State == ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing)
             window.dock_is_active = true;
         if (node.windows.size > 1)
-            DockNodeHideWindowDuringHostWindowCreation(window);
+            dock_node_hide_window_during_host_window_creation(window);
         return;
     }
 
@@ -2789,7 +2777,7 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
             // There is an edge case when docking into a dockspace which only has _inactive_ nodes (because none of the windows are active)
             // In this case we need to fallback into any leaf mode, possibly the central node.
             // FIXME-20181220: We should not have to test for is_leaf_node() here but we have another bug to fix first.
-            if (node && node.IsDockSpace() && node.is_root_node())
+            if (node && node.is_dock_space() && node.is_root_node())
                 node = (node.CentralNode && node.is_leaf_node()) ? node.CentralNode : DockNodeTreeFindFallbackLeafNode(node);
         }
         else
@@ -2959,7 +2947,7 @@ pub fn dock_settings_handler_dock_node_to_settings(g: &mut Context, dc: &mut Doc
     // IM_ASSERT(depth < (1 << (sizeof(node_settings.Depth) << 3)));
     node_settings.id = node.id;
     node_settings.parent_node_id = node.parent_node ? node.parent_node.id : 0;
-    node_settings.ParentWindowId = (node.IsDockSpace() && node.host_window_id && node.host_window_id.parent_window) ? node.host_window_id.parent_window.id : 0;
+    node_settings.ParentWindowId = (node.is_dock_space() && node.host_window_id && node.host_window_id.parent_window) ? node.host_window_id.parent_window.id : 0;
     node_settings.selected_tab_id = node.selected_tab_id;
     node_settings.split_axis = (signed char)(node.is_split_node() ? node.split_axis : ImGuiAxis_None);
     node_settings.Depth = (char)depth;
@@ -3035,7 +3023,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
         if (ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_settings->ID))
         {
             buf->appendf("%*s", ImMax(2, (line_start_pos + 92) - buf->size()), "");     // Align everything
-            if (node->IsDockSpace() && node->HostWindow && node->HostWindow->parent_window)
+            if (node->is_dock_space() && node->HostWindow && node->HostWindow->parent_window)
                 buf->appendf(" ; in '%s'", node->HostWindow->parent_window->Name);
             // Iterate settings so we can give info about windows that didn't exist during the session.
             int contains_window = 0;

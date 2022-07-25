@@ -324,7 +324,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
         ImGuiWindow* window_behind = g.windows[n];
         if (window_behind == window)
             break;
-        if (window_behind.WasActive && window_behind.ViewportOwned && !(window_behind.flags & WindowFlags::ChildWindow))
+        if (window_behind.WasActive && window_behind.viewport_owned && !(window_behind.flags & WindowFlags::ChildWindow))
             if (window_behind.Viewport.get_main_rect().Overlaps(window.Rect()))
                 return false;
     }

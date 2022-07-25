@@ -6,7 +6,7 @@ use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags, DockNo
 use crate::frame::get_frame_height;
 use crate::{dock, INVALID_ID, window};
 use crate::axis::Axis;
-use crate::dock::dock_context::dock_context_remove_node;
+use crate::dock::preview::DockPreviewData;
 use crate::dock::request::{DockRequest, DockRequestType};
 use crate::rect::Rect;
 use crate::settings::{find_window_settings, mark_ini_settings_dirty, SettingsHandler};
@@ -227,7 +227,7 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context)
     for (_, node) in dc.nodes.iter_mut() {
         // if (ImGuiDockNode * node = (ImGuiDockNode *)
         // dc.Nodes.data[n].val_p){
-        //     if (node.IsFloatingNode()) {
+        //     if (node.is_floating_node()) {
         //         DockNodeUpdate(node);
         //     }
         // }
@@ -770,7 +770,7 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode)
                 // window.parent_window.DC.ChildWindows.find_erase(window);
                 parent_win.dc.child_windows.retain(|x| x != window.id);
             }
-            // UpdateWindowParentAndRootLinks(window, window.flags, NULL);
+            // update_window_parent_and_root_links(window, window.flags, NULL);
             update_window_parent_and_root_links(g, window, window.flags, None);
         }
         node.clone_from(&new_node);
@@ -802,4 +802,82 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode)
     node.size = dock::fix_large_windows_when_undocking(g, &node.size, node_win_0_vp);
     nodewant_mouse_move = true;
     mark_ini_settings_dirty(g);
+}
+
+// This is mostly used for automation.
+// bool DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos)
+pub fn dock_context_calc_drop_pos_for_docking(
+    g: &mut Context,
+    target: &mut Window,
+    target_node: Option<&mut DockNode>,
+    payload: &mut Window,
+    split_dir: Direction,
+    mut split_outer: bool,
+    out_pos: &mut Vector2D) -> bool
+{
+    // In dock_node_preview_dock_setup() for a root central node instead of showing both "inner" and "outer" drop rects
+    // (which would be functionally identical) we only show the outer one. Reflect this here.
+    // if (target_node && target_node.parent_node == NULL && target_node.is_central_node() && split_dir != Direction::None)
+    if target_node.is_some() && target_node.unwrap().parent_node_id != INVALID_ID && split_idr != Direction::None
+    {
+        split_outer = true;
+    }
+    // ImGuiDockPreviewData split_data;
+    let mut split_data = DockPreviewData::default();
+    dock::dock_node_preview_dock_setup(g, target, target_node.unwrap(), payload, &mut split_data, false, split_outer);
+    if split_data.drop_rects_draw[&split_dir+1].is_inverted() {
+        return false;
+    }
+    *out_pos = split_data.drop_rects_draw[&split_dir+1].get_center().clone();
+    return true;
+}
+
+// static void ImGui::dock_context_remove_node(ImGuiContext* ctx, ImGuiDockNode* node, bool merge_sibling_into_parent_node)
+pub fn dock_context_remove_node(g: &mut Context, node: &mut DockNode, merge_sibling_into_parent_node: bool)
+{
+    // ImGuiContext& g = *ctx;
+    // ImGuiDockContext* dc  = &ctx.DockContext;
+    let dc = &mut g.dock_context;
+
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_remove_node 0x%08X\n", node.ID);
+    // IM_ASSERT(DockContextFindNodeByID(ctx, node.id) == node);
+    // IM_ASSERT(node.ChildNodes[0] == NULL && node.ChildNodes[1] == NULL);
+    // IM_ASSERT(node.Windows.size == 0);
+
+    if node.host_window_id != INVALID_ID {
+        let win = g.get_window(node.host_window_id);
+        // node.host_window.dock_node_as_host = NULL;
+        win.dock_node_as_host_id = None;
+    }
+
+    // ImGuiDockNode* parent_node = node.ParentNode;
+    let parent_node = g.get_dock_node(node.parent_node_id);
+
+    // const bool merge = (merge_sibling_into_parent_node && parent_node != NULL);
+    let merge = merge_sibling_into_parent_node && parent_node.is_some();
+    let parent_node_obj = parent_node.unwrap();
+    if parent_node.is_some() {
+        if merge {
+
+            // IM_ASSERT(parent_node.ChildNodes[0] == node || parent_node.ChildNodes[1] == node);
+            // ImGuiDockNode* sibling_node = (parent_node.ChildNodes[0] == node ? parent_node.ChildNodes[1] : parent_node.ChildNodes[0]);
+            let sibling_node_id = if parent_node_obj.child_nodes[0] == node.id { parent_node_obj.child_nodes[1] } else { parent_node.child_nodes[0] };
+            let sibling_node = g.get_dock_node(sibling_node_id);
+            dock::dock_node_tree_merge(g, parent_node_obj, sibling_node);
+        } else {
+
+            // for (int n = 0; parent_node && n < IM_ARRAYSIZE(parent_node.ChildNodes); n += 1)
+                // if (parent_node.ChildNodes[n] == node) {
+                //    parent_node_obj.child_nodes.remove()
+
+            // }
+
+            parent_node_obj.child_nodes.retain( |child_node| child_node != node.id);
+
+            // dc.Nodes.SetVoidPtr(node.ID, NULL);
+            dc.nodes.retain(|x| x != node.id);
+            // IM_DELETE(node);
+            g.dock_nodes.retain(|dn| dn != node.id);
+        }
+    }
 }

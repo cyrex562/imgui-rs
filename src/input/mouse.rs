@@ -288,7 +288,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
         //if (root_node->OnlyNodeWithWindows != node || root_node->CentralNode != NULL)
         if root_node.only_node_with_window != node.id || root_node.central_node != INVALID_ID
         {  // -V1051 PVS-Studio thinks node should be root_node and is wrong about that.
-        // if (undock_floating_node || root_node -> IsDockSpace())
+        // if (undock_floating_node || root_node -> is_dock_space())
         if undock_floating_node || root_node.is_dock_space()
             {
             can_undock_node = true;

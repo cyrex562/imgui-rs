@@ -701,7 +701,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
         DebugNodeWindow(node->VisibleWindow, "visible_window");
         BulletText("SelectedTabID: 0x%08X, LastFocusedNodeID: 0x%08X", node->SelectedTabId, node->LastFocusedNodeId);
         BulletText("Misc:%s%s%s%s%s%s%s",
-            node->IsDockSpace() ? " is_dock_space" : "",
+            node->is_dock_space() ? " is_dock_space" : "",
             node->is_central_node() ? " is_central_node" : "",
             is_alive ? " IsAlive" : "", is_active ? " IsActive" : "", node->IsFocused ? " is_focused" : "",
             node->WantLockSizeOnce ? " WantLockSizeOnce" : "",
