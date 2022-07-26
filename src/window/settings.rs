@@ -11,11 +11,11 @@ pub struct WindowSettings
 {
     //ImGuiID     id;
     pub id: Id32,
-    // Vector2Dih    pos;            // NB: Settings position are stored RELATIVE to the viewport! Whereas runtime ones are absolute positions.
+    // Vector2D    pos;            // NB: Settings position are stored RELATIVE to the viewport! Whereas runtime ones are absolute positions.
     pub pos: Vector2D,
-    // Vector2Dih    size;
+    // Vector2D    size;
     pub size: Vector2D,
-    // Vector2Dih    ViewportPos;
+    // Vector2D    ViewportPos;
     pub viewport_pos: Vector2D,
     // ImGuiID     ViewportId;
     pub viewport_id: Id32,

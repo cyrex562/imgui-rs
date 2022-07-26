@@ -1625,7 +1625,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
         g.nav_windowing_list_window = find_window_by_name("###NavWindowingList");
     const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ GetMainViewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport.size.x * 0.20, viewport.size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
-    SetNextWindowPos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
+    set_next_window_pos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
     begin("###NavWindowingList", NULL, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
     for (int n = g.windows_focus_order.size - 1; n >= 0; n--)

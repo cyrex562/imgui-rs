@@ -63,7 +63,7 @@ pub struct Window {
     // ImGuiWindowFlags        flags, flags_previous_frame;          // See enum ImGuiWindowFlags_
     pub flags: HashSet<WindowFlags>,
     pub flags_previous_frame: HashSet<WindowFlags>,
-    // ImGuiWindowClass        window_class;                        // Advanced users only. Set with SetNextWindowClass()
+    // ImGuiWindowClass        window_class;                        // Advanced users only. Set with set_next_window_class()
     pub window_class: WindowClass,
     // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
     pub viewport_id: Id32,
@@ -165,11 +165,11 @@ pub struct Window {
     pub hidden_frames_for_render_only: i8,
     // ImS8                    disable_inputs_frames;                // Disable window interactions for N frames
     pub disable_inputs_frames: i8,
-    // ImGuiCond               set_window_pos_allow_flags : 8;         // store acceptable condition flags for SetNextWindowPos() use.
+    // ImGuiCond               set_window_pos_allow_flags : 8;         // store acceptable condition flags for set_next_window_pos() use.
     pub set_window_pos_allow_flags: HashSet<Condition>,
     // ImGuiCond               set_window_size_allow_flags : 8;        // store acceptable condition flags for SetNextWindowSize() use.
     pub set_window_size_allow_flags: HashSet<Condition>,
-    // ImGuiCond               set_window_collapsed_allow_flags : 8;   // store acceptable condition flags for SetNextWindowCollapsed() use.
+    // ImGuiCond               set_window_collapsed_allow_flags : 8;   // store acceptable condition flags for set_next_window_collapsed() use.
     pub set_window_collapsed_allow_flags: HashSet<Condition>,
     // ImGuiCond               set_window_dock_allow_flags : 8;        // store acceptable condition flags for SetNextWindowDock() use.
     // Vector2D                  set_window_pos_val;                    // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
@@ -198,9 +198,9 @@ pub struct Window {
     pub clip_rect: Rect,
     // ImRect                  content_region_rect;                  // FIXME: This is currently confusing/misleading. It is essentially work_rect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
     pub content_region_rect: Rect,
-    // Vector2Dih                hit_test_hole_size;                    // Define an optional rectangular hole where mouse will pass-through the window.
+    // Vector2D                hit_test_hole_size;                    // Define an optional rectangular hole where mouse will pass-through the window.
     pub hit_test_hole_size: Vector2D,
-    // Vector2Dih                hit_test_hole_offset;
+    // Vector2D                hit_test_hole_offset;
     pub hit_test_hole_offset: Vector2D,
     // int                     last_frame_active;                    // Last frame number the window was active.
     pub last_frame_active: usize,
@@ -386,7 +386,7 @@ impl Window {
         let mut id = hash_data(ptr, seed);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
-            // debug_hook_id_info(id, ImGuiDataType_Pointer, ptr, NULL);
+            // debug_hook_id_info(id, DataType::Pointer, ptr, NULL);
         }
         return id;
     }
@@ -406,7 +406,7 @@ impl Window {
         // TODO
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
-            // debug_hook_id_info(id, ImGuiDataType::S32, n, null());
+            // debug_hook_id_info(id, DataType::S32, n, null());
         }
         return id;
     }
@@ -495,7 +495,7 @@ pub enum WindowFlags {
     NoScrollWithMouse, // Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.
     NoCollapse, // Disable user collapsing window by double-clicking on it. Also referred to as window Menu Button (e.g. within a docking node).
     AlwaysAutoResize, // Resize every window to its content every frame
-    NoBackground, // Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0).
+    NoBackground, // Disable drawing background color (WindowBg, etc.) and outside border. Similar as using set_netxt_window_bg_alpha(0.0).
     NoSavedSettings, // Never load/save settings in .ini file
     NoMouseInputs, // Disable catching mouse, hovering test with pass through.
     MenuBar,     // Has a menu-bar

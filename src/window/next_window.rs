@@ -17,8 +17,8 @@ pub fn set_next_window_size_constraints(g: &mut Context, size_min: &Vector2D, si
     g.next_window_data.size_callback_user_data = custom_callback_user_data;
 }
 
-// void ImGui::SetNextWindowPos(const Vector2D& pos, ImGuiCond cond, const Vector2D& pivot)
-pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, pivot: &Vector2D)
+// void ImGui::set_next_window_pos(const Vector2D& pos, ImGuiCond cond, const Vector2D& pivot)
+pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, pivot: Option<_>)
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
@@ -57,7 +57,7 @@ pub fn set_next_window_scroll(g: &mut Context, scroll: &Vector2D)
     g.next_window_data.ScrollVal = scroll;
 }
 
-// void ImGui::SetNextWindowCollapsed(bool collapsed, ImGuiCond cond)
+// void ImGui::set_next_window_collapsed(bool collapsed, ImGuiCond cond)
 pub fn set_next_window_collapsed(g: &mut Context, collapsed, cond:Condition)
 {
     // ImGuiContext& g = *GImGui;
@@ -74,7 +74,7 @@ pub fn set_next_window_focus(g: &mut Context)
     g.next_window_data.flags |= NextWindowDataFlags::HasFocus;
 }
 
-// void ImGui::SetNextWindowBgAlpha(float alpha)
+// void ImGui::set_netxt_window_bg_alpha(float alpha)
 pub fn set_next_window_bg_alpha(g: &mut Context, alpha: f32)
 {
     // ImGuiContext& g = *GImGui;
@@ -82,7 +82,7 @@ pub fn set_next_window_bg_alpha(g: &mut Context, alpha: f32)
     g.next_window_data.BgAlphaVal = alpha;
 }
 
-// void ImGui::SetNextWindowViewport(ImGuiID id)
+// void ImGui::set_next_window_viewport(ImGuiID id)
 pub fn set_next_window_viewport(g: &mut Context, id: Id32)
 {
     // ImGuiContext& g = *GImGui;
@@ -99,7 +99,7 @@ pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
     g.next_window_data.dock_id = id;
 }
 
-// void ImGui::SetNextWindowClass(const ImGuiWindowClass* window_class)
+// void ImGui::set_next_window_class(const ImGuiWindowClass* window_class)
 pub fn set_next_window_class(g: &mut Context, window_class: &mut WindowClass)
 {
     // ImGuiContext& g = *GImGui;

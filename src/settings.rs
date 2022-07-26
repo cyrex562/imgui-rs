@@ -309,10 +309,10 @@ pub fn window_settings_handler_read_line(g: &mut Context, handler: &mut Settings
     int x, y;
     int i;
     ImU32 u1;
-    if (sscanf(line, "pos=%i,%i", &x, &y) == 2)             { settings.pos = Vector2Dih(x, y); }
-    else if (sscanf(line, "size=%i,%i", &x, &y) == 2)       { settings.size = Vector2Dih(x, y); }
+    if (sscanf(line, "pos=%i,%i", &x, &y) == 2)             { settings.pos = Vector2D(x, y); }
+    else if (sscanf(line, "size=%i,%i", &x, &y) == 2)       { settings.size = Vector2D(x, y); }
     else if (sscanf(line, "viewport_id=0x%08X", &u1) == 1)   { settings.viewport_id = u1; }
-    else if (sscanf(line, "viewport_pos=%i,%i", &x, &y) == 2){ settings.viewport_pos = Vector2Dih(x, y); }
+    else if (sscanf(line, "viewport_pos=%i,%i", &x, &y) == 2){ settings.viewport_pos = Vector2D(x, y); }
     else if (sscanf(line, "collapsed=%d", &i) == 1)         { settings.collapsed = (i != 0); }
     else if (sscanf(line, "dock_id=0x%x,%d", &u1, &i) == 2)  { settings.dock_id = u1; settings.dock_order = i; }
     else if (sscanf(line, "dock_id=0x%x", &u1) == 1)         { settings.dock_id = u1; settings.dock_order = -1; }
@@ -352,10 +352,10 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
             window.settings_offset = g.settings_windows.offset_from_ptr(settings);
         }
         // IM_ASSERT(settings.ID == window.id);
-        settings.pos = Vector2Dih(window.pos - window.viewport_pos);
-        settings.size = Vector2Dih(window.size_full);
+        settings.pos = Vector2D(window.pos - window.viewport_pos);
+        settings.size = Vector2D(window.size_full);
         settings.viewport_id = window.viewport_id;
-        settings.viewport_pos = Vector2Dih(window.viewport_pos);
+        settings.viewport_pos = Vector2D(window.viewport_pos);
         // IM_ASSERT(window.dock_node == NULL || window.dock_node.ID == window.DockId);
         settings.dock_id = window.dock_id;
         settings.ClassId = window.window_class.ClassId;

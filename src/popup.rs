@@ -397,7 +397,7 @@ pub fn begin_popup_modal(g: &mut Context, name: &str, p_open: &mut bool, flags: 
     if ((g.next_window_data.flags & NextWindowDataFlags::HasPos) == 0)
     {
         const ImGuiViewport* viewport = window.was_active ? window.viewport : GetMainViewport(); // FIXME-VIEWPORT: What may be our reference viewport?
-        SetNextWindowPos(viewport.get_center(), Cond::FirstUseEver, Vector2D::new(0.5, 0.5));
+        set_next_window_pos(viewport.get_center(), Cond::FirstUseEver, Vector2D::new(0.5, 0.5));
     }
 
     flags |= WindowFlags::Popup | WindowFlags::Modal | WindowFlags::NoCollapse | WindowFlags::NoDocking;

@@ -146,7 +146,7 @@ pub fn find_bottom_most_visible_window_with_begin_stack(
 
 // Find window given position, search front-to-back
 // FIXME: Note that we have an inconsequential lag here: outer_rect_clipped is updated in Begin(), so windows moved programmatically
-// with set_window_pos() and not SetNextWindowPos() will have that rectangle lagging by a frame at the time FindHoveredWindow() is
+// with set_window_pos() and not set_next_window_pos() will have that rectangle lagging by a frame at the time FindHoveredWindow() is
 // called, aka before the next Begin(). Moving window isn't affected.
 // static void find_hovered_window()
 pub fn find_hovered_window(g: &mut Context) {

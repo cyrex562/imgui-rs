@@ -301,7 +301,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
     // const bool dragging = IsMouseDragging(0, g.io.MouseDragThreshold * 1.70);
     let dragging = is_mouse_dragging(g, 0, g.io.mouse_drag_threshold * 1.70);
     if can_undock_node && dragging {
-        dock_context_queue_undock_node(&g, node); // Will lead to DockNodeStartMouseMovingWindow() -> start_mouse_moving_window() being called next frame
+        dock_context_queue_undock_node(&g, node); // Will lead to dock_node_start_mouse_moving_window() -> start_mouse_moving_window() being called next frame
     }
     else if !can_undock_node && (clicked || dragging) && g.moving_window_id != window.id {
         start_mouse_moving_window(g, window);

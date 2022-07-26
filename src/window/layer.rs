@@ -25,7 +25,7 @@ pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
 }
 
 
-// void ImGui::BringWindowToDisplayFront(ImGuiWindow* window)
+// void ImGui::bring_window_to_display_front(ImGuiWindow* window)
 pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -127,7 +127,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
     // Bring to front
     BringWindowToFocusFront(focus_front_window);
     if (((window.flags | focus_front_window.flags | display_front_window.flags) & WindowFlags::NoBringToFrontOnFocus) == 0)
-        BringWindowToDisplayFront(display_front_window);
+        bring_window_to_display_front(display_front_window);
 }
 
 

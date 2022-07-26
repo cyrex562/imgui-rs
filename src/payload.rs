@@ -1,18 +1,31 @@
+use crate::INVALID_ID;
 use crate::types::Id32;
+use crate::window::Window;
+
+pub enum PayloadDataType {
+    None,
+    Window,
+}
+
+pub union PayloadData {
+    win: Window,
+}
 
 /// data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 #[derive(Default,Debug,Clone)]
 pub struct Payload
 {
     // Members
-    pub data: Vec<u8>,               // data (copied and owned by dear imgui)
-    pub data_size: usize,         // data size
+    // pub data: Vec<u8>,               // data (copied and owned by dear imgui)
+    // pub data_size: usize,         // data size
+    pub data: PayloadData,
+    pub data_size: usize,
 
     // [Internal]
     pub source_id: Id32,         // Source item id
     pub source_parent_id: Id32,   // Source parent id (if available)
     pub data_frame_count: usize,   // data timestamp
-    pub data_type: String, // char            data_type[32 + 1];   // data type tag (short user-supplied string, 32 characters max)
+    pub data_type: PayloadDataType, // char            data_type[32 + 1];   // data type tag (short user-supplied string, 32 characters max)
     pub preview: bool,            // Set when AcceptDragDropPayload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
     pub delivery: bool,           // Set when AcceptDragDropPayload() was called and mouse button is released over the target item.
 

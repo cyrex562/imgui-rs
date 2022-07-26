@@ -12,6 +12,17 @@ pub struct Rect {
     pub max: Vector2D,
 }
 
+impl From<(&Vector2D, &Vector2D)> for Rect {
+    fn from(vectors: (&Vector2D, &Vector2D)) -> Self {
+      let (min, max) = vectors;
+        Self {
+          
+          min: min.clone(),
+          max: max.clone()
+      }      
+    }
+}
+
 impl Rect {
     //  constexpr ImRect()                                        : min(0.0, 0.0), max(0.0, 0.0)  {}
     pub fn new() -> Self {
@@ -21,12 +32,12 @@ impl Rect {
         }
     }
     //     constexpr ImRect(const Vector2D& min, const Vector2D& max)    : min(min), max(max)                {}
-    pub fn new2(min: &Vector2D, max: &Vector2D) -> Self {
-        Self {
-            min: min.clone(),
-            max: max.clone(),
-        }
-    }
+    // pub fn new2(min: &Vector2D, max: &Vector2D) -> Self {
+    //     Self {
+    //         min: min.clone(),
+    //         max: max.clone(),
+    //     }
+    // }
     //     constexpr ImRect(const Vector4D& v)                         : min(v.x, v.y), max(v.z, v.w)      {}
     pub fn new3(v: &Vector4D) -> Self {
         Self {

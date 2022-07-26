@@ -3668,7 +3668,7 @@ int ImGui::GetColumnIndex()
 int ImGui::GetColumnsCount()
 {
     ImGuiWindow* window = GetCurrentWindowRead();
-    return window.dc.current_columns ? window.dc.current_columns.Count : 1;
+    return window.dc.current_columns ? window.dc.current_columns.count : 1;
 }
 
 float ImGui::GetColumnOffsetFromNorm(const ImGuiOldColumns* columns, float offset_norm)
@@ -3753,11 +3753,11 @@ void ImGui::SetColumnOffset(int column_index, float offset)
         column_index = columns.Current;
     // IM_ASSERT(column_index < columns.columns.size);
 
-    const bool preserve_width = !(columns.flags & ImGuiOldColumnFlags_NoPreserveWidths) && (column_index < columns.Count - 1);
+    const bool preserve_width = !(columns.flags & ImGuiOldColumnFlags_NoPreserveWidths) && (column_index < columns.count - 1);
     const float width = preserve_width ? GetColumnWidthEx(columns, column_index, columns.IsBeingResized) : 0.0;
 
     if (!(columns.flags & ImGuiOldColumnFlags_NoForceWithinWindow))
-        offset = ImMin(offset, columns.OffMaxX - g.style.ColumnsMinSpacing * (columns.Count - column_index));
+        offset = ImMin(offset, columns.OffMaxX - g.style.ColumnsMinSpacing * (columns.count - column_index));
     columns.Columns[column_index].OffsetNorm = GetColumnNormFromOffset(columns, offset - columns.OffMinX);
 
     if (preserve_width)
@@ -3791,7 +3791,7 @@ void ImGui::PushColumnsBackground()
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     ImGuiOldColumns* columns = window.dc.current_columns;
-    if (columns.Count == 1)
+    if (columns.count == 1)
         return;
 
     // Optimization: avoid SetCurrentChannel() + push_clip_rect()
@@ -3804,7 +3804,7 @@ void ImGui::PopColumnsBackground()
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     ImGuiOldColumns* columns = window.dc.current_columns;
-    if (columns.Count == 1)
+    if (columns.count == 1)
         return;
 
     // Optimization: avoid pop_clip_rect() + SetCurrentChannel()
@@ -3851,7 +3851,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
     ImGuiOldColumns* columns = FindOrCreateColumns(window, id);
     // IM_ASSERT(columns.id == id);
     columns.Current = 0;
-    columns.Count = columns_count;
+    columns.count = columns_count;
     columns.flags = flags;
     window.dc.current_columns = columns;
 
@@ -3898,9 +3898,9 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
         column.clip_rect.ClipWithFull(window.clip_rect);
     }
 
-    if (columns.Count > 1)
+    if (columns.count > 1)
     {
-        columns.Splitter.Split(window.draw_list, 1 + columns.Count);
+        columns.Splitter.Split(window.draw_list, 1 + columns.count);
         columns.Splitter.SetCurrentChannel(window.draw_list, 1);
         PushColumnClipRect(0);
     }
@@ -3924,7 +3924,7 @@ void ImGui::NextColumn()
     // ImGuiContext& g = *GImGui;
     ImGuiOldColumns* columns = window.dc.current_columns;
 
-    if (columns.Count == 1)
+    if (columns.count == 1)
     {
         window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);
         // IM_ASSERT(columns.current == 0);
@@ -3932,7 +3932,7 @@ void ImGui::NextColumn()
     }
 
     // Next column
-    if ( += 1columns.Current == columns.Count)
+    if ( += 1columns.Current == columns.count)
         columns.Current = 0;
 
     PopItemWidth();
@@ -3978,7 +3978,7 @@ void ImGui::EndColumns()
     // IM_ASSERT(columns != NULL);
 
     PopItemWidth();
-    if (columns.Count > 1)
+    if (columns.count > 1)
     {
         PopClipRect();
         columns.Splitter.Merge(window.draw_list);
@@ -3999,7 +3999,7 @@ void ImGui::EndColumns()
         const float y1 = ImMax(columns.HostCursorPosY, window.clip_rect.min.y);
         const float y2 = ImMin(window.dc.cursor_pos.y, window.clip_rect.max.y);
         int dragging_column = -1;
-        for (int n = 1; n < columns.Count; n += 1)
+        for (int n = 1; n < columns.count; n += 1)
         {
             ImGuiOldColumnData* column = &columns.Columns[n];
             float x = window.pos.x + GetColumnOffset(n);
@@ -4030,7 +4030,7 @@ void ImGui::EndColumns()
         if (dragging_column != -1)
         {
             if (!columns.IsBeingResized)
-                for (int n = 0; n < columns.Count + 1; n += 1)
+                for (int n = 0; n < columns.count + 1; n += 1)
                     columns.Columns[n].OffsetNormBeforeResize = columns.Columns[n].OffsetNorm;
             columns.IsBeingResized = is_being_resized = true;
             float x = GetDraggedColumnOffset(columns, dragging_column);
@@ -4054,7 +4054,7 @@ void ImGui::Columns(int columns_count, const char* id, bool border)
     ImGuiOldColumnFlags flags = (border ? 0 : ImGuiOldColumnFlags_NoBorder);
     //flags |= ImGuiOldColumnFlags_NoPreserveWidths; // NB: Legacy behavior
     ImGuiOldColumns* columns = window.dc.current_columns;
-    if (columns != NULL && columns.Count == columns_count && columns.flags == flags)
+    if (columns != NULL && columns.count == columns_count && columns.flags == flags)
         return;
 
     if (columns != NULL)

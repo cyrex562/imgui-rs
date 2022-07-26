@@ -180,7 +180,7 @@ pub fn begin_child_ex(g: &mut Context, name: &str, id: Id32, size_arg: &Vector2D
     child_window.child_id = id;
     child_window.auto_fit_child_axises = auto_fit_axises;
 
-    // Set the cursor to handle case where the user called SetNextWindowPos()+BeginChild() manually.
+    // Set the cursor to handle case where the user called set_next_window_pos()+BeginChild() manually.
     // While this is not really documented/defined, it seems that the expected thing to do.
     if child_window.begin_count == 1 {
         parent_window.dc.cursor_pos = child_window.pos;

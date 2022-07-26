@@ -9,7 +9,7 @@ struct ImGuiStackLevelInfo
     pub query_frame_count: i8,
     // bool                    QuerySuccess;               // Obtained result from debug_hook_id_info()
     pub query_success: bool,
-    // ImGuiDataType           DataType : 8;
+    // DataType           DataType : 8;
     pub data_type: DimgDataType,
     // char                    Desc[57];                   // Arbitrarily sized buffer to hold a result (FIXME: could replace Results[] with a chunk stream?) FIXME: Now that we added CTRL+C this should be fixed.
     pub desc: String,

@@ -18,28 +18,29 @@
 #error "Minimum ImGui version requirement not met -- please use a newer version!"
 
 
-#include <limits.h>
-#include <math.h>
-#include <new>
-#include <stdint.h>
-#include <stdio.h> // for fwrite, ssprintf, sscanf
-#include <stdlib.h>
-#include <string.h> // strlen, strncmp
+// #include <limits.h>
+// #include <math.h>
+// #include <new>
+// #include <stdint.h>
+// #include <stdio.h> // for fwrite, ssprintf, sscanf
+// #include <stdlib.h>
+// #include <string.h> // strlen, strncmp
 
 // Use secure CRT function variants to avoid MSVC compiler errors
-#ifdef _MSC_VER
-#define sscanf sscanf_s
+// #ifdef _MSC_VER
+// #define sscanf sscanf_s
 
 
 ImNodesContext* GImNodes = NULL;
 
-namespace IMNODES_NAMESPACE
-{
-namespace
-{
+// namespace IMNODES_NAMESPACE
+// {
+// namespace
+// {
 // [SECTION] bezier curve helpers
 
 use crate::Context;
+use crate::types::DataType;
 
 struct CubicBezier
 {
@@ -810,7 +811,7 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, Rect box_rect)
 
 Vector2D SnapOriginToGrid(Vector2D origin)
 {
-    if (GImNodes.Style.flags & ImNodesStyleFlags_GridSnapping)
+    if (GImNodes.Style.flags & NodesStyleFlags_GridSnapping)
     {
         const float spacing = GImNodes.Style.GridSpacing;
         const float spacing2 = spacing * 0.5;
@@ -831,7 +832,7 @@ void TranslateSelectedNodes(ImNodesEditorContext& editor)
     {
         // If we have grid snap enabled, don't start moving nodes until we've moved the mouse
         // slightly
-        const bool shouldTranslate = (GImNodes.Style.flags & ImNodesStyleFlags_GridSnapping)
+        const bool shouldTranslate = (GImNodes.Style.flags & NodesStyleFlags_GridSnapping)
                                          ? ImGui::GetIO().mouse_drag_max_distance_sqr[0] > 5.0
                                          : true;
 
@@ -1333,7 +1334,7 @@ void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
     const Vector2D offset = editor.Panning;
     ImU32        line_color = GImNodes.Style.colors[ImNodesCol_GridLine];
     ImU32        line_color_prim = GImNodes.Style.colors[ImNodesCol_GridLinePrimary];
-    bool         draw_primary = GImNodes.Style.flags & ImNodesStyleFlags_GridLinesPrimary;
+    bool         draw_primary = GImNodes.Style.flags & NodesStyleFlags_GridLinesPrimary;
 
     for (float x = fmodf(offset.x, GImNodes.Style.GridSpacing); x < canvas_size.x;
          x += GImNodes.Style.GridSpacing)
@@ -1548,7 +1549,7 @@ void DrawNode(ImNodesEditorContext& editor, const int node_idx)
 
         }
 
-        if ((GImNodes.Style.flags & ImNodesStyleFlags_NodeOutline) != 0)
+        if ((GImNodes.Style.flags & NodesStyleFlags_NodeOutline) != 0)
         {
 // #ifIMGUI_VERSION_NUM < 18200
             GImNodes.CanvasDrawList.AddRect(
@@ -1993,12 +1994,12 @@ ImNodesIO::ImNodesIO()
 {
 }
 
-ImNodesStyle::ImNodesStyle()
+NodesStyle::NodesStyle()
     : GridSpacing(24.f), NodeCornerRounding(4.f), NodePadding(8.f, 8.f), NodeBorderThickness(1.f),
       LinkThickness(3.f), LinkLineSegmentsPerLength(0.1), LinkHoverDistance(10.f),
       PinCircleRadius(4.f), PinQuadSideLength(7.f), PinTriangleSideLength(9.5),
       PinLineThickness(1.f), PinHoverRadius(10.f), PinOffset(0.f), MiniMapPadding(8.0, 8.0),
-      MiniMapOffset(4.0, 4.0), Flags(ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines),
+      MiniMapOffset(4.0, 4.0), Flags(NodesStyleFlags_NodeOutline | NodesStyleFlags_GridLines),
       Colors()
 {
 }
@@ -2068,9 +2069,9 @@ void SetImGuiContext(ImGuiContext* g) { ImGui::SetCurrentContext(g); }
 
 ImNodesIO& GetIO() { return GImNodes.Io; }
 
-ImNodesStyle& GetStyle() { return GImNodes.Style; }
+NodesStyle& GetStyle() { return GImNodes.Style; }
 
-void StyleColorsDark(ImNodesStyle* dest)
+void StyleColorsDark(NodesStyle* dest)
 {
     if (dest == nullptr)
     {
@@ -2116,7 +2117,7 @@ void StyleColorsDark(ImNodesStyle* dest)
     dest.Colors[ImNodesCol_MiniMapCanvasOutline] = IM_COL32(200, 200, 200, 200);
 }
 
-void StyleColorsClassic(ImNodesStyle* dest)
+void StyleColorsClassic(NodesStyle* dest)
 {
     if (dest == nullptr)
     {
@@ -2157,7 +2158,7 @@ void StyleColorsClassic(ImNodesStyle* dest)
     dest.Colors[ImNodesCol_MiniMapCanvasOutline] = IM_COL32(200, 200, 200, 200);
 }
 
-void StyleColorsLight(ImNodesStyle* dest)
+void StyleColorsLight(NodesStyle* dest)
 {
     if (dest == nullptr)
     {
@@ -2269,7 +2270,7 @@ void BeginNodeEditor()
             GImNodes.CanvasRectScreenSpace = Rect(
                 EditorSpaceToScreenSpace(Vector2D::new(0.f, 0.f)), EditorSpaceToScreenSpace(canvas_size));
 
-            if (GImNodes.Style.flags & ImNodesStyleFlags_GridLines)
+            if (GImNodes.Style.flags & NodesStyleFlags_GridLines)
             {
                 DrawGrid(editor, canvas_size);
             }
@@ -2640,75 +2641,90 @@ void PopColorStyle()
     GImNodes.ColorModifierStack.pop_back();
 }
 
-struct ImNodesStyleVarInfo
+#[derive(Default,Debug,Clone)]
+pub struct NodesStyleVarInfo
 {
-    ImGuiDataType Type;
-    ImU32         Count;
-    ImU32         Offset;
-    void* GetVarPtr(ImNodesStyle* style) const { return (void*)((unsigned char*)style + Offset); }
-};
-
-static const ImNodesStyleVarInfo GStyleVarInfo[] = {
-    // ImNodesStyleVar_GridSpacing
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, GridSpacing)},
-    // ImNodesStyleVar_NodeCornerRounding
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, NodeCornerRounding)},
-    // ImNodesStyleVar_NodePadding
-    {ImGuiDataType_Float, 2, IM_OFFSETOF(ImNodesStyle, NodePadding)},
-    // ImNodesStyleVar_NodeBorderThickness
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, NodeBorderThickness)},
-    // ImNodesStyleVar_LinkThickness
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, LinkThickness)},
-    // ImNodesStyleVar_LinkLineSegmentsPerLength
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, LinkLineSegmentsPerLength)},
-    // ImNodesStyleVar_LinkHoverDistance
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, LinkHoverDistance)},
-    // ImNodesStyleVar_PinCircleRadius
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, PinCircleRadius)},
-    // ImNodesStyleVar_PinQuadSideLength
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, PinQuadSideLength)},
-    // ImNodesStyleVar_PinTriangleSideLength
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, PinTriangleSideLength)},
-    // ImNodesStyleVar_PinLineThickness
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, PinLineThickness)},
-    // ImNodesStyleVar_PinHoverRadius
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, PinHoverRadius)},
-    // ImNodesStyleVar_PinOffset
-    {ImGuiDataType_Float, 1, IM_OFFSETOF(ImNodesStyle, PinOffset)},
-    // ImNodesStyleVar_MiniMapPadding
-    {ImGuiDataType_Float, 2, IM_OFFSETOF(ImNodesStyle, MiniMapPadding)},
-    // ImNodesStyleVar_MiniMapOffset
-    {ImGuiDataType_Float, 2, IM_OFFSETOF(ImNodesStyle, MiniMapOffset)},
-};
-
-static const ImNodesStyleVarInfo* GetStyleVarInfo(ImNodesStyleVar idx)
-{
-    // IM_ASSERT(idx >= 0 && idx < ImNodesStyleVar_COUNT);
-    // IM_ASSERT(IM_ARRAYSIZE(GStyleVarInfo) == ImNodesStyleVar_COUNT);
-    return &GStyleVarInfo[idx];
+    // DataType Type;
+    pub data_type: DataType,
+    // ImU32         Count;
+    pub count: usize,
+    // ImU32         Offset;
+    pub offset: usize
+    // void* GetVarPtr(NodesStyle* style) const { return (void*)((unsigned char*)style + Offset); }
 }
 
-// void push_style_var(const ImNodesStyleVar item, const float value)
+impl NodesStyleVarInfo {
+    pub fn new(data_type: DataType, count: usize, offset: usize) -> Self {
+        Self {
+            data_type,
+            count,
+            offset
+        }
+    }
+}
+
+pub const STYLE_VAR_INFO: [NodesStyleVarInfo;15]  = [
+    // NodesStyleVar_GridSpacing
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, GridSpacing)),
+    // NodesStyleVar_NodeCornerRounding
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, NodeCornerRounding)),
+    // NodesStyleVar_NodePadding
+    NodesStyleVarInfo::new(DataType::Float, 2, IM_OFFSETOF(NodesStyle, NodePadding)),
+    // NodesStyleVar_NodeBorderThickness
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, NodeBorderThickness)),
+    // NodesStyleVar_LinkThickness
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, LinkThickness)),
+    // NodesStyleVar_LinkLineSegmentsPerLength
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, LinkLineSegmentsPerLength)),
+    // NodesStyleVar_LinkHoverDistance
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, LinkHoverDistance)),
+    // NodesStyleVar_PinCircleRadius
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, PinCircleRadius)),
+    // NodesStyleVar_PinQuadSideLength
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, PinQuadSideLength)),
+    // NodesStyleVar_PinTriangleSideLength
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, PinTriangleSideLength)),
+    // NodesStyleVar_PinLineThickness
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, PinLineThickness)),
+    // NodesStyleVar_PinHoverRadius
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, PinHoverRadius)),
+    // NodesStyleVar_PinOffset
+    NodesStyleVarInfo::new(DataType::Float, 1, IM_OFFSETOF(NodesStyle, PinOffset)),
+    // NodesStyleVar_MiniMapPadding
+    NodesStyleVarInfo::new(DataType::Float, 2, IM_OFFSETOF(NodesStyle, MiniMapPadding)),
+    // NodesStyleVar_MiniMapOffset
+    NodesStyleVarInfo::new(DataType::Float, 2, IM_OFFSETOF(NodesStyle, MiniMapOffset)),
+];
+
+pub fn get_style_var_info(idx: NodesStyleVar) -> &NodesStyleVarInfo
+{
+    // IM_ASSERT(idx >= 0 && idx < NodesStyleVar_COUNT);
+    // IM_ASSERT(IM_ARRAYSIZE(STYLE_VAR_INFO) == NodesStyleVar_COUNT);
+    return STYLE_VAR_INFO[idx].borrow();
+}
+
+// void push_style_var(const NodesStyleVar item, const float value)
 pub fn push_style_var(g: &mut Context, item: NodesStyleVar, value: f32)
 {
-    const ImNodesStyleVarInfo* var_info = GetStyleVarInfo(item);
-    if (var_info.Type == ImGuiDataType_Float && var_info.Count == 1)
+    // const NodesStyleVarInfo* var_info = get_style_var_info(item);
+    let var_info = get_style_var_info(&item);
+    if var_info.data_type == DataType::Float && var_info.count == 1
     {
-        float& style_var = *(float*)var_info.GetVarPtr(&GImNodes.Style);
-        GImNodes.StyleModifierStack.push_back(ImNodesStyleVarElement(item, style_var));
+        float& style_var = var_info.GetVarPtr(&GImNodes.Style);
+        GImNodes.StyleModifierStack.push_back(NodesStyleVarElement(item, style_var));
         style_var = value;
         return;
     }
     // IM_ASSERT(0 && "Called PushStyleVar() float variant but variable is not a float!");
 }
 
-void push_style_var(const ImNodesStyleVar item, const Vector2D& value)
+pub fn push_style_var2(const NodesStyleVar item, const Vector2D& value)
 {
-    const ImNodesStyleVarInfo* var_info = GetStyleVarInfo(item);
-    if (var_info.Type == ImGuiDataType_Float && var_info.Count == 2)
+    const NodesStyleVarInfo* var_info = GetStyleVarInfo(item);
+    if (var_info.Type == DataType::Float && var_info.count == 2)
     {
         Vector2D& style_var = *(Vector2D*)var_info.GetVarPtr(&GImNodes.Style);
-        GImNodes.StyleModifierStack.push_back(ImNodesStyleVarElement(item, style_var));
+        GImNodes.StyleModifierStack.push_back(NodesStyleVarElement(item, style_var));
         style_var = value;
         return;
     }
@@ -2721,15 +2737,15 @@ pub fn pop_style_var(g: &mut Context, count: i32)
     while count > 0
     {
         // IM_ASSERT(GImNodes.StyleModifierStack.size() > 0);
-        const ImNodesStyleVarElement style_backup = GImNodes.StyleModifierStack.back();
+        const NodesStyleVarElement style_backup = GImNodes.StyleModifierStack.back();
         GImNodes.StyleModifierStack.pop_back();
-        const ImNodesStyleVarInfo* var_info = GetStyleVarInfo(style_backup.Item);
+        const NodesStyleVarInfo* var_info = get_style_var_info(style_backup.Item);
         void*                      style_var = var_info.GetVarPtr(&GImNodes.Style);
-        if (var_info.Type == ImGuiDataType_Float && var_info.Count == 1)
+        if (var_info.Type == DataType::Float && var_info.count == 1)
         {
             ((float*)style_var)[0] = style_backup.FloatValue[0];
         }
-        else if (var_info.Type == ImGuiDataType_Float && var_info.Count == 2)
+        else if (var_info.Type == DataType::Float && var_info.count == 2)
         {
             ((float*)style_var)[0] = style_backup.FloatValue[0];
             ((float*)style_var)[1] = style_backup.FloatValue[1];

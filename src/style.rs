@@ -2,7 +2,7 @@ use crate::color::StyleColor;
 use crate::Context;
 use crate::imgui_color::{ColorConvertFloat4ToU32, IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiColorMod};
 use crate::imgui_globals::GImGui;
-use crate::imgui_h::{ImGuiColor, ImGuiDataType, ImGuiDir, ImGuiStyleVar};
+use crate::imgui_h::{ImGuiColor, DataType, ImGuiDir, ImGuiStyleVar};
 use crate::imgui_math::ImLerpF32;
 use crate::imgui_vec::{Vector2D, Vector4D};
 
@@ -315,8 +315,8 @@ pub fn pop_style_color(mut count: i32)
 #[derive(Default,Debug,Clone)]
 pub struct ImGuiStyleVarInfo
 {
-    // ImGuiDataType   Type;
-    pub data_type: ImGuiDataType,
+    // DataType   Type;
+    pub data_type: DataType,
     // ImU32           Count;
     pub count: u32,
     // ImU32           Offset;
@@ -329,7 +329,7 @@ pub struct ImGuiStyleVarInfo
 //         style + self.offset
 //     }
 //
-//     pub fn new(data_type: ImGuiDataType, count: u32, offset: u32) -> Self {
+//     pub fn new(data_type: DataType, count: u32, offset: u32) -> Self {
 //         Self {
 //             data_type,
 //             count,
@@ -343,46 +343,46 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
     ImGuiColor::Text, ImGuiColor::Tab, ImGuiColor::TabHovered, ImGuiColor::TabActive, ImGuiColor::TabUnfocused, ImGuiColor::TabUnfocusedActive
 ];
 //
-// pub const GStyleVarInfo: [ImGuiStyleVarInfo;25] =
+// pub const STYLE_VAR_INFO: [ImGuiStyleVarInfo;25] =
 // [
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, Alpha) ),               // ImGuiStyleVar_Alpha
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, DisabledAlpha) ),       // ImGuiStyleVar_DisabledAlpha
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, window_padding) ),       // ImGuiStyleVar_WindowPadding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, window_rounding) ),      // ImGuiStyleVar_WindowRounding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, WindowBorderSize) ),    // ImGuiStyleVar_WindowBorderSize
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowMinSize) ),       // ImGuiStyleVar_WindowMinSize
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowTitleAlign) ),    // ImGuiStyleVar_WindowTitleAlign
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ChildRounding) ),       // ImGuiStyleVar_ChildRounding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ChildBorderSize) ),     // ImGuiStyleVar_ChildBorderSize
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, PopupRounding) ),       // ImGuiStyleVar_PopupRounding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, PopupBorderSize) ),     // ImGuiStyleVar_PopupBorderSize
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, FramePadding) ),        // ImGuiStyleVar_FramePadding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, FrameRounding) ),       // ImGuiStyleVar_FrameRounding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, FrameBorderSize) ),     // ImGuiStyleVar_FrameBorderSize
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ItemSpacing) ),         // ImGuiStyleVar_ItemSpacing
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ItemInnerSpacing) ),    // ImGuiStyleVar_ItemInnerSpacing
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, indent_spacing) ),       // ImGuiStyleVar_IndentSpacing
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, CellPadding) ),         // ImGuiStyleVar_CellPadding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarSize) ),       // ImGuiStyleVar_ScrollbarSize
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarRounding) ),   // ImGuiStyleVar_ScrollbarRounding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, GrabMinSize) ),         // ImGuiStyleVar_GrabMinSize
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, GrabRounding) ),        // ImGuiStyleVar_GrabRounding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, TabRounding) ),         // ImGuiStyleVar_TabRounding
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) ),     // ImGuiStyleVar_ButtonTextAlign
-//     ImGuiStyleVarInfo::new( ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, SelectableTextAlign) ), // ImGuiStyleVar_SelectableTextAlign
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, Alpha) ),               // ImGuiStyleVar_Alpha
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, DisabledAlpha) ),       // ImGuiStyleVar_DisabledAlpha
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, window_padding) ),       // ImGuiStyleVar_WindowPadding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, window_rounding) ),      // ImGuiStyleVar_WindowRounding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, WindowBorderSize) ),    // ImGuiStyleVar_WindowBorderSize
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, WindowMinSize) ),       // ImGuiStyleVar_WindowMinSize
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, WindowTitleAlign) ),    // ImGuiStyleVar_WindowTitleAlign
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, ChildRounding) ),       // ImGuiStyleVar_ChildRounding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, ChildBorderSize) ),     // ImGuiStyleVar_ChildBorderSize
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, PopupRounding) ),       // ImGuiStyleVar_PopupRounding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, PopupBorderSize) ),     // ImGuiStyleVar_PopupBorderSize
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, FramePadding) ),        // ImGuiStyleVar_FramePadding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, FrameRounding) ),       // ImGuiStyleVar_FrameRounding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, FrameBorderSize) ),     // ImGuiStyleVar_FrameBorderSize
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, ItemSpacing) ),         // ImGuiStyleVar_ItemSpacing
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, ItemInnerSpacing) ),    // ImGuiStyleVar_ItemInnerSpacing
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, indent_spacing) ),       // ImGuiStyleVar_IndentSpacing
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, CellPadding) ),         // ImGuiStyleVar_CellPadding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarSize) ),       // ImGuiStyleVar_ScrollbarSize
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarRounding) ),   // ImGuiStyleVar_ScrollbarRounding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, GrabMinSize) ),         // ImGuiStyleVar_GrabMinSize
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, GrabRounding) ),        // ImGuiStyleVar_GrabRounding
+//     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, TabRounding) ),         // ImGuiStyleVar_TabRounding
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) ),     // ImGuiStyleVar_ButtonTextAlign
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, SelectableTextAlign) ), // ImGuiStyleVar_SelectableTextAlign
 // ];
 
-// static const ImGuiStyleVarInfo* GetStyleVarInfo(ImGuiStyleVar idx)
+// static const ImGuiStyleVarInfo* get_style_var_info(ImGuiStyleVar idx)
 // {
 //     IM_ASSERT(idx >= 0 && idx < ImGuiStyleVar_COUNT);
-//     IM_ASSERT(IM_ARRAYSIZE(GStyleVarInfo) == ImGuiStyleVar_COUNT);
-//     return &GStyleVarInfo[idx];
+//     IM_ASSERT(IM_ARRAYSIZE(STYLE_VAR_INFO) == ImGuiStyleVar_COUNT);
+//     return &STYLE_VAR_INFO[idx];
 // }
 
 // void ImGui::PushStyleVar(ImGuiStyleVar idx, float val)
 // {
-//     const ImGuiStyleVarInfo* var_info = GetStyleVarInfo(idx);
-//     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 1)
+//     const ImGuiStyleVarInfo* var_info = get_style_var_info(idx);
+//     if (var_info->Type == DataType::Float && var_info->Count == 1)
 //     {
 //         ImGuiContext& g = *GImGui;
 //         float* pvar = (float*)var_info->GetVarPtr(&g.style);
@@ -395,8 +395,8 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 
 // void ImGui::PushStyleVar(ImGuiStyleVar idx, const Vector2D& val)
 // {
-//     const ImGuiStyleVarInfo* var_info = GetStyleVarInfo(idx);
-//     if (var_info->Type == ImGuiDataType_Float && var_info->Count == 2)
+//     const ImGuiStyleVarInfo* var_info = get_style_var_info(idx);
+//     if (var_info->Type == DataType::Float && var_info->Count == 2)
 //     {
 //         ImGuiContext& g = *GImGui;
 //         Vector2D* pvar = (Vector2D*)var_info->GetVarPtr(&g.style);
@@ -414,10 +414,10 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 //     {
 //         // We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info->Type] * info->Count), the overhead in Debug is not worth it.
 //         ImGuiStyleMod& backup = g.style_var_stack.back();
-//         const ImGuiStyleVarInfo* info = GetStyleVarInfo(backup.VarIdx);
+//         const ImGuiStyleVarInfo* info = get_style_var_info(backup.VarIdx);
 //         void* data = info->GetVarPtr(&g.style);
-//         if (info->Type == ImGuiDataType_Float && info->Count == 1)      { ((float*)data)[0] = backup.BackupFloat[0]; }
-//         else if (info->Type == ImGuiDataType_Float && info->Count == 2) { ((float*)data)[0] = backup.BackupFloat[0]; ((float*)data)[1] = backup.BackupFloat[1]; }
+//         if (info->Type == DataType::Float && info->Count == 1)      { ((float*)data)[0] = backup.BackupFloat[0]; }
+//         else if (info->Type == DataType::Float && info->Count == 2) { ((float*)data)[0] = backup.BackupFloat[0]; ((float*)data)[1] = backup.BackupFloat[1]; }
 //         g.style_var_stack.pop_back();
 //         count--;
 //     }
@@ -690,7 +690,7 @@ pub fn StyleColorsLight(dst: *mut Style)
 // - Tip: Use your programming IDE navigation facilities on the names in the _second column_ below to find the actual members and their description.
 //   In Visual Studio IDE: CTRL+comma ("Edit.GoToAll") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
 //   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
-// - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link enum values to members offset/type.
+// - When changing this enum, you need to update the associated internal table STYLE_VAR_INFO[] accordingly. This is where we link enum values to members offset/type.
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
 pub enum DimgStyleVar
 {

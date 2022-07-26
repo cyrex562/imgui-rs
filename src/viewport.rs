@@ -336,7 +336,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
             if (g.windows[n].Viewport == old_viewport)
                 SetWindowViewport(g.windows[n], viewport);
     SetWindowViewport(window, viewport);
-    BringWindowToDisplayFront(window);
+    bring_window_to_display_front(window);
 
     return true;
 }
@@ -864,7 +864,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     window.viewport.update_work_rect();
 
     // The viewport may have changed monitor since the global update in UpdateViewportsNewFrame()
-    // Either a SetNextWindowPos() call in the current frame or a set_window_pos() call in the previous frame may have this effect.
+    // Either a set_next_window_pos() call in the current frame or a set_window_pos() call in the previous frame may have this effect.
     if (viewport_rect_changed)
         UpdateViewportPlatformMonitor(window.viewport);
 

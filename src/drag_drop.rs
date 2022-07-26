@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use std::collections::HashSet;
 use crate::color::StyleColor;
 use crate::condition::Condition;
@@ -318,7 +319,7 @@ pub fn accept_drag_drop_payload(g: &mut Context, payload_type: &str, flags: &Has
     ImGuiPayload& payload = g.drag_drop_payload;
     // IM_ASSERT(g.drag_drop_active);                        // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
     // IM_ASSERT(payload.dataFrameCount != -1);            // Forgot to call EndDragDropTarget() ?
-    if (type != NULL && !payload.IsDataType(type))
+    if (type != NULL && !payload.is_data_type(type))
         return NULL;
 
     // Accept smallest drag target bounding box, this allows us to nest drag targets conveniently without ordering constraints.
@@ -349,10 +350,15 @@ pub fn accept_drag_drop_payload(g: &mut Context, payload_type: &str, flags: &Has
 }
 
 // const ImGuiPayload* GetDragDropPayload()
-pub fn get_drag_drop_payload(g: &mut Context) -> &mut Payload
+pub fn get_drag_drop_payload(g: &mut Context) -> Option<&mut Payload>
 {
     // ImGuiContext& g = *GImGui;
-    return g.drag_drop_active ? &g.drag_drop_payload : NULL;
+    // return g.drag_drop_active ? &g.drag_drop_payload : NULL;
+    if g.drag_drop_active {
+        Some(g.drag_drop_payload.borrow_mut())
+    } else {
+        None
+    }
 }
 
 // We don't really use/need this now, but added it for the sake of consistency and because we might need it later.

@@ -17,7 +17,7 @@ use crate::rect::Rect;
 use crate::stack::StackTool;
 use crate::style::{get_color_u32, pop_style_color, push_style_color};
 use crate::tab_bar::TabBar;
-use crate::types::{Id32, ImGuiDataType};
+use crate::types::{Id32, DataType};
 use crate::vectors::two_d::Vector2D;
 use crate::window::next_window::NextWindowDataFlags;
 use crate::window::settings::WindowSettings;
@@ -621,7 +621,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "window_class: %08X\n", node->WindowClass.ClassId);
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size: (%.0, %.0)\n", node.size.x, node.size.y);
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size_ref: (%.0, %.0)\n", node.size_ref.x, node.size_ref.y);
-        int depth = DockNodeGetDepth(node);
+        int depth = dock_node_get_depth(node);
         overlay_draw_list->AddRect(node.pos + Vector2D::new(3, 3) * depth, node.pos + node.size - Vector2D::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
         Vector2D pos = node.pos + Vector2D::new(3, 3) * depth;
         overlay_draw_list->AddRectFilled(pos - Vector2D::new(1, 1), pos + CalcTextSize(buf) + Vector2D::new(1, 1), IM_COL32(200, 100, 100, 255));
@@ -704,7 +704,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
             node->is_dock_space() ? " is_dock_space" : "",
             node->is_central_node() ? " is_central_node" : "",
             is_alive ? " IsAlive" : "", is_active ? " IsActive" : "", node->IsFocused ? " is_focused" : "",
-            node->WantLockSizeOnce ? " WantLockSizeOnce" : "",
+            node->want_lock_size_once ? " want_lock_size_once" : "",
             node->HasCentralNodeChild ? " has_central_node_child" : "");
         if (TreeNode("flags", "flags Merged: 0x%04X, Local: 0x%04X, InWindows: 0x%04X, Shared: 0x%04X", node->MergedFlags, node->LocalFlags, node->LocalFlagsInWindows, node->SharedFlags))
         {
@@ -1178,7 +1178,7 @@ pub fn update_debug_tool_item_picker(g: &mut Context)
         g.DebugItemPickerBreakId = hovered_id;
         g.DebugItemPickerActive = false;
     }
-    SetNextWindowBgAlpha(0.60);
+    set_netxt_window_bg_alpha(0.60);
     BeginTooltip();
     Text("hovered_id: 0x%08X", hovered_id);
     Text("Press ESC to abort picking.");
@@ -1228,8 +1228,8 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
 }
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
-// void debug_hook_id_info(ImGuiID id, ImGuiDataType data_type, const void* data_id, const void* data_id_end)
-pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: ImGuiDataType, data_id: &Vec<u8>, data_id_end: &Vec<u8>)
+// void debug_hook_id_info(ImGuiID id, DataType data_type, const void* data_id, const void* data_id_end)
+pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_id: &Vec<u8>, data_id_end: &Vec<u8>)
 {
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
@@ -1255,16 +1255,16 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: ImGuiDataType, d
 
     switch (data_type)
     {
-    case ImGuiDataType_S32:
+    case DataType::S32:
         ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "%d", (intptr_t)data_id);
         break;
     case DataType::String:
         ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "%.*s", data_id_end ? ((const char*)data_id_end - (const char*)data_id) : strlen((const char*)data_id), (const char*)data_id);
         break;
-    case ImGuiDataType_Pointer:
+    case DataType::Pointer:
         ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "(void*)0x%p", data_id);
         break;
-    case ImGuiDataType_ID:
+    case DataType::ID:
         if (info->Desc[0] != 0) // PushOverrideID() is often used to avoid hashing twice, which would lead to 2 calls to debug_hook_id_info(). We prioritize the first one.
             return;
         ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "0x%08X [override]", id);

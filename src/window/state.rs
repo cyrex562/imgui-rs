@@ -41,10 +41,10 @@ pub fn set_window_condition_allow_flags(
     };
 }
 
-// void ImGui::SetWindowHitTestHole(ImGuiWindow* window, const Vector2D& pos, const Vector2D& size)
+// void ImGui::set_window_hit_test_hole(ImGuiWindow* window, const Vector2D& pos, const Vector2D& size)
 pub fn set_window_hit_test_hole(g: &mut Context, window: &mut Window, pos: &Vector2D, size: &Vector2D)
 {
     // IM_ASSERT(window.hit_test_hole_size.x == 0);     // We don't support multiple holes/hit test filters
-    window.hit_test_hole_size = Vector2Dih(size);
-    window.HitTestHoleOffset = Vector2Dih(pos - window.pos);
+    window.hit_test_hole_size = Vector2D(size);
+    window.HitTestHoleOffset = Vector2D(pos - window.pos);
 }

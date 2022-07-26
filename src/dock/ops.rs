@@ -98,7 +98,7 @@ pub fn set_window_dock(g: &mut Context, window: &mut window::Window, dock_id: Id
 pub fn get_window_always_want_own_tab_bar(g: &mut Context, window: &mut window::Window) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    if (g.io.ConfigDockingAlwaysTabBar || window.window_class.DockingAlwaysTabBar)
+    if (g.io.config_docking_always_tab_bar || window.window_class.docking_always_tab_bar)
         if ((window.flags & (WindowFlags::ChildWindow | WindowFlags::NoTitleBar | WindowFlags::NoDocking)) == 0)
             if (!window.IsFallbackWindow)    // We don't support AlwaysTabBar on the fallback/implicit window to avoid unused dock-node overhead/noise
                 return true;
@@ -125,7 +125,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     }
     else
     {
-        // Calling SetNextWindowPos() undock windows by default (by setting PosUndock)
+        // Calling set_next_window_pos() undock windows by default (by setting PosUndock)
         bool want_undock = false;
         want_undock |= (window.flags & WindowFlags::NoDocking) != 0;
         want_undock |= (g.next_window_data.flags & NextWindowDataFlags::HasPos) && (window.set_window_pos_allow_flags & g.next_window_data.PosCond) && g.next_window_data.PosUndock;
@@ -192,20 +192,20 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     node.State = DockNodeState::HostWindowVisible;
 
     // Undock if we are submitted earlier than the host window
-    if (!(node.MergedFlags & DockNodeFlags::KeepAliveOnly) && window.BeginOrderWithinContext < node.host_window.BeginOrderWithinContext)
+    if (!(node.merged_flags & DockNodeFlags::KeepAliveOnly) && window.BeginOrderWithinContext < node.host_window.BeginOrderWithinContext)
     {
         dock_context_process_undock_window(g, window);
         return;
     }
 
     // Position/size window
-    SetNextWindowPos(node.pos);
+    set_next_window_pos(node.pos);
     set_next_window_size(node.size);
-    g.next_window_data.PosUndock = false; // Cancel implicit undocking of SetNextWindowPos()
+    g.next_window_data.PosUndock = false; // Cancel implicit undocking of set_next_window_pos()
     window.dock_is_active = true;
     window.dock_node_is_visible = true;
     window.dock_tab_is_visible = false;
-    if (node.MergedFlags & DockNodeFlags::KeepAliveOnly)
+    if (node.merged_flags & DockNodeFlags::KeepAliveOnly)
         return;
 
     // When the window is selected we mark it as visible.
@@ -256,7 +256,7 @@ pub fn begin_dockable_drag_drop_source(g: &mut Context, window: &mut window::Win
     }
 }
 
-// void BeginDockableDragDropTarget(ImGuiWindow* window)
+// void begin_dockable_drag_drop_target(ImGuiWindow* window)
 pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Window)
 {
     ImGuiContext* g = GImGui;
@@ -273,7 +273,7 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
     // Peek into the payload before calling AcceptDragDropPayload() so we can handle overlapping dock nodes with filtering
     // (this is a little unusual pattern, normally most code would call AcceptDragDropPayload directly)
     const ImGuiPayload* payload = &g.drag_drop_payload;
-    if (!payload.IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW) || !DockNodeIsDropAllowed(window, *(ImGuiWindow**)payload.Data))
+    if (!payload.is_data_type(IMGUI_PAYLOAD_TYPE_WINDOW) || !dock_node_is_drop_allowed(window, *(ImGuiWindow**)payload.Data))
     {
         EndDragDropTarget();
         return;

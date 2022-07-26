@@ -67,7 +67,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
 
     node.pos = window.dc.cursor_pos;
     node.size = node.size_ref = size;
-    SetNextWindowPos(node.pos);
+    set_next_window_pos(node.pos);
     set_next_window_size(node.size);
     g.next_window_data.PosUndock = false;
 
@@ -86,7 +86,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     pop_style_var();
 
     ImGuiWindow* host_window = g.current_window;
-    DockNodeSetupHostWindow(node, host_window);
+    dock_node_setup_host_window(node, host_window);
     host_windowchild_id = window.get_id(title);
     node.only_node_with_windows = NULL;
 
@@ -119,9 +119,9 @@ pub fn dock_space_over_viewport(g: &mut Context, viewport: &mut Viewport, docksp
     if (viewport == NULL)
         viewport = GetMainViewport();
 
-    SetNextWindowPos(viewport.WorkPos);
+    set_next_window_pos(viewport.WorkPos);
     set_next_window_size(viewport.work_size);
-    SetNextWindowViewport(viewport.id);
+    set_next_window_viewport(viewport.id);
 
     ImGuiWindowFlags host_window_flags = 0;
     host_window_flags |= WindowFlags::NoTitleBar | WindowFlags::NoCollapse | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoDocking;

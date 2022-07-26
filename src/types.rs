@@ -51,9 +51,9 @@ impl PtrOrIndex {
 }
 
 
-// Extend ImGuiDataType_
+// Extend DataType::
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum ImGuiDataType
+pub enum DataType
 {
     String,
     Pointer,
@@ -83,11 +83,11 @@ impl Default for DataAuthority {
 #[derive(Default,Debug,Clone)]
 pub struct DataTypeTempStorage
 {
-    // ImU8        Data[8];        // Can fit any data up to ImGuiDataType_COUNT
+    // ImU8        Data[8];        // Can fit any data up to DataType::COUNT
     pub data: [u8;8],
 }
 
-/// Type information associated to one ImGuiDataType. Retrieve with DataTypeGetInfo().
+/// Type information associated to one DataType. Retrieve with DataTypeGetInfo().
 #[derive(Default,Debug,Clone)]
 pub struct DataTypeInfo
 {

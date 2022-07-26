@@ -7,28 +7,24 @@ use crate::dock::ops::set_window_dock;
 use crate::dock::request::{DockRequest, DockRequestType};
 use crate::globals::GImGui;
 use crate::math::saturate_f32;
-use crate::settings::{create_new_window_settings, find_window_settings};
+use crate::settings::{create_new_window_settings, find_or_create_window_settings, find_window_settings};
 use crate::types::{DataAuthority, Direction, Id32};
 use crate::vectors::two_d::Vector2D;
 use crate::window::get::{find_window_by_name, find_window_id};
 use crate::window::settings::WindowSettings;
 
-// void DockBuilderDockWindow(const char* window_name, ImGuiID node_id)
-pub fn dock_builder_dock_window(g: &mut Context, window_name: &str, node_id: Id32)
-{
+// void dock_builder_dock_window(const char* window_name, ImGuiID node_id)
+pub fn dock_builder_dock_window(g: &mut Context, window_name: &str, node_id: Id32) {
     // We don't preserve relative order of multiple docked windows (by clearing dock_order back to -1)
     // ImGuiID window_id = ImHashStr(window_name);
     let window_id = hash_string(window_name, 0);
     let window = find_window_by_id(g, window_id);
     // if (ImGuiWindow* window = find_window_by_id(window_id))
-    if window.is_some()
-    {
+    if window.is_some() {
         // Apply to created window
         set_window_dock(g, window, node_id, Cond::Always);
         window.dock_order = -1;
-    }
-    else
-    {
+    } else {
         // Apply to settings
         // ImGuiWindowSettings* settings = FindWindowSettings(window_id);
         let mut settings_opt = find_window_settings(g, window_id);
@@ -43,16 +39,14 @@ pub fn dock_builder_dock_window(g: &mut Context, window_name: &str, node_id: Id3
     }
 }
 
-// ImGuiDockNode* DockBuilderGetNode(ImGuiID node_id)
-pub fn dock_builder_get_node(g: &mut Context, node_id: Id32) -> Option<&mut DockNode>
-{
+// ImGuiDockNode* dock_builder_get_node(ImGuiID node_id)
+pub fn dock_builder_get_node(g: &mut Context, node_id: Id32) -> Option<&mut DockNode> {
     // ImGuiContext* .g = GImGui;
     return dock_context_find_node_by_id(g, node_id);
 }
 
 // void DockBuilderSetNodePos(ImGuiID node_id, Vector2D pos)
-pub fn dock_builder_set_node_pos(g: &mut Context, node_id: Id32, pos: Vector2D)
-{
+pub fn dock_builder_set_node_pos(g: &mut Context, node_id: Id32, pos: Vector2D) {
     // ImGuiContext* .g = GImGui;
     // ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_id);
     let node_opt = dock_cotext_find_node_by_id(g, node_id);
@@ -67,8 +61,7 @@ pub fn dock_builder_set_node_pos(g: &mut Context, node_id: Id32, pos: Vector2D)
 }
 
 // void DockBuilderSetNodeSize(ImGuiID node_id, Vector2D size)
-pub fn dock_builder_set_node_size(g: &mut Context, node_id: Id32, size: Vector2D)
-{
+pub fn dock_builder_set_node_size(g: &mut Context, node_id: Id32, size: Vector2D) {
     // ImGuiContext* .g = GImGui;
     // ImGuiDockNode* node = dock_context_find_node_by_id(.g, node_id);
     let node = dock_context_find_node_by_id(g, node_id);
@@ -91,8 +84,7 @@ pub fn dock_builder_set_node_size(g: &mut Context, node_id: Id32, size: Vector2D
 // - Use (id == 0) to let the system allocate a node identifier.
 // - Existing node with a same id will be removed.
 // ImGuiID DockBuilderAddNode(ImGuiID id, ImGuiDockNodeFlags flags)
-pub fn dock_builder_add_node(g: &mut Context, id: Id32, flags: &HashSet<DockNodeFlags>) -> Id32
-{
+pub fn dock_builder_add_node(g: &mut Context, id: Id32, flags: &HashSet<DockNodeFlags>) -> Id32 {
     // ImGuiContext* .g = GImGui;
 
     if id != INVALID_ID {
@@ -102,16 +94,13 @@ pub fn dock_builder_add_node(g: &mut Context, id: Id32, flags: &HashSet<DockNode
     // ImGuiDockNode* node = NULL;
     let node: Option<&mut DockNode>;
     // if (flags & DockNodeFlags::DockSpace)
-    if flags.contains(&DockNodeFlags::DockSpace)
-    {
+    if flags.contains(&DockNodeFlags::DockSpace) {
         let mut flags_b: HashSet<DockNodeFlags> = flags.clone();
         flags_b.remove(&DockNodeFlags::DockSpace);
         flags_b.insert(DockNodeFlags::KeepAliveOnly);
         let dock_space = DockSpace::new(id, Vector2D::new(0.0, 0.0), &flags_b);
         node = dock_context_find_node_by_id(g, id);
-    }
-    else
-    {
+    } else {
         node = Some(dock_context_add_node(g, id));
         node.set_local_flags(flags);
     }
@@ -120,8 +109,7 @@ pub fn dock_builder_add_node(g: &mut Context, id: Id32, flags: &HashSet<DockNode
 }
 
 // void DockBuilderRemoveNode(ImGuiID node_id)
-pub fn dock_builder_remove_node(g: &mut Context, node_id: Id32)
-{
+pub fn dock_builder_remove_node(g: &mut Context, node_id: Id32) {
     // ImGuiContext* g = GImGui;
     let mut node = dock_context_find_node_by_id(g, node_id);
     if node.is_none() {
@@ -142,8 +130,7 @@ pub fn dock_builder_remove_node(g: &mut Context, node_id: Id32)
 
 // root_id = 0 to remove all, root_id != 0 to remove child of given node.
 // void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
-pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
-{
+pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32) {
     // ImGuiContext* g = GImGui;
     // ImGuiDockContext* dc  = &g.dock_context;
     let dc = &mut g.dock_context;
@@ -167,12 +154,10 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
     // ImVector<ImGuiDockNode*> nodes_to_remove;
     let mut nodes_to_remove: Vec<&mut DockNonde>;
     // for (int n = 0; n < dc.Nodes.data.size; n += 1)
-    for node_id in dc.nodes.iter()
-    {
+    for node_id in dc.nodes.iter() {
         let node_opt = g.get_dock_node(*node_id);
         // if (ImGuiDockNode * node = dc.Nodes.data[n].val_p)
-        if node_opt.is_some()
-        {
+        if node_opt.is_some() {
             let node = node_opt.unwrap();
             let want_removal = (root_id == 0) || (node.id != root_id && dock_node_get_root_node(g, node).id == root_id);
             if want_removal {
@@ -193,29 +178,24 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
 
     // DockNodeMoveWindows->DockNodeAddWindow will normally set those when reaching two windows (which is only adequate during interactive merge)
     // Make sure we don't lose our current pos/size. (FIXME-DOCK: Consider tidying up that code in DockNodeAddWindow instead)
-    if root_node.unwrap()
-    {
+    if root_node.unwrap() {
         root_node.unwrap().authority_for_pos = backup_root_node_authority_for_pos;
         root_node.unwrap().authority_for_size = backup_root_node_authority_for_size;
     }
 
     // Apply to settings
     // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != NULL; settings = g.SettingsWindows.next_chunk(settings))
-    for settings in g.settings_windows.iter_mut()
-    {
+    for settings in g.settings_windows.iter_mut() {
         // if (ImGuiID
         // window_settings_dock_id = settings.dock_id)
         // window_settings_dock_id
         let windows_settings_dock_id = settings.dock_id;
-        if windows_settings_dock_id != INVALID_ID
-        {
+        if windows_settings_dock_id != INVALID_ID {
             // for (int n = 0; n < nodes_to_remove.size; n += 1)
-            for n in nodes_to_remove
-            {
+            for n in nodes_to_remove {
 
                 // if (nodes_to_remove[n].id == window_settings_dock_id)
-                if n.id == window_settings_dock_id
-                {
+                if n.id == window_settings_dock_id {
                     settings.dock_id = root_id;
                     break;
                 }
@@ -229,18 +209,14 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
         nodes_to_remove.sort();
     }
     // for (int n = 0; n < nodes_to_remove.size; n += 1)
-    for n in nodes_to_remove
-    {
+    for n in nodes_to_remove {
         dock_context_remove_node(g, n, false);
     }
 
-    if root_id == INVALID_ID
-    {
+    if root_id == INVALID_ID {
         dc.nodes.clear();
         dc.requests.clear();
-    }
-    else if has_central_node
-    {
+    } else if has_central_node {
         root_node.central_node = root_node;
         let mut flags_to_set = root_node.local_flags.clone();
         flags_to_set.insert(DockNodeFlags::CentralNode);
@@ -250,23 +226,19 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32)
 }
 
 // void DockBuilderRemoveNodeDockedWindows(ImGuiID root_id, bool clear_settings_refs)
-pub fn dock_builder_remove_node_docked_windows(g: &mut Context, root_id: Id32, clear_settings_refs: bool)
-{
+pub fn dock_builder_remove_node_docked_windows(g: &mut Context, root_id: Id32, clear_settings_refs: bool) {
     // clear references in settings
     // ImGuiContext* g = GImGui;
     // ImGuiContext& g = *.g;
-    if clear_settings_refs
-    {
+    if clear_settings_refs {
         // for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
-        for settings in g.settings_handlers.iter_mut()
-        {
+        for settings in g.settings_handlers.iter_mut() {
             let mut want_removal = (root_id == INVALID_ID) || (settings.dock_id == root_id);
             if !want_removal && settings.dock_id != INVALID_ID {
                 // if ImGuiDockNode * node = dock_context_find_node_by_id(g, settings.dock_id)
                 let node = dock_context_find_node_by_id(g, settings.dock_id);
                 {
-                    if dock_node_get_root_node(g, node.unwrap()).id == root_id
-                    {
+                    if dock_node_get_root_node(g, node.unwrap()).id == root_id {
                         want_removal = true;
                     }
                 }
@@ -279,19 +251,17 @@ pub fn dock_builder_remove_node_docked_windows(g: &mut Context, root_id: Id32, c
 
     // clear references in windows
     // for (int n = 0; n < g.windows.len(); n += 1)
-    for (_, window) in g.windows.iter_mut()
-    {
+    for (_, window) in g.windows.iter_mut() {
         // ImGuiWindow* window = g.windows[n];
         let win_dock_node = g.get_dock_node(window.dock_node_id).unwrap();
         let want_removal = (root_id == 0) || (window.dock_node_id != INVALID_ID && dock_node_get_root_node(g, win_dock_node).id == root_id) || (window.dock_node_as_host_id != INVALID_ID && window.dock_node_as_host_id == root_id);
-        if want_removal
-        {
+        if want_removal {
             // const ImGuiID backup_dock_id = window.dock_id;
             let backup_dock_id = window.dock_id;
             // IM_UNUSED(backup_dock_id);
             dock_context_process_undock_window(g, window, clear_settings_refs);
             if !clear_settings_refs {}
-                // IM_ASSERT(window.DockId == backup_dock_id);
+            // IM_ASSERT(window.DockId == backup_dock_id);
         }
     }
 }
@@ -301,18 +271,15 @@ pub fn dock_builder_remove_node_docked_windows(g: &mut Context, root_id: Id32, c
 // FIXME-DOCK: We are not exposing nor using split_outer.
 // ImGuiID DockBuilderSplitNode(ImGuiID id, ImGuiDir split_dir, float size_ratio_for_node_at_dir, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir)
 pub fn dock_builder_split_node(g: &mut Context,
-                               id: Id32, split_dir:
-                               Direction, size_ratio_for_node_at_dir: f32,
+                               id: Id32, split_dir: Direction, size_ratio_for_node_at_dir: f32,
                                out_id_at_dir: &mut Id32,
-                               out_id_at_opposite_dir: &mut Id32) -> Id32
-{
+                               out_id_at_opposite_dir: &mut Id32) -> Id32 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_dir != Dir::None);
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockBuilderSplitNode: node 0x%08X, split_dir %d\n", id, split_dir);
 
     let node = dock_context_find_node_by_id(g, id);
-    if node.is_none()
-    {
+    if node.is_none() {
         // IM_ASSERT(node != NULL);
         return 0;
     }
@@ -341,9 +308,8 @@ pub fn dock_builder_split_node(g: &mut Context,
     return id_at_dir;
 }
 
-// static ImGuiDockNode* DockBuilderCopyNodeRec(ImGuiDockNode* src_node, ImGuiID dst_node_id_if_known, ImVector<ImGuiID>* out_node_remap_pairs)
-pub fn dock_builder_copy_node_rec(g: &mut Context, src_node: &mut DockNode, dst_node_id_if_known: Id32, out_node_remap_pairs: &mut Vec<Id32>) -> &mut DockNode
-{
+// static ImGuiDockNode* dock_builder_copy_node_rec(ImGuiDockNode* src_node, ImGuiID dst_node_id_if_known, ImVector<ImGuiID>* out_node_remap_pairs)
+pub fn dock_builder_copy_node_rec(g: &mut Context, src_node: &mut DockNode, dst_node_id_if_known: Id32, out_node_remap_pairs: &mut Vec<Id32>) -> &mut DockNode {
     // ImGuiContext& g = *GImGui;
     let mut dst_node = dock_context_add_node(g, dst_node_id_if_known);
     dst_node.shared_flags = src_node.shared_flags.clone();
@@ -360,18 +326,15 @@ pub fn dock_builder_copy_node_rec(g: &mut Context, src_node: &mut DockNode, dst_
 
     // for (int child_n = 0; child_n < IM_ARRAYSIZE(src_node.child_nodes); child_n += 1)
     // for child_node_id in src_node.child_nodes
-    for child_n in 0 .. src_node.child_nodes.len()
-    {
+    for child_n in 0..src_node.child_nodes.len() {
         let child_node_id = src_node.child_nodes[child_n];
         if child_node_id != INVALID_ID {
             let child_node = g.get_dock_node(child_node_id).unwrap();
             let x = dock_builder_copy_node_rec(g, child_node, 0, out_node_remap_pairs);
-            // dst_node.child_nodes[child_node_id] = DockBuilderCopyNodeRec(src_node.child_nodes[child_node_id], 0, out_node_remap_pairs);
-
-
-            //[src_node.child_nodes.index]
-            dst_node.child_nodes[child_node_id]
-            parent_node = dst_node;
+            // dst_node.child_nodes[child_node_id] = dock_builder_copy_node_rec(src_node.child_nodes[child_node_id], 0, out_node_remap_pairs);
+            //[src_node.child_nodes.index].parent_node = dst_node;
+            let child_node_id = dst_node.child_nodes[child_node_id];
+            g.get_dock_node(child_node_id).unwrap().parent_node_id = dst_node.id;
         }
     }
 
@@ -379,60 +342,55 @@ pub fn dock_builder_copy_node_rec(g: &mut Context, src_node: &mut DockNode, dst_
     return dst_node;
 }
 
-// void DockBuilderCopyNode(ImGuiID src_node_id, ImGuiID dst_node_id, ImVector<ImGuiID>* out_node_remap_pairs)
-pub fn dock_builder_copy_node(g: &mut Context, src_node_id: Id32, dst_node_id: Id32, out_node_remap_pairs: &mut Vec<Id32>)
-{
-    ImGuiContext* g = GImGui;
+// void dock_builder_copy_node(ImGuiID src_node_id, ImGuiID dst_node_id, ImVector<ImGuiID>* out_node_remap_pairs)
+pub fn dock_builder_copy_node(g: &mut Context, src_node_id: Id32, dst_node_id: Id32, out_node_remap_pairs: &mut Vec<Id32>) {
+    // ImGuiContext* g = GImGui;
     // IM_ASSERT(src_node_id != 0);
     // IM_ASSERT(dst_node_id != 0);
     // IM_ASSERT(out_node_remap_pairs != NULL);
 
-    dock_builder_remove_node(dst_node_id);
+    dock_builder_remove_node(g, dst_node_id);
 
-    ImGuiDockNode* src_node = dock_context_find_node_by_id(g, src_node_id);
+    let src_node = dock_context_find_node_by_id(g, src_node_id);
     // IM_ASSERT(src_node != NULL);
 
     out_node_remap_pairs.clear();
-    DockBuilderCopyNodeRec(src_node, dst_node_id, out_node_remap_pairs);
+    dock_builder_copy_node_rec(g, src_node.unwrap(), dst_node_id, out_node_remap_pairs);
 
     // IM_ASSERT((out_node_remap_pairs.size % 2) == 0);
 }
 
-// void DockBuilderCopyWindowSettings(const char* src_name, const char* dst_name)
-pub fn dock_builder_copy_window_settings(g: &mut Context, src_name: &str, dst_name: &str)
-{
-    ImGuiWindow* src_window = find_window_by_name(src_name);
-    if (src_window == NULL)
+// void dock_builder_copy_window_settings(const char* src_name, const char* dst_name)
+pub fn dock_builder_copy_window_settings(g: &mut Context, src_name: &str, dst_name: &str) {
+    let src_window = find_window_by_name(g, src_name);
+    if src_window.is_none() {
         return;
-    if (ImGuiWindow* dst_window = find_window_by_name(dst_name))
-    {
-        dst_window.pos = src_window.pos;
-        dst_window.size = src_window.size;
-        dst_window.sizeFull = src_window.sizeFull;
-        dst_window.collapsed = src_window.collapsed;
     }
-    else if (ImGuiWindowSettings* dst_settings = FindOrCreateWindowSettings(dst_name))
-    {
-        Vector2Dih window_pos_2ih = Vector2Dih(src_window.pos);
-        if (src_window.viewport_id != 0 && src_window.viewport_id != IMGUI_VIEWPORT_DEFAULT_ID)
-        {
-            dst_settings.viewport_pos = window_pos_2ih;
-            dst_settings.viewport_id = src_window.viewport_id;
-            dst_settings.pos = Vector2Dih(0, 0);
-        }
-        else
-        {
-            dst_settings.pos = window_pos_2ih;
-        }
-        dst_settings.size = Vector2Dih(src_window.sizeFull);
-        dst_settings.collapsed = src_window.collapsed;
+    let mut dst_window = find_window_by_name(g, dst_name);
+    // if (ImGuiWindow* dst_window = find_window_by_name(dst_name))
+    if dst_window.is_some() {
+        dst_window.unwrap().pos = src_window.unwrap().pos.clone();
+        dst_window.unwrap().size = src_window.unwrap().size.clone();
+        dst_window.unwrap().size_full = src_window.unwrap().size_full.clone();
+        dst_window.unwrap().collapsed = src_window.unwrap().collapsed;
     }
+    // else if (ImGuiWindowSettings* dst_settings = FindOrCreateWindowSettings(dst_name))
+    let dst_settings = find_or_create_window_settings(g, dst_name);
+    let window_pos_2ih = Vector2D::new(src_window.pos.x, src_window.pos.y);
+    if src_window.viewport_id != 0 && src_window.viewport_id != IMGUI_VIEWPORT_DEFAULT_ID {
+        dst_settings.viewport_pos = window_pos_2ih;
+        dst_settings.viewport_id = src_window.viewport_id;
+        dst_settings.pos = Vector2D::default();
+    } else {
+        dst_settings.pos = window_pos_2ih;
+    }
+    dst_settings.size = Vector2D(src_window.size_full);
+    dst_settings.collapsed = src_window.collapsed;
 }
 
 // FIXME: Will probably want to change this signature, in particular how the window remapping pairs are passed.
 // void DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_id, ImVector<const char*>* in_window_remap_pairs)
-pub fn dock_builder_copy_dock_space(g: &mut Context, src_dockspace_id: Id32, dst_dockspace_id: Id32, in_window_remap_pairs: &mut Vec<String>)
-{
+pub fn dock_builder_copy_dock_space(g: &mut Context, src_dockspace_id: Id32, dst_dockspace_id: Id32, in_window_remap_pairs: &mut Vec<String>) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(src_dockspace_id != 0);
     // IM_ASSERT(dst_dockspace_id != 0);
@@ -442,74 +400,87 @@ pub fn dock_builder_copy_dock_space(g: &mut Context, src_dockspace_id: Id32, dst
     // Duplicate entire dock
     // FIXME: When overwriting dst_dockspace_id, windows that aren't part of our dockspace window class but that are docked in a same node will be split apart,
     // whereas we could attempt to at least keep them together in a new, same floating node.
-    ImVector<ImGuiID> node_remap_pairs;
-    DockBuilderCopyNode(src_dockspace_id, dst_dockspace_id, &node_remap_pairs);
+    // ImVector<ImGuiID> node_remap_pairs;
+    let mut node_remap_pairs: Vec<Id32> = vec![];
+    dock_builder_copy_node(g, src_dockspace_id, dst_dockspace_id, &mut node_remap_pairs);
 
     // Attempt to transition all the upcoming windows associated to dst_dockspace_id into the newly created hierarchy of dock nodes
     // (The windows associated to src_dockspace_id are staying in place)
-    ImVector<ImGuiID> src_windows;
-    for (int remap_window_n = 0; remap_window_n < in_window_remap_pairs.size; remap_window_n += 2)
-    {
-        const char* src_window_name = (*in_window_remap_pairs)[remap_window_n];
-        const char* dst_window_name = (*in_window_remap_pairs)[remap_window_n + 1];
-        ImGuiID src_window_id = ImHashStr(src_window_name);
-        src_windows.push_back(src_window_id);
+    // ImVector<ImGuiID> src_windows;
+    let mut src_windows: Vec<Id32> = vec![];
+    // for (int remap_window_n = 0; remap_window_n < in_window_remap_pairs.size; remap_window_n += 2)
+    for remap_window_n in (0..in_window_remap_pairs.len()).step_by(2) {
+        let src_window_name = in_window_remap_pairs[remap_window_n].clone();
+        let dst_window_name = in_window_remap_pairs[remap_window_n + 1].clone();
+        let src_window_id = hash_string(src_window_name.as_str(), 0);
+        src_windows.push(src_window_id);
 
         // Search in the remapping tables
-        ImGuiID src_dock_id = INVALID_ID;
-        if (ImGuiWindow* src_window = find_window_by_id(src_window_id))
+        let mut src_dock_id = INVALID_ID;
+        // if (ImGuiWindow* src_window = find_window_by_id(src_window_id)) {
+        let mut src_window = find_window_by_id(g, src_window_id);
+        if src_window.is_some() {
             src_dock_id = src_window.dock_id;
-        else if (ImGuiWindowSettings* src_window_settings = FindWindowSettings(src_window_id))
+        }
+        let src_window_settings = find_window_settings(g, src_window_id);
+        // else if (ImGuiWindowSettings* src_window_settings = FindWindowSettings(src_window_id)) {
+        if src_window_settings.is_some() {
             src_dock_id = src_window_settings.dock_id;
-        ImGuiID dst_dock_id = INVALID_ID;
-        for (int dock_remap_n = 0; dock_remap_n < node_remap_pairs.size; dock_remap_n += 2)
-            if (node_remap_pairs[dock_remap_n] == src_dock_id)
-            {
+        }
+        // ImGuiID dst_dock_id = INVALID_ID;
+        let mut dst_dock_id = INVALID_ID;
+        // for (int dock_remap_n = 0; dock_remap_n < node_remap_pairs.size; dock_remap_n += 2)
+        for dock_remap_n in (0..node_remap_pairs.len()).step_by(2) {
+            if node_remap_pairs[dock_remap_n] == src_dock_id {
                 dst_dock_id = node_remap_pairs[dock_remap_n + 1];
                 //node_remap_pairs[dock_remap_n] = node_remap_pairs[dock_remap_n + 1] = 0; // clear
                 break;
             }
+        }
 
-        if (dst_dock_id != 0)
-        {
+        if dst_dock_id != 0 {
             // Docked windows gets redocked into the new node hierarchy.
             // IMGUI_DEBUG_LOG_DOCKING("[docking] Remap live window '%s' 0x%08X -> '%s' 0x%08X\n", src_window_name, src_dock_id, dst_window_name, dst_dock_id);
-            DockBuilderDockWindow(dst_window_name, dst_dock_id);
-        }
-        else
-        {
+            dock_builder_dock_window(g, dst_window_name.as_str(), dst_dock_id);
+        } else {
             // Floating windows gets their settings transferred (regardless of whether the new window already exist or not)
             // When this is leading to a Copy and not a Move, we would get two overlapping floating windows. Could we possibly dock them together?
             // IMGUI_DEBUG_LOG_DOCKING("[docking] Remap window settings '%s' -> '%s'\n", src_window_name, dst_window_name);
-            DockBuilderCopyWindowSettings(src_window_name, dst_window_name);
+            dock_builder_copy_window_settings(g, src_window_name.as_str(), dst_window_name.as_str());
         }
     }
 
     // Anything else in the source nodes of 'node_remap_pairs' are windows that were docked in src_dockspace_id but are not owned by it (unaffiliated windows, e.g. "ImGui Demo")
     // Find those windows and move to them to the cloned dock node. This may be optional?
-    for (int dock_remap_n = 0; dock_remap_n < node_remap_pairs.size; dock_remap_n += 2)
-        if (ImGuiID src_dock_id = node_remap_pairs[dock_remap_n])
-        {
-            ImGuiID dst_dock_id = node_remap_pairs[dock_remap_n + 1];
-            ImGuiDockNode* node = DockBuilderGetNode(src_dock_id);
-            for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
-            {
-                ImGuiWindow* window = node.windows[window_n];
-                if (src_windows.contains(window.id))
+    // for (int dock_remap_n = 0; dock_remap_n < node_remap_pairs.size; dock_remap_n += 2)
+    for dock_remap_n in (0..node_remap_pairs.len()).step_by(2) {
+        // if (ImGuiID
+        // src_dock_id = node_remap_pairs[dock_remap_n])
+        let src_dock_id = node_remap_pairs[dock_remap_n];
+        if src_doc_id != INVALID_ID {
+            // ImGuiID
+            let dst_dock_id = node_remap_pairs[dock_remap_n + 1];
+            let node = dock_builder_get_node(g, src_dock_id);
+            // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
+            for window_n in 0..node.windows.len() {
+                // ImGuiWindow * window = node.windows[window_n];
+                let window = g.get_window(window_n);
+                if src_windows.contains(&window.id) {
                     continue;
+                }
 
                 // Docked windows gets redocked into the new node hierarchy.
                 // IMGUI_DEBUG_LOG_DOCKING("[docking] Remap window '%s' %08X -> %08X\n", window.Name, src_dock_id, dst_dock_id);
-                DockBuilderDockWindow(window.Name, dst_dock_id);
+                dock_builder_dock_window(g, window.Name, dst_dock_id);
             }
         }
+    }
 }
 
 // FIXME-DOCK: This is awkward because in series of split user is likely to loose access to its root node.
 // void DockBuilderFinish(ImGuiID root_id)
-pub fn dock_builder_finish(g: &mut Context, root_id: Id32)
-{
-    ImGuiContext* g = GImGui;
+pub fn dock_builder_finish(g: &mut Context, root_id: Id32) {
+    ImGuiContext * g = GImGui;
     //DockContextRebuild(ctx);
     DockContextBuildAddWindowsToNodes(g, root_id);
 }

@@ -4,7 +4,7 @@ use crate::tab_bar::TabItemFlags;
 use crate::types::Id32;
 use crate::ViewportFlags;
 
-/// [ALPHA] Rarely used / very advanced uses only. Use with SetNextWindowClass() and DockSpace() functions.
+/// [ALPHA] Rarely used / very advanced uses only. Use with set_next_window_class() and DockSpace() functions.
 /// Important: the content of this class is still highly WIP and likely to change and be refactored
 /// before we stabilize Docking features. Please be mindful if using this.
 /// Provide hints:

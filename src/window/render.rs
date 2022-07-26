@@ -31,7 +31,7 @@ use crate::window::state::set_window_condition_allow_flags;
 use crate::window::settings::apply_window_settings;
 use crate::window::size::calc_window_size_after_constraint;
 
-// static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
+// static void ImGui::render_window_outer_borders(ImGuiWindow* window)
 pub fn render_window_outer_borders(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -114,7 +114,7 @@ pub fn render_window_decorations(g: &mut Context,
             let mut is_docking_transparent_payload = false;
 
             if g.drag_drop_active && (g.frame_count - g.drag_drop_accept_fraame_count) <= 1 && g.io.config_docking_transparent_payload {
-                if g.drag_drop_payload.IsDataType(PAYLOAD_TYPE_WINDOW) && g.drag_drop_payload.data == window {
+                if g.drag_drop_payload.is_data_type(PAYLOAD_TYPE_WINDOW) && g.drag_drop_payload.data == window {
                     is_docking_transparent_payload = true;
                 }
             }
@@ -258,7 +258,7 @@ pub fn render_window_decorations(g: &mut Context,
 
         // Borders (for dock node host they will be rendered over after the tab bar)
         if handle_borders_and_resize_grips && !window.dock_node_as_host_id {
-            RenderWindowOuterBorders(window);
+            render_window_outer_borders(window);
         }
     }
 }

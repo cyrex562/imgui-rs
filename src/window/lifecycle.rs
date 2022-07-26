@@ -170,7 +170,7 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
     // g.windows_by_id.SetVoidPtr(window.id, window);
 
 
-    // Default/arbitrary window position. Use SetNextWindowPos() with the appropriate condition flag to change the initial position of a window.
+    // Default/arbitrary window position. Use set_next_window_pos() with the appropriate condition flag to change the initial position of a window.
     // const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
    let main_viewport: &mut Viewport = get_main_viewport(g).unwrap();
     window.pos = &main_viewport.pos + Vector2D::new(60.0, 60.0);
@@ -643,7 +643,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         if (window_just_activated_by_user)
         {
             window.AutoPosLastDirection = Direction::None;
-            if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: BeginPopup() could use SetNextWindowPos()
+            if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: BeginPopup() could use set_next_window_pos()
                 window.pos = g.begin_popup_stack.back().OpenPopupPos;
         }
 
@@ -1019,11 +1019,11 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
                 if ((window.root_window_dock_tree.flags & WindowFlags::NoDocking) == 0)
                     BeginDockableDragDropSource(window);
 
-            // Docking: Any dockable window can act as a target. For dock node hosts we call BeginDockableDragDropTarget() in DockNodeUpdate() instead.
+            // Docking: Any dockable window can act as a target. For dock node hosts we call begin_dockable_drag_drop_target() in DockNodeUpdate() instead.
             if (g.drag_drop_active && !(flags & WindowFlags::NoDocking))
                 if (g.moving_window == NULL || g.moving_window.root_window_dock_tree != window)
                     if ((window == window.root_window_dock_tree) && !(window.flags & WindowFlags::DockNodeHost))
-                        BeginDockableDragDropTarget(window);
+                        begin_dockable_drag_drop_target(window);
         }
 
         // We fill last item data based on Title Bar/Tab, in order for IsItemHovered() and IsItemActive() to be usable after Begin().

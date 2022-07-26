@@ -102,12 +102,12 @@ pub fn dock_settings_handler_read_line(g: &mut Context, handler: &mut SettingsHa
     if (sscanf(line, " window=0x%08X%n", &node.ParentWindowId, &r) ==1) { line += r; if (node.ParentWindowId == 0) return; }
     if (node.parent_node_id == 0)
     {
-        if (sscanf(line, " pos=%i,%i%n",  &x, &y, &r) == 2)         { line += r; node.pos = Vector2Dih(x, y); } else return;
-        if (sscanf(line, " size=%i,%i%n", &x, &y, &r) == 2)         { line += r; node.size = Vector2Dih(x, y); } else return;
+        if (sscanf(line, " pos=%i,%i%n",  &x, &y, &r) == 2)         { line += r; node.pos = Vector2D(x, y); } else return;
+        if (sscanf(line, " size=%i,%i%n", &x, &y, &r) == 2)         { line += r; node.size = Vector2D(x, y); } else return;
     }
     else
     {
-        if (sscanf(line, " size_ref=%i,%i%n", &x, &y, &r) == 2)      { line += r; node.size_ref = Vector2Dih(x, y); }
+        if (sscanf(line, " size_ref=%i,%i%n", &x, &y, &r) == 2)      { line += r; node.size_ref = Vector2D(x, y); }
     }
     if (sscanf(line, " split=%c%n", &c, &r) == 1)                   { line += r; if (c == 'X') node.split_axis = Axis::X; else if (c == 'Y') node.split_axis = Axis::Y; }
     if (sscanf(line, " NoResize=%d%n", &x, &r) == 1)                { line += r; if (x != 0) node.flags |= DockNodeFlags::NoResize; }
@@ -135,9 +135,9 @@ pub fn dock_settings_handler_dock_node_to_settings(g: &mut Context, dc: &mut Doc
     node_settings.split_axis = (signed char)(node.is_split_node() ? node.split_axis : ImGuiAxis_None);
     node_settings.Depth = (char)depth;
     node_settings.flags = (node.local_flags & DockNodeFlags::SavedFlagsMask_);
-    node_settings.pos = Vector2Dih(node.pos);
-    node_settings.size = Vector2Dih(node.size);
-    node_settings.size_ref = Vector2Dih(node.size_ref);
+    node_settings.pos = Vector2D(node.pos);
+    node_settings.size = Vector2D(node.size);
+    node_settings.size_ref = Vector2D(node.size_ref);
     dc.NodesSettings.push_back(node_settings);
     if (node.child_nodes[0])
         DockSettingsHandler::DockNodeToSettings(dc, node.child_nodes[0], depth + 1);

@@ -225,17 +225,17 @@ struct ImNodesColElement
     ImNodesColElement(const ImU32 c, const ImNodesCol s) : Color(c), Item(s) {}
 };
 
-struct ImNodesStyleVarElement
+struct NodesStyleVarElement
 {
-    ImNodesStyleVar Item;
+    NodesStyleVar Item;
     float           FloatValue[2];
 
-    ImNodesStyleVarElement(const ImNodesStyleVar variable, const float value) : Item(variable)
+    NodesStyleVarElement(const NodesStyleVar variable, const float value) : Item(variable)
     {
         FloatValue[0] = value;
     }
 
-    ImNodesStyleVarElement(const ImNodesStyleVar variable, const Vector2D value) : Item(variable)
+    NodesStyleVarElement(const NodesStyleVar variable, const Vector2D value) : Item(variable)
     {
         FloatValue[0] = value.x;
         FloatValue[1] = value.y;
@@ -314,9 +314,9 @@ struct ImNodesContext
 
     // Configuration state
     ImNodesIO                        Io;
-    ImNodesStyle                     Style;
+    NodesStyle                     Style;
     ImVector<ImNodesColElement>      ColorModifierStack;
-    ImVector<ImNodesStyleVarElement> StyleModifierStack;
+    ImVector<NodesStyleVarElement> StyleModifierStack;
     ImGuiTextBuffer                  TextBuffer;
 
     int           CurrentAttributeFlags;

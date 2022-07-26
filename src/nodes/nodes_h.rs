@@ -12,8 +12,8 @@
 
 
 typedef int ImNodesCol;             // -> enum ImNodesCol_
-typedef int ImNodesStyleVar;        // -> enum ImNodesStyleVar_
-typedef int ImNodesStyleFlags;      // -> enum ImNodesStyleFlags_
+typedef int NodesStyleVar;        // -> enum NodesStyleVar_
+typedef int NodesStyleFlags;      // -> enum NodesStyleFlags_
 typedef int ImNodesPinShape;        // -> enum ImNodesPinShape_
 typedef int ImNodesAttributeFlags;  // -> enum ImNodesAttributeFlags_
 typedef int ImNodesMiniMapLocation; // -> enum ImNodesMiniMapLocation_
@@ -79,13 +79,13 @@ impl Default for NodesStyleVar {
     }
 }
 
-enum ImNodesStyleFlags_
+enum NodesStyleFlags_
 {
-    ImNodesStyleFlags_None = 0,
-    ImNodesStyleFlags_NodeOutline,
-    ImNodesStyleFlags_GridLines,
-    ImNodesStyleFlags_GridLinesPrimary,
-    ImNodesStyleFlags_GridSnapping = 1 << 4
+    NodesStyleFlags_None = 0,
+    NodesStyleFlags_NodeOutline,
+    NodesStyleFlags_GridLines,
+    NodesStyleFlags_GridLinesPrimary,
+    NodesStyleFlags_GridSnapping = 1 << 4
 };
 
 enum ImNodesPinShape_
@@ -169,7 +169,7 @@ struct ImNodesIO
     ImNodesIO();
 };
 
-struct ImNodesStyle
+struct NodesStyle
 {
     float GridSpacing;
 
@@ -206,13 +206,13 @@ struct ImNodesStyle
     // Mini-map offset from the screen side.
     Vector2D MiniMapOffset;
 
-    // By default, ImNodesStyleFlags_NodeOutline and ImNodesStyleFlags_Gridlines are enabled.
-    ImNodesStyleFlags Flags;
+    // By default, NodesStyleFlags_NodeOutline and NodesStyleFlags_Gridlines are enabled.
+    NodesStyleFlags Flags;
     // Set these mid-frame using Push/PopColorStyle. You can index this color array with with a
     // ImNodesCol value.
     unsigned int Colors[ImNodesCol_COUNT];
 
-    ImNodesStyle();
+    NodesStyle();
 };
 
 enum ImNodesMiniMapLocation_
@@ -265,12 +265,12 @@ void                  EditorContextMoveToNode(const int node_id);
 ImNodesIO& GetIO();
 
 // Returns the global style struct. See the struct declaration for default values.
-ImNodesStyle& GetStyle();
+NodesStyle& GetStyle();
 // style presets matching the dear imgui styles of the same name. If dest is NULL, the active
-// context's ImNodesStyle instance will be used as the destination.
-void StyleColorsDark(ImNodesStyle* dest = NULL); // on by default
-void StyleColorsClassic(ImNodesStyle* dest = NULL);
-void StyleColorsLight(ImNodesStyle* dest = NULL);
+// context's NodesStyle instance will be used as the destination.
+void StyleColorsDark(NodesStyle* dest = NULL); // on by default
+void StyleColorsClassic(NodesStyle* dest = NULL);
+void StyleColorsLight(NodesStyle* dest = NULL);
 
 // The top-level function call. Call this before calling BeginNode/EndNode. Calling this function
 // will result the node editor grid workspace being rendered.
@@ -285,11 +285,11 @@ void MiniMap(
     const ImNodesMiniMapNodeHoveringCallback         node_hovering_callback = NULL,
     const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data = NULL);
 
-// Use PushColorStyle and PopColorStyle to modify ImNodesStyle::colors mid-frame.
+// Use PushColorStyle and PopColorStyle to modify NodesStyle::colors mid-frame.
 void PushColorStyle(ImNodesCol item, unsigned int color);
 void PopColorStyle();
-void push_style_var(ImNodesStyleVar style_item, float value);
-void push_style_var(ImNodesStyleVar style_item, const Vector2D& value);
+void push_style_var(NodesStyleVar style_item, float value);
+void push_style_var(NodesStyleVar style_item, const Vector2D& value);
 void pop_style_var(int count = 1);
 
 // id can be any positive or negative integer, but INT_MIN is currently reserved for internal use.
@@ -354,7 +354,7 @@ Vector2D GetNodeScreenSpacePos(const int node_id);
 Vector2D GetNodeEditorSpacePos(const int node_id);
 Vector2D GetNodeGridSpacePos(const int node_id);
 
-// If ImNodesStyleFlags_GridSnapping is enabled, snap the specified node's origin to the grid.
+// If NodesStyleFlags_GridSnapping is enabled, snap the specified node's origin to the grid.
 void SnapNodeToGrid(int node_id);
 
 // Returns true if the current node editor canvas is being hovered over by the mouse, and is not

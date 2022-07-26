@@ -23,7 +23,7 @@ impl ImGuiTextFilter {
             ..Default()
         };
         out.InputBuf[0] = 0;
-        out.CountGrep = 0;
+        out.countGrep = 0;
         if default_filter
         {
             out.InputBuf = default_filter.clone();
@@ -94,7 +94,7 @@ impl ImGuiTextFilter {
         // input_range.split(',', &Filters);
         text_filter_text_range_split(',', &mut self.Filters);
 
-        self.CountGrep = 0;
+        self.countGrep = 0;
         // for (int i = 0; i != Filters.size; i += 1)
         for i in 0..self.Filters.size {
             let f = Filters[i];
@@ -116,7 +116,7 @@ impl ImGuiTextFilter {
     pub fn Clear(&mut self) {
         self.InputBuf.clear();
         self.Filters.clear();
-        self.CountGrep = 0;
+        self.countGrep = 0;
     }
     // bool                IsActive() const { return !Filters.empty(); }
     pub fn IsActive(&self) -> bool {
