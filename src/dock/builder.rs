@@ -471,7 +471,7 @@ pub fn dock_builder_copy_dock_space(g: &mut Context, src_dockspace_id: Id32, dst
 
                 // Docked windows gets redocked into the new node hierarchy.
                 // IMGUI_DEBUG_LOG_DOCKING("[docking] Remap window '%s' %08X -> %08X\n", window.Name, src_dock_id, dst_dock_id);
-                dock_builder_dock_window(g, window.Name, dst_dock_id);
+                dock_builder_dock_window(g, window.name, dst_dock_id);
             }
         }
     }

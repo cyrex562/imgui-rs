@@ -1,4 +1,4 @@
-// Simple column measurement, currently used for MenuItem() only.. This is very short-sighted/throw-away code and NOT a generic helper.
+// Simple column measurement, currently used for menu_item() only.. This is very short-sighted/throw-away code and NOT a generic helper.
 #[derive(Debug,Clone,Default)]
 pub struct  ImGuiMenuColumns
 {

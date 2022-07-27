@@ -79,7 +79,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     window_flags |= WindowFlags::NoBackground;
 
     char title[256];
-    ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", window.Name, id);
+    ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", window.name, id);
 
     push_style_var(StyleVar::ChildBorderSize, 0.0);
     begin(title, NULL, window_flags);

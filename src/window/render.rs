@@ -229,7 +229,7 @@ pub fn render_window_decorations(g: &mut Context,
             }
 
             // FIXME-DOCK: Ideally we'd use ImGuiCol_TitleBgActive/ImGuiCol_TitleBg here, but neither is guaranteed to be visible enough at this sort of size..
-            let mut col = get_color_u32_no_alpha(if (held && hovered) || (node.IsFocused && !hovered) { StyleColor::ButtonActive } else { if hovered { StyleColor::ButtonHovered } else { StyleColor::Button }});
+            let mut col = get_color_u32_no_alpha(if (held && hovered) || (node.is_focused && !hovered) { StyleColor::ButtonActive } else { if hovered { StyleColor::ButtonHovered } else { StyleColor::Button }});
             window.draw_list.add_triangle_filled(p, p + Vector2D::new(unhide_sz_draw, 0.0), p + Vector2D::new(0.0, unhide_sz_draw), col);
         }
 

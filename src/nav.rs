@@ -137,7 +137,7 @@ pub fn set_nav_window(g: &mut Context, window: &mut Window)
     // ImGuiContext& g = *GImGui;
     if (g.nav_window != window)
     {
-        IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"%s\")\n", window ? window.Name : "<NULL>");
+        IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"%s\")\n", window ? window.name : "<NULL>");
         g.nav_window = window;
     }
     g.NavInitRequest = g.NavMoveSubmitted = g.NavMoveScoringItems = false;
@@ -589,7 +589,7 @@ pub fn nav_restore_layer(g: &mut Context, layer: NavLayer)
         ImGuiWindow* prev_nav_window = g.nav_window;
         g.nav_window = NavRestoreLastChildNavWindow(g.nav_window);    // FIXME-NAV: Should clear ongoing nav requests?
         if (prev_nav_window)
-            IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.Name, g.nav_window.Name);
+            IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.name, g.nav_window.name);
     }
     ImGuiWindow* window = g.nav_window;
     if (window.NavLastIds[layer] != 0)
@@ -637,7 +637,7 @@ pub fn nav_init_window(g: &mut Context, window: &mut Window, force_reinit: bool)
     bool init_for_nav = false;
     if (window == window.root_window || (window.flags & WindowFlags::Popup) || (window.NavLastIds[0] == 0) || force_reinit)
         init_for_nav = true;
-    IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: from nav_init_window(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.Name, g.NavLayer);
+    IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: from nav_init_window(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.name, g.NavLayer);
     if (init_for_nav)
     {
         SetNavID(0, g.NavLayer, 0, Rect());
@@ -944,7 +944,7 @@ pub fn nav_init_request_apply_result(g: &mut Context)
 
     // Apply result from previous navigation init request (will typically select the first item, unless SetItemDefaultFocus() has been called)
     // FIXME-NAV: On _NavFlattened windows, g.nav_window will only be updated during subsequent frame. Not a problem currently.
-    IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: ApplyResult: NavID 0x%08X in Layer %d window \"%s\"\n", g.NavInitResultId, g.NavLayer, g.nav_window.Name);
+    IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: ApplyResult: NavID 0x%08X in Layer %d window \"%s\"\n", g.NavInitResultId, g.NavLayer, g.nav_window.name);
     SetNavID(g.NavInitResultId, g.NavLayer, 0, g.NavInitResultRectRel);
     g.NavIdIsAlive = true; // Mark as alive from previous frame as we got a result
     if (g.NavInitRequestFromMove)
@@ -1015,7 +1015,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // Moving with no reference triggers a init request (will be used as a fallback if the direction fails to find a match)
     if (g.NavMoveSubmitted && g.nav_id == 0)
     {
-        IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: from move, window \"%s\", layer=%d\n", window ? window.Name : "<NULL>", g.NavLayer);
+        IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: from move, window \"%s\", layer=%d\n", window ? window.name : "<NULL>", g.NavLayer);
         g.NavInitRequest = g.NavInitRequestFromMove = true;
         g.NavInitResultId = 0;
         g.nav_disable_highlight = false;
@@ -1142,7 +1142,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
 
     if (g.nav_window != result.Window)
     {
-        IMGUI_DEBUG_LOG_FOCUS("[focus] NavMoveRequest: SetNavWindow(\"%s\")\n", result.Window.Name);
+        IMGUI_DEBUG_LOG_FOCUS("[focus] NavMoveRequest: SetNavWindow(\"%s\")\n", result.Window.name);
         g.nav_window = result.Window;
     }
     if (g.active_id != result.id)
@@ -1156,7 +1156,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
     }
 
     // Focus
-    IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d window \"%s\"\n", result.id, g.NavLayer, g.nav_window.Name);
+    IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d window \"%s\"\n", result.id, g.NavLayer, g.nav_window.name);
     SetNavID(result.id, g.NavLayer, result.FocusScopeId, result.RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable
@@ -1604,7 +1604,7 @@ pub fn get_fallback_window_name_for_windowing_list(g: &mut Context, window: &mut
 {
     if (window.flags & WindowFlags::Popup)
         return "(Popup)";
-    if ((window.flags & WindowFlags::MenuBar) && strcmp(window.Name, "##MainMenuBar") == 0)
+    if ((window.flags & WindowFlags::MenuBar) && strcmp(window.name, "##MainMenuBar") == 0)
         return "(Main menu bar)";
     if (window.dock_node_as_host_id)
         return "(Dock node)";
@@ -1634,10 +1634,10 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
         // IM_ASSERT(window != NULL); // Fix static analyzers
         if (!IsWindowNavFocusable(window))
             continue;
-        const char* label = window.Name;
+        const char* label = window.name;
         if (label == FindRenderedTextEnd(label))
             label = GetFallbackWindowNameForWindowingList(window);
-        Selectable(label, g.nav_windowing_target == window);
+        selectable(label, g.nav_windowing_target == window);
     }
     end();
     pop_style_var();

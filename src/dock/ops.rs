@@ -230,7 +230,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
 
     // Update child_id to allow returning from Child to Parent with Escape
     ImGuiWindow* parent_window = window.dock_node_id.host_window_id;
-    windowchild_id = parent_window.get_id(window.Name);
+    windowchild_id = parent_window.get_id(window.name);
 }
 
 // void BeginDockableDragDropSource(ImGuiWindow* window)

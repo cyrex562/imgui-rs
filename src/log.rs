@@ -302,21 +302,21 @@ pub fn LogButtons(g: &mut Context)
 
     PushID("LogButtons");
 // #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
-//     const bool log_to_tty = Button("Log To TTY"); SameLine();
+//     const bool log_to_tty = Button("Log To TTY"); same_line();
 // #else
 //     const bool log_to_tty = false;
 // #endif
-//     const bool log_to_file = Button("Log To File"); SameLine();
+//     const bool log_to_file = Button("Log To File"); same_line();
     let log_to_file = Button("Log To File");
-        SameLine();
-// const bool log_to_clipboard = Button("Log To Clipboard"); SameLine();
+        same_line();
+// const bool log_to_clipboard = Button("Log To Clipboard"); same_line();
     let log_to_clipboard = Button("Log To Clipboard");
-        SameLine();
+        same_line();
     PushAllowKeyboardFocus(false);
     SetNextItemWidth(80.0);
     SliderInt("Default Depth", &g.LogDepthToExpandDefault, 0, 9, null());
     PopAllowKeyboardFocus();
-    PopID();
+    pop_id();
 
     // Start logging at the end of the function so that the buttons don't appear in the log
     if (log_to_tty) {

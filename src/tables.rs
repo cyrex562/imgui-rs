@@ -405,7 +405,7 @@ bool    ImGui::BeginTableEx(const char* name, ImGuiID id, int columns_count, ImG
     }
 
     // Push a standardized id for both child-using and not-child-using tables
-    PushOverrideID(instance_id);
+    push_override_id(instance_id);
 
     // Backup a copy of host window members we will modify
     ImGuiWindow* inner_window = table.InnerWindow;
@@ -749,7 +749,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         if (table.DeclColumnsCount <= column_n)
         {
             TableSetupColumnFlags(table, column, ImGuiTableColumnFlags_None);
-            column.NameOffset = -1;
+            column.nameOffset = -1;
             column.UserID = 0;
             column.InitStretchWeightOrWidth = -1.0;
         }
@@ -1109,10 +1109,10 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     if (table.IsContextPopupOpen && table.InstanceCurrent == table.InstanceInteracted)
     {
         const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.id);
-        if (BeginPopupEx(context_menu_id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings))
+        if (begin_popupEx(context_menu_id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings))
         {
             TableDrawContextMenu(table);
-            EndPopup();
+            end_popup();
         }
         else
         {
@@ -1332,7 +1332,7 @@ void    ImGui::EndTable()
     // Pop from id stack
     // IM_ASSERT_USER_ERROR(inner_window.IDStack.back() == table.id + table.InstanceCurrent, "Mismatching PushID/PopID!");
     // IM_ASSERT_USER_ERROR(outer_window.dc.ItemWidthStack.size >= temp_data.HostBackupItemWidthStackSize, "Too many PopItemWidth!");
-    PopID();
+    pop_id();
 
     // Restore window data that we modified
     const Vector2D backup_outer_max_pos = outer_window.dc.cursor_max_pos;
@@ -1345,7 +1345,7 @@ void    ImGui::EndTable()
     outer_window.dc.columns_offset = temp_data.HostBackupColumnsOffset;
 
     // Layout in outer window
-    // (FIXME: To allow auto-fit and allow desirable effect of SameLine() we dissociate 'used' vs 'ideal' size by overriding
+    // (FIXME: To allow auto-fit and allow desirable effect of same_line() we dissociate 'used' vs 'ideal' size by overriding
     // CursorPosPrevLine and CursorMaxPos manually. That should be a more general layout feature, see same problem e.g. #3414)
     if (inner_window != outer_window)
     {
@@ -1466,10 +1466,10 @@ void ImGui::TableSetupColumn(const char* label, ImGuiTableColumnFlags flags, flo
     }
 
     // Store name (append with zero-terminator in contiguous buffer)
-    column.NameOffset = -1;
+    column.nameOffset = -1;
     if (label != NULL && label[0] != 0)
     {
-        column.NameOffset = (ImS16)table.ColumnsNames.size();
+        column.nameOffset = (ImS16)table.ColumnsNames.size();
         table.ColumnsNames.append(label, label + strlen(label) + 1);
     }
 }
@@ -1540,9 +1540,9 @@ const char* ImGui::TableGetColumnName(const ImGuiTable* table, int column_n)
     if (table.IsLayoutLocked == false && column_n >= table.DeclColumnsCount)
         return ""; // NameOffset is invalid at this point
     const ImGuiTableColumn* column = &table.Columns[column_n];
-    if (column.NameOffset == -1)
+    if (column.nameOffset == -1)
         return "";
-    return &table.ColumnsNames.Buf[column.NameOffset];
+    return &table.ColumnsNames.Buf[column.nameOffset];
 }
 
 // Change user accessible enabled/disabled state of a column (often perceived as "showing/hiding" from users point of view)
@@ -2227,7 +2227,7 @@ void ImGui::TableUpdateColumnsWeightFromWidth(ImGuiTable* table)
 // - TableDrawBorders() [Internal]
 //-------------------------------------------------------------------------
 
-// Bg2 is used by Selectable (and possibly other widgets) to render to the background.
+// Bg2 is used by selectable (and possibly other widgets) to render to the background.
 // Unlike our Bg0/1 channel which we uses for RowBg/CellBg/Borders and where we guarantee all shapes to be CPU-clipped, the Bg2 channel being widgets-facing will rely on regular clip_rect.
 void ImGui::TablePushBackgroundChannel()
 {
@@ -2857,7 +2857,7 @@ void ImGui::TableHeadersRow()
         const char* name = (TableGetColumnFlags(column_n) & ImGuiTableColumnFlags_NoHeaderLabel) ? "" : TableGetColumnName(column_n);
         PushID(table.InstanceCurrent * table.ColumnsCount + column_n);
         TableHeader(name);
-        PopID();
+        pop_id();
     }
 
     // Allow opening popup from the right-most section after the last column.
@@ -2869,7 +2869,7 @@ void ImGui::TableHeadersRow()
 
 // Emit a column header (text + optional sort order)
 // We cpu-clip text here so that all columns headers can be merged into a same draw call.
-// Note that because of how we cpu-clip and display sorting indicators, you _cannot_ use SameLine() after a TableHeader()
+// Note that because of how we cpu-clip and display sorting indicators, you _cannot_ use same_line() after a TableHeader()
 void ImGui::TableHeader(const char* label)
 {
     // ImGuiContext& g = *GImGui;
@@ -3004,7 +3004,7 @@ void ImGui::TableHeader(const char* label)
     if (text_clipped && hovered && g.hovered_id_not_active_timer > g.TooltipSlowDelay)
         SetTooltip("%.*s", (label_end - label), label);
 
-    // We don't use BeginPopupContextItem() because we want the popup to stay up even after the column is hidden
+    // We don't use begin_popupContextItem() because we want the popup to stay up even after the column is hidden
     if (IsMouseReleased(1) && IsItemHovered())
         TableOpenContextMenu(column_n);
 }
@@ -3032,7 +3032,7 @@ void ImGui::TableOpenContextMenu(int column_n)
         table.ContextPopupColumn = (ImGuiTableColumnIdx)column_n;
         table.InstanceInteracted = table.InstanceCurrent;
         const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.id);
-        OpenPopupEx(context_menu_id, ImGuiPopupFlags_None);
+        open_popupEx(context_menu_id, ImGuiPopupFlags_None);
     }
 }
 
@@ -3055,7 +3055,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
         if (column != NULL)
         {
             const bool can_resize = !(column.flags & ImGuiTableColumnFlags_NoResize) && column.IsEnabled;
-            if (MenuItem("size column to fit###SizeOne", NULL, false, can_resize))
+            if (menu_item("size column to fit###SizeOne", NULL, false, can_resize))
                 TableSetColumnWidthAutoSingle(table, column_n);
         }
 
@@ -3064,7 +3064,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
             size_all_desc = "size all columns to fit###SizeAll";        // All fixed
         else
             size_all_desc = "size all columns to default###SizeAll";    // All stretch or mixed
-        if (MenuItem(size_all_desc, NULL))
+        if (menu_item(size_all_desc, NULL))
             TableSetColumnWidthAutoAll(table);
         want_separator = true;
     }
@@ -3072,13 +3072,13 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
     // Ordering
     if (table.flags & ImGuiTableFlags_Reorderable)
     {
-        if (MenuItem("Reset order", NULL, false, !table.IsDefaultDisplayOrder))
+        if (menu_item("Reset order", NULL, false, !table.IsDefaultDisplayOrder))
             table.IsResetDisplayOrderRequest = true;
         want_separator = true;
     }
 
     // Reset all (should work but seems unnecessary/noisy to expose?)
-    //if (MenuItem("Reset all"))
+    //if (menu_item("Reset all"))
     //    table->IsResetAllRequest = true;
 
     // Sorting
@@ -3091,9 +3091,9 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
         want_separator = true;
 
         bool append_to_sort_specs = g.io.key_shift;
-        if (MenuItem("Sort in Ascending Order", NULL, column.SortOrder != -1 && column.SortDirection == ImGuiSortDirection_Ascending, (column.flags & ImGuiTableColumnFlags_NoSortAscending) == 0))
+        if (menu_item("Sort in Ascending Order", NULL, column.SortOrder != -1 && column.SortDirection == ImGuiSortDirection_Ascending, (column.flags & ImGuiTableColumnFlags_NoSortAscending) == 0))
             TableSetColumnSortDirection(table, column_n, ImGuiSortDirection_Ascending, append_to_sort_specs);
-        if (MenuItem("Sort in Descending Order", NULL, column.SortOrder != -1 && column.SortDirection == ImGuiSortDirection_Descending, (column.flags & ImGuiTableColumnFlags_NoSortDescending) == 0))
+        if (menu_item("Sort in Descending Order", NULL, column.SortOrder != -1 && column.SortDirection == ImGuiSortDirection_Descending, (column.flags & ImGuiTableColumnFlags_NoSortDescending) == 0))
             TableSetColumnSortDirection(table, column_n, ImGuiSortDirection_Descending, append_to_sort_specs);
     }
 
@@ -3105,7 +3105,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
             Separator();
         want_separator = true;
 
-        push_item_flag(ItemFlags::SelectableDontClosePopup, true);
+        push_item_flag(ItemFlags::selectableDontClosePopup, true);
         for (int other_column_n = 0; other_column_n < table.ColumnsCount; other_column_n += 1)
         {
             ImGuiTableColumn* other_column = &table.Columns[other_column_n];
@@ -3120,7 +3120,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
             bool menu_item_active = (other_column.flags & ImGuiTableColumnFlags_NoHide) ? false : true;
             if (other_column.IsUserEnabled && table.ColumnsEnabledCount <= 1)
                 menu_item_active = false;
-            if (MenuItem(name, NULL, other_column.IsUserEnabled, menu_item_active))
+            if (menu_item(name, NULL, other_column.IsUserEnabled, menu_item_active))
                 other_column.IsUserEnabledNextFrame = !other_column.IsUserEnabled;
         }
         pop_item_flag();
@@ -3486,7 +3486,7 @@ void ImGui::table_gc_compact_transient_buffers(ImGuiTable* table)
     table.ColumnsNames.clear();
     table.MemoryCompacted = true;
     for (int n = 0; n < table.ColumnsCount; n += 1)
-        table.Columns[n].NameOffset = -1;
+        table.Columns[n].nameOffset = -1;
     g.tables_last_time_active[g.tables.GetIndex(table)] = -1.0;
 }
 
@@ -3539,7 +3539,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
     char* p = buf;
     const char* buf_end = buf + IM_ARRAYSIZE(buf);
     const bool is_active = (table.last_frame_active >= ImGui::GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
-    ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.id, table.ColumnsCount, table.OuterWindow.Name, is_active ? "" : " *Inactive*");
+    ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.id, table.ColumnsCount, table.OuterWindow.name, is_active ? "" : " *Inactive*");
     if (!is_active) { push_style_color(StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open = TreeNode(table, "%s", buf);
     if (!is_active) { pop_style_color(); }
@@ -3550,7 +3550,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
     if (!open)
         return;
     if (table.InstanceCurrent > 0)
-        ImGui::Text("** %d instances of same table! Some data below will refer to last instance.", table.InstanceCurrent + 1);
+        ImGui::text("** %d instances of same table! Some data below will refer to last instance.", table.InstanceCurrent + 1);
     bool clear_settings = SmallButton("clear settings");
     BulletText("OuterRect: pos: (%.1,%.1) size: (%.1,%.1) Sizing: '%s'", table.OuterRect.min.x, table.OuterRect.min.y, table.OuterRect.get_width(), table.OuterRect.get_height(), DebugNodeTableGetSizingPolicyDesc(table.flags));
     BulletText("ColumnsGivenWidth: %.1, ColumnsAutoFitWidth: %.1, InnerWidth: %.1%s", table.ColumnsGivenWidth, table.ColumnsAutoFitWidth, table.InnerWidth, table.InnerWidth == 0.0 ? " (auto)" : "");
@@ -3583,7 +3583,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
             (column.flags & ImGuiTableColumnFlags_WidthFixed) ? "WidthFixed " : "",
             (column.flags & ImGuiTableColumnFlags_NoResize) ? "NoResize " : "");
         Bullet();
-        Selectable(buf);
+        selectable(buf);
         if (IsItemHovered())
         {
             Rect r(column.MinX, table.OuterRect.min.y, column.MaxX, table.OuterRect.max.y);
@@ -3833,7 +3833,7 @@ ImGuiID ImGui::GetColumnsID(const char* str_id, int columns_count)
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
     PushID(0x11223347 + (str_id ? 0 : columns_count));
     ImGuiID id = window.get_id(str_id ? str_id : "columns");
-    PopID();
+    pop_id();
 
     return id;
 }

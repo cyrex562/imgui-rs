@@ -348,7 +348,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         ImGuiWindowSettings* settings = (window.settings_offset != -1) ? g.settings_windows.ptr_from_offset(window.settings_offset) : FindWindowSettings(window.id);
         if (!settings)
         {
-            settings = create_new_window_settings(window.Name);
+            settings = create_new_window_settings(window.name);
             window.settings_offset = g.settings_windows.offset_from_ptr(settings);
         }
         // IM_ASSERT(settings.ID == window.id);

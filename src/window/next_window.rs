@@ -18,7 +18,7 @@ pub fn set_next_window_size_constraints(g: &mut Context, size_min: &Vector2D, si
 }
 
 // void ImGui::set_next_window_pos(const Vector2D& pos, ImGuiCond cond, const Vector2D& pivot)
-pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, pivot: Option<_>)
+pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, pivot: Option<Vector2D>)
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.

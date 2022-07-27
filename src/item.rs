@@ -74,7 +74,7 @@ pub enum ItemStatusFlags {
     Edited,
     // value exposed by item was edited in the current frame (should match the bool return value of most widgets)
     ToggledSelection,
-    // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
+    // Set when selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
     ToggledOpen,
     // Set when TreeNode() reports toggling their open state.
     HasDeactivated,
@@ -92,7 +92,7 @@ pub enum ItemStatusFlags {
     Opened,
     //
     Checkable,
-    // Item is a checkable (e.g. CheckBox, MenuItem)
+    // Item is a checkable (e.g. CheckBox, menu_item)
     Checked,   //
 // #endif
 }
@@ -436,8 +436,8 @@ pub enum ItemFlags {
     // false     // Disable keyboard/gamepad directional navigation (FIXME: should merge with _NoTabStop)
     NoNavDefaultFocus,
     // false     // Disable item being a candidate for default focus (e.g. used by title bar items)
-    SelectableDontClosePopup,
-    // false     // Disable MenuItem/Selectable() automatically closing their popup window
+    selectableDontClosePopup,
+    // false     // Disable menu_item/selectable() automatically closing their popup window
     MixedValue,
     // false     // [BETA] Represent a mixed/indeterminate value, generally multi-selection where values differ. Currently only supported by Checkbox() (later should support all sorts of widgets)
     ReadOnly,
@@ -492,7 +492,7 @@ pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
     // but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
     const float offset_to_match_baseline_y = (text_baseline_y >= 0) ? ImMax(0.0, window.dc.CurrLineTextBaseOffset - text_baseline_y) : 0.0;
 
-    const float line_y1 = window.dc.IsSameLine ? window.dc.CursorPosPrevLine.y : window.dc.cursor_pos.y;
+    const float line_y1 = window.dc.Issame_line ? window.dc.CursorPosPrevLine.y : window.dc.cursor_pos.y;
     const float line_height = ImMax(window.dc.CurrLineSize.y, /*ImMax(*/window.dc.cursor_pos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y);
 
     // Always align ourselves on pixel boundaries
@@ -509,11 +509,11 @@ pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
     window.dc.CurrLineSize.y = 0.0;
     window.dc.PrevLineTextBaseOffset = ImMax(window.dc.CurrLineTextBaseOffset, text_baseline_y);
     window.dc.CurrLineTextBaseOffset = 0.0;
-    window.dc.IsSameLine = false;
+    window.dc.Issame_line = false;
 
     // Horizontal layout mode
     if (window.dc.LayoutType == ImGuiLayoutType_Horizontal)
-        SameLine();
+        same_line();
 }
 
 // Declare item bounding box for clipping and interaction.
@@ -580,7 +580,7 @@ pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: Option<&Re
         return false;
     //if (g.io.key_alt) window->draw_list->add_rect(bb.min, bb.max, IM_COL32(255,255,0,120)); // [DEBUG]
 
-    // We need to calculate this now to take account of the current clipping rectangle (as items like Selectable may change them)
+    // We need to calculate this now to take account of the current clipping rectangle (as items like selectable may change them)
     if (IsMouseHoveringRect(bb.min, bb.max))
         g.last_item_data.status_flags |= ImGuiItemStatusFlags_HoveredRect;
     return true;

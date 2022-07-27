@@ -643,7 +643,7 @@ pub fn add_update_viewport(g: &mut Context, window: &mut Window, id: Id32, pos: 
         viewport.flags = flags;
         UpdateViewportPlatformMonitor(viewport);
         g.viewports.push_back(viewport);
-        IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Add viewport %08X '%s'\n", id, window ? window.Name : "<NULL>");
+        IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Add viewport %08X '%s'\n", id, window ? window.name : "<NULL>");
 
         // We normally setup for all viewports in NewFrame() but here need to handle the mid-frame creation of a new viewport.
         // We need to extend the fullscreen clip rect so the OverlayDrawList clip is correct for that the first frame
@@ -686,7 +686,7 @@ pub fn destroy_viewport(g: &mut Context, viewport: &mut Viewport)
         g.mouse_last_hovered_viewport = NULL;
 
     // Destroy
-    IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete viewport %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.Name : "n/a");
+    IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete viewport %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.name : "n/a");
     DestroyPlatformWindow(viewport); // In most circumstances the platform window will already be destroyed here.
     // IM_ASSERT(g.platform_io.viewports.contains(viewport) == false);
     // IM_ASSERT(g.viewports[viewport.Idx] == viewport);
@@ -803,7 +803,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
             if ((window.flags & WindowFlags::DockNodeHost) && window.viewport.last_frame_active < g.frame_count && will_be_visible)
             {
                 // Steal/transfer ownership
-                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] window '%s' steal viewport %08X from window '%s'\n", window.Name, window.viewport.id, window.viewport.Window.Name);
+                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] window '%s' steal viewport %08X from window '%s'\n", window.name, window.viewport.id, window.viewport.Window.name);
                 window.viewport.Window = window;
                 window.viewport.id = window.id;
                 window.viewport.LastNameHash = 0;

@@ -3,7 +3,7 @@ use crate::axis::Axis;
 use crate::context::Context;
 use crate::types::{DataAuthority, Direction};
 use crate::types::Id32;
-use crate::{dock, window};
+use crate::{dock, hash_string, window};
 use crate::color::StyleColor;
 use crate::condition::Condition;
 use crate::dock::context::dock_context_remove_node;
@@ -17,8 +17,10 @@ use crate::frame::get_frame_height;
 use crate::input::mouse::{start_mouse_moving_window, start_mouse_moving_window_or_node};
 use crate::input::NavLayer;
 use crate::item::ItemFlags;
+use crate::layout::same_line;
 use crate::nodes::{pop_style_var, push_style_var};
 use crate::payload::PayloadDataType;
+use crate::popup::{begin_popup, end_popup, is_popup_open, open_popup};
 use crate::rect::Rect;
 use crate::settings::mark_ini_settings_dirty;
 use crate::style::{get_color_u32, get_color_u32_no_alpha, pop_style_color, push_style_color};
@@ -29,6 +31,7 @@ use crate::vectors::ImLengthSqr;
 use crate::vectors::two_d::Vector2D;
 use crate::window::class::WindowClass;
 use crate::window::{Window, WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
+use crate::window::current::{pop_id, push_override_id};
 use crate::window::layer::{bring_window_to_display_front, focus_window};
 use crate::window::lifecycle::{begin, end, update_window_parent_and_root_links};
 use crate::window::next_window::{set_next_window_class, set_next_window_collapsed, set_next_window_pos, set_next_window_size, set_next_window_viewport};
@@ -1235,7 +1238,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode)
     {
         node.want_close_all = false;
         node.want_close_tab_id = 0;
-        node.IsFocused = false;
+        node.is_focused = false;
     }
     if node.tab_bar.is_some() && node.tab_bar.unwrap().selected_tab_id != INVALID_ID {
         node.selected_tab_id = node.tab_bar.unwrap().selected_tab_id;
@@ -1287,33 +1290,39 @@ pub fn dock_node_update_window_menu(g: &mut Context, node: &mut DockNode, tab_ba
 {
     // Try to position the menu so it is more likely to stays within the same viewport
     // ImGuiContext& g = *GImGui;
-    ImGuiID ret_tab_id = INVALID_ID;
-    if (g.style.window_menu_button_position == Direction::Left)
-        set_next_window_pos(Vector2D::new(node.pos.x, node.pos.y + get_frame_height()), Cond::Always, Vector2D::new(0.0, 0.0));
-    else
-        set_next_window_pos(Vector2D::new(node.pos.x + node.size.x, node.pos.y + get_frame_height()), Cond::Always, Vector2D::new(1.0, 0.0));
-    if (BeginPopup("#WindowMenu"))
+    let mut ret_tab_id: Id32 = INVALID_ID;
+    if g.style.window_menu_button_position == Direction::Left {
+        set_next_window_pos(g, &Vector2D::new(node.pos.x, node.pos.y + get_frame_height(g)), Cond::Always, Some(Vector2D::new(0.0, 0.0)));
+    }
+    else {
+        set_next_window_pos(g, &Vector2D::new(node.pos.x + node.size.x, node.pos.y + get_frame_height(g)), Cond::Always, Some(Vector2D::new(1.0, 0.0)));
+    }
+    if begin_popup(g, "#WindowMenu", None)
     {
-        node.IsFocused = true;
-        if (tab_bar.tabs.size == 1)
+        node.is_focused = true;
+        if tab_bar.tabs.size == 1
         {
-            if (MenuItem("Hide tab bar", NULL, node.is_hidden_tab_bar()))
+            if menu_item("Hide tab bar", None, node.is_hidden_tab_bar()) {
                 node.want_hidden_tab_bar_toggle = true;
+            }
         }
         else
         {
-            for (int tab_n = 0; tab_n < tab_bar.tabs.size; tab_n += 1)
+            // for (int tab_n = 0; tab_n < tab_bar.tabs.size; tab_n += 1)
+           for tab_n in 0 .. tab_bar.tabs.len()
             {
-                ImGuiTabItem* tab = &tab_bar.tabs[tab_n];
-                if (tab.flags & TabItemFlags::Button)
+                let tab = &tab_bar.tabs[tab_n];
+                if tab.flags.contains(&TabItemFlags::Button) {
                     continue;
-                if (Selectable(tab_bar.GetTabName(tab), tab.id == tab_bar.selected_tab_id))
+                }
+                if selectable(tab_bar.get_tab_name(tab), tab.id == tab_bar.selected_tab_id) {
                     ret_tab_id = tab.id;
-                SameLine();
-                Text("   ");
+                }
+                same_line(g, 0f32, 0f32);
+                text("   ");
             }
         }
-        EndPopup();
+        end_popup(g);
     }
     return ret_tab_id;
 }
@@ -1322,14 +1331,16 @@ pub fn dock_node_update_window_menu(g: &mut Context, node: &mut DockNode, tab_ba
 // bool DockNodeBeginAmendTabBar(ImGuiDockNode* node)
 pub fn dock_node_begin_amend_tab_bar(g: &mut Context, node: &mut DockNode) -> bool
 {
-    if (node.tab_bar == NULL || node.host_window_id == NULL)
+    if node.tab_bar.is_none() || node.host_window_id == INVALID_ID {
         return false;
-    if (node.merged_flags & DockNodeFlags::KeepAliveOnly)
+    }
+    if node.merged_flags.contains(&DockNodeFlags::KeepAliveOnly) {
         return false;
-    begin(node.host_window_id.Name);
-    PushOverrideID(node.id);
-    bool ret = BeginTabBarEx(node.tab_bar, node.tab_bar.BarRect, node.tab_bar.flags, node);
-    IM_UNUSED(ret);
+    }
+    begin(g, node.host_window_id.name, None, None);
+    push_override_id(g, node.id);
+    let ret = begin_tab_bar_ex(&node.tab_bar, node.tab_bar.BarRect, node.tab_bar.flags, node);
+    // IM_UNUSED(ret);
     // IM_ASSERT(ret);
     return true;
 }
@@ -1337,9 +1348,9 @@ pub fn dock_node_begin_amend_tab_bar(g: &mut Context, node: &mut DockNode) -> bo
 // void DockNodeEndAmendTabBar()
 pub fn dock_node_end_amend_tab_bar(g: &mut Context)
 {
-    EndTabBar();
-    PopID();
-    end();
+    end_tab_bar(g);
+    pop_id(g);
+    end(g);
 }
 
 // static bool IsDockNodeTitleBarHighlighted(ImGuiDockNode* node, ImGuiDockNode* root_node, ImGuiWindow* host_window)
@@ -1347,57 +1358,83 @@ pub fn is_dock_node_title_bar_hihglighted(g: &mut Context, node: &mut DockNode, 
 {
     // CTRL+Tab highlight (only highlighting leaf node, not whole hierarchy)
     // ImGuiContext& g = *GImGui;
-    if (g.nav_windowing_target)
-        return (g.nav_windowing_target.dock_node == node);
+    if g.nav_windowing_target_id != INVALID_ID {
+        let nav_win_target = g.get_window(g.nav_windowing_target_id);
+        return nav_win_target.dock_node_id == node.id;
+    }
 
     // FIXME-DOCKING: May want alternative to treat central node void differently? e.g. if (g.nav_window == host_window)
-    if (g.nav_window && g.nav_window.root_window_for_title_bar_highlight == host_window.root_window_dock_tree && root_node.last_focused_node_id == node.id)
-        for (ImGuiDockNode* parent_node = g.nav_window.root_window.dock_node; parent_node != NULL; parent_node = parent_node.host_window ? parent_node.host_window.root_window.dock_node : NULL)
-            if ((parent_node = dock_node_get_root_node(parent_node)) == root_node)
+    if g.nav_window_id != INVALID_ID && g.get_window(g.nav_window_id).root_window_for_title_bar_highlight_id == host_window.root_window_dock_tree_id && root_node.last_focused_node_id == node.id {
+        // for (ImGuiDockNode* parent_node = g.nav_window.root_window.dock_node; parent_node != NULL; parent_node = parent_node.host_window ? parent_node.host_window.root_window.dock_node : NULL){
+        let nav_win = g.get_window(g.nav_window_id);
+
+        let mut parent_node: Option<&mut DockNode> = g.get_dock_node(nav_win.dock_node_id);
+        while parent_node.is_some() {
+            parent_node = Some(dock_node_get_root_node(g, parent_node.unwrap()));
+            if parent_node.unwrap().id == root_node.id {
                 return true;
+            }
+            // if ((parent_node = dock_node_get_root_node(parent_node)) == root_node) {
+            //     return true;
+            // }
+
+            let parent_node_host_win = g.get_window(parent_node.unwrap().host_window_id);
+            parent_node = if parent_node.unwrap().host_window_id != INVALID_ID {
+                g.get_dock_node(parent_node_host_win.dock_node_id)
+            } else {
+                let root_win = g.get_window(parent_node_host_win.root_window_id);
+                g.get_dock_node(root_win.dock_node_id);
+            };
+        }
+    }
     return false;
 }
 
 // Submit the tab bar corresponding to a dock node and various housekeeping details.
 // static void DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_window)
-pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_window: &mut window::Window)
+pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiStyle& style = g.style;
+    // ImGuiStyle& style = g.style;
+    let style = &mut g.style;
 
-    const bool node_was_active = (node.last_frame_active + 1 == g.frame_count);
-    const bool closed_all = node.want_close_all && node_was_active;
-    const ImGuiID closed_one = node.want_close_tab_id && node_was_active;
+    let node_was_active = (node.last_frame_active + 1 == g.frame_count);
+    let closed_all = node.want_close_all && node_was_active;
+    let closed_one = node.want_close_tab_id != INVALID_ID && node_was_active;
     node.want_close_all = false;
     node.want_close_tab_id = 0;
 
     // Decide if we should use a focused title bar color
-    bool is_focused = false;
-    ImGuiDockNode* root_node = dock_node_get_root_node(node);
-    if (IsDockNodeTitleBarHighlighted(node, root_node, host_window))
+    let mut is_focused = false;
+    ImGuiDockNode* root_node = dock_node_get_root_node(g, node);
+    if is_dock_node_title_bar_highlighted(node, root_node, host_window) {
         is_focused = true;
+    }
 
     // hidden tab bar will show a triangle on the upper-left (in Begin)
-    if (node.is_hidden_tab_bar() || node.is_no_tab_bar())
+    if node.is_hidden_tab_bar() || node.is_no_tab_bar()
     {
-        node.visible_window_id = (node.windows.len() > 0) ? node.windows[0] : NULL;
-        node.IsFocused = is_focused;
-        if (is_focused)
-            node.LastFrameFocused = g.frame_count;
-        if (node.visible_window_id)
+        node.visible_window_id = if node.windows.len() > 0 { node.windows[0] } else { INVALID_ID };
+        node.is_focused = is_focused;
+        if is_focused {
+            node.last_frame_focused = g.frame_count;
+        }
+        if node.visible_window_id
         {
             // Notify root of visible window (used to display title in OS task bar)
-            if (is_focused || root_node.visible_window == NULL)
+            if is_focused || root_node.visible_window == INVALID_ID {
                 root_node.visible_window = node.visible_window_id;
-            if (node.tab_bar)
-                node.tab_bar.VisibleTabId = node.visible_window_id.tab_id;
+            }
+            if node.tab_bar {
+                node.tab_bar.visible_tab_id = node.visible_window_id.tab_id;
+            }
         }
         return;
     }
 
     // Move ourselves to the Menu layer (so we can be accessed by tapping Alt) + undo skip_items flag in order to draw over the title bar even if the window is collapsed
-    bool backup_skip_item = host_window.skip_items;
-    if (!node.is_dock_space())
+    let backup_skip_item = host_window.skip_items;
+    if !node.is_dock_space()
     {
         host_window.skip_items = false;
         host_window.dcnav_layer_current = NavLayer::Menu;
@@ -1406,59 +1443,84 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     // Use PushOverrideID() instead of PushID() to use the node id _without_ the host window id.
     // This is to facilitate computing those id from the outside, and will affect more or less only the id of the collapse button, popup and tabs,
     // as docked windows themselves will override the stack with their own root id.
-    PushOverrideID(node.id);
-    ImGuiTabBar* tab_bar = node.tab_bar;
-    bool tab_bar_is_recreated = (tab_bar == NULL); // Tab bar are automatically destroyed when a node gets hidden
-    if (tab_bar == NULL)
+    push_override_id(g, node.id);
+    let mut tab_bar = &mut node.tab_bar;
+    let tab_bar_is_recreated = (tab_bar.is_none()); // Tab bar are automatically destroyed when a node gets hidden
+    if tab_bar.is_none()
     {
-        dock_node_add_tab_bar(node);
-        tab_bar = node.tab_bar;
+        dock_node_add_tab_bar(g, node);
+        tab_bar = &mut node.tab_bar;
     }
 
-    ImGuiID focus_tab_id = INVALID_ID;
-    node.IsFocused = is_focused;
+    let mut focus_tab_id: Id32 = INVALID_ID;
+    node.is_focused = is_focused;
 
-    const ImGuiDockNodeFlags node_flags = node.merged_flags;
-    const bool has_window_menu_button = (node_flags & DockNodeFlags::NoWindowMenuButton) == 0 && (style.window_menu_button_position != Direction::None);
+    let node_flags = node.merged_flags.clone();
+    let has_window_menu_button = node_flags.contains(&DockNodeFlags::NoWindowMenuButton) == false && (style.window_menu_button_position != Direction::None);
 
     // In a dock node, the Collapse Button turns into the window Menu button.
     // FIXME-DOCK FIXME-OPT: Could we recycle popups id across multiple dock nodes?
-    if (has_window_menu_button && IsPopupOpen("#WindowMenu"))
+    if has_window_menu_button && is_popup_open(g, hash_string("#WindowMenu", 0), None)
     {
-        if (ImGuiID tab_id = DockNodeUpdateWindowMenu(node, tab_bar))
-            focus_tab_id = tab_bar.next_selected_tab_id = tab_id;
-        is_focused |= node.IsFocused;
+        let tab_id = dock_node_update_window_menu(g, node, &mut tab_bar.unwrap());
+        if tab_id != INVALID_ID {
+            tab_bar.unwrap().next_selected_tab_id = tab_id;
+            focus_tab_id = tab_id;
+        }
+        is_focused |= node.is_focused;
     }
 
     // Layout
-    Rect title_bar_rect, tab_bar_rect;
-    Vector2D window_menu_button_pos;
-    Vector2D close_button_pos;
-    DockNodeCalcTabBarLayout(node, &title_bar_rect, &tab_bar_rect, &window_menu_button_pos, &close_button_pos);
+    // Rect title_bar_rect, tab_bar_rect;
+    let mut title_bar_rect = Rect::default();
+    let mut tab_bar_rect = Rect::default();
+    // Vector2D window_menu_button_pos;
+    let mut window_menu_button_pos = Vector2D::default();
+    // Vector2D close_button_pos = V;
+    let mut close_button_pos = Vector2D::default();
+
+
+    dock_node_calc_tab_bar_layout(g, node, &mut title_bar_rect, &mut tab_bar_rect, &mut window_menu_button_pos, &mut close_button_pos);
 
     // Submit new tabs, they will be added as Unsorted and sorted below based on relative dock_order value.
-    const int tabs_count_old = tab_bar.tabs.size;
-    for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
+    let tabs_count_old = tab_bar.unwrap().tabs.size;
+    // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
+    for window_n in 0..node.windows.len()
     {
-        ImGuiWindow* window = node.windows[window_n];
-        if (TabBarFindTabByID(tab_bar, window.tab_id) == NULL)
+        let window = g.get_window(node.windows[window_n]);
+        if tab_bar_find_tab_by_id(tab_bar, window.tab_id).is_none() {
             tab_bar_add_tab(tab_bar, TabItemFlags::Unsorted, window);
+        }
     }
 
     // Title bar
-    if (is_focused)
-        node.LastFrameFocused = g.frame_count;
-    ImU32 title_bar_col = get_color_u32(host_window.collapsed ? StyleColor::TitleBgCollapsed : is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg);
-    ImDrawFlags rounding_flags = calc_rounding_flags_for_rect_in_rect(title_bar_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE);
-    host_window.draw_list.add_rect_filled(title_bar_rect.min, title_bar_rect.max, title_bar_col, host_window.WindowRounding, rounding_flags);
+    if is_focused {
+        node.last_frame_focused = g.frame_count;
+    }
+    // ImU32 title_bar_col = get_color_u32(host_window.collapsed ? StyleColor::TitleBgCollapsed : is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg);
+    let title_bar_col = get_color_u32_no_alpha(
+        if host_window.collapsed {
+            StyleColor::TitleBgCollapsed
+        } else {
+            if is_focused {
+                StyleColor::TitleBgActive
+            } else {
+                StyleColor::TitleBg
+            }
+        }
+    );
+    let rounding_flags = calc_rounding_flags_for_rect_in_rect(title_bar_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE);
+    g.get_draw_list(host_window.draw_list_id).add_rect_filled(&title_bar_rect.min, &title_bar_rect.max, title_bar_col, host_window.WindowRounding, rounding_flags);
 
     // Docking/Collapse button
-    if (has_window_menu_button)
+    if has_window_menu_button
     {
-        if (collapse_button(host_window.get_id("#COLLAPSE"), window_menu_button_pos, node)) // == DockNodeGetWindowMenuButtonId(node)
-            OpenPopup("#WindowMenu");
-        if (IsItemActive())
+        if collapse_button(host_window.get_id(g, "#COLLAPSE"), window_menu_button_pos, node) { // == DockNodeGetWindowMenuButtonId(node)
+            open_popup(g, "#WindowMenu", None);
+        }
+        if (is_item_active()) {
             focus_tab_id = tab_bar.selected_tab_id;
+        }
     }
 
     // If multiple tabs are appearing on the same frame, sort them based on their persistent dock_order value
@@ -1483,7 +1545,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         tab_bar.selected_tab_id = g.nav_window.root_window.id;
 
     // Selected newly added tabs, or persistent tab id if the tab bar was just recreated
-    if (tab_bar_is_recreated && TabBarFindTabByID(tab_bar, node.selected_tab_id) != NULL)
+    if (tab_bar_is_recreated && tab_bar_find_tab_by_id(tab_bar, node.selected_tab_id) != NULL)
         tab_bar.selected_tab_id = tab_bar.next_selected_tab_id = node.selected_tab_id;
     else if (tab_bar.tabs.size > tabs_count_old)
         tab_bar.selected_tab_id = tab_bar.next_selected_tab_id = tab_bar.tabs.back().Window.tab_id;
@@ -1493,7 +1555,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     tab_bar_flags |= ImGuiTabBarFlags_SaveSettings | ImGuiTabBarFlags_DockNode;
     if (!host_window.collapsed && is_focused)
         tab_bar_flags |= ImGuiTabBarFlags_IsFocused;
-    BeginTabBarEx(tab_bar, tab_bar_rect, tab_bar_flags, node);
+    begin_tab_bar_ex(tab_bar, tab_bar_rect, tab_bar_flags, node);
     //host_window->draw_list->add_rect(tab_bar_rect.min, tab_bar_rect.max, IM_COL32(255,0,255,255));
 
     // Backup style colors
@@ -1523,10 +1585,10 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
 
             // Note that TabItemEx() calls TabBarCalcTabID() so our tab item id will ignore the current id stack (rightly so)
             bool tab_open = true;
-            TabItemEx(tab_bar, window.Name, window.has_close_button ? &tab_open : NULL, tab_item_flags, window);
+            TabItemEx(tab_bar, window.name, window.has_close_button ? &tab_open : NULL, tab_item_flags, window);
             if (!tab_open)
                 node.want_close_tab_id = window.tab_id;
-            if (tab_bar.VisibleTabId == window.tab_id)
+            if (tab_bar.visible_tab_id == window.tab_id)
                 node.visible_window_id = window;
 
             // Store last item data so it can be queried with IsItemXXX functions after the user Begin() call
@@ -1595,7 +1657,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
                 focus_tab_id = tab_bar.selected_tab_id;
 
             // Forward moving request to selected window
-            if (ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, tab_bar.selected_tab_id))
+            if (ImGuiTabItem* tab = tab_bar_find_tab_by_id(tab_bar, tab_bar.selected_tab_id))
                 start_mouse_moving_window_or_node(tab.Window ? tab.Window : node.host_window, node, false);
         }
     }
@@ -1611,15 +1673,15 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
 
     // Apply navigation focus
     if (focus_tab_id != 0)
-        if (ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, focus_tab_id))
+        if (ImGuiTabItem* tab = tab_bar_find_tab_by_id(tab_bar, focus_tab_id))
             if (tab.Window)
             {
                 focus_window(tab.Window);
                 nav_init_window(tab.Window, false);
             }
 
-    EndTabBar();
-    PopID();
+    end_tab_bar();
+    pop_id();
 
     // Restore skip_items flag
     if (!node.is_dock_space())
@@ -1947,18 +2009,18 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     {
         // Compute target tab bar geometry so we can locate our preview tabs
         Rect tab_bar_rect;
-        DockNodeCalcTabBarLayout(&data.FutureNode, NULL, &tab_bar_rect, NULL, NULL);
+        dock_node_calc_tab_bar_layout(&data.FutureNode, NULL, &tab_bar_rect, NULL, NULL);
         Vector2D tab_pos = tab_bar_rect.min;
         if (host_node && host_node.tab_bar)
         {
             if (!host_node.is_hidden_tab_bar() && !host_node.is_no_tab_bar())
                 tab_pos.x += host_node.tab_bar.WidthAllTabs + g.style.item_inner_spacing.x; // We don't use OffsetNewTab because when using non-persistent-order tab bar it is incremented with each Tab submission.
             else
-                tab_pos.x += g.style.item_inner_spacing.x + TabItemCalcSize(host_node.windows[0].Name, host_node.windows[0].has_close_button).x;
+                tab_pos.x += g.style.item_inner_spacing.x + TabItemCalcSize(host_node.windows[0].name, host_node.windows[0].has_close_button).x;
         }
         else if (!(host_window.flags & WindowFlags::DockNodeHost))
         {
-            tab_pos.x += g.style.item_inner_spacing.x + TabItemCalcSize(host_window.Name, host_window.has_close_button).x; // Account for slight offset which will be added when changing from title bar to tab bar
+            tab_pos.x += g.style.item_inner_spacing.x + TabItemCalcSize(host_window.name, host_window.has_close_button).x; // Account for slight offset which will be added when changing from title bar to tab bar
         }
 
         // Draw tab shape/label preview (payload may be a loose window or a host window carrying multiple tabbed windows)
@@ -1976,7 +2038,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
                 continue;
 
             // Calculate the tab bounding box for each payload window
-            Vector2D tab_size = TabItemCalcSize(payload_window.Name, payload_window.has_close_button);
+            Vector2D tab_size = TabItemCalcSize(payload_window.name, payload_window.has_close_button);
             Rect tab_bb(tab_pos.x, tab_pos.y, tab_pos.x + tab_size.x, tab_pos.y + tab_size.y);
             tab_pos.x += tab_size.x + g.style.item_inner_spacing.x;
             const ImU32 overlay_col_text = get_color_u32(payload_window.DockStyle.colors[ImGuiWindowDockStyleCol_Text]);
@@ -1988,7 +2050,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
                 if (!tab_bar_rect.Contains(tab_bb))
                     overlay_draw_lists[overlay_n].push_clip_rect(tab_bar_rect.min, tab_bar_rect.max);
                 TabItemBackground(overlay_draw_lists[overlay_n], tab_bb, tab_flags, overlay_col_tabs);
-                TabItemLabelAndCloseButton(overlay_draw_lists[overlay_n], tab_bb, tab_flags, g.style.frame_padding, payload_window.Name, 0, 0, false, NULL, NULL);
+                TabItemLabelAndCloseButton(overlay_draw_lists[overlay_n], tab_bb, tab_flags, g.style.frame_padding, payload_window.name, 0, 0, false, NULL, NULL);
                 if (!tab_bar_rect.Contains(tab_bb))
                     overlay_draw_lists[overlay_n].pop_clip_rect();
             }
@@ -2356,7 +2418,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode)
                     mark_ini_settings_dirty();
                 }
             }
-            PopID();
+            pop_id();
         }
     }
 

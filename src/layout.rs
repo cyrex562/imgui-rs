@@ -15,7 +15,7 @@ pub enum LayoutType
 //      offset_from_start_x != 0 : align to specified x position (relative to window/group left)
 //      spacing_w < 0            : use default spacing if pos_x == 0, no spacing if pos_x != 0
 //      spacing_w >= 0           : enforce spacing amount
-// void SameLine(float offset_from_start_x, float spacing_w)
+// void same_line(float offset_from_start_x, float spacing_w)
 pub fn same_line(g: &mut Context, offset_from_start_x: f32, spacing_w: f32)
 {
     // ImGuiContext& g = *GImGui;
@@ -39,5 +39,5 @@ pub fn same_line(g: &mut Context, offset_from_start_x: f32, spacing_w: f32)
     }
     window.dc.CurrLineSize = window.dc.PrevLineSize;
     window.dc.CurrLineTextBaseOffset = window.dc.PrevLineTextBaseOffset;
-    window.dc.IsSameLine = true;
+    window.dc.Issame_line = true;
 }

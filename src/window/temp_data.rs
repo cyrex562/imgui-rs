@@ -29,7 +29,7 @@ pub struct WindowTempData {
     pub curr_line_text_base_offset: f32,
     // float                   PrevLineTextBaseOffset;
     pub prev_line_text_base_offset: f32,
-    // bool                    IsSameLine;
+    // bool                    Issame_line;
     pub is_same_line: bool,
     // ImVec1                  Indent;                 // Indentation / start position from left of window (increased by TreePush/TreePop, etc.)
     pub indent: Vector1D,

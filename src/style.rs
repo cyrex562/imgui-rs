@@ -70,7 +70,7 @@ pub struct Style {
     // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
     pub ButtonTextAlign: Vector2D,
     // Alignment of button text when button is larger than text. Defaults to (0.5, 0.5) (centered).
-    pub SelectableTextAlign: Vector2D,
+    pub selectableTextAlign: Vector2D,
     // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
     pub DisplayWindowPadding: Vector2D,
     // window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
@@ -129,7 +129,7 @@ impl Style {
         out.TabMinWidthForCloseButton = 0.0;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to FLT_MAX to never show close button unless selected.
         out.ColorButtonPosition = ImGuiDirection::Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
         out.ButtonTextAlign = Vector2D::new(0.5, 0.5);// Alignment of button text when button is larger than text.
-        out.SelectableTextAlign = Vector2D::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
+        out.selectableTextAlign = Vector2D::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
         out.DisplayWindowPadding = Vector2D::new(19.0, 19.0);    // window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
         out.DisplaySafeAreaPadding = Vector2D::new(3.0, 3.0);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
         out.MouseCursorScale = 1.0;             // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). May be removed later.
@@ -369,7 +369,7 @@ pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
 //     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, GrabRounding) ),        // ImGuiStyleVar_GrabRounding
 //     ImGuiStyleVarInfo::new( DataType::Float, 1, IM_OFFSETOF(ImGuiStyle, TabRounding) ),         // ImGuiStyleVar_TabRounding
 //     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) ),     // ImGuiStyleVar_ButtonTextAlign
-//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, SelectableTextAlign) ), // ImGuiStyleVar_SelectableTextAlign
+//     ImGuiStyleVarInfo::new( DataType::Float, 2, IM_OFFSETOF(ImGuiStyle, selectableTextAlign) ), // ImGuiStyleVar_selectableTextAlign
 // ];
 
 // static const ImGuiStyleVarInfo* get_style_var_info(ImGuiStyleVar idx)
@@ -719,6 +719,6 @@ pub enum DimgStyleVar
     GrabRounding,        // float     GrabRounding
     TabRounding,         // float     TabRounding
     ButtonTextAlign,     // Vector2D    ButtonTextAlign
-    SelectableTextAlign, // Vector2D    SelectableTextAlign
+    selectableTextAlign, // Vector2D    selectableTextAlign
     COUNT
 }

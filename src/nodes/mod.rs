@@ -1669,10 +1669,10 @@ void EndPinAttribute()
     // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Attribute);
     GImNodes.CurrentScope = ImNodesScope_Node;
 
-    ImGui::PopID();
+    ImGui::pop_id();
     ImGui::EndGroup();
 
-    if (ImGui::IsItemActive())
+    if (ImGui::is_item_active())
     {
         GImNodes.ActiveAttribute = true;
         GImNodes.ActiveAttributeId = GImNodes.CurrentAttributeId;
@@ -2500,7 +2500,7 @@ void EndNode()
 
     // The node's rectangle depends on the ImGui UI group size.
     ImGui::EndGroup();
-    ImGui::PopID();
+    ImGui::pop_id();
 
     ImNodeData& node = editor.Nodes.Pool[GImNodes.CurrentNodeIdx];
     node.Rect = GetItemRect();
@@ -2576,10 +2576,10 @@ void EndStaticAttribute()
     // IM_ASSERT(GImNodes.CurrentScope == ImNodesScope_Attribute);
     GImNodes.CurrentScope = ImNodesScope_Node;
 
-    ImGui::PopID();
+    ImGui::pop_id();
     ImGui::EndGroup();
 
-    if (ImGui::IsItemActive())
+    if (ImGui::is_item_active())
     {
         GImNodes.ActiveAttribute = true;
         GImNodes.ActiveAttributeId = GImNodes.CurrentAttributeId;

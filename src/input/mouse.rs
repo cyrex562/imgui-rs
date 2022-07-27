@@ -547,7 +547,7 @@ pub fn get_mouse_pos(g: &mut Context) -> Vector2D
     return g.io.mouse_pos;
 }
 
-// NB: prefer to call right after BeginPopup(). At the time Selectable/MenuItem is activated, the popup is already closed!
+// NB: prefer to call right after begin_popup(). At the time selectable/menu_item is activated, the popup is already closed!
 // Vector2D GetMousePosOnOpeningCurrentPopup()
 pub fn get_mouse_pos_on_opening_current_popup(g: &mut Context) -> Vector2D
 {

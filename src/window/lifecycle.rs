@@ -276,7 +276,7 @@ pub fn update_window_parent_and_root_links(
 // - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
 // - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
 // bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
-pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut HashSet<WindowFlags>) -> bool
+pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Option<&mut HashSet<WindowFlags>>) -> bool
 {
     // ImGuiContext& g = *GImGui;
     // const ImGuiStyle& style = g.style;
@@ -506,11 +506,11 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
             window_title_visible_elsewhere = true;
         else if (g.nav_windowing_list_window != NULL && (window.flags & WindowFlags::NoNavFocus) == 0)   // window titles visible when using CTRL+TAB
             window_title_visible_elsewhere = true;
-        if (window_title_visible_elsewhere && !window_just_created && strcmp(name, window.Name) != 0)
+        if (window_title_visible_elsewhere && !window_just_created && strcmp(name, window.name) != 0)
         {
-            size_t buf_len = window.NameBufLen;
-            window.Name = ImStrdupcpy(window.Name, &buf_len, name);
-            window.NameBufLen = buf_len;
+            size_t buf_len = window.nameBufLen;
+            window.name = ImStrdupcpy(window.name, &buf_len, name);
+            window.nameBufLen = buf_len;
         }
 
         // UPDATE CONTENTS SIZE, UPDATE HIDDEN STATUS
@@ -643,8 +643,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         if (window_just_activated_by_user)
         {
             window.AutoPosLastDirection = Direction::None;
-            if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: BeginPopup() could use set_next_window_pos()
-                window.pos = g.begin_popup_stack.back().OpenPopupPos;
+            if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: begin_popup() could use set_next_window_pos()
+                window.pos = g.begin_popup_stack.back().open_popupPos;
         }
 
         // Position child window
@@ -756,7 +756,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
             // IM_ASSERT(window.IDStack.size == 1);
             window.idStack.size = 0;
             IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.id);
-            IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.Name, (g.hovered_window == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
+            IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.name, (g.hovered_window == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
             window.idStack.size = 1;
         }
 
@@ -838,7 +838,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
 
         // Inner clipping rectangle.
         // Will extend a little bit outside the normal work region.
-        // This is to allow e.g. Selectable or CollapsingHeader or some separators to cover that space.
+        // This is to allow e.g. selectable or CollapsingHeader or some separators to cover that space.
         // Force round operator last to ensure that e.g. (max.x-min.x) in user's render code produce correct result.
         // Note that if our window is collapsed we will end up with an inverted (~null) clipping rectangle which is the correct behavior.
         // Affected by window/frame border size. Used by:
@@ -948,7 +948,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
         window.dc.ideal_max_pos = window.dc.cursor_start_pos;
         window.dc.CurrLineSize = window.dc.PrevLineSize = Vector2D::new(0.0, 0.0);
         window.dc.CurrLineTextBaseOffset = window.dc.PrevLineTextBaseOffset = 0.0;
-        window.dc.IsSameLine = false;
+        window.dc.Issame_line = false;
 
         window.dcnav_layer_current = NavLayer::Main;
         window.dc.nav_layers_active_mask = window.dc.NavLayersActiveMaskNext;
@@ -989,7 +989,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: &mut
             {
                 window.viewport.PlatformRequestClose = false;
                 g.NavWindowingToggleLayer = false; // Assume user mapped platform_request_close on ALT-F4 so we disable ALT for menu toggle. False positive not an issue.
-                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] window '%s' platform_request_close\n", window.Name);
+                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] window '%s' platform_request_close\n", window.name);
                 *p_open = false;
             }
         }

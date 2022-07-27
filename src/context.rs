@@ -226,7 +226,7 @@ pub struct Context {
     pub group_stack: Vec<GroupData>,
     // ImVector<ImGuiPopupData>open_popup_stack;                     // Which popups are open (persistent)
     pub open_popup_stack: Vec<PopupData>,
-    // ImVector<ImGuiPopupData>begin_popup_stack;                    // Which level of BeginPopup() we are in (reset every frame)
+    // ImVector<ImGuiPopupData>begin_popup_stack;                    // Which level of begin_popup() we are in (reset every frame)
     pub begin_popup_stack: Vec<PopupData>,
     // int                     begin_menu_count;
     pub begin_menu_count: i32,

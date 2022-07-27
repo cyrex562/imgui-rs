@@ -379,7 +379,7 @@ pub struct Table
     pub RowCellDataCurrent: ImGuiTableColumnIdx,
     // ImGuiTableDrawChannelIdx    DummyDrawChannel;           // Redirect non-visible columns here.
     pub DummyDrawChannel: ImGuiTableDrawChannelIdx,
-    // ImGuiTableDrawChannelIdx    Bg2DrawChannelCurrent;      // For Selectable() and other widgets drawing across columns after the freezing line. index within DrawSplitter.Channels[]
+    // ImGuiTableDrawChannelIdx    Bg2DrawChannelCurrent;      // For selectable() and other widgets drawing across columns after the freezing line. index within DrawSplitter.Channels[]
     pub Bg2DrawChannelCurrent: ImGuiTableColumnIdx,
     // ImGuiTableDrawChannelIdx    Bg2DrawChannelUnfrozen;
     pub Bg2DrawChannelUnfrozen: ImGuiTableColumnIdx,

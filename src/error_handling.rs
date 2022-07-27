@@ -165,12 +165,12 @@ pub fn error_check_end_frame_recover(g: &mut Context, log_callback: ErrorLogCall
         }
         if (window.flags & WindowFlags::ChildWindow)
         {
-            if (log_callback) log_callback(user_data, "Recovered from missing EndChild() for '%s'", window.Name);
+            if (log_callback) log_callback(user_data, "Recovered from missing EndChild() for '%s'", window.name);
             end_child();
         }
         else
         {
-            if (log_callback) log_callback(user_data, "Recovered from missing End() for '%s'", window.Name);
+            if (log_callback) log_callback(user_data, "Recovered from missing End() for '%s'", window.name);
             end();
         }
     }
@@ -183,7 +183,7 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
     // ImGuiContext& g = *GImGui;
     while (g.current_table && (g.current_table.OuterWindow == g.current_window || g.current_table.InnerWindow == g.current_window))
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing EndTable() in '%s'", g.current_table.OuterWindow.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing EndTable() in '%s'", g.current_table.OuterWindow.name);
         EndTable();
     }
 
@@ -192,47 +192,47 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
     // IM_ASSERT(window != NULL);
     while (g.CurrentTabBar != NULL) //-V1044
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing EndTabBar() in '%s'", window.Name);
-        EndTabBar();
+        if (log_callback) log_callback(user_data, "Recovered from missing EndTabBar() in '%s'", window.name);
+        end_tab_bar();
     }
     while (window.dc.TreeDepth > 0)
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing TreePop() in '%s'", window.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing TreePop() in '%s'", window.name);
         TreePop();
     }
     while (g.group_stack.size > stack_sizes.sizeOfGroupStack) //-V1044
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing EndGroup() in '%s'", window.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing EndGroup() in '%s'", window.name);
         EndGroup();
     }
     while (window.idStack.size > 1)
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing PopID() in '%s'", window.Name);
-        PopID();
+        if (log_callback) log_callback(user_data, "Recovered from missing PopID() in '%s'", window.name);
+        pop_id();
     }
     while (g.disabled_stack_size > stack_sizes.sizeOfDisabledStack) //-V1044
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing EndDisabled() in '%s'", window.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing EndDisabled() in '%s'", window.name);
         EndDisabled();
     }
     while (g.color_stack.size > stack_sizes.sizeOfColorStack)
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing PopStyleColor() in '%s' for ImGuiCol_%s", window.Name, GetStyleColorName(g.color_stack.back().Col));
+        if (log_callback) log_callback(user_data, "Recovered from missing PopStyleColor() in '%s' for ImGuiCol_%s", window.name, GetStyleColorName(g.color_stack.back().Col));
         pop_style_color();
     }
     while (g.item_flags_stack.size > stack_sizes.sizeOfItemFlagsStack) //-V1044
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing PopItemFlag() in '%s'", window.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing PopItemFlag() in '%s'", window.name);
         pop_item_flag();
     }
     while (g.style_var_stack.size > stack_sizes.sizeOfStyleVarStack) //-V1044
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing PopStyleVar() in '%s'", window.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing PopStyleVar() in '%s'", window.name);
         pop_style_var();
     }
     while (g.FocusScopeStack.size > stack_sizes.sizeOfFocusScopeStack) //-V1044
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing PopFocusScope() in '%s'", window.Name);
+        if (log_callback) log_callback(user_data, "Recovered from missing PopFocusScope() in '%s'", window.name);
         PopFocusScope();
     }
 }

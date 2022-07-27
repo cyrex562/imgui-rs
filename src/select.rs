@@ -1,5 +1,5 @@
 // Extend
-pub enum DimgSelectableFlags
+pub enum DimgselectableFlags
 {
     // NB: need to be in sync with last value of
     NoHoldingActiveID     ,
@@ -8,6 +8,6 @@ pub enum DimgSelectableFlags
     SelectOnRelease       ,  // Override button behavior to react on Release (default is Click+Release)
     SpanAvailWidth        ,  // Span all avail width even if we declared less for layout purpose. FIXME: We may be able to remove this (added in 6251d379, 2bcafc86 for menus)
     DrawHoveredWhenHeld   ,  // Always show active when held, even is not hovered. This concept could probably be renamed/formalized somehow.
-    SetNavIdOnHover       ,  // Set Nav/Focus id on mouse hover (used by MenuItem)
+    SetNavIdOnHover       ,  // Set Nav/Focus id on mouse hover (used by menu_item)
     NoPadWithHalfSpacing   = 1 << 27   // Disable padding each side with ItemSpacing * 0.5
 }

@@ -90,7 +90,7 @@ pub fn update_platform_windows(g: &mut Context)
         bool is_new_platform_window = (viewport.platform_window_created == false);
         if (is_new_platform_window)
         {
-            IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform window %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.Name : "n/a");
+            IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform window %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.name : "n/a");
             g.platform_io.Platform_CreateWindow(viewport);
             if (g.platform_io.Renderer_CreateWindow != NULL)
                 g.platform_io.Renderer_CreateWindow(viewport);
@@ -113,7 +113,7 @@ pub fn update_platform_windows(g: &mut Context)
         // Update title bar (if it changed)
         if (ImGuiWindow* window_for_title = GetWindowForTitleDisplay(viewport.Window))
         {
-            const char* title_begin = window_for_title.Name;
+            const char* title_begin = window_for_title.name;
             char* title_end = (char*)(intptr_t)FindRenderedTextEnd(title_begin);
             const ImGuiID title_hash = ImHashStr(title_begin, title_end - title_begin);
             if (viewport.LastNameHash != title_hash)

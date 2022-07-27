@@ -51,7 +51,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
         window.draw_list->AddRectFilled(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::WindowBg, alpha_mul));
         window.draw_list->AddRectFilled(title_r.min, title_r.max, get_color_u32(window_is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg, alpha_mul));
         window.draw_list->AddRect(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::Border, alpha_mul));
-        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.Name, FindRenderedTextEnd(thumb_window.Name));
+        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, FindRenderedTextEnd(thumb_window.name));
     }
     draw_list->AddRect(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul));
 }
@@ -90,7 +90,7 @@ pub fn viewport_comparer_by_front_most_stamp_count(g: &mut Context, lhs: &Vec<u8
 // void DebugTextEncoding(const char* str)
 pub fn debug_text_encoding(g: &mut Context, text: &str)
 {
-    Text("Text: \"%s\"", str);
+    text("Text: \"%s\"", str);
     if (!BeginTable("list", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit))
         return;
     TableSetupColumn("Offset");
@@ -103,13 +103,13 @@ pub fn debug_text_encoding(g: &mut Context, text: &str)
         unsigned int c;
         const int c_utf8_len = ImTextCharFromUtf8(&c, p, NULL);
         TableNextColumn();
-        Text("%d", (p - str));
+        text("%d", (p - str));
         TableNextColumn();
         for (int byte_index = 0; byte_index < c_utf8_len; byte_index += 1)
         {
             if (byte_index > 0)
-                SameLine();
-            Text("0x%02X", (unsigned char)p[byte_index]);
+                same_line();
+            text("0x%02X", (unsigned char)p[byte_index]);
         }
         TableNextColumn();
         if (GetFont()->FindGlyphNoFallback((ImWchar)c))
@@ -117,7 +117,7 @@ pub fn debug_text_encoding(g: &mut Context, text: &str)
         else
             TextUnformatted((c == IM_UNICODE_CODEPOINT_INVALID) ? "[invalid]" : "[missing]");
         TableNextColumn();
-        Text("U+%04X", c);
+        text("U+%04X", c);
         p += c_utf8_len;
     }
     EndTable();
@@ -147,7 +147,7 @@ pub fn show_font_atlas(g: &mut Context, atlas: &mut FontAtlas)
         ImFont* font = atlas->Fonts[i];
         PushID(font);
         DebugNodeFont(font);
-        PopID();
+        pop_id();
     }
     if (TreeNode("Atlas texture", "Atlas texture (%dx%d pixels)", atlas->TexWidth, atlas->TexHeight))
     {
@@ -176,11 +176,11 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     }
 
     // Basic info
-    Text("Dear ImGui %s", GetVersion());
-    Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / io.frame_rate, io.frame_rate);
-    Text("%d vertices, %d indices (%d triangles)", io.metrics_render_vertices, io.metrics_render_indices, io.metrics_render_indices / 3);
-    Text("%d visible windows, %d active allocations", io.metrics_render_windows, io.MetricsActiveAllocations);
-    //SameLine(); if (SmallButton("GC")) { g.gc_compact_all = true; }
+    text("Dear ImGui %s", GetVersion());
+    text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / io.frame_rate, io.frame_rate);
+    text("%d vertices, %d indices (%d triangles)", io.metrics_render_vertices, io.metrics_render_indices, io.metrics_render_indices / 3);
+    text("%d visible windows, %d active allocations", io.metrics_render_windows, io.MetricsActiveAllocations);
+    //same_line(); if (SmallButton("GC")) { g.gc_compact_all = true; }
 
     Separator();
 
@@ -235,7 +235,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     if (TreeNode("Tools"))
     {
         bool show_encoding_viewer = TreeNode("UTF-8 Encoding viewer");
-        SameLine();
+        same_line();
         MetricsHelpMarker("You can also call DebugTextEncoding() from your code with a given string to test that your UTF-8 encoding settings are correct.");
         if (show_encoding_viewer)
         {
@@ -250,22 +250,22 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         // The Item Picker tool is super useful to visually select an item and break into the call-stack of where it was submitted.
         if (Checkbox("Show Item Picker", &g.DebugItemPickerActive) && g.DebugItemPickerActive)
             DebugStartItemPicker();
-        SameLine();
+        same_line();
         MetricsHelpMarker("Will call the IM_DEBUG_BREAK() macro to break in debugger.\nWarning: If you don't have a debugger attached, this will probably crash.");
 
         // Stack Tool is your best friend!
         Checkbox("Show Debug Log", &cfg->ShowDebugLog);
-        SameLine();
+        same_line();
         MetricsHelpMarker("You can also call ShowDebugLogWindow() from your code.");
 
         // Stack Tool is your best friend!
         Checkbox("Show Stack Tool", &cfg->ShowStackTool);
-        SameLine();
+        same_line();
         MetricsHelpMarker("You can also call ShowStackToolWindow() from your code.");
 
         Checkbox("Show windows begin order", &cfg->ShowWindowsBeginOrder);
         Checkbox("Show windows rectangles", &cfg->ShowWindowsRects);
-        SameLine();
+        same_line();
         SetNextItemWidth(GetFontSize() * 12);
         cfg->ShowWindowsRects |= Combo("##show_windows_rect_type", &cfg->ShowWindowsRectsType, wrt_rects_names, WRT_Count, WRT_Count);
         if (cfg->ShowWindowsRects && g.nav_window != NULL)
@@ -275,13 +275,13 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             for (int rect_n = 0; rect_n < WRT_Count; rect_n += 1)
             {
                 Rect r = Funcs::GetWindowRect(g.nav_window, rect_n);
-                Text("(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), wrt_rects_names[rect_n]);
+                text("(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), wrt_rects_names[rect_n]);
             }
             Unindent();
         }
 
         Checkbox("Show tables rectangles", &cfg->ShowTablesRects);
-        SameLine();
+        same_line();
         SetNextItemWidth(GetFontSize() * 12);
         cfg->ShowTablesRects |= Combo("##show_table_rects_type", &cfg->ShowTablesRectsType, trt_rects_names, TRT_Count, TRT_Count);
         if (cfg->ShowTablesRects && g.nav_window != NULL)
@@ -307,7 +307,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                         {
                             Rect r = Funcs::GetTableRect(table, rect_n, column_n);
                             ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) col %d %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), column_n, trt_rects_names[rect_n]);
-                            Selectable(buf);
+                            selectable(buf);
                             if (IsItemHovered())
                                 get_foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                         }
@@ -316,7 +316,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                     {
                         Rect r = Funcs::GetTableRect(table, rect_n, -1);
                         ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), trt_rects_names[rect_n]);
-                        Selectable(buf);
+                        selectable(buf);
                         if (IsItemHovered())
                             get_foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                     }
@@ -367,7 +367,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 for (int draw_list_i = 0; draw_list_i < viewport.draw_data_builder.layers[layer_i].size; draw_list_i += 1)
                 {
                     if (!viewport_has_drawlist)
-                        Text("active DrawLists in viewport #%d, id: 0x%08X", viewport->Idx, viewport->ID);
+                        text("active DrawLists in viewport #%d, id: 0x%08X", viewport->Idx, viewport->ID);
                     viewport_has_drawlist = true;
                     DebugNodeDrawList(NULL, viewport, viewport.draw_data_builder.layers[layer_i][draw_list_i], "draw_list");
                 }
@@ -383,7 +383,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         Unindent(GetTreeNodeToLabelSpacing());
 
         bool open = TreeNode("Monitors", "Monitors (%d)", g.platform_io.monitors.size);
-        SameLine();
+        same_line();
         MetricsHelpMarker("Dear ImGui uses monitor data:\n- to query DPI settings on a per monitor basis\n- to position popup/tooltips so they don't straddle monitors.");
         if (open)
         {
@@ -422,7 +422,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         for (int i = 0; i < g.open_popup_stack.size; i += 1)
         {
             ImGuiWindow* window = g.open_popup_stack[i].Window;
-            BulletText("PopupID: %08x, window: '%s'%s%s", g.open_popup_stack[i].PopupId, window ? window.Name : "NULL", window && (window.flags & WindowFlags::ChildWindow) ? " ChildWindow" : "", window && (window.flags & WindowFlags::ChildMenu) ? " ChildMenu" : "");
+            BulletText("PopupID: %08x, window: '%s'%s%s", g.open_popup_stack[i].PopupId, window ? window.name : "NULL", window && (window.flags & WindowFlags::ChildWindow) ? " ChildWindow" : "", window && (window.flags & WindowFlags::ChildMenu) ? " ChildMenu" : "");
         }
         TreePop();
     }
@@ -435,7 +435,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             {
                 PushID(tab_bar);
                 DebugNodeTabBar(tab_bar, "tab_bar");
-                PopID();
+                pop_id();
             }
         TreePop();
     }
@@ -473,7 +473,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         Checkbox("List root nodes", &root_nodes_only);
         Checkbox("Ctrl shows window dock info", &cfg->ShowDockingNodes);
         if (SmallButton("clear nodes")) { DockContextClearNodes(&g, 0, true); }
-        SameLine();
+        same_line();
         if (SmallButton("Rebuild all")) { dc->WantFullRebuild = true; }
         for (int n = 0; n < dc->Nodes.data.size; n += 1)
             if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.data[n].val_p)
@@ -485,11 +485,11 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         if (TreeNode("SettingsDocking", "Settings packed data: Docking"))
         {
             ImGuiDockContext* dc = &g.dock_context;
-            Text("In settings_windows:");
+            text("In settings_windows:");
             for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != NULL; settings = g.settings_windows.next_chunk(settings))
                 if (settings.dock_id != 0)
                     BulletText("window '%s' -> dock_id %08X", settings->GetName(), settings.dock_id);
-            Text("In SettingsNodes:");
+            text("In SettingsNodes:");
             for (int n = 0; n < dc->NodesSettings.size; n += 1)
             {
                 ImGuiDockNodeSettings* settings = &dc->NodesSettings[n];
@@ -497,7 +497,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 if (settings->SelectedTabId)
                 {
                     if (ImGuiWindow* window = find_window_by_id(settings->SelectedTabId))
-                        selected_tab_name = window.Name;
+                        selected_tab_name = window.name;
                     else if (ImGuiWindowSettings* window_settings = FindWindowSettings(settings->SelectedTabId))
                         selected_tab_name = window_settings->GetName();
                 }
@@ -518,40 +518,40 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 // Misc Details
     if (TreeNode("Internal state"))
     {
-        Text("WINDOWING");
+        text("WINDOWING");
         Indent();
-        Text("hovered_window: '%s'", g.hovered_window ? g.hovered_window->Name : "NULL");
-        Text("hovered_window->Root: '%s'", g.hovered_window ? g.hovered_window->root_window_dock_tree->Name : "NULL");
-        Text("hovered_window_under_moving_window: '%s'", g.hovered_window_under_moving_window ? g.hovered_window_under_moving_window->Name : "NULL");
-        Text("hovered_dock_node: 0x%08X", g.hovered_dock_node ? g.hovered_dock_node->ID : 0);
-        Text("moving_window: '%s'", g.moving_window ? g.moving_window->Name : "NULL");
-        Text("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport->ID, g.io.MouseHoveredViewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
+        text("hovered_window: '%s'", g.hovered_window ? g.hovered_window->Name : "NULL");
+        text("hovered_window->Root: '%s'", g.hovered_window ? g.hovered_window->root_window_dock_tree->Name : "NULL");
+        text("hovered_window_under_moving_window: '%s'", g.hovered_window_under_moving_window ? g.hovered_window_under_moving_window->Name : "NULL");
+        text("hovered_dock_node: 0x%08X", g.hovered_dock_node ? g.hovered_dock_node->ID : 0);
+        text("moving_window: '%s'", g.moving_window ? g.moving_window->Name : "NULL");
+        text("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport->ID, g.io.MouseHoveredViewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
         Unindent();
 
-        Text("ITEMS");
+        text("ITEMS");
         Indent();
-        Text("active_id: 0x%08X/0x%08X (%.2 sec), AllowOverlap: %d, Source: %s", g.active_id, g.active_id_previous_frame, g.active_id_timer, g.ActiveIdAllowOverlap, GetInputSourceName(g.active_id_source));
-        Text("active_id_window: '%s'", g.active_id_window ? g.active_id_window->Name : "NULL");
+        text("active_id: 0x%08X/0x%08X (%.2 sec), AllowOverlap: %d, Source: %s", g.active_id, g.active_id_previous_frame, g.active_id_timer, g.ActiveIdAllowOverlap, GetInputSourceName(g.active_id_source));
+        text("active_id_window: '%s'", g.active_id_window ? g.active_id_window->Name : "NULL");
 
         int active_id_using_key_input_count = 0;
         for (int n = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n += 1)
             active_id_using_key_input_count += g.active_id_using_key_input_mask[n] ? 1 : 0;
-        Text("ActiveIdUsing: Wheel: %d, NavDirMask: %x, NavInputMask: %x, KeyInputMask: %d key(s)", g.active_id_using_mouse_wheel, g.active_id_using_nav_dir_mask, g.active_id_using_nav_input_mask, active_id_using_key_input_count);
-        Text("hovered_id: 0x%08X (%.2 sec), AllowOverlap: %d", g.hovered_id_previous_frame, g.hovered_id_timer, g.hovered_id_allow_overlap); // Not displaying g.hovered_id as it is update mid-frame
-        Text("DragDrop: %d, source_id = 0x%08X, Payload \"%s\" (%d bytes)", g.drag_drop_active, g.drag_drop_payload.source_id, g.drag_drop_payload.dataType, g.drag_drop_payload.dataSize);
+        text("ActiveIdUsing: Wheel: %d, NavDirMask: %x, NavInputMask: %x, KeyInputMask: %d key(s)", g.active_id_using_mouse_wheel, g.active_id_using_nav_dir_mask, g.active_id_using_nav_input_mask, active_id_using_key_input_count);
+        text("hovered_id: 0x%08X (%.2 sec), AllowOverlap: %d", g.hovered_id_previous_frame, g.hovered_id_timer, g.hovered_id_allow_overlap); // Not displaying g.hovered_id as it is update mid-frame
+        text("DragDrop: %d, source_id = 0x%08X, Payload \"%s\" (%d bytes)", g.drag_drop_active, g.drag_drop_payload.source_id, g.drag_drop_payload.dataType, g.drag_drop_payload.dataSize);
         Unindent();
 
-        Text("NAV,FOCUS");
+        text("NAV,FOCUS");
         Indent();
-        Text("nav_window: '%s'", g.nav_window ? g.nav_window->Name : "NULL");
-        Text("nav_id: 0x%08X, nav_layer: %d", g.nav_id, g.NavLayer);
-        Text("nav_input_source: %s", GetInputSourceName(g.nav_input_source));
-        Text("nav_active: %d, nav_visible: %d", g.io.nav_active, g.io.NavVisible);
-        Text("nav_activate_id/DownId/PressedId/InputId: %08X/%08X/%08X/%08X", g.nav_activate_id, g.NavActivateDownId, g.NavActivatePressedId, g.NavActivateInputId);
-        Text("nav_activate_flags: %04X", g.NavActivateFlags);
-        Text("NavDisableHighlight: %d, nav_disable_mouse_hover: %d", g.nav_disable_highlight, g.nav_disable_mouse_hover);
-        Text("nav_focus_scope_id = 0x%08X", g.NavFocusScopeId);
-        Text("nav_windowing_target: '%s'", g.nav_windowing_target ? g.nav_windowing_target->Name : "NULL");
+        text("nav_window: '%s'", g.nav_window ? g.nav_window->Name : "NULL");
+        text("nav_id: 0x%08X, nav_layer: %d", g.nav_id, g.NavLayer);
+        text("nav_input_source: %s", GetInputSourceName(g.nav_input_source));
+        text("nav_active: %d, nav_visible: %d", g.io.nav_active, g.io.NavVisible);
+        text("nav_activate_id/DownId/PressedId/InputId: %08X/%08X/%08X/%08X", g.nav_activate_id, g.NavActivateDownId, g.NavActivatePressedId, g.NavActivateInputId);
+        text("nav_activate_flags: %04X", g.NavActivateFlags);
+        text("NavDisableHighlight: %d, nav_disable_mouse_hover: %d", g.nav_disable_highlight, g.nav_disable_mouse_hover);
+        text("nav_focus_scope_id = 0x%08X", g.NavFocusScopeId);
+        text("nav_windowing_target: '%s'", g.nav_windowing_target ? g.nav_windowing_target->Name : "NULL");
         Unindent();
 
         TreePop();
@@ -650,7 +650,7 @@ pub fn debug_node_dock_node_flags(g: &mut Context, p_flags: &HashSet<DockNodeFla
     using namespace ImGui;
     PushID(label);
     push_style_var(StyleVar::frame_padding, Vector2D::new(0.0, 0.0));
-    Text("%s:", label);
+    text("%s:", label);
     if (!enabled)
         BeginDisabled();
     CheckboxFlags("NoSplit", p_flags, DockNodeFlags::NoSplit);
@@ -670,7 +670,7 @@ pub fn debug_node_dock_node_flags(g: &mut Context, p_flags: &HashSet<DockNodeFla
     if (!enabled)
         EndDisabled();
     pop_style_var();
-    PopID();
+    pop_id();
 }
 
 // [DEBUG] Display contents of ImDockNode
@@ -743,7 +743,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
     bool node_open = TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->VtxBuffer.size, draw_list->IdxBuffer.size, cmd_count);
     if (draw_list == GetWindowDrawList())
     {
-        SameLine();
+        same_line();
         TextColored(Vector4D(1.0, 0.4, 0.4, 1.0), "CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
         if (node_open)
             TreePop();
@@ -792,7 +792,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
 
         // Display vertex information summary. Hover to get all triangles drawn in wire-frame
         ImFormatString(buf, IM_ARRAYSIZE(buf), "Mesh: elem_count: %d, vtx_offset: +%d, idx_offset: +%d, Area: ~%0.f px", pcmd->ElemCount, pcmd->VtxOffset, pcmd->IdxOffset, total_area);
-        Selectable(buf);
+        selectable(buf);
         if (IsItemHovered() && fg_draw_list)
             DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, true, false);
 
@@ -812,7 +812,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
                         (n == 0) ? "Vert:" : "     ", idx_i, v.pos.x, v.pos.y, v.uv.x, v.uv.y, v.col);
                 }
 
-                Selectable(buf, false);
+                selectable(buf, false);
                 if (fg_draw_list && IsItemHovered())
                 {
                     ImDrawListFlags backup_flags = fg_draw_list.flags;
@@ -862,8 +862,8 @@ pub fn debug_node_draw_cmd_show_mesh_and_bounding_box(g: &mut Context, out_draw_
 pub fn debug_node_font(g: &mut Context, font: &mut Font)
 {
     bool opened = TreeNode(font, "font: \"%s\"\n%.2 px, %d glyphs, %d file(s)",
-        font->ConfigData ? font->ConfigData[0].Name : "", font->FontSize, font->Glyphs.size, font->ConfigDataCount);
-    SameLine();
+        font->ConfigData ? font->ConfigData[0].name : "", font->FontSize, font->Glyphs.size, font->ConfigDataCount);
+    same_line();
     if (SmallButton("Set as default"))
         GetIO().FontDefault = font;
     if (!opened)
@@ -871,24 +871,24 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
 
     // Display preview text
     PushFont(font);
-    Text("The quick brown fox jumps over the lazy dog");
+    text("The quick brown fox jumps over the lazy dog");
     PopFont();
 
     // Display details
     SetNextItemWidth(GetFontSize() * 8);
     DragFloat("font scale", &font->Scale, 0.005, 0.3, 2.0, "%.1");
-    SameLine(); MetricsHelpMarker(
+    same_line(); MetricsHelpMarker(
         "Note than the default embedded font is NOT meant to be scaled.\n\n"
         "font are currently rendered into bitmaps at a given size at the time of building the atlas. "
         "You may oversample them to get some flexibility with scaling. "
         "You can also render at multiple sizes and select which one to use at runtime.\n\n"
         "(Glimmer of hope: the atlas system will be rewritten in the future to make scaling more flexible.)");
-    Text("ascent: %f, descent: %f, height: %f", font->Ascent, font->Descent, font->Ascent - font->Descent);
+    text("ascent: %f, descent: %f, height: %f", font->Ascent, font->Descent, font->Ascent - font->Descent);
     char c_str[5];
-    Text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
-    Text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
+    text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
+    text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
     const int surface_sqrt = ImSqrt((float)font->MetricsTotalSurface);
-    Text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
+    text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
     for (int config_i = 0; config_i < font->ConfigDataCount; config_i += 1)
         if (font->ConfigData)
             if (const ImFontConfig* cfg = &font->ConfigData[config_i])
@@ -953,12 +953,12 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
 // void DebugNodeFontGlyph(ImFont*, const ImFontGlyph* glyph)
 pub fn debug_node_font_glyph(g: &mut Context, font: &mut Font, glyph: &FontGlyph)
 {
-    Text("codepoint: U+%04X", glyph->Codepoint);
+    text("codepoint: U+%04X", glyph->Codepoint);
     Separator();
-    Text("visible: %d", glyph->Visible);
-    Text("advance_x: %.1", glyph->AdvanceX);
-    Text("pos: (%.2,%.2)->(%.2,%.2)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
-    Text("UV: (%.3,%.3)->(%.3,%.3)", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
+    text("visible: %d", glyph->Visible);
+    text("advance_x: %.1", glyph->AdvanceX);
+    text("pos: (%.2,%.2)->(%.2,%.2)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
+    text("UV: (%.3,%.3)->(%.3,%.3)", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
 }
 
 // [DEBUG] Display contents of ImGuiStorage
@@ -990,7 +990,7 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
     {
         ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
         p += ImFormatString(p, buf_end - p, "%s'%s'",
-            tab_n > 0 ? ", " : "", (tab->Window || tab->NameOffset != -1) ? tab_bar->GetTabName(tab) : "???");
+            tab_n > 0 ? ", " : "", (tab->Window || tab->NameOffset != -1) ? tab_bar->get_tab_name(tab) : "???");
     }
     p += ImFormatString(p, buf_end - p, (tab_bar->Tabs.size > 3) ? " ... }" : " } ");
     if (!is_active) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
@@ -1009,11 +1009,11 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
         {
             const ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
             PushID(tab);
-            if (SmallButton("<")) { TabBarQueueReorder(tab_bar, tab, -1); } SameLine(0, 2);
-            if (SmallButton(">")) { TabBarQueueReorder(tab_bar, tab, +1); } SameLine();
-            Text("%02d%c Tab 0x%08X '%s' Offset: %.1, width: %.1/%.1",
-                tab_n, (tab->ID == tab_bar->SelectedTabId) ? '*' : ' ', tab->ID, (tab->Window || tab->NameOffset != -1) ? tab_bar->GetTabName(tab) : "???", tab->Offset, tab->Width, tab->ContentWidth);
-            PopID();
+            if (SmallButton("<")) { TabBarQueueReorder(tab_bar, tab, -1); } same_line(0, 2);
+            if (SmallButton(">")) { TabBarQueueReorder(tab_bar, tab, +1); } same_line();
+            text("%02d%c Tab 0x%08X '%s' Offset: %.1, width: %.1/%.1",
+                tab_n, (tab->ID == tab_bar->SelectedTabId) ? '*' : ' ', tab->ID, (tab->Window || tab->NameOffset != -1) ? tab_bar->get_tab_name(tab) : "???", tab->Offset, tab->Width, tab->ContentWidth);
+            pop_id();
         }
         TreePop();
     }
@@ -1030,7 +1030,7 @@ pub fn debug_node_viewport(g: &mut Context, viewport: &mut Viewport)
             viewport.pos.x, viewport.pos.y, viewport.size.x, viewport.size.y,
             viewport->WorkOffsetMin.x, viewport->WorkOffsetMin.y, viewport->WorkOffsetMax.x, viewport->WorkOffsetMax.y,
             viewport->PlatformMonitor, viewport->DpiScale * 100.0);
-        if (viewport->Idx > 0) { SameLine(); if (SmallButton("Reset pos")) { viewport.pos = Vector2D::new(200, 200); viewport.update_work_rect(); if (viewport->Window) viewport->Window.pos = viewport.pos; } }
+        if (viewport->Idx > 0) { same_line(); if (SmallButton("Reset pos")) { viewport.pos = Vector2D::new(200, 200); viewport.update_work_rect(); if (viewport->Window) viewport->Window.pos = viewport.pos; } }
         BulletText("flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
             (flags & ImGuiViewportFlags_IsPlatformMonitor) ? " IsPlatformMonitor" : "",
@@ -1065,7 +1065,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     const bool is_active = window.was_active;
     ImGuiTreeNodeFlags tree_node_flags = (window == g.nav_window) ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
     if (!is_active) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
-    const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.Name, is_active ? "" : " *Inactive*");
+    const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.name, is_active ? "" : " *Inactive*");
     if (!is_active) { pop_style_color(); }
     if (IsItemHovered() && is_active)
         get_foreground_draw_list(window)->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
@@ -1123,7 +1123,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
 // void DebugNodeWindowSettings(ImGuiWindowSettings* settings)
 pub fn debug_node_window_Settings(g: &mut Context, settings: &mut WindowSettings)
 {
-    Text("0x%08X \"%s\" pos (%d,%d) size (%d,%d) collapsed=%d",
+    text("0x%08X \"%s\" pos (%d,%d) size (%d,%d) collapsed=%d",
         settings->ID, settings->GetName(), settings.pos.x, settings.pos.y, settings.size.x, settings.size.y, settings.collapsed);
 }
 
@@ -1136,7 +1136,7 @@ pub fn debug_node_windows_list(g: &mut Context, windows: &mut Vec<Id32>, label: 
     {
         PushID((*windows)[i]);
         DebugNodeWindow((*windows)[i], "window");
-        PopID();
+        pop_id();
     }
     TreePop();
 }
@@ -1180,8 +1180,8 @@ pub fn update_debug_tool_item_picker(g: &mut Context)
     }
     set_netxt_window_bg_alpha(0.60);
     BeginTooltip();
-    Text("hovered_id: 0x%08X", hovered_id);
-    Text("Press ESC to abort picking.");
+    text("hovered_id: 0x%08X", hovered_id);
+    text("Press ESC to abort picking.");
     TextColored(GetStyleColorVec4(hovered_id ? StyleColor::Text : StyleColor::TextDisabled), "Click to break in debugger!");
     EndTooltip();
 }
@@ -1282,7 +1282,7 @@ pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format
     ImGuiStackLevelInfo* info = &tool->Results[n];
     ImGuiWindow* window = (info->Desc[0] == 0 && n == 0) ? find_window_by_id(info->ID) : NULL;
     if (window)                                                                 // Source: window name (because the root id don't call GetID() and so doesn't get hooked)
-        return ImFormatString(buf, buf_size, format_for_ui ? "\"%s\" [window]" : "%s", window.Name);
+        return ImFormatString(buf, buf_size, format_for_ui ? "\"%s\" [window]" : "%s", window.name);
     if (info->QuerySuccess)                                                     // Source: GetID() hooks (prioritize over ItemInfo() because we frequently use patterns like: PushID(str), Button("") where they both have same id)
         return ImFormatString(buf, buf_size, (format_for_ui && info->DataType == DataType::String) ? "\"%s\"" : "%s", info->Desc);
     if (tool->StackLevel < tool->Results.size)                                  // Only start using fallback below when all queries are done, so during queries we don't flickering ??? markers.
@@ -1312,17 +1312,17 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
     const ImGuiID hovered_id = g.hovered_id_previous_frame;
     const ImGuiID active_id = g.active_id;
 #ifdef IMGUI_ENABLE_TEST_ENGINE
-    Text("hovered_id: 0x%08X (\"%s\"), active_id:  0x%08X (\"%s\")", hovered_id, hovered_id ? ImGuiTestEngine_FindItemDebugLabel(&g, hovered_id) : "", active_id, active_id ? ImGuiTestEngine_FindItemDebugLabel(&g, active_id) : "");
+    text("hovered_id: 0x%08X (\"%s\"), active_id:  0x%08X (\"%s\")", hovered_id, hovered_id ? ImGuiTestEngine_FindItemDebugLabel(&g, hovered_id) : "", active_id, active_id ? ImGuiTestEngine_FindItemDebugLabel(&g, active_id) : "");
 #else
-    Text("hovered_id: 0x%08X, active_id:  0x%08X", hovered_id, active_id);
+    text("hovered_id: 0x%08X, active_id:  0x%08X", hovered_id, active_id);
 
-    SameLine();
+    same_line();
     MetricsHelpMarker("Hover an item with the mouse to display elements of the id Stack leading to the item's final id.\nEach level of the stack correspond to a PushID() call.\nAll levels of the stack are hashed together to make the final id of a widget (id displayed at the bottom level of the stack).\nRead FAQ entry about the id stack for details.");
 
     // CTRL+C to copy path
     const float time_since_copy = g.time - tool->CopyToClipboardLastTime;
     Checkbox("Ctrl+C: copy path to clipboard", &tool->CopyToClipboardOnCtrlC);
-    SameLine();
+    same_line();
     TextColored((time_since_copy >= 0.0 && time_since_copy < 0.75 && f32::mod(time_since_copy, 0.25) < 0.25 * 0.5) ? Vector4D(1.f, 1.f, 0.3, 1.f) : Vector4D(), "*COPIED*");
     if (tool->CopyToClipboardOnCtrlC && IsKeyDown(Key::ModCtrl) && IsKeyPressed(ImGuiKey_C))
     {
@@ -1358,12 +1358,12 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
         {
             ImGuiStackLevelInfo* info = &tool->Results[n];
             TableNextColumn();
-            Text("0x%08X", (n > 0) ? tool->Results[n - 1].id : 0);
+            text("0x%08X", (n > 0) ? tool->Results[n - 1].id : 0);
             TableNextColumn();
             StackToolFormatLevelInfo(tool, n, true, g.TempBuffer.data, g.TempBuffer.size);
             TextUnformatted(g.TempBuffer.data);
             TableNextColumn();
-            Text("0x%08X", info->ID);
+            text("0x%08X", info->ID);
             if (n == tool->Results.size - 1)
                 TableSetBgColor(ImGuiTableBgTarget_CellBg, get_color_u32(StyleColor::Header));
         }

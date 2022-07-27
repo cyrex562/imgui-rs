@@ -253,7 +253,7 @@ pub enum StyleColor {
     ButtonHovered,
     ButtonActive,
     Header,
-    // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+    // Header* colors are used for CollapsingHeader, TreeNode, selectable, menu_item
     HeaderHovered,
     HeaderActive,
     Separator,

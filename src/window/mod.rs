@@ -513,8 +513,8 @@ pub enum WindowFlags {
     NavFlattened, // [BETA] On child window: allow gamepad/keyboard navigation to cross over parent border to this child or between sibling child windows.
     ChildWindow,  // Don't use! For internal use by BeginChild()
     Tooltip,      // Don't use! For internal use by BeginTooltip()
-    Popup,        // Don't use! For internal use by BeginPopup()
-    Modal,        // Don't use! For internal use by BeginPopupModal()
+    Popup,        // Don't use! For internal use by begin_popup()
+    Modal,        // Don't use! For internal use by begin_popupModal()
     ChildMenu,    // Don't use! For internal use by BeginMenu()
     DockNodeHost, // Don't use! For internal use by Begin()/NewFrame()
                             // [Obsolete]

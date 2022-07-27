@@ -190,7 +190,7 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
     *window.dc.cursor_max_pos.y = ImMaxF32(window.dc.cursor_max_pos.y, pos_y - g.style.ItemSpacing.y);
     // window->dc.CursorPosPrevLine.y = window->dc.cursor_pos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
     *window.dc.CursorPosPrevLine.y = window.dc.cursor_pos.y - line_height;
-    // window->dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
+    // window->dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use same_line) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
     *window.dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y);
     let columns = window.dc.current_columns;
     if (columns.is_null() == false) {
@@ -349,7 +349,7 @@ bool ImGuiListClipper::Step()
 
         // Convert position ranges to item index ranges
         // - Very important: when a starting position is after our maximum item, we set min to (ItemsCount - 1). This allows us to handle most forms of wrapping.
-        // - Due to how Selectable extra padding they tend to be "unaligned" with exact unit in the item list,
+        // - Due to how selectable extra padding they tend to be "unaligned" with exact unit in the item list,
         //   which with the flooring/ceiling tend to lead to 2 items instead of one being submitted.
         for (int i = 0; i < data.Ranges.size; i += 1)
             if (data.Ranges[i].PosToIndexConvert)

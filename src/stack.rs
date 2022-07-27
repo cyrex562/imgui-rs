@@ -52,8 +52,8 @@ pub struct  ImGuiStackSizes
     pub SizeOfGroupStack: i16,
     // short   SizeOfItemFlagsStack;
     pub SizeOfItemFlagsStack: i16,
-    // short   SizeOfBeginPopupStack;
-    pub SizeOfBeginPopupStack: i16,
+    // short   SizeOfbegin_popupStack;
+    pub SizeOfbegin_popupStack: i16,
     // short   SizeOfDisabledStack;
     pub SizeOfDisabledStack: i16,
 }
@@ -79,7 +79,7 @@ impl ImGuiStackSizes {
 //     SizeOfFocusScopeStack = g.FocusScopeStack.size;
 //     SizeOfGroupStack = g.group_stack.size;
 //     SizeOfItemFlagsStack = g.item_flags_stack.size;
-//     SizeOfBeginPopupStack = g.begin_popup_stack.size;
+//     SizeOfbegin_popupStack = g.begin_popup_stack.size;
 //     SizeOfDisabledStack = g.DisabledStackSize;
 // }
 
@@ -97,7 +97,7 @@ impl ImGuiStackSizes {
 //     // Global stacks
 //     // For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.
 //     IM_ASSERT(SizeOfGroupStack      == g.group_stack.size        && "BeginGroup/EndGroup Mismatch!");
-//     IM_ASSERT(SizeOfBeginPopupStack == g.begin_popup_stack.size   && "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!");
+//     IM_ASSERT(SizeOfbegin_popupStack == g.begin_popup_stack.size   && "begin_popup/EndPopup or BeginMenu/EndMenu Mismatch!");
 //     IM_ASSERT(SizeOfDisabledStack   == g.DisabledStackSize      && "BeginDisabled/EndDisabled Mismatch!");
 //     IM_ASSERT(SizeOfItemFlagsStack  >= g.item_flags_stack.size    && "push_item_flag/PopItemFlag Mismatch!");
 //     IM_ASSERT(SizeOfColorStack      >= g.color_stack.size        && "PushStyleColor/PopStyleColor Mismatch!");
