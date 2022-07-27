@@ -293,7 +293,6 @@ impl Window {
             //     viewport_pos = Vector2D(FLT_MAX, FLT_MAX);
             viewport_pos: Vector2D::new(f32::MAX, f32::MAX),
             //     move_id = GetID("#MOVE");
-
             //     scroll_target = Vector2D(FLT_MAX, FLT_MAX);
             scroll_target: Vector2D::new(f32::MAX, f32::MAX),
             //     scroll_target_center_ratio = Vector2D(0.5, 0.5);
