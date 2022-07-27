@@ -3,7 +3,8 @@ use crate::condition::Condition;
 use crate::config::ConfigFlags;
 use crate::dock::context::{dock_context_find_node_by_id, dock_context_gen_node_id};
 use crate::dock::node;
-use crate::dock::node::{dock_node_get_root_node, dock_node_hide_window_during_host_window_creation, DockNodeFlags, DockNodeState};
+use crate::dock::node::{dock_node_get_root_node, DockNodeFlags, DockNodeState, preview, window};
+use crate::dock::node::window::dock_node_hide_window_during_host_window_creation;
 use crate::drag_drop::DragDropFlags;
 use crate::frame::get_frame_height;
 use crate::globals::GImGui;
@@ -53,7 +54,7 @@ pub fn tab_item_comparer_by_dock_order(g: &mut Context, lhs: &Vec<u8>, rhs: &Vec
     ImGuiWindow* b = ((const ImGuiTabItem*)rhs).Window;
     if (int d = ((a.dock_order == -1) ? INT_MAX : a.dock_order) - ((b.dock_order == -1) ? INT_MAX : b.dock_order))
         return d;
-    return (a.BeginOrderWithinContext - b.BeginOrderWithinContext);
+    return (a.begin_order_within_context - b.begin_order_within_context);
 }
 
 // [Internal] Called via SetNextWindowDockID()
@@ -90,7 +91,7 @@ pub fn set_window_dock(g: &mut Context, window: &mut window::Window, dock_id: Id
         return;
 
     if (window.dock_node_id)
-        node::dock_node_remove_window(window.dock_node_id, window, 0);
+        window::dock_node_remove_window(window.dock_node_id, window, 0);
     window.dock_id = dock_id;
 }
 
@@ -170,8 +171,8 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     }
 
     // Store style overrides
-    for (int color_n = 0; color_n < ImGuiWindowDockStyleCol_COUNT; color_n += 1)
-        window.DockStyle.colors[color_n] = ColorConvertFloat4ToU32(g.style.colors[GWindowDockStyleColors[color_n]]);
+    for (int color_n = 0; color_n < WindowDockStyleColor::COUNT; color_n += 1)
+        window.dock_style.colors[color_n] = ColorConvertFloat4ToU32(g.style.colors[GWindowDockStyleColors[color_n]]);
 
     // Fast path return. It is common for windows to hold on a persistent dock_id but be the only visible window,
     // and never create neither a host window neither a tab bar.
@@ -192,7 +193,7 @@ pub fn begin_docked(g: &mut Context, window: &mut window::Window, p_open: &mut b
     node.State = DockNodeState::HostWindowVisible;
 
     // Undock if we are submitted earlier than the host window
-    if (!(node.merged_flags & DockNodeFlags::KeepAliveOnly) && window.BeginOrderWithinContext < node.host_window.BeginOrderWithinContext)
+    if (!(node.merged_flags & DockNodeFlags::KeepAliveOnly) && window.begin_order_within_context < node.host_window.begin_order_within_context)
     {
         dock_context_process_undock_window(g, window);
         return;
@@ -244,15 +245,15 @@ pub fn begin_dockable_drag_drop_source(g: &mut Context, window: &mut window::Win
     g.last_item_data.id = window.move_id;
     window = window.root_window_dock_tree;
     // IM_ASSERT((window.flags & WindowFlags::NoDocking) == 0);
-    bool is_drag_docking = (g.io.ConfigDockingWithShift) || Rect(0, 0, window.size_full.x, get_frame_height()).Contains(g.active_id_click_offset); // FIXME-DOCKING: Need to make this stateful and explicit
+    bool is_drag_docking = (g.io.config_docking_with_shift) || Rect(0, 0, window.size_full.x, get_frame_height()).Contains(g.active_id_click_offset); // FIXME-DOCKING: Need to make this stateful and explicit
     if (is_drag_docking && BeginDragDropSource(DragDropFlags::SourceNoPreviewTooltip | ImGuiDragDropFlags_SourceNoHoldToOpenOthers | ImGuiDragDropFlags_SourceAutoExpirePayload))
     {
         SetDragDropPayload(IMGUI_PAYLOAD_TYPE_WINDOW, &window, sizeof(window));
         EndDragDropSource();
 
         // Store style overrides
-        for (int color_n = 0; color_n < ImGuiWindowDockStyleCol_COUNT; color_n += 1)
-            window.DockStyle.colors[color_n] = ColorConvertFloat4ToU32(g.style.colors[GWindowDockStyleColors[color_n]]);
+        for (int color_n = 0; color_n < WindowDockStyleColor::COUNT; color_n += 1)
+            window.dock_style.colors[color_n] = ColorConvertFloat4ToU32(g.style.colors[GWindowDockStyleColors[color_n]]);
     }
 }
 
@@ -306,7 +307,7 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
         }
 
         const Rect explicit_target_rect = (node && node.tab_bar && !node.is_hidden_tab_bar() && !node.is_no_tab_bar()) ? node.tab_bar.BarRect : Rect(window.pos, window.pos + Vector2D::new(window.size.x, get_frame_height()));
-        const bool is_explicit_target = g.io.ConfigDockingWithShift || IsMouseHoveringRect(explicit_target_rect.min, explicit_target_rect.max);
+        const bool is_explicit_target = g.io.config_docking_with_shift || IsMouseHoveringRect(explicit_target_rect.min, explicit_target_rect.max);
 
         // preview docking request and find out split direction/ratio
         //const bool do_preview = true;     // Ignore testing for payload->is_preview() which removes one frame of delay, but breaks overlapping drop targets within the same window.
@@ -319,21 +320,21 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut window::Win
             if (node && (node.parent_node || node.is_central_node()))
                 if (ImGuiDockNode* root_node = dock_node_get_root_node(node))
                 {
-                    node::dock_node_preview_dock_setup(window, root_node, payload_window, &split_outer, is_explicit_target, true);
-                    if (split_outer.IsSplitDirExplicit)
+                    preview::dock_node_preview_dock_setup(window, root_node, payload_window, &split_outer, is_explicit_target, true);
+                    if (split_outer.is_split_dir_explicit)
                         split_data = &split_outer;
                 }
-            node::dock_node_preview_dock_setup(window, node, payload_window, &split_inner, is_explicit_target, false);
+            preview::dock_node_preview_dock_setup(window, node, payload_window, &split_inner, is_explicit_target, false);
             if (split_data == &split_outer)
-                split_inner.IsDropAllowed = false;
+                split_inner.is_drop_allowed = false;
 
             // Draw inner then outer, so that previewed tab (in inner data) will be behind the outer drop boxes
             DockNodePreviewDockRender(window, node, payload_window, &split_inner);
             DockNodePreviewDockRender(window, node, payload_window, &split_outer);
 
             // Queue docking request
-            if (split_data.IsDropAllowed && payload.IsDelivery())
-                DockContextQueueDock(g, window, split_data.SplitNode, payload_window, split_data.SplitDir, split_data.SplitRatio, split_data == &split_outer);
+            if (split_data.is_drop_allowed && payload.IsDelivery())
+                DockContextQueueDock(g, window, split_data.split_node, payload_window, split_data.split_dir, split_data.split_ratio, split_data == &split_outer);
         }
     }
     EndDragDropTarget();

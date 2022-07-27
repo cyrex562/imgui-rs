@@ -23,12 +23,22 @@ impl From<(&Vector2D, &Vector2D)> for Rect {
     }
 }
 
+impl From<(f32,f32,f32,f32)> for Rect {
+    fn from (floats: (f32,f32,f32,f32)) -> Self {
+        let (x1,y1,x2,y2) = floats;
+        Self {
+            min: Vector2D::new(x1,y1),
+            max: Vector2D::new(x2,y2)
+        }
+    }
+}
+
 impl Rect {
     //  constexpr ImRect()                                        : min(0.0, 0.0), max(0.0, 0.0)  {}
-    pub fn new() -> Self {
+    pub fn new(min: &Vector2D, max: Vector2D) -> Self {
         Self {
-            min: Vector2D::new2(),
-            max: Vector2D::new2(),
+            min: min.clone(),
+            max: max.clone(),
         }
     }
     //     constexpr ImRect(const Vector2D& min, const Vector2D& max)    : min(min), max(max)                {}

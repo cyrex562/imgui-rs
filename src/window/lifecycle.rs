@@ -347,7 +347,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window.last_frame_active = current_frame;
         window.last_time_active = g.time;
         window.BeginOrderWithinParent = 0;
-        window.BeginOrderWithinContext = (g.windows_active_count += 1);
+        window.begin_order_within_context = (g.windows_active_count += 1);
     }
     else
     {
@@ -1015,7 +1015,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         {
             // Docking: Dragging a dockable window (or any of its child) turns it into a drag and drop source.
             // We need to do this _before_ we overwrite window->dc.LastItemId below because BeginDockableDragDropSource() also overwrites it.
-            if ((g.moving_window == window) && (g.io.ConfigDockingWithShift == g.io.key_shift))
+            if ((g.moving_window == window) && (g.io.config_docking_with_shift == g.io.key_shift))
                 if ((window.root_window_dock_tree.flags & WindowFlags::NoDocking) == 0)
                     BeginDockableDragDropSource(window);
 
@@ -1029,7 +1029,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // We fill last item data based on Title Bar/Tab, in order for IsItemHovered() and IsItemActive() to be usable after Begin().
         // This is useful to allow creating context menus on title bar only, etc.
         if (window.dock_is_active)
-            SetLastItemData(window.move_id, g.current_item_flags, window.DockTabItemStatusFlags, window.DockTabItemRect);
+            SetLastItemData(window.move_id, g.current_item_flags, window.dock_tab_item_status_flags, window.dock_tab_item_rect);
         else
             SetLastItemData(window.move_id, g.current_item_flags, IsMouseHoveringRect(title_bar_rect.min, title_bar_rect.max, false) ? ImGuiItemStatusFlags_HoveredRect : 0, title_bar_rect);
 

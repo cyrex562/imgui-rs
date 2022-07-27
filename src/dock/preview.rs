@@ -5,7 +5,7 @@ use crate::types::{Direction, Id32};
 pub struct DockPreviewData
 {
     // ImGuiDockNode   FutureNode;
-    pub future_node: DimgDockNode,
+    pub future_node: Id32,
     // bool            IsDropAllowed;
     pub is_drop_allowed: bool,
     // bool            IsCenterAvailable;

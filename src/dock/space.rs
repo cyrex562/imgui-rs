@@ -35,7 +35,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
         node = dock_context_add_node(g, id);
         node.set_local_flags(DockNodeFlags::CentralNode);
     }
-    if (window_class && window_class.ClassId != node.window_class.ClassId)
+    if (window_class && window_class.class_id != node.window_class.class_id)
         // IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X: setup window_class 0x%08X -> 0x%08X\n", id, node.window_class.ClassId, window_class.ClassId);
     node.shared_flags = flags;
     node.window_class = window_class ? *window_class : ImGuiWindowClass();

@@ -316,7 +316,7 @@ struct ImNodesContext
     ImNodesIO                        Io;
     NodesStyle                     Style;
     ImVector<ImNodesColElement>      ColorModifierStack;
-    ImVector<NodesStyleVarElement> StyleModifierStack;
+    ImVector<NodesStyleVarElement> style_modifier_stack;
     ImGuiTextBuffer                  TextBuffer;
 
     int           CurrentAttributeFlags;

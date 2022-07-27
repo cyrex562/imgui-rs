@@ -153,7 +153,7 @@ pub fn set_nav_id(g: &mut Context, id: Id32, nav_layer: NavLayer, focus_scope_id
     g.nav_id = id;
     g.NavLayer = nav_layer;
     g.NavFocusScopeId = focus_scope_id;
-    g.nav_window.NavLastIds[nav_layer] = id;
+    g.nav_window.nav_last_ids[nav_layer] = id;
     g.nav_window.NavRectRel[nav_layer] = rect_rel;
 }
 
@@ -172,7 +172,7 @@ pub fn set_focus_id(g: &mut Context, id: Id32, window: &mut Window)
     g.nav_id = id;
     g.NavLayer = nav_layer;
     g.NavFocusScopeId = window.dc.NavFocusScopeIdCurrent;
-    window.NavLastIds[nav_layer] = id;
+    window.nav_last_ids[nav_layer] = id;
     if (g.last_item_data.id == id)
         window.NavRectRel[nav_layer] = window_rect_abs_to_rel(window, g.last_item_data.NavRect);
 
@@ -592,9 +592,9 @@ pub fn nav_restore_layer(g: &mut Context, layer: NavLayer)
             IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.name, g.nav_window.name);
     }
     ImGuiWindow* window = g.nav_window;
-    if (window.NavLastIds[layer] != 0)
+    if (window.nav_last_ids[layer] != 0)
     {
-        SetNavID(window.NavLastIds[layer], layer, 0, window.NavRectRel[layer]);
+        SetNavID(window.nav_last_ids[layer], layer, 0, window.NavRectRel[layer]);
     }
     else
     {
@@ -635,7 +635,7 @@ pub fn nav_init_window(g: &mut Context, window: &mut Window, force_reinit: bool)
     }
 
     bool init_for_nav = false;
-    if (window == window.root_window || (window.flags & WindowFlags::Popup) || (window.NavLastIds[0] == 0) || force_reinit)
+    if (window == window.root_window || (window.flags & WindowFlags::Popup) || (window.nav_last_ids[0] == 0) || force_reinit)
         init_for_nav = true;
     IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: from nav_init_window(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.name, g.NavLayer);
     if (init_for_nav)
@@ -649,7 +649,7 @@ pub fn nav_init_window(g: &mut Context, window: &mut Window, force_reinit: bool)
     }
     else
     {
-        g.nav_id = window.NavLastIds[0];
+        g.nav_id = window.nav_last_ids[0];
         g.NavFocusScopeId = 0;
     }
 }
@@ -1222,7 +1222,7 @@ pub fn nav_update_cancel_request(g: &mut Context)
     {
         // clear NavLastId for popups but keep it for regular child window so we can leave one and come back where we were
         if (g.nav_window && ((g.nav_window.flags & WindowFlags::Popup) || !(g.nav_window.flags & WindowFlags::ChildWindow)))
-            g.nav_window.NavLastIds[0] = 0;
+            g.nav_window.nav_last_ids[0] = 0;
         g.nav_id = g.NavFocusScopeId = 0;
     }
 }
@@ -1545,7 +1545,7 @@ pub fn nav_update_windowing(g: &mut Context)
         apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);
         close_popups_over_window(apply_focus_window, false);
         focus_window(apply_focus_window);
-        if (apply_focus_window.NavLastIds[0] == 0)
+        if (apply_focus_window.nav_last_ids[0] == 0)
             nav_init_window(apply_focus_window, false);
 
         // If the window has ONLY a menu layer (no main layer), select it directly
@@ -1591,7 +1591,7 @@ pub fn nav_update_windowing(g: &mut Context)
             // Reinitialize navigation when entering menu bar with the Alt key (FIXME: could be a properly of the layer?)
             const bool preserve_layer_1_nav_id = (new_nav_window.dock_node_as_host != NULL);
             if (new_nav_layer == NavLayer::Menu && !preserve_layer_1_nav_id)
-                g.nav_window.NavLastIds[new_nav_layer] = 0;
+                g.nav_window.nav_last_ids[new_nav_layer] = 0;
             NavRestoreLayer(new_nav_layer);
             NavRestoreHighlightAfterMove();
         }

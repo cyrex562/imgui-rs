@@ -266,7 +266,7 @@ pub fn GetColorU32_3(col: u32) -> u32
     (col & !IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT)
 }
 
-pub fn ColorConvertU32ToFloat4(col: u32) -> Vector4D {
+pub fn color_convert_u32_to_float4(col: u32) -> Vector4D {
     todo!()
 }
 
@@ -281,7 +281,7 @@ pub fn push_style_color(g: &mut Context, idx: StyleColor, color: u32)
     backup.Col = idx.clone();
     backup.BackupValue = g.style.colors[idx];
     g.color_stack.push_back(backup);
-    g.style.colors[idx] = ColorConvertU32ToFloat4(color);
+    g.style.colors[idx] = color_convert_u32_to_float4(color);
 }
 
 // void ImGui::PushStyleColor(ImGuiCol idx, const Vector4D& col)
@@ -339,8 +339,8 @@ pub struct ImGuiStyleVarInfo
 // }
 
 // static const ImGuiCol GWindowDockStyleColors[ImGuiWindowDockStyleCol_COUNT] =
-pub const GWindowDockStyleColors: [ImGuiColor; 6] = [
-    ImGuiColor::Text, ImGuiColor::Tab, ImGuiColor::TabHovered, ImGuiColor::TabActive, ImGuiColor::TabUnfocused, ImGuiColor::TabUnfocusedActive
+pub const WINDOW_DOCK_STYLE_COLORS: [StyleColor; 6] = [
+    StyleColor::Text, StyleColor::Tab, StyleColor::TabHovered, StyleColor::TabActive, StyleColor::TabUnfocused, StyleColor::TabUnfocusedActive
 ];
 //
 // pub const STYLE_VAR_INFO: [ImGuiStyleVarInfo;25] =

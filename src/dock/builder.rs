@@ -2,7 +2,8 @@ use std::collections::HashSet;
 use crate::{Context, dock, hash_string, INVALID_ID};
 use crate::dock::context::{dock_context_add_node, dock_context_find_node_by_id, dock_context_process_dock, dock_context_process_undock_window, dock_context_remove_node};
 use crate::dock::{context, node, settings};
-use crate::dock::node::{dock_node_find_window_by_id, dock_node_get_root_node, DockNode, DockNodeFlags};
+use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags, window};
+use crate::dock::node::window::dock_node_find_window_by_id;
 use crate::dock::ops::set_window_dock;
 use crate::dock::request::{DockRequest, DockRequestType};
 use crate::globals::GImGui;
@@ -168,7 +169,7 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32) {
                     dock_context_queue_notify_removed_node(g, node);
                 }
                 if root_node {
-                    node::dock_node_move_windows(g, root_node.unwrap(), node);
+                    window::dock_node_move_windows(g, root_node.unwrap(), node);
                     settings::dock_settings_rename_node_references(g, node.id, root_node.id);
                 }
                 nodes_to_remove.push_back(node);

@@ -342,7 +342,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             for (int i = 0; i < g.windows.len(); i += 1)
                 if (g.windows[i]->last_frame_active + 1 >= g.frame_count)
                     temp_buffer.push_back(g.windows[i]);
-            struct Func { static int  WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((*(const ImGuiWindow* const *)lhs)->BeginOrderWithinContext - (*(const ImGuiWindow* const*)rhs)->BeginOrderWithinContext); } };
+            struct Func { static int  WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((*(const ImGuiWindow* const *)lhs)->begin_order_within_context - (*(const ImGuiWindow* const*)rhs)->begin_order_within_context); } };
             ImQsort(temp_buffer.data, temp_buffer.size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
             DebugNodeWindowsListByBeginStackParent(temp_buffer.data, temp_buffer.size, NULL);
             TreePop();
@@ -574,7 +574,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             if (cfg->ShowWindowsBeginOrder && !(window.flags & WindowFlags::ChildWindow))
             {
                 char buf[32];
-                ImFormatString(buf, IM_ARRAYSIZE(buf), "%d", window.BeginOrderWithinContext);
+                ImFormatString(buf, IM_ARRAYSIZE(buf), "%d", window.begin_order_within_context);
                 float font_size = GetFontSize();
                 draw_list->AddRectFilled(window.pos, window.pos + Vector2D::new(font_size, font_size), IM_COL32(200, 100, 100, 255));
                 draw_list->AddText(window.pos, IM_COL32(255, 255, 255, 255), buf);
@@ -618,7 +618,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         ImGuiDockNode* node = g.hovered_dock_node;
         ImDrawList* overlay_draw_list = node->HostWindow ? get_foreground_draw_list(node->HostWindow) : get_foreground_draw_list(GetMainViewport());
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "dock_id: %x%s\n", node->ID, node->is_central_node() ? " *central_node*" : "");
-        p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "window_class: %08X\n", node->WindowClass.ClassId);
+        p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "window_class: %08X\n", node->WindowClassclass_id);
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size: (%.0, %.0)\n", node.size.x, node.size.y);
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size_ref: (%.0, %.0)\n", node.size_ref.x, node.size_ref.y);
         int depth = dock_node_get_depth(node);
@@ -1082,19 +1082,19 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
         (flags & WindowFlags::ChildWindow)  ? "Child " : "",      (flags & WindowFlags::Tooltip)     ? "Tooltip "   : "",  (flags & WindowFlags::Popup) ? "Popup " : "",
         (flags & WindowFlags::Modal)        ? "Modal " : "",      (flags & WindowFlags::ChildMenu)   ? "ChildMenu " : "",  (flags & WindowFlags::NoSavedSettings) ? "NoSavedSettings " : "",
         (flags & WindowFlags::NoMouseInputs)? "NoMouseInputs":"", (flags & WindowFlags::NoNavInputs) ? "NoNavInputs" : "", (flags & WindowFlags::AlwaysAutoResize) ? "AlwaysAutoResize" : "");
-    BulletText("WindowClassId: 0x%08X", window.window_class.ClassId);
+    BulletText("WindowClassId: 0x%08X", window.window_class.class_id);
     BulletText("scroll: (%.2/%.2,%.2/%.2) Scrollbar:%s%s", window.scroll.x, window.scroll_max.x, window.scroll.y, window.scroll_max.y, window.scrollbar_x ? "x" : "", window.scrollbar_y ? "Y" : "");
-    BulletText("active: %d/%d, write_accessed: %d, begin_order_within_context: %d", window.active, window.was_active, window.write_accessed, (window.active || window.was_active) ? window.BeginOrderWithinContext : -1);
+    BulletText("active: %d/%d, write_accessed: %d, begin_order_within_context: %d", window.active, window.was_active, window.write_accessed, (window.active || window.was_active) ? window.begin_order_within_context : -1);
     BulletText("appearing: %d, hidden: %d (CanSkip %d Cannot %d), skip_items: %d", window.Appearing, window.hidden, window..hidden_frames_can_skip_items, window.hidden_frames_cannot_skip_items, window.skip_items);
     for (int layer = 0; layer < NavLayer::COUNT; layer += 1)
     {
         Rect r = window.NavRectRel[layer];
         if (r.min.x >= r.max.y && r.min.y >= r.max.y)
         {
-            BulletText("nav_last_ids[%d]: 0x%08X", layer, window.NavLastIds[layer]);
+            BulletText("nav_last_ids[%d]: 0x%08X", layer, window.nav_last_ids[layer]);
             continue;
         }
-        BulletText("nav_last_ids[%d]: 0x%08X at +(%.1,%.1)(%.1,%.1)", layer, window.NavLastIds[layer], r.min.x, r.min.y, r.max.x, r.max.y);
+        BulletText("nav_last_ids[%d]: 0x%08X at +(%.1,%.1)(%.1,%.1)", layer, window.nav_last_ids[layer], r.min.x, r.min.y, r.max.x, r.max.y);
         if (IsItemHovered())
             get_foreground_draw_list(window)->AddRect(r.min + window.pos, r.max + window.pos, IM_COL32(255, 255, 0, 255));
     }
@@ -1151,7 +1151,7 @@ pub fn debug_node_windows_list_by_begin_stack_parent(g: &mut Context, windows: &
         if (window.ParentWindowInBeginStack != parent_in_begin_stack)
             continue;
         char buf[20];
-        ImFormatString(buf, IM_ARRAYSIZE(buf), "[%04d] window", window.BeginOrderWithinContext);
+        ImFormatString(buf, IM_ARRAYSIZE(buf), "[%04d] window", window.begin_order_within_context);
         //BulletText("[%04d] window '%s'", window->begin_order_within_context, window->name);
         DebugNodeWindow(window, buf);
         Indent();
@@ -1173,7 +1173,7 @@ pub fn update_debug_tool_item_picker(g: &mut Context)
     SetMouseCursor(ImGuiMouseCursor_Hand);
     if (IsKeyPressed(ImGuiKey_Escape))
         g.DebugItemPickerActive = false;
-    if (IsMouseClicked(0) && hovered_id)
+    if (is_mouse_clicked(0) && hovered_id)
     {
         g.DebugItemPickerBreakId = hovered_id;
         g.DebugItemPickerActive = false;

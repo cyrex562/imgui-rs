@@ -338,7 +338,7 @@ bool ImGuiListClipper::Step()
 
             // Add focused/active item
             Rect nav_rect_abs = ImGui::WindowRectRelToAbs(window, window.NavRectRel[0]);
-            if (g.nav_id != 0 && window.NavLastIds[0] == g.nav_id)
+            if (g.nav_id != 0 && window.nav_last_ids[0] == g.nav_id)
                 data.Ranges.push_back(ImGuiListClipperRange::FromPositions(nav_rect_abs.min.y, nav_rect_abs.max.y, 0, 0));
 
             // Add visible range

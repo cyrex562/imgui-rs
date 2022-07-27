@@ -316,7 +316,7 @@ pub fn window_settings_handler_read_line(g: &mut Context, handler: &mut Settings
     else if (sscanf(line, "collapsed=%d", &i) == 1)         { settings.collapsed = (i != 0); }
     else if (sscanf(line, "dock_id=0x%x,%d", &u1, &i) == 2)  { settings.dock_id = u1; settings.dock_order = i; }
     else if (sscanf(line, "dock_id=0x%x", &u1) == 1)         { settings.dock_id = u1; settings.dock_order = -1; }
-    else if (sscanf(line, "class_id=0x%x", &u1) == 1)        { settings.ClassId = u1; }
+    else if (sscanf(line, "class_id=0x%x", &u1) == 1)        { settingsclass_id = u1; }
 }
 
 // Apply to existing windows (if any)
@@ -358,7 +358,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         settings.viewport_pos = Vector2D(window.viewport_pos);
         // IM_ASSERT(window.dock_node == NULL || window.dock_node.ID == window.DockId);
         settings.dock_id = window.dock_id;
-        settings.ClassId = window.window_class.ClassId;
+        settingsclass_id = window.window_class.class_id;
         settings.dock_order = window.dock_order;
         settings.collapsed = window.collapsed;
     }
@@ -386,8 +386,8 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
                 buf.appendf("dock_id=0x%08X\n", settings.dock_id);
             else
                 buf.appendf("dock_id=0x%08X,%d\n", settings.dock_id, settings.dock_order);
-            if (settings.ClassId != 0)
-                buf.appendf("class_id=0x%08X\n", settings.ClassId);
+            if (settingsclass_id != 0)
+                buf.appendf("class_id=0x%08X\n", settingsclass_id);
         }
         buf.append("\n");
     }

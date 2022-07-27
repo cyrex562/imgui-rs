@@ -286,7 +286,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
         // ImGuiDockNode* root_node = DockNodeGetRootNode(node);
         let mut root_node = dock_node_get_root_node(g, node);
         //if (root_node->only_node_with_windows != node || root_node->CentralNode != NULL)
-        if root_node.only_node_with_window != node.id || root_node.central_node_id != INVALID_ID
+        if root_node.only_node_with_window_id != node.id || root_node.central_node_id != INVALID_ID
         {  // -V1051 PVS-Studio thinks node should be root_node and is wrong about that.
         // if (undock_floating_node || root_node -> is_dock_space())
         if undock_floating_node || root_node.is_dock_space()

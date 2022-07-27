@@ -2228,13 +2228,13 @@ void BeginNodeEditor()
     GImNodes.ImNodesUIState = ImNodesUIState_None;
 
     GImNodes.MousePos = ImGui::GetIO().MousePos;
-    GImNodes.LeftMouseClicked = ImGui::IsMouseClicked(0);
+    GImNodes.LeftMouseClicked = ImGui::is_mouse_clicked(0);
     GImNodes.LeftMouseReleased = ImGui::IsMouseReleased(0);
     GImNodes.LeftMouseDragging = ImGui::is_mouse_dragging(0, 0.0);
     GImNodes.AltMouseClicked =
         (GImNodes.Io.EmulateThreeButtonMouse.Modifier != NULL &&
          *GImNodes.Io.EmulateThreeButtonMouse.Modifier && GImNodes.LeftMouseClicked) ||
-        ImGui::IsMouseClicked(GImNodes.Io.AltMouseButton);
+        ImGui::is_mouse_clicked(GImNodes.Io.AltMouseButton);
     GImNodes.AltMouseDragging =
         (GImNodes.Io.EmulateThreeButtonMouse.Modifier != NULL && GImNodes.LeftMouseDragging &&
          (*GImNodes.Io.EmulateThreeButtonMouse.Modifier)) ||
@@ -2704,27 +2704,28 @@ pub fn get_style_var_info(idx: NodesStyleVar) -> &NodesStyleVarInfo
 }
 
 // void push_style_var(const NodesStyleVar item, const float value)
-pub fn push_style_var(g: &mut Context, item: NodesStyleVar, value: f32)
+pub fn push_style_float(g: &mut Context, item: NodesStyleVar, value: f32)
 {
     // const NodesStyleVarInfo* var_info = get_style_var_info(item);
     let var_info = get_style_var_info(&item);
     if var_info.data_type == DataType::Float && var_info.count == 1
     {
         float& style_var = var_info.GetVarPtr(&GImNodes.Style);
-        GImNodes.StyleModifierStack.push_back(NodesStyleVarElement(item, style_var));
+        GImNodes.style_modifier_stack.push_back(NodesStyleVarElement(item, style_var));
         style_var = value;
         return;
     }
     // IM_ASSERT(0 && "Called PushStyleVar() float variant but variable is not a float!");
 }
 
-pub fn push_style_var2(const NodesStyleVar item, const Vector2D& value)
+pub fn push_style_vector2d(g: &mut Context, item: NodesStyleVar, value: &Vector2D)
 {
-    const NodesStyleVarInfo* var_info = GetStyleVarInfo(item);
-    if (var_info.Type == DataType::Float && var_info.count == 2)
+    let var_info = get_style_var_info(item);
+    if var_info.Type == DataType::Float && var_info.count == 2
     {
-        Vector2D& style_var = *(Vector2D*)var_info.GetVarPtr(&GImNodes.Style);
-        GImNodes.StyleModifierStack.push_back(NodesStyleVarElement(item, style_var));
+        // Vector2D& style_var = *(Vector2D*)var_info.GetVarPtr(&GImNodes.Style);
+        let style_var = var_info.get_var_vector2d(IM_NODES.style);
+        IM_NODES.style_modifier_stack.push(NodesStyleVarElement::new(item, style_var));
         style_var = value;
         return;
     }
@@ -2737,8 +2738,8 @@ pub fn pop_style_var(g: &mut Context, count: i32)
     while count > 0
     {
         // IM_ASSERT(GImNodes.StyleModifierStack.size() > 0);
-        const NodesStyleVarElement style_backup = GImNodes.StyleModifierStack.back();
-        GImNodes.StyleModifierStack.pop_back();
+        const NodesStyleVarElement style_backup = GImNodes.style_modifier_stack.back();
+        GImNodes.style_modifier_stack.pop_back();
         const NodesStyleVarInfo* var_info = get_style_var_info(style_backup.Item);
         void*                      style_var = var_info.GetVarPtr(&GImNodes.Style);
         if (var_info.Type == DataType::Float && var_info.count == 1)

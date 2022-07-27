@@ -91,7 +91,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
         SetNavWindow(window);
         if (window && g.nav_disable_mouse_hover)
             g.NavMousePosDirty = true;
-        g.nav_id = window ? window.NavLastIds[0] : 0; // Restore nav_id
+        g.nav_id = window ? window.nav_last_ids[0] : 0; // Restore nav_id
         g.NavLayer = NavLayer::Main;
         g.NavFocusScopeId = 0;
         g.NavIdIsAlive = false;

@@ -131,3 +131,11 @@ impl Default for SortDirection {
         Self::None
     }
 }
+
+pub const DIRECTIONS: [Direction;5] = [
+    Direction::None,
+    Direction::Left,
+    Direction::Right,
+    Direction::Up,
+    Direction::Down,
+];
