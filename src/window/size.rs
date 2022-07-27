@@ -381,7 +381,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     window.dcnav_layer_current = NavLayer::Menu;
 
     // Manual resize grips
-    // PushID("#RESIZE");
+    // push_id("#RESIZE");
     push_id("#RESIZE");
     // for (int resize_grip_n = 0; resize_grip_n < resize_grip_count; resize_grip_n += 1)
     for resize_grip_n in 0 .. resize_grip_count

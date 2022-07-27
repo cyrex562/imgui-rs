@@ -252,7 +252,7 @@ pub fn render_nav_highlight(g: &mut Context, bb: &Rect, id: Id32, flags: Option<
     if (window.dc.NavHideHighlightOneFrame)
         return;
 
-    float rounding = (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.style.FrameRounding;
+    float rounding = (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.style.frame_rounding;
     Rect display_rect = bb;
     display_rect.clip_with(window.clip_rect);
     if (flags & ImGuiNavHighlightFlags_TypeDefault)

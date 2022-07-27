@@ -1330,7 +1330,7 @@ void    ImGui::EndTable()
     }
 
     // Pop from id stack
-    // IM_ASSERT_USER_ERROR(inner_window.IDStack.back() == table.id + table.InstanceCurrent, "Mismatching PushID/PopID!");
+    // IM_ASSERT_USER_ERROR(inner_window.IDStack.back() == table.id + table.InstanceCurrent, "Mismatching push_id/PopID!");
     // IM_ASSERT_USER_ERROR(outer_window.dc.ItemWidthStack.size >= temp_data.HostBackupItemWidthStackSize, "Too many PopItemWidth!");
     pop_id();
 
@@ -2852,10 +2852,10 @@ void ImGui::TableHeadersRow()
             continue;
 
         // Push an id to allow unnamed labels (generally accidental, but let's behave nicely with them)
-        // - in your own code you may omit the PushID/PopID all-together, provided you know they won't collide
+        // - in your own code you may omit the push_id/PopID all-together, provided you know they won't collide
         // - table->InstanceCurrent is only >0 when we use multiple BeginTable/EndTable calls with same identifier.
         const char* name = (TableGetColumnFlags(column_n) & ImGuiTableColumnFlags_NoHeaderLabel) ? "" : TableGetColumnName(column_n);
-        PushID(table.InstanceCurrent * table.ColumnsCount + column_n);
+        push_id(table.InstanceCurrent * table.ColumnsCount + column_n);
         TableHeader(name);
         pop_id();
     }
@@ -3831,7 +3831,7 @@ ImGuiID ImGui::GetColumnsID(const char* str_id, int columns_count)
 
     // Differentiate column id with an arbitrary prefix for cases where users name their columns set the same as another widget.
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
-    PushID(0x11223347 + (str_id ? 0 : columns_count));
+    push_id(0x11223347 + (str_id ? 0 : columns_count));
     ImGuiID id = window.get_id(str_id ? str_id : "columns");
     pop_id();
 

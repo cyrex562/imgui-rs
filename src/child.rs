@@ -103,7 +103,7 @@ pub fn begin_child_frame(g: &mut Context, id: Id32, size: &Vector2D, extra_flags
     // const ImGuiStyle& style = g.style;
     let style = &g.style;
     push_style_color(g, StyleColor::ChildBg, style.colors[StyleColor::FrameBg]);
-    push_style_float(g, StyleVar::ChildRounding, style.FrameRounding);
+    push_style_float(g, StyleVar::ChildRounding, style.frame_rounding);
     push_style_float(g, StyleVar::ChildBorderSize, style.frame_border_size);
     push_style_float(g, StyleVar::WindowPadding, style.frame_padding);
     let mut flags: HashSet<WindowFlags> = HashSet::from([WindowFlags::NoMove, WindowFlags::AlwaysUseWindowPadding]);

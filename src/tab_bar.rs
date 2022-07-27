@@ -19,7 +19,7 @@ pub enum TabItemFlags {
     NoCloseWithMiddleMouseButton,
     // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
     NoPushId,
-    // Don't call PushID(tab->id)/PopID() on BeginTabItem()/EndTabItem()
+    // Don't call push_id(tab->id)/PopID() on BeginTabItem()/EndTabItem()
     NoTooltip,
     // Disable tooltip for the given tab
     NoReorder,

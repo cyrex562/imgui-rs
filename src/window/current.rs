@@ -19,7 +19,7 @@ pub fn get_state_storage(g: &mut Context) -> &mut Storage
     return window.dc.StateStorage;
 }
 
-// void PushID(const char* str_id)
+// void push_id(const char* str_id)
 pub fn push_id(g: &mut Context, str_id: &str)
 {
     // ImGuiContext& g = *GImGui;
@@ -28,7 +28,7 @@ pub fn push_id(g: &mut Context, str_id: &str)
     window.idStack.push_back(id);
 }
 
-// void PushID(const char* str_id_begin, const char* str_id_end)
+// void push_id(const char* str_id_begin, const char* str_id_end)
 pub fn push_id2(g: &mut Context, str_id_begin: &str, )
 {
     // ImGuiContext& g = *GImGui;
@@ -37,7 +37,7 @@ pub fn push_id2(g: &mut Context, str_id_begin: &str, )
     window.idStack.push_back(id);
 }
 
-// void PushID(const void* ptr_id)
+// void push_id(const void* ptr_id)
  fn push_id3(g: &mut Context, ptr_id: Id32)
 {
     // ImGuiContext& g = *GImGui;
@@ -46,7 +46,7 @@ pub fn push_id2(g: &mut Context, str_id_begin: &str, )
     window.idStack.push_back(id);
 }
 
-// void PushID(int int_id)
+// void push_id(int int_id)
 pub fn push_id4(g: &mut Context, int_id: Id32)
 {
     // ImGuiContext& g = *GImGui;

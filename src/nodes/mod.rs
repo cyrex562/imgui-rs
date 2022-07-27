@@ -1646,7 +1646,7 @@ void BeginPinAttribute(
     GImNodes.CurrentScope = ImNodesScope_Attribute;
 
     ImGui::BeginGroup();
-    ImGui::PushID(id);
+    ImGui::push_id(id);
 
     ImNodesEditorContext& editor = EditorContextGet();
 
@@ -2487,7 +2487,7 @@ void BeginNode(const int node_id)
     DrawListAddNode(node_idx);
     DrawListActivateCurrentNodeForeground();
 
-    ImGui::PushID(node.Id);
+    ImGui::push_id(node.Id);
     ImGui::BeginGroup();
 }
 
@@ -2567,7 +2567,7 @@ void BeginStaticAttribute(const int id)
     GImNodes.CurrentAttributeId = id;
 
     ImGui::BeginGroup();
-    ImGui::PushID(id);
+    ImGui::push_id(id);
 }
 
 void EndStaticAttribute()

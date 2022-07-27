@@ -300,7 +300,7 @@ pub fn LogButtons(g: &mut Context)
     {
     // ImGuiContext& g = *GImGui;
 
-    PushID("LogButtons");
+    push_id("LogButtons");
 // #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
 //     const bool log_to_tty = Button("Log To TTY"); same_line();
 // #else

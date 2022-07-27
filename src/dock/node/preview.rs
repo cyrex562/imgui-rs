@@ -222,7 +222,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     }
 
     // Display drop boxes
-    const float overlay_rounding = ImMax(3.0, g.style.FrameRounding);
+    const float overlay_rounding = ImMax(3.0, g.style.frame_rounding);
     for (int dir = Direction::None; dir < Direction::COUNT; dir += 1)
     {
         if (!data.drop_rects_draw[dir + 1].is_inverted())

@@ -92,7 +92,7 @@ impl ImGuiStackSizes {
 //
 //     // window stacks
 //     // NOT checking: dc.item_width, dc.text_wrap_pos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)
-//     IM_ASSERT(SizeOfIDStack         == window.IDStack.size     && "PushID/PopID or TreeNode/TreePop Mismatch!");
+//     IM_ASSERT(SizeOfIDStack         == window.IDStack.size     && "push_id/PopID or TreeNode/TreePop Mismatch!");
 //
 //     // Global stacks
 //     // For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.

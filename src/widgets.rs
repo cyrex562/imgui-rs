@@ -702,7 +702,7 @@ bool ImGui::ButtonEx(const char* label, const Vector2D& size_arg, ImGuiButtonFla
     // Render
     const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     RenderNavHighlight(bb, id);
-    RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+    RenderFrame(bb.Min, bb.Max, col, true, style.frame_rounding);
 
     if (g.LogEnabled)
         LogSetNextTextDecoration("[", "]");
@@ -732,7 +732,7 @@ bool ImGui::SmallButton(const char* label)
     return pressed;
 }
 
-// Tip: use ImGui::PushID()/PopID() to push indices or pointers in the id stack.
+// Tip: use ImGui::push_id()/PopID() to push indices or pointers in the id stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
 bool ImGui::InvisibleButton(const char* str_id, const Vector2D& size_arg, ImGuiButtonFlags flags)
 {
@@ -782,7 +782,7 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size, ImGui
     const ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     const ImU32 text_col = GetColorU32(ImGuiCol_Text);
     RenderNavHighlight(bb, id);
-    RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding);
+    RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.frame_rounding);
     RenderArrow(window.draw_list, bb.Min + DimgVec2D::new(ImMax(0.0, (size.x - g.FontSize) * 0.5), ImMax(0.0, (size.y - g.FontSize) * 0.5)), text_col, dir);
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.LastItemData.StatusFlags);
@@ -1055,7 +1055,7 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const Vector2D& si
     // Render
     const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     RenderNavHighlight(bb, id);
-    RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0, g.Style.FrameRounding));
+    RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0, g.Style.frame_rounding));
     if (bg_col.w > 0.0)
         window.draw_list->AddRectFilled(bb.Min + padding, bb.Max - padding, GetColorU32(bg_col));
     window.draw_list->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
@@ -1074,7 +1074,7 @@ bool ImGui::ImageButton(ImTextureID user_texture_id, const Vector2D& size, const
         return false;
 
     // Default to using texture id as id. User can still push string/integer prefixes.
-    PushID((void*)(intptr_t)user_texture_id);
+    push_id((void*)(intptr_t)user_texture_id);
     const ImGuiID id = window.GetID("#image");
     pop_id();
 
@@ -1113,7 +1113,7 @@ bool ImGui::Checkbox(const char* label, bool* v)
 
     const ImRect check_bb(pos, pos + DimgVec2D::new(square_sz, square_sz));
     RenderNavHighlight(total_bb, id);
-    RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+    RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.frame_rounding);
     ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
     bool mixed_value = (g.LastItemData.InFlags & ItemFlags::MixedValue) != 0;
     if (mixed_value)
@@ -1121,7 +1121,7 @@ bool ImGui::Checkbox(const char* label, bool* v)
         // Undocumented tristate/mixed/indeterminate checkbox (#2644)
         // This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
         Vector2D pad(ImMax(1.0, IM_FLOOR(square_sz / 3.6)), ImMax(1.0, IM_FLOOR(square_sz / 3.6)));
-        window.draw_list->AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.FrameRounding);
+        window.draw_list->AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.frame_rounding);
     }
     else if (*v)
     {
@@ -1269,10 +1269,10 @@ void ImGui::ProgressBar(float fraction, const Vector2D& size_arg, const char* ov
 
     // Render
     fraction = ImSaturate(fraction);
-    RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+    RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.frame_rounding);
     bb.Expand(DimgVec2D::new(-style.FrameBorderSize, -style.FrameBorderSize));
     const Vector2D fill_br = DimgVec2D::new(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y);
-    RenderRectFilledRangeH(window.draw_list, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0, fraction, style.FrameRounding);
+    RenderRectFilledRangeH(window.draw_list, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0, fraction, style.frame_rounding);
 
     // Default displaying the fraction as percentage string, but user can override it
     char overlay_buf[32];
@@ -1626,16 +1626,16 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     const float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
     RenderNavHighlight(bb, id);
     if (!(flags & ImGuiComboFlags_NoPreview))
-        window.draw_list->AddRectFilled(bb.Min, DimgVec2D::new(value_x2, bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
+        window.draw_list->AddRectFilled(bb.Min, DimgVec2D::new(value_x2, bb.Max.y), frame_col, style.frame_rounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
     if (!(flags & ImGuiComboFlags_NoArrowButton))
     {
         ImU32 bg_col = GetColorU32((popup_open || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
         ImU32 text_col = GetColorU32(ImGuiCol_Text);
-        window.draw_list->AddRectFilled(DimgVec2D::new(value_x2, bb.Min.y), bb.Max, bg_col, style.FrameRounding, (w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
+        window.draw_list->AddRectFilled(DimgVec2D::new(value_x2, bb.Min.y), bb.Max, bg_col, style.frame_rounding, (w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
         if (value_x2 + arrow_size - style.FramePadding.x <= bb.Max.x)
             RenderArrow(window.draw_list, DimgVec2D::new(value_x2 + style.FramePadding.y, bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down, 1.0);
     }
-    RenderFrameBorder(bb.Min, bb.Max, style.FrameRounding);
+    RenderFrameBorder(bb.Min, bb.Max, style.frame_rounding);
 
     // Custom preview
     if (flags & ImGuiComboFlags_CustomPreview)
@@ -1831,7 +1831,7 @@ bool ImGui::Combo(const char* label, int* current_item, bool (*items_getter)(voi
     bool value_changed = false;
     for (int i = 0; i < items_count; i += 1)
     {
-        PushID(i);
+        push_id(i);
         const bool item_selected = (i == *current_item);
         const char* item_text;
         if (!items_getter(data, i, &item_text))
@@ -2385,7 +2385,7 @@ bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, floa
     // Draw frame
     const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
     RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, style.FrameRounding);
+    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, style.frame_rounding);
 
     // Drag behavior
     const bool value_changed = DragBehavior(id, data_type, p_data, v_speed, p_min, p_max, format, flags);
@@ -2415,12 +2415,12 @@ bool ImGui::DragScalarN(const char* label, DataType data_type, void* p_data, int
     // ImGuiContext& g = *GImGui;
     bool value_changed = false;
     BeginGroup();
-    PushID(label);
+    push_id(label);
     PushMultiItemsWidths(components, CalcItemWidth());
     size_t type_size = GDataTypeInfo[data_type].Size;
     for (int i = 0; i < components; i += 1)
     {
-        PushID(i);
+        push_id(i);
         if (i > 0)
             same_line(0, g.Style.ItemInnerSpacing.x);
         value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
@@ -2469,7 +2469,7 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
         return false;
 
     // ImGuiContext& g = *GImGui;
-    PushID(label);
+    push_id(label);
     BeginGroup();
     PushMultiItemsWidths(2, CalcItemWidth());
 
@@ -2523,7 +2523,7 @@ bool ImGui::DragIntRange2(const char* label, int* v_current_min, int* v_current_
         return false;
 
     // ImGuiContext& g = *GImGui;
-    PushID(label);
+    push_id(label);
     BeginGroup();
     PushMultiItemsWidths(2, CalcItemWidth());
 
@@ -2995,7 +2995,7 @@ bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, co
     // Draw frame
     const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
     RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
+    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.frame_rounding);
 
     // Slider behavior
     ImRect grab_bb;
@@ -3031,12 +3031,12 @@ bool ImGui::SliderScalarN(const char* label, DataType data_type, void* v, int co
     // ImGuiContext& g = *GImGui;
     bool value_changed = false;
     BeginGroup();
-    PushID(label);
+    push_id(label);
     PushMultiItemsWidths(components, CalcItemWidth());
     size_t type_size = GDataTypeInfo[data_type].Size;
     for (int i = 0; i < components; i += 1)
     {
-        PushID(i);
+        push_id(i);
         if (i > 0)
             same_line(0, g.Style.ItemInnerSpacing.x);
         value_changed |= SliderScalar("", data_type, v, v_min, v_max, format, flags);
@@ -3143,7 +3143,7 @@ bool ImGui::VSliderScalar(const char* label, const Vector2D& size, DataType data
     // Draw frame
     const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
     RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
+    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.frame_rounding);
 
     // Slider behavior
     ImRect grab_bb;
@@ -3446,7 +3446,7 @@ bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, con
         const float button_size = get_frame_height();
 
         BeginGroup(); // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
-        PushID(label);
+        push_id(label);
         SetNextItemWidth(ImMax(1.0, CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2));
         if (InputText("", buf, IM_ARRAYSIZE(buf), flags)) // PushId(label) + "" gives us the expected id from outside point of view
             value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
@@ -3503,12 +3503,12 @@ bool ImGui::InputScalarN(const char* label, DataType data_type, void* p_data, in
     // ImGuiContext& g = *GImGui;
     bool value_changed = false;
     BeginGroup();
-    PushID(label);
+    push_id(label);
     PushMultiItemsWidths(components, CalcItemWidth());
     size_t type_size = GDataTypeInfo[data_type].Size;
     for (int i = 0; i < components; i += 1)
     {
-        PushID(i);
+        push_id(i);
         if (i > 0)
             same_line(0, g.Style.ItemInnerSpacing.x);
         value_changed |= InputScalar("", data_type, p_data, p_step, p_step_fast, format, flags);
@@ -3878,7 +3878,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // We reproduce the contents of BeginChildFrame() in order to provide 'label' so our window internal data are easier to read/debug.
         // FIXME-NAV: Pressing NavActivate will trigger general child activation right before triggering our own below. Harmless but bizarre.
         PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_FrameBg]);
-        PushStyleVar(ImGuiStyleVar_ChildRounding, style.FrameRounding);
+        PushStyleVar(ImGuiStyleVar_ChildRounding, style.frame_rounding);
         PushStyleVar(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize);
         PushStyleVar(ImGuiStyleVar_WindowPadding, DimgVec2D::new(0, 0)); // Ensure no clip rect so mouse hover can reach FramePadding edges
         bool child_visible = BeginChildEx(label, id, frame_bb.GetSize(), true, ImGuiWindowFlags_NoMove);
@@ -4463,7 +4463,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     if (!is_multiline)
     {
         RenderNavHighlight(frame_bb, id);
-        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.frame_rounding);
     }
 
     const Vector4D clip_rect(frame_bb.Min.x, frame_bb.Min.y, frame_bb.Min.x + inner_size.x, frame_bb.Min.y + inner_size.y); // Not using frame_bb.max because we have adjusted size
@@ -4807,7 +4807,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
     g.NextItemData.ClearFlags();
 
     BeginGroup();
-    PushID(label);
+    push_id(label);
 
     // If we're not showing any slider there's no point in doing any HSV conversions
     const ImGuiColorEditFlags flags_untouched = flags;
@@ -5061,7 +5061,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
     const float width = CalcItemWidth();
     g.NextItemData.ClearFlags();
 
-    PushID(label);
+    push_id(label);
     BeginGroup();
 
     if (!(flags & ImGuiColorEditFlags_NoSidePreview))
@@ -5445,7 +5445,7 @@ bool ImGui::ColorButton(const char* desc_id, const Vector4D& col, ImGuiColorEdit
 
     Vector4D col_rgb_without_alpha(col_rgb.x, col_rgb.y, col_rgb.z, 1.0);
     float grid_step = ImMin(size.x, size.y) / 2.99;
-    float rounding = ImMin(g.Style.FrameRounding, grid_step * 0.5);
+    float rounding = ImMin(g.Style.frame_rounding, grid_step * 0.5);
     ImRect bb_inner = bb;
     float off = 0.0;
     if ((flags & ImGuiColorEditFlags_NoBorder) == 0)
@@ -5618,7 +5618,7 @@ void ImGui::ColorPickerOptionsPopup(const float* ref_col, ImGuiColorEditFlags fl
         {
             // Draw small/thumbnail version of each picker type (over an invisible button for selection)
             if (picker_type > 0) Separator();
-            PushID(picker_type);
+            push_id(picker_type);
             ImGuiColorEditFlags picker_flags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | (flags & ImGuiColorEditFlags_NoAlpha);
             if (picker_type == 0) picker_flags |= ImGuiColorEditFlags_PickerHueBar;
             if (picker_type == 1) picker_flags |= ImGuiColorEditFlags_PickerHueWheel;
@@ -5935,7 +5935,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     {
         // Framed type
         const ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
-        RenderFrame(frame_bb.Min, frame_bb.Max, bg_col, true, style.FrameRounding);
+        RenderFrame(frame_bb.Min, frame_bb.Max, bg_col, true, style.frame_rounding);
         RenderNavHighlight(frame_bb, id, nav_highlight_flags);
         if (flags & ImGuiTreeNodeFlags_Bullet)
             RenderBullet(window.draw_list, DimgVec2D::new(text_pos.x - text_offset_x * 0.60, text_pos.y + g.FontSize * 0.5), text_col);
@@ -5979,7 +5979,7 @@ void ImGui::TreePush(const char* str_id)
     ImGuiWindow* window = GetCurrentWindow();
     Indent();
     window.DC.TreeDepth += 1;
-    PushID(str_id);
+    push_id(str_id);
 }
 
 void ImGui::TreePush(const void* ptr_id)
@@ -5987,7 +5987,7 @@ void ImGui::TreePush(const void* ptr_id)
     ImGuiWindow* window = GetCurrentWindow();
     Indent();
     window.DC.TreeDepth += 1;
-    PushID(ptr_id);
+    push_id(ptr_id);
 }
 
 void ImGui::Treepush_override_id(ImGuiID id)
@@ -6094,7 +6094,7 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
 //-------------------------------------------------------------------------
 
 // Tip: pass a non-visible label (e.g. "##hello") then you can use the space to draw other text or image.
-// But you need to make sure the id is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
+// But you need to make sure the id is unique, e.g. enclose calls in push_id/PopID or use ##unique_id.
 // With this scheme, ImGuiselectableFlags_SpanAllColumns and ImGuiselectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: selectable() with (size.x == 0.0) and (selectableTextAlign.x > 0.0) followed by same_line() is currently not supported.
 bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags flags, const Vector2D& size_arg)
@@ -6359,7 +6359,7 @@ bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(v
             if (!items_getter(data, i, &item_text))
                 item_text = "*Unknown item*";
 
-            PushID(i);
+            push_id(i);
             const bool item_selected = (i == *current_item);
             if (selectable(item_text, item_selected))
             {
@@ -6434,7 +6434,7 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
             scale_max = v_max;
     }
 
-    RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+    RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.frame_rounding);
 
     const int values_count_min = (plot_type == ImGuiPlotType_Lines) ? 2 : 1;
     int idx_hovered = -1;
@@ -6653,7 +6653,7 @@ bool ImGui::BeginMenuBar()
 
     IM_ASSERT(!window.DC.MenuBarAppending);
     BeginGroup(); // Backup position on layer 0 // FIXME: Misleading to use a group for that backup/restore
-    PushID("##menubar");
+    push_id("##menubar");
 
     // We don't clip with current window clipping rectangle as it is already set to the area below. However we clip with window full rect.
     // We remove 1 worth of rounding to max.x to that text in long menus and small windows don't tend to display over the lower-right rounded area, which looks particularly glitchy.
@@ -6856,7 +6856,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
     // However the final position is going to be different! It is chosen by FindBestWindowPosForPopup().
     // e.g. Menus tend to overlap each other horizontally to amplify relative Z-ordering.
     Vector2D popup_pos, pos = window.DC.CursorPos;
-    PushID(label);
+    push_id(label);
     if (!enabled)
         BeginDisabled();
     const ImGuiMenuColumns* offsets = &window.DC.MenuColumns;
@@ -7035,7 +7035,7 @@ bool ImGui::menu_itemEx(const char* label, const char* icon, const char* shortcu
     // We've been using the equivalent of ImGuiselectableFlags_SetNavIdOnHover on all selectable() since early Nav system days (commit 43ee5d73),
     // but I am unsure whether this should be kept at all. For now moved it to be an opt-in feature used by menus only.
     bool pressed;
-    PushID(label);
+    push_id(label);
     if (!enabled)
         BeginDisabled();
 
@@ -7889,7 +7889,7 @@ bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags f
     if (ret && !(flags & TabItemFlags::NoPushId))
     {
         ImGuiTabItem* tab = &tab_bar->Tabs[tab_bar->LastTabItemIdx];
-        push_override_id(tab->ID); // We already hashed 'label' so push into the id stack directly instead of doing another hash through PushID(label)
+        push_override_id(tab->ID); // We already hashed 'label' so push into the id stack directly instead of doing another hash through push_id(label)
     }
     return ret;
 }
@@ -8260,7 +8260,7 @@ void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabI
     const float width = bb.GetWidth();
     IM_UNUSED(flags);
     IM_ASSERT(width > 0.0);
-    const float rounding = ImMax(0.0, ImMin((flags & TabItemFlags::Button) ? g.Style.FrameRounding : g.Style.TabRounding, width * 0.5 - 1.0));
+    const float rounding = ImMax(0.0, ImMin((flags & TabItemFlags::Button) ? g.Style.frame_rounding : g.Style.TabRounding, width * 0.5 - 1.0));
     const float y1 = bb.Min.y + 1.0;
     const float y2 = bb.Max.y + ((flags & TabItemFlags::Preview) ? 0.0 : -1.0);
     draw_list->PathLineTo(DimgVec2D::new(bb.Min.x, y2));

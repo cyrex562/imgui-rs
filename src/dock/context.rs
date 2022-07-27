@@ -2,12 +2,13 @@ use std::collections::{HashMap, HashSet};
 use crate::config::ConfigFlags;
 use crate::context::Context;
 use crate::dock::{ImGuiDockNode, node, ops, settings};
-use crate::dock::node::{dock_node_get_root_node, dock_node_tree_update_pos_size, dock_node_update_has_central_node_child, DockNode, DockNodeFlags, DockNodeSettings, preview, tab_bar, tree, window};
+use crate::dock::node::{dock_node_get_root_node, dock_node_update_has_central_node_child, DockNode, DockNodeFlags, DockNodeSettings, preview, tab_bar, tree, window};
 use crate::frame::get_frame_height;
 use crate::{dock, hash_string, INVALID_ID, window};
 use crate::axis::Axis;
 use crate::dock::builder::{dock_builder_remove_node_child_nodes, dock_builder_remove_node_docked_windows};
 use crate::dock::defines::DOCKING_SPLITTER_SIZE;
+use crate::dock::node::tree::dock_node_tree_update_pos_size;
 use crate::dock::node::window::dock_node_add_window;
 use crate::dock::preview::DockPreviewData;
 use crate::dock::request::{DockRequest, DockRequestType};
@@ -794,7 +795,7 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode)
         } else {1};
         // node.parent_node.child_nodes[index_in_parent] = NULL;
         parent_node.unwrap().child_nodes[index_in_parent] = INVALID_ID;
-        node::dock_node_tree_merge(g,
+        tree::dock_node_tree_merge(g,
                                    parent_node.unwrap(),
                                    g.get_dock_node(parent_node.unwrap().child_nodes[index_in_parent ^ 1]));
         // node.parent_node.authority_for_viewport = DataAuthority::Window; // The node that stays in place keeps the viewport, so our newly dragged out node will create a new viewport
@@ -871,7 +872,7 @@ pub fn dock_context_remove_node(g: &mut Context, node: &mut DockNode, merge_sibl
             // ImGuiDockNode* sibling_node = (parent_node.ChildNodes[0] == node ? parent_node.ChildNodes[1] : parent_node.ChildNodes[0]);
             let sibling_node_id = if parent_node_obj.child_nodes[0] == node.id { parent_node_obj.child_nodes[1] } else { parent_node.child_nodes[0] };
             let sibling_node = g.get_dock_node(sibling_node_id);
-            node::dock_node_tree_merge(g, parent_node_obj, sibling_node);
+            tree::dock_node_tree_merge(g, parent_node_obj, sibling_node);
         } else {
 
             // for (int n = 0; parent_node && n < IM_ARRAYSIZE(parent_node.ChildNodes); n += 1)

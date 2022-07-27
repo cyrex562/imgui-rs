@@ -111,7 +111,7 @@ impl Style {
         out.PopupRounding = 0.0;             // Radius of popup window corners rounding. Set to 0.0 to have rectangular child windows
         out.PopupBorderSize = 1.0;             // Thickness of border around popup or tooltip windows. Generally set to 0.0 or 1.0. Other values not well tested.
         out.frame_padding = Vector2D::new(4.0, 3.0);      // Padding within a framed rectangle (used by most widgets)
-        out.FrameRounding = 0.0;             // Radius of frame corners rounding. Set to 0.0 to have rectangular frames (used by most widgets).
+        out.frame_rounding = 0.0;             // Radius of frame corners rounding. Set to 0.0 to have rectangular frames (used by most widgets).
         out.frame_border_size = 0.0;             // Thickness of border around frames. Generally set to 0.0 or 1.0. Other values not well tested.
         out.ItemSpacing = Vector2D::new(8.0, 4.0);      // Horizontal and vertical spacing between widgets/lines
         out.item_inner_spacing = Vector2D::new(4.0, 4.0);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
@@ -153,7 +153,7 @@ impl Style {
         self.ChildRounding = f32::floor(&self.ChildRounding * scale_factor);
         self.PopupRounding = f32::floor(&self.PopupRounding * scale_factor);
         self.frame_padding = Vector2D::floor(&self.frame_padding * scale_factor);
-        self.FrameRounding = f32::floor(&self.FrameRounding * scale_factor);
+        self.frame_rounding = f32::floor(&self.frame_rounding * scale_factor);
         self.ItemSpacing = Vector2D::floor(&self.ItemSpacing * scale_factor);
         self.item_inner_spacing = Vector2D::floor(&self.item_inner_spacing * scale_factor);
         self.CellPadding = Vector2D::floor(&self.CellPadding * scale_factor);

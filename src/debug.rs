@@ -145,7 +145,7 @@ pub fn show_font_atlas(g: &mut Context, atlas: &mut FontAtlas)
     for (int i = 0; i < atlas->Fonts.size; i += 1)
     {
         ImFont* font = atlas->Fonts[i];
-        PushID(font);
+        push_id(font);
         DebugNodeFont(font);
         pop_id();
     }
@@ -433,7 +433,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         for (int n = 0; n < g.tab_bars.GetMapSize(); n += 1)
             if (ImGuiTabBar* tab_bar = g.tab_bars.TryGetMapData(n))
             {
-                PushID(tab_bar);
+                push_id(tab_bar);
                 DebugNodeTabBar(tab_bar, "tab_bar");
                 pop_id();
             }
@@ -648,7 +648,7 @@ pub fn debug_node_columns(g: &mut Context, columns: &mut OldColumns)
 pub fn debug_node_dock_node_flags(g: &mut Context, p_flags: &HashSet<DockNodeFlags>, label: &str, enabled: bool)
 {
     using namespace ImGui;
-    PushID(label);
+    push_id(label);
     push_style_var(StyleVar::frame_padding, Vector2D::new(0.0, 0.0));
     text("%s:", label);
     if (!enabled)
@@ -1008,7 +1008,7 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
         for (int tab_n = 0; tab_n < tab_bar->Tabs.size; tab_n += 1)
         {
             const ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
-            PushID(tab);
+            push_id(tab);
             if (SmallButton("<")) { TabBarQueueReorder(tab_bar, tab, -1); } same_line(0, 2);
             if (SmallButton(">")) { TabBarQueueReorder(tab_bar, tab, +1); } same_line();
             text("%02d%c Tab 0x%08X '%s' Offset: %.1, width: %.1/%.1",
@@ -1134,7 +1134,7 @@ pub fn debug_node_windows_list(g: &mut Context, windows: &mut Vec<Id32>, label: 
         return;
     for (int i = windows.len() - 1; i >= 0; i--) // Iterate front to back
     {
-        PushID((*windows)[i]);
+        push_id((*windows)[i]);
         DebugNodeWindow((*windows)[i], "window");
         pop_id();
     }
@@ -1283,7 +1283,7 @@ pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format
     ImGuiWindow* window = (info->Desc[0] == 0 && n == 0) ? find_window_by_id(info->ID) : NULL;
     if (window)                                                                 // Source: window name (because the root id don't call GetID() and so doesn't get hooked)
         return ImFormatString(buf, buf_size, format_for_ui ? "\"%s\" [window]" : "%s", window.name);
-    if (info->QuerySuccess)                                                     // Source: GetID() hooks (prioritize over ItemInfo() because we frequently use patterns like: PushID(str), Button("") where they both have same id)
+    if (info->QuerySuccess)                                                     // Source: GetID() hooks (prioritize over ItemInfo() because we frequently use patterns like: push_id(str), Button("") where they both have same id)
         return ImFormatString(buf, buf_size, (format_for_ui && info->DataType == DataType::String) ? "\"%s\"" : "%s", info->Desc);
     if (tool->StackLevel < tool->Results.size)                                  // Only start using fallback below when all queries are done, so during queries we don't flickering ??? markers.
         return (*buf = 0);
@@ -1317,7 +1317,7 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
     text("hovered_id: 0x%08X, active_id:  0x%08X", hovered_id, active_id);
 
     same_line();
-    MetricsHelpMarker("Hover an item with the mouse to display elements of the id Stack leading to the item's final id.\nEach level of the stack correspond to a PushID() call.\nAll levels of the stack are hashed together to make the final id of a widget (id displayed at the bottom level of the stack).\nRead FAQ entry about the id stack for details.");
+    MetricsHelpMarker("Hover an item with the mouse to display elements of the id Stack leading to the item's final id.\nEach level of the stack correspond to a push_id() call.\nAll levels of the stack are hashed together to make the final id of a widget (id displayed at the bottom level of the stack).\nRead FAQ entry about the id stack for details.");
 
     // CTRL+C to copy path
     const float time_since_copy = g.time - tool->CopyToClipboardLastTime;
@@ -1351,7 +1351,7 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
     {
         const float id_width = CalcTextSize("0xDDDDDDDD").x;
         TableSetupColumn("Seed", ImGuiTableColumnFlags_WidthFixed, id_width);
-        TableSetupColumn("PushID", ImGuiTableColumnFlags_WidthStretch);
+        TableSetupColumn("push_id", ImGuiTableColumnFlags_WidthStretch);
         TableSetupColumn("Result", ImGuiTableColumnFlags_WidthFixed, id_width);
         TableHeadersRow();
         for (int n = 0; n < tool->Results.size; n += 1)

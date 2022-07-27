@@ -98,7 +98,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         host_window.dcnav_layer_current = NavLayer::Menu;
     }
 
-    // Use PushOverrideID() instead of PushID() to use the node id _without_ the host window id.
+    // Use PushOverrideID() instead of push_id() to use the node id _without_ the host window id.
     // This is to facilitate computing those id from the outside, and will affect more or less only the id of the collapse button, popup and tabs,
     // as docked windows themselves will override the stack with their own root id.
     push_override_id(g, node.id);
