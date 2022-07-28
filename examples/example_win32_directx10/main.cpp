@@ -10,9 +10,9 @@
 #include <tchar.h>
 
 // data
-static ID3D10Device*            g_pd3dDevice = NULL;
-static IDXGISwapChain*          g_pSwapChain = NULL;
-static ID3D10RenderTargetView*  g_mainRenderTargetView = NULL;
+static ID3D10Device*            g_pd3dDevice = None;
+static IDXGISwapChain*          g_pSwapChain = None;
+static ID3D10RenderTargetView*  g_mainRenderTargetView = None;
 
 // Forward declarations of helper functions
 bool CreateDeviceD3D(HWND hWnd);
@@ -26,9 +26,9 @@ int main(int, char**)
 {
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
-    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL };
+    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(None), None, None, None, None, _T("ImGui Example"), None };
     ::RegisterClassEx(&wc);
-    HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Dear ImGui DirectX10 Example"), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Dear ImGui DirectX10 Example"), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, None, None, wc.hInstance, None);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -72,7 +72,7 @@ int main(int, char**)
     // Load fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - If the file cannot be loaded, the function will return None. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
@@ -81,8 +81,8 @@ int main(int, char**)
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0);
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0);
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0);
-    //ImFont* font = io.fonts->AddFontFromFileTTF("c:\\windows\\fonts\\ArialUni.ttf", 18.0, NULL, io.fonts->get_glyph_ranges_japanese());
-    //IM_ASSERT(font != NULL);
+    //ImFont* font = io.fonts->AddFontFromFileTTF("c:\\windows\\fonts\\ArialUni.ttf", 18.0, None, io.fonts->get_glyph_ranges_japanese());
+    //IM_ASSERT(font != None);
 
     // Our state
     bool show_demo_window = true;
@@ -96,7 +96,7 @@ int main(int, char**)
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
-        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+        while (::PeekMessage(&msg, None, 0U, 0U, PM_REMOVE))
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
@@ -151,7 +151,7 @@ int main(int, char**)
         // Rendering
         ImGui::Render();
         const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
-        g_pd3dDevice->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
+        g_pd3dDevice->OMSetRenderTargets(1, &g_mainRenderTargetView, None);
         g_pd3dDevice->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
         ImGui_ImplDX10_RenderDrawData(ImGui::GetDrawData());
 
@@ -200,7 +200,7 @@ bool CreateDeviceD3D(HWND hWnd)
 
     UINT createDeviceFlags = 0;
     //createDeviceFlags |= D3D10_CREATE_DEVICE_DEBUG;
-    if (D3D10CreateDeviceAndSwapChain(NULL, D3D10_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, D3D10_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice) != S_OK)
+    if (D3D10CreateDeviceAndSwapChain(None, D3D10_DRIVER_TYPE_HARDWARE, None, createDeviceFlags, D3D10_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice) != S_OK)
         return false;
 
     CreateRenderTarget();
@@ -210,21 +210,21 @@ bool CreateDeviceD3D(HWND hWnd)
 void CleanupDeviceD3D()
 {
     CleanupRenderTarget();
-    if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = NULL; }
-    if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = NULL; }
+    if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = None; }
+    if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = None; }
 }
 
 void CreateRenderTarget()
 {
     ID3D10Texture2D* pBackBuffer;
     g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
+    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, None, &g_mainRenderTargetView);
     pBackBuffer->Release();
 }
 
 void CleanupRenderTarget()
 {
-    if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
+    if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = None; }
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp
@@ -243,7 +243,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_SIZE:
-        if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
+        if (g_pd3dDevice != None && wParam != SIZE_MINIMIZED)
         {
             CleanupRenderTarget();
             g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);

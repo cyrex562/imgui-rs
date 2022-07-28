@@ -31,7 +31,7 @@ impl ImGuiOnceUponAFrame {
 // void ImGui::NewFrame()
 pub fn new_frame(g: &mut Context)
 {
-    // IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
+    // IM_ASSERT(GImGui != None && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
     // ImGuiContext& g = *GImGui;
 
     // Remove pending delete hooks before frame start.
@@ -76,7 +76,7 @@ pub fn new_frame(g: &mut Context)
     sec_current_font(get_default_font());
     // IM_ASSERT(g.Font->IsLoaded());
     let mut virtual_space = Rect::new4(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
-    // for (int n = 0; n < g.Viewports.Size; n += 1){
+    // for (int n = 0; n < g.viewports.Size; n += 1){
     for n in 0 .. g.viewports.len() {
         virtual_space.add_rect(g.viewports[n].get_main_rect());
     }
@@ -204,7 +204,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     update_mouse_moving_window_new_frame();
 
     // Background darkening/whitening
-    if (get_top_most_popup_modal() != NULL || (g.nav_windowing_target_id != NULL && g.nav_windowing_highlight_alpha > 0.0)) {
+    if (get_top_most_popup_modal() != None || (g.nav_windowing_target_id != None && g.nav_windowing_highlight_alpha > 0.0)) {
         g.dim_bg_ratio = f32::min(g.dim_bg_ratio + g.io.delta_time * 6.0, 1.0);
     }
     else {
@@ -259,7 +259,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
 
     // Closing the focused window restore focus to the first active root window in descending z-order
     if (g.nav_window_id && !g.nav_window_id .WasActive){
-    FocusTopMostWindowUnderOne(NULL, NULL);
+    FocusTopMostWindowUnderOne(None, None);
 }
 
     // No window should be open at the beginning of the frame.
@@ -326,7 +326,7 @@ pub fn end_frame(g: &mut Context)
     // Update docking
     dock_context_end_frame(g);
 
-    set_current_viewport(NULL, NULL);
+    set_current_viewport(None, None);
 
     // Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
     if g.drag_drop_active

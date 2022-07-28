@@ -567,7 +567,7 @@ Other Changes:
   the whole widget is clipped.
 - InputText: Allow activating/cancelling/validating input with gamepad nav events. (#2321, #4552)
 - InputText: Fixed selection rectangle appearing one frame late when selecting all.
-- TextUnformatted: Accept null ranges including (NULL,NULL) without asserting, in order to conform
+- TextUnformatted: Accept null ranges including (None,None) without asserting, in order to conform
   to common idioms (e.g. passing .data(), .data() + .size() from a null string). (#3615)
 - Disabled: Added assert guard for mismatching BeginDisabled()/EndDisabled() blocks. (#211)
 - Nav: Fixed using SetKeyboardFocusHere() on non-visible/clipped items. It now works and will scroll
@@ -588,9 +588,9 @@ Other Changes:
   is disabled. (#4547, #4439) [@PathogenDavid]
 - Nav: Fixed vertical scoring offset when wrapping on Y in a decorated window.
 - Nav: Improve scrolling behavior when navigating to an item larger than view.
-- TreePush(): removed unnecessary/inconsistent legacy behavior where passing a NULL value to
+- TreePush(): removed unnecessary/inconsistent legacy behavior where passing a None value to
   the TreePush(const char*) and TreePush(const void*) functions would use an hard-coded replacement.
-  The only situation where that change would make a meaningful difference is TreePush((const char*)NULL)
+  The only situation where that change would make a meaningful difference is TreePush((const char*)None)
   (_explicitly_ casting a null pointer to const char*), which is unlikely and will now crash.
   You may replace it with anything else.
 - ColorEdit4: Fixed not being able to change hue when saturation is 0. (#4014) [@rokups]
@@ -611,7 +611,7 @@ Other Changes:
 - io: Added 'io.want_capture_mouse_unless_popup_close' alternative to `io.want_capture_mouse'. (#4480)
   This allows apps to receive the click on void when that click is used to close popup (by default,
   clicking on a void when a popup is open will close the popup but not release io.want_capture_mouse).
-- fonts: imgui_freetype: Fixed crash when FT_Render_Glyph() fails to render a glyph and returns NULL
+- fonts: imgui_freetype: Fixed crash when FT_Render_Glyph() fails to render a glyph and returns None
   (which apparently happens with Freetype 2.11). (#4394, #4145?).
 - fonts: Fixed ImFontAtlas::clear_input_data() marking atlas as not built. (#4455, #3487)
 - Backends: Added more implicit asserts to detect invalid/redundant calls to Shutdown functions. (#4562)
@@ -835,7 +835,7 @@ Other Changes:
 - tab_bar: Fixed mouse reordering with very fast movements (e.g. crossing multiple tabs in a single
   frame and then immediately standing still (would only affect automation/bots). [@rokups]
 - Menus: made MenuItem() in a menu bar reflect the 'selected' argument with a highlight. (#4128) [@mattelegende]
-- Drags, Sliders, Inputs: Specifying a NULL format to Float functions default them to "%.3" to be
+- Drags, Sliders, Inputs: Specifying a None format to Float functions default them to "%.3" to be
   consistent with the compile-time default. (#3922)
 - DragScalar: Add default value for v_speed argument to match higher-level functions. (#3922) [@eliasdaler]
 - ColorEdit4: Alpha default to 255 (instead of 0) when omitted in hex input. (#3973) [@squadack]
@@ -948,7 +948,7 @@ Breaking Changes:
 
 Other Changes:
 
-- window, Nav: Fixed crash when calling SetWindowFocus(NULL) at the time a new window appears. (#3865) [@nem0]
+- window, Nav: Fixed crash when calling SetWindowFocus(None) at the time a new window appears. (#3865) [@nem0]
 - window: Shrink close button hit-testing region when it covers an abnormally high portion of the window visible
   area (e.g. when window is collapsed + moved in a corner) to facilitate moving the window away. (#3825)
 - Nav: Various fixes for losing gamepad/keyboard navigation reference point when a window reappears or
@@ -2752,7 +2752,7 @@ Breaking Changes:
   codebase for e.g. "DragInt.*%f" to you find them.
 - InputFloat(): Obsoleted InputFloat() functions taking an optional "int decimal_precision" in favor of an equivalent and more
   flexible "const char* format", consistent with other functions. Kept redirection functions (will obsolete).
-- Misc: IM_DELETE() helper function added in 1.60 doesn't set the input pointer to NULL, more consistent with standard
+- Misc: IM_DELETE() helper function added in 1.60 doesn't set the input pointer to None, more consistent with standard
   expectation and allows passing r-values.
 
 Other Changes:
@@ -3093,7 +3093,7 @@ Other Changes:
 - Internals: ButtonBehavior: Fixed ImGuiButtonFlags_NoHoldingActiveID flag from incorrectly setting the ActiveIdClickOffset field.
   This had no known effect within imgui code but could have affected custom drag and drop patterns. And it is more correct this way! (#1418)
 - Internals: ButtonBehavior: Fixed ImGuiButtonFlags_AllowOverlapMode to avoid temporarily activating widgets on click before they have been correctly double-hovered. (#319, #600)
-- Internals: Added SplitterBehavior() helper. (#319)
+- Internals: Added splitter_behavior() helper. (#319)
 - Internals: Added IM_NEW(), IM_DELETE() helpers. (#484, #504, #1517)
 - Internals: Basic refactor of the settings API which now allows external elements to be loaded/saved.
 - Demo: Added ShowFontSelector() showing loaded fonts.
@@ -3169,7 +3169,7 @@ Other Changes:
 - window: Made the `ImGuiWindowFlags_NoMove` flag properly inherited from parent to child. In a setup with ParentWindow (no flag) -> Child (NoMove) -> SubChild (no flag), the user won't be able to move the parent window by clicking on SubChild. (#1381)
 - Popups: Pop-ups can be closed with a right-click anywhere, without altering focus under the pop-up. (~#439)
 - Popups: `BeginPopupContextItem()`, `BeginPopupContextWindow()` are now setup to allow reopening a context menu by right-clicking again. (~#439)
-- Popups: `BeginPopupContextItem()` now supports a NULL string identifier and uses the last item id if available.
+- Popups: `BeginPopupContextItem()` now supports a None string identifier and uses the last item id if available.
 - Popups: Added `OpenPopupOnItemClick()` helper which mimic `BeginPopupContextItem()` but doesn't do the BeginPopup().
 - MenuItem: Only activating on mouse release. [@Urmeli0815] (was already fixed in nav branch).
 - MenuItem: Made tick mark thicker (thick mark?).
@@ -3243,7 +3243,7 @@ Work on dear imgui has been gradually resuming. It means that fixes and new feat
 - Marked the weird `IMGUI_ONCE_UPON_A_FRAME` helper macro as obsolete. Prefer using the more explicit `ImGuiOnceUponAFrame`.
 - Changed `ColorEdit4(const char* label, float col[4], bool show_alpha = true)` signature to `ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flags = 0)`, where flags 0x01 is a safe no-op (hello dodgy backward compatibility!). The new `ColorEdit4`/`ColorPicker4` functions have lots of available flags! Check and run the demo window, under "Color/Picker Widgets", to understand the various new options.
 - Changed signature of `ColorButton(Vector4D col, bool small_height = false, bool outline_border = true)` to `ColorButton(const char* desc_id, Vector4D col, ImGuiColorEditFlags flags = 0, Vector2D size = DimgVec2D::new(0,0))`. This function was rarely used and was very dodgy (no explicit id!).
-- Changed `BeginPopupContextWindow(bool also_over_items=true, const char* str_id=NULL, int mouse_button=1)` signature to `(const char* str_id=NULL, int mouse_button=1, bool also_over_items=true)`. This is perhaps the most aggressive change in this update, but note that the majority of users relied on default parameters completely, so this will affect only a fraction of users of this already rarely used function.
+- Changed `BeginPopupContextWindow(bool also_over_items=true, const char* str_id=None, int mouse_button=1)` signature to `(const char* str_id=None, int mouse_button=1, bool also_over_items=true)`. This is perhaps the most aggressive change in this update, but note that the majority of users relied on default parameters completely, so this will affect only a fraction of users of this already rarely used function.
 - Removed `IsPosHoveringAnyWindow()`, which was partly broken and misleading. In the vast majority of cases, people using that function wanted to use `io.want_capture_mouse` flag. Replaced with IM_ASSERT + comment redirecting user to `io.want_capture_mouse`. (#1237)
 - Removed the old `ValueColor()` helpers, they are equivalent to calling `Text(label)` + `SameLine()` + `ColorButton()`.
 - Removed `ColorEditMode()` and `ImGuiColorEditMode` type in favor of `ImGuiColorEditFlags` and parameters to the various Color*() functions. The `SetColorEditOptions()` function allows to initialize default but the user can still change them with right-click context menu. Commenting out your old call to `ColorEditMode()` may just be fine!
@@ -3373,9 +3373,9 @@ Other Changes:
 - Examples: OpenGL*: Saving/restoring separate color/alpha blend functions correctly. (#1120) [@greggman]
 - Examples: OpenGL2: Uploading font texture as RGBA32 to increase compatibility with users shaders for beginners. (#824)
 - Examples: Vulkan: Countless fixes and improvements. (#785, #804, #910, #1017, #1039, #1041, #1042, #1043, #1080) [@martty, @Loftilus, @ParticlePeter, @SaschaWillems]
-- Examples: DirectX9/10/10: Only call SetCursor(NULL) is io.mouse_draw_cursor is set. (#585, #909)
+- Examples: DirectX9/10/10: Only call SetCursor(None) is io.mouse_draw_cursor is set. (#585, #909)
 - Examples: DirectX9: Explicitly setting viewport to match that other examples are doing. (#937)
-- Examples: GLFW+OpenGL3: Fixed Shutdown() calling GL functions with NULL parameters if NewFrame was never called. (#800)
+- Examples: GLFW+OpenGL3: Fixed Shutdown() calling GL functions with None parameters if NewFrame was never called. (#800)
 - Examples: GLFW+OpenGL2: Renaming opengl_example/ to opengl2_example/ for clarity.
 - Examples: SDL+OpenGL: explicitly setting GL_UNPACK_ROW_LENGTH to reduce issues because SDL changes it. (#752)
 - Examples: SDL2: Added build .bat files for Win32.
@@ -3393,7 +3393,7 @@ Breaking Changes:
 
 - Renamed `SetNextTreeNodeOpened()` to `SetNextTreeNodeOpen()` for consistency, no redirection.
 - Removed confusing set of `GetInternalState()`, `GetInternalStateSize()`, `SetInternalState()` functions. Now using `CreateContext()`, `DestroyContext()`, `GetCurrentContext()`, `SetCurrentContext()`. If you were using multiple contexts the change should be obvious and trivial.
-- Obsoleted old signature of `CollapsingHeader(const char* label, const char* str_id = NULL, bool display_frame = true, bool default_open = false)`, as extra parameters were badly designed and rarely used. Most uses were using 1 parameter and shouldn't affect you. You can replace the "default_open = true" flag in new API with `CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)`.
+- Obsoleted old signature of `CollapsingHeader(const char* label, const char* str_id = None, bool display_frame = true, bool default_open = false)`, as extra parameters were badly designed and rarely used. Most uses were using 1 parameter and shouldn't affect you. You can replace the "default_open = true" flag in new API with `CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)`.
 - Changed `ImDrawList::push_clip_rect(Vector4D rect)` to `ImDraw::push_clip_rect(Vector2D min,Vector2D max,bool intersect_with_current_clip_rect=false)`. Note that higher-level `ImGui::push_clip_rect()` is preferable because it will clip at logic/widget level, whereas `ImDrawList::push_clip_rect()` only affect your renderer.
 - Title bar (using ImGuiCol_TitleBg/ImGuiCol_TitleBgActive colors) isn't rendered over a window background (ImGuiCol_WindowBg color) anymore (see #655). If your TitleBg/TitleBgActive alpha was 1.0 or you are using the default theme it will not affect you. However if your TitleBg/TitleBgActive alpha was <1.0 you need to tweak your custom theme to readjust for the fact that we don't draw a WindowBg background behind the title bar.
   This helper function will convert an old TitleBg/TitleBgActive color into a new one with the same visual output, given the OLD color and the OLD WindowBg color. (Or If this is confusing, just pick the RGB value from title bar from an old screenshot and apply this as TitleBg/TitleBgActive. Or you may just create TitleBgActive from a tweaked TitleBg color.)
@@ -3510,7 +3510,7 @@ Other Changes:
 - ImDrawList: add_circle(), add_rect() takes optional thickness parameter.
 - ImDrawList: Added add_triangle().
 - ImDrawList: Added PrimQuadUV() helper to ease custom rendering of textured quads (require primitive reserve).
-- ImDrawList: Allow add_text(ImFont\* font, float font_size, ...) variant to take NULL/0.0 as default.
+- ImDrawList: Allow add_text(ImFont\* font, float font_size, ...) variant to take None/0.0 as default.
 - ImFontAtlas: heuristic increase default texture width up for large number of glyphs. (#491)
 - ImTextBuffer: Fixed empty() helper which was utterly broken.
 - Metrics: allow to inspect individual triangles in draw calls.
@@ -3978,7 +3978,7 @@ Other Changes:
 - ImFontAtlas: Fixed appending new fonts without clearing existing fonts. Clearing input data left to application. (#224)
 - ImDrawList: merge draw command better, cases of multiple Begin/End gets merged properly.
 - Store common stacked settings contiguously in memory to avoid heap allocation for unused features, and reduce cache misses.
-- Shutdown() tests for g.io.fonts not being NULL to ease use of multiple ImGui contexts. (#207)
+- Shutdown() tests for g.io.fonts not being None to ease use of multiple ImGui contexts. (#207)
 - Added IMGUI_DISABLE_OBSOLETE_FUNCTIONS define to disable the functions that are meant to be removed.
 - Examples: Added ? marks with tooltips next to various widgets. Added more comments in the demo window.
 - Examples: Added Menu-bar example.

@@ -1,12 +1,11 @@
-use crate::INVALID_ID;
 use crate::types::{Direction, Id32};
+use crate::INVALID_ID;
 
-#[derive(Debug,Clone,Default)]
-pub struct DockRequest
-{
+#[derive(Debug, Clone, Default)]
+pub struct DockRequest {
     // ImGuiDockRequestType    Type;
     pub request_type: DockRequestType,
-    // ImGuiWindow*            DockTargetWindow;   // Destination/Target window to dock into (may be a loose window or a dock_node, might be NULL in which case DockTargetNode cannot be NULL)
+    // ImGuiWindow*            DockTargetWindow;   // Destination/Target window to dock into (may be a loose window or a dock_node, might be None in which case DockTargetNode cannot be None)
     pub dock_target_window_id: Id32,
     // ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
     pub dock_target_node_id: Id32,
@@ -26,11 +25,10 @@ pub struct DockRequest
 
 impl DockRequest {
     //ImGuiDockRequest()
-    pub fn new() -> Self
-    {
+    pub fn new() -> Self {
         // Type = None;
-        // DockTargetWindow = DockPayload = UndockTargetWindow = NULL;
-        // DockTargetNode = UndockTargetNode = NULL;
+        // DockTargetWindow = DockPayload = UndockTargetWindow = None;
+        // DockTargetNode = UndockTargetNode = None;
         // DockSplitDir = ImGuiDir_None;
         // DockSplitRatio = 0.5;
         // DockSplitOuter = false;
@@ -48,14 +46,12 @@ impl DockRequest {
     }
 }
 
-
-#[derive(Debug,Clone)]
-pub enum DockRequestType
-{
+#[derive(Debug, Clone)]
+pub enum DockRequestType {
     None,
     Dock,
     Undock,
-    Split                  // split is the same as Dock but without a DockPayload
+    Split, // split is the same as Dock but without a DockPayload
 }
 
 impl Default for DockRequestType {

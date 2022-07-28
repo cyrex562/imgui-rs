@@ -15,7 +15,7 @@ pub fn find_blocking_modal(g: &mut Context, window: &mut Window) -> Option<&mut 
 {
     // ImGuiContext& g = *GImGui;
     // if (g.open_popup_stack.size <= 0)
-    //     return NULL;
+    //     return None;
     if g.open_popup_stack.is_empty() {
         return None;
     }
@@ -46,7 +46,7 @@ pub fn find_blocking_modal(g: &mut Context, window: &mut Window) -> Option<&mut 
         if is_window_within_begin_stack_of(window, popup_window) {       // window is rendered over last modal, no render order change needed.
             break;
         }
-        // for (ImGuiWindow* parent = popup_window.ParentWindowInBeginStack.root_window; parent != NULL; parent = parent.ParentWindowInBeginStack.root_window)
+        // for (ImGuiWindow* parent = popup_window.ParentWindowInBeginStack.root_window; parent != None; parent = parent.ParentWindowInBeginStack.root_window)
         let mut parent_window_in_begin_stack = g.get_window(popup_window_obj.parent_window_in_begin_stack_id).unwrap();
         while parent_window_in_begin_stack.root_window_id != INVALID_ID {
             let parent_win = g.get_window(parent_window_in_begin_stack.root_window_id).unwrap();

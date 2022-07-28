@@ -1,20 +1,20 @@
 pub mod checks;
 pub mod class;
+pub mod clip;
+pub mod current;
+pub mod focus;
 pub mod get;
+pub mod layer;
+pub mod lifecycle;
+pub mod next_window;
+pub mod pos;
+pub mod props;
 pub mod render;
 pub mod settings;
 pub mod size;
-pub mod temp_data;
-pub mod lifecycle;
-pub mod pos;
-pub mod layer;
-pub mod clip;
 pub mod state;
+pub mod temp_data;
 pub mod visibility;
-pub mod focus;
-pub mod next_window;
-pub mod props;
-pub mod current;
 
 use std::ptr::null_mut;
 
@@ -22,18 +22,19 @@ use crate::color::IM_COL32_A_MASK;
 use crate::column::OldColumns;
 use crate::condition::Condition;
 use crate::config::ConfigFlags;
-use crate::context::{Context, set_active_id_using_nav_and_keys};
+use crate::context::{set_active_id_using_nav_and_keys, Context};
 use class::WindowClass;
 use next_window::NextWindowDataFlags;
 use settings::WindowSettings;
 use std::collections::HashSet;
 use temp_data::WindowTempData;
 
-use crate::types::Direction;
 use crate::dock::node::{dock_node_get_root_node, DockNode, DockNodeFlags};
 use crate::drag_drop::DragDropFlags;
 use crate::draw::draw_list::add_draw_list_to_draw_data;
+use crate::types::Direction;
 
+use crate::draw::draw_data;
 use crate::hash::{hash_data, hash_string};
 use crate::id::set_active_id;
 use crate::input::{mouse, NavLayer};
@@ -41,12 +42,11 @@ use crate::item::{ItemStatusFlags, LastItemData};
 use crate::kv_store::Storage;
 use crate::layout::LayoutType;
 use crate::menu::ImGuiMenuColumns;
-use crate::draw::draw_data;
 use crate::rect::Rect;
 use crate::size_callback_data::SizeCallbackData;
 use crate::stack::ImGuiStackSizes;
 use crate::tab_bar::TabItemFlags;
-use crate::types::{Id32, INVALID_ID, WindowHandle};
+use crate::types::{Id32, WindowHandle, INVALID_ID};
 use crate::utils::{add_hash_set, remove_hash_set_val, sub_hash_set};
 use crate::vectors::two_d::Vector2D;
 use crate::vectors::Vector1D;
@@ -65,7 +65,7 @@ pub struct Window {
     pub flags_previous_frame: HashSet<WindowFlags>,
     // ImGuiWindowClass        window_class;                        // Advanced users only. Set with set_next_window_class()
     pub window_class: WindowClass,
-    // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
+    // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a None value here if their viewport was discarded.
     pub viewport_id: Id32,
     // ImGuiID                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
     // pub viewport_id: Id32,
@@ -134,7 +134,7 @@ pub struct Window {
     pub is_fallback_window: bool,
     // bool                    is_explicit_child;                    // Set when passed _ChildWindow, left to false by BeginDocked()
     pub is_explicit_child: bool,
-    // bool                    has_close_button;                     // Set when the window has a close button (p_open != NULL)
+    // bool                    has_close_button;                     // Set when the window has a close button (p_open != None)
     pub has_close_button: bool,
     // signed char             resize_border_held;                   // current border being held for resize (-1: none, otherwise 0-3)
     pub resize_border_held: i8,
@@ -224,7 +224,7 @@ pub struct Window {
     pub draw_list_id: Id32,
     // ImDrawList              DrawListInst;
     pub draw_list_inst: Id32,
-    // ImGuiWindow*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
+    // ImGuiWindow*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise None.
     pub parent_window_id: WindowHandle,
     // ImGuiWindow*            parent_window_in_begin_stack;
     pub parent_window_in_begin_stack_id: WindowHandle,
@@ -251,7 +251,7 @@ pub struct Window {
     // bool                    memory_compacted;                    // Set when window extraneous data have been garbage collected
     pub memory_compacted: bool,
     // Docking
-    // bool                    dock_is_active        :1;             // When docking artifacts are actually visible. When this is set, dock_node is guaranteed to be != NULL. ~~ (dock_node != NULL) && (dock_node->windows.len() > 1).
+    // bool                    dock_is_active        :1;             // When docking artifacts are actually visible. When this is set, dock_node is guaranteed to be != None. ~~ (dock_node != None) && (dock_node->windows.len() > 1).
     pub dock_is_active: bool,
     // bool                    DockNodeis_visible   :1;
     pub doc_node_is_visible: bool,
@@ -278,7 +278,7 @@ pub struct Window {
 
 impl Window {
     // // ImGuiWindow is mostly a dumb struct. It merely has a constructor and a few helper methods
-    // ImGuiWindow::ImGuiWindow(ImGuiContext* context, const char* name) : DrawListInst(NULL)
+    // ImGuiWindow::ImGuiWindow(ImGuiContext* context, const char* name) : DrawListInst(None)
     pub fn new(g: &mut Context, name: &str) -> Self {
         let mut out = Self {
             //     name = ImStrdup(name);
@@ -385,7 +385,7 @@ impl Window {
         let mut id = hash_data(ptr, seed);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
-            // debug_hook_id_info(id, DataType::Pointer, ptr, NULL);
+            // debug_hook_id_info(id, DataType::Pointer, ptr, None);
         }
         return id;
     }
@@ -467,17 +467,17 @@ pub const DIMG_WIN_FLAGS_NO_INPUTS: HashSet<WindowFlags> = HashSet::from([
 ]);
 
 // When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
-// static const float NAV_WINDOWING_HIGHLIGHT_DELAY            = 0.20;    // time before the highlight and screen dimming starts fading in
+// static let NAV_WINDOWING_HIGHLIGHT_DELAY            = 0.20;    // time before the highlight and screen dimming starts fading in
 pub const NAV_WINDOWING_HIGHLIGHT_DELAY: f32 = 0.20;
 
-// static const float NAV_WINDOWING_LIST_APPEAR_DELAY          = 0.15;    // time before the window list starts to appear
+// static let NAV_WINDOWING_LIST_APPEAR_DELAY          = 0.15;    // time before the window list starts to appear
 pub const NAV_WINDOWING_LIST_APPEAR_DELAY: f32 = 0.15;
 
 // window resizing from edges (when io.config_windows_resize_from_edges = true and ImGuiBackendFlags_HasMouseCursors is set in io.backend_flags by backend)
-// static const float WINDOWS_HOVER_PADDING                    = 4.0;     // Extend outside window for hovering/resizing (maxxed with TouchPadding) and inside windows for borders. Affect FindHoveredWindow().
+// static let WINDOWS_HOVER_PADDING                    = 4.0;     // Extend outside window for hovering/resizing (maxxed with TouchPadding) and inside windows for borders. Affect FindHoveredWindow().
 pub const WINDOWS_HOVER_PADDING: f32 = 4.0;
 
-// static const float WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER = 0.04;    // Reduce visual noise by only highlighting the border after a certain time.
+// static let WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER = 0.04;    // Reduce visual noise by only highlighting the border after a certain time.
 pub const WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER: f32 = 0.04;
 
 // typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);              // Callback function for ImGui::SetNextWindowSizeConstraints()
@@ -487,9 +487,9 @@ pub type ImGuiSizeCallback = fn(*mut SizeCallbackData);
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum WindowFlags {
     None = 0,
-    NoTitleBar,                 // Disable title-bar
-    NoResize,                   // Disable user resizing with the lower-right grip
-    NoMove,                     // Disable user moving the window
+    NoTitleBar,                // Disable title-bar
+    NoResize,                  // Disable user resizing with the lower-right grip
+    NoMove,                    // Disable user moving the window
     NoScrollbar, // Disable scrollbars (window can still scroll with mouse or programmatically)
     NoScrollWithMouse, // Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.
     NoCollapse, // Disable user collapsing window by double-clicking on it. Also referred to as window Menu Button (e.g. within a docking node).
@@ -497,9 +497,9 @@ pub enum WindowFlags {
     NoBackground, // Disable drawing background color (WindowBg, etc.) and outside border. Similar as using set_netxt_window_bg_alpha(0.0).
     NoSavedSettings, // Never load/save settings in .ini file
     NoMouseInputs, // Disable catching mouse, hovering test with pass through.
-    MenuBar,     // Has a menu-bar
+    MenuBar,      // Has a menu-bar
     HorizontalScrollbar, // Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(Vector2D(width,0.0)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
-    NoFocusOnAppearing, // Disable taking focus when transitioning from hidden to visible state
+    NoFocusOnAppearing,  // Disable taking focus when transitioning from hidden to visible state
     NoBringToFrontOnFocus, // Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)
     AlwaysVerticalScrollbar, // Always show vertical scrollbar (even if content_size.y < size.y)
     AlwaysHorizontalScrollbar, // Always show horizontal scrollbar (even if content_size.x < size.x)
@@ -516,8 +516,8 @@ pub enum WindowFlags {
     Modal,        // Don't use! For internal use by begin_popupModal()
     ChildMenu,    // Don't use! For internal use by BeginMenu()
     DockNodeHost, // Don't use! For internal use by Begin()/NewFrame()
-                            // [Obsolete]
-                            //ImGuiWindowFlags_ResizeFromAnySide    = 1 << 17,  // [Obsolete] --> Set io.config_windows_resize_from_edges=true and make sure mouse cursors are supported by backend (io.backend_flags & ImGuiBackendFlags_HasMouseCursors)
+                  // [Obsolete]
+                  //ImGuiWindowFlags_ResizeFromAnySide    = 1 << 17,  // [Obsolete] --> Set io.config_windows_resize_from_edges=true and make sure mouse cursors are supported by backend (io.backend_flags & ImGuiBackendFlags_HasMouseCursors)
 }
 
 // flags for ImGui::IsWindowFocused()
@@ -533,7 +533,7 @@ pub enum FocusedFlags {
     NoPopupHierarchy,
     // Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
     DockHierarchy, // Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
-                            // ImGuiFocusedFlags_RootAndChildWindows           = ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows
+                   // ImGuiFocusedFlags_RootAndChildWindows           = ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows
 }
 
 // flags for ImGui::IsItemHovered(), ImGui::IsWindowHovered()
@@ -563,8 +563,8 @@ pub enum HoveredFlags {
     AllowWhenDisabled,
     // IsItemHovered() only: Return true even if the item is disabled
     NoNavOverride, // Disable using gamepad/keyboard navigation state when active, always query mouse.
-                             // ImGuiHoveredFlags_RectOnly                      = ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped,
-                             // ImGuiHoveredFlags_RootAndChildWindows           = ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows
+                   // ImGuiHoveredFlags_RectOnly                      = ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped,
+                   // ImGuiHoveredFlags_RootAndChildWindows           = ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows
 }
 
 // pub const RootAndChildWindows: i32           = DimgHoveredFlags::RootWindow | DimgHoveredFlags::ChildWindows;

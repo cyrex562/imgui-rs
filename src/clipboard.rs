@@ -1,6 +1,6 @@
-use std::os::raw::c_char;
 use crate::context::Context;
 use crate::imgui_context::ImGuiContext;
+use std::os::raw::c_char;
 
 // void ImGui::set_clipboard_text(const char* text)
 pub fn set_clipboard_text(g: &mut Context, text: &str) {
@@ -17,20 +17,20 @@ pub fn get_clipboard_text_fn_dflt_impl(g: &mut Context) -> String {
     // ImGuiContext& g = *GImGui;
     // ctx.clipboard_handler_data.clear();
     // TODO: winapi
-    // if (!::OpenClipboard(NULL)) {
-    //     return NULL;
+    // if (!::OpenClipboard(None)) {
+    //     return None;
     // }
     // HANDLE wbuf_handle = ::GetClipboardData(CF_UNICODETEXT);
-    // if (wbuf_handle == NULL)
+    // if (wbuf_handle == None)
     // {
     //     ::CloseClipboard();
-    //     return NULL;
+    //     return None;
     // }
     // if (const WCHAR* wbuf_global = (const WCHAR*)::GlobalLock(wbuf_handle))
     // {
-    //     int buf_len = ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, NULL, 0, NULL, NULL);
+    //     int buf_len = ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, None, 0, None, None);
     //     g.ClipboardHandlerData.resize(buf_len);
-    //     ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, g.ClipboardHandlerData.Data, buf_len, NULL, NULL);
+    //     ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, g.ClipboardHandlerData.Data, buf_len, None, None);
     // }
     // ::GlobalUnlock(wbuf_handle);
     // ::CloseClipboard();
@@ -40,11 +40,11 @@ pub fn get_clipboard_text_fn_dflt_impl(g: &mut Context) -> String {
 // static void set_clipboard_text_fn_DefaultImpl(void*, const char* text)
 pub fn set_clipboard_text_fn_dflt_impl(text: &str) {
     todo!()
-    // if (!::OpenClipboard(NULL))
+    // if (!::OpenClipboard(None))
     //     return;
-    // const int wbuf_length = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
+    // let wbuf_length = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, None, 0);
     // HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, wbuf_length * sizeof(WCHAR));
-    // if (wbuf_handle == NULL)
+    // if (wbuf_handle == None)
     // {
     //     ::CloseClipboard();
     //     return;
@@ -53,12 +53,11 @@ pub fn set_clipboard_text_fn_dflt_impl(text: &str) {
     // ::MultiByteToWideChar(CP_UTF8, 0, text, -1, wbuf_global, wbuf_length);
     // ::GlobalUnlock(wbuf_handle);
     // ::EmptyClipboard();
-    // if (::SetClipboardData(CF_UNICODETEXT, wbuf_handle) == NULL)
+    // if (::SetClipboardData(CF_UNICODETEXT, wbuf_handle) == None)
     //     ::GlobalFree(wbuf_handle);
     // ::CloseClipboard();
     // TODO
 }
-
 
 //-----------------------------------------------------------------------------
 // [SECTION] PLATFORM DEPENDENT HELPERS
@@ -121,7 +120,7 @@ pub fn set_clipboard_text_fn_dflt_impl(text: &str) {
 //             }
 //         }
 //     }
-//     return NULL;
+//     return None;
 // }
 
 // #else
@@ -130,7 +129,7 @@ pub fn set_clipboard_text_fn_dflt_impl(text: &str) {
 // static const char* GetClipboardTextFn_DefaultImpl(void*)
 // {
 //     ImGuiContext& g = *GImGui;
-//     return g.ClipboardHandlerData.empty() ? NULL : g.ClipboardHandlerData.begin();
+//     return g.ClipboardHandlerData.empty() ? None : g.ClipboardHandlerData.begin();
 // }
 //
 // static void set_clipboard_text_fn_DefaultImpl(void*, const char* text)

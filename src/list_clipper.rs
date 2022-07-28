@@ -102,7 +102,7 @@ impl ListClipper {
             data = &g.clipper_temp_data[g.ClipperTempDataStacked - 1];
             data.ListClipper.TempData = data;
         }
-        TempData = NULL;
+        TempData = None;
     }
     ItemsCount = -1;
 
@@ -204,7 +204,7 @@ pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
             TableEndRow(table);
     }
         table.RowPosY2 = window.dc.cursor_pos.y;
-        // const int row_increase = ((off_y / line_height) + 0.5);
+        // let row_increase = ((off_y / line_height) + 0.5);
         let row_increate = (off_y / line_height) + 0.5;
         //table->CurrentRow += row_increase; // Can't do without fixing TableEndRow()
         table.RowBgColorCounter += row_increase;
@@ -261,7 +261,7 @@ bool ImGuiListClipper::Step()
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     ImGuiListClipperData* data = (ImGuiListClipperData*)TempData;
-    // IM_ASSERT(data != NULL && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
+    // IM_ASSERT(data != None && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
 
     ImGuiTable* table = g.current_table;
     if (table && table.IsInsideRow)
@@ -273,7 +273,7 @@ bool ImGuiListClipper::Step()
 
     // While we are in frozen row state, keep displaying items one by one, unclipped
     // FIXME: Could be stored as a table-agnostic state.
-    if (data.StepNo == 0 && table != NULL && !table.IsUnfrozenRows)
+    if (data.StepNo == 0 && table != None && !table.IsUnfrozenRows)
     {
         DisplayStart = data.ItemsFrozen;
         DisplayEnd = data.ItemsFrozen + 1;
@@ -319,7 +319,7 @@ bool ImGuiListClipper::Step()
     }
 
     // Step 0 or 1: Calculate the actual ranges of visible elements.
-    const int already_submitted = DisplayEnd;
+    let already_submitted = DisplayEnd;
     if (calc_clipping)
     {
         if (g.LogEnabled)
@@ -342,8 +342,8 @@ bool ImGuiListClipper::Step()
                 data.Ranges.push_back(ImGuiListClipperRange::FromPositions(nav_rect_abs.min.y, nav_rect_abs.max.y, 0, 0));
 
             // Add visible range
-            const int off_min = (is_nav_request && g.NavMoveClipDir == Direction::Up) ? -1 : 0;
-            const int off_max = (is_nav_request && g.NavMoveClipDir == Direction::Down) ? 1 : 0;
+            let off_min = (is_nav_request && g.NavMoveClipDir == Direction::Up) ? -1 : 0;
+            let off_max = (is_nav_request && g.NavMoveClipDir == Direction::Down) ? 1 : 0;
             data.Ranges.push_back(ImGuiListClipperRange::FromPositions(window.clip_rect.min.y, window.clip_rect.max.y, off_min, off_max));
         }
 

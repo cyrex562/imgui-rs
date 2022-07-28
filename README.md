@@ -240,7 +240,7 @@ CODE
      // build and load the texture atlas into a texture
      // (In the examples/ app this is usually done within the ImGui_ImplXXX_Init() function from one of the demo Renderer)
      int width, height;
-     unsigned char* pixels = NULL;
+     unsigned char* pixels = None;
      io.fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
      // At this point you've got the texture data and you need to upload that to your graphic system:
@@ -643,7 +643,7 @@ CODE
                        If this is confusing, pick the RGB value from title bar from an old screenshot and apply this as TitleBg/TitleBgActive. Or you may just create TitleBgActive from a tweaked TitleBg color.
  - 2016/05/07 (1.49) - removed confusing set of GetInternalState(), GetInternalStateSize(), SetInternalState() functions. Now using CreateContext(), DestroyContext(), GetCurrentContext(), SetCurrentContext().
  - 2016/05/02 (1.49) - renamed SetNextTreeNodeOpened() to SetNextTreeNodeOpen(), no redirection.
- - 2016/05/01 (1.49) - obsoleted old signature of CollapsingHeader(const char* label, const char* str_id = NULL, bool display_frame = true, bool default_open = false) as extra parameters were badly designed and rarely used. You can replace the "default_open = true" flag in new API with CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen).
+ - 2016/05/01 (1.49) - obsoleted old signature of CollapsingHeader(const char* label, const char* str_id = None, bool display_frame = true, bool default_open = false) as extra parameters were badly designed and rarely used. You can replace the "default_open = true" flag in new API with CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen).
  - 2016/04/26 (1.49) - changed ImDrawList::push_clip_rect(Vector4D rect) to ImDrawList::push_clip_rect(Imvec2 min,Vector2D max,bool intersect_with_current_clip_rect=false). Note that higher-level ImGui::push_clip_rect() is preferable because it will clip at logic/widget level, whereas ImDrawList::push_clip_rect() only affect your renderer.
  - 2016/04/03 (1.48) - removed style.WindowFillAlphaDefault setting which was redundant. Bake default BG alpha inside style.colors[ImGuiCol_WindowBg] and all other Bg color values. (ref GitHub issue #337).
  - 2016/04/03 (1.48) - renamed ImGuiCol_TooltipBg to ImGuiCol_PopupBg, used by popups/menus and tooltips. popups/menus were previously using ImGuiCol_WindowBg. (ref github issue #337)
@@ -699,7 +699,7 @@ CODE
  - 2015/01/19 (1.30) - renamed ImGuiStorage::GetIntPtr()/GetFloatPtr() to GetIntRef()/GetIntRef() because Ptr was conflicting with actual pointer storage functions.
  - 2015/01/11 (1.30) - big font/image API change! now loads TTF file. allow for multiple fonts. no need for a PNG loader.
  - 2015/01/11 (1.30) - removed GetDefaultFontData(). uses io.fonts->GetTextureData*() API to retrieve uncompressed pixels.
-                       - old:  const void* png_data; unsigned int png_size; ImGui::GetDefaultFontData(NULL, NULL, &png_data, &png_size); [..Upload texture to GPU..];
+                       - old:  const void* png_data; unsigned int png_size; ImGui::GetDefaultFontData(None, None, &png_data, &png_size); [..Upload texture to GPU..];
                        - new:  unsigned char* pixels; int width, height; io.fonts->GetTexDataAsRGBA32(&pixels, &width, &height); [..Upload texture to GPU..]; io.fonts->set_tex_id(YourTexIdentifier);
                        you now have more flexibility to load multiple TTF fonts and manage the texture buffer for internal needs. It is now recommended that you sample the font texture with bilinear interpolation.
  - 2015/01/11 (1.30) - added texture identifier in ImDrawCmd passed to your render function (we can now render images). make sure to call io.fonts->set_tex_id()
@@ -898,7 +898,7 @@ CODE
 // #pragma clang diagnostic ignored "-Wsign-conversion"                // warning: implicit conversion changes signedness
 // #pragma clang diagnostic ignored "-Wformat-pedantic"                // warning: format specifies type 'void *' but the argument has type 'xxxx *' // unreasonable, would lead to casting every %p arg to void*. probably enabled by -pedantic.
 // #pragma clang diagnostic ignored "-Wint-to-void-pointer-cast"       // warning: cast to 'void *' from smaller integer type 'int'
-// #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    // some standard header variations use #define NULL 0
+// #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    // some standard header variations use #define None 0
 // #pragma clang diagnostic ignored "-Wdouble-promotion"               // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using printf() is a misery with this as C += 1 va_arg ellipsis changes float to double.
 // #pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
 // #elif defined(__GNUC__)

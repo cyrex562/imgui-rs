@@ -93,7 +93,7 @@ struct ImObjectPool
 struct ImOptionalIndex
 {
     ImOptionalIndex() : _Index(INVALID_INDEX) {}
-    ImOptionalIndex(const int value) : _Index(value) {}
+    ImOptionalIndex(let value) : _Index(value) {}
 
     // Observers
 
@@ -107,7 +107,7 @@ struct ImOptionalIndex
 
     // Modifiers
 
-    inline ImOptionalIndex& operator=(const int value)
+    inline ImOptionalIndex& operator=(let value)
     {
         _Index = value;
         return *this;
@@ -117,13 +117,13 @@ struct ImOptionalIndex
 
     inline bool operator==(const ImOptionalIndex& rhs) const { return _Index == rhs._Index; }
 
-    inline bool operator==(const int rhs) const { return _Index == rhs; }
+    inline bool operator==(let rhs) const { return _Index == rhs; }
 
     inline bool operator!=(const ImOptionalIndex& rhs) const { return _Index != rhs._Index; }
 
-    inline bool operator!=(const int rhs) const { return _Index != rhs; }
+    inline bool operator!=(let rhs) const { return _Index != rhs; }
 
-    static const int INVALID_INDEX = -1;
+    static let INVALID_INDEX = -1;
 
 private:
     int _Index;
@@ -152,7 +152,7 @@ struct ImNodeData
     ImVector<int> PinIndices;
     bool          Draggable;
 
-    ImNodeData(const int node_id)
+    ImNodeData(let node_id)
         : Id(node_id), Origin(0.0, 0.0), TitleBarContentRect(),
           Rect(Vector2D::new(0.0, 0.0), Vector2D::new(0.0, 0.0)), ColorStyle(), LayoutStyle(), PinIndices(),
           Draggable(true)
@@ -177,7 +177,7 @@ struct ImPinData
         ImU32 Background, Hovered;
     } ColorStyle;
 
-    ImPinData(const int pin_id)
+    ImPinData(let pin_id)
         : Id(pin_id), parent_node_idx(), AttributeRect(), Type(ImNodesAttributeType_None),
           Shape(ImNodesPinShape_CircleFilled), Pos(), Flags(ImNodesAttributeFlags_None),
           ColorStyle()
@@ -195,7 +195,7 @@ struct ImLinkData
         ImU32 Base, Hovered, Selected;
     } ColorStyle;
 
-    ImLinkData(const int link_id) : Id(link_id), StartPinIdx(), EndPinIdx(), ColorStyle() {}
+    ImLinkData(let link_id) : Id(link_id), StartPinIdx(), EndPinIdx(), ColorStyle() {}
 };
 
 struct ImClickInteractionState
@@ -230,7 +230,7 @@ struct NodesStyleVarElement
     NodesStyleVar Item;
     float           FloatValue[2];
 
-    NodesStyleVarElement(const NodesStyleVar variable, const float value) : Item(variable)
+    NodesStyleVarElement(const NodesStyleVar variable, let value) : Item(variable)
     {
         FloatValue[0] = value;
     }
@@ -287,7 +287,7 @@ struct ImNodesEditorContext
         : Nodes(), Pins(), Links(), Panning(0.f, 0.f), SelectedNodeIndices(), SelectedLinkIndices(),
           SelectedNodeOffsets(), PrimaryNodeOffset(0.f, 0.f), ClickInteraction(),
           MiniMapEnabled(false), MiniMapSizeFraction(0.0),
-          MiniMapNodeHoveringCallback(NULL), MiniMapNodeHoveringCallbackUserData(NULL),
+          MiniMapNodeHoveringCallback(None), MiniMapNodeHoveringCallbackUserData(None),
           MiniMapScaling(0.0)
     {
     }
@@ -360,16 +360,16 @@ namespace IMNODES_NAMESPACE
 static inline ImNodesEditorContext& EditorContextGet()
 {
     // No editor context was set! Did you forget to call ImNodes::CreateContext()?
-    // IM_ASSERT(GImNodes.EditorCtx != NULL);
+    // IM_ASSERT(GImNodes.EditorCtx != None);
     return *GImNodes.EditorCtx;
 }
 
 // [SECTION] ObjectPool implementation
 
 template<typename T>
-static inline int ObjectPoolFind(const ImObjectPool<T>& objects, const int id)
+static inline int ObjectPoolFind(const ImObjectPool<T>& objects, let id)
 {
-    const int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
+    let index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
     return index;
 }
 
@@ -378,7 +378,7 @@ static inline void ObjectPoolUpdate(ImObjectPool<T>& objects)
 {
     for (int i = 0; i < objects.InUse.size();  += 1i)
     {
-        const int id = objects.Pool[i].Id;
+        let id = objects.Pool[i].Id;
 
         if (!objects.InUse[i] && objects.IdMap.GetInt(id, -1) == i)
         {
@@ -400,14 +400,14 @@ inline void ObjectPoolUpdate(ImObjectPool<ImNodeData>& nodes)
         }
         else
         {
-            const int id = nodes.Pool[i].Id;
+            let id = nodes.Pool[i].Id;
 
             if (nodes.IdMap.GetInt(id, -1) == i)
             {
                 // Remove node idx form depth stack the first time we detect that this idx slot is
                 // unused
                 ImVector<int>&   depth_stack = EditorContextGet().NodeDepthOrder;
-                const int* const elem = depth_stack.find(i);
+                let* const elem = depth_stack.find(i);
                 // IM_ASSERT(elem != depth_stack.end());
                 depth_stack.erase(elem);
 
@@ -429,7 +429,7 @@ static inline void ObjectPoolReset(ImObjectPool<T>& objects)
 }
 
 template<typename T>
-static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const int id)
+static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, let id)
 {
     int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
 
@@ -440,7 +440,7 @@ static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const in
         {
             index = objects.Pool.size();
             // IM_ASSERT(objects.Pool.size() == objects.InUse.size());
-            const int new_size = objects.Pool.size() + 1;
+            let new_size = objects.Pool.size() + 1;
             objects.Pool.resize(new_size);
             objects.InUse.resize(new_size);
         }
@@ -460,7 +460,7 @@ static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const in
 }
 
 template<>
-inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const int node_id)
+inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, let node_id)
 {
     int node_idx = nodes.IdMap.GetInt(static_cast<ImGuiID>(node_id), -1);
 
@@ -471,7 +471,7 @@ inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const in
         {
             node_idx = nodes.Pool.size();
             // IM_ASSERT(nodes.Pool.size() == nodes.InUse.size());
-            const int new_size = nodes.Pool.size() + 1;
+            let new_size = nodes.Pool.size() + 1;
             nodes.Pool.resize(new_size);
             nodes.InUse.resize(new_size);
         }
@@ -494,9 +494,9 @@ inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const in
 }
 
 template<typename T>
-static inline T& ObjectPoolFindOrCreateObject(ImObjectPool<T>& objects, const int id)
+static inline T& ObjectPoolFindOrCreateObject(ImObjectPool<T>& objects, let id)
 {
-    const int index = ObjectPoolFindOrCreateIndex(objects, id);
+    let index = ObjectPoolFindOrCreateIndex(objects, id);
     return objects.Pool[index];
 }
 } // namespace IMNODES_NAMESPACE

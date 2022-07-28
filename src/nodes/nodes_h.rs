@@ -121,7 +121,7 @@ struct ImNodesIO
         EmulateThreeButtonMouse();
 
         // The keyboard modifier to use in combination with mouse left click to pan the editor view.
-        // Set to NULL by default. To enable this feature, set the modifier to point to a boolean
+        // Set to None by default. To enable this feature, set the modifier to point to a boolean
         // indicating the state of a modifier. For example,
         //
         // ImNodes::GetIO().EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().key_alt;
@@ -132,7 +132,7 @@ struct ImNodesIO
     {
         LinkDetachWithModifierClick();
 
-        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to NULL
+        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to None
         // by default. To enable the feature, set the modifier to point to a boolean indicating the
         // state of a modifier. For example,
         //
@@ -148,14 +148,14 @@ struct ImNodesIO
     {
         MultipleSelectModifier();
 
-        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to NULL
+        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to None
         // by default. To enable the feature, set the modifier to point to a boolean indicating the
         // state of a modifier. For example,
         //
         // ImNodes::GetIO().MultipleSelectModifier.Modifier = &ImGui::GetIO().key_ctrl;
         //
         // Left-clicking a node with this modifier pressed will add the node to the list of
-        // currently selected nodes. If this value is NULL, the Ctrl key will be used.
+        // currently selected nodes. If this value is None, the Ctrl key will be used.
         const bool* Modifier;
     } MultipleSelectModifier;
 
@@ -251,7 +251,7 @@ namespace IMNODES_NAMESPACE
 void SetImGuiContext(ImGuiContext* g);
 
 ImNodesContext* CreateContext();
-void            DestroyContext(ImNodesContext* g = NULL); // NULL = destroy current context
+void            DestroyContext(ImNodesContext* g = None); // None = destroy current context
 ImNodesContext* GetCurrentContext();
 void            SetCurrentContext(ImNodesContext* g);
 
@@ -260,17 +260,17 @@ void                  EditorContextFree(ImNodesEditorContext*);
 void                  EditorContextSet(ImNodesEditorContext*);
 Vector2D                EditorContextGetPanning();
 void                  EditorContextResetPanning(const Vector2D& pos);
-void                  EditorContextMoveToNode(const int node_id);
+void                  EditorContextMoveToNode(let node_id);
 
 ImNodesIO& GetIO();
 
 // Returns the global style struct. See the struct declaration for default values.
 NodesStyle& GetStyle();
-// style presets matching the dear imgui styles of the same name. If dest is NULL, the active
+// style presets matching the dear imgui styles of the same name. If dest is None, the active
 // context's NodesStyle instance will be used as the destination.
-void StyleColorsDark(NodesStyle* dest = NULL); // on by default
-void StyleColorsClassic(NodesStyle* dest = NULL);
-void StyleColorsLight(NodesStyle* dest = NULL);
+void StyleColorsDark(NodesStyle* dest = None); // on by default
+void StyleColorsClassic(NodesStyle* dest = None);
+void StyleColorsLight(NodesStyle* dest = None);
 
 // The top-level function call. Call this before calling BeginNode/EndNode. Calling this function
 // will result the node editor grid workspace being rendered.
@@ -280,10 +280,10 @@ void EndNodeEditor();
 // Add a navigable minimap to the editor; call before EndNodeEditor after all
 // nodes and links have been specified
 void MiniMap(
-    const float                                      minimap_size_fraction = 0.2,
+    let                                      minimap_size_fraction = 0.2,
     const ImNodesMiniMapLocation                     location = ImNodesMiniMapLocation_TopLeft,
-    const ImNodesMiniMapNodeHoveringCallback         node_hovering_callback = NULL,
-    const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data = NULL);
+    const ImNodesMiniMapNodeHoveringCallback         node_hovering_callback = None,
+    const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data = None);
 
 // Use PushColorStyle and PopColorStyle to modify NodesStyle::colors mid-frame.
 void PushColorStyle(ImNodesCol item, unsigned int color);
@@ -350,9 +350,9 @@ void SetNodeScreenSpacePos(int node_id, const Vector2D& screen_space_pos);
 void SetNodeEditorSpacePos(int node_id, const Vector2D& editor_space_pos);
 void SetNodeGridSpacePos(int node_id, const Vector2D& grid_pos);
 
-Vector2D GetNodeScreenSpacePos(const int node_id);
-Vector2D GetNodeEditorSpacePos(const int node_id);
-Vector2D GetNodeGridSpacePos(const int node_id);
+Vector2D GetNodeScreenSpacePos(let node_id);
+Vector2D GetNodeEditorSpacePos(let node_id);
+Vector2D GetNodeGridSpacePos(let node_id);
 
 // If NodesStyleFlags_GridSnapping is enabled, snap the specified node's origin to the grid.
 void SnapNodeToGrid(int node_id);
@@ -396,7 +396,7 @@ bool IsLinkSelected(int link_id);
 // is being pressed over the UI content of the attribute.
 bool IsAttributeActive();
 // Was any attribute active? If so, sets the active attribute id to the output function argument.
-bool IsAnyAttributeActive(int* attribute_id = NULL);
+bool IsAnyAttributeActive(int* attribute_id = None);
 
 // Use the following functions to query a change of state for an existing link, or new link. Call
 // these after EndNodeEditor().
@@ -409,18 +409,18 @@ bool IsLinkStarted(int* started_at_attribute_id);
 // 2) an existing link which is detached from a pin and then dropped
 // Use the including_detached_links flag to control whether this function triggers when the user
 // detaches a link and drops it.
-bool IsLinkDropped(int* started_at_attribute_id = NULL, bool including_detached_links = true);
+bool IsLinkDropped(int* started_at_attribute_id = None, bool including_detached_links = true);
 // Did the user finish creating a new link?
 bool IsLinkCreated(
     int*  started_at_attribute_id,
     int*  ended_at_attribute_id,
-    bool* created_from_snap = NULL);
+    bool* created_from_snap = None);
 bool IsLinkCreated(
     int*  started_at_node_id,
     int*  started_at_attribute_id,
     int*  ended_at_node_id,
     int*  ended_at_attribute_id,
-    bool* created_from_snap = NULL);
+    bool* created_from_snap = None);
 
 // Was an existing link detached from a pin by the user? The detached link's id is assigned to the
 // output argument link_id.
@@ -429,10 +429,10 @@ bool IsLinkDestroyed(int* link_id);
 // Use the following functions to write the editor context's state to a string, or directly to a
 // file. The editor context is serialized in the INI file format.
 
-const char* SaveCurrentEditorStateToIniString(size_t* data_size = NULL);
+const char* SaveCurrentEditorStateToIniString(size_t* data_size = None);
 const char* SaveEditorStateToIniString(
     const ImNodesEditorContext* editor,
-    size_t*                     data_size = NULL);
+    size_t*                     data_size = None);
 
 void LoadCurrentEditorStateFromIniString(const char* data, size_t data_size);
 void LoadEditorStateFromIniString(ImNodesEditorContext* editor, const char* data, size_t data_size);

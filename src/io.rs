@@ -1,21 +1,20 @@
-use std::collections::HashSet;
 use crate::clipboard::{get_clipboard_text_fn_dflt_impl, set_clipboard_text_fn_dflt_impl};
 use crate::config::{BackendFlags, ConfigFlags};
 use crate::context::Context;
-use crate::font::Font;
 use crate::font::font_atlas::FontAtlas;
-use crate::input::{DimgInputEventType, InputSource, DimgKey, DimgKeyData, ModFlags};
+use crate::font::Font;
+use crate::input::{DimgInputEventType, DimgKey, DimgKeyData, InputSource, ModFlags};
 use crate::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
-use crate::types::{Id32, DimgWchar};
+use crate::types::{DimgWchar, Id32};
 use crate::vectors::two_d::Vector2D;
+use std::collections::HashSet;
 
-#[derive(Debug,Default,Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Io {
     //------------------------------------------------------------------
     // Configuration                            // Default value
     //------------------------------------------------------------------
-
     pub config_flags: HashSet<ConfigFlags>,
     // = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
     pub backend_flags: HashSet<BackendFlags>,
@@ -27,7 +26,7 @@ pub struct Io {
     pub ini_saving_rate: f32,
     // = 5.0           // Minimum time between saving positions/sizes to .ini file, in seconds.
     pub ini_filename: String,
-    // const char* ini_filename;                    // = "imgui.ini"    // Path to .ini file (important: default "imgui.ini" is relative to current working dir!). Set NULL to disable automatic .ini loading/saving or if you want to manually call LoadIniSettingsXXX() / SaveIniSettingsXXX() functions.
+    // const char* ini_filename;                    // = "imgui.ini"    // Path to .ini file (important: default "imgui.ini" is relative to current working dir!). Set None to disable automatic .ini loading/saving or if you want to manually call LoadIniSettingsXXX() / SaveIniSettingsXXX() functions.
     pub log_filename: String,
     // const char* log_filename;                    // = "imgui_log.txt"// Path to .log file (default parameter to ImGui::LogToFile when no file is specified).
     pub mouse_double_click_time: f32,
@@ -41,7 +40,7 @@ pub struct Io {
     pub key_repeat_rate: f32,
     // = 0.050         // When holding a key/button, rate at which it repeats, in seconds.
     pub user_data: Vec<u8>,
-    // void*       user_data;                       // = NULL           // Store your own data for retrieval by callbacks.
+    // void*       user_data;                       // = None           // Store your own data for retrieval by callbacks.
     pub fonts: Vec<FontAtlas>,
     // ImFontAtlas*fonts;                          // <auto>           // font atlas: load, rasterize and pack one or more fonts into a single texture.
     pub font_global_scale: f32,
@@ -49,8 +48,8 @@ pub struct Io {
     pub font_allow_user_scaling: bool,
     // = false          // Allow user scaling text of individual window with CTRL+Wheel.
     pub font_default: Font,
-    // ImFont*     font_default;                    // = NULL           // font to use on NewFrame(). Use NULL to uses fonts->fonts[0].
-    pub display_framebuffer_scale: Vector2D,        // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::framebuffer_scale.
+    // ImFont*     font_default;                    // = None           // font to use on NewFrame(). Use None to uses fonts->fonts[0].
+    pub display_framebuffer_scale: Vector2D, // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::framebuffer_scale.
 
     // Docking options (when ImGuiConfigFlags_DockingEnable is set)
     pub config_docking_no_split: bool,
@@ -59,7 +58,7 @@ pub struct Io {
     // = false          // Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)
     pub config_docking_always_tab_bar: bool,
     // = false          // [BETA] [FIXME: This currently creates regression with auto-sizing and general overhead] Make every single floating window display within a docking node.
-    pub config_docking_transparent_payload: bool,// = false          // [BETA] Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with config_viewports_no_auto_merge.
+    pub config_docking_transparent_payload: bool, // = false          // [BETA] Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with config_viewports_no_auto_merge.
 
     // viewport options (when ConfigFlags::ViewportsEnable is set)
     pub config_viewports_no_auto_merge: bool,
@@ -85,7 +84,7 @@ pub struct Io {
     // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.backend_flags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
     pub config_windows_move_from_title_bar_only: bool,
     // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
-    pub config_memory_compact_timer: f32,      // = 60.0          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0 to disable.
+    pub config_memory_compact_timer: f32, // = 60.0          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0 to disable.
 
     //------------------------------------------------------------------
     // Platform Functions
@@ -93,15 +92,15 @@ pub struct Io {
     //------------------------------------------------------------------
 
     // Optional: Platform/Renderer backend name (informational only! will be displayed in About window) + User data for backend/wrappers to store their own stuff.
-    // const char* backend_platform_name;            // = NULL
+    // const char* backend_platform_name;            // = None
     pub backend_platform_name: String,
-    // const char* backend_renderer_name;            // = NULL
+    // const char* backend_renderer_name;            // = None
     pub backend_renderer_name: String,
-    // void*       backend_platform_user_data;        // = NULL           // User data for platform backend
+    // void*       backend_platform_user_data;        // = None           // User data for platform backend
     pub backend_platform_user_data: Vec<u8>,
-    // void*       backend_renderer_user_data;        // = NULL           // User data for renderer backend
+    // void*       backend_renderer_user_data;        // = None           // User data for renderer backend
     pub backend_renderer_user_data: Vec<u8>,
-    // void*       backend_language_user_data;        // = NULL           // User data for non C++ programming language backend
+    // void*       backend_language_user_data;        // = None           // User data for non C++ programming language backend
     pub backend_language_user_data: Vec<u8>,
 
     // Optional: Access OS clipboard
@@ -113,12 +112,12 @@ pub struct Io {
     // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on windows)
     // (default to use native imm32 api on windows)
     // void        (*SetPlatformImeDataFn)(ImGuiViewport* viewport, ImGuiPlatformImeData* data);
-// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//     void*       ime_window_handle;                // = NULL           // [Obsolete] Set ImGuiViewport::platform_handle_raw instead. Set this to your HWND to get automatic IME cursor positioning.
+    // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    //     void*       ime_window_handle;                // = None           // [Obsolete] Set ImGuiViewport::platform_handle_raw instead. Set this to your HWND to get automatic IME cursor positioning.
     pub ime_window_handle: Id32,
-// #else
-//     void*       _UnusedPadding;                                     // Unused field to keep data structure the same size.
-// #endif
+    // #else
+    //     void*       _UnusedPadding;                                     // Unused field to keep data structure the same size.
+    // #endif
 
     //------------------------------------------------------------------
     // Input - Call before calling NewFrame()
@@ -135,7 +134,7 @@ pub struct Io {
     //  void  add_input_character(unsigned int c);                      // Queue a new character input
     //  void  add_input_character_utf16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
     //  void  add_input_characters_utf8(const char* str);                // Queue a new characters input from an UTF-8 string
-    // 
+    //
     //  void  set_key_event_native_data(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
     //  void  set_app_accepting_events(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
     //  void  clear_input_characters();                                 // [Internal] clear the text input buffer manually
@@ -146,7 +145,6 @@ pub struct Io {
     // (when reading from the io.want_capture_mouse, io.want_capture_keyboard flags to dispatch your inputs, it is
     //  generally easier and more correct to use their state BEFORE calling NewFrame(). See FAQ for details!)
     //------------------------------------------------------------------
-
     pub want_capture_mouse: bool,
     // Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
     pub want_capture_keyboard: bool,
@@ -156,7 +154,7 @@ pub struct Io {
     pub want_set_mouse_pos: bool,
     // mouse_pos has been altered, backend should reposition mouse on next frame. Rarely used! Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
     pub want_save_ini_settings: bool,
-    // When manual .ini load/save is active (io.ini_filename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.want_save_ini_settings yourself after saving!
+    // When manual .ini load/save is active (io.ini_filename == None), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.want_save_ini_settings yourself after saving!
     pub nav_active: bool,
     // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
     pub nav_visible: bool,
@@ -173,14 +171,14 @@ pub struct Io {
     // Number of active windows
     pub metrics_active_allocations: i32,
     // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-    pub mouse_delta: Vector2D,                         // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+    pub mouse_delta: Vector2D, // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
 
     // Legacy: before 1.87, we required backend to fill io.key_map[] (imgui->native map) during initialization and io.keys_down[] (native indices) every frame.
     // This is still temporarily supported as a legacy feature. However the new preferred scheme is for backend to call io.add_key_event().
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     int         KeyMap[ImGuiKey_COUNT];             // [LEGACY] Input: map of indices into the keys_down[512] entries array which represent your "native" keyboard state. The first 512 are now unused and should be kept zero. Legacy backend will write into KeyMap[] using ImGuiKey_ indices which are always >512.
-//     bool        keys_down[ImGuiKey_COUNT];           // [LEGACY] Input: Keyboard keys that are pressed (ideally left in the "native" order your engine has access to keyboard keys, so you can use your own defines/enums for keys). This used to be [512] sized. It is now ImGuiKey_COUNT to allow legacy io.keys_down[GetKeyIndex(...)] to work without an overflow.
-// #endif
+    // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+    //     int         KeyMap[ImGuiKey_COUNT];             // [LEGACY] Input: map of indices into the keys_down[512] entries array which represent your "native" keyboard state. The first 512 are now unused and should be kept zero. Legacy backend will write into KeyMap[] using ImGuiKey_ indices which are always >512.
+    //     bool        keys_down[ImGuiKey_COUNT];           // [LEGACY] Input: Keyboard keys that are pressed (ideally left in the "native" order your engine has access to keyboard keys, so you can use your own defines/enums for keys). This used to be [512] sized. It is now ImGuiKey_COUNT to allow legacy io.keys_down[GetKeyIndex(...)] to work without an overflow.
+    // #endif
 
     //------------------------------------------------------------------
     // [Internal] Dear ImGui will maintain those fields. Forward compatibility not guaranteed!
@@ -259,14 +257,16 @@ pub struct Io {
     // 0: using add_key_analog_event(), 1: writing to legacy io.nav_inputs[] directly
     pub input_queue_surrogate: Vec<u8>,
     // For add_input_character_utf16()
-    pub input_queue_characters: Vec<u8>,         // Queue of _characters_ input (obtained by platform backend). Fill using add_input_character() helper.
+    pub input_queue_characters: Vec<u8>, // Queue of _characters_ input (obtained by platform backend). Fill using add_input_character() helper.
 
-    //    ImGuiIO();
+                                         //    ImGuiIO();
 }
 
 impl Io {
     pub fn new() -> Self {
-        let mut out = Self { ..Default::default() };
+        let mut out = Self {
+            ..Default::default()
+        };
 
         // Most fields are initialized with zero
         // memset(this, 0, sizeof(*this));
@@ -289,11 +289,11 @@ impl Io {
         // # endif
         out.key_repeat_delay = 0.275;
         out.key_repeat_rate = 0.050;
-        // out.user_data = NULL;
+        // out.user_data = None;
 
-        // out.fonts = NULL;
+        // out.fonts = None;
         out.font_global_scale = 1.0;
-        // out.font_default = NULL;
+        // out.font_default = None;
         out.font_allow_user_scaling = false;
         out.display_framebuffer_scale = Vector2D::new(1.0, 1.0);
 
@@ -323,12 +323,12 @@ impl Io {
         out.config_memory_compact_timer = 60.0;
 
         // Platform Functions
-        // out.backend_platform_name = backend_renderer_name = NULL;
+        // out.backend_platform_name = backend_renderer_name = None;
         out.backend_platform_name = "".to_string();
         out.backend_renderer_name = "".to_string();
-        // out.backend_platform_user_data = backend_renderer_user_data = backend_language_user_data = NULL;
+        // out.backend_platform_user_data = backend_renderer_user_data = backend_language_user_data = None;
         out.backend_platform_user_data = Vec::new();
-        out.get_clipboard_text_fn = get_clipboard_text_fn_dflt_impl;   // Platform dependent default implementations
+        out.get_clipboard_text_fn = get_clipboard_text_fn_dflt_impl; // Platform dependent default implementations
         out.set_clipboard_text_fn = set_clipboard_text_fn_dflt_impl;
         out.clipboard_user_data = Vec::new();
         out.set_platform_ime_data_fn = SetPlatformImeDataFn_DefaultImpl;
@@ -352,7 +352,6 @@ impl Io {
         out
     }
 
-
     // Input Functions
     //  void  add_key_event(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
     pub fn add_key_event(&mut self, key: &DimgKey, down: bool) {
@@ -363,9 +362,9 @@ impl Io {
     }
     //  void  add_key_analog_event(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
     // Queue a new key down/up event.
-// - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
-// - bool down:          Is the key down? use false to signify a key release.
-// - float analog_value: 0.0..1.0
+    // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
+    // - bool down:          Is the key down? use false to signify a key release.
+    // - float analog_value: 0.0..1.0
     pub fn add_key_analog_event(&mut self, g: &mut Context, key: &DimgKey, down: bool, v: f32) {
         //if (e->down) { IMGUI_DEBUG_LOG_IO("add_key_event() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->down, e->NativeKeycode, e->NativeScancode); }
         if key == DimgKey::None || !self.app_accepting_events {
@@ -376,13 +375,13 @@ impl Io {
         // IM_ASSERT(ImGui::IsNamedKey(key)); // Backend needs to pass a valid ImGuiKey_ constant. 0..511 values are legacy native key codes which are not accepted by this API.
 
         // Verify that backend isn't mixing up using new io.add_key_event() api and old io.keys_down[] + io.key_map[] data.
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     IM_ASSERT((backend_using_legacy_key_arrays == -1 || backend_using_legacy_key_arrays == 0) && "Backend needs to either only use io.add_key_event(), either only fill legacy io.keys_down[] + io.key_map[]. Not both!");
-//     if (backend_using_legacy_key_arrays == -1)
-//         for (int n = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n++)
-//             IM_ASSERT(KeyMap[n] == -1 && "Backend needs to either only use io.add_key_event(), either only fill legacy io.keys_down[] + io.key_map[]. Not both!");
-//     backend_using_legacy_key_arrays = 0;
-// #endif
+        // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+        //     IM_ASSERT((backend_using_legacy_key_arrays == -1 || backend_using_legacy_key_arrays == 0) && "Backend needs to either only use io.add_key_event(), either only fill legacy io.keys_down[] + io.key_map[]. Not both!");
+        //     if (backend_using_legacy_key_arrays == -1)
+        //         for (int n = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n++)
+        //             IM_ASSERT(KeyMap[n] == -1 && "Backend needs to either only use io.add_key_event(), either only fill legacy io.keys_down[] + io.key_map[]. Not both!");
+        //     backend_using_legacy_key_arrays = 0;
+        // #endif
         if self.is_gamepad_key(key) {
             self.backend_using_legacy_nav_input_array = false;
         }
@@ -394,7 +393,9 @@ impl Io {
             // for (int n = g.input_events_queue.size - 1; n >= 0 && !found; n--){
             let mut n = g.InputEventsQueue.size - 1;
             while n >= 0 && !found {
-                if g.InputEventsQueue[n].Type == DimgInputEventType::Key && g.InputEventsQueue[n].Key.Key == key {
+                if g.InputEventsQueue[n].Type == DimgInputEventType::Key
+                    && g.InputEventsQueue[n].Key.Key == key
+                {
                     found = true;
                 }
             }
@@ -408,7 +409,9 @@ impl Io {
         e.input_event_type = DimgInputEventType::Key;
         e.source = if self.is_gamepad_key(key) {
             InputSource::Gamepad
-        } else { InputSource::Keyboard };
+        } else {
+            InputSource::Keyboard
+        };
         e.Key.Key = key;
         e.Key.down = down;
         e.Key.analog_value = analog_value;
@@ -488,9 +491,9 @@ impl Io {
     //  void  add_input_character(unsigned int c);                      // Queue a new character input
 
     // Pass in translated ASCII characters for text input.
-// - with glfw you can get those from the callback set in glfwSetCharCallback()
-// - on windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
-// FIXME: Should in theory be called "AddCharacterEvent()" to be consistent with new API
+    // - with glfw you can get those from the callback set in glfwSetCharCallback()
+    // - on windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
+    // FIXME: Should in theory be called "AddCharacterEvent()" to be consistent with new API
     pub fn add_input_character(&mut self, c: u32, g: &mut Context) {
         // ImGuiContext & g = *;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.".to_string());
@@ -501,19 +504,20 @@ impl Io {
             input_event_type: DimgInputEventType::Text,
             source: InputSource::Keyboard,
             val: DimgInputEventVal::new(),
-            added_byt_test_engine: false
+            added_byt_test_engine: false,
         };
         g.InputEventsQueue.push_back(e);
     }
     //  void  add_input_character_utf16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
     // UTF16 strings use surrogate pairs to encode codepoints >= 0x10000, so
-// we should save the high surrogate.
+    // we should save the high surrogate.
     pub fn add_input_character_utf16(&mut self, c: DimgWchar) {
         if (c == 0 && self.input_queue_surrogate.is_empty()) || !self.app_accepting_events {
             return;
         }
 
-        if (c & 0xFC00) == 0xD800 { // High surrogate, must save {
+        if (c & 0xFC00) == 0xD800 {
+            // High surrogate, must save {
             if self.input_queue_surrogate.is_empty() == false {
                 self.add_input_character(IM_UNICODE_CODEPOINT_INVALID);
             }
@@ -524,14 +528,15 @@ impl Io {
         //ImWchar cp = c;
         let cp: DimgWchar = c;
         if self.input_queue_surrogate != 0 {
-            if (c & 0xFC00) != 0xDC00 { // Invalid low surrogate {
+            if (c & 0xFC00) != 0xDC00 {
+                // Invalid low surrogate {
                 self.add_input_character(IM_UNICODE_CODEPOINT_INVALID);
             } else {
-// #if IM_UNICODE_CODEPOINT_MAX == 0xFFFF
-//             cp = IM_UNICODE_CODEPOINT_INVALID; // codepoint will not fit in ImWchar
-// #else
-//             cp = (ImWchar)(((input_queue_surrogate - 0xD800) << 10) + (c - 0xDC00) + 0x10000);
-// #endif
+                // #if IM_UNICODE_CODEPOINT_MAX == 0xFFFF
+                //             cp = IM_UNICODE_CODEPOINT_INVALID; // codepoint will not fit in ImWchar
+                // #else
+                //             cp = (ImWchar)(((input_queue_surrogate - 0xD800) << 10) + (c - 0xDC00) + 0x10000);
+                // #endif
             }
 
             self.input_queue_surrogate.clear();
@@ -547,7 +552,7 @@ impl Io {
         //
         // while *self.utf8_chars != 0 {
         //     let c: u32 = 0;
-        //     utf8_chars += DimgTextCharFromUtf8(&c, utf8_chars, NULL);
+        //     utf8_chars += DimgTextCharFromUtf8(&c, utf8_chars, None);
         //     if c != 0 {
         //         self.add_input_character(c);
         //     }
@@ -557,9 +562,14 @@ impl Io {
 
     //  void  set_key_event_native_data(ImGuiKey key, int native_keycode, int native_scancode, int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
     // [Optional] Call after add_key_event().
-// Specify native keycode, scancode + Specify index for legacy <1.87 IsKeyXXX() functions with native indices.
-// If you are writing a backend in 2022 or don't use IsKeyXXX() with native values that are not ImGuiKey values, you can avoid calling this.
-    pub fn set_key_event_native_data(key: DimgKey, native_keycode: i32, native_scancode: i32, native_legacy_index: i32) {
+    // Specify native keycode, scancode + Specify index for legacy <1.87 IsKeyXXX() functions with native indices.
+    // If you are writing a backend in 2022 or don't use IsKeyXXX() with native values that are not ImGuiKey values, you can avoid calling this.
+    pub fn set_key_event_native_data(
+        key: DimgKey,
+        native_keycode: i32,
+        native_scancode: i32,
+        native_legacy_index: i32,
+    ) {
         if key == DimgKey::None {
             return;
         }
@@ -569,16 +579,16 @@ impl Io {
         // IM_UNUSED(native_scancode); // Yet unused
 
         // build native->imgui map so old user code can still call key functions with native 0..511 values.
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     const int legacy_key = (native_legacy_index != -1) ? native_legacy_index : native_keycode;
-//     if (!ImGui::IsLegacyKey(legacy_key))
-//         return;
-//     KeyMap[legacy_key] = key;
-//     KeyMap[key] = legacy_key;
-// #else
-//     IM_UNUSED(key);
-//     IM_UNUSED(native_legacy_index);
-// #endif
+        // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+        //     let legacy_key = (native_legacy_index != -1) ? native_legacy_index : native_keycode;
+        //     if (!ImGui::IsLegacyKey(legacy_key))
+        //         return;
+        //     KeyMap[legacy_key] = key;
+        //     KeyMap[key] = legacy_key;
+        // #else
+        //     IM_UNUSED(key);
+        //     IM_UNUSED(native_legacy_index);
+        // #endif
     }
     //  void  set_app_accepting_events(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
     // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
@@ -609,11 +619,9 @@ impl Io {
     }
 }
 
-
 // (Optional) Access via ImGui::GetPlatformIO()
-#[derive(Debug,Clone,Default)]
-pub struct PlatformIo
-{
+#[derive(Debug, Clone, Default)]
+pub struct PlatformIo {
     //------------------------------------------------------------------
     // Input - Backend interface/functions + Monitor List
     //------------------------------------------------------------------
@@ -632,7 +640,6 @@ pub struct PlatformIo
     // Platform functions are typically called before their Renderer counterpart, apart from Destroy which are called the other way.
 
     // Platform function --------------------------------------------------- Called by -----
-
 
     // (Optional) Monitor list
     // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.
@@ -728,7 +735,13 @@ impl PlatformIo {
         todo!()
     }
     //     int     (*Platform_CreateVkSurface)(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
-    pub fn Platform_CreateVkSurface(&mut self, vp: &mut ImGuiViewport, vk_inst: u64, vk_allocators: *const c_void, out_vk_surface: &mut u64) -> i32 {
+    pub fn Platform_CreateVkSurface(
+        &mut self,
+        vp: &mut ImGuiViewport,
+        vk_inst: u64,
+        vk_allocators: *const c_void,
+        out_vk_surface: &mut u64,
+    ) -> i32 {
         todo!()
     }
 

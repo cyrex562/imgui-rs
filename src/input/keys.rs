@@ -81,7 +81,7 @@ pub fn get_key_pressed_amount(g: &mut Context, key: Key, repeat_delay: f32, repe
 {
     // ImGuiContext& g = *GImGui;
     const ImGuiKeyData* key_data = GetKeyData(key);
-    const float t = key_data.down_duration;
+    let t = key_data.down_duration;
     return CalcTypematicRepeatAmount(t - g.io.delta_time, t, repeat_delay, repeat_rate);
 }
 
@@ -101,7 +101,7 @@ pub fn is_key_pressed(g: &mut Context, key: Key, repeat: bool) -> bool
 {
     // ImGuiContext& g = *GImGui;
     const ImGuiKeyData* key_data = GetKeyData(key);
-    const float t = key_data.down_duration;
+    let t = key_data.down_duration;
     if (t < 0.0)
         return false;
     const bool pressed = (t == 0.0) || (repeat && t > g.io.KeyRepeatDelay && GetKeyPressedAmount(key, g.io.KeyRepeatDelay, g.io.KeyRepeatRate) > 0);

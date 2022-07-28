@@ -71,7 +71,7 @@ struct ImGui_ImplOpenGL2_Data
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 static ImGui_ImplOpenGL2_Data* ImGui_ImplOpenGL2_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplOpenGL2_Data*)ImGui::GetIO().BackendRendererUserData : NULL;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplOpenGL2_Data*)ImGui::GetIO().BackendRendererUserData : None;
 }
 
 // Forward Declarations
@@ -82,7 +82,7 @@ static void ImGui_ImplOpenGL2_ShutdownPlatformInterface();
 bool    ImGui_ImplOpenGL2_Init()
 {
     ImGuiIO& io = ImGui::GetIO();
-    IM_ASSERT(io.BackendRendererUserData == NULL && "Already initialized a renderer backend!");
+    IM_ASSERT(io.BackendRendererUserData == None && "Already initialized a renderer backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplOpenGL2_Data* bd = IM_NEW(ImGui_ImplOpenGL2_Data)();
@@ -99,20 +99,20 @@ bool    ImGui_ImplOpenGL2_Init()
 void    ImGui_ImplOpenGL2_Shutdown()
 {
     ImGui_ImplOpenGL2_Data* bd = ImGui_ImplOpenGL2_GetBackendData();
-    IM_ASSERT(bd != NULL && "No renderer backend to shutdown, or already shutdown?");
+    IM_ASSERT(bd != None && "No renderer backend to shutdown, or already shutdown?");
     ImGuiIO& io = ImGui::GetIO();
 
     ImGui_ImplOpenGL2_ShutdownPlatformInterface();
     ImGui_ImplOpenGL2_DestroyDeviceObjects();
-    io.BackendRendererName = NULL;
-    io.BackendRendererUserData = NULL;
+    io.BackendRendererName = None;
+    io.BackendRendererUserData = None;
     IM_DELETE(bd);
 }
 
 void    ImGui_ImplOpenGL2_NewFrame()
 {
     ImGui_ImplOpenGL2_Data* bd = ImGui_ImplOpenGL2_GetBackendData();
-    IM_ASSERT(bd != NULL && "Did you call ImGui_ImplOpenGL2_Init()?");
+    IM_ASSERT(bd != None && "Did you call ImGui_ImplOpenGL2_Init()?");
 
     if (!bd->FontTexture)
         ImGui_ImplOpenGL2_CreateDeviceObjects();

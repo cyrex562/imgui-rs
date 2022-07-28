@@ -124,7 +124,7 @@ extern "C" {
 /*! @brief Returns the adapter device name of the specified monitor.
  *
  *  @return The UTF-8 encoded adapter device name (for example `\\.\DISPLAY1`)
- *  of the specified monitor, or `NULL` if an [error](@ref error_handling)
+ *  of the specified monitor, or `None` if an [error](@ref error_handling)
  *  occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -139,7 +139,7 @@ GLFWAPI const char* glfwGetWin32Adapter(GLFWmonitor* monitor);
 /*! @brief Returns the display device name of the specified monitor.
  *
  *  @return The UTF-8 encoded display device name (for example
- *  `\\.\DISPLAY1\Monitor0`) of the specified monitor, or `NULL` if an
+ *  `\\.\DISPLAY1\Monitor0`) of the specified monitor, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -153,7 +153,7 @@ GLFWAPI const char* glfwGetWin32Monitor(GLFWmonitor* monitor);
 
 /*! @brief Returns the `HWND` of the specified window.
  *
- *  @return The `HWND` of the specified window, or `NULL` if an
+ *  @return The `HWND` of the specified window, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -169,7 +169,7 @@ GLFWAPI HWND glfwGetWin32Window(GLFWwindow* window);
 #if defined(GLFW_EXPOSE_NATIVE_WGL)
 /*! @brief Returns the `HGLRC` of the specified window.
  *
- *  @return The `HGLRC` of the specified window, or `NULL` if an
+ *  @return The `HGLRC` of the specified window, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -231,7 +231,7 @@ GLFWAPI id glfwGetNSGLContext(GLFWwindow* window);
 #if defined(GLFW_EXPOSE_NATIVE_X11)
 /*! @brief Returns the `Display` used by GLFW.
  *
- *  @return The `Display` used by GLFW, or `NULL` if an
+ *  @return The `Display` used by GLFW, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -289,7 +289,7 @@ GLFWAPI window glfwGetX11Window(GLFWwindow* window);
 #if defined(GLFW_EXPOSE_NATIVE_GLX)
 /*! @brief Returns the `GLXContext` of the specified window.
  *
- *  @return The `GLXContext` of the specified window, or `NULL` if an
+ *  @return The `GLXContext` of the specified window, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -319,7 +319,7 @@ GLFWAPI GLXWindow glfwGetGLXWindow(GLFWwindow* window);
 #if defined(GLFW_EXPOSE_NATIVE_WAYLAND)
 /*! @brief Returns the `struct wl_display*` used by GLFW.
  *
- *  @return The `struct wl_display*` used by GLFW, or `NULL` if an
+ *  @return The `struct wl_display*` used by GLFW, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -333,7 +333,7 @@ GLFWAPI struct wl_display* glfwGetWaylandDisplay(void);
 
 /*! @brief Returns the `struct wl_output*` of the specified monitor.
  *
- *  @return The `struct wl_output*` of the specified monitor, or `NULL` if an
+ *  @return The `struct wl_output*` of the specified monitor, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -347,7 +347,7 @@ GLFWAPI struct wl_output* glfwGetWaylandMonitor(GLFWmonitor* monitor);
 
 /*! @brief Returns the main `struct wl_surface*` of the specified window.
  *
- *  @return The main `struct wl_surface*` of the specified window, or `NULL` if
+ *  @return The main `struct wl_surface*` of the specified window, or `None` if
  *  an [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -363,7 +363,7 @@ GLFWAPI struct wl_surface* glfwGetWaylandWindow(GLFWwindow* window);
 #if defined(GLFW_EXPOSE_NATIVE_MIR)
 /*! @brief Returns the `MirConnection*` used by GLFW.
  *
- *  @return The `MirConnection*` used by GLFW, or `NULL` if an
+ *  @return The `MirConnection*` used by GLFW, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not
@@ -391,7 +391,7 @@ GLFWAPI int glfwGetMirMonitor(GLFWmonitor* monitor);
 
 /*! @brief Returns the `MirSurface*` of the specified window.
  *
- *  @return The `MirSurface*` of the specified window, or `NULL` if an
+ *  @return The `MirSurface*` of the specified window, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @thread_safety This function may be called from any thread.  Access is not

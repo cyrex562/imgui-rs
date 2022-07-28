@@ -82,13 +82,13 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", window.name, id);
 
     push_style_var(StyleVar::ChildBorderSize, 0.0);
-    begin(title, NULL, window_flags);
+    begin(title, None, window_flags);
     pop_style_var();
 
     ImGuiWindow* host_window = g.current_window;
     dock_node_setup_host_window(node, host_window);
     host_windowchild_id = window.get_id(title);
-    node.only_node_with_windows = NULL;
+    node.only_node_with_windows = None;
 
     // IM_ASSERT(node.IsRootNode());
 
@@ -116,7 +116,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
 // ImGuiID DockSpaceOverViewport(const ImGuiViewport* viewport, ImGuiDockNodeFlags dockspace_flags, const ImGuiWindowClass* window_class)
 pub fn dock_space_over_viewport(g: &mut Context, viewport: &mut Viewport, dockspace_flags: &HashSet<DockNodeFlags>, window_class: &WindowClass) -> Id32
 {
-    if (viewport == NULL)
+    if (viewport == None)
         viewport = GetMainViewport();
 
     set_next_window_pos(viewport.WorkPos);
@@ -135,7 +135,7 @@ pub fn dock_space_over_viewport(g: &mut Context, viewport: &mut Viewport, docksp
     push_style_var(StyleVar::WindowRounding, 0.0);
     push_style_var(StyleVar::WindowBorderSize, 0.0);
     push_style_var(StyleVar::WindowPadding, Vector2D::new(0.0, 0.0));
-    begin(label, NULL, host_window_flags);
+    begin(label, None, host_window_flags);
     pop_style_var(3);
 
     ImGuiID dockspace_id = GetID("DockSpace");

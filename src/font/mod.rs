@@ -78,7 +78,7 @@ impl Font {
         }
         self.fallback_advance_x
     }
-    //     bool                        is_loaded() const                    { return container_atlas != NULL; }
+    //     bool                        is_loaded() const                    { return container_atlas != None; }
     pub fn is_loaded(&self) -> bool {
         self.container_atlas.is_some()
     }
@@ -92,7 +92,7 @@ impl Font {
     //
     //     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
     //     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0 to disable.
-    //      Vector2D            calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
+    //      Vector2D            calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = None, const char** remaining = None) const; // utf8
     pub fn calc_text_size_a(&self, size: f32, max_width: f32, wrap_width: f32, text: &str) -> Vector2D {
         todo!()
     }
@@ -172,7 +172,7 @@ impl ImFontGlyphRangesBuilder {
     pub fn add_char(&mut self, c: u8) {
         self.set_bit(c as usize)
     }
-    //      void  add_text(const char* text, const char* text_end = NULL);     // Add string (each character of the UTF-8 string are added)
+    //      void  add_text(const char* text, const char* text_end = None);     // Add string (each character of the UTF-8 string are added)
     pub fn add_text(&mut self, text: &String) {
         todo!()
     }
@@ -200,7 +200,7 @@ pub struct DimgFontConfig
     pub pixel_snap_h: bool,             // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set oversample_h/V to 1.
     pub glyph_extra_spacing: Vector2D,      // 0, 0     // Extra spacing (in pixels) between glyphs. Only x axis is supported for now.
     pub glyph_offset: Vector2D,            // 0, 0     // Offset all glyphs from this font input.
-    pub glyph_ranges: Vec<DimgWchar>, // const ImWchar*  glyph_ranges;            // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
+    pub glyph_ranges: Vec<DimgWchar>, // const ImWchar*  glyph_ranges;            // None     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
     pub glyph_min_advance_x: f32,      // 0        // Minimum advance_x for glyphs, set min to align font icons, set both min/max to enforce mono-space font
     pub glyph_max_advance_x: f32,      // FLT_MAX  // Maximum advance_x for glyphs
     pub merge_mode: bool,              // false    // merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use glyph_offset.y when merge font of different heights.

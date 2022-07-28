@@ -1,20 +1,17 @@
-#[derive(Clone,Debug,Default)]
-pub struct ImGuiTextRange
-    {
-        // const char*     b;
-        // const char*     e;
-        pub b: String,
-        pub e: String,
-
-
-    }
+#[derive(Clone, Debug, Default)]
+pub struct ImGuiTextRange {
+    // const char*     b;
+    // const char*     e;
+    pub b: String,
+    pub e: String,
+}
 
 impl ImGuiTextRange {
-    // ImGuiTextRange()                                { b = e = NULL; }
+    // ImGuiTextRange()                                { b = e = None; }
     pub fn new(b: &String, e: &String) -> Self {
         Self {
             b: b.clone(),
-            e: e.clone()
+            e: e.clone(),
         }
     }
     //     ImGuiTextRange(const char* _b, const char* _e)  { b = _b; e = _e; }

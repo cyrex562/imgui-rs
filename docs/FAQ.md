@@ -574,7 +574,7 @@ ImFontConfig config;
 config.merge_mode = true;
 io.fonts->add_font_default();
 io.fonts->AddFontFromFileTTF("fontawesome-webfont.ttf", 16.0, &config, ranges); // merge icon font
-io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.fonts->get_glyph_ranges_japanese()); // merge japanese glyphs
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_pixels, None, &config, io.fonts->get_glyph_ranges_japanese()); // merge japanese glyphs
 ```
 
 ##### [Return to index](#index)
@@ -586,7 +586,7 @@ When loading a font, pass custom Unicode ranges to specify the glyphs to load.
 
 ```cpp
 // Add default Japanese ranges
-io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, NULL, io.fonts->get_glyph_ranges_japanese());
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, None, io.fonts->get_glyph_ranges_japanese());
 
 // Or create your own custom ranges (e.g. for a game you can feed your entire game script and only build the characters the game need)
 ImVector<ImWchar> ranges;
@@ -595,7 +595,7 @@ builder.add_text("Hello world");                        // Add a string (here "H
 builder.add_char(0x7262);                               // Add a specific character
 builder.add_ranges(io.fonts->get_glyph_ranges_japanese()); // Add one of the default ranges
 builder.build_ranges(&ranges);                          // build the final result (ordered ranges with all the unique characters submitted)
-io.fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, NULL, ranges.data);
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", 16.0, None, ranges.data);
 ```
 
 All your strings needs to use UTF-8 encoding. In C += 111 you can encode a string literal in UTF-8

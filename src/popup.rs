@@ -133,7 +133,7 @@ pub fn get_top_most_popup_modal(g: &mut Context) -> &mut Window
         if (ImGuiWindow* popup = g.open_popup_stack.data[n].Window)
             if (popup.flags & WindowFlags::Modal)
                 return popup;
-    return NULL;
+    return None;
 }
 
 // ImGuiWindow* GetTopMostAndVisiblePopupModal()
@@ -144,7 +144,7 @@ pub fn get_top_most_and_visible_popup_modal(g: &mut Context) -> &mut Window
         if (ImGuiWindow* popup = g.open_popup_stack.data[n].Window)
             if ((popup.flags & WindowFlags::Modal) && is_window_active_and_visible(popup))
                 return popup;
-    return NULL;
+    return None;
 }
 
 // void OpenPopup(const char* str_id, ImGuiPopupFlags popup_flags)
@@ -165,21 +165,21 @@ pub fn open_popup2(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 // Mark popup as open (toggle toward open state).
 // Popups are closed when user click outside, or activate a pressable item, or CloseCurrentPopup() is called within a begin_popup()/EndPopup() block.
 // Popup identifiers are relative to the current id-stack (so OpenPopup and begin_popup needs to be at the same level).
-// One open popup per level of the popup hierarchy (NB: when assigning we reset the window member of ImGuiPopupRef to NULL)
+// One open popup per level of the popup hierarchy (NB: when assigning we reset the window member of ImGuiPopupRef to None)
 // void OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags)
 pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 {
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* parent_window = g.current_window;
-    const int current_stack_size = g.begin_popup_stack.size;
+    let current_stack_size = g.begin_popup_stack.size;
 
     if (popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup)
         if (is_popup_open(0u, ImGuiPopupFlags_AnyPopupId))
             return;
 
-    ImGuiPopupData popup_ref; // Tagged as new ref as window will be set back to NULL if we write this into open_popup_stack.
+    ImGuiPopupData popup_ref; // Tagged as new ref as window will be set back to None if we write this into open_popup_stack.
     popup_ref.PopupId = id;
-    popup_ref.Window = NULL;
+    popup_ref.Window = None;
     popup_ref.SourceWindow = g.nav_window;
     popup_ref.OpenFrameCount = g.frame_count;
     popup_ref.OpenParentId = parent_window.idStack.back();
@@ -257,7 +257,7 @@ pub fn close_popups_over_window(g: &mut Context, ref_window: &mut Window, restor
     }
     if (popup_count_to_keep < g.open_popup_stack.size) // This test is not required but it allows to set a convenient breakpoint on the statement below
     {
-        IMGUI_DEBUG_LOG_POPUP("[popup] close_popups_over_window(\"%s\")\n", ref_window ? ref_window.name : "<NULL>");
+        IMGUI_DEBUG_LOG_POPUP("[popup] close_popups_over_window(\"%s\")\n", ref_window ? ref_window.name : "<None>");
         ClosePopupToLevel(popup_count_to_keep, restore_focus_to_window_under_popup);
     }
 }
@@ -295,7 +295,7 @@ pub fn close_popup_to_level(g: &mut Context, remaining: i32, restore_focus_to_wi
         if (focus_window && !focus_window.was_active && popup_window)
         {
             // Fallback
-            FocusTopMostWindowUnderOne(popup_window, NULL);
+            FocusTopMostWindowUnderOne(popup_window, None);
         }
         else
         {
@@ -356,7 +356,7 @@ pub fn begin_popup_ex(g: &mut Context, id: Id32, flags: &HashSet<WindowFlags>) -
         ImFormatString(name, IM_ARRAYSIZE(name), "##Popup_%08x", id); // Not recycling, so we can close/open during the same frame
 
     flags |= WindowFlags::Popup | WindowFlags::NoDocking;
-    bool is_open = begin(name, NULL, flags);
+    bool is_open = begin(name, None, flags);
     if (!is_open) // NB: Begin can return false when the popup is completely clipped (e.g. zero size display)
         end_popup();
 
@@ -443,13 +443,13 @@ pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &Has
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
     {
         ImGuiID id = str_id ? window.get_id(str_id) : g.last_item_data.id;    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
-        // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
+        // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
         open_popupEx(id, popup_flags);
     }
 }
 
 // This is a helper to handle the simplest case of associating one named popup to one given widget.
-// - To create a popup associated to the last item, you generally want to pass a NULL value to str_id.
+// - To create a popup associated to the last item, you generally want to pass a None value to str_id.
 // - To create a popup with a specific identifier, pass it in str_id.
 //    - This is useful when using using begin_popupContextItem() on an item which doesn't have an identifier, e.g. a Text() call.
 //    - This is useful when multiple code locations may want to manipulate/open the same popup, given an explicit id.
@@ -472,7 +472,7 @@ pub fn begin_popup_context_item(g: &mut Context, str_id: &str, popup_flags: &Has
     if (window.skip_items)
         return false;
     ImGuiID id = str_id ? window.get_id(str_id) : g.last_item_data.id;    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
-    // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
+    // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
         open_popupEx(id, popup_flags);
@@ -504,7 +504,7 @@ pub fn begin_popup_context_void(g: &mut Context, str_id: &str, popup_flags: &Has
     ImGuiID id = window.get_id(str_id);
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
-        if (get_top_most_popup_modal() == NULL)
+        if (get_top_most_popup_modal() == None)
             open_popupEx(id, popup_flags);
     return begin_popupEx(id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings);
 }
@@ -535,7 +535,7 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
             if (dir == Direction::Right) pos = Vector2D::new(r_avoid.min.x, r_avoid.min.y - size.y); // Above, Toward Right
             if (dir == Direction::Left)  pos = Vector2D::new(r_avoid.max.x - size.x, r_avoid.max.y); // Below, Toward Left
             if (dir == Direction::Up)    pos = Vector2D::new(r_avoid.max.x - size.x, r_avoid.min.y - size.y); // Above, Toward Left
-            if (!r_outer.Contains(Rect(pos, pos + size)))
+            if (!r_outer.contains(Rect(pos, pos + size)))
                 continue;
             *last_dir = dir;
             return pos;
@@ -553,8 +553,8 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
 
-            const float avail_w = (dir == Direction::Left ? r_avoid.min.x : r_outer.max.x) - (dir == Direction::Right ? r_avoid.max.x : r_outer.min.x);
-            const float avail_h = (dir == Direction::Up ? r_avoid.min.y : r_outer.max.y) - (dir == Direction::Down ? r_avoid.max.y : r_outer.min.y);
+            let avail_w = (dir == Direction::Left ? r_avoid.min.x : r_outer.max.x) - (dir == Direction::Right ? r_avoid.max.x : r_outer.min.x);
+            let avail_h = (dir == Direction::Up ? r_avoid.min.y : r_outer.max.y) - (dir == Direction::Down ? r_avoid.max.y : r_outer.min.y);
 
             // If there not enough room on one axis, there's no point in positioning on a side on this axis (e.g. when not enough width, use a top/bottom position to maximize available width)
             if (avail_w < size.x && (dir == Direction::Left || dir == Direction::Right))
@@ -595,10 +595,10 @@ pub fn get_popup_allowed_extent_rect(g: &mut Context, window: &mut Window) -> Re
 {
     // ImGuiContext& g = *GImGui;
     Rect r_screen;
-    if (window.ViewportAllowPlatformMonitorExtend >= 0)
+    if (window.viewportAllowPlatformMonitorExtend >= 0)
     {
         // Extent with be in the frame of reference of the given viewport (so min is likely to be negative here)
-        const ImGuiPlatformMonitor& monitor = g.platform_io.monitors[window.ViewportAllowPlatformMonitorExtend];
+        const ImGuiPlatformMonitor& monitor = g.platform_io.monitors[window.viewportAllowPlatformMonitorExtend];
         r_screen.min = monitor.WorkPos;
         r_screen.max = monitor.WorkPos + monitor.work_size;
     }

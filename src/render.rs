@@ -110,11 +110,11 @@ void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, 
     if (need_clipping)
     {
         Vector4D fine_clip_rect(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
-        draw_list.AddText(NULL, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, &fine_clip_rect);
+        draw_list.AddText(None, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, &fine_clip_rect);
     }
     else
     {
-        draw_list.AddText(NULL, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, NULL);
+        draw_list.AddText(None, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, None);
     }
 }
 
@@ -122,7 +122,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
 {
     // Hide anything after a '##' string
     const char* text_display_end = FindRenderedTextEnd(text, text_end);
-    const int text_len = (text_display_end - text);
+    let text_len = (text_display_end - text);
     if (text_len == 0)
         return;
 
@@ -140,7 +140,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
 void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end_full, const Vector2D* text_size_if_known)
 {
     // ImGuiContext& g = *GImGui;
-    if (text_end_full == NULL)
+    if (text_end_full == None)
         text_end_full = FindRenderedTextEnd(text);
     const Vector2D text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_end_full, false, 0.0);
 
@@ -156,8 +156,8 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         //          <-> this is generally some padding value
 
         const ImFont* font = draw_list->_Data.Font;
-        const float font_size = draw_list->_Data.font_size;
-        const char* text_end_ellipsis = NULL;
+        let font_size = draw_list->_Data.font_size;
+        const char* text_end_ellipsis = None;
 
         ImWchar ellipsis_char = font.EllipsisChar;
         int ellipsis_char_count = 1;
@@ -174,13 +174,13 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         if (ellipsis_char_count > 1)
         {
             // Full ellipsis size without free spacing after it.
-            const float spacing_between_dots = 1.0 * (draw_list->_Data.font_size / font.font_size);
+            let spacing_between_dots = 1.0 * (draw_list->_Data.font_size / font.font_size);
             ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots;
             ellipsis_total_width = ellipsis_glyph_width * ellipsis_char_count - spacing_between_dots;
         }
 
         // We can now claim the space between pos_max.x and ellipsis_max.x
-        const float text_avail_width = ImMax((ImMax(pos_max.x, ellipsis_max_x) - ellipsis_total_width) - pos_min.x, 1.0);
+        let text_avail_width = ImMax((ImMax(pos_max.x, ellipsis_max_x) - ellipsis_total_width) - pos_min.x, 1.0);
         float text_size_clipped_x = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, text_end_full, &text_end_ellipsis).x;
         if (text == text_end_ellipsis && text_end_ellipsis < text_end_full)
         {
@@ -220,11 +220,11 @@ void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool bor
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     window.draw_list.add_rect_filled(p_min, p_max, fill_col, rounding);
-    const float border_size = g.style.frame_border_size;
+    let border_size = g.style.frame_border_size;
     if (border && border_size > 0.0)
     {
-        window.draw_list.AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), get_color_u32(StyleColor::BorderShadow), rounding, 0, border_size);
-        window.draw_list.AddRect(p_min, p_max, get_color_u32(StyleColor::Border), rounding, 0, border_size);
+        window.draw_list.add_rect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), get_color_u32(StyleColor::BorderShadow), rounding, 0, border_size);
+        window.draw_list.add_rect(p_min, p_max, get_color_u32(StyleColor::Border), rounding, 0, border_size);
     }
 }
 
@@ -232,11 +232,11 @@ void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
 {
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    const float border_size = g.style.frame_border_size;
+    let border_size = g.style.frame_border_size;
     if (border_size > 0.0)
     {
-        window.draw_list.AddRect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), get_color_u32(StyleColor::BorderShadow), rounding, 0, border_size);
-        window.draw_list.AddRect(p_min, p_max, get_color_u32(StyleColor::Border), rounding, 0, border_size);
+        window.draw_list.add_rect(p_min + Vector2D::new(1, 1), p_max + Vector2D::new(1, 1), get_color_u32(StyleColor::BorderShadow), rounding, 0, border_size);
+        window.draw_list.add_rect(p_min, p_max, get_color_u32(StyleColor::Border), rounding, 0, border_size);
     }
 }
 
@@ -257,19 +257,19 @@ pub fn render_nav_highlight(g: &mut Context, bb: &Rect, id: Id32, flags: Option<
     display_rect.clip_with(window.clip_rect);
     if (flags & ImGuiNavHighlightFlags_TypeDefault)
     {
-        const float THICKNESS = 2.0;
-        const float DISTANCE = 3.0 + THICKNESS * 0.5;
+        let THICKNESS = 2.0;
+        let DISTANCE = 3.0 + THICKNESS * 0.5;
         display_rect.Expand(Vector2D::new(DISTANCE, DISTANCE));
-        bool fully_visible = window.clip_rect.Contains(display_rect);
+        bool fully_visible = window.clip_rect.contains(display_rect);
         if (!fully_visible)
             window.draw_list.push_clip_rect(display_rect.min, display_rect.max);
-        window.draw_list.AddRect(display_rect.min + Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.max - Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), get_color_u32(StyleColor::NavHighlight), rounding, 0, THICKNESS);
+        window.draw_list.add_rect(display_rect.min + Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.max - Vector2D::new(THICKNESS * 0.5, THICKNESS * 0.5), get_color_u32(StyleColor::NavHighlight), rounding, 0, THICKNESS);
         if (!fully_visible)
             window.draw_list.pop_clip_rect();
     }
     if (flags & NavHighlightingFlags::TypeThin)
     {
-        window.draw_list.AddRect(display_rect.min, display_rect.max, get_color_u32(StyleColor::NavHighlight), rounding, 0, 1.0);
+        window.draw_list.add_rect(display_rect.min, display_rect.max, get_color_u32(StyleColor::NavHighlight), rounding, 0, 1.0);
     }
 }
 
@@ -286,7 +286,7 @@ void ImGui::render_mouse_cursor(Vector2D base_pos, float base_scale, ImGuiMouseC
             continue;
         ImGuiViewportP* viewport = g.viewports[n];
         const Vector2D pos = base_pos - offset;
-        const float scale = base_scale * viewport.DpiScale;
+        let scale = base_scale * viewport.DpiScale;
         if (!viewport.get_main_rect().Overlaps(Rect(pos, pos + Vector2D::new(size.x + 2, size.y + 2) * scale)))
             continue;
         ImDrawList* draw_list = get_foreground_draw_list(viewport);
@@ -308,9 +308,9 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
     if g.dim_bg_ration <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0 {
         return;
     }
-    // const bool dim_bg_for_modal = (modal_window != NULL);
+    // const bool dim_bg_for_modal = (modal_window != None);
 
-    // const bool dim_bg_for_window_list = (g.NavWindowingTargetAnim != NULL && g.NavWindowingTargetAnim->Active);
+    // const bool dim_bg_for_window_list = (g.NavWindowingTargetAnim != None && g.NavWindowingTargetAnim->Active);
     let dim_bg_for_window_list = true;
     let nav_win_tgt_anim = g.get_window(g.nav_windowing_target_anim).unwrap();
     let dim_bg_for_window_list = g.nav_windowing_target_anim != INVALID_ID && nav_win_tgt_anim.active;
@@ -318,7 +318,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
         return;
     }
 
-    // ImGuiViewport* viewports_already_dimmed[2] = { NULL, NULL };
+    // ImGuiViewport* viewports_already_dimmed[2] = { None, None };
     let viewports_already_dimmedd: [Id32; 2] = [0, 0];
     if dim_bg_for_modal {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
@@ -428,13 +428,13 @@ pub fn render(g: &mut Context)
             INVALID_ID
         }
     ];
-    // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & ImGuiWindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->root_window_dock_tree : NULL;
-    // windows_to_render_top_most[1] = (g.nav_windowing_target_id? g.nav_windowing_list_window : NULL);
+    // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & ImGuiWindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->root_window_dock_tree : None;
+    // windows_to_render_top_most[1] = (g.nav_windowing_target_id? g.nav_windowing_list_window : None);
     // for (int n = 0; n != g.windows.Size; n += 1)
     for (win_id, window) in g.windows.iter_mut()
     {
         // ImGuiWindow* window = g.windows[n];
-        // IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
+        // IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing None pointer 'window'"
         if is_window_active_and_visible(window) && (!window.flags.contains(&WindowFlags::ChildWindow)) && window.id != windows_to_render_top_most[0] && window.id != windows_to_render_top_most[1] {
             add_root_window_to_draw_data(g, window);
         }

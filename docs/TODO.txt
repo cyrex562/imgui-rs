@@ -74,7 +74,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - input text: reorganize event handling, allow CharFilter to modify buffers, allow multiple events? (#541)
  - input text: expose CursorPos in char filter event (#816)
  - input text: try usage idiom of using InputText with data only exposed through get/set accessors, without extraneous copy/alloc. (#3009)
- - input text: access public fields via a non-callback API e.g. InputTextGetState("xxx") that may return NULL if not active (available in internals)
+ - input text: access public fields via a non-callback API e.g. InputTextGetState("xxx") that may return None if not active (available in internals)
  - input text: flag to disable live update of the user buffer (also applies to float/int text input) (#701)
  - input text: hover tooltip could show unclamped text
  - input text: support for INSERT key to toggle overwrite mode. currently disabled because stb_textedit behavior is unsatisfactory on multi-line. (#2863)
@@ -151,7 +151,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - docking: B: changing title font/style per-window is not supported as dock nodes are created in NewFrame.
  - docking: B- dock node inside its own viewports creates 1 temporary viewport per window on startup before ditching them (doesn't affect the user nor request platform windows to be created, but unnecessary)
  - docking: B- resize sibling locking behavior may be less desirable if we merged same-axis sibling in a same node level?
- - docking: B- single visible node part of a hidden split hierarchy (OnlyNodeWithWindows != NULL) should show a normal title bar (not a tab bar)
+ - docking: B- single visible node part of a hidden split hierarchy (OnlyNodeWithWindows != None) should show a normal title bar (not a tab bar)
  - docking: B~ SetNextWindowDock() calls (with conditional) -> defer everything to DockContextUpdate (repro: Documents->[x]windows->Dock 1 elsewhere->Click Redock All
  - docking: B~ tidy up tab list popup buttons features (available with manual tab-bar, see ImGuiTabBarFlags_NoTabListPopupButton code, not used by docking nodes)
  - docking: B- SetNextWindowDockId(0) with a second Begin() in the frame will asserts
@@ -347,7 +347,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - nav/menus: allow pressing Menu to leave a sub-menu.
  - nav/menus: a way to access the main menu bar with Alt? (currently needs CTRL+TAB) or last focused window menu bar?
  - nav/menus: when using the main menu bar, even though we restore focus after, the underlying window loses its title bar highlight during menu manipulation. could we prevent it?
- - nav/menus: main menu bar currently cannot restore a NULL focus. Could save nav_window at the time of being focused, similarly to what popup do?
+ - nav/menus: main menu bar currently cannot restore a None focus. Could save nav_window at the time of being focused, similarly to what popup do?
  - nav/menus: Alt,Up could open the first menu (e.g. "File") currently it tends to nav into the window/collapse menu. Do do that we would need custom transition?
  - nav/windowing: configure fade-in/fade-out delay on Ctrl+Tab?
  - nav/windowing: when CTRL+Tab/windowing is active, the hovered_window detection doesn't take account of the window display re-ordering.

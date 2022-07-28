@@ -1272,11 +1272,11 @@ GLFWAPI void glfwTerminate(void);
  *  library.  It is intended for when you are using GLFW as a shared library and
  *  want to ensure that you are using the minimum required version.
  *
- *  Any or all of the version arguments may be `NULL`.
+ *  Any or all of the version arguments may be `None`.
  *
- *  @param[out] major Where to store the major version number, or `NULL`.
- *  @param[out] minor Where to store the minor version number, or `NULL`.
- *  @param[out] rev Where to store the revision number, or `NULL`.
+ *  @param[out] major Where to store the major version number, or `None`.
+ *  @param[out] minor Where to store the minor version number, or `None`.
+ *  @param[out] rev Where to store the revision number, or `None`.
  *
  *  @errors None.
  *
@@ -1340,9 +1340,9 @@ GLFWAPI const char* glfwGetVersionString(void);
  *  Once set, the error callback remains set even after the library has been
  *  terminated.
  *
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set.
+ *  @return The previously set callback, or `None` if no callback was set.
  *
  *  @errors None.
  *
@@ -1362,11 +1362,11 @@ GLFWAPI GLFWerrorfun glfwSetErrorCallback(GLFWerrorfun cbfun);
  *
  *  This function returns an array of handles for all currently connected
  *  monitors.  The primary monitor is always first in the returned array.  If no
- *  monitors were found, this function returns `NULL`.
+ *  monitors were found, this function returns `None`.
  *
  *  @param[out] count Where to store the number of monitors in the returned
  *  array.  This is set to zero if an error occurred.
- *  @return An array of monitor handles, or `NULL` if no monitors were found or
+ *  @return An array of monitor handles, or `None` if no monitors were found or
  *  if an [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -1392,7 +1392,7 @@ GLFWAPI GLFWmonitor** glfwGetMonitors(int* count);
  *  This function returns the primary monitor.  This is usually the monitor
  *  where elements like the task bar or global menu bar are located.
  *
- *  @return The primary monitor, or `NULL` if no monitors were found or if an
+ *  @return The primary monitor, or `None` if no monitors were found or if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -1416,12 +1416,12 @@ GLFWAPI GLFWmonitor* glfwGetPrimaryMonitor(void);
  *  This function returns the position, in screen coordinates, of the upper-left
  *  corner of the specified monitor.
  *
- *  Any or all of the position arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` position arguments will be set to zero.
+ *  Any or all of the position arguments may be `None`.  If an error occurs, all
+ *  non-`None` position arguments will be set to zero.
  *
  *  @param[in] monitor The monitor to query.
- *  @param[out] xpos Where to store the monitor x-coordinate, or `NULL`.
- *  @param[out] ypos Where to store the monitor y-coordinate, or `NULL`.
+ *  @param[out] xpos Where to store the monitor x-coordinate, or `None`.
+ *  @param[out] ypos Where to store the monitor y-coordinate, or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
@@ -1446,14 +1446,14 @@ GLFWAPI void glfwGetMonitorPos(GLFWmonitor* monitor, int* xpos, int* ypos);
  *  [EDID](https://en.wikipedia.org/wiki/Extended_display_identification_data)
  *  data is incorrect or because the driver does not report it accurately.
  *
- *  Any or all of the size arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` size arguments will be set to zero.
+ *  Any or all of the size arguments may be `None`.  If an error occurs, all
+ *  non-`None` size arguments will be set to zero.
  *
  *  @param[in] monitor The monitor to query.
  *  @param[out] widthMM Where to store the width, in millimetres, of the
- *  monitor's display area, or `NULL`.
+ *  monitor's display area, or `None`.
  *  @param[out] heightMM Where to store the height, in millimetres, of the
- *  monitor's display area, or `NULL`.
+ *  monitor's display area, or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
  *
@@ -1477,7 +1477,7 @@ GLFWAPI void glfwGetMonitorPhysicalSize(GLFWmonitor* monitor, int* widthMM, int*
  *  monitor and is not guaranteed to be unique among the connected monitors.
  *
  *  @param[in] monitor The monitor to query.
- *  @return The UTF-8 encoded name of the monitor, or `NULL` if an
+ *  @return The UTF-8 encoded name of the monitor, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -1502,9 +1502,9 @@ GLFWAPI const char* glfwGetMonitorName(GLFWmonitor* monitor);
  *  currently set callback.  This is called when a monitor is connected to or
  *  disconnected from the system.
  *
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -1529,7 +1529,7 @@ GLFWAPI GLFWmonitorfun glfwSetMonitorCallback(GLFWmonitorfun cbfun);
  *  @param[in] monitor The monitor to query.
  *  @param[out] count Where to store the number of video modes in the returned
  *  array.  This is set to zero if an error occurred.
- *  @return An array of video modes, or `NULL` if an
+ *  @return An array of video modes, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -1559,7 +1559,7 @@ GLFWAPI const GLFWvidmode* glfwGetVideoModes(GLFWmonitor* monitor, int* count);
  *  will depend on whether that window is iconified.
  *
  *  @param[in] monitor The monitor to query.
- *  @return The current mode of the monitor, or `NULL` if an
+ *  @return The current mode of the monitor, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -1607,7 +1607,7 @@ GLFWAPI void glfwSetGamma(GLFWmonitor* monitor, float gamma);
  *  This function returns the current gamma ramp of the specified monitor.
  *
  *  @param[in] monitor The monitor to query.
- *  @return The current gamma ramp, or `NULL` if an
+ *  @return The current gamma ramp, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -1756,11 +1756,11 @@ GLFWAPI void glfwWindowHint(int hint, int value);
  *  @param[in] height The desired height, in screen coordinates, of the window.
  *  This must be greater than zero.
  *  @param[in] title The initial, UTF-8 encoded window title.
- *  @param[in] monitor The monitor to use for full screen mode, or `NULL` for
+ *  @param[in] monitor The monitor to use for full screen mode, or `None` for
  *  windowed mode.
- *  @param[in] share The window whose context to share resources with, or `NULL`
+ *  @param[in] share The window whose context to share resources with, or `None`
  *  to not share resources.
- *  @return The handle of the created window, or `NULL` if an
+ *  @return The handle of the created window, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
@@ -1962,14 +1962,14 @@ GLFWAPI void glfwSetWindowIcon(GLFWwindow* window, int count, const GLFWimage* i
  *  This function retrieves the position, in screen coordinates, of the
  *  upper-left corner of the client area of the specified window.
  *
- *  Any or all of the position arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` position arguments will be set to zero.
+ *  Any or all of the position arguments may be `None`.  If an error occurs, all
+ *  non-`None` position arguments will be set to zero.
  *
  *  @param[in] window The window to query.
  *  @param[out] xpos Where to store the x-coordinate of the upper-left corner of
- *  the client area, or `NULL`.
+ *  the client area, or `None`.
  *  @param[out] ypos Where to store the y-coordinate of the upper-left corner of
- *  the client area, or `NULL`.
+ *  the client area, or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
@@ -2022,14 +2022,14 @@ GLFWAPI void glfwSetWindowPos(GLFWwindow* window, int xpos, int ypos);
  *  of the specified window.  If you wish to retrieve the size of the
  *  framebuffer of the window in pixels, see @ref glfwGetFramebufferSize.
  *
- *  Any or all of the size arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` size arguments will be set to zero.
+ *  Any or all of the size arguments may be `None`.  If an error occurs, all
+ *  non-`None` size arguments will be set to zero.
  *
  *  @param[in] window The window whose size to retrieve.
  *  @param[out] width Where to store the width, in screen coordinates, of the
- *  client area, or `NULL`.
+ *  client area, or `None`.
  *  @param[out] height Where to store the height, in screen coordinates, of the
- *  client area, or `NULL`.
+ *  client area, or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
@@ -2167,14 +2167,14 @@ GLFWAPI void glfwSetWindowSize(GLFWwindow* window, int width, int height);
  *  specified window.  If you wish to retrieve the size of the window in screen
  *  coordinates, see @ref glfwGetWindowSize.
  *
- *  Any or all of the size arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` size arguments will be set to zero.
+ *  Any or all of the size arguments may be `None`.  If an error occurs, all
+ *  non-`None` size arguments will be set to zero.
  *
  *  @param[in] window The window whose framebuffer to query.
  *  @param[out] width Where to store the width, in pixels, of the framebuffer,
- *  or `NULL`.
+ *  or `None`.
  *  @param[out] height Where to store the height, in pixels, of the framebuffer,
- *  or `NULL`.
+ *  or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
@@ -2201,18 +2201,18 @@ GLFWAPI void glfwGetFramebufferSize(GLFWwindow* window, int* width, int* height)
  *  the offset along a particular coordinate axis, the retrieved values will
  *  always be zero or positive.
  *
- *  Any or all of the size arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` size arguments will be set to zero.
+ *  Any or all of the size arguments may be `None`.  If an error occurs, all
+ *  non-`None` size arguments will be set to zero.
  *
  *  @param[in] window The window whose frame size to query.
  *  @param[out] left Where to store the size, in screen coordinates, of the left
- *  edge of the window frame, or `NULL`.
+ *  edge of the window frame, or `None`.
  *  @param[out] top Where to store the size, in screen coordinates, of the top
- *  edge of the window frame, or `NULL`.
+ *  edge of the window frame, or `None`.
  *  @param[out] right Where to store the size, in screen coordinates, of the
- *  right edge of the window frame, or `NULL`.
+ *  right edge of the window frame, or `None`.
  *  @param[out] bottom Where to store the size, in screen coordinates, of the
- *  bottom edge of the window frame, or `NULL`.
+ *  bottom edge of the window frame, or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
@@ -2381,7 +2381,7 @@ GLFWAPI void glfwFocusWindow(GLFWwindow* window);
  *  in full screen on.
  *
  *  @param[in] window The window to query.
- *  @return The monitor, or `NULL` if the window is in windowed mode or an error
+ *  @return The monitor, or `None` if the window is in windowed mode or an error
  *  occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2400,13 +2400,13 @@ GLFWAPI GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
 /*! @brief Sets the mode, monitor, video mode and placement of a window.
  *
  *  This function sets the monitor that the window uses for full screen mode or,
- *  if the monitor is `NULL`, makes it windowed mode.
+ *  if the monitor is `None`, makes it windowed mode.
  *
  *  When setting a monitor, this function updates the width, height and refresh
  *  rate of the desired video mode and switches to the video mode closest to it.
  *  The window position is ignored when setting a monitor.
  *
- *  When the monitor is `NULL`, the position, width and height are used to
+ *  When the monitor is `None`, the position, width and height are used to
  *  place the window client area.  The refresh rate is ignored when no monitor
  *  is specified.
  *
@@ -2418,7 +2418,7 @@ GLFWAPI GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
  *  floating, resizable, has size or aspect ratio limits, etc..
  *
  *  @param[in] window The window whose monitor, size or video mode to set.
- *  @param[in] monitor The desired monitor, or `NULL` to set windowed mode.
+ *  @param[in] monitor The desired monitor, or `None` to set windowed mode.
  *  @param[in] xpos The desired x-coordinate of the upper-left corner of the
  *  client area.
  *  @param[in] ypos The desired y-coordinate of the upper-left corner of the
@@ -2482,7 +2482,7 @@ GLFWAPI int glfwGetWindowAttrib(GLFWwindow* window, int attrib);
  *
  *  This function sets the user-defined pointer of the specified window.  The
  *  current value is retained until the window is destroyed.  The initial value
- *  is `NULL`.
+ *  is `None`.
  *
  *  @param[in] window The window whose pointer to set.
  *  @param[in] pointer The new value.
@@ -2504,7 +2504,7 @@ GLFWAPI void glfwSetWindowUserPointer(GLFWwindow* window, void* pointer);
 /*! @brief Returns the user pointer of the specified window.
  *
  *  This function returns the current value of the user-defined pointer of the
- *  specified window.  The initial value is `NULL`.
+ *  specified window.  The initial value is `None`.
  *
  *  @param[in] window The window whose pointer to return.
  *
@@ -2529,9 +2529,9 @@ GLFWAPI void* glfwGetWindowUserPointer(GLFWwindow* window);
  *  position of the upper-left corner of the client area of the window.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2553,9 +2553,9 @@ GLFWAPI GLFWwindowposfun glfwSetWindowPosCallback(GLFWwindow* window, GLFWwindow
  *  in screen coordinates, of the client area of the window.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2583,9 +2583,9 @@ GLFWAPI GLFWwindowsizefun glfwSetWindowSizeCallback(GLFWwindow* window, GLFWwind
  *  The close callback is not triggered by @ref glfwDestroyWindow.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2615,9 +2615,9 @@ GLFWAPI GLFWwindowclosefun glfwSetWindowCloseCallback(GLFWwindow* window, GLFWwi
  *  infrequently or never at all.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2644,9 +2644,9 @@ GLFWAPI GLFWwindowrefreshfun glfwSetWindowRefreshCallback(GLFWwindow* window, GL
  *  and @ref glfwSetMouseButtonCallback.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2667,9 +2667,9 @@ GLFWAPI GLFWwindowfocusfun glfwSetWindowFocusCallback(GLFWwindow* window, GLFWwi
  *  is called when the window is iconified or restored.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2690,9 +2690,9 @@ GLFWAPI GLFWwindowiconifyfun glfwSetWindowIconifyCallback(GLFWwindow* window, GL
  *  which is called when the framebuffer of the specified window is resized.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -2935,7 +2935,7 @@ GLFWAPI void glfwSetInputMode(GLFWwindow* window, int mode, int value);
  *  If the key is `GLFW_KEY_UNKNOWN`, the scancode is used instead, otherwise
  *  the scancode is ignored.  If a non-printable key or (if the key is
  *  `GLFW_KEY_UNKNOWN`) a scancode that maps to a non-printable key is
- *  specified, this function returns `NULL`.          
+ *  specified, this function returns `None`.          
  *
  *  This behavior allows you to pass in the arguments passed to the
  *  [key callback](@ref input_key) without modification.
@@ -2965,7 +2965,7 @@ GLFWAPI void glfwSetInputMode(GLFWwindow* window, int mode, int value);
  *
  *  @param[in] key The key to query, or `GLFW_KEY_UNKNOWN`.
  *  @param[in] scancode The scancode of the key to query.
- *  @return The localized name of the key, or `NULL`.
+ *  @return The localized name of the key, or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
@@ -3068,14 +3068,14 @@ GLFWAPI int glfwGetMouseButton(GLFWwindow* window, int button);
  *  `floor` function.  Casting directly to an integer type works for positive
  *  coordinates, but fails for negative ones.
  *
- *  Any or all of the position arguments may be `NULL`.  If an error occurs, all
- *  non-`NULL` position arguments will be set to zero.
+ *  Any or all of the position arguments may be `None`.  If an error occurs, all
+ *  non-`None` position arguments will be set to zero.
  *
  *  @param[in] window The desired window.
  *  @param[out] xpos Where to store the cursor x-coordinate, relative to the
- *  left edge of the client area, or `NULL`.
+ *  left edge of the client area, or `None`.
  *  @param[out] ypos Where to store the cursor y-coordinate, relative to the to
- *  top edge of the client area, or `NULL`.
+ *  top edge of the client area, or `None`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
@@ -3149,7 +3149,7 @@ GLFWAPI void glfwSetCursorPos(GLFWwindow* window, double xpos, double ypos);
  *  @param[in] image The desired cursor image.
  *  @param[in] xhot The desired x-coordinate, in pixels, of the cursor hotspot.
  *  @param[in] yhot The desired y-coordinate, in pixels, of the cursor hotspot.
- *  @return The handle of the created cursor, or `NULL` if an
+ *  @return The handle of the created cursor, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -3178,7 +3178,7 @@ GLFWAPI GLFWcursor* glfwCreateCursor(const GLFWimage* image, int xhot, int yhot)
  *  a window with @ref glfwSetCursor.
  *
  *  @param[in] shape One of the [standard shapes](@ref shapes).
- *  @return A new cursor ready to use or `NULL` if an
+ *  @return A new cursor ready to use or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
@@ -3232,7 +3232,7 @@ GLFWAPI void glfwDestroyCursor(GLFWcursor* cursor);
  *  has input focus.
  *
  *  @param[in] window The window to set the cursor for.
- *  @param[in] cursor The cursor to set, or `NULL` to switch back to the default
+ *  @param[in] cursor The cursor to set, or `None` to switch back to the default
  *  arrow cursor.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -3273,9 +3273,9 @@ GLFWAPI void glfwSetCursor(GLFWwindow* window, GLFWcursor* cursor);
  *  scancode may be zero.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new key callback, or `NULL` to remove the currently
+ *  @param[in] cbfun The new key callback, or `None` to remove the currently
  *  set callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3311,9 +3311,9 @@ GLFWAPI GLFWkeyfun glfwSetKeyCallback(GLFWwindow* window, GLFWkeyfun cbfun);
  *  receives these events.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3345,9 +3345,9 @@ GLFWAPI GLFWcharfun glfwSetCharCallback(GLFWwindow* window, GLFWcharfun cbfun);
  *  [key callback](@ref glfwSetKeyCallback) instead.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or an
+ *  @return The previously set callback, or `None` if no callback was set or an
  *  error occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3374,9 +3374,9 @@ GLFWAPI GLFWcharmodsfun glfwSetCharModsCallback(GLFWwindow* window, GLFWcharmods
  *  [window focus callback](@ref glfwSetWindowFocusCallback) has been called.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3400,9 +3400,9 @@ GLFWAPI GLFWmousebuttonfun glfwSetMouseButtonCallback(GLFWwindow* window, GLFWmo
  *  client area of the window.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3424,9 +3424,9 @@ GLFWAPI GLFWcursorposfun glfwSetCursorPosCallback(GLFWwindow* window, GLFWcursor
  *  the window.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3451,9 +3451,9 @@ GLFWAPI GLFWcursorenterfun glfwSetCursorEnterCallback(GLFWwindow* window, GLFWcu
  *  wheel or a touchpad scrolling area.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new scroll callback, or `NULL` to remove the currently
+ *  @param[in] cbfun The new scroll callback, or `None` to remove the currently
  *  set callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3479,9 +3479,9 @@ GLFWAPI GLFWscrollfun glfwSetScrollCallback(GLFWwindow* window, GLFWscrollfun cb
  *  make a deep copy.
  *
  *  @param[in] window The window whose callback to set.
- *  @param[in] cbfun The new file drop callback, or `NULL` to remove the
+ *  @param[in] cbfun The new file drop callback, or `None` to remove the
  *  currently set callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3522,13 +3522,13 @@ GLFWAPI int glfwJoystickPresent(int joy);
  *  Each element in the array is a value between -1.0 and 1.0.
  *
  *  Querying a joystick slot with no device present is not an error, but will
- *  cause this function to return `NULL`.  Call @ref glfwJoystickPresent to
+ *  cause this function to return `None`.  Call @ref glfwJoystickPresent to
  *  check device presence.
  *
  *  @param[in] joy The [joystick](@ref joysticks) to query.
  *  @param[out] count Where to store the number of axis values in the returned
  *  array.  This is set to zero if an error occurred.
- *  @return An array of axis values, or `NULL` if the joystick is not present.
+ *  @return An array of axis values, or `None` if the joystick is not present.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
  *  GLFW_INVALID_ENUM and @ref GLFW_PLATFORM_ERROR.
@@ -3554,13 +3554,13 @@ GLFWAPI const float* glfwGetJoystickAxes(int joy, int* count);
  *  Each element in the array is either `GLFW_PRESS` or `GLFW_RELEASE`.
  *
  *  Querying a joystick slot with no device present is not an error, but will
- *  cause this function to return `NULL`.  Call @ref glfwJoystickPresent to
+ *  cause this function to return `None`.  Call @ref glfwJoystickPresent to
  *  check device presence.
  *
  *  @param[in] joy The [joystick](@ref joysticks) to query.
  *  @param[out] count Where to store the number of button states in the returned
  *  array.  This is set to zero if an error occurred.
- *  @return An array of button states, or `NULL` if the joystick is not present.
+ *  @return An array of button states, or `None` if the joystick is not present.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
  *  GLFW_INVALID_ENUM and @ref GLFW_PLATFORM_ERROR.
@@ -3588,11 +3588,11 @@ GLFWAPI const unsigned char* glfwGetJoystickButtons(int joy, int* count);
  *  yourself.
  *
  *  Querying a joystick slot with no device present is not an error, but will
- *  cause this function to return `NULL`.  Call @ref glfwJoystickPresent to
+ *  cause this function to return `None`.  Call @ref glfwJoystickPresent to
  *  check device presence.
  *
  *  @param[in] joy The [joystick](@ref joysticks) to query.
- *  @return The UTF-8 encoded name of the joystick, or `NULL` if the joystick
+ *  @return The UTF-8 encoded name of the joystick, or `None` if the joystick
  *  is not present.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
@@ -3619,9 +3619,9 @@ GLFWAPI const char* glfwGetJoystickName(int joy);
  *  currently set callback.  This is called when a joystick is connected to or
  *  disconnected from the system.
  *
- *  @param[in] cbfun The new callback, or `NULL` to remove the currently set
+ *  @param[in] cbfun The new callback, or `None` to remove the currently set
  *  callback.
- *  @return The previously set callback, or `NULL` if no callback was set or the
+ *  @return The previously set callback, or `None` if no callback was set or the
  *  library had not been [initialized](@ref intro_init).
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3665,11 +3665,11 @@ GLFWAPI void glfwSetClipboardString(GLFWwindow* window, const char* string);
  *
  *  This function returns the contents of the system clipboard, if it contains
  *  or is convertible to a UTF-8 encoded string.  If the clipboard is empty or
- *  if its contents cannot be converted, `NULL` is returned and a @ref
+ *  if its contents cannot be converted, `None` is returned and a @ref
  *  GLFW_FORMAT_UNAVAILABLE error is generated.
  *
  *  @param[in] window The window that will request the clipboard contents.
- *  @return The contents of the clipboard as a UTF-8 encoded string, or `NULL`
+ *  @return The contents of the clipboard as a UTF-8 encoded string, or `None`
  *  if an [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -3802,7 +3802,7 @@ GLFWAPI uint64_t glfwGetTimerFrequency(void);
  *  a window without a context will generate a @ref GLFW_NO_WINDOW_CONTEXT
  *  error.
  *
- *  @param[in] window The window whose context to make current, or `NULL` to
+ *  @param[in] window The window whose context to make current, or `None` to
  *  detach the current context.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
@@ -3824,7 +3824,7 @@ GLFWAPI void glfwMakeContextCurrent(GLFWwindow* window);
  *  This function returns the window whose OpenGL or OpenGL ES context is
  *  current on the calling thread.
  *
- *  @return The window whose context is current, or `NULL` if no window's
+ *  @return The window whose context is current, or `None` if no window's
  *  context is current.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3974,7 +3974,7 @@ GLFWAPI int glfwExtensionSupported(const char* extension);
  *  `vkGetDeviceProcAddr` instead.
  *
  *  @param[in] procname The ASCII encoded name of the function.
- *  @return The address of the function, or `NULL` if an
+ *  @return The address of the function, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
@@ -3983,7 +3983,7 @@ GLFWAPI int glfwExtensionSupported(const char* extension);
  *  @remark The address of a given function is not guaranteed to be the same
  *  between contexts.
  *
- *  @remark This function may return a non-`NULL` address despite the
+ *  @remark This function may return a non-`None` address despite the
  *  associated version or extension not being available.  Always check the
  *  context version or extension string first.
  *
@@ -4035,17 +4035,17 @@ GLFWAPI int glfwVulkanSupported(void);
  *  additional extensions you can pass this list directly to the
  *  `VkInstanceCreateInfo` struct.
  *
- *  If Vulkan is not available on the machine, this function returns `NULL` and
+ *  If Vulkan is not available on the machine, this function returns `None` and
  *  generates a @ref GLFW_API_UNAVAILABLE error.  Call @ref glfwVulkanSupported
  *  to check whether Vulkan is available.
  *
  *  If Vulkan is available but no set of extensions allowing window surface
- *  creation was found, this function returns `NULL`.  You may still use Vulkan
+ *  creation was found, this function returns `None`.  You may still use Vulkan
  *  for off-screen rendering and compute work.
  *
  *  @param[out] count Where to store the number of extensions in the returned
  *  array.  This is set to zero if an error occurred.
- *  @return An array of ASCII encoded extension names, or `NULL` if an
+ *  @return An array of ASCII encoded extension names, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -4076,7 +4076,7 @@ GLFWAPI const char** glfwGetRequiredInstanceExtensions(uint32_t* count);
 /*! @brief Returns the address of the specified Vulkan instance function.
  *
  *  This function returns the address of the specified Vulkan core or extension
- *  function for the specified instance.  If instance is set to `NULL` it can
+ *  function for the specified instance.  If instance is set to `None` it can
  *  return any function exported from the Vulkan loader, including at least the
  *  following functions:
  *
@@ -4085,17 +4085,17 @@ GLFWAPI const char** glfwGetRequiredInstanceExtensions(uint32_t* count);
  *  - `vkCreateInstance`
  *  - `vkGetInstanceProcAddr`
  *
- *  If Vulkan is not available on the machine, this function returns `NULL` and
+ *  If Vulkan is not available on the machine, this function returns `None` and
  *  generates a @ref GLFW_API_UNAVAILABLE error.  Call @ref glfwVulkanSupported
  *  to check whether Vulkan is available.
  *
  *  This function is equivalent to calling `vkGetInstanceProcAddr` with
  *  a platform-specific query of the Vulkan loader as a fallback.
  *
- *  @param[in] instance The Vulkan instance to query, or `NULL` to retrieve
+ *  @param[in] instance The Vulkan instance to query, or `None` to retrieve
  *  functions related to instance creation.
  *  @param[in] procname The ASCII encoded name of the function.
- *  @return The address of the function, or `NULL` if an
+ *  @return The address of the function, or `None` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -4170,7 +4170,7 @@ GLFWAPI int glfwGetPhysicalDevicePresentationSupport(VkInstance instance, VkPhys
  *
  *  @param[in] instance The Vulkan instance to create the surface in.
  *  @param[in] window The window to create the surface for.
- *  @param[in] allocator The allocator to use, or `NULL` to use the default
+ *  @param[in] allocator The allocator to use, or `None` to use the default
  *  allocator.
  *  @param[out] surface Where to store the handle of the surface.  This is set
  *  to `VK_NULL_HANDLE` if an error occurred.

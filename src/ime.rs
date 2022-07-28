@@ -13,7 +13,7 @@ pub fn set_platform_ime_data_fn_default_impl(g: &mut Context, viewport: &mut Vie
     if (hwnd == 0)
         return;
 
-    ::ImmAssociateContextEx(hwnd, NULL, data->WantVisible ? IACE_DEFAULT : 0);
+    ::ImmAssociateContextEx(hwnd, None, data->WantVisible ? IACE_DEFAULT : 0);
 
     if (HIMC himc = ::ImmGetContext(hwnd))
     {

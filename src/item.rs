@@ -119,7 +119,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
     if g.active_id != 0 && g.active_id != id && !g.active_id_allow_overlap {
         return Ok(false);
     }
-    if !IsMouseHoveringRect(&bb.min, &bb.max) {
+    if !is_mouse_hovering_rect(&bb.min, &bb.max) {
         return Ok(false);
     }
     if !is_window_content_hoverable(g, window, HoveredFlags::None) {
@@ -153,7 +153,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if (g.DebugItemPickerActive && g.hovered_id_previous_frame == id) {
-            get_foreground_draw_list().AddRect(bb.min, bb.max, make_color_32(255, 255, 0, 255));
+            get_foreground_draw_list().add_rect(bb.min, bb.max, make_color_32(255, 255, 0, 255));
         }
         if (g.DebugItemPickerBreakId == id) {
             IM_DEBUG_BREAK();
@@ -490,10 +490,10 @@ pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
     // We increase the height in this function to accommodate for baseline offset.
     // In theory we should be offsetting the starting position (window->dc.cursor_pos), that will be the topic of a larger refactor,
     // but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
-    const float offset_to_match_baseline_y = (text_baseline_y >= 0) ? ImMax(0.0, window.dc.CurrLineTextBaseOffset - text_baseline_y) : 0.0;
+    let offset_to_match_baseline_y = (text_baseline_y >= 0) ? ImMax(0.0, window.dc.CurrLineTextBaseOffset - text_baseline_y) : 0.0;
 
-    const float line_y1 = window.dc.Issame_line ? window.dc.CursorPosPrevLine.y : window.dc.cursor_pos.y;
-    const float line_height = ImMax(window.dc.CurrLineSize.y, /*ImMax(*/window.dc.cursor_pos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y);
+    let line_y1 = window.dc.Issame_line ? window.dc.CursorPosPrevLine.y : window.dc.cursor_pos.y;
+    let line_height = ImMax(window.dc.CurrLineSize.y, /*ImMax(*/window.dc.cursor_pos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y);
 
     // Always align ourselves on pixel boundaries
     //if (g.io.key_alt) window->draw_list->add_rect(window->dc.cursor_pos, window->dc.cursor_pos + Vector2D(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
@@ -545,8 +545,8 @@ pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: Option<&Re
         //      thousands of item, but at least NavMoveRequest is only set on user interaction, aka maximum once a frame.
         //      We could early out with "if (is_clipped && !g.nav_init_request) return false;" but when we wouldn't be able
         //      to reach unclipped widgets. This would work if user had explicit scrolling control (e.g. mapped on a stick).
-        // We intentionally don't check if g.nav_window != NULL because g.nav_any_request should only be set when it is non null.
-        // If we crash on a NULL g.nav_window we need to fix the bug elsewhere.
+        // We intentionally don't check if g.nav_window != None because g.nav_any_request should only be set when it is non null.
+        // If we crash on a None g.nav_window we need to fix the bug elsewhere.
         window.dc.NavLayersActiveMaskNext |= (1 << window.dcnav_layer_current);
         if (g.nav_id == id || g.NavAnyRequest)
             if (g.nav_window.root_window_for_nav == window.root_window_for_nav)
@@ -581,7 +581,7 @@ pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: Option<&Re
     //if (g.io.key_alt) window->draw_list->add_rect(bb.min, bb.max, IM_COL32(255,255,0,120)); // [DEBUG]
 
     // We need to calculate this now to take account of the current clipping rectangle (as items like selectable may change them)
-    if (IsMouseHoveringRect(bb.min, bb.max))
+    if (is_mouse_hovering_rect(bb.min, bb.max))
         g.last_item_data.status_flags |= ImGuiItemStatusFlags_HoveredRect;
     return true;
 }
@@ -613,8 +613,8 @@ pub fn push_multi_items_widths(g: &mut Context, components: i32, w_full: f32)
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     const ImGuiStyle& style = g.style;
-    const float w_item_one  = ImMax(1.0, f32::floor((w_full - (style.item_inner_spacing.x) * (components - 1)) / components));
-    const float w_item_last = ImMax(1.0, f32::floor(w_full - (w_item_one + style.item_inner_spacing.x) * (components - 1)));
+    let w_item_one  = ImMax(1.0, f32::floor((w_full - (style.item_inner_spacing.x) * (components - 1)) / components));
+    let w_item_last = ImMax(1.0, f32::floor(w_full - (w_item_one + style.item_inner_spacing.x) * (components - 1)));
     window.dc.ItemWidthStack.push_back(window.dc.ItemWidth); // Backup current width
     window.dc.ItemWidthStack.push_back(w_item_last);
     for (int i = 0; i < components - 2; i += 1)

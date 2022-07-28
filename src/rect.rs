@@ -1,6 +1,6 @@
-use crate::vectors::Vector4D;
 use crate::math::{ImClampVec2, ImFloor, ImMaxVec2, ImMinVec2};
 use crate::vectors::two_d::Vector2D;
+use crate::vectors::Vector4D;
 
 // Helper: ImRect (2D axis aligned bounding-box)
 // NB: we can't rely on Vector2D math operators being available here!
@@ -14,21 +14,20 @@ pub struct Rect {
 
 impl From<(&Vector2D, &Vector2D)> for Rect {
     fn from(vectors: (&Vector2D, &Vector2D)) -> Self {
-      let (min, max) = vectors;
+        let (min, max) = vectors;
         Self {
-          
-          min: min.clone(),
-          max: max.clone()
-      }      
+            min: min.clone(),
+            max: max.clone(),
+        }
     }
 }
 
-impl From<(f32,f32,f32,f32)> for Rect {
-    fn from (floats: (f32,f32,f32,f32)) -> Self {
-        let (x1,y1,x2,y2) = floats;
+impl From<(f32, f32, f32, f32)> for Rect {
+    fn from(floats: (f32, f32, f32, f32)) -> Self {
+        let (x1, y1, x2, y2) = floats;
         Self {
-            min: Vector2D::new(x1,y1),
-            max: Vector2D::new(x2,y2)
+            min: Vector2D::new(x1, y1),
+            max: Vector2D::new(x2, y2),
         }
     }
 }
@@ -117,7 +116,10 @@ impl Rect {
     }
     //     bool        contains(const ImRect& r) const     { return r.min.x >= min.x && r.min.y >= min.y && r.max.x <= max.x && r.max.y <= max.y; }
     pub fn contains_rect(&self, r: &Self) -> bool {
-        r.min.x >= self.min.x && r.min.y >= self.min.y && r.max.x <= self.max.x && r.max.y <= self.max.y
+        r.min.x >= self.min.x
+            && r.min.y >= self.min.y
+            && r.max.x <= self.max.x
+            && r.max.y <= self.max.y
     }
     //     bool        Overlaps(const ImRect& r) const     { return r.min.y <  max.y && r.max.y >  min.y && r.min.x <  max.x && r.max.x >  min.x; }
     pub fn overlaps_rect(&self, r: &Self) -> bool {
@@ -153,7 +155,7 @@ impl Rect {
             self.max.y = r.max.y
         }
     }
-    //     void        Expand(const float amount)          { min.x -= amount;   min.y -= amount;   max.x += amount;   max.y += amount; }
+    //     void        Expand(let amount)          { min.x -= amount;   min.y -= amount;   max.x += amount;   max.y += amount; }
     pub fn expand_float(&mut self, amount: f32) {
         self.min.x -= amount;
         self.min.y -= amount;

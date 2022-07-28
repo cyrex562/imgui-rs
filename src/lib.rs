@@ -1,113 +1,112 @@
 extern crate core;
 
-use std::collections::HashSet;
-use std::io::stdout;
 use crate::context::{call_context_hooks, Context, ContextHookType};
-use dock::context::dock_context_shutdown;
 use crate::hash::hash_string;
 use crate::settings::SettingsHandler;
 use crate::types::INVALID_ID;
 use crate::viewport::{Viewport, ViewportFlags};
+use dock::context::dock_context_shutdown;
+use std::collections::HashSet;
+use std::io::stdout;
 
-pub mod config;
-pub mod orig_imgui_single_file;
-mod style;
-mod io;
-mod input_event;
-mod internal_h;
-mod geometry;
-mod vectors;
-mod hash;
-mod file;
-mod text;
-mod color;
-mod math;
-mod kv_store;
-mod sort;
-mod context;
-mod log;
-mod column;
-mod rect;
-mod dock;
-mod tab_bar;
-mod item;
-mod group;
-mod popup;
-mod nav;
-mod clipper;
-mod table;
-mod pool;
-mod stb_textedit_h;
-mod string;
-mod text_input_state;
-mod stb_text_edit_state;
-mod globals;
-mod text_filter;
-mod text_range;
-mod text_buffer;
-mod list_clipper;
-mod render;
-mod clipboard;
-mod gc;
-mod id;
-mod types;
-mod payload;
-mod combo;
-mod helpers;
-mod slider;
-mod select;
-mod button;
-mod tree_node;
-mod separator;
-mod tooltip;
-mod plot;
-mod data_type;
-mod viewport;
-mod settings;
-mod metrics;
-mod stack;
-mod contexty;
-mod tab_item;
-mod font;
 mod axis;
-mod data_authority;
-mod utils;
-mod draw_channel;
-mod drag_drop;
-mod table_column;
-mod table_row;
-mod condition;
-mod direction;
-mod selectable;
-mod input_text;
-mod texture;
-mod platform;
-mod menu;
-mod layout;
-mod draw;
-mod frame;
-mod size_callback_data;
-mod child;
-mod resize;
 mod border;
-mod window;
-mod modal;
-pub mod text_wrap;
+mod button;
+mod child;
+mod clipboard;
+mod clipper;
+mod color;
+mod column;
+mod combo;
 pub mod components;
-pub mod input;
-pub mod error_handling;
-mod cursor;
+mod condition;
+pub mod config;
 mod content;
-mod scrolling;
-mod ime;
+mod context;
+mod contexty;
+mod cursor;
+mod data_authority;
+mod data_type;
 mod debug;
+mod direction;
+mod dock;
+mod drag_drop;
+mod draw;
+mod draw_channel;
+pub mod error_handling;
+mod file;
+mod font;
+mod frame;
+mod gc;
+mod geometry;
+mod globals;
+mod group;
+mod hash;
+mod helpers;
+mod id;
+mod ime;
+pub mod input;
+mod input_event;
+mod input_text;
+mod internal_h;
+mod io;
+mod item;
+mod kv_store;
+mod layout;
+mod list_clipper;
+mod log;
+mod math;
+mod menu;
+mod metrics;
+mod modal;
+mod nav;
 mod nodes;
 mod nodes_h;
+pub mod orig_imgui_single_file;
+mod payload;
+mod platform;
+mod plot;
+mod pool;
+mod popup;
+mod rect;
+mod render;
+mod resize;
+mod scrolling;
+mod select;
+mod selectable;
+mod separator;
+mod settings;
+mod size_callback_data;
+mod slider;
+mod sort;
+mod stack;
+mod stb_text_edit_state;
+mod stb_textedit_h;
+mod string;
+mod style;
+mod tab_bar;
+mod tab_item;
+mod table;
+mod table_column;
+mod table_row;
+mod text;
+mod text_buffer;
+mod text_filter;
+mod text_input_state;
+mod text_range;
+pub mod text_wrap;
+mod texture;
+mod tooltip;
+mod tree_node;
+mod types;
+mod utils;
+mod vectors;
+mod viewport;
 mod widgets;
+mod window;
 
 /// void ImGui::Initialize()
-pub fn initialize(g: &mut Context)
-{
+pub fn initialize(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
 
@@ -116,7 +115,7 @@ pub fn initialize(g: &mut Context)
         // ImGuiSettingsHandler ini_handler;
         let mut ini_handler = SettingsHandler::default();
         ini_handler.type_name = String::from("window");
-        ini_handler.type_hash = hash_string(&ini_handler.type_name.into_bytes(), );
+        ini_handler.type_hash = hash_string(&ini_handler.type_name.into_bytes());
         ini_handler.clear_all_fn = WindowSettingsHandler_ClearAll;
         ini_handler.read_open_fn = WindowSettingsHandler_ReadOpen;
         ini_handler.read_line_fn = WindowSettingsHandler_ReadLine;
@@ -142,23 +141,20 @@ pub fn initialize(g: &mut Context)
     // Initialize Docking
     dock_context_initialize(&g);
 
-
     g.initialized = true;
 }
 
 // This function is merely here to free heap allocations.
 // void ImGui::Shutdown()
-pub fn shutdown(g: &mut Context)
-{
+pub fn shutdown(g: &mut Context) {
     // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
     // ImGuiContext& g = *GImGui;
-    if g.io.fonts.is_empty() == false && g.font_atlas_owned_by_context
-    {
+    if g.io.fonts.is_empty() == false && g.font_atlas_owned_by_context {
         g.io.fonts.locked = false;
         // IM_DELETE(g.io.fonts);
         g.io.fonts.clear();
     }
-    // g.io.fonts = NULL;
+    // g.io.fonts = None;
 
     // Cleanup of other data are conditional on actually having initialized Dear ImGui.
     if !g.initialized {
@@ -166,9 +162,9 @@ pub fn shutdown(g: &mut Context)
     }
 
     // Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
-if (g.settings_loaded && g.io.ini_filename.is_empty() == false) {
-    save_ini_settings_to_disk(g.io.ini_file_name);
-}
+    if (g.settings_loaded && g.io.ini_filename.is_empty() == false) {
+        save_ini_settings_to_disk(g.io.ini_file_name);
+    }
 
     // Destroy platform windows
     destroy_platform_windows();

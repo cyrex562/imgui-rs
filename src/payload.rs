@@ -1,6 +1,6 @@
-use crate::INVALID_ID;
 use crate::types::Id32;
 use crate::window::Window;
+use crate::INVALID_ID;
 
 pub enum PayloadDataType {
     None,
@@ -11,10 +11,9 @@ pub union PayloadData {
     win: Window,
 }
 
-/// data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
-#[derive(Default,Debug,Clone)]
-pub struct Payload
-{
+/// data payload for Drag and Drop operations: accept_drag_drop_payload(), GetDragDropPayload()
+#[derive(Default, Debug, Clone)]
+pub struct Payload {
     // Members
     // pub data: Vec<u8>,               // data (copied and owned by dear imgui)
     // pub data_size: usize,         // data size
@@ -22,14 +21,12 @@ pub struct Payload
     pub data_size: usize,
 
     // [Internal]
-    pub source_id: Id32,         // Source item id
-    pub source_parent_id: Id32,   // Source parent id (if available)
-    pub data_frame_count: usize,   // data timestamp
+    pub source_id: Id32,            // Source item id
+    pub source_parent_id: Id32,     // Source parent id (if available)
+    pub data_frame_count: usize,    // data timestamp
     pub data_type: PayloadDataType, // char            data_type[32 + 1];   // data type tag (short user-supplied string, 32 characters max)
-    pub preview: bool,            // Set when AcceptDragDropPayload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
-    pub delivery: bool,           // Set when AcceptDragDropPayload() was called and mouse button is released over the target item.
-
-
+    pub preview: bool, // Set when accept_drag_drop_payload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
+    pub delivery: bool, // Set when accept_drag_drop_payload() was called and mouse button is released over the target item.
 }
 
 impl Payload {
@@ -42,7 +39,7 @@ impl Payload {
             ..Default::default()
         }
     }
-    // void clear()    { source_id = source_parent_id = 0; data = NULL; data_size = 0; memset(data_type, 0, sizeof(data_type)); data_frame_count = -1; preview = delivery = false; }
+    // void clear()    { source_id = source_parent_id = 0; data = None; data_size = 0; memset(data_type, 0, sizeof(data_type)); data_frame_count = -1; preview = delivery = false; }
     pub fn clear(&mut self) {
         self.source_id = INVALID_ID;
         self.source_parent_id = INVALID_ID;

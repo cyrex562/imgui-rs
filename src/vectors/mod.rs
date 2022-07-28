@@ -7,22 +7,19 @@ use two_d::Vector2D;
 // static inline Vector2D operator-(const Vector2D& lhs, const Vector2D& rhs)            { return Vector2D(lhs.x - rhs.x, lhs.y - rhs.y); }
 // static inline Vector2D operator*(const Vector2D& lhs, const Vector2D& rhs)            { return Vector2D(lhs.x * rhs.x, lhs.y * rhs.y); }
 
-
-// static inline Vector2D& operator*=(Vector2D& lhs, const float rhs)                  { lhs.x *= rhs; lhs.y *= rhs; return lhs; }
-// static inline Vector2D& operator/=(Vector2D& lhs, const float rhs)                  { lhs.x /= rhs; lhs.y /= rhs; return lhs; }
+// static inline Vector2D& operator*=(Vector2D& lhs, let rhs)                  { lhs.x *= rhs; lhs.y *= rhs; return lhs; }
+// static inline Vector2D& operator/=(Vector2D& lhs, let rhs)                  { lhs.x /= rhs; lhs.y /= rhs; return lhs; }
 // static inline Vector2D& operator+=(Vector2D& lhs, const Vector2D& rhs)                { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
 // static inline Vector2D& operator-=(Vector2D& lhs, const Vector2D& rhs)                { lhs.x -= rhs.x; lhs.y -= rhs.y; return lhs; }
 // static inline Vector2D& operator*=(Vector2D& lhs, const Vector2D& rhs)                { lhs.x *= rhs.x; lhs.y *= rhs.y; return lhs; }
 // static inline Vector2D& operator/=(Vector2D& lhs, const Vector2D& rhs)                { lhs.x /= rhs.x; lhs.y /= rhs.y; return lhs; }
 
+pub fn ImLengthSqr(lhs: &Vector2D) -> f32 {
+    return (lhs.x * lhs.x) + (lhs.y * lhs.y);
+}
 
-
-
-pub fn ImLengthSqr(lhs: &Vector2D) -> f32 { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
-
-#[derive(Default,Debug,Clone)]
-pub struct Vector1D
-{
+#[derive(Default, Debug, Clone)]
+pub struct Vector1D {
     // float   x;
     pub x: f32,
     // constexpr ImVec1()         : x(0.0) { }
@@ -32,39 +29,31 @@ pub struct Vector1D
 
 impl Vector1D {
     pub fn new() -> Self {
-        Self {
-            x: 0.0
-        }
+        Self { x: 0.0 }
     }
 
     pub fn new2(x: f32) -> Self {
-        Self {
-            x
-        }
+        Self { x }
     }
 }
 
 /// Vector4D: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
-#[derive(Default,Debug,Clone)]
-pub struct Vector4D
-{
+#[derive(Default, Debug, Clone)]
+pub struct Vector4D {
     // float                                                     x, y, z, w;
     pub x: f32,
     pub y: f32,
     pub z: f32,
-    pub w: f32
-    // constexpr Vector4D()                                        : x(0.0), y(0.0), z(0.0), w(0.0) { }
-    // constexpr Vector4D(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
-// #ifdef IM_VEC4_CLASS_EXTRA
-//     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and Vector4D.
-// #endif
+    pub w: f32, // constexpr Vector4D()                                        : x(0.0), y(0.0), z(0.0), w(0.0) { }
+                // constexpr Vector4D(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
+                // #ifdef IM_VEC4_CLASS_EXTRA
+                //     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and Vector4D.
+                // #endif
 }
 
 impl Vector4D {
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
-        Self {
-            x, y, z, w
-        }
+        Self { x, y, z, w }
     }
 
     pub fn clear(&mut self) {
@@ -74,8 +63,6 @@ impl Vector4D {
         self.w = 0.0;
     }
 }
-
-
 
 // static inline Vector4D operator+(const Vector4D& lhs, const Vector4D& rhs)            { return Vector4D(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w); }
 // static inline Vector4D operator-(const Vector4D& lhs, const Vector4D& rhs)            { return Vector4D(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w); }
@@ -87,7 +74,7 @@ pub fn lerp_vector4d(a: &Vector4D, b: &Vector4D, t: f32) -> Vector4D {
         x: a.x + (b.x - a.x) * t,
         y: a.y + (b.y - a.y) * t,
         z: a.z + (b.z - a.z) * t,
-        w: a.w + (b.w - a.w) * t
+        w: a.w + (b.w - a.w) * t,
     }
 }
 

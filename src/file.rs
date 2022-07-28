@@ -3,21 +3,20 @@ use std::fs::File;
 use std::io::{Read, Write};
 
 // ImFileHandle ImFileOpen(const char* filename, const char* mode)
-pub fn ImFileOpen(filename: &String, mode: &String) -> ImFileHandle
-{
-// #if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(__CYGWIN__) && !defined(__GNUC__)
-//     // We need a fopen() wrapper because MSVC/windows fopen doesn't handle UTF-8 filenames.
-//     // Previously we used ImTextCountCharsFromUtf8/ImTextStrFromUtf8 here but we now need to support ImWchar16 and ImWchar32!
-//     const int filename_wsize = ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
-//     const int mode_wsize = ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, NULL, 0);
-//     ImVector<ImWchar> buf;
-//     buf.resize(filename_wsize + mode_wsize);
-//     ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, (wchar_t*)&buf[0], filename_wsize);
-//     ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, (wchar_t*)&buf[filename_wsize], mode_wsize);
-//     return ::_wfopen((const wchar_t*)&buf[0], (const wchar_t*)&buf[filename_wsize]);
-// #else
-//     return fopen(filename, mode);
-// #endif
+pub fn ImFileOpen(filename: &String, mode: &String) -> ImFileHandle {
+    // #if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(__CYGWIN__) && !defined(__GNUC__)
+    //     // We need a fopen() wrapper because MSVC/windows fopen doesn't handle UTF-8 filenames.
+    //     // Previously we used ImTextCountCharsFromUtf8/ImTextStrFromUtf8 here but we now need to support ImWchar16 and ImWchar32!
+    //     let filename_wsize = ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, None, 0);
+    //     let mode_wsize = ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, None, 0);
+    //     ImVector<ImWchar> buf;
+    //     buf.resize(filename_wsize + mode_wsize);
+    //     ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, (wchar_t*)&buf[0], filename_wsize);
+    //     ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, (wchar_t*)&buf[filename_wsize], mode_wsize);
+    //     return ::_wfopen((const wchar_t*)&buf[0], (const wchar_t*)&buf[filename_wsize]);
+    // #else
+    //     return fopen(filename, mode);
+    // #endif
     fs::File::open(filename)
 }
 
@@ -47,8 +46,12 @@ pub fn ImFileWrite(data: &mut Vec<u8>, sz: usize, count: usize, f: &mut fs::File
 // Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == ImGui::MemFree()
 // This can't really be used with "rt" because fseek size won't match read size.
 // void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_file_size, int padding_bytes)
-pub fn ImFileLoadToMemory(filename: &String, mode: &String, out_file_size: &mut usize, padding_bytes: i32) -> Option<Vec<u8>>
-{
+pub fn ImFileLoadToMemory(
+    filename: &String,
+    mode: &String,
+    out_file_size: &mut usize,
+    padding_bytes: i32,
+) -> Option<Vec<u8>> {
     // IM_ASSERT(filename && mode);
     if out_file_size {
         *out_file_size = 0;
@@ -56,30 +59,27 @@ pub fn ImFileLoadToMemory(filename: &String, mode: &String, out_file_size: &mut 
 
     // ImFileHandle f;
     let mut f: fs::File;
-    // if ((f = ImFileOpen(filename, mode)) == NULL) {
-    //     return NULL;
+    // if ((f = ImFileOpen(filename, mode)) == None) {
+    //     return None;
     // }
     f = ImFileOpen(filename, mode);
 
     // size_t file_size = (size_t)ImFileGetSize(f);
     let file_size = ImFileGetSize(&f);
-    if file_size == -1
-    {
+    if file_size == -1 {
         ImFileClose(&f);
-        // return NULL;
+        // return None;
         return None;
     }
 
     // void* file_data = IM_ALLOC(file_size + padding_bytes);
     let mut file_data: Vec<u8> = Vec::new();
     file_data.reserve((file_size + padding_bytes) as usize);
-    if (file_data == NULL)
-    {
+    if (file_data == None) {
         ImFileClose(&mut f);
-        return NULL;
+        return None;
     }
-    if (ImFileRead(&mut file_data, 1, file_size, &mut f) != file_size)
-    {
+    if (ImFileRead(&mut file_data, 1, file_size, &mut f) != file_size) {
         ImFileClose(&mut f);
         // IM_FREE(file_data);
         return None;

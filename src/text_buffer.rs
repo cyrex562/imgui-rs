@@ -2,22 +2,18 @@ use std::ops::Index;
 
 // Helper: Growable text buffer for logging/accumulating text
 // (this could be called 'ImGuiTextBuilder' / 'ImGuiStringBuilder')
-#[derive(Default,Debug,Clone)]
-pub struct TextBuffer
-{
+#[derive(Default, Debug, Clone)]
+pub struct TextBuffer {
     // ImVector<char>      Buf;
     pub Buf: String,
     //  static char EmptyString[1];
-    pub EmptyString: [u8;1],
-
+    pub EmptyString: [u8; 1],
 }
 
 impl TextBuffer {
     // ImGuiTextBuffer()   { }
     pub fn new() -> Self {
-        Self {
-            ..Default()
-        }
+        Self { ..Default() }
     }
 
     // const char*         begin() const           { return Buf.data ? &Buf.front() : EmptyString; }
@@ -48,14 +44,14 @@ impl TextBuffer {
     pub fn c_str(&self) -> *const u8 {
         self.Buf.as_ptr()
     }
-    //  void      append(const char* str, const char* str_end = NULL);
+    //  void      append(const char* str, const char* str_end = None);
     pub fn append(&mut self, start_str: *const u8, end_str: *const u8) {
         self.Buf.push_str(&String::from(start_str))
         //  int len = str_end ? (str_end - str) : strlen(str);
         //
         //     // Add zero-terminator the first time
-        //     const int write_off = (Buf.size != 0) ? Buf.size : 1;
-        //     const int needed_sz = write_off + len;
+        //     let write_off = (Buf.size != 0) ? Buf.size : 1;
+        //     let needed_sz = write_off + len;
         //     if (write_off + len >= Buf.Capacity)
         //     {
         //         int new_capacity = Buf.Capacity * 2;
@@ -70,8 +66,7 @@ impl TextBuffer {
     //  void      appendfv(const char* fmt, va_list args) IM_FMTLIST(2);
 }
 
-
-// inline char         operator[](int i) const { IM_ASSERT(Buf.data != NULL); return Buf.data[i]; }
+// inline char         operator[](int i) const { IM_ASSERT(Buf.data != None); return Buf.data[i]; }
 impl Index<i32> for TextBuffer {
     type Output = u8;
 
@@ -79,7 +74,6 @@ impl Index<i32> for TextBuffer {
         self.Buf[index]
     }
 }
-
 
 // char ImGuiTextBuffer::EmptyString[1] = { 0 };
 
@@ -97,7 +91,7 @@ impl Index<i32> for TextBuffer {
 //     va_list args_copy;
 //     va_copy(args_copy, args);
 //
-//     int len = ImFormatStringV(NULL, 0, fmt, args);         // FIXME-OPT: could do a first pass write attempt, likely successful on first pass.
+//     int len = ImFormatStringV(None, 0, fmt, args);         // FIXME-OPT: could do a first pass write attempt, likely successful on first pass.
 //     if (len <= 0)
 //     {
 //         va_end(args_copy);
@@ -105,8 +99,8 @@ impl Index<i32> for TextBuffer {
 //     }
 //
 //     // Add zero-terminator the first time
-//     const int write_off = (Buf.size != 0) ? Buf.size : 1;
-//     const int needed_sz = write_off + len;
+//     let write_off = (Buf.size != 0) ? Buf.size : 1;
+//     let needed_sz = write_off + len;
 //     if (write_off + len >= Buf.Capacity)
 //     {
 //         int new_capacity = Buf.Capacity * 2;

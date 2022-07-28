@@ -42,7 +42,7 @@ impl ImGuiTextFilter {
         }
         return value_changed;
     }
-    //  bool      PassFilter(const char* text, const char* text_end = NULL) const;
+    //  bool      PassFilter(const char* text, const char* text_end = None) const;
     pub fn PassFilter(&mut self, text: &mut String, text_end: &String) -> bool {
 
         if self.Filters.empty() {
@@ -63,14 +63,14 @@ impl ImGuiTextFilter {
         if (f.b[0] == '-')
         {
             // Subtract
-            if (ImStristr(text, text_end, f.b + 1, f.e) != NULL) {
+            if (ImStristr(text, text_end, f.b + 1, f.e) != None) {
                 return false;
             }
         }
         else
         {
             // Grep
-            if (ImStristr(text, text_end, f.b, f.e) != NULL) {
+            if (ImStristr(text, text_end, f.b, f.e) != None) {
                 return true;
             }
         }

@@ -221,7 +221,7 @@ pub fn set_scroll_from_pos_x(g: &mut Context, window: &mut Window, local_x: f32,
 pub fn set_scroll_from_pos_y(g: &mut Context, window: &mut Window, local_y: f32, center_y_ratio: f32)
 {
     // IM_ASSERT(center_y_ratio >= 0.0 && center_y_ratio <= 1.0);
-    const float decoration_up_height = window.title_bar_height() + window.MenuBarHeight(); // FIXME: Would be nice to have a more standardized access to our scrollable/client rect;
+    let decoration_up_height = window.title_bar_height() + window.MenuBarHeight(); // FIXME: Would be nice to have a more standardized access to our scrollable/client rect;
     local_y -= decoration_up_height;
     window.ScrollTarget.y = f32::floor(local_y + window.scroll.y); // Convert local position to scroll offset
     window.ScrollTargetCenterRatio.y = center_y_ratio;

@@ -46,7 +46,7 @@ pub fn begin_tooltip_ex(g: &mut Context, tooltip_flags: &HashSet<TooltipFlags>, 
                 ImFormatString(window_name, IM_ARRAYSIZE(window_name), "##Tooltip_%02d", g.tool_tip_override_count += 1);
             }
     ImGuiWindowFlags flags = WindowFlags::Tooltip | WindowFlags::NoInputs | WindowFlags::NoTitleBar | WindowFlags::NoMove | WindowFlags::NoResize | WindowFlags::NoSavedSettings | WindowFlags::AlwaysAutoResize | WindowFlags::NoDocking;
-    begin(window_name, NULL, flags | extra_window_flags);
+    begin(window_name, None, flags | extra_window_flags);
 }
 
 // void EndTooltip()

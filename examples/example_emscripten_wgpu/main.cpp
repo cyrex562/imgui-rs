@@ -15,9 +15,9 @@
 #include <webgpu/webgpu_cpp.h>
 
 // Global WebGPU required states
-static WGPUDevice    wgpu_device = NULL;
-static WGPUSurface   wgpu_surface = NULL;
-static WGPUSwapChain wgpu_swap_chain = NULL;
+static WGPUDevice    wgpu_device = None;
+static WGPUSurface   wgpu_surface = None;
+static WGPUSwapChain wgpu_swap_chain = None;
 static int           wgpu_swap_chain_width = 0;
 static int           wgpu_swap_chain_height = 0;
 
@@ -42,7 +42,7 @@ int main(int, char**)
     // This needs to be done explicitly later
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+WebGPU example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+WebGPU example", None, None);
     if (!window)
     {
         glfwTerminate();
@@ -68,7 +68,7 @@ int main(int, char**)
 
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
     // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
-    io.IniFilename = NULL;
+    io.IniFilename = None;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -81,7 +81,7 @@ int main(int, char**)
     // Load fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - If the file cannot be loaded, the function will return None. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
@@ -92,8 +92,8 @@ int main(int, char**)
     //io.fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0);
     //io.fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0);
     //io.fonts->AddFontFromFileTTF("fonts/ProggyTiny.ttf", 10.0);
-    //ImFont* font = io.fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0, NULL, io.fonts->get_glyph_ranges_japanese());
-    //IM_ASSERT(font != NULL);
+    //ImFont* font = io.fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0, None, io.fonts->get_glyph_ranges_japanese());
+    //IM_ASSERT(font != None);
 #endif
 
     // This function will directly return and exit the main function.
@@ -110,7 +110,7 @@ static bool init_wgpu()
     if (!wgpu_device)
         return false;
 
-    wgpuDeviceSetUncapturedErrorCallback(wgpu_device, print_wgpu_error, NULL);
+    wgpuDeviceSetUncapturedErrorCallback(wgpu_device, print_wgpu_error, None);
 
     // Use C++ wrapper due to misbehavior in Emscripten.
     // Some offset computation for wgpuInstanceCreateSurface in JavaScript
@@ -210,7 +210,7 @@ static void main_loop(void* window)
     WGPURenderPassDescriptor render_pass_desc = {};
     render_pass_desc.colorAttachmentCount = 1;
     render_pass_desc.colorAttachments = &color_attachments;
-    render_pass_desc.depthStencilAttachment = NULL;
+    render_pass_desc.depthStencilAttachment = None;
 
     WGPUCommandEncoderDescriptor enc_desc = {};
     WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(wgpu_device, &enc_desc);

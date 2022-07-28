@@ -13,10 +13,10 @@ pub fn set_active_id(g: &mut Context, id: Id32, window: &mut Window)
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
     // we at least need to be resilient to it. Cancelling the move is rather aggressive and users of 'master' branch
     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.
-    if g.moving_window_id != NULL && g.active_id == g.moving_window_id.move_id
+    if g.moving_window_id != None && g.active_id == g.moving_window_id.move_id
     {
         debug!("set_active_id() cancel moving_window\n");
-        g.moving_window_id = NULL;
+        g.moving_window_id = None;
     }
 
     // Set active id
@@ -74,7 +74,7 @@ pub fn MarkItemEdited(g: &mut Context, id: Id32)
 
 void ImGui::clear_active_id()
 {
-    set_active_id(0, NULL); // g.active_id = 0;
+    set_active_id(0, None); // g.active_id = 0;
 }
 
 void ImGui::SetHoveredID(ImGuiID id)

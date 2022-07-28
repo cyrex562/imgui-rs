@@ -17,7 +17,7 @@ use crate::window::{Window, WindowFlags};
 /// Test if mouse cursor is hovering given rectangle
 /// NB- Rectangle is clipped by our current clip setting
 /// NB- Expand the rectangle to be generous on imprecise inputs systems (g.style.TouchExtraPadding)
-/// bool ImGui::IsMouseHoveringRect(const Vector2D& r_min, const Vector2D& r_max, bool clip)
+/// bool ImGui::is_mouse_hovering_rect(const Vector2D& r_min, const Vector2D& r_max, bool clip)
 pub fn is_mouse_hovering_rect(g: &mut Context, r_min: &Vector2D, r_max: &Vector2D, clip: bool) -> bool {
     // ImGuiContext& g = *GImGui;
 
@@ -37,7 +37,7 @@ pub fn is_mouse_hovering_rect(g: &mut Context, r_min: &Vector2D, r_max: &Vector2
     let min_1 = rect_clipped.min - g.style.touch_extra_padding;
     let max_1 = rect_clipped.max - g.style.touch_extra_padding;
     let rect_for_touch = Rect::new2(&min_1, &max_1);
-    if !rect_for_touch.Contains(g.io.mouse_pos) {
+    if !rect_for_touch.contains(g.io.mouse_pos) {
         return false;
     }
     if !g.mouse_viewport_id.get_main_rect().Overlaps(&rect_clipped){
@@ -149,7 +149,7 @@ pub fn update_mouse_wheel(g: &mut Context)
         }
         if g.wheeling_window_timer <= 0.0
         {
-            g.wheeling_window = NULL;
+            g.wheeling_window = None;
             g.wheeling_window_timer = 0.0;
         }
     }
@@ -277,7 +277,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
     // ImGuiContext& g = *GImGui;
     // bool can_undock_node = false;
     let mut can_undock_node = false;
-    // if (node != NULL && node->VisibleWindow && (node->VisibleWindow.flags & ImGuiWindowFlags_NoMove) == 0)
+    // if (node != None && node->VisibleWindow && (node->VisibleWindow.flags & ImGuiWindowFlags_NoMove) == 0)
     if node.visible_window_id != INVALID_ID && node.visible_window_id.flags.contains(WindowFlags::NoMove) == false
     {
         // Can undock if:
@@ -285,7 +285,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
         // - part of a dockspace node hierarchy (trivia: undocking from a fixed/central node will create a new node and copy windows)
         // ImGuiDockNode* root_node = DockNodeGetRootNode(node);
         let mut root_node = dock_node_get_root_node(g, node);
-        //if (root_node->only_node_with_windows != node || root_node->CentralNode != NULL)
+        //if (root_node->only_node_with_windows != node || root_node->CentralNode != None)
         if root_node.only_node_with_window_id != node.id || root_node.central_node_id != INVALID_ID
         {  // -V1051 PVS-Studio thinks node should be root_node and is wrong about that.
         // if (undock_floating_node || root_node -> is_dock_space())
@@ -311,7 +311,7 @@ pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, n
 /// Handle mouse moving window
 /// Note: moving window with the navigation keys (Square + d-pad / CTRL+TAB + Arrows) are processed in NavUpdateWindowing()
 /// FIXME: We don't have strong guarantee that g.moving_window stay synched with g.active_id == g.moving_window->move_id.
-/// This is currently enforced by the fact that BeginDragDropSource() is setting all g.ActiveIdUsingXXXX flags to inhibit navigation inputs,
+/// This is currently enforced by the fact that begin_drag_drop_source() is setting all g.ActiveIdUsingXXXX flags to inhibit navigation inputs,
 /// but if we should more thoroughly test cases where g.active_id or g.moving_window gets changed and not the other.
 /// void ImGui::UpdateMouseMovingWindowNewFrame()
 pub fn update_mouse_moving_window_new_frame(g: &mut Context)
@@ -328,7 +328,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         let moving_window = g.get_window(moving_window_id).unwrap();
 
         // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
-        // const bool window_disappared = ((!moving_window.WasActive && !moving_window.Active) || moving_window.viewport == NULL);
+        // const bool window_disappared = ((!moving_window.WasActive && !moving_window.Active) || moving_window.viewport == None);
         let window_disappeared = (!moving_window.was_active && !moving_window.active) || moving_window.viewport_id == INVALID_ID;
         if g.io.mouse_down[0] && is_mouse_pos_valid(&g.io.mouse_pos) && !window_disappeared
         {
@@ -361,7 +361,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
                 }
 
                 // clear the NoInput window flag set by the viewport system
-                // moving_window.viewport.flags &= ~ViewportFlags::NoInputs; // FIXME-VIEWPORT: Test engine managed to crash here because viewport was NULL.
+                // moving_window.viewport.flags &= ~ViewportFlags::NoInputs; // FIXME-VIEWPORT: Test engine managed to crash here because viewport was None.
                 let mut viewport: &mut Viewport = g.get_viewport(moving_window.viewport_id).unwrap();
                 remove_hash_set_val(&mut viewport.flags, &ViewportFlags::NoInputs)
             }
@@ -413,7 +413,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
     {
         // Handle the edge case of a popup being closed while clicking in its empty space.
         // If we try to focus it, focus_window() > close_popups_over_window() will accidentally close any parent popups because they are not linked together any more.
-        // ImGuiWindow* RootWindow = g.hovered_window ? g.hovered_window->RootWindow : NULL;
+        // ImGuiWindow* RootWindow = g.hovered_window ? g.hovered_window->RootWindow : None;
         let root_window = if g.hovered_window_id != INVALID_ID {
             let hov_win = g.get_window(g.hovered_window_id).unwrap();
             Some(g.get_window(hov_win.root_window_id).unwrap())
@@ -436,7 +436,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
             false
         };
 
-        // if (RootWindow != NULL && !is_closed_popup)
+        // if (RootWindow != None && !is_closed_popup)
 
         if root_window.is_some() && is_closed_popup == false
         {
@@ -444,7 +444,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
             start_mouse_moving_window(g, g.hovered_window); //-V595
 
             // Cancel moving if clicked outside of title bar
-            if g.io.config_windows_move_from_title_bar_only && (!(root_win.flags.contains(&WindowFlags::NoTitleBar)) || root_win.unwrap().dock_is_active) && !root_win.unwrap().title_bar_rect().Contains(&g.io.mouse_clicked_pos[0]) {
+            if g.io.config_windows_move_from_title_bar_only && (!(root_win.flags.contains(&WindowFlags::NoTitleBar)) || root_win.unwrap().dock_is_active) && !root_win.unwrap().title_bar_rect().contains(&g.io.mouse_clicked_pos[0]) {
                 g.moving_window_id = INVALID_ID
             }
 
@@ -453,7 +453,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
                 g.moving_window_id = INVALID_ID;
             }
         }
-        else if root_window.is_none() && g.nav_window_id != INVALID_ID && get_top_most_popup_modal() == NULL
+        else if root_window.is_none() && g.nav_window_id != INVALID_ID && get_top_most_popup_modal() == None
         {
             // Clicking on void disable focus
             focus_window();
@@ -468,7 +468,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
         // Find the top-most window between hovered_window and the top-most Modal window.
         // This is where we can trim the popup stack.
         let modal = get_top_most_popup_modal();
-        let hovered_window_above_modal = g.hovered_window && (modal == NULL || is_window_above(g.hovered_window, modal));
+        let hovered_window_above_modal = g.hovered_window && (modal == None || is_window_above(g.hovered_window, modal));
         close_popups_over_window(if hovered_window_above_modal { g.hovered_window } else { modal}, true);
     }
 }
@@ -486,7 +486,7 @@ pub fn is_mouse_clicked(g: &mut Context, button: MouseButton, repeat: bool) -> b
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
-    const float t = g.io.mouse_down_duration[button];
+    let t = g.io.mouse_down_duration[button];
     if (t == 0.0)
         return true;
     if (repeat && t > g.io.KeyRepeatDelay)
@@ -562,9 +562,9 @@ pub fn get_mouse_pos_on_opening_current_popup(g: &mut Context) -> Vector2D
 pub fn is_mouse_pos_valid(g: &mut Context, mouse_pos: &Vector2D) -> bool
 {
     // The assert is only to silence a false-positive in XCode Static Analysis.
-    // Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be NULL (which it doesn't for other functions).
-    // IM_ASSERT(GImGui != NULL);
-    const float MOUSE_INVALID = -256000.0;
+    // Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be None (which it doesn't for other functions).
+    // IM_ASSERT(GImGui != None);
+    let MOUSE_INVALID = -256000.0;
     Vector2D p = mouse_pos ? *mouse_pos : g.IO.MousePos;
     return p.x >= MOUSE_INVALID && p.y >= MOUSE_INVALID;
 }

@@ -17,7 +17,7 @@ pub fn set_window_focus2(g: &mut Context, name: &str)
     }
     else
     {
-        focus_window(NULL);
+        focus_window(None);
     }
 }
 

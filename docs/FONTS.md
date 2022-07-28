@@ -117,13 +117,13 @@ io.fonts->build();
 
 ```cpp
 // Basic Latin, Extended Latin
-io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, NULL, io.fonts->get_glyph_ranges_default());
+io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, None, io.fonts->get_glyph_ranges_default());
 
 // Default + Selection of 2500 Ideographs used by Simplified Chinese
-io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, NULL, io.fonts->get_glyph_ranges_chinese_simplified_common());
+io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, None, io.fonts->get_glyph_ranges_chinese_simplified_common());
 
 // Default + Hiragana, Katakana, Half-width, Selection of 1946 Ideographs
-io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, NULL, io.fonts->get_glyph_ranges_japanese());
+io.fonts->AddFontFromFileTTF("font.ttf", size_pixels, None, io.fonts->get_glyph_ranges_japanese());
 ```
 See [Using Custom Glyph ranges](#using-custom-glyph-ranges) section to create your own ranges.
 
@@ -132,7 +132,7 @@ See [Using Custom Glyph ranges](#using-custom-glyph-ranges) section to create yo
 
 ```cpp
 ImGuiIO& io = ImGui::GetIO();
-io.fonts->AddFontFromFileTTF("NotoSansCJKjp-Medium.otf", 20.0, NULL, io.fonts->get_glyph_ranges_japanese());
+io.fonts->AddFontFromFileTTF("NotoSansCJKjp-Medium.otf", 20.0, None, io.fonts->get_glyph_ranges_japanese());
 ```
 ```cpp
 ImGui::Text(u8"こんにちは！テスト %d", 123);
@@ -245,7 +245,7 @@ builder.add_char(0x7262);                               // Add a specific charac
 builder.add_ranges(io.fonts->get_glyph_ranges_japanese()); // Add one of the default ranges
 builder.build_ranges(&ranges);                          // build the final result (ordered ranges with all the unique characters submitted)
 
-io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, NULL, ranges.data);
+io.fonts->AddFontFromFileTTF("myfontfile.ttf", size_in_pixels, None, ranges.data);
 io.fonts->build();                                     // build the atlas while 'ranges' is still in scope and not deleted.
 ```
 
@@ -271,7 +271,7 @@ rect_ids[1] = io.fonts->add_custom_rect_font_glyph(font, 'b', 13, 13, 13+1);
 io.fonts->build();
 
 // Retrieve texture in RGBA format
-unsigned char* tex_pixels = NULL;
+unsigned char* tex_pixels = None;
 int tex_width, tex_height;
 io.fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
 

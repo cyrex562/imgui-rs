@@ -8,12 +8,12 @@ pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(window == window.root_window);
 
-    const int cur_order = window.focus_order;
+    let cur_order = window.focus_order;
     // IM_ASSERT(g.windows_focus_order[cur_order] == window);
     if (g.windows_focus_order.back() == window)
         return;
 
-    const int new_order = g.windows_focus_order.size - 1;
+    let new_order = g.windows_focus_order.size - 1;
     for (int n = cur_order; n < new_order; n += 1)
     {
         g.windows_focus_order[n] = g.windows_focus_order[n + 1];
@@ -59,7 +59,7 @@ pub fn bring_window_to_display_back(g: &mut Context, window: &mut Window)
 // void ImGui::BringWindowToDisplayBehind(ImGuiWindow* window, ImGuiWindow* behind_window)
 pub fn bring_window_to_display_behind(g: &mut Context, window: &mut Window, behind_window: &mut Window)
 {
-    // IM_ASSERT(window != NULL && behind_window != NULL);
+    // IM_ASSERT(window != None && behind_window != None);
     // ImGuiContext& g = *GImGui;
     window = window.root_window;
     behind_window = behind_window.root_window;
@@ -101,10 +101,10 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
     close_popups_over_window(window, false);
 
     // Move the root window to the top of the pile
-    // IM_ASSERT(window == NULL || window.root_window_dock_tree != NULL);
-    ImGuiWindow* focus_front_window = window ? window.root_window : NULL;
-    ImGuiWindow* display_front_window = window ? window.root_window_dock_tree : NULL;
-    ImGuiDockNode* dock_node = window ? window.dock_node_id: NULL;
+    // IM_ASSERT(window == None || window.root_window_dock_tree != None);
+    ImGuiWindow* focus_front_window = window ? window.root_window : None;
+    ImGuiWindow* display_front_window = window ? window.root_window_dock_tree : None;
+    ImGuiDockNode* dock_node = window ? window.dock_node_id: None;
     bool active_id_window_is_dock_node_host = (g.active_id_window && dock_node && dock_node.host_window == g.active_id_window);
 
     // Steal active widgets. Some of the cases it triggers includes:
@@ -115,7 +115,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
         if (!g.ActiveIdNoClearOnFocusLoss && !active_id_window_is_dock_node_host)
             clear_active_id();
 
-    // Passing NULL allow to disable keyboard focus
+    // Passing None allow to disable keyboard focus
     if (!window)
         return;
     window.LastFrameJustFocused = g.frame_count;
@@ -136,7 +136,7 @@ pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_
 {
     // ImGuiContext& g = *GImGui;
     int start_idx = g.windows_focus_order.size - 1;
-    if (under_this_window != NULL)
+    if (under_this_window != None)
     {
         // Aim at root window behind us, if we are in a child window that's our own root (see #4640)
         int offset = -1;
@@ -164,5 +164,5 @@ pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_
                 return;
             }
     }
-    focus_window(NULL);
+    focus_window(None);
 }

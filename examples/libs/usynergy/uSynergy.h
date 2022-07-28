@@ -328,8 +328,8 @@ typedef struct
 	uint16_t						m_clientHeight;									/* height of screen */
 
 	/* Optional configuration data, filled in by client */
-	uSynergyCookie					m_cookie;										/* Cookie pointer passed to callback functions (can be NULL) */
-	uSynergyTraceFunc				m_traceFunc;									/* Function for tracing status (can be NULL) */
+	uSynergyCookie					m_cookie;										/* Cookie pointer passed to callback functions (can be None) */
+	uSynergyTraceFunc				m_traceFunc;									/* Function for tracing status (can be None) */
 	uSynergyScreenActiveCallback	m_screenActiveCallback;							/* Callback for entering and leaving screen */
 	uSynergyMouseCallback			m_mouseCallback;								/* Callback for mouse events */
 	uSynergyKeyboardCallback		m_keyboardCallback;								/* Callback for keyboard events */

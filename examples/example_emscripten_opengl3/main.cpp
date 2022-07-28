@@ -17,8 +17,8 @@
 
 // Emscripten requires to have full control over the main loop. We're going to store our SDL book-keeping variables globally.
 // Having a single function that acts as a loop prevents us to store state in the stack of said function. So we need some location for this.
-SDL_Window*     g_Window = NULL;
-SDL_GLContext   g_GLContext = NULL;
+SDL_Window*     g_Window = None;
+SDL_GLContext   g_GLContext = None;
 
 // For clarity, our main loop code is declared at the end.
 static void main_loop(void*);
@@ -68,7 +68,7 @@ int main(int, char**)
 
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
     // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
-    io.IniFilename = NULL;
+    io.IniFilename = None;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -81,7 +81,7 @@ int main(int, char**)
     // Load fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - If the file cannot be loaded, the function will return None. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
@@ -92,12 +92,12 @@ int main(int, char**)
     //io.fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0);
     //io.fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0);
     //io.fonts->AddFontFromFileTTF("fonts/ProggyTiny.ttf", 10.0);
-    //ImFont* font = io.fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0, NULL, io.fonts->get_glyph_ranges_japanese());
-    //IM_ASSERT(font != NULL);
+    //ImFont* font = io.fonts->AddFontFromFileTTF("fonts/ArialUni.ttf", 18.0, None, io.fonts->get_glyph_ranges_japanese());
+    //IM_ASSERT(font != None);
 #endif
 
     // This function call won't return, and will engage in an infinite loop, processing events from the browser, and dispatching them.
-    emscripten_set_main_loop_arg(main_loop, NULL, 0, true);
+    emscripten_set_main_loop_arg(main_loop, None, 0, true);
 }
 
 static void main_loop(void* arg)

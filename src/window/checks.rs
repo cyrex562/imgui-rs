@@ -10,7 +10,7 @@ pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_
     // ImGuiContext& g = *GImGui;
 
     // It would be saner to ensure that display layer is always reflected in the g.windows[] order, which would likely requires altering all manipulations of that array
-    const int display_layer_delta = get_window_display_layer(potential_above) - get_window_display_layer(potential_below);
+    let display_layer_delta = get_window_display_layer(potential_above) - get_window_display_layer(potential_below);
     if (display_layer_delta != 0)
         return display_layer_delta > 0;
 
@@ -33,7 +33,7 @@ pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> 
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* ref_window = g.hovered_window;
     ImGuiWindow* cur_window = g.current_window;
-    if (ref_window == NULL)
+    if (ref_window == None)
         return false;
 
     if ((flags & ImGuiHoveredFlags_AnyWindow) == 0)
@@ -70,7 +70,7 @@ pub fn is_window_focused(g: &mut Context, flags: &mut HashSet<FocusedFlags>)
     ImGuiWindow* ref_window = g.nav_window;
     ImGuiWindow* cur_window = g.current_window;
 
-    if (ref_window == NULL)
+    if (ref_window == None)
         return false;
     if (flags & ImGuiFocusedFlags_AnyWindow)
         return true;

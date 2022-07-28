@@ -19,8 +19,8 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 // About GLSL version:
-// The 'glsl_version' initialization parameter defaults to "#version 150" if NULL.
-// Only override if your GL version doesn't handle this GLSL version. Keep NULL if unsure!
+// The 'glsl_version' initialization parameter defaults to "#version 150" if None.
+// Only override if your GL version doesn't handle this GLSL version. Keep None if unsure!
 
 #pragma once
 #include "defines.rs"      // IMGUI_IMPL_API

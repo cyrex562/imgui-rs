@@ -31,7 +31,7 @@
 #define IMGUI_VULKAN_DEBUG_REPORT
 #endif
 
-static VkAllocationCallbacks*   g_Allocator = NULL;
+static VkAllocationCallbacks*   g_Allocator = None;
 static VkInstance               g_Instance = VK_NULL_HANDLE;
 static VkPhysicalDevice         g_PhysicalDevice = VK_NULL_HANDLE;
 static VkDevice                 g_Device = VK_NULL_HANDLE;
@@ -93,14 +93,14 @@ static void SetupVulkan(const char** extensions, uint32_t extensions_count)
 
         // Get the function pointer (required for any extensions)
         auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkCreateDebugReportCallbackEXT");
-        IM_ASSERT(vkCreateDebugReportCallbackEXT != NULL);
+        IM_ASSERT(vkCreateDebugReportCallbackEXT != None);
 
         // Setup the debug report callback
         VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
         debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
         debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
         debug_report_ci.pfnCallback = debug_report;
-        debug_report_ci.pUserData = NULL;
+        debug_report_ci.pUserData = None;
         err = vkCreateDebugReportCallbackEXT(g_Instance, &debug_report_ci, g_Allocator, &g_DebugReport);
         check_vk_result(err);
 #else
@@ -114,7 +114,7 @@ static void SetupVulkan(const char** extensions, uint32_t extensions_count)
     // Select GPU
     {
         uint32_t gpu_count;
-        err = vkEnumeratePhysicalDevices(g_Instance, &gpu_count, NULL);
+        err = vkEnumeratePhysicalDevices(g_Instance, &gpu_count, None);
         check_vk_result(err);
         IM_ASSERT(gpu_count > 0);
 
@@ -144,7 +144,7 @@ static void SetupVulkan(const char** extensions, uint32_t extensions_count)
     // Select graphics queue family
     {
         uint32_t count;
-        vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &count, NULL);
+        vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &count, None);
         VkQueueFamilyProperties* queues = (VkQueueFamilyProperties*)malloc(sizeof(VkQueueFamilyProperties) * count);
         vkGetPhysicalDeviceQueueFamilyProperties(g_PhysicalDevice, &count, queues);
         for (uint32_t i = 0; i < count; i += 1)
@@ -360,7 +360,7 @@ int main(int, char**)
         return 1;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+Vulkan example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+Vulkan example", None, None);
 
     // Setup Vulkan
     if (!glfwVulkanSupported())
@@ -427,7 +427,7 @@ int main(int, char**)
     // Load fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - If the file cannot be loaded, the function will return None. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
@@ -436,8 +436,8 @@ int main(int, char**)
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0);
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0);
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0);
-    //ImFont* font = io.fonts->AddFontFromFileTTF("c:\\windows\\fonts\\ArialUni.ttf", 18.0, NULL, io.fonts->get_glyph_ranges_japanese());
-    //IM_ASSERT(font != NULL);
+    //ImFont* font = io.fonts->AddFontFromFileTTF("c:\\windows\\fonts\\ArialUni.ttf", 18.0, None, io.fonts->get_glyph_ranges_japanese());
+    //IM_ASSERT(font != None);
 
     // Upload fonts
     {

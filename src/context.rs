@@ -4,31 +4,29 @@ use std::fmt::{Debug, Formatter};
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
 
-
-use crate::list_clipper::ListClipperData;
-use crate::color::{COLOR_EDIT_FLAGS_DFLT_OPTS, ColorEditFlags, StackedColorModifier};
+use crate::color::{ColorEditFlags, StackedColorModifier, COLOR_EDIT_FLAGS_DFLT_OPTS};
 use crate::combo::ComboPreviewData;
 use crate::config::ConfigFlags;
-use crate::window::ShrinkWidthItem;
-use crate::types::Direction;
 use crate::dock::context::DockContext;
 use crate::dock::node::DockNode;
 use crate::drag_drop::DragDropFlags;
-use crate::draw_channel::DrawChannel;
 use crate::draw::draw_list::DrawList;
+use crate::draw_channel::DrawChannel;
+use crate::list_clipper::ListClipperData;
+use crate::types::Direction;
+use crate::window::ShrinkWidthItem;
 
 use crate::draw::draw_list_shared_data::DrawListSharedData;
-use crate::font::Font;
 use crate::font::font_atlas::FontAtlas;
+use crate::font::Font;
 use crate::group::GroupData;
 use crate::input::{DimgKey, InputSource, ModFlags, MouseCursor, NavLayer};
 use crate::input_event::InputEvent;
 use crate::io::{Io, PlatformIo};
-use crate::item::{ItemFlags, LastItemData, NextItemData, pop_item_flag};
-
+use crate::item::{pop_item_flag, ItemFlags, LastItemData, NextItemData};
 
 use crate::metrics::MetricsConfig;
-use crate::nav::{ActivateFlags, nav_move_request_cancel, NavItemData, NavMoveFlags, ScrollFlags};
+use crate::nav::{nav_move_request_cancel, ActivateFlags, NavItemData, NavMoveFlags, ScrollFlags};
 use crate::payload::Payload;
 use crate::platform::{PlatformImeData, PlatformMonitor};
 
@@ -41,13 +39,13 @@ use crate::tab_bar::TabBar;
 use crate::table::{Table, TableSettings, TableTempData};
 
 use crate::text_input_state::InputTextState;
-use crate::types::{Id32, INVALID_ID, PtrOrIndex, WindowHandle};
-use crate::vectors::Vector4D;
+use crate::types::{Id32, PtrOrIndex, WindowHandle, INVALID_ID};
 use crate::vectors::two_d::Vector2D;
+use crate::vectors::Vector4D;
 use crate::viewport::Viewport;
-use crate::window::{Window, WindowStackData};
 use crate::window::next_window::NextWindowData;
 use crate::window::settings::WindowSettings;
+use crate::window::{Window, WindowStackData};
 
 #[derive()]
 pub struct Context {
@@ -498,7 +496,7 @@ pub struct Context {
     // pub log_enabled: bool,
     // ImGuiLogType            log_type;                            // Capture target
     // pub log_type: ImGuiLogType,
-    // ImFileHandle            log_file;                            // If != NULL log to stdout/ file
+    // ImFileHandle            log_file;                            // If != None log to stdout/ file
     pub log_file: String,
     // ImGuiTextBuffer         LogBuffer;                          // Accumulation buffer when log to clipboard. This is pointer so our GImGui static constructor doesn't call heap allocators.
     // pub LogBuffer: ImGuiTextBuffer,
@@ -644,7 +642,7 @@ impl Context {
             current_dpi_scale: 0.0,
             current_viewport_id: INVALID_ID,
             mouse_viewport_id: INVALID_ID,
-            // mouse_last_hovered_viewport: NULL,
+            // mouse_last_hovered_viewport: None,
             mouse_last_hovered_viewport_id: INVALID_ID,
             platform_last_focused_viewport_id: 0,
             fallback_monitor: PlatformMonitor::default(),
@@ -821,7 +819,13 @@ impl Context {
 
     /// Panics if a window in the window hash set for the global context does not contain a window matching the id set in the current_window_id field
     pub fn get_current_window(&mut self) -> &mut Window {
-        self.windows.get_mut(&self.current_window_id).expect(format!("failed to get current window (id={})", self.current_window_id).as_str())
+        self.windows.get_mut(&self.current_window_id).expect(
+            format!(
+                "failed to get current window (id={})",
+                self.current_window_id
+            )
+            .as_str(),
+        )
     }
 
     pub fn get_viewport(&mut self, vp_id: Id32) -> Option<&mut Viewport> {
@@ -835,7 +839,9 @@ impl Context {
     }
 
     pub fn get_window(&mut self, win_id: Id32) -> &mut Window {
-        self.windows.get_mut(&win_id).expect(format!("window not found in window stack for id={}", win_id).as_str())
+        self.windows
+            .get_mut(&win_id)
+            .expect(format!("window not found in window stack for id={}", win_id).as_str())
     }
 
     pub fn get_dock_node(&mut self, dock_node_id: Id32) -> Option<&mut DockNode> {
@@ -843,12 +849,24 @@ impl Context {
     }
 
     pub fn get_draw_list(&mut self, draw_list_id: Id32) -> &mut DrawList {
-        self.draw_lists.get_mut(&draw_list_id).expect(format!("draw list not found in collection for id={}", draw_list_id).as_str())
+        self.draw_lists
+            .get_mut(&draw_list_id)
+            .expect(format!("draw list not found in collection for id={}", draw_list_id).as_str())
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum ContextHookType { None, NewFramePre, NewFramePost, EndFramePre, EndFramePost, RenderPre, RenderPost, Shutdown, PendingRemoval }
+pub enum ContextHookType {
+    None,
+    NewFramePre,
+    NewFramePost,
+    EndFramePre,
+    EndFramePost,
+    RenderPre,
+    RenderPost,
+    Shutdown,
+    PendingRemoval,
+}
 
 impl Default for ContextHookType {
     fn default() -> Self {
@@ -875,7 +893,29 @@ pub struct ContextHook {
 
 impl Debug for ContextHook {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ContextHook").field("hook_id", &self.hook_id).field("hook_type", &self.hook_type).field("owner", &self.owner).field("callback", &format!("is_some: {}", &self.callback.is_some())).field("user_data", &format!("{:x} {:x} {:x} {:x} {:x} {:x} {:x} {:x}", &self.user_data[0], &self.user_data[1], &self.user_data[2], &self.user_data[3], &self.user_data[4], &self.user_data[5], &self.user_data[6], &self.user_data[7])).finish()
+        f.debug_struct("ContextHook")
+            .field("hook_id", &self.hook_id)
+            .field("hook_type", &self.hook_type)
+            .field("owner", &self.owner)
+            .field(
+                "callback",
+                &format!("is_some: {}", &self.callback.is_some()),
+            )
+            .field(
+                "user_data",
+                &format!(
+                    "{:x} {:x} {:x} {:x} {:x} {:x} {:x} {:x}",
+                    &self.user_data[0],
+                    &self.user_data[1],
+                    &self.user_data[2],
+                    &self.user_data[3],
+                    &self.user_data[4],
+                    &self.user_data[5],
+                    &self.user_data[6],
+                    &self.user_data[7]
+                ),
+            )
+            .finish()
     }
 }
 
@@ -894,7 +934,7 @@ pub fn remove_context_hook(g: &mut Context, hook_id: Id32) {
 /// No specific ordering/dependency support, will see as needed
 pub fn add_context_hook(g: &mut Context, hook: &ContextHook) -> Id32 {
     // ImGuiContext& g = *ctx;
-    // IM_ASSERT(hook->Callback != NULL && hook->HookId == 0 && hook->Type != ImGuiContextHookType_PendingRemoval_);
+    // IM_ASSERT(hook->Callback != None && hook->HookId == 0 && hook->Type != ImGuiContextHookType_PendingRemoval_);
     g.hooks.push(hook.clone());
     g.hook_id_next += 1;
     // g.hooks.last().hook_id = g.hook_id_next;
@@ -922,7 +962,6 @@ pub fn set_active_id_using_nav_and_keys(g: &mut Context) {
     g.active_id_using_key_input_mask.SetAllBits();
     nav_move_request_cancel(g);
 }
-
 
 /// BeginDisabled()/EndDisabled()
 /// - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)

@@ -105,7 +105,7 @@ impl NavItemData {
             ..Default::default()
         }
     }
-    //     void clear()        { window = NULL; id = focus_scope_id = 0; in_flags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
+    //     void clear()        { window = None; id = focus_scope_id = 0; in_flags = 0; DistBox = DistCenter = DistAxial = FLT_MAX; }
     pub fn Clear(&mut self) {
         self.Window = null_mut();
         self.id = INVALID_ID;
@@ -137,7 +137,7 @@ pub fn set_nav_window(g: &mut Context, window: &mut Window)
     // ImGuiContext& g = *GImGui;
     if (g.nav_window != window)
     {
-        IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"%s\")\n", window ? window.name : "<NULL>");
+        IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"%s\")\n", window ? window.name : "<None>");
         g.nav_window = window;
     }
     g.NavInitRequest = g.NavMoveSubmitted = g.NavMoveScoringItems = false;
@@ -148,7 +148,7 @@ pub fn set_nav_window(g: &mut Context, window: &mut Window)
 pub fn set_nav_id(g: &mut Context, id: Id32, nav_layer: NavLayer, focus_scope_id: Id32, rect_rel: &Rect)
 {
     // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(g.nav_window != NULL);
+    // IM_ASSERT(g.nav_window != None);
     // IM_ASSERT(nav_layer == NavLayer::Main || nav_layer == NavLayer::Menu);
     g.nav_id = id;
     g.NavLayer = nav_layer;
@@ -282,12 +282,12 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 
 // #ifIMGUI_DEBUG_NAV_SCORING
     char buf[128];
-    if (IsMouseHoveringRect(cand.min, cand.max))
+    if (is_mouse_hovering_rect(cand.min, cand.max))
     {
         ImFormatString(buf, IM_ARRAYSIZE(buf), "dbox (%.2,%.2->%.4)\ndcen (%.2,%.2->%.4)\nd (%.2,%.2->%.4)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
         ImDrawList* draw_list = get_foreground_draw_list(window);
-        draw_list.AddRect(curr.min, curr.max, IM_COL32(255,200,0,100));
-        draw_list.AddRect(cand.min, cand.max, IM_COL32(255,255,0,200));
+        draw_list.add_rect(curr.min, curr.max, IM_COL32(255,200,0,100));
+        draw_list.add_rect(cand.min, cand.max, IM_COL32(255,255,0,200));
         draw_list.add_rect_filled(cand.max - Vector2D::new(4, 4), cand.max + CalcTextSize(buf) + Vector2D::new(4, 4), IM_COL32(40,0,0,150));
         draw_list.AddText(cand.max, ~0U, buf);
     }
@@ -410,7 +410,7 @@ pub fn nav_process_item(g: &mut Context)
                     NavApplyItemToResult(result);
 
                 // Features like PageUp/PageDown need to maintain a separate score for the visible set of items.
-                const float VISIBLE_RATIO = 0.70;
+                let VISIBLE_RATIO = 0.70;
                 if ((g.NavMoveFlags & ImGuiNavMoveFlags_AlsoScoreVisibleSet) && window.clip_rect.Overlaps(nav_bb))
                     if (ImClamp(nav_bb.max.y, window.clip_rect.min.y, window.clip_rect.max.y) - ImClamp(nav_bb.min.y, window.clip_rect.min.y, window.clip_rect.max.y) >= (nav_bb.max.y - nav_bb.min.y) * VISIBLE_RATIO)
                         if (NavScoreItem(&g.NavMoveResultLocalVisible))
@@ -491,7 +491,7 @@ pub fn nav_move_request_but_no_result_yet(g: &mut Context)
 pub fn nav_move_request_submit(g: &mut Context, move_dir: Direction, clip_dir: Direction, move_flags: &HashSet<NavMoveFlags>, scroll_flags: &HashSet<ScrollFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(g.nav_window != NULL);
+    // IM_ASSERT(g.nav_window != None);
 
     if (move_flags & ImGuiNavMoveFlags_Tabbing)
         move_flags |= ImGuiNavMoveFlags_AllowCurrentNavId;
@@ -615,9 +615,9 @@ pub fn nav_restore_highlight_after_move(g: &mut Context)
 pub fn nav_update_any_request_flag(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    g.NavAnyRequest = g.NavMoveScoringItems || g.NavInitRequest || (IMGUI_DEBUG_NAV_SCORING && g.nav_window != NULL);
+    g.NavAnyRequest = g.NavMoveScoringItems || g.NavInitRequest || (IMGUI_DEBUG_NAV_SCORING && g.nav_window != None);
     if (g.NavAnyRequest)
-        // IM_ASSERT(g.nav_window != NULL);
+        // IM_ASSERT(g.nav_window != None);
 }
 
 // This needs to be called before we submit any widget (aka in or before Begin)
@@ -703,7 +703,7 @@ pub fn get_nav_input_amount(g: &mut Context, n: NavInput, mode: NavReadMode)
     if (mode == NavReadMode::Down)
         return g.io.NavInputs[n];                         // Instant, read analog input (0.0..1.0, as provided by user)
 
-    const float t = g.io.NavInputsDownDuration[n];
+    let t = g.io.NavInputsDownDuration[n];
     if (t < 0.0 && mode == NavReadMode::Released)  // Return 1.0 when just released, no repeat, ignore analog input.
         return (g.io.NavInputsDownDurationPrev[n] >= 0.0 ? 1.0 : 0.0);
     if (t < 0.0)
@@ -745,7 +745,7 @@ pub fn nav_update(g: &mut Context)
     ImGuiIO& io = g.io;
 
     io.WantSetMousePos = false;
-    //if (g.nav_scoring_debug_count > 0) IMGUI_DEBUG_LOG_NAV("[nav] nav_scoring_debug_count %d for '%s' layer %d (Init:%d, Move:%d)\n", g.nav_scoring_debug_count, g.nav_window ? g.nav_window->name : "NULL", g.nav_layer, g.nav_init_request || g.nav_init_result_id != 0, g.NavMoveRequest);
+    //if (g.nav_scoring_debug_count > 0) IMGUI_DEBUG_LOG_NAV("[nav] nav_scoring_debug_count %d for '%s' layer %d (Init:%d, Move:%d)\n", g.nav_scoring_debug_count, g.nav_window ? g.nav_window->name : "None", g.nav_layer, g.nav_init_request || g.nav_init_result_id != 0, g.NavMoveRequest);
 
     // Update Gamepad->Nav inputs mapping
     // Set input source as Gamepad when buttons are pressed (as some features differs when used with Gamepad vs Keyboard)
@@ -821,15 +821,15 @@ pub fn nav_update(g: &mut Context)
     // Store our return window (for returning from Menu Layer to Main Layer) and clear it as soon as we step back in our own Layer 0
     if (g.nav_window)
         NavSaveLastChildNavWindowIntoParent(g.nav_window);
-    if (g.nav_window && g.nav_window.NavLastChildNavWindow != NULL && g.NavLayer == NavLayer::Main)
-        g.nav_window.NavLastChildNavWindow = NULL;
+    if (g.nav_window && g.nav_window.NavLastChildNavWindow != None && g.NavLayer == NavLayer::Main)
+        g.nav_window.NavLastChildNavWindow = None;
 
     // Update CTRL+TAB and Windowing features (hold Square to move/resize/etc.)
     NavUpdateWindowing();
 
     // Set output flags for user application
     io.nav_active = (nav_keyboard_active || nav_gamepad_active) && g.nav_window && !(g.nav_window.flags & WindowFlags::NoNavInputs);
-    io.NavVisible = (io.nav_active && g.nav_id != 0 && !g.nav_disable_highlight) || (g.nav_windowing_target != NULL);
+    io.NavVisible = (io.nav_active && g.nav_id != 0 && !g.nav_disable_highlight) || (g.nav_windowing_target != None);
 
     // Process NavCancel input (to close a popup, get back to parent, clear focus)
     NavUpdateCancelRequest();
@@ -887,7 +887,7 @@ pub fn nav_update(g: &mut Context)
     {
         // *Fallback* manual-scroll with Nav directional keys when window has no navigable item
         ImGuiWindow* window = g.nav_window;
-        const float scroll_speed = IM_ROUND(window.CalcFontSize() * 100 * io.delta_time); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
+        let scroll_speed = IM_ROUND(window.CalcFontSize() * 100 * io.delta_time); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
         const ImGuiDir move_dir = g.NavMoveDir;
         if (window.dc.nav_layers_active_mask == 0x00 && window.dc.nav_has_scroll && move_dir != Direction::None)
         {
@@ -928,8 +928,8 @@ pub fn nav_update(g: &mut Context)
     if (g.nav_window)
     {
         ImDrawList* draw_list = get_foreground_draw_list(g.nav_window);
-        if (1) { for (int layer = 0; layer < 2; layer += 1) { Rect r = WindowRectRelToAbs(g.nav_window, g.nav_window.NavRectRel[layer]); draw_list.AddRect(r.min, r.max, IM_COL32(255,200,0,255)); } } // [DEBUG]
-        if (1) { ImU32 col = (!g.nav_window.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); Vector2D p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0, col); draw_list.AddText(NULL, 13.0, p + Vector2D::new(8,-4), col, buf); }
+        if (1) { for (int layer = 0; layer < 2; layer += 1) { Rect r = WindowRectRelToAbs(g.nav_window, g.nav_window.NavRectRel[layer]); draw_list.add_rect(r.min, r.max, IM_COL32(255,200,0,255)); } } // [DEBUG]
+        if (1) { ImU32 col = (!g.nav_window.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); Vector2D p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0, col); draw_list.AddText(None, 13.0, p + Vector2D::new(8,-4), col, buf); }
     }
 
 }
@@ -958,7 +958,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     ImGuiIO& io = g.io;
     ImGuiWindow* window = g.nav_window;
 
-    if (g.NavMoveForwardToNextFrame && window != NULL)
+    if (g.NavMoveForwardToNextFrame && window != None)
     {
         // Forwarding previous request (which has been modified, e.g. wrap around menus rewrite the requests with a starting rectangle at the other side of the window)
         // (preserve most state, which were already set by the NavMoveRequestForward() function)
@@ -1015,7 +1015,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // Moving with no reference triggers a init request (will be used as a fallback if the direction fails to find a match)
     if (g.NavMoveSubmitted && g.nav_id == 0)
     {
-        IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: from move, window \"%s\", layer=%d\n", window ? window.name : "<NULL>", g.NavLayer);
+        IMGUI_DEBUG_LOG_NAV("[nav] nav_init_request: from move, window \"%s\", layer=%d\n", window ? window.name : "<None>", g.NavLayer);
         g.NavInitRequest = g.NavInitRequestFromMove = true;
         g.NavInitResultId = 0;
         g.nav_disable_highlight = false;
@@ -1024,12 +1024,12 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // When using gamepad, we project the reference nav bounding box into window visible area.
     // This is to allow resuming navigation inside the visible area after doing a large amount of scrolling, since with gamepad every movements are relative
     // (can't focus a visible object like we can with the mouse).
-    if (g.NavMoveSubmitted && g.nav_input_source == InputSource::Gamepad && g.NavLayer == NavLayer::Main && window != NULL)// && (g.nav_move_flags & ImGuiNavMoveFlags_Forwarded))
+    if (g.NavMoveSubmitted && g.nav_input_source == InputSource::Gamepad && g.NavLayer == NavLayer::Main && window != None)// && (g.nav_move_flags & ImGuiNavMoveFlags_Forwarded))
     {
         bool clamp_x = (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         bool clamp_y = (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
         Rect inner_rect_rel = window_rect_abs_to_rel(window, Rect(window.inner_rect.min - Vector2D::new(1, 1), window.inner_rect.max + Vector2D::new(1, 1)));
-        if ((clamp_x || clamp_y) && !inner_rect_rel.Contains(window.NavRectRel[g.NavLayer]))
+        if ((clamp_x || clamp_y) && !inner_rect_rel.contains(window.NavRectRel[g.NavLayer]))
         {
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp nav_rect_rel for gamepad move\n");
             float pad_x = ImMin(inner_rect_rel.get_width(), window.CalcFontSize() * 0.5);
@@ -1045,7 +1045,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
 
     // For scoring we use a single segment on the left side our current item bounding box (not touching the edge to avoid box overlap with zero-spaced items)
     Rect scoring_rect;
-    if (window != NULL)
+    if (window != None)
     {
         Rect nav_rect_rel = !window.NavRectRel[g.NavLayer].is_inverted() ? window.NavRectRel[g.NavLayer] : Rect(0, 0, 0, 0);
         scoring_rect = WindowRectRelToAbs(window, nav_rect_rel);
@@ -1066,7 +1066,7 @@ pub fn nav_update_create_tabbing_request(g: &mut Context)
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.nav_window;
     // IM_ASSERT(g.NavMoveDir == Dir::None);
-    if (window == NULL || g.nav_windowing_target != NULL || (window.flags & WindowFlags::NoNavInputs))
+    if (window == None || g.nav_windowing_target != None || (window.flags & WindowFlags::NoNavInputs))
         return;
 
     const bool tab_pressed = IsKeyPressed(ImGuiKey_Tab, true) && !IsActiveIdUsingKey(ImGuiKey_Tab) && !g.io.key_ctrl && !g.io.key_alt;
@@ -1096,7 +1096,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
 
 
     // Select which result to use
-    ImGuiNavItemData* result = (g.NavMoveResultLocal.id != 0) ? &g.NavMoveResultLocal : (g.NavMoveResultOther.id != 0) ? &g.NavMoveResultOther : NULL;
+    ImGuiNavItemData* result = (g.NavMoveResultLocal.id != 0) ? &g.NavMoveResultLocal : (g.NavMoveResultOther.id != 0) ? &g.NavMoveResultOther : None;
 
     // Tabbing forward wrap
     if (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing)
@@ -1104,7 +1104,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
             result = &g.NavTabbingResultFirst;
 
     // In a situation when there is no results but nav_id != 0, re-enable the Navigation highlight (because g.nav_id is not considered as a possible result)
-    if (result == NULL)
+    if (result == None)
     {
         if (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing)
             g.NavMoveFlags |= ImGuiNavMoveFlags_DontSetNavHighlight;
@@ -1236,7 +1236,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
 {
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.nav_window;
-    if ((window.flags & WindowFlags::NoNavInputs) || g.nav_windowing_target != NULL)
+    if ((window.flags & WindowFlags::NoNavInputs) || g.nav_windowing_target != None)
         return 0.0;
 
     const bool page_up_held = IsKeyDown(ImGuiKey_PageUp) && !IsActiveIdUsingKey(ImGuiKey_PageUp);
@@ -1264,7 +1264,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
     else
     {
         Rect& nav_rect_rel = window.NavRectRel[g.NavLayer];
-        const float page_offset_y = ImMax(0.0, window.inner_rect.get_height() - window.CalcFontSize() * 1.0 + nav_rect_rel.get_height());
+        let page_offset_y = ImMax(0.0, window.inner_rect.get_height() - window.CalcFontSize() * 1.0 + nav_rect_rel.get_height());
         float nav_scoring_rect_offset_y = 0.0;
         if (IsKeyPressed(ImGuiKey_PageUp, true))
         {
@@ -1312,7 +1312,7 @@ pub fn nav_end_frame(g: &mut Context)
     // ImGuiContext& g = *GImGui;
 
     // Show CTRL+TAB list window
-    if (g.nav_windowing_target != NULL)
+    if (g.nav_windowing_target != None)
         NavUpdateWindowingOverlay();
 
     // Perform wrap-around in menus
@@ -1397,7 +1397,7 @@ pub fn find_window_nav_focusable(g: &mut Context, i_start: i32, i_stop: i32, dir
     for (int i = i_start; i >= 0 && i < g.windows_focus_order.size && i != i_stop; i += dir)
         if (IsWindowNavFocusable(g.windows_focus_order[i]))
             return g.windows_focus_order[i];
-    return NULL;
+    return None;
 }
 
 // static void NavUpdateWindowingHighlightWindow(int focus_change_dir)
@@ -1408,7 +1408,7 @@ pub fn nav_update_windowing_highlight_window(g: &mut Context, focus_change_dir: 
     if (g.nav_windowing_target.flags & WindowFlags::Modal)
         return;
 
-    const int i_current = FindWindowFocusIndex(g.nav_windowing_target);
+    let i_current = FindWindowFocusIndex(g.nav_windowing_target);
     ImGuiWindow* window_target = FindWindowNavFocusable(i_current + focus_change_dir, -INT_MAX, focus_change_dir);
     if (!window_target)
         window_target = FindWindowNavFocusable((focus_change_dir < 0) ? (g.windows_focus_order.size - 1) : 0, i_current, focus_change_dir);
@@ -1426,20 +1426,20 @@ pub fn nav_update_windowing(g: &mut Context)
     // ImGuiContext& g = *GImGui;
     ImGuiIO& io = g.io;
 
-    ImGuiWindow* apply_focus_window = NULL;
+    ImGuiWindow* apply_focus_window = None;
     bool apply_toggle_layer = false;
 
     ImGuiWindow* modal_window = get_top_most_popup_modal();
-    bool allow_windowing = (modal_window == NULL);
+    bool allow_windowing = (modal_window == None);
     if (!allow_windowing)
-        g.nav_windowing_target = NULL;
+        g.nav_windowing_target = None;
 
     // Fade out
-    if (g.NavWindowingTargetAnim && g.nav_windowing_target == NULL)
+    if (g.NavWindowingTargetAnim && g.nav_windowing_target == None)
     {
         g.nav_windowing_highlight_alpha = ImMax(g.nav_windowing_highlight_alpha - io.delta_time * 10.0, 0.0);
         if (g.dim_bg_ration <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0)
-            g.NavWindowingTargetAnim = NULL;
+            g.NavWindowingTargetAnim = None;
     }
 
     // Start CTRL+Tab or Square+L/R window selection
@@ -1462,7 +1462,7 @@ pub fn nav_update_windowing(g: &mut Context)
         g.nav_windowing_highlight_alpha = ImMax(g.nav_windowing_highlight_alpha, ImSaturate((g.NavWindowingTimer - NAV_WINDOWING_HIGHLIGHT_DELAY) / 0.05));
 
         // Select window to focus
-        const int focus_change_dir = IsNavInputTest(ImGuiNavInput_FocusPrev, NavReadMode::RepeatSlow) - IsNavInputTest(ImGuiNavInput_FocusNext, NavReadMode::RepeatSlow);
+        let focus_change_dir = IsNavInputTest(ImGuiNavInput_FocusPrev, NavReadMode::RepeatSlow) - IsNavInputTest(ImGuiNavInput_FocusNext, NavReadMode::RepeatSlow);
         if (focus_change_dir != 0)
         {
             NavUpdateWindowingHighlightWindow(focus_change_dir);
@@ -1477,7 +1477,7 @@ pub fn nav_update_windowing(g: &mut Context)
                 apply_toggle_layer = true;
             else if (!g.NavWindowingToggleLayer)
                 apply_focus_window = g.nav_windowing_target;
-            g.nav_windowing_target = NULL;
+            g.nav_windowing_target = None;
         }
     }
 
@@ -1528,8 +1528,8 @@ pub fn nav_update_windowing(g: &mut Context)
             move_delta = get_nav_input_amount_2d(NavDirSourceFlags::PadLStick, NavReadMode::Down);
         if (move_delta.x != 0.0 || move_delta.y != 0.0)
         {
-            const float NAV_MOVE_SPEED = 800.0;
-            const float move_speed = f32::floor(NAV_MOVE_SPEED * io.delta_time * ImMin(io.display_frame_buffer_scale.x, io.display_frame_buffer_scale.y)); // FIXME: Doesn't handle variable framerate very well
+            let NAV_MOVE_SPEED = 800.0;
+            let move_speed = f32::floor(NAV_MOVE_SPEED * io.delta_time * ImMin(io.display_frame_buffer_scale.x, io.display_frame_buffer_scale.y)); // FIXME: Doesn't handle variable framerate very well
             ImGuiWindow* moving_window = g.nav_windowing_target.root_window_dock_tree;
             set_window_pos(moving_window, moving_window.pos + move_delta * move_speed, Cond::Always);
             g.nav_disable_mouse_hover = true;
@@ -1537,9 +1537,9 @@ pub fn nav_update_windowing(g: &mut Context)
     }
 
     // Apply final focus
-    if (apply_focus_window && (g.nav_window == NULL || apply_focus_window != g.nav_window.root_window))
+    if (apply_focus_window && (g.nav_window == None || apply_focus_window != g.nav_window.root_window))
     {
-        ImGuiViewport* previous_viewport = g.nav_window ? g.nav_window.Viewport : NULL;
+        ImGuiViewport* previous_viewport = g.nav_window ? g.nav_window.viewport : None;
         clear_active_id();
         NavRestoreHighlightAfterMove();
         apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);
@@ -1563,7 +1563,7 @@ pub fn nav_update_windowing(g: &mut Context)
             g.platform_io.Platform_SetWindowFocus(apply_focus_window.viewport);
     }
     if (apply_focus_window)
-        g.nav_windowing_target = NULL;
+        g.nav_windowing_target = None;
 
     // Apply menu/layer toggle
     if (apply_toggle_layer && g.nav_window)
@@ -1589,7 +1589,7 @@ pub fn nav_update_windowing(g: &mut Context)
         if (new_nav_layer != g.NavLayer)
         {
             // Reinitialize navigation when entering menu bar with the Alt key (FIXME: could be a properly of the layer?)
-            const bool preserve_layer_1_nav_id = (new_nav_window.dock_node_as_host != NULL);
+            const bool preserve_layer_1_nav_id = (new_nav_window.dock_node_as_host != None);
             if (new_nav_layer == NavLayer::Menu && !preserve_layer_1_nav_id)
                 g.nav_window.nav_last_ids[new_nav_layer] = 0;
             NavRestoreLayer(new_nav_layer);
@@ -1616,22 +1616,22 @@ pub fn get_fallback_window_name_for_windowing_list(g: &mut Context, window: &mut
 pub fn nav_update_windowing_overlay(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(g.nav_windowing_target != NULL);
+    // IM_ASSERT(g.nav_windowing_target != None);
 
     if (g.NavWindowingTimer < NAV_WINDOWING_LIST_APPEAR_DELAY)
         return;
 
-    if (g.nav_windowing_list_window == NULL)
+    if (g.nav_windowing_list_window == None)
         g.nav_windowing_list_window = find_window_by_name("###NavWindowingList");
     const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ GetMainViewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport.size.x * 0.20, viewport.size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
     set_next_window_pos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
-    begin("###NavWindowingList", NULL, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
+    begin("###NavWindowingList", None, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
     for (int n = g.windows_focus_order.size - 1; n >= 0; n--)
     {
         ImGuiWindow* window = g.windows_focus_order[n];
-        // IM_ASSERT(window != NULL); // Fix static analyzers
+        // IM_ASSERT(window != None); // Fix static analyzers
         if (!IsWindowNavFocusable(window))
             continue;
         const char* label = window.name;

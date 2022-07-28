@@ -124,7 +124,7 @@ pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
     // When we refactor this function into ActivateItem() we may want to make this an option.
     // moving_window is protected from most user inputs using SetActiveIdUsingNavAndKeys(), but
     // is also automatically dropped in the event g.active_id is stolen.
-    if (g.drag_drop_active || g.moving_window != NULL)
+    if (g.drag_drop_active || g.moving_window != None)
     {
         IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere() ignored while drag_drop_active!\n");
         return;
@@ -158,9 +158,9 @@ pub fn calc_typematic_repeat_amount(g: &mut Context, t0: f32, repeat_delay: f32,
         return 0;
     if (repeat_rate <= 0.0)
         return (t0 < repeat_delay) && (t1 >= repeat_delay);
-    const int count_t0 = (t0 < repeat_delay) ? -1 : ((t0 - repeat_delay) / repeat_rate);
-    const int count_t1 = (t1 < repeat_delay) ? -1 : ((t1 - repeat_delay) / repeat_rate);
-    const int count = count_t1 - count_t0;
+    let count_t0 = (t0 < repeat_delay) ? -1 : ((t0 - repeat_delay) / repeat_rate);
+    let count_t1 = (t1 < repeat_delay) ? -1 : ((t1 - repeat_delay) / repeat_rate);
+    let count = count_t1 - count_t0;
     return count;
 }
 

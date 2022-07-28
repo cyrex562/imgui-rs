@@ -35,7 +35,7 @@ int main(int, char**)
 
     // Setup SDL_Renderer instance
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-    if (renderer == NULL)
+    if (renderer == None)
     {
         SDL_Log("Error creating SDL_Renderer!");
         return false;
@@ -62,7 +62,7 @@ int main(int, char**)
     // Load fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - If the file cannot be loaded, the function will return None. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
@@ -71,8 +71,8 @@ int main(int, char**)
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0);
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0);
     //io.fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0);
-    //ImFont* font = io.fonts->AddFontFromFileTTF("c:\\windows\\fonts\\ArialUni.ttf", 18.0, NULL, io.fonts->get_glyph_ranges_japanese());
-    //IM_ASSERT(font != NULL);
+    //ImFont* font = io.fonts->AddFontFromFileTTF("c:\\windows\\fonts\\ArialUni.ttf", 18.0, None, io.fonts->get_glyph_ranges_japanese());
+    //IM_ASSERT(font != None);
 
     // Our state
     bool show_demo_window = true;

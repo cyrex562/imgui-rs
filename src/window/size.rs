@@ -22,7 +22,7 @@ pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_cont
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;
     let style = &mut g.style;
-    // const float decoration_up_height = window.title_bar_height() + window.MenuBarHeight();
+    // let decoration_up_height = window.title_bar_height() + window.MenuBarHeight();
     let decoration_up_height = window.title_bar_height() + window.menu_bar_height();
     // Vector2D size_pad = window.WindowPadding * 2.0;
     let size_pad = window.window_padding.clone() * 2.0;
@@ -53,7 +53,7 @@ pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_cont
         if window.viewport_owned {
             avail_size = Vector2D::new(f32::MAX, f32::MAX);
         }
-        // const int monitor_idx = window.ViewportAllowPlatformMonitorExtend;
+        // let monitor_idx = window.viewportAllowPlatformMonitorExtend;
         let monitor_idx = window.viewport_allow_platform_monitor_extend;
         if monitor_idx >= 0 && monitor_idx < g.platform_io.monitors.size {
             avail_size = g.platform_io.monitors[monitor_idx].work_size;
@@ -206,7 +206,7 @@ pub fn calc_window_size_after_constraint(
     {
         // ImGuiWindow* window_for_height = GetWindowForTitleAndMenuHeight(window);
         let window_for_height = get::get_window_for_title_and_menu_height(g, window);
-        // const float decoration_up_height = window_for_height->TitleBarHeight() + window_for_height->MenuBarHeight();
+        // let decoration_up_height = window_for_height->TitleBarHeight() + window_for_height->MenuBarHeight();
         let decoration_up_height =
             window_for_height.title_bar_height() + window_for_height.menu_bar_height();
         new_size = Vector2D::max(new_size, g.style.window_min_size);
@@ -350,14 +350,14 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     }
 
     let mut ret_auto_fit = false;
-    // const int resize_border_count = g.io.ConfigWindowsResizeFromEdges ? 4 : 0;
+    // let resize_border_count = g.io.ConfigWindowsResizeFromEdges ? 4 : 0;
     let resize_border_count = if g.io.config_windows_resize_from_edges { 4 } else {0};
-    // const float grip_draw_size = f32::floor(ImMax(g.FontSize * 1.35, window.WindowRounding + 1.0 + g.FontSize * 0.2));
+    // let grip_draw_size = f32::floor(ImMax(g.FontSize * 1.35, window.WindowRounding + 1.0 + g.FontSize * 0.2));
     let grip_draw_size = f32::floor(f32::max(g.font_size * 1.35, window.window_rounding + 1.0 + g.font_size * 0.2));
 
-    // const float grip_hover_inner_size = f32::floor(grip_draw_size * 0.75);
+    // let grip_hover_inner_size = f32::floor(grip_draw_size * 0.75);
     let grip_hover_inner_size = f32::floor(grip_draw_size * 0.75);
-    // const float grip_hover_outer_size = g.io.ConfigWindowsResizeFromEdges ? WINDOWS_HOVER_PADDING : 0.0;
+    // let grip_hover_outer_size = g.io.ConfigWindowsResizeFromEdges ? WINDOWS_HOVER_PADDING : 0.0;
     let grip_hover_outer_size = if g.io.config_windows_resize_from_edges { WINDOWS_HOVER_PADDING} else { 0.0};
 
     // Vector2D pos_target(f32::MAX, f32::MAX);
@@ -511,7 +511,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
         }
         if nav_resize_delta.x != 0.0 || nav_resize_delta.y != 0.0
         {
-            // const float NAV_RESIZE_SPEED = 600.0;
+            // let NAV_RESIZE_SPEED = 600.0;
 
             nav_resize_delta *= f32::floor(NAV_RESIZE_SPEED * g.io.delta_time * ImMin(g.io.display_frame_buffer_scale.x, g.io.display_frame_buffer_scale.y));
             nav_resize_delta = ImMax(nav_resize_delta, &visibility_rect.min - &window.pos - &window.size);

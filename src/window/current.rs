@@ -62,7 +62,7 @@ pub fn push_override_id(g: &mut Context, id: Id32)
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     if (g.debug_hook_id_info == id)
-        debug_hook_id_info(id, DataType::ID, NULL, NULL);
+        debug_hook_id_info(id, DataType::ID, None, None);
     window.idStack.push_back(id);
 }
 

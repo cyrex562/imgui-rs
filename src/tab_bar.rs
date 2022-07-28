@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use crate::imgui_h::{ImGuiID, ImGuiTabBarFlags};
 use crate::imgui_rect::Rect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
@@ -7,9 +6,9 @@ use crate::imgui_window::ImGuiWindow;
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
+use std::collections::HashSet;
 
-
-#[allow(non_camel_case_types)]// flags for ImGui::BeginTabItem()
+#[allow(non_camel_case_types)] // flags for ImGui::BeginTabItem()
 pub enum TabItemFlags {
     None,
     UnsavedDocument,
@@ -17,7 +16,7 @@ pub enum TabItemFlags {
     SetSelected,
     // Trigger flag to programmatically make the tab selected when calling BeginTabItem()
     NoCloseWithMiddleMouseButton,
-    // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
+    // Disable behavior of closing tabs (that are submitted with p_open != None) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
     NoPushId,
     // Don't call push_id(tab->id)/PopID() on BeginTabItem()/EndTabItem()
     NoTooltip,
@@ -26,9 +25,8 @@ pub enum TabItemFlags {
     // Disable reordering this tab or having another tab cross over this tab
     Leading,
     // Enforce the tab position to the left of the tab bar (after the tab list popup button)
-    Trailing,    // Enforce the tab position to the right of the tab bar (before the scrolling buttons)
+    Trailing, // Enforce the tab position to the right of the tab bar (before the scrolling buttons)
 }
-
 
 // Storage for one active tab item (sizeof() 48 bytes)
 #[derive(Clone, Debug, Default)]
@@ -51,7 +49,7 @@ pub struct TabItem {
     pub content_width: f32,
     // float               RequestedWidth;         // width optionally requested by caller, -1.0 is unused
     pub requested_width: f32,
-    // ImS32               NameOffset;             // When window==NULL, offset to name within parent ImGuiTabBar::TabsNames
+    // ImS32               NameOffset;             // When window==None, offset to name within parent ImGuiTabBar::TabsNames
     pub name_offset: i32,
     // ImS16               BeginOrder;             // BeginTabItem() order, used to re-order tabs after toggling ImGuiTabBarFlags_Reorderable
     pub begin_order: i16,
@@ -60,7 +58,6 @@ pub struct TabItem {
     // bool                WantClose;              // Marked as closed by SetTabItemClosed()
     pub want_close: bool,
 }
-
 
 // Storage for a tab bar (sizeof() 152 bytes)
 #[derive(Clone, Debug, Default)]
@@ -127,16 +124,15 @@ pub struct TabBar {
     pub backup_cursor_pos: Vector2D,
     // ImGuiTextBuffer     TabsNames;              // For non-docking tab bar we re-append names in a contiguous buffer.
     pub tabs_names: String,
-
 }
 
 // pub const     FittingPolicyDefault_: i32          = tab_bar_flags::FittingPolicyResizeDown as i32;
 pub const FITTING_POLICY_DFLT: TabBarFlags = TabBarFlags::FittingPolicyResizeDown;
 
-
 // pub const FittingPolicyMask_ : i32            = tab_bar_flags::FittingPolicyResizeDown | tab_bar_flags::FittingPolicyScroll;
 pub const FITTING_POLICY_MASK: HashSet<TabBarFlags> = HashSet::from([
-    TabBarFlags::FittingPolicyResizeDown, TabBarFlags::FittingPolicyScroll
+    TabBarFlags::FittingPolicyResizeDown,
+    TabBarFlags::FittingPolicyScroll,
 ]);
 
 // flags for ImGui::BeginTabBar()
@@ -150,7 +146,7 @@ pub enum TabBarFlags {
     TabListPopupButton,
     // Disable buttons to open the tab list popup
     NoCloseWithMiddleMouseButton,
-    // Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
+    // Disable behavior of closing tabs (that are submitted with p_open != None) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
     NoTabListScrollingButtons,
     // Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll)
     NoTooltip,
@@ -164,5 +160,5 @@ pub enum TabBarFlags {
     DockNode,
     // Part of a dock node [we don't use this in the master branch but it facilitate branch syncing to keep this around]
     IsFocused,
-    SaveSettings,                 // FIXME: Settings are handled by the docking system, this only request the tab bar to mark settings dirty when reordering tabs
+    SaveSettings, // FIXME: Settings are handled by the docking system, this only request the tab bar to mark settings dirty when reordering tabs
 }

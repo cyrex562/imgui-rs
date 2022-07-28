@@ -6,7 +6,7 @@
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
-//  2021/08/23: fixed crash when FT_Render_Glyph() fails to render a glyph and returns NULL.
+//  2021/08/23: fixed crash when FT_Render_Glyph() fails to render a glyph and returns None.
 //  2021/03/05: added ImGuiFreeTypeBuilderFlags_Bitmap to load bitmap glyphs.
 //  2021/03/02: set 'atlas->tex_pixels_use_colors = true' to help some backends with deciding of a prefered texture format.
 //  2021/01/28: added support for color-layered glyphs via ImGuiFreeTypeBuilderFlags_LoadColor (require Freetype 2.10+).
@@ -62,7 +62,7 @@ static void  ImGuiFreeTypeDefaultFreeFunc(void* ptr, void* user_data) { IM_UNUSE
 // current memory allocators
 static void* (*GImGuiFreeTypeAllocFunc)(size_t size, void* user_data) = ImGuiFreeTypeDefaultAllocFunc;
 static void  (*GImGuiFreeTypeFreeFunc)(void* ptr, void* user_data) = ImGuiFreeTypeDefaultFreeFunc;
-static void* GImGuiFreeTypeAllocatorUserData = NULL;
+static void* GImGuiFreeTypeAllocatorUserData = None;
 
 //-------------------------------------------------------------------------
 // Code
@@ -132,7 +132,7 @@ namespace
         void                    SetPixelHeight(int pixel_height); // Change font pixel size. All following calls to RasterizeGlyph() will use this size
         const FT_Glyph_Metrics* LoadGlyph(uint32_t in_codepoint);
         const FT_Bitmap*        RenderGlyphAndGetInfo(GlyphInfo* out_glyph_info);
-        void                    BlitGlyph(const FT_Bitmap* ft_bitmap, uint32_t* dst, uint32_t dst_pitch, unsigned char* multiply_table = NULL);
+        void                    BlitGlyph(const FT_Bitmap* ft_bitmap, uint32_t* dst, uint32_t dst_pitch, unsigned char* multiply_table = None);
         ~FreeTypeFont()         { CloseFont(); }
 
         // [Internals]
@@ -194,7 +194,7 @@ namespace
         if (Face)
         {
             FT_Done_Face(Face);
-            Face = NULL;
+            Face = None;
         }
     }
 
@@ -225,7 +225,7 @@ namespace
     {
         uint32_t glyph_index = FT_Get_Char_Index(Face, codepoint);
         if (glyph_index == 0)
-            return NULL;
+            return None;
 
 		// If this crash for you: FreeType 2.11.0 has a crash bug on some bitmap/colored fonts.
 		// - https://gitlab.freedesktop.org/freetype/freetype/-/issues/1076
@@ -234,7 +234,7 @@ namespace
 		// You can use FreeType 2.10, or the patched version of 2.11.0 in VcPkg, or probably any upcoming FreeType version.
         FT_Error error = FT_Load_Glyph(Face, glyph_index, LoadFlags);
         if (error)
-            return NULL;
+            return None;
 
         // Need an outline for this to work
         FT_GlyphSlot slot = Face.glyph;
@@ -260,7 +260,7 @@ namespace
         FT_GlyphSlot slot = Face.glyph;
         FT_Error error = FT_Render_Glyph(slot, RenderMode);
         if (error != 0)
-            return NULL;
+            return None;
 
         FT_Bitmap* ft_bitmap = &Face.glyph.bitmap;
         out_glyph_info.Width = ft_bitmap.width;
@@ -275,7 +275,7 @@ namespace
 
     void FreeTypeFont::BlitGlyph(const FT_Bitmap* ft_bitmap, uint32_t* dst, uint32_t dst_pitch, unsigned char* multiply_table)
     {
-        // IM_ASSERT(ft_bitmap != NULL);
+        // IM_ASSERT(ft_bitmap != None);
         const uint32_t w = ft_bitmap.width;
         const uint32_t h = ft_bitmap.rows;
         const uint8_t* src = ft_bitmap.buffer;
@@ -285,7 +285,7 @@ namespace
         {
         case FT_PIXEL_MODE_GRAY: // Grayscale image, 1 byte per pixel.
             {
-                if (multiply_table == NULL)
+                if (multiply_table == None)
                 {
                     for (uint32_t y = 0; y < h; y += 1, src += src_pitch, dst += dst_pitch)
                         for (uint32_t x = 0; x < w; x += 1)
@@ -320,7 +320,7 @@ namespace
             {
                 // FIXME: Converting pre-multiplied alpha to straight. Doesn't smell good.
                 #define DE_MULTIPLY(color, alpha) (255.0 * color / alpha + 0.5)
-                if (multiply_table == NULL)
+                if (multiply_table == None)
                 {
                     for (uint32_t y = 0; y < h; y += 1, src += src_pitch, dst += dst_pitch)
                         for (uint32_t x = 0; x < w; x += 1)
@@ -400,7 +400,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     ImFontAtlasBuildInit(atlas);
 
     // clear atlas
-    atlas.TexID = (ImTextureID)NULL;
+    atlas.TexID = (ImTextureID)None;
     atlas.TexWidth = atlas.TexHeight = 0;
     atlas.TexUvScale = Vector2D::new(0.0, 0.0);
     atlas.TexUvWhitePixel = Vector2D::new(0.0, 0.0);
@@ -510,7 +510,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // We could not find a way to retrieve accurate glyph size without rendering them.
     // (e.g. slot->metrics->width not always matching bitmap->width, especially considering the Oblique transform)
     // We allocate in chunks of 256 KB to not waste too much extra memory ahead. Hopefully users of FreeType won't find the temporary allocations.
-    const int BITMAP_BUFFERS_CHUNK_SIZE = 256 * 1024;
+    let BITMAP_BUFFERS_CHUNK_SIZE = 256 * 1024;
     int buf_bitmap_current_used_bytes = 0;
     ImVector<unsigned char*> buf_bitmap_buffers;
     buf_bitmap_buffers.push_back((unsigned char*)IM_ALLOC(BITMAP_BUFFERS_CHUNK_SIZE));
@@ -536,22 +536,22 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             ImFontAtlasBuildMultiplyCalcLookupTable(multiply_table, cfg.RasterizerMultiply);
 
         // Gather the sizes of all rectangles we will need to pack
-        const int padding = atlas.TexGlyphPadding;
+        let padding = atlas.TexGlyphPadding;
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsList.size; glyph_i += 1)
         {
             ImFontBuildSrcGlyphFT& src_glyph = src_tmp.GlyphsList[glyph_i];
 
             const FT_Glyph_Metrics* metrics = src_tmp.font.LoadGlyph(src_glyph.Codepoint);
-            if (metrics == NULL)
+            if (metrics == None)
                 continue;
 
             // Render glyph into a bitmap (currently held by FreeType)
             const FT_Bitmap* ft_bitmap = src_tmp.font.RenderGlyphAndGetInfo(&src_glyph.Info);
-            if (ft_bitmap == NULL)
+            if (ft_bitmap == None)
                 continue;
 
             // Allocate new temporary chunk if needed
-            const int bitmap_size_in_bytes = src_glyph.Info.Width * src_glyph.Info.Height * 4;
+            let bitmap_size_in_bytes = src_glyph.Info.Width * src_glyph.Info.Height * 4;
             if (buf_bitmap_current_used_bytes + bitmap_size_in_bytes > BITMAP_BUFFERS_CHUNK_SIZE)
             {
                 buf_bitmap_current_used_bytes = 0;
@@ -561,7 +561,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             // Blit rasterized pixels to our temporary buffer and keep a pointer to it.
             src_glyph.BitmapData = (unsigned int*)(buf_bitmap_buffers.back() + buf_bitmap_current_used_bytes);
             buf_bitmap_current_used_bytes += bitmap_size_in_bytes;
-            src_tmp.font.BlitGlyph(ft_bitmap, src_glyph.BitmapData, src_glyph.Info.Width, multiply_enabled ? multiply_table : NULL);
+            src_tmp.font.BlitGlyph(ft_bitmap, src_glyph.BitmapData, src_glyph.Info.Width, multiply_enabled ? multiply_table : None);
 
             src_tmp.Rects[glyph_i].w = (stbrp_coord)(src_glyph.Info.Width + padding);
             src_tmp.Rects[glyph_i].h = (stbrp_coord)(src_glyph.Info.Height + padding);
@@ -572,7 +572,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // We need a width for the skyline algorithm, any width!
     // The exact width doesn't really matter much, but some API/GPU have texture size limitations and increasing width can decrease height.
     // User can override tex_desired_width and tex_glyph_padding if they wish, otherwise we use a simple heuristic to select the width based on expected surface.
-    const int surface_sqrt = ImSqrt((float)total_surface) + 1;
+    let surface_sqrt = ImSqrt((float)total_surface) + 1;
     atlas.TexHeight = 0;
     if (atlas.TexDesiredWidth > 0)
         atlas.TexWidth = atlas.TexDesiredWidth;
@@ -581,8 +581,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
     // 5. Start packing
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
-    const int TEX_HEIGHT_MAX = 1024 * 32;
-    const int num_nodes_for_packing_algorithm = atlas.TexWidth - atlas.TexGlyphPadding;
+    let TEX_HEIGHT_MAX = 1024 * 32;
+    let num_nodes_for_packing_algorithm = atlas.TexWidth - atlas.TexGlyphPadding;
     ImVector<stbrp_node> pack_nodes;
     pack_nodes.resize(num_nodes_for_packing_algorithm);
     stbrp_context pack_context;
@@ -636,13 +636,13 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         ImFontConfig& cfg = atlas.ConfigData[src_i];
         ImFont* dst_font = cfg.DstFont;
 
-        const float ascent = src_tmp.font.Info.Ascender;
-        const float descent = src_tmp.font.Info.Descender;
+        let ascent = src_tmp.font.Info.Ascender;
+        let descent = src_tmp.font.Info.Descender;
         ImFontAtlasBuildSetupFont(atlas, dst_font, &cfg, ascent, descent);
-        const float font_off_x = cfg.GlyphOffset.x;
-        const float font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font.Ascent);
+        let font_off_x = cfg.GlyphOffset.x;
+        let font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font.Ascent);
 
-        const int padding = atlas.TexGlyphPadding;
+        let padding = atlas.TexGlyphPadding;
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1)
         {
             ImFontBuildSrcGlyphFT& src_glyph = src_tmp.GlyphsList[glyph_i];
@@ -654,8 +654,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             GlyphInfo& info = src_glyph.Info;
             // IM_ASSERT(info.Width + padding <= pack_rect.w);
             // IM_ASSERT(info.Height + padding <= pack_rect.h);
-            const int tx = pack_rect.x + padding;
-            const int ty = pack_rect.y + padding;
+            let tx = pack_rect.x + padding;
+            let ty = pack_rect.y + padding;
 
             // Register glyph
             float x0 = info.OffsetX + font_off_x;
@@ -677,7 +677,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             size_t blit_src_stride = src_glyph.Info.Width;
             size_t blit_dst_stride = atlas.TexWidth;
             unsigned int* blit_src = src_glyph.BitmapData;
-            if (atlas.TexPixelsAlpha8 != NULL)
+            if (atlas.TexPixelsAlpha8 != None)
             {
                 unsigned char* blit_dst = atlas.TexPixelsAlpha8 + (ty * blit_dst_stride) + tx;
                 for (int y = 0; y < info.Height; y += 1, blit_dst += blit_dst_stride, blit_src += blit_src_stride)
@@ -693,7 +693,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             }
         }
 
-        src_tmp.Rects = NULL;
+        src_tmp.Rects = None;
     }
     atlas.TexPixelsUseColors = tex_use_colors;
 
@@ -721,13 +721,13 @@ static void FreeType_Free(FT_Memory /*memory*/, void* block)
 static void* FreeType_Realloc(FT_Memory /*memory*/, long cur_size, long new_size, void* block)
 {
     // Implement realloc() as we don't ask user to provide it.
-    if (block == NULL)
+    if (block == None)
         return GImGuiFreeTypeAllocFunc(new_size, GImGuiFreeTypeAllocatorUserData);
 
     if (new_size == 0)
     {
         GImGuiFreeTypeFreeFunc(block, GImGuiFreeTypeAllocatorUserData);
-        return NULL;
+        return None;
     }
 
     if (new_size > cur_size)
@@ -745,7 +745,7 @@ static bool ImFontAtlasBuildWithFreeType(ImFontAtlas* atlas)
 {
     // FreeType memory management: https://www.freetype.org/freetype2/docs/design/design-4.html
     FT_MemoryRec_ memory_rec = {};
-    memory_rec.user = NULL;
+    memory_rec.user = None;
     memory_rec.alloc = &FreeType_Alloc;
     memory_rec.free = &FreeType_Free;
     memory_rec.realloc = &FreeType_Realloc;

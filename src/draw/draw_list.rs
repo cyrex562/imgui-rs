@@ -1,22 +1,22 @@
-use std::collections::HashSet;
-use std::ffi::c_void;
-use std::os::raw::c_char;
-use std::f32::consts::PI;
-use std::mem::size_of;
 use crate::context::Context;
-use crate::draw::draw_defines::DrawFlags;
-use crate::types::{DrawIndex, Id32, INVALID_ID};
 use crate::draw::draw_cmd::{CmdHeader, DrawCmd};
+use crate::draw::draw_defines::DrawFlags;
 use crate::draw::draw_list_shared_data::DrawListSharedData;
 use crate::draw::draw_list_splitter::DrawListSplitter;
 use crate::draw::draw_vert::DrawVertex;
 use crate::font::Font;
 use crate::rect::Rect;
 use crate::texture::TextureId;
+use crate::types::{DrawIndex, Id32, INVALID_ID};
 use crate::utils::set_hash_set;
-use crate::vectors::Vector4D;
 use crate::vectors::two_d::Vector2D;
+use crate::vectors::Vector4D;
 use crate::viewport::Viewport;
+use std::collections::HashSet;
+use std::f32::consts::PI;
+use std::ffi::c_void;
+use std::mem::size_of;
+use std::os::raw::c_char;
 
 /// Draw command list
 /// This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,
@@ -27,9 +27,8 @@ use crate::viewport::Viewport;
 /// In single viewport mode, top-left is == GetMainViewport()->pos (generally 0,0), bottom-right is == GetMainViewport()->pos+size (generally io.display_size).
 /// You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to clip_rect as well!)
 /// Important: Primitives are always added to the list and not culled (culling is done at higher-level by ImGui:: functions), if you use this API a lot consider coarse culling your drawn objects.
-#[derive(Default,Debug,Clone)]
-pub struct DrawList
-{
+#[derive(Default, Debug, Clone)]
+pub struct DrawList {
     // This is what you have to render
     // ImVector<ImDrawCmd>     cmd_buffer;          // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
     pub cmd_buffer: Vec<DrawCmd>,
@@ -65,18 +64,23 @@ pub struct DrawList
 }
 
 impl DrawList {
-     // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
+    // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
     // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
     pub fn new(shared_data: &mut DrawListSharedData) -> Self {
-         let mut out = Self {
-             ..Default::default()
-         };
-         out.data = shared_data.clone();
-         out
-     }
+        let mut out = Self {
+            ..Default::default()
+        };
+        out.data = shared_data.clone();
+        out
+    }
     // ~ImDrawList() { _ClearFreeMemory(); }
     //  void  push_clip_rect(const Vector2D& clip_rect_min, const Vector2D& clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::push_clip_rect() to affect logic (hit-testing and widget culling)
-    pub fn push_clip_rect(&mut self, clip_rect_min: &Vector2D, clip_rect_max: &Vector2D, intersect_with_current_clip_rect: bool) {
+    pub fn push_clip_rect(
+        &mut self,
+        clip_rect_min: &Vector2D,
+        clip_rect_max: &Vector2D,
+        intersect_with_current_clip_rect: bool,
+    ) {
         todo!()
     }
     //  void  push_clip_rect_full_screen();
@@ -88,9 +92,13 @@ impl DrawList {
         todo!()
     }
     //  void  push_texture_id(ImTextureID texture_id);
-    pub fn push_texture_id(&mut self, texture_id: TextureId) {todo!()}
+    pub fn push_texture_id(&mut self, texture_id: TextureId) {
+        todo!()
+    }
     //  void  pop_texture_id();
-    pub fn pop_texture_id(&mut self) {todo!()}
+    pub fn pop_texture_id(&mut self) {
+        todo!()
+    }
     // inline Vector2D   get_clip_rect_min() const { const Vector4D& cr = _clip_rect_stack.back(); return Vector2D(cr.x, cr.y); }
     pub fn get_clip_rect_min(&self) -> Vector2D {
         let cr = self.clip_rect_stack.last().unwrap();
@@ -113,27 +121,72 @@ impl DrawList {
         todo!()
     }
     //  void  add_rect(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0, float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
-    pub fn add_rect(&mut self, p_min: &Vector2D, p_max: Vector2D, col: u32, rounding: f32, flags: DrawFlags, thickness: f32) {
+    pub fn add_rect(
+        &mut self,
+        p_min: &Vector2D,
+        p_max: Vector2D,
+        col: u32,
+        rounding: f32,
+        flags: Option<&HashSet<DrawFlags>>,
+        thickness: f32,
+    ) {
         todo!()
     }
     //  void  add_rect_filled(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
-    pub fn add_rect_filled(&mut self, p_min: &Vector2D, p_max: &Vector2D, col: u32, rounding: f32, flags: &HashSet<DrawFlags>) {
+    pub fn add_rect_filled(
+        &mut self,
+        p_min: &Vector2D,
+        p_max: &Vector2D,
+        col: u32,
+        rounding: f32,
+        flags: Option<&HashSet<DrawFlags>>
+    ) {
         todo!()
     }
     //  void  add_rect_filled_multi_color(const Vector2D& p_min, const Vector2D& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
-    pub fn add_rect_filled_multi_color(&mut self, p_min: &Vector2D, p_max: &Vector2D, col_upr_left: u32, col_upr_right: u32, col_bot_right: u32, col_bot_left: u32) {
+    pub fn add_rect_filled_multi_color(
+        &mut self,
+        p_min: &Vector2D,
+        p_max: &Vector2D,
+        col_upr_left: u32,
+        col_upr_right: u32,
+        col_bot_right: u32,
+        col_bot_left: u32,
+    ) {
         todo!()
     }
     //  void  add_quad(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col, float thickness = 1.0);
-    pub fn add_quad(&mut self, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, p4: &Vector2D, col: u32, thickness: f32) {
+    pub fn add_quad(
+        &mut self,
+        p1: &Vector2D,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        p4: &Vector2D,
+        col: u32,
+        thickness: f32,
+    ) {
         todo!()
     }
     //  void  add_quad_filled(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col);
-    pub fn add_quad_filled(&mut self, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, p4: &Vector2D, col: u32) {
+    pub fn add_quad_filled(
+        &mut self,
+        p1: &Vector2D,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        p4: &Vector2D,
+        col: u32,
+    ) {
         todo!()
     }
     //  void  add_triangle(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col, float thickness = 1.0);
-    pub fn add_triangle(&mut self, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, col: u32, thickness: f32) {
+    pub fn add_triangle(
+        &mut self,
+        p1: &Vector2D,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        col: u32,
+        thickness: f32,
+    ) {
         todo!()
     }
     //  void  add_triangle_filled(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col);
@@ -141,31 +194,68 @@ impl DrawList {
         todo!()
     }
     //  void  add_circle(const Vector2D& center, float radius, ImU32 col, int num_segments = 0, float thickness = 1.0);
-    pub fn add_circle(&mut self, center: &Vector2D, radius: f32, col: u32, num_segments: i32, thickness: f32) {
+    pub fn add_circle(
+        &mut self,
+        center: &Vector2D,
+        radius: f32,
+        col: u32,
+        num_segments: i32,
+        thickness: f32,
+    ) {
         todo!()
     }
     //  void  add_circle_filled(const Vector2D& center, float radius, ImU32 col, int num_segments = 0);
-    pub fn add_circle_filled(&mut self, center: &Vector2D, radius: f32, col: u32, num_segments: i32) {
+    pub fn add_circle_filled(
+        &mut self,
+        center: &Vector2D,
+        radius: f32,
+        col: u32,
+        num_segments: i32,
+    ) {
         todo!()
     }
     //  void  add_ngon(const Vector2D& center, float radius, ImU32 col, int num_segments, float thickness = 1.0);
-    pub fn add_ngon(&mut self, center: &Vector2D, radius: f32, col: u32, num_segments: i32, thickness: f32) {
+    pub fn add_ngon(
+        &mut self,
+        center: &Vector2D,
+        radius: f32,
+        col: u32,
+        num_segments: i32,
+        thickness: f32,
+    ) {
         todo!()
     }
     //  void  AddNgonFilled(const Vector2D& center, float radius, ImU32 col, int num_segments);
     pub fn AddNgonFilled(&mut self, center: &Vector2D, radius: f32, col: u32, num_segments: i32) {
         todo!()
     }
-    //  void  add_text(const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
+    //  void  add_text(const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = None);
     pub fn AddText(&mut self, pos: &Vector2D, col: u32, text_begin: &String, text_end: &String) {
         todo!()
     }
-    //  void  add_text(const ImFont* font, float font_size, const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0, const Vector4D* cpu_fine_clip_rect = NULL);
-    pub fn AddText2(&mut self, font: &Font, font_size: f32, pos: &Vector2D, col: u32, text_begin: &str, text_end: &str, wrap_width: f32, cpu_fine_clip_rect: Option<&Vector4D>) {
+    //  void  add_text(const ImFont* font, float font_size, const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = None, float wrap_width = 0.0, const Vector4D* cpu_fine_clip_rect = None);
+    pub fn AddText2(
+        &mut self,
+        font: &Font,
+        font_size: f32,
+        pos: &Vector2D,
+        col: u32,
+        text_begin: &str,
+        text_end: &str,
+        wrap_width: f32,
+        cpu_fine_clip_rect: Option<&Vector4D>,
+    ) {
         todo!()
     }
     //  void  AddPolyline(const Vector2D* points, int num_points, ImU32 col, ImDrawFlags flags, float thickness);
-    pub fn AddPolyline(&mut self, points: &[Vector2D], num_points: usize, col: u32, flags: DrawFlags, thickness: f32) {
+    pub fn AddPolyline(
+        &mut self,
+        points: &[Vector2D],
+        num_points: usize,
+        col: u32,
+        flags: DrawFlags,
+        thickness: f32,
+    ) {
         todo!()
     }
     //  void  AddConvexPolyFilled(const Vector2D* points, int num_points, ImU32 col);
@@ -173,11 +263,28 @@ impl DrawList {
         todo!()
     }
     //  void  AddBezierCubic(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
-    pub fn AddBezierCubic(&mut self, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, p4: &Vector2D, col: u32, thickness: f32, num_segments: i32) {
+    pub fn AddBezierCubic(
+        &mut self,
+        p1: &Vector2D,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        p4: &Vector2D,
+        col: u32,
+        thickness: f32,
+        num_segments: i32,
+    ) {
         todo!()
     }
     //  void  AddBezierQuadratic(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
-    pub fn AddBezierQuadratic(&mut self, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, col: u32, thickness: f32, num_segments: i32) {
+    pub fn AddBezierQuadratic(
+        &mut self,
+        p1: &Vector2D,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        col: u32,
+        thickness: f32,
+        num_segments: i32,
+    ) {
         todo!()
     }
 
@@ -186,15 +293,45 @@ impl DrawList {
     // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
     // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
     //  void  AddImage(ImTextureID user_texture_id, const Vector2D& p_min, const Vector2D& p_max, const Vector2D& uv_min = Vector2D(0, 0), const Vector2D& uv_max = Vector2D(1, 1), ImU32 col = IM_COL32_WHITE);
-    pub fn AddImage(&mut self, user_texture_id: TextureId, p_min: &Vector2D, p_max: &Vector2D, uv_min: &Vector2D, uv_max: &Vector2D, col: u32) {
+    pub fn AddImage(
+        &mut self,
+        user_texture_id: TextureId,
+        p_min: &Vector2D,
+        p_max: &Vector2D,
+        uv_min: &Vector2D,
+        uv_max: &Vector2D,
+        col: u32,
+    ) {
         todo!()
     }
     //  void  AddImageQuad(ImTextureID user_texture_id, const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, const Vector2D& uv1 = Vector2D(0, 0), const Vector2D& uv2 = Vector2D(1, 0), const Vector2D& uv3 = Vector2D(1, 1), const Vector2D& uv4 = Vector2D(0, 1), ImU32 col = IM_COL32_WHITE);
-    pub fn AddImageQuad(&mut self, user_texture_id: TextureId, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, p4: &Vector2D, uv1: &Vector2D, uv2: &Vector2D, uv3: &Vector2D, uv4: &Vector2D, col: u32) {
+    pub fn AddImageQuad(
+        &mut self,
+        user_texture_id: TextureId,
+        p1: &Vector2D,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        p4: &Vector2D,
+        uv1: &Vector2D,
+        uv2: &Vector2D,
+        uv3: &Vector2D,
+        uv4: &Vector2D,
+        col: u32,
+    ) {
         todo!()
     }
     //  void  AddImageRounded(ImTextureID user_texture_id, const Vector2D& p_min, const Vector2D& p_max, const Vector2D& uv_min, const Vector2D& uv_max, ImU32 col, float rounding, ImDrawFlags flags = 0);
-    pub fn AddImageRounded(&mut self, user_texture_id: TextureId, p_min: &Vector2D, p_max: &Vector2D, uv_min: &Vector2D, uv_max: &Vector2D, col: u32, rounding: f32, flags: DrawFlags) {
+    pub fn AddImageRounded(
+        &mut self,
+        user_texture_id: TextureId,
+        p_min: &Vector2D,
+        p_max: &Vector2D,
+        uv_min: &Vector2D,
+        uv_max: &Vector2D,
+        col: u32,
+        rounding: f32,
+        flags: DrawFlags,
+    ) {
         todo!()
     }
 
@@ -225,23 +362,53 @@ impl DrawList {
         self.path.clear()
     }
     //  void  PathArcTo(const Vector2D& center, float radius, float a_min, float a_max, int num_segments = 0);
-    pub fn PathArcTo(&mut self, center: &Vector2D, radius: f32, a_min: f32, a_max: f32, num_segments: i32) {
+    pub fn PathArcTo(
+        &mut self,
+        center: &Vector2D,
+        radius: f32,
+        a_min: f32,
+        a_max: f32,
+        num_segments: i32,
+    ) {
         todo!()
     }
     //  void  PathArcToFast(const Vector2D& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
-    pub fn path_arc_to_fast(&mut self, center: &Vector2D, radius: f32, a_min_of_12: i32, a_max_of_12: i32) {
+    pub fn path_arc_to_fast(
+        &mut self,
+        center: &Vector2D,
+        radius: f32,
+        a_min_of_12: i32,
+        a_max_of_12: i32,
+    ) {
         todo!()
     }
     //  void  PathBezierCubicCurveTo(const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, int num_segments = 0); // Cubic Bezier (4 control points)
-    pub fn PathBezierCubicCurveTo(&mut self, p2: &Vector2D, p3: &Vector2D, p4: &Vector2D, num_segments: usize) {
+    pub fn PathBezierCubicCurveTo(
+        &mut self,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        p4: &Vector2D,
+        num_segments: usize,
+    ) {
         todo!()
     }
     //  void  PathBezierQuadraticCurveTo(const Vector2D& p2, const Vector2D& p3, int num_segments = 0);               // Quadratic Bezier (3 control points)
-    pub fn PathBezierQuadraticCurveTo(&mut self, p2: &Vector2D, p3: &Vector2D, num_segments: usize) {
+    pub fn PathBezierQuadraticCurveTo(
+        &mut self,
+        p2: &Vector2D,
+        p3: &Vector2D,
+        num_segments: usize,
+    ) {
         todo!()
     }
     //  void  PathRect(const Vector2D& rect_min, const Vector2D& rect_max, float rounding = 0.0, ImDrawFlags flags = 0);
-    pub fn PathRect(&mut self, rect_min: &Vector2D, rect_max: &Vector2D, rounding: f32, flags: DrawFlags) {
+    pub fn PathRect(
+        &mut self,
+        rect_min: &Vector2D,
+        rect_max: &Vector2D,
+        rounding: f32,
+        flags: DrawFlags,
+    ) {
         todo!()
     }
 
@@ -285,11 +452,29 @@ impl DrawList {
         todo!()
     }
     //  void  PrimRectUV(const Vector2D& a, const Vector2D& b, const Vector2D& uv_a, const Vector2D& uv_b, ImU32 col);
-    pub fn PrimRectUV(&mut self, a: &Vector2D, b: &Vector2D, uv_a: &Vector2D, uv_b: &Vector2D, col: u32) {
+    pub fn PrimRectUV(
+        &mut self,
+        a: &Vector2D,
+        b: &Vector2D,
+        uv_a: &Vector2D,
+        uv_b: &Vector2D,
+        col: u32,
+    ) {
         todo!()
     }
     //  void  PrimQuadUV(const Vector2D& a, const Vector2D& b, const Vector2D& c, const Vector2D& d, const Vector2D& uv_a, const Vector2D& uv_b, const Vector2D& uv_c, const Vector2D& uv_d, ImU32 col);
-    pub fn PrimQuadUV(&mut self, a: &Vector2D, b: &Vector2D, c: &Vector2D, d: &Vector2D, uv_a: &Vector2D, uv_b: &Vector2D, uv_c: &Vector2D, uv_d: &Vector2D, col: u32) {
+    pub fn PrimQuadUV(
+        &mut self,
+        a: &Vector2D,
+        b: &Vector2D,
+        c: &Vector2D,
+        d: &Vector2D,
+        uv_a: &Vector2D,
+        uv_b: &Vector2D,
+        uv_c: &Vector2D,
+        uv_d: &Vector2D,
+        col: u32,
+    ) {
         todo!()
     }
     // inline    void  PrimWriteVtx(const Vector2D& pos, const Vector2D& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
@@ -311,16 +496,15 @@ impl DrawList {
         self.PrimWriteIdx(0)
     }
 
-// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//     inline    void  AddBezierCurve(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
-//     inline    void  PathBezierCurveTo(const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, int num_segments = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
-// #endif
+    // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    //     inline    void  AddBezierCurve(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
+    //     inline    void  PathBezierCurveTo(const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, int num_segments = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
+    // #endif
 
     // [Internal helpers]
     //  void  _ResetForNewFrame();
     fn reset_for_new_frame(&mut self) {
-
-    //     // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
+        //     // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
         //     IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, ClipRect) == 0);
         //     IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, TextureId) == sizeof(Vector4D));
         //     IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, VtxOffset) == sizeof(Vector4D) + sizeof(ImTextureID));
@@ -341,38 +525,63 @@ impl DrawList {
         //     memset(&_cmd_header, 0, sizeof(_cmd_header));
         self._cmd_header.clear();
         //     _VtxCurrentIdx = 0;
-        //     _VtxWritePtr = NULL;
-        //     _IdxWritePtr = NULL;
+        //     _VtxWritePtr = None;
+        //     _IdxWritePtr = None;
         //     _clip_rect_stack.resize(0);
         //     _texture_id_stack.resize(0);
         //     _path.resize(0);
         //     _splitter.clear();
         //     cmd_buffer.push_back(ImDrawCmd());
         //     _fringe_scale = 1.0;
-
     }
     //  void  _ClearFreeMemory();
-    fn ClearFreeMemory(&mut self){todo!()}
+    fn ClearFreeMemory(&mut self) {
+        todo!()
+    }
     //  void  _PopUnusedDrawCmd();
-    fn PopUnusedDrawCmd(&mut self) {todo!()}
+    fn PopUnusedDrawCmd(&mut self) {
+        todo!()
+    }
     //  void  _TryMergeDrawCmds();
-    fn TryMergeDrawCmds(&mut self) { todo!()}
+    fn TryMergeDrawCmds(&mut self) {
+        todo!()
+    }
     //  void  _OnChangedClipRect();
-    fn OnChangedClipRect(&mut self) {todo!()}
+    fn OnChangedClipRect(&mut self) {
+        todo!()
+    }
     //  void  _OnChangedTextureID();
-    fn OnChangedTextureID(&mut self) {todo!()}
+    fn OnChangedTextureID(&mut self) {
+        todo!()
+    }
     //  void  _OnChangedVtxOffset();
-    fn OnChangedVtxOffset(&mut self) {todo!()}
+    fn OnChangedVtxOffset(&mut self) {
+        todo!()
+    }
     //  int   _CalcCircleAutoSegmentCount(float radius) const;
     fn CalCircleAUtoSegmentCount(&mut self, radius: f32) -> i32 {
         todo!()
     }
     //  void  _PathArcToFastEx(const Vector2D& center, float radius, int a_min_sample, int a_max_sample, int a_step);
-    fn PathArcToFastEx(&mut self, center: &Vector2D, radius: f32, a_min_simple: i32, a_max_sample: i32, a_step: i32) {
+    fn PathArcToFastEx(
+        &mut self,
+        center: &Vector2D,
+        radius: f32,
+        a_min_simple: i32,
+        a_max_sample: i32,
+        a_step: i32,
+    ) {
         todo!()
     }
     //  void  _PathArcToN(const Vector2D& center, float radius, float a_min, float a_max, int num_segments);
-    fn PathArcToN(&mut self, center: &Vector2D, radius: f32, a_min: f32, a_max: f32, num_segments: i32) {
+    fn PathArcToN(
+        &mut self,
+        center: &Vector2D,
+        radius: f32,
+        a_min: f32,
+        a_max: f32,
+        num_segments: i32,
+    ) {
         todo!()
     }
 }
@@ -395,7 +604,13 @@ pub const DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX: f32 = 512.0;
 
 // #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD,_MAXERROR)    ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(f32::PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
 pub fn drawlist_circle_auto_segment_calc(radius: f32, max_error: f32) -> f32 {
-    f32::clamp(f32::round(f32::ceil(PI / f32::acos(1 - f32::min(max_error, (radius)) / (radius)))), DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN, DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX)
+    f32::clamp(
+        f32::round(f32::ceil(
+            PI / f32::acos(1 - f32::min(max_error, (radius)) / (radius)),
+        )),
+        DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MIN,
+        DIMG_DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX,
+    )
 }
 
 // Raw equation from IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC rewritten for 'r' and 'error'.
@@ -419,14 +634,13 @@ pub const DRAW_LIST_ARCFAST_SAMPLE_MAX: usize = DRAW_LIST_ARCFAST_TABLE_SIZE;
 
 // flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
 // It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
-#[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DrawListFlags
-{
-    None                    = 0,
-    anti_aliased_lines       ,  // Enable anti-aliased lines/borders (*2 the number of triangles for 1.0 wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
-    anti_aliased_lines_use_tex ,  // Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
-    anti_aliased_fill        ,  // Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
-    AllowVtxOffset          = 1 << 3   // Can emit 'vtx_offset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum DrawListFlags {
+    None = 0,
+    anti_aliased_lines, // Enable anti-aliased lines/borders (*2 the number of triangles for 1.0 wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
+    anti_aliased_lines_use_tex, // Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
+    anti_aliased_fill, // Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
+    AllowVtxOffset = 1 << 3, // Can emit 'vtx_offset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
 }
 
 // The maximum line width to bake anti-aliased textures for. build atlas with NoBakedLines to disable baking.
@@ -436,15 +650,18 @@ pub enum DrawListFlags
 pub const IM_DRAWLIST_TEX_LINES_WIDTH_MAX: usize = 63;
 
 /// static ImDrawList* get_viewport_draw_list(ImGuiViewportP* viewport, size_t drawlist_no, const char* drawlist_name)
-pub fn get_viewport_draw_list(g: &mut Context, viewport: &mut Viewport, drawlist_no: usize, drawlist_name: &String) -> &mut DrawList
-{
+pub fn get_viewport_draw_list(
+    g: &mut Context,
+    viewport: &mut Viewport,
+    drawlist_no: usize,
+    drawlist_name: &String,
+) -> &mut DrawList {
     // Create the draw list on demand, because they are not frequently used for all viewports
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(drawlist_no < IM_ARRAYSIZE(viewport->DrawLists));
     // ImDrawList* draw_list = viewport->DrawLists[drawlist_no];
     let draw_list = &mut viewport.draw_lists[drawlist_no];
-    if draw_list.id == INVALID_ID
-    {
+    if draw_list.id == INVALID_ID {
         // draw_list = IM_NEW(ImDrawList)(&g.DrawListSharedData);
         viewport.draw_lists[drawlist_no] = DrawList::new(&mut g.draw_list_shared_data);
         // draw_list->_OwnerName = drawlist_name;
@@ -453,8 +670,7 @@ pub fn get_viewport_draw_list(g: &mut Context, viewport: &mut Viewport, drawlist
     }
 
     // Our ImDrawList system requires that there is always a command
-    if viewport.draw_lists_last_frame[drawlist_no] != g.frame_count
-    {
+    if viewport.draw_lists_last_frame[drawlist_no] != g.frame_count {
         draw_list.ResetForNewFrame();
         draw_list.PushTextureID(g.io.fonts.TexID);
         draw_list.PushClipRect(viewport.pos, viewport.pos + viewport.size, false);
@@ -464,14 +680,12 @@ pub fn get_viewport_draw_list(g: &mut Context, viewport: &mut Viewport, drawlist
 }
 
 /// ImDrawList* ImGui::GetBackgroundDrawList(ImGuiViewport* viewport)
-pub fn get_background_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList
-{
+pub fn get_background_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList {
     return get_viewport_draw_list(g, viewport, 0, &String::from("##Background"));
 }
 
 /// ImDrawList* ImGui::GetBackgroundDrawList()
-pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList
-{
+pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList {
     // ImGuiContext& g = *GImGui;
     //return GetBackgroundDrawList(g.CurrentWindow->Viewport);
     let curr_win = g.get_current_window()?;
@@ -480,29 +694,31 @@ pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList
 }
 
 /// ImDrawList* ImGui::GetForegroundDrawList(ImGuiViewport* viewport)
-pub fn get_foreground_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList
-{
+pub fn get_foreground_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList {
     // return GetViewportDrawList((ImGuiViewportP*)viewport, 1, "##Foreground");
     get_viewport_draw_list(g, viewport, 1, &String::from("##Foreground"))
 }
 
 /// ImDrawList* ImGui::GetForegroundDrawList()
-pub fn get_foreground_draw_list2(g: &mut Context) -> &mut DrawList
-{
+pub fn get_foreground_draw_list2(g: &mut Context) -> &mut DrawList {
     // ImGuiContext& g = *GImGui;
     // return GetForegroundDrawList(g.CurrentWindow->Viewport);
     let curr_win = g.get_current_window()?;
-    let vp= g.get_viewport(curr_win.viewport_id).unwrap();
+    let vp = g.get_viewport(curr_win.viewport_id).unwrap();
     get_foreground_draw_list(g, vp)
 }
 
 // static void add_draw_list_to_draw_data(ImVector<ImDrawList*>* out_list, ImDrawList* draw_list)
-pub fn add_draw_list_to_draw_data(g: &mut Context, out_list: &mut Vec<Id32>, draw_list_id: Id32)
-{
+pub fn add_draw_list_to_draw_data(g: &mut Context, out_list: &mut Vec<Id32>, draw_list_id: Id32) {
     let draw_list = g.get_draw_list(draw_list_id).unwrap();
-    if draw_list.cmd_buffer.is_empty() {return;}
+    if draw_list.cmd_buffer.is_empty() {
+        return;
+    }
 
-    if draw_list.cmd_buffer.size == 1 && draw_list.cmd_buffer[0].elem_count == 0 && draw_list.cmd_buffer[0].user_callback.is_none() {
+    if draw_list.cmd_buffer.size == 1
+        && draw_list.cmd_buffer[0].elem_count == 0
+        && draw_list.cmd_buffer[0].user_callback.is_none()
+    {
         return;
     }
 

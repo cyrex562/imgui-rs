@@ -78,16 +78,16 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
         if ((g.io.backend_flags & ImGuiBackendFlags_PlatformHasViewports) && (g.io.backend_flags & ImGuiBackendFlags_RendererHasViewports))
         {
             // IM_ASSERT((g.frame_count == 0 || g.frame_count == g.FrameCountPlatformEnded) && "Forgot to call UpdatePlatformWindows() in main loop after EndFrame()? Check examples/ applications for reference.");
-            // IM_ASSERT(g.platform_io.Platform_CreateWindow  != NULL && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_DestroyWindow != NULL && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_GetWindowPos  != NULL && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_SetWindowPos  != NULL && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_GetWindowSize != NULL && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_set_window_size != NULL && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.Platform_CreateWindow  != None && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.Platform_DestroyWindow != None && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.Platform_GetWindowPos  != None && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.Platform_SetWindowPos  != None && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.Platform_GetWindowSize != None && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.Platform_set_window_size != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.monitors.size > 0 && "Platform init didn't setup Monitors list?");
-            // IM_ASSERT((g.viewports[0].PlatformUserData != NULL || g.viewports[0].PlatformHandle != NULL) && "Platform init didn't setup main viewport.");
+            // IM_ASSERT((g.viewports[0].PlatformUserData != None || g.viewports[0].PlatformHandle != None) && "Platform init didn't setup main viewport.");
             if (g.io.config_docking_transparent_payload && (g.io.config_flags & ImGuiConfigFlags_DockingEnable))
-                // IM_ASSERT(g.platform_io.Platform_SetWindowAlpha != NULL && "Platform_SetWindowAlpha handler is required to use io.ConfigDockingTransparent!");
+                // IM_ASSERT(g.platform_io.Platform_SetWindowAlpha != None && "Platform_SetWindowAlpha handler is required to use io.ConfigDockingTransparent!");
         }
         else
         {
@@ -101,7 +101,7 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
             ImGuiPlatformMonitor& mon = g.platform_io.monitors[monitor_n];
             IM_UNUSED(mon);
             // IM_ASSERT(mon.MainSize.x > 0.0 && mon.MainSize.y > 0.0 && "Monitor main bounds not setup properly.");
-            // IM_ASSERT(Rect(mon.MainPos, mon.MainPos + mon.MainSize).Contains(Rect(mon.WorkPos, mon.WorkPos + mon.work_size)) && "Monitor work bounds not setup properly. If you don't have work area information, just copy MainPos/MainSize into them.");
+            // IM_ASSERT(Rect(mon.MainPos, mon.MainPos + mon.MainSize).contains(Rect(mon.WorkPos, mon.WorkPos + mon.work_size)) && "Monitor work bounds not setup properly. If you don't have work area information, just copy MainPos/MainSize into them.");
             // IM_ASSERT(mon.DpiScale != 0.0);
         }
     }
@@ -160,7 +160,7 @@ pub fn error_check_end_frame_recover(g: &mut Context, log_callback: ErrorLogCall
         ImGuiWindow* window = g.current_window;
         if (g.current_window_stack.size == 1)
         {
-            // IM_ASSERT(window.IsFallbackWindow);
+            // IM_ASSERT(window.is_fallback_window);
             break;
         }
         if (window.flags & WindowFlags::ChildWindow)
@@ -189,8 +189,8 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
 
     ImGuiWindow* window = g.current_window;
     ImGuiStackSizes* stack_sizes = &g.current_window_stack.back().StackSizesOnBegin;
-    // IM_ASSERT(window != NULL);
-    while (g.CurrentTabBar != NULL) //-V1044
+    // IM_ASSERT(window != None);
+    while (g.CurrentTabBar != None) //-V1044
     {
         if (log_callback) log_callback(user_data, "Recovered from missing EndTabBar() in '%s'", window.name);
         end_tab_bar();

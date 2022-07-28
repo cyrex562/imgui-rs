@@ -50,7 +50,7 @@ impl ImGuiInputTextCallbackData {
     pub fn DeleteChars(pos: i32, bytes_count: i32) {
         todo!();
     }
-    //  void      InsertChars(int pos, const char* text, const char* text_end = NULL);
+    //  void      InsertChars(int pos, const char* text, const char* text_end = None);
     pub fn InsertChars(pos: i32, text: &str, text_end: &str) {
         todo!();
     }
@@ -361,7 +361,7 @@ pub const IMGUI_DEBUG_NAV_SCORING: bool = false;
 // #define IMGUI_DEBUG_NAV_RECTS       0   // Display the reference navigation rectangle for each window
 pub const IMGUI_DEBUG_NAV_RECTS: bool = false;
 
-// static const float WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER    = 2.00;    // Lock scrolled window (so it doesn't pick child windows that are scrolling through) for a certain time, unless mouse moved.
+// static let WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER    = 2.00;    // Lock scrolled window (so it doesn't pick child windows that are scrolling through) for a certain time, unless mouse moved.
 pub const WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER: f32 = 2.00;
 
 // [Internal] Storage used by IsKeyDown(), IsKeyPressed() etc functions.
@@ -467,7 +467,7 @@ pub fn update_input_events(g: &mut Context, trickle_fast_inputs: bool)
         {
             ImGuiKey key = e.Key.Key;
             // IM_ASSERT(key != ImGuiKey_None);
-            const int keydata_index = (key - Key::KeysDataOffset);
+            let keydata_index = (key - Key::KeysDataOffset);
             ImGuiKeyData* keydata = &io.keys_data[keydata_index];
             if (keydata.down != e.Key.down || keydata.analog_value != e.Key.analog_value)
             {

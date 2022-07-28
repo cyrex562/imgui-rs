@@ -54,7 +54,7 @@ impl DrawData {
 pub fn get_draw_data(g: &mut Context) -> Option<&mut DrawData>
 {
     // ImGuiContext& g = *GImGui;
-    // ImGuiViewportP* viewport = g.Viewports[0];
+    // ImGuiViewportP* viewport = g.viewports[0];
     let viewport = &mut g.viewports[0];
     return if viewport.draw_data.valid { Some(&mut viewport.draw_data)} else { None}
 }
