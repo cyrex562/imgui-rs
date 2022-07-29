@@ -244,7 +244,7 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &Rect) -> i32
     // This is necessary for tooltips which always resize down to zero at first.
     let surface_threshold = ImMax(rect.get_width() * rect.get_height() * 0.5, 1.0);
     int best_monitor_n = -1;
-    float best_monitor_surface = 0.001;
+    let best_monitor_surface =  0.001;
 
     for (int monitor_n = 0; monitor_n < g.platform_io.monitors.size && best_monitor_surface < surface_threshold; monitor_n += 1)
     {
@@ -254,7 +254,7 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &Rect) -> i32
             return monitor_n;
         Rect overlapping_rect = rect;
         overlapping_rect.ClipWithFull(monitor_rect);
-        float overlapping_surface = overlapping_rect.get_width() * overlapping_rect.get_height();
+        let overlapping_surface =  overlapping_rect.get_width() * overlapping_rect.get_height();
         if (overlapping_surface < best_monitor_surface)
             continue;
         best_monitor_surface = overlapping_surface;

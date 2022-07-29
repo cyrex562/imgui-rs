@@ -36,7 +36,7 @@ pub struct WindowSettings
 // static void ApplyWindowSettings(ImGuiWindow* window, ImGuiWindowSettings* settings)
 pub fn apply_window_settings(g: &mut Context, window: &mut Window, settings: &mut WindowSettings)
 {
-    // const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    // const ImGuiViewport* main_viewport = ImGui::get_main_viewport();
     let main_viewport: &mut Viewport = get_main_viewport(g).unwrap();
     window.viewport_pos = main_viewport.pos.clone();
     if settings.viewport_id

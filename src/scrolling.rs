@@ -25,26 +25,26 @@ pub fn calc_next_scroll_from_scroll_target_and_clamp(g: &mut Context, window: &m
     Vector2D scroll = window.scroll;
     if (window.ScrollTarget.x < f32::MAX)
     {
-        float decoration_total_width = window.scrollbar_sizes.x;
-        float center_x_ratio = window.ScrollTargetCenterRatio.x;
-        float scroll_target_x = window.ScrollTarget.x;
+        let decoration_total_width =  window.scrollbar_sizes.x;
+        let center_x_ratio =  window.ScrollTargetCenterRatio.x;
+        let scroll_target_x =  window.ScrollTarget.x;
         if (window.ScrollTargetEdgeSnapDist.x > 0.0)
         {
-            float snap_x_min = 0.0;
-            float snap_x_max = window.scroll_max.x + window.size_full.x - decoration_total_width;
+            let snap_x_min =  0.0;
+            let snap_x_max =  window.scroll_max.x + window.size_full.x - decoration_total_width;
             scroll_target_x = CalcScrollEdgeSnap(scroll_target_x, snap_x_min, snap_x_max, window.ScrollTargetEdgeSnapDist.x, center_x_ratio);
         }
         scroll.x = scroll_target_x - center_x_ratio * (window.size_full.x - decoration_total_width);
     }
     if (window.ScrollTarget.y < f32::MAX)
     {
-        float decoration_total_height = window.title_bar_height() + window.MenuBarHeight() + window.scrollbar_sizes.y;
-        float center_y_ratio = window.ScrollTargetCenterRatio.y;
-        float scroll_target_y = window.ScrollTarget.y;
+        let decoration_total_height =  window.title_bar_height() + window.MenuBarHeight() + window.scrollbar_sizes.y;
+        let center_y_ratio =  window.ScrollTargetCenterRatio.y;
+        let scroll_target_y =  window.ScrollTarget.y;
         if (window.ScrollTargetEdgeSnapDist.y > 0.0)
         {
-            float snap_y_min = 0.0;
-            float snap_y_max = window.scroll_max.y + window.size_full.y - decoration_total_height;
+            let snap_y_min =  0.0;
+            let snap_y_max =  window.scroll_max.y + window.size_full.y - decoration_total_height;
             scroll_target_y = CalcScrollEdgeSnap(scroll_target_y, snap_y_min, snap_y_max, window.ScrollTargetEdgeSnapDist.y, center_y_ratio);
         }
         scroll.y = scroll_target_y - center_y_ratio * (window.size_full.y - decoration_total_height);
@@ -106,7 +106,7 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
     }
     else if (((flags & ImGuiScrollFlags_KeepVisibleCenterX) && !fully_visible_x) || (flags & ImGuiScrollFlags_AlwaysCenterX))
     {
-        float target_x = can_be_fully_visible_x ? f32::floor((item_rect.min.x + item_rect.max.x - window.inner_rect.get_width()) * 0.5) : item_rect.min.x;
+        let target_x =  can_be_fully_visible_x ? f32::floor((item_rect.min.x + item_rect.max.x - window.inner_rect.get_width()) * 0.5) : item_rect.min.x;
         SetScrollFromPosX(window, target_x - window.pos.x, 0.0);
     }
 
@@ -119,7 +119,7 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
     }
     else if (((flags & ImGuiScrollFlags_KeepVisibleCenterY) && !fully_visible_y) || (flags & ImGuiScrollFlags_AlwaysCenterY))
     {
-        float target_y = can_be_fully_visible_y ? f32::floor((item_rect.min.y + item_rect.max.y - window.inner_rect.get_height()) * 0.5) : item_rect.min.y;
+        let target_y =  can_be_fully_visible_y ? f32::floor((item_rect.min.y + item_rect.max.y - window.inner_rect.get_height()) * 0.5) : item_rect.min.y;
         SetScrollFromPosY(window, target_y - window.pos.y, 0.0);
     }
 
@@ -247,8 +247,8 @@ pub fn set_scroll_here_x(g: &mut Context, center_x_ratio: f32)
 {
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    float spacing_x = ImMax(window.WindowPadding.x, g.style.ItemSpacing.x);
-    float target_pos_x = ImLerp(g.last_item_data.Rect.min.x - spacing_x, g.last_item_data.Rect.max.x + spacing_x, center_x_ratio);
+    let spacing_x =  ImMax(window.WindowPadding.x, g.style.ItemSpacing.x);
+    let target_pos_x =  ImLerp(g.last_item_data.Rect.min.x - spacing_x, g.last_item_data.Rect.max.x + spacing_x, center_x_ratio);
     SetScrollFromPosX(window, target_pos_x - window.pos.x, center_x_ratio); // Convert from absolute to local pos
 
     // Tweak: snap on edges when aiming at an item very close to the edge
@@ -261,8 +261,8 @@ pub fn set_scroll_here_y(g: &mut Context, center_y_ratio: f32)
 {
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    float spacing_y = ImMax(window.WindowPadding.y, g.style.ItemSpacing.y);
-    float target_pos_y = ImLerp(window.dc.CursorPosPrevLine.y - spacing_y, window.dc.CursorPosPrevLine.y + window.dc.PrevLineSize.y + spacing_y, center_y_ratio);
+    let spacing_y =  ImMax(window.WindowPadding.y, g.style.ItemSpacing.y);
+    let target_pos_y =  ImLerp(window.dc.CursorPosPrevLine.y - spacing_y, window.dc.CursorPosPrevLine.y + window.dc.PrevLineSize.y + spacing_y, center_y_ratio);
     SetScrollFromPosY(window, target_pos_y - window.pos.y, center_y_ratio); // Convert from absolute to local pos
 
     // Tweak: snap on edges when aiming at an item very close to the edge

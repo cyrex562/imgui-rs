@@ -21,7 +21,7 @@ use crate::dock::preview::DockPreviewData;
 use crate::dock::settings::dock_settings_rename_node_references;
 use crate::dock::{int, node, settings};
 use crate::drag_drop::get_drag_drop_payload;
-use crate::draw::draw_list::get_foreground_draw_list;
+use crate::draw::list::get_foreground_draw_list;
 use crate::frame::get_frame_height;
 use crate::input::mouse::{
     is_mouse_clicked, start_mouse_moving_window, start_mouse_moving_window_or_node,
@@ -457,7 +457,7 @@ pub fn dock_node_move_child_nodes(g: &mut Context, dst_node: &mut DockNode, src_
     src_node.child_nodes[1] = INVALID_ID;
 }
 
-// Search function called once by root node in DockNodeUpdate()
+// Search function called once by root node in dock_node_update()
 #[derive(Default, Debug, Clone)]
 pub struct DockNodeTreeInfo {
     // ImGuiDockNode*      CentralNode;
@@ -667,7 +667,7 @@ pub fn dock_node_update_for_root_node(g: &mut Context, node: &mut DockNode) {
 
     // Copy the window class from of our first window so it can be used for proper dock filtering.
     // When node has mixed windows, prioritize the class with the most constraint (docking_allow_unclassed = false) as the reference to copy.
-    // FIXME-DOCK: We don't recurse properly, this code could be reworked to work from DockNodeUpdateScanRec.
+    // FIXME-DOCK: We don't recurse properly, this code could be reworked to work from dock_node_updateScanRec.
     // if ImGuiDockNode* first_node_with_windows = info.first_node_with_windows
     let first_node_with_windows = g.get_dock_node(info.first_node_with_windows);
     if first_node_with_windows.is_some() {
@@ -693,7 +693,7 @@ pub fn dock_node_update_for_root_node(g: &mut Context, node: &mut DockNode) {
     }
 }
 
-// static void DockNodeUpdate(ImGuiDockNode* node)
+// static void dock_node_update(ImGuiDockNode* node)
 pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(node.LastFrameActive != g.frame_count);
@@ -768,8 +768,8 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // This is important for first-time (no ini settings restored) single window when io.config_docking_always_tab_bar is enabled,
     // otherwise the node ends up using the minimum window size. Effectively those windows will take an extra frame to show up:
     //   N+0: Begin(): window created (with no known size), node is created
-    //   N+1: DockNodeUpdate(): node skip creating host window / Begin(): window size applied, not visible
-    //   N+2: DockNodeUpdate(): node can create host window / Begin(): window becomes visible
+    //   N+1: dock_node_update(): node skip creating host window / Begin(): window size applied, not visible
+    //   N+2: dock_node_update(): node can create host window / Begin(): window becomes visible
     // We could remove this frame if we could reliably calculate the expected window size during node update, before the Begin() code.
     // It would require a generalization of CalcWindowExpectedSize(), probably extracting code away from Begin().
     // In reality it isn't very important as user quickly ends up with size data in .ini file.
@@ -1063,7 +1063,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         host_window.unwrap().draw_list.channels_set_current(1);
     }
     if host_window.is_some() && node.windows.len() > 0 {
-        DockNodeUpdateTabBar(node, host_window);
+        dock_node_updateTabBar(node, host_window);
     } else {
         node.want_close_all = false;
         node.want_close_tab_id = 0;
@@ -1086,17 +1086,17 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         }
     }
 
-    // We update this after DockNodeUpdateTabBar()
+    // We update this after dock_node_updateTabBar()
     node.last_frame_active = g.frame_count;
 
     // Recurse into children
     // FIXME-DOCK FIXME-OPT: Should not need to recurse into children
     if host_window.is_some() {
         if node.child_nodes[0] != INVALID_ID {
-            DockNodeUpdate(node.child_nodes[0]);
+            dock_node_update(node.child_nodes[0]);
         }
         if node.child_nodes[1] != INVALID_ID {
-            DockNodeUpdate(node.child_nodes[1]);
+            dock_node_update(node.child_nodes[1]);
         }
 
         // Render outer borders last (after the tab bar)
@@ -1299,7 +1299,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
 
                 // [DEBUG] Render touching nodes & limits
                 /*
-                ImDrawList* draw_list = node->host_window ? GetForegroundDrawList(node->host_window) : GetForegroundDrawList(GetMainViewport());
+                ImDrawList* draw_list = node->host_window ? GetForegroundDrawList(node->host_window) : GetForegroundDrawList(get_main_viewport());
                 for (int n = 0; n < 2; n++)
                 {
                     for (int touching_node_n = 0; touching_node_n < touching_nodes[n].size; touching_node_n++)
@@ -1343,7 +1343,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
                         for touching_node_n in 0..touching_nodes[side_n].len() {
                             // ImGuiDockNode* touching_node = touching_nodes[side_n][touching_node_n];
                             let mut touching_node = touching_nodes[side_n][touching_node_n];
-                            //ImDrawList* draw_list = node->host_window ? GetForegroundDrawList(node->host_window) : GetForegroundDrawList(GetMainViewport());
+                            //ImDrawList* draw_list = node->host_window ? GetForegroundDrawList(node->host_window) : GetForegroundDrawList(get_main_viewport());
                             //draw_list->add_rect(touching_node->pos, touching_node->pos + touching_node->size, IM_COL32(255, 128, 0, 255));
                             while touching_node.parent_node != node {
                                 if touching_node.parent_node.split_axis == axis {

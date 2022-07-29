@@ -182,7 +182,7 @@ pub fn dock_node_remove_window(
         remaining_window.collapsed = node.host_window_id.collapsed;
     }
 
-    // Update visibility immediately is required so the DockNodeUpdateRemoveInactiveChilds() processing can reflect changes up the tree
+    // Update visibility immediately is required so the dock_node_updateRemoveInactiveChilds() processing can reflect changes up the tree
     node::dock_node_update_visible_flag(g, node);
 }
 
@@ -315,7 +315,7 @@ pub fn dock_node_setup_host_window(g: &mut Context, node: &mut DockNode, host_wi
     node.host_window_id = host_window.id;
 }
 
-// static ImGuiID DockNodeUpdateWindowMenu(ImGuiDockNode* node, ImGuiTabBar* tab_bar)
+// static ImGuiID dock_node_updateWindowMenu(ImGuiDockNode* node, ImGuiTabBar* tab_bar)
 pub fn dock_node_update_window_menu(
     g: &mut Context,
     node: &mut DockNode,

@@ -22,3 +22,38 @@ pub struct DimgFontGlyph
     pub u1: f32,
     pub v1: f32,
 }
+
+
+void ImFontGlyphRangesBuilder::AddText(const char* text, const char* text_end)
+{
+    while (text_end ? (text < text_end) : *text)
+    {
+        unsigned int c = 0;
+        int c_len = ImTextCharFromUtf8(&c, text, text_end);
+        text += c_len;
+        if (c_len == 0)
+            break;
+        AddChar((ImWchar)c);
+    }
+}
+
+void ImFontGlyphRangesBuilder::AddRanges(const ImWchar* ranges)
+{
+    for (; ranges[0]; ranges += 2)
+        for (unsigned int c = ranges[0]; c <= ranges[1] && c <= IM_UNICODE_CODEPOINT_MAX; c += 1) //-V560
+            AddChar((ImWchar)c);
+}
+
+void ImFontGlyphRangesBuilder::BuildRanges(ImVector<ImWchar>* out_ranges)
+{
+    let max_codepoint = IM_UNICODE_CODEPOINT_MAX;
+    for (int n = 0; n <= max_codepoint; n += 1)
+        if (GetBit(n))
+        {
+            out_ranges.push_back((ImWchar)n);
+            while (n < max_codepoint && GetBit(n + 1))
+                n += 1;
+            out_ranges.push_back((ImWchar)n);
+        }
+    out_ranges.push_back(0);
+}

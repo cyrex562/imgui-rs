@@ -168,7 +168,7 @@ pub fn begin_child_ex(
     flags.extend(parent_window.flags.iter());
 
     // size
-    // const Vector2D content_avail = GetContentRegionAvail();
+    // const Vector2D content_avail = get_content_region_avail();
     let content_avail = get_content_region_avail(g);
     // Vector2D size = f32::floor(size_arg);
     let mut size = Vector2D::floor(size_arg.clone());

@@ -171,7 +171,7 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
 
 
     // Default/arbitrary window position. Use set_next_window_pos() with the appropriate condition flag to change the initial position of a window.
-    // const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    // const ImGuiViewport* main_viewport = ImGui::get_main_viewport();
    let main_viewport: &mut Viewport = get_main_viewport(g).unwrap();
     window.pos = &main_viewport.pos + Vector2D::new(60.0, 60.0);
     window.viewport_pos = main_viewport.pos.clone();
@@ -798,8 +798,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             Vector2D avail_size_from_current_frame = Vector2D::new(window.size_full.x, window.size_full.y - decoration_up_height);
             Vector2D avail_size_from_last_frame = window.inner_rect.GetSize() + window.scrollbar_sizes;
             Vector2D needed_size_from_last_frame = window_just_created ? Vector2D::new(0, 0) : window.ContentSize + window.WindowPadding * 2.0;
-            float size_x_for_scrollbars = use_current_size_for_scrollbar_x ? avail_size_from_current_frame.x : avail_size_from_last_frame.x;
-            float size_y_for_scrollbars = use_current_size_for_scrollbar_y ? avail_size_from_current_frame.y : avail_size_from_last_frame.y;
+            let size_x_for_scrollbars =  use_current_size_for_scrollbar_x ? avail_size_from_current_frame.x : avail_size_from_last_frame.x;
+            let size_y_for_scrollbars =  use_current_size_for_scrollbar_y ? avail_size_from_current_frame.y : avail_size_from_last_frame.y;
             //bool scrollbar_y_from_last_frame = window->scrollbar_y; // FIXME: May want to use that in the scrollbar_x expression? How many pros vs cons?
             window.scrollbar_y = (flags & WindowFlags::AlwaysVerticalScrollbar) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && !(flags & WindowFlags::NoScrollbar));
             window.scrollbar_x = (flags & WindowFlags::AlwaysHorizontalScrollbar) || ((needed_size_from_last_frame.x > size_x_for_scrollbars - (window.scrollbar_y ? style.scrollbar_size : 0.0)) && !(flags & WindowFlags::NoScrollbar) && (flags & WindowFlags::HorizontalScrollbar));
@@ -843,7 +843,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Note that if our window is collapsed we will end up with an inverted (~null) clipping rectangle which is the correct behavior.
         // Affected by window/frame border size. Used by:
         // - Begin() initial clip rect
-        float top_border_size = (((flags & WindowFlags::MenuBar) || !(flags & WindowFlags::NoTitleBar)) ? style.frame_border_size : window.WindowBorderSize);
+        let top_border_size =  (((flags & WindowFlags::MenuBar) || !(flags & WindowFlags::NoTitleBar)) ? style.frame_border_size : window.WindowBorderSize);
         window.InnerClipRect.min.x = f32::floor(0.5 + window.inner_rect.min.x + ImMax(f32::floor(window.WindowPadding.x * 0.5), window.WindowBorderSize));
         window.InnerClipRect.min.y = f32::floor(0.5 + window.inner_rect.min.y + top_border_size);
         window.InnerClipRect.max.x = f32::floor(0.5 + window.inner_rect.max.x - ImMax(f32::floor(window.WindowPadding.x * 0.5), window.WindowBorderSize));
@@ -983,7 +983,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         }
 
         // Close requested by platform window
-        if (p_open != None && window.viewport.PlatformRequestClose && window.viewport != GetMainViewport())
+        if (p_open != None && window.viewport.PlatformRequestClose && window.viewport != get_main_viewport())
         {
             if (!window.dock_is_active || window.dock_tab_is_visible)
             {
@@ -1019,7 +1019,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 if ((window.root_window_dock_tree.flags & WindowFlags::NoDocking) == 0)
                     BeginDockableDragDropSource(window);
 
-            // Docking: Any dockable window can act as a target. For dock node hosts we call begin_dockable_drag_drop_target() in DockNodeUpdate() instead.
+            // Docking: Any dockable window can act as a target. For dock node hosts we call begin_dockable_drag_drop_target() in dock_node_update() instead.
             if (g.drag_drop_active && !(flags & WindowFlags::NoDocking))
                 if (g.moving_window == None || g.moving_window.root_window_dock_tree != window)
                     if ((window == window.root_window_dock_tree) && !(window.flags & WindowFlags::DockNodeHost))

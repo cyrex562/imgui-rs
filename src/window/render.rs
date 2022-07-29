@@ -5,7 +5,7 @@ use crate::config::ConfigFlags;
 use crate::dock::defines::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::draw_defines::DrawFlags;
-use crate::draw::draw_list::{get_foreground_draw_list, DrawListFlags};
+use crate::draw::list::{get_foreground_draw_list, DrawListFlags};
 use crate::globals::GImGui;
 use crate::id::set_active_id;
 use crate::input::mouse::{start_mouse_moving_window, start_mouse_moving_window_or_node};

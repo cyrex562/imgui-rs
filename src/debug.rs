@@ -5,9 +5,9 @@ use crate::axis::Axis;
 use crate::column::OldColumns;
 use crate::types::DataAuthority::Window;
 use crate::dock::node::{DockNode, DockNodeFlags};
-use crate::draw::draw_cmd::DrawCmd;
+use crate::draw::cmd::DrawCmd;
 use crate::draw::draw_defines::DrawFlags;
-use crate::draw::draw_list::{DrawList, DrawListFlags, get_foreground_draw_list};
+use crate::draw::list::{DrawList, DrawListFlags, get_foreground_draw_list};
 use crate::font::Font;
 use crate::font::font_atlas::FontAtlas;
 use crate::globals::GImGui;
@@ -31,7 +31,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
 
     Vector2D scale = bb.GetSize() / viewport.size;
     Vector2D off = bb.min - viewport.pos * scale;
-    float alpha_mul = (viewport.flags & ImGuiViewportFlags_Minimized) ? 0.30 : 1.00;
+    let alpha_mul =  (viewport.flags & ImGuiViewportFlags_Minimized) ? 0.30 : 1.00;
     window.draw_list->AddRectFilled(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul * 0.40));
     for (int i = 0; i != g.windows.len(); i += 1)
     {
@@ -63,7 +63,7 @@ pub fn render_viewports_thumbnails(g: &mut Context)
     ImGuiWindow* window = g.current_window;
 
     // We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
-    float SCALE = 1.0 / 8.0;
+    let SCALE =  1.0 / 8.0;
     Rect bb_full(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     for (int n = 0; n < g.viewports.size; n += 1)
         bb_full.Add(g.viewports[n]->get_main_rect());
@@ -575,7 +575,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             {
                 char buf[32];
                 ImFormatString(buf, IM_ARRAYSIZE(buf), "%d", window.begin_order_within_context);
-                float font_size = GetFontSize();
+                let font_size =  GetFontSize();
                 draw_list->AddRectFilled(window.pos, window.pos + Vector2D::new(font_size, font_size), IM_COL32(200, 100, 100, 255));
                 draw_list->AddText(window.pos, IM_COL32(255, 255, 255, 255), buf);
             }
@@ -597,7 +597,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 {
                     Rect r = Funcs::GetTableRect(table, cfg->ShowTablesRectsType, column_n);
                     ImU32 col = (table->HoveredColumnBody == column_n) ? IM_COL32(255, 255, 128, 255) : IM_COL32(255, 0, 128, 255);
-                    float thickness = (table->HoveredColumnBody == column_n) ? 3.0 : 1.0;
+                    let thickness =  (table->HoveredColumnBody == column_n) ? 3.0 : 1.0;
                     draw_list->AddRect(r.min, r.max, col, 0.0, 0, thickness);
                 }
             }
@@ -616,7 +616,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         char buf[64] = "";
         char* p = buf;
         ImGuiDockNode* node = g.hovered_dock_node;
-        ImDrawList* overlay_draw_list = node->HostWindow ? get_foreground_draw_list(node->HostWindow) : get_foreground_draw_list(GetMainViewport());
+        ImDrawList* overlay_draw_list = node->HostWindow ? get_foreground_draw_list(node->HostWindow) : get_foreground_draw_list(get_main_viewport());
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "dock_id: %x%s\n", node->ID, node->is_central_node() ? " *central_node*" : "");
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "window_class: %08X\n", node->WindowClassclass_id);
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size: (%.0, %.0)\n", node.size.x, node.size.y);
@@ -781,7 +781,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         // This will be in pixels squared as long there's no post-scaling happening to the renderer output.
         const ImDrawIdx* idx_buffer = (draw_list->IdxBuffer.size > 0) ? draw_list->IdxBuffer.data : None;
         const ImDrawVert* vtx_buffer = draw_list->VtxBuffer.data + pcmd->VtxOffset;
-        float total_area = 0.0;
+        let total_area =  0.0;
         for (unsigned int idx_n = pcmd->IdxOffset; idx_n < pcmd->IdxOffset + pcmd->ElemCount; )
         {
             Vector2D triangle[3];

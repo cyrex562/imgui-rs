@@ -393,7 +393,7 @@ int main(int arg, char **argv)
 
    while (text[ch]) {
       int advance,lsb,x0,y0,x1,y1;
-      float x_shift = xpos -  floor(xpos);
+      let x_shift =  xpos -  floor(xpos);
       stbtt_GetCodepointHMetrics(&font, text[ch], &advance, &lsb);
       stbtt_GetCodepointBitmapBoxSubpixel(&font, text[ch], scale,scale,x_shift,0, &x0,&y0,&x1,&y1);
       stbtt_MakeCodepointBitmapSubpixel(&font, &screen[baseline + y0][ xpos + x0], x1-x0,y1-y0, 79, scale,scale,x_shift,0, text[ch]);
@@ -1961,10 +1961,10 @@ static void stbtt__csctx_rline_to(stbtt__csctx *g, float dx, float dy)
 
 static void stbtt__csctx_rccurve_to(stbtt__csctx *g, float dx1, float dy1, float dx2, float dy2, float dx3, float dy3)
 {
-   float cx1 = g.x + dx1;
-   float cy1 = g.y + dy1;
-   float cx2 = cx1 + dx2;
-   float cy2 = cy1 + dy2;
+   let cx1 =  g.x + dx1;
+   let cy1 =  g.y + dy1;
+   let cx2 =  cx1 + dx2;
+   let cy2 =  cy1 + dy2;
    g.x = cx2 + dx3;
    g.y = cy2 + dy3;
    stbtt__csctx_v(g, STBTT_vcubic, g.x, g.y, cx1, cy1, cx2, cy2);
@@ -2840,7 +2840,7 @@ typedef struct stbtt__active_edge
 static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, int off_x, float start_point, void *userdata)
 {
    stbtt__active_edge *z = (stbtt__active_edge *) stbtt__hheap_alloc(hh, sizeof(*z), userdata);
-   float dxdy = (e.x1 - e.x0) / (e.y1 - e.y0);
+   let dxdy =  (e.x1 - e.x0) / (e.y1 - e.y0);
    STBTT_assert(z != None);
    if (!z) return z;
 
@@ -2862,7 +2862,7 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, i
 static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, int off_x, float start_point, void *userdata)
 {
    stbtt__active_edge *z = (stbtt__active_edge *) stbtt__hheap_alloc(hh, sizeof(*z), userdata);
-   float dxdy = (e.x1 - e.x0) / (e.y1 - e.y0);
+   let dxdy =  (e.x1 - e.x0) / (e.y1 - e.y0);
    STBTT_assert(z != None);
    //STBTT_assert(e->y0 <= start_point);
    if (!z) return z;
@@ -2947,7 +2947,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
       STBTT_memset(scanline, 0, result.w);
       for (s=0; s < vsubsample; s += 1) {
          // find center of pixel for this scanline
-         float scan_y = y + 0.5;
+         let scan_y =  y + 0.5;
          stbtt__active_edge **step = &active;
 
          // update all active edges;
@@ -3086,7 +3086,7 @@ static float stbtt__sized_triangle_area(float height, float width)
 
 static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, int len, stbtt__active_edge *e, float y_top)
 {
-   float y_bottom = y_top+1;
+   let y_bottom =  y_top+1;
 
    while (e) {
       // brute force every pixel
@@ -3095,7 +3095,7 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
       STBTT_assert(e.ey >= y_top);
 
       if (e.fdx == 0) {
-         float x0 = e.fx;
+         let x0 =  e.fx;
          if (x0 < len) {
             if (x0 >= 0) {
                stbtt__handle_clipped_edge(scanline, x0,e, x0,y_top, x0,y_bottom);
@@ -3105,12 +3105,12 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
             }
          }
       } else {
-         float x0 = e.fx;
-         float dx = e.fdx;
-         float xb = x0 + dx;
+         let x0 =  e.fx;
+         let dx =  e.fdx;
+         let xb =  x0 + dx;
          float x_top, x_bottom;
          float sy0,sy1;
-         float dy = e.fdy;
+         let dy =  e.fdy;
          STBTT_assert(e->sy <= y_bottom && e.ey >= y_top);
 
          // compute endpoints of line segment clipped to this scanline (if the
@@ -3259,17 +3259,17 @@ static void stbtt__fill_active_edges_new(float *scanline, float *scanline_fill, 
                // that, we need to explicitly produce segments based on x positions.
 
                // rename variables to clearly-defined pairs
-               float y0 = y_top;
-               float x1 =  (x);
-               float x2 =  (x+1);
-               float x3 = xb;
-               float y3 = y_bottom;
+               let y0 =  y_top;
+               let x1 =   (x);
+               let x2 =   (x+1);
+               let x3 =  xb;
+               let y3 =  y_bottom;
 
                // x = e->x + e->dx * (y-y_top)
                // (y-y_top) = (x - e->x) / e->dx
                // y = (x - e->x) / e->dx + y_top
-               float y1 = (x - x0) / dx + y_top;
-               float y2 = (x+1 - x0) / dx + y_top;
+               let y1 =  (x - x0) / dx + y_top;
+               let y2 =  (x+1 - x0) / dx + y_top;
 
                if (x0 < x1 && x3 > x2) {         // three segments descending down-right
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x1,y1);
@@ -3324,7 +3324,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
    while (j < result.h) {
       // find center of pixel for this scanline
       float scan_y_top    = y + 0.0;
-      float scan_y_bottom = y + 1.0;
+      let scan_y_bottom =  y + 1.0;
       stbtt__active_edge **step = &active;
 
       STBTT_memset(scanline , 0, result.w*sizeof(scanline[0]));
@@ -3369,7 +3369,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
          stbtt__fill_active_edges_new(scanline, scanline2+1, result.w, active, scan_y_top);
 
       {
-         float sum = 0;
+         let sum =  0;
          for (i=0; i < result.w; i += 1) {
             float k;
             int m;
@@ -3497,7 +3497,7 @@ typedef struct
 
 static void stbtt__rasterize(stbtt__bitmap *result, stbtt__point *pts, int *wcount, int windings, float scale_x, float scale_y, float shift_x, float shift_y, int off_x, int off_y, int invert, void *userdata)
 {
-   float y_scale_inv = invert ? -scale_y : scale_y;
+   let y_scale_inv =  invert ? -scale_y : scale_y;
    stbtt__edge *e;
    int n,i,j,k,m;
 // #ifSTBTT_RASTERIZER_VERSION == 1
@@ -3563,11 +3563,11 @@ static void stbtt__add_point(stbtt__point *points, int n, float x, float y)
 static int stbtt__tesselate_curve(stbtt__point *points, int *num_points, float x0, float y0, float x1, float y1, float x2, float y2, float objspace_flatness_squared, int n)
 {
    // midpoint
-   float mx = (x0 + 2*x1 + x2)/4;
-   float my = (y0 + 2*y1 + y2)/4;
+   let mx =  (x0 + 2*x1 + x2)/4;
+   let my =  (y0 + 2*y1 + y2)/4;
    // versus directly drawn line
-   float dx = (x0+x2)/2 - mx;
-   float dy = (y0+y2)/2 - my;
+   let dx =  (x0+x2)/2 - mx;
+   let dy =  (y0+y2)/2 - my;
    if (n > 16) // 65536 segments on one curve better be enough!
       return 1;
    if (dx*dx+dy*dy > objspace_flatness_squared) { // half-pixel error allowed... need to be smaller if AA
@@ -3583,36 +3583,36 @@ static int stbtt__tesselate_curve(stbtt__point *points, int *num_points, float x
 static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float objspace_flatness_squared, int n)
 {
    // @TODO this "flatness" calculation is just made-up nonsense that seems to work well enough
-   float dx0 = x1-x0;
-   float dy0 = y1-y0;
-   float dx1 = x2-x1;
-   float dy1 = y2-y1;
-   float dx2 = x3-x2;
-   float dy2 = y3-y2;
-   float dx = x3-x0;
-   float dy = y3-y0;
-   float longlen =  (STBTT_sqrt(dx0*dx0+dy0*dy0)+STBTT_sqrt(dx1*dx1+dy1*dy1)+STBTT_sqrt(dx2*dx2+dy2*dy2));
-   float shortlen =  STBTT_sqrt(dx*dx+dy*dy);
-   float flatness_squared = longlen*longlen-shortlen*shortlen;
+   let dx0 =  x1-x0;
+   let dy0 =  y1-y0;
+   let dx1 =  x2-x1;
+   let dy1 =  y2-y1;
+   let dx2 =  x3-x2;
+   let dy2 =  y3-y2;
+   let dx =  x3-x0;
+   let dy =  y3-y0;
+   let longlen =   (STBTT_sqrt(dx0*dx0+dy0*dy0)+STBTT_sqrt(dx1*dx1+dy1*dy1)+STBTT_sqrt(dx2*dx2+dy2*dy2));
+   let shortlen =   STBTT_sqrt(dx*dx+dy*dy);
+   let flatness_squared =  longlen*longlen-shortlen*shortlen;
 
    if (n > 16) // 65536 segments on one curve better be enough!
       return;
 
    if (flatness_squared > objspace_flatness_squared) {
-      float x01 = (x0+x1)/2;
-      float y01 = (y0+y1)/2;
-      float x12 = (x1+x2)/2;
-      float y12 = (y1+y2)/2;
-      float x23 = (x2+x3)/2;
-      float y23 = (y2+y3)/2;
+      let x01 =  (x0+x1)/2;
+      let y01 =  (y0+y1)/2;
+      let x12 =  (x1+x2)/2;
+      let y12 =  (y1+y2)/2;
+      let x23 =  (x2+x3)/2;
+      let y23 =  (y2+y3)/2;
 
-      float xa = (x01+x12)/2;
-      float ya = (y01+y12)/2;
-      float xb = (x12+x23)/2;
-      float yb = (y12+y23)/2;
+      let xa =  (x01+x12)/2;
+      let ya =  (y01+y12)/2;
+      let xb =  (x12+x23)/2;
+      let yb =  (y12+y23)/2;
 
-      float mx = (xa+xb)/2;
-      float my = (ya+yb)/2;
+      let mx =  (xa+xb)/2;
+      let my =  (ya+yb)/2;
 
       stbtt__tesselate_cubic(points, num_points, x0,y0, x01,y01, xa,ya, mx,my, objspace_flatness_squared,n+1);
       stbtt__tesselate_cubic(points, num_points, mx,my, xb,yb, x23,y23, x3,y3, objspace_flatness_squared,n+1);
@@ -3628,7 +3628,7 @@ static stbtt__point *stbtt_FlattenCurves(stbtt_vertex *vertices, int num_verts, 
    stbtt__point *points=0;
    int num_points=0;
 
-   float objspace_flatness_squared = objspace_flatness * objspace_flatness;
+   let objspace_flatness_squared =  objspace_flatness * objspace_flatness;
    int i,n=0,start=0, pass;
 
    // count how many "moves" there are to get the contour count
@@ -3866,8 +3866,8 @@ static int stbtt_BakeFontBitmap_internal(unsigned char *data, int offset,  // fo
 
 STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, int pw, int ph, int char_index, float *xpos, float *ypos, stbtt_aligned_quad *q, int opengl_fillrule)
 {
-   float d3d_bias = opengl_fillrule ? 0 : -0.5;
-   float ipw = 1.0 / pw, iph = 1.0 / ph;
+   let d3d_bias =  opengl_fillrule ? 0 : -0.5;
+   let ipw =  1.0 / pw, iph = 1.0 / ph;
    const stbtt_bakedchar *b = chardata + char_index;
    int round_x = STBTT_ifloor((*xpos + b.xoff) + 0.5);
    int round_y = STBTT_ifloor((*ypos + b.yoff) + 0.5);
@@ -4161,8 +4161,8 @@ STBTT_DEF int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stb
 
    k=0;
    for (i=0; i < num_ranges; i += 1) {
-      float fh = ranges[i].font_size;
-      float scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
+      let fh =  ranges[i].font_size;
+      let scale =  fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
       ranges[i].h_oversample = (unsigned char) spc.h_oversample;
       ranges[i].v_oversample = (unsigned char) spc.v_oversample;
       for (j=0; j < ranges[i].num_chars; j += 1) {
@@ -4223,8 +4223,8 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
 
    k = 0;
    for (i=0; i < num_ranges; i += 1) {
-      float fh = ranges[i].font_size;
-      float scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
+      let fh =  ranges[i].font_size;
+      let scale =  fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
       float recip_h,recip_v,sub_x,sub_y;
       spc.h_oversample = ranges[i].h_oversample;
       spc.v_oversample = ranges[i].v_oversample;
@@ -4370,12 +4370,12 @@ STBTT_DEF void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, int in
 
 STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int ph, int char_index, float *xpos, float *ypos, stbtt_aligned_quad *q, int align_to_integer)
 {
-   float ipw = 1.0 / pw, iph = 1.0 / ph;
+   let ipw =  1.0 / pw, iph = 1.0 / ph;
    const stbtt_packedchar *b = chardata + char_index;
 
    if (align_to_integer) {
-      float x =  STBTT_ifloor((*xpos + b.xoff) + 0.5);
-      float y =  STBTT_ifloor((*ypos + b.yoff) + 0.5);
+      let x =   STBTT_ifloor((*xpos + b.xoff) + 0.5);
+      let y =   STBTT_ifloor((*ypos + b.yoff) + 0.5);
       q.x0 = x;
       q.y0 = y;
       q.x1 = x + b.xoff2 - b.xoff;
@@ -4405,23 +4405,23 @@ STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int
 
 static int stbtt__ray_intersect_bezier(float orig[2], float ray[2], float q0[2], float q1[2], float q2[2], float hits[2][2])
 {
-   float q0perp = q0[1]*ray[0] - q0[0]*ray[1];
-   float q1perp = q1[1]*ray[0] - q1[0]*ray[1];
-   float q2perp = q2[1]*ray[0] - q2[0]*ray[1];
-   float roperp = orig[1]*ray[0] - orig[0]*ray[1];
+   let q0perp =  q0[1]*ray[0] - q0[0]*ray[1];
+   let q1perp =  q1[1]*ray[0] - q1[0]*ray[1];
+   let q2perp =  q2[1]*ray[0] - q2[0]*ray[1];
+   let roperp =  orig[1]*ray[0] - orig[0]*ray[1];
 
-   float a = q0perp - 2*q1perp + q2perp;
-   float b = q1perp - q0perp;
-   float c = q0perp - roperp;
+   let a =  q0perp - 2*q1perp + q2perp;
+   let b =  q1perp - q0perp;
+   let c =  q0perp - roperp;
 
-   float s0 = 0., s1 = 0.;
+   let s0 =  0., s1 = 0.;
    int num_s = 0;
 
    if (a != 0.0) {
-      float discr = b*b - a*c;
+      let discr =  b*b - a*c;
       if (discr > 0.0) {
-         float rcpna = -1 / a;
-         float d =  STBTT_sqrt(discr);
+         let rcpna =  -1 / a;
+         let d =   STBTT_sqrt(discr);
          s0 = (b+d) * rcpna;
          s1 = (b-d) * rcpna;
          if (s0 >= 0.0 && s0 <= 1.0)
@@ -4442,17 +4442,17 @@ static int stbtt__ray_intersect_bezier(float orig[2], float ray[2], float q0[2],
    if (num_s == 0)
       return 0;
    else {
-      float rcp_len2 = 1 / (ray[0]*ray[0] + ray[1]*ray[1]);
-      float rayn_x = ray[0] * rcp_len2, rayn_y = ray[1] * rcp_len2;
+      let rcp_len2 =  1 / (ray[0]*ray[0] + ray[1]*ray[1]);
+      let rayn_x =  ray[0] * rcp_len2, rayn_y = ray[1] * rcp_len2;
 
-      float q0d =   q0[0]*rayn_x +   q0[1]*rayn_y;
-      float q1d =   q1[0]*rayn_x +   q1[1]*rayn_y;
-      float q2d =   q2[0]*rayn_x +   q2[1]*rayn_y;
-      float rod = orig[0]*rayn_x + orig[1]*rayn_y;
+      let q0d =    q0[0]*rayn_x +   q0[1]*rayn_y;
+      let q1d =    q1[0]*rayn_x +   q1[1]*rayn_y;
+      let q2d =    q2[0]*rayn_x +   q2[1]*rayn_y;
+      let rod =  orig[0]*rayn_x + orig[1]*rayn_y;
 
-      float q10d = q1d - q0d;
-      float q20d = q2d - q0d;
-      float q0rd = q0d - rod;
+      let q10d =  q1d - q0d;
+      let q20d =  q2d - q0d;
+      let q0rd =  q0d - rod;
 
       hits[0][0] = q0rd + s0*(2.0 - 2.0*s0)*q10d + s0*s0*q20d;
       hits[0][1] = a*s0+b;
@@ -4495,7 +4495,7 @@ static int stbtt__compute_crossings_x(float x, float y, int nverts, stbtt_vertex
          int x0 =  verts[i-1].x, y0 =  verts[i-1].y;
          int x1 =  verts[i  ].x, y1 =  verts[i  ].y;
          if (y > STBTT_min(y0,y1) && y < STBTT_max(y0,y1) && x > STBTT_min(x0,x1)) {
-            float x_inter = (y - y0) / (y1 - y0) * (x1-x0) + x0;
+            let x_inter =  (y - y0) / (y1 - y0) * (x1-x0) + x0;
             if (x_inter < x)
                winding += (y0 < y1) ? 1 : -1;
          }
@@ -4521,7 +4521,7 @@ static int stbtt__compute_crossings_x(float x, float y, int nverts, stbtt_vertex
                x1 = verts[i  ].x;
                y1 = verts[i  ].y;
                if (y > STBTT_min(y0,y1) && y < STBTT_max(y0,y1) && x > STBTT_min(x0,x1)) {
-                  float x_inter = (y - y0) / (y1 - y0) * (x1-x0) + x0;
+                  let x_inter =  (y - y0) / (y1 - y0) * (x1-x0) + x0;
                   if (x_inter < x)
                      winding += (y0 < y1) ? 1 : -1;
                }
@@ -4551,24 +4551,24 @@ static float stbtt__cuberoot( float x )
 // x^3 + a*x^2 + b*x + c = 0
 static int stbtt__solve_cubic(float a, float b, float c, float* r)
 {
-   float s = -a / 3;
-   float p = b - a*a / 3;
-   float q = a * (2*a*a - 9*b) / 27 + c;
-   float p3 = p*p*p;
-   float d = q*q + 4*p3 / 27;
+   let s =  -a / 3;
+   let p =  b - a*a / 3;
+   let q =  a * (2*a*a - 9*b) / 27 + c;
+   let p3 =  p*p*p;
+   let d =  q*q + 4*p3 / 27;
    if (d >= 0) {
-      float z =  STBTT_sqrt(d);
-      float u = (-q + z) / 2;
-      float v = (-q - z) / 2;
+      let z =   STBTT_sqrt(d);
+      let u =  (-q + z) / 2;
+      let v =  (-q - z) / 2;
       u = stbtt__cuberoot(u);
       v = stbtt__cuberoot(v);
       r[0] = s + u + v;
       return 1;
    } else {
-      float u =  STBTT_sqrt(-p/3);
-      float v =  STBTT_acos(-STBTT_sqrt(-27/p3) * q / 2) / 3; // p3 must be negative, since d is negative
-      float m =  STBTT_cos(v);
-      float n =  STBTT_cos(v-3.141592/2)*1.732050808;
+      let u =   STBTT_sqrt(-p/3);
+      let v =   STBTT_acos(-STBTT_sqrt(-27/p3) * q / 2) / 3; // p3 must be negative, since d is negative
+      let m =   STBTT_cos(v);
+      let n =   STBTT_cos(v-3.141592/2)*1.732050808;
       r[0] = s + u * 2 * m;
       r[1] = s - u * (m + n);
       r[2] = s - u * (m - n);
@@ -4582,7 +4582,7 @@ static int stbtt__solve_cubic(float a, float b, float c, float* r)
 
 STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float scale, int glyph, int padding, unsigned char onedge_value, float pixel_dist_scale, int *width, int *height, int *xoff, int *yoff)
 {
-   float scale_x = scale, scale_y = scale;
+   let scale_x =  scale, scale_y = scale;
    int ix0,iy0,ix1,iy1;
    int w,h;
    unsigned char *data;
@@ -4621,16 +4621,16 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
 
       for (i=0,j=num_verts-1; i < num_verts; j=i += 1) {
          if (verts[i].type == STBTT_vline) {
-            float x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
-            float x1 = verts[j].x*scale_x, y1 = verts[j].y*scale_y;
-            float dist =  STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
+            let x0 =  verts[i].x*scale_x, y0 = verts[i].y*scale_y;
+            let x1 =  verts[j].x*scale_x, y1 = verts[j].y*scale_y;
+            let dist =   STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0));
             precompute[i] = (dist == 0) ? 0.0 : 1.0 / dist;
          } else if (verts[i].type == STBTT_vcurve) {
-            float x2 = verts[j].x *scale_x, y2 = verts[j].y *scale_y;
-            float x1 = verts[i].cx*scale_x, y1 = verts[i].cy*scale_y;
-            float x0 = verts[i].x *scale_x, y0 = verts[i].y *scale_y;
-            float bx = x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
-            float len2 = bx*bx + by*by;
+            let x2 =  verts[j].x *scale_x, y2 = verts[j].y *scale_y;
+            let x1 =  verts[i].cx*scale_x, y1 = verts[i].cy*scale_y;
+            let x0 =  verts[i].x *scale_x, y0 = verts[i].y *scale_y;
+            let bx =  x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
+            let len2 =  bx*bx + by*by;
             if (len2 != 0.0)
                precompute[i] = 1.0 / (bx*bx + by*by);
             else
@@ -4642,19 +4642,19 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
       for (y=iy0; y < iy1; y += 1) {
          for (x=ix0; x < ix1; x += 1) {
             float val;
-            float min_dist = 999999.0;
-            float sx =  x + 0.5;
-            float sy =  y + 0.5;
-            float x_gspace = (sx / scale_x);
-            float y_gspace = (sy / scale_y);
+            let min_dist =  999999.0;
+            let sx =   x + 0.5;
+            let sy =   y + 0.5;
+            let x_gspace =  (sx / scale_x);
+            let y_gspace =  (sy / scale_y);
 
             int winding = stbtt__compute_crossings_x(x_gspace, y_gspace, num_verts, verts); // @OPTIMIZE: this could just be a rasterization, but needs to be line vs. non-tesselated curves so a new path
 
             for (i=0; i < num_verts; i += 1) {
-               float x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
+               let x0 =  verts[i].x*scale_x, y0 = verts[i].y*scale_y;
 
                if (verts[i].type == STBTT_vline && precompute[i] != 0.0) {
-                  float x1 = verts[i-1].x*scale_x, y1 = verts[i-1].y*scale_y;
+                  let x1 =  verts[i-1].x*scale_x, y1 = verts[i-1].y*scale_y;
 
                   float dist,dist2 = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy);
                   if (dist2 < min_dist*min_dist)
@@ -4669,53 +4669,53 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
                      // check position along line
                      // x' = x0 + t*(x1-x0), y' = y0 + t*(y1-y0)
                      // minimize (x'-sx)*(x'-sx)+(y'-sy)*(y'-sy)
-                     float dx = x1-x0, dy = y1-y0;
-                     float px = x0-sx, py = y0-sy;
+                     let dx =  x1-x0, dy = y1-y0;
+                     let px =  x0-sx, py = y0-sy;
                      // minimize (px+t*dx)^2 + (py+t*dy)^2 = px*px + 2*px*dx*t + t^2*dx*dx + py*py + 2*py*dy*t + t^2*dy*dy
                      // derivative: 2*px*dx + 2*py*dy + (2*dx*dx+2*dy*dy)*t, set to 0 and solve
-                     float t = -(px*dx + py*dy) / (dx*dx + dy*dy);
+                     let t =  -(px*dx + py*dy) / (dx*dx + dy*dy);
                      if (t >= 0.0 && t <= 1.0)
                         min_dist = dist;
                   }
                } else if (verts[i].type == STBTT_vcurve) {
-                  float x2 = verts[i-1].x *scale_x, y2 = verts[i-1].y *scale_y;
-                  float x1 = verts[i  ].cx*scale_x, y1 = verts[i  ].cy*scale_y;
-                  float box_x0 = STBTT_min(STBTT_min(x0,x1),x2);
-                  float box_y0 = STBTT_min(STBTT_min(y0,y1),y2);
-                  float box_x1 = STBTT_max(STBTT_max(x0,x1),x2);
-                  float box_y1 = STBTT_max(STBTT_max(y0,y1),y2);
+                  let x2 =  verts[i-1].x *scale_x, y2 = verts[i-1].y *scale_y;
+                  let x1 =  verts[i  ].cx*scale_x, y1 = verts[i  ].cy*scale_y;
+                  let box_x0 =  STBTT_min(STBTT_min(x0,x1),x2);
+                  let box_y0 =  STBTT_min(STBTT_min(y0,y1),y2);
+                  let box_x1 =  STBTT_max(STBTT_max(x0,x1),x2);
+                  let box_y1 =  STBTT_max(STBTT_max(y0,y1),y2);
                   // coarse culling against bbox to avoid computing cubic unnecessarily
                   if (sx > box_x0-min_dist && sx < box_x1+min_dist && sy > box_y0-min_dist && sy < box_y1+min_dist) {
                      int num=0;
-                     float ax = x1-x0, ay = y1-y0;
-                     float bx = x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
-                     float mx = x0 - sx, my = y0 - sy;
+                     let ax =  x1-x0, ay = y1-y0;
+                     let bx =  x0 - 2*x1 + x2, by = y0 - 2*y1 + y2;
+                     let mx =  x0 - sx, my = y0 - sy;
                      float res[3] = {0.f,0.f,0.f};
                      float px,py,t,it,dist2;
-                     float a_inv = precompute[i];
+                     let a_inv =  precompute[i];
                      if (a_inv == 0.0) { // if a_inv is 0, it's 2nd degree so use quadratic formula
-                        float a = 3*(ax*bx + ay*by);
-                        float b = 2*(ax*ax + ay*ay) + (mx*bx+my*by);
-                        float c = mx*ax+my*ay;
+                        let a =  3*(ax*bx + ay*by);
+                        let b =  2*(ax*ax + ay*ay) + (mx*bx+my*by);
+                        let c =  mx*ax+my*ay;
                         if (a == 0.0) { // if a is 0, it's linear
                            if (b != 0.0) {
                               res[num += 1] = -c/b;
                            }
                         } else {
-                           float discriminant = b*b - 4*a*c;
+                           let discriminant =  b*b - 4*a*c;
                            if (discriminant < 0)
                               num = 0;
                            else {
-                              float root =  STBTT_sqrt(discriminant);
+                              let root =   STBTT_sqrt(discriminant);
                               res[0] = (-b - root)/(2*a);
                               res[1] = (-b + root)/(2*a);
                               num = 2; // don't bother distinguishing 1-solution case, as code below will still work
                            }
                         }
                      } else {
-                        float b = 3*(ax*bx + ay*by) * a_inv; // could precompute this as it doesn't depend on sample point
-                        float c = (2*(ax*ax + ay*ay) + (mx*bx+my*by)) * a_inv;
-                        float d = (mx*ax+my*ay) * a_inv;
+                        let b =  3*(ax*bx + ay*by) * a_inv; // could precompute this as it doesn't depend on sample point
+                        let c =  (2*(ax*ax + ay*ay) + (mx*bx+my*by)) * a_inv;
+                        let d =  (mx*ax+my*ay) * a_inv;
                         num = stbtt__solve_cubic(b, c, d, res);
                      }
                      dist2 = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy);

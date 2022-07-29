@@ -645,7 +645,7 @@ pub fn calc_item_width(g: &mut Context)
         w = window.dc.ItemWidth;
     if (w < 0.0)
     {
-        float region_max_x = get_content_region_max_abs().x;
+        let region_max_x =  get_content_region_max_abs().x;
         w = ImMax(1.0, region_max_x - window.dc.cursor_pos.x + w);
     }
     w = f32::floor(w);

@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::draw::draw_list::{add_draw_list_to_draw_data, DrawList};
+use crate::draw::list::{add_draw_list_to_draw_data, DrawList};
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
 use crate::window::{checks, get, Window, WindowFlags};
@@ -16,8 +16,8 @@ pub struct DrawData
     pub total_vtx_count: i32,        // For convenience, sum of all ImDrawList's vtx_buffer.size
     // ImDrawList**    cmd_lists;               // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
     pub cmd_lists: Vec<Id32>,
-    pub display_pos: Vector2D,             // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport()->pos for the main viewport, == (0.0) in most single-viewport applications)
-    pub display_size: Vector2D,            // size of the viewport to render (== GetMainViewport()->size for the main viewport, == io.display_size in most single-viewport applications)
+    pub display_pos: Vector2D,             // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== get_main_viewport()->pos for the main viewport, == (0.0) in most single-viewport applications)
+    pub display_size: Vector2D,            // size of the viewport to render (== get_main_viewport()->size for the main viewport, == io.display_size in most single-viewport applications)
     pub framebuffer_scale: Vector2D,       // Amount of pixels for each unit of display_size. Based on io.display_framebuffer_scale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
     // ImGuiViewport*  OwnerViewport;          // viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
     pub owner_viewport: Id32,
@@ -41,11 +41,32 @@ impl DrawData {
     }
     //      void  de_index_all_buffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
     pub fn de_index_all_buffers(&mut self) {
-        todo!()
+         ImVector<ImDrawVert> new_vtx_buffer;
+    total_vtx_count = total_idx_count = 0;
+    for (int i = 0; i < cmd_lists_count; i += 1)
+    {
+        ImDrawList* cmd_list = CmdLists[i];
+        if (cmd_list.IdxBuffer.empty())
+            continue;
+        new_vtx_buffer.resize(cmd_list.IdxBuffer.size);
+        for (int j = 0; j < cmd_list.IdxBuffer.size; j += 1)
+            new_vtx_buffer[j] = cmd_list.VtxBuffer[cmd_list.IdxBuffer[j]];
+        cmd_list.VtxBuffer.swap(new_vtx_buffer);
+        cmd_list.IdxBuffer.resize(0);
+        total_vtx_count += cmd_list.VtxBuffer.size;
+    }
     }
     //      void  scale_clip_rects(const Vector2D& fb_scale); // Helper to scale the clip_rect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
     pub fn scale_clip_rects(&mut self, fb_scale: &Vector2D) {
-        todo!()
+        for (int i = 0; i < cmd_lists_count; i += 1)
+    {
+        ImDrawList* cmd_list = CmdLists[i];
+        for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.size; cmd_i += 1)
+        {
+            ImDrawCmd* cmd = &cmd_list.cmd_buffer[cmd_i];
+            cmd.clip_rect = Vector4D(cmd.clip_rect.x * fb_scale.x, cmd.clip_rect.y * fb_scale.y, cmd.clip_rect.z * fb_scale.x, cmd.clip_rect.w * fb_scale.y);
+        }
+    }
     }
 }
 
@@ -93,4 +114,52 @@ pub fn add_window_to_draw_data(g: &mut Context, window: &mut Window, layer: i32)
 pub fn add_root_window_to_draw_data(g: &mut Context, window: &mut Window) {
     // AddWindowToDrawData(window, GetWindowDisplayLayer(window));
     add_window_to_draw_data(g, window, get::get_window_display_layer(window))
+}
+
+
+impl DrawDataBuilder {
+    // void clear()                    { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].resize(0); }
+    //     void ClearFreeMemory()          { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].clear(); }
+    //     int  GetDrawListCount() const   { int count = 0; for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) count += Layers[n].size; return count; }
+    pub fn get_draw_list_count(&self) -> usize {
+        self.layers[0].len() + self.layers[1].len()
+    }
+    //      void FlattenIntoSingleLayer();
+    pub fn flatten_into_single_layer(&mut self) {
+        // int n = Layers[0].Size;
+        let mut n = self.layers[0].len();
+        //     int size = n;
+        let mut size = n;
+        //     for (int i = 1; i < IM_ARRAYSIZE(Layers); i += 1)
+        //         size += Layers[i].Size;
+        for i in 1..self.layers.len() {
+            size += self.layers[i].len();
+        }
+        //     Layers[0].resize(size);
+        self.layers[0].reserve(size);
+        //     for (int layer_n = 1; layer_n < IM_ARRAYSIZE(Layers); layer_n += 1)
+        for layer_n in 1..self.layers.len() {
+            //     {
+            //         ImVector<ImDrawList*>& layer = Layers[layer_n];
+            let layer = &mut self.layers[layer_n];
+            //         if (layer.empty())
+            if layer.is_empty() {
+                continue;
+            }
+            //             continue;
+            //         memcpy(&Layers[0][n], &layer[0], layer.Size * sizeof(ImDrawList*));
+            self.layers[0][n] = self.layer[0];
+            n += layer.len();
+            layer.clear();
+            //         n += layer.Size;
+            //         layer.resize(0);
+            //     }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct DrawDataBuilder {
+    // ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
+    pub layers: [Vec<Id32>; 2],
 }

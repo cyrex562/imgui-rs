@@ -7,7 +7,7 @@ use crate::dock::node;
 use crate::dock::node::{DockNode, DockNodeFlags, int, tab_bar};
 use crate::dock::node::rect::{dock_node_calc_drop_rects_and_test_mouse_pos, dock_node_calc_split_rects};
 use crate::dock::preview::DockPreviewData;
-use crate::draw::draw_list::{DrawList, get_foreground_draw_list};
+use crate::draw::list::{DrawList, get_foreground_draw_list};
 use crate::frame::get_frame_height;
 use crate::math::saturate_f32;
 use crate::rect::Rect;

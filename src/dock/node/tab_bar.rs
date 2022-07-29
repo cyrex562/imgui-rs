@@ -55,7 +55,7 @@ pub fn dock_node_end_amend_tab_bar(g: &mut Context) {
 }
 
 // Submit the tab bar corresponding to a dock node and various housekeeping details.
-// static void DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_window)
+// static void dock_node_updateTabBar(ImGuiDockNode* node, ImGuiWindow* host_window)
 pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_window: &mut Window) {
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;

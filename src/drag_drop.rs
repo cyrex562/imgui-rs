@@ -327,7 +327,7 @@ pub fn accept_drag_drop_payload(g: &mut Context, payload_type: &str, flags: &Has
     // NB: We currently accept None id as target. However, overlapping targets requires a unique id to function!
     const bool was_accepted_previously = (g.drag_drop_accept_id_prev == g.DragDropTargetId);
     Rect r = g.DragDropTargetRect;
-    float r_surface = r.get_width() * r.get_height();
+    let r_surface =  r.get_width() * r.get_height();
     if (r_surface <= g.drag_drop_accept_id_curr_rect_surface)
     {
         g.DragDropAcceptFlags = flags;

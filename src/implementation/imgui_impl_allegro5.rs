@@ -95,10 +95,10 @@ static void ImGui_ImplAllegro5_SetupRenderState(ImDrawData* draw_data)
     // Setup orthographic projection matrix
     // Our visible imgui space lies from draw_data->display_pos (top left) to draw_data->display_pos+data_data->display_size (bottom right).
     {
-        float L = draw_data.display_pos.x;
-        float R = draw_data.display_pos.x + draw_data.display_size.x;
-        float T = draw_data.display_pos.y;
-        float B = draw_data.display_pos.y + draw_data.display_size.y;
+        let L =  draw_data.display_pos.x;
+        let R =  draw_data.display_pos.x + draw_data.display_size.x;
+        let T =  draw_data.display_pos.y;
+        let B =  draw_data.display_pos.y + draw_data.display_size.y;
         ALLEGRO_TRANSFORM transform;
         al_identity_transform(&transform);
         al_use_transform(&transform);

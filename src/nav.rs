@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use crate::config::ConfigFlags;
 use crate::Context;
 use crate::types::Direction;
-use crate::draw::draw_list::get_foreground_draw_list;
+use crate::draw::list::get_foreground_draw_list;
 use crate::imgui_h::ImGuiID;
 use crate::imgui_rect::Rect;
 use crate::imgui_window::{ImGuiItemFlags, ImGuiWindow};
@@ -244,20 +244,20 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 
     // Compute distance between boxes
     // FIXME-NAV: Introducing biases for vertical navigation, needs to be removed.
-    float dbx = NavScoreItemDistInterval(cand.min.x, cand.max.x, curr.min.x, curr.max.x);
-    float dby = NavScoreItemDistInterval(ImLerp(cand.min.y, cand.max.y, 0.2), ImLerp(cand.min.y, cand.max.y, 0.8), ImLerp(curr.min.y, curr.max.y, 0.2), ImLerp(curr.min.y, curr.max.y, 0.8)); // scale down on Y to keep using box-distance for vertically touching items
+    let dbx =  NavScoreItemDistInterval(cand.min.x, cand.max.x, curr.min.x, curr.max.x);
+    let dby =  NavScoreItemDistInterval(ImLerp(cand.min.y, cand.max.y, 0.2), ImLerp(cand.min.y, cand.max.y, 0.8), ImLerp(curr.min.y, curr.max.y, 0.2), ImLerp(curr.min.y, curr.max.y, 0.8)); // scale down on Y to keep using box-distance for vertically touching items
     if (dby != 0.0 && dbx != 0.0)
         dbx = (dbx / 1000.0) + ((dbx > 0.0) ? +1.0 : -1.0);
-    float dist_box = f32::abs(dbx) + f32::abs(dby);
+    let dist_box =  f32::abs(dbx) + f32::abs(dby);
 
     // Compute distance between centers (this is off by a factor of 2, but we only compare center distances with each other so it doesn't matter)
-    float dcx = (cand.min.x + cand.max.x) - (curr.min.x + curr.max.x);
-    float dcy = (cand.min.y + cand.max.y) - (curr.min.y + curr.max.y);
-    float dist_center = f32::abs(dcx) + f32::abs(dcy); // L1 metric (need this for our connectedness guarantee)
+    let dcx =  (cand.min.x + cand.max.x) - (curr.min.x + curr.max.x);
+    let dcy =  (cand.min.y + cand.max.y) - (curr.min.y + curr.max.y);
+    let dist_center =  f32::abs(dcx) + f32::abs(dcy); // L1 metric (need this for our connectedness guarantee)
 
     // Determine which quadrant of 'curr' our candidate item 'cand' lies in based on distance
     ImGuiDir quadrant;
-    float dax = 0.0, day = 0.0, dist_axial = 0.0;
+    let dax =  0.0, day = 0.0, dist_axial = 0.0;
     if (dbx != 0.0 || dby != 0.0)
     {
         // For non-overlapping boxes, use distance between boxes
@@ -987,7 +987,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // Update PageUp/PageDown/Home/End scroll
     // FIXME-NAV: Consider enabling those keys even without the master ImGuiConfigFlags_NavEnableKeyboard flag?
     const bool nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
-    float scoring_rect_offset_y = 0.0;
+    let scoring_rect_offset_y =  0.0;
     if (window && g.NavMoveDir == Direction::None && nav_keyboard_active)
         scoring_rect_offset_y = NavUpdatePageUpPageDown();
     if (scoring_rect_offset_y != 0.0)
@@ -1032,8 +1032,8 @@ pub fn nav_update_create_move_request(g: &mut Context)
         if ((clamp_x || clamp_y) && !inner_rect_rel.contains(window.NavRectRel[g.NavLayer]))
         {
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp nav_rect_rel for gamepad move\n");
-            float pad_x = ImMin(inner_rect_rel.get_width(), window.CalcFontSize() * 0.5);
-            float pad_y = ImMin(inner_rect_rel.get_height(), window.CalcFontSize() * 0.5); // Terrible approximation for the intent of starting navigation from first fully visible item
+            let pad_x =  ImMin(inner_rect_rel.get_width(), window.CalcFontSize() * 0.5);
+            let pad_y =  ImMin(inner_rect_rel.get_height(), window.CalcFontSize() * 0.5); // Terrible approximation for the intent of starting navigation from first fully visible item
             inner_rect_rel.min.x = clamp_x ? (inner_rect_rel.min.x + pad_x) : -f32::MAX;
             inner_rect_rel.max.x = clamp_x ? (inner_rect_rel.max.x - pad_x) : +f32::MAX;
             inner_rect_rel.min.y = clamp_y ? (inner_rect_rel.min.y + pad_y) : -f32::MAX;
@@ -1130,7 +1130,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
         if (g.NavMoveFlags & ImGuiNavMoveFlags_ScrollToEdgeY)
         {
             // FIXME: Should remove this
-            float scroll_target = (g.NavMoveDir == Direction::Up) ? result.Window->scroll_max.y : 0.0;
+            let scroll_target =  (g.NavMoveDir == Direction::Up) ? result.Window->scroll_max.y : 0.0;
             set_scroll_y(result.Window, scroll_target);
         }
         else
@@ -1265,7 +1265,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
     {
         Rect& nav_rect_rel = window.NavRectRel[g.NavLayer];
         let page_offset_y = ImMax(0.0, window.inner_rect.get_height() - window.CalcFontSize() * 1.0 + nav_rect_rel.get_height());
-        float nav_scoring_rect_offset_y = 0.0;
+        let nav_scoring_rect_offset_y =  0.0;
         if (IsKeyPressed(ImGuiKey_PageUp, true))
         {
             nav_scoring_rect_offset_y = -page_offset_y;
@@ -1623,7 +1623,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
 
     if (g.nav_windowing_list_window == None)
         g.nav_windowing_list_window = find_window_by_name("###NavWindowingList");
-    const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ GetMainViewport();
+    const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ get_main_viewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport.size.x * 0.20, viewport.size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
     set_next_window_pos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);

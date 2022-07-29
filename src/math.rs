@@ -310,3 +310,12 @@ pub fn im_f32_to_int8_sat(x: f32) -> i8 {
 // pub fn IM_ROUND(x: f32) -> f32{
 //     f32::round(x)
 // }
+
+
+static inline float ImAcos01(float x)
+{
+    if (x <= 0.0) return f32::PI * 0.5;
+    if (x >= 1.0) return 0.0;
+    return ImAcos(x);
+    //return (-0.69813170079773212 * x * x - 0.87266462599716477) * x + 1.5707963267948966; // Cheap approximation, may be enough for what we do.
+}

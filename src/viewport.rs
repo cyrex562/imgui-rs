@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use crate::config::ConfigFlags;
 use crate::Context;
-use crate::draw::draw_data::DrawData;
+use crate::draw::data::DrawData;
 use crate::draw::draw_data_builder::DrawDataBuilder;
-use crate::draw::draw_list::DrawList;
+use crate::draw::list::DrawList;
 use crate::orig_imgui_single_file::{ImGuiID, ImGuiWindow};
 use crate::types::Id32;
 use crate::vectors::two_d::Vector2D;
@@ -229,7 +229,7 @@ pub fn setup_viewport_draw_data(g: &mut Context, viewport: &mut Viewport, draw_l
 }
 
 
-// ImGuiViewport* GetMainViewport()
+// ImGuiViewport* get_main_viewport()
 pub fn get_main_viewport(g: &mut Context) -> &mut Viewport
 {
     // ImGuiContext& g = *GImGui;
@@ -505,10 +505,10 @@ pub fn update_viewports_new_frame(g: &mut Context)
             new_dpi_scale = (viewport.DpiScale != 0.0) ? viewport.DpiScale : 1.0;
         if (viewport.DpiScale != 0.0 && new_dpi_scale != viewport.DpiScale)
         {
-            float scale_factor = new_dpi_scale / viewport.DpiScale;
+            let scale_factor =  new_dpi_scale / viewport.DpiScale;
             if (g.io.config_flags & ImGuiConfigFlags_DpiEnableScaleViewports)
                 ScaleWindowsInViewport(viewport, scale_factor);
-            //if (viewport == GetMainViewport())
+            //if (viewport == get_main_viewport())
             //    g.PlatformInterface.set_window_size(viewport, viewport->size * scale_factor);
 
             // scale our window moving pivot so that the window will rescale roughly around the mouse position.
@@ -703,7 +703,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
     window.viewportAllowPlatformMonitorExtend = -1;
 
     // Restore main viewport if multi-viewport is not supported by the backend
-    ImGuiViewportP* main_viewport = (ImGuiViewportP*)(void*)GetMainViewport();
+    ImGuiViewportP* main_viewport = (ImGuiViewportP*)(void*)get_main_viewport();
     if (!(g.config_flags_curr_frame & ConfigFlags::ViewportsEnable))
     {
         SetWindowViewport(window, main_viewport);

@@ -250,7 +250,7 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context) {
         // if (ImGuiDockNode * node = (ImGuiDockNode *)
         // dc.Nodes.data[n].val_p){
         //     if (node.is_floating_node()) {
-        //         DockNodeUpdate(node);
+        //         dock_node_update(node);
         //     }
         // }
         if node.is_floating_node() {

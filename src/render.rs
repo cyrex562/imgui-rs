@@ -3,8 +3,8 @@ use std::os::raw::c_char;
 use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, INVALID_ID, window};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
-use crate::draw::draw_data::add_root_window_to_draw_data;
-use crate::draw::draw_list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
+use crate::draw::data::add_root_window_to_draw_data;
+use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
 use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::Color;
@@ -168,8 +168,8 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         }
         const ImFontGlyph* glyph = font.FindGlyph(ellipsis_char);
 
-        float ellipsis_glyph_width = glyph.X1;                 // width of the glyph with no padding on either side
-        float ellipsis_total_width = ellipsis_glyph_width;      // Full width of entire ellipsis
+        let ellipsis_glyph_width =  glyph.X1;                 // width of the glyph with no padding on either side
+        let ellipsis_total_width =  ellipsis_glyph_width;      // Full width of entire ellipsis
 
         if (ellipsis_char_count > 1)
         {
@@ -181,7 +181,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
 
         // We can now claim the space between pos_max.x and ellipsis_max.x
         let text_avail_width = ImMax((ImMax(pos_max.x, ellipsis_max_x) - ellipsis_total_width) - pos_min.x, 1.0);
-        float text_size_clipped_x = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, text_end_full, &text_end_ellipsis).x;
+        let text_size_clipped_x =  font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, text_end_full, &text_end_ellipsis).x;
         if (text == text_end_ellipsis && text_end_ellipsis < text_end_full)
         {
             // Always display at least 1 character if there's no room for character + ellipsis
@@ -197,7 +197,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
 
         // Render text, render ellipsis
         RenderTextClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, Vector2D::new(0.0, 0.0));
-        float ellipsis_x = pos_min.x + text_size_clipped_x;
+        let ellipsis_x =  pos_min.x + text_size_clipped_x;
         if (ellipsis_x + ellipsis_total_width <= ellipsis_max_x)
             for (int i = 0; i < ellipsis_char_count; i += 1)
             {
@@ -252,7 +252,7 @@ pub fn render_nav_highlight(g: &mut Context, bb: &Rect, id: Id32, flags: Option<
     if (window.dc.NavHideHighlightOneFrame)
         return;
 
-    float rounding = (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.style.frame_rounding;
+    let rounding =  (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.style.frame_rounding;
     Rect display_rect = bb;
     display_rect.clip_with(window.clip_rect);
     if (flags & ImGuiNavHighlightFlags_TypeDefault)
@@ -526,5 +526,225 @@ pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Wind
         draw_list.push_clip_rect(viewport_rect.min, viewport_rect.max, false);
         render_rect_filled_with_hole(draw_list, root_win_dock_tree_win.rect(), root_win.rect(), color, 0.0);// window->root_window_dock_tree->window_rounding);
         draw_list.pop_clip_rect();
+    }
+}
+
+
+//-----------------------------------------------------------------------------
+// [SECTION] ImGui Internal Render Helpers
+//-----------------------------------------------------------------------------
+// Vaguely redesigned to stop accessing ImGui global state:
+// - RenderArrow()
+// - RenderBullet()
+// - RenderCheckMark()
+// - RenderArrowDockMenu()
+// - RenderArrowPointingAt()
+// - RenderRectFilledRangeH()
+// - RenderRectFilledWithHole()
+//-----------------------------------------------------------------------------
+// Function in need of a redesign (legacy mess)
+// - RenderColorRectWithAlphaCheckerboard()
+//-----------------------------------------------------------------------------
+
+// Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
+void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir dir, float scale)
+{
+    let h = draw_list->_Data.font_size * 1.00;
+    let r =  h * 0.40 * scale;
+    Vector2D center = pos + Vector2D::new(h * 0.50, h * 0.50 * scale);
+
+    Vector2D a, b, c;
+    switch (dir)
+    {
+    case Direction::Up:
+    case Direction::Down:
+        if (dir == Direction::Up) r = -r;
+        a = Vector2D::new(+0.000, +0.750) * r;
+        b = Vector2D::new(-0.866, -0.750) * r;
+        c = Vector2D::new(+0.866, -0.750) * r;
+        break;
+    case Direction::Left:
+    case Direction::Right:
+        if (dir == Direction::Left) r = -r;
+        a = Vector2D::new(+0.750, +0.000) * r;
+        b = Vector2D::new(-0.750, +0.866) * r;
+        c = Vector2D::new(-0.750, -0.866) * r;
+        break;
+    case Direction::None:
+    case Direction::COUNT:
+        // IM_ASSERT(0);
+        break;
+    }
+    draw_list.add_triangle_filled(center + a, center + b, center + c, col);
+}
+
+void ImGui::render_bullet(ImDrawList* draw_list, Vector2D pos, ImU32 col)
+{
+    draw_list.AddCircleFilled(pos, draw_list->_Data.font_size * 0.20, col, 8);
+}
+
+void ImGui::RenderCheckMark(ImDrawList* draw_list, Vector2D pos, ImU32 col, float sz)
+{
+    let thickness =  ImMax(sz / 5.0, 1.0);
+    sz -= thickness * 0.5;
+    pos += Vector2D::new(thickness * 0.25, thickness * 0.25);
+
+    let third =  sz / 3.0;
+    let bx =  pos.x + third;
+    let by =  pos.y + sz - third * 0.5;
+    draw_list.path_line_to(Vector2D::new(bx - third, by - third));
+    draw_list.path_line_to(Vector2D::new(bx, by));
+    draw_list.path_line_to(Vector2D::new(bx + third * 2.0, by - third * 2.0));
+    draw_list.path_stroke(col, 0, thickness);
+}
+
+// Render an arrow. 'pos' is position of the arrow tip. half_sz.x is length from base to tip. half_sz.y is length on each side.
+void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, Vector2D pos, Vector2D half_sz, ImGuiDir direction, ImU32 col)
+{
+    switch (direction)
+    {
+    case Direction::Left:  draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), pos, col); return;
+    case Direction::Right: draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), pos, col); return;
+    case Direction::Up:    draw_list.add_triangle_filled(Vector2D::new(pos.x + half_sz.x, pos.y + half_sz.y), Vector2D::new(pos.x - half_sz.x, pos.y + half_sz.y), pos, col); return;
+    case Direction::Down:  draw_list.add_triangle_filled(Vector2D::new(pos.x - half_sz.x, pos.y - half_sz.y), Vector2D::new(pos.x + half_sz.x, pos.y - half_sz.y), pos, col); return;
+    case Direction::None: case Direction::COUNT: break; // Fix warnings
+    }
+}
+
+// This is less wide than RenderArrow() and we use in dock nodes instead of the regular RenderArrow() to denote a change of functionality,
+// and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
+void ImGui::RenderArrowDockMenu(ImDrawList* draw_list, Vector2D p_min, float sz, ImU32 col)
+{
+    draw_list.add_rect_filled(p_min + Vector2D::new(sz * 0.20, sz * 0.15), p_min + Vector2D::new(sz * 0.80, sz * 0.30), col);
+    RenderArrowPointingAt(draw_list, p_min + Vector2D::new(sz * 0.50, sz * 0.85), Vector2D::new(sz * 0.30, sz * 0.40), Direction::Down, col);
+}
+
+
+// FIXME: Cleanup and move code to ImDrawList.
+void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const Rect& rect, ImU32 col, float x_start_norm, float x_end_norm, float rounding)
+{
+    if (x_end_norm == x_start_norm)
+        return;
+    if (x_start_norm > x_end_norm)
+        ImSwap(x_start_norm, x_end_norm);
+
+    Vector2D p0 = Vector2D::new(ImLerp(rect.min.x, rect.max.x, x_start_norm), rect.min.y);
+    Vector2D p1 = Vector2D::new(ImLerp(rect.min.x, rect.max.x, x_end_norm), rect.max.y);
+    if (rounding == 0.0)
+    {
+        draw_list.add_rect_filled(p0, p1, col, 0.0);
+        return;
+    }
+
+    rounding = ImClamp(ImMin((rect.max.x - rect.min.x) * 0.5, (rect.max.y - rect.min.y) * 0.5) - 1.0, 0.0, rounding);
+    let inv_rounding = 1.0 / rounding;
+    let arc0_b = ImAcos01(1.0 - (p0.x - rect.min.x) * inv_rounding);
+    let arc0_e = ImAcos01(1.0 - (p1.x - rect.min.x) * inv_rounding);
+    let half_pi = f32::PI * 0.5; // We will == compare to this because we know this is the exact value ImAcos01 can return.
+    let x0 = ImMax(p0.x, rect.min.x + rounding);
+    if (arc0_b == arc0_e)
+    {
+        draw_list.path_line_to(Vector2D::new(x0, p1.y));
+        draw_list.path_line_to(Vector2D::new(x0, p0.y));
+    }
+    else if (arc0_b == 0.0 && arc0_e == half_pi)
+    {
+        draw_list.path_arc_to_fast(Vector2D::new(x0, p1.y - rounding), rounding, 3, 6); // BL
+        draw_list.path_arc_to_fast(Vector2D::new(x0, p0.y + rounding), rounding, 6, 9); // TR
+    }
+    else
+    {
+        draw_listpath_arc_to(Vector2D::new(x0, p1.y - rounding), rounding, f32::PI - arc0_e, f32::PI - arc0_b, 3); // BL
+        draw_listpath_arc_to(Vector2D::new(x0, p0.y + rounding), rounding, f32::PI + arc0_b, f32::PI + arc0_e, 3); // TR
+    }
+    if (p1.x > rect.min.x + rounding)
+    {
+        let arc1_b = ImAcos01(1.0 - (rect.max.x - p1.x) * inv_rounding);
+        let arc1_e = ImAcos01(1.0 - (rect.max.x - p0.x) * inv_rounding);
+        let x1 = ImMin(p1.x, rect.max.x - rounding);
+        if (arc1_b == arc1_e)
+        {
+            draw_list.path_line_to(Vector2D::new(x1, p0.y));
+            draw_list.path_line_to(Vector2D::new(x1, p1.y));
+        }
+        else if (arc1_b == 0.0 && arc1_e == half_pi)
+        {
+            draw_list.path_arc_to_fast(Vector2D::new(x1, p0.y + rounding), rounding, 9, 12); // TR
+            draw_list.path_arc_to_fast(Vector2D::new(x1, p1.y - rounding), rounding, 0, 3);  // BR
+        }
+        else
+        {
+            draw_listpath_arc_to(Vector2D::new(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
+            draw_listpath_arc_to(Vector2D::new(x1, p1.y - rounding), rounding, +arc1_b, +arc1_e, 3); // BR
+        }
+    }
+    draw_list.path_fill_convex(col);
+}
+
+void ImGui::render_rect_filled_with_hole(ImDrawList* draw_list, const Rect& outer, const Rect& inner, ImU32 col, float rounding)
+{
+    const bool fill_L = (inner.min.x > outer.min.x);
+    const bool fill_R = (inner.max.x < outer.max.x);
+    const bool fill_U = (inner.min.y > outer.min.y);
+    const bool fill_D = (inner.max.y < outer.max.y);
+    if (fill_L) draw_list.add_rect_filled(Vector2D::new(outer.min.x, inner.min.y), Vector2D::new(inner.min.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_U ? 0 : DrawFlags::RoundCornersTopLeft)    | (fill_D ? 0 : DrawFlags::RoundCornersBottomLeft));
+    if (fill_R) draw_list.add_rect_filled(Vector2D::new(inner.max.x, inner.min.y), Vector2D::new(outer.max.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_U ? 0 : DrawFlags::RoundCornersTopRight)   | (fill_D ? 0 : DrawFlags::RoundCornersBottomRight));
+    if (fill_U) draw_list.add_rect_filled(Vector2D::new(inner.min.x, outer.min.y), Vector2D::new(inner.max.x, inner.min.y), col, rounding, DrawFlags::RoundCornersNone | (fill_L ? 0 : DrawFlags::RoundCornersTopLeft)    | (fill_R ? 0 : DrawFlags::RoundCornersTopRight));
+    if (fill_D) draw_list.add_rect_filled(Vector2D::new(inner.min.x, inner.max.y), Vector2D::new(inner.max.x, outer.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_L ? 0 : DrawFlags::RoundCornersBottomLeft) | (fill_R ? 0 : DrawFlags::RoundCornersBottomRight));
+    if (fill_L && fill_U) draw_list.add_rect_filled(Vector2D::new(outer.min.x, outer.min.y), Vector2D::new(inner.min.x, inner.min.y), col, rounding, DrawFlags::RoundCornersTopLeft);
+    if (fill_R && fill_U) draw_list.add_rect_filled(Vector2D::new(inner.max.x, outer.min.y), Vector2D::new(outer.max.x, inner.min.y), col, rounding, DrawFlags::RoundCornersTopRight);
+    if (fill_L && fill_D) draw_list.add_rect_filled(Vector2D::new(outer.min.x, inner.max.y), Vector2D::new(inner.min.x, outer.max.y), col, rounding, DrawFlags::RoundCornersBottomLeft);
+    if (fill_R && fill_D) draw_list.add_rect_filled(Vector2D::new(inner.max.x, inner.max.y), Vector2D::new(outer.max.x, outer.max.y), col, rounding, DrawFlags::RoundCornersBottomRight);
+}
+
+ImDrawFlags ImGui::calc_rounding_flags_for_rect_in_rect(const Rect& r_in, const Rect& r_outer, float threshold)
+{
+    bool round_l = r_in.min.x <= r_outer.min.x + threshold;
+    bool round_r = r_in.max.x >= r_outer.max.x - threshold;
+    bool round_t = r_in.min.y <= r_outer.min.y + threshold;
+    bool round_b = r_in.max.y >= r_outer.max.y - threshold;
+    return DrawFlags::RoundCornersNone
+        | ((round_t && round_l) ? DrawFlags::RoundCornersTopLeft : 0) | ((round_t && round_r) ? DrawFlags::RoundCornersTopRight : 0)
+        | ((round_b && round_l) ? DrawFlags::RoundCornersBottomLeft : 0) | ((round_b && round_r) ? DrawFlags::RoundCornersBottomRight : 0);
+}
+
+// Helper for ColorPicker4()
+// NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
+// Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
+// FIXME: uses ImGui::get_color_u32
+void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D p_min, Vector2D p_max, ImU32 col, float grid_step, Vector2D grid_off, float rounding, ImDrawFlags flags)
+{
+    if ((flags & DrawFlags::RoundCornersMask_) == 0)
+        flags = DrawFlags::RoundCornersDefault_;
+    if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF)
+    {
+        ImU32 col_bg1 = get_color_u32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
+        ImU32 col_bg2 = get_color_u32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));
+        draw_list.add_rect_filled(p_min, p_max, col_bg1, rounding, flags);
+
+        int yi = 0;
+        for (let y =  p_min.y + grid_off.y; y < p_max.y; y += grid_step, yi += 1)
+        {
+            let y1 =  ImClamp(y, p_min.y, p_max.y), y2 = ImMin(y + grid_step, p_max.y);
+            if (y2 <= y1)
+                continue;
+            for (let x =  p_min.x + grid_off.x + (yi & 1) * grid_step; x < p_max.x; x += grid_step * 2.0)
+            {
+                let x1 =  ImClamp(x, p_min.x, p_max.x), x2 = ImMin(x + grid_step, p_max.x);
+                if (x2 <= x1)
+                    continue;
+                ImDrawFlags cell_flags = DrawFlags::RoundCornersNone;
+                if (y1 <= p_min.y) { if (x1 <= p_min.x) cell_flags |= DrawFlags::RoundCornersTopLeft; if (x2 >= p_max.x) cell_flags |= DrawFlags::RoundCornersTopRight; }
+                if (y2 >= p_max.y) { if (x1 <= p_min.x) cell_flags |= DrawFlags::RoundCornersBottomLeft; if (x2 >= p_max.x) cell_flags |= DrawFlags::RoundCornersBottomRight; }
+
+                // Combine flags
+                cell_flags = (flags == DrawFlags::RoundCornersNone || cell_flags == DrawFlags::RoundCornersNone) ? DrawFlags::RoundCornersNone : (cell_flags & flags);
+                draw_list.add_rect_filled(Vector2D::new(x1, y1), Vector2D::new(x2, y2), col_bg2, rounding, cell_flags);
+            }
+        }
+    }
+    else
+    {
+        draw_list.add_rect_filled(p_min, p_max, col, rounding, flags);
     }
 }

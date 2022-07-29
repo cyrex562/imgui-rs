@@ -20,7 +20,7 @@ pub struct Io {
     pub backend_flags: HashSet<BackendFlags>,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
     pub display_size: Vector2D,
-    // <unset>          // Main display size, in pixels (generally == GetMainViewport()->size). May change every frame.
+    // <unset>          // Main display size, in pixels (generally == get_main_viewport()->size). May change every frame.
     pub delta_time: f32,
     // = 1.0/60.0     // time elapsed since last frame, in seconds. May change every frame.
     pub ini_saving_rate: f32,

@@ -396,7 +396,7 @@ pub fn begin_popup_modal(g: &mut Context, name: &str, p_open: &mut bool, flags: 
     // FIXME: Should test for (PosCond & window->set_window_pos_allow_flags) with the upcoming window.
     if ((g.next_window_data.flags & NextWindowDataFlags::HasPos) == 0)
     {
-        const ImGuiViewport* viewport = window.was_active ? window.viewport : GetMainViewport(); // FIXME-VIEWPORT: What may be our reference viewport?
+        const ImGuiViewport* viewport = window.was_active ? window.viewport : get_main_viewport(); // FIXME-VIEWPORT: What may be our reference viewport?
         set_next_window_pos(viewport.get_center(), Cond::FirstUseEver, Vector2D::new(0.5, 0.5));
     }
 
@@ -623,7 +623,7 @@ pub fn find_best_window_pos_for_popup(g: &mut Context, window: &mut Window) -> V
         // Child menus typically request _any_ position within the parent menu item, and then we move the new menu outside the parent bounds.
         // This is how we end up with child menus appearing (most-commonly) on the right of the parent menu.
         ImGuiWindow* parent_window = window.parent_window;
-        float horizontal_overlap = g.style.item_inner_spacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
+        let horizontal_overlap =  g.style.item_inner_spacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
         Rect r_avoid;
         if (parent_window.dc.MenuBarAppending)
             r_avoid = Rect(-f32::MAX, parent_window.clip_rect.min.y, f32::MAX, parent_window.clip_rect.max.y); // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a next_window_data.PosConstraintAvoidRect field
@@ -638,7 +638,7 @@ pub fn find_best_window_pos_for_popup(g: &mut Context, window: &mut Window) -> V
     if (window.flags & WindowFlags::Tooltip)
     {
         // Position tooltip (always follows mouse)
-        float sc = g.style.MouseCursorScale;
+        let sc =  g.style.MouseCursorScale;
         Vector2D ref_pos = NavCalcPreferredRefPos();
         Rect r_avoid;
         if (!g.nav_disable_highlight && g.nav_disable_mouse_hover && !(g.io.config_flags & ImGuiConfigFlags_NavEnableSetMousePos))

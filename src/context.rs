@@ -10,13 +10,13 @@ use crate::config::ConfigFlags;
 use crate::dock::context::DockContext;
 use crate::dock::node::DockNode;
 use crate::drag_drop::DragDropFlags;
-use crate::draw::draw_list::DrawList;
+use crate::draw::list::DrawList;
 use crate::draw_channel::DrawChannel;
 use crate::list_clipper::ListClipperData;
 use crate::types::Direction;
 use crate::window::ShrinkWidthItem;
 
-use crate::draw::draw_list_shared_data::DrawListSharedData;
+use crate::draw::list_shared_data::DrawListSharedData;
 use crate::font::font_atlas::FontAtlas;
 use crate::font::Font;
 use crate::group::GroupData;

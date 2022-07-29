@@ -817,8 +817,8 @@ Vector2D SnapOriginToGrid(Vector2D origin)
         let spacing2 = spacing * 0.5;
 
         // Snap the origin to the nearest grid point in any direction
-        float modx = fmodf(fabsf(origin.x) + spacing2, spacing) - spacing2;
-        float mody = fmodf(fabsf(origin.y) + spacing2, spacing) - spacing2;
+        let modx =  fmodf(fabsf(origin.x) + spacing2, spacing) - spacing2;
+        let mody =  fmodf(fabsf(origin.y) + spacing2, spacing) - spacing2;
         origin.x += (origin.x < 0.f) ? modx : -modx;
         origin.y += (origin.y < 0.f) ? mody : -mody;
     }
@@ -1336,7 +1336,7 @@ void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
     ImU32        line_color_prim = GImNodes.Style.colors[ImNodesCol_GridLinePrimary];
     bool         draw_primary = GImNodes.Style.flags & NodesStyleFlags_GridLinesPrimary;
 
-    for (float x = fmodf(offset.x, GImNodes.Style.GridSpacing); x < canvas_size.x;
+    for (let x =  fmodf(offset.x, GImNodes.Style.GridSpacing); x < canvas_size.x;
          x += GImNodes.Style.GridSpacing)
     {
         GImNodes.CanvasDrawList.add_line(
@@ -1345,7 +1345,7 @@ void DrawGrid(ImNodesEditorContext& editor, const Vector2D& canvas_size)
             offset.x - x == 0.f && draw_primary ? line_color_prim : line_color);
     }
 
-    for (float y = fmodf(offset.y, GImNodes.Style.GridSpacing); y < canvas_size.y;
+    for (let y =  fmodf(offset.y, GImNodes.Style.GridSpacing); y < canvas_size.y;
          y += GImNodes.Style.GridSpacing)
     {
         GImNodes.CanvasDrawList.add_line(
