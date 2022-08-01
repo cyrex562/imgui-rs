@@ -873,7 +873,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Setup draw list and outer clipping rectangle
         // IM_ASSERT(window.draw_list.cmd_buffer.size == 1 && window.draw_list.cmd_buffer[0].elem_count == 0);
         window.draw_list.PushTextureID(g.font.container_atlas.TexID);
-        PushClipRect(host_rect.min, host_rect.max, false);
+        push_clip_rect(host_rect.min, host_rect.max, false);
 
         // Child windows can render their decoration (bg color, border, scrollbars, etc.) within their parent to save a draw call (since 1.71)
         // When using overlapping child windows, this will break the assumption that child z-order is mapped to submission order.
@@ -888,7 +888,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
                 ImGuiWindow* previous_child = parent_window.dc.ChildWindows.size >= 2 ? parent_window.dc.ChildWindows[parent_window.dc.ChildWindows.size - 2] : None;
                 bool previous_child_overlapping = previous_child ? previous_child.rect().Overlaps(window.Rect()) : false;
-                bool parent_is_empty = parent_window.draw_list.VtxBuffer.size > 0;
+                bool parent_is_empty = parent_window.draw_list.vtx_buffer.size > 0;
                 if (window.draw_list.cmd_buffer.back().elem_count == 0 && parent_is_empty && !previous_child_overlapping)
                     render_decorations_in_parent = true;
             }
@@ -1048,7 +1048,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     window.dc.NavFocusScopeIdCurrent = (flags & WindowFlags::ChildWindow) ? parent_window.dc.NavFocusScopeIdCurrent : window.get_id("#FOCUSSCOPE"); // Inherit from parent only // -V595
 
     if (!(flags & WindowFlags::DockNodeHost))
-        PushClipRect(window.InnerClipRect.min, window.InnerClipRect.max, true);
+        push_clip_rect(window.InnerClipRect.min, window.InnerClipRect.max, true);
 
     // clear 'accessed' flag last thing (After push_clip_rect which will set the flag. We want the flag to stay false when the default "Debug" window is unused)
     window.write_accessed = false;

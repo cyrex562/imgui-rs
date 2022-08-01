@@ -1,9 +1,10 @@
-use crate::defines;
-use crate::defines::DimgDrawCallback;
+use crate::{defines, INVALID_ID};
+use crate::defines::DrawCallback;
 use crate::texture::TextureId;
 use crate::types::Id32;
 use crate::vectors::Vector4D;
 use std::fmt::{Debug, Formatter};
+use crate::draw::{DrawCallback, im_draw_callback_nop};
 
 // Typically, 1 command = 1 GPU draw call (unless command is a callback)
 // - vtx_offset: When 'io.backend_flags & ImGuiBackendFlags_RendererHasVtxOffset' is enabled,
@@ -23,7 +24,7 @@ pub struct DrawCmd {
     pub elem_count: i32,
     // 4    // Number of indices (multiple of 3) to be rendered as triangles. Vertices are stored in the callee ImDrawList's vtx_buffer[] array, indices in idx_buffer[].
     // ImDrawCallback  user_callback;       // 4-8  // If != None, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
-    pub user_callback: Option<DimgDrawCallback>,
+    pub user_callback: Option<DrawCallback>,
     // void*           user_callback_data;   // 4-8  // The draw callback code can access this.
     pub user_callback_data: Vec<u8>,
 }
@@ -44,7 +45,7 @@ impl DrawCmd {
             vtx_offset: 0,
             idx_offset: 0,
             elem_count: 0,
-            user_callback: Some(defines::im_draw_callback_nop),
+            user_callback: Some(im_draw_callback_nop),
             user_callback_data: vec![],
         }
     }
@@ -57,7 +58,7 @@ impl DrawCmd {
 
 // [Internal] For use by ImDrawList
 #[derive(Debug, Clone, Default)]
-pub struct CmdHeader {
+pub struct DrawCommandHeader {
     // Vector4D          clip_rect;
     pub clip_rect: Vector4D,
     // ImTextureID     texture_id;
@@ -66,7 +67,7 @@ pub struct CmdHeader {
     pub vtx_offset: u32,
 }
 
-impl CmdHeader {
+impl DrawCommandHeader {
     pub fn clear(&mut self) {
         self.clip_rect.clear();
         self.texture_id = INVALID_ID;

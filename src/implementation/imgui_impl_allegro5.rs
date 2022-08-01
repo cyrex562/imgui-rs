@@ -134,10 +134,10 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
         // Allegro's implementation of al_draw_indexed_prim() for DX9 is completely broken. Unindex our buffers ourselves.
         // FIXME-OPT: Unfortunately Allegro doesn't support 32-bit packed colors so we have to convert them to 4 float as well..
         static ImVector<ImDrawVertAllegro> vertices;
-        vertices.resize(cmd_list.IdxBuffer.size);
-        for (int i = 0; i < cmd_list.IdxBuffer.size; i += 1)
+        vertices.resize(cmd_list.idx_buffer.size);
+        for (int i = 0; i < cmd_list.idx_buffer.size; i += 1)
         {
-            const ImDrawVert* src_v = &cmd_list.VtxBuffer[cmd_list.IdxBuffer[i]];
+            const ImDrawVert* src_v = &cmd_list.vtx_buffer[cmd_list.idx_buffer[i]];
             ImDrawVertAllegro* dst_v = &vertices[i];
             dst_v.pos = src_v.pos;
             dst_v.uv = src_v.uv;
@@ -146,19 +146,19 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
         }
 
         let* indices = None;
-        if (sizeof(ImDrawIdx) == 2)
+        if (sizeof == 2)
         {
             // FIXME-OPT: Unfortunately Allegro doesn't support 16-bit indices.. You can '#define ImDrawIdx int' in imconfig.h to request Dear ImGui to output 32-bit indices.
             // Otherwise, we convert them from 16-bit to 32-bit at runtime here, which works perfectly but is a little wasteful.
             static ImVector<int> indices_converted;
-            indices_converted.resize(cmd_list.IdxBuffer.size);
-            for (int i = 0; i < cmd_list.IdxBuffer.size;  += 1i)
-                indices_converted[i] = cmd_list.IdxBuffer.data[i];
+            indices_converted.resize(cmd_list.idx_buffer.size);
+            for (int i = 0; i < cmd_list.idx_buffer.size;  += 1i)
+                indices_converted[i] = cmd_list.idx_buffer.data[i];
             indices = indices_converted.data;
         }
-        else if (sizeof(ImDrawIdx) == 4)
+        else if (sizeof == 4)
         {
-            indices = (let*)cmd_list.IdxBuffer.data;
+            indices = (let*)cmd_list.idx_buffer.data;
         }
 
         // Render command lists

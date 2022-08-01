@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::draw::list::{
     drawlist_circle_auto_segment_calc, drawlist_circle_auto_segment_calc_r, DrawListFlags,
     DRAW_LIST_ARCFAST_SAMPLE_MAX, DRAW_LIST_ARCFAST_TABLE_SIZE,

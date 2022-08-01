@@ -1507,7 +1507,7 @@ bool ImGui::splitter_behavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, floa
     }
 
     // Render at new position
-    if (bg_col & IM_COL32_A_MASK)
+    if (bg_col & COLOR32_A_MASK)
         window.draw_list->AddRectFilled(bb_render.Min, bb_render.Max, bg_col, 0.0);
     const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : (hovered && g.HoveredIdTimer >= hover_visibility_delay) ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
     window.draw_list->AddRectFilled(bb_render.Min, bb_render.Max, col, 0.0);
@@ -1750,7 +1750,7 @@ bool ImGui::BeginComboPreview()
     window.DC.CursorMaxPos = window.DC.CursorPos;
     window.DC.LayoutType = ImGuiLayoutType_Horizontal;
     window.DC.Issame_line = false;
-    PushClipRect(preview_data->PreviewRect.Min, preview_data->PreviewRect.Max, true);
+    push_clip_rect(preview_data->PreviewRect.Min, preview_data->PreviewRect.Max, true);
 
     return true;
 }
@@ -1766,7 +1766,7 @@ void ImGui::EndComboPreview()
     if (window.DC.CursorMaxPos.x < preview_data->PreviewRect.Max.x && window.DC.CursorMaxPos.y < preview_data->PreviewRect.Max.y)
         if (draw_list.cmd_buffer.Size > 1) // Unlikely case that the push_clip_rect() didn't create a command
         {
-            draw_list->_CmdHeader.ClipRect = draw_list.cmd_buffer[draw_list.cmd_buffer.Size - 1].ClipRect = draw_list.cmd_buffer[draw_list.cmd_buffer.Size - 2].ClipRect;
+            draw_list->command_header.ClipRect = draw_list.cmd_buffer[draw_list.cmd_buffer.Size - 1].ClipRect = draw_list.cmd_buffer[draw_list.cmd_buffer.Size - 2].ClipRect;
             draw_list->_TryMergeDrawCmds();
         }
     PopClipRect();
@@ -5331,10 +5331,10 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
         {
             let a0 = (n)     /6.0 * 2.0 * IM_PI - aeps;
             let a1 = (n+1.0)/6.0 * 2.0 * IM_PI + aeps;
-            let vert_start_idx = draw_list->VtxBuffer.Size;
+            let vert_start_idx = draw_list->vtx_buffer.Size;
             draw_list->PathArcTo(wheel_center, (wheel_r_inner + wheel_r_outer)*0.5, a0, a1, segment_per_arc);
-            draw_list->PathStroke(col_white, 0, wheel_thickness);
-            let vert_end_idx = draw_list->VtxBuffer.Size;
+            draw_list->path_stroke(col_white, 0, wheel_thickness);
+            let vert_end_idx = draw_list->vtx_buffer.Size;
 
             // Paint colors over existing vertices
             Vector2D gradient_p0(wheel_center.x + ImCos(a0) * wheel_r_inner, wheel_center.y + ImSin(a0) * wheel_r_inner);
@@ -5357,7 +5357,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
         Vector2D trb = wheel_center + ImRotate(triangle_pb, cos_hue_angle, sin_hue_angle);
         Vector2D trc = wheel_center + ImRotate(triangle_pc, cos_hue_angle, sin_hue_angle);
         Vector2D uv_white = GetFontTexUvWhitePixel();
-        draw_list->PrimReserve(6, 6);
+        draw_list->prim_reserve(6, 6);
         draw_list->PrimVtx(tra, uv_white, hue_color32);
         draw_list->PrimVtx(trb, uv_white, hue_color32);
         draw_list->PrimVtx(trc, uv_white, col_white);
@@ -5396,7 +5396,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
         let alpha =  ImSaturate(col[3]);
         ImRect bar1_bb(bar1_pos_x, picker_pos.y, bar1_pos_x + bars_width, picker_pos.y + sv_picker_size);
         RenderColorRectWithAlphaCheckerboard(draw_list, bar1_bb.Min, bar1_bb.Max, 0, bar1_bb.GetWidth() / 2.0, DimgVec2D::new(0.0, 0.0));
-        draw_list->AddRectFilledMultiColor(bar1_bb.Min, bar1_bb.Max, user_col32_striped_of_alpha, user_col32_striped_of_alpha, user_col32_striped_of_alpha & ~IM_COL32_A_MASK, user_col32_striped_of_alpha & ~IM_COL32_A_MASK);
+        draw_list->AddRectFilledMultiColor(bar1_bb.Min, bar1_bb.Max, user_col32_striped_of_alpha, user_col32_striped_of_alpha, user_col32_striped_of_alpha & ~COLOR32_A_MASK, user_col32_striped_of_alpha & ~COLOR32_A_MASK);
         let bar1_line_y =  IM_ROUND(picker_pos.y + (1.0 - alpha) * sv_picker_size);
         RenderFrameBorder(bar1_bb.Min, bar1_bb.Max, 0.0);
         RenderArrowsForVerticalBar(draw_list, DimgVec2D::new(bar1_pos_x - 1, bar1_line_y), DimgVec2D::new(bars_triangles_half_sz + 1, bars_triangles_half_sz), bars_width + 2.0, style.Alpha);
@@ -6660,7 +6660,7 @@ bool ImGui::BeginMenuBar()
     ImRect bar_rect = window.MenuBarRect();
     ImRect clip_rect(IM_ROUND(bar_rect.Min.x + window.WindowBorderSize), IM_ROUND(bar_rect.Min.y + window.WindowBorderSize), IM_ROUND(ImMax(bar_rect.Min.x, bar_rect.Max.x - ImMax(window.WindowRounding, window.WindowBorderSize))), IM_ROUND(bar_rect.Max.y));
     clip_rect.ClipWith(window.OuterRectClipped);
-    PushClipRect(clip_rect.Min, clip_rect.Max, false);
+    push_clip_rect(clip_rect.Min, clip_rect.Max, false);
 
     // We overwrite CursorMaxPos because BeginGroup sets it to CursorPos (essentially the .EmitItem hack in EndMenuBar() would need something analogous here, maybe a BeginGroupEx() with flags).
     window.DC.CursorPos = window.DC.CursorMaxPos = DimgVec2D::new(bar_rect.Min.x + window.DC.MenuBarOffset.x, bar_rect.Min.y + window.DC.MenuBarOffset.y);
@@ -8058,7 +8058,7 @@ bool    ImGui::tab_item_ex(ImGuiTabBar* tab_bar, const char* label, bool* p_open
     // We don't have CPU clipping primitives to clip the CloseButton (until it becomes a texture), so need to add an extra draw call (temporary in the case of vertical animation)
     const bool want_clip_rect = is_central_section && (bb.Min.x < tab_bar->ScrollingRectMinX || bb.Max.x > tab_bar->ScrollingRectMaxX);
     if (want_clip_rect)
-        PushClipRect(DimgVec2D::new(ImMax(bb.Min.x, tab_bar->ScrollingRectMinX), bb.Min.y - 1), DimgVec2D::new(tab_bar->ScrollingRectMaxX, bb.Max.y), true);
+        push_clip_rect(DimgVec2D::new(ImMax(bb.Min.x, tab_bar->ScrollingRectMinX), bb.Min.y - 1), DimgVec2D::new(tab_bar->ScrollingRectMaxX, bb.Max.y), true);
 
     Vector2D backup_cursor_max_pos = window.DC.CursorMaxPos;
     ItemSize(bb.GetSize(), style.FramePadding.y);
@@ -8263,18 +8263,18 @@ void ImGui::tab_item_background(ImDrawList* draw_list, const ImRect& bb, ImGuiTa
     let rounding = ImMax(0.0, ImMin((flags & TabItemFlags::Button) ? g.Style.frame_rounding : g.Style.TabRounding, width * 0.5 - 1.0));
     let y1 = bb.Min.y + 1.0;
     let y2 = bb.Max.y + ((flags & TabItemFlags::Preview) ? 0.0 : -1.0);
-    draw_list->PathLineTo(DimgVec2D::new(bb.Min.x, y2));
+    draw_list->path_line_to(DimgVec2D::new(bb.Min.x, y2));
     draw_list->PathArcToFast(DimgVec2D::new(bb.Min.x + rounding, y1 + rounding), rounding, 6, 9);
     draw_list->PathArcToFast(DimgVec2D::new(bb.Max.x - rounding, y1 + rounding), rounding, 9, 12);
-    draw_list->PathLineTo(DimgVec2D::new(bb.Max.x, y2));
+    draw_list->path_line_to(DimgVec2D::new(bb.Max.x, y2));
     draw_list->PathFillConvex(col);
     if (g.Style.TabBorderSize > 0.0)
     {
-        draw_list->PathLineTo(DimgVec2D::new(bb.Min.x + 0.5, y2));
+        draw_list->path_line_to(DimgVec2D::new(bb.Min.x + 0.5, y2));
         draw_list->PathArcToFast(DimgVec2D::new(bb.Min.x + rounding + 0.5, y1 + rounding + 0.5), rounding, 6, 9);
         draw_list->PathArcToFast(DimgVec2D::new(bb.Max.x - rounding - 0.5, y1 + rounding + 0.5), rounding, 9, 12);
-        draw_list->PathLineTo(DimgVec2D::new(bb.Max.x - 0.5, y2));
-        draw_list->PathStroke(GetColorU32(ImGuiCol_Border), 0, g.Style.TabBorderSize);
+        draw_list->path_line_to(DimgVec2D::new(bb.Max.x - 0.5, y2));
+        draw_list->path_stroke(GetColorU32(ImGuiCol_Border), 0, g.Style.TabBorderSize);
     }
 }
 

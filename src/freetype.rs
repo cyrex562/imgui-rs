@@ -400,7 +400,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     ImFontAtlasBuildInit(atlas);
 
     // clear atlas
-    atlas.TexID = (ImTextureID)None;
+    atlas.TexID = None;
     atlas.TexWidth = atlas.TexHeight = 0;
     atlas.TexUvScale = Vector2D::new(0.0, 0.0);
     atlas.TexUvWhitePixel = Vector2D::new(0.0, 0.0);

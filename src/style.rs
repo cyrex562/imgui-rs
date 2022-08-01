@@ -1,6 +1,6 @@
 use crate::color::StyleColor;
 use crate::imgui_color::{
-    color_convert_float4_to_u32, ImGuiColorMod, IM_COL32_A_MASK, IM_COL32_A_SHIFT,
+    color_convert_float4_to_u32, ImGuiColorMod, COLOR32_A_MASK, IM_COL32_A_SHIFT,
 };
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{DataType, ImGuiColor, ImGuiDir, ImGuiStyleVar};
@@ -261,9 +261,9 @@ pub fn GetColorU32_3(col: u32) -> u32 {
     if style.alpha >= 1.0 {
         return col;
     }
-    let mut a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
+    let mut a = (col & COLOR32_A_MASK) >> IM_COL32_A_SHIFT;
     a = (a * style.alpha); // We don't need to clamp 0..255 because style.Alpha is in 0..1 range.
-    (col & !IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT)
+    (col & !COLOR32_A_MASK) | (a << IM_COL32_A_SHIFT)
 }
 
 pub fn color_convert_u32_to_float4(col: u32) -> Vector4D {

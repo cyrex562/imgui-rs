@@ -711,11 +711,11 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const Vector2D& pos, 
     if (!glyph || !glyph.Visible)
         return;
     if (glyph.Colored)
-        col |= ~IM_COL32_A_MASK;
+        col |= ~COLOR32_A_MASK;
     let scale =  (size >= 0.0) ? (size / FontSize) : 1.0;
     let x =  f32::floor(pos.x);
     let y =  f32::floor(pos.y);
-    draw_list.PrimReserve(6, 4);
+    draw_list.prim_reserve(6, 4);
     draw_list.PrimRectUV(Vector2D::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), Vector2D::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), Vector2D::new(glyph.U0, glyph.V0), Vector2D::new(glyph.U1, glyph.V1), col);
 }
 
@@ -767,14 +767,14 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
     // Reserve vertices for remaining worse case (over-reserving is useful and easily amortized)
     let vtx_count_max = (text_end - s) * 4;
     let idx_count_max = (text_end - s) * 6;
-    let idx_expected_size = draw_list.IdxBuffer.size + idx_count_max;
-    draw_list.PrimReserve(idx_count_max, vtx_count_max);
+    let idx_expected_size = draw_list.idx_buffer.size + idx_count_max;
+    draw_list.prim_reserve(idx_count_max, vtx_count_max);
 
     ImDrawVert* vtx_write = draw_list->_VtxWritePtr;
     ImDrawIdx* idx_write = draw_list->_IdxWritePtr;
-    unsigned int vtx_current_idx = draw_list->_VtxCurrentIdx;
+    unsigned int vtx_current_idx = draw_list->vtx_current_idx;
 
-    const ImU32 col_untinted = col | ~IM_COL32_A_MASK;
+    const ImU32 col_untinted = col | ~COLOR32_A_MASK;
 
     while (s < text_end)
     {
@@ -886,8 +886,8 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
 
                 // We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug builds. Inlined here:
                 {
-                    idx_write[0] = (ImDrawIdx)(vtx_current_idx); idx_write[1] = (ImDrawIdx)(vtx_current_idx+1); idx_write[2] = (ImDrawIdx)(vtx_current_idx+2);
-                    idx_write[3] = (ImDrawIdx)(vtx_current_idx); idx_write[4] = (ImDrawIdx)(vtx_current_idx+2); idx_write[5] = (ImDrawIdx)(vtx_current_idx+3);
+                    idx_write[0] = (vtx_current_idx); idx_write[1] = (vtx_current_idx+1); idx_write[2] = (vtx_current_idx+2);
+                    idx_write[3] = (vtx_current_idx); idx_write[4] = (vtx_current_idx+2); idx_write[5] = (vtx_current_idx+3);
                     vtx_write[0].pos.x = x1; vtx_write[0].pos.y = y1; vtx_write[0].col = glyph_col; vtx_write[0].uv.x = u1; vtx_write[0].uv.y = v1;
                     vtx_write[1].pos.x = x2; vtx_write[1].pos.y = y1; vtx_write[1].col = glyph_col; vtx_write[1].uv.x = u2; vtx_write[1].uv.y = v1;
                     vtx_write[2].pos.x = x2; vtx_write[2].pos.y = y2; vtx_write[2].col = glyph_col; vtx_write[2].uv.x = u2; vtx_write[2].uv.y = v2;
@@ -902,12 +902,12 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
     }
 
     // Give back unused vertices (clipped ones, blanks) ~ this is essentially a PrimUnreserve() action.
-    draw_list.VtxBuffer.size = (vtx_write - draw_list.VtxBuffer.data); // Same as calling shrink()
-    draw_list.IdxBuffer.size = (idx_write - draw_list.IdxBuffer.data);
-    draw_list.cmd_buffer[draw_list.cmd_buffer.size - 1].elem_count -= (idx_expected_size - draw_list.IdxBuffer.size);
+    draw_list.vtx_buffer.size = (vtx_write - draw_list.vtx_buffer.data); // Same as calling shrink()
+    draw_list.idx_buffer.size = (idx_write - draw_list.idx_buffer.data);
+    draw_list.cmd_buffer[draw_list.cmd_buffer.size - 1].elem_count -= (idx_expected_size - draw_list.idx_buffer.size);
     draw_list->_VtxWritePtr = vtx_write;
     draw_list->_IdxWritePtr = idx_write;
-    draw_list->_VtxCurrentIdx = vtx_current_idx;
+    draw_list->vtx_current_idx = vtx_current_idx;
 }
 
 

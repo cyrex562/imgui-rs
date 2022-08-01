@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::os::raw::c_char;
 use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, INVALID_ID, window};
-use crate::color::{IM_COL32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
+use crate::color::{COLOR32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
 use crate::draw::data::add_root_window_to_draw_data;
 use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
 use crate::frame::end_frame;
@@ -155,8 +155,8 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         // min   max   ellipsis_max
         //          <-> this is generally some padding value
 
-        const ImFont* font = draw_list->_Data.Font;
-        let font_size = draw_list->_Data.font_size;
+        const ImFont* font = draw_list->data.Font;
+        let font_size = draw_list->data.font_size;
         const char* text_end_ellipsis = None;
 
         ImWchar ellipsis_char = font.EllipsisChar;
@@ -174,7 +174,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         if (ellipsis_char_count > 1)
         {
             // Full ellipsis size without free spacing after it.
-            let spacing_between_dots = 1.0 * (draw_list->_Data.font_size / font.font_size);
+            let spacing_between_dots = 1.0 * (draw_list->data.font_size / font.font_size);
             ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots;
             ellipsis_total_width = ellipsis_glyph_width * ellipsis_char_count - spacing_between_dots;
         }
@@ -482,7 +482,7 @@ pub fn render(g: &mut Context)
 // static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col)
 pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Window, color: u32)
 {
-    if (color & IM_COL32_A_MASK) == 0 {
+    if (color & COLOR32_A_MASK) == 0 {
         return;
     }
 
@@ -549,7 +549,7 @@ pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Wind
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir dir, float scale)
 {
-    let h = draw_list->_Data.font_size * 1.00;
+    let h = draw_list->data.font_size * 1.00;
     let r =  h * 0.40 * scale;
     Vector2D center = pos + Vector2D::new(h * 0.50, h * 0.50 * scale);
 
@@ -580,7 +580,7 @@ void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir
 
 void ImGui::render_bullet(ImDrawList* draw_list, Vector2D pos, ImU32 col)
 {
-    draw_list.AddCircleFilled(pos, draw_list->_Data.font_size * 0.20, col, 8);
+    draw_list.AddCircleFilled(pos, draw_list->data.font_size * 0.20, col, 8);
 }
 
 void ImGui::RenderCheckMark(ImDrawList* draw_list, Vector2D pos, ImU32 col, float sz)
@@ -716,7 +716,7 @@ void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D
 {
     if ((flags & DrawFlags::RoundCornersMask_) == 0)
         flags = DrawFlags::RoundCornersDefault_;
-    if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF)
+    if (((col & COLOR32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF)
     {
         ImU32 col_bg1 = get_color_u32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
         ImU32 col_bg2 = get_color_u32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));

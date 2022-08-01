@@ -18,7 +18,7 @@ pub mod visibility;
 
 use std::ptr::null_mut;
 
-use crate::color::IM_COL32_A_MASK;
+use crate::color::COLOR32_A_MASK;
 use crate::column::OldColumns;
 use crate::condition::Condition;
 use crate::config::ConfigFlags;

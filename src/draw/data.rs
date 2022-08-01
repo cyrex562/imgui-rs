@@ -1,7 +1,9 @@
 use crate::context::Context;
 use crate::draw::list::{add_draw_list_to_draw_data, DrawList};
-use crate::types::Id32;
+use crate::draw::vertex::DrawVertex;
+use crate::types::{DrawIndex, Id32};
 use crate::vectors::two_d::Vector2D;
+use crate::vectors::Vector4D;
 use crate::window::{checks, get, Window, WindowFlags};
 
 /// All draw data to render a Dear ImGui frame
@@ -40,31 +42,45 @@ impl DrawData {
         self.owner_viewport = 0;
     }
     //      void  de_index_all_buffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
-    pub fn de_index_all_buffers(&mut self) {
-         ImVector<ImDrawVert> new_vtx_buffer;
-    total_vtx_count = total_idx_count = 0;
-    for (int i = 0; i < cmd_lists_count; i += 1)
-    {
-        ImDrawList* cmd_list = CmdLists[i];
-        if (cmd_list.IdxBuffer.empty())
-            continue;
-        new_vtx_buffer.resize(cmd_list.IdxBuffer.size);
-        for (int j = 0; j < cmd_list.IdxBuffer.size; j += 1)
-            new_vtx_buffer[j] = cmd_list.VtxBuffer[cmd_list.IdxBuffer[j]];
-        cmd_list.VtxBuffer.swap(new_vtx_buffer);
-        cmd_list.IdxBuffer.resize(0);
-        total_vtx_count += cmd_list.VtxBuffer.size;
+    pub fn de_index_all_buffers(&mut self, g: &mut Context) {
+        // ImVector<ImDrawVert> new_vtx_buffer;
+        let mut new_vtx_buffer: Vec<DrawVertex> = vec![];
+        self.total_vtx_count = 0;
+        self.total_idx_count = 0;
+        // for (int i = 0; i < cmd_lists_count; i += 1)
+        for i in 0..self.cmd_lists_count {
+            // ImDrawList* cmd_list = CmdLists[i];
+            let cmd_list_id = self.cmd_lists[i];
+            let cmd_list = g.get_draw_list(cmd_list_id);
+            if cmd_list.idx_buffer.is_empty() {
+                continue;
+            }
+            new_vtx_buffer.resize(cmd_list.idx_buffer.len(), DrawVertex::default());
+            // for (int j = 0; j < cmd_list.idx_buffer.size; j += 1)
+            for j in 0..cmd_list.idx_buffer.len() {
+                new_vtx_buffer[j] = cmd_list.vtx_buffer[cmd_list.idx_buffer[j]];
+            }
+            // cmd_list.vtx_buffer.swap(new_vtx_buffer);
+            cmd_list.vtx_buffer = new_vtx_buffer.to_owned();
+            // cmd_list.idx_buffer.resize(0);
+            cmd_list.idx_buffer.clear();
+            self.total_vtx_count += cmd_list.vtx_buffer.size;
     }
     }
     //      void  scale_clip_rects(const Vector2D& fb_scale); // Helper to scale the clip_rect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
-    pub fn scale_clip_rects(&mut self, fb_scale: &Vector2D) {
-        for (int i = 0; i < cmd_lists_count; i += 1)
-    {
-        ImDrawList* cmd_list = CmdLists[i];
-        for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.size; cmd_i += 1)
+    pub fn scale_clip_rects(&mut self, g: &mut Context, fb_scale: &Vector2D) {
+        // for (int i = 0; i < cmd_lists_count; i += 1)
+    for i in 0..self.cmd_lists.len()
         {
-            ImDrawCmd* cmd = &cmd_list.cmd_buffer[cmd_i];
-            cmd.clip_rect = Vector4D(cmd.clip_rect.x * fb_scale.x, cmd.clip_rect.y * fb_scale.y, cmd.clip_rect.z * fb_scale.x, cmd.clip_rect.w * fb_scale.y);
+        // ImDrawList* cmd_list = CmdLists[i];
+        let cmd_list_id = self.cmd_lists[i];
+            let cmd_list = g.get_draw_list(cmd_list_id);
+            // for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.size; cmd_i += 1)
+            for cmd_i in 0 .. cmd_list.cmd_buffer.len()
+        {
+            // ImDrawCmd* cmd = &cmd_list.cmd_buffer[cmd_i];
+            let cmd = &mut cmd_list.cmd_buffer[cmd_i];
+            cmd.clip_rect = Vector4D::new(cmd.clip_rect.x * fb_scale.x, cmd.clip_rect.y * fb_scale.y, cmd.clip_rect.z * fb_scale.x, cmd.clip_rect.w * fb_scale.y);
         }
     }
     }

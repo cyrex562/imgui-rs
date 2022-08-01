@@ -5,7 +5,7 @@ use crate::axis::Axis;
 use crate::column::OldColumns;
 use crate::types::DataAuthority::Window;
 use crate::dock::node::{DockNode, DockNodeFlags};
-use crate::draw::cmd::DrawCmd;
+use crate::draw::command::DrawCmd;
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::list::{DrawList, DrawListFlags, get_foreground_draw_list};
 use crate::font::Font;
@@ -740,7 +740,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
     int cmd_count = draw_list.cmd_buffer.size;
     if (cmd_count > 0 && draw_list.cmd_buffer.back().elem_count == 0 && draw_list.cmd_buffer.back().user_callback == None)
         cmd_count--;
-    bool node_open = TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->VtxBuffer.size, draw_list->IdxBuffer.size, cmd_count);
+    bool node_open = TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->vtx_buffer.size, draw_list->idx_buffer.size, cmd_count);
     if (draw_list == GetWindowDrawList())
     {
         same_line();
@@ -779,8 +779,8 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
 
         // Calculate approximate coverage area (touched pixel count)
         // This will be in pixels squared as long there's no post-scaling happening to the renderer output.
-        const ImDrawIdx* idx_buffer = (draw_list->IdxBuffer.size > 0) ? draw_list->IdxBuffer.data : None;
-        const ImDrawVert* vtx_buffer = draw_list->VtxBuffer.data + pcmd->VtxOffset;
+        const ImDrawIdx* idx_buffer = (draw_list->idx_buffer.size > 0) ? draw_list->idx_buffer.data : None;
+        const ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + pcmd->VtxOffset;
         let total_area =  0.0;
         for (unsigned int idx_n = pcmd->IdxOffset; idx_n < pcmd->IdxOffset + pcmd->ElemCount; )
         {
@@ -839,8 +839,8 @@ pub fn debug_node_draw_cmd_show_mesh_and_bounding_box(g: &mut Context, out_draw_
     out_draw_list.flags &= ~DrawListFlags::AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
     for (unsigned int idx_n = draw_cmd->IdxOffset, idx_end = draw_cmd->IdxOffset + draw_cmd->ElemCount; idx_n < idx_end; )
     {
-        ImDrawIdx* idx_buffer = (draw_list->IdxBuffer.size > 0) ? draw_list->IdxBuffer.data : None; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
-        ImDrawVert* vtx_buffer = draw_list->VtxBuffer.data + draw_cmd->VtxOffset;
+        ImDrawIdx* idx_buffer = (draw_list->idx_buffer.size > 0) ? draw_list->idx_buffer.data : None; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
+        ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + draw_cmd->VtxOffset;
 
         Vector2D triangle[3];
         for (int n = 0; n < 3; n += 1, idx_n += 1)
