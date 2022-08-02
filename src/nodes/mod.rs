@@ -73,13 +73,13 @@ Vector2D GetClosestPointOnCubicBezier(let num_segments, const Vector2D& p, const
     // IM_ASSERT(num_segments > 0);
     Vector2D p_last = cb.P0;
     Vector2D p_closest;
-    float  p_closest_dist = f32::MAX;
-    float  t_step = 1.0 / num_segments;
+    let p_closest_dist =  f32::MAX;
+    let t_step =  1.0 / num_segments;
     for (int i = 1; i <= num_segments;  += 1i)
     {
         Vector2D p_current = EvalCubicBezier(t_step * i, cb.P0, cb.P1, cb.P2, cb.P3);
         Vector2D p_line = ImLineClosestPoint(p_last, p_current, p);
-        float  dist = ImLengthSqr(p - p_line);
+        let dist =  ImLengthSqr(p - p_line);
         if (dist < p_closest_dist)
         {
             p_closest = p_line;
@@ -1166,7 +1166,7 @@ ImOptionalIndex ResolveHoveredPin(
     const ImObjectPool<ImPinData>& pins,
     const ImVector<int>&           occluded_pin_indices)
 {
-    float           smallest_distance = f32::MAX;
+    let smallest_distance =  f32::MAX;
     ImOptionalIndex pin_idx_with_smallest_distance;
 
     let hover_radius_sqr = GImNodes.Style.PinHoverRadius * GImNodes.Style.PinHoverRadius;
@@ -1236,7 +1236,7 @@ ImOptionalIndex ResolveHoveredLink(
     const ImObjectPool<ImLinkData>& links,
     const ImObjectPool<ImPinData>&  pins)
 {
-    float           smallest_distance = f32::MAX;
+    let smallest_distance =  f32::MAX;
     ImOptionalIndex link_idx_with_smallest_distance;
 
     // There are two ways a link can be detected as "hovered".
@@ -2723,7 +2723,7 @@ pub fn push_style_vector2d(g: &mut Context, item: NodesStyleVar, value: &Vector2
     let var_info = get_style_var_info(item);
     if var_info.Type == DataType::Float && var_info.count == 2
     {
-        // Vector2D& style_var = *(Vector2D*)var_info.GetVarPtr(&GImNodes.Style);
+        // Vector2D& style_var = *var_info.GetVarPtr(&GImNodes.Style);
         let style_var = var_info.get_var_vector2d(IM_NODES.style);
         IM_NODES.style_modifier_stack.push(NodesStyleVarElement::new(item, style_var));
         style_var = value;

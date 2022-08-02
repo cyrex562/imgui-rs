@@ -119,7 +119,7 @@ pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: Option<&HashSet<Pop
 pub fn is_popup_open_2(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiID id = (popup_flags & ImGuiPopupFlags_AnyPopupId) ? 0 : g.current_window.get_id(str_id);
+    ImGuiID id = if (popup_flags & ImGuiPopupFlags_AnyPopupId) { 0 }else{ g.current_window.get_id(str_id)};
     if ((popup_flags & ImGuiPopupFlags_AnyPopupLevel) && id != 0)
         // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel."); // But non-string version is legal and used internally
     return is_popup_open(id, popup_flags);
@@ -129,7 +129,7 @@ pub fn is_popup_open_2(g: &mut Context, str_id: &str, popup_flags: &HashSet<Popu
 pub fn get_top_most_popup_modal(g: &mut Context) -> &mut Window
 {
     // ImGuiContext& g = *GImGui;
-    for (int n = g.open_popup_stack.size - 1; n >= 0; n--)
+    for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
         if (ImGuiWindow* popup = g.open_popup_stack.data[n].Window)
             if (popup.flags & WindowFlags::Modal)
                 return popup;
@@ -140,7 +140,7 @@ pub fn get_top_most_popup_modal(g: &mut Context) -> &mut Window
 pub fn get_top_most_and_visible_popup_modal(g: &mut Context) -> &mut Window
 {
     // ImGuiContext& g = *GImGui;
-    for (int n = g.open_popup_stack.size - 1; n >= 0; n--)
+    for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
         if (ImGuiWindow* popup = g.open_popup_stack.data[n].Window)
             if ((popup.flags & WindowFlags::Modal) && is_window_active_and_visible(popup))
                 return popup;
@@ -184,7 +184,7 @@ pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags
     popup_ref.OpenFrameCount = g.frame_count;
     popup_ref.OpenParentId = parent_window.idStack.back();
     popup_ref.open_popupPos = NavCalcPreferredRefPos();
-    popup_ref.OpenMousePos = is_mouse_pos_valid(&g.io.mouse_pos) ? g.io.mouse_pos : popup_ref.open_popupPos;
+    popup_ref.OpenMousePos = if is_mouse_pos_valid(&g.io.mouse_pos) { g.io.mouse_pos }else{ popup_ref.open_popupPos};
 
     IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopupEx(0x%08X)\n", id);
     if (g.open_popup_stack.size < current_stack_size + 1)
@@ -268,7 +268,7 @@ pub fn close_popups_except_modals(g: &mut Context)
     // ImGuiContext& g = *GImGui;
 
     int popup_count_to_keep;
-    for (popup_count_to_keep = g.open_popup_stack.size; popup_count_to_keep > 0; popup_count_to_keep--)
+    for (popup_count_to_keep = g.open_popup_stack.size; popup_count_to_keep > 0; popup_count_to_keep -= 1 )
     {
         ImGuiWindow* window = g.open_popup_stack[popup_count_to_keep - 1].Window;
         if (!window || window.flags & WindowFlags::Modal)
@@ -326,7 +326,7 @@ pub fn close_current_popup(g: &mut Context)
                 close_parent = true;
         if (!close_parent)
             break;
-        popup_idx--;
+        popup_idx -= 1 ;
     }
     IMGUI_DEBUG_LOG_POPUP("[popup] CloseCurrentPopup %d -> %d\n", g.begin_popup_stack.size - 1, popup_idx);
     ClosePopupToLevel(popup_idx, true);
@@ -442,7 +442,7 @@ pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &Has
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
     {
-        ImGuiID id = str_id ? window.get_id(str_id) : g.last_item_data.id;    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
+        ImGuiID id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
         // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
         open_popupEx(id, popup_flags);
     }
@@ -471,7 +471,7 @@ pub fn begin_popup_context_item(g: &mut Context, str_id: &str, popup_flags: &Has
     ImGuiWindow* window = g.current_window;
     if (window.skip_items)
         return false;
-    ImGuiID id = str_id ? window.get_id(str_id) : g.last_item_data.id;    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
+    ImGuiID id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
     // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
@@ -525,9 +525,9 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
     if (policy == ImGuiPopupPositionPolicy_ComboBox)
     {
         const ImGuiDir dir_prefered_order[Direction::COUNT] = { Direction::Down, Direction::Right, Direction::Left, Direction::Up };
-        for (int n = (*last_dir != Direction::None) ? -1 : 0; n < Direction::COUNT; n += 1)
+        for (int n  (*last_dir != Direction::None) ? -1 : 0; n < Direction::COUNT; n += 1)
         {
-            const ImGuiDir dir = (n == -1) ? *last_dir : dir_prefered_order[n];
+            const ImGuiDir dir = if (n == -1) { *last_dir }else{ dir_prefered_order[n]};
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
             Vector2D pos;
@@ -549,12 +549,12 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
         const ImGuiDir dir_prefered_order[Direction::COUNT] = { Direction::Right, Direction::Down, Direction::Up, Direction::Left };
         for (int n = (*last_dir != Direction::None) ? -1 : 0; n < Direction::COUNT; n += 1)
         {
-            const ImGuiDir dir = (n == -1) ? *last_dir : dir_prefered_order[n];
+            const ImGuiDir dir = if (n == -1) { *last_dir }else{ dir_prefered_order[n]};
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
 
             let avail_w = (dir == Direction::Left ? r_avoid.min.x : r_outer.max.x) - (dir == Direction::Right ? r_avoid.max.x : r_outer.min.x);
-            let avail_h = (dir == Direction::Up ? r_avoid.min.y : r_outer.max.y) - (dir == Direction::Down ? r_avoid.max.y : r_outer.min.y);
+            let avail_h = if (dir == Direction::Up ? r_avoid.min.y : r_outer.max.y) - (dir == Direction::Down { r_avoid.max.y }else{ r_outer.min.y)};
 
             // If there not enough room on one axis, there's no point in positioning on a side on this axis (e.g. when not enough width, use a top/bottom position to maximize available width)
             if (avail_w < size.x && (dir == Direction::Left || dir == Direction::Right))

@@ -458,7 +458,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
         if (n > 0 && viewport.last_frame_active < g.frame_count - 2)
         {
             DestroyViewport(viewport);
-            n--;
+            n -= 1 ;
             continue;
         }
 

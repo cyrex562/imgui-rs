@@ -31,7 +31,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
 
     Vector2D scale = bb.GetSize() / viewport.size;
     Vector2D off = bb.min - viewport.pos * scale;
-    let alpha_mul =  (viewport.flags & ImGuiViewportFlags_Minimized) ? 0.30 : 1.00;
+    let alpha_mul =  if(viewport.flags & ImGuiViewportFlags_Minimized) { 0.30 }else{ 1.00};
     window.draw_list->AddRectFilled(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul * 0.40));
     for (int i = 0; i != g.windows.len(); i += 1)
     {
@@ -153,7 +153,7 @@ pub fn show_font_atlas(g: &mut Context, atlas: &mut FontAtlas)
     {
         Vector4D tint_col = Vector4D(1.0, 1.0, 1.0, 1.0);
         Vector4D border_col = Vector4D(1.0, 1.0, 1.0, 0.5);
-        Image(atlas->TexID, Vector2D::new((float)atlas->TexWidth, atlas->TexHeight), Vector2D::new(0.0, 0.0), Vector2D::new(1.0, 1.0), tint_col, border_col);
+        Image(atlas->TexID, Vector2D::new(atlas->TexWidth, atlas->TexHeight), Vector2D::new(0.0, 0.0), Vector2D::new(1.0, 1.0), tint_col, border_col);
         TreePop();
     }
 }
@@ -535,7 +535,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
         int active_id_using_key_input_count = 0;
         for (int n = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n += 1)
-            active_id_using_key_input_count += g.active_id_using_key_input_mask[n] ? 1 : 0;
+            active_id_using_key_input_count += if g.active_id_using_key_input_mask[n] { 1 }else{ 0};
         text("ActiveIdUsing: Wheel: %d, NavDirMask: %x, NavInputMask: %x, KeyInputMask: %d key(s)", g.active_id_using_mouse_wheel, g.active_id_using_nav_dir_mask, g.active_id_using_nav_input_mask, active_id_using_key_input_count);
         text("hovered_id: 0x%08X (%.2 sec), AllowOverlap: %d", g.hovered_id_previous_frame, g.hovered_id_timer, g.hovered_id_allow_overlap); // Not displaying g.hovered_id as it is update mid-frame
         text("DragDrop: %d, source_id = 0x%08X, Payload \"%s\" (%d bytes)", g.drag_drop_active, g.drag_drop_payload.source_id, g.drag_drop_payload.dataType, g.drag_drop_payload.dataSize);
@@ -596,8 +596,8 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 for (int column_n = 0; column_n < table->ColumnsCount; column_n += 1)
                 {
                     Rect r = Funcs::GetTableRect(table, cfg->ShowTablesRectsType, column_n);
-                    ImU32 col = (table->HoveredColumnBody == column_n) ? IM_COL32(255, 255, 128, 255) : IM_COL32(255, 0, 128, 255);
-                    let thickness =  (table->HoveredColumnBody == column_n) ? 3.0 : 1.0;
+                    ImU32 col = if (table->HoveredColumnBody == column_n) { IM_COL32(255, 255, 128, 255) }else{ IM_COL32(255, 0, 128, 255)};
+                    let thickness =  if (table->HoveredColumnBody == column_n) { 3.0 }else{ 1.0};
                     draw_list->AddRect(r.min, r.max, col, 0.0, 0, thickness);
                 }
             }
@@ -616,7 +616,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         char buf[64] = "";
         char* p = buf;
         ImGuiDockNode* node = g.hovered_dock_node;
-        ImDrawList* overlay_draw_list = node->HostWindow ? get_foreground_draw_list(node->HostWindow) : get_foreground_draw_list(get_main_viewport());
+        ImDrawList* overlay_draw_list = if node->HostWindow { get_foreground_draw_list(node->HostWindow) }else{ get_foreground_draw_list(get_main_viewport())};
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "dock_id: %x%s\n", node->ID, node->is_central_node() ? " *central_node*" : "");
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "window_class: %08X\n", node->WindowClassclass_id);
         p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "size: (%.0, %.0)\n", node.size.x, node.size.y);
@@ -682,7 +682,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
     const bool is_active = (g.frame_count - node->last_frame_active < 2);  // Submitted
     if (!is_alive) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open;
-    ImGuiTreeNodeFlags tree_node_flags = node->IsFocused ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
+    ImGuiTreeNodeFlags tree_node_flags = if node->IsFocused { ImGuiTreeNodeFlags_Selected }else{ ImGuiTreeNodeFlags_None};
     if (node->Windows.size > 0)
         open = TreeNodeEx((void*)(intptr_t)node->ID, tree_node_flags, "%s 0x%04X%s: %d windows (vis: '%s')", label, node->ID, node->is_visible ? "" : " (hidden)", node->Windows.size, node->VisibleWindow ? node->VisibleWindow->Name : "None");
     else
@@ -739,7 +739,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
     ImGuiMetricsConfig* cfg = &g.DebugMetricsConfig;
     int cmd_count = draw_list.cmd_buffer.size;
     if (cmd_count > 0 && draw_list.cmd_buffer.back().elem_count == 0 && draw_list.cmd_buffer.back().user_callback == None)
-        cmd_count--;
+        cmd_count -= 1 ;
     bool node_open = TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->vtx_buffer.size, draw_list->idx_buffer.size, cmd_count);
     if (draw_list == GetWindowDrawList())
     {
@@ -750,7 +750,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         return;
     }
 
-    ImDrawList* fg_draw_list = viewport ? get_foreground_draw_list(viewport) : None; // Render additional visuals into the top-most draw list
+    ImDrawList* fg_draw_list = if viewport { get_foreground_draw_list(viewport) }else{ None}; // Render additional visuals into the top-most draw list
     if (window && IsItemHovered() && fg_draw_list)
         fg_draw_list->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
     if (!node_open)
@@ -779,14 +779,14 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
 
         // Calculate approximate coverage area (touched pixel count)
         // This will be in pixels squared as long there's no post-scaling happening to the renderer output.
-        const ImDrawIdx* idx_buffer = (draw_list->idx_buffer.size > 0) ? draw_list->idx_buffer.data : None;
+        const ImDrawIdx* idx_buffer = if (draw_list->idx_buffer.size > 0) { draw_list->idx_buffer.data }else{ None};
         const ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + pcmd->VtxOffset;
         let total_area =  0.0;
         for (unsigned int idx_n = pcmd->IdxOffset; idx_n < pcmd->IdxOffset + pcmd->ElemCount; )
         {
             Vector2D triangle[3];
             for (int n = 0; n < 3; n += 1, idx_n += 1)
-                triangle[n] = vtx_buffer[idx_buffer ? idx_buffer[idx_n] : idx_n].pos;
+                triangle[n] = if vtx_buffer[idx_buffer { idx_buffer[idx_n] }else{ idx_n].pos};
             total_area += ImTriangleArea(triangle[0], triangle[1], triangle[2]);
         }
 
@@ -839,7 +839,7 @@ pub fn debug_node_draw_cmd_show_mesh_and_bounding_box(g: &mut Context, out_draw_
     out_draw_list.flags &= ~DrawListFlags::AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
     for (unsigned int idx_n = draw_cmd->IdxOffset, idx_end = draw_cmd->IdxOffset + draw_cmd->ElemCount; idx_n < idx_end; )
     {
-        ImDrawIdx* idx_buffer = (draw_list->idx_buffer.size > 0) ? draw_list->idx_buffer.data : None; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
+        ImDrawIdx* idx_buffer = if (draw_list->idx_buffer.size > 0) { draw_list->idx_buffer.data }else{ None}; // We don't hold on those pointers past iterations as ->add_polyline() may invalidate them if out_draw_list==draw_list
         ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + draw_cmd->VtxOffset;
 
         Vector2D triangle[3];
@@ -887,7 +887,7 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
     char c_str[5];
     text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
     text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
-    let surface_sqrt = ImSqrt((float)font->MetricsTotalSurface);
+    let surface_sqrt = ImSqrt(font->MetricsTotalSurface);
     text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
     for (int config_i = 0; config_i < font->ConfigDataCount; config_i += 1)
         if (font->ConfigData)
@@ -1063,7 +1063,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
 
     // ImGuiContext& g = *GImGui;
     const bool is_active = window.was_active;
-    ImGuiTreeNodeFlags tree_node_flags = (window == g.nav_window) ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_None;
+    ImGuiTreeNodeFlags tree_node_flags = if (window == g.nav_window) { ImGuiTreeNodeFlags_Selected }else{ ImGuiTreeNodeFlags_None};
     if (!is_active) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.name, is_active ? "" : " *Inactive*");
     if (!is_active) { pop_style_color(); }
@@ -1132,7 +1132,7 @@ pub fn debug_node_windows_list(g: &mut Context, windows: &mut Vec<Id32>, label: 
 {
     if (!TreeNode(label, "%s (%d)", label, windows.len()))
         return;
-    for (int i = windows.len() - 1; i >= 0; i--) // Iterate front to back
+    for (int i = windows.len() - 1; i >= 0; i -= 1 ) // Iterate front to back
     {
         push_id((*windows)[i]);
         DebugNodeWindow((*windows)[i], "window");
@@ -1200,7 +1200,7 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
 
     // Update queries. The steps are: -1: query Stack, >= 0: query each stack item
     // We can only perform 1 id Info query every frame. This is designed so the GetID() tests are cheap and constant-time
-    const ImGuiID query_id = g.hovered_id_previous_frame ? g.hovered_id_previous_frame : g.active_id;
+    const ImGuiID query_id = if g.hovered_id_previous_frame { g.hovered_id_previous_frame }else{ g.active_id};
     if (tool->QueryId != query_id)
     {
         tool->QueryId = query_id;
@@ -1242,7 +1242,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
         tool->StackLevel += 1;
         tool->Results.resize(window.idStack.size + 1, ImGuiStackLevelInfo());
         for (int n = 0; n < window.idStack.size + 1; n += 1)
-            tool->Results[n].id = (n < window.idStack.size) ? window.idStack[n] : id;
+            tool->Results[n].id = if (n < window.idStack.size) { window.idStack[n] }else{ id};
         return;
     }
 
@@ -1280,7 +1280,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
 pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format_for_ui: bool, buf: &mut String, buf_size: usize) -> i32
 {
     ImGuiStackLevelInfo* info = &tool->Results[n];
-    ImGuiWindow* window = (info->Desc[0] == 0 && n == 0) ? find_window_by_id(info->ID) : None;
+    ImGuiWindow* window = if (info->Desc[0] == 0 && n == 0) { find_window_by_id(info->ID) }else{ None};
     if (window)                                                                 // Source: window name (because the root id don't call GetID() and so doesn't get hooked)
         return ImFormatString(buf, buf_size, format_for_ui ? "\"%s\" [window]" : "%s", window.name);
     if (info->QuerySuccess)                                                     // Source: GetID() hooks (prioritize over ItemInfo() because we frequently use patterns like: push_id(str), Button("") where they both have same id)

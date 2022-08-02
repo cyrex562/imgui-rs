@@ -24,7 +24,7 @@ void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int ve
 }
 
 // Distribute UV over (a, b) rectangle
-void ImGui::ShadeVertsLinearUV(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, const Vector2D& a, const Vector2D& b, const Vector2D& uv_a, const Vector2D& uv_b, bool clamp)
+void shade_verts_linear_uv(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, const Vector2D& a, const Vector2D& b, const Vector2D& uv_a, const Vector2D& uv_b, bool clamp)
 {
     const Vector2D size = b - a;
     const Vector2D uv_size = uv_b - uv_a;

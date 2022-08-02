@@ -230,7 +230,7 @@ pub fn set_current_font(g: &mut Context, font: &mut Font)
 
     ImFontAtlas* atlas = g.font.container_atlas;
     g.draw_list_shared_data.TexUvWhitePixel = atlas.TexUvWhitePixel;
-    g.draw_list_shared_data.TexUvLines = atlas.TexUvLines;
+    g.draw_list_shared_data.tex_uv_lines = atlas.tex_uv_lines;
     g.draw_list_shared_data.font = g.font;
     g.draw_list_shared_data.font_size = g.font_size;
 }
@@ -250,7 +250,7 @@ pub fn push_font(g: &mut Context, font: &mut Font)
 pub fn pop_font(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    g.current_window.draw_list.PopTextureID();
+    g.current_window.draw_list.pop_texture_id();
     g.font_stack.pop_back();
     sec_current_font(g.font_stack.empty() ? get_default_font() : g.font_stack.back());
 }
@@ -716,11 +716,11 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const Vector2D& pos, 
     let x =  f32::floor(pos.x);
     let y =  f32::floor(pos.y);
     draw_list.prim_reserve(6, 4);
-    draw_list.PrimRectUV(Vector2D::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), Vector2D::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), Vector2D::new(glyph.U0, glyph.V0), Vector2D::new(glyph.U1, glyph.V1), col);
+    draw_list.prim_rect_uv(Vector2D::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), Vector2D::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), Vector2D::new(glyph.U0, glyph.V0), Vector2D::new(glyph.U1, glyph.V1), col);
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
+void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -770,9 +770,9 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
     let idx_expected_size = draw_list.idx_buffer.size + idx_count_max;
     draw_list.prim_reserve(idx_count_max, vtx_count_max);
 
-    ImDrawVert* vtx_write = draw_list->_VtxWritePtr;
-    ImDrawIdx* idx_write = draw_list->_IdxWritePtr;
-    unsigned int vtx_current_idx = draw_list->vtx_current_idx;
+    ImDrawVert* vtx_write = draw_list->vtx_write_ptr;
+    ImDrawIdx* idx_write = draw_list->idx_write_ptr;
+    unsigned int self.vtx_current_idx = draw_list->vtx_current_idx;
 
     const ImU32 col_untinted = col | ~COLOR32_A_MASK;
 
@@ -884,16 +884,16 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
                 // Support for untinted glyphs
                 ImU32 glyph_col = glyph.Colored ? col_untinted : col;
 
-                // We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug builds. Inlined here:
+                // We are NOT calling prim_rect_uv() here because non-inlined causes too much overhead in a debug builds. Inlined here:
                 {
-                    idx_write[0] = (vtx_current_idx); idx_write[1] = (vtx_current_idx+1); idx_write[2] = (vtx_current_idx+2);
-                    idx_write[3] = (vtx_current_idx); idx_write[4] = (vtx_current_idx+2); idx_write[5] = (vtx_current_idx+3);
+                    idx_write[0] = (self.vtx_current_idx); idx_write[1] = (self.vtx_current_idx+1); idx_write[2] = (self.vtx_current_idx+2);
+                    idx_write[3] = (self.vtx_current_idx); idx_write[4] = (self.vtx_current_idx+2); idx_write[5] = (self.vtx_current_idx+3);
                     vtx_write[0].pos.x = x1; vtx_write[0].pos.y = y1; vtx_write[0].col = glyph_col; vtx_write[0].uv.x = u1; vtx_write[0].uv.y = v1;
                     vtx_write[1].pos.x = x2; vtx_write[1].pos.y = y1; vtx_write[1].col = glyph_col; vtx_write[1].uv.x = u2; vtx_write[1].uv.y = v1;
                     vtx_write[2].pos.x = x2; vtx_write[2].pos.y = y2; vtx_write[2].col = glyph_col; vtx_write[2].uv.x = u2; vtx_write[2].uv.y = v2;
                     vtx_write[3].pos.x = x1; vtx_write[3].pos.y = y2; vtx_write[3].col = glyph_col; vtx_write[3].uv.x = u1; vtx_write[3].uv.y = v2;
                     vtx_write += 4;
-                    vtx_current_idx += 4;
+                    self.vtx_current_idx += 4;
                     idx_write += 6;
                 }
             }
@@ -905,9 +905,9 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, 
     draw_list.vtx_buffer.size = (vtx_write - draw_list.vtx_buffer.data); // Same as calling shrink()
     draw_list.idx_buffer.size = (idx_write - draw_list.idx_buffer.data);
     draw_list.cmd_buffer[draw_list.cmd_buffer.size - 1].elem_count -= (idx_expected_size - draw_list.idx_buffer.size);
-    draw_list->_VtxWritePtr = vtx_write;
-    draw_list->_IdxWritePtr = idx_write;
-    draw_list->vtx_current_idx = vtx_current_idx;
+    draw_list->vtx_write_ptr = vtx_write;
+    draw_list->idx_write_ptr = idx_write;
+    draw_list->vtx_current_idx = self.vtx_current_idx;
 }
 
 

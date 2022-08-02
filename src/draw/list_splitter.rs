@@ -145,7 +145,7 @@ impl DrawListSplitter {
     _Current = idx;
     memcpy(&draw_list.cmd_buffer, &_Channels.data[idx]._CmdBuffer, sizeof(draw_list.cmd_buffer));
     memcpy(&draw_list.idx_buffer, &_Channels.data[idx]._IdxBuffer, sizeof(draw_list.idx_buffer));
-    draw_list->_IdxWritePtr = draw_list.idx_buffer.data + draw_list.idx_buffer.size;
+    draw_list->idx_write_ptr = draw_list.idx_buffer.data + draw_list.idx_buffer.size;
 
     // If current command is used with different settings we need to add a new command
     ImDrawCmd* curr_cmd = (draw_list.cmd_buffer.size == 0) ? None : &draw_list.cmd_buffer.data[draw_list.cmd_buffer.size - 1];

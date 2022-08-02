@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 // IM_STATIC_ASSERT(DrawFlags::RoundCornersTopLeft == (1 << 4));
-// static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
+// static inline ImDrawFlags fix_rect_corner_flags(ImDrawFlags flags)
 pub fn fix_rect_corner_flags(flags: &HashSet<DrawFlags>) -> DrawFlags {
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     // Legacy Support for hard coded ~0 (used to be a suggested equivalent to ImDrawCornerFlags_All)
@@ -42,7 +42,7 @@ pub fn fix_rect_corner_flags(flags: &HashSet<DrawFlags>) -> DrawFlags {
 pub enum DrawFlags {
     None = 0,
     Closed,
-    // PathStroke(), AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
+    // PathStroke(), add_polyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
     RoundCornersTopLeft,
     // add_rect(), add_rect_filled(), PathRect(): enable rounding top-left corner only (when rounding > 0.0, we default to all corners). Was 0x01.
     RoundCornersTopRight,

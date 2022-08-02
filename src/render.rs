@@ -36,7 +36,7 @@ use crate::window::get::find_bottom_most_visible_window_with_begin_stack;
 // Internal ImGui functions to render text
 // render_text***() functions calls ImDrawList::add_text() calls ImBitmapFont::render_text()
 // void ImGui::render_text(Vector2D pos, const char* text, const char* text_end, bool hide_text_after_hash)
-pub unsafe fn RenderText(pos: &Vector2D, text: &str, mut text_end: &str, hide_text_after_hash: bool)
+pub unsafe fn render_text(pos: &Vector2D, text: &str, mut text_end: &str, hide_text_after_hash: bool)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -68,7 +68,7 @@ pub unsafe fn RenderText(pos: &Vector2D, text: &str, mut text_end: &str, hide_te
 }
 
 // void ImGui::RenderTextWrapped(Vector2D pos, const char* text, const char* text_end, float wrap_width)
-pub fn RenderTextWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_width: f32)
+pub fn render_textWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_width: f32)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -90,7 +90,7 @@ pub fn RenderTextWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_wi
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
-void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_display_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
+void ImGui::render_textClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_display_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
 {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     Vector2D pos = pos_min;
@@ -128,7 +128,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
 
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    RenderTextClippedEx(window.draw_list, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
+    render_textClippedEx(window.draw_list, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
     if (g.LogEnabled)
         LogRenderedText(&pos_min, text, text_display_end);
 }
@@ -137,7 +137,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
-void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end_full, const Vector2D* text_size_if_known)
+void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end_full, const Vector2D* text_size_if_known)
 {
     // ImGuiContext& g = *GImGui;
     if (text_end_full == None)
@@ -196,7 +196,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
         }
 
         // Render text, render ellipsis
-        RenderTextClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, Vector2D::new(0.0, 0.0));
+        render_textClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, Vector2D::new(0.0, 0.0));
         let ellipsis_x =  pos_min.x + text_size_clipped_x;
         if (ellipsis_x + ellipsis_total_width <= ellipsis_max_x)
             for (int i = 0; i < ellipsis_char_count; i += 1)
@@ -207,7 +207,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, c
     }
     else
     {
-        RenderTextClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, Vector2D::new(0.0, 0.0));
+        render_textClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, Vector2D::new(0.0, 0.0));
     }
 
     if (g.LogEnabled)
@@ -296,7 +296,7 @@ void ImGui::render_mouse_cursor(Vector2D base_pos, float base_scale, ImGuiMouseC
         draw_list.AddImage(tex_id, pos + Vector2D::new(2, 0) * scale, pos + (Vector2D::new(2, 0) + size) * scale, uv[2], uv[3], col_shadow);
         draw_list.AddImage(tex_id, pos,                        pos + size * scale,                  uv[2], uv[3], col_border);
         draw_list.AddImage(tex_id, pos,                        pos + size * scale,                  uv[0], uv[1], col_fill);
-        draw_list.PopTextureID();
+        draw_list.pop_texture_id();
     }
 }
 

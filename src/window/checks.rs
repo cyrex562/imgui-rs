@@ -14,7 +14,7 @@ pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_
     if (display_layer_delta != 0)
         return display_layer_delta > 0;
 
-    for (int i = g.windows.len() - 1; i >= 0; i--)
+    for (int i = g.windows.len() - 1; i >= 0; i -= 1 )
     {
         ImGuiWindow* candidate_window = g.windows[i];
         if (candidate_window == potential_above)

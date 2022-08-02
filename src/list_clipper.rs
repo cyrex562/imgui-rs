@@ -342,8 +342,8 @@ bool ImGuiListClipper::Step()
                 data.Ranges.push_back(ImGuiListClipperRange::FromPositions(nav_rect_abs.min.y, nav_rect_abs.max.y, 0, 0));
 
             // Add visible range
-            let off_min = (is_nav_request && g.NavMoveClipDir == Direction::Up) ? -1 : 0;
-            let off_max = (is_nav_request && g.NavMoveClipDir == Direction::Down) ? 1 : 0;
+            let off_min = if (is_nav_request && g.NavMoveClipDir == Direction::Up) { -1 }else{ 0};
+            let off_max = if (is_nav_request && g.NavMoveClipDir == Direction::Down) { 1 }else{ 0};
             data.Ranges.push_back(ImGuiListClipperRange::FromPositions(window.clip_rect.min.y, window.clip_rect.max.y, off_min, off_max));
         }
 

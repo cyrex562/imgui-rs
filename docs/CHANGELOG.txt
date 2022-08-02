@@ -911,7 +911,7 @@ Breaking Changes:
 
 - Removed redirecting functions/enums names that were marked obsolete in 1.66 (September 2018):
     - ImGui::SetScrollHere() --> use ImGui::SetScrollHereY()
-- ImDrawList: upgraded AddPolyline()/PathStroke()'s "bool closed" parameter to use "ImDrawFlags flags".
+- ImDrawList: upgraded add_polyline()/PathStroke()'s "bool closed" parameter to use "ImDrawFlags flags".
     - bool closed = false    --> use ImDrawFlags_None, or 0
     - bool closed = true     --> use ImDrawFlags_Closed
   The matching ImDrawFlags_Closed value is guaranteed to always stay == 1 in the future.
@@ -1105,7 +1105,7 @@ Breaking Changes:
 
 - Added imgui_tables.cpp file! Manually constructed project files will need the new file added! (#3740)
 - Backends: moved all backends files (imgui_impl_XXXX.cpp, imgui_impl_XXXX.h) from examples/ to backends/. (#3513)
-- Renamed ImDrawList::AddBezierCurve() to ImDrawList::AddBezierCubic(). Kept inline redirection function (will obsolete).
+- Renamed ImDrawList::AddBezierCurve() to ImDrawList::add_bezier_cubic(). Kept inline redirection function (will obsolete).
 - Renamed ImDrawList::PathBezierCurveTo() to ImDrawList::PathBezierCubicCurveTo(). Kept inline redirection function (will obsolete).
 - Removed redirecting functions/enums names that were marked obsolete in 1.60 (April 2018):
   - io.RenderDrawListsFn pointer                -> use ImGui::GetDrawData() value and call the render function of your backend
@@ -2500,7 +2500,7 @@ Other Changes:
 - Demo: split the contents of ShowDemoWindow() into smaller functions as it appears to speed up link time with VS. (#2152)
 - Drag and Drop: Added GetDragDropPayload() to peek directly into the payload (if any) from anywhere. (#143)
 - ImGuiTextBuffer: Avoid heap allocation when empty.
-- ImDrawList: Fixed AddConvexPolyFilled() undefined behavior when passing points_count smaller than 3,
+- ImDrawList: Fixed add_convex_poly_filled() undefined behavior when passing points_count smaller than 3,
   in particular, points_count==0 could lead to a memory stomp if the draw list was previously empty.
 - Examples: DirectX10, DirectX11: Removed seemingly unnecessary calls to invalidate and recreate device objects
   in the WM_SIZE handler. (#2088) [@ice1000]
@@ -2994,7 +2994,7 @@ Breaking Changes:
 - Obsoleted `IsRootWindowOrAnyChildHovered()` in favor of using `IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows)`. Kept redirection function (will obsolete). (#1382)
 - Obsoleted `SetNextWindowContentWidth() in favor of using `SetNextWindowContentSize()`. Kept redirection function (will obsolete).
 - Renamed `ImGuiTextBuffer::append()` helper to `appendf()`, and `appendv()` to `appendfv()` for consistency. If you copied the 'Log' demo in your code, it uses appendv() so that needs to be renamed.
-- ImDrawList: Removed 'bool anti_aliased = true' final parameter of `ImDrawList::AddPolyline()` and `ImDrawList::AddConvexPolyFilled()`. Prefer manipulating ImDrawList::flags if you need to toggle them during the frame.
+- ImDrawList: Removed 'bool anti_aliased = true' final parameter of `ImDrawList::add_polyline()` and `ImDrawList::add_convex_poly_filled()`. Prefer manipulating ImDrawList::flags if you need to toggle them during the frame.
 - style, ImDrawList: Renamed `style.AntiAliasedShapes` to `style.AntiAliasedFill` for consistency and as a way to explicitly break code that manipulate those flag at runtime. You can now manipulate ImDrawList::flags.
 - style, Begin: Removed `ImGuiWindowFlags_ShowBorders` window flag. Borders are now fully set up in the ImGuiStyle structure (see e.g. `style.FrameBorderSize`, `style.WindowBorderSize`, `style.PopupBorderSize`).
   Use `ImGui::ShowStyleEditor()` to look them up.
@@ -3082,8 +3082,8 @@ Other Changes:
 - ImGuiStorage: Added BuildSortByKey() helper to rebuild storage from scratch.
 - ImFont: Added get_debug_name() helper.
 - ImFontAtlas: Added missing Thai punctuation in the get_glyph_ranges_thai() ranges. (#1396) [@nProtect]
-- ImDrawList: Removed 'bool anti_aliased = true' final parameter of ImDrawList::AddPolyline() and ImDrawList::AddConvexPolyFilled(). Anti-aliasing is controlled via the regular style.AntiAliased flags.
-- ImDrawList: Added ImDrawList::AddImageRounded() helper. (#845) [@thedmd]
+- ImDrawList: Removed 'bool anti_aliased = true' final parameter of ImDrawList::add_polyline() and ImDrawList::add_convex_poly_filled(). Anti-aliasing is controlled via the regular style.AntiAliased flags.
+- ImDrawList: Added ImDrawList::add_image_rounded() helper. (#845) [@thedmd]
 - ImDrawList: Refactored to make ImDrawList independent of ImGui. Removed static variable in PathArcToFast() which caused linking issues to some.
 - ImDrawList: Exposed ImDrawCornerFlags, replaced occurrences of ~0 with an explicit ImDrawCornerFlags_All. NB: Inversed BotLeft (prev 1<<3, now 1<<2) and BotRight (prev 1<<2, now 1<<3).
 - ImVector: Added ImVector::push_front() helper.
@@ -3778,7 +3778,7 @@ Other Changes:
   enough, with anti-aliasing enabled ImGui 1.43 is now running FASTER than 1.41.
   Made some extra effort in making the code run faster in your typical Debug build.
 - Anti-aliasing can be disabled in the ImGuiStyle structure via the AntiAliasedLines/AntiAliasedShapes fields for further gains.
-- ImDrawList: Added AddPolyline(), AddConvexPolyFilled() with optional anti-aliasing.
+- ImDrawList: Added add_polyline(), add_convex_poly_filled() with optional anti-aliasing.
 - ImDrawList: Added stateful path building and stroking API. PathLineTo(), PathArcTo(), PathRect(), PathFill(), PathStroke()
   with optional anti-aliasing.
 - ImDrawList: Added add_rect_filled_multi_color() helper.

@@ -1628,7 +1628,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
     set_next_window_pos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
     begin("###NavWindowingList", None, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
-    for (int n = g.windows_focus_order.size - 1; n >= 0; n--)
+    for (int n = g.windows_focus_order.size - 1; n >= 0; n -= 1 )
     {
         ImGuiWindow* window = g.windows_focus_order[n];
         // IM_ASSERT(window != None); // Fix static analyzers
