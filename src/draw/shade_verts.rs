@@ -19,7 +19,7 @@ void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int ve
         int r = (col0_r + col_delta_r * t);
         int g = (col0_g + col_delta_g * t);
         int b = (col0_b + col_delta_b * t);
-        vert.col = (r << IM_COL32_R_SHIFT) | (g << IM_COL32_G_SHIFT) | (b << IM_COL32_B_SHIFT) | (vert.col & COLOR_32_A_MASK);
+        vert.col = (r << IM_COL32_R_SHIFT) | (g << IM_COL32_G_SHIFT) | (b << IM_COL32_B_SHIFT) | (vert.col & COLOR32_A_MASK);
     }
 }
 

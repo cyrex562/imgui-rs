@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::draw::list::{add_draw_list_to_draw_data, DrawList};
 use crate::draw::vertex::DrawVertex;
-use crate::types::Id32;
+use crate::types::{DrawIndex, Id32};
 use crate::vectors::two_d::Vector2D;
 use crate::vectors::Vector4D;
 use crate::window::{checks, get, Window, WindowFlags};
@@ -9,24 +9,18 @@ use crate::window::{checks, get, Window, WindowFlags};
 /// All draw data to render a Dear ImGui frame
 /// (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
 /// as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
-#[derive(Debug, Clone, Default)]
-pub struct DrawData {
-    pub valid: bool,
-    // Only valid after Render() is called and before the next NewFrame() is called.
-    pub cmd_lists_count: i32,
-    // Number of ImDrawList* to render
-    pub total_idx_count: i32,
-    // For convenience, sum of all ImDrawList's idx_buffer.size
-    pub total_vtx_count: i32,
-    // For convenience, sum of all ImDrawList's vtx_buffer.size
+#[derive(Debug,Clone,Default)]
+pub struct DrawData
+{
+    pub valid: bool,                  // Only valid after Render() is called and before the next NewFrame() is called.
+    pub cmd_lists_count: i32,        // Number of ImDrawList* to render
+    pub total_idx_count: i32,        // For convenience, sum of all ImDrawList's idx_buffer.size
+    pub total_vtx_count: i32,        // For convenience, sum of all ImDrawList's vtx_buffer.size
     // ImDrawList**    cmd_lists;               // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
-    pub draw_lists: Vec<Id32>,
-    pub display_pos: Vector2D,
-    // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== get_main_viewport()->pos for the main viewport, == (0.0) in most single-viewport applications)
-    pub display_size: Vector2D,
-    // size of the viewport to render (== get_main_viewport()->size for the main viewport, == io.display_size in most single-viewport applications)
-    pub framebuffer_scale: Vector2D,
-    // Amount of pixels for each unit of display_size. Based on io.display_framebuffer_scale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
+    pub cmd_lists: Vec<Id32>,
+    pub display_pos: Vector2D,             // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== get_main_viewport()->pos for the main viewport, == (0.0) in most single-viewport applications)
+    pub display_size: Vector2D,            // size of the viewport to render (== get_main_viewport()->size for the main viewport, == io.display_size in most single-viewport applications)
+    pub framebuffer_scale: Vector2D,       // Amount of pixels for each unit of display_size. Based on io.display_framebuffer_scale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
     // ImGuiViewport*  OwnerViewport;          // viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
     pub owner_viewport: Id32,
 
@@ -41,7 +35,7 @@ impl DrawData {
         self.cmd_lists_count = 0;
         self.total_idx_count = 0;
         self.total_vtx_count = 0;
-        self.draw_lists.clear();
+        self.cmd_lists.clear();
         self.display_pos.clear();
         self.display_size.clear();
         self.framebuffer_scale.clear();
@@ -51,50 +45,55 @@ impl DrawData {
     pub fn de_index_all_buffers(&mut self, g: &mut Context) {
         // ImVector<ImDrawVert> new_vtx_buffer;
         let mut new_vtx_buffer: Vec<DrawVertex> = vec![];
-        total_vtx_count = total_idx_count = 0;
+        self.total_vtx_count = 0;
+        self.total_idx_count = 0;
         // for (int i = 0; i < cmd_lists_count; i += 1)
-        for i in 0..self.draw_lists.len() {
+        for i in 0..self.cmd_lists_count {
             // ImDrawList* cmd_list = CmdLists[i];
-            let draw_list_id = self.draw_lists[i];
-            let draw_list = g.get_draw_list(draw_list_id);
-            if draw_list.idx_buffer.is_empty() {
+            let cmd_list_id = self.cmd_lists[i];
+            let cmd_list = g.get_draw_list(cmd_list_id);
+            if cmd_list.idx_buffer.is_empty() {
                 continue;
             }
-            new_vtx_buffer.resize(draw_list.idx_buffer.len(), DrawVertex::default());
+            new_vtx_buffer.resize(cmd_list.idx_buffer.len(), DrawVertex::default());
             // for (int j = 0; j < cmd_list.idx_buffer.size; j += 1)
-            for j in 0..draw_list.idx_buffer.len() {
-                new_vtx_buffer[j] = draw_list.vtx_buffer[draw_list.idx_buffer[j]];
+            for j in 0..cmd_list.idx_buffer.len() {
+                new_vtx_buffer[j] = cmd_list.vtx_buffer[cmd_list.idx_buffer[j]];
             }
-            // TODO:
-            // draw_list.vtx_buffer.swap(new_vtx_buffer);
-
-            draw_list.idx_buffer.reserve(0);
-            total_vtx_count += draw_list.vtx_buffer.size;
-        }
+            // cmd_list.vtx_buffer.swap(new_vtx_buffer);
+            cmd_list.vtx_buffer = new_vtx_buffer.to_owned();
+            // cmd_list.idx_buffer.resize(0);
+            cmd_list.idx_buffer.clear();
+            self.total_vtx_count += cmd_list.vtx_buffer.size;
+    }
     }
     //      void  scale_clip_rects(const Vector2D& fb_scale); // Helper to scale the clip_rect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
     pub fn scale_clip_rects(&mut self, g: &mut Context, fb_scale: &Vector2D) {
         // for (int i = 0; i < cmd_lists_count; i += 1)
-        for i in 0..self.draw_lists.len() {
-            // ImDrawList* cmd_list = CmdLists[i];
-            let cmd_list_id = self.draw_lists[i];
+    for i in 0..self.cmd_lists.len()
+        {
+        // ImDrawList* cmd_list = CmdLists[i];
+        let cmd_list_id = self.cmd_lists[i];
             let cmd_list = g.get_draw_list(cmd_list_id);
             // for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.size; cmd_i += 1)
-            for cmd_i in 0..cmd_list.cmd_buffer.len() {
-                let cmd = &mut cmd_list.cmd_buffer[cmd_i];
-                cmd.clip_rect = Vector4D(cmd.clip_rect.x * fb_scale.x, cmd.clip_rect.y * fb_scale.y, cmd.clip_rect.z * fb_scale.x, cmd.clip_rect.w * fb_scale.y);
-            }
+            for cmd_i in 0 .. cmd_list.cmd_buffer.len()
+        {
+            // ImDrawCmd* cmd = &cmd_list.cmd_buffer[cmd_i];
+            let cmd = &mut cmd_list.cmd_buffer[cmd_i];
+            cmd.clip_rect = Vector4D::new(cmd.clip_rect.x * fb_scale.x, cmd.clip_rect.y * fb_scale.y, cmd.clip_rect.z * fb_scale.x, cmd.clip_rect.w * fb_scale.y);
         }
+    }
     }
 }
 
 /// Pass this to your backend rendering function! valid after Render() and until the next call to NewFrame()
 /// ImDrawData* ImGui::GetDrawData()
-pub fn get_draw_data(g: &mut Context) -> Option<&mut DrawData> {
+pub fn get_draw_data(g: &mut Context) -> Option<&mut DrawData>
+{
     // ImGuiContext& g = *GImGui;
     // ImGuiViewportP* viewport = g.viewports[0];
     let viewport = &mut g.viewports[0];
-    return if viewport.draw_data.valid { Some(&mut viewport.draw_data) } else { None };
+    return if viewport.draw_data.valid { Some(&mut viewport.draw_data)} else { None}
 }
 
 /// static void AddWindowToDrawData(ImGuiWindow* window, int layer)

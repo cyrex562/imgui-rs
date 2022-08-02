@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::os::raw::c_char;
 use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, INVALID_ID, window};
-use crate::color::{COLOR_32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
+use crate::color::{COLOR32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
 use crate::draw::data::add_root_window_to_draw_data;
 use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
 use crate::frame::end_frame;
@@ -36,7 +36,7 @@ use crate::window::get::find_bottom_most_visible_window_with_begin_stack;
 // Internal ImGui functions to render text
 // render_text***() functions calls ImDrawList::add_text() calls ImBitmapFont::render_text()
 // void ImGui::render_text(Vector2D pos, const char* text, const char* text_end, bool hide_text_after_hash)
-pub unsafe fn render_text(pos: &Vector2D, text: &str, mut text_end: &str, hide_text_after_hash: bool)
+pub unsafe fn RenderText(pos: &Vector2D, text: &str, mut text_end: &str, hide_text_after_hash: bool)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -60,7 +60,7 @@ pub unsafe fn render_text(pos: &Vector2D, text: &str, mut text_end: &str, hide_t
 
     if text != text_display_end
     {
-        window.draw_list.add_text2(&g.font, g.font_size, pos, GetColorU32_3(Color::Text as u32), text, text_display_end, 0.0, None);
+        window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(Color::Text as u32), text, text_display_end, 0.0, None);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
         }
@@ -68,7 +68,7 @@ pub unsafe fn render_text(pos: &Vector2D, text: &str, mut text_end: &str, hide_t
 }
 
 // void ImGui::RenderTextWrapped(Vector2D pos, const char* text, const char* text_end, float wrap_width)
-pub fn render_textWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_width: f32)
+pub fn RenderTextWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_width: f32)
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
@@ -81,7 +81,7 @@ pub fn render_textWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_w
 
     if text != text_end
     {
-        window.draw_list.add_text2(&g.font, g.font_size, pos, GetColorU32_3(StyleColor::Text), text, text_end, wrap_width);
+        window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(StyleColor::Text), text, text_end, wrap_width);
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_end);
         }
@@ -90,7 +90,7 @@ pub fn render_textWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_w
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
-void ImGui::render_textClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_display_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
+void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_display_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
 {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     Vector2D pos = pos_min;
@@ -110,11 +110,11 @@ void ImGui::render_textClippedEx(ImDrawList* draw_list, const Vector2D& pos_min,
     if (need_clipping)
     {
         Vector4D fine_clip_rect(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
-        draw_list.add_text(None, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, &fine_clip_rect);
+        draw_list.AddText(None, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, &fine_clip_rect);
     }
     else
     {
-        draw_list.add_text(None, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, None);
+        draw_list.AddText(None, 0.0, pos, get_color_u32(StyleColor::Text), text, text_display_end, 0.0, None);
     }
 }
 
@@ -128,7 +128,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
 
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
-    render_textClippedEx(window.draw_list, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
+    RenderTextClippedEx(window.draw_list, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
     if (g.LogEnabled)
         LogRenderedText(&pos_min, text, text_display_end);
 }
@@ -137,7 +137,7 @@ void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
-void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end_full, const Vector2D* text_size_if_known)
+void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, const Vector2D& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end_full, const Vector2D* text_size_if_known)
 {
     // ImGuiContext& g = *GImGui;
     if (text_end_full == None)
@@ -155,8 +155,8 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
         // min   max   ellipsis_max
         //          <-> this is generally some padding value
 
-        const ImFont* font = draw_list->_Data.Font;
-        let font_size = draw_list->_Data.font_size;
+        const ImFont* font = draw_list->data.Font;
+        let font_size = draw_list->data.font_size;
         const char* text_end_ellipsis = None;
 
         ImWchar ellipsis_char = font.EllipsisChar;
@@ -174,7 +174,7 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
         if (ellipsis_char_count > 1)
         {
             // Full ellipsis size without free spacing after it.
-            let spacing_between_dots = 1.0 * (draw_list->_Data.font_size / font.font_size);
+            let spacing_between_dots = 1.0 * (draw_list->data.font_size / font.font_size);
             ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots;
             ellipsis_total_width = ellipsis_glyph_width * ellipsis_char_count - spacing_between_dots;
         }
@@ -196,7 +196,7 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
         }
 
         // Render text, render ellipsis
-        render_textClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, Vector2D::new(0.0, 0.0));
+        RenderTextClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, Vector2D::new(0.0, 0.0));
         let ellipsis_x =  pos_min.x + text_size_clipped_x;
         if (ellipsis_x + ellipsis_total_width <= ellipsis_max_x)
             for (int i = 0; i < ellipsis_char_count; i += 1)
@@ -207,7 +207,7 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
     }
     else
     {
-        render_textClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, Vector2D::new(0.0, 0.0));
+        RenderTextClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, Vector2D::new(0.0, 0.0));
     }
 
     if (g.LogEnabled)
@@ -482,7 +482,7 @@ pub fn render(g: &mut Context)
 // static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col)
 pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Window, color: u32)
 {
-    if (color & COLOR_32_A_MASK) == 0 {
+    if (color & COLOR32_A_MASK) == 0 {
         return;
     }
 
@@ -549,7 +549,7 @@ pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Wind
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir dir, float scale)
 {
-    let h = draw_list->_Data.font_size * 1.00;
+    let h = draw_list->data.font_size * 1.00;
     let r =  h * 0.40 * scale;
     Vector2D center = pos + Vector2D::new(h * 0.50, h * 0.50 * scale);
 
@@ -580,7 +580,7 @@ void ImGui::RenderArrow(ImDrawList* draw_list, Vector2D pos, ImU32 col, ImGuiDir
 
 void ImGui::render_bullet(ImDrawList* draw_list, Vector2D pos, ImU32 col)
 {
-    draw_list.AddCircleFilled(pos, draw_list->_Data.font_size * 0.20, col, 8);
+    draw_list.AddCircleFilled(pos, draw_list->data.font_size * 0.20, col, 8);
 }
 
 void ImGui::RenderCheckMark(ImDrawList* draw_list, Vector2D pos, ImU32 col, float sz)
@@ -716,7 +716,7 @@ void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D
 {
     if ((flags & DrawFlags::RoundCornersMask_) == 0)
         flags = DrawFlags::RoundCornersDefault_;
-    if (((col & COLOR_32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF)
+    if (((col & COLOR32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF)
     {
         ImU32 col_bg1 = get_color_u32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
         ImU32 col_bg2 = get_color_u32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));

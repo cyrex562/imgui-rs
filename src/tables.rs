@@ -1259,7 +1259,7 @@ void    ImGui::EndTable()
     // Pop clipping rect
     if (!(flags & ImGuiTableFlags_NoClip))
         inner_window.draw_list.pop_clip_rect();
-    inner_window.clip_rect = inner_window.draw_list->_ClipRectStack.back();
+    inner_window.clip_rect = inner_window.draw_list->clip_rect_stack.back();
 
     // Draw borders
     if ((flags & ImGuiTableFlags_Borders) != 0)
@@ -1791,7 +1791,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
             // In theory we could call SetWindowClipRectBeforeSetChannel() but since we know TableEndRow() is
             // always followed by a change of clipping rectangle we perform the smallest overwrite possible here.
             if ((table.flags & ImGuiTableFlags_NoClip) == 0)
-                window.draw_list->_CmdHeader.clip_rect = table.Bg0ClipRectForDrawCmd.ToVec4();
+                window.draw_list->command_header.clip_rect = table.Bg0ClipRectForDrawCmd.ToVec4();
             table.DrawSplitter.SetCurrentChannel(window.draw_list, TABLE_DRAW_CHANNEL_BG0);
         }
 
@@ -3655,8 +3655,8 @@ void ImGui::SetWindowClipRectBeforeSetChannel(ImGuiWindow* window, const Rect& c
 {
     Vector4D clip_rect_vec4 = clip_rect.ToVec4();
     window.clip_rect = clip_rect;
-    window.draw_list->_CmdHeader.clip_rect = clip_rect_vec4;
-    window.draw_list->_ClipRectStack.data[window.draw_list->_ClipRectStack.size - 1] = clip_rect_vec4;
+    window.draw_list->command_header.clip_rect = clip_rect_vec4;
+    window.draw_list->clip_rect_stack.data[window.draw_list->clip_rect_stack.size - 1] = clip_rect_vec4;
 }
 
 int ImGui::GetColumnIndex()

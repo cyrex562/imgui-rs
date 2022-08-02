@@ -60,7 +60,7 @@ impl DrawCmd {
 
 // [Internal] For use by ImDrawList
 #[derive(Debug, Clone, Default)]
-pub struct CmdHeader {
+pub struct DrawCommandHeader {
     // Vector4D          clip_rect;
     pub clip_rect: Vector4D,
     // ImTextureID     texture_id;
@@ -69,7 +69,7 @@ pub struct CmdHeader {
     pub vtx_offset: u32,
 }
 
-impl CmdHeader {
+impl DrawCommandHeader {
     pub fn clear(&mut self) {
         self.clip_rect.clear();
         self.texture_id = INVALID_ID;

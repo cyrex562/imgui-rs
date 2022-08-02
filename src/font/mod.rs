@@ -230,7 +230,7 @@ pub fn set_current_font(g: &mut Context, font: &mut Font)
 
     ImFontAtlas* atlas = g.font.container_atlas;
     g.draw_list_shared_data.TexUvWhitePixel = atlas.TexUvWhitePixel;
-    g.draw_list_shared_data.tex_uv_lines = atlas.tex_uv_lines;
+    g.draw_list_shared_data.TexUvLines = atlas.TexUvLines;
     g.draw_list_shared_data.font = g.font;
     g.draw_list_shared_data.font_size = g.font_size;
 }
@@ -711,16 +711,16 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const Vector2D& pos, 
     if (!glyph || !glyph.Visible)
         return;
     if (glyph.Colored)
-        col |= ~COLOR_32_A_MASK;
+        col |= ~COLOR32_A_MASK;
     let scale =  (size >= 0.0) ? (size / FontSize) : 1.0;
     let x =  f32::floor(pos.x);
     let y =  f32::floor(pos.y);
     draw_list.prim_reserve(6, 4);
-    draw_list.prim_rectUV(Vector2D::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), Vector2D::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), Vector2D::new(glyph.U0, glyph.V0), Vector2D::new(glyph.U1, glyph.V1), col);
+    draw_list.PrimRectUV(Vector2D::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), Vector2D::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), Vector2D::new(glyph.U0, glyph.V0), Vector2D::new(glyph.U1, glyph.V1), col);
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
+void ImFont::RenderText(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -774,7 +774,7 @@ void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos,
     ImDrawIdx* idx_write = draw_list->_IdxWritePtr;
     unsigned int vtx_current_idx = draw_list->vtx_current_idx;
 
-    const ImU32 col_untinted = col | ~COLOR_32_A_MASK;
+    const ImU32 col_untinted = col | ~COLOR32_A_MASK;
 
     while (s < text_end)
     {

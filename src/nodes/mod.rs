@@ -356,8 +356,8 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, let num_channels)
 
         {
             ImDrawCmd draw_cmd;
-            draw_cmd.clip_rect = draw_list->_ClipRectStack.back();
-            draw_cmd.TextureId = draw_list->_TextureIdStack.back();
+            draw_cmd.clip_rect = draw_list->clip_rect_stack.back();
+            draw_cmd.texture_id = draw_list->texture_id_stack.back();
             channel._CmdBuffer.push_back(draw_cmd);
         }
     }

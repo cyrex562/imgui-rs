@@ -5,7 +5,7 @@ use crate::axis::Axis;
 use crate::column::OldColumns;
 use crate::types::DataAuthority::Window;
 use crate::dock::node::{DockNode, DockNodeFlags};
-use crate::draw::cmd::DrawCmd;
+use crate::draw::command::DrawCmd;
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::list::{DrawList, DrawListFlags, get_foreground_draw_list};
 use crate::font::Font;
@@ -51,7 +51,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
         window.draw_list->AddRectFilled(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::WindowBg, alpha_mul));
         window.draw_list->AddRectFilled(title_r.min, title_r.max, get_color_u32(window_is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg, alpha_mul));
         window.draw_list->AddRect(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::Border, alpha_mul));
-        window.draw_list->add_text(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, FindRenderedTextEnd(thumb_window.name));
+        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, FindRenderedTextEnd(thumb_window.name));
     }
     draw_list->AddRect(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul));
 }
@@ -153,7 +153,7 @@ pub fn show_font_atlas(g: &mut Context, atlas: &mut FontAtlas)
     {
         Vector4D tint_col = Vector4D(1.0, 1.0, 1.0, 1.0);
         Vector4D border_col = Vector4D(1.0, 1.0, 1.0, 0.5);
-        Image(atlas->TexID, Vector2D::new(atlas->TexWidth, atlas->TexHeight), Vector2D::new(0.0, 0.0), Vector2D::new(1.0, 1.0), tint_col, border_col);
+        Image(atlas->TexID, Vector2D::new((float)atlas->TexWidth, atlas->TexHeight), Vector2D::new(0.0, 0.0), Vector2D::new(1.0, 1.0), tint_col, border_col);
         TreePop();
     }
 }
@@ -577,7 +577,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 ImFormatString(buf, IM_ARRAYSIZE(buf), "%d", window.begin_order_within_context);
                 let font_size =  GetFontSize();
                 draw_list->AddRectFilled(window.pos, window.pos + Vector2D::new(font_size, font_size), IM_COL32(200, 100, 100, 255));
-                draw_list->add_text(window.pos, IM_COL32(255, 255, 255, 255), buf);
+                draw_list->AddText(window.pos, IM_COL32(255, 255, 255, 255), buf);
             }
         }
     }
@@ -625,7 +625,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         overlay_draw_list->AddRect(node.pos + Vector2D::new(3, 3) * depth, node.pos + node.size - Vector2D::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
         Vector2D pos = node.pos + Vector2D::new(3, 3) * depth;
         overlay_draw_list->AddRectFilled(pos - Vector2D::new(1, 1), pos + CalcTextSize(buf) + Vector2D::new(1, 1), IM_COL32(200, 100, 100, 255));
-        overlay_draw_list->add_text(None, 0.0, pos, IM_COL32(255, 255, 255, 255), buf);
+        overlay_draw_list->AddText(None, 0.0, pos, IM_COL32(255, 255, 255, 255), buf);
     }
  // #ifdef IMGUI_HAS_DOCK
 
@@ -740,7 +740,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
     int cmd_count = draw_list.cmd_buffer.size;
     if (cmd_count > 0 && draw_list.cmd_buffer.back().elem_count == 0 && draw_list.cmd_buffer.back().user_callback == None)
         cmd_count--;
-    bool node_open = TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->VtxBuffer.size, draw_list->idx_buffer.size, cmd_count);
+    bool node_open = TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list->_OwnerName ? draw_list->_OwnerName : "", draw_list->vtx_buffer.size, draw_list->idx_buffer.size, cmd_count);
     if (draw_list == GetWindowDrawList())
     {
         same_line();
@@ -780,7 +780,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         // Calculate approximate coverage area (touched pixel count)
         // This will be in pixels squared as long there's no post-scaling happening to the renderer output.
         const ImDrawIdx* idx_buffer = (draw_list->idx_buffer.size > 0) ? draw_list->idx_buffer.data : None;
-        const ImDrawVert* vtx_buffer = draw_list->VtxBuffer.data + pcmd->VtxOffset;
+        const ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + pcmd->VtxOffset;
         let total_area =  0.0;
         for (unsigned int idx_n = pcmd->IdxOffset; idx_n < pcmd->IdxOffset + pcmd->ElemCount; )
         {
@@ -840,7 +840,7 @@ pub fn debug_node_draw_cmd_show_mesh_and_bounding_box(g: &mut Context, out_draw_
     for (unsigned int idx_n = draw_cmd->IdxOffset, idx_end = draw_cmd->IdxOffset + draw_cmd->ElemCount; idx_n < idx_end; )
     {
         ImDrawIdx* idx_buffer = (draw_list->idx_buffer.size > 0) ? draw_list->idx_buffer.data : None; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
-        ImDrawVert* vtx_buffer = draw_list->VtxBuffer.data + draw_cmd->VtxOffset;
+        ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + draw_cmd->VtxOffset;
 
         Vector2D triangle[3];
         for (int n = 0; n < 3; n += 1, idx_n += 1)
@@ -887,7 +887,7 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
     char c_str[5];
     text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
     text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
-    let surface_sqrt = ImSqrt(font->MetricsTotalSurface);
+    let surface_sqrt = ImSqrt((float)font->MetricsTotalSurface);
     text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
     for (int config_i = 0; config_i < font->ConfigDataCount; config_i += 1)
         if (font->ConfigData)

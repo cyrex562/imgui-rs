@@ -3,7 +3,7 @@
 
 
 pub mod list;
-pub mod cmd;
+pub mod command;
 pub mod vertex;
 pub mod list_shared_data;
 pub mod list_splitter;
