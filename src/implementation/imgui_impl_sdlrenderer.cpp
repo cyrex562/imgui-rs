@@ -160,7 +160,7 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData *draw_data) {
     for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.Size; cmd_i += 1) {
       const ImDrawCmd *pcmd = &cmd_list.cmd_buffer[cmd_i];
       if (pcmd->UserCallback) {
-        // User callback, registered via ImDrawList::AddCallback()
+        // User callback, registered via ImDrawList::add_callback()
         // (ImDrawCallback_ResetRenderState is a special callback value used by
         // the user to request the renderer to reset render state.)
         if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)

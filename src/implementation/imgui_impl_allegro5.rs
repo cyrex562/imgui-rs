@@ -166,14 +166,14 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
         for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.size; cmd_i += 1)
         {
             const ImDrawCmd* pcmd = &cmd_list.cmd_buffer[cmd_i];
-            if (pcmd.UserCallback)
+            if (pcmd.user_callback)
             {
-                // User callback, registered via ImDrawList::AddCallback()
+                // User callback, registered via ImDrawList::add_callback()
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
-                if (pcmd.UserCallback == ImDrawCallback_ResetRenderState)
+                if (pcmd.user_callback == ImDrawCallback_ResetRenderState)
                     ImGui_ImplAllegro5_SetupRenderState(draw_data);
                 else
-                    pcmd.UserCallback(cmd_list, pcmd);
+                    pcmd.user_callback(cmd_list, pcmd);
             }
             else
             {
@@ -186,7 +186,7 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
                 // Apply scissor/clipping rectangle, Draw
                 ALLEGRO_BITMAP* texture = (ALLEGRO_BITMAP*)pcmd.GetTexID();
                 al_set_clipping_rectangle(clip_min.x, clip_min.y, clip_max.x - clip_min.x, clip_max.y - clip_min.y);
-                al_draw_prim(&vertices[0], bd.VertexDecl, texture, pcmd.IdxOffset, pcmd.IdxOffset + pcmd.ElemCount, ALLEGRO_PRIM_TRIANGLE_LIST);
+                al_draw_prim(&vertices[0], bd.VertexDecl, texture, pcmd.idx_offset, pcmd.idx_offset + pcmd.elem_count, ALLEGRO_PRIM_TRIANGLE_LIST);
             }
         }
     }

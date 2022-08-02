@@ -68,7 +68,7 @@ pub enum BackendFlags {
     // Backend Platform supports honoring GetMouseCursor() value to change the OS cursor shape.
     HasSetMousePos,
     // Backend Platform supports io.want_set_mouse_pos requests to reposition the OS mouse position (only used if ImGuiConfigFlags_NavEnableSetMousePos is set).
-    RendererHasVtxOffset,   // Backend Renderer supports ImDrawCmd::vtx_offset. This enables output of large meshes (64K+ vertices) while still using 16-bit indices.
+    RendererHasvtx_offset,   // Backend Renderer supports ImDrawCmd::vtx_offset. This enables output of large meshes (64K+ vertices) while still using 16-bit indices.
 
     // [BETA] viewports
     PlatformHasViewports,

@@ -335,7 +335,7 @@ Other Changes:
   which would makes the draw operation of some backends assert (e.g. Metal with debugging). (#4857)
 - Popups: Fixed a regression crash when a new window is created after a modal on the same frame. (#4920) [@rokups]
 - Popups: Fixed an issue when reopening a same popup multiple times would offset them by 1 pixel on the right. (#4936)
-- tables, ImDrawListSplitter: Fixed erroneously stripping trailing ImDrawList::AddCallback() when submitted in
+- tables, ImDrawListSplitter: Fixed erroneously stripping trailing ImDrawList::add_callback() when submitted in
   last column or last channel and when there are no other drawing operation. (#4843, #4844) [@hoffstadt]
 - tables: Fixed positioning of Sort icon on right-most column with some settings (not resizable + no borders). (#4918).
 - Nav: Fixed gamepad navigation in wrapping popups not wrapping all the way. (#4365)
@@ -2002,7 +2002,7 @@ Other Changes:
 - Misc: Added IMGUI_DISABLE_METRICS_WINDOW imconfig.h setting to explicitly compile out ShowMetricsWindow().
 - Debug, Metrics: Added "Tools->Item Picker" tool which allow clicking on a widget to break in the debugger
   within the item code. The tool calls IM_DEBUG_BREAK() which can be redefined in imconfig.h if needed.
-- ImDrawList: Fixed CloneOutput() helper crashing. (#1860) [@gviot]
+- ImDrawList: Fixed clone_output() helper crashing. (#1860) [@gviot]
 - ImDrawList::ChannelsSplit(), ImDrawListSplitter: Fixed an issue with merging draw commands between
   channel 0 and 1. (#2624)
 - ImDrawListSplitter: Fixed memory leak when using low-level split api (was not affecting ImDrawList api,
@@ -2147,7 +2147,7 @@ Breaking Changes:
 
 Other Changes:
 
-- ImDrawList: Added ImDrawCallback_ResetRenderState, a special ImDrawList::AddCallback() value
+- ImDrawList: Added ImDrawCallback_ResetRenderState, a special ImDrawList::add_callback() value
   to request the renderer backend to reset its render state. (#2037, #1639, #2452)
   Examples: Added support for ImDrawCallback_ResetRenderState in all renderer backends. Each
   renderer code setting up initial render state has been moved to a function so it could be
@@ -2932,7 +2932,7 @@ Other Changes:
 - ImFontAtlas: Added ImFontAtlasFlags_NoPowerOfTwoHeight flag to disable padding font height to nearest power of two. (#1613)
 - ImFontAtlas: Added ImFontAtlasFlags_NoMouseCursors flag to disable baking software mouse cursors, mostly to save texture memory on very low end hardware. (#1613)
 - ImDrawList: Fixed add_rect() with anti-aliasing disabled (lower-right corner pixel was often missing, rounding looks a little better.) (#1646)
-- ImDrawList: Added CloneOutput() helper to facilitate the cloning of ImDrawData or ImDrawList for multi-threaded rendering.
+- ImDrawList: Added clone_output() helper to facilitate the cloning of ImDrawData or ImDrawList for multi-threaded rendering.
 - Misc: Functions passed to libc qsort are explicitly marked cdecl to support compiling with vectorcall as the default calling convention. (#1230, #1611) [@RandyGaul]
 - Misc: Vector2D: added [] operator. This is becoming desirable for some code working of either axes independently. Better adding it sooner than later.
 - Misc: NewFrame(): Added an assert to detect incorrect filling of the io.KeyMap[] array earlier. (#1555)

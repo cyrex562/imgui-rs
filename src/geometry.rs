@@ -23,7 +23,7 @@ pub fn ImBezierCubicClosestPoint(
     let mut i_step = 1;
     while i_step <= num_segments {
         // Vector2D p_current = ImBezierCubicCalc(p1, p2, p3, p4, t_step * i_step);
-        let mut p_current = ImBezierCubicCalc(p1, p2, p3, p4, t_step * i_step);
+        let mut p_current = bezier_cubic_calc(p1, p2, p3, p4, t_step * i_step);
         // Vector2D p_line = ImLineClosestPoint(p_last, p_current, p);
         let mut p_line = ImLineClosestPoint(&p_last, p_current, p);
         // float dist2 = ImLengthSqr(p - p_line);

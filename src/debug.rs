@@ -780,7 +780,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         // Calculate approximate coverage area (touched pixel count)
         // This will be in pixels squared as long there's no post-scaling happening to the renderer output.
         const ImDrawIdx* idx_buffer = if (draw_list->idx_buffer.size > 0) { draw_list->idx_buffer.data }else{ None};
-        const ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + pcmd->VtxOffset;
+        const ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + pcmd->vtx_offset;
         let total_area =  0.0;
         for (unsigned int idx_n = pcmd->IdxOffset; idx_n < pcmd->IdxOffset + pcmd->ElemCount; )
         {
@@ -791,7 +791,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         }
 
         // Display vertex information summary. Hover to get all triangles drawn in wire-frame
-        ImFormatString(buf, IM_ARRAYSIZE(buf), "Mesh: elem_count: %d, vtx_offset: +%d, idx_offset: +%d, Area: ~%0.f px", pcmd->ElemCount, pcmd->VtxOffset, pcmd->IdxOffset, total_area);
+        ImFormatString(buf, IM_ARRAYSIZE(buf), "Mesh: elem_count: %d, vtx_offset: +%d, idx_offset: +%d, Area: ~%0.f px", pcmd->ElemCount, pcmd->vtx_offset, pcmd->IdxOffset, total_area);
         selectable(buf);
         if (IsItemHovered() && fg_draw_list)
             DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, true, false);
@@ -840,7 +840,7 @@ pub fn debug_node_draw_cmd_show_mesh_and_bounding_box(g: &mut Context, out_draw_
     for (unsigned int idx_n = draw_cmd->IdxOffset, idx_end = draw_cmd->IdxOffset + draw_cmd->ElemCount; idx_n < idx_end; )
     {
         ImDrawIdx* idx_buffer = if (draw_list->idx_buffer.size > 0) { draw_list->idx_buffer.data }else{ None}; // We don't hold on those pointers past iterations as ->add_polyline() may invalidate them if out_draw_list==draw_list
-        ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + draw_cmd->VtxOffset;
+        ImDrawVert* vtx_buffer = draw_list->vtx_buffer.data + draw_cmd->vtx_offset;
 
         Vector2D triangle[3];
         for (int n = 0; n < 3; n += 1, idx_n += 1)

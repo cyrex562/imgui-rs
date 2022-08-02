@@ -345,7 +345,7 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, let num_channels)
         // memory of the command and index buffers.
         if (i < old_channel_capacity)
         {
-            channel._CmdBuffer.resize(0);
+            channel._cmd_buffer.resize(0);
             channel._idx_buffer.resize(0);
         }
         // Else, we need to construct new draw channels.
@@ -358,7 +358,7 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, let num_channels)
             ImDrawCmd draw_cmd;
             draw_cmd.clip_rect = draw_list->clip_rect_stack.back();
             draw_cmd.texture_id = draw_list->texture_id_stack.back();
-            channel._CmdBuffer.push_back(draw_cmd);
+            channel._cmd_buffer.push_back(draw_cmd);
         }
     }
 }
@@ -378,7 +378,7 @@ void ImDrawListSplitterSwapChannels(
 
     ImDrawChannel& lhs_channel = splitter._Channels[lhs_idx];
     ImDrawChannel& rhs_channel = splitter._Channels[rhs_idx];
-    lhs_channel._CmdBuffer.swap(rhs_channel._CmdBuffer);
+    lhs_channel._cmd_buffer.swap(rhs_channel._cmd_buffer);
     lhs_channel._idx_buffer.swap(rhs_channel._idx_buffer);
 
     let current_channel = splitter._Current;

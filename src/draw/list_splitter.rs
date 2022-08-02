@@ -26,8 +26,8 @@ impl DrawListSplitter {
     {
         if (i == _Current)
             memset(&_Channels[i], 0, sizeof(_Channels[i]));  // current channel is a copy of cmd_buffer/idx_buffer, don't destruct again
-        _Channels[i]._CmdBuffer.clear();
-        _Channels[i]._IdxBuffer.clear();
+        _Channels[i]._cmd_buffer.clear();
+        _Channels[i]._idx_buffer.clear();
     }
     _Current = 0;
     _Count = 1;
@@ -57,8 +57,8 @@ impl DrawListSplitter {
         }
         else
         {
-            _Channels[i]._CmdBuffer.resize(0);
-            _Channels[i]._IdxBuffer.resize(0);
+            _Channels[i]._cmd_buffer.resize(0);
+            _Channels[i]._idx_buffer.resize(0);
         }
     }
     }
@@ -140,18 +140,18 @@ impl DrawListSplitter {
         return;
 
     // Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
-    memcpy(&_Channels.data[_Current]._CmdBuffer, &draw_list.cmd_buffer, sizeof(draw_list.cmd_buffer));
-    memcpy(&_Channels.data[_Current]._IdxBuffer, &draw_list.idx_buffer, sizeof(draw_list.idx_buffer));
+    memcpy(&_Channels.data[_Current]._cmd_buffer, &draw_list.cmd_buffer, sizeof(draw_list.cmd_buffer));
+    memcpy(&_Channels.data[_Current]._idx_buffer, &draw_list.idx_buffer, sizeof(draw_list.idx_buffer));
     _Current = idx;
-    memcpy(&draw_list.cmd_buffer, &_Channels.data[idx]._CmdBuffer, sizeof(draw_list.cmd_buffer));
-    memcpy(&draw_list.idx_buffer, &_Channels.data[idx]._IdxBuffer, sizeof(draw_list.idx_buffer));
+    memcpy(&draw_list.cmd_buffer, &_Channels.data[idx]._cmd_buffer, sizeof(draw_list.cmd_buffer));
+    memcpy(&draw_list.idx_buffer, &_Channels.data[idx]._idx_buffer, sizeof(draw_list.idx_buffer));
     draw_list->idx_write_ptr = draw_list.idx_buffer.data + draw_list.idx_buffer.size;
 
     // If current command is used with different settings we need to add a new command
     ImDrawCmd* curr_cmd = (draw_list.cmd_buffer.size == 0) ? None : &draw_list.cmd_buffer.data[draw_list.cmd_buffer.size - 1];
     if (curr_cmd == None)
         draw_list.add_draw_cmd();
-    else if (curr_cmd.ElemCount == 0)
+    else if (curr_cmd.elem_count == 0)
         ImDrawCmd_HeaderCopy(curr_cmd, &draw_list->command_header); // Copy clip_rect, texture_id, vtx_offset
     else if (ImDrawCmd_HeaderCompare(curr_cmd, &draw_list->command_header) != 0)
         draw_list.add_draw_cmd();

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 // IM_STATIC_ASSERT(DrawFlags::RoundCornersTopLeft == (1 << 4));
 // static inline ImDrawFlags fix_rect_corner_flags(ImDrawFlags flags)
-pub fn fix_rect_corner_flags(flags: &HashSet<DrawFlags>) -> DrawFlags {
+pub fn fix_rect_corner_flags(flags: &HashSet<DrawFlags>) -> HashSet<DrawFlags> {
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     // Legacy Support for hard coded ~0 (used to be a suggested equivalent to ImDrawCornerFlags_All)
     //   ~0   --> ImDrawFlags_RoundCornersAll or 0

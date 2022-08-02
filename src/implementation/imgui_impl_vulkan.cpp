@@ -544,7 +544,7 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
             const ImDrawCmd* pcmd = &cmd_list.cmd_buffer[cmd_i];
             if (pcmd->UserCallback != None)
             {
-                // User callback, registered via ImDrawList::AddCallback()
+                // User callback, registered via ImDrawList::add_callback()
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
                 if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
                     ImGui_ImplVulkan_SetupRenderState(draw_data, pipeline, command_buffer, rb, fb_width, fb_height);

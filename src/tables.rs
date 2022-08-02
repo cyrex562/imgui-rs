@@ -1273,7 +1273,7 @@ void    ImGui::EndTable()
     if (table.DummyDrawChannel != (ImGuiTableColumnIdx)-1)
     {
         ImDrawChannel* dummy_channel = &table.DrawSplitter._Channels[table.DummyDrawChannel];
-        dummy_channel->_CmdBuffer.resize(0);
+        dummy_channel->_cmd_buffer.resize(0);
         dummy_channel->_idx_buffer.resize(0);
     }
 
@@ -2371,9 +2371,9 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
 
             // Don't attempt to merge if there are multiple draw calls within the column
             ImDrawChannel* src_channel = &splitter->_Channels[channel_no];
-            if (src_channel->_CmdBuffer.size > 0 && src_channel->_CmdBuffer.back().elem_count == 0 && src_channel->_CmdBuffer.back().user_callback == None) // Equivalent of PopUnusedDrawCmd()
-                src_channel->_CmdBuffer.pop_back();
-            if (src_channel->_CmdBuffer.size != 1)
+            if (src_channel->_cmd_buffer.size > 0 && src_channel->_cmd_buffer.back().elem_count == 0 && src_channel->_cmd_buffer.back().user_callback == None) // Equivalent of PopUnusedDrawCmd()
+                src_channel->_cmd_buffer.pop_back();
+            if (src_channel->_cmd_buffer.size != 1)
                 continue;
 
             // Find out the width of this merge group and check if it will fit in our column
@@ -2398,7 +2398,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
                 merge_group.clip_rect = Rect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
             merge_group.ChannelsMask.SetBit(channel_no);
             merge_group.ChannelsCount += 1;
-            merge_group.clip_rect.Add(src_channel->_CmdBuffer[0].clip_rect);
+            merge_group.clip_rect.Add(src_channel->_cmd_buffer[0].clip_rect);
             merge_group_mask |= (1 << merge_group_n);
         }
 
@@ -2479,7 +2479,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
 
                     ImDrawChannel* channel = &splitter->_Channels[n];
                     // IM_ASSERT(channel->_CmdBuffer.size == 1 && merge_clip_rect.contains(Rect(channel->_CmdBuffer[0].clip_rect)));
-                    channel->_CmdBuffer[0].clip_rect = merge_clip_rect.ToVec4();
+                    channel->_cmd_buffer[0].clip_rect = merge_clip_rect.ToVec4();
                     memcpy(dst_tmp += 1, channel, sizeof(ImDrawChannel));
                 }
             }

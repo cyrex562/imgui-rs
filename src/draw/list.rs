@@ -18,8 +18,9 @@ use std::ffi::c_void;
 use std::mem::size_of;
 use std::os::raw::c_char;
 use crate::color::COLOR32_A_MASK;
+use crate::draw::bezier::{bezier_cubic_calc, bezier_quadratic_calc};
 use crate::draw::flags::{DrawFlags, fix_rect_corner_flags};
-use crate::draw::ROUND_CORNERS_MASK;
+use crate::draw::{DrawCallback, ROUND_CORNERS_MASK};
 use crate::window::clip::push_clip_rect;
 
 /// Draw command list
@@ -1009,8 +1010,10 @@ impl DrawList {
             return;
         }
 
-        flags = fix_rect_corner_flags(flags);
-        if rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone {
+        // flags = fix_rect_corner_flags(flags);
+        set_hash_set(flags, &fix_rect_corner_flags(flags));
+        // let flags_to_check = flags.insert(ROUND_CORNERS_MASK);
+        if rounding < 0.5 || flags.contains(&DrawFlags::RoundCornersNone) {
             self.add_image(user_texture_id, p_min, p_max, uv_min, uv_max, col);
             return;
         }
@@ -1027,7 +1030,7 @@ impl DrawList {
         self.path_fill_convex(col);
         // int
         let vert_end_idx = vtx_buffer.size;
-        shade_verts_linear_uv(self, vert_start_idx, vert_end_idx, p_min, p_max, uv_min, uv_max, true);
+        self.shade_verts_linear_uv(self, vert_start_idx, vert_end_idx, p_min, p_max, uv_min, uv_max, true);
 
         if push_texture_id {
             self.pop_texture_id();
@@ -1082,7 +1085,7 @@ impl DrawList {
             }
 
             // Automatic segment count
-            if radius <= data.arc_fast_radius_cutoff
+            if radius <= self.data.arc_fast_radius_cutoff
             {
                 let a_is_reverse = a_max < a_min;
 
@@ -1098,21 +1101,24 @@ impl DrawList {
 
                 let a_min_segment_angle = a_min_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
                 let a_max_segment_angle = a_max_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                const bool a_emit_start = ImAbs(a_min_segment_angle - a_min) >= 1e-5f;
-                const bool a_emit_end = ImAbs(a_max - a_max_segment_angle) >= 1e-5f;
+                let a_emit_start = f32::abs(a_min_segment_angle - a_min) >= 1e-5f32;
+                let a_emit_end = f32::abs(a_max - a_max_segment_angle) >= 1e-5f32;
 
-                path.reserve(path.size + (a_mid_samples + 1 + (a_emit_start ? 1 : 0) + (a_emit_end ? 1 : 0)));
-                if (a_emit_start)
+                self.path.reserve(path.size + (a_mid_samples + 1 + (if a_emit_start { 1 } else { 0 }) + (if a_emit_end { 1 } else { 0 })));
+                if a_emit_start {
                     path.push_back(Vector2D::new(center.x + ImCos(a_min) * radius, center.y + ImSin(a_min) * radius));
-                if (a_mid_samples > 0)
+                }
+                if a_mid_samples > 0 {
                     path_arc_to_fast_ex(center, radius, a_min_sample, a_max_sample, 0);
-                if (a_emit_end)
+                }
+                if a_emit_end {
                     path.push_back(Vector2D::new(center.x + ImCos(a_max) * radius, center.y + ImSin(a_max) * radius));
+                }
             }
             else
             {
-                let arc_length = ImAbs(a_max - a_min);
-                let circle_segment_count = _CalcCircleAutoSegmentCount(radius);
+                let arc_length = f32::abs(a_max - a_min);
+                let circle_segment_count = calc_circle_auto_segment_count(radius);
                 let arc_segment_count = ImMax(ImCeil(circle_segment_count * arc_length / (f32::PI * 2.0)), (2.0 * f32::PI / arc_length));
                 path_arc_to_n(center, radius, a_min, a_max, arc_segment_count);
             }
@@ -1125,12 +1131,12 @@ impl DrawList {
         a_min_of_12: i32,
         a_max_of_12: i32,
     ) {
-         if (radius < 0.5)
+         if radius < 0.5
             {
                 path.push_back(center);
                 return;
             }
-            path_arc_to_fast_ex(center, radius, a_min_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, a_max_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, 0);
+            self.path_arc_to_fast_ex(center, radius, a_min_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, a_max_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, 0);
     }
     //  void  path_bezier_cubic_curve_to(const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, int num_segments = 0); // Cubic Bezier (4 control points)
     pub fn path_bezier_cubic_curve_to(
@@ -1140,16 +1146,19 @@ impl DrawList {
         p4: &Vector2D,
         num_segments: usize,
     ) {
-        Vector2D p1 = path.back();
-            if (num_segments == 0)
+        let p1 = path.back();
+            if num_segments == 0
             {
-                path_bezier_cubic_curve_toCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, data.curve_tessellation_tol, 0); // Auto-tessellated
+                self.path_bezier_cubic_curve_toCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, self.data.curve_tessellation_tol, 0); // Auto-tessellated
             }
             else
             {
                 let t_step =  1.0 / num_segments;
-                for (int i_step = 1; i_step <= num_segments; i_step += 1)
-                    path.push_back(ImBezierCubicCalc(p1, p2, p3, p4, t_step * i_step));
+                // for (int i_step = 1; i_step <= num_segments; i_step += 1)
+                for i_step in 1 .. num_segments
+                {
+                    self.path.push_back(bezier_cubic_calc(p1, p2, p3, p4, t_step * i_step));
+                }
             }
     }
     //  void  path_bezier_quadratic_curve_to(const Vector2D& p2, const Vector2D& p3, int num_segments = 0);               // Quadratic Bezier (3 control points)
@@ -1160,15 +1169,18 @@ impl DrawList {
         num_segments: usize,
     ) {
          Vector2D p1 = path.back();
-            if (num_segments == 0)
+            if num_segments == 0
             {
-                path_bezier_quadratic_curve_toCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, data.curve_tessellation_tol, 0);// Auto-tessellated
+                self.path_bezier_quadratic_curve_to_casteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, self.data.curve_tessellation_tol, 0);// Auto-tessellated
             }
             else
             {
                 let t_step =  1.0 / num_segments;
-                for (int i_step = 1; i_step <= num_segments; i_step += 1)
-                    path.push_back(ImBezierQuadraticCalc(p1, p2, p3, t_step * i_step));
+                // for (int i_step = 1; i_step <= num_segments; i_step += 1)
+                for i_step in 1.. num_segments
+                {
+                    self.path.push_back(bezier_quadratic_calc(p1, p2, p3, t_step * i_step));
+                }
             }
     }
     //  void  PathRect(const Vector2D& rect_min, const Vector2D& rect_max, float rounding = 0.0, ImDrawFlags flags = 0);
@@ -1176,15 +1188,18 @@ impl DrawList {
         &mut self,
         rect_min: &Vector2D,
         rect_max: &Vector2D,
-        rounding: f32,
-        flags: DrawFlags,
+        mut rounding: f32,
+        flags: &mut HashSet<DrawFlags>,
     ) {
-        flags = fix_rect_corner_flags(flags);
-            rounding = ImMin(rounding, f32::abs(b.x - a.x) * ( ((flags & DrawFlags::RoundCornersTop)  == DrawFlags::RoundCornersTop)  || ((flags & DrawFlags::RoundCornersBottom) == DrawFlags::RoundCornersBottom) ? 0.5 : 1.0 ) - 1.0);
-            rounding = ImMin(rounding, f32::abs(b.y - a.y) * ( ((flags & DrawFlags::RoundCornersLeft) == DrawFlags::RoundCornersLeft) || ((flags & DrawFlags::RoundCornersRight)  == DrawFlags::RoundCornersRight)  ? 0.5 : 1.0 ) - 1.0);
 
-            if (rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone)
-            {
+        // flags.extend(fix_rect_corner_flags(flags).iter()); //= fix_rect_corner_flags(flags);
+        set_hash_set(flags, &fix_rect_corner_flags(flags));
+            rounding = f32::min(rounding, f32::abs(b.x - a.x) * (if ((flags & DrawFlags::RoundCornersTop)  == DrawFlags::RoundCornersTop)  || ((flags & DrawFlags::RoundCornersBottom) == DrawFlags::RoundCornersBottom) { 0.5 } else { 1.0 } ) - 1.0);
+            rounding = f32::min(rounding, f32::abs(b.y - a.y) * ( if ((flags & DrawFlags::RoundCornersLeft) == DrawFlags::RoundCornersLeft) || ((flags & DrawFlags::RoundCornersRight)  == DrawFlags::RoundCornersRight) { 0.5 } else { 1.0 } ) - 1.0);
+
+            // if rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone
+        if rounding < 0.5 || flags.contains(&DrawFlags::RoundCornersNone)
+        {
                 path_line_to(a);
                 path_line_to(Vector2D::new(b.x, a.y));
                 path_line_to(b);
@@ -1192,51 +1207,54 @@ impl DrawList {
             }
             else
             {
-                let rounding_tl = (flags & DrawFlags::RoundCornersTopLeft)     ? rounding : 0.0;
-                let rounding_tr = (flags & DrawFlags::RoundCornersTopRight)    ? rounding : 0.0;
-                let rounding_br = (flags & DrawFlags::RoundCornersBottomRight) ? rounding : 0.0;
-                let rounding_bl = (flags & DrawFlags::RoundCornersBottomLeft)  ? rounding : 0.0;
-                path_arc_to_fast(Vector2D::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
-                path_arc_to_fast(Vector2D::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
-                path_arc_to_fast(Vector2D::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
-                path_arc_to_fast(Vector2D::new(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
+                let rounding_tl = if flags.contains(&DrawFlags::RoundCornersTopLeft) { rounding } else { 0.0 };
+                let rounding_tr = if flags.contains(&DrawFlags::RoundCornersTopRight) { rounding } else { 0.0 };
+                let rounding_br = if flags.contains(&DrawFlags::RoundCornersBottomRight) { rounding } else { 0.0 };
+                let rounding_bl = if flags.contains(&DrawFlags::RoundCornersBottomLeft) { rounding } else { 0.0 };
+                self.path_arc_to_fast(&Vector2D::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
+                self.path_arc_to_fast(&Vector2D::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
+                self.path_arc_to_fast(&Vector2D::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
+                self.path_arc_to_fast(&Vector2D::new(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
             }
     }
 
     // Advanced
-    //  void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'user_callback' in ImDrawCmd and call the function instead of rendering triangles.
-    pub fn AddCallback(&mut self, callback: DrawCallback, callback_data: *mut c_void) {
+    //  void  add_callback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'user_callback' in ImDrawCmd and call the function instead of rendering triangles.
+    pub fn add_callback(&mut self, callback: DrawCallback, callback_data: &mut Vec<u8>) {
         // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
-            ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
+        //     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
             // IM_ASSERT(curr_cmd.UserCallback == None);
-            if (curr_cmd.ElemCount != 0)
+        let mut curr_cmd= &mut self.cmd_buffer[self.cmd_buffer.len() -1];
+        if curr_cmd.element_count != 0
             {
-                AddDrawCmd();
-                curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
+                self.add_draw_cmd();
+               curr_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() - 1];
             }
-            curr_cmd.UserCallback = callback;
-            curr_cmd.UserCallbackData = callback_data;
+            curr_cmd.user_callback = Some(callback);
+            curr_cmd.user_callback_data = callback_data.to_owned();
 
-            AddDrawCmd(); // Force a new command after us (see comment below)
+            self.add_draw_cmd(); // Force a new command after us (see comment below)
     }
     //  void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
-    pub fn AddDrawCmd(&mut self) {
-        ImDrawCmd draw_cmd;
+    pub fn add_draw_cmd(&mut self) {
+        // ImDrawCmd draw_cmd;
+        let mut draw_cmd = DrawCmd::default();
             draw_cmd.clip_rect = command_header.clip_rect;    // Same as calling ImDrawCmd_HeaderCopy()
             draw_cmd.texture_id = command_header.texture_id;
-            draw_cmd.VtxOffset = command_header.VtxOffset;
-            draw_cmd.IdxOffset = IdxBuffer.size;
+            draw_cmd.vtx_offset = command_header.vtx_offset;
+            draw_cmd.idx_offset = self.idx_buffer.size;
 
             // IM_ASSERT(draw_cmd.clip_rect.x <= draw_cmd.clip_rect.z && draw_cmd.clip_rect.y <= draw_cmd.clip_rect.w);
-            CmdBuffer.push_back(draw_cmd);
+            self.cmd_buffer.push_back(draw_cmd);
     }
-    //  ImDrawList* CloneOutput() const;                                  // Create a clone of the cmd_buffer/idx_buffer/vtx_buffer.
-    pub fn CloneOutput(&mut self) -> Vec<DrawList> {
-        ImDrawList* dst = IM_NEW(ImDrawList(data));
-            dst.cmd_buffer = CmdBuffer;
-            dst.IdxBuffer = IdxBuffer;
-            dst.VtxBuffer = VtxBuffer;
-            dst.flags = Flags;
+    //  ImDrawList* clone_output() const;                                  // Create a clone of the cmd_buffer/idx_buffer/vtx_buffer.
+    pub fn clone_output(&mut self) -> DrawList {
+        // ImDrawList* dst = IM_NEW(ImDrawList(data));
+        let mut dst = DrawList::new(&mut self.data);
+            dst.cmd_buffer = self.cmd_buffer.clone();
+            dst.idx_buffer = self.idx_buffer.clone();
+            dst.vtx_buffer = self.vtx_buffer.clone();
+            dst.flags = self.flags.clone();
             return dst;
     }
 
@@ -1257,43 +1275,62 @@ impl DrawList {
     pub fn prim_reserve(&mut self, idx_count: usize, vtx_count: usize) {
          // Large mesh support (when enabled)
             // IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
-            if (sizeof == 2 && (self.vtx_current_idx + vtx_count >= (1 << 16)) && (Flags & DrawListFlags::AllowVtxOffset))
+            if sizeof == 2 && (self.vtx_current_idx + vtx_count >= (1 << 16)) && (self.flags.contains(&DrawListFlags::AllowVtxOffset))
             {
                 // FIXME: In theory we should be testing that vtx_count <64k here.
                 // In practice, render_text() relies on reserving ahead for a worst case scenario so it is currently useful for us
                 // to not make that check until we rework the text functions to handle clipping and large horizontal lines better.
-                command_header.VtxOffset = VtxBuffer.size;
-                _OnChangedVtxOffset();
+                self.command_header.vtx_offset = self.vtx_buffer.size;
+                self.on_changed_vtx_offset();
             }
 
-            ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-            draw_cmd.ElemCount += idx_count;
+            // ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
+            let draw_cmd = &mut self.cmd_buffer[self.cmd_buffer.len()-1];
+        draw_cmd.elem_count += idx_count;
 
-            int vtx_buffer_old_size = VtxBuffer.size;
-            VtxBuffer.resize(vtx_buffer_old_size + vtx_count);
-            self.vtx_write_ptr = VtxBuffer.data + vtx_buffer_old_size;
+            let vtx_buffer_old_size = self.vtx_buffer.len();
+            self.vtx_buffer.resize(vtx_buffer_old_size + vtx_count);
+            self.vtx_write_ptr = self.vtx_buffer.data + vtx_buffer_old_size;
 
-            int idx_buffer_old_size = IdxBuffer.size;
-            IdxBuffer.resize(idx_buffer_old_size + idx_count);
-            self.idx_write_ptr = IdxBuffer.data + idx_buffer_old_size;
+            let idx_buffer_old_size = self.idx_buffer.len();
+            self.idx_buffer.resize(idx_buffer_old_size + idx_count, INVALID_DRAW_INDEX);
+            self.idx_write_ptr = idx_buffer.data + idx_buffer_old_size;
     }
     //  void  PrimUnreserve(int idx_count, int vtx_count);
-    pub fn PrimUnreserve(&mut self, idx_count: usize, vtx_count: usize) {
-        ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-            draw_cmd.ElemCount -= idx_count;
-            VtxBuffer.shrink(VtxBuffer.size - vtx_count);
-            IdxBuffer.shrink(IdxBuffer.size - idx_count);
+    pub fn prim_unreserve(&mut self, idx_count: usize, vtx_count: usize) {
+        // ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
+        let draw_cmd = &mut self.cmd_buffer.data[self.cmd_buffer.len() - 1];
+            draw_cmd.elem_count -= idx_count;
+            self.vtx_buffer.shrink(self.vtx_buffer.size - vtx_count);
+            self.idx_buffer.shrink(self.idx_buffer.size - idx_count);
     }
     //  void  PrimRect(const Vector2D& a, const Vector2D& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
     pub fn prim_rect(&mut self, a: &Vector2D, b: &Vector2D, col: u32) {
-            Vector2D b(c.x, a.y), d(a.x, c.y), uv(data.TexUvWhitePixel);
-            ImDrawIdx idx = self.vtx_current_idx;
-            self.idx_write_ptr[0] = idx; self.idx_write_ptr[1] = (idx+1); self.idx_write_ptr[2] = (idx+2);
-            self.idx_write_ptr[3] = idx; self.idx_write_ptr[4] = (idx+2); self.idx_write_ptr[5] = (idx+3);
-            self.vtx_write_ptr[0].pos = a; self.vtx_write_ptr[0].uv = uv; self.vtx_write_ptr[0].col = col;
-            self.vtx_write_ptr[1].pos = b; self.vtx_write_ptr[1].uv = uv; self.vtx_write_ptr[1].col = col;
-            self.vtx_write_ptr[2].pos = c; self.vtx_write_ptr[2].uv = uv; self.vtx_write_ptr[2].col = col;
-            self.vtx_write_ptr[3].pos = d; self.vtx_write_ptr[3].uv = uv; self.vtx_write_ptr[3].col = col;
+            // Vector2D b(c.x, a.y), d(a.x, c.y), uv(data.TexUvWhitePixel);
+        let b = Vector2D::new(c.x,a.y);
+        let d = Vector2D::new(a.x,c.y);
+        let uv = self.data.text_uv_white_pixel.clone();
+
+        // ImDrawIdx idx = self.vtx_current_idx;
+        let idx = &self.vtx_current_idx;
+        self.idx_write_ptr[0] = idx;
+        self.idx_write_ptr[1] = (idx + 1);
+        self.idx_write_ptr[2] = (idx + 2);
+        self.idx_write_ptr[3] = idx;
+        self.idx_write_ptr[4] = (idx + 2);
+        self.idx_write_ptr[5] = (idx + 3);
+        self.vtx_write_ptr[0].pos = a;
+        self.vtx_write_ptr[0].uv = uv;
+        self.vtx_write_ptr[0].col = col;
+        self.vtx_write_ptr[1].pos = b;
+        self.vtx_write_ptr[1].uv = uv.clone();
+        self.vtx_write_ptr[1].col = col;
+        self.vtx_write_ptr[2].pos = c;
+        self.vtx_write_ptr[2].uv = uv.clone();
+        self.vtx_write_ptr[2].col = col;
+        self.vtx_write_ptr[3].pos = d;
+        self.vtx_write_ptr[3].uv = uv.clone();
+        self.vtx_write_ptr[3].col = col;
             self.vtx_write_ptr += 4;
             self.vtx_current_idx += 4;
             self.idx_write_ptr += 6;
@@ -1307,14 +1344,30 @@ impl DrawList {
         uv_b: &Vector2D,
         col: u32,
     ) {
-         Vector2D b(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
-            ImDrawIdx idx = self.vtx_current_idx;
-            self.idx_write_ptr[0] = idx; self.idx_write_ptr[1] = (idx+1); self.idx_write_ptr[2] = (idx+2);
-            self.idx_write_ptr[3] = idx; self.idx_write_ptr[4] = (idx+2); self.idx_write_ptr[5] = (idx+3);
-            self.vtx_write_ptr[0].pos = a; self.vtx_write_ptr[0].uv = uv_a; self.vtx_write_ptr[0].col = col;
-            self.vtx_write_ptr[1].pos = b; self.vtx_write_ptr[1].uv = uv_b; self.vtx_write_ptr[1].col = col;
-            self.vtx_write_ptr[2].pos = c; self.vtx_write_ptr[2].uv = uv_c; self.vtx_write_ptr[2].col = col;
-            self.vtx_write_ptr[3].pos = d; self.vtx_write_ptr[3].uv = uv_d; self.vtx_write_ptr[3].col = col;
+         // Vector2D b(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
+         let b = Vector2D::new(c.x, a.y);
+        let d = Vector2D::new(a.x,c.y);
+        let uv_b = Vector2D::new(uv_c.x, uv_a.y);
+        let uv_d = Vector2D::new(uv_a.x, uv_c.y);
+            let idx = self.vtx_current_idx;
+        self.idx_write_ptr[0] = idx;
+        self.idx_write_ptr[1] = (idx + 1);
+        self.idx_write_ptr[2] = (idx + 2);
+        self.idx_write_ptr[3] = idx;
+        self.idx_write_ptr[4] = (idx + 2);
+        self.idx_write_ptr[5] = (idx + 3);
+        self.vtx_write_ptr[0].pos = a;
+        self.vtx_write_ptr[0].uv = uv_a;
+        self.vtx_write_ptr[0].col = col;
+        self.vtx_write_ptr[1].pos = b;
+        self.vtx_write_ptr[1].uv = uv_b;
+        self.vtx_write_ptr[1].col = col;
+        self.vtx_write_ptr[2].pos = c;
+        self.vtx_write_ptr[2].uv = uv_c;
+        self.vtx_write_ptr[2].col = col;
+        self.vtx_write_ptr[3].pos = d;
+        self.vtx_write_ptr[3].uv = uv_d;
+        self.vtx_write_ptr[3].col = col;
             self.vtx_write_ptr += 4;
             self.vtx_current_idx += 4;
             self.idx_write_ptr += 6;
@@ -1332,13 +1385,25 @@ impl DrawList {
         uv_d: &Vector2D,
         col: u32,
     ) {
-            ImDrawIdx idx = self.vtx_current_idx;
-            self.idx_write_ptr[0] = idx; self.idx_write_ptr[1] = (idx+1); self.idx_write_ptr[2] = (idx+2);
-            self.idx_write_ptr[3] = idx; self.idx_write_ptr[4] = (idx+2); self.idx_write_ptr[5] = (idx+3);
-            self.vtx_write_ptr[0].pos = a; self.vtx_write_ptr[0].uv = uv_a; self.vtx_write_ptr[0].col = col;
-            self.vtx_write_ptr[1].pos = b; self.vtx_write_ptr[1].uv = uv_b; self.vtx_write_ptr[1].col = col;
-            self.vtx_write_ptr[2].pos = c; self.vtx_write_ptr[2].uv = uv_c; self.vtx_write_ptr[2].col = col;
-            self.vtx_write_ptr[3].pos = d; self.vtx_write_ptr[3].uv = uv_d; self.vtx_write_ptr[3].col = col;
+            let idx = self.vtx_current_idx;
+        self.idx_write_ptr[0] = idx;
+        self.idx_write_ptr[1] = (idx + 1);
+        self.idx_write_ptr[2] = (idx + 2);
+        self.idx_write_ptr[3] = idx;
+        self.idx_write_ptr[4] = (idx + 2);
+        self.idx_write_ptr[5] = (idx + 3);
+        self.vtx_write_ptr[0].pos = a;
+        self.vtx_write_ptr[0].uv = uv_a;
+        self.vtx_write_ptr[0].col = col;
+        self.vtx_write_ptr[1].pos = b;
+        self.vtx_write_ptr[1].uv = uv_b;
+        self.vtx_write_ptr[1].col = col;
+        self.vtx_write_ptr[2].pos = c;
+        self.vtx_write_ptr[2].uv = uv_c;
+        self.vtx_write_ptr[2].col = col;
+        self.vtx_write_ptr[3].pos = d;
+        self.vtx_write_ptr[3].uv = uv_d;
+        self.vtx_write_ptr[3].col = col;
             self.vtx_write_ptr += 4;
             self.vtx_current_idx += 4;
             self.idx_write_ptr += 6;
@@ -1357,7 +1422,7 @@ impl DrawList {
         self.idx_buffer.push(idx)
     }
     // inline    void  PrimVtx(const Vector2D& pos, const Vector2D& uv, ImU32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
-    pub fn PrimVtx(&mut self, pos: &Vector2D, uv: &Vector2D, col: u32) {
+    pub fn prim_vtx(&mut self, pos: &Vector2D, uv: &Vector2D, col: u32) {
         self.prime_write_vtx(pos, uv, col);
         self.prim_write_idx(0)
     }
@@ -1386,7 +1451,7 @@ impl DrawList {
         //     vtx_buffer.resize(0);
         self.vtx_buffer.resize(0, DrawVertex::default());
         //     flags = _Data->InitialFlags;
-        set_hash_set(&mut self.flags, self.data.initial_flags);
+        set_hash_set(&mut self.flags, &self.data.initial_flags);
         //     memset(&_cmd_header, 0, sizeof(_cmd_header));
         self.command_header.clear();
         //     _VtxCurrentIdx = 0;
@@ -1400,7 +1465,8 @@ impl DrawList {
         //     cmd_buffer.push_back(ImDrawCmd());
         //     _fringe_scale = 1.0;
     }
-    //  void  _ClearFreeMemory(); fn clear_free_memory(&mut self) {
+    //  void  _ClearFreeMemory();
+    pub fn clear_free_memory(&mut self) {
         //      CmdBuffer.clear();
         self.cmd_buffer.clear();
         //     IdxBuffer.clear();
@@ -1422,31 +1488,36 @@ impl DrawList {
         //     _Splitter.ClearFreeMemory();
     }
      // void  _PopUnusedDrawCmd();
-pub fn PopUnusedDrawCmd(&mut self) {
-        if (CmdBuffer.size == 0)
-                return;
-            ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-            if (curr_cmd.ElemCount == 0 && curr_cmd.UserCallback == None)
-                CmdBuffer.pop_back();
+pub fn pop_unused_draw_cmd(&mut self) {
+        if self.cmd_buffer.is_empty() {
+            return;
+        }
+            // ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
+         let curr_md = &mut self.cmd_buffer[self.cmd_buffer.len() -1];
+         if curr_cmd.elem_count == 0 && curr_cmd.user_callback == None {
+             self.cmd_buffer.pop_back();
+         }
     }
     //  void  _TryMergeDrawCmds();
-pub fn TryMergeDrawCmds(&mut self) {
-        // // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+pub fn try_merge_draw_commands(&mut self) {
+        // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
         //     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-        //     ImDrawCmd* prev_cmd = curr_cmd - 1;
-        //     if (ImDrawCmd_HeaderCompare(curr_cmd, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && curr_cmd.UserCallback == None && prev_cmd.UserCallback == None)
-        //     {
-        //         prev_cmd.ElemCount += curr_cmd.ElemCount;
-        //         CmdBuffer.pop_back();
-        //     }
+        let curr_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() -1];
+        // ImDrawCmd* prev_cmd = curr_cmd - 1;
+        let prev_cmd = curr_cmd - 1;
+            if draw_cmd_header_compare(curr_cmd, prev_cmd) == 0 && are_sequential_idx_offset(prev_cmd, curr_cmd) && curr_cmd.user_callback == None && prev_cmd.user_callback == None
+            {
+                prev_cmd.elem_count += curr_cmd.elem_count;
+                self.cmd_buffer.pop_back();
+            }
     }
     //  void  _OnChangedClipRect();
 pub fn OnChangedClipRect(&mut self) {
 
          // If current command is used with different settings we need to add a new command
             // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
-            ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-            if (curr_cmd.ElemCount != 0 && memcmp(&curr_cmd.clip_rect, &command_header.clip_rect, sizeof(Vector4D)) != 0)
+            ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
+            if (curr_cmd.elem_count != 0 && memcmp(&curr_cmd.clip_rect, &command_header.clip_rect, sizeof(Vector4D)) != 0)
             {
                 AddDrawCmd();
                 return;
@@ -1455,9 +1526,9 @@ pub fn OnChangedClipRect(&mut self) {
 
             // Try to merge with previous command if it matches, else use current command
             ImDrawCmd* prev_cmd = curr_cmd - 1;
-            if (curr_cmd.ElemCount == 0 && CmdBuffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.UserCallback == None)
+            if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None)
             {
-                CmdBuffer.pop_back();
+                cmd_buffer.pop_back();
                 return;
             }
 
@@ -1467,8 +1538,8 @@ pub fn OnChangedClipRect(&mut self) {
 pub fn OnChangedTextureID(&mut self) {
         // If current command is used with different settings we need to add a new command
             // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
-            ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-            if (curr_cmd.ElemCount != 0 && curr_cmd.texture_id != command_header.texture_id)
+            ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
+            if (curr_cmd.elem_count != 0 && curr_cmd.texture_id != command_header.texture_id)
             {
                 AddDrawCmd();
                 return;
@@ -1477,28 +1548,28 @@ pub fn OnChangedTextureID(&mut self) {
 
             // Try to merge with previous command if it matches, else use current command
             ImDrawCmd* prev_cmd = curr_cmd - 1;
-            if (curr_cmd.ElemCount == 0 && CmdBuffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.UserCallback == None)
+            if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None)
             {
-                CmdBuffer.pop_back();
+                cmd_buffer.pop_back();
                 return;
             }
 
             curr_cmd.texture_id = command_header.texture_id;
     }
     //  void  _OnChangedVtxOffset();
-pub fn OnChangedVtxOffset(&mut self) {
+pub fn OnChangedvtx_offset(&mut self) {
         // // We don't need to compare curr_cmd->vtx_offset != _cmd_header.vtx_offset because we know it'll be different at the time we call this.
             self.vtx_current_idx = 0;
             // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
-            ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
+            ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
             //IM_ASSERT(curr_cmd->vtx_offset != _cmd_header.vtx_offset); // See #3349
-            if (curr_cmd.ElemCount != 0)
+            if (curr_cmd.elem_count != 0)
             {
                 AddDrawCmd();
                 return;
             }
             // IM_ASSERT(curr_cmd.UserCallback == None);
-            curr_cmd.VtxOffset = command_header.VtxOffset;
+            curr_cmd.vtx_offset = command_header.vtx_offset;
     }
     //  int   _CalcCircleAutoSegmentCount(float radius) const;
 pub fn CalCircleAUtoSegmentCount(&mut self, radius: f32) -> i32 {
@@ -1526,7 +1597,7 @@ pub fn path_arc_toFastEx(
 
             // Calculate arc auto segment step size
             if (a_step <= 0)
-                a_step = DRAW_LIST_ARCFAST_SAMPLE_MAX / _CalcCircleAutoSegmentCount(radius);
+                a_step = DRAW_LIST_ARCFAST_SAMPLE_MAX / calc_circle_auto_segment_count(radius);
 
             // Make sure we never do steps larger than one quarter of the circle
             a_step = ImClamp(a_step, 1, IM_DRAWLIST_ARCFAST_TABLE_SIZE / 4);

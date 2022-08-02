@@ -254,7 +254,7 @@ void ImGui_ImplMetal_RenderDrawData(ImDrawData* drawData, id<MTLCommandBuffer> c
             const ImDrawCmd* pcmd = &cmd_list.cmd_buffer[cmd_i];
             if (pcmd->UserCallback)
             {
-                // User callback, registered via ImDrawList::AddCallback()
+                // User callback, registered via ImDrawList::add_callback()
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
                 if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
                     ImGui_ImplMetal_SetupRenderState(drawData, commandBuffer, commandEncoder, renderPipelineState, vertexBuffer, vertexBufferOffset);

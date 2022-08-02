@@ -247,7 +247,7 @@ index of this file:
 //     _Splitter.ClearFreeMemory();
 // }
 
-// ImDrawList* ImDrawList::CloneOutput() const
+// ImDrawList* ImDrawList::clone_output() const
 // {
 //     ImDrawList* dst = IM_NEW(ImDrawList(_Data));
 //     dst.cmd_buffer = CmdBuffer;
@@ -280,7 +280,7 @@ index of this file:
 //         CmdBuffer.pop_back();
 // }
 
-// void ImDrawList::AddCallback(ImDrawCallback callback, void* callback_data)
+// void ImDrawList::add_callback(ImDrawCallback callback, void* callback_data)
 // {
 //     // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
 //     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
@@ -297,10 +297,10 @@ index of this file:
 // }
 
 // Compare clip_rect, texture_id and vtx_offset with a single memcmp()
-#define ImDrawCmd_HeaderSize                            (IM_OFFSETOF(ImDrawCmd, VtxOffset) + sizeof(unsigned int))
+#define ImDrawCmd_HeaderSize                            (IM_OFFSETOF(ImDrawCmd, vtx_offset) + sizeof(unsigned int))
 #define ImDrawCmd_HeaderCompare(CMD_LHS, CMD_RHS)       (memcmp(CMD_LHS, CMD_RHS, ImDrawCmd_HeaderSize))    // Compare clip_rect, texture_id, vtx_offset
 #define ImDrawCmd_HeaderCopy(CMD_DST, CMD_SRC)          (memcpy(CMD_DST, CMD_SRC, ImDrawCmd_HeaderSize))    // Copy clip_rect, texture_id, vtx_offset
-#define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1)  (CMD_0.IdxOffset + CMD_0.ElemCount == CMD_1.IdxOffset)
+#define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1)  (CMD_0.idx_offset + CMD_0.elem_count == CMD_1.idx_offset)
 
 // Try to merge two last draw commands
 // void ImDrawList::_TryMergeDrawCmds()

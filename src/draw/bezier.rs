@@ -55,7 +55,7 @@ pub fn path_bezier_cubic_curve_to_casteljau(path: &Vec<Vector2D>, x1: f32, y1: f
     }
 }
 
-static void path_bezier_quadratic_curve_toCasteljau(ImVector<Vector2D>* path, float x1, float y1, float x2, float y2, float x3, float y3, float tess_tol, int level)
+static void path_bezier_quadratic_curve_to_casteljau(ImVector<Vector2D>* path, float x1, float y1, float x2, float y2, float x3, float y3, float tess_tol, int level)
 {
     let dx =  x3 - x1, dy = y3 - y1;
     let det =  (x2 - x3) * dy - (y2 - y3) * dx;
@@ -68,7 +68,7 @@ static void path_bezier_quadratic_curve_toCasteljau(ImVector<Vector2D>* path, fl
         let x12 =  (x1 + x2) * 0.5, y12 = (y1 + y2) * 0.5;
         let x23 =  (x2 + x3) * 0.5, y23 = (y2 + y3) * 0.5;
         let x123 =  (x12 + x23) * 0.5, y123 = (y12 + y23) * 0.5;
-        path_bezier_quadratic_curve_toCasteljau(path, x1, y1, x12, y12, x123, y123, tess_tol, level + 1);
-        path_bezier_quadratic_curve_toCasteljau(path, x123, y123, x23, y23, x3, y3, tess_tol, level + 1);
+        path_bezier_quadratic_curve_to_casteljau(path, x1, y1, x12, y12, x123, y123, tess_tol, level + 1);
+        path_bezier_quadratic_curve_to_casteljau(path, x123, y123, x23, y23, x3, y3, tess_tol, level + 1);
     }
 }
