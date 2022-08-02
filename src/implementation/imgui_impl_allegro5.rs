@@ -570,7 +570,7 @@ void ImGui_ImplAllegro5_NewFrame()
     int w, h;
     w = al_get_display_width(bd.Display);
     h = al_get_display_height(bd.Display);
-    io.display_size = Vector2D::new((float)w, h);
+    io.display_size = Vector2D::new(w, h);
 
     // Setup time step
     double current_time = al_get_time();

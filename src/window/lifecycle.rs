@@ -522,11 +522,11 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // for one frame we must set them to at least 2, which is counter-intuitive. hidden_frames_cannot_skip_items is a more complicated case because
         // it has a single usage before this code block and may be set below before it is finally checked.
         if (window..hidden_frames_can_skip_items > 0)
-            window..hidden_frames_can_skip_items--;
+            window..hidden_frames_can_skip_items -= 1 ;
         if (window.hidden_frames_cannot_skip_items > 0)
-            window.hidden_frames_cannot_skip_items--;
+            window.hidden_frames_cannot_skip_items -= 1 ;
         if (window.hiddenFramesForRenderOnly > 0)
-            window.hiddenFramesForRenderOnly--;
+            window.hiddenFramesForRenderOnly -= 1 ;
 
         // Hide new windows for one frame until they calculate their size
         if (window_just_created && (!window_size_x_set_by_api || !window_size_y_set_by_api))
@@ -940,8 +940,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or ImU64.
         double start_pos_highp_x = (double)window.pos.x + window.WindowPadding.x - (double)window.scroll.x + window.dc.columns_offset.x;
         double start_pos_highp_y = (double)window.pos.y + window.WindowPadding.y - (double)window.scroll.y + decoration_up_height;
-        window.dc.cursor_start_pos  = Vector2D::new((float)start_pos_highp_x, start_pos_highp_y);
-        window.dc.cursor_start_posLossyness = Vector2D::new((float)(start_pos_highp_x - window.dc.cursor_start_pos.x), (start_pos_highp_y - window.dc.cursor_start_pos.y));
+        window.dc.cursor_start_pos  = Vector2D::new(start_pos_highp_x, start_pos_highp_y);
+        window.dc.cursor_start_posLossyness = Vector2D::new((start_pos_highp_x - window.dc.cursor_start_pos.x), (start_pos_highp_y - window.dc.cursor_start_pos.y));
         window.dc.cursor_pos = window.dc.cursor_start_pos;
         window.dc.CursorPosPrevLine = window.dc.cursor_pos;
         window.dc.cursor_max_pos = window.dc.cursor_start_pos;

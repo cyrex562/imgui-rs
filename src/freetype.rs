@@ -204,7 +204,7 @@ namespace
         // is a maximum height of an any given glyph, i.e. it's the sum of font's ascender and descender. Seems strange to me.
         // NB: FT_Set_Pixel_Sizes() doesn't seem to get us the same result.
         FT_Size_RequestRec req;
-        req.type = (UserFlags & ImGuiFreeTypeBuilderFlags_Bitmap) ? FT_SIZE_REQUEST_TYPE_NOMINAL : FT_SIZE_REQUEST_TYPE_REAL_DIM;
+        req.type = if(UserFlags & ImGuiFreeTypeBuilderFlags_Bitmap) { FT_SIZE_REQUEST_TYPE_NOMINAL }else{ FT_SIZE_REQUEST_TYPE_REAL_DIM};
         req.width = 0;
         req.height = (uint32_t)pixel_height * 64;
         req.horiResolution = 0;
@@ -301,8 +301,8 @@ namespace
             }
         case FT_PIXEL_MODE_MONO: // Monochrome image, 1 bit per pixel. The bits in each byte are ordered from MSB to LSB.
             {
-                uint8_t color0 = multiply_table ? multiply_table[0] : 0;
-                uint8_t color1 = multiply_table ? multiply_table[255] : 255;
+                uint8_t color0 = if multiply_table { multiply_table[0] }else{ 0};
+                uint8_t color1 = if multiply_table { multiply_table[255] }else{ 255};
                 for (uint32_t y = 0; y < h; y += 1, src += src_pitch, dst += dst_pitch)
                 {
                     uint8_t bits = 0;
@@ -311,7 +311,7 @@ namespace
                     {
                         if ((x & 7) == 0)
                             bits = *bits_ptr += 1;
-                        dst[x] = IM_COL32(255, 255, 255, (bits & 0x80) ? color1 : color0);
+                        dst[x] = IM_COL32(255, 255, 255, if (bits & 0x80) { color1} else {color0});
                     }
                 }
                 break;
@@ -439,7 +439,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         // Measure highest codepoints
         src_load_color |= (cfg.FontBuilderFlags & ImGuiFreeTypeBuilderFlags_LoadColor) != 0;
         ImFontBuildDstDataFT& dst_tmp = dst_tmp_array[src_tmp.DstIndex];
-        src_tmp.SrcRanges = cfg.GlyphRanges ? cfg.GlyphRanges : atlas.GetGlyphRangesDefault();
+        src_tmp.SrcRanges = if cfg.GlyphRanges { cfg.GlyphRanges }else{ atlas.GetGlyphRangesDefault()};
         for (const ImWchar* src_range = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
             src_tmp.GlyphsHighest = ImMax(src_tmp.GlyphsHighest, src_range[1]);
         dst_tmp.SrcCount += 1;
@@ -572,12 +572,12 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // We need a width for the skyline algorithm, any width!
     // The exact width doesn't really matter much, but some API/GPU have texture size limitations and increasing width can decrease height.
     // User can override tex_desired_width and tex_glyph_padding if they wish, otherwise we use a simple heuristic to select the width based on expected surface.
-    let surface_sqrt = ImSqrt((float)total_surface) + 1;
+    let surface_sqrt = ImSqrt(total_surface) + 1;
     atlas.TexHeight = 0;
     if (atlas.TexDesiredWidth > 0)
         atlas.TexWidth = atlas.TexDesiredWidth;
     else
-        atlas.TexWidth = (surface_sqrt >= 4096 * 0.7) ? 4096 : (surface_sqrt >= 2048 * 0.7) ? 2048 : (surface_sqrt >= 1024 * 0.7) ? 1024 : 512;
+        atlas.TexWidth = if (surface_sqrt >= 4096 * 0.7) ? 4096 : (surface_sqrt >= 2048 * 0.7) ? 2048 : (surface_sqrt >= 1024 * 0.7) { 1024 }else{ 512};
 
     // 5. Start packing
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
@@ -606,7 +606,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     }
 
     // 7. Allocate texture
-    atlas.TexHeight = (atlas.flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas.TexHeight + 1) : ImUpperPowerOfTwo(atlas.TexHeight);
+    atlas.TexHeight = if (atlas.flags & ImFontAtlasFlags_NoPowerOfTwoHeight) { (atlas.TexHeight + 1) }else{ ImUpperPowerOfTwo(atlas.TexHeight)};
     atlas.TexUvScale = Vector2D::new(1.0 / atlas.TexWidth, 1.0 / atlas.TexHeight);
     if (src_load_color)
     {

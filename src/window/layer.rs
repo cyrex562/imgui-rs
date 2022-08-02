@@ -17,7 +17,7 @@ pub fn bring_window_to_focus_front(g: &mut Context, window: &mut Window)
     for (int n = cur_order; n < new_order; n += 1)
     {
         g.windows_focus_order[n] = g.windows_focus_order[n + 1];
-        g.windows_focus_order[n].FocusOrder--;
+        g.windows_focus_order[n].FocusOrder -= 1 ;
         // IM_ASSERT(g.windows_focus_order[n].FocusOrder == n);
     }
     g.windows_focus_order[new_order] = window;
@@ -32,7 +32,7 @@ pub fn bring_window_to_display_front(g: &mut Context, window: &mut Window)
     ImGuiWindow* current_front_window = g.windows.back();
     if (current_front_window == window || current_front_window.root_window_dock_tree == window) // Cheap early out (could be better)
         return;
-    for (int i = g.windows.len() - 2; i >= 0; i--) // We can ignore the top-most window
+    for (int i = g.windows.len() - 2; i >= 0; i -= 1 ) // We can ignore the top-most window
         if (g.windows[i] == window)
         {
             memmove(&g.windows[i], &g.windows[i + 1], (g.windows.len() - i - 1) * sizeof(ImGuiWindow*));
@@ -147,7 +147,7 @@ pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_
         }
         start_idx = FindWindowFocusIndex(under_this_window) + offset;
     }
-    for (int i = start_idx; i >= 0; i--)
+    for (int i = start_idx; i >= 0; i -= 1 )
     {
         // We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
         ImGuiWindow* window = g.windows_focus_order[i];

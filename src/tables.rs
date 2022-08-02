@@ -2980,7 +2980,7 @@ void ImGui::TableHeader(const char* label)
             if (column.SortOrder > 0)
             {
                 push_style_color(StyleColor::Text, get_color_u32(StyleColor::Text, 0.70));
-                RenderText(Vector2D::new(x + g.style.item_inner_spacing.x, y), sort_order_suf);
+                render_text(Vector2D::new(x + g.style.item_inner_spacing.x, y), sort_order_suf);
                 pop_style_color();
                 x += w_sort_text;
             }
@@ -2998,7 +2998,7 @@ void ImGui::TableHeader(const char* label)
     // Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
     // be merged into a single draw call.
     //window->draw_list->add_circle_filled(Vector2D(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
-    RenderTextEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.frame_padding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
+    render_textEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.frame_padding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
 
     const bool text_clipped = label_size.x > (ellipsis_max - label_pos.x);
     if (text_clipped && hovered && g.hovered_id_not_active_timer > g.TooltipSlowDelay)

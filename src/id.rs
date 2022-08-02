@@ -42,7 +42,7 @@ pub fn set_active_id(g: &mut Context, id: Id32, window: &mut Window)
     if id
     {
         g.active_id_is_alive = id;
-        g.active_id_source = (g.nav_activate_id == id || g.nav_activate_input_id == id || g.nav_just_moved_to_id == id) ? (ImGuiInputSource)InputSource::Nav : InputSource::Mouse;
+        g.active_id_source = if(g.nav_activate_id == id || g.nav_activate_input_id == id || g.nav_just_moved_to_id == id) { (ImGuiInputSource)InputSource::Nav : InputSource:}else{Mouse};
     }
 
     // clear declaration of inputs claimed by the widget
@@ -110,7 +110,7 @@ void ImGui::keep_alive_id(ImGuiID id)
 // ImGuiID GetIDWithSeed(const char* str, const char* str_end, ImGuiID seed)
 pub fn get_id_with_seed(g: &mut Context, in_str: &str, seed: Id32) -> Id32
 {
-    ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
+    ImGuiID id = ifImHashStr(str, str_end { (str_end - str) }else{ 0, seed)};
     // ImGuiContext& g = *GImGui;
     if (g.debug_hook_id_info == id)
         debug_hook_id_info(id, DataType::String, str, str_end);

@@ -724,7 +724,7 @@ pub fn get_nav_input_amount_2d(g: &mut Context, dir_sources: &HashSet<NavDirSour
 {
     Vector2D delta(0.0, 0.0);
     if (dir_sources & NavDirSourceFlags::RawKeyboard)
-        delta += Vector2D::new((float)IsKeyDown(ImGuiKey_RightArrow) - IsKeyDown(ImGuiKey_LeftArrow), IsKeyDown(ImGuiKey_DownArrow) - IsKeyDown(ImGuiKey_UpArrow));
+        delta += Vector2D::new(IsKeyDown(ImGuiKey_RightArrow) - IsKeyDown(ImGuiKey_LeftArrow), IsKeyDown(ImGuiKey_DownArrow) - IsKeyDown(ImGuiKey_UpArrow));
     if (dir_sources & NavDirSourceFlags::Keyboard)
         delta += Vector2D::new(GetNavInputAmount(ImGuiNavInput_KeyRight_, mode)   - GetNavInputAmount(ImGuiNavInput_KeyLeft_,   mode), GetNavInputAmount(ImGuiNavInput_KeyDown_,   mode) - GetNavInputAmount(ImGuiNavInput_KeyUp_,   mode));
     if (dir_sources & NavDirSourceFlags::PadDPad)
@@ -1628,7 +1628,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
     set_next_window_pos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
     begin("###NavWindowingList", None, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
-    for (int n = g.windows_focus_order.size - 1; n >= 0; n--)
+    for (int n = g.windows_focus_order.size - 1; n >= 0; n -= 1 )
     {
         ImGuiWindow* window = g.windows_focus_order[n];
         // IM_ASSERT(window != None); // Fix static analyzers

@@ -22,7 +22,7 @@ pub fn bezier_quadratic_calc(p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, t: f32
 }
 
 // Closely mimics ImBezierCubicClosestPointCasteljau() in imgui.cpp
-// static void PathBezierCubicCurveToCasteljau(ImVector<Vector2D>* path, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float tess_tol, int level)
+// static void path_bezier_cubic_curve_toCasteljau(ImVector<Vector2D>* path, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float tess_tol, int level)
 pub fn path_bezier_cubic_curve_to_casteljau(path: &Vec<Vector2D>, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, x4: f32, y4: f32, tess_tol: f32, level: i32)
 {
     let dx = x4 - x1;
@@ -55,7 +55,7 @@ pub fn path_bezier_cubic_curve_to_casteljau(path: &Vec<Vector2D>, x1: f32, y1: f
     }
 }
 
-static void PathBezierQuadraticCurveToCasteljau(ImVector<Vector2D>* path, float x1, float y1, float x2, float y2, float x3, float y3, float tess_tol, int level)
+static void path_bezier_quadratic_curve_toCasteljau(ImVector<Vector2D>* path, float x1, float y1, float x2, float y2, float x3, float y3, float tess_tol, int level)
 {
     let dx =  x3 - x1, dy = y3 - y1;
     let det =  (x2 - x3) * dy - (y2 - y3) * dx;
@@ -68,7 +68,7 @@ static void PathBezierQuadraticCurveToCasteljau(ImVector<Vector2D>* path, float 
         let x12 =  (x1 + x2) * 0.5, y12 = (y1 + y2) * 0.5;
         let x23 =  (x2 + x3) * 0.5, y23 = (y2 + y3) * 0.5;
         let x123 =  (x12 + x23) * 0.5, y123 = (y12 + y23) * 0.5;
-        PathBezierQuadraticCurveToCasteljau(path, x1, y1, x12, y12, x123, y123, tess_tol, level + 1);
-        PathBezierQuadraticCurveToCasteljau(path, x123, y123, x23, y23, x3, y3, tess_tol, level + 1);
+        path_bezier_quadratic_curve_toCasteljau(path, x1, y1, x12, y12, x123, y123, tess_tol, level + 1);
+        path_bezier_quadratic_curve_toCasteljau(path, x123, y123, x23, y23, x3, y3, tess_tol, level + 1);
     }
 }

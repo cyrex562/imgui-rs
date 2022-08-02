@@ -399,7 +399,7 @@ pub const WINDOW_DOCK_STYLE_COLORS: [StyleColor; 6] = [
 //     if (var_info->Type == DataType::Float && var_info->Count == 2)
 //     {
 //         ImGuiContext& g = *GImGui;
-//         Vector2D* pvar = (Vector2D*)var_info->GetVarPtr(&g.style);
+//         Vector2D* pvar = var_info->GetVarPtr(&g.style);
 //         g.style_var_stack.push_back(ImGuiStyleMod(idx, *pvar));
 //         *pvar = val;
 //         return;

@@ -135,8 +135,8 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
 
     // When disabled we'll return false but still set hovered_id
     ImGuiItemFlags
-    item_flags = (g.LastItemData.id == id?
-    g.LastItemData.InFlags: g.current_item_flags);
+    item_flags = if(g.LastItemData.id == id{
+    g.LastItemData.InFlags}else{ g.current_item_flags)};
     if item_flags & ItemFlags::Disabled {
         // Release active id if turning disabled
         if g.active_id == id {
@@ -490,9 +490,9 @@ pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
     // We increase the height in this function to accommodate for baseline offset.
     // In theory we should be offsetting the starting position (window->dc.cursor_pos), that will be the topic of a larger refactor,
     // but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
-    let offset_to_match_baseline_y = (text_baseline_y >= 0) ? ImMax(0.0, window.dc.CurrLineTextBaseOffset - text_baseline_y) : 0.0;
+    let offset_to_match_baseline_y = if(text_baseline_y >= 0) { ImMax(0.0, window.dc.CurrLineTextBaseOffset - text_baseline_y) }else{ 0.0};
 
-    let line_y1 = window.dc.Issame_line ? window.dc.CursorPosPrevLine.y : window.dc.cursor_pos.y;
+    let line_y1 = if window.dc.Issame_line { window.dc.CursorPosPrevLine.y }else{ window.dc.cursor_pos.y};
     let line_height = ImMax(window.dc.CurrLineSize.y, /*ImMax(*/window.dc.cursor_pos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y);
 
     // Always align ourselves on pixel boundaries
@@ -529,7 +529,7 @@ pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: Option<&Re
     // (display_rect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
     g.last_item_data.id = id;
     g.last_item_data.Rect = bb;
-    g.last_item_data.NavRect = nav_bb_arg ? *nav_bb_arg : bb;
+    g.last_item_data.NavRect = if nav_bb_arg { *nav_bb_arg }else{ bb};
     g.last_item_data.InFlags = g.current_item_flags | extra_flags;
     g.last_item_data.status_flags = ImGuiItemStatusFlags_None;
 
@@ -603,7 +603,7 @@ pub fn push_item_width(g: &mut Context, item_width: f32)
     // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.current_window;
     window.dc.ItemWidthStack.push_back(window.dc.ItemWidth); // Backup current width
-    window.dc.ItemWidth = (item_width == 0.0 ? window.ItemWidthDefault : item_width);
+    window.dc.ItemWidth = if (item_width == 0.0 { window.ItemWidthDefault }else{ item_width)};
     g.NextItemData.flags &= ~ImGuiNextItemDataFlags_HasWidth;
 }
 
@@ -619,7 +619,7 @@ pub fn push_multi_items_widths(g: &mut Context, components: i32, w_full: f32)
     window.dc.ItemWidthStack.push_back(w_item_last);
     for (int i = 0; i < components - 2; i += 1)
         window.dc.ItemWidthStack.push_back(w_item_one);
-    window.dc.ItemWidth = (components == 1) ? w_item_last : w_item_one;
+    window.dc.ItemWidth = if (components == 1) { w_item_last }else{ w_item_one};
     g.NextItemData.flags &= ~ImGuiNextItemDataFlags_HasWidth;
 }
 

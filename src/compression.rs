@@ -22,7 +22,7 @@ static void stb__match(const unsigned char *data, unsigned int length)
     // IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
     if (stb__dout + length > stb__barrier_out_e) { stb__dout += length; return; }
     if (data < stb__barrier_out_b) { stb__dout = stb__barrier_out_e+1; return; }
-    while (length--) *stb__dout += 1 = *data += 1;
+    while (length -= 1 ) *stb__dout += 1 = *data += 1;
 }
 
 static void stb__lit(const unsigned char *data, unsigned int length)

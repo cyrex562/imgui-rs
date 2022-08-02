@@ -288,7 +288,7 @@ pub fn begin_drag_drop_target(g: &mut Context) -> bool
     if (hovered_window == None || window.root_window_dock_tree != hovered_window.root_window_dock_tree || window.skip_items)
         return false;
 
-    const Rect& display_rect = (g.last_item_data.status_flags & ImGuiItemStatusFlags_HasDisplayRect) ? g.last_item_data.DisplayRect : g.last_item_data.Rect;
+    const Rect& display_rect = if(g.last_item_data.status_flags & ImGuiItemStatusFlags_HasDisplayRect) { g.last_item_data.DisplayRect }else{ g.last_item_data.Rect};
     ImGuiID id = g.last_item_data.id;
     if (id == 0)
     {
