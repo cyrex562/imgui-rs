@@ -1,9 +1,10 @@
-use crate::defines;
-use crate::defines::DimgDrawCallback;
+use crate::{defines, INVALID_ID};
+use crate::defines::DrawCallback;
 use crate::texture::TextureId;
 use crate::types::Id32;
 use crate::vectors::Vector4D;
 use std::fmt::{Debug, Formatter};
+use crate::draw::{DrawCallback, im_draw_callback_nop};
 
 // Typically, 1 command = 1 GPU draw call (unless command is a callback)
 // - vtx_offset: When 'io.backend_flags & ImGuiBackendFlags_RendererHasVtxOffset' is enabled,
@@ -12,6 +13,7 @@ use std::fmt::{Debug, Formatter};
 // - The clip_rect/texture_id/vtx_offset fields must be contiguous as we memcmp() them together (this is asserted for).
 #[derive(Default, Clone)]
 pub struct DrawCmd {
+    pub id: Id32,
     pub clip_rect: Vector4D,
     // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData->display_pos to get clipping rectangle in "viewport" coordinates
     // ImTextureID     texture_id,          // 4-8  // User-provided texture id. Set by user in ImfontAtlas::set_tex_id() for fonts or passed to Image*() functions. Ignore if never using images or multiple fonts atlas.
@@ -23,7 +25,7 @@ pub struct DrawCmd {
     pub elem_count: i32,
     // 4    // Number of indices (multiple of 3) to be rendered as triangles. Vertices are stored in the callee ImDrawList's vtx_buffer[] array, indices in idx_buffer[].
     // ImDrawCallback  user_callback;       // 4-8  // If != None, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
-    pub user_callback: Option<DimgDrawCallback>,
+    pub user_callback: Option<DrawCallback>,
     // void*           user_callback_data;   // 4-8  // The draw callback code can access this.
     pub user_callback_data: Vec<u8>,
 }
@@ -39,12 +41,13 @@ impl DrawCmd {
     //
     pub fn new() -> Self {
         Self {
+            id: INVALID_ID,
             clip_rect: Default::default(),
-            texture_id: Id32::MAX,
+            texture_id: INVALID_ID,
             vtx_offset: 0,
             idx_offset: 0,
             elem_count: 0,
-            user_callback: Some(defines::im_draw_callback_nop),
+            user_callback: Some(im_draw_callback_nop),
             user_callback_data: vec![],
         }
     }

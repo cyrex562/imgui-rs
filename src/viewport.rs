@@ -205,7 +205,7 @@ pub fn setup_viewport_draw_data(g: &mut Context, viewport: &mut Viewport, draw_l
     let draw_data: &mut DrawData = &mut viewport.draw_data;
     // viewport.draw_data = draw_data; // Make publicly accessible
     draw_data.valid = true;
-    draw_data.cmd_lists = if draw_lists.len() > 0 { draw_lists.data } else { vec![] };
+    draw_data.draw_lists = if draw_lists.len() > 0 { draw_lists.data } else { vec![] };
     draw_data.cmd_lists_count = draw_lists.size;
     draw_data.total_vtx_count = 0;
     draw_data.total_idx_count = 0;
@@ -222,7 +222,7 @@ pub fn setup_viewport_draw_data(g: &mut Context, viewport: &mut Viewport, draw_l
         draw_list.pop_unused_draw_cmd();
         //     draw_data.total_vtx_count += draw_list->VtxBuffer.Size;
         draw_data.total_vtx_count += draw_list.vtx_buffer.len();
-        //     draw_data.total_idx_count += draw_list->IdxBuffer.Size;
+        //     draw_data.total_idx_count += draw_list->idx_buffer.Size;
         draw_data.total_idx_count += draw_list.idx_buffer.len();
         // }
     }

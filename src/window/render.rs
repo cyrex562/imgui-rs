@@ -1,6 +1,6 @@
 use crate::axis::Axis;
 use crate::border::get_resize_border_rect;
-use crate::color::{StyleColor, IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_WHITE};
+use crate::color::{StyleColor, COLOR_32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_WHITE};
 use crate::config::ConfigFlags;
 use crate::dock::defines::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
@@ -168,7 +168,7 @@ pub fn render_window_decorations(
             let mut bg_col = get_color_u32_no_alpha(get_window_bg_color_idx(window));
             if window.viewport_owned {
                 // No alpha
-                bg_col = (bg_col | IM_COL32_A_MASK);
+                bg_col = (bg_col | COLOR_32_A_MASK);
                 if is_docking_transparent_payload {
                     window.viewport.alpha *= DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
                 }
@@ -188,7 +188,7 @@ pub fn render_window_decorations(
                     override_alpha = true;
                 }
                 if override_alpha {
-                    bg_col = (bg_col & !IM_COL32_A_MASK)
+                    bg_col = (bg_col & !COLOR_32_A_MASK)
                         | (im_f32_to_int8_sat(alpha) << IM_COL32_A_SHIFT);
                 }
             }

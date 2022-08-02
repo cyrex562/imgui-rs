@@ -289,7 +289,7 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
         draw_list.add_rect(curr.min, curr.max, IM_COL32(255,200,0,100));
         draw_list.add_rect(cand.min, cand.max, IM_COL32(255,255,0,200));
         draw_list.add_rect_filled(cand.max - Vector2D::new(4, 4), cand.max + CalcTextSize(buf) + Vector2D::new(4, 4), IM_COL32(40,0,0,150));
-        draw_list.AddText(cand.max, ~0U, buf);
+        draw_list.add_text(cand.max, ~0U, buf);
     }
     else if (g.io.key_ctrl) // Hold to preview score in matching quadrant. Press C to rotate.
     {
@@ -298,7 +298,7 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
             ImFormatString(buf, IM_ARRAYSIZE(buf), "%.0/%.0", dist_box, dist_center);
             ImDrawList* draw_list = get_foreground_draw_list(window);
             draw_list.add_rect_filled(cand.min, cand.max, IM_COL32(255, 0, 0, 200));
-            draw_list.AddText(cand.min, IM_COL32(255, 255, 255, 255), buf);
+            draw_list.add_text(cand.min, IM_COL32(255, 255, 255, 255), buf);
         }
     }
 
@@ -724,7 +724,7 @@ pub fn get_nav_input_amount_2d(g: &mut Context, dir_sources: &HashSet<NavDirSour
 {
     Vector2D delta(0.0, 0.0);
     if (dir_sources & NavDirSourceFlags::RawKeyboard)
-        delta += Vector2D::new((float)IsKeyDown(ImGuiKey_RightArrow) - IsKeyDown(ImGuiKey_LeftArrow), IsKeyDown(ImGuiKey_DownArrow) - IsKeyDown(ImGuiKey_UpArrow));
+        delta += Vector2D::new(IsKeyDown(ImGuiKey_RightArrow) - IsKeyDown(ImGuiKey_LeftArrow), IsKeyDown(ImGuiKey_DownArrow) - IsKeyDown(ImGuiKey_UpArrow));
     if (dir_sources & NavDirSourceFlags::Keyboard)
         delta += Vector2D::new(GetNavInputAmount(ImGuiNavInput_KeyRight_, mode)   - GetNavInputAmount(ImGuiNavInput_KeyLeft_,   mode), GetNavInputAmount(ImGuiNavInput_KeyDown_,   mode) - GetNavInputAmount(ImGuiNavInput_KeyUp_,   mode));
     if (dir_sources & NavDirSourceFlags::PadDPad)
@@ -929,7 +929,7 @@ pub fn nav_update(g: &mut Context)
     {
         ImDrawList* draw_list = get_foreground_draw_list(g.nav_window);
         if (1) { for (int layer = 0; layer < 2; layer += 1) { Rect r = WindowRectRelToAbs(g.nav_window, g.nav_window.NavRectRel[layer]); draw_list.add_rect(r.min, r.max, IM_COL32(255,200,0,255)); } } // [DEBUG]
-        if (1) { ImU32 col = (!g.nav_window.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); Vector2D p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0, col); draw_list.AddText(None, 13.0, p + Vector2D::new(8,-4), col, buf); }
+        if (1) { ImU32 col = (!g.nav_window.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); Vector2D p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0, col); draw_list.add_text(None, 13.0, p + Vector2D::new(8,-4), col, buf); }
     }
 
 }

@@ -142,7 +142,7 @@ pub const SAVED_FLAGS_MASK: HashSet<DockNodeFlags> = HashSet::from([
 ]);
 
 #[derive(Default, Debug, Clone)]
-pub struct DockNode<'a> {
+pub struct DockNode {
     // DimgId                 id;
     pub id: Id32,
     // ImGuiDockNodeFlags      shared_flags;                // (Write) flags shared by all nodes of a same dockspace hierarchy (inherited from the root node)

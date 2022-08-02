@@ -27,7 +27,7 @@ impl DrawListSplitter {
         if (i == _Current)
             memset(&_Channels[i], 0, sizeof(_Channels[i]));  // current channel is a copy of cmd_buffer/idx_buffer, don't destruct again
         _Channels[i]._CmdBuffer.clear();
-        _Channels[i]._IdxBuffer.clear();
+        _Channels[i]._idx_buffer.clear();
     }
     _Current = 0;
     _Count = 1;
@@ -58,7 +58,7 @@ impl DrawListSplitter {
         else
         {
             _Channels[i]._CmdBuffer.resize(0);
-            _Channels[i]._IdxBuffer.resize(0);
+            _Channels[i]._idx_buffer.resize(0);
         }
     }
     }
@@ -98,7 +98,7 @@ impl DrawListSplitter {
         //         if (ch._CmdBuffer.size > 0)
         //             last_cmd = &ch._CmdBuffer.back();
         //         new_cmd_buffer_count += ch._CmdBuffer.size;
-        //         new_idx_buffer_count += ch._IdxBuffer.size;
+        //         new_idx_buffer_count += ch._idx_buffer.size;
         //         for (int cmd_n = 0; cmd_n < ch._CmdBuffer.size; cmd_n += 1)
         //         {
         //             ch._CmdBuffer.data[cmd_n].IdxOffset = idx_offset;
@@ -106,16 +106,16 @@ impl DrawListSplitter {
         //         }
         //     }
         //     draw_list.cmd_buffer.resize(draw_list.cmd_buffer.size + new_cmd_buffer_count);
-        //     draw_list.IdxBuffer.resize(draw_list.IdxBuffer.size + new_idx_buffer_count);
+        //     draw_list.idx_buffer.resize(draw_list.idx_buffer.size + new_idx_buffer_count);
         //
         //     // Write commands and indices in order (they are fairly small structures, we don't copy vertices only indices)
         //     ImDrawCmd* cmd_write = draw_list.cmd_buffer.data + draw_list.cmd_buffer.size - new_cmd_buffer_count;
-        //     ImDrawIdx* idx_write = draw_list.IdxBuffer.data + draw_list.IdxBuffer.size - new_idx_buffer_count;
+        //     ImDrawIdx* idx_write = draw_list.idx_buffer.data + draw_list.idx_buffer.size - new_idx_buffer_count;
         //     for (int i = 1; i < _Count; i += 1)
         //     {
         //         ImDrawChannel& ch = _Channels[i];
         //         if (int sz = ch._CmdBuffer.size) { memcpy(cmd_write, ch._CmdBuffer.data, sz * sizeof(ImDrawCmd)); cmd_write += sz; }
-        //         if (int sz = ch._IdxBuffer.size) { memcpy(idx_write, ch._IdxBuffer.data, sz * sizeof(ImDrawIdx)); idx_write += sz; }
+        //         if (int sz = ch._idx_buffer.size) { memcpy(idx_write, ch._idx_buffer.data, sz * sizeof(ImDrawIdx)); idx_write += sz; }
         //     }
         //     draw_list->_IdxWritePtr = idx_write;
         //
@@ -141,11 +141,11 @@ impl DrawListSplitter {
 
     // Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
     memcpy(&_Channels.data[_Current]._CmdBuffer, &draw_list.cmd_buffer, sizeof(draw_list.cmd_buffer));
-    memcpy(&_Channels.data[_Current]._IdxBuffer, &draw_list.IdxBuffer, sizeof(draw_list.IdxBuffer));
+    memcpy(&_Channels.data[_Current]._idx_buffer, &draw_list.idx_buffer, sizeof(draw_list.idx_buffer));
     _Current = idx;
     memcpy(&draw_list.cmd_buffer, &_Channels.data[idx]._CmdBuffer, sizeof(draw_list.cmd_buffer));
-    memcpy(&draw_list.IdxBuffer, &_Channels.data[idx]._IdxBuffer, sizeof(draw_list.IdxBuffer));
-    draw_list->_IdxWritePtr = draw_list.IdxBuffer.data + draw_list.IdxBuffer.size;
+    memcpy(&draw_list.idx_buffer, &_Channels.data[idx]._idx_buffer, sizeof(draw_list.idx_buffer));
+    draw_list->_IdxWritePtr = draw_list.idx_buffer.data + draw_list.idx_buffer.size;
 
     // If current command is used with different settings we need to add a new command
     ImDrawCmd* curr_cmd = (draw_list.cmd_buffer.size == 0) ? None : &draw_list.cmd_buffer.data[draw_list.cmd_buffer.size - 1];

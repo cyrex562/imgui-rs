@@ -400,7 +400,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     ImFontAtlasBuildInit(atlas);
 
     // clear atlas
-    atlas.TexID = (ImTextureID)None;
+    atlas.TexID = None;
     atlas.TexWidth = atlas.TexHeight = 0;
     atlas.TexUvScale = Vector2D::new(0.0, 0.0);
     atlas.TexUvWhitePixel = Vector2D::new(0.0, 0.0);
@@ -572,7 +572,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // We need a width for the skyline algorithm, any width!
     // The exact width doesn't really matter much, but some API/GPU have texture size limitations and increasing width can decrease height.
     // User can override tex_desired_width and tex_glyph_padding if they wish, otherwise we use a simple heuristic to select the width based on expected surface.
-    let surface_sqrt = ImSqrt((float)total_surface) + 1;
+    let surface_sqrt = ImSqrt(total_surface) + 1;
     atlas.TexHeight = 0;
     if (atlas.TexDesiredWidth > 0)
         atlas.TexWidth = atlas.TexDesiredWidth;

@@ -24,7 +24,7 @@ pub struct DimgFontGlyph
 }
 
 
-void ImFontGlyphRangesBuilder::AddText(const char* text, const char* text_end)
+void ImFontGlyphRangesBuilder::add_text(const char* text, const char* text_end)
 {
     while (text_end ? (text < text_end) : *text)
     {

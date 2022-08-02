@@ -649,8 +649,8 @@ void ImFontAtlas::CalcCustomRectUV(const ImFontAtlasCustomRect* rect, Vector2D* 
 {
     // IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // font atlas needs to be built before we can calculate UV coordinates
     // IM_ASSERT(rect.IsPacked());                // Make sure the rectangle has been packed
-    *out_uv_min = Vector2D::new((float)rect.X * TexUvScale.x, rect.Y * TexUvScale.y);
-    *out_uv_max = Vector2D::new((float)(rect.X + rect.Width) * TexUvScale.x, (rect.Y + rect.Height) * TexUvScale.y);
+    *out_uv_min = Vector2D::new(rect.X * TexUvScale.x, rect.Y * TexUvScale.y);
+    *out_uv_max = Vector2D::new((rect.X + rect.Width) * TexUvScale.x, (rect.Y + rect.Height) * TexUvScale.y);
 }
 
 bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* out_offset, Vector2D* out_size, Vector2D out_uv_border[2], Vector2D out_uv_fill[2])
@@ -662,7 +662,7 @@ bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* 
 
     // IM_ASSERT(PackIdMouseCursors != -1);
     ImFontAtlasCustomRect* r = GetCustomRectByIndex(PackIdMouseCursors);
-    Vector2D pos = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + Vector2D::new((float)r.X, r.Y);
+    Vector2D pos = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + Vector2D::new(r.X, r.Y);
     Vector2D size = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
     *out_size = size;
     *out_offset = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][2];
@@ -755,7 +755,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     ImFontAtlasBuildInit(atlas);
 
     // clear atlas
-    atlas.TexID = (ImTextureID)None;
+    atlas.TexID = None;
     atlas.TexWidth = atlas.TexHeight = 0;
     atlas.TexUvScale = Vector2D::new(0.0, 0.0);
     atlas.TexUvWhitePixel = Vector2D::new(0.0, 0.0);
@@ -893,7 +893,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     // We need a width for the skyline algorithm, any width!
     // The exact width doesn't really matter much, but some API/GPU have texture size limitations and increasing width can decrease height.
     // User can override tex_desired_width and tex_glyph_padding if they wish, otherwise we use a simple heuristic to select the width based on expected surface.
-    let surface_sqrt = ImSqrt((float)total_surface) + 1;
+    let surface_sqrt = ImSqrt(total_surface) + 1;
     atlas.TexHeight = 0;
     if (atlas.TexDesiredWidth > 0)
         atlas.TexWidth = atlas.TexDesiredWidth;
@@ -1155,10 +1155,10 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         }
 
         // Calculate UVs for this line
-        Vector2D uv0 = Vector2D::new((float)(r.X + pad_left - 1), (r.Y + y)) * atlas.TexUvScale;
-        Vector2D uv1 = Vector2D::new((float)(r.X + pad_left + line_width + 1), (r.Y + y + 1)) * atlas.TexUvScale;
+        Vector2D uv0 = Vector2D::new((r.X + pad_left - 1), (r.Y + y)) * atlas.TexUvScale;
+        Vector2D uv1 = Vector2D::new((r.X + pad_left + line_width + 1), (r.Y + y + 1)) * atlas.TexUvScale;
         let half_v =  (uv0.y + uv1.y) * 0.5; // Calculate a constant V in the middle of the row to avoid sampling artifacts
-        atlas.TexUvLines[n] = Vector4D(uv0.x, half_v, uv1.x, half_v);
+        atlas.tex_uv_lines[n] = Vector4D(uv0.x, half_v, uv1.x, half_v);
     }
 }
 

@@ -10,6 +10,7 @@ use crate::config::ConfigFlags;
 use crate::dock::context::DockContext;
 use crate::dock::node::DockNode;
 use crate::drag_drop::DragDropFlags;
+use crate::draw::cmd::DrawCmd;
 use crate::draw::list::DrawList;
 use crate::draw_channel::DrawChannel;
 use crate::list_clipper::ListClipperData;
@@ -546,6 +547,7 @@ pub struct Context {
     // ImVector<char>          temp_buffer;                         // Temporary text buffer
     pub temp_buffer: Vec<u8>,
     pub dock_nodes: HashMap<Id32, DockNode>,
+    pub draw_commands: Vec<DrawCmd>
 }
 
 impl Context {
@@ -814,6 +816,7 @@ impl Context {
             temp_buffer: vec![],
             font: Default::default(),
             dock_nodes: Default::default(),
+            draw_commands: vec![]
         }
     }
 
@@ -835,6 +838,15 @@ impl Context {
             }
         }
 
+        return None;
+    }
+
+    pub fn get_draw_command(&mut self, draw_cmd_id: Id32) -> Option<&mut DrawCmd> {
+        for dc in self.draw_commands.iter_mut() {
+            if dc.id == draw_cmd_id {
+                return Some(dc)
+            }
+        }
         return None;
     }
 

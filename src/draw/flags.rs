@@ -1,34 +1,40 @@
+use std::collections::HashSet;
+use crate::draw::{ROUND_CORNERS_ALL, ROUND_CORNERS_MASK};
 
-IM_STATIC_ASSERT(DrawFlags::RoundCornersTopLeft == (1 << 4));
-static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
+// IM_STATIC_ASSERT(DrawFlags::RoundCornersTopLeft == (1 << 4));
+// static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
+pub fn fix_rect_corner_flags(flags: &mut HashSet<DrawFlags>) -> &mut HashSet<DrawFlags>
 {
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    // Legacy Support for hard coded ~0 (used to be a suggested equivalent to ImDrawCornerFlags_All)
-    //   ~0   --> ImDrawFlags_RoundCornersAll or 0
-    if (flags == ~0)
-        return DrawFlags::RoundCornersAll;
-
-    // Legacy Support for hard coded 0x01 to 0x0F (matching 15 out of 16 old flags combinations)
-    //   0x01 --> ImDrawFlags_RoundCornersTopLeft (VALUE 0x01 OVERLAPS ImDrawFlags_Closed but ImDrawFlags_Closed is never valid in this path!)
-    //   0x02 --> ImDrawFlags_RoundCornersTopRight
-    //   0x03 --> ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight
-    //   0x04 --> ImDrawFlags_RoundCornersBotLeft
-    //   0x05 --> ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBotLeft
-    //   ...
-    //   0x0F --> ImDrawFlags_RoundCornersAll or 0
-    // (See all values in ImDrawCornerFlags_)
-    if (flags >= 0x01 && flags <= 0x0F)
-        return (flags << 4);
-
-    // We cannot support hard coded 0x00 with 'float rounding > 0.0' --> replace with ImDrawFlags_RoundCornersNone or use 'float rounding = 0.0'
+// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+//     // Legacy Support for hard coded ~0 (used to be a suggested equivalent to ImDrawCornerFlags_All)
+//     //   ~0   --> ImDrawFlags_RoundCornersAll or 0
+//     if (flags == ~0)
+//         return DrawFlags::RoundCornersAll;
+//
+//     // Legacy Support for hard coded 0x01 to 0x0F (matching 15 out of 16 old flags combinations)
+//     //   0x01 --> ImDrawFlags_RoundCornersTopLeft (VALUE 0x01 OVERLAPS ImDrawFlags_Closed but ImDrawFlags_Closed is never valid in this path!)
+//     //   0x02 --> ImDrawFlags_RoundCornersTopRight
+//     //   0x03 --> ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight
+//     //   0x04 --> ImDrawFlags_RoundCornersBotLeft
+//     //   0x05 --> ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBotLeft
+//     //   ...
+//     //   0x0F --> ImDrawFlags_RoundCornersAll or 0
+//     // (See all values in ImDrawCornerFlags_)
+//     if (flags >= 0x01 && flags <= 0x0F)
+//         return (flags << 4);
+//
+//     // We cannot support hard coded 0x00 with 'float rounding > 0.0' --> replace with ImDrawFlags_RoundCornersNone or use 'float rounding = 0.0'
 
 
     // If this triggers, please update your code replacing hardcoded values with new ImDrawFlags_RoundCorners* values.
     // Note that ImDrawFlags_Closed (== 0x01) is an invalid flag for add_rect(), add_rect_filled(), PathRect() etc...
     // IM_ASSERT((flags & 0x0F) == 0 && "Misuse of legacy hardcoded ImDrawCornerFlags values!");
 
-    if ((flags & DrawFlags::RoundCornersMask_) == 0)
-        flags |= DrawFlags::RoundCornersAll;
+    // if ((flags & DrawFlags::RoundCornersMask_) == 0) {
+    if flags.contains(ROUND_CORNERS_MASK) == false {
+        // flags |= DrawFlags::RoundCornersAll;
+        flags.insert(ROUND_CORNERS_ALL);
+    }
 
     return flags;
 }

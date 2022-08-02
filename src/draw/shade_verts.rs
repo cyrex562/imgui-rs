@@ -4,8 +4,8 @@ void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int ve
 {
     Vector2D gradient_extent = gradient_p1 - gradient_p0;
     let gradient_inv_length2 =  1.0 / ImLengthSqr(gradient_extent);
-    ImDrawVert* vert_start = draw_list.VtxBuffer.data + vert_start_idx;
-    ImDrawVert* vert_end = draw_list.VtxBuffer.data + vert_end_idx;
+    ImDrawVert* vert_start = draw_list.vtx_buffer.data + vert_start_idx;
+    ImDrawVert* vert_end = draw_list.vtx_buffer.data + vert_end_idx;
     let col0_r = (col0 >> IM_COL32_R_SHIFT) & 0xFF;
     let col0_g = (col0 >> IM_COL32_G_SHIFT) & 0xFF;
     let col0_b = (col0 >> IM_COL32_B_SHIFT) & 0xFF;
@@ -19,7 +19,7 @@ void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int ve
         int r = (col0_r + col_delta_r * t);
         int g = (col0_g + col_delta_g * t);
         int b = (col0_b + col_delta_b * t);
-        vert.col = (r << IM_COL32_R_SHIFT) | (g << IM_COL32_G_SHIFT) | (b << IM_COL32_B_SHIFT) | (vert.col & IM_COL32_A_MASK);
+        vert.col = (r << IM_COL32_R_SHIFT) | (g << IM_COL32_G_SHIFT) | (b << IM_COL32_B_SHIFT) | (vert.col & COLOR_32_A_MASK);
     }
 }
 
@@ -32,8 +32,8 @@ void ImGui::ShadeVertsLinearUV(ImDrawList* draw_list, int vert_start_idx, int ve
         size.x != 0.0 ? (uv_size.x / size.x) : 0.0,
         size.y != 0.0 ? (uv_size.y / size.y) : 0.0);
 
-    ImDrawVert* vert_start = draw_list.VtxBuffer.data + vert_start_idx;
-    ImDrawVert* vert_end = draw_list.VtxBuffer.data + vert_end_idx;
+    ImDrawVert* vert_start = draw_list.vtx_buffer.data + vert_start_idx;
+    ImDrawVert* vert_end = draw_list.vtx_buffer.data + vert_end_idx;
     if (clamp)
     {
         const Vector2D min = ImMin(uv_a, uv_b);

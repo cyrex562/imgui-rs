@@ -235,7 +235,7 @@ index of this file:
 // void ImDrawList::_ClearFreeMemory()
 // {
 //     CmdBuffer.clear();
-//     IdxBuffer.clear();
+//     idx_buffer.clear();
 //     VtxBuffer.clear();
 //     Flags = DrawListFlags::None;
 //     _VtxCurrentIdx = 0;
@@ -251,8 +251,8 @@ index of this file:
 // {
 //     ImDrawList* dst = IM_NEW(ImDrawList(_Data));
 //     dst.cmd_buffer = CmdBuffer;
-//     dst.IdxBuffer = IdxBuffer;
-//     dst.VtxBuffer = VtxBuffer;
+//     dst.idx_buffer = idx_buffer;
+//     dst.vtx_buffer = VtxBuffer;
 //     dst.flags = Flags;
 //     return dst;
 // }
@@ -263,7 +263,7 @@ index of this file:
 //     draw_cmd.clip_rect = _CmdHeader.clip_rect;    // Same as calling ImDrawCmd_HeaderCopy()
 //     draw_cmd.TextureId = _CmdHeader.TextureId;
 //     draw_cmd.VtxOffset = _CmdHeader.VtxOffset;
-//     draw_cmd.IdxOffset = IdxBuffer.size;
+//     draw_cmd.IdxOffset = idx_buffer.size;
 //
 //     // IM_ASSERT(draw_cmd.clip_rect.x <= draw_cmd.clip_rect.z && draw_cmd.clip_rect.y <= draw_cmd.clip_rect.w);
 //     CmdBuffer.push_back(draw_cmd);
@@ -471,9 +471,9 @@ index of this file:
 //     VtxBuffer.resize(vtx_buffer_old_size + vtx_count);
 //     _VtxWritePtr = VtxBuffer.data + vtx_buffer_old_size;
 //
-//     int idx_buffer_old_size = IdxBuffer.size;
-//     IdxBuffer.resize(idx_buffer_old_size + idx_count);
-//     _IdxWritePtr = IdxBuffer.data + idx_buffer_old_size;
+//     int idx_buffer_old_size = idx_buffer.size;
+//     idx_buffer.resize(idx_buffer_old_size + idx_count);
+//     _IdxWritePtr = idx_buffer.data + idx_buffer_old_size;
 // }
 
 // Release the a number of reserved vertices/indices from the end of the last reservation made with PrimReserve().
@@ -484,7 +484,7 @@ index of this file:
 //     ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
 //     draw_cmd.ElemCount -= idx_count;
 //     VtxBuffer.shrink(VtxBuffer.size - vtx_count);
-//     IdxBuffer.shrink(IdxBuffer.size - idx_count);
+//     idx_buffer.shrink(idx_buffer.size - idx_count);
 // }
 
 // Fully unrolled with inline call to keep our debug builds decently fast.
@@ -1070,7 +1070,7 @@ index of this file:
 //     Vector2D p1 = _Path.back();
 //     if (num_segments == 0)
 //     {
-//         PathBezierQuadraticCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data.curve_tessellation_tol, 0);// Auto-tessellated
+//         path_bezier_quadratic_curve_to_casteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data.curve_tessellation_tol, 0);// Auto-tessellated
 //     }
 //     else
 //     {
@@ -1406,7 +1406,7 @@ index of this file:
 //         if (i == _Current)
 //             memset(&_Channels[i], 0, sizeof(_Channels[i]));  // current channel is a copy of cmd_buffer/idx_buffer, don't destruct again
 //         _Channels[i]._CmdBuffer.clear();
-//         _Channels[i]._IdxBuffer.clear();
+//         _Channels[i]._idx_buffer.clear();
 //     }
 //     _Current = 0;
 //     _Count = 1;
@@ -1438,7 +1438,7 @@ index of this file:
 //         else
 //         {
 //             _Channels[i]._CmdBuffer.resize(0);
-//             _Channels[i]._IdxBuffer.resize(0);
+//             _Channels[i]._idx_buffer.resize(0);
 //         }
 //     }
 // }
@@ -1479,7 +1479,7 @@ index of this file:
 //         if (ch._CmdBuffer.size > 0)
 //             last_cmd = &ch._CmdBuffer.back();
 //         new_cmd_buffer_count += ch._CmdBuffer.size;
-//         new_idx_buffer_count += ch._IdxBuffer.size;
+//         new_idx_buffer_count += ch._idx_buffer.size;
 //         for (int cmd_n = 0; cmd_n < ch._CmdBuffer.size; cmd_n += 1)
 //         {
 //             ch._CmdBuffer.data[cmd_n].IdxOffset = idx_offset;
@@ -1487,16 +1487,16 @@ index of this file:
 //         }
 //     }
 //     draw_list.cmd_buffer.resize(draw_list.cmd_buffer.size + new_cmd_buffer_count);
-//     draw_list.IdxBuffer.resize(draw_list.IdxBuffer.size + new_idx_buffer_count);
+//     draw_list.idx_buffer.resize(draw_list.idx_buffer.size + new_idx_buffer_count);
 //
 //     // Write commands and indices in order (they are fairly small structures, we don't copy vertices only indices)
 //     ImDrawCmd* cmd_write = draw_list.cmd_buffer.data + draw_list.cmd_buffer.size - new_cmd_buffer_count;
-//     ImDrawIdx* idx_write = draw_list.IdxBuffer.data + draw_list.IdxBuffer.size - new_idx_buffer_count;
+//     ImDrawIdx* idx_write = draw_list.idx_buffer.data + draw_list.idx_buffer.size - new_idx_buffer_count;
 //     for (int i = 1; i < _Count; i += 1)
 //     {
 //         ImDrawChannel& ch = _Channels[i];
 //         if (int sz = ch._CmdBuffer.size) { memcpy(cmd_write, ch._CmdBuffer.data, sz * sizeof(ImDrawCmd)); cmd_write += sz; }
-//         if (int sz = ch._IdxBuffer.size) { memcpy(idx_write, ch._IdxBuffer.data, sz * sizeof(ImDrawIdx)); idx_write += sz; }
+//         if (int sz = ch._idx_buffer.size) { memcpy(idx_write, ch._idx_buffer.data, sz * sizeof(ImDrawIdx)); idx_write += sz; }
 //     }
 //     draw_list->_IdxWritePtr = idx_write;
 //
@@ -1522,11 +1522,11 @@ index of this file:
 //
 //     // Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
 //     memcpy(&_Channels.data[_Current]._CmdBuffer, &draw_list.cmd_buffer, sizeof(draw_list.cmd_buffer));
-//     memcpy(&_Channels.data[_Current]._IdxBuffer, &draw_list.IdxBuffer, sizeof(draw_list.IdxBuffer));
+//     memcpy(&_Channels.data[_Current]._idx_buffer, &draw_list.idx_buffer, sizeof(draw_list.idx_buffer));
 //     _Current = idx;
 //     memcpy(&draw_list.cmd_buffer, &_Channels.data[idx]._CmdBuffer, sizeof(draw_list.cmd_buffer));
-//     memcpy(&draw_list.IdxBuffer, &_Channels.data[idx]._IdxBuffer, sizeof(draw_list.IdxBuffer));
-//     draw_list->_IdxWritePtr = draw_list.IdxBuffer.data + draw_list.IdxBuffer.size;
+//     memcpy(&draw_list.idx_buffer, &_Channels.data[idx]._idx_buffer, sizeof(draw_list.idx_buffer));
+//     draw_list->_IdxWritePtr = draw_list.idx_buffer.data + draw_list.idx_buffer.size;
 //
 //     // If current command is used with different settings we need to add a new command
 //     ImDrawCmd* curr_cmd = (draw_list.cmd_buffer.size == 0) ? None : &draw_list.cmd_buffer.data[draw_list.cmd_buffer.size - 1];
@@ -1550,14 +1550,14 @@ index of this file:
 //     for (int i = 0; i < cmd_lists_count; i += 1)
 //     {
 //         ImDrawList* cmd_list = CmdLists[i];
-//         if (cmd_list.IdxBuffer.empty())
+//         if (cmd_list.idx_buffer.empty())
 //             continue;
-//         new_vtx_buffer.resize(cmd_list.IdxBuffer.size);
-//         for (int j = 0; j < cmd_list.IdxBuffer.size; j += 1)
-//             new_vtx_buffer[j] = cmd_list.VtxBuffer[cmd_list.IdxBuffer[j]];
-//         cmd_list.VtxBuffer.swap(new_vtx_buffer);
-//         cmd_list.IdxBuffer.resize(0);
-//         total_vtx_count += cmd_list.VtxBuffer.size;
+//         new_vtx_buffer.resize(cmd_list.idx_buffer.size);
+//         for (int j = 0; j < cmd_list.idx_buffer.size; j += 1)
+//             new_vtx_buffer[j] = cmd_list.vtx_buffer[cmd_list.idx_buffer[j]];
+//         cmd_list.vtx_buffer.swap(new_vtx_buffer);
+//         cmd_list.idx_buffer.resize(0);
+//         total_vtx_count += cmd_list.vtx_buffer.size;
 //     }
 // }
 

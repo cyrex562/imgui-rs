@@ -1274,7 +1274,7 @@ void    ImGui::EndTable()
     {
         ImDrawChannel* dummy_channel = &table.DrawSplitter._Channels[table.DummyDrawChannel];
         dummy_channel->_CmdBuffer.resize(0);
-        dummy_channel->_IdxBuffer.resize(0);
+        dummy_channel->_idx_buffer.resize(0);
     }
 
 
@@ -2420,7 +2420,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
             Vector2D text_pos = merge_group.clip_rect.min + Vector2D::new(4, 4);
             Vector2D text_size = CalcTextSize(buf, None);
             get_foreground_draw_list().add_rect_filled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
-            get_foreground_draw_list().AddText(text_pos, IM_COL32(255, 255, 0, 255), buf, None);
+            get_foreground_draw_list().add_text(text_pos, IM_COL32(255, 255, 0, 255), buf, None);
             get_foreground_draw_list().add_rect(merge_group.clip_rect.min, merge_group.clip_rect.max, IM_COL32(255, 255, 0, 255));
         }
 
@@ -2980,7 +2980,7 @@ void ImGui::TableHeader(const char* label)
             if (column.SortOrder > 0)
             {
                 push_style_color(StyleColor::Text, get_color_u32(StyleColor::Text, 0.70));
-                RenderText(Vector2D::new(x + g.style.item_inner_spacing.x, y), sort_order_suf);
+                render_text(Vector2D::new(x + g.style.item_inner_spacing.x, y), sort_order_suf);
                 pop_style_color();
                 x += w_sort_text;
             }
@@ -2998,7 +2998,7 @@ void ImGui::TableHeader(const char* label)
     // Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
     // be merged into a single draw call.
     //window->draw_list->add_circle_filled(Vector2D(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
-    RenderTextEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.frame_padding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
+    render_textEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.frame_padding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
 
     const bool text_clipped = label_size.x > (ellipsis_max - label_pos.x);
     if (text_clipped && hovered && g.hovered_id_not_active_timer > g.TooltipSlowDelay)
@@ -3783,7 +3783,7 @@ void ImGui::PushColumnClipRect(int column_index)
         column_index = columns.Current;
 
     ImGuiOldColumnData* column = &columns.Columns[column_index];
-    PushClipRect(column.clip_rect.min, column.clip_rect.max, false);
+    push_clip_rect(column.clip_rect.min, column.clip_rect.max, false);
 }
 
 // Get into the columns background draw command (which is generally the same draw command as before we called BeginColumns)

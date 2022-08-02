@@ -23,7 +23,7 @@ pub fn debug_check_version_and_data_layout(g: &mut Context, version: &str, sz_io
     if (sz_vec2 != sizeof(Vector2D)) { error = true; // IM_ASSERT(sz_vec2 == sizeof(Vector2D) && "Mismatched struct layout!"); }
     if (sz_vec4 != sizeof(Vector4D)) { error = true; // IM_ASSERT(sz_vec4 == sizeof(Vector4D) && "Mismatched struct layout!"); }
     if (sz_vert != sizeof(ImDrawVert)) { error = true; // IM_ASSERT(sz_vert == sizeof(ImDrawVert) && "Mismatched struct layout!"); }
-    if (sz_idx != sizeof(ImDrawIdx)) { error = true; // IM_ASSERT(sz_idx == sizeof(ImDrawIdx) && "Mismatched struct layout!"); }
+    if (sz_idx != sizeof) { error = true; // IM_ASSERT(sz_idx == sizeof(ImDrawIdx) && "Mismatched struct layout!"); }
     return !error;
 }
 

@@ -128,7 +128,7 @@ pub const IM_COL32_R_SHIFT: u32 = 0;
 pub const IM_COL32_G_SHIFT: u32 = 8;
 pub const IM_COL32_B_SHIFT: u32 = 16;
 pub const IM_COL32_A_SHIFT: u32 = 24;
-pub const IM_COL32_A_MASK: u32 = 0xFF000000;
+pub const COLOR_32_A_MASK: u32 = 0xFF000000;
 
 ///#define IM_COL32(R,G,B,A)    (((A)<<IM_COL32_A_SHIFT) | ((B)<<IM_COL32_B_SHIFT) | ((G)<<IM_COL32_G_SHIFT) | ((R)<<IM_COL32_R_SHIFT))
 pub fn make_color_32(red: u32, green: u32, blue: u32, alpha: u32) -> u32 {

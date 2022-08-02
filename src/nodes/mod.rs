@@ -346,7 +346,7 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, let num_channels)
         if (i < old_channel_capacity)
         {
             channel._CmdBuffer.resize(0);
-            channel._IdxBuffer.resize(0);
+            channel._idx_buffer.resize(0);
         }
         // Else, we need to construct new draw channels.
         else
@@ -379,7 +379,7 @@ void ImDrawListSplitterSwapChannels(
     ImDrawChannel& lhs_channel = splitter._Channels[lhs_idx];
     ImDrawChannel& rhs_channel = splitter._Channels[rhs_idx];
     lhs_channel._CmdBuffer.swap(rhs_channel._CmdBuffer);
-    lhs_channel._IdxBuffer.swap(rhs_channel._IdxBuffer);
+    lhs_channel._idx_buffer.swap(rhs_channel._idx_buffer);
 
     let current_channel = splitter._Current;
 
@@ -3135,7 +3135,7 @@ void NodeLineHandler(ImNodesEditorContext& editor, const char* const line)
     else if (sscanf(line, "origin=%i,%i", &x, &y) == 2)
     {
         ImNodeData& node = editor.Nodes.Pool[GImNodes.CurrentNodeIdx];
-        node.Origin = SnapOriginToGrid(Vector2D::new((float)x, y));
+        node.Origin = SnapOriginToGrid(Vector2D::new(x, y));
     }
 }
 
