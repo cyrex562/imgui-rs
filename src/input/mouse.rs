@@ -8,7 +8,7 @@ use crate::math::floor_vector_2d;
 use crate::rect::Rect;
 use crate::types::INVALID_ID;
 use crate::utils::remove_hash_set_val;
-use crate::vectors::ImLengthSqr;
+use crate::vectors::vec_length_sqr;
 use crate::{Viewport, ViewportFlags};
 use crate::globals::GImGui;
 use crate::vectors::vector_2d::Vector2D;
@@ -87,7 +87,7 @@ pub fn update_mouse_inputs(g: &mut Context)
             if (g.time - io.mouse_clicked_time[i]) < io.mouse_double_click_time
             {
                 let delta_from_click_pos = if is_mouse_pos_valid(&io.mouse_pos) { (&io.mouse_pos - &io.mouse_clicked_pos[i]) } else { Vector2D::new(0.0, 0.0) };
-                if ImLengthSqr(&delta_from_click_pos) < io.mouse_double_click_max_dist * io.mouse_double_click_max_dist {
+                if vec_length_sqr(&delta_from_click_pos) < io.mouse_double_click_max_dist * io.mouse_double_click_max_dist {
                     is_repeated_click = true;
                 }
             }
@@ -107,7 +107,7 @@ pub fn update_mouse_inputs(g: &mut Context)
         {
             // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
             let delta_from_click_pos = if is_mouse_pos_valid(&io.mouse_pos) { (&io.mouse_pos - &io.mouse_clicked_pos[i]) } else {Vector2D::new(0.0, 0.0)};
-            io.mouse_drag_max_distance_sqr[i] = f32::max(io.mouse_drag_max_distance_sqr[i], ImLengthSqr(&delta_from_click_pos));
+            io.mouse_drag_max_distance_sqr[i] = f32::max(io.mouse_drag_max_distance_sqr[i], vec_length_sqr(&delta_from_click_pos));
             io.mouse_drag_max_distance_abs[i].x = f32::max(io.mouse_drag_max_distance_abs[i].x, if delta_from_click_pos.x < 0.0 { -delta_from_click_pos.x } else { delta_from_click_pos.x });
             io.mouse_drag_max_distance_abs[i].y = f32::max(io.mouse_drag_max_distance_abs[i].y, if delta_from_click_pos.y < 0.0 { -delta_from_click_pos.y } else { delta_from_click_pos.y });
         }
@@ -144,7 +144,7 @@ pub fn update_mouse_wheel(g: &mut Context)
     if g.wheeling_window_id != INVALID_ID
     {
         g.wheeling_window_timer -= g.io.delta_time;
-        if is_mouse_pos_valid() && ImLengthSqr(&(&g.io.mouse_pos - &g.wheeling_window_ref_mouse_pos)) > g.io.mouse_drag_threshold * g.io.mouse_drag_threshold {
+        if is_mouse_pos_valid() && vec_length_sqr(&(&g.io.mouse_pos - &g.wheeling_window_ref_mouse_pos)) > g.io.mouse_drag_threshold * g.io.mouse_drag_threshold {
             g.wheeling_window_timer = 0.0;
         }
         if g.wheeling_window_timer <= 0.0

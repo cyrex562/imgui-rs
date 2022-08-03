@@ -105,21 +105,20 @@ impl DrawList {
     ) {
         // Vector4D cr(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
         let mut cr = Vector4D::new(cr_min.x, cr_min.y, cr_max.y, 0.0);
-            if intersect_with_current_clip_rect
-            {
-                // Vector4D current = _CmdHeader.clip_rect;
-                let current = &self.command_header.clip_rect;
-                if cr.x < current.x { cr.x = current.x; }
-                if cr.y < current.y { cr.y = current.y; }
-                if cr.z > current.z { cr.z = current.z; }
-                if cr.w > current.w { cr.w = current.w; }
-            }
-            cr.z = f32::max(cr.x, cr.z);
-            cr.w = f32::max(cr.y, cr.w);
+        if intersect_with_current_clip_rect {
+            // Vector4D current = _CmdHeader.clip_rect;
+            let current = &self.command_header.clip_rect;
+            if cr.x < current.x { cr.x = current.x; }
+            if cr.y < current.y { cr.y = current.y; }
+            if cr.z > current.z { cr.z = current.z; }
+            if cr.w > current.w { cr.w = current.w; }
+        }
+        cr.z = f32::max(cr.x, cr.z);
+        cr.w = f32::max(cr.y, cr.w);
 
-            self.clip_rect_stack.push_back(cr);
-            self.command_header.clip_rect = cr.to_owned();
-            on_changed_clip_rect();
+        self.clip_rect_stack.push_back(cr);
+        self.command_header.clip_rect = cr.to_owned();
+        on_changed_clip_rect();
     }
     //  void  push_clip_rect_full_screen();
     pub fn push_clip_rect_full_screen(&mut self, g: &mut Context) {
@@ -127,30 +126,34 @@ impl DrawList {
                        &Vector2D::new(self.data.clip_rect_full_screen.x,
                                       self.data.clip_rect_full_screen.y),
                        &Vector2D::new(self.data.clip_rect_full_screen.z,
-                                     self.data.clip_rect_full_screen.w),
-        false);
+                                      self.data.clip_rect_full_screen.w),
+                       false);
     }
     //  void  pop_clip_rect();
     pub fn pop_clip_rect(&mut self) {
         self.clip_rect_stack.pop_back();
-            self.command_header.clip_rect = if self.clip_rect_stack.is_empty() {
-                self.data.clip_rect_full_screen.clone() } else {
-                self.clip_rect_stack.data[self.clip_rect_stack.len() - 1] };
-            on_changed_clip_rect();
+        self.command_header.clip_rect = if self.clip_rect_stack.is_empty() {
+            self.data.clip_rect_full_screen.clone()
+        } else {
+            self.clip_rect_stack.data[self.clip_rect_stack.len() - 1]
+        };
+        on_changed_clip_rect();
     }
     //  void  push_texture_id(ImTextureID texture_id);
     pub fn push_texture_id(&mut self, texture_id: TextureId) {
-            self.texture_id_stack.push_back(texture_id);
-            self.command_header.texture_id = texture_id;
-            on_changed_texture_id();
+        self.texture_id_stack.push_back(texture_id);
+        self.command_header.texture_id = texture_id;
+        on_changed_texture_id();
     }
     //  void  pop_texture_id();
     pub fn pop_texture_id(&mut self) {
-            self.texture_id_stack.pop_back();
-            self.command_header.texture_id = if (self.texture_id_stack.is_empty) {
-                INVALID_ID } else {
-                self.texture_id_stack.data[self.texture_id_stack.size - 1] };
-            on_changed_texture_id();
+        self.texture_id_stack.pop_back();
+        self.command_header.texture_id = if (self.texture_id_stack.is_empty) {
+            INVALID_ID
+        } else {
+            self.texture_id_stack.data[self.texture_id_stack.size - 1]
+        };
+        on_changed_texture_id();
     }
     // inline Vector2D   get_clip_rect_min() const { const Vector4D& cr = _clip_rect_stack.back(); return Vector2D(cr.x, cr.y); }
     pub fn get_clip_rect_min(&self) -> Vector2D {
@@ -174,9 +177,9 @@ impl DrawList {
         if (color & COLOR32_A_MASK) == 0 {
             return;
         }
-            path_line_to(p1 + Vector2D::new(0.5, 0.5));
-            path_line_to(p2 + Vector2D::new(0.5, 0.5));
-            path_stroke(color, 0, thickness);
+        path_line_to(p1 + Vector2D::new(0.5, 0.5));
+        path_line_to(p2 + Vector2D::new(0.5, 0.5));
+        path_stroke(color, 0, thickness);
     }
     //  void  add_rect(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0, float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
     pub fn add_rect(
@@ -188,17 +191,16 @@ impl DrawList {
         flags: Option<&mut HashSet<DrawFlags>>,
         thickness: f32,
     ) {
-         if (color & COLOR32_A_MASK) == 0 {
-             return;
-         }
-            if self.flags.contains(&DrawListFlags::AntiAliasedLines) {
-                self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.50, 0.50)), rounding, flags.unwrap());
-            }
-            else {
-                self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.49, 0.49)), rounding, flags.unwrap());
-            } // Better looking lower-right corner and rounded non-AA shapes.
+        if (color & COLOR32_A_MASK) == 0 {
+            return;
+        }
+        if self.flags.contains(&DrawListFlags::AntiAliasedLines) {
+            self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.50, 0.50)), rounding, flags.unwrap());
+        } else {
+            self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.49, 0.49)), rounding, flags.unwrap());
+        } // Better looking lower-right corner and rounded non-AA shapes.
         let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
-            self.path_stroke(color, &in_flags, thickness);
+        self.path_stroke(color, &in_flags, thickness);
     }
     //  void  add_rect_filled(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
     pub fn add_rect_filled(
@@ -230,22 +232,22 @@ impl DrawList {
         col_bot_right: u32,
         col_bot_left: u32,
     ) {
-         if ((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & COLOR32_A_MASK) == 0 {
-             return;
-         }
+        if ((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & COLOR32_A_MASK) == 0 {
+            return;
+        }
 
-            let uv = &self.data.TexUvWhitePixel;
-            self.prim_reserve(6, 4);
-            self.prim_write_idx((self.vtx_current_idx));
+        let uv = &self.data.TexUvWhitePixel;
+        self.prim_reserve(6, 4);
+        self.prim_write_idx((self.vtx_current_idx));
         self.prim_write_idx((self.vtx_current_idx + 1));
         self.prim_write_idx((self.vtx_current_idx + 2));
-            self.prim_write_idx((self.vtx_current_idx));
+        self.prim_write_idx((self.vtx_current_idx));
         self.prim_write_idx((self.vtx_current_idx + 2));
         self.prim_write_idx((self.vtx_current_idx + 3));
-            self.prime_write_vtx(p_min, uv, col_upr_left);
-            self.prime_write_vtx(&Vector2D::new(p_max.x, p_min.y), uv, col_upr_right);
-            self.prime_write_vtx(p_max, uv, col_bot_right);
-            self.prime_write_vtx(&Vector2D::new(p_min.x, p_max.y), uv, col_bot_left);
+        self.prime_write_vtx(p_min, uv, col_upr_left);
+        self.prime_write_vtx(&Vector2D::new(p_max.x, p_min.y), uv, col_upr_right);
+        self.prime_write_vtx(p_max, uv, col_bot_right);
+        self.prime_write_vtx(&Vector2D::new(p_min.x, p_max.y), uv, col_bot_left);
     }
     //  void  add_quad(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col, float thickness = 1.0);
     pub fn add_quad(
@@ -265,7 +267,7 @@ impl DrawList {
         self.path_line_to(p2);
         self.path_line_to(p3);
         self.path_line_to(p4);
-        let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]) ;
+        let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
         from([DrawFlags::Closed]);
         self.path_stroke(color, &in_flags, thickness);
     }
@@ -301,22 +303,22 @@ impl DrawList {
             return;
         }
 
-            self.path_line_to(p1);
-            self.path_line_to(p2);
-            self.path_line_to(p3);
+        self.path_line_to(p1);
+        self.path_line_to(p2);
+        self.path_line_to(p3);
         let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
-            self.path_stroke(col, &in_flags, thickness);
+        self.path_stroke(col, &in_flags, thickness);
     }
     //  void  add_triangle_filled(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col);
     pub fn add_triangle_filled(&mut self, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, col: u32) {
-          if (col & COLOR32_A_MASK) == 0 {
-              return;
-          }
+        if (col & COLOR32_A_MASK) == 0 {
+            return;
+        }
 
-            self.path_line_to(p1);
-            self.path_line_to(p2);
-            self.path_line_to(p3);
-            self.path_fill_convex(col);
+        self.path_line_to(p1);
+        self.path_line_to(p2);
+        self.path_line_to(p3);
+        self.path_fill_convex(col);
     }
     //  void  add_circle(const Vector2D& center, float radius, ImU32 col, int num_segments = 0, float thickness = 1.0);
     pub fn add_circle(
@@ -327,27 +329,24 @@ impl DrawList {
         mut num_segments: i32,
         thickness: f32,
     ) {
-         if (col & COLOR32_A_MASK) == 0 || radius < 0.5 {
-             return;
-         }
+        if (col & COLOR32_A_MASK) == 0 || radius < 0.5 {
+            return;
+        }
 
-            if num_segments <= 0
-            {
-                // Use arc with automatic segment count
-                self.path_arc_to_fast_ex(center, radius - 0.5, 0f32, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
-                self.path.size -= 1 ;
-            }
-            else
-            {
-                // Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
-                num_segments = i32::clamp(num_segments, 3, DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX);
+        if num_segments <= 0 {
+            // Use arc with automatic segment count
+            self.path_arc_to_fast_ex(center, radius - 0.5, 0f32, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
+            self.path.size -= 1;
+        } else {
+            // Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
+            num_segments = i32::clamp(num_segments, 3, DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX);
 
-                // Because we are filling a closed shape we remove 1 from the count of segments/points
-                let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
-                self.path_arc_to(center, radius - 0.5, 0.0, a_max, num_segments - 1);
-            }
-            let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
-            self.path_stroke(col, &in_flags, thickness);
+            // Because we are filling a closed shape we remove 1 from the count of segments/points
+            let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
+            self.path_arc_to(center, radius - 0.5, 0.0, a_max, num_segments - 1);
+        }
+        let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
+        self.path_stroke(col, &in_flags, thickness);
     }
     //  void  add_circle_filled(const Vector2D& center, float radius, ImU32 col, int num_segments = 0);
     pub fn add_circle_filled(
@@ -361,23 +360,20 @@ impl DrawList {
             return;
         }
 
-            if num_segments <= 0
-            {
-                // Use arc with automatic segment count
-                self.path_arc_to_fast_ex(center, radius, 0f32, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
-                self.path.size -= 1 ;
-            }
-            else
-            {
-                // Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
-                num_segments = i32::clamp(num_segments, 3, DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX);
+        if num_segments <= 0 {
+            // Use arc with automatic segment count
+            self.path_arc_to_fast_ex(center, radius, 0f32, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
+            self.path.size -= 1;
+        } else {
+            // Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
+            num_segments = i32::clamp(num_segments, 3, DRAW_LIST_CIRCLE_AUTO_SEGMENT_MAX);
 
-                // Because we are filling a closed shape we remove 1 from the count of segments/points
-                let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
-                self.path_arc_to(center, radius, 0.0, a_max, num_segments - 1);
-            }
+            // Because we are filling a closed shape we remove 1 from the count of segments/points
+            let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
+            self.path_arc_to(center, radius, 0.0, a_max, num_segments - 1);
+        }
 
-            self.path_fill_convex(col);
+        self.path_fill_convex(col);
     }
     //  void  add_ngon(const Vector2D& center, float radius, ImU32 col, int num_segments, float thickness = 1.0);
     pub fn add_ngon(
@@ -388,26 +384,26 @@ impl DrawList {
         num_segments: i32,
         thickness: f32,
     ) {
-         if (col & COLOR32_A_MASK) == 0 || num_segments <= 2 {
-             return;
-         }
+        if (col & COLOR32_A_MASK) == 0 || num_segments <= 2 {
+            return;
+        }
 
-            // Because we are filling a closed shape we remove 1 from the count of segments/points
-            let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
-            self.path_arc_to(center, radius - 0.5, 0.0, a_max, num_segments - 1);
+        // Because we are filling a closed shape we remove 1 from the count of segments/points
+        let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
+        self.path_arc_to(center, radius - 0.5, 0.0, a_max, num_segments - 1);
         let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
-            self.path_stroke(col, &in_flags, thickness);
+        self.path_stroke(col, &in_flags, thickness);
     }
     //  void  AddNgonFilled(const Vector2D& center, float radius, ImU32 col, int num_segments);
     pub fn add_ngon_filled(&mut self, center: &Vector2D, radius: f32, col: u32, num_segments: i32) {
-            if (col & COLOR32_A_MASK) == 0 || num_segments <= 2 {
-                return;
-            }
+        if (col & COLOR32_A_MASK) == 0 || num_segments <= 2 {
+            return;
+        }
 
-            // Because we are filling a closed shape we remove 1 from the count of segments/points
-            let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
-            self.path_arc_to(center, radius, 0.0, a_max, num_segments - 1);
-            self.path_fill_convex(col);
+        // Because we are filling a closed shape we remove 1 from the count of segments/points
+        let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
+        self.path_arc_to(center, radius, 0.0, a_max, num_segments - 1);
+        self.path_fill_convex(col);
     }
     //  void  add_text(const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = None);
     pub fn add_text(&mut self, pos: &Vector2D, color: u32, text: &String) {
@@ -463,452 +459,423 @@ impl DrawList {
         points_count: usize,
         color: u32,
         flags: &HashSet<DrawFlags>,
-        mut thickness: f32
+        mut thickness: f32,
     ) {
         if points_count < 2 {
             return;
         }
 
-            // const bool closed = (flags & DrawFlags::Closed) != 0;
-            let closed = flags.contains(&DrawFlags::Closed);
-            // const Vector2D opaque_uv = data.TexUvWhitePixel;
+        // const bool closed = (flags & DrawFlags::Closed) != 0;
+        let closed = flags.contains(&DrawFlags::Closed);
+        // const Vector2D opaque_uv = data.TexUvWhitePixel;
         let opaque_uv = &self.data.text_uv_white_pixel;
         // let count = closed ? points_count : points_count - 1; // The number of line segments we need to draw
-        let count = if closed { points_count } else { points_count - 1};
-            // const bool thick_line = (thickness > _FringeScale);
+        let count = if closed { points_count } else { points_count - 1 };
+        // const bool thick_line = (thickness > _FringeScale);
         let thick_line = thickness > self.fringe_scale;
 
-            // if (Flags & DrawListFlags::AntiAliasedLines)
-        if self.flags.contains(&DrawListFlags::AntiAliasedLines)
-        {
-                // Anti-aliased stroke
-                let aa_size = self.fringe_scale;
-                // const ImU32 col_trans = color & ~COLOR32_A_MASK;
-                let col_trans = color & !COLOR32_A_MASK;
+        // if (Flags & DrawListFlags::AntiAliasedLines)
+        if self.flags.contains(&DrawListFlags::AntiAliasedLines) {
+            // Anti-aliased stroke
+            let aa_size = self.fringe_scale;
+            // const ImU32 col_trans = color & ~COLOR32_A_MASK;
+            let col_trans = color & !COLOR32_A_MASK;
 
-                // Thicknesses <1.0 should behave like thickness 1.0
-                thickness = f32::max(thickness, 1.0);
-                let integer_thickness = thickness;
-                let fractional_thickness = thickness - integer_thickness;
+            // Thicknesses <1.0 should behave like thickness 1.0
+            thickness = f32::max(thickness, 1.0);
+            let integer_thickness = thickness;
+            let fractional_thickness = thickness - integer_thickness;
 
-                // Do we want to draw this line using a texture?
-                // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
-                // - If aa_size is not 1.0 we cannot use the texture path.
-                // const bool use_texture = (Flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (aa_size == 1.0);
-                let use_texture = self.flags.contains(&DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < DRAW_LIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (aa_size == 1.0);
+            // Do we want to draw this line using a texture?
+            // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
+            // - If aa_size is not 1.0 we cannot use the texture path.
+            // const bool use_texture = (Flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (aa_size == 1.0);
+            let use_texture = self.flags.contains(&DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < DRAW_LIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (aa_size == 1.0);
 
-                // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-                // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font.container_atlas.flags & FontAtlasFlags::NoBakedLines));
+            // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
+            // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font.container_atlas.flags & FontAtlasFlags::NoBakedLines));
 
-                // let idx_count = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
-            let idx_count = if use_texture { count * 6 } else { if thick_line { count * 18} else { count * 12}};
+            // let idx_count = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
+            let idx_count = if use_texture { count * 6 } else { if thick_line { count * 18 } else { count * 12 } };
             // let vtx_count = use_texture ? (points_count * 2) : (thick_line ? points_count * 4 : points_count * 3);
-            let vtx_count = if use_texzture { points_count * 2 } else { if thick_line { points_count * 4} else { points_count * 3}};
+            let vtx_count = if use_texzture { points_count * 2 } else { if thick_line { points_count * 4 } else { points_count * 3 } };
 
-                self.prim_reserve(idx_count, vtx_count);
+            self.prim_reserve(idx_count, vtx_count);
 
-                // Temporary buffer
-                // The first <points_count> items are normals at each line point, then after that there are either 2 or 4 temp points for each line point
-                // Vector2D* temp_normals = alloca(points_count * ((use_texture || !thick_line) ? 3 : 5) * sizeof(Vector2D)); //-V630
-                let mut temp_normals: Vec<Vector2D> = Vec::new();
-                temp_normals.reserve(points_count * (if use_texture || !thick_line { 3} else {5}));
+            // Temporary buffer
+            // The first <points_count> items are normals at each line point, then after that there are either 2 or 4 temp points for each line point
+            // Vector2D* temp_normals = alloca(points_count * ((use_texture || !thick_line) ? 3 : 5) * sizeof(Vector2D)); //-V630
+            let mut temp_normals: Vec<Vector2D> = Vec::new();
+            temp_normals.reserve(points_count * (if use_texture || !thick_line { 3 } else { 5 }));
             // Vector2D* temp_points = temp_normals + points_count;
             let temp_points_offset = points_count;
 
-                // Calculate normals (tangents) for each line segment
-                // for (int i1 = 0; i1 < count; i1 += 1)
-            for i1 in 0 .. count
-            {
-                    let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 };
-                    let dx = points[i2].x - points[i1].x;
-                    let dy = points[i2].y - points[i1].y;
-                    normalize_2f_over_zero(dx, dy);
-                    temp_normals[i1].x = dy;
-                    temp_normals[i1].y = -dx;
-                }
+            // Calculate normals (tangents) for each line segment
+            // for (int i1 = 0; i1 < count; i1 += 1)
+            for i1 in 0..count {
+                let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 };
+                let dx = points[i2].x - points[i1].x;
+                let dy = points[i2].y - points[i1].y;
+                normalize_2f_over_zero(dx, dy);
+                temp_normals[i1].x = dy;
+                temp_normals[i1].y = -dx;
+            }
+            if !closed {
+                temp_normals[points_count - 1] = temp_normals[points_count - 2].clone();
+            }
+
+            // If we are drawing a one-pixel-wide line without a texture, or a textured line of any width, we only need 2 or 3 vertices per point
+            if use_texture || !thick_line {
+                // [PATH 1] Texture-based lines (thick or non-thick)
+                // [PATH 2] Non texture-based lines (non-thick)
+
+                // The width of the geometry we need to draw - this is essentially <thickness> pixels for the line itself, plus "one pixel" for AA.
+                // - In the texture-based path, we don't use aa_size here because the +1 is tied to the generated texture
+                //   (see ImFontAtlasBuildRenderLinesTexData() function), and so alternate values won't work without changes to that code.
+                // - In the non texture-based paths, we would allow aa_size to potentially be != 1.0 with a patch (e.g. fringe_scale patch to
+                //   allow scaling geometry while preserving one-screen-pixel AA fringe).
+                let half_draw_size = if use_texture { ((thickness * 0.5) + 1) } else { aa_size };
+
+                // If line is not closed, the first and last points need to be generated differently as there are no normals to blend
                 if !closed {
-                    temp_normals[points_count - 1] = temp_normals[points_count - 2].clone();
+                    temp_points[0] = &points[0] + &temp_normals[0] * half_draw_size;
+                    temp_points[1] = &points[0] - &temp_normals[0] * half_draw_size;
+                    temp_points[(points_count - 1) * 2 + 0] = &points[points_count - 1] + &temp_normals[points_count - 1] * half_draw_size;
+                    temp_points[(points_count - 1) * 2 + 1] = &points[points_count - 1] - &temp_normals[points_count - 1] * half_draw_size;
                 }
 
-                // If we are drawing a one-pixel-wide line without a texture, or a textured line of any width, we only need 2 or 3 vertices per point
-                if use_texture || !thick_line
-                {
-                    // [PATH 1] Texture-based lines (thick or non-thick)
-                    // [PATH 2] Non texture-based lines (non-thick)
+                // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
+                // This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
+                // FIXME-OPT: merge the different loops, possibly remove the temporary buffer.
+                let mut idx1 = self.vtx_current_idx; // Vertex index for start of line segment
+                // for (int i1 = 0; i1 < count; i1 += 1) // i1 is the first point of the line segment
+                for i1 in 0..count {
+                    let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 }; // i2 is the second point of the line segment
+                    let idx2 = if (i1 + 1) == points_count { self.vtx_current_idx } else {
+                        (idx1 + (if use_texture {
+                            2
+                        } else { 3 }))
+                    }; // Vertex index for end of segment
 
-                    // The width of the geometry we need to draw - this is essentially <thickness> pixels for the line itself, plus "one pixel" for AA.
-                    // - In the texture-based path, we don't use aa_size here because the +1 is tied to the generated texture
-                    //   (see ImFontAtlasBuildRenderLinesTexData() function), and so alternate values won't work without changes to that code.
-                    // - In the non texture-based paths, we would allow aa_size to potentially be != 1.0 with a patch (e.g. fringe_scale patch to
-                    //   allow scaling geometry while preserving one-screen-pixel AA fringe).
-                    let half_draw_size = if use_texture { ((thickness * 0.5) + 1) } else { aa_size };
+                    // Average normals
+                    let mut dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5;
+                    let mut dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5;
+                    fix_normal_2f(dm_x, dm_y);
+                    dm_x *= half_draw_size; // dm_x, dm_y are offset to the outer edge of the AA area
+                    dm_y *= half_draw_size;
 
-                    // If line is not closed, the first and last points need to be generated differently as there are no normals to blend
-                    if !closed
-                    {
-                        temp_points[0] = &points[0] + &temp_normals[0] * half_draw_size;
-                        temp_points[1] = &points[0] - &temp_normals[0] * half_draw_size;
-                        temp_points[(points_count-1)*2+0] = &points[points_count-1] + &temp_normals[points_count-1] * half_draw_size;
-                        temp_points[(points_count-1)*2+1] = &points[points_count-1] - &temp_normals[points_count-1] * half_draw_size;
-                    }
+                    // Add temporary vertexes for the outer edges
+                    // Vector2D* out_vtx = &temp_points[i2 * 2];
+                    let out_vtx = &temp_points[i2 * 2];
+                    out_vtx[0].x = points[i2].x + dm_x;
+                    out_vtx[0].y = points[i2].y + dm_y;
+                    out_vtx[1].x = points[i2].x - dm_x;
+                    out_vtx[1].y = points[i2].y - dm_y;
 
-                    // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
-                    // This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
-                    // FIXME-OPT: merge the different loops, possibly remove the temporary buffer.
-                    let mut idx1 = self.vtx_current_idx; // Vertex index for start of line segment
-                    // for (int i1 = 0; i1 < count; i1 += 1) // i1 is the first point of the line segment
-                    for i1 in 0 .. count
-                    {
-                        let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 }; // i2 is the second point of the line segment
-                        let idx2 = if (i1 + 1) == points_count { self.vtx_current_idx } else {
-                            (idx1 + (if use_texture {
-                                2
-                            } else { 3 }))
-                        }; // Vertex index for end of segment
-
-                        // Average normals
-                        let mut dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5;
-                        let mut dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5;
-                        fix_normal_2f(dm_x, dm_y);
-                        dm_x *= half_draw_size; // dm_x, dm_y are offset to the outer edge of the AA area
-                        dm_y *= half_draw_size;
-
-                        // Add temporary vertexes for the outer edges
-                        // Vector2D* out_vtx = &temp_points[i2 * 2];
-                        let out_vtx = &temp_points[i2*2];
-                        out_vtx[0].x = points[i2].x + dm_x;
-                        out_vtx[0].y = points[i2].y + dm_y;
-                        out_vtx[1].x = points[i2].x - dm_x;
-                        out_vtx[1].y = points[i2].y - dm_y;
-
-                        if use_texture
-                        {
-                            // Add indices for two triangles
-                            self.idx_write_ptr[0] = (idx2 + 0);
-                            self.idx_write_ptr[1] = (idx1 + 0);
-                            self.idx_write_ptr[2] = (idx1 + 1); // Right tri
-                            self.idx_write_ptr[3] = (idx2 + 1);
-                            self.idx_write_ptr[4] = (idx1 + 1);
-                            self.idx_write_ptr[5] = (idx2 + 0); // Left tri
-                            self.idx_write_ptr += 6;
-                        }
-                        else
-                        {
-                            // Add indexes for four triangles
-                            self.idx_write_ptr[0] = (idx2 + 0);
-                            self.idx_write_ptr[1] = (idx1 + 0);
-                            self.idx_write_ptr[2] = (idx1 + 2); // Right tri 1
-                            self.idx_write_ptr[3] = (idx1 + 2);
-                            self.idx_write_ptr[4] = (idx2 + 2);
-                            self.idx_write_ptr[5] = (idx2 + 0); // Right tri 2
-                            self.idx_write_ptr[6] = (idx2 + 1);
-                            self.idx_write_ptr[7] = (idx1 + 1);
-                            self.idx_write_ptr[8] = (idx1 + 0); // Left tri 1
-                            self.idx_write_ptr[9] = (idx1 + 0);
-                            self.idx_write_ptr[10] = (idx2 + 0);
-                            self.idx_write_ptr[11] = (idx2 + 1); // Left tri 2
-                            self.idx_write_ptr += 12;
-                        }
-
-                        idx1 = idx2;
-                    }
-
-                    // Add vertexes for each point on the line
-                    if use_texture
-                    {
-                        // If we're using textures we only need to emit the left/right edge vertices
-                        let tex_uvs = self.data.tex_uv_lines[integer_thickness];
-                        /*if (fractional_thickness != 0.0) // Currently always zero when use_texture==false!
-                        {
-                            const Vector4D tex_uvs_1 = _Data->tex_uv_lines[integer_thickness + 1];
-                            tex_uvs.x = tex_uvs.x + (tex_uvs_1.x - tex_uvs.x) * fractional_thickness; // inlined ImLerp()
-                            tex_uvs.y = tex_uvs.y + (tex_uvs_1.y - tex_uvs.y) * fractional_thickness;
-                            tex_uvs.z = tex_uvs.z + (tex_uvs_1.z - tex_uvs.z) * fractional_thickness;
-                            tex_uvs.w = tex_uvs.w + (tex_uvs_1.w - tex_uvs.w) * fractional_thickness;
-                        }*/
-                        let  tex_uv0 = Vector2D::new(tex_uvs.x, tex_uvs.y);
-                        let tex_uv1 = Vector2D::new(tex_uvs.z, tex_uvs.w);
-                        // for (int i = 0; i < points_count; i += 1)
-                        for i in 0 .. points_count
-                        {
-                            self.vtx_write_ptr[0].pos = temp_points[i * 2 + 0];
-                            self.vtx_write_ptr[0].uv = tex_uv0.clone();
-                            self.vtx_write_ptr[0].col = color; // Left-side outer edge
-                            self.vtx_write_ptr[1].pos = temp_points[i * 2 + 1];
-                            self.vtx_write_ptr[1].uv = tex_uv1.clone();
-                            self.vtx_write_ptr[1].col = color; // Right-side outer edge
-                            self.vtx_write_ptr += 2;
-                        }
-                    }
-                    else
-                    {
-                        // If we're not using a texture, we need the center vertex as well
-                        // for (int i = 0; i < points_count; i += 1)
-                        for i in 0 .. points_count
-                        {
-                            self.vtx_write_ptr[0].pos = points[i].clone();
-                            self.vtx_write_ptr[0].uv = opaque_uv;
-                            self.vtx_write_ptr[0].col = color;       // Center of line
-                            self.vtx_write_ptr[1].pos = temp_points[i * 2 + 0];
-                            self.vtx_write_ptr[1].uv = opaque_uv;
-                            self.vtx_write_ptr[1].col = col_trans; // Left-side outer edge
-                            self.vtx_write_ptr[2].pos = temp_points[i * 2 + 1];
-                            self.vtx_write_ptr[2].uv = opaque_uv;
-                            self.vtx_write_ptr[2].col = col_trans; // Right-side outer edge
-                            self.vtx_write_ptr += 3;
-                        }
-                    }
-                }
-                else
-                {
-                    // [PATH 2] Non texture-based lines (thick): we need to draw the solid line core and thus require four vertices per point
-                    let half_inner_thickness = (thickness - aa_size) * 0.5;
-
-                    // If line is not closed, the first and last points need to be generated differently as there are no normals to blend
-                    if !closed
-                    {
-                        let points_last = points_count - 1;
-                        temp_points[0] = &points[0] + &temp_normals[0] * (half_inner_thickness + aa_size);
-                        temp_points[1] = &points[0] + &temp_normals[0] * (half_inner_thickness);
-                        temp_points[2] = &points[0] - &temp_normals[0] * (half_inner_thickness);
-                        temp_points[3] = &points[0] - &temp_normals[0] * (half_inner_thickness + aa_size);
-                        temp_points[points_last * 4 + 0] = &points[points_last] + &temp_normals[points_last] * (half_inner_thickness + aa_size);
-                        temp_points[points_last * 4 + 1] = &points[points_last] + &temp_normals[points_last] * (half_inner_thickness);
-                        temp_points[points_last * 4 + 2] = &points[points_last] - &temp_normals[points_last] * (half_inner_thickness);
-                        temp_points[points_last * 4 + 3] = &points[points_last] - &temp_normals[points_last] * (half_inner_thickness + aa_size);
-                    }
-
-                    // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
-                    // This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
-                    // FIXME-OPT: merge the different loops, possibly remove the temporary buffer.
-                    let mut idx1 = self.vtx_current_idx; // Vertex index for start of line segment
-                    // for (int i1 = 0; i1 < count; i1 += 1) // i1 is the first point of the line segment
-                    for i1 in 0 .. count
-                    {
-                        let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 }; // i2 is the second point of the line segment
-                        let idx2 = if (i1 + 1) == points_count { self.vtx_current_idx }else { idx1 + 4 }; // Vertex index for end of segment
-
-                        // Average normals
-                        let dm_x =  (temp_normals[i1].x + temp_normals[i2].x) * 0.5;
-                        let dm_y =  (temp_normals[i1].y + temp_normals[i2].y) * 0.5;
-                        fix_normal_2f(dm_x, dm_y);
-                        let dm_out_x =  dm_x * (half_inner_thickness + aa_size);
-                        let dm_out_y =  dm_y * (half_inner_thickness + aa_size);
-                        let dm_in_x =  dm_x * half_inner_thickness;
-                        let dm_in_y =  dm_y * half_inner_thickness;
-
-                        // Add temporary vertices
-                        let out_vtx = &temp_points[i2 * 4];
-                        out_vtx[0].x = points[i2].x + dm_out_x;
-                        out_vtx[0].y = points[i2].y + dm_out_y;
-                        out_vtx[1].x = points[i2].x + dm_in_x;
-                        out_vtx[1].y = points[i2].y + dm_in_y;
-                        out_vtx[2].x = points[i2].x - dm_in_x;
-                        out_vtx[2].y = points[i2].y - dm_in_y;
-                        out_vtx[3].x = points[i2].x - dm_out_x;
-                        out_vtx[3].y = points[i2].y - dm_out_y;
-
-                        // Add indexes
-                        self.idx_write_ptr[0] = (idx2 + 1);
-                        self.idx_write_ptr[1] = (idx1 + 1);
-                        self.idx_write_ptr[2] = (idx1 + 2);
+                    if use_texture {
+                        // Add indices for two triangles
+                        self.idx_write_ptr[0] = (idx2 + 0);
+                        self.idx_write_ptr[1] = (idx1 + 0);
+                        self.idx_write_ptr[2] = (idx1 + 1); // Right tri
+                        self.idx_write_ptr[3] = (idx2 + 1);
+                        self.idx_write_ptr[4] = (idx1 + 1);
+                        self.idx_write_ptr[5] = (idx2 + 0); // Left tri
+                        self.idx_write_ptr += 6;
+                    } else {
+                        // Add indexes for four triangles
+                        self.idx_write_ptr[0] = (idx2 + 0);
+                        self.idx_write_ptr[1] = (idx1 + 0);
+                        self.idx_write_ptr[2] = (idx1 + 2); // Right tri 1
                         self.idx_write_ptr[3] = (idx1 + 2);
                         self.idx_write_ptr[4] = (idx2 + 2);
-                        self.idx_write_ptr[5] = (idx2 + 1);
+                        self.idx_write_ptr[5] = (idx2 + 0); // Right tri 2
                         self.idx_write_ptr[6] = (idx2 + 1);
                         self.idx_write_ptr[7] = (idx1 + 1);
-                        self.idx_write_ptr[8] = (idx1 + 0);
+                        self.idx_write_ptr[8] = (idx1 + 0); // Left tri 1
                         self.idx_write_ptr[9] = (idx1 + 0);
                         self.idx_write_ptr[10] = (idx2 + 0);
-                        self.idx_write_ptr[11] = (idx2 + 1);
-                        self.idx_write_ptr[12] = (idx2 + 2);
-                        self.idx_write_ptr[13] = (idx1 + 2);
-                        self.idx_write_ptr[14] = (idx1 + 3);
-                        self.idx_write_ptr[15] = (idx1 + 3);
-                        self.idx_write_ptr[16] = (idx2 + 3);
-                        self.idx_write_ptr[17] = (idx2 + 2);
-                        self.idx_write_ptr += 18;
-
-                        idx1 = idx2;
+                        self.idx_write_ptr[11] = (idx2 + 1); // Left tri 2
+                        self.idx_write_ptr += 12;
                     }
 
-                    // Add vertices
-                    // for (int i = 0; i < points_count; i += 1)
-                    for i in 0 .. points_count
+                    idx1 = idx2;
+                }
+
+                // Add vertexes for each point on the line
+                if use_texture {
+                    // If we're using textures we only need to emit the left/right edge vertices
+                    let tex_uvs = self.data.tex_uv_lines[integer_thickness];
+                    /*if (fractional_thickness != 0.0) // Currently always zero when use_texture==false!
                     {
-                        self.vtx_write_ptr[0].pos = temp_points[i * 4 + 0];
+                        const Vector4D tex_uvs_1 = _Data->tex_uv_lines[integer_thickness + 1];
+                        tex_uvs.x = tex_uvs.x + (tex_uvs_1.x - tex_uvs.x) * fractional_thickness; // inlined ImLerp()
+                        tex_uvs.y = tex_uvs.y + (tex_uvs_1.y - tex_uvs.y) * fractional_thickness;
+                        tex_uvs.z = tex_uvs.z + (tex_uvs_1.z - tex_uvs.z) * fractional_thickness;
+                        tex_uvs.w = tex_uvs.w + (tex_uvs_1.w - tex_uvs.w) * fractional_thickness;
+                    }*/
+                    let tex_uv0 = Vector2D::new(tex_uvs.x, tex_uvs.y);
+                    let tex_uv1 = Vector2D::new(tex_uvs.z, tex_uvs.w);
+                    // for (int i = 0; i < points_count; i += 1)
+                    for i in 0..points_count {
+                        self.vtx_write_ptr[0].pos = temp_points[i * 2 + 0];
+                        self.vtx_write_ptr[0].uv = tex_uv0.clone();
+                        self.vtx_write_ptr[0].col = color; // Left-side outer edge
+                        self.vtx_write_ptr[1].pos = temp_points[i * 2 + 1];
+                        self.vtx_write_ptr[1].uv = tex_uv1.clone();
+                        self.vtx_write_ptr[1].col = color; // Right-side outer edge
+                        self.vtx_write_ptr += 2;
+                    }
+                } else {
+                    // If we're not using a texture, we need the center vertex as well
+                    // for (int i = 0; i < points_count; i += 1)
+                    for i in 0..points_count {
+                        self.vtx_write_ptr[0].pos = points[i].clone();
                         self.vtx_write_ptr[0].uv = opaque_uv;
-                        self.vtx_write_ptr[0].col = col_trans;
-                        self.vtx_write_ptr[1].pos = temp_points[i * 4 + 1];
+                        self.vtx_write_ptr[0].col = color;       // Center of line
+                        self.vtx_write_ptr[1].pos = temp_points[i * 2 + 0];
                         self.vtx_write_ptr[1].uv = opaque_uv;
-                        self.vtx_write_ptr[1].col = color;
-                        self.vtx_write_ptr[2].pos = temp_points[i * 4 + 2];
+                        self.vtx_write_ptr[1].col = col_trans; // Left-side outer edge
+                        self.vtx_write_ptr[2].pos = temp_points[i * 2 + 1];
                         self.vtx_write_ptr[2].uv = opaque_uv;
-                        self.vtx_write_ptr[2].col = color;
-                        self.vtx_write_ptr[3].pos = temp_points[i * 4 + 3];
-                        self.vtx_write_ptr[3].uv = opaque_uv;
-                        self.vtx_write_ptr[3].col = col_trans;
-                        self.vtx_write_ptr += 4;
+                        self.vtx_write_ptr[2].col = col_trans; // Right-side outer edge
+                        self.vtx_write_ptr += 3;
                     }
                 }
-                self.vtx_current_idx += vtx_count;
-            }
-            else
-            {
-                // [PATH 4] Non texture-based, Non anti-aliased lines
-                let idx_count = count * 6;
-                let vtx_count = count * 4;    // FIXME-OPT: Not sharing edges
-                self.prim_reserve(idx_count, vtx_count);
+            } else {
+                // [PATH 2] Non texture-based lines (thick): we need to draw the solid line core and thus require four vertices per point
+                let half_inner_thickness = (thickness - aa_size) * 0.5;
 
-                // for (int i1 = 0; i1 < count; i1 += 1)
-                for i1 in 0 .. count
-                {
-                    let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 };
-                    let p1 = &points[i1];
-                    let p2 = &points[i2];
+                // If line is not closed, the first and last points need to be generated differently as there are no normals to blend
+                if !closed {
+                    let points_last = points_count - 1;
+                    temp_points[0] = &points[0] + &temp_normals[0] * (half_inner_thickness + aa_size);
+                    temp_points[1] = &points[0] + &temp_normals[0] * (half_inner_thickness);
+                    temp_points[2] = &points[0] - &temp_normals[0] * (half_inner_thickness);
+                    temp_points[3] = &points[0] - &temp_normals[0] * (half_inner_thickness + aa_size);
+                    temp_points[points_last * 4 + 0] = &points[points_last] + &temp_normals[points_last] * (half_inner_thickness + aa_size);
+                    temp_points[points_last * 4 + 1] = &points[points_last] + &temp_normals[points_last] * (half_inner_thickness);
+                    temp_points[points_last * 4 + 2] = &points[points_last] - &temp_normals[points_last] * (half_inner_thickness);
+                    temp_points[points_last * 4 + 3] = &points[points_last] - &temp_normals[points_last] * (half_inner_thickness + aa_size);
+                }
 
-                    let mut dx =  p2.x - p1.x;
-                    let mut dy =  p2.y - p1.y;
-                    normalize_2f_over_zero(dx, dy);
-                    dx *= (thickness * 0.5);
-                    dy *= (thickness * 0.5);
+                // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
+                // This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
+                // FIXME-OPT: merge the different loops, possibly remove the temporary buffer.
+                let mut idx1 = self.vtx_current_idx; // Vertex index for start of line segment
+                // for (int i1 = 0; i1 < count; i1 += 1) // i1 is the first point of the line segment
+                for i1 in 0..count {
+                    let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 }; // i2 is the second point of the line segment
+                    let idx2 = if (i1 + 1) == points_count { self.vtx_current_idx } else { idx1 + 4 }; // Vertex index for end of segment
 
-                    self.vtx_write_ptr[0].pos.x = p1.x + dy;
-                    self.vtx_write_ptr[0].pos.y = p1.y - dx;
+                    // Average normals
+                    let dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5;
+                    let dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5;
+                    fix_normal_2f(dm_x, dm_y);
+                    let dm_out_x = dm_x * (half_inner_thickness + aa_size);
+                    let dm_out_y = dm_y * (half_inner_thickness + aa_size);
+                    let dm_in_x = dm_x * half_inner_thickness;
+                    let dm_in_y = dm_y * half_inner_thickness;
+
+                    // Add temporary vertices
+                    let out_vtx = &temp_points[i2 * 4];
+                    out_vtx[0].x = points[i2].x + dm_out_x;
+                    out_vtx[0].y = points[i2].y + dm_out_y;
+                    out_vtx[1].x = points[i2].x + dm_in_x;
+                    out_vtx[1].y = points[i2].y + dm_in_y;
+                    out_vtx[2].x = points[i2].x - dm_in_x;
+                    out_vtx[2].y = points[i2].y - dm_in_y;
+                    out_vtx[3].x = points[i2].x - dm_out_x;
+                    out_vtx[3].y = points[i2].y - dm_out_y;
+
+                    // Add indexes
+                    self.idx_write_ptr[0] = (idx2 + 1);
+                    self.idx_write_ptr[1] = (idx1 + 1);
+                    self.idx_write_ptr[2] = (idx1 + 2);
+                    self.idx_write_ptr[3] = (idx1 + 2);
+                    self.idx_write_ptr[4] = (idx2 + 2);
+                    self.idx_write_ptr[5] = (idx2 + 1);
+                    self.idx_write_ptr[6] = (idx2 + 1);
+                    self.idx_write_ptr[7] = (idx1 + 1);
+                    self.idx_write_ptr[8] = (idx1 + 0);
+                    self.idx_write_ptr[9] = (idx1 + 0);
+                    self.idx_write_ptr[10] = (idx2 + 0);
+                    self.idx_write_ptr[11] = (idx2 + 1);
+                    self.idx_write_ptr[12] = (idx2 + 2);
+                    self.idx_write_ptr[13] = (idx1 + 2);
+                    self.idx_write_ptr[14] = (idx1 + 3);
+                    self.idx_write_ptr[15] = (idx1 + 3);
+                    self.idx_write_ptr[16] = (idx2 + 3);
+                    self.idx_write_ptr[17] = (idx2 + 2);
+                    self.idx_write_ptr += 18;
+
+                    idx1 = idx2;
+                }
+
+                // Add vertices
+                // for (int i = 0; i < points_count; i += 1)
+                for i in 0..points_count {
+                    self.vtx_write_ptr[0].pos = temp_points[i * 4 + 0];
                     self.vtx_write_ptr[0].uv = opaque_uv;
-                    self.vtx_write_ptr[0].col = color;
-                    self.vtx_write_ptr[1].pos.x = p2.x + dy;
-                    self.vtx_write_ptr[1].pos.y = p2.y - dx;
+                    self.vtx_write_ptr[0].col = col_trans;
+                    self.vtx_write_ptr[1].pos = temp_points[i * 4 + 1];
                     self.vtx_write_ptr[1].uv = opaque_uv;
                     self.vtx_write_ptr[1].col = color;
-                    self.vtx_write_ptr[2].pos.x = p2.x - dy;
-                    self.vtx_write_ptr[2].pos.y = p2.y + dx;
+                    self.vtx_write_ptr[2].pos = temp_points[i * 4 + 2];
                     self.vtx_write_ptr[2].uv = opaque_uv;
                     self.vtx_write_ptr[2].col = color;
-                    self.vtx_write_ptr[3].pos.x = p1.x - dy;
-                    self.vtx_write_ptr[3].pos.y = p1.y + dx;
+                    self.vtx_write_ptr[3].pos = temp_points[i * 4 + 3];
                     self.vtx_write_ptr[3].uv = opaque_uv;
-                    self.vtx_write_ptr[3].col = color;
+                    self.vtx_write_ptr[3].col = col_trans;
                     self.vtx_write_ptr += 4;
-
-                    self.idx_write_ptr[0] = (self.vtx_current_idx);
-                    self.idx_write_ptr[1] = (self.vtx_current_idx + 1);
-                    self.idx_write_ptr[2] = (self.vtx_current_idx + 2);
-                    self.idx_write_ptr[3] = (self.vtx_current_idx);
-                    self.idx_write_ptr[4] = (self.vtx_current_idx + 2);
-                    self.idx_write_ptr[5] = (self.vtx_current_idx + 3);
-                    self.idx_write_ptr += 6;
-                    self.vtx_current_idx += 4;
                 }
             }
+            self.vtx_current_idx += vtx_count;
+        } else {
+            // [PATH 4] Non texture-based, Non anti-aliased lines
+            let idx_count = count * 6;
+            let vtx_count = count * 4;    // FIXME-OPT: Not sharing edges
+            self.prim_reserve(idx_count, vtx_count);
+
+            // for (int i1 = 0; i1 < count; i1 += 1)
+            for i1 in 0..count {
+                let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 };
+                let p1 = &points[i1];
+                let p2 = &points[i2];
+
+                let mut dx = p2.x - p1.x;
+                let mut dy = p2.y - p1.y;
+                normalize_2f_over_zero(dx, dy);
+                dx *= (thickness * 0.5);
+                dy *= (thickness * 0.5);
+
+                self.vtx_write_ptr[0].pos.x = p1.x + dy;
+                self.vtx_write_ptr[0].pos.y = p1.y - dx;
+                self.vtx_write_ptr[0].uv = opaque_uv;
+                self.vtx_write_ptr[0].col = color;
+                self.vtx_write_ptr[1].pos.x = p2.x + dy;
+                self.vtx_write_ptr[1].pos.y = p2.y - dx;
+                self.vtx_write_ptr[1].uv = opaque_uv;
+                self.vtx_write_ptr[1].col = color;
+                self.vtx_write_ptr[2].pos.x = p2.x - dy;
+                self.vtx_write_ptr[2].pos.y = p2.y + dx;
+                self.vtx_write_ptr[2].uv = opaque_uv;
+                self.vtx_write_ptr[2].col = color;
+                self.vtx_write_ptr[3].pos.x = p1.x - dy;
+                self.vtx_write_ptr[3].pos.y = p1.y + dx;
+                self.vtx_write_ptr[3].uv = opaque_uv;
+                self.vtx_write_ptr[3].col = color;
+                self.vtx_write_ptr += 4;
+
+                self.idx_write_ptr[0] = (self.vtx_current_idx);
+                self.idx_write_ptr[1] = (self.vtx_current_idx + 1);
+                self.idx_write_ptr[2] = (self.vtx_current_idx + 2);
+                self.idx_write_ptr[3] = (self.vtx_current_idx);
+                self.idx_write_ptr[4] = (self.vtx_current_idx + 2);
+                self.idx_write_ptr[5] = (self.vtx_current_idx + 3);
+                self.idx_write_ptr += 6;
+                self.vtx_current_idx += 4;
+            }
+        }
     }
     //  void  add_convex_poly_filled(const Vector2D* points, int num_points, ImU32 col);
     pub fn add_convex_poly_filled(&mut self, points: &Vec<Vector2D>, points_count: usize, col: u32) {
-          if points_count < 3 {
-              return;
-          }
+        if points_count < 3 {
+            return;
+        }
 
 
-            let uv = &self.data.text_uv_white_pixel;
+        let uv = &self.data.text_uv_white_pixel;
 
-            if self.flags.contains(&DrawListFlags::AntiAliasedFill)
-            {
-                // Anti-aliased Fill
-                let aa_size = fringe_scale;
-                let col_trans = col & !COLOR32_A_MASK;
-                let idx_count = (points_count - 2)*3 + points_count * 6;
-                let vtx_count = (points_count * 2);
-                self.prim_reserve(idx_count, vtx_count);
+        if self.flags.contains(&DrawListFlags::AntiAliasedFill) {
+            // Anti-aliased Fill
+            let aa_size = fringe_scale;
+            let col_trans = col & !COLOR32_A_MASK;
+            let idx_count = (points_count - 2) * 3 + points_count * 6;
+            let vtx_count = (points_count * 2);
+            self.prim_reserve(idx_count, vtx_count);
 
-                // Add indexes for fill
-                let vtx_inner_idx = self.vtx_current_idx;
-                let vtx_outer_idx = self.vtx_current_idx + 1;
-                // for (int i = 2; i < points_count; i += 1)
-                for i in 2 .. points_count
-                {
-                    self.idx_write_ptr[0] = (vtx_inner_idx);
-                    self.idx_write_ptr[1] = (vtx_inner_idx + ((i - 1) << 1));
-                    self.idx_write_ptr[2] = (vtx_inner_idx + (i << 1));
-                    self.idx_write_ptr += 3;
-                }
-
-                // Compute normals
-                // let temp_normals = alloca(points_count * sizeof(Vector2D)); //-V630
-                let mut temp_normals: Vec<Vector2D> = Vec::new();
-                temp_normals.reserve(points_count);
-
-                // for (int i0 = points_count - 1, i1 = 0; i1 < points_count; i0 = i1 += 1)
-                let indexes_a = 0 .. points_count - 1;
-                let indexes_b = 0 .. points_count;
-                for (i0,i1) in indexes_a.zip(indexes_b)
-                {
-                   let p0 = &points[i0];
-                    let p1 = &points[i1];
-                    let dx =  p1.x - p0.x;
-                    let dy =  p1.y - p0.y;
-                    normalize_2f_over_zero(dx, dy);
-                    temp_normals[i0].x = dy;
-                    temp_normals[i0].y = -dx;
-                }
-
-                // for (int i0 = points_count - 1, i1 = 0; i1 < points_count; i0 = i1 += 1)
-                for (i0, i1) in indexes_a.zip(&indexes_b)
-                {
-                    // Average normals
-                    let n0 = &temp_normals[i0];
-                    let n1 = &temp_normals[i1];
-                    let mut dm_x =  (n0.x + n1.x) * 0.5;
-                    let dm_y =  (n0.y + n1.y) * 0.5;
-                    fix_normal_2f(dm_x, dm_y);
-                    dm_x *= aa_size * 0.5;
-                    dm_y *= aa_size * 0.5;
-
-                    // Add vertices
-                    self.vtx_write_ptr[0].pos.x = (points[i1].x - dm_x);
-                    self.vtx_write_ptr[0].pos.y = (points[i1].y - dm_y);
-                    self.vtx_write_ptr[0].uv = uv;
-                    self.vtx_write_ptr[0].col = col;        // Inner
-                    self.vtx_write_ptr[1].pos.x = (points[i1].x + dm_x);
-                    self.vtx_write_ptr[1].pos.y = (points[i1].y + dm_y);
-                    self.vtx_write_ptr[1].uv = uv;
-                    self.vtx_write_ptr[1].col = col_trans;  // Outer
-                    self.vtx_write_ptr += 2;
-
-                    // Add indexes for fringes
-                    self.idx_write_ptr[0] = (vtx_inner_idx + (i1 << 1));
-                    self.idx_write_ptr[1] = (vtx_inner_idx + (i0 << 1));
-                    self.idx_write_ptr[2] = (vtx_outer_idx + (i0 << 1));
-                    self.idx_write_ptr[3] = (vtx_outer_idx + (i0 << 1));
-                    self.idx_write_ptr[4] = (vtx_outer_idx + (i1 << 1));
-                    self.idx_write_ptr[5] = (vtx_inner_idx + (i1 << 1));
-                    self.idx_write_ptr += 6;
-                }
-                self.vtx_current_idx += vtx_count;
+            // Add indexes for fill
+            let vtx_inner_idx = self.vtx_current_idx;
+            let vtx_outer_idx = self.vtx_current_idx + 1;
+            // for (int i = 2; i < points_count; i += 1)
+            for i in 2..points_count {
+                self.idx_write_ptr[0] = (vtx_inner_idx);
+                self.idx_write_ptr[1] = (vtx_inner_idx + ((i - 1) << 1));
+                self.idx_write_ptr[2] = (vtx_inner_idx + (i << 1));
+                self.idx_write_ptr += 3;
             }
-            else
-            {
-                // Non Anti-aliased Fill
-                let idx_count = (points_count - 2)*3;
-                let vtx_count = points_count;
-                self.prim_reserve(idx_count, vtx_count);
-                // for (int i = 0; i < vtx_count; i += 1)
-                for i in 0 .. vtx_count
-                {
-                    self.vtx_write_ptr[0].pos = &points[i];
-                    self.vtx_write_ptr[0].uv = uv;
-                    self.vtx_write_ptr[0].col = col;
-                    self.vtx_write_ptr += 1;
-                }
-                // for (int i = 2; i < points_count; i += 1)
-                for i in 2 .. points_count
-                {
-                    self.idx_write_ptr[0] = (self.vtx_current_idx);
-                    self.idx_write_ptr[1] = (self.vtx_current_idx + i - 1);
-                    self.idx_write_ptr[2] = (self.vtx_current_idx + i);
-                    self.idx_write_ptr += 3;
-                }
-                self.vtx_current_idx += vtx_count;
+
+            // Compute normals
+            // let temp_normals = alloca(points_count * sizeof(Vector2D)); //-V630
+            let mut temp_normals: Vec<Vector2D> = Vec::new();
+            temp_normals.reserve(points_count);
+
+            // for (int i0 = points_count - 1, i1 = 0; i1 < points_count; i0 = i1 += 1)
+            let indexes_a = 0..points_count - 1;
+            let indexes_b = 0..points_count;
+            for (i0, i1) in indexes_a.zip(indexes_b) {
+                let p0 = &points[i0];
+                let p1 = &points[i1];
+                let dx = p1.x - p0.x;
+                let dy = p1.y - p0.y;
+                normalize_2f_over_zero(dx, dy);
+                temp_normals[i0].x = dy;
+                temp_normals[i0].y = -dx;
             }
+
+            // for (int i0 = points_count - 1, i1 = 0; i1 < points_count; i0 = i1 += 1)
+            for (i0, i1) in indexes_a.zip(&indexes_b) {
+                // Average normals
+                let n0 = &temp_normals[i0];
+                let n1 = &temp_normals[i1];
+                let mut dm_x = (n0.x + n1.x) * 0.5;
+                let dm_y = (n0.y + n1.y) * 0.5;
+                fix_normal_2f(dm_x, dm_y);
+                dm_x *= aa_size * 0.5;
+                dm_y *= aa_size * 0.5;
+
+                // Add vertices
+                self.vtx_write_ptr[0].pos.x = (points[i1].x - dm_x);
+                self.vtx_write_ptr[0].pos.y = (points[i1].y - dm_y);
+                self.vtx_write_ptr[0].uv = uv;
+                self.vtx_write_ptr[0].col = col;        // Inner
+                self.vtx_write_ptr[1].pos.x = (points[i1].x + dm_x);
+                self.vtx_write_ptr[1].pos.y = (points[i1].y + dm_y);
+                self.vtx_write_ptr[1].uv = uv;
+                self.vtx_write_ptr[1].col = col_trans;  // Outer
+                self.vtx_write_ptr += 2;
+
+                // Add indexes for fringes
+                self.idx_write_ptr[0] = (vtx_inner_idx + (i1 << 1));
+                self.idx_write_ptr[1] = (vtx_inner_idx + (i0 << 1));
+                self.idx_write_ptr[2] = (vtx_outer_idx + (i0 << 1));
+                self.idx_write_ptr[3] = (vtx_outer_idx + (i0 << 1));
+                self.idx_write_ptr[4] = (vtx_outer_idx + (i1 << 1));
+                self.idx_write_ptr[5] = (vtx_inner_idx + (i1 << 1));
+                self.idx_write_ptr += 6;
+            }
+            self.vtx_current_idx += vtx_count;
+        } else {
+            // Non Anti-aliased Fill
+            let idx_count = (points_count - 2) * 3;
+            let vtx_count = points_count;
+            self.prim_reserve(idx_count, vtx_count);
+            // for (int i = 0; i < vtx_count; i += 1)
+            for i in 0..vtx_count {
+                self.vtx_write_ptr[0].pos = &points[i];
+                self.vtx_write_ptr[0].uv = uv;
+                self.vtx_write_ptr[0].col = col;
+                self.vtx_write_ptr += 1;
+            }
+            // for (int i = 2; i < points_count; i += 1)
+            for i in 2..points_count {
+                self.idx_write_ptr[0] = (self.vtx_current_idx);
+                self.idx_write_ptr[1] = (self.vtx_current_idx + i - 1);
+                self.idx_write_ptr[2] = (self.vtx_current_idx + i);
+                self.idx_write_ptr += 3;
+            }
+            self.vtx_current_idx += vtx_count;
+        }
     }
     //  void  add_bezier_cubic(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
     pub fn add_bezier_cubic(
@@ -1092,56 +1059,50 @@ impl DrawList {
         a_max: f32,
         num_segments: i32,
     ) {
-         if radius < 0.5
-            {
-                self.path.push_back(center);
-                return;
+        if radius < 0.5 {
+            self.path.push_back(center);
+            return;
+        }
+
+        if num_segments > 0 {
+            self.path_arc_to_n(center, radius, a_min, a_max, num_segments);
+            return;
+        }
+
+        // Automatic segment count
+        if radius <= self.data.arc_fast_radius_cutoff {
+            let a_is_reverse = a_max < a_min;
+
+            // We are going to use precomputed values for mid samples.
+            // Determine first and last sample in lookup table that belong to the arc.
+            let a_min_sample_f = DRAW_LIST_ARCFAST_SAMPLE_MAX * a_min / (f32::PI * 2.0);
+            let a_max_sample_f = DRAW_LIST_ARCFAST_SAMPLE_MAX * a_max / (f32::PI * 2.0);
+
+            let a_min_sample = if a_is_reverse { f32::floor(a_min_sample_f) } else { f32::ceil(a_min_sample_f) };
+            let a_max_sample = if a_is_reverse { f32::ceil(a_max_sample_f) } else { f32::floor(a_max_sample_f) };
+            let a_mid_samples = if a_is_reverse { f32::max(a_min_sample - a_max_sample, 0f32) } else { f32::max(a_max_sample - a_min_sample, 0f32) };
+
+            let a_min_segment_angle = a_min_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
+            let a_max_segment_angle = a_max_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
+            let a_emit_start = f32::abs(a_min_segment_angle - a_min) >= 1e-5f32;
+            let a_emit_end = f32::abs(a_max - a_max_segment_angle) >= 1e-5f32;
+
+            self.path.reserve(path.size + (a_mid_samples + 1 + (if a_emit_start { 1 } else { 0 }) + (if a_emit_end { 1 } else { 0 })));
+            if a_emit_start {
+                self.path.push_back(Vector2D::new(center.x + f32::cos(a_min) * radius, center.y + f32::sin(a_min) * radius));
             }
-
-            if num_segments > 0
-            {
-                self.path_arc_to_n(center, radius, a_min, a_max, num_segments);
-                return;
+            if a_mid_samples > 0f32 {
+                self.path_arc_to_fast_ex(center, radius, a_min_sample, a_max_sample, 0);
             }
-
-            // Automatic segment count
-            if radius <= self.data.arc_fast_radius_cutoff
-            {
-                let a_is_reverse = a_max < a_min;
-
-                // We are going to use precomputed values for mid samples.
-                // Determine first and last sample in lookup table that belong to the arc.
-                let a_min_sample_f = DRAW_LIST_ARCFAST_SAMPLE_MAX * a_min / (f32::PI * 2.0);
-                let a_max_sample_f = DRAW_LIST_ARCFAST_SAMPLE_MAX * a_max / (f32::PI * 2.0);
-
-                let a_min_sample = if a_is_reverse { f32::floor(a_min_sample_f) } else
-                { f32::ceil(a_min_sample_f) };
-                let a_max_sample = if a_is_reverse { f32::ceil(a_max_sample_f) } else { f32::floor(a_max_sample_f) };
-                let a_mid_samples = if a_is_reverse { f32::max(a_min_sample - a_max_sample, 0f32) } else { f32::max(a_max_sample - a_min_sample, 0f32) };
-
-                let a_min_segment_angle = a_min_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                let a_max_segment_angle = a_max_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                let a_emit_start = f32::abs(a_min_segment_angle - a_min) >= 1e-5f32;
-                let a_emit_end = f32::abs(a_max - a_max_segment_angle) >= 1e-5f32;
-
-                self.path.reserve(path.size + (a_mid_samples + 1 + (if a_emit_start { 1 } else { 0 }) + (if a_emit_end { 1 } else { 0 })));
-                if a_emit_start {
-                    self.path.push_back(Vector2D::new(center.x + f32::cos(a_min) * radius, center.y + f32::sin(a_min) * radius));
-                }
-                if a_mid_samples > 0f32 {
-                    self.path_arc_to_fast_ex(center, radius, a_min_sample, a_max_sample, 0);
-                }
-                if a_emit_end {
-                    self.path.push_back(Vector2D::new(center.x + f32::cos(a_max) * radius, center.y + f32::sin(a_max) * radius));
-                }
+            if a_emit_end {
+                self.path.push_back(Vector2D::new(center.x + f32::cos(a_max) * radius, center.y + f32::sin(a_max) * radius));
             }
-            else
-            {
-                let arc_length = f32::abs(a_max - a_min);
-                let circle_segment_count = self.calc_circle_auto_segment_count(radius);
-                let arc_segment_count = f32::max(f32::ceil(circle_segment_count * arc_length / (f32::PI * 2.0)), (2.0 * f32::PI / arc_length));
-                self.path_arc_to_n(center, radius, a_min, a_max, arc_segment_count as i32);
-            }
+        } else {
+            let arc_length = f32::abs(a_max - a_min);
+            let circle_segment_count = self.calc_circle_auto_segment_count(radius);
+            let arc_segment_count = f32::max(f32::ceil(circle_segment_count * arc_length / (f32::PI * 2.0)), (2.0 * f32::PI / arc_length));
+            self.path_arc_to_n(center, radius, a_min, a_max, arc_segment_count as i32);
+        }
     }
     //  void  PathArcToFast(const Vector2D& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
     pub fn path_arc_to_fast(
@@ -1151,12 +1112,11 @@ impl DrawList {
         a_min_of_12: i32,
         a_max_of_12: i32,
     ) {
-         if radius < 0.5
-            {
-                self.path.push_back(center);
-                return;
-            }
-            self.path_arc_to_fast_ex(center, radius, a_min_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, a_max_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, 0);
+        if radius < 0.5 {
+            self.path.push_back(center);
+            return;
+        }
+        self.path_arc_to_fast_ex(center, radius, a_min_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, a_max_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, 0);
     }
     //  void  path_bezier_cubic_curve_to(const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, int num_segments = 0); // Cubic Bezier (4 control points)
     pub fn path_bezier_cubic_curve_to(
@@ -1167,19 +1127,15 @@ impl DrawList {
         num_segments: usize,
     ) {
         let p1 = self.path.back();
-            if num_segments == 0
-            {
-                self.path_bezier_cubic_curve_toCasteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, self.data.curve_tessellation_tol, 0); // Auto-tessellated
+        if num_segments == 0 {
+            self.path_bezier_cubic_curve_toCasteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, self.data.curve_tessellation_tol, 0); // Auto-tessellated
+        } else {
+            let t_step = 1.0 / num_segments;
+            // for (int i_step = 1; i_step <= num_segments; i_step += 1)
+            for i_step in 1..num_segments {
+                self.path.push_back(bezier_cubic_calc(p1, p2, p3, p4, t_step * i_step));
             }
-            else
-            {
-                let t_step =  1.0 / num_segments;
-                // for (int i_step = 1; i_step <= num_segments; i_step += 1)
-                for i_step in 1 .. num_segments
-                {
-                    self.path.push_back(bezier_cubic_calc(p1, p2, p3, p4, t_step * i_step));
-                }
-            }
+        }
     }
     //  void  path_bezier_quadratic_curve_to(const Vector2D& p2, const Vector2D& p3, int num_segments = 0);               // Quadratic Bezier (3 control points)
     pub fn path_bezier_quadratic_curve_to(
@@ -1188,20 +1144,16 @@ impl DrawList {
         p3: &Vector2D,
         num_segments: usize,
     ) {
-         let p1 = path.back();
-            if num_segments == 0
-            {
-                self.path_bezier_quadratic_curve_to_casteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, self.data.curve_tessellation_tol, 0);// Auto-tessellated
+        let p1 = path.back();
+        if num_segments == 0 {
+            self.path_bezier_quadratic_curve_to_casteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, self.data.curve_tessellation_tol, 0);// Auto-tessellated
+        } else {
+            let t_step = 1.0 / num_segments;
+            // for (int i_step = 1; i_step <= num_segments; i_step += 1)
+            for i_step in 1..num_segments {
+                self.path.push_back(bezier_quadratic_calc(p1, p2, p3, t_step * i_step));
             }
-            else
-            {
-                let t_step =  1.0 / num_segments;
-                // for (int i_step = 1; i_step <= num_segments; i_step += 1)
-                for i_step in 1.. num_segments
-                {
-                    self.path.push_back(bezier_quadratic_calc(p1, p2, p3, t_step * i_step));
-                }
-            }
+        }
     }
     //  void  PathRect(const Vector2D& rect_min, const Vector2D& rect_max, float rounding = 0.0, ImDrawFlags flags = 0);
     pub fn path_rect(
@@ -1214,28 +1166,25 @@ impl DrawList {
 
         // flags.extend(fix_rect_corner_flags(flags).iter()); //= fix_rect_corner_flags(flags);
         set_hash_set(flags, &fix_rect_corner_flags(flags));
-            rounding = f32::min(rounding, f32::abs(b.x - a.x) * (if ((flags & DrawFlags::RoundCornersTop)  == DrawFlags::RoundCornersTop)  || ((flags & DrawFlags::RoundCornersBottom) == DrawFlags::RoundCornersBottom) { 0.5 } else { 1.0 } ) - 1.0);
-            rounding = f32::min(rounding, f32::abs(b.y - a.y) * ( if ((flags & DrawFlags::RoundCornersLeft) == DrawFlags::RoundCornersLeft) || ((flags & DrawFlags::RoundCornersRight)  == DrawFlags::RoundCornersRight) { 0.5 } else { 1.0 } ) - 1.0);
+        rounding = f32::min(rounding, f32::abs(b.x - a.x) * (if ((flags & DrawFlags::RoundCornersTop) == DrawFlags::RoundCornersTop) || ((flags & DrawFlags::RoundCornersBottom) == DrawFlags::RoundCornersBottom) { 0.5 } else { 1.0 }) - 1.0);
+        rounding = f32::min(rounding, f32::abs(b.y - a.y) * (if ((flags & DrawFlags::RoundCornersLeft) == DrawFlags::RoundCornersLeft) || ((flags & DrawFlags::RoundCornersRight) == DrawFlags::RoundCornersRight) { 0.5 } else { 1.0 }) - 1.0);
 
-            // if rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone
-        if rounding < 0.5 || flags.contains(&DrawFlags::RoundCornersNone)
-        {
-                path_line_to(a);
-                path_line_to(Vector2D::new(b.x, a.y));
-                path_line_to(b);
-                path_line_to(Vector2D::new(a.x, b.y));
-            }
-            else
-            {
-                let rounding_tl = if flags.contains(&DrawFlags::RoundCornersTopLeft) { rounding } else { 0.0 };
-                let rounding_tr = if flags.contains(&DrawFlags::RoundCornersTopRight) { rounding } else { 0.0 };
-                let rounding_br = if flags.contains(&DrawFlags::RoundCornersBottomRight) { rounding } else { 0.0 };
-                let rounding_bl = if flags.contains(&DrawFlags::RoundCornersBottomLeft) { rounding } else { 0.0 };
-                self.path_arc_to_fast(&Vector2D::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
-                self.path_arc_to_fast(&Vector2D::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
-                self.path_arc_to_fast(&Vector2D::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
-                self.path_arc_to_fast(&Vector2D::new(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
-            }
+        // if rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone
+        if rounding < 0.5 || flags.contains(&DrawFlags::RoundCornersNone) {
+            path_line_to(a);
+            path_line_to(Vector2D::new(b.x, a.y));
+            path_line_to(b);
+            path_line_to(Vector2D::new(a.x, b.y));
+        } else {
+            let rounding_tl = if flags.contains(&DrawFlags::RoundCornersTopLeft) { rounding } else { 0.0 };
+            let rounding_tr = if flags.contains(&DrawFlags::RoundCornersTopRight) { rounding } else { 0.0 };
+            let rounding_br = if flags.contains(&DrawFlags::RoundCornersBottomRight) { rounding } else { 0.0 };
+            let rounding_bl = if flags.contains(&DrawFlags::RoundCornersBottomLeft) { rounding } else { 0.0 };
+            self.path_arc_to_fast(&Vector2D::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
+            self.path_arc_to_fast(&Vector2D::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
+            self.path_arc_to_fast(&Vector2D::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
+            self.path_arc_to_fast(&Vector2D::new(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
+        }
     }
 
     // Advanced
@@ -1243,39 +1192,38 @@ impl DrawList {
     pub fn add_callback(&mut self, callback: DrawCallback, callback_data: &mut Vec<u8>) {
         // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
         //     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-            // IM_ASSERT(curr_cmd.UserCallback == None);
-        let mut curr_cmd= &mut self.cmd_buffer[self.cmd_buffer.len() -1];
-        if curr_cmd.element_count != 0
-            {
-                self.add_draw_cmd();
-               curr_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() - 1];
-            }
-            curr_cmd.user_callback = Some(callback);
-            curr_cmd.user_callback_data = callback_data.to_owned();
+        // IM_ASSERT(curr_cmd.UserCallback == None);
+        let mut curr_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() - 1];
+        if curr_cmd.element_count != 0 {
+            self.add_draw_cmd();
+            curr_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() - 1];
+        }
+        curr_cmd.user_callback = Some(callback);
+        curr_cmd.user_callback_data = callback_data.to_owned();
 
-            self.add_draw_cmd(); // Force a new command after us (see comment below)
+        self.add_draw_cmd(); // Force a new command after us (see comment below)
     }
     //  void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
     pub fn add_draw_cmd(&mut self) {
         // ImDrawCmd draw_cmd;
         let mut draw_cmd = DrawCmd::default();
-            draw_cmd.clip_rect = command_header.clip_rect;    // Same as calling ImDrawCmd_HeaderCopy()
-            draw_cmd.texture_id = command_header.texture_id;
-            draw_cmd.vtx_offset = command_header.vtx_offset;
-            draw_cmd.idx_offset = self.idx_buffer.size;
+        draw_cmd.clip_rect = command_header.clip_rect;    // Same as calling ImDrawCmd_HeaderCopy()
+        draw_cmd.texture_id = command_header.texture_id;
+        draw_cmd.vtx_offset = command_header.vtx_offset;
+        draw_cmd.idx_offset = self.idx_buffer.size;
 
-            // IM_ASSERT(draw_cmd.clip_rect.x <= draw_cmd.clip_rect.z && draw_cmd.clip_rect.y <= draw_cmd.clip_rect.w);
-            self.cmd_buffer.push_back(draw_cmd);
+        // IM_ASSERT(draw_cmd.clip_rect.x <= draw_cmd.clip_rect.z && draw_cmd.clip_rect.y <= draw_cmd.clip_rect.w);
+        self.cmd_buffer.push_back(draw_cmd);
     }
     //  ImDrawList* clone_output() const;                                  // Create a clone of the cmd_buffer/idx_buffer/vtx_buffer.
     pub fn clone_output(&mut self) -> DrawList {
         // ImDrawList* dst = IM_NEW(ImDrawList(data));
         let mut dst = DrawList::new(g, &mut self.data, "");
-            dst.cmd_buffer = self.cmd_buffer.clone();
-            dst.idx_buffer = self.idx_buffer.clone();
-            dst.vtx_buffer = self.vtx_buffer.clone();
-            dst.flags = self.flags.clone();
-            return dst;
+        dst.cmd_buffer = self.cmd_buffer.clone();
+        dst.idx_buffer = self.idx_buffer.clone();
+        dst.vtx_buffer = self.vtx_buffer.clone();
+        dst.flags = self.flags.clone();
+        return dst;
     }
 
     // Advanced: Channels
@@ -1293,42 +1241,41 @@ impl DrawList {
     // - All primitives needs to be reserved via PrimReserve() beforehand.
     //  void  PrimReserve(int idx_count, int vtx_count);
     pub fn prim_reserve(&mut self, idx_count: usize, vtx_count: usize) {
-         // Large mesh support (when enabled)
-            // IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
-            if sizeof == 2 && (self.vtx_current_idx + vtx_count >= (1 << 16)) && (self.flags.contains(&DrawListFlags::AllowVtxOffset))
-            {
-                // FIXME: In theory we should be testing that vtx_count <64k here.
-                // In practice, render_text() relies on reserving ahead for a worst case scenario so it is currently useful for us
-                // to not make that check until we rework the text functions to handle clipping and large horizontal lines better.
-                self.command_header.vtx_offset = self.vtx_buffer.size;
-                self.on_changed_vtx_offset();
-            }
+        // Large mesh support (when enabled)
+        // IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
+        if sizeof == 2 && (self.vtx_current_idx + vtx_count >= (1 << 16)) && (self.flags.contains(&DrawListFlags::AllowVtxOffset)) {
+            // FIXME: In theory we should be testing that vtx_count <64k here.
+            // In practice, render_text() relies on reserving ahead for a worst case scenario so it is currently useful for us
+            // to not make that check until we rework the text functions to handle clipping and large horizontal lines better.
+            self.command_header.vtx_offset = self.vtx_buffer.size;
+            self.on_changed_vtx_offset();
+        }
 
-            // ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-            let draw_cmd = &mut self.cmd_buffer[self.cmd_buffer.len()-1];
+        // ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
+        let draw_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() - 1];
         draw_cmd.elem_count += idx_count;
 
-            let vtx_buffer_old_size = self.vtx_buffer.len();
-            self.vtx_buffer.resize(vtx_buffer_old_size + vtx_count, DrawVertex::default());
-            self.vtx_write_ptr = self.vtx_buffer.data + vtx_buffer_old_size;
+        let vtx_buffer_old_size = self.vtx_buffer.len();
+        self.vtx_buffer.resize(vtx_buffer_old_size + vtx_count, DrawVertex::default());
+        self.vtx_write_ptr = self.vtx_buffer.data + vtx_buffer_old_size;
 
-            let idx_buffer_old_size = self.idx_buffer.len();
-            self.idx_buffer.resize(idx_buffer_old_size + idx_count, INVALID_DRAW_INDEX);
-            self.idx_write_ptr = idx_buffer.data + idx_buffer_old_size;
+        let idx_buffer_old_size = self.idx_buffer.len();
+        self.idx_buffer.resize(idx_buffer_old_size + idx_count, INVALID_DRAW_INDEX);
+        self.idx_write_ptr = idx_buffer.data + idx_buffer_old_size;
     }
     //  void  PrimUnreserve(int idx_count, int vtx_count);
     pub fn prim_unreserve(&mut self, idx_count: usize, vtx_count: usize) {
         // ImDrawCmd* draw_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
         let draw_cmd = &mut self.cmd_buffer.data[self.cmd_buffer.len() - 1];
-            draw_cmd.elem_count -= idx_count;
-            self.vtx_buffer.shrink(self.vtx_buffer.size - vtx_count);
-            self.idx_buffer.shrink(self.idx_buffer.size - idx_count);
+        draw_cmd.elem_count -= idx_count;
+        self.vtx_buffer.shrink(self.vtx_buffer.size - vtx_count);
+        self.idx_buffer.shrink(self.idx_buffer.size - idx_count);
     }
     //  void  PrimRect(const Vector2D& a, const Vector2D& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
     pub fn prim_rect(&mut self, a: &Vector2D, b: &Vector2D, col: u32) {
-            // Vector2D b(c.x, a.y), d(a.x, c.y), uv(data.TexUvWhitePixel);
-        let b = Vector2D::new(c.x,a.y);
-        let d = Vector2D::new(a.x,c.y);
+        // Vector2D b(c.x, a.y), d(a.x, c.y), uv(data.TexUvWhitePixel);
+        let b = Vector2D::new(c.x, a.y);
+        let d = Vector2D::new(a.x, c.y);
         let uv = self.data.text_uv_white_pixel.clone();
 
         // ImDrawIdx idx = self.vtx_current_idx;
@@ -1351,9 +1298,9 @@ impl DrawList {
         self.vtx_write_ptr[3].pos = d;
         self.vtx_write_ptr[3].uv = uv.clone();
         self.vtx_write_ptr[3].col = col;
-            self.vtx_write_ptr += 4;
-            self.vtx_current_idx += 4;
-            self.idx_write_ptr += 6;
+        self.vtx_write_ptr += 4;
+        self.vtx_current_idx += 4;
+        self.idx_write_ptr += 6;
     }
     //  void  prim_rect_uv(const Vector2D& a, const Vector2D& b, const Vector2D& uv_a, const Vector2D& uv_b, ImU32 col);
     pub fn prim_rect_uv(
@@ -1364,12 +1311,12 @@ impl DrawList {
         uv_b: &Vector2D,
         col: u32,
     ) {
-         // Vector2D b(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
-         let b = Vector2D::new(c.x, a.y);
-        let d = Vector2D::new(a.x,c.y);
+        // Vector2D b(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
+        let b = Vector2D::new(c.x, a.y);
+        let d = Vector2D::new(a.x, c.y);
         let uv_b = Vector2D::new(uv_c.x, uv_a.y);
         let uv_d = Vector2D::new(uv_a.x, uv_c.y);
-            let idx = self.vtx_current_idx;
+        let idx = self.vtx_current_idx;
         self.idx_write_ptr[0] = idx;
         self.idx_write_ptr[1] = (idx + 1);
         self.idx_write_ptr[2] = (idx + 2);
@@ -1388,9 +1335,9 @@ impl DrawList {
         self.vtx_write_ptr[3].pos = d;
         self.vtx_write_ptr[3].uv = uv_d;
         self.vtx_write_ptr[3].col = col;
-            self.vtx_write_ptr += 4;
-            self.vtx_current_idx += 4;
-            self.idx_write_ptr += 6;
+        self.vtx_write_ptr += 4;
+        self.vtx_current_idx += 4;
+        self.idx_write_ptr += 6;
     }
     //  void  prim_quad_uv(const Vector2D& a, const Vector2D& b, const Vector2D& c, const Vector2D& d, const Vector2D& uv_a, const Vector2D& uv_b, const Vector2D& uv_c, const Vector2D& uv_d, ImU32 col);
     pub fn prim_quad_uv(
@@ -1405,7 +1352,7 @@ impl DrawList {
         uv_d: &Vector2D,
         col: u32,
     ) {
-            let idx = self.vtx_current_idx;
+        let idx = self.vtx_current_idx;
         self.idx_write_ptr[0] = idx;
         self.idx_write_ptr[1] = (idx + 1);
         self.idx_write_ptr[2] = (idx + 2);
@@ -1424,17 +1371,17 @@ impl DrawList {
         self.vtx_write_ptr[3].pos = d;
         self.vtx_write_ptr[3].uv = uv_d;
         self.vtx_write_ptr[3].col = col;
-            self.vtx_write_ptr += 4;
-            self.vtx_current_idx += 4;
-            self.idx_write_ptr += 6;
+        self.vtx_write_ptr += 4;
+        self.vtx_current_idx += 4;
+        self.idx_write_ptr += 6;
     }
     // inline    void  PrimWriteVtx(const Vector2D& pos, const Vector2D& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
     pub fn prime_write_vtx(&mut self, pos: &Vector2D, uv: &Vector2D, col: u32) {
         // TODO: replace VtxWritePtr with a vector of vertices
         self.vtx_buffer.push(DrawVertex {
-            pos: pos.clone(),
+            position: pos.clone(),
             uv: uv.clone(),
-            col,
+            color: col,
         });
     }
     // inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr++; }
@@ -1507,103 +1454,97 @@ impl DrawList {
         //     _Path.clear();
         //     _Splitter.ClearFreeMemory();
     }
-     // void  _PopUnusedDrawCmd();
-pub fn pop_unused_draw_cmd(&mut self) {
+    // void  _PopUnusedDrawCmd();
+    pub fn pop_unused_draw_cmd(&mut self) {
         if self.cmd_buffer.is_empty() {
             return;
         }
-            // ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
-         let curr_md = &mut self.cmd_buffer[self.cmd_buffer.len() -1];
-         if curr_cmd.elem_count == 0 && curr_cmd.user_callback == None {
-             self.cmd_buffer.pop_back();
-         }
+        // ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
+        let curr_md = &mut self.cmd_buffer[self.cmd_buffer.len() - 1];
+        if curr_cmd.elem_count == 0 && curr_cmd.user_callback == None {
+            self.cmd_buffer.pop_back();
+        }
     }
     //  void  _TryMergeDrawCmds();
-pub fn try_merge_draw_commands(&mut self) {
+    pub fn try_merge_draw_commands(&mut self) {
         // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
         //     ImDrawCmd* curr_cmd = &CmdBuffer.data[CmdBuffer.size - 1];
-        let curr_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() -1];
+        let curr_cmd = &mut self.cmd_buffer[self.cmd_buffer.len() - 1];
         // ImDrawCmd* prev_cmd = curr_cmd - 1;
         let prev_cmd = curr_cmd - 1;
-            if draw_cmd_header_compare(curr_cmd, prev_cmd) == 0 && are_sequential_idx_offset(prev_cmd, curr_cmd) && curr_cmd.user_callback == None && prev_cmd.user_callback == None
-            {
-                prev_cmd.elem_count += curr_cmd.elem_count;
-                self.cmd_buffer.pop_back();
-            }
+        if draw_cmd_header_compare(curr_cmd, prev_cmd) == 0 && are_sequential_idx_offset(prev_cmd, curr_cmd) && curr_cmd.user_callback == None && prev_cmd.user_callback == None {
+            prev_cmd.elem_count += curr_cmd.elem_count;
+            self.cmd_buffer.pop_back();
+        }
     }
     //  void  _OnChangedClipRect();
-pub fn OnChangedClipRect(&mut self) {
+    pub fn OnChangedClipRect(&mut self) {
 
-         // If current command is used with different settings we need to add a new command
-            // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
-            ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
-            if (curr_cmd.elem_count != 0 && memcmp(&curr_cmd.clip_rect, &command_header.clip_rect, sizeof(Vector4D)) != 0)
-            {
-                AddDrawCmd();
-                return;
-            }
-            // IM_ASSERT(curr_cmd.UserCallback == None);
+        // If current command is used with different settings we need to add a new command
+        // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+        ImDrawCmd * curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
+        if (curr_cmd.elem_count != 0 && memcmp(&curr_cmd.clip_rect, &command_header.clip_rect, sizeof(Vector4D)) != 0) {
+            AddDrawCmd();
+            return;
+        }
+        // IM_ASSERT(curr_cmd.UserCallback == None);
 
-            // Try to merge with previous command if it matches, else use current command
-            ImDrawCmd* prev_cmd = curr_cmd - 1;
-            if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None)
-            {
-                cmd_buffer.pop_back();
-                return;
-            }
+        // Try to merge with previous command if it matches, else use current command
+        ImDrawCmd * prev_cmd = curr_cmd - 1;
+        if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None) {
+            cmd_buffer.pop_back();
+            return;
+        }
 
-            curr_cmd.clip_rect = command_header.clip_rect;
+        curr_cmd.clip_rect = command_header.clip_rect;
     }
     //  void  _OnChangedTextureID();
-pub fn OnChangedTextureID(&mut self) {
+    pub fn OnChangedTextureID(&mut self) {
         // If current command is used with different settings we need to add a new command
-            // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
-            ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
-            if (curr_cmd.elem_count != 0 && curr_cmd.texture_id != command_header.texture_id)
-            {
-                AddDrawCmd();
-                return;
-            }
-            // IM_ASSERT(curr_cmd.UserCallback == None);
+        // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+        ImDrawCmd * curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
+        if (curr_cmd.elem_count != 0 && curr_cmd.texture_id != command_header.texture_id) {
+            AddDrawCmd();
+            return;
+        }
+        // IM_ASSERT(curr_cmd.UserCallback == None);
 
-            // Try to merge with previous command if it matches, else use current command
-            ImDrawCmd* prev_cmd = curr_cmd - 1;
-            if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None)
-            {
-                cmd_buffer.pop_back();
-                return;
-            }
+        // Try to merge with previous command if it matches, else use current command
+        ImDrawCmd * prev_cmd = curr_cmd - 1;
+        if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None) {
+            cmd_buffer.pop_back();
+            return;
+        }
 
-            curr_cmd.texture_id = command_header.texture_id;
+        curr_cmd.texture_id = command_header.texture_id;
     }
     //  void  _OnChangedVtxOffset();
-pub fn on_changed_vtx_offset(&mut self) {
+    pub fn on_changed_vtx_offset(&mut self) {
         // // We don't need to compare curr_cmd->vtx_offset != _cmd_header.vtx_offset because we know it'll be different at the time we call this.
-            self.vtx_current_idx = 0;
-            // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
-            ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
-            //IM_ASSERT(curr_cmd->vtx_offset != _cmd_header.vtx_offset); // See #3349
-            if curr_cmd.elem_count != 0
-            {
-                AddDrawCmd();
-                return;
-            }
-            // IM_ASSERT(curr_cmd.UserCallback == None);
-            curr_cmd.vtx_offset = command_header.vtx_offset;
+        self.vtx_current_idx = 0;
+        // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
+        ImDrawCmd * curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
+        //IM_ASSERT(curr_cmd->vtx_offset != _cmd_header.vtx_offset); // See #3349
+        if curr_cmd.elem_count != 0 {
+            AddDrawCmd();
+            return;
+        }
+        // IM_ASSERT(curr_cmd.UserCallback == None);
+        curr_cmd.vtx_offset = command_header.vtx_offset;
     }
     //  int   _CalcCircleAutoSegmentCount(float radius) const;
-pub fn cal_circle_auto_segment_count(&mut self, radius: f32) -> f32 {
+    pub fn cal_circle_auto_segment_count(&mut self, radius: f32) -> f32 {
         // // Automatic segment count
-            let radius_idx = (radius + 0.999999); // ceil to never reduce accuracy
+        let radius_idx = (radius + 0.999999); // ceil to never reduce accuracy
         return if radius_idx < (self.data.circle_segment_counts.len()) as f32 {
             data.CircleSegmentCounts[radius_idx]
         } // Use cached value
         else {
             drawlist_circle_auto_segment_calc(radius, self.data.circle_segment_max_error)
-        }
+        };
     }
     //  void  _PathArcToFastEx(const Vector2D& center, float radius, int a_min_sample, int a_max_sample, int a_step);
-pub fn path_arc_to_fast_ex(
+    pub fn path_arc_to_fast_ex(
         &mut self,
         center: &Vector2D,
         radius: f32,
@@ -1611,109 +1552,99 @@ pub fn path_arc_to_fast_ex(
         a_max_sample: f32,
         mut a_step: usize,
     ) {
-         if radius < 0.5
-            {
-                self.path.push_back(center);
-                return;
-            }
+        if radius < 0.5 {
+            self.path.push_back(center);
+            return;
+        }
 
-            // Calculate arc auto segment step size
-            if a_step <= 0 {
-                a_step = DRAW_LIST_ARCFAST_SAMPLE_MAX / calc_circle_auto_segment_count(radius);
-            }
+        // Calculate arc auto segment step size
+        if a_step <= 0 {
+            a_step = DRAW_LIST_ARCFAST_SAMPLE_MAX / calc_circle_auto_segment_count(radius);
+        }
 
-            // Make sure we never do steps larger than one quarter of the circle
-            a_step = usize::clamp(a_step, 1, (DRAW_LIST_ARCFAST_TABLE_SIZE / 4));
+        // Make sure we never do steps larger than one quarter of the circle
+        a_step = usize::clamp(a_step, 1, (DRAW_LIST_ARCFAST_TABLE_SIZE / 4));
 
-            let sample_range = i32::abs(a_max_sample - a_min_sample);
-            let a_next_step = a_step;
+        let sample_range = i32::abs(a_max_sample - a_min_sample);
+        let a_next_step = a_step;
 
-            let mut samples = sample_range + 1;
-            let mut extra_max_sample = false;
-            if a_step > 1
-            {
-                samples            = sample_range / a_step + 1;
-                let overstep = sample_range % a_step;
+        let mut samples = sample_range + 1;
+        let mut extra_max_sample = false;
+        if a_step > 1 {
+            samples = sample_range / a_step + 1;
+            let overstep = sample_range % a_step;
 
-                if overstep > 0
-                {
-                    extra_max_sample = true;
-                    samples += 1;
+            if overstep > 0 {
+                extra_max_sample = true;
+                samples += 1;
 
-                    // When we have overstep to avoid awkwardly looking one long line and one tiny one at the end,
-                    // distribute first step range evenly between them by reducing first step size.
-                    if sample_range > 0 {
-                        a_step -= (a_step - overstep) / 2;
-                    }
+                // When we have overstep to avoid awkwardly looking one long line and one tiny one at the end,
+                // distribute first step range evenly between them by reducing first step size.
+                if sample_range > 0 {
+                    a_step -= (a_step - overstep) / 2;
                 }
             }
+        }
 
-            path.resize(path.size + samples);
-            Vector2D* out_ptr = path.data + (path.size - samples);
+        path.resize(path.size + samples);
+        Vector2D * out_ptr = path.data + (path.size - samples);
 
-            let mut sample_index = a_min_sample;
-            if sample_index < 0 || sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX
-            {
-                sample_index = sample_index % DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                if sample_index < 0 {
-                    sample_index += DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                }
+        let mut sample_index = a_min_sample;
+        if sample_index < 0 || sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX {
+            sample_index = sample_index % DRAW_LIST_ARCFAST_SAMPLE_MAX;
+            if sample_index < 0 {
+                sample_index += DRAW_LIST_ARCFAST_SAMPLE_MAX;
             }
+        }
 
-            if a_max_sample >= a_min_sample
-            {
-                // for (int a = a_min_sample; a <= a_max_sample; a += a_step, sample_index += a_step, a_step = a_next_step)
-                let index_a = (a_min_sample .. a_max_sample).step_by(a_step);
+        if a_max_sample >= a_min_sample {
+            // for (int a = a_min_sample; a <= a_max_sample; a += a_step, sample_index += a_step, a_step = a_next_step)
+            let index_a = (a_min_sample..a_max_sample).step_by(a_step);
 
-                for a in (a_min_sample .. a_max_sample).step_by(a_step)
-                {
-                    sample_index += a_step;
-                    a_step = a_next_step;
-                    // a_step is clamped to IM_DRAWLIST_ARCFAST_SAMPLE_MAX, so we have guaranteed that it will not wrap over range twice or more
-                    if sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX {
-                        sample_index -= DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                    }
-
-                    let s = self.data.arc_fast_vtx[sample_index];
-                    out_ptr.x = center.x + s.x * radius;
-                    out_ptr.y = center.y + s.y * radius;
-                    out_ptr += 1;
-                }
-            }
-            else
-            {
-                // for (int a = a_min_sample; a >= a_max_sample; a -= a_step, sample_index -= a_step, a_step = a_next_step)
-                for a in (a_max_sample..a_min_sample).step_by()
-                {
-                    // a_step is clamped to IM_DRAWLIST_ARCFAST_SAMPLE_MAX, so we have guaranteed that it will not wrap over range twice or more
-                    if sample_index < 0 {
-                        sample_index += DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                    }
-
-                    let s = self.data.arc_fast_vtx[sample_index];
-                    out_ptr.x = center.x + s.x * radius;
-                    out_ptr.y = center.y + s.y * radius;
-                    out_ptr += 1;
-                }
-            }
-
-            if extra_max_sample
-            {
-                let mut normalized_max_sample = a_max_sample % DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                if normalized_max_sample < 0f32 {
-                    normalized_max_sample += DRAW_LIST_ARCFAST_SAMPLE_MAX;
+            for a in (a_min_sample..a_max_sample).step_by(a_step) {
+                sample_index += a_step;
+                a_step = a_next_step;
+                // a_step is clamped to IM_DRAWLIST_ARCFAST_SAMPLE_MAX, so we have guaranteed that it will not wrap over range twice or more
+                if sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX {
+                    sample_index -= DRAW_LIST_ARCFAST_SAMPLE_MAX;
                 }
 
-                let s = self.data.arc_fast_vtx[normalized_max_sample];
+                let s = self.data.arc_fast_vtx[sample_index];
                 out_ptr.x = center.x + s.x * radius;
                 out_ptr.y = center.y + s.y * radius;
                 out_ptr += 1;
             }
+        } else {
+            // for (int a = a_min_sample; a >= a_max_sample; a -= a_step, sample_index -= a_step, a_step = a_next_step)
+            for a in (a_max_sample..a_min_sample).step_by() {
+                // a_step is clamped to IM_DRAWLIST_ARCFAST_SAMPLE_MAX, so we have guaranteed that it will not wrap over range twice or more
+                if sample_index < 0 {
+                    sample_index += DRAW_LIST_ARCFAST_SAMPLE_MAX;
+                }
 
-            // IM_ASSERT_PARANOID(_Path.data + _Path.size == out_ptr);
+                let s = self.data.arc_fast_vtx[sample_index];
+                out_ptr.x = center.x + s.x * radius;
+                out_ptr.y = center.y + s.y * radius;
+                out_ptr += 1;
+            }
+        }
+
+        if extra_max_sample {
+            let mut normalized_max_sample = a_max_sample % DRAW_LIST_ARCFAST_SAMPLE_MAX;
+            if normalized_max_sample < 0f32 {
+                normalized_max_sample += DRAW_LIST_ARCFAST_SAMPLE_MAX;
+            }
+
+            let s = self.data.arc_fast_vtx[normalized_max_sample];
+            out_ptr.x = center.x + s.x * radius;
+            out_ptr.y = center.y + s.y * radius;
+            out_ptr += 1;
+        }
+
+        // IM_ASSERT_PARANOID(_Path.data + _Path.size == out_ptr);
     }
     //  void  _PathArcToN(const Vector2D& center, float radius, float a_min, float a_max, int num_segments);
-pub fn path_arc_to_n(
+    pub fn path_arc_to_n(
         &mut self,
         center: &Vector2D,
         radius: f32,
@@ -1721,21 +1652,19 @@ pub fn path_arc_to_n(
         a_max: f32,
         num_segments: i32,
     ) {
-        if radius < 0.5
-            {
-                self.path.push_back(center);
-                return;
-            }
+        if radius < 0.5 {
+            self.path.push_back(center);
+            return;
+        }
 
-            // Note that we are adding a point at both a_min and a_max.
-            // If you are trying to draw a full closed circle you don't want the overlapping points!
-            self.path.reserve(self.path.size + (num_segments + 1));
-            // for (int i = 0; i <= num_segments; i += 1)
-        for i in 0 .. num_segments
-        {
-                let a = a_min + (i / num_segments) * (a_max - a_min);
-                self.path.push_back(Vector2D::new(center.x + f32::cos(a) * radius, center.y + f32::sin(a) * radius));
-            }
+        // Note that we are adding a point at both a_min and a_max.
+        // If you are trying to draw a full closed circle you don't want the overlapping points!
+        self.path.reserve(self.path.size + (num_segments + 1));
+        // for (int i = 0; i <= num_segments; i += 1)
+        for i in 0..num_segments {
+            let a = a_min + (i / num_segments) * (a_max - a_min);
+            self.path.push_back(Vector2D::new(center.x + f32::cos(a) * radius, center.y + f32::sin(a) * radius));
+        }
     }
 }
 

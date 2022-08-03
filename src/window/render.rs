@@ -21,7 +21,7 @@ use crate::text::calc_text_size;
 use crate::types::DataAuthority;
 use crate::types::Direction;
 use crate::vectors::vector_2d::Vector2D;
-use crate::vectors::ImLengthSqr;
+use crate::vectors::vec_length_sqr;
 use crate::window::checks::is_window_active_and_visible;
 use crate::window::get::get_window_display_layer;
 use crate::window::next_window::NextWindowDataFlags;

@@ -1272,7 +1272,7 @@ void    ImGui::EndTable()
     // Cons: making it harder for users watching metrics/debugger to spot the wasted vertices.
     if (table.DummyDrawChannel != (ImGuiTableColumnIdx)-1)
     {
-        ImDrawChannel* dummy_channel = &table.DrawSplitter._Channels[table.DummyDrawChannel];
+        ImDrawChannel* dummy_channel = &table.DrawSplitter.channels[table.DummyDrawChannel];
         dummy_channel->_cmd_buffer.resize(0);
         dummy_channel->_idx_buffer.resize(0);
     }
@@ -2370,7 +2370,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
             let channel_no = (merge_group_sub_n == 0) ? column.DrawChannelFrozen : column.DrawChannelUnfrozen;
 
             // Don't attempt to merge if there are multiple draw calls within the column
-            ImDrawChannel* src_channel = &splitter->_Channels[channel_no];
+            ImDrawChannel* src_channel = &splitter->channels[channel_no];
             if (src_channel->_cmd_buffer.size > 0 && src_channel->_cmd_buffer.back().elem_count == 0 && src_channel->_cmd_buffer.back().user_callback == None) // Equivalent of PopUnusedDrawCmd()
                 src_channel->_cmd_buffer.pop_back();
             if (src_channel->_cmd_buffer.size != 1)
@@ -2477,7 +2477,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
                     merge_group.ChannelsMask.ClearBit(n);
                     merge_channels_count--;
 
-                    ImDrawChannel* channel = &splitter->_Channels[n];
+                    ImDrawChannel* channel = &splitter->channels[n];
                     // IM_ASSERT(channel->_CmdBuffer.size == 1 && merge_clip_rect.contains(Rect(channel->_CmdBuffer[0].clip_rect)));
                     channel->_cmd_buffer[0].clip_rect = merge_clip_rect.ToVec4();
                     memcpy(dst_tmp += 1, channel, sizeof(ImDrawChannel));
@@ -2486,7 +2486,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
 
             // Make sure Bg2DrawChannelUnfrozen appears in the middle of our groups (whereas Bg0/Bg1 and Bg2 frozen are fixed to 0 and 1)
             if (merge_group_n == 1 && has_freeze_v)
-                memcpy(dst_tmp += 1, &splitter->_Channels[table.Bg2DrawChannelUnfrozen], sizeof(ImDrawChannel));
+                memcpy(dst_tmp += 1, &splitter->channels[table.Bg2DrawChannelUnfrozen], sizeof(ImDrawChannel));
         }
 
         // Append unmergeable channels that we didn't reorder at the end of the list
@@ -2494,12 +2494,12 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
         {
             if (!remaining_mask.TestBit(n))
                 continue;
-            ImDrawChannel* channel = &splitter->_Channels[n];
+            ImDrawChannel* channel = &splitter->channels[n];
             memcpy(dst_tmp += 1, channel, sizeof(ImDrawChannel));
             remaining_count--;
         }
         // IM_ASSERT(dst_tmp == g.draw_channels_temp_merge_buffer.data + g.draw_channels_temp_merge_buffer.size);
-        memcpy(splitter->_Channels.data + LEADING_DRAW_CHANNELS, g.draw_channels_temp_merge_buffer.data, (splitter->_Count - LEADING_DRAW_CHANNELS) * sizeof(ImDrawChannel));
+        memcpy(splitter->channels.data + LEADING_DRAW_CHANNELS, g.draw_channels_temp_merge_buffer.data, (splitter->_Count - LEADING_DRAW_CHANNELS) * sizeof(ImDrawChannel));
     }
 }
 

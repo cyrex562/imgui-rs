@@ -5,7 +5,7 @@ use crate::vectors::vector_2d::Vector2D;
 #[derive(Debug,Clone,Default)]
 pub struct DrawVertex
 {
-    pub pos: Vector2D,
+    pub position: Vector2D,
     pub uv: Vector2D,
-    pub col: u32,
+    pub color: u32,
 }

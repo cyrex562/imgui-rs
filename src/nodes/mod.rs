@@ -326,20 +326,20 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, let num_channels)
     // instances after splitter._count, instead of over the whole splitter._channels array like
     // the regular ImDrawListSplitter::split method does.
 
-    let old_channel_capacity = splitter._Channels.size;
+    let old_channel_capacity = splitter.channels.size;
     // NOTE: _channels is not resized down, and therefore _count <= _channels.size()!
     let old_channel_count = splitter._Count;
     let requested_channel_count = old_channel_count + num_channels;
     if (old_channel_capacity < old_channel_count + num_channels)
     {
-        splitter._Channels.resize(requested_channel_count);
+        splitter.channels.resize(requested_channel_count);
     }
 
     splitter._Count = requested_channel_count;
 
     for (int i = old_channel_count; i < requested_channel_count;  += 1i)
     {
-        ImDrawChannel& channel = splitter._Channels[i];
+        ImDrawChannel& channel = splitter.channels[i];
 
         // If we're inside the old capacity region of the array, we need to reuse the existing
         // memory of the command and index buffers.
@@ -376,8 +376,8 @@ void ImDrawListSplitterSwapChannels(
     // IM_ASSERT(lhs_idx >= 0 && lhs_idx < splitter._Count);
     // IM_ASSERT(rhs_idx >= 0 && rhs_idx < splitter._Count);
 
-    ImDrawChannel& lhs_channel = splitter._Channels[lhs_idx];
-    ImDrawChannel& rhs_channel = splitter._Channels[rhs_idx];
+    ImDrawChannel& lhs_channel = splitter.channels[lhs_idx];
+    ImDrawChannel& rhs_channel = splitter.channels[rhs_idx];
     lhs_channel._cmd_buffer.swap(rhs_channel._cmd_buffer);
     lhs_channel._idx_buffer.swap(rhs_channel._idx_buffer);
 

@@ -12,6 +12,7 @@ pub mod bezier;
 pub mod flags;
 mod shade_verts;
 mod channel;
+pub use list::DrawList;
 
 /*
 
@@ -1401,44 +1402,44 @@ index of this file:
 
 // void ImDrawListSplitter::ClearFreeMemory()
 // {
-//     for (int i = 0; i < _Channels.size; i += 1)
+//     for (int i = 0; i < channels.size; i += 1)
 //     {
 //         if (i == _Current)
-//             memset(&_Channels[i], 0, sizeof(_Channels[i]));  // current channel is a copy of cmd_buffer/idx_buffer, don't destruct again
-//         _Channels[i]._CmdBuffer.clear();
-//         _Channels[i]._IdxBuffer.clear();
+//             memset(&channels[i], 0, sizeof(channels[i]));  // current channel is a copy of cmd_buffer/idx_buffer, don't destruct again
+//         channels[i]._CmdBuffer.clear();
+//         channels[i]._IdxBuffer.clear();
 //     }
 //     _Current = 0;
 //     _Count = 1;
-//     _Channels.clear();
+//     channels.clear();
 // }
 
 // void ImDrawListSplitter::Split(ImDrawList* draw_list, int channels_count)
 // {
 //     IM_UNUSED(draw_list);
 //     // IM_ASSERT(_Current == 0 && _Count <= 1 && "Nested channel splitting is not supported. Please use separate instances of ImDrawListSplitter.");
-//     int old_channels_count = _Channels.size;
+//     int old_channels_count = channels.size;
 //     if (old_channels_count < channels_count)
 //     {
-//         _Channels.reserve(channels_count); // Avoid over reserving since this is likely to stay stable
-//         _Channels.resize(channels_count);
+//         channels.reserve(channels_count); // Avoid over reserving since this is likely to stay stable
+//         channels.resize(channels_count);
 //     }
 //     _Count = channels_count;
 //
 //     // Channels[] (24/32 bytes each) hold storage that we'll swap with draw_list->_cmd_buffer/_idx_buffer
 //     // The content of Channels[0] at this point doesn't matter. We clear it to make state tidy in a debugger but we don't strictly need to.
 //     // When we switch to the next channel, we'll copy draw_list->_cmd_buffer/_idx_buffer into Channels[0] and then Channels[1] into draw_list->cmd_buffer/_idx_buffer
-//     memset(&_Channels[0], 0, sizeof(ImDrawChannel));
+//     memset(&channels[0], 0, sizeof(ImDrawChannel));
 //     for (int i = 1; i < channels_count; i += 1)
 //     {
 //         if (i >= old_channels_count)
 //         {
-//             IM_PLACEMENT_NEW(&_Channels[i]) ImDrawChannel();
+//             IM_PLACEMENT_NEW(&channels[i]) ImDrawChannel();
 //         }
 //         else
 //         {
-//             _Channels[i]._CmdBuffer.resize(0);
-//             _Channels[i]._IdxBuffer.resize(0);
+//             channels[i]._CmdBuffer.resize(0);
+//             channels[i]._IdxBuffer.resize(0);
 //         }
 //     }
 // }
@@ -1459,7 +1460,7 @@ index of this file:
 //     int idx_offset = last_cmd ? last_cmd.IdxOffset + last_cmd.ElemCount : 0;
 //     for (int i = 1; i < _Count; i += 1)
 //     {
-//         ImDrawChannel& ch = _Channels[i];
+//         ImDrawChannel& ch = channels[i];
 //         if (ch._CmdBuffer.size > 0 && ch._CmdBuffer.back().elem_count == 0 && ch._CmdBuffer.back().user_callback == None) // Equivalent of PopUnusedDrawCmd()
 //             ch._CmdBuffer.pop_back();
 //
@@ -1494,7 +1495,7 @@ index of this file:
 //     ImDrawIdx* idx_write = draw_list.IdxBuffer.data + draw_list.IdxBuffer.size - new_idx_buffer_count;
 //     for (int i = 1; i < _Count; i += 1)
 //     {
-//         ImDrawChannel& ch = _Channels[i];
+//         ImDrawChannel& ch = channels[i];
 //         if (int sz = ch._CmdBuffer.size) { memcpy(cmd_write, ch._CmdBuffer.data, sz * sizeof(ImDrawCmd)); cmd_write += sz; }
 //         if (int sz = ch._IdxBuffer.size) { memcpy(idx_write, ch._IdxBuffer.data, sz * sizeof(ImDrawIdx)); idx_write += sz; }
 //     }
@@ -1521,11 +1522,11 @@ index of this file:
 //         return;
 //
 //     // Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
-//     memcpy(&_Channels.data[_Current]._CmdBuffer, &draw_list.cmd_buffer, sizeof(draw_list.cmd_buffer));
-//     memcpy(&_Channels.data[_Current]._IdxBuffer, &draw_list.IdxBuffer, sizeof(draw_list.IdxBuffer));
+//     memcpy(&channels.data[_Current]._CmdBuffer, &draw_list.cmd_buffer, sizeof(draw_list.cmd_buffer));
+//     memcpy(&channels.data[_Current]._IdxBuffer, &draw_list.IdxBuffer, sizeof(draw_list.IdxBuffer));
 //     _Current = idx;
-//     memcpy(&draw_list.cmd_buffer, &_Channels.data[idx]._CmdBuffer, sizeof(draw_list.cmd_buffer));
-//     memcpy(&draw_list.IdxBuffer, &_Channels.data[idx]._IdxBuffer, sizeof(draw_list.IdxBuffer));
+//     memcpy(&draw_list.cmd_buffer, &channels.data[idx]._CmdBuffer, sizeof(draw_list.cmd_buffer));
+//     memcpy(&draw_list.IdxBuffer, &channels.data[idx]._IdxBuffer, sizeof(draw_list.IdxBuffer));
 //     draw_list->_IdxWritePtr = draw_list.IdxBuffer.data + draw_list.IdxBuffer.size;
 //
 //     // If current command is used with different settings we need to add a new command

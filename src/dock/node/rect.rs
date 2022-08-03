@@ -2,7 +2,7 @@ use crate::axis::Axis;
 use crate::rect::Rect;
 use crate::types::Direction;
 use crate::vectors::vector_2d::Vector2D;
-use crate::vectors::ImLengthSqr;
+use crate::vectors::vec_length_sqr;
 use crate::Context;
 
 // void DockNodeCalcSplitRects(Vector2D& pos_old, Vector2D& size_old, Vector2D& pos_new, Vector2D& size_new, ImGuiDir dir, Vector2D size_new_desired)
@@ -128,7 +128,7 @@ pub fn dock_node_calc_drop_rects_and_test_mouse_pos(
         // Custom hit testing for the 5-way selection, designed to reduce flickering when moving diagonally between sides
         hit_r.Expand(f32::floor(hs_w * 0.30));
         let mouse_delta = (test_mouse_pos.unwrap() - c);
-        let mouse_delta_len2 = ImLengthSqr(mouse_delta);
+        let mouse_delta_len2 = vec_length_sqr(mouse_delta);
         let r_threshold_center = hs_w * 1.4;
         let r_threshold_sides = hs_w * (1.4 + 1.2);
         if mouse_delta_len2 < r_threshold_center * r_threshold_center {

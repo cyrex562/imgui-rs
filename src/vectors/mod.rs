@@ -14,7 +14,7 @@ pub use vector_2d::Vector2D;
 // static inline Vector2D& operator*=(Vector2D& lhs, const Vector2D& rhs)                { lhs.x *= rhs.x; lhs.y *= rhs.y; return lhs; }
 // static inline Vector2D& operator/=(Vector2D& lhs, const Vector2D& rhs)                { lhs.x /= rhs.x; lhs.y /= rhs.y; return lhs; }
 
-pub fn ImLengthSqr(lhs: &Vector2D) -> f32 {
+pub fn vec_length_sqr(lhs: &Vector2D) -> f32 {
     return (lhs.x * lhs.x) + (lhs.y * lhs.y);
 }
 
