@@ -13,7 +13,7 @@ use crate::settings::{
     create_new_window_settings, find_or_create_window_settings, find_window_settings,
 };
 use crate::types::{DataAuthority, Direction, Id32};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::get::{find_window_by_name, find_window_id};
 use crate::window::settings::WindowSettings;
 use crate::{dock, hash_string, Context, INVALID_ID};

@@ -1,7 +1,7 @@
-pub mod two_d;
+pub mod vector_2d;
 
 use std::ops::{Add, Div, Mul, Sub};
-use two_d::Vector2D;
+pub use vector_2d::Vector2D;
 
 // static inline Vector2D operator+(const Vector2D& lhs, const Vector2D& rhs)            { return Vector2D(lhs.x + rhs.x, lhs.y + rhs.y); }
 // static inline Vector2D operator-(const Vector2D& lhs, const Vector2D& rhs)            { return Vector2D(lhs.x - rhs.x, lhs.y - rhs.y); }

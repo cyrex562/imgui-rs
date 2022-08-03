@@ -2,7 +2,7 @@ use std::ffi::c_void;
 use crate::Context;
 use crate::globals::GImGui;
 use crate::imgui_h::{ImGuiCond, ImGuiID, ImGuiInputTextFlags, ImGuiKey};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 pub mod mouse;
 pub mod keyboard;

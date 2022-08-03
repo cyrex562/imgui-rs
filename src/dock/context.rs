@@ -20,7 +20,7 @@ use crate::settings::{find_window_settings, mark_ini_settings_dirty, SettingsHan
 use crate::tab_bar::TabItemFlags;
 use crate::types::{DataAuthority, Direction, Id32};
 use crate::utils::{add_hash_set, get_or_add};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::get::find_window_by_name;
 use crate::window::lifecycle::update_window_parent_and_root_links;
 use crate::window::{Window, WindowFlags};

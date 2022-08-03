@@ -1,6 +1,6 @@
 use crate::{Context, INVALID_ID};
 use crate::globals::GImGui;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 /// In window space (not screen space!)
 /// Vector2D GetWindowContentRegionMin()

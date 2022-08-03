@@ -1,5 +1,5 @@
 use crate::math::{ImClampVec2, ImFloor, ImMaxVec2, ImMinVec2};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 
 // Helper: ImRect (2D axis aligned bounding-box)

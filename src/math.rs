@@ -1,6 +1,6 @@
 use crate::imgui_vec::Vector4D;
 use crate::imgui_vec::Vector2D;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 
 // Helpers: Maths

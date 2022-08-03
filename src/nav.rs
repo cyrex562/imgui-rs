@@ -12,7 +12,7 @@ use crate::item::ItemFlags;
 use crate::orig_imgui_single_file::{ImGuiViewport, ImGuiWindow};
 use crate::rect::Rect;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
 
 pub enum ActivateFlags

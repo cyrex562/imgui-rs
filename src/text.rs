@@ -5,7 +5,7 @@ use crate::imgui_h::{
 use crate::imgui_math::ImMinI32;
 use crate::imgui_vec::Vector2D;
 use crate::imstb_text_edit_state::STB_TexteditState;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::Context;
 use std::os::raw::c_char;
 use std::ptr;

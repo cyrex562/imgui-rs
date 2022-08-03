@@ -9,7 +9,7 @@ use crate::payload::Payload;
 use crate::rect::Rect;
 use crate::style::get_color_u32;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::Window;
 
 // pub const AcceptPeekOnly: i32               = DimgDragDropFlags::AcceptBeforeDelivery | DimgDragDropFlags::AcceptNoDrawDefaultRect;

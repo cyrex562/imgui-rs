@@ -54,7 +54,7 @@ pub enum DataType {
 }
 
 //#define ImDrawIdx unsigned int
-pub type DrawIndex = u32;
+pub type DrawIndex = usize;
 
 /// Store the source authority (dock node vs window) of a field
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

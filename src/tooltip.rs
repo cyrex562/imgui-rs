@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use crate::color::StyleColor;
 use crate::Context;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::WindowFlags;
 
 pub enum TooltipFlags

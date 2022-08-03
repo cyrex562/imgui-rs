@@ -45,7 +45,7 @@ use crate::types::Id32;
 use crate::types::INVALID_ID;
 use crate::types::{DataAuthority, Direction, DIRECTIONS};
 use crate::utils::{add_hash_set, extend_hash_set};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::{ImLengthSqr, Vector4D};
 use crate::window::class::WindowClass;
 use crate::window::current::{get_id, pop_id, push_id, push_id2, push_override_id};

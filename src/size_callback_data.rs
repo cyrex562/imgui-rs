@@ -1,4 +1,4 @@
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 /// Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().
 /// NB: For basic min/max size constraint on each axis you don't need to use the callback! The SetNextWindowSizeConstraints() parameters are enough.

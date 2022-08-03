@@ -5,7 +5,7 @@ use crate::drag_drop::DragDropFlags;
 use crate::draw::list::DrawListFlags;
 use crate::rect::Rect;
 use crate::types::INVALID_ID;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::WindowFlags;
 use crate::window::lifecycle::add_window_to_sort_buffer;
 

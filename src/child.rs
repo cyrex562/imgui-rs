@@ -11,7 +11,7 @@ use crate::rect::Rect;
 use crate::render::render_nav_highlight;
 use crate::style::{pop_style_color, push_style_color};
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::layer::focus_window;
 use crate::window::lifecycle::{begin, end};
 use crate::window::next_window::set_next_window_size;

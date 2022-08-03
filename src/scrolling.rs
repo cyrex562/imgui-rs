@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use crate::Context;
 use crate::nav::ScrollFlags;
 use crate::rect::Rect;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
 
 // Helper to snap on edges when aiming at an item very close to the edge,

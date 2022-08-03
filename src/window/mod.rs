@@ -48,7 +48,7 @@ use crate::stack::ImGuiStackSizes;
 use crate::tab_bar::TabItemFlags;
 use crate::types::{Id32, WindowHandle, INVALID_ID};
 use crate::utils::{add_hash_set, remove_hash_set_val, sub_hash_set};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector1D;
 use crate::viewport::{Viewport, ViewportFlags};
 

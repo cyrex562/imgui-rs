@@ -16,7 +16,7 @@ use crate::style::{
 use crate::tab_bar::{TabBar, TabBarFlags, TabItem, TabItemFlags};
 use crate::types::{Direction, Id32};
 use crate::utils::add_hash_set;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 use crate::window::current::{pop_id, push_override_id};
 use crate::window::layer::focus_window;

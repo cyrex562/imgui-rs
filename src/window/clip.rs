@@ -1,5 +1,5 @@
 use crate::Context;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 /// Push a clipping rectangle for both ImGui logic (hit-testing etc.) and low-level ImDrawList rendering.
 /// - When using this function it is sane to ensure that float are perfectly rounded to integer values,

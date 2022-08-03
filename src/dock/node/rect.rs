@@ -1,7 +1,7 @@
 use crate::axis::Axis;
 use crate::rect::Rect;
 use crate::types::Direction;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::ImLengthSqr;
 use crate::Context;
 

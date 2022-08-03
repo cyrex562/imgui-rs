@@ -2,7 +2,7 @@ use crate::Context;
 use crate::imgui_h::ImGuiID;
 use crate::imgui_vec::{ImVec1, Vector2D};
 use crate::item::ItemStatusFlags;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 // Stacked storage data for BeginGroup()/EndGroup()
 #[derive(Default,Debug,Clone)]

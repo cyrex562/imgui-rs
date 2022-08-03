@@ -209,10 +209,10 @@ index of this file:
 // ImDrawListSharedData::ImDrawListSharedData()
 // {
 //     memset(this, 0, sizeof(*this));
-//     for (int i = 0; i < IM_ARRAYSIZE(ArcFastVtx); i += 1)
+//     for (int i = 0; i < IM_ARRAYSIZE(arc_fast_vtx); i += 1)
 //     {
-//         let a = ((float)i * 2 * f32::PI) / (float)IM_ARRAYSIZE(ArcFastVtx);
-//         ArcFastVtx[i] = Vector2D::new(ImCos(a), ImSin(a));
+//         let a = ((float)i * 2 * f32::PI) / (float)IM_ARRAYSIZE(arc_fast_vtx);
+//         arc_fast_vtx[i] = Vector2D::new(ImCos(a), ImSin(a));
 //     }
 //     arc_fast_radius_cutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, CircleSegmentMaxError);
 // }
@@ -935,7 +935,7 @@ index of this file:
 //             if (sample_index >= IM_DRAWLIST_ARCFAST_SAMPLE_MAX)
 //                 sample_index -= IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
 //
-//             const Vector2D s = _Data.ArcFastVtx[sample_index];
+//             const Vector2D s = _Data.arc_fast_vtx[sample_index];
 //             out_ptr.x = center.x + s.x * radius;
 //             out_ptr.y = center.y + s.y * radius;
 //             out_ptr += 1;
@@ -949,7 +949,7 @@ index of this file:
 //             if (sample_index < 0)
 //                 sample_index += IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
 //
-//             const Vector2D s = _Data.ArcFastVtx[sample_index];
+//             const Vector2D s = _Data.arc_fast_vtx[sample_index];
 //             out_ptr.x = center.x + s.x * radius;
 //             out_ptr.y = center.y + s.y * radius;
 //             out_ptr += 1;
@@ -962,7 +962,7 @@ index of this file:
 //         if (normalized_max_sample < 0)
 //             normalized_max_sample += IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
 //
-//         const Vector2D s = _Data.ArcFastVtx[normalized_max_sample];
+//         const Vector2D s = _Data.arc_fast_vtx[normalized_max_sample];
 //         out_ptr.x = center.x + s.x * radius;
 //         out_ptr.y = center.y + s.y * radius;
 //         out_ptr += 1;
@@ -1055,7 +1055,7 @@ index of this file:
 //     Vector2D p1 = _Path.back();
 //     if (num_segments == 0)
 //     {
-//         path_bezier_cubic_curve_toCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data.curve_tessellation_tol, 0); // Auto-tessellated
+//         path_bezier_cubic_curve_toCasteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data.curve_tessellation_tol, 0); // Auto-tessellated
 //     }
 //     else
 //     {
@@ -1070,7 +1070,7 @@ index of this file:
 //     Vector2D p1 = _Path.back();
 //     if (num_segments == 0)
 //     {
-//         path_bezier_quadratic_curve_toCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data.curve_tessellation_tol, 0);// Auto-tessellated
+//         path_bezier_quadratic_curve_toCasteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data.curve_tessellation_tol, 0);// Auto-tessellated
 //     }
 //     else
 //     {

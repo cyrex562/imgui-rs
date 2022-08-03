@@ -1,4 +1,4 @@
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 // data for resizing from corner
 pub struct ResizeGripDef

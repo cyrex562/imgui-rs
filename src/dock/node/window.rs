@@ -7,7 +7,7 @@ use crate::layout::same_line;
 use crate::popup::{begin_popup, end_popup};
 use crate::tab_bar::{TabBar, TabItemFlags};
 use crate::types::{DataAuthority, Direction, Id32};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::lifecycle::update_window_parent_and_root_links;
 use crate::window::next_window::set_next_window_pos;
 use crate::window::pos::set_window_pos;

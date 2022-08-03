@@ -1,6 +1,6 @@
 use crate::condition::Condition;
 use crate::Context;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::Window;
 
 /// This is called during NewFrame()->UpdateViewportsNewFrame() only.

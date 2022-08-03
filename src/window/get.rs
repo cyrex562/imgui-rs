@@ -2,7 +2,7 @@ use crate::{Context, INVALID_ID, window};
 use crate::globals::GImGui;
 use crate::rect::Rect;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{checks, Window, WindowFlags};
 
 // static ImGuiWindow* GetCombinedRootWindow(ImGuiWindow* window, bool popup_hierarchy, bool dock_hierarchy)

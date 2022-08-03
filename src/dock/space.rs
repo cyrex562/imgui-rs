@@ -10,7 +10,7 @@ use crate::globals::GImGui;
 use crate::item::item_size;
 use crate::nodes::pop_style_var;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::viewport::get_main_viewport;
 use crate::window::class::WindowClass;
 use crate::window::current::get_id;

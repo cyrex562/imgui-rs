@@ -18,7 +18,7 @@ use crate::style::WINDOW_DOCK_STYLE_COLORS;
 use crate::tab_bar::TabItem;
 use crate::types::DataAuthority;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::next_window::{NextWindowDataFlags, set_next_window_pos, set_next_window_size};
 use crate::window::{Window, WindowFlags};
 

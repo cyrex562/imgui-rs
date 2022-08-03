@@ -7,7 +7,7 @@ use crate::input::{DimgInputEventType, DimgKey, DimgKeyData, InputSource, ModFla
 use crate::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
 use crate::types::{DimgWchar, Id32};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use std::collections::HashSet;
 
 #[derive(Debug, Default, Clone)]

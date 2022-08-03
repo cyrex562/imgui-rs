@@ -2,7 +2,7 @@ use crate::context::Context;
 use crate::draw::list::{add_draw_list_to_draw_data, DrawList};
 use crate::draw::vertex::DrawVertex;
 use crate::types::{DrawIndex, Id32};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 use crate::window::{checks, get, Window, WindowFlags};
 

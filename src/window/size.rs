@@ -12,7 +12,7 @@ use crate::resize::{RESIZE_GRIP_DEF, ResizeGripDef};
 use crate::size_callback_data::SizeCallbackData;
 use crate::style::get_color_u32;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{calc_window_size_after_constraint, get, Window, WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::window::next_window::NextWindowDataFlags;
 

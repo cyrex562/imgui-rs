@@ -9,7 +9,7 @@ use crate::window::{HoveredFlags, WindowFlags};
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::utils::set_hash_set;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::checks::is_window_content_hoverable;
 
 impl NextItemData {

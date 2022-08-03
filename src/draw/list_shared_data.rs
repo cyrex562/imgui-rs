@@ -4,7 +4,7 @@ use crate::draw::list::{
     DRAW_LIST_ARCFAST_SAMPLE_MAX, DRAW_LIST_ARCFAST_TABLE_SIZE,
 };
 use crate::font::Font;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 
 #[derive(Default, Debug, Clone)]

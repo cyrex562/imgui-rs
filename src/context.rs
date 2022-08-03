@@ -41,7 +41,7 @@ use crate::table::{Table, TableSettings, TableTempData};
 
 use crate::text_input_state::InputTextState;
 use crate::types::{Id32, PtrOrIndex, WindowHandle, INVALID_ID};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 use crate::viewport::Viewport;
 use crate::window::next_window::NextWindowData;

@@ -3,7 +3,7 @@ use crate::Context;
 use crate::globals::GImGui;
 use crate::rect::Rect;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::class::WindowClass;
 use crate::window::ImGuiSizeCallback;
 

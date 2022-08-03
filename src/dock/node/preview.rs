@@ -14,7 +14,7 @@ use crate::rect::Rect;
 use crate::style::{get_color_u32, pop_style_color, push_style_color, get_color_u32_no_alpha};
 use crate::tab_bar::TabItemFlags;
 use crate::types::{Direction, DIRECTIONS};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
 
 // host_node may be None if the window doesn't have a dock_node already.

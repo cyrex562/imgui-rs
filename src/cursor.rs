@@ -1,6 +1,6 @@
 use crate::Context;
 use crate::globals::GImGui;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 // Vector2D GetCursorScreenPos()
 pub fn get_cursor_screen_pos(g: &mut Context) -> Vector2D {

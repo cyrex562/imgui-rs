@@ -18,7 +18,7 @@ use crate::stack::StackTool;
 use crate::style::{get_color_u32, pop_style_color, push_style_color};
 use crate::tab_bar::TabBar;
 use crate::types::{Id32, DataType};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::next_window::NextWindowDataFlags;
 use crate::window::settings::WindowSettings;
 use crate::window::WindowFlags;

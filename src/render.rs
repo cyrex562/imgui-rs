@@ -13,7 +13,7 @@ use crate::input::MouseCursor;
 use crate::nav::NavHighlightFlags;
 use crate::style::get_color_u32;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::viewport::setup_viewport_draw_data;
 use crate::window::{get, Window, WindowFlags};
 use crate::window::checks::is_window_active_and_visible;
@@ -408,7 +408,7 @@ pub fn render(g: &mut Context)
     {
         // ImGuiViewportP* viewport = g.viewports[n];
         viewport.draw_data_builder.clear();
-        if viewport.draw_lists[0] != INVALID_ID {
+        if viewport.draw_list_ids[0] != INVALID_ID {
             add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], get_background_draw_list(g, viewport).id);
         }
     }
@@ -467,7 +467,7 @@ pub fn render(g: &mut Context)
         viewport.draw_data_builder.flatten_into_single_layer();
 
         // Add foreground ImDrawList (for each active viewport)
-        if viewport.draw_lists[1] != INVALID_ID {
+        if viewport.draw_list_ids[1] != INVALID_ID {
         add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], get_foreground_draw_list(g,viewport));
     }
         setup_viewport_draw_data(g, viewport, &viewport.draw_data_builder.layers[0]);

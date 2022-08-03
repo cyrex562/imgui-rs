@@ -20,7 +20,7 @@ use crate::style::{
 use crate::text::calc_text_size;
 use crate::types::DataAuthority;
 use crate::types::Direction;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::ImLengthSqr;
 use crate::window::checks::is_window_active_and_visible;
 use crate::window::get::get_window_display_layer;

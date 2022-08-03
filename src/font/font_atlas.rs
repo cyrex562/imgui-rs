@@ -3,7 +3,7 @@ use crate::input::MouseCursor;
 use crate::rect::Rect;
 use crate::texture::TextureId;
 use crate::types::DimgWchar;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:

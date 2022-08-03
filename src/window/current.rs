@@ -3,7 +3,7 @@ use crate::globals::GImGui;
 use crate::kv_store::Storage;
 use crate::orig_imgui_single_file::ImGuiID;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 // void SetStateStorage(ImGuiStorage* tree)
 pub fn set_state_storage(g: &mut Context, tree: &Storage)

@@ -9,7 +9,7 @@ use crate::rect::Rect;
 use crate::texture::TextureId;
 use crate::types::{DrawIndex, Id32, INVALID_ID};
 use crate::utils::set_hash_set;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 use crate::viewport::Viewport;
 use std::collections::HashSet;
@@ -21,6 +21,7 @@ use crate::color::COLOR32_A_MASK;
 use crate::draw::bezier::{bezier_cubic_calc, bezier_quadratic_calc};
 use crate::draw::flags::{DrawFlags, fix_rect_corner_flags};
 use crate::draw::{DrawCallback, ROUND_CORNERS_MASK};
+use crate::popup::PopupPositionPolicy::Default;
 use crate::window::clip::push_clip_rect;
 
 /// Draw command list
@@ -46,7 +47,7 @@ pub struct DrawList {
     // [Internal, used while building lists]
     // unsigned pub _VtxCurrentIdx: i32,   // [Internal] generally == vtx_buffer.size unless we are past 64K vertices, in which case this gets reset to 0.
     // pub _VtxCurrentIdx: u32,
-    pub self.vtx_current_idx: usize,
+    pub vtx_current_idx: usize,
     // const ImDrawListSharedData* _Data;          // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
     pub data: DrawListSharedData,
     // const char*             _OwnerName;         // Pointer to owner window's name for debugging
@@ -69,17 +70,31 @@ pub struct DrawList {
     pub splitter: DrawListSplitter,
     // pub _fringe_scale: f32,      // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
     pub fringe_scale: f32,
+    pub id: Id32,
+}
+
+impl Default for DrawList {
+    fn default() -> Self {
+        Self {
+            id: INVALID_ID,
+            ..Default::default()
+        }
+    }
 }
 
 impl DrawList {
     // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
     // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
-    pub fn new(shared_data: &mut DrawListSharedData) -> Self {
+    pub fn new(g: &mut Context, shared_data: &mut DrawListSharedData, name: &str) -> Self {
+        let new_id = hash_String(name);
         Self {
+            id: new_id,
+            owner_name: name.to_string(),
             data: shared_data.clone(),
             ..Default::default()
         }
     }
+
     // ~ImDrawList() { _ClearFreeMemory(); }
     //  void  push_clip_rect(const Vector2D& clip_rect_min, const Vector2D& clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::push_clip_rect() to affect logic (hit-testing and widget culling)
     pub fn push_clip_rect(
@@ -170,19 +185,20 @@ impl DrawList {
         p_max: Vector2D,
         color: u32,
         rounding: f32,
-        flags: Option<&HashSet<DrawFlags>>,
+        flags: Option<&mut HashSet<DrawFlags>>,
         thickness: f32,
     ) {
          if (color & COLOR32_A_MASK) == 0 {
              return;
          }
             if self.flags.contains(&DrawListFlags::AntiAliasedLines) {
-                self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.50, 0.50)), rounding, flags);
+                self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.50, 0.50)), rounding, flags.unwrap());
             }
             else {
-                self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.49, 0.49)), rounding, flags);
+                self.path_rect(p_min + Vector2D::new(0.50, 0.50), &(p_max - Vector2D::new(0.49, 0.49)), rounding, flags.unwrap());
             } // Better looking lower-right corner and rounded non-AA shapes.
-            self.path_stroke(color, DrawFlags::Closed, thickness);
+        let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
+            self.path_stroke(color, &in_flags, thickness);
     }
     //  void  add_rect_filled(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
     pub fn add_rect_filled(
@@ -191,21 +207,18 @@ impl DrawList {
         p_max: &Vector2D,
         color: u32,
         rounding: f32,
-        flags: Option<&HashSet<DrawFlags>>,
+        flags: Option<&mut HashSet<DrawFlags>>,
     ) {
-         if (color & COLOR32_A_MASK) == 0 {
-             return;
-         }
-            if rounding < 0.5 || flags.unwrap().contains(&DrawFlags::RoundCornersNone)
-            {
-                self.prim_reserve(6, 4);
-                self.prim_rect(p_min, p_max, color);
-            }
-            else
-            {
-                self.path_rect(p_min, p_max, rounding, flags);
-                self.path_fill_convex(color);
-            }
+        if (color & COLOR32_A_MASK) == 0 {
+            return;
+        }
+        if rounding < 0.5 || flags.unwrap().contains(&DrawFlags::RoundCornersNone) {
+            self.prim_reserve(6, 4);
+            self.prim_rect(p_min, p_max, color);
+        } else {
+            self.path_rect(p_min, p_max, rounding, flags.unwrap());
+            self.path_fill_convex(color);
+        }
     }
     //  void  add_rect_filled_multi_color(const Vector2D& p_min, const Vector2D& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
     pub fn add_rect_filled_multi_color(
@@ -244,15 +257,17 @@ impl DrawList {
         color: u32,
         thickness: f32,
     ) {
-         if (color & COLOR32_A_MASK) == 0 {
-             return;
-         }
+        if (color & COLOR32_A_MASK) == 0 {
+            return;
+        }
 
-            self.path_line_to(p1);
-            self.path_line_to(p2);
-            self.path_line_to(p3);
-            self.path_line_to(p4);
-            self.path_stroke(color, DrawFlags::Closed, thickness);
+        self.path_line_to(p1);
+        self.path_line_to(p2);
+        self.path_line_to(p3);
+        self.path_line_to(p4);
+        let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]) ;
+        from([DrawFlags::Closed]);
+        self.path_stroke(color, &in_flags, thickness);
     }
     //  void  add_quad_filled(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, ImU32 col);
     pub fn add_quad_filled(
@@ -263,15 +278,15 @@ impl DrawList {
         p4: &Vector2D,
         col: u32,
     ) {
-         if (col & COLOR32_A_MASK) == 0 {
-             return;
-         }
+        if (col & COLOR32_A_MASK) == 0 {
+            return;
+        }
 
-            self.path_line_to(p1);
-            self.path_line_to(p2);
-            self.path_line_to(p3);
-            self.path_line_to(p4);
-            self.path_fill_convex(col);
+        self.path_line_to(p1);
+        self.path_line_to(p2);
+        self.path_line_to(p3);
+        self.path_line_to(p4);
+        self.path_fill_convex(col);
     }
     //  void  add_triangle(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col, float thickness = 1.0);
     pub fn add_triangle(
@@ -289,7 +304,8 @@ impl DrawList {
             self.path_line_to(p1);
             self.path_line_to(p2);
             self.path_line_to(p3);
-            self.path_stroke(col, DrawFlags::Closed, thickness);
+        let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
+            self.path_stroke(col, &in_flags, thickness);
     }
     //  void  add_triangle_filled(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col);
     pub fn add_triangle_filled(&mut self, p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, col: u32) {
@@ -318,7 +334,7 @@ impl DrawList {
             if num_segments <= 0
             {
                 // Use arc with automatic segment count
-                self.path_arc_to_fast_ex(center, radius - 0.5, 0, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
+                self.path_arc_to_fast_ex(center, radius - 0.5, 0f32, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
                 self.path.size -= 1 ;
             }
             else
@@ -330,8 +346,8 @@ impl DrawList {
                 let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
                 self.path_arc_to(center, radius - 0.5, 0.0, a_max, num_segments - 1);
             }
-
-            self.path_stroke(col, DrawFlags::Closed, thickness);
+            let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
+            self.path_stroke(col, &in_flags, thickness);
     }
     //  void  add_circle_filled(const Vector2D& center, float radius, ImU32 col, int num_segments = 0);
     pub fn add_circle_filled(
@@ -348,7 +364,7 @@ impl DrawList {
             if num_segments <= 0
             {
                 // Use arc with automatic segment count
-                self.path_arc_to_fast_ex(center, radius, 0, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
+                self.path_arc_to_fast_ex(center, radius, 0f32, DRAW_LIST_ARCFAST_SAMPLE_MAX, 0);
                 self.path.size -= 1 ;
             }
             else
@@ -379,7 +395,8 @@ impl DrawList {
             // Because we are filling a closed shape we remove 1 from the count of segments/points
             let a_max = (f32::PI * 2.0) * (num_segments - 1.0) / num_segments;
             self.path_arc_to(center, radius - 0.5, 0.0, a_max, num_segments - 1);
-            self.path_stroke(col, DrawFlags::Closed, thickness);
+        let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
+            self.path_stroke(col, &in_flags, thickness);
     }
     //  void  AddNgonFilled(const Vector2D& center, float radius, ImU32 col, int num_segments);
     pub fn add_ngon_filled(&mut self, center: &Vector2D, radius: f32, col: u32, num_segments: i32) {
@@ -510,7 +527,7 @@ impl DrawList {
                     temp_normals[i1].y = -dx;
                 }
                 if !closed {
-                    temp_normals[points_count - 1] = temp_normals[points_count - 2];
+                    temp_normals[points_count - 1] = temp_normals[points_count - 2].clone();
                 }
 
                 // If we are drawing a one-pixel-wide line without a texture, or a textured line of any width, we only need 2 or 3 vertices per point
@@ -531,8 +548,8 @@ impl DrawList {
                     {
                         temp_points[0] = &points[0] + &temp_normals[0] * half_draw_size;
                         temp_points[1] = &points[0] - &temp_normals[0] * half_draw_size;
-                        temp_points[(points_count-1)*2+0] = points[points_count-1] + temp_normals[points_count-1] * half_draw_size;
-                        temp_points[(points_count-1)*2+1] = points[points_count-1] - temp_normals[points_count-1] * half_draw_size;
+                        temp_points[(points_count-1)*2+0] = &points[points_count-1] + &temp_normals[points_count-1] * half_draw_size;
+                        temp_points[(points_count-1)*2+1] = &points[points_count-1] - &temp_normals[points_count-1] * half_draw_size;
                     }
 
                     // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
@@ -664,7 +681,7 @@ impl DrawList {
                     // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
                     // This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
                     // FIXME-OPT: merge the different loops, possibly remove the temporary buffer.
-                    let idx1 = self.vtx_current_idx; // Vertex index for start of line segment
+                    let mut idx1 = self.vtx_current_idx; // Vertex index for start of line segment
                     // for (int i1 = 0; i1 < count; i1 += 1) // i1 is the first point of the line segment
                     for i1 in 0 .. count
                     {
@@ -835,7 +852,7 @@ impl DrawList {
                 }
 
                 // for (int i0 = points_count - 1, i1 = 0; i1 < points_count; i0 = i1 += 1)
-                for (i0, i1) in indexes_a.zip(indexes_b)
+                for (i0, i1) in indexes_a.zip(&indexes_b)
                 {
                     // Average normals
                     let n0 = &temp_normals[i0];
@@ -910,7 +927,8 @@ impl DrawList {
 
         self.path_line_to(p1);
         self.path_bezier_cubic_curve_to(p2, p3, p4, num_segments);
-        self.path_stroke(col, None, thickness);
+        let no_flags: HashSet<DrawFlags> = HashSet::from([]);
+        self.path_stroke(col, &no_flags, thickness);
     }
     //  void  add_bezier_quadratic(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
     pub fn add_bezier_quadratic(
@@ -928,7 +946,8 @@ impl DrawList {
 
         self.path_line_to(p1);
         self.path_bezier_quadratic_curve_to(p2, p3, num_segments);
-        self.path_stroke(col, None, thickness);
+        let no_flags: HashSet<DrawFlags> = HashSet::from([]);
+        self.path_stroke(col, &no_flags, thickness);
     }
 
     // Image primitives
@@ -963,6 +982,7 @@ impl DrawList {
             self.pop_texture_id();
         }
     }
+
     //  void  add_image_quad(ImTextureID user_texture_id, const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, const Vector2D& uv1 = Vector2D(0, 0), const Vector2D& uv2 = Vector2D(1, 0), const Vector2D& uv3 = Vector2D(1, 1), const Vector2D& uv4 = Vector2D(0, 1), ImU32 col = IM_COL32_WHITE);
     pub fn add_image_quad(
         &mut self,
@@ -1095,9 +1115,9 @@ impl DrawList {
                 let a_max_sample_f = DRAW_LIST_ARCFAST_SAMPLE_MAX * a_max / (f32::PI * 2.0);
 
                 let a_min_sample = if a_is_reverse { f32::floor(a_min_sample_f) } else
-                { ImCeil(a_min_sample_f) };
-                let a_max_sample = a_is_reverse ? ImCeil(a_max_sample_f) : f32::floor(a_max_sample_f);
-                let a_mid_samples = a_is_reverse ? ImMax(a_min_sample - a_max_sample, 0) : ImMax(a_max_sample - a_min_sample, 0);
+                { f32::ceil(a_min_sample_f) };
+                let a_max_sample = if a_is_reverse { f32::ceil(a_max_sample_f) } else { f32::floor(a_max_sample_f) };
+                let a_mid_samples = if a_is_reverse { f32::max(a_min_sample - a_max_sample, 0f32) } else { f32::max(a_max_sample - a_min_sample, 0f32) };
 
                 let a_min_segment_angle = a_min_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
                 let a_max_segment_angle = a_max_sample * f32::PI * 2.0 / DRAW_LIST_ARCFAST_SAMPLE_MAX;
@@ -1106,21 +1126,21 @@ impl DrawList {
 
                 self.path.reserve(path.size + (a_mid_samples + 1 + (if a_emit_start { 1 } else { 0 }) + (if a_emit_end { 1 } else { 0 })));
                 if a_emit_start {
-                    path.push_back(Vector2D::new(center.x + ImCos(a_min) * radius, center.y + ImSin(a_min) * radius));
+                    self.path.push_back(Vector2D::new(center.x + f32::cos(a_min) * radius, center.y + f32::sin(a_min) * radius));
                 }
-                if a_mid_samples > 0 {
-                    path_arc_to_fast_ex(center, radius, a_min_sample, a_max_sample, 0);
+                if a_mid_samples > 0f32 {
+                    self.path_arc_to_fast_ex(center, radius, a_min_sample, a_max_sample, 0);
                 }
                 if a_emit_end {
-                    path.push_back(Vector2D::new(center.x + ImCos(a_max) * radius, center.y + ImSin(a_max) * radius));
+                    self.path.push_back(Vector2D::new(center.x + f32::cos(a_max) * radius, center.y + f32::sin(a_max) * radius));
                 }
             }
             else
             {
                 let arc_length = f32::abs(a_max - a_min);
-                let circle_segment_count = calc_circle_auto_segment_count(radius);
-                let arc_segment_count = ImMax(ImCeil(circle_segment_count * arc_length / (f32::PI * 2.0)), (2.0 * f32::PI / arc_length));
-                path_arc_to_n(center, radius, a_min, a_max, arc_segment_count);
+                let circle_segment_count = self.calc_circle_auto_segment_count(radius);
+                let arc_segment_count = f32::max(f32::ceil(circle_segment_count * arc_length / (f32::PI * 2.0)), (2.0 * f32::PI / arc_length));
+                self.path_arc_to_n(center, radius, a_min, a_max, arc_segment_count as i32);
             }
     }
     //  void  PathArcToFast(const Vector2D& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
@@ -1133,7 +1153,7 @@ impl DrawList {
     ) {
          if radius < 0.5
             {
-                path.push_back(center);
+                self.path.push_back(center);
                 return;
             }
             self.path_arc_to_fast_ex(center, radius, a_min_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, a_max_of_12 * DRAW_LIST_ARCFAST_SAMPLE_MAX / 12, 0);
@@ -1146,10 +1166,10 @@ impl DrawList {
         p4: &Vector2D,
         num_segments: usize,
     ) {
-        let p1 = path.back();
+        let p1 = self.path.back();
             if num_segments == 0
             {
-                self.path_bezier_cubic_curve_toCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, self.data.curve_tessellation_tol, 0); // Auto-tessellated
+                self.path_bezier_cubic_curve_toCasteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, self.data.curve_tessellation_tol, 0); // Auto-tessellated
             }
             else
             {
@@ -1168,10 +1188,10 @@ impl DrawList {
         p3: &Vector2D,
         num_segments: usize,
     ) {
-         Vector2D p1 = path.back();
+         let p1 = path.back();
             if num_segments == 0
             {
-                self.path_bezier_quadratic_curve_to_casteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, self.data.curve_tessellation_tol, 0);// Auto-tessellated
+                self.path_bezier_quadratic_curve_to_casteljau(&self.path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, self.data.curve_tessellation_tol, 0);// Auto-tessellated
             }
             else
             {
@@ -1250,7 +1270,7 @@ impl DrawList {
     //  ImDrawList* clone_output() const;                                  // Create a clone of the cmd_buffer/idx_buffer/vtx_buffer.
     pub fn clone_output(&mut self) -> DrawList {
         // ImDrawList* dst = IM_NEW(ImDrawList(data));
-        let mut dst = DrawList::new(&mut self.data);
+        let mut dst = DrawList::new(g, &mut self.data, "");
             dst.cmd_buffer = self.cmd_buffer.clone();
             dst.idx_buffer = self.idx_buffer.clone();
             dst.vtx_buffer = self.vtx_buffer.clone();
@@ -1289,7 +1309,7 @@ impl DrawList {
         draw_cmd.elem_count += idx_count;
 
             let vtx_buffer_old_size = self.vtx_buffer.len();
-            self.vtx_buffer.resize(vtx_buffer_old_size + vtx_count);
+            self.vtx_buffer.resize(vtx_buffer_old_size + vtx_count, DrawVertex::default());
             self.vtx_write_ptr = self.vtx_buffer.data + vtx_buffer_old_size;
 
             let idx_buffer_old_size = self.idx_buffer.len();
@@ -1557,13 +1577,13 @@ pub fn OnChangedTextureID(&mut self) {
             curr_cmd.texture_id = command_header.texture_id;
     }
     //  void  _OnChangedVtxOffset();
-pub fn OnChangedvtx_offset(&mut self) {
+pub fn on_changed_vtx_offset(&mut self) {
         // // We don't need to compare curr_cmd->vtx_offset != _cmd_header.vtx_offset because we know it'll be different at the time we call this.
             self.vtx_current_idx = 0;
             // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
             ImDrawCmd* curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
             //IM_ASSERT(curr_cmd->vtx_offset != _cmd_header.vtx_offset); // See #3349
-            if (curr_cmd.elem_count != 0)
+            if curr_cmd.elem_count != 0
             {
                 AddDrawCmd();
                 return;
@@ -1572,78 +1592,89 @@ pub fn OnChangedvtx_offset(&mut self) {
             curr_cmd.vtx_offset = command_header.vtx_offset;
     }
     //  int   _CalcCircleAutoSegmentCount(float radius) const;
-pub fn CalCircleAUtoSegmentCount(&mut self, radius: f32) -> i32 {
+pub fn cal_circle_auto_segment_count(&mut self, radius: f32) -> f32 {
         // // Automatic segment count
             let radius_idx = (radius + 0.999999); // ceil to never reduce accuracy
-            if (radius_idx < IM_ARRAYSIZE(data.CircleSegmentCounts))
-                return data.CircleSegmentCounts[radius_idx]; // Use cached value
-            else
-                return IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, data.CircleSegmentMaxError);
+        return if radius_idx < (self.data.circle_segment_counts.len()) as f32 {
+            data.CircleSegmentCounts[radius_idx]
+        } // Use cached value
+        else {
+            drawlist_circle_auto_segment_calc(radius, self.data.circle_segment_max_error)
+        }
     }
     //  void  _PathArcToFastEx(const Vector2D& center, float radius, int a_min_sample, int a_max_sample, int a_step);
-pub fn path_arc_toFastEx(
+pub fn path_arc_to_fast_ex(
         &mut self,
         center: &Vector2D,
         radius: f32,
-        a_min_simple: i32,
-        a_max_sample: i32,
-        a_step: i32,
+        a_min_simple: f32,
+        a_max_sample: f32,
+        mut a_step: usize,
     ) {
-         if (radius < 0.5)
+         if radius < 0.5
             {
-                path.push_back(center);
+                self.path.push_back(center);
                 return;
             }
 
             // Calculate arc auto segment step size
-            if (a_step <= 0)
+            if a_step <= 0 {
                 a_step = DRAW_LIST_ARCFAST_SAMPLE_MAX / calc_circle_auto_segment_count(radius);
+            }
 
             // Make sure we never do steps larger than one quarter of the circle
-            a_step = ImClamp(a_step, 1, IM_DRAWLIST_ARCFAST_TABLE_SIZE / 4);
+            a_step = usize::clamp(a_step, 1, (DRAW_LIST_ARCFAST_TABLE_SIZE / 4));
 
-            let sample_range = ImAbs(a_max_sample - a_min_sample);
+            let sample_range = i32::abs(a_max_sample - a_min_sample);
             let a_next_step = a_step;
 
-            int samples = sample_range + 1;
-            bool extra_max_sample = false;
-            if (a_step > 1)
+            let mut samples = sample_range + 1;
+            let mut extra_max_sample = false;
+            if a_step > 1
             {
                 samples            = sample_range / a_step + 1;
                 let overstep = sample_range % a_step;
 
-                if (overstep > 0)
+                if overstep > 0
                 {
                     extra_max_sample = true;
                     samples += 1;
 
                     // When we have overstep to avoid awkwardly looking one long line and one tiny one at the end,
                     // distribute first step range evenly between them by reducing first step size.
-                    if (sample_range > 0)
+                    if sample_range > 0 {
                         a_step -= (a_step - overstep) / 2;
+                    }
                 }
             }
 
             path.resize(path.size + samples);
             Vector2D* out_ptr = path.data + (path.size - samples);
 
-            int sample_index = a_min_sample;
-            if (sample_index < 0 || sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX)
+            let mut sample_index = a_min_sample;
+            if sample_index < 0 || sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX
             {
                 sample_index = sample_index % DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                if (sample_index < 0)
+                if sample_index < 0 {
                     sample_index += DRAW_LIST_ARCFAST_SAMPLE_MAX;
+                }
             }
 
-            if (a_max_sample >= a_min_sample)
+            if a_max_sample >= a_min_sample
             {
-                for (int a = a_min_sample; a <= a_max_sample; a += a_step, sample_index += a_step, a_step = a_next_step)
-                {
-                    // a_step is clamped to IM_DRAWLIST_ARCFAST_SAMPLE_MAX, so we have guaranteed that it will not wrap over range twice or more
-                    if (sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX)
-                        sample_index -= DRAW_LIST_ARCFAST_SAMPLE_MAX;
+                // for (int a = a_min_sample; a <= a_max_sample; a += a_step, sample_index += a_step, a_step = a_next_step)
+                let index_a = (a_min_sample .. a_max_sample).step_by(a_step);
 
-                    const Vector2D s = data.ArcFastVtx[sample_index];
+                for a in (a_min_sample .. a_max_sample).step_by(a_step)
+                {
+                    sample_index += a_step;
+                    a_step = a_next_step;
+                    // a_step is clamped to IM_DRAWLIST_ARCFAST_SAMPLE_MAX, so we have guaranteed that it will not wrap over range twice or more
+                    if sample_index >= DRAW_LIST_ARCFAST_SAMPLE_MAX {
+                        sample_index -= DRAW_LIST_ARCFAST_SAMPLE_MAX;
+                    }
+
+                    let s = self.data.arc_fast_vtx[sample_index];
                     out_ptr.x = center.x + s.x * radius;
                     out_ptr.y = center.y + s.y * radius;
                     out_ptr += 1;
@@ -1651,26 +1682,29 @@ pub fn path_arc_toFastEx(
             }
             else
             {
-                for (int a = a_min_sample; a >= a_max_sample; a -= a_step, sample_index -= a_step, a_step = a_next_step)
+                // for (int a = a_min_sample; a >= a_max_sample; a -= a_step, sample_index -= a_step, a_step = a_next_step)
+                for a in (a_max_sample..a_min_sample).step_by()
                 {
                     // a_step is clamped to IM_DRAWLIST_ARCFAST_SAMPLE_MAX, so we have guaranteed that it will not wrap over range twice or more
-                    if (sample_index < 0)
+                    if sample_index < 0 {
                         sample_index += DRAW_LIST_ARCFAST_SAMPLE_MAX;
+                    }
 
-                    const Vector2D s = data.ArcFastVtx[sample_index];
+                    let s = self.data.arc_fast_vtx[sample_index];
                     out_ptr.x = center.x + s.x * radius;
                     out_ptr.y = center.y + s.y * radius;
                     out_ptr += 1;
                 }
             }
 
-            if (extra_max_sample)
+            if extra_max_sample
             {
-                int normalized_max_sample = a_max_sample % DRAW_LIST_ARCFAST_SAMPLE_MAX;
-                if (normalized_max_sample < 0)
+                let mut normalized_max_sample = a_max_sample % DRAW_LIST_ARCFAST_SAMPLE_MAX;
+                if normalized_max_sample < 0f32 {
                     normalized_max_sample += DRAW_LIST_ARCFAST_SAMPLE_MAX;
+                }
 
-                const Vector2D s = data.ArcFastVtx[normalized_max_sample];
+                let s = self.data.arc_fast_vtx[normalized_max_sample];
                 out_ptr.x = center.x + s.x * radius;
                 out_ptr.y = center.y + s.y * radius;
                 out_ptr += 1;
@@ -1679,7 +1713,7 @@ pub fn path_arc_toFastEx(
             // IM_ASSERT_PARANOID(_Path.data + _Path.size == out_ptr);
     }
     //  void  _PathArcToN(const Vector2D& center, float radius, float a_min, float a_max, int num_segments);
-pub fn path_arc_toN(
+pub fn path_arc_to_n(
         &mut self,
         center: &Vector2D,
         radius: f32,
@@ -1687,19 +1721,20 @@ pub fn path_arc_toN(
         a_max: f32,
         num_segments: i32,
     ) {
-        if (radius < 0.5)
+        if radius < 0.5
             {
-                path.push_back(center);
+                self.path.push_back(center);
                 return;
             }
 
             // Note that we are adding a point at both a_min and a_max.
             // If you are trying to draw a full closed circle you don't want the overlapping points!
-            path.reserve(path.size + (num_segments + 1));
-            for (int i = 0; i <= num_segments; i += 1)
-            {
+            self.path.reserve(self.path.size + (num_segments + 1));
+            // for (int i = 0; i <= num_segments; i += 1)
+        for i in 0 .. num_segments
+        {
                 let a = a_min + (i / num_segments) * (a_max - a_min);
-                path.push_back(Vector2D::new(center.x + ImCos(a) * radius, center.y + ImSin(a) * radius));
+                self.path.push_back(Vector2D::new(center.x + f32::cos(a) * radius, center.y + f32::sin(a) * radius));
             }
     }
 }
@@ -1734,12 +1769,12 @@ pub fn drawlist_circle_auto_segment_calc(radius: f32, max_error: f32) -> f32 {
 // Raw equation from IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC rewritten for 'r' and 'error'.
 // #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(_N,_MAXERROR)    ((_MAXERROR) / (1 - ImCos(f32::PI / ImMax((float)(_N), f32::PI))))
 pub fn drawlist_circle_auto_segment_calc_r(n: f32, max_error: f32) -> f32 {
-    ((max_error) / (1 - f32::cos(f32::PI / f32::max(n, f32::PI))))
+    ((max_error) / (1 - f32::cos(f32::PI / f32::max(n, f32::PI()))))
 }
 
 // #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(_N,_RAD)     ((1 - ImCos(f32::PI / ImMax((float)(_N), f32::PI))) / (_RAD))
 pub fn drawlist_circl_auto_segment_calc_error(n: f32, rad: f32) -> f32 {
-    ((1 - f32::cos(f32::PI / f32::max(n, f32::PI))) / rad)
+    ((1 - f32::cos(f32::PI / f32::max(n, f32::PI()))) / rad)
 }
 
 // ImDrawList: Lookup table size for adaptive arc drawing, cover full circle.
@@ -1748,7 +1783,7 @@ pub fn drawlist_circl_auto_segment_calc_error(n: f32, rad: f32) -> f32 {
 pub const DRAW_LIST_ARCFAST_TABLE_SIZE: usize = 48usize;
 // #endif
 // #define IM_DRAWLIST_ARCFAST_SAMPLE_MAX                          IM_DRAWLIST_ARCFAST_TABLE_SIZE // Sample index _PathArcToFastEx() for 360 angle.
-pub const DRAW_LIST_ARCFAST_SAMPLE_MAX: usize = DRAW_LIST_ARCFAST_TABLE_SIZE;
+pub const DRAW_LIST_ARCFAST_SAMPLE_MAX: f32 = DRAW_LIST_ARCFAST_TABLE_SIZE as f32;
 
 // flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
 // It is however possible to temporarily alter flags between calls to ImDrawList:: functions.
@@ -1781,20 +1816,26 @@ pub fn get_viewport_draw_list(
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(drawlist_no < IM_ARRAYSIZE(viewport->DrawLists));
     // ImDrawList* draw_list = viewport->DrawLists[drawlist_no];
-    let draw_list = &mut viewport.draw_lists[drawlist_no];
-    if draw_list.id == INVALID_ID {
+    let draw_list_id = viewport.draw_list_ids[drawlist_no];
+    let mut draw_list: &mut DrawList;
+    if draw_list_id == INVALID_ID {
+        let mut new_draw_list = DrawList::new(g, &mut g.draw_list_shared_data, drawlist_name);
+        g.draw_lists.insert(new_draw_list.id, new_draw_list);
         // draw_list = IM_NEW(ImDrawList)(&g.DrawListSharedData);
-        viewport.draw_lists[drawlist_no] = DrawList::new(&mut g.draw_list_shared_data);
+        viewport.draw_list_ids[drawlist_no] = new_draw_list.id.clone();
         // draw_list->_OwnerName = drawlist_name;
-        viewport.draw_lists[drawlist_no].owner_name = drawlist_name.clone();
+        // viewport.draw_list_ids[drawlist_no].owner_name = drawlist_name.clone();
         // viewport.draw_lists[drawlist_no] = draw_list;
+        draw_list = g.draw_lists.get_mut(&new_draw_list.id).unwrap();
+    } else {
+        draw_list = g.get_draw_list(draw_list_id);
     }
 
     // Our ImDrawList system requires that there is always a command
     if viewport.draw_lists_last_frame[drawlist_no] != g.frame_count {
-        draw_list.ResetForNewFrame();
-        draw_list.PushTextureID(g.io.fonts.TexID);
-        draw_list.push_clip_rect(viewport.pos, viewport.pos + viewport.size, false);
+        draw_list.reset_for_new_frame();
+        draw_list.push_texture_id(g.io.fonts.TexID);
+        draw_list.push_clip_rect(&viewport.pos, &viewport.pos + &viewport.size, false);
         viewport.draw_lists_last_frame[drawlist_no] = g.frame_count;
     }
     return draw_list;

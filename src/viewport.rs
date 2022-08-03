@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 use crate::config::ConfigFlags;
 use crate::Context;
-use crate::draw::data::DrawData;
+use crate::draw::data::{DrawData, DrawDataBuilder};
 use crate::draw::draw_data_builder::DrawDataBuilder;
 use crate::draw::list::DrawList;
 use crate::orig_imgui_single_file::{ImGuiID, ImGuiWindow};
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
 use crate::window::checks::is_window_active_and_visible;
 use crate::window::next_window::NextWindowDataFlags;
@@ -136,9 +136,9 @@ pub struct Viewport
     // ImGuiWindow*        window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
     pub window: Id32,
     // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
-    pub draw_lists_last_frame: [i32;2],
+    pub draw_lists_last_frame: [usize;2],
     // ImDrawList*         DrawLists[2];           // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.mouse_draw_cursor is set and to draw most debug overlays.
-    pub draw_lists: [Id32;2],
+    pub draw_list_ids: [Id32;2],
     // ImDrawData          DrawDataP;
     // pub draw_data_p: DrawData,
     // ImDrawDataBuilder   DrawDataBuilder;

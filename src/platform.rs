@@ -2,7 +2,7 @@ use crate::config::ConfigFlags;
 use crate::{Context, Viewport};
 use crate::orig_imgui_single_file::{ImGuiViewport, ImGuiWindow, int};
 use crate::rect::Rect;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::checks::is_window_active_and_visible;
 
 // (Optional) This is required when enabling multi-viewport. Represent the bounds of each connected monitor/display and their DPI.

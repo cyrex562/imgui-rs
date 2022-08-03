@@ -5,7 +5,7 @@ use crate::imgui_vec::Vector2D;
 use crate::imgui_window::ImGuiWindow;
 use crate::rect::Rect;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use std::collections::HashSet;
 
 #[allow(non_camel_case_types)] // flags for ImGui::BeginTabItem()

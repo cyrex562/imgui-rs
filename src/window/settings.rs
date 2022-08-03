@@ -1,6 +1,6 @@
 use crate::{Context, Viewport};
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::Window;
 
 /// windows data saved in imgui.ini file

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use crate::condition::Condition;
 use crate::Context;
 use crate::utils::{add_hash_set, sub_hash_set};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::Window;
 
 // static void SetWindowConditionAllowFlags(ImGuiWindow* window, ImGuiCond flags, bool enabled)

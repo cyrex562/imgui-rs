@@ -5,7 +5,7 @@ use font_atlas::FontAtlas;
 use font_glyph::DimgFontGlyph;
 use crate::globals::GImGui;
 use crate::types::{DimgWchar, Id32};
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 pub mod font_atlas;
 mod font_glyph;

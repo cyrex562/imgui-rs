@@ -4,7 +4,7 @@ use crate::layout::LayoutType;
 use crate::menu::ImGuiMenuColumns;
 use crate::types::Id32;
 use crate::vectors::Vector1D;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 // Transient per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the dc variable name in ImGuiWindow.
 // (That's theory, in practice the delimitation between ImGuiWindow and ImGuiWindowTempData is quite tenuous and could be reconsidered..)

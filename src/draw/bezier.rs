@@ -1,4 +1,4 @@
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 
 // Vector2D ImBezierCubicCalc(const Vector2D& p1, const Vector2D& p2, const Vector2D& p3, const Vector2D& p4, float t)
 pub fn bezier_cubic_calc(p1: &Vector2D, p2: &Vector2D, p3: &Vector2D, p4: &Vector2D, t: f32) -> Vector2D

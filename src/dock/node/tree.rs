@@ -7,7 +7,7 @@ use crate::dock::node::{DOCK_NODE_FLAGS_LOCAL_FLAGS_TRANSFER_MASK, dock_node_get
 use crate::dock::settings::dock_settings_rename_node_references;
 use crate::types::{DataAuthority, Id32};
 use crate::utils::add_hash_set;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::{Context, INVALID_ID};
 use std::ops::BitOr;
 

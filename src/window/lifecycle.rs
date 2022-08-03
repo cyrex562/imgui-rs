@@ -5,7 +5,7 @@ use crate::config::ConfigFlags;
 use crate::drag_drop::DragDropFlags;
 use crate::globals::GImGui;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{get, layer, ops, settings, state, Window, WindowFlags, WINDOWS_HOVER_PADDING};
 use crate::window::settings::WindowSettings;
 
@@ -487,7 +487,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window.has_close_button = (p_open != None);
         window.clip_rect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
         window.idStack.resize(1);
-        window.draw_list->_ResetForNewFrame();
+        window.draw_list->_reset_for_new_frame();
         window.dc.current_tableIdx = -1;
         if (flags & WindowFlags::DockNodeHost)
         {

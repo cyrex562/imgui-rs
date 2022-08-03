@@ -8,7 +8,7 @@ use crate::input::NavLayer;
 use crate::orig_imgui_single_file::ImGuiID;
 use crate::rect::Rect;
 use crate::types::Id32;
-use crate::vectors::two_d::Vector2D;
+use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
 use crate::window::checks::is_window_active_and_visible;
 use crate::window::next_window::NextWindowDataFlags;
