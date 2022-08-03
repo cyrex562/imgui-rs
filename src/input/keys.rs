@@ -1,9 +1,9 @@
 use crate::Context;
 use crate::globals::GImGui;
-use crate::input::DimgKeyData;
+use crate::input::KeyInputData;
 
 // ImGuiKeyData* GetKeyData(ImGuiKey key)
-pub fn get_key_data(g: &mut Context, key: Key) -> &mut DimgKeyData
+pub fn get_key_data(g: &mut Context, key: Key) -> &mut KeyInputData
 {
     // ImGuiContext& g = *GImGui;
     int index;

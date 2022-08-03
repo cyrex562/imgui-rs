@@ -15,9 +15,9 @@ pub fn push_clip_rect(
     intersect_with_current_clip_rect: bool,
 ) {
     // ImGuiWindow* window = GetCurrentWindow();
-    let window = g.get_current_window().unwrap();
+    let window = g.current_window_mut().unwrap();
     // window.draw_list->PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
-    let draw_list = g.get_draw_list(window.draw_list_id).unwrap();
+    let draw_list = g.draw_list_mut(window.draw_list_id).unwrap();
     draw_list.push_clip_rect(
         clip_rect_min,
         clip_rect_max,
@@ -30,9 +30,9 @@ pub fn push_clip_rect(
 // void ImGui::PopClipRect()
 pub fn pop_clip_rect(g: &mut Context) {
     // ImGuiWindow* window = GetCurrentWindow();
-    let window = g.get_current_window().unwrap();
+    let window = g.current_window_mut().unwrap();
     // window.draw_list->PopClipRect();
-    let draw_list = g.get_draw_list(window.draw_list_id).unwrap();
+    let draw_list = g.draw_list_mut(window.draw_list_id).unwrap();
     draw_list.pop_clip_rect();
     // window.ClipRect = window.draw_list->_ClipRectStack.back();
     window.clip_rect = draw_list.clip_rect_stack.last().unwrap().clone();

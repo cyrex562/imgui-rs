@@ -146,7 +146,7 @@ pub fn calc_wrap_width_for_pos(
 
     // ImGuiContext& g = *GImGui;
     // ImGuiWindow* window = g.CurrentWindow;
-    let window = g.get_current_window()?;
+    let window = g.current_window_mut()?;
     if wrap_pos_x == 0.0 {
         // We could decide to setup a default wrapping max point for auto-resizing windows,
         // or have auto-wrap (with unspecified wrapping pos) behave as a content_size extending function?
@@ -309,7 +309,7 @@ pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, co
         return;
 
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
-    window.set_window_size_allow_flags &= ~(ImGuiCond_Once | Cond::FirstUseEver | ImGuiCond_Appearing);
+    window.set_window_size_allow_flags &= ~(ImGuiCond_Once | Condition::FirstUseEver | ImGuiCond_Appearing);
 
     // Set
     Vector2D old_size = window.size_full;
@@ -372,7 +372,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     // - Note that we are unable to tell if the platform setup allows hovering with a distance threshold (on Win32, decorated window have such threshold).
     // We only clip interaction so we overwrite window->clip_rect, cannot call push_clip_rect() yet as draw_list is not yet setup.
     // const bool clip_with_viewport_rect = !(g.io.backend_flags & ImGuiBackendFlags_HasMouseHoveredViewport) || (g.io.MouseHoveredViewport != window.viewport_id) || !(window.viewport.flags & ImGuiViewportFlags_NoDecoration);
-    let clip_with_viewport_rect = !g.io.backend_flags.contains(&BackendFlags::HasMouseHoveredViewport) || g.io.mouse_hovered_viewport != window.viewport_id || !g.get_viewport(window.viewport_id).unwrap().flags.contains(&ViewportFlags::NoDecoration);
+    let clip_with_viewport_rect = !g.io.backend_flags.contains(&BackendFlags::HasMouseHoveredViewport) || g.io.mouse_hovered_viewport != window.viewport_id || !g.viewport_mut(window.viewport_id).unwrap().flags.contains(&ViewportFlags::NoDecoration);
     if clip_with_viewport_rect {
         window.clip_rect = window.viewport.get_main_rect();
     }

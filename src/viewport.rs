@@ -217,7 +217,7 @@ pub fn setup_viewport_draw_data(g: &mut Context, viewport: &mut Viewport, draw_l
     for ele in draw_lists {
         // {
         //     ImDrawList* draw_list = draw_lists.Data[n];
-        let draw_list = g.get_draw_list(*ele).unwrap()
+        let draw_list = g.draw_list_mut(*ele).unwrap()
         //     draw_list->_PopUnusedDrawCmd();
         draw_list.pop_unused_draw_cmd();
         //     draw_data.total_vtx_count += draw_list->VtxBuffer.Size;
@@ -771,7 +771,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
         // merge into host viewport?
         // We cannot test window->viewport_owned as it set lower in the function.
         // Testing (g.active_id == 0 || g.active_id_allow_overlap) to avoid merging during a short-term widget interaction. Main intent was to avoid during resize (see #4212)
-        bool try_to_merge_into_host_viewport = (window.viewport && window == window.viewport.Window && (g.active_id == 0 || g.ActiveIdAllowOverlap));
+        bool try_to_merge_into_host_viewport = (window.viewport && window == window.viewport.Window && (g.active_id == 0 || g.active_id_allow_overlap));
         if (try_to_merge_into_host_viewport)
             UpdateTryMergeWindowIntoHostViewports(window);
     }

@@ -1225,7 +1225,7 @@ void    ImGui::EndTable()
 
     // Context menu in columns body
     if (flags & ImGuiTableFlags_ContextMenuInBody)
-        if (table.HoveredColumnBody != -1 && !IsAnyItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
+        if (table.HoveredColumnBody != -1 && !IsAnyItemHovered() && IsMouseReleased(MouseButton::Right))
             TableOpenContextMenu(table.HoveredColumnBody);
 
     // Finalize table height

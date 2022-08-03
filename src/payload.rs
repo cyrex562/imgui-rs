@@ -24,7 +24,7 @@ pub struct Payload {
     pub source_id: Id32,            // Source item id
     pub source_parent_id: Id32,     // Source parent id (if available)
     pub data_frame_count: usize,    // data timestamp
-    pub data_type: PayloadDataType, // char            data_type[32 + 1];   // data type tag (short user-supplied string, 32 characters max)
+    pub data_type: String, // char            data_type[32 + 1];   // data type tag (short user-supplied string, 32 characters max)
     pub preview: bool, // Set when accept_drag_drop_payload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
     pub delivery: bool, // Set when accept_drag_drop_payload() was called and mouse button is released over the target item.
 }
@@ -52,7 +52,7 @@ impl Payload {
     }
 
     // bool is_data_type(const char* type) const { return data_frame_count != -1 && strcmp(type, data_type) == 0; }
-    pub fn is_data_type(&self, data_type: &String) -> bool {
+    pub fn is_data_type(&self, data_type: &str) -> bool {
         self.data_frame_count != usize::MAX && (*data_type == self.data_type)
     }
 

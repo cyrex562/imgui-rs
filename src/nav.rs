@@ -1511,7 +1511,7 @@ pub fn nav_update_windowing(g: &mut Context)
         // Apply layer toggle on release
         // Important: as before version <18314 we lacked an explicit io event for focus gain/loss, we also compare mouse validity to detect old backends clearing mouse pos on focus loss.
         if (IsKeyReleased(Key::ModAlt) && g.NavWindowingToggleLayer)
-            if (g.active_id == 0 || g.ActiveIdAllowOverlap)
+            if (g.active_id == 0 || g.active_id_allow_overlap)
                 if (is_mouse_pos_valid(&io.mouse_pos) == is_mouse_pos_valid(&io.mouse_pos_prev))
                     apply_toggle_layer = true;
         if (!IsKeyDown(Key::ModAlt))
@@ -1531,7 +1531,7 @@ pub fn nav_update_windowing(g: &mut Context)
             let NAV_MOVE_SPEED = 800.0;
             let move_speed = f32::floor(NAV_MOVE_SPEED * io.delta_time * ImMin(io.display_frame_buffer_scale.x, io.display_frame_buffer_scale.y)); // FIXME: Doesn't handle variable framerate very well
             ImGuiWindow* moving_window = g.nav_windowing_target.root_window_dock_tree;
-            set_window_pos(moving_window, moving_window.pos + move_delta * move_speed, Cond::Always);
+            set_window_pos(moving_window, moving_window.pos + move_delta * move_speed, Condition::Always);
             g.nav_disable_mouse_hover = true;
         }
     }
@@ -1625,7 +1625,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
         g.nav_windowing_list_window = find_window_by_name("###NavWindowingList");
     const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ get_main_viewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport.size.x * 0.20, viewport.size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
-    set_next_window_pos(viewport.get_center(), Cond::Always, Vector2D::new(0.5, 0.5));
+    set_next_window_pos(viewport.get_center(), Condition::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
     begin("###NavWindowingList", None, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
     for (int n = g.windows_focus_order.size - 1; n >= 0; n -= 1 )

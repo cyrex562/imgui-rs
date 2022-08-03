@@ -491,7 +491,7 @@ void ImGui_ImplGlfw_MouseButtonCallback(GLFWwindow *window, int button,
   ImGui_ImplGlfw_UpdateKeyModifiers(mods);
 
   ImGuiIO &io = ImGui::GetIO();
-  if (button >= 0 && button < ImGuiMouseButton_COUNT)
+  if (button >= 0 && button < MouseButton::COUNT)
     io.AddMouseButtonEvent(button, action == GLFW_PRESS);
 }
 

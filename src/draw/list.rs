@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::draw::command::{DrawCommandHeader, DrawCmd};
+use crate::draw::command::{DrawCommandHeader, DrawCommand};
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::list_shared_data::DrawListSharedData;
 use crate::draw::list_splitter::DrawListSplitter;
@@ -37,7 +37,7 @@ use crate::window::clip::push_clip_rect;
 pub struct DrawList {
     // This is what you have to render
     // ImVector<ImDrawCmd>     cmd_buffer;          // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
-    pub cmd_buffer: Vec<DrawCmd>,
+    pub cmd_buffer: Vec<DrawCommand>,
     // ImVector<ImDrawIdx>     idx_buffer;          // index buffer. Each command consume ImDrawCmd::elem_count of those
     pub idx_buffer: Vec<DrawIndex>,
     // ImVector<ImDrawVert>    vtx_buffer;          // Vertex buffer.
@@ -1206,7 +1206,7 @@ impl DrawList {
     //  void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
     pub fn add_draw_cmd(&mut self) {
         // ImDrawCmd draw_cmd;
-        let mut draw_cmd = DrawCmd::default();
+        let mut draw_cmd = DrawCommand::default();
         draw_cmd.clip_rect = command_header.clip_rect;    // Same as calling ImDrawCmd_HeaderCopy()
         draw_cmd.texture_id = command_header.texture_id;
         draw_cmd.vtx_offset = command_header.vtx_offset;
@@ -1412,7 +1412,7 @@ impl DrawList {
         }
         //
         //     cmd_buffer.resize(0);
-        self.cmd_buffer.resize(0, DrawCmd::new());
+        self.cmd_buffer.resize(0, DrawCommand::new());
         //     idx_buffer.resize(0);
         self.idx_buffer.resize(0, 0);
         //     vtx_buffer.resize(0);
@@ -1757,7 +1757,7 @@ pub fn get_viewport_draw_list(
         // viewport.draw_lists[drawlist_no] = draw_list;
         draw_list = g.draw_lists.get_mut(&new_draw_list.id).unwrap();
     } else {
-        draw_list = g.get_draw_list(draw_list_id);
+        draw_list = g.draw_list_mut(draw_list_id);
     }
 
     // Our ImDrawList system requires that there is always a command
@@ -1779,8 +1779,8 @@ pub fn get_background_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mu
 pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList {
     // ImGuiContext& g = *GImGui;
     //return GetBackgroundDrawList(g.CurrentWindow->Viewport);
-    let curr_win = g.get_current_window()?;
-    let vp = g.get_viewport(curr_win.viewport_id).unwrap();
+    let curr_win = g.current_window_mut()?;
+    let vp = g.viewport_mut(curr_win.viewport_id).unwrap();
     get_background_draw_list(g, vp)
 }
 
@@ -1794,14 +1794,14 @@ pub fn get_foreground_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mu
 pub fn get_foreground_draw_list2(g: &mut Context) -> &mut DrawList {
     // ImGuiContext& g = *GImGui;
     // return GetForegroundDrawList(g.CurrentWindow->Viewport);
-    let curr_win = g.get_current_window()?;
-    let vp = g.get_viewport(curr_win.viewport_id).unwrap();
+    let curr_win = g.current_window_mut()?;
+    let vp = g.viewport_mut(curr_win.viewport_id).unwrap();
     get_foreground_draw_list(g, vp)
 }
 
 // static void add_draw_list_to_draw_data(ImVector<ImDrawList*>* out_list, ImDrawList* draw_list)
 pub fn add_draw_list_to_draw_data(g: &mut Context, out_list: &mut Vec<Id32>, draw_list_id: Id32) {
-    let draw_list = g.get_draw_list(draw_list_id).unwrap();
+    let draw_list = g.draw_list_mut(draw_list_id).unwrap();
     if draw_list.cmd_buffer.is_empty() {
         return;
     }

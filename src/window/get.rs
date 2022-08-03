@@ -109,7 +109,7 @@ pub fn find_front_most_visible_child_window(g: &mut Context, window: &mut Window
     //     }
     // }
     for child_win_id in window.dc.child_windows.iter() {
-        let child_win = g.get_window(*child_win_id).unwrap();
+        let child_win = g.window_mut(*child_win_id).unwrap();
         if checks::is_window_active_and_visible(child_win) {
             return find_front_most_visible_child_window(g, child_win);
         }
@@ -128,7 +128,7 @@ pub fn find_bottom_most_visible_window_with_begin_stack(
     // for (int i = FindWindowDisplayIndex(parent_window); i >= 0; i--)
     for i in find_window_display_index(parent_window)..0 {
         // ImGuiWindow* window = g.windows[i];
-        let window = g.get_window(i).unwrap();
+        let window = g.window_mut(i).unwrap();
         if window.flags.contains(&WindowFlags::ChildWindow) {
             continue;
         }
@@ -156,14 +156,14 @@ pub fn find_hovered_window(g: &mut Context) {
     // ImGuiViewportP* moving_window_viewport = g.moving_window ? g.moving_window->Viewport : None;
 
     let moving_window_viewport = if g.moving_window_id != INVALID_ID {
-        let mw_win = g.get_window(g.moving_window_id).unwrap();
-        Some(g.get_viewport(mw_win.viewport_id).unwrap())
+        let mw_win = g.window_mut(g.moving_window_id).unwrap();
+        Some(g.viewport_mut(mw_win.viewport_id).unwrap())
     } else {
         None
     };
     if g.moving_window_id != INVALID_ID {
         // g.moving_window.viewport = g.mouse_viewport;
-        let mw_win = g.get_window(g.moving_window_id).unwrap();
+        let mw_win = g.window_mut(g.moving_window_id).unwrap();
         mw_win.viewport_id = g.mouse_viewport_id;
     }
 
@@ -172,7 +172,7 @@ pub fn find_hovered_window(g: &mut Context) {
     let mut hovered_window: Option<&mut Window>;
     let mut hovered_window_ignoring_moving_window: Option<&mut Window> = None;
     if g.moving_window && !(g.moving_window.flags.contains(WindowFlags::NoMouseInputs)) {
-        hovered_window = g.get_window(g.moving_window_id).unwrawp();
+        hovered_window = g.window_mut(g.moving_window_id).unwrawp();
     }
 
     // Vector2D padding_regular = g.style.touch_extra_padding;
@@ -233,7 +233,7 @@ pub fn find_hovered_window(g: &mut Context) {
         if (hovered_window_ignoring_moving_window.is_none()
             && (g.moving_window_id == INVALID_ID
                 || window.root_window_dock_tree_id
-                    != g.get_window(g.moving_window_id)
+                    != g.window_mut(g.moving_window_id)
                         .unwrap()
                         .root_window_dock_tree_id))
         {
@@ -248,7 +248,7 @@ pub fn find_hovered_window(g: &mut Context) {
     g.hovered_window_under_moving_window = hovered_window_ignoring_moving_window;
 
     if g.moving_window_id != INVALID_ID {
-        g.get_window(g.moving_window_id).unwrap().viewport_id = moving_window_viewport.unwrap().id;
+        g.window_mut(g.moving_window_id).unwrap().viewport_id = moving_window_viewport.unwrap().id;
     }
 }
 
@@ -264,7 +264,7 @@ pub fn get_window_for_title_display(g: &mut Context, window: &mut Window) -> &mu
     // return window.DockNodeAsHost ? window.DockNodeAsHost->VisibleWindow : window;
     if window.dock_node_as_host_id.id != INVALID_ID {
         return g
-            .get_window(window.dock_node_as_host_id.visible_window)
+            .window_mut(window.dock_node_as_host_id.visible_window)
             .unwrap();
     }
     return window;
@@ -276,7 +276,7 @@ pub fn get_window_for_title_and_menu_height(g: &mut Context, window: &mut Window
     if window.dock_node_as_host_id.id != INVALID_ID
         && window.dock_node_as_host_id.visible_window != INVALID_ID
     {
-        g.get_window(window.dock_node_as_host_id.visible_window)
+        g.window_mut(window.dock_node_as_host_id.visible_window)
             .unwrap()
     }
     window

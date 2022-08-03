@@ -5,7 +5,7 @@ use crate::axis::Axis;
 use crate::column::OldColumns;
 use crate::types::DataAuthority::Window;
 use crate::dock::node::{DockNode, DockNodeFlags};
-use crate::draw::command::DrawCmd;
+use crate::draw::command::DrawCommand;
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::list::{DrawList, DrawListFlags, get_foreground_draw_list};
 use crate::font::Font;
@@ -530,7 +530,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
         text("ITEMS");
         Indent();
-        text("active_id: 0x%08X/0x%08X (%.2 sec), AllowOverlap: %d, Source: %s", g.active_id, g.active_id_previous_frame, g.active_id_timer, g.ActiveIdAllowOverlap, GetInputSourceName(g.active_id_source));
+        text("active_id: 0x%08X/0x%08X (%.2 sec), AllowOverlap: %d, Source: %s", g.active_id, g.active_id_previous_frame, g.active_id_timer, g.active_id_allow_overlap, GetInputSourceName(g.active_id_source));
         text("active_id_window: '%s'", g.active_id_window ? g.active_id_window->Name : "None");
 
         int active_id_using_key_input_count = 0;
@@ -828,7 +828,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
 
 // [DEBUG] Display mesh/aabb of a ImDrawCmd
 // void DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, const ImDrawList* draw_list, const ImDrawCmd* draw_cmd, bool show_mesh, bool show_aabb)
-pub fn debug_node_draw_cmd_show_mesh_and_bounding_box(g: &mut Context, out_draw_list: &mut DrawList, draw_list: &DrawList, draw_cmd: &DrawCmd, show_mesh: bool, show_aabb: bool)
+pub fn debug_node_draw_cmd_show_mesh_and_bounding_box(g: &mut Context, out_draw_list: &mut DrawList, draw_list: &DrawList, draw_cmd: &DrawCommand, show_mesh: bool, show_aabb: bool)
 {
     // IM_ASSERT(show_mesh || show_aabb);
 
@@ -1300,7 +1300,7 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
 {
     // ImGuiContext& g = *GImGui;
     if (!(g.next_window_data.flags & NextWindowDataFlags::HasSize))
-        set_next_window_size(Vector2D::new(0.0, GetFontSize() * 8.0), Cond::FirstUseEver);
+        set_next_window_size(Vector2D::new(0.0, GetFontSize() * 8.0), Condition::FirstUseEver);
     if (!begin("Dear ImGui Stack Tool", p_open) || GetCurrentWindow()->BeginCount > 1)
     {
         end();

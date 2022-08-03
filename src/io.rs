@@ -3,7 +3,7 @@ use crate::config::{BackendFlags, ConfigFlags};
 use crate::context::Context;
 use crate::font::font_atlas::FontAtlas;
 use crate::font::Font;
-use crate::input::{DimgInputEventType, DimgKey, DimgKeyData, InputSource, ModFlags};
+use crate::input::{DimgInputEventType, DimgKey, KeyInputData, InputSource, ModFlags};
 use crate::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
 use crate::types::{DimgWchar, Id32};
@@ -190,7 +190,7 @@ pub struct Io {
     pub mouse_pos: Vector2D,
     // Mouse position, in pixels. Set to Vector2D(-FLT_MAX, -FLT_MAX) if mouse is unavailable (on another screen, etc.)
     pub mouse_down: [bool; 5],
-    // bool        mouse_down[5];                       // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
+    // bool        mouse_down[5];                       // Mouse buttons: 0=left, 1=right, 2=middle + extras (MouseButton::COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
     pub mouse_wheel: f32,
     // Mouse wheel Vertical: 1 unit scrolls about 5 lines text.
     pub mouse_wheel_h: f32,
@@ -211,7 +211,7 @@ pub struct Io {
     // Other state maintained from data above + io function calls
     pub key_mods: ModFlags,
     // Key mods flags (same as io.key_ctrl/key_shift/key_alt/key_super but merged into flags), updated by NewFrame()
-    pub keys_data: Vec<DimgKeyData>,
+    pub keys_data: Vec<KeyInputData>,
     // Key state for all known keys. Use IsKeyXXX() functions to access this.
     pub want_capture_mouse_unless_popup_close: bool,
     // Alternative to want_capture_mouse: (want_capture_mouse == true && want_capture_mouse_unless_popup_close == false) when a click over void is expected to close a popup.
@@ -270,7 +270,7 @@ impl Io {
 
         // Most fields are initialized with zero
         // memset(this, 0, sizeof(*this));
-        // IM_STATIC_ASSERT(IM_ARRAYSIZE(ImGuiIO::mouse_down) == ImGuiMouseButton_COUNT && IM_ARRAYSIZE(ImGuiIO::mouse_clicked) == ImGuiMouseButton_COUNT);
+        // IM_STATIC_ASSERT(IM_ARRAYSIZE(ImGuiIO::mouse_down) == MouseButton::COUNT && IM_ARRAYSIZE(ImGuiIO::mouse_clicked) == MouseButton::COUNT);
 
         // Settings
         out.config_flags.insert(ConfigFlags::None);
@@ -436,7 +436,7 @@ impl Io {
     pub fn add_mouse_button_event(&mut self, g: &mut Context, button: i32, down: bool) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
-        // IM_ASSERT(mouse_button >= 0 && mouse_button < ImGuiMouseButton_COUNT);
+        // IM_ASSERT(mouse_button >= 0 && mouse_button < MouseButton::COUNT);
         if !self.app_accepting_events {
             return;
         }

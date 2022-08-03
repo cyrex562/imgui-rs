@@ -4089,7 +4089,7 @@ static void ShowDemoWindowLayout() {
       ImGui::PushID(n);
       ImGui::InvisibleButton("##canvas", size);
       if (ImGui::IsItemActive() &&
-          ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+          ImGui::IsMouseDragging(MouseButton::Left)) {
         offset.x += ImGui::GetIO().MouseDelta.x;
         offset.y += ImGui::GetIO().MouseDelta.y;
       }
@@ -4260,7 +4260,7 @@ static void ShowDemoWindowPopups() {
     // behavior of essentially doing:
     //     if (id == 0)
     //         id = GetItemID(); // Use last item id
-    //     if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
+    //     if (IsItemHovered() && IsMouseReleased(MouseButton::Right))
     //         OpenPopup(id);
     //     return BeginPopup(id);
     // For advanced advanced uses you may want to replicate and customize this
@@ -9354,14 +9354,14 @@ static void ShowExampleAppCustomRendering(bool *p_open) {
 
       // Add first and second point
       if (is_hovered && !adding_line &&
-          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+          ImGui::IsMouseClicked(MouseButton::Left)) {
         points.push_back(mouse_pos_in_canvas);
         points.push_back(mouse_pos_in_canvas);
         adding_line = true;
       }
       if (adding_line) {
         points.back() = mouse_pos_in_canvas;
-        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        if (!ImGui::IsMouseDown(MouseButton::Left))
           adding_line = false;
       }
 
@@ -9370,14 +9370,14 @@ static void ShowExampleAppCustomRendering(bool *p_open) {
       // mouse is hovering something etc.
       const float mouse_threshold_for_pan =
           opt_enable_context_menu ? -1.0 : 0.0;
-      if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right,
+      if (is_active && ImGui::IsMouseDragging(MouseButton::Right,
                                               mouse_threshold_for_pan)) {
         scrolling.x += io.MouseDelta.x;
         scrolling.y += io.MouseDelta.y;
       }
 
       // Context menu (under default mouse threshold)
-      Vector2D drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
+      Vector2D drag_delta = ImGui::GetMouseDragDelta(MouseButton::Right);
       if (opt_enable_context_menu && drag_delta.x == 0.0 && drag_delta.y == 0.0)
         ImGui::OpenPopupOnItemClick("context",
                                     ImGuiPopupFlags_MouseButtonRight);

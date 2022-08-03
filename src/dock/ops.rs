@@ -55,8 +55,8 @@ pub fn fix_large_windows_when_undocking(g: &mut Context, size: &Vector2D, ref_vi
 // Compare TabItem nodes given the last known dock_order (will persist in .ini file as hint), used to sort tabs when multiple tabs are added on the same frame.
 // static int  TabItemComparerByDockOrder(const void* lhs, const void* rhs)
 pub fn tab_item_comparer_by_dock_order(g: &mut Context, lhs: &TabItem, rhs: &TabItem) -> i16 {
-    let a = g.get_window(lhs.window_id);//&mut lhs.window;
-    let b = g.get_window(rhs.window_id);//&mut lhs.window;
+    let a = g.window_mut(lhs.window_id);//&mut lhs.window;
+    let b = g.window_mut(rhs.window_id);//&mut lhs.window;
     // if (int d = ((a.dock_order == -1) ? INT_MAX : a.dock_order) - ((b.dock_order == -1) ? INT_MAX : b.dock_order)){
 // return d;
     let d = if a.dock_order == -1 {
@@ -81,7 +81,7 @@ pub fn set_window_dock(g: &mut Context, window: &mut Window, mut dock_id: Id32, 
     if cond != Condition::None && (window.set_window_dock_allow_flags.contains(&cond)) == false {
         return;
     }
-    // window.set_window_dock_allow_flags &= ~(ImGuiCond_Once | Cond::FirstUseEver | ImGuiCond_Appearing);
+    // window.set_window_dock_allow_flags &= ~(ImGuiCond_Once | Condition::FirstUseEver | ImGuiCond_Appearing);
     window.set_window_dock_allow_flags.remove(&Condition::Once);
     window.set_window_dock_allow_flags.remove(&Condition::FirstUseEver);
     window.set_window_dock_allow_flags.remove(&Condition::Appearing);
@@ -115,7 +115,7 @@ pub fn set_window_dock(g: &mut Context, window: &mut Window, mut dock_id: Id32, 
     }
 
     if window.dock_node_id {
-        let node = g.get_dock_node(window.dock_node_id).unwrap();
+        let node = g.dock_node_mut(window.dock_node_id).unwrap();
         dock_node_remove_window(g, node, window, 0);
     }
     window.dock_id = dock_id;
@@ -168,7 +168,7 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
 
     // Bind to our dock node
     // ImGuiDockNode* node = window.dock_node_id;
-    let mut node = g.get_dock_node(window.dock_node_id);
+    let mut node = g.dock_node_mut(window.dock_node_id);
     if node != None {}
         // IM_ASSERT(window.DockId == node.ID);
     if window.dock_id != 0 && node == None
@@ -231,7 +231,7 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
     node.State = DockNodeState::HostWindowVisible;
 
     // Undock if we are submitted earlier than the host window
-    if !(node.merged_flags.contains(&DockNodeFlags::KeepAliveOnly)) && window.begin_order_within_context < g.get_window(node.unwrap().host_window_id).begin_order_within_context
+    if !(node.merged_flags.contains(&DockNodeFlags::KeepAliveOnly)) && window.begin_order_within_context < g.window_mut(node.unwrap().host_window_id).begin_order_within_context
     {
         dock_context_process_undock_window(g, window,false);
         return;
@@ -278,7 +278,7 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
 
     // Update child_id to allow returning from Child to Parent with Escape
     // ImGuiWindow* parent_window = window.dock_node_id.host_window_id;
-    let parent_window = g.get_window(g.get_dock_node(window.dock_node_id).unwrap().host_window_id);
+    let parent_window = g.window_mut(g.dock_node_mut(window.dock_node_id).unwrap().host_window_id);
     window.child_id = parent_window.get_id(g, &window.name);
 }
 
@@ -291,7 +291,7 @@ pub fn begin_dockable_drag_drop_source(g: &mut Context, mut window: &mut Window)
     // IM_ASSERT(g.current_window == window);
 
     g.last_item_data.id = window.move_id;
-    window = g.get_window(window.root_window_dock_tree_id);
+    window = g.window_mut(window.root_window_dock_tree_id);
     // IM_ASSERT((window.flags & WindowFlags::NoDocking) == 0);
     let is_drag_docking = (g.io.config_docking_with_shift) || Rect::new4(0f32, 0f32, window.size_full.x, get_frame_height(g)).contains(&g.active_id_click_offset); // FIXME-DOCKING: Need to make this stateful and explicit
     if is_drag_docking && begin_drag_drop_source(g, DragDropFlags::SourceNoPreviewTooltip | DragDropFlags::SourceNoHoldToOpenOthers | DragDropFlags::SourceAutoExpirePayload)
@@ -359,7 +359,7 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut Window)
         else
         {
             if window.dock_node_id {
-                node = g.get_dock_node(window.dock_node_id).unwrap();
+                node = g.dock_node_mut(window.dock_node_id).unwrap();
             }
             else {
                 dock_into_floating_window = true;

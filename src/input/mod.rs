@@ -213,24 +213,24 @@ pub enum DimgKey
     // Gamepad (some of those are analog values, 0.0 to 1.0)                              // NAVIGATION action
     GamepadStart,          // Menu (Xbox)          + (Switch)   Start/Options (PS) // --
     GamepadBack,           // View (Xbox)          - (Switch)   Share (PS)         // --
-    GamepadFaceUp,         // Y (Xbox)             x (Switch)   Triangle (PS)      // -> ImGuiNavInput_Input
-    GamepadFaceDown,       // A (Xbox)             B (Switch)   Cross (PS)         // -> ImGuiNavInput_Activate
-    GamepadFaceLeft,       // x (Xbox)             Y (Switch)   Square (PS)        // -> ImGuiNavInput_Menu
-    GamepadFaceRight,      // B (Xbox)             A (Switch)   Circle (PS)        // -> ImGuiNavInput_Cancel
-    GamepadDpadUp,         // D-pad Up                                             // -> ImGuiNavInput_DpadUp
-    GamepadDpadDown,       // D-pad down                                           // -> ImGuiNavInput_DpadDown
-    GamepadDpadLeft,       // D-pad Left                                           // -> ImGuiNavInput_DpadLeft
-    GamepadDpadRight,      // D-pad Right                                          // -> ImGuiNavInput_DpadRight
-    GamepadL1,             // L Bumper (Xbox)      L (Switch)   L1 (PS)            // -> ImGuiNavInput_FocusPrev + ImGuiNavInput_TweakSlow
-    GamepadR1,             // R Bumper (Xbox)      R (Switch)   R1 (PS)            // -> ImGuiNavInput_FocusNext + ImGuiNavInput_TweakFast
+    GamepadFaceUp,         // Y (Xbox)             x (Switch)   Triangle (PS)      // -> Input
+    GamepadFaceDown,       // A (Xbox)             B (Switch)   Cross (PS)         // -> Activate
+    GamepadFaceLeft,       // x (Xbox)             Y (Switch)   Square (PS)        // -> Menu
+    GamepadFaceRight,      // B (Xbox)             A (Switch)   Circle (PS)        // -> Cancel
+    GamepadDpadUp,         // D-pad Up                                             // -> DpadUp
+    GamepadDpadDown,       // D-pad down                                           // -> DpadDown
+    GamepadDpadLeft,       // D-pad Left                                           // -> DpadLeft
+    GamepadDpadRight,      // D-pad Right                                          // -> DpadRight
+    GamepadL1,             // L Bumper (Xbox)      L (Switch)   L1 (PS)            // -> FocusPrev + TweakSlow
+    GamepadR1,             // R Bumper (Xbox)      R (Switch)   R1 (PS)            // -> FocusNext + TweakFast
     GamepadL2,             // L Trigger (Xbox)     ZL (Switch)  L2 (PS) [Analog]
     GamepadR2,             // R Trigger (Xbox)     ZR (Switch)  R2 (PS) [Analog]
     GamepadL3,             // L Thumbstick (Xbox)  L3 (Switch)  L3 (PS)
     GamepadR3,             // R Thumbstick (Xbox)  R3 (Switch)  R3 (PS)
-    GamepadLStickUp,       // [Analog]                                             // -> ImGuiNavInput_LStickUp
-    GamepadLStickDown,     // [Analog]                                             // -> ImGuiNavInput_LStickDown
-    GamepadLStickLeft,     // [Analog]                                             // -> ImGuiNavInput_LStickLeft
-    GamepadLStickRight,    // [Analog]                                             // -> ImGuiNavInput_LStickRight
+    GamepadLStickUp,       // [Analog]                                             // -> LStickUp
+    GamepadLStickDown,     // [Analog]                                             // -> LStickDown
+    GamepadLStickLeft,     // [Analog]                                             // -> LStickLeft
+    GamepadLStickRight,    // [Analog]                                             // -> LStickRight
     GamepadRStickUp,       // [Analog]
     GamepadRStickDown,     // [Analog]
     GamepadRStickLeft,     // [Analog]
@@ -296,41 +296,40 @@ pub enum ModFlags
 pub enum NavInput
 {
     // Gamepad Mapping
-    ImGuiNavInput_Activate,      // Activate / Open / Toggle / Tweak value       // e.g. Cross  (PS4), A (Xbox), A (Switch), Space (Keyboard)
-    ImGuiNavInput_Cancel,        // Cancel / Close / Exit                        // e.g. Circle (PS4), B (Xbox), B (Switch), Escape (Keyboard)
-    ImGuiNavInput_Input,         // Text input / On-Screen keyboard              // e.g. Triang.(PS4), Y (Xbox), x (Switch), Return (Keyboard)
-    ImGuiNavInput_Menu,          // Tap: Toggle menu / Hold: Focus, Move, Resize // e.g. Square (PS4), x (Xbox), Y (Switch), Alt (Keyboard)
-    ImGuiNavInput_DpadLeft,      // Move / Tweak / Resize window (w/ PadMenu)    // e.g. D-pad Left/Right/Up/down (Gamepads), Arrow keys (Keyboard)
-    ImGuiNavInput_DpadRight,     //
-    ImGuiNavInput_DpadUp,        //
-    ImGuiNavInput_DpadDown,      //
-    ImGuiNavInput_LStickLeft,    // scroll / Move window (w/ PadMenu)            // e.g. Left Analog Stick Left/Right/Up/down
-    ImGuiNavInput_LStickRight,   //
-    ImGuiNavInput_LStickUp,      //
-    ImGuiNavInput_LStickDown,    //
-    ImGuiNavInput_FocusPrev,     // Focus Next window (w/ PadMenu)               // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-    ImGuiNavInput_FocusNext,     // Focus Prev window (w/ PadMenu)               // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
-    ImGuiNavInput_TweakSlow,     // Slower tweaks                                // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-    ImGuiNavInput_TweakFast,     // Faster tweaks                                // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
+    Activate,      // Activate / Open / Toggle / Tweak value       // e.g. Cross  (PS4), A (Xbox), A (Switch), Space (Keyboard)
+    Cancel,        // Cancel / Close / Exit                        // e.g. Circle (PS4), B (Xbox), B (Switch), Escape (Keyboard)
+    Input,         // Text input / On-Screen keyboard              // e.g. Triang.(PS4), Y (Xbox), x (Switch), Return (Keyboard)
+    Menu,          // Tap: Toggle menu / Hold: Focus, Move, Resize // e.g. Square (PS4), x (Xbox), Y (Switch), Alt (Keyboard)
+    DpadLeft,      // Move / Tweak / Resize window (w/ PadMenu)    // e.g. D-pad Left/Right/Up/down (Gamepads), Arrow keys (Keyboard)
+    DpadRight,     //
+    DpadUp,        //
+    DpadDown,      //
+    LStickLeft,    // scroll / Move window (w/ PadMenu)            // e.g. Left Analog Stick Left/Right/Up/down
+    LStickRight,   //
+    LStickUp,      //
+    LStickDown,    //
+    FocusPrev,     // Focus Next window (w/ PadMenu)               // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
+    FocusNext,     // Focus Prev window (w/ PadMenu)               // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
+    TweakSlow,     // Slower tweaks                                // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
+    TweakFast,     // Faster tweaks                                // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
 
     // [Internal] Don't use directly! This is used internally to differentiate keyboard from gamepad inputs for behaviors that require to differentiate them.
     // Keyboard behavior that have no corresponding gamepad mapping (e.g. CTRL+TAB) will be directly reading from keyboard keys instead of io.nav_inputs[].
-    ImGuiNavInput_KeyLeft_,      // Move left                                    // = Arrow keys
-    ImGuiNavInput_KeyRight_,     // Move right
-    ImGuiNavInput_KeyUp_,        // Move up
-    ImGuiNavInput_KeyDown_,      // Move down
-    ImGuiNavInput_COUNT
+    KeyLeft,      // Move left                                    // = Arrow keys
+    KeyRight,     // Move right
+    KeyUp,        // Move up
+    KeyDown,      // Move down
 }
 
 // Identify a mouse button.
 // Those values are guaranteed to be stable and we frequently use 0/1 directly. Named enums provided for convenience.
-#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+#[derive(Debug,Clone,Copy,Eq, PartialEq,Hash)]
 pub enum MouseButton
 {
-    Left = 0,
-    Right = 1,
-    Middle = 2,
-    COUNT = 5
+    None,
+    Left,
+    Right,
+    Middle,
 }
 
 // Enumeration for GetMouseCursor()
@@ -350,9 +349,9 @@ pub enum MouseCursor
     NotAllowed,        // When hovering something with disallowed interaction. Usually a crossed circle.
 }
 
-pub const MouseButtonLeft: i32         = 0;
-
-pub const MouseButtonDefault: i32      = 1;
+// pub const MouseButtonLeft: i32         = 0;
+//
+// pub const MouseButtonDefault: i32      = 1;
 
 // Debug options
 // #define IMGUI_DEBUG_NAV_SCORING     0   // Display navigation scoring preview when hovering items. Display last moving direction matches when holding CTRL
@@ -366,7 +365,7 @@ pub const WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER: f32 = 2.00;
 
 // [Internal] Storage used by IsKeyDown(), IsKeyPressed() etc functions.
 // If prior to 1.87 you used io.keys_downDuration[] (which was marked as internal), you should use GetKeyData(key)->down_duration and not io.keys_data[key]->down_duration.
-pub struct DimgKeyData
+pub struct KeyInputData
 {
     pub down: bool,               // True for if key is down
     pub down_duration: f32,      // Duration the key has been down (<0.0: not pressed, 0.0: just pressed, >0.0: time held)
@@ -384,7 +383,7 @@ pub struct DimgKeyData
 pub enum NavLayer
 {
     Main,    // Main scrolling layer
-    Menu,    // Menu layer (access with Alt/ImGuiNavInput_Menu)
+    Menu,    // Menu layer (access with Alt/Menu)
 
 }
 
@@ -437,7 +436,7 @@ pub fn update_input_events(g: &mut Context, trickle_fast_inputs: bool)
         else if (e.Type == ImGuiInputEventType_MouseButton)
         {
             const ImGuiMouseButton button = e.MouseButton.Button;
-            // IM_ASSERT(button >= 0 && button < ImGuiMouseButton_COUNT);
+            // IM_ASSERT(button >= 0 && button < MouseButton::COUNT);
             if (io.mouse_down[button] != e.MouseButton.down)
             {
                 // Trickling Rule: Stop processing queued events if we got multiple action on the same button

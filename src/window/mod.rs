@@ -302,7 +302,7 @@ impl Window {
             auto_fit_frames_y: -1,
             //     auto_pos_last_direction = ImGuiDir_None;
             auto_pos_last_direction: Direction::None,
-            //     set_window_pos_allow_flags = set_window_size_allow_flags = set_window_collapsed_allow_flags = set_window_dock_allow_flags = Cond::Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing;
+            //     set_window_pos_allow_flags = set_window_size_allow_flags = set_window_collapsed_allow_flags = set_window_dock_allow_flags = Condition::Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing;
             set_window_pos_allow_flags: Condition::Always
                 | Condition::Once
                 | Condition::FirstUserEver
@@ -411,7 +411,7 @@ impl Window {
     }
 
     // This is only used in rare/specific situations to manufacture an id out of nowhere.
-    // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
+    // ImGuiID ImGuiWindow::get_id_from_rectangle(const ImRect& r_abs)
     pub fn get_id_from_rect(&mut self, g: &mut Context, r_abs: &Rect) -> Id32 {
         // ImGuiID seed = IDStack.back();
         let seed = self.id_stack.back();

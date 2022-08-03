@@ -29,7 +29,7 @@ pub fn is_mouse_hovering_rect(g: &mut Context, r_min: &Vector2D, r_max: &Vector2
     };
 
     if clip {
-        let curr_win = g.get_current_window()?;
+        let curr_win = g.current_window_mut()?;
         rect_clipped.clip_with(&curr_win.clip_rect);
     }
 
@@ -126,7 +126,7 @@ pub fn update_mouse_inputs(g: &mut Context)
 pub fn start_lock_wheeling_window(g: &mut Context, window: &Window)
 {
     // ImGuiContext& g = *GImGui;
-    let mut wheeling_window = g.get_window(g.wheeling_window_id).unwrap();
+    let mut wheeling_window = g.window_mut(g.wheeling_window_id).unwrap();
     if wheeling_window == window {
         return;
     }
@@ -166,8 +166,8 @@ pub fn update_mouse_wheel(g: &mut Context)
 
     // ImGuiWindow* window = g.wheeling_window ? g.wheeling_window : g.hovered_window;
 
-    let mut window = if g.wheeling_window_id != INVALID_ID {g.get_window(g.wheeling_window_id).unwrap()} else {
-        g.get_window(g.hovered_window).unwrap()
+    let mut window = if g.wheeling_window_id != INVALID_ID {g.window_mut(g.wheeling_window_id).unwrap()} else {
+        g.window_mut(g.hovered_window).unwrap()
     };
     // if (!window || window.collapsed) {
     if window.collapsed {
@@ -212,7 +212,7 @@ pub fn update_mouse_wheel(g: &mut Context)
     {
         start_lock_wheeling_window(g, window);
         while (window.flags.contains(&WindowFlags::ChildWindow)) && ((window.scroll_max.y == 0.0) || ((window.flags.contains(&WindowFlags::NoScrollWithMouse)) && !(window.flags.contains(&WindowFlags::NoMouseInputs)))) {
-            window = g.get_window(window.parent_window_id).unwrap();
+            window = g.window_mut(window.parent_window_id).unwrap();
         }
         if !(window.flags.contains(&WindowFlags::NoScrollWithMouse)) && !(window.flags.contains(&WindowFlags::NoMouseInputs))
         {
@@ -227,7 +227,7 @@ pub fn update_mouse_wheel(g: &mut Context)
     {
         start_lock_wheeling_window(g, window);
         while (window.flags.contains(&WindowFlags::ChildWindow)) && ((window.scroll_max.x == 0.0) || ((window.flags.contains(&WindowFlags::NoScrollWithMouse)) && !(window.flags.contains( &WindowFlags::NoMouseInputs)))) {
-            window = g.get_window(window.parent_window_id).unwrap();
+            window = g.window_mut(window.parent_window_id).unwrap();
         }
         if !(window.flags.contains(&WindowFlags::NoScrollWithMouse)) && !(window.flags.contains(&WindowFlags::NoMouseInputs))
         {
@@ -251,8 +251,8 @@ pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
     set_active_id(g, window.id, window);
     g.nav_disable_highlight = true;
     g.active_id_click_offset = &g.io.mouse_clicked_pos[0] - window.root_window_dock_tree_id.pos;
-    g.ActiveIdNoClearOnFocusLoss = true;
-    // SetActiveIdUsingNavAndKeys();
+    g.active_id_no_clear_on_focus_loss = true;
+    // set_active_id_using_nav_and_keys();
     set_active_id_using_nav_and_keys(g);
 
     // bool can_move_window = true;
@@ -324,8 +324,8 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         keep_alive_id(g.active_id);
         // IM_ASSERT(g.moving_window && g.moving_window->root_window_dock_tree);
         // ImGuiWindow* moving_window = g.moving_window->root_window_dock_tree;
-        let moving_window_id = g.get_window(g.moving_window_id).unwrap().root_window_dock_tree_id;
-        let moving_window = g.get_window(moving_window_id).unwrap();
+        let moving_window_id = g.window_mut(g.moving_window_id).unwrap().root_window_dock_tree_id;
+        let moving_window = g.window_mut(moving_window_id).unwrap();
 
         // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
         // const bool window_disappared = ((!moving_window.WasActive && !moving_window.Active) || moving_window.viewport == None);
@@ -362,7 +362,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
 
                 // clear the NoInput window flag set by the viewport system
                 // moving_window.viewport.flags &= ~ViewportFlags::NoInputs; // FIXME-VIEWPORT: Test engine managed to crash here because viewport was None.
-                let mut viewport: &mut Viewport = g.get_viewport(moving_window.viewport_id).unwrap();
+                let mut viewport: &mut Viewport = g.viewport_mut(moving_window.viewport_id).unwrap();
                 remove_hash_set_val(&mut viewport.flags, &ViewportFlags::NoInputs)
             }
 
@@ -375,7 +375,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         // When clicking/dragging from a window that has the _NoMove flag, we still set the active_id in order to prevent hovering others.
         if g.active_id_window_id != INVALID_ID // && g.active_id_window.move_id == g.active_id)
         {
-            let active_id_win = g.get_window(g.active_id_window_id).unwrap();
+            let active_id_win = g.window_mut(g.active_id_window_id).unwrap();
             if active_id_win.move_id == g.active_id {
                 keep_alive_id(g.active_id);
                 if !g.io.mouse_down[0] {
@@ -401,7 +401,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
     //     return;
     // }
     if g.nav_window_id != INVALID_ID {
-        let win = g.get_window(g.nav_window_id).unwrap();
+        let win = g.window_mut(g.nav_window_id).unwrap();
         if win.appearing {
             return;
         }
@@ -415,8 +415,8 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
         // If we try to focus it, focus_window() > close_popups_over_window() will accidentally close any parent popups because they are not linked together any more.
         // ImGuiWindow* RootWindow = g.hovered_window ? g.hovered_window->RootWindow : None;
         let root_window = if g.hovered_window_id != INVALID_ID {
-            let hov_win = g.get_window(g.hovered_window_id).unwrap();
-            Some(g.get_window(hov_win.root_window_id).unwrap())
+            let hov_win = g.window_mut(g.hovered_window_id).unwrap();
+            Some(g.window_mut(hov_win.root_window_id).unwrap())
         } else {
             None
         };

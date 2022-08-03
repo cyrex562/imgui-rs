@@ -31,12 +31,12 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
     // Modal windows prevents mouse from hovering behind them.
     // ImGuiWindow* modal_window = get_top_most_popup_modal();
     let modal_window = get_top_most_popup_modal();
-    let hov_win = g.get_window(g.hovered_window_id).unwrap();
+    let hov_win = g.window_mut(g.hovered_window_id).unwrap();
     if modal_window
         && hovered_window_id != INVALID_ID
         && !is_window_within_begin_stack_of(
-            g.get_window(g.hovered_window).unwrap().root_window_id,
-            modal_window,
+        g.window_mut(g.hovered_window).unwrap().root_window_id,
+        modal_window,
         )
     {
         // FIXME-MERGE: root_window_dock_tree ?
@@ -258,12 +258,12 @@ pub fn update_window_parent_and_root_links(
         window.root_window_for_title_bar_highlight_id = parent_window.root_window_for_title_bar_highlight_id;
     }
     // while (window.root_window_for_nav_id.flags & WindowFlags::NavFlattened)
-    let mut root_window_for_nav = g.get_window(window.root_window_for_nav_id).unwrap();
+    let mut root_window_for_nav = g.window_mut(window.root_window_for_nav_id).unwrap();
     while root_window_for_nav.flags.contains(&WindowFlags::NavFlattened)
     {
         // IM_ASSERT(window.root_window_for_nav_id.parent_window != None);
         window.root_window_for_nav_id = root_window_for_nav.parent_window_id;
-        root_window_for_nav = g.get_window(window.root_window_for_nav_id).unwrap();
+        root_window_for_nav = g.window_mut(window.root_window_for_nav_id).unwrap();
     }
 }
 
@@ -438,7 +438,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             // FIXME: Look into removing the branch so everything can go through this same code path for consistency.
             window.SetWindowPosVal = g.next_window_data.PosVal;
             window.SetWindowPosPivot = g.next_window_data.PosPivotVal;
-            window.set_window_pos_allow_flags &= ~(ImGuiCond_Once | Cond::FirstUseEver | ImGuiCond_Appearing);
+            window.set_window_pos_allow_flags &= ~(ImGuiCond_Once | Condition::FirstUseEver | ImGuiCond_Appearing);
         }
         else
         {
@@ -1175,14 +1175,14 @@ pub fn end(g: &mut Context)
 // static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, ImGuiWindow* window)
 pub fn add_window_to_sort_buffer(g: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32) {
     out_sorted_windows.push_back(window);
-    let win = g.get_window(window).unwrap();
+    let win = g.window_mut(window).unwrap();
     if window.active {
         // int count = window.dc.ChildWindows.Size;
         let count = win.dc.child_windows.len();
         // ImQsort(window.dc.ChildWindows.Data, count, sizeof(ImGuiWindow*), ChildWindowComparer);
         win.dc.child_windows.sort();
         for child_win_id in win.dc.child_windows.iter() {
-            let child_win = g.get_window(*child_win_id).unwrap();
+            let child_win = g.window_mut(*child_win_id).unwrap();
             if child_win.active {
                 add_window_to_sort_buffer(g, out_sorted_windows, *child_win_id);
             }

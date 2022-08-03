@@ -28,7 +28,7 @@ pub fn begin_child(
     extra_flags: &mut HashSet<WindowFlags>,
 ) -> bool {
     // ImGuiWindow* window = GetCurrentWindow();
-    let window = g.get_current_window().unwrap();
+    let window = g.current_window_mut().unwrap();
     return begin_child_ex(
         g,
         str_id,
@@ -55,7 +55,7 @@ pub fn begin_child2(
 pub fn end_child(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
     // ImGuiWindow* window = g.current_window;
-    let window = g.get_current_window().unwrap();
+    let window = g.current_window_mut().unwrap();
 
     // IM_ASSERT(g.within_end_child == false);
     // IM_ASSERT(window.flags & WindowFlags::ChildWindow);   // Mismatched BeginChild()/EndChild() calls
@@ -76,7 +76,7 @@ pub fn end_child(g: &mut Context) {
         end(g);
 
         // ImGuiWindow* parent_window = g.current_window;
-        let parent_window = g.get_current_window().unwrap();
+        let parent_window = g.current_window_mut().unwrap();
         // ImRect bb(parent_window.dc.cursor_pos, parent_window.dc.cursor_pos + sz);
         let mut bb = Rect::new2(
             &parent_window.dc.cursor_pos,
@@ -107,7 +107,7 @@ pub fn end_child(g: &mut Context) {
             // Not navigable into
             item_add(g, &mut bb, 0, None, None);
         }
-        if g.get_window(g.hovered_window).unwrap() == window {
+        if g.window_mut(g.hovered_window).unwrap() == window {
             g.last_item_data.status_flags |= ItemStatusFlags::HoveredWindow;
         }
     }
@@ -155,7 +155,7 @@ pub fn begin_child_ex(
 ) -> bool {
     // ImGuiContext& g = *GImGui;
     // ImGuiWindow* parent_window = g.current_window;
-    let parent_window = g.get_current_window().unwrap();
+    let parent_window = g.current_window_mut().unwrap();
 
     // flags |= WindowFlags::NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | WindowFlags::ChildWindow | ImGuiWindowFlags_NoDocking;
     // flags |= (parent_window.flags & ImGuiWindowFlags_NoMove);  // Inherit the NoMove flag
@@ -206,7 +206,7 @@ pub fn begin_child_ex(
     g.style.child_border_size = backup_border_size;
 
     // ImGuiWindow* child_window = g.current_window;
-    let child_window = g.get_current_window().unwrap();
+    let child_window = g.current_window_mut().unwrap();
     child_window.child_id = id;
     child_window.auto_fit_child_axises = auto_fit_axises;
 

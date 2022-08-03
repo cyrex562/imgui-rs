@@ -155,7 +155,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     let tabs_count_old = tab_bar.unwrap().tabs.size;
     // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
     for window_n in 0..node.windows.len() {
-        let window = g.get_window(node.windows[window_n]);
+        let window = g.window_mut(node.windows[window_n]);
         if tab_bar_find_tab_by_id(tab_bar, window.tab_id).is_none() {
             tab_bar_add_tab(tab_bar, TabItemFlags::Unsorted, window);
         }
@@ -180,7 +180,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         host_window.Rect(),
         DOCKING_SPLITTER_SIZE,
     );
-    g.get_draw_list(host_window.draw_list_id).add_rect_filled(
+    g.draw_list_mut(host_window.draw_list_id).add_rect_filled(
         &title_bar_rect.min,
         &title_bar_rect.max,
         title_bar_col,
@@ -222,8 +222,8 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     //         ImQsort(tab_bar.tabs.data + tabs_unsorted_start, tab_bar.tabs.size - tabs_unsorted_start, sizeof(ImGuiTabItem), TabItemComparerByDockOrder);
     // }
     tab_bar.unwrap().tabs.sort_by(|a, b| {
-        let a_win = g.get_window(a.window_id);
-        let b_win = g.get_window(b.window_id);
+        let a_win = g.window_mut(a.window_id);
+        let b_win = g.window_mut(b.window_id);
         a_win.dock_order.cmp(&b_win.dock_order)
     });
 
@@ -268,7 +268,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)s
     for win_id in node.windows {
         // ImGuiWindow* window = node.windows[window_n];
-        let window = g.get_window(win_id);
+        let window = g.window_mut(win_id);
         if (closed_all || closed_one) == (window.tab_id != INVALID_ID && window.has_close_button)
             && !(window.flags.contains(&WindowFlags::UnsavedDocument)) {
             continue;
@@ -407,9 +407,9 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
                 start_mouse_moving_window_or_node(
                     g,
                     if tab.unwrap().wwindow_id != INVALID_ID {
-                        g.get_window(tab.window_id)
+                        g.window_mut(tab.window_id)
                     } else {
-                        g.get_window(node.host_window_id)
+                        g.window_mut(node.host_window_id)
                     },
                     node,
                     false,
@@ -433,8 +433,8 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         let tab: Option<&mut TabItem> = tab_bar_find_tab_by_id(tab_bar.unwrap(), focus_tab_id);
         if tab.is_some() {
             if tab.unwrap().window_id != INVALID_ID {
-                focus_window(g, g.get_window(tab.unwrap().window_id));
-                nav_init_window(g, g.get_window(tab.unwrap().window_id), false);
+                focus_window(g, g.window_mut(tab.unwrap().window_id));
+                nav_init_window(g, g.window_mut(tab.unwrap().window_id), false);
             }
         }
     }

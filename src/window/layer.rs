@@ -112,7 +112,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
     // - When using Nav to activate menu items (due to timing of activating on press->new window appears->losing active_id)
     // - Using dock host items (tab, collapse button) can trigger this before we redirect the active_id_window toward the child window.
     if (g.active_id != 0 && g.active_id_window && g.active_id_window.root_window != focus_front_window)
-        if (!g.ActiveIdNoClearOnFocusLoss && !active_id_window_is_dock_node_host)
+        if (!g.active_id_no_clear_on_focus_loss && !active_id_window_is_dock_node_host)
             clear_active_id();
 
     // Passing None allow to disable keyboard focus

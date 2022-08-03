@@ -312,7 +312,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
 
     // const bool dim_bg_for_window_list = (g.NavWindowingTargetAnim != None && g.NavWindowingTargetAnim->Active);
     let dim_bg_for_window_list = true;
-    let nav_win_tgt_anim = g.get_window(g.nav_windowing_target_anim).unwrap();
+    let nav_win_tgt_anim = g.window_mut(g.nav_windowing_target_anim).unwrap();
     let dim_bg_for_window_list = g.nav_windowing_target_anim != INVALID_ID && nav_win_tgt_anim.active;
     if !dim_bg_for_modal && !dim_bg_for_window_list {
         return;
@@ -329,8 +329,8 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
         viewports_already_dimmed[0] = modal_window.viewport_id;
     } else if dim_bg_for_window_list {
         // Draw dimming behind CTRL+Tab target window and behind CTRL+Tab UI window
-        let nwta_win = g.get_window(g.nav_windowing_target_anim).unwrap();
-        let nwl_win = g.get_window(g.nav_windowing_list_window_id).unwrap();
+        let nwta_win = g.window_mut(g.nav_windowing_target_anim).unwrap();
+        let nwl_win = g.window_mut(g.nav_windowing_list_window_id).unwrap();
         render_dimmed_background_behind_window(g, g.NavWindowingTargetAnim, get_color_u32(StyleColor::NavWindowingDimBg, g.dim_bg_ration));
         if g.nav_windowing_list_window_id != INVALID_ID {
 
@@ -347,7 +347,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
         // Draw border around CTRL+Tab target window
         // ImGuiWindow * window = g.NavWindowingTargetAnim;
         // ImGuiViewport * viewport = window.viewport;
-        let nwta_vp = g.get_viewport(nwta_win.viewport_id).unwrap();
+        let nwta_vp = g.viewport_mut(nwta_win.viewport_id).unwrap();
         let distance = g.font_size;
         let bb = nwta_win.rect();
         // float
@@ -417,7 +417,7 @@ pub fn render(g: &mut Context)
     // ImGuiWindow* windows_to_render_top_most[2];
     let mut windows_to_render_top_most: [Id32;2] = [
         if g.nav_windowing_target_id != INVALID_ID && !g.nav_windowing_target_id.flags.contains(WindowFlags::NoBringToFrontOnFocus) {
-            let nwt_win = g.get_window(g.nav_windowing_target_id).unwrap();
+            let nwt_win = g.window_mut(g.nav_windowing_target_id).unwrap();
             nwt_win.root_window_dock_tree_id
         } else {
             INVALID_ID
@@ -441,8 +441,8 @@ pub fn render(g: &mut Context)
     }
     // for (int n = 0; n < IM_ARRAYSIZE(windows_to_render_top_most); n += 1)
     for n in 0 .. windows_to_render_top_most.len() {
-        if windows_to_render_top_most[n] != INVALID_ID && is_window_active_and_visible(g.get_window(windows_to_render_top_most[n]).unwrap()) { // nav_windowing_target is always temporarily displayed as the top-most window
-            add_root_window_to_draw_data(g, g.get_window(windows_to_render_top_most[n]).unwrap());
+        if windows_to_render_top_most[n] != INVALID_ID && is_window_active_and_visible(g.window_mut(windows_to_render_top_most[n]).unwrap()) { // nav_windowing_target is always temporarily displayed as the top-most window
+            add_root_window_to_draw_data(g, g.window_mut(windows_to_render_top_most[n]).unwrap());
         }
     }
 
@@ -487,7 +487,7 @@ pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Wind
     }
 
     // ImGuiViewportP* viewport = window.viewport;
-    let viewport = g.get_viewport(window.viewport_id).unwrap();
+    let viewport = g.viewport_mut(window.viewport_id).unwrap();
     // ImRect viewport_rect = viewport->get_main_rect();
     let viewport_rect = viewport.get_main_rect();
 
@@ -497,8 +497,8 @@ pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Wind
     // and draw list have been trimmed already, hence the explicit recreation of a draw command if missing.
     // FIXME: This is creating complication, might be simpler if we could inject a drawlist in drawdata at a given position and not attempt to manipulate ImDrawCmd order.
     // ImDrawList* draw_list = window.root_window_dock_tree->DrawList;
-    let root_win_dock_tree_win = g.get_window(window.root_window_dock_tree_id).unwrap();
-    let draw_list = g.get_draw_list(root_win_dock_tree_win.draw_list_id).unwrap();
+    let root_win_dock_tree_win = g.window_mut(window.root_window_dock_tree_id).unwrap();
+    let draw_list = g.draw_list_mut(root_win_dock_tree_win.draw_list_id).unwrap();
     if draw_list.cmd_buffer.len() == 0 {
         draw_list.add_draw_cmd();
     }
@@ -514,12 +514,12 @@ pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Wind
 
 
     // Draw over sibling docking nodes in a same docking tree
-    let root_win = g.get_window(window.root_window_id).unwrap();
+    let root_win = g.window_mut(window.root_window_id).unwrap();
     if root_win.dock_is_active
     {
         // ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.root_window_dock_tree)->DrawList;
 
-        let draw_list = g.get_draw_list(get::find_front_most_visible_child_window(g, root_win_dock_tree_win).draw_list_id).unwrap();
+        let draw_list = g.draw_list_mut(get::find_front_most_visible_child_window(g, root_win_dock_tree_win).draw_list_id).unwrap();
         if draw_list.cmd_buffer.len() == 0 {
             draw_list.add_draw_cmd();
         }

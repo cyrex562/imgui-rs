@@ -56,7 +56,7 @@ pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> 
     if (!IsWindowContentHoverable(ref_window, flags))
         return false;
     if (!(flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
-        if (g.active_id != 0 && !g.ActiveIdAllowOverlap && g.active_id != ref_window.move_id)
+        if (g.active_id != 0 && !g.active_id_allow_overlap && g.active_id != ref_window.move_id)
             return false;
     return true;
 }
@@ -113,8 +113,8 @@ pub fn is_window_content_hoverable(
     // FIXME-OPT: This could be cached/stored within the window.
     // ImGuiContext& g = *GImGui;
     if g.nav_window_id {
-        let nav_win = g.get_window(g.nav_window_id).unwrap();
-        let focused_root_window = g.get_window(nav_win.root_window_dock_tree_id).unwrap();
+        let nav_win = g.window_mut(g.nav_window_id).unwrap();
+        let focused_root_window = g.window_mut(nav_win.root_window_dock_tree_id).unwrap();
         if focused_root_window.was_active
             && focused_root_window.id != window.root_window_dock_tree_id
         {
@@ -141,7 +141,7 @@ pub fn is_window_content_hoverable(
         // }
     }
     // Filter by viewport
-    let moving_win = g.get_window(g.moving_window_id).unwrap();
+    let moving_win = g.window_mut(g.moving_window_id).unwrap();
     if window.viewport_id != g.mouse_viewport_id
         && (g.moving_window_id == INVALID_ID
             || window.root_window_dock_tree_id != moving_win.root_window_dock_tree)
@@ -157,7 +157,7 @@ pub fn is_window_content_hoverable(
 pub fn is_clipped_ex(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'static str> {
     // ImGuiContext& g = *GImGui;
     // ImGuiWindow* window = g.CurrentWindow;
-    let window = g.get_current_window()?;
+    let window = g.current_window_mut()?;
     if !bb.Overlaps(&window.clip_rect) {
         if id == 0 || (id != g.active_id && id != g.nav_id) {
             if !g.LogEnabled {

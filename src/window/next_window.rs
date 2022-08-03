@@ -25,7 +25,7 @@ pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, piv
     g.next_window_data.flags |= NextWindowDataFlags::HasPos;
     g.next_window_data.PosVal = pos;
     g.next_window_data.PosPivotVal = pivot;
-    g.next_window_data.PosCond = cond ? cond : Cond::Always;
+    g.next_window_data.PosCond = cond ? cond : Condition::Always;
     g.next_window_data.PosUndock = true;
 }
 
@@ -36,7 +36,7 @@ pub fn set_next_window_size(g: &mut Context, size: &Vector2D, cond: Condition)
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.next_window_data.flags |= NextWindowDataFlags::HasSize;
     g.next_window_data.sizeVal = size;
-    g.next_window_data.sizeCond = cond ? cond : Cond::Always;
+    g.next_window_data.sizeCond = cond ? cond : Condition::Always;
 }
 
 // Content size = inner scrollable rectangle, padded with window_padding.
@@ -64,7 +64,7 @@ pub fn set_next_window_collapsed(g: &mut Context, collapsed, cond:Condition)
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.next_window_data.flags |= NextWindowDataFlags::HasCollapsed;
     g.next_window_data.CollapsedVal = collapsed;
-    g.next_window_data.CollapsedCond = cond ? cond : Cond::Always;
+    g.next_window_data.CollapsedCond = cond ? cond : Condition::Always;
 }
 
 // void ImGui::SetNextWindowFocus()
@@ -95,7 +95,7 @@ pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
 {
     // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasDock;
-    g.next_window_data.DockCond = cond ? cond : Cond::Always;
+    g.next_window_data.DockCond = cond ? cond : Condition::Always;
     g.next_window_data.dock_id = id;
 }
 

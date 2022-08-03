@@ -613,7 +613,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
     if (event.type == NSEventTypeLeftMouseDown || event.type == NSEventTypeRightMouseDown || event.type == NSEventTypeOtherMouseDown)
     {
         int button = [event buttonNumber];
-        if (button >= 0 && button < ImGuiMouseButton_COUNT)
+        if (button >= 0 && button < MouseButton::COUNT)
             io.AddMouseButtonEvent(button, true);
         return io.WantCaptureMouse;
     }
@@ -621,7 +621,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
     if (event.type == NSEventTypeLeftMouseUp || event.type == NSEventTypeRightMouseUp || event.type == NSEventTypeOtherMouseUp)
     {
         int button = [event buttonNumber];
-        if (button >= 0 && button < ImGuiMouseButton_COUNT)
+        if (button >= 0 && button < MouseButton::COUNT)
             io.AddMouseButtonEvent(button, false);
         return io.WantCaptureMouse;
     }

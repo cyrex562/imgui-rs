@@ -309,7 +309,7 @@ pub fn end_frame(g: &mut Context)
     if g.io.set_platform_ime_data_fn.is_some() && (g.platform_ime_data == g.platform_ime_data_prev)
     {
         // ImGuiViewport* viewport = FindViewportByID(g.PlatformImeViewport);
-        let viewport = g.get_viewport(g.platform_ime_viewport);
+        let viewport = g.viewport_mut(g.platform_ime_viewport);
         g.io.set_platform_ime_data_fn(if viewport.is_some() {viewport} else { get_main_viewport() }, &g.platform_ime_data);
     }
 

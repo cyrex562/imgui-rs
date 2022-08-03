@@ -196,10 +196,10 @@ pub fn render_window_decorations(
             // Render, for docked windows and host windows we ensure bg goes before decorations
             let bg_draw_list = if window.dock_is_active {
                 // window.dock_node.host_window.draw_list
-                let win = g.get_window(window.dock_node_id.host_window_id).unwrap();
-                g.get_draw_list(win.draw_list_id).unwrap()
+                let win = g.window_mut(window.dock_node_id.host_window_id).unwrap();
+                g.draw_list_mut(win.draw_list_id).unwrap()
             } else {
-                g.get_draw_list(window.draw_list_id).unwrap()
+                g.draw_list_mut(window.draw_list_id).unwrap()
             };
 
             if window.dock_is_active || (flags.contains(&WindowFlags::DockNodeHost)) {

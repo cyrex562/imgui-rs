@@ -26,7 +26,7 @@ pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut Window, h
     // There is an edge case when docking into a dockspace which only has inactive nodes.
     // In this case DockNodeTreeFindNodeByPos() will have selected a leaf node which is inactive.
     // Because the inactive leaf node doesn't have proper pos/size yet, we'll use the root node as reference.
-    let root_payload_as_host = g.get_dock_node(root_payload.dock_node_as_host_id);
+    let root_payload_as_host = g.dock_node_mut(root_payload.dock_node_as_host_id);
     let ref_node_for_rect = if host_node.is_some() && !host_node.unwrap().is_visible { node::dock_node_get_root_node(g, host_node.unwrap()) } else { host_node.unwrap() };
     if ref_node_for_rect {}
     // IM_ASSERT(ref_node_for_rect.is_visible == true);
@@ -66,7 +66,7 @@ pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut Window, h
     }
 
     // build a tentative future node (reuse same structure because it is practical. Shape will be readjusted when previewing a split)
-    let data_future_node: &mut DockNode = g.get_dock_node(data.future_node).unwrwap();
+    let data_future_node: &mut DockNode = g.dock_node_mut(data.future_node).unwrwap();
     data_future_node.has_close_button = (if host_node.is_some() { host_node.unwrap().has_close_button } else { host_window.unwrap().has_close_button }) || (root_payload.has_close_button);
     data_future_node.hash_window_menu_button = if host_node.is_some() { true } else { ((host_window.flags.contains(&WindowFlags::NoCollapse)) == false) };
     data_future_node.pos = if ref_node_for_rect.id != INVALID_ID { ref_node_for_rect.pos.clone() } else { host_window.pos.clone() };
@@ -144,7 +144,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     let overlay_col_lines = get_color_u32(StyleColor::NavWindowingHighlight, if is_transparent_payload { 0.80 } else { 0.60 });
 
     // Display area preview
-    let root_payload_dock_node = g.get_dock_node(root_payload.dock_node_as_host_id);
+    let root_payload_dock_node = g.dock_node_mut(root_payload.dock_node_as_host_id);
     let can_preview_tabs = (root_payload_dock_node.is_some() || root_payload_dock_node.unwrap().windows.len() > 0);
     if data.is_drop_allowed {
         let mut overlay_rect = data.future_node.rect();
@@ -163,7 +163,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     if data.is_drop_allowed && can_preview_tabs && data.split_dir == Direction::None && data.is_center_available {
         // Compute target tab bar geometry so we can locate our preview tabs
         let mut tab_bar_rect = Rect::default();
-        let dfn_dn = g.get_dock_node(data.future_node).unwrap();
+        let dfn_dn = g.dock_node_mut(data.future_node).unwrap();
         tab_bar::dock_node_calc_tab_bar_layout(g, Some(dfn_dn), None, &mut tab_bar_rect, None, None);
         let mut tab_pos = tab_bar_rect.min.clone();
         if host_node.id != INVALID_ID && host_node.tab_bar.is_some() {
@@ -182,7 +182,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
         // IM_ASSERT(root_payload.DockNodeAsHost.Windows.size <= root_payload.DockNodeAsHost.TabBar.Tabs.size);
         let tab_bar_with_payload = if root_payload.dock_node_as_host_id != INVALID_ID {
             //  root_payload.dock_node_as_host_id.tab_bar} 
-            let dn = g.get_dock_node(root_payload.dock_node_as_host_id).unwrap();
+            let dn = g.dock_node_mut(root_payload.dock_node_as_host_id).unwrap();
             dn.tab_bar.as_mut()
         } else {
             None
@@ -192,7 +192,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
         for payload_n in 0..payload_count {
             // dock_node's tab_bar may have non-window Tabs manually appended by user
             let payload_window = if tab_bar_with_payload.is_some() {
-                g.get_window(tab_bar_with_payload.unwrap().tabs[payload_n].window_id)
+                g.window_mut(tab_bar_with_payload.unwrap().tabs[payload_n].window_id)
             } else { root_payload };
             if tab_bar_with_payload.is_some() && payload_window.id == INVALID_ID {
                 continue;

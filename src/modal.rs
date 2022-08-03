@@ -26,7 +26,7 @@ pub fn find_blocking_modal(g: &mut Context, window: &mut Window) -> Option<&mut 
     {
         // ImGuiWindow* popup_window = g.open_popup_stack.data[i].window;
         let psd = &mut g.open_popup_stack[i];
-        let popup_window = g.get_window(psd.window_id)
+        let popup_window = g.window_mut(psd.window_id)
 
         // if popup_window.is_none() || !(popup_window.unwrap().flags.contains(&WindowFlags::Modal)) {
         //     continue;
@@ -47,13 +47,13 @@ pub fn find_blocking_modal(g: &mut Context, window: &mut Window) -> Option<&mut 
             break;
         }
         // for (ImGuiWindow* parent = popup_window.ParentWindowInBeginStack.root_window; parent != None; parent = parent.ParentWindowInBeginStack.root_window)
-        let mut parent_window_in_begin_stack = g.get_window(popup_window_obj.parent_window_in_begin_stack_id).unwrap();
+        let mut parent_window_in_begin_stack = g.window_mut(popup_window_obj.parent_window_in_begin_stack_id).unwrap();
         while parent_window_in_begin_stack.root_window_id != INVALID_ID {
-            let parent_win = g.get_window(parent_window_in_begin_stack.root_window_id).unwrap();
+            let parent_win = g.window_mut(parent_window_in_begin_stack.root_window_id).unwrap();
             if is_window_within_begin_stack_of(window, parent_win) {
                 return Some(popup_window_obj);
             }                           // Place window above its begin stack parent.
-            parent_window_in_begin_stack = g.get_window(parent_win.parent_window_in_begin_stack_id).unwrap();
+            parent_window_in_begin_stack = g.window_mut(parent_win.parent_window_in_begin_stack_id).unwrap();
         }
     }
     return None;

@@ -51,7 +51,7 @@ impl DrawData {
         for i in 0..self.cmd_lists_count {
             // ImDrawList* cmd_list = CmdLists[i];
             let cmd_list_id = self.cmd_lists[i];
-            let cmd_list = g.get_draw_list(cmd_list_id);
+            let cmd_list = g.draw_list_mut(cmd_list_id);
             if cmd_list.idx_buffer.is_empty() {
                 continue;
             }
@@ -74,7 +74,7 @@ impl DrawData {
         {
         // ImDrawList* cmd_list = CmdLists[i];
         let cmd_list_id = self.cmd_lists[i];
-            let cmd_list = g.get_draw_list(cmd_list_id);
+            let cmd_list = g.draw_list_mut(cmd_list_id);
             // for (int cmd_i = 0; cmd_i < cmd_list.cmd_buffer.size; cmd_i += 1)
             for cmd_i in 0 .. cmd_list.cmd_buffer.len()
         {
@@ -101,7 +101,7 @@ pub fn add_window_to_draw_data(g: &mut Context, window: &mut Window, layer: i32)
     // ImGuiContext& g = *GImGui;
     // ImGuiViewportP* viewport = window.viewport;
     let viewport_id = window.viewport_id;
-    let viewport = g.get_viewport(viewport_id).unwrap();
+    let viewport = g.viewport_mut(viewport_id).unwrap();
     g.io.metrics_render_windows += 1;
     if window.flags.contains(&WindowFlags::DockNodeHost) {
         window.draw_list_id.channels_merge();
@@ -118,7 +118,7 @@ pub fn add_window_to_draw_data(g: &mut Context, window: &mut Window, layer: i32)
     //         AddWindowToDrawData(child, layer);
     // }
     for child_id in window.dc.child_windows.iter() {
-        let win_obj = g.get_window(*child_id).unwrap();
+        let win_obj = g.window_mut(*child_id).unwrap();
         if checks::is_window_active_and_visible(win_obj) {
             add_window_to_draw_data(g, win_obj, layer);
         }

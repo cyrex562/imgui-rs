@@ -152,12 +152,12 @@ pub fn dock_context_new_frame_update_undocking(g: &mut Context) {
         let req = dc.requests.get(n).unwrap();
         if req.request_type == DockRequestType::Undock && req.undock_target_window_id != INVALID_ID
         {
-            let tgt_win = g.get_window(req.undock_target_window_id);
+            let tgt_win = g.window_mut(req.undock_target_window_id);
             dock_context_process_undock_window(g, tgt_win, false);
         } else if req.requst_type == DockRequestType::Undock
             && req.undock_target_node_id != INVALID_ID
         {
-            let tgt_node = g.get_dock_node(req.undock_target_node_id).unwrap();
+            let tgt_node = g.dock_node_mut(req.undock_target_node_id).unwrap();
             dock_context_process_undock_node(g, tgt_node);
         }
     }
@@ -222,8 +222,8 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context) {
     g.hovered_dock_node_id = INVALID_ID;
     // if (ImGuiWindow* hovered_window = g.hovered_window_under_moving_window)
     if g.hovered_window_under_moving_window_id != INVALID_ID {
-        let hovered_window = g.get_window(g.hovered_window_under_moving_window_id);
-        let hovered_window_root_window = g.get_window(hovered_window.root_window_id);
+        let hovered_window = g.window_mut(g.hovered_window_under_moving_window_id);
+        let hovered_window_root_window = g.window_mut(hovered_window.root_window_id);
         if hovered_window.dock_node_as_host_id.is_some() {
             g.hovered_dock_node = dock_node_tree_find_visible_node_by_pos(
                 &hovered_window.dock_node_as_host_id.unwrap(),
@@ -568,13 +568,13 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
 
     // ImGuiWindow* payload_window = req.dock_payload_id;     // Optional
     let payload_window_id = req.dock_payload_id;
-    let payload_window = g.get_window(payload_window_id);
+    let payload_window = g.window_mut(payload_window_id);
     // ImGuiWindow* target_window = req.dock_target_window_id;
     let target_window_id = req.dock_target_window_id;
-    let target_window = g.get_window(target_window_id);
+    let target_window = g.window_mut(target_window_id);
     // ImGuiDockNode* node = req.dock_target_node_id;
     let node_id = req.dock_target_node_id;
-    let mut node = g.get_dock_node(node_id);
+    let mut node = g.dock_node_mut(node_id);
 
     if payload_window.id != INVALID_ID {
     }
@@ -590,7 +590,7 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
     let mut payload_node: &mut DockNode = &mut Default::default();
     if payload_window.id != INVALID_ID {
         payload_node = g
-            .get_dock_node(payload_window.dock_node_as_host_id)
+            .dock_node_mut(payload_window.dock_node_as_host_id)
             .unwrap();
         payload_window.dock_node_as_host_id = INVALID_ID; // Important to clear this as the node will have its life as a child which might be merged/deleted later.
         if payload_node.is_some() && payload_node.unwrap().is_leaf_node() {
@@ -674,7 +674,7 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
             dock_node_add_tab_bar(g, node.unwrap());
             // for (int n = 0; n < node.windows.len(); n += 1)
             for win_id in node.unwrap().windows.iter_mut() {
-                let win = g.get_window(*win_id).unwrap();
+                let win = g.window_mut(*win_id).unwrap();
                 tab_bar_add_tab(
                     &mut node.unwrap().tab_bar.unwrwap(),
                     TabItemFlags::None,
@@ -693,7 +693,7 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
                     // IM_ASSERT(payload_node.only_node_with_windows != None); // The docking should have been blocked by dock_node_preview_dock_setup() early on and never submitted.
                     // ImGuiDockNode* visible_node = payload_node.only_node_with_windows;
                     let visible_node = g
-                        .get_dock_node(payload_node.only_node_with_window_id)
+                        .dock_node_mut(payload_node.only_node_with_window_id)
                         .unwrap();
                     if visible_node.tab_bar.is_some() {}
                     // IM_ASSERT(visible_node.TabBar.Tabs.size > 0);
@@ -773,7 +773,7 @@ pub fn dock_context_process_undock_window(
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockWindow window '%s', clear_persistent_docking_ref = %d\n", window.Name, clear_persistent_docking_ref);
     // if (window.dock_node)
     if window.dock_node_id != INVALID_ID {
-        let win_dock_node = g.get_dock_node(window.dock_node_id);
+        let win_dock_node = g.dock_node_mut(window.dock_node_id);
         window::dock_node_remove_window(
             g,
             win_dock_node.unwrap(),
@@ -791,7 +791,7 @@ pub fn dock_context_process_undock_window(
     window.dock_is_active = false;
     window.dock_node_is_visible = false;
     window.dock_tab_is_visible = false;
-    let ref_vp = g.get_viewport(window.viewport_id);
+    let ref_vp = g.viewport_mut(window.viewport_id);
     window.size_full = ops::fix_large_windows_when_undocking(g, &window.size_full, ref_vp);
     window.size = window.size_full.clone();
 
@@ -817,10 +817,10 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode) {
         // for (int n = 0; n < new_node.windows.len(); n += 1)
         for win_id in new_node.windows.iter() {
             // ImGuiWindow* window = new_node.windows[n];
-            let mut win = g.get_window(*win_id);
+            let mut win = g.window_mut(*win_id);
             window.flags.remove(WindowFlags::ChildWindow);
             if window.parent_window_id != INVALID_ID {
-                let parent_win = g.get_window(window.parent_window_id);
+                let parent_win = g.window_mut(window.parent_window_id);
                 // window.parent_window.DC.ChildWindows.find_erase(window);
                 parent_win.dc.child_windows.retain(|x| x != window.id);
             }
@@ -832,7 +832,7 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode) {
         // Otherwise extract our node and merge our sibling back into the parent node.
         // IM_ASSERT(node.ParentNode.ChildNodes[0] == node || node.ParentNode.ChildNodes[1] == node);
         // int index_in_parent = (node.parent_node.child_nodes[0] == node) ? 0 : 1;
-        let parent_node = g.get_dock_node(node.parent_node_id);
+        let parent_node = g.dock_node_mut(node.parent_node_id);
         let index_in_parent = if parent_node.unwrap().child_nodes[0] == node.id {
             0
         } else {
@@ -843,7 +843,7 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode) {
         dock_node_tree_merge(
             g,
             parent_node.unwrap(),
-            g.get_dock_node(parent_node.unwrap().child_nodes[index_in_parent ^ 1]),
+            g.dock_node_mut(parent_node.unwrap().child_nodes[index_in_parent ^ 1]),
         );
         // node.parent_node.authority_for_viewport = DataAuthority::Window; // The node that stays in place keeps the viewport, so our newly dragged out node will create a new viewport
         parent_node.unwrap().authority_for_viewport = DataAuthority::Window;
@@ -853,8 +853,8 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode) {
 
     node.authority_for_pos = DataAuthority::DockNode;
     node.authority_for_size = DataAuthority::DockNode;
-    let node_win_0 = g.get_window(node.windows[0]);
-    let node_win_0_vp = g.get_viewport(node_win_0.viewport_id);
+    let node_win_0 = g.window_mut(node.windows[0]);
+    let node_win_0_vp = g.viewport_mut(node_win_0.viewport_id);
     node.size = ops::fix_large_windows_when_undocking(g, &node.size, node_win_0_vp);
     nodewant_mouse_move = true;
     mark_ini_settings_dirty(g);
@@ -916,13 +916,13 @@ pub fn dock_context_remove_node(
     // IM_ASSERT(node.Windows.size == 0);
 
     if node.host_window_id != INVALID_ID {
-        let win = g.get_window(node.host_window_id);
+        let win = g.window_mut(node.host_window_id);
         // node.host_window.dock_node_as_host = None;
         win.dock_node_as_host_id = INVALID_ID;
     }
 
     // ImGuiDockNode* parent_node = node.ParentNode;
-    let parent_node = g.get_dock_node(node.parent_node_id);
+    let parent_node = g.dock_node_mut(node.parent_node_id);
 
     // const bool merge = (merge_sibling_into_parent_node && parent_node != None);
     let merge = merge_sibling_into_parent_node && parent_node.is_some();
@@ -936,7 +936,7 @@ pub fn dock_context_remove_node(
             } else {
                 parent_node.child_nodes[0]
             };
-            let sibling_node = g.get_dock_node(sibling_node_id);
+            let sibling_node = g.dock_node_mut(sibling_node_id);
             dock_node_tree_merge(g, parent_node_obj, sibling_node);
         } else {
             // for (int n = 0; parent_node && n < IM_ARRAYSIZE(parent_node.ChildNodes); n += 1)
@@ -989,7 +989,7 @@ pub fn dock_context_bind_node_to_window(
     if !node.unwrap().is_visible {
         let mut ancestor_node = node.unwrap();
         while !ancestor_node.is_visible && ancestor_node.parent_node_id != INVALID_ID {
-            let parent_node = g.get_dock_node(ancestor_node.parent_node_id);
+            let parent_node = g.dock_node_mut(ancestor_node.parent_node_id);
             ancestor_node = parent_node.unwrap();
         }
         // IM_ASSERT(ancestor_node.size.x > 0.0 && ancestor_node.size.y > 0.0);

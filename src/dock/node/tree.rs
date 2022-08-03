@@ -105,8 +105,8 @@ pub fn dock_node_tree_merge(
 ) {
     // When called from DockContextProcessUndockNode() it is possible that one of the child is None.
     // ImGuiContext& g = *GImGui;
-    let child_0 = g.get_dock_node(parent_node.child_nodes[0]);
-    let child_1 = g.get_dock_node(parent_node.child_nodes[1]);
+    let child_0 = g.dock_node_mut(parent_node.child_nodes[0]);
+    let child_1 = g.dock_node_mut(parent_node.child_nodes[1]);
     // IM_ASSERT(child_0 || child_1);
     // IM_ASSERT(merge_lead_child == child_0 || merge_lead_child == child_1);
     if (child_0.is_some() && child_0.unwrap().windows.len() > 0)
@@ -208,9 +208,9 @@ pub fn dock_node_tree_update_pos_size(
     }
 
     // ImGuiDockNode* child_0 = node.child_nodes[0];
-    let child_0 = g.get_dock_node(node.child_nodes[0]);
+    let child_0 = g.dock_node_mut(node.child_nodes[0]);
     // ImGuiDockNode* child_1 = node.child_nodes[1];
-    let child_1 = g.get_dock_node(node.child_nodes[1]);
+    let child_1 = g.dock_node_mut(node.child_nodes[1]);
     // Vector2D child_0_pos = pos, child_1_pos = pos;
     let child_0_pos = child_0.unwrap().pos.clone();
     let child_1_pos = child_1.unwrap().pos.clone();

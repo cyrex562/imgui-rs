@@ -400,7 +400,7 @@ pub fn dock_node_get_root_node (
 ) -> Option<&mut DockNode> {
     let mut out_node: Option<&mut DockNode> = Some(node);
     while out_node.parent_node_id != INVALID_ID {
-        out_node = g.get_dock_node(out_node.parent_node_id)
+        out_node = g.dock_node_mut(out_node.parent_node_id)
     }
     return out_node;
 }
@@ -420,7 +420,7 @@ pub fn dock_node_comparer_depth_most_first(
 // int dock_node_get_tab_order(ImGuiWindow* window)
 pub fn dock_node_get_tab_order(g: &mut Context, window: &mut Window) -> i32 {
     // ImGuiTabBar* tab_bar = window.dock_node_id.tab_bar;
-    let tab_bar = &mut g.get_dock_node(window.dock_node_id).unwrap().tab_bar;
+    let tab_bar = &mut g.dock_node_mut(window.dock_node_id).unwrap().tab_bar;
     // if (tab_bar == None)
     //     return -1
     if tab_bar == INVALID_ID {
@@ -443,12 +443,12 @@ pub fn dock_node_move_child_nodes(g: &mut Context, dst_node: &mut DockNode, src_
     dst_node.child_nodes[1] = src_node.child_nodes[1];
     if dst_node.child_nodes[0] != INVALID_ID {
         // dst_node.child_nodes[0].parent_node = dst_node;
-        let node = g.get_dock_node(dst_node.child_nodes[0]).unwrap();
+        let node = g.dock_node_mut(dst_node.child_nodes[0]).unwrap();
         node.parent_node_id = dst_node.id;
     }
     if dst_node.child_nodes[1] {
         // dst_node.child_nodes[1].parent_node = dst_node;
-        let node = g.get_dock_node(dst_node.child_nodes[1]).unwrap();
+        let node = g.dock_node_mut(dst_node.child_nodes[1]).unwrap();
         node.parent_node_id = dst_node.id;
     }
     dst_node.split_axis = src_node.split_axis.clone();
@@ -488,11 +488,11 @@ pub fn dock_node_find_info(g: &mut Context, node: &mut DockNode, info: &mut Dock
         return;
     }
     if node.child_nodes[0] != INVALID_ID {
-        let node = g.get_dock_node(node.child_nodes[0]).unwrap();
+        let node = g.dock_node_mut(node.child_nodes[0]).unwrap();
         dock_node_find_info(g, node, info);
     }
     if node.child_nodes[1] != INVALID_ID {
-        let node = g.get_dock_node(node.child_nodes[1]).unwrap();
+        let node = g.dock_node_mut(node.child_nodes[1]).unwrap();
         dock_node_find_info(g, node, info);
     }
 }
@@ -506,7 +506,7 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
 
     // Inherit most flags
     if node.parent_node_id != INVALID_ID {
-        let parent_node = g.get_dock_node(node.parent_node_id).unwrap();
+        let parent_node = g.dock_node_mut(node.parent_node_id).unwrap();
         let mut flags_to_set = parent_node.shared_flags.clone();
         flags_to_set.insert(DockNodeFlags::SharedFlagsInheritMask);
         node.shared_flags = flags_to_set;
@@ -518,10 +518,10 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
     // If 'node->ChildNode[1]' delete itself, then 'node->ChildNode[0]->windows' will be moved into 'node' and the "remove inactive windows" loop will have run twice on those windows (harmless)
     node.has_central_node_child = false;
     if node.child_nodes[0] != INVALID_ID {
-        dock_node_update_flags_and_collapse(g, g.get_dock_node(node.child_nodes[0]).unwrap());
+        dock_node_update_flags_and_collapse(g, g.dock_node_mut(node.child_nodes[0]).unwrap());
     }
     if node.child_nodes[1] != INVALID_ID {
-        dock_node_update_flags_and_collapse(g, g.get_dock_node(node.child_nodes[1]).unwrap());
+        dock_node_update_flags_and_collapse(g, g.dock_node_mut(node.child_nodes[1]).unwrap());
     }
 
     // Remove inactive windows, collapse nodes
@@ -531,7 +531,7 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
     // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
     for win_id in node.windows.iter() {
         // ImGuiWindow* window = node.windows[window_n];
-        let window = g.get_window(*win_id);
+        let window = g.window_mut(*win_id);
         // IM_ASSERT(window.dock_node == node);
 
         let node_was_active = (node.last_frame_active + 1 == g.frame_count);
@@ -610,16 +610,16 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
 pub fn dock_node_update_has_central_node_child(g: &mut Context, node: &mut DockNode) {
     node.has_central_node_child = false;
     if node.child_nodes[0] != INVALID_ID {
-        dock_node_update_has_central_node_child(g, g.get_dock_node(node.child_nodes[0]).unwrap());
+        dock_node_update_has_central_node_child(g, g.dock_node_mut(node.child_nodes[0]).unwrap());
     }
     if node.child_nodes[1] != INVALID_ID {
-        dock_node_update_has_central_node_child(g, g.get_dock_node(node.child_nodes[1]).unwrap());
+        dock_node_update_has_central_node_child(g, g.dock_node_mut(node.child_nodes[1]).unwrap());
     }
     if node.is_root_node() {
         // ImGuiDockNode* mark_node = node.central_node;
         let mut mark_node_id = node.central_node_id;
         while mark_node_id != INVALID_ID {
-            let mut mark_node = g.get_dock_node(mark_node_id).unwrap();
+            let mut mark_node = g.dock_node_mut(mark_node_id).unwrap();
             mark_node.has_central_node_child = true;
             // mark_node = mark_node.parent_node;
             mark_node_id = mark_node.parent_node_id;
@@ -637,9 +637,9 @@ pub fn dock_node_update_visible_flag(g: &mut Context, node: &mut DockNode) {
     };
     is_visible |= (node.windows.len() > 0);
     is_visible |= (node.child_nodes[0] != INVALID_ID
-        && g.get_dock_node(node.child_nodes[0]).unwrap().is_visible);
+        && g.dock_node_mut(node.child_nodes[0]).unwrap().is_visible);
     is_visible |= (node.child_nodes[1] != INVALID_ID
-        && g.get_dock_node(node.child_nodes[1]).unwrap().is_visible);
+        && g.dock_node_mut(node.child_nodes[1]).unwrap().is_visible);
     node.is_visible = is_visible;
 }
 
@@ -669,14 +669,14 @@ pub fn dock_node_update_for_root_node(g: &mut Context, node: &mut DockNode) {
     // When node has mixed windows, prioritize the class with the most constraint (docking_allow_unclassed = false) as the reference to copy.
     // FIXME-DOCK: We don't recurse properly, this code could be reworked to work from dock_node_updateScanRec.
     // if ImGuiDockNode* first_node_with_windows = info.first_node_with_windows
-    let first_node_with_windows = g.get_dock_node(info.first_node_with_windows);
+    let first_node_with_windows = g.dock_node_mut(info.first_node_with_windows);
     if first_node_with_windows.is_some() {
         let first_node: &mut DockNode = first_node_with_windows.some();
-        let win0 = g.get_window(first_node.windows[0]);
+        let win0 = g.window_mut(first_node.windows[0]);
         node.window_class = win0.window_class.clone();
         // for (int n = 1; n < first_node_with_windows.windows.len(); n += 1)
         for win_id in first_node.windows.iter() {
-            let win = g.get_window(*win_id);
+            let win = g.window_mut(*win_id);
             if win.window_class.docking_allow_unclassed == false {
                 node.window_class = win.window_class.clone();
                 break;
@@ -687,7 +687,7 @@ pub fn dock_node_update_for_root_node(g: &mut Context, node: &mut DockNode) {
     // ImGuiDockNode* mark_node = node.central_node_id;
     let mut mark_node_id = node.central_node_id;
     while mark_node_id {
-        let mark_node = g.get_dock_node(mark_node_id).unwrap();
+        let mark_node = g.dock_node_mut(mark_node_id).unwrap();
         mark_node.has_central_node_child = true;
         mark_node_id = mark_node.parent_node_id;
     }
@@ -728,7 +728,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     if want_to_hide_host_window {
         if node.windows.len() == 1 {
             // Floating window pos/size is authoritative
-            let single_window = g.get_window(node.windows[0]);
+            let single_window = g.window_mut(node.windows[0]);
             node.pos = single_window.pos.clone();
             node.size = single_window.size_full.clone();
             node.authority_for_pos = DataAuthority::Window;
@@ -758,7 +758,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         node.last_frame_active = g.frame_count;
 
         if nodewant_mouse_move && node.windows.len() == 1 {
-            window::dock_node_start_mouse_moving_window(g, node, g.get_window(node.windows[0]));
+            window::dock_node_start_mouse_moving_window(g, node, g.window_mut(node.windows[0]));
         }
         return;
     }
@@ -787,7 +787,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             ref_window = window::dock_node_find_window_by_id(g, node, node.selected_tab_id);
         }
         if ref_window.is_none() {
-            ref_window = Some(g.get_window(node.windows[0]));
+            ref_window = Some(g.window_mut(node.windows[0]));
         }
         if ref_window.unwrap().auto_fit_frames_x > 0 || ref_window.unwrap().auto_fit_frames_y > 0 {
             node.State = DockNodeState::HostWindowHiddenBecauseWindowsAreResizing;
@@ -805,7 +805,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     for window_n in 0..node.windows.len() {
         // FIXME-DOCK: Setting dock_is_active here means that for single active window in a leaf node, dock_is_active will be cleared until the next Begin() call.
         // ImGuiWindow* window = node.windows[window_n];
-        let window = g.get_window(node.windows[window_n]);
+        let window = g.window_mut(node.windows[window_n]);
         node.has_close_button = window.has_close_button;
         window.dock_is_active = (node.windows.len() > 1);
     }
@@ -820,12 +820,12 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     if node.is_dock_space() {
         // [Explicit root dockspace node]
         // IM_ASSERT(node.host_window);
-        host_window = Some(g.get_window(node.host_window_id));
+        host_window = Some(g.window_mut(node.host_window_id));
     } else {
         // [Automatic root or child nodes]
         if node.is_root_node() && node.is_visible {
             let mut ref_window = if node.windows.len() > 0 {
-                Some(g.get_window(node.windows[0]))
+                Some(g.window_mut(node.windows[0]))
             } else {
                 None
             };
@@ -881,7 +881,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             pop_style_var(g, 0);
             beginned_into_host_window = true;
 
-            host_window = Some(g.get_window(g.current_window_id));
+            host_window = Some(g.window_mut(g.current_window_id));
             window::dock_node_setup_host_window(g, node, host_window.unwrap());
             host_window.dc.cursor_pos = host_window.pos;
             node.pos = host_window.pos;
@@ -901,8 +901,8 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             node.authority_for_size = DataAuthority::Auto;
             node.authority_for_viewport = DataAuthority::Auto;
         } else if node.parent_node_id != INVALID_ID {
-            let parent_node = g.get_dock_node(node.parent_node_id);
-            host_window = Some(g.get_window(parent_node.unwrap().host_window_id));
+            let parent_node = g.dock_node_mut(node.parent_node_id);
+            host_window = Some(g.window_mut(parent_node.unwrap().host_window_id));
             node.host_window_id = host_window.unwrap().id;
             //host_window = node.parent_node.host_window;
             node.authority_for_pos = DataAuthority::Auto;
@@ -910,7 +910,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             node.authority_for_viewport = DataAuthority::Auto;
         }
         if nodewant_mouse_move && node.host_window_id != INVALID_ID {
-            let win = g.get_window(node.host_window_id);
+            let win = g.window_mut(node.host_window_id);
             window::dock_node_start_mouse_moving_window(g, node, win);
         }
     }
@@ -923,15 +923,15 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         //     node.last_focused_node_id = g.nav_window.root_window.dock_node.id;
         // }
         if g.nav_window_id != INVALID_ID {
-            let nav_win = g.get_window(g.nav_window_id);
+            let nav_win = g.window_mut(g.nav_window_id);
             if nav_win.root_window != INVALID_ID {
-                let nav_win_root_win = g.get_window(nav_win.root_window_id);
+                let nav_win_root_win = g.window_mut(nav_win.root_window_id);
                 if nav_win_root_win.dock_node_id != INVALID_ID
                     && nav_win_root_win.parent_window_id != INVALID_ID
                 {
-                    let nav_win_root_win_dock_node = g.get_dock_node(nav_win_root_win.dock_node_id);
+                    let nav_win_root_win_dock_node = g.dock_node_mut(nav_win_root_win.dock_node_id);
                     let nav_win_root_win_parent_win =
-                        g.get_window(nav_win_root_win.parent_window_id);
+                        g.window_mut(nav_win_root_win.parent_window_id);
                     node.last_focused_node_id = nav_win_root_win_dock_node.id;
                 }
             }
@@ -940,7 +940,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
 
     // Register a hit-test hole in the window unless we are currently dragging a window that is compatible with our dockspace
     // ImGuiDockNode* central_node = node.central_node_id;
-    let central_node = g.get_dock_node(node.central_node_id);
+    let central_node = g.dock_node_mut(node.central_node_id);
     let central_node_hole = node.is_root_node()
         && host_window.is_some()
         && node_flags.contains(&DockNodeFlags::PassthruCentralNode)
@@ -993,7 +993,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             if host_window.unwrap().parent_window_id != INVALID_ID {
                 set_window_hit_test_hole(
                     g,
-                    g.get_window(host_window.unwrap().parent_window_id),
+                    g.window_mut(host_window.unwrap().parent_window_id),
                     &hole_rect.min,
                     &(&hole_rect.max - &hole_rect.min),
                 );
@@ -1079,7 +1079,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     if host_window.is_some() && node.is_visible {
         if node.is_root_node()
             && (g.moving_window_id == INVALID_ID
-                || g.get_window(g.moving_window_id).root_window_dock_tree_id
+                || g.window_mut(g.moving_window_id).root_window_dock_tree_id
                     != host_window.unwrap().id)
         {
             begin_dockable_drag_drop_target(g, host_window.unwrap());
@@ -1123,7 +1123,7 @@ pub fn dock_node_is_drop_allowed_one(
     host_window: &mut Window,
 ) -> bool {
     if host_window.dock_node_as_host_id != INVALID_ID
-        && g.get_dock_node(host_window.dock_node_as_host_id)
+        && g.dock_node_mut(host_window.dock_node_as_host_id)
             .is_dock_space()
         && payload.begin_order_within_context < host_window.begin_order_within_context
     {
@@ -1131,7 +1131,7 @@ pub fn dock_node_is_drop_allowed_one(
     }
 
     let host_class = if host_window.dock_node_as_host_id != INVALID_ID {
-        g.get_dock_node(host_window.dock_node_as_host_id)
+        g.dock_node_mut(host_window.dock_node_as_host_id)
             .unwrap()
             .window_class
             .borrow()
@@ -1164,7 +1164,7 @@ pub fn dock_node_is_drop_allowed_one(
     // for (int i = g.open_popup_stack.size - 1; i >= 0; i--)
     for i in g.open_popup_stack.len() - 1..0 {
         // if (ImGuiWindow * popup_window = g.open_popup_stack[i].Window)
-        let popup_window = g.get_window(g.open_popup_stack[i].window_id);
+        let popup_window = g.window_mut(g.open_popup_stack[i].window_id);
         {
             if is_window_within_begin_stack_of(g, payload, popup_window) {
                 // Payload is created from within a popup begin stack.
@@ -1182,7 +1182,7 @@ pub fn dock_node_is_drop_allowed(
     host_window: &mut window::Window,
     root_payload: &mut window::Window,
 ) -> bool {
-    let root_payload_dock_node = g.get_dock_node(root_payload.dock_node_as_host_id);
+    let root_payload_dock_node = g.dock_node_mut(root_payload.dock_node_as_host_id);
     if root_payload_dock_node.is_some() && root_payload_dock_node.unwrap().is_split_node() {
         // FIXME-DOCK: Missing filtering
         return true;
@@ -1197,7 +1197,7 @@ pub fn dock_node_is_drop_allowed(
     for payload_n in 0..payload_count {
         // ImGuiWindow* payload = root_payload.dock_node_as_host_id? root_payload.dock_node_as_host_id.windows[payload_n] : root_payload;
         let payload = if root_payload_dock_node.is_some() {
-            g.get_window(root_payload_dock_node.unwrap().windows[payload_n])
+            g.window_mut(root_payload_dock_node.unwrap().windows[payload_n])
         } else {
             root_payload
         };
@@ -1220,8 +1220,8 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
 
     // ImGuiDockNode* child_0 = node.child_nodes[0];
     // ImGuiDockNode* child_1 = node.child_nodes[1];
-    let child_0 = g.get_dock_node(node.child_nodes[0]);
-    let child_1 = g.get_dock_node(node.child_nodes[1]);
+    let child_0 = g.dock_node_mut(node.child_nodes[0]);
+    let child_1 = g.dock_node_mut(node.child_nodes[1]);
     if child_0.unwrap().is_visible && child_1.unwrap().is_visible {
         // Bounding box of the splitter cover the space between both nodes (w = Spacing, h = size[xy^1] for when splitting horizontally)
         // const ImGuiAxis axis = node.split_axis;
@@ -1245,7 +1245,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
             || (&merged_flags.contains(&no_resize_axis_flag))
         {
             // ImGuiWindow* window = g.current_window;
-            let window = g.get_current_window();
+            let window = g.current_window_mut();
             window.draw_list.add_rect_filled(
                 bb.min,
                 bb.max,
@@ -1350,9 +1350,9 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
                                     // Mark other node so its size will be preserved during the upcoming call to dock_node_tree_update_pos_size().
                                     // ImGuiDockNode* node_to_preserve = touching_node.parent_node.child_nodes[side_n];
                                     let parent_node =
-                                        g.get_dock_node(touching_node.parent_node_id).unwrap();
+                                        g.dock_node_mut(touching_node.parent_node_id).unwrap();
                                     let node_to_preserve =
-                                        g.get_dock_node(parent_node.child_nodes[side_n]).unwrap();
+                                        g.dock_node_mut(parent_node.child_nodes[side_n]).unwrap();
                                     node_to_preserve.want_lock_size_once = true;
                                     //draw_list->add_rect(touching_node->pos, touching_node->rect().max, IM_COL32(255, 0, 0, 255));
                                     //draw_list->add_rect_filled(node_to_preserve->pos, node_to_preserve->rect().max, IM_COL32(0, 255, 0, 100));

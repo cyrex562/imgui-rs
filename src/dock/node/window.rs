@@ -32,7 +32,7 @@ pub fn dock_node_add_window(
     if window.dock_node_id != INVALID_ID {
         // Can overwrite an existing window->dock_node (e.g. pointing to a disabled DockSpace node)
         // IM_ASSERT(window.dock_node.ID != node.ID);
-        let dock_node_a = g.get_dock_node(window.dock_node_id);
+        let dock_node_a = g.dock_node_mut(window.dock_node_id);
         dock_node_remove_window(g, dock_node_a.unwrap(), window, 0);
     }
     // IM_ASSERT(window.dock_node == None || window.DockNodeAsHost == None);
@@ -43,11 +43,11 @@ pub fn dock_node_add_window(
     // We will call dock_node_hide_window_during_host_window_creation() on ourselves in Begin()
     if node.host_window_id == INVALID_ID
         && node.windows.len() == 1
-        && g.get_window(node.windows[0]).unwrap().was_active == false
+        && g.window_mut(node.windows[0]).unwrap().was_active == false
     {
         dock_node_hide_window_during_host_window_creation(
             g,
-            g.get_window(node.windows[0]).unwrap(),
+            g.window_mut(node.windows[0]).unwrap(),
         );
     }
 
@@ -82,7 +82,7 @@ pub fn dock_node_add_window(
             // Add existing windows
             // for (int n = 0; n < node.windows.len() - 1; n += 1){
             for win_id in node.windows.iter() {
-                let win_a = g.get_window(*win_id);
+                let win_a = g.window_mut(*win_id);
                 tab_bar_add_tab(g, &mut node.tab_bar, TabItemFlags::None, win_a);
             }
         }
@@ -95,7 +95,7 @@ pub fn dock_node_add_window(
     if node.host_window_id != INVALID_ID {
         let mut flags = window.flags.clone();
         flags.insert(WindowFlags::ChildWIndow);
-        let mut parent_win = g.get_window(node.host_window_id);
+        let mut parent_win = g.window_mut(node.host_window_id);
         update_window_parent_and_root_links(g, window, &mut flags, Some(parent_win));
     }
 }
@@ -120,7 +120,7 @@ pub fn dock_node_remove_window(
     window.dock_id = save_dock_id;
     window.flags.remove(&WindowFlags::ChildWindow); // &= ~WindowFlags::ChildWindow;
     if window.parent_window_id != INVALID_ID {
-        let mut parent_win = g.get_window(window.parent_window_id).unwrap();
+        let mut parent_win = g.window_mut(window.parent_window_id).unwrap();
         // window.parent_window.DC.ChildWindows.find_erase(window);
         parent_win.dc.child_windows.find_erase(window);
     }
@@ -167,15 +167,15 @@ pub fn dock_node_remove_window(
 
     if node.windows.len() == 1 && !node.is_central_node() && node.host_window_id != INVALID_ID {
         // ImGuiWindow* remaining_window = node.windows[0];
-        let remaining_window = g.get_window(node.windows[0]);
+        let remaining_window = g.window_mut(node.windows[0]);
         if node.host_window_id.viewport_owned && node.is_root_node() {
             // Transfer viewport back to the remaining loose window
             // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Node %08X transfer viewport %08X=>%08X for window '%s'\n", node.id, node.host_window_id.viewport.id, remaining_window.id, remaining_window.Name);
             // IM_ASSERT(node.host_window.viewport.Window == node.host_window);
             // node.host_window_id.viewport.Window = remaining_window;
             // node.host_window_id.viewport.id = remaining_window.id;
-            let host_win = g.get_window(node.host_window_id);
-            let vp_a = g.get_viewport(host_win.viewport_id).unwrap();
+            let host_win = g.window_mut(node.host_window_id);
+            let vp_a = g.viewport_mut(host_win.viewport_id).unwrap();
             vp_a.window_id = remaining_window.id;
             vp_a.id = remaining_window.id;
         }
@@ -207,9 +207,9 @@ pub fn dock_node_move_windows(g: &mut Context, dst_node: &mut DockNode, src_node
     for win_id in src_node.windows.iter() {
         // dock_node's tab_bar may have non-window Tabs manually appended by user
         let win = if src_tab_bar.is_some() {
-            g.get_window(src_tab_bar.unwrap().tab[n].window_id)
+            g.window_mut(src_tab_bar.unwrap().tab[n].window_id)
         } else {
-            g.get_window(src_node.windows[n])
+            g.window_mut(src_node.windows[n])
         };
         // if (ImGuiWindow* window = src_tab_bar ? src_tab_bar.tabs[n].Window : src_node.windows[n])
         // {
@@ -235,7 +235,7 @@ pub fn dock_node_move_windows(g: &mut Context, dst_node: &mut DockNode, src_node
 // static void dock_node_hide_host_window(ImGuiDockNode* node)
 pub fn dock_node_hide_host_window(g: &mut Context, node: &mut DockNode) {
     if node.host_window_id != INVALID_ID {
-        let host_win = g.get_window(node.host_window_id);
+        let host_win = g.window_mut(node.host_window_id);
 
         if host_win.dock_node_as_host_id == node.id {
             // node.host_window_id.dock_node_as_host = None;
@@ -247,7 +247,7 @@ pub fn dock_node_hide_host_window(g: &mut Context, node: &mut DockNode) {
     if node.windows.len() == 1 {
         node.visible_window_id = node.windows[0];
         // node.windows[0].dock_is_active = false;
-        g.get_window(node.windows[0]).dock_is_active = false;
+        g.window_mut(node.windows[0]).dock_is_active = false;
     }
 
     if node.tab_bar.is_some() {
@@ -259,9 +259,9 @@ pub fn dock_node_hide_host_window(g: &mut Context, node: &mut DockNode) {
 pub fn dock_node_apply_pos_size_to_windows(g: &mut Context, node: &mut DockNode) {
     // for (int n = 0; n < node.windows.len(); n += 1)
     for win_id in node.windows.iter() {
-        let node_win = g.get_window(*win_id);
-        set_window_pos(g, node_win, &node.pos, Cond::Always); // We don't assign directly to pos because it can break the calculation of SizeContents on next frame
-        set_window_size(g, node_win, &node.size, Cond::Always);
+        let node_win = g.window_mut(*win_id);
+        set_window_pos(g, node_win, &node.pos, Condition::Always); // We don't assign directly to pos because it can break the calculation of SizeContents on next frame
+        set_window_size(g, node_win, &node.size, Condition::Always);
     }
 }
 
@@ -274,7 +274,7 @@ pub fn dock_node_find_window_by_id(
     // IM_ASSERT(id != 0);
     // for (int n = 0; n < node.windows.len(); n += 1){
     for win_id in node.windows.iter() {
-        let win = g.get_window(*win_id);
+        let win = g.window_mut(*win_id);
         // if (node.windows[n].id == id)
         if win.id == id {
             return Some(win);
@@ -306,9 +306,9 @@ pub fn dock_node_setup_host_window(g: &mut Context, node: &mut DockNode, host_wi
     //  - N+1: DockSpace(id)                // requalify node as dockspace, moving host window
     if node.host_window_id != INVALID_ID
         && node.host_window_id != host_window.id
-        && g.get_window(node.host_window_id).dock_node_as_host_id == node.id
+        && g.window_mut(node.host_window_id).dock_node_as_host_id == node.id
     {
-        g.get_window(node.host_window_id).dock_node_as_host_id = INVALID_ID;
+        g.window_mut(node.host_window_id).dock_node_as_host_id = INVALID_ID;
     }
 
     host_window.dock_node_as_host_id = node.id;
@@ -328,14 +328,14 @@ pub fn dock_node_update_window_menu(
         set_next_window_pos(
             g,
             &Vector2D::new(node.pos.x, node.pos.y + get_frame_height(g)),
-            Cond::Always,
+            Condition::Always,
             Some(Vector2D::new(0.0, 0.0)),
         );
     } else {
         set_next_window_pos(
             g,
             &Vector2D::new(node.pos.x + node.size.x, node.pos.y + get_frame_height(g)),
-            Cond::Always,
+            Condition::Always,
             Some(Vector2D::new(1.0, 0.0)),
         );
     }

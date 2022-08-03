@@ -70,9 +70,9 @@ pub const POPUP_FLAGS_ANY_POPUP: HashSet<PopupFlags> = HashSet::from([
 pub enum PopupFlags
 {
     None                    = 0,
-    // ImGuiPopupFlags_MouseButtonLeft         = 0,        // For begin_popupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)
-    MouseButtonRight        = 1,        // For begin_popupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGuiMouseButton_Right)
-    MouseButtonMiddle       = 2,        // For begin_popupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)
+    // ImGuiPopupFlags_MouseButtonLeft         = 0,        // For begin_popupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as MouseButton::Left)
+    MouseButtonRight        = 1,        // For begin_popupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as MouseButton::Right)
+    MouseButtonMiddle       = 2,        // For begin_popupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as MouseButton::Middle)
     MouseButtonMask_        = 0x1F,
     // ImGuiPopupFlags_MouseButtonDefault_     = 1,
     NoOpenOverExistingPopup,   // For OpenPopup*(), begin_popupContext*(): don't open if there's already a popup at the same level of the popup stack
@@ -397,7 +397,7 @@ pub fn begin_popup_modal(g: &mut Context, name: &str, p_open: &mut bool, flags: 
     if ((g.next_window_data.flags & NextWindowDataFlags::HasPos) == 0)
     {
         const ImGuiViewport* viewport = window.was_active ? window.viewport : get_main_viewport(); // FIXME-VIEWPORT: What may be our reference viewport?
-        set_next_window_pos(viewport.get_center(), Cond::FirstUseEver, Vector2D::new(0.5, 0.5));
+        set_next_window_pos(viewport.get_center(), Condition::FirstUseEver, Vector2D::new(0.5, 0.5));
     }
 
     flags |= WindowFlags::Popup | WindowFlags::Modal | WindowFlags::NoCollapse | WindowFlags::NoDocking;
@@ -460,7 +460,7 @@ pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &Has
 //       return begin_popup(id);
 //   Which is essentially the same as:
 //       id = str_id ? GetID(str_id) : GetItemID();
-//       if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
+//       if (IsItemHovered() && IsMouseReleased(MouseButton::Right))
 //           OpenPopup(id);
 //       return begin_popup(id);
 //   The main difference being that this is tweaked to avoid computing the id twice.

@@ -27,7 +27,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     // ImGuiContext* g = GImGui;
     // ImGuiContext& g = *.g;
     // ImGuiWindow* window = GetCurrentWindow();
-    let window = g.get_current_window();
+    let window = g.current_window_mut();
     if !(g.io.config_flags.contains(&ConfigFlags::DockingEnable)) {
         return 0;
     }
@@ -106,7 +106,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     pop_style_var(g, 0);
 
     // ImGuiWindow* host_window = g.current_window;
-    let host_window = g.get_current_window();
+    let host_window = g.current_window_mut();
     dock_node_setup_host_window(g,node.unwrap(), host_window);
     host_windowchild_id = window.get_id(g, title.as_str());
     node.only_node_with_windows = None;

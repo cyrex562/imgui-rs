@@ -122,7 +122,7 @@ pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
 
     // It makes sense in the vast majority of cases to never interrupt a drag and drop.
     // When we refactor this function into ActivateItem() we may want to make this an option.
-    // moving_window is protected from most user inputs using SetActiveIdUsingNavAndKeys(), but
+    // moving_window is protected from most user inputs using set_active_id_using_nav_and_keys(), but
     // is also automatically dropped in the event g.active_id is stolen.
     if (g.drag_drop_active || g.moving_window != None)
     {

@@ -12,7 +12,7 @@ use crate::draw::{DrawCallback, im_draw_callback_nop};
 //   Backends made for <1.71. will typically ignore the vtx_offset fields.
 // - The clip_rect/texture_id/vtx_offset fields must be contiguous as we memcmp() them together (this is asserted for).
 #[derive(Default, Clone)]
-pub struct DrawCmd {
+pub struct DrawCommand {
     pub id: Id32,
     pub clip_rect: Vector4D,
     // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData->display_pos to get clipping rectangle in "viewport" coordinates
@@ -30,13 +30,13 @@ pub struct DrawCmd {
     pub user_callback_data: Vec<u8>,
 }
 
-impl Debug for DrawCmd {
+impl Debug for DrawCommand {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }
 
-impl DrawCmd {
+impl DrawCommand {
     // ImDrawCmd() { memset(this, 0, sizeof(*this)); } // Also ensure our padding fields are zeroed
     //
     pub fn new() -> Self {

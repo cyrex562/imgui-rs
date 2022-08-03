@@ -634,7 +634,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
                 g.active_id_click_offset = g.IO.MousePos - bb.Min;
 
             let mouse_button = g.ActiveIdMouseButton;
-            IM_ASSERT(mouse_button >= 0 && mouse_button < ImGuiMouseButton_COUNT);
+            IM_ASSERT(mouse_button >= 0 && mouse_button < MouseButton::COUNT);
             if (g.IO.MouseDown[mouse_button])
             {
                 held = true;
@@ -4062,7 +4062,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
 
         // Although we are active we don't prevent mouse from hovering other elements unless we are interacting right now with the widget.
         // down the line we should have a cleaner library-wide concept of Selected vs active.
-        g.ActiveIdAllowOverlap = !io.MouseDown[0];
+        g.active_id_allow_overlap = !io.MouseDown[0];
         g.WantTextInputNextFrame = 1;
 
         // Edit in progress
@@ -5267,7 +5267,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
             {
                 // FIXME: Hackily differentiating using the DragInt (active_id != 0 && !active_id_allow_overlap) vs. using the InputText or DropTarget.
                 // For the later we don't want to run the hue-wrap canceling code. If you are well versed in HSV picker please provide your input! (See #2050)
-                value_changed_fix_hue_wrap = (g.ActiveId != 0 && !g.ActiveIdAllowOverlap);
+                value_changed_fix_hue_wrap = (g.ActiveId != 0 && !g.active_id_allow_overlap);
                 value_changed = true;
             }
         if (flags & ImGuiColorEditFlags_DisplayHSV || (flags & ImGuiColorEditFlags_DisplayMask_) == 0)
@@ -5837,8 +5837,8 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         window.DC.TreeJumpToParentOnPopMask |= (1 << window.DC.TreeDepth);
 
     bool item_add = ItemAdd(interact_bb, id);
-    g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDisplayRect;
-    g.LastItemData.DisplayRect = frame_bb;
+    g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Hasdisplay_rect;
+    g.LastItemData.display_rect = frame_bb;
 
     if (!item_add)
     {
@@ -8148,8 +8148,8 @@ bool    ImGui::tab_item_ex(ImGuiTabBar* tab_bar, const char* label, bool* p_open
                 g.MovingWindow = docked_window;
                 SetActiveID(g.MovingWindow->MoveId, g.MovingWindow);
                 g.active_id_click_offset -= g.MovingWindow->Pos - bb.Min;
-                g.ActiveIdNoClearOnFocusLoss = true;
-                SetActiveIdUsingNavAndKeys();
+                g.active_id_no_clear_on_focus_loss = true;
+                set_active_id_using_nav_and_keys();
             }
         }
     }

@@ -52,7 +52,7 @@ pub struct LastItemData {
     pub rect: Rect,
     // ImRect                  nav_rect;            // Navigation scoring rectangle (not displayed)
     pub nav_rect: Rect,
-    // ImRect                  display_rect;        // Display rectangle (only if ImGuiItemStatusFlags_HasDisplayRect is set)
+    // ImRect                  display_rect;        // Display rectangle (only if ImGuiItemStatusFlags_Hasdisplay_rect is set)
     pub display_rect: Rect,
     // ImGuiLastItemData()     { memset(this, 0, sizeof(*this)); }
 }
@@ -69,7 +69,7 @@ pub enum ItemStatusFlags {
     None = 0,
     HoveredRect,
     // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!, this is only one part of the most-common IsItemHovered test)
-    HasDisplayRect,
+    Hasdisplay_rect,
     // g.last_item_data.display_rect is valid
     Edited,
     // value exposed by item was edited in the current frame (should match the bool return value of most widgets)
@@ -112,7 +112,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
         return Ok(false);
     }
 
-    let window = g.get_current_window()?;
+    let window = g.current_window_mut()?;
     if g.hovered_window_id != g.current_window_id {
         return Ok(false);
     }
@@ -168,7 +168,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'st
 }
 
 /// This is also inlined in ItemAdd()
-/// Note: if ImGuiItemStatusFlags_HasDisplayRect is set, user needs to set window->dc.LastItemDisplayRect!
+/// Note: if ImGuiItemStatusFlags_Hasdisplay_rect is set, user needs to set window->dc.LastItemdisplay_rect!
 /// void ImGui::SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags item_flags, const ImRect& item_rect)
 pub fn set_last_item_data(g: &mut Context, item_id: Id32, in_flags: &HashSet<ItemFlags>, item_flags: &HashSet<ItemStatusFlags>, item_rect: &Rect)
 {
@@ -232,7 +232,7 @@ pub fn is_item_focused(g: &mut Context) -> bool
     // Special handling for the dummy item after Begin() which represent the title bar or tab.
     // When the window is collapsed (skip_items==true) that last item will never be overwritten so we need to detect the case.
     // ImGuiWindow* window = g.current_window;
-    let window = g.get_current_window().unwrap();
+    let window = g.current_window_mut().unwrap();
     if g.last_item_data.id == window.id && window.write_accessed {
         return false;
     }
@@ -292,7 +292,7 @@ pub fn is_item_visible(g: &mut Context) -> bool
 {
     // ImGuiContext& g = *GImGui;
     // return g.current_window->ClipRect.Overlaps(g.last_item_data.Rect);
-    let curr_win = g.get_current_window().unwrap();
+    let curr_win = g.current_window_mut().unwrap();
     curr_win.clip_rect.overlaps_rect(&g.last_item_data.rect)
 }
 
@@ -316,7 +316,7 @@ pub fn sest_item_allow_overlap(g: &mut Context)
         g.hovered_id_allow_overlap = true;
     }
     if (g.active_id == id) {
-        g.ActiveIdAllowOverlap = true;
+        g.active_id_allow_overlap = true;
     }
 }
 
@@ -366,7 +366,7 @@ pub fn get_item_rect_size(g: &mut Context) -> Vector2D
 pub fn is_item_hovered(g: &mut Context, flags: &HashSet<HoveredFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    let window = g.get_window(g.current_window_id).unwrap();
+    let window = g.window_mut(g.current_window_id).unwrap();
     if g.nav_disable_mouse_hover && !g.nav_disable_highlight && !(flags.contains(&HoveredFlags::NoNavOverride))
     {
         if (g.last_item_data.in_flags.contains(&ItemFlags::Disabled)) && !(flags.contains(&HoveredFlags::AllowWhenDisabled) ){
@@ -526,7 +526,7 @@ pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: Option<&Re
     ImGuiWindow* window = g.current_window;
 
     // Set item data
-    // (display_rect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
+    // (display_rect is left untouched, made valid when ImGuiItemStatusFlags_Hasdisplay_rect is set)
     g.last_item_data.id = id;
     g.last_item_data.Rect = bb;
     g.last_item_data.NavRect = if nav_bb_arg { *nav_bb_arg }else{ bb};

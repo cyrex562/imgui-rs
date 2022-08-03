@@ -11,6 +11,7 @@ use crate::dock::context::DockContext;
 use crate::dock::node::DockNode;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::cmd::DrawCmd;
+use crate::draw::command::DrawCommand;
 use crate::draw::list::DrawList;
 use crate::draw_channel::DrawChannel;
 use crate::list_clipper::ListClipperData;
@@ -21,7 +22,7 @@ use crate::draw::list_shared_data::DrawListSharedData;
 use crate::font::font_atlas::FontAtlas;
 use crate::font::Font;
 use crate::group::GroupData;
-use crate::input::{DimgKey, InputSource, ModFlags, MouseCursor, NavLayer};
+use crate::input::{DimgKey, InputSource, ModFlags, MouseButton, MouseCursor, NavLayer};
 use crate::input_event::InputEvent;
 use crate::io::{Io, PlatformIo};
 use crate::item::{pop_item_flag, ItemFlags, LastItemData, NextItemData};
@@ -178,7 +179,7 @@ pub struct Context {
     // ImGuiInputSource        active_id_source;                     // Activating with mouse or nav (gamepad/keyboard)
     pub active_id_source: InputSource,
     // int                     active_id_mouse_button;
-    pub active_id_mouse_button: i32,
+    pub active_id_mouse_button: MouseButton,
     // ImGuiID                 active_id_previous_frame;
     pub active_id_previous_frame: Id32,
     //bool                    active_id_previous_frame_is_alive;
@@ -365,7 +366,7 @@ pub struct Context {
     // int                     drag_drop_source_frame_count;
     pub drag_drop_source_frame_count: usize,
     // int                     drag_drop_mouse_button;
-    pub drag_drop_mouse_button: i32,
+    pub drag_drop_mouse_button: MouseButton,
     // ImGuiPayload            drag_drop_payload;
     pub drag_drop_payload: Payload,
     // ImRect                  drag_drop_target_rect;                 // Store rectangle of current target candidate (we favor small targets when overlapping)
@@ -547,7 +548,7 @@ pub struct Context {
     // ImVector<char>          temp_buffer;                         // Temporary text buffer
     pub temp_buffer: Vec<u8>,
     pub dock_nodes: HashMap<Id32, DockNode>,
-    pub draw_commands: Vec<DrawCmd>
+    pub draw_commands: Vec<DrawCommand>,
 }
 
 impl Context {
@@ -613,7 +614,7 @@ impl Context {
             // active_id_click_offset: Vector2D::new( - 1, -1),
             active_id_window_id: u32::MAX,
             active_id_source: InputSource::None,
-            active_id_mouse_button: -1,
+            active_id_mouse_button: MouseButton::None,
             active_id_previous_frame: 0,
             active_id_previous_frame_is_alive: false,
             active_id_previous_frame_has_been_edited_before: false,
@@ -816,22 +817,25 @@ impl Context {
             temp_buffer: vec![],
             font: Default::default(),
             dock_nodes: Default::default(),
-            draw_commands: vec![]
+            draw_commands: vec![],
         }
     }
 
     /// Panics if a window in the window hash set for the global context does not contain a window matching the id set in the current_window_id field
-    pub fn get_current_window(&mut self) -> &mut Window {
+    pub fn current_window_mut(&mut self) -> &mut Window {
         self.windows.get_mut(&self.current_window_id).expect(
             format!(
                 "failed to get current window (id={})",
                 self.current_window_id
-            )
-            .as_str(),
+            ).as_str(),
         )
     }
 
-    pub fn get_viewport(&mut self, vp_id: Id32) -> Option<&mut Viewport> {
+    pub fn hovered_window_under_moving_window_mut(&mut self) -> &mut Window {
+        self.window_mut(self.hovered_window_under_moving_window_id)
+    }
+
+    pub fn viewport_mut(&mut self, vp_id: Id32) -> Option<&mut Viewport> {
         for vp in self.viewports.iter_mut() {
             if vp.id == vp_id {
                 return Some(vp);
@@ -841,29 +845,25 @@ impl Context {
         return None;
     }
 
-    pub fn get_draw_command(&mut self, draw_cmd_id: Id32) -> Option<&mut DrawCmd> {
+    pub fn draw_command_mut(&mut self, draw_cmd_id: Id32) -> Option<&mut DrawCommand> {
         for dc in self.draw_commands.iter_mut() {
             if dc.id == draw_cmd_id {
-                return Some(dc)
+                return Some(dc);
             }
         }
         return None;
     }
 
-    pub fn get_window(&mut self, win_id: Id32) -> &mut Window {
-        self.windows
-            .get_mut(&win_id)
-            .expect(format!("window not found in window stack for id={}", win_id).as_str())
+    pub fn window_mut(&mut self, win_id: Id32) -> &mut Window {
+        self.windows.get_mut(&win_id).expect(format!("window not found in window stack for id={}", win_id).as_str())
     }
 
-    pub fn get_dock_node(&mut self, dock_node_id: Id32) -> Option<&mut DockNode> {
+    pub fn dock_node_mut(&mut self, dock_node_id: Id32) -> Option<&mut DockNode> {
         self.dock_nodes.get_mut(&dock_node_id)
     }
 
-    pub fn get_draw_list(&mut self, draw_list_id: Id32) -> &mut DrawList {
-        self.draw_lists
-            .get_mut(&draw_list_id)
-            .expect(format!("draw list not found in collection for id={}", draw_list_id).as_str())
+    pub fn draw_list_mut(&mut self, draw_list_id: Id32) -> &mut DrawList {
+        self.draw_lists.get_mut(&draw_list_id).expect(format!("draw list not found in collection for id={}", draw_list_id).as_str())
     }
 }
 
@@ -905,29 +905,23 @@ pub struct ContextHook {
 
 impl Debug for ContextHook {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ContextHook")
-            .field("hook_id", &self.hook_id)
-            .field("hook_type", &self.hook_type)
-            .field("owner", &self.owner)
-            .field(
-                "callback",
-                &format!("is_some: {}", &self.callback.is_some()),
-            )
-            .field(
-                "user_data",
-                &format!(
-                    "{:x} {:x} {:x} {:x} {:x} {:x} {:x} {:x}",
-                    &self.user_data[0],
-                    &self.user_data[1],
-                    &self.user_data[2],
-                    &self.user_data[3],
-                    &self.user_data[4],
-                    &self.user_data[5],
-                    &self.user_data[6],
-                    &self.user_data[7]
-                ),
-            )
-            .finish()
+        f.debug_struct("ContextHook").field("hook_id", &self.hook_id).field("hook_type", &self.hook_type).field("owner", &self.owner).field(
+            "callback",
+            &format!("is_some: {}", &self.callback.is_some()),
+        ).field(
+            "user_data",
+            &format!(
+                "{:x} {:x} {:x} {:x} {:x} {:x} {:x} {:x}",
+                &self.user_data[0],
+                &self.user_data[1],
+                &self.user_data[2],
+                &self.user_data[3],
+                &self.user_data[4],
+                &self.user_data[5],
+                &self.user_data[6],
+                &self.user_data[7]
+            ),
+        ).finish()
     }
 }
 
@@ -1022,7 +1016,7 @@ pub fn set_current_window(g: &mut Context, window_handle: WindowHandle) {
     // ImGuiContext& g = *GImGui;
     g.current_window_id = window_handle;
     // if window
-    let current_window = g.get_window(window_handle);
+    let current_window = g.window_mut(window_handle);
     g.current_table_id = if current_window.dc.current_table_idx != -1 {
         g.tables.get_by_index(window_handle.dc.current_table_idx)
     } else {

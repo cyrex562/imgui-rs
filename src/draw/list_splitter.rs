@@ -1,5 +1,5 @@
 use crate::draw::channel::DrawChannel;
-use crate::draw::command::DrawCmd;
+use crate::draw::command::DrawCommand;
 use crate::draw_channel::DrawChannel;
 use crate::draw::list::DrawList;
 
@@ -60,7 +60,7 @@ impl DrawListSplitter {
                 // IM_PLACEMENT_NEW(&channels[i]) ImDrawChannel();
                 self.channels[i] = DrawChannel::new();
             } else {
-                self.channels[i].cmd_buffer.resize(0, DrawCmd::default());
+                self.channels[i].cmd_buffer.resize(0, DrawCommand::default());
                 self.channels[i].idx_buffer.resize(0, 0u32);
             }
         }

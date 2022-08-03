@@ -1932,7 +1932,7 @@ static void MiniMapUpdate()
 
     ImGui::end_child();
 
-    bool center_on_click = mini_map_is_hovered && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+    bool center_on_click = mini_map_is_hovered && ImGui::IsMouseDown(MouseButton::Left) &&
                            editor.ClickInteraction.Type == ImNodesClickInteractionType_None &&
                            !GImNodes.NodeIdxSubmissionOrder.empty();
     if (center_on_click)
@@ -1990,7 +1990,7 @@ ImNodesIO::MultipleSelectModifier::MultipleSelectModifier() : Modifier(None) {}
 
 ImNodesIO::ImNodesIO()
     : EmulateThreeButtonMouse(), LinkDetachWithModifierClick(),
-      AltMouseButton(ImGuiMouseButton_Middle), AutoPanningSpeed(1000.0)
+      AltMouseButton(MouseButton::Middle), AutoPanningSpeed(1000.0)
 {
 }
 

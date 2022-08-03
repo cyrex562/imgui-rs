@@ -28,7 +28,7 @@ pub fn dock_builder_dock_window(g: &mut Context, window_name: &str, node_id: Id3
     // if (ImGuiWindow* window = find_window_by_id(window_id))
     if window.is_some() {
         // Apply to created window
-        set_window_dock(g, window, node_id, Cond::Always);
+        set_window_dock(g, window, node_id, Condition::Always);
         window.dock_order = -1;
     } else {
         // Apply to settings
@@ -170,7 +170,7 @@ pub fn dock_builder_remove_node_child_nodes(g: &mut Context, root_id: Id32) {
     let mut nodes_to_remove: Vec<&mut DockNonde>;
     // for (int n = 0; n < dc.Nodes.data.size; n += 1)
     for node_id in dc.nodes.iter() {
-        let node_opt = g.get_dock_node(*node_id);
+        let node_opt = g.dock_node_mut(*node_id);
         // if (ImGuiDockNode * node = dc.Nodes.data[n].val_p)
         if node_opt.is_some() {
             let node = node_opt.unwrap();
@@ -272,7 +272,7 @@ pub fn dock_builder_remove_node_docked_windows(
     // for (int n = 0; n < g.windows.len(); n += 1)
     for (_, window) in g.windows.iter_mut() {
         // ImGuiWindow* window = g.windows[n];
-        let win_dock_node = g.get_dock_node(window.dock_node_id).unwrap();
+        let win_dock_node = g.dock_node_mut(window.dock_node_id).unwrap();
         let want_removal = (root_id == 0)
             || (window.dock_node_id != INVALID_ID
                 && dock_node_get_root_node(g, win_dock_node).id == root_id)
@@ -379,12 +379,12 @@ pub fn dock_builder_copy_node_rec(
     for child_n in 0..src_node.child_nodes.len() {
         let child_node_id = src_node.child_nodes[child_n];
         if child_node_id != INVALID_ID {
-            let child_node = g.get_dock_node(child_node_id).unwrap();
+            let child_node = g.dock_node_mut(child_node_id).unwrap();
             let x = dock_builder_copy_node_rec(g, child_node, 0, out_node_remap_pairs);
             // dst_node.child_nodes[child_node_id] = dock_builder_copy_node_rec(src_node.child_nodes[child_node_id], 0, out_node_remap_pairs);
             //[src_node.child_nodes.index].parent_node = dst_node;
             let child_node_id = dst_node.child_nodes[child_node_id];
-            g.get_dock_node(child_node_id).unwrap().parent_node_id = dst_node.id;
+            g.dock_node_mut(child_node_id).unwrap().parent_node_id = dst_node.id;
         }
     }
 
@@ -528,7 +528,7 @@ pub fn dock_builder_copy_dock_space(
             // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
             for window_n in 0..node.windows.len() {
                 // ImGuiWindow * window = node.windows[window_n];
-                let window = g.get_window(window_n);
+                let window = g.window_mut(window_n);
                 if src_windows.contains(&window.id) {
                     continue;
                 }
