@@ -1,13 +1,24 @@
 use std::collections::HashSet;
 use crate::condition::Condition;
+use crate::config::BackendFlags;
 use crate::context::{call_context_hooks, Context, ContextHookType};
+use crate::dock::context::dock_context_new_frame_update_undocking;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::list::DrawListFlags;
+use crate::gc::GcCompactTransientMiscBuffers;
+use crate::input::keyboard::update_keyboard_inputs;
+use crate::input::mouse::{update_mouse_inputs, update_mouse_moving_window_new_frame, update_mouse_wheel};
+use crate::input::{MouseCursor, update_input_events};
+use crate::input_event::InputEvent;
+use crate::nav::nav_update;
+use crate::popup::get_top_most_popup_modal;
 use crate::rect::Rect;
+use crate::settings::update_settings;
 use crate::types::INVALID_ID;
 use crate::vectors::vector_2d::Vector2D;
+use crate::viewport::update_viewports_new_frame;
 use crate::window::WindowFlags;
-use crate::window::lifecycle::add_window_to_sort_buffer;
+use crate::window::lifecycle::{add_window_to_sort_buffer, update_hovered_window_and_capture_flags};
 
 /// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
 /// Usage: static ImGuiOnceUponAFrame oaf; if (oaf) ImGui::Text("This will be called only once per frame");
@@ -20,10 +31,18 @@ pub struct ImGuiOnceUponAFrame
     // operator bool() const { int current_frame = ImGui::GetFrameCount(); if (ref_frame == current_frame) return false; ref_frame = current_frame; return true; }
 }
 
-impl ImGuiOnceUponAFrame {
-    pub fn new() -> Self {
+// impl ImGuiOnceUponAFrame {
+//     pub fn new() -> Self {
+//         Self {
+//             ref_frame: -1,
+//         }
+//     }
+// }
+
+impl Default for ImGuiOnceUponAFrame {
+    fn default() -> Self {
         Self {
-            ref_frame: -1,
+            ref_frame: i32::MAX,
         }
     }
 }
@@ -52,7 +71,7 @@ pub fn new_frame(g: &mut Context)
     g.config_flags_curr_frame = g.io.config_flags.clone();
 
     // Load settings on first frame, save settings when modified (after a delay)
-    update_settings();
+    update_settings(g);
 
     g.time += g.io.delta_time;
     g.within_frame_scope = true;
@@ -66,9 +85,9 @@ pub fn new_frame(g: &mut Context)
     g.frame_rate_sec_per_frame[g.frame_rate_sec_per_frame_idx] = g.io.delta_time;
     g.frame_rate_sec_per_frame_idx = (g.frame_rate_sec_per_frame_idx + 1) % (g.frame_rate_sec_per_frame.len());
     g.frame_rate_sec_per_frame_count = f32::min(g.frame_rate_sec_per_frame_count + 1, (g.frame_rate_sec_per_frame.len()));
-    g.io.frame_rate = if(g.frame_rate_sec_per_frame_accum > 0.0) { (1.0 / (g.frame_rate_sec_per_frame_accum / g.frame_rate_sec_per_frame_count)) } else {f32::f32::MAX};
+    g.io.frame_rate = if g.frame_rate_sec_per_frame_accum > 0.0 { (1.0 / (g.frame_rate_sec_per_frame_accum / g.frame_rate_sec_per_frame_count)) } else {f32::f32::MAX};
 
-    update_viewports_new_frame();
+    update_viewports_new_frame(g);
 
     // Setup current font and draw list shared data
     // FIXME-VIEWPORT: the concept of a single ClipRectFullscreen is not ideal!
@@ -92,7 +111,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     if g.style.anti_aliased_fill {
         g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedFill);
     }
-    if g.io.backend_flags.contains(BackendFlags::RendererHasVxtOffset) {
+    if g.io.backend_flags.contains(&BackendFlags::RendererHasVxtOffset) {
         g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AllowVtxOffset);
     }
 
@@ -115,13 +134,13 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     if !g.hovered_id_previous_frame {
         g.hovered_id_timer = 0.0;
     }
-    if (g.hovered_id_previous_frame == INVALID_ID || (g.hovered_id != INVALID_ID && g.active_id == g.hovered_id)) {
+    if g.hovered_id_previous_frame == INVALID_ID || (g.hovered_id != INVALID_ID && g.active_id == g.hovered_id) {
         g.hovered_id_not_active_timer = 0.0;
     }
     if g.hovered_id {
         g.hovered_id_timer += g.io.delta_time;
     }
-    if (g.hovered_id != INVALID_ID && g.active_id != g.hovered_id) {
+    if g.hovered_id != INVALID_ID && g.active_id != g.hovered_id {
         g.hovered_id_not_active_timer += g.io.delta_time;
     }
     g.hovered_id_previous_frame = g.hovered_id;
@@ -134,14 +153,14 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     // clear ActiveID if the item is not alive anymore.
     // In 1.87, the common most call to keep_alive_id() was moved from GetID() to ItemAdd().
     // As a result, custom widget using ButtonBehavior() _without_ ItemAdd() need to call keep_alive_id() themselves.
-    if (g.active_id != 0 && g.active_id_is_alive != g.active_id && g.active_id_previous_frame == g.active_id)
+    if g.active_id != 0 && g.active_id_is_alive != g.active_id && g.active_id_previous_frame == g.active_id
     {
         // IMGUI_DEBUG_LOG_ACTIVEID("NewFrame(): ClearActiveID() because it isn't marked alive anymore!\n");
         clear_active_id();
     }
 
     // Update active_id data (clear reference to active widget if the widget isn't alive anymore)
-    if (g.active_id) {
+    if g.active_id {
         g.active_id_timer += g.io.delta_time;
     }
     g.last_active_id_timer += g.io.delta_time;
@@ -152,10 +171,10 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.active_id_has_been_edited_this_frame = false;
     g.active_id_previous_frame_is_alive = false;
     g.active_id_is_just_activated = false;
-    if (g.temp_input_id != 0 && g.active_id != g.temp_input_id) {
+    if g.temp_input_id != 0 && g.active_id != g.temp_input_id {
         g.temp_input_id = INVALID_ID;
     }
-    if (g.active_id == 0)
+    if g.active_id == 0
     {
         g.active_id_using_nav_dir_mask = 0x00;
         g.active_id_using_nav_input_mask = 0x00;
@@ -175,11 +194,11 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     //    ClosePopupsExceptModals();
 
     // Process input queue (trickle as many events as possible)
-    g.input_events_trail.resize(0);
-    update_input_events(g.io.config_input_trickle_event_queue);
+    g.input_events_trail.resize(0, InputEvent::default());
+    update_input_events(g, g.io.config_input_trickle_event_queue);
 
     // Update keyboard input state
-    update_keyboard_inputs();
+    update_keyboard_inputs(g);
 
     //IM_ASSERT(g.io.key_ctrl == IsKeyDown(ImGuiKey_LeftCtrl) || IsKeyDown(ImGuiKey_RightCtrl));
     //IM_ASSERT(g.io.key_shift == IsKeyDown(ImGuiKey_LeftShift) || IsKeyDown(ImGuiKey_RightShift));
@@ -187,24 +206,24 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     //IM_ASSERT(g.io.key_super == IsKeyDown(ImGuiKey_LeftSuper) || IsKeyDown(ImGuiKey_RightSuper));
 
     // Update gamepad/keyboard navigation
-    nav_update();
+    nav_update(g);
 
     // Update mouse input state
-    update_mouse_inputs();
+    update_mouse_inputs(g);
 
     // Undocking
     // (needs to be before UpdateMouseMovingWindowNewFrame so the window is already offset and following the mouse on the detaching frame)
-    dock_context_new_frame_update_undocking(&g);
+    dock_context_new_frame_update_undocking(g);
 
     // Find hovered window
     // (needs to be before UpdateMouseMovingWindowNewFrame so we fill g.hovered_window_under_moving_window on the mouse release frame)
-    update_hovered_window_and_capture_flags();
+    update_hovered_window_and_capture_flags(g);
 
     // Handle user moving window with mouse (at the beginning of the frame to avoid input lag or sheering)
-    update_mouse_moving_window_new_frame();
+    update_mouse_moving_window_new_frame(g);
 
     // Background darkening/whitening
-    if (get_top_most_popup_modal() != None || (g.nav_windowing_target_id != None && g.nav_windowing_highlight_alpha > 0.0)) {
+    if get_top_most_popup_modal(g) != None || (g.nav_windowing_target_id != INVALID_ID && g.nav_windowing_highlight_alpha > 0.0) {
         g.dim_bg_ratio = f32::min(g.dim_bg_ratio + g.io.delta_time * 6.0, 1.0);
     }
     else {
@@ -212,19 +231,20 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     }
 
     g.mouse_cursor = MouseCursor::Arrow;
-    g.want_capture_keyboard_next_frame = g.want_text_input_next_frame = -1;
+    g.want_capture_keyboard_next_frame = -1;
+    g.want_text_input_next_frame = -1;
     g.want_capture_mouse_next_frame = g.want_capture_keyboard_next_frame;
 
     // Platform IME data: reset for the frame
-    g.platform_ime_data_prev = g.platform_ime_data;
+    g.platform_ime_data_prev = g.platform_ime_data.clone();
     g.platform_ime_data.WantVisible = false;
 
     // Mouse wheel scrolling, scale
-    update_mouse_wheel();
+    update_mouse_wheel(g);
 
     // Mark all windows as not visible and compact unused memory.
     // IM_ASSERT(g.WindowsFocusOrder.Size <= g.Windows.Size);
-    let memory_compact_start_time = if (g.gc_compact_all || g.io.config_memory_compact_timer < 0.0) { f32::MAX} else { g.time  - g.io.config_memory_compact_timer};
+    let memory_compact_start_time = if g.gc_compact_all || g.io.config_memory_compact_timer < 0.0 { f32::MAX} else { g.time  - g.io.config_memory_compact_timer};
     // for (int i = 0; i != g.Windows.Size; i += 1)
     for  i in 0 .. g.windows.len()
     {
@@ -236,30 +256,34 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         window.write_accessed = false;
 
         // Garbage collect transient buffers of recently unused windows
-        if (!window.was_active && !window.memory_compacted && window.last_time_active < memory_compact_start_time) {
+        if !window.was_active && !window.memory_compacted && window.last_time_active < memory_compact_start_time {
             gc_compact_transient_window_buffers(window);
         }
     }
 
     // Garbage collect transient buffers of recently unused tables
-    for (int i = 0; i < g.tables_last_time_active.size; i += 1){
-        if (g.tables_last_time_active[i] >= 0.0 && g.tables_last_time_active[i] < memory_compact_start_time) {
+    // for (int i = 0; i < g.tables_last_time_active.size; i += 1)
+    for i in 0 .. g.tables_last_time_active.len()
+    {
+        if g.tables_last_time_active[i] >= 0.0 && g.tables_last_time_active[i] < memory_compact_start_time {
             table_gc_compact_transient_buffers(g.tables.get_by_index(i));
         }
     }
-    for (int i = 0; i < g.tables_temp_data.size; i += 1){
-        if (g.tables_temp_data[i].last_time_active >= 0.0 && g.tables_temp_data[i].last_time_active < memory_compact_start_time) {
+    // for (int i = 0; i < g.tables_temp_data.size; i += 1)
+    for i in 0 .. g.tables_temp_data.len()
+    {
+        if g.tables_temp_data[i].last_time_active >= 0.0 && g.tables_temp_data[i].last_time_active < memory_compact_start_time {
             table_gc_compact_transient_buffers(&g.tables_temp_data[i]);
         }
     }
-    if (g.gc_compact_all) {
-        GcCompactTransientMiscBuffers();
+    if g.gc_compact_all {
+        GcCompactTransientMiscBuffers(g);
     }
     g.gc_compact_all = false;
 
     // Closing the focused window restore focus to the first active root window in descending z-order
-    if (g.nav_window_id && !g.nav_window_id .WasActive){
-    FocusTopMostWindowUnderOne(None, None);
+    if g.nav_window_id && !g.nav_window_id.WasActive {
+    focus_topmost_window_under_one(None, None);
 }
 
     // No window should be open at the beginning of the frame.

@@ -131,7 +131,7 @@ pub fn focus_window(g: &mut Context, window: &mut Window)
 }
 
 
-// void ImGui::FocusTopMostWindowUnderOne(ImGuiWindow* under_this_window, ImGuiWindow* ignore_window)
+// void ImGui::focus_topmost_window_under_one(ImGuiWindow* under_this_window, ImGuiWindow* ignore_window)
 pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_window, ignore_window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;

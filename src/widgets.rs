@@ -6785,7 +6785,7 @@ void ImGui::EndMainMenuBar()
     // FIXME: With this strategy we won't be able to restore a None focus.
     // ImGuiContext& g = *GImGui;
     if (g.current_window_id == g.NavWindow && g.NavLayer == ImGuiNavLayer_Main && !g.NavAnyRequest)
-        FocusTopMostWindowUnderOne(g.NavWindow, None);
+        focus_topmost_window_under_one(g.NavWindow, None);
 
     End();
 }

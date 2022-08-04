@@ -295,7 +295,7 @@ pub fn close_popup_to_level(g: &mut Context, remaining: i32, restore_focus_to_wi
         if (focus_window && !focus_window.was_active && popup_window)
         {
             // Fallback
-            FocusTopMostWindowUnderOne(popup_window, None);
+            focus_topmost_window_under_one(popup_window, None);
         }
         else
         {
