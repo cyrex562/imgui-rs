@@ -291,7 +291,7 @@ pub fn find_window_display_index(g: &mut Context, window: &mut Window) -> usize 
 // ImGuiWindow* ImGui::FindWindowByName(const char* name)
 pub fn find_or_create_window_by_name(g: &mut Context, name: &str) -> (&mut Window, bool)
 {
-    // ImGuiID id = ImHashStr(name);
+    // ImGuiID id = hash_string(name);
     // return FindWindowByID(id);
     for (_, win) in g.windows.iter_mut() {
         if win.name.as_str() == name {

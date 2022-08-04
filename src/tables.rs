@@ -1108,7 +1108,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     // [Part 11] Context menu
     if (table.IsContextPopupOpen && table.InstanceCurrent == table.InstanceInteracted)
     {
-        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.id);
+        const ImGuiID context_menu_id = hash_string("##ContextMenu", 0, table.id);
         if (begin_popupEx(context_menu_id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings))
         {
             TableDrawContextMenu(table);
@@ -3031,7 +3031,7 @@ void ImGui::TableOpenContextMenu(int column_n)
         table.IsContextPopupOpen = true;
         table.ContextPopupColumn = (ImGuiTableColumnIdx)column_n;
         table.InstanceInteracted = table.InstanceCurrent;
-        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.id);
+        const ImGuiID context_menu_id = hash_string("##ContextMenu", 0, table.id);
         open_popupEx(context_menu_id, ImGuiPopupFlags_None);
     }
 }
@@ -3445,7 +3445,7 @@ void ImGui::table_settings_add_settings_handler()
 {
     ImGuiSettingsHandler ini_handler;
     ini_handler.TypeName = "Table";
-    ini_handler.type_hash = ImHashStr("Table");
+    ini_handler.type_hash = hash_string("Table");
     ini_handler.clear_all_fn = TableSettingsHandler_ClearAll;
     ini_handler.read_open_fn = TableSettingsHandler_ReadOpen;
     ini_handler.read_line_fn = TableSettingsHandler_ReadLine;

@@ -58,7 +58,7 @@ pub struct Window {
     // char*                   name;                               // window name, owned by the window.
     pub name: String,
     //*mut c_char,
-    // ImGuiID                 id;                                 // == ImHashStr(name)
+    // ImGuiID                 id;                                 // == hash_string(name)
     pub id: Id32,
     // ImGuiWindowFlags        flags, flags_previous_frame;          // See enum ImGuiWindowFlags_
     pub flags: HashSet<WindowFlags>,
@@ -284,7 +284,7 @@ impl Window {
             //     name = ImStrdup(name);
             //     NameBufLen = strlen(name) + 1;
             name: String::from(name),
-            //     id = ImHashStr(name);
+            //     id = hash_string(name);
             id: hash_string(name.as_vec(), 0),
             //     IDStack.push_back(id);
             id_stack: Vec::new(),
@@ -368,7 +368,7 @@ impl Window {
     pub fn get_id(&mut self, g: &mut Context, in_str: &str) -> Id32 {
         // ImGuiID seed = IDStack.back();
         let mut seed = self.id_stack.back();
-        // ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
+        // ImGuiID id = hash_string(str, str_end ? (str_end - str) : 0, seed);
         let id = hash_string(in_str.as_mut_vec(), 0);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {

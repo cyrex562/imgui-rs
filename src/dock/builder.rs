@@ -22,7 +22,7 @@ use std::collections::HashSet;
 // void dock_builder_dock_window(const char* window_name, ImGuiID node_id)
 pub fn dock_builder_dock_window(g: &mut Context, window_name: &str, node_id: Id32) {
     // We don't preserve relative order of multiple docked windows (by clearing dock_order back to -1)
-    // ImGuiID window_id = ImHashStr(window_name);
+    // ImGuiID window_id = hash_string(window_name);
     let window_id = hash_string(window_name, 0);
     let window = find_window_by_id(g, window_id);
     // if (ImGuiWindow* window = find_window_by_id(window_id))

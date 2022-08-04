@@ -62,7 +62,7 @@ pub fn get_window_resize_border_id(g: &mut Context, window: &mut Window, dir: Di
     } else {
         window.id
     };
-    // id = ImHashStr("#RESIZE", 0, id);
+    // id = hash_string("#RESIZE", 0, id);
     id = hash_string("#RESIZE", id);
     // id = ImHashData(&n, sizeof, id);
     id = hash_data(&Vec::from(n.to_le_bytes()), id);

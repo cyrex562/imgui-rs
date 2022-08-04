@@ -127,7 +127,7 @@ pub fn get_window_resize_corner_id(g: &mut Context, window: &mut Window, n: i32)
     // IM_ASSERT(n >= 0 && n < 4);
     // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.ID : window.id;
     let mut id = if window.dock_is_active { window.dock_node_id.host_window_id } else { window.id};
-    // id = ImHashStr("#RESIZE", 0, id);
+    // id = hash_string("#RESIZE", 0, id);
     // id = hash_string("#RESIZE", 0, id);
     // // id = ImHashData(&n, sizeof, id);
     // id = hash_data(&n, )

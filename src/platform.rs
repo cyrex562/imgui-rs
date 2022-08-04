@@ -115,7 +115,7 @@ pub fn update_platform_windows(g: &mut Context)
         {
             const char* title_begin = window_for_title.name;
             char* title_end = (char*)(intptr_t)FindRenderedTextEnd(title_begin);
-            const ImGuiID title_hash = ImHashStr(title_begin, title_end - title_begin);
+            const ImGuiID title_hash = hash_string(title_begin, title_end - title_begin);
             if (viewport.LastNameHash != title_hash)
             {
                 char title_end_backup_c = *title_end;

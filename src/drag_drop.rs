@@ -2,12 +2,12 @@ use std::borrow::BorrowMut;
 use std::collections::HashSet;
 use crate::color::StyleColor;
 use crate::condition::Condition;
-use crate::{Context, INVALID_ID};
+use crate::{Context, hash_string, INVALID_ID};
 use crate::context::set_active_id_using_nav_and_keys;
 use crate::id::set_active_id;
 use crate::input::mouse::{is_mouse_dragging, is_mouse_hovering_rect};
 use crate::input::MouseButton;
-use crate::item::ItemStatusFlags;
+use crate::item::{item_hoverable, ItemStatusFlags};
 use crate::orig_imgui_single_file::{ImGuiID, ImGuiWindow};
 use crate::payload::Payload;
 use crate::rect::Rect;
@@ -132,8 +132,7 @@ pub fn begin_drag_drop_source(g: &mut Context, flags: &HashSet<DragDropFlags>) -
             g.last_item_data.id = window.get_id_from_rectangle(&g.last_item_data.rect);
             source_id = g.last_item_data.id;
             keep_alive_id(source_id);
-            bool
-            is_hovered = ItemHoverable(g.last_item_data.Rect, source_id);
+            let is_hovered = item_hoverable(g, g.last_item_data.Rect, source_id).unwrap();
             if is_hovered && g.io.mouse_clicked[mouse_button] {
                 set_active_id(g, source_id, window);
                 focus_window(g, window);
@@ -152,7 +151,7 @@ pub fn begin_drag_drop_source(g: &mut Context, flags: &HashSet<DragDropFlags>) -
         set_active_id_using_nav_and_keys(g);
     } else {
         window = None;
-        source_id = ImHashStr("#SourceExtern");
+        source_id = hash_string("#SourceExtern", 0);
         source_drag_active = true;
     }
 
@@ -274,7 +273,7 @@ pub fn begin_drag_drop_target_custom(g: &mut Context, bb: &Rect, id: Id32) -> bo
     if !is_mouse_hovering_rect(g, &bb.min, &bb.max, false) || (id == g.drag_drop_payload.source_id) {
         return false;
     }
-    if (window.skip_items) {
+    if window.skip_items {
         return false;
     }
 
@@ -298,7 +297,7 @@ pub fn begin_drag_drop_target(g: &mut Context) -> bool {
 
     // ImGuiWindow* window = g.current_window;
     let window = g.current_window_mut();
-    if (!(g.last_item_data.status_flags.contains(&ItemStatusFlags::HoveredRect))) {
+    if !(g.last_item_data.status_flags.contains(&ItemStatusFlags::HoveredRect)) {
         return false;
     }
     // ImGuiWindow* hovered_window = g.hovered_window_under_moving_window;

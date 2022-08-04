@@ -13,7 +13,7 @@ pub struct SettingsHandler
 {
     // const char* TypeName;       // Short description stored in .ini file. Disallowed characters: '[' ']'
     pub type_name: String,
-    // ImGuiID     type_hash;       // == ImHashStr(TypeName)
+    // ImGuiID     type_hash;       // == hash_string(TypeName)
     pub type_hash: Id32,
     // void        (*clear_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // clear all settings data
     pub clear_all_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
@@ -95,7 +95,7 @@ pub fn create_new_window_settings(g: &mut Context, name: &str) -> &mut WindowSet
     const size_t chunk_size = sizeof(ImGuiWindowSettings) + name_len + 1;
     ImGuiWindowSettings* settings = g.settings_windows.alloc_chunk(chunk_size);
     IM_PLACEMENT_NEW(settings) ImGuiWindowSettings();
-    settings.id = ImHashStr(name, name_len);
+    settings.id = hash_string(name, name_len);
     memcpy(settings.GetName(), name, name_len + 1);   // Store with zero terminator
 
     return settings;
@@ -121,7 +121,7 @@ pub fn find_window_settings(g: &mut Context, id: Id32) -> Option<&mut WindowSett
 // ImGuiWindowSettings* FindOrCreateWindowSettings(const char* name)
 pub fn find_or_create_window_settings(g: &mut Context, name: &str) -> &mut WindowSettings
 {
-    if (ImGuiWindowSettings* settings = FindWindowSettings(ImHashStr(name)))
+    if (ImGuiWindowSettings* settings = FindWindowSettings(hash_string(name)))
         return settings;
     return create_new_window_settings(name);
 }
@@ -146,7 +146,7 @@ pub fn remove_settings_handler(g: &mut Context, type_name: &str)
 pub fn find_settings_handler(g: &mut Context, type_name: &str) -> &mut SettingsHandler
 {
     // ImGuiContext& g = *GImGui;
-    const ImGuiID type_hash = ImHashStr(type_name);
+    const ImGuiID type_hash = hash_string(type_name);
     for (int handler_n = 0; handler_n < g.settings_handlers.size; handler_n += 1)
         if (g.settings_handlers[handler_n].type_hash == type_hash)
             return &g.settings_handlers[handler_n];
@@ -381,7 +381,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         buf.appendf("collapsed=%d\n", settings.collapsed);
         if (settings.dock_id != 0)
         {
-            //buf->appendf("tab_id=0x%08X\n", ImHashStr("#TAB", 4, settings->id)); // window->tab_id: this is not read back but writing it makes "debugging" the .ini data easier.
+            //buf->appendf("tab_id=0x%08X\n", hash_string("#TAB", 4, settings->id)); // window->tab_id: this is not read back but writing it makes "debugging" the .ini data easier.
             if (settings.dock_order == -1)
                 buf.appendf("dock_id=0x%08X\n", settings.dock_id);
             else

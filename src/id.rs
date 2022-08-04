@@ -110,7 +110,7 @@ void ImGui::keep_alive_id(ImGuiID id)
 // ImGuiID GetIDWithSeed(const char* str, const char* str_end, ImGuiID seed)
 pub fn get_id_with_seed(g: &mut Context, in_str: &str, seed: Id32) -> Id32
 {
-    ImGuiID id = ifImHashStr(str, str_end { (str_end - str) }else{ 0, seed)};
+    ImGuiID id = ifhash_string(str, str_end { (str_end - str) }else{ 0, seed)};
     // ImGuiContext& g = *GImGui;
     if (g.debug_hook_id_info == id)
         debug_hook_id_info(id, DataType::String, str, str_end);
