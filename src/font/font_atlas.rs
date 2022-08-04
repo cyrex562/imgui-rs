@@ -1,4 +1,4 @@
-use crate::font::{DimgFontConfig, Font, ImFontBuilderIO};
+use crate::font::{FontConfig, Font, ImFontBuilderIO};
 use crate::input::MouseCursor;
 use crate::rect::Rect;
 use crate::texture::TextureId;
@@ -61,7 +61,7 @@ pub struct FontAtlas {
     // ImVector<ImFontAtlasCustomRect> custom_rects;    // Rectangles for packing custom texture data into the atlas.
     pub custom_rects: Vec<ImFontAtlasCustomRect>,
     // ImVector<ImFontConfig>      config_data;         // Configuration data
-    pub config_data: Vec<DimgFontConfig>,
+    pub config_data: Vec<FontConfig>,
     // Vector4D                      tex_uv_lines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
     pub tex_uv_lines: Vec<Vector4D>,
     // [Internal] font builder
@@ -84,11 +84,11 @@ impl FontAtlas {
     //  ImFontAtlas();
     //      ~ImFontAtlas();
     //      ImFont*           add_font(const ImFontConfig* font_cfg);
-    pub fn add_font(&mut self, font_cfg: &DimgFontConfig) -> Font {
+    pub fn add_font(&mut self, font_cfg: &FontConfig) -> Font {
         todo!()
     }
     //      ImFont*           add_font_default(const ImFontConfig* font_cfg = None);
-    pub fn add_font_default(&mut self, font_cfg: &DimgFontConfig) -> Font {
+    pub fn add_font_default(&mut self, font_cfg: &FontConfig) -> Font {
         todo!()
     }
     //      ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = None, const ImWchar* glyph_ranges = None);
@@ -96,7 +96,7 @@ impl FontAtlas {
         &mut self,
         filename: &String,
         size_pixels: f32,
-        font_cfg: &DimgFontConfig,
+        font_cfg: &FontConfig,
         glyph_ranges: &[DimgWchar],
     ) -> Font {
         todo!()
@@ -107,7 +107,7 @@ impl FontAtlas {
         font_data: &Vec<u8>,
         font_size: i32,
         size_pixels: f32,
-        font_cfg: &DimgFontConfig,
+        font_cfg: &FontConfig,
         glyph_ranges: &[DimgWchar],
     ) -> Font {
         todo!()
@@ -118,7 +118,7 @@ impl FontAtlas {
         compressed_font_data: &Vec<u8>,
         compressed_font_size: usize,
         size_pixels: f32,
-        font_config: &DimgFontConfig,
+        font_config: &FontConfig,
         glyph_ranges: &Vec<DimgWchar>,
     ) -> Font {
         todo!()
@@ -128,7 +128,7 @@ impl FontAtlas {
         &mut self,
         compressed_font_data_base85: &String,
         size_pixels: f32,
-        font_cfg: &DimgFontConfig,
+        font_cfg: &FontConfig,
         glyph_ranges: &Vec<DimgWchar>,
     ) -> Font {
         todo!()

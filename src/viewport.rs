@@ -258,7 +258,7 @@ pub fn find_viewport_by_platform_handle(g: &mut Context, platform_handle: Id32) 
 }
 
 // void SetCurrentViewport(ImGuiWindow* current_window, ImGuiViewportP* viewport)
-pub fn set_current_viewport(g: &mut Context, current_window: &mut Window, viewport: &mut Viewport)
+pub fn set_current_viewport(g: &mut Context, current_window: Option<&mut Window>, viewport: Option<&mut Viewport>)
 {
     // ImGuiContext& g = *GImGui;
     (void)current_window;
@@ -583,7 +583,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
 }
 
 // Update user-facing viewport list (g.viewports -> g.platform_io.viewports after filtering out some)
-// static void UpdateViewportsEndFrame()
+// static void update_viewports_end_frame()
 pub fn update_viewports_ends_frame(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;

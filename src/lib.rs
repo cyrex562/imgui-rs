@@ -1,4 +1,4 @@
-extern crate core;
+extern crate freetype;
 
 use crate::context::{call_context_hooks, Context, ContextHookType};
 use crate::hash::hash_string;
@@ -8,6 +8,7 @@ use crate::viewport::{Viewport, ViewportFlags};
 use dock::context::dock_context_shutdown;
 use std::collections::HashSet;
 use std::io::stdout;
+
 
 mod axis;
 mod border;
@@ -104,6 +105,7 @@ mod vectors;
 mod viewport;
 mod widgets;
 mod window;
+mod font_freetype;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context) {

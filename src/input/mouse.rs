@@ -388,7 +388,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
 
 /// Initiate moving window when clicking on empty space or title bar.
 /// Handle left-click and right-click focus.
-/// void ImGui::UpdateMouseMovingWindowEndFrame()
+/// void ImGui::update_mouse_moving_window_end_frame()
 pub fn update_mouse_moving_window_end_frame(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
