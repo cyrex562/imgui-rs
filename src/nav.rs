@@ -2,7 +2,7 @@ use std::ptr::{null, null_mut};
 use std::collections::HashSet;
 use crate::config::ConfigFlags;
 use crate::{Context, INVALID_ID};
-use crate::color::Color;
+use crate::color::{Color, make_color_32};
 use crate::types::Direction;
 use crate::draw::list::foreground_draw_list;
 use crate::imgui_h::Id32;
@@ -14,6 +14,7 @@ use crate::item::ItemFlags;
 use crate::math::lerp_f32;
 use crate::orig_imgui_single_file::{ImGuiViewport, Window};
 use crate::rect::Rect;
+use crate::text::calc_text_size;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
@@ -195,7 +196,7 @@ pub fn set_focus_id(g: &mut Context, id: Id32, window: &mut Window)
     g.nav_focus_spope_id = window.dc.NavFocusScopeIdCurrent;
     window.nav_last_ids[nav_layer] = id;
     if g.last_item_data.id == id {
-        window.nav_rect_rel[nav_layer] = window_rect_abs_to_rel(window, g.last_item_data.nav_rect);
+        window.nav_rect_rel[nav_layer] = window_rect_abs_to_rel(window, &g.last_item_data.nav_rect);
     }
 
     if g.active_id_source == InputSource::Nav {
@@ -255,7 +256,7 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 
     // FIXME: Those are not good variables names
     let cand = &mut g.last_item_data.nav_rect;   // Current item nav rectangle
-    let curr = g.nav_scoring_rect;   // Current modified source rect (NB: we've applied max.x = min.x in NavUpdate() to inhibit the effect of having varied item width)
+    let curr = g.nav_scoring_rect.clone();   // Current modified source rect (NB: we've applied max.x = min.x in NavUpdate() to inhibit the effect of having varied item width)
     g.nav_scoring_debug_count += 1;
 
     // When entering through a NavFlattened border, we consider child window items as fully clipped for scoring
@@ -270,14 +271,14 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 
     // We perform scoring on items bounding box clipped by the current clipping rectangle on the other axis (clipping on our movement axis would give us equal scores for all clipped items)
     // For example, this ensure that items in one column are not reached when moving vertically from items in another column.
-    nav_clamp_rect_to_visible_area_for_move_dir(g, g.nav_move_clip_dir, cand, &window.clip_rect);
+    nav_clamp_rect_to_visible_area_for_move_dir(g, g.nav_move_clip_dir.clone(), cand, &window.clip_rect);
 
     // Compute distance between boxes
     // FIXME-NAV: Introducing biases for vertical navigation, needs to be removed.
     let mut dbx =  nav_score_item_dist_interval(g, cand.min.x, cand.max.x, curr.min.x, curr.max.x);
     let mut dby =  nav_score_item_dist_interval(g, lerp_f32(cand.min.y, cand.max.y, 0.2), lerp_f32(cand.min.y, cand.max.y, 0.8), lerp_f32(curr.min.y, curr.max.y, 0.2), lerp_f32(curr.min.y, curr.max.y, 0.8)); // scale down on Y to keep using box-distance for vertically touching items
     if dby != 0.0 && dbx != 0.0 {
-        dbx = (dbx / 1000.0) + { if ((dbx > 0.0) { 1.0 } else { -1.0 }) };
+        dbx = (dbx / 1000.0) + (if dbx > 0.0 { 1.0 } else { -1.0 });
     }
     let dist_box =  f32::abs(dbx) + f32::abs(dby);
 
@@ -316,30 +317,33 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 // #ifIMGUI_DEBUG_NAV_SCORING
 //     char buf[128];
     let mut buf: String = String::new();
-    if is_mouse_hovering_rect(g, &cand.min, &cand.max)
+    if is_mouse_hovering_rect(g, &cand.min, &cand.max, false)
     {
-        // ImFormatString(buf, IM_ARRAYSIZE(buf), "dbox (%.2,%.2->%.4)\ndcen (%.2,%.2->%.4)\nd (%.2,%.2->%.4)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
-        let draw_list = foreground_draw_list(g, window);
-        draw_list.add_rect(&curr.min, &curr.max, IM_COL32(255,200,0,100));
-        draw_list.add_rect(&cand.min, &cand.max, IM_COL32(255,255,0,200));
-        draw_list.add_rect_filled(&cand.max - Vector2D::new(4, 4), &cand.max + calc_text_size(buf) + Vector2D::new(4.0, 4.0), Color::from((40,0,0,150)));
-        draw_list.add_text(cand.max, ~0U, buf);
+        // ImFormatString(buf, IM_ARRAYSIZE(buf), "dbox (%.2,%.2->%.4)\ndcen (%.2,%.2->%.4)\nd (%.2,%.2->%.4)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.nav_move_dir], "WENS"[quadrant]);
+        let draw_list = foreground_draw_list(g, g.viewport_mut(window.viewport_id));
+        draw_list.add_rect(&curr.min, &curr.max, make_color_32(255,200,0,100), 0.0, None, 0.0);
+        draw_list.add_rect(&cand.min, &cand.max, make_color_32(255,255,0,200), 0.0, None, 0.0);
+        draw_list.add_rect_filled(
+            &cand.max - Vector2D::new(4f32, 4f32),
+            &cand.max + calc_text_size(g, buf.as_str(), false, 0.0) + Vector2D::new(4.0, 4.0),
+            make_color_32(40,0,0,150), 0.0, None);
+        draw_list.add_text(&cand.max, make_color_32(255,255,255,255), buf.as_str());
     }
     else if (g.io.key_ctrl) // Hold to preview score in matching quadrant. Press C to rotate.
     {
-        if (quadrant == g.NavMoveDir)
+        if (quadrant == g.nav_move_dir)
         {
-            ImFormatString(buf, IM_ARRAYSIZE(buf), "%.0/%.0", dist_box, dist_center);
-            ImDrawList* draw_list = foreground_draw_list(window);
-            draw_list.add_rect_filled(cand.min, cand.max, IM_COL32(255, 0, 0, 200));
-            draw_list.add_text(cand.min, IM_COL32(255, 255, 255, 255), buf);
+            // ImFormatString(buf, IM_ARRAYSIZE(buf), "%.0/%.0", dist_box, dist_center);
+            let draw_list = foreground_draw_list(g, g.viewport_mut(window.viewport_id));
+            draw_list.add_rect_filled(&cand.min, &cand.max, make_color_32(255, 0, 0, 200), 0.0, None);
+            draw_list.add_text(&cand.min, make_color_32(255, 255, 255, 255), buf.as_str());
         }
     }
 
 
     // Is it in the quadrant we're interesting in moving to?
     bool new_best = false;
-    const ImGuiDir move_dir = g.NavMoveDir;
+    const ImGuiDir move_dir = g.nav_move_dir;
     if (quadrant == move_dir)
     {
         // Does it beat the current best candidate?
@@ -531,8 +535,8 @@ pub fn nav_move_request_submit(g: &mut Context, move_dir: Direction, clip_dir: D
         move_flags |= ImGuiNavMoveFlags_AllowCurrentNavId;
 
     g.nav_move_submitted = g.nav_move_scoring_items = true;
-    g.NavMoveDir = move_dir;
-    g.NavMoveDirForDebug = move_dir;
+    g.nav_move_dir = move_dir;
+    g.nav_move_dirForDebug = move_dir;
     g.nav_move_clip_dir = clip_dir;
     g.nav_move_flags = move_flags;
     g.NavMoveScrollFlags = scroll_flags;
@@ -571,7 +575,7 @@ pub fn nav_move_request_forward(g: &mut Context, move_dir: Direction, clip_dir: 
     // IM_ASSERT(g.NavMoveForwardToNextFrame == false);
     NavMoveRequestCancel();
     g.NavMoveForwardToNextFrame = true;
-    g.NavMoveDir = move_dir;
+    g.nav_move_dir = move_dir;
     g.nav_move_clip_dir = clip_dir;
     g.nav_move_flags = move_flags | ImGuiNavMoveFlags_Forwarded;
     g.NavMoveScrollFlags = scroll_flags;
@@ -911,7 +915,7 @@ pub fn nav_update(g: &mut Context)
 
     // Process move requests
     NavUpdateCreateMoveRequest();
-    if (g.NavMoveDir == Direction::None)
+    if (g.nav_move_dir == Direction::None)
         NavUpdateCreateTabbingRequest();
     nav_update_any_request_flag();
     g.NavIdIsAlive = false;
@@ -922,7 +926,7 @@ pub fn nav_update(g: &mut Context)
         // *Fallback* manual-scroll with Nav directional keys when window has no navigable item
         Window* window = g.nav_window;
         let scroll_speed = IM_ROUND(window.CalcFontSize() * 100 * io.delta_time); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
-        const ImGuiDir move_dir = g.NavMoveDir;
+        const ImGuiDir move_dir = g.nav_move_dir;
         if (window.dc.nav_layers_active_mask == 0x00 && window.dc.nav_has_scroll && move_dir != Direction::None)
         {
             if (move_dir == Direction::Left || move_dir == Direction::Right)
@@ -996,25 +1000,25 @@ pub fn nav_update_create_move_request(g: &mut Context)
     {
         // Forwarding previous request (which has been modified, e.g. wrap around menus rewrite the requests with a starting rectangle at the other side of the window)
         // (preserve most state, which were already set by the NavMoveRequestForward() function)
-        // IM_ASSERT(g.NavMoveDir != Dir::None && g.nav_move_clip_dir != Dir::None);
+        // IM_ASSERT(g.nav_move_dir != Dir::None && g.nav_move_clip_dir != Dir::None);
         // IM_ASSERT(g.nav_move_flags & ImGuiNavMoveFlags_Forwarded);
-        IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequestForward %d\n", g.NavMoveDir);
+        IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequestForward %d\n", g.nav_move_dir);
     }
     else
     {
         // Initiate directional inputs request
-        g.NavMoveDir = Direction::None;
+        g.nav_move_dir = Direction::None;
         g.nav_move_flags = ImGuiNavMoveFlags_None;
         g.NavMoveScrollFlags = ImGuiScrollFlags_None;
         if (window && !g.nav_windowing_target && !(window.flags & WindowFlags::NoNavInputs))
         {
             const ImGuiNavReadMode read_mode = NavReadMode::Repeat;
-            if (!IsActiveIdUsingNavDir(Direction::Left)  && (IsNavInputTest(ImGuiNavInput_DpadLeft,  read_mode) || IsNavInputTest(ImGuiNavInput_KeyLeft_,  read_mode))) { g.NavMoveDir = Direction::Left; }
-            if (!IsActiveIdUsingNavDir(Direction::Right) && (IsNavInputTest(ImGuiNavInput_DpadRight, read_mode) || IsNavInputTest(ImGuiNavInput_KeyRight_, read_mode))) { g.NavMoveDir = Direction::Right; }
-            if (!IsActiveIdUsingNavDir(Direction::Up)    && (IsNavInputTest(ImGuiNavInput_DpadUp,    read_mode) || IsNavInputTest(ImGuiNavInput_KeyUp_,    read_mode))) { g.NavMoveDir = Direction::Up; }
-            if (!IsActiveIdUsingNavDir(Direction::Down)  && (IsNavInputTest(ImGuiNavInput_DpadDown,  read_mode) || IsNavInputTest(ImGuiNavInput_KeyDown_,  read_mode))) { g.NavMoveDir = Direction::Down; }
+            if (!IsActiveIdUsingNavDir(Direction::Left)  && (IsNavInputTest(ImGuiNavInput_DpadLeft,  read_mode) || IsNavInputTest(ImGuiNavInput_KeyLeft_,  read_mode))) { g.nav_move_dir = Direction::Left; }
+            if (!IsActiveIdUsingNavDir(Direction::Right) && (IsNavInputTest(ImGuiNavInput_DpadRight, read_mode) || IsNavInputTest(ImGuiNavInput_KeyRight_, read_mode))) { g.nav_move_dir = Direction::Right; }
+            if (!IsActiveIdUsingNavDir(Direction::Up)    && (IsNavInputTest(ImGuiNavInput_DpadUp,    read_mode) || IsNavInputTest(ImGuiNavInput_KeyUp_,    read_mode))) { g.nav_move_dir = Direction::Up; }
+            if (!IsActiveIdUsingNavDir(Direction::Down)  && (IsNavInputTest(ImGuiNavInput_DpadDown,  read_mode) || IsNavInputTest(ImGuiNavInput_KeyDown_,  read_mode))) { g.nav_move_dir = Direction::Down; }
         }
-        g.nav_move_clip_dir = g.NavMoveDir;
+        g.nav_move_clip_dir = g.nav_move_dir;
         g.NavScoringNoClipRect = Rect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
     }
 
@@ -1022,7 +1026,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // FIXME-NAV: Consider enabling those keys even without the master ImGuiConfigFlags_NavEnableKeyboard flag?
     const bool nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
     let scoring_rect_offset_y =  0.0;
-    if (window && g.NavMoveDir == Direction::None && nav_keyboard_active)
+    if (window && g.nav_move_dir == Direction::None && nav_keyboard_active)
         scoring_rect_offset_y = NavUpdatePageUpPageDown();
     if (scoring_rect_offset_y != 0.0)
     {
@@ -1033,18 +1037,18 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // [DEBUG] Always send a request
 // #ifIMGUI_DEBUG_NAV_SCORING
     if (io.key_ctrl && IsKeyPressed(ImGuiKey_C))
-        g.NavMoveDirForDebug = (ImGuiDir)((g.NavMoveDirForDebug + 1) & 3);
-    if (io.key_ctrl && g.NavMoveDir == Direction::None)
+        g.nav_move_dirForDebug = (ImGuiDir)((g.nav_move_dirForDebug + 1) & 3);
+    if (io.key_ctrl && g.nav_move_dir == Direction::None)
     {
-        g.NavMoveDir = g.NavMoveDirForDebug;
+        g.nav_move_dir = g.nav_move_dirForDebug;
         g.nav_move_flags |= ImGuiNavMoveFlags_DebugNoResult;
     }
 
 
     // Submit
     g.NavMoveForwardToNextFrame = false;
-    if (g.NavMoveDir != Direction::None)
-        NavMoveRequestSubmit(g.NavMoveDir, g.nav_move_clip_dir, g.nav_move_flags, g.NavMoveScrollFlags);
+    if (g.nav_move_dir != Direction::None)
+        NavMoveRequestSubmit(g.nav_move_dir, g.nav_move_clip_dir, g.nav_move_flags, g.NavMoveScrollFlags);
 
     // Moving with no reference triggers a init request (will be used as a fallback if the direction fails to find a match)
     if (g.nav_move_submitted && g.nav_id == 0)
@@ -1099,7 +1103,7 @@ pub fn nav_update_create_tabbing_request(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
     Window* window = g.nav_window;
-    // IM_ASSERT(g.NavMoveDir == Dir::None);
+    // IM_ASSERT(g.nav_move_dir == Dir::None);
     if (window == None || g.nav_windowing_target != None || (window.flags & WindowFlags::NoNavInputs))
         return;
 
@@ -1164,7 +1168,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
         if (g.nav_move_flags & ImGuiNavMoveFlags_ScrollToEdgeY)
         {
             // FIXME: Should remove this
-            let scroll_target =  (g.NavMoveDir == Direction::Up) ? result.Window->scroll_max.y : 0.0;
+            let scroll_target =  (g.nav_move_dir == Direction::Up) ? result.Window->scroll_max.y : 0.0;
             set_scroll_y(result.Window, scroll_target);
         }
         else
@@ -1303,14 +1307,14 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
         if (IsKeyPressed(ImGuiKey_PageUp, true))
         {
             nav_scoring_rect_offset_y = -page_offset_y;
-            g.NavMoveDir = Direction::Down; // Because our scoring rect is offset up, we request the down direction (so we can always land on the last item)
+            g.nav_move_dir = Direction::Down; // Because our scoring rect is offset up, we request the down direction (so we can always land on the last item)
             g.nav_move_clip_dir = Direction::Up;
             g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet;
         }
         else if (IsKeyPressed(ImGuiKey_PageDown, true))
         {
             nav_scoring_rect_offset_y = +page_offset_y;
-            g.NavMoveDir = Direction::Up; // Because our scoring rect is offset down, we request the up direction (so we can always land on the last item)
+            g.nav_move_dir = Direction::Up; // Because our scoring rect is offset down, we request the up direction (so we can always land on the last item)
             g.nav_move_clip_dir = Direction::Down;
             g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet;
         }
@@ -1322,7 +1326,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
             nav_rect_rel.min.y = nav_rect_rel.max.y = 0.0;
             if (nav_rect_rel.is_inverted())
                 nav_rect_rel.min.x = nav_rect_rel.max.x = 0.0;
-            g.NavMoveDir = Direction::Down;
+            g.nav_move_dir = Direction::Down;
             g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdgeY;
             // FIXME-NAV: MoveClipDir left to _None, intentional?
         }
@@ -1331,7 +1335,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
             nav_rect_rel.min.y = nav_rect_rel.max.y = window.ContentSize.y;
             if (nav_rect_rel.is_inverted())
                 nav_rect_rel.min.x = nav_rect_rel.max.x = 0.0;
-            g.NavMoveDir = Direction::Up;
+            g.nav_move_dir = Direction::Up;
             g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdgeY;
             // FIXME-NAV: MoveClipDir left to _None, intentional?
         }
@@ -1365,9 +1369,9 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
 
     bool do_forward = false;
     Rect bb_rel = window.nav_rect_rel[g.nav_layer];
-    ImGuiDir clip_dir = g.NavMoveDir;
+    ImGuiDir clip_dir = g.nav_move_dir;
     const ImGuiNavMoveFlags move_flags = g.nav_move_flags;
-    if (g.NavMoveDir == Direction::Left && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
+    if (g.nav_move_dir == Direction::Left && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
     {
         bb_rel.min.x = bb_rel.max.x = window.ContentSize.x + window.WindowPadding.x;
         if (move_flags & ImGuiNavMoveFlags_WrapX)
@@ -1377,7 +1381,7 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
         }
         do_forward = true;
     }
-    if (g.NavMoveDir == Direction::Right && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
+    if (g.nav_move_dir == Direction::Right && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
     {
         bb_rel.min.x = bb_rel.max.x = -window.WindowPadding.x;
         if (move_flags & ImGuiNavMoveFlags_WrapX)
@@ -1387,7 +1391,7 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
         }
         do_forward = true;
     }
-    if (g.NavMoveDir == Direction::Up && (move_flags & (ImGuiNavMoveFlags_WrapY | ImGuiNavMoveFlags_LoopY)))
+    if (g.nav_move_dir == Direction::Up && (move_flags & (ImGuiNavMoveFlags_WrapY | ImGuiNavMoveFlags_LoopY)))
     {
         bb_rel.min.y = bb_rel.max.y = window.ContentSize.y + window.WindowPadding.y;
         if (move_flags & ImGuiNavMoveFlags_WrapY)
@@ -1397,7 +1401,7 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
         }
         do_forward = true;
     }
-    if (g.NavMoveDir == Direction::Down && (move_flags & (ImGuiNavMoveFlags_WrapY | ImGuiNavMoveFlags_LoopY)))
+    if (g.nav_move_dir == Direction::Down && (move_flags & (ImGuiNavMoveFlags_WrapY | ImGuiNavMoveFlags_LoopY)))
     {
         bb_rel.min.y = bb_rel.max.y = -window.WindowPadding.y;
         if (move_flags & ImGuiNavMoveFlags_WrapY)
@@ -1410,7 +1414,7 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
     if (!do_forward)
         return;
     window.nav_rect_rel[g.nav_layer] = bb_rel;
-    NavMoveRequestForward(g.NavMoveDir, clip_dir, move_flags, g.NavMoveScrollFlags);
+    NavMoveRequestForward(g.nav_move_dir, clip_dir, move_flags, g.NavMoveScrollFlags);
 }
 
 // static int FindWindowFocusIndex(Window* window)

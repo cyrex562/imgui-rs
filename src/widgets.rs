@@ -5903,12 +5903,12 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
                 toggled = true;
         }
 
-        if (g.NavId == id && g.NavMoveDir == ImGuiDir_Left && is_open)
+        if (g.NavId == id && g.nav_move_dir == ImGuiDir_Left && is_open)
         {
             toggled = true;
             NavMoveRequestCancel();
         }
-        if (g.NavId == id && g.NavMoveDir == ImGuiDir_Right && !is_open) // If there's something upcoming on the line we may want to give it the priority?
+        if (g.NavId == id && g.nav_move_dir == ImGuiDir_Right && !is_open) // If there's something upcoming on the line we may want to give it the priority?
         {
             toggled = true;
             NavMoveRequestCancel();
@@ -6009,7 +6009,7 @@ void ImGui::TreePop()
     ImU32 tree_depth_mask = (1 << window.DC.TreeDepth);
 
     // Handle Left arrow to move to parent tree node (when ImGuiTreeNodeFlags_NavLeftJumpsBackHere is enabled)
-    if (g.NavMoveDir == ImGuiDir_Left && g.NavWindow == window && NavMoveRequestButNoResultYet())
+    if (g.nav_move_dir == ImGuiDir_Left && g.NavWindow == window && NavMoveRequestButNoResultYet())
         if (g.NavIdIsAlive && (window.DC.TreeJumpToParentOnPopMask & tree_depth_mask))
         {
             SetNavID(window.idStack.back(), g.nav_layer, 0, ImRect());
@@ -6680,7 +6680,7 @@ void ImGui::EndMenuBar()
     // ImGuiContext& g = *GImGui;
 
     // Nav: When a move request within one of our child menu failed, capture the request to navigate among our siblings.
-    if (NavMoveRequestButNoResultYet() && (g.NavMoveDir == ImGuiDir_Left || g.NavMoveDir == ImGuiDir_Right) && (g.NavWindow->Flags & WindowFlags_ChildMenu))
+    if (NavMoveRequestButNoResultYet() && (g.nav_move_dir == ImGuiDir_Left || g.nav_move_dir == ImGuiDir_Right) && (g.NavWindow->Flags & WindowFlags_ChildMenu))
     {
         // Try to find out if the request is for one of our child menu
         Window* nav_earliest_child = g.NavWindow;
@@ -6696,7 +6696,7 @@ void ImGui::EndMenuBar()
             SetNavID(window.nav_last_ids[layer], layer, 0, window.nav_rect_rel[layer]);
             g.NavDisableHighlight = true; // Hide highlight for the current frame so we don't see the intermediary selection.
             g.NavDisableMouseHover = g.NavMousePosDirty = true;
-            NavMoveRequestForward(g.NavMoveDir, g.nav_move_clip_dir, g.nav_move_flags, g.NavMoveScrollFlags); // Repeat
+            NavMoveRequestForward(g.nav_move_dir, g.nav_move_clip_dir, g.nav_move_flags, g.NavMoveScrollFlags); // Repeat
         }
     }
 
@@ -6935,7 +6935,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
             want_open = true;
         else if (!menu_is_open && hovered && !moving_toward_child_menu) // Hover to open
             want_open = true;
-        if (g.NavId == id && g.NavMoveDir == ImGuiDir_Right) // Nav-Right to open
+        if (g.NavId == id && g.nav_move_dir == ImGuiDir_Right) // Nav-Right to open
         {
             want_open = true;
             NavMoveRequestCancel();
@@ -6953,7 +6953,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         {
             want_open = true;
         }
-        else if (g.NavId == id && g.NavMoveDir == ImGuiDir_Down) // Nav-down to open
+        else if (g.NavId == id && g.nav_move_dir == ImGuiDir_Down) // Nav-down to open
         {
             want_open = true;
             NavMoveRequestCancel();
@@ -7006,7 +7006,7 @@ void ImGui::EndMenu()
     // However, it means that with the current code, a BeginMenu() from outside another menu or a menu-bar won't be closable with the Left direction.
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window_id;
-    if (g.NavMoveDir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.layout_type == ImGuiLayoutType_Vertical)
+    if (g.nav_move_dir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.layout_type == ImGuiLayoutType_Vertical)
         if (g.NavWindow && (g.NavWindow->RootWindowForNav->Flags & WindowFlags_Popup) && g.NavWindow->RootWindowForNav->ParentWindow == window)
         {
             ClosePopupToLevel(g.begin_popupStack.Size, true);

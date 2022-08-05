@@ -376,3 +376,8 @@ pub const COLOR_EDIT_FLAGS_INPUT_MASK: HashSet<ColorEditFlags> = HashSet::from([
     ColorEditFlags::InputRGB, ColorEditFlags::InputHSV
 ]);
 
+pub const COLOR_WHITE_32: u32 = make_color_32(255,255,255,255);
+pub const COLOR_BLACK_32: u32 = make_color_32(0,0,0,255);
+pub const COLOR_RED_32: u32 = make_color_32(255,0,0,255);
+pub const COLOR_GREEN_32: u32 = make_color_32(0,255,0,255);
+pub const COLOR_BLUE_32: u32 = make_color_32(0,0,255,255);

@@ -406,7 +406,7 @@ impl DrawList {
         self.path_fill_convex(col);
     }
     //  void  add_text(const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = None);
-    pub fn add_text(&mut self, pos: &Vector2D, color: u32, text: &String) {
+    pub fn add_text(&mut self, pos: &Vector2D, color: u32, text: &str) {
         if (color & COLOR32_A_MASK) == 0 {
             return;
         }
