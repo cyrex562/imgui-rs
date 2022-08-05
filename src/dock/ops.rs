@@ -170,7 +170,7 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
     // ImGuiDockNode* node = window.dock_node_id;
     let mut node = g.dock_node_mut(window.dock_node_id);
     if node != None {}
-        // IM_ASSERT(window.DockId == node.ID);
+        // IM_ASSERT(window.DockId == node.id);
     if window.dock_id != 0 && node == None
     {
         node = dock_context_bind_node_to_window(g, window);
@@ -253,7 +253,7 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
         window.dock_tab_is_visible = true;
     }
 
-    // Update window flag
+    // update window flag
     // IM_ASSERT((window.flags & WindowFlags::ChildWindow) == 0);
     // window.flags |= WindowFlags::ChildWindow | WindowFlags::AlwaysUseWindowPadding | WindowFlags::NoResize;
     window.flags.insert(WindowFlags::ChildWindow);
@@ -276,7 +276,7 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
         *p_open = false;
     }
 
-    // Update child_id to allow returning from Child to Parent with Escape
+    // update child_id to allow returning from Child to Parent with Escape
     // Window* parent_window = window.dock_node_id.host_window_id;
     let parent_window = g.window_mut(g.dock_node_mut(window.dock_node_id).unwrap().host_window_id);
     window.child_id = parent_window.get_id(g, &window.name);

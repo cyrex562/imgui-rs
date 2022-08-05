@@ -474,7 +474,7 @@ impl DrawList {
         // const bool thick_line = (thickness > _FringeScale);
         let thick_line = thickness > self.fringe_scale;
 
-        // if (Flags & DrawListFlags::AntiAliasedLines)
+        // if (flags & DrawListFlags::AntiAliasedLines)
         if self.flags.contains(&DrawListFlags::AntiAliasedLines) {
             // Anti-aliased stroke
             let aa_size = self.fringe_scale;
@@ -489,7 +489,7 @@ impl DrawList {
             // Do we want to draw this line using a texture?
             // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
             // - If aa_size is not 1.0 we cannot use the texture path.
-            // const bool use_texture = (Flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (aa_size == 1.0);
+            // const bool use_texture = (flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (aa_size == 1.0);
             let use_texture = self.flags.contains(&DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < DRAW_LIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (aa_size == 1.0);
 
             // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
@@ -1402,7 +1402,7 @@ impl DrawList {
     /// Initialize before use in a new frame. We always have a command ready in the buffer.
     pub fn reset_for_new_frame(&mut self) {
         //     // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
-        //     IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, ClipRect) == 0);
+        //     IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, clip_rect) == 0);
         //     IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, TextureId) == sizeof(Vector4D));
         //     IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, VtxOffset) == sizeof(Vector4D) + sizeof(ImTextureID));
         //     if (_splitter._Count > 1)
@@ -1440,7 +1440,7 @@ impl DrawList {
         self.idx_buffer.clear();
         //     VtxBuffer.clear();
         self.vtx_buffer.clear();
-        //     Flags = DrawListFlags::None;
+        //     flags = DrawListFlags::None;
         self.flags.clear();
         //     _VtxCurrentIdx = 0;
         self.clip_rect_stack.clear();
@@ -1785,7 +1785,7 @@ pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList {
 }
 
 /// ImDrawList* ImGui::GetForegroundDrawList(ImGuiViewport* viewport)
-pub fn get_foreground_draw_list(g: &mut Context, viewport: Option<&mut Viewport>) -> &mut DrawList {
+pub fn foreground_draw_list(g: &mut Context, viewport: Option<&mut Viewport>) -> &mut DrawList {
     // return GetViewportDrawList((ImGuiViewportP*)viewport, 1, "##Foreground");
     get_viewport_draw_list(g, viewport, 1, &String::from("##Foreground"))
 }
@@ -1796,7 +1796,7 @@ pub fn get_foreground_draw_list2(g: &mut Context) -> &mut DrawList {
     // return GetForegroundDrawList(g.CurrentWindow->Viewport);
     let curr_win = g.current_window_mut()?;
     let vp = g.viewport_mut(curr_win.viewport_id).unwrap();
-    get_foreground_draw_list(g, vp)
+    foreground_draw_list(g, vp)
 }
 
 // static void add_draw_list_to_draw_data(ImVector<ImDrawList*>* out_list, ImDrawList* draw_list)

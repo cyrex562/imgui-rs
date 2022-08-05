@@ -262,7 +262,7 @@ pub fn set_scroll_here_y(g: &mut Context, center_y_ratio: f32)
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window;
     let spacing_y =  ImMax(window.WindowPadding.y, g.style.item_spacing.y);
-    let target_pos_y =  ImLerp(window.dc.cursor_pos_prev_line.y - spacing_y, window.dc.cursor_pos_prev_line.y + window.dc.PrevLineSize.y + spacing_y, center_y_ratio);
+    let target_pos_y =  ImLerp(window.dc.cursor_pos_prev_line.y - spacing_y, window.dc.cursor_pos_prev_line.y + window.dc.prev_line_size.y + spacing_y, center_y_ratio);
     SetScrollFromPosY(window, target_pos_y - window.pos.y, center_y_ratio); // Convert from absolute to local pos
 
     // Tweak: snap on edges when aiming at an item very close to the edge

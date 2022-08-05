@@ -22,7 +22,7 @@
 // online: https://github.com/ocornut/imgui/tree/master/docs
 
 // CHANGELOG
-//  2021-12-21: Update SDL_RenderGeometryRaw() format to work with SDL 2.0.19.
+//  2021-12-21: update SDL_RenderGeometryRaw() format to work with SDL 2.0.19.
 //  2021-12-03: Added support for large mesh (64K+ vertices), enable
 //  ImGuiBackendFlags_RendererHasVtxOffset flag. 2021-10-06: Backup and restore
 //  modified clip_rect/viewport. 2021-09-21: Initial version.

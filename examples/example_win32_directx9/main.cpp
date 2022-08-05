@@ -193,7 +193,7 @@ int main(int, char **) {
       g_pd3dDevice->EndScene();
     }
 
-    // Update and Render additional Platform windows
+    // update and Render additional Platform windows
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
       ImGui::UpdatePlatformWindows();
       ImGui::RenderPlatformWindowsDefault();

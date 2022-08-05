@@ -203,7 +203,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
 //         let line_start_pos = buf->size(); (void)line_start_pos;
 //         const ImGuiDockNodeSettings* node_settings = &dc.nodes_settings[node_n];
 //         buf.appendf("%*s%s%*s", node_settings.Depth * 2, "", (node_settings.flags & DockNodeFlags::DockSpace) ? "DockSpace" : "dock_node ", (max_depth - node_settings.Depth) * 2, "");  // Text align nodes to facilitate looking at .ini file
-//         buf.appendf(" id=0x%08X", node_settings->ID);
+//         buf.appendf(" id=0x%08X", node_settings->id);
 //         if (node_settings->parent_node_id)
 //         {
 //             buf->appendf(" Parent=0x%08X size_ref=%d,%d", node_settings->parent_node_id, node_settings.size_ref.x, node_settings.size_ref.y);
@@ -233,7 +233,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
 //
 // // #ifIMGUI_DEBUG_INI_SETTINGS
 //         // [DEBUG] Include comments in the .ini file to ease debugging
-//         if (ImGuiDockNode* node = dock_context_find_node_by_id(g, node_settings->ID))
+//         if (ImGuiDockNode* node = dock_context_find_node_by_id(g, node_settings->id))
 //         {
 //             buf->appendf("%*s", ImMax(2, (line_start_pos + 92) - buf->size()), "");     // Align everything
 //             if (node->is_dock_space() && node->HostWindow && node->HostWindow->parent_window)
@@ -241,7 +241,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
 //             // Iterate settings so we can give info about windows that didn't exist during the session.
 //             int contains_window = 0;
 //             for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
-//                 if (settings.dock_id == node_settings->ID)
+//                 if (settings.dock_id == node_settings->id)
 //                 {
 //                     if (contains_window += 1 == 0)
 //                         buf->appendf(" ; contains ");

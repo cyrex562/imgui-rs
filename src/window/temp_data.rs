@@ -1,7 +1,7 @@
 use crate::column::OldColumns;
 use crate::input::NavLayer;
 use crate::layout::LayoutType;
-use crate::menu::ImGuiMenuColumns;
+use crate::menu_columns::MenuColumns;
 use crate::types::Id32;
 use crate::vectors::Vector1D;
 use crate::vectors::vector_2d::Vector2D;
@@ -24,7 +24,7 @@ pub struct WindowTempData {
     pub ideal_max_pos: Vector2D,
     // Vector2D                  curr_line_size;
     pub curr_line_size: Vector2D,
-    // Vector2D                  PrevLineSize;
+    // Vector2D                  prev_line_size;
     pub prev_line_size: Vector2D,
     // float                   curr_line_text_base_offset; // Baseline offset (0.0 by default on a new line, generally == style.FramePadding.y when a framed item has been added).
     pub curr_line_text_base_offset: f32,
@@ -41,7 +41,7 @@ pub struct WindowTempData {
     // Vector2D                  CursorStartPosLossyness;// Record the loss of precision of CursorStartPos due to really large scrolling amount. This is used by clipper to compensentate and fix the most common use case of large scroll area.
     pub cursort_start_pos_lossyness: Vector2D,
     // Keyboard/Gamepad navigation
-    // ImGuiNavLayer           NavLayerCurrent;        // current layer, 0..31 (we currently only use 0..1)
+    // ImGuiNavLayer           nav_layer_current;        // current layer, 0..31 (we currently only use 0..1)
     pub nav_layer_current: NavLayer,
     // short                   nav_layers_active_mask;    // Which layers have been written to (result from previous frame)
     pub nav_layers_active_mask: i16,
@@ -59,7 +59,7 @@ pub struct WindowTempData {
     // Vector2D                  menu_bar_offset;          // menu_bar_offset.x is sort of equivalent of a per-layer CursorPos.x, saved/restored as we switch to the menu bar. The only situation when menu_bar_offset.y is > 0 if when (SafeAreaPadding.y > FramePadding.y), often used on TVs.
     pub menu_bar_offset: Vector2D,
     // ImGuiMenuColumns        menu_columns;            // Simplified columns storage for menu items measurement
-    pub menu_columns: ImGuiMenuColumns,
+    pub menu_columns: MenuColumns,
     // int                     tree_depth;              // current tree depth.
     pub tree_depth: i32,
     // ImU32                   tree_jump_to_parent_on_pop_mask; // Store a copy of !g.nav_id_is_alive for tree_depth 0..31.. Could be turned into a ImU64 if necessary.

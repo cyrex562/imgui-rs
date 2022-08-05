@@ -533,7 +533,7 @@ static void ImGui_ImplOSX_UpdateGamepads()
 
     GCExtendedGamepad* gp = controller.extendedGamepad;
 
-    // Update gamepad inputs
+    // update gamepad inputs
     #define IM_SATURATE(V)                        (V < 0.0 ? 0.0 : V > 1.0 ? 1.0 : V)
     #define MAP_BUTTON(KEY_NO, BUTTON_NAME)       { io.AddKeyEvent(KEY_NO, gp.BUTTON_NAME.isPressed); }
     #define MAP_ANALOG(KEY_NO, AXIS_NAME, V0, V1) { float vn = (float)(gp.AXIS_NAME.value - V0) / (float)(V1 - V0); vn = IM_SATURATE(vn); io.AddKeyAnalogEvent(KEY_NO, vn > 0.1, vn); }

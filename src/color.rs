@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use crate::imgui_h::Color;
 use crate::imgui_math::{IM_F32_TO_INT8_SAT};
 use crate::imgui_vec::Vector4D;
-use crate::math::{f32_mod, im_f32_to_int8_sat, lerp_u32};
+use crate::math::{f32_mod, f32_to_int8_sat, lerp_u32};
 use crate::vectors::Vector4D;
 
 pub fn im_alpha_blend_colors(col_a: u32, col_b: u32) -> u32 {
@@ -28,10 +28,10 @@ pub fn convert_u32_color_to_vector4d(in_u32: u32) -> Vector4D {
 }
 
 pub fn convert_vector4d_to_u32_color(in_vec: &Vector4D) -> u32 {
-    let mut out: u32 = ((im_f32_to_int8_sat(in_vec.x)) << IM_COL32_R_SHIFT) as u32;
-    out |= ((im_f32_to_int8_sat(in_vec.y)) << IM_COL32_G_SHIFT) as u32;
-    out |= ((im_f32_to_int8_sat(in_vec.z)) << IM_COL32_B_SHIFT) as u32;
-    out |= ((im_f32_to_int8_sat(in_vec.w)) << IM_COL32_A_SHIFT) as u32;
+    let mut out: u32 = ((f32_to_int8_sat(in_vec.x)) << IM_COL32_R_SHIFT) as u32;
+    out |= ((f32_to_int8_sat(in_vec.y)) << IM_COL32_G_SHIFT) as u32;
+    out |= ((f32_to_int8_sat(in_vec.z)) << IM_COL32_B_SHIFT) as u32;
+    out |= ((f32_to_int8_sat(in_vec.w)) << IM_COL32_A_SHIFT) as u32;
     out
 }
 

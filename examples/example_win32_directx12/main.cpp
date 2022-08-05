@@ -216,7 +216,7 @@ int main(int, char**)
 
         g_pd3dCommandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&g_pd3dCommandList);
 
-        // Update and Render additional Platform windows
+        // update and Render additional Platform windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             ImGui::UpdatePlatformWindows();

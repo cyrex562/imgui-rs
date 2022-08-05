@@ -123,7 +123,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
         node.set_local_flags(node.local_flags | DockNodeFlags::CentralNode);
     }
 
-    // Update the node
+    // update the node
     dock_node_update(g, node.unwrap());
 
     end(g);

@@ -38,13 +38,13 @@ pub fn set_item_default_focus(g: &mut Context)
     Window* window = g.current_window;
     if (!window.Appearing)
         return;
-    if (g.nav_window != window.root_window_for_nav || (!g.NavInitRequest && g.NavInitResultId == 0) || g.NavLayer != window.dcnav_layer_current)
+    if (g.nav_window != window.root_window_for_nav || (!g.nav_init_request && g.NavInitResultId == 0) || g.nav_layer != window.dcnav_layer_current)
         return;
 
-    g.NavInitRequest = false;
+    g.nav_init_request = false;
     g.NavInitResultId = g.last_item_data.id;
     g.NavInitResultRectRel = window_rect_abs_to_rel(window, g.last_item_data.Rect);
-    NavUpdateAnyRequestFlag();
+    nav_update_any_request_flag();
 
     // scroll could be done in NavInitRequestApplyResult() via a opt-in flag (we however don't want regular init requests to scroll)
     if (!IsItemVisible())

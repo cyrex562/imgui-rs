@@ -21,7 +21,7 @@ use crate::dock::preview::DockPreviewData;
 use crate::dock::settings::dock_settings_rename_node_references;
 use crate::dock::{int, node, settings};
 use crate::drag_drop::get_drag_drop_payload;
-use crate::draw::list::get_foreground_draw_list;
+use crate::draw::list::foreground_draw_list;
 use crate::frame::get_frame_height;
 use crate::input::mouse::{
     is_mouse_clicked, start_mouse_moving_window, start_mouse_moving_window_or_node,
@@ -233,7 +233,7 @@ impl DockNode {
     //
     // ImGuiDockNode::ImGuiDockNode(Id32 id)
     // {
-    //     ID = id;
+    //     id = id;
     //     SharedFlags = LocalFlags = LocalFlagsInWindows = MergedFlags = ImGuiDockNodeFlags_None;
     //     ParentNode = ChildNodes[0] = ChildNodes[1] = None;
     //     TabBar = None;
@@ -498,7 +498,7 @@ pub fn dock_node_find_info(g: &mut Context, node: &mut DockNode, info: &mut Dock
 }
 
 // - Remove inactive windows/nodes.
-// - Update visibility flag.
+// - update visibility flag.
 // static void dock_node_update_flags_and_collapse(ImGuiDockNode* node)
 pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode) {
     // ImGuiContext& g = *GImGui;
@@ -629,7 +629,7 @@ pub fn dock_node_update_has_central_node_child(g: &mut Context, node: &mut DockN
 
 // static void dock_node_update_visible_flag(ImGuiDockNode* node)
 pub fn dock_node_update_visible_flag(g: &mut Context, node: &mut DockNode) {
-    // Update visibility flag
+    // update visibility flag
     let mut is_visible = if node.parent_node_id == INVALID {
         node.is_dock_space()
     } else {
@@ -643,7 +643,7 @@ pub fn dock_node_update_visible_flag(g: &mut Context, node: &mut DockNode) {
     node.is_visible = is_visible;
 }
 
-// Update central_node, only_node_with_windows, LastFocusedNodeID. Copy window class.
+// update central_node, only_node_with_windows, LastFocusedNodeID. Copy window class.
 // static void dock_node_update_for_root_node(ImGuiDockNode* node)
 pub fn dock_node_update_for_root_node(g: &mut Context, node: &mut DockNode) {
     dock_node_update_flags_and_collapse(g, node);
@@ -915,7 +915,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         }
     }
 
-    // Update focused node (the one whose title bar is highlight) within a node tree
+    // update focused node (the one whose title bar is highlight) within a node tree
     if node.is_split_node() {}
     // IM_ASSERT(node.TabBar == None);
     if node.is_root_node() {
@@ -1001,7 +1001,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         }
     }
 
-    // Update position/size, process and draw resizing splitters
+    // update position/size, process and draw resizing splitters
     if node.is_root_node() && host_window.is_some() {
         host_window.unwrap().draw_list.channels_set_current(1);
         tree::dock_node_tree_update_pos_size(
@@ -1223,7 +1223,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
     let child_0 = g.dock_node_mut(node.child_nodes[0]);
     let child_1 = g.dock_node_mut(node.child_nodes[1]);
     if child_0.unwrap().is_visible && child_1.unwrap().is_visible {
-        // Bounding box of the splitter cover the space between both nodes (w = Spacing, h = size[xy^1] for when splitting horizontally)
+        // Bounding box of the splitter cover the space between both nodes (w = spacing, h = size[xy^1] for when splitting horizontally)
         // const ImGuiAxis axis = node.split_axis;
         let axis = node.split_axis.clone();
         // IM_ASSERT(axis != ImGuiAxis_None);

@@ -874,7 +874,7 @@ Other Changes:
 - Backends: GLFW: Adding bound check in KeyCallback because GLFW appears to send -1 on some setups. [#4124]
 - Backends: Vulkan: Fix mapped memory Vulkan validation error when buffer sizes are not multiple of
   VkPhysicalDeviceLimits::nonCoherentAtomSize. (#3957) [@AgentX1994]
-- Backends: WebGPU: Update to latest specs (Chrome Canary 92 and Emscripten 2.0.20). (#4116, #3632) [@bfierz, @Kangz]
+- Backends: WebGPU: update to latest specs (Chrome Canary 92 and Emscripten 2.0.20). (#4116, #3632) [@bfierz, @Kangz]
 - Backends: OpenGL3: Don't try to read GL_CLIP_ORIGIN unless we're OpenGL 4.5. (#3998, #2366, #2186) [@s7jones]
 - Examples: OpenGL: Add OpenGL ES 2.0 support to modern GL examples. (#2837, #3951) [@lethal-guitar, @hinxx]
 - Examples: Vulkan: Rebuild swapchain on VK_SUBOPTIMAL_KHR. (#3881)
@@ -1239,7 +1239,7 @@ Breaking Changes:
 - ImGuiListClipper: Renamed constructor parameters which created an ambiguous alternative to using
   the ImGuiListClipper::Begin() function, with misleading edge cases. Always use ImGuiListClipper::Begin()!
   Kept inline redirection function (will obsolete).
-  (note: imgui_memory_editor <0.40 from imgui_club/ used this old clipper API. Update your copy if needed).
+  (note: imgui_memory_editor <0.40 from imgui_club/ used this old clipper API. update your copy if needed).
 - style: Renamed style.TabMinWidthForUnselectedCloseButton to style.TabMinWidthForCloseButton.
 - Renamed ImGuiSliderFlags_ClampOnInput to ImGuiSliderFlags_AlwaysClamp. Kept redirection enum (will obsolete).
 - Renamed OpenPopupContextItem() back to OpenPopupOnItemClick(), REVERTED CHANGE FROM 1.77.

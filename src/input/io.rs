@@ -3,7 +3,7 @@ use crate::config::{BackendFlags, ConfigFlags};
 use crate::context::Context;
 use crate::font::font_atlas::FontAtlas;
 use crate::font::Font;
-use crate::input::{DimgInputEventType, DimgKey, KeyInputData, InputSource, ModFlags};
+use crate::input::{InputEventType, Key, KeyInputData, InputSource, ModFlags};
 use crate::input::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
 use crate::types::{DimgWchar, Id32};
@@ -354,7 +354,7 @@ impl Io {
 
     // Input Functions
     //  void  add_key_event(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
-    pub fn add_key_event(&mut self, key: &DimgKey, down: bool) {
+    pub fn add_key_event(&mut self, key: &Key, down: bool) {
         if !self.app_accepting_events {
             return;
         }
@@ -365,9 +365,9 @@ impl Io {
     // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
     // - bool down:          Is the key down? use false to signify a key release.
     // - float analog_value: 0.0..1.0
-    pub fn add_key_analog_event(&mut self, g: &mut Context, key: &DimgKey, down: bool, v: f32) {
+    pub fn add_key_analog_event(&mut self, g: &mut Context, key: &Key, down: bool, v: f32) {
         //if (e->down) { IMGUI_DEBUG_LOG_IO("add_key_event() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->down, e->NativeKeycode, e->NativeScancode); }
-        if key == DimgKey::None || !self.app_accepting_events {
+        if key == Key::None || !self.app_accepting_events {
             return;
         }
         //ImGuiContext& g = *GImGui;
@@ -393,7 +393,7 @@ impl Io {
             // for (int n = g.input_events_queue.size - 1; n >= 0 && !found; n--){
             let mut n = g.InputEventsQueue.size - 1;
             while n >= 0 && !found {
-                if g.InputEventsQueue[n].Type == DimgInputEventType::Key
+                if g.InputEventsQueue[n].Type == InputEventType::Key
                     && g.InputEventsQueue[n].Key.Key == key
                 {
                     found = true;
@@ -406,7 +406,7 @@ impl Io {
 
         // Add event
         let mut e: InputEvent = InputEvent::new();
-        e.input_event_type = DimgInputEventType::Key;
+        e.input_event_type = InputEventType::Key;
         e.source = if self.is_gamepad_key(key) {
             InputSource::Gamepad
         } else {
@@ -426,7 +426,7 @@ impl Io {
         }
 
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::MousePos;
+        e.input_event_type = InputEventType::MousePos;
         e.source = InputSource::Mouse;
         e.MousePos.PosX = x;
         e.MousePos.PosY = y;
@@ -442,7 +442,7 @@ impl Io {
         }
 
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::MouseButton;
+        e.input_event_type = InputEventType::MouseButton;
         e.source = InputSource::Mouse;
         e.MouseButton.Button = button;
         e.MouseButton.down = down;
@@ -458,7 +458,7 @@ impl Io {
 
         //DimgInputEvent e;
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::mouse_wheel;
+        e.input_event_type = InputEventType::MouseWheel;
         e.source = InputSource::Mouse;
         e.mouse_wheel.WheelX = wheel_x;
         e.mouse_wheel.WheelY = wheel_y;
@@ -472,7 +472,7 @@ impl Io {
 
         // DimgInputEvent e;
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::mouse_viewport;
+        e.input_event_type = InputEventType::MouseViewport;
         e.source = InputSource::Mouse;
         e.mouse_viewport.HoveredViewportID = id;
         g.InputEventsQueue.push_back(e);
@@ -484,7 +484,7 @@ impl Io {
 
         // DimgInputEvent e;
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::Focus;
+        e.input_event_type = InputEventType::Focus;
         e.AppFocused.Focused = focused;
         g.InputEventsQueue.push_back(e);
     }
@@ -501,7 +501,7 @@ impl Io {
             return;
         }
         let e: InputEvent = InputEvent {
-            input_event_type: DimgInputEventType::Text,
+            input_event_type: InputEventType::Text,
             source: InputSource::Keyboard,
             val: DimgInputEventVal::new(),
             added_byt_test_engine: false,
@@ -565,12 +565,12 @@ impl Io {
     // Specify native keycode, scancode + Specify index for legacy <1.87 IsKeyXXX() functions with native indices.
     // If you are writing a backend in 2022 or don't use IsKeyXXX() with native values that are not ImGuiKey values, you can avoid calling this.
     pub fn set_key_event_native_data(
-        key: DimgKey,
+        key: Key,
         native_keycode: i32,
         native_scancode: i32,
         native_legacy_index: i32,
     ) {
-        if key == DimgKey::None {
+        if key == Key::None {
             return;
         }
         // IM_ASSERT(ImGui::IsNamedKey(key)); // >= 512
@@ -642,7 +642,7 @@ pub struct PlatformIo {
     // Platform function --------------------------------------------------- Called by -----
 
     // (Optional) Monitor list
-    // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.
+    // - Updated by: app/backend. update every frame to dynamically support changing monitor or DPI configuration.
     // - Used by: dear imgui to query DPI info, clamp popups/tooltips within same monitor and not have them straddle monitors.
     // ImVector<ImGuiPlatformMonitor>  Monitors;
     pub Monitors: Vec<ImGuiPlatformMonitor>,

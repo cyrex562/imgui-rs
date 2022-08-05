@@ -471,7 +471,7 @@ static void sSetDisconnected(uSynergyContext *context)
 
 
 /**
-@brief Update a connected context
+@brief update a connected context
 **/
 static void sUpdateContext(uSynergyContext *context)
 {
@@ -578,13 +578,13 @@ void uSynergyInit(uSynergyContext *context)
 
 
 /**
-@brief Update uSynergy
+@brief update uSynergy
 **/
 void uSynergyUpdate(uSynergyContext *context)
 {
 	if (context->m_connected)
 	{
-		/* Update context, receive data, call callbacks */
+		/* update context, receive data, call callbacks */
 		sUpdateContext(context);
 	}
 	else

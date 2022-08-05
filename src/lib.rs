@@ -53,7 +53,7 @@ mod layout;
 mod list_clipper;
 mod log;
 mod math;
-mod menu;
+mod menu_columns;
 mod metrics;
 mod modal;
 mod nav;

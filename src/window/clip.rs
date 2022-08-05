@@ -23,7 +23,7 @@ pub fn push_clip_rect(
         clip_rect_max,
         intersect_with_current_clip_rect,
     );
-    // window.ClipRect = window.draw_list->_ClipRectStack.back();
+    // window.clip_rect = window.draw_list->_ClipRectStack.back();
     window.clip_rect = draw_list.clip_rect_stack.last().unwrap().clone()
 }
 
@@ -34,6 +34,6 @@ pub fn pop_clip_rect(g: &mut Context) {
     // window.draw_list->PopClipRect();
     let draw_list = g.draw_list_mut(window.draw_list_id).unwrap();
     draw_list.pop_clip_rect();
-    // window.ClipRect = window.draw_list->_ClipRectStack.back();
+    // window.clip_rect = window.draw_list->_ClipRectStack.back();
     window.clip_rect = draw_list.clip_rect_stack.last().unwrap().clone();
 }

@@ -17,7 +17,7 @@
 //  2021-08-24: Fix for latest specs.
 //  2021-05-24: Add support for draw_data->framebuffer_scale.
 //  2021-05-19: Replaced direct access to ImDrawCmd::texture_id with a call to ImDrawCmd::get_tex_id(). (will become a requirement)
-//  2021-05-16: Update to latest WebGPU specs (compatible with Emscripten 2.0.20 and Chrome Canary 92).
+//  2021-05-16: update to latest WebGPU specs (compatible with Emscripten 2.0.20 and Chrome Canary 92).
 //  2021-02-18: Change blending equation to preserve alpha in output buffer.
 //  2021-01-28: Initial version.
 

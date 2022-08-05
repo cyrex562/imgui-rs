@@ -4,7 +4,7 @@ use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, INVALID_ID, window};
 use crate::color::{COLOR32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
 use crate::draw::data::add_root_window_to_draw_data;
-use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
+use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, foreground_draw_list};
 use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::Color;
@@ -94,7 +94,7 @@ void ImGui::render_textClippedEx(ImDrawList* draw_list, const Vector2D& pos_min,
 {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     Vector2D pos = pos_min;
-    const Vector2D text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_display_end, false, 0.0);
+    const Vector2D text_size = text_size_if_known ? *text_size_if_known : calc_text_size(text, text_display_end, false, 0.0);
 
     const Vector2D* clip_min = clip_rect ? &clip_rect.min : &pos_min;
     const Vector2D* clip_max = clip_rect ? &clip_rect.Max : &pos_max;
@@ -142,7 +142,7 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
     // ImGuiContext& g = *GImGui;
     if (text_end_full == None)
         text_end_full = FindRenderedTextEnd(text);
-    const Vector2D text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_end_full, false, 0.0);
+    const Vector2D text_size = text_size_if_known ? *text_size_if_known : calc_text_size(text, text_end_full, false, 0.0);
 
     //draw_list->add_line(Vector2D(pos_max.x, pos_min.y - 4), Vector2D(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list->add_line(Vector2D(ellipsis_max_x, pos_min.y-2), Vector2D(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
@@ -378,7 +378,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
             continue;
         }
         // ImDrawList* draw_list = GetForegroundDrawList(viewport);
-        let draw_list = get_foreground_draw_list(g, viewport);
+        let draw_list = foreground_draw_list(g, viewport);
         let dim_bg_col = get_color_u32(if dim_bg_for_modal { StyleColor::ModalWindowDimBg } else { StyleColor::NavWindowingDimBg }, g.dim_bg_ration);
         draw_list.add_rect_filled(viewport.pos, viewport.pos + viewport.size, dim_bg_col, 0.0, 0.0);
     }
@@ -468,7 +468,7 @@ pub fn render(g: &mut Context)
 
         // Add foreground ImDrawList (for each active viewport)
         if viewport.draw_list_ids[1] != INVALID_ID {
-        add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], get_foreground_draw_list(g,viewport));
+        add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], foreground_draw_list(g, viewport));
     }
         setup_viewport_draw_data(g, viewport, &viewport.draw_data_builder.layers[0]);
         let draw_data = &viewport.draw_data;

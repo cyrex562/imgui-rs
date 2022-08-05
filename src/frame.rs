@@ -132,7 +132,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         keep_alive_id(g.drag_drop_payload.source_id);
     }
 
-    // Update hovered_id data
+    // update hovered_id data
     if !g.hovered_id_previous_frame {
         g.hovered_id_timer = 0.0;
     }
@@ -161,7 +161,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         clear_active_id();
     }
 
-    // Update active_id data (clear reference to active widget if the widget isn't alive anymore)
+    // update active_id data (clear reference to active widget if the widget isn't alive anymore)
     if g.active_id {
         g.active_id_timer += g.io.delta_time;
     }
@@ -199,7 +199,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.input_events_trail.resize(0, InputEvent::default());
     update_input_events(g, g.io.config_input_trickle_event_queue);
 
-    // Update keyboard input state
+    // update keyboard input state
     update_keyboard_inputs(g);
 
     //IM_ASSERT(g.io.key_ctrl == IsKeyDown(ImGuiKey_LeftCtrl) || IsKeyDown(ImGuiKey_RightCtrl));
@@ -207,10 +207,10 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     //IM_ASSERT(g.io.key_alt == IsKeyDown(ImGuiKey_LeftAlt) || IsKeyDown(ImGuiKey_RightAlt));
     //IM_ASSERT(g.io.key_super == IsKeyDown(ImGuiKey_LeftSuper) || IsKeyDown(ImGuiKey_RightSuper));
 
-    // Update gamepad/keyboard navigation
+    // update gamepad/keyboard navigation
     nav_update(g);
 
-    // Update mouse input state
+    // update mouse input state
     update_mouse_inputs(g);
 
     // Undocking
@@ -299,7 +299,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     // Docking
     dock_context_new_frame_update_docking(g);
 
-    // [DEBUG] Update debug features
+    // [DEBUG] update debug features
     update_debug_tool_item_picker(g);
     update_debug_tool_stack_queries(g);
 
@@ -346,10 +346,10 @@ pub fn end_frame(g: &mut Context)
     }
     end(g);
 
-    // Update navigation: CTRL+Tab, wrap-around requests
+    // update navigation: CTRL+Tab, wrap-around requests
     nav_end_frame(g);
 
-    // Update docking
+    // update docking
     dock_context_end_frame(g);
 
     set_current_viewport(g, None, None);
@@ -379,7 +379,7 @@ pub fn end_frame(g: &mut Context)
     // Initiate moving window + handle left-click and right-click focus
     update_mouse_moving_window_end_frame(g);
 
-    // Update user-facing viewport list (g.viewports -> g.platform_io.viewports after filtering out some)
+    // update user-facing viewport list (g.viewports -> g.platform_io.viewports after filtering out some)
     update_viewports_end_frame();
 
     // Sort the window list so that all child windows are after their parent

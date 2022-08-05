@@ -3,6 +3,8 @@ use crate::Context;
 use crate::imgui_clipper::ListClipperData;
 use crate::imgui_globals::GImGui;
 use crate::imgui_math::ImMaxF32;
+use crate::nav::NavMoveFlags;
+use crate::types::Direction;
 use crate::window::lifecycle::end;
 
 // Helper: Manually clip large list of items.
@@ -28,8 +30,8 @@ use crate::window::lifecycle::end;
 #[derive(Default,Debug,Clone)]
 pub struct ListClipper
 {
-    pub display_start: i32,     // First item to display, updated by each call to step()
-    pub display_end: i32,       // End of items to display (exclusive)
+    pub display_start: usize,     // First item to display, updated by each call to step()
+    pub display_end: usize,       // End of items to display (exclusive)
     pub items_count: usize,       // [Internal] Number of items
     pub items_height: f32,       // [Internal] height of item after a first step and item submission can calculate it
     pub start_pos_y: f32,         // [Internal] Cursor position at the time of Begin() or after table frozen rows are all processed
@@ -89,7 +91,7 @@ impl ListClipper {
     pub fn end(&mut self) {
 
         // ImGuiContext& g = *GImGui;
-        // if (ListClipperData* data = (ListClipperData*)TempData)
+        // if (ListClipperData* data = (ListClipperData*)temp_data)
         let mut data = &mut self.temp_data;
         if data.is_empty() == false {
             // In theory here we should assert that we are already at the right position, but it seems saner to just seek at the end and not assert/crash the user.
@@ -112,146 +114,152 @@ impl ListClipper {
     }
 
     //  bool  step();            // Call until it returns false. The display_start/display_end fields will be set and you can process/draw those items.
-    pub fn step(&mut self) -> bool {
+    pub fn step(&mut self, g: &mut Context) -> bool {
         // ImGuiContext& g = *GImGui;
-    // Window* window = g.current_window;
-    let window = g.current_window_mut();
-        // ListClipperData* data = (ListClipperData*)TempData;
-    let mut data = &mut self.temp_data;
+        // Window* window = g.current_window;
+        let window = g.current_window_mut();
+        // ListClipperData* data = (ListClipperData*)temp_data;
+        let mut data: &mut ListClipperData = &mut self.temp_data.into();
         // IM_ASSERT(data != None && "Called ImGuiListClipper::step() too many times, or before ImGuiListClipper::Begin() ?");
 
-    // ImGuiTable* table = g.current_table;
-    let mut table = &mut g.current_table;
+        // ImGuiTable* table = g.current_table;
+        let mut table = &mut g.current_table;
         if table && table.is_inside_row {
             table_end_row(table);
         }
 
-    // No items
-    if (self.items_count == 0 || GetSkipItemForListClipping()) {
-        end(g);
-        return false;
-    }
+        // No items
+        if self.items_count == 0 || get_skip_item_for_list_clipping(g) {
+            end(g);
+            return false;
+        }
 
-    // While we are in frozen row state, keep displaying items one by one, unclipped
-    // FIXME: Could be stored as a table-agnostic state.
-    if (data.StepNo == 0 && table != None && !table.IsUnfrozenRows)
-    {
-        DisplayStart = data.items_frozen;
-        DisplayEnd = data.items_frozen + 1;
-        if (DisplayStart >= ItemsCount)
-            return (void)end(), false;
-        data.items_frozen += 1;
-        return true;
-    }
-
-    // step 0: Let you process the first element (regardless of it being visible or not, so we can measure the element height)
-    bool calc_clipping = false;
-    if (data.StepNo == 0)
-    {
-        StartPosY = window.dc.cursor_pos.y;
-        if (ItemsHeight <= 0.0)
-        {
-            // Submit the first item (or range) so we can measure its height (generally the first range is 0..1)
-            data.Ranges.push_front(ImGuiListClipperRange::FromIndices(data.items_frozen, data.items_frozen + 1));
-            DisplayStart = ImMax(data.Ranges[0].min, data.items_frozen);
-            DisplayEnd = ImMin(data.Ranges[0].max, ItemsCount);
-            if (DisplayStart == DisplayEnd)
-                return (void)end(), false;
-            data.StepNo = 1;
+        // While we are in frozen row state, keep displaying items one by one, unclipped
+        // FIXME: Could be stored as a table-agnostic state.
+        if data.step_no == 0 && table != None && !table.is_unfrozen_rows {
+            self.display_start = data.items_frozen;
+            self.display_end = data.items_frozen + 1;
+            if self.display_start >= self.items_count {
+                end(g);
+                return false;
+            }
+            data.items_frozen += 1;
             return true;
         }
-        calc_clipping = true;   // If on the first step with known item height, calculate clipping.
-    }
 
-    // step 1: Let the clipper infer height from first range
-    if (ItemsHeight <= 0.0)
-    {
-        // IM_ASSERT(data.step_no == 1);
-        if (table)
-            // IM_ASSERT(table.RowPosY1 == start_pos_y && table.RowPosY2 == window.dc.cursor_pos.y);
-
-        ItemsHeight = (window.dc.cursor_pos.y - StartPosY) / (DisplayEnd - DisplayStart);
-        bool affected_by_floating_point_precision = ImIsFloatAboveGuaranteedIntegerPrecision(StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.dc.cursor_pos.y);
-        if (affected_by_floating_point_precision)
-            ItemsHeight = window.dc.PrevLineSize.y + g.style.item_spacing.y; // FIXME: Technically wouldn't allow multi-line entries.
-
-        // IM_ASSERT(items_height > 0.0 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
-        calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.
-    }
-
-    // step 0 or 1: Calculate the actual ranges of visible elements.
-    let already_submitted = DisplayEnd;
-    if (calc_clipping)
-    {
-        if (g.log_enabled)
-        {
-            // If logging is active, do not perform any clipping
-            data.Ranges.push_back(ImGuiListClipperRange::FromIndices(0, ItemsCount));
-        }
-        else
-        {
-            // Add range selected to be included for navigation
-            const bool is_nav_request = (g.NavMoveScoringItems && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
-            if (is_nav_request)
-                data.Ranges.push_back(ImGuiListClipperRange::FromPositions(g.NavScoringNoClipRect.min.y, g.NavScoringNoClipRect.max.y, 0, 0));
-            if (is_nav_request && (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && g.NavTabbingDir == -1)
-                data.Ranges.push_back(ImGuiListClipperRange::FromIndices(ItemsCount - 1, ItemsCount));
-
-            // Add focused/active item
-            Rect nav_rect_abs = ImGui::WindowRectRelToAbs(window, window.nav_rectRel[0]);
-            if (g.nav_id != 0 && window.nav_last_ids[0] == g.nav_id)
-                data.Ranges.push_back(ImGuiListClipperRange::FromPositions(nav_rect_abs.min.y, nav_rect_abs.max.y, 0, 0));
-
-            // Add visible range
-            let off_min = if (is_nav_request && g.NavMoveClipDir == Direction::Up) { -1 }else{ 0};
-            let off_max = if (is_nav_request && g.NavMoveClipDir == Direction::Down) { 1 }else{ 0};
-            data.Ranges.push_back(ImGuiListClipperRange::FromPositions(window.clip_rect.min.y, window.clip_rect.max.y, off_min, off_max));
-        }
-
-        // Convert position ranges to item index ranges
-        // - Very important: when a starting position is after our maximum item, we set min to (items_count - 1). This allows us to handle most forms of wrapping.
-        // - Due to how selectable extra padding they tend to be "unaligned" with exact unit in the item list,
-        //   which with the flooring/ceiling tend to lead to 2 items instead of one being submitted.
-        for (int i = 0; i < data.Ranges.size; i += 1)
-            if (data.Ranges[i].PosToIndexConvert)
-            {
-                int m1 = (((double)data.Ranges[i].min - window.dc.cursor_pos.y - data.lossyness_offset) / ItemsHeight);
-                int m2 = ((((double)data.Ranges[i].max - window.dc.cursor_pos.y - data.lossyness_offset) / ItemsHeight) + 0.999999);
-                data.Ranges[i].min = ImClamp(already_submitted + m1 + data.Ranges[i].PosToIndexOffsetMin, already_submitted, ItemsCount - 1);
-                data.Ranges[i].max = ImClamp(already_submitted + m2 + data.Ranges[i].PosToIndexOffsetMax, data.Ranges[i].min + 1, ItemsCount);
-                data.Ranges[i].PosToIndexConvert = false;
+        // step 0: Let you process the first element (regardless of it being visible or not, so we can measure the element height)
+        let mut calc_clipping = false;
+        if data.step_no == 0 {
+            self.start_pos_y = window.dc.cursor_pos.y;
+            if self.items_height <= 0.0 {
+                // Submit the first item (or range) so we can measure its height (generally the first range is 0..1)
+                data.ranges.push_front(ImGuiListClipperRange::FromIndices(data.items_frozen, data.items_frozen + 1));
+                self.display_start = ImMax(data.ranges[0].min, data.items_frozen);
+                self.display_end = ImMin(data.ranges[0].max, self.items_count);
+                if self.display_start == self.display_end {
+                    // return (void);
+                    // end(), false;
+                    end(g);
+                    return false;
+                }
+                data.step_num = 1;
+                return true;
             }
-        ImGuiListClipper_SortAndFuseRanges(data.Ranges, data.StepNo);
-    }
+            calc_clipping = true;   // If on the first step with known item height, calculate clipping.
+        }
 
-    // step 0+ (if item height is given in advance) or 1+: Display the next range in line.
-    if (data.StepNo < data.Ranges.size)
-    {
-        DisplayStart = ImMax(data.Ranges[data.StepNo].min, already_submitted);
-        DisplayEnd = ImMin(data.Ranges[data.StepNo].max, ItemsCount);
-        if (DisplayStart > already_submitted) //-V1051
-            ImGuiListClipper_SeekCursorForItem(this, DisplayStart);
-        data.StepNo += 1;
-        return true;
-    }
+        // step 1: Let the clipper infer height from first range
+        if self.items_height <= 0.0 {
+            // IM_ASSERT(data.step_no == 1);
+            if table {}
+            // IM_ASSERT(table.row_pos_y1 == start_pos_y && table.row_pos_y2 == window.dc.cursor_pos.y);
 
-    // After the last step: Let the clipper validate that we have reached the expected Y position (corresponding to element display_end),
-    // Advance the cursor to the end of the list and then returns 'false' to end the loop.
-    if (ItemsCount < INT_MAX)
-        ImGuiListClipper_SeekCursorForItem(this, ItemsCount);
+            self.items_height = (window.dc.cursor_pos.y - self.start_pos_y) / (self.display_end - self.display_start);
+            let affected_by_floating_point_precision = is_float_above_guaranteed_interger_precision(self.start_pos_y) || is_float_above_guaranteed_interger_precision(window.dc.cursor_pos.y);
+            if affected_by_floating_point_precision {
+                self.items_height = window.dc.prev_line_size.y + g.style.item_spacing.y;
+            } // FIXME: Technically wouldn't allow multi-line entries.
 
-    end();
-    return false;
+            // IM_ASSERT(items_height > 0.0 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
+            calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.
+        }
+
+        // step 0 or 1: Calculate the actual ranges of visible elements.
+        let already_submitted = self.display_end;
+        if calc_clipping {
+            if g.log_enabled {
+                // If logging is active, do not perform any clipping
+                data.ranges.push_back(ListClipperRange::from_indices(0, self.items_count));
+            } else {
+                // Add range selected to be included for navigation
+                let is_nav_request = (g.nav_move_scoring_items && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
+                if is_nav_request {
+                    data.ranges.push_back(ImGuiListClipperRange::FromPositions(g.NavScoringNoClipRect.min.y, g.NavScoringNoClipRect.max.y, 0, 0));
+                }
+                if is_nav_request && (g.nav_move_flags.contains(&NavMoveFlags::Tabbing)) && g.nav_tabbing_dir == -1 {
+                    data.ranges.push_back(ListClipperRange::from_indices((self.items_count - 1), self.items_count));
+                }
+
+                // Add focused/active item
+                let nav_rect_abs = window_rect_rel_to_abs(window, &window.nav_rect_rel[0]);
+                if g.nav_id != 0 && window.nav_last_ids[0] == g.nav_id {
+                    data.ranges.push_back(ListClipperRange::from_positions(nav_rect_abs.min.y, nav_rect_abs.max.y, 0, 0));
+                }
+
+                // Add visible range
+                let off_min = if is_nav_request && g.nav_move_clip_dir == Direction::Up { -1 } else { 0 };
+                let off_max = if is_nav_request && g.nav_move_clip_dir == Direction::Down { 1 } else { 0 };
+                data.ranges.push_back(ListClipperRange::from_positions(window.clip_rect.min.y, window.clip_rect.max.y, off_min, off_max));
+            }
+
+            // Convert position ranges to item index ranges
+            // - Very important: when a starting position is after our maximum item, we set min to (items_count - 1). This allows us to handle most forms of wrapping.
+            // - Due to how selectable extra padding they tend to be "unaligned" with exact unit in the item list,
+            //   which with the flooring/ceiling tend to lead to 2 items instead of one being submitted.
+            // for (int i = 0; i < data.ranges.size; i += 1)
+            for i in 0..data.ranges.size {
+                if data.ranges[i].pos_to_index_convert {
+                    let m1 = ((
+                        data.ranges[i].min - window.dc.cursor_pos.y - data.lossyness_offset) / self.items_height);
+                    let m2 = (((
+                        data.ranges[i].max - window.dc.cursor_pos.y - data.lossyness_offset) / self.items_height) + 0.999999);
+                    data.ranges[i].min = usize::clamp(already_submitted + m1 + data.ranges[i].pos_to_index_offset_min, already_submitted, (self.items_count - 1));
+                    data.ranges[i].max = usize::clamp(already_submitted + m2 + data.ranges[i].pos_to_index_offset_max, data.ranges[i].min + 1, self.items_count);
+                    data.ranges[i].pos_to_index_convert = false;
+                }
+            }
+            sort_and_fuse_ranges(&mut data.ranges, data.step_no);
+        }
+
+        // step 0+ (if item height is given in advance) or 1+: Display the next range in line.
+        if data.step_num < data.ranges.size {
+            self.display_start = ImMax(data.ranges[data.step_num].min, already_submitted);
+            self.display_end = ImMin(data.ranges[data.step_num].max, self.items_count);
+            if self.display_start > already_submitted { //-V1051
+                seek_cursor_for_item(this, self.display_start);
+            }
+            data.step_num += 1;
+            return true;
+        }
+
+        // After the last step: Let the clipper validate that we have reached the expected Y position (corresponding to element display_end),
+        // Advance the cursor to the end of the list and then returns 'false' to end the loop.
+        if self.items_count < usize::MAX {
+            seek_cursor_for_item(this, self.items_count);
+        }
+
+        end(g);
+        return false;
     }
     // Call force_display_range_by_indices() before first call to step() if you need a range of items to be displayed regardless of visibility.
     //  void  force_display_range_by_indices(int item_min, int item_max); // item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.
     pub fn force_display_range_by_indices(&mut self, item_min: i32, item_max: i32) {
-        // ListClipperData* data = (ListClipperData*)TempData;
+        // ListClipperData* data = (ListClipperData*)temp_data;
         let data = &mut self.temp_data;
         // IM_ASSERT(display_start < 0); // Only allowed after Begin() and if there has not been a specified range yet.
         // IM_ASSERT(item_min <= item_max);
         if item_min < item_max {
-            data.Ranges.push_back(ListClipperRange::FromIndices(item_min, item_max));
+            data.ranges.push_back(ListClipperRange::FromIndices(item_min, item_max));
         }
     }
 }
@@ -264,7 +272,7 @@ impl ListClipper {
 pub fn get_skip_item_for_list_clipping(g: &mut Context) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    // return (g.current_table ? g.current_table->HostSkipItems : g.current_window->skip_items);
+    // return (g.current_table ? g.current_table->host_skip_items : g.current_window->skip_items);
     if g.current_table {
         g.current_table.host_skip_items
     } else {
@@ -276,7 +284,7 @@ pub fn get_skip_item_for_list_clipping(g: &mut Context) -> bool
 
 
 //static void ImGuiListClipper_SortAndFuseRanges(ImVector<ImGuiListClipperRange>& ranges, int offset = 0)
-pub fn sort_and_fuse_ranges(ranges: &mut Vec<ListClipper>, offset: usize)
+pub fn sort_and_fuse_ranges(ranges: &mut Vec<ListClipperRange>, offset: usize)
 {
     if ranges.size - offset <= 1 {
         return;
@@ -312,40 +320,38 @@ pub fn sort_and_fuse_ranges(ranges: &mut Vec<ListClipper>, offset: usize)
 }
 
 // static void ImGuiListClipper_SeekCursorAndSetupPrevLine(float pos_y, float line_height)
-pub fn seek_cursor_and_setup_prev_line(pos_y: f32, line_height: f32)
-{
+pub fn seek_cursor_and_setup_prev_line(g: &mut Context, pos_y: f32, line_height: f32) {
     // Set cursor position and a few other things so that SetScrollHereY() and columns() can work when seeking cursor.
     // FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     // ImGuiContext& g = *GImGui;
     // Window* window = g.current_window;
-    let window = g.current_window;
+    let window = g.current_window_mut();
     // float off_y = pos_y - window->dc.cursor_pos.y;
     let off_y = pos_y - window.dc.cursor_pos.y;
     // window->dc.cursor_pos.y = pos_y;
-    *window.dc.cursor_pos.y = pos_y;
+    window.dc.cursor_pos.y = pos_y;
     // window->dc.CursorMaxPos.y = ImMax(window->dc.CursorMaxPos.y, pos_y - g.style.item_spacing.y);
-    *window.dc.cursor_max_pos.y = ImMaxF32(window.dc.cursor_max_pos.y, pos_y - g.style.item_spacing.y);
+    window.dc.cursor_max_pos.y = ImMaxF32(window.dc.cursor_max_pos.y, pos_y - g.style.item_spacing.y);
     // window->dc.cursor_pos_prev_line.y = window->dc.cursor_pos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
-    *window.dc.cursor_pos_prev_line.y = window.dc.cursor_pos.y - line_height;
-    // window->dc.PrevLineSize.y = (line_height - g.style.item_spacing.y);      // If we end up needing more accurate data (to e.g. use same_line) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
-    *window.dc.PrevLineSize.y = (line_height - g.style.item_spacing.y);
-    let columns = window.dc.current_columns;
+    window.dc.cursor_pos_prev_line.y = window.dc.cursor_pos.y - line_height;
+    // window->dc.prev_line_size.y = (line_height - g.style.item_spacing.y);      // If we end up needing more accurate data (to e.g. use same_line) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
+    window.dc.prev_line_size.y = (line_height - g.style.item_spacing.y);
+    let columns = &mut window.dc.current_columns;
     if columns.is_empty() == false {
         columns.LineMinY = window.dc.cursor_pos.y;
     }                         // Setting this so that cell Y position are set properly
     // if (ImGuiTable* table = g.current_table)
-    let table = g.current_table;
-    if table.is_null() == false
-    {
-        if (table.is_inside_row){
+    let table = g.current_table_mut();
+    if table.is_null() == false {
+        if table.is_inside_row {
             table_end_row(table);
-    }
-        table.RowPosY2 = window.dc.cursor_pos.y;
+        }
+        table.row_pos_y2 = window.dc.cursor_pos.y;
         // let row_increase = ((off_y / line_height) + 0.5);
         let row_increate = (off_y / line_height) + 0.5;
-        //table->CurrentRow += row_increase; // Can't do without fixing table_end_row()
-        table.RowBgColorCounter += row_increase;
+        //table->current_row += row_increase; // Can't do without fixing table_end_row()
+        table.row_bg_color_counter += row_increase;
     }
 }
 
@@ -356,10 +362,10 @@ pub fn seek_cursor_for_item(clipper: *mut ListClipper, item_n: usize)
     // Perform the add and multiply with double to allow seeking through larger ranges
     // ListClipperData* data = (ListClipperData*)clipper->temp_data;
     let mut data = &mut clipper.temp_data;
-    // float pos_y = (float)((double)clipper->start_pos_y + data->lossyness_offset + (double)(item_n - data->items_frozen) * clipper->items_height);
+    // float pos_y = (float)(clipper->start_pos_y + data->lossyness_offset + (item_n - data->items_frozen) * clipper->items_height);
     let pos_y = clipper.start_pos_y + data.lossyness_offset + (item_n - data.items_frozen) * clipper.items_height;
     // ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y, clipper->items_height);
-    seek_cursor_and_setup_prev_line(pos_y, clipper.items_height);
+    seek_cursor_and_setup_prev_line(g, pos_y, clipper.items_height);
 }
 
 // ImGuiListClipper::ImGuiListClipper()
@@ -390,18 +396,18 @@ pub fn seek_cursor_for_item(clipper: *mut ListClipper, item_n: usize)
 //
 // }
 
-bool ImGuiListClipper::Step()
-{
-
-}
+// bool ImGuiListClipper::Step()
+// {
+// 
+// }
 
 #[derive(Debug,Clone,Default)]
 pub struct ListClipperRange
 {
     // int     min;
-    pub min: i32,
+    pub min: usize,
     // int     max;
-    pub max: i32,
+    pub max: usize,
     // bool    pos_to_index_convert;      // Begin/End are absolute position (will be converted to indices later)
     pub pos_to_index_convert: bool,
     // ImS8    pos_to_index_offset_min;    // Add to min after converting to indices
@@ -412,10 +418,10 @@ pub struct ListClipperRange
 
 impl ListClipperRange {
     // static ImGuiListClipperRange    from_indices(int min, int max)                               { ImGuiListClipperRange r = { min, max, false, 0, 0 }; return r; }
-    pub fn from_indices(min: i32, max: i32) -> Self {
+    pub fn from_indices(min: usize, max: usize) -> Self {
         Self {
-            min: min,
-            max: max,
+            min,
+            max,
             pos_to_index_convert: false,
             pos_to_index_offset_min: 0,
             pos_to_index_offset_max: 0
@@ -424,8 +430,8 @@ impl ListClipperRange {
     //     static ImGuiListClipperRange    from_positions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { y1, y2, true, off_min, off_max }; return r; }
     pub fn from_positions(y1: f32, y2: f32, off_min: i32, off_max: i32) -> Self {
         Self {
-            min: y1 as i32,
-            max: y2 as i32,
+            min: y1 as usize,
+            max: y2 as usize,
             pos_to_index_convert: true,
             pos_to_index_offset_min: off_min as i8,
             pos_to_index_offset_max: off_max as i8,
@@ -440,11 +446,11 @@ pub struct ListClipperData
     // ImGuiListClipper*               list_clipper;
     pub list_clipper: ListClipper,
     // float                           lossyness_offset;
-    pub lossyness_offset: f32,
+    pub lossyness_offset: usize,
     // int                             step_no;
-    pub step_no: i32,
+    pub step_no: usize,
     // int                             items_frozen;
-    pub items_frozen: i32,
+    pub items_frozen: usize,
     // ImVector<ImGuiListClipperRange> ranges;
     pub ranges: Vec<ListClipperRange>,
 }

@@ -49,7 +49,7 @@ pub struct TabItem {
     pub content_width: f32,
     // float               RequestedWidth;         // width optionally requested by caller, -1.0 is unused
     pub requested_width: f32,
-    // ImS32               NameOffset;             // When window==None, offset to name within parent ImGuiTabBar::TabsNames
+    // ImS32               name_offset;             // When window==None, offset to name within parent ImGuiTabBar::TabsNames
     pub name_offset: i32,
     // ImS16               BeginOrder;             // BeginTabItem() order, used to re-order tabs after toggling ImGuiTabBarFlags_Reorderable
     pub begin_order: i16,

@@ -16,9 +16,9 @@ use crate::vectors::Vector4D;
 //     f32::sqrt(x)
 // }
 // #define f32::mod(x, Y)        fmodf((x), (Y))
-pub fn f32_mod(x: f32, y: f32) -> f32 {
-    x % y
-}
+// pub fn f32_mod(x: f32, y: f32) -> f32 {
+//     x % y
+// }
 // #define ImCos(x)            cosf(x)
 // pub fn ImCos(x: f32) -> f32 {
 //     f32::cos(x)
@@ -36,9 +36,9 @@ pub fn f32_mod(x: f32, y: f32) -> f32 {
 //     f32::atan2(y,x)
 // }
 // #define ImAtof(STR)         atof(STR)
-pub fn atof(x: &String) -> f32 {
-    f32::try_from(x).unwrap()
-}
+// pub fn atof(x: &String) -> f32 {
+//     f32::try_from(x).unwrap()
+// }
 //#define ImFloorStd(x)     floorf(x)           // We use our own, see f32::floor() and f32::floor()
 // pub fn ImFloorStd(x: f32) -> f32 {
 //     f32::floor(x)
@@ -288,7 +288,7 @@ pub fn linear_sweep(current: f32, target: f32, speed: f32) -> f32 {
 //     }
 // }
 
-// static inline bool   ImIsFloatAboveGuaranteedIntegerPrecision(float f)          { return f <= -16777216 || f >= 16777216; }
+// static inline bool   is_float_above_guaranteed_interger_precision(float f)          { return f <= -16777216 || f >= 16777216; }
 pub fn is_float_above_guranteed_integer_precision(f: f32) -> bool {
     f <= -16777216.0 || f >= 16777216.0
 }
@@ -301,7 +301,7 @@ pub fn f32_to_i8_unbound(x: f32) -> i8 {
 }
 
 // #define im_f32_to_int8_sat(_VAL)        ((ImSaturate(_VAL) * 255.0 + 0.5))               // Saturated, always output 0..255
-pub fn im_f32_to_int8_sat(x: f32) -> i8 {
+pub fn f32_to_int8_sat(x: f32) -> i8 {
     saturate_f32(x) * 255.0 + 0.5 as i8
 }
 
@@ -312,10 +312,10 @@ pub fn im_f32_to_int8_sat(x: f32) -> i8 {
 // }
 
 
-static inline float ImAcos01(float x)
+pub fn acos_1(x: f32) -> f32
 {
-    if (x <= 0.0) return f32::PI * 0.5;
-    if (x >= 1.0) return 0.0;
-    return ImAcos(x);
+    if x <= 0.0 {return  f32::PI * 0.5 };
+    if x >= 1.0 { return 0.0; };
+    return f32::acos(x);
     //return (-0.69813170079773212 * x * x - 0.87266462599716477) * x + 1.5707963267948966; // Cheap approximation, may be enough for what we do.
 }

@@ -25,12 +25,12 @@ pub struct ImFontBuilderIO
 #[derive(Debug,Clone,Default)]
 pub struct Font
 {
-    // Members: Hot ~20/24 bytes (for CalcTextSize)
-    pub index_advance_x: Vec<f32>, // ImVector<float>             index_advance_x;      // 12-16 // out //            // Sparse. glyphs->advance_x in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
+    // Members: Hot ~20/24 bytes (for calc_text_size)
+    pub index_advance_x: Vec<f32>, // ImVector<float>             index_advance_x;      // 12-16 // out //            // Sparse. glyphs->advance_x in a directly indexable way (cache-friendly for calc_text_size functions which only this this info, and are often bottleneck in large UI).
     pub fallback_advance_x: f32,  // 4     // out // = fallback_glyph->advance_x
     pub font_size: f32,          // 4     // in  //            // height of characters/line, set during loading (don't change after loading)
 
-    // Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
+    // Members: Hot ~28/40 bytes (for calc_text_size + render loop)
     pub index_lookup: Vec<DimgWchar>, //ImVector<ImWchar>           index_lookup;        // 12-16 // out //            // Sparse. index glyphs by Unicode code-point.
     pub glyphs: Vec<DimgFontGlyph>, // ImVector<ImFontGlyph>       glyphs;             // 12-16 // out //            // All glyphs.
     pub fallback_glyph: DimgFontGlyph, // const ImFontGlyph*          fallback_glyph;      // 4-8   // out // = find_glyph(FontFallbackChar)

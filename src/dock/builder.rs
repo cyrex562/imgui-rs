@@ -388,7 +388,7 @@ pub fn dock_builder_copy_node_rec(
         }
     }
 
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X (%d childs)\n", src_node.ID, dst_node.ID, dst_node.IsSplitNode() ? 2 : 0);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X (%d childs)\n", src_node.id, dst_node.id, dst_node.IsSplitNode() ? 2 : 0);
     return dst_node;
 }
 

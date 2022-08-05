@@ -5,13 +5,13 @@ use crate::config::ConfigFlags;
 use crate::dock::defines::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::draw_defines::DrawFlags;
-use crate::draw::list::{get_foreground_draw_list, DrawListFlags};
+use crate::draw::list::{foreground_draw_list, DrawListFlags};
 use crate::globals::GImGui;
 use crate::id::set_active_id;
 use crate::input::mouse::{start_mouse_moving_window, start_mouse_moving_window_or_node};
 use crate::input::{InputSource, NavLayer};
 use crate::item::{ItemFlags, ItemStatusFlags};
-use crate::math::{im_f32_to_int8_sat, saturate_f32};
+use crate::math::{f32_to_int8_sat, saturate_f32};
 use crate::orig_imgui_single_file::{buf, buf_end, int};
 use crate::rect::Rect;
 use crate::style::{
@@ -189,7 +189,7 @@ pub fn render_window_decorations(
                 }
                 if override_alpha {
                     bg_col = (bg_col & !COLOR32_A_MASK)
-                        | (im_f32_to_int8_sat(alpha) << IM_COL32_A_SHIFT);
+                        | (f32_to_int8_sat(alpha) << IM_COL32_A_SHIFT);
                 }
             }
 
@@ -462,7 +462,7 @@ pub fn render_window_title_bar_contents(
     } else {
         0.0
     };
-    // const Vector2D text_size = CalcTextSize(name, None, true) + Vector2D::new(marker_size_x, 0.0);
+    // const Vector2D text_size = calc_text_size(name, None, true) + Vector2D::new(marker_size_x, 0.0);
     let text_size = calc_text_size(g, name, true, 0.0) + Vector2D::new(marker_size_x, 0.0);
 
     // As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,

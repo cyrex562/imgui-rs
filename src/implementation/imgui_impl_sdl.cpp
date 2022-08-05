@@ -48,7 +48,7 @@
 //  io.add_mouse_pos_event(), io.add_mouse_button_event(),
 //  io.add_mouse_wheel_event() API (1.87+). 2022-01-17: Inputs: always update
 //  key mods next and before key event (not in NewFrame) to fix input queue with
-//  very low framerates. 2022-01-12: Update mouse inputs using
+//  very low framerates. 2022-01-12: update mouse inputs using
 //  SDL_MOUSEMOTION/SDL_WINDOWEVENT_LEAVE + fallback to provide it when focused
 //  but not hovered/captured. More standard and will allow us to pass it to
 //  future input queue API. 2022-01-12: Maintain our own copy of
@@ -629,7 +629,7 @@ static bool ImGui_ImplSDL2_Init(SDL_Window *window, SDL_Renderer *renderer,
   SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 #endif
 
-  // Update monitors
+  // update monitors
   ImGui_ImplSDL2_UpdateMonitors();
 
   // We need SDL_CaptureMouse(), SDL_GetGlobalMouseState() from SDL 2.0.4+ to
@@ -805,7 +805,7 @@ static void ImGui_ImplSDL2_UpdateGamepads() {
     return;
   io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 
-// Update gamepad inputs
+// update gamepad inputs
 #define IM_SATURATE(V) (V < 0.0 ? 0.0 : V > 1.0 ? 1.0 : V)
 #define MAP_BUTTON(KEY_NO, BUTTON_NO)                                          \
   {                                                                            \
@@ -934,7 +934,7 @@ void ImGui_ImplSDL2_NewFrame() {
   ImGui_ImplSDL2_UpdateMouseData();
   ImGui_ImplSDL2_UpdateMouseCursor();
 
-  // Update game controllers (if enabled and available)
+  // update game controllers (if enabled and available)
   ImGui_ImplSDL2_UpdateGamepads();
 }
 

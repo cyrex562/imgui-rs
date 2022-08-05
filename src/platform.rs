@@ -110,7 +110,7 @@ pub fn update_platform_windows(g: &mut Context)
         viewport.LastPlatformPos = viewport.pos;
         viewport.LastPlatformSize = viewport.LastRendererSize = viewport.size;
 
-        // Update title bar (if it changed)
+        // update title bar (if it changed)
         if (Window* window_for_title = GetWindowForTitleDisplay(viewport.Window))
         {
             const char* title_begin = window_for_title.name;
@@ -126,7 +126,7 @@ pub fn update_platform_windows(g: &mut Context)
             }
         }
 
-        // Update alpha (if it changed)
+        // update alpha (if it changed)
         if (viewport.LastAlpha != viewport.alpha && g.platform_io.Platform_SetWindowAlpha)
             g.platform_io.Platform_SetWindowAlpha(viewport, viewport.alpha);
         viewport.LastAlpha = viewport.alpha;
@@ -154,7 +154,7 @@ pub fn update_platform_windows(g: &mut Context)
         viewport.ClearRequestFlags();
     }
 
-    // Update our implicit z-order knowledge of platform windows, which is used when the backend cannot provide io.mouse_hovered_viewport.
+    // update our implicit z-order knowledge of platform windows, which is used when the backend cannot provide io.mouse_hovered_viewport.
     // When setting Platform_GetWindowFocus, it is expected that the platform backend can handle calls without crashing if it doesn't have data stored.
     // FIXME-VIEWPORT: We should use this information to also set dear imgui-side focus, allowing us to handle os-level alt+tab.
     if (g.platform_io.Platform_GetWindowFocus != None)
@@ -263,7 +263,7 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &Rect) -> i32
     return best_monitor_n;
 }
 
-// Update monitor from viewport rectangle (we'll use this info to clamp windows and save windows lost in a removed monitor)
+// update monitor from viewport rectangle (we'll use this info to clamp windows and save windows lost in a removed monitor)
 // static void UpdateViewportPlatformMonitor(ImGuiViewportP* viewport)
 pub fn update_viewport_platform_monitor(g: &mut Context, viewport: &mut Viewport)
 {

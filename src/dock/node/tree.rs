@@ -115,7 +115,7 @@ pub fn dock_node_tree_merge(
         // IM_ASSERT(parent_node.TabBar == None);
         // IM_ASSERT(parent_node.Windows.size == 0);
     }
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x%08X + 0x%08X back into parent 0x%08X\n", child_0 ? child_0.ID : 0, child_1 ? child_1.ID : 0, parent_node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x%08X + 0x%08X back into parent 0x%08X\n", child_0 ? child_0.id : 0, child_1 ? child_1.id : 0, parent_node.id);
 
     let backup_last_explicit_size = parent_node.size_ref.clone();
     node::dock_node_move_child_nodes(g, parent_node, merge_lead_child.unwrap());
@@ -184,7 +184,7 @@ pub fn dock_node_tree_merge(
     }
 }
 
-// Update pos/size for a node hierarchy (don't affect child windows yet)
+// update pos/size for a node hierarchy (don't affect child windows yet)
 // (Depth-first, Pre-Order)
 // void dock_node_tree_update_pos_size(ImGuiDockNode* node, Vector2D pos, Vector2D size, ImGuiDockNode* only_write_to_single_node)
 pub fn dock_node_tree_update_pos_size(

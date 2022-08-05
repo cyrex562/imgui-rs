@@ -299,7 +299,7 @@ pub fn close_popup_to_level(g: &mut Context, remaining: i32, restore_focus_to_wi
         }
         else
         {
-            if (g.NavLayer == NavLayer::Main && focus_window)
+            if (g.nav_layer == NavLayer::Main && focus_window)
                 focus_window = NavRestoreLastChildNavWindow(focus_window);
             focus_window(focus_window);
         }

@@ -31,12 +31,12 @@ pub fn dock_node_add_window(
     // ImGuiContext& g = *GImGui; (void)g;
     if window.dock_node_id != INVALID_ID {
         // Can overwrite an existing window->dock_node (e.g. pointing to a disabled DockSpace node)
-        // IM_ASSERT(window.dock_node.ID != node.ID);
+        // IM_ASSERT(window.dock_node.id != node.id);
         let dock_node_a = g.dock_node_mut(window.dock_node_id);
         dock_node_remove_window(g, dock_node_a.unwrap(), window, 0);
     }
     // IM_ASSERT(window.dock_node == None || window.DockNodeAsHost == None);
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeAddWindow node 0x%08X window '%s'\n", node.ID, window.Name);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeAddWindow node 0x%08X window '%s'\n", node.id, window.Name);
 
     // If more than 2 windows appeared on the same frame leading to the creation of a new hosting window,
     // we'll hide windows until the host window is ready. Hide the 1st window after its been output (so it is not visible for one frame).
@@ -91,7 +91,7 @@ pub fn dock_node_add_window(
 
     node::dock_node_update_visible_flag(g, node);
 
-    // Update this without waiting for the next time we Begin() in the window, so our host window will have the proper title bar color on its first frame.
+    // update this without waiting for the next time we Begin() in the window, so our host window will have the proper title bar color on its first frame.
     if node.host_window_id != INVALID_ID {
         let mut flags = window.flags.clone();
         flags.insert(WindowFlags::ChildWIndow);
@@ -111,8 +111,8 @@ pub fn dock_node_remove_window(
     // IM_ASSERT(window.dock_node == node);
     //IM_ASSERT(window->root_window_dock_tree == node->host_window);
     //IM_ASSERT(window->last_frame_active < g.frame_count);    // We may call this from Begin()
-    // IM_ASSERT(save_dock_id == 0 || save_dock_id == node.ID);
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeRemoveWindow node 0x%08X window '%s'\n", node.ID, window.Name);
+    // IM_ASSERT(save_dock_id == 0 || save_dock_id == node.id);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeRemoveWindow node 0x%08X window '%s'\n", node.id, window.Name);
 
     window.dock_node_id = INVALID_ID;
     window.dock_is_active = false;
@@ -124,7 +124,7 @@ pub fn dock_node_remove_window(
         // window.parent_window.DC.ChildWindows.find_erase(window);
         parent_win.dc.child_windows.find_erase(window);
     }
-    update_window_parent_and_root_links(g, window, &mut window.flags, None); // Update immediately
+    update_window_parent_and_root_links(g, window, &mut window.flags, None); // update immediately
 
     // Remove window
     // bool erased = false;
@@ -182,7 +182,7 @@ pub fn dock_node_remove_window(
         remaining_window.collapsed = node.host_window_id.collapsed;
     }
 
-    // Update visibility immediately is required so the dock_node_updateRemoveInactiveChilds() processing can reflect changes up the tree
+    // update visibility immediately is required so the dock_node_updateRemoveInactiveChilds() processing can reflect changes up the tree
     node::dock_node_update_visible_flag(g, node);
 }
 

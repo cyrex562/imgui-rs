@@ -215,7 +215,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     // }
     // if (tab_bar.tabs.size > tabs_unsorted_start)
     // {
-    //     // IMGUI_DEBUG_LOG_DOCKING("[docking] In node 0x%08X: %d new appearing tabs:%s\n", node.ID, tab_bar.Tabs.size - tabs_unsorted_start, (tab_bar.Tabs.size > tabs_unsorted_start + 1) ? " (will sort)" : "");
+    //     // IMGUI_DEBUG_LOG_DOCKING("[docking] In node 0x%08X: %d new appearing tabs:%s\n", node.id, tab_bar.Tabs.size - tabs_unsorted_start, (tab_bar.Tabs.size > tabs_unsorted_start + 1) ? " (will sort)" : "");
     //     for (int tab_n = tabs_unsorted_start; tab_n < tab_bar.tabs.size; tab_n += 1)
     //         // IMGUI_DEBUG_LOG_DOCKING("[docking] - Tab '%s' Order %d\n", tab_bar.Tabs[tab_n].Window.Name, tab_bar.Tabs[tab_n].Window.dock_order);
     //     if (tab_bar.tabs.size > tabs_unsorted_start + 1)
@@ -322,7 +322,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
             window.dock_tab_item_status_flags = g.last_item_data.status_flags.clone();
             window.dock_tab_item_rect = g.last_item_data.Rect;
 
-            // Update navigation id on menu layer
+            // update navigation id on menu layer
             if g.nav_window
                 && g.nav_window.root_window == window
                 && (window.dc.nav_layers_active_mask & (1 << NavLayer::Menu)) == 0

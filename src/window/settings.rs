@@ -27,7 +27,7 @@ pub struct WindowSettings
     pub dock_order: i16,
     // bool        Collapsed;
     pub collapsed: bool,
-    // bool        WantApply;      // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
+    // bool        want_apply;      // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
     pub want_apply: bool,
     // WindowSettings()       { memset(this, 0, sizeof(*this)); DockOrder = -1; }
     // char* GetName()             { return (char*)(this + 1); }

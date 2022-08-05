@@ -41,7 +41,7 @@ use crate::input::{mouse, NavLayer};
 use crate::item::{ItemStatusFlags, LastItemData};
 use crate::kv_store::Storage;
 use crate::layout::LayoutType;
-use crate::menu::ImGuiMenuColumns;
+use crate::menu_columns::MenuColumns;
 use crate::rect::Rect;
 use crate::size_callback_data::SizeCallbackData;
 use crate::stack::ImGuiStackSizes;
@@ -183,7 +183,7 @@ pub struct Window {
     pub dc: WindowTempData,
 
     // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show windows Rectangles' viewer.
-    // The main 'OuterRect', omitted as a field, is window->rect().
+    // The main 'outer_rect', omitted as a field, is window->rect().
     // ImRect                  outer_rect_clipped;                   // == window->rect() just after setup in Begin(). == window->rect() for root window.
     pub outer_rect_clipped: Rect,
     // ImRect                  inner_rect;                          // Inner rectangle (omit title bar, menu bar, scroll bar)

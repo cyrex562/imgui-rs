@@ -351,12 +351,12 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
             settings = create_new_window_settings(window.name);
             window.settings_offset = g.settings_windows.offset_from_ptr(settings);
         }
-        // IM_ASSERT(settings.ID == window.id);
+        // IM_ASSERT(settings.id == window.id);
         settings.pos = Vector2D(window.pos - window.viewport_pos);
         settings.size = Vector2D(window.size_full);
         settings.viewport_id = window.viewport_id;
         settings.viewport_pos = Vector2D(window.viewport_pos);
-        // IM_ASSERT(window.dock_node == None || window.dock_node.ID == window.DockId);
+        // IM_ASSERT(window.dock_node == None || window.dock_node.id == window.DockId);
         settings.dock_id = window.dock_id;
         settingsclass_id = window.window_class.class_id;
         settings.dock_order = window.dock_order;

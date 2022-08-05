@@ -214,7 +214,7 @@ use freetype::face::Face;
         req.vertResolution = 0;
         FT_Request_Size(Face, &req);
 
-        // Update font info
+        // update font info
         FT_Size_Metrics metrics = Face->size.metrics;
         Info.PixelHeight = (uint32_t)pixel_height;
         Info.Ascender = FT_CEIL(metrics.ascender);
@@ -417,7 +417,7 @@ use freetype::face::Face;
     //     req.vertResolution = 0;
     //     FT_Request_Size(Face, &req);
     //
-    //     // Update font info
+    //     // update font info
     //     FT_Size_Metrics metrics = Face->size.metrics;
     //     Info.PixelHeight = (uint32_t)pixel_height;
     //     Info.Ascender = FT_CEIL(metrics.ascender);

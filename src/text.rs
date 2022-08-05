@@ -344,8 +344,8 @@ pub const IM_UNICODE_CODEPOINT_INVALID: u32 = 0xFFFD;
 pub const IM_UNICODE_CODEPOINT_MAX: u32 = 0x10FFFF;
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
-// CalcTextSize("") should return Vector2D(0.0, g.font_size)
-// Vector2D ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
+// calc_text_size("") should return Vector2D(0.0, g.font_size)
+// Vector2D ImGui::calc_text_size(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
 pub fn calc_text_size(
     g: &mut Context,
     text: &str,

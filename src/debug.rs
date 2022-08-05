@@ -7,7 +7,7 @@ use crate::types::DataAuthority::Window;
 use crate::dock::node::{DockNode, DockNodeFlags};
 use crate::draw::command::DrawCommand;
 use crate::draw::draw_defines::DrawFlags;
-use crate::draw::list::{DrawList, DrawListFlags, get_foreground_draw_list};
+use crate::draw::list::{DrawList, DrawListFlags, foreground_draw_list};
 use crate::font::Font;
 use crate::font::font_atlas::FontAtlas;
 use crate::globals::GImGui;
@@ -186,9 +186,9 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
     // Debugging enums
     enum { WRT_OuterRect, WRT_OuterRectClipped, WRT_InnerRect, WRT_InnerClipRect, WRT_WorkRect, WRT_Content, WRT_ContentIdeal, WRT_ContentRegionRect, WRT_Count }; // windows rect Type
-    const char* wrt_rects_names[WRT_Count] = { "OuterRect", "outer_rect_clipped", "inner_rect", "inner_clip_rect", "work_rect", "Content", "ContentIdeal", "content_region_rect" };
+    const char* wrt_rects_names[WRT_Count] = { "outer_rect", "outer_rect_clipped", "inner_rect", "inner_clip_rect", "work_rect", "Content", "ContentIdeal", "content_region_rect" };
     enum { TRT_OuterRect, TRT_InnerRect, TRT_WorkRect, TRT_HostClipRect, TRT_InnerClipRect, TRT_BackgroundClipRect, TRT_ColumnsRect, TRT_ColumnsWorkRect, TRT_ColumnsClipRect, TRT_ColumnsContentHeadersUsed, TRT_ColumnsContentHeadersIdeal, TRT_ColumnsContentFrozen, TRT_ColumnsContentUnfrozen, TRT_Count }; // tables rect Type
-    const char* trt_rects_names[TRT_Count] = { "OuterRect", "inner_rect", "work_rect", "HostClipRect", "inner_clip_rect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" };
+    const char* trt_rects_names[TRT_Count] = { "outer_rect", "inner_rect", "work_rect", "host_clip_rect", "inner_clip_rect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" };
     if (cfg->ShowWindowsRectsType < 0)
         cfg->ShowWindowsRectsType = WRT_WorkRect;
     if (cfg->ShowTablesRectsType < 0)
@@ -294,7 +294,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
                 BulletText("Table 0x%08X (%d columns, in '%s')", table->ID, table->ColumnsCount, table->OuterWindow->Name);
                 if (IsItemHovered())
-                    get_foreground_draw_list()->AddRect(table->OuterRect.min - Vector2D::new(1, 1), table->OuterRect.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                    foreground_draw_list()->AddRect(table->OuterRect.min - Vector2D::new(1, 1), table->OuterRect.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                 Indent();
                 char buf[128];
                 for (int rect_n = 0; rect_n < TRT_Count; rect_n += 1)
@@ -309,7 +309,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                             ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) col %d %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), column_n, trt_rects_names[rect_n]);
                             selectable(buf);
                             if (IsItemHovered())
-                                get_foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                                foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                         }
                     }
                     else
@@ -318,7 +318,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                         ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), trt_rects_names[rect_n]);
                         selectable(buf);
                         if (IsItemHovered())
-                            get_foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                            foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                     }
                 }
                 Unindent();
@@ -544,13 +544,13 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         text("NAV,FOCUS");
         Indent();
         text("nav_window: '%s'", g.nav_window ? g.nav_window->Name : "None");
-        text("nav_id: 0x%08X, nav_layer: %d", g.nav_id, g.NavLayer);
+        text("nav_id: 0x%08X, nav_layer: %d", g.nav_id, g.nav_layer);
         text("nav_input_source: %s", GetInputSourceName(g.nav_input_source));
         text("nav_active: %d, nav_visible: %d", g.io.nav_active, g.io.NavVisible);
         text("nav_activate_id/DownId/PressedId/InputId: %08X/%08X/%08X/%08X", g.nav_activate_id, g.NavActivateDownId, g.NavActivatePressedId, g.NavActivateInputId);
         text("nav_activate_flags: %04X", g.NavActivateFlags);
         text("NavDisableHighlight: %d, nav_disable_mouse_hover: %d", g.nav_disable_highlight, g.nav_disable_mouse_hover);
-        text("nav_focus_scope_id = 0x%08X", g.NavFocusScopeId);
+        text("nav_focus_scope_id = 0x%08X", g.nav_focus_spope_id);
         text("nav_windowing_target: '%s'", g.nav_windowing_target ? g.nav_windowing_target->Name : "None");
         Unindent();
 
@@ -624,7 +624,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         int depth = dock_node_get_depth(node);
         overlay_draw_list->AddRect(node.pos + Vector2D::new(3, 3) * depth, node.pos + node.size - Vector2D::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
         Vector2D pos = node.pos + Vector2D::new(3, 3) * depth;
-        overlay_draw_list->AddRectFilled(pos - Vector2D::new(1, 1), pos + CalcTextSize(buf) + Vector2D::new(1, 1), IM_COL32(200, 100, 100, 255));
+        overlay_draw_list->AddRectFilled(pos - Vector2D::new(1, 1), pos + calc_text_size(buf) + Vector2D::new(1, 1), IM_COL32(200, 100, 100, 255));
         overlay_draw_list->AddText(None, 0.0, pos, IM_COL32(255, 255, 255, 255), buf);
     }
  // #ifdef IMGUI_HAS_DOCK
@@ -638,7 +638,7 @@ pub fn debug_node_columns(g: &mut Context, columns: &mut OldColumns)
 {
     if (!TreeNode((void*)(uintptr_t)columns->ID, "columns Id: 0x%08X, Count: %d, flags: 0x%04X", columns->ID, columns->Count, columns.flags))
         return;
-    BulletText("width: %.1 (MinX: %.1, MaxX: %.1)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
+    BulletText("width: %.1 (min_x: %.1, max_x: %.1)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (int column_n = 0; column_n < columns->Columns.size; column_n += 1)
         BulletText("column %02d: offset_norm %.3 (= %.1 px)", column_n, columns->Columns[column_n].OffsetNorm, GetColumnOffsetFromNorm(columns, columns->Columns[column_n].OffsetNorm));
     TreePop();
@@ -690,7 +690,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
     if (!is_alive) { pop_style_color(); }
     if (is_active && IsItemHovered())
         if (Window* window = node->HostWindow ? node->HostWindow : node->VisibleWindow)
-            get_foreground_draw_list(window)->AddRect(node.pos, node.pos + node.size, IM_COL32(255, 255, 0, 255));
+            foreground_draw_list(window)->AddRect(node.pos, node.pos + node.size, IM_COL32(255, 255, 0, 255));
     if (open)
     {
         // IM_ASSERT(node->ChildNodes[0] == None || node->ChildNodes[0]->ParentNode == node);
@@ -750,7 +750,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         return;
     }
 
-    ImDrawList* fg_draw_list = if viewport { get_foreground_draw_list(viewport) }else{ None}; // Render additional visuals into the top-most draw list
+    ImDrawList* fg_draw_list = if viewport { foreground_draw_list(viewport) }else{ None}; // Render additional visuals into the top-most draw list
     if (window && IsItemHovered() && fg_draw_list)
         fg_draw_list->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
     if (!node_open)
@@ -998,7 +998,7 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
     if (!is_active) { pop_style_color(); }
     if (is_active && IsItemHovered())
     {
-        ImDrawList* draw_list = get_foreground_draw_list();
+        ImDrawList* draw_list = foreground_draw_list();
         draw_list->AddRect(tab_bar->BarRect.min, tab_bar->BarRect.max, IM_COL32(255, 255, 0, 255));
         draw_list->AddLine(Vector2D::new(tab_bar->ScrollingRectMinX, tab_bar->BarRect.min.y), Vector2D::new(tab_bar->ScrollingRectMinX, tab_bar->BarRect.max.y), IM_COL32(0, 255, 0, 255));
         draw_list->AddLine(Vector2D::new(tab_bar->ScrollingRectMaxX, tab_bar->BarRect.min.y), Vector2D::new(tab_bar->ScrollingRectMaxX, tab_bar->BarRect.max.y), IM_COL32(0, 255, 0, 255));
@@ -1068,7 +1068,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.name, is_active ? "" : " *Inactive*");
     if (!is_active) { pop_style_color(); }
     if (IsItemHovered() && is_active)
-        get_foreground_draw_list(window)->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
+        foreground_draw_list(window)->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
     if (!open)
         return;
 
@@ -1088,7 +1088,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     BulletText("appearing: %d, hidden: %d (CanSkip %d Cannot %d), skip_items: %d", window.Appearing, window.hidden, window..hidden_frames_can_skip_items, window.hidden_frames_cannot_skip_items, window.skip_items);
     for (int layer = 0; layer < NavLayer::COUNT; layer += 1)
     {
-        Rect r = window.nav_rectRel[layer];
+        Rect r = window.nav_rect_rel[layer];
         if (r.min.x >= r.max.y && r.min.y >= r.max.y)
         {
             BulletText("nav_last_ids[%d]: 0x%08X", layer, window.nav_last_ids[layer]);
@@ -1096,7 +1096,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
         }
         BulletText("nav_last_ids[%d]: 0x%08X at +(%.1,%.1)(%.1,%.1)", layer, window.nav_last_ids[layer], r.min.x, r.min.y, r.max.x, r.max.y);
         if (IsItemHovered())
-            get_foreground_draw_list(window)->AddRect(r.min + window.pos, r.max + window.pos, IM_COL32(255, 255, 0, 255));
+            foreground_draw_list(window)->AddRect(r.min + window.pos, r.max + window.pos, IM_COL32(255, 255, 0, 255));
     }
     BulletText("nav_layers_active_mask: %x, nav_last_child_nav_window: %s", window.dc.nav_layers_active_mask, window.NavLastChildNavWindow ? window.NavLastChildNavWindow->Name : "None");
 
@@ -1198,7 +1198,7 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
     if (g.frame_count != tool->LastActiveFrame + 1)
         return;
 
-    // Update queries. The steps are: -1: query Stack, >= 0: query each stack item
+    // update queries. The steps are: -1: query Stack, >= 0: query each stack item
     // We can only perform 1 id Info query every frame. This is designed so the GetID() tests are cheap and constant-time
     const Id32 query_id = if g.hovered_id_previous_frame { g.hovered_id_previous_frame }else{ g.active_id};
     if (tool->QueryId != query_id)
@@ -1216,7 +1216,7 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
         if (tool->Results[stack_level].QuerySuccess || tool->Results[stack_level].QueryFrameCount > 2)
             tool->StackLevel += 1;
 
-    // Update hook
+    // update hook
     stack_level = tool->StackLevel;
     if (stack_level == -1)
         g.debug_hook_id_info = query_id;
@@ -1251,7 +1251,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
     if (tool->StackLevel != window.idStack.size)
         return;
     ImGuiStackLevelInfo* info = &tool->Results[tool->StackLevel];
-    // IM_ASSERT(info->ID == id && info->QueryFrameCount > 0);
+    // IM_ASSERT(info->id == id && info->QueryFrameCount > 0);
 
     switch (data_type)
     {
@@ -1349,7 +1349,7 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
     tool->LastActiveFrame = g.frame_count;
     if (tool->Results.size > 0 && BeginTable("##table", 3, ImGuiTableFlags_Borders))
     {
-        let id_width = CalcTextSize("0xDDDDDDDD").x;
+        let id_width = calc_text_size("0xDDDDDDDD").x;
         TableSetupColumn("Seed", ImGuiTableColumnFlags_WidthFixed, id_width);
         TableSetupColumn("push_id", ImGuiTableColumnFlags_WidthStretch);
         TableSetupColumn("Result", ImGuiTableColumnFlags_WidthFixed, id_width);

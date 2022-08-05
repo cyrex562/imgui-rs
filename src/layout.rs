@@ -41,7 +41,7 @@ pub fn same_line(g: &mut Context, offset_from_start_x: f32, mut spacing_w: f32)
         window.dc.cursor_pos.x = window.dc.cursor_pos_prev_line.x + spacing_w;
         window.dc.cursor_pos.y = window.dc.cursor_pos_prev_line.y;
     }
-    window.dc.curr_line_size = window.dc.PrevLineSize;
+    window.dc.curr_line_size = window.dc.prev_line_size;
     window.dc.curr_line_text_base_offset = window.dc.PrevLineTextBaseOffset;
     window.dc.Issame_line = true;
 }

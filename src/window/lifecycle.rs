@@ -89,8 +89,8 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
         g.hovered_window_under_moving_window_id = INVALID_ID;
     }
 
-    // Update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
-    // Update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
+    // update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
+    // update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
     if g.want_capture_mouse_next_frame != -1 {
         io.want_capture_mouse_unless_popup_close = (g.want_capture_mouse_next_frame != 0);
         io.want_capture_mouse = io.want_capture_mouse_unless_popup_close;
@@ -103,7 +103,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
             || has_open_modal;
     }
 
-    // Update io.want_capture_keyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
+    // update io.want_capture_keyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
     if g.want_capture_keyboard_next_frame != -1 {
         io.want_capture_keyboard = (g.want_capture_keyboard_next_frame != 0);
     } else {
@@ -116,7 +116,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
         io.want_capture_keyboard = true;
     }
 
-    // Update io.want_text_input flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
+    // update io.want_text_input flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
     io.want_text_input = if g.want_text_input_next_frame != -1 {
         (g.want_text_input_next_frame != 0)
     } else {
@@ -322,7 +322,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     window.is_fallback_window = g.current_window_stack.is_empty &&
     g.within_frame_scope_with_implicit_window;
 
-    // Update the appearing flag (note: the BeginDocked() path may also set this to true later)
+    // update the appearing flag (note: the BeginDocked() path may also set this to true later)
     // bool window_just_activated_by_user = (window.LastFrameActive < current_frame - 1); // Not using !was_active because the implicit "Debug" window would always toggle off->on
     let window_just_activated_by_user = window.last_frame_active < current_frame - 1;
 
@@ -334,7 +334,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window_just_activated_by_user |= (window != popup_ref.Window);
     }
 
-    // Update flags, last_frame_active, BeginOrderXXX fields
+    // update flags, last_frame_active, BeginOrderXXX fields
     const bool window_was_appearing = window.Appearing;
     if (first_begin_of_the_frame)
     {
@@ -418,7 +418,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window.PopupId = popup_ref.PopupId;
     }
 
-    // Update ->RootWindow and others pointers (before any possible call to focus_window)
+    // update ->RootWindow and others pointers (before any possible call to focus_window)
     if (first_begin_of_the_frame)
     {
         update_window_parent_and_root_links(window, flags, parent_window);
@@ -499,7 +499,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         if (window.memory_compacted)
             GcAwakeTransientWindowBuffers(window);
 
-        // Update stored window name when it changes (which can _only_ happen with the "###" operator, so the id would stay unchanged).
+        // update stored window name when it changes (which can _only_ happen with the "###" operator, so the id would stay unchanged).
         // The title bar always display the 'name' parameter, so we only update the string storage if it needs to be visible to the end-user elsewhere.
         bool window_title_visible_elsewhere = false;
         if ((window.viewport && window.viewport.Window == window) || (window.dock_is_active))
@@ -515,7 +515,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // UPDATE CONTENTS SIZE, UPDATE HIDDEN STATUS
 
-        // Update contents size from last frame for auto-fitting (or use explicit size)
+        // update contents size from last frame for auto-fitting (or use explicit size)
         CalcWindowContentSizes(window, &window.ContentSize, &window.ContentSizeIdeal);
 
         // FIXME: These flags are decremented before they are used. This means that in order to have these fields produce their intended behaviors
@@ -790,7 +790,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // SCROLLBAR VISIBILITY
 
-        // Update scrollbar visibility (based on the size that was effective during last frame or the auto-resized size).
+        // update scrollbar visibility (based on the size that was effective during last frame or the auto-resized size).
         if (!window.collapsed)
         {
             // When reading the current size we need to read it after size constraints have been applied.
@@ -809,7 +809,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         }
 
         // UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)
-        // Update various regions. Variables they depends on should be set above in this function.
+        // update various regions. Variables they depends on should be set above in this function.
         // We set this up after processing the resize grip so that our rectangles doesn't lag by a frame.
 
         // Outer rectangle
@@ -938,15 +938,15 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // Record the loss of precision of CursorStartPos which can happen due to really large scrolling amount.
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or ImU64.
-        double start_pos_highp_x = (double)window.pos.x + window.WindowPadding.x - (double)window.scroll.x + window.dc.columns_offset.x;
-        double start_pos_highp_y = (double)window.pos.y + window.WindowPadding.y - (double)window.scroll.y + decoration_up_height;
+        double start_pos_highp_x = window.pos.x + window.WindowPadding.x - window.scroll.x + window.dc.columns_offset.x;
+        double start_pos_highp_y = window.pos.y + window.WindowPadding.y - window.scroll.y + decoration_up_height;
         window.dc.cursor_start_pos  = Vector2D::new(start_pos_highp_x, start_pos_highp_y);
         window.dc.cursor_start_posLossyness = Vector2D::new((start_pos_highp_x - window.dc.cursor_start_pos.x), (start_pos_highp_y - window.dc.cursor_start_pos.y));
         window.dc.cursor_pos = window.dc.cursor_start_pos;
         window.dc.cursor_pos_prev_line = window.dc.cursor_pos;
         window.dc.cursor_max_pos = window.dc.cursor_start_pos;
         window.dc.ideal_max_pos = window.dc.cursor_start_pos;
-        window.dc.curr_line_size = window.dc.PrevLineSize = Vector2D::new(0.0, 0.0);
+        window.dc.curr_line_size = window.dc.prev_line_size = Vector2D::new(0.0, 0.0);
         window.dc.curr_line_text_base_offset = window.dc.PrevLineTextBaseOffset = 0.0;
         window.dc.Issame_line = false;
 
@@ -1055,7 +1055,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     window.begin_count += 1;
     g.next_window_data.ClearFlags();
 
-    // Update visibility
+    // update visibility
     if (first_begin_of_the_frame)
     {
         // When we are about to select this tab (which will only be visible on the _next frame_), flag it with a non-zero hidden_frames_cannot_skip_items.
@@ -1094,7 +1094,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         if (style.alpha <= 0.0)
             window..hidden_frames_can_skip_items = 1;
 
-        // Update the hidden flag
+        // update the hidden flag
         bool hidden_regular = (window..hidden_frames_can_skip_items > 0) || (window.hidden_frames_cannot_skip_items > 0);
         window.hidden = hidden_regular || (window.hiddenFramesForRenderOnly > 0);
 
@@ -1105,7 +1105,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.flags |= WindowFlags::NoInputs;
         }
 
-        // Update the skip_items flag, used to early out of all items functions (no layout required)
+        // update the skip_items flag, used to early out of all items functions (no layout required)
         bool skip_items = false;
         if (window.collapsed || !window.active || hidden_regular)
             if (window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0 && window.hidden_frames_cannot_skip_items <= 0)

@@ -73,7 +73,7 @@ pub fn update_keyboard_inputs(g: &mut Context)
         }
     }
 
-    // Update keys
+    // update keys
     // for (int i = 0; i < IM_ARRAYSIZE(io.keys_data); i += 1)
     for i in 0 .. io.keys_data.len()
     {
@@ -140,7 +140,7 @@ pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
     }
     else
     {
-        g.NavTabbingDir = 1;
+        g.nav_tabbing_dir = 1;
         g.NavTabbingCounter = offset + 1;
     }
 }

@@ -8,7 +8,7 @@ index of this file:
 // [SECTION] Forward Declarations
 // [SECTION] Widgets: Text, etc.
 // [SECTION] Widgets: Main (Button, Image, Checkbox, RadioButton, ProgressBar, Bullet, etc.)
-// [SECTION] Widgets: Low-level Layout helpers (Spacing, Dummy, NewLine, Separator, etc.)
+// [SECTION] Widgets: Low-level Layout helpers (spacing, Dummy, NewLine, Separator, etc.)
 // [SECTION] Widgets: ComboBox
 // [SECTION] data Type and data Formatting Helpers
 // [SECTION] Widgets: DragScalar, DragFloat, DragInt, etc.
@@ -172,7 +172,7 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
     {
         // Common case
         let wrap_width = wrap_enabled ? CalcWrapWidthForPos(window.DC.CursorPos, wrap_pos_x) : 0.0;
-        const Vector2D text_size = CalcTextSize(text_begin, text_end, false, wrap_width);
+        const Vector2D text_size = calc_text_size(text_begin, text_end, false, wrap_width);
 
         ImRect bb(text_pos, text_pos + text_size);
         ItemSize(text_size, 0.0);
@@ -207,7 +207,7 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
                     if (!line_end)
                         line_end = text_end;
                     if ((flags & ImGuiTextFlags_NoWidthForLargeClippedText) == 0)
-                        text_size.x = ImMax(text_size.x, CalcTextSize(line, line_end).x);
+                        text_size.x = ImMax(text_size.x, calc_text_size(line, line_end).x);
                     line = line_end + 1;
                     lines_skipped += 1;
                 }
@@ -227,7 +227,7 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
                 const char* line_end = (const char*)memchr(line, '\n', text_end - line);
                 if (!line_end)
                     line_end = text_end;
-                text_size.x = ImMax(text_size.x, CalcTextSize(line, line_end).x);
+                text_size.x = ImMax(text_size.x, calc_text_size(line, line_end).x);
                 render_text(pos, line, line_end, false);
                 line = line_end + 1;
                 line_rect.Min.y += line_height;
@@ -243,7 +243,7 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
                 if (!line_end)
                     line_end = text_end;
                 if ((flags & ImGuiTextFlags_NoWidthForLargeClippedText) == 0)
-                    text_size.x = ImMax(text_size.x, CalcTextSize(line, line_end).x);
+                    text_size.x = ImMax(text_size.x, calc_text_size(line, line_end).x);
                 line = line_end + 1;
                 lines_skipped += 1;
             }
@@ -362,8 +362,8 @@ void ImGui::LabelTextV(const char* label, const char* fmt, va_list args)
 
     const char* value_text_begin, *value_text_end;
     ImFormatStringToTempBufferV(&value_text_begin, &value_text_end, fmt, args);
-    const Vector2D value_size = CalcTextSize(value_text_begin, value_text_end, false);
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D value_size = calc_text_size(value_text_begin, value_text_end, false);
+    const Vector2D label_size = calc_text_size(label, None, true);
 
     const Vector2D pos = window.DC.CursorPos;
     const ImRect value_bb(pos, pos + DimgVec2D::new(w, value_size.y + style.FramePadding.y * 2));
@@ -398,7 +398,7 @@ void ImGui::BulletTextV(const char* fmt, va_list args)
 
     const char* text_begin, *text_end;
     ImFormatStringToTempBufferV(&text_begin, &text_end, fmt, args);
-    const Vector2D label_size = CalcTextSize(text_begin, text_end, false);
+    const Vector2D label_size = calc_text_size(text_begin, text_end, false);
     const Vector2D total_size = DimgVec2D::new(g.FontSize + (label_size.x > 0.0 ? (label_size.x + style.FramePadding.x * 2) : 0.0), label_size.y);  // Empty text doesn't add padding
     Vector2D pos = window.DC.CursorPos;
     pos.y += window.DC.curr_line_text_base_offset;
@@ -681,7 +681,7 @@ bool ImGui::ButtonEx(const char* label, const Vector2D& size_arg, ImGuiButtonFla
     // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const Id32 id = window.GetID(label);
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
 
     Vector2D pos = window.DC.CursorPos;
     if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window.DC.curr_line_text_base_offset) // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
@@ -988,11 +988,11 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, Id32 id, ImGuiAxis axis, ImS64* 
         let scroll_v_norm = ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm * 0.5) / (1.0 - grab_h_norm));
         *p_scroll_v = (ImS64)(scroll_v_norm * scroll_max);
 
-        // Update values for rendering
+        // update values for rendering
         scroll_ratio = ImSaturate(*p_scroll_v / scroll_max);
         grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v;
 
-        // Update distance to grab now that we have seeked and saturated
+        // update distance to grab now that we have seeked and saturated
         if (seek_absolute)
             g.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm * 0.5;
     }
@@ -1091,7 +1091,7 @@ bool ImGui::Checkbox(const char* label, bool* v)
     // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const Id32 id = window.GetID(label);
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
 
     let square_sz = get_frame_height();
     const Vector2D pos = window.DC.CursorPos;
@@ -1197,7 +1197,7 @@ bool ImGui::RadioButton(const char* label, bool active)
     // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const Id32 id = window.GetID(label);
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
 
     let square_sz = get_frame_height();
     const Vector2D pos = window.DC.CursorPos;
@@ -1282,7 +1282,7 @@ void ImGui::ProgressBar(float fraction, const Vector2D& size_arg, const char* ov
         overlay = overlay_buf;
     }
 
-    Vector2D overlay_size = CalcTextSize(overlay, None);
+    Vector2D overlay_size = calc_text_size(overlay, None);
     if (overlay_size.x > 0.0)
         render_textClipped(DimgVec2D::new(ImClamp(fill_br.x + style.item_spacing.x, bb.Min.x, bb.Max.x - overlay_size.x - style.ItemInnerSpacing.x), bb.Min.y), bb.Max, overlay, None, &overlay_size, DimgVec2D::new(0.0, 0.5), &bb);
 }
@@ -1313,7 +1313,7 @@ void ImGui::Bullet()
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: Low-level Layout helpers
 //-------------------------------------------------------------------------
-// - Spacing()
+// - spacing()
 // - Dummy()
 // - NewLine()
 // - AlignTextToFramePadding()
@@ -1602,7 +1602,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)); // Can't use both flags together
 
     let arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0.0 : get_frame_height();
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
     let w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + DimgVec2D::new(w, label_size.y + style.FramePadding.y * 2.0));
     const ImRect total_bb(bb.Min, bb.Max + DimgVec2D::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
@@ -1904,7 +1904,7 @@ static const DataTypeInfo GDataTypeInfo[] =
     { sizeof,            "U64",  "%llu", "%llu"  },
 #endif
     { sizeof,            "float", "%.3","%f"    },  // DataType::Float (float are promoted to double in va_arg)
-    { sizeof(double),           "double","%f",  "%lf"   },  // DataType::Double
+    { sizeof,           "double","%f",  "%lf"   },  // DataType::Double
 };
 IM_STATIC_ASSERT(IM_ARRAYSIZE(GDataTypeInfo) == DataType::COUNT);
 
@@ -2329,7 +2329,7 @@ bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, floa
     const Id32 id = window.GetID(label);
     let w = CalcItemWidth();
 
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + DimgVec2D::new(w, label_size.y + style.FramePadding.y * 2.0));
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + DimgVec2D::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
 
@@ -2949,7 +2949,7 @@ bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, co
     const Id32 id = window.GetID(label);
     let w = CalcItemWidth();
 
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + DimgVec2D::new(w, label_size.y + style.FramePadding.y * 2.0));
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + DimgVec2D::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
 
@@ -3117,7 +3117,7 @@ bool ImGui::VSliderScalar(const char* label, const Vector2D& size, DataType data
     const ImGuiStyle& style = g.Style;
     const Id32 id = window.GetID(label);
 
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + size);
     const ImRect bb(frame_bb.Min, frame_bb.Max + DimgVec2D::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
 
@@ -3851,7 +3851,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     if (is_multiline) // Open group before calling GetID() because groups tracks id created within their scope (including the scrollbar)
         BeginGroup();
     const Id32 id = window.GetID(label);
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
     const Vector2D frame_size = CalcItemSize(size_arg, CalcItemWidth(), (is_multiline ? g.FontSize * 8.0 : label_size.y) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
     const Vector2D total_size = DimgVec2D::new(frame_size.x + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), frame_size.y);
 
@@ -4289,7 +4289,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             }
         }
 
-        // Update render selection flag after events have been handled, so selection highlight can be displayed during the same frame.
+        // update render selection flag after events have been handled, so selection highlight can be displayed during the same frame.
         render_selection |= state->HasSelection() && (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
     }
 
@@ -4860,7 +4860,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
         let w_item_one  = ImMax(1.0, IM_FLOOR((w_inputs - (style.ItemInnerSpacing.x) * (components - 1)) / components));
         let w_item_last = ImMax(1.0, IM_FLOOR(w_inputs - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
 
-        const bool hide_prefix = (w_item_one <= CalcTextSize((flags & ImGuiColorEditFlags_Float) ? "M:0.000" : "M:000").x);
+        const bool hide_prefix = (w_item_one <= calc_text_size((flags & ImGuiColorEditFlags_Float) ? "M:0.000" : "M:000").x);
         static const char* ids[4] = { "##x", "##Y", "##Z", "##W" };
         static const char* fmt_table_int[3][4] =
         {
@@ -5800,7 +5800,7 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
 
     if (!label_end)
         label_end = FindRenderedTextEnd(label);
-    const Vector2D label_size = CalcTextSize(label, label_end, false);
+    const Vector2D label_size = calc_text_size(label, label_end, false);
 
     // We vertically grow up to current line height up the typical widget height.
     let frame_height = ImMax(ImMin(window.DC.curr_line_size.y, g.FontSize + style.FramePadding.y * 2), label_size.y + padding.y * 2);
@@ -5817,7 +5817,7 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
         frame_bb.Max.x += IM_FLOOR(window.WindowPadding.x * 0.5);
     }
 
-    let text_offset_x = g.FontSize + (display_frame ? padding.x * 3 : padding.x * 2);           // Collapser arrow width + Spacing
+    let text_offset_x = g.FontSize + (display_frame ? padding.x * 3 : padding.x * 2);           // Collapser arrow width + spacing
     let text_offset_y = ImMax(padding.y, window.DC.curr_line_text_base_offset);                    // Latch before ItemSize changes it
     let text_width = g.FontSize + (label_size.x > 0.0 ? label_size.x + padding.x * 2 : 0.0);  // Include collapser
     Vector2D text_pos(window.DC.CursorPos.x + text_offset_x, window.DC.CursorPos.y + text_offset_y);
@@ -6012,7 +6012,7 @@ void ImGui::TreePop()
     if (g.NavMoveDir == ImGuiDir_Left && g.NavWindow == window && NavMoveRequestButNoResultYet())
         if (g.NavIdIsAlive && (window.DC.TreeJumpToParentOnPopMask & tree_depth_mask))
         {
-            SetNavID(window.idStack.back(), g.NavLayer, 0, ImRect());
+            SetNavID(window.idStack.back(), g.nav_layer, 0, ImRect());
             NavMoveRequestCancel();
         }
     window.DC.TreeJumpToParentOnPopMask &= tree_depth_mask - 1;
@@ -6108,7 +6108,7 @@ bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags fl
 
     // Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
     Id32 id = window.GetID(label);
-    Vector2D label_size = CalcTextSize(label, None, true);
+    Vector2D label_size = calc_text_size(label, None, true);
     Vector2D size(size_arg.x != 0.0 ? size_arg.x : label_size.x, size_arg.y != 0.0 ? size_arg.y : label_size.y);
     Vector2D pos = window.DC.CursorPos;
     pos.y += window.DC.curr_line_text_base_offset;
@@ -6195,10 +6195,10 @@ bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags fl
         if (g.NavJustMovedToId == id)
             selected = pressed = true;
 
-    // Update nav_id when clicking or when Hovering (this doesn't happen on most widgets), so navigation can be resumed with gamepad/keyboard
+    // update nav_id when clicking or when Hovering (this doesn't happen on most widgets), so navigation can be resumed with gamepad/keyboard
     if (pressed || (hovered && (flags & ImGuiselectableFlags_SetNavIdOnHover)))
     {
-        if (!g.NavDisableMouseHover && g.NavWindow == window && g.NavLayer == window.DC.NavLayerCurrent)
+        if (!g.NavDisableMouseHover && g.NavWindow == window && g.nav_layer == window.DC.NavLayerCurrent)
         {
             SetNavID(id, window.DC.NavLayerCurrent, window.DC.NavFocusScopeIdCurrent, WindowRectAbsToRel(window, bb)); // (bb == nav_rect)
             g.NavDisableHighlight = true;
@@ -6271,7 +6271,7 @@ bool ImGui::BeginListBox(const char* label, const Vector2D& size_arg)
 
     const ImGuiStyle& style = g.Style;
     const Id32 id = GetID(label);
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
 
     // size default to hold ~7.25 items.
     // Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
@@ -6401,7 +6401,7 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
     const ImGuiStyle& style = g.Style;
     const Id32 id = window.GetID(label);
 
-    const Vector2D label_size = CalcTextSize(label, None, true);
+    const Vector2D label_size = calc_text_size(label, None, true);
     if (frame_size.x == 0.0)
         frame_size.x = CalcItemWidth();
     if (frame_size.y == 0.0)
@@ -6686,17 +6686,17 @@ void ImGui::EndMenuBar()
         Window* nav_earliest_child = g.NavWindow;
         while (nav_earliest_child->ParentWindow && (nav_earliest_child->ParentWindow->Flags & WindowFlags_ChildMenu))
             nav_earliest_child = nav_earliest_child->ParentWindow;
-        if (nav_earliest_child->ParentWindow == window && nav_earliest_child->DC.ParentLayoutType == LayoutType::Horizontal && (g.NavMoveFlags & ImGuiNavMoveFlags_Forwarded) == 0)
+        if (nav_earliest_child->ParentWindow == window && nav_earliest_child->DC.ParentLayoutType == LayoutType::Horizontal && (g.nav_move_flags & ImGuiNavMoveFlags_Forwarded) == 0)
         {
             // To do so we claim focus back, restore nav_id and then process the movement request for yet another frame.
             // This involve a one-frame delay which isn't very problematic in this situation. We could remove it by scoring in advance for multiple window (probably not worth bothering)
             const ImGuiNavLayer layer = ImGuiNavLayer_Menu;
             IM_ASSERT(window.DC.nav_layers_active_mask_next & (1 << layer)); // Sanity check
             FocusWindow(window);
-            SetNavID(window.nav_last_ids[layer], layer, 0, window.nav_rectRel[layer]);
+            SetNavID(window.nav_last_ids[layer], layer, 0, window.nav_rect_rel[layer]);
             g.NavDisableHighlight = true; // Hide highlight for the current frame so we don't see the intermediary selection.
             g.NavDisableMouseHover = g.NavMousePosDirty = true;
-            NavMoveRequestForward(g.NavMoveDir, g.NavMoveClipDir, g.NavMoveFlags, g.NavMoveScrollFlags); // Repeat
+            NavMoveRequestForward(g.NavMoveDir, g.nav_move_clip_dir, g.nav_move_flags, g.NavMoveScrollFlags); // Repeat
         }
     }
 
@@ -6784,7 +6784,7 @@ void ImGui::EndMainMenuBar()
     // When the user has left the menu layer (typically: closed menus through activation of an item), we restore focus to the previous window
     // FIXME: With this strategy we won't be able to restore a None focus.
     // ImGuiContext& g = *GImGui;
-    if (g.current_window_id == g.NavWindow && g.NavLayer == ImGuiNavLayer_Main && !g.nav_any_request)
+    if (g.current_window_id == g.NavWindow && g.nav_layer == ImGuiNavLayer_Main && !g.nav_any_request)
         focus_topmost_window_under_one(g.NavWindow, None);
 
     End();
@@ -6844,7 +6844,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
     // Tag menu as used. Next time BeginMenu() with same id is called it will append to existing menu
     g.MenusIdSubmittedThisFrame.push_back(id);
 
-    Vector2D label_size = CalcTextSize(label, None, true);
+    Vector2D label_size = calc_text_size(label, None, true);
 
     // Odd hack to allow hovering across menus of a same menu-set (otherwise we wouldn't be able to hover parent without always being a Child window)
     const bool menuset_is_open = IsRootOfOpenMenuSet();
@@ -6883,7 +6883,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         // (In a typical menu window where all items are BeginMenu() or menu_item() calls, extra_w will always be 0.0.
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
         popup_pos = DimgVec2D::new(pos.x, pos.y - style.WindowPadding.y);
-        let icon_w =  (icon && icon[0]) ? CalcTextSize(icon, None).x : 0.0;
+        let icon_w =  (icon && icon[0]) ? calc_text_size(icon, None).x : 0.0;
         let checkmark_w =  IM_FLOOR(g.FontSize * 1.20);
         let min_w =  window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0.0, checkmark_w); // Feedback to next frame
         let extra_w =  ImMax(0.0, get_content_region_avail().x - min_w);
@@ -7025,7 +7025,7 @@ bool ImGui::menu_itemEx(const char* label, const char* icon, const char* shortcu
     // ImGuiContext& g = *GImGui;
     ImGuiStyle& style = g.Style;
     Vector2D pos = window.DC.CursorPos;
-    Vector2D label_size = CalcTextSize(label, None, true);
+    Vector2D label_size = calc_text_size(label, None, true);
 
     const bool menuset_is_open = IsRootOfOpenMenuSet();
     Window* backed_nav_window = g.NavWindow;
@@ -7059,8 +7059,8 @@ bool ImGui::menu_itemEx(const char* label, const char* icon, const char* shortcu
         // Menu item inside a vertical menu
         // (In a typical menu window where all items are BeginMenu() or menu_item() calls, extra_w will always be 0.0.
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
-        let icon_w =  (icon && icon[0]) ? CalcTextSize(icon, None).x : 0.0;
-        let shortcut_w =  (shortcut && shortcut[0]) ? CalcTextSize(shortcut, None).x : 0.0;
+        let icon_w =  (icon && icon[0]) ? calc_text_size(icon, None).x : 0.0;
+        let shortcut_w =  (shortcut && shortcut[0]) ? calc_text_size(shortcut, None).x : 0.0;
         let checkmark_w =  IM_FLOOR(g.FontSize * 1.20);
         let min_w =  window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, shortcut_w, checkmark_w); // Feedback for next frame
         let stretch_w =  ImMax(0.0, get_content_region_avail().x - min_w);
@@ -7513,7 +7513,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
     if (g.NavWindowingTarget != None && g.NavWindowingTarget->DockNode && g.NavWindowingTarget->DockNode->TabBar == tab_bar)
         tab_bar->visible_tab_id = scroll_to_tab_id = g.NavWindowingTarget->ID;
 
-    // Update scrolling
+    // update scrolling
     if (scroll_to_tab_id != 0)
         TabBarScrollToTab(tab_bar, scroll_to_tab_id, sections);
     tab_bar->ScrollingAnim = TabBarScrollClamp(tab_bar, tab_bar->ScrollingAnim);
@@ -8008,7 +8008,7 @@ bool    ImGui::tab_item_ex(ImGuiTabBar* tab_bar, const char* label, bool* p_open
         tab_bar->TabsNames.append(label, label + strlen(label) + 1); // Append name _with_ the zero-terminator.
     }
 
-    // Update selected tab
+    // update selected tab
     if (!is_tab_button)
     {
         if (tab_appearing && (tab_bar->Flags & TabBarFlags::AutoSelectNewTabs) && tab_bar->NextSelectedTabId == 0)
@@ -8244,7 +8244,7 @@ void    ImGui::SetTabItemClosed(const char* label)
 Vector2D ImGui::tab_item_calc_size(const char* label, bool has_close_button)
 {
     // ImGuiContext& g = *GImGui;
-    Vector2D label_size = CalcTextSize(label, None, true);
+    Vector2D label_size = calc_text_size(label, None, true);
     Vector2D size = DimgVec2D::new(label_size.x + g.Style.FramePadding.x, label_size.y + g.Style.FramePadding.y * 2.0);
     if (has_close_button)
         size.x += g.Style.FramePadding.x + (g.Style.ItemInnerSpacing.x + g.FontSize); // We use Y intentionally to fit the close button circle.
@@ -8283,7 +8283,7 @@ void ImGui::tab_item_background(ImDrawList* draw_list, const ImRect& bb, ImGuiTa
 void ImGui::tab_item_label_and_close_button(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, Vector2D frame_padding, const char* label, Id32 tab_id, Id32 close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
 {
     // ImGuiContext& g = *GImGui;
-    Vector2D label_size = CalcTextSize(label, None, true);
+    Vector2D label_size = calc_text_size(label, None, true);
 
     if (out_just_closed)
         *out_just_closed = false;

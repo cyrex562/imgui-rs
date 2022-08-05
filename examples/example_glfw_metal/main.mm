@@ -162,7 +162,7 @@ int main(int, char**)
             ImGui::Render();
             ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, renderEncoder);
 
-            // Update and Render additional Platform windows
+            // update and Render additional Platform windows
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
                 ImGui::UpdatePlatformWindows();

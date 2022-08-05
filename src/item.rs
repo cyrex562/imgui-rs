@@ -4,7 +4,7 @@ use crate::color::make_color_32;
 use crate::condition::Condition;
 use crate::content::get_content_region_max_abs;
 use crate::context::Context;
-use crate::draw::list::get_foreground_draw_list;
+use crate::draw::list::foreground_draw_list;
 use crate::globals::GImGui;
 use crate::id::{clear_active_id, keep_alive_id, set_hovered_id};
 use crate::input::mouse::{is_mouse_clicked, is_mouse_hovering_rect};
@@ -159,7 +159,7 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> bool {
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if g.debug_item_picker_active && g.hovered_id_previous_frame == id {
-            get_foreground_draw_list(g, None).add_rect(&bb.min, &bb.max, make_color_32(255, 255, 0, 255), 0.0, None, 0.0);
+            foreground_draw_list(g, None).add_rect(&bb.min, &bb.max, make_color_32(255, 255, 0, 255), 0.0, None, 0.0);
         }
         if g.debug_item_picker_break_id == id {
             // IM_DEBUG_BREAK();
@@ -297,7 +297,7 @@ pub fn is_any_item_focused(g: &mut Context) -> bool
 pub fn is_item_visible(g: &mut Context) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    // return g.current_window->ClipRect.Overlaps(g.last_item_data.Rect);
+    // return g.current_window->clip_rect.Overlaps(g.last_item_data.Rect);
     let curr_win = g.current_window_mut().unwrap();
     curr_win.clip_rect.overlaps_rect(&g.last_item_data.rect)
 }
@@ -515,7 +515,7 @@ pub fn item_size(g: &mut Context, size: &Vector2D, text_baseline_y: f32)
     window.dc.cursor_max_pos.y = ImMax(window.dc.cursor_max_pos.y, window.dc.cursor_pos.y - g.style.item_spacing.y);
     //if (g.io.key_alt) window->draw_list->add_circle(window->dc.CursorMaxPos, 3.0, IM_COL32(255,0,0,255), 4); // [DEBUG]
 
-    window.dc.PrevLineSize.y = line_height;
+    window.dc.prev_line_size.y = line_height;
     window.dc.curr_line_size.y = 0.0;
     window.dc.PrevLineTextBaseOffset = ImMax(window.dc.curr_line_text_base_offset, text_baseline_y);
     window.dc.curr_line_text_base_offset = 0.0;

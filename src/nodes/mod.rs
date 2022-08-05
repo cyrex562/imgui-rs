@@ -760,7 +760,7 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, Rect box_rect)
         ImSwap(box_rect.min.y, box_rect.max.y);
     }
 
-    // Update node selection
+    // update node selection
 
     editor.SelectedNodeIndices.clear();
 
@@ -778,7 +778,7 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, Rect box_rect)
         }
     }
 
-    // Update link selection
+    // update link selection
 
     editor.SelectedLinkIndices.clear();
 
@@ -2406,7 +2406,7 @@ void EndNodeEditor()
     }
     ClickInteractionUpdate(editor);
 
-    // At this point, draw commands have been issued for all nodes (and pins). Update the node pool
+    // At this point, draw commands have been issued for all nodes (and pins). update the node pool
     // to detect unused node slots and remove those indices from the depth stack before sorting the
     // node draw commands by depth.
     ObjectPoolUpdate(editor.Nodes);
