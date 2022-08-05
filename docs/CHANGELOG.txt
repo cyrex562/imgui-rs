@@ -471,7 +471,7 @@ Other Changes:
 - Clipper: currently focused item is automatically included in clipper range.
   Fixes issue where e.g. drag and dropping an item and scrolling ensure the item source location is
   still submitted. (#3841, #1725) [@GamingMinds-DanielC, @ocornut]
-- Clipper: added ForceDisplayRangeByIndices() to force a given item (or several) to be stepped out
+- Clipper: added force_display_range_by_indices() to force a given item (or several) to be stepped out
   during a clipping operation. (#3841) [@@GamingMinds-DanielC]
 - Clipper: rework so gamepad/keyboard navigation doesn't create spikes in number of items requested
   by the clipper to display. (#3841)

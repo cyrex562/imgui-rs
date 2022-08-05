@@ -116,7 +116,7 @@ impl Style {
         out.frame_padding = Vector2D::new(4.0, 3.0); // Padding within a framed rectangle (used by most widgets)
         out.frame_rounding = 0.0; // Radius of frame corners rounding. Set to 0.0 to have rectangular frames (used by most widgets).
         out.frame_border_size = 0.0; // Thickness of border around frames. Generally set to 0.0 or 1.0. Other values not well tested.
-        out.ItemSpacing = Vector2D::new(8.0, 4.0); // Horizontal and vertical spacing between widgets/lines
+        out.item_spacing = Vector2D::new(8.0, 4.0); // Horizontal and vertical spacing between widgets/lines
         out.item_inner_spacing = Vector2D::new(4.0, 4.0); // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
         out.CellPadding = Vector2D::new(4.0, 2.0); // Padding within a table cell
         out.touch_extra_padding = Vector2D::new(0.0, 0.0); // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
@@ -157,7 +157,7 @@ impl Style {
         self.PopupRounding = f32::floor(&self.PopupRounding * scale_factor);
         self.frame_padding = Vector2D::floor(&self.frame_padding * scale_factor);
         self.frame_rounding = f32::floor(&self.frame_rounding * scale_factor);
-        self.ItemSpacing = Vector2D::floor(&self.ItemSpacing * scale_factor);
+        self.item_spacing = Vector2D::floor(&self.item_spacing * scale_factor);
         self.item_inner_spacing = Vector2D::floor(&self.item_inner_spacing * scale_factor);
         self.CellPadding = Vector2D::floor(&self.CellPadding * scale_factor);
         self.touch_extra_padding = Vector2D::floor(&self.touch_extra_padding * scale_factor);
@@ -333,7 +333,7 @@ pub struct ImGuiStyleVarInfo {
 //     }
 // }
 
-// static const ImGuiCol GWindowDockStyleColors[ImGuiWindowDockStyleCol_COUNT] =
+// static const ImGuiCol GWindowDockStyleColors[WindowDockStyleCol_COUNT] =
 pub const WINDOW_DOCK_STYLE_COLORS: [StyleColor; 6] = [
     StyleColor::Text,
     StyleColor::Tab,

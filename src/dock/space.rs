@@ -21,12 +21,12 @@ use crate::window::WindowFlags;
 // Create an explicit dockspace node within an existing window. Also expose dock node flags and creates a central_node by default.
 // The Central Node is always displayed even when empty and shrink/extend according to the requested size of its neighbors.
 // DockSpace() needs to be submitted _before_ any window they can host. If you use a dockspace, submit it early in your app.
-// ImGuiID DockSpace(ImGuiID id, const Vector2D& size_arg, ImGuiDockNodeFlags flags, const ImGuiWindowClass* window_class)
+// Id32 DockSpace(Id32 id, const Vector2D& size_arg, ImGuiDockNodeFlags flags, const WindowClass* window_class)
 pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut HashSet<DockNodeFlags>, window_class: &WindowClass) -> Id32
 {
     // ImGuiContext* g = GImGui;
     // ImGuiContext& g = *.g;
-    // ImGuiWindow* window = GetCurrentWindow();
+    // Window* window = GetCurrentWindow();
     let window = g.current_window_mut();
     if !(g.io.config_flags.contains(&ConfigFlags::DockingEnable)) {
         return 0;
@@ -90,7 +90,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
 
     // FIXME-DOCK: Why do we need a child window to host a dockspace, could we host it in the existing window?
     // FIXME-DOCK: What is the reason for not simply calling BeginChild()? (OK to have a reason but should be commented)
-    // ImGuiWindowFlags window_flags = WindowFlags::ChildWindow | WindowFlags::DockNodeHost;
+    // WindowFlags window_flags = WindowFlags::ChildWindow | WindowFlags::DockNodeHost;
     let mut window_flags: HashSet<WindowFlags> = HashSet::from([WindowFlags::ChildWindow, WindowFlags::DockNodeHost, WindowFlags::NoSavedSettings, WindowFlags::NoResize, WindowFlags::NoCollapse, WindowFlags::NoTitleBar, WindowFlags::NoScrollbar, WindowFlags::NoScrollWithMouse, WindowFlags::NoBackground]);
     // window_flags |= WindowFlags::NoSavedSettings | WindowFlags::NoResize | WindowFlags::NoCollapse | WindowFlags::NoTitleBar;
     // window_flags |= WindowFlags::NoScrollbar | WindowFlags::NoScrollWithMouse;
@@ -105,7 +105,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     begin(g, &title, None, Some(&mut window_flags));
     pop_style_var(g, 0);
 
-    // ImGuiWindow* host_window = g.current_window;
+    // Window* host_window = g.current_window;
     let host_window = g.current_window_mut();
     dock_node_setup_host_window(g,node.unwrap(), host_window);
     host_windowchild_id = window.get_id(g, title.as_str());
@@ -135,7 +135,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
 // The limitation with this call is that your window won't have a menu bar.
 // Even though we could pass window flags, it would also require the user to be able to call BeginMenuBar() somehow meaning we can't Begin/End in a single function.
 // But you can also use BeginMainMenuBar(). If you really want a menu bar inside the same window as the one hosting the dockspace, you will need to copy this code somewhere and tweak it.
-// ImGuiID DockSpaceOverViewport(const ImGuiViewport* viewport, ImGuiDockNodeFlags dockspace_flags, const ImGuiWindowClass* window_class)
+// Id32 DockSpaceOverViewport(const ImGuiViewport* viewport, ImGuiDockNodeFlags dockspace_flags, const WindowClass* window_class)
 pub fn dock_space_over_viewport(g: &mut Context, mut viewport: Option<&mut Viewport>, dockspace_flags: &mut HashSet<DockNodeFlags>, window_class: &WindowClass) -> Id32
 {
     if viewport.is_none() {
@@ -146,7 +146,7 @@ pub fn dock_space_over_viewport(g: &mut Context, mut viewport: Option<&mut Viewp
     set_next_window_size(g, &viewport.work_size, Condition::None);
     set_next_window_viewport(g, viewport.id);
 
-    // ImGuiWindowFlags host_window_flags = 0;
+    // WindowFlags host_window_flags = 0;
     let mut host_window_flags: HashSet<WindowFlags> = HashSet::from([
         WindowFlags::NoTitleBar, WindowFlags::NoCollapse, WindowFlags::NoResize, WindowFlags::NoMove, WindowFlags::NoDocking, WindowFlags::NoBringToFrontOnFocus, WindowFlags::NoNavFocus
     ]);

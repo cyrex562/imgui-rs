@@ -4,7 +4,7 @@ use crate::rect::Rect;
 use crate::types::Id32;
 use crate::window::{HoveredFlags, Window, WindowFlags};
 
-// bool ImGui::is_window_above(ImGuiWindow* potential_above, ImGuiWindow* potential_below)
+// bool ImGui::is_window_above(Window* potential_above, Window* potential_below)
 pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_below: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -16,7 +16,7 @@ pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_
 
     for (int i = g.windows.len() - 1; i >= 0; i -= 1 )
     {
-        ImGuiWindow* candidate_window = g.windows[i];
+        Window* candidate_window = g.windows[i];
         if (candidate_window == potential_above)
             return true;
         if (candidate_window == potential_below)
@@ -31,8 +31,8 @@ pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> 
 {
     // IM_ASSERT((flags & (ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenDisabled)) == 0);   // flags not supported by this function
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* ref_window = g.hovered_window;
-    ImGuiWindow* cur_window = g.current_window;
+    Window* ref_window = g.hovered_window;
+    Window* cur_window = g.current_window;
     if (ref_window == None)
         return false;
 
@@ -67,8 +67,8 @@ pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> 
 pub fn is_window_focused(g: &mut Context, flags: &mut HashSet<FocusedFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* ref_window = g.nav_window;
-    ImGuiWindow* cur_window = g.current_window;
+    Window* ref_window = g.nav_window;
+    Window* cur_window = g.current_window;
 
     if (ref_window == None)
         return false;
@@ -97,13 +97,13 @@ pub fn is_window_docked(g: &mut Context) -> bool
 // Can we focus this window with CTRL+TAB (or PadMenu + PadFocusPrev/PadFocusNext)
 // Note that NoNavFocus makes the window not reachable with CTRL+TAB but it can still be focused with mouse or programmatically.
 // If you want a window to never be focused, you may use the e.g. NoInputs flag.
-// bool ImGui::IsWindowNavFocusable(ImGuiWindow* window)
+// bool ImGui::IsWindowNavFocusable(Window* window)
 pub fn is_window_nav_focusable(g: &mut Context, window: &mut Window) -> bool
 {
     return window.was_active && window == window.root_window && !(window.flags & WindowFlags::NoNavFocus);
 }
 
-// static inline bool IsWindowContentHoverable(ImGuiWindow* window, ImGuiHoveredFlags flags)
+// static inline bool IsWindowContentHoverable(Window* window, ImGuiHoveredFlags flags)
 pub fn is_window_content_hoverable(
     g: &mut Context,
     window: &mut Window,
@@ -127,7 +127,7 @@ pub fn is_window_content_hoverable(
                 return false;
             }
         }
-        // if ImGuiWindow * focused_root_window = g.nav_window_id.root_window_dock_tree {
+        // if Window * focused_root_window = g.nav_window_id.root_window_dock_tree {
         //     if focused_root_window.was_active && focused_root_window != window.root_window_dock_tree_id {
         //         // For the purpose of those flags we differentiate "standard popup" from "modal popup"
         //         // NB: The order of those two tests is important because Modal windows are also Popups.
@@ -153,14 +153,14 @@ pub fn is_window_content_hoverable(
     return true;
 }
 
-// bool ImGui::IsClippedEx(const ImRect& bb, ImGuiID id)
+// bool ImGui::is_clipped_ex(const ImRect& bb, Id32 id)
 pub fn is_clipped_ex(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'static str> {
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* window = g.CurrentWindow;
+    // Window* window = g.CurrentWindow;
     let window = g.current_window_mut()?;
     if !bb.Overlaps(&window.clip_rect) {
         if id == 0 || (id != g.active_id && id != g.nav_id) {
-            if !g.LogEnabled {
+            if !g.log_enabled {
                 return Ok(true);
             }
         }
@@ -168,15 +168,15 @@ pub fn is_clipped_ex(g: &mut Context, bb: &Rect, id: Id32) -> Result<bool, &'sta
     return Ok(false);
 }
 
-// static bool IsWindowActiveAndVisible(ImGuiWindow* window)
+// static bool IsWindowActiveAndVisible(Window* window)
 pub fn is_window_active_and_visible(window: &mut Window) -> bool {
     return (window.active) && (!window.hidden);
 }
 
 /// static int IMGUI_CDECL ChildWindowComparer(const void* lhs, const void* rhs)
 pub fn child_window_comparer(lhs: &Window, rhs: &Window) -> i32 {
-    // const ImGuiWindow* const a = *(const ImGuiWindow* const *)lhs;
-    // const ImGuiWindow* const b = *(const ImGuiWindow* const *)rhs;
+    // const Window* const a = *(const Window* const *)lhs;
+    // const Window* const b = *(const Window* const *)rhs;
     if lhs.flags.contains(&WindowFlags::Popup) - rhs.flags.contains(&WindowFlags::Popup) {
         return 1;
     }

@@ -45,12 +45,8 @@ mod group;
 mod hash;
 mod helpers;
 mod id;
-mod ime;
 pub mod input;
-mod input_event;
-mod input_text;
 mod internal_h;
-mod io;
 mod item;
 mod kv_store;
 mod layout;
@@ -105,14 +101,14 @@ mod vectors;
 mod viewport;
 mod widgets;
 mod window;
-mod font_freetype;
+pub mod input;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
 
-    // Add .ini handle for ImGuiWindow type
+    // Add .ini handle for Window type
     {
         // ImGuiSettingsHandler ini_handler;
         let mut ini_handler = SettingsHandler::default();

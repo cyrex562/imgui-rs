@@ -1,12 +1,16 @@
 use std::ffi::c_void;
 use crate::Context;
 use crate::globals::GImGui;
-use crate::imgui_h::{ImGuiCond, ImGuiID, ImGuiInputTextFlags, ImGuiKey};
+use crate::imgui_h::{Id32, ImGuiCond, ImGuiInputTextFlags, ImGuiKey};
 use crate::vectors::vector_2d::Vector2D;
 
 pub mod mouse;
 pub mod keyboard;
 pub mod keys;
+mod ime;
+pub mod input_event;
+mod input_text;
+pub mod io;
 
 // Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
 // The callback function should return 0 by default.
@@ -132,7 +136,7 @@ pub struct ImGuiInputEventMouseButton   {
 }
 
 pub struct ImGuiInputEventMouseViewport { 
-    // ImGuiID HoveredViewportID; 
+    // Id32 HoveredViewportID;
     pub hovered_viewport_id: DimgId,
 }
 

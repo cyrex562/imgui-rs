@@ -8,7 +8,7 @@ use crate::id::set_active_id;
 use crate::input::mouse::{is_mouse_dragging, is_mouse_hovering_rect};
 use crate::input::MouseButton;
 use crate::item::{item_hoverable, ItemStatusFlags};
-use crate::orig_imgui_single_file::{ImGuiID, ImGuiWindow};
+use crate::orig_imgui_single_file::{Id32, Window};
 use crate::payload::Payload;
 use crate::rect::Rect;
 use crate::style::get_color_u32;
@@ -84,7 +84,7 @@ pub fn clear_drag_drop(g: &mut Context) {
 // bool begin_drag_drop_source(ImGuiDragDropFlags flags)
 pub fn begin_drag_drop_source(g: &mut Context, flags: &HashSet<DragDropFlags>) -> bool {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow * window = g.current_window;
+    Window * window = g.current_window;
 
     // FIXME-DRAGDROP: While in the common-most "drag from non-zero active id" case we can tell the mouse button,
     // in both SourceExtern and id==0 cases we may requires something else (explicit flags or some heuristic).
@@ -185,7 +185,7 @@ pub fn begin_drag_drop_source(g: &mut Context, flags: &HashSet<DragDropFlags>) -
         }
 
         if !(flags.contains(&DragDropFlags::SourceNoDisableHover)) && !(flags.contains(&DragDropFlags::SourceExtern)) {
-            g.last_item_data.status_flags.remove(&ItemStatusFlags::HoveredRect);// &= ~ImGuiItemStatusFlags_HoveredRect;
+            g.last_item_data.status_flags.remove(&ItemStatusFlags::HoveredRect);// &= ~ItemStatusFlags::HoveredRect;
         }
 
         return true;
@@ -254,16 +254,16 @@ pub fn set_drag_drop_payload(g: &mut Context, payload_type: &str, data: &Window,
     return (g.drag_drop_accept_fraame_count == g.frame_count) || (g.drag_drop_accept_fraame_count == g.frame_count - 1);
 }
 
-// bool begin_drag_drop_target_custom(const Rect& bb, ImGuiID id)
+// bool begin_drag_drop_target_custom(const Rect& bb, Id32 id)
 pub fn begin_drag_drop_target_custom(g: &mut Context, bb: &Rect, id: Id32) -> bool {
     // ImGuiContext& g = *GImGui;
     if !g.drag_drop_active {
         return false;
     }
 
-    // ImGuiWindow* window = g.current_window;
+    // Window* window = g.current_window;
     let window = g.current_window_mut();
-    // ImGuiWindow* hovered_window = g.hovered_window_under_moving_window;
+    // Window* hovered_window = g.hovered_window_under_moving_window;
     let hovered_window = g.hovered_window_under_moving_window_mut();
     // if (hovered_window == None || window.root_window_dock_tree != hovered_window.root_window_dock_tree)
     if window.root_window_dock_tree_id != hovered_window.root_window_dock_tree_id {
@@ -295,18 +295,18 @@ pub fn begin_drag_drop_target(g: &mut Context) -> bool {
         return false;
     }
 
-    // ImGuiWindow* window = g.current_window;
+    // Window* window = g.current_window;
     let window = g.current_window_mut();
     if !(g.last_item_data.status_flags.contains(&ItemStatusFlags::HoveredRect)) {
         return false;
     }
-    // ImGuiWindow* hovered_window = g.hovered_window_under_moving_window;
+    // Window* hovered_window = g.hovered_window_under_moving_window;
     let hovered_window = g.hovered_window_under_moving_window_mut();
     if window.root_window_dock_tree_id != hovered_window.root_window_dock_tree_id || window.skip_items {
         return false;
     }
 
-    let display_rect = if g.last_item_data.status_flags.contains(&ItemStatusFlags::Hasdisplay_rect) { g.last_item_data.display_rect.clone() } else { g.last_item_data.rect.clone() };
+    let display_rect = if g.last_item_data.status_flags.contains(&ItemStatusFlags::HasDisplayRect) { g.last_item_data.display_rect.clone() } else { g.last_item_data.rect.clone() };
     let mut id = g.last_item_data.id;
     if id == 0 {
         id = window.get_id_from_rectangle(display_rect);
@@ -332,7 +332,7 @@ pub fn is_drag_drop_payload_being_accepted(g: &mut Context) -> bool {
 // const ImGuiPayload* accept_drag_drop_payload(const char* type, ImGuiDragDropFlags flags)
 pub fn accept_drag_drop_payload(g: &mut Context, payload_type: &str, flags: &mut HashSet<DragDropFlags>) -> Option<&mut Payload> {
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* window = g.current_window;
+    // Window* window = g.current_window;
     let window = g.current_window_mut();
     // ImGuiPayload& payload = g.drag_drop_payload;
     let payload = &mut g.drag_drop_payload;

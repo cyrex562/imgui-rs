@@ -1,5 +1,5 @@
 use std::os::raw::c_char;
-use crate::imgui_h::{ImGuiID, ImGuiInputTextFlags, ImWchar};
+use crate::imgui_h::{Id32, ImGuiInputTextFlags, ImWchar};
 use crate::imgui_math::ImMinI32;
 use crate::imstb_text_edit_state::STB_TexteditState;
 
@@ -7,8 +7,8 @@ use crate::imstb_text_edit_state::STB_TexteditState;
 #[derive(Debug,Default,Clone)]
 pub struct InputTextState
 {
-    // ImGuiID                 id;                     // widget id owning the text state
-    pub ID: ImGuiID,
+    // Id32                 id;                     // widget id owning the text state
+    pub ID: Id32,
     // int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
     pub CurLenW: usize,
     pub CurLenA: usize,

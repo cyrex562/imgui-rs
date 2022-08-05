@@ -264,7 +264,7 @@ use freetype::face::Face;
             return None;
 
         FT_Bitmap* ft_bitmap = &Face.glyph.bitmap;
-        out_glyph_info.Width = ft_bitmap.width;
+        out_glyph_info.width = ft_bitmap.width;
         out_glyph_info.Height = ft_bitmap.rows;
         out_glyph_info.OffsetX = Face.glyph.bitmap_left;
         out_glyph_info.OffsetY = -Face.glyph.bitmap_top;
@@ -469,7 +469,7 @@ use freetype::face::Face;
     //         return None;
     //
     //     FT_Bitmap* ft_bitmap = &Face.glyph.bitmap;
-    //     out_glyph_info.Width = ft_bitmap.width;
+    //     out_glyph_info.width = ft_bitmap.width;
     //     out_glyph_info.Height = ft_bitmap.rows;
     //     out_glyph_info.OffsetX = Face.glyph.bitmap_left;
     //     out_glyph_info.OffsetY = -Face.glyph.bitmap_top;
@@ -757,7 +757,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
                 continue;
 
             // Allocate new temporary chunk if needed
-            let bitmap_size_in_bytes = src_glyph.Info.Width * src_glyph.Info.Height * 4;
+            let bitmap_size_in_bytes = src_glyph.Info.width * src_glyph.Info.Height * 4;
             if (buf_bitmap_current_used_bytes + bitmap_size_in_bytes > BITMAP_BUFFERS_CHUNK_SIZE)
             {
                 buf_bitmap_current_used_bytes = 0;
@@ -767,9 +767,9 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             // Blit rasterized pixels to our temporary buffer and keep a pointer to it.
             src_glyph.BitmapData = (unsigned int*)(buf_bitmap_buffers.back() + buf_bitmap_current_used_bytes);
             buf_bitmap_current_used_bytes += bitmap_size_in_bytes;
-            src_tmp.font.BlitGlyph(ft_bitmap, src_glyph.BitmapData, src_glyph.Info.Width, multiply_enabled ? multiply_table : None);
+            src_tmp.font.BlitGlyph(ft_bitmap, src_glyph.BitmapData, src_glyph.Info.width, multiply_enabled ? multiply_table : None);
 
-            src_tmp.Rects[glyph_i].w = (stbrp_coord)(src_glyph.Info.Width + padding);
+            src_tmp.Rects[glyph_i].w = (stbrp_coord)(src_glyph.Info.width + padding);
             src_tmp.Rects[glyph_i].h = (stbrp_coord)(src_glyph.Info.Height + padding);
             total_surface += src_tmp.Rects[glyph_i].w * src_tmp.Rects[glyph_i].h;
         }
@@ -858,7 +858,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
                 continue;
 
             GlyphInfo& info = src_glyph.Info;
-            // IM_ASSERT(info.Width + padding <= pack_rect.w);
+            // IM_ASSERT(info.width + padding <= pack_rect.w);
             // IM_ASSERT(info.Height + padding <= pack_rect.h);
             let tx = pack_rect.x + padding;
             let ty = pack_rect.y + padding;
@@ -866,11 +866,11 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             // Register glyph
             let x0 =  info.OffsetX + font_off_x;
             let y0 =  info.OffsetY + font_off_y;
-            let x1 =  x0 + info.Width;
+            let x1 =  x0 + info.width;
             let y1 =  y0 + info.Height;
             let u0 =  (tx) / atlas.TexWidth;
             let v0 =  (ty) / atlas.TexHeight;
-            let u1 =  (tx + info.Width) / atlas.TexWidth;
+            let u1 =  (tx + info.width) / atlas.TexWidth;
             let v1 =  (ty + info.Height) / atlas.TexHeight;
             dst_font.AddGlyph(&cfg, (ImWchar)src_glyph.Codepoint, x0, y0, x1, y1, u0, v0, u1, v1, info.AdvanceX);
 
@@ -880,21 +880,21 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
                 dst_glyph.Colored = tex_use_colors = true;
 
             // Blit from temporary buffer to final texture
-            size_t blit_src_stride = src_glyph.Info.Width;
+            size_t blit_src_stride = src_glyph.Info.width;
             size_t blit_dst_stride = atlas.TexWidth;
             unsigned int* blit_src = src_glyph.BitmapData;
             if (atlas.TexPixelsAlpha8 != None)
             {
                 unsigned char* blit_dst = atlas.TexPixelsAlpha8 + (ty * blit_dst_stride) + tx;
                 for (int y = 0; y < info.Height; y += 1, blit_dst += blit_dst_stride, blit_src += blit_src_stride)
-                    for (int x = 0; x < info.Width; x += 1)
+                    for (int x = 0; x < info.width; x += 1)
                         blit_dst[x] = (unsigned char)((blit_src[x] >> IM_COL32_A_SHIFT) & 0xFF);
             }
             else
             {
                 unsigned int* blit_dst = atlas.TexPixelsRGBA32 + (ty * blit_dst_stride) + tx;
                 for (int y = 0; y < info.Height; y += 1, blit_dst += blit_dst_stride, blit_src += blit_src_stride)
-                    for (int x = 0; x < info.Width; x += 1)
+                    for (int x = 0; x < info.width; x += 1)
                         blit_dst[x] = blit_src[x];
             }
         }

@@ -35,7 +35,7 @@ use crate::window::{
 use crate::{Context, ViewportFlags};
 use std::collections::HashSet;
 
-// static void ImGui::render_window_outer_borders(ImGuiWindow* window)
+// static void ImGui::render_window_outer_borders(Window* window)
 pub fn render_window_outer_borders(g: &mut Context, window: &mut Window) {
     // ImGuiContext& g = *GImGui;
     // float rounding = window.WindowRounding;
@@ -100,7 +100,7 @@ pub fn render_window_outer_borders(g: &mut Context, window: &mut Window) {
 
 /// Draw background and borders
 /// Draw and handle scrollbars
-/// void ImGui::RenderWindowDecorations(ImGuiWindow* window, const Rect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size)
+/// void ImGui::RenderWindowDecorations(Window* window, const Rect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size)
 pub fn render_window_decorations(
     g: &mut Context,
     window: &mut Window,
@@ -114,7 +114,7 @@ pub fn render_window_decorations(
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;
     let style = &g.style;
-    // ImGuiWindowFlags flags = window.flags;
+    // WindowFlags flags = window.flags;
     let flags = &window.flags;
 
     // Ensure that ScrollBar doesn't read last frame's skip_items
@@ -376,7 +376,7 @@ pub fn render_window_decorations(
 
 // Render title text, collapse button, close button
 // When inside a dock node, this is handled in DockNodeCalcTabBarLayout() instead.
-// void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const Rect& title_bar_rect, const char* name, bool* p_open)
+// void ImGui::RenderWindowTitleBarContents(Window* window, const Rect& title_bar_rect, const char* name, bool* p_open)
 pub fn render_window_title_bar_contents(
     g: &mut Context,
     window: &mut Window,
@@ -387,7 +387,7 @@ pub fn render_window_title_bar_contents(
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;
     let style: &mut Style = &mut g.style;
-    // ImGuiWindowFlags flags = window.flags;
+    // WindowFlags flags = window.flags;
     let flags: &mut HashSet<WindowFlags> = &mut window.flags;
 
     // const bool has_close_button = (p_open != None);

@@ -8247,8 +8247,8 @@ struct ExampleAppConsole {
     //   With:
     //      ImGuiListClipper clipper;
     //      clipper.Begin(Items.size);
-    //      while (clipper.Step())
-    //         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+    //      while (clipper.step())
+    //         for (int i = clipper.display_start; i < clipper.display_end; i++)
     // - That your items are evenly spaced (same height)
     // - That you have cheap random access to your elements (you can access them
     // given their index,
@@ -8923,7 +8923,7 @@ static void ShowExampleAppConstrainedResize(bool *p_open) {
   if (type == 6)
     ImGui::SetNextWindowSizeConstraints(
         DimgVec2D::new (0, 0), DimgVec2D::new (FLT_MAX, FLT_MAX),
-        CustomConstraints::Step, (void *)(intptr_t)100); // Fixed Step
+        CustomConstraints::Step, (void *)(intptr_t)100); // Fixed step
 
   ImGuiWindowFlags flags = auto_resize ? ImGuiWindowFlags_AlwaysAutoResize : 0;
   if (ImGui::Begin("Example: Constrained Resize", p_open, flags)) {

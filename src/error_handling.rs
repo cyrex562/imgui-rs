@@ -157,7 +157,7 @@ pub fn error_check_end_frame_recover(g: &mut Context, log_callback: ErrorLogCall
     while (g.current_window_stack.size > 0) //-V1044
     {
         ErrorCheckEndWindowRecover(log_callback, user_data);
-        ImGuiWindow* window = g.current_window;
+        Window* window = g.current_window;
         if (g.current_window_stack.size == 1)
         {
             // IM_ASSERT(window.is_fallback_window);
@@ -187,7 +187,7 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
         EndTable();
     }
 
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     ImGuiStackSizes* stack_sizes = &g.current_window_stack.back().StackSizesOnBegin;
     // IM_ASSERT(window != None);
     while (g.CurrentTabBar != None) //-V1044

@@ -278,7 +278,7 @@ pub fn set_window_font_scale(g: &mut Context, scale: f32)
 {
     // IM_ASSERT(scale > 0.0);
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = GetCurrentWindow();
+    Window* window = GetCurrentWindow();
     window.font_window_scale = scale;
     g.font_size = g.draw_list_shared_data.font_size = window.CalcFontSize();
 }

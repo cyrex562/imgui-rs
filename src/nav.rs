@@ -4,12 +4,12 @@ use crate::config::ConfigFlags;
 use crate::Context;
 use crate::types::Direction;
 use crate::draw::list::get_foreground_draw_list;
-use crate::imgui_h::ImGuiID;
+use crate::imgui_h::Id32;
 use crate::imgui_rect::Rect;
-use crate::imgui_window::{ImGuiItemFlags, ImGuiWindow};
+use crate::imgui_window::{ImGuiItemFlags, Window};
 use crate::input::{InputSource, NavInput, NavLayer};
 use crate::item::ItemFlags;
-use crate::orig_imgui_single_file::{ImGuiViewport, ImGuiWindow};
+use crate::orig_imgui_single_file::{ImGuiViewport, Window};
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
@@ -80,12 +80,12 @@ pub enum NavMoveFlags
 #[derive(Default,Debug,Clone)]
 pub struct NavItemData
 {
-    // ImGuiWindow*        window;         // Init,Move    // Best candidate window (result->ItemWindow->root_window_for_nav == request->window)
-    pub Window: *mut ImGuiWindow,
-    // ImGuiID             id;             // Init,Move    // Best candidate item id
-    pub ID: ImGuiID,
-    // ImGuiID             focus_scope_id;   // Init,Move    // Best candidate focus scope id
-    pub FocusScopeId: ImGuiID,
+    // Window*        window;         // Init,Move    // Best candidate window (result->ItemWindow->root_window_for_nav == request->window)
+    pub Window: *mut Window,
+    // Id32             id;             // Init,Move    // Best candidate item id
+    pub ID: Id32,
+    // Id32             focus_scope_id;   // Init,Move    // Best candidate focus scope id
+    pub FocusScopeId: Id32,
     // ImRect              RectRel;        // Init,Move    // Best candidate bounding box in window relative space
     pub RectRel: Rect,
     // ImGuiItemFlags      in_flags;        // ????,Move    // Best candidate item flags
@@ -110,7 +110,7 @@ impl NavItemData {
         self.Window = null_mut();
         self.id = INVALID_ID;
         self.FocusScopeId = 0;
-        self.InFlags = ImGuiItemFlags::None;
+        self.in_flags = ImGuiItemFlags::None;
         self.DistBox = f32::MAX;
         self.DistCenter = f32::MAX;
         self.DistAxial = f32::MAX;
@@ -131,7 +131,7 @@ pub enum NavReadMode
 
 pub const NAV_RESIZE_SPEED: f32 = 600.0;
 
-// void SetNavWindow(ImGuiWindow* window)
+// void SetNavWindow(Window* window)
 pub fn set_nav_window(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -144,7 +144,7 @@ pub fn set_nav_window(g: &mut Context, window: &mut Window)
     NavUpdateAnyRequestFlag();
 }
 
-// void SetNavID(ImGuiID id, ImGuiNavLayer nav_layer, ImGuiID focus_scope_id, const Rect& rect_rel)
+// void SetNavID(Id32 id, ImGuiNavLayer nav_layer, Id32 focus_scope_id, const Rect& rect_rel)
 pub fn set_nav_id(g: &mut Context, id: Id32, nav_layer: NavLayer, focus_scope_id: Id32, rect_rel: &Rect)
 {
     // ImGuiContext& g = *GImGui;
@@ -154,10 +154,10 @@ pub fn set_nav_id(g: &mut Context, id: Id32, nav_layer: NavLayer, focus_scope_id
     g.NavLayer = nav_layer;
     g.NavFocusScopeId = focus_scope_id;
     g.nav_window.nav_last_ids[nav_layer] = id;
-    g.nav_window.NavRectRel[nav_layer] = rect_rel;
+    g.nav_window.nav_rectRel[nav_layer] = rect_rel;
 }
 
-// void SetFocusID(ImGuiID id, ImGuiWindow* window)
+// void SetFocusID(Id32 id, Window* window)
 pub fn set_focus_id(g: &mut Context, id: Id32, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -174,7 +174,7 @@ pub fn set_focus_id(g: &mut Context, id: Id32, window: &mut Window)
     g.NavFocusScopeId = window.dc.NavFocusScopeIdCurrent;
     window.nav_last_ids[nav_layer] = id;
     if (g.last_item_data.id == id)
-        window.NavRectRel[nav_layer] = window_rect_abs_to_rel(window, g.last_item_data.NavRect);
+        window.nav_rectRel[nav_layer] = window_rect_abs_to_rel(window, g.last_item_data.nav_rect);
 
     if (g.active_id_source == InputSource::Nav)
         g.nav_disable_mouse_hover = true;
@@ -220,12 +220,12 @@ pub fn nav_clamp_rect_to_visible_area_for_move_dir(g: &mut Context, move_dir: Di
 pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     if (g.NavLayer != window.dcnav_layer_current)
         return false;
 
     // FIXME: Those are not good variables names
-    Rect cand = g.last_item_data.NavRect;   // Current item nav rectangle
+    Rect cand = g.last_item_data.nav_rect;   // Current item nav rectangle
     const Rect curr = g.NavScoringRect;   // Current modified source rect (NB: we've applied max.x = min.x in NavUpdate() to inhibit the effect of having varied item width)
     g.NavScoringDebugCount += 1;
 
@@ -354,24 +354,24 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 pub fn nav_apply_item_to_result(g: &mut Context, result: &mut NavItemData)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     result.Window = window;
     result.id = g.last_item_data.id;
     result.FocusScopeId = window.dc.NavFocusScopeIdCurrent;
-    result.InFlags = g.last_item_data.InFlags;
-    result.RectRel = window_rect_abs_to_rel(window, g.last_item_data.NavRect);
+    result.in_flags = g.last_item_data.in_flags;
+    result.RectRel = window_rect_abs_to_rel(window, g.last_item_data.nav_rect);
 }
 
 // We get there when either nav_id == id, or when g.nav_any_request is set (which is updated by NavUpdateAnyRequestFlag above)
 // This is called after last_item_data is set.
-// static void NavProcessItem()
+// static void nav_process_item()
 pub fn nav_process_item(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
-    const ImGuiID id = g.last_item_data.id;
-    const Rect nav_bb = g.last_item_data.NavRect;
-    const ImGuiItemFlags item_flags = g.last_item_data.InFlags;
+    Window* window = g.current_window;
+    const Id32 id = g.last_item_data.id;
+    const Rect nav_bb = g.last_item_data.nav_rect;
+    const ImGuiItemFlags item_flags = g.last_item_data.in_flags;
 
     // Process Init Request
     if (g.NavInitRequest && g.NavLayer == window.dcnav_layer_current && (item_flags & ItemFlags::Disabled) == 0)
@@ -399,7 +399,7 @@ pub fn nav_process_item(g: &mut Context)
         if (is_tabbing)
         {
             if (is_tab_stop || (g.NavMoveFlags & ImGuiNavMoveFlags_FocusApi))
-                NavProcessItemForTabbingRequest(id);
+                nav_process_itemForTabbingRequest(id);
         }
         else if ((g.nav_id != id || (g.NavMoveFlags & ImGuiNavMoveFlags_AllowCurrentNavId)) && !(item_flags & (ItemFlags::Disabled | ItemFlags::NoNav)))
         {
@@ -427,7 +427,7 @@ pub fn nav_process_item(g: &mut Context)
         g.NavLayer = window.dcnav_layer_current;
         g.NavFocusScopeId = window.dc.NavFocusScopeIdCurrent;
         g.NavIdIsAlive = true;
-        window.NavRectRel[window.dcnav_layer_current] = window_rect_abs_to_rel(window, nav_bb);    // Store item bounding box (relative to window position)
+        window.nav_rectRel[window.dcnav_layer_current] = window_rect_abs_to_rel(window, nav_bb);    // Store item bounding box (relative to window position)
     }
 }
 
@@ -438,7 +438,7 @@ pub fn nav_process_item(g: &mut Context)
 // - Case 3: tab forward wrap:    set result to first eligible item (preemptively), on ref id set counter, on next frame if counter hasn't elapsed store result. // FIXME-TABBING: Could be done as a next-frame forwarded request
 // - Case 4: tab backward:        store all results, on ref id pick prev, stop storing
 // - Case 5: tab backward wrap:   store all results, on ref id if no result keep storing until last // FIXME-TABBING: Could be done as next-frame forwarded requested
-// void NavProcessItemForTabbingRequest(ImGuiID id)
+// void nav_process_itemForTabbingRequest(Id32 id)
 pub fn nav_process_item_for_tabbing_request(g: &mut Context, id: Id32)
 {
     // ImGuiContext& g = *GImGui;
@@ -545,7 +545,7 @@ pub fn nav_move_request_forward(g: &mut Context, move_dir: Direction, clip_dir: 
 
 // Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
 // popup is assembled and in case of appended popups it is not clear which EndPopup() call is final.
-// void NavMoveRequestTryWrapping(ImGuiWindow* window, ImGuiNavMoveFlags wrap_flags)
+// void NavMoveRequestTryWrapping(Window* window, ImGuiNavMoveFlags wrap_flags)
 pub fn nav_move_request_try_wrapping(g: &mut Context, window: &mut Window, wrap_flags: &HashSet<NavMoveFlags>)
 {
     // ImGuiContext& g = *GImGui;
@@ -557,10 +557,10 @@ pub fn nav_move_request_try_wrapping(g: &mut Context, window: &mut Window, wrap_
 
 // FIXME: This could be replaced by updating a frame number in each window when (window == nav_window) and (nav_layer == 0).
 // This way we could find the last focused window among our children. It would be much less confusing this way?
-// static void NavSaveLastChildNavWindowIntoParent(ImGuiWindow* nav_window)
+// static void NavSaveLastChildNavWindowIntoParent(Window* nav_window)
 pub fn nav_save_last_child_nav_window_int_parent(g: &mut Context, nav_window: &mut Window)
 {
-    ImGuiWindow* parent = nav_window;
+    Window* parent = nav_window;
     while (parent && parent.root_window != parent && (parent.flags & (WindowFlags::Popup | WindowFlags::ChildMenu)) == 0)
         parent = parent.parent_window;
     if (parent && parent != nav_window)
@@ -569,7 +569,7 @@ pub fn nav_save_last_child_nav_window_int_parent(g: &mut Context, nav_window: &m
 
 // Restore the last focused child.
 // Call when we are expected to land on the Main Layer (0) after focus_window()
-// static ImGuiWindow* NavRestoreLastChildNavWindow(ImGuiWindow* window)
+// static Window* NavRestoreLastChildNavWindow(Window* window)
 pub fn nav_restore_last_child_nav_window(g: &mut Context, window: &mut Window)
 {
     if (window.NavLastChildNavWindow && window.NavLastChildNavWindow.WasActive)
@@ -586,15 +586,15 @@ pub fn nav_restore_layer(g: &mut Context, layer: NavLayer)
     // ImGuiContext& g = *GImGui;
     if (layer == NavLayer::Main)
     {
-        ImGuiWindow* prev_nav_window = g.nav_window;
+        Window* prev_nav_window = g.nav_window;
         g.nav_window = NavRestoreLastChildNavWindow(g.nav_window);    // FIXME-NAV: Should clear ongoing nav requests?
         if (prev_nav_window)
             IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.name, g.nav_window.name);
     }
-    ImGuiWindow* window = g.nav_window;
+    Window* window = g.nav_window;
     if (window.nav_last_ids[layer] != 0)
     {
-        SetNavID(window.nav_last_ids[layer], layer, 0, window.NavRectRel[layer]);
+        SetNavID(window.nav_last_ids[layer], layer, 0, window.nav_rectRel[layer]);
     }
     else
     {
@@ -615,13 +615,13 @@ pub fn nav_restore_highlight_after_move(g: &mut Context)
 pub fn nav_update_any_request_flag(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    g.NavAnyRequest = g.NavMoveScoringItems || g.NavInitRequest || (IMGUI_DEBUG_NAV_SCORING && g.nav_window != None);
-    if (g.NavAnyRequest)
+    g.nav_any_request = g.NavMoveScoringItems || g.NavInitRequest || (IMGUI_DEBUG_NAV_SCORING && g.nav_window != None);
+    if (g.nav_any_request)
         // IM_ASSERT(g.nav_window != None);
 }
 
 // This needs to be called before we submit any widget (aka in or before Begin)
-// void nav_init_window(ImGuiWindow* window, bool force_reinit)
+// void nav_init_window(Window* window, bool force_reinit)
 pub fn nav_init_window(g: &mut Context, window: &mut Window, force_reinit: bool)
 {
     // FIXME: ChildWindow test here is wrong for docking
@@ -658,7 +658,7 @@ pub fn nav_init_window(g: &mut Context, window: &mut Window, force_reinit: bool)
 pub fn nav_cal_preferred_ref_pos(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.nav_window;
+    Window* window = g.nav_window;
     if (g.nav_disable_highlight || !g.nav_disable_mouse_hover || !window)
     {
         // Mouse (we need a fallback in case the mouse becomes invalid after being used)
@@ -671,7 +671,7 @@ pub fn nav_cal_preferred_ref_pos(g: &mut Context) -> Vector2D
     {
         // When navigation is active and mouse is disabled, pick a position around the bottom left of the currently navigated item
         // Take account of upcoming scrolling (maybe set mouse pos should be done in EndFrame?)
-        Rect rect_rel = WindowRectRelToAbs(window, window.NavRectRel[g.NavLayer]);
+        Rect rect_rel = WindowRectRelToAbs(window, window.nav_rectRel[g.NavLayer]);
         if (window.last_frame_active != g.frame_count && (window.ScrollTarget.x != f32::MAX || window.ScrollTarget.y != f32::MAX))
         {
             Vector2D next_scroll = CalcNextScrollFromScrollTargetAndClamp(window);
@@ -886,7 +886,7 @@ pub fn nav_update(g: &mut Context)
     if (g.nav_window && !(g.nav_window.flags & WindowFlags::NoNavInputs) && !g.nav_windowing_target)
     {
         // *Fallback* manual-scroll with Nav directional keys when window has no navigable item
-        ImGuiWindow* window = g.nav_window;
+        Window* window = g.nav_window;
         let scroll_speed = IM_ROUND(window.CalcFontSize() * 100 * io.delta_time); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
         const ImGuiDir move_dir = g.NavMoveDir;
         if (window.dc.nav_layers_active_mask == 0x00 && window.dc.nav_has_scroll && move_dir != Direction::None)
@@ -928,7 +928,7 @@ pub fn nav_update(g: &mut Context)
     if (g.nav_window)
     {
         ImDrawList* draw_list = get_foreground_draw_list(g.nav_window);
-        if (1) { for (int layer = 0; layer < 2; layer += 1) { Rect r = WindowRectRelToAbs(g.nav_window, g.nav_window.NavRectRel[layer]); draw_list.add_rect(r.min, r.max, IM_COL32(255,200,0,255)); } } // [DEBUG]
+        if (1) { for (int layer = 0; layer < 2; layer += 1) { Rect r = WindowRectRelToAbs(g.nav_window, g.nav_window.nav_rectRel[layer]); draw_list.add_rect(r.min, r.max, IM_COL32(255,200,0,255)); } } // [DEBUG]
         if (1) { ImU32 col = (!g.nav_window.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); Vector2D p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0, col); draw_list.add_text(None, 13.0, p + Vector2D::new(8,-4), col, buf); }
     }
 
@@ -956,7 +956,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
     ImGuiIO& io = g.io;
-    ImGuiWindow* window = g.nav_window;
+    Window* window = g.nav_window;
 
     if (g.NavMoveForwardToNextFrame && window != None)
     {
@@ -1029,7 +1029,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
         bool clamp_x = (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         bool clamp_y = (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
         Rect inner_rect_rel = window_rect_abs_to_rel(window, Rect(window.inner_rect.min - Vector2D::new(1, 1), window.inner_rect.max + Vector2D::new(1, 1)));
-        if ((clamp_x || clamp_y) && !inner_rect_rel.contains(window.NavRectRel[g.NavLayer]))
+        if ((clamp_x || clamp_y) && !inner_rect_rel.contains(window.nav_rectRel[g.NavLayer]))
         {
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp nav_rect_rel for gamepad move\n");
             let pad_x =  ImMin(inner_rect_rel.get_width(), window.CalcFontSize() * 0.5);
@@ -1038,7 +1038,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
             inner_rect_rel.max.x = clamp_x ? (inner_rect_rel.max.x - pad_x) : +f32::MAX;
             inner_rect_rel.min.y = clamp_y ? (inner_rect_rel.min.y + pad_y) : -f32::MAX;
             inner_rect_rel.max.y = clamp_y ? (inner_rect_rel.max.y - pad_y) : +f32::MAX;
-            window.NavRectRel[g.NavLayer].ClipWithFull(inner_rect_rel);
+            window.nav_rectRel[g.NavLayer].ClipWithFull(inner_rect_rel);
             g.nav_id = g.NavFocusScopeId = 0;
         }
     }
@@ -1047,7 +1047,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     Rect scoring_rect;
     if (window != None)
     {
-        Rect nav_rect_rel = !window.NavRectRel[g.NavLayer].is_inverted() ? window.NavRectRel[g.NavLayer] : Rect(0, 0, 0, 0);
+        Rect nav_rect_rel = !window.nav_rectRel[g.NavLayer].is_inverted() ? window.nav_rectRel[g.NavLayer] : Rect(0, 0, 0, 0);
         scoring_rect = WindowRectRelToAbs(window, nav_rect_rel);
         scoring_rect.TranslateY(scoring_rect_offset_y);
         scoring_rect.min.x = ImMin(scoring_rect.min.x + 1.0, scoring_rect.max.x);
@@ -1064,7 +1064,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
 pub fn nav_update_create_tabbing_request(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.nav_window;
+    Window* window = g.nav_window;
     // IM_ASSERT(g.NavMoveDir == Dir::None);
     if (window == None || g.nav_windowing_target != None || (window.flags & WindowFlags::NoNavInputs))
         return;
@@ -1076,7 +1076,7 @@ pub fn nav_update_create_tabbing_request(g: &mut Context)
     // Initiate tabbing request
     // (this is ALWAYS ENABLED, regardless of ImGuiConfigFlags_NavEnableKeyboard flag!)
     // Initially this was designed to use counters and modulo arithmetic, but that could not work with unsubmitted items (list clipper). Instead we use a strategy close to other move requests.
-    // See NavProcessItemForTabbingRequest() for a description of the various forward/backward tabbing cases with and without wrapping.
+    // See nav_process_itemForTabbingRequest() for a description of the various forward/backward tabbing cases with and without wrapping.
     //// FIXME: We use (g.active_id == 0) but (g.NavDisableHighlight == false) might be righter once we can tab through anything
     g.NavTabbingDir = g.io.key_shift ? -1 : (g.active_id == 0) ? 0 : +1;
     ImGuiScrollFlags scroll_flags = window.Appearing ? ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_KeepVisibleEdgeY;
@@ -1160,7 +1160,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
     SetNavID(result.id, g.NavLayer, result.FocusScopeId, result.RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable
-    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result.InFlags & ItemFlags::Inputable))
+    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result.in_flags & ItemFlags::Inputable))
     {
         g.NavNextActivateId = result.id;
         g.NavNextActivateFlags = ImGuiActivateFlags_PreferInput | ImGuiActivateFlags_TryToPreserveState;
@@ -1205,8 +1205,8 @@ pub fn nav_update_cancel_request(g: &mut Context)
     else if (g.nav_window && g.nav_window != g.nav_window.root_window && !(g.nav_window.flags & WindowFlags::Popup) && g.nav_window.parent_window)
     {
         // Exit child window
-        ImGuiWindow* child_window = g.nav_window;
-        ImGuiWindow* parent_window = g.nav_window.parent_window;
+        Window* child_window = g.nav_window;
+        Window* parent_window = g.nav_window.parent_window;
         // IM_ASSERT(child_windowchild_id != 0);
         Rect child_rect = child_window.Rect();
         focus_window(parent_window);
@@ -1235,7 +1235,7 @@ pub fn nav_update_cancel_request(g: &mut Context)
 pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.nav_window;
+    Window* window = g.nav_window;
     if ((window.flags & WindowFlags::NoNavInputs) || g.nav_windowing_target != None)
         return 0.0;
 
@@ -1263,7 +1263,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
     }
     else
     {
-        Rect& nav_rect_rel = window.NavRectRel[g.NavLayer];
+        Rect& nav_rect_rel = window.nav_rectRel[g.NavLayer];
         let page_offset_y = ImMax(0.0, window.inner_rect.get_height() - window.CalcFontSize() * 1.0 + nav_rect_rel.get_height());
         let nav_scoring_rect_offset_y =  0.0;
         if (IsKeyPressed(ImGuiKey_PageUp, true))
@@ -1327,10 +1327,10 @@ pub fn nav_end_frame(g: &mut Context)
 pub fn nav_update_create_wrapping_request(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.nav_window;
+    Window* window = g.nav_window;
 
     bool do_forward = false;
-    Rect bb_rel = window.NavRectRel[g.NavLayer];
+    Rect bb_rel = window.nav_rectRel[g.NavLayer];
     ImGuiDir clip_dir = g.NavMoveDir;
     const ImGuiNavMoveFlags move_flags = g.NavMoveFlags;
     if (g.NavMoveDir == Direction::Left && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
@@ -1375,11 +1375,11 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
     }
     if (!do_forward)
         return;
-    window.NavRectRel[g.NavLayer] = bb_rel;
+    window.nav_rectRel[g.NavLayer] = bb_rel;
     NavMoveRequestForward(g.NavMoveDir, clip_dir, move_flags, g.NavMoveScrollFlags);
 }
 
-// static int FindWindowFocusIndex(ImGuiWindow* window)
+// static int FindWindowFocusIndex(Window* window)
 pub fn find_window_focus_index(g: &mut Context, window: &mut Window) -> i32
 {
     // ImGuiContext& g = *GImGui;
@@ -1390,7 +1390,7 @@ pub fn find_window_focus_index(g: &mut Context, window: &mut Window) -> i32
     return order;
 }
 
-// static ImGuiWindow* FindWindowNavFocusable(int i_start, int i_stop, int dir) // FIXME-OPT O(N)
+// static Window* FindWindowNavFocusable(int i_start, int i_stop, int dir) // FIXME-OPT O(N)
 pub fn find_window_nav_focusable(g: &mut Context, i_start: i32, i_stop: i32, dir: i32) -> &mut Window
 {
     // ImGuiContext& g = *GImGui;
@@ -1409,7 +1409,7 @@ pub fn nav_update_windowing_highlight_window(g: &mut Context, focus_change_dir: 
         return;
 
     let i_current = FindWindowFocusIndex(g.nav_windowing_target);
-    ImGuiWindow* window_target = FindWindowNavFocusable(i_current + focus_change_dir, -INT_MAX, focus_change_dir);
+    Window* window_target = FindWindowNavFocusable(i_current + focus_change_dir, -INT_MAX, focus_change_dir);
     if (!window_target)
         window_target = FindWindowNavFocusable((focus_change_dir < 0) ? (g.windows_focus_order.size - 1) : 0, i_current, focus_change_dir);
     if (window_target) // Don't reset windowing target if there's a single window in the list
@@ -1426,10 +1426,10 @@ pub fn nav_update_windowing(g: &mut Context)
     // ImGuiContext& g = *GImGui;
     ImGuiIO& io = g.io;
 
-    ImGuiWindow* apply_focus_window = None;
+    Window* apply_focus_window = None;
     bool apply_toggle_layer = false;
 
-    ImGuiWindow* modal_window = get_top_most_popup_modal();
+    Window* modal_window = get_top_most_popup_modal();
     bool allow_windowing = (modal_window == None);
     if (!allow_windowing)
         g.nav_windowing_target = None;
@@ -1446,7 +1446,7 @@ pub fn nav_update_windowing(g: &mut Context)
     const bool start_windowing_with_gamepad = allow_windowing && !g.nav_windowing_target && IsNavInputTest(ImGuiNavInput_Menu, NavReadMode::Pressed);
     const bool start_windowing_with_keyboard = allow_windowing && !g.nav_windowing_target && io.key_ctrl && IsKeyPressed(ImGuiKey_Tab);
     if (start_windowing_with_gamepad || start_windowing_with_keyboard)
-        if (ImGuiWindow* window = g.nav_window ? g.nav_window : FindWindowNavFocusable(g.windows_focus_order.size - 1, -INT_MAX, -1))
+        if (Window* window = g.nav_window ? g.nav_window : FindWindowNavFocusable(g.windows_focus_order.size - 1, -INT_MAX, -1))
         {
             g.nav_windowing_target = g.NavWindowingTargetAnim = window.root_window;
             g.NavWindowingTimer = g.nav_windowing_highlight_alpha = 0.0;
@@ -1530,7 +1530,7 @@ pub fn nav_update_windowing(g: &mut Context)
         {
             let NAV_MOVE_SPEED = 800.0;
             let move_speed = f32::floor(NAV_MOVE_SPEED * io.delta_time * ImMin(io.display_frame_buffer_scale.x, io.display_frame_buffer_scale.y)); // FIXME: Doesn't handle variable framerate very well
-            ImGuiWindow* moving_window = g.nav_windowing_target.root_window_dock_tree;
+            Window* moving_window = g.nav_windowing_target.root_window_dock_tree;
             set_window_pos(moving_window, moving_window.pos + move_delta * move_speed, Condition::Always);
             g.nav_disable_mouse_hover = true;
         }
@@ -1555,7 +1555,7 @@ pub fn nav_update_windowing(g: &mut Context)
         // FIXME-NAV: This should be done in NavInit.. or in focus_window... However in both of those cases,
         // we won't have a guarantee that windows has been visible before and therefore nav_layers_active_mask*
         // won't be valid.
-        if (apply_focus_window.dc.NavLayersActiveMaskNext == (1 << NavLayer::Menu))
+        if (apply_focus_window.dc.nav_layers_active_mask_next == (1 << NavLayer::Menu))
             g.NavLayer = NavLayer::Menu;
 
         // Request OS level focus
@@ -1571,7 +1571,7 @@ pub fn nav_update_windowing(g: &mut Context)
         clear_active_id();
 
         // Move to parent menu if necessary
-        ImGuiWindow* new_nav_window = g.nav_window;
+        Window* new_nav_window = g.nav_window;
         while (new_nav_window.parent_window
             && (new_nav_window.dc.nav_layers_active_mask & (1 << NavLayer::Menu)) == 0
             && (new_nav_window.flags & WindowFlags::ChildWindow) != 0
@@ -1579,7 +1579,7 @@ pub fn nav_update_windowing(g: &mut Context)
             new_nav_window = new_nav_window.parent_window;
         if (new_nav_window != g.nav_window)
         {
-            ImGuiWindow* old_nav_window = g.nav_window;
+            Window* old_nav_window = g.nav_window;
             focus_window(new_nav_window);
             new_nav_window.NavLastChildNavWindow = old_nav_window;
         }
@@ -1599,7 +1599,7 @@ pub fn nav_update_windowing(g: &mut Context)
 }
 
 // window has already passed the IsWindowNavFocusable()
-// static const char* GetFallbackWindowNameForWindowingList(ImGuiWindow* window)
+// static const char* GetFallbackWindowNameForWindowingList(Window* window)
 pub fn get_fallback_window_name_for_windowing_list(g: &mut Context, window: &mut Window) -> String
 {
     if (window.flags & WindowFlags::Popup)
@@ -1630,7 +1630,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
     begin("###NavWindowingList", None, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
     for (int n = g.windows_focus_order.size - 1; n >= 0; n -= 1 )
     {
-        ImGuiWindow* window = g.windows_focus_order[n];
+        Window* window = g.windows_focus_order[n];
         // IM_ASSERT(window != None); // Fix static analyzers
         if (!IsWindowNavFocusable(window))
             continue;

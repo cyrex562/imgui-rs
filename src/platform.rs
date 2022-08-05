@@ -1,6 +1,6 @@
 use crate::config::ConfigFlags;
 use crate::{Context, Viewport};
-use crate::orig_imgui_single_file::{ImGuiViewport, ImGuiWindow, int};
+use crate::orig_imgui_single_file::{ImGuiViewport, Window, int};
 use crate::rect::Rect;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::checks::is_window_active_and_visible;
@@ -111,11 +111,11 @@ pub fn update_platform_windows(g: &mut Context)
         viewport.LastPlatformSize = viewport.LastRendererSize = viewport.size;
 
         // Update title bar (if it changed)
-        if (ImGuiWindow* window_for_title = GetWindowForTitleDisplay(viewport.Window))
+        if (Window* window_for_title = GetWindowForTitleDisplay(viewport.Window))
         {
             const char* title_begin = window_for_title.name;
             char* title_end = (char*)(intptr_t)FindRenderedTextEnd(title_begin);
-            const ImGuiID title_hash = hash_string(title_begin, title_end - title_begin);
+            const Id32 title_hash = hash_string(title_begin, title_end - title_begin);
             if (viewport.LastNameHash != title_hash)
             {
                 char title_end_backup_c = *title_end;

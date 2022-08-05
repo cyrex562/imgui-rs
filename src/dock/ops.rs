@@ -74,7 +74,7 @@ pub fn tab_item_comparer_by_dock_order(g: &mut Context, lhs: &TabItem, rhs: &Tab
 
 
 // [Internal] Called via SetNextWindowDockID()
-// void SetWindowDock(ImGuiWindow* window, ImGuiID dock_id, ImGuiCond cond)
+// void SetWindowDock(Window* window, Id32 dock_id, ImGuiCond cond)
 pub fn set_window_dock(g: &mut Context, window: &mut Window, mut dock_id: Id32, cond: Condition)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
@@ -121,7 +121,7 @@ pub fn set_window_dock(g: &mut Context, window: &mut Window, mut dock_id: Id32, 
     window.dock_id = dock_id;
 }
 
-// bool get_window_always_want_own_tab_bar(ImGuiWindow* window)
+// bool get_window_always_want_own_tab_bar(Window* window)
 pub fn get_window_always_want_own_tab_bar(g: &mut Context, window: &mut Window) -> bool {
     // ImGuiContext& g = *GImGui;
     if g.io.config_docking_always_tab_bar || window.window_class.docking_always_tab_bar {
@@ -135,7 +135,7 @@ pub fn get_window_always_want_own_tab_bar(g: &mut Context, window: &mut Window) 
     return false;
 }
 
-// void BeginDocked(ImGuiWindow* window, bool* p_open)
+// void BeginDocked(Window* window, bool* p_open)
 pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
 {
     // ImGuiContext* g = GImGui;
@@ -277,12 +277,12 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
     }
 
     // Update child_id to allow returning from Child to Parent with Escape
-    // ImGuiWindow* parent_window = window.dock_node_id.host_window_id;
+    // Window* parent_window = window.dock_node_id.host_window_id;
     let parent_window = g.window_mut(g.dock_node_mut(window.dock_node_id).unwrap().host_window_id);
     window.child_id = parent_window.get_id(g, &window.name);
 }
 
-// void BeginDockableDragDropSource(ImGuiWindow* window)
+// void BeginDockableDragDropSource(Window* window)
 pub fn begin_dockable_drag_drop_source(g: &mut Context, mut window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -308,7 +308,7 @@ pub fn begin_dockable_drag_drop_source(g: &mut Context, mut window: &mut Window)
     }
 }
 
-// void begin_dockable_drag_drop_target(ImGuiWindow* window)
+// void begin_dockable_drag_drop_target(Window* window)
 pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext* g = GImGui;
@@ -333,7 +333,7 @@ pub fn begin_dockable_drag_drop_target(g: &mut Context, window: &mut Window)
         return;
     }
 
-    // ImGuiWindow* payload_window = *(ImGuiWindow**)payload.Data;
+    // Window* payload_window = *(Window**)payload.Data;
     let payload_window = &mut payload.data;
     if accept_drag_drop_payload(g, PAYLOAD_TYPE_WINDOW, DragDropFlags::AcceptBeforeDelivery | DragDropFlags::AcceptNoDrawDefaultRect)
     {

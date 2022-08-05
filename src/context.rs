@@ -23,8 +23,8 @@ use crate::font::font_atlas::FontAtlas;
 use crate::font::Font;
 use crate::group::GroupData;
 use crate::input::{DimgKey, InputSource, ModFlags, MouseButton, MouseCursor, NavLayer};
-use crate::input_event::InputEvent;
-use crate::io::{Io, PlatformIo};
+use crate::input::input_event::InputEvent;
+use crate::input::io::{Io, PlatformIo};
 use crate::item::{pop_item_flag, ItemFlags, LastItemData, NextItemData};
 
 use crate::metrics::MetricsConfig;
@@ -100,47 +100,47 @@ pub struct Context {
     // void*                   test_engine;                         // Test engine user data
     pub test_engine: Vec<u8>,
     // windows state
-    // ImVector<ImGuiWindow*>  windows;                            // windows, sorted in display order, back to front
+    // ImVector<Window*>  windows;                            // windows, sorted in display order, back to front
     pub windows: HashMap<Id32, Window>,
-    //Vec<ImGuiWindow>,
-    // ImVector<ImGuiWindow*>  windows_focus_order;                  // Root windows, sorted in focus order, back to front.
+    //Vec<Window>,
+    // ImVector<Window*>  windows_focus_order;                  // Root windows, sorted in focus order, back to front.
     pub windows_focus_order: Vec<Id32>,
-    // ImVector<ImGuiWindow*>  windows_temp_sort_buffer;              // Temporary buffer used in EndFrame() to reorder windows so parents are kept before their child
+    // ImVector<Window*>  windows_temp_sort_buffer;              // Temporary buffer used in EndFrame() to reorder windows so parents are kept before their child
     pub windows_temp_sort_buffer: Vec<Id32>,
-    // ImVector<ImGuiWindowStackData> current_window_stack;
+    // ImVector<WindowStackData> current_window_stack;
     pub current_window_stack: Vec<WindowStackData>,
-    // ImGuiStorage            WindowsById;                        // Map window's ImGuiID to ImGuiWindow*
+    // ImGuiStorage            WindowsById;                        // Map window's Id32 to Window*
     // pub WindowsById: ImGuiStorage,
     // int                     windows_active_count;                 // Number of unique windows submitted by frame
     pub windows_active_count: i32,
     // Vector2D                  windows_hover_padding;                // Padding around resizable windows for which hovering on counts as hovering the window == ImMax(style.TouchExtraPadding, WINDOWS_HOVER_PADDING)
     pub windows_hover_padding: Vector2D,
-    // ImGuiWindow*            current_window;                      // window being drawn into
+    // Window*            current_window;                      // window being drawn into
     pub current_window_id: Id32,
-    //*mut ImGuiWindow,
-    // ImGuiWindow*            hovered_window;                      // window the mouse is hovering. Will typically catch mouse inputs.
+    //*mut Window,
+    // Window*            hovered_window;                      // window the mouse is hovering. Will typically catch mouse inputs.
     pub hovered_window_id: Id32,
-    //*mut ImGuiWindow,
-    // ImGuiWindow*            hovered_window_under_moving_window;     // Hovered window ignoring moving_window. Only set if moving_window is set.
+    //*mut Window,
+    // Window*            hovered_window_under_moving_window;     // Hovered window ignoring moving_window. Only set if moving_window is set.
     pub hovered_window_under_moving_window_id: Id32,
-    //*mut ImGuiWindow,
+    //*mut Window,
     // ImGuiDockNode*          hovered_dock_node;                    // [Debug] Hovered dock node.
     pub hovered_dock_node_id: Id32,
-    // ImGuiWindow*            moving_window;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally moving_window->root_window_dock_tree.
+    // Window*            moving_window;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally moving_window->root_window_dock_tree.
     pub moving_window_id: Id32,
-    // ImGuiWindow*            wheeling_window;                     // Track the window we started mouse-wheeling on. Until a timer elapse or mouse has moved, generally keep scrolling the same window even if during the course of scrolling the mouse ends up hovering a child window.
+    // Window*            wheeling_window;                     // Track the window we started mouse-wheeling on. Until a timer elapse or mouse has moved, generally keep scrolling the same window even if during the course of scrolling the mouse ends up hovering a child window.
     pub wheeling_window_id: Id32,
-    //*mut ImGuiWindow,
+    //*mut Window,
     // Vector2D                  wheeling_window_ref_mouse_pos;
     pub wheeling_window_ref_mouse_pos: Vector2D,
     // float                   wheeling_window_timer;
     pub wheeling_window_timer: f32,
     // Item/widgets state and tracking information
-    // ImGuiID                 debug_hook_id_info;                    // Will call core hooks: debug_hook_id_info() from GetID functions, used by Stack Tool [next hovered_id/active_id to not pull in an extra cache-line]
+    // Id32                 debug_hook_id_info;                    // Will call core hooks: debug_hook_id_info() from GetID functions, used by Stack Tool [next hovered_id/active_id to not pull in an extra cache-line]
     pub debug_hook_id_info: Id32,
-    // ImGuiID                 hovered_id;                          // Hovered widget, filled during the frame
+    // Id32                 hovered_id;                          // Hovered widget, filled during the frame
     pub hovered_id: Id32,
-    // ImGuiID                 hovered_id_previous_frame;
+    // Id32                 hovered_id_previous_frame;
     pub hovered_id_previous_frame: Id32,
     // bool                    hovered_id_allow_overlap;
     pub hovered_id_allow_overlap: bool,
@@ -154,9 +154,9 @@ pub struct Context {
     pub hovered_id_timer: f32,
     // float                   hovered_id_not_active_timer;            // Measure contiguous hovering time where the item has not been active
     pub hovered_id_not_active_timer: f32,
-    // ImGuiID                 active_id;                           // active widget
+    // Id32                 active_id;                           // active widget
     pub active_id: Id32,
-    // ImGuiID                 active_id_is_alive;                    // active widget has been seen this frame (we can't use a bool as the active_id may change within the frame)
+    // Id32                 active_id_is_alive;                    // active widget has been seen this frame (we can't use a bool as the active_id may change within the frame)
     pub active_id_is_alive: Id32,
     // float                   active_id_timer;
     pub active_id_timer: f32,
@@ -174,21 +174,21 @@ pub struct Context {
     pub active_id_has_been_edited_this_frame: bool,
     // Vector2D                  active_id_click_offset;                // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
     pub active_id_click_offset: Vector2D,
-    // ImGuiWindow*            active_id_window;
+    // Window*            active_id_window;
     pub active_id_window_id: Id32,
     // ImGuiInputSource        active_id_source;                     // Activating with mouse or nav (gamepad/keyboard)
     pub active_id_source: InputSource,
     // int                     active_id_mouse_button;
     pub active_id_mouse_button: MouseButton,
-    // ImGuiID                 active_id_previous_frame;
+    // Id32                 active_id_previous_frame;
     pub active_id_previous_frame: Id32,
     //bool                    active_id_previous_frame_is_alive;
     pub active_id_previous_frame_is_alive: bool,
     // bool                    active_id_previous_frame_has_been_edited_before;
     pub active_id_previous_frame_has_been_edited_before: bool,
-    // ImGuiWindow*            active_id_previous_frame_window;
+    // Window*            active_id_previous_frame_window;
     pub active_id_previous_frame_window_id: Id32,
-    // ImGuiID                 last_active_id;                       // Store the last non-zero active_id, useful for animation.
+    // Id32                 last_active_id;                       // Store the last non-zero active_id, useful for animation.
     pub last_active_id: Id32,
     // float                   last_active_id_timer;                  // Store the last non-zero active_id timer since the beginning of activation, useful for animation.
     pub last_active_id_timer: f32,
@@ -218,11 +218,11 @@ pub struct Context {
     pub style_var_stack: Vec<StyleMod>,
     // ImVector<ImFont*>       font_stack;                          // Stack for PushFont()/PopFont() - inherited by Begin()
     pub font_stack: Vec<Font>,
-    // ImVector<ImGuiID>       focus_scope_stack;                    // Stack for PushFocusScope()/PopFocusScope() - not inherited by Begin(), unless child window
+    // ImVector<Id32>       focus_scope_stack;                    // Stack for PushFocusScope()/PopFocusScope() - not inherited by Begin(), unless child window
     pub focus_scope_stack: Vec<Id32>,
     // ImVector<ImGuiItemFlags>item_flags_stack;                     // Stack for push_item_flag()/PopItemFlag() - inherited by Begin()
     pub item_flags_stack: Vec<ItemFlags>,
-    // ImVector<ImGuiGroupData>group_stack;                         // Stack for BeginGroup()/EndGroup() - not inherited by Begin()
+    // ImVector<GroupData>group_stack;                         // Stack for BeginGroup()/EndGroup() - not inherited by Begin()
     pub group_stack: Vec<GroupData>,
     // ImVector<ImGuiPopupData>open_popup_stack;                     // Which popups are open (persistent)
     pub open_popup_stack: Vec<PopupData>,
@@ -244,36 +244,36 @@ pub struct Context {
     pub mouse_viewport_id: Id32,
     // ImGuiViewportP*         mouse_last_hovered_viewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
     pub mouse_last_hovered_viewport_id: Id32,
-    // ImGuiID                 platform_last_focused_viewport_id;
+    // Id32                 platform_last_focused_viewport_id;
     pub platform_last_focused_viewport_id: Id32,
     // ImGuiPlatformMonitor    fallback_monitor;                    // Virtual monitor used as fallback if backend doesn't provide monitor information.
     pub fallback_monitor: PlatformMonitor,
     // int                     viewport_front_most_stamp_count;        // Every time the front-most window changes, we stamp its viewport with an incrementing counter
     pub viewport_front_most_stamp_count: i32,
     // Gamepad/keyboard Navigation
-    // ImGuiWindow*            nav_window;                          // Focused window for navigation. Could be called 'FocusedWindow'
+    // Window*            nav_window;                          // Focused window for navigation. Could be called 'FocusedWindow'
     pub nav_window_id: Id32,
-    // ImGuiID                 nav_id;                              // Focused item for navigation
+    // Id32                 nav_id;                              // Focused item for navigation
     pub nav_id: Id32,
-    // ImGuiID                 nav_focus_scope_id;                    // Identify a selection scope (selection code often wants to "clear other items" when landing on an item of the selection set)
+    // Id32                 nav_focus_scope_id;                    // Identify a selection scope (selection code often wants to "clear other items" when landing on an item of the selection set)
     pub nav_focus_scope_id: Id32,
-    // ImGuiID                 nav_activate_id;                      // ~~ (g.active_id == 0) && IsNavInputPressed(ImGuiNavInput_Activate) ? nav_id : 0, also set when calling ActivateItem()
+    // Id32                 nav_activate_id;                      // ~~ (g.active_id == 0) && IsNavInputPressed(ImGuiNavInput_Activate) ? nav_id : 0, also set when calling ActivateItem()
     pub nav_activate_id: Id32,
-    // ImGuiID                 nav_activate_down_id;                  // ~~ IsNavInputDown(ImGuiNavInput_Activate) ? nav_id : 0
+    // Id32                 nav_activate_down_id;                  // ~~ IsNavInputDown(ImGuiNavInput_Activate) ? nav_id : 0
     pub nav_activate_down_id: Id32,
-    // ImGuiID                 nav_activate_pressed_id;               // ~~ IsNavInputPressed(ImGuiNavInput_Activate) ? nav_id : 0
+    // Id32                 nav_activate_pressed_id;               // ~~ IsNavInputPressed(ImGuiNavInput_Activate) ? nav_id : 0
     pub nav_activate_pressed_id: Id32,
-    // ImGuiID                 nav_activate_input_id;                 // ~~ IsNavInputPressed(ImGuiNavInput_Input) ? nav_id : 0; ImGuiActivateFlags_PreferInput will be set and nav_activate_id will be 0.
+    // Id32                 nav_activate_input_id;                 // ~~ IsNavInputPressed(ImGuiNavInput_Input) ? nav_id : 0; ImGuiActivateFlags_PreferInput will be set and nav_activate_id will be 0.
     pub nav_activate_input_id: Id32,
     // ImGuiActivateFlags      nav_activate_flags;
     pub nav_activate_flags: HashSet<ActivateFlags>,
-    // ImGuiID                 nav_just_moved_to_id;                   // Just navigated to this id (result of a successfully MoveRequest).
+    // Id32                 nav_just_moved_to_id;                   // Just navigated to this id (result of a successfully MoveRequest).
     pub nav_just_moved_to_id: Id32,
-    // ImGuiID                 nav_just_moved_to_focus_scope_id;         // Just navigated to this focus scope id (result of a successfully MoveRequest).
+    // Id32                 nav_just_moved_to_focus_scope_id;         // Just navigated to this focus scope id (result of a successfully MoveRequest).
     pub nav_just_moved_to_focus_scope_id: Id32,
     // ImGuiModFlags           nav_just_moved_to_key_mods;
     pub nav_just_moved_to_key_mods: ModFlags,
-    // ImGuiID                 nav_next_activate_id;                  // Set by ActivateItem(), queued until next frame.
+    // Id32                 nav_next_activate_id;                  // Set by ActivateItem(), queued until next frame.
     pub nav_next_activate_id: Id32,
     // ImGuiActivateFlags      nav_next_activate_flags;
     pub nav_next_activate_flags: HashSet<ActivateFlags>,
@@ -296,7 +296,7 @@ pub struct Context {
     pub nav_init_request: bool,
     // bool                    nav_init_request_from_move;
     pub nav_init_request_from_move: bool,
-    // ImGuiID                 nav_init_result_id;                    // Init request result (first item of the window, or one for which SetItemDefaultFocus() was called)
+    // Id32                 nav_init_result_id;                    // Init request result (first item of the window, or one for which SetItemDefaultFocus() was called)
     pub nav_init_result_id: Id32,
     // ImRect                  nav_init_result_rect_rel;               // Init request result rectangle (relative to parent window)
     pub nav_init_result_rect_rel: Rect,
@@ -337,11 +337,11 @@ pub struct Context {
     // ImGuiNavItemData        nav_tabbing_result_first;              // First tabbing request candidate within nav_window and flattened hierarchy
     pub nav_tabbing_result_first: NavItemData,
     // Navigation: Windowing (CTRL+TAB for list, or Menu button + keys or directional pads to move/resize)
-    // ImGuiWindow*            nav_windowing_target;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
+    // Window*            nav_windowing_target;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
     pub nav_windowing_target_id: Id32,
-    // ImGuiWindow*            nav_windowing_target_anim;             // Record of last valid nav_windowing_target until DimBgRatio and nav_windowing_highlight_alpha becomes 0.0, so the fade-out can stay on it.
+    // Window*            nav_windowing_target_anim;             // Record of last valid nav_windowing_target until DimBgRatio and nav_windowing_highlight_alpha becomes 0.0, so the fade-out can stay on it.
     pub nav_windowing_target_anim: Id32,
-    // ImGuiWindow*            nav_windowing_list_window;             // Internal window actually listing the CTRL+Tab contents
+    // Window*            nav_windowing_list_window;             // Internal window actually listing the CTRL+Tab contents
     pub nav_windowing_list_window_id: Id32,
     // float                   nav_windowing_timer;
     pub nav_windowing_timer: f32,
@@ -371,19 +371,19 @@ pub struct Context {
     pub drag_drop_payload: Payload,
     // ImRect                  drag_drop_target_rect;                 // Store rectangle of current target candidate (we favor small targets when overlapping)
     pub drag_drop_target_rect: Rect,
-    // ImGuiID                 drag_drop_target_id;
+    // Id32                 drag_drop_target_id;
     pub drag_drop_target_id: Id32,
     // ImGuiDragDropFlags      drag_drop_accept_flags;
     pub drag_drop_accept_flags: HashSet<DragDropFlags>,
     // float                   drag_drop_accept_id_curr_rect_surface;    // Target item surface (we resolve overlapping targets by prioritizing the smaller surface)
     pub drag_drop_accept_id_curr_rect_surface: f32,
-    // ImGuiID                 drag_drop_accept_id_curr;               // Target item id (set at the time of accepting the payload)
+    // Id32                 drag_drop_accept_id_curr;               // Target item id (set at the time of accepting the payload)
     pub drag_drop_accept_id_curr: Id32,
-    // ImGuiID                 drag_drop_accept_id_prev;               // Target item id from previous frame (we need to store this to allow for overlapping drag and drop targets)
+    // Id32                 drag_drop_accept_id_prev;               // Target item id from previous frame (we need to store this to allow for overlapping drag and drop targets)
     pub drag_drop_accept_id_prev: Id32,
     // int                     drag_drop_accept_frame_count;           // Last time a target expressed a desire to accept the source
     pub drag_drop_accept_frame_count: usize,
-    // ImGuiID                 drag_drop_hold_just_pressed_id;          // Set when holding a payload just made ButtonBehavior() return a press.
+    // Id32                 drag_drop_hold_just_pressed_id;          // Set when holding a payload just made ButtonBehavior() return a press.
     pub drag_drop_hold_just_pressed_id: Id32,
     // ImVector<unsigned char> drag_drop_payload_buf_heap;             // We don't expose the ImVector<> directly, ImGuiPayload only holds pointer+size
     pub drag_drop_payload_buf_heap: Vec<u8>,
@@ -392,7 +392,7 @@ pub struct Context {
     // Clipper
     // int                             clipper_temp_data_stacked;
     pub clipper_temp_data_stacked: i32,
-    // ImVector<ImGuiListClipperData>  clipper_temp_data;
+    // ImVector<ListClipperData>  clipper_temp_data;
     pub clipper_temp_data: Vec<ListClipperData>,
     // tables
     // ImGuiTable*                     current_table;
@@ -423,7 +423,7 @@ pub struct Context {
     pub input_text_state: InputTextState,
     // ImFont                  input_text_password_font;
     pub input_text_password_font: Font,
-    // ImGuiID                 temp_input_id;                        // Temporary text input when CTRL+clicking on a slider, etc.
+    // Id32                 temp_input_id;                        // Temporary text input when CTRL+clicking on a slider, etc.
     pub temp_input_id: Id32,
     // ImGuiColorEditFlags     color_edit_options;                   // Store user options for color edit widgets
     pub color_edit_options: HashSet<ColorEditFlags>,
@@ -461,14 +461,14 @@ pub struct Context {
     pub tooltip_slow_delay: f32,
     // ImVector<char>          clipboard_handler_data;               // If no custom clipboard handler is defined
     pub clipboard_handler_data: Vec<u8>,
-    // ImVector<ImGuiID>       menus_id_submitted_this_frame;          // A list of menu IDs that were rendered at least once
+    // ImVector<Id32>       menus_id_submitted_this_frame;          // A list of menu IDs that were rendered at least once
     pub menus_id_submitted_this_frame: Vec<Id32>,
     // Platform support
     // ImGuiPlatformImeData    platform_ime_data;                    // data updated by current frame
     pub platform_ime_data: PlatformImeData,
     // ImGuiPlatformImeData    platform_ime_data_prev;                // Previous frame data (when changing we will call io.SetPlatformImeDataFn
     pub platform_ime_data_prev: PlatformImeData,
-    // ImGuiID                 platform_ime_viewport;
+    // Id32                 platform_ime_viewport;
     pub platform_ime_viewport: Id32,
     // char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv()->decimal_point
     pub platform_local_decimal_point: char,
@@ -485,13 +485,13 @@ pub struct Context {
     pub settings_ini_data: Vec<u8>,
     // ImVector<ImGuiSettingsHandler>      settings_handlers;       // List of .ini settings handlers
     pub settings_handlers: Vec<SettingsHandler>,
-    // ImChunkStream<ImGuiWindowSettings>  settings_windows;        // ImGuiWindow .ini settings entries
+    // ImChunkStream<WindowSettings>  settings_windows;        // Window .ini settings entries
     pub settings_windows: Vec<WindowSettings>,
     // ImChunkStream<ImGuiTableSettings>   SettingsTables;         // ImGuiTable .ini settings entries
     pub settings_tabls: Vec<TableSettings>,
     // ImVector<ImGuiContextHook>          hooks;                  // hooks for extensions (e.g. test engine)
     pub hooks: Vec<ContextHook>,
-    // ImGuiID                             hook_id_next;             // Next available HookId
+    // Id32                             hook_id_next;             // Next available HookId
     pub hook_id_next: Id32,
     // Capture/Logging
     // bool                    log_enabled;                         // Currently capturing
@@ -523,7 +523,7 @@ pub struct Context {
     // pub DebugLogBuf: ImGuiTextBuffer,
     // bool                    debug_item_picker_active;              // Item picker is active (started with DebugStartItemPicker())
     pub debug_item_picker_active: bool,
-    // ImGuiID                 debug_item_picker_break_id;             // Will call IM_DEBUG_BREAK() when encountering this id
+    // Id32                 debug_item_picker_break_id;             // Will call IM_DEBUG_BREAK() when encountering this id
     pub debug_item_picker_break_id: Id32,
     // ImGuiMetricsConfig      debug_metrics_config;
     pub debug_metrics_config: MetricsConfig,
@@ -890,11 +890,11 @@ pub type ContextHookCallback = fn(g: &mut Context, hook: &mut ContextHook);
 
 #[derive(Default, Clone)]
 pub struct ContextHook {
-    // ImGuiID                     HookId;     // A unique id assigned by AddContextHook()
+    // Id32                     HookId;     // A unique id assigned by AddContextHook()
     pub hook_id: Id32,
     // ImGuiContextHookType        Type;
     pub hook_type: ContextHookType,
-    // ImGuiID                     Owner;
+    // Id32                     Owner;
     pub owner: Id32,
     // ImGuiContextHookCallback    Callback;
     pub callback: Option<ContextHookCallback>,
@@ -1011,7 +1011,7 @@ pub fn end_disabled(g: &mut Context) {
     }
 }
 
-// static void set_current_window(ImGuiWindow* window)
+// static void set_current_window(Window* window)
 pub fn set_current_window(g: &mut Context, window_handle: WindowHandle) {
     // ImGuiContext& g = *GImGui;
     g.current_window_id = window_handle;

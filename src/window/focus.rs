@@ -12,7 +12,7 @@ pub fn set_window_focus2(g: &mut Context, name: &str)
 {
     if (name)
     {
-        if (ImGuiWindow* window = find_window_by_name(name))
+        if (Window* window = find_window_by_name(name))
             focus_window(window);
     }
     else
@@ -25,7 +25,7 @@ pub fn set_window_focus2(g: &mut Context, name: &str)
 pub fn pop_focus_scope(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     // IM_ASSERT(g.FocusScopeStack.size > 0); // Too many PopFocusScope() ?
     window.dc.NavFocusScopeIdCurrent = g.FocusScopeStack.back();
     g.FocusScopeStack.pop_back();
@@ -35,7 +35,7 @@ pub fn pop_focus_scope(g: &mut Context)
 pub fn set_item_default_focus(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     if (!window.Appearing)
         return;
     if (g.nav_window != window.root_window_for_nav || (!g.NavInitRequest && g.NavInitResultId == 0) || g.NavLayer != window.dcnav_layer_current)

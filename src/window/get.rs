@@ -5,10 +5,10 @@ use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::{checks, Window, WindowFlags};
 
-// static ImGuiWindow* GetCombinedRootWindow(ImGuiWindow* window, bool popup_hierarchy, bool dock_hierarchy)
+// static Window* GetCombinedRootWindow(Window* window, bool popup_hierarchy, bool dock_hierarchy)
 pub fn get_combined_root_window(g: &mut Context, window: &mut Window, popup_hierarchy: bool, dock_hierarchy: bool) -> &mut Window
 {
-    ImGuiWindow* last_window = None;
+    Window* last_window = None;
     while (last_window != window)
     {
         last_window = window;
@@ -23,10 +23,10 @@ pub fn get_combined_root_window(g: &mut Context, window: &mut Window, popup_hier
 
 
 
-// bool ImGui::IsWindowChildOf(ImGuiWindow* window, ImGuiWindow* potential_parent, bool popup_hierarchy, bool dock_hierarchy)
+// bool ImGui::IsWindowChildOf(Window* window, Window* potential_parent, bool popup_hierarchy, bool dock_hierarchy)
 pub fn is_window_child_of(g: &mut Context, window: &mut Window, potential_parent: &mut Window, popup_hierarchy: bool, dock_hierarchy: bool) -> bool
 {
-    ImGuiWindow* window_root = GetCombinedRootWindow(window, popup_hierarchy, dock_hierarchy);
+    Window* window_root = GetCombinedRootWindow(window, popup_hierarchy, dock_hierarchy);
     if (window_root == potential_parent)
         return true;
     while (window != None)
@@ -40,7 +40,7 @@ pub fn is_window_child_of(g: &mut Context, window: &mut Window, potential_parent
     return false;
 }
 
-// bool ImGui::is_window_within_begin_stack_of(ImGuiWindow* window, ImGuiWindow* potential_parent)
+// bool ImGui::is_window_within_begin_stack_of(Window* window, Window* potential_parent)
 pub fn is_window_within_begin_stack_of(g: &mut Context, window: &mut Window, potential_parent: &mut Window) -> bool
 {
     if (window.root_window == potential_parent)
@@ -54,7 +54,7 @@ pub fn is_window_within_begin_stack_of(g: &mut Context, window: &mut Window, pot
     return false;
 }
 
-// ImGuiID ImGui::GetWindowDockID()
+// Id32 ImGui::GetWindowDockID()
 pub fn get_window_dock_id(g: &mut Context) -> Id32
 {
     // ImGuiContext& g = *GImGui;
@@ -64,14 +64,14 @@ pub fn get_window_dock_id(g: &mut Context) -> Id32
 // float ImGui::GetWindowWidth()
 pub fn get_window_width(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.current_window_id;
+    Window* window = g.current_window_id;
     return window.size.x;
 }
 
 // float ImGui::GetWindowHeight()
 pub fn get_window_height(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.current_window_id;
+    Window* window = g.current_window_id;
     return window.size.y;
 }
 
@@ -80,18 +80,18 @@ pub fn get_window_height(g: &mut Context) -> f32
 pub fn get_window_pos(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     return window.pos;
 }
 
 // Vector2D ImGui::GetWindowSize()
 pub fn get_window_size(g: &mut Context) -> Vector2D
 {
-    ImGuiWindow* window = GetCurrentWindowRead();
+    Window* window = GetCurrentWindowRead();
     return window.size;
 }
 
-/// static inline int GetWindowDisplayLayer(ImGuiWindow* window)
+/// static inline int GetWindowDisplayLayer(Window* window)
 pub fn get_window_display_layer(window: &Window) -> i32 {
     // return (window.flags & WindowFlags::Tooltip) ? 1 : 0;
     if window.flags.contains(&WindowFlags::Tooltip) {
@@ -101,7 +101,7 @@ pub fn get_window_display_layer(window: &Window) -> i32 {
     }
 }
 
-// static ImGuiWindow* FindFrontMostVisibleChildWindow(ImGuiWindow* window)
+// static Window* FindFrontMostVisibleChildWindow(Window* window)
 pub fn find_front_most_visible_child_window(g: &mut Context, window: &mut Window) -> &mut Window {
     // for (int n = window.dc.ChildWindows.Size - 1; n >= 0; n--){
     //     if (IsWindowActiveAndVisible(window.dc.ChildWindows[n])) {
@@ -117,17 +117,17 @@ pub fn find_front_most_visible_child_window(g: &mut Context, window: &mut Window
     return window;
 }
 
-// ImGuiWindow* ImGui::FindBottomMostVisibleWindowWithinBeginStack(ImGuiWindow* parent_window)
+// Window* ImGui::FindBottomMostVisibleWindowWithinBeginStack(Window* parent_window)
 pub fn find_bottom_most_visible_window_with_begin_stack(
     g: &mut Context,
     parent_window: &mut Window,
 ) -> &mut Window {
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* bottom_most_visible_window = parent_window;
+    // Window* bottom_most_visible_window = parent_window;
     let mut bottom_most_visible_window: &mut Window = parent_window;
     // for (int i = FindWindowDisplayIndex(parent_window); i >= 0; i--)
     for i in find_window_display_index(parent_window)..0 {
-        // ImGuiWindow* window = g.windows[i];
+        // Window* window = g.windows[i];
         let window = g.window_mut(i).unwrap();
         if window.flags.contains(&WindowFlags::ChildWindow) {
             continue;
@@ -167,8 +167,8 @@ pub fn find_hovered_window(g: &mut Context) {
         mw_win.viewport_id = g.mouse_viewport_id;
     }
 
-    // ImGuiWindow* hovered_window = None;
-    // ImGuiWindow* hovered_window_ignoring_moving_window = None;
+    // Window* hovered_window = None;
+    // Window* hovered_window_ignoring_moving_window = None;
     let mut hovered_window: Option<&mut Window>;
     let mut hovered_window_ignoring_moving_window: Option<&mut Window> = None;
     if g.moving_window && !(g.moving_window.flags.contains(WindowFlags::NoMouseInputs)) {
@@ -185,7 +185,7 @@ pub fn find_hovered_window(g: &mut Context) {
     };
     // for (int i = g.windows.Size - 1; i >= 0; i--)
     for (_, window) in g.windows.iter_mut() {
-        // ImGuiWindow* window = g.windows[i];
+        // Window* window = g.windows[i];
         // IM_MSVC_WARNING_SUPPRESS(28182); // [Static Analyzer] Dereferencing None pointer.
         if !window.active || window.hidden {
             continue;
@@ -201,7 +201,7 @@ pub fn find_hovered_window(g: &mut Context) {
         // Using the clipped AABB, a child window will typically be clipped by its parent (not always)
         // ImRect bb(window.OuterRectClipped);
         let bb = window.outer_rect_clipped.clone();
-        // if (window.flags & (WindowFlags::ChildWindow | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
+        // if (window.flags & (WindowFlags::ChildWindow | WindowFlags_NoResize | WindowFlags_AlwaysAutoResize))
         if window.flags.contains(&WindowFlags::ChildWindow)
             && window.flags.contains(&WindowFlags::NoResize)
             && window.flags.contains(&WindowFlags::AlwaysAutoResize)
@@ -252,14 +252,14 @@ pub fn find_hovered_window(g: &mut Context) {
     }
 }
 
-// ImGuiWindow* ImGui::FindWindowByID(ImGuiID id)
+// Window* ImGui::FindWindowByID(Id32 id)
 pub fn find_window_id(g: &mut Context, id: Id32) -> &mut Window {
     // ImGuiContext& g = *GImGui;
-    // return (ImGuiWindow*)g.windows_by_id.GetVoidPtr(id);
+    // return (Window*)g.windows_by_id.GetVoidPtr(id);
     g.windows.get_mut(&id).unwrap()
 }
 
-// static ImGuiWindow* GetWindowForTitleDisplay(ImGuiWindow* window)
+// static Window* GetWindowForTitleDisplay(Window* window)
 pub fn get_window_for_title_display(g: &mut Context, window: &mut Window) -> &mut Window {
     // return window.DockNodeAsHost ? window.DockNodeAsHost->VisibleWindow : window;
     if window.dock_node_as_host_id.id != INVALID_ID {
@@ -270,7 +270,7 @@ pub fn get_window_for_title_display(g: &mut Context, window: &mut Window) -> &mu
     return window;
 }
 
-// static ImGuiWindow* GetWindowForTitleAndMenuHeight(ImGuiWindow* window)
+// static Window* GetWindowForTitleAndMenuHeight(Window* window)
 pub fn get_window_for_title_and_menu_height(g: &mut Context, window: &mut Window) -> &mut Window {
     // return (window.DockNodeAsHost && window.DockNodeAsHost->VisibleWindow) ? window.DockNodeAsHost->VisibleWindow : window;
     if window.dock_node_as_host_id.id != INVALID_ID
@@ -282,16 +282,16 @@ pub fn get_window_for_title_and_menu_height(g: &mut Context, window: &mut Window
     window
 }
 
-// int ImGui::FindWindowDisplayIndex(ImGuiWindow* window)
+// int ImGui::FindWindowDisplayIndex(Window* window)
 pub fn find_window_display_index(g: &mut Context, window: &mut Window) -> usize {
     ImGuiContext & g = *GImGui;
     return g.windows.index_from_ptr(g.windows.find(window));
 }
 
-// ImGuiWindow* ImGui::FindWindowByName(const char* name)
+// Window* ImGui::FindWindowByName(const char* name)
 pub fn find_or_create_window_by_name(g: &mut Context, name: &str) -> (&mut Window, bool)
 {
-    // ImGuiID id = hash_string(name);
+    // Id32 id = hash_string(name);
     // return FindWindowByID(id);
     for (_, win) in g.windows.iter_mut() {
         if win.name.as_str() == name {

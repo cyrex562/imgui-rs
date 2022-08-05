@@ -185,7 +185,7 @@ impl DrawList {
     pub fn add_rect(
         &mut self,
         p_min: &Vector2D,
-        p_max: Vector2D,
+        p_max: &Vector2D,
         color: u32,
         rounding: f32,
         flags: Option<&mut HashSet<DrawFlags>>,
@@ -1737,7 +1737,7 @@ pub const IM_DRAWLIST_TEX_LINES_WIDTH_MAX: usize = 63;
 /// static ImDrawList* get_viewport_draw_list(ImGuiViewportP* viewport, size_t drawlist_no, const char* drawlist_name)
 pub fn get_viewport_draw_list(
     g: &mut Context,
-    viewport: &mut Viewport,
+    viewport: Option<&mut Viewport>,
     drawlist_no: usize,
     drawlist_name: &String,
 ) -> &mut DrawList {
@@ -1785,7 +1785,7 @@ pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList {
 }
 
 /// ImDrawList* ImGui::GetForegroundDrawList(ImGuiViewport* viewport)
-pub fn get_foreground_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList {
+pub fn get_foreground_draw_list(g: &mut Context, viewport: Option<&mut Viewport>) -> &mut DrawList {
     // return GetViewportDrawList((ImGuiViewportP*)viewport, 1, "##Foreground");
     get_viewport_draw_list(g, viewport, 1, &String::from("##Foreground"))
 }

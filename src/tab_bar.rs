@@ -1,8 +1,8 @@
-use crate::imgui_h::{ImGuiID, ImGuiTabBarFlags};
+use crate::imgui_h::{Id32, ImGuiTabBarFlags};
 use crate::imgui_rect::Rect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_vec::Vector2D;
-use crate::imgui_window::ImGuiWindow;
+use crate::imgui_window::Window;
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
@@ -31,11 +31,11 @@ pub enum TabItemFlags {
 // Storage for one active tab item (sizeof() 48 bytes)
 #[derive(Clone, Debug, Default)]
 pub struct TabItem {
-    // ImGuiID             id;
+    // Id32             id;
     pub id: Id32,
     // ImGuiTabItemFlags   flags;
     pub flags: HashSet<TabItemFlags>,
-    // ImGuiWindow*        window;                 // When TabItem is part of a dock_node's tab_bar, we hold on to a window.
+    // Window*        window;                 // When TabItem is part of a dock_node's tab_bar, we hold on to a window.
     pub window_id: Id32,
     // int                 LastFrameVisible;
     pub last_frame_visible: i32,
@@ -66,13 +66,13 @@ pub struct TabBar {
     pub tabs: Vec<TabItem>,
     // ImGuiTabBarFlags    flags;
     pub flags: HashSet<TabBarFlags>,
-    // ImGuiID             id;                     // Zero for tab-bars used by docking
+    // Id32             id;                     // Zero for tab-bars used by docking
     pub id: Id32,
-    // ImGuiID             selected_tab_id;          // Selected tab/window
+    // Id32             selected_tab_id;          // Selected tab/window
     pub selected_tab_id: Id32,
-    // ImGuiID             NextSelectedTabId;      // Next selected tab/window. Will also trigger a scrolling animation
+    // Id32             NextSelectedTabId;      // Next selected tab/window. Will also trigger a scrolling animation
     pub next_selected_tab_id: Id32,
-    // ImGuiID             VisibleTabId;           // Can occasionally be != selected_tab_id (e.g. when previewing contents for CTRL+TAB preview)
+    // Id32             VisibleTabId;           // Can occasionally be != selected_tab_id (e.g. when previewing contents for CTRL+TAB preview)
     pub visible_tab_id: Id32,
     // int                 CurrFrameVisible;
     pub curr_frame_visible: i32,
@@ -100,7 +100,7 @@ pub struct TabBar {
     pub scrolling_rect_min_x: f32,
     // float               ScrollingRectMaxX;
     pub scrolling_rect_max_x: f32,
-    // ImGuiID             ReorderRequestTabId;
+    // Id32             ReorderRequestTabId;
     pub reorder_request_tab_id: Id32,
     // ImS16               ReorderRequestOffset;
     pub reorder_request_offset: i16,
@@ -120,7 +120,7 @@ pub struct TabBar {
     pub item_spacing_y: f32,
     // Vector2D              FramePadding;           // style.FramePadding locked at the time of BeginTabBar()
     pub frame_padding: Vector2D,
-    // Vector2D              BackupCursorPos;
+    // Vector2D              backup_cursor_pos;
     pub backup_cursor_pos: Vector2D,
     // ImGuiTextBuffer     TabsNames;              // For non-docking tab bar we re-append names in a contiguous buffer.
     pub tabs_names: String,

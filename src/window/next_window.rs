@@ -40,7 +40,7 @@ pub fn set_next_window_size(g: &mut Context, size: &Vector2D, cond: Condition)
 }
 
 // Content size = inner scrollable rectangle, padded with window_padding.
-// SetNextWindowContentSize(Vector2D(100,100) + ImGuiWindowFlags_AlwaysAutoResize will always allow submitting a 100x100 item.
+// SetNextWindowContentSize(Vector2D(100,100) + WindowFlags_AlwaysAutoResize will always allow submitting a 100x100 item.
 // void ImGui::SetNextWindowContentSize(const Vector2D& size)
 pub fn set_next_window_content_size(g: &mut Context, size: &Vector2D)
 {
@@ -82,7 +82,7 @@ pub fn set_next_window_bg_alpha(g: &mut Context, alpha: f32)
     g.next_window_data.BgAlphaVal = alpha;
 }
 
-// void ImGui::set_next_window_viewport(ImGuiID id)
+// void ImGui::set_next_window_viewport(Id32 id)
 pub fn set_next_window_viewport(g: &mut Context, id: Id32)
 {
     // ImGuiContext& g = *GImGui;
@@ -90,7 +90,7 @@ pub fn set_next_window_viewport(g: &mut Context, id: Id32)
     g.next_window_data.viewport_id = id;
 }
 
-// void ImGui::SetNextWindowDockID(ImGuiID id, ImGuiCond cond)
+// void ImGui::SetNextWindowDockID(Id32 id, ImGuiCond cond)
 pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
 {
     // ImGuiContext& g = *GImGui;
@@ -99,7 +99,7 @@ pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
     g.next_window_data.dock_id = id;
 }
 
-// void ImGui::set_next_window_class(const ImGuiWindowClass* window_class)
+// void ImGui::set_next_window_class(const WindowClass* window_class)
 pub fn set_next_window_class(g: &mut Context, window_class: &mut WindowClass)
 {
     // ImGuiContext& g = *GImGui;
@@ -143,11 +143,11 @@ pub struct NextWindowData {
     pub SizeCallbackUserData: Vec<u8>,
     // float                       BgAlphaVal;             // Override background alpha
     pub BgAlphaVal: f32,
-    // ImGuiID                     viewport_id;
+    // Id32                     viewport_id;
     pub ViewportId: Id32,
-    // ImGuiID                     dock_id;
+    // Id32                     dock_id;
     pub dock_id: Id32,
-    // ImGuiWindowClass            window_class;
+    // WindowClass            window_class;
     pub WindowClass: WindowClass,
     // Vector2D                      MenuBarOffsetMinVal;    // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)
     pub MenuBarOffsetMinVal: Vector2D,

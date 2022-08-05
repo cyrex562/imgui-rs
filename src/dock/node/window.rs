@@ -15,13 +15,13 @@ use crate::window::size::set_window_size;
 use crate::window::{Window, WindowFlags};
 use crate::{Context, INVALID_ID};
 
-// static void dock_node_hide_window_during_host_window_creation(ImGuiWindow* window)
+// static void dock_node_hide_window_during_host_window_creation(Window* window)
 pub fn dock_node_hide_window_during_host_window_creation(g: &mut Context, window: &mut Window) {
     window.hidden = true;
     window.hidden_frames_can_skip_items = if window.active { 1 } else { 2 };
 }
 
-// static void DockNodeAddWindow(ImGuiDockNode* node, ImGuiWindow* window, bool add_to_tab_bar)
+// static void DockNodeAddWindow(ImGuiDockNode* node, Window* window, bool add_to_tab_bar)
 pub fn dock_node_add_window(
     g: &mut Context,
     node: &mut DockNode,
@@ -100,7 +100,7 @@ pub fn dock_node_add_window(
     }
 }
 
-// static void DockNodeRemoveWindow(ImGuiDockNode* node, ImGuiWindow* window, ImGuiID save_dock_id)
+// static void DockNodeRemoveWindow(ImGuiDockNode* node, Window* window, Id32 save_dock_id)
 pub fn dock_node_remove_window(
     g: &mut Context,
     node: &mut DockNode,
@@ -166,7 +166,7 @@ pub fn dock_node_remove_window(
     }
 
     if node.windows.len() == 1 && !node.is_central_node() && node.host_window_id != INVALID_ID {
-        // ImGuiWindow* remaining_window = node.windows[0];
+        // Window* remaining_window = node.windows[0];
         let remaining_window = g.window_mut(node.windows[0]);
         if node.host_window_id.viewport_owned && node.is_root_node() {
             // Transfer viewport back to the remaining loose window
@@ -211,7 +211,7 @@ pub fn dock_node_move_windows(g: &mut Context, dst_node: &mut DockNode, src_node
         } else {
             g.window_mut(src_node.windows[n])
         };
-        // if (ImGuiWindow* window = src_tab_bar ? src_tab_bar.tabs[n].Window : src_node.windows[n])
+        // if (Window* window = src_tab_bar ? src_tab_bar.tabs[n].Window : src_node.windows[n])
         // {
         //     window.dock_node = None;
         //     window.dock_is_active = false;
@@ -265,7 +265,7 @@ pub fn dock_node_apply_pos_size_to_windows(g: &mut Context, node: &mut DockNode)
     }
 }
 
-// static ImGuiWindow* DockNodeFindWindowByID(ImGuiDockNode* node, ImGuiID id)
+// static Window* DockNodeFindWindowByID(ImGuiDockNode* node, Id32 id)
 pub fn dock_node_find_window_by_id(
     g: &mut Context,
     node: &mut DockNode,
@@ -283,7 +283,7 @@ pub fn dock_node_find_window_by_id(
     return None;
 }
 
-// static void dock_node_start_mouse_moving_window(ImGuiDockNode* node, ImGuiWindow* window)
+// static void dock_node_start_mouse_moving_window(ImGuiDockNode* node, Window* window)
 pub fn dock_node_start_mouse_moving_window(
     g: &mut Context,
     node: &mut DockNode,
@@ -297,7 +297,7 @@ pub fn dock_node_start_mouse_moving_window(
     node.want_mouse_move = false;
 }
 
-// static void dock_node_setup_host_window(ImGuiDockNode* node, ImGuiWindow* host_window)
+// static void dock_node_setup_host_window(ImGuiDockNode* node, Window* host_window)
 pub fn dock_node_setup_host_window(g: &mut Context, node: &mut DockNode, host_window: &mut Window) {
     // Remove ourselves from any previous different host window
     // This can happen if a user mistakenly does (see #4295 for details):
@@ -315,7 +315,7 @@ pub fn dock_node_setup_host_window(g: &mut Context, node: &mut DockNode, host_wi
     node.host_window_id = host_window.id;
 }
 
-// static ImGuiID dock_node_updateWindowMenu(ImGuiDockNode* node, ImGuiTabBar* tab_bar)
+// static Id32 dock_node_updateWindowMenu(ImGuiDockNode* node, ImGuiTabBar* tab_bar)
 pub fn dock_node_update_window_menu(
     g: &mut Context,
     node: &mut DockNode,

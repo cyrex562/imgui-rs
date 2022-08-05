@@ -19,7 +19,7 @@ use crate::window::{Window, WindowFlags};
 
 // host_node may be None if the window doesn't have a dock_node already.
 // FIXME-DOCK: This is misnamed since it's also doing the filtering.
-// static void dock_node_preview_dock_setup(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* root_payload, DockPreviewData* data, bool is_explicit_target, bool is_outer_docking)
+// static void dock_node_preview_dock_setup(Window* host_window, ImGuiDockNode* host_node, Window* root_payload, DockPreviewData* data, bool is_explicit_target, bool is_outer_docking)
 pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut Window, host_node: Option<&mut DockNode>, root_payload: &mut Window, data: &mut DockPreviewData, is_explicit_target: bool, is_outer_docking: bool) {
     // ImGuiContext& g = *GImGui;
 
@@ -120,7 +120,7 @@ pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut Window, h
     }
 }
 
-// static void dock_node_preview_dock_render(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* root_payload, const DockPreviewData* data)
+// static void dock_node_preview_dock_render(Window* host_window, ImGuiDockNode* host_node, Window* root_payload, const DockPreviewData* data)
 pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_window, host_node: &mut DockNode, root_payload: &mut window::Window, data: &mut DockPreviewData) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.current_window == host_window);   // Because we rely on font size to calculate tab sizes

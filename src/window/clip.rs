@@ -14,7 +14,7 @@ pub fn push_clip_rect(
     clip_rect_max: &Vector2D,
     intersect_with_current_clip_rect: bool,
 ) {
-    // ImGuiWindow* window = GetCurrentWindow();
+    // Window* window = GetCurrentWindow();
     let window = g.current_window_mut().unwrap();
     // window.draw_list->PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
     let draw_list = g.draw_list_mut(window.draw_list_id).unwrap();
@@ -29,7 +29,7 @@ pub fn push_clip_rect(
 
 // void ImGui::PopClipRect()
 pub fn pop_clip_rect(g: &mut Context) {
-    // ImGuiWindow* window = GetCurrentWindow();
+    // Window* window = GetCurrentWindow();
     let window = g.current_window_mut().unwrap();
     // window.draw_list->PopClipRect();
     let draw_list = g.draw_list_mut(window.draw_list_id).unwrap();

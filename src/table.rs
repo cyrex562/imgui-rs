@@ -2,11 +2,11 @@ use std::collections::HashSet;
 use crate::types::Id32;
 use crate::types::SortDirection;
 use crate::imgui_color::ImColor;
-use crate::imgui_h::{ImDrawListSplitter, ImGuiID, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
+use crate::imgui_h::{ImDrawListSplitter, Id32, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
 use crate::imgui_rect::Rect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
-use crate::imgui_vec::{ImVec1, Vector2D};
-use crate::imgui_window::ImGuiWindow;
+use crate::imgui_vec::{Vector1D, Vector2D};
+use crate::imgui_window::Window;
 
 // #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
 pub const IM_COL_32_DISABLE: ImColor = ImColor::new4(0,0,0,1);
@@ -46,8 +46,8 @@ pub struct ImGuiTableColumn
     pub InitStretchWeightOrWidth: f32,
     // ImRect                  clip_rect;                       // Clipping rectangle for the column
     pub ClipRect: Rect,
-    // ImGuiID                 UserID;                         // Optional, value passed to TableSetupColumn()
-    pub UserID: ImGuiID,
+    // Id32                 UserID;                         // Optional, value passed to TableSetupColumn()
+    pub UserID: Id32,
     // float                   WorkMinX;                       // Contents region min ~(MinX + CellPaddingX + CellSpacingX1) == cursor start position when entering column
     pub WorkMinX: f32,
     // float                   WorkMaxX;                       // Contents region max ~(MaxX - CellPaddingX - CellSpacingX2)
@@ -205,13 +205,13 @@ impl ImGuiTableInstanceData {
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
 pub struct Table
 {
-    // ImGuiID                     id;
-    pub ID: ImGuiID,
+    // Id32                     id;
+    pub ID: Id32,
     // ImGuiTableFlags             flags;
     pub Flags: ImGuiTableFlags,
     // void*                       RawData;                    // Single allocation to hold columns[], DisplayOrderToIndex[] and RowCellData[]
     pub RawData: Vec<u8>,
-    // ImGuiTableTempData*         TempData;                   // Transient data while table is active. Point within g.CurrentTableStack[]
+    // ImGuiTableTempData*         temp_data;                   // Transient data while table is active. Point within g.CurrentTableStack[]
     pub TempData: *mut TableTempData,
     // ImSpan<ImGuiTableColumn>    columns;                    // Point within RawData[]
     pub Columns: Vec<ImGuiTableColumn>,
@@ -315,13 +315,13 @@ pub struct Table
     pub HostClipRect: Rect,
     // ImRect                      HostBackupInnerClipRect;    // Backup of InnerWindow->clip_rect during PushTableBackground()/PopTableBackground()
     pub HostBackupInnerClipRect: Rect,
-    // ImGuiWindow*                OuterWindow;                // Parent window for the table
-    pub OuterWindow: *mut ImGuiWindow,
-    // ImGuiWindow*                InnerWindow;                // window holding the table data (== OuterWindow or a child window)
-    pub InnerWindow: *mut ImGuiWindow,
+    // Window*                OuterWindow;                // Parent window for the table
+    pub OuterWindow: *mut Window,
+    // Window*                InnerWindow;                // window holding the table data (== OuterWindow or a child window)
+    pub InnerWindow: *mut Window,
     // ImGuiTextBuffer             ColumnsNames;               // Contiguous buffer holding columns names
     pub ColumnsNames: ImGuiTextBuffer,
-    // ImDrawListSplitter*         DrawSplitter;               // Shortcut to TempData->DrawSplitter while in table. Isolate draw commands per columns to avoid switching clip rect constantly
+    // ImDrawListSplitter*         DrawSplitter;               // Shortcut to temp_data->DrawSplitter while in table. Isolate draw commands per columns to avoid switching clip rect constantly
     pub DrawSplitter: *mut ImDrawListSplitter,
     // ImGuiTableInstanceData      InstanceDataFirst;
     pub InstanceDataFirst: ImGuiTableInstanceData,
@@ -385,7 +385,7 @@ pub struct Table
     pub Bg2DrawChannelUnfrozen: ImGuiTableColumnIdx,
     // bool                        IsLayoutLocked;             // Set by TableUpdateLayout() which is called when beginning the first row.
     pub IsLayoutLocked: bool,
-    // bool                        IsInsideRow;                // Set when inside TableBeginRow()/TableEndRow().
+    // bool                        IsInsideRow;                // Set when inside TableBeginRow()/table_end_row().
     pub IsInsideRow: bool,
     // bool                        IsInitializing;
     pub IsInitializing: bool,
@@ -448,12 +448,12 @@ pub struct TableTempData
     pub HostBackupParentWorkRect: Rect,
     // Vector2D                      HostBackupPrevLineSize;     // Backup of InnerWindow->dc.PrevLineSize at the end of BeginTable()
     pub HostBackupPrevLineSize: Vector2D,
-    // Vector2D                      HostBackupCurrLineSize;     // Backup of InnerWindow->dc.CurrLineSize at the end of BeginTable()
-    pub HostBackupCurrLineSize: Vector2D,
-    // Vector2D                      HostBackupCursorMaxPos;     // Backup of InnerWindow->dc.CursorMaxPos at the end of BeginTable()
+    // Vector2D                      Hostbackup_curr_line_size;     // Backup of InnerWindow->dc.curr_line_size at the end of BeginTable()
+    pub Hostbackup_curr_line_size: Vector2D,
+    // Vector2D                      Hostbackup_cursor_max_pos;     // Backup of InnerWindow->dc.CursorMaxPos at the end of BeginTable()
     pub HostBackupCursorMaxPOs: Vector2D,
-    // ImVec1                      HostBackupColumnsOffset;    // Backup of OuterWindow->dc.columns_offset at the end of BeginTable()
-    pub HostBackupColumnOffset: ImVec1,
+    // Vector1D                      HostBackupColumnsOffset;    // Backup of OuterWindow->dc.columns_offset at the end of BeginTable()
+    pub HostBackupColumnOffset: Vector1D,
     // float                       HostBackupItemWidth;        // Backup of OuterWindow->dc.item_width at the end of BeginTable()
     pub HostBackupItemWidth: f32,
     // int                         HostBackupItemWidthStackSize;//Backup of OuterWindow->dc.item_width_stack.size at the end of BeginTable()
@@ -476,8 +476,8 @@ pub struct ImGuiTableColumnSettings
 {
     // float                   WidthOrWeight;
     WidthOrWeight: f32,
-    // ImGuiID                 UserID;
-    pub UserID: ImGuiID,
+    // Id32                 UserID;
+    pub UserID: Id32,
     // ImGuiTableColumnIdx     index;
     pub Index: ImGuiTableColumnIdx,
     // ImGuiTableColumnIdx     DisplayOrder;
@@ -513,8 +513,8 @@ impl ImGuiTableColumnSettings {
 #[derive(Debug,Clone,Default)]
 pub struct TableSettings
 {
-    // ImGuiID                     id;                     // Set to 0 to invalidate/delete the setting
-    pub ID: ImGuiID,
+    // Id32                     id;                     // Set to 0 to invalidate/delete the setting
+    pub ID: Id32,
     // ImGuiTableFlags             SaveFlags;              // Indicate data we want to save using the Resizable/Reorderable/Sortable/Hideable flags (could be using its own flags..)
     pub SaveFlags: ImGuiTableFlags,
     // float                       RefScale;               // Reference scale to be able to rescale columns on font/dpi changes.
@@ -571,7 +571,7 @@ pub struct DimgTableSortSpecs
 // - Important! Sizing policies have complex and subtle side effects, much more so than you would expect.
 //   Read comments/demos carefully + experiment with live demos to get acquainted with them.
 // - The DEFAULT sizing policies are:
-//    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
+//    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has WindowFlags_AlwaysAutoResize.
 //    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
 // - When ScrollX is off:
 //    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.

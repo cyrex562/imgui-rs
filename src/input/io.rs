@@ -4,7 +4,7 @@ use crate::context::Context;
 use crate::font::font_atlas::FontAtlas;
 use crate::font::Font;
 use crate::input::{DimgInputEventType, DimgKey, KeyInputData, InputSource, ModFlags};
-use crate::input_event::InputEvent;
+use crate::input::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
 use crate::types::{DimgWchar, Id32};
 use crate::vectors::vector_2d::Vector2D;
@@ -81,7 +81,7 @@ pub struct Io {
     pub config_drag_click_to_input_text: bool,
     // = false          // [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
     pub config_windows_resize_from_edges: bool,
-    // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.backend_flags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
+    // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.backend_flags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window WindowFlags_ResizeFromAnySide flag)
     pub config_windows_move_from_title_bar_only: bool,
     // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
     pub config_memory_compact_timer: f32, // = 60.0          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0 to disable.
@@ -129,7 +129,7 @@ pub struct Io {
     //  void  add_mouse_pos_event(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
     //  void  add_mouse_button_event(int button, bool down);             // Queue a mouse button change
     //  void  add_mouse_wheel_event(float wh_x, float wh_y);             // Queue a mouse wheel update
-    //  void  add_mouse_viewport_event(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+    //  void  add_mouse_viewport_event(Id32 id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
     //  void  add_focus_event(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
     //  void  add_input_character(unsigned int c);                      // Queue a new character input
     //  void  add_input_character_utf16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
@@ -156,7 +156,7 @@ pub struct Io {
     pub want_save_ini_settings: bool,
     // When manual .ini load/save is active (io.ini_filename == None), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.want_save_ini_settings yourself after saving!
     pub nav_active: bool,
-    // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+    // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the WindowFlags_NoNavInputs flag.
     pub nav_visible: bool,
     // Keyboard/Gamepad navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
     pub framerate: f32,
@@ -358,7 +358,7 @@ impl Io {
         if !self.app_accepting_events {
             return;
         }
-        self.add_key_analog_event(key, down, if down { 1.0 } else { 0.0 });
+        self.add_key_analog_event(g, key, down, if down { 1.0 } else { 0.0 });
     }
     //  void  add_key_analog_event(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
     // Queue a new key down/up event.
@@ -464,7 +464,7 @@ impl Io {
         e.mouse_wheel.WheelY = wheel_y;
         g.InputEventsQueue.push_back(e);
     }
-    //  void  add_mouse_viewport_event(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+    //  void  add_mouse_viewport_event(Id32 id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
     pub fn add_mouse_viewport_event(&mut self, g: &mut Context, id: Id32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
@@ -519,7 +519,7 @@ impl Io {
         if (c & 0xFC00) == 0xD800 {
             // High surrogate, must save {
             if self.input_queue_surrogate.is_empty() == false {
-                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID);
+                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID,g);
             }
             self.input_queue_surrogate = c;
             return;
@@ -530,7 +530,7 @@ impl Io {
         if self.input_queue_surrogate != 0 {
             if (c & 0xFC00) != 0xDC00 {
                 // Invalid low surrogate {
-                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID);
+                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID,g);
             } else {
                 // #if IM_UNICODE_CODEPOINT_MAX == 0xFFFF
                 //             cp = IM_UNICODE_CODEPOINT_INVALID; // codepoint will not fit in ImWchar

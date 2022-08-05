@@ -18,13 +18,13 @@ pub fn vec_length_sqr(lhs: &Vector2D) -> f32 {
     return (lhs.x * lhs.x) + (lhs.y * lhs.y);
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct Vector1D {
     // float   x;
     pub x: f32,
-    // constexpr ImVec1()         : x(0.0) { }
+    // constexpr Vector1D()         : x(0.0) { }
 
-    // constexpr ImVec1(float _x) : x(_x) { }
+    // constexpr Vector1D(float _x) : x(_x) { }
 }
 
 impl Vector1D {
@@ -38,7 +38,7 @@ impl Vector1D {
 }
 
 /// Vector4D: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct Vector4D {
     // float                                                     x, y, z, w;
     pub x: f32,

@@ -160,7 +160,7 @@ pub struct DockNode {
     // pub parent_node: &'a mut DockNode,
     // ImGuiDockNode*          child_nodes[2];              // [split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
     pub child_nodes: Vec<Id32>, //[*mut ImGuiDockNode;2],
-    // ImVector<ImGuiWindow*>  windows;                    // Note: unordered list! Iterate tab_bar->Tabs for user-order.
+    // ImVector<Window*>  windows;                    // Note: unordered list! Iterate tab_bar->Tabs for user-order.
     pub windows: Vec<Id32>,
     // ImGuiTabBar*            tab_bar;
     pub tab_bar: Option<TabBar>, //*mut ImGuiTabBar,
@@ -173,14 +173,14 @@ pub struct DockNode {
     pub size_ref: Vector2D,
     // ImGuiAxis               split_axis;                  // [split node only] split axis (x or Y)
     pub split_axis: Axis,
-    // ImGuiWindowClass        window_class;                // [Root node only]
+    // WindowClass        window_class;                // [Root node only]
     pub window_class: WindowClass,
     // ImU32                   last_bg_color;
     pub last_bg_color: u32,
-    // ImGuiWindow*            host_window;
-    pub host_window_id: Id32, //*mut ImGuiWindow,
-    // ImGuiWindow*            visible_window;              // Generally point to window which is id is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
-    pub visible_window_id: Id32, //*mut ImGuiWindow,
+    // Window*            host_window;
+    pub host_window_id: Id32, //*mut Window,
+    // Window*            visible_window;              // Generally point to window which is id is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
+    pub visible_window_id: Id32, //*mut Window,
     // ImGuiDockNode*          central_node;                // [Root node only] Pointer to central node.
     pub central_node_id: Id32, // *mut ImGuiDockNode,
     // ImGuiDockNode*          only_node_with_windows;        // [Root node only] Set when there is a single visible node within the hierarchy.
@@ -231,7 +231,7 @@ pub struct DockNode {
 
 impl DockNode {
     //
-    // ImGuiDockNode::ImGuiDockNode(ImGuiID id)
+    // ImGuiDockNode::ImGuiDockNode(Id32 id)
     // {
     //     ID = id;
     //     SharedFlags = LocalFlags = LocalFlagsInWindows = MergedFlags = ImGuiDockNodeFlags_None;
@@ -354,13 +354,13 @@ impl Default for DockNodeState {
 // Persistent Settings data, stored contiguously in SettingsNodes (sizeof() ~32 bytes)
 #[derive(Debug, Clone, Default)]
 pub struct DockNodeSettings {
-    // ImGuiID             id;
+    // Id32             id;
     pub id: Id32,
-    // ImGuiID             parent_node_id;
+    // Id32             parent_node_id;
     pub parent_node_id: Id32,
-    // ImGuiID             ParentWindowId;
+    // Id32             ParentWindowId;
     pub parent_window_id: Id32,
-    // ImGuiID             SelectedTabId;
+    // Id32             SelectedTabId;
     pub selected_tab_id: Id32,
     // signed char         SplitAxis;
     pub split_axis: i8,
@@ -381,16 +381,16 @@ pub struct DockNodeSettings {
 // (some functions are only declared in imgui.cpp, see Docking section)
 //  void          DockContextInitialize(ImGuiContext* ctx);
 //  void          DockContextShutdown(ImGuiContext* ctx);
-//  void          DockContextClearNodes(ImGuiContext* ctx, ImGuiID root_id, bool clear_settings_refs); // Use root_id==0 to clear all
+//  void          DockContextClearNodes(ImGuiContext* ctx, Id32 root_id, bool clear_settings_refs); // Use root_id==0 to clear all
 //  void          DockContextRebuildNodes(ImGuiContext* ctx);
 //  void          DockContextNewFrameUpdateUndocking(ImGuiContext* ctx);
 //  void          DockContextNewFrameUpdateDocking(ImGuiContext* ctx);
 //  void          DockContextEndFrame(ImGuiContext* ctx);
-//  ImGuiID       dock_context_gen_node_id(ImGuiContext* ctx);
-//  void          DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, float split_ratio, bool split_outer);
-//  void          DockContextQueueUndockWindow(ImGuiContext* ctx, ImGuiWindow* window);
+//  Id32       dock_context_gen_node_id(ImGuiContext* ctx);
+//  void          DockContextQueueDock(ImGuiContext* ctx, Window* target, ImGuiDockNode* target_node, Window* payload, ImGuiDir split_dir, float split_ratio, bool split_outer);
+//  void          DockContextQueueUndockWindow(ImGuiContext* ctx, Window* window);
 //  void          DockContextQueueUndockNode(ImGuiContext* ctx, ImGuiDockNode* node);
-//  bool          DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos);
+//  bool          DockContextCalcDropPosForDocking(Window* target, ImGuiDockNode* target_node, Window* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos);
 //  bool          DockNodeBeginAmendTabBar(ImGuiDockNode* node);
 //  void          DockNodeEndAmendTabBar();
 /// inline ImGuiDockNode*   DockNodeGetRootNode(ImGuiDockNode* node)                 { while (node->parent_node) node = node->parent_node; return node; }
@@ -417,7 +417,7 @@ pub fn dock_node_comparer_depth_most_first(
     return dock_node_get_depth(b) - dock_node_get_depth(a);
 }
 
-// int dock_node_get_tab_order(ImGuiWindow* window)
+// int dock_node_get_tab_order(Window* window)
 pub fn dock_node_get_tab_order(g: &mut Context, window: &mut Window) -> i32 {
     // ImGuiTabBar* tab_bar = window.dock_node_id.tab_bar;
     let tab_bar = &mut g.dock_node_mut(window.dock_node_id).unwrap().tab_bar;
@@ -466,7 +466,7 @@ pub struct DockNodeTreeInfo {
     pub first_node_with_windows: Id32,
     // int                 count_nodes_with_windows;
     pub count_nodes_with_windows: i32,
-    //ImGuiWindowClass  WindowClassForMerges;
+    //WindowClass  WindowClassForMerges;
     pub window_class_for_merges: WindowClass,
     // ImGuiDockNodeTreeInfo() { memset(this, 0, sizeof(*this)); }
 }
@@ -530,7 +530,7 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
     node.local_flags_in_windows.clear();
     // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
     for win_id in node.windows.iter() {
-        // ImGuiWindow* window = node.windows[window_n];
+        // Window* window = node.windows[window_n];
         let window = g.window_mut(*win_id);
         // IM_ASSERT(window.dock_node == node);
 
@@ -779,7 +779,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         && node.is_leaf_node()
     {
         // IM_ASSERT(node.Windows.size > 0);
-        // ImGuiWindow* ref_window = None;
+        // Window* ref_window = None;
 
         let mut ref_window: Option<&mut Window> = None;
         if node.selected_tab_id != INVALID_ID {
@@ -804,7 +804,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
     for window_n in 0..node.windows.len() {
         // FIXME-DOCK: Setting dock_is_active here means that for single active window in a leaf node, dock_is_active will be cleared until the next Begin() call.
-        // ImGuiWindow* window = node.windows[window_n];
+        // Window* window = node.windows[window_n];
         let window = g.window_mut(node.windows[window_n]);
         node.has_close_button = window.has_close_button;
         window.dock_is_active = (node.windows.len() > 1);
@@ -814,7 +814,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     }
 
     // Bind or create host window
-    // ImGuiWindow* host_window = None;
+    // Window* host_window = None;
     let mut host_window: Option<&mut Window> = None;
     let mut beginned_into_host_window = false;
     if node.is_dock_space() {
@@ -860,7 +860,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             // char window_label[20];
             let mut window_label = String::new();
             dock_node_get_host_window_title(node, window_label, window_label.len());
-            // ImGuiWindowFlags window_flags = WindowFlags::NoScrollbar | WindowFlags::NoScrollWithMouse | WindowFlags::DockNodeHost;
+            // WindowFlags window_flags = WindowFlags::NoScrollbar | WindowFlags::NoScrollWithMouse | WindowFlags::DockNodeHost;
             let mut window_flags = HashSet::from([
                 WindowFlags::NoScrollbar,
                 WindowFlags::NoScrollWithMouse,
@@ -875,7 +875,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             // window_flags |= WindowFlags::NoSavedSettings | WindowFlags::NoNavFocus | WindowFlags::NoCollapse;
             // window_flags |= WindowFlags::NoTitleBar;
 
-            set_netxt_window_bg_alpha(0.0); // Don't set ImGuiWindowFlags_NoBackground because it disables borders
+            set_netxt_window_bg_alpha(0.0); // Don't set WindowFlags_NoBackground because it disables borders
             push_style_vector2d(g, StyleVar::WindowPadding, &Vector2D::default());
             begin(g, window_label.as_str(), None, Some(&mut window_flags));
             pop_style_var(g, 0);
@@ -887,7 +887,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             node.pos = host_window.pos;
             node.size = host_window.size;
 
-            // We set ImGuiWindowFlags_NoFocusOnAppearing because we don't want the host window to take full focus (e.g. steal nav_window)
+            // We set WindowFlags_NoFocusOnAppearing because we don't want the host window to take full focus (e.g. steal nav_window)
             // But we still it bring it to the front of display. There's no way to choose this precise behavior via window flags.
             // One simple case to ponder if: window A has a toggle to create windows B/C/D. Dock B/C/D together, clear the toggle and enable it again.
             // When reappearing B/C/D will request focus and be moved to the top of the display pile, but they are not linked to the dock host window
@@ -1116,7 +1116,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     }
 }
 
-// static bool dock_node_is_drop_allowedOne(ImGuiWindow* payload, ImGuiWindow* host_window)
+// static bool dock_node_is_drop_allowedOne(Window* payload, Window* host_window)
 pub fn dock_node_is_drop_allowed_one(
     g: &mut Context,
     payload: &mut Window,
@@ -1163,7 +1163,7 @@ pub fn dock_node_is_drop_allowed_one(
     // ImGuiContext& g = *GImGui;
     // for (int i = g.open_popup_stack.size - 1; i >= 0; i--)
     for i in g.open_popup_stack.len() - 1..0 {
-        // if (ImGuiWindow * popup_window = g.open_popup_stack[i].Window)
+        // if (Window * popup_window = g.open_popup_stack[i].Window)
         let popup_window = g.window_mut(g.open_popup_stack[i].window_id);
         {
             if is_window_within_begin_stack_of(g, payload, popup_window) {
@@ -1176,7 +1176,7 @@ pub fn dock_node_is_drop_allowed_one(
     return true;
 }
 
-// static bool dock_node_is_drop_allowed(ImGuiWindow* host_window, ImGuiWindow* root_payload)
+// static bool dock_node_is_drop_allowed(Window* host_window, Window* root_payload)
 pub fn dock_node_is_drop_allowed(
     g: &mut Context,
     host_window: &mut window::Window,
@@ -1195,7 +1195,7 @@ pub fn dock_node_is_drop_allowed(
     };
     // for (int payload_n = 0; payload_n < payload_count; payload_n += 1)
     for payload_n in 0..payload_count {
-        // ImGuiWindow* payload = root_payload.dock_node_as_host_id? root_payload.dock_node_as_host_id.windows[payload_n] : root_payload;
+        // Window* payload = root_payload.dock_node_as_host_id? root_payload.dock_node_as_host_id.windows[payload_n] : root_payload;
         let payload = if root_payload_dock_node.is_some() {
             g.window_mut(root_payload_dock_node.unwrap().windows[payload_n])
         } else {
@@ -1244,7 +1244,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
         if (&merged_flags.contains(&DockNodeFlags::NoResize))
             || (&merged_flags.contains(&no_resize_axis_flag))
         {
-            // ImGuiWindow* window = g.current_window;
+            // Window* window = g.current_window;
             let window = g.current_window_mut();
             window.draw_list.add_rect_filled(
                 bb.min,

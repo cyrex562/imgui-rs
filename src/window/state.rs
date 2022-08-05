@@ -5,7 +5,7 @@ use crate::utils::{add_hash_set, sub_hash_set};
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::Window;
 
-// static void SetWindowConditionAllowFlags(ImGuiWindow* window, ImGuiCond flags, bool enabled)
+// static void SetWindowConditionAllowFlags(Window* window, ImGuiCond flags, bool enabled)
 pub fn set_window_condition_allow_flags(
     window: &mut Window,
     flags: &mut HashSet<Condition>,
@@ -41,7 +41,7 @@ pub fn set_window_condition_allow_flags(
     };
 }
 
-// void ImGui::set_window_hit_test_hole(ImGuiWindow* window, const Vector2D& pos, const Vector2D& size)
+// void ImGui::set_window_hit_test_hole(Window* window, const Vector2D& pos, const Vector2D& size)
 pub fn set_window_hit_test_hole(g: &mut Context, window: &mut Window, pos: &Vector2D, size: &Vector2D)
 {
     // IM_ASSERT(window.hit_test_hole_size.x == 0);     // We don't support multiple holes/hit test filters

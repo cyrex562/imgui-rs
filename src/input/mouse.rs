@@ -122,7 +122,7 @@ pub fn update_mouse_inputs(g: &mut Context)
     }
 }
 
-// static void StartLockWheelingWindow(ImGuiWindow* window)
+// static void StartLockWheelingWindow(Window* window)
 pub fn start_lock_wheeling_window(g: &mut Context, window: &Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -164,7 +164,7 @@ pub fn update_mouse_wheel(g: &mut Context)
         return;
     }
 
-    // ImGuiWindow* window = g.wheeling_window ? g.wheeling_window : g.hovered_window;
+    // Window* window = g.wheeling_window ? g.wheeling_window : g.hovered_window;
 
     let mut window = if g.wheeling_window_id != INVALID_ID {g.window_mut(g.wheeling_window_id).unwrap()} else {
         g.window_mut(g.hovered_window).unwrap()
@@ -193,7 +193,7 @@ pub fn update_mouse_wheel(g: &mut Context)
     }
 
     // Mouse wheel scrolling
-    // If a child window has the ImGuiWindowFlags_NoScrollWithMouse flag, we give a chance to scroll its parent
+    // If a child window has the WindowFlags_NoScrollWithMouse flag, we give a chance to scroll its parent
     if g.io.key_ctrl {
         return;
     }
@@ -238,7 +238,7 @@ pub fn update_mouse_wheel(g: &mut Context)
     }
 }
 
-/// void ImGui::start_mouse_moving_window(ImGuiWindow* window)
+/// void ImGui::start_mouse_moving_window(Window* window)
 pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
 {
     // Set active_id even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
@@ -271,13 +271,13 @@ pub fn start_mouse_moving_window(g: &mut Context, window: &mut Window)
 /// We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
 /// - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
 /// - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
-/// void ImGui::StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock_floating_node)
+/// void ImGui::StartMouseMovingWindowOrNode(Window* window, ImGuiDockNode* node, bool undock_floating_node)
 pub fn start_mouse_moving_window_or_node(g: &mut Context, window: &mut Window, node: &mut DockNode, undock_floating_node: bool)
 {
     // ImGuiContext& g = *GImGui;
     // bool can_undock_node = false;
     let mut can_undock_node = false;
-    // if (node != None && node->VisibleWindow && (node->VisibleWindow.flags & ImGuiWindowFlags_NoMove) == 0)
+    // if (node != None && node->VisibleWindow && (node->VisibleWindow.flags & WindowFlags_NoMove) == 0)
     if node.visible_window_id != INVALID_ID && node.visible_window_id.flags.contains(WindowFlags::NoMove) == false
     {
         // Can undock if:
@@ -323,7 +323,7 @@ pub fn update_mouse_moving_window_new_frame(g: &mut Context)
         // We track it to preserve Focus and so that generally active_id_window == moving_window and active_id == moving_window->move_id for consistency.
         keep_alive_id(g.active_id);
         // IM_ASSERT(g.moving_window && g.moving_window->root_window_dock_tree);
-        // ImGuiWindow* moving_window = g.moving_window->root_window_dock_tree;
+        // Window* moving_window = g.moving_window->root_window_dock_tree;
         let moving_window_id = g.window_mut(g.moving_window_id).unwrap().root_window_dock_tree_id;
         let moving_window = g.window_mut(moving_window_id).unwrap();
 
@@ -413,14 +413,14 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
     {
         // Handle the edge case of a popup being closed while clicking in its empty space.
         // If we try to focus it, focus_window() > close_popups_over_window() will accidentally close any parent popups because they are not linked together any more.
-        // ImGuiWindow* RootWindow = g.hovered_window ? g.hovered_window->RootWindow : None;
+        // Window* RootWindow = g.hovered_window ? g.hovered_window->RootWindow : None;
         let root_window = if g.hovered_window_id != INVALID_ID {
             let hov_win = g.window_mut(g.hovered_window_id).unwrap();
             Some(g.window_mut(hov_win.root_window_id).unwrap())
         } else {
             None
         };
-        // const bool is_closed_popup = RootWindow && (RootWindow.flags & ImGuiWindowFlags_Popup) && !IsPopupOpen(RootWindow.popup_id, ImGuiPopupFlags_AnyPopupLevel);
+        // const bool is_closed_popup = RootWindow && (RootWindow.flags & WindowFlags_Popup) && !IsPopupOpen(RootWindow.popup_id, ImGuiPopupFlags_AnyPopupLevel);
         let is_closed_popup: bool = if root_window.is_some() {
             let root_win = root_window.unwrap();
             if root_win.flags.contains(&WindowFlags::Popup) {
@@ -482,13 +482,14 @@ pub fn is_mouse_down(g: &mut Context, button: MouseButton) -> bool
 }
 
 // bool IsMouseClicked(ImGuiMouseButton button, bool repeat)
-pub fn is_mouse_clicked(g: &mut Context, button: MouseButton, repeat: bool) -> bool
+pub fn is_mouse_clicked(g: &mut Context, button: &MouseButton, repeat: bool) -> bool
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.io.mouse_down));
     let t = g.io.mouse_down_duration[button];
-    if (t == 0.0)
+    if (t == 0.0) {
         return true;
+    }
     if (repeat && t > g.io.KeyRepeatDelay)
         return CalcTypematicRepeatAmount(t - g.io.delta_time, t, g.io.KeyRepeatDelay, g.io.KeyRepeatRate) > 0;
     return false;

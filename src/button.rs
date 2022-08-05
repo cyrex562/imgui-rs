@@ -15,7 +15,7 @@ pub enum ButtonFlags
     AllowItemOverlap      ,  // require previous frame hovered_id to either match id or be null before being usable, use along with SetItemAllowOverlap()
     DontClosePopups       ,  // disable automatically closing parent popup on press // [UNUSED]
     //Disabled             = 1 << 14,  // disable interactions -> use BeginDisabled() or ImGuiItemFlags_Disabled
-    AlignTextBaseLine     ,  // vertically align button to match text baseline - ButtonEx() only // FIXME: Should be removed and handled by SmallButton(), not possible currently because of dc.CursorPosPrevLine
+    AlignTextBaseLine     ,  // vertically align button to match text baseline - ButtonEx() only // FIXME: Should be removed and handled by SmallButton(), not possible currently because of dc.cursor_pos_prev_line
     NoKeyModifiers        ,  // disable mouse interaction if a key modifier is held
     NoHoldingActiveId     ,  // don't set active_id while holding the mouse (PressedOnClick only)
     NoNavFocus            ,  // don't override navigation focus when activated

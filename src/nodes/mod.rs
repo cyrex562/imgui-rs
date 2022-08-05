@@ -422,7 +422,7 @@ void DrawListSet(ImDrawList* window_draw_list)
 void DrawListAddNode(let node_idx)
 {
     GImNodes.NodeIdxToSubmissionIdx.SetInt(
-        static_cast<ImGuiID>(node_idx), GImNodes.NodeIdxSubmissionOrder.size);
+        static_cast<Id32>(node_idx), GImNodes.NodeIdxSubmissionOrder.size);
     GImNodes.NodeIdxSubmissionOrder.push_back(node_idx);
     ImDrawListGrowChannels(GImNodes.CanvasDrawList, 2);
 }
@@ -462,7 +462,7 @@ void DrawListActivateCurrentNodeForeground()
 void DrawListActivateNodeBackground(let node_idx)
 {
     let submission_idx =
-        GImNodes.NodeIdxToSubmissionIdx.GetInt(static_cast<ImGuiID>(node_idx), -1);
+        GImNodes.NodeIdxToSubmissionIdx.GetInt(static_cast<Id32>(node_idx), -1);
     // There is a discrepancy in the submitted node count and the rendered node count! Did you call
     // one of the following functions
     // * EditorContextMoveToNode

@@ -58,16 +58,16 @@ pub struct Window {
     // char*                   name;                               // window name, owned by the window.
     pub name: String,
     //*mut c_char,
-    // ImGuiID                 id;                                 // == hash_string(name)
+    // Id32                 id;                                 // == hash_string(name)
     pub id: Id32,
-    // ImGuiWindowFlags        flags, flags_previous_frame;          // See enum ImGuiWindowFlags_
+    // WindowFlags        flags, flags_previous_frame;          // See enum WindowFlags_
     pub flags: HashSet<WindowFlags>,
     pub flags_previous_frame: HashSet<WindowFlags>,
-    // ImGuiWindowClass        window_class;                        // Advanced users only. Set with set_next_window_class()
+    // WindowClass        window_class;                        // Advanced users only. Set with set_next_window_class()
     pub window_class: WindowClass,
     // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a None value here if their viewport was discarded.
     pub viewport_id: Id32,
-    // ImGuiID                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
+    // Id32                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
     // pub viewport_id: Id32,
     // Vector2D                  viewport_pos;                        // We backup the viewport position (since the viewport may disappear or never be created if the window is inactive)
     pub viewport_pos: Vector2D,
@@ -91,11 +91,11 @@ pub struct Window {
     pub window_rounding: f32,
     // float                   WindowBorderSize;                   // window border size at the time of Begin().
     // int                     NameBufLen;                         // size of buffer storing name. May be larger than strlen(name)!
-    // ImGuiID                 move_id;                             // == window->GetID("#MOVE")
+    // Id32                 move_id;                             // == window->GetID("#MOVE")
     pub move_id: Id32,
-    // ImGuiID                 tab_id;                              // == window->GetID("#TAB")
+    // Id32                 tab_id;                              // == window->GetID("#TAB")
     pub tab_id: Id32,
-    // ImGuiID                 child_id;                            // id of corresponding item in parent window (for navigation to return from child window to parent window)
+    // Id32                 child_id;                            // id of corresponding item in parent window (for navigation to return from child window to parent window)
     pub child_id: Id32,
     // Vector2D                  scroll;
     pub scroll: Vector2D,
@@ -146,7 +146,7 @@ pub struct Window {
     pub begin_order_within_context: i16,
     // short                   focus_order;                         // Order within windows_focus_order[], altered when windows are focused.
     pub focus_order: i16,
-    // ImGuiID                 popup_id;                            // id in the popup stack when this window is used as a popup/menu (because we use generic name/id for recycling)
+    // Id32                 popup_id;                            // id in the popup stack when this window is used as a popup/menu (because we use generic name/id for recycling)
     pub popup_id: Id32,
     // ImS8                    auto_fit_frames_x, auto_fit_frames_y;
     pub auto_fit_frames_x: i8,
@@ -177,9 +177,9 @@ pub struct Window {
     // Vector2D                  set_window_pos_pivot;                  // store window pivot for positioning. Vector2D(0, 0) when positioning from top-left corner; Vector2D(0.5, 0.5) for centering; Vector2D(1, 1) for bottom right.
     pub set_window_pos_pivot: Vector2D,
 
-    // ImVector<ImGuiID>       IDStack;                            // id stack. id are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
+    // ImVector<Id32>       IDStack;                            // id stack. id are hashes seeded with the value at the top of the stack. (In theory this should be in the temp_data structure)
     pub id_stack: Vec<Id32>,
-    // ImGuiWindowTempData     dc;                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "dc" variable name.
+    // WindowTempData     dc;                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "dc" variable name.
     pub dc: WindowTempData,
 
     // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show windows Rectangles' viewer.
@@ -224,23 +224,23 @@ pub struct Window {
     pub draw_list_id: Id32,
     // ImDrawList              DrawListInst;
     pub draw_list_inst: Id32,
-    // ImGuiWindow*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise None.
+    // Window*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise None.
     pub parent_window_id: WindowHandle,
-    // ImGuiWindow*            parent_window_in_begin_stack;
+    // Window*            parent_window_in_begin_stack;
     pub parent_window_in_begin_stack_id: WindowHandle,
-    // ImGuiWindow*            RootWindow;                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
+    // Window*            RootWindow;                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
     pub root_window_id: WindowHandle,
-    // ImGuiWindow*            root_window_popup_tree;                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
+    // Window*            root_window_popup_tree;                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
     pub root_window_popup_tree_id: WindowHandle,
-    // ImGuiWindow*            root_window_dock_tree;                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
+    // Window*            root_window_dock_tree;                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
     pub root_window_dock_tree_id: WindowHandle,
-    // ImGuiWindow*            root_window_for_title_bar_highlight;     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
+    // Window*            root_window_for_title_bar_highlight;     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
     pub root_window_for_title_bar_highlight_id: WindowHandle,
-    // ImGuiWindow*            root_window_for_nav;                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
+    // Window*            root_window_for_nav;                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
     pub root_window_for_nav_id: WindowHandle,
-    // ImGuiWindow*            nav_last_child_nav_window;              // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.windows sorted by last focused including child window.)
+    // Window*            nav_last_child_nav_window;              // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.windows sorted by last focused including child window.)
     pub nav_last_child_nav_window: WindowHandle,
-    // ImGuiID                 nav_last_ids[ImGuiNavLayer_COUNT];    // Last known nav_id for this window, per layer (0/1)
+    // Id32                 nav_last_ids[ImGuiNavLayer_COUNT];    // Last known nav_id for this window, per layer (0/1)
     pub nav_last_ids: Vec<Id32>,
     // ImRect                  nav_rect_rel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
     pub nav_rect_rel: Vec<Rect>,
@@ -261,13 +261,13 @@ pub struct Window {
     pub dock_tab_want_close: bool,
     // short                   dock_order;                          // Order of the last time the window was visible within its dock_node. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
     pub dock_order: i16,
-    // ImGuiWindowDockStyle    dock_style;
+    // WindowDockStyle    dock_style;
     pub dock_style: WindowDockStyle,
     // ImGuiDockNode*          dock_node;                           // Which node are we docked into. Important: Prefer testing dock_is_active in many cases as this will still be set when the dock node is hidden.
     pub dock_node_id: Id32, //Id32, // *mut ImGuiDockNode,
     // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
     pub dock_node_as_host_id: Id32, // Id32, // *mut ImGuiDockNode,
-    // ImGuiID                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
+    // Id32                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
     pub dock_id: Id32,
     // ImGuiItemStatusFlags    dock_tab_item_status_flags;
     pub dock_tab_item_status_flags: HashSet<ItemStatusFlags>,
@@ -277,8 +277,8 @@ pub struct Window {
 }
 
 impl Window {
-    // // ImGuiWindow is mostly a dumb struct. It merely has a constructor and a few helper methods
-    // ImGuiWindow::ImGuiWindow(ImGuiContext* context, const char* name) : DrawListInst(None)
+    // // Window is mostly a dumb struct. It merely has a constructor and a few helper methods
+    // Window::Window(ImGuiContext* context, const char* name) : DrawListInst(None)
     pub fn new(g: &mut Context, name: &str) -> Self {
         let mut out = Self {
             //     name = ImStrdup(name);
@@ -352,23 +352,23 @@ impl Window {
         out.draw_list_id.data = g.draw_list_shared_data.clone();
         //     draw_list->_OwnerName = name;
         &out.draw_list_id.owner_name = &out.name;
-        //     IM_PLACEMENT_NEW(&window_class) ImGuiWindowClass();
+        //     IM_PLACEMENT_NEW(&window_class) WindowClass();
         // TODO
         out
     }
 
-    // ImGuiWindow::~ImGuiWindow()
+    // Window::~Window()
     // {
     //     IM_ASSERT(draw_list == &DrawListInst);
     //     IM_DELETE(name);
     //     ColumnsStorage.clear_destruct();
     // }
 
-    // ImGuiID ImGuiWindow::GetID(const char* str, const char* str_end)
+    // Id32 Window::GetID(const char* str, const char* str_end)
     pub fn get_id(&mut self, g: &mut Context, in_str: &str) -> Id32 {
-        // ImGuiID seed = IDStack.back();
+        // Id32 seed = IDStack.back();
         let mut seed = self.id_stack.back();
-        // ImGuiID id = hash_string(str, str_end ? (str_end - str) : 0, seed);
+        // Id32 id = hash_string(str, str_end ? (str_end - str) : 0, seed);
         let id = hash_string(in_str.as_mut_vec(), 0);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
@@ -377,11 +377,11 @@ impl Window {
         return id;
     }
 
-    // ImGuiID ImGuiWindow::GetID(const void* ptr)
+    // Id32 Window::GetID(const void* ptr)
     pub fn get_id2(&mut self, g: &mut Context, ptr: &mut Vec<u8>) -> Id32 {
-        // ImGuiID seed = IDStack.back();
+        // Id32 seed = IDStack.back();
         let mut seed = self.id_stack.back();
-        // ImGuiID id = ImHashData(&ptr, sizeof(void*), seed);
+        // Id32 id = ImHashData(&ptr, sizeof(void*), seed);
         let mut id = hash_data(ptr, seed);
         // ImGuiContext& g = *GImGui;
         if g.debug_hook_id_info == id {
@@ -390,11 +390,11 @@ impl Window {
         return id;
     }
 
-    // ImGuiID ImGuiWindow::GetID(int n)
+    // Id32 Window::GetID(int n)
     pub fn get_id3(&mut self, g: &mut Context, n: i32) -> Id32 {
-        // ImGuiID seed = IDStack.back();
+        // Id32 seed = IDStack.back();
         let mut seed = self.id_stack.back();
-        // ImGuiID id = ImHashData(&n, sizeof(n), seed);
+        // Id32 id = ImHashData(&n, sizeof(n), seed);
         let mut n_bytes: [u8; 4] = [0; 4];
         let n_bytes_raw = n.to_le_bytes();
         n_bytes[0] = n_bytes_raw[0];
@@ -411,13 +411,13 @@ impl Window {
     }
 
     // This is only used in rare/specific situations to manufacture an id out of nowhere.
-    // ImGuiID ImGuiWindow::get_id_from_rectangle(const ImRect& r_abs)
+    // Id32 Window::get_id_from_rectangle(const ImRect& r_abs)
     pub fn get_id_from_rect(&mut self, g: &mut Context, r_abs: &Rect) -> Id32 {
-        // ImGuiID seed = IDStack.back();
+        // Id32 seed = IDStack.back();
         let seed = self.id_stack.back();
         // ImRect r_rel = ImGui::WindowRectAbsToRel(this, r_abs);
         let r_rel = window_rect_abs_to_rel(self, r_abs);
-        // ImGuiID id = ImHashData(&r_rel, sizeof(r_rel), seed);
+        // Id32 id = ImHashData(&r_rel, sizeof(r_rel), seed);
         let id = hash_data(&r_rel, seed);
         return id;
     }
@@ -429,14 +429,14 @@ impl Window {
 
 #[derive(Debug, Clone, Default)]
 pub struct WindowDockStyle {
-    // ImU32 colors[ImGuiWindowDockStyleCol_COUNT];
+    // ImU32 colors[WindowDockStyleCol_COUNT];
     pub colors: Vec<u32>,
 }
 
 // data saved for each window pushed into the stack
 #[derive(Debug, Clone, Default)]
 pub struct WindowStackData {
-    // ImGuiWindow*            window;
+    // Window*            window;
     pub window: WindowHandle,
     // ImGuiLastItemData       parent_last_item_data_backup;
     pub parent_last_item_data_backup: LastItemData,
@@ -444,7 +444,7 @@ pub struct WindowStackData {
     pub stack_sizes_on_begin: ImGuiStackSizes,
 }
 
-//     ImGuiWindowFlags_NoDecoration           = WindowFlags::NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse,
+//     WindowFlags_NoDecoration           = WindowFlags::NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar | WindowFlags_NoCollapse,
 // pub const NoDecoration: i32 = DimgWindowFlags::NoTitleBar | DimgWindowFlags::NoResize | DimgWindowFlags::NoScrollbar | DimgWindowFlags::NoCollapse;
 pub const WIN_FLAGS_NO_DECORATION: HashSet<WindowFlags> = HashSet::from([
     WindowFlags::NoTitleBar,
@@ -453,12 +453,12 @@ pub const WIN_FLAGS_NO_DECORATION: HashSet<WindowFlags> = HashSet::from([
     WindowFlags::NoCollapse,
 ]);
 
-// ImGuiWindowFlags_NoNav                  = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
-// pub const ImGuiWindowFlags_NoNav: i32 = DimgWindowFlags::NoNavInputs | DimgWindowFlags::NoNavFocus;
+// WindowFlags_NoNav                  = WindowFlags_NoNavInputs | WindowFlags_NoNavFocus,
+// pub const WindowFlags_NoNav: i32 = DimgWindowFlags::NoNavInputs | DimgWindowFlags::NoNavFocus;
 pub const DIMG_WIN_FLAGS_NO_NAV: HashSet<WindowFlags> =
     HashSet::from([WindowFlags::NoNavInputs, WindowFlags::NoNavFocus]);
 
-//     ImGuiWindowFlags_NoInputs               = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
+//     WindowFlags_NoInputs               = WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus,
 // pub const NoInputs: i32 = DimgWindowFlags::NoMouseInputs | DimgWindowFlags::NoNavInputs | DimgWindowFlags::NoNavFocus;
 pub const DIMG_WIN_FLAGS_NO_INPUTS: HashSet<WindowFlags> = HashSet::from([
     WindowFlags::NoMouseInputs,
@@ -517,7 +517,7 @@ pub enum WindowFlags {
     ChildMenu,    // Don't use! For internal use by BeginMenu()
     DockNodeHost, // Don't use! For internal use by Begin()/NewFrame()
                   // [Obsolete]
-                  //ImGuiWindowFlags_ResizeFromAnySide    = 1 << 17,  // [Obsolete] --> Set io.config_windows_resize_from_edges=true and make sure mouse cursors are supported by backend (io.backend_flags & ImGuiBackendFlags_HasMouseCursors)
+                  //WindowFlags_ResizeFromAnySide    = 1 << 17,  // [Obsolete] --> Set io.config_windows_resize_from_edges=true and make sure mouse cursors are supported by backend (io.backend_flags & ImGuiBackendFlags_HasMouseCursors)
 }
 
 // flags for ImGui::IsWindowFocused()
@@ -538,7 +538,7 @@ pub enum FocusedFlags {
 
 // flags for ImGui::IsItemHovered(), ImGui::IsWindowHovered()
 // Note: if you are trying to check whether your mouse should be dispatched to Dear ImGui or to your app, you should use 'io.want_capture_mouse' instead! Please read the FAQ!
-// Note: windows with the ImGuiWindowFlags_NoInputs flag are ignored by IsWindowHovered() calls.
+// Note: windows with the WindowFlags_NoInputs flag are ignored by IsWindowHovered() calls.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum HoveredFlags {
     None = 0,

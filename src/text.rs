@@ -1,6 +1,6 @@
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{
-    ImGuiID, ImGuiInputTextFlags, ImWchar, IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX,
+    Id32, ImGuiInputTextFlags, ImWchar, IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX,
 };
 use crate::imgui_math::ImMinI32;
 use crate::imgui_vec::Vector2D;
@@ -389,5 +389,5 @@ pub fn get_text_line_height(g: &mut Context) -> f32 {
 // float GetTextLineHeightWithSpacing()
 pub fn get_text_line_height_with_spacing(g: &mut Context) -> f32 {
     // ImGuiContext& g = *GImGui;
-    return g.font_size + g.style.ItemSpacing.y;
+    return g.font_size + g.style.item_spacing.y;
 }

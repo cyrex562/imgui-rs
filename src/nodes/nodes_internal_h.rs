@@ -369,7 +369,7 @@ static inline ImNodesEditorContext& EditorContextGet()
 template<typename T>
 static inline int ObjectPoolFind(const ImObjectPool<T>& objects, let id)
 {
-    let index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
+    let index = objects.IdMap.GetInt(static_cast<Id32>(id), -1);
     return index;
 }
 
@@ -431,7 +431,7 @@ static inline void ObjectPoolReset(ImObjectPool<T>& objects)
 template<typename T>
 static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, let id)
 {
-    int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
+    int index = objects.IdMap.GetInt(static_cast<Id32>(id), -1);
 
     // Construct new object
     if (index == -1)
@@ -450,7 +450,7 @@ static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, let id)
             objects.FreeList.pop_back();
         }
         IM_PLACEMENT_NEW(objects.Pool.data + index) T(id);
-        objects.IdMap.SetInt(static_cast<ImGuiID>(id), index);
+        objects.IdMap.SetInt(static_cast<Id32>(id), index);
     }
 
     // Flag it as used
@@ -462,7 +462,7 @@ static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, let id)
 template<>
 inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, let node_id)
 {
-    int node_idx = nodes.IdMap.GetInt(static_cast<ImGuiID>(node_id), -1);
+    int node_idx = nodes.IdMap.GetInt(static_cast<Id32>(node_id), -1);
 
     // Construct new node
     if (node_idx == -1)
@@ -481,7 +481,7 @@ inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, let node
             nodes.FreeList.pop_back();
         }
         IM_PLACEMENT_NEW(nodes.Pool.data + node_idx) ImNodeData(node_id);
-        nodes.IdMap.SetInt(static_cast<ImGuiID>(node_id), node_idx);
+        nodes.IdMap.SetInt(static_cast<Id32>(node_id), node_idx);
 
         ImNodesEditorContext& editor = EditorContextGet();
         editor.NodeDepthOrder.push_back(node_idx);

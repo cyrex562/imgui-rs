@@ -96,7 +96,7 @@ pub fn get_draw_data(g: &mut Context) -> Option<&mut DrawData>
     return if viewport.draw_data.valid { Some(&mut viewport.draw_data)} else { None}
 }
 
-/// static void AddWindowToDrawData(ImGuiWindow* window, int layer)
+/// static void AddWindowToDrawData(Window* window, int layer)
 pub fn add_window_to_draw_data(g: &mut Context, window: &mut Window, layer: i32) {
     // ImGuiContext& g = *GImGui;
     // ImGuiViewportP* viewport = window.viewport;
@@ -113,7 +113,7 @@ pub fn add_window_to_draw_data(g: &mut Context, window: &mut Window, layer: i32)
     );
     // for (int i = 0; i < window.dc.ChildWindows.Size; i += 1)
     // {
-    //     ImGuiWindow* child = window.dc.ChildWindows[i];
+    //     Window* child = window.dc.ChildWindows[i];
     //     if (IsWindowActiveAndVisible(child)) // Clipped children may have been marked not active
     //         AddWindowToDrawData(child, layer);
     // }
@@ -126,7 +126,7 @@ pub fn add_window_to_draw_data(g: &mut Context, window: &mut Window, layer: i32)
 }
 
 /// Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
-// static inline void AddRootWindowToDrawData(ImGuiWindow* window)
+// static inline void AddRootWindowToDrawData(Window* window)
 pub fn add_root_window_to_draw_data(g: &mut Context, window: &mut Window) {
     // AddWindowToDrawData(window, GetWindowDisplayLayer(window));
     add_window_to_draw_data(g, window, get::get_window_display_layer(window))

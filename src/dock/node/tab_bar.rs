@@ -55,7 +55,7 @@ pub fn dock_node_end_amend_tab_bar(g: &mut Context) {
 }
 
 // Submit the tab bar corresponding to a dock node and various housekeeping details.
-// static void dock_node_updateTabBar(ImGuiDockNode* node, ImGuiWindow* host_window)
+// static void dock_node_updateTabBar(ImGuiDockNode* node, Window* host_window)
 pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_window: &mut Window) {
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;
@@ -267,7 +267,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     node.visible_window_id = INVALID_ID;
     // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)s
     for win_id in node.windows {
-        // ImGuiWindow* window = node.windows[window_n];
+        // Window* window = node.windows[window_n];
         let window = g.window_mut(win_id);
         if (closed_all || closed_one) == (window.tab_id != INVALID_ID && window.has_close_button)
             && !(window.flags.contains(&WindowFlags::UnsavedDocument)) {

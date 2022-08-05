@@ -4,7 +4,7 @@ pub const DIMG_WINDOW_HANDLE_INVALID: u32 = u32::MAX;
 pub const INVALID_ID: u32 = u32::MAX;
 
 // Scalar data types
-// typedef unsigned int        ImGuiID;// A unique id used by widgets (typically the result of hashing a stack of string)
+// typedef unsigned int        Id32;// A unique id used by widgets (typically the result of hashing a stack of string)
 pub type Id32 = u32;
 
 // Character types

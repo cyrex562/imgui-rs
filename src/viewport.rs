@@ -4,7 +4,7 @@ use crate::Context;
 use crate::draw::data::{DrawData, DrawDataBuilder};
 use crate::draw::draw_data_builder::DrawDataBuilder;
 use crate::draw::list::DrawList;
-use crate::orig_imgui_single_file::{ImGuiID, ImGuiWindow};
+use crate::orig_imgui_single_file::{Id32, Window};
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
@@ -63,7 +63,7 @@ pub enum ViewportFlags
     NoRendererClear         ,   // Platform window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
     TopMost                 ,   // Platform window: Display on top (for tooltips only).
     Minimized               ,  // Platform window: window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
-    NoAutoMerge             ,  // Platform window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
+    NoAutoMerge             ,  // Platform window: Avoid merging this window into another host window. This can only be set via WindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
     CanHostOtherWindows      = 1 << 12   // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
 }
 
@@ -121,7 +121,7 @@ pub struct Viewport
     pub last_frame_active: i32,
     //int                 LastFrontMostStampCount;// Last stamp number from when a window hosted by this viewport was made front-most (by comparing this value between two viewport we have an implicit viewport z-order
     pub last_front_most_stamp_count: i32,
-    // ImGuiID             LastNameHash;
+    // Id32             LastNameHash;
     pub last_name_hash: Id32,
     // Vector2D              LastPos;
     pub last_pos: Vector2D,
@@ -133,7 +133,7 @@ pub struct Viewport
     pub platform_monitor: i16,
     // bool                PlatformWindowCreated;
     pub platform_window_created: bool,
-    // ImGuiWindow*        window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
+    // Window*        window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
     pub window: Id32,
     // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
     pub draw_lists_last_frame: [usize;2],
@@ -237,7 +237,7 @@ pub fn get_main_viewport(g: &mut Context) -> &mut Viewport
 }
 
 // FIXME: This leaks access to viewports not listed in platform_io.viewports[]. Problematic? (#4236)
-// ImGuiViewport* FindViewportByID(ImGuiID id)
+// ImGuiViewport* FindViewportByID(Id32 id)
 pub fn find_viewport_by_id(g: &mut Context, id: Id32) -> &mut Viewport
 {
     // ImGuiContext& g = *GImGui;
@@ -257,7 +257,7 @@ pub fn find_viewport_by_platform_handle(g: &mut Context, platform_handle: Id32) 
     return None;
 }
 
-// void SetCurrentViewport(ImGuiWindow* current_window, ImGuiViewportP* viewport)
+// void SetCurrentViewport(Window* current_window, ImGuiViewportP* viewport)
 pub fn set_current_viewport(g: &mut Context, current_window: Option<&mut Window>, viewport: Option<&mut Viewport>)
 {
     // ImGuiContext& g = *GImGui;
@@ -277,7 +277,7 @@ pub fn set_current_viewport(g: &mut Context, current_window: Option<&mut Window>
         g.platform_io.Platform_OnChangedViewport(g.current_viewport);
 }
 
-// void SetWindowViewport(ImGuiWindow* window, ImGuiViewportP* viewport)
+// void SetWindowViewport(Window* window, ImGuiViewportP* viewport)
 pub fn set_window_viewport(g: &mut Context, window: &mut Window, viewport: &mut Viewport)
 {
     // Abandon viewport
@@ -289,7 +289,7 @@ pub fn set_window_viewport(g: &mut Context, window: &mut Window, viewport: &mut 
     window.viewport_owned = (viewport.Window == window);
 }
 
-// static bool GetWindowAlwaysWantOwnViewport(ImGuiWindow* window)
+// static bool GetWindowAlwaysWantOwnViewport(Window* window)
 pub fn get_window_always_want_own_viewport(g: &mut Context, window: &mut Window) -> bool
 {
     // Tooltips and menus are not automatically forced into their own viewport when the NoMerge flag is set, however the multiplication of viewports makes them more likely to protrude and create their own.
@@ -303,7 +303,7 @@ pub fn get_window_always_want_own_viewport(g: &mut Context, window: &mut Window)
     return false;
 }
 
-// static bool update_try_merge_window_into_host_viewport(ImGuiWindow* window, ImGuiViewportP* viewport)
+// static bool update_try_merge_window_into_host_viewport(Window* window, ImGuiViewportP* viewport)
 pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut Window, viewport: &mut Viewport) -> bool
 {
     // ImGuiContext& g = *GImGui;
@@ -321,7 +321,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
     // FIXME: Can't use g.windows_focus_order[] for root windows only as we care about Z order. If we maintained a DisplayOrder along with focus_order we could..
     for (int n = 0; n < g.windows.len(); n += 1)
     {
-        ImGuiWindow* window_behind = g.windows[n];
+        Window* window_behind = g.windows[n];
         if (window_behind == window)
             break;
         if (window_behind.WasActive && window_behind.viewport_owned && !(window_behind.flags & WindowFlags::ChildWindow))
@@ -342,7 +342,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
 }
 
 // FIXME: handle 0 to N host viewports
-// static bool UpdateTryMergeWindowIntoHostViewports(ImGuiWindow* window)
+// static bool UpdateTryMergeWindowIntoHostViewports(Window* window)
 pub fn update_try_merge_window_into_host_viewports(g: &mut Context, window: &mut Window) -> bool
 {
     // ImGuiContext& g = *GImGui;
@@ -605,7 +605,7 @@ pub fn update_viewports_ends_frame(g: &mut Context)
 }
 
 // FIXME: We should ideally refactor the system to call this every frame (we currently don't)
-// ImGuiViewportP* AddUpdateViewport(ImGuiWindow* window, ImGuiID id, const Vector2D& pos, const Vector2D& size, ImGuiViewportFlags flags)
+// ImGuiViewportP* AddUpdateViewport(Window* window, Id32 id, const Vector2D& pos, const Vector2D& size, ImGuiViewportFlags flags)
 pub fn add_update_viewport(g: &mut Context, window: &mut Window, id: Id32, pos: &Vector2D, size: &Vector2D, flags: &HashSet<ViewportFlags>)
 {
     // ImGuiContext& g = *GImGui;
@@ -676,7 +676,7 @@ pub fn destroy_viewport(g: &mut Context, viewport: &mut Viewport)
     // ImGuiContext& g = *GImGui;
     for (int window_n = 0; window_n < g.windows.len(); window_n += 1)
     {
-        ImGuiWindow* window = g.windows[window_n];
+        Window* window = g.windows[window_n];
         if (window.viewport != viewport)
             continue;
         window.viewport = None;
@@ -695,11 +695,11 @@ pub fn destroy_viewport(g: &mut Context, viewport: &mut Viewport)
 }
 
 // FIXME-VIEWPORT: This is all super messy and ought to be clarified or rewritten.
-// static void WindowSelectViewport(ImGuiWindow* window)
+// static void WindowSelectViewport(Window* window)
 pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindowFlags flags = window.flags;
+    WindowFlags flags = window.flags;
     window.viewportAllowPlatformMonitorExtend = -1;
 
     // Restore main viewport if multi-viewport is not supported by the backend
@@ -831,7 +831,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
     //    window->flags |= WindowFlags::NoTitleBar;
 }
 
-// void WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_window_in_stack)
+// void WindowSyncOwnedViewport(Window* window, Window* parent_window_in_stack)
 pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_window_in_stack: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -871,7 +871,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     // Update common viewport flags
     const ImGuiViewportFlags viewport_flags_to_clear = ImGuiViewportFlags_TopMost | ImGuiViewportFlags_NoTaskBarIcon | ImGuiViewportFlags_NoDecoration | ImGuiViewportFlags_NoRendererClear;
     ImGuiViewportFlags viewport_flags = window.viewport.flags & ~viewport_flags_to_clear;
-    ImGuiWindowFlags window_flags = window.flags;
+    WindowFlags window_flags = window.flags;
     const bool is_modal = (window_flags & WindowFlags::Modal) != 0;
     const bool is_short_lived_floating_window = (window_flags & (WindowFlags::ChildMenu | WindowFlags::Tooltip | WindowFlags::Popup)) != 0;
     if (window_flags & WindowFlags::Tooltip)
@@ -884,7 +884,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     // Not correct to set modal as topmost because:
     // - Because other popups can be stacked above a modal (e.g. combo box in a modal)
     // - ImGuiViewportFlags_TopMost is currently handled different in backends: in Win32 it is "appear top most" whereas in GLFW and SDL it is "stay topmost"
-    //if (flags & ImGuiWindowFlags_Modal)
+    //if (flags & WindowFlags_Modal)
     //    viewport_flags |= ImGuiViewportFlags_TopMost;
 
     // For popups and menus that may be protruding out of their parent viewport, we enable _NoFocusOnClick so that clicking on them
@@ -894,7 +894,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     if (is_short_lived_floating_window && !is_modal)
         viewport_flags |= ImGuiViewportFlags_NoFocusOnAppearing | ImGuiViewportFlags_NoFocusOnClick;
 
-    // We can overwrite viewport flags using ImGuiWindowClass (advanced users)
+    // We can overwrite viewport flags using WindowClass (advanced users)
     if (window.window_class.viewportFlagsOverrideSet)
         viewport_flags |= window.window_class.viewportFlagsOverrideSet;
     if (window.window_class.viewportFlagsOverrideClear)
@@ -910,7 +910,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
 
     // Update parent viewport id
     // (the !is_fallback_window test mimic the one done in WindowSelectViewport())
-    if (window.window_class.ParentViewportId != (ImGuiID)-1)
+    if (window.window_class.ParentViewportId != (Id32)-1)
         window.viewport.ParentViewportId = window.window_class.ParentViewportId;
     else if ((window_flags & (WindowFlags::Popup | WindowFlags::Tooltip)) && parent_window_in_stack && (!parent_window_in_stack.is_fallback_window || parent_window_in_stack.WasActive))
         window.viewport.ParentViewportId = parent_window_in_stack.viewport.id;

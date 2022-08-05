@@ -1,7 +1,7 @@
 use crate::{Context, INVALID_ID};
 use crate::window::{Window, WindowFlags};
 
-// When a modal popup is open, newly created windows that want focus (i.e. are not popups and do not specify ImGuiWindowFlags_NoFocusOnAppearing)
+// When a modal popup is open, newly created windows that want focus (i.e. are not popups and do not specify WindowFlags_NoFocusOnAppearing)
 // should be positioned behind that modal window, unless the window was created inside the modal begin-stack.
 // In case of multiple stacked modals newly created window honors begin stack order and does not go below its own modal parent.
 // - window             // FindBlockingModal() returns Modal1
@@ -10,7 +10,7 @@ use crate::window::{Window, WindowFlags};
 //      - window        //                  .. returns Modal2
 //          - window    //                  .. returns Modal2
 //          - Modal2    //                  .. returns Modal2
-// static ImGuiWindow* ImGui::FindBlockingModal(ImGuiWindow* window)
+// static Window* ImGui::FindBlockingModal(Window* window)
 pub fn find_blocking_modal(g: &mut Context, window: &mut Window) -> Option<&mut Window>
 {
     // ImGuiContext& g = *GImGui;
@@ -24,7 +24,7 @@ pub fn find_blocking_modal(g: &mut Context, window: &mut Window) -> Option<&mut 
     // for (int i = g.open_popup_stack.size - 1; i >= 0; i--)
     for i in g.open_popup_stack.len() - 1 .. 0
     {
-        // ImGuiWindow* popup_window = g.open_popup_stack.data[i].window;
+        // Window* popup_window = g.open_popup_stack.data[i].window;
         let psd = &mut g.open_popup_stack[i];
         let popup_window = g.window_mut(psd.window_id)
 
@@ -46,7 +46,7 @@ pub fn find_blocking_modal(g: &mut Context, window: &mut Window) -> Option<&mut 
         if is_window_within_begin_stack_of(window, popup_window) {       // window is rendered over last modal, no render order change needed.
             break;
         }
-        // for (ImGuiWindow* parent = popup_window.ParentWindowInBeginStack.root_window; parent != None; parent = parent.ParentWindowInBeginStack.root_window)
+        // for (Window* parent = popup_window.ParentWindowInBeginStack.root_window; parent != None; parent = parent.ParentWindowInBeginStack.root_window)
         let mut parent_window_in_begin_stack = g.window_mut(popup_window_obj.parent_window_in_begin_stack_id).unwrap();
         while parent_window_in_begin_stack.root_window_id != INVALID_ID {
             let parent_win = g.window_mut(parent_window_in_begin_stack.root_window_id).unwrap();

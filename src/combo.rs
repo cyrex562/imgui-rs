@@ -8,11 +8,11 @@ use crate::vectors::vector_2d::Vector2D;
 pub struct ComboPreviewData {
     // ImRect          PreviewRect;
     pub preview_rect: Rect,
-    // Vector2D          BackupCursorPos;
+    // Vector2D          backup_cursor_pos;
     pub backup_cursor_pos: Vector2D,
-    // Vector2D          BackupCursorMaxPos;
+    // Vector2D          backup_cursor_max_pos;
     pub backup_cursor_max_pos: Vector2D,
-    // Vector2D          BackupCursorPosPrevLine;
+    // Vector2D          backup_cursor_posPrevLine;
     pub backup_cursor_pos_prev_line: Vector2D,
     // float           BackupPrevLineTextBaseOffset;
     pub backup_prev_line_text_base_offset: f32,

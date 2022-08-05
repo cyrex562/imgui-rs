@@ -6,11 +6,11 @@ use crate::debug::{update_debug_tool_item_picker, update_debug_tool_stack_querie
 use crate::dock::context::{dock_context_end_frame, dock_context_new_frame_update_docking, dock_context_new_frame_update_undocking};
 use crate::drag_drop::{clear_drag_drop, DragDropFlags};
 use crate::draw::list::DrawListFlags;
-use crate::gc::GcCompactTransientMiscBuffers;
+use crate::gc::gc_compact_transient_misc_buffers;
 use crate::input::keyboard::update_keyboard_inputs;
 use crate::input::mouse::{is_mouse_down, update_mouse_inputs, update_mouse_moving_window_end_frame, update_mouse_moving_window_new_frame, update_mouse_wheel};
 use crate::input::{MouseCursor, update_input_events};
-use crate::input_event::InputEvent;
+use crate::input::input_event::InputEvent;
 use crate::nav::{nav_end_frame, nav_update};
 use crate::popup::get_top_most_popup_modal;
 use crate::rect::Rect;
@@ -250,7 +250,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     // for (int i = 0; i != g.Windows.Size; i += 1)
     for  i in 0 .. g.windows.len()
     {
-        // ImGuiWindow* window = g.Windows[i];
+        // Window* window = g.Windows[i];
         let mut window = g.windows[i];
         window.was_active = window.active;
         window.begin_count = 0;
@@ -279,7 +279,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         }
     }
     if g.gc_compact_all {
-        GcCompactTransientMiscBuffers(g);
+        gc_compact_transient_misc_buffers(g);
     }
     g.gc_compact_all = false;
 
@@ -389,14 +389,14 @@ pub fn end_frame(g: &mut Context)
     // for (int i = 0; i != g.windows.Size; i += 1)
     for (_,win) in g.windows.iter_mut()
     {
-        // ImGuiWindow* window = g.windows[i];
+        // Window* window = g.windows[i];
         if win.active && win.flags.contains(&WindowFlags::ChildWindow) {    // if a child is active its parent will add it
             continue;
         }
         add_window_to_sort_buffer(g, &g.windows_temp_sort_buffer, window);
     }
 
-    // This usually assert if there is a mismatch between the ImGuiWindowFlags_ChildWindow / ParentWindow values and dc.ChildWindows[] in parents, aka we've done something wrong.
+    // This usually assert if there is a mismatch between the WindowFlags_ChildWindow / ParentWindow values and dc.ChildWindows[] in parents, aka we've done something wrong.
     // IM_ASSERT(g.windows.Size == g.windows_temp_sort_buffer.Size);
     g.windows.swap(&mut g.windows_temp_sort_buffer);
     g.io.metrics_active_windows = g.windows_active_count;
@@ -425,5 +425,5 @@ pub fn get_frame_height(g: &mut Context) -> f32
 pub fn get_frame_height_with_spacing(g: &mut Context) -> f32
 {
     // ImGuiContext& g = *GImGui;
-    return g.font_size + g.style.frame_padding.y * 2.0 + g.style.ItemSpacing.y;
+    return g.font_size + g.style.frame_padding.y * 2.0 + g.style.item_spacing.y;
 }
