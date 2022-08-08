@@ -344,8 +344,8 @@ Other Changes:
 - Platform IME: changed io.ImeSetInputScreenPosFn() to io.SetPlatformImeDataFn() API,
   now taking a ImGuiPlatformImeData structure which we can more easily extend in the future.
 - Platform IME: moved io.ime_window_handle to GetMainViewport()->platform_handle_raw.
-- Platform IME: add ImGuiPlatformImeData::WantVisible, hide IME composition window when not used. (#2589) [@actboy168]
-- Platform IME: add ImGuiPlatformImeData::InputLineHeight. (#3113) [@liuliu]
+- Platform IME: add ImGuiPlatformImeData::want_visible, hide IME composition window when not used. (#2589) [@actboy168]
+- Platform IME: add ImGuiPlatformImeData::input_line_height. (#3113) [@liuliu]
 - Platform IME: [windows] call ImmSetCandidateWindow() to position candidate window.
 - Backends: GLFW: Pass localized keys (matching keyboard layout). Fix e.g. CTRL+A, CTRL+Z, CTRL+Y shortcuts.
   We are now converting GLFW untranslated keycodes back to translated keycodes in order to match the behavior of

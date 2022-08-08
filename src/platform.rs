@@ -36,19 +36,19 @@ impl PlatformMonitor {
 #[derive(Debug,Default,Clone)]
 pub struct PlatformImeData
 {
-    pub WantVisible: bool,        // A widget wants the IME to be visible
-    pub InputPos: Vector2D,           // Position of the input cursor
-    pub InputLineHeight: f32,   // Line height
+    pub want_visible: bool,        // A widget wants the IME to be visible
+    pub input_pos: Vector2D,           // Position of the input cursor
+    pub input_line_height: f32,   // Line height
 
     // ImGuiPlatformImeData() { memset(this, 0, sizeof(*this)); }
 }
 
 impl PlatformImeData {
-    pub fn new(initial_input_pos: Vector2D) -> Self {
+    pub fn new(initial_input_pos: &Vector2D) -> Self {
         Self {
-            WantVisible: false,
-            InputPos: initial_input_pos,
-            InputLineHeight: 0.0
+            want_visible: false,
+            input_pos: initial_input_pos.clone(),
+            input_line_height: 0.0
         }
     }
 }
@@ -60,20 +60,23 @@ pub fn update_platform_windows(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.frame_count_ended == g.frame_count && "Forgot to call Render() or EndFrame() before UpdatePlatformWindows()?");
-    // IM_ASSERT(g.FrameCountPlatformEnded < g.frame_count);
-    g.FrameCountPlatformEnded = g.frame_count;
-    if (!(g.config_flags_curr_frame & ConfigFlags::ViewportsEnable))
+    // IM_ASSERT(g.frame_count_platform_ended < g.frame_count);
+    g.frame_count_platform_ended = g.frame_count;
+    if !(g.config_flags_curr_frame.contains(&ConfigFlags::ViewportsEnable)) {
         return;
+    }
 
     // Create/resize/destroy platform windows to match each active viewport.
     // Skip the main viewport (index 0), which is always fully handled by the application!
-    for (int i = 1; i < g.viewports.size; i += 1)
+    // for (int i = 1; i < g.viewports.size; i += 1)
+    for i in 1 .. g.viewports.len()
     {
-        ImGuiViewportP* viewport = g.viewports[i];
+        // ImGuiViewportP* viewport = g.viewports[i];
+        let viewport = &mut g.viewports[i];
 
         // Destroy platform window if the viewport hasn't been submitted or if it is hosting a hidden window
         // (the implicit/fallback Debug##Default window will be registering its viewport then be disabled, causing a dummy DestroyPlatformWindow to be made each frame)
-        bool destroy_platform_window = false;
+        let mut destroy_platform_window = false;
         destroy_platform_window |= (viewport.last_frame_active < g.frame_count - 1);
         destroy_platform_window |= (viewport.Window && !is_window_active_and_visible(viewport.Window));
         if (destroy_platform_window)

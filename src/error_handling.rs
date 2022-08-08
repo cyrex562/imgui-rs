@@ -77,7 +77,7 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
     {
         if ((g.io.backend_flags & ImGuiBackendFlags_PlatformHasViewports) && (g.io.backend_flags & ImGuiBackendFlags_RendererHasViewports))
         {
-            // IM_ASSERT((g.frame_count == 0 || g.frame_count == g.FrameCountPlatformEnded) && "Forgot to call UpdatePlatformWindows() in main loop after EndFrame()? Check examples/ applications for reference.");
+            // IM_ASSERT((g.frame_count == 0 || g.frame_count == g.frame_count_platform_ended) && "Forgot to call UpdatePlatformWindows() in main loop after EndFrame()? Check examples/ applications for reference.");
             // IM_ASSERT(g.platform_io.Platform_CreateWindow  != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.Platform_DestroyWindow != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.Platform_GetWindowPos  != None && "Platform init didn't install handlers?");

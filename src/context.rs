@@ -756,7 +756,7 @@ impl Context {
             clipboard_handler_data: vec![],
             menus_id_submitted_this_frame: vec![],
             platform_ime_data: PlatformImeData::new(Vector2D::new(0.0, 0.0)),
-            // platform_ime_data_prev.InputPos: Vector2D( - 1.0,
+            // platform_ime_data_prev.input_pos: Vector2D( - 1.0,
             // -1.0), // Different to ensure initial submission
             platform_ime_data_prev: PlatformImeData::new(Vector2D::new(-1.0, -1.0)),
             platform_ime_viewport: 0,

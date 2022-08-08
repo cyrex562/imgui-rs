@@ -118,7 +118,7 @@ pub struct Viewport
     // int                 Idx;
     pub idx: i32,
     //int                 last_frame_active;        // Last frame number this viewport was activated by a window
-    pub last_frame_active: i32,
+    pub last_frame_active: usize,
     //int                 LastFrontMostStampCount;// Last stamp number from when a window hosted by this viewport was made front-most (by comparing this value between two viewport we have an implicit viewport z-order
     pub last_front_most_stamp_count: i32,
     // ImGuiID             LastNameHash;
