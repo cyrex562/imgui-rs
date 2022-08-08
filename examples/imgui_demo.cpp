@@ -4311,7 +4311,7 @@ static void ShowDemoWindowPopups() {
       // element opens the same popup as above. The popup itself will be
       // submitted by the code above.
       ImGui::Text("(2) Or right-click this text");
-      ImGui::OpenPopupOnItemClick("my popup", ImGuiPopupFlags_MouseButtonRight);
+      ImGui::OpenPopupOnItemClick("my popup", PopupFlags::MouseButtonRight);
 
       // Back to square one: manually open the same popup.
       if (ImGui::Button("(3) Or click this button"))
@@ -6093,7 +6093,7 @@ static void ShowDemoWindowTables() {
 
       // [2.3] Right-click anywhere in columns to open another custom popup
       // (instead of testing for !IsAnyItemHovered() we could also call
-      // OpenPopup() with ImGuiPopupFlags_NoOpenOverExistingPopup to manage
+      // OpenPopup() with PopupFlags::NoOpenOverExistingPopup to manage
       // popup priority as the popups triggers, here "are we hovering a column"
       // are overlapping)
       int hovered_column = -1;
@@ -9380,7 +9380,7 @@ static void ShowExampleAppCustomRendering(bool *p_open) {
       Vector2D drag_delta = ImGui::GetMouseDragDelta(MouseButton::Right);
       if (opt_enable_context_menu && drag_delta.x == 0.0 && drag_delta.y == 0.0)
         ImGui::OpenPopupOnItemClick("context",
-                                    ImGuiPopupFlags_MouseButtonRight);
+                                    PopupFlags::MouseButtonRight);
       if (ImGui::BeginPopup("context")) {
         if (adding_line)
           points.resize(points.size() - 2);

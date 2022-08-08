@@ -53,7 +53,7 @@ pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_cont
         if window.viewport_owned {
             avail_size = Vector2D::new(f32::MAX, f32::MAX);
         }
-        // let monitor_idx = window.viewportAllowPlatformMonitorExtend;
+        // let monitor_idx = window.viewportAllowplatform_monitorExtend;
         let monitor_idx = window.viewport_allow_platform_monitor_extend;
         if monitor_idx >= 0 && monitor_idx < g.platform_io.monitors.size {
             avail_size = g.platform_io.monitors[monitor_idx].work_size;

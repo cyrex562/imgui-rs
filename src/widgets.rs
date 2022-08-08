@@ -1614,10 +1614,10 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     bool hovered, held;
     bool pressed = ButtonBehavior(bb, id, &hovered, &held);
     const Id32 popup_id = hash_string("##ComboPopup", 0, id);
-    bool popup_open = is_popup_open(popup_id, ImGuiPopupFlags_None);
+    bool popup_open = is_popup_open(popup_id, PopupFlags::None);
     if (pressed && !popup_open)
     {
-        open_popupEx(popup_id, ImGuiPopupFlags_None);
+        open_popupEx(popup_id, PopupFlags::None);
         popup_open = true;
     }
 
@@ -1665,7 +1665,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
 bool ImGui::BeginComboPopup(Id32 popup_id, const ImRect& bb, ImGuiComboFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    if (!is_popup_open(popup_id, ImGuiPopupFlags_None))
+    if (!is_popup_open(popup_id, PopupFlags::None))
     {
         g.NextWindowData.ClearFlags();
         return false;
@@ -4893,7 +4893,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
                 value_changed |= DragInt(ids[n], &i[n], 1.0, 0, hdr ? 0 : 255, fmt_table_int[fmt_idx][n]);
             }
             if (!(flags & ImGuiColorEditFlags_NoOptions))
-                open_popupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+                open_popupOnItemClick("context", PopupFlags::MouseButtonRight);
         }
     }
     else if ((flags & ImGuiColorEditFlags_DisplayHex) != 0 && (flags & ImGuiColorEditFlags_NoInputs) == 0)
@@ -4921,7 +4921,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
             IM_UNUSED(r); // Fixes C6031: Return value ignored: 'sscanf'.
         }
         if (!(flags & ImGuiColorEditFlags_NoOptions))
-            open_popupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+            open_popupOnItemClick("context", PopupFlags::MouseButtonRight);
     }
 
     Window* picker_active_window = None;
@@ -4942,7 +4942,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
             }
         }
         if (!(flags & ImGuiColorEditFlags_NoOptions))
-            open_popupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+            open_popupOnItemClick("context", PopupFlags::MouseButtonRight);
 
         if (begin_popup("picker"))
         {
@@ -5155,7 +5155,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
             }
         }
         if (!(flags & ImGuiColorEditFlags_NoOptions))
-            open_popupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+            open_popupOnItemClick("context", PopupFlags::MouseButtonRight);
     }
     else if (flags & ImGuiColorEditFlags_PickerHueBar)
     {
@@ -5172,7 +5172,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
             value_changed = value_changed_sv = true;
         }
         if (!(flags & ImGuiColorEditFlags_NoOptions))
-            open_popupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+            open_popupOnItemClick("context", PopupFlags::MouseButtonRight);
 
         // Hue bar logic
         SetCursorScreenPos(DimgVec2D::new(bar0_pos_x, picker_pos.y));
@@ -6821,7 +6821,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
     // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const Id32 id = window.GetID(label);
-    bool menu_is_open = is_popup_open(id, ImGuiPopupFlags_None);
+    bool menu_is_open = is_popup_open(id, PopupFlags::None);
 
     // Sub-menus are ChildWindow so that mouse can be hovering across them (otherwise top-most popup menu would steal focus and not allow hovering on parent menu)
     // The first menu in a hierarchy isn't so hovering doesn't get across (otherwise e.g. resizing borders with ImGuiButtonFlags_FlattenChildren would react), but top-most BeginMenu() will bypass that limitation.
@@ -6962,7 +6962,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
 
     if (!enabled) // explicitly close if an open menu becomes disabled, facilitate users code a lot in pattern such as 'if (BeginMenu("options", has_object)) { ..use object.. }'
         want_close = true;
-    if (want_close && is_popup_open(id, ImGuiPopupFlags_None))
+    if (want_close && is_popup_open(id, PopupFlags::None))
         ClosePopupToLevel(g.begin_popupStack.Size, true);
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags | ItemStatusFlags::Openable | (menu_is_open ? ItemStatusFlags::Opened : 0));

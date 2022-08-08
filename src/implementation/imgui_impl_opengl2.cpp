@@ -71,7 +71,7 @@ struct ImGui_ImplOpenGL2_Data
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 static ImGui_ImplOpenGL2_Data* ImGui_ImplOpenGL2_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplOpenGL2_Data*)ImGui::GetIO().BackendRendererUserData : None;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplOpenGL2_Data*)ImGui::GetIO().Backendrenderer_user_data : None;
 }
 
 // Forward Declarations
@@ -82,11 +82,11 @@ static void ImGui_ImplOpenGL2_ShutdownPlatformInterface();
 bool    ImGui_ImplOpenGL2_Init()
 {
     ImGuiIO& io = ImGui::GetIO();
-    IM_ASSERT(io.BackendRendererUserData == None && "Already initialized a renderer backend!");
+    IM_ASSERT(io.Backendrenderer_user_data == None && "Already initialized a renderer backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplOpenGL2_Data* bd = IM_NEW(ImGui_ImplOpenGL2_Data)();
-    io.BackendRendererUserData = (void*)bd;
+    io.Backendrenderer_user_data = (void*)bd;
     io.BackendRendererName = "imgui_impl_opengl2";
     io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;    // We can create multi-viewports on the Renderer side (optional)
 
@@ -105,7 +105,7 @@ void    ImGui_ImplOpenGL2_Shutdown()
     ImGui_ImplOpenGL2_ShutdownPlatformInterface();
     ImGui_ImplOpenGL2_DestroyDeviceObjects();
     io.BackendRendererName = None;
-    io.BackendRendererUserData = None;
+    io.Backendrenderer_user_data = None;
     IM_DELETE(bd);
 }
 
@@ -317,10 +317,10 @@ static void ImGui_ImplOpenGL2_RenderWindow(ImGuiViewport* viewport, void*)
 static void ImGui_ImplOpenGL2_InitPlatformInterface()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    platform_io.Renderer_RenderWindow = ImGui_ImplOpenGL2_RenderWindow;
+    platform_io.renderer_render_window = ImGui_ImplOpenGL2_RenderWindow;
 }
 
 static void ImGui_ImplOpenGL2_ShutdownPlatformInterface()
 {
-    ImGui::DestroyPlatformWindows();
+    ImGui::destroy_platform_windows();
 }

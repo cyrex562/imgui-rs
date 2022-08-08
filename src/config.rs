@@ -44,7 +44,7 @@ pub enum ConfigFlags {
     // viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
     DpiEnableScaleViewports,
     // [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the dpi_scale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
-    DpiEnableScaleFonts,  // [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match dpi_scale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback, but this is all early work in progress.
+    DpiEnableScaleFonts,  // [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match dpi_scale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the platform_on_changed_viewport callback, but this is all early work in progress.
 
     // User storage (to allow your backend/engine to communicate to code that may be shared between multiple projects. Those flags are NOT used by core Dear ImGui)
     IsSRGB,

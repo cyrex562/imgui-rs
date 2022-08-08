@@ -668,7 +668,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.pos = FindBestWindowPosForPopup(window);
 
         // Late create viewport if we don't fit within our current host viewport.
-        if (window.viewportAllowPlatformMonitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ViewportFlags::Minimized))
+        if (window.viewportAllowplatform_monitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ViewportFlags::Minimized))
             if (!window.viewport.get_main_rect().contains(window.Rect()))
             {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
@@ -704,7 +704,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             else if (window.viewport_owned && g.platform_io.monitors.size > 0)
             {
                 // Lost windows (e.g. a monitor disconnected) will naturally moved to the fallback/dummy monitor aka the main viewport.
-                const ImGuiPlatformMonitor* monitor = GetViewportPlatformMonitor(window.viewport);
+                const platform_monitor* monitor = GetViewportplatform_monitor(window.viewport);
                 visibility_rect.min = monitor.WorkPos + visibility_padding;
                 visibility_rect.max = monitor.WorkPos + monitor.work_size - visibility_padding;
                 ClampWindowRect(window, visibility_rect);

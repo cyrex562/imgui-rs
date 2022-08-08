@@ -70,7 +70,7 @@ struct CUSTOMVERTEX
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 static ImGui_ImplDX9_Data* ImGui_ImplDX9_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplDX9_Data*)ImGui::GetIO().BackendRendererUserData : None;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplDX9_Data*)ImGui::GetIO().Backendrenderer_user_data : None;
 }
 
 // Forward Declarations
@@ -293,11 +293,11 @@ void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
 bool ImGui_ImplDX9_Init(IDirect3DDevice9* device)
 {
     ImGuiIO& io = ImGui::GetIO();
-    IM_ASSERT(io.BackendRendererUserData == None && "Already initialized a renderer backend!");
+    IM_ASSERT(io.Backendrenderer_user_data == None && "Already initialized a renderer backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplDX9_Data* bd = IM_NEW(ImGui_ImplDX9_Data)();
-    io.BackendRendererUserData = (void*)bd;
+    io.Backendrenderer_user_data = (void*)bd;
     io.BackendRendererName = "imgui_impl_dx9";
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::vtx_offset field, allowing for large meshes.
     io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;  // We can create multi-viewports on the Renderer side (optional)
@@ -321,7 +321,7 @@ void ImGui_ImplDX9_Shutdown()
     ImGui_ImplDX9_InvalidateDeviceObjects();
     if (bd->pd3dDevice) { bd->pd3dDevice->Release(); }
     io.BackendRendererName = None;
-    io.BackendRendererUserData = None;
+    io.Backendrenderer_user_data = None;
     IM_DELETE(bd);
 }
 
@@ -418,11 +418,11 @@ static void ImGui_ImplDX9_CreateWindow(ImGuiViewport* viewport)
 {
     ImGui_ImplDX9_Data* bd = ImGui_ImplDX9_GetBackendData();
     ImGui_ImplDX9_ViewportData* vd = IM_NEW(ImGui_ImplDX9_ViewportData)();
-    viewport->RendererUserData = vd;
+    viewport->renderer_user_data = vd;
 
     // platform_handle_raw should always be a HWND, whereas platform_handle might be a higher-level handle (e.g. GLFWWindow*, SDL_Window*).
     // Some backends will leave platform_handle_raw None, in which case we assume platform_handle will contain the HWND.
-    HWND hwnd = viewport->PlatformHandleRaw ? (HWND)viewport->PlatformHandleRaw : (HWND)viewport->PlatformHandle;
+    HWND hwnd = viewport->platform_handleRaw ? (HWND)viewport->platform_handleRaw : (HWND)viewport->platform_handle;
     IM_ASSERT(hwnd != 0);
 
     ZeroMemory(&vd->d3dpp, sizeof(D3DPRESENT_PARAMETERS));
@@ -444,7 +444,7 @@ static void ImGui_ImplDX9_CreateWindow(ImGuiViewport* viewport)
 static void ImGui_ImplDX9_DestroyWindow(ImGuiViewport* viewport)
 {
     // The main viewport (owned by the application) will always have renderer_user_data == None since we didn't create the data for it.
-    if (ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->RendererUserData)
+    if (ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->renderer_user_data)
     {
         if (vd->SwapChain)
             vd->SwapChain->Release();
@@ -452,13 +452,13 @@ static void ImGui_ImplDX9_DestroyWindow(ImGuiViewport* viewport)
         ZeroMemory(&vd->d3dpp, sizeof(D3DPRESENT_PARAMETERS));
         IM_DELETE(vd);
     }
-    viewport->RendererUserData = None;
+    viewport->renderer_user_data = None;
 }
 
 static void ImGui_ImplDX9_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 {
     ImGui_ImplDX9_Data* bd = ImGui_ImplDX9_GetBackendData();
-    ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->renderer_user_data;
     if (vd->SwapChain)
     {
         vd->SwapChain->Release();
@@ -473,7 +473,7 @@ static void ImGui_ImplDX9_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 static void ImGui_ImplDX9_RenderWindow(ImGuiViewport* viewport, void*)
 {
     ImGui_ImplDX9_Data* bd = ImGui_ImplDX9_GetBackendData();
-    ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->renderer_user_data;
     Vector4D clear_color = Vector4D(0.0, 0.0, 0.0, 1.0);
 
     LPDIRECT3DSURFACE9 render_target = None;
@@ -503,7 +503,7 @@ static void ImGui_ImplDX9_RenderWindow(ImGuiViewport* viewport, void*)
 
 static void ImGui_ImplDX9_SwapBuffers(ImGuiViewport* viewport, void*)
 {
-    ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->renderer_user_data;
     HRESULT hr = vd->SwapChain->Present(None, None, vd->d3dpp.hDeviceWindow, None, 0);
     // Let main application handle D3DERR_DEVICELOST by resetting the device.
     IM_ASSERT(hr == D3D_OK || hr == D3DERR_DEVICELOST);
@@ -513,22 +513,22 @@ static void ImGui_ImplDX9_InitPlatformInterface()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     platform_io.Renderer_CreateWindow = ImGui_ImplDX9_CreateWindow;
-    platform_io.Renderer_DestroyWindow = ImGui_ImplDX9_DestroyWindow;
+    platform_io.renderer_destroy_window = ImGui_ImplDX9_DestroyWindow;
     platform_io.Renderer_SetWindowSize = ImGui_ImplDX9_SetWindowSize;
-    platform_io.Renderer_RenderWindow = ImGui_ImplDX9_RenderWindow;
-    platform_io.Renderer_SwapBuffers = ImGui_ImplDX9_SwapBuffers;
+    platform_io.renderer_render_window = ImGui_ImplDX9_RenderWindow;
+    platform_io.renderer_swap_buffers = ImGui_ImplDX9_SwapBuffers;
 }
 
 static void ImGui_ImplDX9_ShutdownPlatformInterface()
 {
-    ImGui::DestroyPlatformWindows();
+    ImGui::destroy_platform_windows();
 }
 
 static void ImGui_ImplDX9_CreateDeviceObjectsForPlatformWindows()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     for (int i = 1; i < platform_io.Viewports.Size; i += 1)
-        if (!platform_io.Viewports[i]->RendererUserData)
+        if (!platform_io.Viewports[i]->renderer_user_data)
             ImGui_ImplDX9_CreateWindow(platform_io.Viewports[i]);
 }
 
@@ -536,6 +536,6 @@ static void ImGui_ImplDX9_InvalidateDeviceObjectsForPlatformWindows()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     for (int i = 1; i < platform_io.Viewports.Size; i += 1)
-        if (platform_io.Viewports[i]->RendererUserData)
+        if (platform_io.Viewports[i]->renderer_user_data)
             ImGui_ImplDX9_DestroyWindow(platform_io.Viewports[i]);
 }

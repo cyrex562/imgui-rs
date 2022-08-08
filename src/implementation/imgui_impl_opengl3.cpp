@@ -206,7 +206,7 @@ struct ImGui_ImplOpenGL3_Data
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 static ImGui_ImplOpenGL3_Data* ImGui_ImplOpenGL3_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplOpenGL3_Data*)ImGui::GetIO().BackendRendererUserData : None;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplOpenGL3_Data*)ImGui::GetIO().Backendrenderer_user_data : None;
 }
 
 // Forward Declarations
@@ -241,7 +241,7 @@ struct ImGui_ImplOpenGL3_VtxAttribState
 bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
 {
     ImGuiIO& io = ImGui::GetIO();
-    IM_ASSERT(io.BackendRendererUserData == None && "Already initialized a renderer backend!");
+    IM_ASSERT(io.Backendrenderer_user_data == None && "Already initialized a renderer backend!");
 
     // Initialize our loader
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
@@ -254,7 +254,7 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
 
     // Setup backend capabilities flags
     ImGui_ImplOpenGL3_Data* bd = IM_NEW(ImGui_ImplOpenGL3_Data)();
-    io.BackendRendererUserData = (void*)bd;
+    io.Backendrenderer_user_data = (void*)bd;
     io.BackendRendererName = "imgui_impl_opengl3";
 
     // Query for GL version (e.g. 320 for GL 3.2)
@@ -339,7 +339,7 @@ void    ImGui_ImplOpenGL3_Shutdown()
     ImGui_ImplOpenGL3_ShutdownPlatformInterface();
     ImGui_ImplOpenGL3_DestroyDeviceObjects();
     io.BackendRendererName = None;
-    io.BackendRendererUserData = None;
+    io.Backendrenderer_user_data = None;
     IM_DELETE(bd);
 }
 
@@ -898,12 +898,12 @@ static void ImGui_ImplOpenGL3_RenderWindow(ImGuiViewport* viewport, void*)
 static void ImGui_ImplOpenGL3_InitPlatformInterface()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    platform_io.Renderer_RenderWindow = ImGui_ImplOpenGL3_RenderWindow;
+    platform_io.renderer_render_window = ImGui_ImplOpenGL3_RenderWindow;
 }
 
 static void ImGui_ImplOpenGL3_ShutdownPlatformInterface()
 {
-    ImGui::DestroyPlatformWindows();
+    ImGui::destroy_platform_windows();
 }
 
 #if defined(__clang__)

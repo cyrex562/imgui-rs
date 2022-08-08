@@ -5,7 +5,7 @@ use crate::platform::PlatformImeData;
 pub fn set_platform_ime_data_fn_default_impl(g: &mut Context, viewport: &mut Viewport, data: &mut PlatformImeData)
 {
     // Notify OS Input Method Editor of text input position
-    HWND hwnd = (HWND)viewport->PlatformHandleRaw;
+    HWND hwnd = (HWND)viewport->platform_handleRaw;
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     if (hwnd == 0)
         hwnd = (HWND)GetIO().ImeWindowHandle;

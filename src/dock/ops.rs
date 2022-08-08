@@ -45,7 +45,7 @@ pub fn fix_large_windows_when_undocking(g: &mut Context, size: &Vector2D, ref_vi
     // if (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable)
     if g.config_flags_curr_frame.contains(&ConfigFlags::ViewportsEnable)
     {
-        // const ImGuiPlatformMonitor* monitor = GetViewportPlatformMonitor(ref_viewport);
+        // const platform_monitor* monitor = GetViewportplatform_monitor(ref_viewport);
         let monitor = get_viewport_platform_monitor(g, ref_viewport.unwrap());
         let max_size = Vector2D::floor(&monitor.work_size * 0.90);
     }

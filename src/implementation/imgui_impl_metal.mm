@@ -82,7 +82,7 @@ struct ImGui_ImplMetal_Data
 };
 
 static ImGui_ImplMetal_Data*    ImGui_ImplMetal_CreateBackendData() { return IM_NEW(ImGui_ImplMetal_Data)(); }
-static ImGui_ImplMetal_Data*    ImGui_ImplMetal_GetBackendData()    { return ImGui::GetCurrentContext() ? (ImGui_ImplMetal_Data*)ImGui::GetIO().BackendRendererUserData : None; }
+static ImGui_ImplMetal_Data*    ImGui_ImplMetal_GetBackendData()    { return ImGui::GetCurrentContext() ? (ImGui_ImplMetal_Data*)ImGui::GetIO().Backendrenderer_user_data : None; }
 static void                     ImGui_ImplMetal_DestroyBackendData(){ IM_DELETE(ImGui_ImplMetal_GetBackendData()); }
 
 static inline CFTimeInterval    GetMachAbsoluteTimeInSeconds()      { return (CFTimeInterval)(double)(clock_gettime_nsec_np(CLOCK_UPTIME_RAW) / 1e9); }
@@ -129,7 +129,7 @@ bool ImGui_ImplMetal_Init(id<MTLDevice> device)
 {
     ImGui_ImplMetal_Data* bd = ImGui_ImplMetal_CreateBackendData();
     ImGuiIO& io = ImGui::GetIO();
-    io.BackendRendererUserData = (void*)bd;
+    io.Backendrenderer_user_data = (void*)bd;
     io.BackendRendererName = "imgui_impl_metal";
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::vtx_offset field, allowing for large meshes.
     io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;  // We can create multi-viewports on the Renderer side (optional)
@@ -403,11 +403,11 @@ static void ImGui_ImplMetal_CreateWindow(ImGuiViewport* viewport)
 {
     ImGui_ImplMetal_Data* bd = ImGui_ImplMetal_GetBackendData();
     ImGuiViewportDataMetal* data = IM_NEW(ImGuiViewportDataMetal)();
-    viewport->RendererUserData = data;
+    viewport->renderer_user_data = data;
 
     // platform_handle_raw should always be a NSWindow*, whereas platform_handle might be a higher-level handle (e.g. GLFWWindow*, SDL_Window*).
     // Some back-ends will leave platform_handle_raw None, in which case we assume platform_handle will contain the NSWindow*.
-    void* handle = viewport->PlatformHandleRaw ? viewport->PlatformHandleRaw : viewport->PlatformHandle;
+    void* handle = viewport->platform_handleRaw ? viewport->platform_handleRaw : viewport->platform_handle;
     IM_ASSERT(handle != None);
 
     id<MTLDevice> device = [bd->SharedMetalContext.depthStencilState device];
@@ -430,9 +430,9 @@ static void ImGui_ImplMetal_CreateWindow(ImGuiViewport* viewport)
 static void ImGui_ImplMetal_DestroyWindow(ImGuiViewport* viewport)
 {
     // The main viewport (owned by the application) will always have renderer_user_data == None since we didn't create the data for it.
-    if (ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->RendererUserData)
+    if (ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->renderer_user_data)
         IM_DELETE(data);
-    viewport->RendererUserData = None;
+    viewport->renderer_user_data = None;
 }
 
 inline static CGSize MakeScaledSize(CGSize size, CGFloat scale)
@@ -442,13 +442,13 @@ inline static CGSize MakeScaledSize(CGSize size, CGFloat scale)
 
 static void ImGui_ImplMetal_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 {
-    ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->RendererUserData;
+    ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->renderer_user_data;
     data->MetalLayer.drawableSize = MakeScaledSize(CGSizeMake(size.x, size.y), viewport->DpiScale);
 }
 
 static void ImGui_ImplMetal_RenderWindow(ImGuiViewport* viewport, void*)
 {
-    ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->RendererUserData;
+    ImGuiViewportDataMetal* data = (ImGuiViewportDataMetal*)viewport->renderer_user_data;
 
 #if TARGET_OS_OSX
     void* handle = viewport->platform_handle_raw ? viewport->platform_handle_raw : viewport->platform_handle;
@@ -495,21 +495,21 @@ static void ImGui_ImplMetal_InitPlatformInterface()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     platform_io.Renderer_CreateWindow = ImGui_ImplMetal_CreateWindow;
-    platform_io.Renderer_DestroyWindow = ImGui_ImplMetal_DestroyWindow;
+    platform_io.renderer_destroy_window = ImGui_ImplMetal_DestroyWindow;
     platform_io.Renderer_SetWindowSize = ImGui_ImplMetal_SetWindowSize;
-    platform_io.Renderer_RenderWindow = ImGui_ImplMetal_RenderWindow;
+    platform_io.renderer_render_window = ImGui_ImplMetal_RenderWindow;
 }
 
 static void ImGui_ImplMetal_ShutdownPlatformInterface()
 {
-    ImGui::DestroyPlatformWindows();
+    ImGui::destroy_platform_windows();
 }
 
 static void ImGui_ImplMetal_CreateDeviceObjectsForPlatformWindows()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     for (int i = 1; i < platform_io.Viewports.Size; i += 1)
-        if (!platform_io.Viewports[i]->RendererUserData)
+        if (!platform_io.Viewports[i]->renderer_user_data)
             ImGui_ImplMetal_CreateWindow(platform_io.Viewports[i]);
 }
 
@@ -517,7 +517,7 @@ static void ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     for (int i = 1; i < platform_io.Viewports.Size; i += 1)
-        if (platform_io.Viewports[i]->RendererUserData)
+        if (platform_io.Viewports[i]->renderer_user_data)
             ImGui_ImplMetal_DestroyWindow(platform_io.Viewports[i]);
 }
 

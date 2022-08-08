@@ -389,7 +389,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         {
             for (int i = 0; i < g.platform_io.monitors.size; i += 1)
             {
-                const ImGuiPlatformMonitor& mon = g.platform_io.monitors[i];
+                const platform_monitor& mon = g.platform_io.monitors[i];
                 BulletText("Monitor #%d: DPI %.0%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), main_size (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), work_size (%.0,%.0)",
                     i, mon.DpiScale * 100.0,
                     mon.MainPos.x, mon.MainPos.y, mon.MainPos.x + mon.MainSize.x, mon.MainPos.y + mon.MainSize.y, mon.MainSize.x, mon.MainSize.y,
@@ -1029,11 +1029,11 @@ pub fn debug_node_viewport(g: &mut Context, viewport: &mut Viewport)
         BulletText("Main pos: (%.0,%.0), size: (%.0,%.0)\nWorkArea Offset Left: %.0 Top: %.0, Right: %.0, Bottom: %.0\nMonitor: %d, dpi_scale: %.0%%",
             viewport.pos.x, viewport.pos.y, viewport.size.x, viewport.size.y,
             viewport->WorkOffsetMin.x, viewport->WorkOffsetMin.y, viewport->WorkOffsetMax.x, viewport->WorkOffsetMax.y,
-            viewport->PlatformMonitor, viewport->DpiScale * 100.0);
+            viewport->platform_monitor, viewport->DpiScale * 100.0);
         if (viewport->Idx > 0) { same_line(); if (SmallButton("Reset pos")) { viewport.pos = Vector2D::new(200, 200); viewport.update_work_rect(); if (viewport->Window) viewport->Window.pos = viewport.pos; } }
         BulletText("flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
-            (flags & ViewportFlags::IsPlatformMonitor) ? " IsPlatformMonitor" : "",
+            (flags & ViewportFlags::Isplatform_monitor) ? " Isplatform_monitor" : "",
             (flags & ViewportFlags::OwnedByApp) ? " OwnedByApp" : "",
             (flags & ViewportFlags::NoDecoration) ? " NoDecoration" : "",
             (flags & ViewportFlags::NoTaskBarIcon) ? " NoTaskBarIcon" : "",
@@ -1101,7 +1101,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     BulletText("nav_layers_active_mask: %x, nav_last_child_nav_window: %s", window.dc.nav_layers_active_mask, window.NavLastChildNavWindow ? window.NavLastChildNavWindow->Name : "None");
 
     BulletText("viewport: %d%s, viewport_id: 0x%08X, viewport_pos: (%.1,%.1)", window.viewport ? window.viewport->Idx : -1, window.viewport_owned ? " (Owned)" : "", window.viewport_id, window.viewport_pos.x, window.viewport_pos.y);
-    BulletText("ViewportMonitor: %d", window.viewport ? window.viewport->PlatformMonitor : -1);
+    BulletText("ViewportMonitor: %d", window.viewport ? window.viewport->platform_monitor : -1);
     BulletText("dock_id: 0x%04X, dock_order: %d, Act: %d, Vis: %d", window.dock_id, window.dock_order, window.dock_is_active, window.dock_tab_is_visible);
     if (window.dock_node_id || window.dock_node_as_host_id)
         DebugNodeDockNode(window.dock_node_as_host_id? window.dock_node_as_host_id: window.dock_node, window.dock_node_as_host_id? "dock_node_as_host": "dock_node");

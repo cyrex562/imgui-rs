@@ -72,7 +72,7 @@ struct ImGui_ImplDX12_Data
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 static ImGui_ImplDX12_Data* ImGui_ImplDX12_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplDX12_Data*)ImGui::GetIO().BackendRendererUserData : None;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplDX12_Data*)ImGui::GetIO().Backendrenderer_user_data : None;
 }
 
 // Buffers used during the rendering of a frame
@@ -240,7 +240,7 @@ void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandL
         return;
 
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
-    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)draw_data->OwnerViewport->RendererUserData;
+    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)draw_data->OwnerViewport->renderer_user_data;
     vd->FrameIndex += 1;
     ImGui_ImplDX12_RenderBuffers* fr = &vd->FrameRenderBuffers[vd->FrameIndex % bd->numFramesInFlight];
 
@@ -773,11 +773,11 @@ bool ImGui_ImplDX12_Init(ID3D12Device* device, int num_frames_in_flight, DXGI_FO
                          D3D12_CPU_DESCRIPTOR_HANDLE font_srv_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE font_srv_gpu_desc_handle)
 {
     ImGuiIO& io = ImGui::GetIO();
-    IM_ASSERT(io.BackendRendererUserData == None && "Already initialized a renderer backend!");
+    IM_ASSERT(io.Backendrenderer_user_data == None && "Already initialized a renderer backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplDX12_Data* bd = IM_NEW(ImGui_ImplDX12_Data)();
-    io.BackendRendererUserData = (void*)bd;
+    io.Backendrenderer_user_data = (void*)bd;
     io.BackendRendererName = "imgui_impl_dx12";
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::vtx_offset field, allowing for large meshes.
     io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;  // We can create multi-viewports on the Renderer side (optional)
@@ -794,7 +794,7 @@ bool ImGui_ImplDX12_Init(ID3D12Device* device, int num_frames_in_flight, DXGI_FO
     // Create a dummy ImGui_ImplDX12_ViewportData holder for the main viewport,
     // Since this is created and managed by the application, we will only use the ->Resources[] fields.
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    main_viewport->RendererUserData = IM_NEW(ImGui_ImplDX12_ViewportData)(bd->numFramesInFlight);
+    main_viewport->renderer_user_data = IM_NEW(ImGui_ImplDX12_ViewportData)(bd->numFramesInFlight);
 
     return true;
 }
@@ -807,13 +807,13 @@ void ImGui_ImplDX12_Shutdown()
 
     // Manually delete main viewport render resources in-case we haven't initialized for viewports
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    if (ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)main_viewport->RendererUserData)
+    if (ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)main_viewport->renderer_user_data)
     {
         // We could just call ImGui_ImplDX12_DestroyWindow(main_viewport) as a convenience but that would be misleading since we only use data->Resources[]
         for (UINT i = 0; i < bd->numFramesInFlight; i += 1)
             ImGui_ImplDX12_DestroyRenderBuffers(&vd->FrameRenderBuffers[i]);
         IM_DELETE(vd);
-        main_viewport->RendererUserData = None;
+        main_viewport->renderer_user_data = None;
     }
 
     // Clean up windows and device objects
@@ -821,7 +821,7 @@ void ImGui_ImplDX12_Shutdown()
     ImGui_ImplDX12_InvalidateDeviceObjects();
 
     io.BackendRendererName = None;
-    io.BackendRendererUserData = None;
+    io.Backendrenderer_user_data = None;
     IM_DELETE(bd);
 }
 
@@ -844,11 +844,11 @@ static void ImGui_ImplDX12_CreateWindow(ImGuiViewport* viewport)
 {
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
     ImGui_ImplDX12_ViewportData* vd = IM_NEW(ImGui_ImplDX12_ViewportData)(bd->numFramesInFlight);
-    viewport->RendererUserData = vd;
+    viewport->renderer_user_data = vd;
 
     // platform_handle_raw should always be a HWND, whereas platform_handle might be a higher-level handle (e.g. GLFWWindow*, SDL_Window*).
     // Some backends will leave platform_handle_raw None, in which case we assume platform_handle will contain the HWND.
-    HWND hwnd = viewport->PlatformHandleRaw ? (HWND)viewport->PlatformHandleRaw : (HWND)viewport->PlatformHandle;
+    HWND hwnd = viewport->platform_handleRaw ? (HWND)viewport->platform_handleRaw : (HWND)viewport->platform_handle;
     IM_ASSERT(hwnd != 0);
 
     vd->FrameIndex = UINT_MAX;
@@ -964,7 +964,7 @@ static void ImGui_ImplDX12_DestroyWindow(ImGuiViewport* viewport)
 {
     // The main viewport (owned by the application) will always have renderer_user_data == None since we didn't create the data for it.
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
-    if (ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->RendererUserData)
+    if (ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->renderer_user_data)
     {
         ImGui_WaitForPendingOperations(vd);
 
@@ -984,13 +984,13 @@ static void ImGui_ImplDX12_DestroyWindow(ImGuiViewport* viewport)
         }
         IM_DELETE(vd);
     }
-    viewport->RendererUserData = None;
+    viewport->renderer_user_data = None;
 }
 
 static void ImGui_ImplDX12_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 {
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
-    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->renderer_user_data;
 
     ImGui_WaitForPendingOperations(vd);
 
@@ -1013,7 +1013,7 @@ static void ImGui_ImplDX12_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 static void ImGui_ImplDX12_RenderWindow(ImGuiViewport* viewport, void*)
 {
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
-    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->renderer_user_data;
 
     ImGui_ImplDX12_FrameContext* frame_context = &vd->FrameCtx[vd->FrameIndex % bd->numFramesInFlight];
     UINT back_buffer_idx = vd->SwapChain->GetCurrentBackBufferIndex();
@@ -1052,7 +1052,7 @@ static void ImGui_ImplDX12_RenderWindow(ImGuiViewport* viewport, void*)
 
 static void ImGui_ImplDX12_SwapBuffers(ImGuiViewport* viewport, void*)
 {
-    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->renderer_user_data;
 
     vd->SwapChain->Present(0, 0);
     while (vd->Fence->GetCompletedValue() < vd->FenceSignaledValue)
@@ -1063,13 +1063,13 @@ void ImGui_ImplDX12_InitPlatformInterface()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     platform_io.Renderer_CreateWindow = ImGui_ImplDX12_CreateWindow;
-    platform_io.Renderer_DestroyWindow = ImGui_ImplDX12_DestroyWindow;
+    platform_io.renderer_destroy_window = ImGui_ImplDX12_DestroyWindow;
     platform_io.Renderer_SetWindowSize = ImGui_ImplDX12_SetWindowSize;
-    platform_io.Renderer_RenderWindow = ImGui_ImplDX12_RenderWindow;
-    platform_io.Renderer_SwapBuffers = ImGui_ImplDX12_SwapBuffers;
+    platform_io.renderer_render_window = ImGui_ImplDX12_RenderWindow;
+    platform_io.renderer_swap_buffers = ImGui_ImplDX12_SwapBuffers;
 }
 
 void ImGui_ImplDX12_ShutdownPlatformInterface()
 {
-    ImGui::DestroyPlatformWindows();
+    ImGui::destroy_platform_windows();
 }

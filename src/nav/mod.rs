@@ -1597,8 +1597,8 @@ pub fn nav_update_windowing(g: &mut Context)
             g.nav_layer = NavLayer::Menu;
 
         // Request OS level focus
-        if (apply_focus_window.viewport != previous_viewport && g.platform_io.Platform_SetWindowFocus)
-            g.platform_io.Platform_SetWindowFocus(apply_focus_window.viewport);
+        if (apply_focus_window.viewport != previous_viewport && g.platform_io.platform_set_window_focus)
+            g.platform_io.platform_set_window_focus(apply_focus_window.viewport);
     }
     if (apply_focus_window)
         g.nav_windowing_target = None;

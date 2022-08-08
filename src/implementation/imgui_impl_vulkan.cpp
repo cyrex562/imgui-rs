@@ -355,7 +355,7 @@ static uint32_t __glsl_shader_frag_spv[] =
 // FIXME: multi-context support is not tested and probably dysfunctional in this backend.
 static ImGui_ImplVulkan_Data* ImGui_ImplVulkan_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplVulkan_Data*)ImGui::GetIO().BackendRendererUserData : None;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplVulkan_Data*)ImGui::GetIO().Backendrenderer_user_data : None;
 }
 
 static uint32_t ImGui_ImplVulkan_MemoryType(VkMemoryPropertyFlags properties, uint32_t type_bits)
@@ -473,7 +473,7 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
         pipeline = bd->Pipeline;
 
     // Allocate array to store enough vertex/index buffers. Each unique viewport gets its own storage.
-    ImGui_ImplVulkan_ViewportData* viewport_renderer_data = (ImGui_ImplVulkan_ViewportData*)draw_data->OwnerViewport->RendererUserData;
+    ImGui_ImplVulkan_ViewportData* viewport_renderer_data = (ImGui_ImplVulkan_ViewportData*)draw_data->OwnerViewport->renderer_user_data;
     IM_ASSERT(viewport_renderer_data != None);
     ImGui_ImplVulkanH_WindowRenderBuffers* wrb = &viewport_renderer_data->RenderBuffers;
     if (wrb->FrameRenderBuffers == None)
@@ -1061,11 +1061,11 @@ bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass rend
     IM_ASSERT(g_FunctionsLoaded && "Need to call ImGui_ImplVulkan_LoadFunctions() if IMGUI_IMPL_VULKAN_NO_PROTOTYPES or VK_NO_PROTOTYPES are set!");
 
     ImGuiIO& io = ImGui::GetIO();
-    IM_ASSERT(io.BackendRendererUserData == None && "Already initialized a renderer backend!");
+    IM_ASSERT(io.Backendrenderer_user_data == None && "Already initialized a renderer backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplVulkan_Data* bd = IM_NEW(ImGui_ImplVulkan_Data)();
-    io.BackendRendererUserData = (void*)bd;
+    io.Backendrenderer_user_data = (void*)bd;
     io.BackendRendererName = "imgui_impl_vulkan";
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::vtx_offset field, allowing for large meshes.
     io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;  // We can create multi-viewports on the Renderer side (optional)
@@ -1087,7 +1087,7 @@ bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass rend
 
     // Our render function expect renderer_user_data to be storing the window render buffer we need (for the main viewport we won't use ->window)
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    main_viewport->RendererUserData = IM_NEW(ImGui_ImplVulkan_ViewportData)();
+    main_viewport->renderer_user_data = IM_NEW(ImGui_ImplVulkan_ViewportData)();
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplVulkan_InitPlatformInterface();
@@ -1106,15 +1106,15 @@ void ImGui_ImplVulkan_Shutdown()
 
     // Manually delete main viewport render data in-case we haven't initialized for viewports
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    if (ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)main_viewport->RendererUserData)
+    if (ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)main_viewport->renderer_user_data)
         IM_DELETE(vd);
-    main_viewport->RendererUserData = None;
+    main_viewport->renderer_user_data = None;
 
     // Clean up windows
     ImGui_ImplVulkan_ShutdownPlatformInterface();
 
     io.BackendRendererName = None;
-    io.BackendRendererUserData = None;
+    io.Backendrenderer_user_data = None;
     IM_DELETE(bd);
 }
 
@@ -1564,7 +1564,7 @@ void ImGui_ImplVulkanH_DestroyAllViewportsRenderBuffers(VkDevice device, const V
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     for (int n = 0; n < platform_io.Viewports.Size; n += 1)
-        if (ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)platform_io.Viewports[n]->RendererUserData)
+        if (ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)platform_io.Viewports[n]->renderer_user_data)
             ImGui_ImplVulkanH_DestroyWindowRenderBuffers(device, &vd->RenderBuffers, allocator);
 }
 
@@ -1578,13 +1578,13 @@ static void ImGui_ImplVulkan_CreateWindow(ImGuiViewport* viewport)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
     ImGui_ImplVulkan_ViewportData* vd = IM_NEW(ImGui_ImplVulkan_ViewportData)();
-    viewport->RendererUserData = vd;
+    viewport->renderer_user_data = vd;
     ImGui_ImplVulkanH_Window* wd = &vd->Window;
     ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
 
     // Create surface
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    VkResult err = (VkResult)platform_io.Platform_CreateVkSurface(viewport, v->Instance, (const void*)v->Allocator, (ImU64*)&wd->Surface);
+    VkResult err = (VkResult)platform_io.platform_create_vk_surface(viewport, v->Instance, (const void*)v->Allocator, (ImU64*)&wd->Surface);
     check_vk_result(err);
 
     // Check for WSI support
@@ -1617,7 +1617,7 @@ static void ImGui_ImplVulkan_DestroyWindow(ImGuiViewport* viewport)
 {
     // The main viewport (owned by the application) will always have renderer_user_data == None since we didn't create the data for it.
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-    if (ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->RendererUserData)
+    if (ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->renderer_user_data)
     {
         ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
         if (vd->WindowOwned)
@@ -1625,13 +1625,13 @@ static void ImGui_ImplVulkan_DestroyWindow(ImGuiViewport* viewport)
         ImGui_ImplVulkanH_DestroyWindowRenderBuffers(v->Device, &vd->RenderBuffers, v->Allocator);
         IM_DELETE(vd);
     }
-    viewport->RendererUserData = None;
+    viewport->renderer_user_data = None;
 }
 
 static void ImGui_ImplVulkan_SetWindowSize(ImGuiViewport* viewport, Vector2D size)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-    ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->renderer_user_data;
     if (vd == None) // This is None for the main viewport (which is left to the user/app to handle)
         return;
     ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
@@ -1642,7 +1642,7 @@ static void ImGui_ImplVulkan_SetWindowSize(ImGuiViewport* viewport, Vector2D siz
 static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-    ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->renderer_user_data;
     ImGui_ImplVulkanH_Window* wd = &vd->Window;
     ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
     VkResult err;
@@ -1716,7 +1716,7 @@ static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
 static void ImGui_ImplVulkan_SwapBuffers(ImGuiViewport* viewport, void*)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-    ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->RendererUserData;
+    ImGui_ImplVulkan_ViewportData* vd = (ImGui_ImplVulkan_ViewportData*)viewport->renderer_user_data;
     ImGui_ImplVulkanH_Window* wd = &vd->Window;
     ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
 
@@ -1745,15 +1745,15 @@ void ImGui_ImplVulkan_InitPlatformInterface()
 {
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        IM_ASSERT(platform_io.Platform_CreateVkSurface != None && "Platform needs to setup the CreateVkSurface handler.");
+        IM_ASSERT(platform_io.platform_create_vk_surface != None && "Platform needs to setup the CreateVkSurface handler.");
     platform_io.Renderer_CreateWindow = ImGui_ImplVulkan_CreateWindow;
-    platform_io.Renderer_DestroyWindow = ImGui_ImplVulkan_DestroyWindow;
+    platform_io.renderer_destroy_window = ImGui_ImplVulkan_DestroyWindow;
     platform_io.Renderer_SetWindowSize = ImGui_ImplVulkan_SetWindowSize;
-    platform_io.Renderer_RenderWindow = ImGui_ImplVulkan_RenderWindow;
-    platform_io.Renderer_SwapBuffers = ImGui_ImplVulkan_SwapBuffers;
+    platform_io.renderer_render_window = ImGui_ImplVulkan_RenderWindow;
+    platform_io.renderer_swap_buffers = ImGui_ImplVulkan_SwapBuffers;
 }
 
 void ImGui_ImplVulkan_ShutdownPlatformInterface()
 {
-    ImGui::DestroyPlatformWindows();
+    ImGui::destroy_platform_windows();
 }

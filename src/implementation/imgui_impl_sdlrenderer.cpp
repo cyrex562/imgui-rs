@@ -56,20 +56,20 @@ struct ImGui_ImplSDLRenderer_Data {
 static ImGui_ImplSDLRenderer_Data *ImGui_ImplSDLRenderer_GetBackendData() {
   return ImGui::GetCurrentContext()
              ? (ImGui_ImplSDLRenderer_Data *)ImGui::GetIO()
-                   .BackendRendererUserData
+                   .Backendrenderer_user_data
              : None;
 }
 
 // Functions
 bool ImGui_ImplSDLRenderer_Init(SDL_Renderer *renderer) {
   ImGuiIO &io = ImGui::GetIO();
-  IM_ASSERT(io.BackendRendererUserData == None &&
+  IM_ASSERT(io.Backendrenderer_user_data == None &&
             "Already initialized a renderer backend!");
   IM_ASSERT(renderer != None && "SDL_Renderer not initialized!");
 
   // Setup backend capabilities flags
   ImGui_ImplSDLRenderer_Data *bd = IM_NEW(ImGui_ImplSDLRenderer_Data)();
-  io.BackendRendererUserData = (void *)bd;
+  io.Backendrenderer_user_data = (void *)bd;
   io.BackendRendererName = "imgui_impl_sdlrenderer";
   io.BackendFlags |=
       ImGuiBackendFlags_RendererHasVtxOffset; // We can honor the
@@ -90,7 +90,7 @@ void ImGui_ImplSDLRenderer_Shutdown() {
   ImGui_ImplSDLRenderer_DestroyDeviceObjects();
 
   io.BackendRendererName = None;
-  io.BackendRendererUserData = None;
+  io.Backendrenderer_user_data = None;
   IM_DELETE(bd);
 }
 

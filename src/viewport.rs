@@ -20,7 +20,7 @@ use crate::window::next_window::NextWindowDataFlags;
 // }
 //
 // impl ViewportP {
-//     // // ImGuiViewportP()                    { Idx = -1; last_frame_active = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; last_name_hash = 0; Alpha = LastAlpha = 1.0; PlatformMonitor = -1; PlatformWindowCreated = false; window = None; DrawLists[0] = DrawLists[1] = None; last_platform_pos = last_platform_size = last_renderer_size = Vector2D(FLT_MAX, FLT_MAX); }
+//     // // ImGuiViewportP()                    { Idx = -1; last_frame_active = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; last_name_hash = 0; Alpha = LastAlpha = 1.0; platform_monitor = -1; PlatformWindowCreated = false; window = None; DrawLists[0] = DrawLists[1] = None; last_platform_pos = last_platform_size = last_renderer_size = Vector2D(FLT_MAX, FLT_MAX); }
 //     pub fn new() -> Self {
 //         Self {
 //             idx: -1,
@@ -42,7 +42,7 @@ use crate::window::next_window::NextWindowDataFlags;
 //     }
 //
 //     //     // ~ImGuiViewportP()                   { if (DrawLists[0]) IM_DELETE(DrawLists[0]); if (DrawLists[1]) IM_DELETE(DrawLists[1]); }
-//     //     // void    ClearRequestFlags()         { platform_request_close = platform_request_move = platform_request_resize = false; }
+//     //     // void    clear_request_flags()         { platform_request_close = platform_request_move = platform_request_resize = false; }
 //     //
 //
 // }
@@ -53,7 +53,7 @@ pub enum ViewportFlags
 {
     None                     = 0,
     IsPlatformWindow        ,   // Represent a Platform window
-    IsPlatformMonitor       ,   // Represent a Platform Monitor (unused yet)
+    Isplatform_monitor       ,   // Represent a Platform Monitor (unused yet)
     OwnedByApp              ,   // Platform window: is created/managed by the application (rather than a dear imgui backend)
     NoDecoration            ,   // Platform window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
     NoTaskBarIcon           ,   // Platform window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
@@ -83,80 +83,80 @@ impl Default for ViewportFlags {
 #[derive(Debug,Clone,Default)]
 pub struct Viewport
 {
-    pub id: Id32,                   // Unique identifier for the viewport
-    pub flags: HashSet<ViewportFlags>, //ImGuiViewportFlags  flags;                  // See
-    pub pos: Vector2D,                    // Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
-    pub size: Vector2D,                   // Main Area: size of the viewport.
-    pub work_pos: Vector2D,                // Work Area: Position of the viewport minus task bars, menus bars, status bars (>= pos)
-    pub work_size: Vector2D,               // Work Area: size of the viewport minus task bars, menu bars, status bars (<= size)
-    pub dpi_scale: f32,              // 1.0 = 96 DPI = No extra scale.
-    pub parent_viewport_id: Id32,     // (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
-    // ImDrawData*         draw_data;               // The ImDrawData corresponding to this viewport. valid after Render() and until the next call to NewFrame().
-    pub draw_data: DrawData,
 
-    // Platform/Backend Dependent data
-    // Our design separate the Renderer and Platform backends to facilitate combining default backends with each others.
-    // When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled
-    // by the same system and you may not need to use all the user_data/Handle fields.
-    // The library never uses those fields, they are merely storage to facilitate backend implementation.
-    // void*               renderer_user_data;       // void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your renderer_create_window function.
-    pub renderer_user_data: Vec<u8>,
-    // void*               PlatformUserData;       // void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your platform_create_window function.
-    pub platformuser_data: Vec<u8>,
-    // void*               platform_handle;         // void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
-    pub platform_handle: Vec<u8>,
-    // void*               platform_handle_raw;      // void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where platform_handle would be a SDL_Window*)
-    pub platform_handle_raw: Vec<u8>,
-    pub platform_request_move: bool,    // Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
-    pub platform_request_resize: bool,  // Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)
-    pub platform_request_close: bool,   // Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
 
-    // ImGuiViewport()     { memset(this, 0, sizeof(*this)); }
-    // ~ImGuiViewport()    { IM_ASSERT(PlatformUserData == None && renderer_user_data == None); }
 
     // Helpers
-    // int                 Idx;
-    pub idx: i32,
-    //int                 last_frame_active;        // Last frame number this viewport was activated by a window
-    pub last_frame_active: usize,
-    //int                 LastFrontMostStampCount;// Last stamp number from when a window hosted by this viewport was made front-most (by comparing this value between two viewport we have an implicit viewport z-order
-    pub last_front_most_stamp_count: i32,
     // Id32             last_name_hash;
-    pub last_name_hash: Id32,
-    // Vector2D              LastPos;
-    pub last_pos: Vector2D,
-    // float               Alpha;                  // window opacity (when dragging dockable windows/viewports we make them transparent)
-    pub alpha: f32,
-    // float               LastAlpha;
-    pub last_apha: f32,
-    // short               PlatformMonitor;
-    pub platform_monitor: i16,
-    // bool                PlatformWindowCreated;
-    pub platform_window_created: bool,
-    // Window*        window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
-    pub window: Id32,
-    // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
-    pub draw_lists_last_frame: [usize;2],
-    // ImDrawList*         DrawLists[2];           // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.mouse_draw_cursor is set and to draw most debug overlays.
-    pub draw_list_ids: [Id32;2],
     // ImDrawData          DrawDataP;
-    // pub draw_data_p: DrawData,
+    // ImDrawData*         draw_data;               // The ImDrawData corresponding to this viewport. valid after Render() and until the next call to NewFrame().
     // ImDrawDataBuilder   DrawDataBuilder;
-    pub draw_data_builder: DrawDataBuilder,
-    // Vector2D              last_platform_pos;
-    pub last_plaform_pos: Vector2D,
-    // Vector2D              last_platform_size;
-    pub last_platform_size: Vector2D,
-    // Vector2D              last_renderer_size;
-    pub last_renderer_size: Vector2D,
-    // Vector2D              WorkOffsetMin;          // Work Area: Offset from pos to top-left corner of Work Area. Generally (0,0) or (0,+main_menu_bar_height). Work Area is Full Area but without menu-bars/status-bars (so WorkArea always fit inside pos/size!)
-    pub work_offset_min: Vector2D,
-    // Vector2D              WorkOffsetMax;          // Work Area: Offset from pos+size to bottom-right corner of Work Area. Generally (0,0) or (0,-status_bar_height).
-    pub work_offset_max: Vector2D,
-    // Vector2D              BuildWorkOffsetMin;     // Work Area: Offset being built during current frame. Generally >= 0.0.
-    pub build_work_offset_min: Vector2D,
+    // ImDrawList*         DrawLists[2];           // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.mouse_draw_cursor is set and to draw most debug overlays.
+    // ImGuiViewport()     { memset(this, 0, sizeof(*this)); }
+    // Our design separate the Renderer and Platform backends to facilitate combining default backends with each others.
+    // Platform/Backend Dependent data
+    // The library never uses those fields, they are merely storage to facilitate backend implementation.
     // Vector2D              BuildWorkOffsetMax;     // Work Area: Offset being built during current frame. Generally <= 0.0.
+    // Vector2D              BuildWorkOffsetMin;     // Work Area: Offset being built during current frame. Generally >= 0.0.
+    // Vector2D              LastPos;
+    // Vector2D              WorkOffsetMax;          // Work Area: Offset from pos+size to bottom-right corner of Work Area. Generally (0,0) or (0,-status_bar_height).
+    // Vector2D              WorkOffsetMin;          // Work Area: Offset from pos to top-left corner of Work Area. Generally (0,0) or (0,+main_menu_bar_height). Work Area is Full Area but without menu-bars/status-bars (so WorkArea always fit inside pos/size!)
+    // Vector2D              last_platform_pos;
+    // Vector2D              last_platform_size;
+    // Vector2D              last_renderer_size;
+    // When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled
+    // Window*        window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
+    // bool                PlatformWindowCreated;
+    // by the same system and you may not need to use all the user_data/Handle fields.
+    // float               Alpha;                  // window opacity (when dragging dockable windows/viewports we make them transparent)
+    // float               LastAlpha;
+    // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
+    // int                 Idx;
+    // pub draw_data_p: DrawData,
+    // short               platform_monitor;
+    // void*               platform_handle;         // void* for FindViewportByplatform_handle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
+    // void*               platform_handle_raw;      // void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where platform_handle would be a SDL_Window*)
+    // void*               platform_user_data;       // void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your platform_create_window function.
+    // void*               renderer_user_data;       // void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your renderer_create_window function.
+    // ~ImGuiViewport()    { IM_ASSERT(platform_user_data == None && renderer_user_data == None); }
+    //int                 LastFrontMostStampCount;// Last stamp number from when a window hosted by this viewport was made front-most (by comparing this value between two viewport we have an implicit viewport z-order
+    //int                 last_frame_active;        // Last frame number this viewport was activated by a window
+    pub alpha: f32,
     pub build_work_offset_max: Vector2D,
+    pub build_work_offset_min: Vector2D,
+    pub dpi_scale: f32,              // 1.0 = 96 DPI = No extra scale.
+    pub draw_data: DrawData,
+    pub draw_data_builder: DrawDataBuilder,
+    pub draw_list_ids: [Id32;2],
+    pub draw_lists_last_frame: [usize;2],
+    pub flags: HashSet<ViewportFlags>, //ImGuiViewportFlags  flags;                  // See
+    pub id: Id32,                   // Unique identifier for the viewport
+    pub idx: i32,
+    pub last_apha: f32,
+    pub last_frame_active: usize,
+    pub last_front_most_stamp_count: i32,
+    pub last_name_hash: Id32,
+    pub last_plaform_pos: Vector2D,
+    pub last_platform_size: Vector2D,
+    pub last_pos: Vector2D,
+    pub last_renderer_size: Vector2D,
+    pub parent_viewport_id: Id32,     // (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
+    pub platform_handle: Vec<u8>,
+    pub platform_handle_raw: Vec<u8>,
+    pub platform_monitor: usize,
+    pub platform_request_close: bool,   // Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
+    pub platform_request_move: bool,    // Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
+    pub platform_request_resize: bool,  // Platform window requested resize (e.g. window was resized by the OS / host window manager, authoritative size will be OS window size)
+    pub platform_window_created: bool,
+    pub platform_user_data: Vec<u8>,
+    pub pos: Vector2D,                    // Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
+    pub renderer_user_data: Vec<u8>,
+    pub size: Vector2D,                   // Main Area: size of the viewport.
+    pub window: Id32,
+    pub work_offset_max: Vector2D,
+    pub work_offset_min: Vector2D,
+    pub work_pos: Vector2D,                // Work Area: Position of the viewport minus task bars, menus bars, status bars (>= pos)
+    pub work_size: Vector2D,               // Work Area: size of the viewport minus task bars, menu bars, status bars (<= size)
 }
 
 impl Viewport {
@@ -247,12 +247,12 @@ pub fn find_viewport_by_id(g: &mut Context, id: Id32) -> &mut Viewport
     return None;
 }
 
-// ImGuiViewport* FindViewportByPlatformHandle(void* platform_handle)
+// ImGuiViewport* FindViewportByplatform_handle(void* platform_handle)
 pub fn find_viewport_by_platform_handle(g: &mut Context, platform_handle: Id32) -> &mut Viewport
 {
     // ImGuiContext& g = *GImGui;
     for (int i = 0; i != g.viewports.size; i += 1)
-        if (g.viewports[i].PlatformHandle == platform_handle)
+        if (g.viewports[i].platform_handle == platform_handle)
             return g.viewports[i];
     return None;
 }
@@ -273,8 +273,8 @@ pub fn set_current_viewport(g: &mut Context, current_window: Option<&mut Window>
 
     // Notify platform layer of viewport changes
     // FIXME-DPI: This is only currently used for experimenting with handling of multiple DPI
-    if (g.current_viewport && g.platform_io.Platform_OnChangedViewport)
-        g.platform_io.Platform_OnChangedViewport(g.current_viewport);
+    if (g.current_viewport && g.platform_io.platform_on_changed_viewport)
+        g.platform_io.platform_on_changed_viewport(g.current_viewport);
 }
 
 // void SetWindowViewport(Window* window, ImGuiViewportP* viewport)
@@ -389,7 +389,7 @@ pub fn scale_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, scale
 
 // If the backend doesn't set mouse_last_hovered_viewport or doesn't honor ViewportFlags::NoInputs, we do a search ourselves.
 // A) It won't take account of the possibility that non-imgui windows may be in-between our dragged window and our target window.
-// B) It requires Platform_GetWindowFocus to be implemented by backend.
+// B) It requires platform_get_window_focus to be implemented by backend.
 // ImGuiViewportP* FindHoveredViewportFromPlatformWindowStack(const Vector2D& mouse_platform_pos)
 pub fn find_hovered_viewport_from_platform_window_stack(g: &mut Context, mouse_platform_pos: &Vector2D) -> &mut Viewport
 {
@@ -421,9 +421,9 @@ pub fn update_viewports_new_frame(g: &mut Context)
         {
             ViewportP* viewport = g.viewports[n];
             const bool platform_funcs_available = viewport.platform_window_created;
-            if (g.platform_io.Platform_GetWindowMinimized && platform_funcs_available)
+            if (g.platform_io.platform_get_window_minimized && platform_funcs_available)
             {
-                bool minimized = g.platform_io.Platform_GetWindowMinimized(viewport);
+                bool minimized = g.platform_io.platform_get_window_minimized(viewport);
                 if (minimized)
                     viewport.flags |= ViewportFlags::Minimized;
                 else
@@ -437,7 +437,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
     ViewportP* main_viewport = g.viewports[0];
     // IM_ASSERT(main_viewport.id == IMGUI_VIEWPORT_DEFAULT_ID);
     // IM_ASSERT(main_viewport.Window == None);
-    Vector2D main_viewport_pos = viewports_enabled ? g.platform_io.Platform_GetWindowPos(main_viewport) : Vector2D::new(0.0, 0.0);
+    Vector2D main_viewport_pos = viewports_enabled ? g.platform_io.platform_get_window_pos(main_viewport) : Vector2D::new(0.0, 0.0);
     Vector2D main_viewport_size = g.io.display_size;
     if (viewports_enabled && (main_viewport.flags & ViewportFlags::Minimized))
     {
@@ -471,14 +471,14 @@ pub fn update_viewports_new_frame(g: &mut Context)
             {
                 // viewport->work_pos and work_size will be updated below
                 if (viewport.platform_request_move)
-                    viewport.pos = viewport.last_platform_pos = g.platform_io.Platform_GetWindowPos(viewport);
+                    viewport.pos = viewport.last_platform_pos = g.platform_io.platform_get_window_pos(viewport);
                 if (viewport.platform_requsest_resize)
-                    viewport.size = viewport.last_platform_size = g.platform_io.Platform_GetWindowSize(viewport);
+                    viewport.size = viewport.last_platform_size = g.platform_io.platform_get_window_size(viewport);
             }
         }
 
         // update/copy monitor info
-        UpdateViewportPlatformMonitor(viewport);
+        UpdateViewportplatform_monitor(viewport);
 
         // Lock down space taken by menu bars and status bars, reset the offset for functions like BeginMainMenuBar() to alter them again.
         viewport.WorkOffsetMin = viewport.BuildWorkOffsetMin;
@@ -497,10 +497,10 @@ pub fn update_viewports_new_frame(g: &mut Context)
 
         // update DPI scale
         float new_dpi_scale;
-        if (g.platform_io.Platform_GetWindowDpiScale && platform_funcs_available)
-            new_dpi_scale = g.platform_io.Platform_GetWindowDpiScale(viewport);
-        else if (viewport.PlatformMonitor != -1)
-            new_dpi_scale = g.platform_io.monitors[viewport.PlatformMonitor].DpiScale;
+        if (g.platform_io.platform_get_window_dpi_scale && platform_funcs_available)
+            new_dpi_scale = g.platform_io.platform_get_window_dpi_scale(viewport);
+        else if (viewport.platform_monitor != -1)
+            new_dpi_scale = g.platform_io.monitors[viewport.platform_monitor].DpiScale;
         else
             new_dpi_scale = (viewport.DpiScale != 0.0) ? viewport.DpiScale : 1.0;
         if (viewport.DpiScale != 0.0 && new_dpi_scale != viewport.DpiScale)
@@ -523,7 +523,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
     // update fallback monitor
     if (g.platform_io.monitors.size == 0)
     {
-        ImGuiPlatformMonitor* monitor = &g.FallbackMonitor;
+        platform_monitor* monitor = &g.FallbackMonitor;
         monitor.MainPos = main_viewport.pos;
         monitor.MainSize = main_viewport.size;
         monitor.WorkPos = main_viewport.WorkPos;
@@ -601,7 +601,7 @@ pub fn update_viewports_ends_frame(g: &mut Context)
             // IM_ASSERT(viewport.Window != None);
         g.platform_io.viewports.push_back(viewport);
     }
-    g.viewports[0].ClearRequestFlags(); // clear main viewport flags because UpdatePlatformWindows() won't do it and may not even be called
+    g.viewports[0].clear_request_flags(); // clear main viewport flags because UpdatePlatformWindows() won't do it and may not even be called
 }
 
 // FIXME: We should ideally refactor the system to call this every frame (we currently don't)
@@ -641,7 +641,7 @@ pub fn add_update_viewport(g: &mut Context, window: &mut Window, id: Id32, pos: 
         viewport.pos = viewport.LastPos = pos;
         viewport.size = size;
         viewport.flags = flags;
-        UpdateViewportPlatformMonitor(viewport);
+        UpdateViewportplatform_monitor(viewport);
         g.viewports.push_back(viewport);
         IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Add viewport %08X '%s'\n", id, window ? window.name : "<None>");
 
@@ -654,8 +654,8 @@ pub fn add_update_viewport(g: &mut Context, window: &mut Window, id: Id32, pos: 
 
         // Store initial dpi_scale before the OS platform window creation, based on expected monitor data.
         // This is so we can select an appropriate font size on the first frame of our window lifetime
-        if (viewport.PlatformMonitor != -1)
-            viewport.DpiScale = g.platform_io.monitors[viewport.PlatformMonitor].DpiScale;
+        if (viewport.platform_monitor != -1)
+            viewport.DpiScale = g.platform_io.monitors[viewport.platform_monitor].DpiScale;
     }
 
     viewport.Window = window;
@@ -687,7 +687,7 @@ pub fn destroy_viewport(g: &mut Context, viewport: &mut Viewport)
 
     // Destroy
     IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete viewport %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.name : "n/a");
-    DestroyPlatformWindow(viewport); // In most circumstances the platform window will already be destroyed here.
+    destroy_platform_window(viewport); // In most circumstances the platform window will already be destroyed here.
     // IM_ASSERT(g.platform_io.viewports.contains(viewport) == false);
     // IM_ASSERT(g.viewports[viewport.Idx] == viewport);
     g.viewports.erase(g.viewports.data + viewport.Idx);
@@ -700,7 +700,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
     WindowFlags flags = window.flags;
-    window.viewportAllowPlatformMonitorExtend = -1;
+    window.viewportAllowplatform_monitorExtend = -1;
 
     // Restore main viewport if multi-viewport is not supported by the backend
     ViewportP* main_viewport = (ViewportP*)(void*)get_main_viewport();
@@ -792,9 +792,9 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
             bool use_mouse_ref = (g.nav_disable_highlight || !g.nav_disable_mouse_hover || !g.nav_window);
             bool mouse_valid = is_mouse_pos_valid(&mouse_ref);
             if ((window.Appearing || (flags & (WindowFlags::Tooltip | WindowFlags::ChildMenu))) && (!use_mouse_ref || mouse_valid))
-                window.viewportAllowPlatformMonitorExtend = FindPlatformMonitorForPos((use_mouse_ref && mouse_valid) ? mouse_ref : NavCalcPreferredRefPos());
+                window.viewportAllowplatform_monitorExtend = Findplatform_monitorForPos((use_mouse_ref && mouse_valid) ? mouse_ref : NavCalcPreferredRefPos());
             else
-                window.viewportAllowPlatformMonitorExtend = window.viewport.PlatformMonitor;
+                window.viewportAllowplatform_monitorExtend = window.viewport.platform_monitor;
         }
         else if (window.viewport && window != window.viewport.Window && window.viewport.Window && !(flags & WindowFlags::ChildWindow) && window.dock_node_id == None)
         {
@@ -814,11 +814,11 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
                 window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ViewportFlags::NoFocusOnAppearing);
             }
         }
-        else if (window.viewportAllowPlatformMonitorExtend < 0 && (flags & WindowFlags::ChildWindow) == 0)
+        else if (window.viewportAllowplatform_monitorExtend < 0 && (flags & WindowFlags::ChildWindow) == 0)
         {
             // Regular (non-child, non-popup) windows by default are also allowed to protrude
             // Child windows are kept contained within their parent.
-            window.viewportAllowPlatformMonitorExtend = window.viewport.PlatformMonitor;
+            window.viewportAllowplatform_monitorExtend = window.viewport.platform_monitor;
         }
     }
 
@@ -866,7 +866,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     // The viewport may have changed monitor since the global update in UpdateViewportsNewFrame()
     // Either a set_next_window_pos() call in the current frame or a set_window_pos() call in the previous frame may have this effect.
     if (viewport_rect_changed)
-        UpdateViewportPlatformMonitor(window.viewport);
+        UpdateViewportplatform_monitor(window.viewport);
 
     // update common viewport flags
     const ViewportFlags viewport_flags_to_clear = ViewportFlags::TopMost | ViewportFlags::NoTaskBarIcon | ViewportFlags::NoDecoration | ViewportFlags::NoRendererClear;

@@ -78,7 +78,7 @@ struct ImGui_ImplAllegro5_Data
 // Backend data stored in io.backend_platform_user_data to allow support for multiple Dear ImGui contexts
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 // FIXME: multi-context support is not well tested and probably dysfunctional in this backend.
-static ImGui_ImplAllegro5_Data* ImGui_ImplAllegro5_GetBackendData()     { return ImGui::GetCurrentContext() ? (ImGui_ImplAllegro5_Data*)ImGui::GetIO().BackendPlatformUserData : None; }
+static ImGui_ImplAllegro5_Data* ImGui_ImplAllegro5_GetBackendData()     { return ImGui::GetCurrentContext() ? (ImGui_ImplAllegro5_Data*)ImGui::GetIO().Backendplatform_user_data : None; }
 
 struct ImDrawVertAllegro
 {
@@ -397,11 +397,11 @@ static ImGuiKey ImGui_ImplAllegro5_KeyCodeToImGuiKey(int key_code)
 bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
 {
     ImGuiIO& io = ImGui::GetIO();
-    // IM_ASSERT(io.BackendPlatformUserData == None && "Already initialized a platform backend!");
+    // IM_ASSERT(io.Backendplatform_user_data == None && "Already initialized a platform backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplAllegro5_Data* bd = IM_NEW(ImGui_ImplAllegro5_Data)();
-    io.BackendPlatformUserData = (void*)bd;
+    io.Backendplatform_user_data = (void*)bd;
     io.BackendPlatformName = io.BackendRendererName = "imgui_impl_allegro5";
     io.backend_flags |= ImGuiBackendFlags_HasMouseCursors;       // We can honor GetMouseCursor() values (optional)
 
@@ -440,7 +440,7 @@ void ImGui_ImplAllegro5_Shutdown()
     if (bd.ClipboardTextData)
         al_free(bd.ClipboardTextData);
 
-    io.BackendPlatformUserData = None;
+    io.Backendplatform_user_data = None;
     io.BackendPlatformName = io.BackendRendererName = None;
     IM_DELETE(bd);
 }

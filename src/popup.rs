@@ -46,6 +46,7 @@ impl PopupData {
     }
 }
 
+#[derive(Debug,Default,Clone,Copy)]
 pub enum PopupPositionPolicy
 {
     Default,
@@ -63,18 +64,18 @@ pub const POPUP_FLAGS_ANY_POPUP: HashSet<PopupFlags> = HashSet::from([
 //   small flags values as a mouse button index, so we encode the mouse button in the first few bits of the flags.
 //   It is therefore guaranteed to be legal to pass a mouse button index in ImGuiPopupFlags.
 // - For the same reason, we exceptionally default the ImGuiPopupFlags argument of begin_popupContextXXX functions to 1 instead of 0.
-//   IMPORTANT: because the default parameter is 1 (==ImGuiPopupFlags_MouseButtonRight), if you rely on the default parameter
-//   and want to another another flag, you need to pass in the ImGuiPopupFlags_MouseButtonRight flag.
+//   IMPORTANT: because the default parameter is 1 (==PopupFlags::MouseButtonRight), if you rely on the default parameter
+//   and want to another another flag, you need to pass in the PopupFlags::MouseButtonRight flag.
 // - Multiple buttons currently cannot be combined/or-ed in those functions (we could allow it later).
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
 pub enum PopupFlags
 {
     None                    = 0,
-    // ImGuiPopupFlags_MouseButtonLeft         = 0,        // For begin_popupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as MouseButton::Left)
+    // PopupFlags::MouseButtonLeft         = 0,        // For begin_popupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as MouseButton::Left)
     MouseButtonRight        = 1,        // For begin_popupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as MouseButton::Right)
     MouseButtonMiddle       = 2,        // For begin_popupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as MouseButton::Middle)
     MouseButtonMask_        = 0x1F,
-    // ImGuiPopupFlags_MouseButtonDefault_     = 1,
+    // PopupFlags::MouseButtonDefault_     = 1,
     NoOpenOverExistingPopup,   // For OpenPopup*(), begin_popupContext*(): don't open if there's already a popup at the same level of the popup stack
     NoOpenOverItems        ,   // For begin_popupContextWindow(): don't return true when hovering items, only when hovering empty space
     AnyPopupId             ,   // For IsPopupOpen(): ignore the Id32 parameter and test for any popup.
@@ -82,29 +83,35 @@ pub enum PopupFlags
 
 }
 
-// Supported flags: ImGuiPopupFlags_AnyPopupId, ImGuiPopupFlags_AnyPopupLevel
+// Supported flags: PopupFlags::AnyPopupId, PopupFlags::AnyPopupLevel
 // bool IsPopupOpen(Id32 id, ImGuiPopupFlags popup_flags)
 pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: Option<&HashSet<PopupFlags>>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    if (popup_flags & ImGuiPopupFlags_AnyPopupId)
+    if popup_flags.unwrap().contains(&PopupFlags::AnyPopupId)
     {
         // Return true if any popup is open at the current begin_popup() level of the popup stack
         // This may be used to e.g. test for another popups already opened to handle popups priorities at the same level.
         // IM_ASSERT(id == 0);
-        if (popup_flags & ImGuiPopupFlags_AnyPopupLevel)
+        if popup_flags.unwrap.contains(&PopupFlags::AnyPopupLevel) {
             return g.open_popup_stack.size > 0;
-        else
+        }
+        else {
             return g.open_popup_stack.size > g.begin_popup_stack.size;
+        }
     }
     else
     {
-        if (popup_flags & ImGuiPopupFlags_AnyPopupLevel)
+        if popup_flags.unwrap().contains(&PopupFlags::AnyPopupLevel)
         {
             // Return true if the popup is open anywhere in the popup stack
-            for (int n = 0; n < g.open_popup_stack.size; n += 1)
-                if (g.open_popup_stack[n].PopupId == id)
+            // for (int n = 0; n < g.open_popup_stack.size; n += 1)
+            for n in 0 .. g.open_popup_stack.len()
+            {
+                if g.open_popup_stack[n].popup_id == id {
                     return true;
+                }
+            }
             return false;
         }
         else
@@ -119,20 +126,25 @@ pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: Option<&HashSet<Pop
 pub fn is_popup_open_2(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    Id32 id = if (popup_flags & ImGuiPopupFlags_AnyPopupId) { 0 }else{ g.current_window.get_id(str_id)};
-    if ((popup_flags & ImGuiPopupFlags_AnyPopupLevel) && id != 0)
-        // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel."); // But non-string version is legal and used internally
-    return is_popup_open(id, popup_flags);
+    let id = if popup_flags.contains(&PopupFlags::AnyPopupId)
+    { 0 } else{
+        g.current_window.get_id(str_id)};
+    if popup_flags.contains(& PopupFlags::AnyPopupLevel) && id != 0 {}
+        // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and PopupFlags::AnyPopupLevel."); // But non-string version is legal and used internally
+    return is_popup_open(g, id, Some(popup_flags));
 }
 
 // Window* get_top_most_popup_modal()
-pub fn get_top_most_popup_modal(g: &mut Context) -> &mut Window
+pub fn get_top_most_popup_modal(g: &mut Context) -> Option<&mut Window>
 {
     // ImGuiContext& g = *GImGui;
-    for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
-        if (Window* popup = g.open_popup_stack.data[n].Window)
-            if (popup.flags & WindowFlags::Modal)
+    for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 ){
+        if let popup = g.open_popup_stack.data[n].Window {
+            if (popup.flags & WindowFlags::Modal) {
                 return popup;
+            }
+        }
+    }
     return None;
 }
 
@@ -173,8 +185,8 @@ pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags
     Window* parent_window = g.current_window;
     let current_stack_size = g.begin_popup_stack.size;
 
-    if (popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup)
-        if (is_popup_open(0u, ImGuiPopupFlags_AnyPopupId))
+    if (popup_flags & PopupFlags::NoOpenOverExistingPopup)
+        if (is_popup_open(0u, PopupFlags::AnyPopupId))
             return;
 
     ImGuiPopupData popup_ref; // Tagged as new ref as window will be set back to None if we write this into open_popup_stack.
@@ -343,7 +355,7 @@ pub fn close_current_popup(g: &mut Context)
 pub fn begin_popup_ex(g: &mut Context, id: Id32, flags: &HashSet<WindowFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    if (!is_popup_open(id, ImGuiPopupFlags_None))
+    if (!is_popup_open(id, PopupFlags::None))
     {
         g.next_window_data.ClearFlags(); // We behave like Begin() and need to consume those values
         return false;
@@ -385,7 +397,7 @@ pub fn begin_popup_modal(g: &mut Context, name: &str, p_open: &mut bool, flags: 
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window;
     const Id32 id = window.get_id(name);
-    if (!is_popup_open(id, ImGuiPopupFlags_None))
+    if (!is_popup_open(id, PopupFlags::None))
     {
         g.next_window_data.ClearFlags(); // We behave like Begin() and need to consume those values
         return false;
@@ -439,7 +451,7 @@ pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &Has
 {
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window;
-    int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
+    int mouse_button = (popup_flags & PopupFlags::MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
     {
         Id32 id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
@@ -456,7 +468,7 @@ pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &Has
 // - You may want to handle the whole on user side if you have specific needs (e.g. tweaking IsItemHovered() parameters).
 //   This is essentially the same as:
 //       id = str_id ? GetID(str_id) : GetItemID();
-//       OpenPopupOnItemClick(str_id, ImGuiPopupFlags_MouseButtonRight);
+//       OpenPopupOnItemClick(str_id, PopupFlags::MouseButtonRight);
 //       return begin_popup(id);
 //   Which is essentially the same as:
 //       id = str_id ? GetID(str_id) : GetItemID();
@@ -473,7 +485,7 @@ pub fn begin_popup_context_item(g: &mut Context, str_id: &str, popup_flags: &Has
         return false;
     Id32 id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
     // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
-    int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
+    int mouse_button = (popup_flags & PopupFlags::MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
         open_popupEx(id, popup_flags);
     return begin_popupEx(id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings);
@@ -487,9 +499,9 @@ pub fn begin_popup_context_window(g: &mut Context, str_id: &str, popup_flags: &H
     if (!str_id)
         str_id = "window_context";
     Id32 id = window.get_id(str_id);
-    int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
+    int mouse_button = (popup_flags & PopupFlags::MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
-        if (!(popup_flags & ImGuiPopupFlags_NoOpenOverItems) || !IsAnyItemHovered())
+        if (!(popup_flags & PopupFlags::NoOpenOverItems) || !IsAnyItemHovered())
             open_popupEx(id, popup_flags);
     return begin_popupEx(id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings);
 }
@@ -502,7 +514,7 @@ pub fn begin_popup_context_void(g: &mut Context, str_id: &str, popup_flags: &Has
     if (!str_id)
         str_id = "void_context";
     Id32 id = window.get_id(str_id);
-    int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
+    int mouse_button = (popup_flags & PopupFlags::MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
         if (get_top_most_popup_modal() == None)
             open_popupEx(id, popup_flags);
@@ -595,10 +607,10 @@ pub fn get_popup_allowed_extent_rect(g: &mut Context, window: &mut Window) -> Re
 {
     // ImGuiContext& g = *GImGui;
     Rect r_screen;
-    if (window.viewportAllowPlatformMonitorExtend >= 0)
+    if (window.viewportAllowplatform_monitorExtend >= 0)
     {
         // Extent with be in the frame of reference of the given viewport (so min is likely to be negative here)
-        const ImGuiPlatformMonitor& monitor = g.platform_io.monitors[window.viewportAllowPlatformMonitorExtend];
+        const platform_monitor& monitor = g.platform_io.monitors[window.viewportAllowplatform_monitorExtend];
         r_screen.min = monitor.WorkPos;
         r_screen.max = monitor.WorkPos + monitor.work_size;
     }

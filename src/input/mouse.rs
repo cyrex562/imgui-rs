@@ -420,7 +420,7 @@ pub fn update_mouse_moving_window_end_frame(g: &mut Context)
         } else {
             None
         };
-        // const bool is_closed_popup = RootWindow && (RootWindow.flags & WindowFlags_Popup) && !IsPopupOpen(RootWindow.popup_id, ImGuiPopupFlags_AnyPopupLevel);
+        // const bool is_closed_popup = RootWindow && (RootWindow.flags & WindowFlags_Popup) && !IsPopupOpen(RootWindow.popup_id, PopupFlags::AnyPopupLevel);
         let is_closed_popup: bool = if root_window.is_some() {
             let root_win = root_window.unwrap();
             if root_win.flags.contains(&WindowFlags::Popup) {
