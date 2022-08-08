@@ -379,7 +379,7 @@ extern void		uSynergyInit(uSynergyContext *context);
 
 
 /**
-@brief Update uSynergy
+@brief update uSynergy
 
 This function updates uSynergy and does the bulk of the work. It does connection management,
 receiving data, reconnecting after errors or timeouts and so on. It assumes that networking

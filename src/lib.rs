@@ -1,4 +1,4 @@
-extern crate core;
+extern crate freetype;
 
 use crate::context::{call_context_hooks, Context, ContextHookType};
 use crate::hash::hash_string;
@@ -8,6 +8,7 @@ use crate::viewport::{Viewport, ViewportFlags};
 use dock::context::dock_context_shutdown;
 use std::collections::HashSet;
 use std::io::stdout;
+
 
 mod axis;
 mod border;
@@ -44,19 +45,15 @@ mod group;
 mod hash;
 mod helpers;
 mod id;
-mod ime;
 pub mod input;
-mod input_event;
-mod input_text;
 mod internal_h;
-mod io;
 mod item;
 mod kv_store;
 mod layout;
 mod list_clipper;
 mod log;
 mod math;
-mod menu;
+mod menu_columns;
 mod metrics;
 mod modal;
 mod nav;
@@ -104,13 +101,14 @@ mod vectors;
 mod viewport;
 mod widgets;
 mod window;
+pub mod input;
 
 /// void ImGui::Initialize()
 pub fn initialize(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
 
-    // Add .ini handle for ImGuiWindow type
+    // Add .ini handle for Window type
     {
         // ImGuiSettingsHandler ini_handler;
         let mut ini_handler = SettingsHandler::default();

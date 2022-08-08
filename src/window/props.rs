@@ -3,7 +3,7 @@ use crate::types::Id32;
 use crate::window::{Window, WindowFlags};
 use crate::{Context, Viewport};
 
-// static ImGuiColor get_window_bg_color_idx(ImGuiWindow* window)
+// static ImGuiColor get_window_bg_color_idx(Window* window)
 pub fn get_window_bg_color_idx(window: &mut Window) {
     // if (window.flags & (WindowFlags::Tooltip | WindowFlags::Popup))
     if window.flags.contains(&WindowFlags::Tooltip) && window.flags.contains(&WindowFlags::Popup) {
@@ -18,7 +18,7 @@ pub fn get_window_bg_color_idx(window: &mut Window) {
 
 // ImDrawList* ImGui::GetWindowDrawList()
 pub fn get_window_draw_list(g: &mut Context) {
-    ImGuiWindow * window = GetCurrentWindow();
+    Window * window = GetCurrentWindow();
     return window.draw_list;
 }
 
@@ -35,10 +35,10 @@ pub fn get_window_viewport(g: &mut Context) -> &mut Viewport {
     return g.current_viewport;
 }
 
-// void PushFocusScope(ImGuiID id)
+// void PushFocusScope(Id32 id)
 pub fn push_focus_scope(g: &mut Context, id: Id32) {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow * window = g.current_window;
+    Window * window = g.current_window;
     g.FocusScopeStack
         .push_back(window.dc.NavFocusScopeIdCurrent);
     window.dc.NavFocusScopeIdCurrent = id;

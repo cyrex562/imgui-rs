@@ -1,12 +1,16 @@
 use std::ffi::c_void;
 use crate::Context;
 use crate::globals::GImGui;
-use crate::imgui_h::{ImGuiCond, ImGuiID, ImGuiInputTextFlags, ImGuiKey};
+use crate::imgui_h::{Id32, ImGuiCond, ImGuiInputTextFlags, ImGuiKey};
 use crate::vectors::vector_2d::Vector2D;
 
 pub mod mouse;
 pub mod keyboard;
 pub mod keys;
+mod ime;
+pub mod input_event;
+mod input_text;
+pub mod io;
 
 // Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
 // The callback function should return 0 by default.
@@ -85,24 +89,23 @@ pub struct ImGuiInputCallbackData {
 
 }
 
-pub enum DimgKey
-{
-    LegacyNativeKeyBegin = 0,
-    LegacyNativeKeyEnd = 512,
-    //GamepadBegin = GamepadStart,
-    //GamepadEnd = GamepadRStickRight + 1
-}
+// pub enum Key
+// {
+//
+//     //GamepadBegin = GamepadStart,
+//     //GamepadEnd = GamepadRStickRight + 1
+// }
 
-pub const GAME_PAD_BEGIN: DimgKey = GamepadStart;
-pub const GAME_PAD_END: DimgKey = GamepadRStickRight;
+pub const GAME_PAD_BEGIN: Key = GamepadStart;
+pub const GAME_PAD_END: Key = GamepadRStickRight;
 
-pub enum DimgInputEventType
+pub enum InputEventType
 {
     None = 0,
     MousePos,
-    mouse_wheel,
+    MouseWheel,
     MouseButton,
-    mouse_viewport,
+    MouseViewport,
     Key,
     Text,
     Focus,
@@ -112,43 +115,43 @@ pub enum DimgInputEventType
 
 // FIXME: Structures in the union below need to be declared as anonymous unions appears to be an extension?
 // Using Vector2D() would fail on Clang 'union member 'mouse_pos' has a non-trivial default constructor'
-pub struct DimgInputEventMousePos { 
+pub struct InputEventMousePos {
     pub pos_x: f32,
     pub pos_y: f32,
     // float PosX, PosY; 
 }
 
-pub struct ImGuiInputEventMouseWheel    { 
+pub struct InputEventMouseWheel {
     // float WheelX, WheelY; 
 pub wheel_x: f32,
     pub wheel_y: f32
 }
 
 
-pub struct ImGuiInputEventMouseButton   { 
+pub struct InputEventMouseButton {
     // int Button; bool Down; 
     pub button: i32,
     pub down: bool,
 }
 
-pub struct ImGuiInputEventMouseViewport { 
-    // ImGuiID HoveredViewportID; 
+pub struct InputEventMouseViewport {
+    // Id32 HoveredViewportID;
     pub hovered_viewport_id: DimgId,
 }
 
-pub struct ImGuiInputEventKey           { 
+pub struct InputEventKey {
     // ImGuiKey Key; bool Down; float analog_value;
-    pub key: DimgKey,
+    pub key: Key,
     pub down: bool,
     pub analog_value: f32,
 }
 
-pub struct ImGuiInputEventText          { 
+pub struct InputEventText {
     // unsigned int Char; 
     pub key: u32,
 }
 
-pub struct ImGuiInputEventAppFocused    { 
+pub struct InputEventAppFocused {
     // bool Focused; 
     pub focused: bool,
 }
@@ -156,8 +159,10 @@ pub struct ImGuiInputEventAppFocused    {
 // Keys value 0 to 511 are left unused as legacy native/opaque key values (< 1.87)
 // Keys value >= 512 are named keys (>= 1.87)
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgKey
+pub enum Key
 {
+    // LegacyNativeKeyBegin = 0,
+    // LegacyNativeKeyEnd = 512,
     // Keyboard
     None = 0,
     Tab = 512,             // == ImGuiKey_NamedKey_BEGIN
@@ -168,7 +173,7 @@ pub enum DimgKey
     PageUp,
     PageDown,
     Home,
-    end,
+    End,
     Insert,
     Delete,
     Backspace,
@@ -268,11 +273,11 @@ pub enum DimgKey
 }
 
 
-pub const DIMG_NAMED_KEY_BEGIN: DimgKey         = DimgKey::Tab;
+pub const DIMG_NAMED_KEY_BEGIN: Key = Key::Tab;
 
-pub const DIMG_NAMED_KEY_END: DimgKey = DimgKey::LastItem;
+pub const DIMG_NAMED_KEY_END: Key = Key::LastItem;
 
-pub const DIMG_KEYS_DATA_SZ: usize = DimgKey::LastItem as usize - DimgKey::Tab as usize;
+pub const DIMG_KEYS_DATA_SZ: usize = Key::LastItem as usize - Key::Tab as usize;
 
 pub const DIMG_KEYS_DATA_OFFSET: usize        = 0    ;
 
@@ -379,7 +384,7 @@ pub struct KeyInputData
 // #endif
 //
 // #endif // #ifndef IMGUI_DISABLE
-#[derive(Debug,Clone,Eq, PartialEq,Hash)]
+#[derive(Debug,Clone, Copy, Eq, PartialEq,Hash)]
 pub enum NavLayer
 {
     Main,    // Main scrolling layer

@@ -135,7 +135,7 @@ pub fn dock_node_calc_drop_rects_and_test_mouse_pos(
             return dir == Direction::None;
         }
         if mouse_delta_len2 < r_threshold_sides * r_threshold_sides {
-            return dir == ImGetDirQuadrantFromDelta(mouse_delta.x, mouse_delta.y);
+            return dir == get_dir_quadrant_from_delta(mouse_delta.x, mouse_delta.y);
         }
     }
     return hit_r.contains(test_mouse_pos.unwrap());

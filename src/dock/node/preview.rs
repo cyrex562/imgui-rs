@@ -7,7 +7,7 @@ use crate::dock::node;
 use crate::dock::node::{DockNode, DockNodeFlags, int, tab_bar};
 use crate::dock::node::rect::{dock_node_calc_drop_rects_and_test_mouse_pos, dock_node_calc_split_rects};
 use crate::dock::preview::DockPreviewData;
-use crate::draw::list::{DrawList, get_foreground_draw_list};
+use crate::draw::list::{DrawList, foreground_draw_list};
 use crate::frame::get_frame_height;
 use crate::math::saturate_f32;
 use crate::rect::Rect;
@@ -19,7 +19,7 @@ use crate::window::{Window, WindowFlags};
 
 // host_node may be None if the window doesn't have a dock_node already.
 // FIXME-DOCK: This is misnamed since it's also doing the filtering.
-// static void dock_node_preview_dock_setup(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* root_payload, DockPreviewData* data, bool is_explicit_target, bool is_outer_docking)
+// static void dock_node_preview_dock_setup(Window* host_window, ImGuiDockNode* host_node, Window* root_payload, DockPreviewData* data, bool is_explicit_target, bool is_outer_docking)
 pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut Window, host_node: Option<&mut DockNode>, root_payload: &mut Window, data: &mut DockPreviewData, is_explicit_target: bool, is_outer_docking: bool) {
     // ImGuiContext& g = *GImGui;
 
@@ -120,7 +120,7 @@ pub fn dock_node_preview_dock_setup(g: &mut Context, host_window: &mut Window, h
     }
 }
 
-// static void dock_node_preview_dock_render(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* root_payload, const DockPreviewData* data)
+// static void dock_node_preview_dock_render(Window* host_window, ImGuiDockNode* host_node, Window* root_payload, const DockPreviewData* data)
 pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_window, host_node: &mut DockNode, root_payload: &mut window::Window, data: &mut DockPreviewData) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.current_window == host_window);   // Because we rely on font size to calculate tab sizes
@@ -132,9 +132,9 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     // In case the two windows involved are on different viewports, we will draw the overlay on each of them.
     let mut overlay_draw_lists_count = 0;
     let mut overlay_draw_lists: [DrawList; 2] = [DrawList::default(); 2];
-    overlay_draw_lists[overlay_draw_lists_count += 1] = get_foreground_draw_list(g, host_window.viewport);
+    overlay_draw_lists[overlay_draw_lists_count += 1] = foreground_draw_list(g, host_window.viewport);
     if host_window.viewport != root_payload.viewport && !is_transparent_payload {
-        overlay_draw_lists[overlay_draw_lists_count += 1] = get_foreground_draw_list(g, root_payload.viewport);
+        overlay_draw_lists[overlay_draw_lists_count += 1] = foreground_draw_list(g, root_payload.viewport);
     }
 
     // Draw main preview rectangle

@@ -238,7 +238,7 @@ index of this file:
 //     CmdBuffer.clear();
 //     IdxBuffer.clear();
 //     VtxBuffer.clear();
-//     Flags = DrawListFlags::None;
+//     flags = DrawListFlags::None;
 //     _VtxCurrentIdx = 0;
 //     _VtxWritePtr = None;
 //     _IdxWritePtr = None;
@@ -254,7 +254,7 @@ index of this file:
 //     dst.cmd_buffer = CmdBuffer;
 //     dst.IdxBuffer = IdxBuffer;
 //     dst.VtxBuffer = VtxBuffer;
-//     dst.flags = Flags;
+//     dst.flags = flags;
 //     return dst;
 // }
 
@@ -317,7 +317,7 @@ index of this file:
 // }
 
 // Our scheme may appears a bit unusual, basically we want the most-common calls add_line add_rect etc. to not have to perform any check so we always have a command ready in the stack.
-// The cost of figuring out if a new command has to be added or if we can merge is paid in those Update** functions only.
+// The cost of figuring out if a new command has to be added or if we can merge is paid in those update** functions only.
 // void ImDrawList::_OnChangedClipRect()
 // {
 //     // If current command is used with different settings we need to add a new command
@@ -456,7 +456,7 @@ index of this file:
 // {
 //     // Large mesh support (when enabled)
 //     // IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
-//     if (sizeof(ImDrawIdx) == 2 && (_VtxCurrentIdx + vtx_count >= (1 << 16)) && (Flags & DrawListFlags::AllowVtxOffset))
+//     if (sizeof(ImDrawIdx) == 2 && (_VtxCurrentIdx + vtx_count >= (1 << 16)) && (flags & DrawListFlags::AllowVtxOffset))
 //     {
 //         // FIXME: In theory we should be testing that vtx_count <64k here.
 //         // In practice, render_text() relies on reserving ahead for a worst case scenario so it is currently useful for us
@@ -552,7 +552,7 @@ index of this file:
 //     let count = closed ? points_count : points_count - 1; // The number of line segments we need to draw
 //     const bool thick_line = (thickness > _FringeScale);
 //
-//     if (Flags & DrawListFlags::AntiAliasedLines)
+//     if (flags & DrawListFlags::AntiAliasedLines)
 //     {
 //         // Anti-aliased stroke
 //         let AA_SIZE = _FringeScale;
@@ -566,7 +566,7 @@ index of this file:
 //         // Do we want to draw this line using a texture?
 //         // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
 //         // - If AA_SIZE is not 1.0 we cannot use the texture path.
-//         const bool use_texture = (Flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0);
+//         const bool use_texture = (flags & DrawListFlags::AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0);
 //
 //         // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
 //         // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font.container_atlas.flags & FontAtlasFlags::NoBakedLines));
@@ -806,7 +806,7 @@ index of this file:
 //
 //     const Vector2D uv = _Data.TexUvWhitePixel;
 //
-//     if (Flags & DrawListFlags::AntiAliasedFill)
+//     if (flags & DrawListFlags::AntiAliasedFill)
 //     {
 //         // Anti-aliased Fill
 //         let AA_SIZE = _FringeScale;
@@ -1122,7 +1122,7 @@ index of this file:
 // {
 //     if ((col & IM_COL32_A_MASK) == 0)
 //         return;
-//     if (Flags & DrawListFlags::AntiAliasedLines)
+//     if (flags & DrawListFlags::AntiAliasedLines)
 //         PathRect(p_min + Vector2D::new(0.50, 0.50), p_max - Vector2D::new(0.50, 0.50), rounding, flags);
 //     else
 //         PathRect(p_min + Vector2D::new(0.50, 0.50), p_max - Vector2D::new(0.49, 0.49), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.

@@ -2,23 +2,25 @@ use std::collections::HashSet;
 use crate::condition::Condition;
 use crate::config::BackendFlags;
 use crate::context::{call_context_hooks, Context, ContextHookType};
-use crate::dock::context::dock_context_new_frame_update_undocking;
-use crate::drag_drop::DragDropFlags;
+use crate::debug::{update_debug_tool_item_picker, update_debug_tool_stack_queries};
+use crate::dock::context::{dock_context_end_frame, dock_context_new_frame_update_docking, dock_context_new_frame_update_undocking};
+use crate::drag_drop::{clear_drag_drop, DragDropFlags};
 use crate::draw::list::DrawListFlags;
-use crate::gc::GcCompactTransientMiscBuffers;
+use crate::gc::gc_compact_transient_misc_buffers;
 use crate::input::keyboard::update_keyboard_inputs;
-use crate::input::mouse::{update_mouse_inputs, update_mouse_moving_window_new_frame, update_mouse_wheel};
+use crate::input::mouse::{is_mouse_down, update_mouse_inputs, update_mouse_moving_window_end_frame, update_mouse_moving_window_new_frame, update_mouse_wheel};
 use crate::input::{MouseCursor, update_input_events};
-use crate::input_event::InputEvent;
-use crate::nav::nav_update;
+use crate::input::input_event::InputEvent;
+use crate::nav::{nav_end_frame, nav_update};
 use crate::popup::get_top_most_popup_modal;
 use crate::rect::Rect;
 use crate::settings::update_settings;
 use crate::types::INVALID_ID;
 use crate::vectors::vector_2d::Vector2D;
-use crate::viewport::update_viewports_new_frame;
+use crate::viewport::{get_main_viewport, set_current_viewport, update_viewports_new_frame};
 use crate::window::WindowFlags;
-use crate::window::lifecycle::{add_window_to_sort_buffer, update_hovered_window_and_capture_flags};
+use crate::window::lifecycle::{add_window_to_sort_buffer, begin, end, update_hovered_window_and_capture_flags};
+use crate::window::next_window::set_next_window_size;
 
 /// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
 /// Usage: static ImGuiOnceUponAFrame oaf; if (oaf) ImGui::Text("This will be called only once per frame");
@@ -130,7 +132,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         keep_alive_id(g.drag_drop_payload.source_id);
     }
 
-    // Update hovered_id data
+    // update hovered_id data
     if !g.hovered_id_previous_frame {
         g.hovered_id_timer = 0.0;
     }
@@ -159,7 +161,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         clear_active_id();
     }
 
-    // Update active_id data (clear reference to active widget if the widget isn't alive anymore)
+    // update active_id data (clear reference to active widget if the widget isn't alive anymore)
     if g.active_id {
         g.active_id_timer += g.io.delta_time;
     }
@@ -197,7 +199,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.input_events_trail.resize(0, InputEvent::default());
     update_input_events(g, g.io.config_input_trickle_event_queue);
 
-    // Update keyboard input state
+    // update keyboard input state
     update_keyboard_inputs(g);
 
     //IM_ASSERT(g.io.key_ctrl == IsKeyDown(ImGuiKey_LeftCtrl) || IsKeyDown(ImGuiKey_RightCtrl));
@@ -205,10 +207,10 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     //IM_ASSERT(g.io.key_alt == IsKeyDown(ImGuiKey_LeftAlt) || IsKeyDown(ImGuiKey_RightAlt));
     //IM_ASSERT(g.io.key_super == IsKeyDown(ImGuiKey_LeftSuper) || IsKeyDown(ImGuiKey_RightSuper));
 
-    // Update gamepad/keyboard navigation
+    // update gamepad/keyboard navigation
     nav_update(g);
 
-    // Update mouse input state
+    // update mouse input state
     update_mouse_inputs(g);
 
     // Undocking
@@ -248,7 +250,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     // for (int i = 0; i != g.Windows.Size; i += 1)
     for  i in 0 .. g.windows.len()
     {
-        // ImGuiWindow* window = g.Windows[i];
+        // Window* window = g.Windows[i];
         let mut window = g.windows[i];
         window.was_active = window.active;
         window.begin_count = 0;
@@ -277,7 +279,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
         }
     }
     if g.gc_compact_all {
-        GcCompactTransientMiscBuffers(g);
+        gc_compact_transient_misc_buffers(g);
     }
     g.gc_compact_all = false;
 
@@ -295,18 +297,18 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
     g.group_stack.clear();
 
     // Docking
-    dock_context_new_frame_update_docking(&g);
+    dock_context_new_frame_update_docking(g);
 
-    // [DEBUG] Update debug features
-    update_debug_tool_item_picker();
-    update_debug_tool_stack_queries();
+    // [DEBUG] update debug features
+    update_debug_tool_item_picker(g);
+    update_debug_tool_stack_queries(g);
 
     // Create implicit/fallback window - which we will only render it if the user has added something to it.
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid ImGui:: calls from crashing.
     g.within_frame_scope_with_implicit_window = true;
-    set_next_window_size(Vector2D::new(400, 400), Condition::FirstUseEver);
-    begin("Debug##Default");
+    set_next_window_size(g, &Vector2D::new(400.0, 400.0), Condition::FirstUseEver);
+    begin(g, "Debug##Default", None, None);
     // IM_ASSERT(g.CurrentWindow->IsFallbackWindow == true);
 
     call_context_hooks(g, ContextHookType::NewFramePost);
@@ -334,31 +336,31 @@ pub fn end_frame(g: &mut Context)
     {
         // ImGuiViewport* viewport = FindViewportByID(g.PlatformImeViewport);
         let viewport = g.viewport_mut(g.platform_ime_viewport);
-        g.io.set_platform_ime_data_fn(if viewport.is_some() {viewport} else { get_main_viewport() }, &g.platform_ime_data);
+        g.io.set_platform_ime_data_fn(if viewport.is_some() {viewport} else { get_main_viewport(g) }, &g.platform_ime_data);
     }
 
     // Hide implicit/fallback "Debug" window if it hasn't been used
     g.within_frame_scope_with_implicit_window = false;
-    if g.current_window && !g.current_window.write_accessed){
+    if g.current_window && !g.current_window.write_accessed{
         g.current_window.active = false;
     }
-    end();
+    end(g);
 
-    // Update navigation: CTRL+Tab, wrap-around requests
-    nav_end_frame();
+    // update navigation: CTRL+Tab, wrap-around requests
+    nav_end_frame(g);
 
-    // Update docking
+    // update docking
     dock_context_end_frame(g);
 
-    set_current_viewport(None, None);
+    set_current_viewport(g, None, None);
 
     // Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
     if g.drag_drop_active
     {
         let is_delivered = g.drag_drop_payload.delivery;
-        let is_elapsed = (g.drag_drop_payload.data_frame_count + 1 < g.frame_count) && ((g.drag_drop_source_flags.contains(DragDropFlags::SourceAutoExpirePayload) ) || !is_mouse_down(g.drag_drop_mouse_button));
+        let is_elapsed = (g.drag_drop_payload.data_frame_count + 1 < g.frame_count) && ((g.drag_drop_source_flags.contains(&DragDropFlags::SourceAutoExpirePayload) ) || !is_mouse_down(g, g.drag_drop_mouse_button));
         if is_delivered || is_elapsed {
-            clear_drag_drop();
+            clear_drag_drop(g);
         }
     }
 
@@ -375,26 +377,26 @@ pub fn end_frame(g: &mut Context)
     g.frame_count_ended = g.frame_count;
 
     // Initiate moving window + handle left-click and right-click focus
-    UpdateMouseMovingWindowEndFrame();
+    update_mouse_moving_window_end_frame(g);
 
-    // Update user-facing viewport list (g.viewports -> g.platform_io.viewports after filtering out some)
-    UpdateViewportsEndFrame();
+    // update user-facing viewport list (g.viewports -> g.platform_io.viewports after filtering out some)
+    update_viewports_end_frame();
 
     // Sort the window list so that all child windows are after their parent
     // We cannot do that on focus_window() because children may not exist yet
     // g.windows_temp_sort_buffer.resize(0);
     g.windows_temp_sort_buffer.reserve(g.windows.len());
     // for (int i = 0; i != g.windows.Size; i += 1)
-    for win in g.windows.iter_mut()
+    for (_,win) in g.windows.iter_mut()
     {
-        // ImGuiWindow* window = g.windows[i];
+        // Window* window = g.windows[i];
         if win.active && win.flags.contains(&WindowFlags::ChildWindow) {    // if a child is active its parent will add it
             continue;
         }
-        add_window_to_sort_buffer(&g.windows_temp_sort_buffer, window);
+        add_window_to_sort_buffer(g, &g.windows_temp_sort_buffer, window);
     }
 
-    // This usually assert if there is a mismatch between the ImGuiWindowFlags_ChildWindow / ParentWindow values and dc.ChildWindows[] in parents, aka we've done something wrong.
+    // This usually assert if there is a mismatch between the WindowFlags_ChildWindow / ParentWindow values and dc.ChildWindows[] in parents, aka we've done something wrong.
     // IM_ASSERT(g.windows.Size == g.windows_temp_sort_buffer.Size);
     g.windows.swap(&mut g.windows_temp_sort_buffer);
     g.io.metrics_active_windows = g.windows_active_count;
@@ -405,8 +407,9 @@ pub fn end_frame(g: &mut Context)
     // clear Input data for next frame
     g.io.mouse_wheel = 0.0;
     g.io.mouse_wheel_h = 0.0;
-    g.io.input_queue_characters.resize(0);
-    memset(g.io.NavInputs, 0, sizeof(g.io.NavInputs));
+    g.io.input_queue_characters.resize(0, 0u8);
+    // memset(g.io.nav_inputs, 0, sizeof(g.io.nav_inputs));
+    g.io.nav_inputs.clear();
 
     call_context_hooks(g, ImGuiContextHookType_EndFramePost);
 }
@@ -422,5 +425,5 @@ pub fn get_frame_height(g: &mut Context) -> f32
 pub fn get_frame_height_with_spacing(g: &mut Context) -> f32
 {
     // ImGuiContext& g = *GImGui;
-    return g.font_size + g.style.frame_padding.y * 2.0 + g.style.ItemSpacing.y;
+    return g.font_size + g.style.frame_padding.y * 2.0 + g.style.item_spacing.y;
 }

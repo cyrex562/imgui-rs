@@ -102,7 +102,7 @@ public:
         minimap_location_(ImNodesMiniMapLocation_BottomRight) {}
 
   void show() {
-    // Update timer context
+    // update timer context
     current_time_seconds = 0.001 * SDL_GetTicks();
 
     auto flags = ImGuiWindowFlags_MenuBar;

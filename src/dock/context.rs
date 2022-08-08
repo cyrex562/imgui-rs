@@ -79,7 +79,7 @@ pub fn dock_context_shutdown(g: &mut Context) {
     }
 }
 
-// void ImGui::DockContextClearNodes(ImGuiContext* ctx, ImGuiID root_id, bool clear_settings_refs)
+// void ImGui::DockContextClearNodes(ImGuiContext* ctx, Id32 root_id, bool clear_settings_refs)
 pub fn dock_context_clear_nodes(g: &mut Context, root_id: Id32, clear_settings_refs: bool) {
     // IM_UNUSED(ctx);
     // IM_ASSERT(ctx == GImGui);
@@ -97,7 +97,7 @@ pub fn dock_context_rebuild_nodes(g: &mut Context) {
     // ImGuiDockContext* dc = &ctx->DockContext;
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRebuildNodes\n");
     SaveIniSettingsToMemory();
-    // ImGuiID root_id = 0; // Rebuild all
+    // Id32 root_id = 0; // Rebuild all
     let mut root_id: Id32 = 0;
     dock_context_clear_nodes(g, root_id, false);
     dock_context_build_nodes_from_settings(g, &mut g.dock_context.nodes_settings);
@@ -200,7 +200,7 @@ pub fn dock_context_end_frame(g: &mut Context) {
     }
 }
 
-// static ImGuiDockNode* ImGui::DockContextFindNodeByID(ImGuiContext* ctx, ImGuiID id)
+// static ImGuiDockNode* ImGui::DockContextFindNodeByID(ImGuiContext* ctx, Id32 id)
 pub fn dock_context_find_node_by_id(g: &mut Context, id: Id32) -> Option<&mut DockNode> {
     // return (ImGuiDockNode*)ctx.DockContext.Nodes.GetVoidPtr(id);
     // g.dock_context.nodes.get_mut(&id).expect(format!("failed to get node for id {}", id).as_str())
@@ -220,7 +220,7 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context) {
     // We could in theory use DockNodeTreeFindVisibleNodeByPos() on the root host dock node, but using ->dock_node is a good shortcut.
     // Note this is mostly a debug thing and isn't actually used for docking target, because docking involve more detailed filtering.
     g.hovered_dock_node_id = INVALID_ID;
-    // if (ImGuiWindow* hovered_window = g.hovered_window_under_moving_window)
+    // if (Window* hovered_window = g.hovered_window_under_moving_window)
     if g.hovered_window_under_moving_window_id != INVALID_ID {
         let hovered_window = g.window_mut(g.hovered_window_under_moving_window_id);
         let hovered_window_root_window = g.window_mut(hovered_window.root_window_id);
@@ -259,12 +259,12 @@ pub fn dock_context_new_frame_update_docking(g: &mut Context) {
     }
 }
 
-// ImGuiID ImGui::dock_context_gen_node_id(ImGuiContext* ctx)
+// Id32 ImGui::dock_context_gen_node_id(ImGuiContext* ctx)
 pub fn dock_context_gen_node_id(g: &mut Context) -> Id32 {
     // Generate an id for new node (the exact id value doesn't matter as long as it is not already used)
     // FIXME-OPT FIXME-DOCK: This is suboptimal, even if the node count is small enough not to be a worry.0
     // We should poke in ctx->Nodes to find a suitable id faster. Even more so trivial that ctx->Nodes lookup is already sorted.
-    // ImGuiID id = 0x0001;
+    // Id32 id = 0x0001;
     let mut id = INVALID_IDx0001;
     while dock_context_find_node_by_id(g, id).is_some() {
         id += 1;
@@ -272,7 +272,7 @@ pub fn dock_context_gen_node_id(g: &mut Context) -> Id32 {
     return id;
 }
 
-// static ImGuiDockNode* ImGui::DockContextAddNode(ImGuiContext* ctx, ImGuiID id)
+// static ImGuiDockNode* ImGui::DockContextAddNode(ImGuiContext* ctx, Id32 id)
 pub fn dock_context_add_node(g: &mut Context, mut id: Id32) -> &mut DockNode {
     // Generate an id for the new node (the exact id value doesn't matter as long as it is not already used) and add the first window.
     // ImGuiContext& g = *ctx;
@@ -286,7 +286,7 @@ pub fn dock_context_add_node(g: &mut Context, mut id: Id32) -> &mut DockNode {
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextAddNode 0x%08X\n", id);
     // ImGuiDockNode* node = IM_NEW(ImGuiDockNode)(id);
     let mut node = DockNode::new(id);
-    // ctx.DockContext.Nodes.SetVoidPtr(node.ID, node);
+    // ctx.DockContext.Nodes.SetVoidPtr(node.id, node);
     g.dock_context.nodes.push(node.id);
     return &mut node;
 }
@@ -298,7 +298,7 @@ pub struct DockContextPruneNodeData {
     pub count_windows: i32,
     pub count_child_windows: i32,
     pub count_child_nodes: i32,
-    // ImGuiID     RootId;
+    // Id32     RootId;
     pub root_id: Id32, // ImGuiDockContextPruneNodeData() { CountWindows = CountChildWindows = CountChildNodes = 0; RootId = 0; }
 }
 
@@ -321,7 +321,7 @@ pub fn dock_context_prune_unused_settings_nodes(g: &mut Context) {
         // ImGuiDockContextPruneNodeData* parent_data = settings.parent_node_id ? pool.GetByKey(settings.parent_node_id) : 0;
         let mut parent_data = pool.get_mut(&settings.parent_node_id);
 
-        // pool.GetOrAddByKey(settings.ID).RootId = parent_data ? parent_data.RootId : settings.ID;
+        // pool.GetOrAddByKey(settings.id).RootId = parent_data ? parent_data.RootId : settings.id;
         let mut pool_val = get_or_add(&mut pool, &settings.id);
         pool_val.root_id = if parent_data.is_some() {
             parent_data.unwrap().root_id
@@ -344,7 +344,7 @@ pub fn dock_context_prune_unused_settings_nodes(g: &mut Context) {
         // if (settings.ParentWindowId != 0)
         if settings.parent_window_id != INVALID_ID {
             let window_settings = find_window_settings(g, settings.parent_window_id);
-            // if (ImGuiWindowSettings * window_settings = FindWindowSettings(settings.ParentWindowId))
+            // if (WindowSettings * window_settings = FindWindowSettings(settings.ParentWindowId))
             if window_settings.id != INVALID_ID {
                 // if (window_settings.dock_id)
                 if window_settings.dock_id != INVALID_ID {
@@ -361,10 +361,10 @@ pub fn dock_context_prune_unused_settings_nodes(g: &mut Context) {
 
     // Count reference to dock ids from window settings
     // We guard against the possibility of an invalid .ini file (RootID may point to a missing node)
-    // for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+    // for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
     for settings in g.settings_windows.iter_mut() {
         let dock_id = settings.dock_id;
-        // if (ImGuiID dock_id = settings.dock_id){
+        // if (Id32 dock_id = settings.dock_id){
         if dock_id != INVALID_ID {
             // if (ImGuiDockContextPruneNodeData * data = pool.GetByKey(dock_id)) {
             let data = pool.get_mut(&dock_id);
@@ -388,12 +388,12 @@ pub fn dock_context_prune_unused_settings_nodes(g: &mut Context) {
     for settings_n in 0..dc.nodes_settings.len() {
         // ImGuiDockNodeSettings* settings = &dc.nodes_settings[settings_n];
         let settings = &mut dc.nodes_settings[settings_n];
-        // ImGuiDockContextPruneNodeData* data = pool.GetByKey(settings.ID);
+        // ImGuiDockContextPruneNodeData* data = pool.GetByKey(settings.id);
         let data = pool.get_mut(&settings.id);
         if data.unwrap().count_windows > 1 {
             continue;
         }
-        // ImGuiDockContextPruneNodeData* data_root = (data.RootId == settings.ID) ? data : pool.GetByKey(data.RootId);
+        // ImGuiDockContextPruneNodeData* data_root = (data.RootId == settings.id) ? data : pool.GetByKey(data.RootId);
         let data_root = if data.unwrap().root_id == settings.id {
             data
         } else {
@@ -410,7 +410,7 @@ pub fn dock_context_prune_unused_settings_nodes(g: &mut Context) {
             && data.count_child_nodes == 0); // Leaf nodes with 0 window
         remove |= (data_root.count_child_windows == 0);
         if remove {
-            // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_prune_unused_settings_nodes: Prune 0x%08X\n", settings.ID);
+            // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_prune_unused_settings_nodes: Prune 0x%08X\n", settings.id);
             settings::dock_settings_remove_node_references(g, &mut settings.id, 1);
             settings.id = INVALID_ID;
         }
@@ -470,14 +470,14 @@ pub fn dock_context_buld_nodes_from_settings(
     }
 }
 
-// void dock_context_build_add_windows_to_nodes(ImGuiContext* ctx, ImGuiID root_id)
+// void dock_context_build_add_windows_to_nodes(ImGuiContext* ctx, Id32 root_id)
 pub fn dock_context_build_add_windows_to_nodes(g: &mut Context, root_id: Id32) {
     // Rebind all windows to nodes (they can also lazily rebind but we'll have a visible glitch during the first frame)
     // ImGuiContext& g = *ctx;
     // for (int n = 0; n < g.windows.len(); n += 1)
     // for n in 0 .. g.windows.len()
     for (_, window) in g.windows.iter_mut() {
-        // ImGuiWindow* window = g.windows[n];
+        // Window* window = g.windows[n];
         // let window = g.windows.get_mut(n).unwrap();
         if window.dock_id == INVALID_ID || window.last_frame_active < g.frame_count - 1 {
             continue;
@@ -495,7 +495,7 @@ pub fn dock_context_build_add_windows_to_nodes(g: &mut Context, root_id: Id32) {
     }
 }
 
-// void DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, float split_ratio, bool split_outer)
+// void DockContextQueueDock(ImGuiContext* ctx, Window* target, ImGuiDockNode* target_node, Window* payload, ImGuiDir split_dir, float split_ratio, bool split_outer)
 pub fn dock_context_queue_dock(
     g: &mut Context,
     target: &mut Window,
@@ -518,7 +518,7 @@ pub fn dock_context_queue_dock(
     g.dock_context.requests.push_back(req);
 }
 
-// void DockContextQueueUndockWindow(ImGuiContext* ctx, ImGuiWindow* window)
+// void DockContextQueueUndockWindow(ImGuiContext* ctx, Window* window)
 pub fn dock_context_queue_undock_window(g: &mut Context, window: &mut Window) {
     // ImGuiDockRequest req;
     let mut req = DockRequest::default();
@@ -566,10 +566,10 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
     // ImGuiContext& g = *ctx;
     // IM_UNUSED(g);
 
-    // ImGuiWindow* payload_window = req.dock_payload_id;     // Optional
+    // Window* payload_window = req.dock_payload_id;     // Optional
     let payload_window_id = req.dock_payload_id;
     let payload_window = g.window_mut(payload_window_id);
-    // ImGuiWindow* target_window = req.dock_target_window_id;
+    // Window* target_window = req.dock_target_window_id;
     let target_window_id = req.dock_target_window_id;
     let target_window = g.window_mut(target_window_id);
     // ImGuiDockNode* node = req.dock_target_node_id;
@@ -578,13 +578,13 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
 
     if payload_window.id != INVALID_ID {
     }
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X target '%s' dock window '%s', split_dir %d\n", node ? node.ID : 0, target_window ? target_window.Name : "None", payload_window ? payload_window.Name : "None", req.DockSplitDir);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X target '%s' dock window '%s', split_dir %d\n", node ? node.id : 0, target_window ? target_window.Name : "None", payload_window ? payload_window.Name : "None", req.DockSplitDir);
     else {
     }
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X, split_dir %d\n", node ? node.ID : 0, req.DockSplitDir);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_process_dock node 0x%08X, split_dir %d\n", node ? node.id : 0, req.DockSplitDir);
 
     // Decide which Tab will be selected at the end of the operation
-    // ImGuiID next_selected_id = 0;
+    // Id32 next_selected_id = 0;
     let mut next_selected_id: Id32 = 0;
     // ImGuiDockNode* payload_node = None;
     let mut payload_node: &mut DockNode = &mut Default::default();
@@ -729,7 +729,7 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
                 // IM_ASSERT(node.Windows.size == 0);
                 node::dock_node_move_child_nodes(g, node.unwrap(), payload_node);
             } else {
-                // const ImGuiID payload_dock_id = payload_node.id;
+                // const Id32 payload_dock_id = payload_node.id;
                 let payload_dock_id = payload_node.id;
                 window::dock_node_move_windows(g, node.unwrap(), payload_node);
                 settings::dock_settings_rename_node_references(g, payload_dock_id, node.id);
@@ -737,7 +737,7 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
             dock_context_remove_node(g, payload_node, true);
         } else if payload_window {
             // Transfer single window
-            // const ImGuiID payload_dock_id = payload_window.dock_id;
+            // const Id32 payload_dock_id = payload_window.dock_id;
             let payload_dock_id = payload_window.dock_id;
             node.unwrap().visible_window_id = payload_window.id;
             window::dock_node_add_window(g, node.unwrap(), payload_window, true);
@@ -754,7 +754,7 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
         node.unwrap().want_hiddent_tab_bar_update = true;
     }
 
-    // Update selection immediately
+    // update selection immediately
     // if ImGuiTabBar* tab_bar = node.tab_bar {
     let mut tab_bar = &mut node.unwrap().tab_bar;
     if tab_bar.is_some() {
@@ -763,7 +763,7 @@ pub fn dock_context_process_dock(g: &mut Context, req: &mut DockRequest) {
     mark_ini_settings_dirty(g);
 }
 
-// void DockContextProcessUndockWindow(ImGuiContext* ctx, ImGuiWindow* window, bool clear_persistent_docking_ref)
+// void DockContextProcessUndockWindow(ImGuiContext* ctx, Window* window, bool clear_persistent_docking_ref)
 pub fn dock_context_process_undock_window(
     g: &mut Context,
     window: &mut Window,
@@ -801,7 +801,7 @@ pub fn dock_context_process_undock_window(
 // void DockContextProcessUndockNode(ImGuiContext* ctx, ImGuiDockNode* node)
 pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode) {
     // ImGuiContext& g = *.g;
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockNode node %08X\n", node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockNode node %08X\n", node.id);
     // IM_ASSERT(node.IsLeafNode());
     // IM_ASSERT(node.Windows.size >= 1);
 
@@ -816,7 +816,7 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode) {
         settings::dock_settings_rename_node_references(g, node.id, new_node.id);
         // for (int n = 0; n < new_node.windows.len(); n += 1)
         for win_id in new_node.windows.iter() {
-            // ImGuiWindow* window = new_node.windows[n];
+            // Window* window = new_node.windows[n];
             let mut win = g.window_mut(*win_id);
             window.flags.remove(WindowFlags::ChildWindow);
             if window.parent_window_id != INVALID_ID {
@@ -861,7 +861,7 @@ pub fn dock_context_process_undock_node(g: &mut Context, node: &mut DockNode) {
 }
 
 // This is mostly used for automation.
-// bool DockContextCalcDropPosForDocking(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos)
+// bool DockContextCalcDropPosForDocking(Window* target, ImGuiDockNode* target_node, Window* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos)
 pub fn dock_context_calc_drop_pos_for_docking(
     g: &mut Context,
     target: &mut Window,
@@ -910,7 +910,7 @@ pub fn dock_context_remove_node(
     // ImGuiDockContext* dc  = &ctx.DockContext;
     let dc = &mut g.dock_context;
 
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_remove_node 0x%08X\n", node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] dock_context_remove_node 0x%08X\n", node.id);
     // IM_ASSERT(DockContextFindNodeByID(ctx, node.id) == node);
     // IM_ASSERT(node.ChildNodes[0] == None && node.ChildNodes[1] == None);
     // IM_ASSERT(node.Windows.size == 0);
@@ -949,7 +949,7 @@ pub fn dock_context_remove_node(
                 .child_nodes
                 .retain(|child_node| child_node != node.id);
 
-            // dc.Nodes.SetVoidPtr(node.ID, None);
+            // dc.Nodes.SetVoidPtr(node.id, None);
             dc.nodes.retain(|x| x != node.id);
             // IM_DELETE(node);
             g.dock_nodes.retain(|dn| dn != node.id);
@@ -957,7 +957,7 @@ pub fn dock_context_remove_node(
     }
 }
 
-// static ImGuiDockNode* dock_context_bind_node_to_window(ImGuiContext* ctx, ImGuiWindow* window)
+// static ImGuiDockNode* dock_context_bind_node_to_window(ImGuiContext* ctx, Window* window)
 pub fn dock_context_bind_node_to_window(
     g: &mut Context,
     window: &mut window::Window,

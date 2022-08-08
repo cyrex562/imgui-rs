@@ -155,7 +155,7 @@ int main(int, char**)
         g_pd3dDevice->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
         ImGui_ImplDX10_RenderDrawData(ImGui::GetDrawData());
 
-        // Update and Render additional Platform windows
+        // update and Render additional Platform windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             ImGui::UpdatePlatformWindows();

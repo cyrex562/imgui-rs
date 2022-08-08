@@ -5,7 +5,7 @@ use crate::window::Window;
 
 /// This is called during NewFrame()->UpdateViewportsNewFrame() only.
 /// Need to keep in sync with set_window_pos()
-/// static void TranslateWindow(ImGuiWindow* window, const Vector2D& delta)
+/// static void TranslateWindow(Window* window, const Vector2D& delta)
 pub fn translate_window(window: &mut Window, delta: &Vector2D)
 {
     window.pos += delta;
@@ -18,7 +18,7 @@ pub fn translate_window(window: &mut Window, delta: &Vector2D)
     window.dc.ideal_max_pos += delta;
 }
 
-// void ImGui::set_window_pos(ImGuiWindow* window, const Vector2D& pos, ImGuiCond cond)
+// void ImGui::set_window_pos(Window* window, const Vector2D& pos, ImGuiCond cond)
 pub fn set_window_pos(g: &mut Context, window: &mut Window, pos: &Vector2D, condition: Condition)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
@@ -46,13 +46,13 @@ pub fn set_window_pos(g: &mut Context, window: &mut Window, pos: &Vector2D, cond
 // void ImGui::set_window_pos(const Vector2D& pos, ImGuiCond cond)
 pub fn set_window_pos_2(g: &mut Window, pos: &Vector2D, condition: Condition)
 {
-    ImGuiWindow* window = GetCurrentWindowRead();
+    Window* window = GetCurrentWindowRead();
     set_window_pos(window, pos, cond);
 }
 
 // void ImGui::set_window_pos(const char* name, const Vector2D& pos, ImGuiCond cond)
 pub fn set_window_pos3(g: &mut Context, name: &str, pos: &Vector2D, condition: Condition)
 {
-    if (ImGuiWindow* window = find_window_by_name(name))
+    if (Window* window = find_window_by_name(name))
         set_window_pos(window, pos, cond);
 }

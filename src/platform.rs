@@ -1,33 +1,34 @@
 use crate::config::ConfigFlags;
-use crate::{Context, Viewport};
-use crate::orig_imgui_single_file::{ImGuiViewport, ImGuiWindow, int};
+use crate::{Context, hash_string, INVALID_ID, Viewport, ViewportFlags};
+use crate::orig_imgui_single_file::{Viewport, Window, int};
 use crate::rect::Rect;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::checks::is_window_active_and_visible;
+use crate::window::get::get_window_for_title_display;
 
 // (Optional) This is required when enabling multi-viewport. Represent the bounds of each connected monitor/display and their DPI.
 // We use this information for multiple DPI support + clamping the position of popups and tooltips so they don't straddle multiple monitors.
 #[derive(Debug,Clone,Default)]
-pub struct PlatformMonitor
+pub struct PlatformDisplay
 {
-    // Vector2D  MainPos, MainSize;      // Coordinates of the area displayed on this monitor (min = upper left, max = bottom right)
-    pub MainPos: Vector2D,
-    pub MainSize: Vector2D,
-    // Vector2D  work_pos, work_size;      // Coordinates without task bars / side bars / menu bars. Used to avoid positioning popups/tooltips inside this region. If you don't have this info, please copy the value for MainPos/MainSize.
-    pub WorkPos: Vector2D,
-    pub WorkSize: Vector2D,
-    pub DpiScale: f32,              // 1.0 = 96 DPI
-    // ImGuiPlatformMonitor()          { MainPos = MainSize = work_pos = work_size = Vector2D(0, 0); dpi_scale = 1.0; }
+    // Vector2D  main_pos, main_size;      // Coordinates of the area displayed on this monitor (min = upper left, max = bottom right)
+    pub main_pos: Vector2D,
+    pub main_size: Vector2D,
+    // Vector2D  work_pos, work_size;      // Coordinates without task bars / side bars / menu bars. Used to avoid positioning popups/tooltips inside this region. If you don't have this info, please copy the value for main_pos/main_size.
+    pub work_pos: Vector2D,
+    pub work_size: Vector2D,
+    pub dpi_scale: f32,              // 1.0 = 96 DPI
+    // ImGuiPlatformMonitor()          { main_pos = main_size = work_pos = work_size = Vector2D(0, 0); dpi_scale = 1.0; }
 }
 
-impl PlatformMonitor {
+impl PlatformDisplay {
     pub fn new() -> Self {
         Self {
-            MainPos: Default::default(),
-            MainSize: Default::default(),
-            WorkPos: Default::default(),
-            WorkSize: Default::default(),
-            DpiScale: 1.0
+            main_pos: Default::default(),
+            main_size: Default::default(),
+            work_pos: Default::default(),
+            work_size: Default::default(),
+            dpi_scale: 1.0
         }
     }
 }
@@ -44,10 +45,10 @@ pub struct PlatformImeData
 }
 
 impl PlatformImeData {
-    pub fn new(initial_input_pos: &Vector2D) -> Self {
+    pub fn new(initial_input_pos: Vector2D) -> Self {
         Self {
             want_visible: false,
-            input_pos: initial_input_pos.clone(),
+            input_pos: initial_input_pos,
             input_line_height: 0.0
         }
     }
@@ -60,8 +61,8 @@ pub fn update_platform_windows(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.frame_count_ended == g.frame_count && "Forgot to call Render() or EndFrame() before UpdatePlatformWindows()?");
-    // IM_ASSERT(g.frame_count_platform_ended < g.frame_count);
-    g.frame_count_platform_ended = g.frame_count;
+    // IM_ASSERT(g.frame_count_plantform_ended < g.frame_count);
+    g.frame_count_plantform_ended = g.frame_count;
     if !(g.config_flags_curr_frame.contains(&ConfigFlags::ViewportsEnable)) {
         return;
     }
@@ -76,96 +77,112 @@ pub fn update_platform_windows(g: &mut Context)
 
         // Destroy platform window if the viewport hasn't been submitted or if it is hosting a hidden window
         // (the implicit/fallback Debug##Default window will be registering its viewport then be disabled, causing a dummy DestroyPlatformWindow to be made each frame)
-        let mut destroy_platform_window = false;
-        destroy_platform_window |= (viewport.last_frame_active < g.frame_count - 1);
-        destroy_platform_window |= (viewport.Window && !is_window_active_and_visible(viewport.Window));
-        if (destroy_platform_window)
+        let mut do_destroy_platform_window = false;
+        do_destroy_platform_window |= (viewport.last_frame_active < g.frame_count - 1);
+        do_destroy_platform_window |= (viewport.Window && !is_window_active_and_visible(viewport.Window));
+        if do_destroy_platform_window
         {
-            DestroyPlatformWindow(viewport);
+            destroy_platform_window(g, viewport);
             continue;
         }
 
         // New windows that appears directly in a new viewport won't always have a size on their first frame
-        if (viewport.last_frame_active < g.frame_count || viewport.size.x <= 0 || viewport.size.y <= 0)
+        if viewport.last_frame_active < g.frame_count || viewport.size.x <= 0 || viewport.size.y <= 0 {
             continue;
+        }
 
         // Create window
-        bool is_new_platform_window = (viewport.platform_window_created == false);
-        if (is_new_platform_window)
+        let is_new_platform_window = (viewport.platform_window_created == false);
+        if is_new_platform_window
         {
             IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform window %08X '%s'\n", viewport.id, viewport.Window ? viewport.Window.name : "n/a");
-            g.platform_io.Platform_CreateWindow(viewport);
-            if (g.platform_io.Renderer_CreateWindow != None)
-                g.platform_io.Renderer_CreateWindow(viewport);
-            viewport.LastNameHash = 0;
-            viewport.LastPlatformPos = viewport.LastPlatformSize = Vector2D::new(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/size below, before Platform_ShowWindow (FIXME: Is that necessary?)
-            viewport.LastRendererSize = viewport.size;                                       // We don't need to call Renderer_set_window_size() as it is expected Renderer_CreateWindow() already did it.
+            g.platform_io.platform_create_window(viewport);
+            if g.platform_io.renderer_create_window != None {
+                g.platform_io.renderer_create_window(viewport);
+            }
+            viewport.last_name_hash = 0;
+            viewport.last_platform_size = Vector2D::new(f32::MAX, f32::MAX);
+            viewport.last_platform_pos = viewport.last_platform_size.clone(); // By clearing those we'll enforce a call to platform_set_window_pos/size below, before Platform_ShowWindow (FIXME: Is that necessary?)
+            viewport.last_renderer_size = viewport.size.clone();                                       // We don't need to call renderer_set_window_size() as it is expected renderer_create_window() already did it.
             viewport.platform_window_created = true;
         }
 
         // Apply Position and size (from ImGui to Platform/Renderer backends)
-        if ((viewport.LastPlatformPos.x != viewport.pos.x || viewport.LastPlatformPos.y != viewport.pos.y) && !viewport.PlatformRequestMove)
-            g.platform_io.Platform_SetWindowPos(viewport, viewport.pos);
-        if ((viewport.LastPlatformSize.x != viewport.size.x || viewport.LastPlatformSize.y != viewport.size.y) && !viewport.PlatformRequestResize)
-            g.platform_io.Platform_set_window_size(viewport, viewport.size);
-        if ((viewport.LastRendererSize.x != viewport.size.x || viewport.LastRendererSize.y != viewport.size.y) && g.platform_io.Renderer_set_window_size)
-            g.platform_io.Renderer_set_window_size(viewport, viewport.size);
-        viewport.LastPlatformPos = viewport.pos;
-        viewport.LastPlatformSize = viewport.LastRendererSize = viewport.size;
+        if (viewport.last_platform_pos.x != viewport.pos.x || viewport.last_platform_pos.y != viewport.pos.y) && !viewport.platform_request_move {
+            g.platform_io.platform_set_window_pos(viewport, &viewport.pos);
+        }
+        if (viewport.last_platform_size.x != viewport.size.x || viewport.last_platform_size.y != viewport.size.y) && !viewport.platform_requsest_resize {
+            g.platform_io.platform_set_window_size(viewport, &viewport.size);
+        }
+        if (viewport.last_renderer_size.x != viewport.size.x || viewport.last_renderer_size.y != viewport.size.y) && g.platform_io.renderer_set_window_size {
+            g.platform_io.renderer_set_window_size(viewport, &viewport.size);
+        }
+        viewport.last_platform_pos = viewport.pos.clone();
+        viewport.last_platform_size = viewport.size.clone();
+        viewport.last_renderer_size = viewport.size.clone();
 
-        // Update title bar (if it changed)
-        if (ImGuiWindow* window_for_title = GetWindowForTitleDisplay(viewport.Window))
+        // update title bar (if it changed)
+        let window_for_title = &mut get_window_for_title_display(g, viewport.window_id);
+        // if (Window* window_for_title = GetWindowForTitleDisplay(viewport.Window))
+        if window_for_title.id != INVALID_ID
         {
-            const char* title_begin = window_for_title.name;
-            char* title_end = (char*)(intptr_t)FindRenderedTextEnd(title_begin);
-            const ImGuiID title_hash = ImHashStr(title_begin, title_end - title_begin);
-            if (viewport.LastNameHash != title_hash)
+            // const char* title_begin = window_for_title.name;
+            let title_begin = &mut window_for_title.name;
+            let title_end = find_rendered_text_end(title_begin);
+            let title_hash = hash_string(title_begin, title_end - title_begin);
+            if viewport.last_name_hash != title_hash
             {
-                char title_end_backup_c = *title_end;
-                *title_end = 0; // Cut existing buffer short instead of doing an alloc/free, no small gain.
-                g.platform_io.Platform_SetWindowTitle(viewport, title_begin);
+                // char title_end_backup_c = *title_end;
+                let title_end_backup_c = title_end;
+                // *title_end = 0; // Cut existing buffer short instead of doing an alloc/free, no small gain.
+                g.platform_io.platform_set_window_title(viewport, title_begin);
                 *title_end = title_end_backup_c;
-                viewport.LastNameHash = title_hash;
+                viewport.last_name_hash = title_hash;
             }
         }
 
-        // Update alpha (if it changed)
-        if (viewport.LastAlpha != viewport.alpha && g.platform_io.Platform_SetWindowAlpha)
-            g.platform_io.Platform_SetWindowAlpha(viewport, viewport.alpha);
-        viewport.LastAlpha = viewport.alpha;
+        // update alpha (if it changed)
+        if viewport.last_alpha != viewport.alpha && g.platform_io.platform_set_window_alpha {
+            g.platform_io.platform_set_window_alpha(viewport, viewport.alpha);
+        }
+        viewport.last_alpha = viewport.alpha;
 
         // Optional, general purpose call to allow the backend to perform general book-keeping even if things haven't changed.
-        if (g.platform_io.Platform_UpdateWindow)
-            g.platform_io.Platform_UpdateWindow(viewport);
+        if g.platform_io.platform_update_window {
+            g.platform_io.platform_update_window(viewport);
+        }
 
-        if (is_new_platform_window)
+        if is_new_platform_window
         {
             // On startup ensure new platform window don't steal focus (give it a few frames, as nested contents may lead to viewport being created a few frames late)
-            if (g.frame_count < 3)
-                viewport.flags |= ImGuiViewportFlags_NoFocusOnAppearing;
+            if g.frame_count < 3 {
+                viewport.flags |= ViewportFlags::NoFocusOnAppearing;
+            }
 
             // Show window
-            g.platform_io.Platform_ShowWindow(viewport);
+            g.platform_io.platform_show_window(viewport);
 
             // Even without focus, we assume the window becomes front-most.
             // This is useful for our platform z-order heuristic when io.mouse_hovered_viewport is not available.
-            if (viewport.LastFrontMostStampCount != g.viewportFrontMostStampCount)
-                viewport.LastFrontMostStampCount = g.viewportFrontMostStampCount += 1;
+            if viewport.last_frontmost_stamp_count != g.viewport_frontmost_stamp_count {
+                 g.viewport_frontmost_stamp_count += 1;
+                viewport.last_frontmost_stamp_count = viewport_frontmost_stamp_count;
             }
+        }
 
         // clear request flags
         viewport.ClearRequestFlags();
     }
 
-    // Update our implicit z-order knowledge of platform windows, which is used when the backend cannot provide io.mouse_hovered_viewport.
+    // update our implicit z-order knowledge of platform windows, which is used when the backend cannot provide io.mouse_hovered_viewport.
     // When setting Platform_GetWindowFocus, it is expected that the platform backend can handle calls without crashing if it doesn't have data stored.
     // FIXME-VIEWPORT: We should use this information to also set dear imgui-side focus, allowing us to handle os-level alt+tab.
     if (g.platform_io.Platform_GetWindowFocus != None)
     {
-        ImGuiViewportP* focused_viewport = None;
+        ViewportP* focused_viewport = None;
         for (int n = 0; n < g.viewports.size && focused_viewport == None; n += 1)
         {
-            ImGuiViewportP* viewport = g.viewports[n];
+            ViewportP* viewport = g.viewports[n];
             if (viewport.platform_window_created)
                 if (g.platform_io.Platform_GetWindowFocus(viewport))
                     focused_viewport = viewport;
@@ -176,8 +193,8 @@ pub fn update_platform_windows(g: &mut Context)
         // will keep the front most stamp instead of losing it back to their parent viewport.
         if (focused_viewport && g.PlatformLastFocusedViewportId != focused_viewport.id)
         {
-            if (focused_viewport.LastFrontMostStampCount != g.viewportFrontMostStampCount)
-                focused_viewport.LastFrontMostStampCount = g.viewportFrontMostStampCount += 1;
+            if (focused_viewport.last_frontmost_stamp_count != g.viewport_frontmost_stamp_count)
+                focused_viewport.last_frontmost_stamp_count = g.viewport_frontmost_stamp_count += 1;
             g.PlatformLastFocusedViewportId = focused_viewport.id;
         }
     }
@@ -202,16 +219,16 @@ pub fn render_platform_windows_default(g: &mut Context, platform_render_arg: &Ve
     ImGuiPlatformIO& platform_io = GetPlatformIO();
     for (int i = 1; i < platform_io.viewports.size; i += 1)
     {
-        ImGuiViewport* viewport = platform_io.viewports[i];
-        if (viewport.flags & ImGuiViewportFlags_Minimized)
+        Viewport* viewport = platform_io.viewports[i];
+        if (viewport.flags & ViewportFlags::Minimized)
             continue;
         if (platform_io.Platform_RenderWindow) platform_io.Platform_RenderWindow(viewport, platform_render_arg);
         if (platform_io.Renderer_RenderWindow) platform_io.Renderer_RenderWindow(viewport, renderer_render_arg);
     }
     for (int i = 1; i < platform_io.viewports.size; i += 1)
     {
-        ImGuiViewport* viewport = platform_io.viewports[i];
-        if (viewport.flags & ImGuiViewportFlags_Minimized)
+        Viewport* viewport = platform_io.viewports[i];
+        if (viewport.flags & ViewportFlags::Minimized)
             continue;
         if (platform_io.Platform_SwapBuffers) platform_io.Platform_SwapBuffers(viewport, platform_render_arg);
         if (platform_io.Renderer_SwapBuffers) platform_io.Renderer_SwapBuffers(viewport, renderer_render_arg);
@@ -266,7 +283,7 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &Rect) -> i32
     return best_monitor_n;
 }
 
-// Update monitor from viewport rectangle (we'll use this info to clamp windows and save windows lost in a removed monitor)
+// update monitor from viewport rectangle (we'll use this info to clamp windows and save windows lost in a removed monitor)
 // static void UpdateViewportPlatformMonitor(ImGuiViewportP* viewport)
 pub fn update_viewport_platform_monitor(g: &mut Context, viewport: &mut Viewport)
 {
@@ -275,10 +292,10 @@ pub fn update_viewport_platform_monitor(g: &mut Context, viewport: &mut Viewport
 
 // Return value is always != None, but don't hold on it across frames.
 // const ImGuiPlatformMonitor* GetViewportPlatformMonitor(ImGuiViewport* viewport_p)
-pub fn get_viewport_platform_monitor(g: &mut Context, viewport: &mut Viewport) -> &mut PlatformMonitor
+pub fn get_viewport_platform_monitor(g: &mut Context, viewport: &mut Viewport) -> &mut PlatformDisplay
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)viewport_p;
+    ViewportP* viewport = (ViewportP*)(void*)viewport_p;
     int monitor_idx = viewport.PlatformMonitor;
     if (monitor_idx >= 0 && monitor_idx < g.platform_io.monitors.size)
         return &g.platform_io.monitors[monitor_idx];

@@ -1,6 +1,6 @@
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::{
-    ImGuiID, ImGuiInputTextFlags, ImWchar, IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX,
+    Id32, ImGuiInputTextFlags, ImWchar, IM_UNICODE_CODEPOINT_INVALID, IM_UNICODE_CODEPOINT_MAX,
 };
 use crate::imgui_math::ImMinI32;
 use crate::imgui_vec::Vector2D;
@@ -344,8 +344,8 @@ pub const IM_UNICODE_CODEPOINT_INVALID: u32 = 0xFFFD;
 pub const IM_UNICODE_CODEPOINT_MAX: u32 = 0x10FFFF;
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
-// CalcTextSize("") should return Vector2D(0.0, g.font_size)
-// Vector2D ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
+// calc_text_size("") should return Vector2D(0.0, g.font_size)
+// Vector2D ImGui::calc_text_size(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
 pub fn calc_text_size(
     g: &mut Context,
     text: &str,
@@ -389,5 +389,5 @@ pub fn get_text_line_height(g: &mut Context) -> f32 {
 // float GetTextLineHeightWithSpacing()
 pub fn get_text_line_height_with_spacing(g: &mut Context) -> f32 {
     // ImGuiContext& g = *GImGui;
-    return g.font_size + g.style.ItemSpacing.y;
+    return g.font_size + g.style.item_spacing.y;
 }

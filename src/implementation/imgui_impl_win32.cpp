@@ -58,7 +58,7 @@ typedef DWORD(WINAPI *PFN_XInputGetState)(DWORD, XINPUT_STATE *);
 //  io.add_mouse_pos_event(), io.add_mouse_button_event(),
 //  io.add_mouse_wheel_event() API (1.87+). 2022-01-17: Inputs: always update
 //  key mods next and before a key event (not in NewFrame) to fix input queue
-//  with very low framerates. 2022-01-12: Inputs: Update mouse inputs using
+//  with very low framerates. 2022-01-12: Inputs: update mouse inputs using
 //  WM_MOUSEMOVE/WM_MOUSELEAVE + fallback to provide it when focused but not
 //  hovered/captured. More standard and will allow us to pass it to future input
 //  queue API. 2022-01-12: Inputs: Maintain our own copy of MouseButtonsDown
@@ -536,13 +536,13 @@ void ImGui_ImplWin32_NewFrame() {
   io.DeltaTime = (float)(current_time - bd->Time) / bd->TicksPerSecond;
   bd->Time = current_time;
 
-  // Update OS mouse position
+  // update OS mouse position
   ImGui_ImplWin32_UpdateMouseData();
 
   // Process workarounds for known windows key handling issues
   ImGui_ImplWin32_ProcessKeyEventsWorkarounds();
 
-  // Update OS mouse cursor with the cursor requested by imgui
+  // update OS mouse cursor with the cursor requested by imgui
   ImGuiMouseCursor mouse_cursor =
       io.MouseDrawCursor ? ImGuiMouseCursor_None : ImGui::GetMouseCursor();
   if (bd->LastMouseCursor != mouse_cursor) {
@@ -550,7 +550,7 @@ void ImGui_ImplWin32_NewFrame() {
     ImGui_ImplWin32_UpdateMouseCursor();
   }
 
-  // Update game controllers (if enabled and available)
+  // update game controllers (if enabled and available)
   ImGui_ImplWin32_UpdateGamepads();
 }
 
@@ -1066,7 +1066,7 @@ typedef HRESULT(WINAPI *PFN_GetDpiForMonitor)(
     UINT *); // Shcore.lib + dll, windows 8.1+
 typedef DPI_AWARENESS_CONTEXT(WINAPI *PFN_SetThreadDpiAwarenessContext)(
     DPI_AWARENESS_CONTEXT); // User32.lib + dll, windows 10 v1607+ (Creators
-                            // Update)
+                            // update)
 
 // Helper function to enable DPI awareness without setting up a manifest
 void ImGui_ImplWin32_EnableDpiAwareness() {
@@ -1234,7 +1234,7 @@ static void ImGui_ImplWin32_ShowWindow(ImGuiViewport *viewport) {
 }
 
 static void ImGui_ImplWin32_UpdateWindow(ImGuiViewport *viewport) {
-  // (Optional) Update Win32 style if it changed _after_ creation.
+  // (Optional) update Win32 style if it changed _after_ creation.
   // Generally they won't change unless configuration flags are changed, but
   // advanced uses (such as manually rewriting viewport flags) make this useful.
   ImGui_ImplWin32_ViewportData *vd =
@@ -1248,7 +1248,7 @@ static void ImGui_ImplWin32_UpdateWindow(ImGuiViewport *viewport) {
   // Only reapply the flags that have been changed from our point of view (as
   // other flags are being modified by windows)
   if (vd->DwStyle != new_style || vd->DwExStyle != new_ex_style) {
-    // (Optional) Update TopMost state if it changed _after_ creation
+    // (Optional) update TopMost state if it changed _after_ creation
     bool top_most_changed =
         (vd->DwExStyle & WS_EX_TOPMOST) != (new_ex_style & WS_EX_TOPMOST);
     HWND insert_after =

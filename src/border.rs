@@ -56,13 +56,13 @@ pub fn get_window_resize_border_id(g: &mut Context, window: &mut Window, dir: Di
     // IM_ASSERT(dir >= 0 && dir < 4);
     // int n = dir + 4;
     let n: u32 = dir + 4;
-    // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.ID : window.id;
+    // Id32 id = window.dock_is_active ? window.DockNode.HostWindow.id : window.id;
     let mut id = if window.dock_is_active {
         window.dock_node_id.host_window_id
     } else {
         window.id
     };
-    // id = ImHashStr("#RESIZE", 0, id);
+    // id = hash_string("#RESIZE", 0, id);
     id = hash_string("#RESIZE", id);
     // id = ImHashData(&n, sizeof, id);
     id = hash_data(&Vec::from(n.to_le_bytes()), id);

@@ -5,7 +5,7 @@ use crate::dock::node::{DockNode, DockNodeFlags, DockNodeSettings};
 use crate::text_buffer::TextBuffer;
 use crate::types::Id32;
 
-// static void DockSettingsRenameNodeReferences(ImGuiID old_node_id, ImGuiID new_node_id)
+// static void DockSettingsRenameNodeReferences(Id32 old_node_id, Id32 new_node_id)
 pub fn dock_settings_rename_node_references(g: &mut Context, old_node_id: Id32, new_node_id: Id32)
 {
     // ImGuiContext& g = *GImGui;
@@ -14,14 +14,14 @@ pub fn dock_settings_rename_node_references(g: &mut Context, old_node_id: Id32, 
     // for window_n in 0.. g.windows.len()
     for (_, window) in g.windows.iter_mut()
     {
-        // ImGuiWindow* window = g.windows[window_n];
+        // Window* window = g.windows[window_n];
         // let window = g.windows[window_n];
         if window.dock_id == old_node_id && window.dock_node == None {
             window.dock_id = new_node_id;
         }
     }
     //// FIXME-OPT: We could remove this loop by storing the index in the map
-    // for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+    // for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
     for settings in g.settings_windows.iter_mut()
     {
         if settings.dock_id == old_node_id {
@@ -30,14 +30,14 @@ pub fn dock_settings_rename_node_references(g: &mut Context, old_node_id: Id32, 
     }
 }
 
-// Remove references stored in ImGuiWindowSettings to the given ImGuiDockNodeSettings
-// static void DockSettingsRemoveNodeReferences(ImGuiID* node_ids, int node_ids_count)
+// Remove references stored in WindowSettings to the given ImGuiDockNodeSettings
+// static void DockSettingsRemoveNodeReferences(Id32* node_ids, int node_ids_count)
 pub fn dock_settings_remove_node_references(g: &mut Context, node_ids: &mut Id32, node_ids_count: i32)
 {
     // ImGuiContext& g = *GImGui;
     let mut found = 0;
     //// FIXME-OPT: We could remove this loop by storing the index in the map
-    // for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+    // for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
     for settings in g.settings_windows.iter_mut()
     {
         // for (int node_n = 0; node_n < node_ids_count; node_n += 1)
@@ -55,7 +55,7 @@ pub fn dock_settings_remove_node_references(g: &mut Context, node_ids: &mut Id32
     }
 }
 
-// static ImGuiDockNodeSettings* DockSettingsFindNodeSettings(ImGuiContext* ctx, ImGuiID id)
+// static ImGuiDockNodeSettings* DockSettingsFindNodeSettings(ImGuiContext* ctx, Id32 id)
 pub fn dock_settings_find_node_settings(g: &mut Context, id: Id32) -> Option<&mut DockNodeSettings>
 {
     // FIXME-OPT
@@ -203,7 +203,7 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
 //         let line_start_pos = buf->size(); (void)line_start_pos;
 //         const ImGuiDockNodeSettings* node_settings = &dc.nodes_settings[node_n];
 //         buf.appendf("%*s%s%*s", node_settings.Depth * 2, "", (node_settings.flags & DockNodeFlags::DockSpace) ? "DockSpace" : "dock_node ", (max_depth - node_settings.Depth) * 2, "");  // Text align nodes to facilitate looking at .ini file
-//         buf.appendf(" id=0x%08X", node_settings->ID);
+//         buf.appendf(" id=0x%08X", node_settings->id);
 //         if (node_settings->parent_node_id)
 //         {
 //             buf->appendf(" Parent=0x%08X size_ref=%d,%d", node_settings->parent_node_id, node_settings.size_ref.x, node_settings.size_ref.y);
@@ -233,15 +233,15 @@ pub fn dock_settings_handler_write_all(g: &mut Context, handler: &mut SettingsHa
 //
 // // #ifIMGUI_DEBUG_INI_SETTINGS
 //         // [DEBUG] Include comments in the .ini file to ease debugging
-//         if (ImGuiDockNode* node = dock_context_find_node_by_id(g, node_settings->ID))
+//         if (ImGuiDockNode* node = dock_context_find_node_by_id(g, node_settings->id))
 //         {
 //             buf->appendf("%*s", ImMax(2, (line_start_pos + 92) - buf->size()), "");     // Align everything
 //             if (node->is_dock_space() && node->HostWindow && node->HostWindow->parent_window)
 //                 buf->appendf(" ; in '%s'", node->HostWindow->parent_window->Name);
 //             // Iterate settings so we can give info about windows that didn't exist during the session.
 //             int contains_window = 0;
-//             for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
-//                 if (settings.dock_id == node_settings->ID)
+//             for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+//                 if (settings.dock_id == node_settings->id)
 //                 {
 //                     if (contains_window += 1 == 0)
 //                         buf->appendf(" ; contains ");

@@ -19,7 +19,7 @@ use crate::window::WindowFlags;
 use crate::{orig_imgui_single_file, Context, INVALID_ID};
 use std::collections::HashSet;
 
-// bool ImGui::BeginChild(const char* str_id, const Vector2D& size_arg, bool border, ImGuiWindowFlags extra_flags)
+// bool ImGui::BeginChild(const char* str_id, const Vector2D& size_arg, bool border, WindowFlags extra_flags)
 pub fn begin_child(
     g: &mut Context,
     str_id: &str,
@@ -27,7 +27,7 @@ pub fn begin_child(
     border: bool,
     extra_flags: &mut HashSet<WindowFlags>,
 ) -> bool {
-    // ImGuiWindow* window = GetCurrentWindow();
+    // Window* window = GetCurrentWindow();
     let window = g.current_window_mut().unwrap();
     return begin_child_ex(
         g,
@@ -39,7 +39,7 @@ pub fn begin_child(
     );
 }
 
-// bool ImGui::BeginChild(ImGuiID id, const Vector2D& size_arg, bool border, ImGuiWindowFlags extra_flags)
+// bool ImGui::BeginChild(Id32 id, const Vector2D& size_arg, bool border, WindowFlags extra_flags)
 pub fn begin_child2(
     g: &mut Context,
     id: Id32,
@@ -54,7 +54,7 @@ pub fn begin_child2(
 // void ImGui::EndChild()
 pub fn end_child(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* window = g.current_window;
+    // Window* window = g.current_window;
     let window = g.current_window_mut().unwrap();
 
     // IM_ASSERT(g.within_end_child == false);
@@ -75,7 +75,7 @@ pub fn end_child(g: &mut Context) {
         }
         end(g);
 
-        // ImGuiWindow* parent_window = g.current_window;
+        // Window* parent_window = g.current_window;
         let parent_window = g.current_window_mut().unwrap();
         // ImRect bb(parent_window.dc.cursor_pos, parent_window.dc.cursor_pos + sz);
         let mut bb = Rect::new2(
@@ -116,7 +116,7 @@ pub fn end_child(g: &mut Context) {
 }
 
 // Helper to create a child window / scrolling region that looks like a normal widget frame.
-// bool ImGui::BeginChildFrame(ImGuiID id, const Vector2D& size, ImGuiWindowFlags extra_flags)
+// bool ImGui::BeginChildFrame(Id32 id, const Vector2D& size, WindowFlags extra_flags)
 pub fn begin_child_frame(
     g: &mut Context,
     id: Id32,
@@ -144,7 +144,7 @@ pub fn end_child_frame(g: &mut Context) {
     end_child(g);
 }
 
-// bool ImGui::begin_child_ex(const char* name, ImGuiID id, const Vector2D& size_arg, bool border, ImGuiWindowFlags flags)
+// bool ImGui::begin_child_ex(const char* name, Id32 id, const Vector2D& size_arg, bool border, WindowFlags flags)
 pub fn begin_child_ex(
     g: &mut Context,
     name: &str,
@@ -154,11 +154,11 @@ pub fn begin_child_ex(
     flags: &mut HashSet<WindowFlags>,
 ) -> bool {
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* parent_window = g.current_window;
+    // Window* parent_window = g.current_window;
     let parent_window = g.current_window_mut().unwrap();
 
-    // flags |= WindowFlags::NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | WindowFlags::ChildWindow | ImGuiWindowFlags_NoDocking;
-    // flags |= (parent_window.flags & ImGuiWindowFlags_NoMove);  // Inherit the NoMove flag
+    // flags |= WindowFlags::NoTitleBar | WindowFlags_NoResize | WindowFlags_NoSavedSettings | WindowFlags::ChildWindow | WindowFlags_NoDocking;
+    // flags |= (parent_window.flags & WindowFlags_NoMove);  // Inherit the NoMove flag
     flags.insert(WindowFlags::NoTitleBar);
     flags.insert(WindowFlags::NoResize);
     flags.insert(WindowFlags::NoSavedSettings);
@@ -184,7 +184,7 @@ pub fn begin_child_ex(
     }
     set_next_window_size(g, &size, Condition::None);
 
-    // build up name. If you need to append to a same child from multiple location in the id stack, use BeginChild(ImGuiID id) with a stable value.
+    // build up name. If you need to append to a same child from multiple location in the id stack, use BeginChild(Id32 id) with a stable value.
     // const char* temp_window_name;
     let mut temp_window_name = String::from("");
     if name.is_empty() == false {
@@ -205,7 +205,7 @@ pub fn begin_child_ex(
     // g.style.ChildBorderSize = backup_border_size;
     g.style.child_border_size = backup_border_size;
 
-    // ImGuiWindow* child_window = g.current_window;
+    // Window* child_window = g.current_window;
     let child_window = g.current_window_mut().unwrap();
     child_window.child_id = id;
     child_window.auto_fit_child_axises = auto_fit_axises;

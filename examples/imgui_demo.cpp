@@ -192,7 +192,7 @@ ShowExampleAppCustomRendering()
                                // only. See #883 on GitHub.
 #endif
 
-// Play it nice with windows users (Update: May 2018, Notepad now supports
+// Play it nice with windows users (update: May 2018, Notepad now supports
 // Unix-style carriage returns!)
 #ifdef _WIN32
 #define IM_NEWLINE "\r\n"
@@ -1196,7 +1196,7 @@ static void ShowDemoWindowWidgets() {
         }
       }
       if (node_clicked != -1) {
-        // Update selection state
+        // update selection state
         // (process outside of tree loop to avoid visual inconsistencies during
         // the clicking frame)
         if (ImGui::GetIO().KeyCtrl)
@@ -6487,7 +6487,7 @@ static void ShowDemoWindowTables() {
       ImGui::TreePop();
     }
 
-    // Update item list if we changed the number of items
+    // update item list if we changed the number of items
     static ImVector<MyItem> items;
     static ImVector<int> selection;
     static bool items_need_sort = false;
@@ -8247,8 +8247,8 @@ struct ExampleAppConsole {
     //   With:
     //      ImGuiListClipper clipper;
     //      clipper.Begin(Items.size);
-    //      while (clipper.Step())
-    //         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+    //      while (clipper.step())
+    //         for (int i = clipper.display_start; i < clipper.display_end; i++)
     // - That your items are evenly spaced (same height)
     // - That you have cheap random access to your elements (you can access them
     // given their index,
@@ -8923,7 +8923,7 @@ static void ShowExampleAppConstrainedResize(bool *p_open) {
   if (type == 6)
     ImGui::SetNextWindowSizeConstraints(
         DimgVec2D::new (0, 0), DimgVec2D::new (FLT_MAX, FLT_MAX),
-        CustomConstraints::Step, (void *)(intptr_t)100); // Fixed Step
+        CustomConstraints::Step, (void *)(intptr_t)100); // Fixed step
 
   ImGuiWindowFlags flags = auto_resize ? ImGuiWindowFlags_AlwaysAutoResize : 0;
   if (ImGui::Begin("Example: Constrained Resize", p_open, flags)) {
@@ -9910,7 +9910,7 @@ void ShowExampleAppDocuments(bool *p_open) {
     return;
   }
 
-  // Update closing queue
+  // update closing queue
   static ImVector<MyDocument *> close_queue;
   if (close_queue.empty()) {
     // Close queue is locked once we started a popup

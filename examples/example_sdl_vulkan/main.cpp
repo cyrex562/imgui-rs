@@ -552,7 +552,7 @@ int main(int, char**)
         if (!main_is_minimized)
             FrameRender(wd, main_draw_data);
 
-        // Update and Render additional Platform windows
+        // update and Render additional Platform windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             ImGui::UpdatePlatformWindows();

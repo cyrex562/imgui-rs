@@ -5,11 +5,11 @@ use crate::INVALID_ID;
 pub struct DockRequest {
     // ImGuiDockRequestType    Type;
     pub request_type: DockRequestType,
-    // ImGuiWindow*            DockTargetWindow;   // Destination/Target window to dock into (may be a loose window or a dock_node, might be None in which case DockTargetNode cannot be None)
+    // Window*            DockTargetWindow;   // Destination/Target window to dock into (may be a loose window or a dock_node, might be None in which case DockTargetNode cannot be None)
     pub dock_target_window_id: Id32,
     // ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
     pub dock_target_node_id: Id32,
-    // ImGuiWindow*            DockPayload;        // Source/Payload window to dock (may be a loose window or a dock_node), [Optional]
+    // Window*            DockPayload;        // Source/Payload window to dock (may be a loose window or a dock_node), [Optional]
     pub dock_payload_id: Id32,
     // ImGuiDir                DockSplitDir;
     pub dock_split_dir: Direction,
@@ -17,7 +17,7 @@ pub struct DockRequest {
     pub dock_split_ratio: f32,
     // bool                    DockSplitOuter;
     pub dock_split_outer: bool,
-    // ImGuiWindow*            UndockTargetWindow;
+    // Window*            UndockTargetWindow;
     pub undock_target_window_id: Id32,
     // ImGuiDockNode*          UndockTargetNode;
     pub undock_target_node_id: Id32,

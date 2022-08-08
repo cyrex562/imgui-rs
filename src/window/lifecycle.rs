@@ -29,7 +29,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
     // IM_ASSERT(g.hovered_window == None || g.hovered_window == g.moving_window || g.hovered_window->Viewport == g.mouse_viewport);
 
     // Modal windows prevents mouse from hovering behind them.
-    // ImGuiWindow* modal_window = get_top_most_popup_modal();
+    // Window* modal_window = get_top_most_popup_modal();
     let modal_window = get_top_most_popup_modal();
     let hov_win = g.window_mut(g.hovered_window_id).unwrap();
     if modal_window
@@ -89,8 +89,8 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
         g.hovered_window_under_moving_window_id = INVALID_ID;
     }
 
-    // Update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
-    // Update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
+    // update io.want_capture_mouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
+    // update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
     if g.want_capture_mouse_next_frame != -1 {
         io.want_capture_mouse_unless_popup_close = (g.want_capture_mouse_next_frame != 0);
         io.want_capture_mouse = io.want_capture_mouse_unless_popup_close;
@@ -103,7 +103,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
             || has_open_modal;
     }
 
-    // Update io.want_capture_keyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
+    // update io.want_capture_keyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
     if g.want_capture_keyboard_next_frame != -1 {
         io.want_capture_keyboard = (g.want_capture_keyboard_next_frame != 0);
     } else {
@@ -116,7 +116,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
         io.want_capture_keyboard = true;
     }
 
-    // Update io.want_text_input flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
+    // update io.want_text_input flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
     io.want_text_input = if g.want_text_input_next_frame != -1 {
         (g.want_text_input_next_frame != 0)
     } else {
@@ -124,7 +124,7 @@ pub fn update_hovered_window_and_capture_flags(g: &mut Context) {
     };
 }
 
-// static void UpdateWindowInFocusOrderList(ImGuiWindow* window, bool just_created, ImGuiWindowFlags new_flags)
+// static void UpdateWindowInFocusOrderList(Window* window, bool just_created, WindowFlags new_flags)
 pub fn update_window_focus_order_list(
     g: &mut Context,
     window: &mut Window,
@@ -156,14 +156,14 @@ pub fn update_window_focus_order_list(
     window.is_explicit_child = new_is_explicit_child;
 }
 
-// static ImGuiWindow* CreateNewWindow(const char* name, ImGuiWindowFlags flags)
+// static Window* CreateNewWindow(const char* name, WindowFlags flags)
 pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<WindowFlags>) -> &mut Window
 {
     // ImGuiContext& g = *GImGui;
     //IMGUI_DEBUG_LOG("CreateNewWindow '%s', flags = 0x%08X\n", name, flags);
 
     // Create window the first time
-    // ImGuiWindow* window = IM_NEW(ImGuiWindow)(&g, name);
+    // Window* window = IM_NEW(Window)(&g, name);
     let mut window = Window::new(g, name);
     window.flags = flags.clone();
     // TODO: add window to context?
@@ -221,7 +221,7 @@ pub fn create_new_window(g: &mut Context, name: &str, flags: &mut HashSet<Window
     return &mut window;
 }
 
-// void ImGui::update_window_parent_and_root_links(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window)
+// void ImGui::update_window_parent_and_root_links(Window* window, WindowFlags flags, Window* parent_window)
 pub fn update_window_parent_and_root_links(
     g: &mut Context,
     window: &mut Window,
@@ -275,7 +275,7 @@ pub fn update_window_parent_and_root_links(
 //   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
 // - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
 // - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
-// bool ImGui::begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
+// bool ImGui::begin(const char* name, bool* p_open, WindowFlags flags)
 pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Option<&mut HashSet<WindowFlags>>) -> bool
 {
     // ImGuiContext& g = *GImGui;
@@ -287,7 +287,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     // IM_ASSERT(g.frame_count_ended != g.frame_count);   // Called ImGui::Render() or ImGui::EndFrame() and haven't called ImGui::NewFrame() again yet
 
     // Find or create
-    // ImGuiWindow* window = FindWindowByName(name);
+    // Window* window = FindWindowByName(name);
     // let (window, window_just_created) = find_or_create_window_by_name(g, name);
     let mut window_opt = get::find_window_by_name(g, name);
     let mut window_just_created = false;
@@ -322,7 +322,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     window.is_fallback_window = g.current_window_stack.is_empty &&
     g.within_frame_scope_with_implicit_window;
 
-    // Update the appearing flag (note: the BeginDocked() path may also set this to true later)
+    // update the appearing flag (note: the BeginDocked() path may also set this to true later)
     // bool window_just_activated_by_user = (window.LastFrameActive < current_frame - 1); // Not using !was_active because the implicit "Debug" window would always toggle off->on
     let window_just_activated_by_user = window.last_frame_active < current_frame - 1;
 
@@ -334,7 +334,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window_just_activated_by_user |= (window != popup_ref.Window);
     }
 
-    // Update flags, last_frame_active, BeginOrderXXX fields
+    // update flags, last_frame_active, BeginOrderXXX fields
     const bool window_was_appearing = window.Appearing;
     if (first_begin_of_the_frame)
     {
@@ -343,7 +343,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             state::set_window_condition_allow_flags(window, ImGuiCond_Appearing, true);
 
         window.FlagsPreviousFrame = window.flags;
-        window.flags = (ImGuiWindowFlags)flags;
+        window.flags = (WindowFlags)flags;
         window.last_frame_active = current_frame;
         window.last_time_active = g.time;
         window.BeginOrderWithinParent = 0;
@@ -389,8 +389,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     }
 
     // Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
-    ImGuiWindow* parent_window_in_stack = (window.dock_is_active && window.dock_node_id.host_window_id) ? window.dock_node_id.host_window_id: g.current_window_stack.empty() ? None : g.current_window_stack.back().Window;
-    ImGuiWindow* parent_window = first_begin_of_the_frame ? ((flags & (WindowFlags::ChildWindow | WindowFlags::Popup)) ? parent_window_in_stack : None) : window.parent_window;
+    Window* parent_window_in_stack = (window.dock_is_active && window.dock_node_id.host_window_id) ? window.dock_node_id.host_window_id: g.current_window_stack.empty() ? None : g.current_window_stack.back().Window;
+    Window* parent_window = first_begin_of_the_frame ? ((flags & (WindowFlags::ChildWindow | WindowFlags::Popup)) ? parent_window_in_stack : None) : window.parent_window;
     // IM_ASSERT(parent_window != None || !(flags & WindowFlags::ChildWindow));
 
     // We allow window memory to be compacted so recreate the base stack when needed.
@@ -400,7 +400,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     // Add to stack
     // We intentionally set g.current_window to None to prevent usage until when the viewport is set, then will call set_current_window()
     g.current_window = window;
-    ImGuiWindowStackData window_stack_data;
+    WindowStackData window_stack_data;
     window_stack_data.Window = window;
     window_stack_data.ParentLastItemDataBackup = g.last_item_data;
     window_stack_data.StackSizesOnBegin.SetToCurrentState();
@@ -418,7 +418,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window.PopupId = popup_ref.PopupId;
     }
 
-    // Update ->RootWindow and others pointers (before any possible call to focus_window)
+    // update ->RootWindow and others pointers (before any possible call to focus_window)
     if (first_begin_of_the_frame)
     {
         update_window_parent_and_root_links(window, flags, parent_window);
@@ -499,7 +499,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         if (window.memory_compacted)
             GcAwakeTransientWindowBuffers(window);
 
-        // Update stored window name when it changes (which can _only_ happen with the "###" operator, so the id would stay unchanged).
+        // update stored window name when it changes (which can _only_ happen with the "###" operator, so the id would stay unchanged).
         // The title bar always display the 'name' parameter, so we only update the string storage if it needs to be visible to the end-user elsewhere.
         bool window_title_visible_elsewhere = false;
         if ((window.viewport && window.viewport.Window == window) || (window.dock_is_active))
@@ -515,7 +515,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // UPDATE CONTENTS SIZE, UPDATE HIDDEN STATUS
 
-        // Update contents size from last frame for auto-fitting (or use explicit size)
+        // update contents size from last frame for auto-fitting (or use explicit size)
         CalcWindowContentSizes(window, &window.ContentSize, &window.ContentSizeIdeal);
 
         // FIXME: These flags are decremented before they are used. This means that in order to have these fields produce their intended behaviors
@@ -569,7 +569,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.WindowPadding = style.WindowPadding;
 
         // Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
-        window.dc.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.ItemSpacing.x), g.next_window_data.MenuBarOffsetMinVal.x);
+        window.dc.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.item_spacing.x), g.next_window_data.MenuBarOffsetMinVal.x);
         window.dc.MenuBarOffset.y = g.next_window_data.MenuBarOffsetMinVal.y;
 
         // Collapse window by double-clicking on title bar
@@ -600,7 +600,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         bool use_current_size_for_scrollbar_y = window_just_created;
         if ((flags & WindowFlags::AlwaysAutoResize) && !window.collapsed)
         {
-            // Using SetNextWindowSize() overrides ImGuiWindowFlags_AlwaysAutoResize, so it can be used on tooltips/popups, etc.
+            // Using SetNextWindowSize() overrides WindowFlags_AlwaysAutoResize, so it can be used on tooltips/popups, etc.
             if (!window_size_x_set_by_api)
             {
                 window.size_full.x = size_auto_fit.x;
@@ -615,7 +615,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         else if (window.auto_fit_frames_x > 0 || window.auto_fit_frames_y > 0)
         {
             // Auto-fit may only grow window during the first few frames
-            // We still process initial auto-fit on collapsed windows to get a window width, but otherwise don't honor ImGuiWindowFlags_AlwaysAutoResize when collapsed.
+            // We still process initial auto-fit on collapsed windows to get a window width, but otherwise don't honor WindowFlags_AlwaysAutoResize when collapsed.
             if (!window_size_x_set_by_api && window.auto_fit_frames_x > 0)
             {
                 window.size_full.x = window.auto_fit_only_grows ? ImMax(window.size_full.x, size_auto_fit.x) : size_auto_fit.x;
@@ -668,12 +668,12 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.pos = FindBestWindowPosForPopup(window);
 
         // Late create viewport if we don't fit within our current host viewport.
-        if (window.viewportAllowPlatformMonitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ImGuiViewportFlags_Minimized))
+        if (window.viewportAllowPlatformMonitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ViewportFlags::Minimized))
             if (!window.viewport.get_main_rect().contains(window.Rect()))
             {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
                 //ImGuiViewport* old_viewport = window->viewport;
-                window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ImGuiViewportFlags_NoFocusOnAppearing);
+                window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ViewportFlags::NoFocusOnAppearing);
 
                 // FIXME-DPI
                 //IM_ASSERT(old_viewport->dpi_scale == window->viewport->dpi_scale); // FIXME-DPI: Something went wrong
@@ -720,7 +720,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.WindowRounding = (flags & WindowFlags::ChildWindow) ? style.ChildRounding : ((flags & WindowFlags::Popup) && !(flags & WindowFlags::Modal)) ? style.PopupRounding : style.WindowRounding;
 
         // For windows with title bar or menu bar, we clamp to FrameHeight(font_size + FramePadding.y * 2.0) to completely hide artifacts.
-        //if ((window->flags & ImGuiWindowFlags_MenuBar) || !(window->flags & WindowFlags::NoTitleBar))
+        //if ((window->flags & WindowFlags_MenuBar) || !(window->flags & WindowFlags::NoTitleBar))
         //    window->window_rounding = ImMin(window->window_rounding, g.font_size + style.FramePadding.y * 2.0);
 
         // Apply window focus (new and reactivated windows are moved to front)
@@ -732,7 +732,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             else if ((window.dock_is_active || (flags & WindowFlags::ChildWindow) == 0) && !(flags & WindowFlags::Tooltip))
                 want_focus = true;
 
-            ImGuiWindow* modal = get_top_most_popup_modal();
+            Window* modal = get_top_most_popup_modal();
             if (modal != None && !is_window_within_begin_stack_of(window, modal))
             {
                 // Avoid focusing a window that is created outside of active modal. This will prevent active modal from being closed.
@@ -742,7 +742,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 want_focus = false;
                 if (window == window.root_window)
                 {
-                    ImGuiWindow* blocking_modal = FindBlockingModal(window);
+                    Window* blocking_modal = FindBlockingModal(window);
                     // IM_ASSERT(blocking_modal != None);
                     BringWindowToDisplayBehind(window, blocking_modal);
                 }
@@ -756,7 +756,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             // IM_ASSERT(window.IDStack.size == 1);
             window.idStack.size = 0;
             IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.id);
-            IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.name, (g.hovered_window == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
+            IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.name, (g.hovered_window == window) ? ItemStatusFlags::HoveredRect : 0);
             window.idStack.size = 1;
         }
 
@@ -777,9 +777,9 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Synchronize window --> viewport again and one last time (clamping and manual resize may have affected either)
         if (window.viewport_owned)
         {
-            if (!window.viewport.PlatformRequestMove)
+            if (!window.viewport.platform_request_move)
                 window.viewport.pos = window.pos;
-            if (!window.viewport.PlatformRequestResize)
+            if (!window.viewport.platform_requsest_resize)
                 window.viewport.size = window.size;
             window.viewport.update_work_rect();
             viewport_rect = window.viewport.get_main_rect();
@@ -790,7 +790,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // SCROLLBAR VISIBILITY
 
-        // Update scrollbar visibility (based on the size that was effective during last frame or the auto-resized size).
+        // update scrollbar visibility (based on the size that was effective during last frame or the auto-resized size).
         if (!window.collapsed)
         {
             // When reading the current size we need to read it after size constraints have been applied.
@@ -809,7 +809,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         }
 
         // UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)
-        // Update various regions. Variables they depends on should be set above in this function.
+        // update various regions. Variables they depends on should be set above in this function.
         // We set this up after processing the resize grip so that our rectangles doesn't lag by a frame.
 
         // Outer rectangle
@@ -852,9 +852,9 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // Default item width. Make it proportional to window size if window manually resizes
         if (window.size.x > 0.0 && !(flags & WindowFlags::Tooltip) && !(flags & WindowFlags::AlwaysAutoResize))
-            window.ItemWidthDefault = f32::floor(window.size.x * 0.65);
+            window.item_width_default = f32::floor(window.size.x * 0.65);
         else
-            window.ItemWidthDefault = f32::floor(g.font_size * 16.0);
+            window.item_width_default = f32::floor(g.font_size * 16.0);
 
         // SCROLLING
 
@@ -886,7 +886,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             {
                 // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
                 // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
-                ImGuiWindow* previous_child = parent_window.dc.ChildWindows.size >= 2 ? parent_window.dc.ChildWindows[parent_window.dc.ChildWindows.size - 2] : None;
+                Window* previous_child = parent_window.dc.ChildWindows.size >= 2 ? parent_window.dc.ChildWindows[parent_window.dc.ChildWindows.size - 2] : None;
                 bool previous_child_overlapping = previous_child ? previous_child.rect().Overlaps(window.Rect()) : false;
                 bool parent_is_empty = parent_window.draw_list.vtx_buffer.size > 0;
                 if (window.draw_list.cmd_buffer.back().elem_count == 0 && parent_is_empty && !previous_child_overlapping)
@@ -896,7 +896,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 window.draw_list = parent_window.draw_list;
 
             // Handle title bar, scrollbar, resize grips and resize borders
-            const ImGuiWindow* window_to_highlight = g.nav_windowing_target ? g.nav_windowing_target : g.nav_window;
+            const Window* window_to_highlight = g.nav_windowing_target ? g.nav_windowing_target : g.nav_window;
             const bool title_bar_is_highlight = want_focus || (window_to_highlight && (window.root_window_for_title_bar_highlight == window_to_highlight.root_window_for_title_bar_highlight || (window.dock_node_id && window.dock_node_id == window_to_highlight.dock_node)));
             RenderWindowDecorations(window, title_bar_rect, title_bar_is_highlight, handle_borders_and_resize_grips, resize_grip_count, resize_grip_col, resize_grip_draw_size);
 
@@ -938,36 +938,36 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // Record the loss of precision of CursorStartPos which can happen due to really large scrolling amount.
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or ImU64.
-        double start_pos_highp_x = (double)window.pos.x + window.WindowPadding.x - (double)window.scroll.x + window.dc.columns_offset.x;
-        double start_pos_highp_y = (double)window.pos.y + window.WindowPadding.y - (double)window.scroll.y + decoration_up_height;
+        double start_pos_highp_x = window.pos.x + window.WindowPadding.x - window.scroll.x + window.dc.columns_offset.x;
+        double start_pos_highp_y = window.pos.y + window.WindowPadding.y - window.scroll.y + decoration_up_height;
         window.dc.cursor_start_pos  = Vector2D::new(start_pos_highp_x, start_pos_highp_y);
         window.dc.cursor_start_posLossyness = Vector2D::new((start_pos_highp_x - window.dc.cursor_start_pos.x), (start_pos_highp_y - window.dc.cursor_start_pos.y));
         window.dc.cursor_pos = window.dc.cursor_start_pos;
-        window.dc.CursorPosPrevLine = window.dc.cursor_pos;
+        window.dc.cursor_pos_prev_line = window.dc.cursor_pos;
         window.dc.cursor_max_pos = window.dc.cursor_start_pos;
         window.dc.ideal_max_pos = window.dc.cursor_start_pos;
-        window.dc.CurrLineSize = window.dc.PrevLineSize = Vector2D::new(0.0, 0.0);
-        window.dc.CurrLineTextBaseOffset = window.dc.PrevLineTextBaseOffset = 0.0;
+        window.dc.curr_line_size = window.dc.prev_line_size = Vector2D::new(0.0, 0.0);
+        window.dc.curr_line_text_base_offset = window.dc.PrevLineTextBaseOffset = 0.0;
         window.dc.Issame_line = false;
 
         window.dcnav_layer_current = NavLayer::Main;
-        window.dc.nav_layers_active_mask = window.dc.NavLayersActiveMaskNext;
+        window.dc.nav_layers_active_mask = window.dc.nav_layers_active_mask_next;
         window.dc.NavHideHighlightOneFrame = false;
         window.dc.nav_has_scroll = (window.scroll_max.y > 0.0);
 
         window.dc.MenuBarAppending = false;
-        window.dc.MenuColumns.Update(style.ItemSpacing.x, window_just_activated_by_user);
+        window.dc.MenuColumns.Update(style.item_spacing.x, window_just_activated_by_user);
         window.dc.TreeDepth = 0;
         window.dc.TreeJumpToParentOnPopMask = 0x00;
         window.dc.ChildWindows.resize(0);
         window.dc.StateStorage = &window.StateStorage;
         window.dc.current_columns = None;
-        window.dc.LayoutType = ImGuiLayoutType_Vertical;
-        window.dc.ParentLayoutType = parent_window ? parent_window.dc.LayoutType : ImGuiLayoutType_Vertical;
+        window.dc.layout_type = ImGuiLayoutType_Vertical;
+        window.dc.ParentLayoutType = parent_window ? parent_window.dc.layout_type : ImGuiLayoutType_Vertical;
 
-        window.dc.ItemWidth = window.ItemWidthDefault;
+        window.dc.item_width = window.item_width_default;
         window.dc.TextWrapPos = -1.0; // disabled
-        window.dc.ItemWidthStack.resize(0);
+        window.dc.item_width_stack.resize(0);
         window.dc.TextWrapPosStack.resize(0);
 
         if (window.auto_fit_frames_x > 0)
@@ -1031,7 +1031,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         if (window.dock_is_active)
             SetLastItemData(window.move_id, g.current_item_flags, window.dock_tab_item_status_flags, window.dock_tab_item_rect);
         else
-            SetLastItemData(window.move_id, g.current_item_flags, is_mouse_hovering_rect(title_bar_rect.min, title_bar_rect.max, false) ? ImGuiItemStatusFlags_HoveredRect : 0, title_bar_rect);
+            SetLastItemData(window.move_id, g.current_item_flags, is_mouse_hovering_rect(title_bar_rect.min, title_bar_rect.max, false) ? ItemStatusFlags::HoveredRect : 0, title_bar_rect);
 
         // [Test Engine] Register title bar / tab
         if (!(window.flags & WindowFlags::NoTitleBar))
@@ -1055,7 +1055,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     window.begin_count += 1;
     g.next_window_data.ClearFlags();
 
-    // Update visibility
+    // update visibility
     if (first_begin_of_the_frame)
     {
         // When we are about to select this tab (which will only be visible on the _next frame_), flag it with a non-zero hidden_frames_cannot_skip_items.
@@ -1077,8 +1077,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             // IM_ASSERT((flags& WindowFlags::NoTitleBar) != 0 || (window.dock_is_active));
             if (!(flags & WindowFlags::AlwaysAutoResize) && window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0) // FIXME: Doesn't make sense for ChildWindow??
             {
-                const bool nav_request = (flags & WindowFlags::NavFlattened) && (g.NavAnyRequest && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
-                if (!g.LogEnabled && !nav_request)
+                const bool nav_request = (flags & WindowFlags::NavFlattened) && (g.nav_any_request && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
+                if (!g.log_enabled && !nav_request)
                     if (window.OuterRectClipped.min.x >= window.OuterRectClipped.max.x || window.OuterRectClipped.min.y >= window.OuterRectClipped.max.y)
                         window..hidden_frames_can_skip_items = 1;
             }
@@ -1094,7 +1094,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         if (style.alpha <= 0.0)
             window..hidden_frames_can_skip_items = 1;
 
-        // Update the hidden flag
+        // update the hidden flag
         bool hidden_regular = (window..hidden_frames_can_skip_items > 0) || (window.hidden_frames_cannot_skip_items > 0);
         window.hidden = hidden_regular || (window.hiddenFramesForRenderOnly > 0);
 
@@ -1105,7 +1105,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.flags |= WindowFlags::NoInputs;
         }
 
-        // Update the skip_items flag, used to early out of all items functions (no layout required)
+        // update the skip_items flag, used to early out of all items functions (no layout required)
         bool skip_items = false;
         if (window.collapsed || !window.active || hidden_regular)
             if (window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0 && window.hidden_frames_cannot_skip_items <= 0)
@@ -1114,7 +1114,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // Only clear nav_layers_active_mask_next when marked as visible, so a CTRL+Tab back can use a safe value.
         if (!window.skip_items)
-            window.dc.NavLayersActiveMaskNext = 0x00;
+            window.dc.nav_layers_active_mask_next = 0x00;
 
         // Sanity check: there are two spots which can set appearing = true
         // - when 'window_just_activated_by_user' is set -> hidden_frames_cannot_skip_items is set -> skip_items always false
@@ -1130,7 +1130,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 pub fn end(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
 
     // Error checking: verify that user hasn't called End() too many times!
     if (g.current_window_stack.size <= 1 && g.within_frame_scope_with_implicit_window)
@@ -1156,7 +1156,7 @@ pub fn end(g: &mut Context)
 
     // Docking: report contents sizes to parent to allow for auto-resize
     if (window.dock_node && window.dock_tab_is_visible)
-        if (ImGuiWindow* host_window = window.dock_node.host_window)         // FIXME-DOCK
+        if (Window* host_window = window.dock_node.host_window)         // FIXME-DOCK
             host_window.dc.cursor_max_pos = window.dc.cursor_max_pos + window.WindowPadding - host_window.WindowPadding;
 
     // Pop from window stack
@@ -1172,14 +1172,14 @@ pub fn end(g: &mut Context)
         SetCurrentViewport(g.current_window, g.current_window.viewport);
 }
 
-// static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, ImGuiWindow* window)
+// static void AddWindowToSortBuffer(ImVector<Window*>* out_sorted_windows, Window* window)
 pub fn add_window_to_sort_buffer(g: &mut Context, out_sorted_windows: &Vec<Id32>, window: Id32) {
     out_sorted_windows.push_back(window);
     let win = g.window_mut(window).unwrap();
     if window.active {
         // int count = window.dc.ChildWindows.Size;
         let count = win.dc.child_windows.len();
-        // ImQsort(window.dc.ChildWindows.Data, count, sizeof(ImGuiWindow*), ChildWindowComparer);
+        // ImQsort(window.dc.ChildWindows.Data, count, sizeof(Window*), ChildWindowComparer);
         win.dc.child_windows.sort();
         for child_win_id in win.dc.child_windows.iter() {
             let child_win = g.window_mut(*child_win_id).unwrap();
@@ -1190,7 +1190,7 @@ pub fn add_window_to_sort_buffer(g: &mut Context, out_sorted_windows: &Vec<Id32>
 
         // for (int i = 0; i < count; i += 1)
         // {
-        //     ImGuiWindow* child = window.dc.ChildWindows[i];
+        //     Window* child = window.dc.ChildWindows[i];
         //     if (child->Active)
         //         AddWindowToSortBuffer(out_sorted_windows, child);
         // }

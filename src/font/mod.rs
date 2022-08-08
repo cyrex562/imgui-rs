@@ -25,12 +25,12 @@ pub struct ImFontBuilderIO
 #[derive(Debug,Clone,Default)]
 pub struct Font
 {
-    // Members: Hot ~20/24 bytes (for CalcTextSize)
-    pub index_advance_x: Vec<f32>, // ImVector<float>             index_advance_x;      // 12-16 // out //            // Sparse. glyphs->advance_x in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
+    // Members: Hot ~20/24 bytes (for calc_text_size)
+    pub index_advance_x: Vec<f32>, // ImVector<float>             index_advance_x;      // 12-16 // out //            // Sparse. glyphs->advance_x in a directly indexable way (cache-friendly for calc_text_size functions which only this this info, and are often bottleneck in large UI).
     pub fallback_advance_x: f32,  // 4     // out // = fallback_glyph->advance_x
     pub font_size: f32,          // 4     // in  //            // height of characters/line, set during loading (don't change after loading)
 
-    // Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
+    // Members: Hot ~28/40 bytes (for calc_text_size + render loop)
     pub index_lookup: Vec<DimgWchar>, //ImVector<ImWchar>           index_lookup;        // 12-16 // out //            // Sparse. index glyphs by Unicode code-point.
     pub glyphs: Vec<DimgFontGlyph>, // ImVector<ImFontGlyph>       glyphs;             // 12-16 // out //            // All glyphs.
     pub fallback_glyph: DimgFontGlyph, // const ImFontGlyph*          fallback_glyph;      // 4-8   // out // = find_glyph(FontFallbackChar)
@@ -38,7 +38,7 @@ pub struct Font
     // Members: Cold ~32/40 bytes
     pub container_atlas: Option<FontAtlas>, // ImFontAtlas*                container_atlas;     // 4-8   // out //            // What we has been loaded into
     // const ImFontConfig*         config_data;         // 4-8   // in  //            // Pointer within container_atlas->config_data
-    pub config_data: Option<DimgFontConfig>,
+    pub config_data: Option<FontConfig>,
 // short                       config_data_count;    // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
     pub config_data_count: isize,
     // ImWchar                     fallback_char;       // 2     // out // = FFFD/'?' // Character used if a glyph isn't found.
@@ -124,7 +124,7 @@ impl Font {
         todo!()
     }
     //      void              add_glyph(const ImFontConfig* src_cfg, ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
-    pub fn add_glyph(&mut self, src_cfg: &DimgFontConfig, c: DimgWchar, x0: f32, y0: f32, x1: f32, y1: f32, u0: f32, v0: f32, u1: f32, v1: f32, advance_x: f32) {
+    pub fn add_glyph(&mut self, src_cfg: &FontConfig, c: DimgWchar, x0: f32, y0: f32, x1: f32, y1: f32, u0: f32, v0: f32, u1: f32, v1: f32, advance_x: f32) {
         todo!()
     }
     //      void              add_remap_char(ImWchar dst, ImWchar src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
@@ -188,7 +188,7 @@ impl ImFontGlyphRangesBuilder {
 }
 
 #[derive(Clone,Debug,Default)]
-pub struct DimgFontConfig
+pub struct FontConfig
 {
     pub id: Id32,
     pub font_data: Vec<u8>, // void*           font_data;               //          // TTF/OTF data
@@ -278,7 +278,7 @@ pub fn set_window_font_scale(g: &mut Context, scale: f32)
 {
     // IM_ASSERT(scale > 0.0);
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = GetCurrentWindow();
+    Window* window = GetCurrentWindow();
     window.font_window_scale = scale;
     g.font_size = g.draw_list_shared_data.font_size = window.CalcFontSize();
 }

@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 use crate::Context;
 use crate::types::Direction;
-use crate::imgui_h::ImGuiID;
+use crate::imgui_h::Id32;
 use crate::imgui_vec::Vector2D;
-use crate::imgui_window::ImGuiWindow;
+use crate::imgui_window::Window;
 use crate::input::NavLayer;
-use crate::orig_imgui_single_file::ImGuiID;
+use crate::orig_imgui_single_file::Id32;
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
@@ -17,17 +17,17 @@ use crate::window::next_window::NextWindowDataFlags;
 #[derive(Debug,Default,Clone)]
 pub struct PopupData
 {
-    // ImGuiID             popup_id;        // Set on OpenPopup()
+    // Id32             popup_id;        // Set on OpenPopup()
     pub popup_id: Id32,
-    // ImGuiWindow*        window;         // Resolved on begin_popup() - may stay unresolved if user never calls OpenPopup()
+    // Window*        window;         // Resolved on begin_popup() - may stay unresolved if user never calls OpenPopup()
     pub window_id: Id32,
-    // ImGuiWindow*        source_window;   // Set on OpenPopup() copy of nav_window at the time of opening the popup
+    // Window*        source_window;   // Set on OpenPopup() copy of nav_window at the time of opening the popup
     pub source_window_id:Id32,
     // int                 parent_nav_layer; // Resolved on begin_popup(). Actually a ImGuiNavLayer type (declared down below), initialized to -1 which is not part of an enum, but serves well-enough as "not any of layers" value
     pub parent_nav_layer: i32,
     // int                 open_frame_count; // Set on OpenPopup()
     pub open_frame_count: i32,
-    // ImGuiID             open_parent_id;   // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
+    // Id32             open_parent_id;   // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
     pub open_parent_id: Id32,
     // Vector2D              open_popup_pos;   // Set on OpenPopup(), preferred popup position (typically == open_mouse_pos when using mouse)
     pub open_popup_pos: Vector2D,
@@ -77,13 +77,13 @@ pub enum PopupFlags
     // ImGuiPopupFlags_MouseButtonDefault_     = 1,
     NoOpenOverExistingPopup,   // For OpenPopup*(), begin_popupContext*(): don't open if there's already a popup at the same level of the popup stack
     NoOpenOverItems        ,   // For begin_popupContextWindow(): don't return true when hovering items, only when hovering empty space
-    AnyPopupId             ,   // For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
+    AnyPopupId             ,   // For IsPopupOpen(): ignore the Id32 parameter and test for any popup.
     AnyPopupLevel          ,   // For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
 
 }
 
 // Supported flags: ImGuiPopupFlags_AnyPopupId, ImGuiPopupFlags_AnyPopupLevel
-// bool IsPopupOpen(ImGuiID id, ImGuiPopupFlags popup_flags)
+// bool IsPopupOpen(Id32 id, ImGuiPopupFlags popup_flags)
 pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: Option<&HashSet<PopupFlags>>) -> bool
 {
     // ImGuiContext& g = *GImGui;
@@ -119,29 +119,29 @@ pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: Option<&HashSet<Pop
 pub fn is_popup_open_2(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiID id = if (popup_flags & ImGuiPopupFlags_AnyPopupId) { 0 }else{ g.current_window.get_id(str_id)};
+    Id32 id = if (popup_flags & ImGuiPopupFlags_AnyPopupId) { 0 }else{ g.current_window.get_id(str_id)};
     if ((popup_flags & ImGuiPopupFlags_AnyPopupLevel) && id != 0)
         // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel."); // But non-string version is legal and used internally
     return is_popup_open(id, popup_flags);
 }
 
-// ImGuiWindow* get_top_most_popup_modal()
+// Window* get_top_most_popup_modal()
 pub fn get_top_most_popup_modal(g: &mut Context) -> &mut Window
 {
     // ImGuiContext& g = *GImGui;
     for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
-        if (ImGuiWindow* popup = g.open_popup_stack.data[n].Window)
+        if (Window* popup = g.open_popup_stack.data[n].Window)
             if (popup.flags & WindowFlags::Modal)
                 return popup;
     return None;
 }
 
-// ImGuiWindow* GetTopMostAndVisiblePopupModal()
+// Window* GetTopMostAndVisiblePopupModal()
 pub fn get_top_most_and_visible_popup_modal(g: &mut Context) -> &mut Window
 {
     // ImGuiContext& g = *GImGui;
     for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
-        if (ImGuiWindow* popup = g.open_popup_stack.data[n].Window)
+        if (Window* popup = g.open_popup_stack.data[n].Window)
             if ((popup.flags & WindowFlags::Modal) && is_window_active_and_visible(popup))
                 return popup;
     return None;
@@ -151,12 +151,12 @@ pub fn get_top_most_and_visible_popup_modal(g: &mut Context) -> &mut Window
 pub fn open_popup(g: &mut Context, str_id: &str, popup_flags: Option<&HashSet<PopupFlags>>)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiID id = g.current_window.get_id(str_id);
+    Id32 id = g.current_window.get_id(str_id);
     IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopup(\"%s\" -> 0x%08X\n", str_id, id);
     open_popupEx(id, popup_flags);
 }
 
-// OpenPopup(ImGuiID id, ImGuiPopupFlags popup_flags)
+// OpenPopup(Id32 id, ImGuiPopupFlags popup_flags)
 pub fn open_popup2(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 {
    open_popupEx(id, popup_flags);
@@ -166,11 +166,11 @@ pub fn open_popup2(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 // Popups are closed when user click outside, or activate a pressable item, or CloseCurrentPopup() is called within a begin_popup()/EndPopup() block.
 // Popup identifiers are relative to the current id-stack (so OpenPopup and begin_popup needs to be at the same level).
 // One open popup per level of the popup hierarchy (NB: when assigning we reset the window member of ImGuiPopupRef to None)
-// void OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags)
+// void OpenPopupEx(Id32 id, ImGuiPopupFlags popup_flags)
 pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* parent_window = g.current_window;
+    Window* parent_window = g.current_window;
     let current_stack_size = g.begin_popup_stack.size;
 
     if (popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup)
@@ -216,7 +216,7 @@ pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags
 
 // When popups are stacked, clicking on a lower level popups puts focus back to it and close popups above it.
 // This function closes any popups that are over 'ref_window'.
-// void close_popups_over_window(ImGuiWindow* ref_window, bool restore_focus_to_window_under_popup)
+// void close_popups_over_window(Window* ref_window, bool restore_focus_to_window_under_popup)
 pub fn close_popups_over_window(g: &mut Context, ref_window: &mut Window, restore_focus_to_window_under_popup: bool)
 {
     // ImGuiContext& g = *GImGui;
@@ -244,7 +244,7 @@ pub fn close_popups_over_window(g: &mut Context, ref_window: &mut Window, restor
             //     window -> Popup1 -> Popup1_Child -> Popup2 -> Popup2_Child
             bool ref_window_is_descendent_of_popup = false;
             for (int n = popup_count_to_keep; n < g.open_popup_stack.size; n += 1)
-                if (ImGuiWindow* popup_window = g.open_popup_stack[n].Window)
+                if (Window* popup_window = g.open_popup_stack[n].Window)
                     //if (popup_window->root_window_dock_tree == ref_window->root_window_dock_tree) // FIXME-MERGE
                     if (is_window_within_begin_stack_of(ref_window, popup_window))
                     {
@@ -270,7 +270,7 @@ pub fn close_popups_except_modals(g: &mut Context)
     int popup_count_to_keep;
     for (popup_count_to_keep = g.open_popup_stack.size; popup_count_to_keep > 0; popup_count_to_keep -= 1 )
     {
-        ImGuiWindow* window = g.open_popup_stack[popup_count_to_keep - 1].Window;
+        Window* window = g.open_popup_stack[popup_count_to_keep - 1].Window;
         if (!window || window.flags & WindowFlags::Modal)
             break;
     }
@@ -286,8 +286,8 @@ pub fn close_popup_to_level(g: &mut Context, remaining: i32, restore_focus_to_wi
     // IM_ASSERT(remaining >= 0 && remaining < g.open_popup_stack.size);
 
     // Trim open popup stack
-    ImGuiWindow* focus_window = g.open_popup_stack[remaining].SourceWindow;
-    ImGuiWindow* popup_window = g.open_popup_stack[remaining].Window;
+    Window* focus_window = g.open_popup_stack[remaining].SourceWindow;
+    Window* popup_window = g.open_popup_stack[remaining].Window;
     g.open_popup_stack.resize(remaining);
 
     if (restore_focus_to_window_under_popup)
@@ -299,7 +299,7 @@ pub fn close_popup_to_level(g: &mut Context, remaining: i32, restore_focus_to_wi
         }
         else
         {
-            if (g.NavLayer == NavLayer::Main && focus_window)
+            if (g.nav_layer == NavLayer::Main && focus_window)
                 focus_window = NavRestoreLastChildNavWindow(focus_window);
             focus_window(focus_window);
         }
@@ -318,8 +318,8 @@ pub fn close_current_popup(g: &mut Context)
     // Closing a menu closes its top-most parent popup (unless a modal)
     while (popup_idx > 0)
     {
-        ImGuiWindow* popup_window = g.open_popup_stack[popup_idx].Window;
-        ImGuiWindow* parent_popup_window = g.open_popup_stack[popup_idx - 1].Window;
+        Window* popup_window = g.open_popup_stack[popup_idx].Window;
+        Window* parent_popup_window = g.open_popup_stack[popup_idx - 1].Window;
         bool close_parent = false;
         if (popup_window && (popup_window.flags & WindowFlags::ChildMenu))
             if (parent_popup_window && !(parent_popup_window.flags & WindowFlags::MenuBar))
@@ -334,12 +334,12 @@ pub fn close_current_popup(g: &mut Context)
     // A common pattern is to close a popup when selecting a menu item/selectable that will open another window.
     // To improve this usage pattern, we avoid nav highlight for a single frame in the parent window.
     // Similarly, we could avoid mouse hover highlight in this window but it is less visually problematic.
-    if (ImGuiWindow* window = g.nav_window)
+    if (Window* window = g.nav_window)
         window.dc.NavHideHighlightOneFrame = true;
 }
 
 // Attention! begin_popup() adds default flags which begin_popupEx()!
-// bool begin_popupEx(ImGuiID id, ImGuiWindowFlags flags)
+// bool begin_popupEx(Id32 id, WindowFlags flags)
 pub fn begin_popup_ex(g: &mut Context, id: Id32, flags: &HashSet<WindowFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
@@ -363,7 +363,7 @@ pub fn begin_popup_ex(g: &mut Context, id: Id32, flags: &HashSet<WindowFlags>) -
     return is_open;
 }
 
-// bool begin_popup(const char* str_id, ImGuiWindowFlags flags)
+// bool begin_popup(const char* str_id, WindowFlags flags)
 pub fn begin_popup(g: &mut Context, str_id: &str, flags: Option<&HashSet<WindowFlags>>) -> bool
 {
     // ImGuiContext& g = *GImGui;
@@ -373,18 +373,18 @@ pub fn begin_popup(g: &mut Context, str_id: &str, flags: Option<&HashSet<WindowF
         return false;
     }
     flags |= WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings;
-    ImGuiID id = g.current_window.get_id(str_id);
+    Id32 id = g.current_window.get_id(str_id);
     return begin_popupEx(id, flags);
 }
 
 // If 'p_open' is specified for a modal popup window, the popup will have a regular close button which will close the popup.
 // Note that popup visibility status is owned by Dear ImGui (and manipulated with e.g. OpenPopup) so the actual value of *p_open is meaningless here.
-// bool begin_popupModal(const char* name, bool* p_open, ImGuiWindowFlags flags)
+// bool begin_popupModal(const char* name, bool* p_open, WindowFlags flags)
 pub fn begin_popup_modal(g: &mut Context, name: &str, p_open: &mut bool, flags: &HashSet<WindowFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
-    const ImGuiID id = window.get_id(name);
+    Window* window = g.current_window;
+    const Id32 id = window.get_id(name);
     if (!is_popup_open(id, ImGuiPopupFlags_None))
     {
         g.next_window_data.ClearFlags(); // We behave like Begin() and need to consume those values
@@ -396,7 +396,7 @@ pub fn begin_popup_modal(g: &mut Context, name: &str, p_open: &mut bool, flags: 
     // FIXME: Should test for (PosCond & window->set_window_pos_allow_flags) with the upcoming window.
     if ((g.next_window_data.flags & NextWindowDataFlags::HasPos) == 0)
     {
-        const ImGuiViewport* viewport = window.was_active ? window.viewport : get_main_viewport(); // FIXME-VIEWPORT: What may be our reference viewport?
+        const Viewport* viewport = window.was_active ? window.viewport : get_main_viewport(); // FIXME-VIEWPORT: What may be our reference viewport?
         set_next_window_pos(viewport.get_center(), Condition::FirstUseEver, Vector2D::new(0.5, 0.5));
     }
 
@@ -416,7 +416,7 @@ pub fn begin_popup_modal(g: &mut Context, name: &str, p_open: &mut bool, flags: 
 pub fn end_popup(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     // IM_ASSERT(window.flags & WindowFlags::Popup);  // Mismatched begin_popup()/EndPopup() calls
     // IM_ASSERT(g.begin_popup_stack.size > 0);
 
@@ -438,11 +438,11 @@ pub fn end_popup(g: &mut Context)
 pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
     {
-        ImGuiID id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
+        Id32 id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
         // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
         open_popupEx(id, popup_flags);
     }
@@ -468,10 +468,10 @@ pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &Has
 pub fn begin_popup_context_item(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     if (window.skip_items)
         return false;
-    ImGuiID id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
+    Id32 id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
     // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
@@ -483,10 +483,10 @@ pub fn begin_popup_context_item(g: &mut Context, str_id: &str, popup_flags: &Has
 pub fn begin_popup_context_window(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     if (!str_id)
         str_id = "window_context";
-    ImGuiID id = window.get_id(str_id);
+    Id32 id = window.get_id(str_id);
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
         if (!(popup_flags & ImGuiPopupFlags_NoOpenOverItems) || !IsAnyItemHovered())
@@ -498,10 +498,10 @@ pub fn begin_popup_context_window(g: &mut Context, str_id: &str, popup_flags: &H
 pub fn begin_popup_context_void(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     if (!str_id)
         str_id = "void_context";
-    ImGuiID id = window.get_id(str_id);
+    Id32 id = window.get_id(str_id);
     int mouse_button = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
         if (get_top_most_popup_modal() == None)
@@ -590,7 +590,7 @@ pub fn find_best_window_pos_for_popup_ex(g: &mut Context, ref_pos: &Vector2D, si
 }
 
 // Note that this is used for popups, which can overlap the non work-area of individual viewports.
-// Rect GetPopupAllowedExtentRect(ImGuiWindow* window)
+// Rect GetPopupAllowedExtentRect(Window* window)
 pub fn get_popup_allowed_extent_rect(g: &mut Context, window: &mut Window) -> Rect
 {
     // ImGuiContext& g = *GImGui;
@@ -612,7 +612,7 @@ pub fn get_popup_allowed_extent_rect(g: &mut Context, window: &mut Window) -> Re
     return r_screen;
 }
 
-// Vector2D FindBestWindowPosForPopup(ImGuiWindow* window)
+// Vector2D FindBestWindowPosForPopup(Window* window)
 pub fn find_best_window_pos_for_popup(g: &mut Context, window: &mut Window) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
@@ -622,8 +622,8 @@ pub fn find_best_window_pos_for_popup(g: &mut Context, window: &mut Window) -> V
     {
         // Child menus typically request _any_ position within the parent menu item, and then we move the new menu outside the parent bounds.
         // This is how we end up with child menus appearing (most-commonly) on the right of the parent menu.
-        ImGuiWindow* parent_window = window.parent_window;
-        let horizontal_overlap =  g.style.item_inner_spacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
+        Window* parent_window = window.parent_window;
+        let horizontal_overlap =  g.style.item_inner_spacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.item_spacing.x).
         Rect r_avoid;
         if (parent_window.dc.MenuBarAppending)
             r_avoid = Rect(-f32::MAX, parent_window.clip_rect.min.y, f32::MAX, parent_window.clip_rect.max.y); // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a next_window_data.PosConstraintAvoidRect field

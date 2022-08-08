@@ -7,7 +7,7 @@ use crate::types::DataAuthority::Window;
 use crate::dock::node::{DockNode, DockNodeFlags};
 use crate::draw::command::DrawCommand;
 use crate::draw::draw_defines::DrawFlags;
-use crate::draw::list::{DrawList, DrawListFlags, get_foreground_draw_list};
+use crate::draw::list::{DrawList, DrawListFlags, foreground_draw_list};
 use crate::font::Font;
 use crate::font::font_atlas::FontAtlas;
 use crate::globals::GImGui;
@@ -27,15 +27,15 @@ use crate::window::WindowFlags;
 pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList, viewport: &mut Viewport, bb: &Rect)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
 
     Vector2D scale = bb.GetSize() / viewport.size;
     Vector2D off = bb.min - viewport.pos * scale;
-    let alpha_mul =  if(viewport.flags & ImGuiViewportFlags_Minimized) { 0.30 }else{ 1.00};
+    let alpha_mul =  if(viewport.flags & ViewportFlags::Minimized) { 0.30 }else{ 1.00};
     window.draw_list->AddRectFilled(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul * 0.40));
     for (int i = 0; i != g.windows.len(); i += 1)
     {
-        ImGuiWindow* thumb_window = g.windows[i];
+        Window* thumb_window = g.windows[i];
         if (!thumb_window.was_active || (thumb_window.flags & WindowFlags::ChildWindow))
             continue;
         if (thumb_window.viewport != viewport)
@@ -51,7 +51,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
         window.draw_list->AddRectFilled(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::WindowBg, alpha_mul));
         window.draw_list->AddRectFilled(title_r.min, title_r.max, get_color_u32(window_is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg, alpha_mul));
         window.draw_list->AddRect(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::Border, alpha_mul));
-        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, FindRenderedTextEnd(thumb_window.name));
+        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, find_rendered_text_end(thumb_window.name));
     }
     draw_list->AddRect(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul));
 }
@@ -60,7 +60,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
 pub fn render_viewports_thumbnails(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
 
     // We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
     let SCALE =  1.0 / 8.0;
@@ -71,7 +71,7 @@ pub fn render_viewports_thumbnails(g: &mut Context)
     Vector2D off = p - bb_full.min * SCALE;
     for (int n = 0; n < g.viewports.size; n += 1)
     {
-        ImGuiViewportP* viewport = g.viewports[n];
+        ViewportP* viewport = g.viewports[n];
         Rect viewport_draw_bb(off + (viewport.pos) * SCALE, off + (viewport.pos + viewport.size) * SCALE);
         DebugRenderViewportThumbnail(window.draw_list, viewport, viewport_draw_bb);
     }
@@ -81,9 +81,9 @@ pub fn render_viewports_thumbnails(g: &mut Context)
 // static int  ViewportComparerByFrontMostStampCount(const void* lhs, const void* rhs)
 pub fn viewport_comparer_by_front_most_stamp_count(g: &mut Context, lhs: &Vec<u8>, rhs: &Vec<u8>) -> i32
 {
-    const ImGuiViewportP* a = *(const ImGuiViewportP* const*)lhs;
-    const ImGuiViewportP* b = *(const ImGuiViewportP* const*)rhs;
-    return b->LastFrontMostStampCount - a->LastFrontMostStampCount;
+    const ViewportP* a = *(const ViewportP* const*)lhs;
+    const ViewportP* b = *(const ViewportP* const*)rhs;
+    return b->last_frontmost_stamp_count - a->last_frontmost_stamp_count;
 }
 
 // Helper tool to diagnose between text encoding issues and font loading issues. Pass your UTF-8 string and verify that there are correct.
@@ -186,9 +186,9 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
     // Debugging enums
     enum { WRT_OuterRect, WRT_OuterRectClipped, WRT_InnerRect, WRT_InnerClipRect, WRT_WorkRect, WRT_Content, WRT_ContentIdeal, WRT_ContentRegionRect, WRT_Count }; // windows rect Type
-    const char* wrt_rects_names[WRT_Count] = { "OuterRect", "outer_rect_clipped", "inner_rect", "inner_clip_rect", "work_rect", "Content", "ContentIdeal", "content_region_rect" };
+    const char* wrt_rects_names[WRT_Count] = { "outer_rect", "outer_rect_clipped", "inner_rect", "inner_clip_rect", "work_rect", "Content", "ContentIdeal", "content_region_rect" };
     enum { TRT_OuterRect, TRT_InnerRect, TRT_WorkRect, TRT_HostClipRect, TRT_InnerClipRect, TRT_BackgroundClipRect, TRT_ColumnsRect, TRT_ColumnsWorkRect, TRT_ColumnsClipRect, TRT_ColumnsContentHeadersUsed, TRT_ColumnsContentHeadersIdeal, TRT_ColumnsContentFrozen, TRT_ColumnsContentUnfrozen, TRT_Count }; // tables rect Type
-    const char* trt_rects_names[TRT_Count] = { "OuterRect", "inner_rect", "work_rect", "HostClipRect", "inner_clip_rect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" };
+    const char* trt_rects_names[TRT_Count] = { "outer_rect", "inner_rect", "work_rect", "host_clip_rect", "inner_clip_rect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" };
     if (cfg->ShowWindowsRectsType < 0)
         cfg->ShowWindowsRectsType = WRT_WorkRect;
     if (cfg->ShowTablesRectsType < 0)
@@ -216,7 +216,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             return Rect();
         }
 
-        static Rect GetWindowRect(ImGuiWindow* window, int rect_type)
+        static Rect GetWindowRect(Window* window, int rect_type)
         {
             if (rect_type == WRT_OuterRect)                 { return window.Rect(); }
             else if (rect_type == WRT_OuterRectClipped)     { return window.OuterRectClipped; }
@@ -248,7 +248,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         }
 
         // The Item Picker tool is super useful to visually select an item and break into the call-stack of where it was submitted.
-        if (Checkbox("Show Item Picker", &g.DebugItemPickerActive) && g.DebugItemPickerActive)
+        if (Checkbox("Show Item Picker", &g.debug_item_picker_active) && g.debug_item_picker_active)
             DebugStartItemPicker();
         same_line();
         MetricsHelpMarker("Will call the IM_DEBUG_BREAK() macro to break in debugger.\nWarning: If you don't have a debugger attached, this will probably crash.");
@@ -294,7 +294,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
                 BulletText("Table 0x%08X (%d columns, in '%s')", table->ID, table->ColumnsCount, table->OuterWindow->Name);
                 if (IsItemHovered())
-                    get_foreground_draw_list()->AddRect(table->OuterRect.min - Vector2D::new(1, 1), table->OuterRect.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                    foreground_draw_list()->AddRect(table->OuterRect.min - Vector2D::new(1, 1), table->OuterRect.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                 Indent();
                 char buf[128];
                 for (int rect_n = 0; rect_n < TRT_Count; rect_n += 1)
@@ -309,7 +309,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                             ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) col %d %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), column_n, trt_rects_names[rect_n]);
                             selectable(buf);
                             if (IsItemHovered())
-                                get_foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                                foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                         }
                     }
                     else
@@ -318,7 +318,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                         ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), trt_rects_names[rect_n]);
                         selectable(buf);
                         if (IsItemHovered())
-                            get_foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                            foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                     }
                 }
                 Unindent();
@@ -337,13 +337,13 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         if (TreeNode("By submission order (begin stack)"))
         {
             // Here we display windows in their submitted order/hierarchy, however note that the Begin stack doesn't constitute a Parent<>Child relationship!
-            ImVector<ImGuiWindow*>& temp_buffer = g.windows_temp_sort_buffer;
+            ImVector<Window*>& temp_buffer = g.windows_temp_sort_buffer;
             temp_buffer.resize(0);
             for (int i = 0; i < g.windows.len(); i += 1)
                 if (g.windows[i]->last_frame_active + 1 >= g.frame_count)
                     temp_buffer.push_back(g.windows[i]);
-            struct Func { static int  WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((*(const ImGuiWindow* const *)lhs)->begin_order_within_context - (*(const ImGuiWindow* const*)rhs)->begin_order_within_context); } };
-            ImQsort(temp_buffer.data, temp_buffer.size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
+            struct Func { static int  WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((*(const Window* const *)lhs)->begin_order_within_context - (*(const Window* const*)rhs)->begin_order_within_context); } };
+            ImQsort(temp_buffer.data, temp_buffer.size, sizeof(Window*), Func::WindowComparerByBeginOrder);
             DebugNodeWindowsListByBeginStackParent(temp_buffer.data, temp_buffer.size, None);
             TreePop();
         }
@@ -361,7 +361,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         Checkbox("Show ImDrawCmd bounding boxes when hovering", &cfg->ShowDrawCmdBoundingBoxes);
         for (int viewport_i = 0; viewport_i < g.viewports.size; viewport_i += 1)
         {
-            ImGuiViewportP* viewport = g.viewports[viewport_i];
+            ViewportP* viewport = g.viewports[viewport_i];
             bool viewport_has_drawlist = false;
             for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport.draw_data_builder.layers); layer_i += 1)
                 for (int draw_list_i = 0; draw_list_i < viewport.draw_data_builder.layers[layer_i].size; draw_list_i += 1)
@@ -390,7 +390,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             for (int i = 0; i < g.platform_io.monitors.size; i += 1)
             {
                 const ImGuiPlatformMonitor& mon = g.platform_io.monitors[i];
-                BulletText("Monitor #%d: DPI %.0%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), MainSize (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), work_size (%.0,%.0)",
+                BulletText("Monitor #%d: DPI %.0%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), main_size (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), work_size (%.0,%.0)",
                     i, mon.DpiScale * 100.0,
                     mon.MainPos.x, mon.MainPos.y, mon.MainPos.x + mon.MainSize.x, mon.MainPos.y + mon.MainSize.y, mon.MainSize.x, mon.MainSize.y,
                     mon.WorkPos.x, mon.WorkPos.y, mon.WorkPos.x + mon.work_size.x, mon.WorkPos.y + mon.work_size.y, mon.work_size.x, mon.work_size.y);
@@ -401,13 +401,13 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         BulletText("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport ? g.mouse_viewport->ID : 0, g.io.MouseHoveredViewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
         if (TreeNode("Inferred Z order (front-to-back)"))
         {
-            static ImVector<ImGuiViewportP*> viewports;
+            static ImVector<ViewportP*> viewports;
             viewports.resize(g.viewports.size);
             memcpy(viewports.data, g.viewports.data, g.viewports.size_in_bytes());
             if (viewports.size > 1)
-                ImQsort(viewports.data, viewports.size, sizeof(ImGuiViewport*), ViewportComparerByFrontMostStampCount);
+                ImQsort(viewports.data, viewports.size, sizeof(Viewport*), ViewportComparerByFrontMostStampCount);
             for (int i = 0; i < viewports.size; i += 1)
-                BulletText("viewport #%d, id: 0x%08X, FrontMostStampCount = %08d, window: \"%s\"", viewports[i]->Idx, viewports[i]->ID, viewports[i]->LastFrontMostStampCount, viewports[i]->Window ? viewports[i]->Window->Name : "N/A");
+                BulletText("viewport #%d, id: 0x%08X, FrontMostStampCount = %08d, window: \"%s\"", viewports[i]->Idx, viewports[i]->ID, viewports[i]->last_frontmost_stamp_count, viewports[i]->Window ? viewports[i]->Window->Name : "N/A");
             TreePop();
         }
 
@@ -421,7 +421,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     {
         for (int i = 0; i < g.open_popup_stack.size; i += 1)
         {
-            ImGuiWindow* window = g.open_popup_stack[i].Window;
+            Window* window = g.open_popup_stack[i].Window;
             BulletText("PopupID: %08x, window: '%s'%s%s", g.open_popup_stack[i].PopupId, window ? window.name : "None", window && (window.flags & WindowFlags::ChildWindow) ? " ChildWindow" : "", window && (window.flags & WindowFlags::ChildMenu) ? " ChildMenu" : "");
         }
         TreePop();
@@ -486,7 +486,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         {
             ImGuiDockContext* dc = &g.dock_context;
             text("In settings_windows:");
-            for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+            for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
                 if (settings.dock_id != 0)
                     BulletText("window '%s' -> dock_id %08X", settings->GetName(), settings.dock_id);
             text("In SettingsNodes:");
@@ -496,9 +496,9 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 const char* selected_tab_name = None;
                 if (settings->SelectedTabId)
                 {
-                    if (ImGuiWindow* window = find_window_by_id(settings->SelectedTabId))
+                    if (Window* window = find_window_by_id(settings->SelectedTabId))
                         selected_tab_name = window.name;
-                    else if (ImGuiWindowSettings* window_settings = FindWindowSettings(settings->SelectedTabId))
+                    else if (WindowSettings* window_settings = FindWindowSettings(settings->SelectedTabId))
                         selected_tab_name = window_settings->GetName();
                 }
                 BulletText("Node %08X, Parent %08X, SelectedTab %08X ('%s')", settings->ID, settings->parent_node_id, settings->SelectedTabId, selected_tab_name ? selected_tab_name : settings->SelectedTabId ? "N/A" : "");
@@ -544,13 +544,13 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         text("NAV,FOCUS");
         Indent();
         text("nav_window: '%s'", g.nav_window ? g.nav_window->Name : "None");
-        text("nav_id: 0x%08X, nav_layer: %d", g.nav_id, g.NavLayer);
+        text("nav_id: 0x%08X, nav_layer: %d", g.nav_id, g.nav_layer);
         text("nav_input_source: %s", GetInputSourceName(g.nav_input_source));
         text("nav_active: %d, nav_visible: %d", g.io.nav_active, g.io.NavVisible);
         text("nav_activate_id/DownId/PressedId/InputId: %08X/%08X/%08X/%08X", g.nav_activate_id, g.NavActivateDownId, g.NavActivatePressedId, g.NavActivateInputId);
         text("nav_activate_flags: %04X", g.NavActivateFlags);
         text("NavDisableHighlight: %d, nav_disable_mouse_hover: %d", g.nav_disable_highlight, g.nav_disable_mouse_hover);
-        text("nav_focus_scope_id = 0x%08X", g.NavFocusScopeId);
+        text("nav_focus_scope_id = 0x%08X", g.nav_focus_spope_id);
         text("nav_windowing_target: '%s'", g.nav_windowing_target ? g.nav_windowing_target->Name : "None");
         Unindent();
 
@@ -562,7 +562,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
     {
         for (int n = 0; n < g.windows.len(); n += 1)
         {
-            ImGuiWindow* window = g.windows[n];
+            Window* window = g.windows[n];
             if (!window.was_active)
                 continue;
             ImDrawList* draw_list = get_foreground_draw_list(window);
@@ -624,7 +624,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         int depth = dock_node_get_depth(node);
         overlay_draw_list->AddRect(node.pos + Vector2D::new(3, 3) * depth, node.pos + node.size - Vector2D::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
         Vector2D pos = node.pos + Vector2D::new(3, 3) * depth;
-        overlay_draw_list->AddRectFilled(pos - Vector2D::new(1, 1), pos + CalcTextSize(buf) + Vector2D::new(1, 1), IM_COL32(200, 100, 100, 255));
+        overlay_draw_list->AddRectFilled(pos - Vector2D::new(1, 1), pos + calc_text_size(buf) + Vector2D::new(1, 1), IM_COL32(200, 100, 100, 255));
         overlay_draw_list->AddText(None, 0.0, pos, IM_COL32(255, 255, 255, 255), buf);
     }
  // #ifdef IMGUI_HAS_DOCK
@@ -638,7 +638,7 @@ pub fn debug_node_columns(g: &mut Context, columns: &mut OldColumns)
 {
     if (!TreeNode((void*)(uintptr_t)columns->ID, "columns Id: 0x%08X, Count: %d, flags: 0x%04X", columns->ID, columns->Count, columns.flags))
         return;
-    BulletText("width: %.1 (MinX: %.1, MaxX: %.1)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
+    BulletText("width: %.1 (min_x: %.1, max_x: %.1)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (int column_n = 0; column_n < columns->Columns.size; column_n += 1)
         BulletText("column %02d: offset_norm %.3 (= %.1 px)", column_n, columns->Columns[column_n].OffsetNorm, GetColumnOffsetFromNorm(columns, columns->Columns[column_n].OffsetNorm));
     TreePop();
@@ -689,8 +689,8 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
         open = TreeNodeEx((void*)(intptr_t)node->ID, tree_node_flags, "%s 0x%04X%s: %s split (vis: '%s')", label, node->ID, node->is_visible ? "" : " (hidden)", (node->SplitAxis == Axis::X) ? "horizontal" : (node->SplitAxis == Axis::Y) ? "vertical" : "n/a", node->VisibleWindow ? node->VisibleWindow->Name : "None");
     if (!is_alive) { pop_style_color(); }
     if (is_active && IsItemHovered())
-        if (ImGuiWindow* window = node->HostWindow ? node->HostWindow : node->VisibleWindow)
-            get_foreground_draw_list(window)->AddRect(node.pos, node.pos + node.size, IM_COL32(255, 255, 0, 255));
+        if (Window* window = node->HostWindow ? node->HostWindow : node->VisibleWindow)
+            foreground_draw_list(window)->AddRect(node.pos, node.pos + node.size, IM_COL32(255, 255, 0, 255));
     if (open)
     {
         // IM_ASSERT(node->ChildNodes[0] == None || node->ChildNodes[0]->ParentNode == node);
@@ -732,7 +732,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
 
 // [DEBUG] Display contents of ImDrawList
 // Note that both 'window' and 'viewport' may be None here. viewport is generally null of destroyed popups which previously owned a viewport.
-// void DebugNodeDrawList(ImGuiWindow* window, ImGuiViewportP* viewport, const ImDrawList* draw_list, const char* label)
+// void DebugNodeDrawList(Window* window, ImGuiViewportP* viewport, const ImDrawList* draw_list, const char* label)
 pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewport: &mut Viewport, draw_list: &DrawList, label: &str)
 {
     // ImGuiContext& g = *GImGui;
@@ -750,7 +750,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         return;
     }
 
-    ImDrawList* fg_draw_list = if viewport { get_foreground_draw_list(viewport) }else{ None}; // Render additional visuals into the top-most draw list
+    ImDrawList* fg_draw_list = if viewport { foreground_draw_list(viewport) }else{ None}; // Render additional visuals into the top-most draw list
     if (window && IsItemHovered() && fg_draw_list)
         fg_draw_list->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
     if (!node_open)
@@ -901,7 +901,7 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
         ImDrawList* draw_list = GetWindowDrawList();
         const ImU32 glyph_col = get_color_u32(StyleColor::Text);
         let cell_size = font->FontSize * 1;
-        let cell_spacing = GetStyle().ItemSpacing.y;
+        let cell_spacing = GetStyle().item_spacing.y;
         for (unsigned int base = 0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
         {
             // Skip ahead if a large bunch of glyphs are not present in the font (test in chunks of 4k)
@@ -998,7 +998,7 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
     if (!is_active) { pop_style_color(); }
     if (is_active && IsItemHovered())
     {
-        ImDrawList* draw_list = get_foreground_draw_list();
+        ImDrawList* draw_list = foreground_draw_list();
         draw_list->AddRect(tab_bar->BarRect.min, tab_bar->BarRect.max, IM_COL32(255, 255, 0, 255));
         draw_list->AddLine(Vector2D::new(tab_bar->ScrollingRectMinX, tab_bar->BarRect.min.y), Vector2D::new(tab_bar->ScrollingRectMinX, tab_bar->BarRect.max.y), IM_COL32(0, 255, 0, 255));
         draw_list->AddLine(Vector2D::new(tab_bar->ScrollingRectMaxX, tab_bar->BarRect.min.y), Vector2D::new(tab_bar->ScrollingRectMaxX, tab_bar->BarRect.max.y), IM_COL32(0, 255, 0, 255));
@@ -1025,7 +1025,7 @@ pub fn debug_node_viewport(g: &mut Context, viewport: &mut Viewport)
     SetNextItemOpen(true, ImGuiCond_Once);
     if (TreeNode((void*)(intptr_t)viewport->ID, "viewport #%d, id: 0x%08X, Parent: 0x%08X, window: \"%s\"", viewport->Idx, viewport->ID, viewport->ParentViewportId, viewport->Window ? viewport->Window->Name : "N/A"))
     {
-        ImGuiWindowFlags flags = viewport.flags;
+        WindowFlags flags = viewport.flags;
         BulletText("Main pos: (%.0,%.0), size: (%.0,%.0)\nWorkArea Offset Left: %.0 Top: %.0, Right: %.0, Bottom: %.0\nMonitor: %d, dpi_scale: %.0%%",
             viewport.pos.x, viewport.pos.y, viewport.size.x, viewport.size.y,
             viewport->WorkOffsetMin.x, viewport->WorkOffsetMin.y, viewport->WorkOffsetMax.x, viewport->WorkOffsetMax.y,
@@ -1033,18 +1033,18 @@ pub fn debug_node_viewport(g: &mut Context, viewport: &mut Viewport)
         if (viewport->Idx > 0) { same_line(); if (SmallButton("Reset pos")) { viewport.pos = Vector2D::new(200, 200); viewport.update_work_rect(); if (viewport->Window) viewport->Window.pos = viewport.pos; } }
         BulletText("flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
-            (flags & ImGuiViewportFlags_IsPlatformMonitor) ? " IsPlatformMonitor" : "",
+            (flags & ViewportFlags::IsPlatformMonitor) ? " IsPlatformMonitor" : "",
             (flags & ViewportFlags::OwnedByApp) ? " OwnedByApp" : "",
-            (flags & ImGuiViewportFlags_NoDecoration) ? " NoDecoration" : "",
-            (flags & ImGuiViewportFlags_NoTaskBarIcon) ? " NoTaskBarIcon" : "",
-            (flags & ImGuiViewportFlags_NoFocusOnAppearing) ? " NoFocusOnAppearing" : "",
-            (flags & ImGuiViewportFlags_NoFocusOnClick) ? " NoFocusOnClick" : "",
+            (flags & ViewportFlags::NoDecoration) ? " NoDecoration" : "",
+            (flags & ViewportFlags::NoTaskBarIcon) ? " NoTaskBarIcon" : "",
+            (flags & ViewportFlags::NoFocusOnAppearing) ? " NoFocusOnAppearing" : "",
+            (flags & ViewportFlags::NoFocusOnClick) ? " NoFocusOnClick" : "",
             (flags & ViewportFlags::NoInputs) ? " NoInputs" : "",
-            (flags & ImGuiViewportFlags_NoRendererClear) ? " NoRendererClear" : "",
-            (flags & ImGuiViewportFlags_TopMost) ? " TopMost" : "",
-            (flags & ImGuiViewportFlags_Minimized) ? " Minimized" : "",
-            (flags & ImGuiViewportFlags_NoAutoMerge) ? " NoAutoMerge" : "",
-            (flags & ImGuiViewportFlags_CanHostOtherWindows) ? " CanHostOtherWindows" : "");
+            (flags & ViewportFlags::NoRendererClear) ? " NoRendererClear" : "",
+            (flags & ViewportFlags::TopMost) ? " TopMost" : "",
+            (flags & ViewportFlags::Minimized) ? " Minimized" : "",
+            (flags & ViewportFlags::NoAutoMerge) ? " NoAutoMerge" : "",
+            (flags & ViewportFlags::CanHostOtherWindows) ? " CanHostOtherWindows" : "");
         for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport.draw_data_builder.layers); layer_i += 1)
             for (int draw_list_i = 0; draw_list_i < viewport.draw_data_builder.layers[layer_i].size; draw_list_i += 1)
                 DebugNodeDrawList(None, viewport, viewport.draw_data_builder.layers[layer_i][draw_list_i], "draw_list");
@@ -1052,7 +1052,7 @@ pub fn debug_node_viewport(g: &mut Context, viewport: &mut Viewport)
     }
 }
 
-// void DebugNodeWindow(ImGuiWindow* window, const char* label)
+// void DebugNodeWindow(Window* window, const char* label)
 pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &str)
 {
     if (window == None)
@@ -1068,14 +1068,14 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.name, is_active ? "" : " *Inactive*");
     if (!is_active) { pop_style_color(); }
     if (IsItemHovered() && is_active)
-        get_foreground_draw_list(window)->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
+        foreground_draw_list(window)->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
     if (!open)
         return;
 
     if (window.memory_compacted)
         TextDisabled("Note: some memory buffers have been compacted/freed.");
 
-    ImGuiWindowFlags flags = window.flags;
+    WindowFlags flags = window.flags;
     DebugNodeDrawList(window, window.viewport, window.draw_list, "draw_list");
     BulletText("pos: (%.1,%.1), size: (%.1,%.1), content_size (%.1,%.1) Ideal (%.1,%.1)", window.pos.x, window.pos.y, window.size.x, window.size.y, window.ContentSize.x, window.ContentSize.y, window.ContentSizeIdeal.x, window.ContentSizeIdeal.y);
     BulletText("flags: 0x%08X (%s%s%s%s%s%s%s%s%s..)", flags,
@@ -1088,7 +1088,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     BulletText("appearing: %d, hidden: %d (CanSkip %d Cannot %d), skip_items: %d", window.Appearing, window.hidden, window..hidden_frames_can_skip_items, window.hidden_frames_cannot_skip_items, window.skip_items);
     for (int layer = 0; layer < NavLayer::COUNT; layer += 1)
     {
-        Rect r = window.NavRectRel[layer];
+        Rect r = window.nav_rect_rel[layer];
         if (r.min.x >= r.max.y && r.min.y >= r.max.y)
         {
             BulletText("nav_last_ids[%d]: 0x%08X", layer, window.nav_last_ids[layer]);
@@ -1096,7 +1096,7 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
         }
         BulletText("nav_last_ids[%d]: 0x%08X at +(%.1,%.1)(%.1,%.1)", layer, window.nav_last_ids[layer], r.min.x, r.min.y, r.max.x, r.max.y);
         if (IsItemHovered())
-            get_foreground_draw_list(window)->AddRect(r.min + window.pos, r.max + window.pos, IM_COL32(255, 255, 0, 255));
+            foreground_draw_list(window)->AddRect(r.min + window.pos, r.max + window.pos, IM_COL32(255, 255, 0, 255));
     }
     BulletText("nav_layers_active_mask: %x, nav_last_child_nav_window: %s", window.dc.nav_layers_active_mask, window.NavLastChildNavWindow ? window.NavLastChildNavWindow->Name : "None");
 
@@ -1120,14 +1120,14 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     TreePop();
 }
 
-// void DebugNodeWindowSettings(ImGuiWindowSettings* settings)
+// void DebugNodeWindowSettings(WindowSettings* settings)
 pub fn debug_node_window_Settings(g: &mut Context, settings: &mut WindowSettings)
 {
     text("0x%08X \"%s\" pos (%d,%d) size (%d,%d) collapsed=%d",
         settings->ID, settings->GetName(), settings.pos.x, settings.pos.y, settings.size.x, settings.size.y, settings.collapsed);
 }
 
-// void DebugNodeWindowsList(ImVector<ImGuiWindow*>* windows, const char* label)
+// void DebugNodeWindowsList(ImVector<Window*>* windows, const char* label)
 pub fn debug_node_windows_list(g: &mut Context, windows: &mut Vec<Id32>, label: &str)
 {
     if (!TreeNode(label, "%s (%d)", label, windows.len()))
@@ -1142,12 +1142,12 @@ pub fn debug_node_windows_list(g: &mut Context, windows: &mut Vec<Id32>, label: 
 }
 
 // FIXME-OPT: This is technically suboptimal, but it is simpler this way.
-// void DebugNodeWindowsListByBeginStackParent(ImGuiWindow** windows, int windows_size, ImGuiWindow* parent_in_begin_stack)
+// void DebugNodeWindowsListByBeginStackParent(Window** windows, int windows_size, Window* parent_in_begin_stack)
 pub fn debug_node_windows_list_by_begin_stack_parent(g: &mut Context, windows: &mut Vec<id32>, windows_size: i32, parent_in_begin_stack: &mut window::Window)
 {
     for (int i = 0; i < windows_size; i += 1)
     {
-        ImGuiWindow* window = windows[i];
+        Window* window = windows[i];
         if (window.ParentWindowInBeginStack != parent_in_begin_stack)
             continue;
         char buf[20];
@@ -1165,18 +1165,18 @@ pub fn debug_node_windows_list_by_begin_stack_parent(g: &mut Context, windows: &
 pub fn update_debug_tool_item_picker(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    g.DebugItemPickerBreakId = 0;
-    if (!g.DebugItemPickerActive)
+    g.debug_item_picker_break_id = 0;
+    if (!g.debug_item_picker_active)
         return;
 
-    const ImGuiID hovered_id = g.hovered_id_previous_frame;
+    const Id32 hovered_id = g.hovered_id_previous_frame;
     SetMouseCursor(ImGuiMouseCursor_Hand);
     if (IsKeyPressed(ImGuiKey_Escape))
-        g.DebugItemPickerActive = false;
+        g.debug_item_picker_active = false;
     if (is_mouse_clicked(0) && hovered_id)
     {
-        g.DebugItemPickerBreakId = hovered_id;
-        g.DebugItemPickerActive = false;
+        g.debug_item_picker_break_id = hovered_id;
+        g.debug_item_picker_active = false;
     }
     set_netxt_window_bg_alpha(0.60);
     BeginTooltip();
@@ -1198,9 +1198,9 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
     if (g.frame_count != tool->LastActiveFrame + 1)
         return;
 
-    // Update queries. The steps are: -1: query Stack, >= 0: query each stack item
+    // update queries. The steps are: -1: query Stack, >= 0: query each stack item
     // We can only perform 1 id Info query every frame. This is designed so the GetID() tests are cheap and constant-time
-    const ImGuiID query_id = if g.hovered_id_previous_frame { g.hovered_id_previous_frame }else{ g.active_id};
+    const Id32 query_id = if g.hovered_id_previous_frame { g.hovered_id_previous_frame }else{ g.active_id};
     if (tool->QueryId != query_id)
     {
         tool->QueryId = query_id;
@@ -1216,7 +1216,7 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
         if (tool->Results[stack_level].QuerySuccess || tool->Results[stack_level].QueryFrameCount > 2)
             tool->StackLevel += 1;
 
-    // Update hook
+    // update hook
     stack_level = tool->StackLevel;
     if (stack_level == -1)
         g.debug_hook_id_info = query_id;
@@ -1228,14 +1228,14 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
 }
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
-// void debug_hook_id_info(ImGuiID id, DataType data_type, const void* data_id, const void* data_id_end)
+// void debug_hook_id_info(Id32 id, DataType data_type, const void* data_id, const void* data_id_end)
 pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_id: &Vec<u8>, data_id_end: &Vec<u8>)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     ImGuiStackTool* tool = &g.DebugStackTool;
 
-    // Step 0: stack query
+    // step 0: stack query
     // This assume that the id was computed with the current id stack, which tends to be the case for our widget.
     if (tool->StackLevel == -1)
     {
@@ -1246,12 +1246,12 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
         return;
     }
 
-    // Step 1+: query for individual level
+    // step 1+: query for individual level
     // IM_ASSERT(tool->StackLevel >= 0);
     if (tool->StackLevel != window.idStack.size)
         return;
     ImGuiStackLevelInfo* info = &tool->Results[tool->StackLevel];
-    // IM_ASSERT(info->ID == id && info->QueryFrameCount > 0);
+    // IM_ASSERT(info->id == id && info->QueryFrameCount > 0);
 
     switch (data_type)
     {
@@ -1280,7 +1280,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
 pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format_for_ui: bool, buf: &mut String, buf_size: usize) -> i32
 {
     ImGuiStackLevelInfo* info = &tool->Results[n];
-    ImGuiWindow* window = if (info->Desc[0] == 0 && n == 0) { find_window_by_id(info->ID) }else{ None};
+    Window* window = if (info->Desc[0] == 0 && n == 0) { find_window_by_id(info->ID) }else{ None};
     if (window)                                                                 // Source: window name (because the root id don't call GetID() and so doesn't get hooked)
         return ImFormatString(buf, buf_size, format_for_ui ? "\"%s\" [window]" : "%s", window.name);
     if (info->QuerySuccess)                                                     // Source: GetID() hooks (prioritize over ItemInfo() because we frequently use patterns like: push_id(str), Button("") where they both have same id)
@@ -1309,8 +1309,8 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
 
     // Display hovered/active status
     ImGuiStackTool* tool = &g.DebugStackTool;
-    const ImGuiID hovered_id = g.hovered_id_previous_frame;
-    const ImGuiID active_id = g.active_id;
+    const Id32 hovered_id = g.hovered_id_previous_frame;
+    const Id32 active_id = g.active_id;
 #ifdef IMGUI_ENABLE_TEST_ENGINE
     text("hovered_id: 0x%08X (\"%s\"), active_id:  0x%08X (\"%s\")", hovered_id, hovered_id ? ImGuiTestEngine_FindItemDebugLabel(&g, hovered_id) : "", active_id, active_id ? ImGuiTestEngine_FindItemDebugLabel(&g, active_id) : "");
 #else
@@ -1349,7 +1349,7 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
     tool->LastActiveFrame = g.frame_count;
     if (tool->Results.size > 0 && BeginTable("##table", 3, ImGuiTableFlags_Borders))
     {
-        let id_width = CalcTextSize("0xDDDDDDDD").x;
+        let id_width = calc_text_size("0xDDDDDDDD").x;
         TableSetupColumn("Seed", ImGuiTableColumnFlags_WidthFixed, id_width);
         TableSetupColumn("push_id", ImGuiTableColumnFlags_WidthStretch);
         TableSetupColumn("Result", ImGuiTableColumnFlags_WidthFixed, id_width);

@@ -1,5 +1,5 @@
 use crate::Context;
-use crate::orig_imgui_single_file::{buf, buf_end, ImGuiID, ImGuiWindow};
+use crate::orig_imgui_single_file::{buf, buf_end, Id32, Window};
 use crate::text_buffer::TextBuffer;
 use crate::types::Id32;
 use crate::window::{Window, WindowFlags};
@@ -13,7 +13,7 @@ pub struct SettingsHandler
 {
     // const char* TypeName;       // Short description stored in .ini file. Disallowed characters: '[' ']'
     pub type_name: String,
-    // ImGuiID     type_hash;       // == ImHashStr(TypeName)
+    // Id32     type_hash;       // == hash_string(TypeName)
     pub type_hash: Id32,
     // void        (*clear_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // clear all settings data
     pub clear_all_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
@@ -69,7 +69,7 @@ pub fn mark_ini_settings_dirty(g: &mut Context)
         g.SettingsDirtyTimer = g.io.IniSavingRate;
 }
 
-// void MarkIniSettingsDirty(ImGuiWindow* window)
+// void MarkIniSettingsDirty(Window* window)
 pub fn mark_ini_settings_dirty2(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
@@ -78,7 +78,7 @@ pub fn mark_ini_settings_dirty2(g: &mut Context, window: &mut Window)
             g.SettingsDirtyTimer = g.io.IniSavingRate;
 }
 
-// ImGuiWindowSettings* CreateNewWindowSettings(const char* name)
+// WindowSettings* CreateNewWindowSettings(const char* name)
 pub fn create_new_window_settings(g: &mut Context, name: &str) -> &mut WindowSettings
 {
     // ImGuiContext& g = *GImGui;
@@ -92,20 +92,20 @@ pub fn create_new_window_settings(g: &mut Context, name: &str) -> &mut WindowSet
     const size_t name_len = strlen(name);
 
     // Allocate chunk
-    const size_t chunk_size = sizeof(ImGuiWindowSettings) + name_len + 1;
-    ImGuiWindowSettings* settings = g.settings_windows.alloc_chunk(chunk_size);
-    IM_PLACEMENT_NEW(settings) ImGuiWindowSettings();
-    settings.id = ImHashStr(name, name_len);
+    const size_t chunk_size = sizeof(WindowSettings) + name_len + 1;
+    WindowSettings* settings = g.settings_windows.alloc_chunk(chunk_size);
+    IM_PLACEMENT_NEW(settings) WindowSettings();
+    settings.id = hash_string(name, name_len);
     memcpy(settings.GetName(), name, name_len + 1);   // Store with zero terminator
 
     return settings;
 }
 
-// ImGuiWindowSettings* FindWindowSettings(ImGuiID id)
+// WindowSettings* FindWindowSettings(Id32 id)
 pub fn find_window_settings(g: &mut Context, id: Id32) -> Option<&mut WindowSettings>
 {
     // ImGuiContext& g = *GImGui;
-    // for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+    // for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
     for settings in g.settings_windows.iter_mut()
     {
         // if (settings.id == id) {
@@ -118,10 +118,10 @@ pub fn find_window_settings(g: &mut Context, id: Id32) -> Option<&mut WindowSett
     return None;
 }
 
-// ImGuiWindowSettings* FindOrCreateWindowSettings(const char* name)
+// WindowSettings* FindOrCreateWindowSettings(const char* name)
 pub fn find_or_create_window_settings(g: &mut Context, name: &str) -> &mut WindowSettings
 {
-    if (ImGuiWindowSettings* settings = FindWindowSettings(ImHashStr(name)))
+    if (WindowSettings* settings = FindWindowSettings(hash_string(name)))
         return settings;
     return create_new_window_settings(name);
 }
@@ -146,7 +146,7 @@ pub fn remove_settings_handler(g: &mut Context, type_name: &str)
 pub fn find_settings_handler(g: &mut Context, type_name: &str) -> &mut SettingsHandler
 {
     // ImGuiContext& g = *GImGui;
-    const ImGuiID type_hash = ImHashStr(type_name);
+    const Id32 type_hash = hash_string(type_name);
     for (int handler_n = 0; handler_n < g.settings_handlers.size; handler_n += 1)
         if (g.settings_handlers[handler_n].type_hash == type_hash)
             return &g.settings_handlers[handler_n];
@@ -294,9 +294,9 @@ pub fn window_settings_handler_clear_all(g: &mut Context, handler: &mut Settings
 // static void* WindowSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name)
 pub fn window_settings_handler_read_open(g: &mut Context, handler: &mut SettingsHandler, name: &str) -> WindowSettings
 {
-    ImGuiWindowSettings* settings = FindOrCreateWindowSettings(name);
-    ImGuiID id = settings.id;
-    *settings = ImGuiWindowSettings(); // clear existing if recycling previous entry
+    WindowSettings* settings = FindOrCreateWindowSettings(name);
+    Id32 id = settings.id;
+    *settings = WindowSettings(); // clear existing if recycling previous entry
     settings.id = id;
     settings.WantApply = true;
     return (void*)settings;
@@ -305,7 +305,7 @@ pub fn window_settings_handler_read_open(g: &mut Context, handler: &mut Settings
 // static void WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line)
 pub fn window_settings_handler_read_line(g: &mut Context, handler: &mut SettingsHandler, entry: &mut Vec<u8>, line: &str)
 {
-    ImGuiWindowSettings* settings = (ImGuiWindowSettings*)entry;
+    WindowSettings* settings = (WindowSettings*)entry;
     int x, y;
     int i;
     ImU32 u1;
@@ -324,10 +324,10 @@ pub fn window_settings_handler_read_line(g: &mut Context, handler: &mut Settings
 pub fn window_handler_apply_all(g: &mut Context, handler: &mut SettingsHandler)
 {
     // ImGuiContext& g = *.g;
-    for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+    for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
         if (settings.WantApply)
         {
-            if (ImGuiWindow* window = find_window_by_id(settings.id))
+            if (Window* window = find_window_by_id(settings.id))
                 apply_window_settings(window, settings);
             settings.WantApply = false;
         }
@@ -341,22 +341,22 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
     // ImGuiContext& g = *.g;
     for (int i = 0; i != g.windows.len(); i += 1)
     {
-        ImGuiWindow* window = g.windows[i];
+        Window* window = g.windows[i];
         if (window.flags & WindowFlags::NoSavedSettings)
             continue;
 
-        ImGuiWindowSettings* settings = (window.settings_offset != -1) ? g.settings_windows.ptr_from_offset(window.settings_offset) : FindWindowSettings(window.id);
+        WindowSettings* settings = (window.settings_offset != -1) ? g.settings_windows.ptr_from_offset(window.settings_offset) : FindWindowSettings(window.id);
         if (!settings)
         {
             settings = create_new_window_settings(window.name);
             window.settings_offset = g.settings_windows.offset_from_ptr(settings);
         }
-        // IM_ASSERT(settings.ID == window.id);
+        // IM_ASSERT(settings.id == window.id);
         settings.pos = Vector2D(window.pos - window.viewport_pos);
         settings.size = Vector2D(window.size_full);
         settings.viewport_id = window.viewport_id;
         settings.viewport_pos = Vector2D(window.viewport_pos);
-        // IM_ASSERT(window.dock_node == None || window.dock_node.ID == window.DockId);
+        // IM_ASSERT(window.dock_node == None || window.dock_node.id == window.DockId);
         settings.dock_id = window.dock_id;
         settingsclass_id = window.window_class.class_id;
         settings.dock_order = window.dock_order;
@@ -365,7 +365,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
 
     // Write to text buffer
     buf.reserve(buf->size() + g.settings_windows.len()() * 6); // ballpark reserve
-    for (ImGuiWindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
+    for (WindowSettings* settings = g.settings_windows.begin(); settings != None; settings = g.settings_windows.next_chunk(settings))
     {
         const char* settings_name = settings.GetName();
         buf.appendf("[%s][%s]\n", handler.TypeName, settings_name);
@@ -381,7 +381,7 @@ pub fn window_settings_handler_write_all(g: &mut Context, handler: &mut Settings
         buf.appendf("collapsed=%d\n", settings.collapsed);
         if (settings.dock_id != 0)
         {
-            //buf->appendf("tab_id=0x%08X\n", ImHashStr("#TAB", 4, settings->id)); // window->tab_id: this is not read back but writing it makes "debugging" the .ini data easier.
+            //buf->appendf("tab_id=0x%08X\n", hash_string("#TAB", 4, settings->id)); // window->tab_id: this is not read back but writing it makes "debugging" the .ini data easier.
             if (settings.dock_order == -1)
                 buf.appendf("dock_id=0x%08X\n", settings.dock_id);
             else

@@ -5,13 +5,13 @@ use crate::config::ConfigFlags;
 use crate::dock::defines::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::draw_defines::DrawFlags;
-use crate::draw::list::{get_foreground_draw_list, DrawListFlags};
+use crate::draw::list::{foreground_draw_list, DrawListFlags};
 use crate::globals::GImGui;
 use crate::id::set_active_id;
 use crate::input::mouse::{start_mouse_moving_window, start_mouse_moving_window_or_node};
 use crate::input::{InputSource, NavLayer};
 use crate::item::{ItemFlags, ItemStatusFlags};
-use crate::math::{im_f32_to_int8_sat, saturate_f32};
+use crate::math::{f32_to_int8_sat, saturate_f32};
 use crate::orig_imgui_single_file::{buf, buf_end, int};
 use crate::rect::Rect;
 use crate::style::{
@@ -35,7 +35,7 @@ use crate::window::{
 use crate::{Context, ViewportFlags};
 use std::collections::HashSet;
 
-// static void ImGui::render_window_outer_borders(ImGuiWindow* window)
+// static void ImGui::render_window_outer_borders(Window* window)
 pub fn render_window_outer_borders(g: &mut Context, window: &mut Window) {
     // ImGuiContext& g = *GImGui;
     // float rounding = window.WindowRounding;
@@ -100,7 +100,7 @@ pub fn render_window_outer_borders(g: &mut Context, window: &mut Window) {
 
 /// Draw background and borders
 /// Draw and handle scrollbars
-/// void ImGui::RenderWindowDecorations(ImGuiWindow* window, const Rect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size)
+/// void ImGui::RenderWindowDecorations(Window* window, const Rect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size)
 pub fn render_window_decorations(
     g: &mut Context,
     window: &mut Window,
@@ -114,7 +114,7 @@ pub fn render_window_decorations(
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;
     let style = &g.style;
-    // ImGuiWindowFlags flags = window.flags;
+    // WindowFlags flags = window.flags;
     let flags = &window.flags;
 
     // Ensure that ScrollBar doesn't read last frame's skip_items
@@ -189,7 +189,7 @@ pub fn render_window_decorations(
                 }
                 if override_alpha {
                     bg_col = (bg_col & !COLOR32_A_MASK)
-                        | (im_f32_to_int8_sat(alpha) << IM_COL32_A_SHIFT);
+                        | (f32_to_int8_sat(alpha) << IM_COL32_A_SHIFT);
                 }
             }
 
@@ -376,7 +376,7 @@ pub fn render_window_decorations(
 
 // Render title text, collapse button, close button
 // When inside a dock node, this is handled in DockNodeCalcTabBarLayout() instead.
-// void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const Rect& title_bar_rect, const char* name, bool* p_open)
+// void ImGui::RenderWindowTitleBarContents(Window* window, const Rect& title_bar_rect, const char* name, bool* p_open)
 pub fn render_window_title_bar_contents(
     g: &mut Context,
     window: &mut Window,
@@ -387,7 +387,7 @@ pub fn render_window_title_bar_contents(
     // ImGuiContext& g = *GImGui;
     // ImGuiStyle& style = g.style;
     let style: &mut Style = &mut g.style;
-    // ImGuiWindowFlags flags = window.flags;
+    // WindowFlags flags = window.flags;
     let flags: &mut HashSet<WindowFlags> = &mut window.flags;
 
     // const bool has_close_button = (p_open != None);
@@ -462,7 +462,7 @@ pub fn render_window_title_bar_contents(
     } else {
         0.0
     };
-    // const Vector2D text_size = CalcTextSize(name, None, true) + Vector2D::new(marker_size_x, 0.0);
+    // const Vector2D text_size = calc_text_size(name, None, true) + Vector2D::new(marker_size_x, 0.0);
     let text_size = calc_text_size(g, name, true, 0.0) + Vector2D::new(marker_size_x, 0.0);
 
     // As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,

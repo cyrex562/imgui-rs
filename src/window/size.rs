@@ -16,7 +16,7 @@ use crate::vectors::vector_2d::Vector2D;
 use crate::window::{calc_window_size_after_constraint, get, Window, WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::window::next_window::NextWindowDataFlags;
 
-// static Vector2D CalcWindowAutoFitSize(ImGuiWindow* window, const Vector2D& size_contents)
+// static Vector2D CalcWindowAutoFitSize(Window* window, const Vector2D& size_contents)
 pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_contents: &Vector2D) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
@@ -82,7 +82,7 @@ pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_cont
     }
 }
 
-// Vector2D ImGui::CalcWindowNextAutoFitSize(ImGuiWindow* window)
+// Vector2D ImGui::CalcWindowNextAutoFitSize(Window* window)
 pub fn calc_window_next_auto_fit_size(g: &mut Context, window: &mut Window) -> Vector2D
 {
     // Vector2D size_contents_current;
@@ -98,7 +98,7 @@ pub fn calc_window_next_auto_fit_size(g: &mut Context, window: &mut Window) -> V
     return size_final;
 }
 
-// static void CalcResizePosSizeFromAnyCorner(ImGuiWindow* window, const Vector2D& corner_target, const Vector2D& corner_norm, Vector2D* out_pos, Vector2D* out_size)
+// static void CalcResizePosSizeFromAnyCorner(Window* window, const Vector2D& corner_target, const Vector2D& corner_norm, Vector2D* out_pos, Vector2D* out_size)
 pub fn calc_resize_pos_size_from_any_corner(g: &mut Context, window: &mut Window, corner_target: &Vector2D, corner_norm: &Vector2D, out_pos: &mut Vector2D, out_size: &mut Vector2D)
 {
     // Vector2D pos_min = ImLerp(corner_target, window.pos, corner_norm);                // Expected window upper-left
@@ -121,13 +121,13 @@ pub fn calc_resize_pos_size_from_any_corner(g: &mut Context, window: &mut Window
 }
 
 // 0..3: corners (Lower-right, Lower-left, Unused, Unused)
-// ImGuiID ImGui::GetWindowResizeCornerID(ImGuiWindow* window, int n)
+// Id32 ImGui::GetWindowResizeCornerID(Window* window, int n)
 pub fn get_window_resize_corner_id(g: &mut Context, window: &mut Window, n: i32) -> Id32
 {
     // IM_ASSERT(n >= 0 && n < 4);
-    // ImGuiID id = window.dock_is_active ? window.DockNode.HostWindow.ID : window.id;
+    // Id32 id = window.dock_is_active ? window.DockNode.HostWindow.id : window.id;
     let mut id = if window.dock_is_active { window.dock_node_id.host_window_id } else { window.id};
-    // id = ImHashStr("#RESIZE", 0, id);
+    // id = hash_string("#RESIZE", 0, id);
     // id = hash_string("#RESIZE", 0, id);
     // // id = ImHashData(&n, sizeof, id);
     // id = hash_data(&n, )
@@ -145,12 +145,12 @@ pub fn calc_wrap_width_for_pos(
     }
 
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* window = g.CurrentWindow;
+    // Window* window = g.CurrentWindow;
     let window = g.current_window_mut()?;
     if wrap_pos_x == 0.0 {
         // We could decide to setup a default wrapping max point for auto-resizing windows,
         // or have auto-wrap (with unspecified wrapping pos) behave as a content_size extending function?
-        //if (window->hidden && (window->flags & ImGuiWindowFlags_AlwaysAutoResize))
+        //if (window->hidden && (window->flags & WindowFlags_AlwaysAutoResize))
         //    wrap_pos_x = ImMax(window->work_rect.min.x + g.font_size * 10.0, window->work_rect.max.x);
         //else
         wrap_pos_x = window.work_rect.max.x;
@@ -162,7 +162,7 @@ pub fn calc_wrap_width_for_pos(
     Ok(out)
 }
 
-// static Vector2D CalcWindowSizeAfterConstraint(ImGuiWindow* window, const Vector2D& size_desired)
+// static Vector2D CalcWindowSizeAfterConstraint(Window* window, const Vector2D& size_desired)
 pub fn calc_window_size_after_constraint(
     g: &mut Context,
     window: &mut Window,
@@ -204,7 +204,7 @@ pub fn calc_window_size_after_constraint(
     if !window.flags.contains(&WindowFlags::ChildWindow)
         && !window.flags.contains(&WindowFlags::AlwaysAutoResize)
     {
-        // ImGuiWindow* window_for_height = GetWindowForTitleAndMenuHeight(window);
+        // Window* window_for_height = GetWindowForTitleAndMenuHeight(window);
         let window_for_height = get::get_window_for_title_and_menu_height(g, window);
         // let decoration_up_height = window_for_height->TitleBarHeight() + window_for_height->MenuBarHeight();
         let decoration_up_height =
@@ -218,7 +218,7 @@ pub fn calc_window_size_after_constraint(
     return new_size;
 }
 
-// static void CalcWindowContentSizes(ImGuiWindow* window, Vector2D* content_size_current, Vector2D* content_size_ideal)
+// static void CalcWindowContentSizes(Window* window, Vector2D* content_size_current, Vector2D* content_size_ideal)
 pub fn calc_window_content_sizes(
     g: &mut Context,
     window: &mut Window,
@@ -269,7 +269,7 @@ pub fn calc_window_content_sizes(
     };
 }
 
-// static inline void ClampWindowRect(ImGuiWindow* window, const Rect& visibility_rect)
+// static inline void ClampWindowRect(Window* window, const Rect& visibility_rect)
 pub fn clamp_window_rect(g: &mut Context, window: &mut Window, visibility_rect: &Rect) {
     // ImGuiContext& g = *GImGui;
     // Vector2D size_for_clamping = window.size;
@@ -290,7 +290,7 @@ pub fn clamp_window_rect(g: &mut Context, window: &mut Window, visibility_rect: 
     );
 }
 
-/// static void ScaleWindow(ImGuiWindow* window, float scale)
+/// static void ScaleWindow(Window* window, float scale)
 pub fn scale_window(window: &mut Window, scale: f32)
 {
     // Vector2D origin = window.viewport.pos;
@@ -301,7 +301,7 @@ pub fn scale_window(window: &mut Window, scale: f32)
     window.content_size = Vector2D::floor(window.ContentSize * scale);
 }
 
-// void ImGui::set_window_size(ImGuiWindow* window, const Vector2D& size, ImGuiCond cond)
+// void ImGui::set_window_size(Window* window, const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size(g: &mut Context, window: &mut Window, size: &Vector2D, condition: Condition)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
@@ -335,11 +335,11 @@ pub fn set_window_size2(g: &mut Context, size: &Vector2D, cond: Condition)
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
-// static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const Vector2D& size_auto_fit, int* border_held, int resize_grip_count, ImU32 resize_grip_col[4], const Rect& visibility_rect)
+// static bool ImGui::UpdateWindowManualResize(Window* window, const Vector2D& size_auto_fit, int* border_held, int resize_grip_count, ImU32 resize_grip_col[4], const Rect& visibility_rect)
 pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_auto_fit: &Vector2D, border_held: &mut i32, resize_grip_count: i32, mut resize_grip_col: [u32;4], visibility_rect: &Rect) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindowFlags flags = window.flags;
+    // WindowFlags flags = window.flags;
     let flags = &window.flags;
 
     if flags.contains(&WindowFlags::NoResize) || flags.contains(&WindowFlags::AlwaysAutoResize) || window.auto_fit_frames_x > 0 || window.auto_fit_frames_y > 0 {
@@ -457,7 +457,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
         let mut held = false;
         // Rect border_rect = GetResizeBorderRect(window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
         let mut border_rect = get_resize_border_rect(window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
-        // ImGuiID border_id = window.GetID(border_n + 4); // == GetWindowResizeBorderID()
+        // Id32 border_id = window.GetID(border_n + 4); // == GetWindowResizeBorderID()
         let border_id = window.get_id3(g, border_n + 4);
         keep_alive_id(border_id);
         button_behavior(border_rect, border_id, &hovered, &held, ButtonFlags::FlattenChildren | ButtonFlags::NoNavFocus);
@@ -542,7 +542,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
 // void ImGui::set_window_size(const char* name, const Vector2D& size, ImGuiCond cond)
 pub fn set_window_size3(g: &mut Context, name: &str, size: &Vector2D, cond: Condition)
 {
-    if (ImGuiWindow* window = find_window_by_name(name)) {
+    if (Window* window = find_window_by_name(name)) {
         set_window_size(window, size, cond);
     }
 }

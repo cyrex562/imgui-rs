@@ -4,12 +4,12 @@ use crate::vectors::vector_2d::Vector2D;
 use crate::window::Window;
 
 /// windows data saved in imgui.ini file
-/// Because we never destroy or rename ImGuiWindowSettings, we can store the names in a separate buffer easily.
+/// Because we never destroy or rename WindowSettings, we can store the names in a separate buffer easily.
 /// (this is designed to be stored in a ImChunkStream buffer, with the variable-length name following our structure)
 #[derive(Default,Debug,Clone)]
 pub struct WindowSettings
 {
-    //ImGuiID     id;
+    //Id32     id;
     pub id: Id32,
     // Vector2D    pos;            // NB: Settings position are stored RELATIVE to the viewport! Whereas runtime ones are absolute positions.
     pub pos: Vector2D,
@@ -17,23 +17,23 @@ pub struct WindowSettings
     pub size: Vector2D,
     // Vector2D    ViewportPos;
     pub viewport_pos: Vector2D,
-    // ImGuiID     ViewportId;
+    // Id32     ViewportId;
     pub viewport_id: Id32,
-    // ImGuiID     DockId;         // id of last known dock_node (even if the dock_node is invisible because it has only 1 active window), or 0 if none.
+    // Id32     DockId;         // id of last known dock_node (even if the dock_node is invisible because it has only 1 active window), or 0 if none.
     pub dock_id: Id32,
-    // ImGuiID     ClassId;        // id of window class if specified
+    // Id32     ClassId;        // id of window class if specified
     pub class_id: Id32,
     // short       DockOrder;      // Order of the last time the window was visible within its dock_node. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
     pub dock_order: i16,
     // bool        Collapsed;
     pub collapsed: bool,
-    // bool        WantApply;      // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
+    // bool        want_apply;      // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
     pub want_apply: bool,
-    // ImGuiWindowSettings()       { memset(this, 0, sizeof(*this)); DockOrder = -1; }
+    // WindowSettings()       { memset(this, 0, sizeof(*this)); DockOrder = -1; }
     // char* GetName()             { return (char*)(this + 1); }
 }
 
-// static void ApplyWindowSettings(ImGuiWindow* window, ImGuiWindowSettings* settings)
+// static void ApplyWindowSettings(Window* window, WindowSettings* settings)
 pub fn apply_window_settings(g: &mut Context, window: &mut Window, settings: &mut WindowSettings)
 {
     // const ImGuiViewport* main_viewport = ImGui::get_main_viewport();

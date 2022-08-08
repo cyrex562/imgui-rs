@@ -271,7 +271,7 @@ void ImGui_ImplAndroid_NewFrame()
     // Setup time step
     struct timespec current_timespec;
     clock_gettime(CLOCK_MONOTONIC, &current_timespec);
-    double current_time = (double)(current_timespec.tv_sec) + (current_timespec.tv_nsec / 1000000000.0);
+    double current_time = (current_timespec.tv_sec) + (current_timespec.tv_nsec / 1000000000.0);
     io.delta_time = g_Time > 0.0 ? (current_time - g_Time) : (1.0 / 60.0);
     g_Time = current_time;
 }

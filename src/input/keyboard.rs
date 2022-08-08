@@ -73,7 +73,7 @@ pub fn update_keyboard_inputs(g: &mut Context)
         }
     }
 
-    // Update keys
+    // update keys
     // for (int i = 0; i < IM_ARRAYSIZE(io.keys_data); i += 1)
     for i in 0 .. io.keys_data.len()
     {
@@ -116,7 +116,7 @@ pub fn pop_allow_keyboard_focus(g: &mut Context)
 pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     // IM_ASSERT(offset >= -1);    // -1 is allowed but not below
     IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere(%d) in window \"%s\"\n", offset, window.name);
 
@@ -140,7 +140,7 @@ pub fn set_keyboard_focus_here(g: &mut Context, offset: i32)
     }
     else
     {
-        g.NavTabbingDir = 1;
+        g.nav_tabbing_dir = 1;
         g.NavTabbingCounter = offset + 1;
     }
 }

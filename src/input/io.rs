@@ -3,8 +3,8 @@ use crate::config::{BackendFlags, ConfigFlags};
 use crate::context::Context;
 use crate::font::font_atlas::FontAtlas;
 use crate::font::Font;
-use crate::input::{DimgInputEventType, DimgKey, KeyInputData, InputSource, ModFlags};
-use crate::input_event::InputEvent;
+use crate::input::{InputEventType, Key, KeyInputData, InputSource, ModFlags};
+use crate::input::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
 use crate::types::{DimgWchar, Id32};
 use crate::vectors::vector_2d::Vector2D;
@@ -81,7 +81,7 @@ pub struct Io {
     pub config_drag_click_to_input_text: bool,
     // = false          // [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
     pub config_windows_resize_from_edges: bool,
-    // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.backend_flags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
+    // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.backend_flags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window WindowFlags_ResizeFromAnySide flag)
     pub config_windows_move_from_title_bar_only: bool,
     // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
     pub config_memory_compact_timer: f32, // = 60.0          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0 to disable.
@@ -129,7 +129,7 @@ pub struct Io {
     //  void  add_mouse_pos_event(float x, float y);                     // Queue a mouse position update. Use -FLT_MAX,-FLT_MAX to signify no mouse (e.g. app not focused and not hovered)
     //  void  add_mouse_button_event(int button, bool down);             // Queue a mouse button change
     //  void  add_mouse_wheel_event(float wh_x, float wh_y);             // Queue a mouse wheel update
-    //  void  add_mouse_viewport_event(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+    //  void  add_mouse_viewport_event(Id32 id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
     //  void  add_focus_event(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
     //  void  add_input_character(unsigned int c);                      // Queue a new character input
     //  void  add_input_character_utf16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
@@ -156,7 +156,7 @@ pub struct Io {
     pub want_save_ini_settings: bool,
     // When manual .ini load/save is active (io.ini_filename == None), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.want_save_ini_settings yourself after saving!
     pub nav_active: bool,
-    // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+    // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the WindowFlags_NoNavInputs flag.
     pub nav_visible: bool,
     // Keyboard/Gamepad navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
     pub framerate: f32,
@@ -354,20 +354,20 @@ impl Io {
 
     // Input Functions
     //  void  add_key_event(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
-    pub fn add_key_event(&mut self, key: &DimgKey, down: bool) {
+    pub fn add_key_event(&mut self, key: &Key, down: bool) {
         if !self.app_accepting_events {
             return;
         }
-        self.add_key_analog_event(key, down, if down { 1.0 } else { 0.0 });
+        self.add_key_analog_event(g, key, down, if down { 1.0 } else { 0.0 });
     }
     //  void  add_key_analog_event(ImGuiKey key, bool down, float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
     // Queue a new key down/up event.
     // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
     // - bool down:          Is the key down? use false to signify a key release.
     // - float analog_value: 0.0..1.0
-    pub fn add_key_analog_event(&mut self, g: &mut Context, key: &DimgKey, down: bool, v: f32) {
+    pub fn add_key_analog_event(&mut self, g: &mut Context, key: &Key, down: bool, v: f32) {
         //if (e->down) { IMGUI_DEBUG_LOG_IO("add_key_event() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->down, e->NativeKeycode, e->NativeScancode); }
-        if key == DimgKey::None || !self.app_accepting_events {
+        if key == Key::None || !self.app_accepting_events {
             return;
         }
         //ImGuiContext& g = *GImGui;
@@ -393,7 +393,7 @@ impl Io {
             // for (int n = g.input_events_queue.size - 1; n >= 0 && !found; n--){
             let mut n = g.InputEventsQueue.size - 1;
             while n >= 0 && !found {
-                if g.InputEventsQueue[n].Type == DimgInputEventType::Key
+                if g.InputEventsQueue[n].Type == InputEventType::Key
                     && g.InputEventsQueue[n].Key.Key == key
                 {
                     found = true;
@@ -406,7 +406,7 @@ impl Io {
 
         // Add event
         let mut e: InputEvent = InputEvent::new();
-        e.input_event_type = DimgInputEventType::Key;
+        e.input_event_type = InputEventType::Key;
         e.source = if self.is_gamepad_key(key) {
             InputSource::Gamepad
         } else {
@@ -426,7 +426,7 @@ impl Io {
         }
 
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::MousePos;
+        e.input_event_type = InputEventType::MousePos;
         e.source = InputSource::Mouse;
         e.MousePos.PosX = x;
         e.MousePos.PosY = y;
@@ -442,7 +442,7 @@ impl Io {
         }
 
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::MouseButton;
+        e.input_event_type = InputEventType::MouseButton;
         e.source = InputSource::Mouse;
         e.MouseButton.Button = button;
         e.MouseButton.down = down;
@@ -458,13 +458,13 @@ impl Io {
 
         //DimgInputEvent e;
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::mouse_wheel;
+        e.input_event_type = InputEventType::MouseWheel;
         e.source = InputSource::Mouse;
         e.mouse_wheel.WheelX = wheel_x;
         e.mouse_wheel.WheelY = wheel_y;
         g.InputEventsQueue.push_back(e);
     }
-    //  void  add_mouse_viewport_event(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+    //  void  add_mouse_viewport_event(Id32 id);                      // Queue a mouse hovered viewport. Requires backend to set ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
     pub fn add_mouse_viewport_event(&mut self, g: &mut Context, id: Id32) {
         // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.io == this && "Can only add events to current context.");
@@ -472,7 +472,7 @@ impl Io {
 
         // DimgInputEvent e;
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::mouse_viewport;
+        e.input_event_type = InputEventType::MouseViewport;
         e.source = InputSource::Mouse;
         e.mouse_viewport.HoveredViewportID = id;
         g.InputEventsQueue.push_back(e);
@@ -484,7 +484,7 @@ impl Io {
 
         // DimgInputEvent e;
         let mut e = InputEvent::new();
-        e.input_event_type = DimgInputEventType::Focus;
+        e.input_event_type = InputEventType::Focus;
         e.AppFocused.Focused = focused;
         g.InputEventsQueue.push_back(e);
     }
@@ -501,7 +501,7 @@ impl Io {
             return;
         }
         let e: InputEvent = InputEvent {
-            input_event_type: DimgInputEventType::Text,
+            input_event_type: InputEventType::Text,
             source: InputSource::Keyboard,
             val: DimgInputEventVal::new(),
             added_byt_test_engine: false,
@@ -519,7 +519,7 @@ impl Io {
         if (c & 0xFC00) == 0xD800 {
             // High surrogate, must save {
             if self.input_queue_surrogate.is_empty() == false {
-                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID);
+                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID,g);
             }
             self.input_queue_surrogate = c;
             return;
@@ -530,7 +530,7 @@ impl Io {
         if self.input_queue_surrogate != 0 {
             if (c & 0xFC00) != 0xDC00 {
                 // Invalid low surrogate {
-                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID);
+                self.add_input_character(IM_UNICODE_CODEPOINT_INVALID,g);
             } else {
                 // #if IM_UNICODE_CODEPOINT_MAX == 0xFFFF
                 //             cp = IM_UNICODE_CODEPOINT_INVALID; // codepoint will not fit in ImWchar
@@ -565,12 +565,12 @@ impl Io {
     // Specify native keycode, scancode + Specify index for legacy <1.87 IsKeyXXX() functions with native indices.
     // If you are writing a backend in 2022 or don't use IsKeyXXX() with native values that are not ImGuiKey values, you can avoid calling this.
     pub fn set_key_event_native_data(
-        key: DimgKey,
+        key: Key,
         native_keycode: i32,
         native_scancode: i32,
         native_legacy_index: i32,
     ) {
-        if key == DimgKey::None {
+        if key == Key::None {
             return;
         }
         // IM_ASSERT(ImGui::IsNamedKey(key)); // >= 512
@@ -642,7 +642,7 @@ pub struct PlatformIo {
     // Platform function --------------------------------------------------- Called by -----
 
     // (Optional) Monitor list
-    // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.
+    // - Updated by: app/backend. update every frame to dynamically support changing monitor or DPI configuration.
     // - Used by: dear imgui to query DPI info, clamp popups/tooltips within same monitor and not have them straddle monitors.
     // ImVector<ImGuiPlatformMonitor>  Monitors;
     pub Monitors: Vec<ImGuiPlatformMonitor>,
@@ -654,7 +654,7 @@ pub struct PlatformIo {
     // viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
     // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
     // ImVector<ImGuiViewport*>        viewports;                              // Main viewports, followed by all secondary viewports.
-    pub Viewports: Vec<ImGuiViewport>,
+    pub Viewports: Vec<Viewport>,
     // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
 }
 
@@ -664,80 +664,80 @@ impl PlatformIo {
             ..Default::default()
         }
     }
-    // void    (*Platform_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
-    pub fn Platform_CreateWindow(&mut self, vp: &mut ImGuiViewport) {
+    // void    (*platform_create_window)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
+    pub fn platform_create_window(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Platform_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  //
-    pub fn Platform_DestroyWindow(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_DestroyWindow(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so set_window_pos/size/Title can be called on them before showing the window
-    pub fn Platform_ShowWindow(&mut self, vp: &mut ImGuiViewport) {
+    pub fn platform_show_window(&mut self, vp: &mut Viewport) {
         todo!()
     }
-    //     void    (*Platform_SetWindowPos)(ImGuiViewport* vp, Vector2D pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
-    pub fn Platform_SetWindowPos(&mut self, vp: &mut ImGuiViewport, pos: Vector2D) {
+    //     void    (*platform_set_window_pos)(ImGuiViewport* vp, Vector2D pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    pub fn platform_set_window_pos(&mut self, vp: &mut Viewport, pos: &Vector2D) {
         todo!()
     }
     //     Vector2D  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
-    pub fn Platform_GetWindowPos(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_GetWindowPos(&mut self, vp: &mut Viewport) {
         todo!()
     }
-    //     void    (*Platform_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
-    pub fn Platform_set_window_size(&mut self, vp: &mut ImGuiViewport, size: &Vector2D) {
+    //     void    (*platform_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    pub fn platform_set_window_size(&mut self, vp: &mut Viewport, size: &Vector2D) {
         todo!()
     }
     //     Vector2D  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
-    pub fn Platform_GetWindowSize(&mut self, vp: &mut ImGuiViewport) -> Vector2D {
+    pub fn Platform_GetWindowSize(&mut self, vp: &mut Viewport) -> Vector2D {
         todo!()
     }
     //     void    (*Platform_SetWindowFocus)(ImGuiViewport* vp);                  // N . . . .  // Move window to front and set input focus
-    pub fn Platform_SetWindowFocus(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_SetWindowFocus(&mut self, vp: &mut Viewport) {
         todo!()
     }
 
     //     bool    (*Platform_GetWindowFocus)(ImGuiViewport* vp);                  // . . U . .  //
-    pub fn Platform_GetWindowFocus(&mut self, vp: &mut ImGuiViewport) -> bool {
+    pub fn Platform_GetWindowFocus(&mut self, vp: &mut Viewport) -> bool {
         todo!()
     }
     //     bool    (*Platform_GetWindowMinimized)(ImGuiViewport* vp);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
-    pub fn Platform_GetWindowMinimized(&mut self, vp: &mut ImGuiViewport) -> bool {
+    pub fn Platform_GetWindowMinimized(&mut self, vp: &mut Viewport) -> bool {
         todo!()
     }
     //     void    (*Platform_SetWindowTitle)(ImGuiViewport* vp, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
-    pub fn Platform_SetWindowTitle(&mut self, vp: &mut ImGuiViewport, in_str: &String) {
+    pub fn platform_set_window_title(&mut self, vp: &mut Viewport, in_str: &String) {
         todo!()
     }
     //     void    (*Platform_SetWindowAlpha)(ImGuiViewport* vp, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
-    pub fn Platform_SetWindowAlpha(&mut self, vp: &mut ImGuiViewport, alpha: f32) {
+    pub fn platform_set_window_alpha(&mut self, vp: &mut Viewport, alpha: f32) {
         todo!()
     }
     //     void    (*Platform_UpdateWindow)(ImGuiViewport* vp);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
-    pub fn Platform_UpdateWindow(&mut self, vp: &mut ImGuiViewport) {
+    pub fn platform_update_window(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Platform_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Platform_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+    pub fn Platform_RenderWindow(&mut self, vp: &mut Viewport, render_arg: *mut c_void) {
         todo!()
     }
     //     void    (*Platform_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Platform_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+    pub fn Platform_SwapBuffers(&mut self, vp: &mut Viewport, render_arg: *mut c_void) {
         todo!()
     }
     //     float   (*Platform_GetWindowDpiScale)(ImGuiViewport* vp);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0 = 96 DPI.
-    pub fn Platform_GetWindowDpiScale(&mut self, vp: &mut ImGuiViewport) -> f32 {
+    pub fn Platform_GetWindowDpiScale(&mut self, vp: &mut Viewport) -> f32 {
         todo!()
     }
 
     //     void    (*Platform_OnChangedViewport)(ImGuiViewport* vp);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
-    pub fn Platform_OnChangedViewport(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_OnChangedViewport(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     int     (*Platform_CreateVkSurface)(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
     pub fn Platform_CreateVkSurface(
         &mut self,
-        vp: &mut ImGuiViewport,
+        vp: &mut Viewport,
         vk_inst: u64,
         vk_allocators: *const c_void,
         out_vk_surface: &mut u64,
@@ -747,24 +747,24 @@ impl PlatformIo {
 
     //
     //     // (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)
-    //     void    (*Renderer_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
-    pub fn Platform_CreateWindow2(&mut self, vp: &mut ImGuiViewport) {
+    //     void    (*renderer_create_window)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after platform_create_window)
+    pub fn platform_create_window2(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Renderer_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
-    pub fn Platform_DestroyWindow2(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_DestroyWindow2(&mut self, vp: &mut Viewport) {
         todo!()
     }
-    //     void    (*Renderer_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_set_window_size)
-    pub fn Renderer_set_window_size(&mut self, vp: &mut ImGuiViewport, size: Vector2D) {
+    //     void    (*renderer_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after platform_set_window_size)
+    pub fn renderer_set_window_size(&mut self, vp: &mut Viewport, size: &Vector2D) {
         todo!()
     }
     //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) clear framebuffer, setup render target, then render the viewport->draw_data. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Renderer_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+    pub fn Renderer_RenderWindow(&mut self, vp: &mut Viewport, render_arg: *mut c_void) {
         todo!()
     }
     //     void    (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Renderer_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: &mut c_void) {
+    pub fn Renderer_SwapBuffers(&mut self, vp: &mut Viewport, render_arg: &mut c_void) {
         todo!()
     }
 }

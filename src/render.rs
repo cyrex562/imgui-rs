@@ -4,7 +4,7 @@ use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, INVALID_ID, window};
 use crate::color::{COLOR32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32};
 use crate::draw::data::add_root_window_to_draw_data;
-use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, get_foreground_draw_list};
+use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, foreground_draw_list};
 use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
 use crate::imgui_h::Color;
@@ -19,7 +19,7 @@ use crate::window::{get, Window, WindowFlags};
 use crate::window::checks::is_window_active_and_visible;
 use crate::window::get::find_bottom_most_visible_window_with_begin_stack;
 
-// const char* ImGui::FindRenderedTextEnd(const char* text, const char* text_end)
+// const char* ImGui::find_rendered_text_end(const char* text, const char* text_end)
 // pub unsafe fn find_rendered_text_end(text: *const c_char, text_end: *const c_char) -> *const c_char {
 //     // const char* text_display_end = text;
 //     let mut text_display_end = text;
@@ -40,7 +40,7 @@ pub unsafe fn render_text(pos: &Vector2D, text: &str, mut text_end: &str, hide_t
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
-    // ImGuiWindow* window = g.current_window;
+    // Window* window = g.current_window;
     let window = g.current_window;
 
     // Hide anything after a '##' string
@@ -61,7 +61,7 @@ pub unsafe fn render_text(pos: &Vector2D, text: &str, mut text_end: &str, hide_t
     if text != text_display_end
     {
         window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(Color::Text as u32), text, text_display_end, 0.0, None);
-        if g.LogEnabled {
+        if g.log_enabled {
             LogRenderedText(&pos, text, text_display_end);
         }
     }
@@ -72,7 +72,7 @@ pub fn render_textWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_w
 {
     // ImGuiContext& g = *GImGui;
     let g = GImGui;
-    // ImGuiWindow* window = g.current_window;
+    // Window* window = g.current_window;
     let window = g.current_window;
 
     if !text_end {
@@ -82,7 +82,7 @@ pub fn render_textWrapped(pos: &Vector2D, text: &str, mut text_end: &str, wrap_w
     if text != text_end
     {
         window.draw_list.AddText2(&g.font, g.font_size, pos, GetColorU32_3(StyleColor::Text), text, text_end, wrap_width);
-        if g.LogEnabled {
+        if g.log_enabled {
             LogRenderedText(&pos, text, text_end);
         }
     }
@@ -94,7 +94,7 @@ void ImGui::render_textClippedEx(ImDrawList* draw_list, const Vector2D& pos_min,
 {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     Vector2D pos = pos_min;
-    const Vector2D text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_display_end, false, 0.0);
+    const Vector2D text_size = text_size_if_known ? *text_size_if_known : calc_text_size(text, text_display_end, false, 0.0);
 
     const Vector2D* clip_min = clip_rect ? &clip_rect.min : &pos_min;
     const Vector2D* clip_max = clip_rect ? &clip_rect.Max : &pos_max;
@@ -121,15 +121,15 @@ void ImGui::render_textClippedEx(ImDrawList* draw_list, const Vector2D& pos_min,
 void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
 {
     // Hide anything after a '##' string
-    const char* text_display_end = FindRenderedTextEnd(text, text_end);
+    const char* text_display_end = find_rendered_text_end(text, text_end);
     let text_len = (text_display_end - text);
     if (text_len == 0)
         return;
 
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     render_textClippedEx(window.draw_list, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
-    if (g.LogEnabled)
+    if (g.log_enabled)
         LogRenderedText(&pos_min, text, text_display_end);
 }
 
@@ -141,8 +141,8 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
 {
     // ImGuiContext& g = *GImGui;
     if (text_end_full == None)
-        text_end_full = FindRenderedTextEnd(text);
-    const Vector2D text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_end_full, false, 0.0);
+        text_end_full = find_rendered_text_end(text);
+    const Vector2D text_size = text_size_if_known ? *text_size_if_known : calc_text_size(text, text_end_full, false, 0.0);
 
     //draw_list->add_line(Vector2D(pos_max.x, pos_min.y - 4), Vector2D(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list->add_line(Vector2D(ellipsis_max_x, pos_min.y-2), Vector2D(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
@@ -210,7 +210,7 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
         render_textClippedEx(draw_list, pos_min, Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, Vector2D::new(0.0, 0.0));
     }
 
-    if (g.LogEnabled)
+    if (g.log_enabled)
         LogRenderedText(&pos_min, text, text_end_full);
 }
 
@@ -218,7 +218,7 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
 void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool border, float rounding)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     window.draw_list.add_rect_filled(p_min, p_max, fill_col, rounding);
     let border_size = g.style.frame_border_size;
     if (border && border_size > 0.0)
@@ -231,7 +231,7 @@ void ImGui::RenderFrame(Vector2D p_min, Vector2D p_max, ImU32 fill_col, bool bor
 void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     let border_size = g.style.frame_border_size;
     if (border_size > 0.0)
     {
@@ -240,7 +240,7 @@ void ImGui::RenderFrameBorder(Vector2D p_min, Vector2D p_max, float rounding)
     }
 }
 
-// void ImGui::render_nav_highlight(const Rect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
+// void ImGui::render_nav_highlight(const Rect& bb, Id32 id, ImGuiNavHighlightFlags flags)
 pub fn render_nav_highlight(g: &mut Context, bb: &Rect, id: Id32, flags: Option<&HashSet<NavHighlightFlags>>)
 {
     // ImGuiContext& g = *GImGui;
@@ -248,7 +248,7 @@ pub fn render_nav_highlight(g: &mut Context, bb: &Rect, id: Id32, flags: Option<
         return;
     if (g.nav_disable_highlight && !(flags & ImGuiNavHighlightFlags_AlwaysDraw))
         return;
-    ImGuiWindow* window = g.current_window;
+    Window* window = g.current_window;
     if (window.dc.NavHideHighlightOneFrame)
         return;
 
@@ -284,7 +284,7 @@ void ImGui::render_mouse_cursor(Vector2D base_pos, float base_scale, ImGuiMouseC
         Vector2D offset, size, uv[4];
         if (!font_atlas.GetMouseCursorTexData(mouse_cursor, &offset, &size, &uv[0], &uv[2]))
             continue;
-        ImGuiViewportP* viewport = g.viewports[n];
+        ViewportP* viewport = g.viewports[n];
         const Vector2D pos = base_pos - offset;
         let scale = base_scale * viewport.DpiScale;
         if (!viewport.get_main_rect().Overlaps(Rect(pos, pos + Vector2D::new(size.x + 2, size.y + 2) * scale)))
@@ -303,7 +303,7 @@ void ImGui::render_mouse_cursor(Vector2D base_pos, float base_scale, ImGuiMouseC
 // static void ImGuis::RenderDimmedBackgrounds()
 pub fn render_dimmed_backgrounds(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
-    // ImGuiWindow* modal_window = GetTopMostAndVisiblePopupModal();
+    // Window* modal_window = GetTopMostAndVisiblePopupModal();
     let modal_window: &mut Window = get_top_most_and_visible_popup_modal();
     if g.dim_bg_ration <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0 {
         return;
@@ -322,7 +322,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
     let viewports_already_dimmedd: [Id32; 2] = [0, 0];
     if dim_bg_for_modal {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
-        // ImGuiWindow* dim_behind_window = FindBottomMostVisibleWindowWithinBeginStack(modal_window);
+        // Window* dim_behind_window = FindBottomMostVisibleWindowWithinBeginStack(modal_window);
         let dim_behind_window = find_bottom_most_visible_window_with_begin_stack(g, modal_window);
         // RenderDimmedBackgroundBehindWindow(dim_behind_window, get_color_u32(ImGuiCol_ModalWindowDimBg, g.dim_bg_ration));
         render_dimmed_background_behind_window(g, dim_behind_window, get_color_u32(StyleColor::ModalWindowDimBg, g.dim_bg_ratio));
@@ -345,7 +345,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
         viewports_already_dimmed[1] = nwl_win.viewport_id;
 
         // Draw border around CTRL+Tab target window
-        // ImGuiWindow * window = g.NavWindowingTargetAnim;
+        // Window * window = g.NavWindowingTargetAnim;
         // ImGuiViewport * viewport = window.viewport;
         let nwta_vp = g.viewport_mut(nwta_win.viewport_id).unwrap();
         let distance = g.font_size;
@@ -378,7 +378,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
             continue;
         }
         // ImDrawList* draw_list = GetForegroundDrawList(viewport);
-        let draw_list = get_foreground_draw_list(g, viewport);
+        let draw_list = foreground_draw_list(g, viewport);
         let dim_bg_col = get_color_u32(if dim_bg_for_modal { StyleColor::ModalWindowDimBg } else { StyleColor::NavWindowingDimBg }, g.dim_bg_ration);
         draw_list.add_rect_filled(viewport.pos, viewport.pos + viewport.size, dim_bg_col, 0.0, 0.0);
     }
@@ -414,7 +414,7 @@ pub fn render(g: &mut Context)
     }
 
     // Add ImDrawList to render
-    // ImGuiWindow* windows_to_render_top_most[2];
+    // Window* windows_to_render_top_most[2];
     let mut windows_to_render_top_most: [Id32;2] = [
         if g.nav_windowing_target_id != INVALID_ID && !g.nav_windowing_target_id.flags.contains(WindowFlags::NoBringToFrontOnFocus) {
             let nwt_win = g.window_mut(g.nav_windowing_target_id).unwrap();
@@ -428,12 +428,12 @@ pub fn render(g: &mut Context)
             INVALID_ID
         }
     ];
-    // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & ImGuiWindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->root_window_dock_tree : None;
+    // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & WindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->root_window_dock_tree : None;
     // windows_to_render_top_most[1] = (g.nav_windowing_target_id? g.nav_windowing_list_window : None);
     // for (int n = 0; n != g.windows.Size; n += 1)
     for (win_id, window) in g.windows.iter_mut()
     {
-        // ImGuiWindow* window = g.windows[n];
+        // Window* window = g.windows[n];
         // IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing None pointer 'window'"
         if is_window_active_and_visible(window) && (!window.flags.contains(&WindowFlags::ChildWindow)) && window.id != windows_to_render_top_most[0] && window.id != windows_to_render_top_most[1] {
             add_root_window_to_draw_data(g, window);
@@ -468,7 +468,7 @@ pub fn render(g: &mut Context)
 
         // Add foreground ImDrawList (for each active viewport)
         if viewport.draw_list_ids[1] != INVALID_ID {
-        add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], get_foreground_draw_list(g,viewport));
+        add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], foreground_draw_list(g, viewport));
     }
         setup_viewport_draw_data(g, viewport, &viewport.draw_data_builder.layers[0]);
         let draw_data = &viewport.draw_data;
@@ -479,7 +479,7 @@ pub fn render(g: &mut Context)
     call_context_hooks(g, ImGuiContextHookType_RenderPost);
 }
 
-// static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col)
+// static void ImGui::RenderDimmedBackgroundBehindWindow(Window* window, ImU32 col)
 pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Window, color: u32)
 {
     if (color & COLOR32_A_MASK) == 0 {

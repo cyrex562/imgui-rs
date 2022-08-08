@@ -19,7 +19,6 @@ pub struct Payload {
     // pub data_size: usize,         // data size
     pub data: PayloadData,
     pub data_size: usize,
-
     // [Internal]
     pub source_id: Id32,            // Source item id
     pub source_parent_id: Id32,     // Source parent id (if available)
@@ -43,7 +42,7 @@ impl Payload {
     pub fn clear(&mut self) {
         self.source_id = INVALID_ID;
         self.source_parent_id = INVALID_ID;
-        self.data = vec![];
+        self.data = PayloadData::default();
         self.data_size = 0;
         self.data_type = String::from("");
         self.data_frame_count = usize::MAX;

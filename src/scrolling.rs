@@ -19,7 +19,7 @@ pub fn calc_scroll_edge_snap(g: &mut Context, target: f32, snap_min: f32, snap_m
     return target;
 }
 
-// static Vector2D CalcNextScrollFromScrollTargetAndClamp(ImGuiWindow* window)
+// static Vector2D CalcNextScrollFromScrollTargetAndClamp(Window* window)
 pub fn calc_next_scroll_from_scroll_target_and_clamp(g: &mut Context, window: &mut Window) -> Vector2D
 {
     Vector2D scroll = window.scroll;
@@ -63,18 +63,18 @@ pub fn calc_next_scroll_from_scroll_target_and_clamp(g: &mut Context, window: &m
 pub fn scroll_to_item(g: &mut Context, flags: &HashSet<ScrollFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
-    ScrollToRectEx(window, g.last_item_data.NavRect, flags);
+    Window* window = g.current_window;
+    ScrollToRectEx(window, g.last_item_data.nav_rect, flags);
 }
 
-// void ScrollToRect(ImGuiWindow* window, const Rect& item_rect, ImGuiScrollFlags flags)
+// void ScrollToRect(Window* window, const Rect& item_rect, ImGuiScrollFlags flags)
 pub fn scroll_to_rect(g: &mut Context, window: &mut Window, item_rect: &Rect, flags: &HashSet<ScrollFlags>)
 {
     ScrollToRectEx(window, item_rect, flags);
 }
 
 // scroll to keep newly navigated item fully into view
-// Vector2D ScrollToRectEx(ImGuiWindow* window, const Rect& item_rect, ImGuiScrollFlags flags)
+// Vector2D ScrollToRectEx(Window* window, const Rect& item_rect, ImGuiScrollFlags flags)
 pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect, flags: &HashSet<ScrollFlags>)
 {
     // ImGuiContext& g = *GImGui;
@@ -94,15 +94,15 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
 
     const bool fully_visible_x = item_rect.min.x >= window_rect.min.x && item_rect.max.x <= window_rect.max.x;
     const bool fully_visible_y = item_rect.min.y >= window_rect.min.y && item_rect.max.y <= window_rect.max.y;
-    const bool can_be_fully_visible_x = (item_rect.get_width() + g.style.ItemSpacing.x * 2.0) <= window_rect.get_width();
-    const bool can_be_fully_visible_y = (item_rect.get_height() + g.style.ItemSpacing.y * 2.0) <= window_rect.get_height();
+    const bool can_be_fully_visible_x = (item_rect.get_width() + g.style.item_spacing.x * 2.0) <= window_rect.get_width();
+    const bool can_be_fully_visible_y = (item_rect.get_height() + g.style.item_spacing.y * 2.0) <= window_rect.get_height();
 
     if ((flags & ImGuiScrollFlags_KeepVisibleEdgeX) && !fully_visible_x)
     {
         if (item_rect.min.x < window_rect.min.x || !can_be_fully_visible_x)
-            SetScrollFromPosX(window, item_rect.min.x - g.style.ItemSpacing.x - window.pos.x, 0.0);
+            SetScrollFromPosX(window, item_rect.min.x - g.style.item_spacing.x - window.pos.x, 0.0);
         else if (item_rect.max.x >= window_rect.max.x)
-            SetScrollFromPosX(window, item_rect.max.x + g.style.ItemSpacing.x - window.pos.x, 1.0);
+            SetScrollFromPosX(window, item_rect.max.x + g.style.item_spacing.x - window.pos.x, 1.0);
     }
     else if (((flags & ImGuiScrollFlags_KeepVisibleCenterX) && !fully_visible_x) || (flags & ImGuiScrollFlags_AlwaysCenterX))
     {
@@ -113,9 +113,9 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
     if ((flags & ImGuiScrollFlags_KeepVisibleEdgeY) && !fully_visible_y)
     {
         if (item_rect.min.y < window_rect.min.y || !can_be_fully_visible_y)
-            SetScrollFromPosY(window, item_rect.min.y - g.style.ItemSpacing.y - window.pos.y, 0.0);
+            SetScrollFromPosY(window, item_rect.min.y - g.style.item_spacing.y - window.pos.y, 0.0);
         else if (item_rect.max.y >= window_rect.max.y)
-            SetScrollFromPosY(window, item_rect.max.y + g.style.ItemSpacing.y - window.pos.y, 1.0);
+            SetScrollFromPosY(window, item_rect.max.y + g.style.item_spacing.y - window.pos.y, 1.0);
     }
     else if (((flags & ImGuiScrollFlags_KeepVisibleCenterY) && !fully_visible_y) || (flags & ImGuiScrollFlags_AlwaysCenterY))
     {
@@ -143,32 +143,32 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
 // float GetScrollX()
 pub fn get_Scroll_x(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.current_window_id;
+    Window* window = g.current_window_id;
     return window.scroll.x;
 }
 
 // float GetScrollY()
 pub fn get_scroll_y(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.current_window_id;
+    Window* window = g.current_window_id;
     return window.scroll.y;
 }
 
 // float GetScrollMaxX()
 pub fn get_scroll_max_x(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.current_window_id;
+    Window* window = g.current_window_id;
     return window.scroll_max.x;
 }
 
 // float GetScrollMaxY()
 pub fn get_scroll_max_y(g: &mut Context) -> f32
 {
-    ImGuiWindow* window = g.current_window_id;
+    Window* window = g.current_window_id;
     return window.scroll_max.y;
 }
 
-// void set_scroll_x(ImGuiWindow* window, float scroll_x)
+// void set_scroll_x(Window* window, float scroll_x)
 pub fn set_scroll_x(g: &mut Context, window: &mut Window, scroll_x: f32)
 {
     window.ScrollTarget.x = scroll_x;
@@ -176,7 +176,7 @@ pub fn set_scroll_x(g: &mut Context, window: &mut Window, scroll_x: f32)
     window.ScrollTargetEdgeSnapDist.x = 0.0;
 }
 
-// void set_scroll_y(ImGuiWindow* window, float scroll_y)
+// void set_scroll_y(Window* window, float scroll_y)
 pub fn set_scroll_y(g: &mut Context, window: &mut Window, scroll_y: f32)
 {
     window.ScrollTarget.y = scroll_y;
@@ -208,7 +208,7 @@ pub fn set_scroll_y2(g: &mut Context, scroll_y:f32)
 //  - SetScrollFromPosY(0.0) == SetScrollY(0.0 + scroll.y) == has no effect!
 //  - SetScrollFromPosY(-scroll.y) == SetScrollY(-scroll.y + scroll.y) == SetScrollY(0.0) == reset scroll. Of course writing SetScrollY(0.0) directly then makes more sense
 // We store a target position so centering and clamping can occur on the next frame when we are guaranteed to have a known window size
-// void SetScrollFromPosX(ImGuiWindow* window, float local_x, float center_x_ratio)
+// void SetScrollFromPosX(Window* window, float local_x, float center_x_ratio)
 pub fn set_scroll_from_pos_x(g: &mut Context, window: &mut Window, local_x: f32, center_x_ratio: f32)
 {
     // IM_ASSERT(center_x_ratio >= 0.0 && center_x_ratio <= 1.0);
@@ -217,7 +217,7 @@ pub fn set_scroll_from_pos_x(g: &mut Context, window: &mut Window, local_x: f32,
     window.ScrollTargetEdgeSnapDist.x = 0.0;
 }
 
-// void SetScrollFromPosY(ImGuiWindow* window, float local_y, float center_y_ratio)
+// void SetScrollFromPosY(Window* window, float local_y, float center_y_ratio)
 pub fn set_scroll_from_pos_y(g: &mut Context, window: &mut Window, local_y: f32, center_y_ratio: f32)
 {
     // IM_ASSERT(center_y_ratio >= 0.0 && center_y_ratio <= 1.0);
@@ -246,8 +246,8 @@ pub fn set_scroll_from_pos_y2(g: &mut Context, local_y: f32, center_y_ratio: f32
 pub fn set_scroll_here_x(g: &mut Context, center_x_ratio: f32)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
-    let spacing_x =  ImMax(window.WindowPadding.x, g.style.ItemSpacing.x);
+    Window* window = g.current_window;
+    let spacing_x =  ImMax(window.WindowPadding.x, g.style.item_spacing.x);
     let target_pos_x =  ImLerp(g.last_item_data.Rect.min.x - spacing_x, g.last_item_data.Rect.max.x + spacing_x, center_x_ratio);
     SetScrollFromPosX(window, target_pos_x - window.pos.x, center_x_ratio); // Convert from absolute to local pos
 
@@ -260,9 +260,9 @@ pub fn set_scroll_here_x(g: &mut Context, center_x_ratio: f32)
 pub fn set_scroll_here_y(g: &mut Context, center_y_ratio: f32)
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.current_window;
-    let spacing_y =  ImMax(window.WindowPadding.y, g.style.ItemSpacing.y);
-    let target_pos_y =  ImLerp(window.dc.CursorPosPrevLine.y - spacing_y, window.dc.CursorPosPrevLine.y + window.dc.PrevLineSize.y + spacing_y, center_y_ratio);
+    Window* window = g.current_window;
+    let spacing_y =  ImMax(window.WindowPadding.y, g.style.item_spacing.y);
+    let target_pos_y =  ImLerp(window.dc.cursor_pos_prev_line.y - spacing_y, window.dc.cursor_pos_prev_line.y + window.dc.prev_line_size.y + spacing_y, center_y_ratio);
     SetScrollFromPosY(window, target_pos_y - window.pos.y, center_y_ratio); // Convert from absolute to local pos
 
     // Tweak: snap on edges when aiming at an item very close to the edge

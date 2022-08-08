@@ -3,7 +3,7 @@ use crate::types::Id32;
 #[derive(Default,Debug,Clone)]
 struct ImGuiStackLevelInfo
 {
-    //ImGuiID                 id;
+    //Id32                 id;
     pub id: Id32,
     //ImS8                    QueryFrameCount;            // >= 1: Query in progress
     pub query_frame_count: i8,
@@ -24,7 +24,7 @@ pub struct StackTool
     pub last_active_frame: i32,
     // int                     StackLevel;                 // -1: query stack and resize Results, >= 0: individual stack level
     pub stack_level: i32,
-    // ImGuiID                 QueryId;                    // id to query details for
+    // Id32                 QueryId;                    // id to query details for
     pub query_id: Id32,
     // ImVector<ImGuiStackLevelInfo> Results;
     pub results: Vec<DimgStackLevelInfo>,
@@ -71,7 +71,7 @@ impl ImGuiStackSizes {
 // void ImGuiStackSizes::SetToCurrentState()
 // {
 //     ImGuiContext& g = *GImGui;
-//     ImGuiWindow* window = g.current_window;
+//     Window* window = g.current_window;
 //     SizeOfIDStack = window.IDStack.size;
 //     SizeOfColorStack = g.color_stack.size;
 //     SizeOfStyleVarStack = g.style_var_stack.size;
@@ -87,7 +87,7 @@ impl ImGuiStackSizes {
 // void ImGuiStackSizes::CompareWithCurrentState()
 // {
 //     ImGuiContext& g = *GImGui;
-//     ImGuiWindow* window = g.current_window;
+//     Window* window = g.current_window;
 //     IM_UNUSED(window);
 //
 //     // window stacks

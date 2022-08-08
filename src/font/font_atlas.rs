@@ -1,4 +1,4 @@
-use crate::font::{DimgFontConfig, Font, ImFontBuilderIO};
+use crate::font::{FontConfig, Font, ImFontBuilderIO};
 use crate::input::MouseCursor;
 use crate::rect::Rect;
 use crate::texture::TextureId;
@@ -61,7 +61,7 @@ pub struct FontAtlas {
     // ImVector<ImFontAtlasCustomRect> custom_rects;    // Rectangles for packing custom texture data into the atlas.
     pub custom_rects: Vec<ImFontAtlasCustomRect>,
     // ImVector<ImFontConfig>      config_data;         // Configuration data
-    pub config_data: Vec<DimgFontConfig>,
+    pub config_data: Vec<FontConfig>,
     // Vector4D                      tex_uv_lines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
     pub tex_uv_lines: Vec<Vector4D>,
     // [Internal] font builder
@@ -84,11 +84,11 @@ impl FontAtlas {
     //  ImFontAtlas();
     //      ~ImFontAtlas();
     //      ImFont*           add_font(const ImFontConfig* font_cfg);
-    pub fn add_font(&mut self, font_cfg: &DimgFontConfig) -> Font {
+    pub fn add_font(&mut self, font_cfg: &FontConfig) -> Font {
         todo!()
     }
     //      ImFont*           add_font_default(const ImFontConfig* font_cfg = None);
-    pub fn add_font_default(&mut self, font_cfg: &DimgFontConfig) -> Font {
+    pub fn add_font_default(&mut self, font_cfg: &FontConfig) -> Font {
         todo!()
     }
     //      ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = None, const ImWchar* glyph_ranges = None);
@@ -96,7 +96,7 @@ impl FontAtlas {
         &mut self,
         filename: &String,
         size_pixels: f32,
-        font_cfg: &DimgFontConfig,
+        font_cfg: &FontConfig,
         glyph_ranges: &[DimgWchar],
     ) -> Font {
         todo!()
@@ -107,7 +107,7 @@ impl FontAtlas {
         font_data: &Vec<u8>,
         font_size: i32,
         size_pixels: f32,
-        font_cfg: &DimgFontConfig,
+        font_cfg: &FontConfig,
         glyph_ranges: &[DimgWchar],
     ) -> Font {
         todo!()
@@ -118,7 +118,7 @@ impl FontAtlas {
         compressed_font_data: &Vec<u8>,
         compressed_font_size: usize,
         size_pixels: f32,
-        font_config: &DimgFontConfig,
+        font_config: &FontConfig,
         glyph_ranges: &Vec<DimgWchar>,
     ) -> Font {
         todo!()
@@ -128,7 +128,7 @@ impl FontAtlas {
         &mut self,
         compressed_font_data_base85: &String,
         size_pixels: f32,
-        font_cfg: &DimgFontConfig,
+        font_cfg: &FontConfig,
         glyph_ranges: &Vec<DimgWchar>,
     ) -> Font {
         todo!()
@@ -620,7 +620,7 @@ int ImFontAtlas::AddCustomRectRegular(int width, int height)
     // IM_ASSERT(width > 0 && width <= 0xFFFF);
     // IM_ASSERT(height > 0 && height <= 0xFFFF);
     ImFontAtlasCustomRect r;
-    r.Width = (unsigned short)width;
+    r.width = (unsigned short)width;
     r.Height = (unsigned short)height;
     CustomRects.push_back(r);
     return CustomRects.size - 1; // Return index
@@ -635,7 +635,7 @@ int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int
     // IM_ASSERT(width > 0 && width <= 0xFFFF);
     // IM_ASSERT(height > 0 && height <= 0xFFFF);
     ImFontAtlasCustomRect r;
-    r.Width = (unsigned short)width;
+    r.width = (unsigned short)width;
     r.Height = (unsigned short)height;
     r.GlyphID = id;
     r.GlyphAdvanceX = advance_x;
@@ -650,7 +650,7 @@ void ImFontAtlas::CalcCustomRectUV(const ImFontAtlasCustomRect* rect, Vector2D* 
     // IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // font atlas needs to be built before we can calculate UV coordinates
     // IM_ASSERT(rect.IsPacked());                // Make sure the rectangle has been packed
     *out_uv_min = Vector2D::new(rect.X * TexUvScale.x, rect.Y * TexUvScale.y);
-    *out_uv_max = Vector2D::new((rect.X + rect.Width) * TexUvScale.x, (rect.Y + rect.Height) * TexUvScale.y);
+    *out_uv_max = Vector2D::new((rect.X + rect.width) * TexUvScale.x, (rect.Y + rect.Height) * TexUvScale.y);
 }
 
 bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* out_offset, Vector2D* out_size, Vector2D out_uv_border[2], Vector2D out_uv_fill[2])
@@ -1037,7 +1037,7 @@ void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opa
     memset(pack_rects.data, 0, pack_rects.size_in_bytes());
     for (int i = 0; i < user_rects.size; i += 1)
     {
-        pack_rects[i].w = user_rects[i].Width;
+        pack_rects[i].w = user_rects[i].width;
         pack_rects[i].h = user_rects[i].Height;
     }
     stbrp_pack_rects(pack_context, &pack_rects[0], pack_rects.size);
@@ -1046,7 +1046,7 @@ void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opa
         {
             user_rects[i].X = (unsigned short)pack_rects[i].x;
             user_rects[i].Y = (unsigned short)pack_rects[i].y;
-            // IM_ASSERT(pack_rects[i].w == user_rects[i].Width && pack_rects[i].h == user_rects[i].Height);
+            // IM_ASSERT(pack_rects[i].w == user_rects[i].width && pack_rects[i].h == user_rects[i].Height);
             atlas.TexHeight = ImMax(atlas.TexHeight, pack_rects[i].y + pack_rects[i].h);
         }
 }
@@ -1080,7 +1080,7 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
     if (!(atlas.flags & ImFontAtlasFlags_NoMouseCursors))
     {
         // Render/copy pixels
-        // IM_ASSERT(r.Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
+        // IM_ASSERT(r.width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
         let x_for_white = r.X;
         let x_for_black = r.X + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
         if (atlas.TexPixelsAlpha8 != None)
@@ -1097,7 +1097,7 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
     else
     {
         // Render 4 white pixels
-        // IM_ASSERT(r.Width == 2 && r.Height == 2);
+        // IM_ASSERT(r.width == 2 && r.Height == 2);
         let offset = r.X + r.Y * w;
         if (atlas.TexPixelsAlpha8 != None)
         {
@@ -1124,11 +1124,11 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         // Each line consists of at least two empty pixels at the ends, with a line of solid pixels in the middle
         unsigned int y = n;
         unsigned int line_width = n;
-        unsigned int pad_left = (r.Width - line_width) / 2;
-        unsigned int pad_right = r.Width - (pad_left + line_width);
+        unsigned int pad_left = (r.width - line_width) / 2;
+        unsigned int pad_right = r.width - (pad_left + line_width);
 
         // Write each slice
-        // IM_ASSERT(pad_left + line_width + pad_right == r.Width && y < r.Height); // Make sure we're inside the texture bounds before we start writing pixels
+        // IM_ASSERT(pad_left + line_width + pad_right == r.width && y < r.Height); // Make sure we're inside the texture bounds before we start writing pixels
         if (atlas.TexPixelsAlpha8 != None)
         {
             unsigned char* write_ptr = &atlas.TexPixelsAlpha8[r.X + ((r.Y + y) * atlas.TexWidth)];
@@ -1202,7 +1202,7 @@ void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
         // IM_ASSERT(r.Font.container_atlas == atlas);
         Vector2D uv0, uv1;
         atlas.CalcCustomRectUV(r, &uv0, &uv1);
-        r.Font.AddGlyph(None, (ImWchar)r.GlyphID, r.GlyphOffset.x, r.GlyphOffset.y, r.GlyphOffset.x + r.Width, r.GlyphOffset.y + r.Height, uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX);
+        r.Font.AddGlyph(None, (ImWchar)r.GlyphID, r.GlyphOffset.x, r.GlyphOffset.y, r.GlyphOffset.x + r.width, r.GlyphOffset.y + r.Height, uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX);
     }
 
     // build all fonts lookup tables
