@@ -668,12 +668,12 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.pos = FindBestWindowPosForPopup(window);
 
         // Late create viewport if we don't fit within our current host viewport.
-        if (window.viewportAllowPlatformMonitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ImGuiViewportFlags_Minimized))
+        if (window.viewportAllowPlatformMonitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ViewportFlags::Minimized))
             if (!window.viewport.get_main_rect().contains(window.Rect()))
             {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
                 //ImGuiViewport* old_viewport = window->viewport;
-                window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ImGuiViewportFlags_NoFocusOnAppearing);
+                window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ViewportFlags::NoFocusOnAppearing);
 
                 // FIXME-DPI
                 //IM_ASSERT(old_viewport->dpi_scale == window->viewport->dpi_scale); // FIXME-DPI: Something went wrong
@@ -777,9 +777,9 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Synchronize window --> viewport again and one last time (clamping and manual resize may have affected either)
         if (window.viewport_owned)
         {
-            if (!window.viewport.PlatformRequestMove)
+            if (!window.viewport.platform_request_move)
                 window.viewport.pos = window.pos;
-            if (!window.viewport.PlatformRequestResize)
+            if (!window.viewport.platform_requsest_resize)
                 window.viewport.size = window.size;
             window.viewport.update_work_rect();
             viewport_rect = window.viewport.get_main_rect();

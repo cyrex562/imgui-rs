@@ -2430,7 +2430,7 @@ bool ImGui::DragScalarN(const char* label, DataType data_type, void* p_data, int
     }
     pop_id();
 
-    const char* label_end = FindRenderedTextEnd(label);
+    const char* label_end = find_rendered_text_end(label);
     if (label != label_end)
     {
         same_line(0, g.Style.ItemInnerSpacing.x);
@@ -2487,7 +2487,7 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
     PopItemWidth();
     same_line(0, g.Style.ItemInnerSpacing.x);
 
-    TextEx(label, FindRenderedTextEnd(label));
+    TextEx(label, find_rendered_text_end(label));
     EndGroup();
     pop_id();
 
@@ -2541,7 +2541,7 @@ bool ImGui::DragIntRange2(const char* label, int* v_current_min, int* v_current_
     PopItemWidth();
     same_line(0, g.Style.ItemInnerSpacing.x);
 
-    TextEx(label, FindRenderedTextEnd(label));
+    TextEx(label, find_rendered_text_end(label));
     EndGroup();
     pop_id();
 
@@ -3046,7 +3046,7 @@ bool ImGui::SliderScalarN(const char* label, DataType data_type, void* v, int co
     }
     pop_id();
 
-    const char* label_end = FindRenderedTextEnd(label);
+    const char* label_end = find_rendered_text_end(label);
     if (label != label_end)
     {
         same_line(0, g.Style.ItemInnerSpacing.x);
@@ -3472,7 +3472,7 @@ bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, con
         if (flags & ImGuiInputTextFlags_ReadOnly)
             EndDisabled();
 
-        const char* label_end = FindRenderedTextEnd(label);
+        const char* label_end = find_rendered_text_end(label);
         if (label != label_end)
         {
             same_line(0, style.ItemInnerSpacing.x);
@@ -3518,7 +3518,7 @@ bool ImGui::InputScalarN(const char* label, DataType data_type, void* p_data, in
     }
     pop_id();
 
-    const char* label_end = FindRenderedTextEnd(label);
+    const char* label_end = find_rendered_text_end(label);
     if (label != label_end)
     {
         same_line(0.0, g.Style.ItemInnerSpacing.x);
@@ -4803,7 +4803,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
     let w_full = CalcItemWidth();
     let w_button = (flags & ImGuiColorEditFlags_NoSmallPreview) ? 0.0 : (square_sz + style.ItemInnerSpacing.x);
     let w_inputs = w_full - w_button;
-    const char* label_display_end = FindRenderedTextEnd(label);
+    const char* label_display_end = find_rendered_text_end(label);
     g.next_item_data.ClearFlags();
 
     BeginGroup();
@@ -5205,7 +5205,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
 
     if (!(flags & ImGuiColorEditFlags_NoLabel))
     {
-        const char* label_display_end = FindRenderedTextEnd(label);
+        const char* label_display_end = find_rendered_text_end(label);
         if (label != label_display_end)
         {
             if ((flags & ImGuiColorEditFlags_NoSidePreview))
@@ -5523,7 +5523,7 @@ void ImGui::ColorTooltip(const char* text, let* col, ImGuiColorEditFlags flags)
     // ImGuiContext& g = *GImGui;
 
     BeginTooltipEx(ImGuiTooltipFlags_OverridePreviousTooltip, WindowFlags_None);
-    const char* text_end = text ? FindRenderedTextEnd(text, None) : text;
+    const char* text_end = text ? find_rendered_text_end(text, None) : text;
     if (text_end > text)
     {
         TextEx(text, text_end);
@@ -5799,7 +5799,7 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
     const Vector2D padding = (display_frame || (flags & ImGuiTreeNodeFlags_FramePadding)) ? style.FramePadding : DimgVec2D::new(style.FramePadding.x, ImMin(window.DC.curr_line_text_base_offset, style.FramePadding.y));
 
     if (!label_end)
-        label_end = FindRenderedTextEnd(label);
+        label_end = find_rendered_text_end(label);
     const Vector2D label_size = calc_text_size(label, label_end, false);
 
     // We vertically grow up to current line height up the typical widget height.
@@ -6717,12 +6717,12 @@ void ImGui::EndMenuBar()
 // Important: calling order matters!
 // FIXME: Somehow overlapping with docking tech.
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
-bool ImGui::BeginViewportSideBar(const char* name, ImGuiViewport* viewport_p, ImGuiDir dir, float axis_size, WindowFlags window_flags)
+bool ImGui::BeginViewportSideBar(const char* name, Viewport* viewport_p, ImGuiDir dir, float axis_size, WindowFlags window_flags)
 {
     IM_ASSERT(dir != ImGuiDir_None);
 
     Window* bar_window = find_window_by_name(name);
-    ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)(viewport_p ? viewport_p : get_main_viewport());
+    ViewportP* viewport = (ViewportP*)(void*)(viewport_p ? viewport_p : get_main_viewport());
     if (bar_window == None || bar_window.BeginCount == 0)
     {
         // Calculate and set window size/position
@@ -6756,7 +6756,7 @@ bool ImGui::BeginViewportSideBar(const char* name, ImGuiViewport* viewport_p, Im
 bool ImGui::BeginMainMenuBar()
 {
     // ImGuiContext& g = *GImGui;
-    ImGuiViewportP* viewport = (ImGuiViewportP*)(void*)get_main_viewport();
+    ViewportP* viewport = (ViewportP*)(void*)get_main_viewport();
 
     // Notify of viewport change so GetFrameHeight() can be accurate in case of DPI change
     SetCurrentViewport(None, viewport);
@@ -8207,7 +8207,7 @@ bool    ImGui::tab_item_ex(ImGuiTabBar* tab_bar, const char* label, bool* p_open
     // FIXME: We may want disabled tab to still display the tooltip?
     if (text_clipped && g.HoveredId == id && !held && g.HoveredIdNotActiveTimer > g.TooltipSlowDelay && IsItemHovered())
         if (!(tab_bar->Flags & TabBarFlags::NoTooltip) && !(tab->Flags & TabItemFlags::NoTooltip))
-            SetTooltip("%.*s", (FindRenderedTextEnd(label) - label), label);
+            SetTooltip("%.*s", (find_rendered_text_end(label) - label), label);
 
     IM_ASSERT(!is_tab_button || !(tab_bar->SelectedTabId == tab->ID && is_tab_button)); // TabItemButton should not be selected
     if (is_tab_button)

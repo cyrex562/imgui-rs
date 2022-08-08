@@ -19,7 +19,7 @@ use crate::window::{get, Window, WindowFlags};
 use crate::window::checks::is_window_active_and_visible;
 use crate::window::get::find_bottom_most_visible_window_with_begin_stack;
 
-// const char* ImGui::FindRenderedTextEnd(const char* text, const char* text_end)
+// const char* ImGui::find_rendered_text_end(const char* text, const char* text_end)
 // pub unsafe fn find_rendered_text_end(text: *const c_char, text_end: *const c_char) -> *const c_char {
 //     // const char* text_display_end = text;
 //     let mut text_display_end = text;
@@ -121,7 +121,7 @@ void ImGui::render_textClippedEx(ImDrawList* draw_list, const Vector2D& pos_min,
 void ImGui::render_text_clipped(const Vector2D& pos_min, const Vector2D& pos_max, const char* text, const char* text_end, const Vector2D* text_size_if_known, const Vector2D& align, const Rect* clip_rect)
 {
     // Hide anything after a '##' string
-    const char* text_display_end = FindRenderedTextEnd(text, text_end);
+    const char* text_display_end = find_rendered_text_end(text, text_end);
     let text_len = (text_display_end - text);
     if (text_len == 0)
         return;
@@ -141,7 +141,7 @@ void ImGui::render_textEllipsis(ImDrawList* draw_list, const Vector2D& pos_min, 
 {
     // ImGuiContext& g = *GImGui;
     if (text_end_full == None)
-        text_end_full = FindRenderedTextEnd(text);
+        text_end_full = find_rendered_text_end(text);
     const Vector2D text_size = text_size_if_known ? *text_size_if_known : calc_text_size(text, text_end_full, false, 0.0);
 
     //draw_list->add_line(Vector2D(pos_max.x, pos_min.y - 4), Vector2D(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
@@ -284,7 +284,7 @@ void ImGui::render_mouse_cursor(Vector2D base_pos, float base_scale, ImGuiMouseC
         Vector2D offset, size, uv[4];
         if (!font_atlas.GetMouseCursorTexData(mouse_cursor, &offset, &size, &uv[0], &uv[2]))
             continue;
-        ImGuiViewportP* viewport = g.viewports[n];
+        ViewportP* viewport = g.viewports[n];
         const Vector2D pos = base_pos - offset;
         let scale = base_scale * viewport.DpiScale;
         if (!viewport.get_main_rect().Overlaps(Rect(pos, pos + Vector2D::new(size.x + 2, size.y + 2) * scale)))

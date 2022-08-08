@@ -31,7 +31,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
 
     Vector2D scale = bb.GetSize() / viewport.size;
     Vector2D off = bb.min - viewport.pos * scale;
-    let alpha_mul =  if(viewport.flags & ImGuiViewportFlags_Minimized) { 0.30 }else{ 1.00};
+    let alpha_mul =  if(viewport.flags & ViewportFlags::Minimized) { 0.30 }else{ 1.00};
     window.draw_list->AddRectFilled(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul * 0.40));
     for (int i = 0; i != g.windows.len(); i += 1)
     {
@@ -51,7 +51,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
         window.draw_list->AddRectFilled(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::WindowBg, alpha_mul));
         window.draw_list->AddRectFilled(title_r.min, title_r.max, get_color_u32(window_is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg, alpha_mul));
         window.draw_list->AddRect(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::Border, alpha_mul));
-        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, FindRenderedTextEnd(thumb_window.name));
+        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, find_rendered_text_end(thumb_window.name));
     }
     draw_list->AddRect(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul));
 }
@@ -71,7 +71,7 @@ pub fn render_viewports_thumbnails(g: &mut Context)
     Vector2D off = p - bb_full.min * SCALE;
     for (int n = 0; n < g.viewports.size; n += 1)
     {
-        ImGuiViewportP* viewport = g.viewports[n];
+        ViewportP* viewport = g.viewports[n];
         Rect viewport_draw_bb(off + (viewport.pos) * SCALE, off + (viewport.pos + viewport.size) * SCALE);
         DebugRenderViewportThumbnail(window.draw_list, viewport, viewport_draw_bb);
     }
@@ -81,9 +81,9 @@ pub fn render_viewports_thumbnails(g: &mut Context)
 // static int  ViewportComparerByFrontMostStampCount(const void* lhs, const void* rhs)
 pub fn viewport_comparer_by_front_most_stamp_count(g: &mut Context, lhs: &Vec<u8>, rhs: &Vec<u8>) -> i32
 {
-    const ImGuiViewportP* a = *(const ImGuiViewportP* const*)lhs;
-    const ImGuiViewportP* b = *(const ImGuiViewportP* const*)rhs;
-    return b->LastFrontMostStampCount - a->LastFrontMostStampCount;
+    const ViewportP* a = *(const ViewportP* const*)lhs;
+    const ViewportP* b = *(const ViewportP* const*)rhs;
+    return b->last_frontmost_stamp_count - a->last_frontmost_stamp_count;
 }
 
 // Helper tool to diagnose between text encoding issues and font loading issues. Pass your UTF-8 string and verify that there are correct.
@@ -361,7 +361,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         Checkbox("Show ImDrawCmd bounding boxes when hovering", &cfg->ShowDrawCmdBoundingBoxes);
         for (int viewport_i = 0; viewport_i < g.viewports.size; viewport_i += 1)
         {
-            ImGuiViewportP* viewport = g.viewports[viewport_i];
+            ViewportP* viewport = g.viewports[viewport_i];
             bool viewport_has_drawlist = false;
             for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport.draw_data_builder.layers); layer_i += 1)
                 for (int draw_list_i = 0; draw_list_i < viewport.draw_data_builder.layers[layer_i].size; draw_list_i += 1)
@@ -390,7 +390,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             for (int i = 0; i < g.platform_io.monitors.size; i += 1)
             {
                 const ImGuiPlatformMonitor& mon = g.platform_io.monitors[i];
-                BulletText("Monitor #%d: DPI %.0%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), MainSize (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), work_size (%.0,%.0)",
+                BulletText("Monitor #%d: DPI %.0%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), main_size (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), work_size (%.0,%.0)",
                     i, mon.DpiScale * 100.0,
                     mon.MainPos.x, mon.MainPos.y, mon.MainPos.x + mon.MainSize.x, mon.MainPos.y + mon.MainSize.y, mon.MainSize.x, mon.MainSize.y,
                     mon.WorkPos.x, mon.WorkPos.y, mon.WorkPos.x + mon.work_size.x, mon.WorkPos.y + mon.work_size.y, mon.work_size.x, mon.work_size.y);
@@ -401,13 +401,13 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         BulletText("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport ? g.mouse_viewport->ID : 0, g.io.MouseHoveredViewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
         if (TreeNode("Inferred Z order (front-to-back)"))
         {
-            static ImVector<ImGuiViewportP*> viewports;
+            static ImVector<ViewportP*> viewports;
             viewports.resize(g.viewports.size);
             memcpy(viewports.data, g.viewports.data, g.viewports.size_in_bytes());
             if (viewports.size > 1)
-                ImQsort(viewports.data, viewports.size, sizeof(ImGuiViewport*), ViewportComparerByFrontMostStampCount);
+                ImQsort(viewports.data, viewports.size, sizeof(Viewport*), ViewportComparerByFrontMostStampCount);
             for (int i = 0; i < viewports.size; i += 1)
-                BulletText("viewport #%d, id: 0x%08X, FrontMostStampCount = %08d, window: \"%s\"", viewports[i]->Idx, viewports[i]->ID, viewports[i]->LastFrontMostStampCount, viewports[i]->Window ? viewports[i]->Window->Name : "N/A");
+                BulletText("viewport #%d, id: 0x%08X, FrontMostStampCount = %08d, window: \"%s\"", viewports[i]->Idx, viewports[i]->ID, viewports[i]->last_frontmost_stamp_count, viewports[i]->Window ? viewports[i]->Window->Name : "N/A");
             TreePop();
         }
 
@@ -1033,18 +1033,18 @@ pub fn debug_node_viewport(g: &mut Context, viewport: &mut Viewport)
         if (viewport->Idx > 0) { same_line(); if (SmallButton("Reset pos")) { viewport.pos = Vector2D::new(200, 200); viewport.update_work_rect(); if (viewport->Window) viewport->Window.pos = viewport.pos; } }
         BulletText("flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
-            (flags & ImGuiViewportFlags_IsPlatformMonitor) ? " IsPlatformMonitor" : "",
+            (flags & ViewportFlags::IsPlatformMonitor) ? " IsPlatformMonitor" : "",
             (flags & ViewportFlags::OwnedByApp) ? " OwnedByApp" : "",
-            (flags & ImGuiViewportFlags_NoDecoration) ? " NoDecoration" : "",
-            (flags & ImGuiViewportFlags_NoTaskBarIcon) ? " NoTaskBarIcon" : "",
-            (flags & ImGuiViewportFlags_NoFocusOnAppearing) ? " NoFocusOnAppearing" : "",
-            (flags & ImGuiViewportFlags_NoFocusOnClick) ? " NoFocusOnClick" : "",
+            (flags & ViewportFlags::NoDecoration) ? " NoDecoration" : "",
+            (flags & ViewportFlags::NoTaskBarIcon) ? " NoTaskBarIcon" : "",
+            (flags & ViewportFlags::NoFocusOnAppearing) ? " NoFocusOnAppearing" : "",
+            (flags & ViewportFlags::NoFocusOnClick) ? " NoFocusOnClick" : "",
             (flags & ViewportFlags::NoInputs) ? " NoInputs" : "",
-            (flags & ImGuiViewportFlags_NoRendererClear) ? " NoRendererClear" : "",
-            (flags & ImGuiViewportFlags_TopMost) ? " TopMost" : "",
-            (flags & ImGuiViewportFlags_Minimized) ? " Minimized" : "",
-            (flags & ImGuiViewportFlags_NoAutoMerge) ? " NoAutoMerge" : "",
-            (flags & ImGuiViewportFlags_CanHostOtherWindows) ? " CanHostOtherWindows" : "");
+            (flags & ViewportFlags::NoRendererClear) ? " NoRendererClear" : "",
+            (flags & ViewportFlags::TopMost) ? " TopMost" : "",
+            (flags & ViewportFlags::Minimized) ? " Minimized" : "",
+            (flags & ViewportFlags::NoAutoMerge) ? " NoAutoMerge" : "",
+            (flags & ViewportFlags::CanHostOtherWindows) ? " CanHostOtherWindows" : "");
         for (int layer_i = 0; layer_i < IM_ARRAYSIZE(viewport.draw_data_builder.layers); layer_i += 1)
             for (int draw_list_i = 0; draw_list_i < viewport.draw_data_builder.layers[layer_i].size; draw_list_i += 1)
                 DebugNodeDrawList(None, viewport, viewport.draw_data_builder.layers[layer_i][draw_list_i], "draw_list");

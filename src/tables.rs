@@ -2886,7 +2886,7 @@ void ImGui::TableHeader(const char* label)
     // Label
     if (label == None)
         label = "";
-    const char* label_end = FindRenderedTextEnd(label);
+    const char* label_end = find_rendered_text_end(label);
     Vector2D label_size = calc_text_size(label, label_end, true);
     Vector2D label_pos = window.dc.cursor_pos;
 

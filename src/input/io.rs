@@ -654,7 +654,7 @@ pub struct PlatformIo {
     // viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
     // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
     // ImVector<ImGuiViewport*>        viewports;                              // Main viewports, followed by all secondary viewports.
-    pub Viewports: Vec<ImGuiViewport>,
+    pub Viewports: Vec<Viewport>,
     // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
 }
 
@@ -664,80 +664,80 @@ impl PlatformIo {
             ..Default::default()
         }
     }
-    // void    (*Platform_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
-    pub fn Platform_CreateWindow(&mut self, vp: &mut ImGuiViewport) {
+    // void    (*platform_create_window)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
+    pub fn platform_create_window(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Platform_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  //
-    pub fn Platform_DestroyWindow(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_DestroyWindow(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so set_window_pos/size/Title can be called on them before showing the window
-    pub fn Platform_ShowWindow(&mut self, vp: &mut ImGuiViewport) {
+    pub fn platform_show_window(&mut self, vp: &mut Viewport) {
         todo!()
     }
-    //     void    (*Platform_SetWindowPos)(ImGuiViewport* vp, Vector2D pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
-    pub fn Platform_SetWindowPos(&mut self, vp: &mut ImGuiViewport, pos: Vector2D) {
+    //     void    (*platform_set_window_pos)(ImGuiViewport* vp, Vector2D pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    pub fn platform_set_window_pos(&mut self, vp: &mut Viewport, pos: &Vector2D) {
         todo!()
     }
     //     Vector2D  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
-    pub fn Platform_GetWindowPos(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_GetWindowPos(&mut self, vp: &mut Viewport) {
         todo!()
     }
-    //     void    (*Platform_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
-    pub fn Platform_set_window_size(&mut self, vp: &mut ImGuiViewport, size: &Vector2D) {
+    //     void    (*platform_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    pub fn platform_set_window_size(&mut self, vp: &mut Viewport, size: &Vector2D) {
         todo!()
     }
     //     Vector2D  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
-    pub fn Platform_GetWindowSize(&mut self, vp: &mut ImGuiViewport) -> Vector2D {
+    pub fn Platform_GetWindowSize(&mut self, vp: &mut Viewport) -> Vector2D {
         todo!()
     }
     //     void    (*Platform_SetWindowFocus)(ImGuiViewport* vp);                  // N . . . .  // Move window to front and set input focus
-    pub fn Platform_SetWindowFocus(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_SetWindowFocus(&mut self, vp: &mut Viewport) {
         todo!()
     }
 
     //     bool    (*Platform_GetWindowFocus)(ImGuiViewport* vp);                  // . . U . .  //
-    pub fn Platform_GetWindowFocus(&mut self, vp: &mut ImGuiViewport) -> bool {
+    pub fn Platform_GetWindowFocus(&mut self, vp: &mut Viewport) -> bool {
         todo!()
     }
     //     bool    (*Platform_GetWindowMinimized)(ImGuiViewport* vp);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
-    pub fn Platform_GetWindowMinimized(&mut self, vp: &mut ImGuiViewport) -> bool {
+    pub fn Platform_GetWindowMinimized(&mut self, vp: &mut Viewport) -> bool {
         todo!()
     }
     //     void    (*Platform_SetWindowTitle)(ImGuiViewport* vp, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
-    pub fn Platform_SetWindowTitle(&mut self, vp: &mut ImGuiViewport, in_str: &String) {
+    pub fn platform_set_window_title(&mut self, vp: &mut Viewport, in_str: &String) {
         todo!()
     }
     //     void    (*Platform_SetWindowAlpha)(ImGuiViewport* vp, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
-    pub fn Platform_SetWindowAlpha(&mut self, vp: &mut ImGuiViewport, alpha: f32) {
+    pub fn platform_set_window_alpha(&mut self, vp: &mut Viewport, alpha: f32) {
         todo!()
     }
     //     void    (*Platform_UpdateWindow)(ImGuiViewport* vp);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
-    pub fn Platform_UpdateWindow(&mut self, vp: &mut ImGuiViewport) {
+    pub fn platform_update_window(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Platform_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Platform_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+    pub fn Platform_RenderWindow(&mut self, vp: &mut Viewport, render_arg: *mut c_void) {
         todo!()
     }
     //     void    (*Platform_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Platform_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+    pub fn Platform_SwapBuffers(&mut self, vp: &mut Viewport, render_arg: *mut c_void) {
         todo!()
     }
     //     float   (*Platform_GetWindowDpiScale)(ImGuiViewport* vp);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0 = 96 DPI.
-    pub fn Platform_GetWindowDpiScale(&mut self, vp: &mut ImGuiViewport) -> f32 {
+    pub fn Platform_GetWindowDpiScale(&mut self, vp: &mut Viewport) -> f32 {
         todo!()
     }
 
     //     void    (*Platform_OnChangedViewport)(ImGuiViewport* vp);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
-    pub fn Platform_OnChangedViewport(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_OnChangedViewport(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     int     (*Platform_CreateVkSurface)(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
     pub fn Platform_CreateVkSurface(
         &mut self,
-        vp: &mut ImGuiViewport,
+        vp: &mut Viewport,
         vk_inst: u64,
         vk_allocators: *const c_void,
         out_vk_surface: &mut u64,
@@ -747,24 +747,24 @@ impl PlatformIo {
 
     //
     //     // (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)
-    //     void    (*Renderer_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
-    pub fn Platform_CreateWindow2(&mut self, vp: &mut ImGuiViewport) {
+    //     void    (*renderer_create_window)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after platform_create_window)
+    pub fn platform_create_window2(&mut self, vp: &mut Viewport) {
         todo!()
     }
     //     void    (*Renderer_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
-    pub fn Platform_DestroyWindow2(&mut self, vp: &mut ImGuiViewport) {
+    pub fn Platform_DestroyWindow2(&mut self, vp: &mut Viewport) {
         todo!()
     }
-    //     void    (*Renderer_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_set_window_size)
-    pub fn Renderer_set_window_size(&mut self, vp: &mut ImGuiViewport, size: Vector2D) {
+    //     void    (*renderer_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after platform_set_window_size)
+    pub fn renderer_set_window_size(&mut self, vp: &mut Viewport, size: &Vector2D) {
         todo!()
     }
     //     void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) clear framebuffer, setup render target, then render the viewport->draw_data. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Renderer_RenderWindow(&mut self, vp: &mut ImGuiViewport, render_arg: *mut c_void) {
+    pub fn Renderer_RenderWindow(&mut self, vp: &mut Viewport, render_arg: *mut c_void) {
         todo!()
     }
     //     void    (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub fn Renderer_SwapBuffers(&mut self, vp: &mut ImGuiViewport, render_arg: &mut c_void) {
+    pub fn Renderer_SwapBuffers(&mut self, vp: &mut Viewport, render_arg: &mut c_void) {
         todo!()
     }
 }

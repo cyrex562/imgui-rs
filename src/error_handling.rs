@@ -77,13 +77,13 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
     {
         if ((g.io.backend_flags & ImGuiBackendFlags_PlatformHasViewports) && (g.io.backend_flags & ImGuiBackendFlags_RendererHasViewports))
         {
-            // IM_ASSERT((g.frame_count == 0 || g.frame_count == g.FrameCountPlatformEnded) && "Forgot to call UpdatePlatformWindows() in main loop after EndFrame()? Check examples/ applications for reference.");
-            // IM_ASSERT(g.platform_io.Platform_CreateWindow  != None && "Platform init didn't install handlers?");
+            // IM_ASSERT((g.frame_count == 0 || g.frame_count == g.frame_count_plantform_ended) && "Forgot to call UpdatePlatformWindows() in main loop after EndFrame()? Check examples/ applications for reference.");
+            // IM_ASSERT(g.platform_io.platform_create_window  != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.Platform_DestroyWindow != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.Platform_GetWindowPos  != None && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_SetWindowPos  != None && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.platform_set_window_pos  != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.Platform_GetWindowSize != None && "Platform init didn't install handlers?");
-            // IM_ASSERT(g.platform_io.Platform_set_window_size != None && "Platform init didn't install handlers?");
+            // IM_ASSERT(g.platform_io.platform_set_window_size != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.monitors.size > 0 && "Platform init didn't setup Monitors list?");
             // IM_ASSERT((g.viewports[0].PlatformUserData != None || g.viewports[0].PlatformHandle != None) && "Platform init didn't setup main viewport.");
             if (g.io.config_docking_transparent_payload && (g.io.config_flags & ImGuiConfigFlags_DockingEnable))
@@ -100,9 +100,9 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
         {
             ImGuiPlatformMonitor& mon = g.platform_io.monitors[monitor_n];
             IM_UNUSED(mon);
-            // IM_ASSERT(mon.MainSize.x > 0.0 && mon.MainSize.y > 0.0 && "Monitor main bounds not setup properly.");
-            // IM_ASSERT(Rect(mon.MainPos, mon.MainPos + mon.MainSize).contains(Rect(mon.WorkPos, mon.WorkPos + mon.work_size)) && "Monitor work bounds not setup properly. If you don't have work area information, just copy MainPos/MainSize into them.");
-            // IM_ASSERT(mon.DpiScale != 0.0);
+            // IM_ASSERT(mon.main_size.x > 0.0 && mon.main_size.y > 0.0 && "Monitor main bounds not setup properly.");
+            // IM_ASSERT(Rect(mon.main_pos, mon.main_pos + mon.main_size).contains(Rect(mon.work_pos, mon.work_pos + mon.work_size)) && "Monitor work bounds not setup properly. If you don't have work area information, just copy main_pos/main_size into them.");
+            // IM_ASSERT(mon.dpi_scale != 0.0);
         }
     }
 }

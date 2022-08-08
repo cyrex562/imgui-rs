@@ -12,7 +12,7 @@ use crate::input::{InputSource, NavInput, NavLayer};
 use crate::input::mouse::is_mouse_hovering_rect;
 use crate::item::ItemFlags;
 use crate::math::lerp_f32;
-use crate::orig_imgui_single_file::{ImGuiViewport, Window};
+use crate::orig_imgui_single_file::{Viewport, Window};
 use crate::rect::Rect;
 use crate::text::calc_text_size;
 use crate::types::Id32;
@@ -716,7 +716,7 @@ pub fn nav_cal_preferred_ref_pos(g: &mut Context) -> Vector2D
             rect_rel.Translate(window.scroll - next_scroll);
         }
         Vector2D pos = Vector2D::new(rect_rel.min.x + ImMin(g.style.frame_padding.x * 4, rect_rel.get_width()), rect_rel.max.y - ImMin(g.style.frame_padding.y, rect_rel.get_height()));
-        ImGuiViewport* viewport = window.viewport;
+        Viewport* viewport = window.viewport;
         return f32::floor(ImClamp(pos, viewport.pos, viewport.pos + viewport.size)); // f32::floor() is important because non-integer mouse position application in backend might be lossy and result in undesirable non-zero delta.
     }
 }
@@ -1577,7 +1577,7 @@ pub fn nav_update_windowing(g: &mut Context)
     // Apply final focus
     if (apply_focus_window && (g.nav_window == None || apply_focus_window != g.nav_window.root_window))
     {
-        ImGuiViewport* previous_viewport = g.nav_window ? g.nav_window.viewport : None;
+        Viewport* previous_viewport = g.nav_window ? g.nav_window.viewport : None;
         clear_active_id();
         NavRestoreHighlightAfterMove();
         apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);
@@ -1661,7 +1661,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
 
     if (g.nav_windowing_list_window == None)
         g.nav_windowing_list_window = find_window_by_name("###NavWindowingList");
-    const ImGuiViewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ get_main_viewport();
+    const Viewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ get_main_viewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport.size.x * 0.20, viewport.size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
     set_next_window_pos(viewport.get_center(), Condition::Always, Vector2D::new(0.5, 0.5));
     push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
@@ -1673,7 +1673,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
         if (!IsWindowNavFocusable(window))
             continue;
         const char* label = window.name;
-        if (label == FindRenderedTextEnd(label))
+        if (label == find_rendered_text_end(label))
             label = GetFallbackWindowNameForWindowingList(window);
         selectable(label, g.nav_windowing_target == window);
     }

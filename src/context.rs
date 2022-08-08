@@ -30,7 +30,7 @@ use crate::item::{pop_item_flag, ItemFlags, LastItemData, NextItemData};
 use crate::metrics::MetricsConfig;
 use crate::nav::{nav_move_request_cancel, ActivateFlags, NavItemData, NavMoveFlags, ScrollFlags};
 use crate::payload::Payload;
-use crate::platform::{PlatformImeData, PlatformMonitor};
+use crate::platform::{PlatformImeData, PlatformDisplay};
 
 use crate::popup::PopupData;
 use crate::rect::Rect;
@@ -128,7 +128,7 @@ pub struct Context {
     pub draw_commands: Vec<DrawCommand>,
     pub draw_list_shared_data: DrawListSharedData,
     pub draw_lists: HashMap<Id32, DrawList>,
-    pub fallback_monitor: PlatformMonitor,
+    pub fallback_monitor: PlatformDisplay,
     pub focus_scope_stack: Vec<Id32>,
     pub font: Font,
     pub font_atlas_owned_by_context: bool,
@@ -356,7 +356,7 @@ impl Context {
             draw_commands: vec![],
             draw_list_shared_data: DrawListSharedData::default(),
             draw_lists: Default::default(),
-            fallback_monitor: PlatformMonitor::default(),
+            fallback_monitor: PlatformDisplay::default(),
             focus_scope_stack: vec![],
             font: Default::default(),
             font_atlas_owned_by_context: true,

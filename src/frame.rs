@@ -239,7 +239,7 @@ g.draw_list_shared_data.initial_flags.insert(DrawListFlags::AntiAliasedLinesUseT
 
     // Platform IME data: reset for the frame
     g.platform_ime_data_prev = g.platform_ime_data.clone();
-    g.platform_ime_data.WantVisible = false;
+    g.platform_ime_data.want_visible = false;
 
     // Mouse wheel scrolling, scale
     update_mouse_wheel(g);
