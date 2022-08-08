@@ -792,7 +792,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
             bool use_mouse_ref = (g.nav_disable_highlight || !g.nav_disable_mouse_hover || !g.nav_window);
             bool mouse_valid = is_mouse_pos_valid(&mouse_ref);
             if ((window.Appearing || (flags & (WindowFlags::Tooltip | WindowFlags::ChildMenu))) && (!use_mouse_ref || mouse_valid))
-                window.viewportAllowplatform_monitorExtend = Findplatform_monitorForPos((use_mouse_ref && mouse_valid) ? mouse_ref : NavCalcPreferredRefPos());
+                window.viewportAllowplatform_monitorExtend = Findplatform_monitorForPos((use_mouse_ref && mouse_valid) ? mouse_ref : nav_calc_preferred_ref_pos());
             else
                 window.viewportAllowplatform_monitorExtend = window.viewport.platform_monitor;
         }

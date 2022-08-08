@@ -329,8 +329,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     // if (flags & WindowFlags::Popup)
     if flags.contains(&WindowFlags::Popup)
     {
-        ImGuiPopupData& popup_ref = g.open_popup_stack[g.begin_popup_stack.size];
-        window_just_activated_by_user |= (window.PopupId != popup_ref.PopupId); // We recycle popups so treat window as activated if popup id changed
+        PopupData& popup_ref = g.open_popup_stack[g.begin_popup_stack.size];
+        window_just_activated_by_user |= (window.popup_id != popup_ref.popup_id); // We recycle popups so treat window as activated if popup id changed
         window_just_activated_by_user |= (window != popup_ref.Window);
     }
 
@@ -394,8 +394,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     // IM_ASSERT(parent_window != None || !(flags & WindowFlags::ChildWindow));
 
     // We allow window memory to be compacted so recreate the base stack when needed.
-    if (window.idStack.size == 0)
-        window.idStack.push_back(window.id);
+    if (window.id_stack.size == 0)
+        window.id_stack.push_back(window.id);
 
     // Add to stack
     // We intentionally set g.current_window to None to prevent usage until when the viewport is set, then will call set_current_window()
@@ -411,11 +411,11 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
     if (flags & WindowFlags::Popup)
     {
-        ImGuiPopupData& popup_ref = g.open_popup_stack[g.begin_popup_stack.size];
+        PopupData& popup_ref = g.open_popup_stack[g.begin_popup_stack.size];
         popup_ref.Window = window;
         popup_ref.ParentNavLayer = parent_window_in_stack.DCnav_layer_current;
         g.begin_popup_stack.push_back(popup_ref);
-        window.PopupId = popup_ref.PopupId;
+        window.popup_id = popup_ref.popup_id;
     }
 
     // update ->RootWindow and others pointers (before any possible call to focus_window)
@@ -486,7 +486,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window.active = true;
         window.has_close_button = (p_open != None);
         window.clip_rect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
-        window.idStack.resize(1);
+        window.id_stack.resize(1);
         window.draw_list->_reset_for_new_frame();
         window.dc.current_tableIdx = -1;
         if (flags & WindowFlags::DockNodeHost)
@@ -644,7 +644,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         {
             window.AutoPosLastDirection = Direction::None;
             if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: begin_popup() could use set_next_window_pos()
-                window.pos = g.begin_popup_stack.back().open_popupPos;
+                window.pos = g.begin_popup_stack.back().open_popup_pos;
         }
 
         // Position child window
@@ -754,10 +754,10 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         if (g.TestEngineHookItems)
         {
             // IM_ASSERT(window.IDStack.size == 1);
-            window.idStack.size = 0;
+            window.id_stack.size = 0;
             IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.id);
             IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.name, (g.hovered_window == window) ? ItemStatusFlags::HoveredRect : 0);
-            window.idStack.size = 1;
+            window.id_stack.size = 1;
         }
 
 

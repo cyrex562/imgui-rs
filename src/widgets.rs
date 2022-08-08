@@ -1617,7 +1617,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     bool popup_open = is_popup_open(popup_id, PopupFlags::None);
     if (pressed && !popup_open)
     {
-        open_popupEx(popup_id, PopupFlags::None);
+        open_popup_ex(popup_id, PopupFlags::None);
         popup_open = true;
     }
 
@@ -6012,12 +6012,12 @@ void ImGui::TreePop()
     if (g.nav_move_dir == ImGuiDir_Left && g.NavWindow == window && NavMoveRequestButNoResultYet())
         if (g.NavIdIsAlive && (window.DC.TreeJumpToParentOnPopMask & tree_depth_mask))
         {
-            SetNavID(window.idStack.back(), g.nav_layer, 0, ImRect());
+            SetNavID(window.id_stack.back(), g.nav_layer, 0, ImRect());
             NavMoveRequestCancel();
         }
     window.DC.TreeJumpToParentOnPopMask &= tree_depth_mask - 1;
 
-    IM_ASSERT(window.idStack.Size > 1); // There should always be 1 element in the IDStack (pushed during window creation). If this triggers you called TreePop/PopID too much.
+    IM_ASSERT(window.id_stack.Size > 1); // There should always be 1 element in the IDStack (pushed during window creation). If this triggers you called TreePop/PopID too much.
     pop_id();
 }
 
@@ -6808,7 +6808,7 @@ static bool IsRootOfOpenMenuSet()
     // This fixes the most common case of menu opening on hover when moving between window content and menu bar. Multiple different menu sets in same nav layer would still
     // open on hover, but that should be a lesser problem, because if such menus are close in proximity in window content then it won't feel weird and if they are far apart
     // it likely won't be a problem anyone runs into.
-    const ImGuiPopupData* upper_popup = &g.open_popupStack[g.begin_popupStack.Size];
+    const PopupData* upper_popup = &g.open_popupStack[g.begin_popupStack.Size];
     return (window.DC.NavLayerCurrent == upper_popup->ParentNavLayer && upper_popup->Window && (upper_popup->Window->Flags & WindowFlags_ChildMenu));
 }
 

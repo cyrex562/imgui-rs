@@ -422,7 +422,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         for (int i = 0; i < g.open_popup_stack.size; i += 1)
         {
             Window* window = g.open_popup_stack[i].Window;
-            BulletText("PopupID: %08x, window: '%s'%s%s", g.open_popup_stack[i].PopupId, window ? window.name : "None", window && (window.flags & WindowFlags::ChildWindow) ? " ChildWindow" : "", window && (window.flags & WindowFlags::ChildMenu) ? " ChildMenu" : "");
+            BulletText("PopupID: %08x, window: '%s'%s%s", g.open_popup_stack[i].popup_id, window ? window.name : "None", window && (window.flags & WindowFlags::ChildWindow) ? " ChildWindow" : "", window && (window.flags & WindowFlags::ChildMenu) ? " ChildMenu" : "");
         }
         TreePop();
     }
@@ -1240,15 +1240,15 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
     if (tool->StackLevel == -1)
     {
         tool->StackLevel += 1;
-        tool->Results.resize(window.idStack.size + 1, ImGuiStackLevelInfo());
-        for (int n = 0; n < window.idStack.size + 1; n += 1)
-            tool->Results[n].id = if (n < window.idStack.size) { window.idStack[n] }else{ id};
+        tool->Results.resize(window.id_stack.size + 1, ImGuiStackLevelInfo());
+        for (int n = 0; n < window.id_stack.size + 1; n += 1)
+            tool->Results[n].id = if (n < window.id_stack.size) { window.id_stack[n] }else{ id};
         return;
     }
 
     // step 1+: query for individual level
     // IM_ASSERT(tool->StackLevel >= 0);
-    if (tool->StackLevel != window.idStack.size)
+    if (tool->StackLevel != window.id_stack.size)
         return;
     ImGuiStackLevelInfo* info = &tool->Results[tool->StackLevel];
     // IM_ASSERT(info->id == id && info->QueryFrameCount > 0);

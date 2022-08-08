@@ -1,9 +1,10 @@
 use std::collections::HashSet;
-use crate::Context;
+use crate::{Context, INVALID_ID};
 use crate::types::Direction;
 use crate::imgui_h::Id32;
 use crate::imgui_vec::Vector2D;
 use crate::imgui_window::Window;
+use crate::input::mouse::is_mouse_pos_valid;
 use crate::input::NavLayer;
 use crate::orig_imgui_single_file::Id32;
 use crate::rect::Rect;
@@ -26,7 +27,7 @@ pub struct PopupData
     // int                 parent_nav_layer; // Resolved on begin_popup(). Actually a ImGuiNavLayer type (declared down below), initialized to -1 which is not part of an enum, but serves well-enough as "not any of layers" value
     pub parent_nav_layer: i32,
     // int                 open_frame_count; // Set on OpenPopup()
-    pub open_frame_count: i32,
+    pub open_frame_count: usize,
     // Id32             open_parent_id;   // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
     pub open_parent_id: Id32,
     // Vector2D              open_popup_pos;   // Set on OpenPopup(), preferred popup position (typically == open_mouse_pos when using mouse)
@@ -85,7 +86,7 @@ pub enum PopupFlags
 
 // Supported flags: PopupFlags::AnyPopupId, PopupFlags::AnyPopupLevel
 // bool IsPopupOpen(Id32 id, ImGuiPopupFlags popup_flags)
-pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: Option<&HashSet<PopupFlags>>) -> bool
+pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>) -> bool
 {
     // ImGuiContext& g = *GImGui;
     if popup_flags.unwrap().contains(&PopupFlags::AnyPopupId)
@@ -117,7 +118,7 @@ pub fn is_popup_open(g: &mut Context, id: Id32, popup_flags: Option<&HashSet<Pop
         else
         {
             // Return true if the popup is open at the current begin_popup() level of the popup stack (this is the most-common query)
-            return g.open_popup_stack.size > g.begin_popup_stack.size && g.open_popup_stack[g.begin_popup_stack.size].PopupId == id;
+            return g.open_popup_stack.size > g.begin_popup_stack.size && g.open_popup_stack[g.begin_popup_stack.size].popup_id == id;
         }
     }
 }
@@ -131,17 +132,19 @@ pub fn is_popup_open_2(g: &mut Context, str_id: &str, popup_flags: &HashSet<Popu
         g.current_window.get_id(str_id)};
     if popup_flags.contains(& PopupFlags::AnyPopupLevel) && id != 0 {}
         // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and PopupFlags::AnyPopupLevel."); // But non-string version is legal and used internally
-    return is_popup_open(g, id, Some(popup_flags));
+    return is_popup_open(g, id, popup_flags);
 }
 
 // Window* get_top_most_popup_modal()
 pub fn get_top_most_popup_modal(g: &mut Context) -> Option<&mut Window>
 {
     // ImGuiContext& g = *GImGui;
-    for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 ){
-        if let popup = g.open_popup_stack.data[n].Window {
-            if (popup.flags & WindowFlags::Modal) {
-                return popup;
+    // for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
+    for n in g.open_popup_stack.len() - 1 ..0
+    {
+        if let popup = g.window_mut(g.open_popup_stack[n].window_id) {
+            if popup.flags.contains(&WindowFlags::Modal) {
+                return Some(popup);
             }
         }
     }
@@ -149,29 +152,35 @@ pub fn get_top_most_popup_modal(g: &mut Context) -> Option<&mut Window>
 }
 
 // Window* GetTopMostAndVisiblePopupModal()
-pub fn get_top_most_and_visible_popup_modal(g: &mut Context) -> &mut Window
+pub fn get_top_most_and_visible_popup_modal(g: &mut Context) -> Option<&mut Window>
 {
     // ImGuiContext& g = *GImGui;
-    for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
-        if (Window* popup = g.open_popup_stack.data[n].Window)
-            if ((popup.flags & WindowFlags::Modal) && is_window_active_and_visible(popup))
+    //for (int n = g.open_popup_stack.size - 1; n >= 0; n -= 1 )
+    for n in g.open_popup_stack.len() - 1 ..0
+    {
+        if let pop = g.window_mut(g.open_popup_stack[n].window_id) {
+        // if (Window * popup = g.open_popup_stack.data[n].Window) {
+            if popup.flags.contains(&WindowFlags::Modal) && is_window_active_and_visible(popup) {
                 return popup;
+            }
+        }
+    }
     return None;
 }
 
 // void OpenPopup(const char* str_id, ImGuiPopupFlags popup_flags)
-pub fn open_popup(g: &mut Context, str_id: &str, popup_flags: Option<&HashSet<PopupFlags>>)
+pub fn open_popup(g: &mut Context, str_id: &str, popup_flags: &HashSet<PopupFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    Id32 id = g.current_window.get_id(str_id);
-    IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopup(\"%s\" -> 0x%08X\n", str_id, id);
-    open_popupEx(id, popup_flags);
+    let id = g.current_window_id;
+    // IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopup(\"%s\" -> 0x%08X\n", str_id, id);
+    open_popup_ex(g, id, popup_flags);
 }
 
 // OpenPopup(Id32 id, ImGuiPopupFlags popup_flags)
 pub fn open_popup2(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 {
-   open_popupEx(id, popup_flags);
+   open_popup_ex(g, id, popup_flags);
 }
 
 // Mark popup as open (toggle toward open state).
@@ -182,24 +191,27 @@ pub fn open_popup2(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    Window* parent_window = g.current_window;
+    // Window* parent_window = g.current_window;
+    let parent_window = g.current_window_mut();
     let current_stack_size = g.begin_popup_stack.size;
 
-    if (popup_flags & PopupFlags::NoOpenOverExistingPopup)
-        if (is_popup_open(0u, PopupFlags::AnyPopupId))
+    if popup_flags.contains(&PopupFlags::NoOpenOverExistingPopup) {
+        if is_popup_open(g, 0, &HashSet::from([PopupFlags::AnyPopupId])) {
             return;
+        }
+    }
 
-    ImGuiPopupData popup_ref; // Tagged as new ref as window will be set back to None if we write this into open_popup_stack.
-    popup_ref.PopupId = id;
-    popup_ref.Window = None;
-    popup_ref.SourceWindow = g.nav_window;
-    popup_ref.OpenFrameCount = g.frame_count;
-    popup_ref.OpenParentId = parent_window.idStack.back();
-    popup_ref.open_popupPos = NavCalcPreferredRefPos();
-    popup_ref.OpenMousePos = if is_mouse_pos_valid(&g.io.mouse_pos) { g.io.mouse_pos }else{ popup_ref.open_popupPos};
+    let mut popup_ref: PopupData = PopupData::default(); // Tagged as new ref as window will be set back to None if we write this into open_popup_stack.
+    popup_ref.popup_id = id;
+    popup_ref.window_id = INVALID_ID;
+    popup_ref.source_window_id = g.nav_window_id;
+    popup_ref.open_frame_count = g.frame_count;
+    popup_ref.open_parent_id = parent_window.id_stack.back();
+    popup_ref.open_popup_pos = nav_calc_preferred_ref_pos();
+    popup_ref.open_mouse_pos = if is_mouse_pos_valid(g, &g.io.mouse_pos) { g.io.mouse_pos }else{ popup_ref.open_popup_pos};
 
-    IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopupEx(0x%08X)\n", id);
-    if (g.open_popup_stack.size < current_stack_size + 1)
+    // IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopupEx(0x%08X)\n", id);
+    if g.open_popup_stack.size < current_stack_size + 1
     {
         g.open_popup_stack.push_back(popup_ref);
     }
@@ -208,7 +220,7 @@ pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags
         // Gently handle the user mistakenly calling OpenPopup() every frame. It is a programming mistake! However, if we were to run the regular code path, the ui
         // would become completely unusable because the popup will always be in hidden-while-calculating-size state _while_ claiming focus. Which would be a very confusing
         // situation for the programmer. Instead, we silently allow the popup to proceed, it will keep reappearing and the programming error will be more obvious to understand.
-        if (g.open_popup_stack[current_stack_size].PopupId == id && g.open_popup_stack[current_stack_size].OpenFrameCount == g.frame_count - 1)
+        if (g.open_popup_stack[current_stack_size].popup_id == id && g.open_popup_stack[current_stack_size].OpenFrameCount == g.frame_count - 1)
         {
             g.open_popup_stack[current_stack_size].OpenFrameCount = popup_ref.OpenFrameCount;
         }
@@ -232,19 +244,22 @@ pub fn open_popup_ex(g: &mut Context, id: Id32, popup_flags: &HashSet<PopupFlags
 pub fn close_popups_over_window(g: &mut Context, ref_window: &mut Window, restore_focus_to_window_under_popup: bool)
 {
     // ImGuiContext& g = *GImGui;
-    if (g.open_popup_stack.size == 0)
+    if g.open_popup_stack.len() == 0 {
         return;
+    }
 
     // Don't close our own child popup windows.
-    int popup_count_to_keep = 0;
-    if (ref_window)
+    let mut popup_count_to_keep = 0;
+    if ref_window
     {
         // Find the highest popup which is a descendant of the reference window (generally reference window = nav_window)
-        for (; popup_count_to_keep < g.open_popup_stack.size; popup_count_to_keep += 1)
+        // for (; popup_count_to_keep < g.open_popup_stack.size; popup_count_to_keep += 1)
+        for popup_count_to_keep in 0 .. g.open_popup_stack.len()
         {
-            ImGuiPopupData& popup = g.open_popup_stack[popup_count_to_keep];
-            if (!popup.Window)
+            let mut popup = &mut g.open_popup_stack[popup_count_to_keep];
+            if !popup.window_id != INVALID_ID {
                 continue;
+            }
             // IM_ASSERT((popup.Window.flags & WindowFlags::Popup) != 0);
             if (popup.Window.flags & WindowFlags::ChildWindow)
                 continue;
@@ -324,7 +339,7 @@ pub fn close_current_popup(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
     int popup_idx = g.begin_popup_stack.size - 1;
-    if (popup_idx < 0 || popup_idx >= g.open_popup_stack.size || g.begin_popup_stack[popup_idx].PopupId != g.open_popup_stack[popup_idx].PopupId)
+    if (popup_idx < 0 || popup_idx >= g.open_popup_stack.size || g.begin_popup_stack[popup_idx].popup_id != g.open_popup_stack[popup_idx].popup_id)
         return;
 
     // Closing a menu closes its top-most parent popup (unless a modal)
@@ -456,7 +471,7 @@ pub fn open_popup_on_item_click(g: &mut Context, str_id: &str, popup_flags: &Has
     {
         Id32 id = if str_id { window.get_id(str_id) }else{ g.last_item_data.id};    // If user hasn't passed an id, we can use the LastItemID. Using LastItemID as a Popup id won't conflict!
         // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
-        open_popupEx(id, popup_flags);
+        open_popup_ex(id, popup_flags);
     }
 }
 
@@ -487,7 +502,7 @@ pub fn begin_popup_context_item(g: &mut Context, str_id: &str, popup_flags: &Has
     // IM_ASSERT(id != 0);                                             // You cannot pass a None str_id if the last item has no identifier (e.g. a Text() item)
     int mouse_button = (popup_flags & PopupFlags::MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
-        open_popupEx(id, popup_flags);
+        open_popup_ex(id, popup_flags);
     return begin_popupEx(id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings);
 }
 
@@ -502,7 +517,7 @@ pub fn begin_popup_context_window(g: &mut Context, str_id: &str, popup_flags: &H
     int mouse_button = (popup_flags & PopupFlags::MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
         if (!(popup_flags & PopupFlags::NoOpenOverItems) || !IsAnyItemHovered())
-            open_popupEx(id, popup_flags);
+            open_popup_ex(id, popup_flags);
     return begin_popupEx(id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings);
 }
 
@@ -517,7 +532,7 @@ pub fn begin_popup_context_void(g: &mut Context, str_id: &str, popup_flags: &Has
     int mouse_button = (popup_flags & PopupFlags::MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
         if (get_top_most_popup_modal() == None)
-            open_popupEx(id, popup_flags);
+            open_popup_ex(id, popup_flags);
     return begin_popupEx(id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings);
 }
 
@@ -651,7 +666,7 @@ pub fn find_best_window_pos_for_popup(g: &mut Context, window: &mut Window) -> V
     {
         // Position tooltip (always follows mouse)
         let sc =  g.style.MouseCursorScale;
-        Vector2D ref_pos = NavCalcPreferredRefPos();
+        Vector2D ref_pos = nav_calc_preferred_ref_pos();
         Rect r_avoid;
         if (!g.nav_disable_highlight && g.nav_disable_mouse_hover && !(g.io.config_flags & ImGuiConfigFlags_NavEnableSetMousePos))
             r_avoid = Rect(ref_pos.x - 16, ref_pos.y - 8, ref_pos.x + 16, ref_pos.y + 8);

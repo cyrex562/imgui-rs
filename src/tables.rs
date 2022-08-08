@@ -3032,7 +3032,7 @@ void ImGui::TableOpenContextMenu(int column_n)
         table.ContextPopupColumn = (ImGuiTableColumnIdx)column_n;
         table.InstanceInteracted = table.InstanceCurrent;
         const Id32 context_menu_id = hash_string("##ContextMenu", 0, table.id);
-        open_popupEx(context_menu_id, PopupFlags::None);
+        open_popup_ex(context_menu_id, PopupFlags::None);
     }
 }
 

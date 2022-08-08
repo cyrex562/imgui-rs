@@ -955,7 +955,7 @@ pub fn nav_update(g: &mut Context)
     // (This will take into account the possibility that a scroll was queued in the window to offset our absolute mouse position before scroll has been applied)
     if (set_mouse_pos && (io.config_flags & ImGuiConfigFlags_NavEnableSetMousePos) && (io.backend_flags & ImGuiBackendFlags_HasSetMousePos))
     {
-        io.mouse_pos = io.mouse_pos_prev = NavCalcPreferredRefPos();
+        io.mouse_pos = io.mouse_pos_prev = nav_calc_preferred_ref_pos();
         io.WantSetMousePos = true;
         //IMGUI_DEBUG_LOG_IO("SetMousePos: (%.1,%.1)\n", io.mouse_pos.x, io.mouse_pos.y);
     }
@@ -967,7 +967,7 @@ pub fn nav_update(g: &mut Context)
     {
         ImDrawList* draw_list = foreground_draw_list(g.nav_window);
         if (1) { for (int layer = 0; layer < 2; layer += 1) { Rect r = WindowRectRelToAbs(g.nav_window, g.nav_window.nav_rect_rel[layer]); draw_list.add_rect(r.min, r.max, IM_COL32(255,200,0,255)); } } // [DEBUG]
-        if (1) { ImU32 col = (!g.nav_window.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); Vector2D p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.nav_layer); draw_list.AddCircleFilled(p, 3.0, col); draw_list.add_text(None, 13.0, p + Vector2D::new(8,-4), col, buf); }
+        if (1) { ImU32 col = (!g.nav_window.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); Vector2D p = nav_calc_preferred_ref_pos(); char buf[32]; ImFormatString(buf, 32, "%d", g.nav_layer); draw_list.AddCircleFilled(p, 3.0, col); draw_list.add_text(None, 13.0, p + Vector2D::new(8,-4), col, buf); }
     }
 
 }

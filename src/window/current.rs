@@ -25,7 +25,7 @@ pub fn push_id(g: &mut Context, str_id: &str)
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window;
     Id32 id = window.get_id(str_id);
-    window.idStack.push_back(id);
+    window.id_stack.push_back(id);
 }
 
 // void push_id(const char* str_id_begin, const char* str_id_end)
@@ -34,7 +34,7 @@ pub fn push_id2(g: &mut Context, str_id_begin: &str, )
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window;
     Id32 id = window.get_id(str_id_begin, str_id_end);
-    window.idStack.push_back(id);
+    window.id_stack.push_back(id);
 }
 
 // void push_id(const void* ptr_id)
@@ -43,7 +43,7 @@ pub fn push_id2(g: &mut Context, str_id_begin: &str, )
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window;
     Id32 id = window.get_id(ptr_id);
-    window.idStack.push_back(id);
+    window.id_stack.push_back(id);
 }
 
 // void push_id(int int_id)
@@ -52,7 +52,7 @@ pub fn push_id4(g: &mut Context, int_id: Id32)
     // ImGuiContext& g = *GImGui;
     Window* window = g.current_window;
     Id32 id = window.get_id(int_id);
-    window.idStack.push_back(id);
+    window.id_stack.push_back(id);
 }
 
 // Push a given id value ignoring the id stack as a seed.
@@ -63,7 +63,7 @@ pub fn push_override_id(g: &mut Context, id: Id32)
     Window* window = g.current_window;
     if (g.debug_hook_id_info == id)
         debug_hook_id_info(id, DataType::ID, None, None);
-    window.idStack.push_back(id);
+    window.id_stack.push_back(id);
 }
 
 // void PopID()
@@ -71,7 +71,7 @@ pub fn pop_id(g: &mut Context)
 {
     Window* window = g.current_window_id;
     // IM_ASSERT(window.IDStack.size > 1); // Too many PopID(), or could be popping in a wrong/different window?
-    window.idStack.pop_back();
+    window.id_stack.pop_back();
 }
 
 // Id32 GetID(const char* str_id)
