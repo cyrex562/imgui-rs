@@ -180,7 +180,7 @@ pub fn render_window_decorations(
                     .flags
                     .contains(&NextWindowDataFlags::HasBgAlpha)
                 {
-                    alpha = g.next_window_data.BgAlphaVal;
+                    alpha = g.next_window_data.bg_alpha_val;
                     override_alpha = true;
                 }
                 if is_docking_transparent_payload {

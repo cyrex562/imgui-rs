@@ -159,7 +159,7 @@ pub fn focus_top_most_window_under_one(g: &mut Context, window: &mut under_this_
                 // If A and B are docked into window and B disappear, at the NewFrame() call site window->nav_last_child_nav_window will still point to B.
                 // We might leverage the tab order implicitly stored in window->dock_node_as_host->tab_bar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
                 // to tell which is the "previous" window. Or we may leverage 'LastFrameFocused/last_frame_just_focused' and have this function handle child window itself?
-                Window* focus_window = NavRestoreLastChildNavWindow(window);
+                Window* focus_window = nav_restore_last_child_nav_window(window);
                 focus_window(focus_window);
                 return;
             }

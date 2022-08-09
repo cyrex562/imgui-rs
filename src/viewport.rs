@@ -63,7 +63,7 @@ pub enum ViewportFlags
     NoRendererClear         ,   // Platform window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
     TopMost                 ,   // Platform window: Display on top (for tooltips only).
     Minimized               ,  // Platform window: window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
-    NoAutoMerge             ,  // Platform window: Avoid merging this window into another host window. This can only be set via WindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
+    NoAutoMerge             ,  // Platform window: Avoid merging this window into another host window. This can only be set via window_class viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
     CanHostOtherWindows      = 1 << 12   // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
 }
 
@@ -362,7 +362,7 @@ pub fn translate_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, o
     // 2) If it's not going to fit into the new size, keep it at same absolute position.
     // One problem with this is that most Win32 applications doesn't update their render while dragging,
     // and so the window will appear to teleport when releasing the mouse.
-    const bool translate_all_windows = (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != (g.config_flags_last_frame & ConfigFlags::ViewportsEnable);
+    let translate_all_windows = (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != (g.config_flags_last_frame & ConfigFlags::ViewportsEnable);
     Rect test_still_fit_rect(old_pos, old_pos + viewport.size);
     Vector2D delta_pos = new_pos - old_pos;
     for (int window_n = 0; window_n < g.windows.len(); window_n += 1) // FIXME-OPT
@@ -414,13 +414,13 @@ pub fn update_viewports_new_frame(g: &mut Context)
     // IM_ASSERT(g.platform_io.viewports.size <= g.viewports.size);
 
     // update Minimized status (we need it first in order to decide if we'll apply pos/size of the main viewport)
-    const bool viewports_enabled = (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != 0;
+    let viewports_enabled = (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != 0;
     if (viewports_enabled)
     {
         for (int n = 0; n < g.viewports.size; n += 1)
         {
             ViewportP* viewport = g.viewports[n];
-            const bool platform_funcs_available = viewport.platform_window_created;
+            let platform_funcs_available = viewport.platform_window_created;
             if (g.platform_io.platform_get_window_minimized && platform_funcs_available)
             {
                 bool minimized = g.platform_io.platform_get_window_minimized(viewport);
@@ -462,7 +462,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
             continue;
         }
 
-        const bool platform_funcs_available = viewport.platform_window_created;
+        let platform_funcs_available = viewport.platform_window_created;
         if (viewports_enabled)
         {
             // update Position and size (from Platform window to ImGui) if requested.
@@ -506,7 +506,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
         if (viewport.DpiScale != 0.0 && new_dpi_scale != viewport.DpiScale)
         {
             let scale_factor =  new_dpi_scale / viewport.DpiScale;
-            if (g.io.config_flags & ImGuiConfigFlags_DpiEnableScaleViewports)
+            if (g.io.config_flags & ConfigFlags::DpiEnableScaleViewports)
                 ScaleWindowsInViewport(viewport, scale_factor);
             //if (viewport == get_main_viewport())
             //    g.PlatformInterface.set_window_size(viewport, viewport->size * scale_factor);
@@ -572,7 +572,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
     // - when we are between viewports, our dragged preview will tend to show in the last viewport _even_ if we don't have tooltips in their viewports (when lacking monitor info)
     // - consider the case of holding on a menu item to browse child menus: even thou a mouse button is held, there's no active id because menu items only react on mouse release.
     // FIXME-VIEWPORT: This is essentially broken, when ImGuiBackendFlags_HasMouseHoveredViewport is set we want to trust when viewport_hovered==None and use that.
-    const bool is_mouse_dragging_with_an_expected_destination = g.drag_drop_active;
+    let is_mouse_dragging_with_an_expected_destination = g.drag_drop_active;
     if (is_mouse_dragging_with_an_expected_destination && viewport_hovered == None)
         viewport_hovered = g.mouse_last_hovered_viewport;
     if (is_mouse_dragging_with_an_expected_destination || g.active_id == 0 || !IsAnyMouseDown())
@@ -700,7 +700,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
 {
     // ImGuiContext& g = *GImGui;
     WindowFlags flags = window.flags;
-    window.viewportAllowplatform_monitorExtend = -1;
+    window.viewport_allow_platform_monitor_extend = -1;
 
     // Restore main viewport if multi-viewport is not supported by the backend
     ViewportP* main_viewport = (ViewportP*)(void*)get_main_viewport();
@@ -792,14 +792,14 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
             bool use_mouse_ref = (g.nav_disable_highlight || !g.nav_disable_mouse_hover || !g.nav_window);
             bool mouse_valid = is_mouse_pos_valid(&mouse_ref);
             if ((window.Appearing || (flags & (WindowFlags::Tooltip | WindowFlags::ChildMenu))) && (!use_mouse_ref || mouse_valid))
-                window.viewportAllowplatform_monitorExtend = Findplatform_monitorForPos((use_mouse_ref && mouse_valid) ? mouse_ref : nav_calc_preferred_ref_pos());
+                window.viewport_allow_platform_monitor_extend = Findplatform_monitorForPos((use_mouse_ref && mouse_valid) ? mouse_ref : nav_calc_preferred_ref_pos());
             else
-                window.viewportAllowplatform_monitorExtend = window.viewport.platform_monitor;
+                window.viewport_allow_platform_monitor_extend = window.viewport.platform_monitor;
         }
         else if (window.viewport && window != window.viewport.Window && window.viewport.Window && !(flags & WindowFlags::ChildWindow) && window.dock_node_id == None)
         {
             // When called from Begin() we don't have access to a proper version of the hidden flag yet, so we replicate this code.
-            const bool will_be_visible = (window.dock_is_active && !window.dock_tab_is_visible) ? false : true;
+            let will_be_visible = (window.dock_is_active && !window.dock_tab_is_visible) ? false : true;
             if ((window.flags & WindowFlags::DockNodeHost) && window.viewport.last_frame_active < g.frame_count && will_be_visible)
             {
                 // Steal/transfer ownership
@@ -814,11 +814,11 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
                 window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ViewportFlags::NoFocusOnAppearing);
             }
         }
-        else if (window.viewportAllowplatform_monitorExtend < 0 && (flags & WindowFlags::ChildWindow) == 0)
+        else if (window.viewport_allow_platform_monitor_extend < 0 && (flags & WindowFlags::ChildWindow) == 0)
         {
             // Regular (non-child, non-popup) windows by default are also allowed to protrude
             // Child windows are kept contained within their parent.
-            window.viewportAllowplatform_monitorExtend = window.viewport.platform_monitor;
+            window.viewport_allow_platform_monitor_extend = window.viewport.platform_monitor;
         }
     }
 
@@ -872,8 +872,8 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     const ViewportFlags viewport_flags_to_clear = ViewportFlags::TopMost | ViewportFlags::NoTaskBarIcon | ViewportFlags::NoDecoration | ViewportFlags::NoRendererClear;
     ViewportFlags viewport_flags = window.viewport.flags & ~viewport_flags_to_clear;
     WindowFlags window_flags = window.flags;
-    const bool is_modal = (window_flags & WindowFlags::Modal) != 0;
-    const bool is_short_lived_floating_window = (window_flags & (WindowFlags::ChildMenu | WindowFlags::Tooltip | WindowFlags::Popup)) != 0;
+    let is_modal = (window_flags & WindowFlags::Modal) != 0;
+    let is_short_lived_floating_window = (window_flags & (WindowFlags::ChildMenu | WindowFlags::Tooltip | WindowFlags::Popup)) != 0;
     if (window_flags & WindowFlags::Tooltip)
         viewport_flags |= ViewportFlags::TopMost;
     if ((g.io.ConfigViewportsNoTaskBarIcon || is_short_lived_floating_window) && !is_modal)
@@ -894,7 +894,7 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
     if (is_short_lived_floating_window && !is_modal)
         viewport_flags |= ViewportFlags::NoFocusOnAppearing | ViewportFlags::NoFocusOnClick;
 
-    // We can overwrite viewport flags using WindowClass (advanced users)
+    // We can overwrite viewport flags using window_class (advanced users)
     if (window.window_class.viewportFlagsOverrideSet)
         viewport_flags |= window.window_class.viewportFlagsOverrideSet;
     if (window.window_class.viewportFlagsOverrideClear)

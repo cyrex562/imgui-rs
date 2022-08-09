@@ -47,7 +47,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
         title_r = Rect(f32::floor(off + title_r.min * scale), f32::floor(off +  Vector2D::new(title_r.max.x, title_r.min.y) * scale) + Vector2D::new(0,5)); // Exaggerate title bar height
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
-        const bool window_is_focused = (g.nav_window && thumb_window.root_window_for_title_bar_highlight == g.nav_window->root_window_for_title_bar_highlight);
+        let window_is_focused = (g.nav_window && thumb_window.root_window_for_title_bar_highlight == g.nav_window->root_window_for_title_bar_highlight);
         window.draw_list->AddRectFilled(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::WindowBg, alpha_mul));
         window.draw_list->AddRectFilled(title_r.min, title_r.max, get_color_u32(window_is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg, alpha_mul));
         window.draw_list->AddRect(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::Border, alpha_mul));
@@ -128,7 +128,7 @@ pub fn debug_text_encoding(g: &mut Context, text: &str)
 pub fn metrics_help_marker(g: &mut Context, desc: &str)
 {
     TextDisabled("(?)");
-    if (IsItemHovered())
+    if (is_item_hovered())
     {
         BeginTooltip();
         PushTextWrapPos(GetFontSize() * 35.0);
@@ -293,7 +293,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                     continue;
 
                 BulletText("Table 0x%08X (%d columns, in '%s')", table->ID, table->ColumnsCount, table->OuterWindow->Name);
-                if (IsItemHovered())
+                if (is_item_hovered())
                     foreground_draw_list()->AddRect(table->OuterRect.min - Vector2D::new(1, 1), table->OuterRect.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                 Indent();
                 char buf[128];
@@ -308,7 +308,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                             Rect r = Funcs::GetTableRect(table, rect_n, column_n);
                             ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) col %d %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), column_n, trt_rects_names[rect_n]);
                             selectable(buf);
-                            if (IsItemHovered())
+                            if (is_item_hovered())
                                 foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                         }
                     }
@@ -317,7 +317,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                         Rect r = Funcs::GetTableRect(table, rect_n, -1);
                         ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1,%6.1) (%6.1,%6.1) size (%6.1,%6.1) %s", r.min.x, r.min.y, r.max.x, r.max.y, r.get_width(), r.get_height(), trt_rects_names[rect_n]);
                         selectable(buf);
-                        if (IsItemHovered())
+                        if (is_item_hovered())
                             foreground_draw_list()->AddRect(r.min - Vector2D::new(1, 1), r.max + Vector2D::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                     }
                 }
@@ -678,8 +678,8 @@ pub fn debug_node_dock_node_flags(g: &mut Context, p_flags: &HashSet<DockNodeFla
 pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
 {
     // ImGuiContext& g = *GImGui;
-    const bool is_alive = (g.frame_count - node->last_frame_alive < 2);    // Submitted with ImGuiDockNodeFlags_KeepAliveOnly
-    const bool is_active = (g.frame_count - node->last_frame_active < 2);  // Submitted
+    let is_alive = (g.frame_count - node->last_frame_alive < 2);    // Submitted with ImGuiDockNodeFlags_KeepAliveOnly
+    let is_active = (g.frame_count - node->last_frame_active < 2);  // Submitted
     if (!is_alive) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open;
     ImGuiTreeNodeFlags tree_node_flags = if node->IsFocused { ImGuiTreeNodeFlags_Selected }else{ ImGuiTreeNodeFlags_None};
@@ -688,7 +688,7 @@ pub fn debug_node_dock_node(g: &mut Context, node: &mut DockNode, label: &str)
     else
         open = TreeNodeEx((void*)(intptr_t)node->ID, tree_node_flags, "%s 0x%04X%s: %s split (vis: '%s')", label, node->ID, node->is_visible ? "" : " (hidden)", (node->SplitAxis == Axis::X) ? "horizontal" : (node->SplitAxis == Axis::Y) ? "vertical" : "n/a", node->VisibleWindow ? node->VisibleWindow->Name : "None");
     if (!is_alive) { pop_style_color(); }
-    if (is_active && IsItemHovered())
+    if (is_active && is_item_hovered())
         if (Window* window = node->HostWindow ? node->HostWindow : node->VisibleWindow)
             foreground_draw_list(window)->AddRect(node.pos, node.pos + node.size, IM_COL32(255, 255, 0, 255));
     if (open)
@@ -751,7 +751,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
     }
 
     ImDrawList* fg_draw_list = if viewport { foreground_draw_list(viewport) }else{ None}; // Render additional visuals into the top-most draw list
-    if (window && IsItemHovered() && fg_draw_list)
+    if (window && is_item_hovered() && fg_draw_list)
         fg_draw_list->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
     if (!node_open)
         return;
@@ -772,7 +772,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
             pcmd->ElemCount / 3, (void*)(intptr_t)pcmd->TextureId,
             pcmd->ClipRect.x, pcmd->ClipRect.y, pcmd->ClipRect.z, pcmd->ClipRect.w);
         bool pcmd_node_open = TreeNode((void*)(pcmd - draw_list.cmd_buffer.begin()), "%s", buf);
-        if (IsItemHovered() && (cfg->ShowDrawCmdMesh || cfg->ShowDrawCmdBoundingBoxes) && fg_draw_list)
+        if (is_item_hovered() && (cfg->ShowDrawCmdMesh || cfg->ShowDrawCmdBoundingBoxes) && fg_draw_list)
             DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, cfg->ShowDrawCmdMesh, cfg->ShowDrawCmdBoundingBoxes);
         if (!pcmd_node_open)
             continue;
@@ -793,7 +793,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
         // Display vertex information summary. Hover to get all triangles drawn in wire-frame
         ImFormatString(buf, IM_ARRAYSIZE(buf), "Mesh: elem_count: %d, vtx_offset: +%d, idx_offset: +%d, Area: ~%0.f px", pcmd->ElemCount, pcmd->vtx_offset, pcmd->IdxOffset, total_area);
         selectable(buf);
-        if (IsItemHovered() && fg_draw_list)
+        if (is_item_hovered() && fg_draw_list)
             DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, true, false);
 
         // Display individual triangles/vertices. Hover on to get the corresponding triangle highlighted.
@@ -813,7 +813,7 @@ pub fn debug_node_draw_list(g: &mut Context, window: &mut window::Window, viewpo
                 }
 
                 selectable(buf, false);
-                if (fg_draw_list && IsItemHovered())
+                if (fg_draw_list && is_item_hovered())
                 {
                     ImDrawListFlags backup_flags = fg_draw_list.flags;
                     fg_draw_list.flags &= ~DrawListFlags::AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
@@ -983,7 +983,7 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
     char buf[256];
     char* p = buf;
     const char* buf_end = buf + IM_ARRAYSIZE(buf);
-    const bool is_active = (tab_bar->PrevFrameVisible >= GetFrameCount() - 2);
+    let is_active = (tab_bar->PrevFrameVisible >= GetFrameCount() - 2);
     p += ImFormatString(p, buf_end - p, "%s 0x%08X (%d tabs)%s", label, tab_bar->ID, tab_bar->Tabs.size, is_active ? "" : " *Inactive*");
     p += ImFormatString(p, buf_end - p, "  { ");
     for (int tab_n = 0; tab_n < ImMin(tab_bar->Tabs.size, 3); tab_n += 1)
@@ -996,7 +996,7 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
     if (!is_active) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open = TreeNode(label, "%s", buf);
     if (!is_active) { pop_style_color(); }
-    if (is_active && IsItemHovered())
+    if (is_active && is_item_hovered())
     {
         ImDrawList* draw_list = foreground_draw_list();
         draw_list->AddRect(tab_bar->BarRect.min, tab_bar->BarRect.max, IM_COL32(255, 255, 0, 255));
@@ -1062,12 +1062,12 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
     }
 
     // ImGuiContext& g = *GImGui;
-    const bool is_active = window.was_active;
+    let is_active = window.was_active;
     ImGuiTreeNodeFlags tree_node_flags = if (window == g.nav_window) { ImGuiTreeNodeFlags_Selected }else{ ImGuiTreeNodeFlags_None};
     if (!is_active) { push_style_color(, StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
-    const bool open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.name, is_active ? "" : " *Inactive*");
+    let open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.name, is_active ? "" : " *Inactive*");
     if (!is_active) { pop_style_color(); }
-    if (IsItemHovered() && is_active)
+    if (is_item_hovered() && is_active)
         foreground_draw_list(window)->AddRect(window.pos, window.pos + window.size, IM_COL32(255, 255, 0, 255));
     if (!open)
         return;
@@ -1095,10 +1095,10 @@ pub fn debug_node_window(g: &mut Context, window: &mut window::Window, label: &s
             continue;
         }
         BulletText("nav_last_ids[%d]: 0x%08X at +(%.1,%.1)(%.1,%.1)", layer, window.nav_last_ids[layer], r.min.x, r.min.y, r.max.x, r.max.y);
-        if (IsItemHovered())
+        if (is_item_hovered())
             foreground_draw_list(window)->AddRect(r.min + window.pos, r.max + window.pos, IM_COL32(255, 255, 0, 255));
     }
-    BulletText("nav_layers_active_mask: %x, nav_last_child_nav_window: %s", window.dc.nav_layers_active_mask, window.NavLastChildNavWindow ? window.NavLastChildNavWindow->Name : "None");
+    BulletText("nav_layers_active_mask: %x, nav_last_child_nav_window: %s", window.dc.nav_layers_active_mask, window.nav_last_child_nav_window_id ? window.nav_last_child_nav_window_id->Name : "None");
 
     BulletText("viewport: %d%s, viewport_id: 0x%08X, viewport_pos: (%.1,%.1)", window.viewport ? window.viewport->Idx : -1, window.viewport_owned ? " (Owned)" : "", window.viewport_id, window.viewport_pos.x, window.viewport_pos.y);
     BulletText("ViewportMonitor: %d", window.viewport ? window.viewport->platform_monitor : -1);

@@ -49,7 +49,7 @@ pub struct WindowTempData {
     pub nav_layers_active_mask_next: i16,
     // Id32                 nav_focus_scope_id_current; // current focus scope id while appending
     pub nav_focus_scope_id_current: Id32,
-    // bool                    NavHideHighlightOneFrame;
+    // bool                    nav_hide_highlight_one_frame;
     pub nav_hide_higlight_one_frame: bool,
     // bool                    nav_has_scroll;           // Set when scrolling can be used (scroll_max > 0.0)
     pub nav_has_scroll: bool,

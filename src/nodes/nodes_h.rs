@@ -125,7 +125,7 @@ struct ImNodesIO
         // indicating the state of a modifier. For example,
         //
         // ImNodes::GetIO().EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().key_alt;
-        const bool* Modifier;
+        let* Modifier;
     } EmulateThreeButtonMouse;
 
     struct LinkDetachWithModifierClick
@@ -141,7 +141,7 @@ struct ImNodesIO
         // Left-clicking a link with this modifier pressed will detach that link. NOTE: the user has
         // to actually delete the link for this to work. A deleted link can be detected by calling
         // IsLinkDestroyed() after EndNodeEditor().
-        const bool* Modifier;
+        let* Modifier;
     } LinkDetachWithModifierClick;
 
     struct MultipleSelectModifier
@@ -156,7 +156,7 @@ struct ImNodesIO
         //
         // Left-clicking a node with this modifier pressed will add the node to the list of
         // currently selected nodes. If this value is None, the Ctrl key will be used.
-        const bool* Modifier;
+        let* Modifier;
     } MultipleSelectModifier;
 
     // Holding alt mouse button pans the node area, by default middle mouse button will be used
@@ -335,7 +335,7 @@ void PopAttributeFlag();
 void Link(int id, int start_attribute_id, int end_attribute_id);
 
 // Enable or disable the ability to click and drag a specific node.
-void SetNodeDraggable(int node_id, const bool draggable);
+void SetNodeDraggable(int node_id, let draggable);
 
 // The node's position can be expressed in three coordinate systems:
 // * screen space coordinates, -- the origin is the upper left corner of the window.

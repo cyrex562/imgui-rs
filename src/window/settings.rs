@@ -17,7 +17,7 @@ pub struct WindowSettings
     pub size: Vector2D,
     // Vector2D    ViewportPos;
     pub viewport_pos: Vector2D,
-    // Id32     ViewportId;
+    // Id32     viewport_id;
     pub viewport_id: Id32,
     // Id32     DockId;         // id of last known dock_node (even if the dock_node is invisible because it has only 1 active window), or 0 if none.
     pub dock_id: Id32,

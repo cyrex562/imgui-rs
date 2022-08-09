@@ -76,9 +76,9 @@ pub struct Style {
     // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
     pub DisplayWindowPadding: Vector2D,
     // window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-    pub DisplaySafeAreaPadding: Vector2D,
+    pub display_safe_area_padding: Vector2D,
     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
-    pub MouseCursorScale: f32,
+    pub mouse_cursor_scale: f32,
     // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
     pub anti_aliased_lines: bool,
     // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
@@ -134,8 +134,8 @@ impl Style {
         out.ButtonTextAlign = Vector2D::new(0.5, 0.5); // Alignment of button text when button is larger than text.
         out.selectableTextAlign = Vector2D::new(0.0, 0.0); // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
         out.DisplayWindowPadding = Vector2D::new(19.0, 19.0); // window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-        out.DisplaySafeAreaPadding = Vector2D::new(3.0, 3.0); // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
-        out.MouseCursorScale = 1.0; // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). May be removed later.
+        out.display_safe_area_padding = Vector2D::new(3.0, 3.0); // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
+        out.mouse_cursor_scale = 1.0; // scale software rendered mouse cursor (when io.mouse_draw_cursor is enabled). May be removed later.
         out.anti_aliased_lines = true; // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
         out.anti_aliased_lines_use_tex = true; // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
         out.anti_aliased_fill = true; // Enable anti-aliased filled shapes (rounded rectangles, circles, etc.).
@@ -175,8 +175,8 @@ impl Style {
             f32::MAX
         };
         self.DisplayWindowPadding = Vector2D::floor(&self.DisplayWindowPadding * scale_factor);
-        self.DisplaySafeAreaPadding = Vector2D::floor(&self.DisplaySafeAreaPadding * scale_factor);
-        self.MouseCursorScale = f32::floor(self.MouseCursorScale * scale_factor);
+        self.display_safe_area_padding = Vector2D::floor(&self.display_safe_area_padding * scale_factor);
+        self.mouse_cursor_scale = f32::floor(self.mouse_cursor_scale * scale_factor);
     }
 }
 

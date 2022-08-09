@@ -26,7 +26,7 @@ pub fn get_combined_root_window(g: &mut Context, window: &mut Window, popup_hier
 // bool ImGui::IsWindowChildOf(Window* window, Window* potential_parent, bool popup_hierarchy, bool dock_hierarchy)
 pub fn is_window_child_of(g: &mut Context, window: &mut Window, potential_parent: &mut Window, popup_hierarchy: bool, dock_hierarchy: bool) -> bool
 {
-    Window* window_root = GetCombinedRootWindow(window, popup_hierarchy, dock_hierarchy);
+    Window* window_root = get_combined_root_window(window, popup_hierarchy, dock_hierarchy);
     if (window_root == potential_parent)
         return true;
     while (window != None)

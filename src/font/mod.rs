@@ -621,7 +621,7 @@ Vector2D ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, co
     Vector2D text_size = Vector2D::new(0, 0);
     let line_width =  0.0;
 
-    const bool word_wrap_enabled = (wrap_width > 0.0);
+    let word_wrap_enabled = (wrap_width > 0.0);
     const char* word_wrap_eol = None;
 
     const char* s = text_begin;
@@ -734,7 +734,7 @@ void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos,
     let start_x = x;
     let scale = size / FontSize;
     let line_height = FontSize * scale;
-    const bool word_wrap_enabled = (wrap_width > 0.0);
+    let word_wrap_enabled = (wrap_width > 0.0);
     const char* word_wrap_eol = None;
 
     // Fast-forward to first visible line

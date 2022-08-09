@@ -1,5 +1,6 @@
+use std::collections::HashSet;
 use crate::condition::Condition;
-use crate::Context;
+use crate::{Context, INVALID_ID};
 use crate::globals::GImGui;
 use crate::rect::Rect;
 use crate::types::Id32;
@@ -23,10 +24,10 @@ pub fn set_next_window_pos(g: &mut Context, pos: &Vector2D, cond: Condition, piv
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.next_window_data.flags |= NextWindowDataFlags::HasPos;
-    g.next_window_data.PosVal = pos;
-    g.next_window_data.PosPivotVal = pivot;
-    g.next_window_data.PosCond = cond ? cond : Condition::Always;
-    g.next_window_data.PosUndock = true;
+    g.next_window_data.pos_val = pos;
+    g.next_window_data.pos_pivot_val = pivot;
+    g.next_window_data.pos_cond = cond ? cond : Condition::Always;
+    g.next_window_data.pos_undock = true;
 }
 
 // void ImGui::set_next_window_size(const Vector2D& size, ImGuiCond cond)
@@ -46,7 +47,7 @@ pub fn set_next_window_content_size(g: &mut Context, size: &Vector2D)
 {
     // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasContentSize;
-    g.next_window_data.ContentSizeVal = f32::floor(size);
+    g.next_window_data.content_size_val = f32::floor(size);
 }
 
 // void ImGui::SetNextWindowScroll(const Vector2D& scroll)
@@ -54,7 +55,7 @@ pub fn set_next_window_scroll(g: &mut Context, scroll: &Vector2D)
 {
     // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasScroll;
-    g.next_window_data.ScrollVal = scroll;
+    g.next_window_data.scroll_val = scroll;
 }
 
 // void ImGui::set_next_window_collapsed(bool collapsed, ImGuiCond cond)
@@ -63,7 +64,7 @@ pub fn set_next_window_collapsed(g: &mut Context, collapsed, cond:Condition)
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.next_window_data.flags |= NextWindowDataFlags::HasCollapsed;
-    g.next_window_data.CollapsedVal = collapsed;
+    g.next_window_data.collapsed_val = collapsed;
     g.next_window_data.CollapsedCond = cond ? cond : Condition::Always;
 }
 
@@ -79,7 +80,7 @@ pub fn set_next_window_bg_alpha(g: &mut Context, alpha: f32)
 {
     // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasBgAlpha;
-    g.next_window_data.BgAlphaVal = alpha;
+    g.next_window_data.bg_alpha_val = alpha;
 }
 
 // void ImGui::set_next_window_viewport(Id32 id)
@@ -95,11 +96,11 @@ pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
 {
     // ImGuiContext& g = *GImGui;
     g.next_window_data.flags |= NextWindowDataFlags::HasDock;
-    g.next_window_data.DockCond = cond ? cond : Condition::Always;
+    g.next_window_data.dock_cond = cond ? cond : Condition::Always;
     g.next_window_data.dock_id = id;
 }
 
-// void ImGui::set_next_window_class(const WindowClass* window_class)
+// void ImGui::set_next_window_class(const window_class* window_class)
 pub fn set_next_window_class(g: &mut Context, window_class: &mut WindowClass)
 {
     // ImGuiContext& g = *GImGui;
@@ -112,46 +113,73 @@ pub fn set_next_window_class(g: &mut Context, window_class: &mut WindowClass)
 #[derive(Debug, Clone, Default)]
 pub struct NextWindowData {
     // ImGuiNextWindowDataFlags    flags;
-    pub Flags: NextWindowDataFlags,
-    // ImGuiCond                   PosCond;
-    pub PosCond: Condition,
-    // ImGuiCond                   SizeCond;
-    pub SizeCond: Condition,
+    pub flags: HashSet<NextWindowDataFlags>,
+    // ImGuiCond                   pos_cond;
+    pub pos_cond: Condition,
+    // ImGuiCond                   size_cond;
+    pub size_cond: Condition,
     // ImGuiCond                   CollapsedCond;
-    pub CollapseCond: Condition,
-    // ImGuiCond                   DockCond;
-    pub DockCond: Condition,
-    // Vector2D                      PosVal;
-    pub PosVal: Vector2D,
-    // Vector2D                      PosPivotVal;
-    pub PosPivotVal: Vector2D,
-    // Vector2D                      SizeVal;
-    pub SizeVal: Vector2D,
-    // Vector2D                      ContentSizeVal;
-    pub ContentSizeVal: Vector2D,
-    // Vector2D                      ScrollVal;
-    pub ScrollVal: Vector2D,
-    // bool                        PosUndock;
-    pub PosUndock: bool,
-    // bool                        CollapsedVal;
-    pub CollapsedVal: bool,
-    // ImRect                      SizeConstraintRect;
-    pub SizeConstraintRect: Rect,
-    // ImGuiSizeCallback           SizeCallback;
-    pub SizeCallback: ImGuiSizeCallback,
-    // void*                       SizeCallbackUserData;
-    pub SizeCallbackUserData: Vec<u8>,
-    // float                       BgAlphaVal;             // Override background alpha
-    pub BgAlphaVal: f32,
+    pub collapse_cond: Condition,
+    // ImGuiCond                   dock_cond;
+    pub dock_cond: Condition,
+    // Vector2D                      pos_val;
+    pub pos_val: Vector2D,
+    // Vector2D                      pos_pivot_val;
+    pub pos_pivot_val: Vector2D,
+    // Vector2D                      size_val;
+    pub size_val: Vector2D,
+    // Vector2D                      content_size_val; 
+    pub content_size_val: Vector2D,
+    // Vector2D                      scroll_val;
+    pub scroll_val: Vector2D,
+    // bool                        pos_undock;
+    pub pos_undock: bool,
+    // bool                        collapsed_val;
+    pub collapsed_val: bool,
+    // ImRect                      size_constraint_rect;
+    pub size_constraint_rect: Rect,
+    // ImGuiSizeCallback           size_callback;
+    pub size_callback: Option<SizeCallback>,
+    // void*                       size_callback_user_data;
+    pub size_callback_user_data: Vec<u8>,
+    // float                       bg_alpha_val;             // Override background alpha
+    pub bg_alpha_val: f32,
     // Id32                     viewport_id;
-    pub ViewportId: Id32,
+    pub viewport_id: Id32,
     // Id32                     dock_id;
     pub dock_id: Id32,
-    // WindowClass            window_class;
-    pub WindowClass: WindowClass,
-    // Vector2D                      MenuBarOffsetMinVal;    // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)
-    pub MenuBarOffsetMinVal: Vector2D,
+    // window_class            window_class;
+    pub window_class: WindowClass,
+    // Vector2D                      menu_bar_offset_min_val;    // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)
+    pub menu_bar_offset_min_val: Vector2D,
 
+}
+
+impl Default for NextWindowData {
+    fn default() -> Self {
+        Self {
+            flags: HashSet::new(),
+            pos_cond: Condition::None,
+            size_cond: Condition::None,
+            collapse_cond: Condition::None,
+            dock_cond: Condition::None,
+            pos_val: Vector2D::default(),
+            pos_pivot_val: Vector2D::default(),
+            size_val: Vector2D::default(),
+            content_size_val: Vector2D::default(),
+            scroll_val: Vector2D::default(),
+            pos_undock: false,
+            collapsed_val: false,
+            size_constraint_rect: Rect::default(),
+            size_callback: None,
+            size_callback_user_data: vec![],
+            bg_alpha_val: 0.0,
+            viewport_id: INVALID_ID,
+            dock_id: INVALID_ID,
+            window_class: WindowClass::default(),
+            menu_bar_offset_min_val: Vector2D::default()
+        }
+    }
 }
 
 impl NextWindowData {
@@ -162,8 +190,8 @@ impl NextWindowData {
         }
     }
     //     inline void ClearFlags()    { flags = ImGuiNextWindowDataFlags_None; }
-    pub fn ClearFlags(&mut self) {
-        self.flags = NextWindowDataFlags::None
+    pub fn clear_flags(&mut self) {
+        self.flags.clear()
     }
 }
 

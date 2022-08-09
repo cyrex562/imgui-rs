@@ -3,6 +3,7 @@ use crate::{Context, INVALID_ID};
 use crate::rect::Rect;
 use crate::types::Id32;
 use crate::window::{HoveredFlags, Window, WindowFlags};
+use crate::window::get::{get_combined_root_window, is_window_child_of};
 
 // bool ImGui::is_window_above(Window* potential_above, Window* potential_below)
 pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_below: &mut Window)
@@ -27,37 +28,49 @@ pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_
 
 
 // bool ImGui::IsWindowHovered(ImGuiHoveredFlags flags)
-pub fn is_window_hovered(g: &mut Context, flags: &mut HashSet<HoveredFlags>) -> bool
+pub fn is_window_hovered(g: &mut Context, flags: &HashSet<HoveredFlags>) -> bool
 {
     // IM_ASSERT((flags & (ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenDisabled)) == 0);   // flags not supported by this function
     // ImGuiContext& g = *GImGui;
-    Window* ref_window = g.hovered_window;
-    Window* cur_window = g.current_window;
-    if (ref_window == None)
-        return false;
+    // Window* ref_window = g.hovered_window;
+    let ref_window_id = g.hovered_window_id;
 
-    if ((flags & ImGuiHoveredFlags_AnyWindow) == 0)
+    // Window* cur_window = g.current_window;
+    let mut cur_window = g.current_window_mut();
+    if ref_window_id == INVALID_ID {
+        return false;
+    }
+    let ref_window = g.window_mut(ref_window_id);
+
+    if (flags.contains(&HoveredFlags::AnyWindow)) == false
     {
         // IM_ASSERT(cur_window); // Not inside a Begin()/End()
-        const bool popup_hierarchy = (flags & ImGuiHoveredFlags_NoPopupHierarchy) == 0;
-        const bool dock_hierarchy = (flags & ImGuiHoveredFlags_DockHierarchy) != 0;
-        if (flags & ImGuiHoveredFlags_RootWindow)
-            cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy, dock_hierarchy);
+        let popup_hierarchy = flags.contains(&HoveredFlags::NoPopupHierarchy) == 0;
+        let dock_hierarchy = flags.contains(&HoveredFlags::DockHierarchy) != 0;
+        if flags.contains( &HoveredFlags::RootWindow) {
+            cur_window = get_combined_root_window(g, cur_window, popup_hierarchy, dock_hierarchy);
+        }
 
-        bool result;
-        if (flags & ImGuiHoveredFlags_ChildWindows)
-            result = IsWindowChildOf(ref_window, cur_window, popup_hierarchy, dock_hierarchy);
-        else
+        let mut result = false;
+        if flags.contains(& HoveredFlags::ChildWindows) {
+            result = is_window_child_of(g, ref_window, cur_window, popup_hierarchy, dock_hierarchy);
+        }
+        else {
             result = (ref_window == cur_window);
-        if (!result)
+        }
+        if !result {
             return false;
+        }
     }
 
-    if (!IsWindowContentHoverable(ref_window, flags))
+    if !is_window_content_hoverable(g, ref_window, flags) {
         return false;
-    if (!(flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
-        if (g.active_id != 0 && !g.active_id_allow_overlap && g.active_id != ref_window.move_id)
+    }
+    if !flags.contains( & HoveredFlags::AllowWhenBlockedByActiveItem) {
+        if g.active_id != 0 && !g.active_id_allow_overlap && g.active_id != ref_window.move_id {
             return false;
+        }
+    }
     return true;
 }
 
@@ -76,13 +89,13 @@ pub fn is_window_focused(g: &mut Context, flags: &mut HashSet<FocusedFlags>)
         return true;
 
     // IM_ASSERT(cur_window); // Not inside a Begin()/End()
-    const bool popup_hierarchy = (flags & ImGuiFocusedFlags_NoPopupHierarchy) == 0;
-    const bool dock_hierarchy = (flags & ImGuiFocusedFlags_DockHierarchy) != 0;
-    if (flags & ImGuiHoveredFlags_RootWindow)
-        cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy, dock_hierarchy);
+    let popup_hierarchy = (flags & ImGuiFocusedFlags_NoPopupHierarchy) == 0;
+    let dock_hierarchy = (flags & ImGuiFocusedFlags_DockHierarchy) != 0;
+    if (flags & HoveredFlags::RootWindow)
+        cur_window = get_combined_root_window(cur_window, popup_hierarchy, dock_hierarchy);
 
-    if (flags & ImGuiHoveredFlags_ChildWindows)
-        return IsWindowChildOf(ref_window, cur_window, popup_hierarchy, dock_hierarchy);
+    if (flags & HoveredFlags::ChildWindows)
+        return is_window_child_of(ref_window, cur_window, popup_hierarchy, dock_hierarchy);
     else
         return (ref_window == cur_window);
 }

@@ -92,10 +92,10 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
     if ((flags & ImGuiScrollFlags_MaskY_) == 0)
         flags |= window.Appearing ? ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeY;
 
-    const bool fully_visible_x = item_rect.min.x >= window_rect.min.x && item_rect.max.x <= window_rect.max.x;
-    const bool fully_visible_y = item_rect.min.y >= window_rect.min.y && item_rect.max.y <= window_rect.max.y;
-    const bool can_be_fully_visible_x = (item_rect.get_width() + g.style.item_spacing.x * 2.0) <= window_rect.get_width();
-    const bool can_be_fully_visible_y = (item_rect.get_height() + g.style.item_spacing.y * 2.0) <= window_rect.get_height();
+    let fully_visible_x = item_rect.min.x >= window_rect.min.x && item_rect.max.x <= window_rect.max.x;
+    let fully_visible_y = item_rect.min.y >= window_rect.min.y && item_rect.max.y <= window_rect.max.y;
+    let can_be_fully_visible_x = (item_rect.get_width() + g.style.item_spacing.x * 2.0) <= window_rect.get_width();
+    let can_be_fully_visible_y = (item_rect.get_height() + g.style.item_spacing.y * 2.0) <= window_rect.get_height();
 
     if ((flags & ImGuiScrollFlags_KeepVisibleEdgeX) && !fully_visible_x)
     {

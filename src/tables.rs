@@ -321,7 +321,7 @@ bool    ImGui::BeginTableEx(const char* name, Id32 id, int columns_count, ImGuiT
         // IM_ASSERT(inner_width >= 0.0);
 
     // If an outer size is specified ahead we will be able to early out when not visible. Exact clipping rules may evolve.
-    const bool use_child_window = (flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) != 0;
+    let use_child_window = (flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) != 0;
     const Vector2D avail_size = get_content_region_avail();
     Vector2D actual_outer_size = CalcItemSize(outer_size, ImMax(avail_size.x, 1.0), use_child_window ? ImMax(avail_size.y, 1.0) : 0.0);
     Rect outer_rect(outer_window.dc.cursor_pos, outer_window.dc.cursor_pos + actual_outer_size);
@@ -427,8 +427,8 @@ bool    ImGui::BeginTableEx(const char* name, Id32 id, int columns_count, ImGuiT
     // - PadOuter           | Pad ..Content..... Pad .....Content.. Pad |
     // - PadInner           ........Content.. Pad | Pad ..Content........
     // - PadOuter+PadInner  | Pad ..Content.. Pad | Pad ..Content.. Pad |
-    const bool pad_outer_x = (flags & ImGuiTableFlags_NoPadOuterX) ? false : (flags & ImGuiTableFlags_PadOuterX) ? true : (flags & ImGuiTableFlags_BordersOuterV) != 0;
-    const bool pad_inner_x = (flags & ImGuiTableFlags_NoPadInnerX) ? false : true;
+    let pad_outer_x = (flags & ImGuiTableFlags_NoPadOuterX) ? false : (flags & ImGuiTableFlags_PadOuterX) ? true : (flags & ImGuiTableFlags_BordersOuterV) != 0;
+    let pad_inner_x = (flags & ImGuiTableFlags_NoPadInnerX) ? false : true;
     let inner_spacing_for_border = (flags & ImGuiTableFlags_BordersInnerV) ? TABLE_BORDER_SIZE : 0.0;
     let inner_spacing_explicit = (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) == 0) ? g.style.CellPadding.x : 0.0;
     let inner_padding_explicit = (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) != 0) ? g.style.CellPadding.x : 0.0;
@@ -770,7 +770,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             table.IsSortSpecsDirty = true;
 
         // Auto-fit unsized columns
-        const bool start_auto_fit = (column.flags & ImGuiTableColumnFlags_WidthFixed) ? (column.widthRequest < 0.0) : (column.StretchWeight < 0.0);
+        let start_auto_fit = (column.flags & ImGuiTableColumnFlags_WidthFixed) ? (column.widthRequest < 0.0) : (column.StretchWeight < 0.0);
         if (start_auto_fit)
             column.AutoFitQueue = column.CannotSkipItemsQueue = (1 << 3) - 1; // Fit for three frames
 
@@ -799,7 +799,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             column.widthAuto = TableGetColumnWidthAuto(table, column);
 
         // Non-resizable columns keep their requested width (apply user value regardless of IsPreserveWidthAuto)
-        const bool column_is_resizable = (column.flags & ImGuiTableColumnFlags_NoResize) == 0;
+        let column_is_resizable = (column.flags & ImGuiTableColumnFlags_NoResize) == 0;
         if (column_is_resizable)
             has_resizable = true;
         if ((column.flags & ImGuiTableColumnFlags_WidthFixed) && column.InitStretchWeightOrWidth > 0.0 && !column_is_resizable)
@@ -841,7 +841,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             continue;
         ImGuiTableColumn* column = &table.Columns[column_n];
 
-        const bool column_is_resizable = (column.flags & ImGuiTableColumnFlags_NoResize) == 0;
+        let column_is_resizable = (column.flags & ImGuiTableColumnFlags_NoResize) == 0;
         if (column.flags & ImGuiTableColumnFlags_WidthFixed)
         {
             // Apply same widths policy
@@ -941,7 +941,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     table.HoveredColumnBody = -1;
     table.HoveredColumnBorder = -1;
     const Rect mouse_hit_rect(table.OuterRect.min.x, table.OuterRect.min.y, table.OuterRect.max.x, ImMax(table.OuterRect.max.y, table.OuterRect.min.y + table_instance.LastOuterHeight));
-    const bool is_hovering_table = ItemHoverable(mouse_hit_rect, 0);
+    let is_hovering_table = ItemHoverable(mouse_hit_rect, 0);
 
     // [Part 6] Setup final position, offset, skip/clip states and clipping rectangles, detect hovered column
     // Process columns in their visible orders as we are comparing the visible order and adjusting host_clip_rect while looping.
@@ -1019,7 +1019,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         // Possible solution to preserve last known content width for clipped column. Test 'table_reported_size' fails when enabling Y clipping and window is resized small.
         column.is_visibleX = (column.clip_rect.max.x > column.clip_rect.min.x);
         column.is_visibleY = true; // (column->clip_rect.max.y > column->clip_rect.min.y);
-        const bool is_visible = column.is_visibleX; //&& column->is_visible_y;
+        let is_visible = column.is_visibleX; //&& column->is_visible_y;
         if (is_visible)
             table.VisibleMaskByIndex |= (1 << column_n);
 
@@ -1109,7 +1109,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     if (table.IsContextPopupOpen && table.InstanceCurrent == table.InstanceInteracted)
     {
         const Id32 context_menu_id = hash_string("##ContextMenu", 0, table.id);
-        if (begin_popupEx(context_menu_id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings))
+        if (begin_popup_ex(context_menu_id, WindowFlags::AlwaysAutoResize | WindowFlags::NoTitleBar | WindowFlags::NoSavedSettings))
         {
             TableDrawContextMenu(table);
             end_popup();
@@ -1225,7 +1225,7 @@ void    ImGui::EndTable()
 
     // Context menu in columns body
     if (flags & ImGuiTableFlags_ContextMenuInBody)
-        if (table.HoveredColumnBody != -1 && !IsAnyItemHovered() && IsMouseReleased(MouseButton::Right))
+        if (table.HoveredColumnBody != -1 && !is_any_item_hovered() && is_mouse_released(MouseButton::Right))
             TableOpenContextMenu(table.HoveredColumnBody);
 
     // Finalize table height
@@ -1759,12 +1759,12 @@ void ImGui::table_end_row(ImGuiTable* table)
     // Row background fill
     let bg_y1 = table.RowPosY1;
     let bg_y2 = table.RowPosY2;
-    const bool unfreeze_rows_actual = (table.CurrentRow + 1 == table.FreezeRowsCount);
-    const bool unfreeze_rows_request = (table.CurrentRow + 1 == table.FreezeRowsRequest);
+    let unfreeze_rows_actual = (table.CurrentRow + 1 == table.FreezeRowsCount);
+    let unfreeze_rows_request = (table.CurrentRow + 1 == table.FreezeRowsRequest);
     if (table.CurrentRow == 0)
         TableGetInstanceData(table, table.InstanceCurrent).LastFirstRowHeight = bg_y2 - bg_y1;
 
-    const bool is_visible = (bg_y2 >= table.InnerClipRect.min.y && bg_y1 <= table.InnerClipRect.max.y);
+    let is_visible = (bg_y2 >= table.InnerClipRect.min.y && bg_y1 <= table.InnerClipRect.max.y);
     if (is_visible)
     {
         // Decide of background color for the row
@@ -1784,8 +1784,8 @@ void ImGui::table_end_row(ImGuiTable* table)
             if (table.flags & ImGuiTableFlags_BordersInnerH)
                 border_col = (table.LastRowFlags & ImGuiTableRowFlags_Headers) ? table.BorderColorStrong : table.BorderColorLight;
 
-        const bool draw_cell_bg_color = table.RowCellDataCurrent >= 0;
-        const bool draw_strong_bottom_border = unfreeze_rows_actual;
+        let draw_cell_bg_color = table.RowCellDataCurrent >= 0;
+        let draw_strong_bottom_border = unfreeze_rows_actual;
         if ((bg_col0 | bg_col1 | border_col) != 0 || draw_strong_bottom_border || draw_cell_bg_color)
         {
             // In theory we could call SetWindowClipRectBeforeSetChannel() but since we know table_end_row() is
@@ -2341,8 +2341,8 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
 {
     // ImGuiContext& g = *GImGui;
     ImDrawListSplitter* splitter = table.DrawSplitter;
-    const bool has_freeze_v = (table.FreezeRowsCount > 0);
-    const bool has_freeze_h = (table.FreezeColumnsCount > 0);
+    let has_freeze_v = (table.FreezeRowsCount > 0);
+    let has_freeze_h = (table.FreezeColumnsCount > 0);
     // IM_ASSERT(splitter->_Current == 0);
 
     // Track which groups we are going to attempt to merge, and which channels goes into each group.
@@ -2529,10 +2529,10 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
 
             let column_n = table.DisplayOrderToIndex[order_n];
             ImGuiTableColumn* column = &table.Columns[column_n];
-            const bool is_hovered = (table.HoveredColumnBorder == column_n);
-            const bool is_resized = (table.ResizedColumn == column_n) && (table.InstanceInteracted == table.InstanceCurrent);
-            const bool is_resizable = (column.flags & (ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoDirectResize_)) == 0;
-            const bool is_frozen_separator = (table.FreezeColumnsCount == order_n + 1);
+            let is_hovered = (table.HoveredColumnBorder == column_n);
+            let is_resized = (table.ResizedColumn == column_n) && (table.InstanceInteracted == table.InstanceCurrent);
+            let is_resizable = (column.flags & (ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoDirectResize_)) == 0;
+            let is_frozen_separator = (table.FreezeColumnsCount == order_n + 1);
             if (column.MaxX > table.InnerClipRect.max.x && !is_resized)
                 continue;
 
@@ -2718,8 +2718,8 @@ void ImGui::TableSortSpecsSanitize(ImGuiTable* table)
         // IM_ASSERT(sort_order_count < sizeof(sort_order_mask) * 8);
     }
 
-    const bool need_fix_linearize = (1 << sort_order_count) != (sort_order_mask + 1);
-    const bool need_fix_single_sort_order = (sort_order_count > 1) && !(table.flags & ImGuiTableFlags_SortMulti);
+    let need_fix_linearize = (1 << sort_order_count) != (sort_order_mask + 1);
+    let need_fix_single_sort_order = (sort_order_count > 1) && !(table.flags & ImGuiTableFlags_SortMulti);
     if (need_fix_linearize || need_fix_single_sort_order)
     {
         ImU64 fixed_mask = 0x00;
@@ -2862,7 +2862,7 @@ void ImGui::TableHeadersRow()
 
     // Allow opening popup from the right-most section after the last column.
     Vector2D mouse_pos = ImGui::GetMousePos();
-    if (IsMouseReleased(1) && TableGetHoveredColumn() == columns_count)
+    if (is_mouse_released(1) && TableGetHoveredColumn() == columns_count)
         if (mouse_pos.y >= row_y1 && mouse_pos.y < row_y1 + row_height)
             TableOpenContextMenu(-1); // Will open a non-column-specific popup.
 }
@@ -2916,7 +2916,7 @@ void ImGui::TableHeader(const char* label)
     column.ContentMaxXHeadersIdeal = ImMax(column.ContentMaxXHeadersIdeal, max_pos_x);
 
     // Keep header highlighted when context menu is open.
-    const bool selected = (table.IsContextPopupOpen && table.ContextPopupColumn == column_n && table.InstanceInteracted == table.InstanceCurrent);
+    let selected = (table.IsContextPopupOpen && table.ContextPopupColumn == column_n && table.InstanceInteracted == table.InstanceCurrent);
     Id32 id = window.get_id(label);
     Rect bb(cell_r.min.x, cell_r.min.y, cell_r.max.x, ImMax(cell_r.max.y, cell_r.min.y + label_height + g.style.CellPadding.y * 2.0));
     item_size(Vector2D::new(0.0, label_height)); // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
@@ -3000,12 +3000,12 @@ void ImGui::TableHeader(const char* label)
     //window->draw_list->add_circle_filled(Vector2D(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
     render_textEllipsis(window.draw_list, label_pos, Vector2D::new(ellipsis_max, label_pos.y + label_height + g.style.frame_padding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
 
-    const bool text_clipped = label_size.x > (ellipsis_max - label_pos.x);
+    let text_clipped = label_size.x > (ellipsis_max - label_pos.x);
     if (text_clipped && hovered && g.hovered_id_not_active_timer > g.TooltipSlowDelay)
         SetTooltip("%.*s", (label_end - label), label);
 
     // We don't use begin_popupContextItem() because we want the popup to stay up even after the column is hidden
-    if (IsMouseReleased(1) && IsItemHovered())
+    if (is_mouse_released(1) && is_item_hovered())
         TableOpenContextMenu(column_n);
 }
 
@@ -3054,7 +3054,7 @@ void ImGui::TableDrawContextMenu(ImGuiTable* table)
     {
         if (column != None)
         {
-            const bool can_resize = !(column.flags & ImGuiTableColumnFlags_NoResize) && column.IsEnabled;
+            let can_resize = !(column.flags & ImGuiTableColumnFlags_NoResize) && column.IsEnabled;
             if (menu_item("size column to fit###SizeOne", None, false, can_resize))
                 TableSetColumnWidthAutoSingle(table, column_n);
         }
@@ -3410,10 +3410,10 @@ static void TableSettingsHandler_WriteAll(ImGuiContext* g, ImGuiSettingsHandler*
 
         // TableSaveSettings() may clear some of those flags when we establish that the data can be stripped
         // (e.g. Order was unchanged)
-        const bool save_size    = (settings.SaveFlags & ImGuiTableFlags_Resizable) != 0;
-        const bool save_visible = (settings.SaveFlags & ImGuiTableFlags_Hideable) != 0;
-        const bool save_order   = (settings.SaveFlags & ImGuiTableFlags_Reorderable) != 0;
-        const bool save_sort    = (settings.SaveFlags & ImGuiTableFlags_Sortable) != 0;
+        let save_size    = (settings.SaveFlags & ImGuiTableFlags_Resizable) != 0;
+        let save_visible = (settings.SaveFlags & ImGuiTableFlags_Hideable) != 0;
+        let save_order   = (settings.SaveFlags & ImGuiTableFlags_Reorderable) != 0;
+        let save_sort    = (settings.SaveFlags & ImGuiTableFlags_Sortable) != 0;
         if (!save_size && !save_visible && !save_order && !save_sort)
             continue;
 
@@ -3538,12 +3538,12 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
     char buf[512];
     char* p = buf;
     const char* buf_end = buf + IM_ARRAYSIZE(buf);
-    const bool is_active = (table.last_frame_active >= ImGui::GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
+    let is_active = (table.last_frame_active >= ImGui::GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
     ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.id, table.ColumnsCount, table.OuterWindow.name, is_active ? "" : " *Inactive*");
     if (!is_active) { push_style_color(StyleColor::Text, GetStyleColorVec4(StyleColor::TextDisabled)); }
     bool open = TreeNode(table, "%s", buf);
     if (!is_active) { pop_style_color(); }
-    if (IsItemHovered())
+    if (is_item_hovered())
         get_foreground_draw_list().add_rect(table.OuterRect.min, table.OuterRect.max, IM_COL32(255, 255, 0, 255));
     if (IsItemVisible() && table.HoveredColumnBody != -1)
         get_foreground_draw_list().add_rect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255));
@@ -3584,7 +3584,7 @@ void ImGui::DebugNodeTable(ImGuiTable* table)
             (column.flags & ImGuiTableColumnFlags_NoResize) ? "NoResize " : "");
         Bullet();
         selectable(buf);
-        if (IsItemHovered())
+        if (is_item_hovered())
         {
             Rect r(column.MinX, table.OuterRect.min.y, column.MaxX, table.OuterRect.max.y);
             get_foreground_draw_list().add_rect(r.min, r.max, IM_COL32(255, 255, 0, 255));
@@ -3753,7 +3753,7 @@ void ImGui::SetColumnOffset(int column_index, float offset)
         column_index = columns.Current;
     // IM_ASSERT(column_index < columns.columns.size);
 
-    const bool preserve_width = !(columns.flags & ImGuiOldColumnFlags_NoPreserveWidths) && (column_index < columns.count - 1);
+    let preserve_width = !(columns.flags & ImGuiOldColumnFlags_NoPreserveWidths) && (column_index < columns.count - 1);
     let width = preserve_width ? GetColumnWidthEx(columns, column_index, columns.IsBeingResized) : 0.0;
 
     if (!(columns.flags & ImGuiOldColumnFlags_NoForceWithinWindow))

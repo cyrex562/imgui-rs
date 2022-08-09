@@ -415,7 +415,7 @@ pub fn nav_process_item(g: &mut Context)
     if (g.nav_init_request && g.nav_layer == window.dcnav_layer_current && (item_flags & ItemFlags::Disabled) == 0)
     {
         // Even if 'ImGuiItemFlags_NoNavDefaultFocus' is on (typically collapse/close button) we record the first ResultId so they can be used as a fallback
-        const bool candidate_for_nav_default_focus = (item_flags & ItemFlags::NoNavDefaultFocus) == 0;
+        let candidate_for_nav_default_focus = (item_flags & ItemFlags::NoNavDefaultFocus) == 0;
         if (candidate_for_nav_default_focus || g.NavInitResultId == 0)
         {
             g.NavInitResultId = id;
@@ -432,14 +432,14 @@ pub fn nav_process_item(g: &mut Context)
     // FIXME-NAV: Consider policy for double scoring (scoring from nav_scoring_rect + scoring from a rect wrapped according to current wrapping policy)
     if (g.nav_move_scoring_items)
     {
-        const bool is_tab_stop = (item_flags & ItemFlags::Inputable) && (item_flags & (ItemFlags::NoTabStop | ItemFlags::Disabled)) == 0;
-        const bool is_tabbing = (g.nav_move_flags & ImGuiNavMoveFlags_Tabbing) != 0;
+        let is_tab_stop = (item_flags & ItemFlags::Inputable) && (item_flags & (ItemFlags::NoTabStop | ItemFlags::Disabled)) == 0;
+        let is_tabbing = (g.nav_move_flags & NavMoveFlags::Tabbing) != 0;
         if (is_tabbing)
         {
-            if (is_tab_stop || (g.nav_move_flags & ImGuiNavMoveFlags_FocusApi))
+            if (is_tab_stop || (g.nav_move_flags & NavMoveFlags::FocusApi))
                 nav_process_itemForTabbingRequest(id);
         }
-        else if ((g.nav_id != id || (g.nav_move_flags & ImGuiNavMoveFlags_AllowCurrentNavId)) && !(item_flags & (ItemFlags::Disabled | ItemFlags::NoNav)))
+        else if ((g.nav_id != id || (g.nav_move_flags & NavMoveFlags::AllowCurrentNavId)) && !(item_flags & (ItemFlags::Disabled | ItemFlags::NoNav)))
         {
             ImGuiNavItemData* result = (window == g.nav_window) ? &g.NavMoveResultLocal : &g.NavMoveResultOther;
             if (!is_tabbing)
@@ -449,7 +449,7 @@ pub fn nav_process_item(g: &mut Context)
 
                 // Features like PageUp/PageDown need to maintain a separate score for the visible set of items.
                 let VISIBLE_RATIO = 0.70;
-                if ((g.nav_move_flags & ImGuiNavMoveFlags_AlsoScoreVisibleSet) && window.clip_rect.Overlaps(nav_bb))
+                if ((g.nav_move_flags & NavMoveFlags::AlsoScoreVisibleSet) && window.clip_rect.Overlaps(nav_bb))
                     if (ImClamp(nav_bb.max.y, window.clip_rect.min.y, window.clip_rect.max.y) - ImClamp(nav_bb.min.y, window.clip_rect.min.y, window.clip_rect.max.y) >= (nav_bb.max.y - nav_bb.min.y) * VISIBLE_RATIO)
                         if (NavScoreItem(&g.NavMoveResultLocalVisible))
                             NavApplyItemToResult(&g.NavMoveResultLocalVisible);
@@ -531,8 +531,8 @@ pub fn nav_move_request_submit(g: &mut Context, move_dir: Direction, clip_dir: D
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.nav_window != None);
 
-    if (move_flags & ImGuiNavMoveFlags_Tabbing)
-        move_flags |= ImGuiNavMoveFlags_AllowCurrentNavId;
+    if (move_flags & NavMoveFlags::Tabbing)
+        move_flags |= NavMoveFlags::AllowCurrentNavId;
 
     g.nav_move_submitted = g.nav_move_scoring_items = true;
     g.nav_move_dir = move_dir;
@@ -577,7 +577,7 @@ pub fn nav_move_request_forward(g: &mut Context, move_dir: Direction, clip_dir: 
     g.NavMoveForwardToNextFrame = true;
     g.nav_move_dir = move_dir;
     g.nav_move_clip_dir = clip_dir;
-    g.nav_move_flags = move_flags | ImGuiNavMoveFlags_Forwarded;
+    g.nav_move_flags = move_flags | NavMoveFlags::Forwarded;
     g.NavMoveScrollFlags = scroll_flags;
 }
 
@@ -602,19 +602,24 @@ pub fn nav_save_last_child_nav_window_int_parent(g: &mut Context, nav_window: &m
     while (parent && parent.root_window != parent && (parent.flags & (WindowFlags::Popup | WindowFlags::ChildMenu)) == 0)
         parent = parent.parent_window;
     if (parent && parent != nav_window)
-        parent.NavLastChildNavWindow = nav_window;
+        parent.nav_last_child_nav_window_id = nav_window;
 }
 
 // Restore the last focused child.
 // Call when we are expected to land on the Main Layer (0) after focus_window()
-// static Window* NavRestoreLastChildNavWindow(Window* window)
-pub fn nav_restore_last_child_nav_window(g: &mut Context, window: &mut Window)
+// static Window* nav_restore_last_child_nav_window(Window* window)
+pub fn nav_restore_last_child_nav_window(g: &mut Context, window: &mut Window) -> &mut Window
 {
-    if (window.NavLastChildNavWindow && window.NavLastChildNavWindow.WasActive)
-        return window.NavLastChildNavWindow;
-    if (window.dock_node_as_host_id && window.dock_node_as_host_id.tab_bar)
-        if (ImGuiTabItem* tab = TabBarFindMostRecentlySelectedTabForActiveWindow(window.dock_node_as_host_id.tab_bar))
-            return tab.Window;
+    if window.nav_last_child_nav_window_id != INVALID_ID && g.window_mut(window.nav_last_child_nav_window_id).was_active {
+        return g.window_mut(window.nav_last_child_nav_window_id);
+    }
+    if window.dock_node_as_host_id != INVALID_ID && g.dock_node_mut(window.dock_node_as_host_id).unwrap().tab_bar.is_some() {
+        let tab_bar = &mut g.dock_node_mut(window.dock_node_as_host_id).unwrap().tab_bar.unwrap();
+        let tab = tab_bar_find_most_recently_selected_tab_for_active_window(tab_bar);
+        if tab.id != INVALID_ID {
+            return g.window_mut(tab.window_id);
+        }
+    }
     return window;
 }
 
@@ -622,12 +627,13 @@ pub fn nav_restore_last_child_nav_window(g: &mut Context, window: &mut Window)
 pub fn nav_restore_layer(g: &mut Context, layer: NavLayer)
 {
     // ImGuiContext& g = *GImGui;
-    if (layer == NavLayer::Main)
+    if layer == NavLayer::Main
     {
         Window* prev_nav_window = g.nav_window;
-        g.nav_window = NavRestoreLastChildNavWindow(g.nav_window);    // FIXME-NAV: Should clear ongoing nav requests?
-        if (prev_nav_window)
-            IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.name, g.nav_window.name);
+        g.nav_window = nav_restore_last_child_nav_window(g.nav_window);    // FIXME-NAV: Should clear ongoing nav requests?
+        if (prev_nav_window) {
+            // IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.name, g.nav_window.name);
+        }
     }
     Window* window = g.nav_window;
     if (window.nav_last_ids[layer] != 0)
@@ -787,7 +793,7 @@ pub fn nav_update(g: &mut Context)
 
     // update Gamepad->Nav inputs mapping
     // Set input source as Gamepad when buttons are pressed (as some features differs when used with Gamepad vs Keyboard)
-    const bool nav_gamepad_active = (io.config_flags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.backend_flags & BackendFlags::HasGamepad) != 0;
+    let nav_gamepad_active = (io.config_flags & ConfigFlags::NavEnableGamepad) != 0 && (io.backend_flags & BackendFlags::HasGamepad) != 0;
     if (nav_gamepad_active && g.io.BackendUsingLegacyNavInputArray == false)
     {
         for (int n = 0; n < ImGuiNavInput_COUNT; n += 1)
@@ -813,7 +819,7 @@ pub fn nav_update(g: &mut Context)
     }
 
     // update Keyboard->Nav inputs mapping
-    const bool nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
+    let nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
     if (nav_keyboard_active)
     {
         #define NAV_MAP_KEY(_KEY, _NAV_INPUT)  do { if (IsKeyDown(_KEY)) { io.NavInputs[_NAV_INPUT] = 1.0; g.nav_input_source = InputSource::Keyboard; } } while (0)
@@ -859,8 +865,8 @@ pub fn nav_update(g: &mut Context)
     // Store our return window (for returning from Menu Layer to Main Layer) and clear it as soon as we step back in our own Layer 0
     if (g.nav_window)
         NavSaveLastChildNavWindowIntoParent(g.nav_window);
-    if (g.nav_window && g.nav_window.NavLastChildNavWindow != None && g.nav_layer == NavLayer::Main)
-        g.nav_window.NavLastChildNavWindow = None;
+    if (g.nav_window && g.nav_window.nav_last_child_nav_window_id != None && g.nav_layer == NavLayer::Main)
+        g.nav_window.nav_last_child_nav_window_id = None;
 
     // update CTRL+TAB and Windowing features (hold Square to move/resize/etc.)
     NavUpdateWindowing();
@@ -953,7 +959,7 @@ pub fn nav_update(g: &mut Context)
 
     // update mouse position if requested
     // (This will take into account the possibility that a scroll was queued in the window to offset our absolute mouse position before scroll has been applied)
-    if (set_mouse_pos && (io.config_flags & ImGuiConfigFlags_NavEnableSetMousePos) && (io.backend_flags & ImGuiBackendFlags_HasSetMousePos))
+    if (set_mouse_pos && (io.config_flags & ConfigFlags::NavEnableSetMousePos) && (io.backend_flags & ImGuiBackendFlags_HasSetMousePos))
     {
         io.mouse_pos = io.mouse_pos_prev = nav_calc_preferred_ref_pos();
         io.WantSetMousePos = true;
@@ -1008,7 +1014,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     {
         // Initiate directional inputs request
         g.nav_move_dir = Direction::None;
-        g.nav_move_flags = ImGuiNavMoveFlags_None;
+        g.nav_move_flags = NavMoveFlags::None;
         g.NavMoveScrollFlags = ImGuiScrollFlags_None;
         if (window && !g.nav_windowing_target && !(window.flags & WindowFlags::NoNavInputs))
         {
@@ -1024,7 +1030,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
 
     // update PageUp/PageDown/Home/End scroll
     // FIXME-NAV: Consider enabling those keys even without the master ImGuiConfigFlags_NavEnableKeyboard flag?
-    const bool nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
+    let nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
     let scoring_rect_offset_y =  0.0;
     if (window && g.nav_move_dir == Direction::None && nav_keyboard_active)
         scoring_rect_offset_y = NavUpdatePageUpPageDown();
@@ -1041,7 +1047,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     if (io.key_ctrl && g.nav_move_dir == Direction::None)
     {
         g.nav_move_dir = g.nav_move_dirForDebug;
-        g.nav_move_flags |= ImGuiNavMoveFlags_DebugNoResult;
+        g.nav_move_flags |= NavMoveFlags::DebugNoResult;
     }
 
 
@@ -1064,8 +1070,8 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // (can't focus a visible object like we can with the mouse).
     if (g.nav_move_submitted && g.nav_input_source == InputSource::Gamepad && g.nav_layer == NavLayer::Main && window != None)// && (g.nav_move_flags & ImGuiNavMoveFlags_Forwarded))
     {
-        bool clamp_x = (g.nav_move_flags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
-        bool clamp_y = (g.nav_move_flags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
+        bool clamp_x = (g.nav_move_flags & (NavMoveFlags::LoopX | NavMoveFlags::WrapX)) == 0;
+        bool clamp_y = (g.nav_move_flags & (NavMoveFlags::LoopY | NavMoveFlags::WrapY)) == 0;
         Rect inner_rect_rel = window_rect_abs_to_rel(window, Rect(window.inner_rect.min - Vector2D::new(1, 1), window.inner_rect.max + Vector2D::new(1, 1)));
         if ((clamp_x || clamp_y) && !inner_rect_rel.contains(window.nav_rect_rel[g.nav_layer]))
         {
@@ -1107,7 +1113,7 @@ pub fn nav_update_create_tabbing_request(g: &mut Context)
     if (window == None || g.nav_windowing_target != None || (window.flags & WindowFlags::NoNavInputs))
         return;
 
-    const bool tab_pressed = IsKeyPressed(ImGuiKey_Tab, true) && !IsActiveIdUsingKey(ImGuiKey_Tab) && !g.io.key_ctrl && !g.io.key_alt;
+    let tab_pressed = IsKeyPressed(ImGuiKey_Tab, true) && !IsActiveIdUsingKey(ImGuiKey_Tab) && !g.io.key_ctrl && !g.io.key_alt;
     if (!tab_pressed)
         return;
 
@@ -1119,7 +1125,7 @@ pub fn nav_update_create_tabbing_request(g: &mut Context)
     g.nav_tabbing_dir = g.io.key_shift ? -1 : (g.active_id == 0) ? 0 : +1;
     ImGuiScrollFlags scroll_flags = window.Appearing ? ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_KeepVisibleEdgeY;
     ImGuiDir clip_dir = (g.nav_tabbing_dir < 0) ? Direction::Up : Direction::Down;
-    NavMoveRequestSubmit(Direction::None, clip_dir, ImGuiNavMoveFlags_Tabbing, scroll_flags); // FIXME-NAV: Once we refactor tabbing, add LegacyApi flag to not activate non-inputable.
+    NavMoveRequestSubmit(Direction::None, clip_dir, NavMoveFlags::Tabbing, scroll_flags); // FIXME-NAV: Once we refactor tabbing, add LegacyApi flag to not activate non-inputable.
     g.NavTabbingCounter = -1;
 }
 
@@ -1129,7 +1135,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
 // #ifIMGUI_DEBUG_NAV_SCORING
-    if (g.nav_move_flags & ImGuiNavMoveFlags_DebugNoResult) // [DEBUG] Scoring all items in nav_window at all times
+    if (g.nav_move_flags & NavMoveFlags::DebugNoResult) // [DEBUG] Scoring all items in nav_window at all times
         return;
 
 
@@ -1137,22 +1143,22 @@ pub fn nav_move_request_apply_result(g: &mut Context)
     ImGuiNavItemData* result = (g.NavMoveResultLocal.id != 0) ? &g.NavMoveResultLocal : (g.NavMoveResultOther.id != 0) ? &g.NavMoveResultOther : None;
 
     // Tabbing forward wrap
-    if (g.nav_move_flags & ImGuiNavMoveFlags_Tabbing)
+    if (g.nav_move_flags & NavMoveFlags::Tabbing)
         if ((g.NavTabbingCounter == 1 || g.nav_tabbing_dir == 0) && g.NavTabbingResultFirst.id)
             result = &g.NavTabbingResultFirst;
 
     // In a situation when there is no results but nav_id != 0, re-enable the Navigation highlight (because g.nav_id is not considered as a possible result)
     if (result == None)
     {
-        if (g.nav_move_flags & ImGuiNavMoveFlags_Tabbing)
-            g.nav_move_flags |= ImGuiNavMoveFlags_DontSetNavHighlight;
-        if (g.nav_id != 0 && (g.nav_move_flags & ImGuiNavMoveFlags_DontSetNavHighlight) == 0)
+        if (g.nav_move_flags & NavMoveFlags::Tabbing)
+            g.nav_move_flags |= NavMoveFlags::DontSetNavHighlight;
+        if (g.nav_id != 0 && (g.nav_move_flags & NavMoveFlags::DontSetNavHighlight) == 0)
             NavRestoreHighlightAfterMove();
         return;
     }
 
     // PageUp/PageDown behavior first jumps to the bottom/top mostly visible item, _otherwise_ use the result from the previous/next page.
-    if (g.nav_move_flags & ImGuiNavMoveFlags_AlsoScoreVisibleSet)
+    if (g.nav_move_flags & NavMoveFlags::AlsoScoreVisibleSet)
         if (g.NavMoveResultLocalVisible.id != 0 && g.NavMoveResultLocalVisible.id != g.nav_id)
             result = &g.NavMoveResultLocalVisible;
 
@@ -1165,7 +1171,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
     // scroll to keep newly navigated item fully into view.
     if (g.nav_layer == NavLayer::Main)
     {
-        if (g.nav_move_flags & ImGuiNavMoveFlags_ScrollToEdgeY)
+        if (g.nav_move_flags & NavMoveFlags::ScrollToEdgeY)
         {
             // FIXME: Should remove this
             let scroll_target =  (g.nav_move_dir == Direction::Up) ? result.Window->scroll_max.y : 0.0;
@@ -1198,22 +1204,22 @@ pub fn nav_move_request_apply_result(g: &mut Context)
     SetNavID(result.id, g.nav_layer, result.FocusScopeId, result.RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable
-    if ((g.nav_move_flags & ImGuiNavMoveFlags_Tabbing) && (result.in_flags & ItemFlags::Inputable))
+    if ((g.nav_move_flags & NavMoveFlags::Tabbing) && (result.in_flags & ItemFlags::Inputable))
     {
         g.NavNextActivateId = result.id;
         g.NavNextActivateFlags = ImGuiActivateFlags_PreferInput | ImGuiActivateFlags_TryToPreserveState;
-        g.nav_move_flags |= ImGuiNavMoveFlags_DontSetNavHighlight;
+        g.nav_move_flags |= NavMoveFlags::DontSetNavHighlight;
     }
 
     // Activate
-    if (g.nav_move_flags & ImGuiNavMoveFlags_Activate)
+    if (g.nav_move_flags & NavMoveFlags::Activate)
     {
         g.NavNextActivateId = result.id;
         g.NavNextActivateFlags = ImGuiActivateFlags_None;
     }
 
     // Enable nav highlight
-    if ((g.nav_move_flags & ImGuiNavMoveFlags_DontSetNavHighlight) == 0)
+    if ((g.nav_move_flags & NavMoveFlags::DontSetNavHighlight) == 0)
         NavRestoreHighlightAfterMove();
 }
 
@@ -1254,7 +1260,7 @@ pub fn nav_update_cancel_request(g: &mut Context)
     else if (g.open_popup_stack.size > 0 && !(g.open_popup_stack.back().Window.flags & WindowFlags::Modal))
     {
         // Close open popup/menu
-        ClosePopupToLevel(g.open_popup_stack.size - 1, true);
+        close_popup_to_level(g.open_popup_stack.size - 1, true);
     }
     else
     {
@@ -1277,10 +1283,10 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
     if ((window.flags & WindowFlags::NoNavInputs) || g.nav_windowing_target != None)
         return 0.0;
 
-    const bool page_up_held = IsKeyDown(ImGuiKey_PageUp) && !IsActiveIdUsingKey(ImGuiKey_PageUp);
-    const bool page_down_held = IsKeyDown(ImGuiKey_PageDown) && !IsActiveIdUsingKey(ImGuiKey_PageDown);
-    const bool home_pressed = IsKeyPressed(ImGuiKey_Home) && !IsActiveIdUsingKey(ImGuiKey_Home);
-    const bool end_pressed = IsKeyPressed(ImGuiKey_End) && !IsActiveIdUsingKey(ImGuiKey_End);
+    let page_up_held = IsKeyDown(ImGuiKey_PageUp) && !IsActiveIdUsingKey(ImGuiKey_PageUp);
+    let page_down_held = IsKeyDown(ImGuiKey_PageDown) && !IsActiveIdUsingKey(ImGuiKey_PageDown);
+    let home_pressed = IsKeyPressed(ImGuiKey_Home) && !IsActiveIdUsingKey(ImGuiKey_Home);
+    let end_pressed = IsKeyPressed(ImGuiKey_End) && !IsActiveIdUsingKey(ImGuiKey_End);
     if (page_up_held == page_down_held && home_pressed == end_pressed) // Proceed if either (not both) are pressed, otherwise early out
         return 0.0;
 
@@ -1309,14 +1315,14 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
             nav_scoring_rect_offset_y = -page_offset_y;
             g.nav_move_dir = Direction::Down; // Because our scoring rect is offset up, we request the down direction (so we can always land on the last item)
             g.nav_move_clip_dir = Direction::Up;
-            g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet;
+            g.nav_move_flags = NavMoveFlags::AllowCurrentNavId | NavMoveFlags::AlsoScoreVisibleSet;
         }
         else if (IsKeyPressed(ImGuiKey_PageDown, true))
         {
             nav_scoring_rect_offset_y = +page_offset_y;
             g.nav_move_dir = Direction::Up; // Because our scoring rect is offset down, we request the up direction (so we can always land on the last item)
             g.nav_move_clip_dir = Direction::Down;
-            g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet;
+            g.nav_move_flags = NavMoveFlags::AllowCurrentNavId | NavMoveFlags::AlsoScoreVisibleSet;
         }
         else if (home_pressed)
         {
@@ -1327,7 +1333,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
             if (nav_rect_rel.is_inverted())
                 nav_rect_rel.min.x = nav_rect_rel.max.x = 0.0;
             g.nav_move_dir = Direction::Down;
-            g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdgeY;
+            g.nav_move_flags = NavMoveFlags::AllowCurrentNavId | NavMoveFlags::ScrollToEdgeY;
             // FIXME-NAV: MoveClipDir left to _None, intentional?
         }
         else if (end_pressed)
@@ -1336,7 +1342,7 @@ pub fn nav_update_page_up_page_down(g: &mut Context) -> f32
             if (nav_rect_rel.is_inverted())
                 nav_rect_rel.min.x = nav_rect_rel.max.x = 0.0;
             g.nav_move_dir = Direction::Up;
-            g.nav_move_flags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdgeY;
+            g.nav_move_flags = NavMoveFlags::AllowCurrentNavId | NavMoveFlags::ScrollToEdgeY;
             // FIXME-NAV: MoveClipDir left to _None, intentional?
         }
         return nav_scoring_rect_offset_y;
@@ -1356,8 +1362,8 @@ pub fn nav_end_frame(g: &mut Context)
     // Perform wrap-around in menus
     // FIXME-NAV: Wrap may need to apply a weight bias on the other axis. e.g. 4x4 grid with 2 last items missing on last item won't handle LoopY/WrapY correctly.
     // FIXME-NAV: Wrap (not Loop) support could be handled by the scoring function and then WrapX would function without an extra frame.
-    const ImGuiNavMoveFlags wanted_flags = ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapY | ImGuiNavMoveFlags_LoopY;
-    if (g.nav_window && NavMoveRequestButNoResultYet() && (g.nav_move_flags & wanted_flags) && (g.nav_move_flags & ImGuiNavMoveFlags_Forwarded) == 0)
+    const ImGuiNavMoveFlags wanted_flags = NavMoveFlags::WrapX | NavMoveFlags::LoopX | NavMoveFlags::WrapY | NavMoveFlags::LoopY;
+    if (g.nav_window && NavMoveRequestButNoResultYet() && (g.nav_move_flags & wanted_flags) && (g.nav_move_flags & NavMoveFlags::Forwarded) == 0)
         NavUpdateCreateWrappingRequest();
 }
 
@@ -1371,40 +1377,40 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
     Rect bb_rel = window.nav_rect_rel[g.nav_layer];
     ImGuiDir clip_dir = g.nav_move_dir;
     const ImGuiNavMoveFlags move_flags = g.nav_move_flags;
-    if (g.nav_move_dir == Direction::Left && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
+    if (g.nav_move_dir == Direction::Left && (move_flags & (NavMoveFlags::WrapX | NavMoveFlags::LoopX)))
     {
         bb_rel.min.x = bb_rel.max.x = window.ContentSize.x + window.WindowPadding.x;
-        if (move_flags & ImGuiNavMoveFlags_WrapX)
+        if (move_flags & NavMoveFlags::WrapX)
         {
             bb_rel.TranslateY(-bb_rel.get_height()); // Previous row
             clip_dir = Direction::Up;
         }
         do_forward = true;
     }
-    if (g.nav_move_dir == Direction::Right && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
+    if (g.nav_move_dir == Direction::Right && (move_flags & (NavMoveFlags::WrapX | NavMoveFlags::LoopX)))
     {
         bb_rel.min.x = bb_rel.max.x = -window.WindowPadding.x;
-        if (move_flags & ImGuiNavMoveFlags_WrapX)
+        if (move_flags & NavMoveFlags::WrapX)
         {
             bb_rel.TranslateY(+bb_rel.get_height()); // Next row
             clip_dir = Direction::Down;
         }
         do_forward = true;
     }
-    if (g.nav_move_dir == Direction::Up && (move_flags & (ImGuiNavMoveFlags_WrapY | ImGuiNavMoveFlags_LoopY)))
+    if (g.nav_move_dir == Direction::Up && (move_flags & (NavMoveFlags::WrapY | NavMoveFlags::LoopY)))
     {
         bb_rel.min.y = bb_rel.max.y = window.ContentSize.y + window.WindowPadding.y;
-        if (move_flags & ImGuiNavMoveFlags_WrapY)
+        if (move_flags & NavMoveFlags::WrapY)
         {
             bb_rel.TranslateX(-bb_rel.get_width()); // Previous column
             clip_dir = Direction::Left;
         }
         do_forward = true;
     }
-    if (g.nav_move_dir == Direction::Down && (move_flags & (ImGuiNavMoveFlags_WrapY | ImGuiNavMoveFlags_LoopY)))
+    if (g.nav_move_dir == Direction::Down && (move_flags & (NavMoveFlags::WrapY | NavMoveFlags::LoopY)))
     {
         bb_rel.min.y = bb_rel.max.y = -window.WindowPadding.y;
-        if (move_flags & ImGuiNavMoveFlags_WrapY)
+        if (move_flags & NavMoveFlags::WrapY)
         {
             bb_rel.TranslateX(+bb_rel.get_width()); // Next column
             clip_dir = Direction::Right;
@@ -1481,8 +1487,8 @@ pub fn nav_update_windowing(g: &mut Context)
     }
 
     // Start CTRL+Tab or Square+L/R window selection
-    const bool start_windowing_with_gamepad = allow_windowing && !g.nav_windowing_target && IsNavInputTest(ImGuiNavInput_Menu, NavReadMode::Pressed);
-    const bool start_windowing_with_keyboard = allow_windowing && !g.nav_windowing_target && io.key_ctrl && IsKeyPressed(ImGuiKey_Tab);
+    let start_windowing_with_gamepad = allow_windowing && !g.nav_windowing_target && IsNavInputTest(ImGuiNavInput_Menu, NavReadMode::Pressed);
+    let start_windowing_with_keyboard = allow_windowing && !g.nav_windowing_target && io.key_ctrl && IsKeyPressed(ImGuiKey_Tab);
     if (start_windowing_with_gamepad || start_windowing_with_keyboard)
         if (Window* window = g.nav_window ? g.nav_window : FindWindowNavFocusable(g.windows_focus_order.size - 1, -INT_MAX, -1))
         {
@@ -1533,7 +1539,7 @@ pub fn nav_update_windowing(g: &mut Context)
     // Keyboard: Press and Release ALT to toggle menu layer
     // - Testing that only Alt is tested prevents Alt+Shift or AltGR from toggling menu layer.
     // - AltGR is normally Alt+Ctrl but we can't reliably detect it (not all backends/systems/layout emit it as Alt+Ctrl). But even on keyboards without AltGR we don't want Alt+Ctrl to open menu anyway.
-	const bool nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
+	let nav_keyboard_active = (io.config_flags & ConfigFlags::NavEnableKeyboard) != 0;
     if (nav_keyboard_active && IsKeyPressed(Key::ModAlt))
     {
         g.NavWindowingToggleLayer = true;
@@ -1580,7 +1586,7 @@ pub fn nav_update_windowing(g: &mut Context)
         Viewport* previous_viewport = g.nav_window ? g.nav_window.viewport : None;
         clear_active_id();
         NavRestoreHighlightAfterMove();
-        apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);
+        apply_focus_window = nav_restore_last_child_nav_window(apply_focus_window);
         close_popups_over_window(apply_focus_window, false);
         focus_window(apply_focus_window);
         if (apply_focus_window.nav_last_ids[0] == 0)
@@ -1619,7 +1625,7 @@ pub fn nav_update_windowing(g: &mut Context)
         {
             Window* old_nav_window = g.nav_window;
             focus_window(new_nav_window);
-            new_nav_window.NavLastChildNavWindow = old_nav_window;
+            new_nav_window.nav_last_child_nav_window_id = old_nav_window;
         }
 
         // Toggle layer
@@ -1627,7 +1633,7 @@ pub fn nav_update_windowing(g: &mut Context)
         if (new_nav_layer != g.nav_layer)
         {
             // Reinitialize navigation when entering menu bar with the Alt key (FIXME: could be a properly of the layer?)
-            const bool preserve_layer_1_nav_id = (new_nav_window.dock_node_as_host != None);
+            let preserve_layer_1_nav_id = (new_nav_window.dock_node_as_host != None);
             if (new_nav_layer == NavLayer::Menu && !preserve_layer_1_nav_id)
                 g.nav_window.nav_last_ids[new_nav_layer] = 0;
             NavRestoreLayer(new_nav_layer);

@@ -55,225 +55,225 @@ use crate::viewport::{Viewport, ViewportFlags};
 // Storage for one window
 #[derive(Default, Debug, Clone)]
 pub struct Window {
-    // char*                   name;                               // window name, owned by the window.
-    pub name: String,
-    //*mut c_char,
-    // Id32                 id;                                 // == hash_string(name)
-    pub id: Id32,
-    // WindowFlags        flags, flags_previous_frame;          // See enum WindowFlags_
-    pub flags: HashSet<WindowFlags>,
-    pub flags_previous_frame: HashSet<WindowFlags>,
-    // WindowClass        window_class;                        // Advanced users only. Set with set_next_window_class()
-    pub window_class: WindowClass,
-    // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a None value here if their viewport was discarded.
-    pub viewport_id: Id32,
-    // Id32                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
-    // pub viewport_id: Id32,
-    // Vector2D                  viewport_pos;                        // We backup the viewport position (since the viewport may disappear or never be created if the window is inactive)
-    pub viewport_pos: Vector2D,
-    // int                     viewport_allow_platform_monitor_extend; // Reset to -1 every frame (index is guaranteed to be valid between NewFrame..EndFrame), only used in the appearing frame of a tooltip/popup to enforce clamping to a given monitor
-    pub viewport_allow_platform_monitor_extend: i32,
-    // Vector2D                  pos;                                // Position (always rounded-up to nearest pixel)
-    pub pos: Vector2D,
-    // Vector2D                  size;                               // current size (==size_full or collapsed title bar size)
-    pub size: Vector2D,
-    // Vector2D                  size_full;                           // size when non collapsed
-    pub size_full: Vector2D,
-    // Vector2D                  content_size;                        // size of contents/scrollable client area (calculated from the extents reach of the cursor) from previous frame. Does not include window decoration or window padding.
-    pub content_size: Vector2D,
-    // Vector2D                  content_size_ideal;
-    pub content_size_ideal: Vector2D,
-    // Vector2D                  content_size_explicit;                // size of contents/scrollable client area explicitly request by the user via SetNextWindowContentSize().
-    pub content_size_explicit: Vector2D,
-    // Vector2D                  window_padding;                      // window padding at the time of Begin().
-    pub window_padding: Vector2D,
-    // float                   window_rounding;                     // window rounding at the time of Begin(). May be clamped lower to avoid rendering artifacts with title bar, menu bar etc.
-    pub window_rounding: f32,
-    // float                   WindowBorderSize;                   // window border size at the time of Begin().
-    // int                     NameBufLen;                         // size of buffer storing name. May be larger than strlen(name)!
-    // Id32                 move_id;                             // == window->GetID("#MOVE")
-    pub move_id: Id32,
-    // Id32                 tab_id;                              // == window->GetID("#TAB")
-    pub tab_id: Id32,
+
+
+    // Docking
     // Id32                 child_id;                            // id of corresponding item in parent window (for navigation to return from child window to parent window)
-    pub child_id: Id32,
-    // Vector2D                  scroll;
-    pub scroll: Vector2D,
-    // Vector2D                  scroll_max;
-    pub scroll_max: Vector2D,
-    // Vector2D                  scroll_target;                       // target scroll position. stored as cursor position with scrolling canceled out, so the highest point is always 0.0. (FLT_MAX for no change)
-    pub scroll_target: Vector2D,
-    // Vector2D                  scroll_target_center_ratio;            // 0.0 = scroll so that target position is at top, 0.5 = scroll so that target position is centered
-    pub scroll_target_center_ratio: Vector2D,
-    // Vector2D                  scroll_target_edge_snap_dist;           // 0.0 = no snapping, >0.0 snapping threshold
-    pub scroll_target_edge_snap_dist: Vector2D,
-    // Vector2D                  scrollbar_sizes;                     // size taken by each scrollbars on their smaller axis. Pay attention! scrollbar_sizes.x == width of the vertical scrollbar, scrollbar_sizes.y = height of the horizontal scrollbar.
-    pub scrollbar_sizes: Vector2D,
-    // bool                    scrollbar_x, scrollbar_y;             // Are scrollbars visible?
-    pub scrollbar_x: bool,
-    pub scrollbar_y: bool,
-    // bool                    viewport_owned;
-    pub viewport_owned: bool,
-    // bool                    active;                             // Set to true on Begin(), unless collapsed
-    pub active: bool,
-    // bool                    was_active;
-    pub was_active: bool,
-    // bool                    write_accessed;                      // Set to true when any widget access the current window
-    pub write_accessed: bool,
-    // bool                    collapsed;                          // Set when collapsing window to become only title-bar
-    pub collapsed: bool,
-    // bool                    want_collapse_toggle;
-    pub want_collapse_toggle: bool,
-    // bool                    skip_items;                          // Set when items can safely be all clipped (e.g. window not visible or collapsed)
-    pub skip_items: bool,
-    // bool                    appearing;                          // Set during the frame where the window is appearing (or re-appearing)
-    pub appearing: bool,
-    // bool                    hidden;                             // Do not display (== HiddenFrames*** > 0)
-    pub hidden: bool,
-    // bool                    is_fallback_window;                   // Set on the "Debug##Default" window.
-    pub is_fallback_window: bool,
-    // bool                    is_explicit_child;                    // Set when passed _ChildWindow, left to false by BeginDocked()
-    pub is_explicit_child: bool,
-    // bool                    has_close_button;                     // Set when the window has a close button (p_open != None)
-    pub has_close_button: bool,
-    // signed char             resize_border_held;                   // current border being held for resize (-1: none, otherwise 0-3)
-    pub resize_border_held: i8,
-    // short                   begin_count;                         // Number of Begin() during the current frame (generally 0 or 1, 1+ if appending via multiple Begin/End pairs)
-    pub begin_count: i16,
-    // short                   begin_order_within_parent;             // Begin() order within immediate parent window, if we are a child window. Otherwise 0.
-    pub begin_order_within_parent: i16,
-    // short                   begin_order_within_context;            // Begin() order within entire imgui context. This is mostly used for debugging submission order related issues.
-    pub begin_order_within_context: i16,
-    // short                   focus_order;                         // Order within windows_focus_order[], altered when windows are focused.
-    pub focus_order: i16,
+    // Id32                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
+    // Id32                 id;                                 // == hash_string(name)
+    // Id32                 move_id;                             // == window->GetID("#MOVE")
+    // Id32                 nav_last_ids[ImGuiNavLayer_COUNT];    // Last known nav_id for this window, per layer (0/1)
     // Id32                 popup_id;                            // id in the popup stack when this window is used as a popup/menu (because we use generic name/id for recycling)
-    pub popup_id: Id32,
-    // ImS8                    auto_fit_frames_x, auto_fit_frames_y;
-    pub auto_fit_frames_x: i8,
-    pub auto_fit_frames_y: i8,
-    // ImS8                    auto_fit_child_axises;
-    pub auto_fit_child_axises: i8,
-    // bool                    auto_fit_only_grows;
-    pub auto_fit_only_grows: bool,
-    // ImGuiDir                auto_pos_last_direction;
-    pub auto_pos_last_direction: Direction,
-    // ImS8                    hidden_frames_can_skip_items;           // Hide the window for N frames
-    pub hidden_frames_can_skip_items: i8,
-    // ImS8                    hidden_frames_cannot_skip_items;        // Hide the window for N frames while allowing items to be submitted so we can measure their size
-    pub hidden_frames_cannot_skip_items: i8,
-    // ImS8                    hidden_frames_for_render_only;          // Hide the window until frame N at Render() time only
-    pub hidden_frames_for_render_only: i8,
-    // ImS8                    disable_inputs_frames;                // Disable window interactions for N frames
-    pub disable_inputs_frames: i8,
-    // ImGuiCond               set_window_pos_allow_flags : 8;         // store acceptable condition flags for set_next_window_pos() use.
-    pub set_window_pos_allow_flags: HashSet<Condition>,
-    // ImGuiCond               set_window_size_allow_flags : 8;        // store acceptable condition flags for SetNextWindowSize() use.
-    pub set_window_size_allow_flags: HashSet<Condition>,
+    // Id32                 tab_id;                              // == window->GetID("#TAB")
+    // Id32                 viewport_id;                         // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
+    // ImDrawList              DrawListInst;
+    // ImDrawList*             draw_list;                           // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
     // ImGuiCond               set_window_collapsed_allow_flags : 8;   // store acceptable condition flags for set_next_window_collapsed() use.
-    pub set_window_collapsed_allow_flags: HashSet<Condition>,
     // ImGuiCond               set_window_dock_allow_flags : 8;        // store acceptable condition flags for SetNextWindowDock() use.
-    // Vector2D                  set_window_pos_val;                    // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
-    pub set_window_pos_val: Vector2D,
-    // Vector2D                  set_window_pos_pivot;                  // store window pivot for positioning. Vector2D(0, 0) when positioning from top-left corner; Vector2D(0.5, 0.5) for centering; Vector2D(1, 1) for bottom right.
-    pub set_window_pos_pivot: Vector2D,
-
+    // ImGuiCond               set_window_pos_allow_flags : 8;         // store acceptable condition flags for set_next_window_pos() use.
+    // ImGuiCond               set_window_size_allow_flags : 8;        // store acceptable condition flags for SetNextWindowSize() use.
+    // ImGuiDir                auto_pos_last_direction;
+    // ImGuiDockNode*          dock_node;                           // Which node are we docked into. Important: Prefer testing dock_is_active in many cases as this will still be set when the dock node is hidden.
+    // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
+    // ImGuiItemStatusFlags    dock_tab_item_status_flags;
+    // ImGuiStorage            state_storage;
+    // ImGuiViewportP*         viewport;                           // Always set in Begin(). Inactive windows may have a None value here if their viewport was discarded.
+    // ImRect                  clip_rect;                           // current clipping/scissoring rectangle, evolve as we are using push_clip_rect(), etc. == draw_list->clip_rect_stack.back().
+    // ImRect                  content_region_rect;                  // FIXME: This is currently confusing/misleading. It is essentially work_rect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
+    // ImRect                  dock_tab_item_rect;
+    // ImRect                  inner_clip_rect;                      // == inner_rect shrunk by window_padding*0.5 on each side, clipped within viewport or parent clip rect.
+    // ImRect                  inner_rect;                          // Inner rectangle (omit title bar, menu bar, scroll bar)
+    // ImRect                  nav_rect_rel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
+    // ImRect                  outer_rect_clipped;                   // == window->rect() just after setup in Begin(). == window->rect() for root window.
+    // ImRect                  parent_work_rect;                     // Backup of work_rect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
+    // ImRect                  work_rect;                           // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by window_padding*1.0 on each side. This is meant to replace content_region_rect over time (from 1.71+ onward).
+    // ImS8                    auto_fit_child_axises;
+    // ImS8                    auto_fit_frames_x, auto_fit_frames_y;
+    // ImS8                    disable_inputs_frames;                // Disable window interactions for N frames
+    // ImS8                    hidden_frames_can_skip_items;           // Hide the window for N frames
+    // ImS8                    hidden_frames_cannot_skip_items;        // Hide the window for N frames while allowing items to be submitted so we can measure their size
+    // ImS8                    hidden_frames_for_render_only;          // Hide the window until frame N at Render() time only
     // ImVector<Id32>       IDStack;                            // id stack. id are hashes seeded with the value at the top of the stack. (In theory this should be in the temp_data structure)
-    pub id_stack: Vec<Id32>,
-    // WindowTempData     dc;                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "dc" variable name.
-    pub dc: WindowTempData,
-
+    // ImVector<ImGuiOldColumns> ColumnsStorage;
     // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show windows Rectangles' viewer.
     // The main 'outer_rect', omitted as a field, is window->rect().
-    // ImRect                  outer_rect_clipped;                   // == window->rect() just after setup in Begin(). == window->rect() for root window.
-    pub outer_rect_clipped: Rect,
-    // ImRect                  inner_rect;                          // Inner rectangle (omit title bar, menu bar, scroll bar)
-    pub inner_rect: Rect,
-    // ImRect                  inner_clip_rect;                      // == inner_rect shrunk by window_padding*0.5 on each side, clipped within viewport or parent clip rect.
-    pub inner_clip_rect: Rect,
-    // ImRect                  work_rect;                           // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by window_padding*1.0 on each side. This is meant to replace content_region_rect over time (from 1.71+ onward).
-    pub work_rect: Rect,
-    // ImRect                  parent_work_rect;                     // Backup of work_rect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
-    pub parent_work_rect: Rect,
-    // ImRect                  clip_rect;                           // current clipping/scissoring rectangle, evolve as we are using push_clip_rect(), etc. == draw_list->clip_rect_stack.back().
-    pub clip_rect: Rect,
-    // ImRect                  content_region_rect;                  // FIXME: This is currently confusing/misleading. It is essentially work_rect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
-    pub content_region_rect: Rect,
-    // Vector2D                hit_test_hole_size;                    // Define an optional rectangular hole where mouse will pass-through the window.
-    pub hit_test_hole_size: Vector2D,
+    // Vector2D                  content_size;                        // size of contents/scrollable client area (calculated from the extents reach of the cursor) from previous frame. Does not include window decoration or window padding.
+    // Vector2D                  content_size_explicit;                // size of contents/scrollable client area explicitly request by the user via SetNextWindowContentSize().
+    // Vector2D                  content_size_ideal;
+    // Vector2D                  pos;                                // Position (always rounded-up to nearest pixel)
+    // Vector2D                  scroll;
+    // Vector2D                  scroll_max;
+    // Vector2D                  scroll_target;                       // target scroll position. stored as cursor position with scrolling canceled out, so the highest point is always 0.0. (FLT_MAX for no change)
+    // Vector2D                  scroll_target_center_ratio;            // 0.0 = scroll so that target position is at top, 0.5 = scroll so that target position is centered
+    // Vector2D                  scroll_target_edge_snap_dist;           // 0.0 = no snapping, >0.0 snapping threshold
+    // Vector2D                  scrollbar_sizes;                     // size taken by each scrollbars on their smaller axis. Pay attention! scrollbar_sizes.x == width of the vertical scrollbar, scrollbar_sizes.y = height of the horizontal scrollbar.
+    // Vector2D                  set_window_pos_pivot;                  // store window pivot for positioning. Vector2D(0, 0) when positioning from top-left corner; Vector2D(0.5, 0.5) for centering; Vector2D(1, 1) for bottom right.
+    // Vector2D                  set_window_pos_val;                    // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
+    // Vector2D                  size;                               // current size (==size_full or collapsed title bar size)
+    // Vector2D                  size_full;                           // size when non collapsed
+    // Vector2D                  viewport_pos;                        // We backup the viewport position (since the viewport may disappear or never be created if the window is inactive)
+    // Vector2D                  window_padding;                      // window padding at the time of Begin().
     // Vector2D                hit_test_hole_offset;
-    pub hit_test_hole_offset: Vector2D,
-    // int                     last_frame_active;                    // Last frame number the window was active.
-    pub last_frame_active: usize,
-    // int                     last_frame_just_focused;               // Last frame number the window was made Focused.
-    pub last_frame_just_focused: i32,
-    // float                   last_time_active;                     // Last timestamp the window was active (using float as we don't need high precision there)
-    pub last_time_active: f32,
-    // float                   item_width_default;
-    pub item_width_default: f32,
-    // ImGuiStorage            state_storage;
-    pub state_storage: Storage,
-    // ImVector<ImGuiOldColumns> ColumnsStorage;
-    pub column: Vec<OldColumns>,
-    // float                   font_window_scale;                    // User scale multiplier per-window, via SetWindowFontScale()
-    pub font_window_scale: f32,
-    // float                   font_dpi_scale;
-    pub font_dpi_scale: f32,
-    // int                     settings_offset;                     // Offset into settings_windows[] (offsets are always valid as we only grow the array from the back)
-    pub settings_offset: i32,
-    // ImDrawList*             draw_list;                           // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
-    pub draw_list_id: Id32,
-    // ImDrawList              DrawListInst;
-    pub draw_list_inst: Id32,
+    // Vector2D                hit_test_hole_size;                    // Define an optional rectangular hole where mouse will pass-through the window.
     // Window*            ParentWindow;                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise None.
-    pub parent_window_id: WindowHandle,
-    // Window*            parent_window_in_begin_stack;
-    pub parent_window_in_begin_stack_id: WindowHandle,
     // Window*            RootWindow;                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
-    pub root_window_id: WindowHandle,
-    // Window*            root_window_popup_tree;                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
-    pub root_window_popup_tree_id: WindowHandle,
-    // Window*            root_window_dock_tree;                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
-    pub root_window_dock_tree_id: WindowHandle,
-    // Window*            root_window_for_title_bar_highlight;     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
-    pub root_window_for_title_bar_highlight_id: WindowHandle,
-    // Window*            root_window_for_nav;                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
-    pub root_window_for_nav_id: WindowHandle,
     // Window*            nav_last_child_nav_window;              // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.windows sorted by last focused including child window.)
-    pub nav_last_child_nav_window: WindowHandle,
-    // Id32                 nav_last_ids[ImGuiNavLayer_COUNT];    // Last known nav_id for this window, per layer (0/1)
-    pub nav_last_ids: Vec<Id32>,
-    // ImRect                  nav_rect_rel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
-    pub nav_rect_rel: Vec<Rect>,
-    // int                     memory_draw_list_idx_capacity;          // Backup of last idx/vtx count, so when waking up the window we can preallocate and avoid iterative alloc/copy
-    pub memory_draw_list_idx_capacity: usize,
-    // int                     memory_draw_list_vtx_capacity;
-    pub memory_draw_list_vtx_capacity: usize,
-    // bool                    memory_compacted;                    // Set when window extraneous data have been garbage collected
-    pub memory_compacted: bool,
-    // Docking
-    // bool                    dock_is_active        :1;             // When docking artifacts are actually visible. When this is set, dock_node is guaranteed to be != None. ~~ (dock_node != None) && (dock_node->windows.len() > 1).
-    pub dock_is_active: bool,
-    // bool                    DockNodeis_visible   :1;
-    pub doc_node_is_visible: bool,
-    // bool                    dock_tab_is_visible    :1;             // Is our window visible this frame? ~~ is the corresponding tab selected?
-    pub dock_tab_is_visible: bool,
-    // bool                    dock_tab_want_close    :1;
-    pub dock_tab_want_close: bool,
-    // short                   dock_order;                          // Order of the last time the window was visible within its dock_node. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
-    pub dock_order: i16,
+    // Window*            parent_window_in_begin_stack;
+    // Window*            root_window_dock_tree;                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
+    // Window*            root_window_for_nav;                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
+    // Window*            root_window_for_title_bar_highlight;     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
+    // Window*            root_window_popup_tree;                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
+    // window_class        window_class;                        // Advanced users only. Set with set_next_window_class()
     // WindowDockStyle    dock_style;
-    pub dock_style: WindowDockStyle,
-    // ImGuiDockNode*          dock_node;                           // Which node are we docked into. Important: Prefer testing dock_is_active in many cases as this will still be set when the dock node is hidden.
-    pub dock_node_id: Id32, //Id32, // *mut ImGuiDockNode,
-    // ImGuiDockNode*          dock_node_as_host;                     // Which node are we owning (for parent windows)
-    pub dock_node_as_host_id: Id32, // Id32, // *mut ImGuiDockNode,
-    // Id32                 dock_id;                             // Backup of last valid dock_node->id, so single window remember their dock node id even when they are not bound any more
+    // WindowFlags        flags, flags_previous_frame;          // See enum WindowFlags_
+    // WindowTempData     dc;                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "dc" variable name.
+    // bool                    DockNodeis_visible   :1;
+    // bool                    active;                             // Set to true on Begin(), unless collapsed
+    // bool                    appearing;                          // Set during the frame where the window is appearing (or re-appearing)
+    // bool                    auto_fit_only_grows;
+    // bool                    collapsed;                          // Set when collapsing window to become only title-bar
+    // bool                    dock_is_active        :1;             // When docking artifacts are actually visible. When this is set, dock_node is guaranteed to be != None. ~~ (dock_node != None) && (dock_node->windows.len() > 1).
+    // bool                    dock_tab_is_visible    :1;             // Is our window visible this frame? ~~ is the corresponding tab selected?
+    // bool                    dock_tab_want_close    :1;
+    // bool                    has_close_button;                     // Set when the window has a close button (p_open != None)
+    // bool                    hidden;                             // Do not display (== HiddenFrames*** > 0)
+    // bool                    is_explicit_child;                    // Set when passed _ChildWindow, left to false by BeginDocked()
+    // bool                    is_fallback_window;                   // Set on the "Debug##Default" window.
+    // bool                    memory_compacted;                    // Set when window extraneous data have been garbage collected
+    // bool                    scrollbar_x, scrollbar_y;             // Are scrollbars visible?
+    // bool                    skip_items;                          // Set when items can safely be all clipped (e.g. window not visible or collapsed)
+    // bool                    viewport_owned;
+    // bool                    want_collapse_toggle;
+    // bool                    was_active;
+    // bool                    write_accessed;                      // Set to true when any widget access the current window
+    // char*                   name;                               // window name, owned by the window.
+    // float                   WindowBorderSize;                   // window border size at the time of Begin().
+    // float                   font_dpi_scale;
+    // float                   font_window_scale;                    // User scale multiplier per-window, via SetWindowFontScale()
+    // float                   item_width_default;
+    // float                   last_time_active;                     // Last timestamp the window was active (using float as we don't need high precision there)
+    // float                   window_rounding;                     // window rounding at the time of Begin(). May be clamped lower to avoid rendering artifacts with title bar, menu bar etc.
+    // int                     NameBufLen;                         // size of buffer storing name. May be larger than strlen(name)!
+    // int                     last_frame_active;                    // Last frame number the window was active.
+    // int                     last_frame_just_focused;               // Last frame number the window was made Focused.
+    // int                     memory_draw_list_idx_capacity;          // Backup of last idx/vtx count, so when waking up the window we can preallocate and avoid iterative alloc/copy
+    // int                     memory_draw_list_vtx_capacity;
+    // int                     settings_offset;                     // Offset into settings_windows[] (offsets are always valid as we only grow the array from the back)
+    // int                     viewport_allow_platform_monitor_extend; // Reset to -1 every frame (index is guaranteed to be valid between NewFrame..EndFrame), only used in the appearing frame of a tooltip/popup to enforce clamping to a given monitor
+    // pub viewport_id: Id32,
+    // short                   begin_count;                         // Number of Begin() during the current frame (generally 0 or 1, 1+ if appending via multiple Begin/End pairs)
+    // short                   begin_order_within_context;            // Begin() order within entire imgui context. This is mostly used for debugging submission order related issues.
+    // short                   begin_order_within_parent;             // Begin() order within immediate parent window, if we are a child window. Otherwise 0.
+    // short                   dock_order;                          // Order of the last time the window was visible within its dock_node. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
+    // short                   focus_order;                         // Order within windows_focus_order[], altered when windows are focused.
+    // signed char             resize_border_held;                   // current border being held for resize (-1: none, otherwise 0-3)
+    //*mut c_char,
+    pub active: bool,
+    pub appearing: bool,
+    pub auto_fit_child_axises: i8,
+    pub auto_fit_frames_x: i8,
+    pub auto_fit_frames_y: i8,
+    pub auto_fit_only_grows: bool,
+    pub auto_pos_last_direction: Direction,
+    pub begin_count: i16,
+    pub begin_order_within_context: i16,
+    pub begin_order_within_parent: i16,
+    pub child_id: Id32,
+    pub clip_rect: Rect,
+    pub collapsed: bool,
+    pub column: Vec<OldColumns>,
+    pub content_region_rect: Rect,
+    pub content_size: Vector2D,
+    pub content_size_explicit: Vector2D,
+    pub content_size_ideal: Vector2D,
+    pub dc: WindowTempData,
+    pub disable_inputs_frames: i8,
+    pub doc_node_is_visible: bool,
     pub dock_id: Id32,
-    // ImGuiItemStatusFlags    dock_tab_item_status_flags;
-    pub dock_tab_item_status_flags: HashSet<ItemStatusFlags>,
-    // ImRect                  dock_tab_item_rect;
+    pub dock_is_active: bool,
+    pub dock_node_as_host_id: Id32, // Id32, // *mut ImGuiDockNode,
+    pub dock_node_id: Id32, //Id32, // *mut ImGuiDockNode,
+    pub dock_order: i16,
+    pub dock_style: WindowDockStyle,
+    pub dock_tab_is_visible: bool,
     pub dock_tab_item_rect: Rect,
+    pub dock_tab_item_status_flags: HashSet<ItemStatusFlags>,
+    pub dock_tab_want_close: bool,
+    pub draw_list_id: Id32,
+    pub draw_list_inst: Id32,
+    pub flags: HashSet<WindowFlags>,
+    pub flags_previous_frame: HashSet<WindowFlags>,
+    pub focus_order: i16,
+    pub font_dpi_scale: f32,
+    pub font_window_scale: f32,
+    pub has_close_button: bool,
+    pub hidden: bool,
+    pub hidden_frames_can_skip_items: i8,
+    pub hidden_frames_cannot_skip_items: i8,
+    pub hidden_frames_for_render_only: i8,
+    pub hit_test_hole_offset: Vector2D,
+    pub hit_test_hole_size: Vector2D,
+    pub id: Id32,
+    pub id_stack: Vec<Id32>,
+    pub inner_clip_rect: Rect,
+    pub inner_rect: Rect,
+    pub is_explicit_child: bool,
+    pub is_fallback_window: bool,
+    pub item_width_default: f32,
+    pub last_frame_active: usize,
+    pub last_frame_just_focused: i32,
+    pub last_time_active: f32,
+    pub memory_compacted: bool,
+    pub memory_draw_list_idx_capacity: usize,
+    pub memory_draw_list_vtx_capacity: usize,
+    pub move_id: Id32,
+    pub name: String,
+    pub nav_last_child_nav_window_id: WindowHandle,
+    pub nav_last_ids: Vec<Id32>,
+    pub nav_rect_rel: Vec<Rect>,
+    pub outer_rect_clipped: Rect,
+    pub parent_window_id: WindowHandle,
+    pub parent_window_in_begin_stack_id: WindowHandle,
+    pub parent_work_rect: Rect,
+    pub popup_id: Id32,
+    pub pos: Vector2D,
+    pub resize_border_held: i8,
+    pub root_window_dock_tree_id: WindowHandle,
+    pub root_window_for_nav_id: WindowHandle,
+    pub root_window_for_title_bar_highlight_id: WindowHandle,
+    pub root_window_id: WindowHandle,
+    pub root_window_popup_tree_id: WindowHandle,
+    pub scroll: Vector2D,
+    pub scroll_max: Vector2D,
+    pub scroll_target: Vector2D,
+    pub scroll_target_center_ratio: Vector2D,
+    pub scroll_target_edge_snap_dist: Vector2D,
+    pub scrollbar_sizes: Vector2D,
+    pub scrollbar_x: bool,
+    pub scrollbar_y: bool,
+    pub set_window_collapsed_allow_flags: HashSet<Condition>,
     pub set_window_dock_allow_flags: HashSet<Condition>,
+    pub set_window_pos_allow_flags: HashSet<Condition>,
+    pub set_window_pos_pivot: Vector2D,
+    pub set_window_pos_val: Vector2D,
+    pub set_window_size_allow_flags: HashSet<Condition>,
+    pub settings_offset: i32,
+    pub size: Vector2D,
+    pub size_full: Vector2D,
+    pub skip_items: bool,
+    pub state_storage: Storage,
+    pub tab_id: Id32,
+    pub viewport_allow_platform_monitor_extend: i32,
+    pub viewport_id: Id32,
+    pub viewport_owned: bool,
+    pub viewport_pos: Vector2D,
+    pub want_collapse_toggle: bool,
+    pub was_active: bool,
+    pub window_class: WindowClass,
+    pub window_padding: Vector2D,
+    pub window_rounding: f32,
+    pub work_rect: Rect,
+    pub write_accessed: bool,
 }
 
 impl Window {
@@ -352,7 +352,7 @@ impl Window {
         out.draw_list_id.data = g.draw_list_shared_data.clone();
         //     draw_list->_OwnerName = name;
         &out.draw_list_id.owner_name = &out.name;
-        //     IM_PLACEMENT_NEW(&window_class) WindowClass();
+        //     IM_PLACEMENT_NEW(&window_class) window_class();
         // TODO
         out
     }

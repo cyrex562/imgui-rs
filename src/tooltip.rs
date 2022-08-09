@@ -27,7 +27,7 @@ pub fn begin_tooltip_ex(g: &mut Context, tooltip_flags: &HashSet<TooltipFlags>, 
         // In the context of a dragging tooltip we try to reduce that offset and we enforce following the cursor.
         // Whatever we do we want to call set_next_window_pos() to enforce a tooltip position and disable clipping the tooltip without our display area, like regular tooltip do.
         //Vector2D tooltip_pos = g.io.mouse_pos - g.active_id_click_offset - g.style.window_padding;
-        Vector2D tooltip_pos = g.io.mouse_pos + Vector2D::new(16 * g.style.MouseCursorScale, 8 * g.style.MouseCursorScale);
+        Vector2D tooltip_pos = g.io.mouse_pos + Vector2D::new(16 * g.style.mouse_cursor_scale, 8 * g.style.mouse_cursor_scale);
         set_next_window_pos(tooltip_pos);
         set_netxt_window_bg_alpha(g.style.colors[StyleColor::PopupBg].w * 0.60);
         //PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * 0.60); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(

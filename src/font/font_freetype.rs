@@ -736,7 +736,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         buf_rects_out_n += src_tmp.GlyphsCount;
 
         // Compute multiply table if requested
-        const bool multiply_enabled = (cfg.RasterizerMultiply != 1.0);
+        let multiply_enabled = (cfg.RasterizerMultiply != 1.0);
         unsigned char multiply_table[256];
         if (multiply_enabled)
             ImFontAtlasBuildMultiplyCalcLookupTable(multiply_table, cfg.RasterizerMultiply);

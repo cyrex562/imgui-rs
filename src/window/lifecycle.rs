@@ -335,7 +335,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     }
 
     // update flags, last_frame_active, BeginOrderXXX fields
-    const bool window_was_appearing = window.Appearing;
+    let window_was_appearing = window.Appearing;
     if (first_begin_of_the_frame)
     {
         window.Appearing = window_just_activated_by_user;
@@ -358,7 +358,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     // (NB: during the frame dock nodes are created, it is possible that (window->dock_is_active == false) even though (window->dock_node->windows.len() > 1)
     // IM_ASSERT(window.dock_node == None || window.DockNodeAsHost == None); // Cannot be both
     if (g.next_window_data.flags & NextWindowDataFlags::HasDock)
-        set_window_dock(window, g.next_window_data.dock_id, g.next_window_data.DockCond);
+        set_window_dock(window, g.next_window_data.dock_id, g.next_window_data.dock_cond);
     if (first_begin_of_the_frame)
     {
         bool has_dock_node = (window.dock_id != 0 || window.dock_node_id != None);
@@ -431,18 +431,18 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     bool window_size_x_set_by_api = false, window_size_y_set_by_api = false;
     if (g.next_window_data.flags & NextWindowDataFlags::HasPos)
     {
-        window_pos_set_by_api = (window.set_window_pos_allow_flags & g.next_window_data.PosCond) != 0;
-        if (window_pos_set_by_api && ImLengthSqr(g.next_window_data.PosPivotVal) > 0.00001)
+        window_pos_set_by_api = (window.set_window_pos_allow_flags & g.next_window_data.pos_cond) != 0;
+        if (window_pos_set_by_api && ImLengthSqr(g.next_window_data.pos_pivot_val) > 0.00001)
         {
             // May be processed on the next frame if this is our first frame and we are measuring size
             // FIXME: Look into removing the branch so everything can go through this same code path for consistency.
-            window.SetWindowPosVal = g.next_window_data.PosVal;
-            window.SetWindowPosPivot = g.next_window_data.PosPivotVal;
+            window.SetWindowPosVal = g.next_window_data.pos_val;
+            window.SetWindowPosPivot = g.next_window_data.pos_pivot_val;
             window.set_window_pos_allow_flags &= ~(ImGuiCond_Once | Condition::FirstUseEver | ImGuiCond_Appearing);
         }
         else
         {
-            set_window_pos(window, g.next_window_data.PosVal, g.next_window_data.PosCond);
+            set_window_pos(window, g.next_window_data.pos_val, g.next_window_data.pos_cond);
         }
     }
     if (g.next_window_data.flags & NextWindowDataFlags::HasSize)
@@ -453,25 +453,25 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     }
     if (g.next_window_data.flags & NextWindowDataFlags::HasScroll)
     {
-        if (g.next_window_data.ScrollVal.x >= 0.0)
+        if (g.next_window_data.scroll_val.x >= 0.0)
         {
-            window.ScrollTarget.x = g.next_window_data.ScrollVal.x;
+            window.ScrollTarget.x = g.next_window_data.scroll_val.x;
             window.ScrollTargetCenterRatio.x = 0.0;
         }
-        if (g.next_window_data.ScrollVal.y >= 0.0)
+        if (g.next_window_data.scroll_val.y >= 0.0)
         {
-            window.ScrollTarget.y = g.next_window_data.ScrollVal.y;
+            window.ScrollTarget.y = g.next_window_data.scroll_val.y;
             window.ScrollTargetCenterRatio.y = 0.0;
         }
     }
     if (g.next_window_data.flags & NextWindowDataFlags::HasContentSize)
-        window.content_size_explicit = g.next_window_data.ContentSizeVal;
+        window.content_size_explicit = g.next_window_data.content_size_val;
     else if (first_begin_of_the_frame)
         window.content_size_explicit = Vector2D::new(0.0, 0.0);
     if (g.next_window_data.flags & NextWindowDataFlags::HasWindowClass)
         window.window_class = g.next_window_data.window_class;
     if (g.next_window_data.flags & NextWindowDataFlags::HasCollapsed)
-        SetWindowCollapsed(window, g.next_window_data.CollapsedVal, g.next_window_data.CollapsedCond);
+        SetWindowCollapsed(window, g.next_window_data.collapsed_val, g.next_window_data.CollapsedCond);
     if (g.next_window_data.flags & NextWindowDataFlags::HasFocus)
         layer::focus_window(window);
     if (window.Appearing)
@@ -481,8 +481,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     if (first_begin_of_the_frame)
     {
         // Initialize
-        const bool window_is_child_tooltip = (flags & WindowFlags::ChildWindow) && (flags & WindowFlags::Tooltip); // FIXME-WIP: Undocumented behavior of Child+Tooltip for pinned tooltip (#1345)
-        const bool window_just_appearing_after_hidden_for_resize = (window.hidden_frames_cannot_skip_items > 0);
+        let window_is_child_tooltip = (flags & WindowFlags::ChildWindow) && (flags & WindowFlags::Tooltip); // FIXME-WIP: Undocumented behavior of Child+Tooltip for pinned tooltip (#1345)
+        let window_just_appearing_after_hidden_for_resize = (window.hidden_frames_cannot_skip_items > 0);
         window.active = true;
         window.has_close_button = (p_open != None);
         window.clip_rect = Vector4D(-f32::MAX, -f32::MAX, +f32::MAX, +f32::MAX);
@@ -552,7 +552,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         WindowSelectViewport(window);
         SetCurrentViewport(window, window.viewport);
-        window.FontDpiScale = (g.io.config_flags & ImGuiConfigFlags_DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
+        window.FontDpiScale = (g.io.config_flags & ConfigFlags::DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
         SetCurrentWindow(window);
         flags = window.flags;
 
@@ -569,8 +569,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.WindowPadding = style.WindowPadding;
 
         // Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
-        window.dc.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.item_spacing.x), g.next_window_data.MenuBarOffsetMinVal.x);
-        window.dc.MenuBarOffset.y = g.next_window_data.MenuBarOffsetMinVal.y;
+        window.dc.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.item_spacing.x), g.next_window_data.menu_bar_offset_min_val.x);
+        window.dc.MenuBarOffset.y = g.next_window_data.menu_bar_offset_min_val.y;
 
         // Collapse window by double-clicking on title bar
         // At this point we don't have a clipping rectangle setup yet, so we can use the title bar area for hit detection and drawing
@@ -642,7 +642,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Popup latch its initial position, will position itself when it appears next frame
         if (window_just_activated_by_user)
         {
-            window.AutoPosLastDirection = Direction::None;
+            window.auto_pos_last_direction = Direction::None;
             if ((flags & WindowFlags::Popup) != 0 && !(flags & WindowFlags::Modal) && !window_pos_set_by_api) // FIXME: begin_popup() could use set_next_window_pos()
                 window.pos = g.begin_popup_stack.back().open_popup_pos;
         }
@@ -657,7 +657,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 window.pos = parent_window.dc.cursor_pos;
         }
 
-        const bool window_pos_with_pivot = (window.SetWindowPosVal.x != f32::MAX && window.hidden_frames_cannot_skip_items == 0);
+        let window_pos_with_pivot = (window.SetWindowPosVal.x != f32::MAX && window.hidden_frames_cannot_skip_items == 0);
         if (window_pos_with_pivot)
             set_window_pos(window, window.SetWindowPosVal - window.size * window.SetWindowPosPivot, 0); // Position given a pivot (e.g. for centering)
         else if ((flags & WindowFlags::ChildMenu) != 0)
@@ -668,7 +668,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             window.pos = FindBestWindowPosForPopup(window);
 
         // Late create viewport if we don't fit within our current host viewport.
-        if (window.viewportAllowplatform_monitorExtend >= 0 && !window.viewport_owned && !(window.viewport.flags & ViewportFlags::Minimized))
+        if (window.viewport_allow_platform_monitor_extend >= 0 && !window.viewport_owned && !(window.viewport.flags & ViewportFlags::Minimized))
             if (!window.viewport.get_main_rect().contains(window.Rect()))
             {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
@@ -678,7 +678,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 // FIXME-DPI
                 //IM_ASSERT(old_viewport->dpi_scale == window->viewport->dpi_scale); // FIXME-DPI: Something went wrong
                 SetCurrentViewport(window, window.viewport);
-                window.FontDpiScale = (g.io.config_flags & ImGuiConfigFlags_DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
+                window.FontDpiScale = (g.io.config_flags & ConfigFlags::DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
                 SetCurrentWindow(window);
             }
 
@@ -689,7 +689,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // When clamping to stay visible, we will enforce that window->pos stays inside of visibility_rect.
         Rect viewport_rect(window.viewport.get_main_rect());
         Rect viewport_work_rect(window.viewport.GetWorkRect());
-        Vector2D visibility_padding = ImMax(style.DisplayWindowPadding, style.DisplaySafeAreaPadding);
+        Vector2D visibility_padding = ImMax(style.DisplayWindowPadding, style.display_safe_area_padding);
         Rect visibility_rect(viewport_work_rect.min + visibility_padding, viewport_work_rect.max - visibility_padding);
 
         // Clamp position/size so window stays visible within its viewport or monitor
@@ -762,7 +762,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
 
         // Decide if we are going to handle borders and resize grips
-        const bool handle_borders_and_resize_grips = (window.dock_node_as_host_id || !window.dock_is_active);
+        let handle_borders_and_resize_grips = (window.dock_node_as_host_id || !window.dock_is_active);
 
         // Handle manual resize: Resize Grips, Borders, Gamepad
         int border_held = -1;
@@ -878,7 +878,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Child windows can render their decoration (bg color, border, scrollbars, etc.) within their parent to save a draw call (since 1.71)
         // When using overlapping child windows, this will break the assumption that child z-order is mapped to submission order.
         // FIXME: User code may rely on explicit sorting of overlapping child window and would need to disable this somehow. Please get in contact if you are affected (github #4493)
-        const bool is_undocked_or_docked_visible = !window.dock_is_active || window.dock_tab_is_visible;
+        let is_undocked_or_docked_visible = !window.dock_is_active || window.dock_tab_is_visible;
         if (is_undocked_or_docked_visible)
         {
             bool render_decorations_in_parent = false;
@@ -897,7 +897,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
             // Handle title bar, scrollbar, resize grips and resize borders
             const Window* window_to_highlight = g.nav_windowing_target ? g.nav_windowing_target : g.nav_window;
-            const bool title_bar_is_highlight = want_focus || (window_to_highlight && (window.root_window_for_title_bar_highlight == window_to_highlight.root_window_for_title_bar_highlight || (window.dock_node_id && window.dock_node_id == window_to_highlight.dock_node)));
+            let title_bar_is_highlight = want_focus || (window_to_highlight && (window.root_window_for_title_bar_highlight == window_to_highlight.root_window_for_title_bar_highlight || (window.dock_node_id && window.dock_node_id == window_to_highlight.dock_node)));
             RenderWindowDecorations(window, title_bar_rect, title_bar_is_highlight, handle_borders_and_resize_grips, resize_grip_count, resize_grip_col, resize_grip_draw_size);
 
             if (render_decorations_in_parent)
@@ -911,8 +911,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // - columns() for right-most edge
         // - TreeNode(), CollapsingHeader() for right-most edge
         // - BeginTabBar() for right-most edge
-        const bool allow_scrollbar_x = !(flags & WindowFlags::NoScrollbar) && (flags & WindowFlags::HorizontalScrollbar);
-        const bool allow_scrollbar_y = !(flags & WindowFlags::NoScrollbar);
+        let allow_scrollbar_x = !(flags & WindowFlags::NoScrollbar) && (flags & WindowFlags::HorizontalScrollbar);
+        let allow_scrollbar_y = !(flags & WindowFlags::NoScrollbar);
         let work_rect_size_x = (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : ImMax(allow_scrollbar_x ? window.ContentSize.x : 0.0, window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
         let work_rect_size_y = (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : ImMax(allow_scrollbar_y ? window.ContentSize.y : 0.0, window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
         window.work_rect.min.x = f32::floor(window.inner_rect.min.x - window.scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize));
@@ -952,10 +952,10 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         window.dcnav_layer_current = NavLayer::Main;
         window.dc.nav_layers_active_mask = window.dc.nav_layers_active_mask_next;
-        window.dc.NavHideHighlightOneFrame = false;
+        window.dc.nav_hide_highlight_one_frame = false;
         window.dc.nav_has_scroll = (window.scroll_max.y > 0.0);
 
-        window.dc.MenuBarAppending = false;
+        window.dc.menu_bar_appending = false;
         window.dc.MenuColumns.Update(style.item_spacing.x, window_just_activated_by_user);
         window.dc.TreeDepth = 0;
         window.dc.TreeJumpToParentOnPopMask = 0x00;
@@ -1011,7 +1011,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 LogToClipboard();
         */
 
-        if (g.io.config_flags & ImGuiConfigFlags_DockingEnable)
+        if (g.io.config_flags & ConfigFlags::DockingEnable)
         {
             // Docking: Dragging a dockable window (or any of its child) turns it into a drag and drop source.
             // We need to do this _before_ we overwrite window->dc.LastItemId below because BeginDockableDragDropSource() also overwrites it.
@@ -1077,7 +1077,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             // IM_ASSERT((flags& WindowFlags::NoTitleBar) != 0 || (window.dock_is_active));
             if (!(flags & WindowFlags::AlwaysAutoResize) && window.auto_fit_frames_x <= 0 && window.auto_fit_frames_y <= 0) // FIXME: Doesn't make sense for ChildWindow??
             {
-                const bool nav_request = (flags & WindowFlags::NavFlattened) && (g.nav_any_request && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
+                let nav_request = (flags & WindowFlags::NavFlattened) && (g.nav_any_request && g.nav_window && g.nav_window.root_window_for_nav == window.root_window_for_nav);
                 if (!g.log_enabled && !nav_request)
                     if (window.OuterRectClipped.min.x >= window.OuterRectClipped.max.x || window.OuterRectClipped.min.y >= window.OuterRectClipped.max.y)
                         window..hidden_frames_can_skip_items = 1;

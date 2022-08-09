@@ -529,7 +529,7 @@ bool ImGui_ImplAllegro5_ProcessEvent(ALLEGRO_EVENT* ev)
 static void ImGui_ImplAllegro5_UpdateMouseCursor()
 {
     ImGuiIO& io = ImGui::GetIO();
-    if (io.config_flags & ImGuiConfigFlags_NoMouseCursorChange)
+    if (io.config_flags & ConfigFlags::NoMouseCursorChange)
         return;
 
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();

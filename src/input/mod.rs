@@ -387,6 +387,7 @@ pub struct KeyInputData
 #[derive(Debug,Clone, Copy, Eq, PartialEq,Hash)]
 pub enum NavLayer
 {
+    None,
     Main,    // Main scrolling layer
     Menu,    // Menu layer (access with Alt/Menu)
 
@@ -414,7 +415,7 @@ pub fn update_input_events(g: &mut Context, trickle_fast_inputs: bool)
     // Only trickle chars<>key when working with InputText()
     // FIXME: InputText() could parse event trail?
     // FIXME: Could specialize chars<>keys trickling rules for control keys (those not typically associated to characters)
-    const bool trickle_interleaved_keys_and_text = (trickle_fast_inputs && g.want_text_input_next_frame == 1);
+    let trickle_interleaved_keys_and_text = (trickle_fast_inputs && g.want_text_input_next_frame == 1);
 
     bool mouse_moved = false, mouse_wheeled = false, key_changed = false, text_inputted = false;
     int  mouse_button_changed = 0x00;

@@ -155,10 +155,10 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
     }
     else
     {
-        // Calling set_next_window_pos() undock windows by default (by setting PosUndock)
+        // Calling set_next_window_pos() undock windows by default (by setting pos_undock)
         let mut want_undock = false;
         want_undock |= (window.flags.contains(&WindowFlags::NoDocking));
-        want_undock |= (g.next_window_data.flags.contains(&NextWindowDataFlags::HasPos)) && (window.set_window_pos_allow_flags.contains( &g.next_window_data.PosCond)) && g.next_window_data.PosUndock;
+        want_undock |= (g.next_window_data.flags.contains(&NextWindowDataFlags::HasPos)) && (window.set_window_pos_allow_flags.contains( &g.next_window_data.pos_cond)) && g.next_window_data.pos_undock;
         if want_undock
         {
             dock_context_process_undock_window(g, window, false);
@@ -240,7 +240,7 @@ pub fn begin_docked(g: &mut Context, window: &mut Window, p_open: &mut bool)
     // Position/size window
     set_next_window_pos(g, &node.unwrap().pos, Condition::None, None);
     set_next_window_size(g, &node.unwrap().size, Condition::None);
-    g.next_window_data.PosUndock = false; // Cancel implicit undocking of set_next_window_pos()
+    g.next_window_data.pos_undock = false; // Cancel implicit undocking of set_next_window_pos()
     window.dock_is_active = true;
     window.dock_node_is_visible = true;
     window.dock_tab_is_visible = false;

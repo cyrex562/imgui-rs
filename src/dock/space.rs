@@ -21,7 +21,7 @@ use crate::window::WindowFlags;
 // Create an explicit dockspace node within an existing window. Also expose dock node flags and creates a central_node by default.
 // The Central Node is always displayed even when empty and shrink/extend according to the requested size of its neighbors.
 // DockSpace() needs to be submitted _before_ any window they can host. If you use a dockspace, submit it early in your app.
-// Id32 DockSpace(Id32 id, const Vector2D& size_arg, ImGuiDockNodeFlags flags, const WindowClass* window_class)
+// Id32 DockSpace(Id32 id, const Vector2D& size_arg, ImGuiDockNodeFlags flags, const window_class* window_class)
 pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut HashSet<DockNodeFlags>, window_class: &WindowClass) -> Id32
 {
     // ImGuiContext* g = GImGui;
@@ -86,7 +86,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
     node.size_ref = size.clone();
     set_next_window_pos(g, &node.pos, Condition::None, None);
     set_next_window_size(g, &node.size, Condition::None);
-    g.next_window_data.PosUndock = false;
+    g.next_window_data.pos_undock = false;
 
     // FIXME-DOCK: Why do we need a child window to host a dockspace, could we host it in the existing window?
     // FIXME-DOCK: What is the reason for not simply calling BeginChild()? (OK to have a reason but should be commented)
@@ -135,7 +135,7 @@ pub fn dock_space(g: &mut Context, id: Id32, size_arg: &Vector2D, flags: &mut Ha
 // The limitation with this call is that your window won't have a menu bar.
 // Even though we could pass window flags, it would also require the user to be able to call BeginMenuBar() somehow meaning we can't Begin/End in a single function.
 // But you can also use BeginMainMenuBar(). If you really want a menu bar inside the same window as the one hosting the dockspace, you will need to copy this code somewhere and tweak it.
-// Id32 DockSpaceOverViewport(const ImGuiViewport* viewport, ImGuiDockNodeFlags dockspace_flags, const WindowClass* window_class)
+// Id32 DockSpaceOverViewport(const ImGuiViewport* viewport, ImGuiDockNodeFlags dockspace_flags, const window_class* window_class)
 pub fn dock_space_over_viewport(g: &mut Context, mut viewport: Option<&mut Viewport>, dockspace_flags: &mut HashSet<DockNodeFlags>, window_class: &WindowClass) -> Id32
 {
     if viewport.is_none() {

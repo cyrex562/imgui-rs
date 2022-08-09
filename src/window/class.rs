@@ -26,7 +26,7 @@ pub struct WindowClass
 }
 
 impl WindowClass {
-    // WindowClass() { memset(this, 0, sizeof(*this)); parent_viewport_id = (Id32)-1; docking_allow_unclassed = true;
+    // window_class() { memset(this, 0, sizeof(*this)); parent_viewport_id = (Id32)-1; docking_allow_unclassed = true;
     pub fn new() -> Self {
         Self {
             parent_viewport_id: Id32::MAX,

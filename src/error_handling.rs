@@ -67,7 +67,7 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
         g.io.ConfigWindowsResizeFromEdges = false;
 
     // Perform simple check: error if Docking or viewport are enabled _exactly_ on frame 1 (instead of frame 0 or later), which is a common error leading to loss of .ini data.
-    if (g.frame_count == 1 && (g.io.config_flags & ImGuiConfigFlags_DockingEnable) && (g.config_flags_last_frame & ImGuiConfigFlags_DockingEnable) == 0)
+    if (g.frame_count == 1 && (g.io.config_flags & ConfigFlags::DockingEnable) && (g.config_flags_last_frame & ConfigFlags::DockingEnable) == 0)
         // IM_ASSERT(0 && "Please set DockingEnable before the first call to NewFrame()! Otherwise you will lose your .ini settings!");
     if (g.frame_count == 1 && (g.io.config_flags & ConfigFlags::ViewportsEnable) && (g.config_flags_last_frame & ConfigFlags::ViewportsEnable) == 0)
         // IM_ASSERT(0 && "Please set ViewportsEnable before the first call to NewFrame()! Otherwise you will lose your .ini settings!");
@@ -86,7 +86,7 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
             // IM_ASSERT(g.platform_io.platform_set_window_size != None && "Platform init didn't install handlers?");
             // IM_ASSERT(g.platform_io.monitors.size > 0 && "Platform init didn't setup Monitors list?");
             // IM_ASSERT((g.viewports[0].platform_user_data != None || g.viewports[0].platform_handle != None) && "Platform init didn't setup main viewport.");
-            if (g.io.config_docking_transparent_payload && (g.io.config_flags & ImGuiConfigFlags_DockingEnable))
+            if (g.io.config_docking_transparent_payload && (g.io.config_flags & ConfigFlags::DockingEnable))
                 // IM_ASSERT(g.platform_io.Platform_SetWindowAlpha != None && "Platform_SetWindowAlpha handler is required to use io.ConfigDockingTransparent!");
         }
         else

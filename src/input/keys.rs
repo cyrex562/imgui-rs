@@ -104,7 +104,7 @@ pub fn is_key_pressed(g: &mut Context, key: Key, repeat: bool) -> bool
     let t = key_data.down_duration;
     if (t < 0.0)
         return false;
-    const bool pressed = (t == 0.0) || (repeat && t > g.io.KeyRepeatDelay && GetKeyPressedAmount(key, g.io.KeyRepeatDelay, g.io.KeyRepeatRate) > 0);
+    let pressed = (t == 0.0) || (repeat && t > g.io.KeyRepeatDelay && GetKeyPressedAmount(key, g.io.KeyRepeatDelay, g.io.KeyRepeatRate) > 0);
     if (!pressed)
         return false;
     return true;

@@ -249,7 +249,7 @@ pub fn render_nav_highlight(g: &mut Context, bb: &Rect, id: Id32, flags: Option<
     if (g.nav_disable_highlight && !(flags & ImGuiNavHighlightFlags_AlwaysDraw))
         return;
     Window* window = g.current_window;
-    if (window.dc.NavHideHighlightOneFrame)
+    if (window.dc.nav_hide_highlight_one_frame)
         return;
 
     let rounding =  (flags & ImGuiNavHighlightFlags_NoRounding) ? 0.0 : g.style.frame_rounding;
@@ -453,7 +453,7 @@ pub fn render(g: &mut Context)
 
     // Draw software mouse cursor if requested by io.mouse_draw_cursor flag
     if g.io.mouse_draw_cursor && first_render_of_frame && g.mouse_cursor != MouseCursor::None {
-        render_mouse_cursor(&g.io.mouse_pos, g.style.MouseCursorScale, &g.mouse_cursor, IM_COL32_WHITE, IM_COL32_BLACK, make_color_32(0, 0, 0, 48));
+        render_mouse_cursor(&g.io.mouse_pos, g.style.mouse_cursor_scale, &g.mouse_cursor, IM_COL32_WHITE, IM_COL32_BLACK, make_color_32(0, 0, 0, 48));
     }
 
     // Setup ImDrawData structures for end-user
@@ -683,10 +683,10 @@ void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const Rect& rect, ImU3
 
 void ImGui::render_rect_filled_with_hole(ImDrawList* draw_list, const Rect& outer, const Rect& inner, ImU32 col, float rounding)
 {
-    const bool fill_L = (inner.min.x > outer.min.x);
-    const bool fill_R = (inner.max.x < outer.max.x);
-    const bool fill_U = (inner.min.y > outer.min.y);
-    const bool fill_D = (inner.max.y < outer.max.y);
+    let fill_L = (inner.min.x > outer.min.x);
+    let fill_R = (inner.max.x < outer.max.x);
+    let fill_U = (inner.min.y > outer.min.y);
+    let fill_D = (inner.max.y < outer.max.y);
     if (fill_L) draw_list.add_rect_filled(Vector2D::new(outer.min.x, inner.min.y), Vector2D::new(inner.min.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_U ? 0 : DrawFlags::RoundCornersTopLeft)    | (fill_D ? 0 : DrawFlags::RoundCornersBottomLeft));
     if (fill_R) draw_list.add_rect_filled(Vector2D::new(inner.max.x, inner.min.y), Vector2D::new(outer.max.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_U ? 0 : DrawFlags::RoundCornersTopRight)   | (fill_D ? 0 : DrawFlags::RoundCornersBottomRight));
     if (fill_U) draw_list.add_rect_filled(Vector2D::new(inner.min.x, outer.min.y), Vector2D::new(inner.max.x, inner.min.y), col, rounding, DrawFlags::RoundCornersNone | (fill_L ? 0 : DrawFlags::RoundCornersTopLeft)    | (fill_R ? 0 : DrawFlags::RoundCornersTopRight));

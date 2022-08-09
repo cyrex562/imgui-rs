@@ -173,7 +173,7 @@ pub struct DockNode {
     pub size_ref: Vector2D,
     // ImGuiAxis               split_axis;                  // [split node only] split axis (x or Y)
     pub split_axis: Axis,
-    // WindowClass        window_class;                // [Root node only]
+    // window_class        window_class;                // [Root node only]
     pub window_class: WindowClass,
     // ImU32                   last_bg_color;
     pub last_bg_color: u32,
@@ -466,7 +466,7 @@ pub struct DockNodeTreeInfo {
     pub first_node_with_windows: Id32,
     // int                 count_nodes_with_windows;
     pub count_nodes_with_windows: i32,
-    //WindowClass  WindowClassForMerges;
+    //window_class  WindowClassForMerges;
     pub window_class_for_merges: WindowClass,
     // ImGuiDockNodeTreeInfo() { memset(this, 0, sizeof(*this)); }
 }
