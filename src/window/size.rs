@@ -10,7 +10,7 @@ use crate::nav::NAV_RESIZE_SPEED;
 use crate::rect::Rect;
 use crate::resize::{RESIZE_GRIP_DEF, ResizeGripDef};
 use crate::size_callback_data::SizeCallbackData;
-use crate::style::get_color_u32;
+use crate::style::color_u32_from_style_color;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::{calc_window_size_after_constraint, get, Window, WindowFlags, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
@@ -372,8 +372,8 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     // - Note that we are unable to tell if the platform setup allows hovering with a distance threshold (on Win32, decorated window have such threshold).
     // We only clip interaction so we overwrite window->clip_rect, cannot call push_clip_rect() yet as draw_list is not yet setup.
     // const bool clip_with_viewport_rect = !(g.io.backend_flags & ImGuiBackendFlags_HasMouseHoveredViewport) || (g.io.MouseHoveredViewport != window.viewport_id) || !(window.viewport.flags & ImGuiViewportFlags_NoDecoration);
-    let clip_with_viewport_rect = !g.io.backend_flags.contains(&BackendFlags::HasMouseHoveredViewport) || g.io.mouse_hovered_viewport != window.viewport_id || !g.viewport_mut(window.viewport_id).unwrap().flags.contains(&ViewportFlags::NoDecoration);
-    if clip_with_viewport_rect {
+    let clip_width_viewport_rect = !g.io.backend_flags.contains(&BackendFlags::HasMouseHoveredViewport) || g.io.mouse_hovered_viewport != window.viewport_id || !g.viewport_mut(window.viewport_id).unwrap().flags.contains(&ViewportFlags::NoDecoration);
+    if clip_width_viewport_rect {
         window.clip_rect = window.viewport.get_main_rect();
     }
 
@@ -441,7 +441,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
 
         // Only lower-left grip is visible before hovering/activating
         if resize_grip_n == 0 || held || hovered {
-            resize_grip_col[resize_grip_n] = get_color_u32(if held { StyleColor::ResizeGripActive } else { if hovered { StyleColor::ResizeGripHovered } else { StyleColor::ResizeGrip }}, 0.0);
+            resize_grip_col[resize_grip_n] = color_u32_from_style_color(if held { StyleColor::ResizeGripActive } else { if hovered { StyleColor::ResizeGripHovered } else { StyleColor::ResizeGrip }}, 0.0);
         }
     }
     // for (int border_n = 0; border_n < resize_border_count; border_n += 1)
@@ -517,7 +517,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
             nav_resize_delta = ImMax(nav_resize_delta, &visibility_rect.min - &window.pos - &window.size);
             g.NavWindowingToggleLayer = false;
             g.nav_disable_mouse_hover = true;
-            resize_grip_col[0] = get_color_u32(StyleColor::ResizeGripActive);
+            resize_grip_col[0] = color_u32_from_style_color(StyleColor::ResizeGripActive);
             // FIXME-NAV: Should store and accumulate into a separate size buffer to handle sizing constraints properly, right now a constraint will make us stuck.
             size_target = calc_window_size_after_constraint(g, window, &(&window.size_full + nav_resize_delta));
         }

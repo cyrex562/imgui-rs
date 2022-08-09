@@ -361,7 +361,7 @@ pub fn get_item_rect_size(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
     // return g.last_item_data.Rect.GetSize();
-    g.last_item_data.rect.get_size()
+    g.last_item_data.rect.size()
 }
 
 

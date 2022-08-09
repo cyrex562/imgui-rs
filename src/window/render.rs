@@ -15,7 +15,7 @@ use crate::math::{f32_to_int8_sat, saturate_f32};
 use crate::orig_imgui_single_file::{buf, buf_end, int};
 use crate::rect::Rect;
 use crate::style::{
-    get_color_u32, get_color_u32_no_alpha, pop_style_color, push_style_color, Style,
+    color_u32_from_style_color, get_color_u32_no_alpha, pop_style_color, push_style_color, Style,
 };
 use crate::text::calc_text_size;
 use crate::types::DataAuthority;
@@ -47,7 +47,7 @@ pub fn render_window_outer_borders(g: &mut Context, window: &mut Window) {
         window.draw_list.add_rect(
             &window.pos,
             &window.pos + &window.size,
-            get_color_u32(StyleColor::Border, 0.0),
+            color_u32_from_style_color(StyleColor::Border, 0.0),
             rounding,
             0,
             border_size,
@@ -92,7 +92,7 @@ pub fn render_window_outer_borders(g: &mut Context, window: &mut Window) {
         window.draw_list.add_line(
             Vector2D::new(window.pos.x + border_size, y),
             Vector2D::new(window.pos.x + window.size.x - border_size, y),
-            get_color_u32(StyleColor::Border, 0.0),
+            color_u32_from_style_color(StyleColor::Border, 0.0),
             g.style.frame_border_size,
         );
     }
@@ -251,7 +251,7 @@ pub fn render_window_decorations(
         // Menu bar
         if flags.contains(&WindowFlags::MenuBar) {
             let menu_bar_rect = window.menu_bar_rect();
-            menu_bar_rect.clip_with(window.Rect()); // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
+            menu_bar_rect.clip_width(window.Rect()); // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
             window.draw_list.add_rect_filled(
                 menu_bar_rect.min + Vector2D::new(window_border_size, 0.0),
                 menu_bar_rect.max - Vector2D::new(window_border_size, 0.0),
@@ -477,7 +477,7 @@ pub fn render_window_title_bar_contents(
         let centerness = saturate_f32(1.0 - f32::abs(style.window_title_align.x - 0.5) * 2.0); // 0.0 on either edges, 1.0 on center
         let pad_extend = f32::min(
             f32::max(pad_l, pad_r),
-            title_bar_rect.get_width() - pad_l - pad_r - text_size.x,
+            title_bar_rect.width() - pad_l - pad_r - text_size.x,
         );
         pad_l = f32::max(pad_l, pad_extend * centerness);
         pad_r = f32::max(pad_r, pad_extend * centerness);

@@ -711,7 +711,7 @@ pub fn get_popup_allowed_extent_rect(g: &mut Context, window: &mut Window) -> Re
         r_screen = g.viewport_mut(window.viewport_id).unwrap().get_main_rect();
     }
     let padding = g.style.display_safe_area_padding;
-    r_screen.expand_vector(&Vector2D::new(if r_screen.get_width() > padding.x * 2 { -padding.x } else { 0.0 }, if r_screen.get_height() > padding.y * 2 { -padding.y } else { 0.0 }));
+    r_screen.expand_vector(&Vector2D::new(if r_screen.width() > padding.x * 2 { -padding.x } else { 0.0 }, if r_screen.height() > padding.y * 2 { -padding.y } else { 0.0 }));
     return r_screen;
 }
 

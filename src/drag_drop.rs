@@ -11,7 +11,7 @@ use crate::item::{item_hoverable, ItemStatusFlags};
 use crate::orig_imgui_single_file::{Id32, Window};
 use crate::payload::Payload;
 use crate::rect::Rect;
-use crate::style::get_color_u32;
+use crate::style::color_u32_from_style_color;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::layer::focus_window;
@@ -346,7 +346,7 @@ pub fn accept_drag_drop_payload(g: &mut Context, payload_type: &str, flags: &mut
     // NB: We currently accept None id as target. However, overlapping targets requires a unique id to function!
     let was_accepted_previously = (g.drag_drop_accept_id_prev == g.drag_drop_target_id);
     let r = &mut g.drag_drop_target_rect;
-    let r_surface = r.get_width() * r.get_height();
+    let r_surface = r.width() * r.height();
     if r_surface <= g.drag_drop_accept_id_curr_rect_surface {
         g.drag_drop_accept_flags = flags.clone();
         g.drag_drop_accept_id_curr = g.drag_drop_target_id;
@@ -358,7 +358,7 @@ pub fn accept_drag_drop_payload(g: &mut Context, payload_type: &str, flags: &mut
     payload.preview = was_accepted_previously;
     *flags |= (g.drag_drop_source_flags.clone() & DragDropFlags::AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
     if !(flags.contains(&DragDropFlags::AcceptNoDrawDefaultRect)) && payload.preview {
-        window.draw_list.add_rect(&r.min - Vector2D::new(3.5, 3.5), &r.max + Vector2D::new(3.5, 3.5), get_color_u32(StyleColor::DragDropTarget, 0.0), 0.0, 0, 2.0);
+        window.draw_list.add_rect(&r.min - Vector2D::new(3.5, 3.5), &r.max + Vector2D::new(3.5, 3.5), color_u32_from_style_color(StyleColor::DragDropTarget, 0.0), 0.0, 0, 2.0);
     }
 
     g.drag_drop_accept_fraame_count = g.frame_count;

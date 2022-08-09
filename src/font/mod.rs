@@ -2,7 +2,7 @@ use crate::Context;
 use crate::defines::DimgFontConfig;
 use crate::draw::list::DrawList;
 use font_atlas::FontAtlas;
-use font_glyph::DimgFontGlyph;
+use font_glyph::FontGlyph;
 use crate::globals::GImGui;
 use crate::types::{DimgWchar, Id32};
 use crate::vectors::vector_2d::Vector2D;
@@ -32,8 +32,8 @@ pub struct Font
 
     // Members: Hot ~28/40 bytes (for calc_text_size + render loop)
     pub index_lookup: Vec<DimgWchar>, //ImVector<ImWchar>           index_lookup;        // 12-16 // out //            // Sparse. index glyphs by Unicode code-point.
-    pub glyphs: Vec<DimgFontGlyph>, // ImVector<ImFontGlyph>       glyphs;             // 12-16 // out //            // All glyphs.
-    pub fallback_glyph: DimgFontGlyph, // const ImFontGlyph*          fallback_glyph;      // 4-8   // out // = find_glyph(FontFallbackChar)
+    pub glyphs: Vec<FontGlyph>, // ImVector<ImFontGlyph>       glyphs;             // 12-16 // out //            // All glyphs.
+    pub fallback_glyph: FontGlyph, // const ImFontGlyph*          fallback_glyph;      // 4-8   // out // = find_glyph(FontFallbackChar)
 
     // Members: Cold ~32/40 bytes
     pub container_atlas: Option<FontAtlas>, // ImFontAtlas*                container_atlas;     // 4-8   // out //            // What we has been loaded into
@@ -65,11 +65,11 @@ impl Font {
     //  ImFont();
     //      ~ImFont();
     //      const ImFontGlyph*find_glyph(ImWchar c) const;
-    pub fn find_glyph(&self, c: DimgWchar) -> DimgFontGlyph {
+    pub fn find_glyph(&self, c: DimgWchar) -> FontGlyph {
         todo!()
     }
     //      const ImFontGlyph*find_glyph_no_fallback(ImWchar c) const;
-    pub fn find_glyph_no_fallback(&self, c: DimgWchar) -> DimgFontGlyph {
+    pub fn find_glyph_no_fallback(&self, c: DimgWchar) -> FontGlyph {
         todo!()
     }
     //     float                       get_char_advance(ImWchar c) const     { return (c < index_advance_x.size) ? index_advance_x[c] : fallback_advance_x; }
@@ -243,7 +243,7 @@ pub fn push_font(g: &mut Context, font: &mut Font)
         font = get_default_font();
     sec_current_font(font);
     g.font_stack.push_back(font);
-    g.current_window.draw_list.PushTextureID(font.container_atlas.TexID);
+    g.current_window.draw_list.push_texture_id(font.container_atlas.TexID);
 }
 
 // void  ImGui::PopFont()
@@ -545,7 +545,7 @@ const char* ImFont::CalcWordWrapPositionA(float scale, const char* text, const c
         if (c < 0x80)
             next_s = s + 1;
         else
-            next_s = s + ImTextCharFromUtf8(&c, s, text_end);
+            next_s = s + text_char_from_utf8(&c, s, text_end);
         if (c == 0)
             break;
 
@@ -610,7 +610,7 @@ const char* ImFont::CalcWordWrapPositionA(float scale, const char* text, const c
     return s;
 }
 
-Vector2D ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end, const char** remaining) const
+Vector2D ImFont::calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end, const char** remaining) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // FIXME-OPT: Need to avoid this.
@@ -649,7 +649,7 @@ Vector2D ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, co
                 while (s < text_end)
                 {
                     const char c = *s;
-                    if (ImCharIsBlankA(c)) { s += 1; } else if (c == '\n') { s += 1; break; } else { break; }
+                    if (char_is_blank_a(c)) { s += 1; } else if (c == '\n') { s += 1; break; } else { break; }
                 }
                 continue;
             }
@@ -664,7 +664,7 @@ Vector2D ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, co
         }
         else
         {
-            s += ImTextCharFromUtf8(&c, s, text_end);
+            s += text_char_from_utf8(&c, s, text_end);
             if (c == 0) // Malformed UTF-8?
                 break;
         }
@@ -798,7 +798,7 @@ void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos,
                 while (s < text_end)
                 {
                     const char c = *s;
-                    if (ImCharIsBlankA(c)) { s += 1; } else if (c == '\n') { s += 1; break; } else { break; }
+                    if (char_is_blank_a(c)) { s += 1; } else if (c == '\n') { s += 1; break; } else { break; }
                 }
                 continue;
             }
@@ -812,7 +812,7 @@ void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos,
         }
         else
         {
-            s += ImTextCharFromUtf8(&c, s, text_end);
+            s += text_char_from_utf8(&c, s, text_end);
             if (c == 0) // Malformed UTF-8?
                 break;
         }

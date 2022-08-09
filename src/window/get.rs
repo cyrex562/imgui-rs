@@ -80,7 +80,7 @@ pub fn get_window_height(g: &mut Context) -> f32
 pub fn get_window_pos(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     return window.pos;
 }
 

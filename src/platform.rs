@@ -288,7 +288,7 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &mut Rect) -> usize
 
     // Use a minimum threshold of 1.0 so a zero-sized rect won't false positive, and will still find the correct monitor given its position.
     // This is necessary for tooltips which always resize down to zero at first.
-    let surface_threshold = f32::max(rect.get_width() * rect.get_height() * 0.5, 1.0);
+    let surface_threshold = f32::max(rect.width() * rect.height() * 0.5, 1.0);
     let mut best_monitor_n = -1;
     let mut best_monitor_surface =  0.001;
 
@@ -310,8 +310,8 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &mut Rect) -> usize
             return monitor_n;
         }
         let overlapping_rect = rect;
-        overlapping_rect.clip_with_full(&monitor_rect);
-        let overlapping_surface =  overlapping_rect.get_width() * overlapping_rect.get_height();
+        overlapping_rect.clip_width_full(&monitor_rect);
+        let overlapping_surface =  overlapping_rect.width() * overlapping_rect.height();
         if overlapping_surface < best_monitor_surface {
             continue;
         }

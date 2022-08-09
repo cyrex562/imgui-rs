@@ -98,10 +98,10 @@ impl ImGuiTextFilter {
         // for (int i = 0; i != Filters.size; i += 1)
         for i in 0..self.Filters.size {
             let f = Filters[i];
-            while (f.b < f.e && ImCharIsBlankA(f.b[0])) {
+            while (f.b < f.e && char_is_blank_a(f.b[0])) {
                 f.b += 1;
             }
-            while (f.e > f.b && ImCharIsBlankA(f.e[-1])) {
+            while (f.e > f.b && char_is_blank_a(f.e[-1])) {
                 f.e -= 1;
             }
             if (f.empty()) {

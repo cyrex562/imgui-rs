@@ -101,7 +101,7 @@ pub fn end_group(g: &mut Context)
     }
 
     window.dc.curr_line_text_base_offset = ImMax(window.dc.PrevLineTextBaseOffset, group_data.backup_curr_line_text_base_offset);      // FIXME: Incorrect, we should grab the base offset from the *first line* of the group but it is hard to obtain now.
-    item_size(g, &group_bb.get_size(), 0.0);
+    item_size(g, &group_bb.size(), 0.0);
     let mut flags = HashSet::from([ItemFlags::NoTabStop]);
     item_add(g, &mut group_bb, 0, None, Some(&mut flags));
 

@@ -279,11 +279,11 @@ impl FontAtlas {
     //      bool              get_mouse_cursor_tex_data(ImGuiMouseCursor cursor, Vector2D* out_offset, Vector2D* out_size, Vector2D out_uv_border[2], Vector2D out_uv_fill[2]);
     pub fn get_mouse_cursor_tex_data(
         &mut self,
-        cursor: MouseCursor,
+        cursor: &MouseCursor,
         out_offset: &mut Vector2D,
         out_size: &mut Vector2D,
-        out_uv_border: &mut [Vector2D; 2],
-        out_uv_fill: &mut [Vector2D; 2],
+        out_uv_border: &mut [Vector2D],
+        out_uv_fill: &mut [Vector2D],
     ) -> bool {
         todo!()
     }
@@ -653,7 +653,7 @@ void ImFontAtlas::CalcCustomRectUV(const ImFontAtlasCustomRect* rect, Vector2D* 
     *out_uv_max = Vector2D::new((rect.X + rect.width) * TexUvScale.x, (rect.Y + rect.Height) * TexUvScale.y);
 }
 
-bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, Vector2D* out_offset, Vector2D* out_size, Vector2D out_uv_border[2], Vector2D out_uv_fill[2])
+bool ImFontAtlas::get_mouse_cursor_tex_data(ImGuiMouseCursor cursor_type, Vector2D* out_offset, Vector2D* out_size, Vector2D out_uv_border[2], Vector2D out_uv_fill[2])
 {
     if (cursor_type <= MouseCursor::None || cursor_type >= ImGuiMouseCursor_COUNT)
         return false;

@@ -1,4 +1,4 @@
-use crate::color::StyleColor;
+use crate::color::{COLOR32_A_MASK, IM_COL32_A_SHIFT, StyleColor};
 use crate::imgui_color::{
     color_convert_float4_to_u32, ImGuiColorMod, COLOR32_A_MASK, IM_COL32_A_SHIFT,
 };
@@ -7,6 +7,7 @@ use crate::imgui_h::{DataType, ImGuiColor, ImGuiDir, ImGuiStyleVar};
 use crate::imgui_math::ImLerpF32;
 use crate::imgui_vec::{Vector2D, Vector4D};
 use crate::Context;
+use crate::vectors::Vector4D;
 
 #[allow(non_snake_)]
 pub struct Style {
@@ -229,19 +230,28 @@ impl StyleMod {
 // }
 
 // ImU32 ImGui::get_color_u32(ImGuiCol idx, float alpha_mul)
-pub fn get_color_u32(idx: ImGuiColor, alpha_mul: f32) -> u32 {
+pub fn color_u32_from_style_color(g: &mut Context, idx: StyleColor) -> u32 {
     let style = &g.style;
     let c = style.colors[idx];
     c.w *= style.alpha * alpha_mul;
     return color_convert_float4_to_u32(c);
 }
 
-pub fn get_color_u32_no_alpha(idx: Color) -> u32 {
-    get_color_u32(color, 0.0)
+
+
+// pub fn get_color_u32_no_alpha(idx: StyleColor) -> u32 {
+//     get_color_u32(color, 0.0)
+// }
+
+pub fn color_u32_from_style_color_with_alpha(g: &mut Context, idx: StyleColor, alpha_mul: f32) -> u32 {
+    let style = &g.style;
+    let c = style.colors[idx];
+    c.w *= style.alpha * alpha_mul;
+    return color_convert_float4_to_u32(c);
 }
 
 // ImU32 ImGui::get_color_u32(const Vector4D& col)
-pub fn GetColorU32_2(col: &mut Vector4D) -> u32 {
+pub fn color_u32_from_vec4d(g: &mut Context, col: &mut Vector4D) -> u32 {
     let style = &mut g.style;
     let mut c = col;
     *c.w *= style.alpha;
@@ -249,14 +259,14 @@ pub fn GetColorU32_2(col: &mut Vector4D) -> u32 {
 }
 
 // const Vector4D& ImGui::GetStyleColorVec4(ImGuiCol idx)
-pub fn GetStyleColorVec4(idx: ImGuiColor) -> Vector4D {
+pub fn style_color_to_vec4d(g: &mut Context, idx: ImGuiColor) -> Vector4D {
     // ImGuiStyle& style = GImGui.style;
     let style = &g.style;
     style.colors[idx]
 }
 
 // ImU32 ImGui::get_color_u32(ImU32 col)
-pub fn GetColorU32_3(col: u32) -> u32 {
+pub fn color_u32_from_u32(g: &mut Context, col: u32) -> u32 {
     let style = &g.style;
     if style.alpha >= 1.0 {
         return col;

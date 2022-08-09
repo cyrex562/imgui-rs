@@ -180,7 +180,7 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
             return;
 
         // Render (we don't hide text after ## in this end-user function)
-        render_textWrapped(bb.Min, text_begin, text_end, wrap_width);
+        render_text_wrapped(bb.Min, text_begin, text_end, wrap_width);
     }
     else
     {
@@ -1027,11 +1027,11 @@ void ImGui::Image(ImTextureID user_texture_id, const Vector2D& size, const Vecto
     if (border_col.w > 0.0)
     {
         window.draw_list->AddRect(bb.Min, bb.Max, GetColorU32(border_col), 0.0);
-        window.draw_list->AddImage(user_texture_id, bb.Min + DimgVec2D::new(1, 1), bb.Max - DimgVec2D::new(1, 1), uv0, uv1, GetColorU32(tint_col));
+        window.draw_list->add_image(user_texture_id, bb.Min + DimgVec2D::new(1, 1), bb.Max - DimgVec2D::new(1, 1), uv0, uv1, GetColorU32(tint_col));
     }
     else
     {
-        window.draw_list->AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
+        window.draw_list->add_image(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
     }
 }
 
@@ -1058,7 +1058,7 @@ bool ImGui::ImageButtonEx(Id32 id, ImTextureID texture_id, const Vector2D& size,
     RenderFrame(bb.Min, bb.Max, col, true, ImClamp(ImMin(padding.x, padding.y), 0.0, g.Style.frame_rounding));
     if (bg_col.w > 0.0)
         window.draw_list->AddRectFilled(bb.Min + padding, bb.Max - padding, GetColorU32(bg_col));
-    window.draw_list->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
+    window.draw_list->add_image(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
 
     return pressed;
 }
@@ -2015,7 +2015,7 @@ void ImGui::DataTypeApplyOp(DataType data_type, int op, void* output, const void
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
 bool ImGui::DataTypeApplyFromText(const char* buf, DataType data_type, void* p_data, const char* format)
 {
-    while (ImCharIsBlankA(*buf))
+    while (char_is_blank_a(*buf))
         buf += 1;
     if (!buf[0])
         return false;
@@ -4272,7 +4272,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 for (const char* s = clipboard; *s; )
                 {
                     unsigned int c;
-                    s += ImTextCharFromUtf8(&c, s, None);
+                    s += text_char_from_utf8(&c, s, None);
                     if (c == 0)
                         break;
                     if (!InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Clipboard))
@@ -4909,7 +4909,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
         {
             value_changed = true;
             char* p = buf;
-            while (*p == '#' || ImCharIsBlankA(*p))
+            while (*p == '#' || char_is_blank_a(*p))
                 p += 1;
             i[0] = i[1] = i[2] = 0;
             i[3] = 0xFF; // alpha default to 255 is not parsed by scanf (e.g. inputting #FFFFFF omitting alpha)
@@ -5037,10 +5037,10 @@ bool ImGui::ColorPicker3(const char* label, float col[3], ImGuiColorEditFlags fl
 static void RenderArrowsForVerticalBar(ImDrawList* draw_list, Vector2D pos, Vector2D half_sz, float bar_w, float alpha)
 {
     ImU32 alpha8 = IM_F32_TO_INT8_SAT(alpha);
-    ImGui::RenderArrowPointingAt(draw_list, DimgVec2D::new(pos.x + half_sz.x + 1,         pos.y), DimgVec2D::new(half_sz.x + 2, half_sz.y + 1), ImGuiDir_Right, IM_COL32(0,0,0,alpha8));
-    ImGui::RenderArrowPointingAt(draw_list, DimgVec2D::new(pos.x + half_sz.x,             pos.y), half_sz,                              ImGuiDir_Right, IM_COL32(255,255,255,alpha8));
-    ImGui::RenderArrowPointingAt(draw_list, DimgVec2D::new(pos.x + bar_w - half_sz.x - 1, pos.y), DimgVec2D::new(half_sz.x + 2, half_sz.y + 1), ImGuiDir_Left,  IM_COL32(0,0,0,alpha8));
-    ImGui::RenderArrowPointingAt(draw_list, DimgVec2D::new(pos.x + bar_w - half_sz.x,     pos.y), half_sz,                              ImGuiDir_Left,  IM_COL32(255,255,255,alpha8));
+    ImGui::render_arrow_pointing_at(draw_list, DimgVec2D::new(pos.x + half_sz.x + 1,         pos.y), DimgVec2D::new(half_sz.x + 2, half_sz.y + 1), ImGuiDir_Right, IM_COL32(0,0,0,alpha8));
+    ImGui::render_arrow_pointing_at(draw_list, DimgVec2D::new(pos.x + half_sz.x,             pos.y), half_sz,                              ImGuiDir_Right, IM_COL32(255,255,255,alpha8));
+    ImGui::render_arrow_pointing_at(draw_list, DimgVec2D::new(pos.x + bar_w - half_sz.x - 1, pos.y), DimgVec2D::new(half_sz.x + 2, half_sz.y + 1), ImGuiDir_Left,  IM_COL32(0,0,0,alpha8));
+    ImGui::render_arrow_pointing_at(draw_list, DimgVec2D::new(pos.x + bar_w - half_sz.x,     pos.y), half_sz,                              ImGuiDir_Left,  IM_COL32(255,255,255,alpha8));
 }
 
 // Note: ColorPicker4() only accesses 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
@@ -5930,7 +5930,7 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
 
     // Render
     const ImU32 text_col = GetColorU32(ImGuiCol_Text);
-    ImGuiNavHighlightFlags nav_highlight_flags = ImGuiNavHighlightFlags_TypeThin;
+    ImGuiNavHighlightFlags nav_highlight_flags = NavHighlightFlags::TypeThin;
     if (display_frame)
     {
         // Framed type
@@ -6222,7 +6222,7 @@ bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags fl
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
         RenderFrame(bb.Min, bb.Max, col, false, 0.0);
     }
-    RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
+    RenderNavHighlight(bb, id, NavHighlightFlags::TypeThin | NavHighlightFlags::NoRounding);
 
     if (span_all_columns && window.DC.current_columns)
         PopColumnsBackground();

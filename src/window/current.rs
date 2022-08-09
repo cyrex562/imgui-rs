@@ -23,7 +23,7 @@ pub fn get_state_storage(g: &mut Context) -> &mut Storage
 pub fn push_id(g: &mut Context, str_id: &str)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     Id32 id = window.get_id(str_id);
     window.id_stack.push_back(id);
 }
@@ -32,7 +32,7 @@ pub fn push_id(g: &mut Context, str_id: &str)
 pub fn push_id2(g: &mut Context, str_id_begin: &str, )
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     Id32 id = window.get_id(str_id_begin, str_id_end);
     window.id_stack.push_back(id);
 }
@@ -41,7 +41,7 @@ pub fn push_id2(g: &mut Context, str_id_begin: &str, )
  fn push_id3(g: &mut Context, ptr_id: Id32)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     Id32 id = window.get_id(ptr_id);
     window.id_stack.push_back(id);
 }
@@ -50,7 +50,7 @@ pub fn push_id2(g: &mut Context, str_id_begin: &str, )
 pub fn push_id4(g: &mut Context, int_id: Id32)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     Id32 id = window.get_id(int_id);
     window.id_stack.push_back(id);
 }
@@ -60,7 +60,7 @@ pub fn push_id4(g: &mut Context, int_id: Id32)
 pub fn push_override_id(g: &mut Context, id: Id32)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     if (g.debug_hook_id_info == id)
         debug_hook_id_info(id, DataType::ID, None, None);
     window.id_stack.push_back(id);

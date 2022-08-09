@@ -37,7 +37,7 @@ use crate::popup::{begin_popup, end_popup, is_popup_open, open_popup};
 use crate::rect::Rect;
 use crate::settings::mark_ini_settings_dirty;
 use crate::style::{
-    color_convert_u32_to_float4, get_color_u32, get_color_u32_no_alpha, pop_style_color,
+    color_convert_u32_to_float4, color_u32_from_style_color, get_color_u32_no_alpha, pop_style_color,
     push_style_color, WINDOW_DOCK_STYLE_COLORS,
 };
 use crate::tab_bar::{TabBar, TabBarFlags, TabItem, TabItemFlags};
@@ -1020,7 +1020,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         node.last_bg_color = if node_flags.contains(&DockNodeFlags::PassthruCentralNode) {
             0
         } else {
-            get_color_u32(StyleColor::DockingEmptyBg, 0.0)
+            color_u32_from_style_color(StyleColor::DockingEmptyBg, 0.0)
         };
         if node.last_bg_color != 0 {
             host_window.unwrap().draw_list.add_rect_filled(

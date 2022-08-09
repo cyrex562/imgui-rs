@@ -266,7 +266,7 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
         if !window.clip_rect.overlaps_rect(cand) {
             return false;
         }
-        cand.clip_with_full(&window.clip_rect); // This allows the scored item to not overlap other candidates in the parent window
+        cand.clip_width_full(&window.clip_rect); // This allows the scored item to not overlap other candidates in the parent window
     }
 
     // We perform scoring on items bounding box clipped by the current clipping rectangle on the other axis (clipping on our movement axis would give us equal scores for all clipped items)
@@ -392,7 +392,7 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 pub fn nav_apply_item_to_result(g: &mut Context, result: &mut NavItemData)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     result.Window = window;
     result.id = g.last_item_data.id;
     result.FocusScopeId = window.dc.NavFocusScopeIdCurrent;
@@ -406,7 +406,7 @@ pub fn nav_apply_item_to_result(g: &mut Context, result: &mut NavItemData)
 pub fn nav_process_item(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     const Id32 id = g.last_item_data.id;
     const Rect nav_bb = g.last_item_data.nav_rect;
     const ImGuiItemFlags item_flags = g.last_item_data.in_flags;
@@ -1482,7 +1482,7 @@ pub fn nav_update_windowing(g: &mut Context)
     if (g.NavWindowingTargetAnim && g.nav_windowing_target == None)
     {
         g.nav_windowing_highlight_alpha = ImMax(g.nav_windowing_highlight_alpha - io.delta_time * 10.0, 0.0);
-        if (g.dim_bg_ration <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0)
+        if (g.dim_bg_ratio <= 0.0 && g.nav_windowing_highlight_alpha <= 0.0)
             g.NavWindowingTargetAnim = None;
     }
 

@@ -15,7 +15,7 @@ use crate::input::NavLayer;
 use crate::orig_imgui_single_file::int;
 use crate::rect::Rect;
 use crate::stack::StackTool;
-use crate::style::{get_color_u32, pop_style_color, push_style_color};
+use crate::style::{color_u32_from_style_color, pop_style_color, push_style_color};
 use crate::tab_bar::TabBar;
 use crate::types::{Id32, DataType};
 use crate::vectors::vector_2d::Vector2D;
@@ -27,12 +27,12 @@ use crate::window::WindowFlags;
 pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList, viewport: &mut Viewport, bb: &Rect)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
 
     Vector2D scale = bb.GetSize() / viewport.size;
     Vector2D off = bb.min - viewport.pos * scale;
     let alpha_mul =  if(viewport.flags & ViewportFlags::Minimized) { 0.30 }else{ 1.00};
-    window.draw_list->AddRectFilled(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul * 0.40));
+    window.draw_list->AddRectFilled(bb.min, bb.max, color_u32_from_style_color(StyleColor::Border, alpha_mul * 0.40));
     for (int i = 0; i != g.windows.len(); i += 1)
     {
         Window* thumb_window = g.windows[i];
@@ -48,19 +48,19 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
         let window_is_focused = (g.nav_window && thumb_window.root_window_for_title_bar_highlight == g.nav_window->root_window_for_title_bar_highlight);
-        window.draw_list->AddRectFilled(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::WindowBg, alpha_mul));
-        window.draw_list->AddRectFilled(title_r.min, title_r.max, get_color_u32(window_is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg, alpha_mul));
-        window.draw_list->AddRect(thumb_r.min, thumb_r.max, get_color_u32(StyleColor::Border, alpha_mul));
-        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, get_color_u32(StyleColor::Text, alpha_mul), thumb_window.name, find_rendered_text_end(thumb_window.name));
+        window.draw_list->AddRectFilled(thumb_r.min, thumb_r.max, color_u32_from_style_color(StyleColor::WindowBg, alpha_mul));
+        window.draw_list->AddRectFilled(title_r.min, title_r.max, color_u32_from_style_color(window_is_focused ? StyleColor::TitleBgActive : StyleColor::TitleBg, alpha_mul));
+        window.draw_list->AddRect(thumb_r.min, thumb_r.max, color_u32_from_style_color(StyleColor::Border, alpha_mul));
+        window.draw_list->AddText(g.font, g.font_size * 1.0, title_r.min, color_u32_from_style_color(StyleColor::Text, alpha_mul), thumb_window.name, find_rendered_text_end(thumb_window.name));
     }
-    draw_list->AddRect(bb.min, bb.max, get_color_u32(StyleColor::Border, alpha_mul));
+    draw_list->AddRect(bb.min, bb.max, color_u32_from_style_color(StyleColor::Border, alpha_mul));
 }
 
 // static void RenderViewportsThumbnails()
 pub fn render_viewports_thumbnails(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
 
     // We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
     let SCALE =  1.0 / 8.0;
@@ -101,7 +101,7 @@ pub fn debug_text_encoding(g: &mut Context, text: &str)
     for (const char* p = str; *p != 0; )
     {
         unsigned int c;
-        let c_utf8_len = ImTextCharFromUtf8(&c, p, None);
+        let c_utf8_len = text_char_from_utf8(&c, p, None);
         TableNextColumn();
         text("%d", (p - str));
         TableNextColumn();
@@ -899,7 +899,7 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
     if (TreeNode("glyphs", "glyphs (%d)", font->Glyphs.size))
     {
         ImDrawList* draw_list = GetWindowDrawList();
-        const ImU32 glyph_col = get_color_u32(StyleColor::Text);
+        const ImU32 glyph_col = color_u32_from_style_color(StyleColor::Text);
         let cell_size = font->FontSize * 1;
         let cell_spacing = GetStyle().item_spacing.y;
         for (unsigned int base = 0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
@@ -1232,7 +1232,7 @@ pub fn update_debug_tool_stack_queries(g: &mut Context)
 pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_id: &Vec<u8>, data_id_end: &Vec<u8>)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     ImGuiStackTool* tool = &g.DebugStackTool;
 
     // step 0: stack query
@@ -1365,7 +1365,7 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
             TableNextColumn();
             text("0x%08X", info->ID);
             if (n == tool->Results.size - 1)
-                TableSetBgColor(ImGuiTableBgTarget_CellBg, get_color_u32(StyleColor::Header));
+                TableSetBgColor(ImGuiTableBgTarget_CellBg, color_u32_from_style_color(StyleColor::Header));
         }
         EndTable();
     }

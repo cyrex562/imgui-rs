@@ -60,7 +60,7 @@ pub fn dock_node_calc_drop_rects_and_test_mouse_pos(
     // ImGuiContext& g = *GImGui;
 
     // let parent_smaller_axis = ImMin(parent.get_width(), parent.get_height());
-    let parent_smaller_axis = f32::min(parent.get_width(), parent.get_height());
+    let parent_smaller_axis = f32::min(parent.width(), parent.height());
     let hs_for_central_nodes = f32::min(
         g.font_size * 1.5,
         f32::max(g.font_size * 0.5, parent_smaller_axis / 8.0),
@@ -77,8 +77,8 @@ pub fn dock_node_calc_drop_rects_and_test_mouse_pos(
         hs_w = f32::floor(hs_for_central_nodes * 1.50);
         hs_h = f32::floor(hs_for_central_nodes * 0.80);
         off = Vector2D::new(
-            f32::floor(parent.get_width() * 0.5 - hs_h),
-            f32::floor(parent.get_height() * 0.5 - hs_h),
+            f32::floor(parent.width() * 0.5 - hs_h),
+            f32::floor(parent.height() * 0.5 - hs_h),
         );
     } else {
         hs_w = f32::floor(hs_for_central_nodes);
@@ -86,7 +86,7 @@ pub fn dock_node_calc_drop_rects_and_test_mouse_pos(
         off = Vector2D::new(f32::floor(hs_w * 2.40), f32::floor(hs_w * 2.40));
     }
 
-    let c = Vector2D::floor(parent.get_center());
+    let c = Vector2D::floor(parent.center());
     if dir == Direction::None {
         *out_r = Rect::from((c.x - hs_w, c.y - hs_w, c.x + hs_w, c.y + hs_w));
     } else if dir == Direction::Up {

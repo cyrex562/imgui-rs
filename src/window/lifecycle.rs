@@ -823,7 +823,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         window.OuterRectClipped = outer_rect;
         if (window.dock_is_active)
             window.OuterRectClipped.min.y += window.title_bar_height();
-        window.OuterRectClipped.clip_with(host_rect);
+        window.OuterRectClipped.clip_width(host_rect);
 
         // Inner rectangle
         // Not affected by window border size. Used by:
@@ -861,8 +861,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Lock down maximum scrolling
         // The value of scroll_max are ahead from scrollbar_x/scrollbar_y which is intentionally using inner_rect from previous rect in order to accommodate
         // for right/bottom aligned items without creating a scrollbar.
-        window.scroll_max.x = ImMax(0.0, window.ContentSize.x + window.WindowPadding.x * 2.0 - window.inner_rect.get_width());
-        window.scroll_max.y = ImMax(0.0, window.ContentSize.y + window.WindowPadding.y * 2.0 - window.inner_rect.get_height());
+        window.scroll_max.x = ImMax(0.0, window.ContentSize.x + window.WindowPadding.x * 2.0 - window.inner_rect.width());
+        window.scroll_max.y = ImMax(0.0, window.ContentSize.y + window.WindowPadding.y * 2.0 - window.inner_rect.height());
 
         // Apply scrolling
         window.scroll = CalcNextScrollFromScrollTargetAndClamp(window);
@@ -872,7 +872,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // Setup draw list and outer clipping rectangle
         // IM_ASSERT(window.draw_list.cmd_buffer.size == 1 && window.draw_list.cmd_buffer[0].elem_count == 0);
-        window.draw_list.PushTextureID(g.font.container_atlas.TexID);
+        window.draw_list.push_texture_id(g.font.container_atlas.TexID);
         push_clip_rect(host_rect.min, host_rect.max, false);
 
         // Child windows can render their decoration (bg color, border, scrollbars, etc.) within their parent to save a draw call (since 1.71)
@@ -1130,7 +1130,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 pub fn end(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
 
     // Error checking: verify that user hasn't called End() too many times!
     if (g.current_window_stack.size <= 1 && g.within_frame_scope_with_implicit_window)

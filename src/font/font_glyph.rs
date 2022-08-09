@@ -1,7 +1,7 @@
 // Hold rendering data for one glyph.
 // (Note: some language parsers may fail to convert the 31+1 bitfield members, in this case maybe drop store a single u32 or we can rework this)
 #[derive(Clone,Debug,Default)]
-pub struct DimgFontGlyph
+pub struct FontGlyph
 {
     // unsigned int    colored : 1;        // Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
     pub colored: bool,
@@ -29,7 +29,7 @@ void ImFontGlyphRangesBuilder::add_text(const char* text, const char* text_end)
     while (text_end ? (text < text_end) : *text)
     {
         unsigned int c = 0;
-        int c_len = ImTextCharFromUtf8(&c, text, text_end);
+        int c_len = text_char_from_utf8(&c, text, text_end);
         text += c_len;
         if (c_len == 0)
             break;

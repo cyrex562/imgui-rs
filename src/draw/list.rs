@@ -188,7 +188,7 @@ impl DrawList {
         p_max: &Vector2D,
         color: u32,
         rounding: f32,
-        flags: Option<&mut HashSet<DrawFlags>>,
+        flags: &HashSet<DrawFlags>,
         thickness: f32,
     ) {
         if (color & COLOR32_A_MASK) == 0 {
@@ -202,27 +202,27 @@ impl DrawList {
         let in_flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::Closed]);
         self.path_stroke(color, &in_flags, thickness);
     }
-    //  void  add_rect_filled(const Vector2D& p_min, const Vector2D& p_max, ImU32 col, float rounding = 0.0, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
+
     pub fn add_rect_filled(
         &mut self,
         p_min: &Vector2D,
         p_max: &Vector2D,
         color: u32,
         rounding: f32,
-        flags: Option<&mut HashSet<DrawFlags>>,
+        flags: &HashSet<DrawFlags>,
     ) {
         if (color & COLOR32_A_MASK) == 0 {
             return;
         }
-        if rounding < 0.5 || flags.unwrap().contains(&DrawFlags::RoundCornersNone) {
+        if rounding < 0.5 || flags.contains(&DrawFlags::RoundCornersNone) {
             self.prim_reserve(6, 4);
             self.prim_rect(p_min, p_max, color);
         } else {
-            self.path_rect(p_min, p_max, rounding, flags.unwrap());
+            self.path_rect(p_min, p_max, rounding, flags);
             self.path_fill_convex(color);
         }
     }
-    //  void  add_rect_filled_multi_color(const Vector2D& p_min, const Vector2D& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
+
     pub fn add_rect_filled_multi_color(
         &mut self,
         p_min: &Vector2D,
@@ -441,7 +441,7 @@ impl DrawList {
     //  void  add_text(const ImFont* font, float font_size, const Vector2D& pos, ImU32 col, const char* text_begin, const char* text_end = None, float wrap_width = 0.0, const Vector4D* cpu_fine_clip_rect = None);
     pub fn add_text_2(
         &mut self,
-        font: &Font,
+        font: Option<&Font>,
         font_size: f32,
         pos: &Vector2D,
         color: u32,
@@ -1161,25 +1161,27 @@ impl DrawList {
         rect_min: &Vector2D,
         rect_max: &Vector2D,
         mut rounding: f32,
-        flags: &mut HashSet<DrawFlags>,
+        flags: &HashSet<DrawFlags>,
     ) {
 
         // flags.extend(fix_rect_corner_flags(flags).iter()); //= fix_rect_corner_flags(flags);
-        set_hash_set(flags, &fix_rect_corner_flags(flags));
-        rounding = f32::min(rounding, f32::abs(b.x - a.x) * (if ((flags & DrawFlags::RoundCornersTop) == DrawFlags::RoundCornersTop) || ((flags & DrawFlags::RoundCornersBottom) == DrawFlags::RoundCornersBottom) { 0.5 } else { 1.0 }) - 1.0);
-        rounding = f32::min(rounding, f32::abs(b.y - a.y) * (if ((flags & DrawFlags::RoundCornersLeft) == DrawFlags::RoundCornersLeft) || ((flags & DrawFlags::RoundCornersRight) == DrawFlags::RoundCornersRight) { 0.5 } else { 1.0 }) - 1.0);
+        let flags_a = fix_rect_corner_flags(flags);
+
+        // set_hash_set(flags, &fix_rect_corner_flags(flags));
+        rounding = f32::min(rounding, f32::abs(b.x - a.x) * (if flags_a.contains( & DrawFlags::RoundCornersTop) || flags_a.contains( & DrawFlags::RoundCornersBottom)  { 0.5 } else { 1.0 }) - 1.0);
+        rounding = f32::min(rounding, f32::abs(b.y - a.y) * (if flags_a.contains(& DrawFlags::RoundCornersLeft)  || flags_a.contains( & DrawFlags::RoundCornersRight) { 0.5 } else { 1.0 }) - 1.0);
 
         // if rounding < 0.5 || (flags & DrawFlags::RoundCornersMask_) == DrawFlags::RoundCornersNone
-        if rounding < 0.5 || flags.contains(&DrawFlags::RoundCornersNone) {
+        if rounding < 0.5 || flags_a.contains(&DrawFlags::RoundCornersNone) {
             path_line_to(a);
             path_line_to(Vector2D::new(b.x, a.y));
             path_line_to(b);
             path_line_to(Vector2D::new(a.x, b.y));
         } else {
-            let rounding_tl = if flags.contains(&DrawFlags::RoundCornersTopLeft) { rounding } else { 0.0 };
-            let rounding_tr = if flags.contains(&DrawFlags::RoundCornersTopRight) { rounding } else { 0.0 };
-            let rounding_br = if flags.contains(&DrawFlags::RoundCornersBottomRight) { rounding } else { 0.0 };
-            let rounding_bl = if flags.contains(&DrawFlags::RoundCornersBottomLeft) { rounding } else { 0.0 };
+            let rounding_tl = if flags_a.contains(&DrawFlags::RoundCornersTopLeft) { rounding } else { 0.0 };
+            let rounding_tr = if flags_a.contains(&DrawFlags::RoundCornersTopRight) { rounding } else { 0.0 };
+            let rounding_br = if flags_a.contains(&DrawFlags::RoundCornersBottomRight) { rounding } else { 0.0 };
+            let rounding_bl = if flags_a.contains(&DrawFlags::RoundCornersBottomLeft) { rounding } else { 0.0 };
             self.path_arc_to_fast(&Vector2D::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
             self.path_arc_to_fast(&Vector2D::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
             self.path_arc_to_fast(&Vector2D::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
@@ -1737,7 +1739,7 @@ pub const IM_DRAWLIST_TEX_LINES_WIDTH_MAX: usize = 63;
 /// static ImDrawList* get_viewport_draw_list(ImGuiViewportP* viewport, size_t drawlist_no, const char* drawlist_name)
 pub fn get_viewport_draw_list(
     g: &mut Context,
-    viewport: Option<&mut Viewport>,
+    viewport: &mut Viewport,
     drawlist_no: usize,
     drawlist_name: &String,
 ) -> &mut DrawList {
@@ -1785,7 +1787,7 @@ pub fn get_background_draw_list2(g: &mut Context) -> &mut DrawList {
 }
 
 /// ImDrawList* ImGui::GetForegroundDrawList(ImGuiViewport* viewport)
-pub fn foreground_draw_list(g: &mut Context, viewport: Option<&mut Viewport>) -> &mut DrawList {
+pub fn foreground_draw_list(g: &mut Context, viewport: &mut Viewport) -> &mut DrawList {
     // return GetViewportDrawList((ImGuiViewportP*)viewport, 1, "##Foreground");
     get_viewport_draw_list(g, viewport, 1, &String::from("##Foreground"))
 }

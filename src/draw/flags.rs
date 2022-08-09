@@ -53,3 +53,6 @@ pub enum DrawFlags {
     // add_rect(), add_rect_filled(), PathRect(): enable rounding bottom-right corner only (when rounding > 0.0, we default to all corners). Wax 0x08.
     RoundCornersNone, // add_rect(), add_rect_filled(), PathRect(): disable rounding on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!
 }
+
+
+pub const DRAW_FLAGS_EMPTY: HashSet<DrawFlags> = HashSet::new();

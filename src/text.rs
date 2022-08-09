@@ -23,11 +23,10 @@ pub enum ImGuiInputTextFlags2 {
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
 
-pub unsafe fn ImTextCharFromUtf8(
+pub fn text_char_from_utf8(
     out_char: *mut u32,
     in_text: &str,
-    mut in_text_end: *mut c_char,
-) -> i32 {
+) -> usize {
     const lengths: [u8; 32] = [
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3,
         4, 0,
@@ -115,7 +114,7 @@ pub unsafe fn ImTextStrFromUtf8(
     {
         // unsigned int c;
         let mut c: u32 = 0;
-        in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
+        in_text += text_char_from_utf8(&mut c, in_text, in_text_end);
         if c == 0 {
             break;
         }
@@ -136,7 +135,7 @@ pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: *mut c_char, in_text_end: *m
     while (!in_text_end.is_positive() || in_text.lt(&in_text_end)) && *in_text.is_positive() {
         // unsigned int c;
         let mut c: u32 = 0;
-        in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
+        in_text += text_char_from_utf8(&mut c, in_text, in_text_end);
         if (c == 0) {
             break;
         }
@@ -192,10 +191,10 @@ pub fn ImTextCharToUtf8(mut out_buf: [c_char; 5], c: u32) -> &str {
 
 // Not optimal but we very rarely use this function.
 // int ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountUtf8BytesFromChar(in_text: &str, in_text_end: *mut c_char) -> i32 {
+pub fn text_count_utf8_bytes_from_char(in_text: &str) -> usize {
     // unsigned int unused = 0;
     let mut unused = 0u32;
-    ImTextCharFromUtf8(&mut unused, in_text, in_text_end)
+    text_char_from_utf8(&mut unused, in_text)
 }
 
 // static inline int ImTextCountUtf8BytesFromChar(unsigned int c)

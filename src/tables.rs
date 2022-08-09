@@ -446,7 +446,7 @@ bool    ImGui::BeginTableEx(const char* name, Id32 id, int columns_count, ImGuiT
     table.RowBgColorCounter = 0;
     table.LastRowFlags = ImGuiTableRowFlags_None;
     table.InnerClipRect = (inner_window == outer_window) ? table.work_rect : inner_window.clip_rect;
-    table.InnerClipRect.clip_with(table.work_rect);     // We need this to honor inner_width
+    table.InnerClipRect.clip_width(table.work_rect);     // We need this to honor inner_width
     table.InnerClipRect.ClipWithFull(table.HostClipRect);
     table.InnerClipRect.max.y = (flags & ImGuiTableFlags_NoHostExtendY) ? ImMin(table.InnerClipRect.max.y, inner_window.work_rect.max.y) : inner_window.clip_rect.max.y;
 
@@ -1741,7 +1741,7 @@ void ImGui::TableBeginRow(ImGuiTable* table)
 void ImGui::table_end_row(ImGuiTable* table)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     // IM_ASSERT(window == table.inner_window);
     // IM_ASSERT(table.is_inside_row);
 
@@ -1800,7 +1800,7 @@ void ImGui::table_end_row(ImGuiTable* table)
         if (bg_col0 || bg_col1)
         {
             Rect row_rect(table.work_rect.min.x, bg_y1, table.work_rect.max.x, bg_y2);
-            row_rect.clip_with(table.BgClipRect);
+            row_rect.clip_width(table.BgClipRect);
             if (bg_col0 != 0 && row_rect.min.y < row_rect.max.y)
                 window.draw_list.add_rect_filled(row_rect.min, row_rect.max, bg_col0);
             if (bg_col1 != 0 && row_rect.min.y < row_rect.max.y)
@@ -1817,7 +1817,7 @@ void ImGui::table_end_row(ImGuiTable* table)
                 // FIXME: This cancels the OuterPadding addition done by TableGetCellBgRect(), need to keep it while rendering correctly while scrolling.
                 const ImGuiTableColumn* column = &table.Columns[cell_data.Column];
                 Rect cell_bg_rect = TableGetCellBgRect(table, cell_data.Column);
-                cell_bg_rect.clip_with(table.BgClipRect);
+                cell_bg_rect.clip_width(table.BgClipRect);
                 cell_bg_rect.min.x = ImMax(cell_bg_rect.min.x, column.clip_rect.min.x);     // So that first column after frozen one gets clipped when scrolling
                 cell_bg_rect.max.x = ImMin(cell_bg_rect.max.x, column.MaxX);
                 window.draw_list.add_rect_filled(cell_bg_rect.min, cell_bg_rect.max, cell_data.BgColor);
@@ -2232,7 +2232,7 @@ void ImGui::TableUpdateColumnsWeightFromWidth(ImGuiTable* table)
 void ImGui::TablePushBackgroundChannel()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     ImGuiTable* table = g.current_table;
 
     // Optimization: avoid SetCurrentChannel() + push_clip_rect()
@@ -2244,7 +2244,7 @@ void ImGui::TablePushBackgroundChannel()
 void ImGui::TablePopBackgroundChannel()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     ImGuiTable* table = g.current_table;
     ImGuiTableColumn* column = &table.Columns[table.CurrentColumn];
 
@@ -2873,7 +2873,7 @@ void ImGui::TableHeadersRow()
 void ImGui::TableHeader(const char* label)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     if (window.skip_items)
         return;
 
@@ -2943,7 +2943,7 @@ void ImGui::TableHeader(const char* label)
         if ((table.RowFlags & ImGuiTableRowFlags_Headers) == 0)
             TableSetBgColor(ImGuiTableBgTarget_CellBg, get_color_u32(StyleColor::TableHeaderBg), table.CurrentColumn);
     }
-    render_nav_highlight(bb, id, NavHighlightingFlags::TypeThin | ImGuiNavHighlightFlags_NoRounding);
+    render_nav_highlight(bb, id, NavHighlightingFlags::TypeThin | NavHighlightFlags::NoRounding);
     if (held)
         table.HeldHeaderColumn = (ImGuiTableColumnIdx)column_n;
     window.dc.cursor_pos.y -= g.style.item_spacing.y * 0.5;
@@ -3041,7 +3041,7 @@ void ImGui::TableOpenContextMenu(int column_n)
 void ImGui::TableDrawContextMenu(ImGuiTable* table)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     if (window.skip_items)
         return;
 
@@ -3688,7 +3688,7 @@ static float GetDraggedColumnOffset(ImGuiOldColumns* columns, int column_index)
     // active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
     // window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     // IM_ASSERT(column_index > 0); // We are not supposed to drag column 0.
     // IM_ASSERT(g.active_id == columns.id + Id32(column_index));
 
@@ -3732,7 +3732,7 @@ static float GetColumnWidthEx(ImGuiOldColumns* columns, int column_index, bool b
 float ImGui::GetColumnWidth(int column_index)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     ImGuiOldColumns* columns = window.dc.current_columns;
     if (columns == None)
         return get_content_region_avail().x;
@@ -3745,7 +3745,7 @@ float ImGui::GetColumnWidth(int column_index)
 void ImGui::SetColumnOffset(int column_index, float offset)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     ImGuiOldColumns* columns = window.dc.current_columns;
     // IM_ASSERT(columns != None);
 

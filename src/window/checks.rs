@@ -6,7 +6,7 @@ use crate::window::{HoveredFlags, Window, WindowFlags};
 use crate::window::get::{get_combined_root_window, is_window_child_of};
 
 // bool ImGui::is_window_above(Window* potential_above, Window* potential_below)
-pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_below: &mut Window)
+pub fn is_window_above(g: &mut Context, potential_above: &mut Window, potential_below: &mut Window) -> bool
 {
     // ImGuiContext& g = *GImGui;
 

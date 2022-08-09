@@ -63,7 +63,7 @@ pub fn calc_next_scroll_from_scroll_target_and_clamp(g: &mut Context, window: &m
 pub fn scroll_to_item(g: &mut Context, flags: &HashSet<ScrollFlags>)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     ScrollToRectEx(window, g.last_item_data.nav_rect, flags);
 }
 
@@ -94,8 +94,8 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
 
     let fully_visible_x = item_rect.min.x >= window_rect.min.x && item_rect.max.x <= window_rect.max.x;
     let fully_visible_y = item_rect.min.y >= window_rect.min.y && item_rect.max.y <= window_rect.max.y;
-    let can_be_fully_visible_x = (item_rect.get_width() + g.style.item_spacing.x * 2.0) <= window_rect.get_width();
-    let can_be_fully_visible_y = (item_rect.get_height() + g.style.item_spacing.y * 2.0) <= window_rect.get_height();
+    let can_be_fully_visible_x = (item_rect.width() + g.style.item_spacing.x * 2.0) <= window_rect.get_width();
+    let can_be_fully_visible_y = (item_rect.height() + g.style.item_spacing.y * 2.0) <= window_rect.get_height();
 
     if ((flags & ImGuiScrollFlags_KeepVisibleEdgeX) && !fully_visible_x)
     {
@@ -106,7 +106,7 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
     }
     else if (((flags & ImGuiScrollFlags_KeepVisibleCenterX) && !fully_visible_x) || (flags & ImGuiScrollFlags_AlwaysCenterX))
     {
-        let target_x =  can_be_fully_visible_x ? f32::floor((item_rect.min.x + item_rect.max.x - window.inner_rect.get_width()) * 0.5) : item_rect.min.x;
+        let target_x =  can_be_fully_visible_x ? f32::floor((item_rect.min.x + item_rect.max.x - window.inner_rect.width()) * 0.5) : item_rect.min.x;
         SetScrollFromPosX(window, target_x - window.pos.x, 0.0);
     }
 
@@ -119,7 +119,7 @@ pub fn scroll_to_rect_ex(g: &mut Context, window: &mut Window, item_rect: &Rect,
     }
     else if (((flags & ImGuiScrollFlags_KeepVisibleCenterY) && !fully_visible_y) || (flags & ImGuiScrollFlags_AlwaysCenterY))
     {
-        let target_y =  can_be_fully_visible_y ? f32::floor((item_rect.min.y + item_rect.max.y - window.inner_rect.get_height()) * 0.5) : item_rect.min.y;
+        let target_y =  can_be_fully_visible_y ? f32::floor((item_rect.min.y + item_rect.max.y - window.inner_rect.height()) * 0.5) : item_rect.min.y;
         SetScrollFromPosY(window, target_y - window.pos.y, 0.0);
     }
 
@@ -246,7 +246,7 @@ pub fn set_scroll_from_pos_y2(g: &mut Context, local_y: f32, center_y_ratio: f32
 pub fn set_scroll_here_x(g: &mut Context, center_x_ratio: f32)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     let spacing_x =  ImMax(window.WindowPadding.x, g.style.item_spacing.x);
     let target_pos_x =  ImLerp(g.last_item_data.Rect.min.x - spacing_x, g.last_item_data.Rect.max.x + spacing_x, center_x_ratio);
     SetScrollFromPosX(window, target_pos_x - window.pos.x, center_x_ratio); // Convert from absolute to local pos
@@ -260,7 +260,7 @@ pub fn set_scroll_here_x(g: &mut Context, center_x_ratio: f32)
 pub fn set_scroll_here_y(g: &mut Context, center_y_ratio: f32)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window;
+    let window = g.current_window_mut();
     let spacing_y =  ImMax(window.WindowPadding.y, g.style.item_spacing.y);
     let target_pos_y =  ImLerp(window.dc.cursor_pos_prev_line.y - spacing_y, window.dc.cursor_pos_prev_line.y + window.dc.prev_line_size.y + spacing_y, center_y_ratio);
     SetScrollFromPosY(window, target_pos_y - window.pos.y, center_y_ratio); // Convert from absolute to local pos

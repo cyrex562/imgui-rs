@@ -11,7 +11,7 @@ use crate::draw::list::{DrawList, foreground_draw_list};
 use crate::frame::get_frame_height;
 use crate::math::saturate_f32;
 use crate::rect::Rect;
-use crate::style::{get_color_u32, pop_style_color, push_style_color, get_color_u32_no_alpha};
+use crate::style::{color_u32_from_style_color, pop_style_color, push_style_color, get_color_u32_no_alpha};
 use crate::tab_bar::TabItemFlags;
 use crate::types::{Direction, DIRECTIONS};
 use crate::vectors::vector_2d::Vector2D;
@@ -138,10 +138,10 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     }
 
     // Draw main preview rectangle
-    let overlay_col_main = get_color_u32(StyleColor::DockingPreview, if is_transparent_payload { 0.60 } else { 0.40 });
-    let overlay_col_drop = get_color_u32(StyleColor::DockingPreview, if is_transparent_payload { 0.90 } else { 0.70 });
-    let overlay_col_drop_hovered = get_color_u32(StyleColor::DockingPreview, if is_transparent_payload { 1.20 } else { 1.00 });
-    let overlay_col_lines = get_color_u32(StyleColor::NavWindowingHighlight, if is_transparent_payload { 0.80 } else { 0.60 });
+    let overlay_col_main = color_u32_from_style_color(StyleColor::DockingPreview, if is_transparent_payload { 0.60 } else { 0.40 });
+    let overlay_col_drop = color_u32_from_style_color(StyleColor::DockingPreview, if is_transparent_payload { 0.90 } else { 0.70 });
+    let overlay_col_drop_hovered = color_u32_from_style_color(StyleColor::DockingPreview, if is_transparent_payload { 1.20 } else { 1.00 });
+    let overlay_col_lines = color_u32_from_style_color(StyleColor::NavWindowingHighlight, if is_transparent_payload { 0.80 } else { 0.60 });
 
     // Display area preview
     let root_payload_dock_node = g.dock_node_mut(root_payload.dock_node_as_host_id);
