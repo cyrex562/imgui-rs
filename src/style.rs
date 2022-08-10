@@ -145,7 +145,7 @@ impl Style {
         out.circle_tessellation_max_error = 0.30; // Maximum error (in pixels) allowed when using add_circle()/add_circle_filled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 
         // Default theme
-        StyleColorsDark(&mut out);
+        style_colors_dark(&mut out);
         out
     }
 
@@ -434,7 +434,7 @@ pub const WINDOW_DOCK_STYLE_COLORS: [StyleColor; 6] = [
 //     }
 // }
 
-pub fn GetStyleColorName(idx: &StyleColor) -> String {
+pub fn get_style_color_name(idx: &StyleColor) -> String {
     // Create switch- from enum with regexp: ImGuiColor::{.*}, -->  ImGuiColor::\1=> "\1";
     match idx {
         StyleColor::Text => String::from("Text"),
@@ -497,7 +497,7 @@ pub fn GetStyleColorName(idx: &StyleColor) -> String {
 }
 
 // void ImGui::StyleColorsDark(ImGuiStyle* dst)
-pub fn StyleColorsDark(dst: *mut Style) {
+pub fn style_colors_dark(dst: *mut Style) {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false {
         dst
@@ -579,7 +579,7 @@ pub fn StyleColorsDark(dst: *mut Style) {
 }
 
 // void ImGui::StyleColorsClassic(ImGuiStyle* dst)
-pub fn StyleColorsClassic(dst: *mut Style) {
+pub fn style_colors_classic(dst: *mut Style) {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false {
         dst
@@ -662,7 +662,7 @@ pub fn StyleColorsClassic(dst: *mut Style) {
 
 // Those light colors are better suited with a thicker font than the default one + FrameBorder
 // void ImGui::StyleColorsLight(ImGuiStyle* dst)
-pub fn StyleColorsLight(dst: *mut Style) {
+pub fn style_colors_light(dst: *mut Style) {
     // ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
     let style = if dst.is_null() == false {
         dst
@@ -751,25 +751,25 @@ pub fn StyleColorsLight(dst: *mut Style) {
 //   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
 // - When changing this enum, you need to update the associated internal table STYLE_VAR_INFO[] accordingly. This is where we link enum values to members offset/type.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub enum DimgStyleVar {
-    // Enum name --------------------- // Member in ImGuiStyle structure (see ImGuiStyle for descriptions)
+pub enum StyleVar {
+    None,
     Alpha,               // float     alpha
-    disabled_alpha,      // float     DisabledAlpha
+    DisabledAlpha,      // float     DisabledAlpha
     WindowPadding,       // Vector2D    window_padding
     WindowRounding,      // float     window_rounding
     WindowBorderSize,    // float     window_border_size
     WindowMinSize,       // Vector2D    window_min_size
-    window_title_align,  // Vector2D    WindowTitleAlign
+    WindowTitleAlign,  // Vector2D    WindowTitleAlign
     ChildRounding,       // float     child_rounding
     ChildBorderSize,     // float     child_border_size
     PopupRounding,       // float     popup_rounding
     PopupBorderSize,     // float     popup_border_size
-    frame_padding,       // Vector2D    FramePadding
+    FramePadding,       // Vector2D    FramePadding
     FrameRounding,       // float     frame_rounding
     FrameBorderSize,     // float     frame_border_size
     ItemSpacing,         // Vector2D    item_spacing
-    item_inner_spacing,  // Vector2D    ItemInnerSpacing
-    indent_spacing,      // float     indent_spacing
+    ItemInnerSpacing,  // Vector2D    ItemInnerSpacing
+    IndentSpacing,      // float     indent_spacing
     CellPadding,         // Vector2D    cell_padding
     ScrollbarSize,       // float     scrollbar_size
     ScrollbarRounding,   // float     scrollbar_rounding
@@ -777,6 +777,5 @@ pub enum DimgStyleVar {
     GrabRounding,        // float     grab_rounding
     TabRounding,         // float     tab_rounding
     ButtonTextAlign,     // Vector2D    button_text_align
-    selectableTextAlign, // Vector2D    selectable_text_align
-    COUNT,
+    SelectableTextAlign, // Vector2D    selectable_text_align
 }

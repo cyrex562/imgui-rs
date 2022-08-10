@@ -101,7 +101,7 @@ pub struct Context {
     pub debug_stack_tool: StackTool,
     pub dim_bg_ratio: f32,
     pub disabled_alpha_backup: f32,
-    pub disabled_stack_size: i16,
+    pub disabled_stack_size: usize,
     pub dock_context: DockContext,
     pub dock_nodes: HashMap<Id32, DockNode>,
     pub drag_current_accum: f32,

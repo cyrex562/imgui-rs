@@ -1,7 +1,7 @@
 use std::ffi::c_void;
 use crate::Context;
 use crate::globals::GImGui;
-use crate::imgui_h::{Id32, ImGuiCond, ImGuiInputTextFlags, ImGuiKey};
+use crate::imgui_h::{Id32, ImGuiCond, InputTextFlags, ImGuiKey};
 use crate::vectors::vector_2d::Vector2D;
 
 pub mod mouse;
@@ -23,8 +23,8 @@ pub mod io;
 // - ImGuiInputTextFlags_CallbackResize:      Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow.
 pub struct ImGuiInputTextCallbackData
 {
-    pub EventFlag: ImGuiInputTextFlags,      // One ImGuiInputTextFlags_Callback*    // Read-only
-    pub Flags: ImGuiInputTextFlags,          // What user passed to InputText()      // Read-only
+    pub EventFlag: InputTextFlags,      // One ImGuiInputTextFlags_Callback*    // Read-only
+    pub Flags: InputTextFlags,          // What user passed to InputText()      // Read-only
     pub UserData: *mut c_void,       // What user passed to InputText()      // Read-only
 
     // Arguments for the different callback events
@@ -58,17 +58,17 @@ impl ImGuiInputTextCallbackData {
     pub fn InsertChars(pos: i32, text: &str, text_end: &str) {
         todo!();
     }
-    // void                SelectAll()             { SelectionStart = 0; SelectionEnd = BufTextLen; }
+    // void                select_all()             { SelectionStart = 0; SelectionEnd = BufTextLen; }
     pub fn SelectAll(&mut self) {
         self.SelectionStart = 0;
         self.SelectionEnd = self.BufTextLen;
     }
-    // void                ClearSelection()        { SelectionStart = SelectionEnd = BufTextLen; }
+    // void                clear_selection()        { SelectionStart = SelectionEnd = BufTextLen; }
     pub fn ClearSelection(&mut self) {
         self.SelectionStart = self.BufTextLen;
         self.SelectionEnd = self.BufTextLen;
     }
-    // bool                HasSelection() const    { return SelectionStart != SelectionEnd; }
+    // bool                has_selection() const    { return SelectionStart != SelectionEnd; }
     pub fn HasSelection(&self) -> bool {
         self.SelectionStart != self.SelectionEnd
     }

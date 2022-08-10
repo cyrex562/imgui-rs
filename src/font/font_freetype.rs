@@ -581,7 +581,7 @@ struct ImFontBuildSrcGlyphFT
 struct ImFontBuildSrcDataFT
 {
     FreeTypeFont        Font;
-    stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
+    StbRpRect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
     const ImWchar*      SrcRanges;          // ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFFF)
     int                 DstIndex;           // index into atlas->fonts[] and dst_tmp_array[]
     int                 GlyphsHighest;      // Highest requested codepoint
@@ -708,7 +708,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
     // Allocate packing character data and flag packed characters buffer as non-packed (x0=y0=x1=y1=0)
     // (We technically don't need to zero-clear buf_rects, but let's do it for the sake of sanity)
-    ImVector<stbrp_rect> buf_rects;
+    ImVector<StbRpRect> buf_rects;
     buf_rects.resize(total_glyphs_count);
     memset(buf_rects.data, 0, buf_rects.size_in_bytes());
 
@@ -789,9 +789,9 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
     let TEX_HEIGHT_MAX = 1024 * 32;
     let num_nodes_for_packing_algorithm = atlas.TexWidth - atlas.TexGlyphPadding;
-    ImVector<stbrp_node> pack_nodes;
+    ImVector<StbRpNode> pack_nodes;
     pack_nodes.resize(num_nodes_for_packing_algorithm);
-    stbrp_context pack_context;
+    StbRpContext pack_context;
     stbrp_init_target(&pack_context, atlas.TexWidth, TEX_HEIGHT_MAX, pack_nodes.data, pack_nodes.size);
     ImFontAtlasBuildPackCustomRects(atlas, &pack_context);
 
@@ -852,7 +852,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1)
         {
             ImFontBuildSrcGlyphFT& src_glyph = src_tmp.GlyphsList[glyph_i];
-            stbrp_rect& pack_rect = src_tmp.Rects[glyph_i];
+            StbRpRect& pack_rect = src_tmp.Rects[glyph_i];
             // IM_ASSERT(pack_rect.was_packed);
             if (pack_rect.w == 0 && pack_rect.h == 0)
                 continue;

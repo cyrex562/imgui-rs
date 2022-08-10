@@ -135,7 +135,7 @@ pub fn add_root_window_to_draw_data(g: &mut Context, window: &mut Window) {
 
 impl DrawDataBuilder {
     // void clear()                    { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].resize(0); }
-    //     void ClearFreeMemory()          { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].clear(); }
+    //     void clear_free_memory()          { for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) Layers[n].clear(); }
     //     int  GetDrawListCount() const   { int count = 0; for (int n = 0; n < IM_ARRAYSIZE(Layers); n += 1) count += Layers[n].size; return count; }
     pub fn get_draw_list_count(&self) -> usize {
         self.layers[0].len() + self.layers[1].len()

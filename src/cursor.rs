@@ -18,8 +18,8 @@ pub fn set_cursor_screen_pos(g: &mut Context, pos: &Vector2D) {
 }
 
 // User generally sees positions in window coordinates. Internally we store CursorPos in absolute screen coordinates because it is more convenient.
-// Conversion happens as we pass the value to user, but it makes our naming convention confusing because GetCursorPos() == (dc.cursor_pos - window.pos). May want to rename 'dc.cursor_pos'.
-// Vector2D GetCursorPos()
+// Conversion happens as we pass the value to user, but it makes our naming convention confusing because get_cursor_pos() == (dc.cursor_pos - window.pos). May want to rename 'dc.cursor_pos'.
+// Vector2D get_cursor_pos()
 pub fn get_cursor_pos(g: &mut Context) -> Vector2D {
     // Window* window = GetCurrentWindowRead();
     let window = g.current_window_mut();

@@ -1,16 +1,16 @@
 use std::collections::HashSet;
-use crate::draw::list_splitter::DrawListSplitter;
-use crate::types::Id32;
-use crate::types::SortDirection;
+use imgui_rs::draw::list_splitter::DrawListSplitter;
+use imgui_rs::types::Id32;
+use imgui_rs::types::SortDirection;
 use crate::imgui_color::ImColor;
-use crate::imgui_h::{ImDrawListSplitter, Id32, ImGuiSortDirection, ImGuiTableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
+use crate::imgui_h::{ImDrawListSplitter, Id32, SortDirection, TableColumnFlags, ImGuiTableColumnSortSpecs, ImGuiTableFlags, ImGuiTableRowFlags, ImGuiTableSortSpecs};
 use crate::imgui_rect::Rect;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_vec::{Vector1D, Vector2D};
 use crate::imgui_window::Window;
-use crate::rect::Rect;
-use crate::text_buffer::TextBuffer;
-use crate::vectors::{Vector1D, Vector2D};
+use imgui_rs::rect::Rect;
+use imgui_rs::text_buffer::TextBuffer;
+use imgui_rs::vectors::{Vector1D, Vector2D};
 
 // #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
 pub const IM_COL_32_DISABLE: ImColor = ImColor::new4(0,0,0,1);
@@ -33,7 +33,7 @@ pub type TableDrawChannelIdx = i8;
 pub struct TableColumn
 {
     // ImGuiTableColumnFlags   flags;                          // flags after some patching (not directly same as provided by user). See ImGuiTableColumnFlags_
-    pub flags: TableColumnFlags,
+    pub flags: HashSet<TableColumnFlags>,
     // float                   width_given;                     // Final/actual width visible == (max_x - min_x), locked in TableUpdateLayout(). May be > width_request to honor minimum width, may be < width_request to honor shrinking columns down in tight space.
     pub width_given: f32,
     // float                   min_x;                           // Absolute positions
@@ -130,7 +130,7 @@ impl TableColumn {
     //     }
     pub fn new() -> Self {
         Self {
-            flags: ImGuiTableColumnFlags::ImGuiTableColumnFlags_None,
+            flags: HashSet::new(),
             width_given: 0.0,
             min_x: 0.0,
             stretch_weight: -1.0,
@@ -150,7 +150,7 @@ impl TableColumn {
             prev_enabled_column: -1,
             next_enabled_column: -1,
             sort_order: -1,
-            sort_direction: ImGuiSortDirection::None,
+            sort_direction: SortDirection::None,
             sort_directions_avail_count: 0,
             sort_directions_avail_mask: 0,
             draw_channel_current: -1,
@@ -576,9 +576,9 @@ pub struct TableSortSpecs
 // - Important! Sizing policies have complex and subtle side effects, much more so than you would expect.
 //   Read comments/demos carefully + experiment with live demos to get acquainted with them.
 // - The DEFAULT sizing policies are:
-//    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has WindowFlags_AlwaysAutoResize.
-//    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
-// - When ScrollX is off:
+//    - Default to ImGuiTableFlags_SizingFixedFit    if scroll_x is on, or if host window has WindowFlags_AlwaysAutoResize.
+//    - Default to ImGuiTableFlags_SizingStretchSame if scroll_x is off.
+// - When scroll_x is off:
 //    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
 //    - columns sizing policy allowed: Stretch (default), Fixed/Auto.
 //    - Fixed columns (if any) will generally obtain their requested width (unless the table cannot fit them all).
@@ -586,12 +586,12 @@ pub struct TableSortSpecs
 //    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
 //      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
 //      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
-// - When ScrollX is on:
+// - When scroll_x is on:
 //    - Table defaults to ImGuiTableFlags_SizingFixedFit -> all columns defaults to ImGuiTableColumnFlags_WidthFixed
 //    - columns sizing policy allowed: Fixed/Auto mostly.
 //    - Fixed columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
 //    - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
-//    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
+//    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if scroll_x is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
 //      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
 // - Read on documentation at the top of imgui_tables.cpp for details.
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
@@ -624,9 +624,9 @@ pub enum TableFlags
     SizingStretchProp          = 3 << 13,  // columns default to _WidthStretch with default weights proportional to each columns contents widths.
     SizingStretchSame          = 4 << 13,  // columns default to _WidthStretch with default weights all equal, unless overridden by TableSetupColumn().
     // Sizing Extra Options
-    NoHostExtendX             ,  // Make outer width auto-fit to columns, overriding outer_size.x value. Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
-    NoHostExtendY             ,  // Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY are disabled. data below the limit will be clipped and not visible.
-    NoKeepColumnsVisible      ,  // Disable keeping column always minimally visible when ScrollX is off and table gets too small. Not recommended if columns are resizable.
+    NoHostExtendX             ,  // Make outer width auto-fit to columns, overriding outer_size.x value. Only available when scroll_x/ScrollY are disabled and Stretch columns are not used.
+    NoHostExtendY             ,  // Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when scroll_x/ScrollY are disabled. data below the limit will be clipped and not visible.
+    NoKeepColumnsVisible      ,  // Disable keeping column always minimally visible when scroll_x is off and table gets too small. Not recommended if columns are resizable.
     PreciseWidths             ,  // Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.
     // Clipping
     NoClip                    ,  // Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with TableSetupScrollFreeze().
@@ -635,7 +635,7 @@ pub enum TableFlags
     NoPadOuterX               ,  // Default if BordersOuterV is off. Disable outer-most padding.
     NoPadInnerX               ,  // Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
     // Scrolling
-    ScrollX                   ,  // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.
+    ScrollX                   ,  // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using scroll_x.
     ScrollY                   ,  // Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size.
     // Sorting
     SortMulti                 ,  // Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (specs_count > 1).

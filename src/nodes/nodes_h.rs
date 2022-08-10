@@ -268,9 +268,9 @@ ImNodesIO& GetIO();
 NodesStyle& GetStyle();
 // style presets matching the dear imgui styles of the same name. If dest is None, the active
 // context's NodesStyle instance will be used as the destination.
-void StyleColorsDark(NodesStyle* dest = None); // on by default
-void StyleColorsClassic(NodesStyle* dest = None);
-void StyleColorsLight(NodesStyle* dest = None);
+void style_colors_dark(NodesStyle* dest = None); // on by default
+void style_colors_classic(NodesStyle* dest = None);
+void style_colors_light(NodesStyle* dest = None);
 
 // The top-level function call. Call this before calling BeginNode/EndNode. Calling this function
 // will result the node editor grid workspace being rendered.

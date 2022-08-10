@@ -188,7 +188,7 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
     }
 
     let window = g.current_window_mut();
-    ImGuiStackSizes* stack_sizes = &g.current_window_stack.back().StackSizesOnBegin;
+    StackSizes* stack_sizes = &g.current_window_stack.back().StackSizesOnBegin;
     // IM_ASSERT(window != None);
     while (g.CurrentTabBar != None) //-V1044
     {
@@ -217,7 +217,7 @@ pub fn error_check_end_window_recover(g: &mut Context, log_callback: ErrorLogCal
     }
     while (g.color_stack.size > stack_sizes.sizeOfColorStack)
     {
-        if (log_callback) log_callback(user_data, "Recovered from missing PopStyleColor() in '%s' for ImGuiCol_%s", window.name, GetStyleColorName(g.color_stack.back().Col));
+        if (log_callback) log_callback(user_data, "Recovered from missing PopStyleColor() in '%s' for ImGuiCol_%s", window.name, get_style_color_name(g.color_stack.back().Col));
         pop_style_color();
     }
     while (g.item_flags_stack.size > stack_sizes.sizeOfItemFlagsStack) //-V1044

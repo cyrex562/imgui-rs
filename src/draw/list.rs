@@ -1454,7 +1454,7 @@ impl DrawList {
         //     _ClipRectStack.clear();
         //     _TextureIdStack.clear();
         //     _Path.clear();
-        //     _Splitter.ClearFreeMemory();
+        //     _Splitter.clear_free_memory();
     }
     // void  _PopUnusedDrawCmd();
     pub fn pop_unused_draw_cmd(&mut self) {

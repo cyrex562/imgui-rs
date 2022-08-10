@@ -1047,7 +1047,7 @@ Other Changes:
 - SliderInt: Fixed click/drag when v_min==v_max from setting the value to zero. (#3774) [@erwincoumans]
   Would also repro with DragFloat() when using ImGuiSliderFlags_Logarithmic with v_min==v_max.
 - Menus: Fixed an issue with child-menu auto sizing (issue introduced in 1.80 on 2021/01/25) (#3779)
-- InputText: Fixed slightly off ScrollX tracking, noticeable with large values of FramePadding.x. (#3781)
+- InputText: Fixed slightly off scroll_x tracking, noticeable with large values of FramePadding.x. (#3781)
 - InputText: Multiline: Fixed padding/cliprect not precisely matching single-line version. (#3781)
 - InputText: Multiline: Fixed FramePadding.y worth of vertical offset when aiming with mouse.
 - ListBox: Tweaked default height calculation.
@@ -2412,9 +2412,9 @@ Other Changes:
   Missing calls to End(), past the assert, should not lead to crashes or to the fallback Debug window appearing on screen.
   Those changes makes it easier to integrate dear imgui with a scripting language allowing, given asserts are redirected
   into e.g. an error log and stopping the script execution.
-- ImFontAtlas: Stb and FreeType: Atlas width is now properly based on total surface rather than glyph count (unless overridden with tex_desired_width).
-- ImFontAtlas: Stb and FreeType: Fixed atlas builder so missing glyphs won't influence the atlas texture width. (#2233)
-- ImFontAtlas: Stb and FreeType: Fixed atlas builder so duplicate glyphs (when merging fonts) won't be included in the rasterized atlas.
+- ImFontAtlas: stb and FreeType: Atlas width is now properly based on total surface rather than glyph count (unless overridden with tex_desired_width).
+- ImFontAtlas: stb and FreeType: Fixed atlas builder so missing glyphs won't influence the atlas texture width. (#2233)
+- ImFontAtlas: stb and FreeType: Fixed atlas builder so duplicate glyphs (when merging fonts) won't be included in the rasterized atlas.
 - ImFontAtlas: FreeType: Fixed abnormally high atlas height.
 - ImFontAtlas: FreeType: Fixed support for any values of tex_glyph_padding (not just only 1).
 - ImDrawList: Optimized some of the functions for performance of debug builds where non-inline function call cost are non-negligible.
@@ -3645,10 +3645,10 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - With the addition of better horizontal scrolling primitives I had to make some consistency fixes.
-  `GetCursorPos()` `SetCursorPos()` `GetContentRegionMax()` `GetWindowContentRegionMin()` `GetWindowContentRegionMax()`
+  `get_cursor_pos()` `SetCursorPos()` `GetContentRegionMax()` `GetWindowContentRegionMin()` `GetWindowContentRegionMax()`
   are now incorporating the scrolling amount. They were incorrectly not incorporating this amount previously.
   It PROBABLY shouldn't break anything, but that depends on how you used them. Namely:
-  - If you always used SetCursorPos() with values relative to GetCursorPos() there shouldn't be a problem.
+  - If you always used SetCursorPos() with values relative to get_cursor_pos() there shouldn't be a problem.
     However if you used absolute coordinates, note that SetCursorPosY(100.0) will put you at +100 from the initial Y position (which may be scrolled out of the view), NOT at +100 from the window top border. Since there wasn't any official scrolling value on x axis (past just manually moving the cursor) this can only affect you if you used to set absolute coordinates on the Y axis which is hopefully rare/unlikely, and trivial to fix.
   - The value of GetWindowContentRegionMax() isn't necessarily close to GetWindowWidth() if horizontally scrolling.
     Previously they were roughly interchangeable (roughly because the content region exclude window padding).
@@ -3714,7 +3714,7 @@ Other Changes:
   for forward-compatibility and code using those types/functions may occasionally break. (#219)
 - All sample code is in imgui_demo.cpp. Please keep this file in your project and consider allowing your code to call
   the ShowTestWindow() function as de-facto guide to ImGui features. It will be stripped out by the linker when unused.
-- Added GetContentRegionAvail() helper (basically GetContentRegionMax() - GetCursorPos()).
+- Added GetContentRegionAvail() helper (basically GetContentRegionMax() - get_cursor_pos()).
 - Added ImGuiWindowFlags_NoInputs for totally input-passthru window.
 - Button(): honor negative size consistently with other widgets that do so (width -100 to align the button 100 pixels
   before the right-most position of the contents region).
@@ -3796,7 +3796,7 @@ Other Changes:
 - Updated to stb_truetype 1.06 (+ minor mods) with better font rasterization.
 - InputText: Added ImGuiInputTextFlags_NoHorizontalScroll flag.
 - InputText: Added ImGuiInputTextFlags_AlwaysInsertMode flag.
-- InputText: Added HasSelection() helper in ImGuiTextEditCallbackData as a clarification.
+- InputText: Added has_selection() helper in ImGuiTextEditCallbackData as a clarification.
 - InputText: Fix for using END key on a multi-line text editor (#275)
 - columns: Dispatch render of each column in a sub-draw list and merge on closure, saving a lot of draw calls! (#125)
 - Popups: Fixed Combo boxes inside menus. (#272)

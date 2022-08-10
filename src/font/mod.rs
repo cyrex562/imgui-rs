@@ -566,7 +566,7 @@ const char* ImFont::CalcWordWrapPositionA(float scale, const char* text, const c
         }
 
         let char_width = (c < IndexAdvanceX.size ? IndexAdvanceX.data[c] : FallbackAdvanceX);
-        if (ImCharIsBlankW(c))
+        if (char_is_blank_w(c))
         {
             if (inside_word)
             {

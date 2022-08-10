@@ -26,6 +26,10 @@ pub enum TabItemFlags {
     Leading,
     // Enforce the tab position to the left of the tab bar (after the tab list popup button)
     Trailing, // Enforce the tab position to the right of the tab bar (before the scrolling buttons)
+     NoCloseButton            ,  // Track whether p_open was set or not (we'll need this info on the next frame to recompute ContentWidth during layout)
+    Button                   ,  // Used by TabItemButton, change the tab item behavior to mimic a button
+    Unsorted                 ,  // [Docking] Trailing tabs with the _Unsorted flag will be sorted based on the dock_order of their window.
+    Preview                 // [Docking] Display tab shape for docking preview (height is adjusted slightly to compensate for the yet missing tab bar)
 }
 
 // Storage for one active tab item (sizeof() 48 bytes)

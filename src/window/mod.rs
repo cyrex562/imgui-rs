@@ -44,7 +44,7 @@ use crate::layout::LayoutType;
 use crate::menu_columns::MenuColumns;
 use crate::rect::Rect;
 use crate::size_callback_data::SizeCallbackData;
-use crate::stack::ImGuiStackSizes;
+use crate::stack::StackSizes;
 use crate::tab_bar::TabItemFlags;
 use crate::types::{Id32, WindowHandle, INVALID_ID};
 use crate::utils::{add_hash_set, remove_hash_set_val, sub_hash_set};
@@ -441,7 +441,7 @@ pub struct WindowStackData {
     // ImGuiLastItemData       parent_last_item_data_backup;
     pub parent_last_item_data_backup: LastItemData,
     // ImGuiStackSizes         stack_sizes_on_begin;      // Store size of various stacks for asserting
-    pub stack_sizes_on_begin: ImGuiStackSizes,
+    pub stack_sizes_on_begin: StackSizes,
 }
 
 //     WindowFlags_NoDecoration           = WindowFlags::NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar | WindowFlags_NoCollapse,

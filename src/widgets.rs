@@ -126,7 +126,7 @@ static const ImU64          IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
 //-------------------------------------------------------------------------
 
 // For InputTextEx()
-static bool             InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data, ImGuiInputSource input_source);
+static bool             InputTextFilterCharacter(unsigned int* p_char, InputTextFlags flags, ImGuiInputTextCallback callback, void* user_data, ImGuiInputSource input_source);
 static int              InputTextCalcTextLenAndLineCount(const char* text_begin, const char** out_text_end);
 static Vector2D           InputTextCalcTextSizeW(const ImWchar* text_begin, const ImWchar* text_end, const ImWchar** remaining = None, Vector2D* out_offset = None, bool stop_on_new_line = false);
 
@@ -2165,12 +2165,12 @@ TYPE ImGui::RoundScalarWithFormatT(const char* format, DataType data_type, TYPE 
 
 // This is called by DragBehavior() when the widget is active (held by mouse or being manipulated with Nav controls)
 template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-bool ImGui::DragBehaviorT(DataType data_type, TYPE* v, float v_speed, const TYPE v_min, const TYPE v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragBehaviorT(DataType data_type, TYPE* v, float v_speed, const TYPE v_min, const TYPE v_max, const char* format, SliderFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    const ImGuiAxis axis = (flags & ImGuiSliderFlags_Vertical) ? ImGuiAxis_Y : ImGuiAxis_X;
+    const ImGuiAxis axis = (flags & SliderFlags_Vertical) ? ImGuiAxis_Y : ImGuiAxis_X;
     let is_clamped = (v_min < v_max);
-    let is_logarithmic = (flags & ImGuiSliderFlags_Logarithmic) != 0;
+    let is_logarithmic = (flags & SliderFlags_Logarithmic) != 0;
     let is_floating_point = (data_type == DataType::Float) || (data_type == DataType::Double);
 
     // Default tweak speed
@@ -2244,7 +2244,7 @@ bool ImGui::DragBehaviorT(DataType data_type, TYPE* v, float v_speed, const TYPE
     }
 
     // Round to user desired precision based on format string
-    if (is_floating_point && !(flags & ImGuiSliderFlags_NoRoundToFormat))
+    if (is_floating_point && !(flags & SliderFlags_NoRoundToFormat))
         v_cur = RoundScalarWithFormatT<TYPE>(format, data_type, v_cur);
 
     // Preserve remainder after rounding has been applied. This also allow slow tweaking of values.
@@ -2280,10 +2280,10 @@ bool ImGui::DragBehaviorT(DataType data_type, TYPE* v, float v_speed, const TYPE
     return true;
 }
 
-bool ImGui::DragBehavior(Id32 id, DataType data_type, void* p_v, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragBehavior(Id32 id, DataType data_type, void* p_v, float v_speed, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
-    IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
+    IM_ASSERT((flags == 1 || (flags & SliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
 
     // ImGuiContext& g = *GImGui;
     if (g.ActiveId == id)
@@ -2295,7 +2295,7 @@ bool ImGui::DragBehavior(Id32 id, DataType data_type, void* p_v, float v_speed, 
     }
     if (g.ActiveId != id)
         return false;
-    if ((g.last_item_data.in_flags & ItemFlags::ReadOnly) || (flags & ImGuiSliderFlags_ReadOnly))
+    if ((g.last_item_data.in_flags & ItemFlags::ReadOnly) || (flags & SliderFlags_ReadOnly))
         return false;
 
     switch (data_type)
@@ -2318,7 +2318,7 @@ bool ImGui::DragBehavior(Id32 id, DataType data_type, void* p_v, float v_speed, 
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->data Types' to understand how to use this function directly.
-bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2333,7 +2333,7 @@ bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, floa
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + DimgVec2D::new(w, label_size.y + style.FramePadding.y * 2.0));
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + DimgVec2D::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
 
-    let temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
+    let temp_input_allowed = (flags & SliderFlags_NoInput) == 0;
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ItemFlags::Inputable : 0))
         return false;
@@ -2378,7 +2378,7 @@ bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, floa
     if (temp_input_is_active)
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
-        let is_clamp_input = (flags & ImGuiSliderFlags_AlwaysClamp) != 0 && (p_min == None || p_max == None || DataTypeCompare(data_type, p_min, p_max) < 0);
+        let is_clamp_input = (flags & SliderFlags_AlwaysClamp) != 0 && (p_min == None || p_max == None || DataTypeCompare(data_type, p_min, p_max) < 0);
         return TempInputScalar(frame_bb, id, label, data_type, p_data, format, is_clamp_input ? p_min : None, is_clamp_input ? p_max : None);
     }
 
@@ -2406,7 +2406,7 @@ bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, floa
     return value_changed;
 }
 
-bool ImGui::DragScalarN(const char* label, DataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragScalarN(const char* label, DataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2441,28 +2441,28 @@ bool ImGui::DragScalarN(const char* label, DataType data_type, void* p_data, int
     return value_changed;
 }
 
-bool ImGui::DragFloat(const char* label, float* v, float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragFloat(const char* label, float* v, float v_speed, float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return DragScalar(label, DataType::Float, v, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::DragFloat2(const char* label, float v[2], float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragFloat2(const char* label, float v[2], float v_speed, float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return DragScalarN(label, DataType::Float, v, 2, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::DragFloat3(const char* label, float v[3], float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragFloat3(const char* label, float v[3], float v_speed, float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return DragScalarN(label, DataType::Float, v, 3, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::DragFloat4(const char* label, float v[4], float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragFloat4(const char* label, float v[4], float v_speed, float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return DragScalarN(label, DataType::Float, v, 4, v_speed, &v_min, &v_max, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
-bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_current_max, float v_speed, float v_min, float v_max, const char* format, const char* format_max, ImGuiSliderFlags flags)
+bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_current_max, float v_speed, float v_min, float v_max, const char* format, const char* format_max, SliderFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2475,14 +2475,14 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
 
     let min_min =  (v_min >= v_max) ? -FLT_MAX : v_min;
     let min_max =  (v_min >= v_max) ? *v_current_max : ImMin(v_max, *v_current_max);
-    ImGuiSliderFlags min_flags = flags | ((min_min == min_max) ? ImGuiSliderFlags_ReadOnly : 0);
+    SliderFlags min_flags = flags | ((min_min == min_max) ? SliderFlags_ReadOnly : 0);
     bool value_changed = DragScalar("##min", DataType::Float, v_current_min, v_speed, &min_min, &min_max, format, min_flags);
     PopItemWidth();
     same_line(0, g.Style.ItemInnerSpacing.x);
 
     let max_min =  (v_min >= v_max) ? *v_current_min : ImMax(v_min, *v_current_min);
     let max_max =  (v_min >= v_max) ? FLT_MAX : v_max;
-    ImGuiSliderFlags max_flags = flags | ((max_min == max_max) ? ImGuiSliderFlags_ReadOnly : 0);
+    SliderFlags max_flags = flags | ((max_min == max_max) ? SliderFlags_ReadOnly : 0);
     value_changed |= DragScalar("##max", DataType::Float, v_current_max, v_speed, &max_min, &max_max, format_max ? format_max : format, max_flags);
     PopItemWidth();
     same_line(0, g.Style.ItemInnerSpacing.x);
@@ -2495,28 +2495,28 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
 }
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
-bool ImGui::DragInt(const char* label, int* v, float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragInt(const char* label, int* v, float v_speed, int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return DragScalar(label, DataType::S32, v, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::DragInt2(const char* label, int v[2], float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragInt2(const char* label, int v[2], float v_speed, int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return DragScalarN(label, DataType::S32, v, 2, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::DragInt3(const char* label, int v[3], float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragInt3(const char* label, int v[3], float v_speed, int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return DragScalarN(label, DataType::S32, v, 3, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::DragInt4(const char* label, int v[4], float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::DragInt4(const char* label, int v[4], float v_speed, int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return DragScalarN(label, DataType::S32, v, 4, v_speed, &v_min, &v_max, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
-bool ImGui::DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed, int v_min, int v_max, const char* format, const char* format_max, ImGuiSliderFlags flags)
+bool ImGui::DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed, int v_min, int v_max, const char* format, const char* format_max, SliderFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2529,14 +2529,14 @@ bool ImGui::DragIntRange2(const char* label, int* v_current_min, int* v_current_
 
     int min_min = (v_min >= v_max) ? INT_MIN : v_min;
     int min_max = (v_min >= v_max) ? *v_current_max : ImMin(v_max, *v_current_max);
-    ImGuiSliderFlags min_flags = flags | ((min_min == min_max) ? ImGuiSliderFlags_ReadOnly : 0);
+    SliderFlags min_flags = flags | ((min_min == min_max) ? SliderFlags_ReadOnly : 0);
     bool value_changed = DragInt("##min", v_current_min, v_speed, min_min, min_max, format, min_flags);
     PopItemWidth();
     same_line(0, g.Style.ItemInnerSpacing.x);
 
     int max_min = (v_min >= v_max) ? *v_current_min : ImMax(v_min, *v_current_min);
     int max_max = (v_min >= v_max) ? INT_MAX : v_max;
-    ImGuiSliderFlags max_flags = flags | ((max_min == max_max) ? ImGuiSliderFlags_ReadOnly : 0);
+    SliderFlags max_flags = flags | ((max_min == max_max) ? SliderFlags_ReadOnly : 0);
     value_changed |= DragInt("##max", v_current_max, v_speed, max_min, max_max, format_max ? format_max : format, max_flags);
     PopItemWidth();
     same_line(0, g.Style.ItemInnerSpacing.x);
@@ -2553,24 +2553,24 @@ bool ImGui::DragIntRange2(const char* label, int* v_current_min, int* v_current_
 // Obsolete versions with power parameter. See https://github.com/ocornut/imgui/issues/3361 for details.
 bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, float power)
 {
-    ImGuiSliderFlags drag_flags = ImGuiSliderFlags_None;
+    SliderFlags drag_flags = SliderFlags_None;
     if (power != 1.0)
     {
         IM_ASSERT(power == 1.0 && "Call function with ImGuiSliderFlags_Logarithmic flags instead of using the old 'float power' function!");
         IM_ASSERT(p_min != None && p_max != None);  // When using a power curve the drag needs to have known bounds
-        drag_flags |= ImGuiSliderFlags_Logarithmic;   // Fallback for non-asserting paths
+        drag_flags |= SliderFlags_Logarithmic;   // Fallback for non-asserting paths
     }
     return DragScalar(label, data_type, p_data, v_speed, p_min, p_max, format, drag_flags);
 }
 
 bool ImGui::DragScalarN(const char* label, DataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, float power)
 {
-    ImGuiSliderFlags drag_flags = ImGuiSliderFlags_None;
+    SliderFlags drag_flags = SliderFlags_None;
     if (power != 1.0)
     {
         IM_ASSERT(power == 1.0 && "Call function with ImGuiSliderFlags_Logarithmic flags instead of using the old 'float power' function!");
         IM_ASSERT(p_min != None && p_max != None);  // When using a power curve the drag needs to have known bounds
-        drag_flags |= ImGuiSliderFlags_Logarithmic;   // Fallback for non-asserting paths
+        drag_flags |= SliderFlags_Logarithmic;   // Fallback for non-asserting paths
     }
     return DragScalarN(label, data_type, p_data, components, v_speed, p_min, p_max, format, drag_flags);
 }
@@ -2726,13 +2726,13 @@ TYPE ImGui::ScaleValueFromRatioT(DataType data_type, float t, TYPE v_min, TYPE v
 
 // FIXME: Try to move more of the code into shared SliderBehavior()
 template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-bool ImGui::SliderBehaviorT(const ImRect& bb, Id32 id, DataType data_type, TYPE* v, const TYPE v_min, const TYPE v_max, const char* format, ImGuiSliderFlags flags, ImRect* out_grab_bb)
+bool ImGui::SliderBehaviorT(const ImRect& bb, Id32 id, DataType data_type, TYPE* v, const TYPE v_min, const TYPE v_max, const char* format, SliderFlags flags, ImRect* out_grab_bb)
 {
     // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
 
-    const ImGuiAxis axis = (flags & ImGuiSliderFlags_Vertical) ? ImGuiAxis_Y : ImGuiAxis_X;
-    let is_logarithmic = (flags & ImGuiSliderFlags_Logarithmic) != 0;
+    const ImGuiAxis axis = (flags & SliderFlags_Vertical) ? ImGuiAxis_Y : ImGuiAxis_X;
+    let is_logarithmic = (flags & SliderFlags_Logarithmic) != 0;
     let is_floating_point = (data_type == DataType::Float) || (data_type == DataType::Double);
     const SIGNEDTYPE v_range = (v_min < v_max ? v_max - v_min : v_min - v_max);
 
@@ -2843,7 +2843,7 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, Id32 id, DataType data_type, TYPE*
 
                     // Calculate what our "new" clicked_t will be, and thus how far we actually moved the slider, and subtract this from the accumulator
                     TYPE v_new = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-                    if (is_floating_point && !(flags & ImGuiSliderFlags_NoRoundToFormat))
+                    if (is_floating_point && !(flags & SliderFlags_NoRoundToFormat))
                         v_new = RoundScalarWithFormatT<TYPE>(format, data_type, v_new);
                     let new_clicked_t =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
 
@@ -2862,7 +2862,7 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, Id32 id, DataType data_type, TYPE*
             TYPE v_new = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
 
             // Round to user desired precision based on format string
-            if (is_floating_point && !(flags & ImGuiSliderFlags_NoRoundToFormat))
+            if (is_floating_point && !(flags & SliderFlags_NoRoundToFormat))
                 v_new = RoundScalarWithFormatT<TYPE>(format, data_type, v_new);
 
             // Apply result
@@ -2897,13 +2897,13 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, Id32 id, DataType data_type, TYPE*
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
 // So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-bool ImGui::SliderBehavior(const ImRect& bb, Id32 id, DataType data_type, void* p_v, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags, ImRect* out_grab_bb)
+bool ImGui::SliderBehavior(const ImRect& bb, Id32 id, DataType data_type, void* p_v, const void* p_min, const void* p_max, const char* format, SliderFlags flags, ImRect* out_grab_bb)
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
-    IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
+    IM_ASSERT((flags == 1 || (flags & SliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
 
     // ImGuiContext& g = *GImGui;
-    if ((g.last_item_data.in_flags & ItemFlags::ReadOnly) || (flags & ImGuiSliderFlags_ReadOnly))
+    if ((g.last_item_data.in_flags & ItemFlags::ReadOnly) || (flags & SliderFlags_ReadOnly))
         return false;
 
     switch (data_type)
@@ -2938,7 +2938,7 @@ bool ImGui::SliderBehavior(const ImRect& bb, Id32 id, DataType data_type, void* 
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo->Widgets->data Types' to understand how to use this function directly.
-bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2953,7 +2953,7 @@ bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, co
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + DimgVec2D::new(w, label_size.y + style.FramePadding.y * 2.0));
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + DimgVec2D::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
 
-    let temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
+    let temp_input_allowed = (flags & SliderFlags_NoInput) == 0;
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ItemFlags::Inputable : 0))
         return false;
@@ -2988,7 +2988,7 @@ bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, co
     if (temp_input_is_active)
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
-        let is_clamp_input = (flags & ImGuiSliderFlags_AlwaysClamp) != 0;
+        let is_clamp_input = (flags & SliderFlags_AlwaysClamp) != 0;
         return TempInputScalar(frame_bb, id, label, data_type, p_data, format, is_clamp_input ? p_min : None, is_clamp_input ? p_max : None);
     }
 
@@ -3022,7 +3022,7 @@ bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, co
 }
 
 // Add multiple sliders on 1 line for compact edition of multiple components
-bool ImGui::SliderScalarN(const char* label, DataType data_type, void* v, int components, const void* v_min, const void* v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderScalarN(const char* label, DataType data_type, void* v, int components, const void* v_min, const void* v_max, const char* format, SliderFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3057,27 +3057,27 @@ bool ImGui::SliderScalarN(const char* label, DataType data_type, void* v, int co
     return value_changed;
 }
 
-bool ImGui::SliderFloat(const char* label, float* v, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderFloat(const char* label, float* v, float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return SliderScalar(label, DataType::Float, v, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::SliderFloat2(const char* label, float v[2], float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderFloat2(const char* label, float v[2], float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return SliderScalarN(label, DataType::Float, v, 2, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::SliderFloat3(const char* label, float v[3], float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderFloat3(const char* label, float v[3], float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return SliderScalarN(label, DataType::Float, v, 3, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::SliderFloat4(const char* label, float v[4], float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderFloat4(const char* label, float v[4], float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return SliderScalarN(label, DataType::Float, v, 4, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::SliderAngle(const char* label, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderAngle(const char* label, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, SliderFlags flags)
 {
     if (format == None)
         format = "%.0 deg";
@@ -3087,27 +3087,27 @@ bool ImGui::SliderAngle(const char* label, float* v_rad, float v_degrees_min, fl
     return value_changed;
 }
 
-bool ImGui::SliderInt(const char* label, int* v, int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderInt(const char* label, int* v, int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return SliderScalar(label, DataType::S32, v, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::SliderInt2(const char* label, int v[2], int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderInt2(const char* label, int v[2], int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return SliderScalarN(label, DataType::S32, v, 2, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::SliderInt3(const char* label, int v[3], int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderInt3(const char* label, int v[3], int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return SliderScalarN(label, DataType::S32, v, 3, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::SliderInt4(const char* label, int v[4], int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::SliderInt4(const char* label, int v[4], int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return SliderScalarN(label, DataType::S32, v, 4, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::VSliderScalar(const char* label, const Vector2D& size, DataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::VSliderScalar(const char* label, const Vector2D& size, DataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3147,7 +3147,7 @@ bool ImGui::VSliderScalar(const char* label, const Vector2D& size, DataType data
 
     // Slider behavior
     ImRect grab_bb;
-    let value_changed = SliderBehavior(frame_bb, id, data_type, p_data, p_min, p_max, format, flags | ImGuiSliderFlags_Vertical, &grab_bb);
+    let value_changed = SliderBehavior(frame_bb, id, data_type, p_data, p_min, p_max, format, flags | SliderFlags_Vertical, &grab_bb);
     if (value_changed)
         MarkItemEdited(id);
 
@@ -3166,12 +3166,12 @@ bool ImGui::VSliderScalar(const char* label, const Vector2D& size, DataType data
     return value_changed;
 }
 
-bool ImGui::VSliderFloat(const char* label, const Vector2D& size, float* v, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::VSliderFloat(const char* label, const Vector2D& size, float* v, float v_min, float v_max, const char* format, SliderFlags flags)
 {
     return VSliderScalar(label, size, DataType::Float, v, &v_min, &v_max, format, flags);
 }
 
-bool ImGui::VSliderInt(const char* label, const Vector2D& size, int* v, int v_min, int v_max, const char* format, ImGuiSliderFlags flags)
+bool ImGui::VSliderInt(const char* label, const Vector2D& size, int* v, int v_min, int v_max, const char* format, SliderFlags flags)
 {
     return VSliderScalar(label, size, DataType::S32, v, &v_min, &v_max, format, flags);
 }
@@ -3181,22 +3181,22 @@ bool ImGui::VSliderInt(const char* label, const Vector2D& size, int* v, int v_mi
 // Obsolete versions with power parameter. See https://github.com/ocornut/imgui/issues/3361 for details.
 bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, float power)
 {
-    ImGuiSliderFlags slider_flags = ImGuiSliderFlags_None;
+    SliderFlags slider_flags = SliderFlags_None;
     if (power != 1.0)
     {
         IM_ASSERT(power == 1.0 && "Call function with ImGuiSliderFlags_Logarithmic flags instead of using the old 'float power' function!");
-        slider_flags |= ImGuiSliderFlags_Logarithmic;   // Fallback for non-asserting paths
+        slider_flags |= SliderFlags_Logarithmic;   // Fallback for non-asserting paths
     }
     return SliderScalar(label, data_type, p_data, p_min, p_max, format, slider_flags);
 }
 
 bool ImGui::SliderScalarN(const char* label, DataType data_type, void* v, int components, const void* v_min, const void* v_max, const char* format, float power)
 {
-    ImGuiSliderFlags slider_flags = ImGuiSliderFlags_None;
+    SliderFlags slider_flags = SliderFlags_None;
     if (power != 1.0)
     {
         IM_ASSERT(power == 1.0 && "Call function with ImGuiSliderFlags_Logarithmic flags instead of using the old 'float power' function!");
-        slider_flags |= ImGuiSliderFlags_Logarithmic;   // Fallback for non-asserting paths
+        slider_flags |= SliderFlags_Logarithmic;   // Fallback for non-asserting paths
     }
     return SliderScalarN(label, data_type, v, components, v_min, v_max, format, slider_flags);
 }
@@ -3351,7 +3351,7 @@ int ImParseFormatPrecision(const char* fmt, int default_precision)
 
 // Create text input in place of another active widget (e.g. used when doing a CTRL+Click on drag/slider widgets)
 // FIXME: Facilitate using this in variety of other situations.
-bool ImGui::TempInputText(const ImRect& bb, Id32 id, const char* label, char* buf, int buf_size, ImGuiInputTextFlags flags)
+bool ImGui::TempInputText(const ImRect& bb, Id32 id, const char* label, char* buf, int buf_size, InputTextFlags flags)
 {
     // On the first frame, g.TempInputTextId == 0, then on subsequent frames it becomes == id.
     // We clear ActiveID on the first frame to allow the InputText() taking it back.
@@ -3361,7 +3361,7 @@ bool ImGui::TempInputText(const ImRect& bb, Id32 id, const char* label, char* bu
         ClearActiveID();
 
     g.current_window_id->DC.CursorPos = bb.Min;
-    bool value_changed = InputTextEx(label, None, buf, buf_size, bb.GetSize(), flags | ImGuiInputTextFlags_MergedItem);
+    bool value_changed = InputTextEx(label, None, buf, buf_size, bb.GetSize(), flags | InputTextFlags_MergedItem);
     if (init)
     {
         // First frame we started displaying the InputText widget, we expect it to take the active id.
@@ -3371,12 +3371,12 @@ bool ImGui::TempInputText(const ImRect& bb, Id32 id, const char* label, char* bu
     return value_changed;
 }
 
-static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(DataType data_type, const char* format)
+static inline InputTextFlags InputScalar_DefaultCharsFilter(DataType data_type, const char* format)
 {
     if (data_type == DataType::Float || data_type == DataType::Double)
-        return ImGuiInputTextFlags_CharsScientific;
+        return InputTextFlags_CharsScientific;
     const char format_last_char = format[0] ? format[strlen(format) - 1] : 0;
-    return (format_last_char == 'x' || format_last_char == 'X') ? ImGuiInputTextFlags_CharsHexadecimal : ImGuiInputTextFlags_CharsDecimal;
+    return (format_last_char == 'x' || format_last_char == 'X') ? InputTextFlags_CharsHexadecimal : InputTextFlags_CharsDecimal;
 }
 
 // Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
@@ -3390,7 +3390,7 @@ bool ImGui::TempInputScalar(const ImRect& bb, Id32 id, const char* label, DataTy
     DataTypeFormatString(data_buf, IM_ARRAYSIZE(data_buf), data_type, p_data, format);
     ImStrTrimBlanks(data_buf);
 
-    ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited;
+    InputTextFlags flags = InputTextFlags_AutoSelectAll | InputTextFlags_NoMarkEdited;
     flags |= InputScalar_DefaultCharsFilter(data_type, format);
 
     bool value_changed = false;
@@ -3420,7 +3420,7 @@ bool ImGui::TempInputScalar(const ImRect& bb, Id32 id, const char* label, DataTy
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->data Types' to understand how to use this function directly.
-bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, const void* p_step, const void* p_step_fast, const char* format, ImGuiInputTextFlags flags)
+bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, const void* p_step, const void* p_step_fast, const char* format, InputTextFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3436,9 +3436,9 @@ bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, con
     DataTypeFormatString(buf, IM_ARRAYSIZE(buf), data_type, p_data, format);
 
     // Testing active_id as a minor optimization as filtering is not needed until active
-    if (g.ActiveId == 0 && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsScientific)) == 0)
+    if (g.ActiveId == 0 && (flags & (InputTextFlags_CharsDecimal | InputTextFlags_CharsHexadecimal | InputTextFlags_CharsScientific)) == 0)
         flags |= InputScalar_DefaultCharsFilter(data_type, format);
-    flags |= ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited; // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
+    flags |= InputTextFlags_AutoSelectAll | InputTextFlags_NoMarkEdited; // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
 
     bool value_changed = false;
     if (p_step != None)
@@ -3455,7 +3455,7 @@ bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, con
         const Vector2D backup_frame_padding = style.FramePadding;
         style.FramePadding.x = style.FramePadding.y;
         ImGuiButtonFlags button_flags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
-        if (flags & ImGuiInputTextFlags_ReadOnly)
+        if (flags & InputTextFlags_ReadOnly)
             BeginDisabled();
         same_line(0, style.ItemInnerSpacing.x);
         if (ButtonEx("-", DimgVec2D::new(button_size, button_size), button_flags))
@@ -3469,7 +3469,7 @@ bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, con
             DataTypeApplyOp(data_type, '+', p_data, p_data, g.IO.KeyCtrl && p_step_fast ? p_step_fast : p_step);
             value_changed = true;
         }
-        if (flags & ImGuiInputTextFlags_ReadOnly)
+        if (flags & InputTextFlags_ReadOnly)
             EndDisabled();
 
         const char* label_end = find_rendered_text_end(label);
@@ -3494,7 +3494,7 @@ bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, con
     return value_changed;
 }
 
-bool ImGui::InputScalarN(const char* label, DataType data_type, void* p_data, int components, const void* p_step, const void* p_step_fast, const char* format, ImGuiInputTextFlags flags)
+bool ImGui::InputScalarN(const char* label, DataType data_type, void* p_data, int components, const void* p_step, const void* p_step_fast, const char* format, InputTextFlags flags)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3529,52 +3529,52 @@ bool ImGui::InputScalarN(const char* label, DataType data_type, void* p_data, in
     return value_changed;
 }
 
-bool ImGui::InputFloat(const char* label, float* v, float step, float step_fast, const char* format, ImGuiInputTextFlags flags)
+bool ImGui::InputFloat(const char* label, float* v, float step, float step_fast, const char* format, InputTextFlags flags)
 {
-    flags |= ImGuiInputTextFlags_CharsScientific;
+    flags |= InputTextFlags_CharsScientific;
     return InputScalar(label, DataType::Float, (void*)v, (void*)(step > 0.0 ? &step : None), (void*)(step_fast > 0.0 ? &step_fast : None), format, flags);
 }
 
-bool ImGui::InputFloat2(const char* label, float v[2], const char* format, ImGuiInputTextFlags flags)
+bool ImGui::InputFloat2(const char* label, float v[2], const char* format, InputTextFlags flags)
 {
     return InputScalarN(label, DataType::Float, v, 2, None, None, format, flags);
 }
 
-bool ImGui::InputFloat3(const char* label, float v[3], const char* format, ImGuiInputTextFlags flags)
+bool ImGui::InputFloat3(const char* label, float v[3], const char* format, InputTextFlags flags)
 {
     return InputScalarN(label, DataType::Float, v, 3, None, None, format, flags);
 }
 
-bool ImGui::InputFloat4(const char* label, float v[4], const char* format, ImGuiInputTextFlags flags)
+bool ImGui::InputFloat4(const char* label, float v[4], const char* format, InputTextFlags flags)
 {
     return InputScalarN(label, DataType::Float, v, 4, None, None, format, flags);
 }
 
-bool ImGui::InputInt(const char* label, int* v, int step, int step_fast, ImGuiInputTextFlags flags)
+bool ImGui::InputInt(const char* label, int* v, int step, int step_fast, InputTextFlags flags)
 {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
-    const char* format = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
+    const char* format = (flags & InputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
     return InputScalar(label, DataType::S32, (void*)v, (void*)(step > 0 ? &step : None), (void*)(step_fast > 0 ? &step_fast : None), format, flags);
 }
 
-bool ImGui::InputInt2(const char* label, int v[2], ImGuiInputTextFlags flags)
+bool ImGui::InputInt2(const char* label, int v[2], InputTextFlags flags)
 {
     return InputScalarN(label, DataType::S32, v, 2, None, None, "%d", flags);
 }
 
-bool ImGui::InputInt3(const char* label, int v[3], ImGuiInputTextFlags flags)
+bool ImGui::InputInt3(const char* label, int v[3], InputTextFlags flags)
 {
     return InputScalarN(label, DataType::S32, v, 3, None, None, "%d", flags);
 }
 
-bool ImGui::InputInt4(const char* label, int v[4], ImGuiInputTextFlags flags)
+bool ImGui::InputInt4(const char* label, int v[4], InputTextFlags flags)
 {
     return InputScalarN(label, DataType::S32, v, 4, None, None, "%d", flags);
 }
 
-bool ImGui::InputDouble(const char* label, double* v, double step, double step_fast, const char* format, ImGuiInputTextFlags flags)
+bool ImGui::InputDouble(const char* label, double* v, double step, double step_fast, const char* format, InputTextFlags flags)
 {
-    flags |= ImGuiInputTextFlags_CharsScientific;
+    flags |= InputTextFlags_CharsScientific;
     return InputScalar(label, DataType::Double, (void*)v, (void*)(step > 0.0 ? &step : None), (void*)(step_fast > 0.0 ? &step_fast : None), format, flags);
 }
 
@@ -3591,20 +3591,20 @@ bool ImGui::InputDouble(const char* label, double* v, double step, double step_f
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
 
-bool ImGui::InputText(const char* label, char* buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+bool ImGui::InputText(const char* label, char* buf, size_t buf_size, InputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
-    IM_ASSERT(!(flags & ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
+    IM_ASSERT(!(flags & InputTextFlags_Multiline)); // call InputTextMultiline()
     return InputTextEx(label, None, buf, buf_size, DimgVec2D::new(0, 0), flags, callback, user_data);
 }
 
-bool ImGui::InputTextMultiline(const char* label, char* buf, size_t buf_size, const Vector2D& size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+bool ImGui::InputTextMultiline(const char* label, char* buf, size_t buf_size, const Vector2D& size, InputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
-    return InputTextEx(label, None, buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, callback, user_data);
+    return InputTextEx(label, None, buf, buf_size, size, flags | InputTextFlags_Multiline, callback, user_data);
 }
 
-bool ImGui::InputTextWithHint(const char* label, const char* hint, char* buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+bool ImGui::InputTextWithHint(const char* label, const char* hint, char* buf, size_t buf_size, InputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
-    IM_ASSERT(!(flags & ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
+    IM_ASSERT(!(flags & InputTextFlags_Multiline)); // call InputTextMultiline()
     return InputTextEx(label, hint, buf, buf_size, DimgVec2D::new(0, 0), flags, callback, user_data);
 }
 
@@ -3628,7 +3628,7 @@ namespace ImStb
 
 } // namespace ImStb
 
-void ImGuiInputTextState::OnKeyPressed(int key)
+void InputTextState::OnKeyPressed(int key)
 {
     stb_textedit_key(this, &Stb, key);
     CursorFollow = true;
@@ -3663,7 +3663,7 @@ void ImGuiInputTextCallbackData::DeleteChars(int pos, int bytes_count)
 
 void ImGuiInputTextCallbackData::InsertChars(int pos, const char* new_text, const char* new_text_end)
 {
-    let is_resizable = (Flags & ImGuiInputTextFlags_CallbackResize) != 0;
+    let is_resizable = (Flags & InputTextFlags_CallbackResize) != 0;
     let new_text_len = new_text_end ? (new_text_end - new_text) : strlen(new_text);
     if (new_text_len + BufTextLen >= BufSize)
     {
@@ -3672,7 +3672,7 @@ void ImGuiInputTextCallbackData::InsertChars(int pos, const char* new_text, cons
 
         // Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
         // ImGuiContext& g = *GImGui;
-        ImGuiInputTextState* edit_state = &g.InputTextState;
+        InputTextState* edit_state = &g.InputTextState;
         IM_ASSERT(edit_state->ID != 0 && g.ActiveId == edit_state->ID);
         IM_ASSERT(Buf == edit_state->TextA.Data);
         int new_buf_size = BufTextLen + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1;
@@ -3694,7 +3694,7 @@ void ImGuiInputTextCallbackData::InsertChars(int pos, const char* new_text, cons
 }
 
 // Return false to discard a character.
-static bool InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data, ImGuiInputSource input_source)
+static bool InputTextFilterCharacter(unsigned int* p_char, InputTextFlags flags, ImGuiInputTextCallback callback, void* user_data, ImGuiInputSource input_source)
 {
     IM_ASSERT(input_source == ImGuiInputSource_Keyboard || input_source == ImGuiInputSource_Clipboard);
     unsigned int c = *p_char;
@@ -3704,8 +3704,8 @@ static bool InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags f
     if (c < 0x20)
     {
         bool pass = false;
-        pass |= (c == '\n' && (flags & ImGuiInputTextFlags_Multiline)); // Note that an Enter KEY will emit \r and be ignored (we poll for KEY in InputText() code)
-        pass |= (c == '\t' && (flags & ImGuiInputTextFlags_AllowTabInput));
+        pass |= (c == '\n' && (flags & InputTextFlags_Multiline)); // Note that an Enter KEY will emit \r and be ignored (we poll for KEY in InputText() code)
+        pass |= (c == '\t' && (flags & InputTextFlags_AllowTabInput));
         if (!pass)
             return false;
         apply_named_filters = false; // Override named filters below so newline and tabs can still be inserted.
@@ -3727,7 +3727,7 @@ static bool InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags f
         return false;
 
     // Generic named filters
-    if (apply_named_filters && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsScientific)))
+    if (apply_named_filters && (flags & (InputTextFlags_CharsDecimal | InputTextFlags_CharsHexadecimal | InputTextFlags_CharsUppercase | InputTextFlags_CharsNoBlank | InputTextFlags_CharsScientific)))
     {
         // The libc allows overriding locale, with e.g. 'setlocale(LC_NUMERIC, "de_DE.UTF-8");' which affect the output/input of printf/scanf to use e.g. ',' instead of '.'.
         // The standard mandate that programs starts in the "C" locale where the decimal point is '.'.
@@ -3739,36 +3739,36 @@ static bool InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags f
         const unsigned c_decimal_point = (unsigned int)g.PlatformLocaleDecimalPoint;
 
         // Allow 0-9 . - + * /
-        if (flags & ImGuiInputTextFlags_CharsDecimal)
+        if (flags & InputTextFlags_CharsDecimal)
             if (!(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/'))
                 return false;
 
         // Allow 0-9 . - + * / e E
-        if (flags & ImGuiInputTextFlags_CharsScientific)
+        if (flags & InputTextFlags_CharsScientific)
             if (!(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/') && (c != 'e') && (c != 'E'))
                 return false;
 
         // Allow 0-9 a-F A-F
-        if (flags & ImGuiInputTextFlags_CharsHexadecimal)
+        if (flags & InputTextFlags_CharsHexadecimal)
             if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f') && !(c >= 'A' && c <= 'F'))
                 return false;
 
         // Turn a-z into A-Z
-        if (flags & ImGuiInputTextFlags_CharsUppercase)
+        if (flags & InputTextFlags_CharsUppercase)
             if (c >= 'a' && c <= 'z')
                 *p_char = (c += (unsigned int)('A' - 'a'));
 
-        if (flags & ImGuiInputTextFlags_CharsNoBlank)
-            if (ImCharIsBlankW(c))
+        if (flags & InputTextFlags_CharsNoBlank)
+            if (char_is_blank_w(c))
                 return false;
     }
 
     // Custom callback filter
-    if (flags & ImGuiInputTextFlags_CallbackCharFilter)
+    if (flags & InputTextFlags_CallbackCharFilter)
     {
         ImGuiInputTextCallbackData callback_data;
         memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
-        callback_data.EventFlag = ImGuiInputTextFlags_CallbackCharFilter;
+        callback_data.EventFlag = InputTextFlags_CallbackCharFilter;
         callback_data.EventChar = (ImWchar)c;
         callback_data.Flags = flags;
         callback_data.UserData = user_data;
@@ -3783,9 +3783,9 @@ static bool InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags f
 }
 
 // Find the shortest single replacement we can make to get the new text from the old text.
-// Important: needs to be run before TextW is rewritten with the new characters because calling STB_TEXTEDIT_GETCHAR() at the end.
+// Important: needs to be run before text_w is rewritten with the new characters because calling STB_TEXTEDIT_GETCHAR() at the end.
 // FIXME: Ideally we should transition toward (1) making InsertChars()/DeleteChars() update undo-stack (2) discourage (and keep reconcile) or obsolete (and remove reconcile) accessing buffer directly.
-static void InputTextReconcileUndoStateAfterUserCallback(ImGuiInputTextState* state, const char* new_buf_a, int new_length_a)
+static void InputTextReconcileUndoStateAfterUserCallback(InputTextState* state, const char* new_buf_a, int new_length_a)
 {
     // ImGuiContext& g = *GImGui;
     const ImWchar* old_buf = state->TextW.Data;
@@ -3825,26 +3825,26 @@ static void InputTextReconcileUndoStateAfterUserCallback(ImGuiInputTextState* st
 // - If you want to use ImGui::InputText() with std::string, see misc/cpp/imgui_stdlib.h
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_size, const Vector2D& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* callback_user_data)
+bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_size, const Vector2D& size_arg, InputTextFlags flags, ImGuiInputTextCallback callback, void* callback_user_data)
 {
     Window* window = GetCurrentWindow();
     if (window.SkipItems)
         return false;
 
     IM_ASSERT(buf != None && buf_size >= 0);
-    IM_ASSERT(!((flags & ImGuiInputTextFlags_CallbackHistory) && (flags & ImGuiInputTextFlags_Multiline)));        // Can't use both together (they both use up/down keys)
-    IM_ASSERT(!((flags & ImGuiInputTextFlags_CallbackCompletion) && (flags & ImGuiInputTextFlags_AllowTabInput))); // Can't use both together (they both use tab key)
+    IM_ASSERT(!((flags & InputTextFlags_CallbackHistory) && (flags & InputTextFlags_Multiline)));        // Can't use both together (they both use up/down keys)
+    IM_ASSERT(!((flags & InputTextFlags_CallbackCompletion) && (flags & InputTextFlags_AllowTabInput))); // Can't use both together (they both use tab key)
 
     // ImGuiContext& g = *GImGui;
     ImGuiIO& io = g.IO;
     const ImGuiStyle& style = g.Style;
 
     let RENDER_SELECTION_WHEN_INACTIVE = false;
-    let is_multiline = (flags & ImGuiInputTextFlags_Multiline) != 0;
-    let is_readonly = (flags & ImGuiInputTextFlags_ReadOnly) != 0;
-    let is_password = (flags & ImGuiInputTextFlags_Password) != 0;
-    let is_undoable = (flags & ImGuiInputTextFlags_NoUndoRedo) == 0;
-    let is_resizable = (flags & ImGuiInputTextFlags_CallbackResize) != 0;
+    let is_multiline = (flags & InputTextFlags_Multiline) != 0;
+    let is_readonly = (flags & InputTextFlags_ReadOnly) != 0;
+    let is_password = (flags & InputTextFlags_Password) != 0;
+    let is_undoable = (flags & InputTextFlags_NoUndoRedo) == 0;
+    let is_resizable = (flags & InputTextFlags_CallbackResize) != 0;
     if (is_resizable)
         IM_ASSERT(callback != None); // Must provide a callback if you set the ImGuiInputTextFlags_CallbackResize flag!
 
@@ -3899,7 +3899,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     {
         // Support for internal ImGuiInputTextFlags_MergedItem flag, which could be redesigned as an ItemFlags if needed (with test performed in ItemAdd)
         ItemSize(total_bb, style.FramePadding.y);
-        if (!(flags & ImGuiInputTextFlags_MergedItem))
+        if (!(flags & InputTextFlags_MergedItem))
             if (!ItemAdd(total_bb, id, &frame_bb, ItemFlags::Inputable))
                 return false;
         item_status_flags = g.last_item_data.StatusFlags;
@@ -3909,7 +3909,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         g.MouseCursor = ImGuiMouseCursor_TextInput;
 
     // We are only allowed to access the state if we are already the active widget.
-    ImGuiInputTextState* state = GetInputTextState(id);
+    InputTextState* state = GetInputTextState(id);
 
     let input_requested_by_tabbing = (item_status_flags & ItemStatusFlags::FocusedByTabbing) != 0;
     let input_requested_by_nav = (g.ActiveId != id) && ((g.NavActivateInputId == id) || (g.NavActivateId == id && g.NavInputSource == ImGuiInputSource_Keyboard));
@@ -3948,7 +3948,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         state->ID = id;
         state->TextW.resize(buf_size + 1);          // wchar count <= UTF-8 count. we use +1 to make sure that .data is always pointing to at least an empty string.
         state->TextA.resize(0);
-        state->TextAIsValid = false;                // TextA is not valid yet (we will display buf until then)
+        state->TextAIsValid = false;                // text_a is not valid yet (we will display buf until then)
         state->CurLenW = ImTextStrFromUtf8(state->TextW.Data, buf_size, buf, None, &buf_end);
         state->CurLenA = (buf_end - buf);      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
 
@@ -3966,7 +3966,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
 
         if (!is_multiline)
         {
-            if (flags & ImGuiInputTextFlags_AutoSelectAll)
+            if (flags & InputTextFlags_AutoSelectAll)
                 select_all = true;
             if (input_requested_by_nav && (!recycle_state || !(g.NavActivateFlags & ImGuiActivateFlags_TryToPreserveState)))
                 select_all = true;
@@ -3974,7 +3974,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 select_all = true;
         }
 
-        if (flags & ImGuiInputTextFlags_AlwaysOverwrite)
+        if (flags & InputTextFlags_AlwaysOverwrite)
             state->Stb.insert_mode = 1; // stb field name is indeed incorrect (see #2863)
     }
 
@@ -3988,7 +3988,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // Declare our inputs
         IM_ASSERT(ImGuiNavInput_COUNT < 32);
         g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
-        if (is_multiline || (flags & ImGuiInputTextFlags_CallbackHistory))
+        if (is_multiline || (flags & InputTextFlags_CallbackHistory))
             g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down);
         g.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel);
         SetActiveIdUsingKey(ImGuiKey_Home);
@@ -3998,7 +3998,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             SetActiveIdUsingKey(ImGuiKey_PageUp);
             SetActiveIdUsingKey(ImGuiKey_PageDown);
         }
-        if (flags & (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_AllowTabInput)) // Disable keyboard tabbing out as we will use the \t character.
+        if (flags & (InputTextFlags_CallbackCompletion | InputTextFlags_AllowTabInput)) // Disable keyboard tabbing out as we will use the \t character.
         {
             SetActiveIdUsingKey(ImGuiKey_Tab);
         }
@@ -4087,7 +4087,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 let is_bol = (state->Stb.cursor == 0) || ImStb::STB_TEXTEDIT_GETCHAR(state, state->Stb.cursor - 1) == '\n';
                 if (STB_TEXT_HAS_SELECTION(&state->Stb) || !is_bol)
                     state->OnKeyPressed(STB_TEXTEDIT_K_WORDLEFT);
-                //state->OnKeyPressed(STB_TEXTEDIT_K_WORDRIGHT | STB_TEXTEDIT_K_SHIFT);
+                //state->on_key_pressed(STB_TEXTEDIT_K_WORDRIGHT | STB_TEXTEDIT_K_SHIFT);
                 if (!STB_TEXT_HAS_SELECTION(&state->Stb))
                     ImStb::stb_textedit_prep_selection_at_cursor(&state->Stb);
                 state->Stb.cursor = ImStb::STB_TEXTEDIT_MOVEWORDRIGHT_MAC(state, state->Stb.cursor);
@@ -4131,7 +4131,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // We except backends to emit a Tab key but some also emit a Tab character which we ignore (#2467, #1336)
         // (For Tab and Enter: Win32/SFML/Allegro are sending both keys and chars, GLFW and SDL are only sending keys. For Space they all send all threes)
         let ignore_char_inputs = (io.KeyCtrl && !io.KeyAlt) || (is_osx && io.KeySuper);
-        if ((flags & ImGuiInputTextFlags_AllowTabInput) && IsKeyPressed(ImGuiKey_Tab) && !ignore_char_inputs && !io.KeyShift && !is_readonly)
+        if ((flags & InputTextFlags_AllowTabInput) && IsKeyPressed(ImGuiKey_Tab) && !ignore_char_inputs && !io.KeyShift && !is_readonly)
         {
             unsigned int c = '\t'; // Insert TAB
             if (InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard))
@@ -4209,7 +4209,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         }
         else if (is_validate_enter)
         {
-            bool ctrl_enter_for_new_line = (flags & ImGuiInputTextFlags_CtrlEnterForNewLine) != 0;
+            bool ctrl_enter_for_new_line = (flags & InputTextFlags_CtrlEnterForNewLine) != 0;
             if (!is_multiline || (ctrl_enter_for_new_line && !io.KeyCtrl) || (!ctrl_enter_for_new_line && io.KeyCtrl))
             {
                 enter_pressed = clear_active_id = true;
@@ -4328,7 +4328,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         // When using 'ImGuiInputTextFlags_EnterReturnsTrue' as a special case we reapply the live buffer back to the input buffer before clearing active_id, even though strictly speaking it wasn't modified on this frame.
         // If we didn't do that, code like InputInt() with ImGuiInputTextFlags_EnterReturnsTrue would fail.
         // This also allows the user to use InputText() with ImGuiInputTextFlags_EnterReturnsTrue without maintaining any user-side storage (please note that if you use this property along ImGuiInputTextFlags_CallbackResize you can end up with your temporary string object unnecessarily allocating once a frame, either store your string data, either if you don't then don't use ImGuiInputTextFlags_CallbackResize).
-        let apply_edit_back_to_user_buffer = !cancel_edit || (enter_pressed && (flags & ImGuiInputTextFlags_EnterReturnsTrue) != 0);
+        let apply_edit_back_to_user_buffer = !cancel_edit || (enter_pressed && (flags & InputTextFlags_EnterReturnsTrue) != 0);
         if (apply_edit_back_to_user_buffer)
         {
             // Apply new value immediately - copy modified buffer back
@@ -4337,35 +4337,35 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             // FIXME-OPT: CPU waste to do this every time the widget is active, should mark dirty state from the stb_textedit callbacks.
 
             // User callback
-            if ((flags & (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackAlways)) != 0)
+            if ((flags & (InputTextFlags_CallbackCompletion | InputTextFlags_CallbackHistory | InputTextFlags_CallbackEdit | InputTextFlags_CallbackAlways)) != 0)
             {
                 IM_ASSERT(callback != None);
 
                 // The reason we specify the usage semantic (Completion/History) is that Completion needs to disable keyboard TABBING at the moment.
-                ImGuiInputTextFlags event_flag = 0;
+                InputTextFlags event_flag = 0;
                 ImGuiKey event_key = ImGuiKey_None;
-                if ((flags & ImGuiInputTextFlags_CallbackCompletion) != 0 && IsKeyPressed(ImGuiKey_Tab))
+                if ((flags & InputTextFlags_CallbackCompletion) != 0 && IsKeyPressed(ImGuiKey_Tab))
                 {
-                    event_flag = ImGuiInputTextFlags_CallbackCompletion;
+                    event_flag = InputTextFlags_CallbackCompletion;
                     event_key = ImGuiKey_Tab;
                 }
-                else if ((flags & ImGuiInputTextFlags_CallbackHistory) != 0 && IsKeyPressed(ImGuiKey_UpArrow))
+                else if ((flags & InputTextFlags_CallbackHistory) != 0 && IsKeyPressed(ImGuiKey_UpArrow))
                 {
-                    event_flag = ImGuiInputTextFlags_CallbackHistory;
+                    event_flag = InputTextFlags_CallbackHistory;
                     event_key = ImGuiKey_UpArrow;
                 }
-                else if ((flags & ImGuiInputTextFlags_CallbackHistory) != 0 && IsKeyPressed(ImGuiKey_DownArrow))
+                else if ((flags & InputTextFlags_CallbackHistory) != 0 && IsKeyPressed(ImGuiKey_DownArrow))
                 {
-                    event_flag = ImGuiInputTextFlags_CallbackHistory;
+                    event_flag = InputTextFlags_CallbackHistory;
                     event_key = ImGuiKey_DownArrow;
                 }
-                else if ((flags & ImGuiInputTextFlags_CallbackEdit) && state->Edited)
+                else if ((flags & InputTextFlags_CallbackEdit) && state->Edited)
                 {
-                    event_flag = ImGuiInputTextFlags_CallbackEdit;
+                    event_flag = InputTextFlags_CallbackEdit;
                 }
-                else if (flags & ImGuiInputTextFlags_CallbackAlways)
+                else if (flags & InputTextFlags_CallbackAlways)
                 {
-                    event_flag = ImGuiInputTextFlags_CallbackAlways;
+                    event_flag = InputTextFlags_CallbackAlways;
                 }
 
                 if (event_flag)
@@ -4423,7 +4423,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         }
 
         // clear temporary user storage
-        state->Flags = ImGuiInputTextFlags_None;
+        state->Flags = InputTextFlags_None;
     }
 
     // Copy result to user buffer. This can currently only happen when (g.active_id == id)
@@ -4436,7 +4436,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         if (is_resizable)
         {
             ImGuiInputTextCallbackData callback_data;
-            callback_data.EventFlag = ImGuiInputTextFlags_CallbackResize;
+            callback_data.EventFlag = InputTextFlags_CallbackResize;
             callback_data.Flags = flags;
             callback_data.Buf = buf;
             callback_data.BufTextLen = apply_new_text_length;
@@ -4554,7 +4554,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         if (render_cursor && state->CursorFollow)
         {
             // Horizontal scroll in chunks of quarter width
-            if (!(flags & ImGuiInputTextFlags_NoHorizontalScroll))
+            if (!(flags & InputTextFlags_NoHorizontalScroll))
             {
                 let scroll_increment_x = inner_size.x * 0.25;
                 let visible_width = inner_size.x - style.FramePadding.x;
@@ -4700,24 +4700,24 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     if (label_size.x > 0)
         render_text(DimgVec2D::new(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
 
-    if (value_changed && !(flags & ImGuiInputTextFlags_NoMarkEdited))
+    if (value_changed && !(flags & InputTextFlags_NoMarkEdited))
         MarkItemEdited(id);
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags);
-    if ((flags & ImGuiInputTextFlags_EnterReturnsTrue) != 0)
+    if ((flags & InputTextFlags_EnterReturnsTrue) != 0)
         return enter_pressed;
     else
         return value_changed;
 }
 
-void ImGui::DebugNodeInputTextState(ImGuiInputTextState* state)
+void ImGui::DebugNodeInputTextState(InputTextState* state)
 {
 #ifndef IMGUI_DISABLE_DEBUG_TOOLS
     // ImGuiContext& g = *GImGui;
     ImStb::STB_TexteditState* stb_state = &state->Stb;
     ImStb::StbUndoState* undo_state = &stb_state->undostate;
     text("id: 0x%08X, ActiveID: 0x%08X", state->ID, g.ActiveId);
-    text("CurLenW: %d, CurLenA: %d, Cursor: %d, Selection: %d..%d", state->CurLenA, state->CurLenW, stb_state->cursor, stb_state->select_start, stb_state->select_end);
+    text("cur_len_w: %d, cur_len_a: %d, Cursor: %d, Selection: %d..%d", state->CurLenA, state->CurLenW, stb_state->cursor, stb_state->select_start, stb_state->select_end);
     text("undo_point: %d, redo_point: %d, undo_char_point: %d, redo_char_point: %d", undo_state->undo_point, undo_state->redo_point, undo_state->undo_char_point, undo_state->redo_char_point);
     if (BeginChild("undopoints", DimgVec2D::new(0.0, GetTextLineHeight() * 15), true)) // Visualize undo state
     {
@@ -4905,7 +4905,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
         else
             ImFormatString(buf, IM_ARRAYSIZE(buf), "#%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
         SetNextItemWidth(w_inputs);
-        if (InputText("##Text", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase))
+        if (InputText("##Text", buf, IM_ARRAYSIZE(buf), InputTextFlags_CharsHexadecimal | InputTextFlags_CharsUppercase))
         {
             value_changed = true;
             char* p = buf;
@@ -6229,7 +6229,7 @@ bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags fl
     else if (span_all_columns && g.current_table)
         TablePopBackgroundChannel();
 
-    render_textClipped(text_min, text_max, label, None, &label_size, style.selectableTextAlign, &bb);
+    render_textClipped(text_min, text_max, label, None, &label_size, style.SelectableTextAlign, &bb);
 
     // Automatically close popups
     if (pressed && (window.Flags & WindowFlags_Popup) && !(flags & ImGuiselectableFlags_DontClosePopups) && !(g.last_item_data.in_flags & ItemFlags::selectableDontClosePopup))
@@ -7590,7 +7590,7 @@ ImGuiTabItem* ImGui::TabBarFindMostRecentlySelectedTabForActiveWindow(ImGuiTabBa
 
 // The purpose of this call is to register tab in advance so we can control their order at the time they appear.
 // Otherwise calling this is unnecessary as tabs are appending as needed by the BeginTabItem() function.
-void ImGui::tab_bar_add_tab(ImGuiTabBar* tab_bar, ImGuiTabItemFlags tab_flags, Window* window)
+void ImGui::tab_bar_add_tab(ImGuiTabBar* tab_bar, TabItemFlags tab_flags, Window* window)
 {
     // ImGuiContext& g = *GImGui;
     IM_ASSERT(tab_bar_find_tab_by_id(tab_bar, window.tab_id) == None);
@@ -7870,7 +7870,7 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 // - tab_item_label_and_close_button() [Internal]
 //-------------------------------------------------------------------------
 
-bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags)
+bool    ImGui::BeginTabItem(const char* label, bool* p_open, TabItemFlags flags)
 {
     // ImGuiContext& g = *GImGui;
     let window = g.current_window_mut();;
@@ -7913,7 +7913,7 @@ void    ImGui::EndTabItem()
         pop_id();
 }
 
-bool    ImGui::TabItemButton(const char* label, ImGuiTabItemFlags flags)
+bool    ImGui::TabItemButton(const char* label, TabItemFlags flags)
 {
     // ImGuiContext& g = *GImGui;
     let window = g.current_window_mut();;
@@ -7929,7 +7929,7 @@ bool    ImGui::TabItemButton(const char* label, ImGuiTabItemFlags flags)
     return tab_item_ex(tab_bar, label, None, flags | TabItemFlags::Button | TabItemFlags::NoReorder, None);
 }
 
-bool    ImGui::tab_item_ex(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags, Window* docked_window)
+bool    ImGui::tab_item_ex(ImGuiTabBar* tab_bar, const char* label, bool* p_open, TabItemFlags flags, Window* docked_window)
 {
     // Layout whole tab bar if not already done
     // ImGuiContext& g = *GImGui;
@@ -8253,7 +8253,7 @@ Vector2D ImGui::tab_item_calc_size(const char* label, bool has_close_button)
     return DimgVec2D::new(ImMin(size.x, TabBarCalcMaxTabWidth()), size.y);
 }
 
-void ImGui::tab_item_background(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col)
+void ImGui::tab_item_background(ImDrawList* draw_list, const ImRect& bb, TabItemFlags flags, ImU32 col)
 {
     // While rendering tabs, we trim 1 pixel off the top of our bounding box so they can fit within a regular frame height while looking "detached" from it.
     // ImGuiContext& g = *GImGui;
@@ -8280,7 +8280,7 @@ void ImGui::tab_item_background(ImDrawList* draw_list, const ImRect& bb, ImGuiTa
 
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic
 // We tend to lock style.FramePadding for a given tab-bar, hence the 'frame_padding' parameter.
-void ImGui::tab_item_label_and_close_button(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, Vector2D frame_padding, const char* label, Id32 tab_id, Id32 close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
+void ImGui::tab_item_label_and_close_button(ImDrawList* draw_list, const ImRect& bb, TabItemFlags flags, Vector2D frame_padding, const char* label, Id32 tab_id, Id32 close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped)
 {
     // ImGuiContext& g = *GImGui;
     Vector2D label_size = calc_text_size(label, None, true);

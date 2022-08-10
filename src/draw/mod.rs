@@ -245,7 +245,7 @@ index of this file:
 //     _ClipRectStack.clear();
 //     _TextureIdStack.clear();
 //     _Path.clear();
-//     _Splitter.ClearFreeMemory();
+//     _Splitter.clear_free_memory();
 // }
 
 // ImDrawList* ImDrawList::clone_output() const
@@ -1400,7 +1400,7 @@ index of this file:
 // FIXME: This may be a little confusing, trying to be a little too low-level/optimal instead of just doing vector swap..
 //-----------------------------------------------------------------------------
 
-// void ImDrawListSplitter::ClearFreeMemory()
+// void ImDrawListSplitter::clear_free_memory()
 // {
 //     for (int i = 0; i < channels.size; i += 1)
 //     {

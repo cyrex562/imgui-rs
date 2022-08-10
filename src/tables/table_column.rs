@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 // flags for ImGui::TableSetupColumn()
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum DimgTableColumnFlags
+pub enum TableColumnFlags
 {
     // Input configuration flags
     None                  = 0,
@@ -27,7 +27,7 @@ pub enum DimgTableColumnFlags
 
     // Output status flags, read-only via TableGetColumnFlags()
     IsEnabled            ,  // Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
-    is_visible            ,  // Status: is visible == is enabled AND not clipped by scrolling.
+    IsVisible            ,  // Status: is visible == is enabled AND not clipped by scrolling.
     IsSorted             ,  // Status: is currently part of the sort specs
     IsHovered            ,  // Status: is hovered by mouse
 
@@ -45,15 +45,15 @@ pub enum DimgTableColumnFlags
 
 
 // pub const WidthMask_ : i32           = DimgTableColumnFlags::WidthStretch | DimgTableColumnFlags::WidthFixed;
-pub const WIDTH_MASK: HashSet<DimgTableColumnFlags> = HashSet::from([
-    DimgTableColumnFlags::WidthStretch, DimgTableColumnFlags::WidthFixed
+pub const WIDTH_MASK: HashSet<TableColumnFlags> = HashSet::from([
+    TableColumnFlags::WidthStretch, TableColumnFlags::WidthFixed
 ]);
 
 // pub const     IndentMask_ : i32          = DimgTableColumnFlags::IndentEnable | DimgTableColumnFlags::IndentDisable;
-pub const INDENT_MASK: HashSet<DimgTableColumnFlags> = HashSet::from([
-    DimgTableColumnFlags::IndentEnable, DimgTableColumnFlags::IndentDisable
+pub const INDENT_MASK: HashSet<TableColumnFlags> = HashSet::from([
+    TableColumnFlags::IndentEnable, TableColumnFlags::IndentDisable
 ]);
 
-pub const STATUS_MASK: HashSet<DimgTableColumnFlags> = HashSet::from([
-    DimgTableColumnFlags::IsEnabled, DimgTableColumnFlags::is_visible, DimgTableColumnFlags::IsSorted, DimgTableColumnFlags::IsHovered
+pub const STATUS_MASK: HashSet<TableColumnFlags> = HashSet::from([
+    TableColumnFlags::IsEnabled, TableColumnFlags::is_visible, TableColumnFlags::IsSorted, TableColumnFlags::IsHovered
 ]);

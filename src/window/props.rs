@@ -25,7 +25,7 @@ pub fn get_window_draw_list(g: &mut Context) {
 // float ImGui::GetWindowDpiScale()
 pub fn get_window_dpi_scale(g: &mut Context) -> f32 {
     // ImGuiContext& g = *GImGui;
-    return g.CurrentDpiScale;
+    return g.current_dpi_scale;
 }
 
 // ImGuiViewport* ImGui::GetWindowViewport()

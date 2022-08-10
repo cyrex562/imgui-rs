@@ -2,7 +2,7 @@ use crate::input::ImGuiInputCallbackData;
 
 // flags for ImGui::InputText()
 #[derive(Debug,Clone,Eq, PartialEq,Hash)]
-pub enum ImGuiInputTextFlags
+pub enum InputTextFlags
 {
     None= 0,
     CharsDecimal,   // Allow 0123456789.+-*/

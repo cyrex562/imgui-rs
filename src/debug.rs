@@ -509,7 +509,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
         if (TreeNode("settings_ini_data", "Settings unpacked data (.ini): %d bytes", g.SettingsIniData.size()))
         {
-            InputTextMultiline("##Ini", (char*)(void*)g.SettingsIniData.c_str(), g.SettingsIniData.Buf.size, Vector2D::new(-FLT_MIN, GetTextLineHeight() * 20), ImGuiInputTextFlags_ReadOnly);
+            InputTextMultiline("##Ini", (char*)(void*)g.SettingsIniData.c_str(), g.SettingsIniData.Buf.size, Vector2D::new(-FLT_MIN, GetTextLineHeight() * 20), InputTextFlags_ReadOnly);
             TreePop();
         }
         TreePop();
@@ -1240,7 +1240,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
     if (tool->StackLevel == -1)
     {
         tool->StackLevel += 1;
-        tool->Results.resize(window.id_stack.size + 1, ImGuiStackLevelInfo());
+        tool->Results.resize(window.id_stack.size + 1, StackLevelInfo());
         for (int n = 0; n < window.id_stack.size + 1; n += 1)
             tool->Results[n].id = if (n < window.id_stack.size) { window.id_stack[n] }else{ id};
         return;
@@ -1250,7 +1250,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
     // IM_ASSERT(tool->StackLevel >= 0);
     if (tool->StackLevel != window.id_stack.size)
         return;
-    ImGuiStackLevelInfo* info = &tool->Results[tool->StackLevel];
+    StackLevelInfo* info = &tool->Results[tool->StackLevel];
     // IM_ASSERT(info->id == id && info->QueryFrameCount > 0);
 
     switch (data_type)
@@ -1279,7 +1279,7 @@ pub fn debug_hook_id_info(g: &mut Context, id: Id32, data_type: DataType, data_i
 // static int StackToolFormatLevelInfo(ImGuiStackTool* tool, int n, bool format_for_ui, char* buf, size_t buf_size)
 pub fn stack_tool_format_level(g: &mut Context, tool: &StackTool, n: i32, format_for_ui: bool, buf: &mut String, buf_size: usize) -> i32
 {
-    ImGuiStackLevelInfo* info = &tool->Results[n];
+    StackLevelInfo* info = &tool->Results[n];
     Window* window = if (info->Desc[0] == 0 && n == 0) { find_window_by_id(info->ID) }else{ None};
     if (window)                                                                 // Source: window name (because the root id don't call GetID() and so doesn't get hooked)
         return ImFormatString(buf, buf_size, format_for_ui ? "\"%s\" [window]" : "%s", window.name);
@@ -1350,13 +1350,13 @@ pub fn show_stack_tool_window(g: &mut Context, p_open: &mut bool)
     if (tool->Results.size > 0 && BeginTable("##table", 3, ImGuiTableFlags_Borders))
     {
         let id_width = calc_text_size("0xDDDDDDDD").x;
-        TableSetupColumn("Seed", ImGuiTableColumnFlags_WidthFixed, id_width);
-        TableSetupColumn("push_id", ImGuiTableColumnFlags_WidthStretch);
-        TableSetupColumn("Result", ImGuiTableColumnFlags_WidthFixed, id_width);
+        TableSetupColumn("Seed", TableColumnFlags_WidthFixed, id_width);
+        TableSetupColumn("push_id", TableColumnFlags_WidthStretch);
+        TableSetupColumn("Result", TableColumnFlags_WidthFixed, id_width);
         TableHeadersRow();
         for (int n = 0; n < tool->Results.size; n += 1)
         {
-            ImGuiStackLevelInfo* info = &tool->Results[n];
+            StackLevelInfo* info = &tool->Results[n];
             TableNextColumn();
             text("0x%08X", (n > 0) ? tool->Results[n - 1].id : 0);
             TableNextColumn();

@@ -1,7 +1,8 @@
+use crate::Context;
 use crate::types::Id32;
 
 #[derive(Default,Debug,Clone)]
-struct ImGuiStackLevelInfo
+struct StackLevelInfo
 {
     //Id32                 id;
     pub id: Id32,
@@ -27,7 +28,7 @@ pub struct StackTool
     // Id32                 QueryId;                    // id to query details for
     pub query_id: Id32,
     // ImVector<ImGuiStackLevelInfo> Results;
-    pub results: Vec<DimgStackLevelInfo>,
+    pub results: Vec<StackLevelInfo>,
     // bool                    CopyToClipboardOnCtrlC;
     pub copy_to_clopboard_on_ctrl_c: bool,
     // float                   CopyToClipboardLastTime;
@@ -36,29 +37,29 @@ pub struct StackTool
 }
 
 #[derive(Debug,Default,Clone)]
-pub struct  ImGuiStackSizes
+pub struct  StackSizes
 {
     // short   SizeOfIDStack;
-    pub SizeofIDStack: i16,
-    // short   SizeOfColorStack;
-    pub SizeOfColorStack: i16,
-    // short   SizeOfStyleVarStack;
-    pub SizeOfStyleVarStack: i16,
-    // short   SizeOfFontStack;
-    pub SizeOfFontStack: i16,
-    // short   SizeOfFocusScopeStack;
-    pub SizeOfFocusScopeStack: i16,
-    // short   SizeOfGroupStack;
-    pub SizeOfGroupStack: i16,
-    // short   SizeOfItemFlagsStack;
-    pub SizeOfItemFlagsStack: i16,
-    // short   SizeOfbegin_popupStack;
-    pub SizeOfbegin_popupStack: i16,
-    // short   SizeOfDisabledStack;
-    pub SizeOfDisabledStack: i16,
+    pub id_stack_size: usize,
+    // short   size_of_color_stack;
+    pub color_stack_size: usize,
+    // short   size_of_style_var_stack;
+    pub style_var_stack_size: usize,
+    // short   size_of_font_stack;
+    pub font_stack_size: usize,
+    // short   size_of_focus_scope_stack;
+    pub focus_scope_stack_size: usize,
+    // short   size_of_group_stack;
+    pub group_stack_size: usize,
+    // short   size_of_item_flags_stack;
+    pub item_flags_stack_size: usize,
+    // short   size_ofbegin_popup_stack;
+    pub begin_popup_stack_size: usize,
+    // short   size_of_disabled_stack;
+    pub disabled_stack_size: usize,
 }
 
-impl ImGuiStackSizes {
+impl StackSizes {
     // ImGuiStackSizes() { memset(this, 0, sizeof(*this)); }
     pub fn new()-> Self {
         Self {
@@ -73,14 +74,14 @@ impl ImGuiStackSizes {
 //     ImGuiContext& g = *GImGui;
 //     Window* window = g.current_window;
 //     SizeOfIDStack = window.IDStack.size;
-//     SizeOfColorStack = g.color_stack.size;
-//     SizeOfStyleVarStack = g.style_var_stack.size;
-//     SizeOfFontStack = g.font_stack.size;
-//     SizeOfFocusScopeStack = g.FocusScopeStack.size;
-//     SizeOfGroupStack = g.group_stack.size;
-//     SizeOfItemFlagsStack = g.item_flags_stack.size;
-//     SizeOfbegin_popupStack = g.begin_popup_stack.size;
-//     SizeOfDisabledStack = g.DisabledStackSize;
+//     size_of_color_stack = g.color_stack.size;
+//     size_of_style_var_stack = g.style_var_stack.size;
+//     size_of_font_stack = g.font_stack.size;
+//     size_of_focus_scope_stack = g.FocusScopeStack.size;
+//     size_of_group_stack = g.group_stack.size;
+//     size_of_item_flags_stack = g.item_flags_stack.size;
+//     size_ofbegin_popup_stack = g.begin_popup_stack.size;
+//     size_of_disabled_stack = g.DisabledStackSize;
 // }
 
 // Compare to detect usage errors
@@ -96,23 +97,32 @@ impl ImGuiStackSizes {
 //
 //     // Global stacks
 //     // For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.
-//     IM_ASSERT(SizeOfGroupStack      == g.group_stack.size        && "BeginGroup/EndGroup Mismatch!");
-//     IM_ASSERT(SizeOfbegin_popupStack == g.begin_popup_stack.size   && "begin_popup/EndPopup or BeginMenu/EndMenu Mismatch!");
-//     IM_ASSERT(SizeOfDisabledStack   == g.DisabledStackSize      && "BeginDisabled/EndDisabled Mismatch!");
-//     IM_ASSERT(SizeOfItemFlagsStack  >= g.item_flags_stack.size    && "push_item_flag/PopItemFlag Mismatch!");
-//     IM_ASSERT(SizeOfColorStack      >= g.color_stack.size        && "PushStyleColor/PopStyleColor Mismatch!");
-//     IM_ASSERT(SizeOfStyleVarStack   >= g.style_var_stack.size     && "PushStyleVar/PopStyleVar Mismatch!");
-//     IM_ASSERT(SizeOfFontStack       >= g.font_stack.size         && "PushFont/PopFont Mismatch!");
-//     IM_ASSERT(SizeOfFocusScopeStack == g.FocusScopeStack.size   && "PushFocusScope/PopFocusScope Mismatch!");
+//     IM_ASSERT(size_of_group_stack      == g.group_stack.size        && "BeginGroup/EndGroup Mismatch!");
+//     IM_ASSERT(size_ofbegin_popup_stack == g.begin_popup_stack.size   && "begin_popup/EndPopup or BeginMenu/EndMenu Mismatch!");
+//     IM_ASSERT(size_of_disabled_stack   == g.DisabledStackSize      && "BeginDisabled/EndDisabled Mismatch!");
+//     IM_ASSERT(size_of_item_flags_stack  >= g.item_flags_stack.size    && "push_item_flag/PopItemFlag Mismatch!");
+//     IM_ASSERT(size_of_color_stack      >= g.color_stack.size        && "PushStyleColor/PopStyleColor Mismatch!");
+//     IM_ASSERT(size_of_style_var_stack   >= g.style_var_stack.size     && "PushStyleVar/PopStyleVar Mismatch!");
+//     IM_ASSERT(size_of_font_stack       >= g.font_stack.size         && "PushFont/PopFont Mismatch!");
+//     IM_ASSERT(size_of_focus_scope_stack == g.FocusScopeStack.size   && "PushFocusScope/PopFocusScope Mismatch!");
 // }
 
 
     //     void SetToCurrentState();
-    pub fn SetToCurrentState(&mut self) {
-        todo!()
+    pub fn set_to_current_state(&mut self, g: &mut Context) {
+        let window = g.current_window_mut();
+        self.id_stack_size = window.id_stack.len();
+        self.color_stack_size = g.color_stack.len();
+        self.style_var_stack_size = g.style_var_stack.len();
+        self.font_stack_size = g.font_stack.len();
+        self.focus_scope_stack_size = g.focus_scope_stack.len();
+        self.group_stack_size = g.group_stack.len();
+        self.item_flags_stack_size = g.item_flags_stack.len();
+        self.begin_popup_stack_size = g.begin_popup_stack.len();
+        self.disabled_stack_size = g.disabled_stack_size;
     }
     //     void CompareWithCurrentState();
-    pub fn CompareWithCurrentState(&self) {
-
+    pub fn compare_with_current_state(&self) {
+        todo!();
     }
 }

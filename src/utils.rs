@@ -51,25 +51,26 @@ pub fn get_or_add<K, V: Default>(hash_map: &mut HashMap<K,V>, key: &K) -> &mut V
     out_opt.unwrap()
 }
 
-static void UnpackBitVectorToFlatIndexList(const ImBitVector* in, ImVector<int>* out)
-{
-    // IM_ASSERT(sizeof(in.Storage.data[0]) == sizeof);
-    const ImU32* it_begin = in.Storage.begin();
-    const ImU32* it_end = in.Storage.end();
-    for (const ImU32* it = it_begin; it < it_end; it += 1)
-        if (ImU32 entries_32 = *it)
-            for (ImU32 bit_n = 0; bit_n < 32; bit_n += 1)
-                if (entries_32 & (1 << bit_n))
-                    out.push_back((((it - it_begin) << 5) + bit_n));
-}
+// static void UnpackBitVectorToFlatIndexList(const ImBitVector* in, ImVector<int>* out)
+// pub fn unpack_bit_vector_to_flat_index_list(in: )
+// {
+//     // IM_ASSERT(sizeof(in.Storage.data[0]) == sizeof);
+//     const ImU32* it_begin = in.Storage.begin();
+//     const ImU32* it_end = in.Storage.end();
+//     for (const ImU32* it = it_begin; it < it_end; it += 1)
+//         if (ImU32 entries_32 = *it)
+//             for (ImU32 bit_n = 0; bit_n < 32; bit_n += 1)
+//                 if (entries_32 & (1 << bit_n))
+//                     out.push_back((((it - it_begin) << 5) + bit_n));
+// }
 
 
-static void UnpackAccumulativeOffsetsIntoRanges(int base_codepoint, const short* accumulative_offsets, int accumulative_offsets_count, ImWchar* out_ranges)
-{
-    for (int n = 0; n < accumulative_offsets_count; n += 1, out_ranges += 2)
-    {
-        out_ranges[0] = out_ranges[1] = (ImWchar)(base_codepoint + accumulative_offsets[n]);
-        base_codepoint += accumulative_offsets[n];
-    }
-    out_ranges[0] = 0;
-}
+// static void UnpackAccumulativeOffsetsIntoRanges(int base_codepoint, const short* accumulative_offsets, int accumulative_offsets_count, ImWchar* out_ranges)
+// {
+//     for (int n = 0; n < accumulative_offsets_count; n += 1, out_ranges += 2)
+//     {
+//         out_ranges[0] = out_ranges[1] = (ImWchar)(base_codepoint + accumulative_offsets[n]);
+//         base_codepoint += accumulative_offsets[n];
+//     }
+//     out_ranges[0] = 0;
+// }

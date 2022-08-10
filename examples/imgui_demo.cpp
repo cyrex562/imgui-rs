@@ -2953,8 +2953,8 @@ static void ShowDemoWindowWidgets() {
   }
 
   IMGUI_DEMO_MARKER(
-      "Widgets/Querying Item Status (Edited,active,Hovered etc.)");
-  if (ImGui::TreeNode("Querying Item Status (Edited/active/Hovered etc.)")) {
+      "Widgets/Querying Item Status (edited,active,Hovered etc.)");
+  if (ImGui::TreeNode("Querying Item Status (edited/active/Hovered etc.)")) {
     // Select an item type
     const char *item_names[] = {"Text",
                                 "Button",
@@ -3320,7 +3320,7 @@ static void ShowDemoWindowLayout() {
     // - Using ImGui::GetItemRectMin/max() to query the "item" state (because
     // the child window is an item from
     //   the POV of the parent window). See 'Demo->Querying Status
-    //   (Edited/active/Hovered etc.)' for details.
+    //   (edited/active/Hovered etc.)' for details.
     {
       static int offset_x = 0;
       ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
@@ -4548,7 +4548,7 @@ static void EditTableSizingFlags(ImGuiTableFlags *p_flags) {
   static const EnumDesc policies[] = {
       {ImGuiTableFlags_None, "Default",
        "Use default sizing policy:\n- ImGuiTableFlags_SizingFixedFit if "
-       "ScrollX is on or if host window has "
+       "scroll_x is on or if host window has "
        "ImGuiWindowFlags_AlwaysAutoResize.\n- "
        "ImGuiTableFlags_SizingStretchSame otherwise."},
       {ImGuiTableFlags_SizingFixedFit, "ImGuiTableFlags_SizingFixedFit",
@@ -4846,7 +4846,7 @@ static void ShowDemoWindowTables() {
     ImGui::SetNextItemOpen(open_action != 0);
   IMGUI_DEMO_MARKER("tables/Resizable, stretch");
   if (ImGui::TreeNode("Resizable, stretch")) {
-    // By default, if we don't enable ScrollX the sizing policy for each columns
+    // By default, if we don't enable scroll_x the sizing policy for each columns
     // is "Stretch" Each columns maintain a sizing weight, and they will occupy
     // all available width.
     static ImGuiTableFlags flags =
@@ -5325,7 +5325,7 @@ static void ShowDemoWindowTables() {
                          ImGuiTableFlags_ScrollY);
     PopStyleCompact();
 
-    // When using ScrollX or ScrollY we need to specify a size for our table
+    // When using scroll_x or ScrollY we need to specify a size for our table
     // container! Otherwise by default the table will fit all available space,
     // like a BeginChild() call.
     Vector2D outer_size = DimgVec2D::new (0.0, TEXT_BASE_HEIGHT * 8);
@@ -5359,12 +5359,12 @@ static void ShowDemoWindowTables() {
   IMGUI_DEMO_MARKER("tables/Horizontal scrolling");
   if (ImGui::TreeNode("Horizontal scrolling")) {
     HelpMarker(
-        "When ScrollX is enabled, the default sizing policy becomes "
+        "When scroll_x is enabled, the default sizing policy becomes "
         "ImGuiTableFlags_SizingFixedFit, "
         "as automatically stretching columns doesn't make much sense with "
         "horizontal scrolling.\n\n"
         "Also note that as of the current version, you will almost always want "
-        "to enable ScrollY along with ScrollX,"
+        "to enable ScrollY along with scroll_x,"
         "because the container window won't automatically extend vertically to "
         "fix contents (this may be improved in future versions).");
     static ImGuiTableFlags flags =
@@ -5390,7 +5390,7 @@ static void ShowDemoWindowTables() {
                    ImGuiSliderFlags_NoInput);
     PopStyleCompact();
 
-    // When using ScrollX or ScrollY we need to specify a size for our table
+    // When using scroll_x or ScrollY we need to specify a size for our table
     // container! Otherwise by default the table will fit all available space,
     // like a BeginChild() call.
     Vector2D outer_size = DimgVec2D::new (0.0, TEXT_BASE_HEIGHT * 8);
@@ -5431,13 +5431,13 @@ static void ShowDemoWindowTables() {
     }
 
     ImGui::Spacing();
-    ImGui::TextUnformatted("Stretch + ScrollX");
+    ImGui::TextUnformatted("Stretch + scroll_x");
     ImGui::SameLine();
-    HelpMarker("Showcase using Stretch columns + ScrollX together: "
+    HelpMarker("Showcase using Stretch columns + scroll_x together: "
                "this is rather unusual and only makes sense when specifying an "
                "'inner_width' for the table!\n"
                "Without an explicit value, inner_width is == outer_size.x and "
-               "therefore using Stretch columns + ScrollX together doesn't "
+               "therefore using Stretch columns + scroll_x together doesn't "
                "make sense.");
     static ImGuiTableFlags flags2 =
         ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ScrollX |
@@ -5707,14 +5707,14 @@ static void ShowDemoWindowTables() {
                          ImGuiTableFlags_NoHostExtendX);
     ImGui::SameLine();
     HelpMarker("Make outer width auto-fit to columns, overriding outer_size.x "
-               "value.\n\nOnly available when ScrollX/ScrollY are disabled and "
+               "value.\n\nOnly available when scroll_x/ScrollY are disabled and "
                "Stretch columns are not used.");
     ImGui::CheckboxFlags("ImGuiTableFlags_NoHostExtendY", &flags,
                          ImGuiTableFlags_NoHostExtendY);
     ImGui::SameLine();
     HelpMarker("Make outer height stop exactly at outer_size.y (prevent "
                "auto-extending table past the limit).\n\nOnly available when "
-               "ScrollX/ScrollY are disabled. data below the limit will be "
+               "scroll_x/ScrollY are disabled. data below the limit will be "
                "clipped and not visible.");
     PopStyleCompact();
 
@@ -5846,8 +5846,8 @@ static void ShowDemoWindowTables() {
         ImGuiTableFlags_NoBordersInBody;
 
     if (ImGui::BeginTable("3ways", 3, flags)) {
-      // The first column will use the default _WidthStretch when ScrollX is Off
-      // and _WidthFixed when ScrollX is On
+      // The first column will use the default _WidthStretch when scroll_x is Off
+      // and _WidthFixed when scroll_x is On
       ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_NoHide);
       ImGui::TableSetupColumn("size", ImGuiTableColumnFlags_WidthFixed,
                               TEXT_BASE_WIDTH * 12.0);
@@ -6373,19 +6373,19 @@ static void ShowDemoWindowTables() {
                              ImGuiTableFlags_NoHostExtendX);
         ImGui::SameLine();
         HelpMarker("Make outer width auto-fit to columns, overriding "
-                   "outer_size.x value.\n\nOnly available when ScrollX/ScrollY "
+                   "outer_size.x value.\n\nOnly available when scroll_x/ScrollY "
                    "are disabled and Stretch columns are not used.");
         ImGui::CheckboxFlags("ImGuiTableFlags_NoHostExtendY", &flags,
                              ImGuiTableFlags_NoHostExtendY);
         ImGui::SameLine();
         HelpMarker("Make outer height stop exactly at outer_size.y (prevent "
                    "auto-extending table past the limit).\n\nOnly available "
-                   "when ScrollX/ScrollY are disabled. data below the limit "
+                   "when scroll_x/ScrollY are disabled. data below the limit "
                    "will be clipped and not visible.");
         ImGui::CheckboxFlags("ImGuiTableFlags_NoKeepColumnsVisible", &flags,
                              ImGuiTableFlags_NoKeepColumnsVisible);
         ImGui::SameLine();
-        HelpMarker("Only available if ScrollX is disabled.");
+        HelpMarker("Only available if scroll_x is disabled.");
         ImGui::CheckboxFlags("ImGuiTableFlags_PreciseWidths", &flags,
                              ImGuiTableFlags_PreciseWidths);
         ImGui::SameLine();
@@ -6454,7 +6454,7 @@ static void ShowDemoWindowTables() {
         ImGui::SameLine(0.0, ImGui::GetStyle().ItemInnerSpacing.x);
         ImGui::Checkbox("outer_size", &outer_size_enabled);
         ImGui::SameLine();
-        HelpMarker("If scrolling is disabled (ScrollX and ScrollY not set):\n"
+        HelpMarker("If scrolling is disabled (scroll_x and ScrollY not set):\n"
                    "- The table is output directly in the parent window.\n"
                    "- OuterSize.x < 0.0 will right-align the table.\n"
                    "- OuterSize.x = 0.0 will narrow fit the table unless there "
@@ -6466,8 +6466,8 @@ static void ShowDemoWindowTables() {
         // From a user point of view we will tend to use 'inner_width'
         // differently depending on whether our table is embedding scrolling. To
         // facilitate toying with this demo we will actually pass 0.0 to the
-        // BeginTable() when ScrollX is disabled.
-        ImGui::DragFloat("inner_width (when ScrollX active)",
+        // BeginTable() when scroll_x is disabled.
+        ImGui::DragFloat("inner_width (when scroll_x active)",
                          &inner_width_with_scroll, 1.0, 0.0, FLT_MAX);
 
         ImGui::DragFloat("row_min_height", &row_min_height, 1.0, 0.0, FLT_MAX);

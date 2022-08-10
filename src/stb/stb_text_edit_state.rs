@@ -1,7 +1,8 @@
 use crate::imstb_textedit_h::StbUndoState;
+use crate::stb::stb_textedit_h::StbUndoState;
 
 #[derive(Debug,Default,Clone)]
-pub struct STB_TexteditState {
+pub struct StbTexteditState {
     // int cursor;
     pub cursor: usize,
     // position of the text cursor within the string

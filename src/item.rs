@@ -9,7 +9,8 @@ use crate::globals::GImGui;
 use crate::id::{clear_active_id, keep_alive_id, set_hovered_id};
 use crate::input::mouse::{is_mouse_clicked, is_mouse_hovering_rect};
 use crate::input::MouseButton;
-use crate::INVALID_ID;
+use crate::{INVALID_ID, Viewport};
+use crate::draw::flags::DrawFlags;
 use crate::layout::{LayoutType, same_line};
 use crate::nav::nav_process_item;
 use crate::window::{HoveredFlags, WindowFlags};
@@ -159,7 +160,8 @@ pub fn item_hoverable(g: &mut Context, bb: &Rect, id: Id32) -> bool {
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if g.debug_item_picker_active && g.hovered_id_previous_frame == id {
-            foreground_draw_list(g, None).add_rect(&bb.min, &bb.max, make_color_32(255, 255, 0, 255), 0.0, None, 0.0);
+            let draw_flags: HashSet<DrawFlags> = HashSet::new();
+            foreground_draw_list(g, &mut Viewport::default()).add_rect(&bb.min, &bb.max, make_color_32(255, 255, 0, 255), 0.0, &draw_flags, 0.0);
         }
         if g.debug_item_picker_break_id == id {
             // IM_DEBUG_BREAK();
@@ -306,7 +308,7 @@ pub fn is_item_visible(g: &mut Context) -> bool
 pub fn is_item_edited(g: &mut Context) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    // return (g.last_item_data.status_flags & ItemStatusFlags::Edited) != 0;
+    // return (g.last_item_data.status_flags & ItemStatusFlags::edited) != 0;
     g.last_item_data.status_flags.contains(&ItemStatusFlags::Edited)
 }
 
@@ -608,11 +610,11 @@ pub fn item_add(g: &mut Context, bb: &mut Rect, id: Id32, nav_bb_arg: Option<&Re
 // Affect large frame+labels widgets only.
 //void SetNextItemWidth(float item_width)
 // pub fn SetNextItemWidth(item_width: f32)
-pub fn set_next_item_width(g: &mut Context)
+pub fn set_next_item_width(g: &mut Context, width: f32)
 {
     // ImGuiContext& g = *GImGui;
-    g.next_item_data.flags |= NextItemDataFlags::HasWidth;
-    g.next_item_data.width = item_width;
+    g.next_item_data.flags.insert(NextItemDataFlags::HasWidth);
+    g.next_item_data.width = width;
 }
 
 // FIXME: Remove the == 0.0 behavior?

@@ -125,7 +125,7 @@ pub fn end_group(g: &mut Context)
         g.last_item_data.status_flags |= ItemStatusFlags::HoveredWindow;
     }
 
-    // Forward Edited flag
+    // Forward edited flag
     if group_contains_curr_active_id && g.active_id_has_been_edited_this_frame {
         g.last_item_data.status_flags |= ItemStatusFlags::Edited;
     }

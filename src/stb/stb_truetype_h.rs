@@ -587,7 +587,7 @@ typedef struct
 typedef struct stbtt_pack_context stbtt_pack_context;
 typedef struct stbtt_fontinfo stbtt_fontinfo;
 #ifndef STB_RECT_PACK_VERSION
-typedef struct stbrp_rect stbrp_rect;
+typedef struct StbRpRect StbRpRect;
 
 
 STBTT_DEF int  stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, int width, int height, int stride_in_bytes, int padding, void *alloc_context);
@@ -665,9 +665,9 @@ STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int
                                stbtt_aligned_quad *q,      // output: quad to draw
                                int align_to_integer);
 
-STBTT_DEF int  stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects);
-STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, stbrp_rect *rects, int num_rects);
-STBTT_DEF int  stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects);
+STBTT_DEF int  stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, StbRpRect *rects);
+STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, StbRpRect *rects, int num_rects);
+STBTT_DEF int  stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, StbRpRect *rects);
 // Calling these functions in sequence is roughly equivalent to calling
 // stbtt_PackFontRanges(). If you more control over the packing of multiple
 // fonts, or if you want to pack custom data into a font texture, take a look
@@ -3909,20 +3909,20 @@ typedef struct
 {
    int width,height;
    int x,y,bottom_y;
-} stbrp_context;
+} StbRpContext;
 
 typedef struct
 {
    unsigned char x;
-} stbrp_node;
+} StbRpNode;
 
-struct stbrp_rect
+struct StbRpRect
 {
    stbrp_coord x,y;
    int id,w,h,was_packed;
 };
 
-static void stbrp_init_target(stbrp_context *con, int pw, int ph, stbrp_node *nodes, int num_nodes)
+static void stbrp_init_target(StbRpContext *con, int pw, int ph, StbRpNode *nodes, int num_nodes)
 {
    con.width  = pw;
    con.height = ph;
@@ -3933,7 +3933,7 @@ static void stbrp_init_target(stbrp_context *con, int pw, int ph, stbrp_node *no
    STBTT__NOTUSED(num_nodes);
 }
 
-static void stbrp_pack_rects(stbrp_context *con, stbrp_rect *rects, int num_rects)
+static void stbrp_pack_rects(StbRpContext *con, StbRpRect *rects, int num_rects)
 {
    int i;
    for (i=0; i < num_rects; i += 1) {
@@ -3964,9 +3964,9 @@ static void stbrp_pack_rects(stbrp_context *con, stbrp_rect *rects, int num_rect
 
 STBTT_DEF int stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, int pw, int ph, int stride_in_bytes, int padding, void *alloc_context)
 {
-   stbrp_context *context = (stbrp_context *) STBTT_malloc(sizeof(*context)            ,alloc_context);
+   StbRpContext *context = (StbRpContext *) STBTT_malloc(sizeof(*context)            ,alloc_context);
    int            num_nodes = pw - padding;
-   stbrp_node    *nodes   = (stbrp_node    *) STBTT_malloc(sizeof(*nodes  ) * num_nodes,alloc_context);
+   StbRpNode    *nodes   = (StbRpNode    *) STBTT_malloc(sizeof(*nodes  ) * num_nodes,alloc_context);
 
    if (context == None || nodes == None) {
       if (context != None) STBTT_free(context, alloc_context);
@@ -4154,7 +4154,7 @@ static float stbtt__oversample_shift(int oversample)
 }
 
 // rects array must be big enough to accommodate all characters in the given ranges
-STBTT_DEF int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects)
+STBTT_DEF int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, StbRpRect *rects)
 {
    int i,j,k;
    int missing_glyph_added = 0;
@@ -4213,7 +4213,7 @@ STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info
 }
 
 // rects array must be big enough to accommodate all characters in the given ranges
-STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects)
+STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const stbtt_fontinfo *info, stbtt_pack_range *ranges, int num_ranges, StbRpRect *rects)
 {
    int i,j,k, missing_glyph = -1, return_value = 1;
 
@@ -4233,7 +4233,7 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
       sub_x = stbtt__oversample_shift(spc.h_oversample);
       sub_y = stbtt__oversample_shift(spc.v_oversample);
       for (j=0; j < ranges[i].num_chars; j += 1) {
-         stbrp_rect *r = &rects[k];
+         StbRpRect *r = &rects[k];
          if (r.was_packed && r.w != 0 && r.h != 0) {
             stbtt_packedchar *bc = &ranges[i].chardata_for_range[j];
             int advance, lsb, x0,y0,x1,y1;
@@ -4302,9 +4302,9 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
    return return_value;
 }
 
-STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, stbrp_rect *rects, int num_rects)
+STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, StbRpRect *rects, int num_rects)
 {
-   stbrp_pack_rects((stbrp_context *) spc.pack_info, rects, num_rects);
+   stbrp_pack_rects((StbRpContext *) spc.pack_info, rects, num_rects);
 }
 
 STBTT_DEF int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, stbtt_pack_range *ranges, int num_ranges)
@@ -4312,7 +4312,7 @@ STBTT_DEF int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char 
    stbtt_fontinfo info;
    int i, j, n, return_value; // [DEAR IMGUI] removed = 1;
    //stbrp_context *context = (stbrp_context *) spc->pack_info;
-   stbrp_rect    *rects;
+   StbRpRect    *rects;
 
    // flag all characters as NOT packed
    for (i=0; i < num_ranges; i += 1)
@@ -4326,7 +4326,7 @@ STBTT_DEF int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char 
    for (i=0; i < num_ranges; i += 1)
       n += ranges[i].num_chars;
 
-   rects = (stbrp_rect *) STBTT_malloc(sizeof(*rects) * n, spc.user_allocator_context);
+   rects = (StbRpRect *) STBTT_malloc(sizeof(*rects) * n, spc.user_allocator_context);
    if (rects == None)
       return 0;
 

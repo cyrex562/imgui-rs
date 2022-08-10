@@ -1700,7 +1700,7 @@ void Initialize(ImNodesContext* context)
     context.CurrentAttributeFlags = ImNodesAttributeFlags_None;
     context.AttributeFlagStack.push_back(GImNodes.CurrentAttributeFlags);
 
-    StyleColorsDark(&context.Style);
+    style_colors_dark(&context.Style);
 }
 
 void Shutdown(ImNodesContext* g) { EditorContextFree(g.DefaultEditorCtx); }
@@ -2071,7 +2071,7 @@ ImNodesIO& GetIO() { return GImNodes.Io; }
 
 NodesStyle& GetStyle() { return GImNodes.Style; }
 
-void StyleColorsDark(NodesStyle* dest)
+void style_colors_dark(NodesStyle* dest)
 {
     if (dest == nullptr)
     {
@@ -2117,7 +2117,7 @@ void StyleColorsDark(NodesStyle* dest)
     dest.Colors[ImNodesCol_MiniMapCanvasOutline] = IM_COL32(200, 200, 200, 200);
 }
 
-void StyleColorsClassic(NodesStyle* dest)
+void style_colors_classic(NodesStyle* dest)
 {
     if (dest == nullptr)
     {
@@ -2158,7 +2158,7 @@ void StyleColorsClassic(NodesStyle* dest)
     dest.Colors[ImNodesCol_MiniMapCanvasOutline] = IM_COL32(200, 200, 200, 200);
 }
 
-void StyleColorsLight(NodesStyle* dest)
+void style_colors_light(NodesStyle* dest)
 {
     if (dest == nullptr)
     {

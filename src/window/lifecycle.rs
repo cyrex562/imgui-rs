@@ -403,7 +403,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     WindowStackData window_stack_data;
     window_stack_data.Window = window;
     window_stack_data.ParentLastItemDataBackup = g.last_item_data;
-    window_stack_data.StackSizesOnBegin.SetToCurrentState();
+    window_stack_data.StackSizesOnBegin.set_to_current_state();
     g.current_window_stack.push_back(window_stack_data);
     g.current_window = None;
     if (flags & WindowFlags::ChildMenu)
@@ -1165,7 +1165,7 @@ pub fn end(g: &mut Context)
         g.BeginMenuCount--;
     if (window.flags & WindowFlags::Popup)
         g.begin_popup_stack.pop_back();
-    g.current_window_stack.back().StackSizesOnBegin.CompareWithCurrentState();
+    g.current_window_stack.back().StackSizesOnBegin.compare_with_current_state();
     g.current_window_stack.pop_back();
     SetCurrentWindow(g.current_window_stack.size == 0 ? None : g.current_window_stack.back().Window);
     if (g.current_window)

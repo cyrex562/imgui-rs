@@ -368,11 +368,11 @@ static void ImGui_ImplWin32_UpdateMouseData() {
     if (!io.WantSetMousePos && !bd->MouseTracked && has_mouse_screen_pos) {
       // Single viewport mode: mouse position in client window coordinates
       // (io.mouse_pos is (0,0) when the mouse is on the upper-left corner of
-      // the app window) (This is the position you can get with ::GetCursorPos()
+      // the app window) (This is the position you can get with ::get_cursor_pos()
       // + ::ScreenToClient() or WM_MOUSEMOVE.) Multi-viewport mode: mouse
       // position in OS absolute coordinates (io.mouse_pos is (0,0) when the
       // mouse is on the upper-left of the primary monitor) (This is the
-      // position you can get with ::GetCursorPos() or WM_MOUSEMOVE +
+      // position you can get with ::get_cursor_pos() or WM_MOUSEMOVE +
       // ::ClientToScreen(). In theory adding viewport->pos to a client position
       // would also be the same.)
       POINT mouse_pos = mouse_screen_pos;

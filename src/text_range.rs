@@ -1,12 +1,12 @@
 #[derive(Clone, Debug, Default)]
-pub struct ImGuiTextRange {
+pub struct TextRange {
     // const char*     b;
     // const char*     e;
     pub b: String,
     pub e: String,
 }
 
-impl ImGuiTextRange {
+impl TextRange {
     // ImGuiTextRange()                                { b = e = None; }
     pub fn new(b: &String, e: &String) -> Self {
         Self {

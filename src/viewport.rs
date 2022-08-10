@@ -1,15 +1,19 @@
 use std::collections::HashSet;
 use crate::config::ConfigFlags;
-use crate::Context;
+use crate::{Context, INVALID_ID};
 use crate::draw::data::{DrawData, DrawDataBuilder};
 use crate::draw::draw_data_builder::DrawDataBuilder;
 use crate::draw::list::DrawList;
 use crate::orig_imgui_single_file::{Id32, Window};
+use crate::rect::Rect;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};
 use crate::window::checks::is_window_active_and_visible;
+use crate::window::layer::bring_window_to_display_front;
 use crate::window::next_window::NextWindowDataFlags;
+use crate::window::pos::translate_window;
+use crate::window::size::scale_window;
 
 /// ImGuiViewport Private/Internals fields (cardinal sin: we are using inheritance!)
 /// Every instance of ImGuiViewport is in fact a ImGuiViewportP.
@@ -152,7 +156,7 @@ pub struct Viewport
     pub pos: Vector2D,                    // Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
     pub renderer_user_data: Vec<u8>,
     pub size: Vector2D,                   // Main Area: size of the viewport.
-    pub window: Id32,
+    pub window_id: Id32,
     pub work_offset_max: Vector2D,
     pub work_offset_min: Vector2D,
     pub work_pos: Vector2D,                // Work Area: Position of the viewport minus task bars, menus bars, status bars (>= pos)
@@ -217,7 +221,7 @@ pub fn setup_viewport_draw_data(g: &mut Context, viewport: &mut Viewport, draw_l
     for ele in draw_lists {
         // {
         //     ImDrawList* draw_list = draw_lists.Data[n];
-        let draw_list = g.draw_list_mut(*ele).unwrap()
+        let draw_list = g.draw_list_mut(*ele).unwrap();
         //     draw_list->_PopUnusedDrawCmd();
         draw_list.pop_unused_draw_cmd();
         //     draw_data.total_vtx_count += draw_list->VtxBuffer.Size;
@@ -233,60 +237,68 @@ pub fn setup_viewport_draw_data(g: &mut Context, viewport: &mut Viewport, draw_l
 pub fn get_main_viewport(g: &mut Context) -> &mut Viewport
 {
     // ImGuiContext& g = *GImGui;
-    return g.viewports[0];
+    return &mut g.viewports[0];
 }
 
 // FIXME: This leaks access to viewports not listed in platform_io.viewports[]. Problematic? (#4236)
 // ImGuiViewport* FindViewportByID(Id32 id)
-pub fn find_viewport_by_id(g: &mut Context, id: Id32) -> &mut Viewport
+pub fn find_viewport_by_id(g: &mut Context, id: Id32) -> Option<&mut Viewport>
 {
     // ImGuiContext& g = *GImGui;
-    for (int n = 0; n < g.viewports.size; n += 1)
-        if (g.viewports[n].id == id)
-            return g.viewports[n];
-    return None;
+    // for (int n = 0; n < g.viewports.size; n += 1)
+    //     if (g.viewports[n].id == id)
+    //         return g.viewports[n];
+    // return None;
+    g.viewports.iter_mut().find(|x| x.id == id)
 }
 
 // ImGuiViewport* FindViewportByplatform_handle(void* platform_handle)
-pub fn find_viewport_by_platform_handle(g: &mut Context, platform_handle: Id32) -> &mut Viewport
+pub fn find_viewport_by_platform_handle(g: &mut Context, platform_handle: Id32) -> Option<&mut Viewport>
 {
     // ImGuiContext& g = *GImGui;
-    for (int i = 0; i != g.viewports.size; i += 1)
-        if (g.viewports[i].platform_handle == platform_handle)
-            return g.viewports[i];
-    return None;
+    // for (int i = 0; i != g.viewports.size; i += 1)
+    //     if (g.viewports[i].platform_handle == platform_handle)
+    //         return g.viewports[i];
+    // return None;
+    g.viewports.iter_mut().find(|x|x.platform_handle == platform_handle)
 }
 
 // void SetCurrentViewport(Window* current_window, ImGuiViewportP* viewport)
 pub fn set_current_viewport(g: &mut Context, current_window: Option<&mut Window>, viewport: Option<&mut Viewport>)
 {
     // ImGuiContext& g = *GImGui;
-    (void)current_window;
+    // current_window;
 
-    if (viewport)
-        viewport.last_frame_active = g.frame_count;
-    if (g.current_viewport == viewport)
+    if (viewport.is_some()) {
+        viewport.unwrap().last_frame_active = g.frame_count;
+    }
+    if (g.current_viewport_id == viewport.unwrap().id) {
         return;
-    g.CurrentDpiScale = viewport ? viewport.DpiScale : 1.0;
-    g.current_viewport = viewport;
+    }
+    g.current_dpi_scale = if viewport.is_some() { viewport.dpi_scale } else { 1.0 };
+    g.current_viewport_id = viewport.unwrap().id;
     //IMGUI_DEBUG_LOG_VIEWPORT("[viewport] SetCurrentViewport changed '%s' 0x%08X\n", current_window ? current_window->name : None, viewport ? viewport->id : 0);
 
     // Notify platform layer of viewport changes
     // FIXME-DPI: This is only currently used for experimenting with handling of multiple DPI
-    if (g.current_viewport && g.platform_io.platform_on_changed_viewport)
-        g.platform_io.platform_on_changed_viewport(g.current_viewport);
+    if g.current_viewport_id != INVALID_ID && g.platform_io.platform_on_changed_viewport {
+        g.platform_io.platform_on_changed_viewport(g.viewport_mut(g.current_viewport_id).unwrap());
+    }
 }
 
 // void SetWindowViewport(Window* window, ImGuiViewportP* viewport)
 pub fn set_window_viewport(g: &mut Context, window: &mut Window, viewport: &mut Viewport)
 {
     // Abandon viewport
-    if (window.viewport_owned && window.viewport.Window == window)
+    let window_viewport = g.viewport_mut(window.viewport_id).unwrap();
+    // let viewport_window = g.window_mut(viewport.window_id);
+    if window.viewport_owned && window_viewport.window_id == window.id {
         window.viewport.size = Vector2D::new(0.0, 0.0);
+    }
 
-    window.viewport = viewport;
+    // window.viewport_id = viewport.id;
     window.viewport_id = viewport.id;
-    window.viewport_owned = (viewport.Window == window);
+    window.viewport_owned = (viewport.window_id == window.id);
 }
 
 // static bool GetWindowAlwaysWantOwnViewport(Window* window)
@@ -294,50 +306,67 @@ pub fn get_window_always_want_own_viewport(g: &mut Context, window: &mut Window)
 {
     // Tooltips and menus are not automatically forced into their own viewport when the NoMerge flag is set, however the multiplication of viewports makes them more likely to protrude and create their own.
     // ImGuiContext& g = *GImGui;
-    if (g.io.ConfigViewportsNoAutoMerge || (window.window_class.viewportFlagsOverrideSet & ViewportFlags::NoAutoMerge))
-        if (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable)
-            if (!window.dock_is_active)
-                if ((window.flags & (WindowFlags::ChildWindow | WindowFlags::ChildMenu | WindowFlags::Tooltip)) == 0)
-                    if ((window.flags & WindowFlags::Popup) == 0 || (window.flags & WindowFlags::Modal) != 0)
+    if g.io.config_viewports_not_auto_merge || window.window_class.viewport_flags_override_set.contains(&ViewportFlags::NoAutoMerge) {
+        if g.config_flags_curr_frame.contains(&ConfigFlags::ViewportsEnable) {
+            if !window.dock_is_active {
+                // if window.flags & (WindowFlags::ChildWindow | WindowFlags::ChildMenu | WindowFlags::Tooltip) == 0
+                if !window.flags.contains(&WindowFlags::ChildWindow) && !window.flags.contains(&WindowFlags::ChildMenu) && !window.flags.contains(&WindowFlags::Tooltip) {
+                    if !window.flags.contains(&WindowFlags::Popup) || window.flags.contains(&WindowFlags::Modal) {
                         return true;
+                    }
+                }
+            }
+        }
+    }
     return false;
 }
 
 // static bool update_try_merge_window_into_host_viewport(Window* window, ImGuiViewportP* viewport)
-pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut Window, viewport: &mut Viewport) -> bool
-{
+pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut Window, viewport: &mut Viewport) -> bool {
     // ImGuiContext& g = *GImGui;
-    if (window.viewport == viewport)
+    if window.viewport_id == viewport.id {
         return false;
-    if ((viewport.flags & ViewportFlags::CanHostOtherWindows) == 0)
+    }
+    if !viewport.flags.contains(&ViewportFlags::CanHostOtherWindows) {
         return false;
-    if ((viewport.flags & ViewportFlags::Minimized) != 0)
+    }
+    if !viewport.flags.contains(&ViewportFlags::Minimized) {
         return false;
-    if (!viewport.get_main_rect().contains(window.rect()))
+    }
+    if !viewport.get_main_rect().contains(window.rect()) {
         return false;
-    if (GetWindowAlwaysWantOwnViewport(window))
+    }
+    if get_window_always_want_own_viewport(g, window) {
         return false;
+    }
 
     // FIXME: Can't use g.windows_focus_order[] for root windows only as we care about Z order. If we maintained a display_order along with focus_order we could..
-    for (int n = 0; n < g.windows.len(); n += 1)
-    {
-        Window* window_behind = g.windows[n];
-        if (window_behind == window)
+    // for (int n = 0; n < g.windows.len(); n += 1)
+    for (_, window_behind) in g.windows.iter_mut() {
+        // Window* window_behind = g.windows[n];
+        if window_behind.id == window.id {
             break;
-        if (window_behind.WasActive && window_behind.viewport_owned && !(window_behind.flags & WindowFlags::ChildWindow))
-            if (window_behind.viewport.get_main_rect().Overlaps(window.rect()))
+        }
+        if window_behind.was_active && window_behind.viewport_owned && !(window_behind.flags.contains(&WindowFlags::ChildWindow)) {
+            if window_behind.viewport.get_main_rect().overlaps(window.rect()) {
                 return false;
+            }
+        }
     }
 
     // Move to the existing viewport, Move child/hosted windows as well (FIXME-OPT: iterate child)
-    ViewportP* old_viewport = window.viewport;
-    if (window.viewport_owned)
-        for (int n = 0; n < g.windows.len(); n += 1)
-            if (g.windows[n].viewport == old_viewport)
-                SetWindowViewport(g.windows[n], viewport);
-    SetWindowViewport(window, viewport);
-    bring_window_to_display_front(window);
-
+    // ViewportP* old_viewport = window.viewport;
+    let mut old_viewport = g.viewport_mut(window.viewport_id).unwrap();
+    if window.viewport_owned {
+        // for (int n = 0; n < g.windows.len(); n += 1)
+        for (_, win) in g.windows.iter_mut() {
+            if win.viewport_id == old_viewport.id {
+                set_window_viewport(g, win, viewport);
+            }
+        }
+    }
+    set_window_viewport(g, window, viewport);
+    bring_window_to_display_front(g, window);
     return true;
 }
 
@@ -346,14 +375,13 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
 pub fn update_try_merge_window_into_host_viewports(g: &mut Context, window: &mut Window) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    return update_try_merge_window_into_host_viewport(window, g.viewports[0]);
+    return update_try_merge_window_into_host_viewport(g, window, &mut g.viewports[0]);
 }
 
 // Translate Dear ImGui windows when a Host viewport has been moved
 // (This additionally keeps windows at the same place when ConfigFlags::ViewportsEnable is toggled!)
 // void TranslateWindowsInViewport(ImGuiViewportP* viewport, const Vector2D& old_pos, const Vector2D& new_pos)
-pub fn translate_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, old_pos: &Vector2D, new_pos: &Vector2D)
-{
+pub fn translate_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, old_pos: &Vector2D, new_pos: &Vector2D) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(viewport.Window == None && (viewport.flags & ImGuiViewportFlags_CanHostOtherWindows));
 
@@ -362,12 +390,15 @@ pub fn translate_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, o
     // 2) If it's not going to fit into the new size, keep it at same absolute position.
     // One problem with this is that most Win32 applications doesn't update their render while dragging,
     // and so the window will appear to teleport when releasing the mouse.
-    let translate_all_windows = (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != (g.config_flags_last_frame & ConfigFlags::ViewportsEnable);
-    Rect test_still_fit_rect(old_pos, old_pos + viewport.size);
-    Vector2D delta_pos = new_pos - old_pos;
-    for (int window_n = 0; window_n < g.windows.len(); window_n += 1) // FIXME-OPT
-        if (translate_all_windows || (g.windows[window_n].viewport == viewport && test_still_fit_rect.contains(g.windows[window_n].rect())))
-            TranslateWindow(g.windows[window_n], delta_pos);
+    let translate_all_windows = g.config_flags_curr_frame.contains(&ConfigFlags::ViewportsEnable) != g.config_flags_last_frame.contains(&ConfigFlags::ViewportsEnable);
+    let mut test_still_fit_rect = Rect::new(old_pos, old_pos + viewport.size);
+    let delta_pos = new_pos - old_pos;
+    // for (int window_n = 0; window_n < g.windows.len(); window_n += 1)
+    for (_, window_n) in g.windows.iter_mut() {
+        if translate_all_windows || (window_n.viewport_id == viewport.id && test_still_fit_rect.contains(window_n.rect())) {
+            translate_window(window_n, delta_pos);
+        }
+    }
 }
 
 // scale all windows (position, size). Use when e.g. changing DPI. (This is a lossy operation!)
@@ -375,15 +406,19 @@ pub fn translate_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, o
 pub fn scale_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, scale: f32)
 {
     // ImGuiContext& g = *GImGui;
-    if (viewport.Window)
+    if viewport.window_id
     {
-        ScaleWindow(viewport.Window, scale);
+        scale_window(viewport.Window, scale);
     }
     else
     {
-        for (int i = 0; i != g.windows.len(); i += 1)
-            if (g.windows[i].viewport == viewport)
-                ScaleWindow(g.windows[i], scale);
+        // for (int i = 0; i != g.windows.len(); i += 1)
+        for (_, w) in g.windows.iter_mut()
+        {
+            if w.viewport_id == viewport.id {
+                scale_window(w, scale);
+            }
+        }
     }
 }
 
@@ -394,13 +429,19 @@ pub fn scale_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, scale
 pub fn find_hovered_viewport_from_platform_window_stack(g: &mut Context, mouse_platform_pos: &Vector2D) -> &mut Viewport
 {
     // ImGuiContext& g = *GImGui;
-    ViewportP* best_candidate = None;
-    for (int n = 0; n < g.viewports.size; n += 1)
+    // ViewportP* best_candidate = None;
+    let mut best_candidate: &mut Viewport = &mut Viewport::default();
+    // for (int n = 0; n < g.viewports.size; n += 1)
+    for viewport in g.viewports.iter_mut()
     {
-        ViewportP* viewport = g.viewports[n];
-        if (!(viewport.flags & (ViewportFlags::NoInputs | ViewportFlags::Minimized)) && viewport.get_main_rect().contains(mouse_platform_pos))
-            if (best_candidate == None || best_candidate.last_frontmost_stamp_count < viewport.last_frontmost_stamp_count)
+        // ViewportP* viewport = g.viewports[n];
+        // if (!(viewport.flags & (ViewportFlags::NoInputs | ViewportFlags::Minimized)) && viewport.get_main_rect().contains(mouse_platform_pos))
+        if !(viewport.flags.contains(&ViewportFlags::NoInputs) && !viewport.flags.contains(&ViewportFlags::Minimized)) && viewport.get_main_rect().contains(mouse_platform_pos)
+        {
+            if best_candidate.id == INVALID_ID || best_candidate.last_frontmost_stamp_count < viewport.last_frontmost_stamp_count {
                 best_candidate = viewport;
+            }
+        }
     }
     return best_candidate;
 }
@@ -414,7 +455,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
     // IM_ASSERT(g.platform_io.viewports.size <= g.viewports.size);
 
     // update Minimized status (we need it first in order to decide if we'll apply pos/size of the main viewport)
-    let viewports_enabled = (g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != 0;
+    let viewports_enabled = ( g.config_flags_curr_frame & ConfigFlags::ViewportsEnable) != 0;
     if (viewports_enabled)
     {
         for (int n = 0; n < g.viewports.size; n += 1)
@@ -446,7 +487,7 @@ pub fn update_viewports_new_frame(g: &mut Context)
     }
     AddUpdateViewport(None, IMGUI_VIEWPORT_DEFAULT_ID, main_viewport_pos, main_viewport_size, ViewportFlags::OwnedByApp | ViewportFlags::CanHostOtherWindows);
 
-    g.CurrentDpiScale = 0.0;
+    g.current_dpi_scale = 0.0;
     g.current_viewport = None;
     g.mouse_viewport = None;
     for (int n = 0; n < g.viewports.size; n += 1)
@@ -706,7 +747,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
     ViewportP* main_viewport = (ViewportP*)(void*)get_main_viewport();
     if (!(g.config_flags_curr_frame & ConfigFlags::ViewportsEnable))
     {
-        SetWindowViewport(window, main_viewport);
+        set_window_viewport(window, main_viewport);
         return;
     }
     window.viewport_owned = false;
@@ -757,7 +798,7 @@ pub fn WindowSelectViewport(g: &mut Context, window: &mut Window)
     {
         window.viewport = g.mouse_viewport;
     }
-    else if (GetWindowAlwaysWantOwnViewport(window))
+    else if (get_window_always_want_own_viewport(window))
     {
         window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ViewportFlags::None);
     }
@@ -895,8 +936,8 @@ pub fn window_sync_owned_viewport(g: &mut Context, window: &mut Window, parent_w
         viewport_flags |= ViewportFlags::NoFocusOnAppearing | ViewportFlags::NoFocusOnClick;
 
     // We can overwrite viewport flags using window_class (advanced users)
-    if (window.window_class.viewportFlagsOverrideSet)
-        viewport_flags |= window.window_class.viewportFlagsOverrideSet;
+    if (window.window_class.viewport_flags_override_set)
+        viewport_flags |= window.window_class.viewport_flags_override_set;
     if (window.window_class.viewportFlagsOverrideClear)
         viewport_flags &= ~window.window_class.viewportFlagsOverrideClear;
 

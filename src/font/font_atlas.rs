@@ -727,7 +727,7 @@ struct ImFontBuildSrcData
 {
     stbtt_fontinfo      FontInfo;
     stbtt_pack_range    PackRange;          // Hold the list of codepoints to pack (essentially points to Codepoints.data)
-    stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
+    StbRpRect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
     stbtt_packedchar*   PackedChars;        // Output glyphs
     const ImWchar*      SrcRanges;          // ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFFF)
     int                 DstIndex;           // index into atlas->fonts[] and dst_tmp_array[]
@@ -843,7 +843,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 
     // Allocate packing character data and flag packed characters buffer as non-packed (x0=y0=x1=y1=0)
     // (We technically don't need to zero-clear buf_rects, but let's do it for the sake of sanity)
-    ImVector<stbrp_rect> buf_rects;
+    ImVector<StbRpRect> buf_rects;
     ImVector<stbtt_packedchar> buf_packedchars;
     buf_rects.resize(total_glyphs_count);
     buf_packedchars.resize(total_glyphs_count);
@@ -914,7 +914,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         if (src_tmp.GlyphsCount == 0)
             continue;
 
-        stbrp_pack_rects((stbrp_context*)spc.pack_info, src_tmp.Rects, src_tmp.GlyphsCount);
+        stbrp_pack_rects((StbRpContext*)spc.pack_info, src_tmp.Rects, src_tmp.GlyphsCount);
 
         // Extend texture height and mark missing glyphs as non-packed so we won't render them.
         // FIXME: We are not handling packing failure here (would happen if we got off TEX_HEIGHT_MAX or if a single if larger than tex_width?)
@@ -946,7 +946,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         {
             unsigned char multiply_table[256];
             ImFontAtlasBuildMultiplyCalcLookupTable(multiply_table, cfg.RasterizerMultiply);
-            stbrp_rect* r = &src_tmp.Rects[0];
+            StbRpRect* r = &src_tmp.Rects[0];
             for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1, r += 1)
                 if (r.was_packed)
                     ImFontAtlasBuildMultiplyRectAlpha8(multiply_table, atlas.TexPixelsAlpha8, r.x, r.y, r.w, r.h, atlas.TexWidth * 1);
@@ -1024,15 +1024,15 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
     font.ConfigDataCount += 1;
 }
 
-void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opaque)
+void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* StbRpContext_opaque)
 {
-    stbrp_context* pack_context = (stbrp_context*)stbrp_context_opaque;
+    StbRpContext* pack_context = (StbRpContext*)StbRpContext_opaque;
     // IM_ASSERT(pack_context != None);
 
     ImVector<ImFontAtlasCustomRect>& user_rects = atlas.CustomRects;
     // IM_ASSERT(user_rects.size >= 1); // We expect at least the default custom rects to be registered, else something went wrong.
 
-    ImVector<stbrp_rect> pack_rects;
+    ImVector<StbRpRect> pack_rects;
     pack_rects.resize(user_rects.size);
     memset(pack_rects.data, 0, pack_rects.size_in_bytes());
     for (int i = 0; i < user_rects.size; i += 1)
