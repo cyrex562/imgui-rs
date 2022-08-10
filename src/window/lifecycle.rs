@@ -455,13 +455,13 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
     {
         if (g.next_window_data.scroll_val.x >= 0.0)
         {
-            window.ScrollTarget.x = g.next_window_data.scroll_val.x;
-            window.ScrollTargetCenterRatio.x = 0.0;
+            window.scroll_target.x = g.next_window_data.scroll_val.x;
+            window.scroll_target_center_ratio.x = 0.0;
         }
         if (g.next_window_data.scroll_val.y >= 0.0)
         {
-            window.ScrollTarget.y = g.next_window_data.scroll_val.y;
-            window.ScrollTargetCenterRatio.y = 0.0;
+            window.scroll_target.y = g.next_window_data.scroll_val.y;
+            window.scroll_target_center_ratio.y = 0.0;
         }
     }
     if (g.next_window_data.flags & NextWindowDataFlags::HasContentSize)
@@ -564,12 +564,12 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         else
             window.WindowBorderSize = ((flags & (WindowFlags::Popup | WindowFlags::Tooltip)) && !(flags & WindowFlags::Modal)) ? style.PopupBorderSize : style.WindowBorderSize;
         if (!window.dock_is_active && (flags & WindowFlags::ChildWindow) && !(flags & (WindowFlags::AlwaysUseWindowPadding | WindowFlags::Popup)) && window.WindowBorderSize == 0.0)
-            window.WindowPadding = Vector2D::new(0.0, (flags & WindowFlags::MenuBar) ? style.WindowPadding.y : 0.0);
+            window.window_padding = Vector2D::new(0.0, (flags & WindowFlags::MenuBar) ? style.window_padding.y : 0.0);
         else
-            window.WindowPadding = style.WindowPadding;
+            window.window_padding = style.window_padding;
 
         // Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
-        window.dc.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.item_spacing.x), g.next_window_data.menu_bar_offset_min_val.x);
+        window.dc.MenuBarOffset.x = ImMax(ImMax(window.window_padding.x, style.item_spacing.x), g.next_window_data.menu_bar_offset_min_val.x);
         window.dc.MenuBarOffset.y = g.next_window_data.menu_bar_offset_min_val.y;
 
         // Collapse window by double-clicking on title bar
@@ -669,7 +669,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // Late create viewport if we don't fit within our current host viewport.
         if (window.viewport_allow_platform_monitor_extend >= 0 && !window.viewport_owned && !(window.viewport.flags & ViewportFlags::Minimized))
-            if (!window.viewport.get_main_rect().contains(window.Rect()))
+            if (!window.viewport.get_main_rect().contains(window.rect()))
             {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
                 //ImGuiViewport* old_viewport = window->viewport;
@@ -755,7 +755,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         {
             // IM_ASSERT(window.IDStack.size == 1);
             window.id_stack.size = 0;
-            IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.id);
+            IMGUI_TEST_ENGINE_ITEM_ADD(window.rect(), window.id);
             IMGUI_TEST_ENGINE_ITEM_INFO(window.id, window.name, (g.hovered_window == window) ? ItemStatusFlags::HoveredRect : 0);
             window.id_stack.size = 1;
         }
@@ -797,7 +797,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             // When we use inner_rect here we are intentionally reading last frame size, same for scrollbar_sizes values before we set them again.
             Vector2D avail_size_from_current_frame = Vector2D::new(window.size_full.x, window.size_full.y - decoration_up_height);
             Vector2D avail_size_from_last_frame = window.inner_rect.GetSize() + window.scrollbar_sizes;
-            Vector2D needed_size_from_last_frame = window_just_created ? Vector2D::new(0, 0) : window.ContentSize + window.WindowPadding * 2.0;
+            Vector2D needed_size_from_last_frame = window_just_created ? Vector2D::new(0, 0) : window.ContentSize + window.window_padding * 2.0;
             let size_x_for_scrollbars =  use_current_size_for_scrollbar_x ? avail_size_from_current_frame.x : avail_size_from_last_frame.x;
             let size_y_for_scrollbars =  use_current_size_for_scrollbar_y ? avail_size_from_current_frame.y : avail_size_from_last_frame.y;
             //bool scrollbar_y_from_last_frame = window->scrollbar_y; // FIXME: May want to use that in the scrollbar_x expression? How many pros vs cons?
@@ -818,7 +818,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // - Begin() initial clipping rect for drawing window background and borders.
         // - Begin() clipping whole child
         const Rect host_rect = ((flags & WindowFlags::ChildWindow) && !(flags & WindowFlags::Popup) && !window_is_child_tooltip) ? parent_window.clip_rect : viewport_rect;
-        const Rect outer_rect = window.Rect();
+        const Rect outer_rect = window.rect();
         const Rect title_bar_rect = window.title_bar_rect();
         window.OuterRectClipped = outer_rect;
         if (window.dock_is_active)
@@ -828,7 +828,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Inner rectangle
         // Not affected by window border size. Used by:
         // - inner_clip_rect
-        // - ScrollToRectEx()
+        // - scroll_to_rect_ex()
         // - NavUpdatePageUpPageDown()
         // - Scrollbar()
         window.inner_rect.min.x = window.pos.x;
@@ -844,9 +844,9 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Affected by window/frame border size. Used by:
         // - Begin() initial clip rect
         let top_border_size =  (((flags & WindowFlags::MenuBar) || !(flags & WindowFlags::NoTitleBar)) ? style.frame_border_size : window.WindowBorderSize);
-        window.InnerClipRect.min.x = f32::floor(0.5 + window.inner_rect.min.x + ImMax(f32::floor(window.WindowPadding.x * 0.5), window.WindowBorderSize));
+        window.InnerClipRect.min.x = f32::floor(0.5 + window.inner_rect.min.x + ImMax(f32::floor(window.window_padding.x * 0.5), window.WindowBorderSize));
         window.InnerClipRect.min.y = f32::floor(0.5 + window.inner_rect.min.y + top_border_size);
-        window.InnerClipRect.max.x = f32::floor(0.5 + window.inner_rect.max.x - ImMax(f32::floor(window.WindowPadding.x * 0.5), window.WindowBorderSize));
+        window.InnerClipRect.max.x = f32::floor(0.5 + window.inner_rect.max.x - ImMax(f32::floor(window.window_padding.x * 0.5), window.WindowBorderSize));
         window.InnerClipRect.max.y = f32::floor(0.5 + window.inner_rect.max.y - window.WindowBorderSize);
         window.InnerClipRect.ClipWithFull(host_rect);
 
@@ -861,12 +861,12 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // Lock down maximum scrolling
         // The value of scroll_max are ahead from scrollbar_x/scrollbar_y which is intentionally using inner_rect from previous rect in order to accommodate
         // for right/bottom aligned items without creating a scrollbar.
-        window.scroll_max.x = ImMax(0.0, window.ContentSize.x + window.WindowPadding.x * 2.0 - window.inner_rect.width());
-        window.scroll_max.y = ImMax(0.0, window.ContentSize.y + window.WindowPadding.y * 2.0 - window.inner_rect.height());
+        window.scroll_max.x = ImMax(0.0, window.ContentSize.x + window.window_padding.x * 2.0 - window.inner_rect.width());
+        window.scroll_max.y = ImMax(0.0, window.ContentSize.y + window.window_padding.y * 2.0 - window.inner_rect.height());
 
         // Apply scrolling
-        window.scroll = CalcNextScrollFromScrollTargetAndClamp(window);
-        window.ScrollTarget = Vector2D::new(f32::MAX, f32::MAX);
+        window.scroll = calc_next_scroll_from_scroll_target_and_clamp(window);
+        window.scroll_target = Vector2D::new(f32::MAX, f32::MAX);
 
         // DRAWING
 
@@ -887,7 +887,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
                 // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
                 // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
                 Window* previous_child = parent_window.dc.ChildWindows.size >= 2 ? parent_window.dc.ChildWindows[parent_window.dc.ChildWindows.size - 2] : None;
-                bool previous_child_overlapping = previous_child ? previous_child.rect().Overlaps(window.Rect()) : false;
+                bool previous_child_overlapping = previous_child ? previous_child.rect().Overlaps(window.rect()) : false;
                 bool parent_is_empty = parent_window.draw_list.vtx_buffer.size > 0;
                 if (window.draw_list.cmd_buffer.back().elem_count == 0 && parent_is_empty && !previous_child_overlapping)
                     render_decorations_in_parent = true;
@@ -913,10 +913,10 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // - BeginTabBar() for right-most edge
         let allow_scrollbar_x = !(flags & WindowFlags::NoScrollbar) && (flags & WindowFlags::HorizontalScrollbar);
         let allow_scrollbar_y = !(flags & WindowFlags::NoScrollbar);
-        let work_rect_size_x = (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : ImMax(allow_scrollbar_x ? window.ContentSize.x : 0.0, window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
-        let work_rect_size_y = (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : ImMax(allow_scrollbar_y ? window.ContentSize.y : 0.0, window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
-        window.work_rect.min.x = f32::floor(window.inner_rect.min.x - window.scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize));
-        window.work_rect.min.y = f32::floor(window.inner_rect.min.y - window.scroll.y + ImMax(window.WindowPadding.y, window.WindowBorderSize));
+        let work_rect_size_x = (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : ImMax(allow_scrollbar_x ? window.ContentSize.x : 0.0, window.size.x - window.window_padding.x * 2.0 - window.scrollbar_sizes.x));
+        let work_rect_size_y = (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : ImMax(allow_scrollbar_y ? window.ContentSize.y : 0.0, window.size.y - window.window_padding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
+        window.work_rect.min.x = f32::floor(window.inner_rect.min.x - window.scroll.x + ImMax(window.window_padding.x, window.WindowBorderSize));
+        window.work_rect.min.y = f32::floor(window.inner_rect.min.y - window.scroll.y + ImMax(window.window_padding.y, window.WindowBorderSize));
         window.work_rect.max.x = window.work_rect.min.x + work_rect_size_x;
         window.work_rect.max.y = window.work_rect.min.y + work_rect_size_y;
         window.ParentWorkRect = window.work_rect;
@@ -925,21 +925,21 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // FIXME-OBSOLETE: window->content_region_rect.max is currently very misleading / partly faulty, but some BeginChild() patterns relies on it.
         // Used by:
         // - Mouse wheel scrolling + many other things
-        window.content_region_rect.min.x = window.pos.x - window.scroll.x + window.WindowPadding.x;
-        window.content_region_rect.min.y = window.pos.y - window.scroll.y + window.WindowPadding.y + decoration_up_height;
-        window.content_region_rect.max.x = window.content_region_rect.min.x + (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : (window.size.x - window.WindowPadding.x * 2.0 - window.scrollbar_sizes.x));
-        window.content_region_rect.max.y = window.content_region_rect.min.y + (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : (window.size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
+        window.content_region_rect.min.x = window.pos.x - window.scroll.x + window.window_padding.x;
+        window.content_region_rect.min.y = window.pos.y - window.scroll.y + window.window_padding.y + decoration_up_height;
+        window.content_region_rect.max.x = window.content_region_rect.min.x + (window.content_size_explicit.x != 0.0 ? window.content_size_explicit.x : (window.size.x - window.window_padding.x * 2.0 - window.scrollbar_sizes.x));
+        window.content_region_rect.max.y = window.content_region_rect.min.y + (window.content_size_explicit.y != 0.0 ? window.content_size_explicit.y : (window.size.y - window.window_padding.y * 2.0 - decoration_up_height - window.scrollbar_sizes.y));
 
         // Setup drawing context
         // (NB: That term "drawing context / dc" lost its meaning a long time ago. Initially was meant to hold transient data only. Nowadays difference between window-> and window->dc-> is dubious.)
-        window.dc.indent.x = 0.0 + window.WindowPadding.x - window.scroll.x;
+        window.dc.indent.x = 0.0 + window.window_padding.x - window.scroll.x;
         window.dc.GroupOffset.x = 0.0;
         window.dc.columns_offset.x = 0.0;
 
         // Record the loss of precision of CursorStartPos which can happen due to really large scrolling amount.
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or ImU64.
-        double start_pos_highp_x = window.pos.x + window.WindowPadding.x - window.scroll.x + window.dc.columns_offset.x;
-        double start_pos_highp_y = window.pos.y + window.WindowPadding.y - window.scroll.y + decoration_up_height;
+        double start_pos_highp_x = window.pos.x + window.window_padding.x - window.scroll.x + window.dc.columns_offset.x;
+        double start_pos_highp_y = window.pos.y + window.window_padding.y - window.scroll.y + decoration_up_height;
         window.dc.cursor_start_pos  = Vector2D::new(start_pos_highp_x, start_pos_highp_y);
         window.dc.cursor_start_posLossyness = Vector2D::new((start_pos_highp_x - window.dc.cursor_start_pos.x), (start_pos_highp_y - window.dc.cursor_start_pos.y));
         window.dc.cursor_pos = window.dc.cursor_start_pos;
@@ -1035,7 +1035,7 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
 
         // [Test Engine] Register title bar / tab
         if (!(window.flags & WindowFlags::NoTitleBar))
-            IMGUI_TEST_ENGINE_ITEM_ADD(g.last_item_data.Rect, g.last_item_data.id);
+            IMGUI_TEST_ENGINE_ITEM_ADD(g.last_item_data.rect, g.last_item_data.id);
     }
     else
     {
@@ -1157,7 +1157,7 @@ pub fn end(g: &mut Context)
     // Docking: report contents sizes to parent to allow for auto-resize
     if (window.dock_node && window.dock_tab_is_visible)
         if (Window* host_window = window.dock_node.host_window)         // FIXME-DOCK
-            host_window.dc.cursor_max_pos = window.dc.cursor_max_pos + window.WindowPadding - host_window.WindowPadding;
+            host_window.dc.cursor_max_pos = window.dc.cursor_max_pos + window.window_padding - host_window.window_padding;
 
     // Pop from window stack
     g.last_item_data = g.current_window_stack.back().ParentLastItemDataBackup;

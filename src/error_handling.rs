@@ -52,7 +52,7 @@ pub fn error_check_new_frame_sanity_checks(g: &mut Context)
     // IM_ASSERT(g.style.alpha >= 0.0 && g.style.alpha <= 1.0            && "Invalid style setting!"); // Allows us to avoid a few clamps in color computations
     // IM_ASSERT(g.style.window_min_size.x >= 1.0 && g.style.window_min_size.y >= 1.0 && "Invalid style setting.");
     // IM_ASSERT(g.style.window_menu_button_position == Dir::None || g.style.window_menu_button_position == Dir::Left || g.style.window_menu_button_position == Dir::Right);
-    // IM_ASSERT(g.style.ColorButtonPosition == Dir::Left || g.style.ColorButtonPosition == Dir::Right);
+    // IM_ASSERT(g.style.color_button_position == Dir::Left || g.style.color_button_position == Dir::Right);
 #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
     for (int n = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_COUNT; n += 1)
         // IM_ASSERT(g.io.key_map[n] >= -1 && g.io.key_map[n] < ImGuiKey_LegacyNativeKey_END && "io.key_map[] contains an out of bound value (need to be 0..511, or -1 for unmapped key)");

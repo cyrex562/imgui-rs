@@ -296,7 +296,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
 
  - font: arbitrary line spacing. (#2945)
  - font: merge_mode: flags to select overwriting or not (this is now very easy with refactored ImFontAtlasBuildWithStbTruetype)
- - font: free the Alpha buffer if user only requested RGBA.
+ - font: free the alpha buffer if user only requested RGBA.
 !- font: better calc_text_size_a() API, at least for simple use cases. current one is horrible (perhaps have simple vs extended versions).
  - font: for the purpose of RenderTextEllipsis(), it might be useful that calc_text_size_a() can ignore the trailing padding?
  - font: a CalcTextHeight() helper could run faster than CalcTextSize().y

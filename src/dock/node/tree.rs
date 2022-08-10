@@ -234,7 +234,7 @@ pub fn dock_node_tree_update_pos_size(
         let size_avail = f32::max(size[axis] - spacing, 0.0);
 
         // size allocation policy
-        // 1) The first 0..WindowMinSize[axis]*2 are allocated evenly to both windows.
+        // 1) The first 0..window_min_size[axis]*2 are allocated evenly to both windows.
         // let size_min_each = f32::floor(ImMin(size_avail, g.style.window_min_size[axis] * 2.0) * 0.5);
         let size_min_each =
             f32::floor(f32::min(size_avail, g.style.window_min_size[&axis] * 2.0) * 0.5);

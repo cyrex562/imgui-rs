@@ -672,7 +672,7 @@ pub fn begin_disabled(g: &mut Context, disabled: bool) {
     let was_disabled = g.current_item_flags.contains(&ItemFlags::Disabled);
     if !was_disabled && disabled {
         g.disabled_alpha_backup = g.style.alpha;
-        g.style.alpha *= g.style.disabled_alpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * g.style.DisabledAlpha);
+        g.style.alpha *= g.style.disabled_alpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.style.alpha * g.style.DisabledAlpha);
     }
     if was_disabled || disabled {
         g.current_item_flags.insert(ItemFlags::Disabled);

@@ -43,10 +43,10 @@ pub fn set_item_default_focus(g: &mut Context)
 
     g.nav_init_request = false;
     g.NavInitResultId = g.last_item_data.id;
-    g.NavInitResultRectRel = window_rect_abs_to_rel(window, g.last_item_data.Rect);
+    g.NavInitResultRectRel = window_rect_abs_to_rel(window, g.last_item_data.rect);
     nav_update_any_request_flag();
 
     // scroll could be done in NavInitRequestApplyResult() via a opt-in flag (we however don't want regular init requests to scroll)
     if (!IsItemVisible())
-        ScrollToRectEx(window, g.last_item_data.Rect, ImGuiScrollFlags_None);
+        scroll_to_rect_ex(window, g.last_item_data.rect, ScrollFlags::None);
 }

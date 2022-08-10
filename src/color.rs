@@ -5,7 +5,7 @@ use crate::imgui_vec::Vector4D;
 use crate::math::{f32_mod, f32_to_int8_sat, lerp_u32};
 use crate::vectors::Vector4D;
 
-pub fn im_alpha_blend_colors(col_a: u32, col_b: u32) -> u32 {
+pub fn alpha_blend_colors(col_a: u32, col_b: u32) -> u32 {
     // float t = ((col_b >> IM_COL32_A_SHIFT) & 0xFF) / 255.f;
     let t = ((col_b >> IM_COL32_A_SHIFT) & 0xff) as f32 / 255.0;
     // int r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
@@ -280,9 +280,9 @@ pub enum StyleColor {
     TableHeaderBg,
     // Table header background
     TableBorderStrong,
-    // Table outer and header borders (prefer using Alpha=1.0 here)
+    // Table outer and header borders (prefer using alpha=1.0 here)
     TableBorderLight,
-    // Table inner borders (prefer using Alpha=1.0 here)
+    // Table inner borders (prefer using alpha=1.0 here)
     TableRowBg,
     // Table row background (even rows)
     TableRowBgAlt,
@@ -304,7 +304,7 @@ pub enum StyleColor {
 pub enum ColorEditFlags {
     None,
     NoAlpha,
-    //              // ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).
+    //              // ColorEdit, ColorPicker, ColorButton: ignore alpha component (will only read 3 components from the input pointer).
     NoPicker,
     //              // ColorEdit: disable picker when clicking on color square.
     NoOptions,

@@ -2209,8 +2209,8 @@ static void ShowDemoWindowWidgets() {
     static bool drag_and_drop = true;
     static bool options_menu = true;
     static bool hdr = false;
-    ImGui::Checkbox("With Alpha preview", &alpha_preview);
-    ImGui::Checkbox("With Half Alpha preview", &alpha_half_preview);
+    ImGui::Checkbox("With alpha preview", &alpha_preview);
+    ImGui::Checkbox("With Half alpha preview", &alpha_half_preview);
     ImGui::Checkbox("With Drag and Drop", &drag_and_drop);
     ImGui::Checkbox("With Options Menu", &options_menu);
     ImGui::SameLine();
@@ -2234,8 +2234,8 @@ static void ShowDemoWindowWidgets() {
                "CTRL+click on individual component to input value.\n");
     ImGui::ColorEdit3("MyColor##1", (float *)&color, misc_flags);
 
-    IMGUI_DEMO_MARKER("Widgets/Color/ColorEdit (HSV, with Alpha)");
-    ImGui::Text("Color widget HSV with Alpha:");
+    IMGUI_DEMO_MARKER("Widgets/Color/ColorEdit (HSV, with alpha)");
+    ImGui::Text("Color widget HSV with alpha:");
     ImGui::ColorEdit4("MyColor##2", (float *)&color,
                       ImGuiColorEditFlags_DisplayHSV | misc_flags);
 
@@ -2266,7 +2266,7 @@ static void ShowDemoWindowWidgets() {
       for (int n = 0; n < IM_ARRAYSIZE(saved_palette); n += 1) {
         ImGui::ColorConvertHSVtoRGB(n / 31.0, 0.8, 0.8, saved_palette[n].x,
                                     saved_palette[n].y, saved_palette[n].z);
-        saved_palette[n].w = 1.0; // Alpha
+        saved_palette[n].w = 1.0; // alpha
       }
       saved_palette_init = false;
     }
@@ -2353,8 +2353,8 @@ static void ShowDemoWindowWidgets() {
     static Vector4D ref_color_v(1.0, 0.0, 1.0, 0.5);
     static int display_mode = 0;
     static int picker_mode = 0;
-    ImGui::Checkbox("With Alpha", &alpha);
-    ImGui::Checkbox("With Alpha Bar", &alpha_bar);
+    ImGui::Checkbox("With alpha", &alpha);
+    ImGui::Checkbox("With alpha Bar", &alpha_bar);
     ImGui::Checkbox("With Side preview", &side_preview);
     if (side_preview) {
       ImGui::SameLine();
@@ -4681,7 +4681,7 @@ static void ShowDemoWindowTables() {
   // Most settings are configured on a per-table basis via the flags passed to
   // BeginTable() and TableSetupColumns APIs. There are however a few settings
   // that a shared and part of the ImGuiStyle structure:
-  //   style.CellPadding                          // Padding within each cell
+  //   style.cell_padding                          // Padding within each cell
   //   style.colors[ImGuiCol_TableHeaderBg]       // Table header background
   //   style.colors[ImGuiCol_TableBorderStrong]   // Table outer and header
   //   borders style.colors[ImGuiCol_TableBorderLight]    // Table inner borders
@@ -5045,7 +5045,7 @@ static void ShowDemoWindowTables() {
                "Because of this, activating BorderOuterV sets the default to "
                "PadOuterX. Using PadOuterX or NoPadOuterX you can override the "
                "default.\n\n"
-               "Actual padding values are using style.CellPadding.\n\n"
+               "Actual padding values are using style.cell_padding.\n\n"
                "In this demo we don't show horizontal borders to emphasis how "
                "they don't affect default horizontal padding.");
 
@@ -5102,10 +5102,10 @@ static void ShowDemoWindowTables() {
       ImGui::EndTable();
     }
 
-    // Second example: set style.CellPadding to (0.0) or a custom value.
+    // Second example: set style.cell_padding to (0.0) or a custom value.
     // FIXME-TABLE: Vertical border effectively not displayed the same way as
     // horizontal one...
-    HelpMarker("Setting style.CellPadding to (0,0) or a custom value.");
+    HelpMarker("Setting style.cell_padding to (0,0) or a custom value.");
     static ImGuiTableFlags flags2 =
         ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
     static Vector2D cell_padding(0.0, 0.0);
@@ -5127,7 +5127,7 @@ static void ShowDemoWindowTables() {
     ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags2,
                          ImGuiTableFlags_Resizable);
     ImGui::Checkbox("show_widget_frame_bg", &show_widget_frame_bg);
-    ImGui::SliderFloat2("CellPadding", &cell_padding.x, 0.0, 10.0, "%.0");
+    ImGui::SliderFloat2("cell_padding", &cell_padding.x, 0.0, 10.0, "%.0");
     PopStyleCompact();
 
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
@@ -5672,8 +5672,8 @@ static void ShowDemoWindowTables() {
   if (ImGui::TreeNode("Row height")) {
     HelpMarker(
         "You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded "
-        "with 'style.CellPadding.y' on top and bottom, so effectively the "
-        "minimum row height will always be >= 'style.CellPadding.y * "
+        "with 'style.cell_padding.y' on top and bottom, so effectively the "
+        "minimum row height will always be >= 'style.cell_padding.y * "
         "2.0'.\n\nWe cannot honor a _maximum_ row height as that would "
         "requires a unique clipping rectangle per row.");
     if (ImGui::BeginTable("table_row_height", 1,
@@ -7528,12 +7528,12 @@ void ImGui::ShowAboutWindow(bool *p_open) {
     ImGui::Separator();
     ImGui::Text("style.window_padding: %.2,%.2", style.WindowPadding.x,
                 style.WindowPadding.y);
-    ImGui::Text("style.WindowBorderSize: %.2", style.WindowBorderSize);
+    ImGui::Text("style.window_border_size: %.2", style.WindowBorderSize);
     ImGui::Text("style.FramePadding: %.2,%.2", style.FramePadding.x,
                 style.FramePadding.y);
-    ImGui::Text("style.FrameRounding: %.2", style.FrameRounding);
-    ImGui::Text("style.FrameBorderSize: %.2", style.FrameBorderSize);
-    ImGui::Text("style.ItemSpacing: %.2,%.2", style.ItemSpacing.x,
+    ImGui::Text("style.frame_rounding: %.2", style.FrameRounding);
+    ImGui::Text("style.frame_border_size: %.2", style.FrameBorderSize);
+    ImGui::Text("style.item_spacing: %.2,%.2", style.ItemSpacing.x,
                 style.ItemSpacing.y);
     ImGui::Text("style.ItemInnerSpacing: %.2,%.2", style.ItemInnerSpacing.x,
                 style.ItemInnerSpacing.y);
@@ -7632,10 +7632,10 @@ void ImGui::ShowStyleEditor(ImGuiStyle *ref) {
 
   // Simplified Settings (expose floating-pointer border sizes as boolean
   // representing 0.0 or 1.0)
-  if (ImGui::SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0,
+  if (ImGui::SliderFloat("frame_rounding", &style.FrameRounding, 0.0, 12.0,
                          "%.0"))
-    style.GrabRounding = style.FrameRounding; // Make GrabRounding always the
-                                              // same value as FrameRounding
+    style.GrabRounding = style.FrameRounding; // Make grab_rounding always the
+                                              // same value as frame_rounding
   {
     bool border = (style.WindowBorderSize > 0.0);
     if (ImGui::Checkbox("WindowBorder", &border)) {
@@ -7677,9 +7677,9 @@ void ImGui::ShowStyleEditor(ImGuiStyle *ref) {
                           20.0, "%.0");
       ImGui::SliderFloat2("FramePadding", (float *)&style.FramePadding, 0.0,
                           20.0, "%.0");
-      ImGui::SliderFloat2("CellPadding", (float *)&style.CellPadding, 0.0, 20.0,
+      ImGui::SliderFloat2("cell_padding", (float *)&style.CellPadding, 0.0, 20.0,
                           "%.0");
-      ImGui::SliderFloat2("ItemSpacing", (float *)&style.ItemSpacing, 0.0, 20.0,
+      ImGui::SliderFloat2("item_spacing", (float *)&style.ItemSpacing, 0.0, 20.0,
                           "%.0");
       ImGui::SliderFloat2("ItemInnerSpacing", (float *)&style.ItemInnerSpacing,
                           0.0, 20.0, "%.0");
@@ -7687,35 +7687,35 @@ void ImGui::ShowStyleEditor(ImGuiStyle *ref) {
                           (float *)&style.TouchExtraPadding, 0.0, 10.0, "%.0");
       ImGui::SliderFloat("indent_spacing", &style.indent_spacing, 0.0, 30.0,
                          "%.0");
-      ImGui::SliderFloat("ScrollbarSize", &style.ScrollbarSize, 1.0, 20.0,
+      ImGui::SliderFloat("scrollbar_size", &style.ScrollbarSize, 1.0, 20.0,
                          "%.0");
-      ImGui::SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0, 20.0, "%.0");
+      ImGui::SliderFloat("grab_min_size", &style.GrabMinSize, 1.0, 20.0, "%.0");
       ImGui::Text("Borders");
-      ImGui::SliderFloat("WindowBorderSize", &style.WindowBorderSize, 0.0, 1.0,
+      ImGui::SliderFloat("window_border_size", &style.WindowBorderSize, 0.0, 1.0,
                          "%.0");
-      ImGui::SliderFloat("ChildBorderSize", &style.ChildBorderSize, 0.0, 1.0,
+      ImGui::SliderFloat("child_border_size", &style.ChildBorderSize, 0.0, 1.0,
                          "%.0");
-      ImGui::SliderFloat("PopupBorderSize", &style.PopupBorderSize, 0.0, 1.0,
+      ImGui::SliderFloat("popup_border_size", &style.PopupBorderSize, 0.0, 1.0,
                          "%.0");
-      ImGui::SliderFloat("FrameBorderSize", &style.FrameBorderSize, 0.0, 1.0,
+      ImGui::SliderFloat("frame_border_size", &style.FrameBorderSize, 0.0, 1.0,
                          "%.0");
-      ImGui::SliderFloat("TabBorderSize", &style.TabBorderSize, 0.0, 1.0,
+      ImGui::SliderFloat("tab_border_size", &style.TabBorderSize, 0.0, 1.0,
                          "%.0");
       ImGui::Text("Rounding");
       ImGui::SliderFloat("window_rounding", &style.WindowRounding, 0.0, 12.0,
                          "%.0");
-      ImGui::SliderFloat("ChildRounding", &style.ChildRounding, 0.0, 12.0,
+      ImGui::SliderFloat("child_rounding", &style.ChildRounding, 0.0, 12.0,
                          "%.0");
-      ImGui::SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0,
+      ImGui::SliderFloat("frame_rounding", &style.FrameRounding, 0.0, 12.0,
                          "%.0");
-      ImGui::SliderFloat("PopupRounding", &style.PopupRounding, 0.0, 12.0,
+      ImGui::SliderFloat("popup_rounding", &style.PopupRounding, 0.0, 12.0,
                          "%.0");
-      ImGui::SliderFloat("ScrollbarRounding", &style.ScrollbarRounding, 0.0,
+      ImGui::SliderFloat("scrollbar_rounding", &style.ScrollbarRounding, 0.0,
                          12.0, "%.0");
-      ImGui::SliderFloat("GrabRounding", &style.GrabRounding, 0.0, 12.0, "%.0");
-      ImGui::SliderFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.0,
+      ImGui::SliderFloat("grab_rounding", &style.GrabRounding, 0.0, 12.0, "%.0");
+      ImGui::SliderFloat("log_slider_deadzone", &style.LogSliderDeadzone, 0.0,
                          12.0, "%.0");
-      ImGui::SliderFloat("TabRounding", &style.TabRounding, 0.0, 12.0, "%.0");
+      ImGui::SliderFloat("tab_rounding", &style.TabRounding, 0.0, 12.0, "%.0");
       ImGui::Text("Alignment");
       ImGui::SliderFloat2("WindowTitleAlign", (float *)&style.WindowTitleAlign,
                           0.0, 1.0, "%.2");
@@ -7724,9 +7724,9 @@ void ImGui::ShowStyleEditor(ImGuiStyle *ref) {
                        (int *)&window_menu_button_position,
                        "None\0Left\0Right\0"))
         style.WindowMenuButtonPosition = window_menu_button_position - 1;
-      ImGui::Combo("ColorButtonPosition", (int *)&style.ColorButtonPosition,
+      ImGui::Combo("color_button_position", (int *)&style.ColorButtonPosition,
                    "Left\0Right\0");
-      ImGui::SliderFloat2("ButtonTextAlign", (float *)&style.ButtonTextAlign,
+      ImGui::SliderFloat2("button_text_align", (float *)&style.ButtonTextAlign,
                           0.0, 1.0, "%.2");
       ImGui::SameLine();
       HelpMarker(
@@ -7783,7 +7783,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle *ref) {
         alpha_flags = ImGuiColorEditFlags_None;
       }
       ImGui::SameLine();
-      if (ImGui::RadioButton("Alpha",
+      if (ImGui::RadioButton("alpha",
                              alpha_flags == ImGuiColorEditFlags_AlphaPreview)) {
         alpha_flags = ImGuiColorEditFlags_AlphaPreview;
       }
@@ -7934,15 +7934,15 @@ void ImGui::ShowStyleEditor(ImGuiStyle *ref) {
                  "tesselation will be calculated automatically.");
 
       ImGui::DragFloat(
-          "Global Alpha", &style.Alpha, 0.005, 0.20, 1.0,
+          "Global alpha", &style.Alpha, 0.005, 0.20, 1.0,
           "%.2"); // Not exposing zero here so user doesn't "lose" the UI (zero
                   // alpha clips all widgets). But application code could have a
                   // toggle to switch between zero and non-zero.
-      ImGui::DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005, 0.0, 1.0,
+      ImGui::DragFloat("Disabled alpha", &style.DisabledAlpha, 0.005, 0.0, 1.0,
                        "%.2");
       ImGui::SameLine();
       HelpMarker("Additional alpha multiplier for disabled items (multiply "
-                 "over current value of Alpha).");
+                 "over current value of alpha).");
       ImGui::PopItemWidth();
 
       ImGui::EndTabItem();
@@ -9133,7 +9133,7 @@ static void ShowExampleAppCustomRendering(bool *p_open) {
       // Draw gradients
       // (note that those are currently exacerbating our sRGB/Linear issues)
       // Calling ImGui::GetColorU32() multiplies the given colors by the current
-      // style Alpha, but you may pass the IM_COL32() directly as well..
+      // style alpha, but you may pass the IM_COL32() directly as well..
       ImGui::Text("Gradients");
       Vector2D gradient_size =
           DimgVec2D::new (ImGui::CalcItemWidth(), ImGui::get_frame_height());

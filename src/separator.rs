@@ -1,7 +1,7 @@
-pub enum DimgSeparatorFlags
+pub enum SeparatorFlags
 {
-    None                = 0,
+    None                ,
     Horizontal         ,   // Axis default to current layout type, so generally Horizontal unless e.g. in a menu bar
     Vertical           ,
-    SpanAllColumns      = 1 << 2
+    SpanAllColumns      ,
 }

@@ -2,10 +2,10 @@ use std::collections::HashSet;
 use std::os::raw::c_char;
 use std::ptr::null_mut;
 use crate::{call_context_hooks, Context, ContextHookType, INVALID_ID, window};
-use crate::color::{Color, COLOR32_A_MASK, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32, StyleColor};
+use crate::color::{Color, COLOR32_A_MASK, alpha_blend_colors, IM_COL32_A_SHIFT, IM_COL32_BLACK, IM_COL32_WHITE, make_color_32, StyleColor};
 use crate::draw::data::add_root_window_to_draw_data;
 use crate::draw::DrawList;
-use crate::draw::flags::{DRAW_FLAGS_EMPTY, DrawFlags};
+use crate::draw::flags::{draw_flags_contains_round_corners, DRAW_FLAGS_EMPTY, DrawFlags, set_draw_flags_round_corners_default};
 use crate::draw::list::{add_draw_list_to_draw_data, get_background_draw_list, foreground_draw_list};
 use crate::frame::end_frame;
 use crate::imgui_globals::GImGui;
@@ -179,9 +179,8 @@ pub fn render_text_ellipsis(
     clip_max_x: f32,
     ellipsis_max_x: f32,
     text: &str,
-    text_size_if_known: &Vector2D
-)
-{
+    text_size_if_known: &Vector2D,
+) {
     // ImGuiContext& g = *GImGui;
     // if (text_end_full == None) {
     //     text_end_full = find_rendered_text_end(text);
@@ -197,8 +196,7 @@ pub fn render_text_ellipsis(
     //draw_list->add_line(Vector2D(ellipsis_max_x, pos_min.y-2), Vector2D(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
     //draw_list->add_line(Vector2D(clip_max_x, pos_min.y), Vector2D(clip_max_x, pos_max.y), IM_COL32(255, 0, 0, 255));
     // FIXME: We could technically remove (last_glyph->advance_x - last_glyph->x1) from text_size.x here and save a few pixels.
-    if text_size.x > pos_max.x - pos_min.x
-    {
+    if text_size.x > pos_max.x - pos_min.x {
         // Hello wo...
         // |       |   |
         // min   max   ellipsis_max
@@ -210,18 +208,16 @@ pub fn render_text_ellipsis(
 
         let mut ellipsis_char = font.ellipsis_char;
         let mut ellipsis_char_count = 1;
-        if ellipsis_char == -1
-        {
+        if ellipsis_char == -1 {
             ellipsis_char = font.dot_char;
             ellipsis_char_count = 3;
         }
         let glyph = font.find_glyph(ellipsis_char);
 
-        let mut ellipsis_glyph_width =  glyph.x1;                 // width of the glyph with no padding on either side
-        let mut ellipsis_total_width =  ellipsis_glyph_width;      // Full width of entire ellipsis
+        let mut ellipsis_glyph_width = glyph.x1;                 // width of the glyph with no padding on either side
+        let mut ellipsis_total_width = ellipsis_glyph_width;      // Full width of entire ellipsis
 
-        if ellipsis_char_count > 1
-        {
+        if ellipsis_char_count > 1 {
             // Full ellipsis size without free spacing after it.
             let spacing_between_dots = 1.0 * (draw_list.data.font_size / font.font_size);
             ellipsis_glyph_width = glyph.x1 - glyph.X0 + spacing_between_dots;
@@ -230,35 +226,30 @@ pub fn render_text_ellipsis(
 
         // We can now claim the space between pos_max.x and ellipsis_max.x
         let text_avail_width = f32::max((f32::max(pos_max.x, ellipsis_max_x) - ellipsis_total_width) - pos_min.x, 1.0);
-        let mut text_size_clipped_x =  font.calc_text_size_a(font_size, text_avail_width, 0.0, text).x;
-        if text == text_end_ellipsis && text_end_ellipsis < text_end_full
-        {
+        let mut text_size_clipped_x = font.calc_text_size_a(font_size, text_avail_width, 0.0, text).x;
+        if text == text_end_ellipsis && text_end_ellipsis < text_end_full {
             // Always display at least 1 character if there's no room for character + ellipsis
             text_end_ellipsis = text + text_count_utf8_bytes_from_char(text);
             text_size_clipped_x = font.calc_text_size_a(font_size, f32::MAX, 0.0, text).x;
         }
-        while text_end_ellipsis > text && char_is_blank_a(text_end_ellipsis[-1])
-        {
+        while text_end_ellipsis > text && char_is_blank_a(text_end_ellipsis[-1]) {
             // Trim trailing space before ellipsis (FIXME: Supporting non-ascii blanks would be nice, for this we need a function to backtrack in UTF-8 text)
             text_end_ellipsis -= 1;
             text_size_clipped_x -= font.calc_text_size_a(font_size, f32::MAX, 0.0, text_end_ellipsis).x; // Ascii blanks are always 1 byte
         }
 
         // Render text, render ellipsis
-        render_text_clipped_ex(g, draw_list, pos_min, &Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, &Rect::new(&Vector2D::new(0f32,0f32), &Vector2D::new(0f32,0f32)));
-        let mut ellipsis_x =  pos_min.x + text_size_clipped_x;
+        render_text_clipped_ex(g, draw_list, pos_min, &Vector2D::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, &Rect::new(&Vector2D::new(0f32, 0f32), &Vector2D::new(0f32, 0f32)));
+        let mut ellipsis_x = pos_min.x + text_size_clipped_x;
         if ellipsis_x + ellipsis_total_width <= ellipsis_max_x {
             // for (int i = 0; i < ellipsis_char_count; i += 1)
-            for i in 0 .. ellipsis_char_count
-            {
+            for i in 0..ellipsis_char_count {
                 font.render_char(draw_list, font_size, &Vector2D::new(ellipsis_x, pos_min.y), color_u32_from_style_color(g, StyleColor::Text), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
         }
-    }
-    else
-    {
-        render_text_clipped_ex(g, draw_list, pos_min, &Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, &Rect::new(&Vector2D::new(0f32,0f32), &Vector2D::new(0f32,0f32)));
+    } else {
+        render_text_clipped_ex(g, draw_list, pos_min, &Vector2D::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, &Rect::new(&Vector2D::new(0f32, 0f32), &Vector2D::new(0f32, 0f32)));
     }
 
     // if (g.log_enabled) {
@@ -274,7 +265,7 @@ pub fn render_frame(g: &mut Context, p_min: &Vector2D, p_max: &Vector2D, fill_co
     window.draw_list.add_rect_filled(p_min, p_max, fill_col, rounding);
     let border_size = g.style.frame_border_size;
     if border && border_size > 0.0 {
-        window.draw_list.add_rect(p_min + Vector2D::new(1f32, 1f32), p_max + Vector2D::new(1f32, 1f32), color_u32_from_style_color(g, StyleColor::BorderShadow, ), rounding, 0, border_size);
+        window.draw_list.add_rect(p_min + Vector2D::new(1f32, 1f32), p_max + Vector2D::new(1f32, 1f32), color_u32_from_style_color(g, StyleColor::BorderShadow), rounding, 0, border_size);
         window.draw_list.add_rect(p_min, p_max, color_u32_from_style_color(g, StyleColor::Border), rounding, 0, border_size);
     }
 }
@@ -285,7 +276,7 @@ pub fn render_frame_border(g: &mut Context, p_min: &Vector2D, p_max: &Vector2D, 
     let window = g.current_window_mut();
     let border_size = g.style.frame_border_size;
     if border_size > 0.0 {
-        window.draw_list.add_rect(p_min + Vector2D::new(1f32, 1f32), p_max + Vector2D::new(1f32, 1f32), color_u32_from_style_color(g, StyleColor::BorderShadow, ), rounding, 0, border_size);
+        window.draw_list.add_rect(p_min + Vector2D::new(1f32, 1f32), p_max + Vector2D::new(1f32, 1f32), color_u32_from_style_color(g, StyleColor::BorderShadow), rounding, 0, border_size);
         window.draw_list.add_rect(p_min, p_max, color_u32_from_style_color(g, StyleColor::Border), rounding, 0, border_size);
     }
 }
@@ -423,7 +414,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
         // float
         // distance = g.FontSize;
         // ImRect
-        // bb = window.Rect();
+        // bb = window.rect();
         bb.expand(distance);
         if bb.get_width() >= viewport.size.x && bb.get_height() >= viewport.size.y {
             bb.Expand(-distance - 1.0);
@@ -461,8 +452,7 @@ pub fn render_dimmed_backgrounds(g: &mut Context) {
 // (As with anything within the ImGui:: namspace this doesn't touch your GPU or graphics API at all:
 // it is the role of the ImGui_ImplXXXX_RenderDrawData() function provided by the renderer backend)
 // void ImGui::Render()
-pub fn render(g: &mut Context)
-{
+pub fn render(g: &mut Context) {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.initialized);
 
@@ -477,8 +467,7 @@ pub fn render(g: &mut Context)
 
     // Add background ImDrawList (for each active viewport)
     // for (int n = 0; n != g.viewports.Size; n += 1)
-    for viewport in g.viewports.iter_mut()
-    {
+    for viewport in g.viewports.iter_mut() {
         // ImGuiViewportP* viewport = g.viewports[n];
         viewport.draw_data_builder.clear();
         if viewport.draw_list_ids[0] != INVALID_ID {
@@ -488,7 +477,7 @@ pub fn render(g: &mut Context)
 
     // Add ImDrawList to render
     // Window* windows_to_render_top_most[2];
-    let mut windows_to_render_top_most: [Id32;2] = [
+    let mut windows_to_render_top_most: [Id32; 2] = [
         if g.nav_windowing_target_id != INVALID_ID && !g.nav_windowing_target_id.flags.contains(WindowFlags::NoBringToFrontOnFocus) {
             let nwt_win = g.window_mut(g.nav_windowing_target_id).unwrap();
             nwt_win.root_window_dock_tree_id
@@ -504,8 +493,7 @@ pub fn render(g: &mut Context)
     // windows_to_render_top_most[0] = (g.nav_windowing_target_id && !(g.nav_windowing_target_id.flags & WindowFlags_NoBringToFrontOnFocus)) ? g.nav_windowing_target_id ->root_window_dock_tree : None;
     // windows_to_render_top_most[1] = (g.nav_windowing_target_id? g.nav_windowing_list_window : None);
     // for (int n = 0; n != g.windows.Size; n += 1)
-    for (win_id, window) in g.windows.iter_mut()
-    {
+    for (win_id, window) in g.windows.iter_mut() {
         // Window* window = g.windows[n];
         // IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing None pointer 'window'"
         if is_window_active_and_visible(window) && (!window.flags.contains(&WindowFlags::ChildWindow)) && window.id != windows_to_render_top_most[0] && window.id != windows_to_render_top_most[1] {
@@ -513,7 +501,7 @@ pub fn render(g: &mut Context)
         }
     }
     // for (int n = 0; n < IM_ARRAYSIZE(windows_to_render_top_most); n += 1)
-    for n in 0 .. windows_to_render_top_most.len() {
+    for n in 0..windows_to_render_top_most.len() {
         if windows_to_render_top_most[n] != INVALID_ID && is_window_active_and_visible(g.window_mut(windows_to_render_top_most[n]).unwrap()) { // nav_windowing_target is always temporarily displayed as the top-most window
             add_root_window_to_draw_data(g, g.window_mut(windows_to_render_top_most[n]).unwrap());
         }
@@ -533,16 +521,15 @@ pub fn render(g: &mut Context)
     g.io.metrics_render_vertices = 0;
     g.io.metrics_render_indices = 0;
     // for (int n = 0; n < g.viewports.Size; n += 1)
-    for viewport in g.viewports.iter_mut()
-    {
+    for viewport in g.viewports.iter_mut() {
         // ImGuiViewportP* viewport = g.viewports[n];
         // viewport->DrawDataBuilder.FlattenIntoSingleLayer();
         viewport.draw_data_builder.flatten_into_single_layer();
 
         // Add foreground ImDrawList (for each active viewport)
         if viewport.draw_list_ids[1] != INVALID_ID {
-        add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], foreground_draw_list(g, viewport).id);
-    }
+            add_draw_list_to_draw_data(g, &mut viewport.draw_data_builder.layers[0], foreground_draw_list(g, viewport).id);
+        }
         setup_viewport_draw_data(g, viewport, &viewport.draw_data_builder.layers[0]);
         let draw_data = &viewport.draw_data;
         g.io.metrics_render_vertices += draw_data.total_vtx_count;
@@ -553,8 +540,7 @@ pub fn render(g: &mut Context)
 }
 
 // static void ImGui::RenderDimmedBackgroundBehindWindow(Window* window, ImU32 col)
-pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Window, color: u32)
-{
+pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Window, color: u32) {
     if (color & COLOR32_A_MASK) == 0 {
         return;
     }
@@ -588,8 +574,7 @@ pub fn render_dimmed_background_behind_window(g: &mut Context, window: &mut Wind
 
     // Draw over sibling docking nodes in a same docking tree
     let root_win = g.window_mut(window.root_window_id).unwrap();
-    if root_win.dock_is_active
-    {
+    if root_win.dock_is_active {
         // ImDrawList* draw_list = FindFrontMostVisibleChildWindow(window.root_window_dock_tree)->DrawList;
 
         let draw_list = g.draw_list_mut(get::find_front_most_visible_child_window(g, root_win_dock_tree_win).draw_list_id).unwrap();
@@ -626,7 +611,7 @@ pub fn render_arrow(
             a = Vector2D::new(0.000, 0.750) * r;
             b = Vector2D::new(-0.866, -0.750) * r;
             c = Vector2D::new(0.866, -0.750) * r;
-        },
+        }
         Direction::Left | Direction::Right => {
             if dir == Direction::Left {
                 r = -r;
@@ -634,7 +619,7 @@ pub fn render_arrow(
             a = Vector2D::new(0.750, 0.000) * r;
             b = Vector2D::new(-0.750, 0.866) * r;
             c = Vector2D::new(-0.750, -0.866) * r;
-        },
+        }
         _ => {}
     }
 
@@ -642,21 +627,19 @@ pub fn render_arrow(
 }
 
 // void ImGui::render_bullet(ImDrawList* draw_list, Vector2D pos, ImU32 col)
-pub fn render_bullet(g: &mut Context, draw_list: &mut DrawList, pos: &Vector2D, col: u32)
-{
+pub fn render_bullet(g: &mut Context, draw_list: &mut DrawList, pos: &Vector2D, col: u32) {
     draw_list.add_circle_filled(pos, draw_list.data.font_size * 0.20, col, 8);
 }
 
 // void ImGui::RenderCheckMark(ImDrawList* draw_list, Vector2D pos, ImU32 col, float sz)
-pub fn render_checkmark(draw_list: &mut DrawList, pos: &mut Vector2D, col: u32, mut sz: f32)
-{
-    let thickness =  f32::max(sz / 5.0, 1.0);
+pub fn render_checkmark(draw_list: &mut DrawList, pos: &mut Vector2D, col: u32, mut sz: f32) {
+    let thickness = f32::max(sz / 5.0, 1.0);
     sz -= thickness * 0.5;
     *pos += Vector2D::new(thickness * 0.25, thickness * 0.25);
 
-    let third =  sz / 3.0;
-    let bx =  pos.x + third;
-    let by =  pos.y + sz - third * 0.5;
+    let third = sz / 3.0;
+    let bx = pos.x + third;
+    let by = pos.y + sz - third * 0.5;
     draw_list.path_line_to(&Vector2D::new(bx - third, by - third));
     draw_list.path_line_to(&Vector2D::new(bx, by));
     draw_list.path_line_to(&Vector2D::new(bx + third * 2.0, by - third * 2.0));
@@ -679,8 +662,7 @@ pub fn render_arrow_pointing_at(draw_list: &mut DrawList, pos: &Vector2D, half_s
 // This is less wide than RenderArrow() and we use in dock nodes instead of the regular RenderArrow() to denote a change of functionality,
 // and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
 // void ImGui::RenderArrowDockMenu(ImDrawList* draw_list, Vector2D p_min, float sz, ImU32 col)
-pub fn render_arrow_dock_menu(draw_list: &mut DrawList, p_min: &Vector2D, sz: f32, col: u32)
-{
+pub fn render_arrow_dock_menu(draw_list: &mut DrawList, p_min: &Vector2D, sz: f32, col: u32) {
     let draw_flags: HashSet<DrawFlags> = HashSet::new();
     draw_list.add_rect_filled(p_min + Vector2D::new(sz * 0.20, sz * 0.15), p_min + Vector2D::new(sz * 0.80, sz * 0.30), col, 0.0, &draw_flags);
     render_arrow_pointing_at(draw_list, p_min + Vector2D::new(sz * 0.50, sz * 0.85), &Vector2D::new(sz * 0.30, sz * 0.40), &Direction::Down, col);
@@ -689,8 +671,7 @@ pub fn render_arrow_dock_menu(draw_list: &mut DrawList, p_min: &Vector2D, sz: f3
 
 // FIXME: Cleanup and move code to ImDrawList.
 // void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const Rect& rect, ImU32 col, float x_start_norm, float x_end_norm, float rounding)
-pub fn render_rect_filled_range_h(draw_list: &mut DrawList, rect: &Rect, col: u32, mut x_start_norm: f32, mut x_end_norm: f32, mut rounding: f32)
-{
+pub fn render_rect_filled_range_h(draw_list: &mut DrawList, rect: &Rect, col: u32, mut x_start_norm: f32, mut x_end_norm: f32, mut rounding: f32) {
     if x_end_norm == x_start_norm {
         return;
     }
@@ -703,8 +684,7 @@ pub fn render_rect_filled_range_h(draw_list: &mut DrawList, rect: &Rect, col: u3
 
     let p0 = Vector2D::new(ImLerp(rect.min.x, rect.max.x, x_start_norm), rect.min.y);
     let p1 = Vector2D::new(ImLerp(rect.min.x, rect.max.x, x_end_norm), rect.max.y);
-    if rounding == 0.0
-    {
+    if rounding == 0.0 {
         draw_list.add_rect_filled(&p0, &p1, col, 0.0, &DRAW_FLAGS_EMPTY);
         return;
     }
@@ -715,125 +695,198 @@ pub fn render_rect_filled_range_h(draw_list: &mut DrawList, rect: &Rect, col: u3
     let arc0_e = ImAcos01(1.0 - (p1.x - rect.min.x) * inv_rounding);
     let half_pi = f32::PI * 0.5; // We will == compare to this because we know this is the exact value ImAcos01 can return.
     let x0 = ImMax(p0.x, rect.min.x + rounding);
-    if arc0_b == arc0_e
-    {
+    if arc0_b == arc0_e {
         draw_list.path_line_to(&Vector2D::new(x0, p1.y));
         draw_list.path_line_to(&Vector2D::new(x0, p0.y));
-    }
-    else if arc0_b == 0.0 && arc0_e == half_pi
-    {
+    } else if arc0_b == 0.0 && arc0_e == half_pi {
         draw_list.path_arc_to_fast(&Vector2D::new(x0, p1.y - rounding), rounding, 3, 6); // BL
         draw_list.path_arc_to_fast(&Vector2D::new(x0, p0.y + rounding), rounding, 6, 9); // TR
+    } else {
+        draw_list.path_arc_to(&Vector2D::new(x0, p1.y - rounding), rounding, f32::PI - arc0_e, f32::PI - arc0_b, 3); // BL
+        draw_list.path_arc_to(&Vector2D::new(x0, p0.y + rounding), rounding, f32::PI + arc0_b, f32::PI + arc0_e, 3); // TR
     }
-    else
-    {
-        draw_listpath_arc_to(Vector2D::new(x0, p1.y - rounding), rounding, f32::PI - arc0_e, f32::PI - arc0_b, 3); // BL
-        draw_listpath_arc_to(Vector2D::new(x0, p0.y + rounding), rounding, f32::PI + arc0_b, f32::PI + arc0_e, 3); // TR
-    }
-    if p1.x > rect.min.x + rounding
-    {
+    if p1.x > rect.min.x + rounding {
         let arc1_b = ImAcos01(1.0 - (rect.max.x - p1.x) * inv_rounding);
         let arc1_e = ImAcos01(1.0 - (rect.max.x - p0.x) * inv_rounding);
         let x1 = ImMin(p1.x, rect.max.x - rounding);
-        if (arc1_b == arc1_e)
-        {
+        if arc1_b == arc1_e {
             draw_list.path_line_to(&Vector2D::new(x1, p0.y));
             draw_list.path_line_to(&Vector2D::new(x1, p1.y));
-        }
-        else if arc1_b == 0.0 && arc1_e == half_pi
-        {
+        } else if arc1_b == 0.0 && arc1_e == half_pi {
             draw_list.path_arc_to_fast(&Vector2D::new(x1, p0.y + rounding), rounding, 9, 12); // TR
             draw_list.path_arc_to_fast(&Vector2D::new(x1, p1.y - rounding), rounding, 0, 3);  // BR
-        }
-        else
-        {
-            draw_listpath_arc_to(Vector2D::new(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
-            draw_listpath_arc_to(Vector2D::new(x1, p1.y - rounding), rounding, +arc1_b, +arc1_e, 3); // BR
+        } else {
+            draw_list.path_arc_to(&Vector2D::new(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
+            draw_list.path_arc_to(&Vector2D::new(x1, p1.y - rounding), rounding, arc1_b, arc1_e, 3); // BR
         }
     }
     draw_list.path_fill_convex(col);
 }
 
 // void ImGui::render_rect_filled_with_hole(ImDrawList* draw_list, const Rect& outer, const Rect& inner, ImU32 col, float rounding)
-pub fn render_rect_filled_with_hole(draw_list: &mut DrawList, outer: &Rect, inner: &Rect, col: u32, rounding: f32)
-{
-    let fill_L = (inner.min.x > outer.min.x);
-    let fill_R = (inner.max.x < outer.max.x);
-    let fill_U = (inner.min.y > outer.min.y);
-    let fill_D = (inner.max.y < outer.max.y);
-    if fill_L {
-
-        draw_list.add_rect_filled(&Vector2D::new(outer.min.x, inner.min.y), &Vector2D::new(inner.min.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (if fill_U { 0 } else { DrawFlags::RoundCornersTopLeft }) | (if fill_D {
-            0
-        } else { DrawFlags::RoundCornersBottomLeft }));
+pub fn render_rect_filled_with_hole(draw_list: &mut DrawList, outer: &Rect, inner: &Rect, col: u32, rounding: f32) {
+    let fill_l = (inner.min.x > outer.min.x);
+    let fill_r = (inner.max.x < outer.max.x);
+    let fill_u = (inner.min.y > outer.min.y);
+    let fill_d = (inner.max.y < outer.max.y);
+    let mut flags: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersNone]);
+    if fill_l {
+        flags.clear();
+        if !fill_u {
+            flags.insert(DrawFlags::RoundCornersTopLeft);
+        }
+        if !fill_d {
+            flags.insert(DrawFlags::RoundCornersBottomLeft);
+        }
+        draw_list.add_rect_filled(&Vector2D::new(outer.min.x, inner.min.y), &Vector2D::new(inner.min.x, inner.max.y), col, rounding, &flags);
     }
-    if fill_R {
-        draw_list.add_rect_filled(&Vector2D::new(inner.max.x, inner.min.y), &Vector2D::new(outer.max.x, inner.max.y), col, rounding, DrawFlags::RoundCornersNone | (if fill_U { 0 } else { DrawFlags::RoundCornersTopRight }) | (if fill_D {
-            0
-        } else { DrawFlags::RoundCornersBottomRight }));
+    if fill_r {
+        flags.clear();
+        if !fill_u {
+            flags.insert(DrawFlags::RoundCornersTopRight);
+        }
+        if !fill_d {
+            flags.insert(DrawFlags::RoundCornersBottomRight);
+        }
+        draw_list.add_rect_filled(&Vector2D::new(inner.max.x, inner.min.y), &Vector2D::new(outer.max.x, inner.max.y), col, rounding, &flags);
     }
-    if (fill_U) {
-        draw_list.add_rect_filled(&Vector2D::new(inner.min.x, outer.min.y), &Vector2D::new(inner.max.x, inner.min.y), col, rounding, DrawFlags::RoundCornersNone | (fill_L? 0: DrawFlags::RoundCornersTopLeft) | (fill_R?
-        0: DrawFlags::RoundCornersTopRight));
+    if fill_u {
+        flags.clear();
+        if !fill_l {
+            flags.insert(DrawFlags::RoundCornersTopLeft);
+        }
+        if !fill_r {
+            flags.insert(DrawFlags::RoundCornersTopRight);
+        }
+        draw_list.add_rect_filled(&Vector2D::new(inner.min.x, outer.min.y), &Vector2D::new(inner.max.x, inner.min.y), col, rounding, &flags);
     }
-    if (fill_D) {
-        draw_list.add_rect_filled(Vector2D::new(inner.min.x, inner.max.y), Vector2D::new(inner.max.x, outer.max.y), col, rounding, DrawFlags::RoundCornersNone | (fill_L? 0: DrawFlags::RoundCornersBottomLeft) | (fill_R?
-        0: DrawFlags::RoundCornersBottomRight));
+    if fill_d {
+        flags.clear();
+        if !fill_l {
+            flags.insert(DrawFlags::RoundCornersBottomLeft);
+        }
+        if !fill_r {
+            flags.insert(DrawFlags::RoundCornersBottomRight);
+        }
+        draw_list.add_rect_filled(&Vector2D::new(inner.min.x, inner.max.y), &Vector2D::new(inner.max.x, outer.max.y), col, rounding, &flags);
     }
-    if (fill_L && fill_U) { draw_list.add_rect_filled(Vector2D::new(outer.min.x, outer.min.y), Vector2D::new(inner.min.x, inner.min.y), col, rounding, DrawFlags::RoundCornersTopLeft); }
-    if (fill_R && fill_U) { draw_list.add_rect_filled(Vector2D::new(inner.max.x, outer.min.y), Vector2D::new(outer.max.x, inner.min.y), col, rounding, DrawFlags::RoundCornersTopRight); }
-    if (fill_L && fill_D) { draw_list.add_rect_filled(Vector2D::new(outer.min.x, inner.max.y), Vector2D::new(inner.min.x, outer.max.y), col, rounding, DrawFlags::RoundCornersBottomLeft); }
-    if (fill_R && fill_D) { draw_list.add_rect_filled(Vector2D::new(inner.max.x, inner.max.y), Vector2D::new(outer.max.x, outer.max.y), col, rounding, DrawFlags::RoundCornersBottomRight); }
+    if fill_l && fill_u {
+        flags.clear();
+        flags.insert(DrawFlags::RoundCornersTopLeft);
+        draw_list.add_rect_filled(&Vector2D::new(outer.min.x, outer.min.y), &Vector2D::new(inner.min.x, inner.min.y), col, rounding, &flags);
+    }
+    if fill_r && fill_u {
+        flags.clear();
+        flags.insert(DrawFlags::RoundCornersTopRight);
+        draw_list.add_rect_filled(&Vector2D::new(inner.max.x, outer.min.y), &Vector2D::new(outer.max.x, inner.min.y), col, rounding, &flags);
+    }
+    if fill_l && fill_d {
+        flags.clear();
+        flags.insert(DrawFlags::RoundCornersBottomLeft);
+        draw_list.add_rect_filled(&Vector2D::new(outer.min.x, inner.max.y), &Vector2D::new(inner.min.x, outer.max.y), col, rounding, &flags);
+    }
+    if fill_r && fill_d {
+        flags.clear();
+        flags.insert(DrawFlags::RoundCornersBottomRight);
+        draw_list.add_rect_filled(&Vector2D::new(inner.max.x, inner.max.y), &Vector2D::new(outer.max.x, outer.max.y), col, rounding, &flags);
+    }
 }
 
-ImDrawFlags ImGui::calc_rounding_flags_for_rect_in_rect(const Rect& r_in, const Rect& r_outer, float threshold)
-{
-    bool round_l = r_in.min.x <= r_outer.min.x + threshold;
-    bool round_r = r_in.max.x >= r_outer.max.x - threshold;
-    bool round_t = r_in.min.y <= r_outer.min.y + threshold;
-    bool round_b = r_in.max.y >= r_outer.max.y - threshold;
-    return DrawFlags::RoundCornersNone
-        | ((round_t && round_l) ? DrawFlags::RoundCornersTopLeft : 0) | ((round_t && round_r) ? DrawFlags::RoundCornersTopRight : 0)
-        | ((round_b && round_l) ? DrawFlags::RoundCornersBottomLeft : 0) | ((round_b && round_r) ? DrawFlags::RoundCornersBottomRight : 0);
+pub fn calc_rounding_flags_for_rect_in_rect(r_in: &Rect, r_outer: &Rect, threshold: f32) -> HashSet<DrawFlags> {
+    let mut draw_flags: HashSet<DrawFlags> = HashSet::new();
+    let round_l = r_in.min.x <= r_outer.min.x + threshold;
+    let round_r = r_in.max.x >= r_outer.max.x - threshold;
+    let round_t = r_in.min.y <= r_outer.min.y + threshold;
+    let round_b = r_in.max.y >= r_outer.max.y - threshold;
+    // return DrawFlags::RoundCornersNone
+    //     | ((round_t && round_l) ? DrawFlags::RoundCornersTopLeft : 0) | ((round_t && round_r) ? DrawFlags::RoundCornersTopRight : 0)
+    //     | ((round_b && round_l) ? DrawFlags::RoundCornersBottomLeft : 0) | ((round_b && round_r) ? DrawFlags::RoundCornersBottomRight : 0);
+    //
+    if round_t && round_l {
+        draw_flags.insert(DrawFlags::RoundCornersTopLeft);
+    }
+    if round_t && round_r {
+        draw_flags.insert(DrawFlags::RoundCornersTopRight);
+    }
+    if round_b && round_l {
+        draw_flags.insert(DrawFlags::RoundCornersBottomLeft);
+    }
+    if round_b && round_r {
+        draw_flags.insert(DrawFlags::RoundCornersBottomRight)
+    }
+    return draw_flags;
 }
 
 // Helper for ColorPicker4()
 // NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
 // Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
 // FIXME: uses ImGui::get_color_u32
-void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D p_min, Vector2D p_max, ImU32 col, float grid_step, Vector2D grid_off, float rounding, ImDrawFlags flags)
-{
-    if ((flags & DrawFlags::RoundCornersMask_) == 0)
-        flags = DrawFlags::RoundCornersDefault_;
-    if (((col & COLOR32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF)
-    {
-        ImU32 col_bg1 = get_color_u32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
-        ImU32 col_bg2 = get_color_u32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));
+// void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, Vector2D p_min, Vector2D p_max, ImU32 col, float grid_step, Vector2D grid_off, float rounding, ImDrawFlags flags)
+pub fn render_color_rect_with_alpha_checkerboard(draw_list: &mut DrawList, p_min: &Vector2D, p_max: &Vector2D, col: u32, grid_step: f32, grid_off: &Vector2D, rounding: f32, flags: &HashSet<DrawFlags>) {
+    let mut draw_flags: HashSet<DrawFlags> = HashSet::new();
+    draw_flags = flags.clone();
+    // if ((flags & DrawFlags::RoundCornersMask_) == 0) {
+    //     flags = DrawFlags::RoundCornersDefault_;
+    // }
+    if draw_flags_contains_round_corners(flags) {}
+    if draw_flags.contains(&DrawFlags::RoundCorners) {
+        draw_flags.clear();
+        set_draw_flags_round_corners_default(&mut draw_flags);
+    }
+    if ((col & COLOR32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF {
+        let col_bg1 = get_color_u32(alpha_blend_colors(IM_COL32(204, 204, 204, 255), col));
+        let col_bg2 = get_color_u32(alpha_blend_colors(IM_COL32(128, 128, 128, 255), col));
         draw_list.add_rect_filled(p_min, p_max, col_bg1, rounding, flags);
 
-        int yi = 0;
-        for (let y =  p_min.y + grid_off.y; y < p_max.y; y += grid_step, yi += 1)
-        {
-            let y1 =  ImClamp(y, p_min.y, p_max.y), y2 = ImMin(y + grid_step, p_max.y);
-            if (y2 <= y1)
+        let mut yi = 0;
+        // for (let y =  p_min.y + grid_off.y; y < p_max.y; y += grid_step, yi += 1)
+        for y in (p_min.y + grid_off.y..p_max.y).step(grid_step) {
+            let y1 = f32::clamp(y, p_min.y, p_max.y);
+            let y2 = f32::min(y + grid_step, p_max.y);
+            if y2 <= y1 {
                 continue;
-            for (let x =  p_min.x + grid_off.x + (yi & 1) * grid_step; x < p_max.x; x += grid_step * 2.0)
-            {
-                let x1 =  ImClamp(x, p_min.x, p_max.x), x2 = ImMin(x + grid_step, p_max.x);
-                if (x2 <= x1)
+            }
+            // for (let x =  p_min.x + grid_off.x + (yi & 1) * grid_step; x < p_max.x; x += grid_step * 2.0)
+            for x in (p_min.x + grid_off.x + (yi & 1) * grid_step..p_max.x).step(grid_step * 2.0) {
+                let x1 = f32::clamp(x, p_min.x, p_max.x);
+                let x2 = f32::clamp(x + grid_step, p_max.x);
+                if x2 <= x1 {
                     continue;
-                ImDrawFlags cell_flags = DrawFlags::RoundCornersNone;
-                if (y1 <= p_min.y) { if (x1 <= p_min.x) cell_flags |= DrawFlags::RoundCornersTopLeft; if (x2 >= p_max.x) cell_flags |= DrawFlags::RoundCornersTopRight; }
-                if (y2 >= p_max.y) { if (x1 <= p_min.x) cell_flags |= DrawFlags::RoundCornersBottomLeft; if (x2 >= p_max.x) cell_flags |= DrawFlags::RoundCornersBottomRight; }
+                }
+                let mut cell_flags: HashSet<DrawFlags> = HashSet::new();
+                if y1 <= p_min.y {
+                    if x1 <= p_min.x {
+                        // cell_flags |= DrawFlags::RoundCornersTopLeft;
+                        cell_flags.insert(DrawFlags::RoundCornersTopLeft);
+                    }
+                    if x2 >= p_max.x {
+                        // cell_flags |= DrawFlags::RoundCornersTopRight;
+                        cell_flags.insert(DrawFlags::RoundCornersTopRight);
+                    }
+                }
+                if y2 >= p_max.y {
+                    if x1 <= p_min.x {
+                        // cell_flags |= DrawFlags::RoundCornersBottomLeft;
+                        cell_flags.insert(DrawFlags::RoundCornersBottomLeft);
+                    }
+                    if x2 >= p_max.x {
+                        // cell_flags |= DrawFlags::RoundCornersBottomRight;
+                        cell_flags.insert(DrawFlags::RoundCornersBottomRight);
+                    }
+                }
 
                 // Combine flags
-                cell_flags = (flags == DrawFlags::RoundCornersNone || cell_flags == DrawFlags::RoundCornersNone) ? DrawFlags::RoundCornersNone : (cell_flags & flags);
-                draw_list.add_rect_filled(Vector2D::new(x1, y1), Vector2D::new(x2, y2), col_bg2, rounding, cell_flags);
+                // cell_flags = (flags == DrawFlags::RoundCornersNone || cell_flags == DrawFlags::RoundCornersNone) ? DrawFlags::RoundCornersNone : (cell_flags & flags);
+                if cell_flags.is_empty() || flags.is_empty() {
+                    cell_flags.clear();
+                } else {
+                    cell_flags = cell_flags & flags;
+                }
+                draw_list.add_rect_filled(&Vector2D::new(x1, y1), &Vector2D::new(x2, y2), col_bg2, rounding, &cell_flags);
             }
+            yi += 1;
         }
-    }
-    else
-    {
+    } else {
         draw_list.add_rect_filled(p_min, p_max, col, rounding, flags);
     }
 }

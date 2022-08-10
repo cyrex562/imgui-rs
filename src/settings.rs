@@ -1,4 +1,4 @@
-use crate::Context;
+use crate::{Context, hash_string};
 use crate::orig_imgui_single_file::{buf, buf_end, Id32, Window};
 use crate::text_buffer::TextBuffer;
 use crate::types::Id32;
@@ -16,17 +16,17 @@ pub struct SettingsHandler
     // Id32     type_hash;       // == hash_string(TypeName)
     pub type_hash: Id32,
     // void        (*clear_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // clear all settings data
-    pub clear_all_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub clear_all_fn: Option<fn(g: &mut Context, handler: &mut SettingsHandler)>,
     // void        (*ReadInitFn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // Read: Called before reading (in registration order)
-    pub read_init_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub read_init_fn: Option<fn(g: &mut Context, handler: &mut SettingsHandler)>,
     // void*       (*read_open_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name);              // Read: Called when entering into a new ini entry e.g. "[window][name]"
-    pub read_open_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler, name: &String)>,
+    pub read_open_fn: Option<fn(g: &mut Context, handler: &mut SettingsHandler, name: &String)>,
     // void        (*read_line_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line); // Read: Called for every line of text within an ini entry
-    pub read_line_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler, entry: &mut Vec<u8>, line: &String)>,
+    pub read_line_fn: Option<fn(g: &mut Context, handler: &mut SettingsHandler, entry: &mut Vec<u8>, line: &String)>,
     // void        (*apply_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler);                                // Read: Called after reading (in registration order)
-    pub apply_all_fn: Option<fn(g: &mut DimgContext, handler: &mut SettingsHandler)>,
+    pub apply_all_fn: Option<fn(g: &mut Context, handler: &mut SettingsHandler)>,
     // void        (*write_all_fn)(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf);      // Write: Output every entries into 'out_buf'
-    pub write_all_fn: Option<fn(g: &mut DimgContext, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
+    pub write_all_fn: Option<fn(g: &mut Context, handler: SettingsHandler, out_buf: &mut DimgTextBuffer)>,
     // void*       user_data;
     pub user_data: Vec<u8>,
     //ImGuiSettingsHandler() { memset(this, 0, sizeof(*this)); }
@@ -38,25 +38,28 @@ pub fn update_settings(g: &mut Context)
 {
     // Load settings on first frame (if not explicitly loaded manually before)
     // ImGuiContext& g = *GImGui;
-    if (!g.settings_loaded)
+    if !g.settings_loaded
     {
         // IM_ASSERT(g.settings_windows.empty());
-        if (g.io.ini_file_name)
-            LoadIniSettingsFromDisk(g.io.ini_file_name);
+        if g.io.ini_file_name {
+            load_ini_settings_from_disk(g.io.ini_file_name);
+        }
         g.settings_loaded = true;
     }
 
     // Save settings (with a delay after the last modification, so we don't spam disk too much)
-    if (g.SettingsDirtyTimer > 0.0)
+    if g.settings_dirty_timer > 0.0
     {
-        g.SettingsDirtyTimer -= g.io.delta_time;
-        if (g.SettingsDirtyTimer <= 0.0)
+        g.settings_dirty_timer -= g.io.delta_time;
+        if g.settings_dirty_timer <= 0.0
         {
-            if (g.io.ini_file_name != None)
-                save_ini_settings_to_disk(g.io.ini_file_name);
-            else
-                g.io.WantSaveIniSettings = true;  // Let user know they can call SaveIniSettingsToMemory(). user will need to clear io.want_save_ini_settings themselves.
-            g.SettingsDirtyTimer = 0.0;
+            if g.io.ini_file_name != None {
+                save_ini_settings_to_disk(g, g.io.ini_file_name);
+            }
+            else{
+            g.io.WantSaveIniSettings = true;
+        } // Let user know they can call SaveIniSettingsToMemory(). user will need to clear io.want_save_ini_settings themselves.
+            g.settings_dirty_timer = 0.0;
         }
     }
 }
@@ -65,17 +68,21 @@ pub fn update_settings(g: &mut Context)
 pub fn mark_ini_settings_dirty(g: &mut Context)
 {
     // ImGuiContext& g = *GImGui;
-    if (g.SettingsDirtyTimer <= 0.0)
-        g.SettingsDirtyTimer = g.io.IniSavingRate;
+    if g.settings_dirty_timer <= 0.0 {
+        g.settings_dirty_timer = g.io.ini_saving_rate;
+    }
 }
 
 // void MarkIniSettingsDirty(Window* window)
-pub fn mark_ini_settings_dirty2(g: &mut Context, window: &mut Window)
-{
+pub fn mark_ini_settings_dirty2(g: &mut Context, window: &mut Window) {
     // ImGuiContext& g = *GImGui;
-    if (!(window.flags & WindowFlags::NoSavedSettings))
-        if (g.SettingsDirtyTimer <= 0.0)
-            g.SettingsDirtyTimer = g.io.IniSavingRate;
+    // if (!(window.flags & WindowFlags::NoSavedSettings))
+    if !window.flags.contains(&WindowFlags::NoSavedSettings)
+    {
+        if g.settings_dirty_timer <= 0.0 {
+            g.settings_dirty_timer = g.io.ini_saving_rate;
+        }
+    }
 }
 
 // WindowSettings* CreateNewWindowSettings(const char* name)
@@ -86,19 +93,21 @@ pub fn create_new_window_settings(g: &mut Context, name: &str) -> &mut WindowSet
 // #if!IMGUI_DEBUG_INI_SETTINGS
     // Skip to the "###" marker if any. We don't skip past to match the behavior of GetID()
     // Preserve the full string when IMGUI_DEBUG_INI_SETTINGS is set to make .ini inspection easier.
-    if (const char* p = strstr(name, "###"))
-        name = p;
-
-    const size_t name_len = strlen(name);
-
-    // Allocate chunk
-    const size_t chunk_size = sizeof(WindowSettings) + name_len + 1;
-    WindowSettings* settings = g.settings_windows.alloc_chunk(chunk_size);
-    IM_PLACEMENT_NEW(settings) WindowSettings();
-    settings.id = hash_string(name, name_len);
-    memcpy(settings.GetName(), name, name_len + 1);   // Store with zero terminator
-
-    return settings;
+//     if (const char* p = strstr(name, "###")){
+//     name = p;
+// }
+//
+//     const size_t name_len = strlen(name);
+//
+//     // Allocate chunk
+//     const size_t chunk_size = sizeof(WindowSettings) + name_len + 1;
+//     WindowSettings* settings = g.settings_windows.alloc_chunk(chunk_size);
+//     IM_PLACEMENT_NEW(settings) WindowSettings();
+//     settings.id = hash_string(name, name_len);
+//     memcpy(settings.GetName(), name, name_len + 1);   // Store with zero terminator
+//
+//     return settings;
+    todo!()
 }
 
 // WindowSettings* FindWindowSettings(Id32 id)
@@ -119,11 +128,13 @@ pub fn find_window_settings(g: &mut Context, id: Id32) -> Option<&mut WindowSett
 }
 
 // WindowSettings* FindOrCreateWindowSettings(const char* name)
-pub fn find_or_create_window_settings(g: &mut Context, name: &str) -> &mut WindowSettings
-{
-    if (WindowSettings* settings = FindWindowSettings(hash_string(name)))
-        return settings;
-    return create_new_window_settings(name);
+pub fn find_or_create_window_settings(g: &mut Context, name: &str) -> &mut WindowSettings {
+    let settings = find_window_settings(g, hash_string(name, 0));
+    // if settings.is_some() {
+    //     return settings.unwrap()
+    // }
+    // return create_new_window_settings(name);
+    return settings.unwrap_or(create_new_window_settings(g, name));
 }
 
 // void add_settings_handler(const ImGuiSettingsHandler* handler)
@@ -131,15 +142,18 @@ pub fn add_settings_handler(g: &mut Context, handler: &SettingsHandler)
 {
     // ImGuiContext& g = *GImGui;
     // IM_ASSERT(FindSettingsHandler(handler.TypeName) == None);
-    g.settings_handlers.push_back(*handler);
+    g.settings_handlers.push(handler.to_owned());
 }
 
 // void RemoveSettingsHandler(const char* type_name)
 pub fn remove_settings_handler(g: &mut Context, type_name: &str)
 {
     // ImGuiContext& g = *GImGui;
-    if (ImGuiSettingsHandler* handler = FindSettingsHandler(type_name))
-        g.settings_handlers.erase(handler);
+    // if (ImGuiSettingsHandler* handler = FindSettingsHandler(type_name)) {
+    //
+    //     g.settings_handlers.erase(handler);
+    // }
+    let settings = find_settings_handler(g, type_name)
 }
 
 // ImGuiSettingsHandler* FindSettingsHandler(const char* type_name)
@@ -251,7 +265,7 @@ pub fn load_ini_settings_from_memory(g: &mut Context, ini_data: &str, ini_size: 
 pub fn save_ini_settings_to_disk(g: &mut Context, ini_filename: &str)
 {
     // ImGuiContext& g = *GImGui;
-    g.SettingsDirtyTimer = 0.0;
+    g.settings_dirty_timer = 0.0;
     if (!ini_filename)
         return;
 
@@ -269,7 +283,7 @@ pub fn save_ini_settings_to_disk(g: &mut Context, ini_filename: &str)
 pub fn save_init_settings(g: &mut Context, out_size: &mut usize) -> String
 {
     // ImGuiContext& g = *GImGui;
-    g.SettingsDirtyTimer = 0.0;
+    g.settings_dirty_timer = 0.0;
     g.SettingsIniData.Buf.resize(0);
     g.SettingsIniData.Buf.push_back(0);
     for (int handler_n = 0; handler_n < g.settings_handlers.size; handler_n += 1)

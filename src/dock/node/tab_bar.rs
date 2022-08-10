@@ -177,7 +177,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
     });
     let rounding_flags = calc_rounding_flags_for_rect_in_rect(
         title_bar_rect,
-        host_window.Rect(),
+        host_window.rect(),
         DOCKING_SPLITTER_SIZE,
     );
     g.draw_list_mut(host_window.draw_list_id).add_rect_filled(
@@ -320,7 +320,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
 
             // Store last item data so it can be queried with IsItemXXX functions after the user Begin() call
             window.dock_tab_item_status_flags = g.last_item_data.status_flags.clone();
-            window.dock_tab_item_rect = g.last_item_data.Rect;
+            window.dock_tab_item_rect = g.last_item_data.rect;
 
             // update navigation id on menu layer
             if g.nav_window
@@ -490,8 +490,8 @@ pub fn dock_node_calc_tab_bar_layout(
         out_title_rect.unwrap().max = r.max.clone();
     }
 
-    r.min.x += style.WindowBorderSize;
-    r.max.x -= style.WindowBorderSize;
+    r.min.x += style.window_border_size;
+    r.max.x -= style.window_border_size;
 
     let button_sz = g.font_size;
 

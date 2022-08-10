@@ -41,7 +41,7 @@ pub fn debug_render_viewport_thumbnail(g: &mut Context, draw_list: &mut DrawList
         if (thumb_window.viewport != viewport)
             continue;
 
-        Rect thumb_r = thumb_window.Rect();
+        Rect thumb_r = thumb_window.rect();
         Rect title_r = thumb_window.title_bar_rect();
         thumb_r = Rect(f32::floor(off + thumb_r.min * scale), f32::floor(off +  thumb_r.max * scale));
         title_r = Rect(f32::floor(off + title_r.min * scale), f32::floor(off +  Vector2D::new(title_r.max.x, title_r.min.y) * scale) + Vector2D::new(0,5)); // Exaggerate title bar height
@@ -218,13 +218,13 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
 
         static Rect GetWindowRect(Window* window, int rect_type)
         {
-            if (rect_type == WRT_OuterRect)                 { return window.Rect(); }
+            if (rect_type == WRT_OuterRect)                 { return window.rect(); }
             else if (rect_type == WRT_OuterRectClipped)     { return window.OuterRectClipped; }
             else if (rect_type == WRT_InnerRect)            { return window.inner_rect; }
             else if (rect_type == WRT_InnerClipRect)        { return window.InnerClipRect; }
             else if (rect_type == WRT_WorkRect)             { return window.work_rect; }
-            else if (rect_type == WRT_Content)       { Vector2D min = window.inner_rect.min - window.scroll + window.WindowPadding; return Rect(min, min + window.ContentSize); }
-            else if (rect_type == WRT_ContentIdeal)         { Vector2D min = window.inner_rect.min - window.scroll + window.WindowPadding; return Rect(min, min + window.ContentSizeIdeal); }
+            else if (rect_type == WRT_Content)       { Vector2D min = window.inner_rect.min - window.scroll + window.window_padding; return Rect(min, min + window.ContentSize); }
+            else if (rect_type == WRT_ContentIdeal)         { Vector2D min = window.inner_rect.min - window.scroll + window.window_padding; return Rect(min, min + window.ContentSizeIdeal); }
             else if (rect_type == WRT_ContentRegionRect)    { return window.content_region_rect; }
             // IM_ASSERT(0);
             return Rect();
@@ -498,7 +498,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
                 {
                     if (Window* window = find_window_by_id(settings->SelectedTabId))
                         selected_tab_name = window.name;
-                    else if (WindowSettings* window_settings = FindWindowSettings(settings->SelectedTabId))
+                    else if (WindowSettings* window_settings = find_window_settings(settings->SelectedTabId))
                         selected_tab_name = window_settings->GetName();
                 }
                 BulletText("Node %08X, Parent %08X, SelectedTab %08X ('%s')", settings->ID, settings->parent_node_id, settings->SelectedTabId, selected_tab_name ? selected_tab_name : settings->SelectedTabId ? "N/A" : "");

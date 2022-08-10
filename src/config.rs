@@ -39,7 +39,7 @@ pub enum ConfigFlags {
     DockingEnable,   // Docking enable flags.
 
     // [BETA] viewports
-    // When using viewports it is recommended that your default value for ImGuiCol_WindowBg is opaque (Alpha=1.0) so transition to a viewport won't be noticeable.
+    // When using viewports it is recommended that your default value for ImGuiCol_WindowBg is opaque (alpha=1.0) so transition to a viewport won't be noticeable.
     ViewportsEnable,
     // viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
     DpiEnableScaleViewports,

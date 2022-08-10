@@ -35,13 +35,13 @@ pub fn get_content_region_max_abs(g: &mut Context) -> Vector2D {
 
 
 pub fn get_content_region_avail(g: &mut Context) -> Vector2D {
-    // Window* window = g.current_window_id;
+    // let window = g.current_window_mut();;
     let window = g.current_window_mut();
     return get_content_region_max_abs(g) - window.dc.cursor_pos.clone();
 }
 
 pub fn get_window_content_region_max(g: &mut Context) -> Vector2D {
-    // Window* window = g.current_window_id;
+    // let window = g.current_window_mut();;
     let window = g.current_window_mut();
     return &window.content_region_rect.max - &window.pos;
 }

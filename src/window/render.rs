@@ -38,9 +38,9 @@ use std::collections::HashSet;
 // static void ImGui::render_window_outer_borders(Window* window)
 pub fn render_window_outer_borders(g: &mut Context, window: &mut Window) {
     // ImGuiContext& g = *GImGui;
-    // float rounding = window.WindowRounding;
+    // float rounding = window.window_rounding;
     let mut rounding = window.window_rounding;
-    // float border_size = window.WindowBorderSize;
+    // float border_size = window.window_border_size;
     let mut border_size = window.window_border_size;
     // if border_size > 0.0 && !(window.flags & WindowFlags::NoBackground)
     if border_size > 0.0 && window.flags.contains(&WindowFlags::NoBackground) == false {
@@ -123,9 +123,9 @@ pub fn render_window_decorations(
 
     // Draw window + handle manual resize
     // As we highlight the title bar when want_focus is set, multiple reappearing windows will have have their title bar highlighted on their reappearing frame.
-    // let window_rounding = window.WindowRounding;
+    // let window_rounding = window.window_rounding;
     let window_rounding = window.window_rounding;
-    // let window_border_size = window.WindowBorderSize;
+    // let window_border_size = window.window_border_size;
     let window_border_size = window.window_border_size;
     if window.collapsed {
         // Title bar only
@@ -251,7 +251,7 @@ pub fn render_window_decorations(
         // Menu bar
         if flags.contains(&WindowFlags::MenuBar) {
             let menu_bar_rect = window.menu_bar_rect();
-            menu_bar_rect.clip_width(window.Rect()); // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
+            menu_bar_rect.clip_width(window.rect()); // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
             window.draw_list.add_rect_filled(
                 menu_bar_rect.min + Vector2D::new(window_border_size, 0.0),
                 menu_bar_rect.max - Vector2D::new(window_border_size, 0.0),

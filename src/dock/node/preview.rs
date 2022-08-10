@@ -154,7 +154,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
         if data.split_dir != Direction::None || data.is_center_available {
             // for (int overlay_n = 0; overlay_n < overlay_draw_lists_count; overlay_n += 1) 
             for overlay_n in 0..overlay_draw_lists_count {
-                overlay_draw_lists[overlay_n].add_rect_filled(overlay_rect.min, overlay_rect.max, overlay_col_main, host_window.WindowRounding, calc_rounding_flags_for_rect_in_rect(overlay_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE));
+                overlay_draw_lists[overlay_n].add_rect_filled(overlay_rect.min, overlay_rect.max, overlay_col_main, host_window.WindowRounding, calc_rounding_flags_for_rect_in_rect(overlay_rect, host_window.rect(), DOCKING_SPLITTER_SIZE));
             }
         }
     }

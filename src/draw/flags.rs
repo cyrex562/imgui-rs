@@ -54,5 +54,28 @@ pub enum DrawFlags {
     RoundCornersNone, // add_rect(), add_rect_filled(), PathRect(): disable rounding on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!
 }
 
+pub fn draw_flags_contains_round_corners(flags: &HashSet<DrawFlags>) -> bool {
+    if flags.contains(&DrawFlags::RoundCornersTopRight) {
+        return true;
+    }
+    if flags.contains(&DrawFlags::RoundCornersTopLeft) {
+        return true;
+    }
+    if flags.contains(&DrawFlags::RoundCornersBottomRight) {
+        return true;
+    }
+    if flags.contains(&DrawFlags::RoundCornersBottomLeft) {
+        return true;
+    }
+    return false;
+}
+
+pub fn set_draw_flags_round_corners_default(flags: &mut HashSet<DrawFlags>) {
+    flags.clear();
+    flags.insert(DrawFlags::RoundCornersTopLeft);
+    flags.insert(DrawFlags::RoundCornersTopRight);
+    flags.insert(DrawFlags::RoundCornersBottomLeft);
+    flags.insert(DrawFlags::RoundCornersBottomRight);
+}
 
 pub const DRAW_FLAGS_EMPTY: HashSet<DrawFlags> = HashSet::new();

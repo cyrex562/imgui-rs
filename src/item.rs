@@ -297,7 +297,7 @@ pub fn is_any_item_focused(g: &mut Context) -> bool
 pub fn is_item_visible(g: &mut Context) -> bool
 {
     // ImGuiContext& g = *GImGui;
-    // return g.current_window->clip_rect.Overlaps(g.last_item_data.Rect);
+    // return g.current_window->clip_rect.Overlaps(g.last_item_data.rect);
     let curr_win = g.current_window_mut().unwrap();
     curr_win.clip_rect.overlaps_rect(&g.last_item_data.rect)
 }
@@ -344,7 +344,7 @@ pub fn set_item_using_mouse_wheel(g: &mut Context)
 pub fn get_item_rect_min(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
-    // return g.last_item_data.Rect.Min;
+    // return g.last_item_data.rect.Min;
     g.last_item_data.rect.min.clone()
 }
 
@@ -352,7 +352,7 @@ pub fn get_item_rect_min(g: &mut Context) -> Vector2D
 pub fn get_item_rect_max(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
-    // return g.last_item_data.Rect.max;
+    // return g.last_item_data.rect.max;
     g.last_item_data.rect.max.clone()
 }
 
@@ -360,7 +360,7 @@ pub fn get_item_rect_max(g: &mut Context) -> Vector2D
 pub fn get_item_rect_size(g: &mut Context) -> Vector2D
 {
     // ImGuiContext& g = *GImGui;
-    // return g.last_item_data.Rect.GetSize();
+    // return g.last_item_data.rect.GetSize();
     g.last_item_data.rect.size()
 }
 

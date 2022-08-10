@@ -38,7 +38,7 @@ pub const RESIZE_BORDER_DEF: [ResizeBorderDef; 4] = [
 
 
 pub fn get_resize_border_rect(window: &mut Window, border_n: i32, perp_padding: f32, thickness: f32) -> Rect {
-    // ImRect rect = window.Rect();
+    // ImRect rect = window.rect();
     let mut rect: Rect = window.rect();
     if thickness == 0.0 {
         rect.max -= Vector2D::new(1.0, 1.0);

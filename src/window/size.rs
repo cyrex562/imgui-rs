@@ -24,7 +24,7 @@ pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_cont
     let style = &mut g.style;
     // let decoration_up_height = window.title_bar_height() + window.MenuBarHeight();
     let decoration_up_height = window.title_bar_height() + window.menu_bar_height();
-    // Vector2D size_pad = window.WindowPadding * 2.0;
+    // Vector2D size_pad = window.window_padding * 2.0;
     let size_pad = window.window_padding.clone() * 2.0;
     // Vector2D size_desired = size_contents + size_pad + Vector2D::new(0.0, decoration_up_height);
     let size_desired = size_contents + size_pad + Vector2D::new(0.0, decoration_up_height);
@@ -43,7 +43,7 @@ pub fn calc_window_auto_fit_size(g: &mut Context, window: &mut Window, size_cont
         let is_menu = window.flags.contains(&WindowFlags::ChildMenu);
         // Vector2D size_min = style.window_min_size;
         let size_min = style.window_min_size;
-        if is_popup || is_menu { // Popups and menus bypass style.WindowMinSize by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.g. empty popups)
+        if is_popup || is_menu { // Popups and menus bypass style.window_min_size by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.g. empty popups)
             size_min = Vector2D::min(size_min, &Vector2D::new(4.0, 4.0));
         }
 
@@ -212,7 +212,7 @@ pub fn calc_window_size_after_constraint(
         new_size = Vector2D::max(new_size, g.style.window_min_size);
         new_size.y = f32::max(
             new_size.y,
-            decoration_up_height + ImMax(0.0, g.style.WindowRounding - 1.0),
+            decoration_up_height + ImMax(0.0, g.style.window_rounding - 1.0),
         ); // Reduce artifacts with very small windows
     }
     return new_size;
@@ -352,7 +352,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     let mut ret_auto_fit = false;
     // let resize_border_count = g.io.ConfigWindowsResizeFromEdges ? 4 : 0;
     let resize_border_count = if g.io.config_windows_resize_from_edges { 4 } else {0};
-    // let grip_draw_size = f32::floor(ImMax(g.FontSize * 1.35, window.WindowRounding + 1.0 + g.FontSize * 0.2));
+    // let grip_draw_size = f32::floor(ImMax(g.FontSize * 1.35, window.window_rounding + 1.0 + g.FontSize * 0.2));
     let grip_draw_size = f32::floor(f32::max(g.font_size * 1.35, window.window_rounding + 1.0 + g.font_size * 0.2));
 
     // let grip_hover_inner_size = f32::floor(grip_draw_size * 0.75);

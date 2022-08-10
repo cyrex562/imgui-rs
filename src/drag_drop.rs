@@ -132,7 +132,7 @@ pub fn begin_drag_drop_source(g: &mut Context, flags: &HashSet<DragDropFlags>) -
             g.last_item_data.id = window.get_id_from_rectangle(&g.last_item_data.rect);
             source_id = g.last_item_data.id;
             keep_alive_id(source_id);
-            let is_hovered = item_hoverable(g, g.last_item_data.Rect, source_id).unwrap();
+            let is_hovered = item_hoverable(g, g.last_item_data.rect, source_id).unwrap();
             if is_hovered && g.io.mouse_clicked[mouse_button] {
                 set_active_id(g, source_id, window);
                 focus_window(g, window);

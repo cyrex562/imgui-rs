@@ -8,14 +8,14 @@ use crate::vectors::vector_2d::Vector2D;
 // void SetStateStorage(ImGuiStorage* tree)
 pub fn set_state_storage(g: &mut Context, tree: &Storage)
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     window.dc.StateStorage = tree ? tree : &window.StateStorage;
 }
 
 // ImGuiStorage* GetStateStorage()
 pub fn get_state_storage(g: &mut Context) -> &mut Storage
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     return window.dc.StateStorage;
 }
 
@@ -69,7 +69,7 @@ pub fn push_override_id(g: &mut Context, id: Id32)
 // void PopID()
 pub fn pop_id(g: &mut Context)
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     // IM_ASSERT(window.IDStack.size > 1); // Too many PopID(), or could be popping in a wrong/different window?
     window.id_stack.pop_back();
 }
@@ -77,34 +77,34 @@ pub fn pop_id(g: &mut Context)
 // Id32 GetID(const char* str_id)
 pub fn get_id(g: &mut Context, str_id: &str) -> Id32
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     return window.get_id(str_id);
 }
 
 // Id32 GetID(const char* str_id_begin, const char* str_id_end)
 pub fn get_id2(g: &mut Context, str_id: &str) -> Id32
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     return window.get_id(str_id_begin, str_id_end);
 }
 
 // Id32 GetID(const void* ptr_id)
 pub fn get_id3(g: &mut Context, ptr_id: Id32)->Id32
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     return window.get_id(ptr_id);
 }
 
 // bool IsRectVisible(const Vector2D& size)
 pub fn is_rect_visible(g: &mut Context, size: &Vector2D) -> bool
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     return window.clip_rect.Overlaps(Rect(window.dc.cursor_pos, window.dc.cursor_pos + size));
 }
 
 // bool IsRectVisible(const Vector2D& rect_min, const Vector2D& rect_max)
 pub fn is_rect_visible2(g: &mut Context, rect_min: &Vector2D, rect_max: &Vector2D) -> bool
 {
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     return window.clip_rect.Overlaps(Rect(rect_min, rect_max));
 }

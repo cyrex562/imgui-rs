@@ -758,7 +758,7 @@ bool ImGui::InvisibleButton(const char* str_id, const Vector2D& size_arg, ImGuiB
     return pressed;
 }
 
-bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size, ImGuiButtonFlags flags)
+bool ImGui::ArrowButtonEx(const char* str_id, Direction dir, Vector2D size, ImGuiButtonFlags flags)
 {
     // ImGuiContext& g = *GImGui;
     Window* window = GetCurrentWindow();
@@ -789,7 +789,7 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, Vector2D size, ImGui
     return pressed;
 }
 
-bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
+bool ImGui::ArrowButton(const char* str_id, Direction dir)
 {
     let sz =  get_frame_height();
     return ArrowButtonEx(str_id, dir, DimgVec2D::new(sz, sz), ImGuiButtonFlags_None);
@@ -799,7 +799,7 @@ bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
 bool ImGui::CloseButton(Id32 id, const Vector2D& pos)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
 
     // Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
@@ -838,7 +838,7 @@ bool ImGui::CloseButton(Id32 id, const Vector2D& pos)
 bool ImGui::CollapseButton(Id32 id, const Vector2D& pos, ImGuiDockNode* dock_node)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
 
     ImRect bb(pos, pos + DimgVec2D::new(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0);
     ItemAdd(bb, id);
@@ -872,7 +872,7 @@ Id32 ImGui::GetWindowScrollbarID(Window* window, ImGuiAxis axis)
 // Return scrollbar rectangle, must only be called for corresponding axis if window->scrollbar_x/Y is set.
 ImRect ImGui::GetWindowScrollbarRect(Window* window, ImGuiAxis axis)
 {
-    const ImRect outer_rect = window.Rect();
+    const ImRect outer_rect = window.rect();
     const ImRect inner_rect = window.InnerRect;
     let border_size = window.WindowBorderSize;
     let scrollbar_size = window.ScrollbarSizes[axis ^ 1]; // (scrollbar_sizes.x = width of Y scrollbar; scrollbar_sizes.y = height of x scrollbar)
@@ -886,7 +886,7 @@ ImRect ImGui::GetWindowScrollbarRect(Window* window, ImGuiAxis axis)
 void ImGui::Scrollbar(ImGuiAxis axis)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     const Id32 id = GetWindowScrollbarID(window, axis);
 
     // Calculate scrollbar bounding box
@@ -906,7 +906,7 @@ void ImGui::Scrollbar(ImGuiAxis axis)
             rounding_corners |= ImDrawFlags_RoundCornersBottomRight;
     }
     let size_avail =  window.InnerRect.Max[axis] - window.InnerRect.Min[axis];
-    let size_contents =  window.ContentSize[axis] + window.WindowPadding[axis] * 2.0;
+    let size_contents =  window.ContentSize[axis] + window.window_padding[axis] * 2.0;
     ImS64 scroll = (ImS64)window.Scroll[axis];
     ScrollbarEx(bb, id, axis, &scroll, (ImS64)size_avail, (ImS64)size_contents, rounding_corners);
     window.Scroll[axis] = scroll;
@@ -921,7 +921,7 @@ void ImGui::Scrollbar(ImGuiAxis axis)
 bool ImGui::ScrollbarEx(const ImRect& bb_frame, Id32 id, ImGuiAxis axis, ImS64* p_scroll_v, ImS64 size_avail_v, ImS64 size_contents_v, ImDrawFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return false;
 
@@ -1069,7 +1069,7 @@ bool ImGui::ImageButtonEx(Id32 id, ImTextureID texture_id, const Vector2D& size,
 bool ImGui::ImageButton(ImTextureID user_texture_id, const Vector2D& size, const Vector2D& uv0, const Vector2D& uv1, int frame_padding, const Vector4D& bg_col, const Vector4D& tint_col)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return false;
 
@@ -1443,7 +1443,7 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
 void ImGui::Separator()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return;
 
@@ -1457,7 +1457,7 @@ void ImGui::Separator()
 bool ImGui::splitter_behavior(const ImRect& bb, Id32 id, ImGuiAxis axis, float* size1, float* size2, float min_size1, float min_size2, float hover_extend, float hover_visibility_delay, ImU32 bg_col)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
 
     const ImGuiItemFlags item_flags_backup = g.CurrentItemFlags;
     g.CurrentItemFlags |= ItemFlags::NoNav | ItemFlags::NoNavDefaultFocus;
@@ -1584,7 +1584,7 @@ static float CalcMaxPopupHeightFromItemCount(int items_count)
     // ImGuiContext& g = *GImGui;
     if (items_count <= 0)
         return FLT_MAX;
-    return (g.FontSize + g.Style.item_spacing.y) * items_count - g.Style.item_spacing.y + (g.Style.WindowPadding.y * 2);
+    return (g.FontSize + g.Style.item_spacing.y) * items_count - g.Style.item_spacing.y + (g.Style.window_padding.y * 2);
 }
 
 bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags)
@@ -1709,7 +1709,7 @@ bool ImGui::BeginComboPopup(Id32 popup_id, const ImRect& bb, ImGuiComboFlags fla
 
     // We don't use begin_popupEx() solely because we have a custom name string, which we could make an argument to begin_popupEx()
     WindowFlags window_flags = WindowFlags_AlwaysAutoResize | WindowFlags_Popup | WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoSavedSettings | WindowFlags_NoMove;
-    PushStyleVar(ImGuiStyleVar_WindowPadding, DimgVec2D::new(g.Style.FramePadding.x, g.Style.WindowPadding.y)); // Horizontally align ourselves with the framed text
+    PushStyleVar(ImGuiStyleVar_WindowPadding, DimgVec2D::new(g.Style.FramePadding.x, g.Style.window_padding.y)); // Horizontally align ourselves with the framed text
     bool ret = Begin(name, None, window_flags);
     PopStyleVar();
     if (!ret)
@@ -1731,12 +1731,12 @@ void ImGui::EndCombo()
 bool ImGui::BeginComboPreview()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     ImGuiComboPreviewData* preview_data = &g.ComboPreviewData;
 
-    if (window.SkipItems || !window.ClipRect.Overlaps(g.last_item_data.Rect)) // FIXME: Because we don't have a ItemStatusFlags::Visible flag to test last ItemAdd() result
+    if (window.SkipItems || !window.ClipRect.Overlaps(g.last_item_data.rect)) // FIXME: Because we don't have a ItemStatusFlags::Visible flag to test last ItemAdd() result
         return false;
-    IM_ASSERT(g.last_item_data.Rect.Min.x == preview_data->PreviewRect.Min.x && g.last_item_data.Rect.Min.y == preview_data->PreviewRect.Min.y); // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
+    IM_ASSERT(g.last_item_data.rect.Min.x == preview_data->PreviewRect.Min.x && g.last_item_data.rect.Min.y == preview_data->PreviewRect.Min.y); // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
     if (!window.ClipRect.contains(preview_data->PreviewRect)) // Narrower test (optional)
         return false;
 
@@ -1758,7 +1758,7 @@ bool ImGui::BeginComboPreview()
 void ImGui::EndComboPreview()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     ImGuiComboPreviewData* preview_data = &g.ComboPreviewData;
 
     // FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
@@ -4938,7 +4938,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
                 // Store current color and open a picker
                 g.ColorPickerRef = col_v4;
                 open_popup("picker");
-                set_next_window_pos(g.last_item_data.Rect.GetBL() + DimgVec2D::new(0.0, style.item_spacing.y));
+                set_next_window_pos(g.last_item_data.rect.GetBL() + DimgVec2D::new(0.0, style.item_spacing.y));
             }
         }
         if (!(flags & ImGuiColorEditFlags_NoOptions))
@@ -5046,7 +5046,7 @@ static void RenderArrowsForVerticalBar(ImDrawList* draw_list, Vector2D pos, Vect
 // Note: ColorPicker4() only accesses 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 // (In C++ the 'float col[4]' notation for a function argument is equivalent to 'float* col', we only specify a size to facilitate understanding of the code.)
 // FIXME: we adjust the big color square height based on item width, which may cause a flickering feedback loop (if automatic height makes a vertical scrollbar appears, affecting automatic width..)
-// FIXME: this is trying to be aware of style.Alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.Alpha < 1.0)
+// FIXME: this is trying to be aware of style.alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.alpha < 1.0)
 bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags flags, let* ref_col)
 {
     // ImGuiContext& g = *GImGui;
@@ -5086,7 +5086,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
     bool alpha_bar = (flags & ImGuiColorEditFlags_AlphaBar) && !(flags & ImGuiColorEditFlags_NoAlpha);
     Vector2D picker_pos = window.DC.CursorPos;
     let square_sz =  get_frame_height();
-    let bars_width =  square_sz; // Arbitrary smallish width of Hue/Alpha picking bars
+    let bars_width =  square_sz; // Arbitrary smallish width of Hue/alpha picking bars
     let sv_picker_size =  ImMax(bars_width * 1, width - (alpha_bar ? 2 : 1) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/value picking box
     let bar0_pos_x =  picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
     let bar1_pos_x =  bar0_pos_x + bars_width + style.ItemInnerSpacing.x;
@@ -5184,7 +5184,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
         }
     }
 
-    // Alpha bar logic
+    // alpha bar logic
     if (alpha_bar)
     {
         SetCursorScreenPos(DimgVec2D::new(bar1_pos_x, picker_pos.y));
@@ -5461,7 +5461,7 @@ bool ImGui::ColorButton(const char* desc_id, const Vector4D& col, ImGuiColorEdit
     }
     else
     {
-        // Because GetColorU32() multiplies by the global style Alpha and we don't want to display a checkerboard if the source code had no alpha
+        // Because GetColorU32() multiplies by the global style alpha and we don't want to display a checkerboard if the source code had no alpha
         Vector4D col_source = (flags & ImGuiColorEditFlags_AlphaPreview) ? col_rgb : col_rgb_without_alpha;
         if (col_source.w < 1.0)
             RenderColorRectWithAlphaCheckerboard(window.draw_list, bb_inner.Min, bb_inner.Max, GetColorU32(col_source), grid_step, DimgVec2D::new(off, off), rounding);
@@ -5636,7 +5636,7 @@ void ImGui::ColorPickerOptionsPopup(let* ref_col, ImGuiColorEditFlags flags)
     if (allow_opt_alpha_bar)
     {
         if (allow_opt_picker) Separator();
-        CheckboxFlags("Alpha Bar", &g.ColorEditOptions, ImGuiColorEditFlags_AlphaBar);
+        CheckboxFlags("alpha Bar", &g.ColorEditOptions, ImGuiColorEditFlags_AlphaBar);
     }
     end_popup();
 }
@@ -5748,7 +5748,7 @@ bool ImGui::TreeNodeBehaviorIsOpen(Id32 id, ImGuiTreeNodeFlags flags)
 
     // We only write to the tree storage if the user clicks (or explicitly use the SetNextItemOpen function)
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     ImGuiStorage* storage = window.DC.StateStorage;
 
     bool is_open;
@@ -5813,8 +5813,8 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
     {
         // Framed header expand a little outside the default padding, to the edge of inner_clip_rect
         // (FIXME: May remove this at some point and make inner_clip_rect align with window_padding.x instead of window_padding.x*0.5)
-        frame_bb.Min.x -= IM_FLOOR(window.WindowPadding.x * 0.5 - 1.0);
-        frame_bb.Max.x += IM_FLOOR(window.WindowPadding.x * 0.5);
+        frame_bb.Min.x -= IM_FLOOR(window.window_padding.x * 0.5 - 1.0);
+        frame_bb.Max.x += IM_FLOOR(window.window_padding.x * 0.5);
     }
 
     let text_offset_x = g.FontSize + (display_frame ? padding.x * 3 : padding.x * 2);           // Collapser arrow width + spacing
@@ -5823,7 +5823,7 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
     Vector2D text_pos(window.DC.CursorPos.x + text_offset_x, window.DC.CursorPos.y + text_offset_y);
     ItemSize(DimgVec2D::new(text_width, frame_height), padding.y);
 
-    // For regular tree nodes, we arbitrary allow to click past 2 worth of ItemSpacing
+    // For regular tree nodes, we arbitrary allow to click past 2 worth of item_spacing
     ImRect interact_bb = frame_bb;
     if (!display_frame && (flags & (ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_SpanFullWidth)) == 0)
         interact_bb.Max.x = frame_bb.Min.x + text_width + style.item_spacing.x * 2.0;
@@ -5993,7 +5993,7 @@ void ImGui::TreePush(const void* ptr_id)
 void ImGui::Treepush_override_id(Id32 id)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     Indent();
     window.DC.TreeDepth += 1;
     push_override_id(id);
@@ -6002,7 +6002,7 @@ void ImGui::Treepush_override_id(Id32 id)
 void ImGui::TreePop()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     Unindent();
 
     window.DC.TreeDepth--;
@@ -6076,8 +6076,8 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
         // ImGuiContext& g = *GImGui;
         ImGuiLastItemData last_item_backup = g.last_item_data;
         let button_size =  g.FontSize;
-        let button_x =  ImMax(g.last_item_data.Rect.Min.x, g.last_item_data.Rect.Max.x - g.Style.FramePadding.x * 2.0 - button_size);
-        let button_y =  g.last_item_data.Rect.Min.y;
+        let button_x =  ImMax(g.last_item_data.rect.Min.x, g.last_item_data.rect.Max.x - g.Style.FramePadding.x * 2.0 - button_size);
+        let button_y =  g.last_item_data.rect.Min.y;
         Id32 close_button_id = GetIDWithSeed("#CLOSE", None, id);
         if (CloseButton(close_button_id, DimgVec2D::new(button_x, button_y)))
             *p_visible = false;
@@ -6096,7 +6096,7 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
 // Tip: pass a non-visible label (e.g. "##hello") then you can use the space to draw other text or image.
 // But you need to make sure the id is unique, e.g. enclose calls in push_id/PopID or use ##unique_id.
 // With this scheme, ImGuiselectableFlags_SpanAllColumns and ImGuiselectableFlags_AllowItemOverlap are also frequently used flags.
-// FIXME: selectable() with (size.x == 0.0) and (selectableTextAlign.x > 0.0) followed by same_line() is currently not supported.
+// FIXME: selectable() with (size.x == 0.0) and (selectable_text_align.x > 0.0) followed by same_line() is currently not supported.
 bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags flags, const Vector2D& size_arg)
 {
     Window* window = GetCurrentWindow();
@@ -6115,7 +6115,7 @@ bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags fl
     ItemSize(size, 0.0);
 
     // Fill horizontal space
-    // We don't support (size < 0.0) in selectable() because the ItemSpacing extension would make explicitly right-aligned sizes not visibly match other widgets.
+    // We don't support (size < 0.0) in selectable() because the item_spacing extension would make explicitly right-aligned sizes not visibly match other widgets.
     let span_all_columns = (flags & ImGuiselectableFlags_SpanAllColumns) != 0;
     let min_x = span_all_columns ? window.ParentWorkRect.Min.x : pos.x;
     let max_x = span_all_columns ? window.ParentWorkRect.Max.x : window.work_rect.Max.x;
@@ -6318,7 +6318,7 @@ bool ImGui::ListBoxHeader(const char* label, int items_count, int height_in_item
 void ImGui::EndListBox()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     IM_ASSERT((window.Flags & WindowFlags_ChildWindow) && "Mismatched BeginListBox/EndListBox calls. Did you test the return value of BeginListBox?");
     IM_UNUSED(window);
 
@@ -6717,7 +6717,7 @@ void ImGui::EndMenuBar()
 // Important: calling order matters!
 // FIXME: Somehow overlapping with docking tech.
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
-bool ImGui::BeginViewportSideBar(const char* name, Viewport* viewport_p, ImGuiDir dir, float axis_size, WindowFlags window_flags)
+bool ImGui::BeginViewportSideBar(const char* name, Viewport* viewport_p, Direction dir, float axis_size, WindowFlags window_flags)
 {
     IM_ASSERT(dir != ImGuiDir_None);
 
@@ -6793,7 +6793,7 @@ void ImGui::EndMainMenuBar()
 static bool IsRootOfOpenMenuSet()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if ((g.open_popupStack.Size <= g.begin_popupStack.Size) || (window.Flags & WindowFlags_ChildMenu))
         return false;
 
@@ -6865,7 +6865,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
     if (window.DC.layout_type == LayoutType::Horizontal)
     {
         // Menu inside an horizontal menu bar
-        // selectable extend their highlight by half ItemSpacing in each direction.
+        // selectable extend their highlight by half item_spacing in each direction.
         // For ChildMenu, the popup position will be overwritten by the call to FindBestWindowPosForPopup() in Begin()
         popup_pos = DimgVec2D::new(pos.x - 1.0 - IM_FLOOR(style.item_spacing.x * 0.5), pos.y - style.FramePadding.y + window.MenuBarHeight());
         window.DC.CursorPos.x += IM_FLOOR(style.item_spacing.x * 0.5);
@@ -6882,7 +6882,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         // Menu inside a regular/vertical menu
         // (In a typical menu window where all items are BeginMenu() or menu_item() calls, extra_w will always be 0.0.
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
-        popup_pos = DimgVec2D::new(pos.x, pos.y - style.WindowPadding.y);
+        popup_pos = DimgVec2D::new(pos.x, pos.y - style.window_padding.y);
         let icon_w =  (icon && icon[0]) ? calc_text_size(icon, None).x : 0.0;
         let checkmark_w =  IM_FLOOR(g.FontSize * 1.20);
         let min_w =  window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0.0, checkmark_w); // Feedback to next frame
@@ -6912,7 +6912,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         if (g.HoveredWindow == window && child_menu_window != None && !(window.Flags & WindowFlags_MenuBar))
         {
             let ref_unit =  g.FontSize; // FIXME-DPI
-            ImRect next_window_rect = child_menu_window.Rect();
+            ImRect next_window_rect = child_menu_window.rect();
             Vector2D ta = (g.IO.MousePos - g.IO.MouseDelta);
             Vector2D tb = (window.pos.x < child_menu_window.pos.x) ? next_window_rect.GetTL() : next_window_rect.GetTR();
             Vector2D tc = (window.pos.x < child_menu_window.pos.x) ? next_window_rect.GetBL() : next_window_rect.GetBR();
@@ -7005,7 +7005,7 @@ void ImGui::EndMenu()
     // A menu doesn't close itself because EndMenuBar() wants the catch the last Left<>Right inputs.
     // However, it means that with the current code, a BeginMenu() from outside another menu or a menu-bar won't be closable with the Left direction.
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (g.nav_move_dir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.layout_type == ImGuiLayoutType_Vertical)
         if (g.NavWindow && (g.NavWindow->RootWindowForNav->Flags & WindowFlags_Popup) && g.NavWindow->RootWindowForNav->ParentWindow == window)
         {
@@ -7190,7 +7190,7 @@ static ImGuiPtrOrIndex GetTabBarRefFromTabBar(ImGuiTabBar* tab_bar)
 bool    ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return false;
 
@@ -7204,7 +7204,7 @@ bool    ImGui::BeginTabBar(const char* str_id, ImGuiTabBarFlags flags)
 bool    ImGui::begin_tab_bar_ex(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImGuiTabBarFlags flags, ImGuiDockNode* dock_node)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return false;
 
@@ -7260,8 +7260,8 @@ bool    ImGui::begin_tab_bar_ex(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, 
     }
     else
     {
-        let separator_min_x = tab_bar->BarRect.Min.x - IM_FLOOR(window.WindowPadding.x * 0.5);
-        let separator_max_x = tab_bar->BarRect.Max.x + IM_FLOOR(window.WindowPadding.x * 0.5);
+        let separator_min_x = tab_bar->BarRect.Min.x - IM_FLOOR(window.window_padding.x * 0.5);
+        let separator_max_x = tab_bar->BarRect.Max.x + IM_FLOOR(window.window_padding.x * 0.5);
         window.draw_list->AddLine(DimgVec2D::new(separator_min_x, y), DimgVec2D::new(separator_max_x, y), col, 1.0);
     }
     return true;
@@ -7270,7 +7270,7 @@ bool    ImGui::begin_tab_bar_ex(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, 
 void    ImGui::end_tab_bar()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return;
 
@@ -7535,7 +7535,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
     tab_bar->ScrollingRectMaxX = tab_bar->BarRect.Max.x - sections[2].width - sections[1].Spacing;
 
     // Actual layout in host window (we don't do it in BeginTabBar() so as not to waste an extra frame)
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     window.DC.CursorPos = tab_bar->BarRect.Min;
     ItemSize(DimgVec2D::new(tab_bar->WidthAllTabs, tab_bar->BarRect.GetHeight()), tab_bar->FramePadding.y);
     window.DC.IdealMaxPos.x = ImMax(window.DC.IdealMaxPos.x, tab_bar->BarRect.Min.x + tab_bar->WidthAllTabsIdeal);
@@ -7761,7 +7761,7 @@ bool ImGui::TabBarProcessReorder(ImGuiTabBar* tab_bar)
 static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
 
     const Vector2D arrow_button_size(g.FontSize - 2.0, g.FontSize + g.Style.FramePadding.y * 2.0);
     let scrolling_buttons_width = arrow_button_size.x * 2.0;
@@ -7822,7 +7822,7 @@ static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
 static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
 
     // We use g.style.FramePadding.y to match the square ArrowButton size
     let tab_list_popup_button_width = g.FontSize + g.Style.FramePadding.y;
@@ -7873,7 +7873,7 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return false;
 
@@ -7897,7 +7897,7 @@ bool    ImGui::BeginTabItem(const char* label, bool* p_open, ImGuiTabItemFlags f
 void    ImGui::EndTabItem()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return;
 
@@ -7916,7 +7916,7 @@ void    ImGui::EndTabItem()
 bool    ImGui::TabItemButton(const char* label, ImGuiTabItemFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return false;
 
@@ -7939,7 +7939,7 @@ bool    ImGui::tab_item_ex(ImGuiTabBar* tab_bar, const char* label, bool* p_open
         TabBarLayout(tab_bar);
         g.next_item_data = backup_next_item_data;
     }
-    Window* window = g.current_window_id;
+    let window = g.current_window_mut();;
     if (window.SkipItems)
         return false;
 

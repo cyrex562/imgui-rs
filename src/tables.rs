@@ -119,7 +119,7 @@ index of this file:
 //   - with ImGuiTableColumnFlags_WidthFixed,    init_width  >  0 (explicit) --> width is custom
 //   - with ImGuiTableColumnFlags_WidthStretch,  init_weight <= 0 (default)  --> weight is 1.0
 //   - with ImGuiTableColumnFlags_WidthStretch,  init_weight >  0 (explicit) --> weight is custom
-// widths are specified _without_ CellPadding. If you specify a width of 100.0, the column will be cover (100.0 + Padding * 2.0)
+// widths are specified _without_ cell_padding. If you specify a width of 100.0, the column will be cover (100.0 + Padding * 2.0)
 // and you can fit a 100.0 wide item in it without clipping and with full padding.
 //-----------------------------------------------------------------------------
 // About default sizing policy (if you don't specify a ImGuiTableColumnFlags_WidthXXXX flag)
@@ -395,7 +395,7 @@ bool    ImGui::BeginTableEx(const char* name, Id32 id, int columns_count, ImGuiT
         table.work_rect = table.InnerWindow.work_rect;
         table.OuterRect = table.InnerWindow.rect();
         table->inner_rect = table.InnerWindow->inner_rect;
-        // IM_ASSERT(table.inner_window.WindowPadding.x == 0.0 && table.inner_window.WindowPadding.y == 0.0 && table.inner_window.WindowBorderSize == 0.0);
+        // IM_ASSERT(table.inner_window.window_padding.x == 0.0 && table.inner_window.window_padding.y == 0.0 && table.inner_window.window_border_size == 0.0);
     }
     else
     {
@@ -532,7 +532,7 @@ bool    ImGui::BeginTableEx(const char* name, Id32 id, int columns_count, ImGuiT
         TableLoadSettings(table);
 
     // Handle DPI/font resize
-    // This is designed to facilitate DPI changes with the assumption that e.g. style.CellPadding has been scaled as well.
+    // This is designed to facilitate DPI changes with the assumption that e.g. style.cell_padding has been scaled as well.
     // It will also react to changing fonts with mixed results. It doesn't need to be perfect but merely provide a decent transition.
     // FIXME-DPI: Provide consistent standards for reference size. Perhaps using g.current_dpi_scale would be more self explanatory.
     // This is will lead us to non-rounded width_request in columns, which should work but is a poorly tested path.
@@ -725,7 +725,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     table.EnabledMaskByIndex = 0x00;
     table.EnabledMaskByDisplayOrder = 0x00;
     table.LeftMostEnabledColumn = -1;
-    table.MinColumnWidth = ImMax(1.0, g.style.frame_padding.x * 1.0); // g.style.ColumnsMinSpacing; // FIXME-TABLE
+    table.MinColumnWidth = ImMax(1.0, g.style.frame_padding.x * 1.0); // g.style.columns_min_spacing; // FIXME-TABLE
 
     // [Part 1] Apply/lock Enabled and Order states. Calculate auto/ideal width for columns. count fixed/stretch columns.
     // Process columns in their visible orders as we are building the Prev/Next indices.
@@ -1315,9 +1315,9 @@ void    ImGui::EndTable()
         let neighbor_width_to_keep_visible = table.MinColumnWidth + table.CellPaddingX * 2.0;
         ImGuiTableColumn* column = &table.Columns[table.LastResizedColumn];
         if (column.MaxX < table.InnerClipRect.min.x)
-            SetScrollFromPosX(inner_window, column.MaxX - inner_window.pos.x - neighbor_width_to_keep_visible, 1.0);
+            set_scroll_from_pos_x(inner_window, column.MaxX - inner_window.pos.x - neighbor_width_to_keep_visible, 1.0);
         else if (column.MaxX > table.InnerClipRect.max.x)
-            SetScrollFromPosX(inner_window, column.MaxX - inner_window.pos.x + neighbor_width_to_keep_visible, 1.0);
+            set_scroll_from_pos_x(inner_window, column.MaxX - inner_window.pos.x + neighbor_width_to_keep_visible, 1.0);
     }
 
     // Apply resizing/dragging at the end of the frame
@@ -1950,7 +1950,7 @@ void ImGui::TableBeginCell(ImGuiTable* table, int column_n)
     Window* window = table.InnerWindow;
     table.CurrentColumn = column_n;
 
-    // Start position is roughly ~~ CellRect.min + CellPadding + Indent
+    // Start position is roughly ~~ CellRect.min + cell_padding + Indent
     let start_x =  column.WorkMinX;
     if (column.flags & ImGuiTableColumnFlags_IndentEnable)
         start_x += table.RowIndentOffsetX; // ~~ += window.dc.indent.x - table->host_indent_x, except we locked it for the row.
@@ -3864,10 +3864,10 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
     // Set state for first column
     // We aim so that the right-most column will have the same clipping width as other after being clipped by parent clip_rect
     let column_padding = g.style.item_spacing.x;
-    let half_clip_extend_x = f32::floor(ImMax(window.WindowPadding.x * 0.5, window.WindowBorderSize));
-    let max_1 = window.work_rect.max.x + column_padding - ImMax(column_padding - window.WindowPadding.x, 0.0);
+    let half_clip_extend_x = f32::floor(ImMax(window.window_padding.x * 0.5, window.WindowBorderSize));
+    let max_1 = window.work_rect.max.x + column_padding - ImMax(column_padding - window.window_padding.x, 0.0);
     let max_2 = window.work_rect.max.x + half_clip_extend_x;
-    columns.OffMinX = window.dc.indent.x - column_padding + ImMax(column_padding - window.WindowPadding.x, 0.0);
+    columns.OffMinX = window.dc.indent.x - column_padding + ImMax(column_padding - window.window_padding.x, 0.0);
     columns.OffMaxX = ImMax(ImMin(max_1, max_2) - window.pos.x, columns.OffMinX + 1.0);
     columns.LineMinY = columns.LineMaxY = window.dc.cursor_pos.y;
 
@@ -3910,7 +3910,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
     let offset_1 =  GetColumnOffset(columns.Current + 1);
     let width =  offset_1 - offset_0;
     PushItemWidth(width * 0.65);
-    window.dc.columns_offset.x = ImMax(column_padding - window.WindowPadding.x, 0.0);
+    window.dc.columns_offset.x = ImMax(column_padding - window.window_padding.x, 0.0);
     window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);
     window.work_rect.max.x = window.pos.x + offset_1 - column_padding;
 }
@@ -3954,7 +3954,7 @@ void ImGui::NextColumn()
     else
     {
         // New row/line: column 0 honor IndentX.
-        window.dc.columns_offset.x = ImMax(column_padding - window.WindowPadding.x, 0.0);
+        window.dc.columns_offset.x = ImMax(column_padding - window.window_padding.x, 0.0);
         columns.LineMinY = columns.LineMaxY;
     }
     window.dc.cursor_pos.x = f32::floor(window.pos.x + window.dc.indent.x + window.dc.columns_offset.x);

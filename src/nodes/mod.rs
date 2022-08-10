@@ -563,7 +563,7 @@ Vector2D GetScreenSpacePinCoordinates(
 
 Vector2D GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
 {
-    const Rect& parent_node_rect = editor.Nodes.Pool[pin.parent_node_idx].Rect;
+    const Rect& parent_node_rect = editor.Nodes.Pool[pin.parent_node_idx].rect;
     return GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
 }
 
@@ -741,7 +741,7 @@ void BeginCanvasInteraction(ImNodesEditorContext& editor)
     else if (GImNodes.LeftMouseClicked)
     {
         editor.ClickInteraction.Type = ImNodesClickInteractionType_BoxSelection;
-        editor.ClickInteraction.BoxSelector.Rect.min =
+        editor.ClickInteraction.BoxSelector.rect.min =
             ScreenSpaceToGridSpace(editor, GImNodes.MousePos);
     }
 }
@@ -771,7 +771,7 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, Rect box_rect)
         if (editor.Nodes.InUse[node_idx])
         {
             ImNodeData& node = editor.Nodes.Pool[node_idx];
-            if (box_rect.Overlaps(node.Rect))
+            if (box_rect.Overlaps(node.rect))
             {
                 editor.SelectedNodeIndices.push_back(node_idx);
             }
@@ -792,8 +792,8 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, Rect box_rect)
 
             const ImPinData& pin_start = editor.Pins.Pool[link.StartPinIdx];
             const ImPinData& pin_end = editor.Pins.Pool[link.EndPinIdx];
-            const Rect&    node_start_rect = editor.Nodes.Pool[pin_start.parent_node_idx].Rect;
-            const Rect&    node_end_rect = editor.Nodes.Pool[pin_end.parent_node_idx].Rect;
+            const Rect&    node_start_rect = editor.Nodes.Pool[pin_start.parent_node_idx].rect;
+            const Rect&    node_end_rect = editor.Nodes.Pool[pin_end.parent_node_idx].rect;
 
             const Vector2D start = GetScreenSpacePinCoordinates(
                 node_start_rect, pin_start.AttributeRect, pin_start.Type);
@@ -938,10 +938,10 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
     {
     case ImNodesClickInteractionType_BoxSelection:
     {
-        editor.ClickInteraction.BoxSelector.Rect.max =
+        editor.ClickInteraction.BoxSelector.rect.max =
             ScreenSpaceToGridSpace(editor, GImNodes.MousePos);
 
-        Rect box_rect = editor.ClickInteraction.BoxSelector.Rect;
+        Rect box_rect = editor.ClickInteraction.BoxSelector.rect;
         box_rect.min = GridSpaceToScreenSpace(editor, box_rect.min);
         box_rect.max = GridSpaceToScreenSpace(editor, box_rect.max);
 
@@ -1145,7 +1145,7 @@ void ResolveOccludedPins(const ImNodesEditorContext& editor, ImVector<int>& occl
         for (int next_depth_idx = depth_idx + 1; next_depth_idx < depth_stack.size;
               += 1next_depth_idx)
         {
-            const Rect& rect_above = editor.Nodes.Pool[depth_stack[next_depth_idx]].Rect;
+            const Rect& rect_above = editor.Nodes.Pool[depth_stack[next_depth_idx]].rect;
 
             // Iterate over each pin
             for (int idx = 0; idx < node_below.PinIndices.size;  += 1idx)
@@ -1325,7 +1325,7 @@ inline Rect GetNodeTitleRect(const ImNodeData& node)
 
     return Rect(
         expanded_title_rect.min,
-        expanded_title_rect.min + Vector2D::new(node.Rect.get_width(), 0.f) +
+        expanded_title_rect.min + Vector2D::new(node.rect.get_width(), 0.f) +
             Vector2D::new(0.f, expanded_title_rect.get_height()));
 }
 
@@ -1484,7 +1484,7 @@ void DrawPinShape(const Vector2D& pin_pos, const ImPinData& pin, const ImU32 pin
 void DrawPin(ImNodesEditorContext& editor, let pin_idx)
 {
     ImPinData&    pin = editor.Pins.Pool[pin_idx];
-    const Rect& parent_node_rect = editor.Nodes.Pool[pin.parent_node_idx].Rect;
+    const Rect& parent_node_rect = editor.Nodes.Pool[pin.parent_node_idx].rect;
 
     pin.pos = GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
 
@@ -1524,7 +1524,7 @@ void DrawNode(ImNodesEditorContext& editor, let node_idx)
     {
         // node base
         GImNodes.CanvasDrawList.add_rect_filled(
-            node.Rect.min, node.Rect.max, node_background, node.LayoutStyle.CornerRounding);
+            node.rect.min, node.rect.max, node_background, node.LayoutStyle.CornerRounding);
 
         // title bar:
         if (node.TitleBarContentRect.get_height() > 0.f)
@@ -1553,16 +1553,16 @@ void DrawNode(ImNodesEditorContext& editor, let node_idx)
         {
 // #ifIMGUI_VERSION_NUM < 18200
             GImNodes.CanvasDrawList.add_rect(
-                node.Rect.min,
-                node.Rect.max,
+                node.rect.min,
+                node.rect.max,
                 node.ColorStyle.Outline,
                 node.LayoutStyle.CornerRounding,
                 ImDrawCornerFlags_All,
                 node.LayoutStyle.BorderThickness);
 #else
             GImNodes.CanvasDrawList.add_rect(
-                node.Rect.min,
-                node.Rect.max,
+                node.rect.min,
+                node.rect.max,
                 node.ColorStyle.Outline,
                 node.LayoutStyle.CornerRounding,
                 DrawFlags::RoundCornersAll,
@@ -1787,7 +1787,7 @@ static void MiniMapDrawNode(ImNodesEditorContext& editor, let node_idx)
 {
     const ImNodeData& node = editor.Nodes.Pool[node_idx];
 
-    const Rect node_rect = ScreenSpaceToMiniMapSpace(editor, node.Rect);
+    const Rect node_rect = ScreenSpaceToMiniMapSpace(editor, node.rect);
 
     // Round to near whole pixel value for corner-rounding to prevent visual glitches
     let mini_map_node_rounding =
@@ -2503,13 +2503,13 @@ void EndNode()
     ImGui::pop_id();
 
     ImNodeData& node = editor.Nodes.Pool[GImNodes.CurrentNodeIdx];
-    node.Rect = GetItemRect();
-    node.Rect.Expand(node.LayoutStyle.Padding);
+    node.rect = GetItemRect();
+    node.rect.Expand(node.LayoutStyle.Padding);
 
     editor.GridContentBounds.Add(node.Origin);
-    editor.GridContentBounds.Add(node.Origin + node.Rect.GetSize());
+    editor.GridContentBounds.Add(node.Origin + node.rect.GetSize());
 
-    if (node.Rect.contains(GImNodes.MousePos))
+    if (node.rect.contains(GImNodes.MousePos))
     {
         GImNodes.NodeIndicesOverlappingWithMouse.push_back(GImNodes.CurrentNodeIdx);
     }
@@ -2521,7 +2521,7 @@ Vector2D GetNodeDimensions(int node_id)
     let             node_idx = ObjectPoolFind(editor.Nodes, node_id);
     // IM_ASSERT(node_idx != -1); // invalid node_id
     const ImNodeData& node = editor.Nodes.Pool[node_idx];
-    return node.Rect.GetSize();
+    return node.rect.GetSize();
 }
 
 void BeginNodeTitleBar()

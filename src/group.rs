@@ -117,7 +117,7 @@ pub fn end_group(g: &mut Context)
     else if group_contains_prev_active_id {
         g.last_item_data.id = g.active_id_previous_frame;
     }
-    g.last_item_data.Rect = group_bb;
+    g.last_item_data.rect = group_bb;
 
     // Forward Hovered flag
     let group_contains_curr_hovered_id = (group_data.BackupHoveredIdIsAlive == false) && g.hovered_id != 0;

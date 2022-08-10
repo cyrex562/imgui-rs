@@ -147,7 +147,7 @@ pub struct Window {
     // bool                    was_active;
     // bool                    write_accessed;                      // Set to true when any widget access the current window
     // char*                   name;                               // window name, owned by the window.
-    // float                   WindowBorderSize;                   // window border size at the time of Begin().
+    // float                   window_border_size;                   // window border size at the time of Begin().
     // float                   font_dpi_scale;
     // float                   font_window_scale;                    // User scale multiplier per-window, via SetWindowFontScale()
     // float                   item_width_default;

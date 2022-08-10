@@ -1386,8 +1386,8 @@ static void ImGui_ImplWin32_OnChangedViewport(ImGuiViewport *viewport) {
 #if 0
     ImGuiStyle default_style;
     //default_style.window_padding = Vector2D(0, 0);
-    //default_style.WindowBorderSize = 0.0;
-    //default_style.ItemSpacing.y = 3.0;
+    //default_style.window_border_size = 0.0;
+    //default_style.item_spacing.y = 3.0;
     //default_style.FramePadding = Vector2D(0, 0);
     default_style.ScaleAllSizes(viewport->DpiScale);
     ImGuiStyle& style = ImGui::GetStyle();

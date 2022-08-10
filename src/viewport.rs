@@ -20,7 +20,7 @@ use crate::window::next_window::NextWindowDataFlags;
 // }
 //
 // impl ViewportP {
-//     // // ImGuiViewportP()                    { Idx = -1; last_frame_active = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; last_name_hash = 0; Alpha = LastAlpha = 1.0; platform_monitor = -1; PlatformWindowCreated = false; window = None; DrawLists[0] = DrawLists[1] = None; last_platform_pos = last_platform_size = last_renderer_size = Vector2D(FLT_MAX, FLT_MAX); }
+//     // // ImGuiViewportP()                    { Idx = -1; last_frame_active = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; last_name_hash = 0; alpha = LastAlpha = 1.0; platform_monitor = -1; PlatformWindowCreated = false; window = None; DrawLists[0] = DrawLists[1] = None; last_platform_pos = last_platform_size = last_renderer_size = Vector2D(FLT_MAX, FLT_MAX); }
 //     pub fn new() -> Self {
 //         Self {
 //             idx: -1,
@@ -108,7 +108,7 @@ pub struct Viewport
     // Window*        window;                 // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
     // bool                PlatformWindowCreated;
     // by the same system and you may not need to use all the user_data/Handle fields.
-    // float               Alpha;                  // window opacity (when dragging dockable windows/viewports we make them transparent)
+    // float               alpha;                  // window opacity (when dragging dockable windows/viewports we make them transparent)
     // float               LastAlpha;
     // int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
     // int                 Idx;
@@ -313,7 +313,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
         return false;
     if ((viewport.flags & ViewportFlags::Minimized) != 0)
         return false;
-    if (!viewport.get_main_rect().contains(window.Rect()))
+    if (!viewport.get_main_rect().contains(window.rect()))
         return false;
     if (GetWindowAlwaysWantOwnViewport(window))
         return false;
@@ -325,7 +325,7 @@ pub fn update_try_merge_window_into_host_viewport(g: &mut Context, window: &mut 
         if (window_behind == window)
             break;
         if (window_behind.WasActive && window_behind.viewport_owned && !(window_behind.flags & WindowFlags::ChildWindow))
-            if (window_behind.viewport.get_main_rect().Overlaps(window.Rect()))
+            if (window_behind.viewport.get_main_rect().Overlaps(window.rect()))
                 return false;
     }
 
@@ -366,7 +366,7 @@ pub fn translate_windows_in_viewport(g: &mut Context, viewport: &mut Viewport, o
     Rect test_still_fit_rect(old_pos, old_pos + viewport.size);
     Vector2D delta_pos = new_pos - old_pos;
     for (int window_n = 0; window_n < g.windows.len(); window_n += 1) // FIXME-OPT
-        if (translate_all_windows || (g.windows[window_n].viewport == viewport && test_still_fit_rect.contains(g.windows[window_n].Rect())))
+        if (translate_all_windows || (g.windows[window_n].viewport == viewport && test_still_fit_rect.contains(g.windows[window_n].rect())))
             TranslateWindow(g.windows[window_n], delta_pos);
 }
 

@@ -195,14 +195,14 @@ pub fn begin_child_ex(
         temp_window_name += format!("{}/{:08x}", parent_window.name, id).as_str();
     }
 
-    // let backup_border_size = g.style.ChildBorderSize;
+    // let backup_border_size = g.style.child_border_size;
     let backup_border_size = g.style.child_border_size;
     if !border {
         g.style.child_border_size = 0.0;
     }
     // bool ret = begin(temp_window_name, None, flags);
     let ret = begin(g, temp_window_name.as_str(), None, flags);
-    // g.style.ChildBorderSize = backup_border_size;
+    // g.style.child_border_size = backup_border_size;
     g.style.child_border_size = backup_border_size;
 
     // Window* child_window = g.current_window;

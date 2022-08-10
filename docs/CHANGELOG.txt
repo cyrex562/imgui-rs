@@ -182,7 +182,7 @@ Other Changes:
   level of a popup with a child menu opened.
 - Menus: Menus emitted from the main/scrolling layer are not part of the same menu-set as menus emitted
   from the menu-bar, avoiding  accidental hovering from one to the other. (#3496, #4797) [@rokups]
-- style: Adjust default value of GrabMinSize from 10.0 to 12.0.
+- style: Adjust default value of grab_min_size from 10.0 to 12.0.
 - Stack Tool: Added option to copy item path to clipboard. (#4631)
 - Settings: Fixed out-of-bounds read when .ini file on disk is empty. (#5351) [@quantum5]
 - Settings: Fixed some SetNextWindowPos/SetNextWindowSize API calls not marking settings as dirty.
@@ -458,7 +458,7 @@ Other Changes:
 - Menus: fixed closing a menu by clicking on its menu-bar item when inside a popup. (#3496, #4797) [@xndcn]
 - Menus: fixed menu inside a popup/modal not inhibiting hovering of items in the popup/modal. (#3496, #4797)
 - Menus: fixed sub-menu items inside a popups from closing the popup.
-- Menus: fixed top-level menu from not consistently using style.PopupRounding. (#4788)
+- Menus: fixed top-level menu from not consistently using style.popup_rounding. (#4788)
 - InputText, Nav: fixed repeated calls to SetKeyboardFocusHere() preventing to use InputText(). (#4682)
 - Inputtext, Nav: fixed using SetKeyboardFocusHere() on InputTextMultiline(). (#4761)
 - InputText: made double-click select word, triple-line select line. Word delimitation logic differs
@@ -476,7 +476,7 @@ Other Changes:
 - Clipper: rework so gamepad/keyboard navigation doesn't create spikes in number of items requested
   by the clipper to display. (#3841)
 - Clipper: fixed content height declaration slightly mismatching the value of when not using a clipper.
-  (an additional ItemSpacing.y was declared, affecting scrollbar range).
+  (an additional item_spacing.y was declared, affecting scrollbar range).
 - Clipper: various and incomplete changes to tame down scrolling and precision issues on very large ranges.
   Passing an explicit height to the clipper now allows larger ranges. (#3609, #3962).
 - Clipper: fixed invalid state when number of frozen table row is smaller than ItemCount.
@@ -818,7 +818,7 @@ Breaking Changes:
 
 Other Changes:
 
-- Scrolling: Fix scroll tracking with e.g. SetScrollHereX/Y() when window_padding < ItemSpacing.
+- Scrolling: Fix scroll tracking with e.g. SetScrollHereX/Y() when window_padding < item_spacing.
 - Scrolling: Fix scroll snapping on edge of scroll region when both scrollbars are enabled.
 - Scrolling: Fix mouse wheel axis swap when using SHIFT on macOS (system already does it). (#4010)
 - window: Fix IsWindowAppearing() from returning true twice in most cases. (#3982, #1497, #1061)
@@ -838,7 +838,7 @@ Other Changes:
 - Drags, Sliders, Inputs: Specifying a None format to Float functions default them to "%.3" to be
   consistent with the compile-time default. (#3922)
 - DragScalar: Add default value for v_speed argument to match higher-level functions. (#3922) [@eliasdaler]
-- ColorEdit4: Alpha default to 255 (instead of 0) when omitted in hex input. (#3973) [@squadack]
+- ColorEdit4: alpha default to 255 (instead of 0) when omitted in hex input. (#3973) [@squadack]
 - InputText: Fix handling of paste failure (buffer full) which in some cases could corrupt the undo stack. (#4038)
   (fix submitted to https://github.com/nothings/stb/pull/1158) [@Unit2Ed, @ocornut]
 - InputText: Do not filter private unicode codepoints (e.g. icons) when pasted from clipboard. (#4005) [@dougbinks]
@@ -1240,7 +1240,7 @@ Breaking Changes:
   the ImGuiListClipper::Begin() function, with misleading edge cases. Always use ImGuiListClipper::Begin()!
   Kept inline redirection function (will obsolete).
   (note: imgui_memory_editor <0.40 from imgui_club/ used this old clipper API. update your copy if needed).
-- style: Renamed style.TabMinWidthForUnselectedCloseButton to style.TabMinWidthForCloseButton.
+- style: Renamed style.TabMinWidthForUnselectedCloseButton to style.tab_min_width_for_close_button.
 - Renamed ImGuiSliderFlags_ClampOnInput to ImGuiSliderFlags_AlwaysClamp. Kept redirection enum (will obsolete).
 - Renamed OpenPopupContextItem() back to OpenPopupOnItemClick(), REVERTED CHANGE FROM 1.77.
   For variety of reason this is more self-explanatory and less error-prone. Kept inline redirection function.
@@ -1277,7 +1277,7 @@ Other Changes:
 - CheckboxFlags: Display mixed-value/tristate marker when passed flags that have multiple bits set and
   stored value matches neither zero neither the full set.
 - BeginMenuBar: Fixed minor bug where CursorPosMax gets pushed to CursorPos prior to calling BeginMenuBar(),
-  so e.g. calling the function at the end of a window would often add +ItemSpacing.y to scrolling range.
+  so e.g. calling the function at the end of a window would often add +item_spacing.y to scrolling range.
 - TreeNode, CollapsingHeader: Made clicking on arrow toggle toggle the open state on the Mouse down event
   rather than the Mouse down+Up sequence, even if the _OpenOnArrow flag isn't set. This is standard behavior
   and amends the change done in 1.76 which only affected cases were _OpenOnArrow flag was set.
@@ -1833,7 +1833,7 @@ Docking+viewports Branch:
 - Docking: Can undock from the small triangle button. (#2109,. #2645)
 - Docking: Fixed node->has_close_button not honoring ImGuiDockNodeFlags_NoCloseButton in a floating node,
   leading to empty space at the right of tab-bars with those flags. (#2109)
-- Docking: Made docked windows not use style.ChildRounding.
+- Docking: Made docked windows not use style.child_rounding.
 - Multi-viewports: Added multi-viewport support in the DX12 back-end. (#2851) [@obfuscate]
 
 
@@ -1851,7 +1851,7 @@ Other Changes:
   when Saturation==0, which reduces accidentally lossy interactions. (#2722, #2770) [@rokups]
 - ColorPicker: Made rendering aware of global style alpha of the picker can be faded out. (#2711)
   Note that some elements won't accurately fade down with the same intensity, and the color wheel
-  when enabled will have small overlap glitches with (style.Alpha < 1.0).
+  when enabled will have small overlap glitches with (style.alpha < 1.0).
 - tab_bar: Fixed single-tab not shrinking their width down.
 - tab_bar: Fixed clicking on a tab larger than tab-bar width creating a bouncing feedback loop.
 - tab_bar: Feed desired width (sum of unclipped tabs width) into layout system to allow for auto-resize. (#2768)
@@ -1980,18 +1980,18 @@ Other Changes:
 - InputText: Testing for newly added ImGuiKey_KeyPadEnter key. (#2677, #2005) [@amc522]
 - tab_bar: Fixed unfocused tab bar separator color (was using ImGuiCol_Tab, should use ImGuiCol_TabUnfocusedActive).
 - columns: Fixed a regression from 1.71 where the right-side of the contents rectangle within each column
-  would wrongly use a window_padding.x instead of ItemSpacing.x like it always did. (#125, #2666)
+  would wrongly use a window_padding.x instead of item_spacing.x like it always did. (#125, #2666)
 - columns: Made the right-most edge reaches up to the clipping rectangle (removing half of window_padding.x
   worth of asymmetrical/extraneous padding, note that there's another half that conservatively has to offset
   the right-most column, otherwise it's clipping width won't match the other columns). (#125, #2666)
-- columns: Improved honoring alignment with various values of ItemSpacing.x and window_padding.x. (#125, #2666)
+- columns: Improved honoring alignment with various values of item_spacing.x and window_padding.x. (#125, #2666)
 - columns: Made GetColumnOffset() and GetColumnWidth() behave when there's no column set, consistently with
   other column functions. (#2683)
 - InputTextMultiline: Fixed vertical scrolling tracking glitch.
 - Word-wrapping: Fixed overzealous word-wrapping when glyph edge lands exactly on the limit. Because
   of this, auto-fitting exactly unwrapped text would make it wrap. (fixes initial 1.15 commit, 78645a7d).
 - style: Attenuated default opacity of ImGuiCol_Separator in Classic and Light styles.
-- style: Added style.ColorButtonPosition (left/right, defaults to ImGuiDir_Right) to move the color button
+- style: Added style.color_button_position (left/right, defaults to ImGuiDir_Right) to move the color button
   of ColorEdit3/ColorEdit4 functions to either side of the inputs.
 - io: Added ImGuiKey_KeyPadEnter and support in various backends (previously backends would need to
   specifically redirect key-pad keys to their regular counterpart). This is a temporary attenuating measure
@@ -2082,7 +2082,7 @@ Other Changes:
   options. (#2587, broken in 1.69 by #2384).
 - CollapsingHeader: Better clipping when a close button is enabled and it overlaps the label. (#600)
 - Scrollbar: Minor bounding box adjustment to cope with various border size.
-- Scrollbar, style: Changed default style.ScrollbarSize from 16 to 14.
+- Scrollbar, style: Changed default style.scrollbar_size from 16 to 14.
 - Combo: Fixed rounding not applying with the ImGuiComboFlags_NoArrowButton flag. (#2607) [@DucaRii]
 - Nav: Fixed gamepad/keyboard moving of window affecting contents size incorrectly, sometimes leading
   to scrollbars appearing during the movement.
@@ -2169,7 +2169,7 @@ Other Changes:
   One of the noticeable minor side effect was that navigating menus would have had a tendency to disable
   highlight from parent menu items earlier than necessary while approaching the child menu.
 - window: Close button is horizontally aligned with style.FramePadding.x.
-- window: Fixed contents region being off by WindowBorderSize amount on the right when scrollbar is active.
+- window: Fixed contents region being off by window_border_size amount on the right when scrollbar is active.
 - window: Fixed SetNextWindowSizeConstraints() with non-rounded positions making windows drift. (#2067, #2530)
 - Popups: Closing a popup restores the focused/nav window in place at the time of the popup opening,
   instead of restoring the window that was in the window stack at the time of the OpenPopup call. (#2517)
@@ -2282,7 +2282,7 @@ Other Changes:
   tree depth instead of a relative one.
 - Log/Capture: Fixed CollapsingHeader trailing ascii representation being "#" instead of "##".
 - ImFont: Added get_glyph_ranges_vietnamese() helper. (#2403)
-- Misc: Asserting in NewFrame() if style.WindowMinSize is zero or smaller than (1.0,1.0).
+- Misc: Asserting in NewFrame() if style.window_min_size is zero or smaller than (1.0,1.0).
 - Demo: Using GetBackgroundDrawList() and GetForegroundDrawList() in "Custom Rendering" demo.
 - Demo: InputText: Demonstrating use of ImGuiInputTextFlags_CallbackResize. (#2006, #1443, #1008).
 - Examples: GLFW, SDL: Preserve display_framebuffer_scale when main viewport is minimized.
@@ -2329,7 +2329,7 @@ Other Changes:
 - Tabs: Fixed border (when enabled) so it is aligned correctly mid-pixel and appears as bright as other borders.
 - style, Selectable: Added ImGuiStyle::SelectableTextAlign and ImGuiStyleVar_SelectableTextAlign. (#2347) [@haldean]
 - Menus: Tweaked horizontal overlap between parent and child menu (to help convey relative depth)
-  from using style.ItemSpacing.x to style.ItemInnerSpacing.x, the later being expected to be smaller. (#1086)
+  from using style.item_spacing.x to style.ItemInnerSpacing.x, the later being expected to be smaller. (#1086)
 - RadioButton: Fixed label horizontal alignment to precisely match Checkbox().
 - window: When resizing from an edge, the border is more visible and better follow the rounded corners.
 - window: Fixed initial width of collapsed windows not taking account of contents width (broken in 1.67). (#2336, #176)
@@ -2423,7 +2423,7 @@ Other Changes:
 - io: Renamed InputCharacters[], marked internal as was always intended. Please don't access directly, and use add_input_character() instead!
 - io: add_input_character() goes into a queue which can receive as many characters as needed during the frame. This is useful
   for automation to not have an upper limit on typing speed. Will later transition key/mouse to use the event queue later.
-- style: Tweaked default value of style.DisplayWindowPadding from (20,20) to (19,19) so the default style as a value
+- style: Tweaked default value of style.display_window_padding from (20,20) to (19,19) so the default style as a value
   which is the same as the title bar height.
 - Demo: "Simple Layout" and "style Editor" are now using tabs.
 - Demo: Added a few more things under "Child windows" (changing ImGuiCol_ChildBg, positioning child, using IsItemHovered after a child).
@@ -2493,7 +2493,7 @@ Other Changes:
 - TextUnformatted(): Fixed a case where large-text path would read bytes past the text_end marker depending
   on the position of new lines in the buffer (it wasn't affecting the output but still not the right thing to do!)
 - ListBox(): Fixed frame sizing when items_count==1 unnecessarily showing a scrollbar. (#2173) [@luk1337, @ocornut]
-- ListBox(): Tweaked frame sizing so list boxes will look more consistent when FramePadding is far from ItemSpacing.
+- ListBox(): Tweaked frame sizing so list boxes will look more consistent when FramePadding is far from item_spacing.
 - render_text(): Some optimization for very large text buffers, useful for non-optimized builds.
 - BeginMenu(): Fixed menu popup horizontal offset being off the item in the menu bar when window_padding=0.0.
 - ArrowButton(): Fixed arrow shape being horizontally misaligned by (FramePadding.y-FramePadding.x) if they are different.
@@ -2593,7 +2593,7 @@ Other Changes:
 - Nav: Made CTRL+TAB skip menus + skip the current navigation window if is has the ImGuiWindow_NoNavFocus set. (#787)
   While it was previously possible, you won't be able to CTRL-TAB out and immediately back in a window with the
   ImGuiWindow_NoNavFocus flag.
-- window: Allow menu and popups windows from ignoring the style.WindowMinSize values so short menus/popups are not padded. (#1909)
+- window: Allow menu and popups windows from ignoring the style.window_min_size values so short menus/popups are not padded. (#1909)
 - window: Added global io.ConfigResizeWindowsFromEdges option to enable resizing windows from their edges and from
   the lower-left corner. (#1495)
 - window: Collapse button shows hovering highlight + clicking and dragging on it allows to drag the window as well.
@@ -2996,13 +2996,13 @@ Breaking Changes:
 - Renamed `ImGuiTextBuffer::append()` helper to `appendf()`, and `appendv()` to `appendfv()` for consistency. If you copied the 'Log' demo in your code, it uses appendv() so that needs to be renamed.
 - ImDrawList: Removed 'bool anti_aliased = true' final parameter of `ImDrawList::add_polyline()` and `ImDrawList::add_convex_poly_filled()`. Prefer manipulating ImDrawList::flags if you need to toggle them during the frame.
 - style, ImDrawList: Renamed `style.AntiAliasedShapes` to `style.AntiAliasedFill` for consistency and as a way to explicitly break code that manipulate those flag at runtime. You can now manipulate ImDrawList::flags.
-- style, Begin: Removed `ImGuiWindowFlags_ShowBorders` window flag. Borders are now fully set up in the ImGuiStyle structure (see e.g. `style.FrameBorderSize`, `style.WindowBorderSize`, `style.PopupBorderSize`).
+- style, Begin: Removed `ImGuiWindowFlags_ShowBorders` window flag. Borders are now fully set up in the ImGuiStyle structure (see e.g. `style.frame_border_size`, `style.window_border_size`, `style.popup_border_size`).
   Use `ImGui::ShowStyleEditor()` to look them up.
   Please note that the style system will keep evolving (hopefully stabilizing in Q1 2018), and so custom styles will probably subtly break over time.
   It is recommended that you use the `StyleColorsClassic()`, `StyleColorsDark()`, `StyleColorsLight()` functions. Also see `ShowStyleSelector()`.
 - style: Removed `ImGuiCol_ComboBg` in favor of combo boxes using `ImGuiCol_PopupBg` for consistency. Combo are normal pop-ups.
 - style: Renamed `ImGuiCol_ChildWindowBg` to `ImGuiCol_ChildBg`.
-- style: Renamed `style.ChildWindowRounding` to `style.ChildRounding`, `ImGuiStyleVar_ChildWindowRounding` to `ImGuiStyleVar_ChildRounding`.
+- style: Renamed `style.ChildWindowRounding` to `style.child_rounding`, `ImGuiStyleVar_ChildWindowRounding` to `ImGuiStyleVar_ChildRounding`.
 - Removed obsolete redirection functions: SetScrollPosHere() - marked obsolete in v1.42, July 2015.
 - Removed obsolete redirection functions: GetWindowFont(), GetWindowFontSize() - marked obsolete in v1.48, March 2016.
 
@@ -3021,12 +3021,12 @@ Other Changes:
 - Renamed io.OSXBehaviors to io.OptMacOSXBehaviors. Should not affect users as the compile-time default is usually enough. (#473, #650)
 - style: Added StyleColorsDark() style. (#707) [@dougbinks]
 - style: Added StyleColorsLight() style. Best used with frame borders + thicker font than the default font. (#707)
-- style: Added style.PopupRounding setting. (#1112)
-- style: Added style.FrameBorderSize, style.WindowBorderSize, style.PopupBorderSize. Removed ImGuiWindowFlags_ShowBorders window flag!
+- style: Added style.popup_rounding setting. (#1112)
+- style: Added style.frame_border_size, style.window_border_size, style.popup_border_size. Removed ImGuiWindowFlags_ShowBorders window flag!
   Borders are now fully set up in the ImGuiStyle structure. Use ImGui::ShowStyleEditor() to look them up. (#707, fix #819, #1031)
 - style: Various small changes to the classic style (most noticeably, buttons are now using blue shades). (#707)
 - style: Renamed ImGuiCol_ChildWindowBg to ImGuiCol_ChildBg.
-- style: Renamed style.ChildWindowRounding to style.ChildRounding, ImGuiStyleVar_ChildWindowRounding to ImGuiStyleVar_ChildRounding.
+- style: Renamed style.ChildWindowRounding to style.child_rounding, ImGuiStyleVar_ChildWindowRounding to ImGuiStyleVar_ChildRounding.
 - style: Removed ImGuiCol_ComboBg in favor of combo boxes using ImGuiCol_PopupBg for consistency. (#707)
 - style: Made the ScaleAllSizes() helper rounds down every values so they are aligned on integers.
 - Focus: Added SetItemDefaultFocus(), which in the current (master) branch behave the same as doing `if (IsWindowAppearing()) SetScrollHere()`.
@@ -3153,8 +3153,8 @@ Other Changes:
 - CheckBox: Now rendering a tick mark instead of a full square.
 - ColorEdit4: Added "Copy as..." option in context menu. (#346)
 - ColorPicker: Improved ColorPicker hue wheel color interpolation. (#1313) [@thevaber]
-- ColorButton: Reduced bordering artifact that would be particularly visible with an opaque Col_FrameBg and FrameRounding enabled.
-- ColorButton: Fixed rendering color button with a checkerboard if the transparency comes from the global style.Alpha and not from the actual source color.
+- ColorButton: Reduced bordering artifact that would be particularly visible with an opaque Col_FrameBg and frame_rounding enabled.
+- ColorButton: Fixed rendering color button with a checkerboard if the transparency comes from the global style.alpha and not from the actual source color.
 - TreeNode: Added `ImGuiTreeNodeFlags_FramePadding` flag to conveniently create a tree node with full padding at the beginning of a line, without having to call `AlignTextToFramePadding()`.
 - Trees: Fixed calling `SetNextTreeNodeOpen()` on a collapsed window leaking to the first tree node item of the next frame.
 - Layout: Horizontal layout is automatically enforced in a menu bar, so you can use non-MenuItem elements without calling SameLine().
@@ -3317,7 +3317,7 @@ Other Changes:
 - SliderInt(), SliderFloat() supports reverse direction (where v_min > v_max). (#854)
 - SliderInt(), SliderFloat() better support for when v_min==v_max. (#919)
 - SliderInt(), SliderFloat() enforces writing back value when interacting, to be consistent with other widgets. (#919)
-- SliderInt, SliderFloat(): Fixed edge case where style.GrabMinSize being bigger than slider width can lead to a division by zero. (#919)
+- SliderInt, SliderFloat(): Fixed edge case where style.grab_min_size being bigger than slider width can lead to a division by zero. (#919)
 - Added IsRectVisible() variation with explicit start-end positions. (#768) [@thedmd]
 - Fixed TextUnformatted() clipping bug in the large-text path when horizontal scroll has been applied. (#692, #246)
 - Fixed minor text clipping issue in window title when using font straying above usual line. (#699)
@@ -3329,7 +3329,7 @@ Other Changes:
 - Fixed PlotLines() PlotHistogram() calling with values_count == 0.
 - Fixed clicking on a window's void while staying still overzealously marking .ini settings as dirty. (#923)
 - Fixed assert triggering when a window has zero rendering but has a callback. (#810)
-- Scrollbar: Fixed rendering when sizes are negative to reduce glitches (which can happen with certain style settings and zero WindowMinSize).
+- Scrollbar: Fixed rendering when sizes are negative to reduce glitches (which can happen with certain style settings and zero window_min_size).
 - EndGroup(): Made IsItemHovered() work when an item was activated within the group. (#849)
 - BulletText(): Fixed stopping to display formatted string after the '##' mark.
 - Closing the focused window restore focus to the first active root window in descending z-order .(part of #727)
@@ -3345,7 +3345,7 @@ Other Changes:
 - Shutdown() clear out some remaining pointers for sanity. (#836)
 - Added IMGUI_USE_BGRA_PACKED_COLOR option in imconfig.h (#767, #844) [@thedmd]
 - style: Removed the inconsistent shadow under RenderCollapseTriangle() (~#707)
-- style: Added ButtonTextAlign, ImGuiStyleVar_ButtonTextAlign. (#842)
+- style: Added button_text_align, ImGuiStyleVar_ButtonTextAlign. (#842)
 - ImFont: Allowing to use up to 0xFFFE glyphs in same font (increased from previous 0x8000).
 - ImFont: Added get_glyph_ranges_thai() helper. [@nProtect]
 - ImFont: calc_word_wrap_position_a() fixed font scaling with fallback character.
@@ -3430,9 +3430,9 @@ Other changes:
 - InputText(): Fixed clipping of cursor rendering in case it gets out of the box (which can be forced w/ ImGuiInputTextFlags_NoHorizontalScroll. (#601)
 - style: Changed default indent_spacing from 22 to 21. (#581, #324)
 - style: Fixed TitleBg/TitleBgActive color being rendered above WindowBg color, which was inconsistent and causing visual artifact. (#655)
-  This broke the meaning of TitleBg and TitleBgActive. Only affect values where Alpha<1.0. Fixed default theme. Read comments in "API BREAKING CHANGES" section to convert.
+  This broke the meaning of TitleBg and TitleBgActive. Only affect values where alpha<1.0. Fixed default theme. Read comments in "API BREAKING CHANGES" section to convert.
 - Relative rendering of order of Child windows creation is preserved, to allow more control with overlapping children. (#595)
-- Fixed GetWindowContentRegionMax() being off by ScrollbarSize amount when explicit SizeContents is set.
+- Fixed GetWindowContentRegionMax() being off by scrollbar_size amount when explicit SizeContents is set.
 - Indent(), Unindent(): optional non-default indenting width. (#324, #581)
 - Bullet(), BulletText(): Slightly bigger. Less polygons.
 - ButtonBehavior(): fixed subtle old bug when a repeating button would also return true on mouse release (barely noticeable unless RepeatRate is set to be very slow). (#656)
@@ -3561,7 +3561,7 @@ Changes:
 - Begin(): Initial window creation with ImGuiWindowFlags_NoBringToFrontOnFocus flag pushes it at the front of global window list.
 - BeginPopupContextWindow() and BeginPopupContextVoid() reopen window on subsequent click. (#439)
 - ColorEdit4(): Fixed broken tooltip on hovering the color button. (actually fixes #373, #380)
-- ImageButton(): uses FrameRounding up to a maximum of available framing size. (#394)
+- ImageButton(): uses frame_rounding up to a maximum of available framing size. (#394)
 - columns: Fixed bug with indentation within columns, also making code a bit shorter/faster. (#414, #125)
 - columns: columns set with no implicit id include the columns count within the id to reduce collisions. (#125)
 - columns: Removed one unnecessary allocation when columns are not used by a window. (#125)
@@ -3800,7 +3800,7 @@ Other Changes:
 - InputText: Fix for using END key on a multi-line text editor (#275)
 - columns: Dispatch render of each column in a sub-draw list and merge on closure, saving a lot of draw calls! (#125)
 - Popups: Fixed Combo boxes inside menus. (#272)
-- style: Added GrabRounding setting to make the sliders etc. grabs rounded.
+- style: Added grab_rounding setting to make the sliders etc. grabs rounded.
 - Changed SameLine() parameters from int to float.
 - Fixed incorrect assert triggering when code stole ActiveID from user moving a window by calling e.g. SetKeyboardFocusHere().
 - Fixed CollapsingHeader() label rendering outside its frame in columns context where clip_rect max isn't aligned with the
@@ -3964,13 +3964,13 @@ Other Changes:
   child overlapping items in parent window.
 - window: Fixed appending multiple times to an existing child via multiple BeginChild/EndChild calls to same child name.
   Allows a simple form of out-of-order appending.
-- window: Fixed auto-filling child window using WindowMinSize at their minimum size, irrelevant.
+- window: Fixed auto-filling child window using window_min_size at their minimum size, irrelevant.
 - Metrics: Added io.metrics_active_windows counter. (#213.
 - Metrics: Added io.MetricsAllocs counter (number of active memory allocations).
 - Metrics: ShowMetricsWindow() shows popups stack, allocations.
-- style: Added style.DisplayWindowPadding to prevent windows from reaching edges of display (similar to style.DisplaySafeAreaPadding which is still in effect and also affect popups/tooltips).
+- style: Added style.display_window_padding to prevent windows from reaching edges of display (similar to style.DisplaySafeAreaPadding which is still in effect and also affect popups/tooltips).
 - style: Removed style.AutoFitPadding, using style.window_padding makes more sense (the default values were already the same).
-- style: Added style.ScrollbarRounding. (#212)
+- style: Added style.scrollbar_rounding. (#212)
 - style: Added ImGuiCol_TextDisabled for disabled text. Added TextDisabled() helper.
 - style: Added style.WindowTitleAlign alignment options, to e.g. center title on windows. (#222)
 - ImVector: tweak growth strategy, matches vector from VS2010.

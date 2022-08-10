@@ -47,16 +47,55 @@ pub enum ScrollFlags {
     NoScrollParent,       // Disable forwarding scrolling to parent window if required to keep item/rect visible (only scroll window the function was applied to).
 }
 
-// pub const ImGuiScrollFlags_MaskX: ScrollFlags = ScrollFlags::KeepVisibleEdgeX | ScrollFlags::KeepVisibleCenterX | ScrollFlags::AlwaysCenterX;
-pub const SCROLL_FLAGS_MASK: HashSet<ScrollFlags> = HashSet::from([
+// pub const ScrollFlags::MaskX: ScrollFlags = ScrollFlags::KeepVisibleEdgeX | ScrollFlags::KeepVisibleCenterX | ScrollFlags::AlwaysCenterX;
+pub const SCROLL_FLAGS_MASK_X: HashSet<ScrollFlags> = HashSet::from([
     ScrollFlags::KeepVisibleEdgeX, ScrollFlags::KeepVisibleCenterX, ScrollFlags::AlwaysCenterX
 ]);
-// pub const ImGuiScrollFlags_MaskY: ScrollFlags = ScrollFlags::KeepVisibleEdgeY | ScrollFlags::KeepVisibleCenterY | ScrollFlags::AlwaysCenterY;
+
+pub fn scroll_flags_contains_mask_x(flags: &HashSet<ScrollFlags>) -> bool {
+    if flags.contains(&ScrollFlags::KeepVisibleEdgeX) {
+        return true;
+    }
+    if flags.contains(&ScrollFlags::KeepVisibleCenterX) {
+        return true;
+    }
+    if flags.contains(&ScrollFlags::AlwaysCenterX) {
+        return true;
+    }
+    return false;
+}
+
+pub fn scroll_flags_remove_mask_x(flags: &mut HashSet<ScrollFlags>) {
+    flags.remove(&ScrollFlags::KeepVisibleEdgeX);
+    flags.remove(&ScrollFlags::KeepVisibleCenterX);
+    flags.remove(&ScrollFlags::AlwaysCenterX);
+}
+
+// pub const ScrollFlags::MaskY: ScrollFlags = ScrollFlags::KeepVisibleEdgeY | ScrollFlags::KeepVisibleCenterY | ScrollFlags::AlwaysCenterY;
 pub const SCROLL_FLAGS_MASK_Y: HashSet<ScrollFlags> = HashSet::from(
     [
         ScrollFlags::KeepVisibleCenterY, ScrollFlags::KeepVisibleEdgeY, ScrollFlags::AlwaysCenterY
     ]
 );
+
+pub fn scroll_flags_contains_mask_y(flags: &HashSet<ScrollFlags>) -> bool {
+    if flags.contains(&ScrollFlags::KeepVisibleEdgeY) {
+        return true;
+    }
+    if flags.contains(&ScrollFlags::KeepVisibleCenterY) {
+        return true;
+    }
+    if flags.contains(&ScrollFlags::AlwaysCenterY) {
+        return true;
+    }
+    return false;
+}
+
+pub fn scroll_flags_remove_mask_y(flags: &mut HashSet<ScrollFlags>) {
+    flags.remove(&ScrollFlags::KeepVisibleEdgeY);
+    flags.remove(&ScrollFlags::KeepVisibleCenterY);
+    flags.remove(&ScrollFlags::AlwaysCenterY);
+}
 
 pub enum NavHighlightFlags
 {
@@ -343,7 +382,7 @@ pub fn nav_score_item(g: &mut Context, result: &mut NavItemData) -> bool
 
     // Is it in the quadrant we're interesting in moving to?
     bool new_best = false;
-    const ImGuiDir move_dir = g.nav_move_dir;
+    const Direction move_dir = g.nav_move_dir;
     if (quadrant == move_dir)
     {
         // Does it beat the current best candidate?
@@ -716,9 +755,9 @@ pub fn nav_cal_preferred_ref_pos(g: &mut Context) -> Vector2D
         // When navigation is active and mouse is disabled, pick a position around the bottom left of the currently navigated item
         // Take account of upcoming scrolling (maybe set mouse pos should be done in EndFrame?)
         Rect rect_rel = WindowRectRelToAbs(window, window.nav_rect_rel[g.nav_layer]);
-        if (window.last_frame_active != g.frame_count && (window.ScrollTarget.x != f32::MAX || window.ScrollTarget.y != f32::MAX))
+        if (window.last_frame_active != g.frame_count && (window.scroll_target.x != f32::MAX || window.scroll_target.y != f32::MAX))
         {
-            Vector2D next_scroll = CalcNextScrollFromScrollTargetAndClamp(window);
+            Vector2D next_scroll = calc_next_scroll_from_scroll_target_and_clamp(window);
             rect_rel.Translate(window.scroll - next_scroll);
         }
         Vector2D pos = Vector2D::new(rect_rel.min.x + ImMin(g.style.frame_padding.x * 4, rect_rel.get_width()), rect_rel.max.y - ImMin(g.style.frame_padding.y, rect_rel.get_height()));
@@ -932,7 +971,7 @@ pub fn nav_update(g: &mut Context)
         // *Fallback* manual-scroll with Nav directional keys when window has no navigable item
         Window* window = g.nav_window;
         let scroll_speed = IM_ROUND(window.CalcFontSize() * 100 * io.delta_time); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
-        const ImGuiDir move_dir = g.nav_move_dir;
+        const Direction move_dir = g.nav_move_dir;
         if (window.dc.nav_layers_active_mask == 0x00 && window.dc.nav_has_scroll && move_dir != Direction::None)
         {
             if (move_dir == Direction::Left || move_dir == Direction::Right)
@@ -1015,7 +1054,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
         // Initiate directional inputs request
         g.nav_move_dir = Direction::None;
         g.nav_move_flags = NavMoveFlags::None;
-        g.NavMoveScrollFlags = ImGuiScrollFlags_None;
+        g.NavMoveScrollFlags = ScrollFlags::None;
         if (window && !g.nav_windowing_target && !(window.flags & WindowFlags::NoNavInputs))
         {
             const ImGuiNavReadMode read_mode = NavReadMode::Repeat;
@@ -1043,7 +1082,7 @@ pub fn nav_update_create_move_request(g: &mut Context)
     // [DEBUG] Always send a request
 // #ifIMGUI_DEBUG_NAV_SCORING
     if (io.key_ctrl && IsKeyPressed(ImGuiKey_C))
-        g.nav_move_dirForDebug = (ImGuiDir)((g.nav_move_dirForDebug + 1) & 3);
+        g.nav_move_dirForDebug = (Direction)((g.nav_move_dirForDebug + 1) & 3);
     if (io.key_ctrl && g.nav_move_dir == Direction::None)
     {
         g.nav_move_dir = g.nav_move_dirForDebug;
@@ -1123,8 +1162,8 @@ pub fn nav_update_create_tabbing_request(g: &mut Context)
     // See nav_process_itemForTabbingRequest() for a description of the various forward/backward tabbing cases with and without wrapping.
     //// FIXME: We use (g.active_id == 0) but (g.NavDisableHighlight == false) might be righter once we can tab through anything
     g.nav_tabbing_dir = g.io.key_shift ? -1 : (g.active_id == 0) ? 0 : +1;
-    ImGuiScrollFlags scroll_flags = window.Appearing ? ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_KeepVisibleEdgeY;
-    ImGuiDir clip_dir = (g.nav_tabbing_dir < 0) ? Direction::Up : Direction::Down;
+    ImGuiScrollFlags scroll_flags = window.Appearing ? ScrollFlags::KeepVisibleEdgeX | ScrollFlags::AlwaysCenterY : ScrollFlags::KeepVisibleEdgeX | ScrollFlags::KeepVisibleEdgeY;
+    Direction clip_dir = (g.nav_tabbing_dir < 0) ? Direction::Up : Direction::Down;
     NavMoveRequestSubmit(Direction::None, clip_dir, NavMoveFlags::Tabbing, scroll_flags); // FIXME-NAV: Once we refactor tabbing, add LegacyApi flag to not activate non-inputable.
     g.NavTabbingCounter = -1;
 }
@@ -1180,7 +1219,7 @@ pub fn nav_move_request_apply_result(g: &mut Context)
         else
         {
             Rect rect_abs = WindowRectRelToAbs(result.Window, result.RectRel);
-            ScrollToRectEx(result.Window, rect_abs, g.NavMoveScrollFlags);
+            scroll_to_rect_ex(result.Window, rect_abs, g.NavMoveScrollFlags);
         }
     }
 
@@ -1252,7 +1291,7 @@ pub fn nav_update_cancel_request(g: &mut Context)
         Window* child_window = g.nav_window;
         Window* parent_window = g.nav_window.parent_window;
         // IM_ASSERT(child_windowchild_id != 0);
-        Rect child_rect = child_window.Rect();
+        Rect child_rect = child_window.rect();
         focus_window(parent_window);
         SetNavID(child_windowchild_id, NavLayer::Main, 0, window_rect_abs_to_rel(parent_window, child_rect));
         NavRestoreHighlightAfterMove();
@@ -1375,11 +1414,11 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
 
     bool do_forward = false;
     Rect bb_rel = window.nav_rect_rel[g.nav_layer];
-    ImGuiDir clip_dir = g.nav_move_dir;
+    Direction clip_dir = g.nav_move_dir;
     const ImGuiNavMoveFlags move_flags = g.nav_move_flags;
     if (g.nav_move_dir == Direction::Left && (move_flags & (NavMoveFlags::WrapX | NavMoveFlags::LoopX)))
     {
-        bb_rel.min.x = bb_rel.max.x = window.ContentSize.x + window.WindowPadding.x;
+        bb_rel.min.x = bb_rel.max.x = window.ContentSize.x + window.window_padding.x;
         if (move_flags & NavMoveFlags::WrapX)
         {
             bb_rel.TranslateY(-bb_rel.get_height()); // Previous row
@@ -1389,7 +1428,7 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
     }
     if (g.nav_move_dir == Direction::Right && (move_flags & (NavMoveFlags::WrapX | NavMoveFlags::LoopX)))
     {
-        bb_rel.min.x = bb_rel.max.x = -window.WindowPadding.x;
+        bb_rel.min.x = bb_rel.max.x = -window.window_padding.x;
         if (move_flags & NavMoveFlags::WrapX)
         {
             bb_rel.TranslateY(+bb_rel.get_height()); // Next row
@@ -1399,7 +1438,7 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
     }
     if (g.nav_move_dir == Direction::Up && (move_flags & (NavMoveFlags::WrapY | NavMoveFlags::LoopY)))
     {
-        bb_rel.min.y = bb_rel.max.y = window.ContentSize.y + window.WindowPadding.y;
+        bb_rel.min.y = bb_rel.max.y = window.ContentSize.y + window.window_padding.y;
         if (move_flags & NavMoveFlags::WrapY)
         {
             bb_rel.TranslateX(-bb_rel.get_width()); // Previous column
@@ -1409,7 +1448,7 @@ pub fn nav_update_create_wrapping_request(g: &mut Context)
     }
     if (g.nav_move_dir == Direction::Down && (move_flags & (NavMoveFlags::WrapY | NavMoveFlags::LoopY)))
     {
-        bb_rel.min.y = bb_rel.max.y = -window.WindowPadding.y;
+        bb_rel.min.y = bb_rel.max.y = -window.window_padding.y;
         if (move_flags & NavMoveFlags::WrapY)
         {
             bb_rel.TranslateX(+bb_rel.get_width()); // Next column
@@ -1670,7 +1709,7 @@ pub fn nav_update_windowing_overlay(g: &mut Context)
     const Viewport* viewport = /*g.nav_window ? g.nav_window->viewport :*/ get_main_viewport();
     SetNextWindowSizeConstraints(Vector2D::new(viewport.size.x * 0.20, viewport.size.y * 0.20), Vector2D::new(f32::MAX, f32::MAX));
     set_next_window_pos(viewport.get_center(), Condition::Always, Vector2D::new(0.5, 0.5));
-    push_style_var(StyleVar::WindowPadding, g.style.WindowPadding * 2.0);
+    push_style_var(StyleVar::WindowPadding, g.style.window_padding * 2.0);
     begin("###NavWindowingList", None, WindowFlags::NoTitleBar | WindowFlags::NoFocusOnAppearing | WindowFlags::NoResize | WindowFlags::NoMove | WindowFlags::NoInputs | WindowFlags::AlwaysAutoResize | WindowFlags::NoSavedSettings);
     for (int n = g.windows_focus_order.size - 1; n >= 0; n -= 1 )
     {
