@@ -1,11 +1,11 @@
 use crate::button::ButtonFlags;
 use crate::color::StyleColor;
-use crate::dock::defines::{WindowDockStyleColor, DOCKING_SPLITTER_SIZE};
+use crate::dock::defines::{DOCKING_SPLITTER_SIZE, WindowDockStyleColor};
 use crate::dock::node;
-use crate::dock::node::{title_bar, window, DockNode, DockNodeFlags};
+use crate::dock::node::{title_bar, window};
 use crate::input::mouse::{is_mouse_clicked, start_mouse_moving_window_or_node};
 use crate::input::{MouseButton, NavLayer};
-use crate::item::{is_item_active, pop_item_flag, push_item_flag, ItemFlags};
+use crate::item::{is_item_active, ItemFlags, pop_item_flag, push_item_flag};
 use crate::nav::nav_init_window;
 use crate::popup::{is_popup_open, open_popup};
 use crate::rect::Rect;
@@ -22,8 +22,10 @@ use crate::window::current::{pop_id, push_override_id};
 use crate::window::layer::focus_window;
 use crate::window::lifecycle::{begin, end};
 use crate::window::{Window, WindowFlags};
-use crate::{hash_string, Context, INVALID_ID};
+use crate::{Context, hash_string, INVALID_ID};
 use std::collections::HashSet;
+use crate::dock::node::dock_node::DockNode;
+use crate::dock::node::dock_node_flags::DockNodeFlags;
 
 // User helper to append/amend into a dock node tab bar. Most commonly used to add e.g. a "+" button.
 // bool DockNodeBeginAmendTabBar(ImGuiDockNode* node)

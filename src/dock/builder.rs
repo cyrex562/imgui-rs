@@ -3,7 +3,7 @@ use crate::dock::context::{
     dock_context_process_undock_window, dock_context_remove_node,
 };
 use crate::dock::node::window::dock_node_find_window_by_id;
-use crate::dock::node::{dock_node_get_root_node, window, DockNode, DockNodeFlags};
+use crate::dock::node::{dock_node_get_root_node, window};
 use crate::dock::ops::set_window_dock;
 use crate::dock::request::{DockRequest, DockRequestType};
 use crate::dock::{context, node, settings};
@@ -16,8 +16,10 @@ use crate::types::{DataAuthority, Direction, Id32};
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::get::{find_window_by_name, find_window_id};
 use crate::window::settings::WindowSettings;
-use crate::{dock, hash_string, Context, INVALID_ID};
+use crate::{Context, dock, hash_string, INVALID_ID};
 use std::collections::HashSet;
+use crate::dock::node::dock_node::DockNode;
+use crate::dock::node::dock_node_flags::DockNodeFlags;
 
 // void dock_builder_dock_window(const char* window_name, Id32 node_id)
 pub fn dock_builder_dock_window(g: &mut Context, window_name: &str, node_id: Id32) {

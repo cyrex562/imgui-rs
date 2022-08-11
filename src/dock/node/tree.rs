@@ -3,13 +3,15 @@ use crate::dock::context::dock_context_add_node;
 use crate::dock::defines::DOCKING_SPLITTER_SIZE;
 use crate::dock::node;
 use crate::dock::node::window::{dock_node_apply_pos_size_to_windows, dock_node_move_windows};
-use crate::dock::node::{DOCK_NODE_FLAGS_LOCAL_FLAGS_TRANSFER_MASK, dock_node_get_root_node, DockNode, DockNodeFlags};
+use crate::dock::node::dock_node_get_root_node;
 use crate::dock::settings::dock_settings_rename_node_references;
 use crate::types::{DataAuthority, Id32};
 use crate::utils::add_hash_set;
 use crate::vectors::vector_2d::Vector2D;
 use crate::{Context, INVALID_ID};
 use std::ops::BitOr;
+use crate::dock::node::dock_node::DockNode;
+use crate::dock::node::dock_node_flags::{DOCK_NODE_FLAGS_LOCAL_FLAGS_TRANSFER_MASK, DockNodeFlags};
 
 // void DockNodeTreeSplit(ImGuiContext* ctx, ImGuiDockNode* parent_node, ImGuiAxis split_axis, int split_inheritor_child_idx, float split_ratio, ImGuiDockNode* new_node)
 pub fn dock_node_tree_split(

@@ -1,6 +1,6 @@
 use crate::dock::context::dock_context_remove_node;
 use crate::dock::node;
-use crate::dock::node::{tab_bar, DockNode};
+use crate::dock::node::tab_bar;
 use crate::frame::get_frame_height;
 use crate::input::mouse::start_mouse_moving_window;
 use crate::layout::same_line;
@@ -14,6 +14,7 @@ use crate::window::pos::set_window_pos;
 use crate::window::size::set_window_size;
 use crate::window::{Window, WindowFlags};
 use crate::{Context, INVALID_ID};
+use crate::dock::node::dock_node::DockNode;
 
 // static void dock_node_hide_window_during_host_window_creation(Window* window)
 pub fn dock_node_hide_window_during_host_window_creation(g: &mut Context, window: &mut Window) {

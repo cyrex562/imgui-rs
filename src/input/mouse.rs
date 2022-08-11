@@ -1,7 +1,7 @@
 use crate::condition::Condition;
 use crate::config::ConfigFlags;
 use crate::context::{Context, set_active_id_using_nav_and_keys};
-use crate::dock::node::{dock_node_get_root_node, DockNode};
+use crate::dock::node::dock_node_get_root_node;
 use crate::id::set_active_id;
 use crate::input::{MouseButton, MouseCursor, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::math::floor_vector_2d;
@@ -10,6 +10,7 @@ use crate::types::INVALID_ID;
 use crate::utils::remove_hash_set_val;
 use crate::vectors::vec_length_sqr;
 use crate::{Viewport, ViewportFlags};
+use crate::dock::node::dock_node::DockNode;
 use crate::globals::GImGui;
 use crate::vectors::vector_2d::Vector2D;
 use crate::window::{Window, WindowFlags};

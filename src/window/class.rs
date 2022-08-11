@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use crate::dock::node::DockNodeFlags;
+use crate::dock::node::dock_node_flags::DockNodeFlags;
 use crate::tab_bar::TabItemFlags;
 use crate::types::Id32;
 use crate::ViewportFlags;

@@ -1,7 +1,9 @@
 use crate::{Context, INVALID_ID, SettingsHandler};
 use crate::axis::Axis;
 use crate::dock::context::{dock_context_build_add_windows_to_nodes, dock_context_find_node_by_id, dock_context_prune_unused_settings_nodes, DockContext};
-use crate::dock::node::{DockNode, DockNodeFlags, DockNodeSettings};
+use crate::dock::node::dock_node_settings::DockNodeSettings;
+use crate::dock::node::dock_node::DockNode;
+use crate::dock::node::dock_node_flags::DockNodeFlags;
 use crate::text_buffer::TextBuffer;
 use crate::types::Id32;
 

@@ -8,7 +8,7 @@ use crate::color::{ColorEditFlags, StackedColorModifier, COLOR_EDIT_FLAGS_DFLT_O
 use crate::combo::ComboPreviewData;
 use crate::config::ConfigFlags;
 use crate::dock::context::DockContext;
-use crate::dock::node::DockNode;
+use crate::dock::node::dock_node::DockNode;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::cmd::DrawCmd;
 use crate::draw::command::DrawCommand;

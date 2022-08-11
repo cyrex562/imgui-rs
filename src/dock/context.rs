@@ -9,11 +9,11 @@ use crate::dock::node::tree::{dock_node_tree_merge, dock_node_tree_split, dock_n
 use crate::dock::node::window::dock_node_add_window;
 use crate::dock::node::{
     dock_node_get_root_node, dock_node_update_has_central_node_child
-    , DockNode, DockNodeFlags, DockNodeSettings,
+    ,
 };
 use crate::dock::preview::DockPreviewData;
 use crate::dock::request::{DockRequest, DockRequestType};
-use crate::dock::{node, ops, settings, ImGuiDockNode};
+use crate::dock::{ImGuiDockNode, node, ops, settings};
 use crate::frame::get_frame_height;
 use crate::rect::Rect;
 use crate::settings::{find_window_settings, mark_ini_settings_dirty, SettingsHandler};
@@ -24,8 +24,11 @@ use crate::vectors::vector_2d::Vector2D;
 use crate::window::get::find_window_by_name;
 use crate::window::lifecycle::update_window_parent_and_root_links;
 use crate::window::{Window, WindowFlags};
-use crate::{dock, hash_string, window, INVALID_ID};
+use crate::{dock, hash_string, INVALID_ID, window};
 use std::collections::{HashMap, HashSet};
+use crate::dock::node::dock_node::DockNode;
+use crate::dock::node::dock_node_flags::DockNodeFlags;
+use crate::dock::node::dock_node_settings::DockNodeSettings;
 use crate::dock::node::preview::dock_node_preview_dock_setup;
 use crate::dock::node::tab_bar::dock_node_add_tab_bar;
 

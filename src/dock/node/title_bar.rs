@@ -1,6 +1,7 @@
 use crate::dock::node;
-use crate::dock::node::{dock_node_get_root_node, DockNode};
-use crate::{window, Context, INVALID_ID};
+use crate::dock::node::dock_node_get_root_node;
+use crate::{Context, INVALID_ID, window};
+use crate::dock::node::dock_node::DockNode;
 
 // static bool IsDockNodeTitleBarHighlighted(ImGuiDockNode* node, ImGuiDockNode* root_node, Window* host_window)
 pub fn is_dock_node_title_bar_highlighted(
