@@ -1,8 +1,10 @@
 use std::collections::HashSet;
 use crate::axis::Axis;
+use crate::color::COLOR_WHITE_32;
 use crate::dock::node::dock_node_state::DockNodeState;
 use crate::dock::node::dock_node_flags::DockNodeFlags;
 use crate::INVALID_ID;
+use crate::popup::PopupPositionPolicy::Default;
 use crate::rect::Rect;
 use crate::tab_bar::TabBar;
 use crate::types::{DataAuthority, Id32};
@@ -25,14 +27,17 @@ pub struct DockNode {
     // ImGuiDockNodeState      state;
     pub state: DockNodeState,
     // ImGuiDockNode*          parent_node;
-    pub parent_node_id: Id32, //*mut ImGuiDockNode,
+    pub parent_node_id: Id32,
+    //*mut ImGuiDockNode,
     // pub parent_node: &'a mut DockNode,
     // ImGuiDockNode*          child_nodes[2];              // [split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
-    pub child_nodes: Vec<Id32>, //[*mut ImGuiDockNode;2],
+    pub child_nodes: Vec<Id32>,
+    //[*mut ImGuiDockNode;2],
     // ImVector<Window*>  windows;                    // Note: unordered list! Iterate tab_bar->Tabs for user-order.
     pub windows: Vec<Id32>,
     // ImGuiTabBar*            tab_bar;
-    pub tab_bar: Option<TabBar>, //*mut ImGuiTabBar,
+    pub tab_bar: Option<TabBar>,
+    //*mut ImGuiTabBar,
     // DimgVec2D                  pos;                        // current position
     // pub pos: DimgVec2D,
     pub pos: Vector2D,
@@ -47,13 +52,17 @@ pub struct DockNode {
     // ImU32                   last_bg_color;
     pub last_bg_color: u32,
     // Window*            host_window;
-    pub host_window_id: Id32, //*mut Window,
+    pub host_window_id: Id32,
+    //*mut Window,
     // Window*            visible_window;              // Generally point to window which is id is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
-    pub visible_window_id: Id32, //*mut Window,
+    pub visible_window_id: Id32,
+    //*mut Window,
     // ImGuiDockNode*          central_node;                // [Root node only] Pointer to central node.
-    pub central_node_id: Id32, // *mut ImGuiDockNode,
+    pub central_node_id: Id32,
+    // *mut ImGuiDockNode,
     // ImGuiDockNode*          only_node_with_windows;        // [Root node only] Set when there is a single visible node within the hierarchy.
-    pub only_node_with_window_id: Id32, // *mut ImGuiDockNode,
+    pub only_node_with_window_id: Id32,
+    // *mut ImGuiDockNode,
     // int                     count_node_with_windows;       // [Root node only]
     pub count_node_with_windows: i32,
     // int                     last_frame_alive;             // Last frame number the node was updated or kept alive explicitly with DockSpace() + ImGuiDockNodeFlags_KeepAliveOnly
@@ -99,87 +108,53 @@ pub struct DockNode {
 }
 
 impl DockNode {
-    //
-    // ImGuiDockNode::ImGuiDockNode(Id32 id)
-    // {
-    //     id = id;
-    //     SharedFlags = LocalFlags = LocalFlagsInWindows = MergedFlags = ImGuiDockNodeFlags_None;
-    //     ParentNode = ChildNodes[0] = ChildNodes[1] = None;
-    //     TabBar = None;
-    //     SplitAxis = ImGuiAxis_None;
-    //
-    //     State = DockNodeState::Unknown;
-    //     LastBgColor = IM_COL32_WHITE;
-    //     HostWindow = VisibleWindow = None;
-    //     CentralNode = only_node_with_windows = None;
-    //     count_node_with_windows = 0;
-    //     LastFrameAlive = LastFrameActive = LastFrameFocused = -1;
-    //     last_focused_node_id = 0;
-    //     SelectedTabId = 0;
-    //     WantCloseTabId = 0;
-    //     AuthorityForPos = AuthorityForSize = ImGuiDataAuthority_DockNode;
-    //     AuthorityForViewport = ImGuiDataAuthority_Auto;
-    //     is_visible = true;
-    //     IsFocused = HasCloseButton = HasWindowMenuButton = HasCentralNodeChild = false;
-    //     IsBgDrawnThisFrame = false;
-    //     WantCloseAll = want_lock_size_once = WantMouseMove = WantHiddenTabBarUpdate = WantHiddenTabBarToggle = false;
-    // }
-    //
-    // ImGuiDockNode::~ImGuiDockNode()
-    // {
-    //     IM_DELETE(TabBar);
-    //     TabBar = None;
-    //     ChildNodes[0] = ChildNodes[1] = None;
-    // }
-
-    // ImGuiDockNode(DimgId id);
     pub fn new(id: Id32) -> Self {
-        todo!()
+        Self {
+            id,
+            last_bg_color: COLOR_WHITE_32,
+            authority_for_pos: DataAuthority::DockNode,
+            authority_for_size: DataAuthority::DockNode,
+            authority_for_viewport: DataAuthority::Auto,
+            ..Default::default()
+        }
     }
-    //     ~ImGuiDockNode();
-    //     bool                    is_root_node() const      { return parent_node == None; }
+
     pub fn is_root_node(&self) -> bool {
         self.parent_node_id > 0 && self.parent_node_id < Id32::MAX
     }
-    //     bool                    is_dock_space() const     { return (merged_flags & ImGuiDockNodeFlags_DockSpace) != 0; }
+
     pub fn is_dock_space(&self) -> bool {
-        // (&self.merged_flags & DimgDockNodeFlags::DockSpace) != 0
         self.merged_flags.contains(&DockNodeFlags::DockSpace) == false
     }
-    //     bool                    is_floating_node() const  { return parent_node == None && (merged_flags & ImGuiDockNodeFlags_DockSpace) == 0; }
+
     pub fn is_floating_node(&self) -> bool {
-        // self.parent_node.is_null() && &self.merged_flags & DimgDockNodeFlags::DockSpace == 0
-        self.is_root_node() == false
-            && self.merged_flags.contains(&DockNodeFlags::DockSpace) == false
+        self.is_root_node() == false && self.merged_flags.contains(&DockNodeFlags::DockSpace) == false
     }
-    //     bool                    is_central_node() const   { return (merged_flags & ImGuiDockNodeFlags_CentralNode) != 0; }
+
     pub fn is_central_node(&self) -> bool {
         self.merged_flags.contains(&DockNodeFlags::CentralNode) == false
     }
-    //     bool                    is_hidden_tab_bar() const  { return (merged_flags & ImGuiDockNodeFlags_HiddenTabBar) != 0; } // hidden tab bar can be shown back by clicking the small triangle
+
     pub fn is_hidden_tab_bar(&self) -> bool {
         self.merged_flags.contains(&DockNodeFlags::HiddenTabBar) == false
     }
-    //     bool                    is_no_tab_bar() const      { return (merged_flags & ImGuiDockNodeFlags_NoTabBar) != 0; }     // Never show a tab bar
+
     pub fn is_no_tab_bar(&self) -> bool {
         self.merged_flags.contains(&DockNodeFlags::NoTabBar)
     }
-    //     bool                    is_split_node() const     { return child_nodes[0] != None; }
+
     pub fn is_split_node(&self) -> bool {
         self.child_nodes[0] != INVALID_ID
     }
-    //     bool                    is_leaf_node() const      { return child_nodes[0] == None; }
+
     pub fn is_leaf_node(&self) -> bool {
         self.child_nodes[0] == INVALID_ID
     }
-    //     bool                    is_empty() const         { return child_nodes[0] == None && windows.len() == 0; }
+
     pub fn is_empty(&self) -> bool {
-        // self.child_nodes[0].is_null() && self.windows.is_empty()
-        self.child_nodes[0] == INVALID_ID
-            && self.child_nodes[1] == INVALID_ID
-            && self.windows.is_empty()
+        self.child_nodes[0] == INVALID_ID && self.child_nodes[1] == INVALID_ID && self.windows.is_empty()
     }
-    //     ImRect                  rect() const            { return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
+
     pub fn rect(&self) -> Rect {
         Rect::new4(
             self.pos.x,
@@ -188,18 +163,15 @@ impl DockNode {
             self.pos.y + self.size.y,
         )
     }
-    //
-    //     void                    set_local_flags(ImGuiDockNodeFlags flags) { local_flags = flags; update_merged_flags(); }
+
     pub fn set_local_flags(&mut self, flags: &HashSet<DockNodeFlags>) {
-        // self.local_flags = flags;
         for flag in flags {
             self.local_flags.insert(flag.clone());
         }
         self.update_merged_flags();
     }
-    //     void                    update_merged_flags()     { merged_flags = shared_flags | local_flags | local_flags_in_windows; }
+
     pub fn update_merged_flags(&mut self) {
-        // self.merged_flags = &self.shared_flags | &self.local_flags | &self.local_flags_in_windows;
         extend_hash_set(&mut self.merged_flags, &self.shared_flags);
         extend_hash_set(&mut self.merged_flags, &self.local_flags);
         extend_hash_set(&mut self.merged_flags, &self.local_flags_in_windows);

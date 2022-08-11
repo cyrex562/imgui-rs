@@ -40,10 +40,7 @@ use crate::payload::PayloadDataType;
 use crate::popup::{begin_popup, end_popup, is_popup_open, open_popup};
 use crate::rect::Rect;
 use crate::settings::mark_ini_settings_dirty;
-use crate::style::{
-    color_convert_u32_to_float4, color_u32_from_style_color, get_color_u32_no_alpha, pop_style_color,
-    push_style_color, WINDOW_DOCK_STYLE_COLORS,
-};
+use crate::style::{color_convert_u32_to_float4, color_u32_from_style_color, get_color_u32_no_alpha, pop_style_color, push_style_color, StyleVar, WINDOW_DOCK_STYLE_COLORS};
 use crate::tab_bar::{TabBar, TabBarFlags, TabItem, TabItemFlags};
 use crate::types::Id32;
 use crate::types::INVALID_ID;
@@ -76,30 +73,14 @@ pub use dock_node::DockNode;
 pub use dock_node_flags::DockNodeFlags;
 use dock_node_state::DockNodeState;
 use crate::dock::node::tree::dock_node_tree_update_pos_size;
+use crate::render::render_rect_filled_with_hole;
 
-// Docking
-// (some functions are only declared in imgui.cpp, see Docking section)
-//  void          DockContextInitialize(ImGuiContext* ctx);
-//  void          DockContextShutdown(ImGuiContext* ctx);
-//  void          DockContextClearNodes(ImGuiContext* ctx, Id32 root_id, bool clear_settings_refs); // Use root_id==0 to clear all
-//  void          DockContextRebuildNodes(ImGuiContext* ctx);
-//  void          DockContextNewFrameUpdateUndocking(ImGuiContext* ctx);
-//  void          DockContextNewFrameUpdateDocking(ImGuiContext* ctx);
-//  void          DockContextEndFrame(ImGuiContext* ctx);
-//  Id32       dock_context_gen_node_id(ImGuiContext* ctx);
-//  void          DockContextQueueDock(ImGuiContext* ctx, Window* target, ImGuiDockNode* target_node, Window* payload, ImGuiDir split_dir, float split_ratio, bool split_outer);
-//  void          DockContextQueueUndockWindow(ImGuiContext* ctx, Window* window);
-//  void          DockContextQueueUndockNode(ImGuiContext* ctx, ImGuiDockNode* node);
-//  bool          DockContextCalcDropPosForDocking(Window* target, ImGuiDockNode* target_node, Window* payload, ImGuiDir split_dir, bool split_outer, Vector2D* out_pos);
-//  bool          DockNodeBeginAmendTabBar(ImGuiDockNode* node);
-//  void          DockNodeEndAmendTabBar();
-/// inline ImGuiDockNode*   DockNodeGetRootNode(ImGuiDockNode* node)                 { while (node->parent_node) node = node->parent_node; return node; }
-pub fn dock_node_get_root_node (
+pub fn dock_node_get_root_node(
     g: &mut Context,
     node: &mut DockNode,
 ) -> Option<&mut DockNode> {
     if node.parent_node_id == INVALID_ID {
-        return None
+        return None;
     }
 
     let mut out_node: Option<&mut DockNode> = None;
@@ -112,16 +93,13 @@ pub fn dock_node_get_root_node (
     return out_node;
 }
 
-// static int  DockNodeComparerDepthMostFirst(const void* lhs, const void* rhs)
 pub fn dock_node_comparer_depth_most_first(
     g: &mut Context,
     lhs: &dock_node,
     rhs: &dock_node,
 ) -> i32 {
-    // const ImGuiDockNode* a = *(const ImGuiDockNode* const*)lhs;
-    // const ImGuiDockNode* b = *(const ImGuiDockNode* const*)rhs;
-
-    return dock_node_get_depth(b) - dock_node_get_depth(a);
+    // return dock_node_get_depth(b) - dock_node_get_depth(a);
+    todo!()
 }
 
 // int dock_node_get_tab_order(Window* window)
@@ -244,10 +222,7 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
         let node_was_active = (node.last_frame_active + 1 == g.frame_count);
         let mut remove = false;
         remove |= node_was_active && (window.last_frame_active + 1 < g.frame_count);
-        remove |= node_was_active
-            && (node.want_close_all || node.want_close_tab_id == window.tab_id)
-            && window.has_close_button
-            && !(window.flags.contains(&WindowFlags::UnsavedDocument)); // Submit all _expected_ closure from last frame
+        remove |= node_was_active && (node.want_close_all || node.want_close_tab_id == window.tab_id) && window.has_close_button && !(window.flags.contains(&WindowFlags::UnsavedDocument)); // Submit all _expected_ closure from last frame
         remove |= (window.dock_tab_want_close);
         if remove {
             window.dock_tab_want_close = false;
@@ -257,7 +232,7 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
                 dock_node_remove_window(g, node, window, node.id); // Will delete the node so it'll be invalid on return
                 return;
             }
-            window::dock_node_remove_window(g, node, window, node.id);
+            dock_node_remove_window(g, node, window, node.id);
             window_n -= 1;
             continue;
         }
@@ -275,24 +250,13 @@ pub fn dock_node_update_flags_and_collapse(g: &mut Context, node: &mut DockNode)
     // Auto-hide tab bar option
     // ImGuiDockNodeFlags node_flags = node.merged_flags;
     let node_flags = node.merged_flags.clone();
-    if node.want_hiddent_tab_bar_update
-        && node.windows.len() == 1
-        && (node_flags.contains(&DockNodeFlags::AutoHideTabBar))
-        && !node.is_hidden_tab_bar()
-    {
+    if node.want_hiddent_tab_bar_update && node.windows.len() == 1 && (node_flags.contains(&DockNodeFlags::AutoHideTabBar)) && !node.is_hidden_tab_bar() {
         node.want_hidden_tab_bar_toggle = true;
     }
     node.want_hiddent_tab_bar_update = false;
 
     // Cancel toggling if we know our tab bar is enforced to be hidden at all times
-    if node.want_hidden_tab_bar_toggle
-        && node.visible_window_id != INVALID_ID
-        && (node
-            .visible_window_id
-            .window_class
-            .dock_node_flags_override_set
-            .contains(&DockNodeFlags::HiddenTabBar))
-    {
+    if node.want_hidden_tab_bar_toggle && node.visible_window_id != INVALID_ID && (node.visible_window_id.window_class.dock_node_flags_override_set.contains(&DockNodeFlags::HiddenTabBar)) {
         node.want_hidden_tab_bar_toggle = false;
     }
 
@@ -343,10 +307,8 @@ pub fn dock_node_update_visible_flag(g: &mut Context, node: &mut DockNode) {
         node.is_central_node()
     };
     is_visible |= (node.windows.len() > 0);
-    is_visible |= (node.child_nodes[0] != INVALID_ID
-        && g.dock_node_mut(node.child_nodes[0]).unwrap().is_visible);
-    is_visible |= (node.child_nodes[1] != INVALID_ID
-        && g.dock_node_mut(node.child_nodes[1]).unwrap().is_visible);
+    is_visible |= (node.child_nodes[0] != INVALID_ID && g.dock_node_mut(node.child_nodes[0]).unwrap().is_visible);
+    is_visible |= (node.child_nodes[1] != INVALID_ID && g.dock_node_mut(node.child_nodes[1]).unwrap().is_visible);
     node.is_visible = is_visible;
 }
 
@@ -422,9 +384,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     let mut want_to_hide_host_window = false;
     if node.is_floating_node() {
         if node.windows.len() <= 1 && node.is_leaf_node() {
-            if !g.io.config_docking_always_tab_bar
-                && (node.windows.len() == 0 || !node.windows[0].window_class.docking_always_tab_bar)
-            {
+            if !g.io.config_docking_always_tab_bar && (node.windows.len() == 0 || !node.windows[0].window_class.docking_always_tab_bar) {
                 want_to_hide_host_window = true;
             }
         }
@@ -480,11 +440,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // We could remove this frame if we could reliably calculate the expected window size during node update, before the Begin() code.
     // It would require a generalization of CalcWindowExpectedSize(), probably extracting code away from Begin().
     // In reality it isn't very important as user quickly ends up with size data in .ini file.
-    if node.is_visible
-        && node.host_window_id == INVALID_ID
-        && node.is_floating_node()
-        && node.is_leaf_node()
-    {
+    if node.is_visible && node.host_window_id == INVALID_ID && node.is_floating_node() && node.is_leaf_node() {
         // IM_ASSERT(node.Windows.size > 0);
         // Window* ref_window = None;
 
@@ -505,8 +461,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     let mut node_flags = node.merged_flags.clone();
 
     // Decide if the node will have a close button and a window menu button
-    node.hash_window_menu_button = (node.windows.len() > 0)
-        && node_flags.contains(&DockNodeFlags::NoWindowMenuButton) == false;
+    node.hash_window_menu_button = (node.windows.len() > 0) && node_flags.contains(&DockNodeFlags::NoWindowMenuButton) == false;
     node.has_close_button = false;
     // for (int window_n = 0; window_n < node.windows.len(); window_n += 1)
     for window_n in 0..node.windows.len() {
@@ -633,12 +588,10 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
             let nav_win = g.window_mut(g.nav_window_id);
             if nav_win.root_window != INVALID_ID {
                 let nav_win_root_win = g.window_mut(nav_win.root_window_id);
-                if nav_win_root_win.dock_node_id != INVALID_ID
-                    && nav_win_root_win.parent_window_id != INVALID_ID
-                {
+                if nav_win_root_win.dock_node_id != INVALID_ID && nav_win_root_win.parent_window_id != INVALID_ID {
                     let nav_win_root_win_dock_node = g.dock_node_mut(nav_win_root_win.dock_node_id);
-                    let nav_win_root_win_parent_win =
-                        g.window_mut(nav_win_root_win.parent_window_id);
+                    // let nav_win_root_win_parent_win =
+                    //     g.window_mut(nav_win_root_win.parent_window_id);
                     node.last_focused_node_id = nav_win_root_win_dock_node.id;
                 }
             }
@@ -648,19 +601,13 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // Register a hit-test hole in the window unless we are currently dragging a window that is compatible with our dockspace
     // ImGuiDockNode* central_node = node.central_node_id;
     let central_node = g.dock_node_mut(node.central_node_id);
-    let central_node_hole = node.is_root_node()
-        && host_window.is_some()
-        && node_flags.contains(&DockNodeFlags::PassthruCentralNode)
-        && central_node.is_some()
-        && central_node.unwrap().is_empty();
+    let central_node_hole = node.is_root_node() && host_window.is_some() && node_flags.contains(&DockNodeFlags::PassthruCentralNode) && central_node.is_some() && central_node.unwrap().is_empty();
     let mut central_node_hole_register_hit_test_hole = central_node_hole;
     if central_node_hole {
         let payload = get_drag_drop_payload(g);
         // if (const ImGuiPayload* payload = GetDragDropPayload()) {
         if payload.is_some() {
-            if payload.data_type == PayloadDataType::Window
-                && dock_node_is_drop_allowed(g, host_window.unwrap(), &mut payload.data.win)
-            {
+            if payload.data_type == PayloadDataType::Window && dock_node_is_drop_allowed(g, host_window.unwrap(), &mut payload.data.win) {
                 central_node_hole_register_hit_test_hole = false;
             }
         }
@@ -675,8 +622,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         // Rect root_rect(root_node.pos, root_node.pos + root_node.size);
         let mut root_rect = Rect::from((&root_node.pos, &(&root_node.pos + &root_node.size)));
         // Rect hole_rect(central_node.pos, central_node.pos + central_node.size);
-        let mut hole_rect =
-            Rect::from((&central_node.pos, &(&central_node.pos + &central_node.size)));
+        let mut hole_rect = Rect::from((&central_node.pos, &(&central_node.pos + &central_node.size)));
         if hole_rect.min.x > root_rect.min.x {
             hole_rect.min.x += WINDOWS_HOVER_PADDING;
         }
@@ -711,7 +657,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // update position/size, process and draw resizing splitters
     if node.is_root_node() && host_window.is_some() {
         host_window.unwrap().draw_list.channels_set_current(1);
-        tree::dock_node_tree_update_pos_size(
+        dock_node_tree_update_pos_size(
             g,
             node,
             &host_window.unwrap().pos,
@@ -727,7 +673,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
         node.last_bg_color = if node_flags.contains(&DockNodeFlags::PassthruCentralNode) {
             0
         } else {
-            color_u32_from_style_color(StyleColor::DockingEmptyBg, 0.0)
+            color_u32_from_style_color(g, StyleColor::DockingEmptyBg);
         };
         if node.last_bg_color != 0 {
             host_window.unwrap().draw_list.add_rect_filled(
@@ -742,15 +688,14 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // Draw whole dockspace background if ImGuiDockNodeFlags_PassthruCentralNode if set.
     // We need to draw a background at the root level if requested by ImGuiDockNodeFlags_PassthruCentralNode, but we will only know the correct pos/size
     // _after_ processing the resizing splitters. So we are using the draw_list channel splitting facility to submit drawing primitives out of order!
-    let render_dockspace_bg = node.is_root_node()
-        && host_window.is_some()
-        && (node_flags.contains(&DockNodeFlags::PassthruCentralNode));
+    let render_dockspace_bg = node.is_root_node() && host_window.is_some() && (node_flags.contains(&DockNodeFlags::PassthruCentralNode));
     if render_dockspace_bg && node.is_visible {
         host_window.draw_list.channels_set_current(0);
+        let draw_list = g.draw_list_mut(host_window.unwrap().draw_list_id);
         if central_node_hole {
             render_rect_filled_with_hole(
-                &host_window.draw_list,
-                node.rect(),
+                draw_list,
+                &node.rect(),
                 central_node.rect(),
                 get_color_u32_no_alpha(StyleColor::WindowBg),
                 0.0,
@@ -784,11 +729,7 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
 
     // Draw payload drop target
     if host_window.is_some() && node.is_visible {
-        if node.is_root_node()
-            && (g.moving_window_id == INVALID_ID
-                || g.window_mut(g.moving_window_id).root_window_dock_tree_id
-                    != host_window.unwrap().id)
-        {
+        if node.is_root_node() && (g.moving_window_id == INVALID_ID || g.window_mut(g.moving_window_id).root_window_dock_tree_id != host_window.unwrap().id) {
             begin_dockable_drag_drop_target(g, host_window.unwrap());
         }
     }
@@ -800,10 +741,12 @@ pub fn dock_node_update(g: &mut Context, node: &mut DockNode) {
     // FIXME-DOCK FIXME-OPT: Should not need to recurse into children
     if host_window.is_some() {
         if node.child_nodes[0] != INVALID_ID {
-            dock_node_update(node.child_nodes[0]);
+            let cn = g.dock_node_mut(node.child_nodes[0]).unwrap();
+            dock_node_update(g, cn);
         }
         if node.child_nodes[1] != INVALID_ID {
-            dock_node_update(node.child_nodes[1]);
+            let cn = g.dock_node_mut(node.child_nodes[1]).unwrap();
+            dock_node_update(g, cn);
         }
 
         // Render outer borders last (after the tab bar)
@@ -829,34 +772,21 @@ pub fn dock_node_is_drop_allowed_one(
     payload: &mut Window,
     host_window: &mut Window,
 ) -> bool {
-    if host_window.dock_node_as_host_id != INVALID_ID
-        && g.dock_node_mut(host_window.dock_node_as_host_id)
-            .is_dock_space()
-        && payload.begin_order_within_context < host_window.begin_order_within_context
-    {
+    if host_window.dock_node_as_host_id != INVALID_ID && g.dock_node_mut(host_window.dock_node_as_host_id).is_dock_space() && payload.begin_order_within_context < host_window.begin_order_within_context {
         return false;
     }
 
     let host_class = if host_window.dock_node_as_host_id != INVALID_ID {
-        g.dock_node_mut(host_window.dock_node_as_host_id)
-            .unwrap()
-            .window_class
-            .borrow()
+        g.dock_node_mut(host_window.dock_node_as_host_id).unwrap().window_class.borrow()
     } else {
         host_window.window_class.borrow()
     };
     let payload_class = payload.window_class.borrow();
     if host_class.class_id != payload_class.class_id {
-        if host_class.class_id != 0
-            && host_class.docking_allow_unclassed
-            && payload_class.class_id == 0
-        {
+        if host_class.class_id != 0 && host_class.docking_allow_unclassed && payload_class.class_id == 0 {
             return true;
         }
-        if payload_class.class_id != 0
-            && payload_class.docking_allow_unclassed
-            && host_class.class_id == 0
-        {
+        if payload_class.class_id != 0 && payload_class.docking_allow_unclassed && host_class.class_id == 0 {
             return true;
         }
         return false;
@@ -886,8 +816,8 @@ pub fn dock_node_is_drop_allowed_one(
 // static bool dock_node_is_drop_allowed(Window* host_window, Window* root_payload)
 pub fn dock_node_is_drop_allowed(
     g: &mut Context,
-    host_window: &mut window::Window,
-    root_payload: &mut window::Window,
+    host_window: &mut Window,
+    root_payload: &mut Window,
 ) -> bool {
     let root_payload_dock_node = g.dock_node_mut(root_payload.dock_node_as_host_id);
     if root_payload_dock_node.is_some() && root_payload_dock_node.unwrap().is_split_node() {
@@ -948,9 +878,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
         } else {
             DockNodeFlags::NoResizeY
         };
-        if (&merged_flags.contains(&DockNodeFlags::NoResize))
-            || (&merged_flags.contains(&no_resize_axis_flag))
-        {
+        if (&merged_flags.contains(&DockNodeFlags::NoResize)) || (&merged_flags.contains(&no_resize_axis_flag)) {
             // Window* window = g.current_window;
             let window = g.current_window_mut();
             window.draw_list.add_rect_filled(
@@ -970,13 +898,11 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
             let min_size = g.style.window_min_size[axis];
             let mut resize_limits: [f32; 2] = [0f32; 2];
             resize_limits[0] = node.child_nodes[0].pos[&axis] + min_size;
-            resize_limits[1] =
-                node.child_nodes[1].pos[&axis] + node.child_nodes[1].size[&axis] - min_size;
+            resize_limits[1] = node.child_nodes[1].pos[&axis] + node.child_nodes[1].size[&axis] - min_size;
 
             let splitter_id = get_id(g, "##splitter");
-            if g.active_id == splitter_id
-            // Only process when splitter is active
-            {
+            if g.active_id == splitter_id {
+                // Only process when splitter is active {
                 dock_node_tree_update_splitterFindTouchingNode(
                     child_0,
                     &axis,
@@ -989,6 +915,7 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
                     0,
                     &touching_nodes[1],
                 );
+
                 // for (int touching_node_n = 0; touching_node_n < touching_nodes[0].size; touching_node_n += 1)
                 for touching_node_n in 0..touching_nodes[0].len() {
                     resize_limits[0] = ImMax(
@@ -1056,10 +983,8 @@ pub fn dock_node_tree_update_splitter(g: &mut Context, node: &mut DockNode) {
                                 if touching_node.parent_node.split_axis == axis {
                                     // Mark other node so its size will be preserved during the upcoming call to dock_node_tree_update_pos_size().
                                     // ImGuiDockNode* node_to_preserve = touching_node.parent_node.child_nodes[side_n];
-                                    let parent_node =
-                                        g.dock_node_mut(touching_node.parent_node_id).unwrap();
-                                    let node_to_preserve =
-                                        g.dock_node_mut(parent_node.child_nodes[side_n]).unwrap();
+                                    let parent_node = g.dock_node_mut(touching_node.parent_node_id).unwrap();
+                                    let node_to_preserve = g.dock_node_mut(parent_node.child_nodes[side_n]).unwrap();
                                     node_to_preserve.want_lock_size_once = true;
                                     //draw_list->add_rect(touching_node->pos, touching_node->rect().max, IM_COL32(255, 0, 0, 255));
                                     //draw_list->add_rect_filled(node_to_preserve->pos, node_to_preserve->rect().max, IM_COL32(0, 255, 0, 100));
