@@ -550,9 +550,9 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
         // SELECT VIEWPORT
         // We need to do this before using any style/font sizes, as viewport with a different DPI may affect font sizes.
 
-        WindowSelectViewport(window);
+        window_select_viewport(window);
         SetCurrentViewport(window, window.viewport);
-        window.FontDpiScale = (g.io.config_flags & ConfigFlags::DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
+        window.FontDpiScale = (g.io.config_flags & ConfigFlags::DpiEnableScaleFonts) ? window.viewport.dpi_scale : 1.0;
         SetCurrentWindow(window);
         flags = window.flags;
 
@@ -673,12 +673,12 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
                 //ImGuiViewport* old_viewport = window->viewport;
-                window.viewport = AddUpdateViewport(window, window.id, window.pos, window.size, ViewportFlags::NoFocusOnAppearing);
+                window.viewport = add_update_viewport(window, window.id, window.pos, window.size, ViewportFlags::NoFocusOnAppearing);
 
                 // FIXME-DPI
                 //IM_ASSERT(old_viewport->dpi_scale == window->viewport->dpi_scale); // FIXME-DPI: Something went wrong
                 SetCurrentViewport(window, window.viewport);
-                window.FontDpiScale = (g.io.config_flags & ConfigFlags::DpiEnableScaleFonts) ? window.viewport.DpiScale : 1.0;
+                window.FontDpiScale = (g.io.config_flags & ConfigFlags::DpiEnableScaleFonts) ? window.viewport.dpi_scale : 1.0;
                 SetCurrentWindow(window);
             }
 
@@ -705,8 +705,8 @@ pub fn begin(g: &mut Context, name: &str, p_open: Option<&mut bool>, flags: Opti
             {
                 // Lost windows (e.g. a monitor disconnected) will naturally moved to the fallback/dummy monitor aka the main viewport.
                 const platform_monitor* monitor = GetViewportplatform_monitor(window.viewport);
-                visibility_rect.min = monitor.WorkPos + visibility_padding;
-                visibility_rect.max = monitor.WorkPos + monitor.work_size - visibility_padding;
+                visibility_rect.min = monitor.work_pos + visibility_padding;
+                visibility_rect.max = monitor.work_pos + monitor.work_size - visibility_padding;
                 ClampWindowRect(window, visibility_rect);
             }
         }

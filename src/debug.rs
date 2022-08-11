@@ -391,14 +391,14 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
             {
                 const platform_monitor& mon = g.platform_io.monitors[i];
                 BulletText("Monitor #%d: DPI %.0%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), main_size (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), work_size (%.0,%.0)",
-                    i, mon.DpiScale * 100.0,
-                    mon.MainPos.x, mon.MainPos.y, mon.MainPos.x + mon.MainSize.x, mon.MainPos.y + mon.MainSize.y, mon.MainSize.x, mon.MainSize.y,
-                    mon.WorkPos.x, mon.WorkPos.y, mon.WorkPos.x + mon.work_size.x, mon.WorkPos.y + mon.work_size.y, mon.work_size.x, mon.work_size.y);
+                    i, mon.dpi_scale * 100.0,
+                    mon.main_pos.x, mon.main_pos.y, mon.main_pos.x + mon.main_size.x, mon.main_pos.y + mon.main_size.y, mon.main_size.x, mon.main_size.y,
+                    mon.work_pos.x, mon.work_pos.y, mon.work_pos.x + mon.work_size.x, mon.work_pos.y + mon.work_size.y, mon.work_size.x, mon.work_size.y);
             }
             TreePop();
         }
 
-        BulletText("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport ? g.mouse_viewport->ID : 0, g.io.MouseHoveredViewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
+        BulletText("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport ? g.mouse_viewport->ID : 0, g.io.mouse_hovered_viewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
         if (TreeNode("Inferred Z order (front-to-back)"))
         {
             static ImVector<ViewportP*> viewports;
@@ -525,7 +525,7 @@ pub fn show_metrics_window(g: &mut Context, p_open: &mut bool)
         text("hovered_window_under_moving_window: '%s'", g.hovered_window_under_moving_window ? g.hovered_window_under_moving_window->Name : "None");
         text("hovered_dock_node: 0x%08X", g.hovered_dock_node ? g.hovered_dock_node->ID : 0);
         text("moving_window: '%s'", g.moving_window ? g.moving_window->Name : "None");
-        text("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport->ID, g.io.MouseHoveredViewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
+        text("mouse_viewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.mouse_viewport->ID, g.io.mouse_hovered_viewport, g.mouse_last_hovered_viewport ? g.mouse_last_hovered_viewport->ID : 0);
         Unindent();
 
         text("ITEMS");
@@ -1023,13 +1023,13 @@ pub fn debug_node_tab_bar(g: &mut Context, tab_bar: &mut TabBar, label: &str)
 pub fn debug_node_viewport(g: &mut Context, viewport: &mut Viewport)
 {
     SetNextItemOpen(true, ImGuiCond_Once);
-    if (TreeNode((void*)(intptr_t)viewport->ID, "viewport #%d, id: 0x%08X, Parent: 0x%08X, window: \"%s\"", viewport->Idx, viewport->ID, viewport->ParentViewportId, viewport->Window ? viewport->Window->Name : "N/A"))
+    if (TreeNode((void*)(intptr_t)viewport->ID, "viewport #%d, id: 0x%08X, Parent: 0x%08X, window: \"%s\"", viewport->Idx, viewport->ID, viewport->parent_viewport_id, viewport->Window ? viewport->Window->Name : "N/A"))
     {
         WindowFlags flags = viewport.flags;
         BulletText("Main pos: (%.0,%.0), size: (%.0,%.0)\nWorkArea Offset Left: %.0 Top: %.0, Right: %.0, Bottom: %.0\nMonitor: %d, dpi_scale: %.0%%",
             viewport.pos.x, viewport.pos.y, viewport.size.x, viewport.size.y,
-            viewport->WorkOffsetMin.x, viewport->WorkOffsetMin.y, viewport->WorkOffsetMax.x, viewport->WorkOffsetMax.y,
-            viewport->platform_monitor, viewport->DpiScale * 100.0);
+            viewport->work_offset_min.x, viewport->work_offset_min.y, viewport->work_offset_max.x, viewport->work_offset_max.y,
+            viewport->platform_monitor, viewport->dpi_scale * 100.0);
         if (viewport->Idx > 0) { same_line(); if (SmallButton("Reset pos")) { viewport.pos = Vector2D::new(200, 200); viewport.update_work_rect(); if (viewport->Window) viewport->Window.pos = viewport.pos; } }
         BulletText("flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard

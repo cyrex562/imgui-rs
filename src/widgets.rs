@@ -6738,9 +6738,9 @@ bool ImGui::BeginViewportSideBar(const char* name, Viewport* viewport_p, Directi
 
         // Report our size into work area (for next frame) using actual window size
         if (dir == ImGuiDir_Up || dir == ImGuiDir_Left)
-            viewport->BuildWorkOffsetMin[axis] += axis_size;
+            viewport->build_work_offset_min[axis] += axis_size;
         else if (dir == ImGuiDir_Down || dir == ImGuiDir_Right)
-            viewport->BuildWorkOffsetMax[axis] -= axis_size;
+            viewport->build_work_offset_max[axis] -= axis_size;
     }
 
     window_flags |= WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoMove | WindowFlags_NoDocking;

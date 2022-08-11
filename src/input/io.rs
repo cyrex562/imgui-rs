@@ -654,7 +654,7 @@ pub struct PlatformIo {
     // viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
     // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
     // ImVector<ImGuiViewport*>        viewports;                              // Main viewports, followed by all secondary viewports.
-    pub viewports: Vec<Viewport>,
+    pub viewports: Vec<Id32>,
     // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
 }
 
@@ -681,7 +681,7 @@ impl PlatformIo {
         todo!()
     }
     //     Vector2D  (*platform_get_window_pos)(ImGuiViewport* vp);                    // N . . . .  //
-    pub fn platform_get_window_pos(&mut self, vp: &mut Viewport) {
+    pub fn platform_get_window_pos(&mut self, vp: &mut Viewport) -> Vector2D {
         todo!()
     }
     //     void    (*platform_set_window_size)(ImGuiViewport* vp, Vector2D size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)

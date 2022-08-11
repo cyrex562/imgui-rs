@@ -703,8 +703,8 @@ pub fn get_popup_allowed_extent_rect(g: &mut Context, window: &mut Window) -> Re
     if window.viewport_allow_platform_monitor_extend >= 0 {
         // Extent with be in the frame of reference of the given viewport (so min is likely to be negative here)
         let monitor = g.platform_io.monitors[window.viewport_allow_platform_monitor_extend];
-        r_screen.min = monitor.WorkPos;
-        r_screen.max = monitor.WorkPos + monitor.work_size;
+        r_screen.min = monitor.work_pos;
+        r_screen.max = monitor.work_pos + monitor.work_size;
     } else {
         // Use the full viewport area (not work area) for popups
         // r_screen = window.viewport.get_main_rect();

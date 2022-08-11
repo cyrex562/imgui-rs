@@ -334,7 +334,7 @@ pub fn end_frame(g: &mut Context)
     // Notify Platform/OS when our Input Method Editor cursor has moved (e.g. CJK inputs using Microsoft IME)
     if g.io.set_platform_ime_data_fn.is_some() && (g.platform_ime_data == g.platform_ime_data_prev)
     {
-        // ImGuiViewport* viewport = FindViewportByID(g.PlatformImeViewport);
+        // ImGuiViewport* viewport = find_viewport_by_id(g.PlatformImeViewport);
         let viewport = g.viewport_mut(g.platform_ime_viewport);
         g.io.set_platform_ime_data_fn(if viewport.is_some() {viewport} else { get_main_viewport(g) }, &g.platform_ime_data);
     }

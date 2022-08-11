@@ -263,7 +263,7 @@ pub struct Window {
     pub skip_items: bool,
     pub state_storage: Storage,
     pub tab_id: Id32,
-    pub viewport_allow_platform_monitor_extend: i32,
+    pub viewport_allow_platform_monitor_extend: usize,
     pub viewport_id: Id32,
     pub viewport_owned: bool,
     pub viewport_pos: Vector2D,

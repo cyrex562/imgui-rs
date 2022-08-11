@@ -466,7 +466,7 @@ pub fn update_input_events(g: &mut Context, trickle_fast_inputs: bool)
         }
         else if (e.Type == ImGuiInputEventType_MouseViewport)
         {
-            io.MouseHoveredViewport = e.mouse_viewport.HoveredViewportID;
+            io.mouse_hovered_viewport = e.mouse_viewport.HoveredViewportID;
         }
         else if (e.Type == ImGuiInputEventType_Key)
         {

@@ -371,7 +371,7 @@ pub fn update_window_manual_resize(g: &mut Context, window: &mut Window, size_au
     // - When decoration are enabled we typically benefit from that distance, but then our resize elements would be conflicting with OS resize elements, so we also narrow.
     // - Note that we are unable to tell if the platform setup allows hovering with a distance threshold (on Win32, decorated window have such threshold).
     // We only clip interaction so we overwrite window->clip_rect, cannot call push_clip_rect() yet as draw_list is not yet setup.
-    // const bool clip_with_viewport_rect = !(g.io.backend_flags & ImGuiBackendFlags_HasMouseHoveredViewport) || (g.io.MouseHoveredViewport != window.viewport_id) || !(window.viewport.flags & ImGuiViewportFlags_NoDecoration);
+    // const bool clip_with_viewport_rect = !(g.io.backend_flags & ImGuiBackendFlags_HasMouseHoveredViewport) || (g.io.mouse_hovered_viewport != window.viewport_id) || !(window.viewport.flags & ImGuiViewportFlags_NoDecoration);
     let clip_width_viewport_rect = !g.io.backend_flags.contains(&BackendFlags::HasMouseHoveredViewport) || g.io.mouse_hovered_viewport != window.viewport_id || !g.viewport_mut(window.viewport_id).unwrap().flags.contains(&ViewportFlags::NoDecoration);
     if clip_width_viewport_rect {
         window.clip_rect = window.viewport.get_main_rect();

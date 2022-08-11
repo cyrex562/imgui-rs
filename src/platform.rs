@@ -255,7 +255,7 @@ pub fn render_platform_windows_default(
     }
 }
 
-// static int Findplatform_monitorForPos(const Vector2D& pos)
+// static int find_platform_monitor_for_pos(const Vector2D& pos)
 pub fn find_platform_monitor_for_pos(
     g: &mut Context,
     pos: &Vector2D) -> usize
@@ -305,7 +305,7 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &mut Rect) -> usize
         }
 
         let monitor = g.platform_io.monitors[monitor_n];
-        let monitor_rect = Rect::new(monitor.MainPos, monitor.MainPos + monitor.MainSize);
+        let monitor_rect = Rect::new(monitor.main_pos, monitor.main_pos + monitor.main_size);
         if monitor_rect.contains(rect) {
             return monitor_n;
         }
@@ -324,7 +324,7 @@ pub fn find_platform_monitor_for_rect(g: &mut Context, rect: &mut Rect) -> usize
 }
 
 // update monitor from viewport rectangle (we'll use this info to clamp windows and save windows lost in a removed monitor)
-// static void UpdateViewportplatform_monitor(ImGuiViewportP* viewport)
+// static void update_viewport_platform_monitor(ImGuiViewportP* viewport)
 pub fn update_viewport_platform_monitor(g: &mut Context, viewport: &mut Viewport)
 {
     viewport.platform_monitor = find_platform_monitor_for_rect(g, viewport.get_main_rect());

@@ -104,7 +104,7 @@ pub fn set_next_window_dock_id(g: &mut Context, id: Id32, cond:Condition)
 pub fn set_next_window_class(g: &mut Context, window_class: &mut WindowClass)
 {
     // ImGuiContext& g = *GImGui;
-    // IM_ASSERT((window_class.viewportFlagsOverrideSet & window_class.viewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
+    // IM_ASSERT((window_class.viewportFlagsOverrideSet & window_class.viewport_flags_override_clear) == 0); // Cannot set both set and clear for the same bit
     g.next_window_data.flags |= NextWindowDataFlags::HasWindowClass;
     g.next_window_data.window_class = *window_class;
 }
