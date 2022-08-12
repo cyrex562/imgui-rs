@@ -35,11 +35,11 @@ impl FontGlyphRangesBuilder {
         todo!()
     }
     //      void  add_ranges(const ImWchar* ranges);                           // Add ranges, e.g. builder.add_ranges(ImFontAtlas::get_glyph_ranges_default()) to force add all of ASCII/Latin+Ext
-    pub fn add_ranges(&mut self, ranges: &[DimgWchar]) {
+    pub fn add_ranges(&mut self, ranges: &[char]) {
         todo!()
     }
     //      void  build_ranges(ImVector<ImWchar>* out_ranges);                 // Output new ranges
-    pub fn build_ranges(&mut self, out_ranges: &mut Vec<DimgWchar>) {
+    pub fn build_ranges(&mut self, out_ranges: &mut Vec<char>) {
         todo!()
     }
 }

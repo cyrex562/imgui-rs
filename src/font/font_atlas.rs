@@ -4,7 +4,7 @@ use crate::font::font_builder_io::FontBuilderIo;
 use crate::input::MouseCursor;
 use crate::rect::Rect;
 use crate::texture::TextureId;
-use crate::types::DimgWchar;
+use crate::types::char;
 use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 
@@ -99,7 +99,7 @@ impl FontAtlas {
         filename: &String,
         size_pixels: f32,
         font_cfg: &FontConfig,
-        glyph_ranges: &[DimgWchar],
+        glyph_ranges: &[char],
     ) -> Font {
         todo!()
     }
@@ -110,7 +110,7 @@ impl FontAtlas {
         font_size: i32,
         size_pixels: f32,
         font_cfg: &FontConfig,
-        glyph_ranges: &[DimgWchar],
+        glyph_ranges: &[char],
     ) -> Font {
         todo!()
     }
@@ -121,7 +121,7 @@ impl FontAtlas {
         compressed_font_size: usize,
         size_pixels: f32,
         font_config: &FontConfig,
-        glyph_ranges: &Vec<DimgWchar>,
+        glyph_ranges: &Vec<char>,
     ) -> Font {
         todo!()
     }
@@ -131,7 +131,7 @@ impl FontAtlas {
         compressed_font_data_base85: &String,
         size_pixels: f32,
         font_cfg: &FontConfig,
-        glyph_ranges: &Vec<DimgWchar>,
+        glyph_ranges: &Vec<char>,
     ) -> Font {
         todo!()
     }
@@ -198,35 +198,35 @@ impl FontAtlas {
     //     // NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
     //     // NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
     //      const ImWchar*    get_glyph_ranges_default();                // Basic Latin, Extended Latin
-    pub fn get_glyph_ranges_default(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_default(&self) -> Vec<char> {
         todo!()
     }
     //      const ImWchar*    get_glyph_ranges_korean();                 // Default + Korean characters
-    pub fn get_glyph_ranges_korean(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_korean(&self) -> Vec<char> {
         todo!()
     }
     //      const ImWchar*    get_glyph_ranges_japanese();               // Default + Hiragana, Katakana, Half-width, Selection of 2999 Ideographs
-    pub fn get_glyph_ranges_japanese(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_japanese(&self) -> Vec<char> {
         todo!()
     }
     //      const ImWchar*    get_glyph_ranges_chinese_full();            // Default + Half-width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
-    pub fn get_glyph_ranges_chinese_full(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_chinese_full(&self) -> Vec<char> {
         todo!()
     }
     //      const ImWchar*    get_glyph_ranges_chinese_simplified_common();// Default + Half-width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
-    pub fn get_glyph_ranges_chinese_simplified_common(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_chinese_simplified_common(&self) -> Vec<char> {
         todo!()
     }
     //      const ImWchar*    get_glyph_ranges_cyrillic();               // Default + about 400 Cyrillic characters
-    pub fn get_glyph_ranges_cyrillic(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_cyrillic(&self) -> Vec<char> {
         todo!()
     }
     //      const ImWchar*    get_glyph_ranges_thai();                   // Default + Thai characters
-    pub fn get_glyph_ranges_thai(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_thai(&self) -> Vec<char> {
         todo!()
     }
     //      const ImWchar*    get_glyph_ranges_vietnamese();             // Default + Vietnamese characters
-    pub fn get_glyph_ranges_vietnamese(&self) -> Vec<DimgWchar> {
+    pub fn get_glyph_ranges_vietnamese(&self) -> Vec<char> {
         todo!()
     }
     //
@@ -249,7 +249,7 @@ impl FontAtlas {
     pub fn add_custom_rect_font_glyph(
         &mut self,
         font: &Font,
-        id: DimgWchar,
+        id: char,
         width: i32,
         height: i32,
         advance_x: f32,

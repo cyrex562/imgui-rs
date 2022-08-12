@@ -8,7 +8,7 @@ pub struct FontGlyph
     // unsigned int    visible : 1;        // Flag to indicate glyph has no visible pixels (e.g. space). Allow early out when rendering.
     pub visible: bool,
     // unsigned int    codepoint : 30;     // 0x0000..0x10FFFF
-    pub codepoint: u32,
+    pub codepoint: char,
     // pub advance_x: f32,          // Distance to next character (= data from font + ImFontConfig::glyph_extra_spacing.x baked in)
     pub advance_x: f32,
     // float           x0, y0, x1, y1;     // Glyph corners

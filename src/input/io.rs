@@ -6,7 +6,7 @@ use crate::font::font::Font;
 use crate::input::{InputEventType, Key, KeyInputData, InputSource, ModFlags};
 use crate::input::input_event::InputEvent;
 use crate::text::IM_UNICODE_CODEPOINT_INVALID;
-use crate::types::{DimgWchar, Id32};
+use crate::types::{char, Id32};
 use crate::vectors::vector_2d::Vector2D;
 use std::collections::HashSet;
 
@@ -511,7 +511,7 @@ impl Io {
     //  void  add_input_character_utf16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, it can be a surrogate
     // UTF16 strings use surrogate pairs to encode codepoints >= 0x10000, so
     // we should save the high surrogate.
-    pub fn add_input_character_utf16(&mut self, c: DimgWchar) {
+    pub fn add_input_character_utf16(&mut self, c: char) {
         if (c == 0 && self.input_queue_surrogate.is_empty()) || !self.app_accepting_events {
             return;
         }
@@ -526,7 +526,7 @@ impl Io {
         }
 
         //ImWchar cp = c;
-        let cp: DimgWchar = c;
+        let cp: char = c;
         if self.input_queue_surrogate != 0 {
             if (c & 0xFC00) != 0xDC00 {
                 // Invalid low surrogate {
