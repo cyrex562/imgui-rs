@@ -24,7 +24,7 @@
 //  2022-01-10: Inputs: calling new io.add_key_event(), io.AddKeyModsEvent() + io.set_key_event_native_data() API (1.87+). Support for full ImGuiKey range.
 //  2021-03-04: Initial version.
 
-#include "defines.rs"
+#include "dock_style_color"
 
 #include "imgui_impl_android.h"
 #include <time.h>

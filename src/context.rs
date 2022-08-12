@@ -20,7 +20,7 @@ use crate::window::ShrinkWidthItem;
 
 use crate::draw::list_shared_data::DrawListSharedData;
 use crate::font::font_atlas::FontAtlas;
-use crate::font::Font;
+use crate::font::font::Font;
 use crate::group::GroupData;
 use crate::input::{Key, InputSource, ModFlags, MouseButton, MouseCursor, NavLayer};
 use crate::input::input_event::InputEvent;

@@ -4,7 +4,7 @@ use crate::context::Context;
 use crate::dock::builder::{
     dock_builder_remove_node_child_nodes, dock_builder_remove_node_docked_windows,
 };
-use crate::dock::defines::DOCKING_SPLITTER_SIZE;
+use crate::dock::dock_style_color::DOCKING_SPLITTER_SIZE;
 use crate::dock::node::tree::{dock_node_tree_merge, dock_node_tree_split, dock_node_tree_update_pos_size};
 use crate::dock::node::window::dock_node_add_window;
 use crate::dock::node::{
@@ -31,6 +31,7 @@ use crate::dock::node::dock_node_flags::DockNodeFlags;
 use crate::dock::node::dock_node_settings::DockNodeSettings;
 use crate::dock::node::preview::dock_node_preview_dock_setup;
 use crate::dock::node::tab_bar::dock_node_add_tab_bar;
+use crate::render::calc_rounding_flags_for_rect_in_rect;
 
 #[derive(Default, Debug, Clone)]
 pub struct DockContext {

@@ -58,7 +58,7 @@ impl DrawData {
             new_vtx_buffer.resize(cmd_list.idx_buffer.len(), DrawVertex::default());
             // for (int j = 0; j < cmd_list.idx_buffer.size; j += 1)
             for j in 0..cmd_list.idx_buffer.len() {
-                new_vtx_buffer[j] = cmd_list.vtx_buffer[cmd_list.idx_buffer[j]];
+                new_vtx_buffer[j] = cmd_list.vtx_buffer[cmd_list.idx_buffer[j]].clone();
             }
             // cmd_list.vtx_buffer.swap(new_vtx_buffer);
             cmd_list.vtx_buffer = new_vtx_buffer.to_owned();

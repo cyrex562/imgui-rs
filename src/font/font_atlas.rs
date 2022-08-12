@@ -1,4 +1,6 @@
-use crate::font::{FontConfig, Font, ImFontBuilderIO};
+use crate::font::font_config::FontConfig;
+use crate::font::font::Font;
+use crate::font::font_builder_io::FontBuilderIo;
 use crate::input::MouseCursor;
 use crate::rect::Rect;
 use crate::texture::TextureId;
@@ -66,7 +68,7 @@ pub struct FontAtlas {
     pub tex_uv_lines: Vec<Vector4D>,
     // [Internal] font builder
     // const ImFontBuilderIO*      font_builder_io;      // Opaque interface to a font builder (default to stb_truetype, can be changed to use FreeType by defining IMGUI_ENABLE_FREETYPE).
-    pub font_builder_io: ImFontBuilderIO,
+    pub font_builder_io: FontBuilderIo,
     // unsigned pub font_builder_flags: i32, // Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
     pub font_builder_flags: i32,
 

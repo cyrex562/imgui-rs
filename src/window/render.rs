@@ -2,7 +2,7 @@ use crate::axis::Axis;
 use crate::border::get_resize_border_rect;
 use crate::color::{StyleColor, COLOR32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_WHITE};
 use crate::config::ConfigFlags;
-use crate::dock::defines::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
+use crate::dock::dock_style_color::DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
 use crate::drag_drop::DragDropFlags;
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::list::{foreground_draw_list, DrawListFlags};

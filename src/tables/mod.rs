@@ -188,7 +188,7 @@ index of this file:
 #define _CRT_SECURE_NO_WARNINGS
 
 
-#include "defines.rs"
+#include "dock_style_color"
 
 #ifndef IMGUI_DISABLE
 
@@ -3831,7 +3831,7 @@ ImGuiOldColumns* ImGui::FindOrCreateColumns(Window* window, Id32 id)
 
 Id32 ImGui::GetColumnsID(const char* str_id, int columns_count)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
 
     // Differentiate column id with an arbitrary prefix for cases where users name their columns set the same as another widget.
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
@@ -3845,7 +3845,7 @@ Id32 ImGui::GetColumnsID(const char* str_id, int columns_count)
 void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
 
     // IM_ASSERT(columns_count >= 1);
     // IM_ASSERT(window.dc.CurrentColumns == None);   // Nested columns are currently not supported
@@ -3921,7 +3921,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
 
 void ImGui::NextColumn()
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.skip_items || window.dc.current_columns == None)
         return;
 
@@ -3977,7 +3977,7 @@ void ImGui::NextColumn()
 void ImGui::EndColumns()
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     ImGuiOldColumns* columns = window.dc.current_columns;
     // IM_ASSERT(columns != None);
 
@@ -4052,7 +4052,7 @@ void ImGui::EndColumns()
 
 void ImGui::Columns(int columns_count, const char* id, bool border)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     // IM_ASSERT(columns_count >= 1);
 
     ImGuiOldColumnFlags flags = (border ? 0 : ImGuiOldColumnFlags_NoBorder);

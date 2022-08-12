@@ -4,7 +4,7 @@
 // Changelog:
 // - v0.10: Initial version. Added InputText() / InputTextMultiline() calls with std::string
 
-#include "defines.rs"
+#include "dock_style_color"
 
 #include "imgui_stdlib.h"
 

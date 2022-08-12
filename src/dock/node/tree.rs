@@ -1,6 +1,6 @@
 use crate::axis::Axis;
 use crate::dock::context::dock_context_add_node;
-use crate::dock::defines::DOCKING_SPLITTER_SIZE;
+use crate::dock::dock_style_color::DOCKING_SPLITTER_SIZE;
 use crate::dock::node;
 use crate::dock::node::window::{dock_node_apply_pos_size_to_windows, dock_node_move_windows};
 use crate::dock::node::dock_node_get_root_node;

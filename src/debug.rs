@@ -9,7 +9,7 @@ use crate::dock::node::dock_node::DockNode;
 use crate::draw::command::DrawCommand;
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::list::{DrawList, DrawListFlags, foreground_draw_list};
-use crate::font::Font;
+use crate::font::font::Font;
 use crate::font::font_atlas::FontAtlas;
 use crate::globals::GImGui;
 use crate::input::NavLayer;

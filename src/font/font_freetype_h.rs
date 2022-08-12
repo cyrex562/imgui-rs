@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "defines.rs"      //
+#include "dock_style_color"      //
 
 // Forward declarations
 struct ImFontAtlas;
@@ -18,16 +18,16 @@ struct ImFontBuilderIO;
 // You can set those flags on a per font basis in ImFontConfig::font_builder_flags
 enum ImGuiFreeTypeBuilderFlags
 {
-    ImGuiFreeTypeBuilderFlags_NoHinting    ,   // Disable hinting. This generally generates 'blurrier' bitmap glyphs when the glyph are rendered in any of the anti-aliased modes.
-    ImGuiFreeTypeBuilderFlags_NoAutoHint   ,   // Disable auto-hinter.
-    ImGuiFreeTypeBuilderFlags_ForceAutoHint,   // Indicates that the auto-hinter is preferred over the font's native hinter.
-    ImGuiFreeTypeBuilderFlags_LightHinting ,   // A lighter hinting algorithm for gray-level modes. Many generated glyphs are fuzzier but better resemble their original shape. This is achieved by snapping glyphs to the pixel grid only vertically (Y-axis), as is done by Microsoft's ClearType and Adobe's proprietary font renderer. This preserves inter-glyph spacing in horizontal text.
-    ImGuiFreeTypeBuilderFlags_MonoHinting  ,   // Strong hinting algorithm that should only be used for monochrome output.
-    ImGuiFreeTypeBuilderFlags_Bold         ,   // Styling: Should we artificially embolden the font?
-    ImGuiFreeTypeBuilderFlags_Oblique      ,   // Styling: Should we slant the font, emulating italic style?
-    ImGuiFreeTypeBuilderFlags_Monochrome   ,   // Disable anti-aliasing. Combine this with MonoHinting for best results!
-    ImGuiFreeTypeBuilderFlags_LoadColor    ,   // Enable FreeType color-layered glyphs
-    ImGuiFreeTypeBuilderFlags_Bitmap        = 1 << 9    // Enable FreeType bitmap glyphs
+    FreeTypeBuilderFlags::NoHinting    ,   // Disable hinting. This generally generates 'blurrier' bitmap glyphs when the glyph are rendered in any of the anti-aliased modes.
+    FreeTypeBuilderFlags::NoAutoHint   ,   // Disable auto-hinter.
+    FreeTypeBuilderFlags::ForceAutoHint,   // Indicates that the auto-hinter is preferred over the font's native hinter.
+    FreeTypeBuilderFlags::LightHinting ,   // A lighter hinting algorithm for gray-level modes. Many generated glyphs are fuzzier but better resemble their original shape. This is achieved by snapping glyphs to the pixel grid only vertically (Y-axis), as is done by Microsoft's ClearType and Adobe's proprietary font renderer. This preserves inter-glyph spacing in horizontal text.
+    FreeTypeBuilderFlags::MonoHinting  ,   // Strong hinting algorithm that should only be used for monochrome output.
+    FreeTypeBuilderFlags::Bold         ,   // Styling: Should we artificially embolden the font?
+    FreeTypeBuilderFlags::Oblique      ,   // Styling: Should we slant the font, emulating italic style?
+    FreeTypeBuilderFlags::Monochrome   ,   // Disable anti-aliasing. Combine this with MonoHinting for best results!
+    FreeTypeBuilderFlags::LoadColor    ,   // Enable FreeType color-layered glyphs
+    FreeTypeBuilderFlags::Bitmap        = 1 << 9    // Enable FreeType bitmap glyphs
 };
 
 namespace ImGuiFreeType
@@ -45,6 +45,6 @@ namespace ImGuiFreeType
     // Obsolete names (will be removed soon)
     // Prefer using '#define IMGUI_ENABLE_FREETYPE'
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    static inline bool BuildFontAtlas(ImFontAtlas* atlas, unsigned int flags = 0) { atlas.FontBuilderIO = GetBuilderForFreeType(); atlas.FontBuilderFlags = flags; return atlas.Build(); }
+    static inline bool BuildFontAtlas(ImFontAtlas* atlas, unsigned int flags = 0) { atlas.FontBuilderIO = GetBuilderForFreeType(); atlas.font_builder_flags = flags; return atlas.Build(); }
 
 }

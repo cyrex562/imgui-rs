@@ -4,10 +4,10 @@ pub mod tab_bar;
 pub mod title_bar;
 pub mod tree;
 pub mod window;
-mod dock_node;
-mod dock_node_flags;
-mod dock_node_state;
-mod dock_node_settings;
+pub mod dock_node;
+pub mod dock_node_flags;
+pub mod dock_node_state;
+pub mod dock_node_settings;
 
 use crate::axis::Axis;
 use crate::button::ButtonFlags;
@@ -15,7 +15,7 @@ use crate::color::StyleColor;
 use crate::condition::Condition;
 use crate::context::Context;
 use crate::dock::context::{dock_context_add_node, dock_context_remove_node};
-use crate::dock::defines::{DOCKING_SPLITTER_SIZE, WindowDockStyleColor};
+use crate::dock::dock_style_color::{DOCKING_SPLITTER_SIZE, WindowDockStyleColor};
 use crate::dock::node::rect::{
     dock_node_calc_drop_rects_and_test_mouse_pos, dock_node_calc_split_rects,
 };
@@ -71,7 +71,7 @@ use std::collections::HashSet;
 use std::ops::BitOr;
 pub use dock_node::DockNode;
 pub use dock_node_flags::DockNodeFlags;
-use dock_node_state::DockNodeState;
+pub use dock_node_state::DockNodeState;
 use crate::dock::node::tree::dock_node_tree_update_pos_size;
 use crate::render::render_rect_filled_with_hole;
 

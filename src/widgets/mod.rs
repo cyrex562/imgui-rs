@@ -32,7 +32,7 @@ index of this file:
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "defines.rs"
+#include "dock_style_color"
 
 #ifndef IMGUI_DISABLE
 
@@ -151,7 +151,7 @@ static Vector2D           InputTextCalcTextSizeW(const ImWchar* text_begin, cons
 
 void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
     // ImGuiContext& g = *GImGui;
@@ -272,7 +272,7 @@ void ImGui::text(const char* fmt, ...)
 
 void ImGui::TextV(const char* fmt, va_list args)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -352,7 +352,7 @@ void ImGui::LabelText(const char* label, const char* fmt, ...)
 // Add a label+text combo aligned to other label+value widgets
 void ImGui::LabelTextV(const char* label, const char* fmt, va_list args)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -389,7 +389,7 @@ void ImGui::BulletText(const char* fmt, ...)
 // Text with a little bullet aligned to the typical tree node.
 void ImGui::BulletTextV(const char* fmt, va_list args)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -494,7 +494,7 @@ void ImGui::BulletTextV(const char* fmt, va_list args)
 bool ImGui::ButtonBehavior(const ImRect& bb, Id32 id, bool* out_hovered, bool* out_held, ImGuiButtonFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
 
     // Default only reacts to left mouse button
     if ((flags & ImGuiButtonFlags_MouseButtonMask_) == 0)
@@ -674,7 +674,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, Id32 id, bool* out_hovered, bool* o
 
 bool ImGui::ButtonEx(const char* label, const Vector2D& size_arg, ImGuiButtonFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -737,7 +737,7 @@ bool ImGui::SmallButton(const char* label)
 bool ImGui::InvisibleButton(const char* str_id, const Vector2D& size_arg, ImGuiButtonFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -761,7 +761,7 @@ bool ImGui::InvisibleButton(const char* str_id, const Vector2D& size_arg, ImGuiB
 bool ImGui::ArrowButtonEx(const char* str_id, Direction dir, Vector2D size, ImGuiButtonFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -1013,7 +1013,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, Id32 id, ImGuiAxis axis, ImS64* 
 
 void ImGui::Image(ImTextureID user_texture_id, const Vector2D& size, const Vector2D& uv0, const Vector2D& uv1, const Vector4D& tint_col, const Vector4D& border_col)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -1040,7 +1040,7 @@ void ImGui::Image(ImTextureID user_texture_id, const Vector2D& size, const Vecto
 bool ImGui::ImageButtonEx(Id32 id, ImTextureID texture_id, const Vector2D& size, const Vector2D& uv0, const Vector2D& uv1, const Vector2D& padding, const Vector4D& bg_col, const Vector4D& tint_col)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -1084,7 +1084,7 @@ bool ImGui::ImageButton(ImTextureID user_texture_id, const Vector2D& size, const
 
 bool ImGui::Checkbox(const char* label, bool* v)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -1190,7 +1190,7 @@ bool ImGui::CheckboxFlags(const char* label, ImU64* flags, ImU64 flags_value)
 
 bool ImGui::RadioButton(const char* label, bool active)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -1253,7 +1253,7 @@ bool ImGui::RadioButton(const char* label, int* v, int v_button)
 // size_arg (for each axis) < 0.0: align to end, 0.0: auto, > 0.0: specified size
 void ImGui::ProgressBar(float fraction, const Vector2D& size_arg, const char* overlay)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -1289,7 +1289,7 @@ void ImGui::ProgressBar(float fraction, const Vector2D& size_arg, const char* ov
 
 void ImGui::Bullet()
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -1325,7 +1325,7 @@ void ImGui::Bullet()
 
 void ImGui::Spacing()
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
     ItemSize(DimgVec2D::new(0, 0));
@@ -1333,7 +1333,7 @@ void ImGui::Spacing()
 
 void ImGui::Dummy(const Vector2D& size)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -1344,7 +1344,7 @@ void ImGui::Dummy(const Vector2D& size)
 
 void ImGui::NewLine()
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -1361,7 +1361,7 @@ void ImGui::NewLine()
 
 void ImGui::AlignTextToFramePadding()
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -1373,7 +1373,7 @@ void ImGui::AlignTextToFramePadding()
 // Horizontal/vertical separating line
 void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
 
@@ -1590,7 +1590,7 @@ static float CalcMaxPopupHeightFromItemCount(int items_count)
 bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
 
     ImGuiNextWindowDataFlags backup_next_window_data_flags = g.NextWindowData.Flags;
     g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
@@ -2320,7 +2320,7 @@ bool ImGui::DragBehavior(Id32 id, DataType data_type, void* p_v, float v_speed, 
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->data Types' to understand how to use this function directly.
 bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -2408,7 +2408,7 @@ bool ImGui::DragScalar(const char* label, DataType data_type, void* p_data, floa
 
 bool ImGui::DragScalarN(const char* label, DataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -2464,7 +2464,7 @@ bool ImGui::DragFloat4(const char* label, float v[4], float v_speed, float v_min
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
 bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_current_max, float v_speed, float v_min, float v_max, const char* format, const char* format_max, SliderFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -2518,7 +2518,7 @@ bool ImGui::DragInt4(const char* label, int v[4], float v_speed, int v_min, int 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
 bool ImGui::DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed, int v_min, int v_max, const char* format, const char* format_max, SliderFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -2940,7 +2940,7 @@ bool ImGui::SliderBehavior(const ImRect& bb, Id32 id, DataType data_type, void* 
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo->Widgets->data Types' to understand how to use this function directly.
 bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -3024,7 +3024,7 @@ bool ImGui::SliderScalar(const char* label, DataType data_type, void* p_data, co
 // Add multiple sliders on 1 line for compact edition of multiple components
 bool ImGui::SliderScalarN(const char* label, DataType data_type, void* v, int components, const void* v_min, const void* v_max, const char* format, SliderFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -3109,7 +3109,7 @@ bool ImGui::SliderInt4(const char* label, int v[4], int v_min, int v_max, const 
 
 bool ImGui::VSliderScalar(const char* label, const Vector2D& size, DataType data_type, void* p_data, const void* p_min, const void* p_max, const char* format, SliderFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -3422,7 +3422,7 @@ bool ImGui::TempInputScalar(const ImRect& bb, Id32 id, const char* label, DataTy
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->data Types' to understand how to use this function directly.
 bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, const void* p_step, const void* p_step_fast, const char* format, InputTextFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -3496,7 +3496,7 @@ bool ImGui::InputScalar(const char* label, DataType data_type, void* p_data, con
 
 bool ImGui::InputScalarN(const char* label, DataType data_type, void* p_data, int components, const void* p_step, const void* p_step_fast, const char* format, InputTextFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -3827,7 +3827,7 @@ static void InputTextReconcileUndoStateAfterUserCallback(InputTextState* state, 
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
 bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_size, const Vector2D& size_arg, InputTextFlags flags, ImGuiInputTextCallback callback, void* callback_user_data)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -4793,7 +4793,7 @@ static void ColorEditRestoreHS(let* col, float* H, float* S, float* V)
 // With typical options: Left-click on color square to open color picker. Right-click to open option menu. CTRL-Click over input fields to edit them and TAB to go to next item.
 bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -5050,7 +5050,7 @@ static void RenderArrowsForVerticalBar(ImDrawList* draw_list, Vector2D pos, Vect
 bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags flags, let* ref_col)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -5420,7 +5420,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
 // Note that 'col' may be encoded in HSV if ImGuiColorEditFlags_InputHSV is set.
 bool ImGui::ColorButton(const char* desc_id, const Vector4D& col, ImGuiColorEditFlags flags, const Vector2D& size_arg)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -5676,7 +5676,7 @@ bool ImGui::TreeNode(const void* ptr_id, const char* fmt, ...)
 
 bool ImGui::TreeNode(const char* label)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
     return TreeNodeBehavior(window.GetID(label), 0, label, None);
@@ -5694,7 +5694,7 @@ bool ImGui::TreeNodeV(const void* ptr_id, const char* fmt, va_list args)
 
 bool ImGui::TreeNodeEx(const char* label, ImGuiTreeNodeFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -5721,7 +5721,7 @@ bool ImGui::TreeNodeEx(const void* ptr_id, ImGuiTreeNodeFlags flags, const char*
 
 bool ImGui::TreeNodeExV(const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -5732,7 +5732,7 @@ bool ImGui::TreeNodeExV(const char* str_id, ImGuiTreeNodeFlags flags, const char
 
 bool ImGui::TreeNodeExV(const void* ptr_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -5789,7 +5789,7 @@ bool ImGui::TreeNodeBehaviorIsOpen(Id32 id, ImGuiTreeNodeFlags flags)
 
 bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* label, const char* label_end)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -5976,7 +5976,7 @@ bool ImGui::TreeNodeBehavior(Id32 id, ImGuiTreeNodeFlags flags, const char* labe
 
 void ImGui::TreePush(const char* str_id)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     Indent();
     window.DC.TreeDepth += 1;
     push_id(str_id);
@@ -5984,7 +5984,7 @@ void ImGui::TreePush(const char* str_id)
 
 void ImGui::TreePush(const void* ptr_id)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     Indent();
     window.DC.TreeDepth += 1;
     push_id(ptr_id);
@@ -6043,7 +6043,7 @@ void ImGui::SetNextItemOpen(bool is_open, ImGuiCond cond)
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
 bool ImGui::CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -6056,7 +6056,7 @@ bool ImGui::CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags)
 // Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
 bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -6099,7 +6099,7 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
 // FIXME: selectable() with (size.x == 0.0) and (selectable_text_align.x > 0.0) followed by same_line() is currently not supported.
 bool ImGui::selectable(const char* label, bool selected, ImGuiselectableFlags flags, const Vector2D& size_arg)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -6265,7 +6265,7 @@ bool ImGui::selectable(const char* label, bool* p_selected, ImGuiselectableFlags
 bool ImGui::BeginListBox(const char* label, const Vector2D& size_arg)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -6394,7 +6394,7 @@ bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(v
 int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, Vector2D frame_size)
 {
     // ImGuiContext& g = *GImGui;
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return -1;
 
@@ -6645,7 +6645,7 @@ float ImGuiMenuColumns::DeclColumns(float w_icon, float w_label, float w_shortcu
 // Then later the same system could be used for multiple menu-bars, scrollbars, side-bars.
 bool ImGui::BeginMenuBar()
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
     if (!(window.Flags & WindowFlags_MenuBar))
@@ -6674,7 +6674,7 @@ bool ImGui::BeginMenuBar()
 
 void ImGui::EndMenuBar()
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return;
     // ImGuiContext& g = *GImGui;
@@ -6814,7 +6814,7 @@ static bool IsRootOfOpenMenuSet()
 
 bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 
@@ -7018,7 +7018,7 @@ void ImGui::EndMenu()
 
 bool ImGui::menu_itemEx(const char* label, const char* icon, const char* shortcut, bool selected, bool enabled)
 {
-    Window* window = GetCurrentWindow();
+    let window = g.current_window_mut();
     if (window.SkipItems)
         return false;
 

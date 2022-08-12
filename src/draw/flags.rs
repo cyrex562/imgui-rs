@@ -79,3 +79,16 @@ pub fn set_draw_flags_round_corners_default(flags: &mut HashSet<DrawFlags>) {
 }
 
 pub const DRAW_FLAGS_EMPTY: HashSet<DrawFlags> = HashSet::new();
+
+
+pub const ROUND_CORNERS_BOTTOM: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersBottomRight]);
+
+pub const ROUND_CORNERS_LEFT: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersTopLeft]);
+
+pub const ROUND_CORNERS_RIGHT: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersBottomRight, DrawFlags::RoundCornersTopRight]);
+
+pub const ROUND_CORNERS_ALL: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersTopLeft, DrawFlags::RoundCornersTopRight, DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersBottomRight]);
+
+pub const ROUND_CORNERS_DEFAULT: HashSet<DrawFlags>        = ROUND_CORNERS_ALL;
+
+pub const ROUND_CORNERS_MASK: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersTopLeft, DrawFlags::RoundCornersTopRight, DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersBottomRight, DrawFlags::RoundCornersNone]);

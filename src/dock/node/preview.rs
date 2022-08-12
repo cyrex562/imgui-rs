@@ -2,18 +2,20 @@ use std::collections::HashSet;
 use crate::{Context, INVALID_ID, window};
 use crate::axis::Axis;
 use crate::color::StyleColor;
-use crate::dock::defines::{DOCKING_SPLITTER_SIZE, WindowDockStyleColor};
+use crate::dock::dock_style_color::{DOCKING_SPLITTER_SIZE, WindowDockStyleColor};
 use crate::dock::node;
 use crate::dock::node::{int, tab_bar};
 use crate::dock::node::dock_node::DockNode;
 use crate::dock::node::dock_node_flags::DockNodeFlags;
 use crate::dock::node::rect::{dock_node_calc_drop_rects_and_test_mouse_pos, dock_node_calc_split_rects};
 use crate::dock::preview::DockPreviewData;
+use crate::draw::flags::DrawFlags;
 use crate::draw::list::{DrawList, foreground_draw_list};
 use crate::frame::get_frame_height;
 use crate::math::saturate_f32;
 use crate::rect::Rect;
-use crate::style::{color_u32_from_style_color, get_color_u32_no_alpha, pop_style_color, push_style_color};
+use crate::render::calc_rounding_flags_for_rect_in_rect;
+use crate::style::{color_u32_from_style_color, color_u32_from_style_color_with_alpha, get_color_u32_no_alpha, pop_style_color, push_style_color};
 use crate::tab_bar::TabItemFlags;
 use crate::types::{Direction, DIRECTIONS};
 use crate::vectors::vector_2d::Vector2D;
@@ -140,10 +142,10 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
     }
 
     // Draw main preview rectangle
-    let overlay_col_main = color_u32_from_style_color(StyleColor::DockingPreview, if is_transparent_payload { 0.60 } else { 0.40 });
-    let overlay_col_drop = color_u32_from_style_color(StyleColor::DockingPreview, if is_transparent_payload { 0.90 } else { 0.70 });
-    let overlay_col_drop_hovered = color_u32_from_style_color(StyleColor::DockingPreview, if is_transparent_payload { 1.20 } else { 1.00 });
-    let overlay_col_lines = color_u32_from_style_color(StyleColor::NavWindowingHighlight, if is_transparent_payload { 0.80 } else { 0.60 });
+    let overlay_col_main = color_u32_from_style_color_with_alpha(g, StyleColor::DockingPreview, if is_transparent_payload { 0.60 } else { 0.40 });
+    let overlay_col_drop = color_u32_from_style_color_with_alpha(g, StyleColor::DockingPreview, if is_transparent_payload { 0.90 } else { 0.70 });
+    let overlay_col_drop_hovered = color_u32_from_style_color_with_alpha(g,StyleColor::DockingPreview, if is_transparent_payload { 1.20 } else { 1.00 });
+    let overlay_col_lines = color_u32_from_style_color_with_alpha(g,StyleColor::NavWindowingHighlight, if is_transparent_payload { 0.80 } else { 0.60 });
 
     // Display area preview
     let root_payload_dock_node = g.dock_node_mut(root_payload.dock_node_as_host_id);
@@ -156,7 +158,7 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
         if data.split_dir != Direction::None || data.is_center_available {
             // for (int overlay_n = 0; overlay_n < overlay_draw_lists_count; overlay_n += 1) 
             for overlay_n in 0..overlay_draw_lists_count {
-                overlay_draw_lists[overlay_n].add_rect_filled(overlay_rect.min, overlay_rect.max, overlay_col_main, host_window.WindowRounding, calc_rounding_flags_for_rect_in_rect(overlay_rect, host_window.rect(), DOCKING_SPLITTER_SIZE));
+                overlay_draw_lists[overlay_n].add_rect_filled(overlay_rect.min, overlay_rect.max, overlay_col_main, host_window.WindowRounding, &calc_rounding_flags_for_rect_in_rect(overlay_rect, host_window.rect(), DOCKING_SPLITTER_SIZE));
             }
         }
     }
@@ -231,6 +233,8 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
         }
     }
 
+    let draw_flags: HashSet<DrawFlags> = HashSet::new();
+
     // Display drop boxes
     let overlay_rounding = ImMax(3.0, g.style.frame_rounding);
     // for (int dir = Direction::None; dir < Direction::COUNT; dir += 1)
@@ -243,8 +247,8 @@ pub fn dock_node_preview_dock_render(g: &mut Context, host_window: &mut host_win
             // for (int overlay_n = 0; overlay_n < overlay_draw_lists_count; overlay_n += 1)
             for overlay_n in 0..overlay_draw_lists_count {
                 let center = Vector2D::floor(draw_r_in.get_center());
-                overlay_draw_lists[overlay_n].add_rect_filled(draw_r.min, draw_r.max, overlay_col, overlay_rounding, None);
-                overlay_draw_lists[overlay_n].add_rect(draw_r_in.min, draw_r_in.max, overlay_col_lines, overlay_rounding, None, 0.0);
+                overlay_draw_lists[overlay_n].add_rect_filled(draw_r.min, draw_r.max, overlay_col, overlay_rounding, &draw_flags);
+                overlay_draw_lists[overlay_n].add_rect(draw_r_in.min, draw_r_in.max, overlay_col_lines, overlay_rounding, &draw_flags, 0.0);
                 if dir == Direction::Left || dir == Direction::Right {
                     overlay_draw_lists[overlay_n].add_line(&Vector2D::new(center.x, draw_r_in.min.y), &Vector2D::new(center.x, draw_r_in.max.y), overlay_col_lines, 0.0);
                 }

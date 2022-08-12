@@ -1,13 +1,13 @@
 use crate::button::ButtonFlags;
 use crate::color::StyleColor;
-use crate::dock::defines::{DOCKING_SPLITTER_SIZE, WindowDockStyleColor};
+use crate::dock::dock_style_color::{DOCKING_SPLITTER_SIZE, WindowDockStyleColor};
 use crate::dock::node;
 use crate::dock::node::{title_bar, window};
 use crate::input::mouse::{is_mouse_clicked, start_mouse_moving_window_or_node};
 use crate::input::{MouseButton, NavLayer};
 use crate::item::{is_item_active, ItemFlags, pop_item_flag, push_item_flag};
 use crate::nav::nav_init_window;
-use crate::popup::{is_popup_open, open_popup};
+use crate::popup::{is_popup_open, open_popup, PopupFlags};
 use crate::rect::Rect;
 use crate::style::{
     color_convert_u32_to_float4, get_color_u32_no_alpha, pop_style_color, push_style_color,
@@ -26,6 +26,7 @@ use crate::{Context, hash_string, INVALID_ID};
 use std::collections::HashSet;
 use crate::dock::node::dock_node::DockNode;
 use crate::dock::node::dock_node_flags::DockNodeFlags;
+use crate::render::calc_rounding_flags_for_rect_in_rect;
 
 // User helper to append/amend into a dock node tab bar. Most commonly used to add e.g. a "+" button.
 // bool DockNodeBeginAmendTabBar(ImGuiDockNode* node)
@@ -126,7 +127,8 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
 
     // In a dock node, the Collapse Button turns into the window Menu button.
     // FIXME-DOCK FIXME-OPT: Could we recycle popups id across multiple dock nodes?
-    if has_window_menu_button && is_popup_open(g, hash_string("#WindowMenu", 0), None) {
+    let popup_flags: HashSet<PopupFlags> = HashSet::new();
+    if has_window_menu_button && is_popup_open(g, hash_string("#WindowMenu", 0), &popup_flags) {
         let tab_id = window::dock_node_update_window_menu(g, node, &mut tab_bar.unwrap());
         if tab_id != INVALID_ID {
             tab_bar.unwrap().next_selected_tab_id = tab_id;
@@ -178,7 +180,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         }
     });
     let rounding_flags = calc_rounding_flags_for_rect_in_rect(
-        title_bar_rect,
+        &title_bar_rect,
         host_window.rect(),
         DOCKING_SPLITTER_SIZE,
     );
@@ -187,7 +189,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
         &title_bar_rect.max,
         title_bar_col,
         host_window.WindowRounding,
-        rounding_flags,
+        &rounding_flags,
     );
 
     // Docking/Collapse button
@@ -198,7 +200,8 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
             node,
         ) {
             // == DockNodeGetWindowMenuButtonId(node)
-            open_popup(g, "#WindowMenu", None);
+            let popup_flags: HashSet<PopupFlags> = HashSet::new();
+            open_popup(g, "#WindowMenu", &popup_flags);
         }
         if is_item_active(g) {
             focus_tab_id = tab_bar.selected_tab_id;
@@ -322,7 +325,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
 
             // Store last item data so it can be queried with IsItemXXX functions after the user Begin() call
             window.dock_tab_item_status_flags = g.last_item_data.status_flags.clone();
-            window.dock_tab_item_rect = g.last_item_data.rect;
+            window.dock_tab_item_rect = g.last_item_data.rect.clone();
 
             // update navigation id on menu layer
             if g.nav_window
@@ -398,7 +401,7 @@ pub fn dock_node_update_tab_bar(g: &mut Context, node: &mut DockNode, host_windo
             SetItemAllowOverlap();
         }
         if held {
-            if is_mouse_clicked(g, MouseButton::Left, false) {
+            if is_mouse_clicked(g, &MouseButton::Left, false) {
                 focus_tab_id = tab_bar.selected_tab_id;
             }
 

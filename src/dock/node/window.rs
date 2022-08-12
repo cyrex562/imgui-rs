@@ -1,10 +1,11 @@
+use std::collections::HashSet;
 use crate::dock::context::dock_context_remove_node;
 use crate::dock::node;
 use crate::dock::node::tab_bar;
 use crate::frame::get_frame_height;
 use crate::input::mouse::start_mouse_moving_window;
 use crate::layout::same_line;
-use crate::popup::{begin_popup, end_popup};
+use crate::popup::{begin_popup, end_popup, PopupFlags};
 use crate::tab_bar::{TabBar, TabItemFlags};
 use crate::types::{DataAuthority, Direction, Id32};
 use crate::vectors::vector_2d::Vector2D;
@@ -14,6 +15,7 @@ use crate::window::pos::set_window_pos;
 use crate::window::size::set_window_size;
 use crate::window::{Window, WindowFlags};
 use crate::{Context, INVALID_ID};
+use crate::condition::Condition;
 use crate::dock::node::dock_node::DockNode;
 
 // static void dock_node_hide_window_during_host_window_creation(Window* window)
@@ -340,7 +342,8 @@ pub fn dock_node_update_window_menu(
             Some(Vector2D::new(1.0, 0.0)),
         );
     }
-    if begin_popup(g, "#WindowMenu", None) {
+    let mut window_flags: HashSet<WindowFlags> = HashSet::new();
+    if begin_popup(g, "#WindowMenu", &mut window_flags) {
         node.is_focused = true;
         if tab_bar.tabs.size == 1 {
             if menu_item("Hide tab bar", None, node.is_hidden_tab_bar()) {

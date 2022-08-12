@@ -86,8 +86,10 @@
 
 use std::collections::HashSet;
 use crate::font::FontConfig;
-use freetype::Library;
+use freetype::{Library, RenderMode};
 use freetype::face::Face;
+use freetype::ffi::FT_New_Memory_Face;
+use crate::font::font_config::FontConfig;
 
 // A structure that describe a glyph.
     #[derive(Default,Debug,Clone)]
@@ -153,39 +155,45 @@ use freetype::face::Face;
 
     impl FreeTypeFont {
         pub fn init_font(&mut self, ft_library: &Library, cfg: &FontConfig, extra_user_flags: u32) -> bool{
-            FT_Error error = FT_New_Memory_Face(ft_library, (uint8_t*)cfg.FontData, (uint32_t)cfg.FontDataSize, (uint32_t)cfg.FontNo, &Face);
-        if (error != 0)
-            return false;
-        error = FT_Select_Charmap(Face, FT_ENCODING_UNICODE);
-        if (error != 0)
-            return false;
+            let face = ft_library.new_memory_face(&cfg.font_data, cfg.font_no);
+            //  let error = FT_New_Memory_Face(ft_library, cfg.FontData, cfg.FontDataSize, cfg.FontNo, &Face);
+            if face.is_err() {
+                return false;
+            }
+            let face_unwrapped = face.unwrap();
+
+        // if (error != 0)
+        //     return false;
+        // error = FT_Select_Charmap(Face, FT_ENCODING_UNICODE);
+        // if (error != 0)
+        //     return false;
 
         // Convert to FreeType flags (NB: Bold and Oblique are processed separately)
-        UserFlags = cfg.FontBuilderFlags | extra_font_builder_flags;
+        self.user_flags = cfg.font_builder_flags | extra_user_flags;
 
         LoadFlags = 0;
-        if ((UserFlags & ImGuiFreeTypeBuilderFlags_Bitmap) == 0)
+        if ((UserFlags & FreeTypeBuilderFlags::Bitmap) == 0)
             LoadFlags |= FT_LOAD_NO_BITMAP;
 
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_NoHinting)
+        if (UserFlags & FreeTypeBuilderFlags::NoHinting)
             LoadFlags |= FT_LOAD_NO_HINTING;
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_NoAutoHint)
+        if (UserFlags & FreeTypeBuilderFlags::NoAutoHint)
             LoadFlags |= FT_LOAD_NO_AUTOHINT;
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_ForceAutoHint)
+        if (UserFlags & FreeTypeBuilderFlags::ForceAutoHint)
             LoadFlags |= FT_LOAD_FORCE_AUTOHINT;
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_LightHinting)
+        if (UserFlags & FreeTypeBuilderFlags::LightHinting)
             LoadFlags |= FT_LOAD_TARGET_LIGHT;
-        else if (UserFlags & ImGuiFreeTypeBuilderFlags_MonoHinting)
+        else if (UserFlags & FreeTypeBuilderFlags::MonoHinting)
             LoadFlags |= FT_LOAD_TARGET_MONO;
         else
             LoadFlags |= FT_LOAD_TARGET_NORMAL;
 
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_Monochrome)
+        if (UserFlags & FreeTypeBuilderFlags::Monochrome)
             RenderMode = FT_RENDER_MODE_MONO;
         else
             RenderMode = FT_RENDER_MODE_NORMAL;
 
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_LoadColor)
+        if (UserFlags & FreeTypeBuilderFlags::LoadColor)
             LoadFlags |= FT_LOAD_COLOR;
 
         memset(&Info, 0, sizeof(Info));
@@ -207,16 +215,16 @@ use freetype::face::Face;
         // is a maximum height of an any given glyph, i.e. it's the sum of font's ascender and descender. Seems strange to me.
         // NB: FT_Set_Pixel_Sizes() doesn't seem to get us the same result.
         FT_Size_RequestRec req;
-        req.type = if(UserFlags & ImGuiFreeTypeBuilderFlags_Bitmap) { FT_SIZE_REQUEST_TYPE_NOMINAL }else{ FT_SIZE_REQUEST_TYPE_REAL_DIM};
+        req.type = if(UserFlags & FreeTypeBuilderFlags::Bitmap) { FT_SIZE_REQUEST_TYPE_NOMINAL }else{ FT_SIZE_REQUEST_TYPE_REAL_DIM};
         req.width = 0;
-        req.height = (uint32_t)pixel_height * 64;
+        req.height = pixel_height * 64;
         req.horiResolution = 0;
         req.vertResolution = 0;
         FT_Request_Size(Face, &req);
 
         // update font info
         FT_Size_Metrics metrics = Face->size.metrics;
-        Info.PixelHeight = (uint32_t)pixel_height;
+        Info.PixelHeight = pixel_height;
         Info.Ascender = FT_CEIL(metrics.ascender);
         Info.Descender = FT_CEIL(metrics.descender);
         Info.LineSpacing = FT_CEIL(metrics.height);
@@ -243,9 +251,9 @@ use freetype::face::Face;
         // IM_ASSERT(slot.format == FT_GLYPH_FORMAT_OUTLINE || slot.format == FT_GLYPH_FORMAT_BITMAP);
 
         // Apply convenience transform (this is not picking from real "Bold"/"Italic" fonts! Merely applying FreeType helper transform. Oblique == Slanting)
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_Bold)
+        if (UserFlags & FreeTypeBuilderFlags::Bold)
             FT_GlyphSlot_Embolden(slot);
-        if (UserFlags & ImGuiFreeTypeBuilderFlags_Oblique)
+        if (UserFlags & FreeTypeBuilderFlags::Oblique)
         {
             FT_GlyphSlot_Oblique(slot);
             //FT_BBox bbox;
@@ -354,7 +362,7 @@ use freetype::face::Face;
 
     // bool FreeTypeFont::InitFont(FT_Library ft_library, const ImFontConfig& cfg, unsigned int extra_font_builder_flags)
     // {
-    //     FT_Error error = FT_New_Memory_Face(ft_library, (uint8_t*)cfg.FontData, (uint32_t)cfg.FontDataSize, (uint32_t)cfg.FontNo, &Face);
+    //     FT_Error error = FT_New_Memory_Face(ft_library, cfg.FontData, cfg.FontDataSize, cfg.FontNo, &Face);
     //     if (error != 0)
     //         return false;
     //     error = FT_Select_Charmap(Face, FT_ENCODING_UNICODE);
@@ -412,14 +420,14 @@ use freetype::face::Face;
     //     FT_Size_RequestRec req;
     //     req.type = if(UserFlags & ImGuiFreeTypeBuilderFlags_Bitmap) { FT_SIZE_REQUEST_TYPE_NOMINAL }else{ FT_SIZE_REQUEST_TYPE_REAL_DIM};
     //     req.width = 0;
-    //     req.height = (uint32_t)pixel_height * 64;
+    //     req.height = pixel_height * 64;
     //     req.horiResolution = 0;
     //     req.vertResolution = 0;
     //     FT_Request_Size(Face, &req);
     //
     //     // update font info
     //     FT_Size_Metrics metrics = Face->size.metrics;
-    //     Info.PixelHeight = (uint32_t)pixel_height;
+    //     Info.PixelHeight = pixel_height;
     //     Info.Ascender = FT_CEIL(metrics.ascender);
     //     Info.Descender = FT_CEIL(metrics.descender);
     //     Info.LineSpacing = FT_CEIL(metrics.height);
@@ -643,7 +651,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             return false;
 
         // Measure highest codepoints
-        src_load_color |= (cfg.FontBuilderFlags & ImGuiFreeTypeBuilderFlags_LoadColor) != 0;
+        src_load_color |= (cfg.font_builder_flags & FreeTypeBuilderFlags::LoadColor) != 0;
         ImFontBuildDstDataFT& dst_tmp = dst_tmp_array[src_tmp.DstIndex];
         src_tmp.SrcRanges = if cfg.GlyphRanges { cfg.GlyphRanges }else{ atlas.GetGlyphRangesDefault()};
         for (const ImWchar* src_range = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
@@ -965,7 +973,7 @@ static bool ImFontAtlasBuildWithFreeType(ImFontAtlas* atlas)
     // If you don't call FT_Add_Default_Modules() the rest of code may work, but FreeType won't use our custom allocator.
     FT_Add_Default_Modules(ft_library);
 
-    bool ret = ImFontAtlasBuildWithFreeTypeEx(ft_library, atlas, atlas.FontBuilderFlags);
+    bool ret = ImFontAtlasBuildWithFreeTypeEx(ft_library, atlas, atlas.font_builder_flags);
     FT_Done_Library(ft_library);
 
     return ret;

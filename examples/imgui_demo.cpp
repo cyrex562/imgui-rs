@@ -93,7 +93,7 @@ ShowExampleAppCustomRendering()
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-// #include "../src/defines.rs"
+// #include "../src/dock_style_color"
 
 #ifndef IMGUI_DISABLE
 

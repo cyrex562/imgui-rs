@@ -6,7 +6,7 @@ use crate::vectors::Vector2D;
 
 // Generic linear color gradient, write to RGB fields, leave A untouched.
 // void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, Vector2D gradient_p0, Vector2D gradient_p1, ImU32 col0, ImU32 col1)
-pub fn shade_verts_linear_color_gradient_keep_alpha(g: &mut Context, draw_list: &mut DrawList, vert_start_idx: usize, vert_end_idx: usize, gradient_p0: Vector2D, gradient_p1: Vector2D, col0: u32, col1: u32) {
+pub fn shade_verts_linear_color_gradient_keep_alpha(draw_list: &mut DrawList, vert_start_idx: usize, vert_end_idx: usize, gradient_p0: Vector2D, gradient_p1: Vector2D, col0: u32, col1: u32) {
     let gradient_extent = gradient_p1 - gradient_p0;
     let gradient_inv_length2 = 1.0 / vec_length_sqr(&gradient_extent);
     let vert_start = draw_list.vtx_buffer.data + vert_start_idx;
@@ -30,7 +30,7 @@ pub fn shade_verts_linear_color_gradient_keep_alpha(g: &mut Context, draw_list: 
 
 // Distribute UV over (a, b) rectangle
 // void shade_verts_linear_uv(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, const Vector2D& a, const Vector2D& b, const Vector2D& uv_a, const Vector2D& uv_b, bool clamp)
-pub fn shade_verts_linear_uv(g: &mut Context, draw_list: &mut DrawList, vert_start_idx: i32, vert_end_idx: i32, a: &Vector2D, b: &Vector2D, uv_a: &Vector2D, uv_b: &Vector2D, clamp: bool) {
+pub fn shade_verts_linear_uv(draw_list: &mut DrawList, vert_start_idx: i32, vert_end_idx: i32, a: &Vector2D, b: &Vector2D, uv_a: &Vector2D, uv_b: &Vector2D, clamp: bool) {
     let size = b - a;
     let uv_size = uv_b - uv_a;
     let scale = Vector2D::new(

@@ -1,10 +1,10 @@
 use crate::context::Context;
-use crate::draw::command::{DrawCommandHeader, DrawCommand};
+use crate::draw::command::{DrawCommand, DrawCommandHeader};
 use crate::draw::draw_defines::DrawFlags;
 use crate::draw::list_shared_data::DrawListSharedData;
 use crate::draw::list_splitter::DrawListSplitter;
 use crate::draw::vertex::DrawVertex;
-use crate::font::Font;
+use crate::font::font::Font;
 use crate::rect::Rect;
 use crate::texture::TextureId;
 use crate::types::{DrawIndex, Id32, INVALID_ID};
@@ -19,8 +19,9 @@ use std::mem::size_of;
 use std::os::raw::c_char;
 use crate::color::COLOR32_A_MASK;
 use crate::draw::bezier::{bezier_cubic_calc, bezier_quadratic_calc};
-use crate::draw::flags::{DrawFlags, fix_rect_corner_flags};
-use crate::draw::{DrawCallback, ROUND_CORNERS_MASK};
+use crate::draw::flags::{DrawFlags, fix_rect_corner_flags, ROUND_CORNERS_MASK};
+use crate::draw::DrawCallback;
+use crate::math::{fix_normal_2f, normalize_2f_over_zero};
 use crate::popup::PopupPositionPolicy::Default;
 use crate::window::clip::push_clip_rect;
 
@@ -148,7 +149,7 @@ impl DrawList {
     //  void  pop_texture_id();
     pub fn pop_texture_id(&mut self) {
         self.texture_id_stack.pop_back();
-        self.command_header.texture_id = if (self.texture_id_stack.is_empty) {
+        self.command_header.texture_id = if self.texture_id_stack.is_empty {
             INVALID_ID
         } else {
             self.texture_id_stack.data[self.texture_id_stack.size - 1]
@@ -468,7 +469,7 @@ impl DrawList {
         // const bool closed = (flags & DrawFlags::Closed) != 0;
         let closed = flags.contains(&DrawFlags::Closed);
         // const Vector2D opaque_uv = data.TexUvWhitePixel;
-        let opaque_uv = &self.data.text_uv_white_pixel;
+        let opaque_uv = &self.data.tex_uv_white_pixel;
         // let count = closed ? points_count : points_count - 1; // The number of line segments we need to draw
         let count = if closed { points_count } else { points_count - 1 };
         // const bool thick_line = (thickness > _FringeScale);
@@ -514,9 +515,9 @@ impl DrawList {
             // for (int i1 = 0; i1 < count; i1 += 1)
             for i1 in 0..count {
                 let i2 = if (i1 + 1) == points_count { 0 } else { i1 + 1 };
-                let dx = points[i2].x - points[i1].x;
-                let dy = points[i2].y - points[i1].y;
-                normalize_2f_over_zero(dx, dy);
+                let mut dx = points[i2].x - points[i1].x;
+                let mut dy = points[i2].y - points[i1].y;
+                normalize_2f_over_zero(&mut dx, &mut dy);
                 temp_normals[i1].x = dy;
                 temp_normals[i1].y = -dx;
             }
@@ -560,7 +561,7 @@ impl DrawList {
                     // Average normals
                     let mut dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5;
                     let mut dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5;
-                    fix_normal_2f(dm_x, dm_y);
+                    fix_normal_2f(&mut dm_x, &mut dm_y);
                     dm_x *= half_draw_size; // dm_x, dm_y are offset to the outer edge of the AA area
                     dm_y *= half_draw_size;
 
@@ -668,9 +669,9 @@ impl DrawList {
                     let idx2 = if (i1 + 1) == points_count { self.vtx_current_idx } else { idx1 + 4 }; // Vertex index for end of segment
 
                     // Average normals
-                    let dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5;
-                    let dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5;
-                    fix_normal_2f(dm_x, dm_y);
+                    let mut dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5;
+                    let mut dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5;
+                    fix_normal_2f(&mut dm_x, &mut dm_y);
                     let dm_out_x = dm_x * (half_inner_thickness + aa_size);
                     let dm_out_y = dm_y * (half_inner_thickness + aa_size);
                     let dm_in_x = dm_x * half_inner_thickness;
@@ -744,7 +745,7 @@ impl DrawList {
 
                 let mut dx = p2.x - p1.x;
                 let mut dy = p2.y - p1.y;
-                normalize_2f_over_zero(dx, dy);
+                normalize_2f_over_zero(&mut dx, &mut dy);
                 dx *= (thickness * 0.5);
                 dy *= (thickness * 0.5);
 
@@ -784,7 +785,7 @@ impl DrawList {
         }
 
 
-        let uv = &self.data.text_uv_white_pixel;
+        let uv = &self.data.tex_uv_white_pixel;
 
         if self.flags.contains(&DrawListFlags::AntiAliasedFill) {
             // Anti-aliased Fill
@@ -816,9 +817,9 @@ impl DrawList {
             for (i0, i1) in indexes_a.zip(indexes_b) {
                 let p0 = &points[i0];
                 let p1 = &points[i1];
-                let dx = p1.x - p0.x;
-                let dy = p1.y - p0.y;
-                normalize_2f_over_zero(dx, dy);
+                let mut dx = p1.x - p0.x;
+                let mut dy = p1.y - p0.y;
+                normalize_2f_over_zero(&mut dx, &mut dy);
                 temp_normals[i0].x = dy;
                 temp_normals[i0].y = -dx;
             }
@@ -1278,7 +1279,7 @@ impl DrawList {
         // Vector2D b(c.x, a.y), d(a.x, c.y), uv(data.TexUvWhitePixel);
         let b = Vector2D::new(c.x, a.y);
         let d = Vector2D::new(a.x, c.y);
-        let uv = self.data.text_uv_white_pixel.clone();
+        let uv = self.data.tex_uv_white_pixel.clone();
 
         // ImDrawIdx idx = self.vtx_current_idx;
         let idx = &self.vtx_current_idx;
@@ -1480,12 +1481,12 @@ impl DrawList {
         }
     }
     //  void  _OnChangedClipRect();
-    pub fn OnChangedClipRect(&mut self) {
+    pub fn on_changed_clip_rect(&mut self) {
 
         // If current command is used with different settings we need to add a new command
         // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
         ImDrawCmd * curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
-        if (curr_cmd.elem_count != 0 && memcmp(&curr_cmd.clip_rect, &command_header.clip_rect, sizeof(Vector4D)) != 0) {
+        if curr_cmd.elem_count != 0 && memcmp(&curr_cmd.clip_rect, &command_header.clip_rect, sizeof(Vector4D)) != 0 {
             AddDrawCmd();
             return;
         }
@@ -1493,7 +1494,7 @@ impl DrawList {
 
         // Try to merge with previous command if it matches, else use current command
         ImDrawCmd * prev_cmd = curr_cmd - 1;
-        if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None) {
+        if curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None {
             cmd_buffer.pop_back();
             return;
         }
@@ -1501,11 +1502,11 @@ impl DrawList {
         curr_cmd.clip_rect = command_header.clip_rect;
     }
     //  void  _OnChangedTextureID();
-    pub fn OnChangedTextureID(&mut self) {
+    pub fn on_changed_texture_id(&mut self) {
         // If current command is used with different settings we need to add a new command
         // IM_ASSERT_PARANOID(CmdBuffer.size > 0);
         ImDrawCmd * curr_cmd = &cmd_buffer.data[cmd_buffer.size - 1];
-        if (curr_cmd.elem_count != 0 && curr_cmd.texture_id != command_header.texture_id) {
+        if curr_cmd.elem_count != 0 && curr_cmd.texture_id != command_header.texture_id {
             AddDrawCmd();
             return;
         }
@@ -1513,7 +1514,7 @@ impl DrawList {
 
         // Try to merge with previous command if it matches, else use current command
         ImDrawCmd * prev_cmd = curr_cmd - 1;
-        if (curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None) {
+        if curr_cmd.elem_count == 0 && cmd_buffer.size > 1 && ImDrawCmd_HeaderCompare(&command_header, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.user_callback == None {
             cmd_buffer.pop_back();
             return;
         }
@@ -1721,11 +1722,11 @@ pub const DRAW_LIST_ARCFAST_SAMPLE_MAX: f32 = DRAW_LIST_ARCFAST_TABLE_SIZE as f3
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum DrawListFlags {
     None = 0,
-    anti_aliased_lines,
+    AntiAliasedLines,
     // Enable anti-aliased lines/borders (*2 the number of triangles for 1.0 wide line or lines thin enough to be drawn using textures, otherwise *3 the number of triangles)
-    anti_aliased_lines_use_tex,
+    AntiAliasedLinesUseTex,
     // Enable anti-aliased lines/borders using textures when possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).
-    anti_aliased_fill,
+    AntiAliasedFill,
     // Enable anti-aliased edge around filled shapes (rounded rectangles, circles).
     AllowVtxOffset = 1 << 3, // Can emit 'vtx_offset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
 }

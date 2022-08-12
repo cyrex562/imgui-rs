@@ -3,16 +3,16 @@ use crate::draw::list::{
     drawlist_circle_auto_segment_calc, drawlist_circle_auto_segment_calc_r, DrawListFlags,
     DRAW_LIST_ARCFAST_SAMPLE_MAX, DRAW_LIST_ARCFAST_TABLE_SIZE,
 };
-use crate::font::Font;
+use crate::font::font::Font;
 use crate::vectors::vector_2d::Vector2D;
 use crate::vectors::Vector4D;
 
 #[derive(Default, Debug, Clone)]
 pub struct DrawListSharedData {
     // Vector2D          tex_uv_white_pixel;            // UV of white pixel in the atlas
-    pub text_uv_white_pixel: Vector2D,
+    pub tex_uv_white_pixel: Vector2D,
     // ImFont*         font;                       // current/default font (optional, for simplified add_text overload)
-    pub font: *mut Font,
+    pub font: Font,
     // float           font_size;                   // current/default font size (optional, for simplified add_text overload)
     pub font_size: f32,
     // float           CurveTessellationTol;       // Tessellation tolerance when using PathBezierCurveTo()

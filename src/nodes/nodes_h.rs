@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stddef.h>
-#include "defines.rs"
+#include "dock_style_color"
 
 #ifdef IMNODES_USER_CONFIG
 #include IMNODES_USER_CONFIG

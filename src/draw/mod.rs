@@ -12,7 +12,12 @@ pub mod bezier;
 pub mod flags;
 mod shade_verts;
 mod channel;
+
+use std::collections::HashSet;
 pub use list::DrawList;
+use crate::draw::command::DrawCommand;
+use crate::draw::flags::DrawFlags;
+use crate::math::r_sqrt;
 
 /*
 
@@ -39,7 +44,7 @@ index of this file:
 // #define _CRT_SECURE_NO_WARNINGS
 // #endif
 //
-// #include "defines.rs"
+// #include "dock_style_color"
 //
 // #ifndef IMGUI_DISABLE
 //
@@ -298,10 +303,10 @@ index of this file:
 // }
 
 // Compare clip_rect, texture_id and vtx_offset with a single memcmp()
-#define ImDrawCmd_HeaderSize                            (IM_OFFSETOF(ImDrawCmd, vtx_offset) + sizeof(unsigned int))
-#define ImDrawCmd_HeaderCompare(CMD_LHS, CMD_RHS)       (memcmp(CMD_LHS, CMD_RHS, ImDrawCmd_HeaderSize))    // Compare clip_rect, texture_id, vtx_offset
-#define ImDrawCmd_HeaderCopy(CMD_DST, CMD_SRC)          (memcpy(CMD_DST, CMD_SRC, ImDrawCmd_HeaderSize))    // Copy clip_rect, texture_id, vtx_offset
-#define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1)  (CMD_0.idx_offset + CMD_0.elem_count == CMD_1.idx_offset)
+// #define ImDrawCmd_HeaderSize                            (IM_OFFSETOF(ImDrawCmd, vtx_offset) + sizeof(unsigned int))
+// #define ImDrawCmd_HeaderCompare(CMD_LHS, CMD_RHS)       (memcmp(CMD_LHS, CMD_RHS, ImDrawCmd_HeaderSize))    // Compare clip_rect, texture_id, vtx_offset
+// #define ImDrawCmd_HeaderCopy(CMD_DST, CMD_SRC)          (memcpy(CMD_DST, CMD_SRC, ImDrawCmd_HeaderSize))    // Copy clip_rect, texture_id, vtx_offset
+// #define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1)  (CMD_0.idx_offset + CMD_0.elem_count == CMD_1.idx_offset)
 
 // Try to merge two last draw commands
 // void ImDrawList::_TryMergeDrawCmds()
@@ -384,7 +389,7 @@ index of this file:
 // {
 // use alloc::vec::Vec;
 // use imgui_rs::defines::Viewport;
-// use imgui_rs::draw_cmd::DimgDrawCmd;
+// use imgui_rs::draw_cmd::DrawCmd;
 // use imgui_rs::draw_list::DimgDrawList;
 // use imgui_rs::vec_nd::Vector2D;
 // use std::collections::hash::set::HashSet;
@@ -533,12 +538,6 @@ index of this file:
 //     _IdxWritePtr += 6;
 // }
 
-// On add_polyline() and add_convex_poly_filled() we intentionally avoid using Vector2D and superfluous function calls to optimize debug/non-inlined builds.
-// - Those macros expects l-values and need to be used as their own statement.
-// - Those macros are intentionally not surrounded by the 'do {} while (0)' idiom because even that translates to runtime with debug compilers.
-#define normalize_2f_over_zero(VX,VY)     { let d2 =  VX*VX + VY*VY; if (d2 > 0.0) { let inv_len =  ImRsqrt(d2); VX *= inv_len; VY *= inv_len; } } (void)0
-#define IM_FIXNORMAL2F_MAX_INVLEN2          100.0 // 500.0 (see #4053, #3366)
-#define fix_normal_2f(VX,VY)               { let d2 =  VX*VX + VY*VY; if (d2 > 0.000001) { let inv_len2 =  1.0 / d2; if (inv_len2 > IM_FIXNORMAL2F_MAX_INVLEN2) inv_len2 = IM_FIXNORMAL2F_MAX_INVLEN2; VX *= inv_len2; VY *= inv_len2; } } (void)0
 
 // TODO: Thickness anti-aliased lines cap are missing their AA fringe.
 // We avoid using the Vector2D math operators here to reduce cost to a minimum for debug/non-inlined builds.
@@ -1539,10 +1538,6 @@ index of this file:
 //         draw_list.add_draw_cmd();
 // }
 
-//-----------------------------------------------------------------------------
-// [SECTION] ImDrawData
-//-----------------------------------------------------------------------------
-
 // For backward compatibility: convert all buffers from indexed to de-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
 // void ImDrawData::DeIndexAllBuffers()
 // {
@@ -1578,49 +1573,10 @@ index of this file:
 //     }
 // }
 
-//-----------------------------------------------------------------------------
-// [SECTION] Helpers ShadeVertsXXX functions
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// [SECTION] ImFontConfig
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// [SECTION] ImFontAtlas
-//-----------------------------------------------------------------------------
-
-
-
-//-------------------------------------------------------------------------
-// [SECTION] ImFontAtlas glyph ranges helpers
-//-------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// [SECTION] ImFontGlyphRangesBuilder
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// [SECTION] ImFont
-//-----------------------------------------------------------------------------
-
  // #ifndef IMGUI_DISABLE
 
+pub type DrawCallback = fn(&mut DrawList, &DrawCommand);
 
-pub const ROUND_CORNERS_BOTTOM: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersBottomRight]);
-
-pub const ROUND_CORNERS_LEFT: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersTopLeft]);
-
-pub const ROUND_CORNERS_RIGHT: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersBottomRight, DrawFlags::RoundCornersTopRight]);
-
-pub const ROUND_CORNERS_ALL: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersTopLeft, DrawFlags::RoundCornersTopRight, DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersBottomRight]);
-
-pub const ROUND_CORNERS_DEFAULT: HashSet<DrawFlags>        = ROUND_CORNERS_ALL;
-
-pub const ROUND_CORNERS_MASK: HashSet<DrawFlags> = HashSet::from([DrawFlags::RoundCornersTopLeft, DrawFlags::RoundCornersTopRight, DrawFlags::RoundCornersBottomLeft, DrawFlags::RoundCornersBottomRight, DrawFlags::RoundCornersNone]);
-
-pub type DrawCallback = fn(&mut DrawList, &DimgDrawCmd);
-
-pub fn im_draw_callback_nop(_: &mut DrawList, _: &DimgDrawCmd) {
+pub fn im_draw_callback_nop(_: &mut DrawList, _: &DrawCommand) {
     todo!()
 }

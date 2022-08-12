@@ -10,6 +10,7 @@ use crate::dock::node::window::dock_node_setup_host_window;
 use crate::globals::GImGui;
 use crate::item::item_size;
 use crate::nodes::pop_style_var;
+use crate::style::StyleVar;
 use crate::types::Id32;
 use crate::vectors::vector_2d::Vector2D;
 use crate::viewport::get_main_viewport;

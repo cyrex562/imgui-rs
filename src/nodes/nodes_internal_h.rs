@@ -2,7 +2,7 @@
 
 #include "nodes_h.rs"
 
-#include "defines.rs"
+#include "dock_style_color"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "internal_h.rs"

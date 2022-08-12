@@ -319,3 +319,33 @@ pub fn acos_1(x: f32) -> f32
     return f32::acos(x);
     //return (-0.69813170079773212 * x * x - 0.87266462599716477) * x + 1.5707963267948966; // Cheap approximation, may be enough for what we do.
 }
+
+// On add_polyline() and add_convex_poly_filled() we intentionally avoid using Vector2D and superfluous function calls to optimize debug/non-inlined builds.
+// - Those macros expects l-values and need to be used as their own statement.
+// - Those macros are intentionally not surrounded by the 'do {} while (0)' idiom because even that translates to runtime with debug compilers.
+// #define normalize_2f_over_zero(VX,VY)     { let d2 =  VX*VX + VY*VY; if (d2 > 0.0) { let inv_len =  ImRsqrt(d2); VX *= inv_len; VY *= inv_len; } } (void)0
+pub fn normalize_2f_over_zero(vx: &mut f32, vy: &mut f32) {
+    let d2 = vx * vx + vy * vy;
+    if d2 > 0.0 {
+        let inv_len = r_sqrt(d2);
+        *vx *= inv_len;
+        *vy *= inv_len;
+    }
+}
+
+// #define IM_FIXNORMAL2F_MAX_INVLEN2          100.0 // 500.0 (see #4053, #3366)
+pub const FIX_NORMAL_2F_MAX_INVLEN2: f32 = 100.0;
+
+// 500.0?
+// #define fix_normal_2f(VX,VY)               { let d2 =  VX*VX + VY*VY; if (d2 > 0.000001) { let inv_len2 =  1.0 / d2; if (inv_len2 > IM_FIXNORMAL2F_MAX_INVLEN2) inv_len2 = IM_FIXNORMAL2F_MAX_INVLEN2; VX *= inv_len2; VY *= inv_len2; } } (void)0
+pub fn fix_normal_2f(vx: &mut f32, vy: &mut f32) {
+    let d2 = vx*vx + vy*vy;
+    if d2 > 0.000001 {
+        let inv_len2 = 1.0/d2;
+        if inv_len2 > FIX_NORMAL_2F_MAX_INVLEN2 {
+            inv_len2 = FIX_NORMAL_2F_MAX_INVLEN2;
+        }
+        *vx *= inv_len2;
+        *vy *= inv_len2;
+    }
+}

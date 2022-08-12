@@ -45,7 +45,7 @@
 
 #include <stdint.h>     // uint64_t
 #include <cstring>      // memcpy
-#include "defines.rs"
+#include "dock_style_color"
 
 #include "imgui_impl_allegro5.h"
 
