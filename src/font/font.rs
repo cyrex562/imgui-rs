@@ -13,29 +13,32 @@ use crate::vectors::{Vector2D, Vector4D};
 pub struct Font
 {
     // Members: Hot ~20/24 bytes (for calc_text_size)
-    pub index_advance_x: Vec<f32>, // ImVector<float>             index_advance_x;      // 12-16 // out //            // Sparse. glyphs->advance_x in a directly indexable way (cache-friendly for calc_text_size functions which only this this info, and are often bottleneck in large UI).
-    pub fallback_advance_x: f32,  // 4     // out // = fallback_glyph->advance_x
-    pub font_size: f32,          // 4     // in  //            // height of characters/line, set during loading (don't change after loading)
-
+    // 12-16 // out //// Sparse. glyphs->advance_x in a directly indexable way (cache-friendly for calc_text_size functions which only this this info, and are often bottleneck in large UI).
+    pub index_advance_x: Vec<f32>, // ImVector<float>             index_advance_x;
+    pub fallback_advance_x: f32,
+    // height of characters/line, set during loading (don't change after loading)
+    pub font_size: f32,
     // Members: Hot ~28/40 bytes (for calc_text_size + render loop)
-    pub index_lookup: Vec<char>, //ImVector<ImWchar>           index_lookup;        // 12-16 // out //            // Sparse. index glyphs by Unicode code-point.
-    pub glyphs: Vec<FontGlyph>, // ImVector<ImFontGlyph>       glyphs;             // 12-16 // out //            // All glyphs.
-    pub fallback_glyph: FontGlyph, // const ImFontGlyph*          fallback_glyph;      // 4-8   // out // = find_glyph(FontFallbackChar)
-
-    // Members: Cold ~32/40 bytes
-    pub container_atlas: FontAtlas, // ImFontAtlas*                container_atlas;     // 4-8   // out //            // What we has been loaded into
-    // const ImFontConfig*         config_data;         // 4-8   // in  //            // Pointer within container_atlas->config_data
+     // Sparse. index glyphs by Unicode code-point.
+    pub index_lookup: Vec<char>,
+     // All glyphs.
+    pub glyphs: Vec<FontGlyph>,
+    pub fallback_glyph: FontGlyph,
+     // What we has been loaded into
+    pub container_atlas: FontAtlas,
+     // Pointer within container_atlas->config_data
     pub config_data: FontConfig,
-// short                       config_data_count;    // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
+    // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
     pub config_data_count: isize,
-    // ImWchar                     fallback_char;       // 2     // out // = FFFD/'?' // Character used if a glyph isn't found.
+    // Character used if a glyph isn't found.
     pub fallback_char: char,
-    // ImWchar                     ellipsis_char;       // 2     // out // = '...'    // Character used for ellipsis rendering.
+    // Character used for ellipsis rendering.
     pub ellipsis_char: char,
-    // ImWchar                     dot_char;            // 2     // out // = '.'      // Character used for ellipsis rendering (if a single '...' character isn't found)
+    // Character used for ellipsis rendering (if a single '...' character isn't found)
     pub dot_char: char,
-    pub dirty_lookup_tables: bool,  // 1     // out //
-    pub scale: f32,             // 4     // in  // = 1.f      // Base font scale, multiplied by the per-window font scale which you can adjust with SetWindowFontScale()
+    pub dirty_lookup_tables: bool,
+// Base font scale, multiplied by the per-window font scale which you can adjust with SetWindowFontScale()
+    pub scale: f32,             // 4     // in  // = 1.f
     // float                       ascent, descent;    // 4+4   // out //            // ascent: distance from top to bottom of e.g. 'A' [0..font_size]
     pub ascent: f32,
     pub descent: f32,
