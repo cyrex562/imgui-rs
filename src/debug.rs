@@ -894,7 +894,7 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
         if (font->ConfigData)
             if (const ImFontConfig* cfg = &font->ConfigData[config_i])
                 BulletText("Input %d: \'%s\', Oversample: (%d,%d), pixel_snap_h: %d, Offset: (%.1,%.1)",
-                    config_i, cfg->Name, cfg->OversampleH, cfg->OversampleV, cfg->PixelSnapH, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
+                    config_i, cfg->Name, cfg->OversampleH, cfg->OversampleV, cfg->pixel_snap_h, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
 
     // Display all glyphs of the fonts in separate pages of 256 characters
     if (TreeNode("glyphs", "glyphs (%d)", font->Glyphs.size))

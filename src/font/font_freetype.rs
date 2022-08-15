@@ -750,7 +750,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             ImFontAtlasBuildMultiplyCalcLookupTable(multiply_table, cfg.RasterizerMultiply);
 
         // Gather the sizes of all rectangles we will need to pack
-        let padding = atlas.TexGlyphPadding;
+        let padding = atlas.text_glyph_padding;
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsList.size; glyph_i += 1)
         {
             ImFontBuildSrcGlyphFT& src_glyph = src_tmp.GlyphsList[glyph_i];
@@ -796,7 +796,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     // 5. Start packing
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
     let TEX_HEIGHT_MAX = 1024 * 32;
-    let num_nodes_for_packing_algorithm = atlas.TexWidth - atlas.TexGlyphPadding;
+    let num_nodes_for_packing_algorithm = atlas.TexWidth - atlas.text_glyph_padding;
     ImVector<StbRpNode> pack_nodes;
     pack_nodes.resize(num_nodes_for_packing_algorithm);
     StbRpContext pack_context;
@@ -856,7 +856,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         let font_off_x = cfg.GlyphOffset.x;
         let font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font.Ascent);
 
-        let padding = atlas.TexGlyphPadding;
+        let padding = atlas.text_glyph_padding;
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1)
         {
             ImFontBuildSrcGlyphFT& src_glyph = src_tmp.GlyphsList[glyph_i];

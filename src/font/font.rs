@@ -4,6 +4,7 @@ use crate::font::find_first_existing_glyph;
 use crate::font::font_atlas::FontAtlas;
 use crate::font::font_glyph::FontGlyph;
 use crate::font::font_config::FontConfig;
+use crate::string::char_is_blank_w;
 use crate::vectors::{Vector2D, Vector4D};
 
 // font runtime data and rendering
@@ -72,50 +73,267 @@ impl Font {
         }
     }
 
-    //  ImFont();
-    //      ~ImFont();
-    //      const ImFontGlyph*find_glyph(ImWchar c) const;
     pub fn find_glyph(&self, c: char) -> FontGlyph {
-        todo!()
+        if (c as usize) >= self.index_lookup.size {
+            return self.fallback_glyph.clone();
+        }
+        let i = self.index_lookup[c];
+        if i == '\0' {
+            return self.fallback_glyph.clone();
+        }
+        return self.glyphs[i].clone();
     }
     //      const ImFontGlyph*find_glyph_no_fallback(ImWchar c) const;
-    pub fn find_glyph_no_fallback(&self, c: char) -> FontGlyph {
-        todo!()
+    pub fn find_glyph_no_fallback(&self, c: char) -> Option<FontGlyph> {
+
+            if c as usize >= self.index_lookup.len() {
+                return None;
+            }
+    let i = self.index_lookup.data[c];
+    if i == '\0' {
+        return None;
     }
-    //     float                       get_char_advance(ImWchar c) const     { return (c < index_advance_x.size) ? index_advance_x[c] : fallback_advance_x; }
+    return self.glyphs.data[i].clone();
+    }
+
     pub fn get_char_advance(&self, c: char) -> f32 {
         if c < self.index_advance_x.len() as char {
             self.index_advance_x[c]
         }
         self.fallback_advance_x
     }
-    //     bool                        is_loaded() const                    { return container_atlas != None; }
+
     pub fn is_loaded(&self) -> bool {
         self.container_atlas.is_some()
     }
-    //     const char*                 get_debug_name() const                { return config_data ? config_data->name : "<unknown>"; }
+
     pub fn get_debug_name(&self) -> String {
         if self.config_data.is_some() {
             self.config_data.unwrap().name
         }
         "<unknown>".to_string()
     }
+
     //
     //     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
     //     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0 to disable.
-    //      Vector2D            calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = None, const char** remaining = None) const; // utf8
-    pub fn calc_text_size_a(&self, size: f32, max_width: f32, wrap_width: f32, text: &str) -> Vector2D {
-        todo!()
+    pub fn calc_text_size_a(&self, size: f32, max_width: f32, wrap_width: f32, text: &String) -> Vector2D {
+        // if (!text_end)
+        // text_end = text_begin + strlen(text_begin); // FIXME-OPT: Need to avoid this.
+
+        let line_height = size;
+        let scale = size / self.font_size;
+
+        let mut text_size = Vector2D::new(0f32, 0f32);
+        let line_width =  0.0;
+
+        let word_wrap_enabled = (wrap_width > 0.0);
+        // const char* word_wrap_eol = None;
+        let mut word_wrap_eol_offset: usize = 0;
+
+        // const char* s = text_begin;
+        let s_offset: usize = 0;
+        let text_end_offset: usize = text.len();
+        while s_offset < text_end_offset
+        {
+            if word_wrap_enabled
+            {
+                // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
+                if !word_wrap_eol_offset
+                {
+                    word_wrap_eol_offset = self.calc_word_wrap_position_a(scale, &text[s_offset..],  wrap_width - line_width);
+                    // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
+                    if word_wrap_eol_offset == s_offset {
+                        // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
+                        word_wrap_eol += 1;
+                    }
+                }
+
+                if s >= word_wrap_eol
+                {
+                    if text_size.x < line_width {
+                        text_size.x = line_width;
+                    }
+                    text_size.y += line_height;
+                    line_width = 0.0;
+                    word_wrap_eol = None;
+
+                    // Wrapping skips upcoming blanks
+                    while (s < text_end)
+                    {
+                        const char c = *s;
+                        if (char_is_blank_a(c)) { s += 1; } else if (c == '\n') { s += 1; break; } else { break; }
+                    }
+                    continue;
+                }
+            }
+
+            // Decode and advance source
+            const char* prev_s = s;
+            unsigned int c = (unsigned int)*s;
+            if (c < 0x80)
+            {
+                s += 1;
+            }
+            else
+            {
+                s += text_char_from_utf8(&c, s, text_end);
+                if (c == 0) // Malformed UTF-8?
+                    break;
+            }
+
+            if (c < 32)
+            {
+                if (c == '\n')
+                {
+                    text_size.x = ImMax(text_size.x, line_width);
+                    text_size.y += line_height;
+                    line_width = 0.0;
+                    continue;
+                }
+                if (c == '\r')
+                    continue;
+            }
+
+            let char_width = (c < index_advance_x.size ? index_advance_x.data[c] : fallback_advance_x) * scale;
+            if (line_width + char_width >= max_width)
+            {
+                s = prev_s;
+                break;
+            }
+
+            line_width += char_width;
+        }
+
+        if (text_size.x < line_width)
+            text_size.x = line_width;
+
+        if (line_width > 0 || text_size.y == 0.0)
+            text_size.y += line_height;
+
+        if (remaining)
+            *remaining = s;
+
+        return text_size;
     }
-    //      const char*       calc_word_wrap_position_a(float scale, const char* text, const char* text_end, float wrap_width) const;
-    pub fn calc_word_wrap_position_a(&self, scale: f32, text: &String, wrap_width: f32) -> String{
-        todo!()
+
+
+    pub fn calc_word_wrap_position_a(&self, scale: f32, text: &str, mut wrap_width: f32) -> usize{
+        // Simple word-wrapping for English, not full-featured. Please submit failing cases!
+        // FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for punctuations, support for Unicode punctuations, etc.)
+
+        // For references, possible wrap point marked with ^
+        //  "aaa bbb, ccc,ddd. eee   fff. ggg!"
+        //      ^    ^    ^   ^   ^__    ^    ^
+
+        // List of hardcoded separators: .,;!?'"
+
+        // Skip extra blanks after a line returns (that includes not counting them in width computation)
+        // e.g. "Hello    world" --> "Hello" "World"
+
+        // Cut words that cannot possibly fit within one line.
+        // e.g.: "The tropical fish" with ~5 characters worth of width --> "The tr" "opical" "fish"
+
+        let mut line_width =  0.0;
+        let mut word_width =  0.0;
+        let mut blank_width =  0.0;
+        // We work with unscaled widths to avoid scaling every characters
+        wrap_width /= scale;
+        let mut word_end: usize = text.len() - 1;
+        // const char* prev_word_end = None;
+        let mut prev_word_end: usize = usize::MAX;
+        let mut inside_word = true;
+        let text_end: usize = text.len() - 1;
+
+        let mut s_offset:usize = 0;
+        while s_offset < text_end
+        {
+            // unsigned int c = (unsigned int)*s;
+            let c = text[s_offset];
+
+            // const char* next_s;
+            let mut next_s_offset: usize = usize::MAX;
+            if c < 0x80 {
+                next_s_offset = s_offset + 1;
+            }
+            else {
+                // next_s = s + text_char_from_utf8(&c, s, text_end);
+            }
+            if c == '\0' {
+                break;
+            }
+
+            if c < 32
+            {
+                if c == '\n'
+                {
+                    blank_width = 0.0;
+                    line_width = 0.0;
+                    word_width = 0.0;
+                    inside_word = true;
+                    s_offset = next_s_offset;
+                    continue;
+                }
+                if c == '\r'
+                {
+                    s_offset = next_s_offset;
+                    continue;
+                }
+            }
+
+            let char_width =if  c < self.index_advance_x.len() { self.index_advance_x.data[c] } else { self.fallback_advance_x };
+            if char_is_blank_w(c)
+            {
+                if inside_word
+                {
+                    line_width += blank_width;
+                    blank_width = 0.0;
+                    word_end = s;
+                }
+                blank_width += char_width;
+                inside_word = false;
+            }
+            else
+            {
+                word_width += char_width;
+                if inside_word
+                {
+                    word_end = next_s;
+                }
+                else
+                {
+                    prev_word_end = word_end;
+                    line_width += word_width + blank_width;
+                    word_width = 0.0;
+                    blank_width = 0.0;
+                }
+
+                // Allow wrapping after punctuation.
+                inside_word = (c != '.' && c != ',' && c != ';' && c != '!' && c != '?' && c != '\"');
+            }
+
+            // We ignore blank width at the end of the line (they can be skipped)
+            if line_width + word_width > wrap_width
+            {
+                // Words that cannot possibly fit within an entire line will be cut anywhere.
+                if word_width < wrap_width {
+                    s_offset = if prev_word_end { prev_word_end } else { word_end };
+                }
+                break;
+            }
+
+            s_offset = next_s_offset;
+        }
+
+        return s_offset;
     }
-    //      void              render_char(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, ImWchar c) const;
+
+
     pub fn render_char(&self, draw_list: &DrawList, size: f32, pos: &Vector2D, col: u32, c: char) {
         todo!()
     }
-    //      void              render_text(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0, bool cpu_fine_clip = false) const;
+
+
     pub fn render_text(&self, draw_list: &mut DrawList, size: f32, pos: &Vector2D, col: u32, clip_rect: &Vector4D, text: &String, wrap_width: f32, cpu_fine_clip: bool) {
         // if (!text_end)
         // text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -430,8 +648,8 @@ impl Font {
     // for (int i = 0; i < max_codepoint + 1; i += 1)
     for x in self.index_advance_x.iter_mut()
         {
-        // if (IndexAdvanceX[i] < 0.0) {
-        //     IndexAdvanceX[i] = FallbackAdvanceX;
+        // if (index_advance_x[i] < 0.0) {
+        //     index_advance_x[i] = fallback_advance_x;
         // }
             if *x < 0.0 {
                 *x = self.fallback_advance_x;
@@ -443,7 +661,7 @@ impl Font {
 
     pub fn grow_index(&mut self, new_size: usize) {
 
-        // IM_ASSERT(IndexAdvanceX.size == IndexLookup.size);
+        // IM_ASSERT(index_advance_x.size == IndexLookup.size);
         if new_size <= self.index_lookup.size {
             return;
         }
@@ -451,12 +669,64 @@ impl Font {
         self.index_lookup.resize(new_size, '\0');
     }
 
-    pub fn add_glyph(&mut self, src_cfg: &FontConfig, c: char, x0: f32, y0: f32, x1: f32, y1: f32, u0: f32, v0: f32, u1: f32, v1: f32, advance_x: f32) {
-        todo!()
+    pub fn add_glyph(&mut self, src_cfg: &FontConfig, c: char, mut x0: f32, y0: f32, mut x1: f32, y1: f32, u0: f32, v0: f32, u1: f32, v1: f32, mut advance_x: f32) {
+
+        // Clamp & recenter if needed
+        let advance_x_original = advance_x;
+        advance_x = f32::clamp(advance_x, cfg.glyph_min_advance_x, cfg.glyph_max_advance_x);
+        if advance_x != advance_x_original {
+            let char_off_x = if cfg.pixel_snap_h { f32::floor((advance_x - advance_x_original) * 0.5) } else { (advance_x - advance_x_original) * 0.5 };
+            x0 += char_off_x;
+            x1 += char_off_x;
+        }
+
+        // Snap to pixel
+        if cfg.pixel_snap_h {
+            advance_x = f32::round(advance_x);
+        }
+
+        // Bake spacing
+        advance_x += cfg.glyph_extra_spacing.x;
+
+
+        // self.glyphs.resize(Glyphs.size + 1);
+        let glyph = self.glyphs.last_mut().unwrap();
+        glyph.codepoint = c;
+        glyph.visible = (x0 != x1) && (y0 != y1);
+        glyph.colored = false;
+        glyph.x0 = x0;
+        glyph.y0 = y0;
+        glyph.x1 = x1;
+        glyph.y1 = y1;
+        glyph.u0 = u0;
+        glyph.v0 = v0;
+        glyph.u1 = u1;
+        glyph.v1 = v1;
+        glyph.advance_x = advance_x;
+
+        // Compute rough surface usage metrics (+1 to account for average padding, +0.99 to round)
+        // We use (u1-u0)*tex_width instead of x1-x0 to account for oversampling.
+        let pad = self.container_atlas.text_glyph_padding + 0.99;
+        self.dirty_lookup_tables = true;
+        self.metrics_total_surface += ((glyph.u1 - glyph.u0) * self.container_atlas.tex_width + pad) * ((glyph.v1 - glyph.v0) * self.container_atlas.tex_height + pad);
     }
 
-    pub fn add_remap_char(&mut self, dst: char, src: char, overwrite_dst: bool){
-        todo!()
+    pub fn add_remap_char(&mut self, dst: char, src: char) {
+        // IM_ASSERT(IndexLookup.size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
+        // unsigned int index_size = (unsigned int)IndexLookup.size;
+        let mut index_size: usize = self.index_lookup.len();
+
+        // 'dst' already exists
+        if ((dst as usize) < index_size) && (self.index_lookup[dst as usize] == '\0') {
+            return;
+        }
+        if (src as usize) >= index_size && (dst as usize) >= index_size { // both 'dst' and 'src' don't exist -> no-op
+            return;
+        }
+
+        self.grow_index(dst + 1);
+        self.index_lookup[dst] = if (src as usize) < index_size { self.index_lookup.data[src] } else { -1 };
+        self.index_advance_x[dst] = if (src as usize) < index_size { self.index_advance_x.data[src] } else { 1.0 };
     }
 
     pub fn set_glyph_visible(&mut self, c: char, visible: bool) {
@@ -526,277 +796,45 @@ impl Font {
 // x0/y0/x1/y1 are offset from the character upper-left layout position, in pixels. Therefore x0/y0 are often fairly close to zero.
 // Not to be mistaken with texture coordinates, which are held by u0/v0/u1/v1 in normalized format (0.0..1.0 on each texture axis).
 // 'cfg' is not necessarily == 'this->config_data' because multiple source fonts+configs can be used to build one target font.
-void ImFont::AddGlyph(const ImFontConfig* cfg, ImWchar codepoint, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x)
-{
-    if (cfg != None)
-    {
-        // Clamp & recenter if needed
-        let advance_x_original = advance_x;
-        advance_x = ImClamp(advance_x, cfg.GlyphMinAdvanceX, cfg.GlyphMaxAdvanceX);
-        if (advance_x != advance_x_original)
-        {
-            let char_off_x =  cfg.PixelSnapH ? f32::floor((advance_x - advance_x_original) * 0.5) : (advance_x - advance_x_original) * 0.5;
-            x0 += char_off_x;
-            x1 += char_off_x;
-        }
+// void ImFont::AddGlyph(const ImFontConfig* cfg, ImWchar codepoint, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x)
+// {
+//
+// }
 
-        // Snap to pixel
-        if (cfg.PixelSnapH)
-            advance_x = IM_ROUND(advance_x);
+// void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
+// {
+//     // IM_ASSERT(IndexLookup.size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
+//     unsigned int index_size = (unsigned int)IndexLookup.size;
+//
+//     if (dst < index_size && IndexLookup.data[dst] == (ImWchar)-1 && !overwrite_dst) // 'dst' already exists
+//         return;
+//     if (src >= index_size && dst >= index_size) // both 'dst' and 'src' don't exist -> no-op
+//         return;
+//
+//     GrowIndex(dst + 1);
+//     IndexLookup[dst] = (src < index_size) ? IndexLookup.data[src] : (ImWchar)-1;
+//     index_advance_x[dst] = (src < index_size) ? index_advance_x.data[src] : 1.0;
+// }
 
-        // Bake spacing
-        advance_x += cfg.GlyphExtraSpacing.x;
-    }
+// const ImFontGlyph* ImFont::FindGlyph(ImWchar c) const
+// {
+//
+// }
 
-    Glyphs.resize(Glyphs.size + 1);
-    ImFontGlyph& glyph = Glyphs.back();
-    glyph.Codepoint = (unsigned int)codepoint;
-    glyph.Visible = (x0 != x1) && (y0 != y1);
-    glyph.Colored = false;
-    glyph.X0 = x0;
-    glyph.Y0 = y0;
-    glyph.X1 = x1;
-    glyph.Y1 = y1;
-    glyph.U0 = u0;
-    glyph.V0 = v0;
-    glyph.U1 = u1;
-    glyph.V1 = v1;
-    glyph.AdvanceX = advance_x;
+// const ImFontGlyph* ImFont::FindGlyphNoFallback(ImWchar c) const
+// {
+//
+// }
+//
+// const char* ImFont::calc_word_wrap_position_a(float scale, const char* text, const char* text_end, float wrap_width) const
+// {
+//
+// }
 
-    // Compute rough surface usage metrics (+1 to account for average padding, +0.99 to round)
-    // We use (u1-u0)*tex_width instead of x1-x0 to account for oversampling.
-    let pad =  ContainerAtlas.TexGlyphPadding + 0.99;
-    DirtyLookupTables = true;
-    MetricsTotalSurface += ((glyph.U1 - glyph.U0) * ContainerAtlas.TexWidth + pad) * ((glyph.V1 - glyph.V0) * ContainerAtlas.TexHeight + pad);
-}
-
-void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
-{
-    // IM_ASSERT(IndexLookup.size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
-    unsigned int index_size = (unsigned int)IndexLookup.size;
-
-    if (dst < index_size && IndexLookup.data[dst] == (ImWchar)-1 && !overwrite_dst) // 'dst' already exists
-        return;
-    if (src >= index_size && dst >= index_size) // both 'dst' and 'src' don't exist -> no-op
-        return;
-
-    GrowIndex(dst + 1);
-    IndexLookup[dst] = (src < index_size) ? IndexLookup.data[src] : (ImWchar)-1;
-    IndexAdvanceX[dst] = (src < index_size) ? IndexAdvanceX.data[src] : 1.0;
-}
-
-const ImFontGlyph* ImFont::FindGlyph(ImWchar c) const
-{
-    if (c >= IndexLookup.size)
-        return FallbackGlyph;
-    const ImWchar i = IndexLookup.data[c];
-    if (i == (ImWchar)-1)
-        return FallbackGlyph;
-    return &Glyphs.data[i];
-}
-
-const ImFontGlyph* ImFont::FindGlyphNoFallback(ImWchar c) const
-{
-    if (c >= IndexLookup.size)
-        return None;
-    const ImWchar i = IndexLookup.data[c];
-    if (i == (ImWchar)-1)
-        return None;
-    return &Glyphs.data[i];
-}
-
-const char* ImFont::calc_word_wrap_position_a(float scale, const char* text, const char* text_end, float wrap_width) const
-{
-    // Simple word-wrapping for English, not full-featured. Please submit failing cases!
-    // FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for punctuations, support for Unicode punctuations, etc.)
-
-    // For references, possible wrap point marked with ^
-    //  "aaa bbb, ccc,ddd. eee   fff. ggg!"
-    //      ^    ^    ^   ^   ^__    ^    ^
-
-    // List of hardcoded separators: .,;!?'"
-
-    // Skip extra blanks after a line returns (that includes not counting them in width computation)
-    // e.g. "Hello    world" --> "Hello" "World"
-
-    // Cut words that cannot possibly fit within one line.
-    // e.g.: "The tropical fish" with ~5 characters worth of width --> "The tr" "opical" "fish"
-
-    let line_width =  0.0;
-    let word_width =  0.0;
-    let blank_width =  0.0;
-    wrap_width /= scale; // We work with unscaled widths to avoid scaling every characters
-
-    const char* word_end = text;
-    const char* prev_word_end = None;
-    bool inside_word = true;
-
-    const char* s = text;
-    while (s < text_end)
-    {
-        unsigned int c = (unsigned int)*s;
-        const char* next_s;
-        if (c < 0x80)
-            next_s = s + 1;
-        else
-            next_s = s + text_char_from_utf8(&c, s, text_end);
-        if (c == 0)
-            break;
-
-        if (c < 32)
-        {
-            if (c == '\n')
-            {
-                line_width = word_width = blank_width = 0.0;
-                inside_word = true;
-                s = next_s;
-                continue;
-            }
-            if (c == '\r')
-            {
-                s = next_s;
-                continue;
-            }
-        }
-
-        let char_width = (c < IndexAdvanceX.size ? IndexAdvanceX.data[c] : FallbackAdvanceX);
-        if (char_is_blank_w(c))
-        {
-            if (inside_word)
-            {
-                line_width += blank_width;
-                blank_width = 0.0;
-                word_end = s;
-            }
-            blank_width += char_width;
-            inside_word = false;
-        }
-        else
-        {
-            word_width += char_width;
-            if (inside_word)
-            {
-                word_end = next_s;
-            }
-            else
-            {
-                prev_word_end = word_end;
-                line_width += word_width + blank_width;
-                word_width = blank_width = 0.0;
-            }
-
-            // Allow wrapping after punctuation.
-            inside_word = (c != '.' && c != ',' && c != ';' && c != '!' && c != '?' && c != '\"');
-        }
-
-        // We ignore blank width at the end of the line (they can be skipped)
-        if (line_width + word_width > wrap_width)
-        {
-            // Words that cannot possibly fit within an entire line will be cut anywhere.
-            if (word_width < wrap_width)
-                s = prev_word_end ? prev_word_end : word_end;
-            break;
-        }
-
-        s = next_s;
-    }
-
-    return s;
-}
-
-Vector2D ImFont::calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end, const char** remaining) const
-{
-    if (!text_end)
-        text_end = text_begin + strlen(text_begin); // FIXME-OPT: Need to avoid this.
-
-    let line_height = size;
-    let scale = size / FontSize;
-
-    Vector2D text_size = Vector2D::new(0, 0);
-    let line_width =  0.0;
-
-    let word_wrap_enabled = (wrap_width > 0.0);
-    const char* word_wrap_eol = None;
-
-    const char* s = text_begin;
-    while (s < text_end)
-    {
-        if (word_wrap_enabled)
-        {
-            // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
-            if (!word_wrap_eol)
-            {
-                word_wrap_eol = calc_word_wrap_position_a(scale, s, text_end, wrap_width - line_width);
-                if (word_wrap_eol == s) // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
-                    word_wrap_eol += 1;    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
-            }
-
-            if (s >= word_wrap_eol)
-            {
-                if (text_size.x < line_width)
-                    text_size.x = line_width;
-                text_size.y += line_height;
-                line_width = 0.0;
-                word_wrap_eol = None;
-
-                // Wrapping skips upcoming blanks
-                while (s < text_end)
-                {
-                    const char c = *s;
-                    if (char_is_blank_a(c)) { s += 1; } else if (c == '\n') { s += 1; break; } else { break; }
-                }
-                continue;
-            }
-        }
-
-        // Decode and advance source
-        const char* prev_s = s;
-        unsigned int c = (unsigned int)*s;
-        if (c < 0x80)
-        {
-            s += 1;
-        }
-        else
-        {
-            s += text_char_from_utf8(&c, s, text_end);
-            if (c == 0) // Malformed UTF-8?
-                break;
-        }
-
-        if (c < 32)
-        {
-            if (c == '\n')
-            {
-                text_size.x = ImMax(text_size.x, line_width);
-                text_size.y += line_height;
-                line_width = 0.0;
-                continue;
-            }
-            if (c == '\r')
-                continue;
-        }
-
-        let char_width = (c < IndexAdvanceX.size ? IndexAdvanceX.data[c] : FallbackAdvanceX) * scale;
-        if (line_width + char_width >= max_width)
-        {
-            s = prev_s;
-            break;
-        }
-
-        line_width += char_width;
-    }
-
-    if (text_size.x < line_width)
-        text_size.x = line_width;
-
-    if (line_width > 0 || text_size.y == 0.0)
-        text_size.y += line_height;
-
-    if (remaining)
-        *remaining = s;
-
-    return text_size;
-}
+// Vector2D ImFont::calc_text_size_a(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end, const char** remaining) const
+// {
+//
+// }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
 void ImFont::RenderChar(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, ImWchar c) const

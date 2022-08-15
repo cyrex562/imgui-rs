@@ -394,7 +394,7 @@ static const Vector2D FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT]
 ImFontAtlas::ImFontAtlas()
 {
     memset(this, 0, sizeof(*this));
-    TexGlyphPadding = 1;
+    text_glyph_padding = 1;
     PackIdMouseCursors = PackIdLines = -1;
 }
 
@@ -545,7 +545,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
     if (!font_cfg_template)
     {
         font_cfg.OversampleH = font_cfg.OversampleV = 1;
-        font_cfg.PixelSnapH = true;
+        font_cfg.pixel_snap_h = true;
     }
     if (font_cfg.sizePixels <= 0.0)
         font_cfg.sizePixels = 13.0 * 1.0;
@@ -879,7 +879,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 
         // Gather the sizes of all rectangles we will need to pack (this loop is based on stbtt_PackFontRangesGatherRects)
         let scale = (cfg.sizePixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.sizePixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.sizePixels);
-        let padding = atlas.TexGlyphPadding;
+        let padding = atlas.text_glyph_padding;
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsList.size; glyph_i += 1)
         {
             int x0, y0, x1, y1;
@@ -906,7 +906,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
     let TEX_HEIGHT_MAX = 1024 * 32;
     stbtt_pack_context spc = {};
-    stbtt_PackBegin(&spc, None, atlas.TexWidth, TEX_HEIGHT_MAX, 0, atlas.TexGlyphPadding, None);
+    stbtt_PackBegin(&spc, None, atlas.TexWidth, TEX_HEIGHT_MAX, 0, atlas.text_glyph_padding, None);
     ImFontAtlasBuildPackCustomRects(atlas, spc.pack_info);
 
     // 6. Pack each source font. No rendering yet, we are working with rectangles in an infinitely tall texture at this point.

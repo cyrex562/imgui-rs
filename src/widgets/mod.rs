@@ -4045,8 +4045,8 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         password_font->Descent = g.Font->Descent;
         password_font->ContainerAtlas = g.Font->ContainerAtlas;
         password_font->FallbackGlyph = glyph;
-        password_font->FallbackAdvanceX = glyph->AdvanceX;
-        IM_ASSERT(password_font->Glyphs.empty() && password_font->IndexAdvanceX.empty() && password_font->IndexLookup.empty());
+        password_font->fallback_advance_x = glyph->AdvanceX;
+        IM_ASSERT(password_font->Glyphs.empty() && password_font->index_advance_x.empty() && password_font->IndexLookup.empty());
         PushFont(password_font);
     }
 
