@@ -825,14 +825,14 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     if (src_load_color)
     {
         size_t tex_size = atlas.TexWidth * atlas.TexHeight * 4;
-        atlas.TexPixelsRGBA32 = (unsigned int*)IM_ALLOC(tex_size);
-        memset(atlas.TexPixelsRGBA32, 0, tex_size);
+        atlas.tex_pixels_rgba32 = (unsigned int*)IM_ALLOC(tex_size);
+        memset(atlas.tex_pixels_rgba32, 0, tex_size);
     }
     else
     {
         size_t tex_size = atlas.TexWidth * atlas.TexHeight * 1;
-        atlas.TexPixelsAlpha8 = (unsigned char*)IM_ALLOC(tex_size);
-        memset(atlas.TexPixelsAlpha8, 0, tex_size);
+        atlas.text_pixels_alpha8 = (unsigned char*)IM_ALLOC(tex_size);
+        memset(atlas.text_pixels_alpha8, 0, tex_size);
     }
 
     // 8. Copy rasterized font characters back into the main texture
@@ -891,16 +891,16 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             size_t blit_src_stride = src_glyph.Info.width;
             size_t blit_dst_stride = atlas.TexWidth;
             unsigned int* blit_src = src_glyph.BitmapData;
-            if (atlas.TexPixelsAlpha8 != None)
+            if (atlas.text_pixels_alpha8 != None)
             {
-                unsigned char* blit_dst = atlas.TexPixelsAlpha8 + (ty * blit_dst_stride) + tx;
+                unsigned char* blit_dst = atlas.text_pixels_alpha8 + (ty * blit_dst_stride) + tx;
                 for (int y = 0; y < info.Height; y += 1, blit_dst += blit_dst_stride, blit_src += blit_src_stride)
                     for (int x = 0; x < info.width; x += 1)
                         blit_dst[x] = (unsigned char)((blit_src[x] >> IM_COL32_A_SHIFT) & 0xFF);
             }
             else
             {
-                unsigned int* blit_dst = atlas.TexPixelsRGBA32 + (ty * blit_dst_stride) + tx;
+                unsigned int* blit_dst = atlas.tex_pixels_rgba32 + (ty * blit_dst_stride) + tx;
                 for (int y = 0; y < info.Height; y += 1, blit_dst += blit_dst_stride, blit_src += blit_src_stride)
                     for (int x = 0; x < info.width; x += 1)
                         blit_dst[x] = blit_src[x];
@@ -909,7 +909,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
 
         src_tmp.Rects = None;
     }
-    atlas.TexPixelsUseColors = tex_use_colors;
+    atlas.tex_pixels_use_colors = tex_use_colors;
 
     // Cleanup
     for (int buf_i = 0; buf_i < buf_bitmap_buffers.size; buf_i += 1)

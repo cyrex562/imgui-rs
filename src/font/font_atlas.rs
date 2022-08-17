@@ -1,5 +1,6 @@
 use crate::font::font_config::FontConfig;
 use crate::font::font::Font;
+use crate::font::font_atlas_custom_rect::FontAtlasCustomRect;
 use crate::font::font_builder_io::FontBuilderIo;
 use crate::input::MouseCursor;
 use crate::rect::Rect;
@@ -30,7 +31,7 @@ pub struct FontAtlas {
     //-------------------------------------------
     // Members
     //-------------------------------------------
-    pub flags: ImFontAtlasFlags,
+    pub flags: FontAtlasFlags,
     // ImFontAtlasFlags            flags;              // build flags (see )
     pub tex_id: TextureId,
     // ImTextureID                 tex_id;              // User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
@@ -61,7 +62,7 @@ pub struct FontAtlas {
     pub fonts: Vec<Font>,
     // ImVector<ImFont*>           fonts;              // Hold all the fonts returned by add_font*. fonts[0] is the default font upon calling ImGui::NewFrame(), use ImGui::PushFont()/PopFont() to change the current font.
     // ImVector<ImFontAtlasCustomRect> custom_rects;    // Rectangles for packing custom texture data into the atlas.
-    pub custom_rects: Vec<ImFontAtlasCustomRect>,
+    pub custom_rects: Vec<FontAtlasCustomRect>,
     // ImVector<ImFontConfig>      config_data;         // Configuration data
     pub config_data: Vec<FontConfig>,
     // Vector4D                      tex_uv_lines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
@@ -83,6 +84,14 @@ pub struct FontAtlas {
 }
 
 impl FontAtlas {
+    pub fn new() -> Self {
+        Self {
+            tex_glyph_padding: 1,
+            pack_id_mouse_cursors: -1,
+            pack_id_lines: -1,
+            ..Default::default()
+        }
+    }
     //  ImFontAtlas();
     //      ~ImFontAtlas();
     //      ImFont*           add_font(const ImFontConfig* font_cfg);
@@ -137,19 +146,56 @@ impl FontAtlas {
     }
     //      void              clear_input_data();           // clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
     pub fn clear_input_data(&mut self) {
-        todo!()
+        // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+        // for (int i = 0; i < config_data.size; i += 1)
+        for i in 0 .. self.config_data.len() {
+            if self.config_data[i].font_data.len() > 0 && self.config_data[i].font_data_owned_by_atlas {
+                // IM_FREE(config_data[i].FontData);
+                self.config_data[i].font_data.clear();
+                // config_data[i].FontData = None;
+            }
+        }
+
+        // When clearing this we lose access to the font name and other information used to build the font.
+        // for (int i = 0; i < Fonts.size; i += 1){
+        for i in 0 .. self.fonts.len() {
+            if self.fonts[i].config_data.len() >= self.config_data.len() && self.fonts[i].config_data.len() < self.config_data.len() {
+                self.fonts[i].config_data.clear();
+                self.fonts[i].config_data_count = 0;
+            }
+        }
+        self.config_data.clear();
+        self.custom_rects.clear();
+        self.pack_id_mouse_cursors = -1;
+        self.pack_id_lines = -1;
+        // Important: we leave tex_ready untouched
     }
     //      void              clear_tex_data();             // clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
     pub fn clear_tex_data(&mut self) {
-        todo!()
+        // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+        // if self.text_pixels_alpha8 {
+        //     IM_FREE(text_pixels_alpha8);
+        // }
+        // if self.tex_pixels_rgba32 {
+        //     IM_FREE(tex_pixels_rgba32);
+        // }
+        self.text_pixels_alpha8.clear();
+        self.tex_pixels_rgba32.clear();
+        self.tex_pixels_use_colors = false;
+        // Important: we leave tex_ready untouched
     }
-    //      void              clear_fonts();               // clear output font data (glyphs storage, UV coordinates).
+
+    // clear output font data (glyphs storage, UV coordinates).
     pub fn clear_fonts(&mut self) {
-        todo!()
+        self.fonts.clear();
+        self.tex_ready = false;
     }
-    //      void              clear();                    // clear all input and output.
+
+    // clear all input and output.
     pub fn clear(&mut self) {
-        todo!()
+        self.clear_input_data();
+        self.clear_tex_data();
+        self.clear_fonts();
     }
     //
     //     // build atlas, retrieve pixel data.
@@ -162,24 +208,55 @@ impl FontAtlas {
         todo!()
     }
     //      void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = None);  // 1 byte per-pixel
-    pub fn get_text_data_as_alpha8(
+    pub fn get_tex_data_as_alpha8(
         &mut self,
-        out_pixels: &Vec<Vec<u8>>,
+        out_pixels: &mut &mut Vec<u8>,
         out_width: &mut i32,
         out_height: &mut i32,
         out_bytes_per_pixel: &mut i32,
     ) {
-        todo!()
+        // build atlas on demand
+        if self.tex_pixels_alpha8.len() == 0 {
+            self.build();
+        }
+
+        *out_pixels = &mut self.tex_pixels_alpha8;
+        // if (out_width) { *out_width = TexWidth; }
+        *out_width = self.tex_width;
+        // if (out_height) { *out_height = TexHeight; }
+        *out_height = self.tex_height;
+        // if (out_bytes_per_pixel) { *out_bytes_per_pixel = 1; }
+        *out_bytes_per_pixel = 1;
     }
     //      void              GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = None);  // 4 bytes-per-pixel
-    pub fn get_text_data_as_rgba32(
+    pub fn get_tex_data_as_rgba32(
         &mut self,
-        out_pixels: &Vec<Vec<u8>>,
+        out_pixels: &mut &mut Vec<u8>,
         out_width: &mut i32,
         out_height: &mut i32,
         out_bytes_per_pixel: &mut i32,
     ) {
-        todo!()
+        // Convert to RGBA32 format on demand
+        // Although it is likely to be the most commonly used format, our font rendering is 1 channel / 8 bpp
+        if !tex_pixels_rgba32
+        {
+            // unsigned char* pixels = None;
+            let mut pixels: Vec<u8> = Vec::new()
+            self.get_tex_data_as_alpha8(&mut pixels, None, None);
+            if (pixels)
+            {
+                tex_pixels_rgba32 = (unsigned int*)IM_ALLOC(TexWidth * TexHeight * 4);
+                const unsigned char* src = pixels;
+                unsigned int* dst = tex_pixels_rgba32;
+                for (int n = TexWidth * TexHeight; n > 0; n--)
+                    *dst += 1 = IM_COL32(255, 255, 255, (unsigned int)(*src += 1));
+            }
+        }
+
+        *out_pixels = (unsigned char*)tex_pixels_rgba32;
+        if (out_width) *out_width = TexWidth;
+        if (out_height) *out_height = TexHeight;
+        if (out_bytes_per_pixel) *out_bytes_per_pixel = 4;
     }
     //     bool                        is_built() const             { return fonts.size > 0 && tex_ready; } // Bit ambiguous: used to detect when user didn't built texture but effectively we should check tex_id != 0 except that would be backend dependent...
     pub fn is_built(&self) -> bool {
@@ -261,7 +338,7 @@ impl FontAtlas {
     pub fn get_custom_rect_by_index(
         &mut self,
         index: i32,
-    ) -> Result<ImFontAtlasCustomRect, String> {
+    ) -> Result<FontAtlasCustomRect, String> {
         if index >= 0 {
             Ok(self.custom_rects[index])
         }
@@ -293,7 +370,7 @@ impl FontAtlas {
 
 // flags for ImFontAtlas build
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub enum ImFontAtlasFlags {
+pub enum FontAtlasFlags {
     None = 0,
     NoPowerOfTwoHeight,
     // Don't round the height to next power of two
@@ -302,193 +379,102 @@ pub enum ImFontAtlasFlags {
     NoBakedLines, // Don't build thick line textures into the atlas (save a little texture memory, allow support for point/nearest filtering). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
 }
 
-// See ImFontAtlas::AddCustomRectXXX functions.
-#[derive(Default, Debug, Clone)]
-pub struct ImFontAtlasCustomRect {
-    // unsigned short  width, height;  // Input    // Desired rectangle dimension
-    pub width: u16,
-    pub height: u16,
-    // unsigned short  x, Y;           // Output   // Packed position in Atlas
-    pub x: u16,
-    pub Y: u16,
-    // unsigned pub glyph_id: i32,      // Input    // For custom font glyphs only (id < 0x110000)
-    pub glyph_id: u32,
-    pub glyph_advance_x: f32,
-    // Input    // For custom font glyphs only: glyph xadvance
-    pub glyph_offset: Vector2D,
-    // Input    // For custom font glyphs only: glyph display offset
-    pub font: Font, // ImFont*         font;           // Input    // For custom font glyphs only: target font
-}
-
-impl ImFontAtlasCustomRect {
-    // ImFontAtlasCustomRect()         { width = height = 0; x = Y = 0xFFFF; glyph_id = 0; glyph_advance_x = 0.0; glyph_offset = Vector2D(0, 0); font = None;
-    pub fn new() -> Self {
-        Self {
-            width: 0,
-            height: 0,
-            x: 0xFFFF,
-            Y: 0xFFFF,
-            glyph_id: 0,
-            glyph_advance_x: 0.0,
-            glyph_offset: Default::default(),
-            font: Default::default(),
-        }
-    }
-    //     bool is_packed() const           { return x != 0xFFFF; }
-    pub fn is_packed(&self) -> bool {
-        self.x != 0xFFFF
-    }
-}
-
 
 // A work of art lies ahead! (. = white layer, x = black layer, others are blank)
 // The 2x2 white texels on the top left are the ones we'll use everywhere in Dear ImGui to render filled shapes.
 // (This is used when io.mouse_draw_cursor = true)
-let FONT_ATLAS_DEFAULT_TEX_DATA_W = 122; // Actual texture will be 2 times that + 1 spacing.
-let FONT_ATLAS_DEFAULT_TEX_DATA_H = 27;
-static const char FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS[FONT_ATLAS_DEFAULT_TEX_DATA_W * FONT_ATLAS_DEFAULT_TEX_DATA_H + 1] =
-{
-    "..-         -XXXXXXX-    x    -           x           -XXXXXXX          -          XXXXXXX-     XX          - XX       XX "
-    "..-         -x.....x-   x.x   -          x.x          -x.....x          -          x.....x-    x..x         -x..x     x..x"
-    "---         -XXX.XXX-  x...x  -         x...x         -x....x           -           x....x-    x..x         -x...x   x...x"
-    "x           -  x.x  - x.....x -        x.....x        -x...x            -            x...x-    x..x         - x...x x...x "
-    "XX          -  x.x  -x.......x-       x.......x       -x..x.x           -           x.x..x-    x..x         -  x...x...x  "
-    "x.x         -  x.x  -XXXX.XXXX-       XXXX.XXXX       -x.x x.x          -          x.x x.x-    x..XXX       -   x.....x   "
-    "x..x        -  x.x  -   x.x   -          x.x          -XX   x.x         -         x.x   XX-    x..x..XXX    -    x...x    "
-    "x...x       -  x.x  -   x.x   -    XX    x.x    XX    -      x.x        -        x.x      -    x..x..x..XX  -     x.x     "
-    "x....x      -  x.x  -   x.x   -   x.x    x.x    x.x   -       x.x       -       x.x       -    x..x..x..x.x -    x...x    "
-    "x.....x     -  x.x  -   x.x   -  x..x    x.x    x..x  -        x.x      -      x.x        -XXX x..x..x..x..x-   x.....x   "
-    "x......x    -  x.x  -   x.x   - x...XXXXXX.XXXXXX...x -         x.x   XX-XX   x.x         -x..XX........x..x-  x...x...x  "
-    "x.......x   -  x.x  -   x.x   -x.....................x-          x.x x.x-x.x x.x          -x...x...........x- x...x x...x "
-    "x........x  -  x.x  -   x.x   - x...XXXXXX.XXXXXX...x -           x.x..x-x..x.x           - x..............x-x...x   x...x"
-    "x.........x -XXX.XXX-   x.x   -  x..x    x.x    x..x  -            x...x-x...x            -  x.............x-x..x     x..x"
-    "x..........x-x.....x-   x.x   -   x.x    x.x    x.x   -           x....x-x....x           -  x.............x- XX       XX "
-    "x......XXXXX-XXXXXXX-   x.x   -    XX    x.x    XX    -          x.....x-x.....x          -   x............x--------------"
-    "x...x..x    ---------   x.x   -          x.x          -          XXXXXXX-XXXXXXX          -   x...........x -             "
-    "x..x x..x   -       -XXXX.XXXX-       XXXX.XXXX       -------------------------------------    x..........x -             "
-    "x.x  x..x   -       -x.......x-       x.......x       -    XX           XX    -           -    x..........x -             "
-    "XX    x..x  -       - x.....x -        x.....x        -   x.x           x.x   -           -     x........x  -             "
-    "      x..x  -       -  x...x  -         x...x         -  x..x           x..x  -           -     x........x  -             "
-    "       XX   -       -   x.x   -          x.x          - x...XXXXXXXXXXXXX...x -           -     XXXXXXXXXX  -             "
-    "-------------       -    x    -           x           -x.....................x-           -------------------             "
-    "                    ----------------------------------- x...XXXXXXXXXXXXX...x -                                           "
-    "                                                      -  x..x           x..x  -                                           "
-    "                                                      -   x.x           x.x   -                                           "
-    "                                                      -    XX           XX    -                                           "
-};
+pub const FONT_ATLAS_DEFAULT_TEX_DATA_W: usize = 122; // Actual texture will be 2 times that + 1 spacing.
+pub const FONT_ATLAS_DEFAULT_TEX_DATA_H: usize = 27;
+pub const FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS: &'static str =
 
-static const Vector2D FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3] =
-{
+    "..-         -XXXXXXX-    x    -           x           -XXXXXXX          -          XXXXXXX-     XX          - XX       XX " +
+    "..-         -x.....x-   x.x   -          x.x          -x.....x          -          x.....x-    x..x         -x..x     x..x" +
+    "---         -XXX.XXX-  x...x  -         x...x         -x....x           -           x....x-    x..x         -x...x   x...x" +
+    "x           -  x.x  - x.....x -        x.....x        -x...x            -            x...x-    x..x         - x...x x...x " +
+    "XX          -  x.x  -x.......x-       x.......x       -x..x.x           -           x.x..x-    x..x         -  x...x...x  " +
+    "x.x         -  x.x  -XXXX.XXXX-       XXXX.XXXX       -x.x x.x          -          x.x x.x-    x..XXX       -   x.....x   " +
+    "x..x        -  x.x  -   x.x   -          x.x          -XX   x.x         -         x.x   XX-    x..x..XXX    -    x...x    " +
+    "x...x       -  x.x  -   x.x   -    XX    x.x    XX    -      x.x        -        x.x      -    x..x..x..XX  -     x.x     " +
+    "x....x      -  x.x  -   x.x   -   x.x    x.x    x.x   -       x.x       -       x.x       -    x..x..x..x.x -    x...x    " +
+    "x.....x     -  x.x  -   x.x   -  x..x    x.x    x..x  -        x.x      -      x.x        -XXX x..x..x..x..x-   x.....x   " +
+    "x......x    -  x.x  -   x.x   - x...XXXXXX.XXXXXX...x -         x.x   XX-XX   x.x         -x..XX........x..x-  x...x...x  " +
+    "x.......x   -  x.x  -   x.x   -x.....................x-          x.x x.x-x.x x.x          -x...x...........x- x...x x...x " +
+    "x........x  -  x.x  -   x.x   - x...XXXXXX.XXXXXX...x -           x.x..x-x..x.x           - x..............x-x...x   x...x" +
+    "x.........x -XXX.XXX-   x.x   -  x..x    x.x    x..x  -            x...x-x...x            -  x.............x-x..x     x..x" +
+    "x..........x-x.....x-   x.x   -   x.x    x.x    x.x   -           x....x-x....x           -  x.............x- XX       XX " +
+    "x......XXXXX-XXXXXXX-   x.x   -    XX    x.x    XX    -          x.....x-x.....x          -   x............x--------------" +
+    "x...x..x    ---------   x.x   -          x.x          -          XXXXXXX-XXXXXXX          -   x...........x -             " +
+    "x..x x..x   -       -XXXX.XXXX-       XXXX.XXXX       -------------------------------------    x..........x -             " +
+    "x.x  x..x   -       -x.......x-       x.......x       -    XX           XX    -           -    x..........x -             " +
+    "XX    x..x  -       - x.....x -        x.....x        -   x.x           x.x   -           -     x........x  -             " +
+    "      x..x  -       -  x...x  -         x...x         -  x..x           x..x  -           -     x........x  -             " +
+    "       XX   -       -   x.x   -          x.x          - x...XXXXXXXXXXXXX...x -           -     XXXXXXXXXX  -             " +
+    "-------------       -    x    -           x           -x.....................x-           -------------------             " +
+    "                    ----------------------------------- x...XXXXXXXXXXXXX...x -                                           " +
+    "                                                      -  x..x           x..x  -                                           " +
+    "                                                      -   x.x           x.x   -                                           " +
+    "                                                      -    XX           XX    -                                           ";
+
+
+pub const FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA: [[Vector2D;3];9] =
+[
     // pos ........ size ......... Offset ......
-    { Vector2D::new( 0,3), Vector2D::new(12,19), Vector2D::new( 0, 0) }, // ImGuiMouseCursor_Arrow
-    { Vector2D::new(13,0), Vector2D::new( 7,16), Vector2D::new( 1, 8) }, // ImGuiMouseCursor_TextInput
-    { Vector2D::new(31,0), Vector2D::new(23,23), Vector2D::new(11,11) }, // ImGuiMouseCursor_ResizeAll
-    { Vector2D::new(21,0), Vector2D::new( 9,23), Vector2D::new( 4,11) }, // ImGuiMouseCursor_ResizeNS
-    { Vector2D::new(55,18),Vector2D::new(23, 9), Vector2D::new(11, 4) }, // ImGuiMouseCursor_ResizeEW
-    { Vector2D::new(73,0), Vector2D::new(17,17), Vector2D::new( 8, 8) }, // ImGuiMouseCursor_ResizeNESW
-    { Vector2D::new(55,0), Vector2D::new(17,17), Vector2D::new( 8, 8) }, // ImGuiMouseCursor_ResizeNWSE
-    { Vector2D::new(91,0), Vector2D::new(17,22), Vector2D::new( 5, 0) }, // ImGuiMouseCursor_Hand
-    { Vector2D::new(109,0),Vector2D::new(13,15), Vector2D::new( 6, 7) }, // ImGuiMouseCursor_NotAllowed
-};
+    [ Vector2D::new( 0f32,3f32), Vector2D::new(12f32,19f32), Vector2D::new( 0f32, 0f32) ], // ImGuiMouseCursor_Arrow
+    [ Vector2D::new(13f32,0f32), Vector2D::new( 7f32,16f32), Vector2D::new( 1f32, 8f32) ], // ImGuiMouseCursor_TextInput
+    [ Vector2D::new(31f32,0f32), Vector2D::new(23f32,23f32), Vector2D::new(11f32,11f32) ], // ImGuiMouseCursor_ResizeAll
+    [ Vector2D::new(21f32,0f32), Vector2D::new( 9f32,23f32), Vector2D::new( 4f32,11f32) ], // ImGuiMouseCursor_ResizeNS
+    [ Vector2D::new(55f32,18f32),Vector2D::new(23f32, 9f32), Vector2D::new(11f32, 4f32) ], // ImGuiMouseCursor_ResizeEW
+    [ Vector2D::new(73f32,0f32), Vector2D::new(17f32,17f32), Vector2D::new( 8f32, 8f32) ], // ImGuiMouseCursor_ResizeNESW
+    [ Vector2D::new(55f32,0f32), Vector2D::new(17f32,17f32), Vector2D::new( 8f32, 8f32) ], // ImGuiMouseCursor_ResizeNWSE
+    [ Vector2D::new(91f32,0f32), Vector2D::new(17f32,22f32), Vector2D::new( 5f32, 0f32) ], // ImGuiMouseCursor_Hand
+    [ Vector2D::new(109f32,0f32),Vector2D::new(13f32,15f32), Vector2D::new( 6f32, 7f32) ], // ImGuiMouseCursor_NotAllowed
+];
 
-ImFontAtlas::ImFontAtlas()
-{
-    memset(this, 0, sizeof(*this));
-    text_glyph_padding = 1;
-    PackIdMouseCursors = PackIdLines = -1;
-}
+// ImFontAtlas::ImFontAtlas()
+// {
+//     memset(this, 0, sizeof(*this));
+//
+// }
 
-ImFontAtlas::~ImFontAtlas()
-{
-    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    Clear();
-}
+// ImFontAtlas::~ImFontAtlas()
+// {
+//     // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+//     Clear();
+// }
 
-void    ImFontAtlas::ClearInputData()
-{
-    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    for (int i = 0; i < ConfigData.size; i += 1)
-        if (ConfigData[i].FontData && ConfigData[i].FontDataOwnedByAtlas)
-        {
-            IM_FREE(ConfigData[i].FontData);
-            ConfigData[i].FontData = None;
-        }
+// void    ImFontAtlas::ClearInputData()
+// {
+//
+// }
 
-    // When clearing this we lose access to the font name and other information used to build the font.
-    for (int i = 0; i < Fonts.size; i += 1)
-        if (Fonts[i].ConfigData >= ConfigData.data && Fonts[i].ConfigData < ConfigData.data + ConfigData.size)
-        {
-            Fonts[i].ConfigData = None;
-            Fonts[i].ConfigDataCount = 0;
-        }
-    ConfigData.clear();
-    CustomRects.clear();
-    PackIdMouseCursors = PackIdLines = -1;
-    // Important: we leave tex_ready untouched
-}
+// void    ImFontAtlas::ClearTexData()
+// {
+//
+// }
 
-void    ImFontAtlas::ClearTexData()
-{
-    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    if (TexPixelsAlpha8)
-        IM_FREE(TexPixelsAlpha8);
-    if (TexPixelsRGBA32)
-        IM_FREE(TexPixelsRGBA32);
-    TexPixelsAlpha8 = None;
-    TexPixelsRGBA32 = None;
-    TexPixelsUseColors = false;
-    // Important: we leave tex_ready untouched
-}
+// void    ImFontAtlas::ClearFonts()
+// {
+//     // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+//     fonts.clear_delete();
+//     TexReady = false;
+// }
 
-void    ImFontAtlas::ClearFonts()
-{
-    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    Fonts.clear_delete();
-    TexReady = false;
-}
+// void    ImFontAtlas::Clear()
+// {
+//     ClearInputData();
+//     ClearTexData();
+//     ClearFonts();
+// }
 
-void    ImFontAtlas::Clear()
-{
-    ClearInputData();
-    ClearTexData();
-    ClearFonts();
-}
+// void    ImFontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel)
+// {
+//
+// }
 
-void    ImFontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel)
-{
-    // build atlas on demand
-    if (TexPixelsAlpha8 == None)
-        Build();
-
-    *out_pixels = TexPixelsAlpha8;
-    if (out_width) *out_width = TexWidth;
-    if (out_height) *out_height = TexHeight;
-    if (out_bytes_per_pixel) *out_bytes_per_pixel = 1;
-}
-
-void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel)
-{
-    // Convert to RGBA32 format on demand
-    // Although it is likely to be the most commonly used format, our font rendering is 1 channel / 8 bpp
-    if (!TexPixelsRGBA32)
-    {
-        unsigned char* pixels = None;
-        GetTexDataAsAlpha8(&pixels, None, None);
-        if (pixels)
-        {
-            TexPixelsRGBA32 = (unsigned int*)IM_ALLOC(TexWidth * TexHeight * 4);
-            const unsigned char* src = pixels;
-            unsigned int* dst = TexPixelsRGBA32;
-            for (int n = TexWidth * TexHeight; n > 0; n--)
-                *dst += 1 = IM_COL32(255, 255, 255, (unsigned int)(*src += 1));
-        }
-    }
-
-    *out_pixels = (unsigned char*)TexPixelsRGBA32;
-    if (out_width) *out_width = TexWidth;
-    if (out_height) *out_height = TexHeight;
-    if (out_bytes_per_pixel) *out_bytes_per_pixel = 4;
-}
+// void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel)
+// {
+//
+// }
 
 ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
 {
@@ -498,18 +484,18 @@ ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
 
     // Create new font
     if (!font_cfg.MergeMode)
-        Fonts.push_back(IM_NEW(ImFont));
+        fonts.push_back(IM_NEW(ImFont));
     else
         // IM_ASSERT(!Fonts.empty() && "Cannot use merge_mode for the first font"); // When using merge_mode make sure that a font has already been added before. You can use ImGui::GetIO().fonts->add_font_default() to add the default imgui font.
 
-    ConfigData.push_back(*font_cfg);
-    ImFontConfig& new_font_cfg = ConfigData.back();
+    config_data.push_back(*font_cfg);
+    ImFontConfig& new_font_cfg = config_data.back();
     if (new_font_cfg.DstFont == None)
-        new_font_cfg.DstFont = Fonts.back();
-    if (!new_font_cfg.FontDataOwnedByAtlas)
+        new_font_cfg.DstFont = fonts.back();
+    if (!new_font_cfg.font_data_owned_by_atlas)
     {
         new_font_cfg.FontData = IM_ALLOC(new_font_cfg.FontDataSize);
-        new_font_cfg.FontDataOwnedByAtlas = true;
+        new_font_cfg.font_data_owned_by_atlas = true;
         memcpy(new_font_cfg.FontData, font_cfg.FontData, new_font_cfg.FontDataSize);
     }
 
@@ -603,7 +589,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(const void* compressed_ttf_d
 
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
     // IM_ASSERT(font_cfg.FontData == None);
-    font_cfg.FontDataOwnedByAtlas = true;
+    font_cfg.font_data_owned_by_atlas = true;
     return AddFontFromMemoryTTF(buf_decompressed_data, buf_decompressed_size, size_pixels, &font_cfg, glyph_ranges);
 }
 
@@ -624,8 +610,8 @@ int ImFontAtlas::AddCustomRectRegular(int width, int height)
     ImFontAtlasCustomRect r;
     r.width = (unsigned short)width;
     r.Height = (unsigned short)height;
-    CustomRects.push_back(r);
-    return CustomRects.size - 1; // Return index
+    custom_rects.push_back(r);
+    return custom_rects.size - 1; // Return index
 }
 
 int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int height, float advance_x, const Vector2D& offset)
@@ -643,8 +629,8 @@ int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int
     r.GlyphAdvanceX = advance_x;
     r.GlyphOffset = offset;
     r.font = font;
-    CustomRects.push_back(r);
-    return CustomRects.size - 1; // Return index
+    custom_rects.push_back(r);
+    return custom_rects.size - 1; // Return index
 }
 
 void ImFontAtlas::CalcCustomRectUV(const ImFontAtlasCustomRect* rect, Vector2D* out_uv_min, Vector2D* out_uv_max) const
@@ -662,8 +648,8 @@ bool ImFontAtlas::get_mouse_cursor_tex_data(ImGuiMouseCursor cursor_type, Vector
     if (Flags & ImFontAtlasFlags_NoMouseCursors)
         return false;
 
-    // IM_ASSERT(PackIdMouseCursors != -1);
-    ImFontAtlasCustomRect* r = GetCustomRectByIndex(PackIdMouseCursors);
+    // IM_ASSERT(pack_id_mouse_cursors != -1);
+    ImFontAtlasCustomRect* r = GetCustomRectByIndex(pack_id_mouse_cursors);
     Vector2D pos = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + Vector2D::new(r.X, r.Y);
     Vector2D size = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
     *out_size = size;
@@ -681,7 +667,7 @@ bool    ImFontAtlas::Build()
     // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
 
     // Default font is none are specified
-    if (ConfigData.size == 0)
+    if (config_data.size == 0)
         AddFontDefault();
 
     // Select builder
@@ -752,7 +738,7 @@ struct ImFontBuildDstData
 
 static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 {
-    // IM_ASSERT(atlas.ConfigData.size > 0);
+    // IM_ASSERT(atlas.config_data.size > 0);
 
     ImFontAtlasBuildInit(atlas);
 
@@ -766,22 +752,22 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     // Temporary storage for building
     ImVector<ImFontBuildSrcData> src_tmp_array;
     ImVector<ImFontBuildDstData> dst_tmp_array;
-    src_tmp_array.resize(atlas.ConfigData.size);
-    dst_tmp_array.resize(atlas.Fonts.size);
+    src_tmp_array.resize(atlas.config_data.size);
+    dst_tmp_array.resize(atlas.fonts.size);
     memset(src_tmp_array.data, 0, src_tmp_array.size_in_bytes());
     memset(dst_tmp_array.data, 0, dst_tmp_array.size_in_bytes());
 
     // 1. Initialize font loading structure, check font data validity
-    for (int src_i = 0; src_i < atlas.ConfigData.size; src_i += 1)
+    for (int src_i = 0; src_i < atlas.config_data.size; src_i += 1)
     {
         ImFontBuildSrcData& src_tmp = src_tmp_array[src_i];
-        ImFontConfig& cfg = atlas.ConfigData[src_i];
+        ImFontConfig& cfg = atlas.config_data[src_i];
         // IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.container_atlas == atlas));
 
         // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
-        for (int output_i = 0; output_i < atlas.Fonts.size && src_tmp.DstIndex == -1; output_i += 1)
-            if (cfg.DstFont == atlas.Fonts[output_i])
+        for (int output_i = 0; output_i < atlas.fonts.size && src_tmp.DstIndex == -1; output_i += 1)
+            if (cfg.DstFont == atlas.fonts[output_i])
                 src_tmp.DstIndex = output_i;
         if (src_tmp.DstIndex == -1)
         {
@@ -868,7 +854,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         buf_packedchars_out_n += src_tmp.GlyphsCount;
 
         // Convert our ranges in the format stb_truetype wants
-        ImFontConfig& cfg = atlas.ConfigData[src_i];
+        ImFontConfig& cfg = atlas.config_data[src_i];
         src_tmp.PackRange.font_size = cfg.sizePixels;
         src_tmp.PackRange.first_unicode_codepoint_in_range = 0;
         src_tmp.PackRange.array_of_unicode_codepoints = src_tmp.GlyphsList.data;
@@ -928,15 +914,15 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     // 7. Allocate texture
     atlas.TexHeight = (atlas.flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas.TexHeight + 1) : ImUpperPowerOfTwo(atlas.TexHeight);
     atlas.TexUvScale = Vector2D::new(1.0 / atlas.TexWidth, 1.0 / atlas.TexHeight);
-    atlas.TexPixelsAlpha8 = (unsigned char*)IM_ALLOC(atlas.TexWidth * atlas.TexHeight);
-    memset(atlas.TexPixelsAlpha8, 0, atlas.TexWidth * atlas.TexHeight);
-    spc.pixels = atlas.TexPixelsAlpha8;
+    atlas.text_pixels_alpha8 = (unsigned char*)IM_ALLOC(atlas.TexWidth * atlas.TexHeight);
+    memset(atlas.text_pixels_alpha8, 0, atlas.TexWidth * atlas.TexHeight);
+    spc.pixels = atlas.text_pixels_alpha8;
     spc.height = atlas.TexHeight;
 
     // 8. Render/rasterize font characters into the texture
     for (int src_i = 0; src_i < src_tmp_array.size; src_i += 1)
     {
-        ImFontConfig& cfg = atlas.ConfigData[src_i];
+        ImFontConfig& cfg = atlas.config_data[src_i];
         ImFontBuildSrcData& src_tmp = src_tmp_array[src_i];
         if (src_tmp.GlyphsCount == 0)
             continue;
@@ -951,7 +937,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
             StbRpRect* r = &src_tmp.Rects[0];
             for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1, r += 1)
                 if (r.was_packed)
-                    ImFontAtlasBuildMultiplyRectAlpha8(multiply_table, atlas.TexPixelsAlpha8, r.x, r.y, r.w, r.h, atlas.TexWidth * 1);
+                    ImFontAtlasBuildMultiplyRectAlpha8(multiply_table, atlas.text_pixels_alpha8, r.x, r.y, r.w, r.h, atlas.TexWidth * 1);
         }
         src_tmp.Rects = None;
     }
@@ -970,7 +956,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         // When merging fonts with merge_mode=true:
         // - We can have multiple input fonts writing into a same destination font.
         // - dst_font->config_data is != from cfg which is our source configuration.
-        ImFontConfig& cfg = atlas.ConfigData[src_i];
+        ImFontConfig& cfg = atlas.config_data[src_i];
         ImFont* dst_font = cfg.DstFont;
 
         let font_scale = stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.sizePixels);
@@ -1017,13 +1003,13 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
     {
         font.ClearOutputData();
         font.font_size = font_config.sizePixels;
-        font.ConfigData = font_config;
-        font.ConfigDataCount = 0;
+        font.config_data = font_config;
+        font.config_dataCount = 0;
         font.container_atlas = atlas;
         font.Ascent = ascent;
         font.Descent = descent;
     }
-    font.ConfigDataCount += 1;
+    font.config_dataCount += 1;
 }
 
 void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* StbRpContext_opaque)
@@ -1031,7 +1017,7 @@ void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* StbRpContext_opaq
     StbRpContext* pack_context = (StbRpContext*)StbRpContext_opaque;
     // IM_ASSERT(pack_context != None);
 
-    ImVector<ImFontAtlasCustomRect>& user_rects = atlas.CustomRects;
+    ImVector<ImFontAtlasCustomRect>& user_rects = atlas.custom_rects;
     // IM_ASSERT(user_rects.size >= 1); // We expect at least the default custom rects to be registered, else something went wrong.
 
     ImVector<StbRpRect> pack_rects;
@@ -1057,7 +1043,7 @@ void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, int x, int y, 
 {
     // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
     // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
-    unsigned char* out_pixel = atlas.TexPixelsAlpha8 + x + (y * atlas.TexWidth);
+    unsigned char* out_pixel = atlas.text_pixels_alpha8 + x + (y * atlas.TexWidth);
     for (int off_y = 0; off_y < h; off_y += 1, out_pixel += atlas.TexWidth, in_str += w)
         for (int off_x = 0; off_x < w; off_x += 1)
             out_pixel[off_x] = (in_str[off_x] == in_marker_char) ? in_marker_pixel_value : 0x00;
@@ -1067,7 +1053,7 @@ void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, int x, int y,
 {
     // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
     // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
-    unsigned int* out_pixel = atlas.TexPixelsRGBA32 + x + (y * atlas.TexWidth);
+    unsigned int* out_pixel = atlas.tex_pixels_rgba32 + x + (y * atlas.TexWidth);
     for (int off_y = 0; off_y < h; off_y += 1, out_pixel += atlas.TexWidth, in_str += w)
         for (int off_x = 0; off_x < w; off_x += 1)
             out_pixel[off_x] = (in_str[off_x] == in_marker_char) ? in_marker_pixel_value : IM_COL32_BLACK_TRANS;
@@ -1075,7 +1061,7 @@ void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, int x, int y,
 
 static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
 {
-    ImFontAtlasCustomRect* r = atlas.GetCustomRectByIndex(atlas.PackIdMouseCursors);
+    ImFontAtlasCustomRect* r = atlas.GetCustomRectByIndex(atlas.pack_id_mouse_cursors);
     // IM_ASSERT(r.IsPacked());
 
     let w = atlas.TexWidth;
@@ -1085,7 +1071,7 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
         // IM_ASSERT(r.width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
         let x_for_white = r.X;
         let x_for_black = r.X + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
-        if (atlas.TexPixelsAlpha8 != None)
+        if (atlas.text_pixels_alpha8 != None)
         {
             ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_white, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, '.', 0xFF);
             ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_black, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, 'X', 0xFF);
@@ -1101,13 +1087,13 @@ static void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
         // Render 4 white pixels
         // IM_ASSERT(r.width == 2 && r.Height == 2);
         let offset = r.X + r.Y * w;
-        if (atlas.TexPixelsAlpha8 != None)
+        if (atlas.text_pixels_alpha8 != None)
         {
-            atlas.TexPixelsAlpha8[offset] = atlas.TexPixelsAlpha8[offset + 1] = atlas.TexPixelsAlpha8[offset + w] = atlas.TexPixelsAlpha8[offset + w + 1] = 0xFF;
+            atlas.text_pixels_alpha8[offset] = atlas.text_pixels_alpha8[offset + 1] = atlas.text_pixels_alpha8[offset + w] = atlas.text_pixels_alpha8[offset + w + 1] = 0xFF;
         }
         else
         {
-            atlas.TexPixelsRGBA32[offset] = atlas.TexPixelsRGBA32[offset + 1] = atlas.TexPixelsRGBA32[offset + w] = atlas.TexPixelsRGBA32[offset + w + 1] = IM_COL32_WHITE;
+            atlas.tex_pixels_rgba32[offset] = atlas.tex_pixels_rgba32[offset + 1] = atlas.tex_pixels_rgba32[offset + w] = atlas.tex_pixels_rgba32[offset + w + 1] = IM_COL32_WHITE;
         }
     }
     atlas.TexUvWhitePixel = Vector2D::new((r.X + 0.5) * atlas.TexUvScale.x, (r.Y + 0.5) * atlas.TexUvScale.y);
@@ -1119,7 +1105,7 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         return;
 
     // This generates a triangular shape in the texture, with the various line widths stacked on top of each other to allow interpolation between them
-    ImFontAtlasCustomRect* r = atlas.GetCustomRectByIndex(atlas.PackIdLines);
+    ImFontAtlasCustomRect* r = atlas.GetCustomRectByIndex(atlas.pack_id_lines);
     // IM_ASSERT(r.IsPacked());
     for (unsigned int n = 0; n < IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1; n += 1) // +1 because of the zero-width row
     {
@@ -1131,9 +1117,9 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
 
         // Write each slice
         // IM_ASSERT(pad_left + line_width + pad_right == r.width && y < r.Height); // Make sure we're inside the texture bounds before we start writing pixels
-        if (atlas.TexPixelsAlpha8 != None)
+        if (atlas.text_pixels_alpha8 != None)
         {
-            unsigned char* write_ptr = &atlas.TexPixelsAlpha8[r.X + ((r.Y + y) * atlas.TexWidth)];
+            unsigned char* write_ptr = &atlas.text_pixels_alpha8[r.X + ((r.Y + y) * atlas.TexWidth)];
             for (unsigned int i = 0; i < pad_left; i += 1)
                 *(write_ptr + i) = 0x00;
 
@@ -1145,7 +1131,7 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         }
         else
         {
-            unsigned int* write_ptr = &atlas.TexPixelsRGBA32[r.X + ((r.Y + y) * atlas.TexWidth)];
+            unsigned int* write_ptr = &atlas.tex_pixels_rgba32[r.X + ((r.Y + y) * atlas.TexWidth)];
             for (unsigned int i = 0; i < pad_left; i += 1)
                 *(write_ptr + i) = IM_COL32(255, 255, 255, 0);
 
@@ -1168,20 +1154,20 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
 void ImFontAtlasBuildInit(ImFontAtlas* atlas)
 {
     // Register texture region for mouse cursors or standard white pixels
-    if (atlas.PackIdMouseCursors < 0)
+    if (atlas.pack_id_mouse_cursors < 0)
     {
         if (!(atlas.flags & ImFontAtlasFlags_NoMouseCursors))
-            atlas.PackIdMouseCursors = atlas.AddCustomRectRegular(FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1, FONT_ATLAS_DEFAULT_TEX_DATA_H);
+            atlas.pack_id_mouse_cursors = atlas.AddCustomRectRegular(FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1, FONT_ATLAS_DEFAULT_TEX_DATA_H);
         else
-            atlas.PackIdMouseCursors = atlas.AddCustomRectRegular(2, 2);
+            atlas.pack_id_mouse_cursors = atlas.AddCustomRectRegular(2, 2);
     }
 
     // Register texture region for thick lines
     // The +2 here is to give space for the end caps, whilst height +1 is to accommodate the fact we have a zero-width row
-    if (atlas.PackIdLines < 0)
+    if (atlas.pack_id_lines < 0)
     {
         if (!(atlas.flags & FontAtlasFlags::NoBakedLines))
-            atlas.PackIdLines = atlas.AddCustomRectRegular(IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 2, IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1);
+            atlas.pack_id_lines = atlas.AddCustomRectRegular(IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 2, IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1);
     }
 }
 
@@ -1189,14 +1175,14 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
 void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
 {
     // Render into our custom data blocks
-    // IM_ASSERT(atlas.TexPixelsAlpha8 != None || atlas.TexPixelsRGBA32 != None);
+    // IM_ASSERT(atlas.text_pixels_alpha8 != None || atlas.tex_pixels_rgba32 != None);
     ImFontAtlasBuildRenderDefaultTexData(atlas);
     ImFontAtlasBuildRenderLinesTexData(atlas);
 
     // Register custom rectangle glyphs
-    for (int i = 0; i < atlas.CustomRects.size; i += 1)
+    for (int i = 0; i < atlas.custom_rects.size; i += 1)
     {
-        const ImFontAtlasCustomRect* r = &atlas.CustomRects[i];
+        const ImFontAtlasCustomRect* r = &atlas.custom_rects[i];
         if (r.Font == None || r.GlyphID == 0)
             continue;
 
@@ -1208,9 +1194,9 @@ void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
     }
 
     // build all fonts lookup tables
-    for (int i = 0; i < atlas.Fonts.size; i += 1)
-        if (atlas.Fonts[i].DirtyLookupTables)
-            atlas.Fonts[i].BuildLookupTable();
+    for (int i = 0; i < atlas.fonts.size; i += 1)
+        if (atlas.fonts[i].DirtyLookupTables)
+            atlas.fonts[i].BuildLookupTable();
 
     atlas.TexReady = true;
 }

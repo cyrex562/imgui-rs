@@ -16,6 +16,7 @@ pub mod font_glyph_ranges_builder;
 pub mod font_freetype;
 pub mod ops;
 pub mod embedded_font;
+pub mod font_atlas_custom_rect;
 
 
 // static ImWchar FindFirstExistingGlyph(ImFont* font, const ImWchar* candidate_chars, int candidate_chars_count)

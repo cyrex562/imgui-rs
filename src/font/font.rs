@@ -128,7 +128,7 @@ impl Font {
         let scale = size / self.font_size;
 
         let mut text_size = Vector2D::new(0f32, 0f32);
-        let line_width =  0.0;
+        let mut line_width =  0.0;
 
         let word_wrap_enabled = (wrap_width > 0.0);
         // const char* word_wrap_eol = None;
@@ -162,44 +162,48 @@ impl Font {
                     word_wrap_eol = None;
 
                     // Wrapping skips upcoming blanks
-                    while (s < text_end)
+                    while (s_offset < text_end_offset)
                     {
-                        const char c = *s;
-                        if (char_is_blank_a(c)) { s += 1; } else if (c == '\n') { s += 1; break; } else { break; }
+                        let c = text[s_offset];
+                        if char_is_blank_a(c) { s += 1; } else if c == '\n' { s += 1; break; } else { break; }
                     }
                     continue;
                 }
             }
 
             // Decode and advance source
-            const char* prev_s = s;
-            unsigned int c = (unsigned int)*s;
-            if (c < 0x80)
+            // const char* prev_s = s;
+            let prev_s_offset = s_offset;
+            // unsigned int c = (unsigned int)*s;
+            let c = text[s_offset];
+            if c < 0x80
             {
                 s += 1;
             }
             else
             {
                 s += text_char_from_utf8(&c, s, text_end);
-                if (c == 0) // Malformed UTF-8?
+                if c == 0 { // Malformed UTF-8?
                     break;
+                }
             }
 
-            if (c < 32)
+            if c < 32
             {
-                if (c == '\n')
+                if c == '\n'
                 {
                     text_size.x = ImMax(text_size.x, line_width);
                     text_size.y += line_height;
                     line_width = 0.0;
                     continue;
                 }
-                if (c == '\r')
+                if c == '\r' {
                     continue;
+                }
             }
 
-            let char_width = (c < index_advance_x.size ? index_advance_x.data[c] : fallback_advance_x) * scale;
-            if (line_width + char_width >= max_width)
+            let char_width = (if c < index_advance_x.size { index_advance_x.data[c] } else { fallback_advance_x }) * scale;
+            if line_width + char_width >= max_width
             {
                 s = prev_s;
                 break;
@@ -208,14 +212,17 @@ impl Font {
             line_width += char_width;
         }
 
-        if (text_size.x < line_width)
+        if text_size.x < line_width {
             text_size.x = line_width;
+        }
 
-        if (line_width > 0 || text_size.y == 0.0)
+        if line_width > 0f32 || text_size.y == 0.0 {
             text_size.y += line_height;
+        }
 
-        if (remaining)
+        if remaining {
             *remaining = s;
+        }
 
         return text_size;
     }
@@ -332,8 +339,20 @@ impl Font {
     }
 
 
-    pub fn render_char(&self, draw_list: &DrawList, size: f32, pos: &Vector2D, col: u32, c: char) {
-        todo!()
+    pub fn render_char(&self, draw_list: &mut DrawList, size: f32, pos: &Vector2D, mut col: u32, c: char) {
+        // const ImFontGlyph* glyph = FindGlyph(c);
+        let glyph = self.find_glyph(c);
+        if glyph.visible {
+            return;
+        }
+        if glyph.colored {
+            col |= !COLOR32_A_MASK;
+        }
+        let scale = if size >= 0.0 { (size / FontSize) } else { 1.0 };
+        let x = f32::floor(pos.x);
+        let y = f32::floor(pos.y);
+        draw_list.prim_reserve(6, 4);
+        draw_list.prim_rect_uv(&Vector2D::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), &Vector2D::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), &Vector2D::new(glyph.U0, glyph.V0), &Vector2D::new(glyph.U1, glyph.V1), col);
     }
 
 
@@ -570,96 +589,88 @@ impl Font {
     //     // [Internal] Don't use!
     //      void              build_lookup_table();
     pub fn build_lookup_table(&mut self) {
-         let mut max_codepoint: u32 = 0;
-    // for (int i = 0; i != Glyphs.size; i += 1)
-    for glyph in self.glyphs.iter()
-    {
-        // max_codepoint = ImMax(max_codepoint, Glyphs[i].Codepoint);
-        max_codepoint = u32::max(max_codepoint, glyph.codepoint.into());
-    }
-
-    // build lookup table
-    // IM_ASSERT(Glyphs.size < 0xFFFF); // -1 is reserved
-    self.index_advance_x.clear();
-    self.index_lookup.clear();
-    self.dirty_lookup_tables = false;
-    // memset(Used4kPagesMap, 0, sizeof(Used4kPagesMap));
-    self.used4k_pages_map.clear();
-    self.grow_index((max_codepoint + 1) as usize);
-    // for (int i = 0; i < Glyphs.size; i += 1)
-    for glyph in self.glyphs.iter()
-        {
-        // int codepoint = Glyphs[i].Codepoint;
-        let codepoint = glyph.codepoint;
-            self.index_advance_x[codepoint] = glyph.advance_x;
-        self.index_lookup[codepoint] = i.into();
-
-        // Mark 4K page as used
-        let page_n = codepoint / 4096;
-        self.used4k_pages_map[page_n >> 3] |= 1 << (page_n & 7);
-    }
-
-    // Create a glyph to handle TAB
-    // FIXME: Needs proper TAB handling but it needs to be contextualized (or we could arbitrary say that each string starts at "column 0" ?)
-    if find_glyph(' ')
-    {
-        // So we can call this function multiple times (FIXME: Flaky)
-        if self.glyphs.last().unwrap().codepoint != '\t' {
-            self.glyphs.reserve(1);
+        let mut max_codepoint: u32 = 0;
+        // for (int i = 0; i != Glyphs.size; i += 1)
+        for glyph in self.glyphs.iter() {
+            // max_codepoint = ImMax(max_codepoint, Glyphs[i].Codepoint);
+            max_codepoint = u32::max(max_codepoint, glyph.codepoint.into());
         }
-        let mut tab_glyph = self.glyphs.last_mut().unwrap();
-        tab_glyph = find_glyph(' ');
-        tab_glyph.codepoint = '\t';
-        tab_glyph.advance_x *= TABSIZE;
-        self.index_advance_x[tab_glyph.codepoint] = tab_glyph.advance_x;
-        self.index_lookup[tab_glyph.codepoint] = (self.glyphs.size - 1);
-    }
 
-    // Mark special glyphs as not visible (note that add_glyph already mark as non-visible glyphs with zero-size polygons)
-    set_glyph_visible(' ', false);
-    set_glyph_visible('\t', false);
+        // build lookup table
+        // IM_ASSERT(Glyphs.size < 0xFFFF); // -1 is reserved
+        self.index_advance_x.clear();
+        self.index_lookup.clear();
+        self.dirty_lookup_tables = false;
+        // memset(Used4kPagesMap, 0, sizeof(Used4kPagesMap));
+        self.used4k_pages_map.clear();
+        self.grow_index((max_codepoint + 1) as usize);
+        // for (int i = 0; i < Glyphs.size; i += 1)
+        for glyph in self.glyphs.iter() {
+            // int codepoint = Glyphs[i].Codepoint;
+            let codepoint = glyph.codepoint;
+            self.index_advance_x[codepoint] = glyph.advance_x;
+            self.index_lookup[codepoint] = i.into();
 
-    // Ellipsis character is required for rendering elided text. We prefer using U+2026 (horizontal ellipsis).
-    // However some old fonts may contain ellipsis at U+0085. Here we auto-detect most suitable ellipsis character.
-    // FIXME: Note that 0x2026 is rarely included in our font ranges. Because of this we are more likely to use three individual dots.
-    let ellipsis_chars: [char;2] =  ['\u{2026}', '\u{0085}' ];
-    let dots_chars: [char;2] = [ '.', '\u{FF0E}' ];
-    if self.ellipsis_char == '\0' {
-    self.ellipsis_char = find_first_existing_glyph(self, &ellipsis_chars.into_vec()).unwrap();
-    }
-    if self.dot_char == '\0'
+            // Mark 4K page as used
+            let page_n = codepoint / 4096;
+            self.used4k_pages_map[page_n >> 3] |= 1 << (page_n & 7);
+        }
+
+        // Create a glyph to handle TAB
+        // FIXME: Needs proper TAB handling but it needs to be contextualized (or we could arbitrary say that each string starts at "column 0" ?)
+        if find_glyph(' ') {
+            // So we can call this function multiple times (FIXME: Flaky)
+            if self.glyphs.last().unwrap().codepoint != '\t' {
+                self.glyphs.reserve(1);
+            }
+            let mut tab_glyph = self.glyphs.last_mut().unwrap();
+            tab_glyph = find_glyph(' ');
+            tab_glyph.codepoint = '\t';
+            tab_glyph.advance_x *= TABSIZE;
+            self.index_advance_x[tab_glyph.codepoint] = tab_glyph.advance_x;
+            self.index_lookup[tab_glyph.codepoint] = (self.glyphs.size - 1);
+        }
+
+        // Mark special glyphs as not visible (note that add_glyph already mark as non-visible glyphs with zero-size polygons)
+        set_glyph_visible(' ', false);
+        set_glyph_visible('\t', false);
+
+        // Ellipsis character is required for rendering elided text. We prefer using U+2026 (horizontal ellipsis).
+        // However some old fonts may contain ellipsis at U+0085. Here we auto-detect most suitable ellipsis character.
+        // FIXME: Note that 0x2026 is rarely included in our font ranges. Because of this we are more likely to use three individual dots.
+        let ellipsis_chars: [char; 2] = ['\u{2026}', '\u{0085}'];
+        let dots_chars: [char; 2] = ['.', '\u{FF0E}'];
+        if self.ellipsis_char == '\0' {
+            self.ellipsis_char = find_first_existing_glyph(self, &ellipsis_chars.into_vec()).unwrap();
+        }
+        if self.dot_char == '\0'
 
         {
             self.dot_char = find_first_existing_glyph(self, &dots_chars.into_vec()).unwrap();
         }
 
-    // Setup fallback character
-    let fallback_chars: [char;3] = [ UNICODE_CODEPOINT_INVALID, '?', ' ' ];
-    self.fallback_glyph = find_glyph_no_fallback(fallback_chars.into_vec());
-    if self.fallback_glyph == '\0'
-    {
-        self.fallback_char = find_first_existing_glyph(self, &fallback_chars.into_vec()).unwrap();
-        self.fallback_glyph = find_glyph_no_fallback(self.fallback_char);
-        if FallbackGlyph == '\0'
-        {
-            self.fallback_glyhph = self.glyphs.last().unwrap();
-            self.fallback_char = self.fallback_glyph.codepoint;
+        // Setup fallback character
+        let fallback_chars: [char; 3] = [UNICODE_CODEPOINT_INVALID, '?', ' '];
+        self.fallback_glyph = find_glyph_no_fallback(fallback_chars.into_vec());
+        if self.fallback_glyph == '\0' {
+            self.fallback_char = find_first_existing_glyph(self, &fallback_chars.into_vec()).unwrap();
+            self.fallback_glyph = find_glyph_no_fallback(self.fallback_char);
+            if FallbackGlyph == '\0' {
+                self.fallback_glyhph = self.glyphs.last().unwrap();
+                self.fallback_char = self.fallback_glyph.codepoint;
+            }
         }
-    }
 
-    self.fallback_advance_x = self.fallback_glyph.advance_x;
-    // for (int i = 0; i < max_codepoint + 1; i += 1)
-    for x in self.index_advance_x.iter_mut()
-        {
-        // if (index_advance_x[i] < 0.0) {
-        //     index_advance_x[i] = fallback_advance_x;
-        // }
+        self.fallback_advance_x = self.fallback_glyph.advance_x;
+        // for (int i = 0; i < max_codepoint + 1; i += 1)
+        for x in self.index_advance_x.iter_mut() {
+            // if (index_advance_x[i] < 0.0) {
+            //     index_advance_x[i] = fallback_advance_x;
+            // }
             if *x < 0.0 {
                 *x = self.fallback_advance_x;
             }
-    }
-
-
+        }
     }
 
     pub fn grow_index(&mut self, new_size: usize) {
@@ -840,22 +851,13 @@ impl Font {
 // }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-void ImFont::RenderChar(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, ImWchar c) const
-{
-    const ImFontGlyph* glyph = FindGlyph(c);
-    if (!glyph || !glyph.Visible)
-        return;
-    if (glyph.Colored)
-        col |= ~COLOR32_A_MASK;
-    let scale =  (size >= 0.0) ? (size / FontSize) : 1.0;
-    let x =  f32::floor(pos.x);
-    let y =  f32::floor(pos.y);
-    draw_list.prim_reserve(6, 4);
-    draw_list.prim_rect_uv(Vector2D::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), Vector2D::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), Vector2D::new(glyph.U0, glyph.V0), Vector2D::new(glyph.U1, glyph.V1), col);
-}
+// void ImFont::RenderChar(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, ImWchar c) const
+// {
+//     
+// }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
-{
-
-}
+// void ImFont::render_text(ImDrawList* draw_list, float size, const Vector2D& pos, ImU32 col, const Vector4D& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
+// {
+// 
+// }

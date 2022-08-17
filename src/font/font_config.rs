@@ -2,7 +2,7 @@
 // ImFontConfig::ImFontConfig()
 // {
 //     memset(this, 0, sizeof(*this));
-//     FontDataOwnedByAtlas = true;
+//     font_data_owned_by_atlas = true;
 //     OversampleH = 3; // FIXME: 2 may be a better default?
 //     OversampleV = 1;
 //     glyph_max_advance_x = f32::MAX;
