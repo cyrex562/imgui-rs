@@ -174,7 +174,7 @@ impl Font {
             // Decode and advance source
             // const char* prev_s = s;
             let prev_s_offset = s_offset;
-            // unsigned int c = (unsigned int)*s;
+            // unsigned int c = *s;
             let c = text[s_offset];
             if c < 0x80
             {
@@ -258,7 +258,7 @@ impl Font {
         let mut s_offset:usize = 0;
         while s_offset < text_end
         {
-            // unsigned int c = (unsigned int)*s;
+            // unsigned int c = *s;
             let c = text[s_offset];
 
             // const char* next_s;
@@ -460,7 +460,7 @@ impl Font {
             }
 
             // Decode and advance source
-            // unsigned int c = (unsigned int)*s;
+            // unsigned int c = *s;
             let c: char = text[s_offset];
             // if c.as_() < 0x80
             // {
@@ -727,7 +727,7 @@ impl Font {
 
     pub fn add_remap_char(&mut self, dst: char, src: char) {
         // IM_ASSERT(IndexLookup.size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
-        // unsigned int index_size = (unsigned int)IndexLookup.size;
+        // unsigned int index_size = IndexLookup.size;
         let mut index_size: usize = self.index_lookup.len();
 
         // 'dst' already exists
@@ -818,7 +818,7 @@ impl Font {
 // void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
 // {
 //     // IM_ASSERT(IndexLookup.size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
-//     unsigned int index_size = (unsigned int)IndexLookup.size;
+//     unsigned int index_size = IndexLookup.size;
 //
 //     if (dst < index_size && IndexLookup.data[dst] == (ImWchar)-1 && !overwrite_dst) // 'dst' already exists
 //         return;

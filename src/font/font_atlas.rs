@@ -1,8 +1,10 @@
+use crate::color::make_color_32;
 use crate::font::font_config::FontConfig;
 use crate::font::font::Font;
 use crate::font::font_atlas_custom_rect::FontAtlasCustomRect;
 use crate::font::font_builder_io::FontBuilderIo;
 use crate::input::MouseCursor;
+use crate::INVALID_ID;
 use crate::rect::Rect;
 use crate::texture::TextureId;
 use crate::types::char;
@@ -98,10 +100,35 @@ impl FontAtlas {
     pub fn add_font(&mut self, font_cfg: &FontConfig) -> Font {
         todo!()
     }
+
     //      ImFont*           add_font_default(const ImFontConfig* font_cfg = None);
-    pub fn add_font_default(&mut self, font_cfg: &FontConfig) -> Font {
-        todo!()
+    pub fn add_font_default(&mut self, font_cfg_template: Option<&mut FontConfig>) -> Font {
+        // ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
+        let mut font_config = if self.font_cfg_template {
+            *font_cfg_template
+        } else {
+            FontConfig::new()
+        };
+        if !self.font_cfg_template
+        {
+            font_cfg.oversample_h = font_cfg.oversample_v = 1;
+            font_cfg.pixel_snap_h = true;
+        }
+        let mut font_config = FontConfig::new();
+        font_cfg
+        if (font_cfg.sizePixels <= 0.0)
+            font_cfg.sizePixels = 13.0 * 1.0;
+        if (font_cfg.name[0] == '\0')
+            ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "ProggyClean.ttf, %dpx", font_cfg.sizePixels);
+        font_cfg.ellipsis_char = (ImWchar)0x0085;
+        font_cfg.GlyphOffset.y = 1.0 * f32::floor(font_cfg.sizePixels / 13.0);  // Add +1 offset per 13 units
+
+        const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
+        const ImWchar* glyph_ranges = font_cfg.GlyphRanges != None ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
+        ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.sizePixels, &font_cfg, glyph_ranges);
+        return font;
     }
+
     //      ImFont*           AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg = None, const ImWchar* glyph_ranges = None);
     pub fn add_font_file_ttf(
         &mut self,
@@ -110,8 +137,45 @@ impl FontAtlas {
         font_cfg: &FontConfig,
         glyph_ranges: &[char],
     ) -> Font {
-        todo!()
+        // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+        // IM_ASSERT(font_cfg.FontData != None && font_cfg.FontDataSize > 0);
+        // IM_ASSERT(font_cfg.sizePixels > 0.0);
+
+        // Create new font
+        if !font_cfg.merge_mode {
+            // fonts.push_back(IM_NEW(ImFont));
+            fonts.push(Font::new());
+        }
+        else {}
+            // IM_ASSERT(!Fonts.empty() && "Cannot use merge_mode for the first font"); // When using merge_mode make sure that a font has already been added before. You can use ImGui::GetIO().fonts->add_font_default() to add the default imgui font.
+
+        // config_data.push_back(*font_cfg);
+        self.config_data.push(font_cfg.clone());
+        // ImFontConfig& new_font_cfg = config_data.back();
+        let new_font_cfg = self.config_data.last_mut().unwrap();
+        if new_font_cfg.dst_font == INVALID_ID {
+            new_font_cfg.dst_font = self.fonts.last().unwrap().clone();
+        }
+        if !new_font_cfg.font_data_owned_by_atlas
+        {
+            new_font_cfg.font_data = Vec::new(); //IM_ALLOC(new_font_cfg.FontDataSize);
+            new_font_cfg.font_data_owned_by_atlas = true;
+            // memcpy(new_font_cfg.FontData, font_cfg.FontData, new_font_cfg.FontDataSize);
+            new_font_cfg.font_data = font_cfg.font_data.clone();
+        }
+
+        if new_font_cfg.dst_font.ellipsis_char == '\0' {
+            new_font_cfg.dst_font.ellipsis_char = font_cfg.ellipsis_char;
+        }
+
+        // Invalidate texture
+        self.tex_ready = false;
+        // ClearTexData();
+        self.clear_tex_data();
+        return new_font_cfg.dst_font.clone();
     }
+
+
     //      ImFont*           add_font_from_memory_ttf(void* font_data, int font_size, float size_pixels, const ImFontConfig* font_cfg = None, const ImWchar* glyph_ranges = None); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->font_data_owned_by_atlas=false to keep ownership of your data and it won't be freed.
     pub fn add_font_from_memory_ttf(
         &mut self,
@@ -210,53 +274,67 @@ impl FontAtlas {
     //      void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = None);  // 1 byte per-pixel
     pub fn get_tex_data_as_alpha8(
         &mut self,
-        out_pixels: &mut &mut Vec<u8>,
-        out_width: &mut i32,
-        out_height: &mut i32,
-        out_bytes_per_pixel: &mut i32,
+        out_pixels: &mut Vec<u8>,
+        out_width: Option<&mut i32>,
+        out_height: Option<&mut i32>,
+        out_bytes_per_pixel: Option<&mut i32>,
     ) {
         // build atlas on demand
         if self.tex_pixels_alpha8.len() == 0 {
             self.build();
         }
 
-        *out_pixels = &mut self.tex_pixels_alpha8;
+        if out_pixels.is_some() {
+            *out_pixels.unwrap() = &mut self.tex_pixels_alpha8;
+        }
         // if (out_width) { *out_width = TexWidth; }
-        *out_width = self.tex_width;
+        if out_width.is_some() {
+            *out_width.unwrap() = self.tex_width;
+        }
         // if (out_height) { *out_height = TexHeight; }
-        *out_height = self.tex_height;
+        if out_height.is_some() {
+            *out_height.unwrap() = self.tex_height;
+        }
         // if (out_bytes_per_pixel) { *out_bytes_per_pixel = 1; }
-        *out_bytes_per_pixel = 1;
+        if out_bytes_per_pixel.is_some() {
+            *out_bytes_per_pixel = 1;
+        }
     }
     //      void              GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = None);  // 4 bytes-per-pixel
     pub fn get_tex_data_as_rgba32(
         &mut self,
-        out_pixels: &mut &mut Vec<u8>,
-        out_width: &mut i32,
-        out_height: &mut i32,
-        out_bytes_per_pixel: &mut i32,
+        out_pixels: &mut Vec<u32>,
+        out_width: Option<&mut i32>,
+        out_height: Option<&mut i32>,
+        out_bytes_per_pixel: Option<&mut i32>
     ) {
         // Convert to RGBA32 format on demand
         // Although it is likely to be the most commonly used format, our font rendering is 1 channel / 8 bpp
-        if !tex_pixels_rgba32
+        if self.tex_pixels_rgba32.is_empty()
         {
             // unsigned char* pixels = None;
-            let mut pixels: Vec<u8> = Vec::new()
-            self.get_tex_data_as_alpha8(&mut pixels, None, None);
-            if (pixels)
+            let mut pixels: Vec<u8> = Vec::new();
+            self.get_tex_data_as_alpha8(&mut pixels, None, None, None);
+            if pixels.is_empty() == false
             {
-                tex_pixels_rgba32 = (unsigned int*)IM_ALLOC(TexWidth * TexHeight * 4);
-                const unsigned char* src = pixels;
-                unsigned int* dst = tex_pixels_rgba32;
-                for (int n = TexWidth * TexHeight; n > 0; n--)
-                    *dst += 1 = IM_COL32(255, 255, 255, (unsigned int)(*src += 1));
+                // self.tex_pixels_rgba32 = IM_ALLOC(self.tex_width * self.tex_height * 4);
+               self.tex_pixels_rgba32.reserve(self.tex_width * self.text_height);
+                // const unsigned char* src = pixels;
+                let src = &mut pixels;
+                // unsigned int* dst = tex_pixels_rgba32;
+                let dst = &self.tex_pixels_rgba32;
+                // for (int n = TexWidth * TexHeight; n > 0; n--)
+                for n in 0 .. self.tex_width * self.tex_height
+                {
+                    dst[n] = make_color_32(255, 255, 255, src[n]);
+                }
             }
         }
 
-        *out_pixels = (unsigned char*)tex_pixels_rgba32;
-        if (out_width) *out_width = TexWidth;
-        if (out_height) *out_height = TexHeight;
-        if (out_bytes_per_pixel) *out_bytes_per_pixel = 4;
+        *out_pixels = self.tex_pixels_rgba32.clone();
+        if out_width.is_some() { *out_width.unwrap() = self.tex_width };
+        if out_height.is_some() { *out_height.unwrap() = self.tex_height };
+        if out_bytes_per_pixel.is_some() { *out_bytes_per_pixel.unwrap() = 4 };
     }
     //     bool                        is_built() const             { return fonts.size > 0 && tex_ready; } // Bit ambiguous: used to detect when user didn't built texture but effectively we should check tex_id != 0 except that would be backend dependent...
     pub fn is_built(&self) -> bool {
@@ -476,44 +554,31 @@ pub const FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA: [[Vector2D;3];9] =
 //
 // }
 
-ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
-{
-    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    // IM_ASSERT(font_cfg.FontData != None && font_cfg.FontDataSize > 0);
-    // IM_ASSERT(font_cfg.sizePixels > 0.0);
-
-    // Create new font
-    if (!font_cfg.MergeMode)
-        fonts.push_back(IM_NEW(ImFont));
-    else
-        // IM_ASSERT(!Fonts.empty() && "Cannot use merge_mode for the first font"); // When using merge_mode make sure that a font has already been added before. You can use ImGui::GetIO().fonts->add_font_default() to add the default imgui font.
-
-    config_data.push_back(*font_cfg);
-    ImFontConfig& new_font_cfg = config_data.back();
-    if (new_font_cfg.DstFont == None)
-        new_font_cfg.DstFont = fonts.back();
-    if (!new_font_cfg.font_data_owned_by_atlas)
-    {
-        new_font_cfg.FontData = IM_ALLOC(new_font_cfg.FontDataSize);
-        new_font_cfg.font_data_owned_by_atlas = true;
-        memcpy(new_font_cfg.FontData, font_cfg.FontData, new_font_cfg.FontDataSize);
-    }
-
-    if (new_font_cfg.DstFont.EllipsisChar == (ImWchar)-1)
-        new_font_cfg.DstFont.EllipsisChar = font_cfg.EllipsisChar;
-
-    // Invalidate texture
-    TexReady = false;
-    ClearTexData();
-    return new_font_cfg.DstFont;
-}
+// ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
+// {
+//
+// }
 
 // Default font TTF is compressed with stb_compress then base85 encoded (see misc/fonts/binary_to_compressed_c.cpp for encoder)
-static unsigned int stb_decompress_length(const unsigned char* input);
-static unsigned int stb_decompress(unsigned char* output, const unsigned char* input, unsigned int length);
-static const char*  GetDefaultCompressedFontDataTTFBase85();
-static unsigned int Decode85Byte(char c)                                    { return c >= '\\' ? c-36 : c-35; }
-static void         Decode85(const unsigned char* src, unsigned char* dst)
+// static unsigned int stb_decompress_length(const unsigned char* input);
+// static unsigned int stb_decompress(unsigned char* output, const unsigned char* input, unsigned int length);
+// static const char*  GetDefaultCompressedFontDataTTFBase85();
+// static unsigned int Decode85Byte(char c)                                    { return c >= '\\' ? c-36 : c-35; }
+
+pub fn decode_85_byte(c: u8) -> u32 {
+    if c >= '\\' as u8{
+        (c - 36) as u32
+    } else {
+        (c - 35) as u32
+    }
+}
+
+
+
+
+
+// static void         Decode85(const unsigned char* src, unsigned char* dst)
+pub fn decode85(src: &mut Vec<u8>, dst: &mut Vec<u8>)
 {
     while (*src)
     {
@@ -525,26 +590,26 @@ static void         Decode85(const unsigned char* src, unsigned char* dst)
 }
 
 // Load embedded ProggyClean.ttf at size 13, disable oversampling
-ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
-{
-    ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
-    if (!font_cfg_template)
-    {
-        font_cfg.OversampleH = font_cfg.OversampleV = 1;
-        font_cfg.pixel_snap_h = true;
-    }
-    if (font_cfg.sizePixels <= 0.0)
-        font_cfg.sizePixels = 13.0 * 1.0;
-    if (font_cfg.name[0] == '\0')
-        ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "ProggyClean.ttf, %dpx", font_cfg.sizePixels);
-    font_cfg.EllipsisChar = (ImWchar)0x0085;
-    font_cfg.GlyphOffset.y = 1.0 * f32::floor(font_cfg.sizePixels / 13.0);  // Add +1 offset per 13 units
-
-    const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
-    const ImWchar* glyph_ranges = font_cfg.GlyphRanges != None ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
-    ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.sizePixels, &font_cfg, glyph_ranges);
-    return font;
-}
+// ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
+// {
+//     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
+//     if (!font_cfg_template)
+//     {
+//         font_cfg.OversampleH = font_cfg.OversampleV = 1;
+//         font_cfg.pixel_snap_h = true;
+//     }
+//     if (font_cfg.sizePixels <= 0.0)
+//         font_cfg.sizePixels = 13.0 * 1.0;
+//     if (font_cfg.name[0] == '\0')
+//         ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "ProggyClean.ttf, %dpx", font_cfg.sizePixels);
+//     font_cfg.ellipsis_char = (ImWchar)0x0085;
+//     font_cfg.GlyphOffset.y = 1.0 * f32::floor(font_cfg.sizePixels / 13.0);  // Add +1 offset per 13 units
+//
+//     const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
+//     const ImWchar* glyph_ranges = font_cfg.GlyphRanges != None ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
+//     ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.sizePixels, &font_cfg, glyph_ranges);
+//     return font;
+// }
 
 ImFont* ImFontAtlas::AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
 {
@@ -584,8 +649,8 @@ ImFont* ImFontAtlas::AddFontFromMemoryTTF(void* ttf_data, int ttf_size, float si
 ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(const void* compressed_ttf_data, int compressed_ttf_size, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
 {
     const unsigned int buf_decompressed_size = stb_decompress_length((const unsigned char*)compressed_ttf_data);
-    unsigned char* buf_decompressed_data = (unsigned char*)IM_ALLOC(buf_decompressed_size);
-    stb_decompress(buf_decompressed_data, (const unsigned char*)compressed_ttf_data, (unsigned int)compressed_ttf_size);
+    unsigned char* buf_decompressed_data = IM_ALLOC(buf_decompressed_size);
+    stb_decompress(buf_decompressed_data, (const unsigned char*)compressed_ttf_data, compressed_ttf_size);
 
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
     // IM_ASSERT(font_cfg.FontData == None);
@@ -597,7 +662,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedBase85TTF(const char* compressed
 {
     int compressed_ttf_size = ((strlen(compressed_ttf_data_base85) + 4) / 5) * 4;
     void* compressed_ttf = IM_ALLOC(compressed_ttf_size);
-    Decode85((const unsigned char*)compressed_ttf_data_base85, (unsigned char*)compressed_ttf);
+    Decode85((const unsigned char*)compressed_ttf_data_base85, compressed_ttf);
     ImFont* font = AddFontFromMemoryCompressedTTF(compressed_ttf, compressed_ttf_size, size_pixels, font_cfg, glyph_ranges);
     IM_FREE(compressed_ttf);
     return font;
@@ -695,7 +760,7 @@ void    ImFontAtlasBuildMultiplyCalcLookupTable(unsigned char out_table[256], fl
 {
     for (unsigned int i = 0; i < 256; i += 1)
     {
-        unsigned int value = (unsigned int)(i * in_brighten_factor);
+        unsigned int value = (i * in_brighten_factor);
         out_table[i] = value > 255 ? 255 : (value & 0xFF);
     }
 }
@@ -762,12 +827,12 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     {
         ImFontBuildSrcData& src_tmp = src_tmp_array[src_i];
         ImFontConfig& cfg = atlas.config_data[src_i];
-        // IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.container_atlas == atlas));
+        // IM_ASSERT(cfg.dst_font && (!cfg.dst_font.IsLoaded() || cfg.dst_font.container_atlas == atlas));
 
         // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
         for (int output_i = 0; output_i < atlas.fonts.size && src_tmp.DstIndex == -1; output_i += 1)
-            if (cfg.DstFont == atlas.fonts[output_i])
+            if (cfg.dst_font == atlas.fonts[output_i])
                 src_tmp.DstIndex = output_i;
         if (src_tmp.DstIndex == -1)
         {
@@ -777,7 +842,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         // Initialize helper structure for font loading and verify that the TTF/OTF data is correct
         let font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)cfg.FontData, cfg.FontNo);
         // IM_ASSERT(font_offset >= 0 && "font_data is incorrect, or font_no cannot be found.");
-        if (!stbtt_InitFont(&src_tmp.FontInfo, (unsigned char*)cfg.FontData, font_offset))
+        if (!stbtt_InitFont(&src_tmp.FontInfo, cfg.FontData, font_offset))
             return false;
 
         // Measure highest codepoints
@@ -914,7 +979,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     // 7. Allocate texture
     atlas.TexHeight = (atlas.flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas.TexHeight + 1) : ImUpperPowerOfTwo(atlas.TexHeight);
     atlas.TexUvScale = Vector2D::new(1.0 / atlas.TexWidth, 1.0 / atlas.TexHeight);
-    atlas.text_pixels_alpha8 = (unsigned char*)IM_ALLOC(atlas.TexWidth * atlas.TexHeight);
+    atlas.text_pixels_alpha8 = IM_ALLOC(atlas.TexWidth * atlas.TexHeight);
     memset(atlas.text_pixels_alpha8, 0, atlas.TexWidth * atlas.TexHeight);
     spc.pixels = atlas.text_pixels_alpha8;
     spc.height = atlas.TexHeight;
@@ -957,7 +1022,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         // - We can have multiple input fonts writing into a same destination font.
         // - dst_font->config_data is != from cfg which is our source configuration.
         ImFontConfig& cfg = atlas.config_data[src_i];
-        ImFont* dst_font = cfg.DstFont;
+        ImFont* dst_font = cfg.dst_font;
 
         let font_scale = stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.sizePixels);
         int unscaled_ascent, unscaled_descent, unscaled_line_gap;

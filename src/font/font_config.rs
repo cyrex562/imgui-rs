@@ -7,9 +7,10 @@
 //     OversampleV = 1;
 //     glyph_max_advance_x = f32::MAX;
 //     RasterizerMultiply = 1.0;
-//     EllipsisChar = (ImWchar)-1;
+//     ellipsis_char = (ImWchar)-1;
 // }
 
+use crate::font::font::Font;
 use crate::popup::PopupPositionPolicy::Default;
 use crate::types::Id32;
 use crate::vectors::Vector2D;
@@ -40,7 +41,7 @@ pub struct FontConfig
     // char            name[40];               // name (strictly to ease debugging)
     pub name: String,
     // ImFont*         dst_font;
-    pub dst_font: Id32,
+    pub dst_font: Font,
     //  ImFontConfig();
 }
 

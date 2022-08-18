@@ -230,7 +230,7 @@ pub enum InputTextFlags2 {
 //         && (!in_text_end.is_null() || in_text < in_text_end)
 //         && *in_text != 0
 //     {
-//         // unsigned int c = (unsigned int)(*in_text++);
+//         // unsigned int c = (*in_text++);
 //         let mut c = *in_text as u32;
 //         in_text += 1;
 //         if (c < 0x80) {
@@ -254,7 +254,7 @@ pub enum InputTextFlags2 {
 //     // int bytes_count = 0;
 //     let mut bytes_count = 0i32;
 //     while ((in_text_end.is_nul() || in_text < in_text_end) && *in_text != 0) {
-//         // unsigned int c = (unsigned int)(*in_text++);
+//         // unsigned int c = (*in_text++);
 //         let mut c = *in_text as u32;
 //         in_text += 1;
 //         if c < 0x80 {
@@ -290,7 +290,7 @@ pub enum InputTextFlags2 {
 //     // const ImWchar* s = text_begin;
 //     let mut s: *mut ImWchar = text_begin;
 //     while s < text_end {
-//         // unsigned int c = (unsigned int)(*s += 1);
+//         // unsigned int c = (*s += 1);
 //         let mut c = *s;
 //         s += 1;
 //         if c == ImWchar::from('\n') {

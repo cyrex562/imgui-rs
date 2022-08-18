@@ -1895,7 +1895,7 @@ static const DataTypeInfo GDataTypeInfo[] =
     { sizeof(short),            "S16",  "%d",   "%d"    },  // DataType::S16
     { sizeof(unsigned short),   "U16",  "%u",   "%u"    },
     { sizeof,              "S32",  "%d",   "%d"    },  // DataType::S32
-    { sizeof(unsigned int),     "U32",  "%u",   "%u"    },
+    { sizeof,     "U32",  "%u",   "%u"    },
 #ifdef _MSC_VER
     { sizeof(ImS64),            "S64",  "%I64d","%I64d" },  // DataType::S64
     { sizeof,            "U64",  "%I64u","%I64u" },
@@ -3736,7 +3736,7 @@ static bool InputTextFilterCharacter(unsigned int* p_char, InputTextFlags flags,
         //   ImGui::GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
         // Users of non-default decimal point (in particular ',') may be affected by word-selection logic (is_word_boundary_from_right/is_word_boundary_from_left) functions.
         // ImGuiContext& g = *GImGui;
-        const unsigned c_decimal_point = (unsigned int)g.PlatformLocaleDecimalPoint;
+        const unsigned c_decimal_point = g.PlatformLocaleDecimalPoint;
 
         // Allow 0-9 . - + * /
         if (flags & InputTextFlags_CharsDecimal)
@@ -3756,7 +3756,7 @@ static bool InputTextFilterCharacter(unsigned int* p_char, InputTextFlags flags,
         // Turn a-z into A-Z
         if (flags & InputTextFlags_CharsUppercase)
             if (c >= 'a' && c <= 'z')
-                *p_char = (c += (unsigned int)('A' - 'a'));
+                *p_char = (c += ('A' - 'a'));
 
         if (flags & InputTextFlags_CharsNoBlank)
             if (char_is_blank_w(c))
@@ -4146,7 +4146,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 for (int n = 0; n < io.InputQueueCharacters.Size; n += 1)
                 {
                     // Insert character if they pass filtering
-                    unsigned int c = (unsigned int)io.InputQueueCharacters[n];
+                    unsigned int c = io.InputQueueCharacters[n];
                     if (c == '\t') // Skip Tab, see above.
                         continue;
                     if (InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard))
@@ -4915,9 +4915,9 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
             i[3] = 0xFF; // alpha default to 255 is not parsed by scanf (e.g. inputting #FFFFFF omitting alpha)
             int r;
             if (alpha)
-                r = sscanf(p, "%02X%02X%02X%02X", (unsigned int*)&i[0], (unsigned int*)&i[1], (unsigned int*)&i[2], (unsigned int*)&i[3]); // Treat at unsigned (%x is unsigned)
+                r = sscanf(p, "%02X%02X%02X%02X", &i[0], &i[1], &i[2], &i[3]); // Treat at unsigned (%x is unsigned)
             else
-                r = sscanf(p, "%02X%02X%02X", (unsigned int*)&i[0], (unsigned int*)&i[1], (unsigned int*)&i[2]);
+                r = sscanf(p, "%02X%02X%02X", &i[0], &i[1], &i[2]);
             IM_UNUSED(r); // Fixes C6031: Return value ignored: 'sscanf'.
         }
         if (!(flags & ImGuiColorEditFlags_NoOptions))

@@ -887,7 +887,7 @@ pub fn debug_node_font(g: &mut Context, font: &mut Font)
     text("ascent: %f, descent: %f, height: %f", font->Ascent, font->Descent, font->Ascent - font->Descent);
     char c_str[5];
     text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
-    text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
+    text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->ellipsis_char), font->ellipsis_char);
     let surface_sqrt = ImSqrt(font->MetricsTotalSurface);
     text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
     for (int config_i = 0; config_i < font->ConfigDataCount; config_i += 1)

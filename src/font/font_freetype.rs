@@ -635,12 +635,12 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         ImFontBuildSrcDataFT& src_tmp = src_tmp_array[src_i];
         ImFontConfig& cfg = atlas.ConfigData[src_i];
         FreeTypeFont& font_face = src_tmp.font;
-        // IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.container_atlas == atlas));
+        // IM_ASSERT(cfg.dst_font && (!cfg.dst_font.IsLoaded() || cfg.dst_font.container_atlas == atlas));
 
         // Find index from cfg.dst_font (we allow the user to set cfg.dst_font. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
         for (int output_i = 0; output_i < atlas.Fonts.size && src_tmp.DstIndex == -1; output_i += 1)
-            if (cfg.DstFont == atlas.Fonts[output_i])
+            if (cfg.dst_font == atlas.Fonts[output_i])
                 src_tmp.DstIndex = output_i;
         // IM_ASSERT(src_tmp.DstIndex != -1); // cfg.dst_font not pointing within atlas->fonts[] array?
         if (src_tmp.DstIndex == -1)
@@ -773,7 +773,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
             }
 
             // Blit rasterized pixels to our temporary buffer and keep a pointer to it.
-            src_glyph.BitmapData = (unsigned int*)(buf_bitmap_buffers.back() + buf_bitmap_current_used_bytes);
+            src_glyph.BitmapData = (buf_bitmap_buffers.back() + buf_bitmap_current_used_bytes);
             buf_bitmap_current_used_bytes += bitmap_size_in_bytes;
             src_tmp.font.BlitGlyph(ft_bitmap, src_glyph.BitmapData, src_glyph.Info.width, multiply_enabled ? multiply_table : None);
 
@@ -825,13 +825,13 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     if (src_load_color)
     {
         size_t tex_size = atlas.TexWidth * atlas.TexHeight * 4;
-        atlas.tex_pixels_rgba32 = (unsigned int*)IM_ALLOC(tex_size);
+        atlas.tex_pixels_rgba32 = IM_ALLOC(tex_size);
         memset(atlas.tex_pixels_rgba32, 0, tex_size);
     }
     else
     {
         size_t tex_size = atlas.TexWidth * atlas.TexHeight * 1;
-        atlas.text_pixels_alpha8 = (unsigned char*)IM_ALLOC(tex_size);
+        atlas.text_pixels_alpha8 = IM_ALLOC(tex_size);
         memset(atlas.text_pixels_alpha8, 0, tex_size);
     }
 
@@ -848,7 +848,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         // - We can have multiple input fonts writing into a same destination font.
         // - dst_font->config_data is != from cfg which is our source configuration.
         ImFontConfig& cfg = atlas.ConfigData[src_i];
-        ImFont* dst_font = cfg.DstFont;
+        ImFont* dst_font = cfg.dst_font;
 
         let ascent = src_tmp.font.Info.Ascender;
         let descent = src_tmp.font.Info.Descender;

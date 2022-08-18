@@ -83,7 +83,7 @@ static unsigned int stb_adler32(unsigned int adler32, unsigned char *buffer, uns
         buflen -= blocklen;
         blocklen = 5552;
     }
-    return (unsigned int)(s2 << 16) + (unsigned int)s1;
+    return (s2 << 16) + s1;
 }
 
 static unsigned int stb_decompress(unsigned char *output, const unsigned char *i, unsigned int /*length*/)
@@ -104,7 +104,7 @@ static unsigned int stb_decompress(unsigned char *output, const unsigned char *i
             if (*i == 0x05 && i[1] == 0xfa) {
                 // IM_ASSERT(stb__dout == output + olen);
                 if (stb__dout != output + olen) return 0;
-                if (stb_adler32(1, output, olen) != (unsigned int) stb__in4(2))
+                if (stb_adler32(1, output, olen) !=  stb__in4(2))
                     return 0;
                 return olen;
             } else {

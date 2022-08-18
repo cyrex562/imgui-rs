@@ -141,7 +141,7 @@ void ImGui_ImplAllegro5_RenderDrawData(ImDrawData* draw_data)
             ImDrawVertAllegro* dst_v = &vertices[i];
             dst_v.pos = src_v.pos;
             dst_v.uv = src_v.uv;
-            unsigned char* c = (unsigned char*)&src_v.col;
+            unsigned char* c = &src_v.col;
             dst_v.col = al_map_rgba(c[0], c[1], c[2], c[3]);
         }
 
