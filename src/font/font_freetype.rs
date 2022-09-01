@@ -747,7 +747,7 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         let multiply_enabled = (cfg.RasterizerMultiply != 1.0);
         unsigned char multiply_table[256];
         if (multiply_enabled)
-            ImFontAtlasBuildMultiplyCalcLookupTable(multiply_table, cfg.RasterizerMultiply);
+            font_atlas_build_multiply_calc_lookup_table(multiply_table, cfg.RasterizerMultiply);
 
         // Gather the sizes of all rectangles we will need to pack
         let padding = atlas.text_glyph_padding;
@@ -979,7 +979,7 @@ static bool ImFontAtlasBuildWithFreeType(ImFontAtlas* atlas)
     return ret;
 }
 
-const ImFontBuilderIO* ImGuiFreeType::GetBuilderForFreeType()
+const ImFontBuilderIO* ImGuiFreeType::get_builder_for_free_type()
 {
     static ImFontBuilderIO io;
     io.FontBuilder_Build = ImFontAtlasBuildWithFreeType;

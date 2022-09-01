@@ -34,9 +34,9 @@ namespace ImGuiFreeType
 {
     // This is automatically assigned when using '#define IMGUI_ENABLE_FREETYPE'.
     // If you need to dynamically select between multiple builders:
-    // - you can manually assign this builder with 'atlas->font_builder_io = ImGuiFreeType::GetBuilderForFreeType()'
+    // - you can manually assign this builder with 'atlas->font_builder_io = ImGuiFreeType::get_builder_for_free_type()'
     // - prefer deep-copying this into your own ImFontBuilderIO instance if you use hot-reloading that messes up static data.
-     const ImFontBuilderIO*    GetBuilderForFreeType();
+     const ImFontBuilderIO*    get_builder_for_free_type();
 
     // Override allocators. By default ImGuiFreeType will use IM_ALLOC()/IM_FREE()
     // However, as FreeType does lots of allocations we provide a way for the user to redirect it to a separate memory heap if desired.
@@ -45,6 +45,6 @@ namespace ImGuiFreeType
     // Obsolete names (will be removed soon)
     // Prefer using '#define IMGUI_ENABLE_FREETYPE'
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    static inline bool BuildFontAtlas(ImFontAtlas* atlas, unsigned int flags = 0) { atlas.FontBuilderIO = GetBuilderForFreeType(); atlas.font_builder_flags = flags; return atlas.Build(); }
+    static inline bool BuildFontAtlas(ImFontAtlas* atlas, unsigned int flags = 0) { atlas.FontBuilderIO = get_builder_for_free_type(); atlas.font_builder_flags = flags; return atlas.Build(); }
 
 }
