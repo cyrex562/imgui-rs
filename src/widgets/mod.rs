@@ -1893,7 +1893,7 @@ static const DataTypeInfo GDataTypeInfo[] =
     { sizeof(char),             "S8",   "%d",   "%d"    },  // DataType::S8
     { sizeof(unsigned char),    "U8",   "%u",   "%u"    },
     { sizeof(short),            "S16",  "%d",   "%d"    },  // DataType::S16
-    { sizeof(unsigned short),   "U16",  "%u",   "%u"    },
+    { sizeof,   "U16",  "%u",   "%u"    },
     { sizeof,              "S32",  "%d",   "%d"    },  // DataType::S32
     { sizeof,     "U32",  "%u",   "%u"    },
 #ifdef _MSC_VER
@@ -6520,7 +6520,7 @@ struct ImGuiPlotArrayGetterData
 static float Plot_ArrayGetter(void* data, int idx)
 {
     ImGuiPlotArrayGetterData* plot_data = (ImGuiPlotArrayGetterData*)data;
-    let v = *(let*)(const void*)((const unsigned char*)plot_data->Values + idx * plot_data->Stride);
+    let v = *(let*)(const void*)(plot_data->Values + idx * plot_data->Stride);
     return v;
 }
 

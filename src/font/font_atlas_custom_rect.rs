@@ -5,8 +5,8 @@ use crate::vectors::Vector2D;
 #[derive(Default, Debug, Clone)]
 pub struct FontAtlasCustomRect {
     // unsigned short  width, height;  // Input    // Desired rectangle dimension
-    pub width: u16,
-    pub height: u16,
+    pub width: u32,
+    pub height: u32,
     // unsigned short  x, Y;           // Output   // Packed position in Atlas
     pub x: u16,
     pub Y: u16,
