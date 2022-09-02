@@ -197,7 +197,7 @@ use crate::font::font_config::FontConfig;
             LoadFlags |= FT_LOAD_COLOR;
 
         memset(&Info, 0, sizeof(Info));
-        SetPixelHeight((uint32_t)cfg.sizePixels);
+        SetPixelHeight((uint32_t)cfg.size_pixels);
 
         return true;
         }
@@ -398,7 +398,7 @@ use crate::font::font_config::FontConfig;
     //         LoadFlags |= FT_LOAD_COLOR;
     //
     //     memset(&Info, 0, sizeof(Info));
-    //     SetPixelHeight((uint32_t)cfg.sizePixels);
+    //     SetPixelHeight((uint32_t)cfg.size_pixels);
     //
     //     return true;
     // }
@@ -853,8 +853,8 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
         let ascent = src_tmp.font.Info.Ascender;
         let descent = src_tmp.font.Info.Descender;
         ImFontAtlasBuildSetupFont(atlas, dst_font, &cfg, ascent, descent);
-        let font_off_x = cfg.GlyphOffset.x;
-        let font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font.Ascent);
+        let font_off_x = cfg.glyph_offset.x;
+        let font_off_y = cfg.glyph_offset.y + IM_ROUND(dst_font.Ascent);
 
         let padding = atlas.text_glyph_padding;
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1)

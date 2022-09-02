@@ -114,18 +114,25 @@ impl FontAtlas {
             font_cfg.oversample_h = font_cfg.oversample_v = 1;
             font_cfg.pixel_snap_h = true;
         }
-        let mut font_config = FontConfig::new();
-        font_cfg
-        if (font_cfg.sizePixels <= 0.0)
-            font_cfg.sizePixels = 13.0 * 1.0;
-        if (font_cfg.name[0] == '\0')
-            ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "ProggyClean.ttf, %dpx", font_cfg.sizePixels);
-        font_cfg.ellipsis_char = (ImWchar)0x0085;
-        font_cfg.GlyphOffset.y = 1.0 * f32::floor(font_cfg.sizePixels / 13.0);  // Add +1 offset per 13 units
+        let mut font_cfg = FontConfig::new();
+        if font_cfg.size_pixels <= 0.0 {
+            font_cfg.size_pixels = 13.0 * 1.0;
+        }
+        if font_cfg.name[0] == '\0' {
+            // ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "ProggyClean.ttf, %dpx", font_cfg.size_pixels);
+            font_cfg.name = format!("ProggyClean.ttf, {}", font_cfg.size_pixels);
+        }
+        font_cfg.ellipsis_char = 0x0085 as char;
+        font_cfg.glyph_offset.y = 1.0 * f32::floor(font_cfg.size_pixels / 13.0);  // Add +1 offset per 13 units
 
-        const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
-        const ImWchar* glyph_ranges = font_cfg.GlyphRanges != None ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
-        ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.sizePixels, &font_cfg, glyph_ranges);
+        // const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
+        let ttf_compressed_base85 = get_default_compressed_font_data_ttf_base85();
+        // const ImWchar* glyph_ranges = font_cfg.GlyphRanges != None ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
+        let glyph_ranges = if font_cfg.glyph_ranges.len() > 0 { font_cfg.glyph_ranges.clone() } else {
+            get_glyph_ranges_default()
+        };
+        // ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.size_pixels, &font_cfg, glyph_ranges);
+        let font = add_font_from_memory_compressed_base85_ttf(ttf_compressed_base85, font_cfg.size_pixels, &font_cfg, glyph_ranges);
         return font;
     }
 
@@ -139,7 +146,7 @@ impl FontAtlas {
     ) -> Font {
         // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
         // IM_ASSERT(font_cfg.FontData != None && font_cfg.FontDataSize > 0);
-        // IM_ASSERT(font_cfg.sizePixels > 0.0);
+        // IM_ASSERT(font_cfg.size_pixels > 0.0);
 
         // Create new font
         if !font_cfg.merge_mode {
@@ -182,10 +189,28 @@ impl FontAtlas {
         font_data: &Vec<u8>,
         font_size: i32,
         size_pixels: f32,
-        font_cfg: &FontConfig,
+        font_cfg_template: Option<&FontConfig>,
         glyph_ranges: &[char],
-    ) -> Font {
-        todo!()
+    ) -> Option<Font> {
+        // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
+        let data_size: usize = 0;
+        // void* data = ImFileLoadToMemory(filename, "rb", &data_size, 0);
+        let data = file_load_to_memory(filename, "rb", &data_size, 0);
+        if (!data)
+        {
+            // IM_ASSERT_USER_ERROR(0, "Could not load font file!");
+            return None;
+        }
+        //ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
+        let font_cfg = if font_cfg_template.unwrap_or(FontConfig::new());
+        if (font_cfg.name[0] == '\0')
+        {
+            // Store a short copy of filename into into the font name for convenience
+            const char* p;
+            for (p = filename + strlen(filename); p > filename && p[-1] != '/' && p[-1] != '\\'; p--) {}
+            ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "%s, %.0px", p, size_pixels);
+        }
+        return AddFontFromMemoryTTF(data, data_size, size_pixels, &font_cfg, glyph_ranges);
     }
     //      ImFont*           add_font_from_memory_compressed_ttf(const void* compressed_font_data, int compressed_font_size, float size_pixels, const ImFontConfig* font_cfg = None, const ImWchar* glyph_ranges = None); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
     pub fn add_font_from_memory_compressed_ttf(
@@ -580,13 +605,14 @@ pub fn decode_85_byte(c: u8) -> u32 {
 // static void         Decode85(const unsigned char* src, unsigned char* dst)
 pub fn decode85(src: &mut Vec<u8>, dst: &mut Vec<u8>)
 {
-    while (*src)
-    {
-        unsigned int tmp = Decode85Byte(src[0]) + 85 * (Decode85Byte(src[1]) + 85 * (Decode85Byte(src[2]) + 85 * (Decode85Byte(src[3]) + 85 * Decode85Byte(src[4]))));
-        dst[0] = ((tmp >> 0) & 0xFF); dst[1] = ((tmp >> 8) & 0xFF); dst[2] = ((tmp >> 16) & 0xFF); dst[3] = ((tmp >> 24) & 0xFF);   // We can't assume little-endianness.
-        src += 5;
-        dst += 4;
-    }
+    // while (*src)
+    // {
+    //     unsigned int tmp = Decode85Byte(src[0]) + 85 * (Decode85Byte(src[1]) + 85 * (Decode85Byte(src[2]) + 85 * (Decode85Byte(src[3]) + 85 * Decode85Byte(src[4]))));
+    //     dst[0] = ((tmp >> 0) & 0xFF); dst[1] = ((tmp >> 8) & 0xFF); dst[2] = ((tmp >> 16) & 0xFF); dst[3] = ((tmp >> 24) & 0xFF);   // We can't assume little-endianness.
+    //     src += 5;
+    //     dst += 4;
+    // }
+    todo!()
 }
 
 // Load embedded ProggyClean.ttf at size 13, disable oversampling
@@ -598,39 +624,23 @@ pub fn decode85(src: &mut Vec<u8>, dst: &mut Vec<u8>)
 //         font_cfg.OversampleH = font_cfg.OversampleV = 1;
 //         font_cfg.pixel_snap_h = true;
 //     }
-//     if (font_cfg.sizePixels <= 0.0)
-//         font_cfg.sizePixels = 13.0 * 1.0;
+//     if (font_cfg.size_pixels <= 0.0)
+//         font_cfg.size_pixels = 13.0 * 1.0;
 //     if (font_cfg.name[0] == '\0')
-//         ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "ProggyClean.ttf, %dpx", font_cfg.sizePixels);
+//         ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "ProggyClean.ttf, %dpx", font_cfg.size_pixels);
 //     font_cfg.ellipsis_char = (ImWchar)0x0085;
-//     font_cfg.GlyphOffset.y = 1.0 * f32::floor(font_cfg.sizePixels / 13.0);  // Add +1 offset per 13 units
+//     font_cfg.glyph_offset.y = 1.0 * f32::floor(font_cfg.size_pixels / 13.0);  // Add +1 offset per 13 units
 //
 //     const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
 //     const ImWchar* glyph_ranges = font_cfg.GlyphRanges != None ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
-//     ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.sizePixels, &font_cfg, glyph_ranges);
+//     ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.size_pixels, &font_cfg, glyph_ranges);
 //     return font;
 // }
 
-ImFont* ImFontAtlas::AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
-{
-    // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    size_t data_size = 0;
-    void* data = ImFileLoadToMemory(filename, "rb", &data_size, 0);
-    if (!data)
-    {
-        // IM_ASSERT_USER_ERROR(0, "Could not load font file!");
-        return None;
-    }
-    ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
-    if (font_cfg.name[0] == '\0')
-    {
-        // Store a short copy of filename into into the font name for convenience
-        const char* p;
-        for (p = filename + strlen(filename); p > filename && p[-1] != '/' && p[-1] != '\\'; p--) {}
-        ImFormatString(font_cfg.name, IM_ARRAYSIZE(font_cfg.name), "%s, %.0px", p, size_pixels);
-    }
-    return AddFontFromMemoryTTF(data, data_size, size_pixels, &font_cfg, glyph_ranges);
-}
+// ImFont* ImFontAtlas::AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
+// {
+//
+// }
 
 // NB: Transfer ownership of 'ttf_data' to ImFontAtlas, unless font_cfg_template->font_data_owned_by_atlas == false. Owned TTF buffer will be deleted after build().
 ImFont* ImFontAtlas::AddFontFromMemoryTTF(void* ttf_data, int ttf_size, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
@@ -640,7 +650,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryTTF(void* ttf_data, int ttf_size, float si
     // IM_ASSERT(font_cfg.FontData == None);
     font_cfg.FontData = ttf_data;
     font_cfg.FontDataSize = ttf_size;
-    font_cfg.sizePixels = size_pixels > 0.0 ? size_pixels : font_cfg.sizePixels;
+    font_cfg.size_pixels = size_pixels > 0.0 ? size_pixels : font_cfg.size_pixels;
     if (glyph_ranges)
         font_cfg.GlyphRanges = glyph_ranges;
     return AddFont(&font_cfg);
@@ -692,7 +702,7 @@ int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, int width, int
     r.Height = (unsigned short)height;
     r.GlyphID = id;
     r.GlyphAdvanceX = advance_x;
-    r.GlyphOffset = offset;
+    r.glyph_offset = offset;
     r.font = font;
     custom_rects.push_back(r);
     return custom_rects.size - 1; // Return index
@@ -920,7 +930,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 
         // Convert our ranges in the format stb_truetype wants
         ImFontConfig& cfg = atlas.config_data[src_i];
-        src_tmp.PackRange.font_size = cfg.sizePixels;
+        src_tmp.PackRange.font_size = cfg.size_pixels;
         src_tmp.PackRange.first_unicode_codepoint_in_range = 0;
         src_tmp.PackRange.array_of_unicode_codepoints = src_tmp.GlyphsList.data;
         src_tmp.PackRange.num_chars = src_tmp.GlyphsList.size;
@@ -929,7 +939,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         src_tmp.PackRange.v_oversample = (unsigned char)cfg.OversampleV;
 
         // Gather the sizes of all rectangles we will need to pack (this loop is based on stbtt_PackFontRangesGatherRects)
-        let scale = (cfg.sizePixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.sizePixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.sizePixels);
+        let scale = (cfg.size_pixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.size_pixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.size_pixels);
         let padding = atlas.text_glyph_padding;
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsList.size; glyph_i += 1)
         {
@@ -1024,15 +1034,15 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         ImFontConfig& cfg = atlas.config_data[src_i];
         ImFont* dst_font = cfg.dst_font;
 
-        let font_scale = stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.sizePixels);
+        let font_scale = stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.size_pixels);
         int unscaled_ascent, unscaled_descent, unscaled_line_gap;
         stbtt_GetFontVMetrics(&src_tmp.FontInfo, &unscaled_ascent, &unscaled_descent, &unscaled_line_gap);
 
         let ascent = f32::floor(unscaled_ascent * font_scale + ((unscaled_ascent > 0.0) ? +1 : -1));
         let descent = f32::floor(unscaled_descent * font_scale + ((unscaled_descent > 0.0) ? +1 : -1));
         ImFontAtlasBuildSetupFont(atlas, dst_font, &cfg, ascent, descent);
-        let font_off_x = cfg.GlyphOffset.x;
-        let font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font.Ascent);
+        let font_off_x = cfg.glyph_offset.x;
+        let font_off_y = cfg.glyph_offset.y + IM_ROUND(dst_font.Ascent);
 
         for (int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i += 1)
         {
@@ -1067,7 +1077,7 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
     if (!font_config.MergeMode)
     {
         font.ClearOutputData();
-        font.font_size = font_config.sizePixels;
+        font.font_size = font_config.size_pixels;
         font.config_data = font_config;
         font.config_dataCount = 0;
         font.container_atlas = atlas;
@@ -1255,7 +1265,7 @@ void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
         // IM_ASSERT(r.Font.container_atlas == atlas);
         Vector2D uv0, uv1;
         atlas.CalcCustomRectUV(r, &uv0, &uv1);
-        r.Font.AddGlyph(None, (ImWchar)r.GlyphID, r.GlyphOffset.x, r.GlyphOffset.y, r.GlyphOffset.x + r.width, r.GlyphOffset.y + r.Height, uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX);
+        r.Font.AddGlyph(None, (ImWchar)r.GlyphID, r.glyph_offset.x, r.glyph_offset.y, r.glyph_offset.x + r.width, r.glyph_offset.y + r.Height, uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX);
     }
 
     // build all fonts lookup tables
