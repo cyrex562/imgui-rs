@@ -208,7 +208,7 @@ impl ImGuiIO {
     // Queue a new key down/up event.
     // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
     // - bool down:          Is the key down? use false to signify a key release.
-    // - float analog_value: 0.0f32..1.0f
+    // - float analog_value: 0f32..1.0f
     void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, bool down, float analog_value)
     {
         //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", ImGui::GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
@@ -256,7 +256,7 @@ impl ImGuiIO {
     {
         if (!AppAcceptingEvents)
             return;
-        AddKeyAnalogEvent(key, down, down ? 1f32 : 0.0f32);
+        AddKeyAnalogEvent(key, down, down ? 1f32 : 0f32);
     }
 
     // [Optional] Call after AddKeyEvent().
@@ -327,7 +327,7 @@ impl ImGuiIO {
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         IM_ASSERT(&g.IO == this && "Can only add events to current context.");
-        if ((wheel_x == 0.0f32 && wheel_y == 0.0f32) || !AppAcceptingEvents)
+        if ((wheel_x == 0f32 && wheel_y == 0f32) || !AppAcceptingEvents)
             return;
 
         ImGuiInputEvent e;
