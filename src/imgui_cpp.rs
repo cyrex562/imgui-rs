@@ -949,7 +949,7 @@ CODE
 // #define IMGUI_DEBUG_INI_SETTINGS    0   // Save additional comments in .ini file (particularly helps for Docking, but makes saving slower)
 
 use std::ptr::null_mut;
-use libc::{c_char, size_t};
+use libc::{c_char, c_int, size_t};
 
 // When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
 // static const float NAV_WINDOWING_HIGHLIGHT_DELAY            = 0.20f32;    // Time before the highlight and screen dimming starts fading in
@@ -1204,7 +1204,7 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &mut ImVec2, p_closest: &mut Im
 // tess_tol is generally the same value you would find in ImGui::GetStyle().CurveTessellationTol
 // Because those ImXXX functions are lower-level than ImGui:: we cannot access this value automatically.
 // ImVec2 ImBezierCubicClosestPointCasteljau(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, float tess_tol)
-pub fn ImBezierCubicClosestPointCasteljau(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &ImVec2, tess_tol: f32) -> ImVec2
+pub fn ImBezierCubicClosestPointCasteljau(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &mut ImVec2, tess_tol: f32) -> ImVec2
 {
     // IM_ASSERT(tess_tol > 0f32);
     let mut p_last = p1.clone();
@@ -1317,7 +1317,7 @@ pub unsafe fn ImStrdupcpy(mut dst: *mut c_char, p_dst_size: *mut size_t, src: *c
 {
     let mut dst_buf_size = if !p_dst_size.is_null() { *p_dst_size } else { libc::strlen(dst) + 1 };
     let mut src_size = libc::strlen(src) + 1;
-    if (dst_buf_size < src_size)
+    if dst_buf_size < src_size
     {
         // IM_FREE(dst);
         libc::free(dst);
@@ -1327,20 +1327,24 @@ pub unsafe fn ImStrdupcpy(mut dst: *mut c_char, p_dst_size: *mut size_t, src: *c
             *p_dst_size = src_size;
         }
     }
-    return (char*)memcpy(dst, (const void*)src, src_size);
+    return libc::memcpy(dst, src, src_size) as *mut c_char;
 }
 
-const char* ImStrchrRange(const char* str, const char* str_end, char c)
+// const char* ImStrchrRange(const char* str, const char* str_end, char c)
+pub unsafe fn ImStrchrRange(str_start: *c_char, str_end: *c_char, c: c_char) -> *c_char
 {
-    const char* p = (const char*)memchr(str, (int)c, str_end - str);
-    return p;
+    // const char* p = (const char*)memchr(str, (int)c, str_end - str);
+    // return p;
+    libc::memchr(str_start, c as c_int, str_end - str_start) as *c_char
 }
 
-int ImStrlenW(const ImWchar* str)
+// int ImStrlenW(const ImWchar* str)
+pub fn ImStrlenW(str_begin: *ImWchar) -> i32
 {
     //return (int)wcslen((const wchar_t*)str);  // FIXME-OPT: Could use this when wchar_t are 16-bit
-    int n = 0;
-    while (*str++) n++;
+    let mut n = 0;
+    // while (*str++) n++;
+    while (*str_begin != )
     return n;
 }
 
