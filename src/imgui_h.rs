@@ -228,7 +228,7 @@ typedef unsigned char       ImU8;   // 8-bit unsigned integer
 typedef signed short        ImS16;  // 16-bit signed integer
 typedef unsigned short      ImU16;  // 16-bit unsigned integer
 typedef signed int          ImS32;  // 32-bit signed integer == int
-typedef unsigned int        ImU32;  // 32-bit unsigned integer (often used to store packed colors)
+typedef unsigned int        u32;  // 32-bit unsigned integer (often used to store packed colors)
 typedef signed   long long  ImS64;  // 64-bit signed integer
 typedef unsigned long long  ImU64;  // 64-bit unsigned integer
 
@@ -400,7 +400,7 @@ namespace ImGui
     // Parameters stacks (shared)
     IMGUI_API void          PushFont(ImFont* font);                                         // use NULL as a shortcut to push default font
     IMGUI_API void          PopFont();
-    IMGUI_API void          PushStyleColor(ImGuiCol idx, ImU32 col);                        // modify a style color. always use this if you modify the style after NewFrame().
+    IMGUI_API void          PushStyleColor(ImGuiCol idx, u32 col);                        // modify a style color. always use this if you modify the style after NewFrame().
     IMGUI_API void          PushStyleColor(ImGuiCol idx, const ImVec4& col);
     IMGUI_API void          PopStyleColor(int count = 1);
     IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, float val);                     // modify a style float variable. always use this if you modify the style after NewFrame().
@@ -424,9 +424,9 @@ namespace ImGui
     IMGUI_API ImFont*       GetFont();                                                      // get current font
     IMGUI_API float         GetFontSize();                                                  // get current font size (= height in pixels) of current font with current scale applied
     IMGUI_API ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
-    IMGUI_API ImU32         GetColorU32(ImGuiCol idx, float alpha_mul = 1f32);              // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
-    IMGUI_API ImU32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
-    IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+    IMGUI_API u32         GetColorU32(ImGuiCol idx, float alpha_mul = 1f32);              // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
+    IMGUI_API u32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+    IMGUI_API u32         GetColorU32(u32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
     IMGUI_API const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
 
     // Cursor / Layout
@@ -769,7 +769,7 @@ namespace ImGui
     IMGUI_API const char*           TableGetColumnName(int column_n = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
     IMGUI_API ImGuiTableColumnFlags TableGetColumnFlags(int column_n = -1);     // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
     IMGUI_API void                  TableSetColumnEnabled(int column_n, bool v);// change user accessible enabled/disabled state of a column. Set to false to hide the column. User can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
-    IMGUI_API void                  TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+    IMGUI_API void                  TableSetBgColor(ImGuiTableBgTarget target, u32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 
     // Legacy Columns API (prefer using Tables!)
     // - You can also use SameLine(pos_x) to mimic simplified columns.
@@ -900,8 +900,8 @@ namespace ImGui
     IMGUI_API ImVec2        CalcTextSize(const char* text, const char* text_end = NULL, bool hide_text_after_double_hash = false, float wrap_width = -1f32);
 
     // Color Utilities
-    IMGUI_API ImVec4        ColorConvertU32ToFloat4(ImU32 in);
-    IMGUI_API ImU32         ColorConvertFloat4ToU32(const ImVec4& in);
+    IMGUI_API ImVec4        ColorConvertU32ToFloat4(u32 in);
+    IMGUI_API u32         ColorConvertFloat4ToU32(const ImVec4& in);
     IMGUI_API void          ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v);
     IMGUI_API void          ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b);
 
@@ -2459,8 +2459,8 @@ struct ImColor
     constexpr ImColor(float r, float g, float b, float a = 1f32)    : Value(r, g, b, a) { }
     constexpr ImColor(const ImVec4& col)                            : Value(col) {}
     ImColor(int r, int g, int b, int a = 255)                       { float sc = 1f32 / 255f32; Value.x = r * sc; Value.y = g * sc; Value.z = b * sc; Value.w = a * sc; }
-    ImColor(ImU32 rgba)                                             { float sc = 1f32 / 255f32; Value.x = ((rgba >> IM_COL32_R_SHIFT) & 0xF0f32) * sc; Value.y = ((rgba >> IM_COL32_G_SHIFT) & 0xF0f32) * sc; Value.z = ((rgba >> IM_COL32_B_SHIFT) & 0xF0f32) * sc; Value.w = ((rgba >> IM_COL32_A_SHIFT) & 0xF0f32) * sc; }
-    inline operator ImU32() const                                   { return ImGui::ColorConvertFloat4ToU32(Value); }
+    ImColor(u32 rgba)                                             { float sc = 1f32 / 255f32; Value.x = ((rgba >> IM_COL32_R_SHIFT) & 0xF0f32) * sc; Value.y = ((rgba >> IM_COL32_G_SHIFT) & 0xF0f32) * sc; Value.z = ((rgba >> IM_COL32_B_SHIFT) & 0xF0f32) * sc; Value.w = ((rgba >> IM_COL32_A_SHIFT) & 0xF0f32) * sc; }
+    inline operator u32() const                                   { return ImGui::ColorConvertFloat4ToU32(Value); }
     inline operator ImVec4() const                                  { return Value; }
 
     // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
@@ -2522,7 +2522,7 @@ struct ImDrawVert
 {
     ImVec2  pos;
     ImVec2  uv;
-    ImU32   col;
+    u32   col;
 };
 // #else
 // You can override the vertex format layout by defining IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT in imconfig.h
@@ -2645,40 +2645,40 @@ struct ImDrawList
     //   In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
     //   In future versions we will use textures to provide cheaper and higher-quality circles.
     //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
-    IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1f32);
-    IMGUI_API void  AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0f32, ImDrawFlags flags = 0, float thickness = 1f32);   // a: upper-left, b: lower-right (== upper-left + size)
-    IMGUI_API void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding = 0f32, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
-    IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);
-    IMGUI_API void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 1f32);
-    IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);
-    IMGUI_API void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness = 1f32);
-    IMGUI_API void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col);
-    IMGUI_API void  AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments = 0, float thickness = 1f32);
-    IMGUI_API void  AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments = 0);
-    IMGUI_API void  AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness = 1f32);
-    IMGUI_API void  AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments);
-    IMGUI_API void  AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL);
-    IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0f32, const ImVec4* cpu_fine_clip_rect = NULL);
-    IMGUI_API void  AddPolyline(const ImVec2* points, int num_points, ImU32 col, ImDrawFlags flags, float thickness);
-    IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col);
-    IMGUI_API void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
-    IMGUI_API void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
+    IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, u32 col, float thickness = 1f32);
+    IMGUI_API void  AddRect(const ImVec2& p_min, const ImVec2& p_max, u32 col, float rounding = 0f32, ImDrawFlags flags = 0, float thickness = 1f32);   // a: upper-left, b: lower-right (== upper-left + size)
+    IMGUI_API void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, u32 col, float rounding = 0f32, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
+    IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, u32 col_upr_left, u32 col_upr_right, u32 col_bot_right, u32 col_bot_left);
+    IMGUI_API void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col, float thickness = 1f32);
+    IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col);
+    IMGUI_API void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, u32 col, float thickness = 1f32);
+    IMGUI_API void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, u32 col);
+    IMGUI_API void  AddCircle(const ImVec2& center, float radius, u32 col, int num_segments = 0, float thickness = 1f32);
+    IMGUI_API void  AddCircleFilled(const ImVec2& center, float radius, u32 col, int num_segments = 0);
+    IMGUI_API void  AddNgon(const ImVec2& center, float radius, u32 col, int num_segments, float thickness = 1f32);
+    IMGUI_API void  AddNgonFilled(const ImVec2& center, float radius, u32 col, int num_segments);
+    IMGUI_API void  AddText(const ImVec2& pos, u32 col, const char* text_begin, const char* text_end = NULL);
+    IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, u32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0f32, const ImVec4* cpu_fine_clip_rect = NULL);
+    IMGUI_API void  AddPolyline(const ImVec2* points, int num_points, u32 col, ImDrawFlags flags, float thickness);
+    IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, u32 col);
+    IMGUI_API void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
+    IMGUI_API void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, u32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
 
     // Image primitives
     // - Read FAQ to understand what ImTextureID is.
     // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
     // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-    IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), ImU32 col = IM_COL32_WHITE);
-    IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), ImU32 col = IM_COL32_WHITE);
-    IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawFlags flags = 0);
+    IMGUI_API void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), u32 col = IM_COL32_WHITE);
+    IMGUI_API void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), u32 col = IM_COL32_WHITE);
+    IMGUI_API void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, u32 col, float rounding, ImDrawFlags flags = 0);
 
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     // - Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
     inline    void  PathClear()                                                 { _Path.Size = 0; }
     inline    void  PathLineTo(const ImVec2& pos)                               { _Path.push(pos); }
     inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size - 1], &pos, 8) != 0) _Path.push(pos); }
-    inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
-    inline    void  PathStroke(ImU32 col, ImDrawFlags flags = 0, float thickness = 1f32) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
+    inline    void  PathFillConvex(u32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
+    inline    void  PathStroke(u32 col, ImDrawFlags flags = 0, float thickness = 1f32) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
     IMGUI_API void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 0);
     IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
     IMGUI_API void  PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0); // Cubic Bezier (4 control points)
@@ -2705,15 +2705,15 @@ struct ImDrawList
     // - All primitives needs to be reserved via PrimReserve() beforehand.
     IMGUI_API void  PrimReserve(int idx_count, int vtx_count);
     IMGUI_API void  PrimUnreserve(int idx_count, int vtx_count);
-    IMGUI_API void  PrimRect(const ImVec2& a, const ImVec2& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
-    IMGUI_API void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, ImU32 col);
-    IMGUI_API void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col);
-    inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
+    IMGUI_API void  PrimRect(const ImVec2& a, const ImVec2& b, u32 col);      // Axis aligned rectangle (composed of two triangles)
+    IMGUI_API void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, u32 col);
+    IMGUI_API void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, u32 col);
+    inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, u32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
     inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr++; }
-    inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
+    inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, u32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
+    inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
     inline    void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
 // #endif
 
@@ -2799,12 +2799,12 @@ struct ImFontGlyph
 // This is essentially a tightly packed of vector of 64k booleans = 8KB storage.
 struct ImFontGlyphRangesBuilder
 {
-    ImVector<ImU32> UsedChars;            // Store 1-bit per Unicode code point (0=unused, 1=used)
+    ImVector<u32> UsedChars;            // Store 1-bit per Unicode code point (0=unused, 1=used)
 
     ImFontGlyphRangesBuilder()              { Clear(); }
-    inline void     Clear()                 { int size_in_bytes = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / (int)sizeof(ImU32)); memset(UsedChars.Data, 0, (size_t)size_in_bytes); }
-    inline bool     GetBit(size_t n) const  { int off = (int)(n >> 5); ImU32 mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; }  // Get bit n in the array
-    inline void     SetBit(size_t n)        { int off = (int)(n >> 5); ImU32 mask = 1u << (n & 31); UsedChars[off] |= mask; }               // Set bit n in the array
+    inline void     Clear()                 { int size_in_bytes = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / (int)sizeof(u32)); memset(UsedChars.Data, 0, (size_t)size_in_bytes); }
+    inline bool     GetBit(size_t n) const  { int off = (int)(n >> 5); u32 mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; }  // Get bit n in the array
+    inline void     SetBit(size_t n)        { int off = (int)(n >> 5); u32 mask = 1u << (n & 31); UsedChars[off] |= mask; }               // Set bit n in the array
     inline void     AddChar(ImWchar c)      { SetBit(c); }                      // Add character
     IMGUI_API void  AddText(const char* text, const char* text_end = NULL);     // Add string (each character of the UTF-8 string are added)
     IMGUI_API void  AddRanges(const ImWchar* ranges);                           // Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
@@ -2989,8 +2989,8 @@ struct ImFont
     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0f32 to disable.
     IMGUI_API ImVec2            CalcTextSizeA(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
     IMGUI_API const char*       CalcWordWrapPositionA(float scale, const char* text, const char* text_end, float wrap_width) const;
-    IMGUI_API void              RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const;
-    IMGUI_API void              RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0f32, bool cpu_fine_clip = false) const;
+    IMGUI_API void              RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, u32 col, ImWchar c) const;
+    IMGUI_API void              RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, u32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0f32, bool cpu_fine_clip = false) const;
 
     // [Internal] Don't use!
     IMGUI_API void              BuildLookupTable();

@@ -1453,7 +1453,7 @@ static void ShowDemoWindowWidgets()
                 // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
                 static int FilterImGuiLetters(ImGuiInputTextCallbackData* data)
                 {
-                    if (data->EventChar < 256 && strchr("imgui", (char)data->EventChar))
+                    if (data->EventChar < 256 && strchr("imgui", data->EventChar))
                         return 0;
                     return 1;
                 }
@@ -2075,7 +2075,7 @@ static void ShowDemoWindowWidgets()
         const short   s16_zero = 0,   s16_one = 1,   s16_fifty = 50, s16_min = -32768,      s16_max = 32767;
         const ImU16   u16_zero = 0,   u16_one = 1,   u16_fifty = 50, u16_min = 0,           u16_max = 65535;
         const ImS32   s32_zero = 0,   s32_one = 1,   s32_fifty = 50, s32_min = INT_MIN/2,   s32_max = INT_MAX/2,    s32_hi_a = INT_MAX/2 - 100,    s32_hi_b = INT_MAX/2;
-        const ImU32   u32_zero = 0,   u32_one = 1,   u32_fifty = 50, u32_min = 0,           u32_max = UINT_MAX/2,   u32_hi_a = UINT_MAX/2 - 100,   u32_hi_b = UINT_MAX/2;
+        const u32   u32_zero = 0,   u32_one = 1,   u32_fifty = 50, u32_min = 0,           u32_max = UINT_MAX/2,   u32_hi_a = UINT_MAX/2 - 100,   u32_hi_b = UINT_MAX/2;
         const ImS64   s64_zero = 0,   s64_one = 1,   s64_fifty = 50, s64_min = LLONG_MIN/2, s64_max = LLONG_MAX/2,  s64_hi_a = LLONG_MAX/2 - 100,  s64_hi_b = LLONG_MAX/2;
         const ImU64   u64_zero = 0,   u64_one = 1,   u64_fifty = 50, u64_min = 0,           u64_max = ULLONG_MAX/2, u64_hi_a = ULLONG_MAX/2 - 100, u64_hi_b = ULLONG_MAX/2;
         const float   f32_zero = 0.f, f32_one = 1.f, f32_lo_a = -10000000000f32, f32_hi_a = +10000000000f32;
@@ -2087,7 +2087,7 @@ static void ShowDemoWindowWidgets()
         static short  s16_v = 32767;
         static ImU16  u16_v = 65535;
         static ImS32  s32_v = -1;
-        static ImU32  u32_v = (ImU32)-1;
+        static u32  u32_v = (u32)-1;
         static ImS64  s64_v = -1;
         static ImU64  u64_v = (ImU64)-1;
         static float  f32_v = 0.123f;
@@ -4813,7 +4813,7 @@ static void ShowDemoWindowTables()
                 // We use a transparent color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
                 if (row_bg_type != 0)
                 {
-                    ImU32 row_bg_color = ImGui::GetColorU32(row_bg_type == 1 ? ImVec4(0.7f, 0.3f, 0.3f, 0.650f32) : ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.650f32)); // Flat or Gradient?
+                    u32 row_bg_color = ImGui::GetColorU32(row_bg_type == 1 ? ImVec4(0.7f, 0.3f, 0.3f, 0.650f32) : ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.650f32)); // Flat or Gradient?
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0 + row_bg_target, row_bg_color);
                 }
 
@@ -4829,7 +4829,7 @@ static void ShowDemoWindowTables()
                     // We can also pass a column number as a third parameter to TableSetBgColor() and do this outside the column loop.
                     if (row >= 1 && row <= 2 && column >= 1 && column <= 2 && cell_bg_type == 1)
                     {
-                        ImU32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.7f, 0.650f32));
+                        u32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.7f, 0.650f32));
                         ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
                     }
                 }
@@ -5835,7 +5835,7 @@ static void ShowDemoWindowMisc()
             ImGui::Text("Keys pressed:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyPressed(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
             ImGui::Text("Keys released:");      for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyReleased(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
             ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
-            ImGui::Text("Chars queue:");        for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
+            ImGui::Text("Chars queue:");        for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
 
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
@@ -7628,16 +7628,16 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             {
                 ImVec2 p0 = ImGui::GetCursorScreenPos();
                 ImVec2 p1 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
-                ImU32 col_a = ImGui::GetColorU32(IM_COL32(0, 0, 0, 255));
-                ImU32 col_b = ImGui::GetColorU32(IM_COL32(255, 255, 255, 255));
+                u32 col_a = ImGui::GetColorU32(IM_COL32(0, 0, 0, 255));
+                u32 col_b = ImGui::GetColorU32(IM_COL32(255, 255, 255, 255));
                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
                 ImGui::InvisibleButton("##gradient1", gradient_size);
             }
             {
                 ImVec2 p0 = ImGui::GetCursorScreenPos();
                 ImVec2 p1 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
-                ImU32 col_a = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
-                ImU32 col_b = ImGui::GetColorU32(IM_COL32(255, 0, 0, 255));
+                u32 col_a = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
+                u32 col_b = ImGui::GetColorU32(IM_COL32(255, 0, 0, 255));
                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
                 ImGui::InvisibleButton("##gradient2", gradient_size);
             }
@@ -7664,7 +7664,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
             ImGui::ColorEdit4("Color", &colf.x);
 
             const ImVec2 p = ImGui::GetCursorScreenPos();
-            const ImU32 col = ImColor(col0f32);
+            const u32 col = ImColor(col0f32);
             const float spacing = 10f32;
             const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
             const float rounding = sz / 5f32;

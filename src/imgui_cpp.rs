@@ -1,6 +1,7 @@
 // dear imgui, v1.89 WIP
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
+
 use libc;
 // (main code and documentation)
 
@@ -948,8 +949,8 @@ CODE
 // #define IMGUI_DEBUG_NAV_RECTS       0   // Display the reference navigation rectangle for each window
 // #define IMGUI_DEBUG_INI_SETTINGS    0   // Save additional comments in .ini file (particularly helps for Docking, but makes saving slower)
 
-use std::ptr::null_mut;
-use libc::{c_char, c_int, size_t};
+use std::ptr::{null, null_mut};
+use libc::{c_char, c_int, c_void, size_t};
 
 // When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
 // static const float NAV_WINDOWING_HIGHLIGHT_DELAY            = 0.20f32;    // Time before the highlight and screen dimming starts fading in
@@ -1339,71 +1340,98 @@ pub unsafe fn ImStrchrRange(str_start: *c_char, str_end: *c_char, c: c_char) -> 
 }
 
 // int ImStrlenW(const ImWchar* str)
-pub fn ImStrlenW(str_begin: *ImWchar) -> i32
+pub unsafe fn ImStrlenW(str_begin: *ImWchar) -> i32
 {
     //return (int)wcslen((const wchar_t*)str);  // FIXME-OPT: Could use this when wchar_t are 16-bit
     let mut n = 0;
     // while (*str++) n++;
-    while (*str_begin != )
+    while *str_begin != 0 {
+        n += 1;
+    }
     return n;
 }
 
 // Find end-of-line. Return pointer will point to either first \n, either str_end.
-const char* ImStreolRange(const char* str, const char* str_end)
+// const char* ImStreolRange(const char* str, const char* str_end)
+pub unsafe fn ImStreolRange(str_begin: *c_char, str_end: *c_char) -> *c_char
 {
-    const char* p = (const char*)memchr(str, '\n', str_end - str);
-    return p ? p : str_end;
+    // const char* p = (const char*)memchr(str, '\n', str_end - str);
+    let p = libc::memchr(str_begin, '\n' as c_int, str_end - str_begin);
+    // return p ? p : str_end;
+    return if !p.is_null() {
+        p
+    } else {
+        str_end
+    }
 }
 
-const ImWchar* ImStrbolW(const ImWchar* buf_mid_line, const ImWchar* buf_begin) // find beginning-of-line
+// const ImWchar* ImStrbolW(const ImWchar* buf_mid_line, const ImWchar* buf_begin) // find beginning-of-line
+pub fn ImStrbolW(mut buf_mid_line: *ImWchar, buf_begin: *ImWchar) -> *ImWchar
 {
-    while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
-        buf_mid_line--;
+    while buf_mid_line > buf_begin && buf_mid_line[-1] != '\n' {
+        buf_mid_line -= 1;
+    }
     return buf_mid_line;
 }
 
-const char* ImStristr(const char* haystack, const char* haystack_end, const char* needle, const char* needle_end)
+// const char* ImStristr(const char* haystack, const char* haystack_end, const char* needle, const char* needle_end)
+pub unsafe fn ImStristr(mut haystack: *c_char, haystack_end: *c_char, needle: *c_char, mut needle_end: *c_char) -> *c_char
 {
-    if (!needle_end)
-        needle_end = needle + strlen(needle);
-
-    const char un0 = (char)toupper(*needle);
-    while ((!haystack_end && *haystack) || (haystack_end && haystack < haystack_end))
-    {
-        if (toupper(*haystack) == un0)
-        {
-            const char* b = needle + 1;
-            for (const char* a = haystack + 1; b < needle_end; a++, b++)
-                if (toupper(*a) != toupper(*b))
-                    break;
-            if (b == needle_end)
-                return haystack;
-        }
-        haystack++;
+    if !needle_end {
+        needle_end = needle + libc::strlen(needle);
     }
-    return NULL;
+
+    let un0 = libc::toupper(*needle as c_int);
+    while (haystack_end.is_null() && ((*haystack as c_int) != 0)) || (!haystack_end.is_null() && (haystack < haystack_end))
+    {
+        if libc::toupper(*haystack as c_int) == un0
+        {
+            let b = needle + 1;
+            // for (const char* a = haystack + 1; b < needle_end; a++, b++)
+            while b < needle_end
+            {
+                // if (toupper(*a) != toupper(*b))
+                if libc::toupper(*a) != libc::toupper(*b)
+                {
+                    break;
+                }
+            }
+            if b == needle_end {
+                return haystack;
+            }
+        }
+        haystack += 1;
+    }
+    return null();
 }
 
 // Trim str by offsetting contents when there's leading data + writing a \0 at the trailing position. We use this in situation where the cost is negligible.
-void ImStrTrimBlanks(char* bu0f32)
+// void ImStrTrimBlanks(char* bu0f32)
+pub unsafe fn ImStrTrimBlanks(buf: *mut c_char)
 {
-    char* p = buf;
-    while (p[0] == ' ' || p[0] == '\t')     // Leading blanks
-        p++;
+    let mut p = buf;
+    while p[0] == ' ' || p[0] == '\t' {    // Leading blanks
+        p += 1;
+    }
     char* p_start = p;
-    while (*p != 0)                         // Find end of string
-        p++;
-    while (p > p_start && (p[-1] == ' ' || p[-1] == '\t'))  // Trailing blanks
-        p--;
-    if (p_start != bu0f32)                     // Copy memory if we had leading blanks
-        memmove(buf, p_start, p - p_start);
+    while *p != 0 {                        // Find end of string
+        p += 1;
+    }
+    while p > p_start && (p[-1] == ' ' || p[-1] == '\t') {  // Trailing blanks
+        p -= 1;
+    }
+    if p_start != bu0f32 {                   // Copy memory if we had leading blanks
+        libc::memmove(buf, p_start, p - p_start);
+    }
     buf[p - p_start] = 0;                   // Zero terminate
 }
 
-const char* ImStrSkipBlank(const char* str)
+// const char* ImStrSkipBlank(const char* str)
+pub fn ImStrSkipBlank(in_str: *c_char)
 {
-    while (str[0] == ' ' || str[0] == '\t')
-        str++;
+    while str[0] == ' ' || str[0] == '\t' {
+        str += 1;
+    }
     return str;
 }
 
@@ -1429,64 +1457,73 @@ const char* ImStrSkipBlank(const char* str)
 // #define vsnprintf _vsnprintf
 // #endif
 
-int ImFormatString(char* buf, size_t buf_size, const char* fmt, ...)
+// int ImFormatString(char* buf, size_t buf_size, const char* fmt, ...)
+pub fn ImFormatString(buf: *mut c_char, buf_size: usize, fmt_str: *c_char) -> i32
 {
-    va_list args;
-    va_start(args, fmt);
-// #ifdef IMGUI_USE_STB_SPRINTF
-    int w = stbsp_vsnprintf(buf, (int)buf_size, fmt, args);
-// #else
-    int w = vsnprintf(buf, buf_size, fmt, args);
-// #endif
-    va_end(args);
-    if (buf == NULL)
-        return w;
-    if (w == -1 || w >= (int)buf_size)
-        w = (int)buf_size - 1;
-    buf[w] = 0;
-    return w;
+//     va_list args;
+//     va_start(args, fmt);
+// // #ifdef IMGUI_USE_STB_SPRINTF
+//     int w = stbsp_vsnprintf(buf, (int)buf_size, fmt, args);
+// // #else
+//     int w = vsnprintf(buf, buf_size, fmt, args);
+// // #endif
+//     va_end(args);
+//     if (buf == NULL)
+//         return w;
+//     if (w == -1 || w >= (int)buf_size)
+//         w = (int)buf_size - 1;
+//     buf[w] = 0;
+//     return w;
+    todo!()
 }
 
-int ImFormatStringV(char* buf, size_t buf_size, const char* fmt, va_list args)
+// int ImFormatStringV(char* buf, size_t buf_size, const char* fmt, va_list args)
+pub fn ImFormatStringV(buf: *mut c_char, buf_size: usize, fmt_str: *c_char, args: &Vec<String>) -> i32
 {
-// #ifdef IMGUI_USE_STB_SPRINTF
-    int w = stbsp_vsnprintf(buf, (int)buf_size, fmt, args);
-// #else
-    int w = vsnprintf(buf, buf_size, fmt, args);
-// #endif
-    if (buf == NULL)
-        return w;
-    if (w == -1 || w >= (int)buf_size)
-        w = (int)buf_size - 1;
-    buf[w] = 0;
-    return w;
+// // #ifdef IMGUI_USE_STB_SPRINTF
+//     int w = stbsp_vsnprintf(buf, (int)buf_size, fmt, args);
+// // #else
+//     int w = vsnprintf(buf, buf_size, fmt, args);
+// // #endif
+//     if (buf == NULL)
+//         return w;
+//     if (w == -1 || w >= (int)buf_size)
+//         w = (int)buf_size - 1;
+//     buf[w] = 0;
+//     return w;
+    todo!()
 }
+
 // #endif // #ifdef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
-
-void ImFormatStringToTempBuffer(const char** out_buf, const char** out_buf_end, const char* fmt, ...)
+// void ImFormatStringToTempBuffer(const char** out_buf, const char** out_buf_end, const char* fmt, ...)
+pub fn ImFormatStringToTempBuffer(out_buf: *mut *mut c_char, out_buf_end: *mut *mut c_char, fmt_str: *c_char, args: &Vec<String>)
 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    va_list args;
-    va_start(args, fmt);
-    int buf_len = ImFormatStringV(g.TempBuffer.Data, g.TempBuffer.Size, fmt, args);
-    *out_buf = g.TempBuffer.Data;
-    if (out_buf_end) { *out_buf_end = g.TempBuffer.Data + buf_len; }
-    va_end(args);
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    // // va_list args;
+    //
+    // va_start(args, fmt);
+    // int buf_len = ImFormatStringV(g.TempBuffer.Data, g.TempBuffer.Size, fmt, args);
+    // *out_buf = g.TempBuffer.Data;
+    // if (out_buf_end) { *out_buf_end = g.TempBuffer.Data + buf_len; }
+    // va_end(args);
+    todo!()
 }
 
-void ImFormatStringToTempBufferV(const char** out_buf, const char** out_buf_end, const char* fmt, va_list args)
+// void ImFormatStringToTempBufferV(const char** out_buf, const char** out_buf_end, const char* fmt, va_list args)
+pub fn ImFormatStringToTempBufferV(out_buf: *mut *mut c_char, out_buf_end: *mut *mut c_char, fmt_str: *c_char, args: &Vec<String>)
 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    int buf_len = ImFormatStringV(g.TempBuffer.Data, g.TempBuffer.Size, fmt, args);
-    *out_buf = g.TempBuffer.Data;
-    if (out_buf_end) { *out_buf_end = g.TempBuffer.Data + buf_len; }
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    // int buf_len = ImFormatStringV(g.TempBuffer.Data, g.TempBuffer.Size, fmt, args);
+    // *out_buf = g.TempBuffer.Data;
+    // if (out_buf_end) { *out_buf_end = g.TempBuffer.Data + buf_len; }
+    todo!()
 }
 
 // CRC32 needs a 1KB lookup table (not cache friendly)
 // Although the code to generate the table is simple and shorter than the table itself, using a const table allows us to easily:
 // - avoid an unnecessary branch/memory tap, - keep the ImHashXXX functions usable by static constructors, - make it thread-safe.
-static const ImU32 GCrc32LookupTable[256] =
-{
+pub const GCrc32LookupTable: [u32;256] =
+[
     0x00000000,0x77073096,0xEE0E612C,0x990951BA,0x076DC419,0x706AF48F,0xE963A535,0x9E6495A3,0x0EDB8832,0x79DCB8A4,0xE0D5E91E,0x97D2D988,0x09B64C2B,0x7EB17CBD,0xE7B82D07,0x90BF1D91,
     0x1DB71064,0x6AB020F2,0xF3B97148,0x84BE41DE,0x1ADAD47D,0x6DDDE4EB,0xF4D4B551,0x83D385C7,0x136C9856,0x646BA8C0,0xFD62F97A,0x8A65C9EC,0x14015C4F,0x63066CD9,0xFA0F3D63,0x8D080DF5,
     0x3B6E20C8,0x4C69105E,0xD56041E4,0xA2677172,0x3C03E4D1,0x4B04D447,0xD20D85FD,0xA50AB56B,0x35B5A8FA,0x42B2986C,0xDBBBC9D6,0xACBCF940,0x32D86CE3,0x45DF5C75,0xDCD60DCF,0xABD13D59,
@@ -1503,19 +1540,24 @@ static const ImU32 GCrc32LookupTable[256] =
     0x86D3D2D4,0xF1D4E242,0x68DDB3F8,0x1FDA836E,0x81BE16CD,0xF6B9265B,0x6FB077E1,0x18B74777,0x88085AE6,0xFF0F6A70,0x66063BCA,0x11010B5C,0x8F659EFF,0xF862AE69,0x616BFFD3,0x166CCF45,
     0xA00AE278,0xD70DD2EE,0x4E048354,0x3903B3C2,0xA7672661,0xD06016F7,0x4969474D,0x3E6E77DB,0xAED16A4A,0xD9D65ADC,0x40DF0B66,0x37D83BF0,0xA9BCAE53,0xDEBB9EC5,0x47B2CF7F,0x30B5FFE9,
     0xBDBDF21C,0xCABAC28A,0x53B39330,0x24B4A3A6,0xBAD03605,0xCDD70693,0x54DE5729,0x23D967BF,0xB3667A2E,0xC4614AB8,0x5D681B02,0x2A6F2B94,0xB40BBE37,0xC30C8EA1,0x5A05DF1B,0x2D02EF8D,
-};
+];
 
 // Known size hash
 // It is ok to call ImHashData on a string with known length but the ### operator won't be supported.
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
-ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed)
+// ImGuiID ImHashData(const void* data_p, size_t data_size, u32 seed)
+pub unsafe fn ImHashData(data_p: *c_void, mut data_size: usize, seed: u32) -> ImGuiID
 {
-    ImU32 crc = ~seed;
-    const unsigned char* data = (const unsigned char*)data_p;
-    const ImU32* crc32_lut = GCrc32LookupTable;
-    while (data_size-- != 0)
-        crc = (crc >> 8) ^ crc32_lut[(crc & 0xF0f32) ^ *data++];
-    return ~crc;
+    // u32 crc = ~seed;
+    let mut crc = !seed;
+    let mut data = data_p;
+    let crc32_lut = GCrc32LookupTable;
+    while data_size != 0 {
+        crc = (crc >> 8) ^ crc32_lut[(crc & 0xF0f32) ^ *data];
+        data += 1;
+        data_size -= 1;
+    }
+    return !crc;
 }
 
 // Zero-terminated string hash, with support for ### to reset back to seed value
@@ -1524,32 +1566,40 @@ ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed)
 // - If we reach ### in the string we discard the hash so far and reset to the seed.
 // - We don't do 'current += 2; continue;' after handling ### to keep the code smaller/faster (measured ~10% diff in Debug build)
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
-ImGuiID ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
+// ImGuiID ImHashStr(const char* data_p, size_t data_size, u32 seed)
+pub unsafe fn ImHashStr(data_p: *c_char, mut data_size: usize, mut seed: u32) -> ImGuiID
 {
-    seed = ~seed;
-    ImU32 crc = seed;
-    const unsigned char* data = (const unsigned char*)data_p;
-    const ImU32* crc32_lut = GCrc32LookupTable;
-    if (data_size != 0)
+    seed = !seed;
+    let mut crc = seed;
+    let mut data = data_p;
+    let crc32_lut = GCrc32LookupTable;
+    if data_size != 0
     {
-        while (data_size-- != 0)
+        while data_size != 0
         {
-            unsigned char c = *data++;
-            if (c == '#' && data_size >= 2 && data[0] == '#' && data[1] == '#')
+            let c = *data;
+            data += 1;
+            if c == '#' as c_char && data_size >= 2 && data[0] == '#' && data[1] == '#' {
                 crc = seed;
+            }
             crc = (crc >> 8) ^ crc32_lut[(crc & 0xF0f32) ^ c];
+            data_size -= 1;
         }
     }
     else
     {
-        while (unsigned char c = *data++)
+        let c = *data;
+
+        while c != 0
         {
-            if (c == '#' && data[0] == '#' && data[1] == '#')
+            if c == '#' as c_char && data[0] == '#' && data[1] == '#' {
                 crc = seed;
+            }
             crc = (crc >> 8) ^ crc32_lut[(crc & 0xF0f32) ^ c];
+            data += 1;
         }
     }
-    return ~crc;
+    return !crc;
 }
 
 //-----------------------------------------------------------------------------
@@ -1559,20 +1609,23 @@ ImGuiID ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
 // Default file functions
 // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
-ImFileHandle ImFileOpen(const char* filename, const char* mode)
+// ImFileHandle ImFileOpen(const char* filename, const char* mode)
+pub fn ImFileOpen(filename: *c_char, mode: *c_char) -> ImFileHandle
 {
-// #if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(__CYGWIN__) && !defined(__GNUC__)
+    // #if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(__CYGWIN__) && !defined(__GNUC__)
     // We need a fopen() wrapper because MSVC/Windows fopen doesn't handle UTF-8 filenames.
     // Previously we used ImTextCountCharsFromUtf8/ImTextStrFromUtf8 here but we now need to support ImWchar16 and ImWchar32!
-    const int filename_wsize = ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
-    const int mode_wsize = ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, NULL, 0);
-    ImVector<ImWchar> buf;
-    buf.resize(filename_wsize + mode_wsize);
-    ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, (wchar_t*)&buf[0], filename_wsize);
-    ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, (wchar_t*)&buf[filename_wsize], mode_wsize);
-    return ::_wfopen((const wchar_t*)&buf[0], (const wchar_t*)&buf[filename_wsize]);
+    if cfg!(windows)
+    let filename_wsize = ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
+    let mode_wsize = ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, NULL, 0);
+    // ImVector<ImWchar> buf;
+    let mut buf : Vec<ImWchar> = vec![];
+    buf.resize(filename_wsize + mode_wsize, 0);
+    ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, &buf[0], filename_wsize);
+    ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, &buf[filename_wsize], mode_wsize);
+    return ::_wfopen(&buf[0], &buf[filename_wsize]);
 // #else
-    return fopen(filename, mode);
+    return libc::fopen(filename, mode);
 // #endif
 }
 
@@ -1639,7 +1692,7 @@ int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* 
     static const uint32_t mins[] = { 0x400000, 0, 0x80, 0x800, 0x10000 };
     static const int shiftc[] = { 0, 18, 12, 6, 0 };
     static const int shifte[] = { 0, 6, 4, 2, 0 };
-    int len = lengths[*(const unsigned char*)in_text >> 3];
+    int len = lengths[*in_text >> 3];
     int wanted = len + !len;
 
     if (in_text_end == NULL)
@@ -1721,31 +1774,31 @@ static inline int ImTextCharToUtf8_inline(char* buf, int buf_size, unsigned int 
 {
     if (c < 0x80)
     {
-        buf[0] = (char)c;
+        buf[0] = c;
         return 1;
     }
     if (c < 0x800)
     {
         if (buf_size < 2) return 0;
-        buf[0] = (char)(0xc0 + (c >> 6));
-        buf[1] = (char)(0x80 + (c & 0x30f32));
+        buf[0] = (0xc0 + (c >> 6));
+        buf[1] = (0x80 + (c & 0x30f32));
         return 2;
     }
     if (c < 0x10000)
     {
         if (buf_size < 3) return 0;
-        buf[0] = (char)(0xe0 + (c >> 12));
-        buf[1] = (char)(0x80 + ((c >> 6) & 0x30f32));
-        buf[2] = (char)(0x80 + ((c ) & 0x30f32));
+        buf[0] = (0xe0 + (c >> 12));
+        buf[1] = (0x80 + ((c >> 6) & 0x30f32));
+        buf[2] = (0x80 + ((c ) & 0x30f32));
         return 3;
     }
     if (c <= 0x10FFF0f32)
     {
         if (buf_size < 4) return 0;
-        buf[0] = (char)(0xf0 + (c >> 18));
-        buf[1] = (char)(0x80 + ((c >> 12) & 0x30f32));
-        buf[2] = (char)(0x80 + ((c >> 6) & 0x30f32));
-        buf[3] = (char)(0x80 + ((c ) & 0x30f32));
+        buf[0] = (0xf0 + (c >> 18));
+        buf[1] = (0x80 + ((c >> 12) & 0x30f32));
+        buf[2] = (0x80 + ((c >> 6) & 0x30f32));
+        buf[3] = (0x80 + ((c ) & 0x30f32));
         return 4;
     }
     // Invalid code point, the max unicode is 0x10FFFF
@@ -1783,7 +1836,7 @@ int ImTextStrToUtf8(char* out_buf, int out_buf_size, const ImWchar* in_text, con
     {
         unsigned int c = (unsigned int)(*in_text++);
         if (c < 0x80)
-            *buf_p++ = (char)c;
+            *buf_p++ = c;
         else
             buf_p += ImTextCharToUtf8_inline(buf_p, (int)(buf_end - buf_p - 1), c);
     }
@@ -1810,7 +1863,7 @@ int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_e
 // Note: The Convert functions are early design which are not consistent with other API.
 //-----------------------------------------------------------------------------
 
-IMGUI_API ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b)
+IMGUI_API u32 ImAlphaBlendColors(u32 col_a, u32 col_b)
 {
     float t = ((col_b >> IM_COL32_A_SHIFT) & 0xF0f32) / 255.f;
     int r = ImLerp((int)(col_a >> IM_COL32_R_SHIFT) & 0xFF, (int)(col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
@@ -1819,7 +1872,7 @@ IMGUI_API ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b)
     return IM_COL32(r, g, b, 0xF0f32);
 }
 
-ImVec4 ImGui::ColorConvertU32ToFloat4(ImU32 in)
+ImVec4 ImGui::ColorConvertU32ToFloat4(u32 in)
 {
     float s = 1f32 / 255f32;
     return ImVec4(
@@ -1829,13 +1882,13 @@ ImVec4 ImGui::ColorConvertU32ToFloat4(ImU32 in)
         ((in >> IM_COL32_A_SHIFT) & 0xF0f32) * s);
 }
 
-ImU32 ImGui::ColorConvertFloat4ToU32(const ImVec4& in)
+u32 ImGui::ColorConvertFloat4ToU32(const ImVec4& in)
 {
-    ImU32 out;
-    out  = ((ImU32)IM_F32_TO_INT8_SAT(in.x)) << IM_COL32_R_SHIFT;
-    out |= ((ImU32)IM_F32_TO_INT8_SAT(in.y)) << IM_COL32_G_SHIFT;
-    out |= ((ImU32)IM_F32_TO_INT8_SAT(in.z)) << IM_COL32_B_SHIFT;
-    out |= ((ImU32)IM_F32_TO_INT8_SAT(in.w)) << IM_COL32_A_SHIFT;
+    u32 out;
+    out  = ((u32)IM_F32_TO_INT8_SAT(in.x)) << IM_COL32_R_SHIFT;
+    out |= ((u32)IM_F32_TO_INT8_SAT(in.y)) << IM_COL32_G_SHIFT;
+    out |= ((u32)IM_F32_TO_INT8_SAT(in.z)) << IM_COL32_B_SHIFT;
+    out |= ((u32)IM_F32_TO_INT8_SAT(in.w)) << IM_COL32_A_SHIFT;
     return out;
 }
 
@@ -2547,7 +2600,7 @@ ImGuiStyle& ImGui::GetStyle()
     return GImGui->Style;
 }
 
-ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
+u32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
 {
     ImGuiStyle& style = GImGui->Style;
     ImVec4 c = style.Colors[idx];
@@ -2555,7 +2608,7 @@ ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
     return ColorConvertFloat4ToU32(c);
 }
 
-ImU32 ImGui::GetColorU32(const ImVec4& col)
+u32 ImGui::GetColorU32(const ImVec4& col)
 {
     ImGuiStyle& style = GImGui->Style;
     ImVec4 c = col;
@@ -2569,18 +2622,18 @@ const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol idx)
     return style.Colors[idx];
 }
 
-ImU32 ImGui::GetColorU32(ImU32 col)
+u32 ImGui::GetColorU32(u32 col)
 {
     ImGuiStyle& style = GImGui->Style;
     if (style.Alpha >= 1f32)
         return col;
-    ImU32 a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
-    a = (ImU32)(a * style.Alpha); // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
+    u32 a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
+    a = (u32)(a * style.Alpha); // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
     return (col & ~IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT);
 }
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
-void ImGui::PushStyleColor(ImGuiCol idx, ImU32 col)
+void ImGui::PushStyleColor(ImGuiCol idx, u32 col)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiColorMod backup;
@@ -2620,8 +2673,8 @@ void ImGui::PopStyleColor(int count)
 struct ImGuiStyleVarInfo
 {
     ImGuiDataType   Type;
-    ImU32           Count;
-    ImU32           Offset;
+    u32           Count;
+    u32           Offset;
     void*           GetVarPtr(ImGuiStyle* style) const { return (void*)((unsigned char*)style + Offset); }
 };
 
@@ -2632,31 +2685,31 @@ static const ImGuiCol GWindowDockStyleColors[ImGuiWindowDockStyleCol_COUNT] =
 
 static const ImGuiStyleVarInfo GStyleVarInfo[] =
 {
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, Alpha) },               // ImGuiStyleVar_Alpha
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, DisabledAlpha) },       // ImGuiStyleVar_DisabledAlpha
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, WindowPadding) },       // ImGuiStyleVar_WindowPadding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, WindowRounding) },      // ImGuiStyleVar_WindowRounding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, WindowBorderSize) },    // ImGuiStyleVar_WindowBorderSize
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, WindowMinSize) },       // ImGuiStyleVar_WindowMinSize
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, WindowTitleAlign) },    // ImGuiStyleVar_WindowTitleAlign
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, ChildRounding) },       // ImGuiStyleVar_ChildRounding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, ChildBorderSize) },     // ImGuiStyleVar_ChildBorderSize
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, PopupRounding) },       // ImGuiStyleVar_PopupRounding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, PopupBorderSize) },     // ImGuiStyleVar_PopupBorderSize
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, FramePadding) },        // ImGuiStyleVar_FramePadding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, FrameRounding) },       // ImGuiStyleVar_FrameRounding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, FrameBorderSize) },     // ImGuiStyleVar_FrameBorderSize
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, ItemSpacing) },         // ImGuiStyleVar_ItemSpacing
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, ItemInnerSpacing) },    // ImGuiStyleVar_ItemInnerSpacing
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, IndentSpacing) },       // ImGuiStyleVar_IndentSpacing
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, CellPadding) },         // ImGuiStyleVar_CellPadding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, ScrollbarSize) },       // ImGuiStyleVar_ScrollbarSize
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, ScrollbarRounding) },   // ImGuiStyleVar_ScrollbarRounding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, GrabMinSize) },         // ImGuiStyleVar_GrabMinSize
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, GrabRounding) },        // ImGuiStyleVar_GrabRounding
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, TabRounding) },         // ImGuiStyleVar_TabRounding
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) },     // ImGuiStyleVar_ButtonTextAlign
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, SelectableTextAlign) }, // ImGuiStyleVar_SelectableTextAlign
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, Alpha) },               // ImGuiStyleVar_Alpha
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, DisabledAlpha) },       // ImGuiStyleVar_DisabledAlpha
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, WindowPadding) },       // ImGuiStyleVar_WindowPadding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, WindowRounding) },      // ImGuiStyleVar_WindowRounding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, WindowBorderSize) },    // ImGuiStyleVar_WindowBorderSize
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, WindowMinSize) },       // ImGuiStyleVar_WindowMinSize
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, WindowTitleAlign) },    // ImGuiStyleVar_WindowTitleAlign
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ChildRounding) },       // ImGuiStyleVar_ChildRounding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ChildBorderSize) },     // ImGuiStyleVar_ChildBorderSize
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, PopupRounding) },       // ImGuiStyleVar_PopupRounding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, PopupBorderSize) },     // ImGuiStyleVar_PopupBorderSize
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, FramePadding) },        // ImGuiStyleVar_FramePadding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, FrameRounding) },       // ImGuiStyleVar_FrameRounding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, FrameBorderSize) },     // ImGuiStyleVar_FrameBorderSize
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, ItemSpacing) },         // ImGuiStyleVar_ItemSpacing
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, ItemInnerSpacing) },    // ImGuiStyleVar_ItemInnerSpacing
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, IndentSpacing) },       // ImGuiStyleVar_IndentSpacing
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, CellPadding) },         // ImGuiStyleVar_CellPadding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ScrollbarSize) },       // ImGuiStyleVar_ScrollbarSize
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ScrollbarRounding) },   // ImGuiStyleVar_ScrollbarRounding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, GrabMinSize) },         // ImGuiStyleVar_GrabMinSize
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, GrabRounding) },        // ImGuiStyleVar_GrabRounding
+    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, TabRounding) },         // ImGuiStyleVar_TabRounding
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) },     // ImGuiStyleVar_ButtonTextAlign
+    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, SelectableTextAlign) }, // ImGuiStyleVar_SelectableTextAlign
 };
 
 static const ImGuiStyleVarInfo* GetStyleVarInfo(ImGuiStyleVar idx)
@@ -2970,7 +3023,7 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, con
 }
 
 // Render a rectangle shaped with optional rounding and borders
-void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border, float rounding)
+void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, bool border, float rounding)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -3027,7 +3080,7 @@ void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFl
     }
 }
 
-void ImGui::RenderMouseCursor(ImVec2 base_pos, float base_scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow)
+void ImGui::RenderMouseCursor(ImVec2 base_pos, float base_scale, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IM_ASSERT(mouse_cursor > ImGuiMouseCursor_None && mouse_cursor < ImGuiMouseCursor_COUNT);
@@ -4769,7 +4822,7 @@ static ImGuiWindow* FindFrontMostVisibleChildWindow(ImGuiWindow* window)
     return window;
 }
 
-static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col)
+static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, u32 col)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -4876,7 +4929,7 @@ static void ImGui::RenderDimmedBackgrounds()
         if (modal_window && viewport->Window && IsWindowAbove(viewport->Window, modal_window))
             continue;
         ImDrawList* draw_list = GetForegroundDrawList(viewport);
-        const ImU32 dim_bg_col = GetColorU32(dim_bg_for_modal ? ImGuiCol_ModalWindowDimBg : ImGuiCol_NavWindowingDimBg, g.DimBgRatio);
+        const u32 dim_bg_col = GetColorU32(dim_bg_for_modal ? ImGuiCol_ModalWindowDimBg : ImGuiCol_NavWindowingDimBg, g.DimBgRatio);
         draw_list->AddRectFilled(viewport->Pos, viewport->Pos + viewport->Size, dim_bg_col);
     }
 }
@@ -5260,7 +5313,7 @@ void ImGui::SetActiveIdUsingAllKeyboardKeys()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IM_ASSERT(g.ActiveId != 0);
-    g.ActiveIdUsingNavDirMask = ~(ImU32)0;
+    g.ActiveIdUsingNavDirMask = ~(u32)0;
     g.ActiveIdUsingKeyInputMask.SetBitRange(ImGuiKey_Keyboard_BEGIN, ImGuiKey_Keyboard_END);
     g.ActiveIdUsingKeyInputMask.SetBit(ImGuiKey_ModCtrl);
     g.ActiveIdUsingKeyInputMask.SetBit(ImGuiKey_ModShift);
@@ -5730,7 +5783,7 @@ ImGuiID ImGui::GetWindowResizeBorderID(ImGuiWindow* window, ImGuiDir dir)
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
-static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const ImVec2& size_auto_fit, int* border_held, int resize_grip_count, ImU32 resize_grip_col[4], const ImRect& visibility_rect)
+static bool ImGui::UpdateWindowManualResize(ImGuiWindow* window, const ImVec2& size_auto_fit, int* border_held, int resize_grip_count, u32 resize_grip_col[4], const ImRect& visibility_rect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiWindowFlags flags = window->Flags;
@@ -5915,7 +5968,7 @@ static void ImGui::RenderWindowOuterBorders(ImGuiWindow* window)
 
 // Draw background and borders
 // Draw and handle scrollbars
-void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const ImU32 resize_grip_col[4], float resize_grip_draw_size)
+void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar_rect, bool title_bar_is_highlight, bool handle_borders_and_resize_grips, int resize_grip_count, const u32 resize_grip_col[4], float resize_grip_draw_size)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiStyle& style = g.Style;
@@ -5934,7 +5987,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         // Title bar only
         float backup_border_size = style.FrameBorderSize;
         g.Style.FrameBorderSize = window->WindowBorderSize;
-        ImU32 title_bar_col = GetColorU32((title_bar_is_highlight && !g.NavDisableHighlight) ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBgCollapsed);
+        u32 title_bar_col = GetColorU32((title_bar_is_highlight && !g.NavDisableHighlight) ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBgCollapsed);
         RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding);
         g.Style.FrameBorderSize = backup_border_size;
     }
@@ -5948,7 +6001,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
                 if (g.DragDropPayload.IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW) && *(ImGuiWindow**)g.DragDropPayload.Data == window)
                     is_docking_transparent_payload = true;
 
-            ImU32 bg_col = GetColorU32(GetWindowBgColorIdx(window));
+            u32 bg_col = GetColorU32(GetWindowBgColorIdx(window));
             if (window->ViewportOwned)
             {
                 // No alpha
@@ -5993,7 +6046,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
         // in order for their pos/size to be matching their undocking state.)
         if (!(flags & ImGuiWindowFlags_NoTitleBar) && !window->DockIsActive)
         {
-            ImU32 title_bar_col = GetColorU32(title_bar_is_highlight ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
+            u32 title_bar_col = GetColorU32(title_bar_is_highlight ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
             window->DrawList->AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, window_rounding, ImDrawFlags_RoundCornersTop);
         }
 
@@ -6024,7 +6077,7 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
                 StartMouseMovingWindowOrNode(window, node, true);
 
             // FIXME-DOCK: Ideally we'd use ImGuiCol_TitleBgActive/ImGuiCol_TitleBg here, but neither is guaranteed to be visible enough at this sort of size..
-            ImU32 col = GetColorU32(((held && hovered) || (node->IsFocused && !hovered)) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+            u32 col = GetColorU32(((held && hovered) || (node->IsFocused && !hovered)) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
             window->DrawList->AddTriangleFilled(p, p + ImVec2(unhide_sz_draw, 0f32), p + ImVec2(0f32, unhide_sz_draw), col);
         }
 
@@ -6670,7 +6723,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
         // Handle manual resize: Resize Grips, Borders, Gamepad
         int border_held = -1;
-        ImU32 resize_grip_col[4] = {};
+        u32 resize_grip_col[4] = {};
         const int resize_grip_count = g.IO.ConfigWindowsResizeFromEdges ? 2 : 1; // Allow resize from lower-left if we have the mouse cursor feedback for it.
         const float resize_grip_draw_size = IM_FLOOR(ImMax(g.FontSize * 1.10f32, window->WindowRounding + 1f32 + g.FontSize * 0.20f32));
         if (handle_borders_and_resize_grips && !window->Collapsed)
@@ -10889,7 +10942,7 @@ static void ImGui::NavUpdate()
     {
         ImDrawList* draw_list = GetForegroundDrawList(g.NavWindow);
         if (1) { for (int layer = 0; layer < 2; layer++) { ImRect r = WindowRectRelToAbs(g.NavWindow, g.NavWindow->NavRectRel[layer]); draw_list->AddRect(r.Min, r.Max, IM_COL32(255,200,0,255)); } } // [DEBUG]
-        if (1) { ImU32 col = (!g.NavWindow->Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); ImVec2 p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list->AddCircleFilled(p, 3.0f32, col); draw_list->AddText(NULL, 13.0f32, p + ImVec2(8,-4), col, bu0f32); }
+        if (1) { u32 col = (!g.NavWindow->Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); ImVec2 p = NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list->AddCircleFilled(p, 3.0f32, col); draw_list->AddText(NULL, 13.0f32, p + ImVec2(8,-4), col, bu0f32); }
     }
 // #endif
 }
@@ -11936,7 +11989,7 @@ static inline void LogTextV(ImGuiContext& g, const char* fmt, va_list args)
     {
         g.LogBuffer.Buf.resize(0);
         g.LogBuffer.appendfv(fmt, args);
-        ImFileWrite(g.LogBuffer.c_str(), sizeof(char), (ImU64)g.LogBuffer.size(), g.LogFile);
+        ImFileWrite(g.LogBuffer.c_str(), sizeof, (ImU64)g.LogBuffer.size(), g.LogFile);
     }
     else
     {
@@ -12394,7 +12447,7 @@ void ImGui::SaveIniSettingsToDisk(const char* ini_filename)
     ImFileHandle f = ImFileOpen(ini_filename, "wt");
     if (!0f32)
         return;
-    ImFileWrite(ini_data, sizeof(char), ini_data_size, 0f32);
+    ImFileWrite(ini_data, sizeof, ini_data_size, 0f32);
     ImFileClose(0f32);
 }
 
@@ -12438,7 +12491,7 @@ static void WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*,
     ImGuiWindowSettings* settings = (ImGuiWindowSettings*)entry;
     int x, y;
     int i;
-    ImU32 u1;
+    u32 u1;
     if (sscanf(line, "Pos=%i,%i", &x, &y) == 2)             { settings->Pos = ImVec2ih((short)x, (short)y); }
     else if (sscanf(line, "Size=%i,%i", &x, &y) == 2)       { settings->Size = ImVec2ih((short)x, (short)y); }
     else if (sscanf(line, "ViewportId=0x%08X", &u1) == 1)   { settings->ViewportId = u1; }
@@ -15278,7 +15331,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
     // Title bar
     if (is_focused)
         node->LastFrameFocused = g.FrameCount;
-    ImU32 title_bar_col = GetColorU32(host_window->Collapsed ? ImGuiCol_TitleBgCollapsed : is_focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
+    u32 title_bar_col = GetColorU32(host_window->Collapsed ? ImGuiCol_TitleBgCollapsed : is_focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
     ImDrawFlags rounding_flags = CalcRoundingFlagsForRectInRect(title_bar_rect, host_window->Rect(), DOCKING_SPLITTER_SIZE);
     host_window->DrawList->AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, host_window->WindowRounding, rounding_flags);
 
@@ -15747,10 +15800,10 @@ static void ImGui::DockNodePreviewDockRender(ImGuiWindow* host_window, ImGuiDock
         overlay_draw_lists[overlay_draw_lists_count++] = GetForegroundDrawList(root_payload->Viewport);
 
     // Draw main preview rectangle
-    const ImU32 overlay_col_main = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.60f32 : 0.400f32);
-    const ImU32 overlay_col_drop = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.90f32 : 0.700f32);
-    const ImU32 overlay_col_drop_hovered = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 1.20f32 : 1.000f32);
-    const ImU32 overlay_col_lines = GetColorU32(ImGuiCol_NavWindowingHighlight, is_transparent_payload ? 0.80f32 : 0.600f32);
+    const u32 overlay_col_main = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.60f32 : 0.400f32);
+    const u32 overlay_col_drop = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.90f32 : 0.700f32);
+    const u32 overlay_col_drop_hovered = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 1.20f32 : 1.000f32);
+    const u32 overlay_col_lines = GetColorU32(ImGuiCol_NavWindowingHighlight, is_transparent_payload ? 0.80f32 : 0.600f32);
 
     // Display area preview
     const bool can_preview_tabs = (root_payload->DockNodeAsHost == NULL || root_payload->DockNodeAsHost->Windows.Size > 0);
@@ -15801,8 +15854,8 @@ static void ImGui::DockNodePreviewDockRender(ImGuiWindow* host_window, ImGuiDock
             ImVec2 tab_size = TabItemCalcSize(payload_window->Name, payload_window->HasCloseButton);
             ImRect tab_bb(tab_pos.x, tab_pos.y, tab_pos.x + tab_size.x, tab_pos.y + tab_size.y);
             tab_pos.x += tab_size.x + g.Style.ItemInnerSpacing.x;
-            const ImU32 overlay_col_text = GetColorU32(payload_window->DockStyle.Colors[ImGuiWindowDockStyleCol_Text]);
-            const ImU32 overlay_col_tabs = GetColorU32(payload_window->DockStyle.Colors[ImGuiWindowDockStyleCol_TabActive]);
+            const u32 overlay_col_text = GetColorU32(payload_window->DockStyle.Colors[ImGuiWindowDockStyleCol_Text]);
+            const u32 overlay_col_tabs = GetColorU32(payload_window->DockStyle.Colors[ImGuiWindowDockStyleCol_TabActive]);
             PushStyleColor(ImGuiCol_Text, overlay_col_text);
             for (int overlay_n = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
             {
@@ -15827,7 +15880,7 @@ static void ImGui::DockNodePreviewDockRender(ImGuiWindow* host_window, ImGuiDock
             ImRect draw_r = data->DropRectsDraw[dir + 1];
             ImRect draw_r_in = draw_r;
             draw_r_in.Expand(-2.00f32);
-            ImU32 overlay_col = (data->SplitDir == (ImGuiDir)dir && data->IsSplitDirExplicit) ? overlay_col_drop_hovered : overlay_col_drop;
+            u32 overlay_col = (data->SplitDir == (ImGuiDir)dir && data->IsSplitDirExplicit) ? overlay_col_drop_hovered : overlay_col_drop;
             for (int overlay_n = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
             {
                 ImVec2 center = ImFloor(draw_r_in.GetCenter());
@@ -16137,7 +16190,7 @@ void ImGui::DockNodeTreeUpdateSplitter(ImGuiDockNode* node)
             float cur_size_1 = child_1->Size[axis];
             float min_size_0 = resize_limits[0] - child_0->Pos[axis];
             float min_size_1 = child_1->Pos[axis] + child_1->Size[axis] - resize_limits[1];
-            ImU32 bg_col = GetColorU32(ImGuiCol_WindowBg);
+            u32 bg_col = GetColorU32(ImGuiCol_WindowBg);
             if (SplitterBehavior(bb, GetID("##Splitter"), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col))
             {
                 if (touching_nodes[0].Size > 0 && touching_nodes[1].Size > 0)
@@ -17241,7 +17294,7 @@ static void DockSettingsHandler_DockNodeToSettings(ImGuiDockContext* dc, ImGuiDo
     node_settings.ParentWindowId = (node->IsDockSpace() && node->HostWindow && node->HostWindow->ParentWindow) ? node->HostWindow->ParentWindow->ID : 0;
     node_settings.SelectedTabId = node->SelectedTabId;
     node_settings.SplitAxis = (signed char)(node->IsSplitNode() ? node->SplitAxis : ImGuiAxis_None);
-    node_settings.Depth = (char)depth;
+    node_settings.Depth = depth;
     node_settings.Flags = (node->LocalFlags & ImGuiDockNodeFlags_SavedFlagsMask_);
     node_settings.Pos = ImVec2ih(node->Pos);
     node_settings.Size = ImVec2ih(node->Size);
@@ -18140,7 +18193,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
                 for (int column_n = 0; column_n < table->ColumnsCount; column_n++)
                 {
                     ImRect r = Funcs::GetTableRect(table, cfg->ShowTablesRectsType, column_n);
-                    ImU32 col = (table->HoveredColumnBody == column_n) ? IM_COL32(255, 255, 128, 255) : IM_COL32(255, 0, 128, 255);
+                    u32 col = (table->HoveredColumnBody == column_n) ? IM_COL32(255, 255, 128, 255) : IM_COL32(255, 0, 128, 255);
                     float thickness = (table->HoveredColumnBody == column_n) ? 3.0f32 : 1f32;
                     draw_list->AddRect(r.Min, r.Max, col, 0f32, 0, thickness);
                 }
@@ -18439,7 +18492,7 @@ void ImGui::DebugNodeFont(ImFont* font)
     if (TreeNode("Glyphs", "Glyphs (%d)", font->Glyphs.Size))
     {
         ImDrawList* draw_list = GetWindowDrawList();
-        const ImU32 glyph_col = GetColorU32(ImGuiCol_Text);
+        const u32 glyph_col = GetColorU32(ImGuiCol_Text);
         const float cell_size = font->FontSize * 1;
         const float cell_spacing = GetStyle().ItemSpacing.y;
         for (unsigned int base = 0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)

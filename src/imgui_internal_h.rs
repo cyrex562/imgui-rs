@@ -315,8 +315,8 @@ namespace ImStb
 //-----------------------------------------------------------------------------
 
 // Helpers: Hashing
-IMGUI_API ImGuiID       ImHashData(const void* data, size_t data_size, ImU32 seed = 0);
-IMGUI_API ImGuiID       ImHashStr(const char* data, size_t data_size = 0, ImU32 seed = 0);
+IMGUI_API ImGuiID       ImHashData(const void* data, size_t data_size, u32 seed = 0);
+IMGUI_API ImGuiID       ImHashStr(const char* data, size_t data_size = 0, u32 seed = 0);
 
 // Helpers: Sorting
 // #ifndef ImQsort
@@ -324,7 +324,7 @@ static inline void      ImQsort(void* base, size_t count, size_t size_of_element
 // #endif
 
 // Helpers: Color Blending
-IMGUI_API ImU32         ImAlphaBlendColors(ImU32 col_a, ImU32 col_b);
+IMGUI_API u32         ImAlphaBlendColors(u32 col_a, u32 col_b);
 
 // Helpers: Bit manipulation
 static inline bool      ImIsPowerOfTwo(int v)           { return v != 0 && (v & (v - 1)) == 0; }
@@ -546,17 +546,17 @@ struct IMGUI_API ImRect
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
 // Helper: ImBitArray
-inline bool     ImBitArrayTestBit(const ImU32* arr, int n)      { ImU32 mask = (ImU32)1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
-inline void     ImBitArrayClearBit(ImU32* arr, int n)           { ImU32 mask = (ImU32)1 << (n & 31); arr[n >> 5] &= ~mask; }
-inline void     ImBitArraySetBit(ImU32* arr, int n)             { ImU32 mask = (ImU32)1 << (n & 31); arr[n >> 5] |= mask; }
-inline void     ImBitArraySetBitRange(ImU32* arr, int n, int n2) // Works on range [n..n2)
+inline bool     ImBitArrayTestBit(const u32* arr, int n)      { u32 mask = (u32)1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
+inline void     ImBitArrayClearBit(u32* arr, int n)           { u32 mask = (u32)1 << (n & 31); arr[n >> 5] &= ~mask; }
+inline void     ImBitArraySetBit(u32* arr, int n)             { u32 mask = (u32)1 << (n & 31); arr[n >> 5] |= mask; }
+inline void     ImBitArraySetBitRange(u32* arr, int n, int n2) // Works on range [n..n2)
 {
     n2--;
     while (n <= n2)
     {
         int a_mod = (n & 31);
         int b_mod = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
-        ImU32 mask = (ImU32)(((ImU64)1 << b_mod) - 1) & ~(ImU32)(((ImU64)1 << a_mod) - 1);
+        u32 mask = (u32)(((ImU64)1 << b_mod) - 1) & ~(u32)(((ImU64)1 << a_mod) - 1);
         arr[n >> 5] |= mask;
         n = (n + 32) & ~31;
     }
@@ -567,7 +567,7 @@ inline void     ImBitArraySetBitRange(ImU32* arr, int n, int n2) // Works on ran
 template<int BITCOUNT, int OFFSET = 0>
 struct ImBitArray
 {
-    ImU32           Storage[(BITCOUNT + 31) >> 5];
+    u32           Storage[(BITCOUNT + 31) >> 5];
     ImBitArray()                                { ClearAllBits(); }
     void            ClearAllBits()              { memset(Storage, 0, sizeof(Storage)); }
     void            SetAllBits()                { memset(Storage, 255, sizeof(Storage)); }
@@ -582,7 +582,7 @@ struct ImBitArray
 // Store 1-bit per value.
 struct IMGUI_API ImBitVector
 {
-    ImVector<ImU32> Storage;
+    ImVector<u32> Storage;
     void            Create(int sz)              { Storage.resize((sz + 31) >> 5); memset(Storage.Data, 0, (size_t)Storage.Size * sizeof(Storage.Data[0])); }
     void            Clear()                     { Storage.clear(); }
     bool            TestBit(int n) const        { IM_ASSERT(n < (Storage.Size << 5)); return ImBitArrayTestBit(Storage.Data, n); }
@@ -1001,8 +1001,8 @@ struct IMGUI_API ImGuiGroupData
 // Simple column measurement, currently used for MenuItem() only.. This is very short-sighted/throw-away code and NOT a generic helper.
 struct IMGUI_API ImGuiMenuColumns
 {
-    ImU32       TotalWidth;
-    ImU32       NextTotalWidth;
+    u32       TotalWidth;
+    u32       NextTotalWidth;
     ImU16       Spacing;
     ImU16       OffsetIcon;         // Always zero for now
     ImU16       OffsetLabel;        // Offsets are locked in Update()
@@ -1518,7 +1518,7 @@ struct IMGUI_API ImGuiDockNode
     ImVec2                  SizeRef;                    // [Split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate Size.
     ImGuiAxis               SplitAxis;                  // [Split node only] Split axis (X or Y)
     ImGuiWindowClass        WindowClass;                // [Root node only]
-    ImU32                   LastBgColor;
+    u32                   LastBgColor;
 
     ImGuiWindow*            HostWindow;
     ImGuiWindow*            VisibleWindow;              // Generally point to window which is ID is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
@@ -1580,7 +1580,7 @@ enum ImGuiWindowDockStyleCol
 
 struct ImGuiWindowDockStyle
 {
-    ImU32 Colors[ImGuiWindowDockStyleCol_COUNT];
+    u32 Colors[ImGuiWindowDockStyleCol_COUNT];
 };
 
 struct ImGuiDockContext
@@ -1841,10 +1841,10 @@ struct ImGuiContext
     float                   LastActiveIdTimer;                  // Store the last non-zero ActiveId timer since the beginning of activation, useful for animation.
 
     // Input Ownership
-    ImU32                   ActiveIdUsingNavDirMask;            // Active widget will want to read those nav move requests (e.g. can activate a button and move away from it)
+    u32                   ActiveIdUsingNavDirMask;            // Active widget will want to read those nav move requests (e.g. can activate a button and move away from it)
     ImBitArrayForNamedKeys  ActiveIdUsingKeyInputMask;          // Active widget will want to read those key inputs. When we grow the ImGuiKey enum we'll need to either to order the enum to make useful keys come first, either redesign this into e.g. a small array.
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-    ImU32                   ActiveIdUsingNavInputMask;          // If you used this. Since (IMGUI_VERSION_NUM >= 18804) : 'g.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel);' becomes 'SetActiveIdUsingKey(ImGuiKey_Escape); SetActiveIdUsingKey(ImGuiKey_NavGamepadCancel);'
+    u32                   ActiveIdUsingNavInputMask;          // If you used this. Since (IMGUI_VERSION_NUM >= 18804) : 'g.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel);' becomes 'SetActiveIdUsingKey(ImGuiKey_Escape); SetActiveIdUsingKey(ImGuiKey_NavGamepadCancel);'
 // #endif
 
     // Next window/item data
@@ -1985,7 +1985,7 @@ struct ImGuiContext
     ImGuiColorEditFlags     ColorEditOptions;                   // Store user options for color edit widgets
     float                   ColorEditLastHue;                   // Backup of last Hue associated to LastColor, so we can restore Hue in lossy RGB<>HSV round trips
     float                   ColorEditLastSat;                   // Backup of last Saturation associated to LastColor, so we can restore Saturation in lossy RGB<>HSV round trips
-    ImU32                   ColorEditLastColor;                 // RGB value with alpha set to 0.
+    u32                   ColorEditLastColor;                 // RGB value with alpha set to 0.
     ImVec4                  ColorPickerRef;                     // Initial/reference color at the time of opening the color picker.
     ImGuiComboPreviewData   ComboPreviewData;
     float                   SliderGrabClickOffset;
@@ -2258,7 +2258,7 @@ struct IMGUI_API ImGuiWindowTempData
     ImVec2                  MenuBarOffset;          // MenuBarOffset.x is sort of equivalent of a per-layer CursorPos.x, saved/restored as we switch to the menu bar. The only situation when MenuBarOffset.y is > 0 if when (SafeAreaPadding.y > FramePadding.y), often used on TVs.
     ImGuiMenuColumns        MenuColumns;            // Simplified columns storage for menu items measurement
     int                     TreeDepth;              // Current tree depth.
-    ImU32                   TreeJumpToParentOnPopMask; // Store a copy of !g.NavIdIsAlive for TreeDepth 0..31.. Could be turned into a ImU64 if necessary.
+    u32                   TreeJumpToParentOnPopMask; // Store a copy of !g.NavIdIsAlive for TreeDepth 0..31.. Could be turned into a ImU64 if necessary.
     ImVector<ImGuiWindow*>  ChildWindows;
     ImGuiStorage*           StateStorage;           // Current persistent per-window storage (store e.g. tree node open/close state)
     ImGuiOldColumns*        CurrentColumns;         // Current columns set
@@ -2577,7 +2577,7 @@ struct ImGuiTableColumn
 // sizeof() ~ 6
 struct ImGuiTableCellData
 {
-    ImU32                       BgColor;    // Actual color
+    u32                       BgColor;    // Actual color
     ImGuiTableColumnIdx         Column;     // Column number
 };
 
@@ -2620,9 +2620,9 @@ struct IMGUI_API ImGuiTable
     ImGuiTableRowFlags          RowFlags : 16;              // Current row flags, see ImGuiTableRowFlags_
     ImGuiTableRowFlags          LastRowFlags : 16;
     int                         RowBgColorCounter;          // Counter for alternating background colors (can be fast-forwarded by e.g clipper), not same as CurrentRow because header rows typically don't increase this.
-    ImU32                       RowBgColor[2];              // Background color override for current row.
-    ImU32                       BorderColorStrong;
-    ImU32                       BorderColorLight;
+    u32                       RowBgColor[2];              // Background color override for current row.
+    u32                       BorderColorStrong;
+    u32                       BorderColorLight;
     float                       BorderX1;
     float                       BorderX2;
     float                       HostIndentX;
@@ -3106,7 +3106,7 @@ namespace ImGui
     IMGUI_API bool          TabBarProcessReorder(ImGuiTabBar* tab_bar);
     IMGUI_API bool          TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImGuiTabItemFlags flags, ImGuiWindow* docked_window);
     IMGUI_API ImVec2        TabItemCalcSize(const char* label, bool has_close_button);
-    IMGUI_API void          TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImU32 col);
+    IMGUI_API void          TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, u32 col);
     IMGUI_API void          TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb, ImGuiTabItemFlags flags, ImVec2 frame_padding, const char* label, ImGuiID tab_id, ImGuiID close_button_id, bool is_contents_visible, bool* out_just_closed, bool* out_text_clipped);
 
     // Render helpers
@@ -3117,21 +3117,21 @@ namespace ImGui
     IMGUI_API void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align = ImVec2(0, 0), const ImRect* clip_rect = NULL);
     IMGUI_API void          RenderTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align = ImVec2(0, 0), const ImRect* clip_rect = NULL);
     IMGUI_API void          RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, float clip_max_x, float ellipsis_max_x, const char* text, const char* text_end, const ImVec2* text_size_if_known);
-    IMGUI_API void          RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border = true, float rounding = 0f32);
+    IMGUI_API void          RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, bool border = true, float rounding = 0f32);
     IMGUI_API void          RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, float rounding = 0f32);
-    IMGUI_API void          RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, float grid_step, ImVec2 grid_off, float rounding = 0f32, ImDrawFlags flags = 0);
+    IMGUI_API void          RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, ImVec2 p_min, ImVec2 p_max, u32 fill_col, float grid_step, ImVec2 grid_off, float rounding = 0f32, ImDrawFlags flags = 0);
     IMGUI_API void          RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags = ImGuiNavHighlightFlags_TypeDefault); // Navigation highlight
     IMGUI_API const char*   FindRenderedTextEnd(const char* text, const char* text_end = NULL); // Find the optional ## from which we stop displaying text.
-    IMGUI_API void          RenderMouseCursor(ImVec2 pos, float scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow);
+    IMGUI_API void          RenderMouseCursor(ImVec2 pos, float scale, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow);
 
     // Render helpers (those functions don't access any ImGui state!)
-    IMGUI_API void          RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir dir, float scale = 1f32);
-    IMGUI_API void          RenderBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col);
-    IMGUI_API void          RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, ImU32 col, float sz);
-    IMGUI_API void          RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, ImU32 col);
-    IMGUI_API void          RenderArrowDockMenu(ImDrawList* draw_list, ImVec2 p_min, float sz, ImU32 col);
-    IMGUI_API void          RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, ImU32 col, float x_start_norm, float x_end_norm, float rounding);
-    IMGUI_API void          RenderRectFilledWithHole(ImDrawList* draw_list, const ImRect& outer, const ImRect& inner, ImU32 col, float rounding);
+    IMGUI_API void          RenderArrow(ImDrawList* draw_list, ImVec2 pos, u32 col, ImGuiDir dir, float scale = 1f32);
+    IMGUI_API void          RenderBullet(ImDrawList* draw_list, ImVec2 pos, u32 col);
+    IMGUI_API void          RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, u32 col, float sz);
+    IMGUI_API void          RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, u32 col);
+    IMGUI_API void          RenderArrowDockMenu(ImDrawList* draw_list, ImVec2 p_min, float sz, u32 col);
+    IMGUI_API void          RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, u32 col, float x_start_norm, float x_end_norm, float rounding);
+    IMGUI_API void          RenderRectFilledWithHole(ImDrawList* draw_list, const ImRect& outer, const ImRect& inner, u32 col, float rounding);
     IMGUI_API ImDrawFlags   CalcRoundingFlagsForRectInRect(const ImRect& r_in, const ImRect& r_outer, float threshold);
 
     // Widgets
@@ -3155,7 +3155,7 @@ namespace ImGui
     IMGUI_API bool          ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool* out_held, ImGuiButtonFlags flags = 0);
     IMGUI_API bool          DragBehavior(ImGuiID id, ImGuiDataType data_type, void* p_v, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags);
     IMGUI_API bool          SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type, void* p_v, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags, ImRect* out_grab_bb);
-    IMGUI_API bool          SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, float* size1, float* size2, float min_size1, float min_size2, float hover_extend = 0f32, float hover_visibility_delay = 0f32, ImU32 bg_col = 0);
+    IMGUI_API bool          SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, float* size1, float* size2, float min_size1, float min_size2, float hover_extend = 0f32, float hover_visibility_delay = 0f32, u32 bg_col = 0);
     IMGUI_API bool          TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* label, const char* label_end = NULL);
     IMGUI_API void          TreePushOverrideID(ImGuiID id);
     IMGUI_API void          TreeNodeSetOpen(ImGuiID id, bool open);
@@ -3195,7 +3195,7 @@ namespace ImGui
     IMGUI_API int           PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 frame_size);
 
     // Shade functions (write over already created vertices)
-    IMGUI_API void          ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, ImVec2 gradient_p0, ImVec2 gradient_p1, ImU32 col0, ImU32 col1);
+    IMGUI_API void          ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, ImVec2 gradient_p0, ImVec2 gradient_p1, u32 col0, u32 col1);
     IMGUI_API void          ShadeVertsLinearUV(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, bool clamp);
 
     // Garbage collection
@@ -3211,7 +3211,7 @@ namespace ImGui
     IMGUI_API void          ErrorCheckEndFrameRecover(ImGuiErrorLogCallback log_callback, void* user_data = NULL);
     IMGUI_API void          ErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback, void* user_data = NULL);
     IMGUI_API void          ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
-    inline void             DebugDrawItemRect(ImU32 col = IM_COL32(255,0,0,255))    { let g = GImGui; // ImGuiContext& g = *GImGui; ImGuiWindow* window = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col); }
+    inline void             DebugDrawItemRect(u32 col = IM_COL32(255,0,0,255))    { let g = GImGui; // ImGuiContext& g = *GImGui; ImGuiWindow* window = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col); }
     inline void             DebugStartItemPicker()                                  { let g = GImGui; // ImGuiContext& g = *GImGui; g.DebugItemPickerActive = true; }
     IMGUI_API void          ShowFontAtlas(ImFontAtlas* atlas);
     IMGUI_API void          DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, const void* data_id, const void* data_id_end);

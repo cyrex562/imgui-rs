@@ -1609,7 +1609,7 @@ int ImGui::TableGetHoveredColumn()
     return (int)table->HoveredColumnBody;
 }
 
-void ImGui::TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n)
+void ImGui::TableSetBgColor(ImGuiTableBgTarget target, u32 color, int column_n)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiTable* table = g.CurrentTable;
@@ -1761,8 +1761,8 @@ void ImGui::TableEndRow(ImGuiTable* table)
     if (is_visible)
     {
         // Decide of background color for the row
-        ImU32 bg_col0 = 0;
-        ImU32 bg_col1 = 0;
+        u32 bg_col0 = 0;
+        u32 bg_col1 = 0;
         if (table->RowBgColor[0] != IM_COL32_DISABLE)
             bg_col0 = table->RowBgColor[0];
         else if (table->Flags & ImGuiTableFlags_RowBg)
@@ -1771,7 +1771,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
             bg_col1 = table->RowBgColor[1];
 
         // Decide of top border color
-        ImU32 border_col = 0;
+        u32 border_col = 0;
         const float border_size = TABLE_BORDER_SIZE;
         if (table->CurrentRow > 0 || table->InnerWindow == table->OuterWindow)
             if (table->Flags & ImGuiTableFlags_BordersInnerH)
@@ -2541,7 +2541,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
 
             // Draw in outer window so right-most column won't be clipped
             // Always draw full height border when being resized/hovered, or on the delimitation of frozen column scrolling.
-            ImU32 col;
+            u32 col;
             float draw_y2;
             if (is_hovered || is_resized || is_frozen_separator)
             {
@@ -2569,7 +2569,7 @@ void ImGui::TableDrawBorders(ImGuiTable* table)
         // of it in inner window, and the part that's over scrollbars in the outer window..)
         // Either solution currently won't allow us to use a larger border size: the border would clipped.
         const ImRect outer_border = table->OuterRect;
-        const ImU32 outer_col = table->BorderColorStrong;
+        const u32 outer_col = table->BorderColorStrong;
         if ((table->Flags & ImGuiTableFlags_BordersOuter) == ImGuiTableFlags_BordersOuter)
         {
             inner_drawlist->AddRect(outer_border.Min, outer_border.Max, outer_col, 0f32, 0, border_size);
@@ -2929,7 +2929,7 @@ void ImGui::TableHeader(const char* label)
         SetItemAllowOverlap();
     if (held || hovered || selected)
     {
-        const ImU32 col = GetColorU32(held ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        const u32 col = GetColorU32(held ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
         //RenderFrame(bb.Min, bb.Max, col, false, 0f32);
         TableSetBgColor(ImGuiTableBgTarget_CellBg, col, table->CurrentColumn);
     }
@@ -3398,7 +3398,7 @@ static void TableSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, 
         char c = 0;
         ImGuiTableColumnSettings* column = settings->GetColumnSettings() + column_n;
         column->Index = (ImGuiTableColumnIdx)column_n;
-        if (sscanf(line, "UserID=0x%08X%n", (ImU32*)&n, &r)==1) { line = ImStrSkipBlank(line + r); column->UserID = (ImGuiID)n; }
+        if (sscanf(line, "UserID=0x%08X%n", (u32*)&n, &r)==1) { line = ImStrSkipBlank(line + r); column->UserID = (ImGuiID)n; }
         if (sscanf(line, "Width=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column->WidthOrWeight = n; column->IsStretch = 0; settings->SaveFlags |= ImGuiTableFlags_Resizable; }
         if (sscanf(line, "Weight=%f%n", &f, &r) == 1)           { line = ImStrSkipBlank(line + r); column->WidthOrWeight = f; column->IsStretch = 1; settings->SaveFlags |= ImGuiTableFlags_Resizable; }
         if (sscanf(line, "Visible=%d%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column->IsEnabled = (ImU8)n; settings->SaveFlags |= ImGuiTableFlags_Hideable; }
@@ -4029,7 +4029,7 @@ void ImGui::EndColumns()
             }
 
             // Draw column
-            const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
+            const u32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
             const float xi = IM_FLOOR(x);
             window->DrawList->AddLine(ImVec2(xi, y1 + 1f32), ImVec2(xi, y2), col);
         }

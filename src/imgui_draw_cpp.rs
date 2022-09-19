@@ -673,7 +673,7 @@ void ImDrawList::PrimUnreserve(int idx_count, int vtx_count)
 }
 
 // Fully unrolled with inline call to keep our debug builds decently fast.
-void ImDrawList::PrimRect(const ImVec2& a, const ImVec2& c, ImU32 col)
+void ImDrawList::PrimRect(const ImVec2& a, const ImVec2& c, u32 col)
 {
     ImVec2 b(c.x, a.y), d(a.x, c.y), uv(_Data->TexUvWhitePixel);
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
@@ -688,7 +688,7 @@ void ImDrawList::PrimRect(const ImVec2& a, const ImVec2& c, ImU32 col)
     _IdxWritePtr += 6;
 }
 
-void ImDrawList::PrimRectUV(const ImVec2& a, const ImVec2& c, const ImVec2& uv_a, const ImVec2& uv_c, ImU32 col)
+void ImDrawList::PrimRectUV(const ImVec2& a, const ImVec2& c, const ImVec2& uv_a, const ImVec2& uv_c, u32 col)
 {
     ImVec2 b(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
@@ -703,7 +703,7 @@ void ImDrawList::PrimRectUV(const ImVec2& a, const ImVec2& c, const ImVec2& uv_a
     _IdxWritePtr += 6;
 }
 
-void ImDrawList::PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col)
+void ImDrawList::PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, u32 col)
 {
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
@@ -726,7 +726,7 @@ void ImDrawList::PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, c
 
 // TODO: Thickness anti-aliased lines cap are missing their AA fringe.
 // We avoid using the ImVec2 math operators here to reduce cost to a minimum for debug/non-inlined builds.
-void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32 col, ImDrawFlags flags, float thickness)
+void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, u32 col, ImDrawFlags flags, float thickness)
 {
     if (points_count < 2)
         return;
@@ -740,7 +740,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
     {
         // Anti-aliased stroke
         const float AA_SIZE = _FringeScale;
-        const ImU32 col_trans = col & ~IM_COL32_A_MASK;
+        const u32 col_trans = col & ~IM_COL32_A_MASK;
 
         // Thicknesses <1.0 should behave like thickness 1.0
         thickness = ImMax(thickness, 1f32);
@@ -983,7 +983,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
 
 // - We intentionally avoid using ImVec2 and its math operators here to reduce cost to a minimum for debug/non-inlined builds.
 // - Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
-void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_count, ImU32 col)
+void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_count, u32 col)
 {
     if (points_count < 3)
         return;
@@ -994,7 +994,7 @@ void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_coun
     {
         // Anti-aliased Fill
         const float AA_SIZE = _FringeScale;
-        const ImU32 col_trans = col & ~IM_COL32_A_MASK;
+        const u32 col_trans = col & ~IM_COL32_A_MASK;
         const int idx_count = (points_count - 2)*3 + points_count * 6;
         const int vtx_count = (points_count * 2);
         PrimReserve(idx_count, vtx_count);
@@ -1388,7 +1388,7 @@ void ImDrawList::PathRect(const ImVec2& a, const ImVec2& b, float rounding, ImDr
     }
 }
 
-void ImDrawList::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness)
+void ImDrawList::AddLine(const ImVec2& p1, const ImVec2& p2, u32 col, float thickness)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1399,7 +1399,7 @@ void ImDrawList::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float th
 
 // p_min = upper-left, p_max = lower-right
 // Note we don't render 1 pixels sized rectangles properly.
-void ImDrawList::AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding, ImDrawFlags flags, float thickness)
+void ImDrawList::AddRect(const ImVec2& p_min, const ImVec2& p_max, u32 col, float rounding, ImDrawFlags flags, float thickness)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1410,7 +1410,7 @@ void ImDrawList::AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, fl
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
 
-void ImDrawList::AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, float rounding, ImDrawFlags flags)
+void ImDrawList::AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, u32 col, float rounding, ImDrawFlags flags)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1427,7 +1427,7 @@ void ImDrawList::AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 c
 }
 
 // p_min = upper-left, p_max = lower-right
-void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left)
+void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, u32 col_upr_left, u32 col_upr_right, u32 col_bot_right, u32 col_bot_left)
 {
     if (((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & IM_COL32_A_MASK) == 0)
         return;
@@ -1442,7 +1442,7 @@ void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_ma
     PrimWriteVtx(ImVec2(p_min.x, p_max.y), uv, col_bot_left);
 }
 
-void ImDrawList::AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness)
+void ImDrawList::AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col, float thickness)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1454,7 +1454,7 @@ void ImDrawList::AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, c
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
 
-void ImDrawList::AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col)
+void ImDrawList::AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1466,7 +1466,7 @@ void ImDrawList::AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2&
     PathFillConvex(col);
 }
 
-void ImDrawList::AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness)
+void ImDrawList::AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, u32 col, float thickness)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1477,7 +1477,7 @@ void ImDrawList::AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
 
-void ImDrawList::AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col)
+void ImDrawList::AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, u32 col)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1488,7 +1488,7 @@ void ImDrawList::AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImV
     PathFillConvex(col);
 }
 
-void ImDrawList::AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness)
+void ImDrawList::AddCircle(const ImVec2& center, float radius, u32 col, int num_segments, float thickness)
 {
     if ((col & IM_COL32_A_MASK) == 0 || radius < 0.5f32)
         return;
@@ -1512,7 +1512,7 @@ void ImDrawList::AddCircle(const ImVec2& center, float radius, ImU32 col, int nu
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
 
-void ImDrawList::AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments)
+void ImDrawList::AddCircleFilled(const ImVec2& center, float radius, u32 col, int num_segments)
 {
     if ((col & IM_COL32_A_MASK) == 0 || radius < 0.5f32)
         return;
@@ -1537,7 +1537,7 @@ void ImDrawList::AddCircleFilled(const ImVec2& center, float radius, ImU32 col, 
 }
 
 // Guaranteed to honor 'num_segments'
-void ImDrawList::AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness)
+void ImDrawList::AddNgon(const ImVec2& center, float radius, u32 col, int num_segments, float thickness)
 {
     if ((col & IM_COL32_A_MASK) == 0 || num_segments <= 2)
         return;
@@ -1549,7 +1549,7 @@ void ImDrawList::AddNgon(const ImVec2& center, float radius, ImU32 col, int num_
 }
 
 // Guaranteed to honor 'num_segments'
-void ImDrawList::AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments)
+void ImDrawList::AddNgonFilled(const ImVec2& center, float radius, u32 col, int num_segments)
 {
     if ((col & IM_COL32_A_MASK) == 0 || num_segments <= 2)
         return;
@@ -1561,7 +1561,7 @@ void ImDrawList::AddNgonFilled(const ImVec2& center, float radius, ImU32 col, in
 }
 
 // Cubic Bezier takes 4 controls points
-void ImDrawList::AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments)
+void ImDrawList::AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col, float thickness, int num_segments)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1572,7 +1572,7 @@ void ImDrawList::AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2
 }
 
 // Quadratic Bezier takes 3 controls points
-void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments)
+void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, u32 col, float thickness, int num_segments)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1582,7 +1582,7 @@ void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const Im
     PathStroke(col, 0, thickness);
 }
 
-void ImDrawList::AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
+void ImDrawList::AddText(const ImFont* font, float font_size, const ImVec2& pos, u32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1611,12 +1611,12 @@ void ImDrawList::AddText(const ImFont* font, float font_size, const ImVec2& pos,
     font->RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL);
 }
 
-void ImDrawList::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end)
+void ImDrawList::AddText(const ImVec2& pos, u32 col, const char* text_begin, const char* text_end)
 {
     AddText(NULL, 0f32, pos, col, text_begin, text_end);
 }
 
-void ImDrawList::AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col)
+void ImDrawList::AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, u32 col)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1632,7 +1632,7 @@ void ImDrawList::AddImage(ImTextureID user_texture_id, const ImVec2& p_min, cons
         PopTextureID();
 }
 
-void ImDrawList::AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1, const ImVec2& uv2, const ImVec2& uv3, const ImVec2& uv4, ImU32 col)
+void ImDrawList::AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1, const ImVec2& uv2, const ImVec2& uv3, const ImVec2& uv4, u32 col)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1648,7 +1648,7 @@ void ImDrawList::AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, con
         PopTextureID();
 }
 
-void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, ImDrawFlags flags)
+void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, u32 col, float rounding, ImDrawFlags flags)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1864,7 +1864,7 @@ void ImDrawData::ScaleClipRects(const ImVec2& fb_scale)
 //-----------------------------------------------------------------------------
 
 // Generic linear color gradient, write to RGB fields, leave A untouched.
-void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, ImVec2 gradient_p0, ImVec2 gradient_p1, ImU32 col0, ImU32 col1)
+void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, int vert_start_idx, int vert_end_idx, ImVec2 gradient_p0, ImVec2 gradient_p1, u32 col0, u32 col1)
 {
     ImVec2 gradient_extent = gradient_p1 - gradient_p0;
     float gradient_inv_length2 = 1f32 / ImLengthSqr(gradient_extent);
@@ -2187,9 +2187,9 @@ ImFont* ImFontAtlas::AddFontFromMemoryTTF(void* ttf_data, int ttf_size, float si
 
 ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(const void* compressed_ttf_data, int compressed_ttf_size, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
 {
-    const unsigned int buf_decompressed_size = stb_decompress_length((const unsigned char*)compressed_ttf_data);
+    const unsigned int buf_decompressed_size = stb_decompress_length(compressed_ttf_data);
     unsigned char* buf_decompressed_data = (unsigned char*)IM_ALLOC(buf_decompressed_size);
-    stb_decompress(buf_decompressed_data, (const unsigned char*)compressed_ttf_data, (unsigned int)compressed_ttf_size);
+    stb_decompress(buf_decompressed_data, compressed_ttf_data, (unsigned int)compressed_ttf_size);
 
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
     IM_ASSERT(font_cfg.FontData == NULL);
@@ -2201,7 +2201,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedBase85TTF(const char* compressed
 {
     int compressed_ttf_size = (((int)strlen(compressed_ttf_data_base85) + 4) / 5) * 4;
     void* compressed_ttf = IM_ALLOC((size_t)compressed_ttf_size);
-    Decode85((const unsigned char*)compressed_ttf_data_base85, (unsigned char*)compressed_tt0f32);
+    Decode85(compressed_ttf_data_base85, (unsigned char*)compressed_tt0f32);
     ImFont* font = AddFontFromMemoryCompressedTTF(compressed_ttf, compressed_ttf_size, size_pixels, font_cfg, glyph_ranges);
     IM_FREE(compressed_tt0f32);
     return font;
@@ -2341,12 +2341,12 @@ struct ImFontBuildDstData
 static void UnpackBitVectorToFlatIndexList(const ImBitVector* in, ImVector<int>* out)
 {
     IM_ASSERT(sizeof(in->Storage.Data[0]) == sizeof(int));
-    const ImU32* it_begin = in->Storage.begin();
-    const ImU32* it_end = in->Storage.end();
-    for (const ImU32* it = it_begin; it < it_end; it++)
-        if (ImU32 entries_32 = *it)
-            for (ImU32 bit_n = 0; bit_n < 32; bit_n++)
-                if (entries_32 & ((ImU32)1 << bit_n))
+    const u32* it_begin = in->Storage.begin();
+    const u32* it_end = in->Storage.end();
+    for (const u32* it = it_begin; it < it_end; it++)
+        if (u32 entries_32 = *it)
+            for (u32 bit_n = 0; bit_n < 32; bit_n++)
+                if (entries_32 & ((u32)1 << bit_n))
                     out->push_back((int)(((it - it_begin) << 5) + bit_n));
 }
 
@@ -3532,7 +3532,7 @@ ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, cons
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const
+void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, u32 col, ImWchar c) const
 {
     const ImFontGlyph* glyph = FindGlyph(c);
     if (!glyph || !glyph->Visible)
@@ -3547,7 +3547,7 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
+void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, u32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -3601,7 +3601,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
     ImDrawIdx* idx_write = draw_list->_IdxWritePtr;
     unsigned int vtx_current_idx = draw_list->_VtxCurrentIdx;
 
-    const ImU32 col_untinted = col | ~IM_COL32_A_MASK;
+    const u32 col_untinted = col | ~IM_COL32_A_MASK;
 
     while (s < text_end)
     {
@@ -3709,7 +3709,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
                 }
 
                 // Support for untinted glyphs
-                ImU32 glyph_col = glyph->Colored ? col_untinted : col;
+                u32 glyph_col = glyph->Colored ? col_untinted : col;
 
                 // We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug builds. Inlined here:
                 {
@@ -3754,7 +3754,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 //-----------------------------------------------------------------------------
 
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
-void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir dir, float scale)
+void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, u32 col, ImGuiDir dir, float scale)
 {
     const float h = draw_list->_Data->FontSize * 1f32;
     float r = h * 0.40f32 * scale;
@@ -3785,12 +3785,12 @@ void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir d
     draw_list->AddTriangleFilled(center + a, center + b, center + c, col);
 }
 
-void ImGui::RenderBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col)
+void ImGui::RenderBullet(ImDrawList* draw_list, ImVec2 pos, u32 col)
 {
     draw_list->AddCircleFilled(pos, draw_list->_Data->FontSize * 0.20f32, col, 8);
 }
 
-void ImGui::RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, ImU32 col, float sz)
+void ImGui::RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, u32 col, float sz)
 {
     float thickness = ImMax(sz / 5f32, 1f32);
     sz -= thickness * 0.5f32;
@@ -3806,7 +3806,7 @@ void ImGui::RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, ImU32 col, float 
 }
 
 // Render an arrow. 'pos' is position of the arrow tip. half_sz.x is length from base to tip. half_sz.y is length on each side.
-void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, ImU32 col)
+void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, u32 col)
 {
     switch (direction)
     {
@@ -3820,7 +3820,7 @@ void ImGui::RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half
 
 // This is less wide than RenderArrow() and we use in dock nodes instead of the regular RenderArrow() to denote a change of functionality,
 // and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
-void ImGui::RenderArrowDockMenu(ImDrawList* draw_list, ImVec2 p_min, float sz, ImU32 col)
+void ImGui::RenderArrowDockMenu(ImDrawList* draw_list, ImVec2 p_min, float sz, u32 col)
 {
     draw_list->AddRectFilled(p_min + ImVec2(sz * 0.20f32, sz * 0.150f32), p_min + ImVec2(sz * 0.80f32, sz * 0.300f32), col);
     RenderArrowPointingAt(draw_list, p_min + ImVec2(sz * 0.50f32, sz * 0.850f32), ImVec2(sz * 0.3f32, sz * 0.400f32), ImGuiDir_Down, col);
@@ -3835,7 +3835,7 @@ static inline float ImAcos01(float x)
 }
 
 // FIXME: Cleanup and move code to ImDrawList.
-void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, ImU32 col, float x_start_norm, float x_end_norm, float rounding)
+void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, u32 col, float x_start_norm, float x_end_norm, float rounding)
 {
     if (x_end_norm == x_start_norm)
         return;
@@ -3895,7 +3895,7 @@ void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, Im
     draw_list->PathFillConvex(col);
 }
 
-void ImGui::RenderRectFilledWithHole(ImDrawList* draw_list, const ImRect& outer, const ImRect& inner, ImU32 col, float rounding)
+void ImGui::RenderRectFilledWithHole(ImDrawList* draw_list, const ImRect& outer, const ImRect& inner, u32 col, float rounding)
 {
     const bool fill_L = (inner.Min.x > outer.Min.x);
     const bool fill_R = (inner.Max.x < outer.Max.x);
@@ -3926,14 +3926,14 @@ ImDrawFlags ImGui::CalcRoundingFlagsForRectInRect(const ImRect& r_in, const ImRe
 // NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
 // Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
 // FIXME: uses ImGui::GetColorU32
-void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, ImVec2 p_min, ImVec2 p_max, ImU32 col, float grid_step, ImVec2 grid_off, float rounding, ImDrawFlags flags)
+void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, ImVec2 p_min, ImVec2 p_max, u32 col, float grid_step, ImVec2 grid_off, float rounding, ImDrawFlags flags)
 {
     if ((flags & ImDrawFlags_RoundCornersMask_) == 0)
         flags = ImDrawFlags_RoundCornersDefault_;
     if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xF0f32)
     {
-        ImU32 col_bg1 = GetColorU32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
-        ImU32 col_bg2 = GetColorU32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));
+        u32 col_bg1 = GetColorU32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col));
+        u32 col_bg2 = GetColorU32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col));
         draw_list->AddRectFilled(p_min, p_max, col_bg1, rounding, flags);
 
         int yi = 0;
