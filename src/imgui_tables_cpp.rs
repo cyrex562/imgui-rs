@@ -3175,7 +3175,7 @@ static void TableSettingsInit(ImGuiTableSettings* settings, ImGuiID id, int colu
 
 static size_t TableSettingsCalcChunkSize(int columns_count)
 {
-    return sizeof(ImGuiTableSettings) + (size_t)columns_count * sizeof(ImGuiTableColumnSettings);
+    return sizeof(ImGuiTableSettings) + columns_count * sizeof(ImGuiTableColumnSettings);
 }
 
 ImGuiTableSettings* ImGui::TableSettingsCreate(ImGuiID id, int columns_count)

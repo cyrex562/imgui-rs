@@ -2066,7 +2066,7 @@ void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_wid
         GetTexDataAsAlpha8(&pixels, NULL, NULL);
         if (pixels)
         {
-            TexPixelsRGBA32 = (unsigned int*)IM_ALLOC((size_t)TexWidth * (size_t)TexHeight * 4);
+            TexPixelsRGBA32 = (unsigned int*)IM_ALLOC(TexWidth * TexHeight * 4);
             const unsigned char* src = pixels;
             unsigned int* dst = TexPixelsRGBA32;
             for (int n = TexWidth * TexHeight; n > 0; n--)
@@ -2100,7 +2100,7 @@ ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
     {
         new_font_cfg.FontData = IM_ALLOC(new_font_cfg.FontDataSize);
         new_font_cfg.FontDataOwnedByAtlas = true;
-        memcpy(new_font_cfg.FontData, font_cfg->FontData, (size_t)new_font_cfg.FontDataSize);
+        memcpy(new_font_cfg.FontData, font_cfg->FontData, new_font_cfg.FontDataSize);
     }
 
     if (new_font_cfg.DstFont->EllipsisChar == -1)
@@ -2200,7 +2200,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(const void* compressed_ttf_d
 ImFont* ImFontAtlas::AddFontFromMemoryCompressedBase85TTF(const char* compressed_ttf_data_base85, float size_pixels, const ImFontConfig* font_cfg, const ImWchar* glyph_ranges)
 {
     int compressed_ttf_size = (((int)strlen(compressed_ttf_data_base85) + 4) / 5) * 4;
-    void* compressed_ttf = IM_ALLOC((size_t)compressed_ttf_size);
+    void* compressed_ttf = IM_ALLOC(compressed_ttf_size);
     Decode85(compressed_ttf_data_base85, (unsigned char*)compressed_tt0f32);
     ImFont* font = AddFontFromMemoryCompressedTTF(compressed_ttf, compressed_ttf_size, size_pixels, font_cfg, glyph_ranges);
     IM_FREE(compressed_tt0f32);
@@ -2368,8 +2368,8 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     ImVector<ImFontBuildDstData> dst_tmp_array;
     src_tmp_array.resize(atlas->ConfigData.Size);
     dst_tmp_array.resize(atlas->Fonts.Size);
-    memset(src_tmp_array.Data, 0, (size_t)src_tmp_array.size_in_bytes());
-    memset(dst_tmp_array.Data, 0, (size_t)dst_tmp_array.size_in_bytes());
+    memset(src_tmp_array.Data, 0, src_tmp_array.size_in_bytes());
+    memset(dst_tmp_array.Data, 0, dst_tmp_array.size_in_bytes());
 
     // 1. Initialize font loading structure, check font data validity
     for (int src_i = 0; src_i < atlas->ConfigData.Size; src_i++)
@@ -2449,8 +2449,8 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     ImVector<stbtt_packedchar> buf_packedchars;
     buf_rects.resize(total_glyphs_count);
     buf_packedchars.resize(total_glyphs_count);
-    memset(buf_rects.Data, 0, (size_t)buf_rects.size_in_bytes());
-    memset(buf_packedchars.Data, 0, (size_t)buf_packedchars.size_in_bytes());
+    memset(buf_rects.Data, 0, buf_rects.size_in_bytes());
+    memset(buf_packedchars.Data, 0, buf_packedchars.size_in_bytes());
 
     // 4. Gather glyphs sizes so we can pack them in our virtual canvas.
     int total_surface = 0;
@@ -2636,7 +2636,7 @@ void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opa
 
     ImVector<stbrp_rect> pack_rects;
     pack_rects.resize(user_rects.Size);
-    memset(pack_rects.Data, 0, (size_t)pack_rects.size_in_bytes());
+    memset(pack_rects.Data, 0, pack_rects.size_in_bytes());
     for (int i = 0; i < user_rects.Size; i++)
     {
         pack_rects[i].w = user_rects[i].Width;
@@ -3320,7 +3320,7 @@ void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
 
 const ImFontGlyph* ImFont::FindGlyph(ImWchar c) const
 {
-    if (c >= (size_t)IndexLookup.Size)
+    if (c >= IndexLookup.Size)
         return FallbackGlyph;
     const ImWchar i = IndexLookup.Data[c];
     if (i == -1)
@@ -3330,7 +3330,7 @@ const ImFontGlyph* ImFont::FindGlyph(ImWchar c) const
 
 const ImFontGlyph* ImFont::FindGlyphNoFallback(ImWchar c) const
 {
-    if (c >= (size_t)IndexLookup.Size)
+    if (c >= IndexLookup.Size)
         return NULL;
     const ImWchar i = IndexLookup.Data[c];
     if (i == -1)

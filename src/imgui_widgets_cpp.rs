@@ -1559,7 +1559,7 @@ void ImGui::ShrinkWidths(ImGuiShrinkWidthItem* items, int count, float width_exc
             items[0].Width = ImMax(items[0].Width - width_excess, 1f32);
         return;
     }
-    ImQsort(items, (size_t)count, sizeof(ImGuiShrinkWidthItem), ShrinkWidthItemComparer);
+    ImQsort(items, count, sizeof(ImGuiShrinkWidthItem), ShrinkWidthItemComparer);
     int count_same_width = 1;
     while (width_excess > 0f32 && count_same_width < count)
     {
@@ -3246,7 +3246,7 @@ const char* ImParseFormatTrimDecorations(const char* fmt, char* buf, size_t buf_
     const char* fmt_end = ImParseFormatFindEnd(fmt_start);
     if (fmt_end[0] == 0) // If we only have leading decoration, we don't need to copy the data.
         return fmt_start;
-    ImStrncpy(buf, fmt_start, ImMin((size_t)(fmt_end - fmt_start) + 1, buf_size));
+    ImStrncpy(buf, fmt_start, ImMin((fmt_end - fmt_start) + 1, buf_size));
     return buf;
 }
 
@@ -3257,7 +3257,7 @@ void ImParseFormatSanitizeForPrinting(const char* fmt_in, char* fmt_out, size_t 
 {
     const char* fmt_end = ImParseFormatFindEnd(fmt_in);
     IM_UNUSED(fmt_out_size);
-    IM_ASSERT((size_t)(fmt_end - fmt_in + 1) < fmt_out_size); // Format is too long, let us know if this happens to you!
+    IM_ASSERT((fmt_end - fmt_in + 1) < fmt_out_size); // Format is too long, let us know if this happens to you!
     while (fmt_in < fmt_end)
     {
         char c = *fmt_in++;
@@ -3273,7 +3273,7 @@ const char* ImParseFormatSanitizeForScanning(const char* fmt_in, char* fmt_out, 
     const char* fmt_end = ImParseFormatFindEnd(fmt_in);
     const char* fmt_out_begin = fmt_out;
     IM_UNUSED(fmt_out_size);
-    IM_ASSERT((size_t)(fmt_end - fmt_in + 1) < fmt_out_size); // Format is too long, let us know if this happens to you!
+    IM_ASSERT((fmt_end - fmt_in + 1) < fmt_out_size); // Format is too long, let us know if this happens to you!
     bool has_type = false;
     while (fmt_in < fmt_end)
     {
@@ -3714,8 +3714,8 @@ static bool STB_TEXTEDIT_INSERTCHARS(ImGuiInputTextState* obj, int pos, const Im
 
     ImWchar* text = obj->TextW.Data;
     if (pos != text_len)
-        memmove(text + pos + new_text_len, text + pos, (size_t)(text_len - pos) * sizeof);
-    memcpy(text + pos, new_text, (size_t)new_text_len * sizeof);
+        memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof);
+    memcpy(text + pos, new_text, new_text_len * sizeof);
 
     obj->Edited = true;
     obj->CurLenW += new_text_len;
@@ -3820,8 +3820,8 @@ void ImGuiInputTextCallbackData::InsertChars(int pos, const char* new_text, cons
     }
 
     if (BufTextLen != pos)
-        memmove(Buf + pos + new_text_len, Buf + pos, (size_t)(BufTextLen - pos));
-    memcpy(Buf + pos, new_text, (size_t)new_text_len * sizeof);
+        memmove(Buf + pos + new_text_len, Buf + pos, (BufTextLen - pos));
+    memcpy(Buf + pos, new_text, new_text_len * sizeof);
     Buf[BufTextLen + new_text_len] = '\0';
 
     if (CursorPos >= pos)
@@ -6679,7 +6679,7 @@ struct ImGuiPlotArrayGetterData
 static float Plot_ArrayGetter(void* data, int idx)
 {
     ImGuiPlotArrayGetterData* plot_data = (ImGuiPlotArrayGetterData*)data;
-    const float v = *(const float*)(const void*)(plot_data->Values + (size_t)idx * plot_data->Stride);
+    const float v = *(const float*)(const void*)(plot_data->Values + idx * plot_data->Stride);
     return v;
 }
 

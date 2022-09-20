@@ -1563,7 +1563,7 @@ static void ShowDemoWindowWidgets()
                 static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
                 {
                     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-                    return ImGui::InputTextMultiline(label, my_str->begin(), (size_t)my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
+                    return ImGui::InputTextMultiline(label, my_str->begin(), my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
                 }
             };
 
@@ -5202,7 +5202,7 @@ static void ShowDemoWindowTables()
                 {
                     MyItem::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
                     if (items.Size > 1)
-                        qsort(&items[0], (size_t)items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
+                        qsort(&items[0], items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
                     MyItem::s_current_sort_specs = None;
                     sorts_specs->SpecsDirty = false;
                 }
@@ -5418,7 +5418,7 @@ static void ShowDemoWindowTables()
             if (sorts_specs && items_need_sort && items.Size > 1)
             {
                 MyItem::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
-                qsort(&items[0], (size_t)items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
+                qsort(&items[0], items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
                 MyItem::s_current_sort_specs = None;
                 sorts_specs->SpecsDirty = false;
             }
@@ -6072,7 +6072,7 @@ void ImGui::ShowAboutWindow(bool* p_open)
 
         ImGui::Text("Dear ImGui %s (%d)", IMGUI_VERSION, IMGUI_VERSION_NUM);
         ImGui::Separator();
-        ImGui::Text("sizeof(size_t): %d, sizeof(ImDrawIdx): %d, sizeof(ImDrawVert): %d", (int)sizeof(size_t), (int)sizeof(ImDrawIdx), (int)sizeof(ImDrawVert));
+        ImGui::Text("sizeof: %d, sizeof(ImDrawIdx): %d, sizeof(ImDrawVert): %d", (int)sizeof, (int)sizeof(ImDrawIdx), (int)sizeof(ImDrawVert));
         ImGui::Text("define: __cplusplus=%d", (int)__cplusplus);
 // #ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
         ImGui::Text("define: IMGUI_DISABLE_OBSOLETE_FUNCTIONS");

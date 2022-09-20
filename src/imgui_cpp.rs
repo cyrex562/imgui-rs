@@ -3,6 +3,7 @@
 #![allow(non_upper_case_globals)]
 
 use libc;
+use windows_sys::Win32;
 // (main code and documentation)
 
 // Help:
@@ -1610,30 +1611,54 @@ pub unsafe fn ImHashStr(data_p: *c_char, mut data_size: usize, mut seed: u32) ->
 // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
 // ImFileHandle ImFileOpen(const char* filename, const char* mode)
-pub fn ImFileOpen(filename: *c_char, mode: *c_char) -> ImFileHandle
+pub unsafe fn ImFileOpen(filename: *c_char, mode: *c_char) -> ImFileHandle
 {
     // #if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(__CYGWIN__) && !defined(__GNUC__)
     // We need a fopen() wrapper because MSVC/Windows fopen doesn't handle UTF-8 filenames.
     // Previously we used ImTextCountCharsFromUtf8/ImTextStrFromUtf8 here but we now need to support ImWchar16 and ImWchar32!
-    if cfg!(windows)
-    let filename_wsize = ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
-    let mode_wsize = ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, NULL, 0);
-    // ImVector<ImWchar> buf;
-    let mut buf : Vec<ImWchar> = vec![];
-    buf.resize(filename_wsize + mode_wsize, 0);
-    ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, &buf[0], filename_wsize);
-    ::MultiByteToWideChar(CP_UTF8, 0, mode, -1, &buf[filename_wsize], mode_wsize);
-    return ::_wfopen(&buf[0], &buf[filename_wsize]);
+    if cfg!(windows) {
+        let filename_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, filename, -1, NULL, 0);
+        let mode_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, mode, -1, NULL, 0);
+        // ImVector<ImWchar> buf;
+        let mut buf: Vec<ImWchar> = vec![];
+        buf.resize((filename_wsize + mode_wsize) as usize, 0);
+        Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, filename, -1, &buf[0], filename_wsize);
+        Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, mode, -1, &buf[filename_wsize], mode_wsize);
+        return ::_wfopen(&buf[0], &buf[filename_wsize]);
+    }
 // #else
     return libc::fopen(filename, mode);
 // #endif
 }
 
 // We should in theory be using fseeko()/ftello() with off_t and _fseeki64()/_ftelli64() with __int64, waiting for the PR that does that in a very portable pre-C++11 zero-warnings way.
-bool    ImFileClose(ImFileHandle 0f32)     { return fclose(0f32) == 0; }
-ImU64   ImFileGetSize(ImFileHandle 0f32)   { long off = 0, sz = 0; return ((off = ftell(0f32)) != -1 && !fseek(f, 0, SEEK_END) && (sz = ftell(0f32)) != -1 && !fseek(f, off, SEEK_SET)) ? (ImU64)sz : (ImU64)-1; }
-ImU64   ImFileRead(void* data, ImU64 sz, ImU64 count, ImFileHandle 0f32)           { return fread(data, (size_t)sz, (size_t)count, 0f32); }
-ImU64   ImFileWrite(const void* data, ImU64 sz, ImU64 count, ImFileHandle 0f32)    { return fwrite(data, (size_t)sz, (size_t)count, 0f32); }
+// bool    ImFileClose(ImFileHandle 0f32)     { return fclose(0f32) == 0; }
+pub unsafe fn ImFileClose(f: ImFileHandle) -> c_int {
+    libc::fclose(f)
+}
+pub unsafe fn ImFileGetSize(f: ImFileHandle) -> u64   {
+    // long off = 0, sz = 0;
+    let mut off = 0;
+    let mut sz = 0;
+    off = libc::ftell(f);
+    let seek_result_1 = libc::fseek(f, 0, libc::SEEK_END);
+    sz = libc::ftell(f);
+    let seek_result_2 = libc::fseek(f, off, libc::SEEK_SET);
+
+    if (off != -1) && !seek_result_1 > 0 && sz != -1 && !seek_result_2 > 0 {
+        return sz as u64
+    }
+    return -1;
+}
+
+
+pub unsafe fn ImFileRead(data: *mut c_void, sz: u64, count: u64, f: ImFileHandle)   -> u64      {
+    libc::fread(data, sz as size_t, count as size_t, f) as u64 }
+
+
+pub unsafe fn   ImFileWrite(data: *mut c_void, sz: u64, count: u64, f: ImFileHandle) -> u64   {
+    libc::fwrite(data, sz as size_t, count as size_t, f) as u64
+}
 // #endif // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
 // Helper: Load file content into memory
@@ -1649,8 +1674,8 @@ void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_f
     if ((f = ImFileOpen(filename, mode)) == NULL)
         return NULL;
 
-    size_t file_size = (size_t)ImFileGetSize(0f32);
-    if (file_size == (size_t)-1)
+    size_t file_size = ImFileGetSize(0f32);
+    if (file_size == -1)
     {
         ImFileClose(0f32);
         return NULL;
@@ -1669,7 +1694,7 @@ void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_f
         return NULL;
     }
     if (padding_bytes > 0)
-        memset((void*)(((char*)file_data) + file_size), 0, (size_t)padding_bytes);
+        memset((void*)(((char*)file_data) + file_size), 0, padding_bytes);
 
     ImFileClose(0f32);
     if (out_file_size)
@@ -1953,7 +1978,7 @@ static ImGuiStorage::ImGuiStoragePair* LowerBound(ImVector<ImGuiStorage::ImGuiSt
 {
     ImGuiStorage::ImGuiStoragePair* first = data.Data;
     ImGuiStorage::ImGuiStoragePair* last = data.Data + data.Size;
-    size_t count = (size_t)(last - first);
+    size_t count = (last - first);
     while (count > 0)
     {
         size_t count2 = count >> 1;
@@ -1984,7 +2009,7 @@ void ImGuiStorage::BuildSortByKey()
             return 0;
         }
     };
-    ImQsort(Data.Data, (size_t)Data.Size, sizeof(ImGuiStoragePair), StaticFunc::PairComparerByID);
+    ImQsort(Data.Data, Data.Size, sizeof(ImGuiStoragePair), StaticFunc::PairComparerByID);
 }
 
 int ImGuiStorage::GetInt(ImGuiID key, int default_val) const
@@ -2220,7 +2245,7 @@ void ImGuiTextBuffer::append(const char* str, const char* str_end)
     }
 
     Buf.resize(needed_sz);
-    memcpy(&Buf[write_off - 1], str, (size_t)len);
+    memcpy(&Buf[write_off - 1], str, len);
     Buf[write_off - 1 + len] = 0;
 }
 
@@ -2255,7 +2280,7 @@ void ImGuiTextBuffer::appendfv(const char* fmt, va_list args)
     }
 
     Buf.resize(needed_sz);
-    ImFormatStringV(&Buf[write_off - 1], (size_t)len + 1, fmt, args_copy);
+    ImFormatStringV(&Buf[write_off - 1], len + 1, fmt, args_copy);
     va_end(args_copy);
 }
 
@@ -4675,7 +4700,7 @@ static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, Im
     if (window->Active)
     {
         int count = window->DC.ChildWindows.Size;
-        ImQsort(window->DC.ChildWindows.Data, (size_t)count, sizeof(ImGuiWindow*), ChildWindowComparer);
+        ImQsort(window->DC.ChildWindows.Data, count, sizeof(ImGuiWindow*), ChildWindowComparer);
         for (int i = 0; i < count; i++)
         {
             ImGuiWindow* child = window->DC.ChildWindows[i];
@@ -6465,7 +6490,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             window_title_visible_elsewhere = true;
         if (window_title_visible_elsewhere && !window_just_created && strcmp(name, window->Name) != 0)
         {
-            size_t buf_len = (size_t)window->NameBufLen;
+            size_t buf_len = window->NameBufLen;
             window->Name = ImStrdupcpy(window->Name, &buf_len, name);
             window->NameBufLen = (int)buf_len;
         }
@@ -7162,7 +7187,7 @@ void ImGui::BringWindowToDisplayFront(ImGuiWindow* window)
     for (int i = g.Windows.Size - 2; i >= 0; i--) // We can ignore the top-most window
         if (g.Windows[i] == window)
         {
-            memmove(&g.Windows[i], &g.Windows[i + 1], (size_t)(g.Windows.Size - i - 1) * sizeof(ImGuiWindow*));
+            memmove(&g.Windows[i], &g.Windows[i + 1], (g.Windows.Size - i - 1) * sizeof(ImGuiWindow*));
             g.Windows[g.Windows.Size - 1] = window;
             break;
         }
@@ -7176,7 +7201,7 @@ void ImGui::BringWindowToDisplayBack(ImGuiWindow* window)
     for (int i = 0; i < g.Windows.Size; i++)
         if (g.Windows[i] == window)
         {
-            memmove(&g.Windows[1], &g.Windows[0], (size_t)i * sizeof(ImGuiWindow*));
+            memmove(&g.Windows[1], &g.Windows[0], i * sizeof(ImGuiWindow*));
             g.Windows[0] = window;
             break;
         }
@@ -8132,7 +8157,7 @@ void ImGui::GetKeyChordName(ImGuiModFlags mods, ImGuiKey key, char* out_buf, int
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IM_ASSERT((mods & ~ImGuiModFlags_All) == 0 && "Passing invalid ImGuiModFlags value!"); // A frequent mistake is to pass ImGuiKey_ModXXX instead of ImGuiModFlags_XXX
-    ImFormatString(out_buf, (size_t)out_buf_size, "%s%s%s%s%s",
+    ImFormatString(out_buf, out_buf_size, "%s%s%s%s%s",
         (mods & ImGuiModFlags_Ctrl) ? "Ctrl+" : "",
         (mods & ImGuiModFlags_Shift) ? "Shift+" : "",
         (mods & ImGuiModFlags_Alt) ? "Alt+" : "",
@@ -12360,7 +12385,7 @@ void ImGui::LoadIniSettingsFromDisk(const char* ini_filename)
     if (!file_data)
         return;
     if (file_data_size > 0)
-        LoadIniSettingsFromMemory(file_data, (size_t)file_data_size);
+        LoadIniSettingsFromMemory(file_data, file_data_size);
     IM_FREE(file_data);
 }
 
@@ -12464,7 +12489,7 @@ const char* ImGui::SaveIniSettingsToMemory(size_t* out_size)
         handler->WriteAllFn(&g, handler, &g.SettingsIniData);
     }
     if (out_size)
-        *out_size = (size_t)g.SettingsIniData.size();
+        *out_size = g.SettingsIniData.size();
     return g.SettingsIniData.c_str();
 }
 
@@ -17426,7 +17451,7 @@ static void SetClipboardTextFn_DefaultImpl(void*, const char* text)
     if (!::OpenClipboard(NULL))
         return;
     const int wbuf_length = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
-    HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)wbuf_length * sizeof(WCHAR));
+    HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, wbuf_length * sizeof(WCHAR));
     if (wbuf_handle == NULL)
     {
         ::CloseClipboard();
@@ -17509,7 +17534,7 @@ static void SetClipboardTextFn_DefaultImpl(void*, const char* text)
     g.ClipboardHandlerData.clear();
     const char* text_end = text + strlen(text);
     g.ClipboardHandlerData.resize((int)(text_end - text) + 1);
-    memcpy(&g.ClipboardHandlerData[0], text, (size_t)(text_end - text));
+    memcpy(&g.ClipboardHandlerData[0], text, (text_end - text));
     g.ClipboardHandlerData[(int)(text_end - text)] = 0;
 }
 
@@ -17896,7 +17921,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
                 if (g.Windows[i]->LastFrameActive + 1 >= g.FrameCount)
                     temp_buffer.push(g.Windows[i]);
             struct Func { static int IMGUI_CDECL WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((int)(*(const ImGuiWindow* const *)lhs)->BeginOrderWithinContext - (*(const ImGuiWindow* const*)rhs)->BeginOrderWithinContext); } };
-            ImQsort(temp_buffer.Data, (size_t)temp_buffer.Size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
+            ImQsort(temp_buffer.Data, temp_buffer.Size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
             DebugNodeWindowsListByBeginStackParent(temp_buffer.Data, temp_buffer.Size, NULL);
             TreePop();
         }
