@@ -951,7 +951,8 @@ CODE
 // #define IMGUI_DEBUG_INI_SETTINGS    0   // Save additional comments in .ini file (particularly helps for Docking, but makes saving slower)
 
 use std::ptr::{null, null_mut};
-use libc::{c_char, c_int, c_void, size_t};
+use libc::{c_char, c_int, c_uchar, c_uint, c_void, size_t};
+use crate::imgui_storage::ImGuiStoragePair;
 
 // When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
 // static const float NAV_WINDOWING_HIGHLIGHT_DELAY            = 0.20f32;    // Time before the highlight and screen dimming starts fading in
@@ -1687,7 +1688,7 @@ pub unsafe fn ImFileLoadToMemory(filename: *c_char, mode: *c_char, out_file_size
     }
 
     // void* file_data = IM_ALLOC(file_size + padding_bytes);
-    let mut file_data = libc::malloc(file_size + padding_bytes);
+    let mut file_data = libc::malloc((file_size + padding_bytes) as size_t);
     if file_data.is_null()
     {
         ImFileClose(f);
@@ -1700,12 +1701,12 @@ pub unsafe fn ImFileLoadToMemory(filename: *c_char, mode: *c_char, out_file_size
         return null_mut();
     }
     if padding_bytes > 0 {
-        libc::memset(((file_data) + file_size), 0, padding_bytes);
+        libc::memset(((file_data) + file_size), 0, padding_bytes as size_t);
     }
 
     ImFileClose(0f32);
-    if (out_file_size) {
-        *out_file_size = file_size;
+    if out_file_size {
+        *out_file_size = file_size as size_t;
     }
 
     return file_data;
@@ -1719,7 +1720,7 @@ pub unsafe fn ImFileLoadToMemory(filename: *c_char, mode: *c_char, out_file_size
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_int, in_text: *c_char, in_text_end: *c_char) -> c_int
+pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_uint, in_text: *c_char, mut in_text_end: *c_char) -> c_int
 {
     pub const lengths: [c_char;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 ];
     pub const masks: [c_int;5]  = [ 0x00, 0x7f, 0x1f, 0x0f32, 0x07 ];
@@ -1729,7 +1730,7 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_int, in_text: *c_char, in_text
     let mut len = lengths[*in_text >> 3];
     let mut wanted = len + !len;
 
-    if in_text_end == NULL {
+    if in_text_end.is_null() {
         in_text_end = in_text + wanted;
     } // Max length, nulls will be taken into account.
 
@@ -1742,10 +1743,10 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_int, in_text: *c_char, in_text
     s[3] = if in_text + 3 < in_text_end { in_text[3] } else { 0 };
 
     // Assume a four-byte character and load four bytes. Unused bits are shifted out.
-    *out_char  = (uint32_t)(s[0] & masks[len]) << 18;
-    *out_char |= (uint32_t)(s[1] & 0x30f32) << 12;
-    *out_char |= (uint32_t)(s[2] & 0x30f32) <<  6;
-    *out_char |= (uint32_t)(s[3] & 0x30f32) <<  0;
+    *out_char  = (s[0] & masks[len]) << 18;
+    *out_char |= (s[1] & 0x30f32) << 12;
+    *out_char |= (s[2] & 0x30f32) <<  6;
+    *out_char |= (s[3] & 0x30f32) <<  0;
     *out_char >>= shiftc[len];
 
     // Accumulate the various error conditions.
@@ -1773,16 +1774,16 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_int, in_text: *c_char, in_text
 }
 
 // int ImTextStrFromUtf8(ImWchar* buf, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
-pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, in_text: *const c_char, in_text_end: *const c_char, in_text_remaining: *const *const char)
+pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, mut in_text: *const c_char, in_text_end: *const c_char, in_text_remaining: *mut *const c_char)
 {
     // ImWchar* buf_out = buf;
     let mut buf_out = buf;
     // ImWchar* buf_end = buf + buf_size;
     let mut buf_end = buf + buf_size;
-    while buf_out < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text
+    while buf_out < buf_end - 1 && (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
     {
         let mut c: c_uint = 0;
-        in_text += ImTextCharFromUtf8(&c, in_text, in_text_end);
+        in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
         if c == 0 {
             break;
         }
@@ -1790,22 +1791,22 @@ pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, in_text: *cons
         buf_out += 1;
     }
     *buf_out = 0;
-    if in_text_remaining {
+    if in_text_remaining.is_null() == false {
         *in_text_remaining = in_text;
     }
     return buf_out - buf;
 }
 
 // int ImTextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountCharsFromUtf8(in_text: *const c_char, in_text_end: *const c_char) -> i32
+pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: *const c_char, in_text_end: *const c_char) -> i32
 {
     // int char_count = 0;
     let mut char_count: i32 = 0;
-    while (!in_text_end || in_text < in_text_end) && *in_text
+    while (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
     {
         // unsigned int c;
         let mut c: c_uint = 0;
-        in_text += ImTextCharFromUtf8(&c, in_text, in_text_end);
+        in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
         if c == 0 {
             break;
         }
@@ -1827,24 +1828,24 @@ pub fn ImTextCharToUtf8_inline(buf: *mut c_char, buf_size: c_int, c: c_uint) -> 
     {
         if (buf_size < 2) { return 0; }
         buf[0] = (0xc0 + (c >> 6));
-        buf[1] = (0x80 + (c & 0x30f32));
+        buf[1] = (0x80 + (c & 0x3F));
         return 2;
     }
     if (c < 0x10000)
     {
         if (buf_size < 3) { return 0; }
         buf[0] = (0xe0 + (c >> 12));
-        buf[1] = (0x80 + ((c >> 6) & 0x30f32));
-        buf[2] = (0x80 + ((c ) & 0x30f32));
+        buf[1] = (0x80 + ((c >> 6) & 0x3F));
+        buf[2] = (0x80 + ((c ) & 0x3F));
         return 3;
     }
-    if (c <= 0x10FFF0f32)
+    if (c <= 0x10FFFF)
     {
         if (buf_size < 4) { return 0; }
         buf[0] = (0xf0 + (c >> 18));
-        buf[1] = (0x80 + ((c >> 12) & 0x30f32));
-        buf[2] = (0x80 + ((c >> 6) & 0x30f32));
-        buf[3] = (0x80 + ((c ) & 0x30f32));
+        buf[1] = (0x80 + ((c >> 12) & 0x3F));
+        buf[2] = (0x80 + ((c >> 6) & 0x3F));
+        buf[3] = (0x80 + ((c ) & 0x3F));
         return 4;
     }
     // Invalid code point, the max unicode is 0x10FFFF
@@ -1852,11 +1853,11 @@ pub fn ImTextCharToUtf8_inline(buf: *mut c_char, buf_size: c_int, c: c_uint) -> 
 }
 
 // const char* ImTextCharToUtf8(char out_buf[5], unsigned int c)
-pub fn ImTextCharToUtf8(out_buf: [c_char;5])
+pub fn ImTextCharToUtf8(mut out_buf: [c_char;5]) -> *const c_char
 {
-    let mut  count = ImTextCharToUtf8_inline(out_buf, 5, c);
+    let mut  count = ImTextCharToUtf8_inline(out_buf.as_mut_ptr(), 5, c);
     out_buf[count] = 0;
-    return out_buf;
+    return out_buf.as_ptr();
 }
 
 // Not optimal but we very rarely use this function.
@@ -1864,8 +1865,8 @@ pub fn ImTextCharToUtf8(out_buf: [c_char;5])
 pub unsafe fn ImTextCountUtf8BytesFromChar() -> c_int
 {
     // unsigned int unused = 0;
-    let mut unused: c_int = 0;
-    return ImTextCharFromUtf8(&unused, in_text, in_text_end);
+    let mut unused: c_uint = 0;
+    return ImTextCharFromUtf8(&mut unused, in_text, in_text_end);
 }
 
 // static inline int ImTextCountUtf8BytesFromChar(unsigned int c)
@@ -1874,7 +1875,7 @@ pub fn ImTextCountUtf8BytesFromChar2(c: c_uint) -> c_int
     if (c < 0x80) { return 1; };
     if (c < 0x800) { return 2; };
     if (c < 0x10000) { return 3; };
-    if (c <= 0x10FFF0f32) { return 4; };
+    if (c <= 0x10FFFF) { return 4; };
     return 3;
 }
 
@@ -1883,7 +1884,7 @@ pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, int_tex
 {
     let mut buf_p = out_buf;
     let buf_end = out_buf + out_buf_size;
-    while buf_p < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text
+    while buf_p < buf_end - 1 && (in_text_end.is_null || in_text < in_text_end) && *in_text != 0
     {
         // let c = (*in_text++);
         let mut c = *in_text;
@@ -1902,19 +1903,19 @@ pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, int_tex
 }
 
 // int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end)
-pub unsafe fn ImTextCountUtf8BytesFromStr(in_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
+pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
 {
     let mut bytes_count = 0;
-    while (!in_text_end || in_text < in_text_end) && *in_text != 0
+    while (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
     {
         // unsigned int c = (*in_text++);
         let mut c = *in_text;
-        in_text+=1;
+        in_text += 1;
         if c < 0x80 {
             bytes_count += 1;
         }
         else {
-            bytes_count += ImTextCountUtf8BytesFromChar(c);
+            bytes_count += ImTextCountUtf8BytesFromChar2(c);
         }
     }
     return bytes_count;
@@ -1932,7 +1933,7 @@ pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
     let mut r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
     let mut g = ImLerp((col_a >> IM_COL32_G_SHIFT) & 0xFF, (col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
     let mut b = ImLerp((col_a >> IM_COL32_B_SHIFT) & 0xFF, (col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
-    return IM_COL32(r, g, b, 0xF0f32);
+    return IM_COL32(r, g, b, 0xFF);
 }
 
 // ImVec4 ImGui::ColorConvertU32ToFloat4(u32 in)
@@ -1975,18 +1976,20 @@ pub fn ColorConvertRGBtoHSV(r: f32, g: f32, b: f32, out_h: &mut f32, out_s: &mut
     }
 
     let chroma = r - (if g < b { g } else { b });
-    out_h = ImFabs(K + (g - b) / (6.f * chroma + 1e-20f32));
-    out_s = chroma / (r + 1e-20f32);
-    out_v = r;
+    *out_h = ImFabs(K + (g - b) / (6.f * chroma + 1e-2f32));
+    *out_s = chroma / (r + 1e-2f32);
+    *out_v = r;
 }
 
 // Convert hsv floats ([0-1],[0-1],[0-1]) to rgb floats ([0-1],[0-1],[0-1]), from Foley & van Dam p593
 // also http://en.wikipedia.org/wiki/HSL_and_HSV
 // void ImGui::ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
-pub fn ColorCOnvertHSVtoRGB(h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32) {
+pub fn ColorCOnvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32) {
     if s == 0f32 {
         // gray
-        out_r = out_g = out_b = v;
+        *out_r = v;
+        *out_g = v;
+        *out_b = v;
         return;
     }
 
@@ -1998,36 +2001,36 @@ pub fn ColorCOnvertHSVtoRGB(h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut
     let mut t = v * (1f32 - s * (1f32 - 0f32));
 
     match i {
-        0 => {
-            out_r = v;
-            out_g = t;
-            out_b = p;
+        0f32 => {
+            *out_r = v;
+            *out_g = t;
+            *out_b = p;
         }
-        1 => {
-            out_r = q;
-            out_g = v;
-            out_b = p;
+        1f32 => {
+            *out_r = q;
+            *out_g = v;
+            *out_b = p;
         }
-        2 => {
-            out_r = p;
-            out_g = v;
-            out_b = t;
+        2f32 => {
+            *out_r = p;
+            *out_g = v;
+            *out_b = t;
         }
-        3 => {
-            out_r = p;
-            out_g = q;
-            out_b = v;
+        3f32 => {
+            *out_r = p;
+            *out_g = q;
+            *out_b = v;
         }
-        4 => {
-            out_r = t;
-            out_g = p;
-            out_b = v;
+        4f32 => {
+            *out_r = t;
+            *out_g = p;
+            *out_b = v;
         }
         // 5 =>
         _ => {
-            out_r = v;
-            out_g = p;
-            out_b = q;
+            *out_r = v;
+            *out_g = p;
+            *out_b = q;
         }
     }
 }
@@ -2039,152 +2042,118 @@ pub fn ColorCOnvertHSVtoRGB(h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut
 
 // std::lower_bound but without the bullshit
 // static ImGuiStorage::ImGuiStoragePair* LowerBound(ImVector<ImGuiStorage::ImGuiStoragePair>& data, ImGuiID key)
-pub fn LowerBound(data: &mut Vec<ImGuiStoragePair>, key: ImGuiID) -> *mut ImGuiStoragePair
-{
-    // ImGuiStorage::ImGuiStoragePair* first = data.Data;
-    let mut first: *mut ImGuiStoragePair = data.Data;
-    // ImGuiStorage::ImGuiStoragePair* last = data.Data + data.Size;
-    let mut last: *mut ImGuiStoragePair = data.Data + data.Size;
-    let count = (last - first);
-    while count > 0
-    {
-         let mut count2 = count >> 1;
-        // ImGuiStorage::ImGuiStoragePair* mid = first + count2;
-        let mid: *mut ImGuiStoragePair = first + count2;
-        if mid.key < key
-        {
-            mid += 1;
-            first = mid;
-            count -= count2 + 1;
-        }
-        else
-        {
-            count = count2;
-        }
-    }
-    return first;
-}
 
-// For quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
-// void ImGuiStorage::BuildSortByKey()
-pub fn BuildSortByKey()
-{
-    struct StaticFunc
-    {
-        static int IMGUI_CDECL PairComparerByID(const void* lhs, const void* rhs)
-        {
-            // We can't just do a subtraction because qsort uses signed integers and subtracting our ID doesn't play well with that.
-            if (((const ImGuiStoragePair*)lhs)->key > ((const ImGuiStoragePair*)rhs)->key) return +1;
-            if (((const ImGuiStoragePair*)lhs)->key < ((const ImGuiStoragePair*)rhs)->key) return -1;
-            return 0;
-        }
-    };
-    ImQsort(Data.Data, Data.Size, sizeof(ImGuiStoragePair), StaticFunc::PairComparerByID);
-}
 
-int ImGuiStorage::GetInt(ImGuiID key, int default_val) const
-{
-    ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(Data), key);
-    if (it == Data.end() || it->key != key)
-        return default_val;
-    return it->val_i;
-}
 
-bool ImGuiStorage::GetBool(ImGuiID key, bool default_val) const
-{
-    return GetInt(key, default_val ? 1 : 0) != 0;
-}
 
-float ImGuiStorage::GetFloat(ImGuiID key, float default_val) const
-{
-    ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(Data), key);
-    if (it == Data.end() || it->key != key)
-        return default_val;
-    return it->val_f;
-}
+// pub fn BuildSortByKey()
+// {
+//     ImQsort(Data.Data, Data.Size, libc::sizeof(ImGuiStoragePair), PairComparerByID);
+// }
 
-void* ImGuiStorage::GetVoidPtr(ImGuiID key) const
-{
-    ImGuiStoragePair* it = LowerBound(const_cast<ImVector<ImGuiStoragePair>&>(Data), key);
-    if (it == Data.end() || it->key != key)
-        return NULL;
-    return it->val_p;
-}
+// int ImGuiStorage::GetInt(ImGuiID key, int default_val) const
+// {
+//     ImGuiStoragePair* it = LowerBound((Data), key);
+//     if (it == Data.end() || it.key != key)
+//         return default_val;
+//     return it.val_i;
+// }
+
+// bool ImGuiStorage::GetBool(ImGuiID key, bool default_val) const
+// {
+//     return GetInt(key, default_val ? 1 : 0) != 0;
+// }
+
+// float ImGuiStorage::GetFloat(ImGuiID key, float default_val) const
+// {
+//     ImGuiStoragePair* it = LowerBound((Data), key);
+//     if (it == Data.end() || it.key != key)
+//         return default_val;
+//     return it.val_f;
+// }
+
+// void* ImGuiStorage::GetVoidPtr(ImGuiID key) const
+// {
+//     ImGuiStoragePair* it = LowerBound((Data), key);
+//     if (it == Data.end() || it.key != key)
+//         return NULL;
+//     return it.val_p;
+// }
 
 // References are only valid until a new value is added to the storage. Calling a Set***() function or a Get***Ref() function invalidates the pointer.
-int* ImGuiStorage::GetIntRef(ImGuiID key, int default_val)
-{
-    ImGuiStoragePair* it = LowerBound(Data, key);
-    if (it == Data.end() || it->key != key)
-        it = Data.insert(it, ImGuiStoragePair(key, default_val));
-    return &it->val_i;
-}
+// int* ImGuiStorage::GetIntRef(ImGuiID key, int default_val)
+// {
+//     ImGuiStoragePair* it = LowerBound(Data, key);
+//     if (it == Data.end() || it.key != key)
+//         it = Data.insert(it, ImGuiStoragePair(key, default_val));
+//     return &it.val_i;
+// }
 
-bool* ImGuiStorage::GetBoolRef(ImGuiID key, bool default_val)
-{
-    return (bool*)GetIntRef(key, default_val ? 1 : 0);
-}
+// bool* ImGuiStorage::GetBoolRef(ImGuiID key, bool default_val)
+// {
+//     return (bool*)GetIntRef(key, default_val ? 1 : 0);
+// }
 
-float* ImGuiStorage::GetFloatRef(ImGuiID key, float default_val)
-{
-    ImGuiStoragePair* it = LowerBound(Data, key);
-    if (it == Data.end() || it->key != key)
-        it = Data.insert(it, ImGuiStoragePair(key, default_val));
-    return &it->val_f;
-}
+// float* ImGuiStorage::GetFloatRef(ImGuiID key, float default_val)
+// {
+//     ImGuiStoragePair* it = LowerBound(Data, key);
+//     if (it == Data.end() || it.key != key)
+//         it = Data.insert(it, ImGuiStoragePair(key, default_val));
+//     return &it.val_f;
+// }
 
-void** ImGuiStorage::GetVoidPtrRef(ImGuiID key, void* default_val)
-{
-    ImGuiStoragePair* it = LowerBound(Data, key);
-    if (it == Data.end() || it->key != key)
-        it = Data.insert(it, ImGuiStoragePair(key, default_val));
-    return &it->val_p;
-}
+// void** ImGuiStorage::GetVoidPtrRef(ImGuiID key, void* default_val)
+// {
+//     ImGuiStoragePair* it = LowerBound(Data, key);
+//     if (it == Data.end() || it.key != key)
+//         it = Data.insert(it, ImGuiStoragePair(key, default_val));
+//     return &it.val_p;
+// }
 
 // FIXME-OPT: Need a way to reuse the result of lower_bound when doing GetInt()/SetInt() - not too bad because it only happens on explicit interaction (maximum one a frame)
-void ImGuiStorage::SetInt(ImGuiID key, int val)
-{
-    ImGuiStoragePair* it = LowerBound(Data, key);
-    if (it == Data.end() || it->key != key)
-    {
-        Data.insert(it, ImGuiStoragePair(key, val));
-        return;
-    }
-    it->val_i = val;
-}
+// void ImGuiStorage::SetInt(ImGuiID key, int val)
+// {
+//     ImGuiStoragePair* it = LowerBound(Data, key);
+//     if (it == Data.end() || it.key != key)
+//     {
+//         Data.insert(it, ImGuiStoragePair(key, val));
+//         return;
+//     }
+//     it.val_i = val;
+// }
 
-void ImGuiStorage::SetBool(ImGuiID key, bool val)
-{
-    SetInt(key, val ? 1 : 0);
-}
+// void ImGuiStorage::SetBool(ImGuiID key, bool val)
+// {
+//     SetInt(key, val ? 1 : 0);
+// }
 
-void ImGuiStorage::SetFloat(ImGuiID key, float val)
-{
-    ImGuiStoragePair* it = LowerBound(Data, key);
-    if (it == Data.end() || it->key != key)
-    {
-        Data.insert(it, ImGuiStoragePair(key, val));
-        return;
-    }
-    it->val_f = val;
-}
+// void ImGuiStorage::SetFloat(ImGuiID key, float val)
+// {
+//     ImGuiStoragePair* it = LowerBound(Data, key);
+//     if (it == Data.end() || it.key != key)
+//     {
+//         Data.insert(it, ImGuiStoragePair(key, val));
+//         return;
+//     }
+//     it.val_f = val;
+// }
 
-void ImGuiStorage::SetVoidPtr(ImGuiID key, void* val)
-{
-    ImGuiStoragePair* it = LowerBound(Data, key);
-    if (it == Data.end() || it->key != key)
-    {
-        Data.insert(it, ImGuiStoragePair(key, val));
-        return;
-    }
-    it->val_p = val;
-}
+// void ImGuiStorage::SetVoidPtr(ImGuiID key, void* val)
+// {
+//     ImGuiStoragePair* it = LowerBound(Data, key);
+//     if (it == Data.end() || it.key != key)
+//     {
+//         Data.insert(it, ImGuiStoragePair(key, val));
+//         return;
+//     }
+//     it.val_p = val;
+// }
 
-void ImGuiStorage::SetAllInt(int v)
-{
-    for (int i = 0; i < Data.Size; i++)
-        Data[i].val_i = v;
-}
+// void ImGuiStorage::SetAllInt(int v)
+// {
+//     for (int i = 0; i < Data.Size; i++)
+//         Data[i].val_i = v;
+// }
 
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiTextFilter

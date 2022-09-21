@@ -6,6 +6,7 @@ use std::io::stdout;
 mod imgui_cpp;
 mod imgui_style;
 mod imgui_io;
+mod imgui_storage;
 
 /// void ImGui::Initialize()
 // pub fn initialize(g: &mut Context) {
