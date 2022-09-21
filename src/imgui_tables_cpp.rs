@@ -1217,7 +1217,7 @@ void    ImGui::EndTable()
     // Context menu in columns body
     if (flags & ImGuiTableFlags_ContextMenuInBody)
         if (table->HoveredColumnBody != -1 && !IsAnyItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
-            TableOpenContextMenu((int)table->HoveredColumnBody);
+            TableOpenContextMenu(table->HoveredColumnBody);
 
     // Finalize table height
     ImGuiTableInstanceData* table_instance = TableGetInstanceData(table, table->InstanceCurrent);
@@ -1606,7 +1606,7 @@ int ImGui::TableGetHoveredColumn()
     ImGuiTable* table = g.CurrentTable;
     if (!table)
         return -1;
-    return (int)table->HoveredColumnBody;
+    return table->HoveredColumnBody;
 }
 
 void ImGui::TableSetBgColor(ImGuiTableBgTarget target, u32 color, int column_n)
@@ -2711,7 +2711,7 @@ void ImGui::TableSortSpecsSanitize(ImGuiTable* table)
             continue;
         sort_order_count++;
         sort_order_mask |= ((ImU64)1 << column->SortOrder);
-        IM_ASSERT(sort_order_count < (int)sizeof(sort_order_mask) * 8);
+        IM_ASSERT(sort_order_count < sizeof(sort_order_mask) * 8);
     }
 
     const bool need_fix_linearize = ((ImU64)1 << sort_order_count) != (sort_order_mask + 1);
@@ -2998,7 +2998,7 @@ void ImGui::TableHeader(const char* label)
 
     const bool text_clipped = label_size.x > (ellipsis_max - label_pos.x);
     if (text_clipped && hovered && g.ActiveId == 0 && IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-        SetTooltip("%.*s", (int)(label_end - label), label);
+        SetTooltip("%.*s", (label_end - label), label);
 
     // We don't use BeginPopupContextItem() because we want the popup to stay up even after the column is hidden
     if (IsMouseReleased(1) && IsItemHovered())
@@ -3438,7 +3438,7 @@ static void TableSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandle
             buf->appendf("Column %-2d", column_n);
             if (column->UserID != 0)                    buf->appendf(" UserID=%08X", column->UserID);
             if (save_size && column->IsStretch)         buf->appendf(" Weight=%.4f", column->WidthOrWeight);
-            if (save_size && !column->IsStretch)        buf->appendf(" Width=%d", (int)column->WidthOrWeight);
+            if (save_size && !column->IsStretch)        buf->appendf(" Width=%d", column->WidthOrWeight);
             if (save_visible)                           buf->appendf(" Visible=%d", column->IsEnabled);
             if (save_order)                             buf->appendf(" Order=%d", column->DisplayOrder);
             if (save_sort && column->SortOrder != -1)   buf->appendf(" Sort=%d%c", column->SortOrder, (column->SortDirection == ImGuiSortDirection_Ascending) ? 'v' : '^');
@@ -3510,7 +3510,7 @@ void ImGui::TableGcCompactSettings()
     int required_memory = 0;
     for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != None; settings = g.SettingsTables.next_chunk(settings))
         if (settings->ID != 0)
-            required_memory += (int)TableSettingsCalcChunkSize(settings->ColumnsCount);
+            required_memory += TableSettingsCalcChunkSize(settings->ColumnsCount);
     if (required_memory == g.SettingsTables.Buf.Size)
         return;
     ImChunkStream<ImGuiTableSettings> new_chunk_stream;

@@ -252,10 +252,10 @@ namespace ImStb
 // #define IM_TABSIZE                      (4)
 // #endif
 // #define IM_MEMALIGN(_OFF,_ALIGN)        (((_OF0f32) + ((_ALIGN) - 1)) & ~((_ALIGN) - 1))           // Memory align e.g. IM_ALIGN(0,4)=0, IM_ALIGN(1,4)=4, IM_ALIGN(4,4)=4, IM_ALIGN(5,4)=8
-// #define IM_F32_TO_INT8_UNBOUND(_VAL)    ((int)((_VAL) * 255f32 + ((_VAL)>=0 ? 0.5f32 : -0.5f32)))   // Unsaturated, for display purpose
-// #define IM_F32_TO_INT8_SAT(_VAL)        ((int)(ImSaturate(_VAL) * 255f32 + 0.5f32))               // Saturated, always output 0..255
-// #define IM_FLOOR(_VAL)                  ((int)(_VAL))                                    // ImFloor() is not inlined in MSVC debug builds
-// #define IM_ROUND(_VAL)                  ((int)((_VAL) + 0.5f32))                           //
+// #define IM_F32_TO_INT8_UNBOUND(_VAL)    (((_VAL) * 255f32 + ((_VAL)>=0 ? 0.5f32 : -0.5f32)))   // Unsaturated, for display purpose
+// #define IM_F32_TO_INT8_SAT(_VAL)        ((ImSaturate(_VAL) * 255f32 + 0.5f32))               // Saturated, always output 0..255
+// #define IM_FLOOR(_VAL)                  ((_VAL))                                    // ImFloor() is not inlined in MSVC debug builds
+// #define IM_ROUND(_VAL)                  (((_VAL) + 0.5f32))                           //
 
 // Enforce cdecl calling convention for functions called by the standard library, in case compilation settings changed the default to e.g. __vectorcall
 // #ifdef _MSC_VER
@@ -463,9 +463,9 @@ static inline float  ImSaturate(float 0f32)                                     
 static inline float  ImLengthSqr(const ImVec2& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
 static inline float  ImLengthSqr(const ImVec4& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
 static inline float  ImInvLength(const ImVec2& lhs, float fail_value)           { float d = (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0f32) return ImRsqrt(d); return fail_value; }
-static inline float  ImFloor(float 0f32)                                           { return (int)(0f32); }
-static inline float  ImFloorSigned(float 0f32)                                     { return ((f >= 0 || (int)f == 0f32) ? (int)f : (int)f - 1); } // Decent replacement for floorf()
-static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((int)(v.x), (int)(v.y)); }
+static inline float  ImFloor(float 0f32)                                           { return (0f32); }
+static inline float  ImFloorSigned(float 0f32)                                     { return ((f >= 0 || f == 0f32) ? f : f - 1); } // Decent replacement for floorf()
+static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((v.x), (v.y)); }
 static inline ImVec2 ImFloorSigned(const ImVec2& v)                             { return ImVec2(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
 static inline int    ImModPositive(int a, int b)                                { return (a + b) % b; }
 static inline float  ImDot(const ImVec2& a, const ImVec2& b)                    { return a.x * b.x + a.y * b.y; }
@@ -546,9 +546,9 @@ struct IMGUI_API ImRect
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
 // Helper: ImBitArray
-inline bool     ImBitArrayTestBit(const u32* arr, int n)      { u32 mask = (u32)1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
-inline void     ImBitArrayClearBit(u32* arr, int n)           { u32 mask = (u32)1 << (n & 31); arr[n >> 5] &= ~mask; }
-inline void     ImBitArraySetBit(u32* arr, int n)             { u32 mask = (u32)1 << (n & 31); arr[n >> 5] |= mask; }
+inline bool     ImBitArrayTestBit(const u32* arr, int n)      { u32 mask = 1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
+inline void     ImBitArrayClearBit(u32* arr, int n)           { u32 mask = 1 << (n & 31); arr[n >> 5] &= ~mask; }
+inline void     ImBitArraySetBit(u32* arr, int n)             { u32 mask = 1 << (n & 31); arr[n >> 5] |= mask; }
 inline void     ImBitArraySetBitRange(u32* arr, int n, int n2) // Works on range [n..n2)
 {
     n2--;
@@ -556,7 +556,7 @@ inline void     ImBitArraySetBitRange(u32* arr, int n, int n2) // Works on range
     {
         int a_mod = (n & 31);
         int b_mod = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
-        u32 mask = (u32)(((ImU64)1 << b_mod) - 1) & ~(u32)(((ImU64)1 << a_mod) - 1);
+        u32 mask = (((ImU64)1 << b_mod) - 1) & ~(((ImU64)1 << a_mod) - 1);
         arr[n >> 5] |= mask;
         n = (n + 32) & ~31;
     }
@@ -605,8 +605,8 @@ struct ImSpan
 
     inline void         set(T* data, int size)      { Data = data; DataEnd = data + size; }
     inline void         set(T* data, T* data_end)   { Data = data; DataEnd = data_end; }
-    inline int          size() const                { return (int)(ptrdiff_t)(DataEnd - Data); }
-    inline int          size_in_bytes() const       { return (int)(ptrdiff_t)(DataEnd - Data) * (int)sizeof(T); }
+    inline int          size() const                { return (ptrdiff_t)(DataEnd - Data); }
+    inline int          size_in_bytes() const       { return (ptrdiff_t)(DataEnd - Data) * sizeof(T); }
     inline T&           operator[](int i)           { T* p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
     inline const T&     operator[](int i) const     { const T* p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
 
@@ -616,7 +616,7 @@ struct ImSpan
     inline const T*     end() const                 { return DataEnd; }
 
     // Utilities
-    inline int  index_from_ptr(const T* it) const   { IM_ASSERT(it >= Data && it < DataEnd); const ptrdiff_t off = it - Data; return (int)off; }
+    inline int  index_from_ptr(const T* it) const   { IM_ASSERT(it >= Data && it < DataEnd); const ptrdiff_t off = it - Data; return off; }
 };
 
 // Helper: ImSpanAllocator<>
@@ -632,7 +632,7 @@ struct ImSpanAllocator
     int     Sizes[CHUNKS];
 
     ImSpanAllocator()                               { memset(this, 0, sizeof(*this)); }
-    inline void  Reserve(int n, size_t sz, int a=4) { IM_ASSERT(n == CurrIdx && n < CHUNKS); CurrOff = IM_MEMALIGN(CurrOff, a); Offsets[n] = CurrOff; Sizes[n] = (int)sz; CurrIdx++; CurrOff += (int)sz; }
+    inline void  Reserve(int n, size_t sz, int a=4) { IM_ASSERT(n == CurrIdx && n < CHUNKS); CurrOff = IM_MEMALIGN(CurrOff, a); Offsets[n] = CurrOff; Sizes[n] = sz; CurrIdx++; CurrOff += sz; }
     inline int   GetArenaSizeInBytes()              { return CurrOff; }
     inline void  SetArenaBasePtr(void* base_ptr)    { BasePtr = (char*)base_ptr; }
     inline void* GetSpanPtrBegin(int n)             { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (void*)(BasePtr + Offsets[n]); }
@@ -690,12 +690,12 @@ struct ImChunkStream
     void    clear()                     { Buf.clear(); }
     bool    empty() const               { return Buf.Size == 0; }
     int     size() const                { return Buf.Size; }
-    T*      alloc_chunk(size_t sz)      { size_t HDR_SZ = 4; sz = IM_MEMALIGN(HDR_SZ + sz, 4u); int off = Buf.Size; Buf.resize(off + (int)sz); ((int*)(void*)(Buf.Data + of0f32))[0] = (int)sz; return (T*)(void*)(Buf.Data + off + (int)HDR_SZ); }
+    T*      alloc_chunk(size_t sz)      { size_t HDR_SZ = 4; sz = IM_MEMALIGN(HDR_SZ + sz, 4u); int off = Buf.Size; Buf.resize(off + sz); ((int*)(void*)(Buf.Data + of0f32))[0] = sz; return (T*)(void*)(Buf.Data + off + HDR_SZ); }
     T*      begin()                     { size_t HDR_SZ = 4; if (!Buf.Data) return NULL; return (T*)(void*)(Buf.Data + HDR_SZ); }
     T*      next_chunk(T* p)            { size_t HDR_SZ = 4; IM_ASSERT(p >= begin() && p < end()); p = (T*)(void*)((char*)(void*)p + chunk_size(p)); if (p == (T*)(void*)((char*)end() + HDR_SZ)) return (T*)0; IM_ASSERT(p < end()); return p; }
     int     chunk_size(const T* p)      { return ((const int*)p)[-1]; }
     T*      end()                       { return (T*)(void*)(Buf.Data + Buf.Size); }
-    int     offset_from_ptr(const T* p) { IM_ASSERT(p >= begin() && p < end()); const ptrdiff_t off = (const char*)p - Buf.Data; return (int)off; }
+    int     offset_from_ptr(const T* p) { IM_ASSERT(p >= begin() && p < end()); const ptrdiff_t off = (const char*)p - Buf.Data; return off; }
     T*      ptr_from_offset(int of0f32)    { IM_ASSERT(off >= 4 && off < Buf.Size); return (T*)(void*)(Buf.Data + of0f32); }
     void    swap(ImChunkStream<T>& rhs) { rhs.Buf.swap(Bu0f32); }
 
@@ -718,7 +718,7 @@ struct ImChunkStream
 // #define IM_ROUNDUP_TO_EVEN(_V)                                  ((((_V) + 1) / 2) * 2)
 // #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN                     4
 // #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX                     512
-// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD,_MAXERROR)    ImClamp(IM_ROUNDUP_TO_EVEN((int)ImCeil(IM_PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
+// #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD,_MAXERROR)    ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(IM_PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
 
 // Raw equation from IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC rewritten for 'r' and 'error'.
 // #define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(_N,_MAXERROR)    ((_MAXERROR) / (1 - ImCos(IM_PI / ImMax((_N), IM_PI))))
@@ -1294,7 +1294,7 @@ struct ImGuiListClipperRange
     ImS8    PosToIndexOffsetMax;    // Add to Min after converting to indices
 
     static ImGuiListClipperRange    FromIndices(int min, int max)                               { ImGuiListClipperRange r = { min, max, false, 0, 0 }; return r; }
-    static ImGuiListClipperRange    FromPositions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { (int)y1, (int)y2, true, (ImS8)off_min, (ImS8)off_max }; return r; }
+    static ImGuiListClipperRange    FromPositions(float y1, float y2, int off_min, int off_max) { ImGuiListClipperRange r = { y1, y2, true, (ImS8)off_min, (ImS8)off_max }; return r; }
 };
 
 // Temporary clipper data, buffers shared/reused between instances

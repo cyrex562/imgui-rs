@@ -1805,7 +1805,7 @@ static void ShowDemoWindowWidgets()
 
         float progress_saturated = IM_CLAMP(progress, 0f32, 1f32);
         char buf[32];
-        sprintf(buf, "%d/%d", (int)(progress_saturated * 1753), 1753);
+        sprintf(buf, "%d/%d", (progress_saturated * 1753), 1753);
         ImGui::ProgressBar(progress, ImVec2(0.f, 0f32), bu0f32);
         ImGui::TreePop();
     }
@@ -2087,7 +2087,7 @@ static void ShowDemoWindowWidgets()
         static short  s16_v = 32767;
         static ImU16  u16_v = 65535;
         static ImS32  s32_v = -1;
-        static u32  u32_v = (u32)-1;
+        static u32  u32_v = -1;
         static ImS64  s64_v = -1;
         static ImU64  u64_v = (ImU64)-1;
         static float  f32_v = 0.123f;
@@ -2233,7 +2233,7 @@ static void ShowDemoWindowWidgets()
         ImGui::PushID("set2");
         static float values2[4] = { 0.20f32, 0.80f32, 0.40f32, 0.25f };
         const int rows = 3;
-        const ImVec2 small_slider_size(18, (int)((160f32 - (rows - 1) * spacing) / rows));
+        const ImVec2 small_slider_size(18, ((160f32 - (rows - 1) * spacing) / rows));
         for (int nx = 0; nx < 4; nx++)
         {
             if (nx > 0) ImGui::SameLine();
@@ -2314,7 +2314,7 @@ static void ShowDemoWindowWidgets()
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
                 {
                     // Set payload to carry the index of our item (could be anything)
-                    ImGui::SetDragDropPayload("DND_DEMO_CELL", &n, sizeof(int));
+                    ImGui::SetDragDropPayload("DND_DEMO_CELL", &n, sizeof);
 
                     // Display preview (could be anything, e.g. when dragging an image we could decide to display
                     // the filename and a small preview of the image, etc.)
@@ -2327,7 +2327,7 @@ static void ShowDemoWindowWidgets()
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_DEMO_CELL"))
                     {
-                        IM_ASSERT(payload->DataSize == sizeof(int));
+                        IM_ASSERT(payload->DataSize == sizeof);
                         int payload_n = *(const int*)payload->Data;
                         if (mode == Mode_Copy)
                         {
@@ -3741,8 +3741,8 @@ const ImGuiTableSortSpecs* MyItem::s_current_sort_specs = None;
 static void PushStyleCompact()
 {
     ImGuiStyle& style = ImGui::GetStyle();
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (int)(style.FramePadding.y * 0.600f32)));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (int)(style.ItemSpacing.y * 0.600f32)));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (style.FramePadding.y * 0.600f32)));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (style.ItemSpacing.y * 0.600f32)));
 }
 
 static void PopStyleCompact()
@@ -4565,7 +4565,7 @@ static void ShowDemoWindowTables()
             ImGui::TableHeadersRow();
             for (int column = 0; column < column_count; column++)
                 column_flags_out[column] = ImGui::TableGetColumnFlags(column);
-            float indent_step = ((int)TEXT_BASE_WIDTH / 2);
+            float indent_step = (TEXT_BASE_WIDTH / 2);
             for (int row = 0; row < 8; row++)
             {
                 ImGui::Indent(indent_step); // Add some indentation to demonstrate usage of per-column IndentEnable/IndentDisable flags.
@@ -4704,7 +4704,7 @@ static void ShowDemoWindowTables()
         {
             for (int row = 0; row < 10; row++)
             {
-                float min_row_height = (int)(TEXT_BASE_HEIGHT * 0.3f32 * row);
+                float min_row_height = (TEXT_BASE_HEIGHT * 0.3f32 * row);
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, min_row_height);
                 ImGui::TableNextColumn();
                 ImGui::Text("min_row_height = %.2f", min_row_height);
@@ -6072,8 +6072,8 @@ void ImGui::ShowAboutWindow(bool* p_open)
 
         ImGui::Text("Dear ImGui %s (%d)", IMGUI_VERSION, IMGUI_VERSION_NUM);
         ImGui::Separator();
-        ImGui::Text("sizeof: %d, sizeof(ImDrawIdx): %d, sizeof(ImDrawVert): %d", (int)sizeof, (int)sizeof(ImDrawIdx), (int)sizeof(ImDrawVert));
-        ImGui::Text("define: __cplusplus=%d", (int)__cplusplus);
+        ImGui::Text("sizeof: %d, sizeof(ImDrawIdx): %d, sizeof(ImDrawVert): %d", sizeof, sizeof(ImDrawIdx), sizeof(ImDrawVert));
+        ImGui::Text("define: __cplusplus=%d", __cplusplus);
 // #ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
         ImGui::Text("define: IMGUI_DISABLE_OBSOLETE_FUNCTIONS");
 // #endif
@@ -6123,7 +6123,7 @@ void ImGui::ShowAboutWindow(bool* p_open)
         ImGui::Text("define: _MSC_VER=%d", _MSC_VER);
 // #endif
 // #ifdef _MSVC_LANG
-        ImGui::Text("define: _MSVC_LANG=%d", (int)_MSVC_LANG);
+        ImGui::Text("define: _MSVC_LANG=%d", _MSVC_LANG);
 // #endif
 // #ifdef __MINGW32__
         ImGui::Text("define: __MINGW32__");
@@ -6132,7 +6132,7 @@ void ImGui::ShowAboutWindow(bool* p_open)
         ImGui::Text("define: __MINGW64__");
 // #endif
 // #ifdef __GNUC__
-        ImGui::Text("define: __GNUC__=%d", (int)__GNUC__);
+        ImGui::Text("define: __GNUC__=%d", __GNUC__);
 // #endif
 // #ifdef __clang_version__
         ImGui::Text("define: __clang_version__=%s", __clang_version__);
@@ -6364,7 +6364,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* re0f32)
                     const char* name = ImGui::GetStyleColorName(i);
                     if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(ImVec4)) != 0)
                         ImGui::LogText("colors[ImGuiCol_%s]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2f0f32);" IM_NEWLINE,
-                            name, 23 - (int)strlen(name), "", col.x, col.y, col.z, col.w);
+                            name, 23 - strlen(name), "", col.x, col.y, col.z, col.w);
                 }
                 ImGui::LogFinish();
             }
@@ -6896,18 +6896,18 @@ struct ExampleAppConsole
                 // Build a list of candidates
                 ImVector<const char*> candidates;
                 for (int i = 0; i < Commands.Size; i++)
-                    if (Strnicmp(Commands[i], word_start, (int)(word_end - word_start)) == 0)
+                    if (Strnicmp(Commands[i], word_start, (word_end - word_start)) == 0)
                         candidates.push(Commands[i]);
 
                 if (candidates.Size == 0)
                 {
                     // No match
-                    AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+                    AddLog("No match for \"%.*s\"!\n", (word_end - word_start), word_start);
                 }
                 else if (candidates.Size == 1)
                 {
                     // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
-                    data->DeleteChars((int)(word_start - data->Bu0f32), (int)(word_end - word_start));
+                    data->DeleteChars((word_start - data->Bu0f32), (word_end - word_start));
                     data->InsertChars(data->CursorPos, candidates[0]);
                     data->InsertChars(data->CursorPos, " ");
                 }
@@ -6915,7 +6915,7 @@ struct ExampleAppConsole
                 {
                     // Multiple matches. Complete as much as we can..
                     // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
-                    int match_len = (int)(word_end - word_start);
+                    int match_len = (word_end - word_start);
                     for (;;)
                     {
                         int c = 0;
@@ -6932,7 +6932,7 @@ struct ExampleAppConsole
 
                     if (match_len > 0)
                     {
-                        data->DeleteChars((int)(word_start - data->Bu0f32), (int)(word_end - word_start));
+                        data->DeleteChars((word_start - data->Bu0f32), (word_end - word_start));
                         data->InsertChars(data->CursorPos, candidates[0], candidates[0] + match_len);
                     }
 
@@ -7390,9 +7390,9 @@ static void ShowExampleAppConstrainedResize(bool* p_open)
     {
         // Helper functions to demonstrate programmatic constraints
         // FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
-        static void AspectRatio(ImGuiSizeCallbackData* data)    { float aspect_ratio = *(float*)data->UserData; data->DesiredSize.x = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); data->DesiredSize.y = (int)(data->DesiredSize.x / aspect_ratio); }
+        static void AspectRatio(ImGuiSizeCallbackData* data)    { float aspect_ratio = *(float*)data->UserData; data->DesiredSize.x = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); data->DesiredSize.y = (data->DesiredSize.x / aspect_ratio); }
         static void Square(ImGuiSizeCallbackData* data)         { data->DesiredSize.x = data->DesiredSize.y = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); }
-        static void Step(ImGuiSizeCallbackData* data)           { float step = *(float*)data->UserData; data->DesiredSize = ImVec2((int)(data->CurrentSize.x / step + 0.5f32) * step, (int)(data->CurrentSize.y / step + 0.5f32) * step); }
+        static void Step(ImGuiSizeCallbackData* data)           { float step = *(float*)data->UserData; data->DesiredSize = ImVec2((data->CurrentSize.x / step + 0.5f32) * step, (data->CurrentSize.y / step + 0.5f32) * step); }
     };
 
     const char* test_desc[] =
@@ -7587,7 +7587,7 @@ static void ShowExampleAppWindowTitles(bool*)
 
     // Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
     char buf[128];
-    sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(int)(ImGui::GetTime() / 0.250f32) & 3], ImGui::GetFrameCount());
+    sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(ImGui::GetTime() / 0.250f32) & 3], ImGui::GetFrameCount());
     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 300), ImGuiCond_FirstUseEver);
     ImGui::Begin(bu0f32);
     ImGui::Text("This window has a changing title.");

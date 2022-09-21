@@ -1335,7 +1335,7 @@ pub unsafe fn ImStrdupcpy(mut dst: *mut c_char, p_dst_size: *mut size_t, src: *c
 // const char* ImStrchrRange(const char* str, const char* str_end, char c)
 pub unsafe fn ImStrchrRange(str_start: *c_char, str_end: *c_char, c: c_char) -> *c_char
 {
-    // const char* p = (const char*)memchr(str, (int)c, str_end - str);
+    // const char* p = (const char*)memchr(str, c, str_end - str);
     // return p;
     libc::memchr(str_start, c as c_int, str_end - str_start) as *c_char
 }
@@ -1343,7 +1343,7 @@ pub unsafe fn ImStrchrRange(str_start: *c_char, str_end: *c_char, c: c_char) -> 
 // int ImStrlenW(const ImWchar* str)
 pub unsafe fn ImStrlenW(str_begin: *ImWchar) -> i32
 {
-    //return (int)wcslen((const wchar_t*)str);  // FIXME-OPT: Could use this when wchar_t are 16-bit
+    //return wcslen((const wchar_t*)str);  // FIXME-OPT: Could use this when wchar_t are 16-bit
     let mut n = 0;
     // while (*str++) n++;
     while *str_begin != 0 {
@@ -1464,15 +1464,15 @@ pub fn ImFormatString(buf: *mut c_char, buf_size: usize, fmt_str: *c_char) -> i3
 //     va_list args;
 //     va_start(args, fmt);
 // // #ifdef IMGUI_USE_STB_SPRINTF
-//     int w = stbsp_vsnprintf(buf, (int)buf_size, fmt, args);
+//     int w = stbsp_vsnprintf(buf, buf_size, fmt, args);
 // // #else
 //     int w = vsnprintf(buf, buf_size, fmt, args);
 // // #endif
 //     va_end(args);
 //     if (buf == NULL)
 //         return w;
-//     if (w == -1 || w >= (int)buf_size)
-//         w = (int)buf_size - 1;
+//     if (w == -1 || w >= buf_size)
+//         w = buf_size - 1;
 //     buf[w] = 0;
 //     return w;
     todo!()
@@ -1482,14 +1482,14 @@ pub fn ImFormatString(buf: *mut c_char, buf_size: usize, fmt_str: *c_char) -> i3
 pub fn ImFormatStringV(buf: *mut c_char, buf_size: usize, fmt_str: *c_char, args: &Vec<String>) -> i32
 {
 // // #ifdef IMGUI_USE_STB_SPRINTF
-//     int w = stbsp_vsnprintf(buf, (int)buf_size, fmt, args);
+//     int w = stbsp_vsnprintf(buf, buf_size, fmt, args);
 // // #else
 //     int w = vsnprintf(buf, buf_size, fmt, args);
 // // #endif
 //     if (buf == NULL)
 //         return w;
-//     if (w == -1 || w >= (int)buf_size)
-//         w = (int)buf_size - 1;
+//     if (w == -1 || w >= buf_size)
+//         w = buf_size - 1;
 //     buf[w] = 0;
 //     return w;
     todo!()
@@ -1652,11 +1652,12 @@ pub unsafe fn ImFileGetSize(f: ImFileHandle) -> u64   {
 }
 
 
-pub unsafe fn ImFileRead(data: *mut c_void, sz: u64, count: u64, f: ImFileHandle)   -> u64      {
-    libc::fread(data, sz as size_t, count as size_t, f) as u64 }
+pub unsafe fn ImFileRead(data: *mut c_void, sz: u64, count: u64, f: ImFileHandle) -> u64 {
+    libc::fread(data, sz as size_t, count as size_t, f) as u64
+}
 
 
-pub unsafe fn   ImFileWrite(data: *mut c_void, sz: u64, count: u64, f: ImFileHandle) -> u64   {
+pub unsafe fn ImFileWrite(data: *mut c_void, sz: u64, count: u64, f: ImFileHandle) -> u64 {
     libc::fwrite(data, sz as size_t, count as size_t, f) as u64
 }
 // #endif // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
@@ -1664,41 +1665,48 @@ pub unsafe fn   ImFileWrite(data: *mut c_void, sz: u64, count: u64, f: ImFileHan
 // Helper: Load file content into memory
 // Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == ImGui::MemFree()
 // This can't really be used with "rt" because fseek size won't match read size.
-void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_file_size, int padding_bytes)
+// void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_file_size, int padding_bytes)
+pub unsafe fn ImFileLoadToMemory(filename: *c_char, mode: *c_char, out_file_size: *mut size_t, padding_bytes: i32) -> *mut c_void
 {
-    IM_ASSERT(filename && mode);
-    if (out_file_size)
+    // IM_ASSERT(filename && mode);
+    if out_file_size.is_null() == false {
         *out_file_size = 0;
-
-    ImFileHandle f;
-    if ((f = ImFileOpen(filename, mode)) == NULL)
-        return NULL;
-
-    size_t file_size = ImFileGetSize(0f32);
-    if (file_size == -1)
-    {
-        ImFileClose(0f32);
-        return NULL;
     }
 
-    void* file_data = IM_ALLOC(file_size + padding_bytes);
-    if (file_data == NULL)
+    // ImFileHandle f;
+    let mut f: ImFileHandle = ImFileOpen(filename, mode);
+    if f.is_null() {
+        return null_mut();
+    }
+
+    let file_size = ImFileGetSize(f);
+    if file_size == -1
+    {
+        ImFileClose(f);
+        return null_mut();
+    }
+
+    // void* file_data = IM_ALLOC(file_size + padding_bytes);
+    let mut file_data = libc::malloc(file_size + padding_bytes);
+    if file_data.is_null()
+    {
+        ImFileClose(f);
+        return null_mut();
+    }
+    if ImFileRead(file_data, 1, file_size, f) != file_size
     {
         ImFileClose(0f32);
-        return NULL;
+        libc::free(file_data);
+        return null_mut();
     }
-    if (ImFileRead(file_data, 1, file_size, 0f32) != file_size)
-    {
-        ImFileClose(0f32);
-        IM_FREE(file_data);
-        return NULL;
+    if padding_bytes > 0 {
+        libc::memset(((file_data) + file_size), 0, padding_bytes);
     }
-    if (padding_bytes > 0)
-        memset((void*)(((char*)file_data) + file_size), 0, padding_bytes);
 
     ImFileClose(0f32);
-    if (out_file_size)
+    if (out_file_size) {
         *out_file_size = file_size;
+    }
 
     return file_data;
 }
@@ -1710,26 +1718,28 @@ void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_f
 // Convert UTF-8 to 32-bit character, process single character input.
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
 // We handle UTF-8 decoding error by skipping forward.
-int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
+// int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
+pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_int, in_text: *c_char, in_text_end: *c_char) -> c_int
 {
-    static const char lengths[32] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 };
-    static const int masks[]  = { 0x00, 0x7f, 0x1f, 0x0f32, 0x07 };
-    static const uint32_t mins[] = { 0x400000, 0, 0x80, 0x800, 0x10000 };
-    static const int shiftc[] = { 0, 18, 12, 6, 0 };
-    static const int shifte[] = { 0, 6, 4, 2, 0 };
-    int len = lengths[*in_text >> 3];
-    int wanted = len + !len;
+    pub const lengths: [c_char;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 ];
+    pub const masks: [c_int;5]  = [ 0x00, 0x7f, 0x1f, 0x0f32, 0x07 ];
+    pub const mins: [u32;5] = [ 0x400000, 0, 0x80, 0x800, 0x10000 ];
+    pub const shiftc: [c_int;5] = [ 0, 18, 12, 6, 0 ];
+    pub const shifte: [c_int;5] = [ 0, 6, 4, 2, 0 ];
+    let mut len = lengths[*in_text >> 3];
+    let mut wanted = len + !len;
 
-    if (in_text_end == NULL)
-        in_text_end = in_text + wanted; // Max length, nulls will be taken into account.
+    if in_text_end == NULL {
+        in_text_end = in_text + wanted;
+    } // Max length, nulls will be taken into account.
 
     // Copy at most 'len' bytes, stop copying at 0 or past in_text_end. Branch predictor does a good job here,
     // so it is fast even with excessive branching.
-    unsigned char s[4];
-    s[0] = in_text + 0 < in_text_end ? in_text[0] : 0;
-    s[1] = in_text + 1 < in_text_end ? in_text[1] : 0;
-    s[2] = in_text + 2 < in_text_end ? in_text[2] : 0;
-    s[3] = in_text + 3 < in_text_end ? in_text[3] : 0;
+    let mut s: [c_uchar;4] = [0;4];
+    s[0] = if in_text + 0 < in_text_end { in_text[0] } else { 0 };
+    s[1] = if in_text + 1 < in_text_end { in_text[1] } else { 0 };
+    s[2] = if in_text + 2 < in_text_end { in_text[2] } else { 0 };
+    s[3] = if in_text + 3 < in_text_end { in_text[3] } else { 0 };
 
     // Assume a four-byte character and load four bytes. Unused bits are shifted out.
     *out_char  = (uint32_t)(s[0] & masks[len]) << 18;
@@ -1739,7 +1749,7 @@ int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* 
     *out_char >>= shiftc[len];
 
     // Accumulate the various error conditions.
-    int e = 0;
+    let mut e = 0;
     e  = (*out_char < mins[len]) << 6; // non-canonical encoding
     e |= ((*out_char >> 11) == 0x1b) << 7;  // surrogate half?
     e |= (*out_char > IM_UNICODE_CODEPOINT_MAX) << 8;  // out of range?
@@ -1749,7 +1759,7 @@ int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* 
     e ^= 0x2a; // top two bits of each tail byte correct?
     e >>= shifte[len];
 
-    if (e)
+    if e
     {
         // No bytes are consumed when *in_text == 0 || in_text == in_text_end.
         // One byte is consumed in case of invalid first byte of in_text.
@@ -1762,56 +1772,67 @@ int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* 
     return wanted;
 }
 
-int ImTextStrFromUtf8(ImWchar* buf, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
+// int ImTextStrFromUtf8(ImWchar* buf, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
+pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, in_text: *const c_char, in_text_end: *const c_char, in_text_remaining: *const *const char)
 {
-    ImWchar* buf_out = buf;
-    ImWchar* buf_end = buf + buf_size;
-    while (buf_out < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text)
+    // ImWchar* buf_out = buf;
+    let mut buf_out = buf;
+    // ImWchar* buf_end = buf + buf_size;
+    let mut buf_end = buf + buf_size;
+    while buf_out < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text
     {
-        unsigned int c;
+        let mut c: c_uint = 0;
         in_text += ImTextCharFromUtf8(&c, in_text, in_text_end);
-        if (c == 0)
+        if c == 0 {
             break;
-        *buf_out++ = c;
+        }
+        *buf_out = c;
+        buf_out += 1;
     }
     *buf_out = 0;
-    if (in_text_remaining)
+    if in_text_remaining {
         *in_text_remaining = in_text;
-    return (int)(buf_out - bu0f32);
+    }
+    return buf_out - buf;
 }
 
-int ImTextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
+// int ImTextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
+pub unsafe fn ImTextCountCharsFromUtf8(in_text: *const c_char, in_text_end: *const c_char) -> i32
 {
-    int char_count = 0;
-    while ((!in_text_end || in_text < in_text_end) && *in_text)
+    // int char_count = 0;
+    let mut char_count: i32 = 0;
+    while (!in_text_end || in_text < in_text_end) && *in_text
     {
-        unsigned int c;
+        // unsigned int c;
+        let mut c: c_uint = 0;
         in_text += ImTextCharFromUtf8(&c, in_text, in_text_end);
-        if (c == 0)
+        if c == 0 {
             break;
-        char_count++;
+        }
+        char_count += 1;
     }
     return char_count;
 }
 
 // Based on stb_to_utf8() from github.com/nothings/stb/
-static inline int ImTextCharToUtf8_inline(char* buf, int buf_size, unsigned int c)
+// static inline int ImTextCharToUtf8_inline(char* buf, int buf_size, unsigned int c)
+pub fn ImTextCharToUtf8_inline(buf: *mut c_char, buf_size: c_int, c: c_uint) -> c_int
 {
-    if (c < 0x80)
+    if c < 0x80
     {
         buf[0] = c;
         return 1;
     }
-    if (c < 0x800)
+    if c < 0x800
     {
-        if (buf_size < 2) return 0;
+        if (buf_size < 2) { return 0; }
         buf[0] = (0xc0 + (c >> 6));
         buf[1] = (0x80 + (c & 0x30f32));
         return 2;
     }
     if (c < 0x10000)
     {
-        if (buf_size < 3) return 0;
+        if (buf_size < 3) { return 0; }
         buf[0] = (0xe0 + (c >> 12));
         buf[1] = (0x80 + ((c >> 6) & 0x30f32));
         buf[2] = (0x80 + ((c ) & 0x30f32));
@@ -1819,7 +1840,7 @@ static inline int ImTextCharToUtf8_inline(char* buf, int buf_size, unsigned int 
     }
     if (c <= 0x10FFF0f32)
     {
-        if (buf_size < 4) return 0;
+        if (buf_size < 4) { return 0; }
         buf[0] = (0xf0 + (c >> 18));
         buf[1] = (0x80 + ((c >> 12) & 0x30f32));
         buf[2] = (0x80 + ((c >> 6) & 0x30f32));
@@ -1830,55 +1851,71 @@ static inline int ImTextCharToUtf8_inline(char* buf, int buf_size, unsigned int 
     return 0;
 }
 
-const char* ImTextCharToUtf8(char out_buf[5], unsigned int c)
+// const char* ImTextCharToUtf8(char out_buf[5], unsigned int c)
+pub fn ImTextCharToUtf8(out_buf: [c_char;5])
 {
-    int count = ImTextCharToUtf8_inline(out_buf, 5, c);
+    let mut  count = ImTextCharToUtf8_inline(out_buf, 5, c);
     out_buf[count] = 0;
     return out_buf;
 }
 
 // Not optimal but we very rarely use this function.
-int ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
+// int ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
+pub unsafe fn ImTextCountUtf8BytesFromChar() -> c_int
 {
-    unsigned int unused = 0;
+    // unsigned int unused = 0;
+    let mut unused: c_int = 0;
     return ImTextCharFromUtf8(&unused, in_text, in_text_end);
 }
 
-static inline int ImTextCountUtf8BytesFromChar(unsigned int c)
+// static inline int ImTextCountUtf8BytesFromChar(unsigned int c)
+pub fn ImTextCountUtf8BytesFromChar2(c: c_uint) -> c_int
 {
-    if (c < 0x80) return 1;
-    if (c < 0x800) return 2;
-    if (c < 0x10000) return 3;
-    if (c <= 0x10FFF0f32) return 4;
+    if (c < 0x80) { return 1; };
+    if (c < 0x800) { return 2; };
+    if (c < 0x10000) { return 3; };
+    if (c <= 0x10FFF0f32) { return 4; };
     return 3;
 }
 
-int ImTextStrToUtf8(char* out_buf, int out_buf_size, const ImWchar* in_text, const ImWchar* in_text_end)
+// int ImTextStrToUtf8(char* out_buf, int out_buf_size, const ImWchar* in_text, const ImWchar* in_text_end)
+pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, int_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
 {
-    char* buf_p = out_buf;
-    const char* buf_end = out_buf + out_buf_size;
-    while (buf_p < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text)
+    let mut buf_p = out_buf;
+    let buf_end = out_buf + out_buf_size;
+    while buf_p < buf_end - 1 && (!in_text_end || in_text < in_text_end) && *in_text
     {
-        unsigned int c = (unsigned int)(*in_text++);
-        if (c < 0x80)
-            *buf_p++ = c;
-        else
-            buf_p += ImTextCharToUtf8_inline(buf_p, (int)(buf_end - buf_p - 1), c);
+        // let c = (*in_text++);
+        let mut c = *in_text;
+        in_text += 1;
+        if c < 0x80 {
+            // *buf_p ++ = c;
+            *buf_p = c;
+            buf_p += 1;
+        }
+        else {
+            buf_p += ImTextCharToUtf8_inline(buf_p, (buf_end - buf_p - 1), c);
+        }
     }
     *buf_p = 0;
-    return (int)(buf_p - out_bu0f32);
+    return buf_p - out_buf;
 }
 
-int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end)
+// int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end)
+pub unsafe fn ImTextCountUtf8BytesFromStr(in_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
 {
-    int bytes_count = 0;
-    while ((!in_text_end || in_text < in_text_end) && *in_text)
+    let mut bytes_count = 0;
+    while (!in_text_end || in_text < in_text_end) && *in_text != 0
     {
-        unsigned int c = (unsigned int)(*in_text++);
-        if (c < 0x80)
-            bytes_count++;
-        else
+        // unsigned int c = (*in_text++);
+        let mut c = *in_text;
+        in_text+=1;
+        if c < 0x80 {
+            bytes_count += 1;
+        }
+        else {
             bytes_count += ImTextCountUtf8BytesFromChar(c);
+        }
     }
     return bytes_count;
 }
@@ -1888,83 +1925,110 @@ int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_e
 // Note: The Convert functions are early design which are not consistent with other API.
 //-----------------------------------------------------------------------------
 
-IMGUI_API u32 ImAlphaBlendColors(u32 col_a, u32 col_b)
+// IMGUI_API u32 ImAlphaBlendColors(u32 col_a, u32 col_b)
+pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
 {
-    float t = ((col_b >> IM_COL32_A_SHIFT) & 0xF0f32) / 255.f;
-    int r = ImLerp((int)(col_a >> IM_COL32_R_SHIFT) & 0xFF, (int)(col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
-    int g = ImLerp((int)(col_a >> IM_COL32_G_SHIFT) & 0xFF, (int)(col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
-    int b = ImLerp((int)(col_a >> IM_COL32_B_SHIFT) & 0xFF, (int)(col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
+    let mut t = ((col_b >> IM_COL32_A_SHIFT) & 0xFF) / 255.f;
+    let mut r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
+    let mut g = ImLerp((col_a >> IM_COL32_G_SHIFT) & 0xFF, (col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
+    let mut b = ImLerp((col_a >> IM_COL32_B_SHIFT) & 0xFF, (col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
     return IM_COL32(r, g, b, 0xF0f32);
 }
 
-ImVec4 ImGui::ColorConvertU32ToFloat4(u32 in)
+// ImVec4 ImGui::ColorConvertU32ToFloat4(u32 in)
+pub fn ColorConvertU32ToFLoat(in_color: u32) -> ImVec4
 {
-    float s = 1f32 / 255f32;
+    let s = 1f32 / 255f32;
     return ImVec4(
-        ((in >> IM_COL32_R_SHIFT) & 0xF0f32) * s,
-        ((in >> IM_COL32_G_SHIFT) & 0xF0f32) * s,
-        ((in >> IM_COL32_B_SHIFT) & 0xF0f32) * s,
-        ((in >> IM_COL32_A_SHIFT) & 0xF0f32) * s);
+        ((in_color >> IM_COL32_R_SHIFT) & 0xFF) * s,
+        ((in_color >> IM_COL32_G_SHIFT) & 0xFF) * s,
+        ((in_color >> IM_COL32_B_SHIFT) & 0xFF) * s,
+        ((in_color >> IM_COL32_A_SHIFT) & 0xFF) * s);
 }
 
-u32 ImGui::ColorConvertFloat4ToU32(const ImVec4& in)
+// u32 ImGui::ColorConvertFloat4ToU32(const ImVec4& in)
+pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 {
-    u32 out;
-    out  = ((u32)IM_F32_TO_INT8_SAT(in.x)) << IM_COL32_R_SHIFT;
-    out |= ((u32)IM_F32_TO_INT8_SAT(in.y)) << IM_COL32_G_SHIFT;
-    out |= ((u32)IM_F32_TO_INT8_SAT(in.z)) << IM_COL32_B_SHIFT;
-    out |= ((u32)IM_F32_TO_INT8_SAT(in.w)) << IM_COL32_A_SHIFT;
+    let mut out: u32 = 0;
+    out  = (IM_F32_TO_INT8_SAT(in_float.x)) << IM_COL32_R_SHIFT;
+    out |= (IM_F32_TO_INT8_SAT(in_float.y)) << IM_COL32_G_SHIFT;
+    out |= (IM_F32_TO_INT8_SAT(in_float.z)) << IM_COL32_B_SHIFT;
+    out |= (IM_F32_TO_INT8_SAT(in_float.w)) << IM_COL32_A_SHIFT;
     return out;
 }
 
 // Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
 // Optimized http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
-void ImGui::ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
+// void ImGui::ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
+pub fn ColorConvertRGBtoHSV(r: f32, g: f32, b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
 {
-    float K = 0.f;
-    if (g < b)
+    let mut K = 0f32;
+    if g < b
     {
         ImSwap(g, b);
         K = -1.f;
     }
-    if (r < g)
+    if r < g
     {
         ImSwap(r, g);
         K = -2.f / 6.f - K;
     }
 
-    const float chroma = r - (g < b ? g : b);
-    out_h = ImFabs(K + (g - b) / (6.f * chroma + 1e-200f32));
-    out_s = chroma / (r + 1e-200f32);
+    let chroma = r - (if g < b { g } else { b });
+    out_h = ImFabs(K + (g - b) / (6.f * chroma + 1e-20f32));
+    out_s = chroma / (r + 1e-20f32);
     out_v = r;
 }
 
 // Convert hsv floats ([0-1],[0-1],[0-1]) to rgb floats ([0-1],[0-1],[0-1]), from Foley & van Dam p593
 // also http://en.wikipedia.org/wiki/HSL_and_HSV
-void ImGui::ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
-{
-    if (s == 0f32)
-    {
+// void ImGui::ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
+pub fn ColorCOnvertHSVtoRGB(h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32) {
+    if s == 0f32 {
         // gray
         out_r = out_g = out_b = v;
         return;
     }
 
     h = ImFmod(h, 1f32) / (60f32 / 360f32);
-    int   i = (int)h;
-    float f = h - i;
-    float p = v * (1f32 - s);
-    float q = v * (1f32 - s * 0f32);
-    float t = v * (1f32 - s * (1f32 - 0f32));
+    let mut i = h;
+    let mut f = h - i;
+    let mut p = v * (1f32 - s);
+    let mut q = v * (1f32 - s * 0f32);
+    let mut t = v * (1f32 - s * (1f32 - 0f32));
 
-    switch (i)
-    {
-    case 0: out_r = v; out_g = t; out_b = p; break;
-    case 1: out_r = q; out_g = v; out_b = p; break;
-    case 2: out_r = p; out_g = v; out_b = t; break;
-    case 3: out_r = p; out_g = q; out_b = v; break;
-    case 4: out_r = t; out_g = p; out_b = v; break;
-    case 5: default: out_r = v; out_g = p; out_b = q; break;
+    match i {
+        0 => {
+            out_r = v;
+            out_g = t;
+            out_b = p;
+        }
+        1 => {
+            out_r = q;
+            out_g = v;
+            out_b = p;
+        }
+        2 => {
+            out_r = p;
+            out_g = v;
+            out_b = t;
+        }
+        3 => {
+            out_r = p;
+            out_g = q;
+            out_b = v;
+        }
+        4 => {
+            out_r = t;
+            out_g = p;
+            out_b = v;
+        }
+        // 5 =>
+        _ => {
+            out_r = v;
+            out_g = p;
+            out_b = q;
+        }
     }
 }
 
@@ -1974,18 +2038,23 @@ void ImGui::ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float&
 //-----------------------------------------------------------------------------
 
 // std::lower_bound but without the bullshit
-static ImGuiStorage::ImGuiStoragePair* LowerBound(ImVector<ImGuiStorage::ImGuiStoragePair>& data, ImGuiID key)
+// static ImGuiStorage::ImGuiStoragePair* LowerBound(ImVector<ImGuiStorage::ImGuiStoragePair>& data, ImGuiID key)
+pub fn LowerBound(data: &mut Vec<ImGuiStoragePair>, key: ImGuiID) -> *mut ImGuiStoragePair
 {
-    ImGuiStorage::ImGuiStoragePair* first = data.Data;
-    ImGuiStorage::ImGuiStoragePair* last = data.Data + data.Size;
-    size_t count = (last - first);
-    while (count > 0)
+    // ImGuiStorage::ImGuiStoragePair* first = data.Data;
+    let mut first: *mut ImGuiStoragePair = data.Data;
+    // ImGuiStorage::ImGuiStoragePair* last = data.Data + data.Size;
+    let mut last: *mut ImGuiStoragePair = data.Data + data.Size;
+    let count = (last - first);
+    while count > 0
     {
-        size_t count2 = count >> 1;
-        ImGuiStorage::ImGuiStoragePair* mid = first + count2;
-        if (mid->key < key)
+         let mut count2 = count >> 1;
+        // ImGuiStorage::ImGuiStoragePair* mid = first + count2;
+        let mid: *mut ImGuiStoragePair = first + count2;
+        if mid.key < key
         {
-            first = ++mid;
+            mid += 1;
+            first = mid;
             count -= count2 + 1;
         }
         else
@@ -1997,7 +2066,8 @@ static ImGuiStorage::ImGuiStoragePair* LowerBound(ImVector<ImGuiStorage::ImGuiSt
 }
 
 // For quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
-void ImGuiStorage::BuildSortByKey()
+// void ImGuiStorage::BuildSortByKey()
+pub fn BuildSortByKey()
 {
     struct StaticFunc
     {
@@ -2233,7 +2303,7 @@ char ImGuiTextBuffer::EmptyString[1] = { 0 };
 
 void ImGuiTextBuffer::append(const char* str, const char* str_end)
 {
-    int len = str_end ? (int)(str_end - str) : (int)strlen(str);
+    int len = str_end ? (str_end - str) : strlen(str);
 
     // Add zero-terminator the first time
     const int write_off = (Buf.Size != 0) ? Buf.Size : 1;
@@ -2328,8 +2398,8 @@ void ImGui::CalcListClipping(int items_count, float items_height, int* out_items
         rect.Add(WindowRectRelToAbs(window, window->NavRectRel[0])); // Could store and use NavJustMovedToRectRel
 
     const ImVec2 pos = window->DC.CursorPos;
-    int start = (int)((rect.Min.y - pos.y) / items_height);
-    int end = (int)((rect.Max.y - pos.y) / items_height);
+    int start = ((rect.Min.y - pos.y) / items_height);
+    int end = ((rect.Max.y - pos.y) / items_height);
 
     // When performing a navigation request, ensure we have one item extra in the direction we are moving to
     // FIXME: Verify this works with tabbing
@@ -2389,7 +2459,7 @@ static void ImGuiListClipper_SeekCursorAndSetupPrevLine(float pos_y, float line_
         if (table->IsInsideRow)
             ImGui::TableEndRow(table);
         table->RowPosY2 = window->DC.CursorPos.y;
-        const int row_increase = (int)((off_y / line_height) + 0.5f32);
+        const int row_increase = ((off_y / line_height) + 0.5f32);
         //table->CurrentRow += row_increase; // Can't do without fixing TableEndRow()
         table->RowBgColorCounter += row_increase;
     }
@@ -2567,8 +2637,8 @@ static bool ImGuiListClipper_StepInternal(ImGuiListClipper* clipper)
         for (int i = 0; i < data->Ranges.Size; i++)
             if (data->Ranges[i].PosToIndexConvert)
             {
-                int m1 = (int)(((double)data->Ranges[i].Min - window->DC.CursorPos.y - data->LossynessOffset) / clipper->ItemsHeight);
-                int m2 = (int)((((double)data->Ranges[i].Max - window->DC.CursorPos.y - data->LossynessOffset) / clipper->ItemsHeight) + 0.9999990f32);
+                int m1 = (((double)data->Ranges[i].Min - window->DC.CursorPos.y - data->LossynessOffset) / clipper->ItemsHeight);
+                int m2 = ((((double)data->Ranges[i].Max - window->DC.CursorPos.y - data->LossynessOffset) / clipper->ItemsHeight) + 0.9999990f32);
                 data->Ranges[i].Min = ImClamp(already_submitted + m1 + data->Ranges[i].PosToIndexOffsetMin, already_submitted, clipper->ItemsCount - 1);
                 data->Ranges[i].Max = ImClamp(already_submitted + m2 + data->Ranges[i].PosToIndexOffsetMax, data->Ranges[i].Min + 1, clipper->ItemsCount);
                 data->Ranges[i].PosToIndexConvert = false;
@@ -2653,7 +2723,7 @@ u32 ImGui::GetColorU32(u32 col)
     if (style.Alpha >= 1f32)
         return col;
     u32 a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
-    a = (u32)(a * style.Alpha); // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
+    a = (a * style.Alpha); // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
     return (col & ~IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT);
 }
 
@@ -2710,31 +2780,31 @@ static const ImGuiCol GWindowDockStyleColors[ImGuiWindowDockStyleCol_COUNT] =
 
 static const ImGuiStyleVarInfo GStyleVarInfo[] =
 {
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, Alpha) },               // ImGuiStyleVar_Alpha
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, DisabledAlpha) },       // ImGuiStyleVar_DisabledAlpha
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, WindowPadding) },       // ImGuiStyleVar_WindowPadding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, WindowRounding) },      // ImGuiStyleVar_WindowRounding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, WindowBorderSize) },    // ImGuiStyleVar_WindowBorderSize
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, WindowMinSize) },       // ImGuiStyleVar_WindowMinSize
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, WindowTitleAlign) },    // ImGuiStyleVar_WindowTitleAlign
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ChildRounding) },       // ImGuiStyleVar_ChildRounding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ChildBorderSize) },     // ImGuiStyleVar_ChildBorderSize
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, PopupRounding) },       // ImGuiStyleVar_PopupRounding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, PopupBorderSize) },     // ImGuiStyleVar_PopupBorderSize
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, FramePadding) },        // ImGuiStyleVar_FramePadding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, FrameRounding) },       // ImGuiStyleVar_FrameRounding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, FrameBorderSize) },     // ImGuiStyleVar_FrameBorderSize
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, ItemSpacing) },         // ImGuiStyleVar_ItemSpacing
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, ItemInnerSpacing) },    // ImGuiStyleVar_ItemInnerSpacing
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, IndentSpacing) },       // ImGuiStyleVar_IndentSpacing
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, CellPadding) },         // ImGuiStyleVar_CellPadding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ScrollbarSize) },       // ImGuiStyleVar_ScrollbarSize
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, ScrollbarRounding) },   // ImGuiStyleVar_ScrollbarRounding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, GrabMinSize) },         // ImGuiStyleVar_GrabMinSize
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, GrabRounding) },        // ImGuiStyleVar_GrabRounding
-    { ImGuiDataType_Float, 1, (u32)IM_OFFSETOF(ImGuiStyle, TabRounding) },         // ImGuiStyleVar_TabRounding
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) },     // ImGuiStyleVar_ButtonTextAlign
-    { ImGuiDataType_Float, 2, (u32)IM_OFFSETOF(ImGuiStyle, SelectableTextAlign) }, // ImGuiStyleVar_SelectableTextAlign
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, Alpha) },               // ImGuiStyleVar_Alpha
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, DisabledAlpha) },       // ImGuiStyleVar_DisabledAlpha
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowPadding) },       // ImGuiStyleVar_WindowPadding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, WindowRounding) },      // ImGuiStyleVar_WindowRounding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, WindowBorderSize) },    // ImGuiStyleVar_WindowBorderSize
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowMinSize) },       // ImGuiStyleVar_WindowMinSize
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, WindowTitleAlign) },    // ImGuiStyleVar_WindowTitleAlign
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ChildRounding) },       // ImGuiStyleVar_ChildRounding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ChildBorderSize) },     // ImGuiStyleVar_ChildBorderSize
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, PopupRounding) },       // ImGuiStyleVar_PopupRounding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, PopupBorderSize) },     // ImGuiStyleVar_PopupBorderSize
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, FramePadding) },        // ImGuiStyleVar_FramePadding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, FrameRounding) },       // ImGuiStyleVar_FrameRounding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, FrameBorderSize) },     // ImGuiStyleVar_FrameBorderSize
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ItemSpacing) },         // ImGuiStyleVar_ItemSpacing
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ItemInnerSpacing) },    // ImGuiStyleVar_ItemInnerSpacing
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, IndentSpacing) },       // ImGuiStyleVar_IndentSpacing
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, CellPadding) },         // ImGuiStyleVar_CellPadding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarSize) },       // ImGuiStyleVar_ScrollbarSize
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, ScrollbarRounding) },   // ImGuiStyleVar_ScrollbarRounding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, GrabMinSize) },         // ImGuiStyleVar_GrabMinSize
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, GrabRounding) },        // ImGuiStyleVar_GrabRounding
+    { ImGuiDataType_Float, 1, IM_OFFSETOF(ImGuiStyle, TabRounding) },         // ImGuiStyleVar_TabRounding
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) },     // ImGuiStyleVar_ButtonTextAlign
+    { ImGuiDataType_Float, 2, IM_OFFSETOF(ImGuiStyle, SelectableTextAlign) }, // ImGuiStyleVar_SelectableTextAlign
 };
 
 static const ImGuiStyleVarInfo* GetStyleVarInfo(ImGuiStyleVar idx)
@@ -2955,7 +3025,7 @@ void ImGui::RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, cons
 {
     // Hide anything after a '##' string
     const char* text_display_end = FindRenderedTextEnd(text, text_end);
-    const int text_len = (int)(text_display_end - text);
+    const int text_len = (text_display_end - text);
     if (text_len == 0)
         return;
 
@@ -3142,7 +3212,7 @@ ImGuiWindow::ImGuiWindow(ImGuiContext* context, const char* name) : DrawListInst
 {
     memset(this, 0, sizeof(*this));
     Name = ImStrdup(name);
-    NameBufLen = (int)strlen(name) + 1;
+    NameBufLen = strlen(name) + 1;
     ID = ImHashStr(name);
     IDStack.push(ID);
     ViewportAllowPlatformMonitorExtend = -1;
@@ -4722,7 +4792,7 @@ static void AddDrawListToDrawData(ImVector<ImDrawList*>* out_list, ImDrawList* d
     IM_ASSERT(draw_list->VtxBuffer.Size == 0 || draw_list->_VtxWritePtr == draw_list->VtxBuffer.Data + draw_list->VtxBuffer.Size);
     IM_ASSERT(draw_list->IdxBuffer.Size == 0 || draw_list->_IdxWritePtr == draw_list->IdxBuffer.Data + draw_list->IdxBuffer.Size);
     if (!(draw_list->Flags & ImDrawListFlags_AllowVtxOffset))
-        IM_ASSERT((int)draw_list->_VtxCurrentIdx == draw_list->VtxBuffer.Size);
+        IM_ASSERT(draw_list->_VtxCurrentIdx == draw_list->VtxBuffer.Size);
 
     // Check that draw_list doesn't use more vertices than indexable (default ImDrawIdx = unsigned short = 2 bytes = 64K vertices per ImDrawList = per window)
     // If this assert triggers because you are drawing lots of stuff manually:
@@ -4821,7 +4891,7 @@ static void SetupViewportDrawData(ImGuiViewportP* viewport, ImVector<ImDrawList*
 
 // Push a clipping rectangle for both ImGui logic (hit-testing etc.) and low-level ImDrawList rendering.
 // - When using this function it is sane to ensure that float are perfectly rounded to integer values,
-//   so that e.g. (int)(max.x-min.x) in user's render produce correct result.
+//   so that e.g. (max.x-min.x) in user's render produce correct result.
 // - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
 //   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
 //   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
@@ -5338,7 +5408,7 @@ void ImGui::SetActiveIdUsingAllKeyboardKeys()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IM_ASSERT(g.ActiveId != 0);
-    g.ActiveIdUsingNavDirMask = ~(u32)0;
+    g.ActiveIdUsingNavDirMask = ~0;
     g.ActiveIdUsingKeyInputMask.SetBitRange(ImGuiKey_Keyboard_BEGIN, ImGuiKey_Keyboard_END);
     g.ActiveIdUsingKeyInputMask.SetBit(ImGuiKey_ModCtrl);
     g.ActiveIdUsingKeyInputMask.SetBit(ImGuiKey_ModShift);
@@ -5791,7 +5861,7 @@ ImGuiID ImGui::GetWindowResizeCornerID(ImGuiWindow* window, int n)
     IM_ASSERT(n >= 0 && n < 4);
     ImGuiID id = window->DockIsActive ? window->DockNode->HostWindow->ID : window->ID;
     id = ImHashStr("#RESIZE", 0, id);
-    id = ImHashData(&n, sizeof(int), id);
+    id = ImHashData(&n, sizeof, id);
     return id;
 }
 
@@ -5799,10 +5869,10 @@ ImGuiID ImGui::GetWindowResizeCornerID(ImGuiWindow* window, int n)
 ImGuiID ImGui::GetWindowResizeBorderID(ImGuiWindow* window, ImGuiDir dir)
 {
     IM_ASSERT(dir >= 0 && dir < 4);
-    int n = (int)dir + 4;
+    int n = dir + 4;
     ImGuiID id = window->DockIsActive ? window->DockNode->HostWindow->ID : window->ID;
     id = ImHashStr("#RESIZE", 0, id);
-    id = ImHashData(&n, sizeof(int), id);
+    id = ImHashData(&n, sizeof, id);
     return id;
 }
 
@@ -6214,7 +6284,7 @@ void ImGui::RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& titl
         if (marker_pos.x > layout_r.Min.x)
         {
             RenderBullet(window->DrawList, marker_pos, GetColorU32(ImGuiCol_Text));
-            clip_r.Max.x = ImMin(clip_r.Max.x, marker_pos.x - (int)(marker_size_x * 0.5f32));
+            clip_r.Max.x = ImMin(clip_r.Max.x, marker_pos.x - (marker_size_x * 0.5f32));
         }
     }
     //if (g.IO.KeyShift) window->DrawList->AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
@@ -6492,7 +6562,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         {
             size_t buf_len = window->NameBufLen;
             window->Name = ImStrdupcpy(window->Name, &buf_len, name);
-            window->NameBufLen = (int)buf_len;
+            window->NameBufLen = buf_len;
         }
 
         // UPDATE CONTENTS SIZE, UPDATE HIDDEN STATUS
@@ -6821,7 +6891,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         // Inner clipping rectangle.
         // Will extend a little bit outside the normal work region.
         // This is to allow e.g. Selectable or CollapsingHeader or some separators to cover that space.
-        // Force round operator last to ensure that e.g. (int)(max.x-min.x) in user's render code produce correct result.
+        // Force round operator last to ensure that e.g. (max.x-min.x) in user's render code produce correct result.
         // Note that if our window is collapsed we will end up with an inverted (~null) clipping rectangle which is the correct behavior.
         // Affected by window/frame border size. Used by:
         // - Begin() initial clip rect
@@ -8102,7 +8172,7 @@ int ImGui::GetKeyIndex(ImGuiKey key)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IM_ASSERT(IsNamedKey(key));
     const ImGuiKeyData* key_data = GetKeyData(key);
-    return (int)(key_data - g.IO.KeysData);
+    return (key_data - g.IO.KeysData);
 }
 // #endif
 
@@ -8177,8 +8247,8 @@ int ImGui::CalcTypematicRepeatAmount(float t0, float t1, float repeat_delay, flo
         return 0;
     if (repeat_rate <= 0f32)
         return (t0 < repeat_delay) && (t1 >= repeat_delay);
-    const int count_t0 = (t0 < repeat_delay) ? -1 : (int)((t0 - repeat_delay) / repeat_rate);
-    const int count_t1 = (t1 < repeat_delay) ? -1 : (int)((t1 - repeat_delay) / repeat_rate);
+    const int count_t0 = (t0 < repeat_delay) ? -1 : ((t0 - repeat_delay) / repeat_rate);
+    const int count_t1 = (t1 < repeat_delay) ? -1 : ((t1 - repeat_delay) / repeat_rate);
     const int count = count_t1 - count_t0;
     return count;
 }
@@ -11497,7 +11567,7 @@ static void ImGui::NavUpdateWindowing()
         g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer - NAV_WINDOWING_HIGHLIGHT_DELAY) / 0.05f32));
 
         // Select window to focus
-        const int focus_change_dir = (int)IsKeyPressed(ImGuiKey_GamepadL1) - (int)IsKeyPressed(ImGuiKey_GamepadR1);
+        const int focus_change_dir = IsKeyPressed(ImGuiKey_GamepadL1) - IsKeyPressed(ImGuiKey_GamepadR1);
         if (focus_change_dir != 0)
         {
             NavUpdateWindowingHighlightWindow(focus_change_dir);
@@ -11625,7 +11695,7 @@ static void ImGui::NavUpdateWindowing()
         }
 
         // Toggle layer
-        const ImGuiNavLayer new_nav_layer = (g.NavWindow->DC.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) ? (ImGuiNavLayer)((int)g.NavLayer ^ 1) : ImGuiNavLayer_Main;
+        const ImGuiNavLayer new_nav_layer = (g.NavWindow->DC.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) ? (ImGuiNavLayer)(g.NavLayer ^ 1) : ImGuiNavLayer_Main;
         if (new_nav_layer != g.NavLayer)
         {
             // Reinitialize navigation when entering menu bar with the Alt key (FIXME: could be a properly of the layer?)
@@ -11862,7 +11932,7 @@ bool ImGui::SetDragDropPayload(const char* type, const void* data, size_t data_s
         if (data_size > sizeof(g.DragDropPayloadBufLocal))
         {
             // Store in heap
-            g.DragDropPayloadBufHeap.resize((int)data_size);
+            g.DragDropPayloadBufHeap.resize(data_size);
             payload.Data = g.DragDropPayloadBufHeap.Data;
             memcpy(payload.Data, data, data_size);
         }
@@ -11877,7 +11947,7 @@ bool ImGui::SetDragDropPayload(const char* type, const void* data, size_t data_s
         {
             payload.Data = None;
         }
-        payload.DataSize = (int)data_size;
+        payload.DataSize = data_size;
     }
     payload.DataFrameCount = g.FrameCount;
 
@@ -12085,7 +12155,7 @@ void ImGui::LogRenderedText(const ImVec2* ref_pos, const char* text, const char*
         const bool is_last_line = (line_end == text_end);
         if (line_start != line_end || !is_last_line)
         {
-            const int line_length = (int)(line_end - line_start);
+            const int line_length = (line_end - line_start);
             const int indentation = g.LogLineFirstItem ? tree_depth * 4 : 1;
             LogText("%*s%.*s", indentation, "", line_length, line_start);
             g.LogLineFirstItem = false;
@@ -12401,7 +12471,7 @@ void ImGui::LoadIniSettingsFromMemory(const char* ini_data, size_t ini_size)
     // For our convenience and to make the code simpler, we'll also write zero-terminators within the buffer. So let's create a writable copy..
     if (ini_size == 0)
         ini_size = strlen(ini_data);
-    g.SettingsIniData.Buf.resize((int)ini_size + 1);
+    g.SettingsIniData.Buf.resize(ini_size + 1);
     char* const buf = g.SettingsIniData.Buf.Data;
     char* const buf_end = buf + ini_size;
     memcpy(buf, ini_data, ini_size);
@@ -17349,7 +17419,7 @@ static void ImGui::DockSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettings
 
     int max_depth = 0;
     for (int node_n = 0; node_n < dc->NodesSettings.Size; node_n++)
-        max_depth = ImMax((int)dc->NodesSettings[node_n].Depth, max_depth);
+        max_depth = ImMax(dc->NodesSettings[node_n].Depth, max_depth);
 
     // Write to text buffer
     buf->appendf("[%s][Data]\n", handler->TypeName);
@@ -17507,7 +17577,7 @@ static const char* GetClipboardTextFn_DefaultImpl(void*)
             {
                 let g = GImGui; // ImGuiContext& g = *GImGui;
                 g.ClipboardHandlerData.clear();
-                int length = (int)CFDataGetLength(cf_data);
+                int length = CFDataGetLength(cf_data);
                 g.ClipboardHandlerData.resize(length + 1);
                 CFDataGetBytes(cf_data, CFRangeMake(0, length), (UInt8*)g.ClipboardHandlerData.Data);
                 g.ClipboardHandlerData[length] = 0;
@@ -17533,9 +17603,9 @@ static void SetClipboardTextFn_DefaultImpl(void*, const char* text)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.ClipboardHandlerData.clear();
     const char* text_end = text + strlen(text);
-    g.ClipboardHandlerData.resize((int)(text_end - text) + 1);
+    g.ClipboardHandlerData.resize((text_end - text) + 1);
     memcpy(&g.ClipboardHandlerData[0], text, (text_end - text));
-    g.ClipboardHandlerData[(int)(text_end - text)] = 0;
+    g.ClipboardHandlerData[(text_end - text)] = 0;
 }
 
 // #endif
@@ -17684,13 +17754,13 @@ void ImGui::DebugTextEncoding(const char* str)
         unsigned int c;
         const int c_utf8_len = ImTextCharFromUtf8(&c, p, NULL);
         TableNextColumn();
-        Text("%d", (int)(p - str));
+        Text("%d", (p - str));
         TableNextColumn();
         for (int byte_index = 0; byte_index < c_utf8_len; byte_index++)
         {
             if (byte_index > 0)
                 SameLine();
-            Text("0x%02X", (int)(unsigned char)p[byte_index]);
+            Text("0x%02X", (unsigned char)p[byte_index]);
         }
         TableNextColumn();
         if (GetFont()->FindGlyphNoFallback(c))
@@ -17698,7 +17768,7 @@ void ImGui::DebugTextEncoding(const char* str)
         else
             TextUnformatted((c == IM_UNICODE_CODEPOINT_INVALID) ? "[invalid]" : "[missing]");
         TableNextColumn();
-        Text("U+%04X", (int)c);
+        Text("U+%04X", c);
         p += c_utf8_len;
     }
     EndTable();
@@ -17920,7 +17990,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
             for (int i = 0; i < g.Windows.Size; i++)
                 if (g.Windows[i]->LastFrameActive + 1 >= g.FrameCount)
                     temp_buffer.push(g.Windows[i]);
-            struct Func { static int IMGUI_CDECL WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((int)(*(const ImGuiWindow* const *)lhs)->BeginOrderWithinContext - (*(const ImGuiWindow* const*)rhs)->BeginOrderWithinContext); } };
+            struct Func { static int IMGUI_CDECL WindowComparerByBeginOrder(const void* lhs, const void* rhs) { return ((*(const ImGuiWindow* const *)lhs)->BeginOrderWithinContext - (*(const ImGuiWindow* const*)rhs)->BeginOrderWithinContext); } };
             ImQsort(temp_buffer.Data, temp_buffer.Size, sizeof(ImGuiWindow*), Func::WindowComparerByBeginOrder);
             DebugNodeWindowsListByBeginStackParent(temp_buffer.Data, temp_buffer.Size, NULL);
             TreePop();
@@ -18505,7 +18575,7 @@ void ImGui::DebugNodeFont(ImFont* font)
     char c_str[5];
     Text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
     Text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
-    const int surface_sqrt = (int)ImSqrt(font->MetricsTotalSurface);
+    const int surface_sqrt = ImSqrt(font->MetricsTotalSurface);
     Text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
     for (int config_i = 0; config_i < font->ConfigDataCount; config_i++)
         if (font->ConfigData)
@@ -18934,10 +19004,10 @@ void ImGui::DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, const void* dat
     switch (data_type)
     {
     case ImGuiDataType_S32:
-        ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "%d", (int)(intptr_t)data_id);
+        ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "%d", (intptr_t)data_id);
         break;
     case ImGuiDataType_String:
-        ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "%.*s", data_id_end ? (int)((const char*)data_id_end - (const char*)data_id) : (int)strlen((const char*)data_id), (const char*)data_id);
+        ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "%.*s", data_id_end ? ((const char*)data_id_end - (const char*)data_id) : strlen((const char*)data_id), (const char*)data_id);
         break;
     case ImGuiDataType_Pointer:
         ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "(void*)0x%p", data_id);
