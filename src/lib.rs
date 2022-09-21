@@ -7,6 +7,8 @@ mod imgui_cpp;
 mod imgui_style;
 mod imgui_io;
 mod imgui_storage;
+mod imgui_textfilter;
+mod imgui_h;
 
 /// void ImGui::Initialize()
 // pub fn initialize(g: &mut Context) {
