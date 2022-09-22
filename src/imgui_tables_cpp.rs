@@ -697,11 +697,11 @@ static void TableSetupColumnFlags(ImGuiTable* table, ImGuiTableColumn* column, I
     if (table->Flags & ImGuiTableFlags_Sortable)
     {
         int count = 0, mask = 0, list = 0;
-        if ((flags & ImGuiTableColumnFlags_PreferSortAscending)  != 0 && (flags & ImGuiTableColumnFlags_NoSortAscending)  == 0) { mask |= 1 << ImGuiSortDirection_Ascending;  list |= ImGuiSortDirection_Ascending  << (count << 1); count++; }
-        if ((flags & ImGuiTableColumnFlags_PreferSortDescending) != 0 && (flags & ImGuiTableColumnFlags_NoSortDescending) == 0) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count++; }
-        if ((flags & ImGuiTableColumnFlags_PreferSortAscending)  == 0 && (flags & ImGuiTableColumnFlags_NoSortAscending)  == 0) { mask |= 1 << ImGuiSortDirection_Ascending;  list |= ImGuiSortDirection_Ascending  << (count << 1); count++; }
-        if ((flags & ImGuiTableColumnFlags_PreferSortDescending) == 0 && (flags & ImGuiTableColumnFlags_NoSortDescending) == 0) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count++; }
-        if ((table->Flags & ImGuiTableFlags_SortTristate) || count == 0) { mask |= 1 << ImGuiSortDirection_None; count++; }
+        if ((flags & ImGuiTableColumnFlags_PreferSortAscending)  != 0 && (flags & ImGuiTableColumnFlags_NoSortAscending)  == 0) { mask |= 1 << ImGuiSortDirection_Ascending;  list |= ImGuiSortDirection_Ascending  << (count << 1); count+= 1; }
+        if ((flags & ImGuiTableColumnFlags_PreferSortDescending) != 0 && (flags & ImGuiTableColumnFlags_NoSortDescending) == 0) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count+= 1; }
+        if ((flags & ImGuiTableColumnFlags_PreferSortAscending)  == 0 && (flags & ImGuiTableColumnFlags_NoSortAscending)  == 0) { mask |= 1 << ImGuiSortDirection_Ascending;  list |= ImGuiSortDirection_Ascending  << (count << 1); count+= 1; }
+        if ((flags & ImGuiTableColumnFlags_PreferSortDescending) == 0 && (flags & ImGuiTableColumnFlags_NoSortDescending) == 0) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count+= 1; }
+        if ((table->Flags & ImGuiTableFlags_SortTristate) || count == 0) { mask |= 1 << ImGuiSortDirection_None; count+= 1; }
         column->SortDirectionsAvailList = (ImU8)list;
         column->SortDirectionsAvailMask = (ImU8)mask;
         column->SortDirectionsAvailCount = (ImU8)count;
@@ -786,7 +786,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             table->Columns[prev_visible_column_idx].NextEnabledColumn = (ImGuiTableColumnIdx)column_n;
         else
             table->LeftMostEnabledColumn = (ImGuiTableColumnIdx)column_n;
-        column->IndexWithinEnabledSet = table->ColumnsEnabledCount++;
+        column->IndexWithinEnabledSet = table->ColumnsEnabledCount+= 1;
         table->EnabledMaskByIndex |= (ImU64)1 << column_n;
         table->EnabledMaskByDisplayOrder |= (ImU64)1 << column->DisplayOrder;
         prev_visible_column_idx = column_n;
@@ -809,12 +809,12 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
         if (column->Flags & ImGuiTableColumnFlags_WidthStretch)
         {
             stretch_sum_width_auto += column->WidthAuto;
-            count_stretch++;
+            count_stretch+= 1;
         }
         else
         {
             fixed_max_width_auto = ImMax(fixed_max_width_auto, column->WidthAuto);
-            count_fixed++;
+            count_fixed+= 1;
         }
     }
     if ((table->Flags & ImGuiTableFlags_Sortable) && table->SortSpecsCount == 0 && !(table->Flags & ImGuiTableFlags_SortTristate))
@@ -1065,7 +1065,7 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
             host_clip_rect.Min.x = ImClamp(column->MaxX + TABLE_BORDER_SIZE, host_clip_rect.Min.x, host_clip_rect.Max.x);
 
         offset_x += column->WidthGiven + table->CellSpacingX1 + table->CellSpacingX2 + table->CellPaddingX * 2.0f32;
-        visible_n++;
+        visible_n+= 1;
     }
 
     // [Part 7] Detect/store when we are hovering the unused space after the right-most column (so e.g. context menus can react on it)
@@ -1412,7 +1412,7 @@ void ImGui::TableSetupColumn(const char* label, ImGuiTableColumnFlags flags, flo
     }
 
     ImGuiTableColumn* column = &table->Columns[table->DeclColumnsCount];
-    table->DeclColumnsCount++;
+    table->DeclColumnsCount+= 1;
 
     // Assert when passing a width or weight if policy is entirely left to default, to avoid storing width into weight and vice-versa.
     // Give a grace to users of ImGuiTableFlags_ScrollX.
@@ -1630,7 +1630,7 @@ void ImGui::TableSetBgColor(ImGuiTableBgTarget target, u32 color, int column_n)
         if ((table->VisibleMaskByIndex & ((ImU64)1 << column_n)) == 0)
             return;
         if (table->RowCellDataCurrent < 0 || table->RowCellData[table->RowCellDataCurrent].Column != column_n)
-            table->RowCellDataCurrent++;
+            table->RowCellDataCurrent+= 1;
         ImGuiTableCellData* cell_data = &table->RowCellData[table->RowCellDataCurrent];
         cell_data->BgColor = color;
         cell_data->Column = (ImGuiTableColumnIdx)column_n;
@@ -1702,7 +1702,7 @@ void ImGui::TableBeginRow(ImGuiTable* table)
     IM_ASSERT(!table->IsInsideRow);
 
     // New row
-    table->CurrentRow++;
+    table->CurrentRow+= 1;
     table->CurrentColumn = -1;
     table->RowBgColor[0] = table->RowBgColor[1] = IM_COL32_DISABLE;
     table->RowCellDataCurrent = -1;
@@ -1863,7 +1863,7 @@ void ImGui::TableEndRow(ImGuiTable* table)
     }
 
     if (!(table->RowFlags & ImGuiTableRowFlags_Headers))
-        table->RowBgColorCounter++;
+        table->RowBgColorCounter+= 1;
     table->IsInsideRow = false;
 }
 
@@ -2286,7 +2286,7 @@ void ImGui::TableSetupDrawChannels(ImGuiTable* table)
             column->DrawChannelFrozen = (ImGuiTableDrawChannelIdx)(draw_channel_current);
             column->DrawChannelUnfrozen = (ImGuiTableDrawChannelIdx)(draw_channel_current + (table->FreezeRowsCount > 0 ? channels_for_row + 1 : 0));
             if (!(table->Flags & ImGuiTableFlags_NoClip))
-                draw_channel_current++;
+                draw_channel_current+= 1;
         }
         else
         {
@@ -2393,7 +2393,7 @@ void ImGui::TableMergeDrawChannels(ImGuiTable* table)
             if (merge_group->ChannelsCount == 0)
                 merge_group->ClipRect = ImRect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
             merge_group->ChannelsMask.SetBit(channel_no);
-            merge_group->ChannelsCount++;
+            merge_group->ChannelsCount+= 1;
             merge_group->ClipRect.Add(src_channel->_CmdBuffer[0].ClipRect);
             merge_group_mask |= (1 << merge_group_n);
         }
@@ -2709,7 +2709,7 @@ void ImGui::TableSortSpecsSanitize(ImGuiTable* table)
             column->SortOrder = -1;
         if (column->SortOrder == -1)
             continue;
-        sort_order_count++;
+        sort_order_count+= 1;
         sort_order_mask |= ((ImU64)1 << column->SortOrder);
         IM_ASSERT(sort_order_count < sizeof(sort_order_mask) * 8);
     }

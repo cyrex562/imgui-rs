@@ -1335,8 +1335,8 @@ static void stb_text_redo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
 
    state->cursor = r.where + r.insert_length;
 
-   s->undo_point++;
-   s->redo_point++;
+   s->undo_point+= 1;
+   s->redo_point+= 1;
 }
 
 static void stb_text_makeundo_insert(STB_TexteditState *state, int where, int length)

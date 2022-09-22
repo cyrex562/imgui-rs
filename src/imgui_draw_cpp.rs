@@ -1053,7 +1053,7 @@ void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_coun
         for (int i = 0; i < vtx_count; i++)
         {
             _VtxWritePtr[0].pos = points[i]; _VtxWritePtr[0].uv = uv; _VtxWritePtr[0].col = col;
-            _VtxWritePtr++;
+            _VtxWritePtr+= 1;
         }
         for (int i = 2; i < points_count; i++)
         {
@@ -1092,7 +1092,7 @@ void ImDrawList::_PathArcToFastEx(const ImVec2& center, float radius, int a_min_
         if (overstep > 0)
         {
             extra_max_sample = true;
-            samples++;
+            samples+= 1;
 
             // When we have overstep to avoid awkwardly looking one long line and one tiny one at the end,
             // distribute first step range evenly between them by reducing first step size.
@@ -1123,7 +1123,7 @@ void ImDrawList::_PathArcToFastEx(const ImVec2& center, float radius, int a_min_
             const ImVec2 s = _Data->ArcFastVtx[sample_index];
             out_ptr->x = center.x + s.x * radius;
             out_ptr->y = center.y + s.y * radius;
-            out_ptr++;
+            out_ptr+= 1;
         }
     }
     else
@@ -1137,7 +1137,7 @@ void ImDrawList::_PathArcToFastEx(const ImVec2& center, float radius, int a_min_
             const ImVec2 s = _Data->ArcFastVtx[sample_index];
             out_ptr->x = center.x + s.x * radius;
             out_ptr->y = center.y + s.y * radius;
-            out_ptr++;
+            out_ptr+= 1;
         }
     }
 
@@ -1150,7 +1150,7 @@ void ImDrawList::_PathArcToFastEx(const ImVec2& center, float radius, int a_min_
         const ImVec2 s = _Data->ArcFastVtx[normalized_max_sample];
         out_ptr->x = center.x + s.x * radius;
         out_ptr->y = center.y + s.y * radius;
-        out_ptr++;
+        out_ptr+= 1;
     }
 
     IM_ASSERT_PARANOID(_Path.Data + _Path.Size == out_ptr);
@@ -1265,7 +1265,7 @@ static void PathBezierCubicCurveToCasteljau(ImVector<ImVec2>* path, float x1, fl
     d3 = (d3 >= 0) ? d3 : -d3;
     if ((d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy))
     {
-        path->push_back(ImVec2(x4, y4));
+        path.push(ImVec2(x4, y4));
     }
     else if (level < 10)
     {
@@ -1286,7 +1286,7 @@ static void PathBezierQuadraticCurveToCasteljau(ImVector<ImVec2>* path, float x1
     float det = (x2 - x3) * dy - (y2 - y3) * dx;
     if (det * det * 4.0f32 < tess_tol * (dx * dx + dy * dy))
     {
-        path->push_back(ImVec2(x3, y3));
+        path.push(ImVec2(x3, y3));
     }
     else if (level < 10)
     {
@@ -2347,7 +2347,7 @@ static void UnpackBitVectorToFlatIndexList(const ImBitVector* in, ImVector<int>*
         if (u32 entries_32 = *it)
             for (u32 bit_n = 0; bit_n < 32; bit_n++)
                 if (entries_32 & (1 << bit_n))
-                    out->push_back((((it - it_begin) << 5) + bit_n));
+                    out.push((((it - it_begin) << 5) + bit_n));
 }
 
 static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
@@ -2399,7 +2399,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         src_tmp.SrcRanges = cfg.GlyphRanges ? cfg.GlyphRanges : atlas->GetGlyphRangesDefault();
         for (const ImWchar* src_range = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
             src_tmp.GlyphsHighest = ImMax(src_tmp.GlyphsHighest, src_range[1]);
-        dst_tmp.SrcCount++;
+        dst_tmp.SrcCount+= 1;
         dst_tmp.GlyphsHighest = ImMax(dst_tmp.GlyphsHighest, src_tmp.GlyphsHighest);
     }
 
@@ -2422,11 +2422,11 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
                     continue;
 
                 // Add to avail set/counters
-                src_tmp.GlyphsCount++;
-                dst_tmp.GlyphsCount++;
+                src_tmp.GlyphsCount+= 1;
+                dst_tmp.GlyphsCount+= 1;
                 src_tmp.GlyphsSet.SetBit(codepoint);
                 dst_tmp.GlyphsSet.SetBit(codepoint);
-                total_glyphs_count++;
+                total_glyphs_count+= 1;
             }
     }
 
@@ -2623,7 +2623,7 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
         font->Ascent = ascent;
         font->Descent = descent;
     }
-    font->ConfigDataCount++;
+    font->ConfigDataCount+= 1;
 }
 
 void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opaque)
@@ -3099,12 +3099,12 @@ void ImFontGlyphRangesBuilder::BuildRanges(ImVector<ImWchar>* out_ranges)
     for (int n = 0; n <= max_codepoint; n++)
         if (GetBit(n))
         {
-            out_ranges->push_back(n);
+            out_ranges.push(n);
             while (n < max_codepoint && GetBit(n + 1))
-                n++;
-            out_ranges->push_back(n);
+                n+= 1;
+            out_ranges.push(n);
         }
-    out_ranges->push_back(0);
+    out_ranges.push(0);
 }
 
 //-----------------------------------------------------------------------------
@@ -3461,7 +3461,7 @@ ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, cons
             {
                 word_wrap_eol = CalcWordWrapPositionA(scale, s, text_end, wrap_width - line_width);
                 if (word_wrap_eol == s) // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
-                    word_wrap_eol++;    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
+                    word_wrap_eol+= 1;    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
             }
 
             if (s >= word_wrap_eol)
@@ -3476,7 +3476,7 @@ ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, cons
                 while (s < text_end)
                 {
                     const char c = *s;
-                    if (ImCharIsBlankA(c)) { s++; } else if (c == '\n') { s++; break; } else { break; }
+                    if (ImCharIsBlankA(c)) { s+= 1; } else if (c == '\n') { s+= 1; break; } else { break; }
                 }
                 continue;
             }
@@ -3612,7 +3612,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, u3
             {
                 word_wrap_eol = CalcWordWrapPositionA(scale, s, text_end, wrap_width - (x - start_x));
                 if (word_wrap_eol == s) // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
-                    word_wrap_eol++;    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
+                    word_wrap_eol+= 1;    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
             }
 
             if (s >= word_wrap_eol)
@@ -3625,7 +3625,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, u3
                 while (s < text_end)
                 {
                     const char c = *s;
-                    if (ImCharIsBlankA(c)) { s++; } else if (c == '\n') { s++; break; } else { break; }
+                    if (ImCharIsBlankA(c)) { s+= 1; } else if (c == '\n') { s+= 1; break; } else { break; }
                 }
                 continue;
             }
@@ -3986,7 +3986,7 @@ static void stb__match(const unsigned char *data, unsigned int length)
     IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
     if (stb__dout + length > stb__barrier_out_e) { stb__dout += length; return; }
     if (data < stb__barrier_out_b) { stb__dout = stb__barrier_out_e+1; return; }
-    while (length--) *stb__dout++ = *data++;
+    while (length--) *stb__dout++ = *data+= 1;
 }
 
 static void stb__lit(const unsigned char *data, unsigned int length)

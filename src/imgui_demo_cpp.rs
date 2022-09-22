@@ -640,7 +640,7 @@ static void ShowDemoWindowWidgets()
         IMGUI_DEMO_MARKER("Widgets/Basic/Button");
         static int clicked = 0;
         if (ImGui::Button("Button"))
-            clicked++;
+            clicked+= 1;
         if (clicked & 1)
         {
             ImGui::SameLine();
@@ -686,7 +686,7 @@ static void ShowDemoWindowWidgets()
         ImGui::PushButtonRepeat(true);
         if (ImGui::ArrowButton("##left", ImGuiDir_Left)) { counter--; }
         ImGui::SameLine(0f32, spacing);
-        if (ImGui::ArrowButton("##right", ImGuiDir_Right)) { counter++; }
+        if (ImGui::ArrowButton("##right", ImGuiDir_Right)) { counter+= 1; }
         ImGui::PopButtonRepeat();
         ImGui::SameLine();
         ImGui::Text("%d", counter);
@@ -1713,7 +1713,7 @@ static void ShowDemoWindowWidgets()
                     if (!open)
                         active_tabs.erase(active_tabs.Data + n);
                     else
-                        n++;
+                        n+= 1;
                 }
 
                 ImGui::EndTabBar();
@@ -6663,8 +6663,8 @@ struct ExampleAppConsole
     }
 
     // Portable helpers
-    static int   Stricmp(const char* s1, const char* s2)         { int d; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; } return d; }
-    static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; n--; } return d; }
+    static int   Stricmp(const char* s1, const char* s2)         { int d; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
+    static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n--; } return d; }
     static char* Strdup(const char* s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; void* buf = malloc(len); IM_ASSERT(bu0f32); return (char*)memcpy(buf, (const void*)s, len); }
     static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end--; *str_end = 0; }
 
@@ -6927,7 +6927,7 @@ struct ExampleAppConsole
                                 all_candidates_matches = false;
                         if (!all_candidates_matches)
                             break;
-                        match_len++;
+                        match_len+= 1;
                     }
 
                     if (match_len > 0)
@@ -7131,7 +7131,7 @@ static void ShowExampleAppLog(bool* p_open)
             const char* word = words[counter % IM_ARRAYSIZE(words)];
             log.AddLog("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
                 ImGui::GetFrameCount(), category, ImGui::GetTime(), word);
-            counter++;
+            counter+= 1;
         }
     }
     ImGui::End();
@@ -8256,7 +8256,7 @@ void ShowExampleAppDocuments(bool* p_open)
         int close_queue_unsaved_documents = 0;
         for (int n = 0; n < close_queue.Size; n++)
             if (close_queue[n]->Dirty)
-                close_queue_unsaved_documents++;
+                close_queue_unsaved_documents+= 1;
 
         if (close_queue_unsaved_documents == 0)
         {

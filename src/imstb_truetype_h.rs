@@ -1720,9 +1720,9 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
 
       for (i=0; i < n; ++i) {
          if (flagcount == 0) {
-            flags = *points++;
+            flags = *points+= 1;
             if (flags & 8)
-               flagcount = *points++;
+               flagcount = *points+= 1;
          } else
             --flagcount;
          vertices[off+i].type = flags;
@@ -1733,7 +1733,7 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
       for (i=0; i < n; ++i) {
          flags = vertices[off+i].type;
          if (flags & 2) {
-            stbtt_int16 dx = *points++;
+            stbtt_int16 dx = *points+= 1;
             x += (flags & 16) ? dx : -dx; // ???
          } else {
             if (!(flags & 16)) {
@@ -1749,7 +1749,7 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
       for (i=0; i < n; ++i) {
          flags = vertices[off+i].type;
          if (flags & 4) {
-            stbtt_int16 dy = *points++;
+            stbtt_int16 dy = *points+= 1;
             y += (flags & 32) ? dy : -dy; // ???
          } else {
             if (!(flags & 32)) {
@@ -1935,7 +1935,7 @@ static void stbtt__csctx_v(stbtt__csctx *c, stbtt_uint8 type, stbtt_int32 x, stb
       c->pvertices[c->num_vertices].cx1 = (stbtt_int16) cx1;
       c->pvertices[c->num_vertices].cy1 = (stbtt_int16) cy1;
    }
-   c->num_vertices++;
+   c->num_vertices+= 1;
 }
 
 static void stbtt__csctx_close_shape(stbtt__csctx *ctx)
@@ -2078,11 +2078,11 @@ static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, st
          for (;;) {
             if (i >= sp) break;
             stbtt__csctx_rline_to(c, s[i], 0);
-            i++;
+            i+= 1;
       vlineto:
             if (i >= sp) break;
             stbtt__csctx_rline_to(c, 0, s[i]);
-            i++;
+            i+= 1;
          }
          break;
 
@@ -2128,7 +2128,7 @@ static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, st
       case 0x1B: // hhcurveto
          if (sp < 4) return STBTT__CSERR("(vv|hh)curveto stack");
          f = 0.0;
-         if (sp & 1) { f = s[i]; i++; }
+         if (sp & 1) { f = s[i]; i+= 1; }
          for (; i + 3 < sp; i += 4) {
             if (b0 == 0x1B)
                stbtt__csctx_rccurve_to(c, s[i], f, s[i+1], s[i+2], s[i+3], 0.0);

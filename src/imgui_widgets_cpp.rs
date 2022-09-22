@@ -208,7 +208,7 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
                     if ((flags & ImGuiTextFlags_NoWidthForLargeClippedText) == 0)
                         text_size.x = ImMax(text_size.x, CalcTextSize(line, line_end).x);
                     line = line_end + 1;
-                    lines_skipped++;
+                    lines_skipped+= 1;
                 }
                 pos.y += lines_skipped * line_height;
             }
@@ -244,7 +244,7 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
                 if ((flags & ImGuiTextFlags_NoWidthForLargeClippedText) == 0)
                     text_size.x = ImMax(text_size.x, CalcTextSize(line, line_end).x);
                 line = line_end + 1;
-                lines_skipped++;
+                lines_skipped+= 1;
             }
             pos.y += lines_skipped * line_height;
         }
@@ -1564,7 +1564,7 @@ void ImGui::ShrinkWidths(ImGuiShrinkWidthItem* items, int count, float width_exc
     while (width_excess > 0f32 && count_same_width < count)
     {
         while (count_same_width < count && items[0].Width <= items[count_same_width].Width)
-            count_same_width++;
+            count_same_width+= 1;
         float max_width_to_remove_per_item = (count_same_width < count && items[count_same_width].Width >= 0f32) ? (items[0].Width - items[count_same_width].Width) : (items[0].Width - 1f32);
         if (max_width_to_remove_per_item <= 0f32)
             break;
@@ -1825,7 +1825,7 @@ static bool Items_SingleStringGetter(void* data, int idx, const char** out_text)
         if (idx == items_count)
             break;
         p += strlen(p) + 1;
-        items_count++;
+        items_count+= 1;
     }
     if (!*p)
         return false;
@@ -1894,7 +1894,7 @@ bool ImGui::Combo(const char* label, int* current_item, const char* items_separa
     while (*p)
     {
         p += strlen(p) + 1;
-        items_count++;
+        items_count+= 1;
     }
     bool value_changed = Combo(label, current_item, Items_SingleStringGetter, (void*)items_separated_by_zeros, items_count, height_in_items);
     return value_changed;
@@ -2042,7 +2042,7 @@ void ImGui::DataTypeApplyOp(ImGuiDataType data_type, int op, void* output, const
 bool ImGui::DataTypeApplyFromText(const char* buf, ImGuiDataType data_type, void* p_data, const char* format)
 {
     while (ImCharIsBlankA(*bu0f32))
-        buf++;
+        buf+= 1;
     if (!buf[0])
         return false;
 
@@ -2164,7 +2164,7 @@ TYPE ImGui::RoundScalarWithFormatT(const char* format, ImGuiDataType data_type, 
     ImFormatString(v_str, IM_ARRAYSIZE(v_str), fmt_start, v);
     const char* p = v_str;
     while (*p == ' ')
-        p++;
+        p+= 1;
     v = (TYPE)ImAtof(p);
 
     return v;
@@ -3210,8 +3210,8 @@ const char* ImParseFormatFindStart(const char* fmt)
         if (c == '%' && fmt[1] != '%')
             return fmt;
         else if (c == '%')
-            fmt++;
-        fmt++;
+            fmt+= 1;
+        fmt+= 1;
     }
     return fmt;
 }
@@ -3260,7 +3260,7 @@ void ImParseFormatSanitizeForPrinting(const char* fmt_in, char* fmt_out, size_t 
     IM_ASSERT((fmt_end - fmt_in + 1) < fmt_out_size); // Format is too long, let us know if this happens to you!
     while (fmt_in < fmt_end)
     {
-        char c = *fmt_in++;
+        char c = *fmt_in+= 1;
         if (c != '\'' && c != '$' && c != '_') // Custom flags provided by stb_sprintf.h. POSIX 2008 also supports '.
             *(fmt_out++) = c;
     }
@@ -3277,7 +3277,7 @@ const char* ImParseFormatSanitizeForScanning(const char* fmt_in, char* fmt_out, 
     bool has_type = false;
     while (fmt_in < fmt_end)
     {
-        char c = *fmt_in++;
+        char c = *fmt_in+= 1;
         if (!has_type && ((c >= '0' && c <= '9') || c == '.'))
             continue;
         has_type |= ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')); // Stop skipping digits
@@ -3292,8 +3292,8 @@ template<typename TYPE>
 static const char* ImAtoi(const char* src, TYPE* output)
 {
     int negative = 0;
-    if (*src == '-') { negative = 1; src++; }
-    if (*src == '+') { src++; }
+    if (*src == '-') { negative = 1; src+= 1; }
+    if (*src == '+') { src+= 1; }
     TYPE v = 0;
     while (*src >= '0' && *src <= '9')
         v = (v * 10) + (*src++ - '0');
@@ -3308,9 +3308,9 @@ int ImParseFormatPrecision(const char* fmt, int default_precision)
     fmt = ImParseFormatFindStart(fmt);
     if (fmt[0] != '%')
         return default_precision;
-    fmt++;
+    fmt+= 1;
     while (*fmt >= '0' && *fmt <= '9')
-        fmt++;
+        fmt+= 1;
     int precision = INT_MAX;
     if (*fmt == '.')
     {
@@ -3591,10 +3591,10 @@ static int InputTextCalcTextLenAndLineCount(const char* text_begin, const char**
     const char* s = text_begin;
     while (char c = *s++) // We are only matching for \n so we can ignore UTF-8 decoding
         if (c == '\n')
-            line_count++;
+            line_count+= 1;
     s--;
     if (s[0] != '\n' && s[0] != '\r')
-        line_count++;
+        line_count+= 1;
     *out_text_end = s;
     return line_count;
 }
@@ -3671,8 +3671,8 @@ static bool is_separator(unsigned int c)                                        
 static int  is_word_boundary_from_right(ImGuiInputTextState* obj, int idx)      { if (obj->Flags & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (is_separator(obj->TextW[idx - 1]) && !is_separator(obj->TextW[idx]) ) : 1; }
 static int  is_word_boundary_from_left(ImGuiInputTextState* obj, int idx)       { if (obj->Flags & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (!is_separator(obj->TextW[idx - 1]) && is_separator(obj->TextW[idx])) : 1; }
 static int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(ImGuiInputTextState* obj, int idx)   { idx--; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx--; return idx < 0 ? 0 : idx; }
-static int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(ImGuiInputTextState* obj, int idx)   { idx++; int len = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx++; return idx > len ? len : idx; }
-static int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(ImGuiInputTextState* obj, int idx)   { idx++; int len = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx++; return idx > len ? len : idx; }
+static int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(ImGuiInputTextState* obj, int idx)   { idx+= 1; int len = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return idx > len ? len : idx; }
+static int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(ImGuiInputTextState* obj, int idx)   { idx+= 1; int len = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return idx > len ? len : idx; }
 static int  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(ImGuiInputTextState* obj, int idx)  { if (ImGui::GetIO().ConfigMacOSXBehaviors) return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx); else return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx); }
 // #define STB_TEXTEDIT_MOVEWORDLEFT   STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
 // #define STB_TEXTEDIT_MOVEWORDRIGHT  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
@@ -4661,13 +4661,13 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             {
                 searches_input_ptr[0] = text_begin + state->Stb.cursor;
                 searches_result_line_no[0] = -1;
-                searches_remaining++;
+                searches_remaining+= 1;
             }
             if (render_selection)
             {
                 searches_input_ptr[1] = text_begin + ImMin(state->Stb.select_start, state->Stb.select_end);
                 searches_result_line_no[1] = -1;
-                searches_remaining++;
+                searches_remaining+= 1;
             }
 
             // Iterate all lines to find our line numbers
@@ -4678,11 +4678,11 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             for (const ImWchar* s = text_begin; *s != 0; s++)
                 if (*s == '\n')
                 {
-                    line_count++;
+                    line_count+= 1;
                     if (searches_result_line_no[0] == -1 && s >= searches_input_ptr[0]) { searches_result_line_no[0] = line_count; if (--searches_remaining <= 0) break; }
                     if (searches_result_line_no[1] == -1 && s >= searches_input_ptr[1]) { searches_result_line_no[1] = line_count; if (--searches_remaining <= 0) break; }
                 }
-            line_count++;
+            line_count+= 1;
             if (searches_result_line_no[0] == -1)
                 searches_result_line_no[0] = line_count;
             if (searches_result_line_no[1] == -1)
@@ -5062,7 +5062,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
             value_changed = true;
             char* p = buf;
             while (*p == '#' || ImCharIsBlankA(*p))
-                p++;
+                p+= 1;
             i[0] = i[1] = i[2] = 0;
             i[3] = 0xFF; // alpha default to 255 is not parsed by scanf (e.g. inputting #FFFFFF omitting alpha)
             int r;
@@ -6137,7 +6137,7 @@ void ImGui::TreePush(const char* str_id)
 {
     ImGuiWindow* window = GetCurrentWindow();
     Indent();
-    window->DC.TreeDepth++;
+    window->DC.TreeDepth+= 1;
     PushID(str_id);
 }
 
@@ -6145,7 +6145,7 @@ void ImGui::TreePush(const void* ptr_id)
 {
     ImGuiWindow* window = GetCurrentWindow();
     Indent();
-    window->DC.TreeDepth++;
+    window->DC.TreeDepth+= 1;
     PushID(ptr_id);
 }
 
@@ -6154,7 +6154,7 @@ void ImGui::TreePushOverrideID(ImGuiID id)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
     Indent();
-    window->DC.TreeDepth++;
+    window->DC.TreeDepth+= 1;
     PushOverrideID(id);
 }
 
@@ -7384,7 +7384,7 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
     if (tab_bar->CurrFrameVisible == g.FrameCount)
     {
         window->DC.CursorPos = ImVec2(tab_bar->BarRect.Min.x, tab_bar->BarRect.Max.y + tab_bar->ItemSpacingY);
-        tab_bar->BeginCount++;
+        tab_bar->BeginCount+= 1;
         return true;
     }
 
@@ -7511,8 +7511,8 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
                 need_sort_by_section = true;
         }
 
-        sections[curr_tab_section_n].TabCount++;
-        tab_dst_n++;
+        sections[curr_tab_section_n].TabCount+= 1;
+        tab_dst_n+= 1;
     }
     if (tab_bar->Tabs.Size != tab_dst_n)
         tab_bar->Tabs.resize(tab_dst_n);
@@ -8149,7 +8149,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     if (tab_is_new)
         tab->Width = ImMax(1f32, size.x);
     tab->ContentWidth = size.x;
-    tab->BeginOrder = tab_bar->TabsActiveCount++;
+    tab->BeginOrder = tab_bar->TabsActiveCount+= 1;
 
     const bool tab_bar_appearing = (tab_bar->PrevFrameVisible + 1 < g.FrameCount);
     const bool tab_bar_focused = (tab_bar->Flags & ImGuiTabBarFlags_IsFocused) != 0;

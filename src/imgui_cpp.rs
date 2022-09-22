@@ -1281,7 +1281,7 @@ pub fn ImTriangleClosestPoint(a: &ImVec2, b: &ImVec2, c: &ImVec2, p: &ImVec2) ->
 pub unsafe fn ImStricmp(str1: *c_char, str2: *c_char) -> i32
 {
     // let mut d = i32;
-    // while ((d = toupper(*str2) - toupper(*str1)) == 0 && *str1) { str1++; str2++; }
+    // while ((d = toupper(*str2) - toupper(*str1)) == 0 && *str1) { str1+= 1; str2+= 1; }
     // return d;
     libc::stricmp(str1, str2)
 }
@@ -1290,7 +1290,7 @@ pub unsafe fn ImStricmp(str1: *c_char, str2: *c_char) -> i32
 pub unsafe fn ImStrnicmp(str1: *c_char, str2: *c_char, count: size_t) -> i32
 {
     // int d = 0;
-    // while (count > 0 && (d = toupper(*str2) - toupper(*str1)) == 0 && *str1) { str1++; str2++; count--; }
+    // while (count > 0 && (d = toupper(*str2) - toupper(*str1)) == 0 && *str1) { str1+= 1; str2+= 1; count--; }
     // return d;
     libc::strnicmp(str1, str2, count)
 }
@@ -1346,7 +1346,7 @@ pub unsafe fn ImStrlenW(str_begin: *ImWchar) -> i32
 {
     //return wcslen((const wchar_t*)str);  // FIXME-OPT: Could use this when wchar_t are 16-bit
     let mut n = 0;
-    // while (*str++) n++;
+    // while (*str++) n+= 1;
     while *str_begin != 0 {
         n += 1;
     }
@@ -2160,99 +2160,99 @@ pub fn ColorCOnvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: 
 //-----------------------------------------------------------------------------
 
 // Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
-ImGuiTextFilter::ImGuiTextFilter(const char* default_filter) //-V1077
-{
-    InputBuf[0] = 0;
-    CountGrep = 0;
-    if (default_filter)
-    {
-        ImStrncpy(InputBuf, default_filter, IM_ARRAYSIZE(InputBu0f32));
-        Build();
-    }
-}
+// ImGuiTextFilter::ImGuiTextFilter(const char* default_filter) //-V1077
+// {
+//     InputBuf[0] = 0;
+//     CountGrep = 0;
+//     if (default_filter)
+//     {
+//         ImStrncpy(InputBuf, default_filter, IM_ARRAYSIZE(InputBu0f32));
+//         Build();
+//     }
+// }
 
-bool ImGuiTextFilter::Draw(const char* label, float width)
-{
-    if (width != 0f32)
-        ImGui::SetNextItemWidth(width);
-    bool value_changed = ImGui::InputText(label, InputBuf, IM_ARRAYSIZE(InputBu0f32));
-    if (value_changed)
-        Build();
-    return value_changed;
-}
+// bool ImGuiTextFilter::Draw(const char* label, float width)
+// {
+//     if (width != 0f32)
+//         ImGui::SetNextItemWidth(width);
+//     bool value_changed = ImGui::InputText(label, InputBuf, IM_ARRAYSIZE(InputBu0f32));
+//     if (value_changed)
+//         Build();
+//     return value_changed;
+// }
 
-void ImGuiTextFilter::ImGuiTextRange::split(char separator, ImVector<ImGuiTextRange>* out) const
-{
-    out->resize(0);
-    const char* wb = b;
-    const char* we = wb;
-    while (we < e)
-    {
-        if (*we == separator)
-        {
-            out->push_back(ImGuiTextRange(wb, we));
-            wb = we + 1;
-        }
-        we++;
-    }
-    if (wb != we)
-        out->push_back(ImGuiTextRange(wb, we));
-}
+// void ImGuiTextFilter::ImGuiTextRange::split(char separator, ImVector<ImGuiTextRange>* out) const
+// {
+//     out->resize(0);
+//     const char* wb = b;
+//     const char* we = wb;
+//     while (we < e)
+//     {
+//         if (*we == separator)
+//         {
+//             out.push(ImGuiTextRange(wb, we));
+//             wb = we + 1;
+//         }
+//         we+= 1;
+//     }
+//     if (wb != we)
+//         out.push(ImGuiTextRange(wb, we));
+// }
 
-void ImGuiTextFilter::Build()
-{
-    Filters.resize(0);
-    ImGuiTextRange input_range(InputBuf, InputBuf + strlen(InputBu0f32));
-    input_range.split(',', &Filters);
+// void ImGuiTextFilter::Build()
+// {
+//     Filters.resize(0);
+//     ImGuiTextRange input_range(InputBuf, InputBuf + strlen(InputBu0f32));
+//     input_range.split(',', &Filters);
+//
+//     CountGrep = 0;
+//     for (int i = 0; i != Filters.Size; i++)
+//     {
+//         ImGuiTextRange& f = Filters[i];
+//         while (f.b < f.e && ImCharIsBlankA(f.b[0]))
+//             f.b+= 1;
+//         while (f.e > f.b && ImCharIsBlankA(f.e[-1]))
+//             f.e--;
+//         if (f.empty())
+//             continue;
+//         if (Filters[i].b[0] != '-')
+//             CountGrep += 1;
+//     }
+// }
 
-    CountGrep = 0;
-    for (int i = 0; i != Filters.Size; i++)
-    {
-        ImGuiTextRange& f = Filters[i];
-        while (f.b < f.e && ImCharIsBlankA(f.b[0]))
-            f.b++;
-        while (f.e > f.b && ImCharIsBlankA(f.e[-1]))
-            f.e--;
-        if (f.empty())
-            continue;
-        if (Filters[i].b[0] != '-')
-            CountGrep += 1;
-    }
-}
-
-bool ImGuiTextFilter::PassFilter(const char* text, const char* text_end) const
-{
-    if (Filters.empty())
-        return true;
-
-    if (text == NULL)
-        text = "";
-
-    for (int i = 0; i != Filters.Size; i++)
-    {
-        const ImGuiTextRange& f = Filters[i];
-        if (f.empty())
-            continue;
-        if (f.b[0] == '-')
-        {
-            // Subtract
-            if (ImStristr(text, text_end, f.b + 1, f.e) != NULL)
-                return false;
-        }
-        else
-        {
-            // Grep
-            if (ImStristr(text, text_end, f.b, f.e) != NULL)
-                return true;
-        }
-    }
-
-    // Implicit * grep
-    if (CountGrep == 0)
-        return true;
-
-    return false;
-}
+// bool ImGuiTextFilter::PassFilter(const char* text, const char* text_end) const
+// {
+//     if (Filters.empty())
+//         return true;
+//
+//     if (text == NULL)
+//         text = "";
+//
+//     for (int i = 0; i != Filters.Size; i++)
+//     {
+//         const ImGuiTextRange& f = Filters[i];
+//         if (f.empty())
+//             continue;
+//         if (f.b[0] == '-')
+//         {
+//             // Subtract
+//             if (ImStristr(text, text_end, f.b + 1, f.e) != NULL)
+//                 return false;
+//         }
+//         else
+//         {
+//             // Grep
+//             if (ImStristr(text, text_end, f.b, f.e) != NULL)
+//                 return true;
+//         }
+//     }
+//
+//     // Implicit * grep
+//     if (CountGrep == 0)
+//         return true;
+//
+//     return false;
+// }
 
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiTextBuffer
@@ -2376,7 +2376,7 @@ void ImGui::CalcListClipping(int items_count, float items_height, int* out_items
     if (is_nav_request && g.NavMoveClipDir == ImGuiDir_Up)
         start--;
     if (is_nav_request && g.NavMoveClipDir == ImGuiDir_Down)
-        end++;
+        end+= 1;
 
     start = ImClamp(start, 0, items_count);
     end = ImClamp(end + 1, start, items_count);
@@ -2533,7 +2533,7 @@ static bool ImGuiListClipper_StepInternal(ImGuiListClipper* clipper)
         clipper->DisplayStart = data->ItemsFrozen;
         clipper->DisplayEnd = ImMin(data->ItemsFrozen + 1, clipper->ItemsCount);
         if (clipper->DisplayStart < clipper->DisplayEnd)
-            data->ItemsFrozen++;
+            data->ItemsFrozen+= 1;
         return true;
     }
 
@@ -2622,7 +2622,7 @@ static bool ImGuiListClipper_StepInternal(ImGuiListClipper* clipper)
         clipper->DisplayEnd = ImMin(data->Ranges[data->StepNo].Max, clipper->ItemsCount);
         if (clipper->DisplayStart > already_submitted) //-V1051
             ImGuiListClipper_SeekCursorForItem(clipper, clipper->DisplayStart);
-        data->StepNo++;
+        data->StepNo+= 1;
         return true;
     }
 
@@ -2912,7 +2912,7 @@ const char* ImGui::FindRenderedTextEnd(const char* text, const char* text_end)
         text_end = (const char*)-1;
 
     while (text_display_end < text_end && *text_display_end != '\0' && (text_display_end[0] != '#' || text_display_end[1] != '#'))
-        text_display_end++;
+        text_display_end+= 1;
     return text_display_end;
 }
 
@@ -3592,7 +3592,7 @@ float ImGui::CalcWrapWidthForPos(const ImVec2& pos, float wrap_pos_x)
 void* ImGui::MemAlloc(size_t size)
 {
     if (ImGuiContext* ctx = GImGui)
-        ctx->IO.MetricsActiveAllocations++;
+        ctx->IO.MetricsActiveAllocations+= 1;
     return (*GImAllocatorAllocFunc)(size, GImAllocatorUserData);
 }
 
@@ -4126,7 +4126,7 @@ static void ImGui::UpdateMouseInputs()
                     is_repeated_click = true;
             }
             if (is_repeated_click)
-                io.MouseClickedLastCount[i]++;
+                io.MouseClickedLastCount[i]+= 1;
             else
                 io.MouseClickedLastCount[i] = 1;
             io.MouseClickedTime[i] = g.Time;
@@ -4735,7 +4735,7 @@ static int IMGUI_CDECL ChildWindowComparer(const void* lhs, const void* rhs)
 
 static void AddWindowToSortBuffer(ImVector<ImGuiWindow*>* out_sorted_windows, ImGuiWindow* window)
 {
-    out_sorted_windows->push_back(window);
+    out_sorted_windows.push(window);
     if (window->Active)
     {
         int count = window->DC.ChildWindows.Size;
@@ -4781,14 +4781,14 @@ static void AddDrawListToDrawData(ImVector<ImDrawList*>* out_list, ImDrawList* d
     if (sizeof(ImDrawIdx) == 2)
         IM_ASSERT(draw_list->_VtxCurrentIdx < (1 << 16) && "Too many vertices in ImDrawList using 16-bit indices. Read comment above");
 
-    out_list->push_back(draw_list);
+    out_list.push(draw_list);
 }
 
 static void AddWindowToDrawData(ImGuiWindow* window, int layer)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiViewportP* viewport = window->Viewport;
-    g.IO.MetricsRenderWindows++;
+    g.IO.MetricsRenderWindows+= 1;
     if (window->Flags & ImGuiWindowFlags_DockNodeHost)
         window->DrawList->ChannelsMerge();
     AddDrawListToDrawData(&viewport->DrawDataBuilder.Layers[layer], window->DrawList);
@@ -6428,7 +6428,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
     g.CurrentWindowStack.push(window_stack_data);
     g.CurrentWindow = None;
     if (flags & ImGuiWindowFlags_ChildMenu)
-        g.BeginMenuCount++;
+        g.BeginMenuCount+= 1;
 
     if (flags & ImGuiWindowFlags_Popup)
     {
@@ -7074,7 +7074,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
     // Clear 'accessed' flag last thing (After PushClipRect which will set the flag. We want the flag to stay false when the default "Debug" window is unused)
     window->WriteAccessed = false;
-    window->BeginCount++;
+    window->BeginCount+= 1;
     g.NextWindowData.ClearFlags();
 
     // Update visibility
@@ -7432,7 +7432,7 @@ void ImGui::BeginDisabled(bool disabled)
     if (was_disabled || disabled)
         g.CurrentItemFlags |= ImGuiItemFlags_Disabled;
     g.ItemFlagsStack.push(g.CurrentItemFlags);
-    g.DisabledStackSize++;
+    g.DisabledStackSize+= 1;
 }
 
 void ImGui::EndDisabled()
@@ -10383,7 +10383,7 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result)
     // FIXME: Those are not good variables names
     ImRect cand = g.LastItemData.NavRect;   // Current item nav rectangle
     const ImRect curr = g.NavScoringRect;   // Current modified source rect (NB: we've applied Max.x = Min.x in NavUpdate() to inhibit the effect of having varied item width)
-    g.NavScoringDebugCount++;
+    g.NavScoringDebugCount+= 1;
 
     // When entering through a NavFlattened border, we consider child window items as fully clipped for scoring
     if (window->ParentWindow == g.NavWindow)
@@ -12460,10 +12460,10 @@ void ImGui::LoadIniSettingsFromMemory(const char* ini_data, size_t ini_size)
     {
         // Skip new lines markers, then find end of the line
         while (*line == '\n' || *line == '\r')
-            line++;
+            line+= 1;
         line_end = line;
         while (line_end < buf_end && *line_end != '\n' && *line_end != '\r')
-            line_end++;
+            line_end+= 1;
         line_end[0] = 0;
         if (line[0] == ';')
             continue;
@@ -12478,7 +12478,7 @@ void ImGui::LoadIniSettingsFromMemory(const char* ini_data, size_t ini_size)
             if (!type_end || !name_start)
                 continue;
             *type_end = 0; // Overwrite first ']'
-            name_start++;  // Skip second '['
+            name_start+= 1;  // Skip second '['
             entry_handler = FindSettingsHandler(type_start);
             entry_data = entry_handler ? entry_handler->ReadOpenFn(&g, entry_handler, name_start) : NULL;
         }
@@ -13979,7 +13979,7 @@ ImGuiID ImGui::DockContextGenNodeID(ImGuiContext* ctx)
     // We should poke in ctx->Nodes to find a suitable ID faster. Even more so trivial that ctx->Nodes lookup is already sorted.
     ImGuiID id = 0x0001;
     while (DockContextFindNodeByID(ctx, id) != NULL)
-        id++;
+        id+= 1;
     return id;
 }
 
@@ -14062,7 +14062,7 @@ static void ImGui::DockContextPruneUnusedSettingsNodes(ImGuiContext* ctx)
         ImGuiDockContextPruneNodeData* parent_data = settings->ParentNodeId ? pool.GetByKey(settings->ParentNodeId) : 0;
         pool.GetOrAddByKey(settings->ID)->RootId = parent_data ? parent_data->RootId : settings->ID;
         if (settings->ParentNodeId)
-            pool.GetOrAddByKey(settings->ParentNodeId)->CountChildNodes++;
+            pool.GetOrAddByKey(settings->ParentNodeId)->CountChildNodes+= 1;
     }
 
     // Count reference to dock ids from dockspaces
@@ -14074,7 +14074,7 @@ static void ImGui::DockContextPruneUnusedSettingsNodes(ImGuiContext* ctx)
             if (ImGuiWindowSettings* window_settings = FindWindowSettings(settings->ParentWindowId))
                 if (window_settings->DockId)
                     if (ImGuiDockContextPruneNodeData* data = pool.GetByKey(window_settings->DockId))
-                        data->CountChildNodes++;
+                        data->CountChildNodes+= 1;
     }
 
     // Count reference to dock ids from window settings
@@ -14083,9 +14083,9 @@ static void ImGui::DockContextPruneUnusedSettingsNodes(ImGuiContext* ctx)
         if (ImGuiID dock_id = settings->DockId)
             if (ImGuiDockContextPruneNodeData* data = pool.GetByKey(dock_id))
             {
-                data->CountWindows++;
+                data->CountWindows+= 1;
                 if (ImGuiDockContextPruneNodeData* data_root = (data->RootId == dock_id) ? data : pool.GetByKey(data->RootId))
-                    data_root->CountChildWindows++;
+                    data_root->CountChildWindows+= 1;
             }
 
     // Prune
@@ -14741,7 +14741,7 @@ static void DockNodeFindInfo(ImGuiDockNode* node, ImGuiDockNodeTreeInfo* info)
     {
         if (info->FirstNodeWithWindows == NULL)
             info->FirstNodeWithWindows = node;
-        info->CountNodesWithWindows++;
+        info->CountNodesWithWindows+= 1;
     }
     if (node->IsCentralNode())
     {
@@ -16171,7 +16171,7 @@ static void DockNodeTreeUpdateSplitterFindTouchingNode(ImGuiDockNode* node, ImGu
 {
     if (node->IsLeafNode())
     {
-        touching_nodes->push_back(node);
+        touching_nodes.push(node);
         return;
     }
     if (node->ChildNodes[0]->IsVisible)
@@ -16786,8 +16786,8 @@ static ImGuiDockNode* DockBuilderCopyNodeRec(ImGuiDockNode* src_node, ImGuiID ds
     dst_node->SplitAxis = src_node->SplitAxis;
     dst_node->UpdateMergedFlags();
 
-    out_node_remap_pairs->push_back(src_node->ID);
-    out_node_remap_pairs->push_back(dst_node->ID);
+    out_node_remap_pairs.push(src_node->ID);
+    out_node_remap_pairs.push(dst_node->ID);
 
     for (int child_n = 0; child_n < IM_ARRAYSIZE(src_node->ChildNodes); child_n++)
         if (src_node->ChildNodes[child_n])
@@ -18573,7 +18573,7 @@ void ImGui::DebugNodeFont(ImFont* font)
             int count = 0;
             for (unsigned int n = 0; n < 256; n++)
                 if (font->FindGlyphNoFallback((base + n)))
-                    count++;
+                    count+= 1;
             if (count <= 0)
                 continue;
             if (!TreeNode((void*)(intptr_t)base, "U+%04X..U+%04X (%d %s)", base, base + 255, count, count > 1 ? "glyphs" : "glyph"))
@@ -18932,7 +18932,7 @@ void ImGui::UpdateDebugToolStackQueries()
     int stack_level = tool->StackLevel;
     if (stack_level >= 0 && stack_level < tool->Results.Size)
         if (tool->Results[stack_level].QuerySuccess || tool->Results[stack_level].QueryFrameCount > 2)
-            tool->StackLevel++;
+            tool->StackLevel+= 1;
 
     // Update hook
     stack_level = tool->StackLevel;
@@ -18941,7 +18941,7 @@ void ImGui::UpdateDebugToolStackQueries()
     if (stack_level >= 0 && stack_level < tool->Results.Size)
     {
         g.DebugHookIdInfo = tool->Results[stack_level].ID;
-        tool->Results[stack_level].QueryFrameCount++;
+        tool->Results[stack_level].QueryFrameCount+= 1;
     }
 }
 
@@ -18956,7 +18956,7 @@ void ImGui::DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, const void* dat
     // This assume that the ID was computed with the current ID stack, which tends to be the case for our widget.
     if (tool->StackLevel == -1)
     {
-        tool->StackLevel++;
+        tool->StackLevel+= 1;
         tool->Results.resize(window->IDStack.Size + 1, ImGuiStackLevelInfo());
         for (int n = 0; n < window->IDStack.Size + 1; n++)
             tool->Results[n].ID = (n < window->IDStack.Size) ? window->IDStack[n] : id;
