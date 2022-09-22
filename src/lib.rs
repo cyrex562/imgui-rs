@@ -10,6 +10,11 @@ mod imgui_storage;
 mod imgui_textfilter;
 mod imgui_h;
 mod type_defs;
+mod imgui_text_buffer;
+mod imgui_list_clipping;
+mod imgui_context;
+mod imgui_internal_h;
+mod imgui_window;
 
 /// void ImGui::Initialize()
 // pub fn initialize(g: &mut Context) {

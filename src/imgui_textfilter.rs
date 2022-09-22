@@ -141,7 +141,7 @@ impl ImGuiTextFilter {
     }
 
     // IMGUI_API void      Build();
-    pub unsafe fn Build(&mut self,) {
+    pub unsafe fn Build(&mut self) {
         // Filters.resize(0);
         self.Filters.clear();
         let  mut input_range = ImGuiTextRange::new2(InputBuf, InputBuf + libc::strlen(self.InputBuf.as_ptr()));
@@ -168,6 +168,13 @@ impl ImGuiTextFilter {
     }
 
     // void                Clear()          { InputBuf[0] = 0; Build(); }
+    pub unsafe fn Clear(&mut self) {
+        self.InputBuf[0] = 0;
+        self.Build();
+    }
 
     // bool                IsActive() const { return !Filters.empty(); }
+    pub unsafe fn IsActive(&mut self) -> bool {
+        !self.Filters.is_empty()
+    }
 }

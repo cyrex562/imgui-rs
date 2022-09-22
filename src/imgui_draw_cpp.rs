@@ -1497,7 +1497,7 @@ void ImDrawList::AddCircle(const ImVec2& center, float radius, u32 col, int num_
     {
         // Use arc with automatic segment count
         _PathArcToFastEx(center, radius - 0.5f32, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0);
-        _Path.Size--;
+        _Path.Size-= 1;
     }
     else
     {
@@ -1521,7 +1521,7 @@ void ImDrawList::AddCircleFilled(const ImVec2& center, float radius, u32 col, in
     {
         // Use arc with automatic segment count
         _PathArcToFastEx(center, radius, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0);
-        _Path.Size--;
+        _Path.Size-= 1;
     }
     else
     {

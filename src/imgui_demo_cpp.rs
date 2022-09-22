@@ -684,7 +684,7 @@ static void ShowDemoWindowWidgets()
         static int counter = 0;
         float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
         ImGui::PushButtonRepeat(true);
-        if (ImGui::ArrowButton("##left", ImGuiDir_Left)) { counter--; }
+        if (ImGui::ArrowButton("##left", ImGuiDir_Left)) { counter-= 1; }
         ImGui::SameLine(0f32, spacing);
         if (ImGui::ArrowButton("##right", ImGuiDir_Right)) { counter+= 1; }
         ImGui::PopButtonRepeat();
@@ -6211,7 +6211,7 @@ void ImGui::ShowAboutWindow(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Forward declare ShowFontAtlas() which isn't worth putting in public API yet
-namespace ImGui { IMGUI_API void ShowFontAtlas(ImFontAtlas* atlas); }
+namespace ImGui {  void ShowFontAtlas(ImFontAtlas* atlas); }
 
 // Demo helper function to select among loaded fonts.
 // Here we use the regular BeginCombo()/EndCombo() api which is the more flexible one.
@@ -6664,9 +6664,9 @@ struct ExampleAppConsole
 
     // Portable helpers
     static int   Stricmp(const char* s1, const char* s2)         { int d; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
-    static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n--; } return d; }
+    static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
     static char* Strdup(const char* s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; void* buf = malloc(len); IM_ASSERT(bu0f32); return (char*)memcpy(buf, (const void*)s, len); }
-    static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end--; *str_end = 0; }
+    static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end-= 1; *str_end = 0; }
 
     void    ClearLog()
     {
@@ -6890,7 +6890,7 @@ struct ExampleAppConsole
                     const char c = word_start[-1];
                     if (c == ' ' || c == '\t' || c == ',' || c == ';')
                         break;
-                    word_start--;
+                    word_start-= 1;
                 }
 
                 // Build a list of candidates
@@ -6953,7 +6953,7 @@ struct ExampleAppConsole
                     if (HistoryPos == -1)
                         HistoryPos = History.Size - 1;
                     else if (HistoryPos > 0)
-                        HistoryPos--;
+                        HistoryPos-= 1;
                 }
                 else if (data->EventKey == ImGuiKey_DownArrow)
                 {
