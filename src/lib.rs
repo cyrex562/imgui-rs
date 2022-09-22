@@ -9,6 +9,7 @@ mod imgui_io;
 mod imgui_storage;
 mod imgui_textfilter;
 mod imgui_h;
+mod type_defs;
 
 /// void ImGui::Initialize()
 // pub fn initialize(g: &mut Context) {
