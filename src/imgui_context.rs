@@ -6,6 +6,8 @@
 use libc::{c_char, c_float, c_int, c_uchar, c_void};
 use crate::imgui_storage::ImGuiStorage;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
+use crate::imgui_window::ImGuiWindow;
+use crate::imgui_io::ImGuiIO;
 use crate::type_defs::{ImGuiActivateFlags, ImGuiColorEditFlags, ImGuiConfigFlags, ImGuiDebugLogFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiItemFlags, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavMoveFlags, ImGuiScrollFlags};
 
 #[derive(Default,Debug,Clone)]

@@ -103,56 +103,82 @@ pub LastTimeActive: float,                     // Last timestamp the window was 
 pub ItemWidthDefault: float,
 pub StateStorage: ImGuiStorage,
 // ImVector<ImGuiOldColumns> ColumnsStorage;
-pub ColumnsStorage: Vec<ImGuiOldColumns>
+pub ColumnsStorage: Vec<ImGuiOldColumns>,
     pub FontWindowScale: float,                    // User scale multiplier per-window, via SetWindowFontScale()
 pub FontDpiScale: float,
 pub SettingsOffset: int,                     // Offset into SettingsWindows[] (offsets are always valid as we only grow the array from the back)
 
-pub DrawList: ImDrawList*,                           // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
+pub DrawList: *mut ImDrawList,                           // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
 pub DrawListInst: ImDrawList,
-pub ParentWindow: ImGuiWindow*,                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
-pub ParentWindowInBeginStack: ImGuiWindow*,
-pub RootWindow: ImGuiWindow*,                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
-pub RootWindowPopupTree: ImGuiWindow*,                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
-pub RootWindowDockTree: ImGuiWindow*,                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
-pub RootWindowForTitleBarHighlight: ImGuiWindow*,     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
-pub RootWindowForNav: ImGuiWindow*,                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
+pub ParentWindow: *mut ImGuiWindow,                       // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
+pub ParentWindowInBeginStack: *mut ImGuiWindow,
+pub RootWindow: *mut ImGuiWindow,                         // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
+pub RootWindowPopupTree: *mut ImGuiWindow,                // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
+pub RootWindowDockTree: *mut ImGuiWindow,                 // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
+pub RootWindowForTitleBarHighlight: *mut ImGuiWindow,     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
+pub RootWindowForNav: *mut ImGuiWindow,                   // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
 
-pub NavLastChildNavWindow: ImGuiWindow*,              // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.Windows sorted by last focused including child window.)
-ImGuiID                 NavLastIds[ImGuiNavLayer_COUNT];    // Last known NavId for this window, per layer (0/1)
-ImRect                  NavRectRel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
+pub NavLastChildNavWindow: *mut ImGuiWindow,              // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.Windows sorted by last focused including child window.)
+// ImGuiID                 NavLastIds[ImGuiNavLayer_COUNT];    // Last known NavId for this window, per layer (0/1)
+pub NavLastIds: [ImGuiID;ImGuiNavLayer_COUNT],
+    // ImRect                  NavRectRel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
+pub NavRectRel: [ImRect;ImGuiNavLayer_COUNT],
 
 pub MemoryDrawListIdxCapacity: int,          // Backup of last idx/vtx count, so when waking up the window we can preallocate and avoid iterative alloc/copy
 pub MemoryDrawListVtxCapacity: int,
 pub MemoryCompacted: bool,                    // Set when window extraneous data have been garbage collected
 
 // Docking
-bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode->Windows.Size > 1).
-bool                    DockNodeIsVisible   :1;
-bool                    DockTabIsVisible    :1;             // Is our window visible this frame? ~~ is the corresponding tab selected?
-bool                    DockTabWantClose    :1;
-pub DockOrder: c_short,                          // Order of the last time the window was visible within its DockNode. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
+// bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode->Windows.Size > 1).
+pub DockIsActive: bool,
+    // bool                    DockNodeIsVisible   :1;
+pub DockNodeIsVisible: bool,
+    // bool                    DockTabIsVisible    :1;             // Is our window visible this frame? ~~ is the corresponding tab selected?
+pub DockTabIsVisible: bool,
+    // bool                    DockTabWantClose    :1;
+pub DockTabWantClose: bool,
+    pub DockOrder: c_short,                          // Order of the last time the window was visible within its DockNode. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
 pub DockStyle: ImGuiWindowDockStyle,
-pub DockNode: ImGuiDockNode*,                           // Which node are we docked into. Important: Prefer testing DockIsActive in many cases as this will still be set when the dock node is hidden.
-pub DockNodeAsHost: ImGuiDockNode*,                     // Which node are we owning (for parent windows)
+pub DockNode: * mut ImGuiDockNode,                           // Which node are we docked into. Important: Prefer testing DockIsActive in many cases as this will still be set when the dock node is hidden.
+pub DockNodeAsHost: * mut ImGuiDockNode,                     // Which node are we owning (for parent windows)
 pub DockId: ImGuiID,                             // Backup of last valid DockNode->ID, so single window remember their dock node id even when they are not bound any more
 pub DockTabItemStatusFlags: ImGuiItemStatusFlags,
 pub DockTabItemRect: ImRect,
 
-public:
-ImGuiWindow(ImGuiContext* context, *const c_char name);
-~ImGuiWindow();
+}
 
-ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
-ImGuiID     GetID(const void* ptr);
-ImGuiID     GetID(int n);
-ImGuiID     GetIDFromRectangle(const ImRect& r_abs);
+impl ImGuiWindow {
+    //ImGuiWindow(ImGuiContext* context, *const c_char name);
+
+
+    //~ImGuiWindow();
+
+    // ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
+
+
+    // ImGuiID     GetID(const void* ptr);
+
+
+    // ImGuiID     GetID(int n);
+
+
+    // ImGuiID     GetIDFromRectangle(const ImRect& r_abs);
 
 // We don't use g.FontSize because the window may be != g.CurrentWindow.
-ImRect      Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
-float       CalcFontSize() const    { let g = GImGui; // ImGuiContext& g = *GImGui; float scale = g.FontBaseSize * FontWindowScale * FontDpiScale; if (ParentWindow) scale *= Parentwindow.FontWindowScale; return scale; }
-float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0f32 : CalcFontSize() + g.Style.FramePadding.y * 2.0f32; }
-ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
-float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0f32 : 0f32; }
-ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
-};
+//     ImRect      Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
+
+
+    // float       CalcFontSize() const    { let g = GImGui; // ImGuiContext& g = *GImGui; float scale = g.FontBaseSize * FontWindowScale * FontDpiScale; if (ParentWindow) scale *= Parentwindow.FontWindowScale; return scale; }
+
+
+    // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0f32 : CalcFontSize() + g.Style.FramePadding.y * 2.0f32; }
+
+
+    // ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
+
+
+    // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0f32 : 0f32; }
+
+
+    // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
+}

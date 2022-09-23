@@ -7,6 +7,7 @@ use libc::c_char;
 use crate::imgui_cpp::{ImStristr, ImStrncpy};
 
 // [Internal]
+#[derive(Default,Debug,Clone)]
 pub struct ImGuiTextRange
 {
     // const char*     b;
