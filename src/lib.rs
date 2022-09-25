@@ -16,6 +16,16 @@ mod imgui_context;
 mod imgui_internal_h;
 mod imgui_window;
 mod imgui_platformio;
+mod imgui_vec2;
+mod imgui_window_class;
+mod imgui_viewport;
+mod imgui_drawlist;
+mod imgui_vec4;
+mod imgui_rect;
+mod imgui_win_dock_style;
+mod imgui_old_columns;
+mod imgui_dock_node;
+mod imgui_draw_data;
 
 /// void ImGui::Initialize()
 // pub fn initialize(g: &mut Context) {

@@ -4,10 +4,15 @@
 //-----------------------------------------------------------------------------
 
 use libc::{c_char, c_float, c_int, c_uchar, c_void};
+use crate::imgui_dock_node::ImGuiDockNode;
 use crate::imgui_storage::ImGuiStorage;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_window::ImGuiWindow;
 use crate::imgui_io::ImGuiIO;
+use crate::imgui_platformio::ImGuiPlatformIO;
+use crate::imgui_rect::ImRect;
+use crate::imgui_vec2::ImVec2;
+use crate::imgui_vec4::ImVec4;
 use crate::type_defs::{ImGuiActivateFlags, ImGuiColorEditFlags, ImGuiConfigFlags, ImGuiDebugLogFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiItemFlags, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavMoveFlags, ImGuiScrollFlags};
 
 #[derive(Default,Debug,Clone)]
@@ -20,7 +25,7 @@ pub struct ImGuiContext
     pub FontAtlasOwnedByContext: bool,
 
     // ImGuiIO                 IO;
-    pub IO: ImGUiIO,
+    pub IO: ImGuiIO,
 
     // ImGuiPlatformIO         PlatformIO;
     pub PlatformIO: ImGuiPlatformIO,

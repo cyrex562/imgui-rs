@@ -136,18 +136,18 @@ pub fn ImGuiListClipper_SeekCursor
         ImGui::TableEndRow(table);
     }
     table->RowPosY2 = window.DC.CursorPos.y;
-    const int row_increase = ((off_y / line_height) + 0.5f32);
+    const c_int row_increase = ((off_y / line_height) + 0.5f32);
     //table->CurrentRow += row_increase; // Can't do without fixing TableEndRow()
     table->RowBgColorCounter += row_increase;
     }
 }
 
-static void ImGuiListClipper_SeekCursorForItem(ImGuiListClipper* clipper, int item_n)
+static void ImGuiListClipper_SeekCursorForItem(ImGuiListClipper* clipper, c_int item_n)
 {
 // StartPosY starts from ItemsFrozen hence the subtraction
 // Perform the add and multiply with double to allow seeking through larger ranges
 ImGuiListClipperData* data = (ImGuiListClipperData*)clipper->TempData;
-float pos_y = ((double)clipper->StartPosY + data->LossynessOffset + (double)(item_n - data->ItemsFrozen) * clipper->ItemsHeight);
+c_float pos_y = ((double)clipper->StartPosY + data->LossynessOffset + (double)(item_n - data->ItemsFrozen) * clipper->ItemsHeight);
 ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y, clipper->ItemsHeight);
 }
 
