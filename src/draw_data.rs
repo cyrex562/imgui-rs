@@ -3,8 +3,8 @@
 use std::ptr::null_mut;
 use libc::c_int;
 use crate::drawlist::ImDrawList;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_viewport::ImGuiViewport;
+use crate::vec2::ImVec2;
+use crate::viewport::ImGuiViewport;
 
 // All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,

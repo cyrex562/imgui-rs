@@ -7,8 +7,8 @@
 //-----------------------------------------------------------------------------
 
 use libc::c_float;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_vec4::ImVec4;
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 use crate::type_defs::ImGuiDir;
 
 #[derive(Default,Debug,Clone)]

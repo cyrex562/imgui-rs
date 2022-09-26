@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
-use crate::imgui_list_clipping::ImGuiListClipper;
+use crate::list_clipping::ImGuiListClipper;
 
 // Temporary clipper data, buffers shared/reused between instances
 #[derive(Default,Debug,Clone)]

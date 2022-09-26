@@ -2,9 +2,9 @@
 
 use std::ptr::null;
 use libc::c_int;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_window::ImGuiWindow;
-use crate::imgui_window_class::ImGuiWindowClass;
+use crate::vec2::ImVec2;
+use crate::window::ImGuiWindow;
+use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::{ImGuiDataAuthority, ImGuiDockNodeFlags, ImGuiID};
 
 // sizeof() 156~192

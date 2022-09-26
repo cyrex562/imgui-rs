@@ -13,9 +13,9 @@ use std::ptr::null_mut;
 use libc::{c_float, c_int, c_short, c_void};
 use crate::draw_data::{ImDrawData, ImDrawDataBuilder};
 use crate::drawlist::ImDrawList;
-use crate::imgui_rect::ImRect;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_window::ImGuiWindow;
+use crate::rect::ImRect;
+use crate::vec2::ImVec2;
+use crate::window::ImGuiWindow;
 use crate::type_defs::{ImGuiID, ImGuiViewportFlags};
 
 pub struct ImGuiViewport {

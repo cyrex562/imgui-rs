@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
 use libc::{c_char, c_float, c_int, c_uint, c_void};
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_vec4::ImVec4;
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 use crate::type_defs::{ImDrawFlags, ImDrawIdx, ImDrawListFlags, ImTextureID};
 
 // Draw command list

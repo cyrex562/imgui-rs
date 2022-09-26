@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
-use crate::imgui_rect::ImRect;
-use crate::imgui_vec2::ImVec2;
+use crate::rect::ImRect;
+use crate::vec2::ImVec2;
 
 // Transient data that are only needed between BeginTable() and EndTable(), those buffers are shared (1 per level of stacked table).
 // - Accessing those requires chasing an extra pointer so for very frequently used data we leave them in the main table structure.

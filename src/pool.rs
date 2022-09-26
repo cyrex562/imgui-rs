@@ -5,7 +5,7 @@
 
 use std::ptr::null_mut;
 use libc::c_int;
-use crate::imgui_storage::ImGuiStorage;
+use crate::storage::ImGuiStorage;
 use crate::nav_item_data::ImGuiNavItemData;
 use crate::type_defs::{ImGuiID, ImPoolIdx};
 

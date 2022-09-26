@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::imgui_vec4::ImVec4;
+use crate::vec4::ImVec4;
 use crate::type_defs::ImGuiCol;
 
 // Stacked color modifier, backup of modified data so we can restore it

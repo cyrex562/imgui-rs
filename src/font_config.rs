@@ -2,7 +2,7 @@
 
 use libc::{c_char, c_float, c_int, c_uint, c_void};
 use crate::font::ImFont;
-use crate::imgui_vec2::ImVec2;
+use crate::vec2::ImVec2;
 use crate::type_defs::ImWchar;
 
 #[derive(Default,Debug,Clone)]

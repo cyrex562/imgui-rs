@@ -5,10 +5,10 @@ use std::str::pattern::Pattern;
 use libc::{c_char, c_float, c_int, c_short, c_uint};
 use crate::drawlist::ImDrawList;
 use crate::font_atlas::ImFontAtlas;
-use crate::imgui_font_config::ImFontConfig;
-use crate::imgui_font_glyph::ImFontGlyph;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_vec4::ImVec4;
+use crate::font_config::ImFontConfig;
+use crate::font_glyph::ImFontGlyph;
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 use crate::type_defs::ImWchar;
 
 // Font runtime data and rendering

@@ -2,8 +2,8 @@
 
 use libc::c_float;
 use crate::font::ImFont;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_vec4::ImVec4;
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 use crate::type_defs::ImDrawListFlags;
 
 // Data shared between all ImDrawList instances

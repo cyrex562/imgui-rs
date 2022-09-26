@@ -5,13 +5,13 @@ use libc::{c_char, c_float, c_int, c_short};
 use crate::context::ImGuiContext;
 use crate::dock_node::ImGuiDockNode;
 use crate::drawlist::ImDrawList;
-use crate::imgui_old_columns::ImGuiOldColumns;
-use crate::imgui_rect::ImRect;
-use crate::imgui_storage::ImGuiStorage;
-use crate::imgui_vec2::{ImVec2, ImVec2ih};
-use crate::imgui_viewport::ImGuiViewport;
-use crate::imgui_win_dock_style::ImGuiWindowDockStyle;
-use crate::imgui_window_class::ImGuiWindowClass;
+use crate::old_columns::ImGuiOldColumns;
+use crate::rect::ImRect;
+use crate::storage::ImGuiStorage;
+use crate::vec2::{ImVec2, ImVec2ih};
+use crate::viewport::ImGuiViewport;
+use crate::win_dock_style::ImGuiWindowDockStyle;
+use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::{ImGuiCond, ImGuiDir, ImGuiID, ImGuiItemStatusFlags, ImGuiLayoutType, ImGuiWindowFlags};
 
 // Storage for one window

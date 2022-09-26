@@ -2,8 +2,8 @@
 
 use std::ptr::null_mut;
 use libc::c_float;
-use crate::imgui_rect::ImRect;
-use crate::imgui_window::ImGuiWindow;
+use crate::rect::ImRect;
+use crate::window::ImGuiWindow;
 use crate::type_defs::{ImGuiID, ImGuiItemFlags};
 
 pub struct ImGuiNavItemData {

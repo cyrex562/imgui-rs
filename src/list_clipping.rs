@@ -142,7 +142,7 @@ pub fn ImGuiListClipper_SeekCursor
     }
 }
 
-static void ImGuiListClipper_SeekCursorForItem(*mut ImGuiListClipper clipper, c_int item_n)
+static c_void ImGuiListClipper_SeekCursorForItem(*mut ImGuiListClipper clipper, c_int item_n)
 {
 // StartPosY starts from ItemsFrozen hence the subtraction
 // Perform the add and multiply with double to allow seeking through larger ranges

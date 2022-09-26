@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
-use crate::imgui_vec2::ImVec2;
+use crate::vec2::ImVec2;
 use crate::type_defs::ImGuiID;
 
 // Stacked storage data for BeginGroup()/EndGroup()

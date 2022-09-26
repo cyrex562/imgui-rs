@@ -131,7 +131,7 @@ struct stbrp_rect
 }; // 16 bytes, nominally
 
 
-STBRP_DEF void stbrp_init_target (stbrp_context *context, c_int width, c_int height, stbrp_node *nodes, c_int num_nodes);
+STBRP_DEF c_void stbrp_init_target (stbrp_context *context, c_int width, c_int height, stbrp_node *nodes, c_int num_nodes);
 // Initialize a rectangle packer to:
 //    pack a rectangle that is 'width' by 'height' in dimensions
 //    using temporary storage provided by the array 'nodes', which is 'num_nodes' long
@@ -152,13 +152,13 @@ STBRP_DEF void stbrp_init_target (stbrp_context *context, c_int width, c_int hei
 // If you do #2, then the non-quantized algorithm will be used, but the algorithm
 // may run out of temporary storage and be unable to pack some rectangles.
 
-STBRP_DEF void stbrp_setup_allow_out_of_mem (stbrp_context *context, c_int allow_out_of_mem);
+STBRP_DEF c_void stbrp_setup_allow_out_of_mem (stbrp_context *context, c_int allow_out_of_mem);
 // Optionally call this function after init but before doing any packing to
 // change the handling of the out-of-temp-memory scenario, described above.
 // If you call init again, this will be reset to the default (false).
 
 
-STBRP_DEF void stbrp_setup_heuristic (stbrp_context *context, c_int heuristic);
+STBRP_DEF c_void stbrp_setup_heuristic (stbrp_context *context, c_int heuristic);
 // Optionally select which packing heuristic the library should use. Different
 // heuristics will produce better/worse results for different data sets.
 // If you call init again, this will be reset to the default.
@@ -230,7 +230,7 @@ enum
    STBRP__INIT_skyline = 1
 };
 
-STBRP_DEF void stbrp_setup_heuristic(stbrp_context *context, c_int heuristic)
+STBRP_DEF c_void stbrp_setup_heuristic(stbrp_context *context, c_int heuristic)
 {
    switch (context->init_mode) {
       case STBRP__INIT_skyline:
@@ -242,7 +242,7 @@ STBRP_DEF void stbrp_setup_heuristic(stbrp_context *context, c_int heuristic)
    }
 }
 
-STBRP_DEF void stbrp_setup_allow_out_of_mem(stbrp_context *context, c_int allow_out_of_mem)
+STBRP_DEF c_void stbrp_setup_allow_out_of_mem(stbrp_context *context, c_int allow_out_of_mem)
 {
    if (allow_out_of_mem)
       // if it's ok to run out of memory, then don't bother aligning them;
@@ -262,7 +262,7 @@ STBRP_DEF void stbrp_setup_allow_out_of_mem(stbrp_context *context, c_int allow_
    }
 }
 
-STBRP_DEF void stbrp_init_target(stbrp_context *context, c_int width, c_int height, stbrp_node *nodes, c_int num_nodes)
+STBRP_DEF c_void stbrp_init_target(stbrp_context *context, c_int width, c_int height, stbrp_node *nodes, c_int num_nodes)
 {
    c_int i;
 
@@ -525,7 +525,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, c
    return res;
 }
 
-static c_int STBRP__CDECL rect_height_compare(const void *a, const void *b)
+static c_int STBRP__CDECL rect_height_compare(const c_void *a, const c_void *b)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
@@ -536,7 +536,7 @@ static c_int STBRP__CDECL rect_height_compare(const void *a, const void *b)
    return (p->w > q->w) ? -1 : (p->w < q->w);
 }
 
-static c_int STBRP__CDECL rect_original_order(const void *a, const void *b)
+static c_int STBRP__CDECL rect_original_order(const c_void *a, const c_void *b)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;

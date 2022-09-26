@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_vec4::ImVec4;
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 
 // Helper: ImRect (2D axis aligned bounding-box)
 // NB: we can't rely on ImVec2 math operators being available here!

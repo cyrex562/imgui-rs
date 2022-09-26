@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
-use crate::imgui_rect::ImRect;
+use crate::rect::ImRect;
 use crate::type_defs::{ImGuiID, ImGuiOldColumnFlags};
 
 pub struct ImGuiOldColumns

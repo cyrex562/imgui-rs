@@ -2,10 +2,10 @@
 
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_void};
 use crate::font::ImFont;
-use crate::imgui_font_config::ImFontConfig;
-use crate::imgui_font_glyph::ImFontGlyph;
-use crate::imgui_vec2::ImVec2;
-use crate::imgui_vec4::ImVec4;
+use crate::font_config::ImFontConfig;
+use crate::font_glyph::ImFontGlyph;
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 use crate::type_defs::{ImFontAtlasFlags, ImGuiMouseCursor, ImTextureID, ImWchar};
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:

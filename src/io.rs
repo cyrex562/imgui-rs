@@ -237,7 +237,7 @@ pub struct ImGuiIO {
     // Only modify via AddFocusEvent()
     pub AppAcceptingEvents: bool,
     // Only modify via SetAppAcceptingEvents()
-    pub BackendUsingLegacyKeyArrays: ImS8,
+    pub BackendUsingLegacyKeyArrays: i8,
     // -1: unknown, 0: using AddKeyEvent(), 1: using legacy io.KeysDown[]
     pub BackendUsingLegacyNavInputArray: bool,
     // 0: using AddKeyAnalogEvent(), 1: writing to legacy io.NavInputs[] directly
@@ -341,7 +341,7 @@ impl ImGuiIO {
             out.KeysData[i].DownDurationPrev = -1f32;
         }
         out.AppAcceptingEvents = true;
-        out.BackendUsingLegacyKeyArrays = (ImS8) - 1;
+        out.BackendUsingLegacyKeyArrays = (i8) - 1;
         out.BackendUsingLegacyNavInputArray = true; // assume using legacy array until proven wrong
         out
     }

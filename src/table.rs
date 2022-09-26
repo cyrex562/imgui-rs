@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
-use crate::imgui_rect::ImRect;
-use crate::imgui_text_buffer::ImGuiTextBuffer;
-use crate::imgui_window::ImGuiWindow;
+use crate::rect::ImRect;
+use crate::text_buffer::ImGuiTextBuffer;
+use crate::window::ImGuiWindow;
 use crate::type_defs::{ImGuiID, ImGuiTableRowFlags};
 
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData 
@@ -11,7 +11,7 @@ use crate::type_defs::{ImGuiID, ImGuiTableRowFlags};
 pub struct ImGuiTable {
     pub ID: ImGuiID,
     pub Flags: ImGuiTableFlags,
-    pub RawData: *mut void,
+    pub RawData: *mut c_void,
     // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
     pub TempData: *mut ImGuiTableTempData,
     // Transient data while table is active. Point within g.CurrentTableStack[]
@@ -38,9 +38,9 @@ pub struct ImGuiTable {
     // Number of columns declared in BeginTable()
     pub CurrentRow: c_int,
     pub CurrentColumn: c_int,
-    pub InstanceCurrent: ImS16,
+    pub InstanceCurrent: i16,
     // Count of BeginTable() calls with same ID in the same frame (generally 0). This is a little bit similar to BeginCount for a window, but multiple table with same ID look are multiple tables, they are just synched.
-    pub InstanceInteracted: ImS16,
+    pub InstanceInteracted: i16,
     // Mark which instance (generally 0) of the same ID is being interacted with
     pub RowPosY1: c_float,
     pub RowPosY2: c_float,

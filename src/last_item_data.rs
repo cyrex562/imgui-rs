@@ -1,4 +1,4 @@
-use crate::imgui_rect::ImRect;
+use crate::rect::ImRect;
 use crate::type_defs::{ImGuiID, ImGuiItemFlags, ImGuiItemStatusFlags};
 
 // Status storage for the last submitted item
