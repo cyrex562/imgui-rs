@@ -1132,13 +1132,13 @@ static void stb_textedit_discard_undo(StbUndoState *state)
          c_int n = state->undo_rec[0].insert_length, i;
          // delete n characters from all other records
          state->undo_char_point -= n;
-         STB_TEXTEDIT_memmove(state->undo_char, state->undo_char + n,  (state->undo_char_point*sizeof(STB_TEXTEDIT_CHARTYPE)));
+         STB_TEXTEDIT_memmove(state->undo_char, state->undo_char + n,  (state->*mut undo_char_pointsizeof(STB_TEXTEDIT_CHARTYPE)));
          for (i=0; i < state->undo_point; ++i)
             if (state->undo_rec[i].char_storage >= 0)
                state->undo_rec[i].char_storage -= n; // @OPTIMIZE: get rid of char_storage and infer it
       }
       --state->undo_point;
-      STB_TEXTEDIT_memmove(state->undo_rec, state->undo_rec+1,  (state->undo_point*sizeof(state->undo_rec[0])));
+      STB_TEXTEDIT_memmove(state->undo_rec, state->undo_rec+1,  (state->*mut undo_pointsizeof(state->undo_rec[0])));
    }
 }
 
@@ -1165,10 +1165,10 @@ static void stb_textedit_discard_redo(StbUndoState *state)
       // now move all the redo records towards the end of the buffer; the first one is at 'redo_point'
       // [DEAR IMGUI]
       size_t move_size = ((STB_TEXTEDIT_UNDOSTATECOUNT - state->redo_point - 1) * sizeof(state->undo_rec[0]));
-      const char* buf_begin = (char*)state->undo_rec; (void)buf_begin;
-      const char* buf_end   = (char*)state->undo_rec + sizeof(state->undo_rec); (void)buf_end;
-      IM_ASSERT(((char*)(state->undo_rec + state->redo_point)) >= buf_begin);
-      IM_ASSERT(((char*)(state->undo_rec + state->redo_point + 1) + move_size) <= buf_end);
+      *const char buf_begin = (*mut char)state->undo_rec; (void)buf_begin;
+      *const char buf_end   = (*mut char)state->undo_rec + sizeof(state->undo_rec); (void)buf_end;
+      IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point)) >= buf_begin);
+      IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point + 1) + move_size) <= buf_end);
       STB_TEXTEDIT_memmove(state->undo_rec + state->redo_point+1, state->undo_rec + state->redo_point, move_size);
 
       // now move redo_point to point to the new one

@@ -1,4 +1,6 @@
 extern crate freetype;
+extern crate core;
+
 use std::collections::HashSet;
 use std::io::stdout;
 
@@ -12,20 +14,43 @@ mod imgui_h;
 mod type_defs;
 mod imgui_text_buffer;
 mod imgui_list_clipping;
-mod imgui_context;
+mod context;
 mod imgui_internal_h;
 mod imgui_window;
 mod imgui_platformio;
 mod imgui_vec2;
 mod imgui_window_class;
 mod imgui_viewport;
-mod imgui_drawlist;
+mod drawlist;
 mod imgui_vec4;
 mod imgui_rect;
 mod imgui_win_dock_style;
 mod imgui_old_columns;
-mod imgui_dock_node;
-mod imgui_draw_data;
+mod dock_node;
+mod draw_data;
+mod imgui_input_event;
+mod font;
+mod imgui_font_glyph;
+mod font_atlas;
+mod imgui_font_config;
+mod draw_list_shared_data;
+mod window_stack_data;
+mod defines;
+mod next_item_data;
+mod last_item_data;
+mod next_window_data;
+mod color_mod;
+mod style_mod;
+mod group_data;
+mod popup_data;
+mod platform_monitor;
+mod nav_item_data;
+mod payload;
+mod list_clipper_data;
+mod table;
+mod table_temp_data;
+mod pool;
+mod draw_channel;
 
 /// void ImGui::Initialize()
 // pub fn initialize(g: &mut Context) {

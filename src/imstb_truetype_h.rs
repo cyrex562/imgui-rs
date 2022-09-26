@@ -284,9 +284,9 @@
 // #include "stb_truetype.h"
 
 unsigned char ttf_buffer[1<<20];
-unsigned char temp_bitmap[512*512];
+unsigned char temp_bitmap[*mut 512512];
 
-stbtt_bakedchar cdata[96]; // ASCII 32..126 is 95 glyphs
+stbtt_bakedcdata: [c_char;96]; // ASCII 32..126 is 95 glyphs
 GLuint ftex;
 
 void my_stbtt_initfont(void)
@@ -349,7 +349,7 @@ c_int main(c_int argc, char **argv)
 
    for (j=0; j < h; ++j) {
       for (i=0; i < w; ++i)
-         putchar(" .:ioVM@"[bitmap[j*w+i]>>5]);
+         putchar(" .:ioVM@"[bitmap[*mut jw+i]>>5]);
       putchar('\n');
    }
    return 0;
@@ -375,7 +375,7 @@ c_int main(c_int argc, char **argv)
 //
 // #if 0
 char buffer[24<<20];
-unsigned char screen[20][79];
+unsigned screen: [c_char;20][79];
 
 c_int main(c_int arg, char **argv)
 {
@@ -389,7 +389,7 @@ c_int main(c_int arg, char **argv)
 
    scale = stbtt_ScaleForPixelHeight(&font, 15);
    stbtt_GetFontVMetrics(&font, &ascent,0,0);
-   baseline =  (ascent*scale);
+   baseline =  (*mut ascentscale);
 
    while (text[ch]) {
       c_int advance,lsb,x0,y0,x1,y1;
@@ -403,7 +403,7 @@ c_int main(c_int arg, char **argv)
       // "alpha blend" that into the working buffer
       xpos += (advance * scale);
       if (text[ch+1])
-         xpos += scale*stbtt_GetCodepointKernAdvance(&font, text[ch],text[ch+1]);
+         xpos += *mut scalestbtt_GetCodepointKernAdvance(&font, text[ch],text[ch+1]);
       ++ch;
    }
 
@@ -434,7 +434,7 @@ c_int main(c_int arg, char **argv)
    typedef signed   char   stbtt_int8;
    typedef unsigned c_short  stbtt_uint16;
    typedef signed   c_short  stbtt_int16;
-   typedef unsigned c_int    stbtt_uint32;
+   typedef c_uint    stbtt_uint32;
    typedef signed   c_int    stbtt_int32;
    #endif
 
@@ -637,7 +637,7 @@ STBTT_DEF c_int  stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned ch
 // calls to stbtt_PackFontRange. Note that you can call this multiple
 // times within a single PackBegin/PackEnd.
 
-STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context *spc, unsigned c_int h_oversample, unsigned c_int v_oversample);
+STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context *spc, c_uint h_oversample, c_uint v_oversample);
 // Oversampling a font increases the quality by allowing higher-quality subpixel
 // positioning, and is especially valuable at smaller text sizes.
 //
@@ -688,7 +688,7 @@ struct stbtt_pack_context {
    c_int   stride_in_bytes;
    c_int   padding;
    c_int   skip_missing;
-   unsigned c_int   h_oversample, v_oversample;
+   c_uint   h_oversample, v_oversample;
    unsigned char *pixels;
    void  *nodes;
 };
@@ -814,7 +814,7 @@ typedef struct stbtt_kerningentry
 } stbtt_kerningentry;
 
 STBTT_DEF c_int  stbtt_GetKerningTableLength(const stbtt_fontinfo *info);
-STBTT_DEF c_int  stbtt_GetKerningTable(const stbtt_fontinfo *info, stbtt_kerningentry* table, c_int table_length);
+STBTT_DEF c_int  stbtt_GetKerningTable(const stbtt_fontinfo *info, *mut stbtt_kerningentry table, c_int table_length);
 // Retrieves a complete list of all of the kerning pairs provided by the font
 // stbtt_GetKerningTable never writes more than table_length entries and returns how many entries it did write.
 // The table will be sorted by (a.glyph1 == b.glyph1)?(a.glyph2 < b.glyph2):(a.glyph1 < b.glyph1)
@@ -1174,7 +1174,7 @@ static stbtt__buf stbtt__new_buf(const void *p, size_t size)
 {
    stbtt__buf r;
    STBTT_assert(size < 0x40000000);
-   r.data = (stbtt_uint8*) p;
+   r.data = (*mut stbtt_uint8) p;
    r.size =  size;
    r.cursor = 0;
    return r;
@@ -1270,7 +1270,7 @@ static stbtt__buf stbtt__cff_index_get(stbtt__buf b, c_int i)
    offsize = stbtt__buf_get8(&b);
    STBTT_assert(i >= 0 && i < count);
    STBTT_assert(offsize >= 1 && offsize <= 4);
-   stbtt__buf_skip(&b, i*offsize);
+   stbtt__buf_skip(&b, *mut ioffsize);
    start = stbtt__buf_get(&b, offsize);
    end = stbtt__buf_get(&b, offsize);
    return stbtt__buf_range(&b, 2+(count+1)*offsize+start, end - start);
@@ -1314,7 +1314,7 @@ static stbtt_uint32 stbtt__find_table(stbtt_uint8 *data, stbtt_uint32 fontstart,
    stbtt_uint32 tabledir = fontstart + 12;
    stbtt_int32 i;
    for (i=0; i < num_tables; ++i) {
-      stbtt_uint32 loc = tabledir + 16*i;
+      stbtt_uint32 loc = tabledir + *mut 16i;
       if (stbtt_tag(data+loc+0, tag))
          return ttULONG(data+loc+8);
    }
@@ -1334,7 +1334,7 @@ static c_int stbtt_GetFontOffsetForIndex_internal(unsigned char *font_collection
          stbtt_int32 n = ttLONG(font_collection+8);
          if (index >= n)
             return -1;
-         return ttULONG(font_collection+12+index*4);
+         return ttULONG(font_collection+12+*mut index4);
       }
    }
    return -1;
@@ -1421,7 +1421,7 @@ static c_int stbtt_InitFont_internal(stbtt_fontinfo *info, unsigned char *data, 
       info->fdselect = stbtt__new_buf(NULL, 0);
 
       // @TODO this should use size from table (not 512MB)
-      info->cff = stbtt__new_buf(data+cff, 512*1024*1024);
+      info->cff = stbtt__new_buf(data+cff, *mut 512*mut 10241024);
       b = info->cff;
 
       // read the header
@@ -1533,17 +1533,17 @@ STBTT_DEF c_int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, c_int unicode_c
 
       // they lie from endCount .. endCount + segCount
       // but searchRange is the nearest power of two, so...
-      if (unicode_codepoint >= ttUSHORT(data + search + rangeShift*2))
-         search += rangeShift*2;
+      if (unicode_codepoint >= ttUSHORT(data + search + *mut rangeShift2))
+         search += *mut rangeShift2;
 
       // now decrement to bias correctly to find smallest
       search -= 2;
       while (entrySelector) {
          stbtt_uint16 end;
          searchRange >>= 1;
-         end = ttUSHORT(data + search + searchRange*2);
+         end = ttUSHORT(data + search + *mut searchRange2);
          if (unicode_codepoint > end)
-            search += searchRange*2;
+            search += *mut searchRange2;
          --entrySelector;
       }
       search += 2;
@@ -1552,14 +1552,14 @@ STBTT_DEF c_int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, c_int unicode_c
          stbtt_uint16 offset, start, last;
          stbtt_uint16 item = (stbtt_uint16) ((search - endCount) >> 1);
 
-         start = ttUSHORT(data + index_map + 14 + segcount*2 + 2 + 2*item);
-         last = ttUSHORT(data + endCount + 2*item);
+         start = ttUSHORT(data + index_map + 14 + *mut segcount2 + 2 + *mut 2item);
+         last = ttUSHORT(data + endCount + *mut 2item);
          if (unicode_codepoint < start || unicode_codepoint > last)
             return 0;
 
-         offset = ttUSHORT(data + index_map + 14 + segcount*6 + 2 + 2*item);
+         offset = ttUSHORT(data + index_map + 14 + *mut segcount6 + 2 + *mut 2item);
          if (offset == 0)
-            return (stbtt_uint16) (unicode_codepoint + ttSHORT(data + index_map + 14 + segcount*4 + 2 + 2*item));
+            return (stbtt_uint16) (unicode_codepoint + ttSHORT(data + index_map + 14 + *mut segcount4 + 2 + *mut 2item));
 
          return ttUSHORT(data + offset + (unicode_codepoint-start)*2 + index_map + 14 + segcount*6 + 2 + 2*item);
       }
@@ -2933,7 +2933,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
    c_int y,j=0;
    c_int max_weight = (255 / vsubsample);  // weight per vertical scanline
    c_int s; // vertical subsample index
-   unsigned char scanline_data[512], *scanline;
+   unsigned scanline_data: [c_char;512], *scanline;
 
    if (result->w > 512)
       scanline = (unsigned char *) STBTT_malloc(result->w, userdata);
@@ -4000,7 +4000,7 @@ STBTT_DEF void stbtt_PackEnd  (stbtt_pack_context *spc)
    STBTT_free(spc->pack_info, spc->user_allocator_context);
 }
 
-STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context *spc, unsigned c_int h_oversample, unsigned c_int v_oversample)
+STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context *spc, c_uint h_oversample, c_uint v_oversample)
 {
    STBTT_assert(h_oversample <= STBTT_MAX_OVERSAMPLE);
    STBTT_assert(v_oversample <= STBTT_MAX_OVERSAMPLE);
@@ -4017,7 +4017,7 @@ STBTT_DEF void stbtt_PackSetSkipMissingCodepoints(stbtt_pack_context *spc, c_int
 
 // #define STBTT__OVER_MASK  (STBTT_MAX_OVERSAMPLE-1)
 
-static void stbtt__h_prefilter(unsigned char *pixels, c_int w, c_int h, c_int stride_in_bytes, unsigned c_int kernel_width)
+static void stbtt__h_prefilter(unsigned char *pixels, c_int w, c_int h, c_int stride_in_bytes, c_uint kernel_width)
 {
    unsigned char buffer[STBTT_MAX_OVERSAMPLE];
    c_int safe_w = w - kernel_width;
@@ -4025,7 +4025,7 @@ static void stbtt__h_prefilter(unsigned char *pixels, c_int w, c_int h, c_int st
    STBTT_memset(buffer, 0, STBTT_MAX_OVERSAMPLE); // suppress bogus warning from VS2013 -analyze
    for (j=0; j < h; ++j) {
       c_int i;
-      unsigned c_int total;
+      c_uint total;
       STBTT_memset(buffer, 0, kernel_width);
 
       total = 0;
@@ -4079,7 +4079,7 @@ static void stbtt__h_prefilter(unsigned char *pixels, c_int w, c_int h, c_int st
    }
 }
 
-static void stbtt__v_prefilter(unsigned char *pixels, c_int w, c_int h, c_int stride_in_bytes, unsigned c_int kernel_width)
+static void stbtt__v_prefilter(unsigned char *pixels, c_int w, c_int h, c_int stride_in_bytes, c_uint kernel_width)
 {
    unsigned char buffer[STBTT_MAX_OVERSAMPLE];
    c_int safe_h = h - kernel_width;
@@ -4087,7 +4087,7 @@ static void stbtt__v_prefilter(unsigned char *pixels, c_int w, c_int h, c_int st
    STBTT_memset(buffer, 0, STBTT_MAX_OVERSAMPLE); // suppress bogus warning from VS2013 -analyze
    for (j=0; j < w; ++j) {
       c_int i;
-      unsigned c_int total;
+      c_uint total;
       STBTT_memset(buffer, 0, kernel_width);
 
       total = 0;

@@ -221,3 +221,12 @@ pub type ImGuiTooltipFlags = c_int;
 
 // typedef void (*ImGuiErrorLogCallback)(void* user_data, const char* fmt, ...);
 pub type ImGuiErrorLogCallback = fn(user_data: *mut c_void, fmt: *const c_char);
+
+
+
+// typedef ImBitArray<ImGuiKey_NamedKey_COUNT, -ImGuiKey_NamedKey_BEGIN>    ImBitArrayForNamedKeys;
+pub type ImBitArrayForNamedKeys = ImBitArray;
+
+
+// typedef c_int ImPoolIdx;
+pub type ImPoolIdx = c_int;

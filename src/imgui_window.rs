@@ -2,9 +2,9 @@
 
 
 use libc::{c_char, c_float, c_int, c_short};
-use crate::imgui_context::ImGuiContext;
-use crate::imgui_dock_node::ImGuiDockNode;
-use crate::imgui_drawlist::ImDrawList;
+use crate::context::ImGuiContext;
+use crate::dock_node::ImGuiDockNode;
+use crate::drawlist::ImDrawList;
 use crate::imgui_old_columns::ImGuiOldColumns;
 use crate::imgui_rect::ImRect;
 use crate::imgui_storage::ImGuiStorage;

@@ -130,7 +130,7 @@ pub fn ImGuiListClipper_SeekCursor
     {
         columns -> LineMinY = window.DC.CursorPos.y;
     }        // Setting this so that cell Y position are set properly
-    if (ImGuiTable* table = g.CurrentTable)
+    if (*mut ImGuiTable table = g.CurrentTable)
     {
     if (table->IsInsideRow){
         ImGui::TableEndRow(table);
@@ -142,11 +142,11 @@ pub fn ImGuiListClipper_SeekCursor
     }
 }
 
-static void ImGuiListClipper_SeekCursorForItem(ImGuiListClipper* clipper, c_int item_n)
+static void ImGuiListClipper_SeekCursorForItem(*mut ImGuiListClipper clipper, c_int item_n)
 {
 // StartPosY starts from ItemsFrozen hence the subtraction
 // Perform the add and multiply with double to allow seeking through larger ranges
-ImGuiListClipperData* data = (ImGuiListClipperData*)clipper->TempData;
+*mut ImGuiListClipperData data = (*mut ImGuiListClipperData)clipper->TempData;
 c_float pos_y = ((double)clipper->StartPosY + data->LossynessOffset + (double)(item_n - data->ItemsFrozen) * clipper->ItemsHeight);
 ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y, clipper->ItemsHeight);
 }

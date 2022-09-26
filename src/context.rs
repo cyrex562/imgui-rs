@@ -4,16 +4,38 @@
 //-----------------------------------------------------------------------------
 
 use libc::{c_char, c_float, c_int, c_uchar, c_void};
-use crate::imgui_dock_node::ImGuiDockNode;
+use crate::color_mod::ImGuiColorMod;
+use crate::defines::{ImGuiInputSource, ImGuiNavLayer};
+use crate::draw_list_shared_data::ImDrawListSharedData;
+use crate::group_data::ImGuiGroupData;
+use crate::dock_node::ImGuiDockNode;
+use crate::draw_channel::ImDrawChannel;
+use crate::font::ImFont;
+use crate::imgui_input_event::ImGuiInputEvent;
 use crate::imgui_storage::ImGuiStorage;
 use crate::imgui_text_buffer::ImGuiTextBuffer;
 use crate::imgui_window::ImGuiWindow;
 use crate::imgui_io::ImGuiIO;
 use crate::imgui_platformio::ImGuiPlatformIO;
 use crate::imgui_rect::ImRect;
+use crate::imgui_style::ImGuiStyle;
 use crate::imgui_vec2::ImVec2;
 use crate::imgui_vec4::ImVec4;
-use crate::type_defs::{ImGuiActivateFlags, ImGuiColorEditFlags, ImGuiConfigFlags, ImGuiDebugLogFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiItemFlags, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavMoveFlags, ImGuiScrollFlags};
+use crate::imgui_viewport::ImGuiViewport;
+use crate::last_item_data::ImGuiLastItemData;
+use crate::list_clipper_data::ImGuiListClipperData;
+use crate::nav_item_data::ImGuiNavItemData;
+use crate::next_item_data::ImGuiNextItemData;
+use crate::next_window_data::ImGuiNextWindowData;
+use crate::payload::ImGuiPayload;
+use crate::platform_monitor::ImGuiPlatformMonitor;
+use crate::pool::ImPool;
+use crate::popup_data::ImGuiPopupData;
+use crate::style_mod::ImGuiStyleMod;
+use crate::table::ImGuiTable;
+use crate::table_temp_data::ImGuiTableTempData;
+use crate::type_defs::{ImBitArrayForNamedKeys, ImGuiActivateFlags, ImGuiColorEditFlags, ImGuiConfigFlags, ImGuiDebugLogFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiItemFlags, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavMoveFlags, ImGuiScrollFlags};
+use crate::window_stack_data::ImGuiWindowStackData;
 
 #[derive(Default,Debug,Clone)]
 pub struct ImGuiContext
@@ -276,19 +298,19 @@ pub struct ImGuiContext
     // Viewports
 
     // ImVector<ImGuiViewportP*> Viewports;                        // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
-    pub Viewports: Vec<*mut ImGuiViewportP>,
+    pub Viewports: Vec<*mut ImGuiViewport>,
 
     // float                   CurrentDpiScale;                    // == CurrentViewport->DpiScale
     pub CurrentDpiScale: c_float,
 
     // ImGuiViewportP*         CurrentViewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
-    pub CurrentVIewport: *mut ImGuiViewportP,
+    pub CurrentVIewport: *mut ImGuiViewport,
 
     // ImGuiViewportP*         MouseViewport;
-    pub MouseViewport: *mut ImGuiViewportP,
+    pub MouseViewport: *mut ImGuiViewport,
 
     // ImGuiViewportP*         MouseLastHoveredViewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
-    pub MouseLatHoveredViewport: *mut ImGuiViewportP,
+    pub MouseLatHoveredViewport: *mut ImGuiViewport,
 
     // ImGuiID                 PlatformLastFocusedViewportId;
     pub PlatformLastFocusedViewportId: ImGuiID,
@@ -370,7 +392,7 @@ pub struct ImGuiContext
     pub NavInitRequestFromMove: bool,
 
     // ImGuiID                 NavInitResultId;                    // Init request result (first item of the window, or one for which SetItemDefaultFocus() was called)
-    pub ImGuiID: NavInitResultId,
+    pub NavInitResultId: ImGuiID,
 
     // ImRect                  NavInitResultRectRel;               // Init request result rectangle (relative to parent window)
     pub NavInitResultRectRel: ImRect,
@@ -520,7 +542,7 @@ pub struct ImGuiContext
     pub ClipperTempDataStacked: usize,
 
     // ImVector<ImGuiListClipperData>  ClipperTempData;
-    pub ClipperTempData: Vec<ImGuiListCliiperData>,
+    pub ClipperTempData: Vec<ImGuiListClipperData>,
 
     // Tables
 

@@ -11,8 +11,8 @@
 
 use std::ptr::null_mut;
 use libc::{c_float, c_int, c_short, c_void};
-use crate::imgui_draw_data::{ImDrawData, ImDrawDataBuilder};
-use crate::imgui_drawlist::ImDrawList;
+use crate::draw_data::{ImDrawData, ImDrawDataBuilder};
+use crate::drawlist::ImDrawList;
 use crate::imgui_rect::ImRect;
 use crate::imgui_vec2::ImVec2;
 use crate::imgui_window::ImGuiWindow;
