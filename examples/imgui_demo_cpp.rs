@@ -2071,7 +2071,7 @@ static c_void ShowDemoWindowWidgets()
         ImU64 ULLONG_MAX = (2ULL * 9223372036854775807LL + 1);
         #endif
         const char    s8_zero  = 0,   s8_one  = 1,   s8_fifty  = 50, s8_min  = -128,        s8_max = 127;
-        const ImU8    u8_zero  = 0,   u8_one  = 1,   u8_fifty  = 50, u8_min  = 0,           u8_max = 255;
+        const u8    u8_zero  = 0,   u8_one  = 1,   u8_fifty  = 50, u8_min  = 0,           u8_max = 255;
         const c_short   s16_zero = 0,   s16_one = 1,   s16_fifty = 50, s16_min = -32768,      s16_max = 32767;
         const ImU16   u16_zero = 0,   u16_one = 1,   u16_fifty = 50, u16_min = 0,           u16_max = 65535;
         const i32   s32_zero = 0,   s32_one = 1,   s32_fifty = 50, s32_min = INT_MIN/2,   s32_max = INT_MAX/2,    s32_hi_a = INT_MAX/2 - 100,    s32_hi_b = INT_MAX/2;
@@ -2083,7 +2083,7 @@ static c_void ShowDemoWindowWidgets()
 
         // State
         static char   s8_v  = 127;
-        static ImU8   u8_v  = 255;
+        static u8   u8_v  = 255;
         static c_short  s16_v = 32767;
         static ImU16  u16_v = 65535;
         static i32  s32_v = -1;

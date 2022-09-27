@@ -2,7 +2,7 @@
 
 use libc::{c_float, c_int};
 use crate::vec2::ImVec2;
-use crate::type_defs::ImGuiStyleVar;
+use crate::style_var::ImGuiStyleVar;
 
 // Stacked style modifier, backup of modified data so we can restore it. Data type inferred from the variable.
 #[derive(Default, Debug, Clone)]

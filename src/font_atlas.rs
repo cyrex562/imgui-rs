@@ -2,11 +2,13 @@
 
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_void};
 use crate::font::ImFont;
+use crate::font_atlas_flags::ImFontAtlasFlags;
 use crate::font_config::ImFontConfig;
 use crate::font_glyph::ImFontGlyph;
+use crate::mouse_cursor::ImGuiMouseCursor;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
-use crate::type_defs::{ImFontAtlasFlags, ImGuiMouseCursor, ImTextureID, ImWchar};
+use crate::type_defs::{ImTextureID, ImWchar};
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
 //  - One or more fonts.

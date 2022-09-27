@@ -1,10 +1,12 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_void};
+use crate::condition::ImGuiCond;
+use crate::next_window_data_flags::ImGuiNextWindowDataFlags;
 use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::window_class::ImGuiWindowClass;
-use crate::type_defs::{ImGuiCond, ImGuiID, ImGuiNextWindowDataFlags};
+use crate::type_defs::ImGuiID;
 
 // Storage for SetNexWindow** functions
 #[derive(Default, Debug, Clone)]

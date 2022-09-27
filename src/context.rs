@@ -3,19 +3,33 @@
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
 
+use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_uchar, c_void};
+use crate::activate_flags::{ImGuiActivateFlags, ImGuiActivateFlags_None};
+use crate::chunk_stream::ImChunkStream;
+use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
 use crate::color_mod::ImGuiColorMod;
-use crate::input_source::{ImGuiInputSource, ImGuiNavLayer};
+use crate::combo_preview_data::ImGuiComboPreviewData;
+use crate::config_flags::{ImGuiConfigFlags, ImGuiConfigFlags_None};
+use crate::context_hook::ImGuiContextHook;
+use crate::debug_log_flags::{ImGuiDebugLogFlags, ImGuiDebugLogFlags_OutputToTTY};
+use crate::direction::{ImGuiDir, ImGuiDir_None};
+use crate::dock_context::ImGuiDockContext;
+use crate::input_source::{ImGuiInputSource, ImGuiInputSource_None, ImGuiNavLayer};
 use crate::draw_list_shared_data::ImDrawListSharedData;
 use crate::group_data::ImGuiGroupData;
 use crate::dock_node::ImGuiDockNode;
+use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_None};
 use crate::draw_channel::ImDrawChannel;
 use crate::font::ImFont;
+use crate::font_atlas::ImFontAtlas;
 use crate::input_event::ImGuiInputEvent;
+use crate::input_text_state::ImGuiInputTextState;
 use crate::storage::ImGuiStorage;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::window::ImGuiWindow;
 use crate::io::ImGuiIO;
+use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_None};
 use crate::platform_io::ImGuiPlatformIO;
 use crate::rect::ImRect;
 use crate::style::ImGuiStyle;
@@ -24,25 +38,37 @@ use crate::vec4::ImVec4;
 use crate::viewport::ImGuiViewport;
 use crate::last_item_data::ImGuiLastItemData;
 use crate::list_clipper_data::ImGuiListClipperData;
+use crate::log_type::{ImGuiLogType, ImGuiLogType_None};
+use crate::metrics_config::ImGuiMetricsConfig;
+use crate::mod_flags::{ImGuiModFlags, ImGuiModFlags_None};
+use crate::mouse_button::{ImGuiMouseButton, ImGuiMouseButton_Left};
+use crate::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_Arrow};
 use crate::nav_item_data::ImGuiNavItemData;
+use crate::nav_layer::ImGuiNavLayer_Main;
+use crate::nav_move_flags::{ImGuiNavMoveFlags, ImGuiNavMoveFlags_None};
 use crate::next_item_data::ImGuiNextItemData;
 use crate::next_window_data::ImGuiNextWindowData;
 use crate::payload::ImGuiPayload;
+use crate::platform_ime_data::ImGuiPlatformImeData;
 use crate::platform_monitor::ImGuiPlatformMonitor;
 use crate::pool::ImPool;
 use crate::popup_data::ImGuiPopupData;
 use crate::ptr_or_index::ImGuiPtrOrIndex;
+use crate::scroll_flags::{ImGuiScrollFlags, ImGuiScrollFlags_None};
+use crate::settings_handler::ImGuiSettingsHandler;
 use crate::shrink_width_item::ImGuiShrinkWidthItem;
+use crate::stack_tool::ImGuiStackTool;
 use crate::style_mod::ImGuiStyleMod;
 use crate::tab_bar::ImGuiTabBar;
 use crate::table::ImGuiTable;
+use crate::table_settings::ImGuiTableSettings;
 use crate::table_temp_data::ImGuiTableTempData;
-use crate::type_defs::{ImBitArrayForNamedKeys, ImGuiActivateFlags, ImGuiColorEditFlags, ImGuiConfigFlags, ImGuiDebugLogFlags, ImGuiDir, ImGuiDragDropFlags, ImGuiID, ImGuiItemFlags, ImGuiModFlags, ImGuiMouseCursor, ImGuiNavMoveFlags, ImGuiScrollFlags};
+use crate::type_defs::{ImBitArrayForNamedKeys, ImFileHandle, ImGuiDir, ImGuiID};
+use crate::window_settings::ImGuiWindowSettings;
 use crate::window_stack_data::ImGuiWindowStackData;
 
-#[derive(Default,Debug,Clone)]
-pub struct ImGuiContext
-{
+#[derive(Default, Debug, Clone)]
+pub struct ImGuiContext {
     // bool                    Initialized;
     pub Initialized: bool,
 
@@ -74,10 +100,10 @@ pub struct ImGuiContext
     pub Font: *mut ImFont,
 
     // float                   FontSize;                           // (Shortcut) == FontBaseSize * g.Currentwindow.FontWindowScale == window.FontSize(). Text height for current window.
-    pub FontSisze: f32,
+    pub FontSize: f32,
 
     // float                   FontBaseSize;                       // (Shortcut) == IO.FontGlobalScale * Font->Scale * Font->FontSize. Base text height.
-    pub FontBase: c_float,
+    pub FontBaseSize: c_float,
 
     // ImDrawListSharedData    DrawListSharedData;
     pub DrawListSharedData: ImDrawListSharedData,
@@ -101,7 +127,7 @@ pub struct ImGuiContext
     pub WithinFrameScope: bool,
 
     // bool                    WithinFrameScopeWithImplicitWindow; // Set by NewFrame(), cleared by EndFrame() when the implicit debug window has been pushed
-    pub WithinFrameScopeWIthImplicitWindow: bool,
+    pub WithinFrameScopeWithImplicitWindow: bool,
 
     // bool                    WithinEndChild;                     // Set within EndChild()
     pub WithinEndChild: bool,
@@ -113,7 +139,7 @@ pub struct ImGuiContext
     pub TestEngineHookItems: bool,
 
     // void*                   TestEngine;                         // Test engine user data
-    pub TestEngin: *mut c_void,
+    pub TestEngine: *mut c_void,
 
     // Windows state
 
@@ -139,7 +165,7 @@ pub struct ImGuiContext
     pub WindowsHoverPadding: ImVec2,
 
     // ImGuiWindow*            CurrentWindow;                      // Window being drawn into
-    pub CurrentWIindow: *mut ImGuiWindow,
+    pub CurrentWindow: *mut ImGuiWindow,
 
     // ImGuiWindow*            HoveredWindow;                      // Window the mouse is hovering. Will typically catch mouse inputs.
     pub HoveredWindow: *mut ImGuiWindow,
@@ -307,13 +333,13 @@ pub struct ImGuiContext
     pub CurrentDpiScale: c_float,
 
     // ImGuiViewportP*         CurrentViewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
-    pub CurrentVIewport: *mut ImGuiViewport,
+    pub CurrentViewport: *mut ImGuiViewport,
 
     // ImGuiViewportP*         MouseViewport;
     pub MouseViewport: *mut ImGuiViewport,
 
     // ImGuiViewportP*         MouseLastHoveredViewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
-    pub MouseLatHoveredViewport: *mut ImGuiViewport,
+    pub MouseLastHoveredViewport: *mut ImGuiViewport,
 
     // ImGuiID                 PlatformLastFocusedViewportId;
     pub PlatformLastFocusedViewportId: ImGuiID,
@@ -422,7 +448,7 @@ pub struct ImGuiContext
     pub NavMoveDir: ImGuiDir,
 
     // ImGuiDir                NavMoveDirForDebug;
-    pub NavModeDirForDebug: ImGuiDir,
+    pub NavMoveDirForDebug: ImGuiDir,
 
     // ImGuiDir                NavMoveClipDir;                     // FIXME-NAV: Describe the purpose of this better. Might want to rename?
     pub NavMoveClipDir: ImGuiDir,
@@ -462,7 +488,7 @@ pub struct ImGuiContext
     pub NavWindowingTargetAnim: *mut ImGuiWindow,
 
     // ImGuiWindow*            NavWindowingListWindow;             // Internal window actually listing the CTRL+Tab contents
-    pub NavWindowlingListWindow: *mut ImGuiWindow,
+    pub NavWindowingListWindow: *mut ImGuiWindow,
 
     // float                   NavWindowingTimer;
     pub NavWindowingTimer: c_float,
@@ -482,7 +508,7 @@ pub struct ImGuiContext
     // Render
 
     // float                   DimBgRatio;                         // 0.0..1.0 animation when fading in a dimming background (for modal window and CTRL+TAB list)
-    pub DimBgRation: c_float,
+    pub DimBgRatio: c_float,
 
     // ImGuiMouseCursor        MouseCursor;
     pub MouseCursor: ImGuiMouseCursor,
@@ -537,7 +563,7 @@ pub struct ImGuiContext
     pub DragDropPayloadBufHead: Vec<c_uchar>,
 
     // unsigned char           DragDropPayloadBufLocal[16];        // Local buffer for small payloads
-    pub DragDropPayloadBufLocal: [c_uchar;16],
+    pub DragDropPayloadBufLocal: [c_uchar; 16],
 
     // Clipper
 
@@ -587,7 +613,7 @@ pub struct ImGuiContext
     pub HoverDelayId: ImGuiID,
 
     // ImGuiID                 HoverDelayIdPreviousFrame;
-    pub HoverDelayPreviousFrame: ImGuiID,
+    pub HoverDelayIdPreviousFrame: ImGuiID,
 
     // float                   HoverDelayTimer;                    // Currently used IsItemHovered(), generally inferred from g.HoveredIdTimer but kept uncleared until clear timer elapse.
     pub HoverDelayTimer: c_float,
@@ -627,7 +653,7 @@ pub struct ImGuiContext
     pub ComboPreviewData: ImGuiComboPreviewData,
 
     // float                   SliderGrabClickOffset;
-    pub SLiderGrabClickOffset: c_float,
+    pub SliderGrabClickOffset: c_float,
 
     // float                   SliderCurrentAccum;                 // Accumulated slider delta when using navigation controls.
     pub SliderCurrentAccum: c_float,
@@ -674,7 +700,7 @@ pub struct ImGuiContext
     pub PlatformImeViewport: ImGuiID,
 
     // char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv()->decimal_point
-    pub PlatformLocalDecimalPoint: c_char,
+    pub PlatformLocaleDecimalPoint: c_char,
 
     // Extensions
     // FIXME: We could provide an API to register one slot in an array held in ImGuiContext?
@@ -724,7 +750,7 @@ pub struct ImGuiContext
     pub LogNextPrefix: *const c_char,
 
     // const char*             LogNextSuffix;
-    pub LogNextSuffic: *const c_char,
+    pub LogNextSuffix: *const c_char,
 
     // float                   LogLinePosY;
     pub LogLinePosY: c_float,
@@ -739,7 +765,7 @@ pub struct ImGuiContext
     pub LogDepthToExpand: c_int,
 
     // int                     LogDepthToExpandDefault;            // Default/stored value for LogDepthMaxExpand if not specified in the LogXXX function call.
-    pub LogdepthToExpandDefault: c_int,
+    pub LogDepthToExpandDefault: c_int,
 
     // Debug Tools
     // ImGuiDebugLogFlags      DebugLogFlags;
@@ -752,7 +778,7 @@ pub struct ImGuiContext
     pub DebugItemPickerActive: bool,
 
     // ImU8                    DebugItemPickerMouseButton;
-    pub DebugItemPickerMouseButton: u8,
+    pub DebugItemPickerMouseButton: ImGuiMouseButton,
 
     // ImGuiID                 DebugItemPickerBreakId;             // Will call IM_DEBUG_BREAK() when encountering this ID
     pub DebugItemPickerBreakId: ImGuiID,
@@ -764,11 +790,11 @@ pub struct ImGuiContext
     pub DebugStackTool: ImGuiStackTool,
 
     // ImGuiDockNode*          DebugHoveredDockNode;               // Hovered dock node.
-    pub DebugHoverDockMode: *mut ImGuiDockNode,
+    pub DebugHoveredDockNode: *mut ImGuiDockNode,
 
     // Misc
     // float                   FramerateSecPerFrame[60];           // Calculate estimate of framerate for user over the last 60 frames..
-    pub FramerateSecPerFrame: [c_float;60],
+    pub FramerateSecPerFrame: [c_float; 60],
 
     // int                     FramerateSecPerFrameIdx;
     pub FramerateSecPerFrameIdx: c_int,
@@ -783,7 +809,7 @@ pub struct ImGuiContext
     pub WantCaptureMouseNextFrame: c_int,
 
     // int                     WantCaptureKeyboardNextFrame;       // "
-    pub WantCaptureKeboardNextFrame: c_int,
+    pub WantCaptureKeyboardNextFrame: c_int,
 
     // int                     WantTextInputNextFrame;
     pub WantTextInputNextFrame: c_int,
@@ -793,172 +819,202 @@ pub struct ImGuiContext
 }
 
 impl ImGuiContext {
-    pub fn new() -> Self {
-//         ImGuiContext(ImFontAtlas* shared_font_atlas)
-//         {
-//             Initialized = false;
-//             ConfigFlagsCurrFrame = ConfigFlagsLastFrame = ImGuiConfigFlags_None;
-//             FontAtlasOwnedByContext = shared_font_atlas ? false : true;
-//             Font = None;
-//             FontSize = FontBaseSize = 0f32;
-//             IO.Fonts = shared_font_atlas ? shared_font_atlas : IM_NEW(ImFontAtlas)();
-//             Time = 0f32;
-//             FrameCount = 0;
-//             FrameCountEnded = FrameCountPlatformEnded = FrameCountRendered = -1;
-//             WithinFrameScope = WithinFrameScopeWithImplicitWindow = WithinEndChild = false;
-//             GcCompactAll = false;
-//             TestEngineHookItems = false;
-//             TestEngine = None;
-//
-//             WindowsActiveCount = 0;
-//             CurrentWindow = None;
-//             HoveredWindow = None;
-//             HoveredWindowUnderMovingWindow = None;
-//             MovingWindow = None;
-//             WheelingWindow = None;
-//             WheelingWindowTimer = 0f32;
-//
-//             DebugHookIdInfo = 0;
-//             HoveredId = HoveredIdPreviousFrame = 0;
-//             HoveredIdAllowOverlap = false;
-//             HoveredIdUsingMouseWheel = HoveredIdPreviousFrameUsingMouseWheel = false;
-//             HoveredIdDisabled = false;
-//             HoveredIdTimer = HoveredIdNotActiveTimer = 0f32;
-//             ActiveId = 0;
-//             ActiveIdIsAlive = 0;
-//             ActiveIdTimer = 0f32;
-//             ActiveIdIsJustActivated = false;
-//             ActiveIdAllowOverlap = false;
-//             ActiveIdNoClearOnFocusLoss = false;
-//             ActiveIdHasBeenPressedBefore = false;
-//             ActiveIdHasBeenEditedBefore = false;
-//             ActiveIdHasBeenEditedThisFrame = false;
-//             ActiveIdClickOffset = ImVec2(-1, -1);
-//             ActiveIdWindow = None;
-//             ActiveIdSource = ImGuiInputSource_None;
-//             ActiveIdMouseButton = -1;
-//             ActiveIdPreviousFrame = 0;
-//             ActiveIdPreviousFrameIsAlive = false;
-//             ActiveIdPreviousFrameHasBeenEditedBefore = false;
-//             ActiveIdPreviousFrameWindow = None;
-//             LastActiveId = 0;
-//             LastActiveIdTimer = 0f32;
-//
-//             ActiveIdUsingNavDirMask = 0x00;
-//             ActiveIdUsingKeyInputMask.ClearAllBits();
-// // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//             ActiveIdUsingNavInputMask = 0x00;
-// // #endif
-//
-//             CurrentItemFlags = ImGuiItemFlags_None;
-//             BeginMenuCount = 0;
-//
-//             CurrentDpiScale = 0f32;
-//             CurrentViewport = None;
-//             MouseViewport = MouseLastHoveredViewport = None;
-//             PlatformLastFocusedViewportId = 0;
-//             ViewportFrontMostStampCount = 0;
-//
-//             NavWindow = None;
-//             NavId = NavFocusScopeId = NavActivateId = NavActivateDownId = NavActivatePressedId = NavActivateInputId = 0;
-//             NavJustMovedToId = NavJustMovedToFocusScopeId = NavNextActivateId = 0;
-//             NavActivateFlags = NavNextActivateFlags = ImGuiActivateFlags_None;
-//             NavJustMovedToKeyMods = ImGuiModFlags_None;
-//             NavInputSource = ImGuiInputSource_None;
-//             NavLayer = ImGuiNavLayer_Main;
-//             NavIdIsAlive = false;
-//             NavMousePosDirty = false;
-//             NavDisableHighlight = true;
-//             NavDisableMouseHover = false;
-//             NavAnyRequest = false;
-//             NavInitRequest = false;
-//             NavInitRequestFromMove = false;
-//             NavInitResultId = 0;
-//             NavMoveSubmitted = false;
-//             NavMoveScoringItems = false;
-//             NavMoveForwardToNextFrame = false;
-//             NavMoveFlags = ImGuiNavMoveFlags_None;
-//             NavMoveScrollFlags = ImGuiScrollFlags_None;
-//             NavMoveKeyMods = ImGuiModFlags_None;
-//             NavMoveDir = NavMoveDirForDebug = NavMoveClipDir = ImGuiDir_None;
-//             NavScoringDebugCount = 0;
-//             NavTabbingDir = 0;
-//             NavTabbingCounter = 0;
-//
-//             NavWindowingTarget = NavWindowingTargetAnim = NavWindowingListWindow = None;
-//             NavWindowingTimer = NavWindowingHighlightAlpha = 0f32;
-//             NavWindowingToggleLayer = false;
-//
-//             DimBgRatio = 0f32;
-//             MouseCursor = ImGuiMouseCursor_Arrow;
-//
-//             DragDropActive = DragDropWithinSource = DragDropWithinTarget = false;
-//             DragDropSourceFlags = ImGuiDragDropFlags_None;
-//             DragDropSourceFrameCount = -1;
-//             DragDropMouseButton = -1;
-//             DragDropTargetId = 0;
-//             DragDropAcceptFlags = ImGuiDragDropFlags_None;
-//             DragDropAcceptIdCurrRectSurface = 0f32;
-//             DragDropAcceptIdPrev = DragDropAcceptIdCurr = 0;
-//             DragDropAcceptFrameCount = -1;
-//             DragDropHoldJustPressedId = 0;
-//             memset(DragDropPayloadBufLocal, 0, sizeof(DragDropPayloadBufLocal));
-//
-//             ClipperTempDataStacked = 0;
-//
-//             CurrentTable = None;
-//             TablesTempDataStacked = 0;
-//             CurrentTabBar = None;
-//
-//             HoverDelayId = HoverDelayIdPreviousFrame = 0;
-//             HoverDelayTimer = HoverDelayClearTimer = 0f32;
-//
-//             TempInputId = 0;
-//             ColorEditOptions = ImGuiColorEditFlags_DefaultOptions_;
-//             ColorEditLastHue = ColorEditLastSat = 0f32;
-//             ColorEditLastColor = 0;
-//             SliderGrabClickOffset = 0f32;
-//             SliderCurrentAccum = 0f32;
-//             SliderCurrentAccumDirty = false;
-//             DragCurrentAccumDirty = false;
-//             DragCurrentAccum = 0f32;
-//             DragSpeedDefaultRatio = 1f32 / 100f32;
-//             ScrollbarClickDeltaToGrabCenter = 0f32;
-//             DisabledAlphaBackup = 0f32;
-//             DisabledStackSize = 0;
-//             TooltipOverrideCount = 0;
-//
-//             PlatformImeData.InputPos = ImVec2(0f32, 0f32);
-//             PlatformImeDataPrev.InputPos = ImVec2(-1f32, -1f32); // Different to ensure initial submission
-//             PlatformImeViewport = 0;
-//             PlatformLocaleDecimalPoint = '.';
-//
-//             SettingsLoaded = false;
-//             SettingsDirtyTimer = 0f32;
-//             HookIdNext = 0;
-//
-//             LogEnabled = false;
-//             LogType = ImGuiLogType_None;
-//             LogNextPrefix = LogNextSuffix = None;
-//             LogFile = None;
-//             LogLinePosY = f32::MAX;
-//             LogLineFirstItem = false;
-//             LogDepthRef = 0;
-//             LogDepthToExpand = LogDepthToExpandDefault = 2;
-//
-//             DebugLogFlags = ImGuiDebugLogFlags_OutputToTTY;
-//             DebugItemPickerActive = false;
-//             DebugItemPickerMouseButton = ImGuiMouseButton_Left;
-//             DebugItemPickerBreakId = 0;
-//             DebugHoveredDockNode = None;
-//
-//             memset(FramerateSecPerFrame, 0, sizeof(FramerateSecPerFrame));
-//             FramerateSecPerFrameIdx = FramerateSecPerFrameCount = 0;
-//             FramerateSecPerFrameAccum = 0f32;
-//             WantCaptureMouseNextFrame = WantCaptureKeyboardNextFrame = WantTextInputNextFrame = -1;
-//         }
-        Self {
+    pub unsafe fn new(shared_font_atlas: *mut ImFontAtlas) -> Self {
+        let mut out = Self {
+            Initialized: false,
+            ConfigFlagsCurrFrame: ImGuiConfigFlags_None,
+            ConfigFlagsLastFrame: ImGuiConfigFlags_None,
+            FontAtlasOwnedByContext: if shared_font_atlas.is_null() == false { false } else { true },
+            Font: null_mut(),
+            FontSize: 0f32,
+            FontBaseSize: 0f32,
+            Time: 0f32,
+            FrameCount: 0,
+            FrameCountEnded: -1,
+            FrameCountPlatformEnded: -1,
+            FrameCountRendered: -1,
+            WithinFrameScope: false,
+            WithinFrameScopeWithImplicitWindow: false,
+            WithinEndChild: false,
+            GcCompactAll: false,
+            TestEngineHookItems: false,
+            TestEngine: null_mut(),
+            WindowsActiveCount: 0,
+            CurrentWindow: null_mut(),
+            HoveredWindow: null_mut(),
+            HoveredWindowUnderMovingWindow: null_mut(),
+            MovingWindow: null_mut(),
+            WheelingWindow: null_mut(),
+            WheelingWindowTimer: 0f32,
+            DebugHookIdInfo: 0,
+            HoveredId: 0,
+            HoveredIdPreviousFrame: 0,
+            HoveredIdAllowOverlap: false,
+            HoveredIdUsingMouseWheel: false,
+            HoveredIdPreviousFrameUsingMouseWheel: false,
+            HoveredIdDisabled: false,
+            HoveredIdTimer: 0f32,
+            HoveredIdNotActiveTimer: 0f32,
+            ActiveId: 0,
+            ActiveIdIsAlive: 0,
+            ActiveIdTimer: 0f32,
+            ActiveIdIsJustActivated: false,
+            ActiveIdAllowOverlap: false,
+            ActiveIdNoClearOnFocusLoss: false,
+            ActiveIdHasBeenPressedBefore: false,
+            ActiveIdHasBeenEditedBefore: false,
+            ActiveIdHasBeenEditedThisFrame: false,
+            ActiveIdClickOffset: ImVec2::new2(-1f32, -1f32),
+            ActiveIdWindow: null_mut(),
+            ActiveIdSource: ImGuiInputSource_None,
+            ActiveIdMouseButton: -1,
+            ActiveIdPreviousFrame: 0,
+            ActiveIdPreviousFrameIsAlive: false,
+            ActiveIdPreviousFrameHasBeenEditedBefore: false,
+            ActiveIdPreviousFrameWindow: null_mut(),
+            LastActiveId: 0,
+            LastActiveIdTimer: 0f32,
+            ActiveIdUsingNavDirMask: 0x00,
+// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+//             ActiveIdUsingNavInputMask : 0x00,
+// #endif
+
+            CurrentItemFlags: ImGuiItemFlags_None,
+            BeginMenuCount: vec![],
+
+            CurrentDpiScale: 0f32,
+            CurrentViewport: null_mut(),
+            MouseViewport: null_mut(),
+            MouseLastHoveredViewport: null_mut(),
+            PlatformLastFocusedViewportId: 0,
+            ViewportFrontMostStampCount: 0,
+
+            NavWindow: null_mut(),
+            NavId: 0,
+            NavFocusScopeId: 0,
+            NavActivateId: 0,
+            NavActivateDownId: 0,
+            NavActivatePressedId: 0,
+            NavActivateInputId: 0,
+            NavJustMovedToId: 0,
+            NavJustMovedToFocusScopeId: 0,
+            NavNextActivateId: 0,
+            NavActivateFlags: ImGuiActivateFlags_None,
+            NavNextActivateFlags: ImGuiActivateFlags_None,
+            NavJustMovedToKeyMods: ImGuiModFlags_None,
+            NavInputSource: ImGuiInputSource_None,
+            NavLayer: ImGuiNavLayer_Main,
+            NavIdIsAlive: false,
+            NavMousePosDirty: false,
+            NavDisableHighlight: true,
+            NavDisableMouseHover: false,
+            NavAnyRequest: false,
+            NavInitRequest: false,
+            NavInitRequestFromMove: false,
+            NavInitResultId: 0,
+            NavMoveSubmitted: false,
+            NavMoveScoringItems: false,
+            NavMoveForwardToNextFrame: false,
+            NavMoveFlags: ImGuiNavMoveFlags_None,
+            NavMoveScrollFlags: ImGuiScrollFlags_None,
+            NavMoveKeyMods: ImGuiModFlags_None,
+            NavMoveDir: ImGuiDir_None,
+            NavMoveDirForDebug: ImGuiDir_None,
+            NavMoveClipDir: ImGuiDir_None,
+            NavScoringDebugCount: 0,
+            NavTabbingDir: 0,
+            NavTabbingCounter: 0,
+
+            NavWindowingTarget: null_mut(),
+            NavWindowingTargetAnim: null_mut(),
+            NavWindowingListWindow: null_mut(),
+            NavWindowingTimer: 0f32,
+            NavWindowingHighlightAlpha: 0f32,
+            NavWindowingToggleLayer: false,
+
+            DimBgRatio: 0f32,
+            MouseCursor: ImGuiMouseCursor_Arrow,
+
+            DragDropActive: false,
+            DragDropWithinSource: false,
+            DragDropWithinTarget: false,
+            DragDropSourceFlags: ImGuiDragDropFlags_None,
+            DragDropSourceFrameCount: -1,
+            DragDropMouseButton: -1,
+            DragDropTargetId: 0,
+            DragDropAcceptFlags: ImGuiDragDropFlags_None,
+            DragDropAcceptIdCurrRectSurface: 0f32,
+            DragDropAcceptIdPrev: 0,
+            DragDropAcceptIdCurr: 0,
+            DragDropAcceptFrameCount: -1,
+            DragDropHoldJustPressedId: 0,
+
+            ClipperTempDataStacked: 0,
+
+            CurrentTable: null_mut(),
+            TablesTempDataStacked: 0,
+            CurrentTabBar: null_mut(),
+
+            HoverDelayId: 0,
+            HoverDelayIdPreviousFrame: 0,
+            HoverDelayTimer: 0f32,
+            HoverDelayClearTimer: 0f32,
+
+            TempInputId: 0,
+            ColorEditOptions: ImGuiColorEditFlags_DefaultOptions_,
+            ColorEditLastHue: 0f32,
+            ColorEditLastSat: 0f32,
+            ColorEditLastColor: 0,
+            SliderGrabClickOffset: 0f32,
+            SliderCurrentAccum: 0f32,
+            SliderCurrentAccumDirty: false,
+            DragCurrentAccumDirty: false,
+            DragCurrentAccum: 0f32,
+            DragSpeedDefaultRatio: 1f32 / 100f32,
+            ScrollbarClickDeltaToGrabCenter: 0f32,
+            DisabledAlphaBackup: 0f32,
+            DisabledStackSize: 0,
+            TooltipOverrideCount: 0,
+
+            PlatformImeViewport: 0,
+            PlatformLocaleDecimalPoint: '.'.into(),
+
+            SettingsLoaded: false,
+            SettingsDirtyTimer: 0f32,
+            HookIdNext: vec![],
+
+            LogEnabled: false,
+            LogType: ImGuiLogType_None,
+            LogNextPrefix: null_mut(),
+            LogNextSuffix: null_mut(),
+            LogFile: null_mut(),
+            LogLinePosY: f32::MAX,
+            LogLineFirstItem: false,
+            LogDepthRef: 0,
+            LogDepthToExpand: 2,
+            LogDepthToExpandDefault: 2,
+
+            DebugLogFlags: ImGuiDebugLogFlags_OutputToTTY,
+            DebugItemPickerActive: false,
+            DebugItemPickerMouseButton: ImGuiMouseButton_Left,
+            DebugItemPickerBreakId: 0,
+            DebugHoveredDockNode: null_mut(),
+
+            FramerateSecPerFrameIdx: 0,
+            FramerateSecPerFrameCount: 0,
+            FramerateSecPerFrameAccum: 0f32,
+            WantCaptureMouseNextFrame: -1,
+            WantCaptureKeyboardNextFrame: -1,
+            WantTextInputNextFrame: -1,
             ..Default::default()
-        }
+        };
+
+        out.IO.Fonts = if shared_font_atlas.is_null() == false { shared_font_atlas } else { IM_NEW(ImFontAtlas)() };
+        out.ActiveIdUsingKeyInputMask.ClearAllBits();
+        out.PlatformImeData.InputPos = ImVec2::new();
+        out.PlatformImeDataPrev.InputPos = ImVec2::new2(-1f32, -1f32); // Different to ensure initial submission
+        libc::memset(out.DragDropPayloadBufLocal.as_mut_ptr(), 0, libc::sizeof(out.DragDropPayloadBufLocal));
+        libc::memset(out.FramerateSecPerFrame.as_mut_ptr(), 0, libc::sizeof(FramerateSecPerFrame));
+        return out;
     }
 }

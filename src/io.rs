@@ -2,8 +2,12 @@
 
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_double, c_float, c_int, c_void};
+use crate::backend_flags::ImGuiBackendFlags;
+use crate::config_flags::ImGuiConfigFlags;
 use crate::imgui_cpp::{GImGui, ImTextCharFromUtf8};
-use crate::type_defs::{ImGuiBackendFlags, ImGuiConfigFlags, ImGuiID, ImGuiKey, ImGuiModFlags, ImWchar, ImWchar16};
+use crate::key::ImGuiKey;
+use crate::mod_flags::ImGuiModFlags;
+use crate::type_defs::{ImGuiID, ImWchar, ImWchar16};
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiIO {

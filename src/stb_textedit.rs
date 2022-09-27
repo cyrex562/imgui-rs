@@ -1,4 +1,5 @@
 // [DEAR IMGUI]
+#![allow(non_camel_case_types)]
 // This is a slightly modified version of stb_textedit.h 1.14.
 // Those changes would need to be pushed into nothings/stb:
 // - Fix in stb_textedit_discard_redo (see https://github.com/nothings/stb/issues/321)
@@ -285,74 +286,32 @@
 // and undo state.
 //
 
+use libc::c_int;
+
 // #ifndef STB_TEXTEDIT_UNDOSTATECOUNT
 // #define STB_TEXTEDIT_UNDOSTATECOUNT   99
 // #endif
+pub const STB_TEXTEDIT_UNDOSTATECOUNT: usize = 99;
+
 // #ifndef STB_TEXTEDIT_UNDOCHARCOUNT
 // #define STB_TEXTEDIT_UNDOCHARCOUNT   999
 // #endif
+pub const STB_TEXTEDIT_UNDOCHARCOUNT: usize = 999;
 // #ifndef STB_TEXTEDIT_CHARTYPE
 // #define STB_TEXTEDIT_CHARTYPE        int
 // #endif
+pub type STB_TEXTEDIT_CHARTYPE = c_int;
+
 // #ifndef STB_TEXTEDIT_POSITIONTYPE
 // #define STB_TEXTEDIT_POSITIONTYPE    int
 // #endif
+pub type STB_TEXTEDIT_POSITIONTYPE  = c_int;
 
-typedef struct
-{
-   // private data
-   STB_TEXTEDIT_POSITIONTYPE  where;
-   STB_TEXTEDIT_POSITIONTYPE  insert_length;
-   STB_TEXTEDIT_POSITIONTYPE  delete_length;
-   c_int                        char_storage;
-} StbUndoRecord;
 
-typedef struct
-{
-   // private data
-   StbUndoRecord          undo_rec [STB_TEXTEDIT_UNDOSTATECOUNT];
-   STB_TEXTEDIT_CHARTYPE  undo_char[STB_TEXTEDIT_UNDOCHARCOUNT];
-   c_short undo_point, redo_point;
-   c_int undo_char_point, redo_char_point;
-} StbUndoState;
 
-typedef struct
-{
-   /////////////////////
-   //
-   // public data
-   //
 
-   c_int cursor;
-   // position of the text cursor within the string
 
-   c_int select_start;          // selection start point
-   c_int select_end;
-   // selection start and end point in characters; if equal, no selection.
-   // note that start may be less than or greater than end (e.g. when
-   // dragging the mouse, start is where the initial click was, and you
-   // can drag in either direction)
 
-   unsigned char insert_mode;
-   // each textfield keeps its own insert mode state. to keep an app-wide
-   // insert mode, copy this value in/out of the app state
-
-   c_int row_count_per_page;
-   // page size in number of row.
-   // this value MUST be set to >0 for pageup or pagedown in multilines documents.
-
-   /////////////////////
-   //
-   // private data
-   //
-   unsigned char cursor_at_end_of_line; // not implemented yet
-   unsigned char initialized;
-   unsigned char has_preferred_x;
-   unsigned char single_line;
-   unsigned char padding1, padding2, padding3;
-   c_float preferred_x; // this determines where the cursor up/down tries to seek to along x
-   StbUndoState undostate;
-} STB_TexteditState;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1377,7 +1336,7 @@ static c_void stb_textedit_clear_state(STB_TexteditState *state, c_int is_single
    state->preferred_x = 0;
    state->cursor_at_end_of_line = 0;
    state->initialized = 1;
-   state->single_line = (unsigned char) is_single_line;
+   state->single_line = (c_uchar) is_single_line;
    state->insert_mode = 0;
    state->row_count_per_page = 0;
 }

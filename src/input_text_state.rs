@@ -1,7 +1,10 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
-use crate::type_defs::{ImGuiID, ImGuiInputTextFlags, ImWchar};
+use crate::input_text_flags::ImGuiInputTextFlags;
+use crate::type_defs::{ImGuiID, ImWchar};
+use crate::stb_text_edit_state::STB_TexteditState;
+use crate::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
 
 // Internal state of the currently focused/edited text input box
 // For a given item ID, access with ImGui::GetInputTextState()
@@ -60,13 +63,13 @@ impl ImGuiInputTextState {
 
     // c_int         GetUndoAvailCount() const   { return Stb.undostate.undo_point; }
     pub fn GetUndoAvailCount(&self) -> c_int {
-        Stb.undostate.undo_point
+        self.Stb.undostate.undo_point as c_int
     }
 
 
     // c_int         GetRedoAvailCount() const   { return STB_TEXTEDIT_UNDOSTATECOUNT - Stb.undostate.redo_point; }
     pub fn GetRedoAvailcount(&self) -> c_int {
-        STB_TEXTEDIT_UNDOSTATECOUNT - self.Stb.undostate.redo_point
+        (STB_TEXTEDIT_UNDOSTATECOUNT - self.Stb.undostate.redo_point) as c_int
     }
 
 
@@ -85,23 +88,42 @@ impl ImGuiInputTextState {
     pub fn CursorClamp(&mut self) {
         self.Stb.cursor = ImMin(self.Stb.cursor, self.CurLenW);
         self.Stb.select_start = ImMin(self.Stb.select_start, self.CurLenW);
-        self.Stb.select_end = ImMin(self.stb.select_end, self.CurLenW);
+        self.Stb.select_end = ImMin(self.Stb.select_end, self.CurLenW);
     }
 
     // bool        HasSelection() const        { return Stb.select_start != Stb.select_end; }
-
+    pub fn HasSelection(&self) -> bool {
+        self.Stb.select_start != self.Stb.select_end
+    }
 
     // c_void        ClearSelection()            { Stb.select_start = Stb.select_end = Stb.cursor; }
-
+    pub fn ClearSelection(&mut self) {
+        self.Stb.select_start = self.Stb.cursor;
+        self.Stb.select_end = self.Stb.cursor;
+    }
 
     // c_int         GetCursorPos() const        { return Stb.cursor; }
+    pub fn GetCursorPos(&self) -> c_int {
+        self.Stb.cursor
+    }
 
 
     // c_int         GetSelectionStart() const   { return Stb.select_start; }
+    pub fn GetSelectionStart(&self) -> c_int {
+        self.Stb.select_start
+    }
 
 
     // c_int         GetSelectionEnd() const     { return Stb.select_end; }
+    pub fn GetSelectionEnd(&self) -> c_int {
+        self.Stb.select_end
+    }
 
 
     // c_void        SelectAll()                 { Stb.select_start = 0; Stb.cursor = Stb.select_end = CurLenW; Stb.has_preferred_x = 0; }
+    pub fn SelectAll(&mut self) {
+        self.Stb.select_start = 0;
+        self.Stb.cursor = self.CurLenW;
+        self.Stb.select_end = self.CurLenW;
+    }
 }

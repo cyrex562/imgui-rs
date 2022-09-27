@@ -1,5 +1,7 @@
+use crate::item_flags::ImGuiItemFlags;
+use crate::item_status_flags::ImGuiItemStatusFlags;
 use crate::rect::ImRect;
-use crate::type_defs::{ImGuiID, ImGuiItemFlags, ImGuiItemStatusFlags};
+use crate::type_defs::ImGuiID;
 
 // Status storage for the last submitted item
 #[derive(Default,Debug,Clone)]

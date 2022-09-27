@@ -2620,7 +2620,7 @@ struct ImGuiStyleVarInfo
     ImGuiDataType   Type;
     u32           Count;
     u32           Offset;
-    c_void*           GetVarPtr(ImGuiStyle* style) const { return (c_void*)((unsigned char*)style + Offset); }
+    c_void*           GetVarPtr(ImGuiStyle* style) const { return (c_void*)((c_uchar*)style + Offset); }
 };
 
 static const ImGuiCol GWindowDockStyleColors[ImGuiWindowDockStyleCol_COUNT] =
@@ -6674,7 +6674,7 @@ bool ImGui::Begin(*const char name, bool* p_open, ImGuiWindowFlags flags)
         if (handle_borders_and_resize_grips && !window.Collapsed)
             if (UpdateWindowManualResize(window, size_auto_fit, &border_held, resize_grip_count, &resize_grip_col[0], visibility_rect))
                 use_current_size_for_scrollbar_x = use_current_size_for_scrollbar_y = true;
-        window.ResizeBorderHeld = (signed char)border_held;
+        window.ResizeBorderHeld = (i8)border_held;
 
         // Synchronize window --> viewport again and one last time (clamping and manual resize may have affected either)
         if (window.ViewportOwned)
@@ -13553,36 +13553,9 @@ c_void ImGui::DestroyPlatformWindows()
 // - ImGuiDockContext
 //-----------------------------------------------------------------------------
 
-enum ImGuiDockRequestType
-{
-    ImGuiDockRequestType_None = 0,
-    ImGuiDockRequestType_Dock,
-    ImGuiDockRequestType_Undock,
-    ImGuiDockRequestType_Split                  // Split is the same as Dock but without a DockPayload
-};
 
-struct ImGuiDockRequest
-{
-    ImGuiDockRequestType    Type;
-    ImGuiWindow*            DockTargetWindow;   // Destination/Target Window to dock into (may be a loose window or a DockNode, might be NULL in which case DockTargetNode cannot be NULL)
-    ImGuiDockNode*          DockTargetNode;     // Destination/Target Node to dock into
-    ImGuiWindow*            DockPayload;        // Source/Payload window to dock (may be a loose window or a DockNode), [Optional]
-    ImGuiDir                DockSplitDir;
-    c_float                   DockSplitRatio;
-    bool                    DockSplitOuter;
-    ImGuiWindow*            UndockTargetWindow;
-    ImGuiDockNode*          UndockTargetNode;
 
-    ImGuiDockRequest()
-    {
-        Type = ImGuiDockRequestType_None;
-        DockTargetWindow = DockPayload = UndockTargetWindow = None;
-        DockTargetNode = UndockTargetNode = None;
-        DockSplitDir = ImGuiDir_None;
-        DockSplitRatio = 0.5f32;
-        DockSplitOuter = false;
-    }
-};
+
 
 struct ImGuiDockPreviewData
 {
@@ -13599,21 +13572,7 @@ struct ImGuiDockPreviewData
     ImGuiDockPreviewData() : FutureNode(0) { IsDropAllowed = IsCenterAvailable = IsSidesAvailable = IsSplitDirExplicit = false; SplitNode = None; SplitDir = ImGuiDir_None; SplitRatio = 0.f; for (c_int n = 0; n < IM_ARRAYSIZE(DropRectsDraw); n++) DropRectsDraw[n] = ImRect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX); }
 };
 
-// Persistent Settings data, stored contiguously in SettingsNodes (sizeof() ~32 bytes)
-struct ImGuiDockNodeSettings
-{
-    ImGuiID             ID;
-    ImGuiID             ParentNodeId;
-    ImGuiID             ParentWindowId;
-    ImGuiID             SelectedTabId;
-    signed char         SplitAxis;
-    char                Depth;
-    ImGuiDockNodeFlags  Flags;                  // NB: We save individual flags one by one in ascii format (ImGuiDockNodeFlags_SavedFlagsMask_)
-    ImVec2ih            Pos;
-    ImVec2ih            Size;
-    ImVec2ih            SizeRef;
-    ImGuiDockNodeSettings() { memset(this, 0, sizeof(*this)); SplitAxis = ImGuiAxis_None; }
-};
+
 
 //-----------------------------------------------------------------------------
 // Docking: Forward Declarations
@@ -17238,7 +17197,7 @@ static c_void DockSettingsHandler_DockNodeToSettings(ImGuiDockContext* dc, ImGui
     node_settings.ParentNodeId = node->ParentNode ? node->ParentNode->ID : 0;
     node_settings.ParentWindowId = (node->IsDockSpace() && node->HostWindow && node->Hostwindow.ParentWindow) ? node->Hostwindow.Parentwindow.ID : 0;
     node_settings.SelectedTabId = node->SelectedTabId;
-    node_settings.SplitAxis = (signed char)(node->IsSplitNode() ? node->SplitAxis : ImGuiAxis_None);
+    node_settings.SplitAxis = (i8)(node->IsSplitNode() ? node->SplitAxis : ImGuiAxis_None);
     node_settings.Depth = depth;
     node_settings.Flags = (node->LocalFlags & ImGuiDockNodeFlags_SavedFlagsMask_);
     node_settings.Pos = ImVec2ih(node->Pos);
@@ -17610,7 +17569,7 @@ c_void ImGui::DebugTextEncoding(*const char str)
         {
             if (byte_index > 0)
                 SameLine();
-            Text("0x%02X", (unsigned char)p[byte_index]);
+            Text("0x%02X", (c_uchar)p[byte_index]);
         }
         TableNextColumn();
         if (GetFont()->FindGlyphNoFallback(c))
@@ -18773,7 +18732,7 @@ c_void ImGui::UpdateDebugToolItemPicker()
     }
     for (c_int mouse_button = 0; mouse_button < 3; mouse_button++)
         if (change_mapping && IsMouseClicked(mouse_button))
-            g.DebugItemPickerMouseButton = (ImU8)mouse_button;
+            g.DebugItemPickerMouseButton = (u8)mouse_button;
     SetNextWindowBgAlpha(0.700f32);
     BeginTooltip();
     Text("HoveredId: 0x%08X", hovered_id);

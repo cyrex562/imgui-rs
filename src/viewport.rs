@@ -16,7 +16,8 @@ use crate::drawlist::ImDrawList;
 use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
-use crate::type_defs::{ImGuiID, ImGuiViewportFlags};
+use crate::type_defs::ImGuiID;
+use crate::viewport_flags::ImGuiViewportFlags;
 
 pub struct ImGuiViewport {
     pub Idx: c_int,

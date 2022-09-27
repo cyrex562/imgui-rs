@@ -1,6 +1,9 @@
 #![allow(non_snake_case)]
 
-use crate::type_defs::{ImGuiDockNodeFlags, ImGuiID, ImGuiTabItemFlags, ImGuiViewportFlags};
+use crate::dock_node_flags::ImGuiDockNodeFlags;
+use crate::tab_item_flags::ImGuiTabItemFlags;
+use crate::type_defs::ImGuiID;
+use crate::viewport_flags::ImGuiViewportFlags;
 
 // [ALPHA] Rarely used / very advanced uses only. Use with SetNextWindowClass() and DockSpace() functions.
 // Important: the content of this class is still highly WIP and likely to change and be refactored

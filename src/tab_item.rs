@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
-use crate::type_defs::{ImGuiID, ImGuiTabItemFlags};
+use crate::tab_item_flags::ImGuiTabItemFlags;
+use crate::type_defs::ImGuiID;
 use crate::window::ImGuiWindow;
 
 // Storage for one active tab item (sizeof() 48 bytes)

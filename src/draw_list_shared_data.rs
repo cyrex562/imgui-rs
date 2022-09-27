@@ -4,7 +4,7 @@ use libc::c_float;
 use crate::font::ImFont;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
-use crate::type_defs::ImDrawListFlags;
+use crate::draw_list_flags::ImDrawListFlags;
 
 // Data shared between all ImDrawList instances
 // You may want to create your own instance of this if you want to use ImDrawList completely without ImGui. In that case, watch out for future changes to this structure.

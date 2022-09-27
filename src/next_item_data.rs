@@ -1,7 +1,9 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
-use crate::type_defs::{ImGuiCond, ImGuiID, ImGuiNextItemDataFlags};
+use crate::condition::ImGuiCond;
+use crate::next_item_data_flags::ImGuiNextItemDataFlags;
+use crate::type_defs::ImGuiID;
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiNextItemData {

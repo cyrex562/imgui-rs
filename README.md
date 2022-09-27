@@ -6,4 +6,4 @@ This is a port of the awesome C/C++ Dear ImGui [https://github.com/cyrex562/imgu
 
 ### Search Patterns
 
-`^\s*(\*mut|\*const)?\s*([\w+\*\<\>]+)\s*(\w+);`
+`^\s*(\*mut|\*const)?\s*([\w+\*\<\>]+)\s*(\w+);` => `pub $3: $1 $2,`

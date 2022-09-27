@@ -2,9 +2,10 @@
 
 use libc::{c_float, c_int};
 use crate::rect::ImRect;
+use crate::table_row_flags::ImGuiTableRowFlags;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::window::ImGuiWindow;
-use crate::type_defs::{ImGuiID, ImGuiTableRowFlags};
+use crate::type_defs::ImGuiID;
 
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData 
 #[derive(Default,Debug,Clone)]

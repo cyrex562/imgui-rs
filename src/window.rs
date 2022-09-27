@@ -2,9 +2,12 @@
 
 
 use libc::{c_char, c_float, c_int, c_short};
+use crate::condition::ImGuiCond;
 use crate::context::ImGuiContext;
 use crate::dock_node::ImGuiDockNode;
 use crate::drawlist::ImDrawList;
+use crate::item_status_flags::ImGuiItemStatusFlags;
+use crate::layout_type::ImGuiLayoutType;
 use crate::old_columns::ImGuiOldColumns;
 use crate::rect::ImRect;
 use crate::storage::ImGuiStorage;
@@ -12,7 +15,8 @@ use crate::vec2::{ImVec2, ImVec2ih};
 use crate::viewport::ImGuiViewport;
 use crate::win_dock_style::ImGuiWindowDockStyle;
 use crate::window_class::ImGuiWindowClass;
-use crate::type_defs::{ImGuiCond, ImGuiDir, ImGuiID, ImGuiItemStatusFlags, ImGuiLayoutType, ImGuiWindowFlags};
+use crate::type_defs::{ImGuiDir, ImGuiID};
+use crate::window_flags::ImGuiWindowFlags;
 
 // Storage for one window
 pub struct  ImGuiWindow

@@ -399,7 +399,7 @@ c_void ImDrawListSharedData::SetCircleTessellationMaxError(c_float max_error)
     for (c_int i = 0; i < IM_ARRAYSIZE(CircleSegmentCounts); i++)
     {
         const c_float radius = i;
-        CircleSegmentCounts[i] = (ImU8)((i > 0) ? IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, CircleSegmentMaxError) : IM_DRAWLIST_ARCFAST_SAMPLE_MAX);
+        CircleSegmentCounts[i] = (u8)((i > 0) ? IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, CircleSegmentMaxError) : IM_DRAWLIST_ARCFAST_SAMPLE_MAX);
     }
     ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, CircleSegmentMaxError);
 }
@@ -2044,7 +2044,7 @@ c_void    ImFontAtlas::Clear()
     ClearFonts();
 }
 
-c_void    ImFontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, c_int* out_width, c_int* out_height, c_int* out_bytes_per_pixel)
+c_void    ImFontAtlas::GetTexDataAsAlpha8(c_uchar** out_pixels, c_int* out_width, c_int* out_height, c_int* out_bytes_per_pixel)
 {
     // Build atlas on demand
     if (TexPixelsAlpha8 == NULL)
@@ -2056,25 +2056,25 @@ c_void    ImFontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, c_int* out
     if (out_bytes_per_pixel) *out_bytes_per_pixel = 1;
 }
 
-c_void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, c_int* out_width, c_int* out_height, c_int* out_bytes_per_pixel)
+c_void    ImFontAtlas::GetTexDataAsRGBA32(c_uchar** out_pixels, c_int* out_width, c_int* out_height, c_int* out_bytes_per_pixel)
 {
     // Convert to RGBA32 format on demand
     // Although it is likely to be the most commonly used format, our font rendering is 1 channel / 8 bpp
     if (!TexPixelsRGBA32)
     {
-        unsigned char* pixels = None;
+        c_uchar* pixels = None;
         GetTexDataAsAlpha8(&pixels, NULL, NULL);
         if (pixels)
         {
             TexPixelsRGBA32 = (c_uint*)IM_ALLOC(TexWidth * TexHeight * 4);
-            const unsigned char* src = pixels;
+            const c_uchar* src = pixels;
             c_uint* dst = TexPixelsRGBA32;
             for (c_int n = TexWidth * TexHeight; n > 0; n--)
                 *dst++ = IM_COL32(255, 255, 255, (*src++));
         }
     }
 
-    *out_pixels = (unsigned char*)TexPixelsRGBA32;
+    *out_pixels = (c_uchar*)TexPixelsRGBA32;
     if (out_width) *out_width = TexWidth;
     if (out_height) *out_height = TexHeight;
     if (out_bytes_per_pixel) *out_bytes_per_pixel = 4;
@@ -2113,11 +2113,11 @@ ImFont* ImFontAtlas::AddFont(*const ImFontConfig font_cfg)
 }
 
 // Default font TTF is compressed with stb_compress then base85 encoded (see misc/fonts/binary_to_compressed_c.cpp for encoder)
-static c_uint stb_decompress_length(const unsigned char* input);
-static c_uint stb_decompress(unsigned char* output, const unsigned char* input, c_uint length);
+static c_uint stb_decompress_length(const c_uchar* input);
+static c_uint stb_decompress(c_uchar* output, const c_uchar* input, c_uint length);
 static *const char  GetDefaultCompressedFontDataTTFBase85();
 static c_uint Decode85Byte(char c)                                    { return c >= '\\' ? c-36 : c-35; }
-static c_void         Decode85(const unsigned char* src, unsigned char* dst)
+static c_void         Decode85(const c_uchar* src, c_uchar* dst)
 {
     while (*src)
     {
@@ -2188,7 +2188,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryTTF(c_void* ttf_data, c_int ttf_size, c_fl
 ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(*const c_void compressed_ttf_data, c_int compressed_ttf_size, c_float size_pixels, *const ImFontConfig font_cfg_template, *const ImWchar glyph_ranges)
 {
     const c_uint buf_decompressed_size = stb_decompress_length(compressed_ttf_data);
-    unsigned char* buf_decompressed_data = (unsigned char*)IM_ALLOC(buf_decompressed_size);
+    c_uchar* buf_decompressed_data = (c_uchar*)IM_ALLOC(buf_decompressed_size);
     stb_decompress(buf_decompressed_data, compressed_ttf_data, compressed_ttf_size);
 
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
@@ -2201,7 +2201,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedBase85TTF(*const char compressed
 {
     c_int compressed_ttf_size = ((strlen(compressed_ttf_data_base85) + 4) / 5) * 4;
     c_void* compressed_ttf = IM_ALLOC(compressed_ttf_size);
-    Decode85(compressed_ttf_data_base85, (unsigned char*)compressed_tt0f32);
+    Decode85(compressed_ttf_data_base85, (c_uchar*)compressed_tt0f32);
     ImFont* font = AddFontFromMemoryCompressedTTF(compressed_ttf, compressed_ttf_size, size_pixels, font_cfg, glyph_ranges);
     IM_FREE(compressed_tt0f32);
     return font;
@@ -2304,9 +2304,9 @@ c_void    ImFontAtlasBuildMultiplyCalcLookupTable(unsigned out_table: [c_char;25
     }
 }
 
-c_void    ImFontAtlasBuildMultiplyRectAlpha8(const unsigned table: [c_char;256], unsigned char* pixels, c_int x, c_int y, c_int w, c_int h, c_int stride)
+c_void    ImFontAtlasBuildMultiplyRectAlpha8(const unsigned table: [c_char;256], c_uchar* pixels, c_int x, c_int y, c_int w, c_int h, c_int stride)
 {
-    unsigned char* data = pixels + x + y * stride;
+    c_uchar* data = pixels + x + y * stride;
     for (c_int j = h; j > 0; j--, data += stride)
         for (c_int i = 0; i < w; i++)
             data[i] = table[data[i]];
@@ -2389,9 +2389,9 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
             return false;
         }
         // Initialize helper structure for font loading and verify that the TTF/OTF data is correct
-        const c_int font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)cfg.FontData, cfg.FontNo);
+        const c_int font_offset = stbtt_GetFontOffsetForIndex((c_uchar*)cfg.FontData, cfg.FontNo);
         IM_ASSERT(font_offset >= 0 && "FontData is incorrect, or FontNo cannot be found.");
-        if (!stbtt_InitFont(&src_tmp.FontInfo, (unsigned char*)cfg.FontData, font_offset))
+        if (!stbtt_InitFont(&src_tmp.FontInfo, (c_uchar*)cfg.FontData, font_offset))
             return false;
 
         // Measure highest codepoints
@@ -2474,8 +2474,8 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         src_tmp.PackRange.array_of_unicode_codepoints = src_tmp.GlyphsList.Data;
         src_tmp.PackRange.num_chars = src_tmp.GlyphsList.Size;
         src_tmp.PackRange.chardata_for_range = src_tmp.PackedChars;
-        src_tmp.PackRange.h_oversample = (unsigned char)cfg.OversampleH;
-        src_tmp.PackRange.v_oversample = (unsigned char)cfg.OversampleV;
+        src_tmp.PackRange.h_oversample = (c_uchar)cfg.OversampleH;
+        src_tmp.PackRange.v_oversample = (c_uchar)cfg.OversampleV;
 
         // Gather the sizes of all rectangles we will need to pack (this loop is based on stbtt_PackFontRangesGatherRects)
         const c_float scale = (cfg.SizePixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.SizePixels);
@@ -2528,7 +2528,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     // 7. Allocate texture
     atlas->TexHeight = (atlas->Flags & ImFontAtlasFlags_NoPowerOfTwoHeight) ? (atlas->TexHeight + 1) : ImUpperPowerOfTwo(atlas->TexHeight);
     atlas->TexUvScale = ImVec2(1f32 / atlas->TexWidth, 1f32 / atlas->TexHeight);
-    atlas->TexPixelsAlpha8 = (unsigned char*)IM_ALLOC(atlas->TexWidth * atlas->TexHeight);
+    atlas->TexPixelsAlpha8 = (c_uchar*)IM_ALLOC(atlas->TexWidth * atlas->TexHeight);
     memset(atlas->TexPixelsAlpha8, 0, atlas->TexWidth * atlas->TexHeight);
     spc.pixels = atlas->TexPixelsAlpha8;
     spc.height = atlas->TexHeight;
@@ -2653,11 +2653,11 @@ c_void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, c_void* stbrp_context
         }
 }
 
-c_void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, c_int x, c_int y, c_int w, c_int h, *const char in_str, char in_marker_char, unsigned char in_marker_pixel_value)
+c_void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, c_int x, c_int y, c_int w, c_int h, *const char in_str, char in_marker_char, c_uchar in_marker_pixel_value)
 {
     IM_ASSERT(x >= 0 && x + w <= atlas->TexWidth);
     IM_ASSERT(y >= 0 && y + h <= atlas->TexHeight);
-    unsigned char* out_pixel = atlas->TexPixelsAlpha8 + x + (y * atlas->TexWidth);
+    c_uchar* out_pixel = atlas->TexPixelsAlpha8 + x + (y * atlas->TexWidth);
     for (c_int off_y = 0; off_y < h; off_y++, out_pixel += atlas->TexWidth, in_str += w)
         for (c_int off_x = 0; off_x < w; off_x++)
             out_pixel[off_x] = (in_str[off_x] == in_marker_char) ? in_marker_pixel_value : 0x00;
@@ -2733,7 +2733,7 @@ static c_void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         IM_ASSERT(pad_left + line_width + pad_right == r->Width && y < r->Height); // Make sure we're inside the texture bounds before we start writing pixels
         if (atlas->TexPixelsAlpha8 != NULL)
         {
-            unsigned char* write_ptr = &atlas->TexPixelsAlpha8[r->X + ((r->Y + y) * atlas->TexWidth)];
+            c_uchar* write_ptr = &atlas->TexPixelsAlpha8[r->X + ((r->Y + y) * atlas->TexWidth)];
             for (c_uint i = 0; i < pad_left; i++)
                 *(write_ptr + i) = 0x00;
 
@@ -3972,15 +3972,15 @@ c_void ImGui::RenderColorRectWithAlphaCheckerboard(ImDrawList* draw_list, ImVec2
 // Decompression from stb.h (public domain) by Sean Barrett https://github.com/nothings/stb/blob/master/stb.h
 //-----------------------------------------------------------------------------
 
-static c_uint stb_decompress_length(const unsigned char *input)
+static c_uint stb_decompress_length(const c_uchar *input)
 {
     return (input[8] << 24) + (input[9] << 16) + (input[10] << 8) + input[11];
 }
 
-static unsigned char *stb__barrier_out_e, *stb__barrier_out_b;
-static const unsigned char *stb__barrier_in_b;
-static unsigned char *stb__dout;
-static c_void stb__match(const unsigned char *data, c_uint length)
+static c_uchar *stb__barrier_out_e, *stb__barrier_out_b;
+static const c_uchar *stb__barrier_in_b;
+static c_uchar *stb__dout;
+static c_void stb__match(const c_uchar *data, c_uint length)
 {
     // INVERSE of memmove... write each byte before copying the next...
     IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
@@ -3989,7 +3989,7 @@ static c_void stb__match(const unsigned char *data, c_uint length)
     while (length--) *stb__dout++ = *data+= 1;
 }
 
-static c_void stb__lit(const unsigned char *data, c_uint length)
+static c_void stb__lit(const c_uchar *data, c_uint length)
 {
     IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
     if (stb__dout + length > stb__barrier_out_e) { stb__dout += length; return; }
@@ -4002,7 +4002,7 @@ static c_void stb__lit(const unsigned char *data, c_uint length)
 // #define stb__in3(x)   ((i[x] << 16) + stb__in2((x)+1))
 // #define stb__in4(x)   ((i[x] << 24) + stb__in3((x)+1))
 
-static const unsigned char *stb_decompress_token(const unsigned char *i)
+static const c_uchar *stb_decompress_token(const c_uchar *i)
 {
     if (*i >= 0x20) { // use fewer if's for cases that expand small
         if (*i >= 0x80)       stb__match(stb__dout-i[1]-1, i[0] - 0x80 + 1), i += 2;
@@ -4019,7 +4019,7 @@ static const unsigned char *stb_decompress_token(const unsigned char *i)
     return i;
 }
 
-static c_uint stb_adler32(c_uint adler32, unsigned char *buffer, c_uint buflen)
+static c_uint stb_adler32(c_uint adler32, c_uchar *buffer, c_uint buflen)
 {
     const unsigned long ADLER_MOD = 65521;
     unsigned long s1 = adler32 & 0xffff, s2 = adler32 >> 16;
@@ -4050,7 +4050,7 @@ static c_uint stb_adler32(c_uint adler32, unsigned char *buffer, c_uint buflen)
     return (s2 << 16) + s1;
 }
 
-static c_uint stb_decompress(unsigned char *output, const unsigned char *i, c_uint /*length*/)
+static c_uint stb_decompress(c_uchar *output, const c_uchar *i, c_uint /*length*/)
 {
     if (stb__in4(0) != 0x57bC0000) return 0;
     if (stb__in4(4) != 0)          return 0; // error! stream is > 4GB
@@ -4062,7 +4062,7 @@ static c_uint stb_decompress(unsigned char *output, const unsigned char *i, c_ui
 
     stb__dout = output;
     for (;;) {
-        const unsigned char *old_i = i;
+        const c_uchar *old_i = i;
         i = stb_decompress_token(i);
         if (i == old_i) {
             if (*i == 0x05 && i[1] == 0xfa) {

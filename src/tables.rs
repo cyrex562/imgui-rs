@@ -702,9 +702,9 @@ static c_void TableSetupColumnFlags(*mut ImGuiTable table, *mut ImGuiTableColumn
         if ((flags & ImGuiTableColumnFlags_PreferSortAscending)  == 0 && (flags & ImGuiTableColumnFlags_NoSortAscending)  == 0) { mask |= 1 << ImGuiSortDirection_Ascending;  list |= ImGuiSortDirection_Ascending  << (count << 1); count+= 1; }
         if ((flags & ImGuiTableColumnFlags_PreferSortDescending) == 0 && (flags & ImGuiTableColumnFlags_NoSortDescending) == 0) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count+= 1; }
         if ((table->Flags & ImGuiTableFlags_SortTristate) || count == 0) { mask |= 1 << ImGuiSortDirection_None; count+= 1; }
-        column->SortDirectionsAvailList = (ImU8)list;
-        column->SortDirectionsAvailMask = (ImU8)mask;
-        column->SortDirectionsAvailCount = (ImU8)count;
+        column->SortDirectionsAvailList = (u8)list;
+        column->SortDirectionsAvailMask = (u8)mask;
+        column->SortDirectionsAvailCount = (u8)count;
         ImGui::TableFixColumnSortDirection(table, column);
     }
 }
@@ -1452,7 +1452,7 @@ c_void ImGui::TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, c
         if (flags & ImGuiTableColumnFlags_DefaultSort && (table->SettingsLoadedFlags & ImGuiTableFlags_Sortable) == 0)
         {
             column->SortOrder = 0; // Multiple columns using _DefaultSort will be reassigned unique SortOrder values when building the sort specs.
-            column->SortDirection = (column->Flags & ImGuiTableColumnFlags_PreferSortDescending) ? (i8)ImGuiSortDirection_Descending : (ImU8)(ImGuiSortDirection_Ascending);
+            column->SortDirection = (column->Flags & ImGuiTableColumnFlags_PreferSortDescending) ? (i8)ImGuiSortDirection_Descending : (u8)(ImGuiSortDirection_Ascending);
         }
     }
 
@@ -2640,7 +2640,7 @@ c_void ImGui::TableFixColumnSortDirection(*mut ImGuiTable table, *mut ImGuiTable
 {
     if (column->SortOrder == -1 || (column->SortDirectionsAvailMask & (1 << column->SortDirection)) != 0)
         return;
-    column->SortDirection = (ImU8)TableGetColumnAvailSortDirection(column, 0);
+    column->SortDirection = (u8)TableGetColumnAvailSortDirection(column, 0);
     table->IsSortSpecsDirty = true;
 }
 
@@ -2678,7 +2678,7 @@ c_void ImGui::TableSetColumnSortDirection(c_int column_n, ImGuiSortDirection sor
             sort_order_max = ImMax(sort_order_max, table->Columns[other_column_n].SortOrder);
 
     *mut ImGuiTableColumn column = &table->Columns[column_n];
-    column->SortDirection = (ImU8)sort_direction;
+    column->SortDirection = (u8)sort_direction;
     if (column->SortDirection == ImGuiSortDirection_None)
         column->SortOrder = -1;
     else if (column->SortOrder == -1 || !append_to_sort_specs)
@@ -2753,7 +2753,7 @@ c_void ImGui::TableSortSpecsSanitize(*mut ImGuiTable table)
             {
                 sort_order_count = 1;
                 column->SortOrder = 0;
-                column->SortDirection = (ImU8)TableGetColumnAvailSortDirection(column, 0);
+                column->SortDirection = (u8)TableGetColumnAvailSortDirection(column, 0);
                 break;
             }
         }
@@ -3401,7 +3401,7 @@ static c_void TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSetting
         if (sscanf(line, "UserID=0x%08X%n", (*mut u32)&n, &r)==1) { line = ImStrSkipBlank(line + r); column->UserID = (ImGuiID)n; }
         if (sscanf(line, "Width=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column->WidthOrWeight = n; column->IsStretch = 0; settings->SaveFlags |= ImGuiTableFlags_Resizable; }
         if (sscanf(line, "Weight=%f%n", &f, &r) == 1)           { line = ImStrSkipBlank(line + r); column->WidthOrWeight = f; column->IsStretch = 1; settings->SaveFlags |= ImGuiTableFlags_Resizable; }
-        if (sscanf(line, "Visible=%d%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column->IsEnabled = (ImU8)n; settings->SaveFlags |= ImGuiTableFlags_Hideable; }
+        if (sscanf(line, "Visible=%d%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column->IsEnabled = (u8)n; settings->SaveFlags |= ImGuiTableFlags_Hideable; }
         if (sscanf(line, "Order=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column->DisplayOrder = (ImGuiTableColumnIdx)n; settings->SaveFlags |= ImGuiTableFlags_Reorderable; }
         if (sscanf(line, "Sort=%d%c%n", &n, &c, &r) == 2)       { line = ImStrSkipBlank(line + r); column->SortOrder = (ImGuiTableColumnIdx)n; column->SortDirection = (c == '^') ? ImGuiSortDirection_Descending : ImGuiSortDirection_Ascending; settings->SaveFlags |= ImGuiTableFlags_Sortable; }
     }

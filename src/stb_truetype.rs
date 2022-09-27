@@ -283,8 +283,8 @@
 // #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
 // #include "stb_truetype.h"
 
-unsigned char ttf_buffer[1<<20];
-unsigned char temp_bitmap[*mut 512512];
+c_uchar ttf_buffer[1<<20];
+c_uchar temp_bitmap[*mut 512512];
 
 stbtt_bakedcdata: [c_char;96]; // ASCII 32..126 is 95 glyphs
 GLuint ftex;
@@ -339,7 +339,7 @@ char ttf_buffer[1<<25];
 c_int main(c_int argc, char **argv)
 {
    stbtt_fontinfo font;
-   unsigned char *bitmap;
+   c_uchar *bitmap;
    c_int w,h,i,j,c = (argc > 1 ? atoi(argv[1]) : 'a'), s = (argc > 2 ? atoi(argv[2]) : 20);
 
    fread(ttf_buffer, 1, 1<<25, fopen(argc > 3 ? argv[3] : "c:/windows/fonts/arialbd.ttf", "rb"));
@@ -430,7 +430,7 @@ c_int main(c_int arg, char **argv)
 // #ifdef STB_TRUETYPE_IMPLEMENTATION
    // #define your own (u)stbtt_int8/16/32 before including to override this
    #ifndef stbtt_uint8
-   typedef unsigned char   stbtt_uint8;
+   typedef c_uchar   stbtt_uint8;
    typedef signed   char   stbtt_int8;
    typedef unsigned c_short  stbtt_uint16;
    typedef signed   c_short  stbtt_int16;
@@ -517,7 +517,7 @@ extern "C" {
 // private structure
 typedef struct
 {
-   unsigned char *data;
+   c_uchar *data;
    c_int cursor;
    c_int size;
 } stbtt__buf;
@@ -535,9 +535,9 @@ typedef struct
    c_float xoff,yoff,xadvance;
 } stbtt_bakedchar;
 
-STBTT_DEF c_int stbtt_BakeFontBitmap(const unsigned char *data, c_int offset,  // font location (use offset=0 for plain .tt0f32)
+STBTT_DEF c_int stbtt_BakeFontBitmap(const c_uchar *data, c_int offset,  // font location (use offset=0 for plain .tt0f32)
                                 c_float pixel_height,                     // height of font in pixels
-                                unsigned char *pixels, c_int pw, c_int ph,  // bitmap to be filled in
+                                c_uchar *pixels, c_int pw, c_int ph,  // bitmap to be filled in
                                 c_int first_char, c_int num_chars,          // characters to bake
                                 stbtt_bakedchar *chardata);             // you allocate this, it's num_chars long
 // if return is positive, the first unused row of the bitmap
@@ -566,7 +566,7 @@ STBTT_DEF c_void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, c_int pw, c
 //
 // It's inefficient; you might want to c&p it and optimize it.
 
-STBTT_DEF c_void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, c_int index, c_float size, c_float *ascent, c_float *descent, c_float *lineGap);
+STBTT_DEF c_void stbtt_GetScaledFontVMetrics(const c_uchar *fontdata, c_int index, c_float size, c_float *ascent, c_float *descent, c_float *lineGap);
 // Query the font vertical metrics without having to create a font first.
 
 
@@ -590,7 +590,7 @@ typedef struct stbtt_fontinfo stbtt_fontinfo;
 typedef struct stbrp_rect stbrp_rect;
 // #endif
 
-STBTT_DEF c_int  stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, c_int width, c_int height, c_int stride_in_bytes, c_int padding, c_void *alloc_context);
+STBTT_DEF c_int  stbtt_PackBegin(stbtt_pack_context *spc, c_uchar *pixels, c_int width, c_int height, c_int stride_in_bytes, c_int padding, c_void *alloc_context);
 // Initializes a packing context stored in the passed-in stbtt_pack_context.
 // Future calls using this context will pack characters into the bitmap passed
 // in here: a 1-channel bitmap that is width * height. stride_in_bytes is
@@ -606,7 +606,7 @@ STBTT_DEF c_void stbtt_PackEnd  (stbtt_pack_context *spc);
 
 // #define STBTT_POINT_SIZE(x)   (-(x))
 
-STBTT_DEF c_int  stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, c_int font_index, c_float font_size,
+STBTT_DEF c_int  stbtt_PackFontRange(stbtt_pack_context *spc, const c_uchar *fontdata, c_int font_index, c_float font_size,
                                 c_int first_unicode_char_in_range, c_int num_chars_in_range, stbtt_packedchar *chardata_for_range);
 // Creates character bitmaps from the font_index'th font found in fontdata (use
 // font_index=0 if you don't know what that is). It creates num_chars_in_range
@@ -628,10 +628,10 @@ typedef struct
    c_int *array_of_unicode_codepoints;       // if non-zero, then this is an array of unicode codepoints
    c_int num_chars;
    stbtt_packedchar *chardata_for_range; // output
-   unsigned char h_oversample, v_oversample; // don't set these, they're used internally
+   c_uchar h_oversample, v_oversample; // don't set these, they're used internally
 } stbtt_pack_range;
 
-STBTT_DEF c_int  stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char *fontdata, c_int font_index, stbtt_pack_range *ranges, c_int num_ranges);
+STBTT_DEF c_int  stbtt_PackFontRanges(stbtt_pack_context *spc, const c_uchar *fontdata, c_int font_index, stbtt_pack_range *ranges, c_int num_ranges);
 // Creates character bitmaps from multiple ranges of characters stored in
 // ranges. This will usually create a better-packed bitmap than multiple
 // calls to stbtt_PackFontRange. Note that you can call this multiple
@@ -689,7 +689,7 @@ struct stbtt_pack_context {
    c_int   padding;
    c_int   skip_missing;
    c_uint   h_oversample, v_oversample;
-   unsigned char *pixels;
+   c_uchar *pixels;
    c_void  *nodes;
 };
 
@@ -699,14 +699,14 @@ struct stbtt_pack_context {
 //
 //
 
-STBTT_DEF c_int stbtt_GetNumberOfFonts(const unsigned char *data);
+STBTT_DEF c_int stbtt_GetNumberOfFonts(const c_uchar *data);
 // This function will determine the number of fonts in a font file.  TrueType
 // collection (.ttc) files may contain multiple fonts, while TrueType font
 // (.tt0f32) files only contain one font. The number of fonts can be used for
 // indexing with the previous function where the index is between zero and one
 // less than the total fonts. If an error occurs, -1 is returned.
 
-STBTT_DEF c_int stbtt_GetFontOffsetForIndex(const unsigned char *data, c_int index);
+STBTT_DEF c_int stbtt_GetFontOffsetForIndex(const c_uchar *data, c_int index);
 // Each .ttf/.ttc file may have more than one font. Each font has a sequential
 // index number starting from 0. Call this function to get the font offset for
 // a given index; it returns -1 if the index is out of range. A regular .ttf
@@ -718,7 +718,7 @@ STBTT_DEF c_int stbtt_GetFontOffsetForIndex(const unsigned char *data, c_int ind
 struct stbtt_fontinfo
 {
    c_void           * userdata;
-   unsigned char  * data;              // pointer to .ttf file
+   c_uchar  * data;              // pointer to .ttf file
    c_int              fontstart;         // offset of start of font
 
    c_int numGlyphs;                     // number of glyphs, needed for range checking
@@ -735,7 +735,7 @@ struct stbtt_fontinfo
    stbtt__buf fdselect;               // map from glyph to fontdict
 };
 
-STBTT_DEF c_int stbtt_InitFont(stbtt_fontinfo *info, const unsigned char *data, c_int offset);
+STBTT_DEF c_int stbtt_InitFont(stbtt_fontinfo *info, const c_uchar *data, c_int offset);
 // Given an offset into the file that defines a font, this function builds
 // the necessary cached info for the rest of the system. You must allocate
 // the stbtt_fontinfo yourself, and stbtt_InitFont will fill it out. You don't
@@ -840,7 +840,7 @@ STBTT_DEF c_int  stbtt_GetKerningTable(const stbtt_fontinfo *info, *mut stbtt_ke
    typedef struct
    {
       stbtt_vertex_type x,y,cx,cy,cx1,cy1;
-      unsigned char type,padding;
+      c_uchar type,padding;
    } stbtt_vertex;
 // #endif
 
@@ -862,7 +862,7 @@ STBTT_DEF c_int stbtt_GetGlyphShape(const stbtt_fontinfo *info, c_int glyph_inde
 STBTT_DEF c_void stbtt_FreeShape(const stbtt_fontinfo *info, stbtt_vertex *vertices);
 // frees the data allocated above
 
-STBTT_DEF unsigned char *stbtt_FindSVGDoc(const stbtt_fontinfo *info, c_int gl);
+STBTT_DEF c_uchar *stbtt_FindSVGDoc(const stbtt_fontinfo *info, c_int gl);
 STBTT_DEF c_int stbtt_GetCodepointSVG(const stbtt_fontinfo *info, c_int unicode_codepoint, const char **svg);
 STBTT_DEF c_int stbtt_GetGlyphSVG(const stbtt_fontinfo *info, c_int gl, const char **svg);
 // fills svg with the character's SVG data.
@@ -873,10 +873,10 @@ STBTT_DEF c_int stbtt_GetGlyphSVG(const stbtt_fontinfo *info, c_int gl, const ch
 // BITMAP RENDERING
 //
 
-STBTT_DEF c_void stbtt_FreeBitmap(unsigned char *bitmap, c_void *userdata);
+STBTT_DEF c_void stbtt_FreeBitmap(c_uchar *bitmap, c_void *userdata);
 // frees the bitmap allocated below
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
+STBTT_DEF c_uchar *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
 // allocates a large-enough single-channel 8bpp bitmap and renders the
 // specified character/glyph at the specified scale into it, with
 // antialiasing. 0 is no coverage (transparent), 255 is fully covered (opaque).
@@ -885,21 +885,21 @@ STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, c_
 //
 // xoff/yoff are the offset it pixel space from the glyph origin to the top-left of the bitmap
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
+STBTT_DEF c_uchar *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
 // the same as stbtt_GetCodepoitnBitmap, but you can specify a subpixel
 // shift for the character
 
-STBTT_DEF c_void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int codepoint);
+STBTT_DEF c_void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int codepoint);
 // the same as stbtt_GetCodepointBitmap, but you pass in storage for the bitmap
 // in the form of 'output', with row spacing of 'out_stride' bytes. the bitmap
 // is clipped to out_w/out_h bytes. Call stbtt_GetCodepointBitmapBox to get the
 // width and height and positioning info for it first.
 
-STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint);
+STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint);
 // same as stbtt_MakeCodepointBitmap, but you can specify a subpixel
 // shift for the character
 
-STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int oversample_x, c_int oversample_y, c_float *sub_x, c_float *sub_y, c_int codepoint);
+STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int oversample_x, c_int oversample_y, c_float *sub_x, c_float *sub_y, c_int codepoint);
 // same as stbtt_MakeCodepointBitmapSubpixel, but prefiltering
 // is performed (see stbtt_PackSetOversampling)
 
@@ -916,11 +916,11 @@ STBTT_DEF c_void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo *font,
 
 // the following functions are equivalent to the above functions, but operate
 // on glyph indices instead of Unicode codepoints (for efficiency)
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
-STBTT_DEF c_void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int glyph);
-STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph);
-STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int oversample_x, c_int oversample_y, c_float *sub_x, c_float *sub_y, c_int glyph);
+STBTT_DEF c_uchar *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
+STBTT_DEF c_uchar *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
+STBTT_DEF c_void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int glyph);
+STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph);
+STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int oversample_x, c_int oversample_y, c_float *sub_x, c_float *sub_y, c_int glyph);
 STBTT_DEF c_void stbtt_GetGlyphBitmapBox(const stbtt_fontinfo *font, c_int glyph, c_float scale_x, c_float scale_y, c_int *ix0, c_int *iy0, c_int *ix1, c_int *iy1);
 STBTT_DEF c_void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, c_int glyph, c_float scale_x, c_float scale_y,c_float shift_x, c_float shift_y, c_int *ix0, c_int *iy0, c_int *ix1, c_int *iy1);
 
@@ -929,7 +929,7 @@ STBTT_DEF c_void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, c_i
 typedef struct
 {
    c_int w,h,stride;
-   unsigned char *pixels;
+   c_uchar *pixels;
 } stbtt__bitmap;
 
 // rasterize a shape with quadratic beziers into a bitmap
@@ -947,11 +947,11 @@ STBTT_DEF c_void stbtt_Rasterize(stbtt__bitmap *result,        // 1-channel bitm
 //
 // Signed Distance Function (or Field) rendering
 
-STBTT_DEF c_void stbtt_FreeSDF(unsigned char *bitmap, c_void *userdata);
+STBTT_DEF c_void stbtt_FreeSDF(c_uchar *bitmap, c_void *userdata);
 // frees the SDF bitmap allocated below
 
-STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float scale, c_int glyph, c_int padding, unsigned char onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
-STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, c_float scale, c_int codepoint, c_int padding, unsigned char onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
+STBTT_DEF c_uchar * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float scale, c_int glyph, c_int padding, c_uchar onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
+STBTT_DEF c_uchar * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, c_float scale, c_int codepoint, c_int padding, c_uchar onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32);
 // These functions compute a discretized SDF field for a single character, suitable for storing
 // in a single-channel texture, sampling with bilinear filtering, and testing against
 // larger than some threshold to produce scalable fonts.
@@ -1023,7 +1023,7 @@ STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, c_fl
 //             You have to have called stbtt_InitFont() first.
 
 
-STBTT_DEF c_int stbtt_FindMatchingFont(const unsigned char *fontdata, const char *name, c_int flags);
+STBTT_DEF c_int stbtt_FindMatchingFont(const c_uchar *fontdata, const char *name, c_int flags);
 // returns the offset (not index) of the font that matches, or -1 if none
 //   if you use STBTT_MACSTYLE_DONTCARE, use a font name like "Arial Bold".
 //   if you use any other flag, use a font name like "Arial"; this checks
@@ -1321,7 +1321,7 @@ static stbtt_uint32 stbtt__find_table(stbtt_uint8 *data, stbtt_uint32 fontstart,
    return 0;
 }
 
-static c_int stbtt_GetFontOffsetForIndex_internal(unsigned char *font_collection, c_int index)
+static c_int stbtt_GetFontOffsetForIndex_internal(c_uchar *font_collection, c_int index)
 {
    // if it's just a font, there's only one valid index
    if (stbtt__isfont(font_collection))
@@ -1340,7 +1340,7 @@ static c_int stbtt_GetFontOffsetForIndex_internal(unsigned char *font_collection
    return -1;
 }
 
-static c_int stbtt_GetNumberOfFonts_internal(unsigned char *font_collection)
+static c_int stbtt_GetNumberOfFonts_internal(c_uchar *font_collection)
 {
    // if it's just a font, there's only one valid font
    if (stbtt__isfont(font_collection))
@@ -1385,7 +1385,7 @@ static c_int stbtt__get_svg(stbtt_fontinfo *info)
    return info->svg;
 }
 
-static c_int stbtt_InitFont_internal(stbtt_fontinfo *info, unsigned char *data, c_int fontstart)
+static c_int stbtt_InitFont_internal(stbtt_fontinfo *info, c_uchar *data, c_int fontstart)
 {
    stbtt_uint32 cmap, t;
    stbtt_int32 i,numTables;
@@ -2884,7 +2884,7 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, c
 // note: this routine clips fills that extend off the edges... ideally this
 // wouldn't happen, but it could happen if the truetype glyph bounding boxes
 // are wrong, or if the user supplies a too-small bitmap
-static c_void stbtt__fill_active_edges(unsigned char *scanline, c_int len, stbtt__active_edge *e, c_int max_weight)
+static c_void stbtt__fill_active_edges(c_uchar *scanline, c_int len, stbtt__active_edge *e, c_int max_weight)
 {
    // non-zero winding fill
    c_int x0=0, w=0;
@@ -2936,7 +2936,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
    unsigned scanline_data: [c_char;512], *scanline;
 
    if (result->w > 512)
-      scanline = (unsigned char *) STBTT_malloc(result->w, userdata);
+      scanline = (c_uchar *) STBTT_malloc(result->w, userdata);
    else
       scanline = scanline_data;
 
@@ -3378,7 +3378,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
             k =  STBTT_fabs(k)*255 + 0.5f32;
             m =  k;
             if (m > 255) m = 255;
-            result->pixels[j*result->stride + i] = (unsigned char) m;
+            result->pixels[j*result->stride + i] = (c_uchar) m;
          }
       }
       // advance all the edges
@@ -3713,12 +3713,12 @@ STBTT_DEF c_void stbtt_Rasterize(stbtt__bitmap *result, c_float flatness_in_pixe
    }
 }
 
-STBTT_DEF c_void stbtt_FreeBitmap(unsigned char *bitmap, c_void *userdata)
+STBTT_DEF c_void stbtt_FreeBitmap(c_uchar *bitmap, c_void *userdata)
 {
    STBTT_free(bitmap, userdata);
 }
 
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
+STBTT_DEF c_uchar *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
 {
    c_int ix0,iy0,ix1,iy1;
    stbtt__bitmap gbm;
@@ -3747,7 +3747,7 @@ STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info
    if (yoff  ) *yoff   = iy0;
 
    if (gbm.w && gbm.h) {
-      gbm.pixels = (unsigned char *) STBTT_malloc(gbm.w * gbm.h, info->userdata);
+      gbm.pixels = (c_uchar *) STBTT_malloc(gbm.w * gbm.h, info->userdata);
       if (gbm.pixels) {
          gbm.stride = gbm.w;
 
@@ -3758,12 +3758,12 @@ STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info
    return gbm.pixels;
 }
 
-STBTT_DEF unsigned char *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
+STBTT_DEF c_uchar *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int glyph, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
 {
    return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y, 0f32, 0f32, glyph, width, height, xoff, yof0f32);
 }
 
-STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph)
+STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int glyph)
 {
    c_int ix0,iy0;
    stbtt_vertex *vertices;
@@ -3782,32 +3782,32 @@ STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsig
    STBTT_free(vertices, info->userdata);
 }
 
-STBTT_DEF c_void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int glyph)
+STBTT_DEF c_void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int glyph)
 {
    stbtt_MakeGlyphBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, 0f32,0f32, glyph);
 }
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
+STBTT_DEF c_uchar *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
 {
    return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y,shift_x,shift_y, stbtt_FindGlyphIndex(info,codepoint), width,height,xoff,yof0f32);
 }
 
-STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int oversample_x, c_int oversample_y, c_float *sub_x, c_float *sub_y, c_int codepoint)
+STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int oversample_x, c_int oversample_y, c_float *sub_x, c_float *sub_y, c_int codepoint)
 {
    stbtt_MakeGlyphBitmapSubpixelPrefilter(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, oversample_x, oversample_y, sub_x, sub_y, stbtt_FindGlyphIndex(info,codepoint));
 }
 
-STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint)
+STBTT_DEF c_void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int codepoint)
 {
    stbtt_MakeGlyphBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, stbtt_FindGlyphIndex(info,codepoint));
 }
 
-STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
+STBTT_DEF c_uchar *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, c_float scale_x, c_float scale_y, c_int codepoint, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
 {
    return stbtt_GetCodepointBitmapSubpixel(info, scale_x, scale_y, 0f32,0f32, codepoint, width,height,xoff,yof0f32);
 }
 
-STBTT_DEF c_void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int codepoint)
+STBTT_DEF c_void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_int codepoint)
 {
    stbtt_MakeCodepointBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, 0f32,0f32, codepoint);
 }
@@ -3818,9 +3818,9 @@ STBTT_DEF c_void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned 
 //
 // This is SUPER-CRAPPY packing to keep source code small
 
-static c_int stbtt_BakeFontBitmap_internal(unsigned char *data, c_int offset,  // font location (use offset=0 for plain .tt0f32)
+static c_int stbtt_BakeFontBitmap_internal(c_uchar *data, c_int offset,  // font location (use offset=0 for plain .tt0f32)
                                 c_float pixel_height,                     // height of font in pixels
-                                unsigned char *pixels, c_int pw, c_int ph,  // bitmap to be filled in
+                                c_uchar *pixels, c_int pw, c_int ph,  // bitmap to be filled in
                                 c_int first_char, c_int num_chars,          // characters to bake
                                 stbtt_bakedchar *chardata)
 {
@@ -3913,7 +3913,7 @@ typedef struct
 
 typedef struct
 {
-   unsigned char x;
+   c_uchar x;
 } stbrp_node;
 
 struct stbrp_rect
@@ -3962,7 +3962,7 @@ static c_void stbrp_pack_rects(stbrp_context *con, stbrp_rect *rects, c_int num_
 // This is SUPER-AWESOME (tm Ryan Gordon) packing using stb_rect_pack.h. If
 // stb_rect_pack.h isn't available, it uses the BakeFontBitmap strategy.
 
-STBTT_DEF c_int stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, c_int pw, c_int ph, c_int stride_in_bytes, c_int padding, c_void *alloc_context)
+STBTT_DEF c_int stbtt_PackBegin(stbtt_pack_context *spc, c_uchar *pixels, c_int pw, c_int ph, c_int stride_in_bytes, c_int padding, c_void *alloc_context)
 {
    stbrp_context *context = (stbrp_context *) STBTT_malloc(sizeof(*context)            ,alloc_context);
    c_int            num_nodes = pw - padding;
@@ -4017,9 +4017,9 @@ STBTT_DEF c_void stbtt_PackSetSkipMissingCodepoints(stbtt_pack_context *spc, c_i
 
 // #define STBTT__OVER_MASK  (STBTT_MAX_OVERSAMPLE-1)
 
-static c_void stbtt__h_prefilter(unsigned char *pixels, c_int w, c_int h, c_int stride_in_bytes, c_uint kernel_width)
+static c_void stbtt__h_prefilter(c_uchar *pixels, c_int w, c_int h, c_int stride_in_bytes, c_uint kernel_width)
 {
-   unsigned char buffer[STBTT_MAX_OVERSAMPLE];
+   c_uchar buffer[STBTT_MAX_OVERSAMPLE];
    c_int safe_w = w - kernel_width;
    c_int j;
    STBTT_memset(buffer, 0, STBTT_MAX_OVERSAMPLE); // suppress bogus warning from VS2013 -analyze
@@ -4036,35 +4036,35 @@ static c_void stbtt__h_prefilter(unsigned char *pixels, c_int w, c_int h, c_int 
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (unsigned char) (total / 2);
+               pixels[i] = (c_uchar) (total / 2);
             }
             break;
          case 3:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (unsigned char) (total / 3);
+               pixels[i] = (c_uchar) (total / 3);
             }
             break;
          case 4:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (unsigned char) (total / 4);
+               pixels[i] = (c_uchar) (total / 4);
             }
             break;
          case 5:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (unsigned char) (total / 5);
+               pixels[i] = (c_uchar) (total / 5);
             }
             break;
          default:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (unsigned char) (total / kernel_width);
+               pixels[i] = (c_uchar) (total / kernel_width);
             }
             break;
       }
@@ -4072,16 +4072,16 @@ static c_void stbtt__h_prefilter(unsigned char *pixels, c_int w, c_int h, c_int 
       for (; i < w; ++i) {
          STBTT_assert(pixels[i] == 0);
          total -= buffer[i & STBTT__OVER_MASK];
-         pixels[i] = (unsigned char) (total / kernel_width);
+         pixels[i] = (c_uchar) (total / kernel_width);
       }
 
       pixels += stride_in_bytes;
    }
 }
 
-static c_void stbtt__v_prefilter(unsigned char *pixels, c_int w, c_int h, c_int stride_in_bytes, c_uint kernel_width)
+static c_void stbtt__v_prefilter(c_uchar *pixels, c_int w, c_int h, c_int stride_in_bytes, c_uint kernel_width)
 {
-   unsigned char buffer[STBTT_MAX_OVERSAMPLE];
+   c_uchar buffer[STBTT_MAX_OVERSAMPLE];
    c_int safe_h = h - kernel_width;
    c_int j;
    STBTT_memset(buffer, 0, STBTT_MAX_OVERSAMPLE); // suppress bogus warning from VS2013 -analyze
@@ -4098,35 +4098,35 @@ static c_void stbtt__v_prefilter(unsigned char *pixels, c_int w, c_int h, c_int 
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (unsigned char) (total / 2);
+               pixels[i*stride_in_bytes] = (c_uchar) (total / 2);
             }
             break;
          case 3:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (unsigned char) (total / 3);
+               pixels[i*stride_in_bytes] = (c_uchar) (total / 3);
             }
             break;
          case 4:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (unsigned char) (total / 4);
+               pixels[i*stride_in_bytes] = (c_uchar) (total / 4);
             }
             break;
          case 5:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (unsigned char) (total / 5);
+               pixels[i*stride_in_bytes] = (c_uchar) (total / 5);
             }
             break;
          default:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (unsigned char) (total / kernel_width);
+               pixels[i*stride_in_bytes] = (c_uchar) (total / kernel_width);
             }
             break;
       }
@@ -4134,7 +4134,7 @@ static c_void stbtt__v_prefilter(unsigned char *pixels, c_int w, c_int h, c_int 
       for (; i < h; ++i) {
          STBTT_assert(pixels[i*stride_in_bytes] == 0);
          total -= buffer[i & STBTT__OVER_MASK];
-         pixels[i*stride_in_bytes] = (unsigned char) (total / kernel_width);
+         pixels[i*stride_in_bytes] = (c_uchar) (total / kernel_width);
       }
 
       pixels += 1;
@@ -4163,8 +4163,8 @@ STBTT_DEF c_int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const s
    for (i=0; i < num_ranges; ++i) {
       c_float fh = ranges[i].font_size;
       c_float scale = fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
-      ranges[i].h_oversample = (unsigned char) spc->h_oversample;
-      ranges[i].v_oversample = (unsigned char) spc->v_oversample;
+      ranges[i].h_oversample = (c_uchar) spc->h_oversample;
+      ranges[i].v_oversample = (c_uchar) spc->v_oversample;
       for (j=0; j < ranges[i].num_chars; ++j) {
          c_int x0,y0,x1,y1;
          c_int codepoint = ranges[i].array_of_unicode_codepoints == NULL ? ranges[i].first_unicode_codepoint_in_range + j : ranges[i].array_of_unicode_codepoints[j];
@@ -4189,7 +4189,7 @@ STBTT_DEF c_int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const s
    return k;
 }
 
-STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int prefilter_x, c_int prefilter_y, c_float *sub_x, c_float *sub_y, c_int glyph)
+STBTT_DEF c_void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, c_uchar *output, c_int out_w, c_int out_h, c_int out_stride, c_float scale_x, c_float scale_y, c_float shift_x, c_float shift_y, c_int prefilter_x, c_int prefilter_y, c_float *sub_x, c_float *sub_y, c_int glyph)
 {
    stbtt_MakeGlyphBitmapSubpixel(info,
                                  output,
@@ -4307,7 +4307,7 @@ STBTT_DEF c_void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, stbrp_re
    stbrp_pack_rects((stbrp_context *) spc->pack_info, rects, num_rects);
 }
 
-STBTT_DEF c_int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char *fontdata, c_int font_index, stbtt_pack_range *ranges, c_int num_ranges)
+STBTT_DEF c_int stbtt_PackFontRanges(stbtt_pack_context *spc, const c_uchar *fontdata, c_int font_index, stbtt_pack_range *ranges, c_int num_ranges)
 {
    stbtt_fontinfo info;
    c_int i, j, n, return_value; // [DEAR IMGUI] removed = 1;
@@ -4343,7 +4343,7 @@ STBTT_DEF c_int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned cha
    return return_value;
 }
 
-STBTT_DEF c_int stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, c_int font_index, c_float font_size,
+STBTT_DEF c_int stbtt_PackFontRange(stbtt_pack_context *spc, const c_uchar *fontdata, c_int font_index, c_float font_size,
             c_int first_unicode_codepoint_in_range, c_int num_chars_in_range, stbtt_packedchar *chardata_for_range)
 {
    stbtt_pack_range range;
@@ -4355,7 +4355,7 @@ STBTT_DEF c_int stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char
    return stbtt_PackFontRanges(spc, fontdata, font_index, &range, 1);
 }
 
-STBTT_DEF c_void stbtt_GetScaledFontVMetrics(const unsigned char *fontdata, c_int index, c_float size, c_float *ascent, c_float *descent, c_float *lineGap)
+STBTT_DEF c_void stbtt_GetScaledFontVMetrics(const c_uchar *fontdata, c_int index, c_float size, c_float *ascent, c_float *descent, c_float *lineGap)
 {
    c_int i_ascent, i_descent, i_lineGap;
    c_float scale;
@@ -4580,12 +4580,12 @@ static c_int stbtt__solve_cubic(c_float a, c_float b, c_float c, c_float* r)
    }
 }
 
-STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float scale, c_int glyph, c_int padding, unsigned char onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
+STBTT_DEF c_uchar * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float scale, c_int glyph, c_int padding, c_uchar onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
 {
    c_float scale_x = scale, scale_y = scale;
    c_int ix0,iy0,ix1,iy1;
    c_int w,h;
-   unsigned char *data;
+   c_uchar *data;
 
    if (scale == 0) return NULL;
 
@@ -4616,7 +4616,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float 
       c_float *precompute;
       stbtt_vertex *verts;
       c_int num_verts = stbtt_GetGlyphShape(info, glyph, &verts);
-      data = (unsigned char *) STBTT_malloc(w * h, info->userdata);
+      data = (c_uchar *) STBTT_malloc(w * h, info->userdata);
       precompute = (c_float *) STBTT_malloc(num_verts * sizeof, info->userdata);
 
       for (i=0,j=num_verts-1; i < num_verts; j=i++) {
@@ -4756,7 +4756,7 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float 
                val = 0;
             else if (val > 255)
                val = 255;
-            data[(y-iy0)*w+(x-ix0)] = (unsigned char) val;
+            data[(y-iy0)*w+(x-ix0)] = (c_uchar) val;
          }
       }
       STBTT_free(precompute, info->userdata);
@@ -4765,12 +4765,12 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float 
    return data;
 }
 
-STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, c_float scale, c_int codepoint, c_int padding, unsigned char onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
+STBTT_DEF c_uchar * stbtt_GetCodepointSDF(const stbtt_fontinfo *info, c_float scale, c_int codepoint, c_int padding, c_uchar onedge_value, c_float pixel_dist_scale, c_int *width, c_int *height, c_int *xoff, c_int *yof0f32)
 {
    return stbtt_GetGlyphSDF(info, scale, stbtt_FindGlyphIndex(info, codepoint), padding, onedge_value, pixel_dist_scale, width, height, xoff, yof0f32);
 }
 
-STBTT_DEF c_void stbtt_FreeSDF(unsigned char *bitmap, c_void *userdata)
+STBTT_DEF c_void stbtt_FreeSDF(c_uchar *bitmap, c_void *userdata)
 {
    STBTT_free(bitmap, userdata);
 }
@@ -4924,7 +4924,7 @@ static c_int stbtt__matches(stbtt_uint8 *fc, stbtt_uint32 offset, stbtt_uint8 *n
    return 0;
 }
 
-static c_int stbtt_FindMatchingFont_internal(unsigned char *font_collection, char *name_utf8, stbtt_int32 flags)
+static c_int stbtt_FindMatchingFont_internal(c_uchar *font_collection, char *name_utf8, stbtt_int32 flags)
 {
    stbtt_int32 i;
    for (i=0;;++i) {
@@ -4940,31 +4940,31 @@ static c_int stbtt_FindMatchingFont_internal(unsigned char *font_collection, cha
 // #pragma GCC diagnostic ignored "-Wcast-qual"
 // #endif
 
-STBTT_DEF c_int stbtt_BakeFontBitmap(const unsigned char *data, c_int offset,
-                                c_float pixel_height, unsigned char *pixels, c_int pw, c_int ph,
+STBTT_DEF c_int stbtt_BakeFontBitmap(const c_uchar *data, c_int offset,
+                                c_float pixel_height, c_uchar *pixels, c_int pw, c_int ph,
                                 c_int first_char, c_int num_chars, stbtt_bakedchar *chardata)
 {
-   return stbtt_BakeFontBitmap_internal((unsigned char *) data, offset, pixel_height, pixels, pw, ph, first_char, num_chars, chardata);
+   return stbtt_BakeFontBitmap_internal((c_uchar *) data, offset, pixel_height, pixels, pw, ph, first_char, num_chars, chardata);
 }
 
-STBTT_DEF c_int stbtt_GetFontOffsetForIndex(const unsigned char *data, c_int index)
+STBTT_DEF c_int stbtt_GetFontOffsetForIndex(const c_uchar *data, c_int index)
 {
-   return stbtt_GetFontOffsetForIndex_internal((unsigned char *) data, index);
+   return stbtt_GetFontOffsetForIndex_internal((c_uchar *) data, index);
 }
 
-STBTT_DEF c_int stbtt_GetNumberOfFonts(const unsigned char *data)
+STBTT_DEF c_int stbtt_GetNumberOfFonts(const c_uchar *data)
 {
-   return stbtt_GetNumberOfFonts_internal((unsigned char *) data);
+   return stbtt_GetNumberOfFonts_internal((c_uchar *) data);
 }
 
-STBTT_DEF c_int stbtt_InitFont(stbtt_fontinfo *info, const unsigned char *data, c_int offset)
+STBTT_DEF c_int stbtt_InitFont(stbtt_fontinfo *info, const c_uchar *data, c_int offset)
 {
-   return stbtt_InitFont_internal(info, (unsigned char *) data, offset);
+   return stbtt_InitFont_internal(info, (c_uchar *) data, offset);
 }
 
-STBTT_DEF c_int stbtt_FindMatchingFont(const unsigned char *fontdata, const char *name, c_int flags)
+STBTT_DEF c_int stbtt_FindMatchingFont(const c_uchar *fontdata, const char *name, c_int flags)
 {
-   return stbtt_FindMatchingFont_internal((unsigned char *) fontdata,  name, flags);
+   return stbtt_FindMatchingFont_internal((c_uchar *) fontdata,  name, flags);
 }
 
 STBTT_DEF c_int stbtt_CompareUTF8toUTF16_bigendian(const char *s1, c_int len1, const char *s2, c_int len2)

@@ -1,9 +1,11 @@
 #![allow(non_snake_case)]
 
 use libc::{c_char, c_float, c_int, c_uint, c_void};
+use crate::draw_flags::ImDrawFlags;
+use crate::draw_list_flags::ImDrawListFlags;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
-use crate::type_defs::{ImDrawFlags, ImDrawIdx, ImDrawListFlags, ImTextureID};
+use crate::type_defs::{ImDrawIdx, ImTextureID};
 
 // Draw command list
 // This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,

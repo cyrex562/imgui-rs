@@ -94,10 +94,10 @@ static const c_float          DRAGDROP_HOLD_TO_OPEN_TIMER = 0.70f32;    // Time 
 static const c_float          DRAG_MOUSE_THRESHOLD_FACTOR = 0.50f32;    // Multiplier for the default value of io.MouseDragThreshold to make DragFloat/DragInt react faster to mouse drags.
 
 // Those MIN/MAX values are not define because we need to point to them
-static const signed char    IM_S8_MIN  = -128;
-static const signed char    IM_S8_MAX  = 127;
-static const unsigned char  IM_U8_MIN  = 0;
-static const unsigned char  IM_U8_MAX  = 0xFF;
+static const i8    IM_S8_MIN  = -128;
+static const i8    IM_S8_MAX  = 127;
+static const c_uchar  IM_U8_MIN  = 0;
+static const c_uchar  IM_U8_MAX  = 0xFF;
 static const signed c_short   IM_S16_MIN = -32768;
 static const signed c_short   IM_S16_MAX = 32767;
 static const unsigned c_short IM_U16_MIN = 0;
@@ -1917,7 +1917,7 @@ bool ImGui::Combo(*const char label, *mut c_int current_item, *const char items_
 static const ImGuiDataTypeInfo GDataTypeInfo[] =
 {
     { sizeof,             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
-    { sizeof(unsigned char),    "U8",   "%u",   "%u"    },
+    { sizeof(c_uchar),    "U8",   "%u",   "%u"    },
     { sizeof(c_short),            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
     { sizeof(unsigned c_short),   "U16",  "%u",   "%u"    },
     { sizeof,              "S32",  "%d",   "%d"    },  // ImGuiDataType_S32
@@ -1978,7 +1978,7 @@ c_int ImGui::DataTypeFormatString(*mut char buf, c_int buf_size, ImGuiDataType d
     if (data_type == ImGuiDataType_S8)
         return ImFormatString(buf, buf_size, format, *(*const i8)p_data);
     if (data_type == ImGuiDataType_U8)
-        return ImFormatString(buf, buf_size, format, *(*const ImU8)p_data);
+        return ImFormatString(buf, buf_size, format, *(*const u8)p_data);
     if (data_type == ImGuiDataType_S16)
         return ImFormatString(buf, buf_size, format, *(*const i16)p_data);
     if (data_type == ImGuiDataType_U16)
@@ -1997,8 +1997,8 @@ c_void ImGui::DataTypeApplyOp(ImGuiDataType data_type, c_int op, *mut c_void out
             if (op == '-') { *(*mut i8)output  = ImSubClampOverflow(*(*const i8)arg1,  *(*const i8)arg2,  IM_S8_MIN,  IM_S8_MAX); }
             return;
         case ImGuiDataType_U8:
-            if (op == '+') { *(*mut ImU8)output  = ImAddClampOverflow(*(*const ImU8)arg1,  *(*const ImU8)arg2,  IM_U8_MIN,  IM_U8_MAX); }
-            if (op == '-') { *(*mut ImU8)output  = ImSubClampOverflow(*(*const ImU8)arg1,  *(*const ImU8)arg2,  IM_U8_MIN,  IM_U8_MAX); }
+            if (op == '+') { *(*mut u8)output  = ImAddClampOverflow(*(*const u8)arg1,  *(*const u8)arg2,  IM_U8_MIN,  IM_U8_MAX); }
+            if (op == '-') { *(*mut u8)output  = ImSubClampOverflow(*(*const u8)arg1,  *(*const u8)arg2,  IM_U8_MIN,  IM_U8_MAX); }
             return;
         case ImGuiDataType_S16:
             if (op == '+') { *(*mut i16)output = ImAddClampOverflow(*(*const i16)arg1, *(*const i16)arg2, IM_S16_MIN, IM_S16_MAX); }
@@ -2068,7 +2068,7 @@ bool ImGui::DataTypeApplyFromText(*const char buf, ImGuiDataType data_type, *mut
         if (data_type == ImGuiDataType_S8)
             *(*mut i8)p_data = (i8)ImClamp(v32, IM_S8_MIN, IM_S8_MAX);
         else if (data_type == ImGuiDataType_U8)
-            *(*mut ImU8)p_data = (ImU8)ImClamp(v32, IM_U8_MIN, IM_U8_MAX);
+            *(*mut u8)p_data = (u8)ImClamp(v32, IM_U8_MIN, IM_U8_MAX);
         else if (data_type == ImGuiDataType_S16)
             *(*mut i16)p_data = (i16)ImClamp(v32, IM_S16_MIN, IM_S16_MAX);
         else if (data_type == ImGuiDataType_U16)
@@ -2093,7 +2093,7 @@ c_int ImGui::DataTypeCompare(ImGuiDataType data_type, *const c_void arg_1, *cons
     switch (data_type)
     {
     case ImGuiDataType_S8:     return DataTypeCompareT<i8  >((*const i8  )arg_1, (*const i8  )arg_2);
-    case ImGuiDataType_U8:     return DataTypeCompareT<ImU8  >((*const ImU8  )arg_1, (*const ImU8  )arg_2);
+    case ImGuiDataType_U8:     return DataTypeCompareT<u8  >((*const u8  )arg_1, (*const u8  )arg_2);
     case ImGuiDataType_S16:    return DataTypeCompareT<i16 >((*const i16 )arg_1, (*const i16 )arg_2);
     case ImGuiDataType_U16:    return DataTypeCompareT<ImU16 >((*const ImU16 )arg_1, (*const ImU16 )arg_2);
     case ImGuiDataType_S32:    return DataTypeCompareT<i32 >((*const i32 )arg_1, (*const i32 )arg_2);
@@ -2122,7 +2122,7 @@ bool ImGui::DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, *const c_
     switch (data_type)
     {
     case ImGuiDataType_S8:     return DataTypeClampT<i8  >((*mut i8  )p_data, (*const i8  )p_min, (*const i8  )p_max);
-    case ImGuiDataType_U8:     return DataTypeClampT<ImU8  >((*mut ImU8  )p_data, (*const ImU8  )p_min, (*const ImU8  )p_max);
+    case ImGuiDataType_U8:     return DataTypeClampT<u8  >((*mut u8  )p_data, (*const u8  )p_min, (*const u8  )p_max);
     case ImGuiDataType_S16:    return DataTypeClampT<i16 >((*mut i16 )p_data, (*const i16 )p_min, (*const i16 )p_max);
     case ImGuiDataType_U16:    return DataTypeClampT<ImU16 >((*mut ImU16 )p_data, (*const ImU16 )p_min, (*const ImU16 )p_max);
     case ImGuiDataType_S32:    return DataTypeClampT<i32 >((*mut i32 )p_data, (*const i32 )p_min, (*const i32 )p_max);
@@ -2331,7 +2331,7 @@ bool ImGui::DragBehavior(ImGuiID id, ImGuiDataType data_type, *mut c_void p_v, c
     switch (data_type)
     {
     case ImGuiDataType_S8:     { i32 v32 = (i32)*(*mut i8)p_v;  bool r = DragBehaviorT<i32, i32, c_float>(ImGuiDataType_S32, &v32, v_speed, p_min ? *(*const i8) p_min : IM_S8_MIN,  p_max ? *(*const i8)p_max  : IM_S8_MAX,  format, flags); if (r) *(*mut i8)p_v = (i8)v32; return r; }
-    case ImGuiDataType_U8:     { u32 v32 = *(*mut ImU8)p_v;  bool r = DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(*const ImU8) p_min : IM_U8_MIN,  p_max ? *(*const ImU8)p_max  : IM_U8_MAX,  format, flags); if (r) *(*mut ImU8)p_v = (ImU8)v32; return r; }
+    case ImGuiDataType_U8:     { u32 v32 = *(*mut u8)p_v;  bool r = DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(*const u8) p_min : IM_U8_MIN,  p_max ? *(*const u8)p_max  : IM_U8_MAX,  format, flags); if (r) *(*mut u8)p_v = (u8)v32; return r; }
     case ImGuiDataType_S16:    { i32 v32 = (i32)*(*mut i16)p_v; bool r = DragBehaviorT<i32, i32, c_float>(ImGuiDataType_S32, &v32, v_speed, p_min ? *(*const i16)p_min : IM_S16_MIN, p_max ? *(*const i16)p_max : IM_S16_MAX, format, flags); if (r) *(*mut i16)p_v = (i16)v32; return r; }
     case ImGuiDataType_U16:    { u32 v32 = *(*mut ImU16)p_v; bool r = DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(*const ImU16)p_min : IM_U16_MIN, p_max ? *(*const ImU16)p_max : IM_U16_MAX, format, flags); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
     case ImGuiDataType_S32:    return DragBehaviorT<i32, i32, c_float >(data_type, (*mut i32)p_v,  v_speed, p_min ? *(*const i32 )p_min : IM_S32_MIN, p_max ? *(*const i32 )p_max : IM_S32_MAX, format, flags);
@@ -2912,7 +2912,7 @@ bool ImGui::SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type
     switch (data_type)
     {
     case ImGuiDataType_S8:  { i32 v32 = (i32)*(*mut i8)p_v;  bool r = SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, *(*const i8)p_min,  *(*const i8)p_max,  format, flags, out_grab_bb); if (r) *(*mut i8)p_v  = (i8)v32;  return r; }
-    case ImGuiDataType_U8:  { u32 v32 = *(*mut ImU8)p_v;  bool r = SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const ImU8)p_min,  *(*const ImU8)p_max,  format, flags, out_grab_bb); if (r) *(*mut ImU8)p_v  = (ImU8)v32;  return r; }
+    case ImGuiDataType_U8:  { u32 v32 = *(*mut u8)p_v;  bool r = SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const u8)p_min,  *(*const u8)p_max,  format, flags, out_grab_bb); if (r) *(*mut u8)p_v  = (u8)v32;  return r; }
     case ImGuiDataType_S16: { i32 v32 = (i32)*(*mut i16)p_v; bool r = SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, *(*const i16)p_min, *(*const i16)p_max, format, flags, out_grab_bb); if (r) *(*mut i16)p_v = (i16)v32; return r; }
     case ImGuiDataType_U16: { u32 v32 = *(*mut ImU16)p_v; bool r = SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const ImU16)p_min, *(*const ImU16)p_max, format, flags, out_grab_bb); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
     case ImGuiDataType_S32:
