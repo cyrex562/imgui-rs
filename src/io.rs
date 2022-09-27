@@ -345,7 +345,7 @@ impl ImGuiIO {
             out.KeysData[i].DownDurationPrev = -1f32;
         }
         out.AppAcceptingEvents = true;
-        out.BackendUsingLegacyKeyArrays = (i8) - 1;
+        out.BackendUsingLegacyKeyArrays =  - 1;
         out.BackendUsingLegacyNavInputArray = true; // assume using legacy array until proven wrong
         out
     }

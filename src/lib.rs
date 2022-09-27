@@ -130,6 +130,44 @@ mod tooltip_flags;
 mod metrics_config;
 mod stack_tool;
 mod stack_level_info;
+mod list_clipper;
+mod old_column_data;
+mod draw_list_splitter;
+mod table_ops;
+mod logging_ops;
+mod span;
+mod table_column;
+mod table_cell_data;
+mod table_instance_data;
+mod table_column_sort_specs;
+mod window_ops;
+mod draw_cmd;
+mod draw;
+mod draw_vert;
+mod draw_cmd_header;
+mod cursor_ops;
+mod config;
+mod constants;
+mod imgui;
+mod utils;
+mod geometry_ops;
+mod string_ops;
+mod hash_ops;
+mod file_ops;
+mod color_ops;
+mod list_clipper_range;
+mod window_temp_data;
+mod list_clipper_ops;
+mod math_ops;
+mod style_ops;
+mod style_var_info;
+mod window_dock_style_colors;
+mod window_dock_style_color;
+mod g_style_var_info;
+mod style_var_ops;
+mod render_ops;
+
+
 
 /// void ImGui::Initialize()
 // pub fn initialize(g: &mut Context) {

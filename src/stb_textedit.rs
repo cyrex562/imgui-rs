@@ -629,7 +629,7 @@ static c_int stb_textedit_move_to_word_previous( STB_TEXTEDIT_STRING *str, c_int
 // #ifndef STB_TEXTEDIT_MOVEWORDRIGHT
 static c_int stb_textedit_move_to_word_next( STB_TEXTEDIT_STRING *str, c_int c )
 {
-   const c_int len = STB_TEXTEDIT_STRINGLEN(str);
+   let len: c_int = STB_TEXTEDIT_STRINGLEN(str);
    ++c; // always move at least one character
    while( c < len && !is_word_boundary( str, c ) )
       ++c;
@@ -1124,10 +1124,10 @@ static c_void stb_textedit_discard_redo(StbUndoState *state)
       // now move all the redo records towards the end of the buffer; the first one is at 'redo_point'
       // [DEAR IMGUI]
       size_t move_size = ((STB_TEXTEDIT_UNDOSTATECOUNT - state->redo_point - 1) * sizeof(state->undo_rec[0]));
-      *const char buf_begin = (*mut char)state->undo_rec; (c_void)buf_begin;
-      *const char buf_end   = (*mut char)state->undo_rec + sizeof(state->undo_rec); (c_void)buf_end;
-      IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point)) >= buf_begin);
-      IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point + 1) + move_size) <= buf_end);
+      let mut  buf_begin: *const c_char = (*mut char)state->undo_rec; (c_void)buf_begin;
+      let mut  buf_end: *const c_char = (*mut char)state->undo_rec + sizeof(state->undo_rec); (c_void)buf_end;
+      // IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point)) >= buf_begin);
+      // IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point + 1) + move_size) <= buf_end);
       STB_TEXTEDIT_memmove(state->undo_rec + state->redo_point+1, state->undo_rec + state->redo_point, move_size);
 
       // now move redo_point to point to the new one

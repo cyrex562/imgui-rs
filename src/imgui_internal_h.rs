@@ -308,7 +308,7 @@ static inline c_void      ImQsort(*mut c_void base, size_t count, size_t size_of
 
 // Helpers: Bit manipulation
 static inline bool      ImIsPowerOfTwo(c_int v)           { return v != 0 && (v & (v - 1)) == 0; }
-static inline bool      ImIsPowerOfTwo(ImU64 v)         { return v != 0 && (v & (v - 1)) == 0; }
+static inline bool      ImIsPowerOfTwo(u64 v)         { return v != 0 && (v & (v - 1)) == 0; }
 static inline c_int       ImUpperPowerOfTwo(c_int v)        { v-= 1; v |= v >> 1; v |= v >> 2; v |= v >> 4; v |= v >> 8; v |= v >> 16; v+= 1; return v; }
 
 // Helpers: String
@@ -377,17 +377,17 @@ IM_MSVC_RUNTIME_CHECKS_RESTORE
 typedef *mut c_void ImFileHandle;
 static inline ImFileHandle  ImFileOpen(*const char, *const char)                    { return NULL; }
 static inline bool          ImFileClose(ImFileHandle)                               { return false; }
-static inline ImU64         ImFileGetSize(ImFileHandle)                             { return (ImU64)-1; }
-static inline ImU64         ImFileRead(*mut c_void, ImU64, ImU64, ImFileHandle)           { return 0; }
-static inline ImU64         ImFileWrite(*const c_void, ImU64, ImU64, ImFileHandle)    { return 0; }
+static inline u64         ImFileGetSize(ImFileHandle)                             { return (u64)-1; }
+static inline u64         ImFileRead(*mut c_void, u64, u64, ImFileHandle)           { return 0; }
+static inline u64         ImFileWrite(*const c_void, u64, u64, ImFileHandle)    { return 0; }
 // #endif
 // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
  ImFileHandle      ImFileOpen(*const char filename, *const char mode);
  bool              ImFileClose(ImFileHandle file);
- ImU64             ImFileGetSize(ImFileHandle file);
- ImU64             ImFileRead(*mut c_void data, ImU64 size, ImU64 count, ImFileHandle file);
- ImU64             ImFileWrite(*const c_void data, ImU64 size, ImU64 count, ImFileHandle file);
+ u64             ImFileGetSize(ImFileHandle file);
+ u64             ImFileRead(*mut c_void data, u64 size, u64 count, ImFileHandle file);
+ u64             ImFileWrite(*const c_void data, u64 size, u64 count, ImFileHandle file);
 // #else
 // #define IMGUI_DISABLE_TTY_FUNCTIONS // Can't use stdout, fflush if we are not using default file functions
 // #endif
@@ -452,7 +452,7 @@ static inline c_float  ImDot(const ImVec2& a, const ImVec2& b)                  
 static inline ImVec2 ImRotate(const ImVec2& v, c_float cos_a, c_float sin_a)        { return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
 static inline c_float  ImLinearSweep(c_float current, c_float target, c_float speed)    { if (current < target) return ImMin(current + speed, target); if (current > target) return ImMax(current - speed, target); return current; }
 static inline ImVec2 ImMul(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
-static inline bool   ImIsFloatAboveGuaranteedIntegerPrecision(c_float 0f32)          { return f <= -16777216 || f >= 16777216; }
+
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
 // Helpers: Geometry
@@ -492,7 +492,7 @@ inline c_void     ImBitArraySetBitRange(*mut u32 arr, c_int n, c_int n2) // Work
     {
         c_int a_mod = (n & 31);
         c_int b_mod = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
-        u32 mask = (((ImU64)1 << b_mod) - 1) & ~(((ImU64)1 << a_mod) - 1);
+        u32 mask = (((u64)1 << b_mod) - 1) & ~(((u64)1 << a_mod) - 1);
         arr[n >> 5] |= mask;
         n = (n + 32) & ~31;
     }
@@ -526,34 +526,7 @@ struct  ImBitVector
     c_void            ClearBit(c_int n)             { IM_ASSERT(n < (Storage.Size << 5)); ImBitArrayClearBit(Storage.Data, n); }
 };
 
-// Helper: ImSpan<>
-// Pointing to a span of data we don't own.
-template<typename T>
-struct ImSpan
-{
-    *mut T                  Data;
-    *mut T                  DataEnd;
 
-    // Constructors, destructor
-    inline ImSpan()                                 { Data = DataEnd = None; }
-    inline ImSpan(*mut T data, c_int size)                { Data = data; DataEnd = data + size; }
-    inline ImSpan(*mut T data, *mut T data_end)             { Data = data; DataEnd = data_end; }
-
-    inline c_void         set(*mut T data, c_int size)      { Data = data; DataEnd = data + size; }
-    inline c_void         set(*mut T data, *mut T data_end)   { Data = data; DataEnd = data_end; }
-    inline c_int          size() const                { return (ptrdiff_t)(DataEnd - Data); }
-    inline c_int          size_in_bytes() const       { return (ptrdiff_t)(DataEnd - Data) * sizeof(T); }
-    inline T&           operator[](c_int i)           { *mut T p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
-    inline const T&     operator[](c_int i) const     { *const T p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
-
-    inline *mut T           begin()                     { return Data; }
-    inline *const T     begin() const               { return Data; }
-    inline *mut T           end()                       { return DataEnd; }
-    inline *const T     end() const                 { return DataEnd; }
-
-    // Utilities
-    inline c_int  index_from_ptr(*const T it) const   { IM_ASSERT(it >= Data && it < DataEnd); const ptrdiff_t off = it - Data; return off; }
-};
 
 // Helper: ImSpanAllocator<>
 // Facilitate storing multiple chunks into a single large block (the "arena")
@@ -905,21 +878,7 @@ enum ImGuiInputFlags_
     ImGuiInputFlags_RepeatRateMask_     = ImGuiInputFlags_RepeatRateDefault | ImGuiInputFlags_RepeatRateNavMove | ImGuiInputFlags_RepeatRateNavTweak,
 };
 
-//-----------------------------------------------------------------------------
-// [SECTION] Clipper support
-//-----------------------------------------------------------------------------
 
-struct ImGuiListClipperRange
-{
-    c_int     Min;
-    c_int     Max;
-    bool    PosToIndexConvert;      // Begin/End are absolute position (will be converted to indices later)
-    i8    PosToIndexOffsetMin;    // Add to Min after converting to indices
-    i8    PosToIndexOffsetMax;    // Add to Min after converting to indices
-
-    static ImGuiListClipperRange    FromIndices(c_int min, c_int max)                               { ImGuiListClipperRange r = { min, max, false, 0, 0 }; return r; }
-    static ImGuiListClipperRange    FromPositions(c_float y1, c_float y2, c_int off_min, c_int off_max) { ImGuiListClipperRange r = { y1, y2, true, (i8)off_min, (i8)off_max }; return r; }
-};
 
 
 
@@ -969,15 +928,7 @@ enum ImGuiOldColumnFlags_
 // #endif
 };
 
-struct ImGuiOldColumnData
-{
-    c_float               OffsetNorm;             // Column start offset, normalized 0.0 (far left) -> 1.0 (far right)
-    c_float               OffsetNormBeforeResize;
-    ImGuiOldColumnFlags Flags;                  // Not exposed
-    ImRect              ClipRect;
 
-    ImGuiOldColumnData() { memset(this, 0, sizeof(*this)); }
-};
 
 //-----------------------------------------------------------------------------
 // [SECTION] Multi-select support
@@ -1037,20 +988,7 @@ enum ImGuiDockNodeState
     ImGuiDockNodeState_HostWindowVisible,
 };
 
-// List of colors that are stored at the time of Begin() into Docked Windows.
-// We currently store the packed colors in a simple array window.DockStyle.Colors[].
-// A better solution may involve appending into a log of colors in ImGuiContext + store offsets into those arrays in ImGuiWindow,
-// but it would be more complex as we'd need to double-buffer both as e.g. drop target may refer to window from last frame.
-enum ImGuiWindowDockStyleCol
-{
-    ImGuiWindowDockStyleCol_Text,
-    ImGuiWindowDockStyleCol_Tab,
-    ImGuiWindowDockStyleCol_TabHovered,
-    ImGuiWindowDockStyleCol_TabActive,
-    ImGuiWindowDockStyleCol_TabUnfocused,
-    ImGuiWindowDockStyleCol_TabUnfocusedActive,
-    ImGuiWindowDockStyleCol_COUNT
-};
+
 
 
 
@@ -1122,89 +1060,15 @@ enum ImGuiTabItemFlagsPrivate_
 // [SECTION] Table support
 //-----------------------------------------------------------------------------
 
-// #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
-// #define IMGUI_TABLE_MAX_COLUMNS         64                  // sizeof(ImU64) * 8. This is solely because we frequently encode columns set in a ImU64.
+
+// #define IMGUI_TABLE_MAX_COLUMNS         64                  // sizeof(u64) * 8. This is solely because we frequently encode columns set in a u64.
 // #define IMGUI_TABLE_MAX_DRAW_CHANNELS   (4 + 64 * 2)        // See TableSetupDrawChannels()
 
 
 
-// [Internal] sizeof() ~ 104
-// We use the terminology "Enabled" to refer to a column that is not Hidden by user/api.
-// We use the terminology "Clipped" to refer to a column that is out of sight because of scrolling/clipping.
-// This is in contrast with some user-facing api such as IsItemVisible() / IsRectVisible() which use "Visible" to mean "not clipped".
-struct ImGuiTableColumn
-{
-    ImGuiTableColumnFlags   Flags;                          // Flags after some patching (not directly same as provided by user). See ImGuiTableColumnFlags_
-    c_float                   WidthGiven;                     // Final/actual width visible == (MaxX - MinX), locked in TableUpdateLayout(). May be > WidthRequest to honor minimum width, may be < WidthRequest to honor shrinking columns down in tight space.
-    c_float                   MinX;                           // Absolute positions
-    c_float                   MaxX;
-    c_float                   WidthRequest;                   // Master width absolute value when !(Flags & _WidthStretch). When Stretch this is derived every frame from StretchWeight in TableUpdateLayout()
-    c_float                   WidthAuto;                      // Automatic width
-    c_float                   StretchWeight;                  // Master width weight when (Flags & _WidthStretch). Often around ~1f32 initially.
-    c_float                   InitStretchWeightOrWidth;       // Value passed to TableSetupColumn(). For Width it is a content width (_without padding_).
-    ImRect                  ClipRect;                       // Clipping rectangle for the column
-    ImGuiID                 UserID;                         // Optional, value passed to TableSetupColumn()
-    c_float                   WorkMinX;                       // Contents region min ~(MinX + CellPaddingX + CellSpacingX1) == cursor start position when entering column
-    c_float                   WorkMaxX;                       // Contents region max ~(MaxX - CellPaddingX - CellSpacingX2)
-    c_float                   ItemWidth;                      // Current item width for the column, preserved across rows
-    c_float                   ContentMaxXFrozen;              // Contents maximum position for frozen rows (apart from headers), from which we can infer content width.
-    c_float                   ContentMaxXUnfrozen;
-    c_float                   ContentMaxXHeadersUsed;         // Contents maximum position for headers rows (regardless of freezing). TableHeader() automatically softclip itself + report ideal desired size, to avoid creating extraneous draw calls
-    c_float                   ContentMaxXHeadersIdeal;
-    i16                   NameOffset;                     // Offset into parent ColumnsNames[]
-    ImGuiTableColumnIdx     DisplayOrder;                   // Index within Table's IndexToDisplayOrder[] (column may be reordered by users)
-    ImGuiTableColumnIdx     IndexWithinEnabledSet;          // Index within enabled/visible set (<= IndexToDisplayOrder)
-    ImGuiTableColumnIdx     PrevEnabledColumn;              // Index of prev enabled/visible column within Columns[], -1 if first enabled/visible column
-    ImGuiTableColumnIdx     NextEnabledColumn;              // Index of next enabled/visible column within Columns[], -1 if last enabled/visible column
-    ImGuiTableColumnIdx     SortOrder;                      // Index of this column within sort specs, -1 if not sorting on this column, 0 for single-sort, may be >0 on multi-sort
-    ImGuiTableDrawChannelIdx DrawChannelCurrent;            // Index within DrawSplitter.Channels[]
-    ImGuiTableDrawChannelIdx DrawChannelFrozen;             // Draw channels for frozen rows (often headers)
-    ImGuiTableDrawChannelIdx DrawChannelUnfrozen;           // Draw channels for unfrozen rows
-    bool                    IsEnabled;                      // IsUserEnabled && (Flags & ImGuiTableColumnFlags_Disabled) == 0
-    bool                    IsUserEnabled;                  // Is the column not marked Hidden by the user? (unrelated to being off view, e.g. clipped by scrolling).
-    bool                    IsUserEnabledNextFrame;
-    bool                    IsVisibleX;                     // Is actually in view (e.g. overlapping the host window clipping rectangle, not scrolled).
-    bool                    IsVisibleY;
-    bool                    IsRequestOutput;                // Return value for TableSetColumnIndex() / TableNextColumn(): whether we request user to output contents or not.
-    bool                    IsSkipItems;                    // Do we want item submissions to this column to be completely ignored (no layout will happen).
-    bool                    IsPreserveWidthAuto;
-    i8                    NavLayerCurrent;                // ImGuiNavLayer in 1 byte
-    u8                    AutoFitQueue;                   // Queue of 8 values for the next 8 frames to request auto-fit
-    u8                    CannotSkipItemsQueue;           // Queue of 8 values for the next 8 frames to disable Clipped/SkipItem
-    u8                    SortDirection : 2;              // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
-    u8                    SortDirectionsAvailCount : 2;   // Number of available sort directions (0 to 3)
-    u8                    SortDirectionsAvailMask : 4;    // Mask of available sort directions (1-bit each)
-    u8                    SortDirectionsAvailList;        // Ordered of available sort directions (2-bits each)
 
-    ImGuiTableColumn()
-    {
-        memset(this, 0, sizeof(*this));
-        StretchWeight = WidthRequest = -1f32;
-        NameOffset = -1;
-        DisplayOrder = IndexWithinEnabledSet = -1;
-        PrevEnabledColumn = NextEnabledColumn = -1;
-        SortOrder = -1;
-        SortDirection = ImGuiSortDirection_None;
-        DrawChannelCurrent = DrawChannelFrozen = DrawChannelUnfrozen = (u8)-1;
-    }
-};
 
-// Transient cell data stored per row.
-// sizeof() ~ 6
-struct ImGuiTableCellData
-{
-    u32                       BgColor;    // Actual color
-    ImGuiTableColumnIdx         Column;     // Column number
-};
 
-// Per-instance data that needs preserving across frames (seemingly most others do not need to be preserved aside from debug needs, does that needs they could be moved to ImGuiTableTempData ?)
-struct ImGuiTableInstanceData
-{
-    c_float                       LastOuterHeight;            // Outer height from last frame // FIXME: multi-instance issue (#3955)
-    c_float                       LastFirstRowHeight;         // Height of first row from last frame // FIXME: possible multi-instance issue?
-
-    ImGuiTableInstanceData()    { LastOuterHeight = LastFirstRowHeight = 0f32; }
-};
 
 
 
@@ -1237,7 +1101,7 @@ namespace ImGui
      c_void          SetWindowCollapsed(*mut ImGuiWindow window, bool collapsed, ImGuiCond cond = 0);
      c_void          SetWindowHitTestHole(*mut ImGuiWindow window, const ImVec2& pos, const ImVec2& size);
     inline ImRect           WindowRectAbsToRel(*mut ImGuiWindow window, const ImRect& r) { ImVec2 off = window.DC.CursorStartPos; return ImRect(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y); }
-    inline ImRect           WindowRectRelToAbs(*mut ImGuiWindow window, const ImRect& r) { ImVec2 off = window.DC.CursorStartPos; return ImRect(r.Min.x + off.x, r.Min.y + off.y, r.Max.x + off.x, r.Max.y + off.y); }
+
 
     // Windows: Display Order and Focus Order
      c_void          FocusWindow(*mut ImGuiWindow window);
@@ -1363,8 +1227,8 @@ namespace ImGui
 
     // Menus
      bool          BeginViewportSideBar(*const char name, *mut ImGuiViewport viewport, ImGuiDir dir, c_float size, ImGuiWindowFlags window_flags);
-     bool          BeginMenuEx(*const char label, *const char icon, bool enabled = true);
-     bool          MenuItemEx(*const char label, *const char icon, *const char shortcut = NULL, bool selected = false, bool enabled = true);
+     bool          BeginMenuEx(*const char label, *const char icon, let mut enabled: bool =  true);
+     bool          MenuItemEx(*const char label, *const char icon, *const char shortcut = NULL, let mut selected: bool =  false, let mut enabled: bool =  true);
 
     // Combos
      bool          BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags flags);
@@ -1415,7 +1279,7 @@ namespace ImGui
      c_void          GetTypematicRepeatRate(ImGuiInputFlags flags, *mut c_float repeat_delay, *mut c_float repeat_rate);
      bool          IsKeyPressedEx(ImGuiKey key, ImGuiInputFlags flags = 0);
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-    inline bool             IsKeyPressedMap(ImGuiKey key, bool repeat = true)           { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // [removed in 1.87]
+    inline bool             IsKeyPressedMap(ImGuiKey key, let mut repeat: bool =  true)           { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // [removed in 1.87]
 // #endif
 
     // Docking
@@ -1460,7 +1324,7 @@ namespace ImGui
     inline *mut ImGuiDockNode   DockBuilderGetCentralNode(ImGuiID node_id)              { *mut ImGuiDockNode node = DockBuilderGetNode(node_id); if (!node) return NULL; return DockNodeGetRootNode(node)->CentralNode; }
      ImGuiID       DockBuilderAddNode(ImGuiID node_id = 0, ImGuiDockNodeFlags flags = 0);
      c_void          DockBuilderRemoveNode(ImGuiID node_id);                 // Remove node and all its child, undock all windows
-     c_void          DockBuilderRemoveNodeDockedWindows(ImGuiID node_id, bool clear_settings_refs = true);
+     c_void          DockBuilderRemoveNodeDockedWindows(ImGuiID node_id, let mut clear_settings_refs: bool =  true);
      c_void          DockBuilderRemoveNodeChildNodes(ImGuiID node_id);       // Remove all split/hierarchy. All remaining docked windows will be re-docked to the remaining root node (node_id).
      c_void          DockBuilderSetNodePos(ImGuiID node_id, ImVec2 pos);
      c_void          DockBuilderSetNodeSize(ImGuiID node_id, ImVec2 size);
@@ -1511,7 +1375,7 @@ namespace ImGui
      c_void          TableDrawContextMenu(*mut ImGuiTable table);
      bool          TableBeginContextMenuPopup(*mut ImGuiTable table);
      c_void          TableMergeDrawChannels(*mut ImGuiTable table);
-    inline *mut ImGuiTableInstanceData   TableGetInstanceData(*mut ImGuiTable table, c_int instance_no) { if (instance_no == 0) return &table->InstanceDataFirst; return &table->InstanceDataExtra[instance_no - 1]; }
+
      c_void          TableSortSpecsSanitize(*mut ImGuiTable table);
      c_void          TableSortSpecsBuild(*mut ImGuiTable table);
      ImGuiSortDirection TableGetColumnNextSortDirection(*mut ImGuiTableColumn column);
@@ -1559,12 +1423,12 @@ namespace ImGui
     // Render helpers
     // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
     // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
-     c_void          RenderText(ImVec2 pos, *const char text, *const char text_end = NULL, bool hide_text_after_hash = true);
+     c_void          RenderText(ImVec2 pos, *const char text, *const char text_end = NULL, let mut hide_text_after_hash: bool =  true);
      c_void          RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width);
      c_void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const ImRect clip_rect = NULL);
      c_void          RenderTextClippedEx(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const ImRect clip_rect = NULL);
      c_void          RenderTextEllipsis(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end, *const ImVec2 text_size_if_known);
-     c_void          RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, bool border = true, c_float rounding = 0f32);
+     c_void          RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, let mut border: bool =  true, c_float rounding = 0f32);
      c_void          RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, c_float rounding = 0f32);
      c_void          RenderColorRectWithAlphaCheckerboard(*mut ImDrawList draw_list, ImVec2 p_min, ImVec2 p_max, u32 fill_col, c_float grid_step, ImVec2 grid_off, c_float rounding = 0f32, ImDrawFlags flags = 0);
      c_void          RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags = ImGuiNavHighlightFlags_TypeDefault); // Navigation highlight
@@ -1596,7 +1460,7 @@ namespace ImGui
      ImGuiID       GetWindowResizeBorderID(*mut ImGuiWindow window, ImGuiDir dir);
      c_void          SeparatorEx(ImGuiSeparatorFlags flags);
      bool          CheckboxFlags(*const char label, *mut ImS64 flags, ImS64 flags_value);
-     bool          CheckboxFlags(*const char label, *mut ImU64 flags, ImU64 flags_value);
+     bool          CheckboxFlags(*const char label, *mut u64 flags, u64 flags_value);
 
     // Widgets low-level behaviors
      bool          ButtonBehavior(const ImRect& bb, ImGuiID id, *mut bool out_hovered, *mut bool out_held, ImGuiButtonFlags flags = 0);

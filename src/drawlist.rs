@@ -1,8 +1,15 @@
 #![allow(non_snake_case)]
 
 use libc::{c_char, c_float, c_int, c_uint, c_void};
+use crate::draw::ImDrawCallback;
+use crate::draw_cmd::ImDrawCmd;
+use crate::draw_cmd_header::ImDrawCmdHeader;
 use crate::draw_flags::ImDrawFlags;
 use crate::draw_list_flags::ImDrawListFlags;
+use crate::draw_list_shared_data::ImDrawListSharedData;
+use crate::draw_list_splitter::ImDrawListSplitter;
+use crate::draw_vert::ImDrawVert;
+use crate::font::ImFont;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::type_defs::{ImDrawIdx, ImTextureID};
@@ -304,8 +311,8 @@ impl ImDrawList {
 
     // inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, u32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr+= 1; _VtxCurrentIdx+= 1; }
     pub fn PrimWriteVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
-        self._VtxWritePtr.pos = pos;
-        self._VtxWritePtr.uv = uv;
+        self._VtxWritePtr.pos = pos.clone();
+        self._VtxWritePtr.uv = uv.clone();
         self._VtxWritePtr.col = col;
         self._VtxWritePtr += 1;
         self._VtxCurrentIdx += 1;
@@ -336,8 +343,8 @@ impl ImDrawList {
 // #endif
 
     // [Internal helpers]
-// void  _ResetForNewFrame();
-fn _ResetForNewFrame(&mut self) {
+// void  _ResetForNewFrame(); 
+    fn _ResetForNewFrame(&mut self) {
         todo!()
     }
 

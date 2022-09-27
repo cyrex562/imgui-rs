@@ -31,7 +31,7 @@ pub type ImGuiID = c_int;
 // typedef signed int          ImS32;  // 32-bit signed integer == int
 // typedef unsigned int        u32;  // 32-bit unsigned integer (often used to store packed colors)
 // typedef signed   long long  ImS64;  // 64-bit signed integer
-// typedef unsigned long long  ImU64;  // 64-bit unsigned integer
+// typedef unsigned long long  u64;  // 64-bit unsigned integer
 
 // Character types
 // (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)

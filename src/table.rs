@@ -1,11 +1,19 @@
 #![allow(non_snake_case)]
 
-use libc::{c_float, c_int};
+use libc::{c_float, c_int, c_void};
+use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::rect::ImRect;
+use crate::span::ImSpan;
+use crate::table_cell_data::ImGuiTableCellData;
+use crate::table_column::ImGuiTableColumn;
+use crate::table_column_sort_specs::ImGuiTableColumnSortSpecs;
+use crate::table_flags::ImGuiTableFlags;
+use crate::table_instance_data::ImGuiTableInstanceData;
 use crate::table_row_flags::ImGuiTableRowFlags;
+use crate::table_temp_data::ImGuiTableTempData;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::window::ImGuiWindow;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::{ImGuiID, ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx};
 
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData 
 #[derive(Default,Debug,Clone)]
@@ -22,13 +30,13 @@ pub struct ImGuiTable {
     // Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
     pub RowCellData: ImSpan<ImGuiTableCellData>,
     // Point within RawData[]. Store cells background requests for current row.
-    pub EnabledMaskByDisplayOrder: ImU64,
+    pub EnabledMaskByDisplayOrder: u64,
     // Column DisplayOrder -> IsEnabled map
-    pub EnabledMaskByIndex: ImU64,
+    pub EnabledMaskByIndex: u64,
     // Column Index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
-    pub VisibleMaskByIndex: ImU64,
+    pub VisibleMaskByIndex: u64,
     // Column Index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
-    pub RequestOutputMaskByIndex: ImU64,
+    pub RequestOutputMaskByIndex: u64,
     // Column Index -> IsVisible || AutoFit (== expect user to submit items)
     pub SettingsLoadedFlags: ImGuiTableFlags,
     // Which data were loaded from the .ini file (e.g. when order is not altered we won't save order)
@@ -39,7 +47,7 @@ pub struct ImGuiTable {
     // Number of columns declared in BeginTable()
     pub CurrentRow: c_int,
     pub CurrentColumn: c_int,
-    pub InstanceCurrent: i16,
+    pub InstanceCurrent: c_int,
     // Count of BeginTable() calls with same ID in the same frame (generally 0). This is a little bit similar to BeginCount for a window, but multiple table with same ID look are multiple tables, they are just synched.
     pub InstanceInteracted: i16,
     // Mark which instance (generally 0) of the same ID is being interacted with

@@ -4,10 +4,12 @@
 use libc::{c_char, c_float, c_int, c_short};
 use crate::condition::ImGuiCond;
 use crate::context::ImGuiContext;
+use crate::direction::ImGuiDir;
 use crate::dock_node::ImGuiDockNode;
 use crate::drawlist::ImDrawList;
 use crate::item_status_flags::ImGuiItemStatusFlags;
 use crate::layout_type::ImGuiLayoutType;
+use crate::nav_layer::ImGuiNavLayer_COUNT;
 use crate::old_columns::ImGuiOldColumns;
 use crate::rect::ImRect;
 use crate::storage::ImGuiStorage;
@@ -17,6 +19,7 @@ use crate::win_dock_style::ImGuiWindowDockStyle;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::{ImGuiDir, ImGuiID};
 use crate::window_flags::ImGuiWindowFlags;
+use crate::window_temp_data::ImGuiWindowTempData;
 
 // Storage for one window
 pub struct  ImGuiWindow
@@ -104,7 +107,7 @@ pub InnerRect: ImRect,                          // Inner rectangle (omit title b
 pub InnerClipRect: ImRect,                      // == InnerRect shrunk by WindowPadding*0.5f32 on each side, clipped within viewport or parent clip rect.
 pub WorkRect: ImRect,                           // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1f32 on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
 pub ParentWorkRect: ImRect,                     // Backup of WorkRect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
-pub ClipRect: ImRect,                           // Current clipping/scissoring rectangle, evolve as we are using PushClipRect(), etc. == DrawList->clip_rect_stack.back().
+pub ClipRect: ImRect,                           // Current clipping/scissoring rectangle, evolve as we are using PushClipRect(), etc. == DrawList.clip_rect_stack.back().
 pub ContentRegionRect: ImRect,                  // FIXME: This is currently confusing/misleading. It is essentially WorkRect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
 pub HitTestHoleSize: ImVec2ih,                    // Define an optional rectangular hole where mouse will pass-through the window.
 pub HitTestHoleOffset: ImVec2ih,
@@ -132,9 +135,9 @@ pub RootWindowForNav: *mut ImGuiWindow,                   // Point to ourself or
 
 pub NavLastChildNavWindow: *mut ImGuiWindow,              // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.Windows sorted by last focused including child window.)
 // ImGuiID                 NavLastIds[ImGuiNavLayer_COUNT];    // Last known NavId for this window, per layer (0/1)
-pub NavLastIds: [ImGuiID;ImGuiNavLayer_COUNT],
+pub NavLastIds: [ImGuiID; ImGuiNavLayer_COUNT as usize],
     // ImRect                  NavRectRel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
-pub NavRectRel: [ImRect;ImGuiNavLayer_COUNT],
+pub NavRectRel: [ImRect; ImGuiNavLayer_COUNT as usize],
 
 pub MemoryDrawListIdxCapacity: c_int,          // Backup of last idx/vtx count, so when waking up the window we can preallocate and avoid iterative alloc/copy
 pub MemoryDrawListVtxCapacity: c_int,
@@ -193,81 +196,6 @@ impl ImGuiWindow {
 
 
     // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
-}
-
-
-
-// Transient per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the DC variable name in ImGuiWindow.
-// (That's theory, in practice the delimitation between ImGuiWindow and ImGuiWindowTempData is quite tenuous and could be reconsidered..)
-// (This doesn't need a constructor because we zero-clear it as part of ImGuiWindow and all frame-temporary data are setup on Begin)
-#[derive(Default,Debug,Clone)]
-pub struct ImGuiWindowTempData {
-    // Layout
-    pub CursorPos: ImVec2,
-    // Current emitting position, in absolute coordinates.
-    pub CursorPosPrevLine: ImVec2,
-    pub CursorStartPos: ImVec2,
-    // Initial position after Begin(), generally ~ window position + WindowPadding.
-    pub CursorMaxPos: ImVec2,
-    // Used to implicitly calculate ContentSize at the beginning of next frame, for scrolling range and auto-resize. Always growing during the frame.
-    pub IdealMaxPos: ImVec2,
-    // Used to implicitly calculate ContentSizeIdeal at the beginning of next frame, for auto-resize only. Always growing during the frame.
-    pub CurrLineSize: ImVec2,
-    pub PrevLineSize: ImVec2,
-    pub CurrLineTextBaseOffset: c_float,
-    // Baseline offset (0f32 by default on a new line, generally == style.FramePadding.y when a framed item has been added).
-    pub PrevLineTextBaseOffset: c_float,
-    pub IsSameLine: bool,
-    pub IsSetPos: bool,
-    pub Indent: ImVec1,
-    // Indentation / start position from left of window (increased by TreePush/TreePop, etc.)
-    pub ColumnsOffset: ImVec1,
-    // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree->Column->Tree. Need revamp columns API.
-    pub GroupOffset: ImVec1,
-    pub CursorStartPosLossyness: ImVec2,// Record the loss of precision of CursorStartPos due to really large scrolling amount. This is used by clipper to compensentate and fix the most common use case of large scroll area.
-
-    // Keyboard/Gamepad navigation
-    pub NavLayerCurrent: ImGuiNavLayer,
-    // Current layer, 0..31 (we currently only use 0..1)
-    pub NavLayersActiveMask: c_short,
-    // Which layers have been written to (result from previous frame)
-    pub NavLayersActiveMaskNext: c_short,
-    // Which layers have been written to (accumulator for current frame)
-    pub NavFocusScopeIdCurrent: ImGuiID,
-    // Current focus scope ID while appending
-    pub NavHideHighlightOneFrame: bool,
-    pub NavHasScroll: bool,           // Set when scrolling can be used (ScrollMax > 0f32)
-
-    // Miscellaneous
-    pub MenuBarAppending: bool,
-    // FIXME: Remove this
-    pub MenuBarOffset: ImVec2,
-    // MenuBarOffset.x is sort of equivalent of a per-layer CursorPos.x, saved/restored as we switch to the menu bar. The only situation when MenuBarOffset.y is > 0 if when (SafeAreaPadding.y > FramePadding.y), often used on TVs.
-    pub MenuColumns: ImGuiMenuColumns,
-    // Simplified columns storage for menu items measurement
-    pub TreeDepth: c_int,
-    // Current tree depth.
-    pub TreeJumpToParentOnPopMask: u32,
-    // Store a copy of !g.NavIdIsAlive for TreeDepth 0..31.. Could be turned into a ImU64 if necessary.
-    pub ChildWindows: Vec<*mut ImGuiWindow>,
-    pub StateStorage: *mut ImGuiStorage,
-    // Current persistent per-window storage (store e.g. tree node open/close state)
-    pub CurrentColumns: *mut ImGuiOldColumns,
-    // Current columns set
-    pub CurrentTableIdx: c_int,
-    // Current table index (into g.Tables)
-    pub LayoutType: ImGuiLayoutType,
-    pub ParentLayoutType: ImGuiLayoutType,       // Layout type of parent window at the time of Begin()
-
-    // Local parameters stacks
-    // We store the current settings outside of the vectors to increase memory locality (reduce cache misses). The vectors are rarely modified. Also it allows us to not heap allocate for short-lived windows which are not using those settings.
-    pub ItemWidth: c_float,
-    // Current item width (>0.0: width in pixels, <0.0: align xx pixels to the right of window).
-    pub TextWrapPos: c_float,
-    // Current text wrap pos.
-    pub ItemWidthStack: Vec<c_float>,
-    // Store item widths to restore (attention: .back() is not == ItemWidth)
-    pub TextWrapPosStack: Vec<c_float>,       // Store text wrap pos to restore (attention: .back() is not == TextWrapPos)
 }
 
 
