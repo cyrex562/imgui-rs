@@ -617,7 +617,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, *mut bool out_hovered, 
             // Avoid pressing both keys from triggering double amount of repeat events
             let key1: *const ImGuiKeyData = GetKeyData(ImGuiKey_Space);
             let key2: *const ImGuiKeyData = GetKeyData(ImGuiKey_NavGamepadActivate);
-            const c_float t1 = ImMax(key1->DownDuration, key2->DownDuration);
+            const c_float t1 = ImMax(key1.DownDuration, key2.DownDuration);
             nav_activated_by_inputs = CalcTypematicRepeatAmount(t1 - g.IO.DeltaTime, t1, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate) > 0;
         }
         if (nav_activated_by_code || nav_activated_by_inputs)
@@ -1460,7 +1460,7 @@ c_void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
         if (columns)
         {
             PopColumnsBackground();
-            columns->LineMinY = window.DC.CursorPos.y;
+            columns.LineMinY = window.DC.CursorPos.y;
         }
     }
 }
@@ -1544,9 +1544,9 @@ static c_int IMGUI_CDECL ShrinkWidthItemComparer(*const c_void lhs, *const c_voi
 {
     let a: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)lhs;
     let b: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)rhs;
-    if (c_int d = (b->Width - a->Width))
+    if (c_int d = (b.Width - a.Width))
         return d;
-    return (b->Index - a->Index);
+    return (b.Index - a.Index);
 }
 
 // Shrink excess width from a set of item, by removing width from the larger items first.
@@ -1762,16 +1762,16 @@ bool ImGui::BeginComboPreview()
     if (window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect)) // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
         return false;
     // IM_ASSERT(g.LastItemData.Rect.Min.x == preview_data->PreviewRect.Min.x && g.LastItemData.Rect.Min.y == preview_data->PreviewRect.Min.y); // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
-    if (!window.ClipRect.Contains(preview_data->PreviewRect)) // Narrower test (optional)
+    if (!window.ClipRect.Contains(preview_data.PreviewRect)) // Narrower test (optional)
         return false;
 
     // FIXME: This could be contained in a PushWorkRect() api
-    preview_data->BackupCursorPos = window.DC.CursorPos;
-    preview_data->BackupCursorMaxPos = window.DC.CursorMaxPos;
-    preview_data->BackupCursorPosPrevLine = window.DC.CursorPosPrevLine;
-    preview_data->BackupPrevLineTextBaseOffset = window.DC.PrevLineTextBaseOffset;
-    preview_data->BackupLayout = window.DC.LayoutType;
-    window.DC.CursorPos = preview_data->PreviewRect.Min + g.Style.FramePadding;
+    preview_data.BackupCursorPos = window.DC.CursorPos;
+    preview_data.BackupCursorMaxPos = window.DC.CursorMaxPos;
+    preview_data.BackupCursorPosPrevLine = window.DC.CursorPosPrevLine;
+    preview_data.BackupPrevLineTextBaseOffset = window.DC.PrevLineTextBaseOffset;
+    preview_data.BackupLayout = window.DC.LayoutType;
+    window.DC.CursorPos = preview_data.PreviewRect.Min + g.Style.FramePadding;
     window.DC.CursorMaxPos = window.DC.CursorPos;
     window.DC.LayoutType = ImGuiLayoutType_Horizontal;
     window.DC.IsSameLine = false;
@@ -5369,7 +5369,7 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
     if (!(flags & ImGuiColorEditFlags_NoSidePreview))
     {
         PushItemFlag(ImGuiItemFlags_NoNavDefaultFocus, true);
-        ImVec4 col_v4(col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
+        let mut col_v4 = ImVec4::new(col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
         if ((flags & ImGuiColorEditFlags_NoLabel))
             Text("Current");
 
@@ -5378,7 +5378,7 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
         if (ref_col != NULL)
         {
             Text("Original");
-            ImVec4 ref_col_v4(ref_col[0], ref_col[1], ref_col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : ref_col[3]);
+            let mut ref_col_v4 = ImVec4::new(ref_col[0], ref_col[1], ref_col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : ref_col[3]);
             if (ColorButton("##original", ref_col_v4, (flags & sub_flags_to_forward), ImVec2(square_sz * 3, square_sz * 2)))
             {
                 memcpy(col, ref_col, components * sizeof);
@@ -5468,7 +5468,7 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
     const u32 col_midgrey = IM_COL32(128,128,128,style_alpha8);
     const u32 col_hues[6 + 1] = { IM_COL32(255,0,0,style_alpha8), IM_COL32(255,255,0,style_alpha8), IM_COL32(0,255,0,style_alpha8), IM_COL32(0,255,255,style_alpha8), IM_COL32(0,0,255,style_alpha8), IM_COL32(255,0,255,style_alpha8), IM_COL32(255,0,0,style_alpha8) };
 
-    ImVec4 hue_color_f(1, 1, 1, style.Alpha); ColorConvertHSVtoRGB(H, 1, 1, hue_color_f.x, hue_color_f.y, hue_color_f.z);
+    let mut hue_color_f = ImVec4::new(1, 1, 1, style.Alpha); ColorConvertHSVtoRGB(H, 1, 1, hue_color_f.x, hue_color_f.y, hue_color_f.z);
     u32 hue_color32 = ColorConvertFloat4ToU32(hue_color_0f32);
     u32 user_col32_striped_of_alpha = ColorConvertFloat4ToU32(ImVec4(R, G, B, style.Alpha)); // Important: this is still including the main rendering/style alpha!!
 
@@ -5595,7 +5595,7 @@ bool ImGui::ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFl
     if (flags & ImGuiColorEditFlags_InputHSV)
         ColorConvertHSVtoRGB(col_rgb.x, col_rgb.y, col_rgb.z, col_rgb.x, col_rgb.y, col_rgb.z);
 
-    ImVec4 col_rgb_without_alpha(col_rgb.x, col_rgb.y, col_rgb.z, 1f32);
+    let mut col_rgb_without_alpha = ImVec4::new(col_rgb.x, col_rgb.y, col_rgb.z, 1f32);
     c_float grid_step = ImMin(size.x, size.y) / 2.99f;
     c_float rounding = ImMin(g.Style.FrameRounding, grid_step * 0.5f32);
     ImRect bb_inner = bb;
@@ -5683,7 +5683,7 @@ c_void ImGui::ColorTooltip(*const char text, *const c_float col, ImGuiColorEditF
     }
 
     ImVec2 sz(g.FontSize * 3 + g.Style.FramePadding.y * 2, g.FontSize * 3 + g.Style.FramePadding.y * 2);
-    ImVec4 cf(col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
+    let mut cf = ImVec4::new(col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
     c_int cr = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = (flags & ImGuiColorEditFlags_NoAlpha) ? 255 : IM_F32_TO_INT8_SAT(col[3]);
     ColorButton("##preview", cf, (flags & (ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32)) | ImGuiColorEditFlags_NoTooltip, sz);
     SameLine();

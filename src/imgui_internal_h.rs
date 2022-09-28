@@ -547,7 +547,7 @@ struct ImSpanAllocator
     inline *mut c_void GetSpanPtrBegin(c_int n)             { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (*mut c_void)(BasePtr + Offsets[n]); }
     inline *mut c_void GetSpanPtrEnd(c_int n)               { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (*mut c_void)(BasePtr + Offsets[n] + Sizes[n]); }
     template<typename T>
-    inline c_void  GetSpan(c_int n, ImSpan<T>* span)    { span->set((*mut T)GetSpanPtrBegin(n), (*mut T)GetSpanPtrEnd(n)); }
+    inline c_void  GetSpan(c_int n, ImSpan<T>* span)    { span.set((*mut T)GetSpanPtrBegin(n), (*mut T)GetSpanPtrEnd(n)); }
 };
 
 
@@ -1299,10 +1299,10 @@ namespace ImGui
      *mut ImGuiDockNodeDockContextFindNodeByID(*mut ImGuiContext ctx, ImGuiID id);
      bool          DockNodeBeginAmendTabBar(*mut ImGuiDockNode node);
      c_void          DockNodeEndAmendTabBar();
-    inline *mut ImGuiDockNode   DockNodeGetRootNode(*mut ImGuiDockNode node)                 { while (node->ParentNode) node = node->ParentNode; return node; }
-    inline bool             DockNodeIsInHierarchyOf(*mut ImGuiDockNode node, *mut ImGuiDockNode parent) { while (node) { if (node == parent) return true; node = node->ParentNode; } return false; }
-    inline c_int              DockNodeGetDepth(*const ImGuiDockNode node)              { c_int depth = 0; while (node->ParentNode) { node = node->ParentNode; depth+= 1; } return depth; }
-    inline ImGuiID          DockNodeGetWindowMenuButtonId(*const ImGuiDockNode node) { return ImHashStr("#COLLAPSE", 0, node->ID); }
+    inline *mut ImGuiDockNode   DockNodeGetRootNode(*mut ImGuiDockNode node)                 { while (node.ParentNode) node = node.ParentNode; return node; }
+    inline bool             DockNodeIsInHierarchyOf(*mut ImGuiDockNode node, *mut ImGuiDockNode parent) { while (node) { if (node == parent) return true; node = node.ParentNode; } return false; }
+    inline c_int              DockNodeGetDepth(*const ImGuiDockNode node)              { c_int depth = 0; while (node.ParentNode) { node = node.ParentNode; depth+= 1; } return depth; }
+    inline ImGuiID          DockNodeGetWindowMenuButtonId(*const ImGuiDockNode node) { return ImHashStr("#COLLAPSE", 0, node.ID); }
     inline *mut ImGuiDockNode   GetWindowDockNode()                                      { let g = GImGui; // ImGuiContext& g = *GImGui; return g.Currentwindow.DockNode; }
      bool          GetWindowAlwaysWantOwnTabBar(*mut ImGuiWindow window);
      c_void          BeginDocked(*mut ImGuiWindow window, *mut bool p_open);

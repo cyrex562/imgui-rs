@@ -148,7 +148,7 @@ impl ImDrawList {
 
 
     // void  AddText(const ImVec2& pos, u32 col, const char* text_begin, const char* text_end = NULL);
-    pub fn AddText(&mut self, pos: &ImVec2, col: u32, text_begin: *const c_char, text_end: *const c_char) {}
+    pub fn AddText(&mut self, pos: *const ImVec2, col: u32, text_begin: *const c_char, text_end: *const c_char) {}
 
     // void  AddText(const ImFont* font, c_float font_size, const ImVec2& pos, u32 col, const char* text_begin, const char*
 // text_end = NULL, c_float wrap_width = 0f32, const ImVec4* cpu_fine_clip_rect = NULL);

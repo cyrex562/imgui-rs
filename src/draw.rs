@@ -206,7 +206,7 @@ using namespace IMGUI_STB_NAMESPACE;
 c_void ImGui::StyleColorsDark(*mut ImGuiStyle dst)
 {
     *mut ImGuiStyle style = dst ? dst : &ImGui::GetStyle();
-    *mut ImVec4 colors = style->Colors;
+    *mut ImVec4 colors = style.Colors;
 
     colors[ImGuiCol_Text]                   = ImVec4(1f32, 1f32, 1f32, 1.000f32);
     colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f32, 0.50f32, 0.50f32, 1.000f32);
@@ -268,7 +268,7 @@ c_void ImGui::StyleColorsDark(*mut ImGuiStyle dst)
 c_void ImGui::StyleColorsClassic(*mut ImGuiStyle dst)
 {
     *mut ImGuiStyle style = dst ? dst : &ImGui::GetStyle();
-    *mut ImVec4 colors = style->Colors;
+    *mut ImVec4 colors = style.Colors;
 
     colors[ImGuiCol_Text]                   = ImVec4(0.90f32, 0.90f32, 0.90f32, 1.000f32);
     colors[ImGuiCol_TextDisabled]           = ImVec4(0.60f32, 0.60f32, 0.60f32, 1.000f32);
@@ -331,7 +331,7 @@ c_void ImGui::StyleColorsClassic(*mut ImGuiStyle dst)
 c_void ImGui::StyleColorsLight(*mut ImGuiStyle dst)
 {
     *mut ImGuiStyle style = dst ? dst : &ImGui::GetStyle();
-    *mut ImVec4 colors = style->Colors;
+    *mut ImVec4 colors = style.Colors;
 
     colors[ImGuiCol_Text]                   = ImVec4(0.00f32, 0.00f32, 0.00f32, 1.000f32);
     colors[ImGuiCol_TextDisabled]           = ImVec4(0.60f32, 0.60f32, 0.60f32, 1.000f32);
@@ -433,7 +433,7 @@ c_void ImDrawList::_ResetForNewFrame()
     CmdBuffer.resize(0);
     IdxBuffer.resize(0);
     VtxBuffer.resize(0);
-    Flags = _Data->InitialFlags;
+    Flags = _Data.InitialFlags;
     memset(&_CmdHeader, 0, sizeof(_CmdHeader));
     _VtxCurrentIdx = 0;
     _VtxWritePtr = None;
@@ -464,10 +464,10 @@ c_void ImDrawList::_ClearFreeMemory()
 *mut ImDrawList ImDrawList::CloneOutput() const
 {
     *mut ImDrawList dst = IM_NEW(ImDrawList(_Data));
-    dst->CmdBuffer = CmdBuffer;
-    dst->IdxBuffer = IdxBuffer;
-    dst->VtxBuffer = VtxBuffer;
-    dst->Flags = Flags;
+    dst.CmdBuffer = CmdBuffer;
+    dst.IdxBuffer = IdxBuffer;
+    dst.VtxBuffer = VtxBuffer;
+    dst.Flags = Flags;
     return dst;
 }
 
@@ -490,7 +490,7 @@ c_void ImDrawList::_PopUnusedDrawCmd()
     if (CmdBuffer.Size == 0)
         return;
     *mut ImDrawCmd curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
-    if (curr_cmd->ElemCount == 0 && curr_cmd->UserCallback == NULL)
+    if (curr_cmd.ElemCount == 0 && curr_cmd.UserCallback == NULL)
         CmdBuffer.pop_back();
 }
 
@@ -499,13 +499,13 @@ c_void ImDrawList::AddCallback(ImDrawCallback callback, *mut c_void callback_dat
     // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
     // IM_ASSERT(curr_cmd->UserCallback == NULL);
-    if (curr_cmd->ElemCount != 0)
+    if (curr_cmd.ElemCount != 0)
     {
         AddDrawCmd();
         curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
     }
-    curr_cmd->UserCallback = callback;
-    curr_cmd->UserCallbackData = callback_data;
+    curr_cmd.UserCallback = callback;
+    curr_cmd.UserCallbackData = callback_data;
 
     AddDrawCmd(); // Force a new command after us (see comment below)
 }
@@ -522,9 +522,9 @@ c_void ImDrawList::_TryMergeDrawCmds()
     // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
     ImDrawCmd* prev_cmd = curr_cmd - 1;
-    if (ImDrawCmd_HeaderCompare(curr_cmd, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && curr_cmd->UserCallback == NULL && prev_cmd->UserCallback == NULL)
+    if (ImDrawCmd_HeaderCompare(curr_cmd, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && curr_cmd.UserCallback == NULL && prev_cmd.UserCallback == NULL)
     {
-        prev_cmd->ElemCount += curr_cmd->ElemCount;
+        prev_cmd.ElemCount += curr_cmd.ElemCount;
         CmdBuffer.pop_back();
     }
 }
@@ -536,7 +536,7 @@ c_void ImDrawList::_OnChangedClipRect()
     // If current command is used with different settings we need to add a new command
     // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
-    if (curr_cmd->ElemCount != 0 && memcmp(&curr_cmd->ClipRect, &_CmdHeader.ClipRect, sizeof(ImVec4)) != 0)
+    if (curr_cmd.ElemCount != 0 && memcmp(&curr_cmd.ClipRect, &_CmdHeader.ClipRect, sizeof(ImVec4)) != 0)
     {
         AddDrawCmd();
         return;
@@ -545,13 +545,13 @@ c_void ImDrawList::_OnChangedClipRect()
 
     // Try to merge with previous command if it matches, else use current command
     ImDrawCmd* prev_cmd = curr_cmd - 1;
-    if (curr_cmd->ElemCount == 0 && CmdBuffer.Size > 1 && ImDrawCmd_HeaderCompare(&_CmdHeader, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd->UserCallback == NULL)
+    if (curr_cmd.ElemCount == 0 && CmdBuffer.Size > 1 && ImDrawCmd_HeaderCompare(&_CmdHeader, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd.UserCallback == NULL)
     {
         CmdBuffer.pop_back();
         return;
     }
 
-    curr_cmd->ClipRect = _CmdHeader.ClipRect;
+    curr_cmd.ClipRect = _CmdHeader.ClipRect;
 }
 
 c_void ImDrawList::_OnChangedTextureID()
@@ -559,7 +559,7 @@ c_void ImDrawList::_OnChangedTextureID()
     // If current command is used with different settings we need to add a new command
     // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
-    if (curr_cmd->ElemCount != 0 && curr_cmd->TextureId != _CmdHeader.TextureId)
+    if (curr_cmd.ElemCount != 0 && curr_cmd.TextureId != _CmdHeader.TextureId)
     {
         AddDrawCmd();
         return;
@@ -568,7 +568,7 @@ c_void ImDrawList::_OnChangedTextureID()
 
     // Try to merge with previous command if it matches, else use current command
     ImDrawCmd* prev_cmd = curr_cmd - 1;
-    if (curr_cmd->ElemCount == 0 && CmdBuffer.Size > 1 && ImDrawCmd_HeaderCompare(&_CmdHeader, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd->UserCallback == NULL)
+    if (curr_cmd.ElemCount == 0 && CmdBuffer.Size > 1 && ImDrawCmd_HeaderCompare(&_CmdHeader, prev_cmd) == 0 && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd) && prev_cmd->UserCallback == NULL)
     {
         CmdBuffer.pop_back();
         return;
@@ -606,7 +606,7 @@ c_int ImDrawList::_CalcCircleAutoSegmentCount(c_float radius) const
 // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
 c_void ImDrawList::PushClipRect(const ImVec2& cr_min, const ImVec2& cr_max, bool intersect_with_current_clip_rect)
 {
-    ImVec4 cr(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
+    let mut cr = ImVec4::new(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
     if (intersect_with_current_clip_rect)
     {
         ImVec4 current = _CmdHeader.ClipRect;

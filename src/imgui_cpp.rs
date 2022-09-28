@@ -54,7 +54,7 @@ ImGuiWindow::ImGuiWindow(ImGuiContext* context, *const char name) : DrawListInst
     SettingsOffset = -1;
     DockOrder = -1;
     DrawList = &DrawListInst;
-    DrawList._Data = &context->DrawListSharedData;
+    DrawList._Data = &context.DrawListSharedData;
     DrawList._OwnerName = Name;
     IM_PLACEMENT_NEW(&WindowClass) ImGuiWindowClass();
 }
@@ -445,7 +445,7 @@ c_float ImGui::CalcWrapWidthForPos(const ImVec2& pos, c_float wrap_pos_x)
 *mut c_void ImGui::MemAlloc(size_t size)
 {
     if (ImGuiContext* ctx = GImGui)
-        ctx->IO.MetricsActiveAllocations+= 1;
+        ctx.IO.MetricsActiveAllocations+= 1;
     return (*GImAllocatorAllocFunc)(size, GImAllocatorUserData);
 }
 

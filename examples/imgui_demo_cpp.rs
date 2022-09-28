@@ -367,7 +367,7 @@ c_void ImGui::ShowDemoWindow(*mut bool p_open)
     // We specify a default position/size in case there's no data in the .ini file.
     // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
     main_viewport: *const ImGuiViewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(main_viewport.WorkPos.x + 650, main_viewport.WorkPos.y + 20), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiCond_FirstUseEver);
 
     // Main body of the Demo window starts here.
@@ -1044,8 +1044,8 @@ static c_void ShowDemoWindowWidgets()
                     ImGui::Text("aaaaaaaa bbbbbbbb, c cccccccc,dddddddd. d eeeeeeee   ffffffff. gggggggg!hhhhhhhh");
 
                 // Draw actual text bounding box, following by marker of our expected limit (should not overlap!)
-                draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
-                draw_list->AddRectFilled(marker_min, marker_max, IM_COL32(255, 0, 255, 255));
+                draw_list.AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+                draw_list.AddRectFilled(marker_min, marker_max, IM_COL32(255, 0, 255, 255));
                 ImGui::PopTextWrapPos();
             }
 
@@ -1103,9 +1103,9 @@ static c_void ShowDemoWindowWidgets()
         // - Consider using the lower-level ImDrawList::AddImage() API, via ImGui::GetWindowDrawList()->AddImage().
         // - Read https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
         // - Read https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
-        ImTextureID my_tex_id = io.Fonts->TexID;
-        c_float my_tex_w = io.Fonts->TexWidth;
-        c_float my_tex_h = io.Fonts->TexHeight;
+        ImTextureID my_tex_id = io.Fonts.TexID;
+        c_float my_tex_w = io.Fonts.TexWidth;
+        c_float my_tex_h = io.Fonts.TexHeight;
         {
             ImGui::Text("%.0fx%.0f", my_tex_w, my_tex_h);
             let pos: ImVec2 = ImGui::GetCursorScreenPos();
@@ -1552,8 +1552,8 @@ static c_void ShowDemoWindowWidgets()
                     {
                         Vec<char>* my_str = (Vec<char>*)data.UserData;
                         // IM_ASSERT(my_str->begin() == data->Bu0f32);
-                        my_str->resize(data.BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
-                        data.Buf = my_str->begin();
+                        my_str.resize(data.BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
+                        data.Buf = my_str.begin();
                     }
                     return 0;
                 }
@@ -1563,7 +1563,7 @@ static c_void ShowDemoWindowWidgets()
                 static bool MyInputTextMultiline(*const char label, Vec<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
                 {
                     // IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-                    return ImGui::InputTextMultiline(label, my_str->begin(), my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (*mut c_void)my_str);
+                    return ImGui::InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (*mut c_void)my_str);
                 }
             };
 
@@ -1906,9 +1906,9 @@ static c_void ShowDemoWindowWidgets()
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (*const ImGuiPayload payload = ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_30f32))
-                        memcpy((*mut c_float)&saved_palette[n], payload->Data, sizeof * 3);
+                        memcpy((*mut c_float)&saved_palette[n], payload.Data, sizeof * 3);
                     if (*const ImGuiPayload payload = ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_40f32))
-                        memcpy((*mut c_float)&saved_palette[n], payload->Data, sizeof * 4);
+                        memcpy((*mut c_float)&saved_palette[n], payload.Data, sizeof * 4);
                     ImGui::EndDragDropTarget();
                 }
 
@@ -2328,7 +2328,7 @@ static c_void ShowDemoWindowWidgets()
                     if (*const ImGuiPayload payload = ImGui::AcceptDragDropPayload("DND_DEMO_CELL"))
                     {
                         // IM_ASSERT(payload->DataSize == sizeof);
-                        c_int payload_n = *(*const c_int)payload->Data;
+                        c_int payload_n = *(*const c_int)payload.Data;
                         if (mode == Mode_Copy)
                         {
                             names[n] = names[payload_n];
@@ -3353,20 +3353,20 @@ static c_void ShowDemoWindowLayout()
             {
             case 0:
                 ImGui::PushClipRect(p0, p1, true);
-                draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
-                draw_list->AddText(text_pos, IM_COL32_WHITE, text_str);
+                draw_list.AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
+                draw_list.AddText(text_pos, IM_COL32_WHITE, text_str);
                 ImGui::PopClipRect();
                 break;
             case 1:
-                draw_list->PushClipRect(p0, p1, true);
-                draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
-                draw_list->AddText(text_pos, IM_COL32_WHITE, text_str);
-                draw_list->PopClipRect();
+                draw_list.PushClipRect(p0, p1, true);
+                draw_list.AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
+                draw_list.AddText(text_pos, IM_COL32_WHITE, text_str);
+                draw_list.PopClipRect();
                 break;
             case 2:
-                ImVec4 clip_rect(p0.x, p0.y, p1.x, p1.y); // AddText() takes a ImVec4* here so let's convert.
-                draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
-                draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize(), text_pos, IM_COL32_WHITE, text_str, NULL, 0f32, &clip_rect);
+                let mut clip_rect = ImVec4::new(p0.x, p0.y, p1.x, p1.y); // AddText() takes a ImVec4* here so let's convert.
+                draw_list.AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
+                draw_list.AddText(ImGui::GetFont(), ImGui::GetFontSize(), text_pos, IM_COL32_WHITE, text_str, NULL, 0f32, &clip_rect);
                 break;
             }
         }
@@ -3709,18 +3709,18 @@ let Name: *const c_char;
     {
         a: *const MyItem = (*const MyItem)lhs;
         b: *const MyItem = (*const MyItem)rhs;
-        for (c_int n = 0; n < s_current_sort_specs->SpecsCount; n++)
+        for (c_int n = 0; n < s_current_sort_specs.SpecsCount; n++)
         {
             // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
             // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
-            sort_spec: *const ImGuiTableColumnSortSpecs = &s_current_sort_specs->Specs[n];
+            sort_spec: *const ImGuiTableColumnSortSpecs = &s_current_sort_specs.Specs[n];
             c_int delta = 0;
-            switch (sort_spec->ColumnUserID)
+            switch (sort_spec.ColumnUserID)
             {
-            case MyItemColumnID_ID:             delta = (a->ID - b->ID);                break;
-            case MyItemColumnID_Name:           delta = (strcmp(a->Name, b->Name));     break;
-            case MyItemColumnID_Quantity:       delta = (a->Quantity - b->Quantity);    break;
-            case MyItemColumnID_Description:    delta = (strcmp(a->Name, b->Name));     break;
+            case MyItemColumnID_ID:             delta = (a.ID - b.ID);                break;
+            case MyItemColumnID_Name:           delta = (strcmp(a.Name, b.Name));     break;
+            case MyItemColumnID_Quantity:       delta = (a.Quantity - b.Quantity);    break;
+            case MyItemColumnID_Description:    delta = (strcmp(a.Name, b->Name));     break;
             default: IM_ASSERT(0); break;
             }
             if (delta > 0)
