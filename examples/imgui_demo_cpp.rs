@@ -190,7 +190,7 @@ static c_void ShowExampleMenuFile();
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
-static c_void HelpMarker(*const char desc)
+static c_void HelpMarker(desc: *const c_char)
 {
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
@@ -214,7 +214,7 @@ static c_void ShowDockingDisabledMessage()
 }
 
 // Helper to wire demo markers located in code to a interactive browser
-typedef c_void (*ImGuiDemoMarkerCallback)(*const char file, c_int line, *const char section, *mut c_void user_data);
+typedef c_void (*ImGuiDemoMarkerCallback)(file: *const c_char, c_int line, section: *const c_char, *mut c_void user_data);
 extern ImGuiDemoMarkerCallback  GImGuiDemoMarkerCallback;
 extern *mut c_void                    GImGuiDemoMarkerCallbackUserData;
 ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback = None;
@@ -366,7 +366,7 @@ c_void ImGui::ShowDemoWindow(*mut bool p_open)
 
     // We specify a default position/size in case there's no data in the .ini file.
     // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
-    *const ImGuiViewport main_viewport = ImGui::GetMainViewport();
+    main_viewport: *const ImGuiViewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiCond_FirstUseEver);
 
@@ -1034,9 +1034,9 @@ static c_void ShowDemoWindowWidgets()
             for (c_int n = 0; n < 2; n++)
             {
                 ImGui::Text("Test paragraph %d:", n);
-                ImVec2 pos = ImGui::GetCursorScreenPos();
-                ImVec2 marker_min = ImVec2(pos.x + wrap_width, pos.y);
-                ImVec2 marker_max = ImVec2(pos.x + wrap_width + 10, pos.y + ImGui::GetTextLineHeight());
+                let pos: ImVec2 = ImGui::GetCursorScreenPos();
+                let marker_min: ImVec2 = ImVec2(pos.x + wrap_width, pos.y);
+                let marker_max: ImVec2 = ImVec2(pos.x + wrap_width + 10, pos.y + ImGui::GetTextLineHeight());
                 ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + wrap_width);
                 if (n == 0)
                     ImGui::Text("The lazy dog is a good dog. This paragraph should fit within %.0f32 pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", wrap_width);
@@ -1108,9 +1108,9 @@ static c_void ShowDemoWindowWidgets()
         c_float my_tex_h = io.Fonts->TexHeight;
         {
             ImGui::Text("%.0fx%.0f", my_tex_w, my_tex_h);
-            ImVec2 pos = ImGui::GetCursorScreenPos();
-            ImVec2 uv_min = ImVec2(0f32, 0f32);                 // Top-left
-            ImVec2 uv_max = ImVec2(1f32, 1f32);                 // Lower-right
+            let pos: ImVec2 = ImGui::GetCursorScreenPos();
+            let uv_min: ImVec2 = ImVec2(0f32, 0f32);                 // Top-left
+            let uv_max: ImVec2 = ImVec2(1f32, 1f32);                 // Lower-right
             ImVec4 tint_col = ImVec4(1f32, 1f32, 1f32, 1f32);   // No tint
             ImVec4 border_col = ImVec4(1f32, 1f32, 1f32, 0.5f32); // 50% opaque white
             ImGui::Image(my_tex_id, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
@@ -1127,8 +1127,8 @@ static c_void ShowDemoWindowWidgets()
                 else if (region_y > my_tex_h - region_sz) { region_y = my_tex_h - region_sz; }
                 ImGui::Text("Min: (%.2f, %.20f32)", region_x, region_y);
                 ImGui::Text("Max: (%.2f, %.20f32)", region_x + region_sz, region_y + region_sz);
-                ImVec2 uv0 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
-                ImVec2 uv1 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
+                let uv0: ImVec2 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
+                let uv1: ImVec2 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
                 ImGui::Image(my_tex_id, ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1, tint_col, border_col);
                 ImGui::EndTooltip();
             }
@@ -1145,9 +1145,9 @@ static c_void ShowDemoWindowWidgets()
             ImGui::PushID(i);
             if (i > 0)
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(i - 1f32, i - 1f32));
-            ImVec2 size = ImVec2(32.0f32, 32.00f32);                         // Size of the image we want to make visible
-            ImVec2 uv0 = ImVec2(0f32, 0f32);                            // UV coordinates for lower-left
-            ImVec2 uv1 = ImVec2(32.0f32 / my_tex_w, 32.0f32 / my_tex_h);    // UV coordinates for (32,32) in our texture
+            let size: ImVec2 = ImVec2(32.0f32, 32.00f32);                         // Size of the image we want to make visible
+            let uv0: ImVec2 = ImVec2(0f32, 0f32);                            // UV coordinates for lower-left
+            let uv1: ImVec2 = ImVec2(32.0f32 / my_tex_w, 32.0f32 / my_tex_h);    // UV coordinates for (32,32) in our texture
             ImVec4 bg_col = ImVec4(0f32, 0f32, 0f32, 1f32);             // Black background
             ImVec4 tint_col = ImVec4(1f32, 1f32, 1f32, 1f32);           // No tint
             if (ImGui::ImageButton("", my_tex_id, size, uv0, uv1, bg_col, tint_col))
@@ -1400,7 +1400,7 @@ static c_void ShowDemoWindowWidgets()
             {
                 for (c_int x = 0; x < 3; x++)
                 {
-                    ImVec2 alignment = ImVec2(x / 2.0f32, y / 2.00f32);
+                    let alignment: ImVec2 = ImVec2(x / 2.0f32, y / 2.00f32);
                     name: [c_char;32];
                     sprintf(name, "(%.1f,%.10f32)", alignment.x, alignment.y);
                     if (x > 0) ImGui::SameLine();
@@ -2675,8 +2675,8 @@ static c_void ShowDemoWindowLayout()
                 ImGui::Text("Some test %d", n);
             ImGui::EndChild();
             let mut child_is_hovered: bool =  ImGui::IsItemHovered();
-            ImVec2 child_rect_min = ImGui::GetItemRectMin();
-            ImVec2 child_rect_max = ImGui::GetItemRectMax();
+            let child_rect_min: ImVec2 = ImGui::GetItemRectMin();
+            let child_rect_max: ImVec2 = ImGui::GetItemRectMax();
             ImGui::PopStyleColor();
             ImGui::Text("Hovered: %d", child_is_hovered);
             ImGui::Text("Rect of child window is: (%.0f32,%.00f32) (%.0f32,%.00f32)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
@@ -2882,7 +2882,7 @@ static c_void ShowDemoWindowLayout()
                 ImGui::SetTooltip("First group hovered");
         }
         // Capture the group size and create widgets using the same size
-        ImVec2 size = ImGui::GetItemRectSize();
+        let size: ImVec2 = ImGui::GetItemRectSize();
         const c_float values[5] = { 0.5f32, 0.20f32, 0.80f32, 0.60f32, 0.25f };
         ImGui::PlotHistogram("##values", values, IM_ARRAYSIZE(values), 0, NULL, 0f32, 1f32, size);
 
@@ -3155,7 +3155,7 @@ static c_void ShowDemoWindowLayout()
         ImGui::SliderInt("Lines", &lines, 1, 15);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.00f32);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f32, 1f32));
-        ImVec2 scrolling_child_size = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
+        let scrolling_child_size: ImVec2 = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
         ImGui::BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
         for (c_int line = 0; line < lines; line++)
         {
@@ -3240,7 +3240,7 @@ static c_void ShowDemoWindowLayout()
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(100);
                 ImGui::DragFloat("##csx", &contents_size_x);
-                ImVec2 p = ImGui::GetCursorScreenPos();
+                let p: ImVec2 = ImGui::GetCursorScreenPos();
                 ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + 10, p.y + 10), IM_COL32_WHITE);
                 ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + contents_size_x - 10, p.y), ImVec2(p.x + contents_size_x, p.y + 10), IM_COL32_WHITE);
                 ImGui::Dummy(ImVec2(0, 10));
@@ -3588,7 +3588,7 @@ static c_void ShowDemoWindowPopups()
             ImGui::OpenPopup("Delete?");
 
         // Always center this window when appearing
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        let center: ImVec2 = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f32, 0.5f32));
 
         if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -3692,7 +3692,7 @@ enum MyItemColumnID
 struct MyItem
 {
     c_int         ID;
-    *const char Name;
+let Name: *const c_char;
     c_int         Quantity;
 
     // We have a problem which is affecting _only this demo_ and should not affect your code:
@@ -3707,13 +3707,13 @@ struct MyItem
     // Compare function to be used by qsort()
     static c_int IMGUI_CDECL CompareWithSortSpecs(*const c_void lhs, *const c_void rhs)
     {
-        *const MyItem a = (*const MyItem)lhs;
-        *const MyItem b = (*const MyItem)rhs;
+        a: *const MyItem = (*const MyItem)lhs;
+        b: *const MyItem = (*const MyItem)rhs;
         for (c_int n = 0; n < s_current_sort_specs->SpecsCount; n++)
         {
             // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
             // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
-            *const ImGuiTableColumnSortSpecs sort_spec = &s_current_sort_specs->Specs[n];
+            sort_spec: *const ImGuiTableColumnSortSpecs = &s_current_sort_specs->Specs[n];
             c_int delta = 0;
             switch (sort_spec->ColumnUserID)
             {
@@ -4398,7 +4398,7 @@ static c_void ShowDemoWindowTables()
 
         // When using ScrollX or ScrollY we need to specify a size for our table container!
         // Otherwise by default the table will fit all available space, like a BeginChild() call.
-        ImVec2 outer_size = ImVec2(0f32, TEXT_BASE_HEIGHT * 8);
+        let outer_size: ImVec2 = ImVec2(0f32, TEXT_BASE_HEIGHT * 8);
         if (ImGui::BeginTable("table_scrolly", 3, flags, outer_size))
         {
             ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
@@ -4453,7 +4453,7 @@ static c_void ShowDemoWindowTables()
 
         // When using ScrollX or ScrollY we need to specify a size for our table container!
         // Otherwise by default the table will fit all available space, like a BeginChild() call.
-        ImVec2 outer_size = ImVec2(0f32, TEXT_BASE_HEIGHT * 8);
+        let outer_size: ImVec2 = ImVec2(0f32, TEXT_BASE_HEIGHT * 8);
         if (ImGui::BeginTable("table_scrollx", 7, flags, outer_size))
         {
             ImGui::TableSetupScrollFreeze(freeze_cols, freeze_rows);
@@ -4557,7 +4557,7 @@ static c_void ShowDemoWindowTables()
             = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY
             | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV
             | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable;
-        ImVec2 outer_size = ImVec2(0f32, TEXT_BASE_HEIGHT * 9);
+        let outer_size: ImVec2 = ImVec2(0f32, TEXT_BASE_HEIGHT * 9);
         if (ImGui::BeginTable("table_columns_flags", column_count, flags, outer_size))
         {
             for (c_int column = 0; column < column_count; column++)
@@ -4730,7 +4730,7 @@ static c_void ShowDemoWindowTables()
         ImGui::SameLine(); HelpMarker("Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.");
         PopStyleCompact();
 
-        ImVec2 outer_size = ImVec2(0f32, TEXT_BASE_HEIGHT * 5.5f32);
+        let outer_size: ImVec2 = ImVec2(0f32, TEXT_BASE_HEIGHT * 5.5f32);
         if (ImGui::BeginTable("table1", 3, flags, outer_size))
         {
             for (c_int row = 0; row < 10; row++)
@@ -5391,10 +5391,10 @@ static c_void ShowDemoWindowTables()
             }
         }
 
-        *const ImDrawList parent_draw_list = ImGui::GetWindowDrawList();
+        let parent_draw_list: *const ImDrawList = ImGui::GetWindowDrawList();
         let parent_draw_list_draw_cmd_count: c_int = parent_draw_list->CmdBuffer.Size;
         ImVec2 table_scroll_cur, table_scroll_max; // For debug display
-        *const ImDrawList table_draw_list = None;  // "
+        let table_draw_list: *const ImDrawList = None;  // "
 
         // Submit table
         const c_float inner_width_to_use = (flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0f32;
@@ -5695,7 +5695,7 @@ static c_void ShowDemoWindowColumns()
     if (ImGui::TreeNode("Horizontal Scrolling"))
     {
         ImGui::SetNextWindowContentSize(ImVec2(1500f32, 0f32));
-        ImVec2 child_size = ImVec2(0, ImGui::GetFontSize() * 20f32);
+        let child_size: ImVec2 = ImVec2(0, ImGui::GetFontSize() * 20f32);
         ImGui::BeginChild("##ScrollingRegion", child_size, false, ImGuiWindowFlags_HorizontalScrollbar);
         ImGui::Columns(10);
 
@@ -5848,9 +5848,9 @@ static c_void ShowDemoWindowMisc()
                 const ImVec2 key_step = ImVec2(key_size.x - 1f32, key_size.y - 1f32);
                 const c_float  key_row_offset = 9.0f32;
 
-                ImVec2 board_min = ImGui::GetCursorScreenPos();
-                ImVec2 board_max = ImVec2(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10f32, board_min.y + 3 * key_step.y + 10f32);
-                ImVec2 start_pos = ImVec2(board_min.x + 5f32 - key_step.x, board_min.y);
+                let board_min: ImVec2 = ImGui::GetCursorScreenPos();
+                let board_max: ImVec2 = ImVec2(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10f32, board_min.y + 3 * key_step.y + 10f32);
+                let start_pos: ImVec2 = ImVec2(board_min.x + 5f32 - key_step.x, board_min.y);
 
                 struct KeyLayoutData { c_int Row, Col; *const char Label; ImGuiKey Key; };
                 const KeyLayoutData keys_to_display[] =
@@ -5869,16 +5869,16 @@ static c_void ShowDemoWindowMisc()
                     draw_list->PushClipRect(board_min, board_max, true);
                     for (c_int n = 0; n < IM_ARRAYSIZE(keys_to_display); n++)
                     {
-                        *const KeyLayoutData key_data = &keys_to_display[n];
-                        ImVec2 key_min = ImVec2(start_pos.x + key_data->Col * key_step.x + key_data->Row * key_row_offset, start_pos.y + key_data->Row * key_step.y);
-                        ImVec2 key_max = ImVec2(key_min.x + key_size.x, key_min.y + key_size.y);
+                        let key_data: *const KeyLayoutData = &keys_to_display[n];
+                        let key_min: ImVec2 = ImVec2(start_pos.x + key_data->Col * key_step.x + key_data->Row * key_row_offset, start_pos.y + key_data->Row * key_step.y);
+                        let key_max: ImVec2 = ImVec2(key_min.x + key_size.x, key_min.y + key_size.y);
                         draw_list->AddRectFilled(key_min, key_max, IM_COL32(204, 204, 204, 255), key_rounding);
                         draw_list->AddRect(key_min, key_max, IM_COL32(24, 24, 24, 255), key_rounding);
-                        ImVec2 face_min = ImVec2(key_min.x + key_face_pos.x, key_min.y + key_face_pos.y);
-                        ImVec2 face_max = ImVec2(face_min.x + key_face_size.x, face_min.y + key_face_size.y);
+                        let face_min: ImVec2 = ImVec2(key_min.x + key_face_pos.x, key_min.y + key_face_pos.y);
+                        let face_max: ImVec2 = ImVec2(face_min.x + key_face_size.x, face_min.y + key_face_size.y);
                         draw_list->AddRect(face_min, face_max, IM_COL32(193, 193, 193, 255), key_face_rounding, ImDrawFlags_None, 2.00f32);
                         draw_list->AddRectFilled(face_min, face_max, IM_COL32(252, 252, 252, 255), key_face_rounding);
-                        ImVec2 label_min = ImVec2(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
+                        let label_min: ImVec2 = ImVec2(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
                         draw_list->AddText(label_min, IM_COL32(64, 64, 64, 255), key_data->Label);
                         if (ImGui::IsKeyDown(key_data->Key))
                             draw_list->AddRectFilled(key_min, key_max, IM_COL32(255, 0, 0, 128), key_rounding);
@@ -6000,9 +6000,9 @@ static c_void ShowDemoWindowMisc()
             // Drag operations gets "unlocked" when the mouse has moved past a certain threshold
             // (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
             // threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
-            ImVec2 value_raw = ImGui::GetMouseDragDelta(0, 0f32);
-            ImVec2 value_with_lock_threshold = ImGui::GetMouseDragDelta(0);
-            ImVec2 mouse_delta = io.MouseDelta;
+            let value_raw: ImVec2 = ImGui::GetMouseDragDelta(0, 0f32);
+            let value_with_lock_threshold: ImVec2 = ImGui::GetMouseDragDelta(0);
+            let mouse_delta: ImVec2 = io.MouseDelta;
             ImGui::Text("GetMouseDragDelta(0):");
             ImGui::Text("  w/ default threshold: (%.1f, %.10f32)", value_with_lock_threshold.x, value_with_lock_threshold.y);
             ImGui::Text("  w/ zero threshold: (%.1f, %.10f32)", value_raw.x, value_raw.y);
@@ -6062,7 +6062,7 @@ c_void ImGui::ShowAboutWindow(*mut bool p_open)
         ImGuiStyle& style = ImGui::GetStyle();
 
         let mut copy_to_clipboard: bool =  ImGui::Button("Copy to clipboard");
-        ImVec2 child_size = ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 18);
+        let child_size: ImVec2 = ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 18);
         ImGui::BeginChildFrame(ImGui::GetID("cfg_infos"), child_size, ImGuiWindowFlags_NoMove);
         if (copy_to_clipboard)
         {
@@ -6594,7 +6594,7 @@ static c_void ShowExampleMenuFile()
         for (c_int i = 0; i < ImGuiCol_COUNT; i++)
         {
             let mut  name: *const c_char = ImGui::GetStyleColorName((ImGuiCol)i);
-            ImVec2 p = ImGui::GetCursorScreenPos();
+            let p: ImVec2 = ImGui::GetCursorScreenPos();
             ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol)i));
             ImGui::Dummy(ImVec2(sz, sz));
             ImGui::SameLine();
@@ -7438,8 +7438,8 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
         if (ImGui::GetIO().KeyShift)
         {
             // Display a dummy viewport (in your real app you would likely use ImageButton() to display a texture.
-            ImVec2 avail_size = ImGui::GetContentRegionAvail();
-            ImVec2 pos = ImGui::GetCursorScreenPos();
+            let avail_size: ImVec2 = ImGui::GetContentRegionAvail();
+            let pos: ImVec2 = ImGui::GetCursorScreenPos();
             ImGui::ColorButton("viewport", ImVec4(0.5f32, 0.2f, 0.5f32, 1f32), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, avail_size);
             ImGui::SetCursorScreenPos(ImVec2(pos.x + 10, pos.y + 10));
             ImGui::Text("%.2f x %.2f", avail_size.x, avail_size.y);
@@ -7479,9 +7479,9 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
     if (location >= 0)
     {
         const c_float PAD = 10f32;
-        *const ImGuiViewport viewport = ImGui::GetMainViewport();
-        ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-        ImVec2 work_size = viewport->WorkSize;
+        let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
+        let work_pos: ImVec2 = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+        let work_size: ImVec2 = viewport->WorkSize;
         ImVec2 window_pos, window_pos_pivot;
         window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
         window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
@@ -7534,7 +7534,7 @@ static c_void ShowExampleAppFullscreen(bool* p_open)
 
     // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
     // Based on your use case you may want one of the other.
-    *const ImGuiViewport viewport = ImGui::GetMainViewport();
+    let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
     ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
 
@@ -7567,7 +7567,7 @@ static c_void ShowExampleAppFullscreen(bool* p_open)
 // Read FAQ section "How can I have multiple widgets with the same label?" for details.
 static c_void ShowExampleAppWindowTitles(bool*)
 {
-    *const ImGuiViewport viewport = ImGui::GetMainViewport();
+    let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
 
     // By default, Windows are uniquely identified by their title.
@@ -7624,18 +7624,18 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             // (note that those are currently exacerbating our sRGB/Linear issues)
             // Calling ImGui::GetColorU32() multiplies the given colors by the current Style Alpha, but you may pass the IM_COL32() directly as well..
             ImGui::Text("Gradients");
-            ImVec2 gradient_size = ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight());
+            let gradient_size: ImVec2 = ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight());
             {
-                ImVec2 p0 = ImGui::GetCursorScreenPos();
-                ImVec2 p1 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
+                let p0: ImVec2 = ImGui::GetCursorScreenPos();
+                let p1: ImVec2 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
                 u32 col_a = ImGui::GetColorU32(IM_COL32(0, 0, 0, 255));
                 u32 col_b = ImGui::GetColorU32(IM_COL32(255, 255, 255, 255));
                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
                 ImGui::InvisibleButton("##gradient1", gradient_size);
             }
             {
-                ImVec2 p0 = ImGui::GetCursorScreenPos();
-                ImVec2 p1 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
+                let p0: ImVec2 = ImGui::GetCursorScreenPos();
+                let p1: ImVec2 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
                 u32 col_a = ImGui::GetColorU32(IM_COL32(0, 255, 0, 255));
                 u32 col_b = ImGui::GetColorU32(IM_COL32(255, 0, 0, 255));
                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
@@ -7739,11 +7739,11 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             //      ImGui::EndChild();
 
             // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
-            ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
-            ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
+            let canvas_p0: ImVec2 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
+            let canvas_sz: ImVec2 = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
             if (canvas_sz.x < 50f32) canvas_sz.x = 50f32;
             if (canvas_sz.y < 50f32) canvas_sz.y = 50f32;
-            ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
+            let canvas_p1: ImVec2 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
             // Draw border and background color
             ImGuiIO& io = ImGui::GetIO();
@@ -7782,7 +7782,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             }
 
             // Context menu (under default mouse threshold)
-            ImVec2 drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
+            let drag_delta: ImVec2 = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
             if (opt_enable_context_menu && drag_delta.x == 0f32 && drag_delta.y == 0f32)
                 ImGui::OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
             if (ImGui::BeginPopup("context"))
@@ -7820,9 +7820,9 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             ImGui::SameLine(); HelpMarker("The Background draw list will be rendered below every Dear ImGui windows.");
             ImGui::Checkbox("Draw in Foreground draw list", &draw_fg);
             ImGui::SameLine(); HelpMarker("The Foreground draw list will be rendered over every Dear ImGui windows.");
-            ImVec2 window_pos = ImGui::GetWindowPos();
-            ImVec2 window_size = ImGui::GetWindowSize();
-            ImVec2 window_center = ImVec2(window_pos.x + window_size.x * 0.5f32, window_pos.y + window_size.y * 0.5f32);
+            let window_pos: ImVec2 = ImGui::GetWindowPos();
+            let window_size: ImVec2 = ImGui::GetWindowSize();
+            let window_center: ImVec2 = ImVec2(window_pos.x + window_size.x * 0.5f32, window_pos.y + window_size.y * 0.5f32);
             if (draw_bg)
                 ImGui::GetBackgroundDrawList()->AddCircle(window_center, window_size.x * 0.6f, IM_COL32(255, 0, 0, 200), 0, 10 + 4);
             if (draw_fg)
@@ -7879,7 +7879,7 @@ c_void ShowExampleAppDockSpace(bool* p_open)
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
     if (opt_fullscreen)
     {
-        *const ImGuiViewport viewport = ImGui::GetMainViewport();
+        let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
@@ -7968,7 +7968,7 @@ c_void ShowExampleAppDockSpace(bool* p_open)
 // Simplified structure to mimic a Document model
 struct MyDocument
 {
-    *const char Name;       // Document title
+let Name: *const c_char;       // Document title
     bool        Open;       // Set when open (we keep an array of all available documents to simplify demo code!)
     bool        OpenPrev;   // Copy of Open from last update.
     bool        Dirty;      // Set when the document has been modified

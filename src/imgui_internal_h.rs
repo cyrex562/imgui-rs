@@ -727,9 +727,9 @@ struct ImGuiDataTypeTempStorage
 struct ImGuiDataTypeInfo
 {
     size_t      Size;           // Size in bytes
-    *const char Name;           // Short descriptive name for the type, for debugging
-    *const char PrintFmt;       // Default printf format for the type
-    *const char ScanFmt;        // Default scanf format for the type
+let Name: *const c_char;           // Short descriptive name for the type, for debugging
+let PrintFmt: *const c_char;       // Default printf format for the type
+let ScanFmt: *const c_char;        // Default scanf format for the type
 };
 
 // Extend ImGuiDataType_

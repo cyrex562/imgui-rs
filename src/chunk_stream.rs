@@ -88,7 +88,7 @@ impl ImChunkStream<T> {
     // c_int     offset_from_ptr(*const T p)
     pub fn offset_from_ptr(&self, p: *const T) -> usize {
         // IM_ASSERT(p >= begin() && p < end());
-        // const ptrdiff_t off = (*const char)p - Buf.Data;
+        // const ptrdiff_t off =p - Buf.Data;
         let off = p - self.Buf.as_ptr();
         return off;
     }

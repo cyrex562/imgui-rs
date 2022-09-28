@@ -1,4 +1,4 @@
-
+#![allow(non_snake_case)]
 //-----------------------------------------------------------------------------
 // [SECTION] RENDER HELPERS
 // Some of those (internal) functions are currently quite a legacy mess - their signature and behavior will change,
@@ -6,78 +6,96 @@
 // Also see imgui_draw.cpp for some more which have been reworked to not rely on ImGui:: context.
 //-----------------------------------------------------------------------------
 
-*const char ImGui::FindRenderedTextEnd(*const char text, *const char text_end)
-{
-    let mut  text_display_end: *const c_char = text;
-    if (!text_end)
-        text_end = (*const char)-1;
+use std::ptr::null;
+use libc::c_char;
+use crate::color::ImGuiCol_Text;
+use crate::drawlist::ImDrawList;
+use crate::imgui::GImGui;
+use crate::logging_ops::LogRenderedText;
+use crate::rect::ImRect;
+use crate::style_ops::GetColorU32;
+use crate::vec2::ImVec2;
 
-    while (text_display_end < text_end && *text_display_end != '\0' && (text_display_end[0] != '#' || text_display_end[1] != '#'))
-        text_display_end+= 1;
+// *const char ImGui::FindRenderedTextEnd(*const char text, *const char text_end)
+pub unsafe fn FindRenderedTextEnd(text: *const c_char, mut text_end: *const c_char) -> *const c_char {
+    let mut text_display_end: *const c_char = text;
+    if !text_end {
+        text_end = null();
+    }
+
+    while text_display_end < text_end && *text_display_end != '\0' as c_char && (text_display_end[0] != '#' || text_display_end[1] != '#') {
+        text_display_end += 1;
+    }
     return text_display_end;
 }
 
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
-c_void ImGui::RenderText(ImVec2 pos, *const char text, *const char text_end, bool hide_text_after_hash)
-{
+// c_void ImGui::RenderText(ImVec2 pos, *const char text, *const char text_end, bool hide_text_after_hash)
+pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const c_char, hide_text_after_hash: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
     // Hide anything after a '##' string
-    *const char text_display_end;
-    if (hide_text_after_hash)
-    {
+    let text_display_end: *const c_char;
+    if hide_text_after_hash {
         text_display_end = FindRenderedTextEnd(text, text_end);
-    }
-    else
-    {
-        if (!text_end)
-            text_end = text + strlen(text); // FIXME-OPT
+    } else {
+        if !text_end {
+            text_end = text + libc::strlen(text);
+        } // FIXME-OPT
         text_display_end = text_end;
     }
 
-    if (text != text_display_end)
-    {
-        window.DrawList.AddText(g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end);
-        if (g.LogEnabled)
+    if text != text_display_end {
+        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0f32, null());
+        if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
+        }
     }
 }
 
-c_void ImGui::RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width)
+// c_void ImGui::RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width)
+pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
-    if (!text_end)
-        text_end = text + strlen(text); // FIXME-OPT
+    if !text_end {
+        text_end = text + libc::strlen(text);
+    } // FIXME-OPT
 
-    if (text != text_end)
+    if text != text_end
     {
-        window.DrawList.AddText(g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_end, wrap_width);
-        if (g.LogEnabled)
+        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text), text, text_end, wrap_width, null());
+        if (g.LogEnabled) {
             LogRenderedText(&pos, text, text_end);
+        }
     }
 }
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
-c_void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_display_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
+// c_void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_display_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
+pub fn RenderTextClippedEx(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_display_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect)
 {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
-    ImVec2 pos = pos_min;
-    const ImVec2 text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_display_end, false, 0f32);
+    let mut pos: ImVec2 = pos_min.clone();
+    let text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_display_end, false, 0f32);
 
-    *const ImVec2 clip_min = clip_rect ? &clip_rect->Min : &pos_min;
-    *const ImVec2 clip_max = clip_rect ? &clip_rect->Max : &pos_max;
+    let clip_min: *const ImVec2 = clip_rect ? &clip_rect.Min : &pos_min;
+    clip_max: *const ImVec2 = clip_rect ? &clip_rect.Max : &pos_max;
     let mut need_clipping: bool =  (pos.x + text_size.x >= clip_max->x) || (pos.y + text_size.y >= clip_max->y);
     if (clip_rect) // If we had no explicit clipping rectangle then pos==clip_min
         need_clipping |= (pos.x < clip_min->x) || (pos.y < clip_min->y);
 
     // Align whole block. We should defer that to the better rendering function when we'll have support for individual line alignment.
-    if (align.x > 0f32) pos.x = ImMax(pos.x, pos.x + (pos_max.x - pos.x - text_size.x) * align.x);
-    if (align.y > 0f32) pos.y = ImMax(pos.y, pos.y + (pos_max.y - pos.y - text_size.y) * align.y);
+    if align.x > 0f32 {
+        pos.x = ImMax(pos.x, pos.x + (pos_max.x - pos.x - text_size.x) * align.x);
+    }
+    if align.y > 0f32 {
+        pos.y = ImMax(pos.y, pos.y + (pos_max.y - pos.y - text_size.y) * align.y);
+    }
 
     // Render
     if (need_clipping)
@@ -128,7 +146,7 @@ c_void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, c
         // min   max   ellipsis_max
         //          <-> this is generally some padding value
 
-        *const ImFont font = draw_list->_Data->Font;
+        font: *const ImFont = draw_list->_Data->Font;
         const c_float font_size = draw_list->_Data->FontSize;
         let mut  text_end_ellipsis: *const c_char = None;
 
@@ -139,7 +157,7 @@ c_void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, c
             ellipsis_char = font->DotChar;
             ellipsis_char_count = 3;
         }
-        *const ImFontGlyph glyph = font->FindGlyph(ellipsis_char);
+        glyph: *const ImFontGlyph = font->FindGlyph(ellipsis_char);
 
         c_float ellipsis_glyph_width = glyph->X1;                 // Width of the glyph with no padding on either side
         c_float ellipsis_total_width = ellipsis_glyph_width;      // Full width of entire ellipsis

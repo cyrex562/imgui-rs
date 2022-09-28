@@ -1316,7 +1316,7 @@ static c_void PathBezierQuadraticCurveToCasteljau(Vec<ImVec2>* path, c_float x1,
 
 c_void ImDrawList::PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, c_int num_segments)
 {
-    ImVec2 p1 = _Path.back();
+    let p1: ImVec2 = _Path.back();
     if (num_segments == 0)
     {
         PathBezierCubicCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data->CurveTessellationTol, 0); // Auto-tessellated
@@ -1331,7 +1331,7 @@ c_void ImDrawList::PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, co
 
 c_void ImDrawList::PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, c_int num_segments)
 {
-    ImVec2 p1 = _Path.back();
+    let p1: ImVec2 = _Path.back();
     if (num_segments == 0)
     {
         PathBezierQuadraticCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data->CurveTessellationTol, 0);// Auto-tessellated
@@ -1619,10 +1619,10 @@ c_void ImDrawList::AddText(*const ImFont font, c_float font_size, const ImVec2& 
     ImVec4 clip_rect = _CmdHeader.ClipRect;
     if (cpu_fine_clip_rect)
     {
-        clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect->x);
-        clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect->y);
-        clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect->z);
-        clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
+        clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect.x);
+        clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect.y);
+        clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect.z);
+        clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect.w);
     }
     font->RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL);
 }
@@ -1882,7 +1882,7 @@ c_void ImDrawData::ScaleClipRects(const ImVec2& fb_scale)
 // Generic linear color gradient, write to RGB fields, leave A untouched.
 c_void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, c_int vert_start_idx, c_int vert_end_idx, ImVec2 gradient_p0, ImVec2 gradient_p1, u32 col0, u32 col1)
 {
-    ImVec2 gradient_extent = gradient_p1 - gradient_p0;
+    let gradient_extent: ImVec2 = gradient_p1 - gradient_p0;
     c_float gradient_inv_length2 = 1f32 / ImLengthSqr(gradient_extent);
     ImDrawVert* vert_start = draw_list->VtxBuffer.Data + vert_start_idx;
     ImDrawVert* vert_end = draw_list->VtxBuffer.Data + vert_end_idx;
@@ -2161,7 +2161,7 @@ ImFont* ImFontAtlas::AddFontDefault(*const ImFontConfig font_cfg_template)
     font_cfg.GlyphOffset.y = 1f32 * IM_FLOOR(font_cfg.SizePixels / 13.00f32);  // Add +1 offset per 13 units
 
     let mut  ttf_compressed_base85: *const c_char = GetDefaultCompressedFontDataTTFBase85();
-    *const ImWchar glyph_ranges = font_cfg.GlyphRanges != NULL ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
+    let glyph_ranges: *const ImWchar = font_cfg.GlyphRanges != NULL ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
     ImFont* font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.SizePixels, &font_cfg, glyph_ranges);
     return font;
 }
@@ -2180,7 +2180,7 @@ ImFont* ImFontAtlas::AddFontFromFileTTF(*const char filename, c_float size_pixel
     if (font_cfg.Name[0] == '\0')
     {
         // Store a short copy of filename into into the font name for convenience
-        *const char p;
+let p: *const c_char;
         for (p = filename + strlen(filename); p > filename && p[-1] != '/' && p[-1] != '\\'; p--) {}
         ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "%s, %.0fpx", p, size_pixels);
     }
@@ -2270,8 +2270,8 @@ bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, ImVec2* ou
 
     // IM_ASSERT(PackIdMouseCursors != -1);
     ImFontAtlasCustomRect* r = GetCustomRectByIndex(PackIdMouseCursors);
-    ImVec2 pos = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + ImVec2(r->X, r->Y);
-    ImVec2 size = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
+    let pos: ImVec2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + ImVec2(r->X, r->Y);
+    let size: ImVec2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
     *out_size = size;
     *out_offset = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][2];
     out_uv_border[0] = (pos) * TexUvScale;
@@ -2295,7 +2295,7 @@ bool    ImFontAtlas::Build()
     //   may mess with some hot-reloading schemes. If you need to assign to this (for dynamic selection) AND are
     //   using a hot-reloading scheme that messes up static data, store your own instance of ImFontBuilderIO somewhere
     //   and point to it instead of pointing directly to return value of the GetBuilderXXX functions.
-    *const ImFontBuilderIO builder_io = FontBuilderIO;
+    let builder_io: *const ImFontBuilderIO = FontBuilderIO;
     if (builder_io == NULL)
     {
 // #ifdef IMGUI_ENABLE_FREETYPE
@@ -2357,8 +2357,8 @@ struct ImFontBuildDstData
 static c_void UnpackBitVectorToFlatIndexList(*const ImBitVector in, Vec<c_int>* out)
 {
     // IM_ASSERT(sizeof(in->Storage.Data[0]) == sizeof);
-    *const u32 it_begin = in->Storage.begin();
-    *const u32 it_end = in->Storage.end();
+    let it_begin: *const u32 = in->Storage.begin();
+    let it_end: *const u32 = in->Storage.end();
     for (*const u32 it = it_begin; it < it_end; it++)
         if (u32 entries_32 = *it)
             for (u32 bit_n = 0; bit_n < 32; bit_n++)
@@ -2773,8 +2773,8 @@ static c_void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         }
 
         // Calculate UVs for this line
-        ImVec2 uv0 = ImVec2((r->X + pad_left - 1), (r->Y + y)) * atlas->TexUvScale;
-        ImVec2 uv1 = ImVec2((r->X + pad_left + line_width + 1), (r->Y + y + 1)) * atlas->TexUvScale;
+        let uv0: ImVec2 = ImVec2((r->X + pad_left - 1), (r->Y + y)) * atlas->TexUvScale;
+        let uv1: ImVec2 = ImVec2((r->X + pad_left + line_width + 1), (r->Y + y + 1)) * atlas->TexUvScale;
         c_float half_v = (uv0.y + uv1.y) * 0.5f32; // Calculate a constant V in the middle of the row to avoid sampling artifacts
         atlas->TexUvLines[n] = ImVec4(uv0.x, half_v, uv1.x, half_v);
     }
@@ -2812,7 +2812,7 @@ c_void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
     // Register custom rectangle glyphs
     for (c_int i = 0; i < atlas->CustomRects.Size; i++)
     {
-        *const ImFontAtlasCustomRect r = &atlas->CustomRects[i];
+        let r: *const ImFontAtlasCustomRect = &atlas->CustomRects[i];
         if (r->Font == NULL || r->GlyphID == 0)
             continue;
 
@@ -3384,7 +3384,7 @@ c_void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
     while (s < text_end)
     {
         c_uint c = *s;
-        *const char next_s;
+let next_s: *const c_char;
         if (c < 0x80)
             next_s = s + 1;
         else
@@ -3461,7 +3461,7 @@ ImVec2 ImFont::CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width
     const c_float line_height = size;
     const c_float scale = size / FontSize;
 
-    ImVec2 text_size = ImVec2(0, 0);
+    let text_size: ImVec2 = ImVec2(0, 0);
     c_float line_width = 0f32;
 
     let word_wrap_enabled: bool = (wrap_width > 0f32);
@@ -3550,7 +3550,7 @@ ImVec2 ImFont::CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
 c_void ImFont::RenderChar(ImDrawList* draw_list, c_float size, const ImVec2& pos, u32 col, ImWchar c) const
 {
-    *const ImFontGlyph glyph = FindGlyph(c);
+    let glyph: *const ImFontGlyph = FindGlyph(c);
     if (!glyph || !glyph->Visible)
         return;
     if (glyph->Colored)
@@ -3585,7 +3585,7 @@ c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos
     if (y + line_height < clip_rect.y && !word_wrap_enabled)
         while (y + line_height < clip_rect.y && s < text_end)
         {
-            s = (*const char)memchr(s, '\n', text_end - s);
+            s =memchr(s, '\n', text_end - s);
             s = s ? s + 1 : text_end;
             y += line_height;
         }
@@ -3598,7 +3598,7 @@ c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos
         c_float y_end = y;
         while (y_end < clip_rect.w && s_end < text_end)
         {
-            s_end = (*const char)memchr(s_end, '\n', text_end - s_end);
+            s_end =memchr(s_end, '\n', text_end - s_end);
             s_end = s_end ? s_end + 1 : text_end;
             y_end += line_height;
         }
@@ -3674,7 +3674,7 @@ c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos
                 continue;
         }
 
-        *const ImFontGlyph glyph = FindGlyph(c);
+        let glyph: *const ImFontGlyph = FindGlyph(c);
         if (glyph == NULL)
             continue;
 
@@ -3774,7 +3774,7 @@ c_void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, u32 col, ImGuiDir d
 {
     const c_float h = draw_list->_Data->FontSize * 1f32;
     c_float r = h * 0.40f32 * scale;
-    ImVec2 center = pos + ImVec2(h * 0.50f32, h * 0.50f32 * scale);
+    let center: ImVec2 = pos + ImVec2(h * 0.50f32, h * 0.50f32 * scale);
 
     ImVec2 a, b, c;
     switch (dir)
@@ -3858,8 +3858,8 @@ c_void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, 
     if (x_start_norm > x_end_norm)
         ImSwap(x_start_norm, x_end_norm);
 
-    ImVec2 p0 = ImVec2(ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y);
-    ImVec2 p1 = ImVec2(ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y);
+    let p0: ImVec2 = ImVec2(ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y);
+    let p1: ImVec2 = ImVec2(ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y);
     if (rounding == 0f32)
     {
         draw_list->AddRectFilled(p0, p1, col, 0f32);

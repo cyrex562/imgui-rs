@@ -322,7 +322,7 @@ bool    ImGui::BeginTableEx(*const char name, ImGuiID id, c_int columns_count, I
     // If an outer size is specified ahead we will be able to early out when not visible. Exact clipping rules may evolve.
     let use_child_window: bool = (flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) != 0;
     const ImVec2 avail_size = GetContentRegionAvail();
-    ImVec2 actual_outer_size = CalcItemSize(outer_size, ImMax(avail_size.x, 1f32), use_child_window ? ImMax(avail_size.y, 1f32) : 0f32);
+    let actual_outer_size: ImVec2 = CalcItemSize(outer_size, ImMax(avail_size.x, 1f32), use_child_window ? ImMax(avail_size.y, 1f32) : 0f32);
     ImRect outer_rect(outer_window.DC.CursorPos, outer_window.DC.CursorPos + actual_outer_size);
     if (use_child_window && IsClippedEx(outer_rect, 0))
     {
@@ -1530,7 +1530,7 @@ c_int ImGui::TableGetColumnCount()
 {
     if (table.IsLayoutLocked == false && column_n >= table.DeclColumnsCount)
         return ""; // NameOffset is invalid at this point
-    *const ImGuiTableColumn column = &table.Columns[column_n];
+    let column: *const ImGuiTableColumn = &table.Columns[column_n];
     if (column.NameOffset == -1)
         return "";
     return &table.ColumnsNames.Buf[column.NameOffset];
@@ -1855,7 +1855,7 @@ c_void ImGui::TableBeginCell(*mut ImGuiTable table, c_int column_n)
 // Maximum column content width given current layout. Use column.MinX so this value on a per-column basis.
 c_float ImGui::TableGetMaxColumnWidth(*const ImGuiTable table, c_int column_n)
 {
-    *const ImGuiTableColumn column = &table.Columns[column_n];
+    let column: *const ImGuiTableColumn = &table.Columns[column_n];
     c_float max_width = f32::MAX;
     const c_float min_column_distance = table.MinColumnWidth + table.CellPaddingX * 2.0f32 + table.CellSpacingX1 + table.CellSpacingX2;
     if (table.Flags & ImGuiTableFlags_ScrollX)
@@ -2236,8 +2236,8 @@ c_void ImGui::TableMergeDrawChannels(*mut ImGuiTable table)
                 continue;
             buf: [c_char;32];
             ImFormatString(buf, 32, "MG%d:%d", merge_group_n, merge_group->ChannelsCount);
-            ImVec2 text_pos = merge_group->ClipRect.Min + ImVec2(4, 4);
-            ImVec2 text_size = CalcTextSize(buf, NULL);
+            let text_pos: ImVec2 = merge_group->ClipRect.Min + ImVec2(4, 4);
+            let text_size: ImVec2 = CalcTextSize(buf, NULL);
             GetForegroundDrawList()->AddRectFilled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
             GetForegroundDrawList()->AddText(text_pos, IM_COL32(255, 255, 0, 255), buf, NULL);
             GetForegroundDrawList()->AddRect(merge_group->ClipRect.Min, merge_group->ClipRect.Max, IM_COL32(255, 255, 0, 255));
@@ -2680,7 +2680,7 @@ c_void ImGui::TableHeadersRow()
     }
 
     // Allow opening popup from the right-most section after the last column.
-    ImVec2 mouse_pos = ImGui::GetMousePos();
+    let mouse_pos: ImVec2 = ImGui::GetMousePos();
     if (IsMouseReleased(1) && TableGetHoveredColumn() == columns_count)
         if (mouse_pos.y >= row_y1 && mouse_pos.y < row_y1 + row_height)
             TableOpenContextMenu(-1); // Will open a non-column-specific popup.
@@ -2706,8 +2706,8 @@ c_void ImGui::TableHeader(*const char label)
     if (label == NULL)
         label = "";
     let mut  label_end: *const c_char = FindRenderedTextEnd(label);
-    ImVec2 label_size = CalcTextSize(label, label_end, true);
-    ImVec2 label_pos = window.DC.CursorPos;
+    let label_size: ImVec2 = CalcTextSize(label, label_end, true);
+    let label_pos: ImVec2 = window.DC.CursorPos;
 
     // If we already got a row height, there's use that.
     // FIXME-TABLE: Padding problem if the correct outer-padding CellBgRect strays off our ClipRect?
@@ -2888,8 +2888,7 @@ c_void ImGui::TableDrawContextMenu(*mut ImGuiTable table)
             if (MenuItem("Size column to fit###SizeOne", NULL, false, can_resize))
                 TableSetColumnWidthAutoSingle(table, column_n);
         }
-
-        *const char size_all_desc;
+let size_all_desc: *const c_char;
         if (table.ColumnsEnabledFixedCount == table.ColumnsEnabledCount && (table.Flags & ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame)
             size_all_desc = "Size all columns to fit###SizeAll";        // All fixed
         else
