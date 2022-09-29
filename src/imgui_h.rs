@@ -292,20 +292,20 @@ namespace ImGui
      c_void          SetScrollY(c_float scroll_y);                                     // set scrolling amount [0 .. GetScrollMaxY()]
      c_float         GetScrollMaxX();                                                // get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x
      c_float         GetScrollMaxY();                                                // get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
-     c_void          SetScrollHereX(c_float center_x_ratio = 0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
-     c_void          SetScrollHereY(c_float center_y_ratio = 0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
-     c_void          SetScrollFromPosX(c_float local_x, c_float center_x_ratio = 0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
-     c_void          SetScrollFromPosY(c_float local_y, c_float center_y_ratio = 0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+     c_void          SetScrollHereX(let center_x_ratio: c_float =  0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+     c_void          SetScrollHereY(let center_y_ratio: c_float =  0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+     c_void          SetScrollFromPosX(c_float local_x, let center_x_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+     c_void          SetScrollFromPosY(c_float local_y, let center_y_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 
     // Parameters stacks (shared)
      c_void          PushFont(ImFont* font);                                         // use NULL as a shortcut to push default font
      c_void          PopFont();
      c_void          PushStyleColor(ImGuiCol idx, u32 col);                        // modify a style color. always use this if you modify the style after NewFrame().
      c_void          PushStyleColor(ImGuiCol idx, const ImVec4& col);
-     c_void          PopStyleColor(c_int count = 1);
+     c_void          PopStyleColor(let count: c_int = 1);
      c_void          PushStyleVar(ImGuiStyleVar idx, c_float val);                     // modify a style float variable. always use this if you modify the style after NewFrame().
      c_void          PushStyleVar(ImGuiStyleVar idx, const ImVec2& val);             // modify a style ImVec2 variable. always use this if you modify the style after NewFrame().
-     c_void          PopStyleVar(c_int count = 1);
+     c_void          PopStyleVar(let count: c_int = 1);
      c_void          PushAllowKeyboardFocus(bool allow_keyboard_focus);              // == tab stop enable. Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets
      c_void          PopAllowKeyboardFocus();
      c_void          PushButtonRepeat(bool repeat);                                  // in 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call IsItemActive() after any Button() to tell if the button is held in the current frame.
@@ -316,7 +316,7 @@ namespace ImGui
      c_void          PopItemWidth();
      c_void          SetNextItemWidth(c_float item_width);                             // set width of the _next_ common large "item+label" widget. >0f32: width in pixels, <0f32 align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
      c_float         CalcItemWidth();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
-     c_void          PushTextWrapPos(c_float wrap_local_pos_x = 0f32);                 // push word-wrapping position for Text*() commands. < 0f32: no wrapping; 0f32: wrap to end of window (or column); > 0f32: wrap at 'wrap_pos_x' position in window local space
+     c_void          PushTextWrapPos(let wrap_local_pos_x: c_float =  0f32);                 // push word-wrapping position for Text*() commands. < 0f32: no wrapping; 0f32: wrap to end of window (or column); > 0f32: wrap at 'wrap_pos_x' position in window local space
      c_void          PopTextWrapPos();
 
     // Style read access
@@ -324,7 +324,7 @@ namespace ImGui
      ImFont*       GetFont();                                                      // get current font
      c_float         GetFontSize();                                                  // get current font size (= height in pixels) of current font with current scale applied
      ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
-     u32         GetColorU32(ImGuiCol idx, c_float alpha_mul = 1f32);              // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
+     u32         GetColorU32(ImGuiCol idx, let alpha_mul: c_float =  1f32);              // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
      u32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
      u32         GetColorU32(u32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
      const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
@@ -341,8 +341,8 @@ namespace ImGui
      c_void          NewLine();                                                      // undo a SameLine() or force a new line when in an horizontal-layout context.
      c_void          Spacing();                                                      // add vertical spacing.
      c_void          Dummy(const ImVec2& size);                                      // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
-     c_void          Indent(c_float indent_w = 0f32);                                  // move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
-     c_void          Unindent(c_float indent_w = 0f32);                                // move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
+     c_void          Indent(let indent_w: c_float =  0f32);                                  // move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
+     c_void          Unindent(let indent_w: c_float =  0f32);                                // move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
      c_void          BeginGroup();                                                   // lock horizontal starting position
      c_void          EndGroup();                                                     // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
      ImVec2        GetCursorPos();                                                 // cursor position in window coordinates (relative to window position)
@@ -420,9 +420,9 @@ namespace ImGui
     // - The old Combo() api are helpers over BeginCombo()/EndCombo() which are kept available for convenience purpose. This is analogous to how ListBox are created.
      bool          BeginCombo(*const char label, *const char preview_value, ImGuiComboFlags flags = 0);
      c_void          EndCombo(); // only call EndCombo() if BeginCombo() returns true!
-     bool          Combo(*const char label, c_int* current_item, *const char const items[], c_int items_count, c_int popup_max_height_in_items = -1);
-     bool          Combo(*const char label, c_int* current_item, *const char items_separated_by_zeros, c_int popup_max_height_in_items = -1);      // Separate items with \0 within a string, end item-list with \0\0. e.g. "One\0Two\0Three\0"
-     bool          Combo(*const char label, c_int* current_item, bool(*items_getter)(data: *mut c_void, c_int idx, *const char* out_text), data: *mut c_void, c_int items_count, c_int popup_max_height_in_items = -1);
+     bool          Combo(*const char label, c_int* current_item, *const char const items[], c_int items_count, let popup_max_height_in_items: c_int = -1);
+     bool          Combo(*const char label, c_int* current_item, *const char items_separated_by_zeros, let popup_max_height_in_items: c_int = -1);      // Separate items with \0 within a string, end item-list with \0\0. e.g. "One\0Two\0Three\0"
+     bool          Combo(*const char label, c_int* current_item, bool(*items_getter)(data: *mut c_void, c_int idx, *const char* out_text), data: *mut c_void, c_int items_count, let popup_max_height_in_items: c_int = -1);
 
     // Widgets: Drag Sliders
     // - CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use ImGuiSliderFlags_AlwaysClamp to always clamp.
@@ -436,18 +436,18 @@ namespace ImGui
     // - We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
     // - Legacy: Pre-1.78 there are DragXXX() function signatures that takes a final `float power=1.0f' argument instead of the `ImGuiSliderFlags flags=0' argument.
     //   If you get a warning converting a float to ImGuiSliderFlags, read https://github.com/ocornut/imgui/issues/3361
-     bool          DragFloat(*const char label, c_float* v, c_float v_speed = 1f32, c_float v_min = 0f32, c_float v_max = 0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);     // If v_min >= v_max we have no bound
-     bool          DragFloat2(*const char label, c_float v[2], c_float v_speed = 1f32, c_float v_min = 0f32, c_float v_max = 0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          DragFloat3(*const char label, c_float v[3], c_float v_speed = 1f32, c_float v_min = 0f32, c_float v_max = 0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          DragFloat4(*const char label, c_float v[4], c_float v_speed = 1f32, c_float v_min = 0f32, c_float v_max = 0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          DragFloatRange2(*const char label, c_float* v_current_min, c_float* v_current_max, c_float v_speed = 1f32, c_float v_min = 0f32, c_float v_max = 0f32, *const char format = "%.3f", *const char format_max = NULL, ImGuiSliderFlags flags = 0);
-     bool          DragInt(*const char label, c_int* v, c_float v_speed = 1f32, c_int v_min = 0, c_int v_max = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);  // If v_min >= v_max we have no bound
-     bool          DragInt2(*const char label, c_int v[2], c_float v_speed = 1f32, c_int v_min = 0, c_int v_max = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);
-     bool          DragInt3(*const char label, c_int v[3], c_float v_speed = 1f32, c_int v_min = 0, c_int v_max = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);
-     bool          DragInt4(*const char label, c_int v[4], c_float v_speed = 1f32, c_int v_min = 0, c_int v_max = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);
-     bool          DragIntRange2(*const char label, c_int* v_current_min, c_int* v_current_max, c_float v_speed = 1f32, c_int v_min = 0, c_int v_max = 0, *const char format = "%d", *const char format_max = NULL, ImGuiSliderFlags flags = 0);
-     bool          DragScalar(*const char label, ImGuiDataType data_type, p_data: *mut c_void, c_float v_speed = 1f32, *const c_void p_min = NULL, *const c_void p_max = NULL, *const char format = NULL, ImGuiSliderFlags flags = 0);
-     bool          DragScalarN(*const char label, ImGuiDataType data_type, p_data: *mut c_void, c_int components, c_float v_speed = 1f32, *const c_void p_min = NULL, *const c_void p_max = NULL, *const char format = NULL, ImGuiSliderFlags flags = 0);
+     bool          DragFloat(*const char label, c_float* v, let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);     // If v_min >= v_max we have no bound
+     bool          DragFloat2(*const char label, c_float v[2], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          DragFloat3(*const char label, c_float v[3], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          DragFloat4(*const char label, c_float v[4], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          DragFloatRange2(*const char label, c_float* v_current_min, c_float* v_current_max, let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", *const char format_max = NULL, ImGuiSliderFlags flags = 0);
+     bool          DragInt(*const char label, c_int* v, let v_speed: c_float =  1f32, let v_min: c_int = 0, let v_max: c_int = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);  // If v_min >= v_max we have no bound
+     bool          DragInt2(*const char label, c_int v[2], let v_speed: c_float =  1f32, let v_min: c_int = 0, let v_max: c_int = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);
+     bool          DragInt3(*const char label, c_int v[3], let v_speed: c_float =  1f32, let v_min: c_int = 0, let v_max: c_int = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);
+     bool          DragInt4(*const char label, c_int v[4], let v_speed: c_float =  1f32, let v_min: c_int = 0, let v_max: c_int = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);
+     bool          DragIntRange2(*const char label, c_int* v_current_min, c_int* v_current_max, let v_speed: c_float =  1f32, let v_min: c_int = 0, let v_max: c_int = 0, *const char format = "%d", *const char format_max = NULL, ImGuiSliderFlags flags = 0);
+     bool          DragScalar(*const char label, ImGuiDataType data_type, p_data: *mut c_void, let v_speed: c_float =  1f32, *const c_void p_min = NULL, *const c_void p_max = NULL, *const char format = NULL, ImGuiSliderFlags flags = 0);
+     bool          DragScalarN(*const char label, ImGuiDataType data_type, p_data: *mut c_void, c_int components, let v_speed: c_float =  1f32, *const c_void p_min = NULL, *const c_void p_max = NULL, *const char format = NULL, ImGuiSliderFlags flags = 0);
 
     // Widgets: Regular Sliders
     // - CTRL+Click on any slider to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use ImGuiSliderFlags_AlwaysClamp to always clamp.
@@ -459,7 +459,7 @@ namespace ImGui
      bool          SliderFloat2(*const char label, c_float v[2], c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
      bool          SliderFloat3(*const char label, c_float v[3], c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
      bool          SliderFloat4(*const char label, c_float v[4], c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          SliderAngle(*const char label, c_float* v_rad, c_float v_degrees_min = -360f32, c_float v_degrees_max = +360f32, *const char format = "%.0f32 deg", ImGuiSliderFlags flags = 0);
+     bool          SliderAngle(*const char label, c_float* v_rad, let v_degrees_min: c_float =  -360f32, let v_degrees_max: c_float =  +360f32, *const char format = "%.0f32 deg", ImGuiSliderFlags flags = 0);
      bool          SliderInt(*const char label, c_int* v, c_int v_min, c_int v_max, *const char format = "%d", ImGuiSliderFlags flags = 0);
      bool          SliderInt2(*const char label, c_int v[2], c_int v_min, c_int v_max, *const char format = "%d", ImGuiSliderFlags flags = 0);
      bool          SliderInt3(*const char label, c_int v[3], c_int v_min, c_int v_max, *const char format = "%d", ImGuiSliderFlags flags = 0);
@@ -476,11 +476,11 @@ namespace ImGui
      bool          InputText(*const char label, char* buf, size_t buf_size, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL, user_data: *mut c_void = NULL);
      bool          InputTextMultiline(*const char label, char* buf, size_t buf_size, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL, user_data: *mut c_void = NULL);
      bool          InputTextWithHint(*const char label, *const char hint, char* buf, size_t buf_size, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL, user_data: *mut c_void = NULL);
-     bool          InputFloat(*const char label, c_float* v, c_float step = 0f32, c_float step_fast = 0f32, *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
+     bool          InputFloat(*const char label, c_float* v, let step: c_float =  0f32, let step_fast: c_float =  0f32, *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
      bool          InputFloat2(*const char label, c_float v[2], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
      bool          InputFloat3(*const char label, c_float v[3], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
      bool          InputFloat4(*const char label, c_float v[4], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
-     bool          InputInt(*const char label, c_int* v, c_int step = 1, c_int step_fast = 100, ImGuiInputTextFlags flags = 0);
+     bool          InputInt(*const char label, c_int* v, let step: c_int = 1, let step_fast: c_int = 100, ImGuiInputTextFlags flags = 0);
      bool          InputInt2(*const char label, c_int v[2], ImGuiInputTextFlags flags = 0);
      bool          InputInt3(*const char label, c_int v[3], ImGuiInputTextFlags flags = 0);
      bool          InputInt4(*const char label, c_int v[4], ImGuiInputTextFlags flags = 0);
@@ -494,7 +494,7 @@ namespace ImGui
      bool          ColorEdit3(*const char label, c_float col[3], ImGuiColorEditFlags flags = 0);
      bool          ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags flags = 0);
      bool          ColorPicker3(*const char label, c_float col[3], ImGuiColorEditFlags flags = 0);
-     bool          ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags flags = 0, *const c_float ref_col = NULL);
+     bool          ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags flags = 0, *let ref_col: c_float =  NULL);
      bool          ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFlags flags = 0, const ImVec2& size = ImVec2(0, 0)); // display a color square/button, hover for details, return true when pressed.
      c_void          SetColorEditOptions(ImGuiColorEditFlags flags);                     // initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
 
@@ -532,15 +532,15 @@ namespace ImGui
     // - Choose frame height:  size.y > 0f32: custom  /  size.y < 0f32 or -FLT_MIN: bottom-align  /  size.y = 0f32 (default): arbitrary default height which can fit ~7 items
      bool          BeginListBox(*const char label, const ImVec2& size = ImVec2(0, 0)); // open a framed scrolling region
      c_void          EndListBox();                                                       // only call EndListBox() if BeginListBox() returned true!
-     bool          ListBox(*const char label, c_int* current_item, *const char const items[], c_int items_count, c_int height_in_items = -1);
-     bool          ListBox(*const char label, c_int* current_item, bool (*items_getter)(data: *mut c_void, c_int idx, *const char* out_text), data: *mut c_void, c_int items_count, c_int height_in_items = -1);
+     bool          ListBox(*const char label, c_int* current_item, *const char const items[], c_int items_count, let height_in_items: c_int = -1);
+     bool          ListBox(*const char label, c_int* current_item, bool (*items_getter)(data: *mut c_void, c_int idx, *const char* out_text), data: *mut c_void, c_int items_count, let height_in_items: c_int = -1);
 
     // Widgets: Data Plotting
     // - Consider using ImPlot (https://github.com/epezent/implot) which is much better!
-     c_void          PlotLines(*const char label, *const c_float values, c_int values_count, c_int values_offset = 0, *const char overlay_text = NULL, c_float scale_min = f32::MAX, c_float scale_max = f32::MAX, ImVec2 graph_size = ImVec2(0, 0), c_int stride = sizeof);
-     c_void          PlotLines(*const char label, c_float(*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, c_int values_offset = 0, *const char overlay_text = NULL, c_float scale_min = f32::MAX, c_float scale_max = f32::MAX, ImVec2 graph_size = ImVec2(0, 0));
-     c_void          PlotHistogram(*const char label, *const c_float values, c_int values_count, c_int values_offset = 0, *const char overlay_text = NULL, c_float scale_min = f32::MAX, c_float scale_max = f32::MAX, ImVec2 graph_size = ImVec2(0, 0), c_int stride = sizeof);
-     c_void          PlotHistogram(*const char label, c_float(*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, c_int values_offset = 0, *const char overlay_text = NULL, c_float scale_min = f32::MAX, c_float scale_max = f32::MAX, ImVec2 graph_size = ImVec2(0, 0));
+     c_void          PlotLines(*const char label, *const c_float values, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = NULL, let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, ImVec2 graph_size = ImVec2(0, 0), let stride: c_int = sizeof);
+     c_void          PlotLines(*const char label, c_float(*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = NULL, let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, ImVec2 graph_size = ImVec2(0, 0));
+     c_void          PlotHistogram(*const char label, *const c_float values, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = NULL, let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, ImVec2 graph_size = ImVec2(0, 0), let stride: c_int = sizeof);
+     c_void          PlotHistogram(*const char label, c_float(*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = NULL, let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, ImVec2 graph_size = ImVec2(0, 0));
 
     // Widgets: Value() Helpers.
     // - Those are merely shortcut to calling Text() with a format string. Output single value in "name: value" format (tip: freely declare more in your code to handle your types. you can add functions to the ImGui namespace)
@@ -637,9 +637,9 @@ namespace ImGui
     //        TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
     //        --------------------------------------------------------------------------------------------------------
     // - 5. Call EndTable()
-     bool          BeginTable(*const char str_id, c_int column, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0f32, 0f32), c_float inner_width = 0f32);
+     bool          BeginTable(*const char str_id, c_int column, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0f32, 0f32), let inner_width: c_float =  0f32);
      c_void          EndTable();                                         // only call EndTable() if BeginTable() returns true!
-     c_void          TableNextRow(ImGuiTableRowFlags row_flags = 0, c_float min_row_height = 0f32); // append into the first cell of a new row.
+     c_void          TableNextRow(ImGuiTableRowFlags row_flags = 0, let min_row_height: c_float =  0f32); // append into the first cell of a new row.
      bool          TableNextColumn();                                  // append into the next column (or first column of next row if currently in last column). Return true when column is visible.
      bool          TableSetColumnIndex(c_int column_n);                  // append into the specified column. Return true when column is visible.
 
@@ -651,7 +651,7 @@ namespace ImGui
     // - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
     //   some advanced use cases (e.g. adding custom widgets in header row).
     // - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
-     c_void          TableSetupColumn(*const char label, ImGuiTableColumnFlags flags = 0, c_float init_width_or_weight = 0f32, ImGuiID user_id = 0);
+     c_void          TableSetupColumn(*const char label, ImGuiTableColumnFlags flags = 0, let init_width_or_weight: c_float =  0f32, ImGuiID user_id = 0);
      c_void          TableSetupScrollFreeze(c_int cols, c_int rows);         // lock columns/rows so they stay visible when scrolled.
      c_void          TableHeadersRow();                                  // submit all headers cells based on data provided to TableSetupColumn() + submit context menu
      c_void          TableHeader(*const char label);                     // submit one header cell manually (rarely used)
@@ -666,19 +666,19 @@ namespace ImGui
      c_int                   TableGetColumnCount();                      // return number of columns (value passed to BeginTable)
      c_int                   TableGetColumnIndex();                      // return current column index.
      c_int                   TableGetRowIndex();                         // return current row index.
-     *const char           TableGetColumnName(c_int column_n = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
-     ImGuiTableColumnFlags TableGetColumnFlags(c_int column_n = -1);     // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
+     *const char           TableGetColumnName(let column_n: c_int = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
+     ImGuiTableColumnFlags TableGetColumnFlags(let column_n: c_int = -1);     // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
      c_void                  TableSetColumnEnabled(c_int column_n, bool v);// change user accessible enabled/disabled state of a column. Set to false to hide the column. User can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
-     c_void                  TableSetBgColor(ImGuiTableBgTarget target, u32 color, c_int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+     c_void                  TableSetBgColor(ImGuiTableBgTarget target, u32 color, let column_n: c_int = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 
     // Legacy Columns API (prefer using Tables!)
     // - You can also use SameLine(pos_x) to mimic simplified columns.
-     c_void          Columns(c_int count = 1, *const char id = NULL, let mut border: bool =  true);
+     c_void          Columns(let count: c_int = 1, *const char id = NULL, let mut border: bool =  true);
      c_void          NextColumn();                                                       // next column, defaults to current row or next row if the current row is finished
      c_int           GetColumnIndex();                                                   // get current column index
-     c_float         GetColumnWidth(c_int column_index = -1);                              // get column width (in pixels). pass -1 to use current column
+     c_float         GetColumnWidth(let column_index: c_int = -1);                              // get column width (in pixels). pass -1 to use current column
      c_void          SetColumnWidth(c_int column_index, c_float width);                      // set column width (in pixels). pass -1 to use current column
-     c_float         GetColumnOffset(c_int column_index = -1);                             // get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0f32
+     c_float         GetColumnOffset(let column_index: c_int = -1);                             // get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0f32
      c_void          SetColumnOffset(c_int column_index, c_float offset_x);                  // set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
      c_int           GetColumnsCount();
 
@@ -713,9 +713,9 @@ namespace ImGui
 
     // Logging/Capture
     // - All text output from the interface can be captured into tty/file/clipboard. By default, tree nodes are automatically opened during logging.
-     c_void          LogToTTY(c_int auto_open_depth = -1);                                 // start logging to tty (stdout)
-     c_void          LogToFile(c_int auto_open_depth = -1, *const char filename = NULL);   // start logging to file
-     c_void          LogToClipboard(c_int auto_open_depth = -1);                           // start logging to OS clipboard
+     c_void          LogToTTY(let auto_open_depth: c_int = -1);                                 // start logging to tty (stdout)
+     c_void          LogToFile(let auto_open_depth: c_int = -1, *const char filename = NULL);   // start logging to file
+     c_void          LogToClipboard(let auto_open_depth: c_int = -1);                           // start logging to OS clipboard
      c_void          LogFinish();                                                        // stop logging (close file, etc.)
      c_void          LogButtons();                                                       // helper to display buttons for logging to tty/file/clipboard
      c_void          LogText(*const char fmt, ...) IM_FMTARGS(1);                        // pass text data straight to log (without being displayed)
@@ -749,7 +749,7 @@ namespace ImGui
     // Focus, Activation
     // - Prefer using "SetItemDefaultFocus()" over "if (IsWindowAppearing()) SetScrollHereY()" when applicable to signify "this is the default item"
      c_void          SetItemDefaultFocus();                                              // make last item the default focused item of a window.
-     c_void          SetKeyboardFocusHere(c_int offset = 0);                               // focus keyboard on the next widget. Use positive 'offset' to access sub components of a multiple component widget. Use -1 to access previous widget.
+     c_void          SetKeyboardFocusHere(let offset: c_int = 0);                               // focus keyboard on the next widget. Use positive 'offset' to access sub components of a multiple component widget. Use -1 to access previous widget.
 
     // Item/Widgets Utilities and Query Functions
     // - Most of the functions are referring to the previous Item that has been submitted.
@@ -797,7 +797,7 @@ namespace ImGui
      c_void          EndChildFrame();                                                    // always call EndChildFrame() regardless of BeginChildFrame() return values (which indicates a collapsed/clipped window)
 
     // Text Utilities
-     ImVec2        CalcTextSize(*const char text, *const char text_end = NULL, let mut hide_text_after_double_hash: bool =  false, c_float wrap_width = -1f32);
+     ImVec2        CalcTextSize(*const char text, *const char text_end = NULL, let mut hide_text_after_double_hash: bool =  false, let wrap_width: c_float =  -1f32);
 
     // Color Utilities
      ImVec4        ColorConvertU32ToFloat4(u32 in);
@@ -828,12 +828,12 @@ namespace ImGui
      bool          IsMouseDoubleClicked(ImGuiMouseButton button);                      // did mouse button double-clicked? Same as GetMouseClickedCount() == 2. (note that a double-click will also report IsMouseClicked() == true)
      c_int           GetMouseClickedCount(ImGuiMouseButton button);                      // return the number of successive mouse-clicks at the time where a click happen (otherwise 0).
      bool          IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, let mut clip: bool =  true);// is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.
-     bool          IsMousePosValid(*const ImVec2 mouse_pos = NULL);                    // by convention we use (-f32::MAX,-f32::MAX) to denote that there is no mouse available
+     bool          IsMousePosValid(*let mouse_pos: ImVec2 = NULL);                    // by convention we use (-f32::MAX,-f32::MAX) to denote that there is no mouse available
      bool          IsAnyMouseDown();                                                   // [WILL OBSOLETE] is any mouse button held? This was designed for backends, but prefer having backend maintain a mask of held mouse buttons, because upcoming input queue system will make this invalid.
      ImVec2        GetMousePos();                                                      // shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
      ImVec2        GetMousePosOnOpeningCurrentPopup();                                 // retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to avoid user backing that value themselves)
-     bool          IsMouseDragging(ImGuiMouseButton button, c_float lock_threshold = -1f32);         // is mouse dragging? (if lock_threshold < -1f32, uses io.MouseDraggingThreshold)
-     ImVec2        GetMouseDragDelta(ImGuiMouseButton button = 0, c_float lock_threshold = -1f32);   // return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0f32 until the mouse moves past a distance threshold at least once (if lock_threshold < -1f32, uses io.MouseDraggingThreshold)
+     bool          IsMouseDragging(ImGuiMouseButton button, let lock_threshold: c_float =  -1f32);         // is mouse dragging? (if lock_threshold < -1f32, uses io.MouseDraggingThreshold)
+     ImVec2        GetMouseDragDelta(ImGuiMouseButton button = 0, let lock_threshold: c_float =  -1f32);   // return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0f32 until the mouse moves past a distance threshold at least once (if lock_threshold < -1f32, uses io.MouseDraggingThreshold)
      c_void          ResetMouseDragDelta(ImGuiMouseButton button = 0);                   //
      ImGuiMouseCursor GetMouseCursor();                                                // get desired cursor type, reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
      c_void          SetMouseCursor(ImGuiMouseCursor cursor_type);                       // set desired cursor type
@@ -1385,17 +1385,6 @@ enum ImGuiSliderFlags_
 
 
 
-// Enumeration for ImGui::SetWindow***(), SetNextWindow***(), SetNextItem***() functions
-// Represent a condition.
-// Important: Treat as a regular enum! Do NOT combine multiple values using binary operators! All the functions above treat 0 as a shortcut to ImGuiCond_Always.
-enum ImGuiCond_
-{
-    ImGuiCond_None          = 0,        // No condition (always set the variable), same as _Always
-    ImGuiCond_Always        = 1 << 0,   // No condition (always set the variable), same as _None
-    ImGuiCond_Once          = 1 << 1,   // Set the variable once per runtime session (only the first call will succeed)
-    ImGuiCond_FirstUseEver  = 1 << 2,   // Set the variable if the object/window has no persistently saved data (no entry in .ini file)
-    ImGuiCond_Appearing     = 1 << 3,   // Set the variable if the object/window is appearing after being hidden/inactive (or the first time)
-};
 
 //-----------------------------------------------------------------------------
 // [SECTION] Helpers: Memory allocations macros, ImVector<>
@@ -1447,8 +1436,8 @@ struct Vec
     inline ~Vec()                                      { if (Data) IM_FREE(Data); } // Important: does not destruct anything
 
     inline c_void         clear()                             { if (Data) { Size = Capacity = 0; IM_FREE(Data); Data = None; } }  // Important: does not destruct anything
-    inline c_void         clear_delete()                      { for (c_int n = 0; n < Size; n++) IM_DELETE(Data[n]); clear(); }     // Important: never called automatically! always explicit.
-    inline c_void         clear_destruct()                    { for (c_int n = 0; n < Size; n++) Data[n].~T(); clear(); }           // Important: never called automatically! always explicit.
+    inline c_void         clear_delete()                      { for (let n: c_int = 0; n < Size; n++) IM_DELETE(Data[n]); clear(); }     // Important: never called automatically! always explicit.
+    inline c_void         clear_destruct()                    { for (let n: c_int = 0; n < Size; n++) Data[n].~T(); clear(); }           // Important: never called automatically! always explicit.
 
     inline bool         empty() const                       { return Size == 0; }
     inline c_int          size() const                        { return Size; }
@@ -1466,11 +1455,11 @@ struct Vec
     inline const T&     front() const                       { IM_ASSERT(Size > 0); return Data[0]; }
     inline T&           back()                              { IM_ASSERT(Size > 0); return Data[Size - 1]; }
     inline const T&     back() const                        { IM_ASSERT(Size > 0); return Data[Size - 1]; }
-    inline c_void         swap(Vec<T>& rhs)              { c_int rhs_size = rhs.Size; rhs.Size = Size; Size = rhs_size; c_int rhs_cap = rhs.Capacity; rhs.Capacity = Capacity; Capacity = rhs_cap; T* rhs_data = rhs.Data; rhs.Data = Data; Data = rhs_data; }
+    inline c_void         swap(Vec<T>& rhs)              { let rhs_size: c_int = rhs.Size; rhs.Size = Size; Size = rhs_size; let rhs_cap: c_int = rhs.Capacity; rhs.Capacity = Capacity; Capacity = rhs_cap; T* rhs_data = rhs.Data; rhs.Data = Data; Data = rhs_data; }
 
-    inline c_int          _grow_capacity(c_int sz) const        { c_int new_capacity = Capacity ? (Capacity + Capacity / 2) : 8; return new_capacity > sz ? new_capacity : sz; }
+    inline c_int          _grow_capacity(c_int sz) const        { let new_capacity: c_int = Capacity ? (Capacity + Capacity / 2) : 8; return new_capacity > sz ? new_capacity : sz; }
     inline c_void         resize(c_int new_size)                { if (new_size > Capacity) reserve(_grow_capacity(new_size)); Size = new_size; }
-    inline c_void         resize(c_int new_size, const T& v)    { if (new_size > Capacity) reserve(_grow_capacity(new_size)); if (new_size > Size) for (c_int n = Size; n < new_size; n++) memcpy(&Data[n], &v, sizeof(v)); Size = new_size; }
+    inline c_void         resize(c_int new_size, const T& v)    { if (new_size > Capacity) reserve(_grow_capacity(new_size)); if (new_size > Size) for (let n: c_int = Size; n < new_size; n++) memcpy(&Data[n], &v, sizeof(v)); Size = new_size; }
     inline c_void         shrink(c_int new_size)                { IM_ASSERT(new_size <= Size); Size = new_size; } // Resize a vector to a smaller size, guaranteed not to cause a reallocation
     inline c_void         reserve(c_int new_capacity)           { if (new_capacity <= Capacity) return; T* new_data = (T*)IM_ALLOC(new_capacity * sizeof(T)); if (Data) { memcpy(new_data, Data, Size * sizeof(T)); IM_FREE(Data); } Data = new_data; Capacity = new_capacity; }
     inline c_void         reserve_discard(c_int new_capacity)   { if (new_capacity <= Capacity) return; if (Data) IM_FREE(Data); Data = (T*)IM_ALLOC(new_capacity * sizeof(T)); Capacity = new_capacity; }
@@ -1599,7 +1588,7 @@ struct ImGuiOnceUponAFrame
 {
     ImGuiOnceUponAFrame() { RefFrame = -1; }
     mutable c_int RefFrame;
-    operator bool() const { c_int current_frame = ImGui::GetFrameCount(); if (RefFrame == current_frame) return false; RefFrame = current_frame; return true; }
+    operator bool() const { let current_frame: c_int = ImGui::GetFrameCount(); if (RefFrame == current_frame) return false; RefFrame = current_frame; return true; }
 };
 
 
@@ -1619,16 +1608,16 @@ struct ImColor
     ImVec4          Value;
 
     constexpr ImColor()                                             { }
-    constexpr ImColor(c_float r, c_float g, c_float b, c_float a = 1f32)    : Value(r, g, b, a) { }
+    constexpr ImColor(c_float r, c_float g, c_float b, let a: c_float =  1f32)    : Value(r, g, b, a) { }
     constexpr ImColor(const ImVec4& col)                            : Value(col) {}
-    ImColor(c_int r, c_int g, c_int b, c_int a = 255)                       { c_float sc = 1f32 / 255f32; Value.x = r * sc; Value.y = g * sc; Value.z = b * sc; Value.w = a * sc; }
-    ImColor(u32 rgba)                                             { c_float sc = 1f32 / 255f32; Value.x = ((rgba >> IM_COL32_R_SHIFT) & 0xF0f32) * sc; Value.y = ((rgba >> IM_COL32_G_SHIFT) & 0xF0f32) * sc; Value.z = ((rgba >> IM_COL32_B_SHIFT) & 0xF0f32) * sc; Value.w = ((rgba >> IM_COL32_A_SHIFT) & 0xF0f32) * sc; }
+    ImColor(c_int r, c_int g, c_int b, let a: c_int = 255)                       { let sc: c_float =  1f32 / 255f32; Value.x = r * sc; Value.y = g * sc; Value.z = b * sc; Value.w = a * sc; }
+    ImColor(u32 rgba)                                             { let sc: c_float =  1f32 / 255f32; Value.x = ((rgba >> IM_COL32_R_SHIFT) & 0xF0f32) * sc; Value.y = ((rgba >> IM_COL32_G_SHIFT) & 0xF0f32) * sc; Value.z = ((rgba >> IM_COL32_B_SHIFT) & 0xF0f32) * sc; Value.w = ((rgba >> IM_COL32_A_SHIFT) & 0xF0f32) * sc; }
     inline operator u32() const                                   { return ImGui::ColorConvertFloat4ToU32(Value); }
     inline operator ImVec4() const                                  { return Value; }
 
     // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
-    inline c_void    SetHSV(c_float h, c_float s, c_float v, c_float a = 1f32){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
-    static ImColor HSV(c_float h, c_float s, c_float v, c_float a = 1f32)   { c_float r, g, b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
+    inline c_void    SetHSV(c_float h, c_float s, c_float v, let a: c_float =  1f32){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
+    static ImColor HSV(c_float h, c_float s, c_float v, let a: c_float =  1f32)   { c_float r, g, b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
 };
 
 //-----------------------------------------------------------------------------
@@ -1692,9 +1681,9 @@ struct ImFontGlyphRangesBuilder
     Vec<u32> UsedChars;            // Store 1-bit per Unicode code point (0=unused, 1=used)
 
     ImFontGlyphRangesBuilder()              { Clear(); }
-    inline c_void     Clear()                 { c_int size_in_bytes = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / sizeof); memset(UsedChars.Data, 0, size_in_bytes); }
-    inline bool     GetBit(size_t n) const  { c_int off = (n >> 5); u32 mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; }  // Get bit n in the array
-    inline c_void     SetBit(size_t n)        { c_int off = (n >> 5); u32 mask = 1u << (n & 31); UsedChars[off] |= mask; }               // Set bit n in the array
+    inline c_void     Clear()                 { let size_in_bytes: c_int = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / sizeof); memset(UsedChars.Data, 0, size_in_bytes); }
+    inline bool     GetBit(size_t n) const  { let off: c_int = (n >> 5); u32 mask = 1u << (n & 31); return (UsedChars[off] & mask) != 0; }  // Get bit n in the array
+    inline c_void     SetBit(size_t n)        { let off: c_int = (n >> 5); u32 mask = 1u << (n & 31); UsedChars[off] |= mask; }               // Set bit n in the array
     inline c_void     AddChar(ImWchar c)      { SetBit(c); }                      // Add character
      c_void  AddText(*const char text, *const char text_end = NULL);     // Add string (each character of the UTF-8 string are added)
      c_void  AddRanges(*const ImWchar ranges);                           // Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
@@ -1819,7 +1808,7 @@ namespace ImGui
 namespace ImGui
 {
     // OBSOLETED in 1.89 (from August 2022)
-     bool      ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), c_int frame_padding = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1)); // Use new ImageButton() signature (explicit item id, regular FramePadding)
+     bool      ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), let frame_padding: c_int = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1)); // Use new ImageButton() signature (explicit item id, regular FramePadding)
     // OBSOLETED in 1.88 (from May 2022)
     static inline c_void  CaptureKeyboardFromApp(let mut want_capture_keyboard: bool =  true)   { SetNextFrameWantCaptureKeyboard(want_capture_keyboard); } // Renamed as name was misleading + removed default value.
     static inline c_void  CaptureMouseFromApp(let mut want_capture_mouse: bool =  true)         { SetNextFrameWantCaptureMouse(want_capture_mouse); }       // Renamed as name was misleading + removed default value.
@@ -1828,7 +1817,7 @@ namespace ImGui
     // OBSOLETED in 1.85 (from August 2021)
     static inline c_float GetWindowContentRegionWidth()                               { return GetWindowContentRegionMax().x - GetWindowContentRegionMin().x; }
     // OBSOLETED in 1.81 (from February 2021)
-     bool      ListBoxHeader(*const char label, c_int items_count, c_int height_in_items = -1); // Helper to calculate size from items_count and height_in_items
+     bool      ListBoxHeader(*const char label, c_int items_count, let height_in_items: c_int = -1); // Helper to calculate size from items_count and height_in_items
     static inline bool  ListBoxHeader(*const char label, const ImVec2& size = ImVec2(0, 0))         { return BeginListBox(label, size); }
     static inline c_void  ListBoxFooter() { EndListBox(); }
     // OBSOLETED in 1.79 (from August 2020)

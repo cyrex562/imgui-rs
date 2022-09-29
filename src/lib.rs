@@ -166,6 +166,8 @@ mod window_dock_style_color;
 mod g_style_var_info;
 mod style_var_ops;
 mod render_ops;
+mod stack_sizes;
+mod imvec1;
 
 
 

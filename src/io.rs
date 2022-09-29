@@ -389,7 +389,7 @@ impl ImGuiIO {
             return;
         }
 
-        // ImWchar cp = c;
+        // let cp: ImWchar = c;
         let mut cp: ImWchar = c as ImWchar;
         if self.InputQueueSurrogate != 0
         {

@@ -291,7 +291,7 @@ STBRP_DEF c_void stbrp_init_target(stbrp_context *context, c_int width, c_int he
 static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, c_int x0, c_int width, c_int *pwaste)
 {
    stbrp_node *node = first;
-   c_int x1 = x0 + width;
+   let x1: c_int = x0 + width;
    c_int min_y, visited_width, waste_area;
 
    STBRP__NOTUSED(c);
@@ -325,7 +325,7 @@ static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, c_in
             visited_width += node.next->x - node.x;
       } else {
          // add waste area
-         c_int under_width = node.next->x - node.x;
+         let under_width: c_int = node.next->x - node.x;
          if (under_width + visited_width > width)
             under_width = width - visited_width;
          waste_area += under_width * (min_y - node.y);
@@ -346,7 +346,7 @@ typedef struct
 
 static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int width, c_int height)
 {
-   c_int best_waste = (1<<30), best_x, best_y = (1 << 30);
+   let best_waste: c_int = (1<<30), best_x, best_y = (1 << 30);
    stbrp__findresult fr;
    stbrp_node **prev, *node, *tail, **best = None;
 
@@ -415,7 +415,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
       while (tail.x < width)
          tail = tail.next;
       while (tail) {
-         c_int xpos = tail.x - width;
+         let xpos: c_int = tail.x - width;
          c_int y,waste;
          STBRP_ASSERT(xpos >= 0);
          // find the left position that matches this

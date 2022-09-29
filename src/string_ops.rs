@@ -384,8 +384,7 @@ pub fn ImTextCharToUtf8(mut out_buf: [c_char;5]) -> *const c_char
 
 // Not optimal but we very rarely use this function.
 // int ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountUtf8BytesFromChar() -> c_int
-{
+pub unsafe fn ImTextCountUtf8BytesFromChar(in_text: *const c_char, in_text_end: *const c_char) -> c_int {
     // unsigned int unused = 0;
     let mut unused: c_uint = 0;
     return ImTextCharFromUtf8(&mut unused, in_text, in_text_end);
@@ -394,10 +393,10 @@ pub unsafe fn ImTextCountUtf8BytesFromChar() -> c_int
 // static inline int ImTextCountUtf8BytesFromChar(unsigned int c)
 pub fn ImTextCountUtf8BytesFromChar2(c: c_uint) -> c_int
 {
-    if (c < 0x80) { return 1; };
-    if (c < 0x800) { return 2; };
-    if (c < 0x10000) { return 3; };
-    if (c <= 0x10FFFF) { return 4; };
+    if c < 0x80 { return 1; };
+    if c < 0x800 { return 2; };
+    if c < 0x10000 { return 3; };
+    if c <= 0x10FFFF { return 4; };
     return 3;
 }
 

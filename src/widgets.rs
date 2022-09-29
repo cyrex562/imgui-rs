@@ -127,7 +127,7 @@ static const u64          IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
 // For InputTextEx()
 static bool             InputTextFilterCharacter(*mut c_uint p_char, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data, ImGuiInputSource input_source);
 static c_int              InputTextCalcTextLenAndLineCount(*const char text_begin, *const *mut char out_text_end);
-static ImVec2           InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar text_end, *const *mut ImWchar remaining = NULL, *mut ImVec2 out_offset = NULL, let mut stop_on_new_line: bool =  false);
+static ImVec2           InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar text_end, *const *mut let remaining: ImWchar = NULL, *mut ImVec2 out_offset = NULL, let mut stop_on_new_line: bool =  false);
 
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: Text, etc.
@@ -165,13 +165,13 @@ c_void ImGui::TextEx(*const char text, *const char text_end, ImGuiTextFlags flag
         text_end = text + strlen(text); // FIXME-OPT
 
     const ImVec2 text_pos(window.DC.CursorPos.x, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset);
-    const c_float wrap_pos_x = window.DC.TextWrapPos;
+    let wrap_pos_x: c_float =  window.DC.TextWrapPos;
     let wrap_enabled: bool = (wrap_pos_x >= 0f32);
     if (text_end - text <= 2000 || wrap_enabled)
     {
         // Common case
-        const c_float wrap_width = wrap_enabled ? CalcWrapWidthForPos(window.DC.CursorPos, wrap_pos_x) : 0f32;
-        const ImVec2 text_size = CalcTextSize(text_begin, text_end, false, wrap_width);
+        let wrap_width: c_float =  wrap_enabled ? CalcWrapWidthForPos(window.DC.CursorPos, wrap_pos_x) : 0f32;
+        let text_size: ImVec2 = CalcTextSize(text_begin, text_end, false, wrap_width);
 
         ImRect bb(text_pos, text_pos + text_size);
         ItemSize(text_size, 0f32);
@@ -189,17 +189,17 @@ c_void ImGui::TextEx(*const char text, *const char text_end, ImGuiTextFlags flag
         // - We also don't vertically center the text within the line full height, which is unlikely to matter because we are likely the biggest and only item on the line.
         // - We use memchr(), pay attention that well optimized versions of those str/mem functions are much faster than a casually written loop.
         let mut  line: *const c_char = text;
-        const c_float line_height = GetTextLineHeight();
+        let line_height: c_float =  GetTextLineHeight();
         ImVec2 text_size(0, 0);
 
         // Lines to skip (can't skip when logging text)
         let pos: ImVec2 = text_pos;
         if (!g.LogEnabled)
         {
-            c_int lines_skippable = ((window.ClipRect.Min.y - text_pos.y) / line_height);
+            let lines_skippable: c_int = ((window.ClipRect.Min.y - text_pos.y) / line_height);
             if (lines_skippable > 0)
             {
-                c_int lines_skipped = 0;
+                let lines_skipped: c_int = 0;
                 while (line < text_end && lines_skipped < lines_skippable)
                 {
                     let mut  line_end: *const c_char =memchr(line, '\n', text_end - line);
@@ -235,7 +235,7 @@ c_void ImGui::TextEx(*const char text, *const char text_end, ImGuiTextFlags flag
             }
 
             // Count remaining lines
-            c_int lines_skipped = 0;
+            let lines_skipped: c_int = 0;
             while (line < text_end)
             {
                 let mut  line_end: *const c_char =memchr(line, '\n', text_end - line);
@@ -357,14 +357,14 @@ c_void ImGui::LabelTextV(*const char label, *const char fmt, va_list args)
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const c_float w = CalcItemWidth();
+    let w: c_float =  CalcItemWidth();
 
     *const char value_text_begin, *value_text_end;
     ImFormatStringToTempBufferV(&value_text_begin, &value_text_end, fmt, args);
-    const ImVec2 value_size = CalcTextSize(value_text_begin, value_text_end, false);
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let value_size: ImVec2 = CalcTextSize(value_text_begin, value_text_end, false);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
-    const ImVec2 pos = window.DC.CursorPos;
+    let pos: ImVec2 = window.DC.CursorPos;
     const ImRect value_bb(pos, pos + ImVec2(w, value_size.y + style.FramePadding.y * 2));
     const ImRect total_bb(pos, pos + ImVec2(w + (label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32), ImMax(value_size.y, label_size.y) + style.FramePadding.y * 2));
     ItemSize(total_bb, style.FramePadding.y);
@@ -397,8 +397,8 @@ c_void ImGui::BulletTextV(*const char fmt, va_list args)
 
     *const char text_begin, *text_end;
     ImFormatStringToTempBufferV(&text_begin, &text_end, fmt, args);
-    const ImVec2 label_size = CalcTextSize(text_begin, text_end, false);
-    const ImVec2 total_size = ImVec2(g.FontSize + (label_size.x > 0f32 ? (label_size.x + style.FramePadding.x * 2) : 0f32), label_size.y);  // Empty text doesn't add padding
+    let label_size: ImVec2 = CalcTextSize(text_begin, text_end, false);
+    let total_size: ImVec2 = ImVec2(g.FontSize + (label_size.x > 0f32 ? (label_size.x + style.FramePadding.x * 2) : 0f32), label_size.y);  // Empty text doesn't add padding
     let pos: ImVec2 = window.DC.CursorPos;
     pos.y += window.DC.CurrLineTextBaseOffset;
     ItemSize(total_size, 0f32);
@@ -547,7 +547,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, *mut bool out_hovered, 
         if (!(flags & ImGuiButtonFlags_NoKeyModifiers) || (!g.IO.KeyCtrl && !g.IO.KeyShift && !g.IO.KeyAlt))
         {
             // Poll buttons
-            c_int mouse_button_clicked = -1;
+            let mouse_button_clicked: c_int = -1;
             if ((flags & ImGuiButtonFlags_MouseButtonLeft) && g.IO.MouseClicked[0])         { mouse_button_clicked = 0; }
             else if ((flags & ImGuiButtonFlags_MouseButtonRight) && g.IO.MouseClicked[1])   { mouse_button_clicked = 1; }
             else if ((flags & ImGuiButtonFlags_MouseButtonMiddle) && g.IO.MouseClicked[2])  { mouse_button_clicked = 2; }
@@ -577,7 +577,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, *mut bool out_hovered, 
             }
             if (flags & ImGuiButtonFlags_PressedOnRelease)
             {
-                c_int mouse_button_released = -1;
+                let mouse_button_released: c_int = -1;
                 if ((flags & ImGuiButtonFlags_MouseButtonLeft) && g.IO.MouseReleased[0])        { mouse_button_released = 0; }
                 else if ((flags & ImGuiButtonFlags_MouseButtonRight) && g.IO.MouseReleased[1])  { mouse_button_released = 1; }
                 else if ((flags & ImGuiButtonFlags_MouseButtonMiddle) && g.IO.MouseReleased[2]) { mouse_button_released = 2; }
@@ -617,7 +617,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, *mut bool out_hovered, 
             // Avoid pressing both keys from triggering double amount of repeat events
             let key1: *const ImGuiKeyData = GetKeyData(ImGuiKey_Space);
             let key2: *const ImGuiKeyData = GetKeyData(ImGuiKey_NavGamepadActivate);
-            const c_float t1 = ImMax(key1.DownDuration, key2.DownDuration);
+            let t1: c_float =  ImMax(key1.DownDuration, key2.DownDuration);
             nav_activated_by_inputs = CalcTypematicRepeatAmount(t1 - g.IO.DeltaTime, t1, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate) > 0;
         }
         if (nav_activated_by_code || nav_activated_by_inputs)
@@ -688,7 +688,7 @@ bool ImGui::ButtonEx(*const char label, const ImVec2& size_arg, ImGuiButtonFlags
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window.GetID(label);
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
     let pos: ImVec2 = window.DC.CursorPos;
     if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window.DC.CurrLineTextBaseOffset) // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
@@ -732,7 +732,7 @@ bool ImGui::Button(*const char label, const ImVec2& size_arg)
 bool ImGui::SmallButton(*const char label)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    c_float backup_padding_y = g.Style.FramePadding.y;
+    let backup_padding_y: c_float =  g.Style.FramePadding.y;
     g.Style.FramePadding.y = 0f32;
     let mut pressed: bool =  ButtonEx(label, ImVec2(0, 0), ImGuiButtonFlags_AlignTextBaseLine);
     g.Style.FramePadding.y = backup_padding_y;
@@ -774,7 +774,7 @@ bool ImGui::ArrowButtonEx(*const char str_id, ImGuiDir dir, ImVec2 size, ImGuiBu
 
     const ImGuiID id = window.GetID(str_id);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
-    const c_float default_size = GetFrameHeight();
+    let default_size: c_float =  GetFrameHeight();
     ItemSize(size, (size.y >= default_size) ? g.Style.FramePadding.y : -1f32);
     if (!ItemAdd(bb, id))
         return false;
@@ -798,7 +798,7 @@ bool ImGui::ArrowButtonEx(*const char str_id, ImGuiDir dir, ImVec2 size, ImGuiBu
 
 bool ImGui::ArrowButton(*const char str_id, ImGuiDir dir)
 {
-    c_float sz = GetFrameHeight();
+    let sz: c_float =  GetFrameHeight();
     return ArrowButtonEx(str_id, dir, ImVec2(sz, sz), ImGuiButtonFlags_None);
 }
 
@@ -811,8 +811,8 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
     // Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
     const ImRect bb(pos, pos + ImVec2(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.00f32);
-    ImRect bb_interact = bb;
-    const c_float area_to_visible_ratio = window.OuterRectClipped.GetArea() / bb.GetArea();
+    let bb_interact: ImRect =  bb;
+    let area_to_visible_ratio: c_float =  window.OuterRectClipped.GetArea() / bb.GetArea();
     if (area_to_visible_ratio < 1.5f32)
         bb_interact.Expand(ImFloor(bb_interact.GetSize() * -0.250f32));
 
@@ -832,7 +832,7 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
     if (hovered)
         window.DrawList.AddCircleFilled(center, ImMax(2.0f32, g.FontSize * 0.5f32 + 1f32), col, 12);
 
-    c_float cross_extent = g.FontSize * 0.5f32 * 0.7071f - 1f32;
+    let cross_extent: c_float =  g.FontSize * 0.5f32 * 0.7071f - 1f32;
     u32 cross_col = GetColorU32(ImGuiCol_Text);
     center -= ImVec2(0.5f32, 0.5f32);
     window.DrawList.AddLine(center + ImVec2(+cross_extent, +cross_extent), center + ImVec2(-cross_extent, -cross_extent), cross_col, 1f32);
@@ -879,10 +879,10 @@ ImGuiID ImGui::GetWindowScrollbarID(*mut ImGuiWindow window, ImGuiAxis axis)
 // Return scrollbar rectangle, must only be called for corresponding axis if window.ScrollbarX/Y is set.
 ImRect ImGui::GetWindowScrollbarRect(*mut ImGuiWindow window, ImGuiAxis axis)
 {
-    const ImRect outer_rect = window.Rect();
-    const ImRect inner_rect = window.InnerRect;
-    const c_float border_size = window.WindowBorderSize;
-    const c_float scrollbar_size = window.ScrollbarSizes[axis ^ 1]; // (ScrollbarSizes.x = width of Y scrollbar; ScrollbarSizes.y = height of X scrollbar)
+    const let outer_rect: ImRect =  window.Rect();
+    const let inner_rect: ImRect =  window.InnerRect;
+    let border_size: c_float =  window.WindowBorderSize;
+    let scrollbar_size: c_float =  window.ScrollbarSizes[axis ^ 1]; // (ScrollbarSizes.x = width of Y scrollbar; ScrollbarSizes.y = height of X scrollbar)
     // IM_ASSERT(scrollbar_size > 0f32);
     if (axis == ImGuiAxis_X)
         return ImRect(inner_rect.Min.x, ImMax(outer_rect.Min.y, outer_rect.Max.y - border_size - scrollbar_size), inner_rect.Max.x, outer_rect.Max.y);
@@ -897,7 +897,7 @@ c_void ImGui::Scrollbar(ImGuiAxis axis)
     const ImGuiID id = GetWindowScrollbarID(window, axis);
 
     // Calculate scrollbar bounding box
-    ImRect bb = GetWindowScrollbarRect(window, axis);
+    let bb: ImRect =  GetWindowScrollbarRect(window, axis);
     ImDrawFlags rounding_corners = ImDrawFlags_RoundCornersNone;
     if (axis == ImGuiAxis_X)
     {
@@ -912,8 +912,8 @@ c_void ImGui::Scrollbar(ImGuiAxis axis)
         if (!window.ScrollbarX)
             rounding_corners |= ImDrawFlags_RoundCornersBottomRight;
     }
-    c_float size_avail = window.InnerRect.Max[axis] - window.InnerRect.Min[axis];
-    c_float size_contents = window.ContentSize[axis] + window.WindowPadding[axis] * 2.0f32;
+    let size_avail: c_float =  window.InnerRect.Max[axis] - window.InnerRect.Min[axis];
+    let size_contents: c_float =  window.ContentSize[axis] + window.WindowPadding[axis] * 2.0f32;
     ImS64 scroll = (ImS64)window.Scroll[axis];
     ScrollbarEx(bb, id, axis, &scroll, (ImS64)size_avail, (ImS64)size_contents, rounding_corners);
     window.Scroll[axis] = scroll;
@@ -934,13 +934,13 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, *mut
 
     KeepAliveID(id);
 
-    const c_float bb_frame_width = bb_frame.GetWidth();
-    const c_float bb_frame_height = bb_frame.GetHeight();
+    let bb_frame_width: c_float =  bb_frame.GetWidth();
+    let bb_frame_height: c_float =  bb_frame.GetHeight();
     if (bb_frame_width <= 0f32 || bb_frame_height <= 0f32)
         return false;
 
     // When we are too small, start hiding and disabling the grab (this reduce visual noise on very small window and facilitate using the window resize grab)
-    c_float alpha = 1f32;
+    let alpha: c_float =  1f32;
     if ((axis == ImGuiAxis_Y) && bb_frame_height < g.FontSize + g.Style.FramePadding.y * 2.00f32)
         alpha = ImSaturate((bb_frame_height - g.FontSize) / (g.Style.FramePadding.y * 2.00f32));
     if (alpha <= 0f32)
@@ -949,18 +949,18 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, *mut
     const ImGuiStyle& style = g.Style;
     let allow_interaction: bool = (alpha >= 1f32);
 
-    ImRect bb = bb_frame;
+    let bb: ImRect =  bb_frame;
     bb.Expand(ImVec2(-ImClamp(IM_FLOOR((bb_frame_width - 2.00f32) * 0.5f32), 0f32, 3.00f32), -ImClamp(IM_FLOOR((bb_frame_height - 2.00f32) * 0.5f32), 0f32, 3.00f32)));
 
     // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
-    const c_float scrollbar_size_v = (axis == ImGuiAxis_X) ? bb.GetWidth() : bb.GetHeight();
+    let scrollbar_size_v: c_float =  (axis == ImGuiAxis_X) ? bb.GetWidth() : bb.GetHeight();
 
     // Calculate the height of our grabbable box. It generally represent the amount visible (vs the total scrollable amount)
     // But we maintain a minimum size in pixel to allow for the user to still aim inside.
     // IM_ASSERT(ImMax(size_contents_v, size_avail_v) > 0f32); // Adding this assert to check if the ImMax(XXX,1f32) is still needed. PLEASE CONTACT ME if this triggers.
     const ImS64 win_size_v = ImMax(ImMax(size_contents_v, size_avail_v), (ImS64)1);
-    const c_float grab_h_pixels = ImClamp(scrollbar_size_v * (size_avail_v / win_size_v), style.GrabMinSize, scrollbar_size_v);
-    const c_float grab_h_norm = grab_h_pixels / scrollbar_size_v;
+    let grab_h_pixels: c_float =  ImClamp(scrollbar_size_v * (size_avail_v / win_size_v), style.GrabMinSize, scrollbar_size_v);
+    let grab_h_norm: c_float =  grab_h_pixels / scrollbar_size_v;
 
     // Handle input right away. None of the code of Begin() is relying on scrolling position before calling Scrollbar().
     let mut held: bool =  false;
@@ -968,15 +968,15 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, *mut
     ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_NoNavFocus);
 
     const ImS64 scroll_max = ImMax((ImS64)1, size_contents_v - size_avail_v);
-    c_float scroll_ratio = ImSaturate(*p_scroll_v / scroll_max);
-    c_float grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v; // Grab position in normalized space
+    let scroll_ratio: c_float =  ImSaturate(*p_scroll_v / scroll_max);
+    let grab_v_norm: c_float =  scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v; // Grab position in normalized space
     if (held && allow_interaction && grab_h_norm < 1f32)
     {
-        const c_float scrollbar_pos_v = bb.Min[axis];
-        const c_float mouse_pos_v = g.IO.MousePos[axis];
+        let scrollbar_pos_v: c_float =  bb.Min[axis];
+        let mouse_pos_v: c_float =  g.IO.MousePos[axis];
 
         // Click position in scrollbar normalized space (0f32->1f32)
-        const c_float clicked_v_norm = ImSaturate((mouse_pos_v - scrollbar_pos_v) / scrollbar_size_v);
+        let clicked_v_norm: c_float =  ImSaturate((mouse_pos_v - scrollbar_pos_v) / scrollbar_size_v);
         SetHoveredID(id);
 
         let mut seek_absolute: bool =  false;
@@ -992,7 +992,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, *mut
 
         // Apply scroll (p_scroll_v will generally point on one member of window.Scroll)
         // It is ok to modify Scroll here because we are being called in Begin() after the calculation of ContentSize and before setting up our starting position
-        const c_float scroll_v_norm = ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm * 0.5f32) / (1f32 - grab_h_norm));
+        let scroll_v_norm: c_float =  ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm * 0.5f32) / (1f32 - grab_h_norm));
         *p_scroll_v = (ImS64)(scroll_v_norm * scroll_max);
 
         // Update values for rendering
@@ -1051,7 +1051,7 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     if (window.SkipItems)
         return false;
 
-    const ImVec2 padding = g.Style.FramePadding;
+    let padding: ImVec2 = g.Style.FramePadding;
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size + padding * 2.00f32);
     ItemSize(bb);
     if (!ItemAdd(bb, id))
@@ -1116,10 +1116,10 @@ bool ImGui::Checkbox(*const char label, *mut bool v)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window.GetID(label);
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
-    const c_float square_sz = GetFrameHeight();
-    const ImVec2 pos = window.DC.CursorPos;
+    let square_sz: c_float =  GetFrameHeight();
+    let pos: ImVec2 = window.DC.CursorPos;
     const ImRect total_bb(pos, pos + ImVec2(square_sz + (label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32), label_size.y + style.FramePadding.y * 2.00f32));
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id))
@@ -1150,7 +1150,7 @@ bool ImGui::Checkbox(*const char label, *mut bool v)
     }
     else if (*v)
     {
-        const c_float pad = ImMax(1f32, IM_FLOOR(square_sz / 6.00f32));
+        let pad: c_float =  ImMax(1f32, IM_FLOOR(square_sz / 6.00f32));
         RenderCheckMark(window.DrawList, check_bb.Min + ImVec2(pad, pad), check_col, square_sz - pad * 2.00f32);
     }
 
@@ -1222,10 +1222,10 @@ bool ImGui::RadioButton(*const char label, bool active)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window.GetID(label);
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
-    const c_float square_sz = GetFrameHeight();
-    const ImVec2 pos = window.DC.CursorPos;
+    let square_sz: c_float =  GetFrameHeight();
+    let pos: ImVec2 = window.DC.CursorPos;
     const ImRect check_bb(pos, pos + ImVec2(square_sz, square_sz));
     const ImRect total_bb(pos, pos + ImVec2(square_sz + (label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32), label_size.y + style.FramePadding.y * 2.00f32));
     ItemSize(total_bb, style.FramePadding.y);
@@ -1235,7 +1235,7 @@ bool ImGui::RadioButton(*const char label, bool active)
     let center: ImVec2 = check_bb.GetCenter();
     center.x = IM_ROUND(center.x);
     center.y = IM_ROUND(center.y);
-    const c_float radius = (square_sz - 1f32) * 0.5f32;
+    let radius: c_float =  (square_sz - 1f32) * 0.5f32;
 
     bool hovered, held;
     let mut pressed: bool =  ButtonBehavior(total_bb, id, &hovered, &held);
@@ -1246,7 +1246,7 @@ bool ImGui::RadioButton(*const char label, bool active)
     window.DrawList.AddCircleFilled(center, radius, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), 16);
     if (active)
     {
-        const c_float pad = ImMax(1f32, IM_FLOOR(square_sz / 6.00f32));
+        let pad: c_float =  ImMax(1f32, IM_FLOOR(square_sz / 6.00f32));
         window.DrawList.AddCircleFilled(center, radius - pad, GetColorU32(ImGuiCol_CheckMark), 16);
     }
 
@@ -1296,7 +1296,7 @@ c_void ImGui::ProgressBar(c_float fraction, const ImVec2& size_arg, *const char 
     fraction = ImSaturate(fraction);
     RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
     bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
-    const ImVec2 fill_br = ImVec2(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y);
+    let fill_br: ImVec2 = ImVec2(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y);
     RenderRectFilledRangeH(window.DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0f32, fraction, style.FrameRounding);
 
     // Default displaying the fraction as percentage string, but user can override it
@@ -1320,7 +1320,7 @@ c_void ImGui::Bullet()
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const c_float line_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), g.FontSize);
+    let line_height: c_float =  ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), g.FontSize);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + ImVec2(g.FontSize, line_height));
     ItemSize(bb);
     if (!ItemAdd(bb, 0))
@@ -1405,13 +1405,13 @@ c_void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(ImIsPowerOfTwo(flags & (ImGuiSeparatorFlags_Horizontal | ImGuiSeparatorFlags_Vertical)));   // Check that only 1 option is selected
 
-    c_float thickness_draw = 1f32;
-    c_float thickness_layout = 0f32;
+    let thickness_draw: c_float =  1f32;
+    let thickness_layout: c_float =  0f32;
     if (flags & ImGuiSeparatorFlags_Vertical)
     {
         // Vertical separator, for menu bars (use current line height). Not exposed because it is misleading and it doesn't have an effect on regular layout.
-        c_float y1 = window.DC.CursorPos.y;
-        c_float y2 = window.DC.CursorPos.y + window.DC.CurrLineSize.y;
+        let y1: c_float =  window.DC.CursorPos.y;
+        let y2: c_float =  window.DC.CursorPos.y + window.DC.CurrLineSize.y;
         const ImRect bb(ImVec2(window.DC.CursorPos.x, y1), ImVec2(window.DC.CursorPos.x + thickness_draw, y2));
         ItemSize(ImVec2(thickness_layout, 0f32));
         if (!ItemAdd(bb, 0))
@@ -1425,8 +1425,8 @@ c_void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
     else if (flags & ImGuiSeparatorFlags_Horizontal)
     {
         // Horizontal Separator
-        c_float x1 = window.Pos.x;
-        c_float x2 = window.Pos.x + window.Size.x;
+        let x1: c_float =  window.Pos.x;
+        let x2: c_float =  window.Pos.x + window.Size.x;
 
         // FIXME-WORKRECT: old hack (#205) until we decide of consistent behavior with WorkRect/Indent and Separator
         if (g.GroupStack.Size > 0 && g.GroupStack.back().WindowID == window.ID)
@@ -1492,7 +1492,7 @@ bool ImGui::SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, *mut 
         return false;
 
     bool hovered, held;
-    ImRect bb_interact = bb;
+    let bb_interact: ImRect =  bb;
     bb_interact.Expand(axis == ImGuiAxis_Y ? ImVec2(0f32, hover_extend) : ImVec2(hover_extend, 0f32));
     ButtonBehavior(bb_interact, id, &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_AllowItemOverlap);
     if (hovered)
@@ -1503,15 +1503,15 @@ bool ImGui::SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, *mut 
     if (held || (hovered && g.HoveredIdPreviousFrame == id && g.HoveredIdTimer >= hover_visibility_delay))
         SetMouseCursor(axis == ImGuiAxis_Y ? ImGuiMouseCursor_ResizeNS : ImGuiMouseCursor_ResizeEW);
 
-    ImRect bb_render = bb;
+    let bb_render: ImRect =  bb;
     if (held)
     {
         let mouse_delta_2d: ImVec2 = g.IO.MousePos - g.ActiveIdClickOffset - bb_interact.Min;
-        c_float mouse_delta = (axis == ImGuiAxis_Y) ? mouse_delta_2d.y : mouse_delta_2d.x;
+        let mouse_delta: c_float =  (axis == ImGuiAxis_Y) ? mouse_delta_2d.y : mouse_delta_2d.x;
 
         // Minimum pane size
-        c_float size_1_maximum_delta = ImMax(0f32, *size1 - min_size1);
-        c_float size_2_maximum_delta = ImMax(0f32, *size2 - min_size2);
+        let size_1_maximum_delta: c_float =  ImMax(0f32, *size1 - min_size1);
+        let size_2_maximum_delta: c_float =  ImMax(0f32, *size2 - min_size2);
         if (mouse_delta < -size_1_maximum_delta)
             mouse_delta = -size_1_maximum_delta;
         if (mouse_delta > size_2_maximum_delta)
@@ -1544,7 +1544,7 @@ static c_int IMGUI_CDECL ShrinkWidthItemComparer(*const c_void lhs, *const c_voi
 {
     let a: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)lhs;
     let b: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)rhs;
-    if (c_int d = (b.Width - a.Width))
+    if (let d: c_int = (b.Width - a.Width))
         return d;
     return (b.Index - a.Index);
 }
@@ -1560,16 +1560,16 @@ c_void ImGui::ShrinkWidths(*mut ImGuiShrinkWidthItem items, c_int count, c_float
         return;
     }
     ImQsort(items, count, sizeof(ImGuiShrinkWidthItem), ShrinkWidthItemComparer);
-    c_int count_same_width = 1;
+    let count_same_width: c_int = 1;
     while (width_excess > 0f32 && count_same_width < count)
     {
         while (count_same_width < count && items[0].Width <= items[count_same_width].Width)
             count_same_width+= 1;
-        c_float max_width_to_remove_per_item = (count_same_width < count && items[count_same_width].Width >= 0f32) ? (items[0].Width - items[count_same_width].Width) : (items[0].Width - 1f32);
+        let max_width_to_remove_per_item: c_float =  (count_same_width < count && items[count_same_width].Width >= 0f32) ? (items[0].Width - items[count_same_width].Width) : (items[0].Width - 1f32);
         if (max_width_to_remove_per_item <= 0f32)
             break;
-        c_float width_to_remove_per_item = ImMin(width_excess / count_same_width, max_width_to_remove_per_item);
-        for (c_int item_n = 0; item_n < count_same_width; item_n++)
+        let width_to_remove_per_item: c_float =  ImMin(width_excess / count_same_width, max_width_to_remove_per_item);
+        for (let item_n: c_int = 0; item_n < count_same_width; item_n++)
             items[item_n].Width -= width_to_remove_per_item;
         width_excess -= width_to_remove_per_item * count_same_width;
     }
@@ -1577,16 +1577,16 @@ c_void ImGui::ShrinkWidths(*mut ImGuiShrinkWidthItem items, c_int count, c_float
     // Round width and redistribute remainder
     // Ensure that e.g. the right-most tab of a shrunk tab-bar always reaches exactly at the same distance from the right-most edge of the tab bar separator.
     width_excess = 0f32;
-    for (c_int n = 0; n < count; n++)
+    for (let n: c_int = 0; n < count; n++)
     {
-        c_float width_rounded = ImFloor(items[n].Width);
+        let width_rounded: c_float =  ImFloor(items[n].Width);
         width_excess += items[n].Width - width_rounded;
         items[n].Width = width_rounded;
     }
     while (width_excess > 0f32)
-        for (c_int n = 0; n < count && width_excess > 0f32; n++)
+        for (let n: c_int = 0; n < count && width_excess > 0f32; n++)
         {
-            c_float width_to_add = ImMin(items[n].InitialWidth - items[n].Width, 1f32);
+            let width_to_add: c_float =  ImMin(items[n].InitialWidth - items[n].Width, 1f32);
             items[n].Width += width_to_add;
             width_excess -= width_to_add;
         }
@@ -1626,9 +1626,9 @@ bool ImGui::BeginCombo(*const char label, *const char preview_value, ImGuiComboF
     const ImGuiID id = window.GetID(label);
     // IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)); // Can't use both flags together
 
-    const c_float arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0f32 : GetFrameHeight();
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
-    const c_float w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
+    let arrow_size: c_float =  (flags & ImGuiComboFlags_NoArrowButton) ? 0f32 : GetFrameHeight();
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
+    let w: c_float =  (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.00f32));
     const ImRect total_bb(bb.Min, bb.Max + ImVec2(label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32, 0f32));
     ItemSize(total_bb, style.FramePadding.y);
@@ -1648,7 +1648,7 @@ bool ImGui::BeginCombo(*const char label, *const char preview_value, ImGuiComboF
 
     // Render shape
     const u32 frame_col = GetColorU32(hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
-    const c_float value_x2 = ImMax(bb.Min.x, bb.Max.x - arrow_size);
+    let value_x2: c_float =  ImMax(bb.Min.x, bb.Max.x - arrow_size);
     RenderNavHighlight(bb, id);
     if (!(flags & ImGuiComboFlags_NoPreview))
         window.DrawList.AddRectFilled(bb.Min, ImVec2(value_x2, bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
@@ -1697,7 +1697,7 @@ bool ImGui::BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags 
     }
 
     // Set popup size
-    c_float w = bb.GetWidth();
+    let w: c_float =  bb.GetWidth();
     if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint)
     {
         g.NextWindowData.SizeConstraintRect.Min.x = ImMax(g.NextWindowData.SizeConstraintRect.Min.x, w);
@@ -1707,7 +1707,7 @@ bool ImGui::BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags 
         if ((flags & ImGuiComboFlags_HeightMask_) == 0)
             flags |= ImGuiComboFlags_HeightRegular;
         // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiComboFlags_HeightMask_)); // Only one
-        c_int popup_max_height_in_items = -1;
+        let popup_max_height_in_items: c_int = -1;
         if (flags & ImGuiComboFlags_HeightRegular)     popup_max_height_in_items = 8;
         else if (flags & ImGuiComboFlags_HeightSmall)  popup_max_height_in_items = 4;
         else if (flags & ImGuiComboFlags_HeightLarge)  popup_max_height_in_items = 20;
@@ -1727,7 +1727,7 @@ bool ImGui::BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags 
             // Always override 'AutoPosLastDirection' to not leave a chance for a past value to affect us.
             let size_expected: ImVec2 = CalcWindowNextAutoFitSize(popup_window);
             popup_window.AutoPosLastDirection = (flags & ImGuiComboFlags_PopupAlignLeft) ? ImGuiDir_Left : ImGuiDir_Down; // Left = "Below, Toward Left", Down = "Below, Toward Right (default)"
-            ImRect r_outer = GetPopupAllowedExtentRect(popup_window);
+            let r_outer: ImRect =  GetPopupAllowedExtentRect(popup_window);
             let pos: ImVec2 = FindBestWindowPosForPopupEx(bb.GetBL(), size_expected, &popup_window.AutoPosLastDirection, r_outer, bb, ImGuiPopupPositionPolicy_ComboBox);
             SetNextWindowPos(pos);
         }
@@ -1761,7 +1761,7 @@ bool ImGui::BeginComboPreview()
 
     if (window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect)) // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
         return false;
-    // IM_ASSERT(g.LastItemData.Rect.Min.x == preview_data->PreviewRect.Min.x && g.LastItemData.Rect.Min.y == preview_data->PreviewRect.Min.y); // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
+    // IM_ASSERT(g.LastItemData.Rect.Min.x == preview_Data.PreviewRect.Min.x && g.LastItemData.Rect.Min.y == preview_Data.PreviewRect.Min.y); // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
     if (!window.ClipRect.Contains(preview_data.PreviewRect)) // Narrower test (optional)
         return false;
 
@@ -1775,7 +1775,7 @@ bool ImGui::BeginComboPreview()
     window.DC.CursorMaxPos = window.DC.CursorPos;
     window.DC.LayoutType = ImGuiLayoutType_Horizontal;
     window.DC.IsSameLine = false;
-    PushClipRect(preview_data->PreviewRect.Min, preview_data->PreviewRect.Max, true);
+    PushClipRect(preview_Data.PreviewRect.Min, preview_Data.PreviewRect.Max, true);
 
     return true;
 }
@@ -1788,20 +1788,20 @@ c_void ImGui::EndComboPreview()
 
     // FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
     *mut ImDrawList draw_list = window.DrawList;
-    if (window.DC.CursorMaxPos.x < preview_data->PreviewRect.Max.x && window.DC.CursorMaxPos.y < preview_data->PreviewRect.Max.y)
+    if (window.DC.CursorMaxPos.x < preview_Data.PreviewRect.Max.x && window.DC.CursorMaxPos.y < preview_Data.PreviewRect.Max.y)
         if (draw_list->CmdBuffer.Size > 1) // Unlikely case that the PushClipRect() didn't create a command
         {
             draw_list->_CmdHeader.ClipRect = draw_list->CmdBuffer[draw_list->CmdBuffer.Size - 1].ClipRect = draw_list->CmdBuffer[draw_list->CmdBuffer.Size - 2].ClipRect;
             draw_list->_TryMergeDrawCmds();
         }
     PopClipRect();
-    window.DC.CursorPos = preview_data->BackupCursorPos;
-    window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, preview_data->BackupCursorMaxPos);
-    window.DC.CursorPosPrevLine = preview_data->BackupCursorPosPrevLine;
-    window.DC.PrevLineTextBaseOffset = preview_data->BackupPrevLineTextBaseOffset;
-    window.DC.LayoutType = preview_data->BackupLayout;
+    window.DC.CursorPos = preview_Data.BackupCursorPos;
+    window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, preview_Data.BackupCursorMaxPos);
+    window.DC.CursorPosPrevLine = preview_Data.BackupCursorPosPrevLine;
+    window.DC.PrevLineTextBaseOffset = preview_Data.BackupPrevLineTextBaseOffset;
+    window.DC.LayoutType = preview_Data.BackupLayout;
     window.DC.IsSameLine = false;
-    preview_data->PreviewRect = ImRect();
+    preview_Data.PreviewRect = ImRect();
 }
 
 // Getter for the old Combo() API: const char*[]
@@ -1818,7 +1818,7 @@ static bool Items_SingleStringGetter(*mut c_void data, c_int idx, *const *mut ch
 {
     // FIXME-OPT: we could pre-compute the indices to fasten this. But only 1 active combo means the waste is limited.
     let mut  items_separated_by_zeros: *const c_char =data;
-    c_int items_count = 0;
+    let items_count: c_int = 0;
     let mut  p: *const c_char = items_separated_by_zeros;
     while (*p)
     {
@@ -1854,7 +1854,7 @@ bool ImGui::Combo(*const char label, *mut c_int current_item, bool (*items_gette
     // Display items
     // FIXME-OPT: Use clipper (but we need to disable it on the appearing frame to make sure our call to SetItemDefaultFocus() is processed)
     let mut value_changed: bool =  false;
-    for (c_int i = 0; i < items_count; i++)
+    for (let i: c_int = 0; i < items_count; i++)
     {
         PushID(i);
         let item_selected: bool = (i == *current_item);
@@ -1889,7 +1889,7 @@ bool ImGui::Combo(*const char label, *mut c_int current_item, *const char const 
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
 bool ImGui::Combo(*const char label, *mut c_int current_item, *const char items_separated_by_zeros, c_int height_in_items)
 {
-    c_int items_count = 0;
+    let items_count: c_int = 0;
     let mut  p: *const c_char = items_separated_by_zeros;       // FIXME-OPT: Avoid computing this, or at least only when combo is open
     while (*p)
     {
@@ -2060,7 +2060,7 @@ bool ImGui::DataTypeApplyFromText(*const char buf, ImGuiDataType data_type, *mut
         format = ImParseFormatSanitizeForScanning(format, format_sanitized, IM_ARRAYSIZE(format_sanitized));
 
     // Small types need a 32-bit buffer to receive the result from scanf()
-    c_int v32 = 0;
+    let v32: c_int = 0;
     if (sscanf(buf, format, type_info->Size >= 4 ? p_data : &v32) < 1)
         return false;
     if (type_info->Size < 4)
@@ -2204,7 +2204,7 @@ bool ImGui::DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, c_float v_speed,
         v_speed = ((v_max - v_min) * g.DragSpeedDefaultRatio);
 
     // Inputs accumulates into g.DragCurrentAccum, which is flushed into the current value as soon as it makes a difference with our precision settings
-    c_float adjust_delta = 0f32;
+    let adjust_delta: c_float =  0f32;
     if (g.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid() && IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * DRAG_MOUSE_THRESHOLD_FACTOR))
     {
         adjust_delta = g.IO.MouseDelta[axis];
@@ -2218,7 +2218,7 @@ bool ImGui::DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, c_float v_speed,
         let decimal_precision: c_int = is_floating_point ? ImParseFormatPrecision(format, 3) : 0;
         let tweak_slow: bool = IsKeyDown((g.NavInputSource == ImGuiInputSource_Gamepad) ? ImGuiKey_NavGamepadTweakSlow : ImGuiKey_NavKeyboardTweakSlow);
         let tweak_fast: bool = IsKeyDown((g.NavInputSource == ImGuiInputSource_Gamepad) ? ImGuiKey_NavGamepadTweakFast : ImGuiKey_NavKeyboardTweakFast);
-        const c_float tweak_factor = tweak_slow ? 1f32 / 1f32 : tweak_fast ? 10f32 : 1f32;
+        let tweak_factor: c_float =  tweak_slow ? 1f32 / 1f32 : tweak_fast ? 10f32 : 1f32;
         adjust_delta = GetNavTweakPressedAmount(axis) * tweak_factor;
         v_speed = ImMax(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision));
     }
@@ -2253,8 +2253,8 @@ bool ImGui::DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, c_float v_speed,
     TYPE v_cur = *v;
     FLOATTYPE v_old_ref_for_accum_remainder = (FLOATTYPE)0f32;
 
-    c_float logarithmic_zero_epsilon = 0f32; // Only valid when is_logarithmic is true
-    const c_float zero_deadzone_halfsize = 0f32; // Drag widgets have no deadzone (as it doesn't make sense)
+    let logarithmic_zero_epsilon: c_float =  0f32; // Only valid when is_logarithmic is true
+    let zero_deadzone_halfsize: c_float =  0f32; // Drag widgets have no deadzone (as it doesn't make sense)
     if (is_logarithmic)
     {
         // When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
@@ -2262,8 +2262,8 @@ bool ImGui::DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, c_float v_speed,
         logarithmic_zero_epsilon = ImPow(0.1f, decimal_precision);
 
         // Convert to parametric space, apply delta, convert back
-        c_float v_old_parametric = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-        c_float v_new_parametric = v_old_parametric + g.DragCurrentAccum;
+        let v_old_parametric: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        let v_new_parametric: c_float =  v_old_parametric + g.DragCurrentAccum;
         v_cur = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_new_parametric, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         v_old_ref_for_accum_remainder = v_old_parametric;
     }
@@ -2281,7 +2281,7 @@ bool ImGui::DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, c_float v_speed,
     if (is_logarithmic)
     {
         // Convert to parametric space, apply delta, convert back
-        c_float v_new_parametric = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        let v_new_parametric: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         g.DragCurrentAccum -= (v_new_parametric - v_old_ref_for_accum_remainder);
     }
     else
@@ -2357,9 +2357,9 @@ bool ImGui::DragScalar(*const char label, ImGuiDataType data_type, *mut c_void p
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window.GetID(label);
-    const c_float w = CalcItemWidth();
+    let w: c_float =  CalcItemWidth();
 
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.00f32));
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32, 0f32));
 
@@ -2448,7 +2448,7 @@ bool ImGui::DragScalarN(*const char label, ImGuiDataType data_type, *mut c_void 
     PushID(label);
     PushMultiItemsWidths(components, CalcItemWidth());
     size_t type_size = GDataTypeInfo[data_type].Size;
-    for (c_int i = 0; i < components; i++)
+    for (let i: c_int = 0; i < components; i++)
     {
         PushID(i);
         if (i > 0)
@@ -2503,15 +2503,15 @@ bool ImGui::DragFloatRange2(*const char label, *mut c_float v_current_min, *mut 
     BeginGroup();
     PushMultiItemsWidths(2, CalcItemWidth());
 
-    c_float min_min = (v_min >= v_max) ? -f32::MAX : v_min;
-    c_float min_max = (v_min >= v_max) ? *v_current_max : ImMin(v_max, *v_current_max);
+    let min_min: c_float =  (v_min >= v_max) ? -f32::MAX : v_min;
+    let min_max: c_float =  (v_min >= v_max) ? *v_current_max : ImMin(v_max, *v_current_max);
     ImGuiSliderFlags min_flags = flags | ((min_min == min_max) ? ImGuiSliderFlags_ReadOnly : 0);
     let mut value_changed: bool =  DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &min_min, &min_max, format, min_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
-    c_float max_min = (v_min >= v_max) ? *v_current_min : ImMax(v_min, *v_current_min);
-    c_float max_max = (v_min >= v_max) ? f32::MAX : v_max;
+    let max_min: c_float =  (v_min >= v_max) ? *v_current_min : ImMax(v_min, *v_current_min);
+    let max_max: c_float =  (v_min >= v_max) ? f32::MAX : v_max;
     ImGuiSliderFlags max_flags = flags | ((max_min == max_max) ? ImGuiSliderFlags_ReadOnly : 0);
     value_changed |= DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &max_min, &max_max, format_max ? format_max : format, max_flags);
     PopItemWidth();
@@ -2557,15 +2557,15 @@ bool ImGui::DragIntRange2(*const char label, *mut c_int v_current_min, *mut c_in
     BeginGroup();
     PushMultiItemsWidths(2, CalcItemWidth());
 
-    c_int min_min = (v_min >= v_max) ? INT_MIN : v_min;
-    c_int min_max = (v_min >= v_max) ? *v_current_max : ImMin(v_max, *v_current_max);
+    let min_min: c_int = (v_min >= v_max) ? INT_MIN : v_min;
+    let min_max: c_int = (v_min >= v_max) ? *v_current_max : ImMin(v_max, *v_current_max);
     ImGuiSliderFlags min_flags = flags | ((min_min == min_max) ? ImGuiSliderFlags_ReadOnly : 0);
     let mut value_changed: bool =  DragInt("##min", v_current_min, v_speed, min_min, min_max, format, min_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
-    c_int max_min = (v_min >= v_max) ? *v_current_min : ImMax(v_min, *v_current_min);
-    c_int max_max = (v_min >= v_max) ? INT_MAX : v_max;
+    let max_min: c_int = (v_min >= v_max) ? *v_current_min : ImMax(v_min, *v_current_min);
+    let max_max: c_int = (v_min >= v_max) ? INT_MAX : v_max;
     ImGuiSliderFlags max_flags = flags | ((max_min == max_max) ? ImGuiSliderFlags_ReadOnly : 0);
     value_changed |= DragInt("##max", v_current_max, v_speed, max_min, max_max, format_max ? format_max : format, max_flags);
     PopItemWidth();
@@ -2634,9 +2634,9 @@ c_float ImGui::ScaleRatioFromValueT(ImGuiDataType data_type, TYPE v, TYPE v_min,
             result = 1f32; // Workaround for values that are in-range but above our fudge
         else if ((v_min * v_max) < 0f32) // Range crosses zero, so split into two portions
         {
-            c_float zero_point_center = (-v_min) / (v_max - v_min); // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
-            c_float zero_point_snap_L = zero_point_center - zero_deadzone_halfsize;
-            c_float zero_point_snap_R = zero_point_center + zero_deadzone_halfsize;
+            let zero_point_center: c_float =  (-v_min) / (v_max - v_min); // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
+            let zero_point_snap_L: c_float =  zero_point_center - zero_deadzone_halfsize;
+            let zero_point_snap_R: c_float =  zero_point_center + zero_deadzone_halfsize;
             if (v == 0f32)
                 result = zero_point_center; // Special case for exactly zero
             else if (v < 0f32)
@@ -2684,13 +2684,13 @@ TYPE ImGui::ScaleValueFromRatioT(ImGuiDataType data_type, c_float t, TYPE v_min,
         if ((v_max == 0f32) && (v_min < 0f32))
             v_max_fudged = -logarithmic_zero_epsilon;
 
-        c_float t_with_flip = flipped ? (1f32 - t) : t; // t, but flipped if necessary to account for us flipping the range
+        let t_with_flip: c_float =  flipped ? (1f32 - t) : t; // t, but flipped if necessary to account for us flipping the range
 
         if ((v_min * v_max) < 0f32) // Range crosses zero, so we have to do this in two parts
         {
-            c_float zero_point_center = (-ImMin(v_min, v_max)) / ImAbs(v_max - v_min); // The zero point in parametric space
-            c_float zero_point_snap_L = zero_point_center - zero_deadzone_halfsize;
-            c_float zero_point_snap_R = zero_point_center + zero_deadzone_halfsize;
+            let zero_point_center: c_float =  (-ImMin(v_min, v_max)) / ImAbs(v_max - v_min); // The zero point in parametric space
+            let zero_point_snap_L: c_float =  zero_point_center - zero_deadzone_halfsize;
+            let zero_point_snap_R: c_float =  zero_point_center + zero_deadzone_halfsize;
             if (t_with_flip >= zero_point_snap_L && t_with_flip <= zero_point_snap_R)
                 result = (TYPE)0f32; // Special case to make getting exactly zero possible (the epsilon prevents it otherwise)
             else if (t_with_flip < zero_point_center)
@@ -2738,18 +2738,18 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
     const SIGNEDTYPE v_range = (v_min < v_max ? v_max - v_min : v_min - v_max);
 
     // Calculate bounds
-    const c_float grab_padding = 2.0f32; // FIXME: Should be part of style.
-    const c_float slider_sz = (bb.Max[axis] - bb.Min[axis]) - grab_padding * 2.0f32;
-    c_float grab_sz = style.GrabMinSize;
+    let grab_padding: c_float =  2.0f32; // FIXME: Should be part of style.
+    let slider_sz: c_float =  (bb.Max[axis] - bb.Min[axis]) - grab_padding * 2.0f32;
+    let grab_sz: c_float =  style.GrabMinSize;
     if (!is_floating_point && v_range >= 0)                                     // v_range < 0 may happen on integer overflows
         grab_sz = ImMax((slider_sz / (v_range + 1)), style.GrabMinSize); // For integer sliders: if possible have the grab size represent 1 unit
     grab_sz = ImMin(grab_sz, slider_sz);
-    const c_float slider_usable_sz = slider_sz - grab_sz;
-    const c_float slider_usable_pos_min = bb.Min[axis] + grab_padding + grab_sz * 0.5f32;
-    const c_float slider_usable_pos_max = bb.Max[axis] - grab_padding - grab_sz * 0.5f32;
+    let slider_usable_sz: c_float =  slider_sz - grab_sz;
+    let slider_usable_pos_min: c_float =  bb.Min[axis] + grab_padding + grab_sz * 0.5f32;
+    let slider_usable_pos_max: c_float =  bb.Max[axis] - grab_padding - grab_sz * 0.5f32;
 
-    c_float logarithmic_zero_epsilon = 0f32; // Only valid when is_logarithmic is true
-    c_float zero_deadzone_halfsize = 0f32; // Only valid when is_logarithmic is true
+    let logarithmic_zero_epsilon: c_float =  0f32; // Only valid when is_logarithmic is true
+    let zero_deadzone_halfsize: c_float =  0f32; // Only valid when is_logarithmic is true
     if (is_logarithmic)
     {
         // When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
@@ -2763,7 +2763,7 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
     if (g.ActiveId == id)
     {
         let mut set_new_value: bool =  false;
-        c_float clicked_t = 0f32;
+        let clicked_t: c_float =  0f32;
         if (g.ActiveIdSource == ImGuiInputSource_Mouse)
         {
             if (!g.IO.MouseDown[0])
@@ -2772,13 +2772,13 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
             }
             else
             {
-                const c_float mouse_abs_pos = g.IO.MousePos[axis];
+                let mouse_abs_pos: c_float =  g.IO.MousePos[axis];
                 if (g.ActiveIdIsJustActivated)
                 {
-                    c_float grab_t = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, *v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+                    let grab_t: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, *v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
                     if (axis == ImGuiAxis_Y)
                         grab_t = 1f32 - grab_t;
-                    const c_float grab_pos = ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t);
+                    let grab_pos: c_float =  ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t);
                     let clicked_around_grab: bool = (mouse_abs_pos >= grab_pos - grab_sz * 0.5f32 - 1f32) && (mouse_abs_pos <= grab_pos + grab_sz * 0.5f32 + 1f32); // No harm being extra generous here.
                     g.SliderGrabClickOffset = (clicked_around_grab && is_floating_point) ? mouse_abs_pos - grab_pos : 0f32;
                 }
@@ -2797,7 +2797,7 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
                 g.SliderCurrentAccumDirty = false;
             }
 
-            c_float input_delta = (axis == ImGuiAxis_X) ? GetNavTweakPressedAmount(axis) : -GetNavTweakPressedAmount(axis);
+            let input_delta: c_float =  (axis == ImGuiAxis_X) ? GetNavTweakPressedAmount(axis) : -GetNavTweakPressedAmount(axis);
             if (input_delta != 0f32)
             {
                 let tweak_slow: bool = IsKeyDown((g.NavInputSource == ImGuiInputSource_Gamepad) ? ImGuiKey_NavGamepadTweakSlow : ImGuiKey_NavKeyboardTweakSlow);
@@ -2823,7 +2823,7 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
                 g.SliderCurrentAccumDirty = true;
             }
 
-            c_float delta = g.SliderCurrentAccum;
+            let delta: c_float =  g.SliderCurrentAccum;
             if (g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated)
             {
                 ClearActiveID();
@@ -2840,14 +2840,14 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
                 else
                 {
                     set_new_value = true;
-                    c_float old_clicked_t = clicked_t;
+                    let old_clicked_t: c_float =  clicked_t;
                     clicked_t = ImSaturate(clicked_t + delta);
 
                     // Calculate what our "new" clicked_t will be, and thus how far we actually moved the slider, and subtract this from the accumulator
                     TYPE v_new = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
                     if (is_floating_point && !(flags & ImGuiSliderFlags_NoRoundToFormat))
                         v_new = RoundScalarWithFormatT<TYPE>(format, data_type, v_new);
-                    c_float new_clicked_t = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+                    let new_clicked_t: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
 
                     if (delta > 0)
                         g.SliderCurrentAccum -= ImMin(new_clicked_t - old_clicked_t, delta);
@@ -2883,10 +2883,10 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
     else
     {
         // Output grab position so it can be displayed by the caller
-        c_float grab_t = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, *v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        let grab_t: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, *v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         if (axis == ImGuiAxis_Y)
             grab_t = 1f32 - grab_t;
-        const c_float grab_pos = ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t);
+        let grab_pos: c_float =  ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t);
         if (axis == ImGuiAxis_X)
             *out_grab_bb = ImRect(grab_pos - grab_sz * 0.5f32, bb.Min.y + grab_padding, grab_pos + grab_sz * 0.5f32, bb.Max.y - grab_padding);
         else
@@ -2950,9 +2950,9 @@ bool ImGui::SliderScalar(*const char label, ImGuiDataType data_type, *mut c_void
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window.GetID(label);
-    const c_float w = CalcItemWidth();
+    let w: c_float =  CalcItemWidth();
 
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.00f32));
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32, 0f32));
 
@@ -3037,7 +3037,7 @@ bool ImGui::SliderScalarN(*const char label, ImGuiDataType data_type, *mut c_voi
     PushID(label);
     PushMultiItemsWidths(components, CalcItemWidth());
     size_t type_size = GDataTypeInfo[data_type].Size;
-    for (c_int i = 0; i < components; i++)
+    for (let i: c_int = 0; i < components; i++)
     {
         PushID(i);
         if (i > 0)
@@ -3084,7 +3084,7 @@ bool ImGui::SliderAngle(*const char label, *mut c_float v_rad, c_float v_degrees
 {
     if (format == NULL)
         format = "%.0f32 deg";
-    c_float v_deg = (*v_rad) * 360f32 / (2 * IM_PI);
+    let v_deg: c_float =  (*v_rad) * 360f32 / (2 * IM_PI);
     let mut value_changed: bool =  SliderFloat(label, &v_deg, v_degrees_min, v_degrees_max, format, flags);
     *v_rad = v_deg * (2 * IM_PI) / 360f32;
     return value_changed;
@@ -3120,7 +3120,7 @@ bool ImGui::VSliderScalar(*const char label, const ImVec2& size, ImGuiDataType d
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window.GetID(label);
 
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + size);
     const ImRect bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32, 0f32));
 
@@ -3291,7 +3291,7 @@ c_void ImParseFormatSanitizeForPrinting(*const char fmt_in, *mut char fmt_out, s
 template<typename TYPE>
 static *const char ImAtoi(*const char src, *mut TYPE output)
 {
-    c_int negative = 0;
+    let negative: c_int = 0;
     if (*src == '-') { negative = 1; src+= 1; }
     if (*src == '+') { src+= 1; }
     TYPE v = 0;
@@ -3311,7 +3311,7 @@ c_int ImParseFormatPrecision(*const char fmt, c_int default_precision)
     fmt+= 1;
     while (*fmt >= '0' && *fmt <= '9')
         fmt+= 1;
-    c_int precision = INT_MAX;
+    let precision: c_int = INT_MAX;
     if (*fmt == '.')
     {
         fmt = ImAtoi<c_int>(fmt + 1, &precision);
@@ -3419,7 +3419,7 @@ bool ImGui::InputScalar(*const char label, ImGuiDataType data_type, *mut c_void 
     let mut value_changed: bool =  false;
     if (p_step != NULL)
     {
-        const c_float button_size = GetFrameHeight();
+        let button_size: c_float =  GetFrameHeight();
 
         BeginGroup(); // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
         PushID(label);
@@ -3429,7 +3429,7 @@ bool ImGui::InputScalar(*const char label, ImGuiDataType data_type, *mut c_void 
         IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags);
 
         // Step buttons
-        const ImVec2 backup_frame_padding = style.FramePadding;
+        let backup_frame_padding: ImVec2 = style.FramePadding;
         style.FramePadding.x = style.FramePadding.y;
         ImGuiButtonFlags button_flags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         if (flags & ImGuiInputTextFlags_ReadOnly)
@@ -3483,7 +3483,7 @@ bool ImGui::InputScalarN(*const char label, ImGuiDataType data_type, *mut c_void
     PushID(label);
     PushMultiItemsWidths(components, CalcItemWidth());
     size_t type_size = GDataTypeInfo[data_type].Size;
-    for (c_int i = 0; i < components; i++)
+    for (let i: c_int = 0; i < components; i++)
     {
         PushID(i);
         if (i > 0)
@@ -3587,7 +3587,7 @@ bool ImGui::InputTextWithHint(*const char label, *const char hint, *mut char buf
 
 static c_int InputTextCalcTextLenAndLineCount(*const char text_begin, *const *mut char out_text_end)
 {
-    c_int line_count = 0;
+    let line_count: c_int = 0;
     let mut  s: *const c_char = text_begin;
     while (char c = *s++) // We are only matching for \n so we can ignore UTF-8 decoding
         if (c == '\n')
@@ -3603,11 +3603,11 @@ static ImVec2 InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar t
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImFont font = g.Font;
-    const c_float line_height = g.FontSize;
-    const c_float scale = line_height / font->FontSize;
+    let line_height: c_float =  g.FontSize;
+    let scale: c_float =  line_height / font->FontSize;
 
     let text_size: ImVec2 = ImVec2(0, 0);
-    c_float line_width = 0f32;
+    let line_width: c_float =  0f32;
 
     let s: *const ImWchar = text_begin;
     while (s < text_end)
@@ -3625,7 +3625,7 @@ static ImVec2 InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar t
         if (c == '\r')
             continue;
 
-        const c_float char_width = font->GetCharAdvance(c) * scale;
+        let char_width: c_float =  font->GetCharAdvance(c) * scale;
         line_width += char_width;
     }
 
@@ -3650,14 +3650,14 @@ namespace ImStb
 
 static c_int     STB_TEXTEDIT_STRINGLEN(*const ImGuiInputTextState obj)                             { return obj->CurLenW; }
 static ImWchar STB_TEXTEDIT_GETCHAR(*const ImGuiInputTextState obj, c_int idx)                      { return obj->TextW[idx]; }
-static c_float   STB_TEXTEDIT_GETWIDTH(*mut ImGuiInputTextState obj, c_int line_start_idx, c_int char_idx)  { ImWchar c = obj->TextW[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; let g = GImGui; // ImGuiContext& g = *GImGui; return g.Font->GetCharAdvance(c) * (g.FontSize / g.Font->FontSize); }
+static c_float   STB_TEXTEDIT_GETWIDTH(*mut ImGuiInputTextState obj, c_int line_start_idx, c_int char_idx)  { let c: ImWchar = obj->TextW[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; let g = GImGui; // ImGuiContext& g = *GImGui; return g.Font->GetCharAdvance(c) * (g.FontSize / g.Font->FontSize); }
 static c_int     STB_TEXTEDIT_KEYTOTEXT(c_int key)                                                    { return key >= 0x200000 ? 0 : key; }
-static ImWchar STB_TEXTEDIT_NEWLINE = '\n';
+static let STB_TEXTEDIT_NEWLINE: ImWchar = '\n';
 static c_void    STB_TEXTEDIT_LAYOUTROW(*mut StbTexteditRow r, *mut ImGuiInputTextState obj, c_int line_start_idx)
 {
     let text: *const ImWchar = obj->TextW.Data;
     let text_remaining: *const ImWchar = None;
-    const ImVec2 size = InputTextCalcTextSizeW(text + line_start_idx, text + obj->CurLenW, &text_remaining, NULL, true);
+    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, text + obj->CurLenW, &text_remaining, NULL, true);
     r->x0 = 0f32;
     r->x1 = size.x;
     r->baseline_y_delta = size.y;
@@ -3671,15 +3671,15 @@ static bool is_separator(c_uint c)                                        { retu
 static c_int  is_word_boundary_from_right(*mut ImGuiInputTextState obj, c_int idx)      { if (obj->Flags & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (is_separator(obj->TextW[idx - 1]) && !is_separator(obj->TextW[idx]) ) : 1; }
 static c_int  is_word_boundary_from_left(*mut ImGuiInputTextState obj, c_int idx)       { if (obj->Flags & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (!is_separator(obj->TextW[idx - 1]) && is_separator(obj->TextW[idx])) : 1; }
 static c_int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(*mut ImGuiInputTextState obj, c_int idx)   { idx-= 1; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx-= 1; return idx < 0 ? 0 : idx; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; c_int len = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return idx > len ? len : idx; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; c_int len = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return idx > len ? len : idx; }
+static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return idx > len ? len : idx; }
+static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return idx > len ? len : idx; }
 static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(*mut ImGuiInputTextState obj, c_int idx)  { if (ImGui::GetIO().ConfigMacOSXBehaviors) return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx); else return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx); }
 // #define STB_TEXTEDIT_MOVEWORDLEFT   STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
 // #define STB_TEXTEDIT_MOVEWORDRIGHT  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
 
 static c_void STB_TEXTEDIT_DELETECHARS(*mut ImGuiInputTextState obj, c_int pos, c_int n)
 {
-    *mut ImWchar dst = obj->TextW.Data + pos;
+    *mut let dst: ImWchar = obj->TextW.Data + pos;
 
     // We maintain our buffer length in both UTF-8 and wchar formats
     obj->Edited = true;
@@ -3688,7 +3688,7 @@ static c_void STB_TEXTEDIT_DELETECHARS(*mut ImGuiInputTextState obj, c_int pos, 
 
     // Offset remaining text (FIXME-OPT: Use memmove)
     let src: *const ImWchar = obj->TextW.Data + pos + n;
-    while (ImWchar c = *src++)
+    while (let c: ImWchar = *src++)
         *dst++ = c;
     *dst = '\0';
 }
@@ -3712,7 +3712,7 @@ static bool STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, c_int pos, *c
         obj->TextW.resize(text_len + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1);
     }
 
-    *mut ImWchar text = obj->TextW.Data;
+    *mut let text: ImWchar = obj->TextW.Data;
     if (pos != text_len)
         memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof);
     memcpy(text + pos, new_text, new_text_len * sizeof);
@@ -3813,7 +3813,7 @@ c_void ImGuiInputTextCallbackData::InsertChars(c_int pos, *const char new_text, 
         *mut ImGuiInputTextState edit_state = &g.InputTextState;
         // IM_ASSERT(edit_state->ID != 0 && g.ActiveId == edit_state->ID);
         // IM_ASSERT(Buf == edit_state->TextA.Data);
-        c_int new_buf_size = BufTextLen + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1;
+        let new_buf_size: c_int = BufTextLen + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1;
         edit_state->TextA.reserve(new_buf_size + 1);
         Buf = edit_state->TextA.Data;
         BufSize = edit_state->BufCapacityA = new_buf_size;
@@ -3939,7 +3939,7 @@ static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
     let old_length: c_int = state->CurLenW;
     let new_length: c_int = ImTextCountCharsFromUtf8(new_buf_a, new_buf_a + new_length_a);
     g.TempBuffer.reserve_discard((new_length + 1) * sizeof);
-    *mut ImWchar new_buf = (*mut ImWchar)(*mut c_void)g.TempBuffer.Data;
+    *mut let new_buf: ImWchar = (*mut ImWchar)(*mut c_void)g.TempBuffer.Data;
     ImTextStrFromUtf8(new_buf, new_length + 1, new_buf_a, new_buf_a + new_length_a);
 
     let shorter_length: c_int = ImMin(old_length, new_length);
@@ -3950,8 +3950,8 @@ static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
     if (first_diff == old_length && first_diff == new_length)
         return;
 
-    c_int old_last_diff = old_length - 1;
-    c_int new_last_diff = new_length - 1;
+    let old_last_diff: c_int = old_length - 1;
+    let new_last_diff: c_int = new_length - 1;
     for (; old_last_diff >= first_diff && new_last_diff >= first_diff; old_last_diff--, new_last_diff--)
         if (old_buf[old_last_diff] != new_buf[new_last_diff])
             break;
@@ -3960,7 +3960,7 @@ static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
     let delete_len: c_int = old_last_diff - first_diff + 1;
     if (insert_len > 0 || delete_len > 0)
         if (*mut STB_TEXTEDIT_CHARTYPE p = stb_text_createundo(&state->Stb.undostate, first_diff, delete_len, insert_len))
-            for (c_int i = 0; i < delete_len; i++)
+            for (let i: c_int = 0; i < delete_len; i++)
                 p[i] = ImStb::STB_TEXTEDIT_GETCHAR(state, first_diff + i);
 }
 
@@ -3998,9 +3998,9 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
     if (is_multiline) // Open group before calling GetID() because groups tracks id created within their scope (including the scrollbar)
         BeginGroup();
     const ImGuiID id = window.GetID(label);
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
-    const ImVec2 frame_size = CalcItemSize(size_arg, CalcItemWidth(), (is_multiline ? g.FontSize * 8.0f32 : label_size.y) + style.FramePadding.y * 2.00f32); // Arbitrary default of 8 lines high for multi-line
-    const ImVec2 total_size = ImVec2(frame_size.x + (label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32), frame_size.y);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
+    let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), (is_multiline ? g.FontSize * 8.0f32 : label_size.y) + style.FramePadding.y * 2.00f32); // Arbitrary default of 8 lines high for multi-line
+    let total_size: ImVec2 = ImVec2(frame_size.x + (label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32), frame_size.y);
 
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + frame_size);
     const ImRect total_bb(frame_bb.Min, frame_bb.Min + total_size);
@@ -4067,7 +4067,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
     let mut clear_active_id: bool =  false;
     let mut select_all: bool =  false;
 
-    c_float scroll_y = is_multiline ? draw_window.Scroll.y : f32::MAX;
+    let scroll_y: c_float =  is_multiline ? draw_window.Scroll.y : f32::MAX;
 
     let init_changed_specs: bool = (state != NULL && state->Stb.single_line != !is_multiline);
     let init_make_active: bool = (user_clicked || user_scroll_finish || input_requested_by_nav || input_requested_by_tabbing);
@@ -4198,7 +4198,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
     }
 
     // Process mouse inputs and character inputs
-    c_int backup_current_text_length = 0;
+    let backup_current_text_length: c_int = 0;
     if (g.ActiveId == id)
     {
         // IM_ASSERT(state != NULL);
@@ -4213,8 +4213,8 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
         g.WantTextInputNextFrame = 1;
 
         // Edit in progress
-        const c_float mouse_x = (io.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + state->ScrollX;
-        const c_float mouse_y = (is_multiline ? (io.MousePos.y - draw_window.DC.CursorPos.y) : (g.FontSize * 0.5f32));
+        let mouse_x: c_float =  (io.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + state->ScrollX;
+        let mouse_y: c_float =  (is_multiline ? (io.MousePos.y - draw_window.DC.CursorPos.y) : (g.FontSize * 0.5f32));
 
         let is_osx: bool = io.ConfigMacOSXBehaviors;
         if (select_all)
@@ -4292,7 +4292,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
         if (io.InputQueueCharacters.Size > 0)
         {
             if (!ignore_char_inputs && !is_readonly && !input_requested_by_nav)
-                for (c_int n = 0; n < io.InputQueueCharacters.Size; n++)
+                for (let n: c_int = 0; n < io.InputQueueCharacters.Size; n++)
                 {
                     // Insert character if they pass filtering
                     c_uint c = io.InputQueueCharacters[n];
@@ -4418,8 +4418,8 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
             {
                 // Filter pasted buffer
                 let clipboard_len: c_int = strlen(clipboard);
-                *mut ImWchar clipboard_filtered = (*mut ImWchar)IM_ALLOC((clipboard_len + 1) * sizeof);
-                c_int clipboard_filtered_len = 0;
+                *mut let clipboard_filtered: ImWchar = (*mut ImWchar)IM_ALLOC((clipboard_len + 1) * sizeof);
+                let clipboard_filtered_len: c_int = 0;
                 for (*const char s = clipboard; *s; )
                 {
                     c_uint c;
@@ -4446,7 +4446,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
 
     // Process callbacks and apply result back to user's buffer.
     let mut  apply_new_text: *const c_char = None;
-    c_int apply_new_text_length = 0;
+    let apply_new_text_length: c_int = 0;
     if (g.ActiveId == id)
     {
         // IM_ASSERT(state != NULL);
@@ -4535,7 +4535,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
                     callback_data.BufDirty = false;
 
                     // We have to convert from wchar-positions to UTF-8-positions, which can be pretty slow (an incentive to ditch the ImWchar buffer, see https://github.com/nothings/stb/issues/188)
-                    *mut ImWchar text = state->TextW.Data;
+                    *mut let text: ImWchar = state->TextW.Data;
                     let utf8_cursor_pos: c_int = callback_data.CursorPos = ImTextCountUtf8BytesFromStr(text, text + state->Stb.cursor);
                     let utf8_selection_start: c_int = callback_data.SelectionStart = ImTextCountUtf8BytesFromStr(text, text + state->Stb.select_start);
                     let utf8_selection_end: c_int = callback_data.SelectionEnd = ImTextCountUtf8BytesFromStr(text, text + state->Stb.select_end);
@@ -4656,7 +4656,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
             // Find lines numbers straddling 'cursor' (slot 0) and 'select_start' (slot 1) positions.
             *const ImWsearches_input_ptr: [c_char;2] = { NULL, NULL };
             c_int searches_result_line_no[2] = { -1000, -1000 };
-            c_int searches_remaining = 0;
+            let searches_remaining: c_int = 0;
             if (render_cursor)
             {
                 searches_input_ptr[0] = text_begin + state->Stb.cursor;
@@ -4673,9 +4673,9 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
             // Iterate all lines to find our line numbers
             // In multi-line mode, we never exit the loop until all lines are counted, so add one extra to the searches_remaining counter.
             searches_remaining += is_multiline ? 1 : 0;
-            c_int line_count = 0;
+            let line_count: c_int = 0;
             //for (const ImWchar* s = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != None; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
-            for (*const ImWchar s = text_begin; *s != 0; s++)
+            for (*const let s: ImWchar = text_begin; *s != 0; s++)
                 if (*s == '\n')
                 {
                     line_count+= 1;
@@ -4708,8 +4708,8 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
             // Horizontal scroll in chunks of quarter width
             if (!(flags & ImGuiInputTextFlags_NoHorizontalScroll))
             {
-                const c_float scroll_increment_x = inner_size.x * 0.25f32;
-                const c_float visible_width = inner_size.x - style.FramePadding.x;
+                let scroll_increment_x: c_float =  inner_size.x * 0.25f32;
+                let visible_width: c_float =  inner_size.x - style.FramePadding.x;
                 if (cursor_offset.x < state->ScrollX)
                     state->ScrollX = IM_FLOOR(ImMax(0f32, cursor_offset.x - scroll_increment_x));
                 else if (cursor_offset.x - visible_width >= state->ScrollX)
@@ -4728,7 +4728,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
                     scroll_y = ImMax(0f32, cursor_offset.y - g.FontSize);
                 else if (cursor_offset.y - (inner_size.y - style.FramePadding.y * 2.00f32) >= scroll_y)
                     scroll_y = cursor_offset.y - inner_size.y + style.FramePadding.y * 2.0f32;
-                const c_float scroll_max_y = ImMax((text_size.y + style.FramePadding.y * 2.00f32) - inner_size.y, 0f32);
+                let scroll_max_y: c_float =  ImMax((text_size.y + style.FramePadding.y * 2.00f32) - inner_size.y, 0f32);
                 scroll_y = ImClamp(scroll_y, 0f32, scroll_max_y);
                 draw_pos.y += (draw_window.Scroll.y - scroll_y);   // Manipulate cursor pos immediately avoid a frame of lag
                 draw_window.Scroll.y = scroll_y;
@@ -4738,17 +4738,17 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
         }
 
         // Draw selection
-        const ImVec2 draw_scroll = ImVec2(state->ScrollX, 0f32);
+        let draw_scroll: ImVec2 = ImVec2(state->ScrollX, 0f32);
         if (render_selection)
         {
             let text_selected_begin: *const ImWchar = text_begin + ImMin(state->Stb.select_start, state->Stb.select_end);
             let text_selected_end: *const ImWchar = text_begin + ImMax(state->Stb.select_start, state->Stb.select_end);
 
             u32 bg_color = GetColorU32(ImGuiCol_TextSelectedBg, render_cursor ? 1f32 : 0.60f32); // FIXME: current code flow mandate that render_cursor is always true here, we are leaving the transparent one for tests.
-            c_float bg_offy_up = is_multiline ? 0f32 : -1f32;    // FIXME: those offsets should be part of the style? they don't play so well with multi-line selection.
-            c_float bg_offy_dn = is_multiline ? 0f32 : 2.0f32;
+            let bg_offy_up: c_float =  is_multiline ? 0f32 : -1f32;    // FIXME: those offsets should be part of the style? they don't play so well with multi-line selection.
+            let bg_offy_dn: c_float =  is_multiline ? 0f32 : 2.0f32;
             let rect_pos: ImVec2 = draw_pos + select_start_offset - draw_scroll;
-            for (*const ImWchar p = text_selected_begin; p < text_selected_end; )
+            for (*const let p: ImWchar = text_selected_begin; p < text_selected_end; )
             {
                 if (rect_pos.y > clip_rect.w + g.FontSize)
                     break;
@@ -4874,7 +4874,7 @@ c_void ImGui::DebugNodeInputTextState(*mut ImGuiInputTextState state)
     if (BeginChild("undopoints", ImVec2(0f32, GetTextLineHeight() * 15), true)) // Visualize undo state
     {
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        for (c_int n = 0; n < STB_TEXTEDIT_UNDOSTATECOUNT; n++)
+        for (let n: c_int = 0; n < STB_TEXTEDIT_UNDOSTATECOUNT; n++)
         {
             ImStb::*mut StbUndoRecord undo_rec = &undo_state->undo_rec[n];
             const char undo_rec_type = (n < undo_state->undo_point) ? 'u' : (n >= undo_state->redo_point) ? 'r' : ' ';
@@ -4951,10 +4951,10 @@ bool ImGui::ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags fl
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const c_float square_sz = GetFrameHeight();
-    const c_float w_full = CalcItemWidth();
-    const c_float w_button = (flags & ImGuiColorEditFlags_NoSmallPreview) ? 0f32 : (square_sz + style.ItemInnerSpacing.x);
-    const c_float w_inputs = w_full - w_button;
+    let square_sz: c_float =  GetFrameHeight();
+    let w_full: c_float =  CalcItemWidth();
+    let w_button: c_float =  (flags & ImGuiColorEditFlags_NoSmallPreview) ? 0f32 : (square_sz + style.ItemInnerSpacing.x);
+    let w_inputs: c_float =  w_full - w_button;
     let mut  label_display_end: *const c_char = FindRenderedTextEnd(label);
     g.NextItemData.ClearFlags();
 
@@ -5002,15 +5002,15 @@ bool ImGui::ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags fl
     let mut value_changed: bool =  false;
     let mut value_changed_as_float: bool =  false;
 
-    const ImVec2 pos = window.DC.CursorPos;
-    const c_float inputs_offset_x = (style.ColorButtonPosition == ImGuiDir_Left) ? w_button : 0f32;
+    let pos: ImVec2 = window.DC.CursorPos;
+    let inputs_offset_x: c_float =  (style.ColorButtonPosition == ImGuiDir_Left) ? w_button : 0f32;
     window.DC.CursorPos.x = pos.x + inputs_offset_x;
 
     if ((flags & (ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV)) != 0 && (flags & ImGuiColorEditFlags_NoInputs) == 0)
     {
         // RGB/HSV 0..255 Sliders
         const c_float w_item_one  = ImMax(1f32, IM_FLOOR((w_inputs - (style.ItemInnerSpacing.x) * (components - 1)) / components));
-        const c_float w_item_last = ImMax(1f32, IM_FLOOR(w_inputs - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
+        let w_item_last: c_float =  ImMax(1f32, IM_FLOOR(w_inputs - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
 
         let hide_prefix: bool = (w_item_one <= CalcTextSize((flags & ImGuiColorEditFlags_Float) ? "M:0.000" : "M:000").x);
         static *const ids: [c_char;4] = { "##X", "##Y", "##Z", "##W" };
@@ -5028,7 +5028,7 @@ bool ImGui::ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags fl
         };
         let fmt_idx: c_int = hide_prefix ? 0 : (flags & ImGuiColorEditFlags_DisplayHSV) ? 2 : 1;
 
-        for (c_int n = 0; n < components; n++)
+        for (let n: c_int = 0; n < components; n++)
         {
             if (n > 0)
                 SameLine(0, style.ItemInnerSpacing.x);
@@ -5079,7 +5079,7 @@ bool ImGui::ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags fl
     *mut ImGuiWindow picker_active_window = None;
     if (!(flags & ImGuiColorEditFlags_NoSmallPreview))
     {
-        const c_float button_offset_x = ((flags & ImGuiColorEditFlags_NoInputs) || (style.ColorButtonPosition == ImGuiDir_Left)) ? 0f32 : w_inputs + style.ItemInnerSpacing.x;
+        let button_offset_x: c_float =  ((flags & ImGuiColorEditFlags_NoInputs) || (style.ColorButtonPosition == ImGuiDir_Left)) ? 0f32 : w_inputs + style.ItemInnerSpacing.x;
         window.DC.CursorPos = ImVec2(pos.x + button_offset_x, pos.y);
 
         const ImVec4 col_v4(col[0], col[1], col[2], alpha ? col[3] : 1f32);
@@ -5122,7 +5122,7 @@ bool ImGui::ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags fl
     if (value_changed && picker_active_window == NULL)
     {
         if (!value_changed_as_float)
-            for (c_int n = 0; n < 4; n++)
+            for (let n: c_int = 0; n < 4; n++)
                 f[n] = i[n] / 255f32;
         if ((flags & ImGuiColorEditFlags_DisplayHSV) && (flags & ImGuiColorEditFlags_InputRGB))
         {
@@ -5210,7 +5210,7 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
     ImGuiStyle& style = g.Style;
     ImGuiIO& io = g.IO;
 
-    const c_float width = CalcItemWidth();
+    let width: c_float =  CalcItemWidth();
     g.NextItemData.ClearFlags();
 
     PushID(label);
@@ -5234,32 +5234,32 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
         flags |= (g.ColorEditOptions & ImGuiColorEditFlags_AlphaBar);
 
     // Setup
-    c_int components = (flags & ImGuiColorEditFlags_NoAlpha) ? 3 : 4;
+    let components: c_int = (flags & ImGuiColorEditFlags_NoAlpha) ? 3 : 4;
     let mut alpha_bar: bool =  (flags & ImGuiColorEditFlags_AlphaBar) && !(flags & ImGuiColorEditFlags_NoAlpha);
     let picker_pos: ImVec2 = window.DC.CursorPos;
-    c_float square_sz = GetFrameHeight();
-    c_float bars_width = square_sz; // Arbitrary smallish width of Hue/Alpha picking bars
-    c_float sv_picker_size = ImMax(bars_width * 1, width - (alpha_bar ? 2 : 1) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/Value picking box
-    c_float bar0_pos_x = picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
-    c_float bar1_pos_x = bar0_pos_x + bars_width + style.ItemInnerSpacing.x;
-    c_float bars_triangles_half_sz = IM_FLOOR(bars_width * 0.200f32);
+    let square_sz: c_float =  GetFrameHeight();
+    let bars_width: c_float =  square_sz; // Arbitrary smallish width of Hue/Alpha picking bars
+    let sv_picker_size: c_float =  ImMax(bars_width * 1, width - (alpha_bar ? 2 : 1) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/Value picking box
+    let bar0_pos_x: c_float =  picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
+    let bar1_pos_x: c_float =  bar0_pos_x + bars_width + style.ItemInnerSpacing.x;
+    let bars_triangles_half_sz: c_float =  IM_FLOOR(bars_width * 0.200f32);
 
     c_float backup_initial_col[4];
     memcpy(backup_initial_col, col, components * sizeof);
 
-    c_float wheel_thickness = sv_picker_size * 0.08f;
-    c_float wheel_r_outer = sv_picker_size * 0.50f32;
-    c_float wheel_r_inner = wheel_r_outer - wheel_thickness;
+    let wheel_thickness: c_float =  sv_picker_size * 0.08f;
+    let wheel_r_outer: c_float =  sv_picker_size * 0.50f32;
+    let wheel_r_inner: c_float =  wheel_r_outer - wheel_thickness;
     ImVec2 wheel_center(picker_pos.x + (sv_picker_size + bars_width)*0.5f32, picker_pos.y + sv_picker_size * 0.5f32);
 
     // Note: the triangle is displayed rotated with triangle_pa pointing to Hue, but most coordinates stays unrotated for logic.
-    c_float triangle_r = wheel_r_inner - (sv_picker_size * 0.0270f32);
+    let triangle_r: c_float =  wheel_r_inner - (sv_picker_size * 0.0270f32);
     let triangle_pa: ImVec2 = ImVec2(triangle_r, 0f32); // Hue point.
     let triangle_pb: ImVec2 = ImVec2(triangle_r * -0.5f32, triangle_r * -0.8660250f32); // Black point.
     let triangle_pc: ImVec2 = ImVec2(triangle_r * -0.5f32, triangle_r * +0.8660250f32); // White point.
 
-    c_float H = col[0], S = col[1], V = col[2];
-    c_float R = col[0], G = col[1], B = col[2];
+    let H: c_float =  col[0], S = col[1], V = col[2];
+    let R: c_float =  col[0], G = col[1], B = col[2];
     if (flags & ImGuiColorEditFlags_InputRGB)
     {
         // Hue is lost when converting from greyscale rgb (saturation=0). Restore it.
@@ -5282,7 +5282,7 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
         {
             let initial_off: ImVec2 = g.IO.MouseClickedPos[0] - wheel_center;
             let current_off: ImVec2 = g.IO.MousePos - wheel_center;
-            c_float initial_dist2 = ImLengthSqr(initial_of0f32);
+            let initial_dist2: c_float =  ImLengthSqr(initial_of0f32);
             if (initial_dist2 >= (wheel_r_inner - 1) * (wheel_r_inner - 1) && initial_dist2 <= (wheel_r_outer + 1) * (wheel_r_outer + 1))
             {
                 // Interactive with Hue wheel
@@ -5291,8 +5291,8 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
                     H += 1f32;
                 value_changed = value_changed_h = true;
             }
-            c_float cos_hue_angle = ImCos(-H * 2.0f32 * IM_PI);
-            c_float sin_hue_angle = ImSin(-H * 2.0f32 * IM_PI);
+            let cos_hue_angle: c_float =  ImCos(-H * 2.0f32 * IM_PI);
+            let sin_hue_angle: c_float =  ImSin(-H * 2.0f32 * IM_PI);
             if (ImTriangleContainsPoint(triangle_pa, triangle_pb, triangle_pc, ImRotate(initial_off, cos_hue_angle, sin_hue_angle)))
             {
                 // Interacting with SV triangle
@@ -5477,12 +5477,12 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
     if (flags & ImGuiColorEditFlags_PickerHueWheel)
     {
         // Render Hue Wheel
-        const c_float aeps = 0.5f32 / wheel_r_outer; // Half a pixel arc length in radians (2pi cancels out).
+        let aeps: c_float =  0.5f32 / wheel_r_outer; // Half a pixel arc length in radians (2pi cancels out).
         let segment_per_arc: c_int = ImMax(4, wheel_r_outer / 12);
-        for (c_int n = 0; n < 6; n++)
+        for (let n: c_int = 0; n < 6; n++)
         {
-            const c_float a0 = (n)     /6f32 * 2.0f32 * IM_PI - aeps;
-            const c_float a1 = (n+1f32)/6f32 * 2.0f32 * IM_PI + aeps;
+            let a0: c_float =  (n)     /6f32 * 2.0f32 * IM_PI - aeps;
+            let a1: c_float =  (n+1f32)/6f32 * 2.0f32 * IM_PI + aeps;
             let vert_start_idx: c_int = draw_list->VtxBuffer.Size;
             draw_list->PathArcTo(wheel_center, (wheel_r_inner + wheel_r_outer)*0.5f32, a0, a1, segment_per_arc);
             draw_list->PathStroke(col_white, 0, wheel_thickness);
@@ -5495,11 +5495,11 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
         }
 
         // Render Cursor + preview on Hue Wheel
-        c_float cos_hue_angle = ImCos(H * 2.0f32 * IM_PI);
-        c_float sin_hue_angle = ImSin(H * 2.0f32 * IM_PI);
+        let cos_hue_angle: c_float =  ImCos(H * 2.0f32 * IM_PI);
+        let sin_hue_angle: c_float =  ImSin(H * 2.0f32 * IM_PI);
         ImVec2 hue_cursor_pos(wheel_center.x + cos_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5f32, wheel_center.y + sin_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5f32);
-        c_float hue_cursor_rad = value_changed_h ? wheel_thickness * 0.65f : wheel_thickness * 0.55f32;
-        c_int hue_cursor_segments = ImClamp((hue_cursor_rad / 1.40f32), 9, 32);
+        let hue_cursor_rad: c_float =  value_changed_h ? wheel_thickness * 0.65f : wheel_thickness * 0.55f32;
+        let hue_cursor_segments: c_int = ImClamp((hue_cursor_rad / 1.40f32), 9, 32);
         draw_list->AddCircleFilled(hue_cursor_pos, hue_cursor_rad, hue_color32, hue_cursor_segments);
         draw_list->AddCircle(hue_cursor_pos, hue_cursor_rad + 1, col_midgrey, hue_cursor_segments);
         draw_list->AddCircle(hue_cursor_pos, hue_cursor_rad, col_white, hue_cursor_segments);
@@ -5529,15 +5529,15 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
         sv_cursor_pos.y = ImClamp(IM_ROUND(picker_pos.y + ImSaturate(1 - V) * sv_picker_size), picker_pos.y + 2, picker_pos.y + sv_picker_size - 2);
 
         // Render Hue Bar
-        for (c_int i = 0; i < 6; ++i)
+        for (let i: c_int = 0; i < 6; ++i)
             draw_list->AddRectFilledMultiColor(ImVec2(bar0_pos_x, picker_pos.y + i * (sv_picker_size / 6)), ImVec2(bar0_pos_x + bars_width, picker_pos.y + (i + 1) * (sv_picker_size / 6)), col_hues[i], col_hues[i], col_hues[i + 1], col_hues[i + 1]);
-        c_float bar0_line_y = IM_ROUND(picker_pos.y + H * sv_picker_size);
+        let bar0_line_y: c_float =  IM_ROUND(picker_pos.y + H * sv_picker_size);
         RenderFrameBorder(ImVec2(bar0_pos_x, picker_pos.y), ImVec2(bar0_pos_x + bars_width, picker_pos.y + sv_picker_size), 0f32);
         RenderArrowsForVerticalBar(draw_list, ImVec2(bar0_pos_x - 1, bar0_line_y), ImVec2(bars_triangles_half_sz + 1, bars_triangles_half_sz), bars_width + 2.0f32, style.Alpha);
     }
 
     // Render cursor/preview circle (clamp S/V within 0..1 range because floating points colors may lead HSV values to be out of range)
-    c_float sv_cursor_rad = value_changed_sv ? 10f32 : 6f32;
+    let sv_cursor_rad: c_float =  value_changed_sv ? 10f32 : 6f32;
     draw_list->AddCircleFilled(sv_cursor_pos, sv_cursor_rad, user_col32_striped_of_alpha, 12);
     draw_list->AddCircle(sv_cursor_pos, sv_cursor_rad + 1, col_midgrey, 12);
     draw_list->AddCircle(sv_cursor_pos, sv_cursor_rad, col_white, 12);
@@ -5545,11 +5545,11 @@ bool ImGui::ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags 
     // Render alpha bar
     if (alpha_bar)
     {
-        c_float alpha = ImSaturate(col[3]);
+        let alpha: c_float =  ImSaturate(col[3]);
         ImRect bar1_bb(bar1_pos_x, picker_pos.y, bar1_pos_x + bars_width, picker_pos.y + sv_picker_size);
         RenderColorRectWithAlphaCheckerboard(draw_list, bar1_bb.Min, bar1_bb.Max, 0, bar1_bb.GetWidth() / 2.0f32, ImVec2(0f32, 0f32));
         draw_list->AddRectFilledMultiColor(bar1_bb.Min, bar1_bb.Max, user_col32_striped_of_alpha, user_col32_striped_of_alpha, user_col32_striped_of_alpha & ~IM_COL32_A_MASK, user_col32_striped_of_alpha & ~IM_COL32_A_MASK);
-        c_float bar1_line_y = IM_ROUND(picker_pos.y + (1f32 - alpha) * sv_picker_size);
+        let bar1_line_y: c_float =  IM_ROUND(picker_pos.y + (1f32 - alpha) * sv_picker_size);
         RenderFrameBorder(bar1_bb.Min, bar1_bb.Max, 0f32);
         RenderArrowsForVerticalBar(draw_list, ImVec2(bar1_pos_x - 1, bar1_line_y), ImVec2(bars_triangles_half_sz + 1, bars_triangles_half_sz), bars_width + 2.0f32, style.Alpha);
     }
@@ -5578,7 +5578,7 @@ bool ImGui::ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFl
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiID id = window.GetID(desc_id);
-    const c_float default_size = GetFrameHeight();
+    let default_size: c_float =  GetFrameHeight();
     const ImVec2 size(size_arg.x == 0f32 ? default_size : size_arg.x, size_arg.y == 0f32 ? default_size : size_arg.y);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
     ItemSize(bb, (size.y >= default_size) ? g.Style.FramePadding.y : 0f32);
@@ -5596,10 +5596,10 @@ bool ImGui::ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFl
         ColorConvertHSVtoRGB(col_rgb.x, col_rgb.y, col_rgb.z, col_rgb.x, col_rgb.y, col_rgb.z);
 
     let mut col_rgb_without_alpha = ImVec4::new(col_rgb.x, col_rgb.y, col_rgb.z, 1f32);
-    c_float grid_step = ImMin(size.x, size.y) / 2.99f;
-    c_float rounding = ImMin(g.Style.FrameRounding, grid_step * 0.5f32);
-    ImRect bb_inner = bb;
-    c_float off = 0f32;
+    let grid_step: c_float =  ImMin(size.x, size.y) / 2.99f;
+    let rounding: c_float =  ImMin(g.Style.FrameRounding, grid_step * 0.5f32);
+    let bb_inner: ImRect =  bb;
+    let off: c_float =  0f32;
     if ((flags & ImGuiColorEditFlags_NoBorder) == 0)
     {
         off = -0.75f32; // The border (using Col_FrameBg) tends to look off when color is near-opaque and rounding is enabled. This offset seemed like a good middle ground to reduce those artifacts.
@@ -5607,7 +5607,7 @@ bool ImGui::ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFl
     }
     if ((flags & ImGuiColorEditFlags_AlphaPreviewHal0f32) && col_rgb.w < 1f32)
     {
-        c_float mid_x = IM_ROUND((bb_inner.Min.x + bb_inner.Max.x) * 0.5f32);
+        let mid_x: c_float =  IM_ROUND((bb_inner.Min.x + bb_inner.Max.x) * 0.5f32);
         RenderColorRectWithAlphaCheckerboard(window.DrawList, ImVec2(bb_inner.Min.x + grid_step, bb_inner.Min.y), bb_inner.Max, GetColorU32(col_rgb), grid_step, ImVec2(-grid_step + off, of0f32), rounding, ImDrawFlags_RoundCornersRight);
         window.DrawList.AddRectFilled(bb_inner.Min, ImVec2(mid_x, bb_inner.Max.y), GetColorU32(col_rgb_without_alpha), rounding, ImDrawFlags_RoundCornersLeft);
     }
@@ -5684,7 +5684,7 @@ c_void ImGui::ColorTooltip(*const char text, *const c_float col, ImGuiColorEditF
 
     ImVec2 sz(g.FontSize * 3 + g.Style.FramePadding.y * 2, g.FontSize * 3 + g.Style.FramePadding.y * 2);
     let mut cf = ImVec4::new(col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
-    c_int cr = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = (flags & ImGuiColorEditFlags_NoAlpha) ? 255 : IM_F32_TO_INT8_SAT(col[3]);
+    let cr: c_int = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = (flags & ImGuiColorEditFlags_NoAlpha) ? 255 : IM_F32_TO_INT8_SAT(col[3]);
     ColorButton("##preview", cf, (flags & (ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32)) | ImGuiColorEditFlags_NoTooltip, sz);
     SameLine();
     if ((flags & ImGuiColorEditFlags_InputRGB) || !(flags & ImGuiColorEditFlags_InputMask_))
@@ -5731,7 +5731,7 @@ c_void ImGui::ColorEditOptionsPopup(*const c_float col, ImGuiColorEditFlags flag
         OpenPopup("Copy");
     if (BeginPopup("Copy"))
     {
-        c_int cr = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = (flags & ImGuiColorEditFlags_NoAlpha) ? 255 : IM_F32_TO_INT8_SAT(col[3]);
+        let cr: c_int = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = (flags & ImGuiColorEditFlags_NoAlpha) ? 255 : IM_F32_TO_INT8_SAT(col[3]);
         buf: [c_char;64];
         ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "(%.3ff, %.3ff, %.3ff, %.3f0f32)", col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
         if (Selectable(bu0f32))
@@ -5766,7 +5766,7 @@ c_void ImGui::ColorPickerOptionsPopup(*const c_float ref_col, ImGuiColorEditFlag
     {
         ImVec2 picker_size(g.FontSize * 8, ImMax(g.FontSize * 8 - (GetFrameHeight() + g.Style.ItemInnerSpacing.x), 1f32)); // FIXME: Picker size copied from main picker function
         PushItemWidth(picker_size.x);
-        for (c_int picker_type = 0; picker_type < 2; picker_type++)
+        for (let picker_type: c_int = 0; picker_type < 2; picker_type++)
         {
             // Draw small/thumbnail version of each picker type (over an invisible button for selection)
             if (picker_type > 0) Separator();
@@ -5955,14 +5955,14 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, *const char l
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     let display_frame: bool = (flags & ImGuiTreeNodeFlags_Framed) != 0;
-    const ImVec2 padding = (display_frame || (flags & ImGuiTreeNodeFlags_FramePadding)) ? style.FramePadding : ImVec2(style.FramePadding.x, ImMin(window.DC.CurrLineTextBaseOffset, style.FramePadding.y));
+    let padding: ImVec2 = (display_frame || (flags & ImGuiTreeNodeFlags_FramePadding)) ? style.FramePadding : ImVec2(style.FramePadding.x, ImMin(window.DC.CurrLineTextBaseOffset, style.FramePadding.y));
 
     if (!label_end)
         label_end = FindRenderedTextEnd(label);
-    const ImVec2 label_size = CalcTextSize(label, label_end, false);
+    let label_size: ImVec2 = CalcTextSize(label, label_end, false);
 
     // We vertically grow up to current line height up the typical widget height.
-    const c_float frame_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), label_size.y + padding.y * 2);
+    let frame_height: c_float =  ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), label_size.y + padding.y * 2);
     ImRect frame_bb;
     frame_bb.Min.x = (flags & ImGuiTreeNodeFlags_SpanFullWidth) ? window.WorkRect.Min.x : window.DC.CursorPos.x;
     frame_bb.Min.y = window.DC.CursorPos.y;
@@ -5976,14 +5976,14 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, *const char l
         frame_bb.Max.x += IM_FLOOR(window.WindowPadding.x * 0.5f32);
     }
 
-    const c_float text_offset_x = g.FontSize + (display_frame ? padding.x * 3 : padding.x * 2);           // Collapser arrow width + Spacing
-    const c_float text_offset_y = ImMax(padding.y, window.DC.CurrLineTextBaseOffset);                    // Latch before ItemSize changes it
-    const c_float text_width = g.FontSize + (label_size.x > 0f32 ? label_size.x + padding.x * 2 : 0f32);  // Include collapser
+    let text_offset_x: c_float =  g.FontSize + (display_frame ? padding.x * 3 : padding.x * 2);           // Collapser arrow width + Spacing
+    let text_offset_y: c_float =  ImMax(padding.y, window.DC.CurrLineTextBaseOffset);                    // Latch before ItemSize changes it
+    let text_width: c_float =  g.FontSize + (label_size.x > 0f32 ? label_size.x + padding.x * 2 : 0f32);  // Include collapser
     ImVec2 text_pos(window.DC.CursorPos.x + text_offset_x, window.DC.CursorPos.y + text_offset_y);
     ItemSize(ImVec2(text_width, frame_height), padding.y);
 
     // For regular tree nodes, we arbitrary allow to click past 2 worth of ItemSpacing
-    ImRect interact_bb = frame_bb;
+    let interact_bb: ImRect =  frame_bb;
     if (!display_frame && (flags & (ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_SpanFullWidth)) == 0)
         interact_bb.Max.x = frame_bb.Min.x + text_width + style.ItemSpacing.x * 2.0f32;
 
@@ -6016,8 +6016,8 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, *const char l
     // We allow clicking on the arrow section with keyboard modifiers held, in order to easily
     // allow browsing a tree while preserving selection with code implementing multi-selection patterns.
     // When clicking on the rest of the tree node we always disallow keyboard modifiers.
-    const c_float arrow_hit_x1 = (text_pos.x - text_offset_x) - style.TouchExtraPadding.x;
-    const c_float arrow_hit_x2 = (text_pos.x - text_offset_x) + (g.FontSize + padding.x * 2.00f32) + style.TouchExtraPadding.x;
+    let arrow_hit_x1: c_float =  (text_pos.x - text_offset_x) - style.TouchExtraPadding.x;
+    let arrow_hit_x2: c_float =  (text_pos.x - text_offset_x) + (g.FontSize + padding.x * 2.00f32) + style.TouchExtraPadding.x;
     let is_mouse_x_over_arrow: bool = (g.IO.MousePos.x >= arrow_hit_x1 && g.IO.MousePos.x < arrow_hit_x2);
     if (window != g.HoveredWindow || !is_mouse_x_over_arrow)
         button_flags |= ImGuiButtonFlags_NoKeyModifiers;
@@ -6234,9 +6234,9 @@ bool ImGui::CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFl
         // FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
         let g = GImGui; // ImGuiContext& g = *GImGui;
         ImGuiLastItemData last_item_backup = g.LastItemData;
-        c_float button_size = g.FontSize;
-        c_float button_x = ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x - g.Style.FramePadding.x * 2.0f32 - button_size);
-        c_float button_y = g.LastItemData.Rect.Min.y;
+        let button_size: c_float =  g.FontSize;
+        let button_x: c_float =  ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x - g.Style.FramePadding.x * 2.0f32 - button_size);
+        let button_y: c_float =  g.LastItemData.Rect.Min.y;
         ImGuiID close_button_id = GetIDWithSeed("#CLOSE", NULL, id);
         if (CloseButton(close_button_id, ImVec2(button_x, button_y)))
             *p_visible = false;
@@ -6276,23 +6276,23 @@ bool ImGui::Selectable(*const char label, bool selected, ImGuiSelectableFlags fl
     // Fill horizontal space
     // We don't support (size < 0f32) in Selectable() because the ItemSpacing extension would make explicitly right-aligned sizes not visibly match other widgets.
     let span_all_columns: bool = (flags & ImGuiSelectableFlags_SpanAllColumns) != 0;
-    const c_float min_x = span_all_columns ? window.ParentWorkRect.Min.x : pos.x;
-    const c_float max_x = span_all_columns ? window.ParentWorkRect.Max.x : window.WorkRect.Max.x;
+    let min_x: c_float =  span_all_columns ? window.ParentWorkRect.Min.x : pos.x;
+    let max_x: c_float =  span_all_columns ? window.ParentWorkRect.Max.x : window.WorkRect.Max.x;
     if (size_arg.x == 0f32 || (flags & ImGuiSelectableFlags_SpanAvailWidth))
         size.x = ImMax(label_size.x, max_x - min_x);
 
     // Text stays at the submission position, but bounding box may be extended on both sides
-    const ImVec2 text_min = pos;
+    let text_min: ImVec2 = pos;
     const ImVec2 text_max(min_x + size.x, pos.y + size.y);
 
     // Selectables are meant to be tightly packed together with no click-gap, so we extend their box to cover spacing between selectable.
     ImRect bb(min_x, pos.y, text_max.x, text_max.y);
     if ((flags & ImGuiSelectableFlags_NoPadWithHalfSpacing) == 0)
     {
-        const c_float spacing_x = span_all_columns ? 0f32 : style.ItemSpacing.x;
-        const c_float spacing_y = style.ItemSpacing.y;
-        const c_float spacing_L = IM_FLOOR(spacing_x * 0.500f32);
-        const c_float spacing_U = IM_FLOOR(spacing_y * 0.500f32);
+        let spacing_x: c_float =  span_all_columns ? 0f32 : style.ItemSpacing.x;
+        let spacing_y: c_float =  style.ItemSpacing.y;
+        let spacing_L: c_float =  IM_FLOOR(spacing_x * 0.500f32);
+        let spacing_U: c_float =  IM_FLOOR(spacing_y * 0.500f32);
         bb.Min.x -= spacing_L;
         bb.Min.y -= spacing_U;
         bb.Max.x += (spacing_x - spacing_L);
@@ -6301,8 +6301,8 @@ bool ImGui::Selectable(*const char label, bool selected, ImGuiSelectableFlags fl
     //if (g.IO.KeyCtrl) { GetForegroundDrawList()->AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
 
     // Modify ClipRect for the ItemAdd(), faster than doing a PushColumnsBackground/PushTableBackground for every Selectable..
-    const c_float backup_clip_rect_min_x = window.ClipRect.Min.x;
-    const c_float backup_clip_rect_max_x = window.ClipRect.Max.x;
+    let backup_clip_rect_min_x: c_float =  window.ClipRect.Min.x;
+    let backup_clip_rect_max_x: c_float =  window.ClipRect.Max.x;
     if (span_all_columns)
     {
         window.ClipRect.Min.x = window.ParentWorkRect.Min.x;
@@ -6430,7 +6430,7 @@ bool ImGui::BeginListBox(*const char label, const ImVec2& size_arg)
 
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = GetID(label);
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
     // Size default to hold ~7.25 items.
     // Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
@@ -6466,7 +6466,7 @@ bool ImGui::ListBoxHeader(*const char label, c_int items_count, c_int height_in_
 {
     // If height_in_items == -1, default height is maximum 7.
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    c_float height_in_items_f = (height_in_items < 0 ? ImMin(items_count, 7) : height_in_items) + 0.25f32;
+    let height_in_items_f: c_float =  (height_in_items < 0 ? ImMin(items_count, 7) : height_in_items) + 0.25f32;
     ImVec2 size;
     size.x = 0f32;
     size.y = GetTextLineHeightWithSpacing() * height_in_items_f + g.Style.FramePadding.y * 2.0f32;
@@ -6500,7 +6500,7 @@ bool ImGui::ListBox(*const char label, c_int* current_item, bool (*items_getter)
     // Calculate size from "height_in_items"
     if (height_in_items < 0)
         height_in_items = ImMin(items_count, 7);
-    c_float height_in_items_f = height_in_items + 0.25f32;
+    let height_in_items_f: c_float =  height_in_items + 0.25f32;
     ImVec2 size(0f32, ImFloor(GetTextLineHeightWithSpacing() * height_in_items_f + g.Style.FramePadding.y * 2.00f32));
 
     if (!BeginListBox(label, size))
@@ -6512,7 +6512,7 @@ bool ImGui::ListBox(*const char label, c_int* current_item, bool (*items_getter)
     ImGuiListClipper clipper;
     clipper.Begin(items_count, GetTextLineHeightWithSpacing()); // We know exactly our line height here so we pass it as a minor optimization, but generally you don't need to.
     while (clipper.Step())
-        for (c_int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+        for (let i: c_int = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
         {
 let item_text: *const c_char;
             if (!items_getter(data, i, &item_text))
@@ -6560,7 +6560,7 @@ c_int ImGui::PlotEx(ImGuiPlotType plot_type, *const char label, c_float (*values
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window.GetID(label);
 
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     if (frame_size.x == 0f32)
         frame_size.x = CalcItemWidth();
     if (frame_size.y == 0f32)
@@ -6577,11 +6577,11 @@ c_int ImGui::PlotEx(ImGuiPlotType plot_type, *const char label, c_float (*values
     // Determine scale from values if not specified
     if (scale_min == f32::MAX || scale_max == f32::MAX)
     {
-        c_float v_min = f32::MAX;
-        c_float v_max = -f32::MAX;
-        for (c_int i = 0; i < values_count; i++)
+        let v_min: c_float =  f32::MAX;
+        let v_max: c_float =  -f32::MAX;
+        for (let i: c_int = 0; i < values_count; i++)
         {
-            const c_float v = values_getter(data, i);
+            let v: c_float =  values_getter(data, i);
             if (v != v) // Ignore NaN values
                 continue;
             v_min = ImMin(v_min, v);
@@ -6596,21 +6596,21 @@ c_int ImGui::PlotEx(ImGuiPlotType plot_type, *const char label, c_float (*values
     RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
     let values_count_min: c_int = (plot_type == ImGuiPlotType_Lines) ? 2 : 1;
-    c_int idx_hovered = -1;
+    let idx_hovered: c_int = -1;
     if (values_count >= values_count_min)
     {
-        c_int res_w = ImMin(frame_size.x, values_count) + ((plot_type == ImGuiPlotType_Lines) ? -1 : 0);
-        c_int item_count = values_count + ((plot_type == ImGuiPlotType_Lines) ? -1 : 0);
+        let res_w: c_int = ImMin(frame_size.x, values_count) + ((plot_type == ImGuiPlotType_Lines) ? -1 : 0);
+        let item_count: c_int = values_count + ((plot_type == ImGuiPlotType_Lines) ? -1 : 0);
 
         // Tooltip on hover
         if (hovered && inner_bb.Contains(g.IO.MousePos))
         {
-            const c_float t = ImClamp((g.IO.MousePos.x - inner_bb.Min.x) / (inner_bb.Max.x - inner_bb.Min.x), 0f32, 0.99990f32);
+            let t: c_float =  ImClamp((g.IO.MousePos.x - inner_bb.Min.x) / (inner_bb.Max.x - inner_bb.Min.x), 0f32, 0.99990f32);
             let v_idx: c_int = (t * item_count);
             // IM_ASSERT(v_idx >= 0 && v_idx < values_count);
 
-            const c_float v0 = values_getter(data, (v_idx + values_offset) % values_count);
-            const c_float v1 = values_getter(data, (v_idx + 1 + values_offset) % values_count);
+            let v0: c_float =  values_getter(data, (v_idx + values_offset) % values_count);
+            let v1: c_float =  values_getter(data, (v_idx + 1 + values_offset) % values_count);
             if (plot_type == ImGuiPlotType_Lines)
                 SetTooltip("%d: %8.4g\n%d: %8.4g", v_idx, v0, v_idx + 1, v1);
             else if (plot_type == ImGuiPlotType_Histogram)
@@ -6618,24 +6618,24 @@ c_int ImGui::PlotEx(ImGuiPlotType plot_type, *const char label, c_float (*values
             idx_hovered = v_idx;
         }
 
-        const c_float t_step = 1f32 / res_w;
-        const c_float inv_scale = (scale_min == scale_max) ? 0f32 : (1f32 / (scale_max - scale_min));
+        let t_step: c_float =  1f32 / res_w;
+        let inv_scale: c_float =  (scale_min == scale_max) ? 0f32 : (1f32 / (scale_max - scale_min));
 
-        c_float v0 = values_getter(data, (0 + values_offset) % values_count);
-        c_float t0 = 0f32;
+        let v0: c_float =  values_getter(data, (0 + values_offset) % values_count);
+        let t0: c_float =  0f32;
         let tp0: ImVec2 = ImVec2( t0, 1f32 - ImSaturate((v0 - scale_min) * inv_scale) );                       // Point in the normalized space of our target rectangle
-        c_float histogram_zero_line_t = (scale_min * scale_max < 0f32) ? (1 + scale_min * inv_scale) : (scale_min < 0f32 ? 0f32 : 1f32);   // Where does the zero line stands
+        let histogram_zero_line_t: c_float =  (scale_min * scale_max < 0f32) ? (1 + scale_min * inv_scale) : (scale_min < 0f32 ? 0f32 : 1f32);   // Where does the zero line stands
 
         const u32 col_base = GetColorU32((plot_type == ImGuiPlotType_Lines) ? ImGuiCol_PlotLines : ImGuiCol_PlotHistogram);
         const u32 col_hovered = GetColorU32((plot_type == ImGuiPlotType_Lines) ? ImGuiCol_PlotLinesHovered : ImGuiCol_PlotHistogramHovered);
 
-        for (c_int n = 0; n < res_w; n++)
+        for (let n: c_int = 0; n < res_w; n++)
         {
-            const c_float t1 = t0 + t_step;
+            let t1: c_float =  t0 + t_step;
             let v1_idx: c_int = (t0 * item_count + 0.5f32);
             // IM_ASSERT(v1_idx >= 0 && v1_idx < values_count);
-            const c_float v1 = values_getter(data, (v1_idx + values_offset + 1) % values_count);
-            const ImVec2 tp1 = ImVec2( t1, 1f32 - ImSaturate((v1 - scale_min) * inv_scale) );
+            let v1: c_float =  values_getter(data, (v1_idx + values_offset + 1) % values_count);
+            let tp1: ImVec2 = ImVec2( t1, 1f32 - ImSaturate((v1 - scale_min) * inv_scale) );
 
             // NB: Draw calls are merged together by the DrawList system. Still, we should render our batch are lower level to save a bit of CPU.
             let pos0: ImVec2 = ImLerp(inner_bb.Min, inner_bb.Max, tp0);
@@ -6679,7 +6679,7 @@ struct ImGuiPlotArrayGetterData
 static c_float Plot_ArrayGetter(data: *mut c_void, c_int idx)
 {
     ImGuiPlotArrayGetterData* plot_data = (ImGuiPlotArrayGetterData*)data;
-    const c_float v = *(*const c_float)(*const c_void)(plot_data->Values + idx * plot_data->Stride);
+    let v: c_float =  *(*const c_float)(*const c_void)(plot_Data.Values + idx * plot_Data.Stride);
     return v;
 }
 
@@ -6771,7 +6771,7 @@ c_void ImGuiMenuColumns::CalcNextTotalWidth(bool update_offsets)
 {
     ImU16 offset = 0;
     let mut want_spacing: bool =  false;
-    for (c_int i = 0; i < IM_ARRAYSIZE(Widths); i++)
+    for (let i: c_int = 0; i < IM_ARRAYSIZE(Widths); i++)
     {
         ImU16 width = Widths[i];
         if (want_spacing && width > 0)
@@ -6816,7 +6816,7 @@ bool ImGui::BeginMenuBar()
 
     // We don't clip with current window clipping rectangle as it is already set to the area below. However we clip with window full rect.
     // We remove 1 worth of rounding to Max.x to that text in long menus and small windows don't tend to display over the lower-right rounded area, which looks particularly glitchy.
-    ImRect bar_rect = window.MenuBarRect();
+    let bar_rect: ImRect =  window.MenuBarRect();
     ImRect clip_rect(IM_ROUND(bar_rect.Min.x + window.WindowBorderSize), IM_ROUND(bar_rect.Min.y + window.WindowBorderSize), IM_ROUND(ImMax(bar_rect.Min.x, bar_rect.Max.x - ImMax(window.WindowRounding, window.WindowBorderSize))), IM_ROUND(bar_rect.Max.y));
     clip_rect.ClipWith(window.OuterRectClipped);
     PushClipRect(clip_rect.Min, clip_rect.Max, false);
@@ -6881,11 +6881,11 @@ bool ImGui::BeginViewportSideBar(*const char name, ImGuiViewport* viewport_p, Im
     // IM_ASSERT(dir != ImGuiDir_None);
 
     ImGuiWindow* bar_window = FindWindowByName(name);
-    *mut ImGuiViewportP viewport = (*mut ImGuiViewportP)(*mut c_void)(viewport_p ? viewport_p : GetMainViewport());
+    let mut viewport: *mut ImGuiViewport =  (*mut ImGuiViewportP)(*mut c_void)(viewport_p ? viewport_p : GetMainViewport());
     if (bar_window == NULL || bar_window.BeginCount == 0)
     {
         // Calculate and set window size/position
-        ImRect avail_rect = viewport->GetBuildWorkRect();
+        let avail_rect: ImRect =  viewport->GetBuildWorkRect();
         ImGuiAxis axis = (dir == ImGuiDir_Up || dir == ImGuiDir_Down) ? ImGuiAxis_Y : ImGuiAxis_X;
         let pos: ImVec2 = avail_rect.Min;
         if (dir == ImGuiDir_Right || dir == ImGuiDir_Down)
@@ -6915,7 +6915,7 @@ bool ImGui::BeginViewportSideBar(*const char name, ImGuiViewport* viewport_p, Im
 bool ImGui::BeginMainMenuBar()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    *mut ImGuiViewportP viewport = (*mut ImGuiViewportP)(*mut c_void)GetMainViewport();
+    let mut viewport: *mut ImGuiViewport =  (*mut ImGuiViewportP)(*mut c_void)GetMainViewport();
 
     // Notify of viewport change so GetFrameHeight() can be accurate in case of DPI change
     SetCurrentViewport(NULL, viewport);
@@ -6925,7 +6925,7 @@ bool ImGui::BeginMainMenuBar()
     // FIXME: Consider removing support for safe area down the line... it's messy. Nowadays consoles have support for TV calibration in OS settings.
     g.NextWindowData.MenuBarOffsetMinVal = ImVec2(g.Style.DisplaySafeAreaPadding.x, ImMax(g.Style.DisplaySafeAreaPadding.y - g.Style.FramePadding.y, 0f32));
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
-    c_float height = GetFrameHeight();
+    let height: c_float =  GetFrameHeight();
     let mut is_open: bool =  BeginViewportSideBar("##MainMenuBar", viewport, ImGuiDir_Up, height, window_flags);
     g.NextWindowData.MenuBarOffsetMinVal = ImVec2(0f32, 0f32);
 
@@ -7029,7 +7029,7 @@ bool ImGui::BeginMenuEx(*const char label, *const char icon, bool enabled)
         popup_pos = ImVec2(pos.x - 1f32 - IM_FLOOR(style.ItemSpacing.x * 0.5f32), pos.y - style.FramePadding.y + window.MenuBarHeight());
         window.DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * 0.5f32);
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x * 2.0f32, style.ItemSpacing.y));
-        c_float w = label_size.x;
+        let w: c_float =  label_size.x;
         ImVec2 text_pos(window.DC.CursorPos.x + offsets->OffsetLabel, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset);
         pressed = Selectable("", menu_is_open, selectable_flags, ImVec2(w, 0f32));
         RenderText(text_pos, label);
@@ -7042,10 +7042,10 @@ bool ImGui::BeginMenuEx(*const char label, *const char icon, bool enabled)
         // (In a typical menu window where all items are BeginMenu() or MenuItem() calls, extra_w will always be 0f32.
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
         popup_pos = ImVec2(pos.x, pos.y - style.WindowPadding.y);
-        c_float icon_w = (icon && icon[0]) ? CalcTextSize(icon, NULL).x : 0f32;
-        c_float checkmark_w = IM_FLOOR(g.FontSize * 1.200f32);
-        c_float min_w = window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0f32, checkmark_w); // Feedback to next frame
-        c_float extra_w = ImMax(0f32, GetContentRegionAvail().x - min_w);
+        let icon_w: c_float =  (icon && icon[0]) ? CalcTextSize(icon, NULL).x : 0f32;
+        let checkmark_w: c_float =  IM_FLOOR(g.FontSize * 1.200f32);
+        let min_w: c_float =  window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0f32, checkmark_w); // Feedback to next frame
+        let extra_w: c_float =  ImMax(0f32, GetContentRegionAvail().x - min_w);
         ImVec2 text_pos(window.DC.CursorPos.x + offsets->OffsetLabel, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset);
         pressed = Selectable("", menu_is_open, selectable_flags | ImGuiSelectableFlags_SpanAvailWidth, ImVec2(min_w, 0f32));
         RenderText(text_pos, label);
@@ -7071,13 +7071,13 @@ bool ImGui::BeginMenuEx(*const char label, *const char icon, bool enabled)
         ImGuiWindow* child_menu_window = (child_popup && child_popup->Window && child_popup->window.ParentWindow == window) ? child_popup->Window : NULL;
         if (g.HoveredWindow == window && child_menu_window != NULL)
         {
-            c_float ref_unit = g.FontSize; // FIXME-DPI
-            c_float child_dir = (window.Pos.x < child_menu_window.Pos.x) ? 1f32 : -1f32;
-            ImRect next_window_rect = child_menu_window.Rect();
+            let ref_unit: c_float =  g.FontSize; // FIXME-DPI
+            let child_dir: c_float =  (window.Pos.x < child_menu_window.Pos.x) ? 1f32 : -1f32;
+            let next_window_rect: ImRect =  child_menu_window.Rect();
             let ta: ImVec2 = (g.IO.MousePos - g.IO.MouseDelta);
             let tb: ImVec2 = (child_dir > 0f32) ? next_window_rect.GetTL() : next_window_rect.GetTR();
             let tc: ImVec2 = (child_dir > 0f32) ? next_window_rect.GetBL() : next_window_rect.GetBR();
-            c_float extra = ImClamp(ImFabs(ta.x - tb.x) * 0.3f32, ref_unit * 0.5f32, ref_unit * 2.5f32);   // add a bit of extra slack.
+            let extra: c_float =  ImClamp(ImFabs(ta.x - tb.x) * 0.3f32, ref_unit * 0.5f32, ref_unit * 2.5f32);   // add a bit of extra slack.
             ta.x += child_dir * -0.5f32;
             tb.x += child_dir * ref_unit;
             tc.x += child_dir * ref_unit;
@@ -7209,7 +7209,7 @@ bool ImGui::MenuItemEx(*const char label, *const char icon, *const char shortcut
     {
         // Mimic the exact layout spacing of BeginMenu() to allow MenuItem() inside a menu bar, which is a little misleading but may be useful
         // Note that in this situation: we don't render the shortcut, we render a highlight instead of the selected tick mark.
-        c_float w = label_size.x;
+        let w: c_float =  label_size.x;
         window.DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * 0.5f32);
         ImVec2 text_pos(window.DC.CursorPos.x + offsets->OffsetLabel, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset);
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x * 2.0f32, style.ItemSpacing.y));
@@ -7223,11 +7223,11 @@ bool ImGui::MenuItemEx(*const char label, *const char icon, *const char shortcut
         // Menu item inside a vertical menu
         // (In a typical menu window where all items are BeginMenu() or MenuItem() calls, extra_w will always be 0f32.
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
-        c_float icon_w = (icon && icon[0]) ? CalcTextSize(icon, NULL).x : 0f32;
-        c_float shortcut_w = (shortcut && shortcut[0]) ? CalcTextSize(shortcut, NULL).x : 0f32;
-        c_float checkmark_w = IM_FLOOR(g.FontSize * 1.200f32);
-        c_float min_w = window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, shortcut_w, checkmark_w); // Feedback for next frame
-        c_float stretch_w = ImMax(0f32, GetContentRegionAvail().x - min_w);
+        let icon_w: c_float =  (icon && icon[0]) ? CalcTextSize(icon, NULL).x : 0f32;
+        let shortcut_w: c_float =  (shortcut && shortcut[0]) ? CalcTextSize(shortcut, NULL).x : 0f32;
+        let checkmark_w: c_float =  IM_FLOOR(g.FontSize * 1.200f32);
+        let min_w: c_float =  window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, shortcut_w, checkmark_w); // Feedback for next frame
+        let stretch_w: c_float =  ImMax(0f32, GetContentRegionAvail().x - min_w);
         pressed = Selectable("", false, selectable_flags | ImGuiSelectableFlags_SpanAvailWidth, ImVec2(min_w, 0f32));
         RenderText(pos + ImVec2(offsets->OffsetLabel, 0f32), label);
         if (icon_w > 0f32)
@@ -7360,7 +7360,7 @@ bool    ImGui::BeginTabBar(*const char str_id, ImGuiTabBarFlags flags)
 
     ImGuiID id = window.GetID(str_id);
     ImGuiTabBar* tab_bar = g.TabBars.GetOrAddByKey(id);
-    ImRect tab_bar_bb = ImRect(window.DC.CursorPos.x, window.DC.CursorPos.y, window.WorkRect.Max.x, window.DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y * 2);
+    let tab_bar_bb: ImRect =  ImRect(window.DC.CursorPos.x, window.DC.CursorPos.y, window.WorkRect.Max.x, window.DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y * 2);
     tab_bar->ID = id;
     return BeginTabBarEx(tab_bar, tab_bar_bb, flags | ImGuiTabBarFlags_IsFocused, NULL);
 }
@@ -7415,17 +7415,17 @@ bool    ImGui::BeginTabBarEx(ImGuiTabBar* tab_bar, const ImRect& tab_bar_bb, ImG
 
     // Draw separator
     const u32 col = GetColorU32((flags & ImGuiTabBarFlags_IsFocused) ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive);
-    const c_float y = tab_bar->BarRect.Max.y - 1f32;
+    let y: c_float =  tab_bar->BarRect.Max.y - 1f32;
     if (dock_node != NULL)
     {
-        const c_float separator_min_x = dock_node->Pos.x + window.WindowBorderSize;
-        const c_float separator_max_x = dock_node->Pos.x + dock_node->Size.x - window.WindowBorderSize;
+        let separator_min_x: c_float =  dock_node->Pos.x + window.WindowBorderSize;
+        let separator_max_x: c_float =  dock_node->Pos.x + dock_node->Size.x - window.WindowBorderSize;
         window.DrawList.AddLine(ImVec2(separator_min_x, y), ImVec2(separator_max_x, y), col, 1f32);
     }
     else
     {
-        const c_float separator_min_x = tab_bar->BarRect.Min.x - IM_FLOOR(window.WindowPadding.x * 0.5f32);
-        const c_float separator_max_x = tab_bar->BarRect.Max.x + IM_FLOOR(window.WindowPadding.x * 0.5f32);
+        let separator_min_x: c_float =  tab_bar->BarRect.Min.x - IM_FLOOR(window.WindowPadding.x * 0.5f32);
+        let separator_max_x: c_float =  tab_bar->BarRect.Max.x + IM_FLOOR(window.WindowPadding.x * 0.5f32);
         window.DrawList.AddLine(ImVec2(separator_min_x, y), ImVec2(separator_max_x, y), col, 1f32);
     }
     return true;
@@ -7479,10 +7479,10 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
 
     // Garbage collect by compacting list
     // Detect if we need to sort out tab list (e.g. in rare case where a tab changed section)
-    c_int tab_dst_n = 0;
+    let tab_dst_n: c_int = 0;
     let mut need_sort_by_section: bool =  false;
     ImGuiTabBarSection sections[3]; // Layout sections: Leading, Central, Trailing
-    for (c_int tab_src_n = 0; tab_src_n < tab_bar->Tabs.Size; tab_src_n++)
+    for (let tab_src_n: c_int = 0; tab_src_n < tab_bar->Tabs.Size; tab_src_n++)
     {
         ImGuiTabItem* tab = &tab_bar->Tabs[tab_src_n];
         if (tab->LastFrameVisible < tab_bar->PrevFrameVisible || tab->WantClose)
@@ -7500,11 +7500,11 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         tab->IndexDuringLayout = (i16)tab_dst_n;
 
         // We will need sorting if tabs have changed section (e.g. moved from one of Leading/Central/Trailing to another)
-        c_int curr_tab_section_n = TabItemGetSectionIdx(tab);
+        let curr_tab_section_n: c_int = TabItemGetSectionIdx(tab);
         if (tab_dst_n > 0)
         {
             ImGuiTabItem* prev_tab = &tab_bar->Tabs[tab_dst_n - 1];
-            c_int prev_tab_section_n = TabItemGetSectionIdx(prev_tab);
+            let prev_tab_section_n: c_int = TabItemGetSectionIdx(prev_tab);
             if (curr_tab_section_n == 0 && prev_tab_section_n != 0)
                 need_sort_by_section = true;
             if (prev_tab_section_n == 2 && curr_tab_section_n != 2)
@@ -7555,9 +7555,9 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
 
     // Compute ideal tabs widths + store them into shrink buffer
     ImGuiTabItem* most_recently_selected_tab = None;
-    c_int curr_section_n = -1;
+    let curr_section_n: c_int = -1;
     let mut found_selected_tab_id: bool =  false;
-    for (c_int tab_n = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
+    for (let tab_n: c_int = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
     {
         ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
         // IM_ASSERT(tab->LastFrameVisible >= tab_bar->PrevFrameVisible);
@@ -7576,7 +7576,7 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         let has_close_button: bool = (tab->Flags & ImGuiTabItemFlags_NoCloseButton) ? false : true;
         tab->ContentWidth = (tab->RequestedWidth >= 0f32) ? tab->RequestedWidth : TabItemCalcSize(tab_name, has_close_button).x;
 
-        c_int section_n = TabItemGetSectionIdx(tab);
+        let section_n: c_int = TabItemGetSectionIdx(tab);
         ImGuiTabBarSection* section = &sections[section_n];
         section->Width += tab->ContentWidth + (section_n == curr_section_n ? g.Style.ItemInnerSpacing.x : 0f32);
         curr_section_n = section_n;
@@ -7591,7 +7591,7 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
 
     // Compute total ideal width (used for e.g. auto-resizing a window)
     tab_bar->WidthAllTabsIdeal = 0f32;
-    for (c_int section_n = 0; section_n < 3; section_n++)
+    for (let section_n: c_int = 0; section_n < 3; section_n++)
         tab_bar->WidthAllTabsIdeal += sections[section_n].Width + sections[section_n].Spacing;
 
     // Horizontal scrolling buttons
@@ -7605,9 +7605,9 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         }
 
     // Shrink widths if full tabs don't fit in their allocated space
-    c_float section_0_w = sections[0].Width + sections[0].Spacing;
-    c_float section_1_w = sections[1].Width + sections[1].Spacing;
-    c_float section_2_w = sections[2].Width + sections[2].Spacing;
+    let section_0_w: c_float =  sections[0].Width + sections[0].Spacing;
+    let section_1_w: c_float =  sections[1].Width + sections[1].Spacing;
+    let section_2_w: c_float =  sections[2].Width + sections[2].Spacing;
     let mut central_section_is_visible: bool =  (section_0_w + section_2_w) < tab_bar->BarRect.GetWidth();
     c_float width_excess;
     if (central_section_is_visible)
@@ -7618,36 +7618,36 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
     // With ImGuiTabBarFlags_FittingPolicyScroll policy, we will only shrink leading/trailing if the central section is not visible anymore
     if (width_excess >= 1f32 && ((tab_bar->Flags & ImGuiTabBarFlags_FittingPolicyResizeDown) || !central_section_is_visible))
     {
-        c_int shrink_data_count = (central_section_is_visible ? sections[1].TabCount : sections[0].TabCount + sections[2].TabCount);
-        c_int shrink_data_offset = (central_section_is_visible ? sections[0].TabCount + sections[2].TabCount : 0);
+        let shrink_data_count: c_int = (central_section_is_visible ? sections[1].TabCount : sections[0].TabCount + sections[2].TabCount);
+        let shrink_data_offset: c_int = (central_section_is_visible ? sections[0].TabCount + sections[2].TabCount : 0);
         ShrinkWidths(g.ShrinkWidthBuffer.Data + shrink_data_offset, shrink_data_count, width_excess);
 
         // Apply shrunk values into tabs and sections
-        for (c_int tab_n = shrink_data_offset; tab_n < shrink_data_offset + shrink_data_count; tab_n++)
+        for (let tab_n: c_int = shrink_data_offset; tab_n < shrink_data_offset + shrink_data_count; tab_n++)
         {
             ImGuiTabItem* tab = &tab_bar->Tabs[g.ShrinkWidthBuffer[tab_n].Index];
-            c_float shrinked_width = IM_FLOOR(g.ShrinkWidthBuffer[tab_n].Width);
+            let shrinked_width: c_float =  IM_FLOOR(g.ShrinkWidthBuffer[tab_n].Width);
             if (shrinked_width < 0f32)
                 continue;
 
             shrinked_width = ImMax(1f32, shrinked_width);
-            c_int section_n = TabItemGetSectionIdx(tab);
+            let section_n: c_int = TabItemGetSectionIdx(tab);
             sections[section_n].Width -= (tab->Width - shrinked_width);
             tab->Width = shrinked_width;
         }
     }
 
     // Layout all active tabs
-    c_int section_tab_index = 0;
-    c_float tab_offset = 0f32;
+    let section_tab_index: c_int = 0;
+    let tab_offset: c_float =  0f32;
     tab_bar->WidthAllTabs = 0f32;
-    for (c_int section_n = 0; section_n < 3; section_n++)
+    for (let section_n: c_int = 0; section_n < 3; section_n++)
     {
         ImGuiTabBarSection* section = &sections[section_n];
         if (section_n == 2)
             tab_offset = ImMin(ImMax(0f32, tab_bar->BarRect.GetWidth() - section->Width), tab_offset);
 
-        for (c_int tab_n = 0; tab_n < section->TabCount; tab_n++)
+        for (let tab_n: c_int = 0; tab_n < section->TabCount; tab_n++)
         {
             ImGuiTabItem* tab = &tab_bar->Tabs[section_tab_index + tab_n];
             tab->Offset = tab_offset;
@@ -7731,7 +7731,7 @@ static c_float ImGui::TabBarCalcMaxTabWidth()
 ImGuiTabItem* ImGui::TabBarFindTabByID(ImGuiTabBar* tab_bar, ImGuiID tab_id)
 {
     if (tab_id != 0)
-        for (c_int n = 0; n < tab_bar->Tabs.Size; n++)
+        for (let n: c_int = 0; n < tab_bar->Tabs.Size; n++)
             if (tab_bar->Tabs[n].ID == tab_id)
                 return &tab_bar->Tabs[n];
     return NULL;
@@ -7741,7 +7741,7 @@ ImGuiTabItem* ImGui::TabBarFindTabByID(ImGuiTabBar* tab_bar, ImGuiID tab_id)
 ImGuiTabItem* ImGui::TabBarFindMostRecentlySelectedTabForActiveWindow(ImGuiTabBar* tab_bar)
 {
     ImGuiTabItem* most_recently_selected_tab = None;
-    for (c_int tab_n = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
+    for (let tab_n: c_int = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
     {
         ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
         if (most_recently_selected_tab == NULL || most_recently_selected_tab->LastFrameSelected < tab->LastFrameSelected)
@@ -7823,16 +7823,16 @@ static c_void ImGui::TabBarScrollToTab(ImGuiTabBar* tab_bar, ImGuiID tab_id, ImG
         return;
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    c_float margin = g.FontSize * 1f32; // When to scroll to make Tab N+1 visible always make a bit of N visible to suggest more scrolling area (since we don't have a scrollbar)
-    c_int order = tab_bar->GetTabOrder(tab);
+    let margin: c_float =  g.FontSize * 1f32; // When to scroll to make Tab N+1 visible always make a bit of N visible to suggest more scrolling area (since we don't have a scrollbar)
+    let order: c_int = tab_bar->GetTabOrder(tab);
 
     // Scrolling happens only in the central section (leading/trailing sections are not scrolling)
     // FIXME: This is all confusing.
-    c_float scrollable_width = tab_bar->BarRect.GetWidth() - sections[0].Width - sections[2].Width - sections[1].Spacing;
+    let scrollable_width: c_float =  tab_bar->BarRect.GetWidth() - sections[0].Width - sections[2].Width - sections[1].Spacing;
 
     // We make all tabs positions all relative Sections[0].Width to make code simpler
-    c_float tab_x1 = tab->Offset - sections[0].Width + (order > sections[0].TabCount - 1 ? -margin : 0f32);
-    c_float tab_x2 = tab->Offset - sections[0].Width + tab->Width + (order + 1 < tab_bar->Tabs.Size - sections[2].TabCount ? margin : 1f32);
+    let tab_x1: c_float =  tab->Offset - sections[0].Width + (order > sections[0].TabCount - 1 ? -margin : 0f32);
+    let tab_x2: c_float =  tab->Offset - sections[0].Width + tab->Width + (order + 1 < tab_bar->Tabs.Size - sections[2].TabCount ? margin : 1f32);
     tab_bar->ScrollingTargetDistToVisibility = 0f32;
     if (tab_bar->ScrollingTarget > tab_x1 || (tab_x2 - tab_x1 >= scrollable_width))
     {
@@ -7864,13 +7864,13 @@ c_void ImGui::TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, *const ImGuiT
         return;
 
     let is_central_section: bool = (src_tab->Flags & ImGuiTabItemFlags_SectionMask_) == 0;
-    const c_float bar_offset = tab_bar->BarRect.Min.x - (is_central_section ? tab_bar->ScrollingTarget : 0);
+    let bar_offset: c_float =  tab_bar->BarRect.Min.x - (is_central_section ? tab_bar->ScrollingTarget : 0);
 
     // Count number of contiguous tabs we are crossing over
     let dir: c_int = (bar_offset + src_tab->Offset) > mouse_pos.x ? -1 : +1;
     let src_idx: c_int = tab_bar->Tabs.index_from_ptr(src_tab);
-    c_int dst_idx = src_idx;
-    for (c_int i = src_idx; i >= 0 && i < tab_bar->Tabs.Size; i += dir)
+    let dst_idx: c_int = src_idx;
+    for (let i: c_int = src_idx; i >= 0 && i < tab_bar->Tabs.Size; i += dir)
     {
         // Reordered tabs must share the same section
         let dst_tab: *const ImGuiTabItem = &tab_bar->Tabs[i];
@@ -7881,8 +7881,8 @@ c_void ImGui::TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, *const ImGuiT
         dst_idx = i;
 
         // Include spacing after tab, so when mouse cursor is between tabs we would not continue checking further tabs that are not hovered.
-        const c_float x1 = bar_offset + dst_tab->Offset - g.Style.ItemInnerSpacing.x;
-        const c_float x2 = bar_offset + dst_tab->Offset + dst_tab->Width + g.Style.ItemInnerSpacing.x;
+        let x1: c_float =  bar_offset + dst_tab->Offset - g.Style.ItemInnerSpacing.x;
+        let x2: c_float =  bar_offset + dst_tab->Offset + dst_tab->Width + g.Style.ItemInnerSpacing.x;
         //GetForegroundDrawList()->AddRect(ImVec2(x1, tab_bar->BarRect.Min.y), ImVec2(x2, tab_bar->BarRect.Max.y), IM_COL32(255, 0, 0, 255));
         if ((dir < 0 && mouse_pos.x > x1) || (dir > 0 && mouse_pos.x < x2))
             break;
@@ -7899,7 +7899,7 @@ bool ImGui::TabBarProcessReorder(ImGuiTabBar* tab_bar)
         return false;
 
     //IM_ASSERT(tab_bar->Flags & ImGuiTabBarFlags_Reorderable); // <- this may happen when using debug tools
-    c_int tab2_order = tab_bar->GetTabOrder(tab1) + tab_bar->ReorderRequestOffset;
+    let tab2_order: c_int = tab_bar->GetTabOrder(tab1) + tab_bar->ReorderRequestOffset;
     if (tab2_order < 0 || tab2_order >= tab_bar->Tabs.Size)
         return false;
 
@@ -7929,22 +7929,22 @@ static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
     let mut window = g.CurrentWindow;
 
     const ImVec2 arrow_button_size(g.FontSize - 2.0f32, g.FontSize + g.Style.FramePadding.y * 2.00f32);
-    const c_float scrolling_buttons_width = arrow_button_size.x * 2.0f32;
+    let scrolling_buttons_width: c_float =  arrow_button_size.x * 2.0f32;
 
-    const ImVec2 backup_cursor_pos = window.DC.CursorPos;
+    let backup_cursor_pos: ImVec2 = window.DC.CursorPos;
     //window.DrawList.AddRect(ImVec2(tab_bar->BarRect.Max.x - scrolling_buttons_width, tab_bar->BarRect.Min.y), ImVec2(tab_bar->BarRect.Max.x, tab_bar->BarRect.Max.y), IM_COL32(255,0,0,255));
 
-    c_int select_dir = 0;
+    let select_dir: c_int = 0;
     ImVec4 arrow_col = g.Style.Colors[ImGuiCol_Text];
     arrow_col.w *= 0.5f32;
 
     PushStyleColor(ImGuiCol_Text, arrow_col);
     PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    const c_float backup_repeat_delay = g.IO.KeyRepeatDelay;
-    const c_float backup_repeat_rate = g.IO.KeyRepeatRate;
+    let backup_repeat_delay: c_float =  g.IO.KeyRepeatDelay;
+    let backup_repeat_rate: c_float =  g.IO.KeyRepeatRate;
     g.IO.KeyRepeatDelay = 0.250f32;
     g.IO.KeyRepeatRate = 0.200f32;
-    c_float x = ImMax(tab_bar->BarRect.Min.x, tab_bar->BarRect.Max.x - scrolling_buttons_width);
+    let x: c_float =  ImMax(tab_bar->BarRect.Min.x, tab_bar->BarRect.Max.x - scrolling_buttons_width);
     window.DC.CursorPos = ImVec2(x, tab_bar->BarRect.Min.y);
     if (ArrowButtonEx("##<", ImGuiDir_Left, arrow_button_size, ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_Repeat))
         select_dir = -1;
@@ -7959,8 +7959,8 @@ static ImGuiTabItem* ImGui::TabBarScrollingButtons(ImGuiTabBar* tab_bar)
     if (select_dir != 0)
         if (ImGuiTabItem* tab_item = TabBarFindTabByID(tab_bar, tab_bar->SelectedTabId))
         {
-            c_int selected_order = tab_bar->GetTabOrder(tab_item);
-            c_int target_order = selected_order + select_dir;
+            let selected_order: c_int = tab_bar->GetTabOrder(tab_item);
+            let target_order: c_int = selected_order + select_dir;
 
             // Skip tab item buttons until another tab item is found or end is reached
             while (tab_to_scroll_to == NULL)
@@ -7990,8 +7990,8 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
     let mut window = g.CurrentWindow;
 
     // We use g.Style.FramePadding.y to match the square ArrowButton size
-    const c_float tab_list_popup_button_width = g.FontSize + g.Style.FramePadding.y;
-    const ImVec2 backup_cursor_pos = window.DC.CursorPos;
+    let tab_list_popup_button_width: c_float =  g.FontSize + g.Style.FramePadding.y;
+    let backup_cursor_pos: ImVec2 = window.DC.CursorPos;
     window.DC.CursorPos = ImVec2(tab_bar->BarRect.Min.x - g.Style.FramePadding.y, tab_bar->BarRect.Min.y);
     tab_bar->BarRect.Min.x += tab_list_popup_button_width;
 
@@ -8005,7 +8005,7 @@ static ImGuiTabItem* ImGui::TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
     ImGuiTabItem* tab_to_select = None;
     if (open)
     {
-        for (c_int tab_n = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
+        for (let tab_n: c_int = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
         {
             ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
             if (tab->Flags & ImGuiTabItemFlags_Button)
@@ -8208,7 +8208,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, *const char label, bool* p_open, 
         tab->LastFrameSelected = g.FrameCount;
 
     // Backup current layout position
-    const ImVec2 backup_main_cursor_pos = window.DC.CursorPos;
+    let backup_main_cursor_pos: ImVec2 = window.DC.CursorPos;
 
     // Layout
     let is_central_section: bool = (tab->Flags & ImGuiTabItemFlags_SectionMask_) == 0;
@@ -8266,8 +8266,8 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, *const char label, bool* p_open, 
     else if (held && !tab_appearing && IsMouseDragging(0))
     {
         // Drag and drop: re-order tabs
-        c_int drag_dir = 0;
-        c_float drag_distance_from_edge_x = 0f32;
+        let drag_dir: c_int = 0;
+        let drag_distance_from_edge_x: c_float =  0f32;
         if (!g.DragDropActive && ((tab_bar->Flags & ImGuiTabBarFlags_Reorderable) || (docked_window != NULL)))
         {
             // While moving a tab it will jump on the other side of the mouse, so we also test for MouseDelta.x
@@ -8292,12 +8292,12 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, *const char label, bool* p_open, 
             let mut undocking_tab: bool =  (g.DragDropActive && g.DragDropPayload.SourceId == id);
             if (!undocking_tab) //&& (!g.IO.ConfigDockingWithShift || g.IO.KeyShift)
             {
-                c_float threshold_base = g.FontSize;
-                c_float threshold_x = (threshold_base * 2.20f32);
-                c_float threshold_y = (threshold_base * 1.5f32) + ImClamp((ImFabs(g.IO.MouseDragMaxDistanceAbs[0].x) - threshold_base * 2.00f32) * 0.20f32, 0f32, threshold_base * 4.00f32);
+                let threshold_base: c_float =  g.FontSize;
+                let threshold_x: c_float =  (threshold_base * 2.20f32);
+                let threshold_y: c_float =  (threshold_base * 1.5f32) + ImClamp((ImFabs(g.IO.MouseDragMaxDistanceAbs[0].x) - threshold_base * 2.00f32) * 0.20f32, 0f32, threshold_base * 4.00f32);
                 //GetForegroundDrawList()->AddRect(ImVec2(bb.Min.x - threshold_x, bb.Min.y - threshold_y), ImVec2(bb.Max.x + threshold_x, bb.Max.y + threshold_y), IM_COL32_WHITE); // [DEBUG]
 
-                c_float distance_from_edge_y = ImMax(bb.Min.y - g.IO.MousePos.y, g.IO.MousePos.y - bb.Max.y);
+                let distance_from_edge_y: c_float =  ImMax(bb.Min.y - g.IO.MousePos.y, g.IO.MousePos.y - bb.Max.y);
                 if (distance_from_edge_y >= threshold_y)
                     undocking_tab = true;
                 if (drag_distance_from_edge_x > threshold_x)
@@ -8330,7 +8330,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, *const char label, bool* p_open, 
 // #endif
 
     // Render tab shape
-    ImDrawList* display_draw_list = window.DrawList;
+    let mut  display_draw_list: *mut ImDrawList =  window.DrawList;
     const u32 tab_col = GetColorU32((held || hovered) ? ImGuiCol_TabHovered : tab_contents_visible ? (tab_bar_focused ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive) : (tab_bar_focused ? ImGuiCol_Tab : ImGuiCol_TabUnfocused));
     TabItemBackground(display_draw_list, bb, flags, tab_col);
     RenderNavHighlight(bb, id);
@@ -8423,12 +8423,12 @@ c_void ImGui::TabItemBackground(ImDrawList* draw_list, const ImRect& bb, ImGuiTa
 {
     // While rendering tabs, we trim 1 pixel off the top of our bounding box so they can fit within a regular frame height while looking "detached" from it.
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    const c_float width = bb.GetWidth();
+    let width: c_float =  bb.GetWidth();
     IM_UNUSED(flags);
     // IM_ASSERT(width > 0f32);
-    const c_float rounding = ImMax(0f32, ImMin((flags & ImGuiTabItemFlags_Button) ? g.Style.FrameRounding : g.Style.TabRounding, width * 0.5f32 - 1f32));
-    const c_float y1 = bb.Min.y + 1f32;
-    const c_float y2 = bb.Max.y + ((flags & ImGuiTabItemFlags_Preview) ? 0f32 : -1f32);
+    let rounding: c_float =  ImMax(0f32, ImMin((flags & ImGuiTabItemFlags_Button) ? g.Style.FrameRounding : g.Style.TabRounding, width * 0.5f32 - 1f32));
+    let y1: c_float =  bb.Min.y + 1f32;
+    let y2: c_float =  bb.Max.y + ((flags & ImGuiTabItemFlags_Preview) ? 0f32 : -1f32);
     draw_list->PathLineTo(ImVec2(bb.Min.x, y2));
     draw_list->PathArcToFast(ImVec2(bb.Min.x + rounding, y1 + rounding), rounding, 6, 9);
     draw_list->PathArcToFast(ImVec2(bb.Max.x - rounding, y1 + rounding), rounding, 9, 12);
@@ -8462,14 +8462,14 @@ c_void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb
     // In Style V2 we'll have full override of all colors per state (e.g. focused, selected)
     // But right now if you want to alter text color of tabs this is what you need to do.
 // #if 0
-    const c_float backup_alpha = g.Style.Alpha;
+    let backup_alpha: c_float =  g.Style.Alpha;
     if (!is_contents_visible)
         g.Style.Alpha *= 0.7f;
 // #endif
 
     // Render text label (with clipping + alpha gradient) + unsaved marker
     ImRect text_pixel_clip_bb(bb.Min.x + frame_padding.x, bb.Min.y + frame_padding.y, bb.Max.x - frame_padding.x, bb.Max.y);
-    ImRect text_ellipsis_clip_bb = text_pixel_clip_bb;
+    let text_ellipsis_clip_bb: ImRect =  text_pixel_clip_bb;
 
     // Return clipped state ignoring the close button
     if (out_text_clipped)
@@ -8478,7 +8478,7 @@ c_void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb
         //draw_list->AddCircle(text_ellipsis_clip_bb.Min, 3.0f32, *out_text_clipped ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 0, 255));
     }
 
-    const c_float button_sz = g.FontSize;
+    let button_sz: c_float =  g.FontSize;
     const ImVec2 button_pos(ImMax(bb.Min.x, bb.Max.x - frame_padding.x * 2.0f32 - button_sz), bb.Min.y);
 
     // Close Button & Unsaved Marker
@@ -8516,7 +8516,7 @@ c_void ImGui::TabItemLabelAndCloseButton(ImDrawList* draw_list, const ImRect& bb
     // This is all rather complicated
     // (the main idea is that because the close button only appears on hover, we don't want it to alter the ellipsis position)
     // FIXME: if FramePadding is noticeably large, ellipsis_max_x will be wrong here (e.g. #3497), maybe for consistency that parameter of RenderTextEllipsis() shouldn't exist..
-    c_float ellipsis_max_x = close_button_visible ? text_pixel_clip_bb.Max.x : bb.Max.x - 1f32;
+    let ellipsis_max_x: c_float =  close_button_visible ? text_pixel_clip_bb.Max.x : bb.Max.x - 1f32;
     if (close_button_visible || unsaved_marker_visible)
     {
         text_pixel_clip_bb.Max.x -= close_button_visible ? (button_sz) : (button_sz * 0.800f32);

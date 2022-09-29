@@ -391,7 +391,7 @@ static inline u64         ImFileWrite(*const c_void, u64, u64, ImFileHandle)    
 // #else
 // #define IMGUI_DISABLE_TTY_FUNCTIONS // Can't use stdout, fflush if we are not using default file functions
 // #endif
- *mut c_void             ImFileLoadToMemory(*const char filename, *const char mode, *mut size_t out_file_size = NULL, c_int padding_bytes = 0);
+ *mut c_void             ImFileLoadToMemory(*const char filename, *const char mode, *mut size_t out_file_size = NULL, let padding_bytes: c_int = 0);
 
 // Helpers: Maths
 IM_MSVC_RUNTIME_CHECKS_OFF
@@ -442,7 +442,7 @@ static inline ImVec4 ImLerp(const ImVec4& a, const ImVec4& b, c_float t)        
 static inline c_float  ImSaturate(c_float 0f32)                                        { return (f < 0f32) ? 0f32 : (f > 1f32) ? 1f32 : f; }
 static inline c_float  ImLengthSqr(const ImVec2& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
 static inline c_float  ImLengthSqr(const ImVec4& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
-static inline c_float  ImInvLength(const ImVec2& lhs, c_float fail_value)           { c_float d = (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0f32) return ImRsqrt(d); return fail_value; }
+static inline c_float  ImInvLength(const ImVec2& lhs, c_float fail_value)           { let d: c_float =  (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0f32) return ImRsqrt(d); return fail_value; }
 static inline c_float  ImFloor(c_float 0f32)                                           { return (0f32); }
 static inline c_float  ImFloorSigned(c_float 0f32)                                     { return ((f >= 0 || f == 0f32) ? f : f - 1); } // Decent replacement for floorf()
 static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((v.x), (v.y)); }
@@ -467,15 +467,7 @@ IM_MSVC_RUNTIME_CHECKS_RESTORE
 inline c_float         ImTriangleArea(const ImVec2& a, const ImVec2& b, const ImVec2& c) { return ImFabs((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))) * 0.5f32; }
  ImGuiDir   ImGetDirQuadrantFromDelta(c_float dx, c_float dy);
 
-// Helper: ImVec1 (1D vector)
-// (this odd construct is used to facilitate the transition between 1D and 2D, and the maintenance of some branches/patches)
-IM_MSVC_RUNTIME_CHECKS_OFF
-struct ImVec1
-{
-    c_float   x;
-    constexpr ImVec1()         : x(0f32) { }
-    constexpr ImVec1(c_float _x) : x(_x) { }
-};
+
 
 
 
@@ -490,8 +482,8 @@ inline c_void     ImBitArraySetBitRange(*mut u32 arr, c_int n, c_int n2) // Work
     n2-= 1;
     while (n <= n2)
     {
-        c_int a_mod = (n & 31);
-        c_int b_mod = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
+        let a_mod: c_int = (n & 31);
+        let b_mod: c_int = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
         u32 mask = (((u64)1 << b_mod) - 1) & ~(((u64)1 << a_mod) - 1);
         arr[n >> 5] |= mask;
         n = (n + 32) & ~31;
@@ -500,7 +492,7 @@ inline c_void     ImBitArraySetBitRange(*mut u32 arr, c_int n, c_int n2) // Work
 
 // Helper: ImBitArray class (wrapper over ImBitArray functions)
 // Store 1-bit per value.
-template<c_int BITCOUNT, c_int OFFSET = 0>
+template<c_int BITCOUNT, let OFFSET: c_int = 0>
 struct ImBitArray
 {
     u32           Storage[(BITCOUNT + 31) >> 5];
@@ -791,22 +783,7 @@ enum ImGuiNextItemDataFlags_
 
 
 
-struct  ImGuiStackSizes
-{
-    c_short   SizeOfIDStack;
-    c_short   SizeOfColorStack;
-    c_short   SizeOfStyleVarStack;
-    c_short   SizeOfFontStack;
-    c_short   SizeOfFocusScopeStack;
-    c_short   SizeOfGroupStack;
-    c_short   SizeOfItemFlagsStack;
-    c_short   SizeOfBeginPopupStack;
-    c_short   SizeOfDisabledStack;
 
-    ImGuiStackSizes() { memset(this, 0, sizeof(*this)); }
-    c_void SetToCurrentState();
-    c_void CompareWithCurrentState();
-};
 
 
 
@@ -890,14 +867,7 @@ enum ImGuiInputFlags_
 
 
 
-enum ImGuiNavHighlightFlags_
-{
-    ImGuiNavHighlightFlags_None             = 0,
-    ImGuiNavHighlightFlags_TypeDefault      = 1 << 0,
-    ImGuiNavHighlightFlags_TypeThin         = 1 << 1,
-    ImGuiNavHighlightFlags_AlwaysDraw       = 1 << 2,       // Draw rectangular highlight if (g.NavId == id) _even_ when using the mouse.
-    ImGuiNavHighlightFlags_NoRounding       = 1 << 3,
-};
+
 
 
 
@@ -1187,9 +1157,9 @@ namespace ImGui
      ImGuiID       GetIDWithSeed(*const char str_id_begin, *const char str_id_end, ImGuiID seed);
 
     // Basic Helpers for widget code
-     c_void          ItemSize(const ImVec2& size, c_float text_baseline_y = -1f32);
-    inline c_void             ItemSize(const ImRect& bb, c_float text_baseline_y = -1f32) { ItemSize(bb.GetSize(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
-     bool          ItemAdd(const ImRect& bb, ImGuiID id, *const ImRect nav_bb = NULL, ImGuiItemFlags extra_flags = 0);
+     c_void          ItemSize(const ImVec2& size, let text_baseline_y: c_float =  -1f32);
+    inline c_void             ItemSize(const ImRect& bb, let text_baseline_y: c_float =  -1f32) { ItemSize(bb.GetSize(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
+     bool          ItemAdd(const ImRect& bb, ImGuiID id, *const let nav_bb: ImRect =  NULL, ImGuiItemFlags extra_flags = 0);
      bool          ItemHoverable(const ImRect& bb, ImGuiID id);
      bool          IsClippedEx(const ImRect& bb, ImGuiID id);
      c_void          SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags status_flags, const ImRect& item_rect);
@@ -1206,7 +1176,7 @@ namespace ImGui
 
     // Logging/Capture
      c_void          LogBegin(ImGuiLogType type, c_int auto_open_depth);           // -> BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
-     c_void          LogToBuffer(c_int auto_open_depth = -1);                      // Start logging/capturing to internal buffer
+     c_void          LogToBuffer(let auto_open_depth: c_int = -1);                      // Start logging/capturing to internal buffer
      c_void          LogRenderedText(*const ImVec2 ref_pos, *const char text, *const char text_end = NULL);
      c_void          LogSetNextTextDecoration(*const char prefix, *const char suffix);
 
@@ -1271,7 +1241,7 @@ namespace ImGui
     inline bool             IsActiveIdUsingKey(ImGuiKey key)                            { let g = GImGui; // ImGuiContext& g = *GImGui; return g.ActiveIdUsingKeyInputMask[key]; }
     inline c_void             SetActiveIdUsingKey(ImGuiKey key)                           { let g = GImGui; // ImGuiContext& g = *GImGui; g.ActiveIdUsingKeyInputMask.SetBit(key); }
     inline ImGuiKey         MouseButtonToKey(ImGuiMouseButton button)                   { IM_ASSERT(button >= 0 && button < ImGuiMouseButton_COUNT); return ImGuiKey_MouseLeft + button; }
-     bool          IsMouseDragPastThreshold(ImGuiMouseButton button, c_float lock_threshold = -1f32);
+     bool          IsMouseDragPastThreshold(ImGuiMouseButton button, let lock_threshold: c_float =  -1f32);
      ImGuiModFlags GetMergedModFlags();
      ImVec2        GetKeyVector2d(ImGuiKey key_left, ImGuiKey key_right, ImGuiKey key_up, ImGuiKey key_down);
      c_float         GetNavTweakPressedAmount(ImGuiAxis axis);
@@ -1301,7 +1271,7 @@ namespace ImGui
      c_void          DockNodeEndAmendTabBar();
     inline *mut ImGuiDockNode   DockNodeGetRootNode(*mut ImGuiDockNode node)                 { while (node.ParentNode) node = node.ParentNode; return node; }
     inline bool             DockNodeIsInHierarchyOf(*mut ImGuiDockNode node, *mut ImGuiDockNode parent) { while (node) { if (node == parent) return true; node = node.ParentNode; } return false; }
-    inline c_int              DockNodeGetDepth(*const ImGuiDockNode node)              { c_int depth = 0; while (node.ParentNode) { node = node.ParentNode; depth+= 1; } return depth; }
+    inline c_int              DockNodeGetDepth(*const ImGuiDockNode node)              { let depth: c_int = 0; while (node.ParentNode) { node = node.ParentNode; depth+= 1; } return depth; }
     inline ImGuiID          DockNodeGetWindowMenuButtonId(*const ImGuiDockNode node) { return ImHashStr("#COLLAPSE", 0, node.ID); }
     inline *mut ImGuiDockNode   GetWindowDockNode()                                      { let g = GImGui; // ImGuiContext& g = *GImGui; return g.Currentwindow.DockNode; }
      bool          GetWindowAlwaysWantOwnTabBar(*mut ImGuiWindow window);
@@ -1353,7 +1323,7 @@ namespace ImGui
      c_float         GetColumnNormFromOffset(*const ImGuiOldColumns columns, c_float offset);
 
     // Tables: Candidates for public API
-     c_void          TableOpenContextMenu(c_int column_n = -1);
+     c_void          TableOpenContextMenu(let column_n: c_int = -1);
      c_void          TableSetColumnWidth(c_int column_n, c_float width);
      c_void          TableSetColumnSortDirection(c_int column_n, ImGuiSortDirection sort_direction, bool append_to_sort_specs);
      c_int           TableGetHoveredColumn(); // May use (TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered) instead. Return hovered column. return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
@@ -1364,7 +1334,7 @@ namespace ImGui
     // Tables: Internals
     inline    *mut ImGuiTable   GetCurrentTable() { let g = GImGui; // ImGuiContext& g = *GImGui; return g.CurrentTable; }
      *mut ImGuiTable   TableFindByID(ImGuiID id);
-     bool          BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0, 0), c_float inner_width = 0f32);
+     bool          BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0, 0), let inner_width: c_float =  0f32);
      c_void          TableBeginInitMemory(*mut ImGuiTable table, c_int columns_count);
      c_void          TableBeginApplyRequests(*mut ImGuiTable table);
      c_void          TableSetupDrawChannels(*mut ImGuiTable table);
@@ -1387,7 +1357,7 @@ namespace ImGui
      c_void          TableEndCell(*mut ImGuiTable table);
      ImRect        TableGetCellBgRect(*const ImGuiTable table, c_int column_n);
      *const char   TableGetColumnName(*const ImGuiTable table, c_int column_n);
-     ImGuiID       TableGetColumnResizeID(*const ImGuiTable table, c_int column_n, c_int instance_no = 0);
+     ImGuiID       TableGetColumnResizeID(*const ImGuiTable table, c_int column_n, let instance_no: c_int = 0);
      c_float         TableGetMaxColumnWidth(*const ImGuiTable table, c_int column_n);
      c_void          TableSetColumnWidthAutoSingle(*mut ImGuiTable table, c_int column_n);
      c_void          TableSetColumnWidthAutoAll(*mut ImGuiTable table);
@@ -1425,18 +1395,18 @@ namespace ImGui
     // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
      c_void          RenderText(ImVec2 pos, *const char text, *const char text_end = NULL, let mut hide_text_after_hash: bool =  true);
      c_void          RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width);
-     c_void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const ImRect clip_rect = NULL);
-     c_void          RenderTextClippedEx(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const ImRect clip_rect = NULL);
+     c_void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  NULL);
+     c_void          RenderTextClippedEx(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  NULL);
      c_void          RenderTextEllipsis(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end, *const ImVec2 text_size_if_known);
-     c_void          RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, let mut border: bool =  true, c_float rounding = 0f32);
-     c_void          RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, c_float rounding = 0f32);
-     c_void          RenderColorRectWithAlphaCheckerboard(*mut ImDrawList draw_list, ImVec2 p_min, ImVec2 p_max, u32 fill_col, c_float grid_step, ImVec2 grid_off, c_float rounding = 0f32, ImDrawFlags flags = 0);
+     c_void          RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, let mut border: bool =  true, let rounding: c_float =  0f32);
+     c_void          RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, let rounding: c_float =  0f32);
+     c_void          RenderColorRectWithAlphaCheckerboard(*mut ImDrawList draw_list, ImVec2 p_min, ImVec2 p_max, u32 fill_col, c_float grid_step, ImVec2 grid_off, let rounding: c_float =  0f32, ImDrawFlags flags = 0);
      c_void          RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags = ImGuiNavHighlightFlags_TypeDefault); // Navigation highlight
      *const char   FindRenderedTextEnd(*const char text, *const char text_end = NULL); // Find the optional ## from which we stop displaying text.
      c_void          RenderMouseCursor(ImVec2 pos, c_float scale, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow);
 
     // Render helpers (those functions don't access any ImGui state!)
-     c_void          RenderArrow(*mut ImDrawList draw_list, ImVec2 pos, u32 col, ImGuiDir dir, c_float scale = 1f32);
+     c_void          RenderArrow(*mut ImDrawList draw_list, ImVec2 pos, u32 col, ImGuiDir dir, let scale: c_float =  1f32);
      c_void          RenderBullet(*mut ImDrawList draw_list, ImVec2 pos, u32 col);
      c_void          RenderCheckMark(*mut ImDrawList draw_list, ImVec2 pos, u32 col, c_float sz);
      c_void          RenderArrowPointingAt(*mut ImDrawList draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, u32 col);
@@ -1466,7 +1436,7 @@ namespace ImGui
      bool          ButtonBehavior(const ImRect& bb, ImGuiID id, *mut bool out_hovered, *mut bool out_held, ImGuiButtonFlags flags = 0);
      bool          DragBehavior(ImGuiID id, ImGuiDataType data_type, *mut c_void p_v, c_float v_speed, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags);
      bool          SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags, *mut ImRect out_grab_bb);
-     bool          SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, *mut c_float size1, *mut c_float size2, c_float min_size1, c_float min_size2, c_float hover_extend = 0f32, c_float hover_visibility_delay = 0f32, u32 bg_col = 0);
+     bool          SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, *mut c_float size1, *mut c_float size2, c_float min_size1, c_float min_size2, let hover_extend: c_float =  0f32, let hover_visibility_delay: c_float =  0f32, u32 bg_col = 0);
      bool          TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, *const char label, *const char label_end = NULL);
      c_void          TreePushOverrideID(ImGuiID id);
      c_void          TreeNodeSetOpen(ImGuiID id, bool open);

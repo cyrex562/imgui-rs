@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
+use crate::draw_list_splitter::ImDrawListSplitter;
+use crate::imvec1::ImVec1;
 use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 

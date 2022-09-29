@@ -638,7 +638,7 @@ static c_void ShowDemoWindowWidgets()
     if (ImGui::TreeNode("Basic"))
     {
         IMGUI_DEMO_MARKER("Widgets/Basic/Button");
-        static c_int clicked = 0;
+        static let clicked: c_int = 0;
         if (ImGui::Button("Button"))
             clicked+= 1;
         if (clicked & 1)
@@ -652,14 +652,14 @@ static c_void ShowDemoWindowWidgets()
         ImGui::Checkbox("checkbox", &check);
 
         IMGUI_DEMO_MARKER("Widgets/Basic/RadioButton");
-        static c_int e = 0;
+        static let e: c_int = 0;
         ImGui::RadioButton("radio a", &e, 0); ImGui::SameLine();
         ImGui::RadioButton("radio b", &e, 1); ImGui::SameLine();
         ImGui::RadioButton("radio c", &e, 2);
 
         // Color buttons, demonstrate using PushID() to add unique identifier in the ID stack, and changing style.
         IMGUI_DEMO_MARKER("Widgets/Basic/Buttons (Colored)");
-        for (c_int i = 0; i < 7; i++)
+        for (let i: c_int = 0; i < 7; i++)
         {
             if (i > 0)
                 ImGui::SameLine();
@@ -681,8 +681,8 @@ static c_void ShowDemoWindowWidgets()
 
         // Arrow buttons with Repeater
         IMGUI_DEMO_MARKER("Widgets/Basic/Buttons (Repeating)");
-        static c_int counter = 0;
-        c_float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
+        static let counter: c_int = 0;
+        let spacing: c_float =  ImGui::GetStyle().ItemInnerSpacing.x;
         ImGui::PushButtonRepeat(true);
         if (ImGui::ArrowButton("##left", ImGuiDir_Left)) { counter-= 1; }
         ImGui::SameLine(0f32, spacing);
@@ -699,7 +699,7 @@ static c_void ShowDemoWindowWidgets()
             // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
             IMGUI_DEMO_MARKER("Widgets/Basic/Combo");
             *const char items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIIIIII", "JJJJ", "KKKKKKK" };
-            static c_int item_current = 0;
+            static let item_current: c_int = 0;
             ImGui::Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
             ImGui::SameLine(); HelpMarker(
                 "Using the simplified one-liner Combo API here.\nRefer to the \"Combo\" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.");
@@ -728,16 +728,16 @@ static c_void ShowDemoWindowWidgets()
             ImGui::InputTextWithHint("input text (w/ hint)", "enter text here", str1, IM_ARRAYSIZE(str1));
 
             IMGUI_DEMO_MARKER("Widgets/Basic/InputInt, InputFloat");
-            static c_int i0 = 123;
+            static let i0: c_int = 123;
             ImGui::InputInt("input int", &i0);
 
-            static c_float f0 = 0.001f;
+            static let f0: c_float =  0.001f;
             ImGui::InputFloat("input float", &f0, 0.01f, 1f32, "%.3f");
 
             static double d0 = 999999.00000001;
             ImGui::InputDouble("input double", &d0, 0.01f, 1f32, "%.8f");
 
-            static c_float f1 = 1.e10f32;
+            static let f1: c_float =  1.e10f32;
             ImGui::InputFloat("input scientific", &f1, 0f32, 0f32, "%e");
             ImGui::SameLine(); HelpMarker(
                 "You can input value using the scientific notation,\n"
@@ -749,7 +749,7 @@ static c_void ShowDemoWindowWidgets()
 
         {
             IMGUI_DEMO_MARKER("Widgets/Basic/DragInt, DragFloat");
-            static c_int i1 = 50, i2 = 42;
+            static let i1: c_int = 50, i2 = 42;
             ImGui::DragInt("drag int", &i1, 1);
             ImGui::SameLine(); HelpMarker(
                 "Click and drag to edit value.\n"
@@ -758,23 +758,23 @@ static c_void ShowDemoWindowWidgets()
 
             ImGui::DragInt("drag int 0..100", &i2, 1, 0, 100, "%d%%", ImGuiSliderFlags_AlwaysClamp);
 
-            static c_float f1 = 1f32, f2 = 0.0067f;
+            static let f1: c_float =  1f32, f2 = 0.0067f;
             ImGui::DragFloat("drag float", &f1, 0.0050f32);
             ImGui::DragFloat("drag small float", &f2, 0.0001f, 0f32, 0f32, "%.06f ns");
         }
 
         {
             IMGUI_DEMO_MARKER("Widgets/Basic/SliderInt, SliderFloat");
-            static c_int i1 = 0;
+            static let i1: c_int = 0;
             ImGui::SliderInt("slider int", &i1, -1, 3);
             ImGui::SameLine(); HelpMarker("CTRL+click to input value.");
 
-            static c_float f1 = 0.123f, f2 = 0f32;
+            static let f1: c_float =  0.123f, f2 = 0f32;
             ImGui::SliderFloat("slider float", &f1, 0f32, 1f32, "ratio = %.3f");
             ImGui::SliderFloat("slider float (log)", &f2, -10f32, 10f32, "%.4f", ImGuiSliderFlags_Logarithmic);
 
             IMGUI_DEMO_MARKER("Widgets/Basic/SliderAngle");
-            static c_float angle = 0f32;
+            static let angle: c_float =  0f32;
             ImGui::SliderAngle("slider angle", &angle);
 
             // Using the format string to display a name instead of an integer.
@@ -782,7 +782,7 @@ static c_void ShowDemoWindowWidgets()
             // This technique can also be used with DragInt().
             IMGUI_DEMO_MARKER("Widgets/Basic/Slider (enum)");
             enum Element { Element_Fire, Element_Earth, Element_Air, Element_Water, Element_COUNT };
-            static c_int elem = Element_Fire;
+            static let elem: c_int = Element_Fire;
             *const char elems_names[Element_COUNT] = { "Fire", "Earth", "Air", "Water" };
             let mut  elem_name: *const c_char = (elem >= 0 && elem < Element_COUNT) ? elems_names[elem] : "Unknown";
             ImGui::SliderInt("slider enum", &elem, 0, Element_COUNT - 1, elem_name);
@@ -808,7 +808,7 @@ static c_void ShowDemoWindowWidgets()
             // See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
             IMGUI_DEMO_MARKER("Widgets/Basic/ListBox");
             *const char items[] = { "Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pineapple", "Strawberry", "Watermelon" };
-            static c_int item_current = 1;
+            static let item_current: c_int = 1;
             ImGui::ListBox("listbox", &item_current, items, IM_ARRAYSIZE(items), 4);
             ImGui::SameLine(); HelpMarker(
                 "Using the simplified one-liner ListBox API here.\nRefer to the \"List boxes\" section below for an explanation of how to use the more flexible and general BeginListBox/EndListBox API.");
@@ -863,7 +863,7 @@ static c_void ShowDemoWindowWidgets()
         IMGUI_DEMO_MARKER("Widgets/Trees/Basic trees");
         if (ImGui::TreeNode("Basic trees"))
         {
-            for (c_int i = 0; i < 5; i++)
+            for (let i: c_int = 0; i < 5; i++)
             {
                 // Use SetNextItemOpen() so set the default state of a node to be open. We could
                 // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
@@ -904,9 +904,9 @@ static c_void ShowDemoWindowWidgets()
             //  You may retain selection state inside or outside your objects in whatever format you see fit.
             // 'node_clicked' is temporary storage of what node we have clicked to process selection at the end
             /// of the loop. May be a pointer to your own node type, etc.
-            static c_int selection_mask = (1 << 2);
-            c_int node_clicked = -1;
-            for (c_int i = 0; i < 6; i++)
+            static let selection_mask: c_int = (1 << 2);
+            let node_clicked: c_int = -1;
+            for (let i: c_int = 0; i < 6; i++)
             {
                 // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
                 // To alter selection we use IsItemClicked() && !IsItemToggledOpen(), so clicking on an arrow doesn't alter selection.
@@ -973,13 +973,13 @@ static c_void ShowDemoWindowWidgets()
         if (ImGui::CollapsingHeader("Header", ImGuiTreeNodeFlags_None))
         {
             ImGui::Text("IsItemHovered: %d", ImGui::IsItemHovered());
-            for (c_int i = 0; i < 5; i++)
+            for (let i: c_int = 0; i < 5; i++)
                 ImGui::Text("Some content %d", i);
         }
         if (ImGui::CollapsingHeader("Header with a close button", &closable_group))
         {
             ImGui::Text("IsItemHovered: %d", ImGui::IsItemHovered());
-            for (c_int i = 0; i < 5; i++)
+            for (let i: c_int = 0; i < 5; i++)
                 ImGui::Text("More content %d", i);
         }
         /*
@@ -1027,11 +1027,11 @@ static c_void ShowDemoWindowWidgets()
                 "for text wrapping follows simple rules suitable for English and possibly other languages.");
             ImGui::Spacing();
 
-            static c_float wrap_width = 200f32;
+            static let wrap_width: c_float =  200f32;
             ImGui::SliderFloat("Wrap width", &wrap_width, -20, 600, "%.0f");
 
             *mut ImDrawList draw_list = ImGui::GetWindowDrawList();
-            for (c_int n = 0; n < 2; n++)
+            for (let n: c_int = 0; n < 2; n++)
             {
                 ImGui::Text("Test paragraph %d:", n);
                 let pos: ImVec2 = ImGui::GetCursorScreenPos();
@@ -1103,9 +1103,9 @@ static c_void ShowDemoWindowWidgets()
         // - Consider using the lower-level ImDrawList::AddImage() API, via ImGui::GetWindowDrawList()->AddImage().
         // - Read https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
         // - Read https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
-        ImTextureID my_tex_id = io.Fonts.TexID;
-        c_float my_tex_w = io.Fonts.TexWidth;
-        c_float my_tex_h = io.Fonts.TexHeight;
+        let mut  my_tex_id: ImTextureID =  io.Fonts.TexID;
+        let my_tex_w: c_float =  io.Fonts.TexWidth;
+        let my_tex_h: c_float =  io.Fonts.TexHeight;
         {
             ImGui::Text("%.0fx%.0f", my_tex_w, my_tex_h);
             let pos: ImVec2 = ImGui::GetCursorScreenPos();
@@ -1117,10 +1117,10 @@ static c_void ShowDemoWindowWidgets()
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
-                c_float region_sz = 32.0f32;
-                c_float region_x = io.MousePos.x - pos.x - region_sz * 0.5f32;
-                c_float region_y = io.MousePos.y - pos.y - region_sz * 0.5f32;
-                c_float zoom = 4.0f32;
+                let region_sz: c_float =  32.0f32;
+                let region_x: c_float =  io.MousePos.x - pos.x - region_sz * 0.5f32;
+                let region_y: c_float =  io.MousePos.y - pos.y - region_sz * 0.5f32;
+                let zoom: c_float =  4.0f32;
                 if (region_x < 0f32) { region_x = 0f32; }
                 else if (region_x > my_tex_w - region_sz) { region_x = my_tex_w - region_sz; }
                 if (region_y < 0f32) { region_y = 0f32; }
@@ -1136,8 +1136,8 @@ static c_void ShowDemoWindowWidgets()
 
         IMGUI_DEMO_MARKER("Widgets/Images/Textured buttons");
         ImGui::TextWrapped("And now some textured buttons..");
-        static c_int pressed_count = 0;
-        for (c_int i = 0; i < 8; i++)
+        static let pressed_count: c_int = 0;
+        for (let i: c_int = 0; i < 8; i++)
         {
             // UV coordinates are often (0f32, 0f32) and (1f32, 1f32) to display an entire textures.
             // Here are trying to display only a 32x32 pixels area of the texture, hence the UV computation.
@@ -1178,11 +1178,11 @@ static c_void ShowDemoWindowWidgets()
         // (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
         // stored in the object itself, etc.)
         *const char items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" };
-        static c_int item_current_idx = 0; // Here we store our selection data as an index.
+        static let item_current_idx: c_int = 0; // Here we store our selection data as an index.
         let mut  combo_preview_value: *const c_char = items[item_current_idx];  // Pass in the preview value visible before opening the combo (it could be anything)
         if (ImGui::BeginCombo("combo 1", combo_preview_value, flags))
         {
-            for (c_int n = 0; n < IM_ARRAYSIZE(items); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(items); n++)
             {
                 let is_selected: bool = (item_current_idx == n);
                 if (ImGui::Selectable(items[n], is_selected))
@@ -1197,17 +1197,17 @@ static c_void ShowDemoWindowWidgets()
 
         // Simplified one-liner Combo() API, using values packed in a single constant string
         // This is a convenience for when the selection set is small and known at compile-time.
-        static c_int item_current_2 = 0;
+        static let item_current_2: c_int = 0;
         ImGui::Combo("combo 2 (one-liner)", &item_current_2, "aaaa\0bbbb\0cccc\0dddd\0eeee\0\0");
 
         // Simplified one-liner Combo() using an array of const char*
         // This is not very useful (may obsolete): prefer using BeginCombo()/EndCombo() for full control.
-        static c_int item_current_3 = -1; // If the selection isn't within 0..count, Combo won't display a preview
+        static let item_current_3: c_int = -1; // If the selection isn't within 0..count, Combo won't display a preview
         ImGui::Combo("combo 3 (array)", &item_current_3, items, IM_ARRAYSIZE(items));
 
         // Simplified one-liner Combo() using an accessor function
         struct Funcs { static bool ItemGetter(*mut c_void data, c_int n, **const char out_str) { *out_str = ((**const char)data)[n]; return true; } };
-        static c_int item_current_4 = 0;
+        static let item_current_4: c_int = 0;
         ImGui::Combo("combo 4 (function)", &item_current_4, &Funcs::ItemGetter, items, IM_ARRAYSIZE(items));
 
         ImGui::TreePop();
@@ -1220,10 +1220,10 @@ static c_void ShowDemoWindowWidgets()
         // (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
         // stored in the object itself, etc.)
         *const char items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" };
-        static c_int item_current_idx = 0; // Here we store our selection data as an index.
+        static let item_current_idx: c_int = 0; // Here we store our selection data as an index.
         if (ImGui::BeginListBox("listbox 1"))
         {
-            for (c_int n = 0; n < IM_ARRAYSIZE(items); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(items); n++)
             {
                 let is_selected: bool = (item_current_idx == n);
                 if (ImGui::Selectable(items[n], is_selected))
@@ -1240,7 +1240,7 @@ static c_void ShowDemoWindowWidgets()
         ImGui::Text("Full-width:");
         if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
         {
-            for (c_int n = 0; n < IM_ARRAYSIZE(items); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(items); n++)
             {
                 let is_selected: bool = (item_current_idx == n);
                 if (ImGui::Selectable(items[n], is_selected))
@@ -1281,8 +1281,8 @@ static c_void ShowDemoWindowWidgets()
         IMGUI_DEMO_MARKER("Widgets/Selectables/Single Selection");
         if (ImGui::TreeNode("Selection State: Single Selection"))
         {
-            static c_int selected = -1;
-            for (c_int n = 0; n < 5; n++)
+            static let selected: c_int = -1;
+            for (let n: c_int = 0; n < 5; n++)
             {
                 buf: [c_char;32];
                 sprintf(buf, "Object %d", n);
@@ -1296,7 +1296,7 @@ static c_void ShowDemoWindowWidgets()
         {
             HelpMarker("Hold CTRL and click to select multiple items.");
             static bool selection[5] = { false, false, false, false, false };
-            for (c_int n = 0; n < 5; n++)
+            for (let n: c_int = 0; n < 5; n++)
             {
                 buf: [c_char;32];
                 sprintf(buf, "Object %d", n);
@@ -1327,7 +1327,7 @@ static c_void ShowDemoWindowWidgets()
 
             if (ImGui::BeginTable("split1", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_Borders))
             {
-                for (c_int i = 0; i < 10; i++)
+                for (let i: c_int = 0; i < 10; i++)
                 {
                     label: [c_char;32];
                     sprintf(label, "Item %d", i);
@@ -1339,7 +1339,7 @@ static c_void ShowDemoWindowWidgets()
             ImGui::Spacing();
             if (ImGui::BeginTable("split2", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_Borders))
             {
-                for (c_int i = 0; i < 10; i++)
+                for (let i: c_int = 0; i < 10; i++)
                 {
                     label: [c_char;32];
                     sprintf(label, "Item %d", i);
@@ -1361,13 +1361,13 @@ static c_void ShowDemoWindowWidgets()
             static selected: [c_char;4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
 
             // Add in a bit of silly fun...
-            const c_float time = ImGui::GetTime();
+            let time: c_float =  ImGui::GetTime();
             let winning_state: bool = memchr(selected, 0, sizeof(selected)) == None; // If all cells are selected...
             if (winning_state)
                 ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f32 + 0.5f32 * cosf(time * 2.00f32), 0.5f32 + 0.5f32 * sinf(time * 3.00f32)));
 
-            for (c_int y = 0; y < 4; y++)
-                for (c_int x = 0; x < 4; x++)
+            for (let y: c_int = 0; y < 4; y++)
+                for (let x: c_int = 0; x < 4; x++)
                 {
                     if (x > 0)
                         ImGui::SameLine();
@@ -1396,9 +1396,9 @@ static c_void ShowDemoWindowWidgets()
                 "basis using PushStyleVar(). You'll probably want to always keep your default situation to "
                 "left-align otherwise it becomes difficult to layout multiple items on a same line");
             static bool selected[3 * 3] = { true, false, true, false, true, false, true, false, true };
-            for (c_int y = 0; y < 3; y++)
+            for (let y: c_int = 0; y < 3; y++)
             {
-                for (c_int x = 0; x < 3; x++)
+                for (let x: c_int = 0; x < 3; x++)
                 {
                     let alignment: ImVec2 = ImVec2(x / 2.0f32, y / 2.00f32);
                     name: [c_char;32];
@@ -1512,7 +1512,7 @@ static c_void ShowDemoWindowWidgets()
                         data.BufDirty = true;
 
                         // Increment a counter
-                        *mut c_int p_int = (*mut c_int)data.UserData;
+                        *mut let p_int: c_int = (*mut c_int)data.UserData;
                         *p_int = *p_int + 1;
                     }
                     return 0;
@@ -1527,7 +1527,7 @@ static c_void ShowDemoWindowWidgets()
             ImGui::SameLine(); HelpMarker("Here we replace and select text each time Up/Down are pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.");
 
             static buf3: [c_char;64];
-            static c_int edit_count = 0;
+            static let edit_count: c_int = 0;
             ImGui::InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, (*mut c_void)&edit_count);
             ImGui::SameLine(); HelpMarker("Here we toggle the casing of the first character on every edits + count edits.");
             ImGui::SameLine(); ImGui::Text("(%d)", edit_count);
@@ -1631,7 +1631,7 @@ static c_void ShowDemoWindowWidgets()
             // Tab Bar
             *const names: [c_char;4] = { "Artichoke", "Beetroot", "Celery", "Daikon" };
             static bool opened[4] = { true, true, true, true }; // Persistent user state
-            for (c_int n = 0; n < IM_ARRAYSIZE(opened); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(opened); n++)
             {
                 if (n > 0) { ImGui::SameLine(); }
                 ImGui::Checkbox(names[n], &opened[n]);
@@ -1641,7 +1641,7 @@ static c_void ShowDemoWindowWidgets()
             // the underlying bool will be set to false when the tab is closed.
             if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
             {
-                for (c_int n = 0; n < IM_ARRAYSIZE(opened); n++)
+                for (let n: c_int = 0; n < IM_ARRAYSIZE(opened); n++)
                     if (opened[n] && ImGui::BeginTabItem(names[n], &opened[n], ImGuiTabItemFlags_None))
                     {
                         ImGui::Text("This is the %s tab!", names[n]);
@@ -1659,9 +1659,9 @@ static c_void ShowDemoWindowWidgets()
         if (ImGui::TreeNode("TabItemButton & Leading/Trailing flags"))
         {
             static Vec<c_int> active_tabs;
-            static c_int next_tab_id = 0;
+            static let next_tab_id: c_int = 0;
             if (next_tab_id == 0) // Initialize with some default tabs
-                for (c_int i = 0; i < 3; i++)
+                for (let i: c_int = 0; i < 3; i++)
                     active_tabs.push(next_tab_id++);
 
             // TabItemButton() and Leading/Trailing flags are distinct features which we will demo together.
@@ -1699,7 +1699,7 @@ static c_void ShowDemoWindowWidgets()
                         active_tabs.push(next_tab_id++); // Add new tab
 
                 // Submit our regular tabs
-                for (c_int n = 0; n < active_tabs.Size; )
+                for (let n: c_int = 0; n < active_tabs.Size; )
                 {
                     let mut open: bool =  true;
                     name: [c_char;16];
@@ -1743,13 +1743,13 @@ static c_void ShowDemoWindowWidgets()
         // Tip: If your float aren't contiguous but part of a structure, you can pass a pointer to your first float
         // and the sizeof() of your structure in the "stride" parameter.
         static c_float values[90] = {};
-        static c_int values_offset = 0;
+        static let values_offset: c_int = 0;
         static double refresh_time = 0.0;
         if (!animate || refresh_time == 0.0)
             refresh_time = ImGui::GetTime();
         while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
         {
-            static c_float phase = 0f32;
+            static let phase: c_float =  0f32;
             values[values_offset] = cosf(phase);
             values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
             phase += 0.1f32 * values_offset;
@@ -1759,8 +1759,8 @@ static c_void ShowDemoWindowWidgets()
         // Plots can display overlay texts
         // (in this example, we will display an average value)
         {
-            c_float average = 0f32;
-            for (c_int n = 0; n < IM_ARRAYSIZE(values); n++)
+            let average: c_float =  0f32;
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(values); n++)
                 average += values[n];
             average /= IM_ARRAYSIZE(values);
             overlay: [c_char;32];
@@ -1776,7 +1776,7 @@ static c_void ShowDemoWindowWidgets()
             static c_float Sin(*mut c_void, c_int i) { return sinf(i * 0.1f32); }
             static c_float Saw(*mut c_void, c_int i) { return (i & 1) ? 1f32 : -1f32; }
         };
-        static c_int func_type = 0, display_count = 70;
+        static let func_type: c_int = 0, display_count = 70;
         ImGui::Separator();
         ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
         ImGui::Combo("func", &func_type, "Sin\0Saw\0");
@@ -1789,7 +1789,7 @@ static c_void ShowDemoWindowWidgets()
 
         // Animate a simple progress bar
         IMGUI_DEMO_MARKER("Widgets/Plotting/ProgressBar");
-        static c_float progress = 0f32, progress_dir = 1f32;
+        static let progress: c_float =  0f32, progress_dir = 1f32;
         if (animate)
         {
             progress += progress_dir * 0.4f * ImGui::GetIO().DeltaTime;
@@ -1803,7 +1803,7 @@ static c_void ShowDemoWindowWidgets()
         ImGui::SameLine(0f32, ImGui::GetStyle().ItemInnerSpacing.x);
         ImGui::Text("Progress Bar");
 
-        c_float progress_saturated = IM_CLAMP(progress, 0f32, 1f32);
+        let progress_saturated: c_float =  IM_CLAMP(progress, 0f32, 1f32);
         buf: [c_char;32];
         sprintf(buf, "%d/%d", (progress_saturated * 1753), 1753);
         ImGui::ProgressBar(progress, ImVec2(0.f, 0f32), bu0f32);
@@ -1858,7 +1858,7 @@ static c_void ShowDemoWindowWidgets()
         static ImVec4 saved_palette[32] = {};
         if (saved_palette_init)
         {
-            for (c_int n = 0; n < IM_ARRAYSIZE(saved_palette); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(saved_palette); n++)
             {
                 ImGui::ColorConvertHSVtoRGB(n / 31f32, 0.8f, 0.8f,
                     saved_palette[n].x, saved_palette[n].y, saved_palette[n].z);
@@ -1891,7 +1891,7 @@ static c_void ShowDemoWindowWidgets()
                 color = backup_color;
             ImGui::Separator();
             ImGui::Text("Palette");
-            for (c_int n = 0; n < IM_ARRAYSIZE(saved_palette); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(saved_palette); n++)
             {
                 ImGui::PushID(n);
                 if ((n % 8) != 0)
@@ -1931,8 +1931,8 @@ static c_void ShowDemoWindowWidgets()
         static let mut side_preview: bool =  true;
         static let mut ref_color: bool =  false;
         static ImVec4 ref_color_v(1f32, 0f32, 1f32, 0.5f32);
-        static c_int display_mode = 0;
-        static c_int picker_mode = 0;
+        static let display_mode: c_int = 0;
+        static let picker_mode: c_int = 0;
         ImGui::Checkbox("With Alpha", &alpha);
         ImGui::Checkbox("With Alpha Bar", &alpha_bar);
         ImGui::Checkbox("With Side Preview", &side_preview);
@@ -1977,7 +1977,7 @@ static c_void ShowDemoWindowWidgets()
 
         // Always both a small version of both types of pickers (to make it more visible in the demo to people who are skimming quickly through it)
         ImGui::Text("Both types:");
-        c_float w = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.y) * 0.40f32;
+        let w: c_float =  (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.y) * 0.40f32;
         ImGui::SetNextItemWidth(w);
         ImGui::ColorPicker3("##MyColor##5", (*mut c_float)&color, ImGuiColorEditFlags_PickerHueBar | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
         ImGui::SameLine();
@@ -2015,8 +2015,8 @@ static c_void ShowDemoWindowWidgets()
         ImGui::SameLine(); HelpMarker("Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
 
         // Drags
-        static c_float drag_f = 0.5f32;
-        static c_int drag_i = 50;
+        static let drag_f: c_float =  0.5f32;
+        static let drag_i: c_int = 50;
         ImGui::Text("Underlying float value: %f", drag_0f32);
         ImGui::DragFloat("DragFloat (0 -> 1)", &drag_f, 0.005f, 0f32, 1f32, "%.3f", flags);
         ImGui::DragFloat("DragFloat (0 -> +in0f32)", &drag_f, 0.005f, 0f32, f32::MAX, "%.3f", flags);
@@ -2025,8 +2025,8 @@ static c_void ShowDemoWindowWidgets()
         ImGui::DragInt("DragInt (0 -> 100)", &drag_i, 0.5f32, 0, 100, "%d", flags);
 
         // Sliders
-        static c_float slider_f = 0.5f32;
-        static c_int slider_i = 50;
+        static let slider_f: c_float =  0.5f32;
+        static let slider_i: c_int = 50;
         ImGui::Text("Underlying float value: %f", slider_0f32);
         ImGui::SliderFloat("SliderFloat (0 -> 1)", &slider_f, 0f32, 1f32, "%.3f", flags);
         ImGui::SliderInt("SliderInt (0 -> 100)", &slider_i, 0, 100, "%d", flags);
@@ -2037,8 +2037,8 @@ static c_void ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Range Widgets");
     if (ImGui::TreeNode("Range Widgets"))
     {
-        static c_float begin = 10, end = 90;
-        static c_int begin_i = 100, end_i = 1000;
+        static let begin: c_float =  10, end = 90;
+        static let begin_i: c_int = 100, end_i = 1000;
         ImGui::DragFloatRange2("range float", &begin, &end, 0.25f, 0f32, 100f32, "Min: %.1f %%", "Max: %.1f %%", ImGuiSliderFlags_AlwaysClamp);
         ImGui::DragIntRange2("range int", &begin_i, &end_i, 5, 0, 1000, "Min: %d units", "Max: %d units");
         ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %d units", "Max: %d units");
@@ -2093,7 +2093,7 @@ static c_void ShowDemoWindowWidgets()
         static c_float  f32_v = 0.123f;
         static double f64_v = 90000.01234567890123456789;
 
-        const c_float drag_speed = 0.2f;
+        let drag_speed: c_float =  0.2f;
         static let mut drag_clamp: bool =  false;
         IMGUI_DEMO_MARKER("Widgets/Data Types/Drags");
         ImGui::Text("Drags:");
@@ -2204,16 +2204,16 @@ static c_void ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Vertical Sliders");
     if (ImGui::TreeNode("Vertical Sliders"))
     {
-        const c_float spacing = 4;
+        let spacing: c_float =  4;
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
 
-        static c_int int_value = 0;
+        static let int_value: c_int = 0;
         ImGui::VSliderInt("##int", ImVec2(18, 160), &int_value, 0, 5);
         ImGui::SameLine();
 
         static c_float values[7] = { 0f32, 0.60f32, 0.35f, 0.9f, 0.70f32, 0.20f32, 0f32 };
         ImGui::PushID("set1");
-        for (c_int i = 0; i < 7; i++)
+        for (let i: c_int = 0; i < 7; i++)
         {
             if (i > 0) ImGui::SameLine();
             ImGui::PushID(i);
@@ -2234,11 +2234,11 @@ static c_void ShowDemoWindowWidgets()
         static c_float values2[4] = { 0.20f32, 0.80f32, 0.40f32, 0.25f };
         let rows: c_int = 3;
         const ImVec2 small_slider_size(18, ((160f32 - (rows - 1) * spacing) / rows));
-        for (c_int nx = 0; nx < 4; nx++)
+        for (let nx: c_int = 0; nx < 4; nx++)
         {
             if (nx > 0) ImGui::SameLine();
             ImGui::BeginGroup();
-            for (c_int ny = 0; ny < rows; ny++)
+            for (let ny: c_int = 0; ny < rows; ny++)
             {
                 ImGui::PushID(nx * rows + ny);
                 ImGui::VSliderFloat("##v", small_slider_size, &values2[nx], 0f32, 1f32, "");
@@ -2252,7 +2252,7 @@ static c_void ShowDemoWindowWidgets()
 
         ImGui::SameLine();
         ImGui::PushID("set3");
-        for (c_int i = 0; i < 4; i++)
+        for (let i: c_int = 0; i < 4; i++)
         {
             if (i > 0) ImGui::SameLine();
             ImGui::PushID(i);
@@ -2293,7 +2293,7 @@ static c_void ShowDemoWindowWidgets()
                 Mode_Move,
                 Mode_Swap
             };
-            static c_int mode = 0;
+            static let mode: c_int = 0;
             if (ImGui::RadioButton("Copy", mode == Mode_Copy)) { mode = Mode_Copy; } ImGui::SameLine();
             if (ImGui::RadioButton("Move", mode == Mode_Move)) { mode = Mode_Move; } ImGui::SameLine();
             if (ImGui::RadioButton("Swap", mode == Mode_Swap)) { mode = Mode_Swap; }
@@ -2303,7 +2303,7 @@ static c_void ShowDemoWindowWidgets()
                 "Brianna", "Barry", "Bernard",
                 "Bibi", "Blaine", "Bryn"
             };
-            for (c_int n = 0; n < IM_ARRAYSIZE(names); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(names); n++)
             {
                 ImGui::PushID(n);
                 if ((n % 3) != 0)
@@ -2328,7 +2328,7 @@ static c_void ShowDemoWindowWidgets()
                     if (*const ImGuiPayload payload = ImGui::AcceptDragDropPayload("DND_DEMO_CELL"))
                     {
                         // IM_ASSERT(payload->DataSize == sizeof);
-                        c_int payload_n = *(*const c_int)payload.Data;
+                        let payload_n: c_int = *(*const c_int)payload.Data;
                         if (mode == Mode_Copy)
                         {
                             names[n] = names[payload_n];
@@ -2360,14 +2360,14 @@ static c_void ShowDemoWindowWidgets()
                 "We don't use the drag and drop api at all here! "
                 "Instead we query when the item is held but not hovered, and order items accordingly.");
             static *const char item_names[] = { "Item One", "Item Two", "Item Three", "Item Four", "Item Five" };
-            for (c_int n = 0; n < IM_ARRAYSIZE(item_names); n++)
+            for (let n: c_int = 0; n < IM_ARRAYSIZE(item_names); n++)
             {
                 let mut  item: *const c_char = item_names[n];
                 ImGui::Selectable(item);
 
                 if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
                 {
-                    c_int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+                    let n_next: c_int = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
                     if (n_next >= 0 && n_next < IM_ARRAYSIZE(item_names))
                     {
                         item_names[n] = item_names[n_next];
@@ -2391,7 +2391,7 @@ static c_void ShowDemoWindowWidgets()
             "Text", "Button", "Button (w/ repeat)", "Checkbox", "SliderFloat", "InputText", "InputTextMultiline", "InputFloat",
             "InputFloat3", "ColorEdit4", "Selectable", "MenuItem", "TreeNode", "TreeNode (w/ double-click)", "Combo", "ListBox"
         };
-        static c_int item_type = 4;
+        static let item_type: c_int = 4;
         static let mut item_disabled: bool =  false;
         ImGui::Combo("Item Type", &item_type, item_names, IM_ARRAYSIZE(item_names), IM_ARRAYSIZE(item_names));
         ImGui::SameLine();
@@ -2419,8 +2419,8 @@ static c_void ShowDemoWindowWidgets()
         if (item_type == 11){ ret = ImGui::MenuItem("ITEM: MenuItem"); }                                // Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
         if (item_type == 12){ ret = ImGui::TreeNode("ITEM: TreeNode"); if (ret) ImGui::TreePop(); }     // Testing tree node
         if (item_type == 13){ ret = ImGui::TreeNodeEx("ITEM: TreeNode w/ ImGuiTreeNodeFlags_OpenOnDoubleClick", ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_NoTreePushOnOpen); } // Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
-        if (item_type == 14){ *const char items[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static c_int current = 1; ret = ImGui::Combo("ITEM: Combo", &current, items, IM_ARRAYSIZE(items)); }
-        if (item_type == 15){ *const char items[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static c_int current = 1; ret = ImGui::ListBox("ITEM: ListBox", &current, items, IM_ARRAYSIZE(items), IM_ARRAYSIZE(items)); }
+        if (item_type == 14){ *const char items[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static let current: c_int = 1; ret = ImGui::Combo("ITEM: Combo", &current, items, IM_ARRAYSIZE(items)); }
+        if (item_type == 15){ *const char items[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static let current: c_int = 1; ret = ImGui::ListBox("ITEM: ListBox", &current, items, IM_ARRAYSIZE(items), IM_ARRAYSIZE(items)); }
 
         let mut hovered_delay_none: bool =  ImGui::IsItemHovered();
         let mut hovered_delay_short: bool =  ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort);
@@ -2614,7 +2614,7 @@ static c_void ShowDemoWindowLayout()
             if (disable_mouse_wheel)
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
             ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f32, 260), false, window_flags);
-            for (c_int i = 0; i < 100; i++)
+            for (let i: c_int = 0; i < 100; i++)
                 ImGui::Text("%04d: scrollable region", i);
             ImGui::EndChild();
         }
@@ -2641,7 +2641,7 @@ static c_void ShowDemoWindowLayout()
             }
             if (ImGui::BeginTable("split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
             {
-                for (c_int i = 0; i < 100; i++)
+                for (let i: c_int = 0; i < 100; i++)
                 {
                     buf: [c_char;32];
                     sprintf(buf, "%03d", i);
@@ -2664,14 +2664,14 @@ static c_void ShowDemoWindowLayout()
         // - Using ImGui::GetItemRectMin/Max() to query the "item" state (because the child window is an item from
         //   the POV of the parent window). See 'Demo->Querying Status (Edited/Active/Hovered etc.)' for details.
         {
-            static c_int offset_x = 0;
+            static let offset_x: c_int = 0;
             ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
             ImGui::DragInt("Offset X", &offset_x, 1f32, -1000, 1000);
 
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset_x);
             ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(255, 0, 0, 100));
             ImGui::BeginChild("Red", ImVec2(200, 100), true, ImGuiWindowFlags_None);
-            for (c_int n = 0; n < 50; n++)
+            for (let n: c_int = 0; n < 50; n++)
                 ImGui::Text("Some test %d", n);
             ImGui::EndChild();
             let mut child_is_hovered: bool =  ImGui::IsItemHovered();
@@ -2688,7 +2688,7 @@ static c_void ShowDemoWindowLayout()
     IMGUI_DEMO_MARKER("Layout/Widgets Width");
     if (ImGui::TreeNode("Widgets Width"))
     {
-        static c_float f = 0f32;
+        static let f: c_float =  0f32;
         static let mut show_indented_items: bool =  true;
         ImGui::Checkbox("Show indented items", &show_indented_items);
 
@@ -2806,10 +2806,10 @@ static c_void ShowDemoWindowLayout()
         ImGui::Checkbox("Rich", &c4);
 
         // Various
-        static c_float f0 = 1f32, f1 = 2.0f32, f2 = 3.0f32;
+        static let f0: c_float =  1f32, f1 = 2.0f32, f2 = 3.0f32;
         ImGui::PushItemWidth(80);
         *const char items[] = { "AAAA", "BBBB", "CCCC", "DDDD" };
-        static c_int item = -1;
+        static let item: c_int = -1;
         ImGui::Combo("Combo", &item, items, IM_ARRAYSIZE(items)); ImGui::SameLine();
         ImGui::SliderFloat("X", &f0, 0f32, 5.00f32); ImGui::SameLine();
         ImGui::SliderFloat("Y", &f1, 0f32, 5.00f32); ImGui::SameLine();
@@ -2819,7 +2819,7 @@ static c_void ShowDemoWindowLayout()
         ImGui::PushItemWidth(80);
         ImGui::Text("Lists:");
         static c_int selection[4] = { 0, 1, 2, 3 };
-        for (c_int i = 0; i < 4; i++)
+        for (let i: c_int = 0; i < 4; i++)
         {
             if (i > 0) ImGui::SameLine();
             ImGui::PushID(i);
@@ -2841,14 +2841,14 @@ static c_void ShowDemoWindowLayout()
         IMGUI_DEMO_MARKER("Layout/Basic Horizontal Layout/Manual wrapping");
         ImGui::Text("Manual wrapping:");
         ImGuiStyle& style = ImGui::GetStyle();
-        c_int buttons_count = 20;
-        c_float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-        for (c_int n = 0; n < buttons_count; n++)
+        let buttons_count: c_int = 20;
+        let window_visible_x2: c_float =  ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+        for (let n: c_int = 0; n < buttons_count; n++)
         {
             ImGui::PushID(n);
             ImGui::Button("Box", button_sz);
-            c_float last_button_x2 = ImGui::GetItemRectMax().x;
-            c_float next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_sz.x; // Expected position if next button was on same line
+            let last_button_x2: c_float =  ImGui::GetItemRectMax().x;
+            let next_button_x2: c_float =  last_button_x2 + style.ItemSpacing.x + button_sz.x; // Expected position if next button was on same line
             if (n + 1 < buttons_count && next_button_x2 < window_visible_x2)
                 ImGui::SameLine();
             ImGui::PopID();
@@ -2983,13 +2983,13 @@ static c_void ShowDemoWindowLayout()
             ImGui::SmallButton("SmallButton()");
 
             // Tree
-            const c_float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
+            let spacing: c_float =  ImGui::GetStyle().ItemInnerSpacing.x;
             ImGui::Button("Button##1");
             ImGui::SameLine(0f32, spacing);
             if (ImGui::TreeNode("Node##1"))
             {
                 // Placeholder tree data
-                for (c_int i = 0; i < 6; i++)
+                for (let i: c_int = 0; i < 6; i++)
                     ImGui::BulletText("Item %d..", i);
                 ImGui::TreePop();
             }
@@ -3005,7 +3005,7 @@ static c_void ShowDemoWindowLayout()
             if (node_open)
             {
                 // Placeholder tree data
-                for (c_int i = 0; i < 6; i++)
+                for (let i: c_int = 0; i < 6; i++)
                     ImGui::BulletText("Item %d..", i);
                 ImGui::TreePop();
             }
@@ -3031,11 +3031,11 @@ static c_void ShowDemoWindowLayout()
         IMGUI_DEMO_MARKER("Layout/Scrolling/Vertical");
         HelpMarker("Use SetScrollHereY() or SetScrollFromPosY() to scroll to a given vertical position.");
 
-        static c_int track_item = 50;
+        static let track_item: c_int = 50;
         static let mut enable_track: bool =  true;
         static let mut enable_extra_decorations: bool =  false;
-        static c_float scroll_to_off_px = 0f32;
-        static c_float scroll_to_pos_px = 200f32;
+        static let scroll_to_off_px: c_float =  0f32;
+        static let scroll_to_pos_px: c_float =  200f32;
 
         ImGui::Checkbox("Decoration", &enable_extra_decorations);
 
@@ -3054,11 +3054,11 @@ static c_void ShowDemoWindowLayout()
             enable_track = false;
 
         ImGuiStyle& style = ImGui::GetStyle();
-        c_float child_w = (ImGui::GetContentRegionAvail().x - 4 * style.ItemSpacing.x) / 5;
+        let child_w: c_float =  (ImGui::GetContentRegionAvail().x - 4 * style.ItemSpacing.x) / 5;
         if (child_w < 1f32)
             child_w = 1f32;
         ImGui::PushID("##VerticalScrolling");
-        for (c_int i = 0; i < 5; i++)
+        for (let i: c_int = 0; i < 5; i++)
         {
             if (i > 0) ImGui::SameLine();
             ImGui::BeginGroup();
@@ -3079,7 +3079,7 @@ static c_void ShowDemoWindowLayout()
                 ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + scroll_to_pos_px, i * 0.250f32);
             if (child_is_visible) // Avoid calling SetScrollHereY when running with culled items
             {
-                for (c_int item = 0; item < 100; item++)
+                for (let item: c_int = 0; item < 100; item++)
                 {
                     if (enable_track && item == track_item)
                     {
@@ -3092,8 +3092,8 @@ static c_void ShowDemoWindowLayout()
                     }
                 }
             }
-            c_float scroll_y = ImGui::GetScrollY();
-            c_float scroll_max_y = ImGui::GetScrollMaxY();
+            let scroll_y: c_float =  ImGui::GetScrollY();
+            let scroll_max_y: c_float =  ImGui::GetScrollMaxY();
             ImGui::EndChild();
             ImGui::Text("%.0f/%.0f", scroll_y, scroll_max_y);
             ImGui::EndGroup();
@@ -3109,9 +3109,9 @@ static c_void ShowDemoWindowLayout()
             "left/right, using SetScrollFromPosX(+1) will usually result in clipped text whereas the "
             "equivalent SetScrollFromPosY(+1) wouldn't.");
         ImGui::PushID("##HorizontalScrolling");
-        for (c_int i = 0; i < 5; i++)
+        for (let i: c_int = 0; i < 5; i++)
         {
-            c_float child_height = ImGui::GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0f32;
+            let child_height: c_float =  ImGui::GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0f32;
             ImGuiWindowFlags child_flags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
             ImGuiID child_id = ImGui::GetID((*mut c_void)(intptr_t)i);
             let mut child_is_visible: bool =  ImGui::BeginChild(child_id, ImVec2(-100, child_height), true, child_flags);
@@ -3121,7 +3121,7 @@ static c_void ShowDemoWindowLayout()
                 ImGui::SetScrollFromPosX(ImGui::GetCursorStartPos().x + scroll_to_pos_px, i * 0.250f32);
             if (child_is_visible) // Avoid calling SetScrollHereY when running with culled items
             {
-                for (c_int item = 0; item < 100; item++)
+                for (let item: c_int = 0; item < 100; item++)
                 {
                     if (item > 0)
                         ImGui::SameLine();
@@ -3136,8 +3136,8 @@ static c_void ShowDemoWindowLayout()
                     }
                 }
             }
-            c_float scroll_x = ImGui::GetScrollX();
-            c_float scroll_max_x = ImGui::GetScrollMaxX();
+            let scroll_x: c_float =  ImGui::GetScrollX();
+            let scroll_max_x: c_float =  ImGui::GetScrollMaxX();
             ImGui::EndChild();
             ImGui::SameLine();
             *const char names[] = { "Left", "25%", "Center", "75%", "Right" };
@@ -3151,27 +3151,27 @@ static c_void ShowDemoWindowLayout()
         HelpMarker(
             "Horizontal scrolling for a window is enabled via the ImGuiWindowFlags_HorizontalScrollbar flag.\n\n"
             "You may want to also explicitly specify content width by using SetNextWindowContentWidth() before Begin().");
-        static c_int lines = 7;
+        static let lines: c_int = 7;
         ImGui::SliderInt("Lines", &lines, 1, 15);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.00f32);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f32, 1f32));
         let scrolling_child_size: ImVec2 = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
         ImGui::BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
-        for (c_int line = 0; line < lines; line++)
+        for (let line: c_int = 0; line < lines; line++)
         {
             // Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
             // If you want to create your own time line for a real application you may be better off manipulating
             // the cursor position yourself, aka using SetCursorPos/SetCursorScreenPos to position the widgets
             // yourself. You may also want to use the lower-level ImDrawList API.
-            c_int num_buttons = 10 + ((line & 1) ? line * 9 : line * 3);
-            for (c_int n = 0; n < num_buttons; n++)
+            let num_buttons: c_int = 10 + ((line & 1) ? line * 9 : line * 3);
+            for (let n: c_int = 0; n < num_buttons; n++)
             {
                 if (n > 0) ImGui::SameLine();
                 ImGui::PushID(n + line * 1000);
                 num_buf: [c_char;16];
                 sprintf(num_buf, "%d", n);
                 let mut  label: *const c_char = (!(n % 15)) ? "FizzBuzz" : (!(n % 3)) ? "Fizz" : (!(n % 5)) ? "Buzz" : num_buf;
-                c_float hue = n * 0.05f32;
+                let hue: c_float =  n * 0.05f32;
                 ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.60f32));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.7f, 0.70f32));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(hue, 0.8f, 0.80f32));
@@ -3180,11 +3180,11 @@ static c_void ShowDemoWindowLayout()
                 ImGui::PopID();
             }
         }
-        c_float scroll_x = ImGui::GetScrollX();
-        c_float scroll_max_x = ImGui::GetScrollMaxX();
+        let scroll_x: c_float =  ImGui::GetScrollX();
+        let scroll_max_x: c_float =  ImGui::GetScrollMaxX();
         ImGui::EndChild();
         ImGui::PopStyleVar(2);
-        c_float scroll_x_delta = 0f32;
+        let scroll_x_delta: c_float =  0f32;
         ImGui::SmallButton("<<");
         if (ImGui::IsItemActive())
             scroll_x_delta = -ImGui::GetIO().DeltaTime * 1000f32;
@@ -3218,7 +3218,7 @@ static c_void ShowDemoWindowLayout()
             static let mut show_tab_bar: bool =  true;
             static let mut show_child: bool =  false;
             static let mut explicit_content_size: bool =  false;
-            static c_float contents_size_x = 300f32;
+            static let contents_size_x: c_float =  300f32;
             if (explicit_content_size)
                 ImGui::SetNextWindowContentSize(ImVec2(contents_size_x, 0f32));
             ImGui::Begin("Horizontal contents size demo window", &show_horizontal_contents_size_demo_window, show_h_scrollbar ? ImGuiWindowFlags_HorizontalScrollbar : 0);
@@ -3274,7 +3274,7 @@ static c_void ShowDemoWindowLayout()
                 ImGui::Text("Tables:");
                 if (ImGui::BeginTable("table", 4, ImGuiTableFlags_Borders))
                 {
-                    for (c_int n = 0; n < 4; n++)
+                    for (let n: c_int = 0; n < 4; n++)
                     {
                         ImGui::TableNextColumn();
                         ImGui::Text("Width %.2f", ImGui::GetContentRegionAvail().x);
@@ -3283,7 +3283,7 @@ static c_void ShowDemoWindowLayout()
                 }
                 ImGui::Text("Columns:");
                 ImGui::Columns(4);
-                for (c_int n = 0; n < 4; n++)
+                for (let n: c_int = 0; n < 4; n++)
                 {
                     ImGui::Text("Width %.2f", ImGui::GetColumnWidth());
                     ImGui::NextColumn();
@@ -3328,7 +3328,7 @@ static c_void ShowDemoWindowLayout()
             "Will alter only this specific ImDrawList::AddText() rendering.\n"
             "This is often used internally to avoid altering the clipping rectangle and minimize draw calls.");
 
-        for (c_int n = 0; n < 3; n++)
+        for (let n: c_int = 0; n < 3; n++)
         {
             if (n > 0)
                 ImGui::SameLine();
@@ -3344,10 +3344,10 @@ static c_void ShowDemoWindowLayout()
             if (!ImGui::IsItemVisible()) // Skip rendering as ImDrawList elements are not clipped.
                 continue;
 
-            const ImVec2 p0 = ImGui::GetItemRectMin();
-            const ImVec2 p1 = ImGui::GetItemRectMax();
+            let p0: ImVec2 = ImGui::GetItemRectMin();
+            let p1: ImVec2 = ImGui::GetItemRectMax();
             let mut  text_str: *const c_char = "Line 1 hello\nLine 2 clip me!";
-            const ImVec2 text_pos = ImVec2(p0.x + offset.x, p0.y + offset.y);
+            let text_pos: ImVec2 = ImVec2(p0.x + offset.x, p0.y + offset.y);
             *mut ImDrawList draw_list = ImGui::GetWindowDrawList();
             switch (n)
             {
@@ -3406,7 +3406,7 @@ static c_void ShowDemoWindowPopups()
             "When a popup is active, it inhibits interacting with windows that are behind the popup. "
             "Clicking outside the popup closes it.");
 
-        static c_int selected_fish = -1;
+        static let selected_fish: c_int = -1;
         *const char names[] = { "Bream", "Haddock", "Mackerel", "Pollock", "Tilefish" };
         static bool toggles[] = { true, false, false, false, false };
 
@@ -3420,7 +3420,7 @@ static c_void ShowDemoWindowPopups()
         {
             ImGui::Text("Aquarium");
             ImGui::Separator();
-            for (c_int i = 0; i < IM_ARRAYSIZE(names); i++)
+            for (let i: c_int = 0; i < IM_ARRAYSIZE(names); i++)
                 if (ImGui::Selectable(names[i]))
                     selected_fish = i;
             ImGui::EndPopup();
@@ -3431,7 +3431,7 @@ static c_void ShowDemoWindowPopups()
             ImGui::OpenPopup("my_toggle_popup");
         if (ImGui::BeginPopup("my_toggle_popup"))
         {
-            for (c_int i = 0; i < IM_ARRAYSIZE(names); i++)
+            for (let i: c_int = 0; i < IM_ARRAYSIZE(names); i++)
                 ImGui::MenuItem(names[i], "", &toggles[i]);
             if (ImGui::BeginMenu("Sub-menu"))
             {
@@ -3448,7 +3448,7 @@ static c_void ShowDemoWindowPopups()
                 ImGui::OpenPopup("another popup");
             if (ImGui::BeginPopup("another popup"))
             {
-                for (c_int i = 0; i < IM_ARRAYSIZE(names); i++)
+                for (let i: c_int = 0; i < IM_ARRAYSIZE(names); i++)
                     ImGui::MenuItem(names[i], "", &toggles[i]);
                 if (ImGui::BeginMenu("Sub-menu"))
                 {
@@ -3513,7 +3513,7 @@ static c_void ShowDemoWindowPopups()
         // and BeginPopupContextItem() will use the last item ID as the popup ID.
         {
             *const names: [c_char;5] = { "Label1", "Label2", "Label3", "Label4", "Label5" };
-            for (c_int n = 0; n < 5; n++)
+            for (let n: c_int = 0; n < 5; n++)
             {
                 ImGui::Selectable(names[n]);
                 if (ImGui::BeginPopupContextItem()) // <-- use last item id as popup id
@@ -3533,7 +3533,7 @@ static c_void ShowDemoWindowPopups()
         // Using an explicit identifier is also convenient if you want to activate the popups from different locations.
         {
             HelpMarker("Text() elements don't have stable identifiers so we need to provide one.");
-            static c_float value = 0.5f32;
+            static let value: c_float =  0.5f32;
             ImGui::Text("Value = %.3f <-- (1) right-click this text", value);
             if (ImGui::BeginPopupContextItem("my popup"))
             {
@@ -3627,7 +3627,7 @@ static c_void ShowDemoWindowPopups()
             ImGui::Text("Hello from Stacked The First\nUsing style.Colors[ImGuiCol_ModalWindowDimBg] behind it.");
 
             // Testing behavior of widgets stacking their own regular popups over the modal.
-            static c_int item = 1;
+            static let item: c_int = 1;
             static c_float color[4] = { 0.4f, 0.7f, 0f32, 0.5f32 };
             ImGui::Combo("Combo", &item, "aaaa\0bbbb\0cccc\0dddd\0eeee\0\0");
             ImGui::ColorEdit4("color", color);
@@ -3709,12 +3709,12 @@ let Name: *const c_char;
     {
         a: *const MyItem = (*const MyItem)lhs;
         b: *const MyItem = (*const MyItem)rhs;
-        for (c_int n = 0; n < s_current_sort_specs.SpecsCount; n++)
+        for (let n: c_int = 0; n < s_current_sort_specs.SpecsCount; n++)
         {
             // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
             // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
             sort_spec: *const ImGuiTableColumnSortSpecs = &s_current_sort_specs.Specs[n];
-            c_int delta = 0;
+            let delta: c_int = 0;
             switch (sort_spec.ColumnUserID)
             {
             case MyItemColumnID_ID:             delta = (a.ID - b.ID);                break;
@@ -3769,7 +3769,7 @@ static c_void EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
     let mut  preview_text: *const c_char = (idx < IM_ARRAYSIZE(policies)) ? policies[idx].Name + (idx > 0 ? strlen("ImGuiTableFlags") : 0) : "";
     if (ImGui::BeginCombo("Sizing Policy", preview_text))
     {
-        for (c_int n = 0; n < IM_ARRAYSIZE(policies); n++)
+        for (let n: c_int = 0; n < IM_ARRAYSIZE(policies); n++)
             if (ImGui::Selectable(policies[n].Name, idx == n))
                 *p_flags = (*p_flags & ~ImGuiTableFlags_SizingMask_) | policies[n].Value;
         ImGui::EndCombo();
@@ -3780,7 +3780,7 @@ static c_void EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
     {
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 50f32);
-        for (c_int m = 0; m < IM_ARRAYSIZE(policies); m++)
+        for (let m: c_int = 0; m < IM_ARRAYSIZE(policies); m++)
         {
             ImGui::Separator();
             ImGui::Text("%s:", policies[m].Name);
@@ -3833,12 +3833,12 @@ static c_void ShowDemoWindowTables()
         return;
 
     // Using those as a base value to create width/height that are factor of the size of our font
-    const c_float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
-    const c_float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+    let TEXT_BASE_WIDTH: c_float =  ImGui::CalcTextSize("A").x;
+    let TEXT_BASE_HEIGHT: c_float =  ImGui::GetTextLineHeightWithSpacing();
 
     ImGui::PushID("Tables");
 
-    c_int open_action = -1;
+    let open_action: c_int = -1;
     if (ImGui::Button("Open all"))
         open_action = 1;
     ImGui::SameLine();
@@ -3879,10 +3879,10 @@ static c_void ShowDemoWindowTables()
         HelpMarker("Using TableNextRow() + calling TableSetColumnIndex() _before_ each cell, in a loop.");
         if (ImGui::BeginTable("table1", 3))
         {
-            for (c_int row = 0; row < 4; row++)
+            for (let row: c_int = 0; row < 4; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("Row %d Column %d", row, column);
@@ -3896,7 +3896,7 @@ static c_void ShowDemoWindowTables()
         HelpMarker("Using TableNextRow() + calling TableNextColumn() _before_ each cell, manually.");
         if (ImGui::BeginTable("table2", 3))
         {
-            for (c_int row = 0; row < 4; row++)
+            for (let row: c_int = 0; row < 4; row++)
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -3917,7 +3917,7 @@ static c_void ShowDemoWindowTables()
             "This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->Tables API transition.");
         if (ImGui::BeginTable("table3", 3))
         {
-            for (c_int item = 0; item < 14; item++)
+            for (let item: c_int = 0; item < 14; item++)
             {
                 ImGui::TableNextColumn();
                 ImGui::Text("Item %d", item);
@@ -3937,7 +3937,7 @@ static c_void ShowDemoWindowTables()
         enum ContentsType { CT_Text, CT_FillButton };
         static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
         static let mut display_headers: bool =  false;
-        static c_int contents_type = CT_Text;
+        static let contents_type: c_int = CT_Text;
 
         PushStyleCompact();
         ImGui::CheckboxFlags("ImGuiTableFlags_RowBg", &flags, ImGuiTableFlags_RowBg);
@@ -3980,10 +3980,10 @@ static c_void ShowDemoWindowTables()
                 ImGui::TableHeadersRow();
             }
 
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     buf: [c_char;32];
@@ -4015,10 +4015,10 @@ static c_void ShowDemoWindowTables()
 
         if (ImGui::BeginTable("table1", 3, flags))
         {
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("Hello %d,%d", column, row);
@@ -4049,10 +4049,10 @@ static c_void ShowDemoWindowTables()
 
         if (ImGui::BeginTable("table1", 3, flags))
         {
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("Hello %d,%d", column, row);
@@ -4079,10 +4079,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("BBB", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("CCC", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableHeadersRow();
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("%s %d,%d", (column == 2) ? "Stretch" : "Fixed", column, row);
@@ -4099,10 +4099,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("EEE", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("FFF", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultHide);
             ImGui::TableHeadersRow();
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 6; column++)
+                for (let column: c_int = 0; column < 6; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("%s %d,%d", (column >= 3) ? "Stretch" : "Fixed", column, row);
@@ -4138,10 +4138,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("Two");
             ImGui::TableSetupColumn("Three");
             ImGui::TableHeadersRow();
-            for (c_int row = 0; row < 6; row++)
+            for (let row: c_int = 0; row < 6; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("Hello %d,%d", column, row);
@@ -4157,10 +4157,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("Two");
             ImGui::TableSetupColumn("Three");
             ImGui::TableHeadersRow();
-            for (c_int row = 0; row < 6; row++)
+            for (let row: c_int = 0; row < 6; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("Fixed %d,%d", column, row);
@@ -4211,10 +4211,10 @@ static c_void ShowDemoWindowTables()
                 ImGui::TableHeadersRow();
             }
 
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     if (row == 0)
@@ -4260,7 +4260,7 @@ static c_void ShowDemoWindowTables()
             static let mut init: bool =  true;
             if (!show_widget_frame_bg)
                 ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
-            for (c_int cell = 0; cell < 3 * 5; cell++)
+            for (let cell: c_int = 0; cell < 3 * 5; cell++)
             {
                 ImGui::TableNextColumn();
                 if (init)
@@ -4292,7 +4292,7 @@ static c_void ShowDemoWindowTables()
         PopStyleCompact();
 
         static ImGuiTableFlags sizing_policy_flags[4] = { ImGuiTableFlags_SizingFixedFit, ImGuiTableFlags_SizingFixedSame, ImGuiTableFlags_SizingStretchProp, ImGuiTableFlags_SizingStretchSame };
-        for (c_int table_n = 0; table_n < 4; table_n++)
+        for (let table_n: c_int = 0; table_n < 4; table_n++)
         {
             ImGui::PushID(table_n);
             ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 30);
@@ -4302,7 +4302,7 @@ static c_void ShowDemoWindowTables()
             // For each policy: we display one table where the columns have equal contents width, and one where the columns have different contents width.
             if (ImGui::BeginTable("table1", 3, sizing_policy_flags[table_n] | flags1))
             {
-                for (c_int row = 0; row < 3; row++)
+                for (let row: c_int = 0; row < 3; row++)
                 {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn(); ImGui::Text("Oh dear");
@@ -4313,7 +4313,7 @@ static c_void ShowDemoWindowTables()
             }
             if (ImGui::BeginTable("table2", 3, sizing_policy_flags[table_n] | flags1))
             {
-                for (c_int row = 0; row < 3; row++)
+                for (let row: c_int = 0; row < 3; row++)
                 {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn(); ImGui::Text("AAAA");
@@ -4332,8 +4332,8 @@ static c_void ShowDemoWindowTables()
 
         enum ContentsType { CT_ShowWidth, CT_ShortText, CT_LongText, CT_Button, CT_FillButton, CT_InputText };
         static ImGuiTableFlags flags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable;
-        static c_int contents_type = CT_ShowWidth;
-        static c_int column_count = 3;
+        static let contents_type: c_int = CT_ShowWidth;
+        static let column_count: c_int = 3;
 
         PushStyleCompact();
         ImGui::PushID("Advanced");
@@ -4358,11 +4358,11 @@ static c_void ShowDemoWindowTables()
 
         if (ImGui::BeginTable("table2", column_count, flags, ImVec2(0f32, TEXT_BASE_HEIGHT * 7)))
         {
-            for (c_int cell = 0; cell < 10 * column_count; cell++)
+            for (let cell: c_int = 0; cell < 10 * column_count; cell++)
             {
                 ImGui::TableNextColumn();
-                c_int column = ImGui::TableGetColumnIndex();
-                c_int row = ImGui::TableGetRowIndex();
+                let column: c_int = ImGui::TableGetColumnIndex();
+                let row: c_int = ImGui::TableGetRowIndex();
 
                 ImGui::PushID(cell);
                 label: [c_char;32];
@@ -4412,10 +4412,10 @@ static c_void ShowDemoWindowTables()
             clipper.Begin(1000);
             while (clipper.Step())
             {
-                for (c_int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                for (let row: c_int = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
                 {
                     ImGui::TableNextRow();
-                    for (c_int column = 0; column < 3; column++)
+                    for (let column: c_int = 0; column < 3; column++)
                     {
                         ImGui::TableSetColumnIndex(column);
                         ImGui::Text("Hello %d,%d", column, row);
@@ -4438,8 +4438,8 @@ static c_void ShowDemoWindowTables()
             "Also note that as of the current version, you will almost always want to enable ScrollY along with ScrollX,"
             "because the container window won't automatically extend vertically to fix contents (this may be improved in future versions).");
         static ImGuiTableFlags flags = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
-        static c_int freeze_cols = 1;
-        static c_int freeze_rows = 1;
+        static let freeze_cols: c_int = 1;
+        static let freeze_rows: c_int = 1;
 
         PushStyleCompact();
         ImGui::CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
@@ -4465,10 +4465,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("Five");
             ImGui::TableSetupColumn("Six");
             ImGui::TableHeadersRow();
-            for (c_int row = 0; row < 20; row++)
+            for (let row: c_int = 0; row < 20; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 7; column++)
+                for (let column: c_int = 0; column < 7; column++)
                 {
                     // Both TableNextColumn() and TableSetColumnIndex() return true when a column is visible or performing width measurement.
                     // Because here we know that:
@@ -4495,7 +4495,7 @@ static c_void ShowDemoWindowTables()
             "this is rather unusual and only makes sense when specifying an 'inner_width' for the table!\n"
             "Without an explicit value, inner_width is == outer_size.x and therefore using Stretch columns + ScrollX together doesn't make sense.");
         static ImGuiTableFlags flags2 = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
-        static c_float inner_width = 1000f32;
+        static let inner_width: c_float =  1000f32;
         PushStyleCompact();
         ImGui::PushID("flags3");
         ImGui::PushItemWidth(TEXT_BASE_WIDTH * 30);
@@ -4506,7 +4506,7 @@ static c_void ShowDemoWindowTables()
         PopStyleCompact();
         if (ImGui::BeginTable("table2", 7, flags2, outer_size, inner_width))
         {
-            for (c_int cell = 0; cell < 20 * 7; cell++)
+            for (let cell: c_int = 0; cell < 20 * 7; cell++)
             {
                 ImGui::TableNextColumn();
                 ImGui::Text("Hello world %d,%d", ImGui::TableGetColumnIndex(), ImGui::TableGetRowIndex());
@@ -4530,7 +4530,7 @@ static c_void ShowDemoWindowTables()
         if (ImGui::BeginTable("table_columns_flags_checkboxes", column_count, ImGuiTableFlags_None))
         {
             PushStyleCompact();
-            for (c_int column = 0; column < column_count; column++)
+            for (let column: c_int = 0; column < column_count; column++)
             {
                 ImGui::TableNextColumn();
                 ImGui::PushID(column);
@@ -4560,17 +4560,17 @@ static c_void ShowDemoWindowTables()
         let outer_size: ImVec2 = ImVec2(0f32, TEXT_BASE_HEIGHT * 9);
         if (ImGui::BeginTable("table_columns_flags", column_count, flags, outer_size))
         {
-            for (c_int column = 0; column < column_count; column++)
+            for (let column: c_int = 0; column < column_count; column++)
                 ImGui::TableSetupColumn(column_names[column], column_flags[column]);
             ImGui::TableHeadersRow();
-            for (c_int column = 0; column < column_count; column++)
+            for (let column: c_int = 0; column < column_count; column++)
                 column_flags_out[column] = ImGui::TableGetColumnFlags(column);
-            c_float indent_step = (TEXT_BASE_WIDTH / 2);
-            for (c_int row = 0; row < 8; row++)
+            let indent_step: c_float =  (TEXT_BASE_WIDTH / 2);
+            for (let row: c_int = 0; row < 8; row++)
             {
                 ImGui::Indent(indent_step); // Add some indentation to demonstrate usage of per-column IndentEnable/IndentDisable flags.
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < column_count; column++)
+                for (let column: c_int = 0; column < column_count; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("%s %s", (column == 0) ? "Indented" : "Hello", ImGui::TableGetColumnName(column));
@@ -4602,10 +4602,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthFixed, 200f32); // Default to 200f32
             ImGui::TableSetupColumn("three", ImGuiTableColumnFlags_WidthFixed);       // Default to auto
             ImGui::TableHeadersRow();
-            for (c_int row = 0; row < 4; row++)
+            for (let row: c_int = 0; row < 4; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     if (row == 0)
@@ -4632,10 +4632,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.00f32);
             ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 30f32);
             ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.00f32);
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 4; column++)
+                for (let column: c_int = 0; column < 4; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     if (row == 0)
@@ -4665,7 +4665,7 @@ static c_void ShowDemoWindowTables()
             ImGui::TableNextColumn();
             ImGui::Text("A0 Row 0");
             {
-                c_float rows_height = TEXT_BASE_HEIGHT * 2;
+                let rows_height: c_float =  TEXT_BASE_HEIGHT * 2;
                 if (ImGui::BeginTable("table_nested2", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
                 {
                     ImGui::TableSetupColumn("B0");
@@ -4702,9 +4702,9 @@ static c_void ShowDemoWindowTables()
         HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0f'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.");
         if (ImGui::BeginTable("table_row_height", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV))
         {
-            for (c_int row = 0; row < 10; row++)
+            for (let row: c_int = 0; row < 10; row++)
             {
-                c_float min_row_height = (TEXT_BASE_HEIGHT * 0.3f32 * row);
+                let min_row_height: c_float =  (TEXT_BASE_HEIGHT * 0.3f32 * row);
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, min_row_height);
                 ImGui::TableNextColumn();
                 ImGui::Text("min_row_height = %.2f", min_row_height);
@@ -4733,10 +4733,10 @@ static c_void ShowDemoWindowTables()
         let outer_size: ImVec2 = ImVec2(0f32, TEXT_BASE_HEIGHT * 5.5f32);
         if (ImGui::BeginTable("table1", 3, flags, outer_size))
         {
-            for (c_int row = 0; row < 10; row++)
+            for (let row: c_int = 0; row < 10; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableNextColumn();
                     ImGui::Text("Cell %d,%d", column, row);
@@ -4752,10 +4752,10 @@ static c_void ShowDemoWindowTables()
         ImGui::Text("Using explicit size:");
         if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(TEXT_BASE_WIDTH * 30, 0f32)))
         {
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableNextColumn();
                     ImGui::Text("Cell %d,%d", column, row);
@@ -4766,10 +4766,10 @@ static c_void ShowDemoWindowTables()
         ImGui::SameLine();
         if (ImGui::BeginTable("table3", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(TEXT_BASE_WIDTH * 30, 0f32)))
         {
-            for (c_int row = 0; row < 3; row++)
+            for (let row: c_int = 0; row < 3; row++)
             {
                 ImGui::TableNextRow(0, TEXT_BASE_HEIGHT * 1.5f32);
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     ImGui::TableNextColumn();
                     ImGui::Text("Cell %d,%d", column, row);
@@ -4787,9 +4787,9 @@ static c_void ShowDemoWindowTables()
     if (ImGui::TreeNode("Background color"))
     {
         static ImGuiTableFlags flags = ImGuiTableFlags_RowBg;
-        static c_int row_bg_type = 1;
-        static c_int row_bg_target = 1;
-        static c_int cell_bg_type = 1;
+        static let row_bg_type: c_int = 1;
+        static let row_bg_target: c_int = 1;
+        static let cell_bg_type: c_int = 1;
 
         PushStyleCompact();
         ImGui::CheckboxFlags("ImGuiTableFlags_Borders", &flags, ImGuiTableFlags_Borders);
@@ -4805,7 +4805,7 @@ static c_void ShowDemoWindowTables()
 
         if (ImGui::BeginTable("table1", 5, flags))
         {
-            for (c_int row = 0; row < 6; row++)
+            for (let row: c_int = 0; row < 6; row++)
             {
                 ImGui::TableNextRow();
 
@@ -4818,7 +4818,7 @@ static c_void ShowDemoWindowTables()
                 }
 
                 // Fill cells
-                for (c_int column = 0; column < 5; column++)
+                for (let column: c_int = 0; column < 5; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("%c%c", 'A' + row, '0' + column);
@@ -4876,7 +4876,7 @@ static c_void ShowDemoWindowTables()
                         ImGui::TextUnformatted(node->Type);
                         if (open)
                         {
-                            for (c_int child_n = 0; child_n < node->ChildCount; child_n++)
+                            for (let child_n: c_int = 0; child_n < node->ChildCount; child_n++)
                                 DisplayNode(&all_nodes[node->ChildIdx + child_n], all_nodes);
                             ImGui::TreePop();
                         }
@@ -4926,7 +4926,7 @@ static c_void ShowDemoWindowTables()
             ImGui::TableSetupColumn("right-align");
             ImGui::TableHeadersRow();
 
-            for (c_int row = 0; row < 3; row++)
+            for (let row: c_int = 0; row < 3; row++)
             {
                 ImGui::TableNextRow();
                 if (row == 0)
@@ -4941,7 +4941,7 @@ static c_void ShowDemoWindowTables()
                 }
 
                 // Draw our contents
-                static c_float dummy_f = 0f32;
+                static let dummy_f: c_float =  0f32;
                 ImGui::PushID(row);
                 ImGui::TableSetColumnIndex(0);
                 ImGui::SliderFloat("float0", &dummy_f, 0f32, 1f32);
@@ -4975,7 +4975,7 @@ static c_void ShowDemoWindowTables()
 
             // Instead of calling TableHeadersRow() we'll submit custom headers ourselves
             ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-            for (c_int column = 0; column < COLUMNS_COUNT; column++)
+            for (let column: c_int = 0; column < COLUMNS_COUNT; column++)
             {
                 ImGui::TableSetColumnIndex(column);
                 let mut  column_name: *const c_char = ImGui::TableGetColumnName(column); // Retrieve name passed to TableSetupColumn()
@@ -4988,10 +4988,10 @@ static c_void ShowDemoWindowTables()
                 ImGui::PopID();
             }
 
-            for (c_int row = 0; row < 5; row++)
+            for (let row: c_int = 0; row < 5; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < 3; column++)
+                for (let column: c_int = 0; column < 3; column++)
                 {
                     buf: [c_char;32];
                     sprintf(buf, "Cell %d,%d", column, row);
@@ -5031,10 +5031,10 @@ static c_void ShowDemoWindowTables()
             ImGui::TableHeadersRow();
 
             // Submit dummy contents
-            for (c_int row = 0; row < 4; row++)
+            for (let row: c_int = 0; row < 4; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < COLUMNS_COUNT; column++)
+                for (let column: c_int = 0; column < COLUMNS_COUNT; column++)
                 {
                     ImGui::TableSetColumnIndex(column);
                     ImGui::Text("Cell %d,%d", column, row);
@@ -5057,10 +5057,10 @@ static c_void ShowDemoWindowTables()
 
             // [2.1] Right-click on the TableHeadersRow() line to open the default table context menu.
             ImGui::TableHeadersRow();
-            for (c_int row = 0; row < 4; row++)
+            for (let row: c_int = 0; row < 4; row++)
             {
                 ImGui::TableNextRow();
-                for (c_int column = 0; column < COLUMNS_COUNT; column++)
+                for (let column: c_int = 0; column < COLUMNS_COUNT; column++)
                 {
                     // Submit dummy contents
                     ImGui::TableSetColumnIndex(column);
@@ -5084,8 +5084,8 @@ static c_void ShowDemoWindowTables()
             // [2.3] Right-click anywhere in columns to open another custom popup
             // (instead of testing for !IsAnyItemHovered() we could also call OpenPopup() with ImGuiPopupFlags_NoOpenOverExistingPopup
             // to manage popup priority as the popups triggers, here "are we hovering a column" are overlapping)
-            c_int hovered_column = -1;
-            for (c_int column = 0; column < COLUMNS_COUNT + 1; column++)
+            let hovered_column: c_int = -1;
+            for (let column: c_int = 0; column < COLUMNS_COUNT + 1; column++)
             {
                 ImGui::PushID(column);
                 if (ImGui::TableGetColumnFlags(column) & ImGuiTableColumnFlags_IsHovered)
@@ -5118,7 +5118,7 @@ static c_void ShowDemoWindowTables()
     if (ImGui::TreeNode("Synced instances"))
     {
         HelpMarker("Multiple tables with the same identifier will share their settings, width, visibility, order etc.");
-        for (c_int n = 0; n < 3; n++)
+        for (let n: c_int = 0; n < 3; n++)
         {
             buf: [c_char;32];
             sprintf(buf, "Synced Table %d", n);
@@ -5129,7 +5129,7 @@ static c_void ShowDemoWindowTables()
                 ImGui::TableSetupColumn("Two");
                 ImGui::TableSetupColumn("Three");
                 ImGui::TableHeadersRow();
-                for (c_int cell = 0; cell < 9; cell++)
+                for (let cell: c_int = 0; cell < 9; cell++)
                 {
                     ImGui::TableNextColumn();
                     ImGui::Text("this cell %d", cell);
@@ -5158,7 +5158,7 @@ static c_void ShowDemoWindowTables()
         if (items.Size == 0)
         {
             items.resize(50, MyItem());
-            for (c_int n = 0; n < items.Size; n++)
+            for (let n: c_int = 0; n < items.Size; n++)
             {
                 let template_n: c_int = n % IM_ARRAYSIZE(template_items_names);
                 MyItem& item = items[n];
@@ -5211,7 +5211,7 @@ static c_void ShowDemoWindowTables()
             ImGuiListClipper clipper;
             clipper.Begin(items.Size);
             while (clipper.Step())
-                for (c_int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
+                for (let row_n: c_int = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
                 {
                     // Display a data item
                     *mut MyItem item = &items[row_n];
@@ -5249,14 +5249,14 @@ static c_void ShowDemoWindowTables()
             | ImGuiTableFlags_SizingFixedFit;
 
         enum ContentsType { CT_Text, CT_Button, CT_SmallButton, CT_FillButton, CT_Selectable, CT_SelectableSpanRow };
-        static c_int contents_type = CT_SelectableSpanRow;
+        static let contents_type: c_int = CT_SelectableSpanRow;
         *const char contents_type_names[] = { "Text", "Button", "SmallButton", "FillButton", "Selectable", "Selectable (span row)" };
-        static c_int freeze_cols = 1;
-        static c_int freeze_rows = 1;
-        static c_int items_count = IM_ARRAYSIZE(template_items_names) * 2;
+        static let freeze_cols: c_int = 1;
+        static let freeze_rows: c_int = 1;
+        static let items_count: c_int = IM_ARRAYSIZE(template_items_names) * 2;
         static ImVec2 outer_size_value = ImVec2(0f32, TEXT_BASE_HEIGHT * 12);
-        static c_float row_min_height = 0f32; // Auto
-        static c_float inner_width_with_scroll = 0f32; // Auto-extend
+        static let row_min_height: c_float =  0f32; // Auto
+        static let inner_width_with_scroll: c_float =  0f32; // Auto-extend
         static let mut outer_size_enabled: bool =  true;
         static let mut show_headers: bool =  true;
         static let mut show_wrapped_text: bool =  false;
@@ -5381,7 +5381,7 @@ static c_void ShowDemoWindowTables()
         if (items.Size != items_count)
         {
             items.resize(items_count, MyItem());
-            for (c_int n = 0; n < items_count; n++)
+            for (let n: c_int = 0; n < items_count; n++)
             {
                 let template_n: c_int = n % IM_ARRAYSIZE(template_items_names);
                 MyItem& item = items[n];
@@ -5397,7 +5397,7 @@ static c_void ShowDemoWindowTables()
         let table_draw_list: *const ImDrawList = None;  // "
 
         // Submit table
-        const c_float inner_width_to_use = (flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0f32;
+        let inner_width_to_use: c_float =  (flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0f32;
         if (ImGui::BeginTable("table_advanced", 6, flags, outer_size_enabled ? outer_size_value : ImVec2(0, 0), inner_width_to_use))
         {
             // Declare columns
@@ -5441,11 +5441,11 @@ static c_void ShowDemoWindowTables()
             clipper.Begin(items.Size);
             while (clipper.Step())
             {
-                for (c_int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
+                for (let row_n: c_int = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
 // #else
             // Without clipper
             {
-                for (c_int row_n = 0; row_n < items.Size; row_n++)
+                for (let row_n: c_int = 0; row_n < items.Size; row_n++)
 // #endif
                 {
                     *mut MyItem item = &items[row_n];
@@ -5569,7 +5569,7 @@ static c_void ShowDemoWindowColumns()
         ImGui::Text("Without border:");
         ImGui::Columns(3, "mycolumns3", false);  // 3-ways, no border
         ImGui::Separator();
-        for (c_int n = 0; n < 14; n++)
+        for (let n: c_int = 0; n < 14; n++)
         {
             label: [c_char;32];
             sprintf(label, "Item %d", n);
@@ -5590,8 +5590,8 @@ static c_void ShowDemoWindowColumns()
         ImGui::Separator();
         *const names: [c_char;3] = { "One", "Two", "Three" };
         *const paths: [c_char;3] = { "/path/one", "/path/two", "/path/three" };
-        static c_int selected = -1;
-        for (c_int i = 0; i < 3; i++)
+        static let selected: c_int = -1;
+        for (let i: c_int = 0; i < 3; i++)
         {
             label: [c_char;32];
             sprintf(label, "%04d", i);
@@ -5614,7 +5614,7 @@ static c_void ShowDemoWindowColumns()
         // NB: Future columns API should allow automatic horizontal borders.
         static let mut h_borders: bool =  true;
         static let mut v_borders: bool =  true;
-        static c_int columns_count = 4;
+        static let columns_count: c_int = 4;
         let lines_count: c_int = 3;
         ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
         ImGui::DragInt("##columns_count", &columns_count, 0.1f, 2, 10, "%d columns");
@@ -5625,7 +5625,7 @@ static c_void ShowDemoWindowColumns()
         ImGui::SameLine();
         ImGui::Checkbox("vertical", &v_borders);
         ImGui::Columns(columns_count, NULL, v_borders);
-        for (c_int i = 0; i < columns_count * lines_count; i++)
+        for (let i: c_int = 0; i < columns_count * lines_count; i++)
         {
             if (h_borders && ImGui::GetColumnIndex() == 0)
                 ImGui::Separator();
@@ -5656,14 +5656,14 @@ static c_void ShowDemoWindowColumns()
 
         ImGui::Text("ImGui");
         ImGui::Button("Apple");
-        static c_float foo = 1f32;
+        static let foo: c_float =  1f32;
         ImGui::InputFloat("red", &foo, 0.05f, 0, "%.3f");
         ImGui::Text("An extra line here.");
         ImGui::NextColumn();
 
         ImGui::Text("Sailor");
         ImGui::Button("Corniflower");
-        static c_float bar = 1f32;
+        static let bar: c_float =  1f32;
         ImGui::InputFloat("blue", &bar, 0.05f, 0, "%.3f");
         ImGui::NextColumn();
 
@@ -5700,13 +5700,13 @@ static c_void ShowDemoWindowColumns()
         ImGui::Columns(10);
 
         // Also demonstrate using clipper for large vertical lists
-        c_int ITEMS_COUNT = 2000;
+        let ITEMS_COUNT: c_int = 2000;
         ImGuiListClipper clipper;
         clipper.Begin(ITEMS_COUNT);
         while (clipper.Step())
         {
-            for (c_int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                for (c_int j = 0; j < 10; j++)
+            for (let i: c_int = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                for (let j: c_int = 0; j < 10; j++)
                 {
                     ImGui::Text("Line %d Column %d...", i, j);
                     ImGui::NextColumn();
@@ -5721,7 +5721,7 @@ static c_void ShowDemoWindowColumns()
     if (ImGui::TreeNode("Tree"))
     {
         ImGui::Columns(2, "tree", true);
-        for (c_int x = 0; x < 3; x++)
+        for (let x: c_int = 0; x < 3; x++)
         {
             let mut open1: bool =  ImGui::TreeNode((*mut c_void)(intptr_t)x, "Node%d", x);
             ImGui::NextColumn();
@@ -5729,7 +5729,7 @@ static c_void ShowDemoWindowColumns()
             ImGui::NextColumn();
             if (open1)
             {
-                for (c_int y = 0; y < 3; y++)
+                for (let y: c_int = 0; y < 3; y++)
                 {
                     let mut open2: bool =  ImGui::TreeNode((*mut c_void)(intptr_t)y, "Node%d.%d", x, y);
                     ImGui::NextColumn();
@@ -5774,7 +5774,7 @@ static c_void ShowDemoWindowMisc()
                     "  \"-xxx\"     hide lines containing \"xxx\"");
         filter.Draw();
         *const char lines[] = { "aaa1.c", "bbb1.c", "ccc1.c", "aaa2.cpp", "bbb2.cpp", "ccc2.cpp", "abc.h", "hello, world" };
-        for (c_int i = 0; i < IM_ARRAYSIZE(lines); i++)
+        for (let i: c_int = 0; i < IM_ARRAYSIZE(lines); i++)
             if (filter.PassFilter(lines[i]))
                 ImGui::BulletText("%s", lines[i]);
     }
@@ -5808,10 +5808,10 @@ static c_void ShowDemoWindowMisc()
                 ImGui::Text("Mouse pos: <INVALID>");
             ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
 
-            c_int count = IM_ARRAYSIZE(io.MouseDown);
-            ImGui::Text("Mouse down:");         for (c_int i = 0; i < count; i++) if (ImGui::IsMouseDown(i))      { ImGui::SameLine(); ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]); }
-            ImGui::Text("Mouse clicked:");      for (c_int i = 0; i < count; i++) if (ImGui::IsMouseClicked(i))   { ImGui::SameLine(); ImGui::Text("b%d (%d)", i, ImGui::GetMouseClickedCount(i)); }
-            ImGui::Text("Mouse released:");     for (c_int i = 0; i < count; i++) if (ImGui::IsMouseReleased(i))  { ImGui::SameLine(); ImGui::Text("b%d", i); }
+            let count: c_int = IM_ARRAYSIZE(io.MouseDown);
+            ImGui::Text("Mouse down:");         for (let i: c_int = 0; i < count; i++) if (ImGui::IsMouseDown(i))      { ImGui::SameLine(); ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]); }
+            ImGui::Text("Mouse clicked:");      for (let i: c_int = 0; i < count; i++) if (ImGui::IsMouseClicked(i))   { ImGui::SameLine(); ImGui::Text("b%d (%d)", i, ImGui::GetMouseClickedCount(i)); }
+            ImGui::Text("Mouse released:");     for (let i: c_int = 0; i < count; i++) if (ImGui::IsMouseReleased(i))  { ImGui::SameLine(); ImGui::Text("b%d", i); }
             ImGui::Text("Mouse wheel: %.1f", io.MouseWheel);
             ImGui::Text("Pen Pressure: %.1f", io.PenPressure); // Note: currently unused
             ImGui::TreePop();
@@ -5835,17 +5835,17 @@ static c_void ShowDemoWindowMisc()
             ImGui::Text("Keys pressed:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyPressed(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
             ImGui::Text("Keys released:");      for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyReleased(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
             ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
-            ImGui::Text("Chars queue:");        for (c_int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
+            ImGui::Text("Chars queue:");        for (let i: c_int = 0; i < io.InputQueueCharacters.Size; i++) { let c: ImWchar = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
 
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
-                const ImVec2 key_size = ImVec2(35f32, 35.00f32);
+                let key_size: ImVec2 = ImVec2(35f32, 35.00f32);
                 const c_float  key_rounding = 3.0f32;
-                const ImVec2 key_face_size = ImVec2(25f32, 25.00f32);
-                const ImVec2 key_face_pos = ImVec2(5f32, 3.00f32);
+                let key_face_size: ImVec2 = ImVec2(25f32, 25.00f32);
+                let key_face_pos: ImVec2 = ImVec2(5f32, 3.00f32);
                 const c_float  key_face_rounding = 2.0f32;
-                const ImVec2 key_label_pos = ImVec2(7.0f32, 4.00f32);
-                const ImVec2 key_step = ImVec2(key_size.x - 1f32, key_size.y - 1f32);
+                let key_label_pos: ImVec2 = ImVec2(7.0f32, 4.00f32);
+                let key_step: ImVec2 = ImVec2(key_size.x - 1f32, key_size.y - 1f32);
                 const c_float  key_row_offset = 9.0f32;
 
                 let board_min: ImVec2 = ImGui::GetCursorScreenPos();
@@ -5867,10 +5867,10 @@ static c_void ShowDemoWindowMisc()
                 {
                     *mut ImDrawList draw_list = ImGui::GetWindowDrawList();
                     draw_list->PushClipRect(board_min, board_max, true);
-                    for (c_int n = 0; n < IM_ARRAYSIZE(keys_to_display); n++)
+                    for (let n: c_int = 0; n < IM_ARRAYSIZE(keys_to_display); n++)
                     {
                         let key_data: *const KeyLayoutData = &keys_to_display[n];
-                        let key_min: ImVec2 = ImVec2(start_pos.x + key_data->Col * key_step.x + key_data->Row * key_row_offset, start_pos.y + key_data->Row * key_step.y);
+                        let key_min: ImVec2 = ImVec2(start_pos.x + key_Data.Col * key_step.x + key_Data.Row * key_row_offset, start_pos.y + key_Data.Row * key_step.y);
                         let key_max: ImVec2 = ImVec2(key_min.x + key_size.x, key_min.y + key_size.y);
                         draw_list->AddRectFilled(key_min, key_max, IM_COL32(204, 204, 204, 255), key_rounding);
                         draw_list->AddRect(key_min, key_max, IM_COL32(24, 24, 24, 255), key_rounding);
@@ -5879,8 +5879,8 @@ static c_void ShowDemoWindowMisc()
                         draw_list->AddRect(face_min, face_max, IM_COL32(193, 193, 193, 255), key_face_rounding, ImDrawFlags_None, 2.00f32);
                         draw_list->AddRectFilled(face_min, face_max, IM_COL32(252, 252, 252, 255), key_face_rounding);
                         let label_min: ImVec2 = ImVec2(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
-                        draw_list->AddText(label_min, IM_COL32(64, 64, 64, 255), key_data->Label);
-                        if (ImGui::IsKeyDown(key_data->Key))
+                        draw_list->AddText(label_min, IM_COL32(64, 64, 64, 255), key_Data.Label);
+                        if (ImGui::IsKeyDown(key_Data.Key))
                             draw_list->AddRectFilled(key_min, key_max, IM_COL32(255, 0, 0, 128), key_rounding);
                     }
                     draw_list->PopClipRect();
@@ -5906,8 +5906,8 @@ static c_void ShowDemoWindowMisc()
             HelpMarker(
                 "Hovering the colored canvas will override io.WantCaptureXXX fields.\n"
                 "Notice how normally (when set to none), the value of io.WantCaptureKeyboard would be false when hovering and true when clicking.");
-            static c_int capture_override_mouse = -1;
-            static c_int capture_override_keyboard = -1;
+            static let capture_override_mouse: c_int = -1;
+            static let capture_override_keyboard: c_int = -1;
             *const char capture_override_desc[] = { "None", "Set to false", "Set to true" };
             ImGui::SetNextItemWidth(ImGui::GetFontSize() * 15);
             ImGui::SliderInt("SetNextFrameWantCaptureMouse()", &capture_override_mouse, -1, +1, capture_override_desc[capture_override_mouse + 1], ImGuiSliderFlags_AlwaysClamp);
@@ -5945,7 +5945,7 @@ static c_void ShowDemoWindowMisc()
             let mut focus_1: bool =  ImGui::Button("Focus on 1"); ImGui::SameLine();
             let mut focus_2: bool =  ImGui::Button("Focus on 2"); ImGui::SameLine();
             let mut focus_3: bool =  ImGui::Button("Focus on 3");
-            c_int has_focus = 0;
+            let has_focus: c_int = 0;
             static buf: [c_char;128] = "click on a button to set focus";
 
             if (focus_1) ImGui::SetKeyboardFocusHere();
@@ -5970,7 +5970,7 @@ static c_void ShowDemoWindowMisc()
 
             // Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
             static c_float f3[3] = { 0f32, 0f32, 0f32 };
-            c_int focus_ahead = -1;
+            let focus_ahead: c_int = -1;
             if (ImGui::Button("Focus on X")) { focus_ahead = 0; } ImGui::SameLine();
             if (ImGui::Button("Focus on Y")) { focus_ahead = 1; } ImGui::SameLine();
             if (ImGui::Button("Focus on Z")) { focus_ahead = 2; }
@@ -5985,7 +5985,7 @@ static c_void ShowDemoWindowMisc()
         if (ImGui::TreeNode("Dragging"))
         {
             ImGui::TextWrapped("You can use ImGui::GetMouseDragDelta(0) to query for the dragged amount on any widget.");
-            for (c_int button = 0; button < 3; button++)
+            for (let button: c_int = 0; button < 3; button++)
             {
                 ImGui::Text("IsMouseDragging(%d):", button);
                 ImGui::Text("  w/ default threshold: %d,", ImGui::IsMouseDragging(button));
@@ -6023,7 +6023,7 @@ static c_void ShowDemoWindowMisc()
                 "Your application can render a different mouse cursor based on what ImGui::GetMouseCursor() returns. "
                 "If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, "
                 "otherwise your backend needs to handle it.");
-            for (c_int i = 0; i < ImGuiMouseCursor_COUNT; i++)
+            for (let i: c_int = 0; i < ImGuiMouseCursor_COUNT; i++)
             {
                 label: [c_char;32];
                 sprintf(label, "Mouse cursor %d: %s", i, mouse_cursors_names[i]);
@@ -6221,7 +6221,7 @@ c_void ImGui::ShowFontSelector(*const char label)
     *mut ImFont font_current = ImGui::GetFont();
     if (ImGui::BeginCombo(label, font_current->GetDebugName()))
     {
-        for (c_int n = 0; n < io.Fonts->Fonts.Size; n++)
+        for (let n: c_int = 0; n < io.Fonts->Fonts.Size; n++)
         {
             *mut ImFont font = io.Fonts->Fonts[n];
             ImGui::PushID((*mut c_void)font);
@@ -6244,7 +6244,7 @@ c_void ImGui::ShowFontSelector(*const char label)
 // Useful for quick combo boxes where the choices are known locally.
 bool ImGui::ShowStyleSelector(*const char label)
 {
-    static c_int style_idx = -1;
+    static let style_idx: c_int = -1;
     if (ImGui::Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
     {
         switch (style_idx)
@@ -6333,7 +6333,7 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
             ImGui::SliderFloat("TabRounding", &style.TabRounding, 0f32, 12.0f32, "%.0f");
             ImGui::Text("Alignment");
             ImGui::SliderFloat2("WindowTitleAlign", &style.WindowTitleAlign, 0f32, 1f32, "%.2f");
-            c_int window_menu_button_position = style.WindowMenuButtonPosition + 1;
+            let window_menu_button_position: c_int = style.WindowMenuButtonPosition + 1;
             if (ImGui::Combo("WindowMenuButtonPosition", (c_int*)&window_menu_button_position, "None\0Left\0Right\0"))
                 style.WindowMenuButtonPosition = window_menu_button_position - 1;
             ImGui::Combo("ColorButtonPosition", (c_int*)&style.ColorButtonPosition, "Left\0Right\0");
@@ -6349,7 +6349,7 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
 
         if (ImGui::BeginTabItem("Colors"))
         {
-            static c_int output_dest = 0;
+            static let output_dest: c_int = 0;
             static let mut output_only_modified: bool =  true;
             if (ImGui::Button("Export"))
             {
@@ -6358,7 +6358,7 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
                 else
                     ImGui::LogToTTY();
                 ImGui::LogText("ImVec4* colors = ImGui::GetStyle().Colors;" IM_NEWLINE);
-                for (c_int i = 0; i < ImGuiCol_COUNT; i++)
+                for (let i: c_int = 0; i < ImGuiCol_COUNT; i++)
                 {
                     const ImVec4& col = style.Colors[i];
                     let mut  name: *const c_char = ImGui::GetStyleColorName(i);
@@ -6385,7 +6385,7 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
 
             ImGui::BeginChild("##colors", ImVec2(0, 0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NavFlattened);
             ImGui::PushItemWidth(-160);
-            for (c_int i = 0; i < ImGuiCol_COUNT; i++)
+            for (let i: c_int = 0; i < ImGuiCol_COUNT; i++)
             {
                 let mut  name: *const c_char = ImGui::GetStyleColorName(i);
                 if (!filter.PassFilter(name))
@@ -6419,14 +6419,14 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
 
             // Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
             // (we enforce hard clamping manually as by default DragFloat/SliderFloat allows CTRL+Click text to get out of bounds).
-            const c_float MIN_SCALE = 0.3f;
-            const c_float MAX_SCALE = 2.0f32;
+            let MIN_SCALE: c_float =  0.3f;
+            let MAX_SCALE: c_float =  2.0f32;
             HelpMarker(
                 "Those are old settings provided for convenience.\n"
                 "However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
                 "rebuild the font atlas, and call style.ScaleAllSizes() on a reference ImGuiStyle structure.\n"
                 "Using those settings here will give you poor quality results.");
-            static c_float window_scale = 1f32;
+            static let window_scale: c_float =  1f32;
             ImGui::PushItemWidth(ImGui::GetFontSize() * 8);
             if (ImGui::DragFloat("window scale", &window_scale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp)) // Scale only this window
                 ImGui::SetWindowFontScale(window_scale);
@@ -6459,28 +6459,28 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
                 ImGui::BeginTooltip();
                 ImGui::TextUnformatted("(R = radius, N = number of segments)");
                 ImGui::Spacing();
-                ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                const c_float min_widget_width = ImGui::CalcTextSize("N: MMM\nR: MMM").x;
-                for (c_int n = 0; n < 8; n++)
+                let mut  draw_list: *mut ImDrawList =  ImGui::GetWindowDrawList();
+                let min_widget_width: c_float =  ImGui::CalcTextSize("N: MMM\nR: MMM").x;
+                for (let n: c_int = 0; n < 8; n++)
                 {
-                    const c_float RAD_MIN = 5f32;
-                    const c_float RAD_MAX = 70f32;
-                    const c_float rad = RAD_MIN + (RAD_MAX - RAD_MIN) * n / (8.0f32 - 1f32);
+                    let RAD_MIN: c_float =  5f32;
+                    let RAD_MAX: c_float =  70f32;
+                    let rad: c_float =  RAD_MIN + (RAD_MAX - RAD_MIN) * n / (8.0f32 - 1f32);
 
                     ImGui::BeginGroup();
 
                     ImGui::Text("R: %.f\nN: %d", rad, draw_list->_CalcCircleAutoSegmentCount(rad));
 
-                    const c_float canvas_width = IM_MAX(min_widget_width, rad * 2.00f32);
+                    let canvas_width: c_float =  IM_MAX(min_widget_width, rad * 2.00f32);
                     const c_float offset_x     = floorf(canvas_width * 0.5f32);
                     const c_float offset_y     = floorf(RAD_MAX);
 
-                    const ImVec2 p1 = ImGui::GetCursorScreenPos();
+                    let p1: ImVec2 = ImGui::GetCursorScreenPos();
                     draw_list->AddCircle(ImVec2(p1.x + offset_x, p1.y + offset_y), rad, ImGui::GetColorU32(ImGuiCol_Text));
                     ImGui::Dummy(ImVec2(canvas_width, RAD_MAX * 2));
 
                     /*
-                    const ImVec2 p2 = ImGui::GetCursorScreenPos();
+                    let p2: ImVec2 = ImGui::GetCursorScreenPos();
                     draw_list->AddCircleFilled(ImVec2(p2.x + offset_x, p2.y + offset_y), rad, ImGui::GetColorU32(ImGuiCol_Text));
                     ImGui::Dummy(ImVec2(canvas_width, RAD_MAX * 2));
                     */
@@ -6576,11 +6576,11 @@ static c_void ShowExampleMenuFile()
         static let mut enabled: bool =  true;
         ImGui::MenuItem("Enabled", "", &enabled);
         ImGui::BeginChild("child", ImVec2(0, 60), true);
-        for (c_int i = 0; i < 10; i++)
+        for (let i: c_int = 0; i < 10; i++)
             ImGui::Text("Scrolling Text %d", i);
         ImGui::EndChild();
-        static c_float f = 0.5f32;
-        static c_int n = 0;
+        static let f: c_float =  0.5f32;
+        static let n: c_int = 0;
         ImGui::SliderFloat("Value", &f, 0f32, 1f32);
         ImGui::InputFloat("Input", &f, 0.1f32);
         ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
@@ -6590,8 +6590,8 @@ static c_void ShowExampleMenuFile()
     IMGUI_DEMO_MARKER("Examples/Menu/Colors");
     if (ImGui::BeginMenu("Colors"))
     {
-        c_float sz = ImGui::GetTextLineHeight();
-        for (c_int i = 0; i < ImGuiCol_COUNT; i++)
+        let sz: c_float =  ImGui::GetTextLineHeight();
+        for (let i: c_int = 0; i < ImGuiCol_COUNT; i++)
         {
             let mut  name: *const c_char = ImGui::GetStyleColorName((ImGuiCol)i);
             let p: ImVec2 = ImGui::GetCursorScreenPos();
@@ -6658,19 +6658,19 @@ struct ExampleAppConsole
     ~ExampleAppConsole()
     {
         ClearLog();
-        for (c_int i = 0; i < History.Size; i++)
+        for (let i: c_int = 0; i < History.Size; i++)
             free(History[i]);
     }
 
     // Portable helpers
     static c_int   Stricmp(*const char s1, *const char s2)         { c_int d; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
-    static c_int   Strnicmp(*const char s1, *const char s2, c_int n) { c_int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
+    static c_int   Strnicmp(*const char s1, *const char s2, c_int n) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
     static char* Strdup(*const char s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(bu0f32); return (char*)memcpy(buf, (*const c_void)s, len); }
     static c_void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end-= 1; *str_end = 0; }
 
     c_void    ClearLog()
     {
-        for (c_int i = 0; i < Items.Size; i++)
+        for (let i: c_int = 0; i < Items.Size; i++)
             free(Items[i]);
         Items.clear();
     }
@@ -6739,7 +6739,7 @@ struct ExampleAppConsole
         ImGui::Separator();
 
         // Reserve enough left-over height for 1 separator + 1 input text
-        const c_float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        let footer_height_to_reserve: c_float =  ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar);
         if (ImGui::BeginPopupContextWindow())
         {
@@ -6774,7 +6774,7 @@ struct ExampleAppConsole
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
         if (copy_to_clipboard)
             ImGui::LogToClipboard();
-        for (c_int i = 0; i < Items.Size; i++)
+        for (let i: c_int = 0; i < Items.Size; i++)
         {
             let mut  item: *const c_char = Items[i];
             if (!Filter.PassFilter(item))
@@ -6831,7 +6831,7 @@ struct ExampleAppConsole
         // Insert into history. First find match and delete it so it can be pushed to the back.
         // This isn't trying to be smart or optimal.
         HistoryPos = -1;
-        for (c_int i = History.Size - 1; i >= 0; i--)
+        for (let i: c_int = History.Size - 1; i >= 0; i--)
             if (Stricmp(History[i], command_line) == 0)
             {
                 free(History[i]);
@@ -6848,13 +6848,13 @@ struct ExampleAppConsole
         else if (Stricmp(command_line, "HELP") == 0)
         {
             AddLog("Commands:");
-            for (c_int i = 0; i < Commands.Size; i++)
+            for (let i: c_int = 0; i < Commands.Size; i++)
                 AddLog("- %s", Commands[i]);
         }
         else if (Stricmp(command_line, "HISTORY") == 0)
         {
-            c_int first = History.Size - 10;
-            for (c_int i = first > 0 ? first : 0; i < History.Size; i++)
+            let first: c_int = History.Size - 10;
+            for (let i: c_int = first > 0 ? first : 0; i < History.Size; i++)
                 AddLog("%3d: %s\n", i, History[i]);
         }
         else
@@ -6895,7 +6895,7 @@ struct ExampleAppConsole
 
                 // Build a list of candidates
                 Vec<*const char> candidates;
-                for (c_int i = 0; i < Commands.Size; i++)
+                for (let i: c_int = 0; i < Commands.Size; i++)
                     if (Strnicmp(Commands[i], word_start, (word_end - word_start)) == 0)
                         candidates.push(Commands[i]);
 
@@ -6915,12 +6915,12 @@ struct ExampleAppConsole
                 {
                     // Multiple matches. Complete as much as we can..
                     // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
-                    c_int match_len = (word_end - word_start);
+                    let match_len: c_int = (word_end - word_start);
                     for (;;)
                     {
-                        c_int c = 0;
+                        let c: c_int = 0;
                         let mut all_candidates_matches: bool =  true;
-                        for (c_int i = 0; i < candidates.Size && all_candidates_matches; i++)
+                        for (let i: c_int = 0; i < candidates.Size && all_candidates_matches; i++)
                             if (i == 0)
                                 c = toupper(candidates[i][match_len]);
                             else if (c == 0 || c != toupper(candidates[i][match_len]))
@@ -6938,7 +6938,7 @@ struct ExampleAppConsole
 
                     // List matches
                     AddLog("Possible matches:\n");
-                    for (c_int i = 0; i < candidates.Size; i++)
+                    for (let i: c_int = 0; i < candidates.Size; i++)
                         AddLog("- %s\n", candidates[i]);
                 }
 
@@ -7011,12 +7011,12 @@ struct ExampleAppLog
 
     c_void    AddLog(*const char fmt, ...) IM_FMTARGS(2)
     {
-        c_int old_size = Buf.size();
+        let old_size: c_int = Buf.size();
         va_list args;
         va_start(args, fmt);
         Buf.appendfv(fmt, args);
         va_end(args);
-        for (c_int new_size = Buf.size(); old_size < new_size; old_size++)
+        for (let new_size: c_int = Buf.size(); old_size < new_size; old_size++)
             if (Buf[old_size] == '\n')
                 LineOffsets.push(old_size + 1);
     }
@@ -7063,7 +7063,7 @@ struct ExampleAppLog
             // This is because we don't have a random access on the result on our filter.
             // A real application processing logs with ten of thousands of entries may want to store the result of
             // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
-            for (c_int line_no = 0; line_no < LineOffsets.Size; line_no++)
+            for (let line_no: c_int = 0; line_no < LineOffsets.Size; line_no++)
             {
                 let mut  line_start: *const c_char = buf + LineOffsets[line_no];
                 let mut  line_end: *const c_char = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
@@ -7090,7 +7090,7 @@ struct ExampleAppLog
             clipper.Begin(LineOffsets.Size);
             while (clipper.Step())
             {
-                for (c_int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
+                for (let line_no: c_int = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
                 {
                     let mut  line_start: *const c_char = buf + LineOffsets[line_no];
                     let mut  line_end: *const c_char = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
@@ -7122,10 +7122,10 @@ static c_void ShowExampleAppLog(bool* p_open)
     IMGUI_DEMO_MARKER("Examples/Log");
     if (ImGui::SmallButton("[Debug] Add 5 entries"))
     {
-        static c_int counter = 0;
+        static let counter: c_int = 0;
         *const categories: [c_char;3] = { "info", "warn", "error" };
         *const char words[] = { "Bumfuzzled", "Cattywampus", "Snickersnee", "Abibliophobia", "Absquatulate", "Nincompoop", "Pauciloquent" };
-        for (c_int n = 0; n < 5; n++)
+        for (let n: c_int = 0; n < 5; n++)
         {
             let mut  category: *const c_char = categories[counter % IM_ARRAYSIZE(categories)];
             let mut  word: *const c_char = words[counter % IM_ARRAYSIZE(words)];
@@ -7162,10 +7162,10 @@ static c_void ShowExampleAppLayout(bool* p_open)
         }
 
         // Left
-        static c_int selected = 0;
+        static let selected: c_int = 0;
         {
             ImGui::BeginChild("left pane", ImVec2(150, 0), true);
-            for (c_int i = 0; i < 100; i++)
+            for (let i: c_int = 0; i < 100; i++)
             {
                 // FIXME: Good candidate to use ImGuiSelectableFlags_SelectOnNav
                 label: [c_char;128];
@@ -7227,7 +7227,7 @@ static c_void ShowPlaceholderObject(*const char prefix, c_int uid)
     if (node_open)
     {
         static c_float placeholder_members[8] = { 0f32, 0f32, 1f32, 3.1416f, 100f32, 999.0f32 };
-        for (c_int i = 0; i < 8; i++)
+        for (let i: c_int = 0; i < 8; i++)
         {
             ImGui::PushID(i); // Use field index as identifier.
             if (i < 2)
@@ -7279,7 +7279,7 @@ static c_void ShowExampleAppPropertyEditor(bool* p_open)
     if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable))
     {
         // Iterate placeholder objects (all the same data)
-        for (c_int obj_i = 0; obj_i < 4; obj_i++)
+        for (let obj_i: c_int = 0; obj_i < 4; obj_i++)
         {
             ShowPlaceholderObject("Object", obj_i);
             //ImGui::Separator();
@@ -7305,9 +7305,9 @@ static c_void ShowExampleAppLongText(bool* p_open)
     }
     IMGUI_DEMO_MARKER("Examples/Long text display");
 
-    static c_int test_type = 0;
+    static let test_type: c_int = 0;
     static ImGuiTextBuffer log;
-    static c_int lines = 0;
+    static let lines: c_int = 0;
     ImGui::Text("Printing unusually long amount of text.");
     ImGui::Combo("Test type", &test_type,
         "Single call to TextUnformatted()\0"
@@ -7318,7 +7318,7 @@ static c_void ShowExampleAppLongText(bool* p_open)
     ImGui::SameLine();
     if (ImGui::Button("Add 1000 lines"))
     {
-        for (c_int i = 0; i < 1000; i++)
+        for (let i: c_int = 0; i < 1000; i++)
             log.appendf("%i The quick brown fox jumps over the lazy dog\n", lines + i);
         lines += 1000;
     }
@@ -7336,7 +7336,7 @@ static c_void ShowExampleAppLongText(bool* p_open)
             ImGuiListClipper clipper;
             clipper.Begin(lines);
             while (clipper.Step())
-                for (c_int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                for (let i: c_int = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                     ImGui::Text("%i The quick brown fox jumps over the lazy dog", i);
             ImGui::PopStyleVar();
             break;
@@ -7344,7 +7344,7 @@ static c_void ShowExampleAppLongText(bool* p_open)
     case 2:
         // Multiple calls to Text(), not clipped (slow)
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        for (c_int i = 0; i < lines; i++)
+        for (let i: c_int = 0; i < lines; i++)
             ImGui::Text("%i The quick brown fox jumps over the lazy dog", i);
         ImGui::PopStyleVar();
         break;
@@ -7367,13 +7367,13 @@ static c_void ShowExampleAppAutoResize(bool* p_open)
     }
     IMGUI_DEMO_MARKER("Examples/Auto-resizing window");
 
-    static c_int lines = 10;
+    static let lines: c_int = 10;
     ImGui::TextUnformatted(
         "Window will resize every-frame to the size of its content.\n"
         "Note that you probably don't want to query the window size to\n"
         "output your content because that would create a feedback loop.");
     ImGui::SliderInt("Number of lines", &lines, 1, 20);
-    for (c_int i = 0; i < lines; i++)
+    for (let i: c_int = 0; i < lines; i++)
         ImGui::Text("%*sThis is line %d", i * 4, "", i); // Pad with space to extend size horizontally
     ImGui::End();
 }
@@ -7390,9 +7390,9 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
     {
         // Helper functions to demonstrate programmatic constraints
         // FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
-        static c_void AspectRatio(ImGuiSizeCallbackData* data)    { c_float aspect_ratio = *data.UserData; data.DesiredSize.x = IM_MAX(data.CurrentSize.x, data.CurrentSize.y); data.DesiredSize.y = (data.DesiredSize.x / aspect_ratio); }
+        static c_void AspectRatio(ImGuiSizeCallbackData* data)    { let aspect_ratio: c_float =  *data.UserData; data.DesiredSize.x = IM_MAX(data.CurrentSize.x, data.CurrentSize.y); data.DesiredSize.y = (data.DesiredSize.x / aspect_ratio); }
         static c_void Square(ImGuiSizeCallbackData* data)         { data.DesiredSize.x = data.DesiredSize.y = IM_MAX(data.CurrentSize.x, data.CurrentSize.y); }
-        static c_void Step(ImGuiSizeCallbackData* data)           { c_float step = *data.UserData; data.DesiredSize = ImVec2((data.CurrentSize.x / step + 0.5f32) * step, (data.CurrentSize.y / step + 0.5f32) * step); }
+        static c_void Step(ImGuiSizeCallbackData* data)           { let step: c_float =  *data.UserData; data.DesiredSize = ImVec2((data.CurrentSize.x / step + 0.5f32) * step, (data.CurrentSize.y / step + 0.5f32) * step); }
     };
 
     *const char test_desc[] =
@@ -7410,12 +7410,12 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
     // Options
     static let mut auto_resize: bool =  false;
     static let mut window_padding: bool =  true;
-    static c_int type = 5; // Aspect Ratio
-    static c_int display_lines = 10;
+    static let type: c_int = 5; // Aspect Ratio
+    static let display_lines: c_int = 10;
 
     // Submit constraint
-    c_float aspect_ratio = 16f32 / 9.0f32;
-    c_float fixed_step = 100f32;
+    let aspect_ratio: c_float =  16f32 / 9.0f32;
+    let fixed_step: c_float =  100f32;
     if (type == 0) ImGui::SetNextWindowSizeConstraints(ImVec2(100, 100), ImVec2(500, 500));         // Between 100x100 and 500x500
     if (type == 1) ImGui::SetNextWindowSizeConstraints(ImVec2(100, 100), ImVec2(f32::MAX, f32::MAX)); // Width > 100, Height > 100
     if (type == 2) ImGui::SetNextWindowSizeConstraints(ImVec2(-1, 0),    ImVec2(-1, f32::MAX));      // Vertical only
@@ -7458,7 +7458,7 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
             ImGui::DragInt("Lines", &display_lines, 0.2f, 1, 100);
             ImGui::Checkbox("Auto-resize", &auto_resize);
             ImGui::Checkbox("Window padding", &window_padding);
-            for (c_int i = 0; i < display_lines; i++)
+            for (let i: c_int = 0; i < display_lines; i++)
                 ImGui::Text("%*sHello, sailor! Making this line long enough for the example.", i * 4, "");
         }
     }
@@ -7473,12 +7473,12 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
 // + a context-menu to choose which corner of the screen to use.
 static c_void ShowExampleAppSimpleOverlay(bool* p_open)
 {
-    static c_int location = 0;
+    static let location: c_int = 0;
     ImGuiIO& io = ImGui::GetIO();
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     if (location >= 0)
     {
-        const c_float PAD = 10f32;
+        let PAD: c_float =  10f32;
         let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
         let work_pos: ImVec2 = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
         let work_size: ImVec2 = viewport->WorkSize;
@@ -7568,7 +7568,7 @@ static c_void ShowExampleAppFullscreen(bool* p_open)
 static c_void ShowExampleAppWindowTitles(bool*)
 {
     let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
+    let base_pos: ImVec2 = viewport->Pos;
 
     // By default, Windows are uniquely identified by their title.
     // You can use the "##" and "###" markers to manipulate the display/ID.
@@ -7618,7 +7618,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
         if (ImGui::BeginTabItem("Primitives"))
         {
             ImGui::PushItemWidth(-ImGui::GetFontSize() * 15);
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            let mut  draw_list: *mut ImDrawList =  ImGui::GetWindowDrawList();
 
             // Draw gradients
             // (note that those are currently exacerbating our sRGB/Linear issues)
@@ -7644,13 +7644,13 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
 
             // Draw a bunch of primitives
             ImGui::Text("All primitives");
-            static c_float sz = 36f32;
-            static c_float thickness = 3.0f32;
-            static c_int ngon_sides = 6;
+            static let sz: c_float =  36f32;
+            static let thickness: c_float =  3.0f32;
+            static let ngon_sides: c_int = 6;
             static let mut circle_segments_override: bool =  false;
-            static c_int circle_segments_override_v = 12;
+            static let circle_segments_override_v: c_int = 12;
             static let mut curve_segments_override: bool =  false;
-            static c_int curve_segments_override_v = 8;
+            static let curve_segments_override_v: c_int = 8;
             static ImVec4 colf = ImVec4(1f32, 1f32, 0.4f, 1f32);
             ImGui::DragFloat("Size", &sz, 0.2f, 2.0f32, 100f32, "%.0f");
             ImGui::DragFloat("Thickness", &thickness, 0.05f, 1f32, 8.0f32, "%.02f");
@@ -7663,19 +7663,19 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             curve_segments_override |= ImGui::SliderInt("Curves segments override", &curve_segments_override_v, 3, 40);
             ImGui::ColorEdit4("Color", &colf.x);
 
-            const ImVec2 p = ImGui::GetCursorScreenPos();
+            let p: ImVec2 = ImGui::GetCursorScreenPos();
             const u32 col = ImColor(col0f32);
-            const c_float spacing = 10f32;
+            let spacing: c_float =  10f32;
             const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
-            const c_float rounding = sz / 5f32;
+            let rounding: c_float =  sz / 5f32;
             let circle_segments: c_int = circle_segments_override ? circle_segments_override_v : 0;
             let curve_segments: c_int = curve_segments_override ? curve_segments_override_v : 0;
-            c_float x = p.x + 4.0f32;
-            c_float y = p.y + 4.0f32;
-            for (c_int n = 0; n < 2; n++)
+            let x: c_float =  p.x + 4.0f32;
+            let y: c_float =  p.y + 4.0f32;
+            for (let n: c_int = 0; n < 2; n++)
             {
                 // First line uses a thickness of 1f32, second line uses the configurable thickness
-                c_float th = (n == 0) ? 1f32 : thickness;
+                let th: c_float =  (n == 0) ? 1f32 : thickness;
                 draw_list->AddNgon(ImVec2(x + sz*0.5f32, y + sz*0.5f32), sz*0.5f32, col, ngon_sides, th);                 x += sz + spacing;  // N-gon
                 draw_list->AddCircle(ImVec2(x + sz*0.5f32, y + sz*0.5f32), sz*0.5f32, col, circle_segments, th);          x += sz + spacing;  // Circle
                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 0f32, ImDrawFlags_None, th);          x += sz + spacing;  // Square
@@ -7747,7 +7747,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
 
             // Draw border and background color
             ImGuiIO& io = ImGui::GetIO();
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            let mut  draw_list: *mut ImDrawList =  ImGui::GetWindowDrawList();
             draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
             draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
 
@@ -7774,7 +7774,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
 
             // Pan (we use a zero mouse threshold when there's no context menu)
             // You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
-            const c_float mouse_threshold_for_pan = opt_enable_context_menu ? -1f32 : 0f32;
+            let mouse_threshold_for_pan: c_float =  opt_enable_context_menu ? -1f32 : 0f32;
             if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right, mouse_threshold_for_pan))
             {
                 scrolling.x += io.MouseDelta.x;
@@ -7799,13 +7799,13 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             draw_list->PushClipRect(canvas_p0, canvas_p1, true);
             if (opt_enable_grid)
             {
-                const c_float GRID_STEP = 64.0f32;
-                for (c_float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
+                let GRID_STEP: c_float =  64.0f32;
+                for (let x: c_float =  fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
                     draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
-                for (c_float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
+                for (let y: c_float =  fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
                     draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
             }
-            for (c_int n = 0; n < points.Size; n += 2)
+            for (let n: c_int = 0; n < points.Size; n += 2)
                 draw_list->AddLine(ImVec2(origin.x + points[n].x, origin.y + points[n].y), ImVec2(origin.x + points[n + 1].x, origin.y + points[n + 1].y), IM_COL32(255, 255, 0, 255), 2.00f32);
             draw_list->PopClipRect();
 
@@ -8046,7 +8046,7 @@ struct ExampleAppDocuments
 // Note that this completely optional, and only affect tab bars with the ImGuiTabBarFlags_Reorderable flag.
 static c_void NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
 {
-    for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+    for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
     {
         MyDocument* doc = &app.Documents[doc_n];
         if (!doc->Open && doc->OpenPrev)
@@ -8089,13 +8089,13 @@ c_void ShowExampleAppDocuments(bool* p_open)
     {
         if (ImGui::BeginMenu("File"))
         {
-            c_int open_count = 0;
-            for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+            let open_count: c_int = 0;
+            for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
                 open_count += app.Documents[doc_n].Open ? 1 : 0;
 
             if (ImGui::BeginMenu("Open", open_count < app.Documents.Size))
             {
-                for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+                for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
                 {
                     MyDocument* doc = &app.Documents[doc_n];
                     if (!doc->Open)
@@ -8105,7 +8105,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Close All Documents", NULL, false, open_count > 0))
-                for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+                for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
                     app.Documents[doc_n].DoQueueClose();
             if (ImGui::MenuItem("Exit", "Ctrl+F4") && p_open)
                 *p_open = false;
@@ -8115,7 +8115,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
     }
 
     // [Debug] List documents with one checkbox for each
-    for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+    for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
     {
         MyDocument* doc = &app.Documents[doc_n];
         if (doc_n > 0)
@@ -8159,7 +8159,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
             //if (ImGui::GetIO().KeyCtrl) ImGui::SetTabItemSelected(docs[1].Name);  // [DEBUG] Test SetTabItemSelected(), probably not very useful as-is anyway..
 
             // Submit Tabs
-            for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+            for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
             {
                 MyDocument* doc = &app.Documents[doc_n];
                 if (!doc->Open)
@@ -8197,7 +8197,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
             ImGui::DockSpace(dockspace_id);
 
             // Create Windows
-            for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+            for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
             {
                 MyDocument* doc = &app.Documents[doc_n];
                 if (!doc->Open)
@@ -8239,7 +8239,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
     if (close_queue.empty())
     {
         // Close queue is locked once we started a popup
-        for (c_int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+        for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
         {
             MyDocument* doc = &app.Documents[doc_n];
             if (doc->WantClose)
@@ -8253,15 +8253,15 @@ c_void ShowExampleAppDocuments(bool* p_open)
     // Display closing confirmation UI
     if (!close_queue.empty())
     {
-        c_int close_queue_unsaved_documents = 0;
-        for (c_int n = 0; n < close_queue.Size; n++)
+        let close_queue_unsaved_documents: c_int = 0;
+        for (let n: c_int = 0; n < close_queue.Size; n++)
             if (close_queue[n]->Dirty)
                 close_queue_unsaved_documents+= 1;
 
         if (close_queue_unsaved_documents == 0)
         {
             // Close documents when all are unsaved
-            for (c_int n = 0; n < close_queue.Size; n++)
+            for (let n: c_int = 0; n < close_queue.Size; n++)
                 close_queue[n]->DoForceClose();
             close_queue.clear();
         }
@@ -8272,10 +8272,10 @@ c_void ShowExampleAppDocuments(bool* p_open)
             if (ImGui::BeginPopupModal("Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
             {
                 ImGui::Text("Save change to the following items?");
-                c_float item_height = ImGui::GetTextLineHeightWithSpacing();
+                let item_height: c_float =  ImGui::GetTextLineHeightWithSpacing();
                 if (ImGui::BeginChildFrame(ImGui::GetID("frame"), ImVec2(-FLT_MIN, 6.25f * item_height)))
                 {
-                    for (c_int n = 0; n < close_queue.Size; n++)
+                    for (let n: c_int = 0; n < close_queue.Size; n++)
                         if (close_queue[n]->Dirty)
                             ImGui::Text("%s", close_queue[n]->Name);
                     ImGui::EndChildFrame();
@@ -8284,7 +8284,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
                 ImVec2 button_size(ImGui::GetFontSize() * 7.0f32, 0f32);
                 if (ImGui::Button("Yes", button_size))
                 {
-                    for (c_int n = 0; n < close_queue.Size; n++)
+                    for (let n: c_int = 0; n < close_queue.Size; n++)
                     {
                         if (close_queue[n]->Dirty)
                             close_queue[n]->DoSave();
@@ -8296,7 +8296,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
                 ImGui::SameLine();
                 if (ImGui::Button("No", button_size))
                 {
-                    for (c_int n = 0; n < close_queue.Size; n++)
+                    for (let n: c_int = 0; n < close_queue.Size; n++)
                         close_queue[n]->DoForceClose();
                     close_queue.clear();
                     ImGui::CloseCurrentPopup();

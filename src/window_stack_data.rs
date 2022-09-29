@@ -2,6 +2,7 @@
 
 use crate::window::ImGuiWindow;
 use crate::last_item_data::ImGuiLastItemData;
+use crate::stack_sizes::ImGuiStackSizes;
 
 // Data saved for each window pushed into the stack
 #[derive(Default, Debug, Clone)]
