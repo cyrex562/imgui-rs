@@ -3066,7 +3066,7 @@ static c_void ShowDemoWindowLayout()
             ImGui::TextUnformatted(names[i]);
 
             const ImGuiWindowFlags child_flags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
-            const ImGuiID child_id = ImGui::GetID((*mut c_void)(intptr_t)i);
+            const let mut child_id: ImGuiID =  ImGui::GetID((*mut c_void)(intptr_t)i);
             let child_is_visible: bool = ImGui::BeginChild(child_id, ImVec2(child_w, 200f32), true, child_flags);
             if (ImGui::BeginMenuBar())
             {
@@ -3113,7 +3113,7 @@ static c_void ShowDemoWindowLayout()
         {
             let child_height: c_float =  ImGui::GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0f32;
             ImGuiWindowFlags child_flags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
-            ImGuiID child_id = ImGui::GetID((*mut c_void)(intptr_t)i);
+            let mut child_id: ImGuiID =  ImGui::GetID((*mut c_void)(intptr_t)i);
             let mut child_is_visible: bool =  ImGui::BeginChild(child_id, ImVec2(-100, child_height), true, child_flags);
             if (scroll_to_of0f32)
                 ImGui::SetScrollX(scroll_to_off_px);
@@ -7767,7 +7767,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             }
             if (adding_line)
             {
-                points.back() = mouse_pos_in_canvas;
+                points.last().unwrap() = mouse_pos_in_canvas;
                 if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
                     adding_line = false;
             }
@@ -7916,7 +7916,7 @@ c_void ShowExampleAppDockSpace(bool* p_open)
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
-        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+        let mut dockspace_id: ImGuiID =  ImGui::GetID("MyDockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0f32, 0f32), dockspace_flags);
     }
     else
@@ -8193,7 +8193,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
             NotifyOfDocumentsClosedElsewhere(app);
 
             // Create a DockSpace node where any window can be docked
-            ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+            let mut dockspace_id: ImGuiID =  ImGui::GetID("MyDockSpace");
             ImGui::DockSpace(dockspace_id);
 
             // Create Windows

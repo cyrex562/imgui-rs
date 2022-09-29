@@ -1316,7 +1316,7 @@ static c_void PathBezierQuadraticCurveToCasteljau(Vec<ImVec2>* path, c_float x1,
 
 c_void ImDrawList::PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, c_int num_segments)
 {
-    let p1: ImVec2 = _Path.back();
+    let p1: ImVec2 = _Path.last().unwrap();
     if (num_segments == 0)
     {
         PathBezierCubicCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data.CurveTessellationTol, 0); // Auto-tessellated
@@ -1331,7 +1331,7 @@ c_void ImDrawList::PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, co
 
 c_void ImDrawList::PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, c_int num_segments)
 {
-    let p1: ImVec2 = _Path.back();
+    let p1: ImVec2 = _Path.last().unwrap();
     if (num_segments == 0)
     {
         PathBezierQuadraticCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data.CurveTessellationTol, 0);// Auto-tessellated
@@ -1753,12 +1753,12 @@ c_void ImDrawListSplitter::Merge(ImDrawList* draw_list)
     // Calculate our final buffer sizes. Also fix the incorrect IdxOffset values in each command.
     let new_cmd_buffer_count: c_int = 0;
     let new_idx_buffer_count: c_int = 0;
-    ImDrawCmd* last_cmd = (_Count > 0 && draw_list->CmdBuffer.Size > 0) ? &draw_list->CmdBuffer.back() : NULL;
+    ImDrawCmd* last_cmd = (_Count > 0 && draw_list->CmdBuffer.Size > 0) ? &draw_list->CmdBuffer.last().unwrap() : NULL;
     let idx_offset: c_int = last_cmd ? last_cmd->IdxOffset + last_cmd->ElemCount : 0;
     for (let i: c_int = 1; i < _Count; i++)
     {
         ImDrawChannel& ch = _Channels[i];
-        if (ch._CmdBuffer.Size > 0 && ch._CmdBuffer.back().ElemCount == 0 && ch._CmdBuffer.back().UserCallback == NULL) // Equivalent of PopUnusedDrawCmd()
+        if (ch._CmdBuffer.Size > 0 && ch._CmdBuffer.last().unwrap().ElemCount == 0 && ch._CmdBuffer.last().unwrap().UserCallback == NULL) // Equivalent of PopUnusedDrawCmd()
             ch._CmdBuffer.pop_back();
 
         if (ch._CmdBuffer.Size > 0 && last_cmd != NULL)
@@ -1775,7 +1775,7 @@ c_void ImDrawListSplitter::Merge(ImDrawList* draw_list)
             }
         }
         if (ch._CmdBuffer.Size > 0)
-            last_cmd = &ch._CmdBuffer.back();
+            last_cmd = &ch._CmdBuffer.last().unwrap();
         new_cmd_buffer_count += ch._CmdBuffer.Size;
         new_idx_buffer_count += ch._IdxBuffer.Size;
         for (let cmd_n: c_int = 0; cmd_n < ch._CmdBuffer.Size; cmd_n++)
@@ -1799,7 +1799,7 @@ c_void ImDrawListSplitter::Merge(ImDrawList* draw_list)
     draw_list->_IdxWritePtr = idx_write;
 
     // Ensure there's always a non-callback draw command trailing the command-buffer
-    if (draw_list->CmdBuffer.Size == 0 || draw_list->CmdBuffer.back().UserCallback != NULL)
+    if (draw_list->CmdBuffer.Size == 0 || draw_list->CmdBuffer.last().unwrap().UserCallback != NULL)
         draw_list->AddDrawCmd();
 
     // If current command is used with different settings we need to add a new command
@@ -2109,9 +2109,9 @@ ImFont* ImFontAtlas::AddFont(*const ImFontConfig font_cfg)
         // IM_ASSERT(!Fonts.empty() && "Cannot use MergeMode for the first font"); // When using MergeMode make sure that a font has already been added before. You can use ImGui::GetIO().Fonts->AddFontDefault() to add the default imgui font.
 
     ConfigData.push(*font_cfg);
-    ImFontConfig& new_font_cfg = ConfigData.back();
+    ImFontConfig& new_font_cfg = ConfigData.last().unwrap();
     if (new_font_cfg.DstFont == NULL)
-        new_font_cfg.DstFont = Fonts.back();
+        new_font_cfg.DstFont = Fonts.last().unwrap();
     if (!new_font_cfg.FontDataOwnedByAtlas)
     {
         new_font_cfg.FontData = IM_ALLOC(new_font_cfg.FontDataSize);
@@ -3200,9 +3200,9 @@ c_void ImFont::BuildLookupTable()
     // FIXME: Needs proper TAB handling but it needs to be contextualized (or we could arbitrary say that each string starts at "column 0" ?)
     if (FindGlyph(' '))
     {
-        if (Glyphs.back().Codepoint != '\t')   // So we can call this function multiple times (FIXME: Flaky)
+        if (Glyphs.last().unwrap().Codepoint != '\t')   // So we can call this function multiple times (FIXME: Flaky)
             Glyphs.resize(Glyphs.Size + 1);
-        ImFontGlyph& tab_glyph = Glyphs.back();
+        ImFontGlyph& tab_glyph = Glyphs.last().unwrap();
         tab_glyph = *FindGlyph(' ');
         tab_glyph.Codepoint = '\t';
         tab_glyph.AdvanceX *= IM_TABSIZE;
@@ -3233,7 +3233,7 @@ c_void ImFont::BuildLookupTable()
         FallbackGlyph = FindGlyphNoFallback(FallbackChar);
         if (FallbackGlyph == NULL)
         {
-            FallbackGlyph = &Glyphs.back();
+            FallbackGlyph = &Glyphs.last().unwrap();
             FallbackChar = FallbackGlyph->Codepoint;
         }
     }
@@ -3298,7 +3298,7 @@ c_void ImFont::AddGlyph(*const ImFontConfig cfg, ImWchar codepoint, c_float x0, 
     }
 
     Glyphs.resize(Glyphs.Size + 1);
-    ImFontGlyph& glyph = Glyphs.back();
+    ImFontGlyph& glyph = Glyphs.last().unwrap();
     glyph.Codepoint = codepoint;
     glyph.Visible = (x0 != x1) && (y0 != y1);
     glyph.Colored = false;

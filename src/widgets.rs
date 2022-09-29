@@ -687,7 +687,7 @@ bool ImGui::ButtonEx(*const char label, const ImVec2& size_arg, ImGuiButtonFlags
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
     let pos: ImVec2 = window.DC.CursorPos;
@@ -751,7 +751,7 @@ bool ImGui::InvisibleButton(*const char str_id, const ImVec2& size_arg, ImGuiBut
     // Cannot use zero-size for InvisibleButton(). Unlike Button() there is not way to fallback using the label size.
     // IM_ASSERT(size_arg.x != 0f32 && size_arg.y != 0f32);
 
-    const ImGuiID id = window.GetID(str_id);
+    const let mut id: ImGuiID =  window.GetID(str_id);
     let size: ImVec2 = CalcItemSize(size_arg, 0f32, 0f32);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
     ItemSize(size);
@@ -772,7 +772,7 @@ bool ImGui::ArrowButtonEx(*const char str_id, ImGuiDir dir, ImVec2 size, ImGuiBu
     if (window.SkipItems)
         return false;
 
-    const ImGuiID id = window.GetID(str_id);
+    const let mut id: ImGuiID =  window.GetID(str_id);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
     let default_size: c_float =  GetFrameHeight();
     ItemSize(size, (size.y >= default_size) ? g.Style.FramePadding.y : -1f32);
@@ -894,7 +894,7 @@ c_void ImGui::Scrollbar(ImGuiAxis axis)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
-    const ImGuiID id = GetWindowScrollbarID(window, axis);
+    const let mut id: ImGuiID =  GetWindowScrollbarID(window, axis);
 
     // Calculate scrollbar bounding box
     let bb: ImRect =  GetWindowScrollbarRect(window, axis);
@@ -1095,7 +1095,7 @@ bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const I
 
     // Default to using texture ID as ID. User can still push string/integer prefixes.
     PushID((*mut c_void)(intptr_t)user_texture_id);
-    const ImGuiID id = window.GetID("#image");
+    const let mut id: ImGuiID =  window.GetID("#image");
     PopID();
 
     if (frame_padding >= 0)
@@ -1115,7 +1115,7 @@ bool ImGui::Checkbox(*const char label, *mut bool v)
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
     let square_sz: c_float =  GetFrameHeight();
@@ -1221,7 +1221,7 @@ bool ImGui::RadioButton(*const char label, bool active)
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
     let square_sz: c_float =  GetFrameHeight();
@@ -1429,7 +1429,7 @@ c_void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
         let x2: c_float =  window.Pos.x + window.Size.x;
 
         // FIXME-WORKRECT: old hack (#205) until we decide of consistent behavior with WorkRect/Indent and Separator
-        if (g.GroupStack.Size > 0 && g.GroupStack.back().WindowID == window.ID)
+        if (g.GroupStack.Size > 0 && g.GroupStack.last().unwrap().WindowID == window.ID)
             x1 += window.DC.Indent.x;
 
         // FIXME-WORKRECT: In theory we should simply be using WorkRect.Min.x/Max.x everywhere but it isn't aesthetically what we want,
@@ -1623,7 +1623,7 @@ bool ImGui::BeginCombo(*const char label, *const char preview_value, ImGuiComboF
         return false;
 
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     // IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)); // Can't use both flags together
 
     let arrow_size: c_float =  (flags & ImGuiComboFlags_NoArrowButton) ? 0f32 : GetFrameHeight();
@@ -1638,7 +1638,7 @@ bool ImGui::BeginCombo(*const char label, *const char preview_value, ImGuiComboF
     // Open on click
     bool hovered, held;
     let mut pressed: bool =  ButtonBehavior(bb, id, &hovered, &held);
-    const ImGuiID popup_id = ImHashStr("##ComboPopup", 0, id);
+    const let mut popup_id: ImGuiID =  ImHashStr("##ComboPopup", 0, id);
     let mut popup_open: bool =  IsPopupOpen(popup_id, ImGuiPopupFlags_None);
     if (pressed && !popup_open)
     {
@@ -2356,7 +2356,7 @@ bool ImGui::DragScalar(*const char label, ImGuiDataType data_type, *mut c_void p
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     let w: c_float =  CalcItemWidth();
 
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
@@ -2949,7 +2949,7 @@ bool ImGui::SliderScalar(*const char label, ImGuiDataType data_type, *mut c_void
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     let w: c_float =  CalcItemWidth();
 
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
@@ -3118,7 +3118,7 @@ bool ImGui::VSliderScalar(*const char label, const ImVec2& size, ImGuiDataType d
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
 
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + size);
@@ -3997,7 +3997,7 @@ bool ImGui::InputTextEx(*const char label, *const char hint, *mut char buf, c_in
 
     if (is_multiline) // Open group before calling GetID() because groups tracks id created within their scope (including the scrollbar)
         BeginGroup();
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), (is_multiline ? g.FontSize * 8.0f32 : label_size.y) + style.FramePadding.y * 2.00f32); // Arbitrary default of 8 lines high for multi-line
     let total_size: ImVec2 = ImVec2(frame_size.x + (label_size.x > 0f32 ? style.ItemInnerSpacing.x + label_size.x : 0f32), frame_size.y);
@@ -5577,7 +5577,7 @@ bool ImGui::ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFl
         return false;
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    const ImGuiID id = window.GetID(desc_id);
+    const let mut id: ImGuiID =  window.GetID(desc_id);
     let default_size: c_float =  GetFrameHeight();
     const ImVec2 size(size_arg.x == 0f32 ? default_size : size_arg.x, size_arg.y == 0f32 ? default_size : size_arg.y);
     const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
@@ -6171,7 +6171,7 @@ c_void ImGui::TreePop()
     if (g.NavMoveDir == ImGuiDir_Left && g.NavWindow == window && NavMoveRequestButNoResultYet())
         if (g.NavIdIsAlive && (window.DC.TreeJumpToParentOnPopMask & tree_depth_mask))
         {
-            SetNavID(window.IDStack.back(), g.NavLayer, 0, ImRect());
+            SetNavID(window.IDStack.last().unwrap(), g.NavLayer, 0, ImRect());
             NavMoveRequestCancel();
         }
     window.DC.TreeJumpToParentOnPopMask &= tree_depth_mask - 1;
@@ -6222,7 +6222,7 @@ bool ImGui::CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFl
     if (p_visible && !*p_visible)
         return false;
 
-    ImGuiID id = window.GetID(label);
+    let mut id: ImGuiID =  window.GetID(label);
     flags |= ImGuiTreeNodeFlags_CollapsingHeader;
     if (p_visible)
         flags |= ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_ClipLabelForTrailingButton;
@@ -6237,7 +6237,7 @@ bool ImGui::CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFl
         let button_size: c_float =  g.FontSize;
         let button_x: c_float =  ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x - g.Style.FramePadding.x * 2.0f32 - button_size);
         let button_y: c_float =  g.LastItemData.Rect.Min.y;
-        ImGuiID close_button_id = GetIDWithSeed("#CLOSE", NULL, id);
+        let mut close_button_id: ImGuiID =  GetIDWithSeed("#CLOSE", NULL, id);
         if (CloseButton(close_button_id, ImVec2(button_x, button_y)))
             *p_visible = false;
         g.LastItemData = last_item_backup;
@@ -6266,7 +6266,7 @@ bool ImGui::Selectable(*const char label, bool selected, ImGuiSelectableFlags fl
     const ImGuiStyle& style = g.Style;
 
     // Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
-    ImGuiID id = window.GetID(label);
+    let mut id: ImGuiID =  window.GetID(label);
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     ImVec2 size(size_arg.x != 0f32 ? size_arg.x : label_size.x, size_arg.y != 0f32 ? size_arg.y : label_size.y);
     let pos: ImVec2 = window.DC.CursorPos;
@@ -6429,7 +6429,7 @@ bool ImGui::BeginListBox(*const char label, const ImVec2& size_arg)
         return false;
 
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = GetID(label);
+    const let mut id: ImGuiID =  GetID(label);
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
 
     // Size default to hold ~7.25 items.
@@ -6558,7 +6558,7 @@ c_int ImGui::PlotEx(ImGuiPlotType plot_type, *const char label, c_float (*values
         return -1;
 
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
 
     let label_size: ImVec2 = CalcTextSize(label, NULL, true);
     if (frame_size.x == 0f32)
@@ -6865,7 +6865,7 @@ c_void ImGui::EndMenuBar()
     PopClipRect();
     PopID();
     window.DC.MenuBarOffset.x = window.DC.CursorPos.x - window.Pos.x; // Save horizontal position so next append can reuse it. This is kinda equivalent to a per-layer CursorPos.
-    g.GroupStack.back().EmitItem = false;
+    g.GroupStack.last().unwrap().EmitItem = false;
     EndGroup(); // Restore position on layer 0
     window.DC.LayoutType = ImGuiLayoutType_Vertical;
     window.DC.IsSameLine = false;
@@ -6979,7 +6979,7 @@ bool ImGui::BeginMenuEx(*const char label, *const char icon, bool enabled)
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
+    const let mut id: ImGuiID =  window.GetID(label);
     let mut menu_is_open: bool =  IsPopupOpen(id, ImGuiPopupFlags_None);
 
     // Sub-menus are ChildWindow so that mouse can be hovering across them (otherwise top-most popup menu would steal focus and not allow hovering on parent menu)
@@ -7358,7 +7358,7 @@ bool    ImGui::BeginTabBar(*const char str_id, ImGuiTabBarFlags flags)
     if (window.SkipItems)
         return false;
 
-    ImGuiID id = window.GetID(str_id);
+    let mut id: ImGuiID =  window.GetID(str_id);
     ImGuiTabBar* tab_bar = g.TabBars.GetOrAddByKey(id);
     let tab_bar_bb: ImRect =  ImRect(window.DC.CursorPos.x, window.DC.CursorPos.y, window.WorkRect.Max.x, window.DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y * 2);
     tab_bar->ID = id;
@@ -7467,7 +7467,7 @@ c_void    ImGui::EndTabBar()
         PopID();
 
     g.CurrentTabBarStack.pop_back();
-    g.CurrentTabBar = g.CurrentTabBarStack.empty() ? NULL : GetTabBarFromTabBarRef(g.CurrentTabBarStack.back());
+    g.CurrentTabBar = g.CurrentTabBarStack.empty() ? NULL : GetTabBarFromTabBarRef(g.CurrentTabBarStack.last().unwrap());
 }
 
 // This is called only once a frame before by the first call to ItemTab()
@@ -7525,7 +7525,7 @@ static c_void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
     sections[1].Spacing = sections[1].TabCount > 0 && sections[2].TabCount > 0 ? g.Style.ItemInnerSpacing.x : 0f32;
 
     // Setup next selected tab
-    ImGuiID scroll_to_tab_id = 0;
+    let mut scroll_to_tab_id: ImGuiID =  0;
     if (tab_bar->NextSelectedTabId)
     {
         tab_bar->SelectedTabId = tab_bar->NextSelectedTabId;
@@ -7711,7 +7711,7 @@ static u32   ImGui::TabBarCalcTabID(ImGuiTabBar* tab_bar, *const char label, ImG
     {
         IM_UNUSED(tab_bar);
         // IM_ASSERT(tab_bar->Flags & ImGuiTabBarFlags_DockNode);
-        ImGuiID id = docked_window.TabId;
+        let mut id: ImGuiID =  docked_window.TabId;
         KeepAliveID(id);
         return id;
     }
@@ -8109,7 +8109,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, *const char label, bool* p_open, 
         return false;
 
     const ImGuiStyle& style = g.Style;
-    const ImGuiID id = TabBarCalcTabID(tab_bar, label, docked_window);
+    const let mut id: ImGuiID =  TabBarCalcTabID(tab_bar, label, docked_window);
 
     // If the user called us with *p_open == false, we early out and don't render.
     // We make a call to ItemAdd() so that attempts to use a contextual popup menu with an implicit ID won't use an older ID.
@@ -8135,7 +8135,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, *const char label, bool* p_open, 
     if (tab == NULL)
     {
         tab_bar->Tabs.push(ImGuiTabItem());
-        tab = &tab_bar->Tabs.back();
+        tab = &tab_bar->Tabs.last().unwrap();
         tab->ID = id;
         tab_bar->TabsAddedNew = tab_is_new = true;
     }
@@ -8345,7 +8345,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, *const char label, bool* p_open, 
         flags |= ImGuiTabItemFlags_NoCloseWithMiddleMouseButton;
 
     // Render tab label, process close button
-    const ImGuiID close_button_id = p_open ? GetIDWithSeed("#CLOSE", NULL, docked_window ? docked_window.ID : id) : 0;
+    const let mut close_button_id: ImGuiID =  p_open ? GetIDWithSeed("#CLOSE", NULL, docked_window ? docked_window.ID : id) : 0;
     bool just_closed;
     bool text_clipped;
     TabItemLabelAndCloseButton(display_draw_list, bb, flags, tab_bar->FramePadding, label, id, close_button_id, tab_contents_visible, &just_closed, &text_clipped);
@@ -8391,7 +8391,7 @@ c_void    ImGui::SetTabItemClosed(*const char label)
     if (is_within_manual_tab_bar)
     {
         ImGuiTabBar* tab_bar = g.CurrentTabBar;
-        ImGuiID tab_id = TabBarCalcTabID(tab_bar, label, NULL);
+        let mut tab_id: ImGuiID =  TabBarCalcTabID(tab_bar, label, NULL);
         if (ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, tab_id))
             tab->WantClose = true; // Will be processed by next call to TabBarLayout()
     }
@@ -8400,7 +8400,7 @@ c_void    ImGui::SetTabItemClosed(*const char label)
         if (window.DockIsActive)
             if (ImGuiDockNode* node = window.DockNode)
             {
-                ImGuiID tab_id = TabBarCalcTabID(node->TabBar, label, window);
+                let mut tab_id: ImGuiID =  TabBarCalcTabID(node->TabBar, label, window);
                 TabBarRemoveTab(node->TabBar, tab_id);
                 window.DockTabWantClose = true;
             }

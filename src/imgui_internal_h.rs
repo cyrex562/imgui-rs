@@ -1292,7 +1292,7 @@ namespace ImGui
      c_void          DockBuilderDockWindow(*const char window_name, ImGuiID node_id);
      *mut ImGuiDockNodeDockBuilderGetNode(ImGuiID node_id);
     inline *mut ImGuiDockNode   DockBuilderGetCentralNode(ImGuiID node_id)              { *mut ImGuiDockNode node = DockBuilderGetNode(node_id); if (!node) return NULL; return DockNodeGetRootNode(node)->CentralNode; }
-     ImGuiID       DockBuilderAddNode(ImGuiID node_id = 0, ImGuiDockNodeFlags flags = 0);
+     ImGuiID       DockBuilderAddNode(let mut node_id: ImGuiID =  0, ImGuiDockNodeFlags flags = 0);
      c_void          DockBuilderRemoveNode(ImGuiID node_id);                 // Remove node and all its child, undock all windows
      c_void          DockBuilderRemoveNodeDockedWindows(ImGuiID node_id, let mut clear_settings_refs: bool =  true);
      c_void          DockBuilderRemoveNodeChildNodes(ImGuiID node_id);       // Remove all split/hierarchy. All remaining docked windows will be re-docked to the remaining root node (node_id).

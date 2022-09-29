@@ -303,7 +303,7 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
 // Read about "TABLE SIZING" at the top of this file.
 bool    ImGui::BeginTable(*const char str_id, c_int columns_count, ImGuiTableFlags flags, const ImVec2& outer_size, c_float inner_width)
 {
-    ImGuiID id = GetID(str_id);
+    let mut id: ImGuiID =  GetID(str_id);
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
@@ -333,7 +333,7 @@ bool    ImGui::BeginTableEx(*const char name, ImGuiID id, c_int columns_count, I
     // Acquire storage for the table
     *mut ImGuiTable table = g.Tables.GetOrAddByKey(id);
     let instance_no: c_int = (table.LastFrameActive != g.FrameCount) ? 0 : table.InstanceCurrent + 1;
-    const ImGuiID instance_id = id + instance_no;
+    const let mut instance_id: ImGuiID =  id + instance_no;
     const ImGuiTableFlags table_last_flags = table.Flags;
     if (instance_no > 0)
         // IM_ASSERT(table.ColumnsCount == columns_count && "BeginTable(): Cannot change columns count mid-frame while preserving same ID");
@@ -1161,7 +1161,7 @@ c_void ImGui::TableUpdateBorders(*mut ImGuiTable table)
         if (!column.IsVisibleX && table.LastResizedColumn != column_n)
             continue;
 
-        ImGuiID column_id = TableGetColumnResizeID(table, column_n, table.InstanceCurrent);
+        let mut column_id: ImGuiID =  TableGetColumnResizeID(table, column_n, table.InstanceCurrent);
         ImRect hit_rect(column.MaxX - hit_half_width, hit_y1, column.MaxX + hit_half_width, border_y2_hit);
         //GetForegroundDrawList()->AddRect(hit_rect.Min, hit_rect.Max, IM_COL32(255, 0, 0, 100));
         KeepAliveID(column_id);
@@ -1250,7 +1250,7 @@ c_void    ImGui::EndTable()
     // Pop clipping rect
     if (!(flags & ImGuiTableFlags_NoClip))
         inner_window.DrawList.PopClipRect();
-    inner_window.ClipRect = inner_window.DrawList._ClipRectStack.back();
+    inner_window.ClipRect = inner_window.DrawList._ClipRectStack.last().unwrap();
 
     // Draw borders
     if ((flags & ImGuiTableFlags_Borders) != 0)
@@ -1577,7 +1577,7 @@ ImGuiTableColumnFlags ImGui::TableGetColumnFlags(c_int column_n)
 ImGuiID ImGui::TableGetColumnResizeID(*const ImGuiTable table, c_int column_n, c_int instance_no)
 {
     // IM_ASSERT(column_n >= 0 && column_n < table.ColumnsCount);
-    ImGuiID id = table.ID + 1 + (instance_no * table.ColumnsCount) + column_n;
+    let mut id: ImGuiID =  table.ID + 1 + (instance_no * table.ColumnsCount) + column_n;
     return id;
 }
 
@@ -2190,7 +2190,7 @@ c_void ImGui::TableMergeDrawChannels(*mut ImGuiTable table)
 
             // Don't attempt to merge if there are multiple draw calls within the column
             *mut ImDrawChannel src_channel = &splitter._Channels[channel_no];
-            if (src_channel._CmdBuffer.Size > 0 && src_channel._CmdBuffer.back().ElemCount == 0 && src_channel._CmdBuffer.back().UserCallback == NULL) // Equivalent of PopUnusedDrawCmd()
+            if (src_channel._CmdBuffer.Size > 0 && src_channel._CmdBuffer.last().unwrap().ElemCount == 0 && src_channel._CmdBuffer.last().unwrap().UserCallback == NULL) // Equivalent of PopUnusedDrawCmd()
                 src_channel._CmdBuffer.pop_back();
             if (src_channel._CmdBuffer.Size != 1)
                 continue;
@@ -2736,7 +2736,7 @@ c_void ImGui::TableHeader(*const char label)
 
     // Keep header highlighted when context menu is open.
     let selected: bool = (table.IsContextPopupOpen && table.ContextPopupColumn == column_n && table.InstanceInteracted == table.InstanceCurrent);
-    ImGuiID id = window.GetID(label);
+    let mut id: ImGuiID =  window.GetID(label);
     ImRect bb(cell_r.Min.x, cell_r.Min.y, cell_r.Max.x, ImMax(cell_r.Max.y, cell_r.Min.y + label_height + g.Style.CellPadding.y * 2.00f32));
     ItemSize(ImVec2(0f32, label_height)); // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
     if (!ItemAdd(bb, id))
@@ -2850,7 +2850,7 @@ c_void ImGui::TableOpenContextMenu(c_int column_n)
         table.IsContextPopupOpen = true;
         table.ContextPopupColumn = (ImGuiTableColumnIdx)column_n;
         table.InstanceInteracted = table.InstanceCurrent;
-        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.ID);
+        const let mut context_menu_id: ImGuiID =  ImHashStr("##ContextMenu", 0, table.ID);
         OpenPopupEx(context_menu_id, ImGuiPopupFlags_None);
     }
 }
@@ -2859,7 +2859,7 @@ bool ImGui::TableBeginContextMenuPopup(*mut ImGuiTable table)
 {
     if (!table.IsContextPopupOpen || table.InstanceCurrent != table.InstanceInteracted)
         return false;
-    const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table.ID);
+    const let mut context_menu_id: ImGuiID =  ImHashStr("##ContextMenu", 0, table.ID);
     if (BeginPopupEx(context_menu_id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings))
         return true;
     table.IsContextPopupOpen = false;
@@ -3186,7 +3186,7 @@ static c_void TableSettingsHandler_ApplyAll(*mut ImGuiContext ctx, *mut ImGuiSet
 
 static *mut c_void TableSettingsHandler_ReadOpen(*mut ImGuiContext, *mut ImGuiSettingsHandler, *const char name)
 {
-    ImGuiID id = 0;
+    let mut id: ImGuiID =  0;
     let columns_count: c_int = 0;
     if (sscanf(name, "0x%08X,%d", &id, &columns_count) < 2)
         return NULL;
@@ -3639,7 +3639,7 @@ c_void ImGui::PopColumnsBackground()
             return &window.ColumnsStorage[n];
 
     window.ColumnsStorage.push(ImGuiOldColumns());
-    *mut ImGuiOldColumns columns = &window.ColumnsStorage.back();
+    *mut ImGuiOldColumns columns = &window.ColumnsStorage.last().unwrap();
     columns->ID = id;
     return columns;
 }
@@ -3651,7 +3651,7 @@ ImGuiID ImGui::GetColumnsID(*const char str_id, c_int columns_count)
     // Differentiate column ID with an arbitrary prefix for cases where users name their columns set the same as another widget.
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
     PushID(0x11223347 + (str_id ? 0 : columns_count));
-    ImGuiID id = window.GetID(str_id ? str_id : "columns");
+    let mut id: ImGuiID =  window.GetID(str_id ? str_id : "columns");
     PopID();
 
     return id;
@@ -3666,7 +3666,7 @@ c_void ImGui::BeginColumns(*const char str_id, c_int columns_count, ImGuiOldColu
     // IM_ASSERT(window.DC.CurrentColumns == NULL);   // Nested columns are currently not supported
 
     // Acquire storage for the columns set
-    ImGuiID id = GetColumnsID(str_id, columns_count);
+    let mut id: ImGuiID =  GetColumnsID(str_id, columns_count);
     *mut ImGuiOldColumns columns = FindOrCreateColumns(window, id);
     // IM_ASSERT(columns->ID == id);
     columns->Current = 0;
@@ -3823,7 +3823,7 @@ c_void ImGui::EndColumns()
         {
             *mut ImGuiOldColumnData column = &columns->Columns[n];
             let x: c_float =  window.Pos.x + GetColumnOffset(n);
-            const ImGuiID column_id = columns->ID + ImGuiID(n);
+            const let mut column_id: ImGuiID =  columns->ID + ImGuiID(n);
             let column_hit_hw: c_float =  COLUMNS_HIT_RECT_HALF_WIDTH;
             const ImRect column_hit_rect(ImVec2(x - column_hit_hw, y1), ImVec2(x + column_hit_hw, y2));
             KeepAliveID(column_id);

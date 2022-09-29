@@ -651,7 +651,7 @@ namespace ImGui
     // - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
     //   some advanced use cases (e.g. adding custom widgets in header row).
     // - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
-     c_void          TableSetupColumn(*const char label, ImGuiTableColumnFlags flags = 0, let init_width_or_weight: c_float =  0f32, ImGuiID user_id = 0);
+     c_void          TableSetupColumn(*const char label, ImGuiTableColumnFlags flags = 0, let init_width_or_weight: c_float =  0f32, let mut user_id: ImGuiID =  0);
      c_void          TableSetupScrollFreeze(c_int cols, c_int rows);         // lock columns/rows so they stay visible when scrolled.
      c_void          TableHeadersRow();                                  // submit all headers cells based on data provided to TableSetupColumn() + submit context menu
      c_void          TableHeader(*const char label);                     // submit one header cell manually (rarely used)

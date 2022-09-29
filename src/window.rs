@@ -9,6 +9,7 @@ use crate::direction::{ImGuiDir, ImGuiDir_None};
 use crate::dock_node::ImGuiDockNode;
 use crate::drawlist::ImDrawList;
 use crate::hash_ops::ImHashStr;
+use crate::imgui::GImGui;
 use crate::item_status_flags::ImGuiItemStatusFlags;
 use crate::layout_type::ImGuiLayoutType;
 use crate::nav_layer::ImGuiNavLayer_COUNT;
@@ -274,8 +275,14 @@ impl ImGuiWindow {
     //~ImGuiWindow();
 
     // ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
-    pub fn GetID(&self, begin: *const c_char, end: *const c_char) -> ImGuiID {
-        todo!()
+    pub unsafe fn GetID(&self, begin: *const c_char, end: *const c_char) -> ImGuiID {
+         let mut seed: ImGuiID =  self.IDStack.last().unwrap().clone();
+        let mut id: ImGuiID =  ImHashStr(begin, if end.is_null() == false { (end - begin) } else { 0 }, seed as u32);
+        let g = GImGui; // ImGuiContext& g = *GImGui;
+        if (g.DebugHookIdInfo == id) {
+            DebugHookIdInfo(id, ImGuiDataType_String, begin, end);
+        }
+        return id;
     }
 
 
