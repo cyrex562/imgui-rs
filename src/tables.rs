@@ -321,7 +321,7 @@ bool    ImGui::BeginTableEx(*const char name, ImGuiID id, c_int columns_count, I
 
     // If an outer size is specified ahead we will be able to early out when not visible. Exact clipping rules may evolve.
     let use_child_window: bool = (flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) != 0;
-    const ImVec2 avail_size = GetContentRegionAvail();
+    let avail_size: ImVec2 =  GetContentRegionAvail();
     let actual_outer_size: ImVec2 = CalcItemSize(outer_size, ImMax(avail_size.x, 1f32), use_child_window ? ImMax(avail_size.y, 1f32) : 0f32);
     ImRect outer_rect(outer_window.DC.CursorPos, outer_window.DC.CursorPos + actual_outer_size);
     if (use_child_window && IsClippedEx(outer_rect, 0))
@@ -428,16 +428,17 @@ bool    ImGui::BeginTableEx(*const char name, ImGuiID id, c_int columns_count, I
     // - PadOuter+PadInner  | Pad ..Content.. Pad | Pad ..Content.. Pad |
     let pad_outer_x: bool = (flags & ImGuiTableFlags_NoPadOuterX) ? false : (flags & ImGuiTableFlags_PadOuterX) ? true : (flags & ImGuiTableFlags_BordersOuterV) != 0;
     let pad_inner_x: bool = (flags & ImGuiTableFlags_NoPadInnerX) ? false : true;
-    const c_float inner_spacing_for_border = (flags & ImGuiTableFlags_BordersInnerV) ? TABLE_BORDER_SIZE : 0f32;
-    const c_float inner_spacing_explicit = (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) == 0) ? g.Style.CellPadding.x : 0f32;
-    const c_float inner_padding_explicit = (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) != 0) ? g.Style.CellPadding.x : 0f32;
+    let     : c_float =  (flags & ImGuiTableFlags_BordersInnerV) ? TABLE_BORDER_SIZE : 0f32;
+    let     : c_float =  (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) == 0) ? g.Style.CellPadding.x : 0f32;
+    let     : c_float =  (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) != 0) ? g.Style.CellPadding.x : 0f32;
     table.CellSpacingX1 = inner_spacing_explicit + inner_spacing_for_border;
     table.CellSpacingX2 = inner_spacing_explicit;
     table.CellPaddingX = inner_padding_explicit;
     table.CellPaddingY = g.Style.CellPadding.y;
 
-    const c_float outer_padding_for_border = (flags & ImGuiTableFlags_BordersOuterV) ? TABLE_BORDER_SIZE : 0f32;
-    const c_float outer_padding_explicit = pad_outer_x ? g.Style.CellPadding.x : 0f32;
+    let
+    : c_float =  (flags & ImGuiTableFlags_BordersOuterV) ? TABLE_BORDER_SIZE : 0f32;
+    let     : c_float =  pad_outer_x ? g.Style.CellPadding.x : 0f32;
     table.OuterPaddingX = (outer_padding_for_border + outer_padding_explicit) - table.CellPaddingX;
 
     table.CurrentColumn = -1;
@@ -535,10 +536,10 @@ bool    ImGui::BeginTableEx(*const char name, ImGuiID id, c_int columns_count, I
     // It will also react to changing fonts with mixed results. It doesn't need to be perfect but merely provide a decent transition.
     // FIXME-DPI: Provide consistent standards for reference size. Perhaps using g.CurrentDpiScale would be more self explanatory.
     // This is will lead us to non-rounded WidthRequest in columns, which should work but is a poorly tested path.
-    const c_float new_ref_scale_unit = g.FontSize; // g.Font->GetCharAdvance('A') ?
+    let     : c_float =  g.FontSize; // g.Font->GetCharAdvance('A') ?
     if (table.RefScale != 0f32 && table.RefScale != new_ref_scale_unit)
     {
-        const c_float scale_factor = new_ref_scale_unit / table.RefScale;
+        let         : c_float =  new_ref_scale_unit / table.RefScale;
         //IMGUI_DEBUG_PRINT("[table] %08X RefScaleUnit %.3f -> %.3f, scaling width by %.3f\n", table.ID, table.RefScaleUnit, new_ref_scale_unit, scale_factor);
         for (c_int n = 0; n < columns_count; n++)
             table.Columns[n].WidthRequest = table.Columns[n].WidthRequest * scale_factor;
@@ -892,9 +893,9 @@ c_void ImGui::TableUpdateLayout(*mut ImGuiTable table)
 
     // [Part 4] Apply final widths based on requested widths
     const ImRect work_rect = table.WorkRect;
-    const c_float width_spacings = (table.OuterPaddingX * 2.00f32) + (table.CellSpacingX1 + table.CellSpacingX2) * (table.ColumnsEnabledCount - 1);
-    const c_float width_avail = ((table.Flags & ImGuiTableFlags_ScrollX) && table.InnerWidth == 0f32) ? table.InnerClipRect.GetWidth() : work_rect.GetWidth();
-    const c_float width_avail_for_stretched_columns = width_avail - width_spacings - sum_width_requests;
+    let     : c_float =  (table.OuterPaddingX * 2.00f32) + (table.CellSpacingX1 + table.CellSpacingX2) * (table.ColumnsEnabledCount - 1);
+    let     : c_float =  ((table.Flags & ImGuiTableFlags_ScrollX) && table.InnerWidth == 0f32) ? table.InnerClipRect.GetWidth() : work_rect.GetWidth();
+    let     : c_float =  width_avail - width_spacings - sum_width_requests;
     c_float width_remaining_for_stretched_columns = width_avail_for_stretched_columns;
     table.ColumnsGivenWidth = width_spacings + (table.CellPaddingX * 2.00f32) * table.ColumnsEnabledCount;
     for (c_int column_n = 0; column_n < table.ColumnsCount; column_n++)
@@ -1071,7 +1072,7 @@ c_void ImGui::TableUpdateLayout(*mut ImGuiTable table)
     // [Part 7] Detect/store when we are hovering the unused space after the right-most column (so e.g. context menus can react on it)
     // Clear Resizable flag if none of our column are actually resizable (either via an explicit _NoResize flag, either
     // because of using _WidthAuto/_WidthStretch). This will hide the resizing option from the context menu.
-    const c_float unused_x1 = ImMax(table.WorkRect.Min.x, table.Columns[table.RightMostEnabledColumn].ClipRect.Max.x);
+    let     : c_float =  ImMax(table.WorkRect.Min.x, table.Columns[table.RightMostEnabledColumn].ClipRect.Max.x);
     if (is_hovering_table && table.HoveredColumnBody == -1)
     {
         if (g.IO.MousePos.x >= unused_x1)
@@ -1138,10 +1139,10 @@ c_void ImGui::TableUpdateBorders(*mut ImGuiTable table)
     // really problematic (whereas the actual visual will be displayed in EndTable() and using the current frame height).
     // Actual columns highlight/render will be performed in EndTable() and not be affected.
     *mut ImGuiTableInstanceData table_instance = TableGetInstanceData(table, table.InstanceCurrent);
-    const c_float hit_half_width = TABLE_RESIZE_SEPARATOR_HALF_THICKNESS;
-    const c_float hit_y1 = table.OuterRect.Min.y;
-    const c_float hit_y2_body = ImMax(table.OuterRect.Max.y, hit_y1 + table_instance.LastOuterHeight);
-    const c_float hit_y2_head = hit_y1 + table_instance.LastFirstRowHeight;
+    let     : c_float =  TABLE_RESIZE_SEPARATOR_HALF_THICKNESS;
+    let     : c_float =  table.OuterRect.Min.y;
+    let     : c_float =  ImMax(table.OuterRect.Max.y, hit_y1 + table_instance.LastOuterHeight);
+    let     : c_float =  hit_y1 + table_instance.LastFirstRowHeight;
 
     for (c_int order_n = 0; order_n < table.ColumnsCount; order_n++)
     {
@@ -1154,7 +1155,7 @@ c_void ImGui::TableUpdateBorders(*mut ImGuiTable table)
             continue;
 
         // ImGuiTableFlags_NoBordersInBodyUntilResize will be honored in TableDrawBorders()
-        const c_float border_y2_hit = (table.Flags & ImGuiTableFlags_NoBordersInBody) ? hit_y2_head : hit_y2_body;
+        let         : c_float =  (table.Flags & ImGuiTableFlags_NoBordersInBody) ? hit_y2_head : hit_y2_body;
         if ((table.Flags & ImGuiTableFlags_NoBordersInBody) && table.IsUsingHeaders == false)
             continue;
 
@@ -1224,7 +1225,7 @@ c_void    ImGui::EndTable()
     inner_window.DC.PrevLineSize = temp_data.HostBackupPrevLineSize;
     inner_window.DC.CurrLineSize = temp_data.HostBackupCurrLineSize;
     inner_window.DC.CursorMaxPos = temp_data.HostBackupCursorMaxPos;
-    const c_float inner_content_max_y = table.RowPosY2;
+    let     : c_float =  table.RowPosY2;
     // IM_ASSERT(table.RowPosY2 == inner_window.DC.CursorPos.y);
     if (inner_window != outer_window)
         inner_window.DC.CursorMaxPos.y = inner_content_max_y;
@@ -1238,7 +1239,7 @@ c_void    ImGui::EndTable()
     // but since the later is likely to be impossible to do we'd rather update both axises together.
     if (table.Flags & ImGuiTableFlags_ScrollX)
     {
-        const c_float outer_padding_for_border = (table.Flags & ImGuiTableFlags_BordersOuterV) ? TABLE_BORDER_SIZE : 0f32;
+        let         : c_float =  (table.Flags & ImGuiTableFlags_BordersOuterV) ? TABLE_BORDER_SIZE : 0f32;
         c_float max_pos_x = table.Innerwindow.DC.CursorMaxPos.x;
         if (table.RightMostEnabledColumn != -1)
             max_pos_x = ImMax(max_pos_x, table.Columns[table.RightMostEnabledColumn].WorkMaxX + table.CellPaddingX + table.OuterPaddingX - outer_padding_for_border);
@@ -1292,7 +1293,7 @@ c_void    ImGui::EndTable()
             if ((column.Flags & ImGuiTableColumnFlags_WidthStretch) && (column.Flags & ImGuiTableColumnFlags_NoResize) != 0)
                 auto_fit_width_for_stretched_min = ImMax(auto_fit_width_for_stretched_min, column_width_request / (column.StretchWeight / table.ColumnsStretchSumWeights));
         }
-    const c_float width_spacings = (table.OuterPaddingX * 2.00f32) + (table.CellSpacingX1 + table.CellSpacingX2) * (table.ColumnsEnabledCount - 1);
+    let     : c_float =  (table.OuterPaddingX * 2.00f32) + (table.CellSpacingX1 + table.CellSpacingX2) * (table.ColumnsEnabledCount - 1);
     table.ColumnsAutoFitWidth = width_spacings + (table.CellPaddingX * 2.00f32) * table.ColumnsEnabledCount + auto_fit_width_for_fixed + ImMax(auto_fit_width_for_stretched, auto_fit_width_for_stretched_min);
 
     // Update scroll
@@ -1303,7 +1304,7 @@ c_void    ImGui::EndTable()
     else if (table.LastResizedColumn != -1 && table.ResizedColumn == -1 && inner_window.ScrollbarX && table.InstanceInteracted == table.InstanceCurrent)
     {
         // When releasing a column being resized, scroll to keep the resulting column in sight
-        const c_float neighbor_width_to_keep_visible = table.MinColumnWidth + table.CellPaddingX * 2.0f32;
+        let         : c_float =  table.MinColumnWidth + table.CellPaddingX * 2.0f32;
         *mut ImGuiTableColumn column = &table.Columns[table.LastResizedColumn];
         if (column.MaxX < table.InnerClipRect.Min.x)
             SetScrollFromPosX(inner_window, column.MaxX - inner_window.Pos.x - neighbor_width_to_keep_visible, 1f32);
@@ -1315,18 +1316,18 @@ c_void    ImGui::EndTable()
     if (table.ResizedColumn != -1 && table.InstanceCurrent == table.InstanceInteracted)
     {
         *mut ImGuiTableColumn column = &table.Columns[table.ResizedColumn];
-        const c_float new_x2 = (g.IO.MousePos.x - g.ActiveIdClickOffset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS);
-        const c_float new_width = ImFloor(new_x2 - column.MinX - table.CellSpacingX1 - table.CellPaddingX * 2.00f32);
+        let         : c_float =  (g.IO.MousePos.x - g.ActiveIdClickOffset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS);
+        let         : c_float =  ImFloor(new_x2 - column.MinX - table.CellSpacingX1 - table.CellPaddingX * 2.00f32);
         table.ResizedColumnNextWidth = new_width;
     }
 
     // Pop from id stack
     // IM_ASSERT_USER_ERROR(inner_window.IDStack.back() == table.ID + table.InstanceCurrent, "Mismatching PushID/PopID!");
-    // IM_ASSERT_USER_ERROR(outer_window.DC.ItemWidthStack.Size >= temp_data->HostBackupItemWidthStackSize, "Too many PopItemWidth!");
+    // IM_ASSERT_USER_ERROR(outer_window.DC.ItemWidthStack.Size >= temp_Data.HostBackupItemWidthStackSize, "Too many PopItemWidth!");
     PopID();
 
     // Restore window data that we modified
-    const ImVec2 backup_outer_max_pos = outer_window.DC.CursorMaxPos;
+    let backup_outer_max_pos: ImVec2 =  outer_window.DC.CursorMaxPos;
     inner_window.WorkRect = temp_data.HostBackupWorkRect;
     inner_window.ParentWorkRect = temp_data.HostBackupParentWorkRect;
     inner_window.SkipItems = table.HostSkipItems;
@@ -1358,7 +1359,7 @@ c_void    ImGui::EndTable()
     }
     else if (temp_data.UserOuterSize.x <= 0f32)
     {
-        const c_float decoration_size = (table.Flags & ImGuiTableFlags_ScrollX) ? inner_window.ScrollbarSizes.x : 0f32;
+        let         : c_float =  (table.Flags & ImGuiTableFlags_ScrollX) ? inner_window.ScrollbarSizes.x : 0f32;
         outer_window.DC.IdealMaxPos.x = ImMax(outer_window.DC.IdealMaxPos.x, table.OuterRect.Min.x + table.ColumnsAutoFitWidth + decoration_size - temp_data.UserOuterSize.x);
         outer_window.DC.CursorMaxPos.x = ImMax(backup_outer_max_pos.x, ImMin(table.OuterRect.Max.x, table.OuterRect.Min.x + table.ColumnsAutoFitWidth));
     }
@@ -1368,7 +1369,7 @@ c_void    ImGui::EndTable()
     }
     if (temp_data.UserOuterSize.y <= 0f32)
     {
-        const c_float decoration_size = (table.Flags & ImGuiTableFlags_ScrollY) ? inner_window.ScrollbarSizes.y : 0f32;
+        let         : c_float =  (table.Flags & ImGuiTableFlags_ScrollY) ? inner_window.ScrollbarSizes.y : 0f32;
         outer_window.DC.IdealMaxPos.y = ImMax(outer_window.DC.IdealMaxPos.y, inner_content_max_y + decoration_size - temp_data.UserOuterSize.y);
         outer_window.DC.CursorMaxPos.y = ImMax(backup_outer_max_pos.y, ImMin(table.OuterRect.Max.y, inner_content_max_y));
     }
@@ -1857,7 +1858,7 @@ c_float ImGui::TableGetMaxColumnWidth(*const ImGuiTable table, c_int column_n)
 {
     let column: *const ImGuiTableColumn = &table.Columns[column_n];
     c_float max_width = f32::MAX;
-    const c_float min_column_distance = table.MinColumnWidth + table.CellPaddingX * 2.0f32 + table.CellSpacingX1 + table.CellSpacingX2;
+    let     : c_float =  table.MinColumnWidth + table.CellPaddingX * 2.0f32 + table.CellSpacingX1 + table.CellSpacingX2;
     if (table.Flags & ImGuiTableFlags_ScrollX)
     {
         // Frozen columns can't reach beyond visible width else scrolling will naturally break.
@@ -1887,8 +1888,8 @@ c_float ImGui::TableGetMaxColumnWidth(*const ImGuiTable table, c_int column_n)
 // Note this is meant to be stored in column.WidthAuto, please generally use the WidthAuto field
 c_float ImGui::TableGetColumnWidthAuto(*mut ImGuiTable table, *mut ImGuiTableColumn column)
 {
-    const c_float content_width_body = ImMax(column.ContentMaxXFrozen, column.ContentMaxXUnfrozen) - column.WorkMinX;
-    const c_float content_width_headers = column.ContentMaxXHeadersIdeal - column.WorkMinX;
+    let     : c_float =  ImMax(column.ContentMaxXFrozen, column.ContentMaxXUnfrozen) - column.WorkMinX;
+    let     : c_float =  column.ContentMaxXHeadersIdeal - column.WorkMinX;
     c_float width_auto = content_width_body;
     if (!(column.Flags & ImGuiTableColumnFlags_NoHeaderWidth))
         width_auto = ImMax(width_auto, content_width_headers);
@@ -1914,8 +1915,8 @@ c_void ImGui::TableSetColumnWidth(c_int column_n, c_float width)
     // Apply constraints early
     // Compare both requested and actual given width to avoid overwriting requested width when column is stuck (minimum size, bounded)
     // IM_ASSERT(table.MinColumnWidth > 0f32);
-    const c_float min_width = table.MinColumnWidth;
-    const c_float max_width = ImMax(min_width, TableGetMaxColumnWidth(table, column_n));
+    let     : c_float =  table.MinColumnWidth;
+    let     : c_float =  ImMax(min_width, TableGetMaxColumnWidth(table, column_n));
     column_0_width = ImClamp(column_0_width, min_width, max_width);
     if (column_0.WidthGiven == column_0_width || column_0.WidthRequest == column_0_width)
         return;
@@ -2335,10 +2336,10 @@ c_void ImGui::TableDrawBorders(*mut ImGuiTable table)
 
     // Draw inner border and resizing feedback
     *mut ImGuiTableInstanceData table_instance = TableGetInstanceData(table, table.InstanceCurrent);
-    const c_float border_size = TABLE_BORDER_SIZE;
-    const c_float draw_y1 = table.InnerRect.Min.y;
-    const c_float draw_y2_body = table.InnerRect.Max.y;
-    const c_float draw_y2_head = table.IsUsingHeaders ? ImMin(table.InnerRect.Max.y, (table.FreezeRowsCount >= 1 ? table.InnerRect.Min.y : table.WorkRect.Min.y) + table_instance.LastFirstRowHeight) : draw_y1;
+    let     : c_float =  TABLE_BORDER_SIZE;
+    let     : c_float =  table.InnerRect.Min.y;
+    let     : c_float =  table.InnerRect.Max.y;
+    let     : c_float =  table.IsUsingHeaders ? ImMin(table.InnerRect.Max.y, (table.FreezeRowsCount >= 1 ? table.InnerRect.Min.y : table.WorkRect.Min.y) + table_instance.LastFirstRowHeight) : draw_y1;
     if (table.Flags & ImGuiTableFlags_BordersInnerV)
     {
         for (c_int order_n = 0; order_n < table.ColumnsCount; order_n++)
@@ -2411,7 +2412,7 @@ c_void ImGui::TableDrawBorders(*mut ImGuiTable table)
     if ((table.Flags & ImGuiTableFlags_BordersInnerH) && table.RowPosY2 < table.OuterRect.Max.y)
     {
         // Draw bottom-most row border
-        const c_float border_y = table.RowPosY2;
+        let         : c_float =  table.RowPosY2;
         if (border_y >= table.BgClipRect.Min.y && border_y < table.BgClipRect.Max.y)
             inner_drawlist.AddLine(ImVec2(table.BorderX1, border_y), ImVec2(table.BorderX2, border_y), table.BorderColorLight, border_size);
     }
@@ -2658,8 +2659,8 @@ c_void ImGui::TableHeadersRow()
         TableUpdateLayout(table);
 
     // Open row
-    const c_float row_y1 = GetCursorScreenPos().y;
-    const c_float row_height = TableGetHeaderRowHeight();
+    let     : c_float =  GetCursorScreenPos().y;
+    let     : c_float =  TableGetHeaderRowHeight();
     TableNextRow(ImGuiTableRowFlags_Headers, row_height);
     if (table.HostSkipItems) // Merely an optimization, you may skip in your own code.
         return;
@@ -2718,7 +2719,7 @@ c_void ImGui::TableHeader(*const char label)
     c_float w_arrow = 0f32;
     c_float w_sort_text = 0f32;
     sort_order_suf: [c_char;4] = "";
-    const c_float ARROW_SCALE = 0.65f32;
+    let     : c_float =  0.65f32;
     if ((table.Flags & ImGuiTableFlags_Sortable) && !(column.Flags & ImGuiTableColumnFlags_NoSort))
     {
         w_arrow = ImFloor(g.FontSize * ARROW_SCALE + g.Style.FramePadding.x);
@@ -2789,7 +2790,7 @@ c_void ImGui::TableHeader(*const char label)
     }
 
     // Sort order arrow
-    const c_float ellipsis_max = cell_r.Max.x - w_arrow - w_sort_text;
+    let     : c_float =  cell_r.Max.x - w_arrow - w_sort_text;
     if ((table.Flags & ImGuiTableFlags_Sortable) && !(column.Flags & ImGuiTableColumnFlags_NoSort))
     {
         if (column.SortOrder != -1)
@@ -3069,7 +3070,7 @@ c_void ImGui::TableSaveSettings(*mut ImGuiTable table)
     settings.SaveFlags = ImGuiTableFlags_None;
     for (c_int n = 0; n < table.ColumnsCount; n++, column++, column_settings++)
     {
-        const c_float width_or_weight = (column.Flags & ImGuiTableColumnFlags_WidthStretch) ? column.StretchWeight : column.WidthRequest;
+        let         : c_float =  (column.Flags & ImGuiTableColumnFlags_WidthStretch) ? column.StretchWeight : column.WidthRequest;
         column_settings.WidthOrWeight = width_or_weight;
         column_settings.Index = (ImGuiTableColumnIdx)n;
         column_settings.DisplayOrder = column.DisplayOrder;
@@ -3321,8 +3322,8 @@ c_void ImGui::TableGcCompactTransientBuffers(*mut ImGuiTable table)
 
 c_void ImGui::TableGcCompactTransientBuffers(*mut ImGuiTableTempData temp_data)
 {
-    temp_data->DrawSplitter.ClearFreeMemory();
-    temp_data->LastTimeActive = -1f32;
+    temp_Data.DrawSplitter.ClearFreeMemory();
+    temp_Data.LastTimeActive = -1f32;
 }
 
 // Compact and remove unused settings data (currently only used by TestEngine)
@@ -3530,8 +3531,9 @@ c_float ImGui::GetColumnOffset(c_int column_index)
         column_index = columns->Current;
     // IM_ASSERT(column_index < columns->Columns.Size);
 
-    const c_float t = columns->Columns[column_index].OffsetNorm;
-    const c_float x_offset = ImLerp(columns->OffMinX, columns->OffMaxX, t);
+    let
+    : c_float =  columns->Columns[column_index].OffsetNorm;
+    let     : c_float =  ImLerp(columns->OffMinX, columns->OffMaxX, t);
     return x_offset;
 }
 
@@ -3573,7 +3575,7 @@ c_void ImGui::SetColumnOffset(c_int column_index, c_float offset)
     // IM_ASSERT(column_index < columns->Columns.Size);
 
     let preserve_width: bool = !(columns->Flags & ImGuiOldColumnFlags_NoPreserveWidths) && (column_index < columns->Count - 1);
-    const c_float width = preserve_width ? GetColumnWidthEx(columns, column_index, columns->IsBeingResized) : 0f32;
+    let     : c_float =  preserve_width ? GetColumnWidthEx(columns, column_index, columns->IsBeingResized) : 0f32;
 
     if (!(columns->Flags & ImGuiOldColumnFlags_NoForceWithinWindow))
         offset = ImMin(offset, columns->OffMaxX - g.Style.ColumnsMinSpacing * (columns->Count - column_index));
@@ -3682,10 +3684,10 @@ c_void ImGui::BeginColumns(*const char str_id, c_int columns_count, ImGuiOldColu
 
     // Set state for first column
     // We aim so that the right-most column will have the same clipping width as other after being clipped by parent ClipRect
-    const c_float column_padding = g.Style.ItemSpacing.x;
-    const c_float half_clip_extend_x = ImFloor(ImMax(window.WindowPadding.x * 0.5f32, window.WindowBorderSize));
-    const c_float max_1 = window.WorkRect.Max.x + column_padding - ImMax(column_padding - window.WindowPadding.x, 0f32);
-    const c_float max_2 = window.WorkRect.Max.x + half_clip_extend_x;
+    let     : c_float =  g.Style.ItemSpacing.x;
+    let     : c_float =  ImFloor(ImMax(window.WindowPadding.x * 0.5f32, window.WindowBorderSize));
+    let     : c_float =  window.WorkRect.Max.x + column_padding - ImMax(column_padding - window.WindowPadding.x, 0f32);
+    let     : c_float =  window.WorkRect.Max.x + half_clip_extend_x;
     columns->OffMinX = window.DC.Indent.x - column_padding + ImMax(column_padding - window.WindowPadding.x, 0f32);
     columns->OffMaxX = ImMax(ImMin(max_1, max_2) - window.Pos.x, columns->OffMinX + 1f32);
     columns->LineMinY = columns->LineMaxY = window.DC.CursorPos.y;
@@ -3762,7 +3764,8 @@ c_void ImGui::NextColumn()
     SetWindowClipRectBeforeSetChannel(window, column.ClipRect);
     columns->Splitter.SetCurrentChannel(window.DrawList, columns->Current + 1);
 
-    const c_float column_padding = g.Style.ItemSpacing.x;
+    let
+    : c_float =  g.Style.ItemSpacing.x;
     columns->LineMaxY = ImMax(columns->LineMaxY, window.DC.CursorPos.y);
     if (columns->Current > 0)
     {
@@ -3816,15 +3819,15 @@ c_void ImGui::EndColumns()
     if (!(flags & ImGuiOldColumnFlags_NoBorder) && !window.SkipItems)
     {
         // We clip Y boundaries CPU side because very long triangles are mishandled by some GPU drivers.
-        const c_float y1 = ImMax(columns->HostCursorPosY, window.ClipRect.Min.y);
-        const c_float y2 = ImMin(window.DC.CursorPos.y, window.ClipRect.Max.y);
+        let         : c_float =  ImMax(columns->HostCursorPosY, window.ClipRect.Min.y);
+        let         : c_float =  ImMin(window.DC.CursorPos.y, window.ClipRect.Max.y);
         c_int dragging_column = -1;
         for (c_int n = 1; n < columns->Count; n++)
         {
             *mut ImGuiOldColumnData column = &columns->Columns[n];
             c_float x = window.Pos.x + GetColumnOffset(n);
             const ImGuiID column_id = columns->ID + ImGuiID(n);
-            const c_float column_hit_hw = COLUMNS_HIT_RECT_HALF_WIDTH;
+            let             : c_float =  COLUMNS_HIT_RECT_HALF_WIDTH;
             const ImRect column_hit_rect(ImVec2(x - column_hit_hw, y1), ImVec2(x + column_hit_hw, y2));
             KeepAliveID(column_id);
             if (IsClippedEx(column_hit_rect, column_id)) // FIXME: Can be removed or replaced with a lower-level test
@@ -3842,7 +3845,7 @@ c_void ImGui::EndColumns()
 
             // Draw column
             const u32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
-            const c_float xi = IM_FLOOR(x);
+            let             : c_float =  IM_FLOOR(x);
             window.DrawList.AddLine(ImVec2(xi, y1 + 1f32), ImVec2(xi, y2), col);
         }
 

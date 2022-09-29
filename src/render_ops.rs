@@ -7,9 +7,10 @@
 //-----------------------------------------------------------------------------
 
 use std::ptr::null;
-use libc::c_char;
+use libc::{c_char, c_float, c_int};
 use crate::color::ImGuiCol_Text;
 use crate::drawlist::ImDrawList;
+use crate::font::ImFont;
 use crate::imgui::GImGui;
 use crate::logging_ops::LogRenderedText;
 use crate::rect::ImRect;
@@ -49,7 +50,7 @@ pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const 
     }
 
     if text != text_display_end {
-        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0f32, null());
+        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_display_end, 0f32, null());
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
         }
@@ -68,8 +69,8 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: 
 
     if text != text_end
     {
-        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text), text, text_end, wrap_width, null());
-        if (g.LogEnabled) {
+        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_end, wrap_width, null());
+        if g.LogEnabled {
             LogRenderedText(&pos, text, text_end);
         }
     }
@@ -108,45 +109,49 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
 }
 
 // c_void ImGui::RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
-pub fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect)
+pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect)
 {
     // Hide anything after a '##' string
     let mut  text_display_end: *const c_char = FindRenderedTextEnd(text, text_end);
     let text_len: c_int = (text_display_end - text);
-    if (text_len == 0)
+    if text_len == 0 {
         return;
+    }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     RenderTextClippedEx(window.DrawList, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
-    if (g.LogEnabled)
-        LogRenderedText(&pos_min, text, text_display_end);
+    if g.LogEnabled {
+        LogRenderedText(pos_min, text, text_display_end);
+    }
 }
 
 
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
-c_void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end_full, *const ImVec2 text_size_if_known)
+// c_void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end_full, *const ImVec2 text_size_if_known)
+pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, clip_max_x: c_float, ellipsis_max_x: c_float, text: *const c_char, mut text_end_full: *const c_char, text_size_if_known: *const ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (text_end_full == NULL)
-        text_end_full = FindRenderedTextEnd(text);
-    const ImVec2 text_size = text_size_if_known ? *text_size_if_known : CalcTextSize(text, text_end_full, false, 0f32);
+    if text_end_full.is_null() {
+        text_end_full = FindRenderedTextEnd(text, null());
+    }
+    let text_size: ImVec2 =  if text_size_if_known { text_size_if_known.clone() } else { CalcTextSize(text, text_end_full, false, 0f32) };
 
     //draw_list->AddLine(ImVec2(pos_max.x, pos_min.y - 4), ImVec2(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list->AddLine(ImVec2(ellipsis_max_x, pos_min.y-2), ImVec2(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
     //draw_list->AddLine(ImVec2(clip_max_x, pos_min.y), ImVec2(clip_max_x, pos_max.y), IM_COL32(255, 0, 0, 255));
     // FIXME: We could technically remove (last_glyph->AdvanceX - last_glyph->X1) from text_size.x here and save a few pixels.
-    if (text_size.x > pos_max.x - pos_min.x)
+    if text_size.x > pos_max.x - pos_min.x
     {
         // Hello wo...
         // |       |   |
         // min   max   ellipsis_max
         //          <-> this is generally some padding value
 
-        font: *const ImFont = draw_list._Data->Font;
-        const c_float font_size = draw_list._Data->FontSize;
+        let font: *const ImFont = draw_list._Data.Font;
+        let         : c_float =  draw_list._Data.FontSize;
         let mut  text_end_ellipsis: *const c_char = None;
 
         ImWchar ellipsis_char = font.EllipsisChar;
@@ -164,13 +169,13 @@ c_void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, c
         if (ellipsis_char_count > 1)
         {
             // Full ellipsis size without free spacing after it.
-            const c_float spacing_between_dots = 1f32 * (draw_list._Data->FontSize / font.FontSize);
+            let             : c_float =  1f32 * (draw_list._Data.FontSize / font.FontSize);
             ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots;
             ellipsis_total_width = ellipsis_glyph_width * ellipsis_char_count - spacing_between_dots;
         }
 
         // We can now claim the space between pos_max.x and ellipsis_max.x
-        const c_float text_avail_width = ImMax((ImMax(pos_max.x, ellipsis_max_x) - ellipsis_total_width) - pos_min.x, 1f32);
+        let         : c_float =  ImMax((ImMax(pos_max.x, ellipsis_max_x) - ellipsis_total_width) - pos_min.x, 1f32);
         c_float text_size_clipped_x = font.CalcTextSizeA(font_size, text_avail_width, 0f32, text, text_end_full, &text_end_ellipsis).x;
         if (text == text_end_ellipsis && text_end_ellipsis < text_end_full)
         {
@@ -210,7 +215,7 @@ c_void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, bool border,
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     window.DrawList.AddRectFilled(p_min, p_max, fill_col, rounding);
-    const c_float border_size = g.Style.FrameBorderSize;
+    let     : c_float =  g.Style.FrameBorderSize;
     if (border && border_size > 0f32)
     {
         window.DrawList.AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
@@ -222,7 +227,7 @@ c_void ImGui::RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, c_float rounding)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    const c_float border_size = g.Style.FrameBorderSize;
+    let     : c_float =  g.Style.FrameBorderSize;
     if (border_size > 0f32)
     {
         window.DrawList.AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
@@ -246,8 +251,8 @@ c_void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlight
     display_rect.ClipWith(window.ClipRect);
     if (flags & ImGuiNavHighlightFlags_TypeDefault)
     {
-        const c_float THICKNESS = 2.0f32;
-        const c_float DISTANCE = 3.0f32 + THICKNESS * 0.5f32;
+        let         : c_float =  2.0f32;
+        let         : c_float =  3.0f32 + THICKNESS * 0.5f32;
         display_rect.Expand(ImVec2(DISTANCE, DISTANCE));
         let mut fully_visible: bool =  window.ClipRect.Contains(display_rect);
         if (!fully_visible)
@@ -274,8 +279,8 @@ c_void ImGui::RenderMouseCursor(ImVec2 base_pos, c_float base_scale, ImGuiMouseC
         if (!font_atlas.GetMouseCursorTexData(mouse_cursor, &offset, &size, &uv[0], &uv[2]))
             continue;
         *mut ImGuiViewportP viewport = g.Viewports[n];
-        const ImVec2 pos = base_pos - offset;
-        const c_float scale = base_scale * viewport.DpiScale;
+        let pos: ImVec2 =  base_pos - offset;
+        let         : c_float =  base_scale * viewport.DpiScale;
         if (!viewport.GetMainRect().Overlaps(ImRect(pos, pos + ImVec2(size.x + 2, size.y + 2) * scale)))
             continue;
         ImDrawList* draw_list = GetForegroundDrawList(viewport);

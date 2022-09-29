@@ -399,7 +399,7 @@ ImDrawListSharedData::ImDrawListSharedData()
     memset(this, 0, sizeof(*this));
     for (c_int i = 0; i < IM_ARRAYSIZE(ArcFastVtx); i++)
     {
-        const c_float a = (i * 2 * IM_PI) / IM_ARRAYSIZE(ArcFastVtx);
+        let         : c_float =  (i * 2 * IM_PI) / IM_ARRAYSIZE(ArcFastVtx);
         ArcFastVtx[i] = ImVec2(ImCos(a), ImSin(a));
     }
     ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, CircleSegmentMaxError);
@@ -414,7 +414,7 @@ c_void ImDrawListSharedData::SetCircleTessellationMaxError(c_float max_error)
     CircleSegmentMaxError = max_error;
     for (c_int i = 0; i < IM_ARRAYSIZE(CircleSegmentCounts); i++)
     {
-        const c_float radius = i;
+        let         : c_float =  i;
         CircleSegmentCounts[i] = ((i > 0) ? IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, CircleSegmentMaxError) : IM_DRAWLIST_ARCFAST_SAMPLE_MAX);
     }
     ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, CircleSegmentMaxError);
@@ -597,10 +597,10 @@ c_int ImDrawList::_CalcCircleAutoSegmentCount(c_float radius) const
 {
     // Automatic segment count
     let radius_idx: c_int = (radius + 0.9999990f32); // ceil to never reduce accuracy
-    if (radius_idx < IM_ARRAYSIZE(_Data->CircleSegmentCounts))
-        return _Data->CircleSegmentCounts[radius_idx]; // Use cached value
+    if (radius_idx < IM_ARRAYSIZE(_Data.CircleSegmentCounts))
+        return _Data.CircleSegmentCounts[radius_idx]; // Use cached value
     else
-        return IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, _Data->CircleSegmentMaxError);
+        return IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, _Data.CircleSegmentMaxError);
 }
 
 // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
@@ -625,13 +625,13 @@ c_void ImDrawList::PushClipRect(const ImVec2& cr_min, const ImVec2& cr_max, bool
 
 c_void ImDrawList::PushClipRectFullScreen()
 {
-    PushClipRect(ImVec2(_Data->ClipRectFullscreen.x, _Data->ClipRectFullscreen.y), ImVec2(_Data->ClipRectFullscreen.z, _Data->ClipRectFullscreen.w));
+    PushClipRect(ImVec2(_Data.ClipRectFullscreen.x, _Data.ClipRectFullscreen.y), ImVec2(_Data.ClipRectFullscreen.z, _Data.ClipRectFullscreen.w));
 }
 
 c_void ImDrawList::PopClipRect()
 {
     _ClipRectStack.pop_back();
-    _CmdHeader.ClipRect = (_ClipRectStack.Size == 0) ? _Data->ClipRectFullscreen : _ClipRectStack.Data[_ClipRectStack.Size - 1];
+    _CmdHeader.ClipRect = (_ClipRectStack.Size == 0) ? _Data.ClipRectFullscreen : _ClipRectStack.Data[_ClipRectStack.Size - 1];
     _OnChangedClipRect();
 }
 
@@ -691,7 +691,7 @@ c_void ImDrawList::PrimUnreserve(c_int idx_count, c_int vtx_count)
 // Fully unrolled with inline call to keep our debug builds decently fast.
 c_void ImDrawList::PrimRect(const ImVec2& a, const ImVec2& c, u32 col)
 {
-    ImVec2 b(c.x, a.y), d(a.x, c.y), uv(_Data->TexUvWhitePixel);
+    ImVec2 b(c.x, a.y), d(a.x, c.y), uv(_Data.TexUvWhitePixel);
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
     _IdxWritePtr[3] = idx; _IdxWritePtr[4] = (ImDrawIdx)(idx+2); _IdxWritePtr[5] = (ImDrawIdx)(idx+3);
@@ -748,20 +748,20 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
         return;
 
     let closed: bool = (flags & ImDrawFlags_Closed) != 0;
-    const ImVec2 opaque_uv = _Data->TexUvWhitePixel;
+    let opaque_uv: ImVec2 =  _Data.TexUvWhitePixel;
     let count: c_int = closed ? points_count : points_count - 1; // The number of line segments we need to draw
     let thick_line: bool = (thickness > _FringeScale);
 
     if (Flags & ImDrawListFlags_AntiAliasedLines)
     {
         // Anti-aliased stroke
-        const c_float AA_SIZE = _FringeScale;
+        let         : c_float =  _FringeScale;
         const u32 col_trans = col & ~IM_COL32_A_MASK;
 
         // Thicknesses <1.0 should behave like thickness 1.0
         thickness = ImMax(thickness, 1f32);
         let integer_thickness: c_int = thickness;
-        const c_float fractional_thickness = thickness - integer_thickness;
+        let         : c_float =  thickness - integer_thickness;
 
         // Do we want to draw this line using a texture?
         // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
@@ -769,7 +769,7 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
         let use_texture: bool = (Flags & ImDrawListFlags_AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.000010f32) && (AA_SIZE == 1f32);
 
         // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-        // IM_ASSERT_PARANOID(!use_texture || !(_Data->Font->ContainerAtlas->Flags & ImFontAtlasFlags_NoBakedLines));
+        // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font->ContainerAtlas->Flags & ImFontAtlasFlags_NoBakedLines));
 
         let idx_count: c_int = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
         let vtx_count: c_int = use_texture ? (points_count * 2) : (thick_line ? points_count * 4 : points_count * 3);
@@ -804,7 +804,7 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
             //   (see ImFontAtlasBuildRenderLinesTexData() function), and so alternate values won't work without changes to that code.
             // - In the non texture-based paths, we would allow AA_SIZE to potentially be != 1f32 with a patch (e.g. fringe_scale patch to
             //   allow scaling geometry while preserving one-screen-pixel AA fringe).
-            const c_float half_draw_size = use_texture ? ((thickness * 0.5f32) + 1) : AA_SIZE;
+            let             : c_float =  use_texture ? ((thickness * 0.5f32) + 1) : AA_SIZE;
 
             // If line is not closed, the first and last points need to be generated differently as there are no normals to blend
             if (!closed)
@@ -862,10 +862,10 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
             if (use_texture)
             {
                 // If we're using textures we only need to emit the left/right edge vertices
-                ImVec4 tex_uvs = _Data->TexUvLines[integer_thickness];
+                ImVec4 tex_uvs = _Data.TexUvLines[integer_thickness];
                 /*if (fractional_thickness != 0f32) // Currently always zero when use_texture==false!
                 {
-                    const ImVec4 tex_uvs_1 = _Data->TexUvLines[integer_thickness + 1];
+                    const ImVec4 tex_uvs_1 = _Data.TexUvLines[integer_thickness + 1];
                     tex_uvs.x = tex_uvs.x + (tex_uvs_1.x - tex_uvs.x) * fractional_thickness; // inlined ImLerp()
                     tex_uvs.y = tex_uvs.y + (tex_uvs_1.y - tex_uvs.y) * fractional_thickness;
                     tex_uvs.z = tex_uvs.z + (tex_uvs_1.z - tex_uvs.z) * fractional_thickness;
@@ -895,7 +895,7 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
         else
         {
             // [PATH 2] Non texture-based lines (thick): we need to draw the solid line core and thus require four vertices per point
-            const c_float half_inner_thickness = (thickness - AA_SIZE) * 0.5f32;
+            let             : c_float =  (thickness - AA_SIZE) * 0.5f32;
 
             // If line is not closed, the first and last points need to be generated differently as there are no normals to blend
             if (!closed)
@@ -1004,12 +1004,12 @@ c_void ImDrawList::AddConvexPolyFilled(*const ImVec2 points, const c_int points_
     if (points_count < 3)
         return;
 
-    const ImVec2 uv = _Data->TexUvWhitePixel;
+    let uv: ImVec2 =  _Data.TexUvWhitePixel;
 
     if (Flags & ImDrawListFlags_AntiAliasedFill)
     {
         // Anti-aliased Fill
-        const c_float AA_SIZE = _FringeScale;
+        let         : c_float =  _FringeScale;
         const u32 col_trans = col & ~IM_COL32_A_MASK;
         let idx_count: c_int = (points_count - 2)*3 + points_count * 6;
         let vtx_count: c_int = (points_count * 2);
@@ -1136,7 +1136,7 @@ c_void ImDrawList::_PathArcToFastEx(const ImVec2& center, c_float radius, c_int 
             if (sample_index >= IM_DRAWLIST_ARCFAST_SAMPLE_MAX)
                 sample_index -= IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
 
-            const ImVec2 s = _Data->ArcFastVtx[sample_index];
+            let s: ImVec2 =  _Data.ArcFastVtx[sample_index];
             out_ptr->x = center.x + s.x * radius;
             out_ptr->y = center.y + s.y * radius;
             out_ptr+= 1;
@@ -1150,7 +1150,7 @@ c_void ImDrawList::_PathArcToFastEx(const ImVec2& center, c_float radius, c_int 
             if (sample_index < 0)
                 sample_index += IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
 
-            const ImVec2 s = _Data->ArcFastVtx[sample_index];
+            let s: ImVec2 =  _Data.ArcFastVtx[sample_index];
             out_ptr->x = center.x + s.x * radius;
             out_ptr->y = center.y + s.y * radius;
             out_ptr+= 1;
@@ -1163,7 +1163,7 @@ c_void ImDrawList::_PathArcToFastEx(const ImVec2& center, c_float radius, c_int 
         if (normalized_max_sample < 0)
             normalized_max_sample += IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
 
-        const ImVec2 s = _Data->ArcFastVtx[normalized_max_sample];
+        let s: ImVec2 =  _Data.ArcFastVtx[normalized_max_sample];
         out_ptr->x = center.x + s.x * radius;
         out_ptr->y = center.y + s.y * radius;
         out_ptr+= 1;
@@ -1185,7 +1185,7 @@ c_void ImDrawList::_PathArcToN(const ImVec2& center, c_float radius, c_float a_m
     _Path.reserve(_Path.Size + (num_segments + 1));
     for (c_int i = 0; i <= num_segments; i++)
     {
-        const c_float a = a_min + (i / num_segments) * (a_max - a_min);
+        let         : c_float =  a_min + (i / num_segments) * (a_max - a_min);
         _Path.push(ImVec2(center.x + ImCos(a) * radius, center.y + ImSin(a) * radius));
     }
 }
@@ -1216,21 +1216,22 @@ c_void ImDrawList::PathArcTo(const ImVec2& center, c_float radius, c_float a_min
     }
 
     // Automatic segment count
-    if (radius <= _Data->ArcFastRadiusCutof0f32)
+    if (radius <= _Data.ArcFastRadiusCutof0f32)
     {
         let a_is_reverse: bool = a_max < a_min;
 
         // We are going to use precomputed values for mid samples.
         // Determine first and last sample in lookup table that belong to the arc.
-        const c_float a_min_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.00f32);
-        const c_float a_max_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.00f32);
+        let         : c_float =  IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.00f32);
+        let         : c_float =  IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.00f32);
 
         let a_min_sample: c_int = a_is_reverse ? ImFloorSigned(a_min_sample_0f32) : ImCeil(a_min_sample_0f32);
         let a_max_sample: c_int = a_is_reverse ? ImCeil(a_max_sample_0f32) : ImFloorSigned(a_max_sample_0f32);
         let a_mid_samples: c_int = a_is_reverse ? ImMax(a_min_sample - a_max_sample, 0) : ImMax(a_max_sample - a_min_sample, 0);
 
-        const c_float a_min_segment_angle = a_min_sample * IM_PI * 2.0f32 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
-        const c_float a_max_segment_angle = a_max_sample * IM_PI * 2.0f32 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
+        let
+        : c_float =  a_min_sample * IM_PI * 2.0f32 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
+        let         : c_float =  a_max_sample * IM_PI * 2.0f32 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
         let a_emit_start: bool = ImAbs(a_min_segment_angle - a_min) >= 1e-5f32;
         let a_emit_end: bool = ImAbs(a_max - a_max_segment_angle) >= 1e-5f32;
 
@@ -1244,7 +1245,7 @@ c_void ImDrawList::PathArcTo(const ImVec2& center, c_float radius, c_float a_min
     }
     else
     {
-        const c_float arc_length = ImAbs(a_max - a_min);
+        let         : c_float =  ImAbs(a_max - a_min);
         let circle_segment_count: c_int = _CalcCircleAutoSegmentCount(radius);
         let arc_segment_count: c_int = ImMax(ImCeil(circle_segment_count * arc_length / (IM_PI * 2.00f32)), (2.0f32 * IM_PI / arc_length));
         _PathArcToN(center, radius, a_min, a_max, arc_segment_count);
@@ -1319,7 +1320,7 @@ c_void ImDrawList::PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, co
     let p1: ImVec2 = _Path.back();
     if (num_segments == 0)
     {
-        PathBezierCubicCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data->CurveTessellationTol, 0); // Auto-tessellated
+        PathBezierCubicCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, _Data.CurveTessellationTol, 0); // Auto-tessellated
     }
     else
     {
@@ -1334,7 +1335,7 @@ c_void ImDrawList::PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3
     let p1: ImVec2 = _Path.back();
     if (num_segments == 0)
     {
-        PathBezierQuadraticCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data->CurveTessellationTol, 0);// Auto-tessellated
+        PathBezierQuadraticCurveToCasteljau(&_Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, _Data.CurveTessellationTol, 0);// Auto-tessellated
     }
     else
     {
@@ -1393,10 +1394,10 @@ c_void ImDrawList::PathRect(const ImVec2& a, const ImVec2& b, c_float rounding, 
     }
     else
     {
-        const c_float rounding_tl = (flags & ImDrawFlags_RoundCornersTopLeft)     ? rounding : 0f32;
-        const c_float rounding_tr = (flags & ImDrawFlags_RoundCornersTopRight)    ? rounding : 0f32;
-        const c_float rounding_br = (flags & ImDrawFlags_RoundCornersBottomRight) ? rounding : 0f32;
-        const c_float rounding_bl = (flags & ImDrawFlags_RoundCornersBottomLeft)  ? rounding : 0f32;
+        let         : c_float =  (flags & ImDrawFlags_RoundCornersTopLeft)     ? rounding : 0f32;
+        let         : c_float =  (flags & ImDrawFlags_RoundCornersTopRight)    ? rounding : 0f32;
+        let         : c_float =  (flags & ImDrawFlags_RoundCornersBottomRight) ? rounding : 0f32;
+        let         : c_float =  (flags & ImDrawFlags_RoundCornersBottomLeft)  ? rounding : 0f32;
         PathArcToFast(ImVec2(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
         PathArcToFast(ImVec2(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
         PathArcToFast(ImVec2(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
@@ -1448,7 +1449,7 @@ c_void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_
     if (((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & IM_COL32_A_MASK) == 0)
         return;
 
-    const ImVec2 uv = _Data->TexUvWhitePixel;
+    let uv: ImVec2 =  _Data.TexUvWhitePixel;
     PrimReserve(6, 4);
     PrimWriteIdx((ImDrawIdx)(_VtxCurrentIdx)); PrimWriteIdx((ImDrawIdx)(_VtxCurrentIdx + 1)); PrimWriteIdx((ImDrawIdx)(_VtxCurrentIdx + 2));
     PrimWriteIdx((ImDrawIdx)(_VtxCurrentIdx)); PrimWriteIdx((ImDrawIdx)(_VtxCurrentIdx + 2)); PrimWriteIdx((ImDrawIdx)(_VtxCurrentIdx + 3));
@@ -1521,7 +1522,7 @@ c_void ImDrawList::AddCircle(const ImVec2& center, c_float radius, u32 col, c_in
         num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
 
         // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const c_float a_max = (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
+        let         : c_float =  (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
         PathArcTo(center, radius - 0.5f32, 0f32, a_max, num_segments - 1);
     }
 
@@ -1545,7 +1546,7 @@ c_void ImDrawList::AddCircleFilled(const ImVec2& center, c_float radius, u32 col
         num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
 
         // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const c_float a_max = (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
+        let         : c_float =  (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
         PathArcTo(center, radius, 0f32, a_max, num_segments - 1);
     }
 
@@ -1559,7 +1560,7 @@ c_void ImDrawList::AddNgon(const ImVec2& center, c_float radius, u32 col, c_int 
         return;
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
-    const c_float a_max = (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
+    let     : c_float =  (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
     PathArcTo(center, radius - 0.5f32, 0f32, a_max, num_segments - 1);
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
@@ -1571,7 +1572,7 @@ c_void ImDrawList::AddNgonFilled(const ImVec2& center, c_float radius, u32 col, 
         return;
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
-    const c_float a_max = (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
+    let     : c_float =  (IM_PI * 2.00f32) * (num_segments - 1f32) / num_segments;
     PathArcTo(center, radius, 0f32, a_max, num_segments - 1);
     PathFillConvex(col);
 }
@@ -1610,9 +1611,9 @@ c_void ImDrawList::AddText(*const ImFont font, c_float font_size, const ImVec2& 
 
     // Pull default font/size from the shared ImDrawListSharedData instance
     if (font == NULL)
-        font = _Data->Font;
+        font = _Data.Font;
     if (font_size == 0f32)
-        font_size = _Data->FontSize;
+        font_size = _Data.FontSize;
 
     // IM_ASSERT(font->ContainerAtlas->TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
@@ -1860,7 +1861,7 @@ c_void ImDrawData::DeIndexAllBuffers()
 }
 
 // Helper to scale the ClipRect field of each ImDrawCmd.
-// Use if your final output buffer is at a different scale than draw_data->DisplaySize,
+// Use if your final output buffer is at a different scale than draw_Data.DisplaySize,
 // or if there is a difference between your window resolution and framebuffer resolution.
 c_void ImDrawData::ScaleClipRects(const ImVec2& fb_scale)
 {
@@ -1906,9 +1907,9 @@ c_void ImGui::ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, c_in
 // Distribute UV over (a, b) rectangle
 c_void ImGui::ShadeVertsLinearUV(ImDrawList* draw_list, c_int vert_start_idx, c_int vert_end_idx, const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, bool clamp)
 {
-    const ImVec2 size = b - a;
-    const ImVec2 uv_size = uv_b - uv_a;
-    const ImVec2 scale = ImVec2(
+    let size: ImVec2 =  b - a;
+    let uv_size: ImVec2 =  uv_b - uv_a;
+    let scale: ImVec2 =  ImVec2(
         size.x != 0f32 ? (uv_size.x / size.x) : 0f32,
         size.y != 0f32 ? (uv_size.y / size.y) : 0f32);
 
@@ -1916,8 +1917,8 @@ c_void ImGui::ShadeVertsLinearUV(ImDrawList* draw_list, c_int vert_start_idx, c_
     ImDrawVert* vert_end = draw_list->VtxBuffer.Data + vert_end_idx;
     if (clamp)
     {
-        const ImVec2 min = ImMin(uv_a, uv_b);
-        const ImVec2 max = ImMax(uv_a, uv_b);
+        let min: ImVec2 =  ImMin(uv_a, uv_b);
+        let max: ImVec2 =  ImMax(uv_a, uv_b);
         for (ImDrawVert* vertex = vert_start; vertex < vert_end; ++vertex)
             vertex->uv = ImClamp(uv_a + ImMul(ImVec2(vertex->pos.x, vertex->pos.y) - a, scale), min, max);
     }
@@ -2494,7 +2495,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         src_tmp.PackRange.v_oversample = (c_uchar)cfg.OversampleV;
 
         // Gather the sizes of all rectangles we will need to pack (this loop is based on stbtt_PackFontRangesGatherRects)
-        const c_float scale = (cfg.SizePixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.SizePixels);
+        let         : c_float =  (cfg.SizePixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.SizePixels);
         let padding: c_int = atlas->TexGlyphPadding;
         for (c_int glyph_i = 0; glyph_i < src_tmp.GlyphsList.Size; glyph_i++)
         {
@@ -2589,15 +2590,17 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         ImFontConfig& cfg = atlas->ConfigData[src_i];
         ImFont* dst_font = cfg.DstFont;
 
-        const c_float font_scale = stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels);
+        let
+        : c_float =  stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels);
         c_int unscaled_ascent, unscaled_descent, unscaled_line_gap;
         stbtt_GetFontVMetrics(&src_tmp.FontInfo, &unscaled_ascent, &unscaled_descent, &unscaled_line_gap);
 
-        const c_float ascent = ImFloor(unscaled_ascent * font_scale + ((unscaled_ascent > 0f32) ? +1 : -1));
-        const c_float descent = ImFloor(unscaled_descent * font_scale + ((unscaled_descent > 0f32) ? +1 : -1));
+        let
+        : c_float =  ImFloor(unscaled_ascent * font_scale + ((unscaled_ascent > 0f32) ? +1 : -1));
+        let         : c_float =  ImFloor(unscaled_descent * font_scale + ((unscaled_descent > 0f32) ? +1 : -1));
         ImFontAtlasBuildSetupFont(atlas, dst_font, &cfg, ascent, descent);
-        const c_float font_off_x = cfg.GlyphOffset.x;
-        const c_float font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font->Ascent);
+        let         : c_float =  cfg.GlyphOffset.x;
+        let         : c_float =  cfg.GlyphOffset.y + IM_ROUND(dst_font->Ascent);
 
         for (c_int glyph_i = 0; glyph_i < src_tmp.GlyphsCount; glyph_i++)
         {
@@ -3280,7 +3283,7 @@ c_void ImFont::AddGlyph(*const ImFontConfig cfg, ImWchar codepoint, c_float x0, 
     if (cfg != NULL)
     {
         // Clamp & recenter if needed
-        const c_float advance_x_original = advance_x;
+        let         : c_float =  advance_x;
         advance_x = ImClamp(advance_x, cfg->GlyphMinAdvanceX, cfg->GlyphMaxAdvanceX);
         if (advance_x != advance_x_original)
         {
@@ -3408,7 +3411,8 @@ let next_s: *const c_char;
             }
         }
 
-        const c_float char_width = (c < IndexAdvanceX.Size ? IndexAdvanceX.Data[c] : FallbackAdvanceX);
+        let
+        : c_float =  (c < IndexAdvanceX.Size ? IndexAdvanceX.Data[c] : FallbackAdvanceX);
         if (ImCharIsBlankW(c))
         {
             if (inside_word)
@@ -3458,8 +3462,9 @@ ImVec2 ImFont::CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // FIXME-OPT: Need to avoid this.
 
-    const c_float line_height = size;
-    const c_float scale = size / FontSize;
+    let
+    : c_float =  size;
+    let     : c_float =  size / FontSize;
 
     let text_size: ImVec2 = ImVec2(0, 0);
     c_float line_width = 0f32;
@@ -3525,7 +3530,8 @@ ImVec2 ImFont::CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width
                 continue;
         }
 
-        const c_float char_width = (c < IndexAdvanceX.Size ? IndexAdvanceX.Data[c] : FallbackAdvanceX) * scale;
+        let
+        : c_float =  (c < IndexAdvanceX.Size ? IndexAdvanceX.Data[c] : FallbackAdvanceX) * scale;
         if (line_width + char_width >= max_width)
         {
             s = prev_s;
@@ -3574,9 +3580,10 @@ c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos
     if (y > clip_rect.w)
         return;
 
-    const c_float start_x = x;
-    const c_float scale = size / FontSize;
-    const c_float line_height = FontSize * scale;
+    let
+    : c_float =  x;
+    let     : c_float =  size / FontSize;
+    let     : c_float =  FontSize * scale;
     let word_wrap_enabled: bool = (wrap_width > 0f32);
     let mut  word_wrap_eol: *const c_char = None;
 
@@ -3772,7 +3779,7 @@ c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 c_void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, u32 col, ImGuiDir dir, c_float scale)
 {
-    const c_float h = draw_list->_Data->FontSize * 1f32;
+    let     : c_float =  draw_list->_Data.FontSize * 1f32;
     c_float r = h * 0.40f32 * scale;
     let center: ImVec2 = pos + ImVec2(h * 0.50f32, h * 0.50f32 * scale);
 
@@ -3803,7 +3810,7 @@ c_void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, u32 col, ImGuiDir d
 
 c_void ImGui::RenderBullet(ImDrawList* draw_list, ImVec2 pos, u32 col)
 {
-    draw_list->AddCircleFilled(pos, draw_list->_Data->FontSize * 0.20f32, col, 8);
+    draw_list->AddCircleFilled(pos, draw_list->_Data.FontSize * 0.20f32, col, 8);
 }
 
 c_void ImGui::RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, u32 col, c_float sz)
@@ -3867,11 +3874,11 @@ c_void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, 
     }
 
     rounding = ImClamp(ImMin((rect.Max.x - rect.Min.x) * 0.5f32, (rect.Max.y - rect.Min.y) * 0.5f32) - 1f32, 0f32, rounding);
-    const c_float inv_rounding = 1f32 / rounding;
-    const c_float arc0_b = ImAcos01(1f32 - (p0.x - rect.Min.x) * inv_rounding);
-    const c_float arc0_e = ImAcos01(1f32 - (p1.x - rect.Min.x) * inv_rounding);
-    const c_float half_pi = IM_PI * 0.5f32; // We will == compare to this because we know this is the exact value ImAcos01 can return.
-    const c_float x0 = ImMax(p0.x, rect.Min.x + rounding);
+    let     : c_float =  1f32 / rounding;
+    let     : c_float =  ImAcos01(1f32 - (p0.x - rect.Min.x) * inv_rounding);
+    let     : c_float =  ImAcos01(1f32 - (p1.x - rect.Min.x) * inv_rounding);
+    let     : c_float =  IM_PI * 0.5f32; // We will == compare to this because we know this is the exact value ImAcos01 can return.
+    let     : c_float =  ImMax(p0.x, rect.Min.x + rounding);
     if (arc0_b == arc0_e)
     {
         draw_list->PathLineTo(ImVec2(x0, p1.y));
@@ -3889,9 +3896,9 @@ c_void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, 
     }
     if (p1.x > rect.Min.x + rounding)
     {
-        const c_float arc1_b = ImAcos01(1f32 - (rect.Max.x - p1.x) * inv_rounding);
-        const c_float arc1_e = ImAcos01(1f32 - (rect.Max.x - p0.x) * inv_rounding);
-        const c_float x1 = ImMin(p1.x, rect.Max.x - rounding);
+        let         : c_float =  ImAcos01(1f32 - (rect.Max.x - p1.x) * inv_rounding);
+        let         : c_float =  ImAcos01(1f32 - (rect.Max.x - p0.x) * inv_rounding);
+        let         : c_float =  ImMin(p1.x, rect.Max.x - rounding);
         if (arc1_b == arc1_e)
         {
             draw_list->PathLineTo(ImVec2(x1, p0.y));

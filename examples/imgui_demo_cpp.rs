@@ -1361,7 +1361,7 @@ static c_void ShowDemoWindowWidgets()
             static selected: [c_char;4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
 
             // Add in a bit of silly fun...
-            const c_float time = ImGui::GetTime();
+            let             : c_float =  ImGui::GetTime();
             let winning_state: bool = memchr(selected, 0, sizeof(selected)) == None; // If all cells are selected...
             if (winning_state)
                 ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f32 + 0.5f32 * cosf(time * 2.00f32), 0.5f32 + 0.5f32 * sinf(time * 3.00f32)));
@@ -2093,7 +2093,8 @@ static c_void ShowDemoWindowWidgets()
         static c_float  f32_v = 0.123f;
         static double f64_v = 90000.01234567890123456789;
 
-        const c_float drag_speed = 0.2f;
+        let
+        : c_float =  0.2f;
         static let mut drag_clamp: bool =  false;
         IMGUI_DEMO_MARKER("Widgets/Data Types/Drags");
         ImGui::Text("Drags:");
@@ -2204,7 +2205,7 @@ static c_void ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Vertical Sliders");
     if (ImGui::TreeNode("Vertical Sliders"))
     {
-        const c_float spacing = 4;
+        let         : c_float =  4;
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
 
         static c_int int_value = 0;
@@ -2983,7 +2984,7 @@ static c_void ShowDemoWindowLayout()
             ImGui::SmallButton("SmallButton()");
 
             // Tree
-            const c_float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
+            let             : c_float =  ImGui::GetStyle().ItemInnerSpacing.x;
             ImGui::Button("Button##1");
             ImGui::SameLine(0f32, spacing);
             if (ImGui::TreeNode("Node##1"))
@@ -3344,10 +3345,10 @@ static c_void ShowDemoWindowLayout()
             if (!ImGui::IsItemVisible()) // Skip rendering as ImDrawList elements are not clipped.
                 continue;
 
-            const ImVec2 p0 = ImGui::GetItemRectMin();
-            const ImVec2 p1 = ImGui::GetItemRectMax();
+            let p0: ImVec2 =  ImGui::GetItemRectMin();
+            let p1: ImVec2 =  ImGui::GetItemRectMax();
             let mut  text_str: *const c_char = "Line 1 hello\nLine 2 clip me!";
-            const ImVec2 text_pos = ImVec2(p0.x + offset.x, p0.y + offset.y);
+            let text_pos: ImVec2 =  ImVec2(p0.x + offset.x, p0.y + offset.y);
             *mut ImDrawList draw_list = ImGui::GetWindowDrawList();
             switch (n)
             {
@@ -3833,8 +3834,8 @@ static c_void ShowDemoWindowTables()
         return;
 
     // Using those as a base value to create width/height that are factor of the size of our font
-    const c_float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
-    const c_float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+    let     : c_float =  ImGui::CalcTextSize("A").x;
+    let     : c_float =  ImGui::GetTextLineHeightWithSpacing();
 
     ImGui::PushID("Tables");
 
@@ -5397,7 +5398,7 @@ static c_void ShowDemoWindowTables()
         let table_draw_list: *const ImDrawList = None;  // "
 
         // Submit table
-        const c_float inner_width_to_use = (flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0f32;
+        let         : c_float =  (flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0f32;
         if (ImGui::BeginTable("table_advanced", 6, flags, outer_size_enabled ? outer_size_value : ImVec2(0, 0), inner_width_to_use))
         {
             // Declare columns
@@ -5839,13 +5840,13 @@ static c_void ShowDemoWindowMisc()
 
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
-                const ImVec2 key_size = ImVec2(35f32, 35.00f32);
+                let key_size: ImVec2 =  ImVec2(35f32, 35.00f32);
                 const c_float  key_rounding = 3.0f32;
-                const ImVec2 key_face_size = ImVec2(25f32, 25.00f32);
-                const ImVec2 key_face_pos = ImVec2(5f32, 3.00f32);
+                let key_face_size: ImVec2 =  ImVec2(25f32, 25.00f32);
+                let key_face_pos: ImVec2 =  ImVec2(5f32, 3.00f32);
                 const c_float  key_face_rounding = 2.0f32;
-                const ImVec2 key_label_pos = ImVec2(7.0f32, 4.00f32);
-                const ImVec2 key_step = ImVec2(key_size.x - 1f32, key_size.y - 1f32);
+                let key_label_pos: ImVec2 =  ImVec2(7.0f32, 4.00f32);
+                let key_step: ImVec2 =  ImVec2(key_size.x - 1f32, key_size.y - 1f32);
                 const c_float  key_row_offset = 9.0f32;
 
                 let board_min: ImVec2 = ImGui::GetCursorScreenPos();
@@ -5870,7 +5871,7 @@ static c_void ShowDemoWindowMisc()
                     for (c_int n = 0; n < IM_ARRAYSIZE(keys_to_display); n++)
                     {
                         let key_data: *const KeyLayoutData = &keys_to_display[n];
-                        let key_min: ImVec2 = ImVec2(start_pos.x + key_data->Col * key_step.x + key_data->Row * key_row_offset, start_pos.y + key_data->Row * key_step.y);
+                        let key_min: ImVec2 = ImVec2(start_pos.x + key_Data.Col * key_step.x + key_Data.Row * key_row_offset, start_pos.y + key_Data.Row * key_step.y);
                         let key_max: ImVec2 = ImVec2(key_min.x + key_size.x, key_min.y + key_size.y);
                         draw_list->AddRectFilled(key_min, key_max, IM_COL32(204, 204, 204, 255), key_rounding);
                         draw_list->AddRect(key_min, key_max, IM_COL32(24, 24, 24, 255), key_rounding);
@@ -5879,8 +5880,8 @@ static c_void ShowDemoWindowMisc()
                         draw_list->AddRect(face_min, face_max, IM_COL32(193, 193, 193, 255), key_face_rounding, ImDrawFlags_None, 2.00f32);
                         draw_list->AddRectFilled(face_min, face_max, IM_COL32(252, 252, 252, 255), key_face_rounding);
                         let label_min: ImVec2 = ImVec2(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
-                        draw_list->AddText(label_min, IM_COL32(64, 64, 64, 255), key_data->Label);
-                        if (ImGui::IsKeyDown(key_data->Key))
+                        draw_list->AddText(label_min, IM_COL32(64, 64, 64, 255), key_Data.Label);
+                        if (ImGui::IsKeyDown(key_Data.Key))
                             draw_list->AddRectFilled(key_min, key_max, IM_COL32(255, 0, 0, 128), key_rounding);
                     }
                     draw_list->PopClipRect();
@@ -6419,8 +6420,8 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
 
             // Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
             // (we enforce hard clamping manually as by default DragFloat/SliderFloat allows CTRL+Click text to get out of bounds).
-            const c_float MIN_SCALE = 0.3f;
-            const c_float MAX_SCALE = 2.0f32;
+            let             : c_float =  0.3f;
+            let             : c_float =  2.0f32;
             HelpMarker(
                 "Those are old settings provided for convenience.\n"
                 "However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
@@ -6460,27 +6461,28 @@ c_void ImGui::ShowStyleEditor(*mut ImGuiStyle re0f32)
                 ImGui::TextUnformatted("(R = radius, N = number of segments)");
                 ImGui::Spacing();
                 ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                const c_float min_widget_width = ImGui::CalcTextSize("N: MMM\nR: MMM").x;
+                let                 : c_float =  ImGui::CalcTextSize("N: MMM\nR: MMM").x;
                 for (c_int n = 0; n < 8; n++)
                 {
-                    const c_float RAD_MIN = 5f32;
-                    const c_float RAD_MAX = 70f32;
-                    const c_float rad = RAD_MIN + (RAD_MAX - RAD_MIN) * n / (8.0f32 - 1f32);
+                    let                     : c_float =  5f32;
+                    let                     : c_float =  70f32;
+                    let                     : c_float =  RAD_MIN + (RAD_MAX - RAD_MIN) * n / (8.0f32 - 1f32);
 
                     ImGui::BeginGroup();
 
                     ImGui::Text("R: %.f\nN: %d", rad, draw_list->_CalcCircleAutoSegmentCount(rad));
 
-                    const c_float canvas_width = IM_MAX(min_widget_width, rad * 2.00f32);
+                    let
+                    : c_float =  IM_MAX(min_widget_width, rad * 2.00f32);
                     const c_float offset_x     = floorf(canvas_width * 0.5f32);
                     const c_float offset_y     = floorf(RAD_MAX);
 
-                    const ImVec2 p1 = ImGui::GetCursorScreenPos();
+                    let p1: ImVec2 =  ImGui::GetCursorScreenPos();
                     draw_list->AddCircle(ImVec2(p1.x + offset_x, p1.y + offset_y), rad, ImGui::GetColorU32(ImGuiCol_Text));
                     ImGui::Dummy(ImVec2(canvas_width, RAD_MAX * 2));
 
                     /*
-                    const ImVec2 p2 = ImGui::GetCursorScreenPos();
+                    let p2: ImVec2 =  ImGui::GetCursorScreenPos();
                     draw_list->AddCircleFilled(ImVec2(p2.x + offset_x, p2.y + offset_y), rad, ImGui::GetColorU32(ImGuiCol_Text));
                     ImGui::Dummy(ImVec2(canvas_width, RAD_MAX * 2));
                     */
@@ -6739,7 +6741,7 @@ struct ExampleAppConsole
         ImGui::Separator();
 
         // Reserve enough left-over height for 1 separator + 1 input text
-        const c_float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+        let         : c_float =  ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar);
         if (ImGui::BeginPopupContextWindow())
         {
@@ -7478,7 +7480,7 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     if (location >= 0)
     {
-        const c_float PAD = 10f32;
+        let         : c_float =  10f32;
         let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
         let work_pos: ImVec2 = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
         let work_size: ImVec2 = viewport->WorkSize;
@@ -7568,7 +7570,7 @@ static c_void ShowExampleAppFullscreen(bool* p_open)
 static c_void ShowExampleAppWindowTitles(bool*)
 {
     let viewport: *const ImGuiViewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
+    let base_pos: ImVec2 =  viewport->Pos;
 
     // By default, Windows are uniquely identified by their title.
     // You can use the "##" and "###" markers to manipulate the display/ID.
@@ -7663,11 +7665,11 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             curve_segments_override |= ImGui::SliderInt("Curves segments override", &curve_segments_override_v, 3, 40);
             ImGui::ColorEdit4("Color", &colf.x);
 
-            const ImVec2 p = ImGui::GetCursorScreenPos();
+            let p: ImVec2 =  ImGui::GetCursorScreenPos();
             const u32 col = ImColor(col0f32);
-            const c_float spacing = 10f32;
+            let             : c_float =  10f32;
             const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
-            const c_float rounding = sz / 5f32;
+            let             : c_float =  sz / 5f32;
             let circle_segments: c_int = circle_segments_override ? circle_segments_override_v : 0;
             let curve_segments: c_int = curve_segments_override ? curve_segments_override_v : 0;
             c_float x = p.x + 4.0f32;
@@ -7774,7 +7776,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
 
             // Pan (we use a zero mouse threshold when there's no context menu)
             // You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
-            const c_float mouse_threshold_for_pan = opt_enable_context_menu ? -1f32 : 0f32;
+            let             : c_float =  opt_enable_context_menu ? -1f32 : 0f32;
             if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right, mouse_threshold_for_pan))
             {
                 scrolling.x += io.MouseDelta.x;
@@ -7799,7 +7801,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             draw_list->PushClipRect(canvas_p0, canvas_p1, true);
             if (opt_enable_grid)
             {
-                const c_float GRID_STEP = 64.0f32;
+                let                 : c_float =  64.0f32;
                 for (c_float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
                     draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
                 for (c_float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
