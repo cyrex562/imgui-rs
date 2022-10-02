@@ -420,3 +420,18 @@ pub unsafe fn EndFrame()
 
     CallContextHooks(g, ImGuiContextHookType_EndFramePost);
 }
+
+
+
+
+c_float GetFrameHeight()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.FontSize + g.Style.FramePadding.y * 2.0f32;
+}
+
+c_float GetFrameHeightWithSpacing()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.FontSize + g.Style.FramePadding.y * 2.0f32 + g.Style.ItemSpacing.y;
+}

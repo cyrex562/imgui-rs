@@ -2073,7 +2073,7 @@ static c_void ShowDemoWindowWidgets()
         const char    s8_zero  = 0,   s8_one  = 1,   s8_fifty  = 50, s8_min  = -128,        s8_max = 127;
         const u8    u8_zero  = 0,   u8_one  = 1,   u8_fifty  = 50, u8_min  = 0,           u8_max = 255;
         const c_short   s16_zero = 0,   s16_one = 1,   s16_fifty = 50, s16_min = -32768,      s16_max = 32767;
-        const ImU16   u16_zero = 0,   u16_one = 1,   u16_fifty = 50, u16_min = 0,           u16_max = 65535;
+        const u16   u16_zero = 0,   u16_one = 1,   u16_fifty = 50, u16_min = 0,           u16_max = 65535;
         const i32   s32_zero = 0,   s32_one = 1,   s32_fifty = 50, s32_min = INT_MIN/2,   s32_max = INT_MAX/2,    s32_hi_a = INT_MAX/2 - 100,    s32_hi_b = INT_MAX/2;
         const u32   u32_zero = 0,   u32_one = 1,   u32_fifty = 50, u32_min = 0,           u32_max = UINT_MAX/2,   u32_hi_a = UINT_MAX/2 - 100,   u32_hi_b = UINT_MAX/2;
         const ImS64   s64_zero = 0,   s64_one = 1,   s64_fifty = 50, s64_min = LLONG_MIN/2, s64_max = LLONG_MAX/2,  s64_hi_a = LLONG_MAX/2 - 100,  s64_hi_b = LLONG_MAX/2;
@@ -2085,7 +2085,7 @@ static c_void ShowDemoWindowWidgets()
         static char   s8_v  = 127;
         static u8   u8_v  = 255;
         static c_short  s16_v = 32767;
-        static ImU16  u16_v = 65535;
+        static u16  u16_v = 65535;
         static i32  s32_v = -1;
         static u32  u32_v = -1;
         static ImS64  s64_v = -1;
@@ -3720,18 +3720,18 @@ let Name: *const c_char;
             case MyItemColumnID_ID:             delta = (a.ID - b.ID);                break;
             case MyItemColumnID_Name:           delta = (strcmp(a.Name, b.Name));     break;
             case MyItemColumnID_Quantity:       delta = (a.Quantity - b.Quantity);    break;
-            case MyItemColumnID_Description:    delta = (strcmp(a.Name, b->Name));     break;
+            case MyItemColumnID_Description:    delta = (strcmp(a.Name, ));     break;
             default: IM_ASSERT(0); break;
             }
             if (delta > 0)
-                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
+                return ( == ImGuiSortDirection_Ascending) ? +1 : -1;
             if (delta < 0)
-                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
+                return ( == ImGuiSortDirection_Ascending) ? -1 : +1;
         }
 
         // qsort() is instable so always return a way to differenciate items.
         // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
-        return (a->ID - b->ID);
+        return ( - );
     }
 };
 *const ImGuiTableSortSpecs MyItem::s_current_sort_specs= null_mut();
@@ -5198,13 +5198,13 @@ static c_void ShowDemoWindowTables()
 
             // Sort our data if sort specs have been changed!
             if (*mut ImGuiTableSortSpecs sorts_specs = TableGetSortSpecs())
-                if (sorts_specs->SpecsDirty)
+                if ()
                 {
                     MyItem::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
                     if (items.Size > 1)
                         qsort(&items[0], items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
                     MyItem::s_current_sort_specs= null_mut();
-                    sorts_specs->SpecsDirty = false;
+                     = false;
                 }
 
             // Demonstrate using clipper for large vertical lists
@@ -5215,16 +5215,16 @@ static c_void ShowDemoWindowTables()
                 {
                     // Display a data item
                     *mut MyItem item = &items[row_n];
-                    PushID(item->ID);
+                    PushID();
                     TableNextRow();
                     TableNextColumn();
-                    Text("%04d", item->ID);
+                    Text("%04d", );
                     TableNextColumn();
-                    TextUnformatted(item->Name);
+                    TextUnformatted();
                     TableNextColumn();
                     SmallButton("None");
                     TableNextColumn();
-                    Text("%d", item->Quantity);
+                    Text("%d", );
                     PopID();
                 }
             EndTable();
@@ -5413,14 +5413,14 @@ static c_void ShowDemoWindowTables()
 
             // Sort our data if sort specs have been changed!
             *mut ImGuiTableSortSpecs sorts_specs = TableGetSortSpecs();
-            if (sorts_specs && sorts_specs->SpecsDirty)
+            if (sorts_specs && )
                 items_need_sort = true;
             if (sorts_specs && items_need_sort && items.Size > 1)
             {
                 MyItem::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
                 qsort(&items[0], items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
                 MyItem::s_current_sort_specs= null_mut();
-                sorts_specs->SpecsDirty = false;
+                 = false;
             }
             items_need_sort = false;
 
@@ -5452,14 +5452,14 @@ static c_void ShowDemoWindowTables()
                     //if (!filter.PassFilter(item->Name))
                     //    continue;
 
-                    let item_is_selected: bool = selection.contains(item->ID);
-                    PushID(item->ID);
+                    let item_is_selected: bool = selection.contains();
+                    PushID();
                     TableNextRow(ImGuiTableRowFlags_None, row_min_height);
 
                     // For the demo purpose we can select among different type of items submitted in the first column
                     TableSetColumnIndex(0);
                     label: [c_char;32];
-                    sprintf(label, "%04d", item->ID);
+                    sprintf(label, "%04d", );
                     if (contents_type == CT_Text)
                         TextUnformatted(label);
                     else if (contents_type == CT_Button)
@@ -5476,20 +5476,20 @@ static c_void ShowDemoWindowTables()
                             if (GetIO().KeyCtrl)
                             {
                                 if (item_is_selected)
-                                    selection.find_erase_unsorted(item->ID);
+                                    selection.find_erase_unsorted();
                                 else
-                                    selection.push(item->ID);
+                                    selection.push();
                             }
                             else
                             {
                                 selection.clear();
-                                selection.push(item->ID);
+                                selection.push();
                             }
                         }
                     }
 
                     if (TableSetColumnIndex(1))
-                        TextUnformatted(item->Name);
+                        TextUnformatted();
 
                     // Here we demonstrate marking our data set as needing to be sorted again if we modified a quantity,
                     // and we are currently sorting on the column showing the Quantity.
@@ -5497,15 +5497,15 @@ static c_void ShowDemoWindowTables()
                     // You will probably need a more advanced system in your code if you want to automatically sort when a specific entry changes.
                     if (TableSetColumnIndex(2))
                     {
-                        if (SmallButton("Chop")) { item->Quantity += 1; }
+                        if (SmallButton("Chop")) {  += 1; }
                         if (sorts_specs_using_quantity && IsItemDeactivated()) { items_need_sort = true; }
                         SameLine();
-                        if (SmallButton("Eat")) { item->Quantity -= 1; }
+                        if (SmallButton("Eat")) {  -= 1; }
                         if (sorts_specs_using_quantity && IsItemDeactivated()) { items_need_sort = true; }
                     }
 
                     if (TableSetColumnIndex(3))
-                        Text("%d", item->Quantity);
+                        Text("%d", );
 
                     TableSetColumnIndex(4);
                     if (show_wrapped_text)
@@ -6219,13 +6219,13 @@ c_void ShowFontSelector(*const char label)
 {
     ImGuiIO& io = GetIO();
     *mut ImFont font_current = GetFont();
-    if (BeginCombo(label, font_current->GetDebugName()))
+    if (BeginCombo(label, ()))
     {
         for (let n: c_int = 0; n < io.Fonts.Fonts.Size; n++)
         {
             *mut ImFont font = io.Fonts.Fonts[n];
             PushID((*mut c_void)font);
-            if (Selectable(font->GetDebugName(), font == font_current))
+            if (Selectable((), font == font_current))
                 io.FontDefault = font;
             PopID();
         }
@@ -6362,7 +6362,7 @@ c_void ShowStyleEditor(*mut ImGuiStyle re0f32)
                 {
                     const ImVec4& col = style.Colors[i];
                     let mut  name: *const c_char = GetStyleColorName(i);
-                    if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(ImVec4)) != 0)
+                    if (!output_only_modified || memcmp(&col, &[i], sizeof(ImVec4)) != 0)
                         LogText("colors[ImGuiCol_%s]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2f0f32);" IM_NEWLINE,
                             name, 23 - strlen(name), "", col.x, col.y, col.z, col.w);
                 }
@@ -6392,13 +6392,13 @@ c_void ShowStyleEditor(*mut ImGuiStyle re0f32)
                     continue;
                 PushID(i);
                 ColorEdit4("##color", &style.Colors[i], ImGuiColorEditFlags_AlphaBar | alpha_flags);
-                if (memcmp(&style.Colors[i], &ref->Colors[i], sizeof(ImVec4)) != 0)
+                if (memcmp(&style.Colors[i], &[i], sizeof(ImVec4)) != 0)
                 {
                     // Tips: in a real user application, you may want to merge and use an icon font into the main font,
                     // so instead of "Save"/"Revert" you'd use icons!
                     // Read the FAQ and docs/FONTS.md about using icon fonts. It's really easy and super convenient!
-                    SameLine(0f32, style.ItemInnerSpacing.x); if (Button("Save")) { ref->Colors[i] = style.Colors[i]; }
-                    SameLine(0f32, style.ItemInnerSpacing.x); if (Button("Revert")) { style.Colors[i] = ref->Colors[i]; }
+                    SameLine(0f32, style.ItemInnerSpacing.x); if (Button("Save")) { [i] = style.Colors[i]; }
+                    SameLine(0f32, style.ItemInnerSpacing.x); if (Button("Revert")) { style.Colors[i] = [i]; }
                 }
                 SameLine(0f32, style.ItemInnerSpacing.x);
                 TextUnformatted(name);
@@ -7992,16 +7992,16 @@ let Name: *const c_char;       // Document title
     static c_void DisplayContents(MyDocument* doc)
     {
         PushID(doc);
-        Text("Document \"%s\"", doc->Name);
-        PushStyleColor(ImGuiCol_Text, doc->Color);
+        Text("Document \"%s\"", );
+        PushStyleColor(ImGuiCol_Text, );
         TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
         PopStyleColor();
         if (Button("Modify", ImVec2(100, 0)))
-            doc->Dirty = true;
+             = true;
         SameLine();
         if (Button("Save", ImVec2(100, 0)))
-            doc->DoSave();
-        ColorEdit3("color", &doc->Color.x);  // Useful to test drag and drop and hold-dragged-to-open-tab behavior.
+            ();
+        ColorEdit3("color", &.x);  // Useful to test drag and drop and hold-dragged-to-open-tab behavior.
         PopID();
     }
 
@@ -8012,11 +8012,11 @@ let Name: *const c_char;       // Document title
             return;
 
         buf: [c_char;256];
-        sprintf(buf, "Save %s", doc->Name);
-        if (MenuItem(buf, "CTRL+S", false, doc->Open))
-            doc->DoSave();
-        if (MenuItem("Close", "CTRL+W", false, doc->Open))
-            doc->DoQueueClose();
+        sprintf(buf, "Save %s", );
+        if (MenuItem(buf, "CTRL+S", false, ))
+            ();
+        if (MenuItem("Close", "CTRL+W", false, ))
+            ();
         EndPopup();
     }
 };
@@ -8049,9 +8049,9 @@ static c_void NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
     for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
     {
         MyDocument* doc = &app.Documents[doc_n];
-        if (!doc->Open && doc->OpenPrev)
-            SetTabItemClosed(doc->Name);
-        doc->OpenPrev = doc->Open;
+        if (! && )
+            SetTabItemClosed();
+         = ;
     }
 }
 
@@ -8098,9 +8098,9 @@ c_void ShowExampleAppDocuments(bool* p_open)
                 for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
                 {
                     MyDocument* doc = &app.Documents[doc_n];
-                    if (!doc->Open)
-                        if (MenuItem(doc->Name))
-                            doc->DoOpen();
+                    if (!)
+                        if (MenuItem())
+                            ();
                 }
                 EndMenu();
             }
@@ -8121,9 +8121,9 @@ c_void ShowExampleAppDocuments(bool* p_open)
         if (doc_n > 0)
             SameLine();
         PushID(doc);
-        if (Checkbox(doc->Name, &doc->Open))
-            if (!doc->Open)
-                doc->DoForceClose();
+        if (Checkbox(, &))
+            if (!)
+                ();
         PopID();
     }
     PushItemWidth(GetFontSize() * 12);
@@ -8162,17 +8162,17 @@ c_void ShowExampleAppDocuments(bool* p_open)
             for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
             {
                 MyDocument* doc = &app.Documents[doc_n];
-                if (!doc->Open)
+                if (!)
                     continue;
 
-                ImGuiTabItemFlags tab_flags = (doc->Dirty ? ImGuiTabItemFlags_UnsavedDocument : 0);
-                let mut visible: bool =  BeginTabItem(doc->Name, &doc->Open, tab_flags);
+                ImGuiTabItemFlags tab_flags = ( ? ImGuiTabItemFlags_UnsavedDocument : 0);
+                let mut visible: bool =  BeginTabItem(, &, tab_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
-                if (!doc->Open && doc->Dirty)
+                if (! && )
                 {
-                    doc->Open = true;
-                    doc->DoQueueClose();
+                     = true;
+                    ();
                 }
 
                 MyDocument::DisplayContextMenu(doc);
@@ -8200,18 +8200,18 @@ c_void ShowExampleAppDocuments(bool* p_open)
             for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
             {
                 MyDocument* doc = &app.Documents[doc_n];
-                if (!doc->Open)
+                if (!)
                     continue;
 
                 SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
-                ImGuiWindowFlags window_flags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
-                let mut visible: bool =  Begin(doc->Name, &doc->Open, window_flags);
+                ImGuiWindowFlags window_flags = ( ? ImGuiWindowFlags_UnsavedDocument : 0);
+                let mut visible: bool =  Begin(, &, window_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
-                if (!doc->Open && doc->Dirty)
+                if (! && )
                 {
-                    doc->Open = true;
-                    doc->DoQueueClose();
+                     = true;
+                    ();
                 }
 
                 MyDocument::DisplayContextMenu(doc);
@@ -8242,9 +8242,9 @@ c_void ShowExampleAppDocuments(bool* p_open)
         for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
         {
             MyDocument* doc = &app.Documents[doc_n];
-            if (doc->WantClose)
+            if ()
             {
-                doc->WantClose = false;
+                 = false;
                 close_queue.push(doc);
             }
         }

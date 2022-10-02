@@ -626,3 +626,17 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
         g.IO.AppFocusLost = false;
     }
 }
+
+
+// inline bool             IsKeyPressedMap(ImGuiKey key, let mut repeat: bool = true)           { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // [removed in 1.87]
+
+// FIXME: Look into renaming this once we have settled the new Focus/Activation/TabStop system.
+c_void PushAllowKeyboardFocus(bool allow_keyboard_focus)
+{
+    PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus);
+}
+
+c_void PopAllowKeyboardFocus()
+{
+    PopItemFlag();
+}

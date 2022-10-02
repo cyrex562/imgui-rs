@@ -300,10 +300,10 @@ static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, c_in
 
    #if 0
    // skip in case we're past the node
-   while (node.next->x <= x0)
+   while (node. <= x0)
       ++node;
    #else
-   STBRP_ASSERT(node.next->x > x0); // we ended up handling this in the caller for efficiency
+   STBRP_ASSERT(node. > x0); // we ended up handling this in the caller for efficiency
    #endif
 
    STBRP_ASSERT(node.x <= x0);
@@ -320,12 +320,12 @@ static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, c_in
          min_y = node.y;
          // the first time through, visited_width might be reduced
          if (node.x < x0)
-            visited_width += node.next->x - x0;
+            visited_width += node. - x0;
          else
-            visited_width += node.next->x - node.x;
+            visited_width += node. - node.x;
       } else {
          // add waste area
-         let under_width: c_int = node.next->x - node.x;
+         let under_width: c_int = node. - node.x;
          if (under_width + visited_width > width)
             under_width = width - visited_width;
          waste_area += under_width * (min_y - node.y);
@@ -419,11 +419,11 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
          c_int y,waste;
          STBRP_ASSERT(xpos >= 0);
          // find the left position that matches this
-         while (node.next->x <= xpos) {
+         while (node. <= xpos) {
             prev = &node.next;
             node = node.next;
          }
-         STBRP_ASSERT(node.next->x > xpos && node.x <= xpos);
+         STBRP_ASSERT(node. > xpos && node.x <= xpos);
          y = stbrp__skyline_find_min_y(c, node, xpos, width, &waste);
          if (y + height <= c.height) {
             if (y <= best_y) {
@@ -484,7 +484,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, c
 
    // from here, traverse cur and free the nodes, until we get to one
    // that shouldn't be freed
-   while (cur.next && cur.next->x <= res.x + width) {
+   while (cur.next && cur. <= res.x + width) {
       stbrp_node *next = cur.next;
       // move the current node to the free list
       cur.next = context.free_head;
@@ -501,7 +501,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, c
 // #ifdef _DEBUG
    cur = context.active_head;
    while (cur.x < context.width) {
-      STBRP_ASSERT(cur.x < cur.next->x);
+      STBRP_ASSERT(cur.x < cur.);
       cur = cur.next;
    }
    STBRP_ASSERT(cur.next == null_mut());

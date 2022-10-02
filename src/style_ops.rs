@@ -17,7 +17,7 @@ pub fn GetStyle() -> &mut ImGuiStyle {
 
 
 // u32 GetColorU32(ImGuiCol idx, c_float alpha_mul)
-pub fn GetColorU32(idx: ImGuiCol, alpha_mul: c_float) -> u32 {
+pub fn GetColorU32(idx: ImGuiCol, alpha_mul: (), scrollbar: _) -> u32 {
     let style = GimGui.Style;
     let mut c = style.Colors[idx];
     c.w *= style.Alpha * alpha_mul;

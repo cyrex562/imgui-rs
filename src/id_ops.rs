@@ -92,3 +92,83 @@ pub fn KeepAliveID(id: ImGuiID)
         g.ActiveIdPreviousFrameIsAlive = true;
     }
 }
+
+
+c_void PushID(*const char str_id)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    let mut id: ImGuiID =  window.GetID(str_id);
+    window.IDStack.push(id);
+}
+
+c_void PushID(*const char str_id_begin, *const char str_id_end)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    let mut id: ImGuiID =  window.GetID(str_id_begin, str_id_end);
+    window.IDStack.push(id);
+}
+
+c_void PushID(*const c_void ptr_id)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    let mut id: ImGuiID =  window.GetID(ptr_id);
+    window.IDStack.push(id);
+}
+
+c_void PushID(c_int int_id)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    let mut id: ImGuiID =  window.GetID(int_id);
+    window.IDStack.push(id);
+}
+
+// Push a given id value ignoring the ID stack as a seed.
+c_void PushOverrideID(ImGuiID id)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    if (g.DebugHookIdInfo == id)
+        DebugHookIdInfo(id, ImGuiDataType_ID, null_mut(), null_mut());
+    window.IDStack.push(id);
+}
+
+// Helper to avoid a common series of PushOverrideID -> GetID() -> PopID() call
+// (note that when using this pattern, TestEngine's "Stack Tool" will tend to not display the intermediate stack level.
+//  for that to work we would need to do PushOverrideID() -> ItemAdd() -> PopID() which would alter widget code a little more)
+ImGuiID GetIDWithSeed(*const char str, *const char str_end, ImGuiID seed)
+{
+    let mut id: ImGuiID =  ImHashStr(str, str_end ? (str_end - str) : 0, seed);
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    if (g.DebugHookIdInfo == id)
+        DebugHookIdInfo(id, ImGuiDataType_String, str, str_end);
+    return id;
+}
+
+c_void PopID()
+{
+    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    // IM_ASSERT(window.IDStack.Size > 1); // Too many PopID(), or could be popping in a wrong/different window?
+    window.IDStack.pop_back();
+}
+
+ImGuiID GetID(*const char str_id)
+{
+    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    return window.GetID(str_id);
+}
+
+ImGuiID GetID(*const char str_id_begin, *const char str_id_end)
+{
+    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    return window.GetID(str_id_begin, str_id_end);
+}
+
+ImGuiID GetID(*const c_void ptr_id)
+{
+    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    return window.GetID(ptr_id);
+}

@@ -2999,7 +2999,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
                   } else {
                      // find thing to insert AFTER
                      stbtt__active_edge *p = active;
-                     while (p.next && p.next->x < z.x)
+                     while (p.next && p. < z.x)
                         p = p.next;
                      // at this point, p->next->x is NOT < z->x
                      z.next = p.next;

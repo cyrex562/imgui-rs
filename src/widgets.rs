@@ -1918,7 +1918,7 @@ static const ImGuiDataTypeInfo GDataTypeInfo[] =
 {
     { sizeof,             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
     { sizeof(c_uchar),    "U8",   "%u",   "%u"    },
-    { sizeof(c_short),            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
+    { sizeof,            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
     { sizeof(unsigned c_short),   "U16",  "%u",   "%u"    },
     { sizeof,              "S32",  "%d",   "%d"    },  // ImGuiDataType_S32
     { sizeof,     "U32",  "%u",   "%u"    },
@@ -1982,7 +1982,7 @@ c_int DataTypeFormatString(*mut char buf, c_int buf_size, ImGuiDataType data_typ
     if (data_type == ImGuiDataType_S16)
         return ImFormatString(buf, buf_size, format, *(*const i16)p_data);
     if (data_type == ImGuiDataType_U16)
-        return ImFormatString(buf, buf_size, format, *(*const ImU16)p_data);
+        return ImFormatString(buf, buf_size, format, *(*const u16)p_data);
     // IM_ASSERT(0);
     return 0;
 }
@@ -2005,8 +2005,8 @@ c_void DataTypeApplyOp(ImGuiDataType data_type, c_int op, *mut c_void output, *c
             if (op == '-') { *(*mut i16)output = ImSubClampOverflow(*(*const i16)arg1, *(*const i16)arg2, IM_S16_MIN, IM_S16_MAX); }
             return;
         case ImGuiDataType_U16:
-            if (op == '+') { *(*mut ImU16)output = ImAddClampOverflow(*(*const ImU16)arg1, *(*const ImU16)arg2, IM_U16_MIN, IM_U16_MAX); }
-            if (op == '-') { *(*mut ImU16)output = ImSubClampOverflow(*(*const ImU16)arg1, *(*const ImU16)arg2, IM_U16_MIN, IM_U16_MAX); }
+            if (op == '+') { *(*mut u16)output = ImAddClampOverflow(*(*const u16)arg1, *(*const u16)arg2, IM_U16_MIN, IM_U16_MAX); }
+            if (op == '-') { *(*mut u16)output = ImSubClampOverflow(*(*const u16)arg1, *(*const u16)arg2, IM_U16_MIN, IM_U16_MAX); }
             return;
         case ImGuiDataType_S32:
             if (op == '+') { *(*mut i32)output = ImAddClampOverflow(*(*const i32)arg1, *(*const i32)arg2, IM_S32_MIN, IM_S32_MAX); }
@@ -2049,21 +2049,21 @@ bool DataTypeApplyFromText(*const char buf, ImGuiDataType data_type, *mut c_void
     // Copy the value in an opaque buffer so we can compare at the end of the function if it changed at all.
     let type_info: *const ImGuiDataTypeInfo = DataTypeGetInfo(data_type);
     ImGuiDataTypeTempStorage data_backup;
-    memcpy(&data_backup, p_data, type_info->Size);
+    memcpy(&data_backup, p_data, );
 
     // Sanitize format
     // For float/double we have to ignore format with precision (e.g. "%.2f") because sscanf doesn't take them in, so force them into %f and %lf
     format_sanitized: [c_char;32];
     if (data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double)
-        format = type_info->ScanFmt;
+        format = ;
     else
         format = ImParseFormatSanitizeForScanning(format, format_sanitized, IM_ARRAYSIZE(format_sanitized));
 
     // Small types need a 32-bit buffer to receive the result from scanf()
     let v32: c_int = 0;
-    if (sscanf(buf, format, type_info->Size >= 4 ? p_data : &v32) < 1)
+    if (sscanf(buf, format,  >= 4 ? p_data : &v32) < 1)
         return false;
-    if (type_info->Size < 4)
+    if ( < 4)
     {
         if (data_type == ImGuiDataType_S8)
             *(*mut i8)p_data = ImClamp(v32, IM_S8_MIN, IM_S8_MAX);
@@ -2072,12 +2072,12 @@ bool DataTypeApplyFromText(*const char buf, ImGuiDataType data_type, *mut c_void
         else if (data_type == ImGuiDataType_S16)
             *(*mut i16)p_data = (i16)ImClamp(v32, IM_S16_MIN, IM_S16_MAX);
         else if (data_type == ImGuiDataType_U16)
-            *(*mut ImU16)p_data = (ImU16)ImClamp(v32, IM_U16_MIN, IM_U16_MAX);
+            *(*mut u16)p_data = (u16)ImClamp(v32, IM_U16_MIN, IM_U16_MAX);
         else
             // IM_ASSERT(0);
     }
 
-    return memcmp(&data_backup, p_data, type_info->Size) != 0;
+    return memcmp(&data_backup, p_data, ) != 0;
 }
 
 template<typename T>
@@ -2095,7 +2095,7 @@ c_int DataTypeCompare(ImGuiDataType data_type, *const c_void arg_1, *const c_voi
     case ImGuiDataType_S8:     return DataTypeCompareT<i8  >((*const i8  )arg_1, (*const i8  )arg_2);
     case ImGuiDataType_U8:     return DataTypeCompareT<u8  >((*const u8  )arg_1, (*const u8  )arg_2);
     case ImGuiDataType_S16:    return DataTypeCompareT<i16 >((*const i16 )arg_1, (*const i16 )arg_2);
-    case ImGuiDataType_U16:    return DataTypeCompareT<ImU16 >((*const ImU16 )arg_1, (*const ImU16 )arg_2);
+    case ImGuiDataType_U16:    return DataTypeCompareT<u16 >((*const u16 )arg_1, (*const u16 )arg_2);
     case ImGuiDataType_S32:    return DataTypeCompareT<i32 >((*const i32 )arg_1, (*const i32 )arg_2);
     case ImGuiDataType_U32:    return DataTypeCompareT<u32 >((*const u32 )arg_1, (*const u32 )arg_2);
     case ImGuiDataType_S64:    return DataTypeCompareT<ImS64 >((*const ImS64 )arg_1, (*const ImS64 )arg_2);
@@ -2124,7 +2124,7 @@ bool DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, *const c_void p_
     case ImGuiDataType_S8:     return DataTypeClampT<i8  >((*mut i8  )p_data, (*const i8  )p_min, (*const i8  )p_max);
     case ImGuiDataType_U8:     return DataTypeClampT<u8  >((*mut u8  )p_data, (*const u8  )p_min, (*const u8  )p_max);
     case ImGuiDataType_S16:    return DataTypeClampT<i16 >((*mut i16 )p_data, (*const i16 )p_min, (*const i16 )p_max);
-    case ImGuiDataType_U16:    return DataTypeClampT<ImU16 >((*mut ImU16 )p_data, (*const ImU16 )p_min, (*const ImU16 )p_max);
+    case ImGuiDataType_U16:    return DataTypeClampT<u16 >((*mut u16 )p_data, (*const u16 )p_min, (*const u16 )p_max);
     case ImGuiDataType_S32:    return DataTypeClampT<i32 >((*mut i32 )p_data, (*const i32 )p_min, (*const i32 )p_max);
     case ImGuiDataType_U32:    return DataTypeClampT<u32 >((*mut u32 )p_data, (*const u32 )p_min, (*const u32 )p_max);
     case ImGuiDataType_S64:    return DataTypeClampT<ImS64 >((*mut ImS64 )p_data, (*const ImS64 )p_min, (*const ImS64 )p_max);
@@ -2333,7 +2333,7 @@ bool DragBehavior(ImGuiID id, ImGuiDataType data_type, *mut c_void p_v, c_float 
     case ImGuiDataType_S8:     { i32 v32 = (i32)*(*mut i8)p_v;  let mut r: bool =  DragBehaviorT<i32, i32, c_float>(ImGuiDataType_S32, &v32, v_speed, p_min ? *(*const i8) p_min : IM_S8_MIN,  p_max ? *(*const i8)p_max  : IM_S8_MAX,  format, flags); if (r) *(*mut i8)p_v = v32; return r; }
     case ImGuiDataType_U8:     { u32 v32 = *(*mut u8)p_v;  let mut r: bool =  DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(*const u8) p_min : IM_U8_MIN,  p_max ? *(*const u8)p_max  : IM_U8_MAX,  format, flags); if (r) *(*mut u8)p_v = v32; return r; }
     case ImGuiDataType_S16:    { i32 v32 = (i32)*(*mut i16)p_v; let mut r: bool =  DragBehaviorT<i32, i32, c_float>(ImGuiDataType_S32, &v32, v_speed, p_min ? *(*const i16)p_min : IM_S16_MIN, p_max ? *(*const i16)p_max : IM_S16_MAX, format, flags); if (r) *(*mut i16)p_v = (i16)v32; return r; }
-    case ImGuiDataType_U16:    { u32 v32 = *(*mut ImU16)p_v; let mut r: bool =  DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(*const ImU16)p_min : IM_U16_MIN, p_max ? *(*const ImU16)p_max : IM_U16_MAX, format, flags); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
+    case ImGuiDataType_U16:    { u32 v32 = *(*mut u16)p_v; let mut r: bool =  DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(*const u16)p_min : IM_U16_MIN, p_max ? *(*const u16)p_max : IM_U16_MAX, format, flags); if (r) *(*mut u16)p_v = (u16)v32; return r; }
     case ImGuiDataType_S32:    return DragBehaviorT<i32, i32, c_float >(data_type, (*mut i32)p_v,  v_speed, p_min ? *(*const i32 )p_min : IM_S32_MIN, p_max ? *(*const i32 )p_max : IM_S32_MAX, format, flags);
     case ImGuiDataType_U32:    return DragBehaviorT<u32, i32, c_float >(data_type, (*mut u32)p_v,  v_speed, p_min ? *(*const u32 )p_min : IM_U32_MIN, p_max ? *(*const u32 )p_max : IM_U32_MAX, format, flags);
     case ImGuiDataType_S64:    return DragBehaviorT<ImS64, ImS64, double>(data_type, (*mut ImS64)p_v,  v_speed, p_min ? *(*const ImS64 )p_min : IM_S64_MIN, p_max ? *(*const ImS64 )p_max : IM_S64_MAX, format, flags);
@@ -2914,7 +2914,7 @@ bool SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type, *mut 
     case ImGuiDataType_S8:  { i32 v32 = (i32)*(*mut i8)p_v;  let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, *(*const i8)p_min,  *(*const i8)p_max,  format, flags, out_grab_bb); if (r) *(*mut i8)p_v  = v32;  return r; }
     case ImGuiDataType_U8:  { u32 v32 = *(*mut u8)p_v;  let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const u8)p_min,  *(*const u8)p_max,  format, flags, out_grab_bb); if (r) *(*mut u8)p_v  = v32;  return r; }
     case ImGuiDataType_S16: { i32 v32 = (i32)*(*mut i16)p_v; let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, *(*const i16)p_min, *(*const i16)p_max, format, flags, out_grab_bb); if (r) *(*mut i16)p_v = (i16)v32; return r; }
-    case ImGuiDataType_U16: { u32 v32 = *(*mut ImU16)p_v; let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const ImU16)p_min, *(*const ImU16)p_max, format, flags, out_grab_bb); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
+    case ImGuiDataType_U16: { u32 v32 = *(*mut u16)p_v; let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const u16)p_min, *(*const u16)p_max, format, flags, out_grab_bb); if (r) *(*mut u16)p_v = (u16)v32; return r; }
     case ImGuiDataType_S32:
         // IM_ASSERT(*(*const i32)p_min >= IM_S32_MIN / 2 && *(*const i32)p_max <= IM_S32_MAX / 2);
         return SliderBehaviorT<i32, i32, c_float >(bb, id, data_type, (*mut i32)p_v,  *(*const i32)p_min,  *(*const i32)p_max,  format, flags, out_grab_bb);
@@ -3604,7 +3604,7 @@ static ImVec2 InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar t
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImFont font = g.Font;
     let line_height: c_float =  g.FontSize;
-    let scale: c_float =  line_height / font->FontSize;
+    let scale: c_float =  line_height / ;
 
     let text_size: ImVec2 = ImVec2(0, 0);
     let line_width: c_float =  0f32;
@@ -3625,7 +3625,7 @@ static ImVec2 InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar t
         if (c == '\r')
             continue;
 
-        let char_width: c_float =  font->GetCharAdvance(c) * scale;
+        let char_width: c_float =  (c) * scale;
         line_width += char_width;
     }
 
@@ -3648,7 +3648,7 @@ static ImVec2 InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar t
 namespace ImStb
 {
 
-static c_int     STB_TEXTEDIT_STRINGLEN(*const ImGuiInputTextState obj)                             { return obj->CurLenW; }
+static c_int     STB_TEXTEDIT_STRINGLEN(*const ImGuiInputTextState obj)                             { return ; }
 static ImWchar STB_TEXTEDIT_GETCHAR(*const ImGuiInputTextState obj, c_int idx)                      { return obj.TextW[idx]; }
 static c_float   STB_TEXTEDIT_GETWIDTH(*mut ImGuiInputTextState obj, c_int line_start_idx, c_int char_idx)  { let c: ImWchar = obj.TextW[line_start_idx + char_idx]; if (c == '\n') return STB_TEXTEDIT_GETWIDTH_NEWLINE; let g = GImGui; // ImGuiContext& g = *GImGui; return g.Font->GetCharAdvance(c) * (g.FontSize / g.Font->FontSize); }
 static c_int     STB_TEXTEDIT_KEYTOTEXT(c_int key)                                                    { return key >= 0x200000 ? 0 : key; }
@@ -3657,22 +3657,22 @@ static c_void    STB_TEXTEDIT_LAYOUTROW(*mut StbTexteditRow r, *mut ImGuiInputTe
 {
     let text: *const ImWchar = obj.TextW.Data;
     let text_remaining: *const ImWchar= null_mut();
-    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, text + obj->CurLenW, &text_remaining, null_mut(), true);
-    r->x0 = 0f32;
-    r->x1 = size.x;
-    r->baseline_y_delta = size.y;
-    r->ymin = 0f32;
-    r->ymax = size.y;
-    r->num_chars = (text_remaining - (text + line_start_idx));
+    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, text + , &text_remaining, null_mut(), true);
+     = 0f32;
+     = size.x;
+     = size.y;
+     = 0f32;
+     = size.y;
+     = (text_remaining - (text + line_start_idx));
 }
 
 // When ImGuiInputTextFlags_Password is set, we don't want actions such as CTRL+Arrow to leak the fact that underlying data are blanks or separators.
 static bool is_separator(c_uint c)                                        { return ImCharIsBlankW(c) || c==',' || c==';' || c=='(' || c==')' || c=='{' || c=='}' || c=='[' || c==']' || c=='|' || c=='\n' || c=='\r'; }
-static c_int  is_word_boundary_from_right(*mut ImGuiInputTextState obj, c_int idx)      { if (obj->Flags & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (is_separator(obj.TextW[idx - 1]) && !is_separator(obj.TextW[idx]) ) : 1; }
-static c_int  is_word_boundary_from_left(*mut ImGuiInputTextState obj, c_int idx)       { if (obj->Flags & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (!is_separator(obj.TextW[idx - 1]) && is_separator(obj.TextW[idx])) : 1; }
+static c_int  is_word_boundary_from_right(*mut ImGuiInputTextState obj, c_int idx)      { if ( & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (is_separator(obj.TextW[idx - 1]) && !is_separator(obj.TextW[idx]) ) : 1; }
+static c_int  is_word_boundary_from_left(*mut ImGuiInputTextState obj, c_int idx)       { if ( & ImGuiInputTextFlags_Password) return 0; return idx > 0 ? (!is_separator(obj.TextW[idx - 1]) && is_separator(obj.TextW[idx])) : 1; }
 static c_int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(*mut ImGuiInputTextState obj, c_int idx)   { idx-= 1; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx-= 1; return idx < 0 ? 0 : idx; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return idx > len ? len : idx; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return idx > len ? len : idx; }
+static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; let len: c_int = ; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return idx > len ? len : idx; }
+static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(*mut ImGuiInputTextState obj, c_int idx)   { idx+= 1; let len: c_int = ; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return idx > len ? len : idx; }
 static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(*mut ImGuiInputTextState obj, c_int idx)  { if (GetIO().ConfigMacOSXBehaviors) return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx); else return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx); }
 // #define STB_TEXTEDIT_MOVEWORDLEFT   STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
 // #define STB_TEXTEDIT_MOVEWORDRIGHT  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
@@ -3682,9 +3682,9 @@ static c_void STB_TEXTEDIT_DELETECHARS(*mut ImGuiInputTextState obj, c_int pos, 
     *mut let dst: ImWchar = obj.TextW.Data + pos;
 
     // We maintain our buffer length in both UTF-8 and wchar formats
-    obj->Edited = true;
-    obj->CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst + n);
-    obj->CurLenW -= n;
+     = true;
+     -= ImTextCountUtf8BytesFromStr(dst, dst + n);
+     -= n;
 
     // Offset remaining text (FIXME-OPT: Use memmove)
     let src: *const ImWchar = obj.TextW.Data + pos + n;
@@ -3695,12 +3695,12 @@ static c_void STB_TEXTEDIT_DELETECHARS(*mut ImGuiInputTextState obj, c_int pos, 
 
 static bool STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, c_int pos, *const ImWchar new_text, c_int new_text_len)
 {
-    let is_resizable: bool = (obj->Flags & ImGuiInputTextFlags_CallbackResize) != 0;
-    let text_len: c_int = obj->CurLenW;
+    let is_resizable: bool = ( & ImGuiInputTextFlags_CallbackResize) != 0;
+    let text_len: c_int = ;
     // IM_ASSERT(pos <= text_len);
 
     let new_text_len_utf8: c_int = ImTextCountUtf8BytesFromStr(new_text, new_text + new_text_len);
-    if (!is_resizable && (new_text_len_utf8 + obj->CurLenA + 1 > obj->BufCapacityA))
+    if (!is_resizable && (new_text_len_utf8 +  + 1 > ))
         return false;
 
     // Grow internal buffer if needed
@@ -3717,10 +3717,10 @@ static bool STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, c_int pos, *c
         memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof);
     memcpy(text + pos, new_text, new_text_len * sizeof);
 
-    obj->Edited = true;
-    obj->CurLenW += new_text_len;
-    obj->CurLenA += new_text_len_utf8;
-    obj.TextW[obj->CurLenW] = '\0';
+     = true;
+     += new_text_len;
+     += new_text_len_utf8;
+    obj.TextW[] = '\0';
 
     return true;
 }
@@ -3751,8 +3751,8 @@ static bool STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, c_int pos, *c
 // the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
 static c_void stb_textedit_replace(*mut ImGuiInputTextState str, *mut STB_TexteditState state, *const STB_TEXTEDIT_CHARTYPE text, c_int text_len)
 {
-    stb_text_makeundo_replace(str, state, 0, str->CurLenW, text_len);
-    ImStb::STB_TEXTEDIT_DELETECHARS(str, 0, str->CurLenW);
+    stb_text_makeundo_replace(str, state, 0, , text_len);
+    ImStb::STB_TEXTEDIT_DELETECHARS(str, 0, );
     if (text_len <= 0)
         return;
     if (ImStb::STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len))
@@ -4186,13 +4186,13 @@ bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_s
     {
         let glyph: *const ImFontGlyph = g.Font.FindGlyph('*');
         *mut ImFont password_font = &g.InputTextPasswordFont;
-        password_font->FontSize = g.Font.FontSize;
-        password_font->Scale = g.Font.Scale;
-        password_font->Ascent = g.Font.Ascent;
-        password_font->Descent = g.Font.Descent;
-        password_font->ContainerAtlas = g.Font.ContainerAtlas;
-        password_font->FallbackGlyph = glyph;
-        password_font->FallbackAdvanceX = glyph->AdvanceX;
+         = g.Font.FontSize;
+         = g.Font.Scale;
+         = g.Font.Ascent;
+         = g.Font.Descent;
+         = g.Font.ContainerAtlas;
+         = glyph;
+         = ;
         // IM_ASSERT(password_font->Glyphs.empty() && password_font->IndexAdvanceX.empty() && password_font->IndexLookup.empty());
         PushFont(password_font);
     }
@@ -4881,10 +4881,10 @@ c_void DebugNodeInputTextState(*mut ImGuiInputTextState state)
             if (undo_rec_type == ' ')
                 BeginDisabled();
             buf: [c_char;64] = "";
-            if (undo_rec_type != ' ' && undo_rec->char_storage != -1)
-                ImTextStrToUtf8(buf, IM_ARRAYSIZE(bu0f32), undo_state.undo_char + undo_rec->char_storage, undo_state.undo_char + undo_rec->char_storage + undo_rec->insert_length);
+            if (undo_rec_type != ' ' &&  != -1)
+                ImTextStrToUtf8(buf, IM_ARRAYSIZE(bu0f32), undo_state.undo_char + , undo_state.undo_char +  + );
             Text("%c [%02d] where %03d, insert %03d, delete %03d, char_storage %03d \"%s\"",
-                undo_rec_type, n, undo_rec->where, undo_rec->insert_length, undo_rec->delete_length, undo_rec->char_storage, bu0f32);
+                undo_rec_type, n, , , , , bu0f32);
             if (undo_rec_type == ' ')
                 EndDisabled();
         }
@@ -5151,12 +5151,12 @@ bool ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags flags)
         let mut accepted_drag_drop: bool =  false;
         if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_30f32))
         {
-            memcpy((*mut c_float)col, payload->Data, sizeof * 3); // Preserve alpha if any //-V512 //-V1086
+            memcpy((*mut c_float)col, , sizeof * 3); // Preserve alpha if any //-V512 //-V1086
             value_changed = accepted_drag_drop = true;
         }
         if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_40f32))
         {
-            memcpy((*mut c_float)col, payload->Data, sizeof * components);
+            memcpy((*mut c_float)col, , sizeof * components);
             value_changed = accepted_drag_drop = true;
         }
 
@@ -6760,7 +6760,7 @@ c_void ImGuiMenuColumns::Update(c_float spacing, bool window_reappearing)
 {
     if (window_reappearing)
         memset(Widths, 0, sizeof(Widths));
-    Spacing = (ImU16)spacing;
+    Spacing = (u16)spacing;
     CalcNextTotalWidth(true);
     memset(Widths, 0, sizeof(Widths));
     TotalWidth = NextTotalWidth;
@@ -6769,11 +6769,11 @@ c_void ImGuiMenuColumns::Update(c_float spacing, bool window_reappearing)
 
 c_void ImGuiMenuColumns::CalcNextTotalWidth(bool update_offsets)
 {
-    ImU16 offset = 0;
+    u16 offset = 0;
     let mut want_spacing: bool =  false;
     for (let i: c_int = 0; i < IM_ARRAYSIZE(Widths); i++)
     {
-        ImU16 width = Widths[i];
+        u16 width = Widths[i];
         if (want_spacing && width > 0)
             offset += Spacing;
         want_spacing |= (width > 0);
@@ -6790,10 +6790,10 @@ c_void ImGuiMenuColumns::CalcNextTotalWidth(bool update_offsets)
 
 c_float ImGuiMenuColumns::DeclColumns(c_float w_icon, c_float w_label, c_float w_shortcut, c_float w_mark)
 {
-    Widths[0] = ImMax(Widths[0], (ImU16)w_icon);
-    Widths[1] = ImMax(Widths[1], (ImU16)w_label);
-    Widths[2] = ImMax(Widths[2], (ImU16)w_shortcut);
-    Widths[3] = ImMax(Widths[3], (ImU16)w_mark);
+    Widths[0] = ImMax(Widths[0], (u16)w_icon);
+    Widths[1] = ImMax(Widths[1], (u16)w_label);
+    Widths[2] = ImMax(Widths[2], (u16)w_shortcut);
+    Widths[3] = ImMax(Widths[3], (u16)w_mark);
     CalcNextTotalWidth(false);
     return ImMax(TotalWidth, NextTotalWidth);
 }
@@ -6845,7 +6845,7 @@ c_void EndMenuBar()
         let mut nav_earliest_child: *mut ImGuiWindow =  g.NavWindow;
         while (nav_earliest_child->ParentWindow && (nav_earliest_child->Parentwindow.Flags & ImGuiWindowFlags_ChildMenu))
             nav_earliest_child = nav_earliest_child->ParentWindow;
-        if (nav_earliest_child->ParentWindow == window && nav_earliest_child->DC.ParentLayoutType == ImGuiLayoutType_Horizontal && (g.NavMoveFlags & ImGuiNavMoveFlags_Forwarded) == 0)
+        if (nav_earliest_child->ParentWindow == window && nav_earliest_child.DC.ParentLayoutType == ImGuiLayoutType_Horizontal && (g.NavMoveFlags & ImGuiNavMoveFlags_Forwarded) == 0)
         {
             // To do so we claim focus back, restore NavId and then process the movement request for yet another frame.
             // This involve a one-frame delay which isn't very problematic in this situation. We could remove it by scoring in advance for multiple window (probably not worth bothering)

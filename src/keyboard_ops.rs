@@ -155,7 +155,7 @@ pub unsafe fn SetActiveIdUsingALlKeyboardKeys()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.ActiveId != 0);
-    g.ActiveIdUsingNavDirMask = ~0;
+    g.ActiveIdUsingNavDirMask = !0;
     g.ActiveIdUsingKeyInputMask.SetBitRange(ImGuiKey_Keyboard_BEGIN, ImGuiKey_Keyboard_END);
     g.ActiveIdUsingKeyInputMask.SetBit(ImGuiKey_ModCtrl);
     g.ActiveIdUsingKeyInputMask.SetBit(ImGuiKey_ModShift);

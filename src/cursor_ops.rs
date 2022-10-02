@@ -34,3 +34,72 @@ pub fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries() {
     window.DC.CursorMaxPos = ImMax(&window.DC.CursorMaxPos, &window.DC.CursorPos);
 // #endif
 }
+
+
+
+ImVec2 GetCursorScreenPos()
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
+    return window.DC.CursorPos;
+}
+
+// 2022/08/05: Setting cursor position also extend boundaries (via modifying CursorMaxPos) used to compute window size, group size etc.
+// I believe this was is a judicious choice but it's probably being relied upon (it has been the case since 1.31 and 1.50)
+// It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2(0,0)) to extend CursorMaxPos...
+c_void SetCursorScreenPos(const ImVec2& pos)
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.CursorPos = pos;
+    //window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, window.DC.CursorPos);
+    window.DC.IsSetPos = true;
+}
+
+// User generally sees positions in window coordinates. Internally we store CursorPos in absolute screen coordinates because it is more convenient.
+// Conversion happens as we pass the value to user, but it makes our naming convention confusing because GetCursorPos() == (DC.CursorPos - window.Pos). May want to rename 'DC.CursorPos'.
+ImVec2 GetCursorPos()
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
+    return window.DC.CursorPos - window.Pos + window.Scroll;
+}
+
+c_float GetCursorPosX()
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
+    return window.DC.CursorPos.x - window.Pos.x + window.Scroll.x;
+}
+
+c_float GetCursorPosY()
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
+    return window.DC.CursorPos.y - window.Pos.y + window.Scroll.y;
+}
+
+c_void SetCursorPos(const ImVec2& local_pos)
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.CursorPos = window.Pos - window.Scroll + local_pos;
+    //window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, window.DC.CursorPos);
+    window.DC.IsSetPos = true;
+}
+
+c_void SetCursorPosX(c_float x)
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.CursorPos.x = window.Pos.x - window.Scroll.x + x;
+    //window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPos.x);
+    window.DC.IsSetPos = true;
+}
+
+c_void SetCursorPosY(c_float y)
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.CursorPos.y = window.Pos.y - window.Scroll.y + y;
+    //window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y);
+    window.DC.IsSetPos = true;
+}
+
+ImVec2 GetCursorStartPos()
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
+    return window.DC.CursorStartPos - window.Pos;
+}

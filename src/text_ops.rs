@@ -29,3 +29,66 @@ let text_display_end: *const c_char;
 
     return text_size;
 }
+
+
+c_void PushTextWrapPos(c_float wrap_pos_x)
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.TextWrapPosStack.push(window.DC.TextWrapPos);
+    window.DC.TextWrapPos = wrap_pos_x;
+}
+
+c_void PopTextWrapPos()
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.TextWrapPos = window.DC.TextWrapPosStack.last().unwrap();
+    window.DC.TextWrapPosStack.pop_back();
+}
+
+static ImGuiWindow* GetCombinedRootWindow(ImGuiWindow* window, bool popup_hierarchy, bool dock_hierarchy)
+{
+    let mut last_window: *mut ImGuiWindow =  null_mut();
+    while (last_window != window)
+    {
+        last_window = window;
+        window = window.RootWindow;
+        if (popup_hierarchy)
+            window = window.RootWindowPopupTree;
+		if (dock_hierarchy)
+			window = window.RootWindowDockTree;
+	}
+    return window;
+}
+
+
+
+
+c_void Indent(c_float indent_w)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.Indent.x += (indent_w != 0f32) ? indent_w : g.Style.IndentSpacing;
+    window.DC.CursorPos.x = window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x;
+}
+
+c_void Unindent(c_float indent_w)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.Indent.x -= (indent_w != 0f32) ? indent_w : g.Style.IndentSpacing;
+    window.DC.CursorPos.x = window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x;
+}
+
+
+
+c_float GetTextLineHeight()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.FontSize;
+}
+
+c_float GetTextLineHeightWithSpacing()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.FontSize + g.Style.ItemSpacing.y;
+}

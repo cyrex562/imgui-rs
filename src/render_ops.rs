@@ -27,6 +27,7 @@ use crate::nav_highlight_flags::{ImGuiNavHighlightFlags, ImGuiNavHighlightFlags_
 use crate::rect::ImRect;
 use crate::string_ops::{ImTextCountUtf8BytesFromChar, ImTextCountUtf8BytesFromChar2, ImTextCountUtf8BytesFromStr};
 use crate::style_ops::GetColorU32;
+use crate::text_ops::CalcTextSize;
 use crate::type_defs::{ImGuiID, ImTextureID, ImWchar};
 use crate::utils::flag_set;
 use crate::vec2::ImVec2;
@@ -69,7 +70,7 @@ pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const 
     }
 
     if text != text_display_end {
-        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_display_end, 0f32, null());
+        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0f32, ), text, text_display_end, 0f32, null());
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_display_end);
         }
@@ -88,7 +89,7 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: 
 
     if text != text_end
     {
-        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_end, wrap_width, null());
+        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0f32, ), text, text_end, wrap_width, null());
         if g.LogEnabled {
             LogRenderedText(&pos, text, text_end);
         }
@@ -121,9 +122,9 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
     // Render
     if need_clipping {
         let mut fine_clip_rect = ImVec4::new2(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
-        draw_list.AddText2(null(), 0f32, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_display_end, 0f32, &fine_clip_rect);
+        draw_list.AddText2(null(), 0f32, &pos, GetColorU32(ImGuiCol_Text, 0f32, ), text, text_display_end, 0f32, &fine_clip_rect);
     } else {
-        draw_list.AddText2(null_mut(), 0f32, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_display_end, 0f32, null_mut());
+        draw_list.AddText2(null_mut(), 0f32, &pos, GetColorU32(ImGuiCol_Text, 0f32, ), text, text_display_end, 0f32, null_mut());
     }
 }
 
@@ -208,7 +209,7 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
         if ellipsis_x + ellipsis_total_width <= ellipsis_max_x {
             // for (let i: c_int = 0; i < ellipsis_char_count; i+ +)
             for i in 0..ellipsis_char_count {
-                font.RenderChar(draw_list, font_size, ImVec2(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text, 0f32), ellipsis_char);
+                font.RenderChar(draw_list, font_size, ImVec2(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text, 0f32, ), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
         }
@@ -229,8 +230,8 @@ pub unsafe fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: b
     window.DrawList.AddRectFilled(&p_min, &p_max, fill_col, rounding, ImDrawFlags_None);
     let border_size: c_float = g.Style.FrameBorderSize;
     if border && border_size > 0f32 {
-        window.DrawList.AddRect(p_min + ImVec2::new2(1f32, 1f32), p_max + ImVec2::new2(1f32, 1f32), GetColorU32(ImGuiCol_BorderShadow, 0f32), rounding, 0, border_size);
-        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0f32), rounding, 0, border_size);
+        window.DrawList.AddRect(p_min + ImVec2::new2(1f32, 1f32), p_max + ImVec2::new2(1f32, 1f32), GetColorU32(ImGuiCol_BorderShadow, 0f32, ), rounding, 0, border_size);
+        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0f32, ), rounding, 0, border_size);
     }
 }
 
@@ -240,8 +241,8 @@ pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float)
     let mut window = g.CurrentWindow;
     let border_size: c_float = g.Style.FrameBorderSize;
     if border_size > 0f32 {
-        window.DrawList.AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow, 0f32), rounding, 0, border_size);
-        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0f32), rounding, 0, border_size);
+        window.DrawList.AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow, 0f32, ), rounding, 0, border_size);
+        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0f32, ), rounding, 0, border_size);
     }
 }
 
@@ -270,13 +271,13 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
         if !fully_visible {
             window.DrawList.PushClipRect(&display_rect.Min, &display_rect.Max, false);
         }
-        window.DrawList.AddRect(display_rect.Min + ImVec2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), display_rect.Max - ImVec2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), GetColorU32(ImGuiCol_NavHighlight, 0f32), rounding, 0, THICKNESS);
+        window.DrawList.AddRect(display_rect.Min + ImVec2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), display_rect.Max - ImVec2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), GetColorU32(ImGuiCol_NavHighlight, 0f32, ), rounding, 0, THICKNESS);
         if !fully_visible {
             window.DrawList.PopClipRect();
         }
     }
     if flags & ImGuiNavHighlightFlags_TypeThin {
-        window.DrawList.AddRect(&display_rect.Min, &display_rect.Max, GetColorU32(ImGuiCol_NavHighlight, 0f32), rounding, 0, 1f32);
+        window.DrawList.AddRect(&display_rect.Min, &display_rect.Max, GetColorU32(ImGuiCol_NavHighlight, 0f32, ), rounding, 0, 1f32);
     }
 }
 
