@@ -3,30 +3,41 @@
 // [SECTION] RENDER HELPERS
 // Some of those (internal) functions are currently quite a legacy mess - their signature and behavior will change,
 // we need a nicer separation between low-level functions and high-level functions relying on the ImGui context.
-// Also see imgui_draw.cpp for some more which have been reworked to not rely on ImGui:: context.
+// Also see imgui_draw.cpp for some more which have been reworked to not rely on  context.
 //-----------------------------------------------------------------------------
 
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int};
-use crate::color::{ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight, ImGuiCol_Text};
+use crate::CallContextHooks;
+use crate::color::{IM_COL32, IM_COL32_BLACK, IM_COL32_WHITE, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight, ImGuiCol_Text};
+use crate::context_hook::{ImGuiContextHookType_RenderPost, ImGuiContextHookType_RenderPre};
+use crate::draw_data::ImDrawData;
+use crate::draw_data_ops::{AddDrawListToDrawData, AddRootWindowToDrawData};
 use crate::draw_flags::ImDrawFlags_None;
-use crate::drawlist::ImDrawList;
+use crate::draw_list::ImDrawList;
+use crate::draw_list_ops::{GetBackgroundDrawList, GetForegroundDrawList};
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::font_glyph::ImFontGlyph;
+use crate::frame_ops::EndFrame;
 use crate::imgui::GImGui;
 use crate::logging_ops::LogRenderedText;
-use crate::mouse_cursor::ImGuiMouseCursor;
+use crate::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_None};
 use crate::nav_highlight_flags::{ImGuiNavHighlightFlags, ImGuiNavHighlightFlags_AlwaysDraw, ImGuiNavHighlightFlags_NoRounding, ImGuiNavHighlightFlags_TypeDefault, ImGuiNavHighlightFlags_TypeThin};
 use crate::rect::ImRect;
 use crate::string_ops::{ImTextCountUtf8BytesFromChar, ImTextCountUtf8BytesFromChar2, ImTextCountUtf8BytesFromStr};
 use crate::style_ops::GetColorU32;
 use crate::type_defs::{ImGuiID, ImTextureID, ImWchar};
+use crate::utils::flag_set;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::viewport::ImGuiViewport;
+use crate::viewport_ops::SetupViewportDrawData;
+use crate::window::ImGuiWindow;
+use crate::window_flags::{ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoBringToFrontOnFocus};
+use crate::window_ops::{IsWindowActiveAndVisible, RenderDimmedBackgrounds};
 
-// *const char ImGui::FindRenderedTextEnd(*const char text, *const char text_end)
+// *const char FindRenderedTextEnd(*const char text, *const char text_end)
 pub unsafe fn FindRenderedTextEnd(text: *const c_char, mut text_end: *const c_char) -> *const c_char {
     let mut text_display_end: *const c_char = text;
     if !text_end {
@@ -41,7 +52,7 @@ pub unsafe fn FindRenderedTextEnd(text: *const c_char, mut text_end: *const c_ch
 
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
-// c_void ImGui::RenderText(ImVec2 pos, *const char text, *const char text_end, bool hide_text_after_hash)
+// c_void RenderText(ImVec2 pos, *const char text, *const char text_end, bool hide_text_after_hash)
 pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const c_char, hide_text_after_hash: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -65,7 +76,7 @@ pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const 
     }
 }
 
-// c_void ImGui::RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width)
+// c_void RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width)
 pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -78,7 +89,7 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: 
     if text != text_end
     {
         window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_end, wrap_width, null());
-        if (g.LogEnabled) {
+        if g.LogEnabled {
             LogRenderedText(&pos, text, text_end);
         }
     }
@@ -86,7 +97,7 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: 
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
-// c_void ImGui::RenderTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_display_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
+// c_void RenderTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_display_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
 pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_display_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     let mut pos: ImVec2 = pos_min.clone();
@@ -112,11 +123,11 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
         let mut fine_clip_rect = ImVec4::new2(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
         draw_list.AddText2(null(), 0f32, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_display_end, 0f32, &fine_clip_rect);
     } else {
-        draw_list.AddText2(NULL, 0f32, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_display_end, 0f32, NULL);
+        draw_list.AddText2(null_mut(), 0f32, &pos, GetColorU32(ImGuiCol_Text, 0f32), text, text_display_end, 0f32, null_mut());
     }
 }
 
-// c_void ImGui::RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
+// c_void RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
 pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Hide anything after a '##' string
     let mut text_display_end: *const c_char = FindRenderedTextEnd(text, text_end);
@@ -137,7 +148,7 @@ pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
-// c_void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end_full, *const ImVec2 text_size_if_known)
+// c_void RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end_full, *const ImVec2 text_size_if_known)
 pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, clip_max_x: c_float, ellipsis_max_x: c_float, text: *const c_char, mut text_end_full: *const c_char, text_size_if_known: *const ImVec2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if text_end_full == null() {
@@ -145,9 +156,9 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
     }
     let text_size: ImVec2 = if text_size_if_known { (*text_size_if_known).clone() } else { CalcTextSize(text, text_end_full, false, 0f32) };
 
-    //draw_list->AddLine(ImVec2(pos_max.x, pos_min.y - 4), ImVec2(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
-    //draw_list->AddLine(ImVec2(ellipsis_max_x, pos_min.y-2), ImVec2(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
-    //draw_list->AddLine(ImVec2(clip_max_x, pos_min.y), ImVec2(clip_max_x, pos_max.y), IM_COL32(255, 0, 0, 255));
+    //draw_list.AddLine(ImVec2(pos_max.x, pos_min.y - 4), ImVec2(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
+    //draw_list.AddLine(ImVec2(ellipsis_max_x, pos_min.y-2), ImVec2(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
+    //draw_list.AddLine(ImVec2(clip_max_x, pos_min.y), ImVec2(clip_max_x, pos_max.y), IM_COL32(255, 0, 0, 255));
     // FIXME: We could technically remove (last_glyph->AdvanceX - last_glyph->X1) from text_size.x here and save a few pixels.
     if text_size.x > pos_max.x - pos_min.x {
         // Hello wo...
@@ -211,8 +222,8 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
 }
 
 // Render a rectangle shaped with optional rounding and borders
-// c_void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, bool border, c_float rounding)
-pub fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: bool, rounding: c_float) {
+// c_void RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, bool border, c_float rounding)
+pub unsafe fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: bool, rounding: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     window.DrawList.AddRectFilled(&p_min, &p_max, fill_col, rounding, ImDrawFlags_None);
@@ -223,8 +234,8 @@ pub fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: bool, ro
     }
 }
 
-// c_void ImGui::RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, c_float rounding)
-pub fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float) {
+// c_void RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, c_float rounding)
+pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     let border_size: c_float = g.Style.FrameBorderSize;
@@ -234,8 +245,8 @@ pub fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float) {
     }
 }
 
-// c_void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
-pub fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighlightFlags) {
+// c_void RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
+pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighlightFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if id != g.NavId {
         return;
@@ -269,8 +280,8 @@ pub fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighlightFlag
     }
 }
 
-// c_void ImGui::RenderMouseCursor(ImVec2 base_pos, c_float base_scale, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow)
-pub fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cursor: ImGuiMouseCursor, col_fill: u32, col_border: u32, col_shadow: u32) {
+// c_void RenderMouseCursor(ImVec2 base_pos, c_float base_scale, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow)
+pub unsafe fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cursor: ImGuiMouseCursor, col_fill: u32, col_border: u32, col_shadow: u32) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(mouse_cursor > ImGuiMouseCursor_None && mouse_cursor < ImGuiMouseCursor_COUNT);
     let mut font_atlas: *mut ImFontAtlas = g.DrawListSharedData.Font.ContainerAtlas;
@@ -301,4 +312,88 @@ pub fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cursor: Im
         draw_list.AddImage(tex_id, &pos, &pos + &size * scale, &uv[0], &uv[1], col_fill);
         draw_list.PopTextureID();
     }
+}
+
+
+// Prepare the data for rendering so you can call GetDrawData()
+// (As with anything within the  namspace this doesn't touch your GPU or graphics API at all:
+// it is the role of the ImGui_ImplXXXX_RenderDrawData() function provided by the renderer backend)
+// c_void Render()
+pub unsafe fn Render()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.Initialized);
+
+    if g.FrameCountEnded != g.FrameCount {
+        EndFrame();
+    }
+    let first_render_of_frame: bool = (g.FrameCountRendered != g.FrameCount);
+    g.FrameCountRendered = g.FrameCount;
+    g.IO.MetricsRenderWindows = 0;
+
+    CallContextHooks(g, ImGuiContextHookType_RenderPre);
+
+    // Add background ImDrawList (for each active viewport)
+    // for (let n: c_int = 0; n != g.Viewports.Size; n++)
+    for n in 0 .. g.Viewports.len()
+    {
+        let mut viewport: *mut ImGuiViewport =  g.Viewports[n];
+        viewport.DrawDataBuilder.Clear();
+        if viewport.DrawLists[0] != null_mut() {
+            AddDrawListToDrawData(&mut viewport.DrawDataBuilder.Layers[0], GetBackgroundDrawList(viewport));
+        }
+    }
+
+    // Add ImDrawList to render
+    let mut windows_to_render_top_most: [*mut ImGuiWindow;2] = [null_mut(),null_mut()];
+    windows_to_render_top_most[0] = if g.NavWindowingTarget.is_null() == false && !flag_set(g.NavWindowingTarget.Flags, ImGuiWindowFlags_NoBringToFrontOnFocus) { g.NavWindowingTarget.RootWindowDockTree } else { null_mut() };
+    windows_to_render_top_most[1] =  (if g.NavWindowingTarget { g.NavWindowingListWindow } else { null_mut() });
+    // for (let n: c_int = 0; n != g.Windows.Size; n++)
+    for n in 0 .. g.Windows.len()
+    {
+        let mut window: *mut ImGuiWindow =  g.Windows[n];
+        IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
+        if IsWindowActiveAndVisible(window) && (window.Flags & ImGuiWindowFlags_ChildWindow) == 0 && window != windows_to_render_top_most[0] && window != windows_to_render_top_most[1] {
+            AddRootWindowToDrawData(window);
+        }
+    }
+    // for (let n: c_int = 0; n < IM_ARRAYSIZE(windows_to_render_top_most); n++)
+    for n in 0 .. windows_to_render_top_most.len()
+    {
+        if !(windows_to_render_top_most[n].is_null()) && IsWindowActiveAndVisible(windows_to_render_top_most[n]) { // NavWindowingTarget is always temporarily displayed as the top-most window
+            AddRootWindowToDrawData(windows_to_render_top_most[n]);
+        }
+    }
+
+    // Draw modal/window whitening backgrounds
+    if first_render_of_frame {
+        RenderDimmedBackgrounds();
+    }
+
+    // Draw software mouse cursor if requested by io.MouseDrawCursor flag
+    if g.IO.MouseDrawCursor && first_render_of_frame && g.MouseCursor != ImGuiMouseCursor_None {
+        RenderMouseCursor(g.IO.MousePos.clone(), g.Style.MouseCursorScale, g.MouseCursor, IM_COL32_WHITE, IM_COL32_BLACK, IM_COL32(0, 0, 0, 48));
+    }
+
+    // Setup ImDrawData structures for end-user
+    g.IO.MetricsRenderVertices = 0;
+    g.IO.MetricsRenderIndices = 0;
+    // for (let n: c_int = 0; n < g.Viewports.Size; n++)
+    for n in 0 .. g.Viewports.len()
+    {
+        let mut viewport: *mut ImGuiViewport =  g.Viewports[n];
+        viewport.DrawDataBuilder.FlattenIntoSingleLayer();
+
+        // Add foreground ImDrawList (for each active viewport)
+        if viewport.DrawLists[1] != null_mut() {
+            AddDrawListToDrawData(&mut viewport.DrawDataBuilder.Layers[0], GetForegroundDrawList(viewport));
+        }
+
+        SetupViewportDrawData(viewport, &mut viewport.DrawDataBuilder.Layers[0]);
+        let draw_data = viewport.DrawData;
+        g.IO.MetricsRenderVertices += draw_Data.TotalVtxCount;
+        g.IO.MetricsRenderIndices += draw_Data.TotalIdxCount;
+    }
+
+    CallContextHooks(g, ImGuiContextHookType_RenderPost);
 }

@@ -4,7 +4,7 @@
 //-----------------------------------------------------------------------------
 
 use std::ptr::null_mut;
-use libc::{c_char, c_float, c_int, c_uchar, c_void};
+use libc::{c_char, c_double, c_float, c_int, c_uchar, c_void};
 use crate::activate_flags::{ImGuiActivateFlags, ImGuiActivateFlags_None};
 use crate::chunk_stream::ImChunkStream;
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
@@ -72,7 +72,7 @@ pub struct ImGuiContext {
     // bool                    Initialized;
     pub Initialized: bool,
 
-    // bool                    FontAtlasOwnedByContext;            // IO.Fonts-> is owned by the ImGuiContext and will be destructed along with it.
+    // bool                    FontAtlasOwnedByContext;            // IO.Fonts. is owned by the ImGuiContext and will be destructed along with it.
     pub FontAtlasOwnedByContext: bool,
 
     // ImGuiIO                 IO;
@@ -109,7 +109,7 @@ pub struct ImGuiContext {
     pub DrawListSharedData: ImDrawListSharedData,
 
     // double                  Time;
-    pub Time: c_float,
+    pub Time: c_double
 
     // int                     FrameCount;
     pub FrameCount: c_int,

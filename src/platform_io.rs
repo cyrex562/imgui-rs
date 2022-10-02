@@ -2,7 +2,7 @@
 
 use libc::{c_char, c_float, c_void};
 
-// (Optional) Access via ImGui::GetPlatformIO()
+// (Optional) Access via GetPlatformIO()
 #[derive(Default,Debug,Clone)]
 pub struct ImGuiPlatformIO
 {
@@ -12,11 +12,11 @@ pub struct ImGuiPlatformIO
 
     // (Optional) Platform functions (e.g. Win32, GLFW, SDL2)
     // For reference, the second column shows which function are generally calling the Platform Functions:
-    //   N = ImGui::NewFrame()                        ~ beginning of the dear imgui frame: read info from platform/OS windows (latest size/position)
-    //   F = ImGui::Begin(), ImGui::EndFrame()        ~ during the dear imgui frame
-    //   U = ImGui::UpdatePlatformWindows()           ~ after the dear imgui frame: create and update all platform/OS windows
-    //   R = ImGui::RenderPlatformWindowsDefault()    ~ render
-    //   D = ImGui::DestroyPlatformWindows()          ~ shutdown
+    //   N = NewFrame()                        ~ beginning of the dear imgui frame: read info from platform/OS windows (latest size/position)
+    //   F = Begin(), EndFrame()        ~ during the dear imgui frame
+    //   U = UpdatePlatformWindows()           ~ after the dear imgui frame: create and update all platform/OS windows
+    //   R = RenderPlatformWindowsDefault()    ~ render
+    //   D = DestroyPlatformWindows()          ~ shutdown
     // The general idea is that NewFrame() we will read the current Platform/OS state, and UpdatePlatformWindows() will write to it.
     //
     // The functions are designed so we can mix and match 2 imgui_impl_xxxx files, one for the Platform (~window/input handling), one for Renderer.
@@ -82,7 +82,7 @@ pub struct ImGuiPlatformIO
 
     // void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
 
-    // void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    // void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport.DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
     // void    (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
@@ -96,7 +96,7 @@ pub struct ImGuiPlatformIO
     // Output - List of viewports to render into platform windows
     //------------------------------------------------------------------
 
-    // Viewports list (the list is updated by calling ImGui::EndFrame or ImGui::Render)
+    // Viewports list (the list is updated by calling EndFrame or Render)
     // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
     // ImVector<ImGuiViewport*>        Viewports;                              // Main viewports, followed by all secondary viewports.
     pub Viewports: Vec<ImGUiViewport>,

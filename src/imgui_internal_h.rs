@@ -193,7 +193,7 @@ Index of this file:
 // #endif
 
 // Debug Logging for ShowDebugLogWindow(). This is designed for relatively rare events so please don't spam.
-// #define IMGUI_DEBUG_LOG(...)            ImGui::DebugLog(__VA_ARGS__);
+// #define IMGUI_DEBUG_LOG(...)            DebugLog(__VA_ARGS__);
 // #define IMGUI_DEBUG_LOG_ACTIVEID(...)   do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventActiveId) IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
 // #define IMGUI_DEBUG_LOG_FOCUS(...)      do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventFocus)    IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
 // #define IMGUI_DEBUG_LOG_POPUP(...)      do { if (g.DebugLogFlags & ImGuiDebugLogFlags_EventPopup)    IMGUI_DEBUG_LOG(__VA_ARGS__); } while (0)
@@ -343,7 +343,7 @@ static inline bool      ImCharIsBlankW(c_uint c)  { return c == ' ' || c == '\t'
  *const char   ImTextCharToUtf8(out_buf: [c_char;5], c_uint c);                                                      // return out_buf
  c_int           ImTextStrToUtf8(*mut char out_buf, c_int out_buf_size, *const ImWchar in_text, *const ImWchar in_text_end);   // return output UTF-8 bytes count
  c_int           ImTextCharFromUtf8(*mut c_uint out_char, *const char in_text, *const char in_text_end);               // read one character. return input UTF-8 bytes count
- c_int           ImTextStrFromUtf8(*mut ImWchar out_buf, c_int out_buf_size, *const char in_text, *const char in_text_end, *const *mut char in_remaining = NULL);   // return input UTF-8 bytes count
+ c_int           ImTextStrFromUtf8(*mut ImWchar out_buf, c_int out_buf_size, *const char in_text, *const char in_text_end, *const *mut char in_remaining = null_mut());   // return input UTF-8 bytes count
  c_int           ImTextCountCharsFromUtf8(*const char in_text, *const char in_text_end);                                 // return number of UTF-8 code-points (NOT bytes count)
  c_int           ImTextCountUtf8BytesFromChar(*const char in_text, *const char in_text_end);                             // return number of bytes to express one char in UTF-8
  c_int           ImTextCountUtf8BytesFromStr(*const ImWchar in_text, *const ImWchar in_text_end);                        // return number of bytes to express string in UTF-8
@@ -375,7 +375,7 @@ IM_MSVC_RUNTIME_CHECKS_RESTORE
 // #ifdef IMGUI_DISABLE_FILE_FUNCTIONS
 // #define IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 typedef *mut c_void ImFileHandle;
-static inline ImFileHandle  ImFileOpen(*const char, *const char)                    { return NULL; }
+static inline ImFileHandle  ImFileOpen(*const char, *const char)                    { return null_mut(); }
 static inline bool          ImFileClose(ImFileHandle)                               { return false; }
 static inline u64         ImFileGetSize(ImFileHandle)                             { return (u64)-1; }
 static inline u64         ImFileRead(*mut c_void, u64, u64, ImFileHandle)           { return 0; }
@@ -391,7 +391,7 @@ static inline u64         ImFileWrite(*const c_void, u64, u64, ImFileHandle)    
 // #else
 // #define IMGUI_DISABLE_TTY_FUNCTIONS // Can't use stdout, fflush if we are not using default file functions
 // #endif
- *mut c_void             ImFileLoadToMemory(*const char filename, *const char mode, *mut size_t out_file_size = NULL, let padding_bytes: c_int = 0);
+ *mut c_void             ImFileLoadToMemory(*const char filename, *const char mode, *mut size_t out_file_size = null_mut(), let padding_bytes: c_int = 0);
 
 // Helpers: Maths
 IM_MSVC_RUNTIME_CHECKS_OFF
@@ -533,7 +533,7 @@ struct ImSpanAllocator
     c_int     Sizes[CHUNKS];
 
     ImSpanAllocator()                               { memset(this, 0, sizeof(*this)); }
-    inline c_void  Reserve(c_int n, size_t sz, c_int a=4) { IM_ASSERT(n == CurrIdx && n < CHUNKS); CurrOff = IM_MEMALIGN(CurrOff, a); Offsets[n] = CurrOff; Sizes[n] = sz; CurrIdx+= 1; CurrOff += sz; }
+    inline c_void  Reserve(c_int n, size_t sz, let mut a: c_int = 4) { IM_ASSERT(n == CurrIdx && n < CHUNKS); CurrOff = IM_MEMALIGN(CurrOff, a); Offsets[n] = CurrOff; Sizes[n] = sz; CurrIdx+= 1; CurrOff += sz; }
     inline c_int   GetArenaSizeInBytes()              { return CurrOff; }
     inline c_void  SetArenaBasePtr(*mut c_void base_ptr)    { BasePtr = (*mut char)base_ptr; }
     inline *mut c_void GetSpanPtrBegin(c_int n)             { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (*mut c_void)(BasePtr + Offsets[n]); }
@@ -578,28 +578,6 @@ struct ImSpanAllocator
 //-----------------------------------------------------------------------------
 
 
-
-// Storage for LastItem data
-enum ImGuiItemStatusFlags_
-{
-    ImGuiItemStatusFlags_None               = 0,
-    ImGuiItemStatusFlags_HoveredRect        = 1 << 0,   // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!, this is only one part of the most-common IsItemHovered test)
-    ImGuiItemStatusFlags_HasDisplayRect     = 1 << 1,   // g.LastItemData.DisplayRect is valid
-    ImGuiItemStatusFlags_Edited             = 1 << 2,   // Value exposed by item was edited in the current frame (should match the bool return value of most widgets)
-    ImGuiItemStatusFlags_ToggledSelection   = 1 << 3,   // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
-    ImGuiItemStatusFlags_ToggledOpen        = 1 << 4,   // Set when TreeNode() reports toggling their open state.
-    ImGuiItemStatusFlags_HasDeactivated     = 1 << 5,   // Set if the widget/group is able to provide data for the ImGuiItemStatusFlags_Deactivated flag.
-    ImGuiItemStatusFlags_Deactivated        = 1 << 6,   // Only valid if ImGuiItemStatusFlags_HasDeactivated is set.
-    ImGuiItemStatusFlags_HoveredWindow      = 1 << 7,   // Override the HoveredWindow test to allow cross-window hover testing.
-    ImGuiItemStatusFlags_FocusedByTabbing   = 1 << 8,   // Set when the Focusable item just got focused by Tabbing (FIXME: to be removed soon)
-
-// #ifdef IMGUI_ENABLE_TEST_ENGINE
-    ImGuiItemStatusFlags_Openable           = 1 << 20,  // Item is an openable (e.g. TreeNode)
-    ImGuiItemStatusFlags_Opened             = 1 << 21,  //
-    ImGuiItemStatusFlags_Checkable          = 1 << 22,  // Item is a checkable (e.g. CheckBox, MenuItem)
-    ImGuiItemStatusFlags_Checked            = 1 << 23,  //
-// #endif
-};
 
 // Extend ImGuiInputTextFlags_
 enum ImGuiInputTextFlagsPrivate_
@@ -724,13 +702,7 @@ let PrintFmt: *const c_char;       // Default printf format for the type
 let ScanFmt: *const c_char;        // Default scanf format for the type
 };
 
-// Extend ImGuiDataType_
-enum ImGuiDataTypePrivate_
-{
-    ImGuiDataType_String = ImGuiDataType_COUNT + 1,
-    ImGuiDataType_Pointer,
-    ImGuiDataType_ID,
-};
+
 
 
 
@@ -794,66 +766,14 @@ enum ImGuiNextItemDataFlags_
 
 
 
-// Extend ImGuiKey_
-enum ImGuiKeyPrivate_
-{
-    ImGuiKey_LegacyNativeKey_BEGIN  = 0,
-    ImGuiKey_LegacyNativeKey_END    = 512,
-    ImGuiKey_Keyboard_BEGIN         = ImGuiKey_NamedKey_BEGIN,
-    ImGuiKey_Keyboard_END           = ImGuiKey_GamepadStart,
-    ImGuiKey_Gamepad_BEGIN          = ImGuiKey_GamepadStart,
-    ImGuiKey_Gamepad_END            = ImGuiKey_GamepadRStickDown + 1,
-    ImGuiKey_Aliases_BEGIN          = ImGuiKey_MouseLeft,
-    ImGuiKey_Aliases_END            = ImGuiKey_COUNT,
-
-    // [Internal] Named shortcuts for Navigation
-    ImGuiKey_NavKeyboardTweakSlow   = ImGuiKey_ModCtrl,
-    ImGuiKey_NavKeyboardTweakFast   = ImGuiKey_ModShift,
-    ImGuiKey_NavGamepadTweakSlow    = ImGuiKey_GamepadL1,
-    ImGuiKey_NavGamepadTweakFast    = ImGuiKey_GamepadR1,
-    ImGuiKey_NavGamepadActivate     = ImGuiKey_GamepadFaceDown,
-    ImGuiKey_NavGamepadCancel       = ImGuiKey_GamepadFaceRight,
-    ImGuiKey_NavGamepadMenu         = ImGuiKey_GamepadFaceLeft,
-    ImGuiKey_NavGamepadInput        = ImGuiKey_GamepadFaceUp,
-};
-
-enum ImGuiInputEventType
-{
-    ImGuiInputEventType_None = 0,
-    ImGuiInputEventType_MousePos,
-    ImGuiInputEventType_MouseWheel,
-    ImGuiInputEventType_MouseButton,
-    ImGuiInputEventType_MouseViewport,
-    ImGuiInputEventType_Key,
-    ImGuiInputEventType_Text,
-    ImGuiInputEventType_Focus,
-    ImGuiInputEventType_COUNT
-};
 
 
 
-// FIXME: Structures in the union below need to be declared as anonymous unions appears to be an extension?
-// Using ImVec2() would fail on Clang 'union member 'MousePos' has a non-trivial default constructor'
-struct ImGuiInputEventMousePos      { c_float PosX, PosY; };
-struct ImGuiInputEventMouseWheel    { c_float WheelX, WheelY; };
-struct ImGuiInputEventMouseButton   { c_int Button; bool Down; };
-struct ImGuiInputEventMouseViewport { ImGuiID HoveredViewportID; };
-struct ImGuiInputEventKey           { ImGuiKey Key; bool Down; c_float AnalogValue; };
-struct ImGuiInputEventText          { c_uint Char; };
-struct ImGuiInputEventAppFocused    { bool Focused; };
 
-// Flags for IsKeyPressedEx(). In upcoming feature this will be used more (and IsKeyPressedEx() renamed)
-// Don't mistake with ImGuiInputTextFlags! (for ImGui::InputText() function)
-enum ImGuiInputFlags_
-{
-    // Flags for IsKeyPressedEx()
-    ImGuiInputFlags_None                = 0,
-    ImGuiInputFlags_Repeat              = 1 << 0,   // Return true on successive repeats. Default for legacy IsKeyPressed(). NOT Default for legacy IsMouseClicked(). MUST BE == 1.
-    ImGuiInputFlags_RepeatRateDefault   = 1 << 1,   // Repeat rate: Regular (default)
-    ImGuiInputFlags_RepeatRateNavMove   = 1 << 2,   // Repeat rate: Fast
-    ImGuiInputFlags_RepeatRateNavTweak  = 1 << 3,   // Repeat rate: Faster
-    ImGuiInputFlags_RepeatRateMask_     = ImGuiInputFlags_RepeatRateDefault | ImGuiInputFlags_RepeatRateNavMove | ImGuiInputFlags_RepeatRateNavTweak,
-};
+
+
+
+
 
 
 
@@ -1054,8 +974,8 @@ namespace ImGui
     // Windows
     // We should always have a CurrentWindow in the stack (there is an implicit "Debug" window)
     // If this ever crash because g.CurrentWindow is NULL it means that either
-    // - ImGui::NewFrame() has never been called, which is illegal.
-    // - You are calling ImGui functions after ImGui::EndFrame()/ImGui::Render() and before the next ImGui::NewFrame(), which is also illegal.
+    // - NewFrame() has never been called, which is illegal.
+    // - You are calling ImGui functions after EndFrame()/Render() and before the next NewFrame(), which is also illegal.
     inline    *mut ImGuiWindow  GetCurrentWindowRead()      { let g = GImGui; // ImGuiContext& g = *GImGui; return g.CurrentWindow; }
     inline    *mut ImGuiWindow  GetCurrentWindow()          { let g = GImGui; // ImGuiContext& g = *GImGui; g.Currentwindow.WriteAccessed = true; return g.CurrentWindow; }
      *mut ImGuiWindow  FindWindowByID(ImGuiID id);
@@ -1070,7 +990,7 @@ namespace ImGui
      c_void          SetWindowSize(*mut ImGuiWindow window, const ImVec2& size, ImGuiCond cond = 0);
      c_void          SetWindowCollapsed(*mut ImGuiWindow window, bool collapsed, ImGuiCond cond = 0);
      c_void          SetWindowHitTestHole(*mut ImGuiWindow window, const ImVec2& pos, const ImVec2& size);
-    inline ImRect           WindowRectAbsToRel(*mut ImGuiWindow window, const ImRect& r) { ImVec2 off = window.DC.CursorStartPos; return ImRect(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y); }
+
 
 
     // Windows: Display Order and Focus Order
@@ -1085,7 +1005,7 @@ namespace ImGui
 
     // Fonts, drawing
      c_void          SetCurrentFont(*mut ImFont font);
-    inline *mut ImFont          GetDefaultFont() { let g = GImGui; // ImGuiContext& g = *GImGui; return g.IO.FontDefault ? g.IO.FontDefault : g.IO.Fonts->Fonts[0]; }
+    inline *mut ImFont          GetDefaultFont() { let g = GImGui; // ImGuiContext& g = *GImGui; return g.IO.FontDefault ? g.IO.FontDefault : g.IO.Fonts.Fonts[0]; }
     inline *mut ImDrawList      GetForegroundDrawList(*mut ImGuiWindow window) { return GetForegroundDrawList(window.Viewport); }
 
     // Init
@@ -1141,7 +1061,7 @@ namespace ImGui
 //#endif
 
     // Basic Accessors
-    inline ImGuiID          GetItemID()     { let g = GImGui; // ImGuiContext& g = *GImGui; return g.LastItemData.ID; }   // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
+    inline ImGuiID          GetItemID()     { let g = GImGui; // ImGuiContext& g = *GImGui; return g.LastItemData.ID; }   // Get ID of last item (~~ often same GetID(label) beforehand)
     inline ImGuiItemStatusFlags GetItemStatusFlags(){ let g = GImGui; // ImGuiContext& g = *GImGui; return g.LastItemData.StatusFlags; }
     inline ImGuiItemFlags   GetItemFlags()  { let g = GImGui; // ImGuiContext& g = *GImGui; return g.LastItemData.InFlags; }
     inline ImGuiID          GetActiveID()   { let g = GImGui; // ImGuiContext& g = *GImGui; return g.ActiveId; }
@@ -1159,7 +1079,7 @@ namespace ImGui
     // Basic Helpers for widget code
      c_void          ItemSize(const ImVec2& size, let text_baseline_y: c_float =  -1f32);
     inline c_void             ItemSize(const ImRect& bb, let text_baseline_y: c_float =  -1f32) { ItemSize(bb.GetSize(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
-     bool          ItemAdd(const ImRect& bb, ImGuiID id, *const let nav_bb: ImRect =  NULL, ImGuiItemFlags extra_flags = 0);
+     bool          ItemAdd(const ImRect& bb, ImGuiID id, *const let nav_bb: ImRect =  null_mut(), let mut extra_flags: ImGuiItemFlags =  0);
      bool          ItemHoverable(const ImRect& bb, ImGuiID id);
      bool          IsClippedEx(const ImRect& bb, ImGuiID id);
      c_void          SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags status_flags, const ImRect& item_rect);
@@ -1177,7 +1097,7 @@ namespace ImGui
     // Logging/Capture
      c_void          LogBegin(ImGuiLogType type, c_int auto_open_depth);           // -> BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
      c_void          LogToBuffer(let auto_open_depth: c_int = -1);                      // Start logging/capturing to internal buffer
-     c_void          LogRenderedText(*const ImVec2 ref_pos, *const char text, *const char text_end = NULL);
+     c_void          LogRenderedText(*const ImVec2 ref_pos, *const char text, *const char text_end = null_mut());
      c_void          LogSetNextTextDecoration(*const char prefix, *const char suffix);
 
     // Popups, Modals, Tooltips
@@ -1198,7 +1118,7 @@ namespace ImGui
     // Menus
      bool          BeginViewportSideBar(*const char name, *mut ImGuiViewport viewport, ImGuiDir dir, c_float size, ImGuiWindowFlags window_flags);
      bool          BeginMenuEx(*const char label, *const char icon, let mut enabled: bool =  true);
-     bool          MenuItemEx(*const char label, *const char icon, *const char shortcut = NULL, let mut selected: bool =  false, let mut enabled: bool =  true);
+     bool          MenuItemEx(*const char label, *const char icon, *const char shortcut = null_mut(), let mut selected: bool =  false, let mut enabled: bool =  true);
 
     // Combos
      bool          BeginComboPopup(ImGuiID popup_id, const ImRect& bb, ImGuiComboFlags flags);
@@ -1229,11 +1149,7 @@ namespace ImGui
 
     // Inputs
     // FIXME: Eventually we should aim to move e.g. IsActiveIdUsingKey() into IsKeyXXX functions.
-    inline bool             IsNamedKey(ImGuiKey key)                                    { return key >= ImGuiKey_NamedKey_BEGIN && key < ImGuiKey_NamedKey_END; }
-    inline bool             IsLegacyKey(ImGuiKey key)                                   { return key >= ImGuiKey_LegacyNativeKey_BEGIN && key < ImGuiKey_LegacyNativeKey_END; }
-    inline bool             IsGamepadKey(ImGuiKey key)                                  { return key >= ImGuiKey_Gamepad_BEGIN && key < ImGuiKey_Gamepad_END; }
-    inline bool             IsAliasKey(ImGuiKey key)                                    { return key >= ImGuiKey_Aliases_BEGIN && key < ImGuiKey_Aliases_END; }
-     *mut ImGuiKeyData GetKeyData(ImGuiKey key);
+
      c_void          GetKeyChordName(ImGuiModFlags mods, ImGuiKey key, *mut char out_buf, c_int out_buf_size);
      c_void          SetItemUsingMouseWheel();
      c_void          SetActiveIdUsingAllKeyboardKeys();
@@ -1291,7 +1207,7 @@ namespace ImGui
     // - Call DockBuilderFinish() after you are done.
      c_void          DockBuilderDockWindow(*const char window_name, ImGuiID node_id);
      *mut ImGuiDockNodeDockBuilderGetNode(ImGuiID node_id);
-    inline *mut ImGuiDockNode   DockBuilderGetCentralNode(ImGuiID node_id)              { *mut ImGuiDockNode node = DockBuilderGetNode(node_id); if (!node) return NULL; return DockNodeGetRootNode(node)->CentralNode; }
+    inline *mut ImGuiDockNode   DockBuilderGetCentralNode(ImGuiID node_id)              { *mut ImGuiDockNode node = DockBuilderGetNode(node_id); if (!node) return null_mut(); return DockNodeGetRootNode(node)->CentralNode; }
      ImGuiID       DockBuilderAddNode(let mut node_id: ImGuiID =  0, ImGuiDockNodeFlags flags = 0);
      c_void          DockBuilderRemoveNode(ImGuiID node_id);                 // Remove node and all its child, undock all windows
      c_void          DockBuilderRemoveNodeDockedWindows(ImGuiID node_id, let mut clear_settings_refs: bool =  true);
@@ -1393,16 +1309,16 @@ namespace ImGui
     // Render helpers
     // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
     // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
-     c_void          RenderText(ImVec2 pos, *const char text, *const char text_end = NULL, let mut hide_text_after_hash: bool =  true);
+     c_void          RenderText(ImVec2 pos, *const char text, *const char text_end = null_mut(), let mut hide_text_after_hash: bool =  true);
      c_void          RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width);
-     c_void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  NULL);
-     c_void          RenderTextClippedEx(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  NULL);
+     c_void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  null_mut());
+     c_void          RenderTextClippedEx(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  null_mut());
      c_void          RenderTextEllipsis(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end, *const ImVec2 text_size_if_known);
      c_void          RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, let mut border: bool =  true, let rounding: c_float =  0f32);
      c_void          RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, let rounding: c_float =  0f32);
      c_void          RenderColorRectWithAlphaCheckerboard(*mut ImDrawList draw_list, ImVec2 p_min, ImVec2 p_max, u32 fill_col, c_float grid_step, ImVec2 grid_off, let rounding: c_float =  0f32, ImDrawFlags flags = 0);
      c_void          RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags = ImGuiNavHighlightFlags_TypeDefault); // Navigation highlight
-     *const char   FindRenderedTextEnd(*const char text, *const char text_end = NULL); // Find the optional ## from which we stop displaying text.
+     *const char   FindRenderedTextEnd(*const char text, *const char text_end = null_mut()); // Find the optional ## from which we stop displaying text.
      c_void          RenderMouseCursor(ImVec2 pos, c_float scale, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow);
 
     // Render helpers (those functions don't access any ImGui state!)
@@ -1416,7 +1332,7 @@ namespace ImGui
      ImDrawFlags   CalcRoundingFlagsForRectInRect(const ImRect& r_in, const ImRect& r_outer, c_float threshold);
 
     // Widgets
-     c_void          TextEx(*const char text, *const char text_end = NULL, ImGuiTextFlags flags = 0);
+     c_void          TextEx(*const char text, *const char text_end = null_mut(), ImGuiTextFlags flags = 0);
      bool          ButtonEx(*const char label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
      bool          CloseButton(ImGuiID id, const ImVec2& pos);
      bool          CollapseButton(ImGuiID id, const ImVec2& pos, *mut ImGuiDockNode dock_node);
@@ -1437,7 +1353,7 @@ namespace ImGui
      bool          DragBehavior(ImGuiID id, ImGuiDataType data_type, *mut c_void p_v, c_float v_speed, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags);
      bool          SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags, *mut ImRect out_grab_bb);
      bool          SplitterBehavior(const ImRect& bb, ImGuiID id, ImGuiAxis axis, *mut c_float size1, *mut c_float size2, c_float min_size1, c_float min_size2, let hover_extend: c_float =  0f32, let hover_visibility_delay: c_float =  0f32, u32 bg_col = 0);
-     bool          TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, *const char label, *const char label_end = NULL);
+     bool          TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, *const char label, *const char label_end = null_mut());
      c_void          TreePushOverrideID(ImGuiID id);
      c_void          TreeNodeSetOpen(ImGuiID id, bool open);
      bool          TreeNodeUpdateNextOpen(ImGuiID id, ImGuiTreeNodeFlags flags);   // Return open state. Consume previous SetNextItemOpen() data, if any. May return true when logging.
@@ -1461,9 +1377,9 @@ namespace ImGui
      bool          DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max);
 
     // InputText
-     bool          InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_size, const ImVec2& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = NULL, *mut c_void user_data = NULL);
+     bool          InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_size, const ImVec2& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = null_mut(), *mut c_void user_data = null_mut());
      bool          TempInputText(const ImRect& bb, ImGuiID id, *const char label, *mut char buf, c_int buf_size, ImGuiInputTextFlags flags);
-     bool          TempInputScalar(const ImRect& bb, ImGuiID id, *const char label, ImGuiDataType data_type, *mut c_void p_data, *const char format, *const c_void p_clamp_min = NULL, *const c_void p_clamp_max = NULL);
+     bool          TempInputScalar(const ImRect& bb, ImGuiID id, *const char label, ImGuiDataType data_type, *mut c_void p_data, *const char format, *const c_void p_clamp_min = null_mut(), *const c_void p_clamp_max = null_mut());
     inline bool             TempInputIsActive(ImGuiID id)       { let g = GImGui; // ImGuiContext& g = *GImGui; return (g.ActiveId == id && g.TempInputId == id); }
     inline *mut ImGuiInputTextState GetInputTextState(ImGuiID id)   { let g = GImGui; // ImGuiContext& g = *GImGui; return (id != 0 && g.InputTextState.ID == id) ? &g.InputTextState : NULL; } // Get input text state if active
 
@@ -1489,8 +1405,8 @@ namespace ImGui
      c_void          DebugLogV(*const char fmt, va_list args) IM_FMTLIST(1);
 
     // Debug Tools
-     c_void          ErrorCheckEndFrameRecover(ImGuiErrorLogCallback log_callback, *mut c_void user_data = NULL);
-     c_void          ErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback, *mut c_void user_data = NULL);
+     c_void          ErrorCheckEndFrameRecover(ImGuiErrorLogCallback log_callback, *mut c_void user_data = null_mut());
+     c_void          ErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback, *mut c_void user_data = null_mut());
      c_void          ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
     inline c_void             DebugDrawItemRect(u32 col = IM_COL32(255,0,0,255))    { let g = GImGui; // ImGuiContext& g = *GImGui; ImGuiWindow* window = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col); }
     inline c_void             DebugStartItemPicker()                                  { let g = GImGui; // ImGuiContext& g = *GImGui; g.DebugItemPickerActive = true; }

@@ -3,6 +3,7 @@
 // [SECTION] MISC HELPERS/UTILITIES (String, Format, Hash functions)
 //-----------------------------------------------------------------------------
 
+use std::ffi::CStr;
 use std::ptr::null;
 use libc::{c_char, c_int, c_uchar, c_uint, size_t};
 use crate::type_defs::ImWchar;
@@ -440,4 +441,8 @@ pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_e
         }
     }
     return bytes_count;
+}
+
+pub unsafe fn str_to_const_c_char_ptr(in_str: &str) -> *const c_char {
+    CStr::from_bytes_with_nul_unchecked(in_str.as_bytes()).as_ptr()
 }

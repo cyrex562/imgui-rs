@@ -34,7 +34,7 @@ pub fn GetSkipItemForListClipping() -> bool {
 // Legacy helper to calculate coarse clipping of large list of evenly sized items.
 // This legacy API is not ideal because it assume we will return a single contiguous rectangle.
 // Prefer using ImGuiListClipper which can returns non-contiguous ranges.
-// void ImGui::CalcListClipping(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end)
+// void CalcListClipping(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end)
 pub unsafe fn CalcListClipping(items_count: usize, items_height: c_float, out_items_display_start: *mut c_int, out_items_display_end: *mut c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let window = g.CurrentWindow;
@@ -122,7 +122,7 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
 
     let mut table = g.CurrentTable;
     if table.is_null() == false && table.IsInsideRow {
-        ImGui::TableEndRow(table);
+        TableEndRow(table);
     }
 
 // No items
@@ -132,7 +132,7 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
 
 // While we are in frozen row state, keep displaying items one by one, unclipped
 // FIXME: Could be stored as a table-agnostic state.
-    if data.StepNo == 0 && table != NULL && !table.IsUnfrozenRows {
+    if data.StepNo == 0 && table != null_mut() && !table.IsUnfrozenRows {
         clipper.DisplayStart = data.ItemsFrozen;
         clipper.DisplayEnd = ImMin(data.ItemsFrozen + 1, clipper.ItemsCount);
         if clipper.DisplayStart < clipper.DisplayEnd {
@@ -179,7 +179,7 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
             data.Ranges.push(ImGuiListClipperRange::FromIndices(0, clipper.ItemsCount));
         } else {
 // Add range selected to be included for navigation
-            let is_nav_request: bool = (g.NavMoveScoringItems && g.NavWindow.is_null() == false && g.Navwindow.RootWindowForNav == window.RootWindowForNav);
+            let is_nav_request: bool = (g.NavMoveScoringItems && g.NavWindow.is_null() == false && g.NavWindow.RootWindowForNav == window.RootWindowForNav);
             if is_nav_request {
                 data.Ranges.push(ImGuiListClipperRange::FromPositions(g.NavScoringNoClipRect.Min.y, g.NavScoringNoClipRect.Max.y, 0, 0));
             }

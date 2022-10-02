@@ -18,7 +18,7 @@ use crate::vec2::ImVec2;
 use crate::window_ops::SetWindowClipRectBeforeSetChannel;
 
 // [Internal] Called by TableNextRow()
-// c_void ImGui::TableEndRow(*mut ImGuiTable table)
+// c_void TableEndRow(*mut ImGuiTable table)
 pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 // *mut ImGuiWindow window = g.CurrentWindow;
@@ -174,7 +174,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
 
 
 // [Internal] Called by TableNextRow()/TableSetColumnIndex()/TableNextColumn()
-// c_void ImGui::TableEndCell(*mut ImGuiTable table)
+// c_void TableEndCell(*mut ImGuiTable table)
 pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
     let mut column: &mut ImGuiTableColumn = &mut table.Columns[table.CurrentColumn];
     let mut window = table.InnerWindow;
@@ -184,7 +184,7 @@ pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
     }
 
 // Report maximum position so we can infer content size per column.
-// *mut c_float p_max_pos_x;
+// *mut let mut p_max_pos_x: c_float = 0f32;
     let mut p_max_pos_x: *mut c_float = null_mut();
     if table.RowFlags & ImGuiTableRowFlags_Headers {
         p_max_pos_x = &mut column.ContentMaxXHeadersUsed;
@@ -218,7 +218,7 @@ pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut 
 // - Important: if ImGuiTableFlags_PadOuterX is set but ImGuiTableFlags_PadInnerX is not set, the outer-most left and right
 //   columns report a small offset so their CellBgRect can extend up to the outer border.
 //   FIXME: But the rendering code in TableEndRow() nullifies that with clamping required for scrolling.
-// ImRect ImGui::TableGetCellBgRect(*const ImGuiTable table, c_int column_n)
+// ImRect TableGetCellBgRect(*const ImGuiTable table, c_int column_n)
 pub fn TableGetCellBgRect(table: *const ImGuiTable, column_n: c_int) -> ImRect {
     let column: &ImGuiTableColumn = &table.Columns[column_n];
     let mut x1 = column.MinX;

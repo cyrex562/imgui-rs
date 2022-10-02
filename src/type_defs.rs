@@ -50,16 +50,16 @@ pub type ImWchar = ImWchar32;
 // #endif
 
 // Callback and functions types
-// typedef int     (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    // Callback function for ImGui::InputText()
+// typedef int     (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    // Callback function for InputText()
 pub type ImGuiInputTextCallback = fn(data: *mut ImGuiInpuTextCallbackData) -> c_int;
 
-// typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);              // Callback function for ImGui::SetNextWindowSizeConstraints()
+// typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);              // Callback function for SetNextWindowSizeConstraints()
 pub type ImGuisizeCallback = fn(data: *mut ImGuisizeCallbackData);
 
-// typedef void*   (*ImGuiMemAllocFunc)(size_t sz, void* user_data);               // Function signature for ImGui::SetAllocatorFunctions()
+// typedef void*   (*ImGuiMemAllocFunc)(size_t sz, void* user_data);               // Function signature for SetAllocatorFunctions()
 pub type ImGuiMemAllocFunc = fn(sz: size_t, user_data: *mut c_void);
 
-// typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for ImGui::SetAllocatorFunctions()
+// typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for SetAllocatorFunctions()
 pub type ImGuiMemFreeFunc = fn(ptr: *mut c_void, user_data: *mut c_void);
 
 //  functions
@@ -72,7 +72,7 @@ pub type ImGuiErrorLogCallback = fn(user_data: *mut c_void, fmt: *const c_char);
 pub type ImBitArrayForNamedKeys = ImBitArray;
 
 
-// typedef c_int ImPoolIdx;
+// typedef let mut ImPoolIdx: c_int = 0;
 pub type ImPoolIdx = c_int;
 
 

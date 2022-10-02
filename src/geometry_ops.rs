@@ -9,7 +9,7 @@ use crate::vec2::ImVec2;
 pub fn ImBezierCubicClosestPoint(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &ImVec2, num_segments: i32) -> ImVec2 {
 
     // IM_ASSERT(num_segments > 0); // Use ImBezierCubicClosestPointCasteljau()
-    // ImVec2 p_last = p1;
+    // let mut p_last: ImVec2 =  p1;
     let mut p_last = p1.clone();
 // ImVec2 p_closest;
     let mut p_closest: ImVec2 = ImVec2::default();
@@ -65,8 +65,8 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &mut ImVec2, p_closest: &mut Im
     }
 }
 
-// tess_tol is generally the same value you would find in ImGui::GetStyle().CurveTessellationTol
-// Because those ImXXX functions are lower-level than ImGui:: we cannot access this value automatically.
+// tess_tol is generally the same value you would find in GetStyle().CurveTessellationTol
+// Because those ImXXX functions are lower-level than  we cannot access this value automatically.
 // ImVec2 ImBezierCubicClosestPointCasteljau(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, float tess_tol)
 pub fn ImBezierCubicClosestPointCasteljau(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &mut ImVec2, tess_tol: f32) -> ImVec2 {
     // IM_ASSERT(tess_tol > 0f32);

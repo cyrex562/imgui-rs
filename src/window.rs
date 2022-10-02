@@ -1,14 +1,17 @@
 #![allow(non_snake_case)]
 
 
+use std::mem;
 use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_short, c_void};
 use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once};
 use crate::context::ImGuiContext;
+use crate::data_type::{ImGuiDataType_Pointer, ImGuiDataType_S32, ImGuiDataType_String};
+use crate::debug_ops::DebugHookIdInfo;
 use crate::direction::{ImGuiDir, ImGuiDir_None};
 use crate::dock_node::ImGuiDockNode;
-use crate::drawlist::ImDrawList;
-use crate::hash_ops::ImHashStr;
+use crate::draw_list::ImDrawList;
+use crate::hash_ops::{ImHashData, ImHashStr};
 use crate::imgui::GImGui;
 use crate::item_status_flags::ImGuiItemStatusFlags;
 use crate::layout_type::ImGuiLayoutType;
@@ -24,6 +27,7 @@ use crate::win_dock_style::ImGuiWindowDockStyle;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::{ImGuiDir, ImGuiID};
 use crate::window_flags::ImGuiWindowFlags;
+use crate::window_ops::WindowRectAbsToRel;
 use crate::window_temp_data::ImGuiWindowTempData;
 
 // Storage for one window
@@ -276,10 +280,10 @@ impl ImGuiWindow {
 
     // ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
     pub unsafe fn GetID(&self, begin: *const c_char, end: *const c_char) -> ImGuiID {
-         let mut seed: ImGuiID =  self.IDStack.last().unwrap().clone();
-        let mut id: ImGuiID =  ImHashStr(begin, if end.is_null() == false { (end - begin) } else { 0 }, seed as u32);
+        let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
+        let mut id: ImGuiID = ImHashStr(begin, if end.is_null() == false { (end - begin) } else { 0 }, seed as u32);
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        if (g.DebugHookIdInfo == id) {
+        if g.DebugHookIdInfo == id {
             DebugHookIdInfo(id, ImGuiDataType_String, begin, end);
         }
         return id;
@@ -287,15 +291,39 @@ impl ImGuiWindow {
 
 
     // ImGuiID     GetID(const void* ptr);
-    pub fn GetID2(&self, ptr: *const c_void) -> ImGuiID {
-        todo!()
+    pub unsafe fn GetID2(&self, ptr: *const c_void) -> ImGuiID {
+        let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
+        let mut id: ImGuiID = ImHashData(&ptr, mem::size_of::<*mut c_void>(), seed as u32);
+        let g = GImGui; // ImGuiContext& g = *GImGui;
+        if g.DebugHookIdInfo == id {
+            DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr, null_mut());
+        }
+        return id;
     }
 
 
     // ImGuiID     GetID(int n);
-
+    // ImGuiID ImGuiWindow::GetID(c_int n)
+    pub unsafe fn GetID3(&self, n: c_int) -> ImGuiID {
+        let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
+        let mut id: ImGuiID = ImHashData(&n, libc::sizeof(n), seed as u32);
+        let g = GImGui; // ImGuiContext& g = *GImGui;
+        if g.DebugHookIdInfo == id {
+            // DebugHookIdInfo(id, ImGuiDataType_S32, n, NULL);
+        }
+        return id;
+    }
 
     // ImGuiID     GetIDFromRectangle(const ImRect& r_abs);
+    // This is only used in rare/specific situations to manufacture an ID out of nowhere.
+    // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
+    pub unsafe fn GetIDFromRectangle(&self, r_abs: &ImRect) -> ImGuiID
+    {
+        let mut seed: ImGuiID =  self.IDStack.last().unwrap().clone();
+        let r_rel: ImRect =  WindowRectAbsToRel(this, r_abs);
+        let mut id: ImGuiID =  ImHashData(&r_rel, libc::sizeof(r_rel), seed as u32);
+        return id;
+    }
 
 // We don't use g.FontSize because the window may be != g.CurrentWindow.
 //     ImRect      Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }

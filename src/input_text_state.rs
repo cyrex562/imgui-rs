@@ -7,7 +7,7 @@ use crate::stb_text_edit_state::STB_TexteditState;
 use crate::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
 
 // Internal state of the currently focused/edited text input box
-// For a given item ID, access with ImGui::GetInputTextState()
+// For a given item ID, access with GetInputTextState()
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiInputTextState {
     pub ID: ImGuiID,

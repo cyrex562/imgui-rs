@@ -8,7 +8,7 @@ use crate::style_mod::ImGuiStyleMod;
 use crate::style_var::ImGuiStyleVar;
 use crate::vec2::ImVec2;
 
-// c_void ImGui::PushStyleVar(ImGuiStyleVar idx, c_float val)
+// c_void PushStyleVar(ImGuiStyleVar idx, c_float val)
 pub unsafe fn PushStyleVar(idx: ImGuiStyleVar, val: c_float) {
     let mut var_info = GetStyleVarInfo(idx);
     if var_info.Type == ImGuiDataType_Float && var_info.Count == 1 {
@@ -22,7 +22,7 @@ pub unsafe fn PushStyleVar(idx: ImGuiStyleVar, val: c_float) {
 }
 
 
-// c_void ImGui::PushStyleVar(ImGuiStyleVar idx, const ImVec2& val)
+// c_void PushStyleVar(ImGuiStyleVar idx, const ImVec2& val)
 pub unsafe fn PushStyleVar2(idx: ImGuiStyleVar, val: &ImVec2) {
     let mut var_info = GetStyleVarInfo(idx);
     if var_info.Type == ImGuiDataType_Float && var_info.Count == 2 {
@@ -36,7 +36,7 @@ pub unsafe fn PushStyleVar2(idx: ImGuiStyleVar, val: &ImVec2) {
 }
 
 
-// c_void ImGui::PopStyleVar(c_int count)
+// c_void PopStyleVar(c_int count)
 pub fn PopStyleVar(mut count: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.StyleVarStack.Size < count {

@@ -12,7 +12,7 @@
 use std::ptr::null_mut;
 use libc::{c_float, c_int, c_short, c_void};
 use crate::draw_data::{ImDrawData, ImDrawDataBuilder};
-use crate::drawlist::ImDrawList;
+use crate::draw_list::ImDrawList;
 use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
@@ -175,7 +175,7 @@ impl ImGuiViewport {
     }
 
 
-    // ImRect  GetBuildWorkRect() const    { ImVec2 pos = CalcWorkRectPos(BuildWorkOffsetMin); ImVec2 size = CalcWorkRectSize(BuildWorkOffsetMin, BuildWorkOffsetMax); return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
+    // ImRect  GetBuildWorkRect() const    { let mut pos: ImVec2 =  CalcWorkRectPos(BuildWorkOffsetMin); let mut size: ImVec2 =  CalcWorkRectSize(BuildWorkOffsetMin, BuildWorkOffsetMax); return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
     pub fn GetBuildWorkRect(&self) -> ImRect {
         let pos = self.CalcWorkRectPos(&self.BuildWorkOffsetMin);
         let size = self.CalcWorkRectSize(&self.BuildWorkOffsetMin, &self.BuildWorkOffsetMax);

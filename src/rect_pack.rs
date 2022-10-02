@@ -184,12 +184,12 @@ struct stbrp_node
 
 struct stbrp_context
 {
-   c_int width;
-   c_int height;
-   c_int align;
-   c_int init_mode;
-   c_int heuristic;
-   c_int num_nodes;
+   let mut width: c_int = 0;
+   let mut height: c_int = 0;
+   let mut align: c_int = 0;
+   let mut init_mode: c_int = 0;
+   let mut heuristic: c_int = 0;
+   let mut num_nodes: c_int = 0;
    stbrp_node *active_head;
    stbrp_node *free_head;
    stbrp_node extra[2]; // we allocate two extra nodes so optimal user-node-count is 'width' not 'width+2'
@@ -264,11 +264,11 @@ STBRP_DEF c_void stbrp_setup_allow_out_of_mem(stbrp_context *context, c_int allo
 
 STBRP_DEF c_void stbrp_init_target(stbrp_context *context, c_int width, c_int height, stbrp_node *nodes, c_int num_nodes)
 {
-   c_int i;
+   let mut i: c_int = 0;
 
    for (i=0; i < num_nodes-1; ++i)
       nodes[i].next = &nodes[i+1];
-   nodes[i].next = None;
+   nodes[i].next= null_mut();
    context.init_mode = STBRP__INIT_skyline;
    context.heuristic = STBRP_HEURISTIC_Skyline_default;
    context.free_head = &nodes[0];
@@ -284,7 +284,7 @@ STBRP_DEF c_void stbrp_init_target(stbrp_context *context, c_int width, c_int he
    context.extra[0].next = &context.extra[1];
    context.extra[1].x = (stbrp_coord) width;
    context.extra[1].y = (1<<30);
-   context.extra[1].next = None;
+   context.extra[1].next= null_mut();
 }
 
 // find minimum y position if it starts at x1
@@ -348,7 +348,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
 {
    let best_waste: c_int = (1<<30), best_x, best_y = (1 << 30);
    stbrp__findresult fr;
-   stbrp_node **prev, *node, *tail, **best = None;
+   stbrp_node **prev, *node, *tail, **best= null_mut();
 
    // align to multiple of c->align
    width = (width + c.align - 1);
@@ -357,7 +357,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
 
    // if it can't possibly fit, bail immediately
    if (width > c.width || height > c.height) {
-      fr.prev_link = None;
+      fr.prev_link= null_mut();
       fr.x = fr.y = 0;
       return fr;
    }
@@ -388,7 +388,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
       node = node.next;
    }
 
-   best_x = (best == NULL) ? 0 : (*best)->x;
+   best_x = (best == null_mut()) ? 0 : (*best)->x;
 
    // if doing best-fit (B0f32), we also have to try aligning right edge to each node position
    //
@@ -456,8 +456,8 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, c
    //    1. it failed
    //    2. the best node doesn't fit (we don't always check this)
    //    3. we're out of memory
-   if (res.prev_link == NULL || res.y + height > context.height || context.free_head == NULL) {
-      res.prev_link = None;
+   if (res.prev_link == null_mut() || res.y + height > context.height || context.free_head == null_mut()) {
+      res.prev_link= null_mut();
       return res;
    }
 
@@ -504,10 +504,10 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, c
       STBRP_ASSERT(cur.x < cur.next->x);
       cur = cur.next;
    }
-   STBRP_ASSERT(cur.next == NULL);
+   STBRP_ASSERT(cur.next == null_mut());
 
    {
-      c_int count=0;
+      let mut count: c_int = 0;
       cur = context.active_head;
       while (cur) {
          cur = cur.next;

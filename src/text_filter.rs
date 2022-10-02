@@ -120,14 +120,14 @@ impl ImGuiTextFilter {
             if f.b[0] == '-'
             {
                 // Subtract
-                if ImStristr(text, text_end, f.b + 1, f.e) != NULL {
+                if ImStristr(text, text_end, f.b + 1, f.e) != null_mut() {
                     return false;
                 }
             }
             else
             {
                 // Grep
-                if ImStristr(text, text_end, f.b, f.e) != NULL {
+                if ImStristr(text, text_end, f.b, f.e) != null_mut() {
                     return true;
                 }
             }

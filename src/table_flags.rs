@@ -5,7 +5,7 @@ use libc::c_int;
 // typedef int ImGuiTableFlags;        // -> enum ImGuiTableFlags_      // Flags: For BeginTable()
 pub type ImGuiTableFlags = c_int;
 
-// Flags for ImGui::BeginTable()
+// Flags for BeginTable()
 // - Important! Sizing policies have complex and subtle side effects, much more so than you would expect.
 //   Read comments/demos carefully + experiment with live demos to get acquainted with them.
 // - The DEFAULT sizing policies are:

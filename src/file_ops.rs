@@ -17,8 +17,8 @@ pub unsafe fn ImFileOpen(filename: * c_char, mode: * c_char) -> ImFileHandle {
     // We need a fopen() wrapper because MSVC/Windows fopen doesn't handle UTF-8 filenames.
     // Previously we used ImTextCountCharsFromUtf8/ImTextStrFromUtf8 here but we now need to support ImWchar16 and ImWchar32!
     if cfg!(windows) {
-        let filename_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, filename, -1, NULL, 0);
-        let mode_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, mode, -1, NULL, 0);
+        let filename_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, filename, -1, null_mut(), 0);
+        let mode_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, mode, -1, null_mut(), 0);
         // ImVector<ImWchar> buf;
         let mut buf: Vec<ImWchar> = vec![];
         buf.resize((filename_wsize + mode_wsize) as usize, 0);
@@ -64,7 +64,7 @@ pub unsafe fn ImFileWrite(data: *mut c_void, sz: u64, count: u64, f: ImFileHandl
 // #endif // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
 // Helper: Load file content into memory
-// Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == ImGui::MemFree()
+// Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == MemFree()
 // This can't really be used with "rt" because fseek size won't match read size.
 // void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_file_size, int padding_bytes)
 pub unsafe fn ImFileLoadToMemory(filename: * c_char, mode: * c_char, out_file_size: *mut size_t, padding_bytes: i32) -> *mut c_void {

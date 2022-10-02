@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
 
-// You may modify the ImGui::GetStyle() main instance during initialization and before NewFrame().
-// During the frame, use ImGui::PushStyleVar(ImGuiStyleVar_XXXX)/PopStyleVar() to alter the main style values,
-// and ImGui::PushStyleColor(ImGuiCol_XXX)/PopStyleColor() for colors.
+// You may modify the GetStyle() main instance during initialization and before NewFrame().
+// During the frame, use PushStyleVar(ImGuiStyleVar_XXXX)/PopStyleVar() to alter the main style values,
+// and PushStyleColor(ImGuiCol_XXX)/PopStyleColor() for colors.
 //-----------------------------------------------------------------------------
 
 use libc::c_float;
@@ -147,7 +147,7 @@ impl ImGuiStyle {
         out.CircleTessellationMaxError = 0.3f32;         // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 
         // Default theme
-        ImGui::StyleColorsDark(this);
+        StyleColorsDark(this);
 
         return out;
     }

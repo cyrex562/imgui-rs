@@ -2,7 +2,7 @@
 
 use std::ptr::null_mut;
 use libc::c_int;
-use crate::drawlist::ImDrawList;
+use crate::draw_list::ImDrawList;
 use crate::vec2::ImVec2;
 use crate::viewport::ImGuiViewport;
 
@@ -80,7 +80,30 @@ impl ImDrawDataBuilder {
     }
 
     // void FlattenIntoSingleLayer();
-    pub fn FlattenIntoSingleLayer(&mut self) {
-        todo!()
+    // pub fn FlattenIntoSingleLayer(&mut self) {
+    //     todo!()
+    // }
+    // c_void ImDrawDataBuilder::FlattenIntoSingleLayer()
+    pub unsafe fn FlattenIntoSingleLayer(&mut self)
+    {
+        let mut n: c_int = self.Layers[0].Size;
+        let mut size: c_int = n;
+        // for (let i: c_int = 1; i < IM_ARRAYSIZE(Layers); i++)
+        for i in 1 .. self.Layers.len()
+        {
+            size += self.Layers[i].Size;
+        }
+        // self.Layers[0].resize(size);
+        // for (let layer_n: c_int = 1; layer_n < IM_ARRAYSIZE(Layers); layer_n++)
+        for layer_n in 1 .. self.Layers.len()
+        {
+            let mut layer = self.Layers[layer_n].clone();
+            if layer.empty() {
+                continue;
+            }
+            libc::memcpy(&mut self.Layers[0][n], &layer[0], layer.Size * libc::sizeof(ImDrawList));
+            n += layer.Size;
+            // layer.resize(0);
+        }
     }
 }

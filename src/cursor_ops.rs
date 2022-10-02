@@ -19,7 +19,7 @@ use crate::imgui_cpp::GImGui;
 //    BeginGroup() + SomeItem("foobar") + SetCursorScreenPos(GetCursorScreenPos()) + EndGroup()
 //  The previous logic made SetCursorScreenPos(GetCursorScreenPos()) have a side-effect! It would erroneously incorporate ItemSpacing.y after the item into content size, making the group taller!
 //  While this code is a little twisted, no-one would expect SetXXX(GetXXX()) to have a side-effect. Using vertical alignment patterns could trigger this issue.
-// c_void ImGui::ErrorCheckUsingSetCursorPosToExtendParentBoundaries()
+// c_void ErrorCheckUsingSetCursorPosToExtendParentBoundaries()
 pub fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

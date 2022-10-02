@@ -6,7 +6,7 @@ use libc::c_int;
 pub type ImGuiTableRowFlags = c_int;
 
 
-// Flags for ImGui::TableNextRow()
+// Flags for TableNextRow()
 // enum ImGuiTableRowFlags_
 // {
 pub const ImGuiTableRowFlags_None: ImGuiTableRowFlags = 0;

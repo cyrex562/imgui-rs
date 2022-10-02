@@ -5,7 +5,7 @@ use libc::c_int;
 // typedef int ImGuiDragDropFlags;     // -> enum ImGuiDragDropFlags_   // Flags: for BeginDragDropSource(), AcceptDragDropPayload()
 pub type ImGuiDragDropFlags = c_int;
 
-// Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
+// Flags for BeginDragDropSource(), AcceptDragDropPayload()
 // enum ImGuiDragDropFlags_
 // {
 pub const ImGuiDragDropFlags_None: ImGuiDragDropFlags                         = 0;

@@ -17,7 +17,7 @@ pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
     return IM_COL32(r, g, b, 0xFF);
 }
 
-// ImVec4 ImGui::ColorConvertU32ToFloat4(u32 in)
+// ImVec4 ColorConvertU32ToFloat4(u32 in)
 pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
 {
     let s = 1f32 / 255f32;
@@ -28,7 +28,7 @@ pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
         ((in_color >> IM_COL32_A_SHIFT) & 0xFF) * s);
 }
 
-// u32 ImGui::ColorConvertFloat4ToU32(const ImVec4& in)
+// u32 ColorConvertFloat4ToU32(const ImVec4& in)
 pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 {
     let mut out: u32 = 0;
@@ -41,7 +41,7 @@ pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 
 // Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
 // Optimized http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
-// void ImGui::ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
+// void ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
 pub fn ColorConvertRGBtoHSV(r: f32, g: f32, b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
 {
     let mut K = 0f32;
@@ -64,7 +64,7 @@ pub fn ColorConvertRGBtoHSV(r: f32, g: f32, b: f32, out_h: &mut f32, out_s: &mut
 
 // Convert hsv floats ([0-1],[0-1],[0-1]) to rgb floats ([0-1],[0-1],[0-1]), from Foley & van Dam p593
 // also http://en.wikipedia.org/wiki/HSL_and_HSV
-// void ImGui::ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
+// void ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
 pub fn ColorConvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32) {
     if s == 0f32 {
         // gray

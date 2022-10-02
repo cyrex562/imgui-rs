@@ -10,19 +10,20 @@ use crate::draw_list_shared_data::ImDrawListSharedData;
 use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::draw_vert::ImDrawVert;
 use crate::font::ImFont;
+use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::type_defs::{ImDrawIdx, ImTextureID};
 
 // Draw command list
-// This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,
+// This is the low-level list of polygons that  functions are filling. At the end of the frame,
 // all command lists are passed to your ImGuiIO::RenderDrawListFn function for rendering.
-// Each dear imgui window contains its own ImDrawList. You can use ImGui::GetWindowDrawList() to
+// Each dear imgui window contains its own ImDrawList. You can use GetWindowDrawList() to
 // access the current window draw list and draw custom primitives.
-// You can interleave normal ImGui:: calls and adding primitives to the current draw list.
+// You can interleave normal  calls and adding primitives to the current draw list.
 // In single viewport mode, top-left is == GetMainViewport()->Pos (generally 0,0), bottom-right is == GetMainViewport()->Pos+Size (generally io.DisplaySize).
 // You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to ClipRect as well!)
-// Important: Primitives are always added to the list and not culled (culling is done at higher-level by ImGui:: functions), if you use this API a lot consider coarse culling your drawn objects.
+// Important: Primitives are always added to the list and not culled (culling is done at higher-level by  functions), if you use this API a lot consider coarse culling your drawn objects.
 #[derive(Default, Debug, Clone)]
 pub struct ImDrawList {
     // This is what you have to render
@@ -38,14 +39,14 @@ pub struct ImDrawList {
     pub _VtxCurrentIdx: c_uint,
     // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
     pub _Data: *const ImDrawListSharedData,
-    // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
+    // Pointer to shared draw data (you can use GetDrawListSharedData() to get the one from current ImGui context)
     pub _OwnerName: *const c_char,
     // Pointer to owner window's name for debugging
     pub _VtxWritePtr: *mut ImDrawVert,
     // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
     pub _IdxWritePtr: *mut ImDrawIdx,
     // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    pub _ClipRectStack: Vec<ImVec4>,
+    pub _ClipRectStack: Vec<ImRect>,
     // [Internal]
     pub _TextureIdStack: Vec<ImTextureID>,
     // [Internal]
@@ -59,7 +60,7 @@ pub struct ImDrawList {
 }
 
 impl ImDrawList {
-    // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
+    // If you want to create ImDrawList instances, pass them GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
     // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
     pub fn new(shared_data: *const ImDrawListSharedData) -> Self {
         Self {
@@ -70,7 +71,7 @@ impl ImDrawList {
 
     // ~ImDrawList() { _ClearFreeMemory(); }
 
-    // void  PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
+    // void  PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level PushClipRect() to affect logic (hit-testing and widget culling)
     pub fn PushClipRect(&mut self, clip_rect_min: &ImVec2, clip_rect_max: &ImVec2, intersect_with_current_clip_rect: bool) {}
 
     // void  PushClipRectFullScreen();
@@ -344,12 +345,12 @@ impl ImDrawList {
 
     // [Internal helpers]
 // void  _ResetForNewFrame(); 
-    fn _ResetForNewFrame(&mut self) {
+    pub(crate) fn _ResetForNewFrame(&mut self) {
         todo!()
     }
 
     // void  _ClearFreeMemory();
-    fn _ClearFreeMemory(&mut self) {
+    pub fn _ClearFreeMemory(&mut self) {
         todo!()
     }
 

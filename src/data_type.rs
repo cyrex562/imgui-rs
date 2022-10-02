@@ -32,5 +32,9 @@ pub const ImGuiDataType_Float: ImGuiDataType = 8;
 // float
 pub const ImGuiDataType_Double: ImGuiDataType = 9;
 // double
-pub const ImGuiDataType_COUNT: ImGuiDataType = 10;
+pub const ImGuiDataType_String: ImGuiDataType = 10;
+pub const ImGuiDataType_Pointer: ImGuiDataType = 11;
+pub const ImGuiDataType_ID: ImGuiDataType = 12;
+
+pub const ImGuiDataType_COUNT: ImGuiDataType = 13;
 // };

@@ -325,9 +325,9 @@ pub type STB_TEXTEDIT_POSITIONTYPE  = c_int;
 typedef struct
 {
    c_float x0,x1;             // starting x location, end x location (allows for align=right, etc)
-   c_float baseline_y_delta;  // position of baseline relative to previous row's baseline
+   let mut baseline_y_delta: c_float = 0f32;  // position of baseline relative to previous row's baseline
    c_float ymin,ymax;         // height of row above and below baseline
-   c_int num_chars;
+   let mut num_chars: c_int = 0;
 } StbTexteditRow;
 // #endif //INCLUDE_STB_TEXTEDIT_H
 
@@ -361,7 +361,7 @@ static c_int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, c_float x, c_float 
    StbTexteditRow r;
    let n: c_int = STB_TEXTEDIT_STRINGLEN(str);
    let base_y: c_float =  0, prev_x;
-   c_int i=0, k;
+   let mut i: c_int = 0, k;
 
    r.x0 = r.x1 = 0;
    r.ymin = r.ymax = 0;
@@ -469,9 +469,9 @@ static c_void stb_text_makeundo_replace(STB_TEXTEDIT_STRING *str, STB_TexteditSt
 typedef struct
 {
    c_float x,y;    // position of n'th character
-   c_float height; // height of line
+   let mut height: c_float = 0f32; // height of line
    c_int first_char, length; // first char of row, and length
-   c_int prev_first;  // first char of previous row
+   let mut prev_first: c_int = 0;  // first char of previous row
 } StbFindState;
 
 // find the x/y location of a character, and remember info about the previous row in
@@ -481,7 +481,7 @@ static c_void stb_textedit_find_charpos(StbFindState *find, STB_TEXTEDIT_STRING 
    StbTexteditRow r;
    let prev_start: c_int = 0;
    let z: c_int = STB_TEXTEDIT_STRINGLEN(str);
-   c_int i=0, first;
+   let mut i: c_int = 0, first;
 
    if (n == z) {
       // if it's at the end, then find the last line -- simpler than trying to
@@ -1091,13 +1091,13 @@ static c_void stb_textedit_discard_undo(StbUndoState *state)
          let n: c_int = state.undo_rec[0].insert_length, i;
          // delete n characters from all other records
          state.undo_char_point -= n;
-         STB_TEXTEDIT_memmove(state.undo_char, state.undo_char + n,  (state->*mut undo_char_pointsizeof(STB_TEXTEDIT_CHARTYPE)));
+         STB_TEXTEDIT_memmove(state.undo_char, state.undo_char + n,  (state.*mut undo_char_pointsizeof(STB_TEXTEDIT_CHARTYPE)));
          for (i=0; i < state.undo_point; ++i)
             if (state.undo_rec[i].char_storage >= 0)
                state.undo_rec[i].char_storage -= n; // @OPTIMIZE: get rid of char_storage and infer it
       }
       --state.undo_point;
-      STB_TEXTEDIT_memmove(state.undo_rec, state.undo_rec+1,  (state->*mut undo_pointsizeof(state.undo_rec[0])));
+      STB_TEXTEDIT_memmove(state.undo_rec, state.undo_rec+1,  (state.*mut undo_pointsizeof(state.undo_rec[0])));
    }
 }
 
@@ -1149,7 +1149,7 @@ static StbUndoRecord *stb_text_create_undo_record(StbUndoState *state, c_int num
    if (numchars > STB_TEXTEDIT_UNDOCHARCOUNT) {
       state.undo_point = 0;
       state.undo_char_point = 0;
-      return NULL;
+      return null_mut();
    }
 
    // if we don't have enough free characters in the buffer, we have to make room
@@ -1162,8 +1162,8 @@ static StbUndoRecord *stb_text_create_undo_record(StbUndoState *state, c_int num
 static STB_TEXTEDIT_CHARTYPE *stb_text_createundo(StbUndoState *state, c_int pos, c_int insert_len, c_int delete_len)
 {
    StbUndoRecord *r = stb_text_create_undo_record(state, insert_len);
-   if (r == NULL)
-      return NULL;
+   if (r == null_mut())
+      return null_mut();
 
    r.where = pos;
    r.insert_length = (STB_TEXTEDIT_POSITIONTYPE) insert_len;
@@ -1171,7 +1171,7 @@ static STB_TEXTEDIT_CHARTYPE *stb_text_createundo(StbUndoState *state, c_int pos
 
    if (insert_len == 0) {
       r.char_storage = -1;
-      return NULL;
+      return null_mut();
    } else {
       r.char_storage = state.undo_char_point;
       state.undo_char_point += insert_len;
@@ -1210,7 +1210,7 @@ static c_void stb_text_undo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
          // the undo records take up too much character space; there's no space to store the redo characters
          r.insert_length = 0;
       } else {
-         c_int i;
+         let mut i: c_int = 0;
 
          // there's definitely room to store the characters eventually
          while (s.undo_char_point + u.delete_length > s.redo_char_point) {
@@ -1274,7 +1274,7 @@ static c_void stb_text_redo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
          u.insert_length = 0;
          u.delete_length = 0;
       } else {
-         c_int i;
+         let mut i: c_int = 0;
          u.char_storage = s.undo_char_point;
          s.undo_char_point = s.undo_char_point + u.insert_length;
 
@@ -1305,7 +1305,7 @@ static c_void stb_text_makeundo_insert(STB_TexteditState *state, c_int where, c_
 
 static c_void stb_text_makeundo_delete(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, c_int where, c_int length)
 {
-   c_int i;
+   let mut i: c_int = 0;
    STB_TEXTEDIT_CHARTYPE *p = stb_text_createundo(&state.undostate, where, length, 0);
    if (p) {
       for (i=0; i < length; ++i)
@@ -1315,7 +1315,7 @@ static c_void stb_text_makeundo_delete(STB_TEXTEDIT_STRING *str, STB_TexteditSta
 
 static c_void stb_text_makeundo_replace(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, c_int where, c_int old_length, c_int new_length)
 {
-   c_int i;
+   let mut i: c_int = 0;
    STB_TEXTEDIT_CHARTYPE *p = stb_text_createundo(&state.undostate, where, old_length, new_length);
    if (p) {
       for (i=0; i < old_length; ++i)
