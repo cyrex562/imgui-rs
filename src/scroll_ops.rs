@@ -26,7 +26,7 @@ static c_float CalcScrollEdgeSnap(c_float target, c_float snap_min, c_float snap
     return target;
 }
 
-static ImVec2 CalcNextScrollFromScrollTargetAndClamp(ImGuiWindow* window)
+static ImVec2 CalcNextScrollFromScrollTargetAndClamp(window: *mut ImGuiWindow)
 {
     let scroll: ImVec2 = window.Scroll;
     if (window.ScrollTarget.x < f32::MAX)
@@ -72,17 +72,17 @@ c_void ScrollToItem(ImGuiScrollFlags flags)
     ScrollToRectEx(window, g.LastItemData.NavRect, flags);
 }
 
-c_void ScrollToRect(ImGuiWindow* window, const ImRect& item_rect, ImGuiScrollFlags flags)
+c_void ScrollToRect(window: *mut ImGuiWindow, const ImRect& item_rect, ImGuiScrollFlags flags)
 {
     ScrollToRectEx(window, item_rect, flags);
 }
 
 // Scroll to keep newly navigated item fully into view
-ImVec2 ScrollToRectEx(ImGuiWindow* window, const ImRect& item_rect, ImGuiScrollFlags flags)
+ImVec2 ScrollToRectEx(window: *mut ImGuiWindow, const ImRect& item_rect, ImGuiScrollFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window_rect: ImRect = ImRect::new(window.InnerRect.Min - ImVec2(1, 1), window.InnerRect.Max + ImVec2(1, 1));
-    //GetForegroundDrawList(window)->AddRect(window_rect.Min, window_rect.Max, IM_COL32_WHITE); // [DEBUG]
+    let mut window_rect: ImRect = ImRect::new(window.InnerRect.Min - ImVec2::new2(1, 1), window.InnerRect.Max + ImVec2::new2(1, 1));
+    //GetForegroundDrawList(window).AddRect(window_rect.Min, window_rect.Max, IM_COL32_WHITE); // [DEBUG]
 
     // Check that only one behavior is selected per axis
     // IM_ASSERT((flags & ImGuiScrollFlags_MaskX_) == 0 || ImIsPowerOfTwo(flags & ImGuiScrollFlags_MaskX_));
@@ -167,14 +167,14 @@ c_float GetScrollMaxY()
     return window.ScrollMax.y;
 }
 
-c_void SetScrollX(ImGuiWindow* window, c_float scroll_x)
+c_void SetScrollX(window: *mut ImGuiWindow, c_float scroll_x)
 {
     window.ScrollTarget.x = scroll_x;
     window.ScrollTargetCenterRatio.x = 0f32;
     window.ScrollTargetEdgeSnapDist.x = 0f32;
 }
 
-c_void SetScrollY(ImGuiWindow* window, c_float scroll_y)
+c_void SetScrollY(window: *mut ImGuiWindow, c_float scroll_y)
 {
     window.ScrollTarget.y = scroll_y;
     window.ScrollTargetCenterRatio.y = 0f32;
@@ -203,7 +203,7 @@ c_void SetScrollY(c_float scroll_y)
 //  - SetScrollFromPosY(0f32) == SetScrollY(0f32 + scroll.y) == has no effect!
 //  - SetScrollFromPosY(-scroll.y) == SetScrollY(-scroll.y + scroll.y) == SetScrollY(0f32) == reset scroll. Of course writing SetScrollY(0f32) directly then makes more sense
 // We store a target position so centering and clamping can occur on the next frame when we are guaranteed to have a known window size
-c_void SetScrollFromPosX(ImGuiWindow* window, c_float local_x, c_float center_x_ratio)
+c_void SetScrollFromPosX(window: *mut ImGuiWindow, c_float local_x, c_float center_x_ratio)
 {
     // IM_ASSERT(center_x_ratio >= 0f32 && center_x_ratio <= 1f32);
     window.ScrollTarget.x = IM_FLOOR(local_x + window.Scroll.x); // Convert local position to scroll offset
@@ -211,7 +211,7 @@ c_void SetScrollFromPosX(ImGuiWindow* window, c_float local_x, c_float center_x_
     window.ScrollTargetEdgeSnapDist.x = 0f32;
 }
 
-c_void SetScrollFromPosY(ImGuiWindow* window, c_float local_y, c_float center_y_ratio)
+c_void SetScrollFromPosY(window: *mut ImGuiWindow, c_float local_y, c_float center_y_ratio)
 {
     // IM_ASSERT(center_y_ratio >= 0f32 && center_y_ratio <= 1f32);
     let decoration_up_height: c_float =  window.TitleBarHeight() + window.MenuBarHeight(); // FIXME: Would be nice to have a more standardized access to our scrollable/client rect;

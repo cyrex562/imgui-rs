@@ -144,13 +144,13 @@ pub struct ImGuiWindow {
     pub SetWindowDockAllowFlags: ImGuiCond,
     pub SetWindowPosVal: ImVec2,
     // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
-    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2(0, 0) when positioning from top-left corner; ImVec2(0.5f32, 0.5f32) for centering; ImVec2(1, 1) for bottom right.
+    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2::new2(0, 0) when positioning from top-left corner; ImVec2::new2(0.5f32, 0.5f32) for centering; ImVec2::new2(1, 1) for bottom right.
 
     // ImVector<ImGuiID>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
     pub IDStack: Vec<ImGuiID>,
     pub DC: ImGuiWindowTempData,                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "DC" variable name.
 
-    // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show Windows Rectangles' viewer.
+    // The best way to understand what those rectangles are is to use the 'Metrics.Tools.Show Windows Rectangles' viewer.
 // The main 'OuterRect', omitted as a field, is window.Rect().
     pub OuterRectClipped: ImRect,
     // == window.Rect() just after setup in Begin(). == window.Rect() for root window.
@@ -214,7 +214,7 @@ pub struct ImGuiWindow {
     pub MemoryCompacted: bool,                    // Set when window extraneous data have been garbage collected
 
     // Docking
-// bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode->Windows.Size > 1).
+// bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode.Windows.Size > 1).
     pub DockIsActive: bool,
     // bool                    DockNodeIsVisible   :1;
     pub DockNodeIsVisible: bool,
@@ -230,7 +230,7 @@ pub struct ImGuiWindow {
     pub DockNodeAsHost: *mut ImGuiDockNode,
     // Which node are we owning (for parent windows)
     pub DockId: ImGuiID,
-    // Backup of last valid DockNode->ID, so single window remember their dock node id even when they are not bound any more
+    // Backup of last valid DockNode.ID, so single window remember their dock node id even when they are not bound any more
     pub DockTabItemStatusFlags: ImGuiItemStatusFlags,
     pub DockTabItemRect: ImRect,
 

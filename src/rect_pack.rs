@@ -350,7 +350,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
    stbrp__findresult fr;
    stbrp_node **prev, *node, *tail, **best= null_mut();
 
-   // align to multiple of c->align
+   // align to multiple of c.align
    width = (width + c.align - 1);
    width -= width % c.align;
    STBRP_ASSERT(width % c.align == 0);
@@ -388,7 +388,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
       node = node.next;
    }
 
-   best_x = (best == null_mut()) ? 0 : (*best)->x;
+   best_x = (best == null_mut()) ? 0 : (*best).x;
 
    // if doing best-fit (B0f32), we also have to try aligning right edge to each node position
    //

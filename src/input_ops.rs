@@ -23,7 +23,7 @@ use crate::vec2::ImVec2;
 // Test if mouse cursor is hovering given rectangle
 // NB- Rectangle is clipped by our current clip setting
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
-// bool IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, bool clip)
+// bool IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, clip: bool)
 pub fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -75,7 +75,7 @@ pub fn GetKeyData(key: ImGuiKey) -> *mut ImGuiKeyData {
 //         index = if g.IO.KeyMap[key] != -1 {
 //             g.IO.KeyMap[key]
 //         } else { key };
-//     } // Remap native->imgui or imgui->native
+//     } // Remap native.imgui or imgui.native
 //     else {
 //         index = key;
 //     }
@@ -239,7 +239,7 @@ pub fn IsKeyDown(key: ImGuiKey) -> bool {
     return true;
 }
 
-// bool IsKeyPressed(ImGuiKey key, bool repeat)
+// bool IsKeyPressed(ImGuiKey key, repeat: bool)
 pub unsafe fn IsKeyPressed(key: ImGuiKey, repeat: bool) -> bool {
     return IsKeyPressedEx(key, if repeat { ImGuiInputFlags_Repeat } else { ImGuiInputFlags_None });
 }
@@ -288,7 +288,7 @@ pub fn IsMouseDown(button: ImGuiMouseButton) -> bool {
     return g.IO.MouseDown[button];
 }
 
-// bool IsMouseClicked(ImGuiMouseButton button, bool repeat)
+// bool IsMouseClicked(ImGuiMouseButton button, repeat: bool)
 pub fn IsMouseClicked(button: ImGuiMouseButton, repeat: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
@@ -428,13 +428,13 @@ pub fn SetMouseCursor(cursor_type: ImGuiMouseCursor) {
     g.MouseCursor = cursor_type;
 }
 
-// c_void SetNextFrameWantCaptureKeyboard(bool want_capture_keyboard)
+// c_void SetNextFrameWantCaptureKeyboard(want_capture_keyboard: bool)
 pub fn SetNextFrameWantCaptureKeyboard(want_capture_keyboard: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.WantCaptureKeyboardNextFrame = if want_capture_keyboard { 1 } else { 0 };
 }
 
-// c_void SetNextFrameWantCaptureMouse(bool want_capture_mouse)
+// c_void SetNextFrameWantCaptureMouse(want_capture_mouse: bool)
 pub fn SetNextFrameWantCaptureMouse(want_capture_mouse: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.WantCaptureMouseNextFrame = if want_capture_mouse { 1 } else { 0 };
@@ -480,7 +480,7 @@ pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
 // We always call this with the value of 'bool g.IO.ConfigInputTrickleEventQueue'.
 // - trickle_fast_inputs = false : process all events, turn into flattened input state (e.g. successive down/up/down/up will be lost)
 // - trickle_fast_inputs = true  : process as many events as possible (successive down/up/down/up will be trickled over several frames so nothing is lost) (new feature in 1.87)
-// c_void UpdateInputEvents(bool trickle_fast_inputs)
+// c_void UpdateInputEvents(trickle_fast_inputs: bool)
 pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
@@ -631,7 +631,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
 // inline bool             IsKeyPressedMap(ImGuiKey key, let mut repeat: bool = true)           { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // [removed in 1.87]
 
 // FIXME: Look into renaming this once we have settled the new Focus/Activation/TabStop system.
-c_void PushAllowKeyboardFocus(bool allow_keyboard_focus)
+c_void PushAllowKeyboardFocus(allow_keyboard_focus: bool)
 {
     PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus);
 }

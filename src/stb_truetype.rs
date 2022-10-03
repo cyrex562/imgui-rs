@@ -1612,7 +1612,7 @@ static c_int stbtt__GetGlyfOffset(const stbtt_fontinfo *info, c_int glyph_index)
    STBTT_assert(!info.cff.size);
 
    if (glyph_index >= info.numGlyphs) return -1; // glyph index out of range
-   if (info.indexToLocFormat >= 2)    return -1; // unknown index->glyph map format
+   if (info.indexToLocFormat >= 2)    return -1; // unknown index.glyph map format
 
    if (info.indexToLocFormat == 0) {
       g1 = info.glyf + ttUSHORT(info.data + info.loca + glyph_index * 2) * 2;
@@ -2626,7 +2626,7 @@ STBTT_DEF c_int  stbtt_GetGlyphKernAdvance(const stbtt_fontinfo *info, c_int g1,
 
 STBTT_DEF c_int  stbtt_GetCodepointKernAdvance(const stbtt_fontinfo *info, c_int ch1, c_int ch2)
 {
-   if (!info.kern && !info.gpos) // if no kerning table, don't waste time looking up both codepoint->glyphs
+   if (!info.kern && !info.gpos) // if no kerning table, don't waste time looking up both codepoint.glyphs
       return 0;
    return stbtt_GetGlyphKernAdvance(info, stbtt_FindGlyphIndex(info,ch1), stbtt_FindGlyphIndex(info,ch2));
 }
@@ -2850,7 +2850,7 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, c
    else
       z.dx = STBTT_ifloor(STBTT_FIX * dxdy);
 
-   z.x = STBTT_ifloor(STBTT_FIX * e.x0 + z.dx * (start_point - e.y0)); // use z->dx so when we offset later it's by the same amount
+   z.x = STBTT_ifloor(STBTT_FIX * e.x0 + z.dx * (start_point - e.y0)); // use z.dx so when we offset later it's by the same amount
    z.x -= off_x * STBTT_FIX;
 
    z.ey = e.y1;
@@ -2864,7 +2864,7 @@ static stbtt__active_edge *stbtt__new_active(stbtt__hheap *hh, stbtt__edge *e, c
    stbtt__active_edge *z = (stbtt__active_edge *) stbtt__hheap_alloc(hh, sizeof(*z), userdata);
    let dxdy: c_float =  (e.x1 - e.x0) / (e.y1 - e.y0);
    STBTT_assert(z != null_mut());
-   //STBTT_assert(e->y0 <= start_point);
+   //STBTT_assert(e.y0 <= start_point);
    if (!z) return z;
    z.fdx = dxdy;
    z.fdy = dxdy != 0f32 ? (1.0f/dxdy) : 0f32;
@@ -2961,7 +2961,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
                stbtt__hheap_free(&hh, z);
             } else {
                z.x += z.dx; // advance to position for current scanline
-               step = &((*step)->next); // advance through list
+               step = &((*step).next); // advance through list
             }
          }
 
@@ -2969,8 +2969,8 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
          for(;;) {
             let mut changed: c_int = 0;
             step = &active;
-            while (*step && (*step)->next) {
-               if ((*step)->x > (*step)->next.x) {
+            while (*step && (*step).next) {
+               if ((*step).x > (*step).next.x) {
                   stbtt__active_edge *t = *step;
                   stbtt__active_edge *q = t.next;
 
@@ -2979,7 +2979,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
                   *step = q;
                   changed = 1;
                }
-               step = &(*step)->next;
+               step = &(*step).next;
             }
             if (!changed) break;
          }
@@ -3001,7 +3001,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
                      stbtt__active_edge *p = active;
                      while (p.next && p. < z.x)
                         p = p.next;
-                     // at this point, p->next->x is NOT < z->x
+                     // at this point, p.next.x is NOT < z.x
                      z.next = p.next;
                      p.next = z;
                   }
@@ -3265,9 +3265,9 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
                let x3: c_float =  xb;
                let y3: c_float =  y_bottom;
 
-               // x = e->x + e->dx * (y-y_top)
-               // (y-y_top) = (x - e->x) / e->dx
-               // y = (x - e->x) / e->dx + y_top
+               // x = e.x + e.dx * (y-y_top)
+               // (y-y_top) = (x - e.x) / e.dx
+               // y = (x - e.x) / e.dx + y_top
                let y1: c_float =  (x - x0) / dx + y_top;
                let y2: c_float =  (x+1 - x0) / dx + y_top;
 
@@ -3340,7 +3340,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
             z.direction = 0;
             stbtt__hheap_free(&hh, z);
          } else {
-            step = &((*step)->next); // advance through list
+            step = &((*step).next); // advance through list
          }
       }
 
@@ -3386,7 +3386,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
       while (*step) {
          stbtt__active_edge *z = *step;
          z.fx += z.fdx; // advance to position for current scanline
-         step = &((*step)->next); // advance through list
+         step = &((*step).next); // advance through list
       }
 
       ++y;
@@ -3402,7 +3402,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
 #error "Unrecognized value of STBTT_RASTERIZER_VERSION"
 // #endif
 
-// #define STBTT__COMPARE(a,b)  ((a)->y0 < (b)->y0)
+// #define STBTT__COMPARE(a,b)  ((a).y0 < (b).y0)
 
 static c_void stbtt__sort_edges_ins_sort(stbtt__edge *p, c_int n)
 {
@@ -4311,7 +4311,7 @@ STBTT_DEF c_int stbtt_PackFontRanges(stbtt_pack_context *spc, const c_uchar *fon
 {
    stbtt_fontinfo info;
    c_int i, j, n, return_value; // [DEAR IMGUI] removed = 1;
-   //stbrp_context *context = (stbrp_context *) spc->pack_info;
+   //stbrp_context *context = (stbrp_context *) spc.pack_info;
    stbrp_rect    *rects;
 
    // flag all characters as NOT packed

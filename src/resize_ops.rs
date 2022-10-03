@@ -23,7 +23,7 @@ use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_NoResize};
 use crate::window_ops::CalcWindowSizeAfterConstraint;
 
-// static c_void CalcResizePosSizeFromAnyCorner(ImGuiWindow* window, const ImVec2& corner_target, const ImVec2& corner_norm, ImVec2* out_pos, ImVec2* out_size)
+// static c_void CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, const ImVec2& corner_target, const ImVec2& corner_norm, out_pos: *mut ImVec2, out_size: *mut ImVec2)
 pub unsafe fn CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, corner: &ImVec2, corner_target: &ImVec2, corner_norm: &ImVec2, out_pos: *mut ImVec2, out_size: *mut ImVec2) {
     let pos_min: ImVec2 = ImLerp(corner_target, window.Pos, corner_norm);                // Expected window upper-left
     let pos_max: ImVec2 = ImLerp(window.Pos + window.Size, corner_target, corner_norm); // Expected window lower-right
@@ -40,12 +40,12 @@ pub unsafe fn CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, corner: &
 }
 
 
-// static ImRect GetResizeBorderRect(ImGuiWindow* window, c_int border_n, c_float perp_padding, c_float thickness)
+// static ImRect GetResizeBorderRect(window: *mut ImGuiWindow, c_int border_n, c_float perp_padding, c_float thickness)
 pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_padding: c_float, thickness: c_float) -> ImRect
 {
     let mut rect: ImRect =  window.Rect();
     if thickness == 0f32 {
-        rect.Max -= ImVec2(1, 1);
+        rect.Max -= ImVec2::new2(1, 1);
     }
     if border_n == ImGuiDir_Left { return ImRect(rect.Min.x - thickness, rect.Min.y + perp_padding, rect.Min.x + thickness, rect.Max.y - perp_padding); }
     if border_n == ImGuiDir_Right { return ImRect(rect.Max.x - thickness, rect.Min.y + perp_padding, rect.Max.x + thickness, rect.Max.y - perp_padding); }
@@ -56,7 +56,7 @@ pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_paddi
 }
 
 // 0..3: corners (Lower-right, Lower-left, Unused, Unused)
-// ImGuiID GetWindowResizeCornerID(ImGuiWindow* window, c_int n)
+// ImGuiID GetWindowResizeCornerID(window: *mut ImGuiWindow, c_int n)
 pub unsafe fn GetWindowResizeCornerID(window: *mut ImGuiWindow, n: c_int) -> ImGuiID {
     // IM_ASSERT(n >= 0 && n < 4);
     let mut id: ImGuiID = if window.DockIsActive { window.DockNode.Hostwindow.ID } else { window.ID };
@@ -66,7 +66,7 @@ pub unsafe fn GetWindowResizeCornerID(window: *mut ImGuiWindow, n: c_int) -> ImG
 }
 
 // Borders (Left, Right, Up, Down)
-// ImGuiID GetWindowResizeBorderID(ImGuiWindow* window, ImGuiDir dir)
+// ImGuiID GetWindowResizeBorderID(window: *mut ImGuiWindow, dir: ImGuiDir)
 pub unsafe fn GetWindowResizeBorderID(window: *mut ImGuiWindow, dir: ImGuiDir) -> ImGuiID
 {
     // IM_ASSERT(dir >= 0 && dir < 4);
@@ -79,7 +79,7 @@ pub unsafe fn GetWindowResizeBorderID(window: *mut ImGuiWindow, dir: ImGuiDir) -
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
-// static bool UpdateWindowManualResize(ImGuiWindow* window, const ImVec2& size_auto_fit, c_int* border_held, c_int resize_grip_count, u32 resize_grip_col[4], const ImRect& visibility_rect)
+// static bool UpdateWindowManualResize(window: *mut ImGuiWindow, const ImVec2& size_auto_fit, c_int* border_held, c_int resize_grip_count, u32 resize_grip_col[4], const ImRect& visibility_rect)
 pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: &ImVec2, border_held: *mut c_int, resize_grip_count: c_int, mut resize_grip_col:[u32;4], visibility_rect: &ImVec2) -> bool
 {
 
@@ -125,7 +125,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         let corner: ImVec2 = ImLerp(window.Pos, window.Pos + window.Size, def.CornerPosN);
 
         // Using the FlattenChilds button flag we make the resize button accessible even if we are hovering over a child window
-        // bool hovered, held;
+        // hovered: bool, held;
         let hovered: bool = false;
         let held: bool = false;
         let mut resize_rect = ImRect::new2(corner - def.InnerDir * grip_hover_outer_size, corner + def.InnerDir * grip_hover_inner_size);
@@ -136,7 +136,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         } // == GetWindowResizeCornerID()
         KeepAliveID(resize_grip_id);
         ButtonBehavior(resize_rect, resize_grip_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_NoNavFocus);
-        //GetForegroundDrawList(window)->AddRect(resize_rect.Min, resize_rect.Max, IM_COL32(255, 255, 0, 255));
+        //GetForegroundDrawList(window).AddRect(resize_rect.Min, resize_rect.Max, IM_COL32(255, 255, 0, 255));
         if hovered || held {
             g.MouseCursor = if resize_grip_n & 1 {
                 ImGuiMouseCursor_ResizeNESW
@@ -177,14 +177,14 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         let def = resize_border_def[border_n];
         let axis = if (border_n == ImGuiDir_Left || border_n == ImGuiDir_Right) { ImGuiAxis_X } else { ImGuiAxis_Y };
 
-        // bool hovered, held;
+        // hovered: bool, held;
         let mut hovered = false;
         let mut held = false;
         let border_rect =  GetResizeBorderRect(window, border_n, grip_hover_inner_size, WINDOWS_HOVER_PADDING);
         let mut border_id: ImGuiID =  window.GetID3(border_n + 4); // == GetWindowResizeBorderID()
         KeepAliveID(border_id);
         ButtonBehavior(border_rect, border_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_NoNavFocus);
-        //GetForegroundDrawLists(window)->AddRect(border_rect.Min, border_rect.Max, IM_COL32(255, 255, 0, 255));
+        //GetForegroundDrawLists(window).AddRect(border_rect.Min, border_rect.Max, IM_COL32(255, 255, 0, 255));
         if ((hovered && g.HoveredIdTimer > WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER) || held)
         {
             g.MouseCursor = if axis == ImGuiAxis_X { ImGuiMouseCursor_ResizeEW } else { ImGuiMouseCursor_ResizeNS };

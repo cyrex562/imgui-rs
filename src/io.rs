@@ -29,7 +29,7 @@ pub struct ImGuiIO {
     pub BackendFlags: ImGuiBackendFlags,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
     pub DisplaySize: ImVec2,
-    // <unset>          // Main display size, in pixels (generally == GetMainViewport()->Size). May change every frame.
+    // <unset>          // Main display size, in pixels (generally == GetMainViewport().Size). May change every frame.
     pub DeltaTime: c_float,
     // = 1.0f/60f32     // Time elapsed since last frame, in seconds. May change every frame.
     pub IniSavingRate: c_float,
@@ -174,7 +174,7 @@ pub struct ImGuiIO {
     // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
     pub MouseDelta: ImVec2,                         // Mouse delta. Note that this is zero if either current or previous position are invalid (-f32::MAX,-f32::MAX), so a disappearing/reappearing mouse won't have a huge delta.
 
-    // Legacy: before 1.87, we required backend to fill io.KeyMap[] (imgui->native map) during initialization and io.KeysDown[] (native indices) every frame.
+    // Legacy: before 1.87, we required backend to fill io.KeyMap[] (imgui.native map) during initialization and io.KeysDown[] (native indices) every frame.
     // This is still temporarily supported as a legacy feature. However the new preferred scheme is for backend to call io.AddKeyEvent().
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
 //     c_int         KeyMap[ImGuiKey_COUNT];             // [LEGACY] Input: map of indices into the KeysDown[512] entries array which represent your "native" keyboard state. The first 512 are now unused and should be kept zero. Legacy backend will write into KeyMap[] using ImGuiKey_ indices which are always >512.
@@ -298,7 +298,7 @@ impl ImGuiIO {
         out.FontGlobalScale = 1f32;
         out.FontDefault = null_mut();
         out.FontAllowUserScaling = false;
-        out.DisplayFramebufferScale = ImVec2(1f32, 1f32);
+        out.DisplayFramebufferScale = ImVec2::new2(1f32, 1f32);
 
         // Docking options (when ImGuiConfigFlags_DockingEnable is set)
         out.ConfigDockingNoSplit = false;
@@ -473,10 +473,10 @@ impl ImGuiIO {
     // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
     // - bool down:          Is the key down? use false to signify a key release.
     // - c_float analog_value: 0f32..1.0f
-    // void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, bool down, c_float analog_value)
+    // void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, down: bool, c_float analog_value)
     pub fn AddKeyAnalogEvent(&mut self, key: ImGuiKey, down: bool, analog_value: c_float)
     {
-        //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
+        //if (e.Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", GetKeyName(e.Key), e.Down, e.NativeKeycode, e.NativeScancode); }
         if key == ImGuiKey_None || !self.AppAcceptingEvents {
             return;
         }
@@ -526,7 +526,7 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddKeyEvent(ImGuiKey key, bool down)
+    // void ImGuiIO::AddKeyEvent(ImGuiKey key, down: bool)
     pub fn AddKeyEvent(&mut self, key: ImGuiKey, down: bool)
     {
         if !self.AppAcceptingEvents {
@@ -549,7 +549,7 @@ impl ImGuiIO {
         // IM_UNUSED(native_keycode);  // Yet unused
         // IM_UNUSED(native_scancode); // Yet unused
 
-        // Build native->imgui map so old user code can still call key functions with native 0..511 values.
+        // Build native.imgui map so old user code can still call key functions with native 0..511 values.
     // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
     //     let legacy_key = if (native_legacy_index != -1) { native_legacy_index } else { native_keycode };
     //     if !IsLegacyKey(legacy_key) {
@@ -564,7 +564,7 @@ impl ImGuiIO {
     }
 
     // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
-    // void ImGuiIO::SetAppAcceptingEvents(bool accepting_events)
+    // void ImGuiIO::SetAppAcceptingEvents(accepting_events: bool)
     pub fn SetAppAcceptingEvents(&mut self, accepting_events: bool)
     {
         self.AppAcceptingEvents = accepting_events;
@@ -589,7 +589,7 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddMouseButtonEvent(c_int mouse_button, bool down)
+    // void ImGuiIO::AddMouseButtonEvent(c_int mouse_button, down: bool)
     pub fn AddMouseButtonEvent(&mut self, mouse_button: c_int, down: bool)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -627,7 +627,7 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddMouseViewportEvent(ImGuiID viewport_id)
+    // void ImGuiIO::AddMouseViewportEvent(viewport_id: ImGuiID)
     pub fn AddMouseViewportEvent(&mut self, viewport_id: ImGuiID)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -642,7 +642,7 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddFocusEvent(bool focused)
+    // void ImGuiIO::AddFocusEvent(focused: bool)
     pub fn AddFocusEvent(&mut self, focused: bool)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -656,21 +656,21 @@ impl ImGuiIO {
     }
 
     // Input Functions
-    // void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
+    // void  AddKeyEvent(ImGuiKey key, down: bool);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
 
-    // void  AddKeyAnalogEvent(ImGuiKey key, bool down, c_float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
+    // void  AddKeyAnalogEvent(ImGuiKey key, down: bool, c_float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
 
     // void  AddMousePosEvent(c_float x, c_float y);                     // Queue a mouse position update. Use -f32::MAX,-f32::MAX to signify no mouse (e.g. app not focused and not hovered)
 
-    // void  AddMouseButtonEvent(c_int button, bool down);             // Queue a mouse button change
+    // void  AddMouseButtonEvent(c_int button, down: bool);             // Queue a mouse button change
 
     // void  AddMouseWheelEvent(c_float wh_x, c_float wh_y);             // Queue a mouse wheel update
 
-    // void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set
+    // void  AddMouseViewportEvent(id: ImGuiID);                      // Queue a mouse hovered viewport. Requires backend to set
 
     // ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
 
-    // void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
+    // void  AddFocusEvent(focused: bool);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
 
     // void  AddInputCharacter(unsigned c_int c);                      // Queue a new character input
 
@@ -681,7 +681,7 @@ impl ImGuiIO {
 
     // void  SetKeyEventNativeData(ImGuiKey key, c_int native_keycode, c_int native_scancode, c_int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
 
-    // void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
+    // void  SetAppAcceptingEvents(accepting_events: bool);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
 
     // void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
 

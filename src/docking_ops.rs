@@ -84,7 +84,7 @@
 //-----------------------------------------------------------------------------
 
 // [Internal] Called via SetNextWindowDockID()
-c_void SetWindowDock(ImGuiWindow* window, ImGuiID dock_id, ImGuiCond cond)
+c_void SetWindowDock(window: *mut ImGuiWindow, dock_id: ImGuiID, ImGuiCond cond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowDockAllowFlags & cond) == 0)
@@ -95,15 +95,15 @@ c_void SetWindowDock(ImGuiWindow* window, ImGuiID dock_id, ImGuiCond cond)
         return;
 
     // If the user attempt to set a dock id that is a split node, we'll dig within to find a suitable docking spot
-    ImGuiContext* ctx = GImGui;
-    if (ImGuiDockNode* new_node = DockContextFindNodeByID(ctx, dock_id))
+    ctx: *mut ImGuiContext = GImGui;
+    if (let mut new_node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, dock_id))
         if (new_node.IsSplitNode())
         {
             // Policy: Find central node or latest focused node. We first move back to our root node.
             new_node = DockNodeGetRootNode(new_node);
             if (new_node.CentralNode)
             {
-                // IM_ASSERT(new_node->CentralNode->IsCentralNode());
+                // IM_ASSERT(new_node.CentralNode.IsCentralNode());
                 dock_id = new_node.CentralNode.ID;
             }
             else
@@ -123,10 +123,10 @@ c_void SetWindowDock(ImGuiWindow* window, ImGuiID dock_id, ImGuiCond cond)
 // Create an explicit dockspace node within an existing window. Also expose dock node flags and creates a CentralNode by default.
 // The Central Node is always displayed even when empty and shrink/extend according to the requested size of its neighbors.
 // DockSpace() needs to be submitted _before_ any window they can host. If you use a dockspace, submit it early in your app.
-ImGuiID DockSpace(ImGuiID id, const ImVec2& size_arg, ImGuiDockNodeFlags flags, *const ImGuiWindowClass window_class)
+ImGuiID DockSpace(id: ImGuiID, const ImVec2& size_arg, ImGuiDockNodeFlags flags, *const ImGuiWindowClass window_class)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ctx: *mut ImGuiContext = GImGui;
+    let g = ctx;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (!(g.IO.ConfigFlags & ImGuiConfigFlags_DockingEnable))
         return 0;
@@ -139,15 +139,15 @@ ImGuiID DockSpace(ImGuiID id, const ImVec2& size_arg, ImGuiDockNodeFlags flags, 
 
     // IM_ASSERT((flags & ImGuiDockNodeFlags_DockSpace) == 0);
     // IM_ASSERT(id != 0);
-    ImGuiDockNode* node = DockContextFindNodeByID(ctx, id);
+    node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, id);
     if (!node)
     {
         IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X created\n", id);
         node = DockContextAddNode(ctx, id);
         node.SetLocalFlags(ImGuiDockNodeFlags_CentralNode);
     }
-    if (window_class && window_class->ClassId != node.WindowClass.ClassId)
-        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X: setup WindowClass 0x%08X -> 0x%08X\n", id, node.WindowClass.ClassId, window_class->ClassId);
+    if (window_class && window_class.ClassId != node.WindowClass.ClassId)
+        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X: setup WindowClass 0x%08X -> 0x%08X\n", id, node.WindowClass.ClassId, window_class.ClassId);
     node.SharedFlags = flags;
     node.WindowClass = window_class ? *window_class : ImGuiWindowClass();
 
@@ -155,7 +155,7 @@ ImGuiID DockSpace(ImGuiID id, const ImVec2& size_arg, ImGuiDockNodeFlags flags, 
     // It is possible that the node has already been claimed by a docked window which appeared before the DockSpace() node, so we overwrite IsDockSpace again.
     if (node.LastFrameActive == g.FrameCount && !(flags & ImGuiDockNodeFlags_KeepAliveOnly))
     {
-        // IM_ASSERT(node->IsDockSpace() == false && "Cannot call DockSpace() twice a frame with the same ID");
+        // IM_ASSERT(node.IsDockSpace() == false && "Cannot call DockSpace() twice a frame with the same ID");
         node.SetLocalFlags(node.LocalFlags | ImGuiDockNodeFlags_DockSpace);
         return id;
     }
@@ -184,7 +184,7 @@ ImGuiID DockSpace(ImGuiID id, const ImVec2& size_arg, ImGuiDockNodeFlags flags, 
 
     // FIXME-DOCK: Why do we need a child window to host a dockspace, could we host it in the existing window?
     // FIXME-DOCK: What is the reason for not simply calling BeginChild()? (OK to have a reason but should be commented)
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_DockNodeHost;
+    let mut window_flags: ImGuiWindowFlags = ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_DockNodeHost;
     window_flags |= ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     window_flags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
     window_flags |= ImGuiWindowFlags_NoBackground;
@@ -201,7 +201,7 @@ ImGuiID DockSpace(ImGuiID id, const ImVec2& size_arg, ImGuiDockNodeFlags flags, 
     host_window.ChildId = window.GetID(title);
     node.OnlyNodeWithWindows= null_mut();
 
-    // IM_ASSERT(node->IsRootNode());
+    // IM_ASSERT(node.IsRootNode());
 
     // We need to handle the rare case were a central node is missing.
     // This can happen if the node was first created manually with DockBuilderAddNode() but _without_ the ImGuiDockNodeFlags_Dockspace.
@@ -233,7 +233,7 @@ ImGuiID DockSpaceOverViewport(*const ImGuiViewport viewport, ImGuiDockNodeFlags 
     SetNextWindowSize(viewport.WorkSize);
     SetNextWindowViewport(viewport.ID);
 
-    ImGuiWindowFlags host_window_flags = 0;
+    let mut host_window_flags: ImGuiWindowFlags = 0;
     host_window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
     host_window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
     if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
@@ -244,12 +244,12 @@ ImGuiID DockSpaceOverViewport(*const ImGuiViewport viewport, ImGuiDockNodeFlags 
 
     PushStyleVar(ImGuiStyleVar_WindowRounding, 0f32);
     PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0f32);
-    PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0f32, 0f32));
+    PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2::new2(0f32, 0f32));
     Begin(label, null_mut(), host_window_flags);
     PopStyleVar(3);
 
     let mut dockspace_id: ImGuiID =  GetID("DockSpace");
-    DockSpace(dockspace_id, ImVec2(0f32, 0f32), dockspace_flags, window_class);
+    DockSpace(dockspace_id, ImVec2::new2(0f32, 0f32), dockspace_flags, window_class);
     End();
 
     return dockspace_id;
@@ -278,7 +278,7 @@ ImGuiID DockSpaceOverViewport(*const ImGuiViewport viewport, ImGuiDockNodeFlags 
 // - DockBuilderFinish()
 //-----------------------------------------------------------------------------
 
-c_void DockBuilderDockWindow(*const char window_name, ImGuiID node_id)
+c_void DockBuilderDockWindow(*const char window_name, node_id: ImGuiID)
 {
     // We don't preserve relative order of multiple docked windows (by clearing DockOrder back to -1)
     let mut window_id: ImGuiID =  ImHashStr(window_name);
@@ -299,26 +299,26 @@ c_void DockBuilderDockWindow(*const char window_name, ImGuiID node_id)
     }
 }
 
-ImGuiDockNode* DockBuilderGetNode(ImGuiID node_id)
+ImGuiDockNode* DockBuilderGetNode(node_id: ImGuiID)
 {
-    ImGuiContext* ctx = GImGui;
+    ctx: *mut ImGuiContext = GImGui;
     return DockContextFindNodeByID(ctx, node_id);
 }
 
-c_void DockBuilderSetNodePos(ImGuiID node_id, ImVec2 pos)
+c_void DockBuilderSetNodePos(node_id: ImGuiID, ImVec2 pos)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockNode* node = DockContextFindNodeByID(ctx, node_id);
+    ctx: *mut ImGuiContext = GImGui;
+    node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
     if (node == null_mut())
         return;
     node.Pos = pos;
     node.AuthorityForPos = ImGuiDataAuthority_DockNode;
 }
 
-c_void DockBuilderSetNodeSize(ImGuiID node_id, ImVec2 size)
+c_void DockBuilderSetNodeSize(node_id: ImGuiID, ImVec2 size)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockNode* node = DockContextFindNodeByID(ctx, node_id);
+    ctx: *mut ImGuiContext = GImGui;
+    node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
     if (node == null_mut())
         return;
     // IM_ASSERT(size.x > 0f32 && size.y > 0f32);
@@ -333,17 +333,17 @@ c_void DockBuilderSetNodeSize(ImGuiID node_id, ImVec2 size)
 //   For various reason, the splitting code currently needs a base size otherwise space may not be allocated as precisely as you would expect.
 // - Use (id == 0) to let the system allocate a node identifier.
 // - Existing node with a same id will be removed.
-ImGuiID DockBuilderAddNode(ImGuiID id, ImGuiDockNodeFlags flags)
+ImGuiID DockBuilderAddNode(id: ImGuiID, ImGuiDockNodeFlags flags)
 {
-    ImGuiContext* ctx = GImGui;
+    ctx: *mut ImGuiContext = GImGui;
 
     if (id != 0)
         DockBuilderRemoveNode(id);
 
-    ImGuiDockNode* node= null_mut();
+    node: *mut ImGuiDockNode= null_mut();
     if (flags & ImGuiDockNodeFlags_DockSpace)
     {
-        DockSpace(id, ImVec2(0, 0), (flags & ~ImGuiDockNodeFlags_DockSpace) | ImGuiDockNodeFlags_KeepAliveOnly);
+        DockSpace(id, ImVec2::new2(0, 0), (flags & ~ImGuiDockNodeFlags_DockSpace) | ImGuiDockNodeFlags_KeepAliveOnly);
         node = DockContextFindNodeByID(ctx, id);
     }
     else
@@ -351,14 +351,14 @@ ImGuiID DockBuilderAddNode(ImGuiID id, ImGuiDockNodeFlags flags)
         node = DockContextAddNode(ctx, id);
         node.SetLocalFlags(flags);
     }
-    node.LastFrameAlive = ctx->FrameCount;   // Set this otherwise BeginDocked will undock during the same frame.
+    node.LastFrameAlive = ctx.FrameCount;   // Set this otherwise BeginDocked will undock during the same frame.
     return node.ID;
 }
 
-c_void DockBuilderRemoveNode(ImGuiID node_id)
+c_void DockBuilderRemoveNode(node_id: ImGuiID)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockNode* node = DockContextFindNodeByID(ctx, node_id);
+    ctx: *mut ImGuiContext = GImGui;
+    node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
     if (node == null_mut())
         return;
     DockBuilderRemoveNodeDockedWindows(node_id, true);
@@ -373,12 +373,12 @@ c_void DockBuilderRemoveNode(ImGuiID node_id)
 }
 
 // root_id = 0 to remove all, root_id != 0 to remove child of given node.
-c_void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
+c_void DockBuilderRemoveNodeChildNodes(root_id: ImGuiID)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiDockContext* dc  = &ctx->DockContext;
+    ctx: *mut ImGuiContext = GImGui;
+    let dc = &mut ctx.DockContext;
 
-    ImGuiDockNode* root_node = root_id ? DockContextFindNodeByID(ctx, root_id) : null_mut();
+    let mut root_node: *mut ImGuiDockNode = root_id ? DockContextFindNodeByID(ctx, root_id) : null_mut();
     if (root_id && root_node == null_mut())
         return;
     let mut has_central_node: bool =  false;
@@ -388,10 +388,10 @@ c_void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
 
     // Process active windows
     Vec<ImGuiDockNode*> nodes_to_remove;
-    for (let n: c_int = 0; n < dc->Nodes.Data.Size; n++)
-        if (ImGuiDockNode* node = (ImGuiDockNode*)dc->Nodes.Data[n].val_p)
+    for (let n: c_int = 0; n < dc.Nodes.Data.Size; n++)
+        if (node: *mut ImGuiDockNode = (ImGuiDockNode*)dc.Nodes.Data[n].val_p)
         {
-            let mut want_removal: bool =  (root_id == 0) || (node.ID != root_id && DockNodeGetRootNode(node)->ID == root_id);
+            let mut want_removal: bool =  (root_id == 0) || (node.ID != root_id && DockNodeGetRootNode(node).ID == root_id);
             if (want_removal)
             {
                 if (node.IsCentralNode())
@@ -407,7 +407,7 @@ c_void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
             }
         }
 
-    // DockNodeMoveWindows->DockNodeAddWindow will normally set those when reaching two windows (which is only adequate during interactive merge)
+    // DockNodeMoveWindows.DockNodeAddWindow will normally set those when reaching two windows (which is only adequate during interactive merge)
     // Make sure we don't lose our current pos/size. (FIXME-DOCK: Consider tidying up that code in DockNodeAddWindow instead)
     if (root_node)
     {
@@ -416,10 +416,10 @@ c_void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
     }
 
     // Apply to settings
-    for (ImGuiWindowSettings* settings = ctx->SettingsWindows.begin(); settings != null_mut(); settings = ctx->SettingsWindows.next_chunk(settings))
+    for (ImGuiWindowSettings* settings = ctx.SettingsWindows.begin(); settings != null_mut(); settings = ctx.SettingsWindows.next_chunk(settings))
         if (let mut window_settings_dock_id: ImGuiID =  settings.DockId)
             for (let n: c_int = 0; n < nodes_to_remove.Size; n++)
-                if (nodes_to_remove[n]->ID == window_settings_dock_id)
+                if (nodes_to_remove[n].ID == window_settings_dock_id)
                 {
                     settings.DockId = root_id;
                     break;
@@ -433,8 +433,8 @@ c_void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
 
     if (root_id == 0)
     {
-        dc->Nodes.Clear();
-        dc->Requests.clear();
+        dc.Nodes.Clear();
+        dc.Requests.clear();
     }
     else if (has_central_node)
     {
@@ -443,19 +443,19 @@ c_void DockBuilderRemoveNodeChildNodes(ImGuiID root_id)
     }
 }
 
-c_void DockBuilderRemoveNodeDockedWindows(ImGuiID root_id, bool clear_settings_refs)
+c_void DockBuilderRemoveNodeDockedWindows(root_id: ImGuiID, clear_settings_refs: bool)
 {
     // Clear references in settings
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ctx: *mut ImGuiContext = GImGui;
+    let g = ctx;
     if (clear_settings_refs)
     {
         for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
         {
             let mut want_removal: bool =  (root_id == 0) || (settings.DockId == root_id);
             if (!want_removal && settings.DockId != 0)
-                if (ImGuiDockNode* node = DockContextFindNodeByID(ctx, settings.DockId))
-                    if (DockNodeGetRootNode(node)->ID == root_id)
+                if (node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, settings.DockId))
+                    if (DockNodeGetRootNode(node).ID == root_id)
                         want_removal = true;
             if (want_removal)
                 settings.DockId = 0;
@@ -466,10 +466,10 @@ c_void DockBuilderRemoveNodeDockedWindows(ImGuiID root_id, bool clear_settings_r
     for (let n: c_int = 0; n < g.Windows.len(); n++)
     {
         let mut window: *mut ImGuiWindow =  g.Windows[n];
-        let mut want_removal: bool =  (root_id == 0) || (window.DockNode && DockNodeGetRootNode(window.DockNode)->ID == root_id) || (window.DockNodeAsHost && window.DockNodeAsHost->ID == root_id);
+        let mut want_removal: bool =  (root_id == 0) || (window.DockNode && DockNodeGetRootNode(window.DockNode).ID == root_id) || (window.DockNodeAsHost && window.DockNodeAsHost.ID == root_id);
         if (want_removal)
         {
-            const let mut backup_dock_id: ImGuiID =  window.DockId;
+            let mut backup_dock_id: ImGuiID =  window.DockId;
             IM_UNUSED(backup_dock_id);
             DockContextProcessUndockWindow(ctx, window, clear_settings_refs);
             if (!clear_settings_refs)
@@ -481,20 +481,20 @@ c_void DockBuilderRemoveNodeDockedWindows(ImGuiID root_id, bool clear_settings_r
 // If 'out_id_at_dir' or 'out_id_at_opposite_dir' are non NULL, the function will write out the ID of the two new nodes created.
 // Return value is ID of the node at the specified direction, so same as (*out_id_at_dir) if that pointer is set.
 // FIXME-DOCK: We are not exposing nor using split_outer.
-ImGuiID DockBuilderSplitNode(ImGuiID id, ImGuiDir split_dir, c_float size_ratio_for_node_at_dir, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir)
+ImGuiID DockBuilderSplitNode(id: ImGuiID, split_dir: ImGuiDir, c_float size_ratio_for_node_at_dir, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_dir != ImGuiDir_None);
     IMGUI_DEBUG_LOG_DOCKING("[docking] DockBuilderSplitNode: node 0x%08X, split_dir %d\n", id, split_dir);
 
-    ImGuiDockNode* node = DockContextFindNodeByID(&g, id);
+    node: *mut ImGuiDockNode = DockContextFindNodeByID(&g, id);
     if (node == null_mut())
     {
         // IM_ASSERT(node != NULL);
         return 0;
     }
 
-    // IM_ASSERT(!node->IsSplitNode()); // Assert if already Split
+    // IM_ASSERT(!node.IsSplitNode()); // Assert if already Split
 
     ImGuiDockRequest req;
     req.Type = ImGuiDockRequestType_Split;
@@ -506,8 +506,8 @@ ImGuiID DockBuilderSplitNode(ImGuiID id, ImGuiDir split_dir, c_float size_ratio_
     req.DockSplitOuter = false;
     DockContextProcessDock(&g, &req);
 
-    let mut id_at_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 0 : 1]->ID;
-    let mut id_at_opposite_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 1 : 0]->ID;
+    let mut id_at_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 0 : 1].ID;
+    let mut id_at_opposite_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 1 : 0].ID;
     if (out_id_at_dir)
         *out_id_at_dir = id_at_dir;
     if (out_id_at_opposite_dir)
@@ -515,10 +515,10 @@ ImGuiID DockBuilderSplitNode(ImGuiID id, ImGuiDir split_dir, c_float size_ratio_
     return id_at_dir;
 }
 
-static ImGuiDockNode* DockBuilderCopyNodeRec(ImGuiDockNode* src_node, ImGuiID dst_node_id_if_known, Vec<ImGuiID>* out_node_remap_pairs)
+static ImGuiDockNode* DockBuilderCopyNodeRec(src_node: *mut ImGuiDockNode, dst_node_id_if_known: ImGuiID, Vec<ImGuiID>* out_node_remap_pairs)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImGuiDockNode* dst_node = DockContextAddNode(&g, dst_node_id_if_known);
+    let mut dst_node: *mut ImGuiDockNode = DockContextAddNode(&g, dst_node_id_if_known);
     dst_node.SharedFlags = src_node.SharedFlags;
     dst_node.LocalFlags = src_node.LocalFlags;
     dst_node.LocalFlagsInWindows = ImGuiDockNodeFlags_None;
@@ -535,29 +535,29 @@ static ImGuiDockNode* DockBuilderCopyNodeRec(ImGuiDockNode* src_node, ImGuiID ds
         if (src_node.ChildNodes[child_n])
         {
             dst_node.ChildNodes[child_n] = DockBuilderCopyNodeRec(src_node.ChildNodes[child_n], 0, out_node_remap_pairs);
-            dst_node.ChildNodes[child_n]->ParentNode = dst_node;
+            dst_node.ChildNodes[child_n].ParentNode = dst_node;
         }
 
     IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X (%d childs)\n", src_node.ID, dst_node.ID, dst_node.IsSplitNode() ? 2 : 0);
     return dst_node;
 }
 
-c_void DockBuilderCopyNode(ImGuiID src_node_id, ImGuiID dst_node_id, Vec<ImGuiID>* out_node_remap_pairs)
+c_void DockBuilderCopyNode(src_node_id: ImGuiID, dst_node_id: ImGuiID, Vec<ImGuiID>* out_node_remap_pairs)
 {
-    ImGuiContext* ctx = GImGui;
+    ctx: *mut ImGuiContext = GImGui;
     // IM_ASSERT(src_node_id != 0);
     // IM_ASSERT(dst_node_id != 0);
     // IM_ASSERT(out_node_remap_pairs != NULL);
 
     DockBuilderRemoveNode(dst_node_id);
 
-    ImGuiDockNode* src_node = DockContextFindNodeByID(ctx, src_node_id);
+    let mut src_node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, src_node_id);
     // IM_ASSERT(src_node != NULL);
 
-    out_node_remap_pairs->clear();
+    out_node_remap_pairs.clear();
     DockBuilderCopyNodeRec(src_node, dst_node_id, out_node_remap_pairs);
 
-    // IM_ASSERT((out_node_remap_pairs->Size % 2) == 0);
+    // IM_ASSERT((out_node_remap_pairs.Size % 2) == 0);
 }
 
 c_void DockBuilderCopyWindowSettings(*const char src_name, *const char dst_name)
@@ -577,27 +577,27 @@ c_void DockBuilderCopyWindowSettings(*const char src_name, *const char dst_name)
         ImVec2ih window_pos_2ih = ImVec2ih(src_window.Pos);
         if (src_window.ViewportId != 0 && src_window.ViewportId != IMGUI_VIEWPORT_DEFAULT_ID)
         {
-            dst_settings->ViewportPos = window_pos_2ih;
-            dst_settings->ViewportId = src_window.ViewportId;
-            dst_settings->Pos = ImVec2ih(0, 0);
+            dst_settings.ViewportPos = window_pos_2ih;
+            dst_settings.ViewportId = src_window.ViewportId;
+            dst_settings.Pos = ImVec2ih(0, 0);
         }
         else
         {
-            dst_settings->Pos = window_pos_2ih;
+            dst_settings.Pos = window_pos_2ih;
         }
-        dst_settings->Size = ImVec2ih(src_window.SizeFull);
-        dst_settings->Collapsed = src_window.Collapsed;
+        dst_settings.Size = ImVec2ih(src_window.SizeFull);
+        dst_settings.Collapsed = src_window.Collapsed;
     }
 }
 
 // FIXME: Will probably want to change this signature, in particular how the window remapping pairs are passed.
-c_void DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_id, Vec<*const char>* in_window_remap_pairs)
+c_void DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_id: ImGuiID, Vec<*const char>* in_window_remap_pairs)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(src_dockspace_id != 0);
     // IM_ASSERT(dst_dockspace_id != 0);
     // IM_ASSERT(in_window_remap_pairs != NULL);
-    // IM_ASSERT((in_window_remap_pairs->Size % 2) == 0);
+    // IM_ASSERT((in_window_remap_pairs.Size % 2) == 0);
 
     // Duplicate entire dock
     // FIXME: When overwriting dst_dockspace_id, windows that aren't part of our dockspace window class but that are docked in a same node will be split apart,
@@ -608,7 +608,7 @@ c_void DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_
     // Attempt to transition all the upcoming windows associated to dst_dockspace_id into the newly created hierarchy of dock nodes
     // (The windows associated to src_dockspace_id are staying in place)
     Vec<ImGuiID> src_windows;
-    for (let remap_window_n: c_int = 0; remap_window_n < in_window_remap_pairs->Size; remap_window_n += 2)
+    for (let remap_window_n: c_int = 0; remap_window_n < in_window_remap_pairs.Size; remap_window_n += 2)
     {
         let mut  src_window_name: *const c_char = (*in_window_remap_pairs)[remap_window_n];
         let mut  dst_window_name: *const c_char = (*in_window_remap_pairs)[remap_window_n + 1];
@@ -620,7 +620,7 @@ c_void DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_
         if (let mut src_window: *mut ImGuiWindow =  FindWindowByID(src_window_id))
             src_dock_id = src_window.DockId;
         else if (ImGuiWindowSettings* src_window_settings = FindWindowSettings(src_window_id))
-            src_dock_id = src_window_settings->DockId;
+            src_dock_id = src_window_settings.DockId;
         let mut dst_dock_id: ImGuiID =  0;
         for (let dock_remap_n: c_int = 0; dock_remap_n < node_remap_pairs.Size; dock_remap_n += 2)
             if (node_remap_pairs[dock_remap_n] == src_dock_id)
@@ -651,7 +651,7 @@ c_void DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_
         if (let mut src_dock_id: ImGuiID =  node_remap_pairs[dock_remap_n])
         {
             let mut dst_dock_id: ImGuiID =  node_remap_pairs[dock_remap_n + 1];
-            ImGuiDockNode* node = DockBuilderGetNode(src_dock_id);
+            node: *mut ImGuiDockNode = DockBuilderGetNode(src_dock_id);
             for (let window_n: c_int = 0; window_n < node.Windows.len(); window_n++)
             {
                 let mut window: *mut ImGuiWindow =  node.Windows[window_n];
@@ -666,9 +666,9 @@ c_void DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_
 }
 
 // FIXME-DOCK: This is awkward because in series of split user is likely to loose access to its root node.
-c_void DockBuilderFinish(ImGuiID root_id)
+c_void DockBuilderFinish(root_id: ImGuiID)
 {
-    ImGuiContext* ctx = GImGui;
+    ctx: *mut ImGuiContext = GImGui;
     //DockContextRebuild(ctx);
     DockContextBuildAddWindowsToNodes(ctx, root_id);
 }
@@ -683,7 +683,7 @@ c_void DockBuilderFinish(ImGuiID root_id)
 // - BeginDockableDragDropTarget()
 //-----------------------------------------------------------------------------
 
-bool GetWindowAlwaysWantOwnTabBar(ImGuiWindow* window)
+bool GetWindowAlwaysWantOwnTabBar(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.IO.ConfigDockingAlwaysTabBar || window.WindowClass.DockingAlwaysTabBar)
@@ -693,10 +693,10 @@ bool GetWindowAlwaysWantOwnTabBar(ImGuiWindow* window)
     return false;
 }
 
-static ImGuiDockNode* DockContextBindNodeToWindow(ImGuiContext* ctx, ImGuiWindow* window)
+static ImGuiDockNode* DockContextBindNodeToWindow(ctx: *mut ImGuiContext, window: *mut ImGuiWindow)
 {
-    ImGuiContext& g = *ctx;
-    ImGuiDockNode* node = DockContextFindNodeByID(ctx, window.DockId);
+    let g = ctx;
+    node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, window.DockId);
     // IM_ASSERT(window.DockNode == NULL);
 
     // We should not be docking into a split node (SetWindowDock should avoid this)
@@ -720,10 +720,10 @@ static ImGuiDockNode* DockContextBindNodeToWindow(ImGuiContext* ctx, ImGuiWindow
     // This is a little wonky because we don't normally update the Pos/Size of visible node mid-frame.
     if (!node.IsVisible)
     {
-        ImGuiDockNode* ancestor_node = node;
+        let mut ancestor_node: *mut ImGuiDockNode = node;
         while (!ancestor_node.IsVisible && ancestor_node.ParentNode)
             ancestor_node = ancestor_node.ParentNode;
-        // IM_ASSERT(ancestor_node->Size.x > 0f32 && ancestor_node->Size.y > 0f32);
+        // IM_ASSERT(ancestor_node.Size.x > 0f32 && ancestor_node.Size.y > 0f32);
         DockNodeUpdateHasCentralNodeChild(DockNodeGetRootNode(ancestor_node));
         DockNodeTreeUpdatePosSize(ancestor_node, ancestor_node.Pos, ancestor_node.Size, node);
     }
@@ -736,10 +736,10 @@ static ImGuiDockNode* DockContextBindNodeToWindow(ImGuiContext* ctx, ImGuiWindow
     return node;
 }
 
-c_void BeginDocked(ImGuiWindow* window, bool* p_open)
+c_void BeginDocked(window: *mut ImGuiWindow, bool* p_open)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ctx: *mut ImGuiContext = GImGui;
+    let g = ctx;
 
     // Clear fields ahead so most early-out paths don't have to do it
     window.DockIsActive = window.DockNodeIsVisible = window.DockTabIsVisible = false;
@@ -767,9 +767,9 @@ c_void BeginDocked(ImGuiWindow* window, bool* p_open)
     }
 
     // Bind to our dock node
-    ImGuiDockNode* node = window.DockNode;
+    node: *mut ImGuiDockNode = window.DockNode;
     if (node != null_mut())
-        // IM_ASSERT(window.DockId == node->ID);
+        // IM_ASSERT(window.DockId == node.ID);
     if (window.DockId != 0 && node == null_mut())
     {
         node = DockContextBindNodeToWindow(ctx, window);
@@ -791,7 +791,7 @@ c_void BeginDocked(ImGuiWindow* window, bool* p_open)
     if (node.LastFrameAlive < g.FrameCount)
     {
         // If the window has been orphaned, transition the docknode to an implicit node processed in DockContextNewFrameUpdateDocking()
-        ImGuiDockNode* root_node = DockNodeGetRootNode(node);
+        let mut root_node: *mut ImGuiDockNode = DockNodeGetRootNode(node);
         if (root_node.LastFrameAlive < g.FrameCount)
             DockContextProcessUndockWindow(ctx, window);
         else
@@ -805,7 +805,7 @@ c_void BeginDocked(ImGuiWindow* window, bool* p_open)
 
     // Fast path return. It is common for windows to hold on a persistent DockId but be the only visible window,
     // and never create neither a host window neither a tab bar.
-    // FIXME-DOCK: replace ->HostWindow NULL compare with something more explicit (~was initially intended as a first frame test)
+    // FIXME-DOCK: replace .HostWindow NULL compare with something more explicit (~was initially intended as a first frame test)
     if (node.HostWindow == null_mut())
     {
         if (node.State == ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing)
@@ -816,9 +816,9 @@ c_void BeginDocked(ImGuiWindow* window, bool* p_open)
     }
 
     // We can have zero-sized nodes (e.g. children of a small-size dockspace)
-    // IM_ASSERT(node->HostWindow);
-    // IM_ASSERT(node->IsLeafNode());
-    // IM_ASSERT(node->Size.x >= 0f32 && node->Size.y >= 0f32);
+    // IM_ASSERT(node.HostWindow);
+    // IM_ASSERT(node.IsLeafNode());
+    // IM_ASSERT(node.Size.x >= 0f32 && node.Size.y >= 0f32);
     node.State = ImGuiDockNodeState_HostWindowVisible;
 
     // Undock if we are submitted earlier than the host window
@@ -863,7 +863,7 @@ c_void BeginDocked(ImGuiWindow* window, bool* p_open)
     window.ChildId = parent_window.GetID(window.Name);
 }
 
-c_void BeginDockableDragDropSource(ImGuiWindow* window)
+c_void BeginDockableDragDropSource(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.ActiveId == window.MoveId);
@@ -885,35 +885,35 @@ c_void BeginDockableDragDropSource(ImGuiWindow* window)
     }
 }
 
-c_void BeginDockableDragDropTarget(ImGuiWindow* window)
+c_void BeginDockableDragDropTarget(window: *mut ImGuiWindow)
 {
-    ImGuiContext* ctx = GImGui;
-    ImGuiContext& g = *ctx;
+    ctx: *mut ImGuiContext = GImGui;
+    let g = ctx;
 
     //IM_ASSERT(window.RootWindowDockTree == window); // May also be a DockSpace
     // IM_ASSERT((window.Flags & ImGuiWindowFlags_NoDocking) == 0);
     if (!g.DragDropActive)
         return;
-    //GetForegroundDrawList(window)->AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
+    //GetForegroundDrawList(window).AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
     if (!BeginDragDropTargetCustom(window.Rect(), window.ID))
         return;
 
     // Peek into the payload before calling AcceptDragDropPayload() so we can handle overlapping dock nodes with filtering
     // (this is a little unusual pattern, normally most code would call AcceptDragDropPayload directly)
     let payload: *const ImGuiPayload = &g.DragDropPayload;
-    if (!payload->IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW) || !DockNodeIsDropAllowed(window, *(ImGuiWindow**)payload->Data))
+    if (!payload.IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW) || !DockNodeIsDropAllowed(window, *(ImGuiWindow**)payload.Data))
     {
         EndDragDropTarget();
         return;
     }
 
-    let mut payload_window: *mut ImGuiWindow =  *(ImGuiWindow**)payload->Data;
+    let mut payload_window: *mut ImGuiWindow =  *(ImGuiWindow**)payload.Data;
     if (AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_WINDOW, ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect))
     {
         // Select target node
         // (Important: we cannot use g.HoveredDockNode here! Because each of our target node have filters based on payload, each candidate drop target will do its own evaluation)
         let mut dock_into_floating_window: bool =  false;
-        ImGuiDockNode* node= null_mut();
+        node: *mut ImGuiDockNode= null_mut();
         if (window.DockNodeAsHost)
         {
             // Cannot assume that node will != NULL even though we passed the rectangle test: it depends on padding/spacing handled by DockNodeTreeFindVisibleNodeByPos().
@@ -933,19 +933,19 @@ c_void BeginDockableDragDropTarget(ImGuiWindow* window)
                 dock_into_floating_window = true; // Dock into a regular window
         }
 
-        const let explicit_target_rect: ImRect =  (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) ? node.TabBar->BarRect : ImRect(window.Pos, window.Pos + ImVec2(window.Size.x, GetFrameHeight()));
+        const let explicit_target_rect: ImRect =  (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) ? node.TabBar.BarRect : ImRect(window.Pos, window.Pos + ImVec2(window.Size.x, GetFrameHeight()));
         let is_explicit_target: bool = g.IO.ConfigDockingWithShift || IsMouseHoveringRect(explicit_target_rect.Min, explicit_target_rect.Max);
 
         // Preview docking request and find out split direction/ratio
-        //let do_preview: bool = true;     // Ignore testing for payload->IsPreview() which removes one frame of delay, but breaks overlapping drop targets within the same window.
-        let do_preview: bool = payload->IsPreview() || payload->IsDelivery();
+        //let do_preview: bool = true;     // Ignore testing for payload.IsPreview() which removes one frame of delay, but breaks overlapping drop targets within the same window.
+        let do_preview: bool = payload.IsPreview() || payload.IsDelivery();
         if (do_preview && (node != null_mut() || dock_into_floating_window))
         {
-            ImGuiDockPreviewData split_inner;
-            ImGuiDockPreviewData split_outer;
+            let mut split_inner = ImGuiDockPrevewData::default();
+            let mut split_outer = ImGuiDockPrevewData::default();
             ImGuiDockPreviewData* split_data = &split_inner;
             if (node && (node.ParentNode || node.IsCentralNode()))
-                if (ImGuiDockNode* root_node = DockNodeGetRootNode(node))
+                if (let mut root_node: *mut ImGuiDockNode = DockNodeGetRootNode(node))
                 {
                     DockNodePreviewDockSetup(window, root_node, payload_window, null_mut(), &split_outer, is_explicit_target, true);
                     if (split_outer.IsSplitDirExplicit)
@@ -960,7 +960,7 @@ c_void BeginDockableDragDropTarget(ImGuiWindow* window)
             DockNodePreviewDockRender(window, node, payload_window, &split_outer);
 
             // Queue docking request
-            if (split_Data.IsDropAllowed && payload->IsDelivery())
+            if (split_Data.IsDropAllowed && payload.IsDelivery())
                 DockContextQueueDock(ctx, window, split_Data.SplitNode, payload_window, split_Data.SplitDir, split_Data.SplitRatio, split_data == &split_outer);
         }
     }

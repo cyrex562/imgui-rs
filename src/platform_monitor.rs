@@ -21,7 +21,7 @@ pub struct ImGuiPlatformMonitor {
 }
 
 impl ImGuiPlatformMonitor {
-    // ImGuiPlatformMonitor()          { MainPos = MainSize = WorkPos = WorkSize = ImVec2(0, 0); DpiScale = 1f32; }
+    // ImGuiPlatformMonitor()          { MainPos = MainSize = WorkPos = WorkSize = ImVec2::new2(0, 0); DpiScale = 1f32; }
     pub fn new() -> Self {
         Self {
             MainPos: ImVec2::new(),

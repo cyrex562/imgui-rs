@@ -17,11 +17,11 @@ impl ImGuiMenuColumns {
     // ImGuiMenuColumns() { memset(this, 0, sizeof(*this)); }
 
 
-    // c_void        Update(c_float spacing, bool window_reappearing);
+    // c_void        Update(c_float spacing, window_reappearing: bool);
 
 
     // c_float       DeclColumns(c_float w_icon, c_float w_label, c_float w_shortcut, c_float w_mark);
 
 
-    // c_void        CalcNextTotalWidth(bool update_offsets);
+    // c_void        CalcNextTotalWidth(update_offsets: bool);
 }

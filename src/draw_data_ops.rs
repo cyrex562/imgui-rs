@@ -47,7 +47,7 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     //       Some graphics API such as GL ES 1/2 don't have a way to offset the starting vertex so it is not supported for them.
     //   (B) Or handle 32-bit indices in your renderer backend, and uncomment '#define ImDrawIdx unsigned int' line in imconfig.h.
     //       Most example backends already support this. For example, the OpenGL example code detect index size at compile-time:
-    //         glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
+    //         glDrawElements(GL_TRIANGLES, (GLsizei)pcmd.ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
     //       Your own engine or render API may use different parameters or function calls to specify index sizes.
     //       2 and 4 bytes indices are generally supported by most graphics API.
     // - If for some reason neither of those solutions works for you, a workaround is to call BeginChild()/EndChild() before reaching
@@ -58,7 +58,7 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     out_list.push(draw_list);
 }
 
-// static c_void AddWindowToDrawData(ImGuiWindow* window, c_int layer)
+// static c_void AddWindowToDrawData(window: *mut ImGuiWindow, c_int layer)
 pub unsafe fn AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -79,9 +79,8 @@ pub unsafe fn AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
 }
 
 // Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
-// static inline c_void AddRootWindowToDrawData(ImGuiWindow* window)
+// static inline c_void AddRootWindowToDrawData(window: *mut ImGuiWindow)
 pub unsafe fn AddRootWindowToDrawData(window: *mut ImGuiWindow)
 {
     AddWindowToDrawData(window, GetWindowDisplayLayer(window));
 }
-

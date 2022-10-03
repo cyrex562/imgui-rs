@@ -31,7 +31,7 @@ pub struct ImGuiWindowTempData {
     pub Indent: ImVec1,
     // Indentation / start position from left of window (increased by TreePush/TreePop, etc.)
     pub ColumnsOffset: ImVec1,
-    // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree->column.Tree. Need revamp columns API.
+    // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree.column.Tree. Need revamp columns API.
     pub GroupOffset: ImVec1,
     pub CursorStartPosLossyness: ImVec2,// Record the loss of precision of CursorStartPos due to really large scrolling amount. This is used by clipper to compensentate and fix the most common use case of large scroll area.
 

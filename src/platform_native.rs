@@ -148,7 +148,7 @@ static c_void SetPlatformImeDataFn_DefaultImpl(ImGuiViewport* viewport, ImGuiPla
     if (hwnd == 0)
         return;
 
-    //::ImmAssociateContextEx(hwnd, NULL, data->WantVisible ? IACE_DEFAULT : 0);
+    //::ImmAssociateContextEx(hwnd, NULL, data.WantVisible ? IACE_DEFAULT : 0);
     if (HIMC himc = ::ImmGetContext(hwnd))
     {
         COMPOSITIONFORM composition_form = {};

@@ -69,7 +69,7 @@ pub unsafe fn NewFrame()
     // FIXME-VIEWPORT: the concept of a single ClipRectFullscreen is not ideal!
     g.IO.Fonts.Locked = true;
     SetCurrentFont(GetDefaultFont());
-    // IM_ASSERT(g.Font->IsLoaded());
+    // IM_ASSERT(g.Font.IsLoaded());
     let mut virtual_space: ImRect = ImRect::new4(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0 .. g.Viewports.len()
@@ -316,7 +316,7 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
-    SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(ImVec2::new2(400, 400), ImGuiCond_FirstUseEver);
     Begin("Debug##Default");
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 

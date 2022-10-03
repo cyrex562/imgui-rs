@@ -21,7 +21,7 @@ use crate::type_defs::{ImDrawIdx, ImTextureID};
 // Each dear imgui window contains its own ImDrawList. You can use GetWindowDrawList() to
 // access the current window draw list and draw custom primitives.
 // You can interleave normal  calls and adding primitives to the current draw list.
-// In single viewport mode, top-left is == GetMainViewport()->Pos (generally 0,0), bottom-right is == GetMainViewport()->Pos+Size (generally io.DisplaySize).
+// In single viewport mode, top-left is == GetMainViewport().Pos (generally 0,0), bottom-right is == GetMainViewport().Pos+Size (generally io.DisplaySize).
 // You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to ClipRect as well!)
 // Important: Primitives are always added to the list and not culled (culling is done at higher-level by  functions), if you use this API a lot consider coarse culling your drawn objects.
 #[derive(Default, Debug, Clone)]
@@ -156,11 +156,11 @@ impl ImDrawList {
     pub fn AddText2(&mut self, font: *const ImFont, font_size: c_float, pos: &ImVec2, col: u32, text_begin: *const c_char, text_end: *const c_char, wrap_width: c_float, cpu_fine_clip_rect: *const ImVec4) {}
 
 
-    // void  AddPolyline(const ImVec2* points, c_int num_points, u32 col, ImDrawFlags flags, c_float thickness);
+    // void  AddPolyline(const points: *mut ImVec2, c_int num_points, u32 col, ImDrawFlags flags, c_float thickness);
     pub fn AddPolyline(&mut self, points: *const ImVec2, num_points: c_int, col: u32, flags: ImDrawFlags, thickness: c_float) {}
 
 
-    // void  AddConvexPolyFilled(const ImVec2* points, c_int num_points, u32 col);
+    // void  AddConvexPolyFilled(const points: *mut ImVec2, c_int num_points, u32 col);
     pub fn AddConvexPolyFilled(&mut self, points: *const ImVec2, num_points: c_int, col: u32) {}
 
     // void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, u32 col, c_float thickness, c_int num_segments = 0); // Cubic Bezier (4 control points)
@@ -173,11 +173,11 @@ impl ImDrawList {
 // - Read FAQ to understand what ImTextureID is.
 // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
 // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-// void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2(0, 0), const ImVec2& uv_max = ImVec2(1, 1), u32 col = IM_COL32_WHITE);
+// void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2::new2(0, 0), const ImVec2& uv_max = ImVec2::new2(1, 1), u32 col = IM_COL32_WHITE);
     pub fn AddImage(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_ming: &ImVec2, uv_max: &ImVec2, col: u32) {}
 
 
-    // void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2(0, 0), const ImVec2& uv2 = ImVec2(1, 0), const ImVec2& uv3 = ImVec2(1, 1), const ImVec2& uv4 = ImVec2(0, 1), u32 col = IM_COL32_WHITE);
+    // void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2::new2(0, 0), const ImVec2& uv2 = ImVec2::new2(1, 0), const ImVec2& uv3 = ImVec2::new2(1, 1), const ImVec2& uv4 = ImVec2::new2(0, 1), u32 col = IM_COL32_WHITE);
     pub fn AddImageQuad(&mut self, user_texture_id: ImTextureID, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, uv1: &ImVec2, uv2: &ImVec2, uv3: &ImVec2, uv4: &ImVec2, col: u32) {
         todo!()
     }
@@ -310,7 +310,7 @@ impl ImDrawList {
         todo!()
     }
 
-    // inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, u32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr+= 1; _VtxCurrentIdx+= 1; }
+    // inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, u32 col)    { _VtxWritePtr.pos = pos; _VtxWritePtr.uv = uv; _VtxWritePtr.col = col; _VtxWritePtr+= 1; _VtxCurrentIdx+= 1; }
     pub fn PrimWriteVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
         self._VtxWritePtr.pos = pos.clone();
         self._VtxWritePtr.uv = uv.clone();

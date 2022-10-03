@@ -17,9 +17,9 @@ use crate::type_defs::ImWchar;
 pub struct ImFont {
     // Members: Hot ~20/24 bytes (for CalcTextSize)
     pub IndexAdvanceX: Vec<c_float>,
-    // 12-16 // out //            // Sparse. Glyphs->AdvanceX in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
+    // 12-16 // out //            // Sparse. Glyphs.AdvanceX in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
     pub FallbackAdvanceX: c_float,
-    // 4     // out // = FallbackGlyph->AdvanceX
+    // 4     // out // = FallbackGlyph.AdvanceX
     pub FontSize: c_float,           // 4     // in  //            // Height of characters/line, set during loading (don't change after loading)
 
     // Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
@@ -94,7 +94,7 @@ impl ImFont {
     }
 
 
-    // const char*                 GetDebugName() const                { return ConfigData ? ConfigData->Name : "<unknown>"; }
+    // const char*                 GetDebugName() const                { return ConfigData ? ConfigData.Name : "<unknown>"; }
     pub unsafe fn GetDebugName(&self) -> *const c_char {
         return if self.ConfigData.is_null() == false {
             self.ConfigData.Name.as_ptr()
@@ -159,7 +159,7 @@ impl ImFont {
     }
 
 
-    // void              SetGlyphVisible(ImWchar c, bool visible);
+    // void              SetGlyphVisible(ImWchar c, visible: bool);
     pub fn SetGlyphVisible(&mut self, c: ImWchar, visible: bool) {
         todo!()
     }

@@ -124,9 +124,9 @@ namespace IMGUI_STB_NAMESPACE
 // #ifdef _MSC_VER
 // #pragma warning (push)
 // #pragma warning (disable: 4456)                             // declaration of 'xx' hides previous local declaration
-// #pragma warning (disable: 6011)                             // (stb_rectpack) Dereferencing NULL pointer 'cur->next'.
+// #pragma warning (disable: 6011)                             // (stb_rectpack) Dereferencing NULL pointer 'cur.next'.
 // #pragma warning (disable: 6385)                             // (stb_truetype) Reading invalid data from 'buffer':  the readable size is '_Old_3`kernel_width' bytes, but '3' bytes may be read.
-// #pragma warning (disable: 28182)                            // (stb_rectpack) Dereferencing NULL pointer. 'cur' contains the same NULL value as 'cur->next' did.
+// #pragma warning (disable: 28182)                            // (stb_rectpack) Dereferencing NULL pointer. 'cur' contains the same NULL value as 'cur.next' did.
 // #endif
 
 // #if defined(__clang__)
@@ -498,7 +498,7 @@ c_void ImDrawList::AddCallback(ImDrawCallback callback, *mut c_void callback_dat
 {
     // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
-    // IM_ASSERT(curr_cmd->UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
     if (curr_cmd.ElemCount != 0)
     {
         AddDrawCmd();
@@ -514,7 +514,7 @@ c_void ImDrawList::AddCallback(ImDrawCallback callback, *mut c_void callback_dat
 // #define ImDrawCmd_HeaderSize                            (IM_OFFSETOF(ImDrawCmd, VtxOffset) + sizeof)
 // #define ImDrawCmd_HeaderCompare(CMD_LHS, CMD_RHS)       (memcmp(CMD_LHS, CMD_RHS, ImDrawCmd_HeaderSize))    // Compare ClipRect, TextureId, VtxOffset
 // #define ImDrawCmd_HeaderCopy(CMD_DST, CMD_SRC)          (memcpy(CMD_DST, CMD_SRC, ImDrawCmd_HeaderSize))    // Copy ClipRect, TextureId, VtxOffset
-// #define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1)  (CMD_0->IdxOffset + CMD_0->ElemCount == CMD_1->IdxOffset)
+// #define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1)  (CMD_0.IdxOffset + CMD_0.ElemCount == CMD_1.IdxOffset)
 
 // Try to merge two last draw commands
 c_void ImDrawList::_TryMergeDrawCmds()
@@ -541,7 +541,7 @@ c_void ImDrawList::_OnChangedClipRect()
         AddDrawCmd();
         return;
     }
-    // IM_ASSERT(curr_cmd->UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
 
     // Try to merge with previous command if it matches, else use current command
     ImDrawCmd* prev_cmd = curr_cmd - 1;
@@ -564,7 +564,7 @@ c_void ImDrawList::_OnChangedTextureID()
         AddDrawCmd();
         return;
     }
-    // IM_ASSERT(curr_cmd->UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
 
     // Try to merge with previous command if it matches, else use current command
     ImDrawCmd* prev_cmd = curr_cmd - 1;
@@ -579,17 +579,17 @@ c_void ImDrawList::_OnChangedTextureID()
 
 c_void ImDrawList::_OnChangedVtxOffset()
 {
-    // We don't need to compare curr_cmd->VtxOffset != _CmdHeader.VtxOffset because we know it'll be different at the time we call this.
+    // We don't need to compare curr_cmd.VtxOffset != _CmdHeader.VtxOffset because we know it'll be different at the time we call this.
     _VtxCurrentIdx = 0;
     // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
-    //IM_ASSERT(curr_cmd->VtxOffset != _CmdHeader.VtxOffset); // See #3349
+    //IM_ASSERT(curr_cmd.VtxOffset != _CmdHeader.VtxOffset); // See #3349
     if ( != 0)
     {
         AddDrawCmd();
         return;
     }
-    // IM_ASSERT(curr_cmd->UserCallback == NULL);
+    // IM_ASSERT(curr_cmd.UserCallback == NULL);
      = _CmdHeader.VtxOffset;
 }
 
@@ -604,7 +604,7 @@ c_int ImDrawList::_CalcCircleAutoSegmentCount(c_float radius) const
 }
 
 // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level PushClipRect() to affect logic (hit-testing and widget culling)
-c_void ImDrawList::PushClipRect(const ImVec2& cr_min, const ImVec2& cr_max, bool intersect_with_current_clip_rect)
+c_void ImDrawList::PushClipRect(const ImVec2& cr_min, const ImVec2& cr_max, intersect_with_current_clip_rect: bool)
 {
     let mut cr = ImVec4::new(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
     if (intersect_with_current_clip_rect)
@@ -769,7 +769,7 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
         let use_texture: bool = (Flags & ImDrawListFlags_AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.000010f32) && (AA_SIZE == 1f32);
 
         // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-        // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font->Containeratlas.Flags & ImFontAtlasFlags_NoBakedLines));
+        // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font.Containeratlas.Flags & ImFontAtlasFlags_NoBakedLines));
 
         let idx_count: c_int = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
         let vtx_count: c_int = use_texture ? (points_count * 2) : (thick_line ? points_count * 4 : points_count * 3);
@@ -822,7 +822,7 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
             for (let i1: c_int = 0; i1 < count; i1++) // i1 is the first point of the line segment
             {
                 let i2: c_int = (i1 + 1) == points_count ? 0 : i1 + 1; // i2 is the second point of the line segment
-                const let mut idx2: c_uint =  ((i1 + 1) == points_count) ? _VtxCurrentIdx : (idx1 + (use_texture ? 2 : 3)); // Vertex index for end of segment
+                let mut idx2: c_uint =  ((i1 + 1) == points_count) ? _VtxCurrentIdx : (idx1 + (use_texture ? 2 : 3)); // Vertex index for end of segment
 
                 // Average normals
                 let dm_x: c_float =  (temp_normals[i1].x + temp_normals[i2].x) * 0.5f32;
@@ -918,7 +918,7 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
             for (let i1: c_int = 0; i1 < count; i1++) // i1 is the first point of the line segment
             {
                 let i2: c_int = (i1 + 1) == points_count ? 0 : (i1 + 1); // i2 is the second point of the line segment
-                const let mut idx2: c_uint =  (i1 + 1) == points_count ? _VtxCurrentIdx : (idx1 + 4); // Vertex index for end of segment
+                let mut idx2: c_uint =  (i1 + 1) == points_count ? _VtxCurrentIdx : (idx1 + 4); // Vertex index for end of segment
 
                 // Average normals
                 let dm_x: c_float =  (temp_normals[i1].x + temp_normals[i2].x) * 0.5f32;
@@ -1408,8 +1408,8 @@ c_void ImDrawList::AddLine(const ImVec2& p1, const ImVec2& p2, u32 col, c_float 
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
-    PathLineTo(p1 + ImVec2(0.5f32, 0.5f32));
-    PathLineTo(p2 + ImVec2(0.5f32, 0.5f32));
+    PathLineTo(p1 + ImVec2::new2(0.5f32, 0.5f32));
+    PathLineTo(p2 + ImVec2::new2(0.5f32, 0.5f32));
     PathStroke(col, 0, thickness);
 }
 
@@ -1420,9 +1420,9 @@ c_void ImDrawList::AddRect(const ImVec2& p_min, const ImVec2& p_max, u32 col, c_
     if ((col & IM_COL32_A_MASK) == 0)
         return;
     if (Flags & ImDrawListFlags_AntiAliasedLines)
-        PathRect(p_min + ImVec2(0.50f32, 0.500f32), p_max - ImVec2(0.50f32, 0.500f32), rounding, flags);
+        PathRect(p_min + ImVec2::new2(0.50f32, 0.500f32), p_max - ImVec2::new2(0.50f32, 0.500f32), rounding, flags);
     else
-        PathRect(p_min + ImVec2(0.50f32, 0.500f32), p_max - ImVec2(0.49f, 0.490f32), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
+        PathRect(p_min + ImVec2::new2(0.50f32, 0.500f32), p_max - ImVec2::new2(0.49f, 0.490f32), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
 
@@ -1614,7 +1614,7 @@ c_void ImDrawList::AddText(*const ImFont font, c_float font_size, const ImVec2& 
     if (font_size == 0f32)
         font_size = _Data.FontSize;
 
-    // IM_ASSERT(font->Containeratlas.TexID == _CmdHeader.TextureId);  // Use high-level PushFont() or low-level ImDrawList::PushTextureId() to change font.
+    // IM_ASSERT(font.Containeratlas.TexID == _CmdHeader.TextureId);  // Use high-level PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
     ImVec4 clip_rect = _CmdHeader.ClipRect;
     if (cpu_fine_clip_rect)
@@ -1904,7 +1904,7 @@ c_void ShadeVertsLinearColorGradientKeepAlpha(ImDrawList* draw_list, c_int vert_
 }
 
 // Distribute UV over (a, b) rectangle
-c_void ShadeVertsLinearUV(ImDrawList* draw_list, c_int vert_start_idx, c_int vert_end_idx, const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, bool clamp)
+c_void ShadeVertsLinearUV(ImDrawList* draw_list, c_int vert_start_idx, c_int vert_end_idx, const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, clamp: bool)
 {
     let size: ImVec2 = b - a;
     let uv_size: ImVec2 = uv_b - uv_a;
@@ -1986,15 +1986,15 @@ static const char FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS[FONT_ATLAS_DEFAULT_TEX_DATA
 static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3] =
 {
     // Pos ........ Size ......... Offset ......
-    { ImVec2( 0,3), ImVec2(12,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Arrow
-    { ImVec2(13,0), ImVec2( 7,16), ImVec2( 1, 8) }, // ImGuiMouseCursor_TextInput
-    { ImVec2(31,0), ImVec2(23,23), ImVec2(11,11) }, // ImGuiMouseCursor_ResizeAll
-    { ImVec2(21,0), ImVec2( 9,23), ImVec2( 4,11) }, // ImGuiMouseCursor_ResizeNS
-    { ImVec2(55,18),ImVec2(23, 9), ImVec2(11, 4) }, // ImGuiMouseCursor_ResizeEW
-    { ImVec2(73,0), ImVec2(17,17), ImVec2( 8, 8) }, // ImGuiMouseCursor_ResizeNESW
-    { ImVec2(55,0), ImVec2(17,17), ImVec2( 8, 8) }, // ImGuiMouseCursor_ResizeNWSE
-    { ImVec2(91,0), ImVec2(17,22), ImVec2( 5, 0) }, // ImGuiMouseCursor_Hand
-    { ImVec2(109,0),ImVec2(13,15), ImVec2( 6, 7) }, // ImGuiMouseCursor_NotAllowed
+    { ImVec2( 0,3), ImVec2::new2(12,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Arrow
+    { ImVec2::new2(13,0), ImVec2( 7,16), ImVec2( 1, 8) }, // ImGuiMouseCursor_TextInput
+    { ImVec2::new2(31,0), ImVec2::new2(23,23), ImVec2::new2(11,11) }, // ImGuiMouseCursor_ResizeAll
+    { ImVec2::new2(21,0), ImVec2( 9,23), ImVec2( 4,11) }, // ImGuiMouseCursor_ResizeNS
+    { ImVec2::new2(55,18),ImVec2::new2(23, 9), ImVec2::new2(11, 4) }, // ImGuiMouseCursor_ResizeEW
+    { ImVec2::new2(73,0), ImVec2::new2(17,17), ImVec2( 8, 8) }, // ImGuiMouseCursor_ResizeNESW
+    { ImVec2::new2(55,0), ImVec2::new2(17,17), ImVec2( 8, 8) }, // ImGuiMouseCursor_ResizeNWSE
+    { ImVec2::new2(91,0), ImVec2::new2(17,22), ImVec2( 5, 0) }, // ImGuiMouseCursor_Hand
+    { ImVec2::new2(109,0),ImVec2::new2(13,15), ImVec2( 6, 7) }, // ImGuiMouseCursor_NotAllowed
 };
 
 ImFontAtlas::ImFontAtlas()
@@ -2022,10 +2022,10 @@ c_void    ImFontAtlas::ClearInputData()
 
     // When clearing this we lose access to the font name and other information used to build the font.
     for (let i: c_int = 0; i < Fonts.Size; i++)
-        if (Fonts[i]->ConfigData >= ConfigData.Data && Fonts[i]->ConfigData < ConfigData.Data + ConfigData.Size)
+        if (Fonts[i].ConfigData >= ConfigData.Data && Fonts[i].ConfigData < ConfigData.Data + ConfigData.Size)
         {
-            Fonts[i]->ConfigData= null_mut();
-            Fonts[i]->ConfigDataCount = 0;
+            Fonts[i].ConfigData= null_mut();
+            Fonts[i].ConfigDataCount = 0;
         }
     ConfigData.clear();
     CustomRects.clear();
@@ -2187,7 +2187,7 @@ let p: *const c_char;
     return AddFontFromMemoryTTF(data, data_size, size_pixels, &font_cfg, glyph_ranges);
 }
 
-// NB: Transfer ownership of 'ttf_data' to ImFontAtlas, unless font_cfg_template->FontDataOwnedByAtlas == false. Owned TTF buffer will be deleted after Build().
+// NB: Transfer ownership of 'ttf_data' to ImFontAtlas, unless font_cfg_template.FontDataOwnedByAtlas == false. Owned TTF buffer will be deleted after Build().
 ImFont* ImFontAtlas::AddFontFromMemoryTTF(ttf_data: *mut c_void, c_int ttf_size, c_float size_pixels, *const ImFontConfig font_cfg_template, *const ImWchar glyph_ranges)
 {
     // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
@@ -2203,7 +2203,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryTTF(ttf_data: *mut c_void, c_int ttf_size,
 
 ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(*const c_void compressed_ttf_data, c_int compressed_ttf_size, c_float size_pixels, *const ImFontConfig font_cfg_template, *const ImWchar glyph_ranges)
 {
-    const let mut buf_decompressed_size: c_uint =  stb_decompress_length(compressed_ttf_data);
+    let mut buf_decompressed_size: c_uint =  stb_decompress_length(compressed_ttf_data);
     c_uchar* buf_decompressed_data = (c_uchar*)IM_ALLOC(buf_decompressed_size);
     stb_decompress(buf_decompressed_data, compressed_ttf_data, compressed_ttf_size);
 
@@ -2253,15 +2253,15 @@ c_int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, c_int width,
     return CustomRects.Size - 1; // Return index
 }
 
-c_void ImFontAtlas::CalcCustomRectUV(*const ImFontAtlasCustomRect rect, ImVec2* out_uv_min, ImVec2* out_uv_max) const
+c_void ImFontAtlas::CalcCustomRectUV(*const ImFontAtlasCustomRect rect, out_uv_min: *mut ImVec2, out_uv_max: *mut ImVec2) const
 {
     // IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // Font atlas needs to be built before we can calculate UV coordinates
-    // IM_ASSERT(rect->IsPacked());                // Make sure the rectangle has been packed
+    // IM_ASSERT(rect.IsPacked());                // Make sure the rectangle has been packed
     *out_uv_min = ImVec2( * TexUvScale.x,  * TexUvScale.y);
     *out_uv_max = ImVec2(( + ) * TexUvScale.x, ( + ) * TexUvScale.y);
 }
 
-bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, ImVec2* out_offset, ImVec2* out_size, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2])
+bool ImFontAtlas::GetMouseCursorTexData(ImGuiMouseCursor cursor_type, out_offset: *mut ImVec2, out_size: *mut ImVec2, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2])
 {
     if (cursor_type <= ImGuiMouseCursor_None || cursor_type >= ImGuiMouseCursor_COUNT)
         return false;
@@ -2356,7 +2356,7 @@ struct ImFontBuildDstData
 
 static c_void UnpackBitVectorToFlatIndexList(*const ImBitVector in, Vec<c_int>* out)
 {
-    // IM_ASSERT(sizeof(in->Storage.Data[0]) == sizeof);
+    // IM_ASSERT(sizeof(in.Storage.Data[0]) == sizeof);
     let it_begin: *const u32 = .begin();
     let it_end: *const u32 = .end();
     for (*const u32 it = it_begin; it < it_end; it++)
@@ -2375,8 +2375,8 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     // Clear atlas
      = (ImTextureID)null_mut();
      =  = 0;
-     = ImVec2(0f32, 0f32);
-     = ImVec2(0f32, 0f32);
+     = ImVec2::new2(0f32, 0f32);
+     = ImVec2::new2(0f32, 0f32);
     ();
 
     // Temporary storage for building
@@ -2392,7 +2392,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     {
         ImFontBuildSrcData& src_tmp = src_tmp_array[src_i];
         ImFontConfig& cfg = [src_i];
-        // IM_ASSERT(cfg.DstFont && (!cfg.DstFont->IsLoaded() || cfg.DstFont->ContainerAtlas == atlas));
+        // IM_ASSERT(cfg.DstFont && (!cfg.DstFont.IsLoaded() || cfg.DstFont.ContainerAtlas == atlas));
 
         // Find index from cfg.DstFont (we allow the user to set cfg.DstFont. Also it makes casual debugging nicer than when storing indices)
         src_tmp.DstIndex = -1;
@@ -2543,7 +2543,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 
     // 7. Allocate texture
      = ( & ImFontAtlasFlags_NoPowerOfTwoHeight) ? ( + 1) : ImUpperPowerOfTwo();
-     = ImVec2(1f32 / , 1f32 / );
+     = ImVec2::new2(1f32 / , 1f32 / );
      = (c_uchar*)IM_ALLOC( * );
     memset(, 0,  * );
     spc.pixels = ;
@@ -2585,7 +2585,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 
         // When merging fonts with MergeMode=true:
         // - We can have multiple input fonts writing into a same destination font.
-        // - dst_font->ConfigData is != from cfg which is our source configuration.
+        // - dst_font.ConfigData is != from cfg which is our source configuration.
         ImFontConfig& cfg = [src_i];
         ImFont* dst_font = cfg.DstFont;
 
@@ -2692,13 +2692,13 @@ c_void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, c_int x, c_
 static c_void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
 {
     ImFontAtlasCustomRect* r = ();
-    // IM_ASSERT(r->IsPacked());
+    // IM_ASSERT(r.IsPacked());
 
     let w: c_int = ;
     if (!( & ImFontAtlasFlags_NoMouseCursors))
     {
         // Render/copy pixels
-        // IM_ASSERT(r->Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r->Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
+        // IM_ASSERT(r.Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
         let x_for_white: c_int = ;
         let x_for_black: c_int =  + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
         if ( != null_mut())
@@ -2715,7 +2715,7 @@ static c_void ImFontAtlasBuildRenderDefaultTexData(ImFontAtlas* atlas)
     else
     {
         // Render 4 white pixels
-        // IM_ASSERT(r->Width == 2 && r->Height == 2);
+        // IM_ASSERT(r.Width == 2 && r.Height == 2);
         let offset: c_int =  +  * w;
         if ( != null_mut())
         {
@@ -2736,7 +2736,7 @@ static c_void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
 
     // This generates a triangular shape in the texture, with the various line widths stacked on top of each other to allow interpolation between them
     ImFontAtlasCustomRect* r = ();
-    // IM_ASSERT(r->IsPacked());
+    // IM_ASSERT(r.IsPacked());
     for (let mut n: c_uint =  0; n < IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1; n++) // +1 because of the zero-width row
     {
         // Each line consists of at least two empty pixels at the ends, with a line of solid pixels in the middle
@@ -2746,7 +2746,7 @@ static c_void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         let mut pad_right: c_uint =   - (pad_left + line_width);
 
         // Write each slice
-        // IM_ASSERT(pad_left + line_width + pad_right == r->Width && y < r->Height); // Make sure we're inside the texture bounds before we start writing pixels
+        // IM_ASSERT(pad_left + line_width + pad_right == r.Width && y < r.Height); // Make sure we're inside the texture bounds before we start writing pixels
         if ( != null_mut())
         {
             c_uchar* write_ptr = &[ + (( + y) * )];
@@ -2817,7 +2817,7 @@ c_void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
             continue;
 
         // Will ignore ImFontConfig settings: GlyphMinAdvanceX, GlyphMinAdvanceY, GlyphExtraSpacing, PixelSnapH
-        // IM_ASSERT(r->Font->ContainerAtlas == atlas);
+        // IM_ASSERT(r.Font.ContainerAtlas == atlas);
         ImVec2 uv0, uv1;
         (r, &uv0, &uv1);
         .AddGlyph(null_mut(), , .x, .y, .x + , .y + , uv0.x, uv0.y, uv1.x, uv1.y, );
@@ -2825,8 +2825,8 @@ c_void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
 
     // Build all fonts lookup tables
     for (let i: c_int = 0; i < .Size; i++)
-        if ([i]->DirtyLookupTables)
-            [i]->BuildLookupTable();
+        if ([i].DirtyLookupTables)
+            [i].BuildLookupTable();
 
      = true;
 }
@@ -3257,7 +3257,7 @@ bool ImFont::IsGlyphRangeUnused(c_uint c_begin, c_uint c_last)
     return true;
 }
 
-c_void ImFont::SetGlyphVisible(ImWchar c, bool visible)
+c_void ImFont::SetGlyphVisible(ImWchar c, visible: bool)
 {
     if (ImFontGlyph* glyph = (ImFontGlyph*)FindGlyph(c))
          = visible ? 1 : 0;
@@ -3274,7 +3274,7 @@ c_void ImFont::GrowIndex(c_int new_size)
 
 // x0/y0/x1/y1 are offset from the character upper-left layout position, in pixels. Therefore x0/y0 are often fairly close to zero.
 // Not to be mistaken with texture coordinates, which are held by u0/v0/u1/v1 in normalized format (0.0..1.0 on each texture axis).
-// 'cfg' is not necessarily == 'this->ConfigData' because multiple source fonts+configs can be used to build one target font.
+// 'cfg' is not necessarily == 'this.ConfigData' because multiple source fonts+configs can be used to build one target font.
 c_void ImFont::AddGlyph(*const ImFontConfig cfg, ImWchar codepoint, c_float x0, c_float y0, c_float x1, c_float y1, c_float u0, c_float v0, c_float u1, c_float v1, c_float advance_x)
 {
     if (cfg != null_mut())
@@ -3319,7 +3319,7 @@ c_void ImFont::AddGlyph(*const ImFontConfig cfg, ImWchar codepoint, c_float x0, 
     MetricsTotalSurface += ((glyph.U1 - glyph.U0) * ContainerAtlas.TexWidth + pad) * ((glyph.V1 - glyph.V0) * ContainerAtlas.TexHeight + pad);
 }
 
-c_void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
+c_void ImFont::AddRemapChar(ImWchar dst, ImWchar src, overwrite_dst: bool)
 {
     // IM_ASSERT(IndexLookup.Size > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
     let mut index_size: c_uint =  IndexLookup.Size;
@@ -3461,7 +3461,7 @@ ImVec2 ImFont::CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width
     let line_height: c_float =  size;
     let scale: c_float =  size / FontSize;
 
-    let text_size: ImVec2 = ImVec2(0, 0);
+    let text_size: ImVec2 = ImVec2::new2(0, 0);
     let line_width: c_float =  0f32;
 
     let word_wrap_enabled: bool = (wrap_width > 0f32);
@@ -3563,7 +3563,7 @@ c_void ImFont::RenderChar(ImDrawList* draw_list, c_float size, const ImVec2& pos
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos, u32 col, const ImVec4& clip_rect, *const char text_begin, *const char text_end, c_float wrap_width, bool cpu_fine_clip) const
+c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos, u32 col, const ImVec4& clip_rect, *const char text_begin, *const char text_end, c_float wrap_width, cpu_fine_clip: bool) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); //  functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -3770,7 +3770,7 @@ c_void ImFont::RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos
 //-----------------------------------------------------------------------------
 
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
-c_void RenderArrow(ImDrawList* draw_list, ImVec2 pos, u32 col, ImGuiDir dir, c_float scale)
+c_void RenderArrow(ImDrawList* draw_list, ImVec2 pos, u32 col, dir: ImGuiDir, c_float scale)
 {
     let h: c_float =  draw_list._Data.FontSize * 1f32;
     let r: c_float =  h * 0.40f32 * scale;
@@ -3822,7 +3822,7 @@ c_void RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, u32 col, c_float sz)
 }
 
 // Render an arrow. 'pos' is position of the arrow tip. half_sz.x is length from base to tip. half_sz.y is length on each side.
-c_void RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, u32 col)
+c_void RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, direction: ImGuiDir, u32 col)
 {
     switch (direction)
     {
@@ -4070,7 +4070,7 @@ static c_uint stb_decompress(c_uchar *output, const c_uchar *i, c_uint /*length*
 {
     if (stb__in4(0) != 0x57bC0000) return 0;
     if (stb__in4(4) != 0)          return 0; // error! stream is > 4GB
-    const let mut olen: c_uint =  stb_decompress_length(i);
+    let mut olen: c_uint =  stb_decompress_length(i);
     stb__barrier_in_b = i;
     stb__barrier_out_e = output + olen;
     stb__barrier_out_b = output;
@@ -4135,7 +4135,7 @@ static const char proggy_clean_ttf_compressed_data_base85[11980 + 1] =
     "eXOONTJlh:.RYF%3'p6sq:UIMA945&^HFS87@$EP2iG<-lCO$%c`uKGD3rC$x0BL8aFn--`ke%#HMP'vh1/R&O_J9'um,.<tx[@%wsJk&bUT2`0uMv7gg#qp/ij.L56'hl;.s5CUrxjO"
     "M7-##.l+Au'A&O:-T72L]P`&=;ctp'XScX*rU.>-XTt,%OVU4)S1+R-#dg0/Nn?Ku1^0f$B*P:Rowwm-`0PKjYDDM'3]d39VZHEl4,.j']Pk-M.h^&:0FACm$maq-&sgw0t7/6(^xtk%"
     "LuH88Fj-ekm>GA#_>568x6(OFRl-IZp`&b,_P'$M<Jnq79VsJW/mWS*PUiq76;]/NM_>hLbxfc$mj`,O;&%W2m`Zh:/)Uetw:aJ%]K9h:TcF]u_-Sj9,VK3M.*'&0D[Ca]J9gp8,kAW]"
-    "%(?A%R$f<->Zts'^kn=-^@c4%-pY6qI%J%1IGxfLU9CP8cbPlXv);C=b),<2mOvP8up,UVf3839acAWAW-W?#ao/^#%KYo8fRULNd2.>%m]UK:n%r$'sw]J;5pAoO_#2mO3n,'=H5(et"
+    "%(?A%R$f<.Zts'^kn=-^@c4%-pY6qI%J%1IGxfLU9CP8cbPlXv);C=b),<2mOvP8up,UVf3839acAWAW-W?#ao/^#%KYo8fRULNd2.>%m]UK:n%r$'sw]J;5pAoO_#2mO3n,'=H5(et"
     "Hg*`+RLgv>=4U8guD$I%D:W>-r5V*%j*W:Kvej.Lp$<M-SGZ':+Q_k+uvOSLiEo(<aD/K<CCc`'Lx>'?;++O'>()jLR-^u68PHm8ZFWe+ej8h:9r6L*0//c&iH&R8pRbA#Kjm%upV1g:"
     "a_#Ur7FuA#(tRh#.Y5K+@?3<-8m0$PEn;J:rh6?I6uG<-`wMU'ircp0LaE_OtlMb&1#6T.#FDKu#1Lw%u%+GM+X'e?YLfjM[VO0MbuFp7;>Q&#WIo)0@F%q7c#4XAXN-U&VB<HFF*qL("
     "$/V,;(kXZejWO`<[5?\?ewY(*9=%wDc;,u<'9t3W-(H1th3+G]ucQ]kLs7df($/*JL]@*t7Bu_G3_7mp7<iaQjO@.kLg;x3B0lqp7Hf,^Ze7-##@/c58Mo(3;knp0%)A7?-W+eI'o8)b<"
@@ -4146,7 +4146,7 @@ static const char proggy_clean_ttf_compressed_data_base85[11980 + 1] =
     "P?^@Po3$##`MSs?DWBZ/S>+4%>fX,VWv/w'KD`LP5IbH;rTV>n3cEK8U#bX]l-/V+^lj3;vlMb&[5YQ8#pekX9JP3XUC72L,,?+Ni&co7ApnO*5NK,((W-i:$,kp'UDAO(G0Sq7MVjJs"
     "bIu)'Z,*[>br5fX^:FPAWr-m2KgL<LUN098kTF&#lvo58=/vjDo;.;)Ka*hLR#/k=rKbxuV`>Q_nN6'8uTG&#1T5g)uLv:873UpTLgH+#FgpH'_o1780Ph8KmxQJ8#H72L4@768@Tm&Q"
     "h4CB/5OvmA&,Q&QbUoi$a_%3M01H)4x7I^&KQVgtFnV+;[Pc>[m4k//,]1?#`VY[Jr*3&&slRfLiVZJ:]?=K3Sw=[$=uRB?3xk48@aeg<Z'<$#4H)6,>e0jT6'N#(q%.O=?2S]u*(m<-"
-    "V8J'(1)G][68hW$5'q[GC&5j`TE?m'esFGNRM)j,ffZ?-qx8;->g4t*:CIP/[Qap7/9'#(1sao7w-.qNUdkJ)tCF&#B^;xGvn2r9FEPFFFcL@.iFNkTve$m%#QvQS8U@)2Z+3K:AKM5i"
+    "V8J'(1)G][68hW$5'q[GC&5j`TE?m'esFGNRM)j,ffZ?-qx8;.g4t*:CIP/[Qap7/9'#(1sao7w-.qNUdkJ)tCF&#B^;xGvn2r9FEPFFFcL@.iFNkTve$m%#QvQS8U@)2Z+3K:AKM5i"
     "sZ88+dKQ)W6>J%CL<KE>`.d*(B`-n8D9oK<Up]c$X$(,)M8Zt7/[rdkqTgl-0cuGMv'?>-XV1q['-5k'cAZ69e;D_?$ZPP&s^+7])$*$#@QYi9,5P&#9r+$%CE=68>K8r0=dSC%%(@p7"
     ".m7jilQ02'0-VWAg<a/''3u.=4L$Y)6k/K:_[3=&jvL<L0C/2'v:^;-DIBW,B4E68:kZ;%?8(Q8BH=kO65BW?xSG&#@uU,DS*,?.+(o(#1vCS8#CHF>TlGW'b)Tq7VT9q^*^$$.:&N@@"
     "$&)WHtPm*5_rO0&e%K&#-30j(E4#'Zb.o/(Tpm$>K'f@[PvFl,hfINTNU6u'0pao7%XUp9]5.>%h`8_=VYbxuel.NTSsJfLacFu3B'lQSu/m6-Oqem8T+oE--$0a/k]uj9EwsG>%veR*"
@@ -4183,7 +4183,7 @@ static const char proggy_clean_ttf_compressed_data_base85[11980 + 1] =
     "[%$Z$uF6pA6Ki2O5:8w*vP1<-1`[G,)-m#>0`P&#eb#.3i)rtB61(o'$?X3B</R90;eZ]%Ncq;-Tl]#F>2Qft^ae_5tKL9MUe9b*sLEQ95C&`=G?@Mj=wh*'3E>=-<)Gt*Iw)'QG:`@I"
     "wOf7&]1i'S01B+Ev/Nac#9S;=;YQpg_6U`*kVY39xK,[/6Aj7:'1Bm-_1EYfa1+o&o4hp7KN_Q(OlIo@S%;jVdn0'1<Vc52=u`3^o-n1'g4v58Hj&6_t7$##?M)c<$bgQ_'SY((-xkA#"
     "Y(,p'H9rIVY-b,'%bCPF7.J<Up^,(dU1VY*5#WkTU>h19w,WQhLI)3S#f$2(eb,jr*b;3Vw]*7NH%$c4Vs,eD9>XW8?N]o+(*pgC%/72LV-u<Hp,3@e^9UB1J+ak9-TN/mhKPg+AJYd$"
-    "MlvAF_jCK*.O-^(63adMT->W%iewS8W6m2rtCpo'RS1R84=@paTKt)>=%&1[)*vp'u+x,VrwN;&]kuO9JDbg=pO$J*.jVe;u'm0dr9l,<*wMK*Oe=g8lV_KEBFkO'oU]^=[-792#ok,)"
+    "MlvAF_jCK*.O-^(63adMT.W%iewS8W6m2rtCpo'RS1R84=@paTKt)>=%&1[)*vp'u+x,VrwN;&]kuO9JDbg=pO$J*.jVe;u'm0dr9l,<*wMK*Oe=g8lV_KEBFkO'oU]^=[-792#ok,)"
     "i]lR8qQ2oA8wcRCZ^7w/Njh;?.stX?Q1>S1q4Bn$)K1<-rGdO'$Wr.Lc.CG)$/*JL4tNR/,SVO3,aUw'DJN:)Ss;wGn9A32ijw%FL+Z0Fn.U9;reSq)bmI32U==5ALuG&#Vf1398/pVo"
     "1*c-(aY168o<`JsSbk-,1N;$>0:OUas(3:8Z972LSfF8eb=c-;>SPw7.6hn3m`9^Xkn(r.qS[0;T%&Qc=+STRxX'q1BNk3&*eu2;&8q$&x>Q#Q7^Tf+6<(d%ZVmj2bDi%.3L2n+4W'$P"
     "iDDG)g,r%+?,$@?uou5tSe2aN_AQU*<h`e-GI7)?OK2A.d7_c)?wQ5AS@DL3r#7fSkgl6-++D:'A,uq7SvlB$pcpH'q3n0#_%dY#xCpr-l<F0NR@-##FEV6NTF6##$l84N1w?AO>'IAO"

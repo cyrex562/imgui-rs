@@ -532,7 +532,7 @@ static c_void stb_textedit_find_charpos(StbFindState *find, STB_TEXTEDIT_STRING 
       find.x += STB_TEXTEDIT_GETWIDTH(str, first, i);
 }
 
-// #define STB_TEXT_HAS_SELECTION(s)   ((s)->select_start != (s)->select_end)
+// #define STB_TEXT_HAS_SELECTION(s)   ((s).select_start != (s).select_end)
 
 // make the selection/cursor state valid if client altered the string
 static c_void stb_textedit_clamp(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
@@ -1126,8 +1126,8 @@ static c_void stb_textedit_discard_redo(StbUndoState *state)
       size_t move_size = ((STB_TEXTEDIT_UNDOSTATECOUNT - state.redo_point - 1) * sizeof(state.undo_rec[0]));
       let mut  buf_begin: *const c_char = (*mut char)state.undo_rec; (c_void)buf_begin;
       let mut  buf_end: *const c_char = (*mut char)state.undo_rec + sizeof(state.undo_rec); (c_void)buf_end;
-      // IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point)) >= buf_begin);
-      // IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point + 1) + move_size) <= buf_end);
+      // IM_ASSERT(((*mut char)(state.undo_rec + state.redo_point)) >= buf_begin);
+      // IM_ASSERT(((*mut char)(state.undo_rec + state.redo_point + 1) + move_size) <= buf_end);
       STB_TEXTEDIT_memmove(state.undo_rec + state.redo_point+1, state.undo_rec + state.redo_point, move_size);
 
       // now move redo_point to point to the new one

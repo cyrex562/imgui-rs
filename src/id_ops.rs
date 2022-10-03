@@ -10,7 +10,7 @@ use crate::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
 use crate::type_defs::ImGuiID;
 use crate::window::ImGuiWindow;
 
-// c_void SetActiveID(ImGuiID id, ImGuiWindow* window)
+// c_void SetActiveID(id: ImGuiID, window: *mut ImGuiWindow)
 pub fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -60,7 +60,7 @@ pub fn ClearActiveID() {
     SetActiveID(0, null_mut()); // g.ActiveId = 0;
 }
 
-// c_void SetHoveredID(ImGuiID id)
+// c_void SetHoveredID(id: ImGuiID)
 pub fn SetHoveredID(id: ImGuiID) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.HoveredId = id;
@@ -81,7 +81,7 @@ pub fn GetHoveredID() -> ImGuiID
 
 // This is called by ItemAdd().
 // Code not using ItemAdd() may need to call this manually otherwise ActiveId will be cleared. In IMGUI_VERSION_NUM < 18717 this was called by GetID().
-// c_void KeepAliveID(ImGuiID id)
+// c_void KeepAliveID(id: ImGuiID)
 pub fn KeepAliveID(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -127,7 +127,7 @@ c_void PushID(c_int int_id)
 }
 
 // Push a given id value ignoring the ID stack as a seed.
-c_void PushOverrideID(ImGuiID id)
+c_void PushOverrideID(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -139,7 +139,7 @@ c_void PushOverrideID(ImGuiID id)
 // Helper to avoid a common series of PushOverrideID -> GetID() -> PopID() call
 // (note that when using this pattern, TestEngine's "Stack Tool" will tend to not display the intermediate stack level.
 //  for that to work we would need to do PushOverrideID() -> ItemAdd() -> PopID() which would alter widget code a little more)
-ImGuiID GetIDWithSeed(*const char str, *const char str_end, ImGuiID seed)
+ImGuiID GetIDWithSeed(*const char str, *const char str_end, seed: ImGuiID)
 {
     let mut id: ImGuiID =  ImHashStr(str, str_end ? (str_end - str) : 0, seed);
     let g = GImGui; // ImGuiContext& g = *GImGui;

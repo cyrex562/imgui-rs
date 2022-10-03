@@ -249,7 +249,7 @@ impl ImFontAtlas {
     }
 
 
-    // c_int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, c_int width, c_int height, c_float advance_x, const ImVec2& offset = ImVec2(0, 0));
+    // c_int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, c_int width, c_int height, c_float advance_x, const ImVec2& offset = ImVec2::new2(0, 0));
     pub fn AddCustomRectFontGlyph(&mut self, font: *mut ImFont, id: ImWchar, width: c_int, height: c_int, advance_x: c_float, offset: &ImVec2) -> c_int {
         todo!()
     }
@@ -261,13 +261,13 @@ impl ImFontAtlas {
     }
 
     // [Internal]
-    // void              CalcCustomRectUV(const ImFontAtlasCustomRect* rect, ImVec2* out_uv_min, ImVec2* out_uv_max) const;
+    // void              CalcCustomRectUV(const ImFontAtlasCustomRect* rect, out_uv_min: *mut ImVec2, out_uv_max: *mut ImVec2) const;
     pub fn CalcUstomRectUV(&mut self, rect: *const ImFontAtlasCustomRect, out_uv_min: *mut ImVec2, out_uv_max: *mut ImVec2) {
         todo!()
     }
 
 
-    // bool              GetMouseCursorTexData(ImGuiMouseCursor cursor, ImVec2* out_offset, ImVec2* out_size, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2]);
+    // bool              GetMouseCursorTexData(ImGuiMouseCursor cursor, out_offset: *mut ImVec2, out_size: *mut ImVec2, ImVec2 out_uv_border[2], ImVec2 out_uv_fill[2]);
     pub fn GetMouseCursorTexData(&mut self, cursor: ImGuiMouseCursor, out_offset: *mut ImVec2, out_size: *mut ImVec2, out_uv_border: [ImVec2; 2], out_uv_fill: [ImVec2; 2]) {
         todo!()
     }

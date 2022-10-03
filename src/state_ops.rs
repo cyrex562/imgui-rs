@@ -253,7 +253,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     window.IsFallbackWindow = (g.CurrentWindowStack.Size == 0 && g.WithinFrameScopeWithImplicitWindow);
 
     // Update the Appearing flag (note: the BeginDocked() path may also set this to true later)
-    let mut window_just_activated_by_user: bool =  (window.LastFrameActive < current_frame - 1); // Not using !WasActive because the implicit "Debug" window would always toggle off->on
+    let mut window_just_activated_by_user: bool =  (window.LastFrameActive < current_frame - 1); // Not using !WasActive because the implicit "Debug" window would always toggle off.on
     if flag_set(flags, ImGuiWindowFlags_Popup)
     {
         let popup_ref = g.OpenPopupStack[g.BeginPopupStack.Size];
@@ -284,7 +284,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     }
 
     // Docking
-    // (NB: during the frame dock nodes are created, it is possible that (window.DockIsActive == false) even though (window.DockNode->Windows.Size > 1)
+    // (NB: during the frame dock nodes are created, it is possible that (window.DockIsActive == false) even though (window.DockNode.Windows.Size > 1)
     // IM_ASSERT(window.DockNode == NULL || window.DockNodeAsHost == NULL); // Cannot be both
     if flag_set(g.NextWindowData.Flags, ImGuiNextWindowDataFlags_HasDock) {
         SetWindowDock(window, g.NextWindowData.DockId, g.NextWindowData.DockCond);
@@ -347,11 +347,11 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         let popup_ref = g.OpenPopupStack[g.BeginPopupStack.Size];
         popup_ref.Window = window;
         popup_ref.ParentNavLayer = parent_window_in_stack.DC.NavLayerCurrent;
-        g.BeginPopupStack.push(popup_re0f32);
+        g.BeginPopupStack.push(popup_ref);
         window.PopupId = popup_ref.PopupId;
     }
 
-    // Update ->RootWindow and others pointers (before any possible call to FocusWindow)
+    // Update .RootWindow and others pointers (before any possible call to FocusWindow)
     if first_begin_of_the_frame
     {
         UpdateWindowParentAndRootLinks(window, flags, parent_window);
@@ -633,7 +633,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
                 window.Viewport = AddUpdateViewport(window, window.ID, window.Pos, window.Size, ImGuiViewportFlags_NoFocusOnAppearing);
 
                 // FIXME-DPI
-                //IM_ASSERT(old_viewport.DpiScale == window.Viewport->DpiScale); // FIXME-DPI: Something went wrong
+                //IM_ASSERT(old_viewport.DpiScale == window.Viewport.DpiScale); // FIXME-DPI: Something went wrong
                 SetCurrentViewport(window, window.Viewport);
                 window.FontDpiScale = (g.IO.ConfigFlags & ImGuiConfigFlags_DpiEnableScaleFonts) ? window.Viewport.DpiScale : 1f32;
                 SetCurrentWindow(window);
@@ -662,8 +662,8 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             {
                 // Lost windows (e.g. a monitor disconnected) will naturally moved to the fallback/dummy monitor aka the main viewport.
                 let monitor: *const ImGuiPlatformMonitor = GetViewportPlatformMonitor(window.Viewport);
-                visibility_rect.Min = monitor->WorkPos + visibility_padding;
-                visibility_rect.Max = monitor->WorkPos + monitor->WorkSize - visibility_padding;
+                visibility_rect.Min = monitor.WorkPos + visibility_padding;
+                visibility_rect.Max = monitor.WorkPos + monitor.WorkSize - visibility_padding;
                 ClampWindowRect(window, visibility_rect);
             }
         }
@@ -754,7 +754,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             // When we use InnerRect here we are intentionally reading last frame size, same for ScrollbarSizes values before we set them again.
             let avail_size_from_current_frame: ImVec2 = ImVec2(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
             let avail_size_from_last_frame: ImVec2 = window.InnerRect.GetSize() + window.ScrollbarSizes;
-            let needed_size_from_last_frame: ImVec2 = window_just_created ? ImVec2(0, 0) : window.ContentSize + window.WindowPadding * 2.0f32;
+            let needed_size_from_last_frame: ImVec2 = window_just_created ? ImVec2::new2(0, 0) : window.ContentSize + window.WindowPadding * 2.0f32;
             let size_x_for_scrollbars: c_float =  use_current_size_for_scrollbar_x ? avail_size_from_current_frame.x : avail_size_from_last_frame.x;
             let size_y_for_scrollbars: c_float =  use_current_size_for_scrollbar_y ? avail_size_from_current_frame.y : avail_size_from_last_frame.y;
             //bool scrollbar_y_from_last_frame = window.ScrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
@@ -844,7 +844,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
                 // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
                 // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
                 let mut previous_child: *mut ImGuiWindow =  parent_window.DC.ChildWindows.Size >= 2 ? parent_window.DC.ChildWindows[parent_window.DC.ChildWindows.Size - 2] : null_mut();
-                let mut previous_child_overlapping: bool =  previous_child ? previous_child->Rect().Overlaps(window.Rect()) : false;
+                let mut previous_child_overlapping: bool =  previous_child ? previous_child.Rect().Overlaps(window.Rect()) : false;
                 let mut parent_is_empty: bool =  parent_window.DrawList.VtxBuffer.Size > 0;
                 if (window.DrawList.CmdBuffer.last().unwrap().ElemCount == 0 && parent_is_empty && !previous_child_overlapping)
                     render_decorations_in_parent = true;
@@ -854,7 +854,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 
             // Handle title bar, scrollbar, resize grips and resize borders
             let window_to_highlight: *const ImGuiWindow = g.NavWindowingTarget ? g.NavWindowingTarget : g.NavWindow;
-            let title_bar_is_highlight: bool = want_focus || (window_to_highlight && (window.RootWindowForTitleBarHighlight == window_to_highlight->RootWindowForTitleBarHighlight || (window.DockNode && window.DockNode == window_to_highlight->DockNode)));
+            let title_bar_is_highlight: bool = want_focus || (window_to_highlight && (window.RootWindowForTitleBarHighlight == window_to_highlight.RootWindowForTitleBarHighlight || (window.DockNode && window.DockNode == window_to_highlight.DockNode)));
             RenderWindowDecorations(window, title_bar_rect, title_bar_is_highlight, handle_borders_and_resize_grips, resize_grip_count, resize_grip_col, resize_grip_draw_size);
 
             if (render_decorations_in_parent)
@@ -903,7 +903,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         window.DC.CursorPosPrevLine = window.DC.CursorPos;
         window.DC.CursorMaxPos = window.DC.CursorStartPos;
         window.DC.IdealMaxPos = window.DC.CursorStartPos;
-        window.DC.CurrLineSize = window.DC.PrevLineSize = ImVec2(0f32, 0f32);
+        window.DC.CurrLineSize = window.DC.PrevLineSize = ImVec2::new2(0f32, 0f32);
         window.DC.CurrLineTextBaseOffset = window.DC.PrevLineTextBaseOffset = 0f32;
         window.DC.IsSameLine = window.DC.IsSetPos = false;
 
@@ -1091,7 +1091,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 // - Feedback welcome at https://github.com/ocornut/imgui/issues/211
 // - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
 // - Optimized shortcuts instead of PushStyleVar() + PushItemFlag()
-c_void BeginDisabled(bool disabled)
+c_void BeginDisabled(disabled: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut was_disabled: bool =  (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;

@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 
+use libc::c_int;
+use crate::type_defs::ImGuiID;
+
 // Pre C++0x doesn't allow us to use a function-local type (without linkage) as template parameter, so we moved this here.
 #[derive(Default, Debug, Copy, Clone)]
 pub struct ImGuiDockContextPruneNodeData {

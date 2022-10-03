@@ -3,7 +3,7 @@
 // In our terminology those should be interchangeable, yet right now this is super confusing.
 // Those two functions are merely a legacy artifact, so at minimum naming should be clarified.
 
-c_void SetNavWindow(ImGuiWindow* window)
+c_void SetNavWindow(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.NavWindow != window)
@@ -15,7 +15,7 @@ c_void SetNavWindow(ImGuiWindow* window)
     NavUpdateAnyRequestFlag();
 }
 
-c_void SetNavID(ImGuiID id, ImGuiNavLayer nav_layer, ImGuiID focus_scope_id, const ImRect& rect_rel)
+c_void SetNavID(id: ImGuiID, ImGuiNavLayer nav_layer, focus_scope_id: ImGuiID, const ImRect& rect_rel)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindow != NULL);
@@ -27,7 +27,7 @@ c_void SetNavID(ImGuiID id, ImGuiNavLayer nav_layer, ImGuiID focus_scope_id, con
     g.NavWindow.NavRectRel[nav_layer] = rect_rel;
 }
 
-c_void SetFocusID(ImGuiID id, ImGuiWindow* window)
+c_void SetFocusID(id: ImGuiID, window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
@@ -67,7 +67,7 @@ static c_float inline NavScoreItemDistInterval(c_float a0, c_float a1, c_float b
     return 0f32;
 }
 
-static c_void inline NavClampRectToVisibleAreaForMoveDir(ImGuiDir move_dir, ImRect& r, const ImRect& clip_rect)
+static c_void inline NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, ImRect& r, const ImRect& clip_rect)
 {
     if (move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right)
     {
@@ -153,7 +153,7 @@ static bool NavScoreItem(ImGuiNavItemData* result)
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window);
         draw_list.AddRect(curr.Min, curr.Max, IM_COL32(255,200,0,100));
         draw_list.AddRect(cand.Min, cand.Max, IM_COL32(255,255,0,200));
-        draw_list.AddRectFilled(cand.Max - ImVec2(4, 4), cand.Max + CalcTextSize(buf) + ImVec2(4, 4), IM_COL32(40,0,0,150));
+        draw_list.AddRectFilled(cand.Max - ImVec2::new2(4, 4), cand.Max + CalcTextSize(buf) + ImVec2::new2(4, 4), IM_COL32(40,0,0,150));
         draw_list.AddText(cand.Max, ~0U, buf);
     }
     else if (g.IO.KeyCtrl) // Hold to preview score in matching quadrant. Press C to rotate.
@@ -174,21 +174,21 @@ static bool NavScoreItem(ImGuiNavItemData* result)
     if (quadrant == move_dir)
     {
         // Does it beat the current best candidate?
-        if (dist_box < result->DistBox)
+        if (dist_box < result.DistBox)
         {
-            result->DistBox = dist_box;
-            result->DistCenter = dist_center;
+            result.DistBox = dist_box;
+            result.DistCenter = dist_center;
             return true;
         }
-        if (dist_box == result->DistBox)
+        if (dist_box == result.DistBox)
         {
             // Try using distance between center points to break ties
-            if (dist_center < result->DistCenter)
+            if (dist_center < result.DistCenter)
             {
-                result->DistCenter = dist_center;
+                result.DistCenter = dist_center;
                 new_best = true;
             }
-            else if (dist_center == result->DistCenter)
+            else if (dist_center == result.DistCenter)
             {
                 // Still tied! we need to be extra-careful to make sure everything gets linked properly. We consistently break ties by symbolically moving "later" items
                 // (with higher index) to the right/downwards by an infinitesimal amount since we the current "best" button already (so it must have a lower index),
@@ -204,11 +204,11 @@ static bool NavScoreItem(ImGuiNavItemData* result)
     // This is just to avoid buttons having no links in a particular direction when there's a suitable neighbor. you get good graphs without this too.
     // 2017/09/29: FIXME: This now currently only enabled inside menu bars, ideally we'd disable it everywhere. Menus in particular need to catch failure. For general navigation it feels awkward.
     // Disabling it may lead to disconnected graphs when nodes are very spaced out on different axis. Perhaps consider offering this as an option?
-    if (result->DistBox == f32::MAX && dist_axial < result->DistAxial)  // Check axial match
+    if (result.DistBox == f32::MAX && dist_axial < result.DistAxial)  // Check axial match
         if (g.NavLayer == ImGuiNavLayer_Menu && !(g.NavWindow.Flags & ImGuiWindowFlags_ChildMenu))
             if ((move_dir == ImGuiDir_Left && dax < 0f32) || (move_dir == ImGuiDir_Right && dax > 0f32) || (move_dir == ImGuiDir_Up && day < 0f32) || (move_dir == ImGuiDir_Down && day > 0f32))
             {
-                result->DistAxial = dist_axial;
+                result.DistAxial = dist_axial;
                 new_best = true;
             }
 
@@ -219,11 +219,11 @@ static c_void NavApplyItemToResult(ImGuiNavItemData* result)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    result->Window = window;
-    result->ID = g.LastItemData.ID;
-    result->FocusScopeId = window.DC.NavFocusScopeIdCurrent;
-    result->InFlags = g.LastItemData.InFlags;
-    result->RectRel = WindowRectAbsToRel(window, g.LastItemData.NavRect);
+    result.Window = window;
+    result.ID = g.LastItemData.ID;
+    result.FocusScopeId = window.DC.NavFocusScopeIdCurrent;
+    result.InFlags = g.LastItemData.InFlags;
+    result.RectRel = WindowRectAbsToRel(window, g.LastItemData.NavRect);
 }
 
 // We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
@@ -232,9 +232,9 @@ static c_void NavProcessItem()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    const let mut id: ImGuiID =  g.LastItemData.ID;
+    let mut id: ImGuiID =  g.LastItemData.ID;
     const let nav_bb: ImRect =  g.LastItemData.NavRect;
-    const let mut item_flags: ImGuiItemFlags =  g.LastItemData.InFlags;
+    let mut item_flags: ImGuiItemFlags =  g.LastItemData.InFlags;
 
     // Process Init Request
     if (g.NavInitRequest && g.NavLayer == window.DC.NavLayerCurrent && (item_flags & ImGuiItemFlags_Disabled) == 0)
@@ -301,7 +301,7 @@ static c_void NavProcessItem()
 // - Case 3: tab forward wrap:    set result to first eligible item (preemptively), on ref id set counter, on next frame if counter hasn't elapsed store result. // FIXME-TABBING: Could be done as a next-frame forwarded request
 // - Case 4: tab backward:        store all results, on ref id pick prev, stop storing
 // - Case 5: tab backward wrap:   store all results, on ref id if no result keep storing until last // FIXME-TABBING: Could be done as next-frame forwarded requested
-c_void NavProcessItemForTabbingRequest(ImGuiID id)
+c_void NavProcessItemForTabbingRequest(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -322,7 +322,7 @@ c_void NavProcessItemForTabbingRequest(ImGuiID id)
         // Tab Backward
         if (g.NavId == id)
         {
-            if (result->ID)
+            if (result.ID)
             {
                 g.NavMoveScoringItems = false;
                 NavUpdateAnyRequestFlag();
@@ -348,7 +348,7 @@ bool NavMoveRequestButNoResultYet()
 }
 
 // FIXME: ScoringRect is not set
-c_void NavMoveRequestSubmit(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
+c_void NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindow != NULL);
@@ -388,7 +388,7 @@ c_void NavMoveRequestCancel()
 }
 
 // Forward will reuse the move request again on the next frame (generally with modifications done to it)
-c_void NavMoveRequestForward(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
+c_void NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavMoveForwardToNextFrame == false);
@@ -402,7 +402,7 @@ c_void NavMoveRequestForward(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveF
 
 // Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
 // popup is assembled and in case of appended popups it is not clear which EndPopup() call is final.
-c_void NavMoveRequestTryWrapping(ImGuiWindow* window, ImGuiNavMoveFlags wrap_flags)
+c_void NavMoveRequestTryWrapping(window: *mut ImGuiWindow, ImGuiNavMoveFlags wrap_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(wrap_flags != 0); // Call with _WrapX, _WrapY, _LoopX, _LoopY
@@ -413,24 +413,24 @@ c_void NavMoveRequestTryWrapping(ImGuiWindow* window, ImGuiNavMoveFlags wrap_fla
 
 // FIXME: This could be replaced by updating a frame number in each window when (window == NavWindow) and (NavLayer == 0).
 // This way we could find the last focused window among our children. It would be much less confusing this way?
-static c_void NavSaveLastChildNavWindowIntoParent(ImGuiWindow* nav_window)
+static c_void NavSaveLastChildNavWindowIntoParent(nav_window: *mut ImGuiWindow)
 {
     let mut parent: *mut ImGuiWindow =  nav_window;
-    while (parent && parent->RootWindow != parent && (parent->Flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_ChildMenu)) == 0)
-        parent = parent->ParentWindow;
+    while (parent && parent.RootWindow != parent && (parent.Flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_ChildMenu)) == 0)
+        parent = parent.ParentWindow;
     if (parent && parent != nav_window)
-        parent->NavLastChildNavWindow = nav_window;
+        parent.NavLastChildNavWindow = nav_window;
 }
 
 // Restore the last focused child.
 // Call when we are expected to land on the Main Layer (0) after FocusWindow()
-static ImGuiWindow* NavRestoreLastChildNavWindow(ImGuiWindow* window)
+static ImGuiWindow* NavRestoreLastChildNavWindow(window: *mut ImGuiWindow)
 {
     if (window.NavLastChildNavWindow && window.NavLastChildNavwindow.WasActive)
         return window.NavLastChildNavWindow;
-    if (window.DockNodeAsHost && window.DockNodeAsHost->TabBar)
-        if (ImGuiTabItem* tab = TabBarFindMostRecentlySelectedTabForActiveWindow(window.DockNodeAsHost->TabBar))
-            return tab->Window;
+    if (window.DockNodeAsHost && window.DockNodeAsHost.TabBar)
+        if (let mut tab: *mut ImGuiTabItem = TabBarFindMostRecentlySelectedTabForActiveWindow(window.DockNodeAsHost.TabBar))
+            return tab.Window;
     return window;
 }
 
@@ -472,7 +472,7 @@ static inline c_void NavUpdateAnyRequestFlag()
 }
 
 // This needs to be called before we submit any widget (aka in or before Begin)
-c_void NavInitWindow(ImGuiWindow* window, bool force_reinit)
+c_void NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
 {
     // FIXME: ChildWindow test here is wrong for docking
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -715,7 +715,7 @@ static c_void NavUpdate()
     {
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(g.NavWindow);
         if (1) { for (let layer: c_int = 0; layer < 2; layer++) { let r: ImRect =  WindowRectRelToAbs(g.NavWindow, g.NavWindow.NavRectRel[layer]); draw_list.AddRect(r.Min, r.Max, IM_COL32(255,200,0,255)); } } // [DEBUG]
-        if (1) { u32 col = (!g.NavWindow.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); let mut p: ImVec2 =  NavCalcPreferredRefPos(); buf: [c_char;32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0f32, col); draw_list.AddText(null_mut(), 13.0f32, p + ImVec2(8,-4), col, buf); }
+        if (1) { u32 col = (!g.NavWindow.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); let mut p: ImVec2 =  NavCalcPreferredRefPos(); buf: [c_char;32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0f32, col); draw_list.AddText(null_mut(), 13.0f32, p + ImVec2::new2(8,-4), col, buf); }
     }
 // #endif
 }
@@ -813,7 +813,7 @@ c_void NavUpdateCreateMoveRequest()
     {
         let mut clamp_x: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         let mut clamp_y: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
-        let inner_rect_rel: ImRect =  WindowRectAbsToRel(window, ImRect(window.InnerRect.Min - ImVec2(1, 1), window.InnerRect.Max + ImVec2(1, 1)));
+        let inner_rect_rel: ImRect =  WindowRectAbsToRel(window, ImRect(window.InnerRect.Min - ImVec2::new2(1, 1), window.InnerRect.Max + ImVec2::new2(1, 1)));
         if ((clamp_x || clamp_y) && !inner_rect_rel.Contains(window.NavRectRel[g.NavLayer]))
         {
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp NavRectRel for gamepad move\n");
@@ -838,8 +838,8 @@ c_void NavUpdateCreateMoveRequest()
         scoring_rect.Min.x = ImMin(scoring_rect.Min.x + 1f32, scoring_rect.Max.x);
         scoring_rect.Max.x = scoring_rect.Min.x;
         // IM_ASSERT(!scoring_rect.IsInverted()); // Ensure if we have a finite, non-inverted bounding box here will allows us to remove extraneous ImFabs() calls in NavScoreItem().
-        //GetForegroundDrawList()->AddRect(scoring_rect.Min, scoring_rect.Max, IM_COL32(255,200,0,255)); // [DEBUG]
-        //if (!g.NavScoringNoClipRect.IsInverted()) { GetForegroundDrawList()->AddRect(g.NavScoringNoClipRect.Min, g.NavScoringNoClipRect.Max, IM_COL32(255, 200, 0, 255)); } // [DEBUG]
+        //GetForegroundDrawList().AddRect(scoring_rect.Min, scoring_rect.Max, IM_COL32(255,200,0,255)); // [DEBUG]
+        //if (!g.NavScoringNoClipRect.IsInverted()) { GetForegroundDrawList().AddRect(g.NavScoringNoClipRect.Min, g.NavScoringNoClipRect.Max, IM_COL32(255, 200, 0, 255)); } // [DEBUG]
     }
     g.NavScoringRect = scoring_rect;
     g.NavScoringNoClipRect.Add(scoring_rect);
@@ -903,9 +903,9 @@ c_void NavMoveRequestApplyResult()
 
     // Maybe entering a flattened child from the outside? In this case solve the tie using the regular scoring rules.
     if (result != &g.NavMoveResultOther && g.NavMoveResultOther.ID != 0 && g.NavMoveResultOther.window.ParentWindow == g.NavWindow)
-        if ((g.NavMoveResultOther.DistBox < result->DistBox) || (g.NavMoveResultOther.DistBox == result->DistBox && g.NavMoveResultOther.DistCenter < result->DistCenter))
+        if ((g.NavMoveResultOther.DistBox < result.DistBox) || (g.NavMoveResultOther.DistBox == result.DistBox && g.NavMoveResultOther.DistCenter < result.DistCenter))
             result = &g.NavMoveResultOther;
-    // IM_ASSERT(g.NavWindow && result->Window);
+    // IM_ASSERT(g.NavWindow && result.Window);
 
     // Scroll to keep newly navigated item fully into view.
     if (g.NavLayer == ImGuiNavLayer_Main)
@@ -913,39 +913,39 @@ c_void NavMoveRequestApplyResult()
         if (g.NavMoveFlags & ImGuiNavMoveFlags_ScrollToEdgeY)
         {
             // FIXME: Should remove this
-            let scroll_target: c_float =  (g.NavMoveDir == ImGuiDir_Up) ? result->window.ScrollMax.y : 0f32;
-            SetScrollY(result->Window, scroll_target);
+            let scroll_target: c_float =  (g.NavMoveDir == ImGuiDir_Up) ? result.window.ScrollMax.y : 0f32;
+            SetScrollY(result.Window, scroll_target);
         }
         else
         {
-            let rect_abs: ImRect =  WindowRectRelToAbs(result->Window, result->RectRel);
-            ScrollToRectEx(result->Window, rect_abs, g.NavMoveScrollFlags);
+            let rect_abs: ImRect =  WindowRectRelToAbs(result.Window, result.RectRel);
+            ScrollToRectEx(result.Window, rect_abs, g.NavMoveScrollFlags);
         }
     }
 
-    if (g.NavWindow != result->Window)
+    if (g.NavWindow != result.Window)
     {
-        IMGUI_DEBUG_LOG_FOCUS("[focus] NavMoveRequest: SetNavWindow(\"%s\")\n", result->window.Name);
-        g.NavWindow = result->Window;
+        IMGUI_DEBUG_LOG_FOCUS("[focus] NavMoveRequest: SetNavWindow(\"%s\")\n", result.window.Name);
+        g.NavWindow = result.Window;
     }
-    if (g.ActiveId != result->ID)
+    if (g.ActiveId != result.ID)
         ClearActiveID();
-    if (g.NavId != result->ID)
+    if (g.NavId != result.ID)
     {
         // Don't set NavJustMovedToId if just landed on the same spot (which may happen with ImGuiNavMoveFlags_AllowCurrentNavId)
-        g.NavJustMovedToId = result->ID;
-        g.NavJustMovedToFocusScopeId = result->FocusScopeId;
+        g.NavJustMovedToId = result.ID;
+        g.NavJustMovedToFocusScopeId = result.FocusScopeId;
         g.NavJustMovedToKeyMods = g.NavMoveKeyMods;
     }
 
     // Focus
-    IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", result->ID, g.NavLayer, g.NavWindow.Name);
-    SetNavID(result->ID, g.NavLayer, result->FocusScopeId, result->RectRel);
+    IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", result.ID, g.NavLayer, g.NavWindow.Name);
+    SetNavID(result.ID, g.NavLayer, result.FocusScopeId, result.RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable
-    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result->InFlags & ImGuiItemFlags_Inputable))
+    if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result.InFlags & ImGuiItemFlags_Inputable))
     {
-        g.NavNextActivateId = result->ID;
+        g.NavNextActivateId = result.ID;
         g.NavNextActivateFlags = ImGuiActivateFlags_PreferInput | ImGuiActivateFlags_TryToPreserveState;
         g.NavMoveFlags |= ImGuiNavMoveFlags_DontSetNavHighlight;
     }
@@ -953,7 +953,7 @@ c_void NavMoveRequestApplyResult()
     // Activate
     if (g.NavMoveFlags & ImGuiNavMoveFlags_Activate)
     {
-        g.NavNextActivateId = result->ID;
+        g.NavNextActivateId = result.ID;
         g.NavNextActivateFlags = ImGuiActivateFlags_None;
     }
 
@@ -1160,7 +1160,7 @@ static c_void NavUpdateCreateWrappingRequest()
     NavMoveRequestForward(g.NavMoveDir, clip_dir, move_flags, g.NavMoveScrollFlags);
 }
 
-static c_int FindWindowFocusIndex(ImGuiWindow* window)
+static c_int FindWindowFocusIndex(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IM_UNUSED(g);
@@ -1183,7 +1183,7 @@ static c_void NavUpdateWindowingHighlightWindow(c_int focus_change_dir)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindowingTarget);
-    if (g.NavWindowingTarget->Flags & ImGuiWindowFlags_Modal)
+    if (g.NavWindowingTarget.Flags & ImGuiWindowFlags_Modal)
         return;
 
     let i_current: c_int = FindWindowFocusIndex(g.NavWindowingTarget);
@@ -1193,7 +1193,7 @@ static c_void NavUpdateWindowingHighlightWindow(c_int focus_change_dir)
     if (window_target) // Don't reset windowing target if there's a single window in the list
     {
         g.NavWindowingTarget = g.NavWindowingTargetAnim = window_target;
-        g.NavWindowingAccumDeltaPos = g.NavWindowingAccumDeltaSize = ImVec2(0f32, 0f32);
+        g.NavWindowingAccumDeltaPos = g.NavWindowingAccumDeltaSize = ImVec2::new2(0f32, 0f32);
     }
     g.NavWindowingToggleLayer = false;
 }
@@ -1232,7 +1232,7 @@ static c_void NavUpdateWindowing()
         {
             g.NavWindowingTarget = g.NavWindowingTargetAnim = window.RootWindow;
             g.NavWindowingTimer = g.NavWindowingHighlightAlpha = 0f32;
-            g.NavWindowingAccumDeltaPos = g.NavWindowingAccumDeltaSize = ImVec2(0f32, 0f32);
+            g.NavWindowingAccumDeltaPos = g.NavWindowingAccumDeltaSize = ImVec2::new2(0f32, 0f32);
             g.NavWindowingToggleLayer = start_windowing_with_gamepad ? true : false; // Gamepad starts toggling layer
             g.NavInputSource = start_windowing_with_keyboard ? ImGuiInputSource_Keyboard : ImGuiInputSource_Gamepad;
         }
@@ -1301,9 +1301,9 @@ static c_void NavUpdateWindowing()
     }
 
     // Move window
-    if (g.NavWindowingTarget && !(g.NavWindowingTarget->Flags & ImGuiWindowFlags_NoMove))
+    if (g.NavWindowingTarget && !(g.NavWindowingTarget.Flags & ImGuiWindowFlags_NoMove))
     {
-        ImVec2 nav_move_dir;
+        let mut nav_move_dir = ImVec2::default();
         if (g.NavInputSource == ImGuiInputSource_Keyboard && !io.KeyShift)
             nav_move_dir = GetKeyVector2d(ImGuiKey_LeftArrow, ImGuiKey_RightArrow, ImGuiKey_UpArrow, ImGuiKey_DownArrow);
         if (g.NavInputSource == ImGuiInputSource_Gamepad)
@@ -1317,7 +1317,7 @@ static c_void NavUpdateWindowing()
             let accum_floored: ImVec2 = ImFloor(g.NavWindowingAccumDeltaPos);
             if (accum_floored.x != 0f32 || accum_floored.y != 0f32)
             {
-                let mut moving_window: *mut ImGuiWindow =  g.NavWindowingTarget->RootWindowDockTree;
+                let mut moving_window: *mut ImGuiWindow =  g.NavWindowingTarget.RootWindowDockTree;
                 SetWindowPos(moving_window, moving_window.Pos + accum_floored, ImGuiCond_Always);
                 g.NavWindowingAccumDeltaPos -= accum_floored;
             }
@@ -1387,7 +1387,7 @@ static c_void NavUpdateWindowing()
 }
 
 // Window has already passed the IsWindowNavFocusable()
-static *const char GetFallbackWindowNameForWindowingList(ImGuiWindow* window)
+static *const char GetFallbackWindowNameForWindowingList(window: *mut ImGuiWindow)
 {
     if (window.Flags & ImGuiWindowFlags_Popup)
         return "(Popup)";
@@ -1411,7 +1411,7 @@ c_void NavUpdateWindowingOverlay()
         g.NavWindowingListWindow = FindWindowByName("###NavWindowingList");
     let viewport: *const ImGuiViewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
     SetNextWindowSizeConstraints(ImVec2(viewport.Size.x * 0.20f32, viewport.Size.y * 0.200f32), ImVec2(f32::MAX, f32::MAX));
-    SetNextWindowPos(viewport.GetCenter(), ImGuiCond_Always, ImVec2(0.5f32, 0.5f32));
+    SetNextWindowPos(viewport.GetCenter(), ImGuiCond_Always, ImVec2::new2(0.5f32, 0.5f32));
     PushStyleVar(ImGuiStyleVar_WindowPadding, g.Style.WindowPadding * 2.00f32);
     Begin("###NavWindowingList", null_mut(), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
     for (let n: c_int = g.WindowsFocusOrder.Size - 1; n >= 0; n--)

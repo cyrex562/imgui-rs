@@ -1,6 +1,6 @@
 
 // Supported flags: ImGuiPopupFlags_AnyPopupId, ImGuiPopupFlags_AnyPopupLevel
-bool IsPopupOpen(ImGuiID id, ImGuiPopupFlags popup_flags)
+bool IsPopupOpen(id: ImGuiID, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (popup_flags & ImGuiPopupFlags_AnyPopupId)
@@ -45,7 +45,7 @@ ImGuiWindow* GetTopMostPopupModal()
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let n: c_int = g.OpenPopupStack.Size - 1; n >= 0; n--)
         if (let mut popup: *mut ImGuiWindow =  g.OpenPopupStack.Data[n].Window)
-            if (popup->Flags & ImGuiWindowFlags_Modal)
+            if (popup.Flags & ImGuiWindowFlags_Modal)
                 return popup;
     return null_mut();
 }
@@ -55,7 +55,7 @@ ImGuiWindow* GetTopMostAndVisiblePopupModal()
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let n: c_int = g.OpenPopupStack.Size - 1; n >= 0; n--)
         if (let mut popup: *mut ImGuiWindow =  g.OpenPopupStack.Data[n].Window)
-            if ((popup->Flags & ImGuiWindowFlags_Modal) && IsWindowActiveAndVisible(popup))
+            if ((popup.Flags & ImGuiWindowFlags_Modal) && IsWindowActiveAndVisible(popup))
                 return popup;
     return null_mut();
 }
@@ -68,7 +68,7 @@ c_void OpenPopup(*const char str_id, ImGuiPopupFlags popup_flags)
     OpenPopupEx(id, popup_flags);
 }
 
-c_void OpenPopup(ImGuiID id, ImGuiPopupFlags popup_flags)
+c_void OpenPopup(id: ImGuiID, ImGuiPopupFlags popup_flags)
 {
     OpenPopupEx(id, popup_flags);
 }
@@ -77,7 +77,7 @@ c_void OpenPopup(ImGuiID id, ImGuiPopupFlags popup_flags)
 // Popups are closed when user click outside, or activate a pressable item, or CloseCurrentPopup() is called within a BeginPopup()/EndPopup() block.
 // Popup identifiers are relative to the current ID-stack (so OpenPopup and BeginPopup needs to be at the same level).
 // One open popup per level of the popup hierarchy (NB: when assigning we reset the Window member of ImGuiPopupRef to NULL)
-c_void OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags)
+c_void OpenPopupEx(id: ImGuiID, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow =  g.CurrentWindow;
@@ -99,7 +99,7 @@ c_void OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags)
     IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopupEx(0x%08X)\n", id);
     if (g.OpenPopupStack.Size < current_stack_size + 1)
     {
-        g.OpenPopupStack.push(popup_re0f32);
+        g.OpenPopupStack.push(popup_ref);
     }
     else
     {
@@ -114,7 +114,7 @@ c_void OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags)
         {
             // Close child popups if any, then flag popup for open/reopen
             ClosePopupToLevel(current_stack_size, false);
-            g.OpenPopupStack.push(popup_re0f32);
+            g.OpenPopupStack.push(popup_ref);
         }
 
         // When reopening a popup we first refocus its parent, otherwise if its parent is itself a popup it would get closed by ClosePopupsOverWindow().
@@ -126,7 +126,7 @@ c_void OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags)
 
 // When popups are stacked, clicking on a lower level popups puts focus back to it and close popups above it.
 // This function closes any popups that are over 'ref_window'.
-c_void ClosePopupsOverWindow(ImGuiWindow* ref_window, bool restore_focus_to_window_under_popup)
+c_void ClosePopupsOverWindow(ref_window: *mut ImGuiWindow, restore_focus_to_window_under_popup: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.OpenPopupStack.Size == 0)
@@ -149,7 +149,7 @@ c_void ClosePopupsOverWindow(ImGuiWindow* ref_window, bool restore_focus_to_wind
             // Trim the stack unless the popup is a direct parent of the reference window (the reference window is often the NavWindow)
             // - With this stack of window, clicking/focusing Popup1 will close Popup2 and Popup3:
             //     Window -> Popup1 -> Popup2 -> Popup3
-            // - Each popups may contain child windows, which is why we compare ->RootWindowDockTree!
+            // - Each popups may contain child windows, which is why we compare .RootWindowDockTree!
             //     Window -> Popup1 -> Popup1_Child -> Popup2 -> Popup2_Child
             let mut ref_window_is_descendent_of_popup: bool =  false;
             for (let n: c_int = popup_count_to_keep; n < g.OpenPopupStack.Size; n++)
@@ -186,7 +186,7 @@ c_void ClosePopupsExceptModals()
         ClosePopupToLevel(popup_count_to_keep, true);
 }
 
-c_void ClosePopupToLevel(c_int remaining, bool restore_focus_to_window_under_popup)
+c_void ClosePopupToLevel(c_int remaining, restore_focus_to_window_under_popup: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupToLevel(%d), restore_focus_to_window_under_popup=%d\n", remaining, restore_focus_to_window_under_popup);
@@ -246,7 +246,7 @@ c_void CloseCurrentPopup()
 }
 
 // Attention! BeginPopup() adds default flags which BeginPopupEx()!
-bool BeginPopupEx(ImGuiID id, ImGuiWindowFlags flags)
+bool BeginPopupEx(id: ImGuiID, ImGuiWindowFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!IsPopupOpen(id, ImGuiPopupFlags_None))
@@ -288,7 +288,7 @@ bool BeginPopupModal(*const char name, bool* p_open, ImGuiWindowFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    const let mut id: ImGuiID =  window.GetID(name);
+    let mut id: ImGuiID =  window.GetID(name);
     if (!IsPopupOpen(id, ImGuiPopupFlags_None))
     {
         g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
@@ -301,7 +301,7 @@ bool BeginPopupModal(*const char name, bool* p_open, ImGuiWindowFlags flags)
     if ((g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0)
     {
         let viewport: *const ImGuiViewport = window.WasActive ? window.Viewport : GetMainViewport(); // FIXME-VIEWPORT: What may be our reference viewport?
-        SetNextWindowPos(viewport.GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f32, 0.5f32));
+        SetNextWindowPos(viewport.GetCenter(), ImGuiCond_FirstUseEver, ImVec2::new2(0.5f32, 0.5f32));
     }
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_Modal | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
@@ -416,8 +416,8 @@ bool BeginPopupContextVoid(*const char str_id, ImGuiPopupFlags popup_flags)
 ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, ImGuiDir* last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy)
 {
     let base_pos_clamped: ImVec2 = ImClamp(ref_pos, r_outer.Min, r_outer.Max - size);
-    //GetForegroundDrawList()->AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
-    //GetForegroundDrawList()->AddRect(r_outer.Min, r_outer.Max, IM_COL32(0,255,0,255));
+    //GetForegroundDrawList().AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
+    //GetForegroundDrawList().AddRect(r_outer.Min, r_outer.Max, IM_COL32(0,255,0,255));
 
     // Combo Box policy (we want a connecting edge)
     if (policy == ImGuiPopupPositionPolicy_ComboBox)
@@ -428,7 +428,7 @@ ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, Im
             const ImGuiDir dir = (n == -1) ? *last_dir : dir_prefered_order[n];
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
-            ImVec2 pos;
+            let mut pos = ImVec2::default();
             if (dir == ImGuiDir_Down)  pos = ImVec2(r_avoid.Min.x, r_avoid.Max.y);          // Below, Toward Right (default)
             if (dir == ImGuiDir_Right) pos = ImVec2(r_avoid.Min.x, r_avoid.Min.y - size.y); // Above, Toward Right
             if (dir == ImGuiDir_Left)  pos = ImVec2(r_avoid.Max.x - size.x, r_avoid.Max.y); // Below, Toward Left
@@ -460,7 +460,7 @@ ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, Im
             if (avail_h < size.y && (dir == ImGuiDir_Up || dir == ImGuiDir_Down))
                 continue;
 
-            ImVec2 pos;
+            let mut pos = ImVec2::default();
             pos.x = (dir == ImGuiDir_Left) ? r_avoid.Min.x - size.x : (dir == ImGuiDir_Right) ? r_avoid.Max.x : base_pos_clamped.x;
             pos.y = (dir == ImGuiDir_Up) ? r_avoid.Min.y - size.y : (dir == ImGuiDir_Down) ? r_avoid.Max.y : base_pos_clamped.y;
 
@@ -478,7 +478,7 @@ ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, Im
 
     // For tooltip we prefer avoiding the cursor at all cost even if it means that part of the tooltip won't be visible.
     if (policy == ImGuiPopupPositionPolicy_Tooltip)
-        return ref_pos + ImVec2(2, 2);
+        return ref_pos + ImVec2::new2(2, 2);
 
     // Otherwise try to keep within display
     let pos: ImVec2 = ref_pos;
@@ -488,7 +488,7 @@ ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, Im
 }
 
 // Note that this is used for popups, which can overlap the non work-area of individual viewports.
-ImRect GetPopupAllowedExtentRect(ImGuiWindow* window)
+ImRect GetPopupAllowedExtentRect(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImRect r_screen;
@@ -509,7 +509,7 @@ ImRect GetPopupAllowedExtentRect(ImGuiWindow* window)
     return r_screen;
 }
 
-ImVec2 FindBestWindowPosForPopup(ImGuiWindow* window)
+ImVec2 FindBestWindowPosForPopup(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 

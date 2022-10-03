@@ -158,16 +158,16 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
 
 // Step 1: Let the clipper infer height from first range
     if clipper.ItemsHeight <= 0f32 {
-// IM_ASSERT(data->StepNo == 1);
+// IM_ASSERT(data.StepNo == 1);
 // if (table) {}
-// IM_ASSERT(table.RowPosY1 == clipper->StartPosY && table.RowPosY2 == window.DC.CursorPos.y);
+// IM_ASSERT(table.RowPosY1 == clipper.StartPosY && table.RowPosY2 == window.DC.CursorPos.y);
 
         clipper.ItemsHeight = (window.DC.CursorPos.y - clipper.StartPosY) / (clipper.DisplayEnd - clipper.DisplayStart);
         let mut affected_by_floating_point_precision: bool = ImIsFloatAboveGuaranteedIntegerPrecision(clipper.StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.DC.CursorPos.y);
         if affected_by_floating_point_precision {
             clipper.ItemsHeight = window.DC.PrevLineSize.y + g.Style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
         }
-// IM_ASSERT(clipper->ItemsHeight > 0f32 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
+// IM_ASSERT(clipper.ItemsHeight > 0f32 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
         calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.
     }
 

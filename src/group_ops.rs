@@ -1,7 +1,7 @@
 
 // Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
-// FIXME-OPT: Could we safely early out on ->SkipItems?
+// FIXME-OPT: Could we safely early out on .SkipItems?
 c_void BeginGroup()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -24,7 +24,7 @@ c_void BeginGroup()
     window.DC.GroupOffset.x = window.DC.CursorPos.x - window.Pos.x - window.DC.ColumnsOffset.x;
     window.DC.Indent = window.DC.GroupOffset;
     window.DC.CursorMaxPos = window.DC.CursorPos;
-    window.DC.CurrLineSize = ImVec2(0f32, 0f32);
+    window.DC.CurrLineSize = ImVec2::new2(0f32, 0f32);
     if (g.LogEnabled)
         g.LogLinePosY = -f32::MAX; // To enforce a carriage return
 }

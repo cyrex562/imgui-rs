@@ -102,7 +102,7 @@ pub struct ImGuiContext {
     // float                   FontSize;                           // (Shortcut) == FontBaseSize * g.Currentwindow.FontWindowScale == window.FontSize(). Text height for current window.
     pub FontSize: f32,
 
-    // float                   FontBaseSize;                       // (Shortcut) == IO.FontGlobalScale * Font->Scale * Font->FontSize. Base text height.
+    // float                   FontBaseSize;                       // (Shortcut) == IO.FontGlobalScale * Font.Scale * Font.FontSize. Base text height.
     pub FontBaseSize: c_float,
 
     // ImDrawListSharedData    DrawListSharedData;
@@ -329,7 +329,7 @@ pub struct ImGuiContext {
     // ImVector<ImGuiViewportP*> Viewports;                        // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
     pub Viewports: Vec<*mut ImGuiViewport>,
 
-    // float                   CurrentDpiScale;                    // == CurrentViewport->DpiScale
+    // float                   CurrentDpiScale;                    // == CurrentViewport.DpiScale
     pub CurrentDpiScale: c_float,
 
     // ImGuiViewportP*         CurrentViewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
@@ -699,7 +699,7 @@ pub struct ImGuiContext {
     // ImGuiID                 PlatformImeViewport;
     pub PlatformImeViewport: ImGuiID,
 
-    // char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv()->decimal_point
+    // char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv().decimal_point
     pub PlatformLocaleDecimalPoint: c_char,
 
     // Extensions

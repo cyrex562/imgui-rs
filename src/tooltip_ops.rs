@@ -14,7 +14,7 @@ c_void BeginTooltipEx(ImGuiTooltipFlags tooltip_flags, ImGuiWindowFlags extra_wi
         // In the context of a dragging tooltip we try to reduce that offset and we enforce following the cursor.
         // Whatever we do we want to call SetNextWindowPos() to enforce a tooltip position and disable clipping the tooltip without our display area, like regular tooltip do.
         //let mut tooltip_pos: ImVec2 =  g.IO.MousePos - g.ActiveIdClickOffset - g.Style.WindowPadding;
-        let tooltip_pos: ImVec2 = g.IO.MousePos + ImVec2(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
+        let tooltip_pos: ImVec2 = g.IO.MousePos + ImVec2::new2(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
         SetNextWindowPos(tooltip_pos);
         SetNextWindowBgAlpha(g.Style.Colors[ImGuiCol_PopupBg].w * 0.600f32);
         //PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * 0.600f32); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(
@@ -32,13 +32,13 @@ c_void BeginTooltipEx(ImGuiTooltipFlags tooltip_flags, ImGuiWindowFlags extra_wi
                 window.HiddenFramesCanSkipItems = 1; // FIXME: This may not be necessary?
                 ImFormatString(window_name, IM_ARRAYSIZE(window_name), "##Tooltip_%02d", ++g.TooltipOverrideCount);
             }
-    ImGuiWindowFlags flags = ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking;
+    let mut flags: ImGuiWindowFlags = ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking;
     Begin(window_name, null_mut(), flags | extra_window_flags);
 }
 
 c_void EndTooltip()
 {
-    // IM_ASSERT(GetCurrentWindowRead()->Flags & ImGuiWindowFlags_Tooltip);   // Mismatched BeginTooltip()/EndTooltip() calls
+    // IM_ASSERT(GetCurrentWindowRead().Flags & ImGuiWindowFlags_Tooltip);   // Mismatched BeginTooltip()/EndTooltip() calls
     End();
 }
 

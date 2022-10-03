@@ -161,7 +161,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
             column.ClipRect.Min.y = table.Bg2ClipRectForDrawCmd.Min.y;
         }
 
-// Update cliprect ahead of TableBeginCell() so clipper can access to new ClipRect->Min.y
+// Update cliprect ahead of TableBeginCell() so clipper can access to new ClipRect.Min.y
         SetWindowClipRectBeforeSetChannel(window, table.Columns[0].ClipRect);
         table.DrawSplitter.SetCurrentChannel(window.DrawList, table.Columns[0].DrawChannelCurrent);
     }

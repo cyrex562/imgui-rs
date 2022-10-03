@@ -1,7 +1,7 @@
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
-// CalcTextSize("") should return ImVec2(0f32, g.FontSize)
-// ImVec2 CalcTextSize(*const char text, *const char text_end, bool hide_text_after_double_hash, c_float wrap_width)
+// CalcTextSize("") should return ImVec2::new2(0f32, g.FontSize)
+// ImVec2 CalcTextSize(*const char text, *const char text_end, hide_text_after_double_hash: bool, c_float wrap_width)
 pub fn CalcTextSize(text: *const c_char, text_end: *const c_char, hid_text_after_double_hash: bool, wrap_width: c_float) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -45,7 +45,7 @@ c_void PopTextWrapPos()
     window.DC.TextWrapPosStack.pop_back();
 }
 
-static ImGuiWindow* GetCombinedRootWindow(ImGuiWindow* window, bool popup_hierarchy, bool dock_hierarchy)
+static ImGuiWindow* GetCombinedRootWindow(window: *mut ImGuiWindow, popup_hierarchy: bool, dock_hierarchy: bool)
 {
     let mut last_window: *mut ImGuiWindow =  null_mut();
     while (last_window != window)

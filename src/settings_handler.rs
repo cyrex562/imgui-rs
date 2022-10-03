@@ -8,7 +8,7 @@ use crate::type_defs::ImGuiID;
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiSettingsHandler {
-    pub TypeName: *const char,
+    pub TypeName: *const c_char,
     // Short description stored in .ini file. Disallowed characters: '[' ']'
     pub TypeHash: ImGuiID,
     // == ImHashStr(TypeName)

@@ -40,7 +40,7 @@ impl ImGuiTextRange {
 
     // IMGUI_API void  split(char separator, ImVector<ImGuiTextRange>* out) const;
     pub fn split(&mut self, separator: c_char, out: &mut Vec<ImGuiTextRange>) {
-        // out->resize(0);
+        // out.resize(0);
         let mut wb = b;
         let mut we = wb;
         while we < e

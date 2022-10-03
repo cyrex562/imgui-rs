@@ -68,11 +68,11 @@ ImGuiViewport* GetMainViewport()
 }
 
 // FIXME: This leaks access to viewports not listed in PlatformIO.Viewports[]. Problematic? (#4236)
-ImGuiViewport* FindViewportByID(ImGuiID id)
+ImGuiViewport* FindViewportByID(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let n: c_int = 0; n < g.Viewports.len(); n++)
-        if (g.Viewports[n]->ID == id)
+        if (g.Viewports[n].ID == id)
             return g.Viewports[n];
     return null_mut();
 }
@@ -81,12 +81,12 @@ ImGuiViewport* FindViewportByPlatformHandle(platform_handle: *mut c_void)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let i: c_int = 0; i != g.Viewports.len(); i++)
-        if (g.Viewports[i]->PlatformHandle == platform_handle)
+        if (g.Viewports[i].PlatformHandle == platform_handle)
             return g.Viewports[i];
     return null_mut();
 }
 
-c_void SetCurrentViewport(ImGuiWindow* current_window, *mut ImGuiViewportP viewport)
+c_void SetCurrentViewport(current_window: *mut ImGuiWindow, *mut ImGuiViewportP viewport)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     (c_void)current_window;
@@ -105,18 +105,18 @@ c_void SetCurrentViewport(ImGuiWindow* current_window, *mut ImGuiViewportP viewp
         g.PlatformIO.Platform_OnChangedViewport(g.CurrentViewport);
 }
 
-c_void SetWindowViewport(ImGuiWindow* window, *mut ImGuiViewportP viewport)
+c_void SetWindowViewport(window: *mut ImGuiWindow, *mut ImGuiViewportP viewport)
 {
     // Abandon viewport
     if (window.ViewportOwned && window.Viewport.Window == window)
-        window.Viewport.Size = ImVec2(0f32, 0f32);
+        window.Viewport.Size = ImVec2::new2(0f32, 0f32);
 
     window.Viewport = viewport;
     window.ViewportId = viewport.ID;
     window.ViewportOwned = (viewport.Window == window);
 }
 
-static bool GetWindowAlwaysWantOwnViewport(ImGuiWindow* window)
+static bool GetWindowAlwaysWantOwnViewport(window: *mut ImGuiWindow)
 {
     // Tooltips and menus are not automatically forced into their own viewport when the NoMerge flag is set, however the multiplication of viewports makes them more likely to protrude and create their own.
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -129,7 +129,7 @@ static bool GetWindowAlwaysWantOwnViewport(ImGuiWindow* window)
     return false;
 }
 
-static bool UpdateTryMergeWindowIntoHostViewport(ImGuiWindow* window, *mut ImGuiViewportP viewport)
+static bool UpdateTryMergeWindowIntoHostViewport(window: *mut ImGuiWindow, *mut ImGuiViewportP viewport)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (window.Viewport == viewport)
@@ -149,8 +149,8 @@ static bool UpdateTryMergeWindowIntoHostViewport(ImGuiWindow* window, *mut ImGui
         let mut window_behind: *mut ImGuiWindow =  g.Windows[n];
         if (window_behind == window)
             break;
-        if (window_behind->WasActive && window_behind->ViewportOwned && !(window_behind->Flags & ImGuiWindowFlags_ChildWindow))
-            if (window_behind->Viewport.GetMainRect().Overlaps(window.Rect()))
+        if (window_behind.WasActive && window_behind.ViewportOwned && !(window_behind.Flags & ImGuiWindowFlags_ChildWindow))
+            if (window_behind.Viewport.GetMainRect().Overlaps(window.Rect()))
                 return false;
     }
 
@@ -158,7 +158,7 @@ static bool UpdateTryMergeWindowIntoHostViewport(ImGuiWindow* window, *mut ImGui
     let mut old_viewport: *mut ImGuiViewport =  window.Viewport;
     if (window.ViewportOwned)
         for (let n: c_int = 0; n < g.Windows.len(); n++)
-            if (g.Windows[n]->Viewport == old_viewport)
+            if (g.Windows[n].Viewport == old_viewport)
                 SetWindowViewport(g.Windows[n], viewport);
     SetWindowViewport(window, viewport);
     BringWindowToDisplayFront(window);
@@ -167,7 +167,7 @@ static bool UpdateTryMergeWindowIntoHostViewport(ImGuiWindow* window, *mut ImGui
 }
 
 // FIXME: handle 0 to N host viewports
-static bool UpdateTryMergeWindowIntoHostViewports(ImGuiWindow* window)
+static bool UpdateTryMergeWindowIntoHostViewports(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return UpdateTryMergeWindowIntoHostViewport(window, g.Viewports[0]);
@@ -189,7 +189,7 @@ c_void TranslateWindowsInViewport(*mut ImGuiViewportP viewport, const ImVec2& ol
     let mut test_still_fit_rect: ImRect = ImRect::new(old_pos, old_pos + viewport.Size);
     let delta_pos: ImVec2 = new_pos - old_pos;
     for (let window_n: c_int = 0; window_n < g.Windows.len(); window_n++) // FIXME-OPT
-        if (translate_all_windows || (g.Windows[window_n]->Viewport == viewport && test_still_fit_rect.Contains(g.Windows[window_n]->Rect())))
+        if (translate_all_windows || (g.Windows[window_n].Viewport == viewport && test_still_fit_rect.Contains(g.Windows[window_n].Rect())))
             TranslateWindow(g.Windows[window_n], delta_pos);
 }
 
@@ -204,7 +204,7 @@ c_void ScaleWindowsInViewport(*mut ImGuiViewportP viewport, c_float scale)
     else
     {
         for (let i: c_int = 0; i != g.Windows.len(); i++)
-            if (g.Windows[i]->Viewport == viewport)
+            if (g.Windows[i].Viewport == viewport)
                 ScaleWindow(g.Windows[i], scale);
     }
 }
@@ -257,7 +257,7 @@ static c_void UpdateViewportsNewFrame()
     let mut main_viewport: *mut ImGuiViewport =  g.Viewports[0];
     // IM_ASSERT(main_viewport.ID == IMGUI_VIEWPORT_DEFAULT_ID);
     // IM_ASSERT(main_viewport.Window == NULL);
-    let main_viewport_pos: ImVec2 = viewports_enabled ? g.PlatformIO.Platform_GetWindowPos(main_viewport) : ImVec2(0f32, 0f32);
+    let main_viewport_pos: ImVec2 = viewports_enabled ? g.PlatformIO.Platform_GetWindowPos(main_viewport) : ImVec2::new2(0f32, 0f32);
     let main_viewport_size: ImVec2 = g.IO.DisplaySize;
     if (viewports_enabled && (main_viewport.Flags & ImGuiViewportFlags_Minimized))
     {
@@ -289,7 +289,7 @@ static c_void UpdateViewportsNewFrame()
             // We do it early in the frame instead of waiting for UpdatePlatformWindows() to avoid a frame of lag when moving/resizing using OS facilities.
             if (!(viewport.Flags & ImGuiViewportFlags_Minimized) && platform_funcs_available)
             {
-                // Viewport->WorkPos and WorkSize will be updated below
+                // Viewport.WorkPos and WorkSize will be updated below
                 if (viewport.PlatformRequestMove)
                     viewport.Pos = viewport.LastPlatformPos = g.PlatformIO.Platform_GetWindowPos(viewport);
                 if (viewport.PlatformRequestResize)
@@ -303,7 +303,7 @@ static c_void UpdateViewportsNewFrame()
         // Lock down space taken by menu bars and status bars, reset the offset for functions like BeginMainMenuBar() to alter them again.
         viewport.WorkOffsetMin = viewport.BuildWorkOffsetMin;
         viewport.WorkOffsetMax = viewport.BuildWorkOffsetMax;
-        viewport.BuildWorkOffsetMin = viewport.BuildWorkOffsetMax = ImVec2(0f32, 0f32);
+        viewport.BuildWorkOffsetMin = viewport.BuildWorkOffsetMax = ImVec2::new2(0f32, 0f32);
         viewport.UpdateWorkRect();
 
         // Reset alpha every frame. Users of transparency (docking) needs to request a lower alpha back.
@@ -344,11 +344,11 @@ static c_void UpdateViewportsNewFrame()
     if (g.PlatformIO.Monitors.len() == 0)
     {
         ImGuiPlatformMonitor* monitor = &g.FallbackMonitor;
-        monitor->MainPos = main_viewport.Pos;
-        monitor->MainSize = main_viewport.Size;
-        monitor->WorkPos = main_viewport.WorkPos;
-        monitor->WorkSize = main_viewport.WorkSize;
-        monitor->DpiScale = main_viewport.DpiScale;
+        monitor.MainPos = main_viewport.Pos;
+        monitor.MainSize = main_viewport.Size;
+        monitor.WorkPos = main_viewport.WorkPos;
+        monitor.WorkSize = main_viewport.WorkSize;
+        monitor.DpiScale = main_viewport.DpiScale;
     }
 
     if (!viewports_enabled)
@@ -363,7 +363,7 @@ static c_void UpdateViewportsNewFrame()
     if (g.IO.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
     {
         viewport_hovered = g.IO.MouseHoveredViewport ? FindViewportByID(g.IO.MouseHoveredViewport) : null_mut();
-        if (viewport_hovered && (viewport_hovered->Flags & ImGuiViewportFlags_NoInputs))
+        if (viewport_hovered && (viewport_hovered.Flags & ImGuiViewportFlags_NoInputs))
             viewport_hovered = FindHoveredViewportFromPlatformWindowStack(g.IO.MousePos); // Backend failed to handle _NoInputs viewport: revert to our fallback.
     }
     else
@@ -381,7 +381,7 @@ static c_void UpdateViewportsNewFrame()
 
     // Update mouse reference viewport
     // (when moving a window we aim at its viewport, but this will be overwritten below if we go in drag and drop mode)
-    // (MovingViewport->Viewport will be NULL in the rare situation where the window disappared while moving, set UpdateMouseMovingWindowNewFrame() for details)
+    // (MovingViewport.Viewport will be NULL in the rare situation where the window disappared while moving, set UpdateMouseMovingWindowNewFrame() for details)
     if (g.MovingWindow && g.Movingwindow.Viewport)
         g.MouseViewport = g.Movingwindow.Viewport;
     else
@@ -396,7 +396,7 @@ static c_void UpdateViewportsNewFrame()
     if (is_mouse_dragging_with_an_expected_destination && viewport_hovered == null_mut())
         viewport_hovered = g.MouseLastHoveredViewport;
     if (is_mouse_dragging_with_an_expected_destination || g.ActiveId == 0 || !IsAnyMouseDown())
-        if (viewport_hovered != null_mut() && viewport_hovered != g.MouseViewport && !(viewport_hovered->Flags & ImGuiViewportFlags_NoInputs))
+        if (viewport_hovered != null_mut() && viewport_hovered != g.MouseViewport && !(viewport_hovered.Flags & ImGuiViewportFlags_NoInputs))
             g.MouseViewport = viewport_hovered;
 
     // IM_ASSERT(g.MouseViewport != NULL);
@@ -420,11 +420,11 @@ static c_void UpdateViewportsEndFrame()
             // IM_ASSERT(viewport.Window != NULL);
         g.PlatformIO.Viewports.push(viewport);
     }
-    g.Viewports[0]->ClearRequestFlags(); // Clear main viewport flags because UpdatePlatformWindows() won't do it and may not even be called
+    g.Viewports[0].ClearRequestFlags(); // Clear main viewport flags because UpdatePlatformWindows() won't do it and may not even be called
 }
 
 // FIXME: We should ideally refactor the system to call this every frame (we currently don't)
-*mut ImGuiViewportP AddUpdateViewport(ImGuiWindow* window, ImGuiID id, const ImVec2& pos, const ImVec2& size, ImGuiViewportFlags flags)
+*mut ImGuiViewportP AddUpdateViewport(window: *mut ImGuiWindow, id: ImGuiID, const ImVec2& pos, const ImVec2& size, ImGuiViewportFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
@@ -512,10 +512,10 @@ static c_void DestroyViewport(*mut ImGuiViewportP viewport)
 }
 
 // FIXME-VIEWPORT: This is all super messy and ought to be clarified or rewritten.
-static c_void WindowSelectViewport(ImGuiWindow* window)
+static c_void WindowSelectViewport(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImGuiWindowFlags flags = window.Flags;
+    let mut flags: ImGuiWindowFlags = window.Flags;
     window.ViewportAllowPlatformMonitorExtend = -1;
 
     // Restore main viewport if multi-viewport is not supported by the backend
@@ -561,7 +561,7 @@ static c_void WindowSelectViewport(ImGuiWindow* window)
     {
         // Always inherit viewport from parent window
         if (window.DockNode && window.DockNode.HostWindow)
-            // IM_ASSERT(window.DockNode->Hostwindow.Viewport == window.Parentwindow.Viewport);
+            // IM_ASSERT(window.DockNode.Hostwindow.Viewport == window.Parentwindow.Viewport);
         window.Viewport = window.Parentwindow.Viewport;
     }
     else if (window.DockNode && window.DockNode.HostWindow)
@@ -606,7 +606,7 @@ static c_void WindowSelectViewport(ImGuiWindow* window)
             // Popups/Tooltip always set ViewportAllowPlatformMonitorExtend so GetWindowAllowedExtentRect() will return full monitor bounds.
             let mouse_ref: ImVec2 = (flags & ImGuiWindowFlags_Tooltip) ? g.IO.MousePos : g.BeginPopupStack.last().unwrap().OpenMousePos;
             let mut use_mouse_ref: bool =  (g.NavDisableHighlight || !g.NavDisableMouseHover || !g.NavWindow);
-            let mut mouse_valid: bool =  IsMousePosValid(&mouse_re0f32);
+            let mut mouse_valid: bool =  IsMousePosValid(&mouse_ref);
             if ((window.Appearing || (flags & (ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_ChildMenu))) && (!use_mouse_ref || mouse_valid))
                 window.ViewportAllowPlatformMonitorExtend = FindPlatformMonitorForPos((use_mouse_ref && mouse_valid) ? mouse_ref : NavCalcPreferredRefPos());
             else
@@ -643,11 +643,11 @@ static c_void WindowSelectViewport(ImGuiWindow* window)
     window.ViewportId = window.Viewport.ID;
 
     // If the OS window has a title bar, hide our imgui title bar
-    //if (window.ViewportOwned && !(window.Viewport->Flags & ImGuiViewportFlags_NoDecoration))
+    //if (window.ViewportOwned && !(window.Viewport.Flags & ImGuiViewportFlags_NoDecoration))
     //    window.Flags |= ImGuiWindowFlags_NoTitleBar;
 }
 
-c_void WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_window_in_stack)
+c_void WindowSyncOwnedViewport(window: *mut ImGuiWindow, parent_window_in_stack: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -686,7 +686,7 @@ c_void WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_window_i
     // Update common viewport flags
     const ImGuiViewportFlags viewport_flags_to_clear = ImGuiViewportFlags_TopMost | ImGuiViewportFlags_NoTaskBarIcon | ImGuiViewportFlags_NoDecoration | ImGuiViewportFlags_NoRendererClear;
     ImGuiViewportFlags viewport_flags = window.Viewport.Flags & ~viewport_flags_to_clear;
-    ImGuiWindowFlags window_flags = window.Flags;
+    let mut window_flags: ImGuiWindowFlags = window.Flags;
     let is_modal: bool = (window_flags & ImGuiWindowFlags_Modal) != 0;
     let is_short_lived_floating_window: bool = (window_flags & (ImGuiWindowFlags_ChildMenu | ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_Popup)) != 0;
     if (window_flags & ImGuiWindowFlags_Tooltip)
@@ -727,8 +727,8 @@ c_void WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_window_i
     // (the !IsFallbackWindow test mimic the one done in WindowSelectViewport())
     if (window.WindowClass.ParentViewportId != (ImGuiID)-1)
         window.Viewport.ParentViewportId = window.WindowClass.ParentViewportId;
-    else if ((window_flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_Tooltip)) && parent_window_in_stack && (!parent_window_in_stack->IsFallbackWindow || parent_window_in_stack->WasActive))
-        window.Viewport.ParentViewportId = parent_window_in_stack->Viewport.ID;
+    else if ((window_flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_Tooltip)) && parent_window_in_stack && (!parent_window_in_stack.IsFallbackWindow || parent_window_in_stack.WasActive))
+        window.Viewport.ParentViewportId = parent_window_in_stack.Viewport.ID;
     else
         window.Viewport.ParentViewportId = g.IO.ConfigViewportsNoDefaultParent ? 0 : IMGUI_VIEWPORT_DEFAULT_ID;
 }
@@ -794,7 +794,7 @@ c_void UpdatePlatformWindows()
         {
             let mut  title_begin: *const c_char = window_for_title.Name;
             char* title_end = FindRenderedTextEnd(title_begin);
-            const let mut title_hash: ImGuiID =  ImHashStr(title_begin, title_end - title_begin);
+            let mut title_hash: ImGuiID =  ImHashStr(title_begin, title_end - title_begin);
             if (viewport.LastNameHash != title_hash)
             {
                 char title_end_backup_c = *title_end;
@@ -865,10 +865,10 @@ c_void UpdatePlatformWindows()
 //
 //    ImGuiPlatformIO& platform_io = GetPlatformIO();
 //    for (int i = 1; i < platform_io.Viewports.Size; i++)
-//        if ((platform_io.Viewports[i]->Flags & ImGuiViewportFlags_Minimized) == 0)
+//        if ((platform_io.Viewports[i].Flags & ImGuiViewportFlags_Minimized) == 0)
 //            MyRenderFunction(platform_io.Viewports[i], my_args);
 //    for (int i = 1; i < platform_io.Viewports.Size; i++)
-//        if ((platform_io.Viewports[i]->Flags & ImGuiViewportFlags_Minimized) == 0)
+//        if ((platform_io.Viewports[i].Flags & ImGuiViewportFlags_Minimized) == 0)
 //            MySwapBufferFunction(platform_io.Viewports[i], my_args);
 //
 c_void RenderPlatformWindowsDefault(platform_render_arg: *mut c_void, renderer_render_arg: *mut c_void)

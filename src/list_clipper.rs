@@ -95,7 +95,7 @@ impl ImGuiListClipper {
             }
 
             // Restore temporary buffer and fix back pointers which may be invalidated when nesting
-            // IM_ASSERT(data->ListClipper == this);
+            // IM_ASSERT(data.ListClipper == this);
             data.StepNo = data.Ranges.len();
             g.ClipperTempDataStacked -= 1;
             if g.ClipperTempDataStacked > 0 {
@@ -155,7 +155,7 @@ impl ImGuiListClipper {
 pub unsafe fn ImGuiListClipper_SeekCursorForItem(clipper: *mut ImGuiListClipper, item_n: c_int) {
 // StartPosY starts from ItemsFrozen hence the subtraction
 // Perform the add and multiply with double to allow seeking through larger ranges
-// *mut ImGuiListClipperData data = (*mut ImGuiListClipperData)clipper->TempData;
+// *mut ImGuiListClipperData data = (*mut ImGuiListClipperData)clipper.TempData;
     let mut data = clipper.TempData as *mut ImGuiListClipperData;
 
     let mut pos_y = (clipper.StartPosY + data.LossynessOffset + (item_n - data.ItemsFrozen) * clipper.ItemsHeight);

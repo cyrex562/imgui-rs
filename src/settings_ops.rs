@@ -51,7 +51,7 @@ c_void MarkIniSettingsDirty()
         g.SettingsDirtyTimer = g.IO.IniSavingRate;
 }
 
-c_void MarkIniSettingsDirty(ImGuiWindow* window)
+c_void MarkIniSettingsDirty(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(window.Flags & ImGuiWindowFlags_NoSavedSettings))
@@ -81,7 +81,7 @@ ImGuiWindowSettings* CreateNewWindowSettings(*const char name)
     return settings;
 }
 
-ImGuiWindowSettings* FindWindowSettings(ImGuiID id)
+ImGuiWindowSettings* FindWindowSettings(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
@@ -100,7 +100,7 @@ ImGuiWindowSettings* FindOrCreateWindowSettings(*const char name)
 c_void AddSettingsHandler(*const ImGuiSettingsHandler handler)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(FindSettingsHandler(handler->TypeName) == NULL);
+    // IM_ASSERT(FindSettingsHandler(handler.TypeName) == NULL);
     g.SettingsHandlers.push(*handler);
 }
 
@@ -114,7 +114,7 @@ c_void RemoveSettingsHandler(*const char type_name)
 ImGuiSettingsHandler* FindSettingsHandler(*const char type_name)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    const let mut type_hash: ImGuiID =  ImHashStr(type_name);
+    let mut type_hash: ImGuiID =  ImHashStr(type_name);
     for (let handler_n: c_int = 0; handler_n < g.SettingsHandlers.Size; handler_n++)
         if (g.SettingsHandlers[handler_n].TypeHash == type_hash)
             return &g.SettingsHandlers[handler_n];
@@ -193,12 +193,12 @@ c_void LoadIniSettingsFromMemory(*const char ini_data, size_t ini_size)
             *type_end = 0; // Overwrite first ']'
             name_start+= 1;  // Skip second '['
             entry_handler = FindSettingsHandler(type_start);
-            entry_data = entry_handler ? entry_handler->ReadOpenFn(&g, entry_handler, name_start) : null_mut();
+            entry_data = entry_handler ? entry_handler.ReadOpenFn(&g, entry_handler, name_start) : null_mut();
         }
         else if (entry_handler != null_mut() && entry_data != null_mut())
         {
             // Let type handler parse the line
-            entry_handler->ReadLineFn(&g, entry_handler, entry_data, line);
+            entry_handler.ReadLineFn(&g, entry_handler, entry_data, line);
         }
     }
     g.SettingsLoaded = true;
@@ -238,18 +238,18 @@ c_void SaveIniSettingsToDisk(*const char ini_filename)
     for (let handler_n: c_int = 0; handler_n < g.SettingsHandlers.Size; handler_n++)
     {
         ImGuiSettingsHandler* handler = &g.SettingsHandlers[handler_n];
-        handler->WriteAllFn(&g, handler, &g.SettingsIniData);
+        handler.WriteAllFn(&g, handler, &g.SettingsIniData);
     }
     if (out_size)
         *out_size = g.SettingsIniData.size();
     return g.SettingsIniData.c_str();
 }
 
-static c_void WindowSettingsHandler_ClearAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
+static c_void WindowSettingsHandler_ClearAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler*)
 {
-    ImGuiContext& g = *ctx;
+    let g = ctx;
     for (let i: c_int = 0; i != g.Windows.len(); i++)
-        g.Windows[i]->SettingsOffset = -1;
+        g.Windows[i].SettingsOffset = -1;
     g.SettingsWindows.clear();
 }
 
@@ -280,9 +280,9 @@ static c_void WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler
 }
 
 // Apply to existing windows (if any)
-static c_void WindowSettingsHandler_ApplyAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
+static c_void WindowSettingsHandler_ApplyAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler*)
 {
-    ImGuiContext& g = *ctx;
+    let g = ctx;
     for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
         if (settings.WantApply)
         {
@@ -292,11 +292,11 @@ static c_void WindowSettingsHandler_ApplyAll(ImGuiContext* ctx, ImGuiSettingsHan
         }
 }
 
-static c_void WindowSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
+static c_void WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 {
     // Gather data from windows that were active during this session
     // (if a window wasn't opened in this session we preserve its settings)
-    ImGuiContext& g = *ctx;
+    let g = ctx;
     for (let i: c_int = 0; i != g.Windows.len(); i++)
     {
         let mut window: *mut ImGuiWindow =  g.Windows[i];
@@ -314,7 +314,7 @@ static c_void WindowSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHan
         settings.Size = ImVec2ih(window.SizeFull);
         settings.ViewportId = window.ViewportId;
         settings.ViewportPos = ImVec2ih(window.ViewportPos);
-        // IM_ASSERT(window.DockNode == NULL || window.DockNode->ID == window.DockId);
+        // IM_ASSERT(window.DockNode == NULL || window.DockNode.ID == window.DockId);
         settings.DockId = window.DockId;
         settings.ClassId = window.WindowClass.ClassId;
         settings.DockOrder = window.DockOrder;
@@ -322,31 +322,31 @@ static c_void WindowSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHan
     }
 
     // Write to text buffer
-    buf->reserve(buf->size() + g.SettingsWindows.size() * 6); // ballpark reserve
+    buf.reserve(buf.size() + g.SettingsWindows.size() * 6); // ballpark reserve
     for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
     {
         let mut  settings_name: *const c_char = settings.GetName();
-        buf->appendf("[%s][%s]\n", handler.TypeName, settings_name);
+        buf.appendf("[%s][%s]\n", handler.TypeName, settings_name);
         if (settings.ViewportId != 0 && settings.ViewportId != IMGUI_VIEWPORT_DEFAULT_ID)
         {
-            buf->appendf("ViewportPos=%d,%d\n", settings.ViewportPos.x, settings.ViewportPos.y);
-            buf->appendf("ViewportId=0x%08X\n", settings.ViewportId);
+            buf.appendf("ViewportPos=%d,%d\n", settings.ViewportPos.x, settings.ViewportPos.y);
+            buf.appendf("ViewportId=0x%08X\n", settings.ViewportId);
         }
         if (settings.Pos.x != 0 || settings.Pos.y != 0 || settings.ViewportId == IMGUI_VIEWPORT_DEFAULT_ID)
-            buf->appendf("Pos=%d,%d\n", settings.Pos.x, settings.Pos.y);
+            buf.appendf("Pos=%d,%d\n", settings.Pos.x, settings.Pos.y);
         if (settings.Size.x != 0 || settings.Size.y != 0)
-            buf->appendf("Size=%d,%d\n", settings.Size.x, settings.Size.y);
-        buf->appendf("Collapsed=%d\n", settings.Collapsed);
+            buf.appendf("Size=%d,%d\n", settings.Size.x, settings.Size.y);
+        buf.appendf("Collapsed=%d\n", settings.Collapsed);
         if (settings.DockId != 0)
         {
-            //buf->appendf("TabId=0x%08X\n", ImHashStr("#TAB", 4, settings.ID)); // window.TabId: this is not read back but writing it makes "debugging" the .ini data easier.
+            //buf.appendf("TabId=0x%08X\n", ImHashStr("#TAB", 4, settings.ID)); // window.TabId: this is not read back but writing it makes "debugging" the .ini data easier.
             if (settings.DockOrder == -1)
-                buf->appendf("DockId=0x%08X\n", settings.DockId);
+                buf.appendf("DockId=0x%08X\n", settings.DockId);
             else
-                buf->appendf("DockId=0x%08X,%d\n", settings.DockId, settings.DockOrder);
+                buf.appendf("DockId=0x%08X,%d\n", settings.DockId, settings.DockOrder);
             if (settings.ClassId != 0)
-                buf->appendf("ClassId=0x%08X\n", settings.ClassId);
+                buf.appendf("ClassId=0x%08X\n", settings.ClassId);
         }
-        buf->append("\n");
+        buf.append("\n");
     }
 }

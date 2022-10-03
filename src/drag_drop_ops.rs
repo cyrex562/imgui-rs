@@ -203,7 +203,7 @@ bool SetDragDropPayload(*const char type, *const c_void data, size_t data_size, 
     return (g.DragDropAcceptFrameCount == g.FrameCount) || (g.DragDropAcceptFrameCount == g.FrameCount - 1);
 }
 
-bool BeginDragDropTargetCustom(const ImRect& bb, ImGuiID id)
+bool BeginDragDropTargetCustom(const ImRect& bb, id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!g.DragDropActive)
@@ -293,7 +293,7 @@ bool IsDragDropPayloadBeingAccepted()
     payload.Preview = was_accepted_previously;
     flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
     if (!(flags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview)
-        window.DrawList.AddRect(r.Min - ImVec2(3.5f32,3.5f32), r.Max + ImVec2(3.5f32, 3.5f32), GetColorU32(ImGuiCol_DragDropTarget), 0f32, 0, 2.00f32);
+        window.DrawList.AddRect(r.Min - ImVec2::new2(3.5f32,3.5f32), r.Max + ImVec2::new2(3.5f32, 3.5f32), GetColorU32(ImGuiCol_DragDropTarget), 0f32, 0, 2.00f32);
 
     g.DragDropAcceptFrameCount = g.FrameCount;
     payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()

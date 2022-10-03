@@ -82,7 +82,7 @@ use crate::window_ops::{FindWindowByID, GetCurrentWindow};
 use crate::window_settings::ImGuiWindowSettings;
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
-// c_void DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, *const c_void data_id, *const c_void data_id_end)
+// c_void DebugHookIdInfo(id: ImGuiID, ImGuiDataType data_type, *const c_void data_id, *const c_void data_id_end)
 pub unsafe fn DebugHookIdInfo(id: ImGuiID, data_type: ImGuiDataType, data_id: *const c_void, data_id_ned: *const c_void) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -266,7 +266,7 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks()
             // IM_ASSERT(g.PlatformIO.Platform_GetWindowSize != NULL && "Platform init didn't install handlers?");
             // IM_ASSERT(g.PlatformIO.Platform_SetWindowSize != NULL && "Platform init didn't install handlers?");
             // IM_ASSERT(g.PlatformIO.Monitors.len() > 0 && "Platform init didn't setup Monitors list?");
-            // IM_ASSERT((g.Viewports[0]->PlatformUserData != NULL || g.Viewports[0]->PlatformHandle != NULL) && "Platform init didn't setup main viewport.");
+            // IM_ASSERT((g.Viewports[0].PlatformUserData != NULL || g.Viewports[0].PlatformHandle != NULL) && "Platform init didn't setup main viewport.");
             if g.IO.ConfigDockingTransparentPayload == true && flag_set(&g.IO.ConfigFlags, &ImGuiConfigFlags_DockingEnable) {}
                 // IM_ASSERT(g.PlatformIO.Platform_SetWindowAlpha != NULL && "Platform_SetWindowAlpha handler is required to use io.ConfigDockingTransparent!");
         }
@@ -495,7 +495,7 @@ pub unsafe fn DebugRenderViewportThumbnaiL(draw_list: &mut ImDrawList, viewport:
         let mut thumb_r: ImRect =  thumb_window.Rect();
         let mut title_r: ImRect =  thumb_window.TitleBarRect();
         thumb_r = ImRect(ImFloor(off + thumb_r.Min * scale), ImFloor(off +  thumb_r.Max * scale));
-        title_r = ImRect(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2(title_r.Max.x, title_r.Min.y) * scale) + ImVec2(0,5)); // Exaggerate title bar height
+        title_r = ImRect(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::new2(0,5)); // Exaggerate title bar height
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
         let window_is_focused: bool = (g.NavWindow.is_null() == false && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight);
@@ -536,8 +536,8 @@ pub unsafe fn RenderViewportsThumbnail()
 // static c_int IMGUI_CDECL ViewportComparerByFrontMostStampCount(*const c_void lhs, *const c_void rhs)
 pub fn ViewportComparerByFrontMostStampCount(lhs: *const ImGuiViewport, rhs: *const ImGuiViewport) -> c_int
 {
-    // const let mut a: *mut ImGuiViewport =  *(const *mut ImGuiViewportP const*)lhs;
-    // const let mut b: *mut ImGuiViewport =  *(const *mut ImGuiViewportP const*)rhs;
+    // let mut a: *mut ImGuiViewport =  *(const *mut ImGuiViewportP const*)lhs;
+    // let mut b: *mut ImGuiViewport =  *(const *mut ImGuiViewportP const*)rhs;
     return lhs.LastFrontMostStampCount - rhs.LastFrontMostStampCount;
 }
 
@@ -616,7 +616,7 @@ pub fn ShowFontAtlas(atlas: *mut ImFontAtlas)
     {
         let tint_col = ImVec4::new2(1f32, 1f32, 1f32, 1f32);
         let border_col = ImVec4::new2(1f32, 1f32, 1f32, 0.5f32);
-        Image(atlas.TexID, ImVec2(atlas.TexWidth, atlas.TexHeight), ImVec2(0f32, 0f32), ImVec2(1f32, 1f32), tint_col, border_col);
+        Image(atlas.TexID, ImVec2(atlas.TexWidth, atlas.TexHeight), ImVec2::new2(0f32, 0f32), ImVec2::new2(1f32, 1f32), tint_col, border_col);
         TreePop();
     }
 }
@@ -698,7 +698,7 @@ impl Funcs {
               return ImRect::new();
           }
 
-    // static ImRect GetWindowRect(ImGuiWindow* window, c_int rect_type)
+    // static ImRect GetWindowRect(window: *mut ImGuiWindow, c_int rect_type)
     pub fn GetWindowRect(window: *mut ImGuiWindow, rect_type: c_int) -> ImRect
     {
         if rect_type == WRT_OuterRect { return window.Rect(); }
@@ -820,7 +820,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
 
                 BulletText("Table 0x%08X (%d columns, in '%s')", table.ID, table.ColumnsCount, table.Outerwindow.Name);
                 if IsItemHovered(ImGuiHoveredFlags_None) {
-                    GetForegroundDrawList(null_mut()).AddRect(table.OuterRect.Min - ImVec2(1, 1), table.OuterRect.Max + ImVec2(1, 1), IM_COL32(255, 255, 0, 255), 0f32, 0, 2.00f32);
+                    GetForegroundDrawList(null_mut()).AddRect(table.OuterRect.Min - ImVec2::new2(1, 1), table.OuterRect.Max + ImVec2::new2(1, 1), IM_COL32(255, 255, 0, 255), 0f32, 0, 2.00f32);
                 }
                 Indent();
                 buf: [c_char;128];
@@ -839,7 +839,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
                             // ImFormatString(buf, buf.len(), str_to_const_c_char_ptr("(%6.1f,%6.10f32) (%6.1f,%6.10f32) Size (%6.1f,%6.10f32) Col %d %s"), r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n]);
                             Selectable(buf);
                             if IsItemHovered(ImGuiHoveredFlags_None) {
-                                GetForegroundDrawList(null_mut()).AddRect(r.Min - ImVec2(1, 1), r.Max + ImVec2(1, 1), IM_COL32(255, 255, 0, 255), 0f32, 0, 2.00f32);
+                                GetForegroundDrawList(null_mut()).AddRect(r.Min - ImVec2::new2(1, 1), r.Max + ImVec2::new2(1, 1), IM_COL32(255, 255, 0, 255), 0f32, 0, 2.00f32);
                             }
                         }
                     }
@@ -849,7 +849,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
                         // ImFormatString(buf, IM_ARRAYSIZE(buf), "(%6.1f,%6.10f32) (%6.1f,%6.10f32) Size (%6.1f,%6.10f32) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), trt_rects_names[rect_n]);
                         Selectable(buf);
                         if IsItemHovered(ImGuiHoveredFlags_None) {
-                            GetForegroundDrawList(null_mut()).AddRect(r.Min - ImVec2(1, 1), r.Max + ImVec2(1, 1), IM_COL32(255, 255, 0, 255), 0f32, 0, 2.00f32);
+                            GetForegroundDrawList(null_mut()).AddRect(r.Min - ImVec2::new2(1, 1), r.Max + ImVec2::new2(1, 1), IM_COL32(255, 255, 0, 255), 0f32, 0, 2.00f32);
                         }
                     }
                 }
@@ -1046,7 +1046,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
         if SmallButton("Clear nodes") { DockContextClearNodes(&g, 0, true); }
         SameLine();
         if SmallButton("Rebuild all") { dc.WantFullRebuild = true; }
-        // for (let n: c_int = 0; n < dc->Nodes.Data.Size; n++)
+        // for (let n: c_int = 0; n < dc.Nodes.Data.Size; n++)
         for n in 0..dc.Nodes.len() {
             let node = dc.Nodes[n].val_p;
             if node.is_null() == false {
@@ -1113,7 +1113,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
 // #ifdef IMGUI_HAS_DOCK
         if TreeNode("SettingsDocking", "Settings packed data: Docking")
         {
-            // ImGuiDockContext* dc = &g.DockContext;
+            // let dc = &mut ctx.DockContext;
             let mut dc = &mut g.DockContext;
             Text("In SettingsWindows:");
             // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
@@ -1124,10 +1124,10 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
                 }
             }
             Text("In SettingsNodes:");
-            // for (let n: c_int = 0; n < dc->NodesSettings.Size; n++)
+            // for (let n: c_int = 0; n < dc.NodesSettings.Size; n++)
             for n in 0 .. dc.NodesSettings.len()
             {
-                // ImGuiDockNodeSettings* settings = &dc->NodesSettings[n];
+                // ImGuiDockNodeSettings* settings = &dc.NodesSettings[n];
                 let mut settings = &mut dc.NodesSettings[n];
                 let mut  selected_tab_name: *const c_char= null_mut();
                 if settings.SelectedTabId
@@ -1271,7 +1271,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
     {
         let buf: [c_char;64] = [0;64];
         let mut p: *const c_char = buf.as_ptr();
-        // ImGuiDockNode* node = g.DebugHoveredDockNode;
+        // node: *mut ImGuiDockNode = g.DebugHoveredDockNode;
         let node = &mut g.DebugHoveredDockNode;
         let mut  overlay_draw_list: *mut ImDrawList =  if node.HostWindow { GetForegroundDrawList3(node.HostWindow) } else { GetForegroundDrawList(GetMainViewport()) };
         // p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "DockId: %X%s\n", node.ID, node.IsCentralNode() ? " *CentralNode*" : "");
@@ -1279,9 +1279,9 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
         // p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "Size: (%.0f32, %.00f32)\n", node.Size.x, node.Size.y);
         // p += ImFormatString(p, buf + IM_ARRAYSIZE(buf) - p, "SizeRef: (%.0f32, %.00f32)\n", node.SizeRef.x, node.SizeRef.y);
         let depth: c_int = DockNodeGetDepth(node);
-        overlay_draw_list.AddRect(node.Pos + ImVec2::new2(3f32, 3f32) * depth, node.Pos + node.Size - ImVec2(3, 3) * depth, IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None, 0f32);
-        let pos: ImVec2 = node.Pos + ImVec2(3, 3) * depth;
-        overlay_draw_list.AddRectFilled(pos - ImVec2::new2(1f32, 1f32), pos + CalcTextSize(buf.as_ptr(), null(), false, 0f32) + ImVec2(1, 1), IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None);
+        overlay_draw_list.AddRect(node.Pos + ImVec2::new2(3f32, 3f32) * depth, node.Pos + node.Size - ImVec2::new2(3, 3) * depth, IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None, 0f32);
+        let pos: ImVec2 = node.Pos + ImVec2::new2(3, 3) * depth;
+        overlay_draw_list.AddRectFilled(pos - ImVec2::new2(1f32, 1f32), pos + CalcTextSize(buf.as_ptr(), null(), false, 0f32) + ImVec2::new2(1, 1), IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None);
         overlay_draw_list.AddText2(null_mut(), 0f32, &pos, IM_COL32(255, 255, 255, 255), buf.as_ptr(), null(), 0f32, null());
     }
 // #endif // #ifdef IMGUI_HAS_DOCK
@@ -1303,11 +1303,11 @@ pub fn DebugNodeColumns(columns: *mut ImGuiOldColumns) {
     TreePop();
 }
 
-// static c_void DebugNodeDockNodeFlags(ImGuiDockNodeFlags* p_flags, *const char label, bool enabled)
+// static c_void DebugNodeDockNodeFlags(ImGuiDockNodeFlags* p_flags, *const char label, enabled: bool)
 pub unsafe fn DebugNodeDockNodeFlags(p_flags: *mut ImGuiDockNodeFlags, label: *const c_char, enabled: bool) {
     // using namespace ImGui;
     PushID(label);
-    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0f32, 0f32));
+    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new2(0f32, 0f32));
     Text("%s:", label);
     if !enabled {
         BeginDisabled();
@@ -1334,7 +1334,7 @@ pub unsafe fn DebugNodeDockNodeFlags(p_flags: *mut ImGuiDockNodeFlags, label: *c
 }
 
 // [DEBUG] Display contents of ImDockNode
-// c_void DebugNodeDockNode(ImGuiDockNode* node, *const char label)
+// c_void DebugNodeDockNode(node: *mut ImGuiDockNode, *const char label)
 pub unsafe fn DebugNodeDockNode(node: *mut ImGuiDockNode, label: *const c_char)
     {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -1366,8 +1366,8 @@ pub unsafe fn DebugNodeDockNode(node: *mut ImGuiDockNode, label: *const c_char)
     }
     if open
     {
-        // IM_ASSERT(node->ChildNodes[0] == NULL || node->ChildNodes[0]->ParentNode == node);
-        // IM_ASSERT(node->ChildNodes[1] == NULL || node->ChildNodes[1]->ParentNode == node);
+        // IM_ASSERT(node.ChildNodes[0] == NULL || node.ChildNodes[0].ParentNode == node);
+        // IM_ASSERT(node.ChildNodes[1] == NULL || node.ChildNodes[1].ParentNode == node);
         BulletText("Pos (%.0f32,%.00f32), Size (%.0f32, %.00f32) Ref (%.0f32, %.00f32)",
             node.Pos.x, node.Pos.y, node.Size.x, node.Size.y, node.SizeRef.x, node.SizeRef.y);
         DebugNodeWindow(node.HostWindow, str_to_const_c_char_ptr("HostWindow"));
@@ -1411,7 +1411,7 @@ pub unsafe fn DebugNodeDockNode(node: *mut ImGuiDockNode, label: *const c_char)
 
 // [DEBUG] Display contents of ImDrawList
 // Note that both 'window' and 'viewport' may be NULL here. Viewport is generally null of destroyed popups which previously owned a viewport.
-// c_void DebugNodeDrawList(ImGuiWindow* window, *mut ImGuiViewportP viewport, *const ImDrawList draw_list, *const char label)
+// c_void DebugNodeDrawList(window: *mut ImGuiWindow, *mut ImGuiViewportP viewport, *const ImDrawList draw_list, *const char label)
 pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiViewport, draw_list: *const ImDrawList, label: *const c_char)
     {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -1454,8 +1454,8 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
 
         let mut buf: [c_char;300] = [0;300];
         // ImFormatString(buf, IM_ARRAYSIZE(buf), "DrawCmd:%5d tris, Tex 0x%p, ClipRect (%4.0f32,%4.00f32)-(%4.0f32,%4.00f32)",
-        //     pcmd->ElemCount / 3, pcmd.TextureId,
-        //     pcmd->ClipRect.x, pcmd->ClipRect.y, pcmd->ClipRect.z, pcmd->ClipRect.w);
+        //     pcmd.ElemCount / 3, pcmd.TextureId,
+        //     pcmd.ClipRect.x, pcmd.ClipRect.y, pcmd.ClipRect.z, pcmd.ClipRect.w);
         let mut pcmd_node_open: bool =  TreeNode((pcmd - draw_list.CmdBuffer.begin()), "%s", buf);
         if IsItemHovered(ImGuiHoveredFlags_None) && (cfg.ShowDrawCmdMesh || cfg.ShowDrawCmdBoundingBoxes) && fg_draw_list.is_null() == false {
             DebugNodeDrawCmdShowMeshAndBoundingBox(&mut *fg_draw_list, draw_list, pcmd, cfg.ShowDrawCmdMesh, cfg.ShowDrawCmdBoundingBoxes);
@@ -1469,7 +1469,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
         let idx_buffer: *const ImDrawIdx = if draw_list.IdxBuffer.Size > 0 { draw_list.IdxBuffer.Data } else { null_mut() };
         let vtx_buffer: *const ImDrawVert = draw_list.VtxBuffer.Data + pcmd.VtxOffset;
         let mut total_area: c_float =  0f32;
-        // for (let mut idx_n: c_uint =  pcmd->IdxOffset; idx_n < pcmd->IdxOffset + pcmd->ElemCount; )
+        // for (let mut idx_n: c_uint =  pcmd.IdxOffset; idx_n < pcmd.IdxOffset + pcmd.ElemCount; )
         for idx_n in pcmd.IdxOffset .. pcmd.IdxOffset + pcmd.ElemCount
             {
             let mut triangle: [Imvec2;3] = [ImVec2::default();3];
@@ -1482,7 +1482,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
         }
 
         // Display vertex information summary. Hover to get all triangles drawn in wire-frame
-        // ImFormatString(buf, IM_ARRAYSIZE(buf), "Mesh: ElemCount: %d, VtxOffset: +%d, IdxOffset: +%d, Area: ~%0.f px", pcmd->ElemCount, pcmd->VtxOffset, pcmd->IdxOffset, total_area);
+        // ImFormatString(buf, IM_ARRAYSIZE(buf), "Mesh: ElemCount: %d, VtxOffset: +%d, IdxOffset: +%d, Area: ~%0.f px", pcmd.ElemCount, pcmd.VtxOffset, pcmd.IdxOffset, total_area);
         Selectable(buf);
         if IsItemHovered(ImGuiHoveredFlags_None) && fg_draw_list.is_null() == false {
             DebugNodeDrawCmdShowMeshAndBoundingBox(&mut *fg_draw_list, draw_list, pcmd, true, false);
@@ -1494,7 +1494,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
         while clipper.Step() {
             let mut idx_i = pcmd.IdxOffset + clipper.DisplayStart;
 
-            // for (let prim: c_int = clipper.DisplayStart, idx_i = pcmd->IdxOffset + clipper.DisplayStart * 3; prim < clipper.DisplayEnd; prim+ +)
+            // for (let prim: c_int = clipper.DisplayStart, idx_i = pcmd.IdxOffset + clipper.DisplayStart * 3; prim < clipper.DisplayEnd; prim+ +)
             for prim in clipper.DisplayStart .. clipper.DisplayEnd
             {
 
@@ -1528,7 +1528,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
 }
 
 // [DEBUG] Display mesh/aabb of a ImDrawCmd
-// c_void DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, *const ImDrawList draw_list, *const ImDrawCmd draw_cmd, bool show_mesh, bool show_aabb)
+// c_void DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, *const ImDrawList draw_list, *const ImDrawCmd draw_cmd, show_mesh: bool, show_aabb: bool)
 pub fn DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: &mut ImDrawList, darw_list: *const ImDrawList, draw_cmd: *const ImDrawCmd, show_mesh: bool, show_aabb: bool)
     {
     // IM_ASSERT(show_mesh || show_aabb);
@@ -1538,11 +1538,11 @@ pub fn DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: &mut ImDrawList, da
     let mut vtxs_rect: ImRect = ImRect::new4(f32::MAX, f32::MAX, f32::MIN, f32::MIN);
     let backup_flags = out_draw_list.Flags;
     out_draw_list.Flags &= !ImDrawListFlags_AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
-    // for (let mut idx_n: c_uint =  draw_cmd->IdxOffset, idx_end = draw_cmd->IdxOffset + draw_cmd->ElemCount; idx_n < idx_end; )
+    // for (let mut idx_n: c_uint =  draw_cmd.IdxOffset, idx_end = draw_cmd.IdxOffset + draw_cmd.ElemCount; idx_n < idx_end; )
         let idx_end = draw_cmd.IdxOffset + draw_cmd.ElemCount;
     for idx_n in draw_cmd.IdxOffset .. idx_end
         {
-        let idx_buffer = if draw_list.IdxBuffer.Size > 0 { draw_list.IdxBuffer.Data } else { null_mut() }; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
+        let idx_buffer = if draw_list.IdxBuffer.Size > 0 { draw_list.IdxBuffer.Data } else { null_mut() }; // We don't hold on those pointers past iterations as .AddPolyline() may invalidate them if out_draw_list==draw_list
         let vtx_buffer = draw_list.VtxBuffer.Data + draw_cmd.VtxOffset;
 
         let mut triangle: [ImVec2; 3] = [ImVec2::default();3];
@@ -1701,7 +1701,7 @@ pub fn DebugNodeStorage(storage: *mut ImGuiStorage, label: *const c_char)
 }
 
 // [DEBUG] Display contents of ImGuiTabBar
-// c_void DebugNodeTabBar(ImGuiTabBar* tab_bar, *const char label)
+// c_void DebugNodeTabBar(tab_bar: *mut ImGuiTabBar, *const char label)
 pub unsafe fn DebugNodeTabBar(tab_bar: *mut ImGuiTabBar, label: *const c_char)
     {
     // Standalone tab bars (not associated to docking/windows functionality) currently hold no discernible strings.
@@ -1793,7 +1793,7 @@ pub unsafe fn DebugNodeViewport(viewport: &mut ImGuiViewport)
     }
 }
 
-// c_void DebugNodeWindow(ImGuiWindow* window, *const char label)
+// c_void DebugNodeWindow(window: *mut ImGuiWindow, *const char label)
 pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
     {
     if window == null_mut()
@@ -1894,7 +1894,7 @@ pub unsafe fn DebugNodeWindowsList(windows: *mut Vec<*mut ImGuiWindow>, label: *
 }
 
 // FIXME-OPT: This is technically suboptimal, but it is simpler this way.
-// c_void DebugNodeWindowsListByBeginStackParent(ImGuiWindow** windows, c_int windows_size, ImGuiWindow* parent_in_begin_stack)
+// c_void DebugNodeWindowsListByBeginStackParent(ImGuiWindow** windows, c_int windows_size, parent_in_begin_stack: *mut ImGuiWindow)
 pub unsafe fn DebugNodeWindowsListByBeginStackParent(winodws: *mut *mut ImGuiWindow, windows_size: c_int, parent_in_begin_stack: *mut ImGuiWindow)
     {
     // for (let i: c_int = 0; i < windows_size; i++)
@@ -1941,7 +1941,7 @@ pub unsafe fn DebugNodeWindowsListByBeginStackParent(winodws: *mut *mut ImGuiWin
 pub unsafe fn ShowDebugLogWindow(p_open: *mut bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if !(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize) {
-        SetNextWindowSize(ImVec2(0f32, GetFontSize() * 12.00f32), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(ImVec2::new2(0f32, GetFontSize() * 12.00f32), ImGuiCond_FirstUseEver);
     }
     if !Begin(str_to_const_c_char_ptr("Dear ImGui Debug Log"), p_open, ImGuiWindowFlags_None) || GetCurrentWindow().BeginCount > 1 {
         End();
@@ -2078,7 +2078,7 @@ pub unsafe fn UpdateDebugToolStackQueries()
     }
 }
 
-// static c_int StackToolFormatLevelInfo(ImGuiStackTool* tool, c_int n, bool format_for_ui, char* buf, size_t buf_size)
+// static c_int StackToolFormatLevelInfo(ImGuiStackTool* tool, c_int n, format_for_ui: bool, char* buf, size_t buf_size)
 pub unsafe fn StackToolFormatLevelInfo(tool: *mut ImGuiStackTool, n: c_int, format_for_ui: bool, buf: *mut c_char, buf_size: size_t) -> c_int
     {
     let mut info: &mut ImGuiStackLevelInfo=  &mut tool.Results[n];
@@ -2112,7 +2112,7 @@ pub unsafe fn ShowStackToolWIndow(p_open: *mut bool)
     {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize)) {
-        SetNextWindowSize(ImVec2(0f32, GetFontSize() * 8.00f32), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(ImVec2::new2(0f32, GetFontSize() * 8.00f32), ImGuiCond_FirstUseEver);
     }
     if !Begin(str_to_const_c_char_ptr("Dear ImGui Stack Tool"), p_open, 0) || GetCurrentWindow().BeginCount > 1
     {

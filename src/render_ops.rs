@@ -53,7 +53,7 @@ pub unsafe fn FindRenderedTextEnd(text: *const c_char, mut text_end: *const c_ch
 
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
-// c_void RenderText(ImVec2 pos, *const char text, *const char text_end, bool hide_text_after_hash)
+// c_void RenderText(ImVec2 pos, *const char text, *const char text_end, hide_text_after_hash: bool)
 pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const c_char, hide_text_after_hash: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -160,7 +160,7 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
     //draw_list.AddLine(ImVec2(pos_max.x, pos_min.y - 4), ImVec2(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list.AddLine(ImVec2(ellipsis_max_x, pos_min.y-2), ImVec2(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
     //draw_list.AddLine(ImVec2(clip_max_x, pos_min.y), ImVec2(clip_max_x, pos_max.y), IM_COL32(255, 0, 0, 255));
-    // FIXME: We could technically remove (last_glyph->AdvanceX - last_glyph->X1) from text_size.x here and save a few pixels.
+    // FIXME: We could technically remove (last_glyph.AdvanceX - last_glyph.X1) from text_size.x here and save a few pixels.
     if text_size.x > pos_max.x - pos_min.x {
         // Hello wo...
         // |       |   |
@@ -214,7 +214,7 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
             }
         }
     } else {
-        RenderTextClippedEx(draw_list, pos_min, ImVec2(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2(0f32, 0f32), null());
+        RenderTextClippedEx(draw_list, pos_min, ImVec2(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2::new2(0f32, 0f32), null());
     }
 
     if g.LogEnabled {
@@ -223,7 +223,7 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
 }
 
 // Render a rectangle shaped with optional rounding and borders
-// c_void RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, bool border, c_float rounding)
+// c_void RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, border: bool, c_float rounding)
 pub unsafe fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: bool, rounding: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -241,12 +241,12 @@ pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float)
     let mut window = g.CurrentWindow;
     let border_size: c_float = g.Style.FrameBorderSize;
     if border_size > 0f32 {
-        window.DrawList.AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow, 0f32, ), rounding, 0, border_size, , );
+        window.DrawList.AddRect(p_min + ImVec2::new2(1, 1), p_max + ImVec2::new2(1, 1), GetColorU32(ImGuiCol_BorderShadow, 0f32, ), rounding, 0, border_size, , );
         window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0f32, ), rounding, 0, border_size, , );
     }
 }
 
-// c_void RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
+// c_void RenderNavHighlight(const ImRect& bb, id: ImGuiID, ImGuiNavHighlightFlags flags)
 pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighlightFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if id != g.NavId {
@@ -307,8 +307,8 @@ pub unsafe fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cur
         let mut draw_list: *mut ImDrawList = GetForegroundDrawList(viewport);
         let mut tex_id: ImTextureID = font_atlas.TexID;
         draw_list.PushTextureID(tex_id);
-        draw_list.AddImage(tex_id, pos + ImVec2(1, 0) * scale, &pos + (ImVec2::new2(1f32, 0f32) + size) * scale, &uv[2], &uv[3], col_shadow);
-        draw_list.AddImage(tex_id, &pos + ImVec2(2, 0) * scale, &pos + (ImVec2(2, 0) + &size) * scale, &uv[2], &uv[3], col_shadow);
+        draw_list.AddImage(tex_id, pos + ImVec2::new2(1, 0) * scale, &pos + (ImVec2::new2(1f32, 0f32) + size) * scale, &uv[2], &uv[3], col_shadow);
+        draw_list.AddImage(tex_id, &pos + ImVec2::new2(2, 0) * scale, &pos + (ImVec2::new2(2, 0) + &size) * scale, &uv[2], &uv[3], col_shadow);
         draw_list.AddImage(tex_id, &pos, &pos + &size * scale, &uv[2], &uv[3], col_border);
         draw_list.AddImage(tex_id, &pos, &pos + &size * scale, &uv[0], &uv[1], col_fill);
         draw_list.PopTextureID();

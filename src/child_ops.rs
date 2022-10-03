@@ -21,7 +21,7 @@ use crate::state_ops::{Begin, End};
 use crate::style_var::{ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_ChildRounding, ImGuiStyleVar_WindowPadding};
 use crate::window_ops::GetCurrentWindow;
 
-// bool BeginChildEx(*const char name, ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags flags)
+// bool BeginChildEx(*const char name, id: ImGuiID, const ImVec2& size_arg, border: bool, ImGuiWindowFlags flags)
 pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
@@ -41,7 +41,7 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     }
     SetNextWindowSize(size);
 
-    // Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(ImGuiID id) with a stable value.
+    // Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(id: ImGuiID) with a stable value.
     let temp_window_name: *const c_char = null();
     if name {
         // ImFormatStringToTempBuffer(&temp_window_name, null_mut(), "%s/%s_%08X", parent_window.Name, name, id);
@@ -76,13 +76,13 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     return ret;
 }
 
-// bool BeginChild(*const char str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+// bool BeginChild(*const char str_id, const ImVec2& size_arg, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild(str_id: *const c_char, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     return BeginChildEx(str_id, window.GetID(str_id, null()), size_arg, border, extra_flags);
 }
 
-// bool BeginChild(ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+// bool BeginChild(id: ImGuiID, const ImVec2& size_arg, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild2(id: ImGuiID, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     // IM_ASSERT(id != 0);
     return BeginChildEx(null_mut(), id, size_arg, border, extra_flags);
@@ -133,7 +133,7 @@ pub unsafe fn EndChild() {
 }
 
 // Helper to create a child window / scrolling region that looks like a normal widget frame.
-// bool BeginChildFrame(ImGuiID id, const ImVec2& size, ImGuiWindowFlags extra_flags)
+// bool BeginChildFrame(id: ImGuiID, const ImVec2& size, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChildFrame(id: ImGuiID, size: &ImVec2, extra_flags: ImGuiWindowFlagss) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = g.Style.clone();

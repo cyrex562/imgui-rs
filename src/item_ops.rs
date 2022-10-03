@@ -20,7 +20,7 @@ use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_ops::IsWindowContentHoverable;
 
-// c_void MarkItemEdited(ImGuiID id)
+// c_void MarkItemEdited(id: ImGuiID)
 pub unsafe fn MarkItemEdited(id: ImGuiID) {
     // This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
     // ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
@@ -106,7 +106,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         }
 
         // Special handling for calling after Begin() which represent the title bar or tab.
-        // When the window is skipped/collapsed (SkipItems==true) that last item (always ->MoveId submitted by Begin)
+        // When the window is skipped/collapsed (SkipItems==true) that last item (always .MoveId submitted by Begin)
         // will never be overwritten so we need to detect the case.
         if g.LastItemData.ID == window.MoveId && window.WriteAccessed {
             return false;
@@ -136,7 +136,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
 }
 
 // Internal facing ItemHoverable() used when submitting widgets. Differs slightly from IsItemHovered().
-// bool ItemHoverable(const ImRect& bb, ImGuiID id)
+// bool ItemHoverable(const ImRect& bb, id: ImGuiID)
 pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap {
@@ -196,7 +196,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
     return true;
 }
 
-// bool IsClippedEx(const ImRect& bb, ImGuiID id)
+// bool IsClippedEx(const ImRect& bb, id: ImGuiID)
 pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -213,7 +213,7 @@ pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool {
 
 // This is also inlined in ItemAdd()
 // Note: if ImGuiItemStatusFlags_HasDisplayRect is set, user needs to set window.DC.LastItemDisplayRect!
-// c_void SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags item_flags, const ImRect& item_rect)
+// c_void SetLastItemData(item_id: ImGuiID, ImGuiItemFlags in_flags, ImGuiItemStatusFlags item_flags, const ImRect& item_rect)
 pub unsafe fn SetLastItemData(item_id: ImGuiID, in_flags: ImGuiItemFlags, item_flags: ImGuiItemStatusFlags, item_rect: &ImRect) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.LastItemData.ID = item_id;
@@ -382,7 +382,7 @@ pub fn ItemSize2(bb: &ImRect, text_baseline_y: c_float) {
 } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
 
 
-// inline bool     FocusableItemRegister( * mut ImGuiWindow window, ImGuiID id)              
+// inline bool     FocusableItemRegister( * mut ImGuiWindow window, id: ImGuiID)
 pub fn FocusableItemRegister(window: *mut ImGuiWindow, id: ImGuiID) -> bool {
     IM_ASSERT(0);
     IM_UNUSED(window);
@@ -399,7 +399,7 @@ pub fn FocusableItemUnregister(window: *mut ImGuiWindow) {
 
 
 
-c_void PushItemFlag(ImGuiItemFlags option, bool enabled)
+c_void PushItemFlag(ImGuiItemFlags option, enabled: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut item_flags: ImGuiItemFlags =  g.CurrentItemFlags;
@@ -421,7 +421,7 @@ c_void PopItemFlag()
 }
 
 
-c_void ActivateItem(ImGuiID id)
+c_void ActivateItem(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NavNextActivateId = id;
@@ -472,7 +472,7 @@ c_void ItemSize(const ImVec2& size, c_float text_baseline_y)
 // Declare item bounding box for clipping and interaction.
 // Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
-bool ItemAdd(const ImRect& bb, ImGuiID id, *const ImRect nav_bb_arg, ImGuiItemFlags extra_flags)
+bool ItemAdd(const ImRect& bb, id: ImGuiID, *const ImRect nav_bb_arg, ImGuiItemFlags extra_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -562,7 +562,7 @@ c_void PushMultiItemsWidths(c_int components, c_float w_full)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    const ImGuiStyle& style = g.Style;
+    const let mut style = &mut g.Style;
     const c_float w_item_one  = ImMax(1f32, IM_FLOOR((w_full - (style.ItemInnerSpacing.x) * (components - 1)) / components));
     let w_item_last: c_float =  ImMax(1f32, IM_FLOOR(w_full - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
     window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
@@ -609,7 +609,7 @@ ImVec2 CalcItemSize(ImVec2 size, c_float default_w, c_float default_h)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
-    ImVec2 region_max;
+    let mut region_max = ImVec2::default();
     if (size.x < 0f32 || size.y < 0f32)
         region_max = GetContentRegionMaxAbs();
 

@@ -75,7 +75,7 @@ Index of this file:
 //-----------------------------------------------------------------------------
 // About 'outer_size':
 // Its meaning needs to differ slightly depending on if we are using ScrollX/ScrollY flags.
-// Default value is ImVec2(0f32, 0f32).
+// Default value is ImVec2::new2(0f32, 0f32).
 //   X
 //   - outer_size.x <= 0f32  ->  Right-align from window/work-rect right-most edge. With -FLT_MIN or 0f32 will align exactly on right-most edge.
 //   - outer_size.x  > 0f32  ->  Set Fixed width.
@@ -153,7 +153,7 @@ Index of this file:
 // About clipping/culling of Rows in Tables:
 // - For large numbers of rows, it is recommended you use ImGuiListClipper to only submit visible rows.
 //   ImGuiListClipper is reliant on the fact that rows are of equal height.
-//   See 'Demo->Tables->Vertical Scrolling' or 'Demo->Tables->Advanced' for a demo of using the clipper.
+//   See 'Demo.Tables.Vertical Scrolling' or 'Demo.Tables.Advanced' for a demo of using the clipper.
 // - Note that auto-resizing columns don't play well with using the clipper.
 //   By default a table with _ScrollX but without _Resizable will have column auto-resize.
 //   So, if you want to use the clipper, make sure to either enable _Resizable, either setup columns width explicitly with _WidthFixed.
@@ -294,7 +294,7 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
     return flags;
 }
 
-*mut ImGuiTable TableFindByID(ImGuiID id)
+*mut ImGuiTable TableFindByID(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.Tables.GetByKey(id);
@@ -307,7 +307,7 @@ bool    BeginTable(*const char str_id, c_int columns_count, ImGuiTableFlags flag
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
-bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags, const ImVec2& outer_size, c_float inner_width)
+bool    BeginTableEx(*const char name, id: ImGuiID, c_int columns_count, ImGuiTableFlags flags, const ImVec2& outer_size, c_float inner_width)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow outer_window = GetCurrentWindow();
@@ -333,7 +333,7 @@ bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTab
     // Acquire storage for the table
     *mut ImGuiTable table = g.Tables.GetOrAddByKey(id);
     let instance_no: c_int = (table.LastFrameActive != g.FrameCount) ? 0 : table.InstanceCurrent + 1;
-    const let mut instance_id: ImGuiID =  id + instance_no;
+    let mut instance_id: ImGuiID =  id + instance_no;
     const ImGuiTableFlags table_last_flags = table.Flags;
     if (instance_no > 0)
         // IM_ASSERT(table.ColumnsCount == columns_count && "BeginTable(): Cannot change columns count mid-frame while preserving same ID");
@@ -385,10 +385,10 @@ bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTab
 
         // Reset scroll if we are reactivating it
         if ((table_last_flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) == 0)
-            SetNextWindowScroll(ImVec2(0f32, 0f32));
+            SetNextWindowScroll(ImVec2::new2(0f32, 0f32));
 
         // Create scrolling region (without border and zero window padding)
-        ImGuiWindowFlags child_flags = (flags & ImGuiTableFlags_ScrollX) ? ImGuiWindowFlags_HorizontalScrollbar : ImGuiWindowFlags_None;
+        let mut child_flags: ImGuiWindowFlags = (flags & ImGuiTableFlags_ScrollX) ? ImGuiWindowFlags_HorizontalScrollbar : ImGuiWindowFlags_None;
         BeginChildEx(name, instance_id, outer_rect.GetSize(), false, child_flags);
         table.InnerWindow = g.CurrentWindow;
         table.WorkRect = table.Innerwindow.WorkRect;
@@ -419,7 +419,7 @@ bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTab
     temp_data.HostBackupCursorMaxPos = inner_window.DC.CursorMaxPos;
     temp_data.HostBackupItemWidth = outer_window.DC.ItemWidth;
     temp_data.HostBackupItemWidthStackSize = outer_window.DC.ItemWidthStack.Size;
-    inner_window.DC.PrevLineSize = inner_window.DC.CurrLineSize = ImVec2(0f32, 0f32);
+    inner_window.DC.PrevLineSize = inner_window.DC.CurrLineSize = ImVec2::new2(0f32, 0f32);
 
     // Padding and Spacing
     // - None               ........Content..... Pad .....Content........
@@ -535,7 +535,7 @@ bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTab
     // It will also react to changing fonts with mixed results. It doesn't need to be perfect but merely provide a decent transition.
     // FIXME-DPI: Provide consistent standards for reference size. Perhaps using g.CurrentDpiScale would be more self explanatory.
     // This is will lead us to non-rounded WidthRequest in columns, which should work but is a poorly tested path.
-    let new_ref_scale_unit: c_float =  g.FontSize; // g.Font->GetCharAdvance('A') ?
+    let new_ref_scale_unit: c_float =  g.FontSize; // g.Font.GetCharAdvance('A') ?
     if (table.RefScale != 0f32 && table.RefScale != new_ref_scale_unit)
     {
         let scale_factor: c_float =  new_ref_scale_unit / table.RefScale;
@@ -551,7 +551,7 @@ bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTab
     inner_window.SkipItems = true;
 
     // Clear names
-    // At this point the ->NameOffset field of each column will be invalid until TableUpdateLayout() or the first call to TableSetupColumn()
+    // At this point the .NameOffset field of each column will be invalid until TableUpdateLayout() or the first call to TableSetupColumn()
     if (table.ColumnsNames.Buf.Size > 0)
         table.ColumnsNames.Buf.clear();
 
@@ -859,7 +859,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
             // (e.g. TextWrapped) too much. Otherwise what tends to happen is that TextWrapped would output a very
             // large height (= first frame scrollbar display very off + clipper would skip lots of items).
             // This is merely making the side-effect less extreme, but doesn't properly fixes it.
-            // FIXME: Move this to ->WidthGiven to avoid temporary lossyless?
+            // FIXME: Move this to .WidthGiven to avoid temporary lossyless?
             // FIXME: This break IsPreserveWidthAuto from not flickering if the stored WidthAuto was smaller.
             if (column.AutoFitQueue > 0x01 && table.IsInitializing && !column.IsPreserveWidthAuto)
                 column.WidthRequest = ImMax(column.WidthRequest, table.MinColumnWidth * 4.00f32); // FIXME-TABLE: Another constant/scale?
@@ -939,7 +939,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
     *mut ImGuiTableInstanceData table_instance = TableGetInstanceData(table, table.InstanceCurrent);
     table.HoveredColumnBody = -1;
     table.HoveredColumnBorder = -1;
-    const let mut mouse_hit_rect: ImRect = ImRect::new(table.OuterRect.Min.x, table.OuterRect.Min.y, table.OuterRect.Max.x, ImMax(table.OuterRect.Max.y, table.OuterRect.Min.y + table_instance.LastOuterHeight));
+    let mut mouse_hit_rect: ImRect = ImRect::new(table.OuterRect.Min.x, table.OuterRect.Min.y, table.OuterRect.Max.x, ImMax(table.OuterRect.Max.y, table.OuterRect.Min.y + table_instance.LastOuterHeight));
     let is_hovering_table: bool = ItemHoverable(mouse_hit_rect, 0);
 
     // [Part 6] Setup final position, offset, skip/clip states and clipping rectangles, detect hovered column
@@ -1163,7 +1163,7 @@ c_void TableUpdateBorders(*mut ImGuiTable table)
 
         let mut column_id: ImGuiID =  TableGetColumnResizeID(table, column_n, table.InstanceCurrent);
         let mut hit_rect: ImRect = ImRect::new(column.MaxX - hit_half_width, hit_y1, column.MaxX + hit_half_width, border_y2_hit);
-        //GetForegroundDrawList()->AddRect(hit_rect.Min, hit_rect.Max, IM_COL32(255, 0, 0, 100));
+        //GetForegroundDrawList().AddRect(hit_rect.Min, hit_rect.Max, IM_COL32(255, 0, 0, 100));
         KeepAliveID(column_id);
 
         let mut hovered: bool =  false, held = false;
@@ -1398,7 +1398,7 @@ c_void    EndTable()
 
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0f32) it is ignored
-c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, c_float init_width_or_weight, ImGuiID user_id)
+c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, c_float init_width_or_weight, user_id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1542,7 +1542,7 @@ c_int TableGetColumnCount()
 // - Request will be applied during next layout, which happens on the first call to TableNextRow() after BeginTable().
 // - For the getter you can test (TableGetColumnFlags() & ImGuiTableColumnFlags_IsEnabled) != 0.
 // - Alternative: the ImGuiTableColumnFlags_Disabled is an overriding/master disable flag which will also hide the column from context menu.
-c_void TableSetColumnEnabled(c_int column_n, bool enabled)
+c_void TableSetColumnEnabled(c_int column_n, enabled: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1642,7 +1642,7 @@ c_void TableSetBgColor(ImGuiTableBgTarget target, u32 color, c_int column_n)
 // - TableEndRow() [Internal]
 //-------------------------------------------------------------------------
 
-// [Public] Note: for row coloring we use ->RowBgColorCounter which is the same value without counting header rows
+// [Public] Note: for row coloring we use .RowBgColorCounter which is the same value without counting header rows
 c_int TableGetRowIndex()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -1699,7 +1699,7 @@ c_void TableBeginRow(*mut ImGuiTable table)
     table.RowTextBaseline = 0f32;
     table.RowIndentOffsetX = window.DC.Indent.x - table.HostIndentX; // Lock indent
     window.DC.PrevLineTextBaseOffset = 0f32;
-    window.DC.CurrLineSize = ImVec2(0f32, 0f32);
+    window.DC.CurrLineSize = ImVec2::new2(0f32, 0f32);
     window.DC.IsSameLine = window.DC.IsSetPos = false;
     window.DC.CursorMaxPos.y = next_y1;
 
@@ -1920,7 +1920,7 @@ c_void TableSetColumnWidth(c_int column_n, c_float width)
     if (column_0.WidthGiven == column_0_width || column_0.WidthRequest == column_0_width)
         return;
 
-    //IMGUI_DEBUG_PRINT("TableSetColumnWidth(%d, %.1f->%.10f32)\n", column_0_idx, column_0->WidthGiven, column_0_width);
+    //IMGUI_DEBUG_PRINT("TableSetColumnWidth(%d, %.1f->%.10f32)\n", column_0_idx, column_0.WidthGiven, column_0_width);
     *mut ImGuiTableColumn column_1 = (column_0.NextEnabledColumn != -1) ? &table.Columns[column_0.NextEnabledColumn] : null_mut();
 
     // In this surprisingly not simple because of how we support mixing Fixed and multiple Stretch columns.
@@ -1933,9 +1933,9 @@ c_void TableSetColumnWidth(c_int column_n, c_float width)
     // When forwarding resize from Wn| to Fn+1| we need to be considerate of the _NoResize flag on Fn+1.
     // FIXME-TABLE: Find a way to rewrite all of this so interactions feel more consistent for the user.
     // Scenarios:
-    // - F1 F2 F3  resize from F1| or F2|   --> ok: alter ->WidthRequested of Fixed column. Subsequent columns will be offset.
-    // - F1 F2 F3  resize from F3|          --> ok: alter ->WidthRequested of Fixed column. If active, ScrollX extent can be altered.
-    // - F1 F2 W3  resize from F1| or F2|   --> ok: alter ->WidthRequested of Fixed column. If active, ScrollX extent can be altered, but it doesn't make much sense as the Stretch column will always be minimal size.
+    // - F1 F2 F3  resize from F1| or F2|   --> ok: alter .WidthRequested of Fixed column. Subsequent columns will be offset.
+    // - F1 F2 F3  resize from F3|          --> ok: alter .WidthRequested of Fixed column. If active, ScrollX extent can be altered.
+    // - F1 F2 W3  resize from F1| or F2|   --> ok: alter .WidthRequested of Fixed column. If active, ScrollX extent can be altered, but it doesn't make much sense as the Stretch column will always be minimal size.
     // - F1 F2 W3  resize from W3|          --> ok: no-op (disabled by Resize Rule 1)
     // - W1 W2 W3  resize from W1| or W2|   --> ok
     // - W1 W2 W3  resize from W3|          --> ok: no-op (disabled by Resize Rule 1)
@@ -2145,7 +2145,7 @@ c_void TableSetupDrawChannels(*mut ImGuiTable table)
 // based on its position (within frozen rows/columns groups or not).
 // At the end of the operation our 1-4 groups will each have a ImDrawCmd using the same ClipRect.
 // This function assume that each column are pointing to a distinct draw channel,
-// otherwise merge_group->ChannelsCount will not match set bit count of merge_group->ChannelsMask.
+// otherwise merge_group.ChannelsCount will not match set bit count of merge_group.ChannelsMask.
 //
 // Column channels will not be merged into one of the 1-4 groups in the following cases:
 // - The contents stray off its clipping rectangle (we only compare the MaxX value, not the MinX value).
@@ -2162,7 +2162,7 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
     *mut ImDrawListSplitter splitter = table.DrawSplitter;
     let has_freeze_v: bool = (table.FreezeRowsCount > 0);
     let has_freeze_h: bool = (table.FreezeColumnsCount > 0);
-    // IM_ASSERT(splitter->_Current == 0);
+    // IM_ASSERT(splitter._Current == 0);
 
     // Track which groups we are going to attempt to merge, and which channels goes into each group.
     struct MergeGroup
@@ -2236,11 +2236,11 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
                 continue;
             buf: [c_char;32];
             ImFormatString(buf, 32, "MG%d:%d", merge_group_n, merge_group.ChannelsCount);
-            let text_pos: ImVec2 = merge_group.ClipRect.Min + ImVec2(4, 4);
+            let text_pos: ImVec2 = merge_group.ClipRect.Min + ImVec2::new2(4, 4);
             let text_size: ImVec2 = CalcTextSize(buf, null_mut());
-            GetForegroundDrawList()->AddRectFilled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
-            GetForegroundDrawList()->AddText(text_pos, IM_COL32(255, 255, 0, 255), buf, null_mut());
-            GetForegroundDrawList()->AddRect(merge_group.ClipRect.Min, merge_group.ClipRect.Max, IM_COL32(255, 255, 0, 255));
+            GetForegroundDrawList().AddRectFilled(text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255));
+            GetForegroundDrawList().AddText(text_pos, IM_COL32(255, 255, 0, 255), buf, null_mut());
+            GetForegroundDrawList().AddRect(merge_group.ClipRect.Min, merge_group.ClipRect.Max, IM_COL32(255, 255, 0, 255));
         }
 // #endif
 
@@ -2281,9 +2281,9 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
                 if ((merge_group_n & 2) != 0 && (table.Flags & ImGuiTableFlags_NoHostExtendY) == 0)
                     merge_clip_rect.Max.y = ImMax(merge_clip_rect.Max.y, host_rect.Max.y);
 // #if 0
-                GetOverlayDrawList()->AddRect(merge_group.ClipRect.Min, merge_group.ClipRect.Max, IM_COL32(255, 0, 0, 200), 0f32, 0, 1f32);
-                GetOverlayDrawList()->AddLine(merge_group.ClipRect.Min, merge_clip_rect.Min, IM_COL32(255, 100, 0, 200));
-                GetOverlayDrawList()->AddLine(merge_group.ClipRect.Max, merge_clip_rect.Max, IM_COL32(255, 100, 0, 200));
+                GetOverlayDrawList().AddRect(merge_group.ClipRect.Min, merge_group.ClipRect.Max, IM_COL32(255, 0, 0, 200), 0f32, 0, 1f32);
+                GetOverlayDrawList().AddLine(merge_group.ClipRect.Min, merge_clip_rect.Min, IM_COL32(255, 100, 0, 200));
+                GetOverlayDrawList().AddLine(merge_group.ClipRect.Max, merge_clip_rect.Max, IM_COL32(255, 100, 0, 200));
 // #endif
                 remaining_count -= merge_group.ChannelsCount;
                 for (let n: c_int = 0; n < IM_ARRAYSIZE(remaining_mask.Storage); n++)
@@ -2297,7 +2297,7 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
                     merge_channels_count-= 1;
 
                     *mut ImDrawChannel channel = &splitter._Channels[n];
-                    // IM_ASSERT(channel->_CmdBuffer.Size == 1 && merge_clip_rect.Contains(ImRect(channel->_CmdBuffer[0].ClipRect)));
+                    // IM_ASSERT(channel._CmdBuffer.Size == 1 && merge_clip_rect.Contains(ImRect(channel._CmdBuffer[0].ClipRect)));
                     channel._CmdBuffer[0].ClipRect = merge_clip_rect.ToVec4();
                     memcpy(dst_tmp++, channel, sizeof(ImDrawChannel));
                 }
@@ -2485,7 +2485,7 @@ ImGuiSortDirection TableGetColumnNextSortDirection(*mut ImGuiTableColumn column)
 
 // Note that the NoSortAscending/NoSortDescending flags are processed in TableSortSpecsSanitize(), and they may change/revert
 // the value of SortDirection. We could technically also do it here but it would be unnecessary and duplicate code.
-c_void TableSetColumnSortDirection(c_int column_n, ImGuiSortDirection sort_direction, bool append_to_sort_specs)
+c_void TableSetColumnSortDirection(c_int column_n, ImGuiSortDirection sort_direction, append_to_sort_specs: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -2644,7 +2644,7 @@ c_float TableGetHeaderRowHeight()
 // [Public] This is a helper to output TableHeader() calls based on the column names declared in TableSetupColumn().
 // The intent is that advanced users willing to create customized headers would not need to use this helper
 // and can create their own! For example: TableHeader() may be preceeded by Checkbox() or other custom widgets.
-// See 'Demo->Tables->Custom headers' for a demonstration of implementing a custom version of this.
+// See 'Demo.Tables.Custom headers' for a demonstration of implementing a custom version of this.
 // This code is constructed to not make much use of internal functions, as it is intended to be a template to copy.
 // FIXME-TABLE: TableOpenContextMenu() and TableGetHeaderRowHeight() are not public.
 c_void TableHeadersRow()
@@ -2738,15 +2738,15 @@ c_void TableHeader(*const char label)
     let selected: bool = (table.IsContextPopupOpen && table.ContextPopupColumn == column_n && table.InstanceInteracted == table.InstanceCurrent);
     let mut id: ImGuiID =  window.GetID(label);
     let mut bb: ImRect = ImRect::new(cell_r.Min.x, cell_r.Min.y, cell_r.Max.x, ImMax(cell_r.Max.y, cell_r.Min.y + label_height + g.Style.CellPadding.y * 2.00f32));
-    ItemSize(ImVec2(0f32, label_height)); // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
+    ItemSize(ImVec2::new2(0f32, label_height)); // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
     if (!ItemAdd(bb, id))
         return;
 
-    //GetForegroundDrawList()->AddRect(cell_r.Min, cell_r.Max, IM_COL32(255, 0, 0, 255)); // [DEBUG]
-    //GetForegroundDrawList()->AddRect(bb.Min, bb.Max, IM_COL32(255, 0, 0, 255)); // [DEBUG]
+    //GetForegroundDrawList().AddRect(cell_r.Min, cell_r.Max, IM_COL32(255, 0, 0, 255)); // [DEBUG]
+    //GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(255, 0, 0, 255)); // [DEBUG]
 
     // Using AllowItemOverlap mode because we cover the whole cell, and we want user to be able to submit subsequent items.
-    bool hovered, held;
+    hovered: bool, held;
     let mut pressed: bool =  ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_AllowItemOverlap);
     if (g.ActiveId != id)
         SetItemAllowOverlap();
@@ -2850,7 +2850,7 @@ c_void TableOpenContextMenu(c_int column_n)
         table.IsContextPopupOpen = true;
         table.ContextPopupColumn = (ImGuiTableColumnIdx)column_n;
         table.InstanceInteracted = table.InstanceCurrent;
-        const let mut context_menu_id: ImGuiID =  ImHashStr("##ContextMenu", 0, table.ID);
+        let mut context_menu_id: ImGuiID =  ImHashStr("##ContextMenu", 0, table.ID);
         OpenPopupEx(context_menu_id, ImGuiPopupFlags_None);
     }
 }
@@ -2859,7 +2859,7 @@ bool TableBeginContextMenuPopup(*mut ImGuiTable table)
 {
     if (!table.IsContextPopupOpen || table.InstanceCurrent != table.InstanceInteracted)
         return false;
-    const let mut context_menu_id: ImGuiID =  ImHashStr("##ContextMenu", 0, table.ID);
+    let mut context_menu_id: ImGuiID =  ImHashStr("##ContextMenu", 0, table.ID);
     if (BeginPopupEx(context_menu_id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings))
         return true;
     table.IsContextPopupOpen = false;
@@ -2983,7 +2983,7 @@ let size_all_desc: *const c_char;
 //-------------------------------------------------------------------------
 
 // Clear and initialize empty settings instance
-static c_void TableSettingsInit(*mut ImGuiTableSettings settings, ImGuiID id, c_int columns_count, c_int columns_count_max)
+static c_void TableSettingsInit(*mut ImGuiTableSettings settings, id: ImGuiID, c_int columns_count, c_int columns_count_max)
 {
     IM_PLACEMENT_NEW(settings) ImGuiTableSettings();
     *mut ImGuiTableColumnSettings settings_column = settings.GetColumnSettings();
@@ -3000,7 +3000,7 @@ static size_t TableSettingsCalcChunkSize(c_int columns_count)
     return sizeof(ImGuiTableSettings) + columns_count * sizeof(ImGuiTableColumnSettings);
 }
 
-*mut ImGuiTableSettings TableSettingsCreate(ImGuiID id, c_int columns_count)
+*mut ImGuiTableSettings TableSettingsCreate(id: ImGuiID, c_int columns_count)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTableSettings settings = g.SettingsTables.alloc_chunk(TableSettingsCalcChunkSize(columns_count));
@@ -3009,7 +3009,7 @@ static size_t TableSettingsCalcChunkSize(c_int columns_count)
 }
 
 // Find existing settings
-*mut ImGuiTableSettings TableSettingsFindByID(ImGuiID id)
+*mut ImGuiTableSettings TableSettingsFindByID(id: ImGuiID)
 {
     // FIXME-OPT: Might want to store a lookup map for this?
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -3165,7 +3165,7 @@ c_void TableLoadSettings(*mut ImGuiTable table)
 
 static c_void TableSettingsHandler_ClearAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler)
 {
-    ImGuiContext& g = *ctx;
+    let g = ctx;
     for (let i: c_int = 0; i != g.Tables.GetMapSize(); i++)
         if (*mut ImGuiTable table = g.Tables.TryGetMapData(i))
             table.SettingsOffset = -1;
@@ -3175,7 +3175,7 @@ static c_void TableSettingsHandler_ClearAll(*mut ImGuiContext ctx, *mut ImGuiSet
 // Apply to existing windows (if any)
 static c_void TableSettingsHandler_ApplyAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler)
 {
-    ImGuiContext& g = *ctx;
+    let g = ctx;
     for (let i: c_int = 0; i != g.Tables.GetMapSize(); i++)
         if (*mut ImGuiTable table = g.Tables.TryGetMapData(i))
         {
@@ -3231,7 +3231,7 @@ static c_void TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSetting
 
 static c_void TableSettingsHandler_WriteAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut ImGuiTextBuffer buf)
 {
-    ImGuiContext& g = *ctx;
+    let g = ctx;
     for (*mut ImGuiTableSettings settings = g.SettingsTables.begin(); settings != null_mut(); settings = g.SettingsTables.next_chunk(settings))
     {
         if (settings.ID == 0) // Skip ditched settings
@@ -3373,9 +3373,9 @@ c_void DebugNodeTable(*mut ImGuiTable table)
     let mut open: bool =  TreeNode(table, "%s", buf);
     if (!is_active) { PopStyleColor(); }
     if (IsItemHovered())
-        GetForegroundDrawList()->AddRect(table.OuterRect.Min, table.OuterRect.Max, IM_COL32(255, 255, 0, 255));
+        GetForegroundDrawList().AddRect(table.OuterRect.Min, table.OuterRect.Max, IM_COL32(255, 255, 0, 255));
     if (IsItemVisible() && table.HoveredColumnBody != -1)
-        GetForegroundDrawList()->AddRect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+        GetForegroundDrawList().AddRect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255));
     if (!open)
         return;
     if (table.InstanceCurrent > 0)
@@ -3416,7 +3416,7 @@ c_void DebugNodeTable(*mut ImGuiTable table)
         if (IsItemHovered())
         {
             let mut r: ImRect = ImRect::new(column.MinX, table.OuterRect.Min.y, column.MaxX, table.OuterRect.Max.y);
-            GetForegroundDrawList()->AddRect(r.Min, r.Max, IM_COL32(255, 255, 0, 255));
+            GetForegroundDrawList().AddRect(r.Min, r.Max, IM_COL32(255, 255, 0, 255));
         }
     }
     if (*mut ImGuiTableSettings settings = TableGetBoundSettings(table))
@@ -3631,7 +3631,7 @@ c_void PopColumnsBackground()
     .SetCurrentChannel(window.DrawList,  + 1);
 }
 
-*mut ImGuiOldColumns FindOrCreateColumns(*mut ImGuiWindow window, ImGuiID id)
+*mut ImGuiOldColumns FindOrCreateColumns(*mut ImGuiWindow window, id: ImGuiID)
 {
     // We have few columns per window so for now we don't need bother much with turning this into a faster lookup.
     for (let n: c_int = 0; n < window.ColumnsStorage.Size; n++)
@@ -3779,7 +3779,7 @@ c_void NextColumn()
     }
     window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);
     window.DC.CursorPos.y = ;
-    window.DC.CurrLineSize = ImVec2(0f32, 0f32);
+    window.DC.CurrLineSize = ImVec2::new2(0f32, 0f32);
     window.DC.CurrLineTextBaseOffset = 0f32;
 
     // FIXME-COLUMNS: Share code with BeginColumns() - move code on columns setup.
@@ -3823,9 +3823,9 @@ c_void EndColumns()
         {
             *mut ImGuiOldColumnData column = &[n];
             let x: c_float =  window.Pos.x + GetColumnOffset(n);
-            const let mut column_id: ImGuiID =   + ImGuiID(n);
+            let mut column_id: ImGuiID =   + ImGuiID(n);
             let column_hit_hw: c_float =  COLUMNS_HIT_RECT_HALF_WIDTH;
-            const let mut column_hit_rect: ImRect = ImRect::new(ImVec2(x - column_hit_hw, y1), ImVec2(x + column_hit_hw, y2));
+            let mut column_hit_rect: ImRect = ImRect::new(ImVec2(x - column_hit_hw, y1), ImVec2(x + column_hit_hw, y2));
             KeepAliveID(column_id);
             if (IsClippedEx(column_hit_rect, column_id)) // FIXME: Can be removed or replaced with a lower-level test
                 continue;
@@ -3866,7 +3866,7 @@ c_void EndColumns()
     window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);
 }
 
-c_void Columns(c_int columns_count, *const char id, bool border)
+c_void Columns(c_int columns_count, *const char id, border: bool)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     // IM_ASSERT(columns_count >= 1);

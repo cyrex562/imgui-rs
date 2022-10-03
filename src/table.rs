@@ -113,7 +113,7 @@ pub struct ImGuiTable {
     pub ColumnsNames: ImGuiTextBuffer,
     // Contiguous buffer holding columns names
     pub DrawSplitter: *mut ImDrawListSplitter,
-    // Shortcut to TempData->DrawSplitter while in table. Isolate draw commands per columns to avoid switching clip rect constantly
+    // Shortcut to TempData.DrawSplitter while in table. Isolate draw commands per columns to avoid switching clip rect constantly
     pub InstanceDataFirst: ImGuiTableInstanceData,
     pub InstanceDataExtra: Vec<ImGuiTableInstanceData>,
     // FIXME-OPT: Using a small-vector pattern would be good.

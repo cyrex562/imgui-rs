@@ -13,11 +13,11 @@ use crate::window_ops::{GetCurrentWindow, GetCurrentWindowRead};
 // See https://github.com/ocornut/imgui/issues/5548 for more details.
 // [Scenario 1]
 //  Previously this would make the window content size ~200x200:
-//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2(200,200)) + End();  // NOT OK
+//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2::new2(200,200)) + End();  // NOT OK
 //  Instead, please submit an item:
-//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2(200,200)) + Dummy(ImVec2(0,0)) + End(); // OK
+//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2::new2(200,200)) + Dummy(ImVec2::new2(0,0)) + End(); // OK
 //  Alternative:
-//    Begin(...) + Dummy(ImVec2(200,200)) + End(); // OK
+//    Begin(...) + Dummy(ImVec2::new2(200,200)) + End(); // OK
 // [Scenario 2]
 //  For reference this is one of the issue what we aim to fix with this change:
 //    BeginGroup() + SomeItem("foobar") + SetCursorScreenPos(GetCursorScreenPos()) + EndGroup()
@@ -48,7 +48,7 @@ pub unsafe fn GetCursorScreenPos() -> ImVec2 {
 
 // 2022/08/05: Setting cursor position also extend boundaries (via modifying CursorMaxPos) used to compute window size, group size etc.
 // I believe this was is a judicious choice but it's probably being relied upon (it has been the case since 1.31 and 1.50)
-// It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2(0,0)) to extend CursorMaxPos...
+// It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2::new2(0,0)) to extend CursorMaxPos...
 // c_void SetCursorScreenPos(const ImVec2& pos)
 pub unsafe fn SetCursorScreenPos(pos: &ImVec2) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();

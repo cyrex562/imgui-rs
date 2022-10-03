@@ -21,7 +21,7 @@ pub fn MouseButtonToKey(button: ImGuiMouseButton) -> ImGuiKey {
 }
 
 
-c_void PushFocusScope(ImGuiID id)
+c_void PushFocusScope(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

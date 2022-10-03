@@ -15,7 +15,7 @@ use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
 
-// c_void StartMouseMovingWindow(ImGuiWindow* window)
+// c_void StartMouseMovingWindow(window: *mut ImGuiWindow)
 pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
     // Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
     // We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.
@@ -46,7 +46,7 @@ pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
 // We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
 // - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
 // - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
-// c_void StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock_floating_node)
+// c_void StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool)
 pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut can_undock_node: bool = false;
@@ -176,7 +176,7 @@ pub unsafe fn UpdateMouseMovingWindowEndFrame() {
 
     // With right mouse button we close popups without changing focus based on where the mouse is aimed
     // Instead, focus will be restored to the window under the bottom-most closed popup.
-    // (The left mouse button path calls FocusWindow on the hovered window, which will lead NewFrame->ClosePopupsOverWindow to trigger)
+    // (The left mouse button path calls FocusWindow on the hovered window, which will lead NewFrame.ClosePopupsOverWindow to trigger)
     if g.IO.MouseClicked[1] {
         // Find the top-most window between HoveredWindow and the top-most Modal Window.
         // This is where we can trim the popup stack.
@@ -202,7 +202,7 @@ pub unsafe fn UpdateMouseInputs() {
     if IsMousePosValid(&io.MousePos) && IsMousePosValid(&io.MousePosPrev) {
         io.MouseDelta = io.MousePos.clone() - io.MousePosPrev.clone();
     } else {
-        io.MouseDelta = ImVec2(0f32, 0f32);
+        io.MouseDelta = ImVec2::new2(0f32, 0f32);
     }
 
     // If mouse moved we re-enable mouse hovering in case it was disabled by gamepad/keyboard. In theory should use a >0f32 threshold but would need to reset in everywhere we set this to true.
@@ -234,7 +234,7 @@ pub unsafe fn UpdateMouseInputs() {
             io.MouseClickedTime[i] = g.Time.clone();
             io.MouseClickedPos[i] = io.MousePos.clone();
             io.MouseClickedCount[i] = io.MouseClickedLastCount[i];
-            io.MouseDragMaxDistanceAbs[i] = ImVec2(0f32, 0f32);
+            io.MouseDragMaxDistanceAbs[i] = ImVec2::new2(0f32, 0f32);
             io.MouseDragMaxDistanceSqr[i] = 0f32;
         } else if io.MouseDown[i] {
             // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
@@ -254,7 +254,7 @@ pub unsafe fn UpdateMouseInputs() {
     }
 }
 
-// static c_void StartLockWheelingWindow(ImGuiWindow* window)
+// static c_void StartLockWheelingWindow(window: *mut ImGuiWindow)
 pub unsafe fn StartLockWheelingWindow(window: *mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.WheelingWindow == window {

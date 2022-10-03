@@ -14,7 +14,7 @@ use crate::type_defs::{ImGuiID, ImPoolIdx};
 pub struct ImPool<T>
 {
 pub Buf: Vec<T>,        // Contiguous data
-pub Map: ImGuiStorage,        // ID->Index
+pub Map: ImGuiStorage,        // ID.Index
 pub FreeIdx: ImPoolIdx,    // Next free idx to use
 pub AliveCount: ImPoolIdx, // Number of active/alive items (for display purpose)
 
@@ -25,7 +25,7 @@ impl ImPool<T> {
     // ~ImPool()   { Clear(); }
     
     
-    // *mut T          GetByKey(ImGuiID key)               { c_int idx = Map.GetInt(key, -1); return (idx != -1) ? &Buf[idx] : NULL; }
+    // *mut T          GetByKey(key: ImGuiID)               { c_int idx = Map.GetInt(key, -1); return (idx != -1) ? &Buf[idx] : NULL; }
     pub fn GetByKey(&mut self, key: ImGuiID) -> *mut T {
         let idx = self.Map.GetInt(key, -1);
         return if idx != -1 {
@@ -47,7 +47,7 @@ impl ImPool<T> {
     }
 
     
-    // *mut T          GetOrAddByKey(ImGuiID key)          { *mut c_int p_idx = Map.GetIntRef(key, -1); if (*p_idx != -1) return &Buf[*p_idx]; *p_idx = FreeIdx; return Add(); }
+    // *mut T          GetOrAddByKey(key: ImGuiID)          { *mut c_int p_idx = Map.GetIntRef(key, -1); if (*p_idx != -1) return &Buf[*p_idx]; *p_idx = FreeIdx; return Add(); }
     pub unsafe fn GetOrAddByKey(&mut self, key: ImGuiID) -> *mut T {
         let mut p_idx = self.Map.GetIntRef(key, -1);
         if *p_idx != -1 {
@@ -95,13 +95,13 @@ impl ImPool<T> {
     }
 
     
-    // void        Remove(ImGuiID key, *const T p)     { Remove(key, GetIndex(p)); }
+    // void        Remove(key: ImGuiID, *const T p)     { Remove(key, GetIndex(p)); }
     pub fn Remove(&mut self, key: ImGuiID, p: *const  T) {
         self.Remove2(key, self.GetIndex(p));
     }
 
     
-    // void        Remove(ImGuiID key, ImPoolIdx idx)  { Buf[idx].~T(); *(*mut c_int)&Buf[idx] = FreeIdx; FreeIdx = idx; Map.SetInt(key, -1); AliveCount-= 1; }
+    // void        Remove(key: ImGuiID, ImPoolIdx idx)  { Buf[idx].~T(); *(*mut c_int)&Buf[idx] = FreeIdx; FreeIdx = idx; Map.SetInt(key, -1); AliveCount-= 1; }
     pub fn Remove2(&mut self, key: ImGuiID, idx: ImPoolIdx) {
         todo!()
     }

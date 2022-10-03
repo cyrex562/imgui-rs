@@ -9,7 +9,7 @@
 //      - Window        //                  .. returns Modal2
 //          - Window    //                  .. returns Modal2
 //          - Modal2    //                  .. returns Modal2
-static ImGuiWindow* FindBlockingModal(ImGuiWindow* window)
+static ImGuiWindow* FindBlockingModal(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.OpenPopupStack.Size <= 0)
@@ -25,7 +25,7 @@ static ImGuiWindow* FindBlockingModal(ImGuiWindow* window)
             continue;
         if (IsWindowWithinBeginStackOf(window, popup_window))       // Window is rendered over last modal, no render order change needed.
             break;
-        for (let mut parent: *mut ImGuiWindow =  popup_window.ParentWindowInBeginStack->RootWindow; parent != null_mut(); parent = parent->ParentWindowInBeginStack->RootWindow)
+        for (let mut parent: *mut ImGuiWindow =  popup_window.ParentWindowInBeginStack.RootWindow; parent != null_mut(); parent = parent.ParentWindowInBeginStack.RootWindow)
             if (IsWindowWithinBeginStackOf(window, parent))
                 return popup_window;                                // Place window above its begin stack parent.
     }
