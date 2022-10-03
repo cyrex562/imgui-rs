@@ -870,7 +870,7 @@ static c_void ShowDemoWindowWidgets()
                 if (i == 0)
                     SetNextItemOpen(true, ImGuiCond_Once);
 
-                if (TreeNode((*mut c_void)i, "Child %d", i))
+                if (TreeNode(i, "Child %d", i))
                 {
                     Text("blah blah");
                     SameLine();
@@ -917,7 +917,7 @@ static c_void ShowDemoWindowWidgets()
                 if (i < 3)
                 {
                     // Items 0..2 are Tree Node
-                    let mut node_open: bool =  TreeNodeEx((*mut c_void)i, node_flags, "Selectable Node %d", i);
+                    let mut node_open: bool =  TreeNodeEx(i, node_flags, "Selectable Node %d", i);
                     if (IsItemClicked() && !IsItemToggledOpen())
                         node_clicked = i;
                     if (test_drag_and_drop && BeginDragDropSource())
@@ -938,7 +938,7 @@ static c_void ShowDemoWindowWidgets()
                     // The only reason we use TreeNode at all is to allow selection of the leaf. Otherwise we can
                     // use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
                     node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-                    TreeNodeEx((*mut c_void)i, node_flags, "Selectable Leaf %d", i);
+                    TreeNodeEx(i, node_flags, "Selectable Leaf %d", i);
                     if (IsItemClicked() && !IsItemToggledOpen())
                         node_clicked = i;
                     if (test_drag_and_drop && BeginDragDropSource())
@@ -1073,7 +1073,7 @@ static c_void ShowDemoWindowWidgets()
             Text("Kanjis: \xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e (nihongo)");
             static buf: [c_char;32] = "\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e";
             //static char buf[32] = u8"NIHONGO"; // <- this is how you would write it with C++11, using real kanjis
-            InputText("UTF-8 input", buf, IM_ARRAYSIZE(bu0f32));
+            InputText("UTF-8 input", buf, IM_ARRAYSIZE(buf));
             TreePop();
         }
         TreePop();
@@ -1528,7 +1528,7 @@ static c_void ShowDemoWindowWidgets()
 
             static buf3: [c_char;64];
             static let edit_count: c_int = 0;
-            InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, (*mut c_void)&edit_count);
+            InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, &edit_count);
             SameLine(); HelpMarker("Here we toggle the casing of the first character on every edits + count edits.");
             SameLine(); Text("(%d)", edit_count);
 
@@ -1551,7 +1551,7 @@ static c_void ShowDemoWindowWidgets()
                     if (data.EventFlag == ImGuiInputTextFlags_CallbackResize)
                     {
                         Vec<char>* my_str = (Vec<char>*)data.UserData;
-                        // IM_ASSERT(my_str->begin() == data->Bu0f32);
+                        // IM_ASSERT(my_str->begin() == data->buf);
                         my_str.resize(data.BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
                         data.Buf = my_str.begin();
                     }
@@ -1563,7 +1563,7 @@ static c_void ShowDemoWindowWidgets()
                 static bool MyInputTextMultiline(*const char label, Vec<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
                 {
                     // IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-                    return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (*mut c_void)my_str);
+                    return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, my_str);
                 }
             };
 
@@ -1574,7 +1574,7 @@ static c_void ShowDemoWindowWidgets()
             if (my_str.empty())
                 my_str.push(0);
             Funcs::MyInputTextMultiline("##MyStr", &my_str, ImVec2(-FLT_MIN, GetTextLineHeight() * 16));
-            Text("Data: %p\nSize: %d\nCapacity: %d", (*mut c_void)my_str.begin(), my_str.size(), my_str.capacity());
+            Text("Data: %p\nSize: %d\nCapacity: %d", my_str.begin(), my_str.size(), my_str.capacity());
             TreePop();
         }
 
@@ -1806,7 +1806,7 @@ static c_void ShowDemoWindowWidgets()
         let progress_saturated: c_float =  IM_CLAMP(progress, 0f32, 1f32);
         buf: [c_char;32];
         sprintf(buf, "%d/%d", (progress_saturated * 1753), 1753);
-        ProgressBar(progress, ImVec2(0.f, 0f32), bu0f32);
+        ProgressBar(progress, ImVec2(0.f, 0f32), buf);
         TreePop();
     }
 
@@ -2477,7 +2477,7 @@ static c_void ShowDemoWindowWidgets()
             EndDisabled();
 
         buf: [c_char;1] = "";
-        InputText("unused", buf, IM_ARRAYSIZE(bu0f32), ImGuiInputTextFlags_ReadOnly);
+        InputText("unused", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_ReadOnly);
         SameLine();
         HelpMarker("This widget is only here to be able to tab-out of the widgets above and see e.g. Deactivated() status.");
 
@@ -3066,7 +3066,7 @@ static c_void ShowDemoWindowLayout()
             TextUnformatted(names[i]);
 
             const ImGuiWindowFlags child_flags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
-            const let mut child_id: ImGuiID =  GetID((*mut c_void)i);
+            const let mut child_id: ImGuiID =  GetID(i);
             let child_is_visible: bool = BeginChild(child_id, ImVec2(child_w, 200f32), true, child_flags);
             if (BeginMenuBar())
             {
@@ -3113,7 +3113,7 @@ static c_void ShowDemoWindowLayout()
         {
             let child_height: c_float =  GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0f32;
             ImGuiWindowFlags child_flags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
-            let mut child_id: ImGuiID =  GetID((*mut c_void)i);
+            let mut child_id: ImGuiID =  GetID(i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2(-100, child_height), true, child_flags);
             if (scroll_to_of0f32)
                 SetScrollX(scroll_to_off_px);
@@ -3564,7 +3564,7 @@ static c_void ShowDemoWindowPopups()
             static name: [c_char;32] = "Label1";
             buf: [c_char;64];
             sprintf(buf, "Button: %s###Button", name); // ### operator override ID ignoring the preceding label
-            Button(bu0f32);
+            Button(buf);
             if (BeginPopupContextItem())
             {
                 Text("Edit name:");
@@ -3914,7 +3914,7 @@ static c_void ShowDemoWindowTables()
         // This is generally more convenient when your cells all contains the same type of data.
         HelpMarker(
             "Only using TableNextColumn(), which tends to be convenient for tables where every cells contains the same type of contents.\n"
-            "This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->Tables API transition.");
+            "This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the columns.Tables API transition.");
         if (BeginTable("table3", 3))
         {
             for (let item: c_int = 0; item < 14; item++)
@@ -3989,7 +3989,7 @@ static c_void ShowDemoWindowTables()
                     buf: [c_char;32];
                     sprintf(buf, "Hello %d,%d", column, row);
                     if (contents_type == CT_Text)
-                        TextUnformatted(bu0f32);
+                        TextUnformatted(buf);
                     else if (contents_type == CT_FillButton)
                         Button(buf, ImVec2(-FLT_MIN, 0f32));
                 }
@@ -4375,7 +4375,7 @@ static c_void ShowDemoWindowTables()
                 case CT_ShowWidth:  Text("W: %.1f", GetContentRegionAvail().x); break;
                 case CT_Button:     Button(label); break;
                 case CT_FillButton: Button(label, ImVec2(-FLT_MIN, 0f32)); break;
-                case CT_InputText:  SetNextItemWidth(-FLT_MIN); InputText("##", text_buf, IM_ARRAYSIZE(text_bu0f32)); break;
+                case CT_InputText:  SetNextItemWidth(-FLT_MIN); InputText("##", text_buf, IM_ARRAYSIZE(text_buf)); break;
                 }
                 PopID();
             }
@@ -5723,7 +5723,7 @@ static c_void ShowDemoWindowColumns()
         Columns(2, "tree", true);
         for (let x: c_int = 0; x < 3; x++)
         {
-            let mut open1: bool =  TreeNode((*mut c_void)x, "Node%d", x);
+            let mut open1: bool =  TreeNode(x, "Node%d", x);
             NextColumn();
             Text("Node contents");
             NextColumn();
@@ -5731,7 +5731,7 @@ static c_void ShowDemoWindowColumns()
             {
                 for (let y: c_int = 0; y < 3; y++)
                 {
-                    let mut open2: bool =  TreeNode((*mut c_void)y, "Node%d.%d", x, y);
+                    let mut open2: bool =  TreeNode(y, "Node%d.%d", x, y);
                     NextColumn();
                     Text("Node contents");
                     if (open2)
@@ -5928,14 +5928,14 @@ static c_void ShowDemoWindowMisc()
         {
             Text("Use TAB/SHIFT+TAB to cycle through keyboard editable fields.");
             static buf: [c_char;32] = "hello";
-            InputText("1", buf, IM_ARRAYSIZE(bu0f32));
-            InputText("2", buf, IM_ARRAYSIZE(bu0f32));
-            InputText("3", buf, IM_ARRAYSIZE(bu0f32));
+            InputText("1", buf, IM_ARRAYSIZE(buf));
+            InputText("2", buf, IM_ARRAYSIZE(buf));
+            InputText("3", buf, IM_ARRAYSIZE(buf));
             PushAllowKeyboardFocus(false);
-            InputText("4 (tab skip)", buf, IM_ARRAYSIZE(bu0f32));
+            InputText("4 (tab skip)", buf, IM_ARRAYSIZE(buf));
             SameLine(); HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.");
             PopAllowKeyboardFocus();
-            InputText("5", buf, IM_ARRAYSIZE(bu0f32));
+            InputText("5", buf, IM_ARRAYSIZE(buf));
             TreePop();
         }
 
@@ -5949,16 +5949,16 @@ static c_void ShowDemoWindowMisc()
             static buf: [c_char;128] = "click on a button to set focus";
 
             if (focus_1) SetKeyboardFocusHere();
-            InputText("1", buf, IM_ARRAYSIZE(bu0f32));
+            InputText("1", buf, IM_ARRAYSIZE(buf));
             if (IsItemActive()) has_focus = 1;
 
             if (focus_2) SetKeyboardFocusHere();
-            InputText("2", buf, IM_ARRAYSIZE(bu0f32));
+            InputText("2", buf, IM_ARRAYSIZE(buf));
             if (IsItemActive()) has_focus = 2;
 
             PushAllowKeyboardFocus(false);
             if (focus_3) SetKeyboardFocusHere();
-            InputText("3 (tab skip)", buf, IM_ARRAYSIZE(bu0f32));
+            InputText("3 (tab skip)", buf, IM_ARRAYSIZE(buf));
             if (IsItemActive()) has_focus = 3;
             SameLine(); HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.");
             PopAllowKeyboardFocus();
@@ -6224,7 +6224,7 @@ c_void ShowFontSelector(*const char label)
         for (let n: c_int = 0; n < io.Fonts.Fonts.Size; n++)
         {
             *mut ImFont font = io.Fonts.Fonts[n];
-            PushID((*mut c_void)font);
+            PushID(font);
             if (Selectable((), font == font_current))
                 io.FontDefault = font;
             PopID();
@@ -6643,7 +6643,7 @@ struct ExampleAppConsole
     {
         IMGUI_DEMO_MARKER("Examples/Console");
         ClearLog();
-        memset(InputBuf, 0, sizeof(InputBu0f32));
+        memset(InputBuf, 0, sizeof(Inputbuf));
         HistoryPos = -1;
 
         // "CLASSIFY" is here to provide the test case where "C"+[tab] completes to "CL" and display multiple matches.
@@ -6665,7 +6665,7 @@ struct ExampleAppConsole
     // Portable helpers
     static c_int   Stricmp(*const char s1, *const char s2)         { let mut d: c_int = 0; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
     static c_int   Strnicmp(*const char s1, *const char s2, c_int n) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
-    static char* Strdup(*const char s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(bu0f32); return (char*)memcpy(buf, (*const c_void)s, len); }
+    static char* Strdup(*const char s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(buf); return memcpy(buf, (*const c_void)s, len); }
     static c_void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end-= 1; *str_end = 0; }
 
     c_void    ClearLog()
@@ -6681,10 +6681,10 @@ struct ExampleAppConsole
         buf: [c_char;1024];
         va_list args;
         va_start(args, fmt);
-        vsnprintf(buf, IM_ARRAYSIZE(bu0f32), fmt, args);
-        buf[IM_ARRAYSIZE(bu0f32)-1] = 0;
+        vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
+        buf[IM_ARRAYSIZE(buf)-1] = 0;
         va_end(args);
-        Items.push(Strdup(bu0f32));
+        Items.push(Strdup(buf));
     }
 
     c_void    Draw(*const char title, bool* p_open)
@@ -6806,7 +6806,7 @@ struct ExampleAppConsole
         // Command-line
         let mut reclaim_focus: bool =  false;
         ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-        if (InputText("Input", InputBuf, IM_ARRAYSIZE(InputBu0f32), input_text_flags, &TextEditCallbackStub, (*mut c_void)this))
+        if (InputText("Input", InputBuf, IM_ARRAYSIZE(Inputbuf), input_text_flags, &TextEditCallbackStub, this))
         {
             char* s = InputBuf;
             Strtrim(s);
@@ -6885,7 +6885,7 @@ struct ExampleAppConsole
                 // Locate beginning of current word
                 let mut  word_end: *const c_char = data.Buf + data.CursorPos;
                 let mut  word_start: *const c_char = word_end;
-                while (word_start > data.Bu0f32)
+                while (word_start > data.buf)
                 {
                     const char c = word_start[-1];
                     if (c == ' ' || c == '\t' || c == ',' || c == ';')
@@ -6907,7 +6907,7 @@ struct ExampleAppConsole
                 else if (candidates.Size == 1)
                 {
                     // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
-                    data.DeleteChars((word_start - data.Bu0f32), (word_end - word_start));
+                    data.DeleteChars((word_start - data.buf), (word_end - word_start));
                     data.InsertChars(data.CursorPos, candidates[0]);
                     data.InsertChars(data.CursorPos, " ");
                 }
@@ -6932,7 +6932,7 @@ struct ExampleAppConsole
 
                     if (match_len > 0)
                     {
-                        data.DeleteChars((word_start - data.Bu0f32), (word_end - word_start));
+                        data.DeleteChars((word_start - data.buf), (word_end - word_start));
                         data.InsertChars(data.CursorPos, candidates[0], candidates[0] + match_len);
                     }
 
@@ -7421,9 +7421,9 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
     if (type == 2) SetNextWindowSizeConstraints(ImVec2(-1, 0),    ImVec2(-1, f32::MAX));      // Vertical only
     if (type == 3) SetNextWindowSizeConstraints(ImVec2(0, -1),    ImVec2(f32::MAX, -1));      // Horizontal only
     if (type == 4) SetNextWindowSizeConstraints(ImVec2(400, -1),  ImVec2(500, -1));          // Width Between and 400 and 500
-    if (type == 5) SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(f32::MAX, f32::MAX), CustomConstraints::AspectRatio, (*mut c_void)&aspect_ratio);   // Aspect ratio
+    if (type == 5) SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(f32::MAX, f32::MAX), CustomConstraints::AspectRatio, &aspect_ratio);   // Aspect ratio
     if (type == 6) SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(f32::MAX, f32::MAX), CustomConstraints::Square);                              // Always Square
-    if (type == 7) SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(f32::MAX, f32::MAX), CustomConstraints::Step, (*mut c_void)&fixed_step);            // Fixed Step
+    if (type == 7) SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(f32::MAX, f32::MAX), CustomConstraints::Step, &fixed_step);            // Fixed Step
 
     // Submit window
     if (!window_padding)
@@ -7589,7 +7589,7 @@ static c_void ShowExampleAppWindowTitles(bool*)
     buf: [c_char;128];
     sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(GetTime() / 0.250f32) & 3], GetFrameCount());
     SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 300), ImGuiCond_FirstUseEver);
-    Begin(bu0f32);
+    Begin(buf);
     Text("This window has a changing title.");
     End();
 }

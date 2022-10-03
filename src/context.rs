@@ -109,7 +109,7 @@ pub struct ImGuiContext {
     pub DrawListSharedData: ImDrawListSharedData,
 
     // double                  Time;
-    pub Time: c_double
+    pub Time: c_double,
 
     // int                     FrameCount;
     pub FrameCount: c_int,
@@ -828,7 +828,7 @@ impl ImGuiContext {
             Font: null_mut(),
             FontSize: 0f32,
             FontBaseSize: 0f32,
-            Time: 0f32,
+            Time: c_double::from(0),
             FrameCount: 0,
             FrameCountEnded: -1,
             FrameCountPlatformEnded: -1,

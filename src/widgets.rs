@@ -1094,7 +1094,7 @@ bool ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& 
         return false;
 
     // Default to using texture ID as ID. User can still push string/integer prefixes.
-    PushID((*mut c_void)user_texture_id);
+    PushID(user_texture_id);
     const let mut id: ImGuiID =  window.GetID("#image");
     PopID();
 
@@ -1303,7 +1303,7 @@ c_void ProgressBar(c_float fraction, const ImVec2& size_arg, *const char overlay
     overlay_buf: [c_char;32];
     if (!overlay)
     {
-        ImFormatString(overlay_buf, IM_ARRAYSIZE(overlay_bu0f32), "%.0f%%", fraction * 100 + 0.010f32);
+        ImFormatString(overlay_buf, IM_ARRAYSIZE(overlay_buf), "%.0f%%", fraction * 100 + 0.010f32);
         overlay = overlay_buf;
     }
 
@@ -1882,7 +1882,7 @@ let item_text: *const c_char;
 // Combo box helper allowing to pass an array of strings.
 bool Combo(*const char label, *mut c_int current_item, *const char const items[], c_int items_count, c_int height_in_items)
 {
-    let value_changed: bool = Combo(label, current_item, Items_ArrayGetter, (*mut c_void)items, items_count, height_in_items);
+    let value_changed: bool = Combo(label, current_item, Items_ArrayGetter, items, items_count, height_in_items);
     return value_changed;
 }
 
@@ -1896,7 +1896,7 @@ bool Combo(*const char label, *mut c_int current_item, *const char items_separat
         p += strlen(p) + 1;
         items_count+= 1;
     }
-    let mut value_changed: bool =  Combo(label, current_item, Items_SingleStringGetter, (*mut c_void)items_separated_by_zeros, items_count, height_in_items);
+    let mut value_changed: bool =  Combo(label, current_item, Items_SingleStringGetter, items_separated_by_zeros, items_count, height_in_items);
     return value_changed;
 }
 
@@ -2041,7 +2041,7 @@ c_void DataTypeApplyOp(ImGuiDataType data_type, c_int op, *mut c_void output, *c
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
 bool DataTypeApplyFromText(*const char buf, ImGuiDataType data_type, *mut c_void p_data, *const char format)
 {
-    while (ImCharIsBlankA(*bu0f32))
+    while (ImCharIsBlankA(*buf))
         buf+= 1;
     if (!buf[0])
         return false;
@@ -2424,7 +2424,7 @@ bool DragScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data, 
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     value_buf: [c_char;64];
-    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_bu0f32), data_type, p_data, format);
+    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
     if (g.LogEnabled)
         LogSetNextTextDecoration("{", "}");
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, null_mut(), ImVec2(0.5f32, 0.5f32));
@@ -2456,7 +2456,7 @@ bool DragScalarN(*const char label, ImGuiDataType data_type, *mut c_void p_data,
         value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
         PopID();
         PopItemWidth();
-        p_data = (*mut c_void)((*mut char)p_data + type_size);
+        p_data = ((*mut char)p_data + type_size);
     }
     PopID();
 
@@ -3012,7 +3012,7 @@ bool SliderScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     value_buf: [c_char;64];
-    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_bu0f32), data_type, p_data, format);
+    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
     if (g.LogEnabled)
         LogSetNextTextDecoration("{", "}");
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, null_mut(), ImVec2(0.5f32, 0.5f32));
@@ -3045,7 +3045,7 @@ bool SliderScalarN(*const char label, ImGuiDataType data_type, *mut c_void v, c_
         value_changed |= SliderScalar("", data_type, v, v_min, v_max, format, flags);
         PopID();
         PopItemWidth();
-        v = (*mut c_void)((*mut char)v + type_size);
+        v = ((*mut char)v + type_size);
     }
     PopID();
 
@@ -3161,7 +3161,7 @@ bool VSliderScalar(*const char label, const ImVec2& size, ImGuiDataType data_typ
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     // For the vertical slider we allow centered text to overlap the frame padding
     value_buf: [c_char;64];
-    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_bu0f32), data_type, p_data, format);
+    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
     RenderTextClipped(ImVec2(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), frame_bb.Max, value_buf, value_buf_end, null_mut(), ImVec2(0.5f32, 0f32));
     if (label_size.x > 0f32)
         RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
@@ -3362,15 +3362,15 @@ bool TempInputScalar(const ImRect& bb, ImGuiID id, *const char label, ImGuiDataT
 {
     fmt_buf: [c_char;32];
     data_buf: [c_char;32];
-    format = ImParseFormatTrimDecorations(format, fmt_buf, IM_ARRAYSIZE(fmt_bu0f32));
-    DataTypeFormatString(data_buf, IM_ARRAYSIZE(data_bu0f32), data_type, p_data, format);
-    ImStrTrimBlanks(data_bu0f32);
+    format = ImParseFormatTrimDecorations(format, fmt_buf, IM_ARRAYSIZE(fmt_buf));
+    DataTypeFormatString(data_buf, IM_ARRAYSIZE(data_buf), data_type, p_data, format);
+    ImStrTrimBlanks(data_buf);
 
     ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited;
     flags |= InputScalar_DefaultCharsFilter(data_type, format);
 
     let mut value_changed: bool =  false;
-    if (TempInputText(bb, id, label, data_buf, IM_ARRAYSIZE(data_bu0f32), flags))
+    if (TempInputText(bb, id, label, data_buf, IM_ARRAYSIZE(data_buf), flags))
     {
         // Backup old value
         size_t data_type_size = DataTypeGetInfo(data_type)->Size;
@@ -3409,7 +3409,7 @@ bool InputScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data,
         format = DataTypeGetInfo(data_type)->PrintFmt;
 
     buf: [c_char;64];
-    DataTypeFormatString(buf, IM_ARRAYSIZE(bu0f32), data_type, p_data, format);
+    DataTypeFormatString(buf, IM_ARRAYSIZE(buf), data_type, p_data, format);
 
     // Testing ActiveId as a minor optimization as filtering is not needed until active
     if (g.ActiveId == 0 && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsScientific)) == 0)
@@ -3424,7 +3424,7 @@ bool InputScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data,
         BeginGroup(); // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
         PushID(label);
         SetNextItemWidth(ImMax(1f32, CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2));
-        if (InputText("", buf, IM_ARRAYSIZE(bu0f32), flags)) // PushId(label) + "" gives us the expected ID from outside point of view
+        if (InputText("", buf, IM_ARRAYSIZE(buf), flags)) // PushId(label) + "" gives us the expected ID from outside point of view
             value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
         IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags);
 
@@ -3462,7 +3462,7 @@ bool InputScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data,
     }
     else
     {
-        if (InputText(label, buf, IM_ARRAYSIZE(bu0f32), flags))
+        if (InputText(label, buf, IM_ARRAYSIZE(buf), flags))
             value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
     }
     if (value_changed)
@@ -3491,7 +3491,7 @@ bool InputScalarN(*const char label, ImGuiDataType data_type, *mut c_void p_data
         value_changed |= InputScalar("", data_type, p_data, p_step, p_step_fast, format, flags);
         PopID();
         PopItemWidth();
-        p_data = (*mut c_void)((*mut char)p_data + type_size);
+        p_data = ((*mut char)p_data + type_size);
     }
     PopID();
 
@@ -3509,7 +3509,7 @@ bool InputScalarN(*const char label, ImGuiDataType data_type, *mut c_void p_data
 bool InputFloat(*const char label, *mut c_float v, c_float step, c_float step_fast, *const char format, ImGuiInputTextFlags flags)
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
-    return InputScalar(label, ImGuiDataType_Float, (*mut c_void)v, (*mut c_void)(step > 0f32 ? &step : null_mut()), (*mut c_void)(step_fast > 0f32 ? &step_fast : null_mut()), format, flags);
+    return InputScalar(label, ImGuiDataType_Float, v, (step > 0f32 ? &step : null_mut()), (step_fast > 0f32 ? &step_fast : null_mut()), format, flags);
 }
 
 bool InputFloat2(*const char label, c_float v[2], *const char format, ImGuiInputTextFlags flags)
@@ -3531,7 +3531,7 @@ bool InputInt(*const char label, *mut c_int v, c_int step, c_int step_fast, ImGu
 {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
     let mut  format: *const c_char = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
-    return InputScalar(label, ImGuiDataType_S32, (*mut c_void)v, (*mut c_void)(step > 0 ? &step : null_mut()), (*mut c_void)(step_fast > 0 ? &step_fast : null_mut()), format, flags);
+    return InputScalar(label, ImGuiDataType_S32, v, (step > 0 ? &step : null_mut()), (step_fast > 0 ? &step_fast : null_mut()), format, flags);
 }
 
 bool InputInt2(*const char label, c_int v[2], ImGuiInputTextFlags flags)
@@ -3552,7 +3552,7 @@ bool InputInt4(*const char label, c_int v[4], ImGuiInputTextFlags flags)
 bool InputDouble(*const char label, *mut double v, double step, double step_fast, *const char format, ImGuiInputTextFlags flags)
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
-    return InputScalar(label, ImGuiDataType_Double, (*mut c_void)v, (*mut c_void)(step > 0.0 ? &step : null_mut()), (*mut c_void)(step_fast > 0.0 ? &step_fast : null_mut()), format, flags);
+    return InputScalar(label, ImGuiDataType_Double, v, (step > 0.0 ? &step : null_mut()), (step_fast > 0.0 ? &step_fast : null_mut()), format, flags);
 }
 
 //-------------------------------------------------------------------------
@@ -3939,7 +3939,7 @@ static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
     let old_length: c_int = state.CurLenW;
     let new_length: c_int = ImTextCountCharsFromUtf8(new_buf_a, new_buf_a + new_length_a);
     g.TempBuffer.reserve_discard((new_length + 1) * sizeof);
-    *mut let new_buf: ImWchar = (*mut ImWchar)(*mut c_void)g.TempBuffer.Data;
+    *mut let new_buf: ImWchar = (*mut ImWchar)g.TempBuffer.Data;
     ImTextStrFromUtf8(new_buf, new_length + 1, new_buf_a, new_buf_a + new_length_a);
 
     let shorter_length: c_int = ImMin(old_length, new_length);
@@ -4080,7 +4080,7 @@ bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_s
 
         // Take a copy of the initial buffer value (both in original UTF-8 format and converted to wchar)
         // From the moment we focused we are ignoring the content of 'buf' (unless we are in read-only mode)
-        let buf_len: c_int = strlen(bu0f32);
+        let buf_len: c_int = strlen(buf);
         state.InitialTextA.resize(buf_len + 1);    // UTF-8. we use +1 to make sure that .Data is always pointing to at least an empty string.
         memcpy(state.InitialTextA.Data, buf, buf_len + 1);
 
@@ -4097,7 +4097,7 @@ bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_s
         state.TextA.clear();
         state.TextAIsValid = false;                // TextA is not valid yet (we will display buf until then)
         state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, buf_size, buf, null_mut(), &buf_end);
-        state.CurLenA = (buf_end - bu0f32);      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
+        state.CurLenA = (buf_end - buf);      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
 
         if (recycle_state)
         {
@@ -4172,14 +4172,14 @@ bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_s
         let mut  buf_end: *const c_char= null_mut();
         state.TextW.resize(buf_size + 1);
         state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, state.TextW.Size, buf, null_mut(), &buf_end);
-        state.CurLenA = (buf_end - bu0f32);
+        state.CurLenA = (buf_end - buf);
         state.CursorClamp();
         render_selection &= state.HasSelection();
     }
 
     // Select the buffer to render.
     let buf_display_from_state: bool = (render_cursor || render_selection || g.ActiveId == id) && !is_readonly && state && state.TextAIsValid;
-    let is_displaying_hint: bool = (hint != null_mut() && (buf_display_from_state ? state.TextA.Data : bu0f32)[0] == 0);
+    let is_displaying_hint: bool = (hint != null_mut() && (buf_display_from_state ? state.TextA.Data : buf)[0] == 0);
 
     // Password pushes a temporary font with only a fallback glyph
     if (is_password && !is_displaying_hint)
@@ -4545,7 +4545,7 @@ bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_s
 
                     // Read back what user may have modified
                     callback_buf = is_readonly ? buf : state.TextA.Data; // Pointer may have been invalidated by a resize callback
-                    // IM_ASSERT(callback_data.Buf == callback_bu0f32);         // Invalid to modify those fields
+                    // IM_ASSERT(callback_data.Buf == callback_buf);         // Invalid to modify those fields
                     // IM_ASSERT(callback_data.BufSize == state->BufCapacityA);
                     // IM_ASSERT(callback_data.Flags == flags);
                     let buf_dirty: bool = callback_data.BufDirty;
@@ -4555,7 +4555,7 @@ bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_s
                     if (buf_dirty)
                     {
                         // IM_ASSERT((flags & ImGuiInputTextFlags_ReadOnly) == 0);
-                        // IM_ASSERT(callback_data.BufTextLen == strlen(callback_data.Bu0f32)); // You need to maintain BufTextLen if you change the text!
+                        // IM_ASSERT(callback_data.BufTextLen == strlen(callback_data.buf)); // You need to maintain BufTextLen if you change the text!
                         InputTextReconcileUndoStateAfterUserCallback(state, callback_data.Buf, callback_data.BufTextLen); // FIXME: Move the rest of this block inside function and rename to InputTextReconcileStateAfterUserCallback() ?
                         if (callback_data.BufTextLen > backup_current_text_length && is_resizable)
                             state.TextW.resize(state.TextW.Size + (callback_data.BufTextLen - backup_current_text_length)); // Worse case scenario resize
@@ -4567,7 +4567,7 @@ bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_s
             }
 
             // Will copy result string if modified
-            if (!is_readonly && strcmp(state.TextA.Data, bu0f32) != 0)
+            if (!is_readonly && strcmp(state.TextA.Data, buf) != 0)
             {
                 apply_new_text = state.TextA.Data;
                 apply_new_text_length = state.CurLenA;
@@ -4882,9 +4882,9 @@ c_void DebugNodeInputTextState(*mut ImGuiInputTextState state)
                 BeginDisabled();
             buf: [c_char;64] = "";
             if (undo_rec_type != ' ' &&  != -1)
-                ImTextStrToUtf8(buf, IM_ARRAYSIZE(bu0f32), undo_state.undo_char + , undo_state.undo_char +  + );
+                ImTextStrToUtf8(buf, IM_ARRAYSIZE(buf), undo_state.undo_char + , undo_state.undo_char +  + );
             Text("%c [%02d] where %03d, insert %03d, delete %03d, char_storage %03d \"%s\"",
-                undo_rec_type, n, , , , , bu0f32);
+                undo_rec_type, n, , , , , buf);
             if (undo_rec_type == ' ')
                 EndDisabled();
         }
@@ -5053,11 +5053,11 @@ bool ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags flags)
         // RGB Hexadecimal Input
         buf: [c_char;64];
         if (alpha)
-            ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "#%02X%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255), ImClamp(i[3], 0, 255));
+            ImFormatString(buf, IM_ARRAYSIZE(buf), "#%02X%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255), ImClamp(i[3], 0, 255));
         else
-            ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "#%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
+            ImFormatString(buf, IM_ARRAYSIZE(buf), "#%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
         SetNextItemWidth(w_inputs);
-        if (InputText("##Text", buf, IM_ARRAYSIZE(bu0f32), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase))
+        if (InputText("##Text", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase))
         {
             value_changed = true;
             *mut char p = buf;
@@ -5733,20 +5733,20 @@ c_void ColorEditOptionsPopup(*const c_float col, ImGuiColorEditFlags flags)
     {
         let cr: c_int = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = (flags & ImGuiColorEditFlags_NoAlpha) ? 255 : IM_F32_TO_INT8_SAT(col[3]);
         buf: [c_char;64];
-        ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "(%.3ff, %.3ff, %.3ff, %.3f0f32)", col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
-        if (Selectable(bu0f32))
-            SetClipboardText(bu0f32);
-        ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "(%d,%d,%d,%d)", cr, cg, cb, ca);
-        if (Selectable(bu0f32))
-            SetClipboardText(bu0f32);
-        ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "#%02X%02X%02X", cr, cg, cb);
-        if (Selectable(bu0f32))
-            SetClipboardText(bu0f32);
+        ImFormatString(buf, IM_ARRAYSIZE(buf), "(%.3ff, %.3ff, %.3ff, %.3f0f32)", col[0], col[1], col[2], (flags & ImGuiColorEditFlags_NoAlpha) ? 1f32 : col[3]);
+        if (Selectable(buf))
+            SetClipboardText(buf);
+        ImFormatString(buf, IM_ARRAYSIZE(buf), "(%d,%d,%d,%d)", cr, cg, cb, ca);
+        if (Selectable(buf))
+            SetClipboardText(buf);
+        ImFormatString(buf, IM_ARRAYSIZE(buf), "#%02X%02X%02X", cr, cg, cb);
+        if (Selectable(buf))
+            SetClipboardText(buf);
         if (!(flags & ImGuiColorEditFlags_NoAlpha))
         {
-            ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "#%02X%02X%02X%02X", cr, cg, cb, ca);
-            if (Selectable(bu0f32))
-                SetClipboardText(bu0f32);
+            ImFormatString(buf, IM_ARRAYSIZE(buf), "#%02X%02X%02X%02X", cr, cg, cb, ca);
+            if (Selectable(buf))
+                SetClipboardText(buf);
         }
         EndPopup();
     }
@@ -6487,7 +6487,7 @@ c_void EndListBox()
 
 bool ListBox(*const char label, c_int* current_item, *const char const items[], c_int items_count, c_int height_items)
 {
-    let value_changed: bool = ListBox(label, current_item, Items_ArrayGetter, (*mut c_void)items, items_count, height_items);
+    let value_changed: bool = ListBox(label, current_item, Items_ArrayGetter, items, items_count, height_items);
     return value_changed;
 }
 
@@ -6686,7 +6686,7 @@ static c_float Plot_ArrayGetter(data: *mut c_void, c_int idx)
 c_void PlotLines(*const char label, *const c_float values, c_int values_count, c_int values_offset, *const char overlay_text, c_float scale_min, c_float scale_max, ImVec2 graph_size, c_int stride)
 {
     ImGuiPlotArrayGetterData data(values, stride);
-    PlotEx(ImGuiPlotType_Lines, label, &Plot_ArrayGetter, (*mut c_void)&data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
+    PlotEx(ImGuiPlotType_Lines, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
 c_void PlotLines(*const char label, c_float (*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, c_int values_offset, *const char overlay_text, c_float scale_min, c_float scale_max, ImVec2 graph_size)
@@ -6697,7 +6697,7 @@ c_void PlotLines(*const char label, c_float (*values_getter)(data: *mut c_void, 
 c_void PlotHistogram(*const char label, *const c_float values, c_int values_count, c_int values_offset, *const char overlay_text, c_float scale_min, c_float scale_max, ImVec2 graph_size, c_int stride)
 {
     ImGuiPlotArrayGetterData data(values, stride);
-    PlotEx(ImGuiPlotType_Histogram, label, &Plot_ArrayGetter, (*mut c_void)&data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
+    PlotEx(ImGuiPlotType_Histogram, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
 c_void PlotHistogram(*const char label, c_float (*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, c_int values_offset, *const char overlay_text, c_float scale_min, c_float scale_max, ImVec2 graph_size)
@@ -6881,7 +6881,7 @@ bool BeginViewportSideBar(*const char name, ImGuiViewport* viewport_p, ImGuiDir 
     // IM_ASSERT(dir != ImGuiDir_None);
 
     let mut bar_window: *mut ImGuiWindow =  FindWindowByName(name);
-    let mut viewport: *mut ImGuiViewport =  (*mut c_void)(viewport_p ? viewport_p : GetMainViewport());
+    let mut viewport: *mut ImGuiViewport =  (viewport_p ? viewport_p : GetMainViewport());
     if (bar_window == null_mut() || bar_window.BeginCount == 0)
     {
         // Calculate and set window size/position
@@ -6915,7 +6915,7 @@ bool BeginViewportSideBar(*const char name, ImGuiViewport* viewport_p, ImGuiDir 
 bool BeginMainMenuBar()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut ImGuiViewport =  (*mut c_void)GetMainViewport();
+    let mut viewport: *mut ImGuiViewport =  GetMainViewport();
 
     // Notify of viewport change so GetFrameHeight() can be accurate in case of DPI change
     SetCurrentViewport(null_mut(), viewport);

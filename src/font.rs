@@ -33,7 +33,7 @@ pub struct ImFont {
     pub ContainerAtlas: *mut ImFontAtlas,
     // 4-8   // out //            // What we has been loaded into
     pub ConfigData: *const ImFontConfig,
-    // 4-8   // in  //            // Pointer within ContainerAtlas->ConfigData
+    // 4-8   // in  //            // Pointer within Containeratlas.ConfigData
     pub ConfigDataCount: c_short,
     // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
     pub FallbackChar: ImWchar,
@@ -165,7 +165,7 @@ impl ImFont {
     }
 
     // bool              IsGlyphRangeUnused(unsigned c_int c_begin, unsigned c_int c_last);
-    pub fn IsGlyphRangeUnused(&mut self, c_being: c_uint, c_last: c_uint) {
+    pub fn IsGlyphRangeUnused(&mut self, c_being: c_uint, c_last: c_uint) -> bool {
         todo!()
     }
 }

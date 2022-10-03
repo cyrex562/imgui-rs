@@ -39,7 +39,7 @@ pub unsafe fn ImStrncpy(dst: *mut c_char, src: * c_char, count: size_t) {
 pub unsafe fn ImStrdup(src_str: * c_char) -> *mut c_char {
     // let len = strlen(str);
     // void* buf = IM_ALLOC(len + 1);
-    // return (char*)memcpy(buf, (const void*)str, len + 1);
+    // return memcpy(buf, (const void*)str, len + 1);
     libc::strdup(src_str)
 }
 
@@ -50,7 +50,7 @@ pub unsafe fn ImStrdupcpy(mut dst: *mut c_char, p_dst_size: *mut size_t, src: * 
     if dst_buf_size < src_size {
         // IM_FREE(dst);
         libc::free(dst);
-        // dst = (char*)IM_ALLOC(src_size);
+        // dst = IM_ALLOC(src_size);
         dst = libc::malloc(src_size);
         if !p_dst_size.is_null() {
             *p_dst_size = src_size;
@@ -125,7 +125,7 @@ pub unsafe fn ImStristr(mut haystack: * c_char, haystack_end: * c_char, needle: 
 }
 
 // Trim str by offsetting contents when there's leading data + writing a \0 at the trailing position. We use this in situation where the cost is negligible.
-// void ImStrTrimBlanks(char* bu0f32)
+// void ImStrTrimBlanks(char* buf)
 pub unsafe fn ImStrTrimBlanks(buf: *mut c_char) {
     let mut p = buf;
     while p[0] == ' ' || p[0] == '\t' {    // Leading blanks
@@ -138,7 +138,7 @@ pub unsafe fn ImStrTrimBlanks(buf: *mut c_char) {
     while p > p_start && (p[-1] == ' ' || p[-1] == '\t') {  // Trailing blanks
         p -= 1;
     }
-    if p_start != bu0f32 {                   // Copy memory if we had leading blanks
+    if p_start != buf {                   // Copy memory if we had leading blanks
         libc::memmove(buf, p_start, p - p_start);
     }
     buf[p - p_start] = 0;                   // Zero terminate

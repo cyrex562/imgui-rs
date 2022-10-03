@@ -305,7 +305,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
             window.DrawList.AddDrawCmd();
         }
         window.DrawList.PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, false);
-        window.DrawList.AddRect(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha, ), window.WindowRounding, 0, 3.00f32);
+        window.DrawList.AddRect(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha, ), window.WindowRounding, 0, 3.00f32, , );
         window.DrawList.PopClipRect();
     }
 
@@ -631,7 +631,7 @@ pub unsafe fn CalcWIndowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
             avail_size = ImVec2(f32::MAX, f32::MAX);
         }
         let monitor_idx: c_int = window.ViewportAllowPlatformMonitorExtend;
-        if (monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size) {
+        if (monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.len()) {
             avail_size = g.PlatformIO.Monitors[monitor_idx].WorkSize;
         }
         let mut size_auto_fit: ImVec2 = ImClamp(size_desired, size_min, ImMax(size_min, avail_size - style.DisplaySafeAreaPadding * 2.00f32));
@@ -693,7 +693,7 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
     let rounding: c_float =  window.WindowRounding;
     let border_size: c_float =  window.WindowBorderSize;
     if border_size > 0f32 && flag_clear(window.Flags, ImGuiWindowFlags_NoBackground) {
-        window.DrawList.AddRect(&window.Pos, window.Pos + window.Size, GetColorU32(ImGuiCol_Border, 0f32, ), rounding, 0, border_size)
+        window.DrawList.AddRect(&window.Pos, window.Pos + window.Size, GetColorU32(ImGuiCol_Border, 0f32, ), rounding, 0, border_size, , )
     };
 
     let border_held: c_int = window.ResizeBorderHeld.clone() as c_int;

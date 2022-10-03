@@ -658,7 +658,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             {
                 ClampWindowRect(window, visibility_rect);
             }
-            else if (window.ViewportOwned && g.PlatformIO.Monitors.Size > 0)
+            else if (window.ViewportOwned && g.PlatformIO.Monitors.len() > 0)
             {
                 // Lost windows (e.g. a monitor disconnected) will naturally moved to the fallback/dummy monitor aka the main viewport.
                 let monitor: *const ImGuiPlatformMonitor = GetViewportPlatformMonitor(window.Viewport);

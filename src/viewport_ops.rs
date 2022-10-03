@@ -341,7 +341,7 @@ static c_void UpdateViewportsNewFrame()
     }
 
     // Update fallback monitor
-    if (g.PlatformIO.Monitors.Size == 0)
+    if (g.PlatformIO.Monitors.len() == 0)
     {
         ImGuiPlatformMonitor* monitor = &g.FallbackMonitor;
         monitor->MainPos = main_viewport.Pos;
@@ -519,7 +519,7 @@ static c_void WindowSelectViewport(ImGuiWindow* window)
     window.ViewportAllowPlatformMonitorExtend = -1;
 
     // Restore main viewport if multi-viewport is not supported by the backend
-    let mut main_viewport: *mut ImGuiViewport =  (*mut c_void)GetMainViewport();
+    let mut main_viewport: *mut ImGuiViewport =  GetMainViewport();
     if (!(g.ConfigFlagsCurrFrame & ImGuiConfigFlags_ViewportsEnable))
     {
         SetWindowViewport(window, main_viewport);
@@ -793,7 +793,7 @@ c_void UpdatePlatformWindows()
         if (let mut window_for_title: *mut ImGuiWindow =  GetWindowForTitleDisplay(viewport.Window))
         {
             let mut  title_begin: *const c_char = window_for_title.Name;
-            char* title_end = (char*)FindRenderedTextEnd(title_begin);
+            char* title_end = FindRenderedTextEnd(title_begin);
             const let mut title_hash: ImGuiID =  ImHashStr(title_begin, title_end - title_begin);
             if (viewport.LastNameHash != title_hash)
             {
@@ -896,7 +896,7 @@ c_void RenderPlatformWindowsDefault(platform_render_arg: *mut c_void, renderer_r
 static c_int FindPlatformMonitorForPos(const ImVec2& pos)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.Size; monitor_n++)
+    for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.len(); monitor_n++)
     {
         const ImGuiPlatformMonitor& monitor = g.PlatformIO.Monitors[monitor_n];
         if (ImRect(monitor.MainPos, monitor.MainPos + monitor.MainSize).Contains(pos))
@@ -912,7 +912,7 @@ static c_int FindPlatformMonitorForRect(const ImRect& rect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
-    let monitor_count: c_int = g.PlatformIO.Monitors.Size;
+    let monitor_count: c_int = g.PlatformIO.Monitors.len();
     if (monitor_count <= 1)
         return monitor_count - 1;
 
@@ -922,7 +922,7 @@ static c_int FindPlatformMonitorForRect(const ImRect& rect)
     let best_monitor_n: c_int = -1;
     let best_monitor_surface: c_float =  0.001f;
 
-    for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.Size && best_monitor_surface < surface_threshold; monitor_n++)
+    for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.len() && best_monitor_surface < surface_threshold; monitor_n++)
     {
         const ImGuiPlatformMonitor& monitor = g.PlatformIO.Monitors[monitor_n];
         const let monitor_rect: ImRect =  ImRect(monitor.MainPos, monitor.MainPos + monitor.MainSize);
@@ -949,9 +949,9 @@ static c_void UpdateViewportPlatformMonitor(*mut ImGuiViewportP viewport)
 *const ImGuiPlatformMonitor GetViewportPlatformMonitor(ImGuiViewport* viewport_p)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut ImGuiViewport =  (*mut c_void)viewport_p;
+    let mut viewport: *mut ImGuiViewport =  viewport_p;
     let monitor_idx: c_int = viewport.PlatformMonitor;
-    if (monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size)
+    if (monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.len())
         return &g.PlatformIO.Monitors[monitor_idx];
     return &g.FallbackMonitor;
 }
@@ -992,4 +992,3 @@ c_void DestroyPlatformWindows()
     for (let i: c_int = 0; i < g.Viewports.len(); i++)
         DestroyPlatformWindow(g.Viewports[i]);
 }
-

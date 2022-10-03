@@ -769,7 +769,7 @@ c_void ImDrawList::AddPolyline(*const ImVec2 points, const c_int points_count, u
         let use_texture: bool = (Flags & ImDrawListFlags_AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.000010f32) && (AA_SIZE == 1f32);
 
         // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-        // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font->ContainerAtlas->Flags & ImFontAtlasFlags_NoBakedLines));
+        // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font->Containeratlas.Flags & ImFontAtlasFlags_NoBakedLines));
 
         let idx_count: c_int = use_texture ? (count * 6) : (thick_line ? count * 18 : count * 12);
         let vtx_count: c_int = use_texture ? (points_count * 2) : (thick_line ? points_count * 4 : points_count * 3);
@@ -1614,7 +1614,7 @@ c_void ImDrawList::AddText(*const ImFont font, c_float font_size, const ImVec2& 
     if (font_size == 0f32)
         font_size = _Data.FontSize;
 
-    // IM_ASSERT(font->ContainerAtlas->TexID == _CmdHeader.TextureId);  // Use high-level PushFont() or low-level ImDrawList::PushTextureId() to change font.
+    // IM_ASSERT(font->Containeratlas.TexID == _CmdHeader.TextureId);  // Use high-level PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
     ImVec4 clip_rect = _CmdHeader.ClipRect;
     if (cpu_fine_clip_rect)
@@ -2099,8 +2099,8 @@ c_void    ImFontAtlas::GetTexDataAsRGBA32(c_uchar** out_pixels, c_int* out_width
 ImFont* ImFontAtlas::AddFont(*const ImFontConfig font_cfg)
 {
     // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
-    // IM_ASSERT(font_cfg->FontData != NULL && font_cfg->FontDataSize > 0);
-    // IM_ASSERT(font_cfg->SizePixels > 0f32);
+    // IM_ASSERT(font_cfg.FontData != NULL && font_cfg.FontDataSize > 0);
+    // IM_ASSERT(font_cfg.SizePixels > 0f32);
 
     // Create new font
     if (!)
@@ -2291,7 +2291,7 @@ bool    ImFontAtlas::Build()
         AddFontDefault();
 
     // Select builder
-    // - Note that we do not reassign to atlas->FontBuilderIO, since it is likely to point to static data which
+    // - Note that we do not reassign to atlas.FontBuilderIO, since it is likely to point to static data which
     //   may mess with some hot-reloading schemes. If you need to assign to this (for dynamic selection) AND are
     //   using a hot-reloading scheme that messes up static data, store your own instance of ImFontBuilderIO somewhere
     //   and point to it instead of pointing directly to return value of the GetBuilderXXX functions.
@@ -2338,7 +2338,7 @@ struct ImFontBuildSrcData
     stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
     stbtt_packedchar*   PackedChars;        // Output glyphs
     *const ImWchar      SrcRanges;          // Ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFF0f32)
-    c_int                 DstIndex;           // Index into atlas->Fonts[] and dst_tmp_array[]
+    c_int                 DstIndex;           // Index into atlas.Fonts[] and dst_tmp_array[]
     c_int                 GlyphsHighest;      // Highest requested codepoint
     c_int                 GlyphsCount;        // Glyph count (excluding missing glyphs and glyphs already set by an earlier source font)
     ImBitVector         GlyphsSet;          // Glyph bit map (random access, 1-bit per codepoint. This will be a maximum of 8KB)
@@ -2368,7 +2368,7 @@ static c_void UnpackBitVectorToFlatIndexList(*const ImBitVector in, Vec<c_int>* 
 
 static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 {
-    // IM_ASSERT(atlas->ConfigData.Size > 0);
+    // IM_ASSERT(atlas.ConfigData.Size > 0);
 
     ImFontAtlasBuildInit(atlas);
 
@@ -2401,7 +2401,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
                 src_tmp.DstIndex = output_i;
         if (src_tmp.DstIndex == -1)
         {
-            // IM_ASSERT(src_tmp.DstIndex != -1); // cfg.DstFont not pointing within atlas->Fonts[] array?
+            // IM_ASSERT(src_tmp.DstIndex != -1); // cfg.DstFont not pointing within atlas.Fonts[] array?
             return false;
         }
         // Initialize helper structure for font loading and verify that the TTF/OTF data is correct
@@ -2490,8 +2490,8 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         src_tmp.PackRange.array_of_unicode_codepoints = src_tmp.GlyphsList.Data;
         src_tmp.PackRange.num_chars = src_tmp.GlyphsList.Size;
         src_tmp.PackRange.chardata_for_range = src_tmp.PackedChars;
-        src_tmp.PackRange.h_oversample = (c_uchar)cfg.OversampleH;
-        src_tmp.PackRange.v_oversample = (c_uchar)cfg.OversampleV;
+        src_tmp.PackRange.h_oversample =cfg.OversampleH;
+        src_tmp.PackRange.v_oversample =cfg.OversampleV;
 
         // Gather the sizes of all rectangles we will need to pack (this loop is based on stbtt_PackFontRangesGatherRects)
         let scale: c_float =  (cfg.SizePixels > 0) ? stbtt_ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels) : stbtt_ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.SizePixels);
@@ -2671,8 +2671,8 @@ c_void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, stbrp_context_opaque:
 
 c_void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, c_int x, c_int y, c_int w, c_int h, *const char in_str, char in_marker_char, c_uchar in_marker_pixel_value)
 {
-    // IM_ASSERT(x >= 0 && x + w <= atlas->TexWidth);
-    // IM_ASSERT(y >= 0 && y + h <= atlas->TexHeight);
+    // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
+    // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
     c_uchar* out_pixel =  + x + (y * );
     for (let off_y: c_int = 0; off_y < h; off_y++, out_pixel += , in_str += w)
         for (let off_x: c_int = 0; off_x < w; off_x++)
@@ -2681,8 +2681,8 @@ c_void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, c_int x, c_i
 
 c_void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, c_int x, c_int y, c_int w, c_int h, *const char in_str, char in_marker_char, c_uint in_marker_pixel_value)
 {
-    // IM_ASSERT(x >= 0 && x + w <= atlas->TexWidth);
-    // IM_ASSERT(y >= 0 && y + h <= atlas->TexHeight);
+    // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
+    // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
     c_uint* out_pixel =  + x + (y * );
     for (let off_y: c_int = 0; off_y < h; off_y++, out_pixel += , in_str += w)
         for (let off_x: c_int = 0; off_x < w; off_x++)
@@ -2805,7 +2805,7 @@ c_void ImFontAtlasBuildInit(ImFontAtlas* atlas)
 c_void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
 {
     // Render into our custom data blocks
-    // IM_ASSERT(atlas->TexPixelsAlpha8 != NULL || atlas->TexPixelsRGBA32 != NULL);
+    // IM_ASSERT(atlas.TexPixelsAlpha8 != NULL || atlas.TexPixelsRGBA32 != NULL);
     ImFontAtlasBuildRenderDefaultTexData(atlas);
     ImFontAtlasBuildRenderLinesTexData(atlas);
 
@@ -3259,7 +3259,7 @@ bool ImFont::IsGlyphRangeUnused(c_uint c_begin, c_uint c_last)
 
 c_void ImFont::SetGlyphVisible(ImWchar c, bool visible)
 {
-    if (ImFontGlyph* glyph = (ImFontGlyph*)(*mut c_void)FindGlyph(c))
+    if (ImFontGlyph* glyph = (ImFontGlyph*)FindGlyph(c))
          = visible ? 1 : 0;
 }
 

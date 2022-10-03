@@ -149,21 +149,21 @@ static bool NavScoreItem(ImGuiNavItemData* result)
     buf: [c_char;128];
     if (IsMouseHoveringRect(cand.Min, cand.Max))
     {
-        ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "dbox (%.2f,%.2f->%.40f32)\ndcen (%.2f,%.2f->%.40f32)\nd (%.2f,%.2f->%.40f32)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
+        ImFormatString(buf, IM_ARRAYSIZE(buf), "dbox (%.2f,%.2f->%.40f32)\ndcen (%.2f,%.2f->%.40f32)\nd (%.2f,%.2f->%.40f32)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window);
         draw_list.AddRect(curr.Min, curr.Max, IM_COL32(255,200,0,100));
         draw_list.AddRect(cand.Min, cand.Max, IM_COL32(255,255,0,200));
-        draw_list.AddRectFilled(cand.Max - ImVec2(4, 4), cand.Max + CalcTextSize(bu0f32) + ImVec2(4, 4), IM_COL32(40,0,0,150));
-        draw_list.AddText(cand.Max, ~0U, bu0f32);
+        draw_list.AddRectFilled(cand.Max - ImVec2(4, 4), cand.Max + CalcTextSize(buf) + ImVec2(4, 4), IM_COL32(40,0,0,150));
+        draw_list.AddText(cand.Max, ~0U, buf);
     }
     else if (g.IO.KeyCtrl) // Hold to preview score in matching quadrant. Press C to rotate.
     {
         if (quadrant == g.NavMoveDir)
         {
-            ImFormatString(buf, IM_ARRAYSIZE(bu0f32), "%.0f/%.0f", dist_box, dist_center);
+            ImFormatString(buf, IM_ARRAYSIZE(buf), "%.0f/%.0f", dist_box, dist_center);
             let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window);
             draw_list.AddRectFilled(cand.Min, cand.Max, IM_COL32(255, 0, 0, 200));
-            draw_list.AddText(cand.Min, IM_COL32(255, 255, 255, 255), bu0f32);
+            draw_list.AddText(cand.Min, IM_COL32(255, 255, 255, 255), buf);
         }
     }
 // #endif
@@ -715,7 +715,7 @@ static c_void NavUpdate()
     {
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(g.NavWindow);
         if (1) { for (let layer: c_int = 0; layer < 2; layer++) { let r: ImRect =  WindowRectRelToAbs(g.NavWindow, g.NavWindow.NavRectRel[layer]); draw_list.AddRect(r.Min, r.Max, IM_COL32(255,200,0,255)); } } // [DEBUG]
-        if (1) { u32 col = (!g.NavWindow.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); let mut p: ImVec2 =  NavCalcPreferredRefPos(); buf: [c_char;32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0f32, col); draw_list.AddText(null_mut(), 13.0f32, p + ImVec2(8,-4), col, bu0f32); }
+        if (1) { u32 col = (!g.NavWindow.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); let mut p: ImVec2 =  NavCalcPreferredRefPos(); buf: [c_char;32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0f32, col); draw_list.AddText(null_mut(), 13.0f32, p + ImVec2(8,-4), col, buf); }
     }
 // #endif
 }

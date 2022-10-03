@@ -182,7 +182,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id {
-            GetForegroundDrawList(null_mut()).AddRect(&bb.Min, &bb.Max, IM_COL32(255, 255, 0, 255), 0f32, ImDrawFlags_None, 0f32);
+            GetForegroundDrawList(null_mut()).AddRect(&bb.Min, &bb.Max, IM_COL32(255, 255, 0, 255), 0f32, ImDrawFlags_None, 0f32, , );
         }
         if g.DebugItemPickerBreakId == id {
             IM_DEBUG_BREAK();

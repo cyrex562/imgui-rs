@@ -12,7 +12,7 @@
 
 // Win32 clipboard implementation
 // We use g.ClipboardHandlerData for temporary storage to ensure it is freed on Shutdown()
-static *const char GetClipboardTextFn_DefaultImpl(*mut c_void)
+static *const char GetClipboardTextFn_DefaultImpl
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.ClipboardHandlerData.clear();
@@ -75,7 +75,7 @@ static c_void SetClipboardTextFn_DefaultImpl(*mut c_void, *const char text)
     }
 }
 
-static *const char GetClipboardTextFn_DefaultImpl(*mut c_void)
+static *const char GetClipboardTextFn_DefaultImpl
 {
     if (!main_clipboard)
         PasteboardCreate(kPasteboardClipboard, &main_clipboard);
@@ -111,7 +111,7 @@ static *const char GetClipboardTextFn_DefaultImpl(*mut c_void)
 // #else
 
 // Local Dear ImGui-only clipboard implementation, if user hasn't defined better clipboard handlers.
-static *const char GetClipboardTextFn_DefaultImpl(*mut c_void)
+static *const char GetClipboardTextFn_DefaultImpl
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.ClipboardHandlerData.empty() ? null_mut() : g.ClipboardHandlerData.begin();

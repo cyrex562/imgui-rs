@@ -92,7 +92,7 @@ impl ImGuiTextFilter {
         if width != 0f32 {
             SetNextItemWidth(width);
         }
-        let value_changed = InputText::new(label, InputBuf, IM_ARRAYSIZE(InputBu0f32));
+        let value_changed = InputText::new(label, InputBuf, IM_ARRAYSIZE(Inputbuf));
         if value_changed {
             self.Build();
         }

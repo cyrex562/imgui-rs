@@ -10,8 +10,8 @@ c_void SetCurrentFont(ImFont* font)
     g.FontSize = g.CurrentWindow ? g.Currentwindow.CalcFontSize() : 0f32;
 
     ImFontAtlas* atlas = g.Font.ContainerAtlas;
-    g.DrawListSharedData.TexUvWhitePixel = atlas->TexUvWhitePixel;
-    g.DrawListSharedData.TexUvLines = atlas->TexUvLines;
+    g.DrawListSharedData.TexUvWhitePixel = atlas.TexUvWhitePixel;
+    g.DrawListSharedData.TexUvLines = atlas.TexUvLines;
     g.DrawListSharedData.Font = g.Font;
     g.DrawListSharedData.FontSize = g.FontSize;
 }

@@ -79,7 +79,7 @@ static *mut c_void DockSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHand
 {
     if (strcmp(name, "Data") != 0)
         return null_mut();
-    return (*mut c_void)1;
+    return 1;
 }
 
 static c_void DockSettingsHandler_ReadLine(ImGuiContext* ctx, ImGuiSettingsHandler*, *mut c_void, *const char line)
@@ -144,7 +144,7 @@ static c_void DockSettingsHandler_DockNodeToSettings(ImGuiDockContext* dc, ImGui
         DockSettingsHandler_DockNodeToSettings(dc, node.ChildNodes[1], depth + 1);
 }
 
-static c_void DockSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* bu0f32)
+static c_void DockSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 {
     ImGuiContext& g = *ctx;
     ImGuiDockContext* dc = &ctx->DockContext;
@@ -221,4 +221,3 @@ static c_void DockSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandl
     }
     buf->appendf("\n");
 }
-

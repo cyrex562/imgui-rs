@@ -24,7 +24,7 @@ use crate::type_defs::{ImTextureID, ImWchar};
 // - If you pass a 'glyph_ranges' array to AddFont*** functions, you need to make sure that your array persist up until the
 //   atlas is build (when calling GetTexData*** or Build()). We only copy the pointer, not the data.
 // - Important: By default, AddFontFromMemoryTTF() takes ownership of the data. Even though we are not writing to it, we will free the pointer on destruction.
-//   You can set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed,
+//   You can set font_cfg.FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed,
 // - Even though many functions are suffixed with "TTF", OTF data is supported just as well.
 // - This is an old API and it is currently awkward for those and and various other reasons! We will address them in the future!
 #[derive(Default, Debug, Clone)]
@@ -109,7 +109,7 @@ impl ImFontAtlas {
     }
 
 
-    // ImFont*           AddFontFromMemoryTTF(void* font_data, c_int font_size, c_float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
+    // ImFont*           AddFontFromMemoryTTF(void* font_data, c_int font_size, c_float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg.FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
     pub fn AddFontFromMemoryTTF(&mut self, font_data: *mut c_void, font_size: c_int, size_pixels: c_float, font_cfg: *const ImFontConfig, glyph_ranges: *const ImWchar) -> *mut ImFont {
         todo!()
     }
@@ -238,7 +238,7 @@ impl ImFontAtlas {
 
     // You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
     // - After calling Build(), you can query the rectangle position and render your pixels.
-    // - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
+    // - If you render colored output, set 'atlas.TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
     // - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
     //   so you can render e.g. custom colorful icons and use them as regular glyphs.
     // - Read docs/FONTS.md for more details about using colorful icons.

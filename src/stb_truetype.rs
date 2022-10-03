@@ -3378,7 +3378,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
             k =  STBTT_fabs(k)*255 + 0.5f32;
             m =  k;
             if (m > 255) m = 255;
-            result.pixels[j*result.stride + i] = (c_uchar) m;
+            result.pixels[j*result.stride + i] = m;
          }
       }
       // advance all the edges
@@ -4036,35 +4036,35 @@ static c_void stbtt__h_prefilter(c_uchar *pixels, c_int w, c_int h, c_int stride
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (c_uchar) (total / 2);
+               pixels[i] = (total / 2);
             }
             break;
          case 3:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (c_uchar) (total / 3);
+               pixels[i] = (total / 3);
             }
             break;
          case 4:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (c_uchar) (total / 4);
+               pixels[i] = (total / 4);
             }
             break;
          case 5:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (c_uchar) (total / 5);
+               pixels[i] = (total / 5);
             }
             break;
          default:
             for (i=0; i <= safe_w; ++i) {
                total += pixels[i] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i];
-               pixels[i] = (c_uchar) (total / kernel_width);
+               pixels[i] = (total / kernel_width);
             }
             break;
       }
@@ -4072,7 +4072,7 @@ static c_void stbtt__h_prefilter(c_uchar *pixels, c_int w, c_int h, c_int stride
       for (; i < w; ++i) {
          STBTT_assert(pixels[i] == 0);
          total -= buffer[i & STBTT__OVER_MASK];
-         pixels[i] = (c_uchar) (total / kernel_width);
+         pixels[i] = (total / kernel_width);
       }
 
       pixels += stride_in_bytes;
@@ -4098,35 +4098,35 @@ static c_void stbtt__v_prefilter(c_uchar *pixels, c_int w, c_int h, c_int stride
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (c_uchar) (total / 2);
+               pixels[i*stride_in_bytes] = (total / 2);
             }
             break;
          case 3:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (c_uchar) (total / 3);
+               pixels[i*stride_in_bytes] = (total / 3);
             }
             break;
          case 4:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (c_uchar) (total / 4);
+               pixels[i*stride_in_bytes] = (total / 4);
             }
             break;
          case 5:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (c_uchar) (total / 5);
+               pixels[i*stride_in_bytes] = (total / 5);
             }
             break;
          default:
             for (i=0; i <= safe_h; ++i) {
                total += pixels[i*stride_in_bytes] - buffer[i & STBTT__OVER_MASK];
                buffer[(i+kernel_width) & STBTT__OVER_MASK] = pixels[i*stride_in_bytes];
-               pixels[i*stride_in_bytes] = (c_uchar) (total / kernel_width);
+               pixels[i*stride_in_bytes] = (total / kernel_width);
             }
             break;
       }
@@ -4134,7 +4134,7 @@ static c_void stbtt__v_prefilter(c_uchar *pixels, c_int w, c_int h, c_int stride
       for (; i < h; ++i) {
          STBTT_assert(pixels[i*stride_in_bytes] == 0);
          total -= buffer[i & STBTT__OVER_MASK];
-         pixels[i*stride_in_bytes] = (c_uchar) (total / kernel_width);
+         pixels[i*stride_in_bytes] = (total / kernel_width);
       }
 
       pixels += 1;
@@ -4163,8 +4163,8 @@ STBTT_DEF c_int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const s
    for (i=0; i < num_ranges; ++i) {
       let fh: c_float =  ranges[i].font_size;
       let scale: c_float =  fh > 0 ? stbtt_ScaleForPixelHeight(info, fh) : stbtt_ScaleForMappingEmToPixels(info, -fh);
-      ranges[i].h_oversample = (c_uchar) spc.h_oversample;
-      ranges[i].v_oversample = (c_uchar) spc.v_oversample;
+      ranges[i].h_oversample = spc.h_oversample;
+      ranges[i].v_oversample = spc.v_oversample;
       for (j=0; j < ranges[i].num_chars; ++j) {
          c_int x0,y0,x1,y1;
          let codepoint: c_int = ranges[i].array_of_unicode_codepoints == null_mut() ? ranges[i].first_unicode_codepoint_in_range + j : ranges[i].array_of_unicode_codepoints[j];
@@ -4756,7 +4756,7 @@ STBTT_DEF c_uchar * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, c_float scale,
                val = 0;
             else if (val > 255)
                val = 255;
-            data[(y-iy0)*w+(x-ix0)] = (c_uchar) val;
+            data[(y-iy0)*w+(x-ix0)] = val;
          }
       }
       STBTT_free(precompute, info.userdata);
@@ -4878,7 +4878,7 @@ static c_int stbtt__matchpair(stbtt_uint8 *fc, stbtt_uint32 nm, stbtt_uint8 *nam
                         return 1;
                   } else if (matchlen < nlen && name[matchlen] == ' ') {
                      ++matchlen;
-                     if (stbtt_CompareUTF8toUTF16_bigendian_internal((char*) (name+matchlen), nlen-matchlen, (char*)(fc+stringOffset+of0f32),slen))
+                     if (stbtt_CompareUTF8toUTF16_bigendian_internal( (name+matchlen), nlen-matchlen, (fc+stringOffset+of0f32),slen))
                         return 1;
                   }
                } else {

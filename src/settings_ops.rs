@@ -133,7 +133,7 @@ c_void ClearIniSettings()
 c_void LoadIniSettingsFromDisk(*const char ini_filename)
 {
     size_t file_data_size = 0;
-    char* file_data = (char*)ImFileLoadToMemory(ini_filename, "rb", &file_data_size);
+    char* file_data = ImFileLoadToMemory(ini_filename, "rb", &file_data_size);
     if (!file_data)
         return;
     if (file_data_size > 0)
@@ -186,7 +186,7 @@ c_void LoadIniSettingsFromMemory(*const char ini_data, size_t ini_size)
             line_end[-1] = 0;
             let mut  name_end: *const c_char = line_end - 1;
             let mut  type_start: *const c_char = line + 1;
-            char* type_end = (char*)(*mut c_void)ImStrchrRange(type_start, name_end, ']');
+            char* type_end = ImStrchrRange(type_start, name_end, ']');
             let mut  name_start: *const c_char = type_end ? ImStrchrRange(type_end + 1, name_end, '[') : null_mut();
             if (!type_end || !name_start)
                 continue;
@@ -260,7 +260,7 @@ static *mut c_void WindowSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHa
     *settings = ImGuiWindowSettings(); // Clear existing if recycling previous entry
     settings.ID = id;
     settings.WantApply = true;
-    return (*mut c_void)settings;
+    return settings;
 }
 
 static c_void WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, entry: *mut c_void, *const char line)
@@ -292,7 +292,7 @@ static c_void WindowSettingsHandler_ApplyAll(ImGuiContext* ctx, ImGuiSettingsHan
         }
 }
 
-static c_void WindowSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* bu0f32)
+static c_void WindowSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 {
     // Gather data from windows that were active during this session
     // (if a window wasn't opened in this session we preserve its settings)

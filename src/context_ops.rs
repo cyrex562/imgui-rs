@@ -7,6 +7,7 @@ use crate::context_hook::{ImGuiContextHook, ImGuiContextHookType, ImGuiContextHo
 use crate::font_atlas::ImFontAtlas;
 use crate::imgui::GImGui;
 use crate::platform_io::ImGuiPlatformIO;
+use crate::state_ops::{Initialize, Shutdown};
 use crate::type_defs::ImGuiID;
 
 // Internal state access - if you want to share Dear ImGui state between modules (e.g. DLL) or allocate it yourself
@@ -45,12 +46,12 @@ pub unsafe fn CreateContext(shared_font_atlas: *mut ImFontAtlas) -> *mut ImGuiCo
 pub unsafe fn DestroyContext(mut ctx: *mut ImGuiContext)
 {
     let mut prev_ctx = GetCurrentContext();
-    if (ctx == null_mut()) { //-V1051
+    if ctx == null_mut() { //-V1051
         ctx = prev_ctx;
     }
     SetCurrentContext(ctx);
     Shutdown();
-    SetCurrentContext(if (prev_ctx != ctx) { prev_ctx } else {null_mut()});
+    SetCurrentContext(if prev_ctx != ctx { prev_ctx } else {null_mut()});
     IM_DELETE(ctx);
 }
 

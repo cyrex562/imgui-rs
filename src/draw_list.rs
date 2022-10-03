@@ -110,7 +110,7 @@ impl ImDrawList {
     pub fn AddLine(&mut self, p1: &ImVec2, p2: &ImVec2, col: u32, thicknetss: c_float) {}
 
     // void  AddRect(const ImVec2& p_min, const ImVec2& p_max, u32 col, c_float rounding = 0f32, ImDrawFlags flags = 0, c_float thickness = 1f32);   // a: upper-left, b: lower-right (== upper-left + size)
-    pub fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float, flags: ImDrawFlags, thickness: c_float) {}
+    pub fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float, flags: ImDrawFlags, thickness: f32) {}
 
 
     // void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, u32 col, c_float rounding = 0f32, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)

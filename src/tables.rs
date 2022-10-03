@@ -634,7 +634,7 @@ c_void TableBeginApplyRequests(*mut ImGuiTable table)
                 table.Columns[table.DisplayOrderToIndex[order_n]].DisplayOrder -= (ImGuiTableColumnIdx)reorder_dir;
             // IM_ASSERT(dst_column.DisplayOrder == dst_order - reorder_dir);
 
-            // Display order is stored in both columns->IndexDisplayOrder and table.DisplayOrder[],
+            // Display order is stored in both columns.IndexDisplayOrder and table.DisplayOrder[],
             // rebuild the later from the former.
             for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
                 table.DisplayOrderToIndex[table.Columns[column_n].DisplayOrder] = (ImGuiTableColumnIdx)column_n;
@@ -3229,7 +3229,7 @@ static c_void TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSetting
     }
 }
 
-static c_void TableSettingsHandler_WriteAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut ImGuiTextBuffer bu0f32)
+static c_void TableSettingsHandler_WriteAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut ImGuiTextBuffer buf)
 {
     ImGuiContext& g = *ctx;
     for (*mut ImGuiTableSettings settings = g.SettingsTables.begin(); settings != null_mut(); settings = g.SettingsTables.next_chunk(settings))
@@ -3366,11 +3366,11 @@ c_void DebugNodeTable(*mut ImGuiTable table)
 {
     buf: [c_char;512];
     *mut char p = buf;
-    let mut  buf_end: *const c_char = buf + IM_ARRAYSIZE(bu0f32);
+    let mut  buf_end: *const c_char = buf + IM_ARRAYSIZE(buf);
     let is_active: bool = (table.LastFrameActive >= GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
     ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.ID, table.ColumnsCount, table.Outerwindow.Name, is_active ? "" : " *Inactive*");
     if (!is_active) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
-    let mut open: bool =  TreeNode(table, "%s", bu0f32);
+    let mut open: bool =  TreeNode(table, "%s", buf);
     if (!is_active) { PopStyleColor(); }
     if (IsItemHovered())
         GetForegroundDrawList()->AddRect(table.OuterRect.Min, table.OuterRect.Max, IM_COL32(255, 255, 0, 255));
@@ -3395,7 +3395,7 @@ c_void DebugNodeTable(*mut ImGuiTable table)
     {
         *mut ImGuiTableColumn column = &table.Columns[n];
         let mut  name: *const c_char = TableGetColumnName(table, n);
-        ImFormatString(buf, IM_ARRAYSIZE(bu0f32),
+        ImFormatString(buf, IM_ARRAYSIZE(buf),
             "Column %d order %d '%s': offset %+.2f to %+.2f%s\n"
             "Enabled: %d, VisibleX/Y: %d/%d, RequestOutput: %d, SkipItems: %d, DrawChannels: %d,%d\n"
             "WidthGiven: %.1f, Request/Auto: %.1f/%.1f, StretchWeight: %.3f (%.1f%%)\n"
@@ -3412,7 +3412,7 @@ c_void DebugNodeTable(*mut ImGuiTable table)
             (column.Flags & ImGuiTableColumnFlags_WidthFixed) ? "WidthFixed " : "",
             (column.Flags & ImGuiTableColumnFlags_NoResize) ? "NoResize " : "");
         Bullet();
-        Selectable(bu0f32);
+        Selectable(buf);
         if (IsItemHovered())
         {
             let mut r: ImRect = ImRect::new(column.MinX, table.OuterRect.Min.y, column.MaxX, table.OuterRect.Max.y);
@@ -3428,7 +3428,7 @@ c_void DebugNodeTable(*mut ImGuiTable table)
 
 c_void DebugNodeTableSettings(*mut ImGuiTableSettings settings)
 {
-    if (!TreeNode((*mut c_void)settings.ID, "Settings 0x%08X (%d columns)", settings.ID, settings.ColumnsCount))
+    if (!TreeNode(settings.ID, "Settings 0x%08X (%d columns)", settings.ID, settings.ColumnsCount))
         return;
     BulletText("SaveFlags: 0x%08X", settings.SaveFlags);
     BulletText("ColumnsCount: %d (max %d)", settings.ColumnsCount, settings.ColumnsCountMax);
@@ -3509,7 +3509,7 @@ static c_float GetDraggedColumnOffset(*mut ImGuiOldColumns columns, c_int column
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
     // IM_ASSERT(column_index > 0); // We are not supposed to drag column 0.
-    // IM_ASSERT(g.ActiveId == columns->ID + ImGuiID(column_index));
+    // IM_ASSERT(g.ActiveId == columns.ID + ImGuiID(column_index));
 
     let x: c_float =  g.IO.MousePos.x - g.ActiveIdClickOffset.x + COLUMNS_HIT_RECT_HALF_WIDTH - window.Pos.x;
     x = ImMax(x, GetColumnOffset(column_index - 1) + g.Style.ColumnsMinSpacing);
@@ -3528,7 +3528,7 @@ c_float GetColumnOffset(c_int column_index)
 
     if (column_index < 0)
         column_index = ;
-    // IM_ASSERT(column_index < columns->Columns.Size);
+    // IM_ASSERT(column_index < columns.Columns.Size);
 
     let t: c_float =  [column_index].OffsetNorm;
     let x_offset: c_float =  ImLerp(, , t);
@@ -3570,7 +3570,7 @@ c_void SetColumnOffset(c_int column_index, c_float offset)
 
     if (column_index < 0)
         column_index = ;
-    // IM_ASSERT(column_index < columns->Columns.Size);
+    // IM_ASSERT(column_index < columns.Columns.Size);
 
     let preserve_width: bool = !( & ImGuiOldColumnFlags_NoPreserveWidths) && (column_index <  - 1);
     let width: c_float =  preserve_width ? GetColumnWidthEx(columns, column_index, ) : 0f32;
@@ -3668,7 +3668,7 @@ c_void BeginColumns(*const char str_id, c_int columns_count, ImGuiOldColumnFlags
     // Acquire storage for the columns set
     let mut id: ImGuiID =  GetColumnsID(str_id, columns_count);
     *mut ImGuiOldColumns columns = FindOrCreateColumns(window, id);
-    // IM_ASSERT(columns->ID == id);
+    // IM_ASSERT(columns.ID == id);
      = 0;
      = columns_count;
      = flags;
@@ -3746,7 +3746,7 @@ c_void NextColumn()
     if ( == 1)
     {
         window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);
-        // IM_ASSERT(columns->Current == 0);
+        // IM_ASSERT(columns.Current == 0);
         return;
     }
 

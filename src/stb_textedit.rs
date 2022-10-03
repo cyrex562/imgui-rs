@@ -1336,7 +1336,7 @@ static c_void stb_textedit_clear_state(STB_TexteditState *state, c_int is_single
    state.preferred_x = 0;
    state.cursor_at_end_of_line = 0;
    state.initialized = 1;
-   state.single_line = (c_uchar) is_single_line;
+   state.single_line = is_single_line;
    state.insert_mode = 0;
    state.row_count_per_page = 0;
 }

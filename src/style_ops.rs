@@ -17,30 +17,42 @@ pub fn GetStyle() -> &mut ImGuiStyle {
 
 
 // u32 GetColorU32(ImGuiCol idx, c_float alpha_mul)
-pub fn GetColorU32(idx: ImGuiCol, alpha_mul: (), scrollbar: _) -> u32 {
-    let style = GimGui.Style;
+pub unsafe fn GetColorU32(idx: ImGuiCol, alpha_mul: f32) -> u32 {
+    let g = GImGui;
+    let style = &mut g.Style;
     let mut c = style.Colors[idx];
     c.w *= style.Alpha * alpha_mul;
     return ColorConvertFloat4ToU32(c);
 }
 
 // u32 GetColorU32(const ImVec4& col)
-pub fn GetColorU32FromImVec4(col: &ImVec4) -> u32 {
-    let style = GimGui.Style;
+pub unsafe fn GetColorU32FromImVec4(col: &ImVec4) -> u32 {
+    let g = GImGui;
+    let style = &mut g.Style;
     let mut c = col.clone();
     c.w *= style.Alpha;
     return ColorConvertFloat4ToU32(&c);
 }
 
 // const ImVec4& GetStyleColorVec4(ImGuiCol idx)
-pub fn GetStyleColorVec4(idx: ImGuiCol) -> &ImVec4 {
-    let style = GimGui.Style;
+pub unsafe fn GetStyleColorVec4(idx: ImGuiCol) -> &ImVec4 {
+    let g = GImGui;
+    let style = &mut g.Style;
     return style.Colors[idx];
 }
 
+pub unsafe fn GetStyleColorU32(idx: ImGuiCol) -> u32 {
+    let g = GImGui;
+    let style = &mut g.Style;
+    let col = style.Colors[idx];
+    GetColorU32FromImVec4(col)
+}
+
+
 // u32 GetColorU32(u32 col)
-pub fn GetColorU32FromU32(col: u32) -> u32 {
-    let style = GimGui.Style;
+pub unsafe fn GetColorU32FromU32(col: u32) -> u32 {
+    let g = GImGui;
+    let style = &mut g.Style;
     if style.Alpha >= 1f32 {
         return col;
     }
@@ -51,7 +63,7 @@ pub fn GetColorU32FromU32(col: u32) -> u32 {
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
 // c_void PushStyleColor(ImGuiCol idx, u32 col)
-pub fn PushStyleColor(idx: ImGuiCol, col: u32) {
+pub unsafe fn PushStyleColor(idx: ImGuiCol, col: u32) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut backup: ImGuiColorMod = ImGuiColorMod::default();
     backup.Col = idx;
@@ -61,7 +73,7 @@ pub fn PushStyleColor(idx: ImGuiCol, col: u32) {
 }
 
 // c_void PushStyleColor(ImGuiCol idx, const ImVec4& col)
-pub fn PushStyleColor2(idx: ImGuiCol, col: &ImVec4) {
+pub unsafe fn PushStyleColor2(idx: ImGuiCol, col: &ImVec4) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut backup: ImGuiColorMod = ImGuiColorMod::default();
     backup.Col = idx;
@@ -71,7 +83,7 @@ pub fn PushStyleColor2(idx: ImGuiCol, col: &ImVec4) {
 }
 
 // c_void PopStyleColor(c_int count)
-pub fn PopStyleColor(mut count: c_int) {
+pub unsafe fn PopStyleColor(mut count: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.ColorStack.Size < count {
 // IM_ASSERT_USER_ERROR(g.ColorStack.Size > count, "Calling PopStyleColor() too many times: stack underflow.");
@@ -88,8 +100,7 @@ pub fn PopStyleColor(mut count: c_int) {
 
 //noinspection ALL
 // *const char GetStyleColorName(ImGuiCol idx)
-pub unsafe fn GetStyleColorName(idx: ImGuiCol) -> *const c_char
-{
+pub unsafe fn GetStyleColorName(idx: ImGuiCol) -> *const c_char {
     // Create switch-case from enum with regexp: ImGuiCol_{.*}, --> case ImGuiCol_\1: return "\1";
     return match idx {
         ImGuiCol_Text => CString::new("Text").unwrap().as_ptr(),
