@@ -1,4 +1,3 @@
-
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int};
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
@@ -18,7 +17,9 @@ use crate::utils::flag_set;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
-use crate::state_ops::End;
+use crate::state_ops::{Begin, End};
+use crate::style_var::{ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_ChildRounding, ImGuiStyleVar_WindowPadding};
+use crate::window_ops::GetCurrentWindow;
 
 // bool BeginChildEx(*const char name, ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags flags)
 pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {

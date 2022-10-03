@@ -2089,7 +2089,7 @@ static c_void ShowDemoWindowWidgets()
         static i32  s32_v = -1;
         static u32  u32_v = -1;
         static ImS64  s64_v = -1;
-        static u64  u64_v = (u64)-1;
+        static u64  u64_v = -1;
         static c_float  f32_v = 0.123f;
         static double f64_v = 90000.01234567890123456789;
 

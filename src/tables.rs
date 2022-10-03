@@ -787,8 +787,8 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
         else
             table.LeftMostEnabledColumn = (ImGuiTableColumnIdx)column_n;
         column.IndexWithinEnabledSet = table.ColumnsEnabledCount+= 1;
-        table.EnabledMaskByIndex |= (u64)1 << column_n;
-        table.EnabledMaskByDisplayOrder |= (u64)1 << column.DisplayOrder;
+        table.EnabledMaskByIndex |= 1 << column_n;
+        table.EnabledMaskByDisplayOrder |= 1 << column.DisplayOrder;
         prev_visible_column_idx = column_n;
         // IM_ASSERT(column.IndexWithinEnabledSet <= column.DisplayOrder);
 
@@ -836,7 +836,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
     table.LeftMostStretchedColumn = table.RightMostStretchedColumn = -1;
     for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
     {
-        if (!(table.EnabledMaskByIndex & ((u64)1 << column_n)))
+        if (!(table.EnabledMaskByIndex & (1 << column_n)))
             continue;
         *mut ImGuiTableColumn column = &table.Columns[column_n];
 
@@ -852,7 +852,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
             // Latch initial size for fixed columns and update it constantly for auto-resizing column (unless clipped!)
             if (column.AutoFitQueue != 0x00)
                 column.WidthRequest = width_auto;
-            else if ((column.Flags & ImGuiTableColumnFlags_WidthFixed) && !column_is_resizable && (table.RequestOutputMaskByIndex & ((u64)1 << column_n)))
+            else if ((column.Flags & ImGuiTableColumnFlags_WidthFixed) && !column_is_resizable && (table.RequestOutputMaskByIndex & (1 << column_n)))
                 column.WidthRequest = width_auto;
 
             // FIXME-TABLE: Increase minimum size during init frame to avoid biasing auto-fitting widgets
@@ -899,7 +899,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
     table.ColumnsGivenWidth = width_spacings + (table.CellPaddingX * 2.00f32) * table.ColumnsEnabledCount;
     for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
     {
-        if (!(table.EnabledMaskByIndex & ((u64)1 << column_n)))
+        if (!(table.EnabledMaskByIndex & (1 << column_n)))
             continue;
         *mut ImGuiTableColumn column = &table.Columns[column_n];
 
@@ -926,7 +926,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
     if (width_remaining_for_stretched_columns >= 1f32 && !(table.Flags & ImGuiTableFlags_PreciseWidths))
         for (let order_n: c_int = table.ColumnsCount - 1; stretch_sum_weights > 0f32 && width_remaining_for_stretched_columns >= 1f32 && order_n >= 0; order_n--)
         {
-            if (!(table.EnabledMaskByDisplayOrder & ((u64)1 << order_n)))
+            if (!(table.EnabledMaskByDisplayOrder & (1 << order_n)))
                 continue;
             *mut ImGuiTableColumn column = &table.Columns[table.DisplayOrderToIndex[order_n]];
             if (!(column.Flags & ImGuiTableColumnFlags_WidthStretch))
@@ -967,7 +967,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
         // Clear status flags
         column.Flags &= ~ImGuiTableColumnFlags_StatusMask_;
 
-        if ((table.EnabledMaskByDisplayOrder & ((u64)1 << order_n)) == 0)
+        if ((table.EnabledMaskByDisplayOrder & (1 << order_n)) == 0)
         {
             // Hidden column: clear a few fields and we are done with it for the remainder of the function.
             // We set a zero-width clip rect but set Min.y/Max.y properly to not interfere with the clipper.
@@ -1020,12 +1020,12 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
         column.IsVisibleY = true; // (column.ClipRect.Max.y > column.ClipRect.Min.y);
         let is_visible: bool = column.IsVisibleX; //&& column.IsVisibleY;
         if (is_visible)
-            table.VisibleMaskByIndex |= ((u64)1 << column_n);
+            table.VisibleMaskByIndex |= (1 << column_n);
 
         // Mark column as requesting output from user. Note that fixed + non-resizable sets are auto-fitting at all times and therefore always request output.
         column.IsRequestOutput = is_visible || column.AutoFitQueue != 0 || column.CannotSkipItemsQueue != 0;
         if (column.IsRequestOutput)
-            table.RequestOutputMaskByIndex |= ((u64)1 << column_n);
+            table.RequestOutputMaskByIndex |= (1 << column_n);
 
         // Mark column as SkipItems (ignoring all items/layout)
         column.IsSkipItems = !column.IsEnabled || table.HostSkipItems;
@@ -1145,7 +1145,7 @@ c_void TableUpdateBorders(*mut ImGuiTable table)
 
     for (let order_n: c_int = 0; order_n < table.ColumnsCount; order_n++)
     {
-        if (!(table.EnabledMaskByDisplayOrder & ((u64)1 << order_n)))
+        if (!(table.EnabledMaskByDisplayOrder & (1 << order_n)))
             continue;
 
         let column_n: c_int = table.DisplayOrderToIndex[order_n];
@@ -1281,7 +1281,7 @@ c_void    EndTable()
     let auto_fit_width_for_stretched: c_float =  0f32;
     let auto_fit_width_for_stretched_min: c_float =  0f32;
     for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
-        if (table.EnabledMaskByIndex & ((u64)1 << column_n))
+        if (table.EnabledMaskByIndex & (1 << column_n))
         {
             *mut ImGuiTableColumn column = &table.Columns[column_n];
             let column_width_request: c_float =  ((column.Flags & ImGuiTableColumnFlags_WidthFixed) && !(column.Flags & ImGuiTableColumnFlags_NoResize)) ? column.WidthRequest : TableGetColumnWidthAuto(table, column);
@@ -1609,7 +1609,7 @@ c_void TableSetBgColor(ImGuiTableBgTarget target, u32 color, c_int column_n)
             return;
         if (column_n == -1)
             column_n = table.CurrentColumn;
-        if ((table.VisibleMaskByIndex & ((u64)1 << column_n)) == 0)
+        if ((table.VisibleMaskByIndex & (1 << column_n)) == 0)
             return;
         if (table.RowCellDataCurrent < 0 || table.RowCellData[table.RowCellDataCurrent].Column != column_n)
             table.RowCellDataCurrent+= 1;
@@ -1749,7 +1749,7 @@ bool TableSetColumnIndex(c_int column_n)
 
     // Return whether the column is visible. User may choose to skip submitting items based on this return value,
     // however they shouldn't skip submitting for columns that may have the tallest contribution to row height.
-    return (table.RequestOutputMaskByIndex & ((u64)1 << column_n)) != 0;
+    return (table.RequestOutputMaskByIndex & (1 << column_n)) != 0;
 }
 
 // [Public] Append into the next column, wrap and create a new row when already on last column
@@ -1775,7 +1775,7 @@ bool TableNextColumn()
     // Return whether the column is visible. User may choose to skip submitting items based on this return value,
     // however they shouldn't skip submitting for columns that may have the tallest contribution to row height.
     let column_n: c_int = table.CurrentColumn;
-    return (table.RequestOutputMaskByIndex & ((u64)1 << column_n)) != 0;
+    return (table.RequestOutputMaskByIndex & (1 << column_n)) != 0;
 }
 
 
@@ -2179,7 +2179,7 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
     // 1. Scan channels and take note of those which can be merged
     for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
     {
-        if ((table.VisibleMaskByIndex & ((u64)1 << column_n)) == 0)
+        if ((table.VisibleMaskByIndex & (1 << column_n)) == 0)
             continue;
         *mut ImGuiTableColumn column = &table.Columns[column_n];
 
@@ -2343,7 +2343,7 @@ c_void TableDrawBorders(*mut ImGuiTable table)
     {
         for (let order_n: c_int = 0; order_n < table.ColumnsCount; order_n++)
         {
-            if (!(table.EnabledMaskByDisplayOrder & ((u64)1 << order_n)))
+            if (!(table.EnabledMaskByDisplayOrder & (1 << order_n)))
                 continue;
 
             let column_n: c_int = table.DisplayOrderToIndex[order_n];
@@ -2533,11 +2533,11 @@ c_void TableSortSpecsSanitize(*mut ImGuiTable table)
         if (column.SortOrder == -1)
             continue;
         sort_order_count+= 1;
-        sort_order_mask |= ((u64)1 << column.SortOrder);
+        sort_order_mask |= (1 << column.SortOrder);
         // IM_ASSERT(sort_order_count < sizeof(sort_order_mask) * 8);
     }
 
-    let need_fix_linearize: bool = ((u64)1 << sort_order_count) != (sort_order_mask + 1);
+    let need_fix_linearize: bool = (1 << sort_order_count) != (sort_order_mask + 1);
     let need_fix_single_sort_order: bool = (sort_order_count > 1) && !(table.Flags & ImGuiTableFlags_SortMulti);
     if (need_fix_linearize || need_fix_single_sort_order)
     {
@@ -2548,11 +2548,11 @@ c_void TableSortSpecsSanitize(*mut ImGuiTable table)
             // (e.g. SortOrder 0 disappeared, SortOrder 1..2 exists --> rewrite then as SortOrder 0..1)
             let column_with_smallest_sort_order: c_int = -1;
             for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
-                if ((fixed_mask & ((u64)1 << (u64)column_n)) == 0 && table.Columns[column_n].SortOrder != -1)
+                if ((fixed_mask & (1 << column_n)) == 0 && table.Columns[column_n].SortOrder != -1)
                     if (column_with_smallest_sort_order == -1 || table.Columns[column_n].SortOrder < table.Columns[column_with_smallest_sort_order].SortOrder)
                         column_with_smallest_sort_order = column_n;
             // IM_ASSERT(column_with_smallest_sort_order != -1);
-            fixed_mask |= ((u64)1 << column_with_smallest_sort_order);
+            fixed_mask |= (1 << column_with_smallest_sort_order);
             table.Columns[column_with_smallest_sort_order].SortOrder = (ImGuiTableColumnIdx)sort_n;
 
             // Fix: Make sure only one column has a SortOrder if ImGuiTableFlags_MultiSortable is not set.
@@ -3146,14 +3146,14 @@ c_void TableLoadSettings(*mut ImGuiTable table)
             column.DisplayOrder = ;
         else
             column.DisplayOrder = (ImGuiTableColumnIdx)column_n;
-        display_order_mask |= (u64)1 << column.DisplayOrder;
+        display_order_mask |= 1 << column.DisplayOrder;
         column.IsUserEnabled = column.IsUserEnabledNextFrame = ;
         column.SortOrder = ;
         column.SortDirection = ;
     }
 
     // Validate and fix invalid display order data
-    const u64 expected_display_order_mask = (settings.ColumnsCount == 64) ? ~0 : ((u64)1 << settings.ColumnsCount) - 1;
+    const u64 expected_display_order_mask = (settings.ColumnsCount == 64) ? ~0 : (1 << settings.ColumnsCount) - 1;
     if (display_order_mask != expected_display_order_mask)
         for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
             table.Columns[column_n].DisplayOrder = (ImGuiTableColumnIdx)column_n;

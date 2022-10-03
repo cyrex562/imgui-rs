@@ -87,7 +87,7 @@ static inline c_void LogTextV(ImGuiContext& g, *const char fmt, va_list args)
     {
         g.LogBuffer.Buf.clear();
         g.LogBuffer.appendfv(fmt, args);
-        ImFileWrite(g.LogBuffer.c_str(), sizeof, (u64)g.LogBuffer.size(), g.LogFile);
+        ImFileWrite(g.LogBuffer.c_str(), sizeof, g.LogBuffer.size(), g.LogFile);
     }
     else
     {
@@ -257,4 +257,3 @@ c_void LogButtons()
     if (log_to_clipboard)
         LogToClipboard();
 }
-

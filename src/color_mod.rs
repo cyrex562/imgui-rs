@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use crate::color::ImGuiCol;
 use crate::vec4::ImVec4;
 use crate::type_defs::ImGuiCol;
 

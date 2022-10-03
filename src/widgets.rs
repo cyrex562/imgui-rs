@@ -1924,10 +1924,10 @@ static const ImGuiDataTypeInfo GDataTypeInfo[] =
     { sizeof,     "U32",  "%u",   "%u"    },
 // #ifdef _MSC_VER
     { sizeof(ImS64),            "S64",  "%I64d","%I64d" },  // ImGuiDataType_S64
-    { sizeof(u64),            "U64",  "%I64u","%I64u" },
+    { sizeof,            "U64",  "%I64u","%I64u" },
 // #else
     { sizeof(ImS64),            "S64",  "%lld", "%lld"  },  // ImGuiDataType_S64
-    { sizeof(u64),            "U64",  "%llu", "%llu"  },
+    { sizeof,            "U64",  "%llu", "%llu"  },
 // #endif
     { sizeof,            "float", "%.3f","%f"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
     { sizeof,           "double","%f",  "%lf"   },  // ImGuiDataType_Double

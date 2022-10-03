@@ -8,8 +8,7 @@ use crate::color::{IM_COL32, IM_COL32_A_SHIFT, IM_COL32_B_SHIFT, IM_COL32_G_SHIF
 use crate::vec4::ImVec4;
 
 // IMGUI_API u32 ImAlphaBlendColors(u32 col_a, u32 col_b)
-pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
-{
+pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32 {
     let mut t = ((col_b >> IM_COL32_A_SHIFT) & 0xFF) / 255.f;
     let mut r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
     let mut g = ImLerp((col_a >> IM_COL32_G_SHIFT) & 0xFF, (col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
@@ -18,8 +17,7 @@ pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
 }
 
 // ImVec4 ColorConvertU32ToFloat4(u32 in)
-pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
-{
+pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4 {
     let s = 1f32 / 255f32;
     return ImVec4(
         ((in_color >> IM_COL32_R_SHIFT) & 0xFF) * s,
@@ -29,10 +27,9 @@ pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
 }
 
 // u32 ColorConvertFloat4ToU32(const ImVec4& in)
-pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
-{
+pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32 {
     let mut out: u32 = 0;
-    out  = (IM_F32_TO_INT8_SAT(in_float.x)) << IM_COL32_R_SHIFT;
+    out = (IM_F32_TO_INT8_SAT(in_float.x)) << IM_COL32_R_SHIFT;
     out |= (IM_F32_TO_INT8_SAT(in_float.y)) << IM_COL32_G_SHIFT;
     out |= (IM_F32_TO_INT8_SAT(in_float.z)) << IM_COL32_B_SHIFT;
     out |= (IM_F32_TO_INT8_SAT(in_float.w)) << IM_COL32_A_SHIFT;
@@ -42,16 +39,13 @@ pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 // Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
 // Optimized http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
 // void ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
-pub fn ColorConvertRGBtoHSV(r: f32, g: f32, b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
-{
+pub fn ColorConvertRGBtoHSV(r: f32, g: f32, b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32) {
     let mut K = 0f32;
-    if g < b
-    {
+    if g < b {
         ImSwap(g, b);
         K = -1.f;
     }
-    if r < g
-    {
+    if r < g {
         ImSwap(r, g);
         K = -2.f / 6.f - K;
     }

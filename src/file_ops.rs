@@ -111,6 +111,6 @@ pub unsafe fn ImFileLoadToMemory(filename: * c_char, mode: * c_char, out_file_si
 typedef *mut c_void ImFileHandle;
 static inline ImFileHandle  ImFileOpen(*const char, *const char)                    { return null_mut(); }
 static inline bool          ImFileClose(ImFileHandle)                               { return false; }
-static inline u64         ImFileGetSize(ImFileHandle)                             { return (u64)-1; }
+static inline u64         ImFileGetSize(ImFileHandle)                             { return -1; }
 static inline u64         ImFileRead(*mut c_void, u64, u64, ImFileHandle)           { return 0; }
 static inline u64         ImFileWrite(*const c_void, u64, u64, ImFileHandle)    { return 0; }
