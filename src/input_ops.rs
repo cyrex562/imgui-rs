@@ -3,6 +3,7 @@
 
 use std::ffi::CString;
 use libc::{c_char, c_float, c_int, c_uint};
+use crate::bit_array::ImBitArray;
 use crate::debug_log_flags::ImGuiDebugLogFlags_EventIO;
 use crate::imgui::GImGui;
 use crate::input_event::ImGuiInputEvent;
@@ -10,8 +11,11 @@ use crate::input_event_type::{ImGuiInputEventType_Focus, ImGuiInputEventType_Key
 use crate::input_flags::{ImGuiInputFlags, ImGuiInputFlags_None, ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateDefault, ImGuiInputFlags_RepeatRateMask_, ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak};
 use crate::input_source::{ImGuiInputSource, input_source_names};
 use crate::io::ImGuiIO;
+use crate::io_ops::GetIO;
+use crate::item_flags::ImGuiItemFlags_NoTabStop;
 use crate::key::{ImGuiKey, ImGuiKey_Aliases_BEGIN, ImGuiKey_Aliases_END, ImGuiKey_Gamepad_BEGIN, ImGuiKey_Gamepad_END, ImGuiKey_KeysData_OFFSET, ImGuiKey_LegacyNativeKey_BEGIN, ImGuiKey_LegacyNativeKey_END, ImGuiKey_ModAlt, ImGuiKey_ModCtrl, ImGuiKey_ModShift, ImGuiKey_ModSuper, ImGuiKey_NamedKey_BEGIN, ImGuiKey_NamedKey_END, ImGuiKey_None};
 use crate::key_data::ImGuiKeyData;
+use crate::keyboard_ops::GetMergedModFlags;
 use crate::mod_flags::ImGuiModFlags;
 use crate::mouse_button::ImGuiMouseButton;
 use crate::mouse_cursor::ImGuiMouseCursor;
@@ -24,7 +28,7 @@ use crate::vec2::ImVec2;
 // NB- Rectangle is clipped by our current clip setting
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
 // bool IsMouseHoveringRect(const r_min: &ImVec2, const r_max: &ImVec2, clip: bool)
-pub fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
+pub unsafe fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Clip
@@ -66,7 +70,7 @@ pub fn IsAliasKey(key: ImGuiKey) -> bool {
 
 
 // ImGuiKeyData* GetKeyData(ImGuiKey key)
-pub fn GetKeyData(key: ImGuiKey) -> *mut ImGuiKeyData {
+pub unsafe fn GetKeyData(key: ImGuiKey) -> *mut ImGuiKeyData {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut index: c_int = 0;
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
@@ -88,7 +92,7 @@ pub fn GetKeyData(key: ImGuiKey) -> *mut ImGuiKeyData {
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
 // c_int GetKeyIndex(ImGuiKey key)
-pub fn GetKeyIndex(key: ImGuiKey) -> c_int {
+pub unsafe fn GetKeyIndex(key: ImGuiKey) -> c_int {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(IsNamedKey(key));
     let key_data = GetKeyData(key);
@@ -147,7 +151,7 @@ pub unsafe fn GetKeyName(mut key: ImGuiKey) -> *const c_char {
 }
 
 // c_void GetKeyChordName(ImGuiModFlags mods, ImGuiKey key, char* out_buf, out_buf_size: c_int)
-pub fn GetKeyChordName(mods: ImGuiModFlags, key: ImGuiKey, out_buf: *mut c_char, out_buf_size: c_int) {
+pub unsafe fn GetKeyChordName(mods: ImGuiModFlags, key: ImGuiKey, out_buf: *mut c_char, out_buf_size: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT((mods & ~ImGuiModFlags_All) == 0 && "Passing invalid ImGuiModFlags value!"); // A frequent mistake is to pass ImGuiKey_ModXXX instead of ImGuiModFlags_XXX
     // ImFormatString(out_buf, out_buf_size, "%s%s%s%s%s",
@@ -210,7 +214,7 @@ pub unsafe fn GetTypematicRepeatRate(flags: ImGuiInputFlags, repeat_delay: *mut 
 // Return value representing the number of presses in the last time period, for the given repeat rate
 // (most often returns 0 or 1. The result is generally only >1 when RepeatRate is smaller than DeltaTime, aka large DeltaTime or fast RepeatRate)
 // c_int GetKeyPressedAmount(ImGuiKey key, repeat_delay: c_float, repeat_rate: c_float)
-pub fn GetKeyPressedAmount(key: ImGuiKey, repeat_delay: c_float, repeat_rate: c_float) -> c_int {
+pub unsafe fn GetKeyPressedAmount(key: ImGuiKey, repeat_delay: c_float, repeat_rate: c_float) -> c_int {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let key_data = GetKeyData(key);
     if !key_data.Down { // In theory this should already be encoded as (DownDuration < 0f32), but testing this facilitate eating mechanism (until we finish work on input ownership)
@@ -222,7 +226,7 @@ pub fn GetKeyPressedAmount(key: ImGuiKey, repeat_delay: c_float, repeat_rate: c_
 
 // Return 2D vector representing the combination of four cardinal direction, with analog value support (for e.g. ImGuiKey_GamepadLStick* values).
 // ImVec2 GetKeyVector2d(ImGuiKey key_left, ImGuiKey key_right, ImGuiKey key_up, ImGuiKey key_down)
-pub fn GetKeyVector2D(key_left: ImGuiKey, key_right: ImGuiKey, key_up: ImGuiKey, key_down: ImGuiKey) -> ImVec2 {
+pub unsafe fn GetKeyVector2D(key_left: ImGuiKey, key_right: ImGuiKey, key_up: ImGuiKey, key_down: ImGuiKey) -> ImVec2 {
     return ImVec2::new2(
         GetKeyData(key_right).AnalogValue - GetKeyData(key_left).AnalogValue,
         GetKeyData(key_down).AnalogValue - GetKeyData(key_up).AnalogValue);
@@ -231,7 +235,7 @@ pub fn GetKeyVector2D(key_left: ImGuiKey, key_right: ImGuiKey, key_up: ImGuiKey,
 // Note that Dear ImGui doesn't know the meaning/semantic of ImGuiKey from 0..511: they are legacy native keycodes.
 // Consider transitioning from 'IsKeyDown(MY_ENGINE_KEY_A)' (<1.87) to IsKeyDown(ImGuiKey_A) (>= 1.87)
 // bool IsKeyDown(ImGuiKey key)
-pub fn IsKeyDown(key: ImGuiKey) -> bool {
+pub unsafe fn IsKeyDown(key: ImGuiKey) -> bool {
     let key_data = GetKeyData(key);
     if !key_data.Down {
         return false;
@@ -273,7 +277,7 @@ pub unsafe fn IsKeyPressedEx(key: ImGuiKey, flags: ImGuiInputFlags) -> bool {
 }
 
 // bool IsKeyReleased(ImGuiKey key)
-pub fn IsKeyRelease(key: ImGuiKey) -> bool {
+pub unsafe fn IsKeyRelease(key: ImGuiKey) -> bool {
     let key_data = GetKeyData(key);
     if key_data.DownDurationPrev < 0f32 || key_data.Down {
         return false;
@@ -282,14 +286,14 @@ pub fn IsKeyRelease(key: ImGuiKey) -> bool {
 }
 
 // bool IsMouseDown(ImGuiMouseButton button)
-pub fn IsMouseDown(button: ImGuiMouseButton) -> bool {
+pub unsafe fn IsMouseDown(button: ImGuiMouseButton) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     return g.IO.MouseDown[button];
 }
 
 // bool IsMouseClicked(ImGuiMouseButton button, repeat: bool)
-pub fn IsMouseClicked(button: ImGuiMouseButton, repeat: bool) -> bool {
+pub unsafe fn IsMouseClicked(button: ImGuiMouseButton, repeat: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     if !g.IO.MouseDown[button] {// In theory this should already be encoded as (DownDuration < 0f32), but testing this facilitate eating mechanism (until we finish work on input ownership)
@@ -306,21 +310,21 @@ pub fn IsMouseClicked(button: ImGuiMouseButton, repeat: bool) -> bool {
 }
 
 // bool IsMouseReleased(ImGuiMouseButton button)
-pub fn IsMouseRelease(button: ImGuiMouseButton) -> bool {
+pub unsafe fn IsMouseRelease(button: ImGuiMouseButton) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     return g.IO.MouseReleased[button];
 }
 
 // bool IsMouseDoubleClicked(ImGuiMouseButton button)
-pub fn IsMouseDoubleClicked(button: ImGuiMouseButton) -> bool {
+pub unsafe fn IsMouseDoubleClicked(button: ImGuiMouseButton) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     return g.IO.MouseClickedCount[button] == 2;
 }
 
 // c_int GetMouseClickedCount(ImGuiMouseButton button)
-pub fn GetMouseClickedCount(button: ImGuiMouseButton) -> c_int {
+pub unsafe fn GetMouseClickedCount(button: ImGuiMouseButton) -> c_int {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     return g.IO.MouseClickedCount[button];
@@ -329,7 +333,7 @@ pub fn GetMouseClickedCount(button: ImGuiMouseButton) -> c_int {
 // Return if a mouse click/drag went past the given threshold. Valid to call during the MouseReleased frame.
 // [Internal] This doesn't test if the button is pressed
 // bool IsMouseDragPastThreshold(ImGuiMouseButton button, lock_threshold: c_float)
-pub fn IsMouseDragPastThreshold(button: ImGuiMouseButton, mut lock_threshold: c_float) -> bool {
+pub unsafe fn IsMouseDragPastThreshold(button: ImGuiMouseButton, mut lock_threshold: c_float) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     if lock_threshold < 0f32 {
@@ -339,7 +343,7 @@ pub fn IsMouseDragPastThreshold(button: ImGuiMouseButton, mut lock_threshold: c_
 }
 
 // bool IsMouseDragging(ImGuiMouseButton button, lock_threshold: c_float)
-pub fn IsMouseDragging(button: ImGuiMouseButton, lock_threshold: c_float) -> bool {
+pub unsafe fn IsMouseDragging(button: ImGuiMouseButton, lock_threshold: c_float) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     if !g.IO.MouseDown[button] {
@@ -349,14 +353,14 @@ pub fn IsMouseDragging(button: ImGuiMouseButton, lock_threshold: c_float) -> boo
 }
 
 // ImVec2 GetMousePos()
-pub fn GetMousePos() -> ImVec2 {
+pub unsafe fn GetMousePos() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.IO.MousePos.clone();
 }
 
 // NB: prefer to call right after BeginPopup(). At the time Selectable/MenuItem is activated, the popup is already closed!
 // ImVec2 GetMousePosOnOpeningCurrentPopup()
-pub fn GetMousePosOnOPeningCurrentPopup() -> ImVec2 {
+pub unsafe fn GetMousePosOnOPeningCurrentPopup() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.BeginPopupStack.Size > 0 {
         return g.OpenPopupStack[g.BeginPopupStack.Size - 1].OpenMousePos;
@@ -377,7 +381,7 @@ pub fn IsMousePosValid(mouse_pos: *const ImVec2) -> bool {
 
 // [WILL OBSOLETE] This was designed for backends, but prefer having backend maintain a mask of held mouse buttons, because upcoming input queue system will make this invalid.
 // bool IsAnyMouseDown()
-pub fn IsAnyMouseDown() -> bool {
+pub unsafe fn IsAnyMouseDown() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // for (let n: c_int = 0; n < IM_ARRAYSIZE(g.IO.MouseDown); n++)
     for n in 0..g.IO.MouseDown.len() {
@@ -392,7 +396,7 @@ pub fn IsAnyMouseDown() -> bool {
 // This is locked and return 0f32 until the mouse moves past a distance threshold at least once.
 // NB: This is only valid if IsMousePosValid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
 // ImVec2 GetMouseDragDelta(ImGuiMouseButton button, lock_threshold: c_float)
-pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) -> ImVec2 {
+pub unsafe fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     if lock_threshold < 0f32 {
@@ -409,7 +413,7 @@ pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) 
 }
 
 // c_void ResetMouseDragDelta(ImGuiMouseButton button)
-pub fn ResetMouseDragDelta(button: ImGuiMouseButton) {
+pub unsafe fn ResetMouseDragDelta(button: ImGuiMouseButton) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     // NB: We don't need to reset g.IO.MouseDragMaxDistanceSqr
@@ -417,25 +421,25 @@ pub fn ResetMouseDragDelta(button: ImGuiMouseButton) {
 }
 
 // ImGuiMouseCursor GetMouseCursor()
-pub fn GetMouseCursor() -> ImGuiMouseCursor {
+pub unsafe fn GetMouseCursor() -> ImGuiMouseCursor {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.MouseCursor;
 }
 
 // c_void SetMouseCursor(ImGuiMouseCursor cursor_type)
-pub fn SetMouseCursor(cursor_type: ImGuiMouseCursor) {
+pub unsafe fn SetMouseCursor(cursor_type: ImGuiMouseCursor) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.MouseCursor = cursor_type;
 }
 
 // c_void SetNextFrameWantCaptureKeyboard(want_capture_keyboard: bool)
-pub fn SetNextFrameWantCaptureKeyboard(want_capture_keyboard: bool) {
+pub unsafe fn SetNextFrameWantCaptureKeyboard(want_capture_keyboard: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.WantCaptureKeyboardNextFrame = if want_capture_keyboard { 1 } else { 0 };
 }
 
 // c_void SetNextFrameWantCaptureMouse(want_capture_mouse: bool)
-pub fn SetNextFrameWantCaptureMouse(want_capture_mouse: bool) {
+pub unsafe fn SetNextFrameWantCaptureMouse(want_capture_mouse: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.WantCaptureMouseNextFrame = if want_capture_mouse { 1 } else { 0 };
 }
@@ -449,7 +453,7 @@ pub fn GetInputSourceName(source: ImGuiInputSource) -> *const c_char {
 }
 
 // static c_void DebugPrintInputEvent(prefix: *const c_char, *const ImGuiInputEvent e)
-pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
+pub unsafe fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if e.Type == ImGuiInputEventType_MousePos {
         IMGUI_DEBUG_LOG_IO("%s: MousePos (%.1f, %.10f32)\n", prefix, e.MousePos.PosX, e.MousePos.PosY);
@@ -481,7 +485,7 @@ pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
 // - trickle_fast_inputs = false : process all events, turn into flattened input state (e.g. successive down/up/down/up will be lost)
 // - trickle_fast_inputs = true  : process as many events as possible (successive down/up/down/up will be trickled over several frames so nothing is lost) (new feature in 1.87)
 // c_void UpdateInputEvents(trickle_fast_inputs: bool)
-pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
+pub unsafe fn UpdateInputEvents(trickle_fast_inputs: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
 
@@ -495,7 +499,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
     let mut key_changed = false;
     let mut text_inputted = false;
     let mut mouse_button_changed: c_int = 0x00;
-    let mut key_changed_mask: ImBitArray<ImGuiKey_KeysData_SIZE> = ImBitArray::new();
+    let mut key_changed_mask: ImBitArray = ImBitArray::new();
 
     // let event_n: c_int = 0;
     // for (; event_n < g.InputEventsQueue.Size; event_n++)
@@ -504,7 +508,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
         if e.Type == ImGuiInputEventType_MousePos {
             let mut event_pos = ImVec2::new2(e.MousePos.PosX, e.MousePos.PosY);
             if IsMousePosValid(&event_pos) {
-                event_pos = ImVec2::new(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
+                event_pos = ImVec2::new2(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
             } // Apply same flooring as UpdateMouseInputs()
             e.IgnoredAsSame = (io.MousePos.x == event_pos.x && io.MousePos.y == event_pos.y);
             if !e.IgnoredAsSame {
@@ -631,12 +635,10 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
 // inline bool             IsKeyPressedMap(ImGuiKey key, let mut repeat: bool = true)           { IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // [removed in 1.87]
 
 // FIXME: Look into renaming this once we have settled the new Focus/Activation/TabStop system.
-c_void PushAllowKeyboardFocus(allow_keyboard_focus: bool)
-{
+pub unsafe fn PushAllowKeyboardFocus(allow_keyboard_focus: bool) {
     PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus);
 }
 
-c_void PopAllowKeyboardFocus()
-{
+pub unsafe fn PopAllowKeyboardFocus() {
     PopItemFlag();
 }

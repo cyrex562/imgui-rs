@@ -1,9 +1,10 @@
 #![allow(non_snake_case)]
 
+use crate::GImGui;
 use crate::window::ImGuiWindow;
 
 // c_void GcCompactTransientMiscBuffers()
-pub fn GcCompatTransientMiscBuffers()
+pub unsafe fn GcCompatTransientMiscBuffers()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.ItemFlagsStack.clear();

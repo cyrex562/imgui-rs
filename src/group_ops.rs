@@ -1,14 +1,22 @@
+use std::ptr::null_mut;
+use crate::cursor_ops::ErrorCheckUsingSetCursorPosToExtendParentBoundaries;
+use crate::GImGui;
+use crate::group_data::ImGuiGroupData;
+use crate::item_flags::ImGuiItemFlags_NoTabStop;
+use crate::item_status_flags::{ImGuiItemStatusFlags_Deactivated, ImGuiItemStatusFlags_Edited, ImGuiItemStatusFlags_HasDeactivated, ImGuiItemStatusFlags_HoveredWindow};
+use crate::rect::ImRect;
+use crate::vec2::ImVec2;
 
 // Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
 // FIXME-OPT: Could we safely early out on .SkipItems?
-c_void BeginGroup()
-{
+// c_void BeginGroup()
+pub unsafe fn BeginGroup() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
-    g.GroupStack.resize(g.GroupStack.Size + 1);
-    ImGuiGroupData& group_data = g.GroupStack.last().unwrap();
+    g.GroupStack.resize(g.GroupStack.Size + 1, Default::default());
+    let mut group_data = g.GroupStack.last_mut().unwrap();
     group_data.WindowID = window.ID;
     group_data.BackupCursorPos = window.DC.CursorPos;
     group_data.BackupCursorMaxPos = window.DC.CursorMaxPos;
@@ -25,23 +33,25 @@ c_void BeginGroup()
     window.DC.Indent = window.DC.GroupOffset;
     window.DC.CursorMaxPos = window.DC.CursorPos;
     window.DC.CurrLineSize = ImVec2::new2(0f32, 0f32);
-    if (g.LogEnabled)
-        g.LogLinePosY = -f32::MAX; // To enforce a carriage return
+    if (g.LogEnabled) {
+        g.LogLinePosY = -f32::MAX;
+    } // To enforce a carriage return
 }
 
-c_void EndGroup()
-{
+// c_void EndGroup()
+pub unsafe fn EndGroup() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     // IM_ASSERT(g.GroupStack.Size > 0); // Mismatched BeginGroup()/EndGroup() calls
 
-    ImGuiGroupData& group_data = g.GroupStack.last().unwrap();
+    ImGuiGroupData & group_data = g.GroupStack.last().unwrap();
     // IM_ASSERT(group_data.WindowID == window.ID); // EndGroup() in wrong window?
 
-    if (window.DC.IsSetPos)
+    if window.DC.IsSetPos {
         ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
+    }
 
-    let mut group_bb: ImRect = ImRect::new(group_data.BackupCursorPos, ImMax(window.DC.CursorMaxPos, group_data.BackupCursorPos));
+    let mut group_bb = ImRect::new2(group_data.BackupCursorPos, ImMax(window.DC.CursorMaxPos, group_data.BackupCursorPos));
 
     window.DC.CursorPos = group_data.BackupCursorPos;
     window.DC.CursorMaxPos = ImMax(group_data.BackupCursorMaxPos, window.DC.CursorMaxPos);
@@ -49,11 +59,11 @@ c_void EndGroup()
     window.DC.GroupOffset = group_data.BackupGroupOffset;
     window.DC.CurrLineSize = group_data.BackupCurrLineSize;
     window.DC.CurrLineTextBaseOffset = group_data.BackupCurrLineTextBaseOffset;
-    if (g.LogEnabled)
-        g.LogLinePosY = -f32::MAX; // To enforce a carriage return
+    if g.LogEnabled {
+        g.LogLinePosY = -f32::MAX;
+    } // To enforce a carriage return
 
-    if (!group_data.EmitItem)
-    {
+    if !group_data.EmitItem {
         g.GroupStack.pop_back();
         return;
     }
@@ -66,27 +76,31 @@ c_void EndGroup()
     // It would be be neater if we replaced window.DC.LastItemId by e.g. 'bool LastItemIsActive', but would put a little more burden on individual widgets.
     // Also if you grep for LastItemId you'll notice it is only used in that context.
     // (The two tests not the same because ActiveIdIsAlive is an ID itself, in order to be able to handle ActiveId being overwritten during the frame.)
-    let group_contains_curr_active_id: bool = (group_data.BackupActiveIdIsAlive != g.ActiveId) && (g.ActiveIdIsAlive == g.ActiveId) && g.ActiveId;
+    let group_contains_curr_active_id: bool = (group_data.BackupActiveIdIsAlive != g.ActiveId) && (g.ActiveIdIsAlive == g.ActiveId) && g.ActiveId != 0;
     let group_contains_prev_active_id: bool = (group_data.BackupActiveIdPreviousFrameIsAlive == false) && (g.ActiveIdPreviousFrameIsAlive == true);
-    if (group_contains_curr_active_id)
+    if group_contains_curr_active_id {
         g.LastItemData.ID = g.ActiveId;
-    else if (group_contains_prev_active_id)
+    } else if (group_contains_prev_active_id) {
         g.LastItemData.ID = g.ActiveIdPreviousFrame;
-    g.LastItemData.Rect = group_bb;
+    }
+    g.LastItemData.Rect = group_bb.clone();
 
     // Forward Hovered flag
     let group_contains_curr_hovered_id: bool = (group_data.BackupHoveredIdIsAlive == false) && g.HoveredId != 0;
-    if (group_contains_curr_hovered_id)
+    if (group_contains_curr_hovered_id) {
         g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
+    }
 
     // Forward Edited flag
-    if (group_contains_curr_active_id && g.ActiveIdHasBeenEditedThisFrame)
+    if (group_contains_curr_active_id && g.ActiveIdHasBeenEditedThisFrame) {
         g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited;
+    }
 
     // Forward Deactivated flag
     g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDeactivated;
-    if (group_contains_prev_active_id && g.ActiveId != g.ActiveIdPreviousFrame)
+    if (group_contains_prev_active_id && g.ActiveId != g.ActiveIdPreviousFrame) {
         g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Deactivated;
+    }
 
     g.GroupStack.pop_back();
     //window.DrawList.AddRect(group_bb.Min, group_bb.Max, IM_COL32(255,0,255,255));   // [Debug]

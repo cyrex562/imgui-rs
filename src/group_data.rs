@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
+use crate::imvec1::ImVec1;
 use crate::vec2::ImVec2;
 use crate::type_defs::ImGuiID;
 

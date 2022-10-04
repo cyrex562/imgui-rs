@@ -9,19 +9,25 @@ use crate::viewport::ImGuiViewport;
 // All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
 // as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
-#[derive(Default,Debug,Clone)]
-pub struct ImDrawData
-{
-pub Valid: bool,                  // Only valid after Render() is called and before the next NewFrame() is called.
-pub CmdListsCount: c_int,          // Number of ImDrawList* to render
-pub TotalIdxCount: c_int,          // For convenience, sum of all ImDrawList's IdxBuffer.Size
-pub TotalVtxCount: c_int,          // For convenience, sum of all ImDrawList's VtxBuffer.Size
-pub CmdLists: *mut *mut ImDrawList,               // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
-pub DisplayPos: ImVec2,             // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport().Pos for the main viewport, == (0.0) in most single-viewport applications)
-pub DisplaySize: ImVec2,            // Size of the viewport to render (== GetMainViewport().Size for the main viewport, == io.DisplaySize in most single-viewport applications)
-pub FramebufferScale: ImVec2,       // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
-pub OwnerViewport: *mut ImGuiViewport,          // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
-
+#[derive(Default, Debug, Clone)]
+pub struct ImDrawData {
+    pub Valid: bool,
+    // Only valid after Render() is called and before the next NewFrame() is called.
+    pub CmdListsCount: c_int,
+    // Number of ImDrawList* to render
+    pub TotalIdxCount: c_int,
+    // For convenience, sum of all ImDrawList's IdxBuffer.Size
+    pub TotalVtxCount: c_int,
+    // For convenience, sum of all ImDrawList's VtxBuffer.Size
+    pub CmdLists: *mut *mut ImDrawList,
+    // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
+    pub DisplayPos: ImVec2,
+    // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport().Pos for the main viewport, == (0.0) in most single-viewport applications)
+    pub DisplaySize: ImVec2,
+    // Size of the viewport to render (== GetMainViewport().Size for the main viewport, == io.DisplaySize in most single-viewport applications)
+    pub FramebufferScale: ImVec2,
+    // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
+    pub OwnerViewport: *mut ImGuiViewport,          // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
 }
 
 impl ImDrawData {
@@ -55,12 +61,10 @@ impl ImDrawData {
 }
 
 
-
-#[derive(Default,Debug,Clone)]
-pub struct ImDrawDataBuilder
-{
+#[derive(Default, Debug, Clone)]
+pub struct ImDrawDataBuilder {
     // ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
-    pub Layers: [Vec<*mut ImDrawList>;2],
+    pub Layers: [Vec<*mut ImDrawList>; 2],
 
 }
 
@@ -84,19 +88,16 @@ impl ImDrawDataBuilder {
     //     todo!()
     // }
     // c_void ImDrawDataBuilder::FlattenIntoSingleLayer()
-    pub unsafe fn FlattenIntoSingleLayer(&mut self)
-    {
+    pub unsafe fn FlattenIntoSingleLayer(&mut self) {
         let mut n: c_int = self.Layers[0].Size;
         let mut size: c_int = n;
         // for (let i: c_int = 1; i < IM_ARRAYSIZE(Layers); i++)
-        for i in 1 .. self.Layers.len()
-        {
+        for i in 1..self.Layers.len() {
             size += self.Layers[i].Size;
         }
         // self.Layers[0].resize(size);
         // for (let layer_n: c_int = 1; layer_n < IM_ARRAYSIZE(Layers); layer_n++)
-        for layer_n in 1 .. self.Layers.len()
-        {
+        for layer_n in 1..self.Layers.len() {
             let mut layer = self.Layers[layer_n].clone();
             if layer.empty() {
                 continue;

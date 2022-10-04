@@ -2234,7 +2234,7 @@ c_int ImFontAtlas::AddCustomRectRegular(width: c_int, height: c_int)
     return CustomRects.Size - 1; // Return index
 }
 
-c_int ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar id, width: c_int, height: c_int, advance_x: c_float, const offset: &ImVec2)
+c_int ImFontAtlas::AddCustomRectFontGlyph(font: *mut ImFont, ImWchar id, width: c_int, height: c_int, advance_x: c_float, const offset: &ImVec2)
 {
 // #ifdef IMGUI_USE_WCHAR32
     // IM_ASSERT(id <= IM_UNICODE_CODEPOINT_MAX);
@@ -2627,7 +2627,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
 
 // #endif // IMGUI_ENABLE_STB_TRUETYPE
 
-c_void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* font_config, ascent: c_float, descent: c_float)
+c_void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, font: *mut ImFont, ImFontConfig* font_config, ascent: c_float, descent: c_float)
 {
     if (!)
     {
@@ -3164,7 +3164,7 @@ c_void    ImFont::ClearOutputData()
     MetricsTotalSurface = 0;
 }
 
-static ImWchar FindFirstExistingGlyph(ImFont* font, *const ImWchar candidate_chars, candidate_chars_count: c_int)
+static ImWchar FindFirstExistingGlyph(font: *mut ImFont, *const ImWchar candidate_chars, candidate_chars_count: c_int)
 {
     for (let n: c_int = 0; n < candidate_chars_count; n++)
         if ((candidate_chars[n]) != null_mut())

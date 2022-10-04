@@ -4,13 +4,15 @@
 // [SECTION] DRAG AND DROP
 //-----------------------------------------------------------------------------
 
-bool IsDragDropActive()
+// bool IsDragDropActive()
+pub fn IsDragDropActive() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.DragDropActive;
 }
 
-c_void ClearDragDrop()
+// c_void ClearDragDrop()
+pub fn  ClearDragDrop()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.DragDropActive = false;
@@ -31,7 +33,8 @@ c_void ClearDragDrop()
 // - We then pull and use the mouse button that was used to activate the item and use it to carry on the drag.
 // If the item has no identifier:
 // - Currently always assume left mouse button.
-bool BeginDragDropSource(ImGuiDragDropFlags flags)
+// bool BeginDragDropSource(flags: ImGuiDragDropFlags)
+pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -266,7 +269,7 @@ bool IsDragDropPayloadBeingAccepted()
     return g.DragDropActive && g.DragDropAcceptIdPrev != 0;
 }
 
-*const ImGuiPayload AcceptDragDropPayload(type: *const c_char, ImGuiDragDropFlags flags)
+*const ImGuiPayload AcceptDragDropPayload(type: *const c_char, flags: ImGuiDragDropFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

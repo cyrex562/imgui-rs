@@ -2,7 +2,9 @@
 
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_void};
 use crate::font::ImFont;
+use crate::font_atlas_custom_rect::ImFontAtlasCustomRect;
 use crate::font_atlas_flags::ImFontAtlasFlags;
+use crate::font_builder_io::ImFontBuilderIO;
 use crate::font_config::ImFontConfig;
 use crate::font_glyph::ImFontGlyph;
 use crate::mouse_cursor::ImGuiMouseCursor;
@@ -249,7 +251,7 @@ impl ImFontAtlas {
     }
 
 
-    // c_int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, width: c_int, height: c_int, advance_x: c_float, const ImVec2& offset = ImVec2::new2(0, 0));
+    // c_int               AddCustomRectFontGlyph(font: *mut ImFont, ImWchar id, width: c_int, height: c_int, advance_x: c_float, const ImVec2& offset = ImVec2::new2(0, 0));
     pub fn AddCustomRectFontGlyph(&mut self, font: *mut ImFont, id: ImWchar, width: c_int, height: c_int, advance_x: c_float, offset: &ImVec2) -> c_int {
         todo!()
     }

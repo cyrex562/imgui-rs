@@ -5,6 +5,7 @@
 // the API mid-way through development and support two ways to using the clipper, needs some rework (see TODO)
 //-----------------------------------------------------------------------------
 
+use std::ptr::null_mut;
 use libc::{c_float, c_int, c_void};
 use crate::direction::{ImGuiDir_Down, ImGuiDir_Up};
 use crate::imgui::GImGui;
@@ -20,7 +21,7 @@ use crate::window_ops::WindowRectRelToAbs;
 // FIXME-TABLE: This prevents us from using ImGuiListClipper _inside_ a table cell.
 // The problem we have is that without a Begin/End scheme for rows using the clipper is ambiguous.
 // static bool GetSkipItemForListClipping()
-pub fn GetSkipItemForListClipping() -> bool {
+pub unsafe fn GetSkipItemForListClipping() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     //return (g.CurrentTable ? g.Currenttable.HostSkipItems : g.Currentwindow.SkipItems);
     return if g.CurrentTable.is_null() == false {

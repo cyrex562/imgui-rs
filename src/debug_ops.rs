@@ -1566,7 +1566,7 @@ pub fn DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: &mut ImDrawList, da
 }
 
 // [DEBUG] Display details for a single font, called by ShowStyleEditor().
-// c_void DebugNodeFont(ImFont* font)
+// c_void DebugNodeFont(font: *mut ImFont)
 pub unsafe fn DebugNodeFont(font: &mut ImFont)
     {
     let mut opened: bool =  TreeNode(font, "Font: \"%s\"\n%.2f px, %d glyphs, %d file(s)",

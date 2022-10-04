@@ -238,3 +238,4 @@ mod dock_node_tree_info;
 mod dock_settings_ops;
 mod platform_native;
 mod dock_context_prune_node_data;
+mod drag_drop_ops;

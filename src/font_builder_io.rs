@@ -1,4 +1,6 @@
-// This structure is likely to evolve as we add support for incremental atlas updates 
+use crate::font_atlas::ImFontAtlas;
+
+// This structure is likely to evolve as we add support for incremental atlas updates
 // struct ImFontBuilderIO
 #[derive(Default, Debug, Clone, Copy)]
 pub struct ImFontBuilderIO {

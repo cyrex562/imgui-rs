@@ -24,7 +24,7 @@ impl ImGuiListClipperRange {
             Max: max as c_float,
             PosToIndexConvert: false,
             PosToIndexOffsetMin: 0,
-            PosToIndexOffsetMax: 0
+            PosToIndexOffsetMax: 0,
         }
     }
 
@@ -35,8 +35,7 @@ impl ImGuiListClipperRange {
             Max: y2,
             PosToIndexConvert: true,
             PosToIndexOffsetMin: off_min,
-            PosToIndexOffsetMax: off_max
+            PosToIndexOffsetMax: off_max,
         }
     }
-
 }

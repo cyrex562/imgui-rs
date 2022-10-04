@@ -1,5 +1,10 @@
 #![allow(non_snake_case)]
 
+use std::ptr::null_mut;
+use libc::{c_float, c_uint, c_ushort};
+use crate::font::ImFont;
+use crate::vec2::ImVec2;
+
 // See ImFontAtlas::AddCustomRectXXX functions.
 #[derive(Default, Debug, Copy, Clone)]
 pub struct ImFontAtlasCustomRect {

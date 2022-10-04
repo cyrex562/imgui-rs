@@ -33,31 +33,33 @@ pub struct ImGuiInputEvent {
 
 // FIXME: Structures in the union below need to be declared as anonymous unions appears to be an extension?
 // Using ImVec2::new() would fail on Clang 'union member 'MousePos' has a non-trivial default constructor'
-#[derive(Default,Debug,Clone)]
-pub struct ImGuiInputEventMousePos      {
+#[derive(Default, Debug, Clone)]
+pub struct ImGuiInputEventMousePos {
     pub PosX: c_float,
-    pub PosY: c_float }
-
-#[derive(Default,Debug,Clone)]
-pub struct ImGuiInputEventMouseWheel    {
-    // WheelX: c_float, WheelY;
-    pub WheelX: c_float,
-    pub WheelY: c_float
+    pub PosY: c_float,
 }
 
-#[derive(Default,Debug,Clone)]
-pub struct ImGuiInputEventMouseButton   {
-    pub Button: c_int,
-    pub Down: bool }
+#[derive(Default, Debug, Clone)]
+pub struct ImGuiInputEventMouseWheel {
+    // WheelX: c_float, WheelY;
+    pub WheelX: c_float,
+    pub WheelY: c_float,
+}
 
-#[derive(Default,Debug,Clone)]
+#[derive(Default, Debug, Clone)]
+pub struct ImGuiInputEventMouseButton {
+    pub Button: c_int,
+    pub Down: bool,
+}
+
+#[derive(Default, Debug, Clone)]
 pub struct ImGuiInputEventMouseViewport {
     // ImGuiID pub(crate) HoveredViewportID;
     pub HoveredViewportID: ImGuiID,
 }
 
-#[derive(Default,Debug,Clone)]
-struct ImGuiInputEventKey           {
+#[derive(Default, Debug, Clone)]
+struct ImGuiInputEventKey {
     // ImGuiKey pub(crate) Key;
     pub Key: ImGuiKey,
     // bool pub(crate) Down;
@@ -65,14 +67,14 @@ struct ImGuiInputEventKey           {
     // let mut AnalogValue: c_float = 0f32;
 }
 
-#[derive(Default,Debug,Clone)]
-struct ImGuiInputEventText          {
+#[derive(Default, Debug, Clone)]
+struct ImGuiInputEventText {
     // c_uint Char;
     pub Char: c_uint,
 }
 
-#[derive(Default,Debug,Clone)]
-struct ImGuiInputEventAppFocused    {
+#[derive(Default, Debug, Clone)]
+struct ImGuiInputEventAppFocused {
     // bool Focused;
     pub Focused: bool,
-};
+}

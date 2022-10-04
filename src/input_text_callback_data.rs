@@ -1,3 +1,8 @@
+use libc::{c_char, c_int, c_void};
+use crate::input_text_flags::ImGuiInputTextFlags;
+use crate::key::ImGuiKey;
+use crate::type_defs::ImWchar;
+
 // Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
 // The callback function should return 0 by default.
 // Callbacks (follow a flag name and see comments in ImGuiInputTextFlags_ declarations for more details)
