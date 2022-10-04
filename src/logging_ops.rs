@@ -8,7 +8,7 @@ use crate::vec2::ImVec2;
 // Internal version that takes a position to decide on newline placement and pad items according to their depth.
 // We split text into individual lines to add current tree level padding
 // FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
-// c_void LogRenderedText(*const ref_pos: ImVec2, *const char text, *const char text_end)
+// c_void LogRenderedText(*const ref_pos: ImVec2, text: *const c_char, text_end: *const c_char)
 pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut text_end: *const c_char) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -81,7 +81,7 @@ pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut t
 //-----------------------------------------------------------------------------
 
 // Pass text data straight to log (without being displayed)
-static inline c_void LogTextV(ImGuiContext& g, *const char fmt, va_list args)
+static inline c_void LogTextV(ImGuiContext& g, fmt: *const c_char, va_list args)
 {
     if (g.LogFile)
     {
@@ -95,7 +95,7 @@ static inline c_void LogTextV(ImGuiContext& g, *const char fmt, va_list args)
     }
 }
 
-c_void LogText(*const char fmt, ...)
+c_void LogText(fmt: *const c_char, ...)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!g.LogEnabled)
@@ -107,7 +107,7 @@ c_void LogText(*const char fmt, ...)
     va_end(args);
 }
 
-c_void LogTextV(*const char fmt, va_list args)
+c_void LogTextV(fmt: *const c_char, va_list args)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!g.LogEnabled)
@@ -134,7 +134,7 @@ c_void LogBegin(ImGuiLogType type, auto_open_depth: c_int)
 }
 
 // Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
-c_void LogSetNextTextDecoration(*const char prefix, *const char suffix)
+c_void LogSetNextTextDecoration(prefix: *const c_char, suffix: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.LogNextPrefix = prefix;
@@ -154,7 +154,7 @@ c_void LogToTTY(auto_open_depth: c_int)
 }
 
 // Start logging/capturing text output to given file
-c_void LogToFile(auto_open_depth: c_int, *const char filename)
+c_void LogToFile(auto_open_depth: c_int, filename: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.LogEnabled)

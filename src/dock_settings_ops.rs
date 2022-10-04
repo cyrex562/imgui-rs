@@ -41,7 +41,7 @@ pub unsafe fn DockSettingsRenameNodeReferences(old_node_id: ImGuiID, new_node_id
         }
     }
     //// FIXME-OPT: We could remove this loop by storing the index in the map
-    // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+    // for (let mut settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
     for settings in g.SettingsWindow.iter_mut() {
         if settings.DockId == old_node_id {
             settings.DockId = new_node_id;
@@ -55,7 +55,7 @@ pub unsafe fn DockSettingsRemoveNodeReferences(node_ids: *mut ImGuiID, node_ids_
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut found: c_int = 0;
     //// FIXME-OPT: We could remove this loop by storing the index in the map
-    // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+    // for (let mut settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
     for settings in g.SettingsWindow.iter_mut() {
         // for (let node_n: c_int = 0; node_n < node_ids_count; node_n+ +)
         for node_n in 0..node_ids_count {
@@ -106,7 +106,7 @@ pub unsafe fn DockSettingsHandler_ApplyAll(ctx: *mut ImGuiContext) {
     DockContextBuildAddWindowsToNodes(ctx, 0);
 }
 
-// static *mut c_void DockSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, *const char name)
+// static *mut c_void DockSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, name: *const c_char)
 pub unsafe fn DockSettingsHandler_ReadOpen(name: *const c_char) -> c_int {
     // if (strcmp(name, "Data") != 0)
     //     return null_mut();
@@ -114,7 +114,7 @@ pub unsafe fn DockSettingsHandler_ReadOpen(name: *const c_char) -> c_int {
     libc::strcmp(name, str_to_const_c_char_ptr("Data"))
 }
 
-// static c_void DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, ImGuiSettingsHandler*, *mut c_void, *const char line)
+// static c_void DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, ImGuiSettingsHandler*, *mut c_void, line: *const c_char)
 pub unsafe fn DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, mut line: *const c_char) {
     let mut c: c_char = 0;
     let mut x: c_int = 0;
@@ -261,7 +261,7 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, handler: *mut
             }
             // Iterate settings so we can give info about windows that didn't exist during the session.
             let mut contains_window: c_int = 0;
-            // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+            // for (let mut settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
             for settings in g.SettingsWindow.iter_mut() {
                 if settings.DockId == node_settings.ID {
                     if contains_window == 0 {

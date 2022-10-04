@@ -14,7 +14,10 @@ use crate::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, I
 use crate::dock_context_ops::{DockContextAddNode, DockContextRemoveNode};
 use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_LocalFlagsTransferMask_, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingInCentralNode, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
 use crate::dock_node_state::{ImGuiDockNodeState_HostWindowHiddenBecauseSingleWindow, ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing};
+use crate::dock_node_tree_info::ImGuiDockNodeTreeInfo;
 use crate::dock_preview_data::ImGuiDockPreviewData;
+use crate::dock_settings_ops::DockSettingsRenameNodeReferences;
+use crate::docking_ops::BeginDockableDragDropTarget;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::input_ops::IsMouseClicked;
@@ -45,7 +48,7 @@ use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiW
 use crate::window_ops::RenderWindowOuterBorders;
 
 // inline * mut ImGuiDockNode   DockNodeGetRootNode( * mut ImGuiDockNode node)
-pub unsafe fn DockNodeGetRootNode(mut node: &mut ImGuiDockNode) -> *mut ImGuiDockNode {
+pub unsafe fn DockNodeGetRootNode(mut node: *mut ImGuiDockNode) -> *mut ImGuiDockNode {
     while node.ParentNode { node = &mut *node.ParentNode; }
     return node;
 }
@@ -1570,7 +1573,7 @@ pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImG
 // host_node may be NULL if the window doesn't have a DockNode already.
 // FIXME-DOCK: This is misnamed since it's also doing the filtering.
 // static c_void DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, payload_window: *mut ImGuiWindow, payload_node: *mut ImGuiDockNode, data: *mut ImGuiDockPreviewData, is_explicit_target: bool, is_outer_docking: bool)
-pub unsafe fn DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, payload_window: *mut ImGuiWindow, payload_node: &mut ImGuiDockNode, data: *mut ImGuiDockPreviewData, is_explicit_target: bool, is_outer_docking: bool)
+pub unsafe fn DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, payload_window: *mut ImGuiWindow, payload_node: *mut ImGuiDockNode, data: *mut ImGuiDockPreviewData, is_explicit_target: bool, is_outer_docking: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -1667,7 +1670,7 @@ pub unsafe fn DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node:
         let pos_old = data.FutureNode.Pos;
         let size_new= data.FutureNode.Pos;
         let size_old = data.FutureNode.Size;
-        DockNodeCalcSplitRects(pos_old, size_old, pos_new, size_new, split_dir, payload_window.Size);
+        DockNodeCalcSplitRects(&pos_old, &size_old, &pos_new, &size_new, split_dir, payload_window.Size);
 
         // Calculate split ratio so we can pass it down the docking request
         let split_ratio: c_float =  ImSaturate(size_new[split_axis] / data.FutureNode.Size[split_axis]);

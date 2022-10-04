@@ -301,13 +301,13 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
 }
 
 // Read about "TABLE SIZING" at the top of this file.
-bool    BeginTable(*const char str_id, columns_count: c_int, ImGuiTableFlags flags, const outer_size: &ImVec2, inner_width: c_float)
+bool    BeginTable(str_id: *const c_char, columns_count: c_int, ImGuiTableFlags flags, const outer_size: &ImVec2, inner_width: c_float)
 {
     let mut id: ImGuiID =  GetID(str_id);
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
-bool    BeginTableEx(*const char name, id: ImGuiID, columns_count: c_int, ImGuiTableFlags flags, const outer_size: &ImVec2, inner_width: c_float)
+bool    BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImGuiTableFlags flags, const outer_size: &ImVec2, inner_width: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow outer_window = GetCurrentWindow();
@@ -1398,7 +1398,7 @@ c_void    EndTable()
 
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0f32) it is ignored
-c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, init_width_or_weight: c_float, user_id: ImGuiID)
+c_void TableSetupColumn(label: *const c_char, ImGuiTableColumnFlags flags, init_width_or_weight: c_float, user_id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -2689,7 +2689,7 @@ c_void TableHeadersRow()
 // Emit a column header (text + optional sort order)
 // We cpu-clip text here so that all columns headers can be merged into a same draw call.
 // Note that because of how we cpu-clip and display sorting indicators, you _cannot_ use SameLine() after a TableHeader()
-c_void TableHeader(*const char label)
+c_void TableHeader(label: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -3184,7 +3184,7 @@ static c_void TableSettingsHandler_ApplyAll(*mut ImGuiContext ctx, *mut ImGuiSet
         }
 }
 
-static *mut c_void TableSettingsHandler_ReadOpen(*mut ImGuiContext, *mut ImGuiSettingsHandler, *const char name)
+static *mut c_void TableSettingsHandler_ReadOpen(*mut ImGuiContext, *mut ImGuiSettingsHandler, name: *const c_char)
 {
     let mut id: ImGuiID =  0;
     let columns_count: c_int = 0;
@@ -3203,7 +3203,7 @@ static *mut c_void TableSettingsHandler_ReadOpen(*mut ImGuiContext, *mut ImGuiSe
     return TableSettingsCreate(id, columns_count);
 }
 
-static c_void TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSettingsHandler, *mut c_void entry, *const char line)
+static c_void TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSettingsHandler, *mut c_void entry, line: *const c_char)
 {
     // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
     *mut ImGuiTableSettings settings = (*mut ImGuiTableSettings)entry;
@@ -3644,7 +3644,7 @@ c_void PopColumnsBackground()
     return columns;
 }
 
-ImGuiID GetColumnsID(*const char str_id, columns_count: c_int)
+ImGuiID GetColumnsID(str_id: *const c_char, columns_count: c_int)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
 
@@ -3657,7 +3657,7 @@ ImGuiID GetColumnsID(*const char str_id, columns_count: c_int)
     return id;
 }
 
-c_void BeginColumns(*const char str_id, columns_count: c_int, ImGuiOldColumnFlags flags)
+c_void BeginColumns(str_id: *const c_char, columns_count: c_int, ImGuiOldColumnFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -3866,7 +3866,7 @@ c_void EndColumns()
     window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);
 }
 
-c_void Columns(columns_count: c_int, *const char id, border: bool)
+c_void Columns(columns_count: c_int, id: *const c_char, border: bool)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     // IM_ASSERT(columns_count >= 1);

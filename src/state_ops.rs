@@ -224,7 +224,7 @@ pub unsafe fn Shutdown()
 //   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
 // - Return false when window is collapsed, so you can early out in your code. You always need to call End() even if false is returned.
 // - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
-// bool Begin(*const char name, bool* p_open, ImGuiWindowFlags flags)
+// bool Begin(name: *const c_char, p_open: *mut bool, ImGuiWindowFlags flags)
 pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWindowFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;

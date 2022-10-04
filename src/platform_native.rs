@@ -35,7 +35,7 @@ static *const char GetClipboardTextFn_DefaultImpl
     return g.ClipboardHandlerData.Data;
 }
 
-static c_void SetClipboardTextFn_DefaultImpl(*mut c_void, *const char text)
+static c_void SetClipboardTextFn_DefaultImpl(*mut c_void, text: *const c_char)
 {
     if (!::OpenClipboard(null_mut()))
         return;
@@ -62,7 +62,7 @@ static PasteboardRef main_clipboard = 0;
 
 // OSX clipboard implementation
 // If you enable this you will need to add '-framework ApplicationServices' to your linker command-line!
-static c_void SetClipboardTextFn_DefaultImpl(*mut c_void, *const char text)
+static c_void SetClipboardTextFn_DefaultImpl(*mut c_void, text: *const c_char)
 {
     if (!main_clipboard)
         PasteboardCreate(kPasteboardClipboard, &main_clipboard);
@@ -117,7 +117,7 @@ static *const char GetClipboardTextFn_DefaultImpl
     return g.ClipboardHandlerData.empty() ? null_mut() : g.ClipboardHandlerData.begin();
 }
 
-static c_void SetClipboardTextFn_DefaultImpl(*mut c_void, *const char text)
+static c_void SetClipboardTextFn_DefaultImpl(*mut c_void, text: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.ClipboardHandlerData.clear();

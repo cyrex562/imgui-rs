@@ -42,14 +42,14 @@ c_void EndTooltip()
     End();
 }
 
-c_void SetTooltipV(*const char fmt, va_list args)
+c_void SetTooltipV(fmt: *const c_char, va_list args)
 {
     BeginTooltipEx(ImGuiTooltipFlags_OverridePreviousTooltip, ImGuiWindowFlags_None);
     TextV(fmt, args);
     EndTooltip();
 }
 
-c_void SetTooltip(*const char fmt, ...)
+c_void SetTooltip(fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);

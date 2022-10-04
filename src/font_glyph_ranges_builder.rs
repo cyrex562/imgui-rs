@@ -39,11 +39,11 @@ impl ImFontGlyphRangesBuilder {
     pub fn AddChar(&mut self, c: ImWchar) { self.SetBit(c); }                      // Add character
 
 
-    // c_void  AddText(*const char text, *const char text_end = null_mut());     // Add string (each character of the UTF-8 string are added)
+    // c_void  AddText(text: *const c_char, *const char text_end = null_mut());     // Add string (each character of the UTF-8 string are added)
 
 
     // c_void  AddRanges(*const ImWchar ranges);                           // Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
 
 
-    // c_void  BuildRanges(Vec<ImWchar>* out_ranges);                 // Output new ranges
+    // c_void  BuildRanges(out_ranges: &mut Vec<ImWchar>);                 // Output new ranges
 }

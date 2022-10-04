@@ -94,7 +94,7 @@ pub fn KeepAliveID(id: ImGuiID)
 }
 
 
-c_void PushID(*const char str_id)
+c_void PushID(str_id: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -102,7 +102,7 @@ c_void PushID(*const char str_id)
     window.IDStack.push(id);
 }
 
-c_void PushID(*const char str_id_begin, *const char str_id_end)
+c_void PushID(str_id_begin: *const c_char, str_id_end: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -139,7 +139,7 @@ c_void PushOverrideID(id: ImGuiID)
 // Helper to avoid a common series of PushOverrideID -> GetID() -> PopID() call
 // (note that when using this pattern, TestEngine's "Stack Tool" will tend to not display the intermediate stack level.
 //  for that to work we would need to do PushOverrideID() -> ItemAdd() -> PopID() which would alter widget code a little more)
-ImGuiID GetIDWithSeed(*const char str, *const char str_end, seed: ImGuiID)
+ImGuiID GetIDWithSeed(str: *const c_char, str_end: *const c_char, seed: ImGuiID)
 {
     let mut id: ImGuiID =  ImHashStr(str, str_end ? (str_end - str) : 0, seed);
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -155,13 +155,13 @@ c_void PopID()
     window.IDStack.pop_back();
 }
 
-ImGuiID GetID(*const char str_id)
+ImGuiID GetID(str_id: *const c_char)
 {
     let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.GetID(str_id);
 }
 
-ImGuiID GetID(*const char str_id_begin, *const char str_id_end)
+ImGuiID GetID(str_id_begin: *const c_char, str_id_end: *const c_char)
 {
     let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.GetID(str_id_begin, str_id_end);

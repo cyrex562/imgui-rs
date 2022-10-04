@@ -351,7 +351,7 @@ pub unsafe fn DockContextPruneUnusedSettings(ctx: *mut ImGuiContext) {
 
     // Count reference to dock ids from window settings
     // We guard against the possibility of an invalid .ini file (RootID may point to a missing node)
-    // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+    // for (let mut settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
     for settings in g.SettingsWindow.iter_mut() {
         let mut dock_id = settings.DockId;
         if dock_id != 0 {
@@ -509,7 +509,7 @@ pub fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDockRequest
 
     let mut payload_window: *mut ImGuiWindow = req.DockPayload;     // Optional
     let mut target_window: *mut ImGuiWindow = req.DockTargetWindow;
-    node: *mut ImGuiDockNode = req.DockTargetNode;
+    let node: *mut ImGuiDockNode = req.DockTargetNode;
     if payload_window {
         IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x%08X target '%s' dock window '%s', split_dir %d\n", if node { node.ID } else { 0 }, if target_window { target_window.Name } else { "NULL" }, payload_window.Name, req.DockSplitDir);
     } else {

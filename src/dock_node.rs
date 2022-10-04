@@ -171,7 +171,7 @@ impl ImGuiDockNode {
 
 
 
-    // void                    SetLocalFlags(ImGuiDockNodeFlags flags) { LocalFlags = flags; UpdateMergedFlags(); }
+    // void                    SetLocalFlags(flags: ImGuiDockNodeFlags) { LocalFlags = flags; UpdateMergedFlags(); }
 
 
     // void                    UpdateMergedFlags()     { MergedFlags = SharedFlags | LocalFlags | LocalFlagsInWindows; }

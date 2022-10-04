@@ -21,10 +21,10 @@ pub struct ImGuiSettingsHandler {
     // c_void        (*ReadInitFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler);                                // Read: Called before reading (in registration order)
     pub ReadInitFn: fn(ctx: *mut ImGuiContext, handler: *mut Self),
 
-    // *mut c_void       (*ReadOpenFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *const char name);              // Read: Called when entering into a new ini entry e.g. "[Window][Name]"
+    // *mut c_void       (*ReadOpenFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, name: *const c_char);              // Read: Called when entering into a new ini entry e.g. "[Window][Name]"
     pub ReadOpenFn: fn(ctx: *mut ImGuiContext, handler: *mut Self, name: *const c_char),
 
-    // c_void        (*ReadLineFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut c_void entry, *const char line); // Read: Called for every line of text within an ini entry
+    // c_void        (*ReadLineFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut c_void entry, line: *const c_char); // Read: Called for every line of text within an ini entry
     pub ReadLineFn: fn(ctx: *mut ImGuiContext, handler: *mut Self, entry: *mut c_void, line: *const c_char),
 
     // c_void        (*ApplyAllFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler);                                // Read: Called after reading (in registration order)

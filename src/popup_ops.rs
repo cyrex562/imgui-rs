@@ -31,7 +31,7 @@ bool IsPopupOpen(id: ImGuiID, ImGuiPopupFlags popup_flags)
     }
 }
 
-bool IsPopupOpen(*const char str_id, ImGuiPopupFlags popup_flags)
+bool IsPopupOpen(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImGuiID =  (popup_flags & ImGuiPopupFlags_AnyPopupId) ? 0 : g.Currentwindow.GetID(str_id);
@@ -60,7 +60,7 @@ ImGuiWindow* GetTopMostAndVisiblePopupModal()
     return null_mut();
 }
 
-c_void OpenPopup(*const char str_id, ImGuiPopupFlags popup_flags)
+c_void OpenPopup(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImGuiID =  g.Currentwindow.GetID(str_id);
@@ -269,7 +269,7 @@ bool BeginPopupEx(id: ImGuiID, ImGuiWindowFlags flags)
     return is_open;
 }
 
-bool BeginPopup(*const char str_id, ImGuiWindowFlags flags)
+bool BeginPopup(str_id: *const c_char, ImGuiWindowFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.OpenPopupStack.Size <= g.BeginPopupStack.Size) // Early out for performance
@@ -284,7 +284,7 @@ bool BeginPopup(*const char str_id, ImGuiWindowFlags flags)
 
 // If 'p_open' is specified for a modal popup window, the popup will have a regular close button which will close the popup.
 // Note that popup visibility status is owned by Dear ImGui (and manipulated with e.g. OpenPopup) so the actual value of *p_open is meaningless here.
-bool BeginPopupModal(*const char name, bool* p_open, ImGuiWindowFlags flags)
+bool BeginPopupModal(name: *const c_char, p_open: *mut bool, ImGuiWindowFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -337,7 +337,7 @@ c_void EndPopup()
 
 // Helper to open a popup if mouse button is released over the item
 // - This is essentially the same as BeginPopupContextItem() but without the trailing BeginPopup()
-c_void OpenPopupOnItemClick(*const char str_id, ImGuiPopupFlags popup_flags)
+c_void OpenPopupOnItemClick(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -366,7 +366,7 @@ c_void OpenPopupOnItemClick(*const char str_id, ImGuiPopupFlags popup_flags)
 //           OpenPopup(id);
 //       return BeginPopup(id);
 //   The main difference being that this is tweaked to avoid computing the ID twice.
-bool BeginPopupContextItem(*const char str_id, ImGuiPopupFlags popup_flags)
+bool BeginPopupContextItem(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -380,7 +380,7 @@ bool BeginPopupContextItem(*const char str_id, ImGuiPopupFlags popup_flags)
     return BeginPopupEx(id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings);
 }
 
-bool BeginPopupContextWindow(*const char str_id, ImGuiPopupFlags popup_flags)
+bool BeginPopupContextWindow(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -394,7 +394,7 @@ bool BeginPopupContextWindow(*const char str_id, ImGuiPopupFlags popup_flags)
     return BeginPopupEx(id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings);
 }
 
-bool BeginPopupContextVoid(*const char str_id, ImGuiPopupFlags popup_flags)
+bool BeginPopupContextVoid(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

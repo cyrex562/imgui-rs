@@ -10,7 +10,7 @@ pub unsafe fn GetClipboardText() -> *const c_char {
     return if g.IO.GetClipboardTextFn { g.IO.GetClipboardTextFn(g.IO.ClipboardUserData) } else { str_to_const_c_char_ptr("") };
 }
 
-// c_void SetClipboardText(*const char text)
+// c_void SetClipboardText(text: *const c_char)
 pub unsafe fn SetClipboardText(text: *const c_char) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.IO.SetClipboardTextFn {

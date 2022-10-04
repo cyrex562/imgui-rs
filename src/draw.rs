@@ -1271,7 +1271,7 @@ ImVec2 ImBezierQuadraticCalc(const p1: &ImVec2, const p2: &ImVec2, const p3: &Im
 }
 
 // Closely mimics ImBezierCubicClosestPointCasteljau() in imgui.cpp
-static c_void PathBezierCubicCurveToCasteljau(Vec<ImVec2>* path, x1: c_float, y1: c_float, x2: c_float, y2: c_float, x3: c_float, y3: c_float, x4: c_float, y4: c_float, tess_tol: c_float, level: c_int)
+static c_void PathBezierCubicCurveToCasteljau(path: &mut Vec<ImVec2>, x1: c_float, y1: c_float, x2: c_float, y2: c_float, x3: c_float, y3: c_float, x4: c_float, y4: c_float, tess_tol: c_float, level: c_int)
 {
     let dx: c_float =  x4 - x1;
     let dy: c_float =  y4 - y1;
@@ -1296,7 +1296,7 @@ static c_void PathBezierCubicCurveToCasteljau(Vec<ImVec2>* path, x1: c_float, y1
     }
 }
 
-static c_void PathBezierQuadraticCurveToCasteljau(Vec<ImVec2>* path, x1: c_float, y1: c_float, x2: c_float, y2: c_float, x3: c_float, y3: c_float, tess_tol: c_float, level: c_int)
+static c_void PathBezierQuadraticCurveToCasteljau(path: &mut Vec<ImVec2>, x1: c_float, y1: c_float, x2: c_float, y2: c_float, x3: c_float, y3: c_float, tess_tol: c_float, level: c_int)
 {
     let dx: c_float =  x3 - x1, dy = y3 - y1;
     let det: c_float =  (x2 - x3) * dy - (y2 - y3) * dx;
@@ -1598,7 +1598,7 @@ c_void ImDrawList::AddBezierQuadratic(const p1: &ImVec2, const p2: &ImVec2, cons
     PathStroke(col, 0, thickness);
 }
 
-c_void ImDrawList::AddText(*const ImFont font, font_size: c_float, const pos: &ImVec2, u32 col, *const char text_begin, *const char text_end, wrap_width: c_float, *const ImVec4 cpu_fine_clip_rect)
+c_void ImDrawList::AddText(*const ImFont font, font_size: c_float, const pos: &ImVec2, u32 col, text_begin: *const c_char, text_end: *const c_char, wrap_width: c_float, *const ImVec4 cpu_fine_clip_rect)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -1627,7 +1627,7 @@ c_void ImDrawList::AddText(*const ImFont font, font_size: c_float, const pos: &I
     (this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != null_mut());
 }
 
-c_void ImDrawList::AddText(const pos: &ImVec2, u32 col, *const char text_begin, *const char text_end)
+c_void ImDrawList::AddText(const pos: &ImVec2, u32 col, text_begin: *const c_char, text_end: *const c_char)
 {
     AddText(null_mut(), 0f32, pos, col, text_begin, text_end);
 }
@@ -2166,7 +2166,7 @@ ImFont* ImFontAtlas::AddFontDefault(*const ImFontConfig font_cfg_template)
     return font;
 }
 
-ImFont* ImFontAtlas::AddFontFromFileTTF(*const char filename, size_pixels: c_float, *const ImFontConfig font_cfg_template, *const ImWchar glyph_ranges)
+ImFont* ImFontAtlas::AddFontFromFileTTF(filename: *const c_char, size_pixels: c_float, *const ImFontConfig font_cfg_template, *const ImWchar glyph_ranges)
 {
     // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     size_t data_size = 0;
@@ -2213,7 +2213,7 @@ ImFont* ImFontAtlas::AddFontFromMemoryCompressedTTF(*const c_void compressed_ttf
     return AddFontFromMemoryTTF(buf_decompressed_data, buf_decompressed_size, size_pixels, &font_cfg, glyph_ranges);
 }
 
-ImFont* ImFontAtlas::AddFontFromMemoryCompressedBase85TTF(*const char compressed_ttf_data_base85, size_pixels: c_float, *const ImFontConfig font_cfg, *const ImWchar glyph_ranges)
+ImFont* ImFontAtlas::AddFontFromMemoryCompressedBase85TTF(compressed_ttf_data_base85: *const c_char, size_pixels: c_float, *const ImFontConfig font_cfg, *const ImWchar glyph_ranges)
 {
     let compressed_ttf_size: c_int = ((strlen(compressed_ttf_data_base85) + 4) / 5) * 4;
     compressed_ttf: *mut c_void = IM_ALLOC(compressed_ttf_size);
@@ -2354,7 +2354,7 @@ struct ImFontBuildDstData
     ImBitVector         GlyphsSet;          // This is used to resolve collision when multiple sources are merged into a same destination font.
 };
 
-static c_void UnpackBitVectorToFlatIndexList(*const ImBitVector in, Vec<c_int>* out)
+static c_void UnpackBitVectorToFlatIndexList(*const ImBitVector in, out: &mut Vec<c_int>)
 {
     // IM_ASSERT(sizeof(in.Storage.Data[0]) == sizeof);
     let it_begin: *const u32 = .begin();
@@ -2669,7 +2669,7 @@ c_void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, stbrp_context_opaque:
         }
 }
 
-c_void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, x: c_int, y: c_int, w: c_int, h: c_int, *const char in_str, char in_marker_char, c_uchar in_marker_pixel_value)
+c_void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, x: c_int, y: c_int, w: c_int, h: c_int, in_str: *const c_char, char in_marker_char, c_uchar in_marker_pixel_value)
 {
     // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
     // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
@@ -2679,7 +2679,7 @@ c_void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, x: c_int, y:
             out_pixel[off_x] = (in_str[off_x] == in_marker_char) ? in_marker_pixel_value : 0x00;
 }
 
-c_void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, x: c_int, y: c_int, w: c_int, h: c_int, *const char in_str, char in_marker_char, c_uint in_marker_pixel_value)
+c_void ImFontAtlasBuildRender32bppRectFromString(ImFontAtlas* atlas, x: c_int, y: c_int, w: c_int, h: c_int, in_str: *const c_char, char in_marker_char, c_uint in_marker_pixel_value)
 {
     // IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
     // IM_ASSERT(y >= 0 && y + h <= atlas.TexHeight);
@@ -3089,7 +3089,7 @@ static c_void UnpackAccumulativeOffsetsIntoRanges(base_codepoint: c_int, *const 
 // [SECTION] ImFontGlyphRangesBuilder
 //-----------------------------------------------------------------------------
 
-c_void ImFontGlyphRangesBuilder::AddText(*const char text, *const char text_end)
+c_void ImFontGlyphRangesBuilder::AddText(text: *const c_char, text_end: *const c_char)
 {
     while (text_end ? (text < text_end) : *text)
     {
@@ -3109,7 +3109,7 @@ c_void ImFontGlyphRangesBuilder::AddRanges(*const ImWchar ranges)
             AddChar(c);
 }
 
-c_void ImFontGlyphRangesBuilder::BuildRanges(Vec<ImWchar>* out_ranges)
+c_void ImFontGlyphRangesBuilder::BuildRanges(out_ranges: &mut Vec<ImWchar>)
 {
     let max_codepoint: c_int = IM_UNICODE_CODEPOINT_MAX;
     for (let n: c_int = 0; n <= max_codepoint; n++)
@@ -3354,7 +3354,7 @@ c_void ImFont::AddRemapChar(ImWchar dst, ImWchar src, overwrite_dst: bool)
     return &Glyphs.Data[i];
 }
 
-*const char ImFont::CalcWordWrapPositionA(scale: c_float, *const char text, *const char text_end, wrap_width: c_float) const
+*const char ImFont::CalcWordWrapPositionA(scale: c_float, text: *const c_char, text_end: *const c_char, wrap_width: c_float) const
 {
     // Simple word-wrapping for English, not full-featured. Please submit failing cases!
     // FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for punctuations, support for Unicode punctuations, etc.)
@@ -3453,7 +3453,7 @@ let next_s: *const c_char;
     return s;
 }
 
-ImVec2 ImFont::CalcTextSizeA(size: c_float, max_width: c_float, wrap_width: c_float, *const char text_begin, *const char text_end, *const char* remaining) const
+ImVec2 ImFont::CalcTextSizeA(size: c_float, max_width: c_float, wrap_width: c_float, text_begin: *const c_char, text_end: *const c_char, *const char* remaining) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // FIXME-OPT: Need to avoid this.
@@ -3563,7 +3563,7 @@ c_void ImFont::RenderChar(ImDrawList* draw_list, size: c_float, const pos: &ImVe
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-c_void ImFont::RenderText(ImDrawList* draw_list, size: c_float, const pos: &ImVec2, u32 col, const ImVec4& clip_rect, *const char text_begin, *const char text_end, wrap_width: c_float, cpu_fine_clip: bool) const
+c_void ImFont::RenderText(ImDrawList* draw_list, size: c_float, const pos: &ImVec2, u32 col, const ImVec4& clip_rect, text_begin: *const c_char, text_end: *const c_char, wrap_width: c_float, cpu_fine_clip: bool) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); //  functions generally already provides a valid text_end, so this is merely to handle direct calls.

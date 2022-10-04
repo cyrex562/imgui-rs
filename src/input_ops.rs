@@ -448,7 +448,7 @@ pub fn GetInputSourceName(source: ImGuiInputSource) -> *const c_char {
     return input_source_names[source];
 }
 
-// static c_void DebugPrintInputEvent(*const char prefix, *const ImGuiInputEvent e)
+// static c_void DebugPrintInputEvent(prefix: *const c_char, *const ImGuiInputEvent e)
 pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if e.Type == ImGuiInputEventType_MousePos {

@@ -159,7 +159,7 @@ c_void EndDragDropSource()
 }
 
 // Use 'cond' to choose to submit payload on drag start or every frame
-bool SetDragDropPayload(*const char type, *const c_void data, size_t data_size, ImGuiCond cond)
+bool SetDragDropPayload(type: *const c_char, *const c_void data, size_t data_size, cond: ImGuiCond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiPayload& payload = g.DragDropPayload;
@@ -266,7 +266,7 @@ bool IsDragDropPayloadBeingAccepted()
     return g.DragDropActive && g.DragDropAcceptIdPrev != 0;
 }
 
-*const ImGuiPayload AcceptDragDropPayload(*const char type, ImGuiDragDropFlags flags)
+*const ImGuiPayload AcceptDragDropPayload(type: *const c_char, ImGuiDragDropFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

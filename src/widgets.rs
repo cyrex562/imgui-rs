@@ -126,7 +126,7 @@ static const u64          IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
 
 // For InputTextEx()
 static bool             InputTextFilterCharacter(*mut c_uint p_char, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data, ImGuiInputSource input_source);
-static c_int              InputTextCalcTextLenAndLineCount(*const char text_begin, *const *mut char out_text_end);
+static c_int              InputTextCalcTextLenAndLineCount(text_begin: *const c_char, *const *mut char out_text_end);
 static ImVec2           InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar text_end, *const *mut let remaining: ImWchar = null_mut(), *mut let mut out_offset: ImVec2 =  null_mut(), let mut stop_on_new_line: bool =  false);
 
 //-------------------------------------------------------------------------
@@ -148,7 +148,7 @@ static ImVec2           InputTextCalcTextSizeW(*const ImWchar text_begin, *const
 // - BulletTextV()
 //-------------------------------------------------------------------------
 
-c_void TextEx(*const char text, *const char text_end, ImGuiTextFlags flags)
+c_void TextEx(text: *const c_char, text_end: *const c_char, ImGuiTextFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -256,12 +256,12 @@ c_void TextEx(*const char text, *const char text_end, ImGuiTextFlags flags)
     }
 }
 
-c_void TextUnformatted(*const char text, *const char text_end)
+c_void TextUnformatted(text: *const c_char, text_end: *const c_char)
 {
     TextEx(text, text_end, ImGuiTextFlags_NoWidthForLargeClippedText);
 }
 
-c_void Text(*const char fmt, ...)
+c_void Text(fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -269,19 +269,19 @@ c_void Text(*const char fmt, ...)
     va_end(args);
 }
 
-c_void TextV(*const char fmt, va_list args)
+c_void TextV(fmt: *const c_char, va_list args)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
         return;
 
     // FIXME-OPT: Handle the %s shortcut?
-    *const char text, *text_end;
+    text: *const c_char, *text_end;
     ImFormatStringToTempBufferV(&text, &text_end, fmt, args);
     TextEx(text, text_end, ImGuiTextFlags_NoWidthForLargeClippedText);
 }
 
-c_void TextColored(const ImVec4& col, *const char fmt, ...)
+c_void TextColored(const ImVec4& col, fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -289,7 +289,7 @@ c_void TextColored(const ImVec4& col, *const char fmt, ...)
     va_end(args);
 }
 
-c_void TextColoredV(const ImVec4& col, *const char fmt, va_list args)
+c_void TextColoredV(const ImVec4& col, fmt: *const c_char, va_list args)
 {
     PushStyleColor(ImGuiCol_Text, col);
     if (fmt[0] == '%' && fmt[1] == 's' && fmt[2] == 0)
@@ -299,7 +299,7 @@ c_void TextColoredV(const ImVec4& col, *const char fmt, va_list args)
     PopStyleColor();
 }
 
-c_void TextDisabled(*const char fmt, ...)
+c_void TextDisabled(fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -307,7 +307,7 @@ c_void TextDisabled(*const char fmt, ...)
     va_end(args);
 }
 
-c_void TextDisabledV(*const char fmt, va_list args)
+c_void TextDisabledV(fmt: *const c_char, va_list args)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     PushStyleColor(ImGuiCol_Text, g.Style.Colors[ImGuiCol_TextDisabled]);
@@ -318,7 +318,7 @@ c_void TextDisabledV(*const char fmt, va_list args)
     PopStyleColor();
 }
 
-c_void TextWrapped(*const char fmt, ...)
+c_void TextWrapped(fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -326,7 +326,7 @@ c_void TextWrapped(*const char fmt, ...)
     va_end(args);
 }
 
-c_void TextWrappedV(*const char fmt, va_list args)
+c_void TextWrappedV(fmt: *const c_char, va_list args)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut need_backup: bool =  (g.Currentwindow.DC.TextWrapPos < 0f32);  // Keep existing wrap position if one is already set
@@ -340,7 +340,7 @@ c_void TextWrappedV(*const char fmt, va_list args)
         PopTextWrapPos();
 }
 
-c_void LabelText(*const char label, *const char fmt, ...)
+c_void LabelText(label: *const c_char, fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -349,7 +349,7 @@ c_void LabelText(*const char label, *const char fmt, ...)
 }
 
 // Add a label+text combo aligned to other label+value widgets
-c_void LabelTextV(*const char label, *const char fmt, va_list args)
+c_void LabelTextV(label: *const c_char, fmt: *const c_char, va_list args)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -359,7 +359,7 @@ c_void LabelTextV(*const char label, *const char fmt, va_list args)
     const let mut style = &mut g.Style;
     let w: c_float =  CalcItemWidth();
 
-    *const char value_text_begin, *value_text_end;
+    value_text_begin: *const c_char, *value_text_end;
     ImFormatStringToTempBufferV(&value_text_begin, &value_text_end, fmt, args);
     let value_size: ImVec2 = CalcTextSize(value_text_begin, value_text_end, false);
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
@@ -377,7 +377,7 @@ c_void LabelTextV(*const char label, *const char fmt, va_list args)
         RenderText(ImVec2::new(value_bb.Max.x + style.ItemInnerSpacing.x, value_bb.Min.y + style.FramePadding.y), label);
 }
 
-c_void BulletText(*const char fmt, ...)
+c_void BulletText(fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -386,7 +386,7 @@ c_void BulletText(*const char fmt, ...)
 }
 
 // Text with a little bullet aligned to the typical tree node.
-c_void BulletTextV(*const char fmt, va_list args)
+c_void BulletTextV(fmt: *const c_char, va_list args)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -395,7 +395,7 @@ c_void BulletTextV(*const char fmt, va_list args)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const let mut style = &mut g.Style;
 
-    *const char text_begin, *text_end;
+    text_begin: *const c_char, *text_end;
     ImFormatStringToTempBufferV(&text_begin, &text_end, fmt, args);
     let label_size: ImVec2 = CalcTextSize(text_begin, text_end, false);
     let total_size: ImVec2 = ImVec2::new(g.FontSize + (label_size.x > 0f32 ? (label_size.x + style.FramePadding.x * 2) : 0f32), label_size.y);  // Empty text doesn't add padding
@@ -679,7 +679,7 @@ bool ButtonBehavior(bb: &ImRect, id: ImGuiID, *mut out_hovered: bool, *mut out_h
     return pressed;
 }
 
-bool ButtonEx(*const char label, const size_arg: &ImVec2, ImGuiButtonFlags flags)
+bool ButtonEx(label: *const c_char, const size_arg: &ImVec2, ImGuiButtonFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -723,13 +723,13 @@ bool ButtonEx(*const char label, const size_arg: &ImVec2, ImGuiButtonFlags flags
     return pressed;
 }
 
-bool Button(*const char label, const size_arg: &ImVec2)
+bool Button(label: *const c_char, const size_arg: &ImVec2)
 {
     return ButtonEx(label, size_arg, ImGuiButtonFlags_None);
 }
 
 // Small buttons fits within text without additional vertical spacing.
-bool SmallButton(*const char label)
+bool SmallButton(label: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let backup_padding_y: c_float =  g.Style.FramePadding.y;
@@ -741,7 +741,7 @@ bool SmallButton(*const char label)
 
 // Tip: use PushID()/PopID() to push indices or pointers in the ID stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
-bool InvisibleButton(*const char str_id, const size_arg: &ImVec2, ImGuiButtonFlags flags)
+bool InvisibleButton(str_id: *const c_char, const size_arg: &ImVec2, ImGuiButtonFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -765,7 +765,7 @@ bool InvisibleButton(*const char str_id, const size_arg: &ImVec2, ImGuiButtonFla
     return pressed;
 }
 
-bool ArrowButtonEx(*const char str_id, dir: ImGuiDir, size: ImVec2, ImGuiButtonFlags flags)
+bool ArrowButtonEx(str_id: *const c_char, dir: ImGuiDir, size: ImVec2, ImGuiButtonFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -796,7 +796,7 @@ bool ArrowButtonEx(*const char str_id, dir: ImGuiDir, size: ImVec2, ImGuiButtonF
     return pressed;
 }
 
-bool ArrowButton(*const char str_id, dir: ImGuiDir)
+bool ArrowButton(str_id: *const c_char, dir: ImGuiDir)
 {
     let sz: c_float =  GetFrameHeight();
     return ArrowButtonEx(str_id, dir, ImVec2::new(sz, sz), ImGuiButtonFlags_None);
@@ -1071,7 +1071,7 @@ bool ImageButtonEx(id: ImGuiID, ImTextureID texture_id, const size: &ImVec2, con
     return pressed;
 }
 
-bool ImageButton(*const char str_id, ImTextureID user_texture_id, const size: &ImVec2, const uv0: &ImVec2, const uv1: &ImVec2, const ImVec4& bg_col, const ImVec4& tint_col)
+bool ImageButton(str_id: *const c_char, ImTextureID user_texture_id, const size: &ImVec2, const uv0: &ImVec2, const uv1: &ImVec2, const ImVec4& bg_col, const ImVec4& tint_col)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -1107,7 +1107,7 @@ bool ImageButton(ImTextureID user_texture_id, const size: &ImVec2, const uv0: &I
 }
 // #endif // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
-bool Checkbox(*const char label, *mut v: bool)
+bool Checkbox(label: *const c_char, *mut v: bool)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -1165,7 +1165,7 @@ bool Checkbox(*const char label, *mut v: bool)
 }
 
 template<typename T>
-bool CheckboxFlagsT(*const char label, *mut T flags, T flags_value)
+bool CheckboxFlagsT(label: *const c_char, *mut T flags, T flags_value)
 {
     let mut all_on: bool =  (*flags & flags_value) == flags_value;
     let mut any_on: bool =  (*flags & flags_value) != 0;
@@ -1193,27 +1193,27 @@ bool CheckboxFlagsT(*const char label, *mut T flags, T flags_value)
     return pressed;
 }
 
-bool CheckboxFlags(*const char label, *mut flags: c_int, flags_value: c_int)
+bool CheckboxFlags(label: *const c_char, *mut flags: c_int, flags_value: c_int)
 {
     return CheckboxFlagsT(label, flags, flags_value);
 }
 
-bool CheckboxFlags(*const char label, *mut c_uint flags, c_uint flags_value)
+bool CheckboxFlags(label: *const c_char, *mut c_uint flags, c_uint flags_value)
 {
     return CheckboxFlagsT(label, flags, flags_value);
 }
 
-bool CheckboxFlags(*const char label, *mut ImS64 flags, ImS64 flags_value)
+bool CheckboxFlags(label: *const c_char, *mut ImS64 flags, ImS64 flags_value)
 {
     return CheckboxFlagsT(label, flags, flags_value);
 }
 
-bool CheckboxFlags(*const char label, *mut u64 flags, u64 flags_value)
+bool CheckboxFlags(label: *const c_char, *mut u64 flags, u64 flags_value)
 {
     return CheckboxFlagsT(label, flags, flags_value);
 }
 
-bool RadioButton(*const char label, active: bool)
+bool RadioButton(label: *const c_char, active: bool)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -1267,7 +1267,7 @@ bool RadioButton(*const char label, active: bool)
 }
 
 // FIXME: This would work nicely if it was a public template, e.g. 'template<T> RadioButton(const char* label, T* v, T v_button)', but I'm not sure how we would expose it..
-bool RadioButton(*const char label, *mut v: c_int, v_button: c_int)
+bool RadioButton(label: *const c_char, *mut v: c_int, v_button: c_int)
 {
     let pressed: bool = RadioButton(label, *v == v_button);
     if (pressed)
@@ -1276,7 +1276,7 @@ bool RadioButton(*const char label, *mut v: c_int, v_button: c_int)
 }
 
 // size_arg (for each axis) < 0f32: align to end, 0f32: auto, > 0f32: specified size
-c_void ProgressBar(fraction: c_float, const size_arg: &ImVec2, *const char overlay)
+c_void ProgressBar(fraction: c_float, const size_arg: &ImVec2, overlay: *const c_char)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -1612,7 +1612,7 @@ static c_float CalcMaxPopupHeightFromItemCount(items_count: c_int)
     return (g.FontSize + g.Style.ItemSpacing.y) * items_count - g.Style.ItemSpacing.y + (g.Style.WindowPadding.y * 2);
 }
 
-bool BeginCombo(*const char label, *const char preview_value, ImGuiComboFlags flags)
+bool BeginCombo(label: *const c_char, preview_value: *const c_char, ImGuiComboFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -1835,7 +1835,7 @@ static bool Items_SingleStringGetter(*mut c_void data, idx: c_int, *const *mut c
 }
 
 // Old API, prefer using BeginCombo() nowadays if you can.
-bool Combo(*const char label, *mut current_item: c_int, bool (*items_getter)(*mut c_void, c_int, *const *mut char), *mut c_void data, items_count: c_int, popup_max_height_in_items: c_int)
+bool Combo(label: *const c_char, *mut current_item: c_int, bool (*items_getter)(*mut c_void, c_int, *const *mut char), *mut c_void data, items_count: c_int, popup_max_height_in_items: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -1880,14 +1880,14 @@ let item_text: *const c_char;
 }
 
 // Combo box helper allowing to pass an array of strings.
-bool Combo(*const char label, *mut current_item: c_int, *const char const items[], items_count: c_int, height_in_items: c_int)
+bool Combo(label: *const c_char, *mut current_item: c_int, *const char const items[], items_count: c_int, height_in_items: c_int)
 {
     let value_changed: bool = Combo(label, current_item, Items_ArrayGetter, items, items_count, height_in_items);
     return value_changed;
 }
 
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
-bool Combo(*const char label, *mut current_item: c_int, *const char items_separated_by_zeros, height_in_items: c_int)
+bool Combo(label: *const c_char, *mut current_item: c_int, items_separated_by_zeros: *const c_char, height_in_items: c_int)
 {
     let items_count: c_int = 0;
     let mut  p: *const c_char = items_separated_by_zeros;       // FIXME-OPT: Avoid computing this, or at least only when combo is open
@@ -1937,7 +1937,7 @@ IM_STATIC_ASSERT(IM_ARRAYSIZE(GDataTypeInfo) == ImGuiDataType_COUNT);
 // FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "%.0f".
 // Even though we changed the compile-time default, we expect users to have carried %f around, which would break the display of DragInt() calls.
 // To honor backward compatibility we are rewriting the format string, unless IMGUI_DISABLE_OBSOLETE_FUNCTIONS is enabled. What could possibly go wrong?!
-static *const char PatchFormatStringFloatToInt(*const char fmt)
+static *const char PatchFormatStringFloatToInt(fmt: *const c_char)
 {
     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
         return "%d";
@@ -1964,7 +1964,7 @@ let tmp_format: *const c_char;
     return &GDataTypeInfo[data_type];
 }
 
-c_int DataTypeFormatString(*mut char buf, buf_size: c_int, ImGuiDataType data_type, *const c_void p_data, *const char format)
+c_int DataTypeFormatString(*mut char buf, buf_size: c_int, ImGuiDataType data_type, *const c_void p_data, format: *const c_char)
 {
     // Signedness doesn't matter when pushing integer arguments
     if (data_type == ImGuiDataType_S32 || data_type == ImGuiDataType_U32)
@@ -2039,7 +2039,7 @@ c_void DataTypeApplyOp(ImGuiDataType data_type, op: c_int, *mut c_void output, *
 
 // User can input math operators (e.g. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
-bool DataTypeApplyFromText(*const char buf, ImGuiDataType data_type, *mut c_void p_data, *const char format)
+bool DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char)
 {
     while (ImCharIsBlankA(*buf))
         buf+= 1;
@@ -2146,7 +2146,7 @@ static c_float GetMinimumStepAtDecimalPrecision(decimal_precision: c_int)
 }
 
 template<typename TYPE>
-TYPE RoundScalarWithFormatT(*const char format, ImGuiDataType data_type, TYPE v)
+TYPE RoundScalarWithFormatT(format: *const c_char, ImGuiDataType data_type, TYPE v)
 {
     IM_UNUSED(data_type);
     // IM_ASSERT(data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double);
@@ -2191,7 +2191,7 @@ TYPE RoundScalarWithFormatT(*const char format, ImGuiDataType data_type, TYPE v)
 
 // This is called by DragBehavior() when the widget is active (held by mouse or being manipulated with Nav controls)
 template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-bool DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, v_speed: c_float, const TYPE v_min, const TYPE v_max, *const char format, ImGuiSliderFlags flags)
+bool DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, v_speed: c_float, const TYPE v_min, const TYPE v_max, format: *const c_char, ImGuiSliderFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let axis: ImGuiAxis = (flags & ImGuiSliderFlags_Vertical) ? ImGuiAxis_Y : ImGuiAxis_X;
@@ -2309,7 +2309,7 @@ bool DragBehaviorT(ImGuiDataType data_type, *mut TYPE v, v_speed: c_float, const
     return true;
 }
 
-bool DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, v_speed: c_float, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags)
+bool DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags)
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -2348,7 +2348,7 @@ bool DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, v_speed
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
-bool DragScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data, v_speed: c_float, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags)
+bool DragScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2436,7 +2436,7 @@ bool DragScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data, 
     return value_changed;
 }
 
-bool DragScalarN(*const char label, ImGuiDataType data_type, *mut c_void p_data, components: c_int, v_speed: c_float, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags)
+bool DragScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int, v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2471,28 +2471,28 @@ bool DragScalarN(*const char label, ImGuiDataType data_type, *mut c_void p_data,
     return value_changed;
 }
 
-bool DragFloat(*const char label, *mut v: c_float, v_speed: c_float, v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool DragFloat(label: *const c_char, *mut v: c_float, v_speed: c_float, v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalar(label, ImGuiDataType_Float, v, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool DragFloat2(*const char label, c_float v[2], v_speed: c_float, v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool DragFloat2(label: *const c_char, c_float v[2], v_speed: c_float, v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalarN(label, ImGuiDataType_Float, v, 2, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool DragFloat3(*const char label, c_float v[3], v_speed: c_float, v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool DragFloat3(label: *const c_char, c_float v[3], v_speed: c_float, v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalarN(label, ImGuiDataType_Float, v, 3, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool DragFloat4(*const char label, c_float v[4], v_speed: c_float, v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool DragFloat4(label: *const c_char, c_float v[4], v_speed: c_float, v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalarN(label, ImGuiDataType_Float, v, 4, v_speed, &v_min, &v_max, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
-bool DragFloatRange2(*const char label, *mut v_current_min: c_float, *mut v_current_max: c_float, v_speed: c_float, v_min: c_float, v_max: c_float, *const char format, *const char format_max, ImGuiSliderFlags flags)
+bool DragFloatRange2(label: *const c_char, *mut v_current_min: c_float, *mut v_current_max: c_float, v_speed: c_float, v_min: c_float, v_max: c_float, format: *const c_char, format_max: *const c_char, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2525,28 +2525,28 @@ bool DragFloatRange2(*const char label, *mut v_current_min: c_float, *mut v_curr
 }
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
-bool DragInt(*const char label, *mut v: c_int, v_speed: c_float, v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool DragInt(label: *const c_char, *mut v: c_int, v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalar(label, ImGuiDataType_S32, v, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool DragInt2(*const char label, c_int v[2], v_speed: c_float, v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool DragInt2(label: *const c_char, c_int v[2], v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalarN(label, ImGuiDataType_S32, v, 2, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool DragInt3(*const char label, c_int v[3], v_speed: c_float, v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool DragInt3(label: *const c_char, c_int v[3], v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalarN(label, ImGuiDataType_S32, v, 3, v_speed, &v_min, &v_max, format, flags);
 }
 
-bool DragInt4(*const char label, c_int v[4], v_speed: c_float, v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool DragInt4(label: *const c_char, c_int v[4], v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return DragScalarN(label, ImGuiDataType_S32, v, 4, v_speed, &v_min, &v_max, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
-bool DragIntRange2(*const char label, *mut v_current_min: c_int, *mut v_current_max: c_int, v_speed: c_float, v_min: c_int, v_max: c_int, *const char format, *const char format_max, ImGuiSliderFlags flags)
+bool DragIntRange2(label: *const c_char, *mut v_current_min: c_int, *mut v_current_max: c_int, v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, format_max: *const c_char, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2727,7 +2727,7 @@ TYPE ScaleValueFromRatioT(ImGuiDataType data_type, t: c_float, TYPE v_min, TYPE 
 
 // FIXME: Try to move more of the code into shared SliderBehavior()
 template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-bool SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut TYPE v, const TYPE v_min, const TYPE v_max, *const char format, ImGuiSliderFlags flags, *mut ImRect out_grab_bb)
+bool SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut TYPE v, const TYPE v_min, const TYPE v_max, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const let mut style = &mut g.Style;
@@ -2899,7 +2899,7 @@ bool SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut TYP
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
 // So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-bool SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags, *mut ImRect out_grab_bb)
+bool SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb)
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -2941,7 +2941,7 @@ bool SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_vo
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
-bool SliderScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags)
+bool SliderScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3025,7 +3025,7 @@ bool SliderScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data
 }
 
 // Add multiple sliders on 1 line for compact edition of multiple components
-bool SliderScalarN(*const char label, ImGuiDataType data_type, *mut c_void v, components: c_int, *const c_void v_min, *const c_void v_max, *const char format, ImGuiSliderFlags flags)
+bool SliderScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void v, components: c_int, *const c_void v_min, *const c_void v_max, format: *const c_char, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3060,27 +3060,27 @@ bool SliderScalarN(*const char label, ImGuiDataType data_type, *mut c_void v, co
     return value_changed;
 }
 
-bool SliderFloat(*const char label, *mut v: c_float, v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool SliderFloat(label: *const c_char, *mut v: c_float, v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalar(label, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
 }
 
-bool SliderFloat2(*const char label, c_float v[2], v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool SliderFloat2(label: *const c_char, c_float v[2], v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalarN(label, ImGuiDataType_Float, v, 2, &v_min, &v_max, format, flags);
 }
 
-bool SliderFloat3(*const char label, c_float v[3], v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool SliderFloat3(label: *const c_char, c_float v[3], v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalarN(label, ImGuiDataType_Float, v, 3, &v_min, &v_max, format, flags);
 }
 
-bool SliderFloat4(*const char label, c_float v[4], v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool SliderFloat4(label: *const c_char, c_float v[4], v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalarN(label, ImGuiDataType_Float, v, 4, &v_min, &v_max, format, flags);
 }
 
-bool SliderAngle(*const char label, *mut v_rad: c_float, v_degrees_min: c_float, v_degrees_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool SliderAngle(label: *const c_char, *mut v_rad: c_float, v_degrees_min: c_float, v_degrees_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     if (format == null_mut())
         format = "%.0f32 deg";
@@ -3090,27 +3090,27 @@ bool SliderAngle(*const char label, *mut v_rad: c_float, v_degrees_min: c_float,
     return value_changed;
 }
 
-bool SliderInt(*const char label, *mut v: c_int, v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool SliderInt(label: *const c_char, *mut v: c_int, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalar(label, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
 }
 
-bool SliderInt2(*const char label, c_int v[2], v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool SliderInt2(label: *const c_char, c_int v[2], v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalarN(label, ImGuiDataType_S32, v, 2, &v_min, &v_max, format, flags);
 }
 
-bool SliderInt3(*const char label, c_int v[3], v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool SliderInt3(label: *const c_char, c_int v[3], v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalarN(label, ImGuiDataType_S32, v, 3, &v_min, &v_max, format, flags);
 }
 
-bool SliderInt4(*const char label, c_int v[4], v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool SliderInt4(label: *const c_char, c_int v[4], v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return SliderScalarN(label, ImGuiDataType_S32, v, 4, &v_min, &v_max, format, flags);
 }
 
-bool VSliderScalar(*const char label, const size: &ImVec2, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags)
+bool VSliderScalar(label: *const c_char, const size: &ImVec2, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3169,12 +3169,12 @@ bool VSliderScalar(*const char label, const size: &ImVec2, ImGuiDataType data_ty
     return value_changed;
 }
 
-bool VSliderFloat(*const char label, const size: &ImVec2, *mut v: c_float, v_min: c_float, v_max: c_float, *const char format, ImGuiSliderFlags flags)
+bool VSliderFloat(label: *const c_char, const size: &ImVec2, *mut v: c_float, v_min: c_float, v_max: c_float, format: *const c_char, ImGuiSliderFlags flags)
 {
     return VSliderScalar(label, size, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
 }
 
-bool VSliderInt(*const char label, const size: &ImVec2, *mut v: c_int, v_min: c_int, v_max: c_int, *const char format, ImGuiSliderFlags flags)
+bool VSliderInt(label: *const c_char, const size: &ImVec2, *mut v: c_int, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags)
 {
     return VSliderScalar(label, size, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
 }
@@ -3203,7 +3203,7 @@ bool VSliderInt(*const char label, const size: &ImVec2, *mut v: c_int, v_min: c_
 //-------------------------------------------------------------------------
 
 // We don't use strchr() because our strings are usually very short and often start with '%'
-*const char ImParseFormatFindStart(*const char fmt)
+*const char ImParseFormatFindStart(fmt: *const c_char)
 {
     while (char c = fmt[0])
     {
@@ -3216,7 +3216,7 @@ bool VSliderInt(*const char label, const size: &ImVec2, *mut v: c_int, v_min: c_
     return fmt;
 }
 
-*const char ImParseFormatFindEnd(*const char fmt)
+*const char ImParseFormatFindEnd(fmt: *const c_char)
 {
     // Printf/scanf types modifiers: I/L/h/j/l/t/w/z. Other uppercase letters qualify as types aka end of the format.
     if (fmt[0] != '%')
@@ -3238,7 +3238,7 @@ bool VSliderInt(*const char label, const size: &ImVec2, *mut v: c_int, v_min: c_
 //  fmt = "%.3f"       -> return fmt
 //  fmt = "hello %.3f" -> return fmt + 6
 //  fmt = "%.3f hello" -> return buf written with "%.3f"
-*const char ImParseFormatTrimDecorations(*const char fmt, *mut char buf, size_t buf_size)
+*const char ImParseFormatTrimDecorations(fmt: *const c_char, *mut char buf, size_t buf_size)
 {
     let mut  fmt_start: *const c_char = ImParseFormatFindStart(fmt);
     if (fmt_start[0] != '%')
@@ -3253,7 +3253,7 @@ bool VSliderInt(*const char label, const size: &ImVec2, *mut v: c_int, v_min: c_
 // Sanitize format
 // - Zero terminate so extra characters after format (e.g. "%f123") don't confuse atof/atoi
 // - stb_sprintf.h supports several new modifiers which format numbers in a way that also makes them incompatible atof/atoi.
-c_void ImParseFormatSanitizeForPrinting(*const char fmt_in, *mut char fmt_out, size_t fmt_out_size)
+c_void ImParseFormatSanitizeForPrinting(fmt_in: *const c_char, *mut char fmt_out, size_t fmt_out_size)
 {
     let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_in);
     IM_UNUSED(fmt_out_size);
@@ -3268,7 +3268,7 @@ c_void ImParseFormatSanitizeForPrinting(*const char fmt_in, *mut char fmt_out, s
 }
 
 // - For scanning we need to remove all width and precision fields "%3.7f" -> "%f". BUT don't strip types like "%I64d" which includes digits. ! "%07I64d" -> "%I64d"
-*const char ImParseFormatSanitizeForScanning(*const char fmt_in, *mut char fmt_out, size_t fmt_out_size)
+*const char ImParseFormatSanitizeForScanning(fmt_in: *const c_char, *mut char fmt_out, size_t fmt_out_size)
 {
     let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_in);
     let mut  fmt_out_begin: *const c_char = fmt_out;
@@ -3289,7 +3289,7 @@ c_void ImParseFormatSanitizeForPrinting(*const char fmt_in, *mut char fmt_out, s
 }
 
 template<typename TYPE>
-static *const char ImAtoi(*const char src, *mut TYPE output)
+static *const char ImAtoi(src: *const c_char, *mut TYPE output)
 {
     let negative: c_int = 0;
     if (*src == '-') { negative = 1; src+= 1; }
@@ -3303,7 +3303,7 @@ static *const char ImAtoi(*const char src, *mut TYPE output)
 
 // Parse display precision back from the display format string
 // FIXME: This is still used by some navigation code path to infer a minimum tweak step, but we should aim to rework widgets so it isn't needed.
-c_int ImParseFormatPrecision(*const char fmt, default_precision: c_int)
+c_int ImParseFormatPrecision(fmt: *const c_char, default_precision: c_int)
 {
     fmt = ImParseFormatFindStart(fmt);
     if (fmt[0] != '%')
@@ -3327,7 +3327,7 @@ c_int ImParseFormatPrecision(*const char fmt, default_precision: c_int)
 
 // Create text input in place of another active widget (e.g. used when doing a CTRL+Click on drag/slider widgets)
 // FIXME: Facilitate using this in variety of other situations.
-bool TempInputText(bb: &ImRect, id: ImGuiID, *const char label, *mut char buf, buf_size: c_int, ImGuiInputTextFlags flags)
+bool TempInputText(bb: &ImRect, id: ImGuiID, label: *const c_char, *mut char buf, buf_size: c_int, ImGuiInputTextFlags flags)
 {
     // On the first frame, g.TempInputTextId == 0, then on subsequent frames it becomes == id.
     // We clear ActiveID on the first frame to allow the InputText() taking it back.
@@ -3347,7 +3347,7 @@ bool TempInputText(bb: &ImRect, id: ImGuiID, *const char label, *mut char buf, b
     return value_changed;
 }
 
-static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(ImGuiDataType data_type, *const char format)
+static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(ImGuiDataType data_type, format: *const c_char)
 {
     if (data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double)
         return ImGuiInputTextFlags_CharsScientific;
@@ -3358,7 +3358,7 @@ static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(ImGuiDataType d
 // Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
 // This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
-bool TempInputScalar(bb: &ImRect, id: ImGuiID, *const char label, ImGuiDataType data_type, *mut c_void p_data, *const char format, *const c_void p_clamp_min, *const c_void p_clamp_max)
+bool TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char, *const c_void p_clamp_min, *const c_void p_clamp_max)
 {
     fmt_buf: [c_char;32];
     data_buf: [c_char;32];
@@ -3396,7 +3396,7 @@ bool TempInputScalar(bb: &ImRect, id: ImGuiID, *const char label, ImGuiDataType 
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
-bool InputScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_step, *const c_void p_step_fast, *const char format, ImGuiInputTextFlags flags)
+bool InputScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_step, *const c_void p_step_fast, format: *const c_char, ImGuiInputTextFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3471,7 +3471,7 @@ bool InputScalar(*const char label, ImGuiDataType data_type, *mut c_void p_data,
     return value_changed;
 }
 
-bool InputScalarN(*const char label, ImGuiDataType data_type, *mut c_void p_data, components: c_int, *const c_void p_step, *const c_void p_step_fast, *const char format, ImGuiInputTextFlags flags)
+bool InputScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int, *const c_void p_step, *const c_void p_step_fast, format: *const c_char, ImGuiInputTextFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3506,50 +3506,50 @@ bool InputScalarN(*const char label, ImGuiDataType data_type, *mut c_void p_data
     return value_changed;
 }
 
-bool InputFloat(*const char label, *mut v: c_float, step: c_float, step_fast: c_float, *const char format, ImGuiInputTextFlags flags)
+bool InputFloat(label: *const c_char, *mut v: c_float, step: c_float, step_fast: c_float, format: *const c_char, ImGuiInputTextFlags flags)
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
     return InputScalar(label, ImGuiDataType_Float, v, (step > 0f32 ? &step : null_mut()), (step_fast > 0f32 ? &step_fast : null_mut()), format, flags);
 }
 
-bool InputFloat2(*const char label, c_float v[2], *const char format, ImGuiInputTextFlags flags)
+bool InputFloat2(label: *const c_char, c_float v[2], format: *const c_char, ImGuiInputTextFlags flags)
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 2, null_mut(), null_mut(), format, flags);
 }
 
-bool InputFloat3(*const char label, c_float v[3], *const char format, ImGuiInputTextFlags flags)
+bool InputFloat3(label: *const c_char, c_float v[3], format: *const c_char, ImGuiInputTextFlags flags)
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 3, null_mut(), null_mut(), format, flags);
 }
 
-bool InputFloat4(*const char label, c_float v[4], *const char format, ImGuiInputTextFlags flags)
+bool InputFloat4(label: *const c_char, c_float v[4], format: *const c_char, ImGuiInputTextFlags flags)
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 4, null_mut(), null_mut(), format, flags);
 }
 
-bool InputInt(*const char label, *mut v: c_int, step: c_int, step_fast: c_int, ImGuiInputTextFlags flags)
+bool InputInt(label: *const c_char, *mut v: c_int, step: c_int, step_fast: c_int, ImGuiInputTextFlags flags)
 {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
     let mut  format: *const c_char = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
     return InputScalar(label, ImGuiDataType_S32, v, (step > 0 ? &step : null_mut()), (step_fast > 0 ? &step_fast : null_mut()), format, flags);
 }
 
-bool InputInt2(*const char label, c_int v[2], ImGuiInputTextFlags flags)
+bool InputInt2(label: *const c_char, c_int v[2], ImGuiInputTextFlags flags)
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 2, null_mut(), null_mut(), "%d", flags);
 }
 
-bool InputInt3(*const char label, c_int v[3], ImGuiInputTextFlags flags)
+bool InputInt3(label: *const c_char, c_int v[3], ImGuiInputTextFlags flags)
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 3, null_mut(), null_mut(), "%d", flags);
 }
 
-bool InputInt4(*const char label, c_int v[4], ImGuiInputTextFlags flags)
+bool InputInt4(label: *const c_char, c_int v[4], ImGuiInputTextFlags flags)
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 4, null_mut(), null_mut(), "%d", flags);
 }
 
-bool InputDouble(*const char label, *mut double v, double step, double step_fast, *const char format, ImGuiInputTextFlags flags)
+bool InputDouble(label: *const c_char, *mut double v, double step, double step_fast, format: *const c_char, ImGuiInputTextFlags flags)
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
     return InputScalar(label, ImGuiDataType_Double, v, (step > 0.0 ? &step : null_mut()), (step_fast > 0.0 ? &step_fast : null_mut()), format, flags);
@@ -3568,24 +3568,24 @@ bool InputDouble(*const char label, *mut double v, double step, double step_fast
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
 
-bool InputText(*const char label, *mut char buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
+bool InputText(label: *const c_char, *mut char buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
 {
     // IM_ASSERT(!(flags & ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
     return InputTextEx(label, null_mut(), buf, buf_size, ImVec2::new2(0, 0), flags, callback, user_data);
 }
 
-bool InputTextMultiline(*const char label, *mut char buf, size_t buf_size, const size: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
+bool InputTextMultiline(label: *const c_char, *mut char buf, size_t buf_size, const size: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
 {
     return InputTextEx(label, null_mut(), buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, callback, user_data);
 }
 
-bool InputTextWithHint(*const char label, *const char hint, *mut char buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
+bool InputTextWithHint(label: *const c_char, hint: *const c_char, *mut char buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
 {
     // IM_ASSERT(!(flags & ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
     return InputTextEx(label, hint, buf, buf_size, ImVec2::new2(0, 0), flags, callback, user_data);
 }
 
-static c_int InputTextCalcTextLenAndLineCount(*const char text_begin, *const *mut char out_text_end)
+static c_int InputTextCalcTextLenAndLineCount(text_begin: *const c_char, *const *mut char out_text_end)
 {
     let line_count: c_int = 0;
     let mut  s: *const c_char = text_begin;
@@ -3799,7 +3799,7 @@ c_void ImGuiInputTextCallbackData::DeleteChars(pos: c_int, bytes_count: c_int)
     BufTextLen -= bytes_count;
 }
 
-c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, *const char new_text, *const char new_text_end)
+c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: *const c_char, new_text_end: *const c_char)
 {
     let is_resizable: bool = (Flags & ImGuiInputTextFlags_CallbackResize) != 0;
     let new_text_len: c_int = new_text_end ? (new_text_end - new_text) : strlen(new_text);
@@ -3932,7 +3932,7 @@ static bool InputTextFilterCharacter(*mut c_uint p_char, ImGuiInputTextFlags fla
 // Find the shortest single replacement we can make to get the new text from the old text.
 // Important: needs to be run before TextW is rewritten with the new characters because calling STB_TEXTEDIT_GETCHAR() at the end.
 // FIXME: Ideally we should transition toward (1) making InsertChars()/DeleteChars() update undo-stack (2) discourage (and keep reconcile) or obsolete (and remove reconcile) accessing buffer directly.
-static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextState state, *const char new_buf_a, new_length_a: c_int)
+static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextState state, new_buf_a: *const c_char, new_length_a: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let old_buf: *const ImWchar = state.TextW.Data;
@@ -3972,7 +3972,7 @@ static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
 // - If you want to use InputText() with std::string, see misc/cpp/imgui_stdlib.h
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-bool InputTextEx(*const char label, *const char hint, *mut char buf, buf_size: c_int, const size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void callback_user_data)
+bool InputTextEx(label: *const c_char, hint: *const c_char, *mut char buf, buf_size: c_int, const size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void callback_user_data)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -4911,7 +4911,7 @@ c_void DebugNodeInputTextState(*mut ImGuiInputTextState state)
 // - ColorPickerOptionsPopup() [Internal]
 //-------------------------------------------------------------------------
 
-bool ColorEdit3(*const char label, c_float col[3], ImGuiColorEditFlags flags)
+bool ColorEdit3(label: *const c_char, c_float col[3], ImGuiColorEditFlags flags)
 {
     return ColorEdit4(label, col, flags | ImGuiColorEditFlags_NoAlpha);
 }
@@ -4943,7 +4943,7 @@ static c_void ColorEditRestoreHS(*const col: c_float, *mut H: c_float, *mut S: c
 // Edit colors components (each component in 0f32..1f32 range).
 // See enum ImGuiColorEditFlags_ for available options. e.g. Only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 // With typical options: Left-click on color square to open color picker. Right-click to open option menu. CTRL-Click over input fields to edit them and TAB to go to next item.
-bool ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags flags)
+bool ColorEdit4(label: *const c_char, c_float col[4], ImGuiColorEditFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -5176,7 +5176,7 @@ bool ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags flags)
     return value_changed;
 }
 
-bool ColorPicker3(*const char label, c_float col[3], ImGuiColorEditFlags flags)
+bool ColorPicker3(label: *const c_char, c_float col[3], ImGuiColorEditFlags flags)
 {
     c_float col4[4] = { col[0], col[1], col[2], 1f32 };
     if (!ColorPicker4(label, col4, flags | ImGuiColorEditFlags_NoAlpha))
@@ -5199,7 +5199,7 @@ static c_void RenderArrowsForVerticalBar(*mut ImDrawList draw_list, pos: ImVec2,
 // (In C++ the 'float col[4]' notation for a function argument is equivalent to 'float* col', we only specify a size to facilitate understanding of the code.)
 // FIXME: we adjust the big color square height based on item width, which may cause a flickering feedback loop (if automatic height makes a vertical scrollbar appears, affecting automatic width..)
 // FIXME: this is trying to be aware of style.Alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.Alpha < 1.0)
-bool ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags flags, *const ref_col: c_float)
+bool ColorPicker4(label: *const c_char, c_float col[4], ImGuiColorEditFlags flags, *const ref_col: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -5570,7 +5570,7 @@ bool ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags flags, 
 // FIXME: May want to display/ignore the alpha component in the color display? Yet show it in the tooltip.
 // 'desc_id' is not called 'label' because we don't display it next to the button, but only in the tooltip.
 // Note that 'col' may be encoded in HSV if ImGuiColorEditFlags_InputHSV is set.
-bool ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFlags flags, const size_arg: &ImVec2)
+bool ColorButton(desc_id: *const c_char, const ImVec4& col, ImGuiColorEditFlags flags, const size_arg: &ImVec2)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -5670,7 +5670,7 @@ c_void SetColorEditOptions(ImGuiColorEditFlags flags)
 }
 
 // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
-c_void ColorTooltip(*const char text, *const col: c_float, ImGuiColorEditFlags flags)
+c_void ColorTooltip(text: *const c_char, *const col: c_float, ImGuiColorEditFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -5808,7 +5808,7 @@ c_void ColorPickerOptionsPopup(*const ref_col: c_float, ImGuiColorEditFlags flag
 // - CollapsingHeader()
 //-------------------------------------------------------------------------
 
-bool TreeNode(*const char str_id, *const char fmt, ...)
+bool TreeNode(str_id: *const c_char, fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -5817,7 +5817,7 @@ bool TreeNode(*const char str_id, *const char fmt, ...)
     return is_open;
 }
 
-bool TreeNode(*const c_void ptr_id, *const char fmt, ...)
+bool TreeNode(*const c_void ptr_id, fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -5826,7 +5826,7 @@ bool TreeNode(*const c_void ptr_id, *const char fmt, ...)
     return is_open;
 }
 
-bool TreeNode(*const char label)
+bool TreeNode(label: *const c_char)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -5834,17 +5834,17 @@ bool TreeNode(*const char label)
     return TreeNodeBehavior(window.GetID(label), 0, label, null_mut());
 }
 
-bool TreeNodeV(*const char str_id, *const char fmt, va_list args)
+bool TreeNodeV(str_id: *const c_char, fmt: *const c_char, va_list args)
 {
     return TreeNodeExV(str_id, 0, fmt, args);
 }
 
-bool TreeNodeV(*const c_void ptr_id, *const char fmt, va_list args)
+bool TreeNodeV(*const c_void ptr_id, fmt: *const c_char, va_list args)
 {
     return TreeNodeExV(ptr_id, 0, fmt, args);
 }
 
-bool TreeNodeEx(*const char label, ImGuiTreeNodeFlags flags)
+bool TreeNodeEx(label: *const c_char, ImGuiTreeNodeFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -5853,7 +5853,7 @@ bool TreeNodeEx(*const char label, ImGuiTreeNodeFlags flags)
     return TreeNodeBehavior(window.GetID(label), flags, label, null_mut());
 }
 
-bool TreeNodeEx(*const char str_id, ImGuiTreeNodeFlags flags, *const char fmt, ...)
+bool TreeNodeEx(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -5862,7 +5862,7 @@ bool TreeNodeEx(*const char str_id, ImGuiTreeNodeFlags flags, *const char fmt, .
     return is_open;
 }
 
-bool TreeNodeEx(*const c_void ptr_id, ImGuiTreeNodeFlags flags, *const char fmt, ...)
+bool TreeNodeEx(*const c_void ptr_id, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -5871,24 +5871,24 @@ bool TreeNodeEx(*const c_void ptr_id, ImGuiTreeNodeFlags flags, *const char fmt,
     return is_open;
 }
 
-bool TreeNodeExV(*const char str_id, ImGuiTreeNodeFlags flags, *const char fmt, va_list args)
+bool TreeNodeExV(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
         return false;
 
-    *const char label, *label_end;
+    label: *const c_char, *label_end;
     ImFormatStringToTempBufferV(&label, &label_end, fmt, args);
     return TreeNodeBehavior(window.GetID(str_id), flags, label, label_end);
 }
 
-bool TreeNodeExV(*const c_void ptr_id, ImGuiTreeNodeFlags flags, *const char fmt, va_list args)
+bool TreeNodeExV(*const c_void ptr_id, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
         return false;
 
-    *const char label, *label_end;
+    label: *const c_char, *label_end;
     ImFormatStringToTempBufferV(&label, &label_end, fmt, args);
     return TreeNodeBehavior(window.GetID(ptr_id), flags, label, label_end);
 }
@@ -5946,7 +5946,7 @@ bool TreeNodeUpdateNextOpen(id: ImGuiID, ImGuiTreeNodeFlags flags)
     return is_open;
 }
 
-bool TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, *const char label, *const char label_end)
+bool TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *const c_char, label_end: *const c_char)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -6133,7 +6133,7 @@ bool TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, *const char label, 
     return is_open;
 }
 
-c_void TreePush(*const char str_id)
+c_void TreePush(str_id: *const c_char)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     Indent();
@@ -6188,7 +6188,7 @@ c_float GetTreeNodeToLabelSpacing()
 }
 
 // Set next TreeNode/CollapsingHeader open state.
-c_void SetNextItemOpen(is_open: bool, ImGuiCond cond)
+c_void SetNextItemOpen(is_open: bool, cond: ImGuiCond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.Currentwindow.SkipItems)
@@ -6200,7 +6200,7 @@ c_void SetNextItemOpen(is_open: bool, ImGuiCond cond)
 
 // CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
-bool CollapsingHeader(*const char label, ImGuiTreeNodeFlags flags)
+bool CollapsingHeader(label: *const c_char, ImGuiTreeNodeFlags flags)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -6213,7 +6213,7 @@ bool CollapsingHeader(*const char label, ImGuiTreeNodeFlags flags)
 // p_visible != NULL && *p_visible == true  : show a small close button on the corner of the header, clicking the button will set *p_visible = false
 // p_visible != NULL && *p_visible == false : do not show the header at all
 // Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
-bool CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFlags flags)
+bool CollapsingHeader(label: *const c_char, p_visible: *mut bool, ImGuiTreeNodeFlags flags)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -6256,7 +6256,7 @@ bool CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFlags fla
 // But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
 // With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: Selectable() with (size.x == 0f32) and (SelectableTextAlign.x > 0f32) followed by SameLine() is currently not supported.
-bool Selectable(*const char label, selected: bool, ImGuiSelectableFlags flags, const size_arg: &ImVec2)
+bool Selectable(label: *const c_char, selected: bool, ImGuiSelectableFlags flags, const size_arg: &ImVec2)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -6401,7 +6401,7 @@ bool Selectable(*const char label, selected: bool, ImGuiSelectableFlags flags, c
     return pressed; //-V1020
 }
 
-bool Selectable(*const char label, bool* p_selected, ImGuiSelectableFlags flags, const size_arg: &ImVec2)
+bool Selectable(label: *const c_char, p_selected: *mut bool, ImGuiSelectableFlags flags, const size_arg: &ImVec2)
 {
     if (Selectable(label, *p_selected, flags, size_arg))
     {
@@ -6421,7 +6421,7 @@ bool Selectable(*const char label, bool* p_selected, ImGuiSelectableFlags flags,
 
 // Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.g. "##empty"
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
-bool BeginListBox(*const char label, const size_arg: &ImVec2)
+bool BeginListBox(label: *const c_char, const size_arg: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
@@ -6462,7 +6462,7 @@ bool BeginListBox(*const char label, const size_arg: &ImVec2)
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // OBSOLETED in 1.81 (from February 2021)
-bool ListBoxHeader(*const char label, items_count: c_int, height_in_items: c_int)
+bool ListBoxHeader(label: *const c_char, items_count: c_int, height_in_items: c_int)
 {
     // If height_in_items == -1, default height is maximum 7.
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -6485,7 +6485,7 @@ c_void EndListBox()
     EndGroup(); // This is only required to be able to do IsItemXXX query on the whole ListBox including label
 }
 
-bool ListBox(*const char label, c_int* current_item, *const char const items[], items_count: c_int, height_items: c_int)
+bool ListBox(label: *const c_char, c_int* current_item, *const char const items[], items_count: c_int, height_items: c_int)
 {
     let value_changed: bool = ListBox(label, current_item, Items_ArrayGetter, items, items_count, height_items);
     return value_changed;
@@ -6493,7 +6493,7 @@ bool ListBox(*const char label, c_int* current_item, *const char const items[], 
 
 // This is merely a helper around BeginListBox(), EndListBox().
 // Considering using those directly to submit custom data or store selection differently.
-bool ListBox(*const char label, c_int* current_item, bool (*items_getter)(*mut c_void, c_int, *const char*), data: *mut c_void, items_count: c_int, height_in_items: c_int)
+bool ListBox(label: *const c_char, c_int* current_item, bool (*items_getter)(*mut c_void, c_int, *const char*), data: *mut c_void, items_count: c_int, height_in_items: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -6550,7 +6550,7 @@ let item_text: *const c_char;
 // - others https://github.com/ocornut/imgui/wiki/Useful-Extensions
 //-------------------------------------------------------------------------
 
-c_int PlotEx(ImGuiPlotType plot_type, *const char label, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, *const char overlay_text, scale_min: c_float, scale_max: c_float, frame_size: ImVec2)
+c_int PlotEx(ImGuiPlotType plot_type, label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char, scale_min: c_float, scale_max: c_float, frame_size: ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
@@ -6683,24 +6683,24 @@ static c_float Plot_ArrayGetter(data: *mut c_void, idx: c_int)
     return v;
 }
 
-c_void PlotLines(*const char label, *const values: c_float, values_count: c_int, values_offset: c_int, *const char overlay_text, scale_min: c_float, scale_max: c_float, graph_size: ImVec2, stride: c_int)
+c_void PlotLines(label: *const c_char, *const values: c_float, values_count: c_int, values_offset: c_int, overlay_text: *const c_char, scale_min: c_float, scale_max: c_float, graph_size: ImVec2, stride: c_int)
 {
     ImGuiPlotArrayGetterData data(values, stride);
     PlotEx(ImGuiPlotType_Lines, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
-c_void PlotLines(*const char label, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, *const char overlay_text, scale_min: c_float, scale_max: c_float, graph_size: ImVec2)
+c_void PlotLines(label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char, scale_min: c_float, scale_max: c_float, graph_size: ImVec2)
 {
     PlotEx(ImGuiPlotType_Lines, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
-c_void PlotHistogram(*const char label, *const values: c_float, values_count: c_int, values_offset: c_int, *const char overlay_text, scale_min: c_float, scale_max: c_float, graph_size: ImVec2, stride: c_int)
+c_void PlotHistogram(label: *const c_char, *const values: c_float, values_count: c_int, values_offset: c_int, overlay_text: *const c_char, scale_min: c_float, scale_max: c_float, graph_size: ImVec2, stride: c_int)
 {
     ImGuiPlotArrayGetterData data(values, stride);
     PlotEx(ImGuiPlotType_Histogram, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
-c_void PlotHistogram(*const char label, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, *const char overlay_text, scale_min: c_float, scale_max: c_float, graph_size: ImVec2)
+c_void PlotHistogram(label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char, scale_min: c_float, scale_max: c_float, graph_size: ImVec2)
 {
     PlotEx(ImGuiPlotType_Histogram, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
@@ -6712,22 +6712,22 @@ c_void PlotHistogram(*const char label, c_float (*values_getter)(data: *mut c_vo
 // - Value()
 //-------------------------------------------------------------------------
 
-c_void Value(*const char prefix, b: bool)
+c_void Value(prefix: *const c_char, b: bool)
 {
     Text("%s: %s", prefix, (b ? "true" : "false"));
 }
 
-c_void Value(*const char prefix, v: c_int)
+c_void Value(prefix: *const c_char, v: c_int)
 {
     Text("%s: %d", prefix, v);
 }
 
-c_void Value(*const char prefix, c_uint v)
+c_void Value(prefix: *const c_char, c_uint v)
 {
     Text("%s: %d", prefix, v);
 }
 
-c_void Value(*const char prefix, v: c_float, *const char float_format)
+c_void Value(prefix: *const c_char, v: c_float, float_format: *const c_char)
 {
     if (float_format)
     {
@@ -6876,7 +6876,7 @@ c_void EndMenuBar()
 // Important: calling order matters!
 // FIXME: Somehow overlapping with docking tech.
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
-bool BeginViewportSideBar(*const char name, ImGuiViewport* viewport_p, dir: ImGuiDir, axis_size: c_float, ImGuiWindowFlags window_flags)
+bool BeginViewportSideBar(name: *const c_char, ImGuiViewport* viewport_p, dir: ImGuiDir, axis_size: c_float, ImGuiWindowFlags window_flags)
 {
     // IM_ASSERT(dir != ImGuiDir_None);
 
@@ -6971,7 +6971,7 @@ static bool IsRootOfOpenMenuSet()
     return (window.DC.NavLayerCurrent == upper_popup.ParentNavLayer && upper_popup.Window && (upper_popup.window.Flags & ImGuiWindowFlags_ChildMenu));
 }
 
-bool BeginMenuEx(*const char label, *const char icon, enabled: bool)
+bool BeginMenuEx(label: *const c_char, icon: *const c_char, enabled: bool)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -7157,7 +7157,7 @@ bool BeginMenuEx(*const char label, *const char icon, enabled: bool)
     return menu_is_open;
 }
 
-bool BeginMenu(*const char label, enabled: bool)
+bool BeginMenu(label: *const c_char, enabled: bool)
 {
     return BeginMenuEx(label, null_mut(), enabled);
 }
@@ -7180,7 +7180,7 @@ c_void EndMenu()
     EndPopup();
 }
 
-bool MenuItemEx(*const char label, *const char icon, *const char shortcut, selected: bool, enabled: bool)
+bool MenuItemEx(label: *const c_char, icon: *const c_char, shortcut: *const c_char, selected: bool, enabled: bool)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -7251,12 +7251,12 @@ bool MenuItemEx(*const char label, *const char icon, *const char shortcut, selec
     return pressed;
 }
 
-bool MenuItem(*const char label, *const char shortcut, selected: bool, enabled: bool)
+bool MenuItem(label: *const c_char, shortcut: *const c_char, selected: bool, enabled: bool)
 {
     return MenuItemEx(label, null_mut(), shortcut, selected, enabled);
 }
 
-bool MenuItem(*const char label, *const char shortcut, bool* p_selected, enabled: bool)
+bool MenuItem(label: *const c_char, shortcut: *const c_char, p_selected: *mut bool, enabled: bool)
 {
     if (MenuItemEx(label, null_mut(), shortcut, p_selected ? *p_selected : false, enabled))
     {
@@ -7299,7 +7299,7 @@ struct ImGuiTabBarSection
 namespace ImGui
 {
     static c_void             TabBarLayout(tab_bar: *mut ImGuiTabBar);
-    static u32            TabBarCalcTabID(tab_bar: *mut ImGuiTabBar, *const char label, docked_window: *mut ImGuiWindow);
+    static u32            TabBarCalcTabID(tab_bar: *mut ImGuiTabBar, label: *const c_char, docked_window: *mut ImGuiWindow);
     static c_float            TabBarCalcMaxTabWidth();
     static c_float            TabBarScrollClamp(tab_bar: *mut ImGuiTabBar, scrolling: c_float);
     static c_void             TabBarScrollToTab(tab_bar: *mut ImGuiTabBar, tab_id: ImGuiID, ImGuiTabBarSection* sections);
@@ -7351,7 +7351,7 @@ static ImGuiPtrOrIndex GetTabBarRefFromTabBar(tab_bar: *mut ImGuiTabBar)
     return ImGuiPtrOrIndex(tab_bar);
 }
 
-bool    BeginTabBar(*const char str_id, ImGuiTabBarFlags flags)
+bool    BeginTabBar(str_id: *const c_char, ImGuiTabBarFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -7705,7 +7705,7 @@ static c_void TabBarLayout(tab_bar: *mut ImGuiTabBar)
 }
 
 // Dockable uses Name/ID in the global namespace. Non-dockable items use the ID stack.
-static u32   TabBarCalcTabID(tab_bar: *mut ImGuiTabBar, *const char label, docked_window: *mut ImGuiWindow)
+static u32   TabBarCalcTabID(tab_bar: *mut ImGuiTabBar, label: *const c_char, docked_window: *mut ImGuiWindow)
 {
     if (docked_window != null_mut())
     {
@@ -8035,7 +8035,7 @@ static ImGuiTabItem* TabBarTabListPopupButton(tab_bar: *mut ImGuiTabBar)
 // - TabItemLabelAndCloseButton() [Internal]
 //-------------------------------------------------------------------------
 
-bool    BeginTabItem(*const char label, bool* p_open, ImGuiTabItemFlags flags)
+bool    BeginTabItem(label: *const c_char, p_open: *mut bool, ImGuiTabItemFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -8078,7 +8078,7 @@ c_void    EndTabItem()
         PopID();
 }
 
-bool    TabItemButton(*const char label, ImGuiTabItemFlags flags)
+bool    TabItemButton(label: *const c_char, ImGuiTabItemFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -8094,7 +8094,7 @@ bool    TabItemButton(*const char label, ImGuiTabItemFlags flags)
     return TabItemEx(tab_bar, label, null_mut(), flags | ImGuiTabItemFlags_Button | ImGuiTabItemFlags_NoReorder, null_mut());
 }
 
-bool    TabItemEx(tab_bar: *mut ImGuiTabBar, *const char label, bool* p_open, ImGuiTabItemFlags flags, docked_window: *mut ImGuiWindow)
+bool    TabItemEx(tab_bar: *mut ImGuiTabBar, label: *const c_char, p_open: *mut bool, ImGuiTabItemFlags flags, docked_window: *mut ImGuiWindow)
 {
     // Layout whole tab bar if not already done
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -8256,7 +8256,7 @@ bool    TabItemEx(tab_bar: *mut ImGuiTabBar, *const char label, bool* p_open, Im
         SetItemAllowOverlap();
 
     // Drag and drop a single floating window node moves it
-    node: *mut ImGuiDockNode = docked_window ? docked_window.DockNode : null_mut();
+    let node: *mut ImGuiDockNode = docked_window ? docked_window.DockNode : null_mut();
     let single_floating_window_node: bool = node && node.IsFloatingNode() && (node.Windows.len() == 1);
     if (held && single_floating_window_node && IsMouseDragging(0, 0f32))
     {
@@ -8384,7 +8384,7 @@ bool    TabItemEx(tab_bar: *mut ImGuiTabBar, *const char label, bool* p_open, Im
 // [Public] This is call is 100% optional but it allows to remove some one-frame glitches when a tab has been unexpectedly removed.
 // To use it to need to call the function SetTabItemClosed() between BeginTabBar() and EndTabBar().
 // Tabs closed by the close button will automatically be flagged to avoid this issue.
-c_void    SetTabItemClosed(*const char label)
+c_void    SetTabItemClosed(label: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut is_within_manual_tab_bar: bool =  g.CurrentTabBar && !(g.CurrentTabBar.Flags & ImGuiTabBarFlags_DockNode);
@@ -8407,7 +8407,7 @@ c_void    SetTabItemClosed(*const char label)
     }
 }
 
-ImVec2 TabItemCalcSize(*const char label, has_close_button: bool)
+ImVec2 TabItemCalcSize(label: *const c_char, has_close_button: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
@@ -8446,7 +8446,7 @@ c_void TabItemBackground(ImDrawList* draw_list, bb: &ImRect, ImGuiTabItemFlags f
 
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic
 // We tend to lock style.FramePadding for a given tab-bar, hence the 'frame_padding' parameter.
-c_void TabItemLabelAndCloseButton(ImDrawList* draw_list, bb: &ImRect, ImGuiTabItemFlags flags, frame_padding: ImVec2, *const char label, tab_id: ImGuiID, close_button_id: ImGuiID, is_contents_visible: bool, bool* out_just_closed, bool* out_text_clipped)
+c_void TabItemLabelAndCloseButton(ImDrawList* draw_list, bb: &ImRect, ImGuiTabItemFlags flags, frame_padding: ImVec2, label: *const c_char, tab_id: ImGuiID, close_button_id: ImGuiID, is_contents_visible: bool, out_just_closed: *mut bool, out_text_clipped: *mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);

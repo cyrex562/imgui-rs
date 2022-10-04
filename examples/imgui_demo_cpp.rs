@@ -1206,7 +1206,7 @@ static c_void ShowDemoWindowWidgets()
         Combo("combo 3 (array)", &item_current_3, items, IM_ARRAYSIZE(items));
 
         // Simplified one-liner Combo() using an accessor function
-        struct Funcs { static bool ItemGetter(*mut c_void data, n: c_int, **const char out_str) { *out_str = ((**const char)data)[n]; return true; } };
+        struct Funcs { static bool ItemGetter(*mut c_void data, n: c_int, *out_str: *const c_char) { *out_str = ((**const char)data)[n]; return true; } };
         static let item_current_4: c_int = 0;
         Combo("combo 4 (function)", &item_current_4, &Funcs::ItemGetter, items, IM_ARRAYSIZE(items));
 
@@ -1560,7 +1560,7 @@ static c_void ShowDemoWindowWidgets()
 
                 // Note: Because  is a namespace you would typically add your own function into the namespace.
                 // For example, you code may declare a function 'InputText(const char* label, MyString* my_str)'
-                static bool MyInputTextMultiline(*const char label, Vec<char>* my_str, const ImVec2& size = ImVec2::new2(0, 0), ImGuiInputTextFlags flags = 0)
+                static bool MyInputTextMultiline(label: *const c_char, my_str: &mut Vec<char>, const ImVec2& size = ImVec2::new2(0, 0), ImGuiInputTextFlags flags = 0)
                 {
                     // IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
                     return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, my_str);
@@ -6215,7 +6215,7 @@ namespace ImGui {  c_void ShowFontAtlas(*mut ImFontAtlas atlas); }
 
 // Demo helper function to select among loaded fonts.
 // Here we use the regular BeginCombo()/EndCombo() api which is the more flexible one.
-c_void ShowFontSelector(*const char label)
+c_void ShowFontSelector(label: *const c_char)
 {
     ImGuiIO& io = GetIO();
     *mut ImFont font_current = GetFont();
@@ -6242,7 +6242,7 @@ c_void ShowFontSelector(*const char label)
 // Demo helper function to select among default colors. See ShowStyleEditor() for more advanced options.
 // Here we use the simplified Combo() api that packs items into a single literal string.
 // Useful for quick combo boxes where the choices are known locally.
-bool ShowStyleSelector(*const char label)
+bool ShowStyleSelector(label: *const c_char)
 {
     static let style_idx: c_int = -1;
     if (Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
@@ -6663,9 +6663,9 @@ struct ExampleAppConsole
     }
 
     // Portable helpers
-    static c_int   Stricmp(*const char s1, *const char s2)         { let mut d: c_int = 0; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
-    static c_int   Strnicmp(*const char s1, *const char s2, n: c_int) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
-    static char* Strdup(*const char s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(buf); return memcpy(buf, (*const c_void)s, len); }
+    static c_int   Stricmp(s1: *const c_char, s2: *const c_char)         { let mut d: c_int = 0; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
+    static c_int   Strnicmp(s1: *const c_char, s2: *const c_char, n: c_int) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
+    static char* Strdup(s: *const c_char)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(buf); return memcpy(buf, (*const c_void)s, len); }
     static c_void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end-= 1; *str_end = 0; }
 
     c_void    ClearLog()
@@ -6675,7 +6675,7 @@ struct ExampleAppConsole
         Items.clear();
     }
 
-    c_void    AddLog(*const char fmt, ...) IM_FMTARGS(2)
+    c_void    AddLog(fmt: *const c_char, ...) IM_FMTARGS(2)
     {
         // FIXME-OPT
         buf: [c_char;1024];
@@ -6687,7 +6687,7 @@ struct ExampleAppConsole
         Items.push(Strdup(buf));
     }
 
-    c_void    Draw(*const char title, bool* p_open)
+    c_void    Draw(title: *const c_char, p_open: *mut bool)
     {
         SetNextWindowSize(ImVec2::new2(520, 600), ImGuiCond_FirstUseEver);
         if (!Begin(title, p_open))
@@ -6824,7 +6824,7 @@ struct ExampleAppConsole
         End();
     }
 
-    c_void    ExecCommand(*const char command_line)
+    c_void    ExecCommand(command_line: *const c_char)
     {
         AddLog("# %s\n", command_line);
 
@@ -6975,7 +6975,7 @@ struct ExampleAppConsole
     }
 };
 
-static c_void ShowExampleAppConsole(bool* p_open)
+static c_void ShowExampleAppConsole(p_open: *mut bool)
 {
     static ExampleAppConsole console;
     console.Draw("Example: Console", p_open);
@@ -7009,7 +7009,7 @@ struct ExampleAppLog
         LineOffsets.push(0);
     }
 
-    c_void    AddLog(*const char fmt, ...) IM_FMTARGS(2)
+    c_void    AddLog(fmt: *const c_char, ...) IM_FMTARGS(2)
     {
         let old_size: c_int = Buf.size();
         va_list args;
@@ -7021,7 +7021,7 @@ struct ExampleAppLog
                 LineOffsets.push(old_size + 1);
     }
 
-    c_void    Draw(*const char title, bool* p_open = null_mut())
+    c_void    Draw(title: *const c_char, bool* p_open = null_mut())
     {
         if (!Begin(title, p_open))
         {
@@ -7110,7 +7110,7 @@ struct ExampleAppLog
 };
 
 // Demonstrate creating a simple log window with basic filtering.
-static c_void ShowExampleAppLog(bool* p_open)
+static c_void ShowExampleAppLog(p_open: *mut bool)
 {
     static ExampleAppLog log;
 
@@ -7145,7 +7145,7 @@ static c_void ShowExampleAppLog(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate create a window with multiple child windows.
-static c_void ShowExampleAppLayout(bool* p_open)
+static c_void ShowExampleAppLayout(p_open: *mut bool)
 {
     SetNextWindowSize(ImVec2::new2(500, 440), ImGuiCond_FirstUseEver);
     if (Begin("Example: Simple layout", p_open, ImGuiWindowFlags_MenuBar))
@@ -7211,7 +7211,7 @@ static c_void ShowExampleAppLayout(bool* p_open)
 // [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
 //-----------------------------------------------------------------------------
 
-static c_void ShowPlaceholderObject(*const char prefix, uid: c_int)
+static c_void ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
 {
     // Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
     PushID(uid);
@@ -7259,7 +7259,7 @@ static c_void ShowPlaceholderObject(*const char prefix, uid: c_int)
 }
 
 // Demonstrate create a simple property editor.
-static c_void ShowExampleAppPropertyEditor(bool* p_open)
+static c_void ShowExampleAppPropertyEditor(p_open: *mut bool)
 {
     SetNextWindowSize(ImVec2::new2(430, 450), ImGuiCond_FirstUseEver);
     if (!Begin("Example: Property editor", p_open))
@@ -7295,7 +7295,7 @@ static c_void ShowExampleAppPropertyEditor(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate/test rendering huge amount of text, and the incidence of clipping.
-static c_void ShowExampleAppLongText(bool* p_open)
+static c_void ShowExampleAppLongText(p_open: *mut bool)
 {
     SetNextWindowSize(ImVec2::new2(520, 600), ImGuiCond_FirstUseEver);
     if (!Begin("Example: Long text display", p_open))
@@ -7358,7 +7358,7 @@ static c_void ShowExampleAppLongText(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate creating a window which gets auto-resized according to its content.
-static c_void ShowExampleAppAutoResize(bool* p_open)
+static c_void ShowExampleAppAutoResize(p_open: *mut bool)
 {
     if (!Begin("Example: Auto-resizing window", p_open, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -7384,7 +7384,7 @@ static c_void ShowExampleAppAutoResize(bool* p_open)
 
 // Demonstrate creating a window with custom resize constraints.
 // Note that size constraints currently don't work on a docked window (when in 'docking' branch)
-static c_void ShowExampleAppConstrainedResize(bool* p_open)
+static c_void ShowExampleAppConstrainedResize(p_open: *mut bool)
 {
     struct CustomConstraints
     {
@@ -7471,7 +7471,7 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
 
 // Demonstrate creating a simple static window with no decoration
 // + a context-menu to choose which corner of the screen to use.
-static c_void ShowExampleAppSimpleOverlay(bool* p_open)
+static c_void ShowExampleAppSimpleOverlay(p_open: *mut bool)
 {
     static let location: c_int = 0;
     ImGuiIO& io = GetIO();
@@ -7527,7 +7527,7 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate creating a window covering the entire screen/viewport
-static c_void ShowExampleAppFullscreen(bool* p_open)
+static c_void ShowExampleAppFullscreen(p_open: *mut bool)
 {
     static let mut use_work_area: bool =  true;
     static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
@@ -7599,7 +7599,7 @@ static c_void ShowExampleAppWindowTitles(bool*)
 //-----------------------------------------------------------------------------
 
 // Demonstrate using the low-level ImDrawList to draw custom shapes.
-static c_void ShowExampleAppCustomRendering(bool* p_open)
+static c_void ShowExampleAppCustomRendering(p_open: *mut bool)
 {
     if (!Begin("Example: Custom rendering", p_open))
     {
@@ -7855,7 +7855,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
 // (*) because of this constraint, the implicit \"Debug\" window can not be docked into an explicit DockSpace() node,
 // because that window is submitted as part of the part of the NewFrame() call. An easy workaround is that you can create
 // your own implicit "Debug##2" window after calling DockSpace() and leave it in the window stack for anyone to use.
-c_void ShowExampleAppDockSpace(bool* p_open)
+c_void ShowExampleAppDockSpace(p_open: *mut bool)
 {
     // If you strip some features of, this demo is pretty much equivalent to calling DockSpaceOverViewport()!
     // In most cases you should be able to just call DockSpaceOverViewport() and ignore all the code below!
@@ -7975,7 +7975,7 @@ let Name: *const c_char;       // Document title
     bool        WantClose;  // Set when the document
     ImVec4      Color;      // An arbitrary variable associated to the document
 
-    MyDocument(*const char name, let mut open: bool =  true, const ImVec4& color = ImVec4(1f32, 1f32, 1f32, 1f32))
+    MyDocument(name: *const c_char, let mut open: bool =  true, const ImVec4& color = ImVec4(1f32, 1f32, 1f32, 1f32))
     {
         Name = name;
         Open = OpenPrev = open;
@@ -8055,7 +8055,7 @@ static c_void NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
     }
 }
 
-c_void ShowExampleAppDocuments(bool* p_open)
+c_void ShowExampleAppDocuments(p_open: *mut bool)
 {
     static ExampleAppDocuments app;
 

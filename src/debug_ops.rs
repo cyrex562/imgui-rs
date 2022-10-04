@@ -169,7 +169,7 @@ impl Func {
 //   The configuration settings mentioned in imconfig.h must be set for all compilation units involved with Dear ImGui,
 //   which is way it is required you put them in your imconfig file (and not just before including imgui.h).
 //   Otherwise it is possible that different compilation units would see different structure layout
-// bool DebugCheckVersionAndDataLayout(*const char version, size_t sz_io, size_t sz_style, size_t sz_vec2, size_t sz_vec4, size_t sz_vert, size_t sz_idx)
+// bool DebugCheckVersionAndDataLayout(version: *const c_char, size_t sz_io, size_t sz_style, size_t sz_vec2, size_t sz_vec4, size_t sz_vert, size_t sz_idx)
 pub unsafe fn DebugCheckVersionAndDataLayout(version: *const c_char, sz_io: size_t, sz_tyle: size_t, sz_vec2: size_t, sz_vec4: size_t, sz_vert: size_t, sz_idx: size_t) -> bool
 {
     let mut error: bool =  false;
@@ -542,7 +542,7 @@ pub fn ViewportComparerByFrontMostStampCount(lhs: *const ImGuiViewport, rhs: *co
 }
 
 // Helper tool to diagnose between text encoding issues and font loading issues. Pass your UTF-8 string and verify that there are correct.
-// c_void DebugTextEncoding(*const char str)
+// c_void DebugTextEncoding(str: *const c_char)
 pub unsafe fn DebugTextEncoding(text: *const c_char)
 {
     Text("Text: \"%s\"", text);
@@ -586,7 +586,7 @@ pub unsafe fn DebugTextEncoding(text: *const c_char)
 }
 
 // Avoid naming collision with imgui_demo.cpp's HelpMarker() for unity builds.
-// static c_void MetricsHelpMarker(*const char desc)
+// static c_void MetricsHelpMarker(desc: *const c_char)
 pub unsafe fn MetricsHelpMarker(desc: *const c_char)
 {
     TextDisabled("(?)");
@@ -714,7 +714,7 @@ impl Funcs {
     }
 }
 
-// c_void ShowMetricsWindow(bool* p_open)
+// c_void ShowMetricsWindow(p_open: *mut bool)
 pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -1092,7 +1092,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
         }
         if TreeNode("SettingsWindows", "Settings packed data: Windows: %d bytes", g.SettingsWindows.size())
         {
-            // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+            // for (let mut settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
             for settings in g.SettingsWindow.iter_mut()
             {
                 DebugNodeWindowSettings(settings);
@@ -1116,7 +1116,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
             // let dc = &mut ctx.DockContext;
             let mut dc = &mut g.DockContext;
             Text("In SettingsWindows:");
-            // for (ImGuiWindowSettings* settings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+            // for (let mut settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
             for settings in g.SettingsWindow.iter_mut()
             {
                 if settings.DockId != 0 {
@@ -1137,7 +1137,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
                     selected_tab_name = window.Name;
                 }
                 let window_settings = FindWindowSettings(settings.SelectedTabId);
-                // else if (ImGuiWindowSettings* window_settings = FindWindowSettings(settings.SelectedTabId))
+                // else if (let mut window_settings: *mut ImGuiWindowSettings = FindWindowSettings(settings.SelectedTabId))
                if window_settings.is_null() == false
                 {
                     selected_tab_name = window_settings.GetName();
@@ -1303,7 +1303,7 @@ pub fn DebugNodeColumns(columns: *mut ImGuiOldColumns) {
     TreePop();
 }
 
-// static c_void DebugNodeDockNodeFlags(ImGuiDockNodeFlags* p_flags, *const char label, enabled: bool)
+// static c_void DebugNodeDockNodeFlags(ImGuiDockNodeFlags* p_flags, label: *const c_char, enabled: bool)
 pub unsafe fn DebugNodeDockNodeFlags(p_flags: *mut ImGuiDockNodeFlags, label: *const c_char, enabled: bool) {
     // using namespace ImGui;
     PushID(label);
@@ -1334,7 +1334,7 @@ pub unsafe fn DebugNodeDockNodeFlags(p_flags: *mut ImGuiDockNodeFlags, label: *c
 }
 
 // [DEBUG] Display contents of ImDockNode
-// c_void DebugNodeDockNode(node: *mut ImGuiDockNode, *const char label)
+// c_void DebugNodeDockNode(node: *mut ImGuiDockNode, label: *const c_char)
 pub unsafe fn DebugNodeDockNode(node: *mut ImGuiDockNode, label: *const c_char)
     {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -1411,7 +1411,7 @@ pub unsafe fn DebugNodeDockNode(node: *mut ImGuiDockNode, label: *const c_char)
 
 // [DEBUG] Display contents of ImDrawList
 // Note that both 'window' and 'viewport' may be NULL here. Viewport is generally null of destroyed popups which previously owned a viewport.
-// c_void DebugNodeDrawList(window: *mut ImGuiWindow, *mut ImGuiViewportP viewport, *const ImDrawList draw_list, *const char label)
+// c_void DebugNodeDrawList(window: *mut ImGuiWindow, *mut ImGuiViewportP viewport, *const ImDrawList draw_list, label: *const c_char)
 pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiViewport, draw_list: *const ImDrawList, label: *const c_char)
     {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -1685,7 +1685,7 @@ pub fn DebugNodeFontGlypn(glyph: *const ImFontGlyph) {
 }
 
 // [DEBUG] Display contents of ImGuiStorage
-// c_void DebugNodeStorage(ImGuiStorage* storage, *const char label)
+// c_void DebugNodeStorage(ImGuiStorage* storage, label: *const c_char)
 pub fn DebugNodeStorage(storage: *mut ImGuiStorage, label: *const c_char)
     {
     if !TreeNode(label, "%s: %d entries, %d bytes", label, storage.Data.Size, storage.Data.size_in_bytes()) {
@@ -1701,7 +1701,7 @@ pub fn DebugNodeStorage(storage: *mut ImGuiStorage, label: *const c_char)
 }
 
 // [DEBUG] Display contents of ImGuiTabBar
-// c_void DebugNodeTabBar(tab_bar: *mut ImGuiTabBar, *const char label)
+// c_void DebugNodeTabBar(tab_bar: *mut ImGuiTabBar, label: *const c_char)
 pub unsafe fn DebugNodeTabBar(tab_bar: *mut ImGuiTabBar, label: *const c_char)
     {
     // Standalone tab bars (not associated to docking/windows functionality) currently hold no discernible strings.
@@ -1793,7 +1793,7 @@ pub unsafe fn DebugNodeViewport(viewport: &mut ImGuiViewport)
     }
 }
 
-// c_void DebugNodeWindow(window: *mut ImGuiWindow, *const char label)
+// c_void DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
 pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
     {
     if window == null_mut()
@@ -1877,7 +1877,7 @@ pub fn DebugNodeWindowSettings(settings: &mut ImGuiWindowSettings)
         settings.ID, settings.GetName(), settings.Pos.x, settings.Pos.y, settings.Size.x, settings.Size.y, settings.Collapsed);
 }
 
-// c_void DebugNodeWindowsList(windows: *mut  Vec<*mut ImGuiWindow>, *const char label)
+// c_void DebugNodeWindowsList(windows: *mut  Vec<*mut ImGuiWindow>, label: *const c_char)
 pub unsafe fn DebugNodeWindowsList(windows: *mut Vec<*mut ImGuiWindow>, label: *const c_char)
     {
     if !TreeNode(label, "%s (%d)", label, windows.Size) {
@@ -1918,7 +1918,7 @@ pub unsafe fn DebugNodeWindowsListByBeginStackParent(winodws: *mut *mut ImGuiWin
 // [SECTION] DEBUG LOG
 //-----------------------------------------------------------------------------
 
-// c_void DebugLog(*const char fmt, ...)
+// c_void DebugLog(fmt: *const c_char, ...)
 // pub fn DebugLog()
 //     {
 //     va_list args;
@@ -1927,7 +1927,7 @@ pub unsafe fn DebugNodeWindowsListByBeginStackParent(winodws: *mut *mut ImGuiWin
 //     va_end(args);
 // }
 
-// c_void DebugLogV(*const char fmt, va_list args)
+// c_void DebugLogV(fmt: *const c_char, va_list args)
 // {
 //     let g = GImGui; // ImGuiContext& g = *GImGui;
 //     let old_size: c_int = g.DebugLogBuf.size();
@@ -1937,7 +1937,7 @@ pub unsafe fn DebugNodeWindowsListByBeginStackParent(winodws: *mut *mut ImGuiWin
 //         IMGUI_DEBUG_PRINTF("%s", g.DebugLogBuf.begin() + old_size);
 // }
 
-// c_void ShowDebugLogWindow(bool* p_open)
+// c_void ShowDebugLogWindow(p_open: *mut bool)
 pub unsafe fn ShowDebugLogWindow(p_open: *mut bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if !(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize) {
@@ -2107,7 +2107,7 @@ pub unsafe fn StackToolFormatLevelInfo(tool: *mut ImGuiStackTool, n: c_int, form
 }
 
 // Stack Tool: Display UI
-// c_void ShowStackToolWindow(bool* p_open)
+// c_void ShowStackToolWindow(p_open: *mut bool)
 pub unsafe fn ShowStackToolWIndow(p_open: *mut bool)
     {
     let g = GImGui; // ImGuiContext& g = *GImGui;

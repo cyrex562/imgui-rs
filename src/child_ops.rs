@@ -21,7 +21,7 @@ use crate::state_ops::{Begin, End};
 use crate::style_var::{ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_ChildRounding, ImGuiStyleVar_WindowPadding};
 use crate::window_ops::GetCurrentWindow;
 
-// bool BeginChildEx(*const char name, id: ImGuiID, const size_arg: &ImVec2, border: bool, ImGuiWindowFlags flags)
+// bool BeginChildEx(name: *const c_char, id: ImGuiID, const size_arg: &ImVec2, border: bool, ImGuiWindowFlags flags)
 pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
@@ -76,7 +76,7 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     return ret;
 }
 
-// bool BeginChild(*const char str_id, const size_arg: &ImVec2, border: bool, ImGuiWindowFlags extra_flags)
+// bool BeginChild(str_id: *const c_char, const size_arg: &ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild(str_id: *const c_char, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     return BeginChildEx(str_id, window.GetID(str_id, null()), size_arg, border, extra_flags);
