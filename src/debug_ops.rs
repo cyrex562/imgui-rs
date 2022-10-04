@@ -283,7 +283,7 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks()
             let mon = g.PlatformIO.Monitors[monitor_n];
             // IM_UNUSED(mon);
             // IM_ASSERT(mon.MainSize.x > 0f32 && mon.MainSize.y > 0f32 && "Monitor main bounds not setup properly.");
-            // IM_ASSERT(ImRect(mon.MainPos, mon.MainPos + mon.MainSize).Contains(ImRect(mon.WorkPos, mon.WorkPos + mon.WorkSize)) && "Monitor work bounds not setup properly. If you don't have work area information, just copy MainPos/MainSize into them.");
+            // IM_ASSERT(ImRect::new(mon.MainPos, mon.MainPos + mon.MainSize).Contains(ImRect::new(mon.WorkPos, mon.WorkPos + mon.WorkSize)) && "Monitor work bounds not setup properly. If you don't have work area information, just copy MainPos/MainSize into them.");
             // IM_ASSERT(mon.DpiScale != 0f32);
         }
     }
@@ -494,8 +494,8 @@ pub unsafe fn DebugRenderViewportThumbnaiL(draw_list: &mut ImDrawList, viewport:
 
         let mut thumb_r: ImRect =  thumb_window.Rect();
         let mut title_r: ImRect =  thumb_window.TitleBarRect();
-        thumb_r = ImRect(ImFloor(off + thumb_r.Min * scale), ImFloor(off +  thumb_r.Max * scale));
-        title_r = ImRect(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::new2(0,5)); // Exaggerate title bar height
+        thumb_r = ImRect::new(ImFloor(off + thumb_r.Min * scale), ImFloor(off +  thumb_r.Max * scale));
+        title_r = ImRect::new(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2::new(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::new2(0,5)); // Exaggerate title bar height
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
         let window_is_focused: bool = (g.NavWindow.is_null() == false && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight);
@@ -616,7 +616,7 @@ pub fn ShowFontAtlas(atlas: *mut ImFontAtlas)
     {
         let tint_col = ImVec4::new2(1f32, 1f32, 1f32, 1f32);
         let border_col = ImVec4::new2(1f32, 1f32, 1f32, 0.5f32);
-        Image(atlas.TexID, ImVec2(atlas.TexWidth, atlas.TexHeight), ImVec2::new2(0f32, 0f32), ImVec2::new2(1f32, 1f32), tint_col, border_col);
+        Image(atlas.TexID, ImVec2::new(atlas.TexWidth, atlas.TexHeight), ImVec2::new2(0f32, 0f32), ImVec2::new2(1f32, 1f32), tint_col, border_col);
         TreePop();
     }
 }
@@ -710,7 +710,7 @@ impl Funcs {
         else if rect_type == WRT_ContentIdeal { let mut min: ImVec2 =  window.InnerRect.Min - window.Scroll + window.WindowPadding; return ImRect::new2(&min, min + window.ContentSizeIdeal); }
         else if rect_type == WRT_ContentRegionRect { return window.ContentRegionRect.clone(); }
         // IM_ASSERT(0);
-        return ImRect();
+        return ImRect::new();
     }
 }
 
@@ -1229,7 +1229,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
                 buf: [c_char;32];
                 // ImFormatString(buf, IM_ARRAYSIZE(buf), "%d", window.BeginOrderWithinContext);
                 let font_size: c_float =  GetFontSize();
-                draw_list.AddRectFilled(&window.Pos, window.Pos + ImVec2(font_size, font_size), IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None);
+                draw_list.AddRectFilled(&window.Pos, window.Pos + ImVec2::new(font_size, font_size), IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None);
                 draw_list.AddText(&window.Pos, IM_COL32(255, 255, 255, 255), buf, null());
             }
         }
@@ -1666,7 +1666,7 @@ pub unsafe fn DebugNodeFont(font: &mut ImFont)
                     EndTooltip();
                 }
             }
-            Dummy(ImVec2((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
+            Dummy(ImVec2::new((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
             TreePop();
         }
         TreePop();
@@ -1726,8 +1726,8 @@ pub unsafe fn DebugNodeTabBar(tab_bar: *mut ImGuiTabBar, label: *const c_char)
     {
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(null_mut());
         draw_list.AddRect(&tab_bar.BarRect.Min, &tab_bar.BarRect.Max, IM_COL32(255, 255, 0, 255), 0f32, ImDrawFlags_None, 0f32);
-        draw_list.AddLine(ImVec2(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Min.y), ImVec2(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
-        draw_list.AddLine(ImVec2(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Min.y), ImVec2(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
+        draw_list.AddLine(ImVec2::new(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
+        draw_list.AddLine(ImVec2::new(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
     }
     if open
     {

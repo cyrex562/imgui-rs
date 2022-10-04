@@ -358,7 +358,7 @@ pub unsafe fn UpdateMouseWheel() {
 pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
-    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
+    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2::new(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
 
     // Find the window hovered by mouse:
     // - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from HoveredWindow.

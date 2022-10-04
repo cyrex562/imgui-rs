@@ -381,7 +381,7 @@ bool    BeginTableEx(*const char name, id: ImGuiID, c_int columns_count, ImGuiTa
             override_content_size.x = inner_width;
 
         if (override_content_size.x != f32::MAX || override_content_size.y != f32::MAX)
-            SetNextWindowContentSize(ImVec2(override_content_size.x != f32::MAX ? override_content_size.x : 0f32, override_content_size.y != f32::MAX ? override_content_size.y : 0f32));
+            SetNextWindowContentSize(ImVec2::new(override_content_size.x != f32::MAX ? override_content_size.x : 0f32, override_content_size.y != f32::MAX ? override_content_size.y : 0f32));
 
         // Reset scroll if we are reactivating it
         if ((table_last_flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) == 0)
@@ -2214,7 +2214,7 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
             // IM_ASSERT(channel_no < IMGUI_TABLE_MAX_DRAW_CHANNELS);
             *mut MergeGroup merge_group = &merge_groups[merge_group_n];
             if (merge_group.ChannelsCount == 0)
-                merge_group.ClipRect = ImRect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
+                merge_group.ClipRect = ImRect::new(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
             merge_group.ChannelsMask.SetBit(channel_no);
             merge_group.ChannelsCount+= 1;
             merge_group.ClipRect.Add(src_channel._CmdBuffer[0].ClipRect);
@@ -2297,7 +2297,7 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
                     merge_channels_count-= 1;
 
                     *mut ImDrawChannel channel = &splitter._Channels[n];
-                    // IM_ASSERT(channel._CmdBuffer.Size == 1 && merge_clip_rect.Contains(ImRect(channel._CmdBuffer[0].ClipRect)));
+                    // IM_ASSERT(channel._CmdBuffer.Size == 1 && merge_clip_rect.Contains(ImRect::new(channel._CmdBuffer[0].ClipRect)));
                     channel._CmdBuffer[0].ClipRect = merge_clip_rect.ToVec4();
                     memcpy(dst_tmp++, channel, sizeof(ImDrawChannel));
                 }
@@ -2378,7 +2378,7 @@ c_void TableDrawBorders(*mut ImGuiTable table)
             }
 
             if (draw_y2 > draw_y1)
-                inner_drawlist.AddLine(ImVec2(column.MaxX, draw_y1), ImVec2(column.MaxX, draw_y2), col, border_size);
+                inner_drawlist.AddLine(ImVec2::new(column.MaxX, draw_y1), ImVec2::new(column.MaxX, draw_y2), col, border_size);
         }
     }
 
@@ -2399,13 +2399,13 @@ c_void TableDrawBorders(*mut ImGuiTable table)
         }
         else if (table.Flags & ImGuiTableFlags_BordersOuterV)
         {
-            inner_drawlist.AddLine(outer_border.Min, ImVec2(outer_border.Min.x, outer_border.Max.y), outer_col, border_size);
-            inner_drawlist.AddLine(ImVec2(outer_border.Max.x, outer_border.Min.y), outer_border.Max, outer_col, border_size);
+            inner_drawlist.AddLine(outer_border.Min, ImVec2::new(outer_border.Min.x, outer_border.Max.y), outer_col, border_size);
+            inner_drawlist.AddLine(ImVec2::new(outer_border.Max.x, outer_border.Min.y), outer_border.Max, outer_col, border_size);
         }
         else if (table.Flags & ImGuiTableFlags_BordersOuterH)
         {
-            inner_drawlist.AddLine(outer_border.Min, ImVec2(outer_border.Max.x, outer_border.Min.y), outer_col, border_size);
-            inner_drawlist.AddLine(ImVec2(outer_border.Min.x, outer_border.Max.y), outer_border.Max, outer_col, border_size);
+            inner_drawlist.AddLine(outer_border.Min, ImVec2::new(outer_border.Max.x, outer_border.Min.y), outer_col, border_size);
+            inner_drawlist.AddLine(ImVec2::new(outer_border.Min.x, outer_border.Max.y), outer_border.Max, outer_col, border_size);
         }
     }
     if ((table.Flags & ImGuiTableFlags_BordersInnerH) && table.RowPosY2 < table.OuterRect.Max.y)
@@ -2413,7 +2413,7 @@ c_void TableDrawBorders(*mut ImGuiTable table)
         // Draw bottom-most row border
         let border_y: c_float =  table.RowPosY2;
         if (border_y >= table.BgClipRect.Min.y && border_y < table.BgClipRect.Max.y)
-            inner_drawlist.AddLine(ImVec2(table.BorderX1, border_y), ImVec2(table.BorderX2, border_y), table.BorderColorLight, border_size);
+            inner_drawlist.AddLine(ImVec2::new(table.BorderX1, border_y), ImVec2::new(table.BorderX2, border_y), table.BorderColorLight, border_size);
     }
 
     inner_drawlist.PopClipRect();
@@ -2799,11 +2799,11 @@ c_void TableHeader(*const char label)
             if (column.SortOrder > 0)
             {
                 PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text, 0.700f32));
-                RenderText(ImVec2(x + g.Style.ItemInnerSpacing.x, y), sort_order_su0f32);
+                RenderText(ImVec2::new(x + g.Style.ItemInnerSpacing.x, y), sort_order_su0f32);
                 PopStyleColor();
                 x += w_sort_text;
             }
-            RenderArrow(window.DrawList, ImVec2(x, y), GetColorU32(ImGuiCol_Text), column.SortDirection == ImGuiSortDirection_Ascending ? ImGuiDir_Up : ImGuiDir_Down, ARROW_SCALE);
+            RenderArrow(window.DrawList, ImVec2::new(x, y), GetColorU32(ImGuiCol_Text), column.SortDirection == ImGuiSortDirection_Ascending ? ImGuiDir_Up : ImGuiDir_Down, ARROW_SCALE);
         }
 
         // Handle clicking on column header to adjust Sort Order
@@ -2816,8 +2816,8 @@ c_void TableHeader(*const char label)
 
     // Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
     // be merged into a single draw call.
-    //window.DrawList.AddCircleFilled(ImVec2(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
-    RenderTextEllipsis(window.DrawList, label_pos, ImVec2(ellipsis_max, label_pos.y + label_height + g.Style.FramePadding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
+    //window.DrawList.AddCircleFilled(ImVec2::new(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
+    RenderTextEllipsis(window.DrawList, label_pos, ImVec2::new(ellipsis_max, label_pos.y + label_height + g.Style.FramePadding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
 
     let text_clipped: bool = label_size.x > (ellipsis_max - label_pos.x);
     if (text_clipped && hovered && g.ActiveId == 0 && IsItemHovered(ImGuiHoveredFlags_DelayNormal))
@@ -3713,7 +3713,7 @@ c_void BeginColumns(*const char str_id, c_int columns_count, ImGuiOldColumnFlags
         *mut ImGuiOldColumnData column = &[n];
         let clip_x1: c_float =  IM_ROUND(window.Pos.x + GetColumnOffset(n));
         let clip_x2: c_float =  IM_ROUND(window.Pos.x + GetColumnOffset(n + 1) - 1f32);
-        column.ClipRect = ImRect(clip_x1, -f32::MAX, clip_x2, +f32::MAX);
+        column.ClipRect = ImRect::new(clip_x1, -f32::MAX, clip_x2, +f32::MAX);
         column.ClipRect.ClipWithFull(window.ClipRect);
     }
 
@@ -3825,7 +3825,7 @@ c_void EndColumns()
             let x: c_float =  window.Pos.x + GetColumnOffset(n);
             let mut column_id: ImGuiID =   + ImGuiID(n);
             let column_hit_hw: c_float =  COLUMNS_HIT_RECT_HALF_WIDTH;
-            let mut column_hit_rect: ImRect = ImRect::new(ImVec2(x - column_hit_hw, y1), ImVec2(x + column_hit_hw, y2));
+            let mut column_hit_rect: ImRect = ImRect::new(ImVec2::new(x - column_hit_hw, y1), ImVec2::new(x + column_hit_hw, y2));
             KeepAliveID(column_id);
             if (IsClippedEx(column_hit_rect, column_id)) // FIXME: Can be removed or replaced with a lower-level test
                 continue;
@@ -3843,7 +3843,7 @@ c_void EndColumns()
             // Draw column
             const u32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
             let xi: c_float =  IM_FLOOR(x);
-            window.DrawList.AddLine(ImVec2(xi, y1 + 1f32), ImVec2(xi, y2), col);
+            window.DrawList.AddLine(ImVec2::new(xi, y1 + 1f32), ImVec2::new(xi, y2), col);
         }
 
         // Apply dragging after drawing the column lines, so our rendered lines are in sync with how items were displayed during the frame.

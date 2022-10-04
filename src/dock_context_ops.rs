@@ -399,9 +399,9 @@ pub unsafe fn DockContextBuildNodesFromSettings(ctx: *mut ImGuiContext, node_set
         }
         let mut node = DockContextAddNode(ctx, settings.ID);
         node.ParentNode = if settings.ParentNodeId { DockContextFindNodeByID(ctx, settings.ParentNodeId) } else { null_mut() };
-        node.Pos = ImVec2(settings.Pos.x, settings.Pos.y);
-        node.Size = ImVec2(settings.Size.x, settings.Size.y);
-        node.SizeRef = ImVec2(settings.SizeRef.x, settings.SizeRef.y);
+        node.Pos = ImVec2::new(settings.Pos.x, settings.Pos.y);
+        node.Size = ImVec2::new(settings.Size.x, settings.Size.y);
+        node.SizeRef = ImVec2::new(settings.SizeRef.x, settings.SizeRef.y);
         node.AuthorityForPos = ImGuiDataAuthority_DockNode;
         node.AuthorityForSize = ImGuiDataAuthority_DockNode;
         node.AuthorityForViewport = ImGuiDataAuthority_DockNode;

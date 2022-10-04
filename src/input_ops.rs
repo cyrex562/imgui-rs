@@ -364,7 +364,7 @@ pub fn GetMousePosOnOPeningCurrentPopup() -> ImVec2 {
     return g.IO.MousePos.clone();
 }
 
-// We typically use ImVec2(-f32::MAX,-f32::MAX) to denote an invalid mouse position.
+// We typically use ImVec2::new(-f32::MAX,-f32::MAX) to denote an invalid mouse position.
 // bool IsMousePosValid(*const ImVec2 mouse_pos)
 pub fn IsMousePosValid(mouse_pos: *const ImVec2) -> bool {
     // The assert is only to silence a false-positive in XCode Static Analysis.
@@ -504,7 +504,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
         if e.Type == ImGuiInputEventType_MousePos {
             let mut event_pos = ImVec2::new2(e.MousePos.PosX, e.MousePos.PosY);
             if IsMousePosValid(&event_pos) {
-                event_pos = ImVec2(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
+                event_pos = ImVec2::new(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
             } // Apply same flooring as UpdateMouseInputs()
             e.IgnoredAsSame = (io.MousePos.x == event_pos.x && io.MousePos.y == event_pos.y);
             if !e.IgnoredAsSame {

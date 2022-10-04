@@ -490,11 +490,11 @@ c_void NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
     IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.Name, g.NavLayer);
     if (init_for_nav)
     {
-        SetNavID(0, g.NavLayer, 0, ImRect());
+        SetNavID(0, g.NavLayer, 0, ImRect::new());
         g.NavInitRequest = true;
         g.NavInitRequestFromMove = false;
         g.NavInitResultId = 0;
-        g.NavInitResultRectRel = ImRect();
+        g.NavInitResultRectRel = ImRect::new();
         NavUpdateAnyRequestFlag();
     }
     else
@@ -514,7 +514,7 @@ static ImVec2 NavCalcPreferredRefPos()
         // The +1f32 offset when stored by OpenPopupEx() allows reopening this or another popup (same or another mouse button) while not moving the mouse, it is pretty standard.
         // In theory we could move that +1f32 offset in OpenPopupEx()
         let p: ImVec2 = IsMousePosValid(&g.IO.MousePos) ? g.IO.MousePos : g.MouseLastValidPos;
-        return ImVec2(p.x + 1f32, p.y);
+        return ImVec2::new(p.x + 1f32, p.y);
     }
     else
     {
@@ -526,7 +526,7 @@ static ImVec2 NavCalcPreferredRefPos()
             let next_scroll: ImVec2 = CalcNextScrollFromScrollTargetAndClamp(window);
             rect_rel.Translate(window.Scroll - next_scroll);
         }
-        let pos: ImVec2 = ImVec2(rect_rel.Min.x + ImMin(g.Style.FramePadding.x * 4, rect_rel.GetWidth()), rect_rel.Max.y - ImMin(g.Style.FramePadding.y, rect_rel.GetHeight()));
+        let pos: ImVec2 = ImVec2::new(rect_rel.Min.x + ImMin(g.Style.FramePadding.x * 4, rect_rel.GetWidth()), rect_rel.Max.y - ImMin(g.Style.FramePadding.y, rect_rel.GetHeight()));
         ImGuiViewport* viewport = window.Viewport;
         return ImFloor(ImClamp(pos, viewport.Pos, viewport.Pos + viewport.Size)); // ImFloor() is important because non-integer mouse position application in backend might be lossy and result in undesirable non-zero delta.
     }
@@ -767,7 +767,7 @@ c_void NavUpdateCreateMoveRequest()
             if (!IsActiveIdUsingNavDir(ImGuiDir_Down)  && ((nav_gamepad_active && IsKeyPressedEx(ImGuiKey_GamepadDpadDown,  repeat_mode)) || (nav_keyboard_active && IsKeyPressedEx(ImGuiKey_DownArrow,  repeat_mode)))) { g.NavMoveDir = ImGuiDir_Down; }
         }
         g.NavMoveClipDir = g.NavMoveDir;
-        g.NavScoringNoClipRect = ImRect(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
+        g.NavScoringNoClipRect = ImRect::new(+f32::MAX, +f32::MAX, -f32::MAX, -f32::MAX);
     }
 
     // Update PageUp/PageDown/Home/End scroll
@@ -813,7 +813,7 @@ c_void NavUpdateCreateMoveRequest()
     {
         let mut clamp_x: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         let mut clamp_y: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
-        let inner_rect_rel: ImRect =  WindowRectAbsToRel(window, ImRect(window.InnerRect.Min - ImVec2::new2(1, 1), window.InnerRect.Max + ImVec2::new2(1, 1)));
+        let inner_rect_rel: ImRect =  WindowRectAbsToRel(window, ImRect::new(window.InnerRect.Min - ImVec2::new2(1, 1), window.InnerRect.Max + ImVec2::new2(1, 1)));
         if ((clamp_x || clamp_y) && !inner_rect_rel.Contains(window.NavRectRel[g.NavLayer]))
         {
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp NavRectRel for gamepad move\n");
@@ -832,7 +832,7 @@ c_void NavUpdateCreateMoveRequest()
     ImRect scoring_rect;
     if (window != null_mut())
     {
-        let nav_rect_rel: ImRect =  !window.NavRectRel[g.NavLayer].IsInverted() ? window.NavRectRel[g.NavLayer] : ImRect(0, 0, 0, 0);
+        let nav_rect_rel: ImRect =  !window.NavRectRel[g.NavLayer].IsInverted() ? window.NavRectRel[g.NavLayer] : ImRect::new(0, 0, 0, 0);
         scoring_rect = WindowRectRelToAbs(window, nav_rect_rel);
         scoring_rect.TranslateY(scoring_rect_offset_y);
         scoring_rect.Min.x = ImMin(scoring_rect.Min.x + 1f32, scoring_rect.Max.x);
@@ -1410,7 +1410,7 @@ c_void NavUpdateWindowingOverlay()
     if (g.NavWindowingListWindow == null_mut())
         g.NavWindowingListWindow = FindWindowByName("###NavWindowingList");
     let viewport: *const ImGuiViewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
-    SetNextWindowSizeConstraints(ImVec2(viewport.Size.x * 0.20f32, viewport.Size.y * 0.200f32), ImVec2(f32::MAX, f32::MAX));
+    SetNextWindowSizeConstraints(ImVec2::new(viewport.Size.x * 0.20f32, viewport.Size.y * 0.200f32), ImVec2::new(f32::MAX, f32::MAX));
     SetNextWindowPos(viewport.GetCenter(), ImGuiCond_Always, ImVec2::new2(0.5f32, 0.5f32));
     PushStyleVar(ImGuiStyleVar_WindowPadding, g.Style.WindowPadding * 2.00f32);
     Begin("###NavWindowingList", null_mut(), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);

@@ -17,7 +17,7 @@ pub Max: ImVec2
 }
 
 impl ImRect {
-    // constexpr ImRect()                                        : Min(0f32, 0f32), Max(0f32, 0f32)  {}
+    // constexpr ImRect::new()                                        : Min(0f32, 0f32), Max(0f32, 0f32)  {}
     pub fn new() -> Self {
         Self {
             Min: ImVec2::default(),
@@ -25,7 +25,7 @@ impl ImRect {
         }
     }
 
-    // constexpr ImRect(const ImVec2& min, const ImVec2& max)    : Min(min), Max(max)                {}
+    // constexpr ImRect::new(const ImVec2& min, const ImVec2& max)    : Min(min), Max(max)                {}
     pub fn new2(min: &ImVec2, max: &ImVec2) -> Self {
         Self {
             Min: min.clone(),
@@ -33,7 +33,7 @@ impl ImRect {
         }
     }
 
-    // constexpr ImRect(const ImVec4& v)                         : Min(v.x, v.y), Max(v.z, v.w)      {}
+    // constexpr ImRect::new(const ImVec4& v)                         : Min(v.x, v.y), Max(v.z, v.w)      {}
     pub fn new3(v: &ImVec4) -> Self {
         Self {
             Min: ImVec2::new2(v.x, v.y),
@@ -41,7 +41,7 @@ impl ImRect {
         }
     }
 
-    // constexpr ImRect(c_float x1, c_float y1, c_float x2, c_float y2)  : Min(x1, y1), Max(x2, y2)          {}
+    // constexpr ImRect::new(c_float x1, c_float y1, c_float x2, c_float y2)  : Min(x1, y1), Max(x2, y2)          {}
     pub fn new4(x1: c_float, y1: c_float, x2: c_float, y2: c_float) -> Self {
         Self {
             Min: ImVec2::new2(x1,y1),
@@ -49,12 +49,12 @@ impl ImRect {
         }
     }
 
-    // ImVec2      GetCenter() const                   { return ImVec2((Min.x + Max.x) * 0.5f32, (Min.y + Max.y) * 0.5f32); }
+    // ImVec2      GetCenter() const                   { return ImVec2::new((Min.x + Max.x) * 0.5f32, (Min.y + Max.y) * 0.5f32); }
     pub fn GetCenter(&mut self) -> ImVec2 {
         ImVec2::new2((self.Min.x + self.Max.x) *0.5f32, (self.Min.y + Self.Max.y) * 0.5f32)
     }
 
-    // ImVec2      GetSize() const                     { return ImVec2(Max.x - Min.x, Max.y - Min.y); }
+    // ImVec2      GetSize() const                     { return ImVec2::new(Max.x - Min.x, Max.y - Min.y); }
     pub fn GetSize(&mut self) -> ImVec2 {
         ImVec2::new2(self.Max.x - self.Min.x, self.Max.y - self.Min.y)
     }
@@ -80,12 +80,12 @@ impl ImRect {
         self.Min.clone()
     }
 
-    // ImVec2      GetTR() const                       { return ImVec2(Max.x, Min.y); }  // Top-right
+    // ImVec2      GetTR() const                       { return ImVec2::new(Max.x, Min.y); }  // Top-right
     pub fn GetTR(&mut self) -> ImVec2 {
         ImVec2::new2(self.Max.x, self.Min.y)
     }
 
-    // ImVec2      GetBL() const                       { return ImVec2(Min.x, Max.y); }  // Bottom-left
+    // ImVec2      GetBL() const                       { return ImVec2::new(Min.x, Max.y); }  // Bottom-left
     pub fn GetBL(&mut self) -> ImVec2 {
         ImVec2::new2(self.Min.x, self.Max.y)
     }

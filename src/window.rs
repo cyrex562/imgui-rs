@@ -244,7 +244,7 @@ impl ImGuiWindow {
             NameBufLen: libc::strlen(name) + 1,
             ID: ImHashStr(name, 0, 0),
             ViewportAllowPlatformMonitorExtend: -1,
-            ViewportPos: ImVec2(f32::MAX, f32::MAX),
+            ViewportPos: ImVec2::new(f32::MAX, f32::MAX),
             MoveId: GetID("#MOVE"),
             TabId: GetID("#TAB"),
             ScrollTarget: ImVec2::new2(f32::MAX, f32::MAX),
@@ -326,7 +326,7 @@ impl ImGuiWindow {
     }
 
 // We don't use g.FontSize because the window may be != g.CurrentWindow.
-//     ImRect      Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
+//     ImRect      Rect() const            { return ImRect::new(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
 
 
     // float       CalcFontSize() const    { let g = GImGui; // ImGuiContext& g = *GImGui; float scale = g.FontBaseSize * FontWindowScale * FontDpiScale; if (ParentWindow) scale *= Parentwindow.FontWindowScale; return scale; }
@@ -335,11 +335,11 @@ impl ImGuiWindow {
     // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0f32 : CalcFontSize() + g.Style.FramePadding.y * 2.0f32; }
 
 
-    // ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
+    // ImRect      TitleBarRect() const    { return ImRect::new(Pos, ImVec2::new(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
 
 
     // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0f32 : 0f32; }
 
 
-    // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
+    // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect::new(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
 }

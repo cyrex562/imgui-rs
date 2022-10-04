@@ -47,12 +47,12 @@ pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_paddi
     if thickness == 0f32 {
         rect.Max -= ImVec2::new2(1, 1);
     }
-    if border_n == ImGuiDir_Left { return ImRect(rect.Min.x - thickness, rect.Min.y + perp_padding, rect.Min.x + thickness, rect.Max.y - perp_padding); }
-    if border_n == ImGuiDir_Right { return ImRect(rect.Max.x - thickness, rect.Min.y + perp_padding, rect.Max.x + thickness, rect.Max.y - perp_padding); }
-    if border_n == ImGuiDir_Up { return ImRect(rect.Min.x + perp_padding, rect.Min.y - thickness, rect.Max.x - perp_padding, rect.Min.y + thickness);    }
-    if border_n == ImGuiDir_Down { return ImRect(rect.Min.x + perp_padding, rect.Max.y - thickness, rect.Max.x - perp_padding, rect.Max.y + thickness);    }
+    if border_n == ImGuiDir_Left { return ImRect::new(rect.Min.x - thickness, rect.Min.y + perp_padding, rect.Min.x + thickness, rect.Max.y - perp_padding); }
+    if border_n == ImGuiDir_Right { return ImRect::new(rect.Max.x - thickness, rect.Min.y + perp_padding, rect.Max.x + thickness, rect.Max.y - perp_padding); }
+    if border_n == ImGuiDir_Up { return ImRect::new(rect.Min.x + perp_padding, rect.Min.y - thickness, rect.Max.x - perp_padding, rect.Min.y + thickness);    }
+    if border_n == ImGuiDir_Down { return ImRect::new(rect.Min.x + perp_padding, rect.Max.y - thickness, rect.Max.x - perp_padding, rect.Max.y + thickness);    }
     // IM_ASSERT(0);
-    return ImRect();
+    return ImRect::new();
 }
 
 // 0..3: corners (Lower-right, Lower-left, Unused, Unused)

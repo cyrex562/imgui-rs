@@ -167,7 +167,7 @@ impl ImGuiDockNode {
         self.ChildNodes[0].is_null() && self.Windows.len() == 0
     }
 
-    // ImRect                  Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
+    // ImRect                  Rect() const            { return ImRect::new(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
 
 
 

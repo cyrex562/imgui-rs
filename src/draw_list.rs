@@ -86,14 +86,14 @@ impl ImDrawList {
     // void  PopTextureID();
     pub fn PopTextureID(&mut self) {}
 
-    // inline ImVec2   GetClipRectMin() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.x, cr.y); }
+    // inline ImVec2   GetClipRectMin() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2::new(cr.x, cr.y); }
     pub fn GetClipRectMin(&mut self) -> ImVec2 {
         let cr = self._ClipRectStack.last().unwrap();
         return ImVec2::new2(cr.x, cr.y);
     }
 
 
-    // inline ImVec2   GetClipRectMax() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2(cr.z, cr.w); }
+    // inline ImVec2   GetClipRectMax() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2::new(cr.z, cr.w); }
     pub fn GetClipRectMax(&mut self) -> ImVec2 {
         let cr = self._ClipRectStack.last();
         return ImVec2::new2(cr.z, cr.w);
@@ -293,8 +293,8 @@ impl ImDrawList {
         todo!()
     }
 
-    // void  PrimRect(const ImVec2& a, const ImVec2& b, u32 col);      // Axis aligned rectangle (composed of two triangles)
-    pub fn PrimRect(&mut self, a: &ImVec2, b: &ImVec2, col: u32) {
+    // void  PrImRect::new(const ImVec2& a, const ImVec2& b, u32 col);      // Axis aligned rectangle (composed of two triangles)
+    pub fn PrImRect::new(&mut self, a: &ImVec2, b: &ImVec2, col: u32) {
         todo!()
     }
 

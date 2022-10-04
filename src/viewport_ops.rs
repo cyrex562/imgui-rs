@@ -774,7 +774,7 @@ c_void UpdatePlatformWindows()
             if (g.PlatformIO.Renderer_CreateWindow != null_mut())
                 g.PlatformIO.Renderer_CreateWindow(viewport);
             viewport.LastNameHash = 0;
-            viewport.LastPlatformPos = viewport.LastPlatformSize = ImVec2(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/Size below, before Platform_ShowWindow (FIXME: Is that necessary?)
+            viewport.LastPlatformPos = viewport.LastPlatformSize = ImVec2::new(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/Size below, before Platform_ShowWindow (FIXME: Is that necessary?)
             viewport.LastRendererSize = viewport.Size;                                       // We don't need to call Renderer_SetWindowSize() as it is expected Renderer_CreateWindow() already did it.
             viewport.PlatformWindowCreated = true;
         }
@@ -899,7 +899,7 @@ static c_int FindPlatformMonitorForPos(const ImVec2& pos)
     for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.len(); monitor_n++)
     {
         const ImGuiPlatformMonitor& monitor = g.PlatformIO.Monitors[monitor_n];
-        if (ImRect(monitor.MainPos, monitor.MainPos + monitor.MainSize).Contains(pos))
+        if (ImRect::new(monitor.MainPos, monitor.MainPos + monitor.MainSize).Contains(pos))
             return monitor_n;
     }
     return -1;
@@ -925,7 +925,7 @@ static c_int FindPlatformMonitorForRect(const ImRect& rect)
     for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.len() && best_monitor_surface < surface_threshold; monitor_n++)
     {
         const ImGuiPlatformMonitor& monitor = g.PlatformIO.Monitors[monitor_n];
-        const let monitor_rect: ImRect =  ImRect(monitor.MainPos, monitor.MainPos + monitor.MainSize);
+        const let monitor_rect: ImRect =  ImRect::new(monitor.MainPos, monitor.MainPos + monitor.MainSize);
         if (monitor_rect.Contains(rect))
             return monitor_n;
         let overlapping_rect: ImRect =  rect;

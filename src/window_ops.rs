@@ -379,7 +379,7 @@ pub unsafe fn FindHoveredWindows() {
         if window.HitTestHoleSize.x != 0 {
             let hole_pos = ImVec2::new2(window.Pos.x + window.HitTestHoleOffset.x, window.Pos.y + window.HitTestHoleOffset.y);
             let hole_size = ImVec2::new2(window.HitTestHoleSize.x as c_float, window.HitTestHoleSize.y as c_float);
-            if ImRect(hole_pos.clone(), hole_pos.clone() + hole_size).Contains(g.IO.MousePos.clone()) {
+            if ImRect::new(hole_pos.clone(), hole_pos.clone() + hole_size).Contains(g.IO.MousePos.clone()) {
                 continue;
             }
         }
@@ -435,11 +435,11 @@ pub fn ApplyWindowSettings(window: *mut ImGuiWindow, settings: *mut ImGuiWindowS
     if settings.ViewportId
     {
         window.ViewportId = settings.ViewportId;
-        window.ViewportPos = ImVec2(settings.ViewportPos.x, settings.ViewportPos.y);
+        window.ViewportPos = ImVec2::new(settings.ViewportPos.x, settings.ViewportPos.y);
     }
-    window.Pos = ImFloor(ImVec2(settings.Pos.x + window.ViewportPos.x, settings.Pos.y + window.ViewportPos.y));
+    window.Pos = ImFloor(ImVec2::new(settings.Pos.x + window.ViewportPos.x, settings.Pos.y + window.ViewportPos.y));
     if settings.Size.x > 0 && settings.Size.y > 0 {
-        window.SizeFull = ImFloor(ImVec2(settings.Size.x, settings.Size.y));
+        window.SizeFull = ImFloor(ImVec2::new(settings.Size.x, settings.Size.y));
 
         window.Size = window.SizeFull.clone();
     }
@@ -628,7 +628,7 @@ pub unsafe fn CalcWIndowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
         // FIXME-VIEWPORT-WORKAREA: May want to use GetWorkSize() instead of Size depending on the type of windows?
         let mut avail_size: ImVec2 = window.Viewport.Size;
         if window.ViewportOwned {
-            avail_size = ImVec2(f32::MAX, f32::MAX);
+            avail_size = ImVec2::new(f32::MAX, f32::MAX);
         }
         let monitor_idx: c_int = window.ViewportAllowPlatformMonitorExtend;
         if (monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.len()) {
@@ -708,7 +708,7 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
     if g.Style.FrameBorderSize > 0f32 && flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
     {
         let y: c_float =  window.Pos.y + window.TitleBarHeight() - 1;
-        window.DrawList.AddLine(ImVec2(window.Pos.x + border_size, y), ImVec2(window.Pos.x + window.Size.x - border_size, y), GetColorU32(ImGuiCol_Border, 0f32, ), g.Style.FrameBorderSize);
+        window.DrawList.AddLine(ImVec2::new(window.Pos.x + border_size, y), ImVec2::new(window.Pos.x + window.Size.x - border_size, y), GetColorU32(ImGuiCol_Border, 0f32, ), g.Style.FrameBorderSize);
     }
 }
 
@@ -811,7 +811,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rec: &
         {
             let mut menu_bar_rect: ImRect =  window.MenuBarRect();
             menu_bar_rect.ClipWith(window.Rect());  // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
-            window.DrawList.AddRectFilled(menu_bar_rect.Min + ImVec2(window_border_size, 0), menu_bar_rect.Max - ImVec2(window_border_size, 0), GetColorU32(ImGuiCol_MenuBarBg, 0f32, ), if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { window_rounding } else { 0f32 }, ImDrawFlags_RoundCornersTop);
+            window.DrawList.AddRectFilled(menu_bar_rect.Min + ImVec2::new(window_border_size, 0), menu_bar_rect.Max - ImVec2::new(window_border_size, 0), GetColorU32(ImGuiCol_MenuBarBg, 0f32, ), if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { window_rounding } else { 0f32 }, ImDrawFlags_RoundCornersTop);
             if style.FrameBorderSize > 0f32 && menu_bar_rect.Max.y < window.Pos.y + window.Size.y {
                 window.DrawList.AddLine(&(menu_bar_rect.GetBL()), &(menu_bar_rect.GetBR()), GetColorU32(ImGuiCol_Border, 0f32, ), style.FrameBorderSize);
             }
@@ -824,7 +824,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rec: &
             let unhide_sz_draw: c_float =  ImFloor(g.FontSize * 0.700f32);
             let unhide_sz_hit: c_float =  ImFloor(g.FontSize * 0.550f32);
             let p: ImVec2 = node.Pos;
-            let mut r: ImRect = ImRect::new2(&p, p + ImVec2(unhide_sz_hit, unhide_sz_hit));
+            let mut r: ImRect = ImRect::new2(&p, p + ImVec2::new(unhide_sz_hit, unhide_sz_hit));
             let mut unhide_id: ImGuiID =  window.GetID(str_to_const_c_char_ptr("#UNHIDE"),null() );
             KeepAliveID(unhide_id);
             // hovered: bool, held;
@@ -842,7 +842,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rec: &
             let col = GetColorU32(if (held && hovered) || (node.IsFocused && !hovered) {
                 ImGuiCol_ButtonActive} else { if hovered                 {ImGuiCol_ButtonHovered
             } else { ImGuiCol_Button }}, 0f32);
-            window.DrawList.AddTriangleFilled(p, p + ImVec2(unhide_sz_draw, 0f32), p + ImVec2::new2(0f32, unhide_sz_draw), col);
+            window.DrawList.AddTriangleFilled(p, p + ImVec2::new(unhide_sz_draw, 0f32), p + ImVec2::new2(0f32, unhide_sz_draw), col);
         }
 
         // Scrollbars
@@ -863,7 +863,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rec: &
                 let corner: ImVec2 = ImLerp(window.Pos, window.Pos + window.Size, grip.CornerPosN);
                 window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::new2(window_border_size, resize_grip_draw_size) } else { ImVec2::new2(resize_grip_draw_size, window_border_size) }));
                 window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::new2(resize_grip_draw_size, window_border_size) } else { ImVec2::new2(window_border_size, resize_grip_draw_size) }));
-                window.DrawList.PathArcToFast(ImVec2(corner.x + grip.InnerDir.x * (window_rounding + window_border_size), corner.y + grip.InnerDir.y * (window_rounding + window_border_size)), window_rounding, grip.AngleMin12, grip.AngleMax12);
+                window.DrawList.PathArcToFast(ImVec2::new(corner.x + grip.InnerDir.x * (window_rounding + window_border_size), corner.y + grip.InnerDir.y * (window_rounding + window_border_size)), window_rounding, grip.AngleMin12, grip.AngleMax12);
                 window.DrawList.PathFillConvex(resize_grip_col[resize_grip_n]);
             }
         }
@@ -917,16 +917,16 @@ c_void RenderWindowTitleBarContents(window: *mut ImGuiWindow, const ImRect& titl
     if (has_close_button)
     {
         pad_r += button_sz;
-        close_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        close_button_pos = ImVec2::new(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
     }
     if (has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Right)
     {
         pad_r += button_sz;
-        collapse_button_pos = ImVec2(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2::new(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
     }
     if (has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Left)
     {
-        collapse_button_pos = ImVec2(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2::new(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y);
         pad_l += button_sz;
     }
 
@@ -946,7 +946,7 @@ c_void RenderWindowTitleBarContents(window: *mut ImGuiWindow, const ImRect& titl
     // Title bar text (with: horizontal alignment, avoiding collapse/close button, optional "unsaved document" marker)
     // FIXME: Refactor text alignment facilities along with RenderText helpers, this is WAY too much messy code..
     let marker_size_x: c_float =  (flags & ImGuiWindowFlags_UnsavedDocument) ? button_sz * 0.80f32 : 0f32;
-    let text_size: ImVec2 = CalcTextSize(name, null_mut(), true) + ImVec2(marker_size_x, 0f32);
+    let text_size: ImVec2 = CalcTextSize(name, null_mut(), true) + ImVec2::new(marker_size_x, 0f32);
 
     // As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,
     // while uncentered title text will still reach edges correctly.
@@ -1318,7 +1318,7 @@ c_void SetWindowPos(window: *mut ImGuiWindow, const ImVec2& pos, ImGuiCond cond)
 
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     window.SetWindowPosAllowFlags &= ~(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing);
-    window.SetWindowPosVal = ImVec2(f32::MAX, f32::MAX);
+    window.SetWindowPosVal = ImVec2::new(f32::MAX, f32::MAX);
 
     // Set
     let old_pos: ImVec2 = window.Pos;
@@ -1471,7 +1471,7 @@ c_void SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_m
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSizeConstraint;
-    g.NextWindowData.SizeConstraintRect = ImRect(size_min, size_max);
+    g.NextWindowData.SizeConstraintRect = ImRect::new(size_min, size_max);
     g.NextWindowData.SizeCallback = custom_callback;
     g.NextWindowData.SizeCallbackUserData = custom_callback_user_data;
 }

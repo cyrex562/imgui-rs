@@ -1,5 +1,5 @@
 use std::ptr::{null, null_mut};
-use libc::{c_char, c_int, INT_MAX};
+use libc::{c_char, c_float, c_int, INT_MAX};
 use crate::dock_node::ImGuiDockNode;
 use crate::{GImGui, ImHashStr};
 use crate::button_flags::ImGuiButtonFlags_AllowItemOverlap;
@@ -8,7 +8,7 @@ use crate::color_ops::ColorConvertU32ToFloat4;
 use crate::condition::ImGuiCond_Always;
 use crate::constants::{DOCKING_SPLITTER_SIZE, WINDOWS_HOVER_PADDING};
 use crate::data_authority::{ImGuiDataAuthority_Auto, ImGuiDataAuthority_DockNode, ImGuiDataAuthority_Window};
-use crate::direction::{ImGuiDir_Left, ImGuiDir_None};
+use crate::direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right};
 use crate::dock_context_ops::DockContextRemoveNode;
 use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
 use crate::dock_node_state::{ImGuiDockNodeState_HostWindowHiddenBecauseSingleWindow, ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing};
@@ -942,10 +942,10 @@ pub unsafe fn DockNodeUpdateWindowMenu(node: *mut ImGuiDockNode, tab_bar: *mut I
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut ret_tab_id: ImGuiID =  0;
     if g.Style.WindowMenuButtonPosition == ImGuiDir_Left {
-        SetNextWindowPos(ImVec2(node.Pos.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(0f32, 0f32));
+        SetNextWindowPos(ImVec2::new(node.Pos.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(0f32, 0f32));
     }
     else {
-        SetNextWindowPos(ImVec2(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(1f32, 0f32));
+        SetNextWindowPos(ImVec2::new(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(1f32, 0f32));
     }
     if BeginPopup("#WindowMenu")
     {
@@ -1418,7 +1418,7 @@ pub unsafe fn DockNodeIsDropAllowedOne(payload: *mut ImGuiWindow, host_window: *
 // static bool DockNodeIsDropAllowed(host_window: *mut ImGuiWindow, root_payload: *mut ImGuiWindow)
 pub unsafe fn DockNodeIsDropAllowed(host_window: *mut ImGuiWindow, root_payload: *mut ImGuiWindow) -> bool
 {
-    if (root_payload.DockNodeAsHost.is_null() == false && root_payload.DockNodeAsHost.IsSplitNode()) { // FIXME-DOCK: Missing filtering
+    if root_payload.DockNodeAsHost.is_null() == false && root_payload.DockNodeAsHost.IsSplitNode() { // FIXME-DOCK: Missing filtering
         return true;
     }
 
@@ -1427,7 +1427,7 @@ pub unsafe fn DockNodeIsDropAllowed(host_window: *mut ImGuiWindow, root_payload:
     for payload_n in 0 .. payload_count
     {
         let mut payload: *mut ImGuiWindow =  if root_payload.DockNodeAsHost { root_payload.DockNodeAsHost.Windows[payload_n] } else { root_payload };
-        if (DockNodeIsDropAllowedOne(payload, host_window)) {
+        if DockNodeIsDropAllowedOne(payload, host_window) {
             return true;
         }
     }
@@ -1436,38 +1436,39 @@ pub unsafe fn DockNodeIsDropAllowed(host_window: *mut ImGuiWindow, root_payload:
 
 // window menu button == collapse button when not in a dock node.
 // FIXME: This is similar to RenderWindowTitleBarContents(), may want to share code.
-static c_void DockNodeCalcTabBarLayout(*const ImGuiDockNode node, ImRect* out_title_rect, ImRect* out_tab_bar_rect, out_window_menu_button_pos: *mut ImVec2, out_close_button_pos: *mut ImVec2)
+// static c_void DockNodeCalcTabBarLayout(node: *const ImGuiDockNode, out_title_rect: *mut ImRect, out_tab_bar_rect: *mut ImRect, out_window_menu_button_pos: *mut ImVec2, out_close_button_pos: *mut ImVec2)
+pub unsafe fn DockNodeCalcTabBarLayout(node: *const ImGuiDockNode, out_title_rect: *mut ImRect, out_tab_bar_rect: *mut ImRect, out_window_menu_button_pos: *mut ImVec2, out_close_button_pos: *mut ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut style = &mut g.Style;
 
-    let r: ImRect =  ImRect(node.Pos.x, node.Pos.y, node.Pos.x + node.Size.x, node.Pos.y + g.FontSize + g.Style.FramePadding.y * 2.00f32);
-    if (out_title_rect) { *out_title_rect = r; }
+    let mut r: ImRect =  ImRect::new4(node.Pos.x, node.Pos.y, node.Pos.x + node.Size.x, node.Pos.y + g.FontSize + g.Style.FramePadding.y * 2.00f32);
+    if out_title_rect { *out_title_rect = r; }
 
     r.Min.x += style.WindowBorderSize;
     r.Max.x -= style.WindowBorderSize;
 
     let button_sz: c_float =  g.FontSize;
 
-    let window_menu_button_pos: ImVec2 = r.Min;
+    let mut window_menu_button_pos: ImVec2 = r.Min.clone();
     r.Min.x += style.FramePadding.x;
     r.Max.x -= style.FramePadding.x;
-    if (node.HasCloseButton)
+    if node.HasCloseButton
     {
         r.Max.x -= button_sz;
-        if (out_close_button_pos) *out_close_button_pos = ImVec2(r.Max.x - style.FramePadding.x, r.Min.y);
+        if (out_close_button_pos) *out_close_button_pos = ImVec2::new2(r.Max.x.clone() - style.FramePadding.x, r.Min.y.clone());
     }
-    if (node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Left)
+    if node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Left
     {
         r.Min.x += button_sz + style.ItemInnerSpacing.x;
     }
-    else if (node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Right)
+    else if node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Right
     {
         r.Max.x -= button_sz + style.FramePadding.x;
-        window_menu_button_pos = ImVec2(r.Max.x, r.Min.y);
+        window_menu_button_pos = ImVec2::new2(r.Max.x.clone(), r.Min.y.clone());
     }
-    if (out_tab_bar_rect) { *out_tab_bar_rect = r; }
-    if (out_window_menu_button_pos) { *out_window_menu_button_pos = window_menu_button_pos; }
+    if out_tab_bar_rect { *out_tab_bar_rect = r.clone(); }
+    if out_window_menu_button_pos { *out_window_menu_button_pos = window_menu_button_pos; }
 }
 
 c_void DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new, ImVec2& size_new, dir: ImGuiDir, ImVec2 size_new_desired)
@@ -1517,24 +1518,24 @@ bool DockNodeCalcDropRectsAndTestMousePos(const ImRect& parent, dir: ImGuiDir, I
     {
         //hs_w = ImFloor(ImClamp(parent_smaller_axis - hs_for_central_nodes * 4.0f32, g.FontSize * 0.5f32, g.FontSize * 8.00f32));
         //hs_h = ImFloor(hs_w * 0.150f32);
-        //off = ImVec2(ImFloor(parent.GetWidth() * 0.5f32 - GetFrameHeightWithSpacing() * 1.4f - hs_h), ImFloor(parent.GetHeight() * 0.5f32 - GetFrameHeightWithSpacing() * 1.4f - hs_h));
+        //off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5f32 - GetFrameHeightWithSpacing() * 1.4f - hs_h), ImFloor(parent.GetHeight() * 0.5f32 - GetFrameHeightWithSpacing() * 1.4f - hs_h));
         hs_w = ImFloor(hs_for_central_nodes * 1.500f32);
         hs_h = ImFloor(hs_for_central_nodes * 0.800f32);
-        off = ImVec2(ImFloor(parent.GetWidth() * 0.5f32 - hs_h), ImFloor(parent.GetHeight() * 0.5f32 - hs_h));
+        off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5f32 - hs_h), ImFloor(parent.GetHeight() * 0.5f32 - hs_h));
     }
     else
     {
         hs_w = ImFloor(hs_for_central_nodes);
         hs_h = ImFloor(hs_for_central_nodes * 0.900f32);
-        off = ImVec2(ImFloor(hs_w * 2.400f32), ImFloor(hs_w * 2.400f32));
+        off = ImVec2::new(ImFloor(hs_w * 2.400f32), ImFloor(hs_w * 2.400f32));
     }
 
     let c: ImVec2 = ImFloor(parent.GetCenter());
-    if      (dir == ImGuiDir_None)  { out_r = ImRect(c.x - hs_w, c.y - hs_w,         c.x + hs_w, c.y + hs_w);         }
-    else if (dir == ImGuiDir_Up)    { out_r = ImRect(c.x - hs_w, c.y - off.y - hs_h, c.x + hs_w, c.y - off.y + hs_h); }
-    else if (dir == ImGuiDir_Down)  { out_r = ImRect(c.x - hs_w, c.y + off.y - hs_h, c.x + hs_w, c.y + off.y + hs_h); }
-    else if (dir == ImGuiDir_Left)  { out_r = ImRect(c.x - off.x - hs_h, c.y - hs_w, c.x - off.x + hs_h, c.y + hs_w); }
-    else if (dir == ImGuiDir_Right) { out_r = ImRect(c.x + off.x - hs_h, c.y - hs_w, c.x + off.x + hs_h, c.y + hs_w); }
+    if      (dir == ImGuiDir_None)  { out_r = ImRect::new(c.x - hs_w, c.y - hs_w,         c.x + hs_w, c.y + hs_w);         }
+    else if (dir == ImGuiDir_Up)    { out_r = ImRect::new(c.x - hs_w, c.y - off.y - hs_h, c.x + hs_w, c.y - off.y + hs_h); }
+    else if (dir == ImGuiDir_Down)  { out_r = ImRect::new(c.x - hs_w, c.y + off.y - hs_h, c.x + hs_w, c.y + off.y + hs_h); }
+    else if (dir == ImGuiDir_Left)  { out_r = ImRect::new(c.x - off.x - hs_h, c.y - hs_w, c.x - off.x + hs_h, c.y + hs_w); }
+    else if (dir == ImGuiDir_Right) { out_r = ImRect::new(c.x + off.x - hs_h, c.y - hs_w, c.x + off.x + hs_h, c.y + hs_w); }
 
     if (test_mouse_pos == null_mut())
         return false;
@@ -1750,9 +1751,9 @@ static c_void DockNodePreviewDockRender(host_window: *mut ImGuiWindow, host_node
                 overlay_draw_lists[overlay_n].AddRectFilled(draw_r.Min, draw_r.Max, overlay_col, overlay_rounding);
                 overlay_draw_lists[overlay_n].AddRect(draw_r_in.Min, draw_r_in.Max, overlay_col_lines, overlay_rounding);
                 if (dir == ImGuiDir_Left || dir == ImGuiDir_Right)
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2(center.x, draw_r_in.Min.y), ImVec2(center.x, draw_r_in.Max.y), overlay_col_lines);
+                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new(center.x, draw_r_in.Min.y), ImVec2::new(center.x, draw_r_in.Max.y), overlay_col_lines);
                 if (dir == ImGuiDir_Up || dir == ImGuiDir_Down)
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2(draw_r_in.Min.x, center.y), ImVec2(draw_r_in.Max.x, center.y), overlay_col_lines);
+                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new(draw_r_in.Min.x, center.y), ImVec2::new(draw_r_in.Max.x, center.y), overlay_col_lines);
             }
         }
 
@@ -2041,9 +2042,9 @@ c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
                     for (int touching_node_n = 0; touching_node_n < touching_nodes[n].Size; touching_node_n++)
                         draw_list.AddRect(touching_nodes[n][touching_node_n].Pos, touching_nodes[n][touching_node_n].Pos + touching_nodes[n][touching_node_n].Size, IM_COL32(0, 255, 0, 255));
                     if (axis == ImGuiAxis_X)
-                        draw_list.AddLine(ImVec2(resize_limits[n], node.ChildNodes[n].Pos.y), ImVec2(resize_limits[n], node.ChildNodes[n].Pos.y + node.ChildNodes[n].Size.y), IM_COL32(255, 0, 255, 255), 3.00f32);
+                        draw_list.AddLine(ImVec2::new(resize_limits[n], node.ChildNodes[n].Pos.y), ImVec2::new(resize_limits[n], node.ChildNodes[n].Pos.y + node.ChildNodes[n].Size.y), IM_COL32(255, 0, 255, 255), 3.00f32);
                     else
-                        draw_list.AddLine(ImVec2(node.ChildNodes[n].Pos.x, resize_limits[n]), ImVec2(node.ChildNodes[n].Pos.x + node.ChildNodes[n].Size.x, resize_limits[n]), IM_COL32(255, 0, 255, 255), 3.00f32);
+                        draw_list.AddLine(ImVec2::new(node.ChildNodes[n].Pos.x, resize_limits[n]), ImVec2::new(node.ChildNodes[n].Pos.x + node.ChildNodes[n].Size.x, resize_limits[n]), IM_COL32(255, 0, 255, 255), 3.00f32);
                 }
                 */
             }

@@ -193,7 +193,7 @@ pub struct ImGuiIO {
     // (this block used to be written by backend, since 1.87 it is best to NOT write to those directly, call the AddXXX functions above instead)
     // (reading from those variables is fair game, as they are extremely unlikely to be moving anywhere)
     pub MousePos: ImVec2,
-    // Mouse position, in pixels. Set to ImVec2(-f32::MAX, -f32::MAX) if mouse is unavailable (on another screen, etc.)
+    // Mouse position, in pixels. Set to ImVec2::new(-f32::MAX, -f32::MAX) if mouse is unavailable (on another screen, etc.)
     // bool        MouseDown[5];                       // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
     pub MouseDown: [bool; 5],
     pub MouseWheel: c_float,
@@ -274,7 +274,7 @@ impl ImGuiIO {
         // Settings
         out.ConfigFlags = ImGuiConfigFlags_None;
         out.BackendFlags = ImGuiBackendFlags_None;
-        out.DisplaySize = ImVec2(-1f32, -1f32);
+        out.DisplaySize = ImVec2::new(-1f32, -1f32);
         out.DeltaTime = 1f32 / 60f32;
         out.IniSavingRate = 5f32;
         out.IniFilename = String::from("imgui.ini").as_ptr().into(); // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
@@ -339,8 +339,8 @@ impl ImGuiIO {
         out.SetPlatformImeDataFn = SetPlatformImeDataFn_DefaultImpl;
 
         // Input (NB: we already have memset zero the entire structure!)
-        out.MousePos = ImVec2(-f32::MAX, -f32::MAX);
-        out.MousePosPrev = ImVec2(-f32::MAX, -f32::MAX);
+        out.MousePos = ImVec2::new(-f32::MAX, -f32::MAX);
+        out.MousePosPrev = ImVec2::new(-f32::MAX, -f32::MAX);
         out.MouseDragThreshold = 6f32;
         // for (c_int i = 0; i < IM_ARRAYSIZE(MouseDownDuration); i+ +)
         for i in 0 .. out.MouseDownDuration.len()

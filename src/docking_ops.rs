@@ -873,7 +873,7 @@ c_void BeginDockableDragDropSource(window: *mut ImGuiWindow)
     g.LastItemData.ID = window.MoveId;
     window = window.RootWindowDockTree;
     // IM_ASSERT((window.Flags & ImGuiWindowFlags_NoDocking) == 0);
-    let mut is_drag_docking: bool =  (g.IO.ConfigDockingWithShift) || ImRect(0, 0, window.SizeFull.x, GetFrameHeight()).Contains(g.ActiveIdClickOffset); // FIXME-DOCKING: Need to make this stateful and explicit
+    let mut is_drag_docking: bool =  (g.IO.ConfigDockingWithShift) || ImRect::new(0, 0, window.SizeFull.x, GetFrameHeight()).Contains(g.ActiveIdClickOffset); // FIXME-DOCKING: Need to make this stateful and explicit
     if (is_drag_docking && BeginDragDropSource(ImGuiDragDropFlags_SourceNoPreviewTooltip | ImGuiDragDropFlags_SourceNoHoldToOpenOthers | ImGuiDragDropFlags_SourceAutoExpirePayload))
     {
         SetDragDropPayload(IMGUI_PAYLOAD_TYPE_WINDOW, &window, sizeof(window));
@@ -933,7 +933,7 @@ c_void BeginDockableDragDropTarget(window: *mut ImGuiWindow)
                 dock_into_floating_window = true; // Dock into a regular window
         }
 
-        const let explicit_target_rect: ImRect =  (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) ? node.TabBar.BarRect : ImRect(window.Pos, window.Pos + ImVec2(window.Size.x, GetFrameHeight()));
+        const let explicit_target_rect: ImRect =  (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) ? node.TabBar.BarRect : ImRect::new(window.Pos, window.Pos + ImVec2::new(window.Size.x, GetFrameHeight()));
         let is_explicit_target: bool = g.IO.ConfigDockingWithShift || IsMouseHoveringRect(explicit_target_rect.Min, explicit_target_rect.Max);
 
         // Preview docking request and find out split direction/ratio

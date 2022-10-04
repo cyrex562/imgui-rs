@@ -118,7 +118,7 @@ pub unsafe fn EndChild() {
 
             // When browsing a window that has no activable items (scroll only) we keep a highlight on the child (pass g.NavId to trick into always displaying)
             if window.DC.NavLayersActiveMask == 0 && window == g.NavWindow {
-                RenderNavHighlight(ImRect(bb.Min.clone() - ImVec2::new2(2f32, 2f32), bb.Max.clone() + ImVec2::new2(2f32, 2f32)), g.NavId, ImGuiNavHighlightFlags_TypeThin);
+                RenderNavHighlight(ImRect::new(bb.Min.clone() - ImVec2::new2(2f32, 2f32), bb.Max.clone() + ImVec2::new2(2f32, 2f32)), g.NavId, ImGuiNavHighlightFlags_TypeThin);
             }
         } else {
             // Not navigable into
