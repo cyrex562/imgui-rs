@@ -32,7 +32,7 @@ pub const GCrc32LookupTable: [u32;256] =
 // ImGuiID ImHashData(const void* data_p, size_t data_size, u32 seed)
 pub unsafe fn ImHashData(data_p: *c_void, mut data_size: usize, seed: u32) -> ImGuiID
 {
-    // u32 crc = ~seed;
+    // let mut crc: u32 = !seed;
     let mut crc = !seed;
     let mut data = data_p;
     let crc32_lut = GCrc32LookupTable;

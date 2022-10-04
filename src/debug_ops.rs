@@ -471,7 +471,7 @@ pub unsafe fn ErrocCheckEndWindowRecover(log_callback: ImGuiErrorLogCallback, us
 
 // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
 
-// c_void DebugRenderViewportThumbnail(ImDrawList* draw_list, *mut ImGuiViewportP viewport, const ImRect& bb)
+// c_void DebugRenderViewportThumbnail(ImDrawList* draw_list, *mut ImGuiViewportP viewport, bb: &ImRect)
 pub unsafe fn DebugRenderViewportThumbnaiL(draw_list: &mut ImDrawList, viewport: *mut ImGuiViewport, bb: &mut ImRect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -668,7 +668,7 @@ pub struct Funcs
     }
 
 impl Funcs {
-          // static ImRect GetTableRect(ImGuiTable* table, c_int rect_type, c_int n)
+          // static ImRect GetTableRect(ImGuiTable* table, rect_type: c_int, n: c_int)
           pub fn GetTableRect(table: *mut ImGuiTable, rect_type: c_int, n: c_int) -> ImRect {
               let table_instance = TableGetInstanceData(table, table.InstanceCurrent); // Always using last submitted instance
               if rect_type == TRT_OuterRect { return table.OuterRect.clone(); } else if rect_type == TRT_InnerRect { return table.InnerRect.clone(); } else if rect_type == TRT_WorkRect { return table.WorkRect.clone(); } else if rect_type == TRT_HostClipRect { return table.HostClipRect.clone(); } else if rect_type == TRT_InnerClipRect { return table.InnerClipRect.clone(); } else if rect_type == TRT_BackgroundClipRect { return table.BgClipRect.clone(); } else if rect_type == TRT_ColumnsRect {
@@ -698,7 +698,7 @@ impl Funcs {
               return ImRect::new();
           }
 
-    // static ImRect GetWindowRect(window: *mut ImGuiWindow, c_int rect_type)
+    // static ImRect GetWindowRect(window: *mut ImGuiWindow, rect_type: c_int)
     pub fn GetWindowRect(window: *mut ImGuiWindow, rect_type: c_int) -> ImRect
     {
         if rect_type == WRT_OuterRect { return window.Rect(); }
@@ -1877,7 +1877,7 @@ pub fn DebugNodeWindowSettings(settings: &mut ImGuiWindowSettings)
         settings.ID, settings.GetName(), settings.Pos.x, settings.Pos.y, settings.Size.x, settings.Size.y, settings.Collapsed);
 }
 
-// c_void DebugNodeWindowsList(Vec<ImGuiWindow*>* windows, *const char label)
+// c_void DebugNodeWindowsList(windows: *mut  Vec<*mut ImGuiWindow>, *const char label)
 pub unsafe fn DebugNodeWindowsList(windows: *mut Vec<*mut ImGuiWindow>, label: *const c_char)
     {
     if !TreeNode(label, "%s (%d)", label, windows.Size) {
@@ -1894,7 +1894,7 @@ pub unsafe fn DebugNodeWindowsList(windows: *mut Vec<*mut ImGuiWindow>, label: *
 }
 
 // FIXME-OPT: This is technically suboptimal, but it is simpler this way.
-// c_void DebugNodeWindowsListByBeginStackParent(ImGuiWindow** windows, c_int windows_size, parent_in_begin_stack: *mut ImGuiWindow)
+// c_void DebugNodeWindowsListByBeginStackParent(ImGuiWindow** windows, windows_size: c_int, parent_in_begin_stack: *mut ImGuiWindow)
 pub unsafe fn DebugNodeWindowsListByBeginStackParent(winodws: *mut *mut ImGuiWindow, windows_size: c_int, parent_in_begin_stack: *mut ImGuiWindow)
     {
     // for (let i: c_int = 0; i < windows_size; i++)
@@ -2078,7 +2078,7 @@ pub unsafe fn UpdateDebugToolStackQueries()
     }
 }
 
-// static c_int StackToolFormatLevelInfo(ImGuiStackTool* tool, c_int n, format_for_ui: bool, char* buf, size_t buf_size)
+// static c_int StackToolFormatLevelInfo(ImGuiStackTool* tool, n: c_int, format_for_ui: bool, char* buf, size_t buf_size)
 pub unsafe fn StackToolFormatLevelInfo(tool: *mut ImGuiStackTool, n: c_int, format_for_ui: bool, buf: *mut c_char, buf_size: size_t) -> c_int
     {
     let mut info: &mut ImGuiStackLevelInfo=  &mut tool.Results[n];

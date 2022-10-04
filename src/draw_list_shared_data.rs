@@ -37,7 +37,7 @@ pub struct ImDrawListSharedData {
 impl ImDrawListSharedData {
     // ImDrawListSharedData();
 
-    // void SetCircleTessellationMaxError(c_float max_error);
+    // void SetCircleTessellationMaxError(max_error: c_float);
     pub fn SetCircleTesselationMaxError(&mut self, max_error: c_float) {
         todo!()
     }

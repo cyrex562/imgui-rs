@@ -20,7 +20,7 @@ pub unsafe fn GetDrawData() -> *mut ImDrawData {
 }
 
 
-// static c_void AddDrawListToDrawData(Vec<ImDrawList*>* out_list, ImDrawList* draw_list)
+// static c_void AddDrawListToDrawData(out_list: *mut  Vec<*mut ImDrawList>, ImDrawList* draw_list)
 pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mut ImDrawList)
 {
     if draw_list.CmdBuffer.Size == 0 {
@@ -58,7 +58,7 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     out_list.push(draw_list);
 }
 
-// static c_void AddWindowToDrawData(window: *mut ImGuiWindow, c_int layer)
+// static c_void AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
 pub unsafe fn AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;

@@ -23,7 +23,7 @@ use crate::vec2::ImVec2;
 // Test if mouse cursor is hovering given rectangle
 // NB- Rectangle is clipped by our current clip setting
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
-// bool IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, clip: bool)
+// bool IsMouseHoveringRect(const r_min: &ImVec2, const r_max: &ImVec2, clip: bool)
 pub fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -146,7 +146,7 @@ pub unsafe fn GetKeyName(mut key: ImGuiKey) -> *const c_char {
     return GKeyNames[key.clone() - ImGuiKey_NamedKey_BEGIN];
 }
 
-// c_void GetKeyChordName(ImGuiModFlags mods, ImGuiKey key, char* out_buf, c_int out_buf_size)
+// c_void GetKeyChordName(ImGuiModFlags mods, ImGuiKey key, char* out_buf, out_buf_size: c_int)
 pub fn GetKeyChordName(mods: ImGuiModFlags, key: ImGuiKey, out_buf: *mut c_char, out_buf_size: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT((mods & ~ImGuiModFlags_All) == 0 && "Passing invalid ImGuiModFlags value!"); // A frequent mistake is to pass ImGuiKey_ModXXX instead of ImGuiModFlags_XXX
@@ -163,7 +163,7 @@ pub fn GetKeyChordName(mods: ImGuiModFlags, key: ImGuiKey, out_buf: *mut c_char,
 // t1 = current time (e.g.: g.Time)
 // An event is triggered at:
 //  t = 0f32     t = repeat_delay,    t = repeat_delay + repeat_rate*N
-// c_int CalcTypematicRepeatAmount(c_float t0, c_float t1, c_float repeat_delay, c_float repeat_rate)
+// c_int CalcTypematicRepeatAmount(t0: c_float, t1: c_float, repeat_delay: c_float, repeat_rate: c_float)
 pub fn CalcTypematicRepeatAmount(t0: c_float, t1: c_float, repeat_delay: c_float, repeat_rate: c_float) -> c_int {
     if t1 == 0f32 {
         return 1;
@@ -209,7 +209,7 @@ pub unsafe fn GetTypematicRepeatRate(flags: ImGuiInputFlags, repeat_delay: *mut 
 
 // Return value representing the number of presses in the last time period, for the given repeat rate
 // (most often returns 0 or 1. The result is generally only >1 when RepeatRate is smaller than DeltaTime, aka large DeltaTime or fast RepeatRate)
-// c_int GetKeyPressedAmount(ImGuiKey key, c_float repeat_delay, c_float repeat_rate)
+// c_int GetKeyPressedAmount(ImGuiKey key, repeat_delay: c_float, repeat_rate: c_float)
 pub fn GetKeyPressedAmount(key: ImGuiKey, repeat_delay: c_float, repeat_rate: c_float) -> c_int {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let key_data = GetKeyData(key);
@@ -259,7 +259,7 @@ pub unsafe fn IsKeyPressedEx(key: ImGuiKey, flags: ImGuiInputFlags) -> bool {
 
     let mut pressed: bool = (t == 0f32);
     if !pressed && ((flags & ImGuiInputFlags_Repeat) != 0) {
-        // c_float repeat_delay, repeat_rate;
+        // repeat_delay: c_float, repeat_rate;
         let mut repeat_delay: c_float = 0f32;
         let mut repeat_rate: c_float = 0f32;
         GetTypematicRepeatRate(flags, &mut repeat_delay, &mut repeat_rate);
@@ -328,7 +328,7 @@ pub fn GetMouseClickedCount(button: ImGuiMouseButton) -> c_int {
 
 // Return if a mouse click/drag went past the given threshold. Valid to call during the MouseReleased frame.
 // [Internal] This doesn't test if the button is pressed
-// bool IsMouseDragPastThreshold(ImGuiMouseButton button, c_float lock_threshold)
+// bool IsMouseDragPastThreshold(ImGuiMouseButton button, lock_threshold: c_float)
 pub fn IsMouseDragPastThreshold(button: ImGuiMouseButton, mut lock_threshold: c_float) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
@@ -338,7 +338,7 @@ pub fn IsMouseDragPastThreshold(button: ImGuiMouseButton, mut lock_threshold: c_
     return g.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold * lock_threshold;
 }
 
-// bool IsMouseDragging(ImGuiMouseButton button, c_float lock_threshold)
+// bool IsMouseDragging(ImGuiMouseButton button, lock_threshold: c_float)
 pub fn IsMouseDragging(button: ImGuiMouseButton, lock_threshold: c_float) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
@@ -365,7 +365,7 @@ pub fn GetMousePosOnOPeningCurrentPopup() -> ImVec2 {
 }
 
 // We typically use ImVec2::new(-f32::MAX,-f32::MAX) to denote an invalid mouse position.
-// bool IsMousePosValid(*const ImVec2 mouse_pos)
+// bool IsMousePosValid(*const mouse_pos: ImVec2)
 pub fn IsMousePosValid(mouse_pos: *const ImVec2) -> bool {
     // The assert is only to silence a false-positive in XCode Static Analysis.
     // Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be NULL (which it doesn't for other functions).
@@ -391,7 +391,7 @@ pub fn IsAnyMouseDown() -> bool {
 // Return the delta from the initial clicking position while the mouse button is clicked or was just released.
 // This is locked and return 0f32 until the mouse moves past a distance threshold at least once.
 // NB: This is only valid if IsMousePosValid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
-// ImVec2 GetMouseDragDelta(ImGuiMouseButton button, c_float lock_threshold)
+// ImVec2 GetMouseDragDelta(ImGuiMouseButton button, lock_threshold: c_float)
 pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));

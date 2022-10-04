@@ -214,7 +214,7 @@ static c_void ShowDockingDisabledMessage()
 }
 
 // Helper to wire demo markers located in code to a interactive browser
-typedef c_void (*ImGuiDemoMarkerCallback)(file: *const c_char, c_int line, section: *const c_char, *mut c_void user_data);
+typedef c_void (*ImGuiDemoMarkerCallback)(file: *const c_char, line: c_int, section: *const c_char, *mut c_void user_data);
 extern ImGuiDemoMarkerCallback  GImGuiDemoMarkerCallback;
 extern *mut c_void                    GImGuiDemoMarkerCallbackUserData;
 ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback= null_mut();
@@ -482,7 +482,7 @@ c_void ShowDemoWindow(*mut p_open: bool)
                     Text("<<PRESS SPACE TO DISABLE>>");
                 }
                 if (IsKeyPressed(ImGuiKey_Space))
-                    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+                    io.ConfigFlags &= !ImGuiConfigFlags_NoMouse;
             }
             CheckboxFlags("io.ConfigFlags: NoMouseCursorChange", &io.ConfigFlags, ImGuiConfigFlags_NoMouseCursorChange);
             SameLine(); HelpMarker("Instruct backend to not alter mouse cursor shape and visibility.");
@@ -1170,9 +1170,9 @@ static c_void ShowDemoWindowWidgets()
         CheckboxFlags("ImGuiComboFlags_PopupAlignLeft", &flags, ImGuiComboFlags_PopupAlignLeft);
         SameLine(); HelpMarker("Only makes a difference if the popup is larger than the combo");
         if (CheckboxFlags("ImGuiComboFlags_NoArrowButton", &flags, ImGuiComboFlags_NoArrowButton))
-            flags &= ~ImGuiComboFlags_NoPreview;     // Clear the other flag, as we cannot combine both
+            flags &= !ImGuiComboFlags_NoPreview;     // Clear the other flag, as we cannot combine both
         if (CheckboxFlags("ImGuiComboFlags_NoPreview", &flags, ImGuiComboFlags_NoPreview))
-            flags &= ~ImGuiComboFlags_NoArrowButton; // Clear the other flag, as we cannot combine both
+            flags &= !ImGuiComboFlags_NoArrowButton; // Clear the other flag, as we cannot combine both
 
         // Using the generic BeginCombo() API, you have full control over how to display the combo contents.
         // (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
@@ -1206,7 +1206,7 @@ static c_void ShowDemoWindowWidgets()
         Combo("combo 3 (array)", &item_current_3, items, IM_ARRAYSIZE(items));
 
         // Simplified one-liner Combo() using an accessor function
-        struct Funcs { static bool ItemGetter(*mut c_void data, c_int n, **const char out_str) { *out_str = ((**const char)data)[n]; return true; } };
+        struct Funcs { static bool ItemGetter(*mut c_void data, n: c_int, **const char out_str) { *out_str = ((**const char)data)[n]; return true; } };
         static let item_current_4: c_int = 0;
         Combo("combo 4 (function)", &item_current_4, &Funcs::ItemGetter, items, IM_ARRAYSIZE(items));
 
@@ -1773,8 +1773,8 @@ static c_void ShowDemoWindowWidgets()
         // We probably want an API passing floats and user provide sample rate/count.
         struct Funcs
         {
-            static c_float Sin(*mut c_void, c_int i) { return sinf(i * 0.1f32); }
-            static c_float Saw(*mut c_void, c_int i) { return (i & 1) ? 1f32 : -1f32; }
+            static c_float Sin(*mut c_void, i: c_int) { return sinf(i * 0.1f32); }
+            static c_float Saw(*mut c_void, i: c_int) { return (i & 1) ? 1f32 : -1f32; }
         };
         static let func_type: c_int = 0, display_count = 70;
         Separator();
@@ -4813,7 +4813,7 @@ static c_void ShowDemoWindowTables()
                 // We use a transparent color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
                 if (row_bg_type != 0)
                 {
-                    u32 row_bg_color = GetColorU32(row_bg_type == 1 ? ImVec4(0.7f, 0.3f, 0.3f, 0.650f32) : ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.650f32)); // Flat or Gradient?
+                    let mut row_bg_color: u32 = GetColorU32(row_bg_type == 1 ? ImVec4(0.7f, 0.3f, 0.3f, 0.650f32) : ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.650f32)); // Flat or Gradient?
                     TableSetBgColor(ImGuiTableBgTarget_RowBg0 + row_bg_target, row_bg_color);
                 }
 
@@ -4829,7 +4829,7 @@ static c_void ShowDemoWindowTables()
                     // We can also pass a column number as a third parameter to TableSetBgColor() and do this outside the column loop.
                     if (row >= 1 && row <= 2 && column >= 1 && column <= 2 && cell_bg_type == 1)
                     {
-                        u32 cell_bg_color = GetColorU32(ImVec4(0.3f, 0.3f, 0.7f, 0.650f32));
+                        let mut cell_bg_color: u32 = GetColorU32(ImVec4(0.3f, 0.3f, 0.7f, 0.650f32));
                         TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
                     }
                 }
@@ -5393,7 +5393,7 @@ static c_void ShowDemoWindowTables()
 
         let parent_draw_list: *const ImDrawList = GetWindowDrawList();
         let parent_draw_list_draw_cmd_count: c_int = parent_draw_list.CmdBuffer.Size;
-        ImVec2 table_scroll_cur, table_scroll_max; // For debug display
+        table_scroll_cur: ImVec2, table_scroll_max; // For debug display
         let table_draw_list: *const ImDrawList= null_mut();  // "
 
         // Submit table
@@ -5852,7 +5852,7 @@ static c_void ShowDemoWindowMisc()
                 let board_max: ImVec2 = ImVec2::new(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10f32, board_min.y + 3 * key_step.y + 10f32);
                 let start_pos: ImVec2 = ImVec2::new(board_min.x + 5f32 - key_step.x, board_min.y);
 
-                struct KeyLayoutData { c_int Row, Col; *const char Label; ImGuiKey Key; };
+                struct KeyLayoutData { Row: c_int, Col; *const char Label; ImGuiKey Key; };
                 const KeyLayoutData keys_to_display[] =
                 {
                     { 0, 0, "", ImGuiKey_Tab },      { 0, 1, "Q", ImGuiKey_Q }, { 0, 2, "W", ImGuiKey_W }, { 0, 3, "E", ImGuiKey_E }, { 0, 4, "R", ImGuiKey_R },
@@ -6664,7 +6664,7 @@ struct ExampleAppConsole
 
     // Portable helpers
     static c_int   Stricmp(*const char s1, *const char s2)         { let mut d: c_int = 0; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
-    static c_int   Strnicmp(*const char s1, *const char s2, c_int n) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
+    static c_int   Strnicmp(*const char s1, *const char s2, n: c_int) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
     static char* Strdup(*const char s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(buf); return memcpy(buf, (*const c_void)s, len); }
     static c_void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end-= 1; *str_end = 0; }
 
@@ -7211,7 +7211,7 @@ static c_void ShowExampleAppLayout(bool* p_open)
 // [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
 //-----------------------------------------------------------------------------
 
-static c_void ShowPlaceholderObject(*const char prefix, c_int uid)
+static c_void ShowPlaceholderObject(*const char prefix, uid: c_int)
 {
     // Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
     PushID(uid);
@@ -7482,7 +7482,7 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
         let viewport: *const ImGuiViewport = GetMainViewport();
         let work_pos: ImVec2 = viewport.WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
         let work_size: ImVec2 = viewport.WorkSize;
-        ImVec2 window_pos, window_pos_pivot;
+        window_pos: ImVec2, window_pos_pivot;
         window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
         window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
         window_pos_pivot.x = (location & 1) ? 1f32 : 0f32;
@@ -7628,16 +7628,16 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             {
                 let p0: ImVec2 = GetCursorScreenPos();
                 let p1: ImVec2 = ImVec2::new(p0.x + gradient_size.x, p0.y + gradient_size.y);
-                u32 col_a = GetColorU32(IM_COL32(0, 0, 0, 255));
-                u32 col_b = GetColorU32(IM_COL32(255, 255, 255, 255));
+                let mut col_a: u32 = GetColorU32(IM_COL32(0, 0, 0, 255));
+                let mut col_b: u32 = GetColorU32(IM_COL32(255, 255, 255, 255));
                 draw_list.AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
                 InvisibleButton("##gradient1", gradient_size);
             }
             {
                 let p0: ImVec2 = GetCursorScreenPos();
                 let p1: ImVec2 = ImVec2::new(p0.x + gradient_size.x, p0.y + gradient_size.y);
-                u32 col_a = GetColorU32(IM_COL32(0, 255, 0, 255));
-                u32 col_b = GetColorU32(IM_COL32(255, 0, 0, 255));
+                let mut col_a: u32 = GetColorU32(IM_COL32(0, 255, 0, 255));
+                let mut col_b: u32 = GetColorU32(IM_COL32(255, 0, 0, 255));
                 draw_list.AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
                 InvisibleButton("##gradient2", gradient_size);
             }
@@ -7664,7 +7664,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             ColorEdit4("Color", &colf.x);
 
             let p: ImVec2 = GetCursorScreenPos();
-            const u32 col = ImColor(col0f32);
+            let col: u32 = ImColor(col0f32);
             let spacing: c_float =  10f32;
             const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
             let rounding: c_float =  sz / 5f32;
@@ -7890,7 +7890,7 @@ c_void ShowExampleAppDockSpace(bool* p_open)
     }
     else
     {
-        dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+        dockspace_flags &= !ImGuiDockNodeFlags_PassthruCentralNode;
     }
 
     // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
@@ -8165,7 +8165,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
                 if (!)
                     continue;
 
-                ImGuiTabItemFlags tab_flags = ( ? ImGuiTabItemFlags_UnsavedDocument : 0);
+                let mut tab_flags: ImGuiTabItemFlags = ( ? ImGuiTabItemFlags_UnsavedDocument : 0);
                 let mut visible: bool =  BeginTabItem(, &, tab_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.

@@ -48,7 +48,7 @@ impl ImDrawData {
         todo!()
     }
 
-    // void  ScaleClipRects(const ImVec2& fb_scale); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
+    // void  ScaleClipRects(const fb_scale: &ImVec2); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
     pub fn ScaleClipRects(&mut self, fb_scale: &ImVec2) {
         todo!()
     }

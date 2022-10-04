@@ -13,7 +13,7 @@ use crate::window::ImGuiWindow;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::ImGuiID;
 
-// sizeof() 156~192
+// sizeof() 156!192
 #[derive(Default,Debug,Clone)]
 pub struct  ImGuiDockNode
 {

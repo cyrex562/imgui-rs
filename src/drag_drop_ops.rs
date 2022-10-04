@@ -136,7 +136,7 @@ bool BeginDragDropSource(ImGuiDragDropFlags flags)
         }
 
         if (!(flags & ImGuiDragDropFlags_SourceNoDisableHover) && !(flags & ImGuiDragDropFlags_SourceExtern))
-            g.LastItemData.StatusFlags &= ~ImGuiItemStatusFlags_HoveredRect;
+            g.LastItemData.StatusFlags &= !ImGuiItemStatusFlags_HoveredRect;
 
         return true;
     }
@@ -203,7 +203,7 @@ bool SetDragDropPayload(*const char type, *const c_void data, size_t data_size, 
     return (g.DragDropAcceptFrameCount == g.FrameCount) || (g.DragDropAcceptFrameCount == g.FrameCount - 1);
 }
 
-bool BeginDragDropTargetCustom(const ImRect& bb, id: ImGuiID)
+bool BeginDragDropTargetCustom(bb: &ImRect, id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!g.DragDropActive)

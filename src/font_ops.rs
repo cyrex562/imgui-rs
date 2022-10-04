@@ -50,7 +50,7 @@ ImVec2 GetFontTexUvWhitePixel()
     return GimGui.DrawListSharedData.TexUvWhitePixel;
 }
 
-c_void SetWindowFontScale(c_float scale)
+c_void SetWindowFontScale(scale: c_float)
 {
     // IM_ASSERT(scale > 0f32);
     let g = GImGui; // ImGuiContext& g = *GImGui;

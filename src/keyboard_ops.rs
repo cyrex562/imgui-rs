@@ -127,7 +127,7 @@ pub unsafe fn UpdateKeyboardInputs()
 
 
 
-// static c_void UpdateAliasKey(ImGuiKey key, v: bool, c_float analog_value)
+// static c_void UpdateAliasKey(ImGuiKey key, v: bool, analog_value: c_float)
 pub fn UpdateAliasKey(key: ImGuiKey, v: bool, analog_value: c_float) {
     // IM_ASSERT(IsAliasKey(key));
     let mut key_data: *mut ImGuiKeyData = GetKeyData(key);

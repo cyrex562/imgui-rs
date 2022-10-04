@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-// static c_void SetupViewportDrawData(*mut ImGuiViewportP viewport, Vec<ImDrawList*>* draw_lists)
+// static c_void SetupViewportDrawData(*mut ImGuiViewportP viewport, draw_lists: *mut  Vec<*mut ImDrawList>)
 pub fn SetupViewportDrawData(viewport: *mut ImGuiViewport, draw_lists: *mut Vec<*mut ImDrawList>) {
     // When minimized, we report draw_data.DisplaySize as zero to be consistent with non-viewport mode,
     // and to allow applications/backends to easily skip rendering.
@@ -175,7 +175,7 @@ static bool UpdateTryMergeWindowIntoHostViewports(window: *mut ImGuiWindow)
 
 // Translate Dear ImGui windows when a Host Viewport has been moved
 // (This additionally keeps windows at the same place when ImGuiConfigFlags_ViewportsEnable is toggled!)
-c_void TranslateWindowsInViewport(*mut ImGuiViewportP viewport, const ImVec2& old_pos, const ImVec2& new_pos)
+c_void TranslateWindowsInViewport(*mut ImGuiViewportP viewport, const old_pos: &ImVec2, const new_pos: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(viewport.Window == NULL && (viewport.Flags & ImGuiViewportFlags_CanHostOtherWindows));
@@ -194,7 +194,7 @@ c_void TranslateWindowsInViewport(*mut ImGuiViewportP viewport, const ImVec2& ol
 }
 
 // Scale all windows (position, size). Use when e.g. changing DPI. (This is a lossy operation!)
-c_void ScaleWindowsInViewport(*mut ImGuiViewportP viewport, c_float scale)
+c_void ScaleWindowsInViewport(*mut ImGuiViewportP viewport, scale: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (viewport.Window)
@@ -212,7 +212,7 @@ c_void ScaleWindowsInViewport(*mut ImGuiViewportP viewport, c_float scale)
 // If the backend doesn't set MouseLastHoveredViewport or doesn't honor ImGuiViewportFlags_NoInputs, we do a search ourselves.
 // A) It won't take account of the possibility that non-imgui windows may be in-between our dragged window and our target window.
 // B) It requires Platform_GetWindowFocus to be implemented by backend.
-*mut ImGuiViewportP FindHoveredViewportFromPlatformWindowStack(const ImVec2& mouse_platform_pos)
+*mut ImGuiViewportP FindHoveredViewportFromPlatformWindowStack(const mouse_platform_pos: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut best_candidate: *mut ImGuiViewport =  null_mut();
@@ -247,7 +247,7 @@ static c_void UpdateViewportsNewFrame()
                 if (minimized)
                     viewport.Flags |= ImGuiViewportFlags_Minimized;
                 else
-                    viewport.Flags &= ~ImGuiViewportFlags_Minimized;
+                    viewport.Flags &= !ImGuiViewportFlags_Minimized;
             }
         }
     }
@@ -424,7 +424,7 @@ static c_void UpdateViewportsEndFrame()
 }
 
 // FIXME: We should ideally refactor the system to call this every frame (we currently don't)
-*mut ImGuiViewportP AddUpdateViewport(window: *mut ImGuiWindow, id: ImGuiID, const ImVec2& pos, const ImVec2& size, ImGuiViewportFlags flags)
+*mut ImGuiViewportP AddUpdateViewport(window: *mut ImGuiWindow, id: ImGuiID, const pos: &ImVec2, const size: &ImVec2, ImGuiViewportFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
@@ -685,7 +685,7 @@ c_void WindowSyncOwnedViewport(window: *mut ImGuiWindow, parent_window_in_stack:
 
     // Update common viewport flags
     const ImGuiViewportFlags viewport_flags_to_clear = ImGuiViewportFlags_TopMost | ImGuiViewportFlags_NoTaskBarIcon | ImGuiViewportFlags_NoDecoration | ImGuiViewportFlags_NoRendererClear;
-    ImGuiViewportFlags viewport_flags = window.Viewport.Flags & ~viewport_flags_to_clear;
+    ImGuiViewportFlags viewport_flags = window.Viewport.Flags & !viewport_flags_to_clear;
     let mut window_flags: ImGuiWindowFlags = window.Flags;
     let is_modal: bool = (window_flags & ImGuiWindowFlags_Modal) != 0;
     let is_short_lived_floating_window: bool = (window_flags & (ImGuiWindowFlags_ChildMenu | ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_Popup)) != 0;
@@ -893,7 +893,7 @@ c_void RenderPlatformWindowsDefault(platform_render_arg: *mut c_void, renderer_r
     }
 }
 
-static c_int FindPlatformMonitorForPos(const ImVec2& pos)
+static c_int FindPlatformMonitorForPos(const pos: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.len(); monitor_n++)
@@ -908,7 +908,7 @@ static c_int FindPlatformMonitorForPos(const ImVec2& pos)
 // Search for the monitor with the largest intersection area with the given rectangle
 // We generally try to avoid searching loops but the monitor count should be very small here
 // FIXME-OPT: We could test the last monitor used for that viewport first, and early
-static c_int FindPlatformMonitorForRect(const ImRect& rect)
+static c_int FindPlatformMonitorForRect(rect: &ImRect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 

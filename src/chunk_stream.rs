@@ -94,7 +94,7 @@ impl ImChunkStream<T> {
     }
 
 
-    // *mut T      ptr_from_offset(c_int of0f32)
+    // *mut T      ptr_from_offset(of0f32: c_int)
     pub fn ptr_from_offset(&mut self, off: usize) -> *mut T {
         // IM_ASSERT(off >= 4 && off < Buf.Size);
         // return (*mut T)(Buf.Data + of0f32);

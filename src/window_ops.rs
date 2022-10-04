@@ -36,7 +36,7 @@ use crate::window_settings::ImGuiWindowSettings;
 // they would meddle many times with the underlying ImDrawCmd.
 // Instead, we do a preemptive overwrite of clipping rectangle _without_ altering the command-buffer and let
 // the subsequent single call to SetCurrentChannel() does it things once.
-// c_void SetWindowClipRectBeforeSetChannel(*mut ImGuiWindow window, const ImRect& clip_rect)
+// c_void SetWindowClipRectBeforeSetChannel(*mut ImGuiWindow window, clip_rect: &ImRect)
 pub fn SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, clip_rect: &ImRect) {
     let mut clip_rect_vec4 = clip_rect.ToVec4();
     window.ClipRect = clip_rect.clone();
@@ -45,14 +45,14 @@ pub fn SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, clip_rect: &I
 }
 
 
-// inline ImRect           WindowRectRelToAbs(*mut ImGuiWindow window, const ImRect& r) 
+// inline ImRect           WindowRectRelToAbs(*mut ImGuiWindow window, r: &ImRect)
 pub fn WindowRectRelToAbs(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
     let off = window.DC.CursorStartPos.clone();
     ImRect::new4(r.Min.x + off.x, r.Min.y + off.y, r.Max.x + off.x, r.Max.y + off.y)
 }
 
 
-// inline ImRect           WindowRectAbsToRel(*mut ImGuiWindow window, const ImRect& r)
+// inline ImRect           WindowRectAbsToRel(*mut ImGuiWindow window, r: &ImRect)
 pub fn WindowRectAbsToRel(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
     let mut off: ImVec2 = window.DC.CursorStartPos.clone();
     return ImRect::new4(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y);
@@ -101,7 +101,7 @@ pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHov
 
 // This is called during NewFrame().UpdateViewportsNewFrame() only.
 // Need to keep in sync with SetWindowPos()
-// static c_void TranslateWindow(window: *mut ImGuiWindow, const ImVec2& delta)
+// static c_void TranslateWindow(window: *mut ImGuiWindow, const delta: &ImVec2)
 pub fn TranslateWindow(window: *mut ImGuiWindow, delta: &ImVec2) {
     window.Pos += delta;
     window.ClipRect.Translate(delta);
@@ -113,7 +113,7 @@ pub fn TranslateWindow(window: *mut ImGuiWindow, delta: &ImVec2) {
     window.DC.IdealMaxPos += delta;
 }
 
-// static c_void ScaleWindow(window: *mut ImGuiWindow, c_float scale)
+// static c_void ScaleWindow(window: *mut ImGuiWindow, scale: c_float)
 pub fn ScaleWindow(window: *mut ImGuiWindow, scale: c_float) {
     let origin: ImVec2 = window.Viewport.Pos.clone();
     window.Pos = ImFloor((window.Pos.clone() - origin) * scale + origin.clone());
@@ -150,7 +150,7 @@ pub fn ChildWindowComparer(lhs: *const c_void, rhs: *const c_void) -> c_int {
     return (a.BeginOrderWithinParent - b.BeginOrderWithinParent) as c_int;
 }
 
-// static c_void AddWindowToSortBuffer(Vec<ImGuiWindow*>* out_sorted_windows, window: *mut ImGuiWindow)
+// static c_void AddWindowToSortBuffer(out_sorted_windows: *mut  Vec<*mut ImGuiWindow>, window: *mut ImGuiWindow)
 pub fn AddWindowToSortBuffer(mut out_sorted_windows: *mut Vec<*mut ImGuiWindow>, window: *mut ImGuiWindow) {
     out_sorted_windows.push(window);
     if window.Active {
@@ -180,7 +180,7 @@ pub fn GetWindowDisplayLayer(window: *mut ImGuiWindow) -> c_int {
 // - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
 //   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
 //   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
-// c_void PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, intersect_with_current_clip_rect: bool)
+// c_void PushClipRect(const clip_rect_min: &ImVec2, const clip_rect_max: &ImVec2, intersect_with_current_clip_rect: bool)
 pub fn PushClipRect(clip_rect_min: &ImVec2, clip_rect_max: &ImVec2, intersect_with_current_clip_rect: bool) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     window.DrawList.PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
@@ -542,7 +542,7 @@ pub fn GetWindowForTitleAndMenuHeight(window: *mut ImGuiWindow) -> *mut ImGuiWin
     return if window.DockNodeAsHost.is_null() == false && window.DockNodeAsHost.VisibleWindow.is_null == false { window.DockNodeAsHost.VisibleWindow } else { window };
 }
 
-// static ImVec2 CalcWindowSizeAfterConstraint(window: *mut ImGuiWindow, const ImVec2& size_desired)
+// static ImVec2 CalcWindowSizeAfterConstraint(window: *mut ImGuiWindow, const size_desired: &ImVec2)
 pub unsafe fn CalcWindowSizeAfterConstraint(window: *mut ImGuiWindow, size_desired: &ImVec2) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -602,7 +602,7 @@ pub unsafe fn CalcWindowContextSizes(window: *mut ImGuiWindow, content_size_curr
      // = (window.ContentSizeExplicit.y != 0f32) ? window.ContentSizeExplicit.y : IM_FLOOR(ImMax(window.DC.CursorMaxPos.y, window.DC.IdealMaxPos.y) - window.DC.CursorStartPos.y);
 }
 
-// static ImVec2 CalcWindowAutoFitSize(window: *mut ImGuiWindow, const ImVec2& size_contents)
+// static ImVec2 CalcWindowAutoFitSize(window: *mut ImGuiWindow, const size_contents: &ImVec2)
 pub unsafe fn CalcWIndowAutoFitSize(window: *mut ImGuiWindow, size_contents: &ImVec2) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -675,7 +675,7 @@ pub unsafe fn GetWindowBgColorIdx(window: *mut ImGuiWindow) -> ImGuiCol
 }
 
 
-// static inline c_void ClampWindowRect(window: *mut ImGuiWindow, const ImRect& visibility_rect)
+// static inline c_void ClampWindowRect(window: *mut ImGuiWindow, visibility_rect: &ImRect)
 pub unsafe fn ClampWindowRect(window: *mut ImGuiWindow, visibility_rect: &ImRect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -714,7 +714,7 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
 
 // Draw background and borders
 // Draw and handle scrollbars
-// c_void RenderWindowDecorations(window: *mut ImGuiWindow, const ImRect& title_bar_rect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, c_int resize_grip_count, const u32 resize_grip_col[4], c_float resize_grip_draw_size)
+// c_void RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: &ImRect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, resize_grip_count: c_int, const u32 resize_grip_col[4], resize_grip_draw_size: c_float)
 pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rec: &ImRect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, resize_grip_count: c_int, resize_grip_col: [u32;4], resize_grip_draw_size: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -892,7 +892,7 @@ pub unsafe fn GetCurrentWindow() -> *mut ImGuiWindow {
 
 // Render title text, collapse button, close button
 // When inside a dock node, this is handled in DockNodeCalcTabBarLayout() instead.
-c_void RenderWindowTitleBarContents(window: *mut ImGuiWindow, const ImRect& title_bar_rect, *const char name, bool* p_open)
+c_void RenderWindowTitleBarContents(window: *mut ImGuiWindow, title_bar_rect: &ImRect, *const char name, bool* p_open)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut style = &mut g.Style;
@@ -1310,7 +1310,7 @@ ImVec2 GetWindowPos()
     return window.Pos;
 }
 
-c_void SetWindowPos(window: *mut ImGuiWindow, const ImVec2& pos, ImGuiCond cond)
+c_void SetWindowPos(window: *mut ImGuiWindow, const pos: &ImVec2, ImGuiCond cond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowPosAllowFlags & cond) == 0)
@@ -1334,13 +1334,13 @@ c_void SetWindowPos(window: *mut ImGuiWindow, const ImVec2& pos, ImGuiCond cond)
     window.DC.CursorStartPos += offset;
 }
 
-c_void SetWindowPos(const ImVec2& pos, ImGuiCond cond)
+c_void SetWindowPos(const pos: &ImVec2, ImGuiCond cond)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
     SetWindowPos(window, pos, cond);
 }
 
-c_void SetWindowPos(*const char name, const ImVec2& pos, ImGuiCond cond)
+c_void SetWindowPos(*const char name, const pos: &ImVec2, ImGuiCond cond)
 {
     if (let mut window: *mut ImGuiWindow =  FindWindowByName(name))
         SetWindowPos(window, pos, cond);
@@ -1352,7 +1352,7 @@ ImVec2 GetWindowSize()
     return window.Size;
 }
 
-c_void SetWindowSize(window: *mut ImGuiWindow, const ImVec2& size, ImGuiCond cond)
+c_void SetWindowSize(window: *mut ImGuiWindow, const size: &ImVec2, ImGuiCond cond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowSizeAllowFlags & cond) == 0)
@@ -1377,12 +1377,12 @@ c_void SetWindowSize(window: *mut ImGuiWindow, const ImVec2& size, ImGuiCond con
         MarkIniSettingsDirty(window);
 }
 
-c_void SetWindowSize(const ImVec2& size, ImGuiCond cond)
+c_void SetWindowSize(const size: &ImVec2, ImGuiCond cond)
 {
     SetWindowSize(GimGui.CurrentWindow, size, cond);
 }
 
-c_void SetWindowSize(*const char name, const ImVec2& size, ImGuiCond cond)
+c_void SetWindowSize(*const char name, const size: &ImVec2, ImGuiCond cond)
 {
     if (let mut window: *mut ImGuiWindow =  FindWindowByName(name))
         SetWindowSize(window, size, cond);
@@ -1399,7 +1399,7 @@ c_void SetWindowCollapsed(window: *mut ImGuiWindow, collapsed: bool, ImGuiCond c
     window.Collapsed = collapsed;
 }
 
-c_void SetWindowHitTestHole(window: *mut ImGuiWindow, const ImVec2& pos, const ImVec2& size)
+c_void SetWindowHitTestHole(window: *mut ImGuiWindow, const pos: &ImVec2, const size: &ImVec2)
 {
     // IM_ASSERT(window.HitTestHoleSize.x == 0);     // We don't support multiple holes/hit test filters
     window.HitTestHoleSize = ImVec2ih(size);
@@ -1447,7 +1447,7 @@ c_void SetWindowFocus(*const char name)
     }
 }
 
-c_void SetNextWindowPos(const ImVec2& pos, ImGuiCond cond, const ImVec2& pivot)
+c_void SetNextWindowPos(const pos: &ImVec2, ImGuiCond cond, const pivot: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
@@ -1458,7 +1458,7 @@ c_void SetNextWindowPos(const ImVec2& pos, ImGuiCond cond, const ImVec2& pivot)
     g.NextWindowData.PosUndock = true;
 }
 
-c_void SetNextWindowSize(const ImVec2& size, ImGuiCond cond)
+c_void SetNextWindowSize(const size: &ImVec2, ImGuiCond cond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
@@ -1467,7 +1467,7 @@ c_void SetNextWindowSize(const ImVec2& size, ImGuiCond cond)
     g.NextWindowData.SizeCond = cond ? cond : ImGuiCond_Always;
 }
 
-c_void SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_max, ImGuiSizeCallback custom_callback, custom_callback_user_data: *mut c_void)
+c_void SetNextWindowSizeConstraints(const size_min: &ImVec2, const size_max: &ImVec2, ImGuiSizeCallback custom_callback, custom_callback_user_data: *mut c_void)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSizeConstraint;
@@ -1478,14 +1478,14 @@ c_void SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_m
 
 // Content size = inner scrollable rectangle, padded with WindowPadding.
 // SetNextWindowContentSize(ImVec2::new2(100,100) + ImGuiWindowFlags_AlwaysAutoResize will always allow submitting a 100x100 item.
-c_void SetNextWindowContentSize(const ImVec2& size)
+c_void SetNextWindowContentSize(const size: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasContentSize;
     g.NextWindowData.ContentSizeVal = ImFloor(size);
 }
 
-c_void SetNextWindowScroll(const ImVec2& scroll)
+c_void SetNextWindowScroll(const scroll: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasScroll;
@@ -1507,7 +1507,7 @@ c_void SetNextWindowFocus()
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasFocus;
 }
 
-c_void SetNextWindowBgAlpha(c_float alpha)
+c_void SetNextWindowBgAlpha(alpha: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasBgAlpha;
@@ -1563,7 +1563,7 @@ ImGuiViewport* GetWindowViewport()
 //      offset_from_start_x != 0 : align to specified x position (relative to window/group left)
 //      spacing_w < 0            : use default spacing if pos_x == 0, no spacing if pos_x != 0
 //      spacing_w >= 0           : enforce spacing amount
-c_void SameLine(c_float offset_from_start_x, c_float spacing_w)
+c_void SameLine(offset_from_start_x: c_float, spacing_w: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

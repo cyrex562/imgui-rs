@@ -52,7 +52,7 @@ impl ImGuiListClipper {
     // ~ImGuiListClipper();
 
 
-    // c_void  Begin(c_int items_count, c_float items_height = -1f32);
+    // c_void  Begin(items_count: c_int, c_float items_height = -1f32);
     // IMGUI_API void  Begin(int items_count, float items_height = -1f32);
     pub unsafe fn Begin(&mut self, items_count: i32, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -135,7 +135,7 @@ impl ImGuiListClipper {
     }
 
     // Call ForceDisplayRangeByIndices() before first call to Step() if you need a range of items to be displayed regardless of visibility.
-    // c_void  ForceDisplayRangeByIndices(c_int item_min, c_int item_max); // item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.
+    // c_void  ForceDisplayRangeByIndices(item_min: c_int, item_max: c_int); // item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.
     pub fn ForceDisplayRangeByIndices(&mut self, item_min: c_int, item_max: c_int) {
         let mut data = self.TempData;
         // IM_ASSERT(DisplayStart < 0); // Only allowed after Begin() and if there has not been a specified range yet.
@@ -147,11 +147,11 @@ impl ImGuiListClipper {
 
 
     // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    // inline ImGuiListClipper(c_int items_count, c_float items_height = -1f32) { memset(this, 0, sizeof(*this)); ItemsCount = -1; Begin(items_count, items_height); } // [removed in 1.79]
+    // inline ImGuiListClipper(items_count: c_int, c_float items_height = -1f32) { memset(this, 0, sizeof(*this)); ItemsCount = -1; Begin(items_count, items_height); } // [removed in 1.79]
 // #endif
 }
 
-// static c_void ImGuiListClipper_SeekCursorForItem(*mut ImGuiListClipper clipper, c_int item_n)
+// static c_void ImGuiListClipper_SeekCursorForItem(*mut ImGuiListClipper clipper, item_n: c_int)
 pub unsafe fn ImGuiListClipper_SeekCursorForItem(clipper: *mut ImGuiListClipper, item_n: c_int) {
 // StartPosY starts from ItemsFrozen hence the subtraction
 // Perform the add and multiply with double to allow seeking through larger ranges

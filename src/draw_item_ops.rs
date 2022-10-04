@@ -1,4 +1,4 @@
-// inline c_void             DebugDrawItemRect(u32 col = IM_COL32(255, 0, 0, 255))    
+// inline c_void             DebugDrawItemRect(let mut col: u32 = IM_COL32(255, 0, 0, 255))
 pub unsafe fn DebugDrawItemRect(col: u32) {
     let g = GImGui; // ImGuiContext& g = *GImGui; 
     let window = g.CurrentWindow;

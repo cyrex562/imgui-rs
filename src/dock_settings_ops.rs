@@ -29,7 +29,7 @@ static c_void DockSettingsRenameNodeReferences(old_node_id: ImGuiID, new_node_id
 }
 
 // Remove references stored in ImGuiWindowSettings to the given ImGuiDockNodeSettings
-static c_void DockSettingsRemoveNodeReferences(ImGuiID* node_ids, c_int node_ids_count)
+static c_void DockSettingsRemoveNodeReferences(ImGuiID* node_ids, node_ids_count: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let found: c_int = 0;
@@ -123,7 +123,7 @@ static c_void DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, ImGuiSettings
     ctx.DockContext.NodesSettings.push(node);
 }
 
-static c_void DockSettingsHandler_DockNodeToSettings(ImGuiDockContext* dc, node: *mut ImGuiDockNode, c_int depth)
+static c_void DockSettingsHandler_DockNodeToSettings(ImGuiDockContext* dc, node: *mut ImGuiDockNode, depth: c_int)
 {
     ImGuiDockNodeSettings node_settings;
     // IM_ASSERT(depth < (1 << (sizeof(node_settings.Depth) << 3)));

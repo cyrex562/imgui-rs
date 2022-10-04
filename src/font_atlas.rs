@@ -103,25 +103,25 @@ impl ImFontAtlas {
     }
 
 
-    // ImFont*           AddFontFromFileTTF(const char* filename, c_float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);
+    // ImFont*           AddFontFromFileTTF(const char* filename, size_pixels: c_float, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);
     pub fn AddFontFromFileTTF(&mut self, filename: *const c_char, size_pixels: c_float, font_cfg: *const ImFontConfig, glyph_ranges: *const ImWchar) -> *mut ImFont {
         todo!()
     }
 
 
-    // ImFont*           AddFontFromMemoryTTF(void* font_data, c_int font_size, c_float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg.FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
+    // ImFont*           AddFontFromMemoryTTF(void* font_data, font_size: c_int, size_pixels: c_float, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg.FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
     pub fn AddFontFromMemoryTTF(&mut self, font_data: *mut c_void, font_size: c_int, size_pixels: c_float, font_cfg: *const ImFontConfig, glyph_ranges: *const ImWchar) -> *mut ImFont {
         todo!()
     }
 
 
-    // ImFont*           AddFontFromMemoryCompressedTTF(const void* compressed_font_data, c_int compressed_font_size, c_float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
+    // ImFont*           AddFontFromMemoryCompressedTTF(const void* compressed_font_data, compressed_font_size: c_int, size_pixels: c_float, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
     pub fn AddFontFromMemoryCompressedTTF(&mut self, compressed_font_data: *const c_void, compressed_font_size: c_int, size_pixels: c_float, font_cfg: *const ImFontConfig, glyph_ranges: *const ImWchar) -> *mut ImFont {
         todo!()
     }
 
 
-    // ImFont*           AddFontFromMemoryCompressedBase85TTF(const char* compressed_font_data_base85, c_float size_pixels, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);              // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
+    // ImFont*           AddFontFromMemoryCompressedBase85TTF(const char* compressed_font_data_base85, size_pixels: c_float, const ImFontConfig* font_cfg = NULL, const ImWchar* glyph_ranges = NULL);              // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
     pub fn AddFontFromMemoryCompressedBase85TTF(&mut self, compressed_font_data_base85: *const c_char, size_pixels: c_float, font_cfg: *const ImFontConfig, glyph_ranges: *const ImWchar) -> *mut ImFont {
         todo!()
     }
@@ -243,19 +243,19 @@ impl ImFontAtlas {
     //   so you can render e.g. custom colorful icons and use them as regular glyphs.
     // - Read docs/FONTS.md for more details about using colorful icons.
     // - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
-    // c_int               AddCustomRectRegular(c_int width, c_int height);
+    // c_int               AddCustomRectRegular(width: c_int, height: c_int);
     pub fn AddCustomRectRegular(&mut self, width: c_int, height: c_int) -> c_int {
         todo!()
     }
 
 
-    // c_int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, c_int width, c_int height, c_float advance_x, const ImVec2& offset = ImVec2::new2(0, 0));
+    // c_int               AddCustomRectFontGlyph(ImFont* font, ImWchar id, width: c_int, height: c_int, advance_x: c_float, const ImVec2& offset = ImVec2::new2(0, 0));
     pub fn AddCustomRectFontGlyph(&mut self, font: *mut ImFont, id: ImWchar, width: c_int, height: c_int, advance_x: c_float, offset: &ImVec2) -> c_int {
         todo!()
     }
 
 
-    // ImFontAtlasCustomRect*      GetCustomRectByIndex(c_int index) { IM_ASSERT(index >= 0); return &CustomRects[index]; }
+    // ImFontAtlasCustomRect*      GetCustomRectByIndex(index: c_int) { IM_ASSERT(index >= 0); return &CustomRects[index]; }
     pub fn GetCustomRectByIndex(&mut self, index: c_int) {
         self.CustomRects[index]
     }

@@ -141,13 +141,13 @@ impl ImGuiViewport {
     }
 
     // Calculate work rect pos/size given a set of offset (we have 1 pair of offset for rect locked from last frame data, and 1 pair for currently building rect)
-//     ImVec2  CalcWorkRectPos(const ImVec2& off_min) const                            { return ImVec2::new(Pos.x + off_min.x, Pos.y + off_min.y); }
+//     ImVec2  CalcWorkRectPos(const off_min: &ImVec2) const                            { return ImVec2::new(Pos.x + off_min.x, Pos.y + off_min.y); }
     pub fn CalcWorkRectPos(&self, off_min: &ImVec2) -> ImVec2 {
         ImVec2::new2(self.Pos.x + off_min.x, self.Pos.y + off_min.y)
     }
 
 
-    // ImVec2  CalcWorkRectSize(const ImVec2& off_min, const ImVec2& off_max) const    { return ImVec2::new(ImMax(0f32, Size.x - off_min.x + off_max.x), ImMax(0f32, Size.y - off_min.y + off_max.y)); }
+    // ImVec2  CalcWorkRectSize(const off_min: &ImVec2, const off_max: &ImVec2) const    { return ImVec2::new(ImMax(0f32, Size.x - off_min.x + off_max.x), ImMax(0f32, Size.y - off_min.y + off_max.y)); }
     pub fn CalcWorkRectSize(&self, off_min: &ImVec2, off_max: &ImVec2) -> ImVec2 {
         ImVec2::new2(
             ImMax(0f32, self.Size.x - off_min.x + off_max.x),

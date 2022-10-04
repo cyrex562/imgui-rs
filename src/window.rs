@@ -303,7 +303,7 @@ impl ImGuiWindow {
 
 
     // ImGuiID     GetID(int n);
-    // ImGuiID ImGuiWindow::GetID(c_int n)
+    // ImGuiID ImGuiWindow::GetID(n: c_int)
     pub unsafe fn GetID3(&self, n: c_int) -> ImGuiID {
         let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
         let mut id: ImGuiID = ImHashData(&n, libc::sizeof(n), seed as u32);
@@ -314,9 +314,9 @@ impl ImGuiWindow {
         return id;
     }
 
-    // ImGuiID     GetIDFromRectangle(const ImRect& r_abs);
+    // ImGuiID     GetIDFromRectangle(r_abs: &ImRect);
     // This is only used in rare/specific situations to manufacture an ID out of nowhere.
-    // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
+    // ImGuiID ImGuiWindow::GetIDFromRectangle(r_abs: &ImRect)
     pub unsafe fn GetIDFromRectangle(&self, r_abs: &ImRect) -> ImGuiID
     {
         let mut seed: ImGuiID =  self.IDStack.last().unwrap().clone();

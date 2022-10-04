@@ -53,7 +53,7 @@ pub unsafe fn FindRenderedTextEnd(text: *const c_char, mut text_end: *const c_ch
 
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
-// c_void RenderText(ImVec2 pos, *const char text, *const char text_end, hide_text_after_hash: bool)
+// c_void RenderText(pos: ImVec2, *const char text, *const char text_end, hide_text_after_hash: bool)
 pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const c_char, hide_text_after_hash: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -77,7 +77,7 @@ pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const 
     }
 }
 
-// c_void RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width)
+// c_void RenderTextWrapped(pos: ImVec2, *const char text, *const char text_end, wrap_width: c_float)
 pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -98,7 +98,7 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: 
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
-// c_void RenderTextClippedEx(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_display_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
+// c_void RenderTextClippedEx(ImDrawList* draw_list, const pos_min: &ImVec2, const pos_max: &ImVec2, *const char text, *const char text_display_end, *const text_size_if_known: ImVec2, const align: &ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_display_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     let mut pos: ImVec2 = pos_min.clone();
@@ -128,7 +128,7 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
     }
 }
 
-// c_void RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align, *const ImRect clip_rect)
+// c_void RenderTextClipped(const pos_min: &ImVec2, const pos_max: &ImVec2, *const char text, *const char text_end, *const text_size_if_known: ImVec2, const align: &ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Hide anything after a '##' string
     let mut text_display_end: *const c_char = FindRenderedTextEnd(text, text_end);
@@ -149,7 +149,7 @@ pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
-// c_void RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end_full, *const ImVec2 text_size_if_known)
+// c_void RenderTextEllipsis(ImDrawList* draw_list, const pos_min: &ImVec2, const pos_max: &ImVec2, clip_max_x: c_float, ellipsis_max_x: c_float, *const char text, *const char text_end_full, *const text_size_if_known: ImVec2)
 pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, clip_max_x: c_float, ellipsis_max_x: c_float, text: *const c_char, mut text_end_full: *const c_char, text_size_if_known: *const ImVec2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if text_end_full == null() {
@@ -223,7 +223,7 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
 }
 
 // Render a rectangle shaped with optional rounding and borders
-// c_void RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, border: bool, c_float rounding)
+// c_void RenderFrame(p_min: ImVec2, p_max: ImVec2, u32 fill_col, border: bool, rounding: c_float)
 pub unsafe fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: bool, rounding: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -235,7 +235,7 @@ pub unsafe fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: b
     }
 }
 
-// c_void RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, c_float rounding)
+// c_void RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float)
 pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -246,7 +246,7 @@ pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float)
     }
 }
 
-// c_void RenderNavHighlight(const ImRect& bb, id: ImGuiID, ImGuiNavHighlightFlags flags)
+// c_void RenderNavHighlight(bb: &ImRect, id: ImGuiID, ImGuiNavHighlightFlags flags)
 pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighlightFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if id != g.NavId {
@@ -281,7 +281,7 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     }
 }
 
-// c_void RenderMouseCursor(ImVec2 base_pos, c_float base_scale, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow)
+// c_void RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, ImGuiMouseCursor mouse_cursor, u32 col_fill, u32 col_border, u32 col_shadow)
 pub unsafe fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cursor: ImGuiMouseCursor, col_fill: u32, col_border: u32, col_shadow: u32) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(mouse_cursor > ImGuiMouseCursor_None && mouse_cursor < ImGuiMouseCursor_COUNT);
@@ -289,7 +289,7 @@ pub unsafe fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cur
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
         // We scale cursor with current viewport/monitor, however Windows 10 for its own hardware cursor seems to be using a different scale factor.
-        // ImVec2 offset, size, uv[4];
+        // offset: ImVec2, size, uv[4];
         let mut offset: ImVec2;
         let mut size: ImVec2 = ImVec2::new2(0f32, 0f32);
         let mut uv: [ImVec2; 4];

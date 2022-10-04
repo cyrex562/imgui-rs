@@ -202,7 +202,7 @@ pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
 }
 
 
-// inline *mut ImGuiTableInstanceData   TableGetInstanceData(*mut ImGuiTable table, c_int instance_no)
+// inline *mut ImGuiTableInstanceData   TableGetInstanceData(*mut ImGuiTable table, instance_no: c_int)
 pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut ImGuiTableInstanceData {
     if instance_no == 0 {
         return &mut table.InstanceDataFirst;
@@ -218,7 +218,7 @@ pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut 
 // - Important: if ImGuiTableFlags_PadOuterX is set but ImGuiTableFlags_PadInnerX is not set, the outer-most left and right
 //   columns report a small offset so their CellBgRect can extend up to the outer border.
 //   FIXME: But the rendering code in TableEndRow() nullifies that with clamping required for scrolling.
-// ImRect TableGetCellBgRect(*const ImGuiTable table, c_int column_n)
+// ImRect TableGetCellBgRect(*const ImGuiTable table, column_n: c_int)
 pub fn TableGetCellBgRect(table: *const ImGuiTable, column_n: c_int) -> ImRect {
     let column: &ImGuiTableColumn = &table.Columns[column_n];
     let mut x1 = column.MinX;

@@ -21,7 +21,7 @@ impl ImGuiPtrOrIndex {
         }
     }
 
-    // ImGuiPtrOrIndex(c_int index)  { Ptr = None; Index = index; }
+    // ImGuiPtrOrIndex(index: c_int)  { Ptr = None; Index = index; }
     pub fn new2(index:c_int)  -> Self {
         Self {
             Ptr: null_mut(),
@@ -29,5 +29,3 @@ impl ImGuiPtrOrIndex {
         }
     }
 }
-
-

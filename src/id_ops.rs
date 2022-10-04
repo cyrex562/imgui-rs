@@ -118,7 +118,7 @@ c_void PushID(*const c_void ptr_id)
     window.IDStack.push(id);
 }
 
-c_void PushID(c_int int_id)
+c_void PushID(int_id: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

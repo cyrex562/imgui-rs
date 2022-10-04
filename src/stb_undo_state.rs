@@ -16,7 +16,7 @@ pub struct StbUndoState
     pub undo_point: c_short,
     pub redo_point: c_short,
 
-    // c_int undo_char_point, redo_char_point;
+    // undo_char_point: c_int, redo_char_point;
     pub undo_char_point: c_int,
     pub redo_char_point: c_int
 }

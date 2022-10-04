@@ -1,7 +1,7 @@
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
 // CalcTextSize("") should return ImVec2::new2(0f32, g.FontSize)
-// ImVec2 CalcTextSize(*const char text, *const char text_end, hide_text_after_double_hash: bool, c_float wrap_width)
+// ImVec2 CalcTextSize(*const char text, *const char text_end, hide_text_after_double_hash: bool, wrap_width: c_float)
 pub fn CalcTextSize(text: *const c_char, text_end: *const c_char, hid_text_after_double_hash: bool, wrap_width: c_float) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -31,7 +31,7 @@ let text_display_end: *const c_char;
 }
 
 
-c_void PushTextWrapPos(c_float wrap_pos_x)
+c_void PushTextWrapPos(wrap_pos_x: c_float)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     window.DC.TextWrapPosStack.push(window.DC.TextWrapPos);
@@ -63,7 +63,7 @@ static ImGuiWindow* GetCombinedRootWindow(window: *mut ImGuiWindow, popup_hierar
 
 
 
-c_void Indent(c_float indent_w)
+c_void Indent(indent_w: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
@@ -71,7 +71,7 @@ c_void Indent(c_float indent_w)
     window.DC.CursorPos.x = window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x;
 }
 
-c_void Unindent(c_float indent_w)
+c_void Unindent(indent_w: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();

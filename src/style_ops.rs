@@ -16,7 +16,7 @@ pub fn GetStyle() -> &mut ImGuiStyle {
 }
 
 
-// u32 GetColorU32(ImGuiCol idx, c_float alpha_mul)
+// u32 GetColorU32(ImGuiCol idx, alpha_mul: c_float)
 pub unsafe fn GetColorU32(idx: ImGuiCol, alpha_mul: f32) -> u32 {
     let g = GImGui;
     let style = &mut g.Style;
@@ -82,7 +82,7 @@ pub unsafe fn PushStyleColor2(idx: ImGuiCol, col: &ImVec4) {
     g.Style.Colors[idx] = col;
 }
 
-// c_void PopStyleColor(c_int count)
+// c_void PopStyleColor(count: c_int)
 pub unsafe fn PopStyleColor(mut count: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.ColorStack.Size < count {

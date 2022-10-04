@@ -105,25 +105,25 @@ impl ImFont {
 
     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). f32::MAX to disable.
     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0f32 to disable.
-    // ImVec2            CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
+    // ImVec2            CalcTextSizeA(size: c_float, max_width: c_float, wrap_width: c_float, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
     pub fn CalcTextSizeA(&mut self, size: c_float, max_width: c_float, wrap_width: c_float, text_begin: *const c_char, text_end: *const c_char, remaining: *mut *const c_char) -> ImVec2 {
         todo!()
     }
 
 
-    // const char*       CalcWordWrapPositionA(c_float scale, const char* text, const char* text_end, c_float wrap_width) const;
+    // const char*       CalcWordWrapPositionA(scale: c_float, const char* text, const char* text_end, wrap_width: c_float) const;
     pub fn CalcWordWrapPositionA(&mut self, scale: c_float, text: *const c_char, text_end: *const c_char, wrap_width: c_float) {
         todo!()
     }
 
 
-    // void              RenderChar(ImDrawList* draw_list, c_float size, const ImVec2& pos, u32 col, ImWchar c) const;
+    // void              RenderChar(ImDrawList* draw_list, size: c_float, const pos: &ImVec2, u32 col, ImWchar c) const;
     pub fn RenderChar(&mut self, draw_list: *const ImDrawList, size: c_float, pos: &ImVec2, col: u32, c: ImWchar) {
         todo!()
     }
 
 
-    // void              RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos, u32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, c_float wrap_width = 0f32, bool cpu_fine_clip = false) const;
+    // void              RenderText(ImDrawList* draw_list, size: c_float, const pos: &ImVec2, u32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, c_float wrap_width = 0f32, bool cpu_fine_clip = false) const;
     pub fn RenderText(&mut self, draw_list: *mut ImDrawList, size: c_float, pos: &ImVec2, col: u32, clip_rect: &ImVec4, text_begin: *const c_char, text_end: *const c_char, wrap_width: c_float, cpu_fine_clip: bool) {
         todo!()
     }
@@ -142,13 +142,13 @@ impl ImFont {
     }
 
 
-    // void              GrowIndex(c_int new_size);
+    // void              GrowIndex(new_size: c_int);
     pub fn GrowIndex(&mut self, new_size: c_int) {
         todo!()
     }
 
 
-    // void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, c_float x0, c_float y0, c_float x1, c_float y1, c_float u0, c_float v0, c_float u1, c_float v1, c_float advance_x);
+    // void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, x0: c_float, y0: c_float, x1: c_float, y1: c_float, u0: c_float, v0: c_float, u1: c_float, v1: c_float, advance_x: c_float);
     pub fn AddGlyph(&mut self, src_cfg: *const ImFontConfig, c: ImWchar, x0: c_float, y0: c_float, x1: c_float, y1: c_float, u0: c_float, v0: c_float, u1: c_float, v1: c_float, advance_x: c_float) {
         todo!()
     }
@@ -164,7 +164,7 @@ impl ImFont {
         todo!()
     }
 
-    // bool              IsGlyphRangeUnused(unsigned c_int c_begin, unsigned c_int c_last);
+    // bool              IsGlyphRangeUnused(unsigned c_begin: c_int, unsigned c_last: c_int);
     pub fn IsGlyphRangeUnused(&mut self, c_being: c_uint, c_last: c_uint) -> bool {
         todo!()
     }

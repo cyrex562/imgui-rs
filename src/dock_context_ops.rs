@@ -388,7 +388,7 @@ pub unsafe fn DockContextPruneUnusedSettings(ctx: *mut ImGuiContext) {
     }
 }
 
-// static c_void DockContextBuildNodesFromSettings(ctx: *mut ImGuiContext, ImGuiDockNodeSettings* node_settings_array, c_int node_settings_count)
+// static c_void DockContextBuildNodesFromSettings(ctx: *mut ImGuiContext, ImGuiDockNodeSettings* node_settings_array, node_settings_count: c_int)
 pub unsafe fn DockContextBuildNodesFromSettings(ctx: *mut ImGuiContext, node_settings_array: *mut ImGuiDockNodeSettings, node_settings_count: c_int) {
     // Build nodes
     // for (let node_n: c_int = 0; node_n < node_settings_count; node_n++)
@@ -458,7 +458,7 @@ pub fn DockContextBuildAddWindowsToNodes(ctx: *mut ImGuiContext, root_id: ImGuiI
 // - DockContextCalcDropPosForDocking()
 //-----------------------------------------------------------------------------
 
-// c_void DockContextQueueDock(ctx: *mut ImGuiContext, target: *mut ImGuiWindow, target_node: *mut ImGuiDockNode, payload: *mut ImGuiWindow, split_dir: ImGuiDir, c_float split_ratio, split_outer: bool)
+// c_void DockContextQueueDock(ctx: *mut ImGuiContext, target: *mut ImGuiWindow, target_node: *mut ImGuiDockNode, payload: *mut ImGuiWindow, split_dir: ImGuiDir, split_ratio: c_float, split_outer: bool)
 pub fn DockContextQueueDock(ctx: *mut ImGuiContext, target: *mut ImGuiWindow, target_node: *mut ImGuiDockNode, payload: *mut ImGuiWindow, split_dir: ImGuiDir, split_ratio: c_float, split_outer: bool) {
     // IM_ASSERT(target != payload);
     let mut req = ImGuiDockRequest::default();
@@ -633,14 +633,14 @@ pub fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDockRequest
 
 
 // Problem:
-//   Undocking a large (~full screen) window would leave it so large that the bottom right sizing corner would more
+//   Undocking a large (!full screen) window would leave it so large that the bottom right sizing corner would more
 //   than likely be off the screen and the window would be hard to resize to fit on screen. This can be particularly problematic
 //   with 'ConfigWindowsMoveFromTitleBarOnly=true' and/or with 'ConfigWindowsResizeFromEdges=false' as well (the later can be
 //   due to missing ImGuiBackendFlags_HasMouseCursors backend flag).
 // Solution:
 //   When undocking a window we currently force its maximum size to 90% of the host viewport or monitor.
 // Reevaluate this when we implement preserving docked/undocked size ("docking_wip/undocked_size" branch).
-// static ImVec2 FixLargeWindowsWhenUndocking(const ImVec2& size, ImGuiViewport* ref_viewport)
+// static ImVec2 FixLargeWindowsWhenUndocking(const size: &ImVec2, ImGuiViewport* ref_viewport)
 pub unsafe fn FixLargeWindowsWhenUndocking(size: &ImVec2, ref_viewport: *mut ImGuiViewport) -> ImVec2 {
     if (ref_viewport == null_mut()) {
         return size.clone();

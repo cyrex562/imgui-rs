@@ -41,8 +41,8 @@ impl ImGuiInputTextCallbackData {
     // Helper functions for text manipulation.
     // Use those function to benefit from the CallbackResize behaviors. Calling those function reset the selection.
     //  ImGuiInputTextCallbackData();
-    //  c_void      DeleteChars(c_int pos, c_int bytes_count);
-    //  c_void      InsertChars(c_int pos, *const char text, *const char text_end = null_mut());
+    //  c_void      DeleteChars(pos: c_int, bytes_count: c_int);
+    //  c_void      InsertChars(pos: c_int, *const char text, *const char text_end = null_mut());
     // c_void                SelectAll()             
     pub fn SelectAll(&mut self) {
         self.SelectionStart = 0;

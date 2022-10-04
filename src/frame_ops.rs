@@ -186,7 +186,7 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
         // This gives a little bit of leeway before clearing the hover timer, allowing mouse to cross gaps
         g.HoverDelayClearTimer += g.IO.DeltaTime;
         if g.HoverDelayClearTimer >= ImMax(0.20f32, g.IO.DeltaTime * 2.00f32) {
-            // ~6 frames at 30 Hz + allow for low framerate
+            // !6 frames at 30 Hz + allow for low framerate
             g.HoverDelayTimer = 0f32;
             g.HoverDelayClearTimer = 0f32;
         }

@@ -33,13 +33,13 @@ pub struct ImGuiPlatformIO
     // void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
     pub Platform_ShowWindow: fn(vp: *mut ImGuiViewport),
 
-    // void    (*Platform_SetWindowPos)(ImGuiViewport* vp, ImVec2 pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    // void    (*Platform_SetWindowPos)(ImGuiViewport* vp, pos: ImVec2);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
     pub Platform_SetWindowPos: fn(vp: *mut ImGuiViewport, pos: ImVec2),
 
     // ImVec2  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
     pub Platform_GetWindowPos: fn(vp: *mut ImGuiViewport) -> ImVec2,
 
-    // void    (*Platform_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    // void    (*Platform_SetWindowSize)(ImGuiViewport* vp, size: ImVec2);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
     pub Platform_SetWindowSize: fn(vp: *mut ImGuiViewport, size: ImVec2),
 
     // ImVec2  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
@@ -80,7 +80,7 @@ pub struct ImGuiPlatformIO
 
     // void    (*Renderer_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
 
-    // void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, ImVec2 size);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
+    // void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, size: ImVec2);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
 
     // void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport.DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 

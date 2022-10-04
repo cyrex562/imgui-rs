@@ -2,16 +2,21 @@ use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int, INT_MAX};
 use crate::dock_node::ImGuiDockNode;
 use crate::{GImGui, ImHashStr};
+use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::button_flags::ImGuiButtonFlags_AllowItemOverlap;
-use crate::color::{ImGuiCol_Text, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed, ImGuiCol_WindowBg};
+use crate::color::{ImGuiCol_DockingEmptyBg, ImGuiCol_DockingPreview, ImGuiCol_NavWindowingHighlight, ImGuiCol_Separator, ImGuiCol_Text, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed, ImGuiCol_WindowBg};
 use crate::color_ops::ColorConvertU32ToFloat4;
 use crate::condition::ImGuiCond_Always;
-use crate::constants::{DOCKING_SPLITTER_SIZE, WINDOWS_HOVER_PADDING};
+use crate::constants::{DOCKING_SPLITTER_SIZE, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
+use crate::context::ImGuiContext;
 use crate::data_authority::{ImGuiDataAuthority_Auto, ImGuiDataAuthority_DockNode, ImGuiDataAuthority_Window};
-use crate::direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right};
-use crate::dock_context_ops::DockContextRemoveNode;
-use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
+use crate::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
+use crate::dock_context_ops::{DockContextAddNode, DockContextRemoveNode};
+use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_LocalFlagsTransferMask_, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingInCentralNode, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
 use crate::dock_node_state::{ImGuiDockNodeState_HostWindowHiddenBecauseSingleWindow, ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing};
+use crate::dock_preview_data::ImGuiDockPreviewData;
+use crate::draw_list::ImDrawList;
+use crate::draw_list_ops::GetForegroundDrawList;
 use crate::input_ops::IsMouseClicked;
 use crate::item_flags::ImGuiItemFlags_Disabled;
 use crate::item_ops::IsItemActive;
@@ -23,20 +28,20 @@ use crate::state_ops::{Begin, End};
 use crate::string_ops::str_to_const_c_char_ptr;
 use crate::style_ops::{GetColorU32, PopStyleColor, PushStyleColor};
 use crate::style_var::ImGuiStyleVar_WindowPadding;
-use crate::style_var_ops::{PopStyleVar, PushStyleVar};
+use crate::style_var_ops::{PopStyleVar, PushStyleVar, PushStyleVar2};
 use crate::tab_bar::ImGuiTabBar;
 use crate::tab_bar_flags::{ImGuiTabBarFlags_AutoSelectNewTabs, ImGuiTabBarFlags_DockNode, ImGuiTabBarFlags_IsFocused, ImGuiTabBarFlags_NoCloseWithMiddleMouseButton, ImGuiTabBarFlags_Reorderable, ImGuiTabBarFlags_SaveSettings};
 use crate::tab_item::ImGuiTabItem;
-use crate::tab_item_flags::{ImGuiTabItemFlags, ImGuiTabItemFlags_Button, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton, ImGuiTabItemFlags_None, ImGuiTabItemFlags_UnsavedDocument, ImGuiTabItemFlags_Unsorted};
+use crate::tab_item_flags::{ImGuiTabItemFlags, ImGuiTabItemFlags_Button, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton, ImGuiTabItemFlags_None, ImGuiTabItemFlags_Preview, ImGuiTabItemFlags_UnsavedDocument, ImGuiTabItemFlags_Unsorted};
 use crate::type_defs::ImGuiID;
-use crate::utils::{flag_clear, flag_set, ImQsort};
+use crate::utils::{flag_clear, flag_set, ImQsort, is_not_null};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::window::ImGuiWindow;
 use crate::window_class::ImGuiWindowClass;
-use crate::window_dock_style_color::ImGuiWindowDockStyleCol_COUNT;
+use crate::window_dock_style_color::{ImGuiWindowDockStyleCol_COUNT, ImGuiWindowDockStyleCol_TabActive, ImGuiWindowDockStyleCol_Text};
 use crate::window_dock_style_colors::GWindowDockStyleColors;
-use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_UnsavedDocument};
+use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_None, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_UnsavedDocument};
 use crate::window_ops::RenderWindowOuterBorders;
 
 // inline * mut ImGuiDockNode   DockNodeGetRootNode( * mut ImGuiDockNode node)
@@ -728,12 +733,12 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode)
             }
 
             // Sync Collapsed
-            if (node.AuthorityForSize == ImGuiDataAuthority_Window && ref_window.is_null() == false) {
+            if node.AuthorityForSize == ImGuiDataAuthority_Window && ref_window.is_null() == false {
                 SetNextWindowCollapsed(ref_window.Collapsed);
             }
 
             // Sync Viewport
-            if (node.AuthorityForViewport == ImGuiDataAuthority_Window && ref_window.is_null() == false) {
+            if node.AuthorityForViewport == ImGuiDataAuthority_Window && ref_window.is_null() == false {
                 SetNextWindowViewport(ref_window.ViewportId);
             }
 
@@ -748,7 +753,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode)
             window_flags |= ImGuiWindowFlags_NoTitleBar;
 
             SetNextWindowBgAlpha(0f32); // Don't set ImGuiWindowFlags_NoBackground because it disables borders
-            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2::new2(0, 0));
+            PushStyleVar2(ImGuiStyleVar_WindowPadding, &ImVec2::new2(0.0, 0.0));
             Begin(window_label.as_ptr(), null_mut(), window_flags);
             PopStyleVar(0);
             beginned_into_host_window = true;
@@ -765,7 +770,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode)
             // When reappearing B/C/D will request focus and be moved to the top of the display pile, but they are not linked to the dock host window
             // during the frame they appear. The dock host window would keep its old display order, and the sorting in EndFrame would move B/C/D back
             // after the dock host window, losing their top-most status.
-            if (node.Hostwindow.Appearing) {
+            if node.Hostwindow.Appearing {
                 BringWindowToDisplayFront(node.HostWindow);
             }
 
@@ -828,7 +833,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode)
     // Update position/size, process and draw resizing splitters
     if node.IsRootNode() && host_window.is_null() == false
     {
-        DockNodeTreeUpdatePosSize(node, host_window.Pos, host_window.Size);
+        DockNodeTreeUpdatePosSize(node, host_window.Pos, host_window.Size, null_mut());
         DockNodeTreeUpdateSplitter(node);
     }
 
@@ -836,7 +841,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode)
     if host_window.is_null() == false && node.IsEmpty() && node.IsVisible
     {
         host_window.DrawList.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_BG);
-        node.LastBgColor = (node_flags & ImGuiDockNodeFlags_PassthruCentralNode) ? 0 : GetColorU32(ImGuiCol_DockingEmptyBg);
+        node.LastBgColor = if flag_set(node_flags, ImGuiDockNodeFlags_PassthruCentralNode) { 0 } else { GetColorU32(ImGuiCol_DockingEmptyBg, 0.0) };
         if node.LastBgColor != 0 {
             host_window.DrawList.AddRectFilled(&node.Pos, node.Pos + node.Size, node.LastBgColor, 0.0, 0);
         }
@@ -850,16 +855,16 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode)
     if render_dockspace_bg && node.IsVisible
     {
         host_window.DrawList.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_BG);
-        if (central_node_hole) {
+        if central_node_hole {
             RenderRectFilledWithHole(host_window.DrawList, node.Rect(), central_node.Rect(), GetColorU32(ImGuiCol_WindowBg, 0.0), 0f32);
         }
         else {
-            host_window.DrawList.AddRectFilled(&mut node.Pos, node.Pos + node.Size, GetColorU32(ImGuiCol_WindowBg), 0f32, 0);
+            host_window.DrawList.AddRectFilled(&mut node.Pos, node.Pos + node.Size, GetColorU32(ImGuiCol_WindowBg, 0.0), 0f32, 0);
         }
     }
 
     // Draw and populate Tab Bar
-    if (host_window) {
+    if host_window {
         host_window.DrawList.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_FG);
     }
     if host_window.is_null() == false && node.Windows.len() > 0
@@ -942,10 +947,10 @@ pub unsafe fn DockNodeUpdateWindowMenu(node: *mut ImGuiDockNode, tab_bar: *mut I
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut ret_tab_id: ImGuiID =  0;
     if g.Style.WindowMenuButtonPosition == ImGuiDir_Left {
-        SetNextWindowPos(ImVec2::new(node.Pos.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(0f32, 0f32));
+        SetNextWindowPos(ImVec2::new2(node.Pos.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(0f32, 0f32));
     }
     else {
-        SetNextWindowPos(ImVec2::new(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(1f32, 0f32));
+        SetNextWindowPos(ImVec2::new2(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, ImVec2::new2(1f32, 0f32));
     }
     if BeginPopup("#WindowMenu")
     {
@@ -961,7 +966,7 @@ pub unsafe fn DockNodeUpdateWindowMenu(node: *mut ImGuiDockNode, tab_bar: *mut I
             // for (let tab_n: c_int = 0; tab_n < tab_bar.Tabs.Size; tab_n++)
             for tab_n in 0 .. tab_bar.Tabs.len()
             {
-                let mut tab: *mut ImGuiTabItem = &tab_bar.Tabs[tab_n];
+                let mut tab: *mut ImGuiTabItem = &mut tab_bar.Tabs[tab_n];
                 if tab.Flags & ImGuiTabItemFlags_Button {
                     continue;
                 }
@@ -987,7 +992,7 @@ pub unsafe fn DockNodeBeginAmendTabBar(node: *mut ImGuiDockNode) -> bool
     if (node.MergedFlags & ImGuiDockNodeFlags_KeepAliveOnly) {
         return false;
     }
-    Begin(node.Hostwindow.Name);
+    Begin(node.Hostwindow.Name, null_mut(), ImGuiWindowFlags_None);
     PushOverrideID(node.ID);
     let mut ret: bool =  BeginTabBarEx(node.TabBar, node.TabBar.BarRect.clone(), node.TabBar.Flags, node);
     IM_UNUSED(ret);
@@ -1015,7 +1020,7 @@ pub unsafe fn IsDockNodeTitleBarHighlighted(node: *mut ImGuiDockNode, root_node:
     if g.NavWindow.is_null() == false && g.NavWindow.RootWindowForTitleBarHighlight == host_window.RootWindowDockTree && root_node.LastFocusedNodeId == node.ID {
         let mut parent_node: *mut ImGuiDockNode = g.NavWindow.Rootwindow.DockNode;
         while parent_node != null_mut() {
-            parent_node = DockNodeGetRootNode(&mut parent_node)
+            parent_node = DockNodeGetRootNode(&mut parent_node);
             if parent_node == root_node {
                 return true;
             }
@@ -1099,7 +1104,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
     // In a dock node, the Collapse Button turns into the Window Menu button.
     // FIXME-DOCK FIXME-OPT: Could we recycle popups id across multiple dock nodes?
     if (has_window_menu_button && IsPopupOpen("#WindowMenu")) {
-        let mut tab_id: ImGuiID = DockNodeUpdateWindowMenu(node, tab_bar)
+        let mut tab_id: ImGuiID = DockNodeUpdateWindowMenu(node, tab_bar);
         if tab_id != 0 {
             focus_tab_id = tab_id;
             tab_bar.NextSelectedTabId = tab_id;
@@ -1113,7 +1118,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
     let mut tab_bar_Rect = ImRect::default();
     let mut window_menu_button_pos = ImVec2::default();
     let mut close_button_pos = ImVec2::default();
-    DockNodeCalcTabBarLayout(node, &title_bar_rect, &tab_bar_rect, &window_menu_button_pos, &close_button_pos);
+    DockNodeCalcTabBarLayout(node, &mut title_bar_rect, &mut tab_bar_rect, &mut window_menu_button_pos, &mut close_button_pos);
 
     // Submit new tabs, they will be added as Unsorted and sorted below based on relative DockOrder value.
     let tabs_count_old: c_int = tab_bar.Tabs.Size;
@@ -1140,7 +1145,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
     // Docking/Collapse button
     if has_window_menu_button
     {
-        if CollapseButton(host_window.GetID(str_to_const_c_char_ptr("#COLLAPSE")), window_menu_button_pos, node) { // == DockNodeGetWindowMenuButtonId(node)
+        if CollapseButton(host_window.GetID(str_to_const_c_char_ptr("#COLLAPSE"), null()), window_menu_button_pos, node) { // == DockNodeGetWindowMenuButtonId(node)
             OpenPopup("#WindowMenu");
         }
         if (IsItemActive()) {
@@ -1237,19 +1242,19 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
             // Note that TabItemEx() calls TabBarCalcTabID() so our tab item ID will ignore the current ID stack (rightly so)
             let mut tab_open: bool =  true;
             TabItemEx(tab_bar, window.Name, window.HasCloseButton ? &tab_open : null_mut(), tab_item_flags, window);
-            if (!tab_open) {
+            if !tab_open {
                 node.WantCloseTabId = window.TabId;
             }
-            if (tab_bar.VisibleTabId == window.TabId) {
+            if tab_bar.VisibleTabId == window.TabId {
                 node.VisibleWindow = window;
             }
 
             // Store last item data so it can be queried with IsItemXXX functions after the user Begin() call
             window.DockTabItemStatusFlags = g.LastItemData.StatusFlags;
-            window.DockTabItemRect = g.LastItemData.Rect;
+            window.DockTabItemRect = g.LastItemData.Rect.clone();
 
             // Update navigation ID on menu layer
-            if (g.NavWindow.is_null() == false && g.NavWindow.RootWindow == window && (window.DC.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) == 0) {
+            if g.NavWindow.is_null() == false && g.NavWindow.RootWindow == window && (window.DC.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) == 0 {
                 host_window.NavLastIds[1] = window.TabId;
             }
         }
@@ -1263,8 +1268,8 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
     }
 
     // Notify root of visible window (used to display title in OS task bar)
-    if (node.VisibleWindow) {
-        if (is_focused || root_node.VisibleWindow == null_mut()) {
+    if node.VisibleWindow {
+        if is_focused || root_node.VisibleWindow == null_mut() {
             root_node.VisibleWindow = node.VisibleWindow;
         }
     }
@@ -1294,7 +1299,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
         //    focus_tab_id = tab_bar.SelectedTabId;
         if !close_button_is_enabled
         {
-            PopStyleColor();
+            PopStyleColor(0);
             PopItemFlag();
         }
     }
@@ -1456,7 +1461,7 @@ pub unsafe fn DockNodeCalcTabBarLayout(node: *const ImGuiDockNode, out_title_rec
     if node.HasCloseButton
     {
         r.Max.x -= button_sz;
-        if (out_close_button_pos) *out_close_button_pos = ImVec2::new2(r.Max.x.clone() - style.FramePadding.x, r.Min.y.clone());
+        if out_close_button_pos { *out_close_button_pos = ImVec2::new2(r.Max.x.clone() - style.FramePadding.x, r.Min.y.clone()); }
     }
     if node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Left
     {
@@ -1471,11 +1476,12 @@ pub unsafe fn DockNodeCalcTabBarLayout(node: *const ImGuiDockNode, out_title_rec
     if out_window_menu_button_pos { *out_window_menu_button_pos = window_menu_button_pos; }
 }
 
-c_void DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new, ImVec2& size_new, dir: ImGuiDir, ImVec2 size_new_desired)
+// c_void DockNodeCalcSplitRects(pos_old: &ImVec2, size_old: &ImVec2, pos_new: &ImVec2, size_new: &ImVec2, dir: ImGuiDir, size_new_desired: ImVec2)
+pub unsafe fn DockNodeCalcSplitRects(pos_old: &ImVec2, size_old: &ImVec2, pos_new: &ImVec2, size_new: &ImVec2, dir: ImGuiDir, size_new_desired: ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let dock_spacing: c_float =  g.Style.ItemInnerSpacing.x;
-    const ImGuiAxis axis = (dir == ImGuiDir_Left || dir == ImGuiDir_Right) ? ImGuiAxis_X : ImGuiAxis_Y;
+    let mut axis: ImGuiAxis = if dir == ImGuiDir_Left || dir == ImGuiDir_Right { ImGuiAxis_X } else { ImGuiAxis_Y };
     pos_new[axis ^ 1] = pos_old[axis ^ 1];
     size_new[axis ^ 1] = size_old[axis ^ 1];
 
@@ -1505,7 +1511,8 @@ c_void DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new
 }
 
 // Retrieve the drop rectangles for a given direction or for the center + perform hit testing.
-bool DockNodeCalcDropRectsAndTestMousePos(const ImRect& parent, dir: ImGuiDir, ImRect& out_r, outer_docking: bool, test_mouse_pos: *mut ImVec2)
+// bool DockNodeCalcDropRectsAndTestMousePos(parent: &ImRect, dir: ImGuiDir, out_r: &mut ImRect, outer_docking: bool, test_mouse_pos: *mut ImVec2)
+pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImGuiDir, out_r: &mut ImRect, outer_docking: bool, test_mouse_pos: *mut ImVec2) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -1521,122 +1528,145 @@ bool DockNodeCalcDropRectsAndTestMousePos(const ImRect& parent, dir: ImGuiDir, I
         //off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5f32 - GetFrameHeightWithSpacing() * 1.4f - hs_h), ImFloor(parent.GetHeight() * 0.5f32 - GetFrameHeightWithSpacing() * 1.4f - hs_h));
         hs_w = ImFloor(hs_for_central_nodes * 1.500f32);
         hs_h = ImFloor(hs_for_central_nodes * 0.800f32);
-        off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5f32 - hs_h), ImFloor(parent.GetHeight() * 0.5f32 - hs_h));
+        off = ImVec2::new2(ImFloor(parent.GetWidth() * 0.5f32 - hs_h), ImFloor(parent.GetHeight() * 0.5f32 - hs_h));
     }
     else
     {
         hs_w = ImFloor(hs_for_central_nodes);
         hs_h = ImFloor(hs_for_central_nodes * 0.900f32);
-        off = ImVec2::new(ImFloor(hs_w * 2.400f32), ImFloor(hs_w * 2.400f32));
+        off = ImVec2::new2(ImFloor(hs_w * 2.400f32), ImFloor(hs_w * 2.400f32));
     }
 
     let c: ImVec2 = ImFloor(parent.GetCenter());
-    if      (dir == ImGuiDir_None)  { out_r = ImRect::new(c.x - hs_w, c.y - hs_w,         c.x + hs_w, c.y + hs_w);         }
-    else if (dir == ImGuiDir_Up)    { out_r = ImRect::new(c.x - hs_w, c.y - off.y - hs_h, c.x + hs_w, c.y - off.y + hs_h); }
-    else if (dir == ImGuiDir_Down)  { out_r = ImRect::new(c.x - hs_w, c.y + off.y - hs_h, c.x + hs_w, c.y + off.y + hs_h); }
-    else if (dir == ImGuiDir_Left)  { out_r = ImRect::new(c.x - off.x - hs_h, c.y - hs_w, c.x - off.x + hs_h, c.y + hs_w); }
-    else if (dir == ImGuiDir_Right) { out_r = ImRect::new(c.x + off.x - hs_h, c.y - hs_w, c.x + off.x + hs_h, c.y + hs_w); }
+    if      (dir == ImGuiDir_None)  { *out_r = ImRect::new4(c.x - hs_w, c.y - hs_w,         c.x + hs_w, c.y + hs_w);         }
+    else if (dir == ImGuiDir_Up)    { *out_r = ImRect::new4(c.x - hs_w, c.y - off.y - hs_h, c.x + hs_w, c.y - off.y + hs_h); }
+    else if (dir == ImGuiDir_Down)  { *out_r = ImRect::new4(c.x - hs_w, c.y + off.y - hs_h, c.x + hs_w, c.y + off.y + hs_h); }
+    else if (dir == ImGuiDir_Left)  { *out_r = ImRect::new4(c.x - off.x - hs_h, c.y - hs_w, c.x - off.x + hs_h, c.y + hs_w); }
+    else if (dir == ImGuiDir_Right) { *out_r = ImRect::new4(c.x + off.x - hs_h, c.y - hs_w, c.x + off.x + hs_h, c.y + hs_w); }
 
-    if (test_mouse_pos == null_mut())
+    if (test_mouse_pos == null_mut()) {
         return false;
+    }
 
-    let hit_r: ImRect =  out_r;
-    if (!outer_docking)
+    let mut hit_r: ImRect =  out_r.clone();
+    if !outer_docking
     {
         // Custom hit testing for the 5-way selection, designed to reduce flickering when moving diagonally between sides
         hit_r.Expand(ImFloor(hs_w * 0.300f32));
         let mouse_delta: ImVec2 = (*test_mouse_pos - c);
         let mouse_delta_len2: c_float =  ImLengthSqr(mouse_delta);
-        let r_threshold_center: c_float =  hs_w * 1.4f;
-        let r_threshold_sides: c_float =  hs_w * (1.4f + 1.20f32);
-        if (mouse_delta_len2 < r_threshold_center * r_threshold_center)
+        let r_threshold_center: c_float =  hs_w * 1.4f32;
+        let r_threshold_sides: c_float =  hs_w * (1.4f32 + 1.20f32);
+        if (mouse_delta_len2 < r_threshold_center * r_threshold_center) {
             return (dir == ImGuiDir_None);
-        if (mouse_delta_len2 < r_threshold_sides * r_threshold_sides)
+        }
+        if (mouse_delta_len2 < r_threshold_sides * r_threshold_sides) {
             return (dir == ImGetDirQuadrantFromDelta(mouse_delta.x, mouse_delta.y));
+        }
     }
-    return hit_r.Contains(*test_mouse_pos);
+    return hit_r.Contains(&*test_mouse_pos);
 }
 
 // host_node may be NULL if the window doesn't have a DockNode already.
 // FIXME-DOCK: This is misnamed since it's also doing the filtering.
-static c_void DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, payload_window: *mut ImGuiWindow, payload_node: *mut ImGuiDockNode, ImGuiDockPreviewData* data, is_explicit_target: bool, is_outer_docking: bool)
+// static c_void DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, payload_window: *mut ImGuiWindow, payload_node: *mut ImGuiDockNode, data: *mut ImGuiDockPreviewData, is_explicit_target: bool, is_outer_docking: bool)
+pub unsafe fn DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, payload_window: *mut ImGuiWindow, payload_node: &mut ImGuiDockNode, data: *mut ImGuiDockPreviewData, is_explicit_target: bool, is_outer_docking: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // There is an edge case when docking into a dockspace which only has inactive nodes.
     // In this case DockNodeTreeFindNodeByPos() will have selected a leaf node which is inactive.
     // Because the inactive leaf node doesn't have proper pos/size yet, we'll use the root node as reference.
-    if (payload_node == null_mut())
-        payload_node = payload_window.DockNodeAsHost;
-    let mut ref_node_for_rect: *mut ImGuiDockNode = (host_node && !host_node.IsVisible) ? DockNodeGetRootNode(host_node) : host_node;
-    if (ref_node_for_rect)
+    if payload_node == null_mut() {
+        *payload_node = (*payload_window.DockNodeAsHost).clone();
+    }
+    let mut ref_node_for_rect: *mut ImGuiDockNode = if host_node.is_null() == false && !host_node.IsVisible { DockNodeGetRootNode(&mut*host_node) }else { host_node };
+    if (ref_node_for_rect) {}
         // IM_ASSERT(ref_node_for_rect.IsVisible == true);
 
     // Filter, figure out where we are allowed to dock
-    let mut src_node_flags: ImGuiDockNodeFlags = payload_node ? payload_node.MergedFlags : payload_window.WindowClass.DockNodeFlagsOverrideSet;
-    let mut dst_node_flags: ImGuiDockNodeFlags = host_node ? host_node.MergedFlags : host_window.WindowClass.DockNodeFlagsOverrideSet;
+    let mut src_node_flags: ImGuiDockNodeFlags = if payload_node { payload_node.MergedFlags } else { payload_window.WindowClass.DockNodeFlagsOverrideSet };
+    let mut dst_node_flags: ImGuiDockNodeFlags = if host_node { host_node.MergedFlags } else { host_window.WindowClass.DockNodeFlagsOverrideSet };
     data.IsCenterAvailable = true;
-    if (is_outer_docking)
+    if (is_outer_docking) {
         data.IsCenterAvailable = false;
-    else if (dst_node_flags & ImGuiDockNodeFlags_NoDocking)
+    }
+    else if (dst_node_flags & ImGuiDockNodeFlags_NoDocking) {
         data.IsCenterAvailable = false;
-    else if (host_node && (dst_node_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) && host_node.IsCentralNode())
+    }
+    else if (host_node.is_null() == false && flag_set(dst_node_flags, ImGuiDockNodeFlags_NoDockingInCentralNode) && host_node.IsCentralNode()) {
         data.IsCenterAvailable = false;
-    else if ((!host_node || !host_node.IsEmpty()) && payload_node && payload_node.IsSplitNode() && (payload_node.OnlyNodeWithWindows == null_mut())) // Is _visibly_ split?
+    }
+    else if ((!host_node.is_null() == false || !host_node.IsEmpty()) && payload_node.is_null() == false && payload_node.IsSplitNode() && (payload_node.OnlyNodeWithWindows == null_mut())) { // Is _visibly_ split?
         data.IsCenterAvailable = false;
-    else if (dst_node_flags & ImGuiDockNodeFlags_NoDockingOverMe)
+    }
+    else if (dst_node_flags & ImGuiDockNodeFlags_NoDockingOverMe) {
         data.IsCenterAvailable = false;
-    else if ((src_node_flags & ImGuiDockNodeFlags_NoDockingOverOther) && (!host_node || !host_node.IsEmpty()))
+    }
+    else if (flag_set(src_node_flags, ImGuiDockNodeFlags_NoDockingOverOther) && (!host_node.is_null() == false || !host_node.IsEmpty())) {
         data.IsCenterAvailable = false;
-    else if ((src_node_flags & ImGuiDockNodeFlags_NoDockingOverEmpty) && host_node && host_node.IsEmpty())
+    }
+    else if (flag_set(src_node_flags, ImGuiDockNodeFlags_NoDockingOverEmpty) && host_node.is_null() == false || host_node.IsEmpty()) {
         data.IsCenterAvailable = false;
+    }
 
     data.IsSidesAvailable = true;
-    if ((dst_node_flags & ImGuiDockNodeFlags_NoSplit) || g.IO.ConfigDockingNoSplit)
+    if (flag_set(dst_node_flags, ImGuiDockNodeFlags_NoSplit) || g.IO.ConfigDockingNoSplit) {
         data.IsSidesAvailable = false;
-    else if (!is_outer_docking && host_node && host_node.ParentNode == null_mut() && host_node.IsCentralNode())
+    }
+    else if (!is_outer_docking && host_node.is_null() == false && host_node.ParentNode == null_mut() && host_node.IsCentralNode()) {
         data.IsSidesAvailable = false;
-    else if ((dst_node_flags & ImGuiDockNodeFlags_NoDockingSplitMe) || (src_node_flags & ImGuiDockNodeFlags_NoDockingSplitOther))
+    }
+    else if ((dst_node_flags & ImGuiDockNodeFlags_NoDockingSplitMe) || (src_node_flags & ImGuiDockNodeFlags_NoDockingSplitOther)) {
         data.IsSidesAvailable = false;
+    }
 
     // Build a tentative future node (reuse same structure because it is practical. Shape will be readjusted when previewing a split)
-    data.FutureNode.HasCloseButton = (host_node ? host_node.HasCloseButton : host_window.HasCloseButton) || (payload_window.HasCloseButton);
-    data.FutureNode.HasWindowMenuButton = host_node ? true : ((host_window.Flags & ImGuiWindowFlags_NoCollapse) == 0);
-    data.FutureNode.Pos = ref_node_for_rect ? ref_node_for_rect.Pos : host_window.Pos;
-    data.FutureNode.Size = ref_node_for_rect ? ref_node_for_rect.Size : host_window.Size;
+    data.FutureNode.HasCloseButton = (if is_not_null(host_node) { host_node.HasCloseButton } else { host_window.HasCloseButton }) || (payload_window.HasCloseButton);
+    data.FutureNode.HasWindowMenuButton = if is_not_null(host_node) { true } else
+    { flag_clear(host_window.Flags, ImGuiWindowFlags_NoCollapse) };
+    data.FutureNode.Pos = if ref_node_for_rect { ref_node_for_rect.Pos } else { host_window.Pos };
+    data.FutureNode.Size = if ref_node_for_rect { ref_node_for_rect.Size } else { host_window.Size };
 
     // Calculate drop shapes geometry for allowed splitting directions
     // IM_ASSERT(ImGuiDir_None == -1);
     data.SplitNode = host_node;
     data.SplitDir = ImGuiDir_None;
     data.IsSplitDirExplicit = false;
-    if (!host_window.Collapsed)
-        for (let dir: c_int = ImGuiDir_None; dir < ImGuiDir_COUNT; dir++)
+    if !host_window.Collapsed {
+        // for (let dir: c_int = ImGuiDir_None; dir < ImGuiDir_COUNT; dir+ +)
+        for dir in ImGuiDir_None..ImGuiDir_COUNT
         {
-            if (dir == ImGuiDir_None && !data.IsCenterAvailable)
+            if dir == ImGuiDir_None && !data.IsCenterAvailable {
                 continue;
-            if (dir != ImGuiDir_None && !data.IsSidesAvailable)
+            }
+            if dir != ImGuiDir_None && !data.IsSidesAvailable {
                 continue;
-            if (DockNodeCalcDropRectsAndTestMousePos(data.FutureNode.Rect(), (ImGuiDir)dir, data.DropRectsDraw[dir+1], is_outer_docking, &g.IO.MousePos))
-            {
-                data.SplitDir = (ImGuiDir)dir;
+            }
+            if DockNodeCalcDropRectsAndTestMousePos(data.FutureNode.Rect(), dir, data.DropRectsDraw[dir + 1], is_outer_docking, &mut g.IO.MousePos) {
+                data.SplitDir = dir;
                 data.IsSplitDirExplicit = true;
             }
         }
+    }
 
     // When docking without holding Shift, we only allow and preview docking when hovering over a drop rect or over the title bar
     data.IsDropAllowed = (data.SplitDir != ImGuiDir_None) || (data.IsCenterAvailable);
-    if (!is_explicit_target && !data.IsSplitDirExplicit && !g.IO.ConfigDockingWithShift)
+    if !is_explicit_target && !data.IsSplitDirExplicit && !g.IO.ConfigDockingWithShift {
         data.IsDropAllowed = false;
+    }
 
     // Calculate split area
     data.SplitRatio = 0f32;
-    if (data.SplitDir != ImGuiDir_None)
+    if data.SplitDir != ImGuiDir_None
     {
-        ImGuiDir split_dir = data.SplitDir;
-        ImGuiAxis split_axis = (split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Right) ? ImGuiAxis_X : ImGuiAxis_Y;
-        ImVec2 pos_new, pos_old = data.FutureNode.Pos;
-        ImVec2 size_new, size_old = data.FutureNode.Size;
+        let split_dir = data.SplitDir;
+        let split_axis = if split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Right
+        { ImGuiAxis_X }else { ImGuiAxis_Y };
+        let pos_new = data.FutureNode.Pos;
+        let pos_old = data.FutureNode.Pos;
+        let size_new= data.FutureNode.Pos;
+        let size_old = data.FutureNode.Size;
         DockNodeCalcSplitRects(pos_old, size_old, pos_new, size_new, split_dir, payload_window.Size);
 
         // Calculate split ratio so we can pass it down the docking request
@@ -1647,7 +1677,8 @@ static c_void DockNodePreviewDockSetup(host_window: *mut ImGuiWindow, host_node:
     }
 }
 
-static c_void DockNodePreviewDockRender(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, root_payload: *mut ImGuiWindow, *const ImGuiDockPreviewData data)
+// static c_void DockNodePreviewDockRender(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, root_payload: *mut ImGuiWindow, data: *ImGuiDockPreviewData)
+pub unsafe fn DockNodePreviewDockRender(host_window: *mut ImGuiWindow, host_node: *mut ImGuiDockNode, root_payload: *mut ImGuiWindow, data: *ImGuiDockPreviewData)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.CurrentWindow == host_window);   // Because we rely on font size to calculate tab sizes
@@ -1657,109 +1688,131 @@ static c_void DockNodePreviewDockRender(host_window: *mut ImGuiWindow, host_node
     let is_transparent_payload: bool = g.IO.ConfigDockingTransparentPayload;
 
     // In case the two windows involved are on different viewports, we will draw the overlay on each of them.
-    let overlay_draw_lists_count: c_int = 0;
-    ImDrawList* overlay_draw_lists[2];
-    overlay_draw_lists[overlay_draw_lists_count++] = GetForegroundDrawList(host_window.Viewport);
-    if (host_window.Viewport != root_payload.Viewport && !is_transparent_payload)
-        overlay_draw_lists[overlay_draw_lists_count++] = GetForegroundDrawList(root_payload.Viewport);
+    let mut overlay_draw_lists_count: c_int = 0;
+    // ImDrawList* overlay_draw_lists[2];
+    let mut overlay_draw_lists:[*mut ImDrawList;2] = [null_mut();2];
+    overlay_draw_lists[overlay_draw_lists_count] = GetForegroundDrawList(host_window.Viewport);
+    overlay_draw_lists_count += 1;
+    if host_window.Viewport != root_payload.Viewport && !is_transparent_payload {
+        overlay_draw_lists[overlay_draw_lists_count] = GetForegroundDrawList(root_payload.Viewport);
+        overlay_draw_lists_count += 1;
+    }
 
     // Draw main preview rectangle
-    const u32 overlay_col_main = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.60f32 : 0.400f32);
-    const u32 overlay_col_drop = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.90f32 : 0.700f32);
-    const u32 overlay_col_drop_hovered = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 1.20f32 : 1.000f32);
-    const u32 overlay_col_lines = GetColorU32(ImGuiCol_NavWindowingHighlight, is_transparent_payload ? 0.80f32 : 0.600f32);
+    let overlay_col_main: u32 = GetColorU32(ImGuiCol_DockingPreview, if is_transparent_payload { 0.60f32 } else { 0.400f32 });
+    let overlay_col_drop: u32 = GetColorU32(ImGuiCol_DockingPreview, if is_transparent_payload { 0.90f32 } else { 0.700f32 });
+    let overlay_col_drop_hovered: u32 = GetColorU32(ImGuiCol_DockingPreview, if is_transparent_payload { 1.20f32 } else { 1.000f32 });
+    let overlay_col_lines: u32 = GetColorU32(ImGuiCol_NavWindowingHighlight, if is_transparent_payload { 0.80f32 } else { 0.600f32 });
 
     // Display area preview
     let can_preview_tabs: bool = (root_payload.DockNodeAsHost == null_mut() || root_payload.DockNodeAsHost.Windows.len() > 0);
-    if (data.IsDropAllowed)
+    if data.IsDropAllowed
     {
-        let overlay_rect: ImRect =  data.FutureNode.Rect();
-        if (data.SplitDir == ImGuiDir_None && can_preview_tabs)
+        let mut overlay_rect: ImRect =  data.FutureNode.Rect();
+        if data.SplitDir == ImGuiDir_None && can_preview_tabs {
             overlay_rect.Min.y += GetFrameHeight();
-        if (data.SplitDir != ImGuiDir_None || data.IsCenterAvailable)
-            for (let overlay_n: c_int = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
-                overlay_draw_lists[overlay_n].AddRectFilled(overlay_rect.Min, overlay_rect.Max, overlay_col_main, host_window.WindowRounding, CalcRoundingFlagsForRectInRect(overlay_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE));
+        }
+        if data.SplitDir != ImGuiDir_None || data.IsCenterAvailable {
+            // for (let overlay_n: c_int = 0; overlay_n < overlay_draw_lists_count; overlay_n+ +)
+            for overlay_n in 0 .. overlay_draw_lists_count
+            {
+                overlay_draw_lists[overlay_n].AddRectFilled(&overlay_rect.Min, &overlay_rect.Max, overlay_col_main, host_window.WindowRounding, CalcRoundingFlagsForRectInRect(&overlay_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE));
+            }
+        }
     }
 
     // Display tab shape/label preview unless we are splitting node (it generally makes the situation harder to read)
-    if (data.IsDropAllowed && can_preview_tabs && data.SplitDir == ImGuiDir_None && data.IsCenterAvailable)
+    if data.IsDropAllowed && can_preview_tabs && data.SplitDir == ImGuiDir_None && data.IsCenterAvailable
     {
         // Compute target tab bar geometry so we can locate our preview tabs
-        ImRect tab_bar_rect;
-        DockNodeCalcTabBarLayout(&data.FutureNode, null_mut(), &tab_bar_rect, null_mut(), null_mut());
-        let tab_pos: ImVec2 = tab_bar_rect.Min;
-        if (host_node && host_node.TabBar)
+        let mut tab_bar_rect: ImRect = ImRect::default();
+        DockNodeCalcTabBarLayout(&data.FutureNode, null_mut(), &mut tab_bar_rect, null_mut(), null_mut());
+        let mut tab_pos: ImVec2 = tab_bar_rect.Min;
+        if is_not_null(host_node) && is_not_null(host_node.TabBar)
         {
-            if (!host_node.IsHiddenTabBar() && !host_node.IsNoTabBar())
-                tab_pos.x += host_node.TabBar.WidthAllTabs + g.Style.ItemInnerSpacing.x; // We don't use OffsetNewTab because when using non-persistent-order tab bar it is incremented with each Tab submission.
-            else
+            if !host_node.IsHiddenTabBar() && !host_node.IsNoTabBar() {
+                tab_pos.x += host_node.TabBar.WidthAllTabs + g.Style.ItemInnerSpacing.x;
+            } // We don't use OffsetNewTab because when using non-persistent-order tab bar it is incremented with each Tab submission.
+            else {
                 tab_pos.x += g.Style.ItemInnerSpacing.x + TabItemCalcSize(host_node.Windows[0].Name, host_node.Windows[0].HasCloseButton).x;
+            }
         }
-        else if (!(host_window.Flags & ImGuiWindowFlags_DockNodeHost))
+        else if !(host_window.Flags & ImGuiWindowFlags_DockNodeHost)
         {
             tab_pos.x += g.Style.ItemInnerSpacing.x + TabItemCalcSize(host_window.Name, host_window.HasCloseButton).x; // Account for slight offset which will be added when changing from title bar to tab bar
         }
 
         // Draw tab shape/label preview (payload may be a loose window or a host window carrying multiple tabbed windows)
-        if (root_payload.DockNodeAsHost)
+        if root_payload.DockNodeAsHost {}
             // IM_ASSERT(root_payload.DockNodeAsHost.Windows.Size <= root_payload.DockNodeAsHost.TabBar.Tabs.Size);
-        let mut tab_bar_with_payload: *mut ImGuiTabBar =  root_payload.DockNodeAsHost ? root_payload.DockNodeAsHost.TabBar : null_mut();
-        let payload_count: c_int = tab_bar_with_payload ? tab_bar_with_payload.Tabs.Size : 1;
-        for (let payload_n: c_int = 0; payload_n < payload_count; payload_n++)
+        let mut tab_bar_with_payload: *mut ImGuiTabBar =  if root_payload.DockNodeAsHost { root_payload.DockNodeAsHost.TabBar } else { null_mut() };
+        let payload_count: c_int = if tab_bar_with_payload { tab_bar_with_payload.Tabs.Size }else { 1 };
+        // for (let payload_n: c_int = 0; payload_n < payload_count; payload_n++)
+        for payload_n in 0 .. payload_count
         {
             // DockNode's TabBar may have non-window Tabs manually appended by user
-            let mut payload_window: *mut ImGuiWindow =  tab_bar_with_payload ? tab_bar_with_payload.Tabs[payload_n].Window : root_payload;
-            if (tab_bar_with_payload && payload_window == null_mut())
+            let mut payload_window: *mut ImGuiWindow =  if tab_bar_with_payload { tab_bar_with_payload.Tabs[payload_n].Window } else { root_payload };
+            if is_not_null(tab_bar_with_payload) && payload_window == null_mut() {
                 continue;
-            if (!DockNodeIsDropAllowedOne(payload_window, host_window))
+            }
+            if !DockNodeIsDropAllowedOne(payload_window, host_window) {
                 continue;
+            }
 
             // Calculate the tab bounding box for each payload window
             let tab_size: ImVec2 = TabItemCalcSize(payload_window.Name, payload_window.HasCloseButton);
-            let mut tab_bb: ImRect = ImRect::new(tab_pos.x, tab_pos.y, tab_pos.x + tab_size.x, tab_pos.y + tab_size.y);
+            let mut tab_bb: ImRect = ImRect::new4(tab_pos.x, tab_pos.y, tab_pos.x + tab_size.x, tab_pos.y + tab_size.y);
             tab_pos.x += tab_size.x + g.Style.ItemInnerSpacing.x;
-            const u32 overlay_col_text = GetColorU32(payload_window.DockStyle.Colors[ImGuiWindowDockStyleCol_Text]);
-            const u32 overlay_col_tabs = GetColorU32(payload_window.DockStyle.Colors[ImGuiWindowDockStyleCol_TabActive]);
+            let overlay_col_text: u32 = GetColorU32(payload_window.DockStyle.Colors[ImGuiWindowDockStyleCol_Text], 0.0);
+            let overlay_col_tabs: u32 = GetColorU32(payload_window.DockStyle.Colors[ImGuiWindowDockStyleCol_TabActive], 0.0);
             PushStyleColor(ImGuiCol_Text, overlay_col_text);
-            for (let overlay_n: c_int = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
+            // for (let overlay_n: c_int = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
+            for overlay_n in 0 .. overlay_draw_lists_count
             {
-                ImGuiTabItemFlags tab_flags = ImGuiTabItemFlags_Preview | ((payload_window.Flags & ImGuiWindowFlags_UnsavedDocument) ? ImGuiTabItemFlags_UnsavedDocument : 0);
-                if (!tab_bar_rect.Contains(tab_bb))
+                let mut tab_flags: ImGuiTabItemFlags = ImGuiTabItemFlags_Preview | (if flag_set(payload_window.Flags, ImGuiWindowFlags_UnsavedDocument) { ImGuiTabItemFlags_UnsavedDocument }else { 0 });
+                if !tab_bar_rect.ContainsRect(&tab_bb) {
                     overlay_draw_lists[overlay_n].PushClipRect(tab_bar_rect.Min, tab_bar_rect.Max);
-                TabItemBackground(overlay_draw_lists[overlay_n], tab_bb, tab_flags, overlay_col_tabs);
-                TabItemLabelAndCloseButton(overlay_draw_lists[overlay_n], tab_bb, tab_flags, g.Style.FramePadding, payload_window.Name, 0, 0, false, null_mut(), null_mut());
-                if (!tab_bar_rect.Contains(tab_bb))
+                }
+                TabItemBackground(overlay_draw_lists[overlay_n], &tab_bb, tab_flags, overlay_col_tabs);
+                TabItemLabelAndCloseButton(overlay_draw_lists[overlay_n], &tab_bb, tab_flags, g.Style.FramePadding, payload_window.Name, 0, 0, false, null_mut(), null_mut());
+                if !tab_bar_rect.ContainsRect(&tab_bb) {
                     overlay_draw_lists[overlay_n].PopClipRect();
+                }
             }
-            PopStyleColor();
+            PopStyleColor(0);
         }
     }
 
     // Display drop boxes
     let overlay_rounding: c_float =  ImMax(3.0f32, g.Style.FrameRounding);
-    for (let dir: c_int = ImGuiDir_None; dir < ImGuiDir_COUNT; dir++)
+    // for (let dir: c_int = ImGuiDir_None; dir < ImGuiDir_COUNT; dir++)
+    for dir in ImGuiDir_None .. ImGuiDir_COUNT
     {
-        if (!data.DropRectsDraw[dir + 1].IsInverted())
+        if !data.DropRectsDraw[dir + 1].IsInverted()
         {
             let draw_r: ImRect =  data.DropRectsDraw[dir + 1];
-            let draw_r_in: ImRect =  draw_r;
+            let mut draw_r_in: ImRect =  draw_r;
             draw_r_in.Expand(-2.00f32);
-            u32 overlay_col = (data.SplitDir == (ImGuiDir)dir && data.IsSplitDirExplicit) ? overlay_col_drop_hovered : overlay_col_drop;
-            for (let overlay_n: c_int = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
+            let mut overlay_col: u32 = if data.SplitDir == dir && data.IsSplitDirExplicit { overlay_col_drop_hovered } else { overlay_col_drop };
+            // for (let overlay_n: c_int = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
+            for overlay_n in 0 .. overlay_draw_lists_count
             {
                 let center: ImVec2 = ImFloor(draw_r_in.GetCenter());
-                overlay_draw_lists[overlay_n].AddRectFilled(draw_r.Min, draw_r.Max, overlay_col, overlay_rounding);
+                overlay_draw_lists[overlay_n].AddRectFilled(&draw_r.Min, &draw_r.Max, overlay_col, overlay_rounding);
                 overlay_draw_lists[overlay_n].AddRect(draw_r_in.Min, draw_r_in.Max, overlay_col_lines, overlay_rounding);
-                if (dir == ImGuiDir_Left || dir == ImGuiDir_Right)
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new(center.x, draw_r_in.Min.y), ImVec2::new(center.x, draw_r_in.Max.y), overlay_col_lines);
-                if (dir == ImGuiDir_Up || dir == ImGuiDir_Down)
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new(draw_r_in.Min.x, center.y), ImVec2::new(draw_r_in.Max.x, center.y), overlay_col_lines);
+                if dir == ImGuiDir_Left || dir == ImGuiDir_Right {
+                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new2(center.x, draw_r_in.Min.y), ImVec2::new2(center.x, draw_r_in.Max.y), overlay_col_lines);
+                }
+                if dir == ImGuiDir_Up || dir == ImGuiDir_Down {
+                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new2(draw_r_in.Min.x, center.y), ImVec2::new2(draw_r_in.Max.x, center.y), overlay_col_lines);
+                }
             }
         }
 
         // Stop after ImGuiDir_None
-        if ((host_node && (host_node.MergedFlags & ImGuiDockNodeFlags_NoSplit)) || g.IO.ConfigDockingNoSplit)
+        if (is_not_null(host_node) && flag_set(host_node.MergedFlags, ImGuiDockNodeFlags_NoSplit)) || g.IO.ConfigDockingNoSplit {
             return;
+        }
     }
 }
 
@@ -1775,51 +1828,55 @@ static c_void DockNodePreviewDockRender(host_window: *mut ImGuiWindow, host_node
 // - DockNodeTreeFindNodeByPos()
 //-----------------------------------------------------------------------------
 
-c_void DockNodeTreeSplit(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode, ImGuiAxis split_axis, c_int split_inheritor_child_idx, c_float split_ratio, new_node: *mut ImGuiDockNode)
+// c_void DockNodeTreeSplit(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode, split_axis: ImGuiAxis, split_inheritor_child_idx: c_int, split_ratio: c_float, new_node: *mut ImGuiDockNode)
+pub unsafe fn DockNodeTreeSplit(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode, split_axis: ImGuiAxis, split_inheritor_child_idx: c_int, split_ratio: c_float, new_node: *mut ImGuiDockNode)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_axis != ImGuiAxis_None);
 
-    let mut child_0: *mut ImGuiDockNode = (new_node && split_inheritor_child_idx != 0) ? new_node : DockContextAddNode(ctx, 0);
+    let mut child_0: *mut ImGuiDockNode = if is_not_null(new_node) && split_inheritor_child_idx != 0
+    { new_node } else { DockContextAddNode(ctx, 0) };
     child_0.ParentNode = parent_node;
 
-    let mut child_1: *mut ImGuiDockNode = (new_node && split_inheritor_child_idx != 1) ? new_node : DockContextAddNode(ctx, 0);
+    let mut child_1: *mut ImGuiDockNode = if is_not_null(new_node) && split_inheritor_child_idx != 1 { new_node } else { DockContextAddNode(ctx, 0) };
     child_1.ParentNode = parent_node;
 
-    let mut child_inheritor: *mut ImGuiDockNode = (split_inheritor_child_idx == 0) ? child_0 : child_1;
+    let mut child_inheritor: *mut ImGuiDockNode = if split_inheritor_child_idx == 0 { child_0 }else { child_1 };
     DockNodeMoveChildNodes(child_inheritor, parent_node);
     parent_node.ChildNodes[0] = child_0;
     parent_node.ChildNodes[1] = child_1;
     parent_node.ChildNodes[split_inheritor_child_idx].VisibleWindow = parent_node.VisibleWindow;
     parent_node.SplitAxis = split_axis;
     parent_node.VisibleWindow= null_mut();
-    parent_node.AuthorityForPos = parent_node.AuthorityForSize = ImGuiDataAuthority_DockNode;
+    parent_node.AuthorityForPos  = ImGuiDataAuthority_DockNode; parent_node.AuthorityForSize = ImGuiDataAuthority_DockNode;
 
-    let size_avail: c_float =  (parent_node.Size[split_axis] - DOCKING_SPLITTER_SIZE);
+    let mut size_avail: c_float =  (parent_node.Size[split_axis] - DOCKING_SPLITTER_SIZE);
     size_avail = ImMax(size_avail, g.Style.WindowMinSize[split_axis] * 2.00f32);
     // IM_ASSERT(size_avail > 0f32); // If you created a node manually with DockBuilderAddNode(), you need to also call DockBuilderSetNodeSize() before splitting.
-    child_0.SizeRef = child_1.SizeRef = parent_node.Size;
+    child_0.SizeRef =  parent_node.Size;child_1.SizeRef = parent_node.Size;
     child_0.SizeRef[split_axis] = ImFloor(size_avail * split_ratio);
     child_1.SizeRef[split_axis] = ImFloor(size_avail - child_0.SizeRef[split_axis]);
 
     DockNodeMoveWindows(parent_node.ChildNodes[split_inheritor_child_idx], parent_node);
     DockSettingsRenameNodeReferences(parent_node.ID, parent_node.ChildNodes[split_inheritor_child_idx].ID);
-    DockNodeUpdateHasCentralNodeChild(DockNodeGetRootNode(parent_node));
-    DockNodeTreeUpdatePosSize(parent_node, parent_node.Pos, parent_node.Size);
+    DockNodeUpdateHasCentralNodeChild(DockNodeGetRootNode(&mut *parent_node));
+    DockNodeTreeUpdatePosSize(parent_node, parent_node.Pos, parent_node.Size, null_mut());
 
     // Flags transfer (e.g. this is where we transfer the ImGuiDockNodeFlags_CentralNode property)
     child_0.SharedFlags = parent_node.SharedFlags & ImGuiDockNodeFlags_SharedFlagsInheritMask_;
     child_1.SharedFlags = parent_node.SharedFlags & ImGuiDockNodeFlags_SharedFlagsInheritMask_;
     child_inheritor.LocalFlags = parent_node.LocalFlags & ImGuiDockNodeFlags_LocalFlagsTransferMask_;
-    parent_node.LocalFlags &= ~ImGuiDockNodeFlags_LocalFlagsTransferMask_;
+    parent_node.LocalFlags &= !ImGuiDockNodeFlags_LocalFlagsTransferMask_;
     child_0.UpdateMergedFlags();
     child_1.UpdateMergedFlags();
     parent_node.UpdateMergedFlags();
-    if (child_inheritor.IsCentralNode())
-        DockNodeGetRootNode(parent_node).CentralNode = child_inheritor;
+    if child_inheritor.IsCentralNode() {
+        DockNodeGetRootNode(&mut*parent_node).CentralNode = child_inheritor;
+    }
 }
 
-c_void DockNodeTreeMerge(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode, merge_lead_child: *mut ImGuiDockNode)
+// c_void DockNodeTreeMerge(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode, merge_lead_child: *mut ImGuiDockNode)
+pub unsafe fn  DockNodeTreeMerge(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode, merge_lead_child: *mut ImGuiDockNode)
 {
     // When called from DockContextProcessUndockNode() it is possible that one of the child is NULL.
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -1827,12 +1884,12 @@ c_void DockNodeTreeMerge(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode
     let mut child_1: *mut ImGuiDockNode = parent_node.ChildNodes[1];
     // IM_ASSERT(child_0 || child_1);
     // IM_ASSERT(merge_lead_child == child_0 || merge_lead_child == child_1);
-    if ((child_0 && child_0.Windows.len() > 0) || (child_1 && child_1.Windows.len() > 0))
+    if ((is_not_null(child_0) && child_0.Windows.len() > 0) || (is_not_null(child_1) && child_1.Windows.len() > 0))
     {
         // IM_ASSERT(parent_node.TabBar == NULL);
         // IM_ASSERT(parent_node.Windows.Size == 0);
     }
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x%08X + 0x%08X back into parent 0x%08X\n", child_0 ? child_0.ID : 0, child_1 ? child_1.ID : 0, parent_node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x%08X + 0x%08X back into parent 0x%08X\n", child_0 ? child_0.ID : 0, child_1 ? child_1.ID : 0, parent_node.ID);
 
     let backup_last_explicit_size: ImVec2 = parent_node.SizeRef;
     DockNodeMoveChildNodes(parent_node, merge_lead_child);
@@ -1847,15 +1904,15 @@ c_void DockNodeTreeMerge(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode
         DockSettingsRenameNodeReferences(child_1.ID, parent_node.ID);
     }
     DockNodeApplyPosSizeToWindows(parent_node);
-    parent_node.AuthorityForPos = parent_node.AuthorityForSize = parent_node.AuthorityForViewport = ImGuiDataAuthority_Auto;
+    parent_node.AuthorityForPos = ImGuiDataAuthority_Auto;parent_node.AuthorityForSize =ImGuiDataAuthority_Auto; parent_node.AuthorityForViewport = ImGuiDataAuthority_Auto;
     parent_node.VisibleWindow = merge_lead_child.VisibleWindow;
     parent_node.SizeRef = backup_last_explicit_size;
 
     // Flags transfer
-    parent_node.LocalFlags &= ~ImGuiDockNodeFlags_LocalFlagsTransferMask_; // Preserve Dockspace flag
-    parent_node.LocalFlags |= (child_0 ? child_0.LocalFlags : 0) & ImGuiDockNodeFlags_LocalFlagsTransferMask_;
-    parent_node.LocalFlags |= (child_1 ? child_1.LocalFlags : 0) & ImGuiDockNodeFlags_LocalFlagsTransferMask_;
-    parent_node.LocalFlagsInWindows = (child_0 ? child_0.LocalFlagsInWindows : 0) | (child_1 ? child_1.LocalFlagsInWindows : 0); // FIXME: Would be more consistent to update from actual windows
+    parent_node.LocalFlags &= !ImGuiDockNodeFlags_LocalFlagsTransferMask_; // Preserve Dockspace flag
+    parent_node.LocalFlags |= (if is_not_null(child_0) { child_0.LocalFlags }else { 0 }) & ImGuiDockNodeFlags_LocalFlagsTransferMask_;
+    parent_node.LocalFlags |= (if is_not_null(child_1) { child_1.LocalFlags } else { 0 }) & ImGuiDockNodeFlags_LocalFlagsTransferMask_;
+    parent_node.LocalFlagsInWindows = (if is_not_null(child_0) { child_0.LocalFlagsInWindows } else { 0 }) | (if is_not_null(child_1) { child_1.LocalFlagsInWindows } else { 0 }); // FIXME: Would be more consistent to update from actual windows
     parent_node.UpdateMergedFlags();
 
     if (child_0)
@@ -1872,7 +1929,8 @@ c_void DockNodeTreeMerge(ctx: *mut ImGuiContext, parent_node: *mut ImGuiDockNode
 
 // Update Pos/Size for a node hierarchy (don't affect child Windows yet)
 // (Depth-first, Pre-Order)
-c_void DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, ImVec2 pos, ImVec2 size, only_write_to_single_node: *mut ImGuiDockNode)
+// c_void DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, pos: ImVec2, size: ImVec2, only_write_to_single_node: *mut ImGuiDockNode)
+pub unsafe fn DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, pos: ImVec2, size: ImVec2, only_write_to_single_node: *mut ImGuiDockNode)
 {
     // During the regular dock node update we write to all nodes.
     // 'only_write_to_single_node' is only set when turning a node visible mid-frame and we need its size right-away.
@@ -1883,13 +1941,14 @@ c_void DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, ImVec2 pos, ImVec2 si
         node.Size = size;
     }
 
-    if (node.IsLeafNode())
+    if (node.IsLeafNode()) {
         return;
+    }
 
     let mut child_0: *mut ImGuiDockNode = node.ChildNodes[0];
     let mut child_1: *mut ImGuiDockNode = node.ChildNodes[1];
-    let child_0_pos: ImVec2 = pos, child_1_pos = pos;
-    let child_0_size: ImVec2 = size, child_1_size = size;
+    let child_0_pos: ImVec2 = pos; let child_1_pos = pos;
+    let child_0_size: ImVec2 = size; let child_1_size = size;
 
     let child_0_is_toward_single_node: bool = (only_write_to_single_node != null_mut() && DockNodeIsInHierarchyOf(only_write_to_single_node, child_0));
     let child_1_is_toward_single_node: bool = (only_write_to_single_node != null_mut() && DockNodeIsInHierarchyOf(only_write_to_single_node, child_1));
@@ -1900,7 +1959,7 @@ c_void DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, ImVec2 pos, ImVec2 si
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let spacing: c_float =  DOCKING_SPLITTER_SIZE;
-        const ImGuiAxis axis = node.SplitAxis;
+        let axis: ImGuiAxis = node.SplitAxis;
         let size_avail: c_float =  ImMax(size[axis] - spacing, 0f32);
 
         // Size allocation policy
@@ -1935,12 +1994,12 @@ c_void DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, ImVec2 pos, ImVec2 si
         }
 
         // 3) If one window is the central node (~ use remaining space, should be made explicit!), use explicit size from the other, and remainder for the central node
-        else if (child_0.SizeRef[axis] != 0f32 && child_1.HasCentralNodeChild)
+        else if child_0.SizeRef[axis] != 0f32 && child_1.HasCentralNodeChild
         {
             child_0_size[axis] = ImMin(size_avail - size_min_each, child_0.SizeRef[axis]);
             child_1_size[axis] = (size_avail - child_0_size[axis]);
         }
-        else if (child_1.SizeRef[axis] != 0f32 && child_0.HasCentralNodeChild)
+        else if child_1.SizeRef[axis] != 0f32 && child_0.HasCentralNodeChild
         {
             child_1_size[axis] = ImMin(size_avail - size_min_each, child_1.SizeRef[axis]);
             child_0_size[axis] = (size_avail - child_1_size[axis]);
@@ -1956,48 +2015,58 @@ c_void DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, ImVec2 pos, ImVec2 si
         child_1_pos[axis] += spacing + child_0_size[axis];
     }
 
-    if (only_write_to_single_node == null_mut())
-        child_0.WantLockSizeOnce = child_1.WantLockSizeOnce = false;
+    if (only_write_to_single_node == null_mut()) {
+        child_0.WantLockSizeOnce = false; child_1.WantLockSizeOnce = false;
+    }
 
-    let child_0_recurse: bool = only_write_to_single_node ? child_0_is_toward_single_node : child_0.IsVisible;
-    let child_1_recurse: bool = only_write_to_single_node ? child_1_is_toward_single_node : child_1.IsVisible;
-    if (child_0_recurse)
-        DockNodeTreeUpdatePosSize(child_0, child_0_pos, child_0_size);
-    if (child_1_recurse)
-        DockNodeTreeUpdatePosSize(child_1, child_1_pos, child_1_size);
+    let child_0_recurse: bool = if only_write_to_single_node { child_0_is_toward_single_node }else { child_0.IsVisible };
+    let child_1_recurse: bool = if only_write_to_single_node { child_1_is_toward_single_node }else { child_1.IsVisible };
+    if (child_0_recurse) {
+        DockNodeTreeUpdatePosSize(child_0, child_0_pos, child_0_size, null_mut());
+    }
+    if (child_1_recurse) {
+        DockNodeTreeUpdatePosSize(child_1, child_1_pos, child_1_size, null_mut());
+    }
 }
 
-static c_void DockNodeTreeUpdateSplitterFindTouchingNode(node: *mut ImGuiDockNode, ImGuiAxis axis, c_int side, Vec<ImGuiDockNode*>* touching_nodes)
+// static c_void DockNodeTreeUpdateSplitterFindTouchingNode(node: *mut ImGuiDockNode, axis: ImGuiAxis, side: c_int, touching_nodes: *mut  Vec<*mut ImGuiDockNode>)
+pub fn DockNodeTreeUpdateSplitterFindTouchingNode(node: *mut ImGuiDockNode, axis: ImGuiAxis, side: c_int, touching_nodes: &mut Vec<*mut ImGuiDockNode>)
 {
-    if (node.IsLeafNode())
+    if node.IsLeafNode()
     {
         touching_nodes.push(node);
         return;
     }
-    if (node.ChildNodes[0].IsVisible)
-        if (node.SplitAxis != axis || side == 0 || !node.ChildNodes[1].IsVisible)
+    if (node.ChildNodes[0].IsVisible) {
+        if (node.SplitAxis != axis || side == 0 || !node.ChildNodes[1].IsVisible) {
             DockNodeTreeUpdateSplitterFindTouchingNode(node.ChildNodes[0], axis, side, touching_nodes);
-    if (node.ChildNodes[1].IsVisible)
-        if (node.SplitAxis != axis || side == 1 || !node.ChildNodes[0].IsVisible)
+        }
+    }
+    if (node.ChildNodes[1].IsVisible) {
+        if (node.SplitAxis != axis || side == 1 || !node.ChildNodes[0].IsVisible) {
             DockNodeTreeUpdateSplitterFindTouchingNode(node.ChildNodes[1], axis, side, touching_nodes);
+        }
+    }
 }
 
 // (Depth-First, Pre-Order)
-c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
+// c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
+pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
 {
-    if (node.IsLeafNode())
+    if (node.IsLeafNode()) {
         return;
+    }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     let mut child_0: *mut ImGuiDockNode = node.ChildNodes[0];
     let mut child_1: *mut ImGuiDockNode = node.ChildNodes[1];
-    if (child_0.IsVisible && child_1.IsVisible)
+    if child_0.IsVisible && child_1.IsVisible
     {
         // Bounding box of the splitter cover the space between both nodes (w = Spacing, h = Size[xy^1] for when splitting horizontally)
-        const ImGuiAxis axis = node.SplitAxis;
+        let axis: ImGuiAxis = node.SplitAxis;
         // IM_ASSERT(axis != ImGuiAxis_None);
-        ImRect bb;
+        let mut bb: ImRect = ImRect::default();
         bb.Min = child_0.Pos;
         bb.Max = child_1.Pos;
         bb.Min[axis] += child_0.Size[axis];
@@ -2005,11 +2074,11 @@ c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
         //if (g.IO.KeyCtrl) GetForegroundDrawList(g.Currentwindow.Viewport).AddRect(bb.Min, bb.Max, IM_COL32(255,0,255,255));
 
         let mut merged_flags: ImGuiDockNodeFlags = child_0.MergedFlags | child_1.MergedFlags; // Merged flags for BOTH childs
-        let mut no_resize_axis_flag: ImGuiDockNodeFlags = (axis == ImGuiAxis_X) ? ImGuiDockNodeFlags_NoResizeX : ImGuiDockNodeFlags_NoResizeY;
-        if ((merged_flags & ImGuiDockNodeFlags_NoResize) || (merged_flags & no_resize_axis_flag))
+        let mut no_resize_axis_flag: ImGuiDockNodeFlags = if axis == ImGuiAxis_X { ImGuiDockNodeFlags_NoResizeX }else { ImGuiDockNodeFlags_NoResizeY };
+        if (merged_flags & ImGuiDockNodeFlags_NoResize) || (merged_flags & no_resize_axis_flag)
         {
             let mut window = g.CurrentWindow;
-            window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Separator), g.Style.FrameRounding);
+            window.DrawList.AddRectFilled(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_Separator, 0.0), g.Style.FrameRounding, 0);
         }
         else
         {
@@ -2018,21 +2087,29 @@ c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
             PushID(node.ID);
 
             // Find resizing limits by gathering list of nodes that are touching the splitter line.
-            Vec<ImGuiDockNode*> touching_nodes[2];
+            // Vec<ImGuiDockNode*> touching_nodes[2];
+            let mut touching_nodes: [Vec<*mut ImGuiDockNode>;2] = [vec![];2];
             let min_size: c_float =  g.Style.WindowMinSize[axis];
-            c_float resize_limits[2];
+            // c_float resize_limits[2];
+            let mut resize_limits: [c_float;2] = [0.0;2];
             resize_limits[0] = node.ChildNodes[0].Pos[axis] + min_size;
             resize_limits[1] = node.ChildNodes[1].Pos[axis] + node.ChildNodes[1].Size[axis] - min_size;
 
             let mut splitter_id: ImGuiID =  GetID("##Splitter");
-            if (g.ActiveId == splitter_id) // Only process when splitter is active
+            if g.ActiveId == splitter_id // Only process when splitter is active
             {
-                DockNodeTreeUpdateSplitterFindTouchingNode(child_0, axis, 1, &touching_nodes[0]);
-                DockNodeTreeUpdateSplitterFindTouchingNode(child_1, axis, 0, &touching_nodes[1]);
-                for (let touching_node_n: c_int = 0; touching_node_n < touching_nodes[0].Size; touching_node_n++)
+                DockNodeTreeUpdateSplitterFindTouchingNode(child_0, axis, 1, &mut touching_nodes[0]);
+                DockNodeTreeUpdateSplitterFindTouchingNode(child_1, axis, 0, &mut touching_nodes[1]);
+                // for (let touching_node_n: c_int = 0; touching_node_n < touching_nodes[0].Size; touching_node_n++)
+                for touching_node_n in 0 .. touching_nodes[0].len()
+                {
                     resize_limits[0] = ImMax(resize_limits[0], touching_nodes[0][touching_node_n].Rect().Min[axis] + min_size);
-                for (let touching_node_n: c_int = 0; touching_node_n < touching_nodes[1].Size; touching_node_n++)
+                }
+                // for (let touching_node_n: c_int = 0; touching_node_n < touching_nodes[1].Size; touching_node_n++)
+                for touching_node_n in 0 .. touching_nodes[1].len()
+                {
                     resize_limits[1] = ImMin(resize_limits[1], touching_nodes[1][touching_node_n].Rect().Max[axis] - min_size);
+                }
 
                 // [DEBUG] Render touching nodes & limits
                 /*
@@ -2054,10 +2131,10 @@ c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
             let cur_size_1: c_float =  child_1.Size[axis];
             let min_size_0: c_float =  resize_limits[0] - child_0.Pos[axis];
             let min_size_1: c_float =  child_1.Pos[axis] + child_1.Size[axis] - resize_limits[1];
-            u32 bg_col = GetColorU32(ImGuiCol_WindowBg);
-            if (SplitterBehavior(bb, GetID("##Splitter"), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col))
+            let mut bg_col: u32 = GetColorU32(ImGuiCol_WindowBg, 0.0);
+            if SplitterBehavior(bb, GetID("##Splitter"), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col)
             {
-                if (touching_nodes[0].Size > 0 && touching_nodes[1].Size > 0)
+                if touching_nodes[0].Size > 0 && touching_nodes[1].Size > 0
                 {
                     child_0.Size[axis] = child_0.SizeRef[axis] = cur_size_0;
                     child_1.Pos[axis] -= cur_size_1 - child_1.Size[axis];
@@ -2065,16 +2142,17 @@ c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
 
                     // Lock the size of every node that is a sibling of the node we are touching
                     // This might be less desirable if we can merge sibling of a same axis into the same parental level.
-                    for (let side_n: c_int = 0; side_n < 2; side_n++)
-                        for (let touching_node_n: c_int = 0; touching_node_n < touching_nodes[side_n].Size; touching_node_n++)
+                    // for (let side_n: c_int = 0; side_n < 2; side_n++)
+                    for side_n in 0 .. 2
+                    {
+                        // for (let touching_node_n: c_int = 0; touching_node_n < touching_nodes[side_n].Size; touching_node_n+ +)
+                        for touching_node_n in 0 .. touching_nodes[side_n].len()
                         {
                             let mut touching_node: *mut ImGuiDockNode = touching_nodes[side_n][touching_node_n];
                             //ImDrawList* draw_list = node.HostWindow ? GetForegroundDrawList(node.HostWindow) : GetForegroundDrawList(GetMainViewport());
                             //draw_list.AddRect(touching_node.Pos, touching_node.Pos + touching_node.Size, IM_COL32(255, 128, 0, 255));
-                            while (touching_node.ParentNode != node)
-                            {
-                                if (touching_node.ParentNode.SplitAxis == axis)
-                                {
+                            while touching_node.ParentNode != node {
+                                if touching_node.ParentNode.SplitAxis == axis {
                                     // Mark other node so its size will be preserved during the upcoming call to DockNodeTreeUpdatePosSize().
                                     let mut node_to_preserve: *mut ImGuiDockNode = touching_node.ParentNode.ChildNodes[side_n];
                                     node_to_preserve.WantLockSizeOnce = true;
@@ -2084,9 +2162,10 @@ c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
                                 touching_node = touching_node.ParentNode;
                             }
                         }
+                    }
 
-                    DockNodeTreeUpdatePosSize(child_0, child_0.Pos, child_0.Size);
-                    DockNodeTreeUpdatePosSize(child_1, child_1.Pos, child_1.Size);
+                    DockNodeTreeUpdatePosSize(child_0, child_0.Pos, child_0.Size, null_mut());
+                    DockNodeTreeUpdatePosSize(child_1, child_1.Pos, child_1.Size, null_mut());
                     MarkIniSettingsDirty();
                 }
             }
@@ -2094,41 +2173,61 @@ c_void DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
         }
     }
 
-    if (child_0.IsVisible)
+    if child_0.IsVisible {
         DockNodeTreeUpdateSplitter(child_0);
-    if (child_1.IsVisible)
+    }
+    if child_1.IsVisible {
         DockNodeTreeUpdateSplitter(child_1);
+    }
 }
 
-ImGuiDockNode* DockNodeTreeFindFallbackLeafNode(node: *mut ImGuiDockNode)
-{
-    if (node.IsLeafNode())
+// ImGuiDockNode* DockNodeTreeFindFallbackLeafNode(node: *mut ImGuiDockNode)
+pub unsafe fn DockNodeTreeFindFallbackLeafNode(node: *mut ImGuiDockNode) -> *mut ImGuiDockNode {
+    if (node.IsLeafNode()) {
         return node;
-    if (let mut leaf_node: *mut ImGuiDockNode = DockNodeTreeFindFallbackLeafNode(node.ChildNodes[0]))
+    }
+
+    let mut leaf_node: *mut ImGuiDockNode = DockNodeTreeFindFallbackLeafNode(node.ChildNodes[0]);
+    if is_not_null(leaf_node)
+    {
         return leaf_node;
-    if (let mut leaf_node: *mut ImGuiDockNode = DockNodeTreeFindFallbackLeafNode(node.ChildNodes[1]))
+    }
+
+    let mut leaf_node: *mut ImGuiDockNode = DockNodeTreeFindFallbackLeafNode(node.ChildNodes[1]);
+    if is_not_null(leaf_node)
+    {
         return leaf_node;
+    }
     return null_mut();
 }
 
-ImGuiDockNode* DockNodeTreeFindVisibleNodeByPos(node: *mut ImGuiDockNode, ImVec2 pos)
-{
-    if (!node.IsVisible)
+// ImGuiDockNode* DockNodeTreeFindVisibleNodeByPos(node: *mut ImGuiDockNode, pos: ImVec2)
+pub unsafe fn DockNodeTreeFindVisibleNodeByPos(node: *mut ImGuiDockNode, pos: ImVec2) -> *mut ImGuiDockNode {
+    if !node.IsVisible {
         return null_mut();
+    }
 
-    let dock_spacing: c_float =  0f32;// g.Style.ItemInnerSpacing.x; // FIXME: Relation to DOCKING_SPLITTER_SIZE?
-    let mut r: ImRect = ImRect::new(node.Pos, node.Pos + node.Size);
+    let dock_spacing: c_float = 0f32;// g.Style.ItemInnerSpacing.x; // FIXME: Relation to DOCKING_SPLITTER_SIZE?
+    let mut r: ImRect = ImRect::new2(&node.Pos, node.Pos + node.Size);
     r.Expand(dock_spacing * 0.5f32);
-    let mut inside: bool =  r.Contains(pos);
-    if (!inside)
+    let mut inside: bool = r.Contains(&pos);
+    if (!inside) {
         return null_mut();
+    }
 
-    if (node.IsLeafNode())
+    if (node.IsLeafNode()) {
         return node;
-    if (let mut hovered_node: *mut ImGuiDockNode = DockNodeTreeFindVisibleNodeByPos(node.ChildNodes[0], pos))
+    }
+    let mut hovered_node: *mut ImGuiDockNode = DockNodeTreeFindVisibleNodeByPos(node.ChildNodes[0], pos);
+    if is_not_null(hovered_node)
+    {
         return hovered_node;
-    if (let mut hovered_node: *mut ImGuiDockNode = DockNodeTreeFindVisibleNodeByPos(node.ChildNodes[1], pos))
+    }
+    let mut hovered_node: *mut ImGuiDockNode = DockNodeTreeFindVisibleNodeByPos(node.ChildNodes[1], pos);
+    if is_not_null(hovered_node)
+    {
         return hovered_node;
+    }
 
     return null_mut();
 }

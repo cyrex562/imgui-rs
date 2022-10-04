@@ -266,7 +266,7 @@ static *mut c_void WindowSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHa
 static c_void WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, entry: *mut c_void, *const char line)
 {
     ImGuiWindowSettings* settings = (ImGuiWindowSettings*)entry;
-    c_int x, y;
+    x: c_int, y;
     let mut i: c_int = 0;
     u32 u1;
     if (sscanf(line, "Pos=%i,%i", &x, &y) == 2)             { settings.Pos = ImVec2ih((c_short)x, y); }

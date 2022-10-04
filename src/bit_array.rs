@@ -4,7 +4,7 @@ use libc::c_int;
 
 // Helper: ImBitArray class (wrapper over ImBitArray functions)
 // Store 1-bit per value.
-// template<c_int BITCOUNT, let OFFSET: c_int = 0>
+// template<BITCOUNT: c_int, let OFFSET: c_int = 0>
 #[derive(Default,Debug,Copy, Clone)]
 pub struct ImBitArray
 {
@@ -28,33 +28,33 @@ impl ImBitArray {
         }
     }
 
-    // bool            TestBit(c_int n) const        { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); return ImBitArrayTestBit(Storage, n); }
+    // bool            TestBit(n: c_int) const        { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); return ImBitArrayTestBit(Storage, n); }
     pub fn TestBit(&mut self, mut n: c_int) -> bool {
         n += OFFSET;
         ImBitArrayTestBit(&self.Storage, n as usize)
     }
 
 
-// c_void            SetBit(c_int n)               { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); ImBitArraySetBit(Storage, n); }
+// c_void            SetBit(n: c_int)               { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); ImBitArraySetBit(Storage, n); }
 pub fn SetBit(&mut self, mut n: c_int) {
     n += OFFSET;
     ImBitArraySetBit(&mut self.Storage, n as usize)
 }
 
-// c_void            ClearBit(c_int n)             { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); ImBitArrayClearBit(Storage, n); }
+// c_void            ClearBit(n: c_int)             { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); ImBitArrayClearBit(Storage, n); }
 pub fn ClearBit(&mut self, mut n: c_int) {
     n += OFFSET;
     ImBitArrayClearBit(&mut self.Storage,n as usize)
 }
 
-// c_void            SetBitRange(c_int n, c_int n2)  { n += OFFSET; n2 += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT && n2 > n && n2 <= BITCOUNT); ImBitArraySetBitRange(Storage, n, n2); } // Works on range [n..n2)
+// c_void            SetBitRange(n: c_int, n2: c_int)  { n += OFFSET; n2 += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT && n2 > n && n2 <= BITCOUNT); ImBitArraySetBitRange(Storage, n, n2); } // Works on range [n..n2)
 pub fn SetBitRange(&mut self, mut n: c_int, mut n2: c_int) {
     n += OFFSET;
     n2 += OFFSET;
     ImBitArraySetBitRange(&mut self.Storage, n, n2)
 }
 
-    // bool            operator[](c_int n) const     { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); return ImBitArrayTestBit(Storage, n); }
+    // bool            operator[](n: c_int) const     { n += OFFSET; IM_ASSERT(n >= 0 && n < BITCOUNT); return ImBitArrayTestBit(Storage, n); }
 }
 
 // impl Index<usize> for ImBitArray {
@@ -77,18 +77,18 @@ pub fn ImBitArrayTestBit(storage: &[u32], index: usize) -> bool {
     storage[index] > 0
 }
 
-// const u32 arr, c_int n)      { u32 mask = 1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
-// inline c_void     ImBitArrayClearBit(*mut u32 arr, c_int n)           { u32 mask = 1 << (n & 31); arr[n >> 5] &= ~mask; }
+// const u32 arr, n: c_int)      { let mut mask: u32 = 1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
+// inline c_void     ImBitArrayClearBit(*mut u32 arr, n: c_int)           { let mut mask: u32 = 1 << (n & 31); arr[n >> 5] &= !mask; }
 pub fn ImBitArrayClearBit(storage: &mut[u32], index: usize) {
     storage[index] = 0;
 }
 
-// inline c_void     ImBitArraySetBit(*mut u32 arr, c_int n)             { u32 mask = 1 << (n & 31); arr[n >> 5] |= mask; }
+// inline c_void     ImBitArraySetBit(*mut u32 arr, n: c_int)             { let mut mask: u32 = 1 << (n & 31); arr[n >> 5] |= mask; }
 pub fn ImBitArraySetBit(storage: &mut[u32], index: c_int) {
     storage[index] = 1;
 }
 
-// inline c_void     ImBitArraySetBitRange(*mut u32 arr, c_int n, c_int n2) // Works on range [n..n2)
+// inline c_void     ImBitArraySetBitRange(*mut u32 arr, n: c_int, n2: c_int) // Works on range [n..n2)
 pub fn ImBitArraySetBitRange(storage: &mut [u32], mut n: c_int, mut n2: c_int) {
     n2 -= 1;
     while n <= n2 {

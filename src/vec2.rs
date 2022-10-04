@@ -65,7 +65,7 @@ impl ImVec2ih {
     }
     
     
-    // constexpr explicit ImVec2ih(const ImVec2& rhs) : x((c_short)rhs.x), y((c_short)rhs.y) {}
+    // constexpr explicit ImVec2ih(const rhs: &ImVec2) : x((c_short)rhs.x), y((c_short)rhs.y) {}
     pub fn new3(rhs: &ImVec2) -> Self {
         Self {
             x: rhs.x.clone() as c_short,
@@ -76,15 +76,15 @@ impl ImVec2ih {
 
 }
 
-static inline ImVec2 *mut operator(const ImVec2& lhs, const c_float rhs)              { return ImVec2::new(lhs.x * rhs, lhs.y * rhs); }
-static inline ImVec2 operator/(const ImVec2& lhs, const c_float rhs)              { return ImVec2::new(lhs.x / rhs, lhs.y / rhs); }
-static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2::new(lhs.x + rhs.x, lhs.y + rhs.y); }
-static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2::new(lhs.x - rhs.x, lhs.y - rhs.y); }
-static inline ImVec2 *mut operator(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2::new(lhs.x * rhs.x, lhs.y * rhs.y); }
-static inline ImVec2 operator/(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2::new(lhs.x / rhs.x, lhs.y / rhs.y); }
-static inline ImVec2& *mut operator=(ImVec2& lhs, const c_float rhs)                  { lhs.x *= rhs; lhs.y *= rhs; return lhs; }
-static inline ImVec2& operator/=(ImVec2& lhs, const c_float rhs)                  { lhs.x /= rhs; lhs.y /= rhs; return lhs; }
-static inline ImVec2& operator+=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
-static inline ImVec2& operator-=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x -= rhs.x; lhs.y -= rhs.y; return lhs; }
-static inline ImVec2& *mut operator=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x *= rhs.x; lhs.y *= rhs.y; return lhs; }
-static inline ImVec2& operator/=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x /= rhs.x; lhs.y /= rhs.y; return lhs; }
+static inline ImVec2 *mut operator(const lhs: &ImVec2, const rhs: c_float)              { return ImVec2::new(lhs.x * rhs, lhs.y * rhs); }
+static inline ImVec2 operator/(const lhs: &ImVec2, const rhs: c_float)              { return ImVec2::new(lhs.x / rhs, lhs.y / rhs); }
+static inline ImVec2 operator+(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new(lhs.x + rhs.x, lhs.y + rhs.y); }
+static inline ImVec2 operator-(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new(lhs.x - rhs.x, lhs.y - rhs.y); }
+static inline ImVec2 *mut operator(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new(lhs.x * rhs.x, lhs.y * rhs.y); }
+static inline ImVec2 operator/(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new(lhs.x / rhs.x, lhs.y / rhs.y); }
+static inline ImVec2& *mut operator=(lhs: &ImVec2, const rhs: c_float)                  { lhs.x *= rhs; lhs.y *= rhs; return lhs; }
+static inline ImVec2& operator/=(lhs: &ImVec2, const rhs: c_float)                  { lhs.x /= rhs; lhs.y /= rhs; return lhs; }
+static inline ImVec2& operator+=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
+static inline ImVec2& operator-=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x -= rhs.x; lhs.y -= rhs.y; return lhs; }
+static inline ImVec2& *mut operator=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x *= rhs.x; lhs.y *= rhs.y; return lhs; }
+static inline ImVec2& operator/=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x /= rhs.x; lhs.y /= rhs.y; return lhs; }

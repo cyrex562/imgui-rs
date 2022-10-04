@@ -40,7 +40,7 @@ pub struct ImGuiInputEventMousePos      {
 
 #[derive(Default,Debug,Clone)]
 pub struct ImGuiInputEventMouseWheel    {
-    // c_float WheelX, WheelY;
+    // WheelX: c_float, WheelY;
     pub WheelX: c_float,
     pub WheelY: c_float
 }

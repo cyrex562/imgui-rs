@@ -141,7 +141,7 @@ pub struct ImColor {
 
 impl ImColor {
     // constexpr ImColor()                                             { }
-    // constexpr ImColor(c_float r, c_float g, c_float b, let a: c_float =  1f32)    : Value(r, g, b, a) { }
+    // constexpr ImColor(r: c_float, g: c_float, b: c_float, let a: c_float =  1f32)    : Value(r, g, b, a) { }
     pub fn new(r: c_float, g: c_float, b: c_float, a: c_float) -> Self {
         Self {
             Value: ImVec4::new4(r, g, b, a)
@@ -157,7 +157,7 @@ impl ImColor {
     }
 
 
-    // ImColor(c_int r, c_int g, c_int b, let a: c_int = 255)
+    // ImColor(r: c_int, g: c_int, b: c_int, let a: c_int = 255)
     pub fn new3(r: c_int, g: c_int, b: c_int, a: c_int) -> Self {
         let sc: c_float = 1f32 / 255f32;
         let mut out = Self {
@@ -191,8 +191,8 @@ impl ImColor {
     // inline operator ImVec4() const                                  { return Value; }
 
     // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
-    // inline c_void    SetHSV(c_float h, c_float s, c_float v, let a: c_float =  1f32){ ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
+    // inline c_void    SetHSV(h: c_float, s: c_float, v: c_float, let a: c_float =  1f32){ ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
 
 
-    // static ImColor HSV(c_float h, c_float s, c_float v, let a: c_float =  1f32)   { c_float r, g, b; ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
+    // static ImColor HSV(h: c_float, s: c_float, v: c_float, let a: c_float =  1f32)   { r: c_float, g, b; ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
 }

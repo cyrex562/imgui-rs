@@ -23,7 +23,7 @@ use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_NoResize};
 use crate::window_ops::CalcWindowSizeAfterConstraint;
 
-// static c_void CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, const ImVec2& corner_target, const ImVec2& corner_norm, out_pos: *mut ImVec2, out_size: *mut ImVec2)
+// static c_void CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, const corner_target: &ImVec2, const corner_norm: &ImVec2, out_pos: *mut ImVec2, out_size: *mut ImVec2)
 pub unsafe fn CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, corner: &ImVec2, corner_target: &ImVec2, corner_norm: &ImVec2, out_pos: *mut ImVec2, out_size: *mut ImVec2) {
     let pos_min: ImVec2 = ImLerp(corner_target, window.Pos, corner_norm);                // Expected window upper-left
     let pos_max: ImVec2 = ImLerp(window.Pos + window.Size, corner_target, corner_norm); // Expected window lower-right
@@ -40,7 +40,7 @@ pub unsafe fn CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, corner: &
 }
 
 
-// static ImRect GetResizeBorderRect(window: *mut ImGuiWindow, c_int border_n, c_float perp_padding, c_float thickness)
+// static ImRect GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_padding: c_float, thickness: c_float)
 pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_padding: c_float, thickness: c_float) -> ImRect
 {
     let mut rect: ImRect =  window.Rect();
@@ -56,7 +56,7 @@ pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_paddi
 }
 
 // 0..3: corners (Lower-right, Lower-left, Unused, Unused)
-// ImGuiID GetWindowResizeCornerID(window: *mut ImGuiWindow, c_int n)
+// ImGuiID GetWindowResizeCornerID(window: *mut ImGuiWindow, n: c_int)
 pub unsafe fn GetWindowResizeCornerID(window: *mut ImGuiWindow, n: c_int) -> ImGuiID {
     // IM_ASSERT(n >= 0 && n < 4);
     let mut id: ImGuiID = if window.DockIsActive { window.DockNode.Hostwindow.ID } else { window.ID };
@@ -79,7 +79,7 @@ pub unsafe fn GetWindowResizeBorderID(window: *mut ImGuiWindow, dir: ImGuiDir) -
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
-// static bool UpdateWindowManualResize(window: *mut ImGuiWindow, const ImVec2& size_auto_fit, c_int* border_held, c_int resize_grip_count, u32 resize_grip_col[4], const ImRect& visibility_rect)
+// static bool UpdateWindowManualResize(window: *mut ImGuiWindow, const size_auto_fit: &ImVec2, c_int* border_held, resize_grip_count: c_int, u32 resize_grip_col[4], visibility_rect: &ImRect)
 pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: &ImVec2, border_held: *mut c_int, resize_grip_count: c_int, mut resize_grip_col:[u32;4], visibility_rect: &ImVec2) -> bool
 {
 

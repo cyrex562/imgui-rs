@@ -107,7 +107,7 @@ impl ImPool<T> {
     }
 
     
-    // void        Reserve(c_int capacity)               { Buf.reserve(capacity); Map.Data.reserve(capacity); }
+    // void        Reserve(capacity: c_int)               { Buf.reserve(capacity); Map.Data.reserve(capacity); }
     pub fn Reserve(&mut self, capacity: c_int) {
         self.Buf.reserve(capacity as usize);
         self.Map.Data.reserve(capacity as usize);

@@ -17,7 +17,7 @@ pub fn ScrollToBringRectIntoView(window: *mut ImGuiWindow, rect: &ImRect) {
 // So the difference between WindowPadding and ItemSpacing will be in the visible area after scrolling.
 // When we refactor the scrolling API this may be configurable with a flag?
 // Note that the effect for this won't be visible on X axis with default Style settings as WindowPadding.x == ItemSpacing.x by default.
-static c_float CalcScrollEdgeSnap(c_float target, c_float snap_min, c_float snap_max, c_float snap_threshold, c_float center_ratio)
+static c_float CalcScrollEdgeSnap(target: c_float, snap_min: c_float, snap_max: c_float, snap_threshold: c_float, center_ratio: c_float)
 {
     if (target <= snap_min + snap_threshold)
         return ImLerp(snap_min, target, center_ratio);
@@ -72,13 +72,13 @@ c_void ScrollToItem(ImGuiScrollFlags flags)
     ScrollToRectEx(window, g.LastItemData.NavRect, flags);
 }
 
-c_void ScrollToRect(window: *mut ImGuiWindow, const ImRect& item_rect, ImGuiScrollFlags flags)
+c_void ScrollToRect(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScrollFlags flags)
 {
     ScrollToRectEx(window, item_rect, flags);
 }
 
 // Scroll to keep newly navigated item fully into view
-ImVec2 ScrollToRectEx(window: *mut ImGuiWindow, const ImRect& item_rect, ImGuiScrollFlags flags)
+ImVec2 ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScrollFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window_rect: ImRect = ImRect::new(window.InnerRect.Min - ImVec2::new2(1, 1), window.InnerRect.Max + ImVec2::new2(1, 1));
@@ -167,27 +167,27 @@ c_float GetScrollMaxY()
     return window.ScrollMax.y;
 }
 
-c_void SetScrollX(window: *mut ImGuiWindow, c_float scroll_x)
+c_void SetScrollX(window: *mut ImGuiWindow, scroll_x: c_float)
 {
     window.ScrollTarget.x = scroll_x;
     window.ScrollTargetCenterRatio.x = 0f32;
     window.ScrollTargetEdgeSnapDist.x = 0f32;
 }
 
-c_void SetScrollY(window: *mut ImGuiWindow, c_float scroll_y)
+c_void SetScrollY(window: *mut ImGuiWindow, scroll_y: c_float)
 {
     window.ScrollTarget.y = scroll_y;
     window.ScrollTargetCenterRatio.y = 0f32;
     window.ScrollTargetEdgeSnapDist.y = 0f32;
 }
 
-c_void SetScrollX(c_float scroll_x)
+c_void SetScrollX(scroll_x: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     SetScrollX(g.CurrentWindow, scroll_x);
 }
 
-c_void SetScrollY(c_float scroll_y)
+c_void SetScrollY(scroll_y: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     SetScrollY(g.CurrentWindow, scroll_y);
@@ -203,7 +203,7 @@ c_void SetScrollY(c_float scroll_y)
 //  - SetScrollFromPosY(0f32) == SetScrollY(0f32 + scroll.y) == has no effect!
 //  - SetScrollFromPosY(-scroll.y) == SetScrollY(-scroll.y + scroll.y) == SetScrollY(0f32) == reset scroll. Of course writing SetScrollY(0f32) directly then makes more sense
 // We store a target position so centering and clamping can occur on the next frame when we are guaranteed to have a known window size
-c_void SetScrollFromPosX(window: *mut ImGuiWindow, c_float local_x, c_float center_x_ratio)
+c_void SetScrollFromPosX(window: *mut ImGuiWindow, local_x: c_float, center_x_ratio: c_float)
 {
     // IM_ASSERT(center_x_ratio >= 0f32 && center_x_ratio <= 1f32);
     window.ScrollTarget.x = IM_FLOOR(local_x + window.Scroll.x); // Convert local position to scroll offset
@@ -211,7 +211,7 @@ c_void SetScrollFromPosX(window: *mut ImGuiWindow, c_float local_x, c_float cent
     window.ScrollTargetEdgeSnapDist.x = 0f32;
 }
 
-c_void SetScrollFromPosY(window: *mut ImGuiWindow, c_float local_y, c_float center_y_ratio)
+c_void SetScrollFromPosY(window: *mut ImGuiWindow, local_y: c_float, center_y_ratio: c_float)
 {
     // IM_ASSERT(center_y_ratio >= 0f32 && center_y_ratio <= 1f32);
     let decoration_up_height: c_float =  window.TitleBarHeight() + window.MenuBarHeight(); // FIXME: Would be nice to have a more standardized access to our scrollable/client rect;
@@ -221,20 +221,20 @@ c_void SetScrollFromPosY(window: *mut ImGuiWindow, c_float local_y, c_float cent
     window.ScrollTargetEdgeSnapDist.y = 0f32;
 }
 
-c_void SetScrollFromPosX(c_float local_x, c_float center_x_ratio)
+c_void SetScrollFromPosX(local_x: c_float, center_x_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     SetScrollFromPosX(g.CurrentWindow, local_x, center_x_ratio);
 }
 
-c_void SetScrollFromPosY(c_float local_y, c_float center_y_ratio)
+c_void SetScrollFromPosY(local_y: c_float, center_y_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     SetScrollFromPosY(g.CurrentWindow, local_y, center_y_ratio);
 }
 
 // center_x_ratio: 0f32 left of last item, 0.5f32 horizontal center of last item, 1f32 right of last item.
-c_void SetScrollHereX(c_float center_x_ratio)
+c_void SetScrollHereX(center_x_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -247,7 +247,7 @@ c_void SetScrollHereX(c_float center_x_ratio)
 }
 
 // center_y_ratio: 0f32 top of last item, 0.5f32 vertical center of last item, 1f32 bottom of last item.
-c_void SetScrollHereY(c_float center_y_ratio)
+c_void SetScrollHereY(center_y_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

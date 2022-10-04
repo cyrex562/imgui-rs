@@ -8,7 +8,7 @@ use crate::vec2::ImVec2;
 // Internal version that takes a position to decide on newline placement and pad items according to their depth.
 // We split text into individual lines to add current tree level padding
 // FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
-// c_void LogRenderedText(*const ImVec2 ref_pos, *const char text, *const char text_end)
+// c_void LogRenderedText(*const ref_pos: ImVec2, *const char text, *const char text_end)
 pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut text_end: *const c_char) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -117,7 +117,7 @@ c_void LogTextV(*const char fmt, va_list args)
 }
 
 // Start logging/capturing text output
-c_void LogBegin(ImGuiLogType type, c_int auto_open_depth)
+c_void LogBegin(ImGuiLogType type, auto_open_depth: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -141,7 +141,7 @@ c_void LogSetNextTextDecoration(*const char prefix, *const char suffix)
     g.LogNextSuffix = suffix;
 }
 
-c_void LogToTTY(c_int auto_open_depth)
+c_void LogToTTY(auto_open_depth: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.LogEnabled)
@@ -154,7 +154,7 @@ c_void LogToTTY(c_int auto_open_depth)
 }
 
 // Start logging/capturing text output to given file
-c_void LogToFile(c_int auto_open_depth, *const char filename)
+c_void LogToFile(auto_open_depth: c_int, *const char filename)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.LogEnabled)
@@ -179,7 +179,7 @@ c_void LogToFile(c_int auto_open_depth, *const char filename)
 }
 
 // Start logging/capturing text output to clipboard
-c_void LogToClipboard(c_int auto_open_depth)
+c_void LogToClipboard(auto_open_depth: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.LogEnabled)
@@ -187,7 +187,7 @@ c_void LogToClipboard(c_int auto_open_depth)
     LogBegin(ImGuiLogType_Clipboard, auto_open_depth);
 }
 
-c_void LogToBuffer(c_int auto_open_depth)
+c_void LogToBuffer(auto_open_depth: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.LogEnabled)

@@ -136,7 +136,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
 }
 
 // Internal facing ItemHoverable() used when submitting widgets. Differs slightly from IsItemHovered().
-// bool ItemHoverable(const ImRect& bb, id: ImGuiID)
+// bool ItemHoverable(bb: &ImRect, id: ImGuiID)
 pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap {
@@ -196,7 +196,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
     return true;
 }
 
-// bool IsClippedEx(const ImRect& bb, id: ImGuiID)
+// bool IsClippedEx(bb: &ImRect, id: ImGuiID)
 pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -213,7 +213,7 @@ pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool {
 
 // This is also inlined in ItemAdd()
 // Note: if ImGuiItemStatusFlags_HasDisplayRect is set, user needs to set window.DC.LastItemDisplayRect!
-// c_void SetLastItemData(item_id: ImGuiID, ImGuiItemFlags in_flags, ImGuiItemStatusFlags item_flags, const ImRect& item_rect)
+// c_void SetLastItemData(item_id: ImGuiID, ImGuiItemFlags in_flags, ImGuiItemStatusFlags item_flags, item_rect: &ImRect)
 pub unsafe fn SetLastItemData(item_id: ImGuiID, in_flags: ImGuiItemFlags, item_flags: ImGuiItemStatusFlags, item_rect: &ImRect) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.LastItemData.ID = item_id;
@@ -222,7 +222,7 @@ pub unsafe fn SetLastItemData(item_id: ImGuiID, in_flags: ImGuiItemFlags, item_f
     g.LastItemData.Rect = item_rect.clone();
 }
 
-// c_float CalcWrapWidthForPos(const ImVec2& pos, c_float wrap_pos_x)
+// c_float CalcWrapWidthForPos(const pos: &ImVec2, wrap_pos_x: c_float)
 pub unsafe fn CalcWrapWidthForPos(pos: &ImVec2, mut wrap_pos_x: c_float) -> c_float {
     if wrap_pos_x < 0f32 {
         return 0f32;
@@ -407,7 +407,7 @@ c_void PushItemFlag(ImGuiItemFlags option, enabled: bool)
     if (enabled)
         item_flags |= option;
     else
-        item_flags &= ~option;
+        item_flags &= !option;
     g.CurrentItemFlags = item_flags;
     g.ItemFlagsStack.push(item_flags);
 }
@@ -433,7 +433,7 @@ c_void ActivateItem(id: ImGuiID)
 // Advance cursor given item size for layout.
 // Register minimum needed size so it can extend the bounding box used for auto-fit calculation.
 // See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
-c_void ItemSize(const ImVec2& size, c_float text_baseline_y)
+c_void ItemSize(const size: &ImVec2, text_baseline_y: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -472,7 +472,7 @@ c_void ItemSize(const ImVec2& size, c_float text_baseline_y)
 // Declare item bounding box for clipping and interaction.
 // Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
-bool ItemAdd(const ImRect& bb, id: ImGuiID, *const ImRect nav_bb_arg, ImGuiItemFlags extra_flags)
+bool ItemAdd(bb: &ImRect, id: ImGuiID, *const ImRect nav_bb_arg, ImGuiItemFlags extra_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -541,7 +541,7 @@ bool ItemAdd(const ImRect& bb, id: ImGuiID, *const ImRect nav_bb_arg, ImGuiItemF
 
 
 // Affect large frame+labels widgets only.
-c_void SetNextItemWidth(c_float item_width)
+c_void SetNextItemWidth(item_width: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasWidth;
@@ -549,16 +549,16 @@ c_void SetNextItemWidth(c_float item_width)
 }
 
 // FIXME: Remove the == 0f32 behavior?
-c_void PushItemWidth(c_float item_width)
+c_void PushItemWidth(item_width: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
     window.DC.ItemWidth = (item_width == 0f32 ? window.ItemWidthDefault : item_width);
-    g.NextItemData.Flags &= ~ImGuiNextItemDataFlags_HasWidth;
+    g.NextItemData.Flags &= !ImGuiNextItemDataFlags_HasWidth;
 }
 
-c_void PushMultiItemsWidths(c_int components, c_float w_full)
+c_void PushMultiItemsWidths(components: c_int, w_full: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -570,7 +570,7 @@ c_void PushMultiItemsWidths(c_int components, c_float w_full)
     for (let i: c_int = 0; i < components - 2; i++)
         window.DC.ItemWidthStack.push(w_item_one);
     window.DC.ItemWidth = (components == 1) ? w_item_last : w_item_one;
-    g.NextItemData.Flags &= ~ImGuiNextItemDataFlags_HasWidth;
+    g.NextItemData.Flags &= !ImGuiNextItemDataFlags_HasWidth;
 }
 
 c_void PopItemWidth()
@@ -604,7 +604,7 @@ c_float CalcItemWidth()
 // Those two functions CalcItemWidth vs CalcItemSize are awkwardly named because they are not fully symmetrical.
 // Note that only CalcItemWidth() is publicly exposed.
 // The 4.0f32 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
-ImVec2 CalcItemSize(ImVec2 size, c_float default_w, c_float default_h)
+ImVec2 CalcItemSize(size: ImVec2, default_w: c_float, default_h: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

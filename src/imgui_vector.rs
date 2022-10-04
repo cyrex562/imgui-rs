@@ -26,8 +26,8 @@
 //     inline c_int          size_in_bytes() const               { return Size * sizeof(T); }
 //     inline c_int          max_size() const                    { return 0x7FFFFFFF / sizeof(T); }
 //     inline c_int          capacity() const                    { return Capacity; }
-//     inline T&           operator[](c_int i)                   { IM_ASSERT(i >= 0 && i < Size); return Data[i]; }
-//     inline const T&     operator[](c_int i) const             { IM_ASSERT(i >= 0 && i < Size); return Data[i]; }
+//     inline T&           operator[](i: c_int)                   { IM_ASSERT(i >= 0 && i < Size); return Data[i]; }
+//     inline const T&     operator[](i: c_int) const             { IM_ASSERT(i >= 0 && i < Size); return Data[i]; }
 // 
 //     inline T*           begin()                             { return Data; }
 //     inline *const T     begin() const                       { return Data; }
@@ -39,12 +39,12 @@
 //     inline const T&     back() const                        { IM_ASSERT(Size > 0); return Data[Size - 1]; }
 //     inline c_void         swap(Vec<T>& rhs)              { let rhs_size: c_int = rhs.Size; rhs.Size = Size; Size = rhs_size; let rhs_cap: c_int = rhs.Capacity; rhs.Capacity = Capacity; Capacity = rhs_cap; T* rhs_data = rhs.Data; rhs.Data = Data; Data = rhs_data; }
 // 
-//     inline c_int          _grow_capacity(c_int sz) const        { let new_capacity: c_int = Capacity ? (Capacity + Capacity / 2) : 8; return new_capacity > sz ? new_capacity : sz; }
-//     inline c_void         resize(c_int new_size)                { if (new_size > Capacity) reserve(_grow_capacity(new_size)); Size = new_size; }
-//     inline c_void         resize(c_int new_size, const T& v)    { if (new_size > Capacity) reserve(_grow_capacity(new_size)); if (new_size > Size) for (let n: c_int = Size; n < new_size; n++) memcpy(&Data[n], &v, sizeof(v)); Size = new_size; }
-//     inline c_void         shrink(c_int new_size)                { IM_ASSERT(new_size <= Size); Size = new_size; } // Resize a vector to a smaller size, guaranteed not to cause a reallocation
-//     inline c_void         reserve(c_int new_capacity)           { if (new_capacity <= Capacity) return; T* new_data = (T*)IM_ALLOC(new_capacity * sizeof(T)); if (Data) { memcpy(new_data, Data, Size * sizeof(T)); IM_FREE(Data); } Data = new_data; Capacity = new_capacity; }
-//     inline c_void         reserve_discard(c_int new_capacity)   { if (new_capacity <= Capacity) return; if (Data) IM_FREE(Data); Data = (T*)IM_ALLOC(new_capacity * sizeof(T)); Capacity = new_capacity; }
+//     inline c_int          _grow_capacity(sz: c_int) const        { let new_capacity: c_int = Capacity ? (Capacity + Capacity / 2) : 8; return new_capacity > sz ? new_capacity : sz; }
+//     inline c_void         resize(new_size: c_int)                { if (new_size > Capacity) reserve(_grow_capacity(new_size)); Size = new_size; }
+//     inline c_void         resize(new_size: c_int, const T& v)    { if (new_size > Capacity) reserve(_grow_capacity(new_size)); if (new_size > Size) for (let n: c_int = Size; n < new_size; n++) memcpy(&Data[n], &v, sizeof(v)); Size = new_size; }
+//     inline c_void         shrink(new_size: c_int)                { IM_ASSERT(new_size <= Size); Size = new_size; } // Resize a vector to a smaller size, guaranteed not to cause a reallocation
+//     inline c_void         reserve(new_capacity: c_int)           { if (new_capacity <= Capacity) return; T* new_data = (T*)IM_ALLOC(new_capacity * sizeof(T)); if (Data) { memcpy(new_data, Data, Size * sizeof(T)); IM_FREE(Data); } Data = new_data; Capacity = new_capacity; }
+//     inline c_void         reserve_discard(new_capacity: c_int)   { if (new_capacity <= Capacity) return; if (Data) IM_FREE(Data); Data = (T*)IM_ALLOC(new_capacity * sizeof(T)); Capacity = new_capacity; }
 // 
 //     // NB: It is illegal to call push_back/push_front/insert with a reference pointing inside the ImVector data itself! e.g. v.push(v[10]) is forbidden.
 //     inline c_void         push_back(const T& v)               { if (Size == Capacity) reserve(_grow_capacity(Size + 1)); memcpy(&Data[Size], &v, sizeof(v)); Size+= 1; }

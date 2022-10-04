@@ -186,7 +186,7 @@ c_void ClosePopupsExceptModals()
         ClosePopupToLevel(popup_count_to_keep, true);
 }
 
-c_void ClosePopupToLevel(c_int remaining, restore_focus_to_window_under_popup: bool)
+c_void ClosePopupToLevel(remaining: c_int, restore_focus_to_window_under_popup: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupToLevel(%d), restore_focus_to_window_under_popup=%d\n", remaining, restore_focus_to_window_under_popup);
@@ -413,7 +413,7 @@ bool BeginPopupContextVoid(*const char str_id, ImGuiPopupFlags popup_flags)
 // (r_outer is usually equivalent to the viewport rectangle minus padding, but when multi-viewports are enabled and monitor
 //  information are available, it may represent the entire platform monitor from the frame of reference of the current viewport.
 //  this allows us to have tooltips/popups displayed out of the parent viewport.)
-ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, ImGuiDir* last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy)
+ImVec2 FindBestWindowPosForPopupEx(const ref_pos: &ImVec2, const size: &ImVec2, ImGuiDir* last_dir, r_outer: &ImRect, r_avoid: &ImRect, ImGuiPopupPositionPolicy policy)
 {
     let base_pos_clamped: ImVec2 = ImClamp(ref_pos, r_outer.Min, r_outer.Max - size);
     //GetForegroundDrawList().AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
@@ -491,7 +491,7 @@ ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, Im
 ImRect GetPopupAllowedExtentRect(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImRect r_screen;
+    let mut r_screen: ImRect = ImRect::default();
     if (window.ViewportAllowPlatformMonitorExtend >= 0)
     {
         // Extent with be in the frame of reference of the given viewport (so Min is likely to be negative here)
@@ -520,7 +520,7 @@ ImVec2 FindBestWindowPosForPopup(window: *mut ImGuiWindow)
         // This is how we end up with child menus appearing (most-commonly) on the right of the parent menu.
         let mut parent_window: *mut ImGuiWindow =  window.ParentWindow;
         let horizontal_overlap: c_float =  g.Style.ItemInnerSpacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
-        ImRect r_avoid;
+        let mut r_avoid: ImRect = ImRect::default();
         if (parent_window.DC.MenuBarAppending)
             r_avoid = ImRect::new(-f32::MAX, parent_window.ClipRect.Min.y, f32::MAX, parent_window.ClipRect.Max.y); // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a NextWindowData.PosConstraintAvoidRect field
         else
@@ -536,7 +536,7 @@ ImVec2 FindBestWindowPosForPopup(window: *mut ImGuiWindow)
         // Position tooltip (always follows mouse)
         let sc: c_float =  g.Style.MouseCursorScale;
         let ref_pos: ImVec2 = NavCalcPreferredRefPos();
-        ImRect r_avoid;
+        let mut r_avoid: ImRect = ImRect::default();
         if (!g.NavDisableHighlight && g.NavDisableMouseHover && !(g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos))
             r_avoid = ImRect::new(ref_pos.x - 16, ref_pos.y - 8, ref_pos.x + 16, ref_pos.y + 8);
         else

@@ -73,7 +73,7 @@ impl ImGuiInputTextState {
     }
 
 
-    // c_void        OnKeyPressed(c_int key);      // Cannot be inline because we call in code in stb_textedit.h implementation
+    // c_void        OnKeyPressed(key: c_int);      // Cannot be inline because we call in code in stb_textedit.h implementation
     pub fn OnKeyPressed(&mut self, key: c_int) {
        todo!()
     }

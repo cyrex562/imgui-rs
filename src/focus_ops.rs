@@ -39,7 +39,7 @@ c_void PopFocusScope()
 }
 
 // Note: this will likely be called ActivateItem() once we rework our Focus/Activation system!
-c_void SetKeyboardFocusHere(c_int offset)
+c_void SetKeyboardFocusHere(offset: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

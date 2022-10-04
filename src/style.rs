@@ -97,7 +97,7 @@ pub struct ImGuiStyle {
     pub Colors: [ImVec4; ImGuiCol_COUNT],
 
     // ImGuiStyle();
-    // void ScaleAllSizes(c_float scale_factor);
+    // void ScaleAllSizes(scale_factor: c_float);
 }
 
 

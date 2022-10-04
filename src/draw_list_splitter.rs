@@ -35,7 +35,7 @@ impl ImDrawListSplitter {
         todo!()
     }
 
-    // c_void              Split(ImDrawList* draw_list, c_int count);
+    // c_void              Split(ImDrawList* draw_list, count: c_int);
     pub fn Split(&mut self, draw_list: *mut ImDrawList, count: c_int) {
         todo!()
     }
@@ -47,7 +47,7 @@ impl ImDrawListSplitter {
     }
 
 
-    // c_void              SetCurrentChannel(ImDrawList* draw_list, c_int channel_idx);
+    // c_void              SetCurrentChannel(ImDrawList* draw_list, channel_idx: c_int);
     pub fn SetCurrentChannel(&mut self, draw_list: *mut ImDrawList, channel_idx: c_int) {
         todo!()
     }

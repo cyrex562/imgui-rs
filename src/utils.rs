@@ -69,3 +69,13 @@ pub fn ImQsort(
 { 
 if count > 1 { libc::qsort(base, count, size_of_element, compare_func); }
 }
+
+
+pub fn is_null<T>(pointer: *T) -> bool
+{
+    pointer.is_null()
+}
+
+pub fn is_not_null<T>(pointer: *T) -> bool {
+    pointer.is_null() == false
+}

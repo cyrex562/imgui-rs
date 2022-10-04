@@ -4,7 +4,7 @@
 pub struct ImGuiResizeBorderDef {
     // ImVec2 InnerDir;
     pub InnerDir: ImVec2,
-    // ImVec2 SegmentN1, SegmentN2;
+    // SegmentN1: ImVec2, SegmentN2;
     pub SegmentN1: ImVec2,
     pub SegmentN2: ImVec2,
     // c_float  OuterAngle;

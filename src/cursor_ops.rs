@@ -49,7 +49,7 @@ pub unsafe fn GetCursorScreenPos() -> ImVec2 {
 // 2022/08/05: Setting cursor position also extend boundaries (via modifying CursorMaxPos) used to compute window size, group size etc.
 // I believe this was is a judicious choice but it's probably being relied upon (it has been the case since 1.31 and 1.50)
 // It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2::new2(0,0)) to extend CursorMaxPos...
-// c_void SetCursorScreenPos(const ImVec2& pos)
+// c_void SetCursorScreenPos(const pos: &ImVec2)
 pub unsafe fn SetCursorScreenPos(pos: &ImVec2) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     window.DC.CursorPos = pos.clone();
@@ -77,7 +77,7 @@ pub unsafe fn GetCursorPosY() -> c_float {
     return window.DC.CursorPos.y.clone() - window.Pos.y.clone() + window.Scroll.y.clone();
 }
 
-// c_void SetCursorPos(const ImVec2& local_pos)
+// c_void SetCursorPos(const local_pos: &ImVec2)
 pub unsafe fn SecCursorPos(local_pos: &ImVec2) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     window.DC.CursorPos = window.Pos - window.Scroll + local_pos;
@@ -85,7 +85,7 @@ pub unsafe fn SecCursorPos(local_pos: &ImVec2) {
     window.DC.IsSetPos = true;
 }
 
-// c_void SetCursorPosX(c_float x)
+// c_void SetCursorPosX(x: c_float)
 pub unsafe fn SetCursorPosX(x: c_float) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     window.DC.CursorPos.x = window.Pos.x.clone() - window.Scroll.x.clone() + x;
@@ -93,7 +93,7 @@ pub unsafe fn SetCursorPosX(x: c_float) {
     window.DC.IsSetPos = true;
 }
 
-// c_void SetCursorPosY(c_float y)
+// c_void SetCursorPosY(y: c_float)
 pub unsafe fn SetCursorPosY(y: c_float) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     window.DC.CursorPos.y = window.Pos.y.clone() - window.Scroll.y.clone() + y;

@@ -24,7 +24,7 @@ pub struct ImGuiTableColumn {
     pub WidthAuto: c_float,
     // Automatic width
     pub StretchWeight: c_float,
-    // Master width weight when (Flags & _WidthStretch). Often around ~1f32 initially.
+    // Master width weight when (Flags & _WidthStretch). Often around !1f32 initially.
     pub InitStretchWeightOrWidth: c_float,
     // Value passed to TableSetupColumn(). For Width it is a content width (_without padding_).
     pub ClipRect: ImRect,

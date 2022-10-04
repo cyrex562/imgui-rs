@@ -15,7 +15,7 @@ c_void SetNavWindow(window: *mut ImGuiWindow)
     NavUpdateAnyRequestFlag();
 }
 
-c_void SetNavID(id: ImGuiID, ImGuiNavLayer nav_layer, focus_scope_id: ImGuiID, const ImRect& rect_rel)
+c_void SetNavID(id: ImGuiID, ImGuiNavLayer nav_layer, focus_scope_id: ImGuiID, rect_rel: &ImRect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindow != NULL);
@@ -51,14 +51,14 @@ c_void SetFocusID(id: ImGuiID, window: *mut ImGuiWindow)
         g.NavDisableHighlight = true;
 }
 
-ImGuiDir ImGetDirQuadrantFromDelta(c_float dx, c_float dy)
+ImGuiDir ImGetDirQuadrantFromDelta(dx: c_float, dy: c_float)
 {
     if (ImFabs(dx) > ImFabs(dy))
         return (dx > 0f32) ? ImGuiDir_Right : ImGuiDir_Left;
     return (dy > 0f32) ? ImGuiDir_Down : ImGuiDir_Up;
 }
 
-static c_float inline NavScoreItemDistInterval(c_float a0, c_float a1, c_float b0, c_float b1)
+static c_float inline NavScoreItemDistInterval(a0: c_float, a1: c_float, b0: c_float, b1: c_float)
 {
     if (a1 < b0)
         return a1 - b0;
@@ -67,7 +67,7 @@ static c_float inline NavScoreItemDistInterval(c_float a0, c_float a1, c_float b
     return 0f32;
 }
 
-static c_void inline NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, ImRect& r, const ImRect& clip_rect)
+static c_void inline NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, r: &mut ImRect, clip_rect: &ImRect)
 {
     if (move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right)
     {
@@ -532,10 +532,10 @@ static ImVec2 NavCalcPreferredRefPos()
     }
 }
 
-c_float GetNavTweakPressedAmount(ImGuiAxis axis)
+c_float GetNavTweakPressedAmount(axis: ImGuiAxis)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    c_float repeat_delay, repeat_rate;
+    repeat_delay: c_float, repeat_rate;
     GetTypematicRepeatRate(ImGuiInputFlags_RepeatRateNavTweak, &repeat_delay, &repeat_rate);
 
     ImGuiKey key_less, key_more;
@@ -715,7 +715,7 @@ static c_void NavUpdate()
     {
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(g.NavWindow);
         if (1) { for (let layer: c_int = 0; layer < 2; layer++) { let r: ImRect =  WindowRectRelToAbs(g.NavWindow, g.NavWindow.NavRectRel[layer]); draw_list.AddRect(r.Min, r.Max, IM_COL32(255,200,0,255)); } } // [DEBUG]
-        if (1) { u32 col = (!g.NavWindow.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); let mut p: ImVec2 =  NavCalcPreferredRefPos(); buf: [c_char;32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0f32, col); draw_list.AddText(null_mut(), 13.0f32, p + ImVec2::new2(8,-4), col, buf); }
+        if (1) { let mut col: u32 = (!g.NavWindow.Hidden) ? IM_COL32(255,0,255,255) : IM_COL32(255,0,0,255); let mut p: ImVec2 =  NavCalcPreferredRefPos(); buf: [c_char;32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list.AddCircleFilled(p, 3.0f32, col); draw_list.AddText(null_mut(), 13.0f32, p + ImVec2::new2(8,-4), col, buf); }
     }
 // #endif
 }
@@ -784,7 +784,7 @@ c_void NavUpdateCreateMoveRequest()
     // [DEBUG] Always send a request
 // #if IMGUI_DEBUG_NAV_SCORING
     if (io.KeyCtrl && IsKeyPressed(ImGuiKey_C))
-        g.NavMoveDirForDebug = (ImGuiDir)((g.NavMoveDirForDebug + 1) & 3);
+        g.NavMoveDirForDebug = ((g.NavMoveDirForDebug + 1) & 3);
     if (io.KeyCtrl && g.NavMoveDir == ImGuiDir_None)
     {
         g.NavMoveDir = g.NavMoveDirForDebug;
@@ -829,7 +829,7 @@ c_void NavUpdateCreateMoveRequest()
     }
 
     // For scoring we use a single segment on the left side our current item bounding box (not touching the edge to avoid box overlap with zero-spaced items)
-    ImRect scoring_rect;
+    let mut scoring_rect: ImRect = ImRect::default();
     if (window != null_mut())
     {
         let nav_rect_rel: ImRect =  !window.NavRectRel[g.NavLayer].IsInverted() ? window.NavRectRel[g.NavLayer] : ImRect::new(0, 0, 0, 0);
@@ -1170,7 +1170,7 @@ static c_int FindWindowFocusIndex(window: *mut ImGuiWindow)
     return order;
 }
 
-static ImGuiWindow* FindWindowNavFocusable(c_int i_start, c_int i_stop, c_int dir) // FIXME-OPT O(N)
+static ImGuiWindow* FindWindowNavFocusable(i_start: c_int, i_stop: c_int, dir: c_int) // FIXME-OPT O(N)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let i: c_int = i_start; i >= 0 && i < g.WindowsFocusOrder.Size && i != i_stop; i += dir)
@@ -1179,7 +1179,7 @@ static ImGuiWindow* FindWindowNavFocusable(c_int i_start, c_int i_stop, c_int di
     return null_mut();
 }
 
-static c_void NavUpdateWindowingHighlightWindow(c_int focus_change_dir)
+static c_void NavUpdateWindowingHighlightWindow(focus_change_dir: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindowingTarget);

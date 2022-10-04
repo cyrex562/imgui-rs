@@ -123,7 +123,7 @@ c_void SetWindowDock(window: *mut ImGuiWindow, dock_id: ImGuiID, ImGuiCond cond)
 // Create an explicit dockspace node within an existing window. Also expose dock node flags and creates a CentralNode by default.
 // The Central Node is always displayed even when empty and shrink/extend according to the requested size of its neighbors.
 // DockSpace() needs to be submitted _before_ any window they can host. If you use a dockspace, submit it early in your app.
-ImGuiID DockSpace(id: ImGuiID, const ImVec2& size_arg, ImGuiDockNodeFlags flags, *const ImGuiWindowClass window_class)
+ImGuiID DockSpace(id: ImGuiID, const size_arg: &ImVec2, ImGuiDockNodeFlags flags, *const ImGuiWindowClass window_class)
 {
     ctx: *mut ImGuiContext = GImGui;
     let g = ctx;
@@ -305,7 +305,7 @@ ImGuiDockNode* DockBuilderGetNode(node_id: ImGuiID)
     return DockContextFindNodeByID(ctx, node_id);
 }
 
-c_void DockBuilderSetNodePos(node_id: ImGuiID, ImVec2 pos)
+c_void DockBuilderSetNodePos(node_id: ImGuiID, pos: ImVec2)
 {
     ctx: *mut ImGuiContext = GImGui;
     node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
@@ -315,7 +315,7 @@ c_void DockBuilderSetNodePos(node_id: ImGuiID, ImVec2 pos)
     node.AuthorityForPos = ImGuiDataAuthority_DockNode;
 }
 
-c_void DockBuilderSetNodeSize(node_id: ImGuiID, ImVec2 size)
+c_void DockBuilderSetNodeSize(node_id: ImGuiID, size: ImVec2)
 {
     ctx: *mut ImGuiContext = GImGui;
     node: *mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
@@ -481,7 +481,7 @@ c_void DockBuilderRemoveNodeDockedWindows(root_id: ImGuiID, clear_settings_refs:
 // If 'out_id_at_dir' or 'out_id_at_opposite_dir' are non NULL, the function will write out the ID of the two new nodes created.
 // Return value is ID of the node at the specified direction, so same as (*out_id_at_dir) if that pointer is set.
 // FIXME-DOCK: We are not exposing nor using split_outer.
-ImGuiID DockBuilderSplitNode(id: ImGuiID, split_dir: ImGuiDir, c_float size_ratio_for_node_at_dir, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir)
+ImGuiID DockBuilderSplitNode(id: ImGuiID, split_dir: ImGuiDir, size_ratio_for_node_at_dir: c_float, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_dir != ImGuiDir_None);
@@ -805,7 +805,7 @@ c_void BeginDocked(window: *mut ImGuiWindow, bool* p_open)
 
     // Fast path return. It is common for windows to hold on a persistent DockId but be the only visible window,
     // and never create neither a host window neither a tab bar.
-    // FIXME-DOCK: replace .HostWindow NULL compare with something more explicit (~was initially intended as a first frame test)
+    // FIXME-DOCK: replace .HostWindow NULL compare with something more explicit (!was initially intended as a first frame test)
     if (node.HostWindow == null_mut())
     {
         if (node.State == ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing)
@@ -848,7 +848,7 @@ c_void BeginDocked(window: *mut ImGuiWindow, bool* p_open)
     if (node.IsHiddenTabBar() || node.IsNoTabBar())
         window.Flags |= ImGuiWindowFlags_NoTitleBar;
     else
-        window.Flags &= ~ImGuiWindowFlags_NoTitleBar;      // Clear the NoTitleBar flag in case the user set it: confusingly enough we need a title bar height so we are correctly offset, but it won't be displayed!
+        window.Flags &= !ImGuiWindowFlags_NoTitleBar;      // Clear the NoTitleBar flag in case the user set it: confusingly enough we need a title bar height so we are correctly offset, but it won't be displayed!
 
     // Save new dock order only if the window has been visible once already
     // This allows multiple windows to be created in the same frame and have their respective dock orders preserved.

@@ -281,7 +281,7 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
 
     // Adjust flags: NoBordersInBodyUntilResize takes priority over NoBordersInBody
     if (flags & ImGuiTableFlags_NoBordersInBodyUntilResize)
-        flags &= ~ImGuiTableFlags_NoBordersInBody;
+        flags &= !ImGuiTableFlags_NoBordersInBody;
 
     // Adjust flags: disable saved settings if there's nothing to save
     if ((flags & (ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Sortable)) == 0)
@@ -301,13 +301,13 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
 }
 
 // Read about "TABLE SIZING" at the top of this file.
-bool    BeginTable(*const char str_id, c_int columns_count, ImGuiTableFlags flags, const ImVec2& outer_size, c_float inner_width)
+bool    BeginTable(*const char str_id, columns_count: c_int, ImGuiTableFlags flags, const outer_size: &ImVec2, inner_width: c_float)
 {
     let mut id: ImGuiID =  GetID(str_id);
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
-bool    BeginTableEx(*const char name, id: ImGuiID, c_int columns_count, ImGuiTableFlags flags, const ImVec2& outer_size, c_float inner_width)
+bool    BeginTableEx(*const char name, id: ImGuiID, columns_count: c_int, ImGuiTableFlags flags, const outer_size: &ImVec2, inner_width: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow outer_window = GetCurrentWindow();
@@ -570,7 +570,7 @@ bool    BeginTableEx(*const char name, id: ImGuiID, c_int columns_count, ImGuiTa
 // + 2 * active_channels_count (for ImDrawCmd and ImDrawIdx buffers inside channels)
 // Where active_channels_count is variable but often == columns_count or columns_count + 1, see TableSetupDrawChannels() for details.
 // Unused channels don't perform their +2 allocations.
-c_void TableBeginInitMemory(*mut ImGuiTable table, c_int columns_count)
+c_void TableBeginInitMemory(*mut ImGuiTable table, columns_count: c_int)
 {
     // Allocate single buffer for our arrays
     ImSpanAllocator<3> span_allocator;
@@ -965,7 +965,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
         }
 
         // Clear status flags
-        column.Flags &= ~ImGuiTableColumnFlags_StatusMask_;
+        column.Flags &= !ImGuiTableColumnFlags_StatusMask_;
 
         if ((table.EnabledMaskByDisplayOrder & (1 << order_n)) == 0)
         {
@@ -1078,13 +1078,13 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
             table.HoveredColumnBody = (ImGuiTableColumnIdx)table.ColumnsCount;
     }
     if (has_resizable == false && (table.Flags & ImGuiTableFlags_Resizable))
-        table.Flags &= ~ImGuiTableFlags_Resizable;
+        table.Flags &= !ImGuiTableFlags_Resizable;
 
     // [Part 8] Lock actual OuterRect/WorkRect right-most position.
     // This is done late to handle the case of fixed-columns tables not claiming more widths that they need.
     // Because of this we are careful with uses of WorkRect and InnerClipRect before this point.
     if (table.RightMostStretchedColumn != -1)
-        table.Flags &= ~ImGuiTableFlags_NoHostExtendX;
+        table.Flags &= !ImGuiTableFlags_NoHostExtendX;
     if (table.Flags & ImGuiTableFlags_NoHostExtendX)
     {
         table.OuterRect.Max.x = table.WorkRect.Max.x = unused_x1;
@@ -1398,7 +1398,7 @@ c_void    EndTable()
 
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0f32) it is ignored
-c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, c_float init_width_or_weight, user_id: ImGuiID)
+c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, init_width_or_weight: c_float, user_id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1466,7 +1466,7 @@ c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, c_float 
 }
 
 // [Public]
-c_void TableSetupScrollFreeze(c_int columns, c_int rows)
+c_void TableSetupScrollFreeze(columns: c_int, rows: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1515,7 +1515,7 @@ c_int TableGetColumnCount()
     return table ? table.ColumnsCount : 0;
 }
 
-*const char TableGetColumnName(c_int column_n)
+*const char TableGetColumnName(column_n: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1526,7 +1526,7 @@ c_int TableGetColumnCount()
     return TableGetColumnName(table, column_n);
 }
 
-*const char TableGetColumnName(*const ImGuiTable table, c_int column_n)
+*const char TableGetColumnName(*const ImGuiTable table, column_n: c_int)
 {
     if (table.IsLayoutLocked == false && column_n >= table.DeclColumnsCount)
         return ""; // NameOffset is invalid at this point
@@ -1542,7 +1542,7 @@ c_int TableGetColumnCount()
 // - Request will be applied during next layout, which happens on the first call to TableNextRow() after BeginTable().
 // - For the getter you can test (TableGetColumnFlags() & ImGuiTableColumnFlags_IsEnabled) != 0.
 // - Alternative: the ImGuiTableColumnFlags_Disabled is an overriding/master disable flag which will also hide the column from context menu.
-c_void TableSetColumnEnabled(c_int column_n, enabled: bool)
+c_void TableSetColumnEnabled(column_n: c_int, enabled: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1558,7 +1558,7 @@ c_void TableSetColumnEnabled(c_int column_n, enabled: bool)
 }
 
 // We allow querying for an extra column in order to poll the IsHovered state of the right-most section
-ImGuiTableColumnFlags TableGetColumnFlags(c_int column_n)
+ImGuiTableColumnFlags TableGetColumnFlags(column_n: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1574,7 +1574,7 @@ ImGuiTableColumnFlags TableGetColumnFlags(c_int column_n)
 
 
 // Return the resizing ID for the right-side of the given column.
-ImGuiID TableGetColumnResizeID(*const ImGuiTable table, c_int column_n, c_int instance_no)
+ImGuiID TableGetColumnResizeID(*const ImGuiTable table, column_n: c_int, instance_no: c_int)
 {
     // IM_ASSERT(column_n >= 0 && column_n < table.ColumnsCount);
     let mut id: ImGuiID =  table.ID + 1 + (instance_no * table.ColumnsCount) + column_n;
@@ -1591,7 +1591,7 @@ c_int TableGetHoveredColumn()
     return table.HoveredColumnBody;
 }
 
-c_void TableSetBgColor(ImGuiTableBgTarget target, u32 color, c_int column_n)
+c_void TableSetBgColor(ImGuiTableBgTarget target, u32 color, column_n: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1653,7 +1653,7 @@ c_int TableGetRowIndex()
 }
 
 // [Public] Starts into the first cell of a new row
-c_void TableNextRow(ImGuiTableRowFlags row_flags, c_float row_min_height)
+c_void TableNextRow(ImGuiTableRowFlags row_flags, row_min_height: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1732,7 +1732,7 @@ c_int TableGetColumnIndex()
 }
 
 // [Public] Append into a specific column
-bool TableSetColumnIndex(c_int column_n)
+bool TableSetColumnIndex(column_n: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1782,7 +1782,7 @@ bool TableNextColumn()
 // [Internal] Called by TableSetColumnIndex()/TableNextColumn()
 // This is called very frequently, so we need to be mindful of unnecessary overhead.
 // FIXME-TABLE FIXME-OPT: Could probably shortcut some things for non-active or clipped columns.
-c_void TableBeginCell(*mut ImGuiTable table, c_int column_n)
+c_void TableBeginCell(*mut ImGuiTable table, column_n: c_int)
 {
     *mut ImGuiTableColumn column = &table.Columns[column_n];
     *mut ImGuiWindow window = table.InnerWindow;
@@ -1853,7 +1853,7 @@ c_void TableBeginCell(*mut ImGuiTable table, c_int column_n)
 //-------------------------------------------------------------------------
 
 // Maximum column content width given current layout. Use column.MinX so this value on a per-column basis.
-c_float TableGetMaxColumnWidth(*const ImGuiTable table, c_int column_n)
+c_float TableGetMaxColumnWidth(*const ImGuiTable table, column_n: c_int)
 {
     let column: *const ImGuiTableColumn = &table.Columns[column_n];
     let max_width: c_float =  f32::MAX;
@@ -1902,7 +1902,7 @@ c_float TableGetColumnWidthAuto(*mut ImGuiTable table, *mut ImGuiTableColumn col
 }
 
 // 'width' = inner column width, without padding
-c_void TableSetColumnWidth(c_int column_n, c_float width)
+c_void TableSetColumnWidth(column_n: c_int, width: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1985,7 +1985,7 @@ c_void TableSetColumnWidth(c_int column_n, c_float width)
 
 // Disable clipping then auto-fit, will take 2 frames
 // (we don't take a shortcut for unclipped columns to reduce inconsistencies when e.g. resizing multiple columns)
-c_void TableSetColumnWidthAutoSingle(*mut ImGuiTable table, c_int column_n)
+c_void TableSetColumnWidthAutoSingle(*mut ImGuiTable table, column_n: c_int)
 {
     // Single auto width uses auto-fit
     *mut ImGuiTableColumn column = &table.Columns[column_n];
@@ -2392,7 +2392,7 @@ c_void TableDrawBorders(*mut ImGuiTable table)
         // of it in inner window, and the part that's over scrollbars in the outer window..)
         // Either solution currently won't allow us to use a larger border size: the border would clipped.
         const let outer_border: ImRect =  table.OuterRect;
-        const u32 outer_col = table.BorderColorStrong;
+        let outer_col: u32 = table.BorderColorStrong;
         if ((table.Flags & ImGuiTableFlags_BordersOuter) == ImGuiTableFlags_BordersOuter)
         {
             inner_drawlist.AddRect(outer_border.Min, outer_border.Max, outer_col, 0f32, 0, border_size);
@@ -2452,7 +2452,7 @@ c_void TableDrawBorders(*mut ImGuiTable table)
     return &table.SortSpecs;
 }
 
-static inline ImGuiSortDirection TableGetColumnAvailSortDirection(*mut ImGuiTableColumn column, c_int n)
+static inline ImGuiSortDirection TableGetColumnAvailSortDirection(*mut ImGuiTableColumn column, n: c_int)
 {
     // IM_ASSERT(n < column.SortDirectionsAvailCount);
     return (column.SortDirectionsAvailList >> (n << 1)) & 0x03;
@@ -2485,7 +2485,7 @@ ImGuiSortDirection TableGetColumnNextSortDirection(*mut ImGuiTableColumn column)
 
 // Note that the NoSortAscending/NoSortDescending flags are processed in TableSortSpecsSanitize(), and they may change/revert
 // the value of SortDirection. We could technically also do it here but it would be unnecessary and duplicate code.
-c_void TableSetColumnSortDirection(c_int column_n, ImGuiSortDirection sort_direction, append_to_sort_specs: bool)
+c_void TableSetColumnSortDirection(column_n: c_int, ImGuiSortDirection sort_direction, append_to_sort_specs: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -2752,7 +2752,7 @@ c_void TableHeader(*const char label)
         SetItemAllowOverlap();
     if (held || hovered || selected)
     {
-        const u32 col = GetColorU32(held ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        let col: u32 = GetColorU32(held ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
         //RenderFrame(bb.Min, bb.Max, col, false, 0f32);
         TableSetBgColor(ImGuiTableBgTarget_CellBg, col, table.CurrentColumn);
     }
@@ -2836,7 +2836,7 @@ c_void TableHeader(*const char label)
 //-------------------------------------------------------------------------
 
 // Use -1 to open menu not specific to a given column.
-c_void TableOpenContextMenu(c_int column_n)
+c_void TableOpenContextMenu(column_n: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -2983,7 +2983,7 @@ let size_all_desc: *const c_char;
 //-------------------------------------------------------------------------
 
 // Clear and initialize empty settings instance
-static c_void TableSettingsInit(*mut ImGuiTableSettings settings, id: ImGuiID, c_int columns_count, c_int columns_count_max)
+static c_void TableSettingsInit(*mut ImGuiTableSettings settings, id: ImGuiID, columns_count: c_int, columns_count_max: c_int)
 {
     IM_PLACEMENT_NEW(settings) ImGuiTableSettings();
     *mut ImGuiTableColumnSettings settings_column = settings.GetColumnSettings();
@@ -2995,12 +2995,12 @@ static c_void TableSettingsInit(*mut ImGuiTableSettings settings, id: ImGuiID, c
     settings.WantApply = true;
 }
 
-static size_t TableSettingsCalcChunkSize(c_int columns_count)
+static size_t TableSettingsCalcChunkSize(columns_count: c_int)
 {
     return sizeof(ImGuiTableSettings) + columns_count * sizeof(ImGuiTableColumnSettings);
 }
 
-*mut ImGuiTableSettings TableSettingsCreate(id: ImGuiID, c_int columns_count)
+*mut ImGuiTableSettings TableSettingsCreate(id: ImGuiID, columns_count: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTableSettings settings = g.SettingsTables.alloc_chunk(TableSettingsCalcChunkSize(columns_count));
@@ -3153,7 +3153,7 @@ c_void TableLoadSettings(*mut ImGuiTable table)
     }
 
     // Validate and fix invalid display order data
-    const u64 expected_display_order_mask = (settings.ColumnsCount == 64) ? ~0 : (1 << settings.ColumnsCount) - 1;
+    const u64 expected_display_order_mask = (settings.ColumnsCount == 64) ? !0 : (1 << settings.ColumnsCount) - 1;
     if (display_order_mask != expected_display_order_mask)
         for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
             table.Columns[column_n].DisplayOrder = (ImGuiTableColumnIdx)column_n;
@@ -3490,19 +3490,19 @@ c_int GetColumnsCount()
     return window.DC.CurrentColumns ? window.DC. : 1;
 }
 
-c_float GetColumnOffsetFromNorm(*const ImGuiOldColumns columns, c_float offset_norm)
+c_float GetColumnOffsetFromNorm(*const ImGuiOldColumns columns, offset_norm: c_float)
 {
     return offset_norm * ( - );
 }
 
-c_float GetColumnNormFromOffset(*const ImGuiOldColumns columns, c_float offset)
+c_float GetColumnNormFromOffset(*const ImGuiOldColumns columns, offset: c_float)
 {
     return offset / ( - );
 }
 
 static let COLUMNS_HIT_RECT_HALF_WIDTH: c_float =  4.0f32;
 
-static c_float GetDraggedColumnOffset(*mut ImGuiOldColumns columns, c_int column_index)
+static c_float GetDraggedColumnOffset(*mut ImGuiOldColumns columns, column_index: c_int)
 {
     // Active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
     // window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
@@ -3519,7 +3519,7 @@ static c_float GetDraggedColumnOffset(*mut ImGuiOldColumns columns, c_int column
     return x;
 }
 
-c_float GetColumnOffset(c_int column_index)
+c_float GetColumnOffset(column_index: c_int)
 {
     *mut ImGuiWindow window = GetCurrentWindowRead();
     *mut ImGuiOldColumns columns = window.DC.CurrentColumns;
@@ -3535,7 +3535,7 @@ c_float GetColumnOffset(c_int column_index)
     return x_offset;
 }
 
-static c_float GetColumnWidthEx(*mut ImGuiOldColumns columns, c_int column_index, let mut before_resize: bool =  false)
+static c_float GetColumnWidthEx(*mut ImGuiOldColumns columns, column_index: c_int, let mut before_resize: bool =  false)
 {
     if (column_index < 0)
         column_index = ;
@@ -3548,7 +3548,7 @@ static c_float GetColumnWidthEx(*mut ImGuiOldColumns columns, c_int column_index
     return GetColumnOffsetFromNorm(columns, offset_norm);
 }
 
-c_float GetColumnWidth(c_int column_index)
+c_float GetColumnWidth(column_index: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -3561,7 +3561,7 @@ c_float GetColumnWidth(c_int column_index)
     return GetColumnOffsetFromNorm(columns, [column_index + 1].OffsetNorm - [column_index].OffsetNorm);
 }
 
-c_void SetColumnOffset(c_int column_index, c_float offset)
+c_void SetColumnOffset(column_index: c_int, offset: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -3583,7 +3583,7 @@ c_void SetColumnOffset(c_int column_index, c_float offset)
         SetColumnOffset(column_index + 1, offset + ImMax(g.Style.ColumnsMinSpacing, width));
 }
 
-c_void SetColumnWidth(c_int column_index, c_float width)
+c_void SetColumnWidth(column_index: c_int, width: c_float)
 {
     *mut ImGuiWindow window = GetCurrentWindowRead();
     *mut ImGuiOldColumns columns = window.DC.CurrentColumns;
@@ -3594,7 +3594,7 @@ c_void SetColumnWidth(c_int column_index, c_float width)
     SetColumnOffset(column_index + 1, GetColumnOffset(column_index) + width);
 }
 
-c_void PushColumnClipRect(c_int column_index)
+c_void PushColumnClipRect(column_index: c_int)
 {
     *mut ImGuiWindow window = GetCurrentWindowRead();
     *mut ImGuiOldColumns columns = window.DC.CurrentColumns;
@@ -3644,7 +3644,7 @@ c_void PopColumnsBackground()
     return columns;
 }
 
-ImGuiID GetColumnsID(*const char str_id, c_int columns_count)
+ImGuiID GetColumnsID(*const char str_id, columns_count: c_int)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
 
@@ -3657,7 +3657,7 @@ ImGuiID GetColumnsID(*const char str_id, c_int columns_count)
     return id;
 }
 
-c_void BeginColumns(*const char str_id, c_int columns_count, ImGuiOldColumnFlags flags)
+c_void BeginColumns(*const char str_id, columns_count: c_int, ImGuiOldColumnFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -3841,7 +3841,7 @@ c_void EndColumns()
             }
 
             // Draw column
-            const u32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
+            let col: u32 = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
             let xi: c_float =  IM_FLOOR(x);
             window.DrawList.AddLine(ImVec2::new(xi, y1 + 1f32), ImVec2::new(xi, y2), col);
         }
@@ -3866,7 +3866,7 @@ c_void EndColumns()
     window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);
 }
 
-c_void Columns(c_int columns_count, *const char id, border: bool)
+c_void Columns(columns_count: c_int, *const char id, border: bool)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     // IM_ASSERT(columns_count >= 1);
