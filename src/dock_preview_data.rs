@@ -1,3 +1,8 @@
+use libc::c_float;
+use crate::direction::{ImGuiDir, ImGuiDir_COUNT};
+use crate::dock_node::ImGuiDockNode;
+use crate::rect::ImRect;
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct ImGuiDockPreviewData {
     pub FutureNode: ImGuiDockNode,
@@ -7,11 +12,11 @@ pub struct ImGuiDockPreviewData {
     // Hold your breath, grammar freaks..
     pub IsSplitDirExplicit: bool,
     // Set when hovered the drop rect (vs. implicit SplitDir==None when hovered the window)
-    pub SplitNode: ImGuiDockNode*,
+    pub SplitNode: *mut ImGuiDockNode,
     pub SplitDir: ImGuiDir,
     pub SplitRatio: c_float,
     // ImRect          DropRectsDraw[ImGuiDir_COUNT + 1];  // May be slightly different from hit-testing drop rects used in DockNodeCalcDropRects()
-    pub DropRectsDraw: [ImRect; ImGuiDir_COUNT + 1],
+    pub DropRectsDraw: [ImRect; (ImGuiDir_COUNT + 1) as usize],
 
 }
 

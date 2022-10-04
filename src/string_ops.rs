@@ -145,11 +145,11 @@ pub unsafe fn ImStrTrimBlanks(buf: *mut c_char) {
 }
 
 // const char* ImStrSkipBlank(const char* str)
-pub fn ImStrSkipBlank(in_str: * c_char) {
-    while str[0] == ' ' || str[0] == '\t' {
-        str += 1;
+pub fn ImStrSkipBlank(mut in_str: *const c_char) -> *const c_char{
+    while in_str[0] == ' ' || in_str[0] == '\t' {
+        in_str += 1;
     }
-    return str;
+    return in_str;
 }
 
 // A) MSVC version appears to return -1 on overflow, whereas glibc appears to return total count (which may be >= buf_size).

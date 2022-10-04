@@ -289,7 +289,7 @@ c_uchar temp_bitmap[*mut 512512];
 stbtt_bakedcdata: [c_char;96]; // ASCII 32..126 is 95 glyphs
 GLuint ftex;
 
-c_void my_stbtt_initfont(c_void)
+c_void my_stbtt_initfont
 {
    fread(ttf_buffer, 1, 1<<20, fopen("c:/windows/fonts/times.ttf", "rb"));
    stbtt_BakeFontBitmap(ttf_buffer,0, 32.0, temp_bitmap,512,512, 32,96, cdata); // no guarantee this fits!
@@ -473,8 +473,8 @@ c_int main(arg: c_int, char **argv)
    // #define your own functions "STBTT_malloc" / "STBTT_free" to avoid malloc.h
    #ifndef STBTT_malloc
    #include <stdlib.h>
-   #define STBTT_malloc(x,u)  ((c_void)(u),malloc(x))
-   #define STBTT_free(x,u)    ((c_void)(u),free(x))
+   #define STBTT_malloc(x,u)  ((u),malloc(x))
+   #define STBTT_free(x,u)    ((u),free(x))
    #endif
 
    #ifndef STBTT_assert

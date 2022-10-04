@@ -89,7 +89,7 @@ ImGuiViewport* FindViewportByPlatformHandle(platform_handle: *mut c_void)
 c_void SetCurrentViewport(current_window: *mut ImGuiWindow, *mut ImGuiViewportP viewport)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    (c_void)current_window;
+    current_window;
 
     if (viewport)
         viewport.LastFrameActive = g.FrameCount;

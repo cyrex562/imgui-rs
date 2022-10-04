@@ -292,7 +292,7 @@ static c_void WindowSettingsHandler_ApplyAll(ctx: *mut ImGuiContext, ImGuiSettin
         }
 }
 
-static c_void WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
+static c_void WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, handler: *mut ImGuiSettingsHandler, buf: *mut ImGuiTextBuffer)
 {
     // Gather data from windows that were active during this session
     // (if a window wasn't opened in this session we preserve its settings)
