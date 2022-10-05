@@ -10,6 +10,8 @@
 // #define IM_UNICODE_CODEPOINT_MAX     0xFFFF     // Maximum Unicode code point supported by this build.
 // #endif
 
+use libc::c_int;
+
 // Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
 // Usage: static ImGuiOnceUponAFrame oaf; if (oa0f32) Text("This will be called only once per frame");
 #[derive(Default,Debug,Copy, Clone)]

@@ -1,11 +1,13 @@
 #![allow(non_snake_case)]
 
 use libc::{c_char, c_float, c_void};
+use crate::ImGuiViewport;
+use crate::platform_monitor::ImGuiPlatformMonitor;
+use crate::vec2::ImVec2;
 
 // (Optional) Access via GetPlatformIO()
-#[derive(Default,Debug,Clone)]
-pub struct ImGuiPlatformIO
-{
+#[derive(Default, Debug, Clone)]
+pub struct ImGuiPlatformIO {
     //------------------------------------------------------------------
     // Input - Backend interface/functions + Monitor List
     //------------------------------------------------------------------

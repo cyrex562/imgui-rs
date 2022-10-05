@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
+use crate::math::{ImClamp, ImMax};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 

@@ -2,7 +2,7 @@
 
 use libc::{c_float, c_void};
 use crate::condition::ImGuiCond;
-use crate::next_window_data_flags::ImGuiNextWindowDataFlags;
+use crate::next_window_data_flags::{ImGuiNextWindowDataFlags, ImGuiNextWindowDataFlags_None};
 use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::window_class::ImGuiWindowClass;

@@ -1,12 +1,13 @@
+use crate::rect::ImRect;
+use crate::vec2::ImVec2;
+use crate::window::ImGuiWindow;
 
-bool IsRectVisible(const size: &ImVec2)
-{
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
-    return window.ClipRect.Overlaps(ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size));
+pub fn IsRectVisible(size: &ImVec2) -> bool {
+    let mut window: *mut ImGuiWindow = GimGui.CurrentWindow;
+    return window.ClipRect.Overlaps(&ImRect::new2(&window.DC.CursorPos, window.DC.CursorPos + size));
 }
 
-bool IsRectVisible(const rect_min: &ImVec2, const rect_max: &ImVec2)
-{
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
-    return window.ClipRect.Overlaps(ImRect::new(rect_min, rect_max));
+pub fn IsRectVisible2(rect_min: &ImVec2, rect_max: &ImVec2) -> bool {
+    let mut window: *mut ImGuiWindow = GimGui.CurrentWindow;
+    return window.ClipRect.Overlaps(&ImRect::new2(rect_min, rect_max));
 }

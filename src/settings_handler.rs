@@ -28,7 +28,7 @@ pub struct ImGuiSettingsHandler {
     pub ReadLineFn: fn(ctx: *mut ImGuiContext, handler: *mut Self, entry: *mut c_void, line: *const c_char),
 
     // c_void        (*ApplyAllFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler);                                // Read: Called after reading (in registration order)
-    pub ApplyAllFn: fn(ctx: *mut ImGuiContext, handler: *mut Self)
+    pub ApplyAllFn: fn(ctx: *mut ImGuiContext, handler: *mut Self),
 
     // c_void        (*WriteAllFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut ImGuiTextBuffer out_buf);      // Write: Output every entries into 'out_buf'
     pub WriteAllFn: fn(ctx: *mut ImGuiContext, handler: *mut Self, out_buf: *mut ImGuiTextBuffer),
