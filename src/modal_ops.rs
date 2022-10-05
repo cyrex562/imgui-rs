@@ -1,4 +1,8 @@
-
+use std::ptr::null_mut;
+use crate::GImGui;
+use crate::utils::flag_clear;
+use crate::window::ImGuiWindow;
+use crate::window_flags::ImGuiWindowFlags_Modal;
 
 // When a modal popup is open, newly created windows that want focus (i.e. are not popups and do not specify ImGuiWindowFlags_NoFocusOnAppearing)
 // should be positioned behind that modal window, unless the window was created inside the modal begin-stack.
@@ -9,25 +13,34 @@
 //      - Window        //                  .. returns Modal2
 //          - Window    //                  .. returns Modal2
 //          - Modal2    //                  .. returns Modal2
-static ImGuiWindow* FindBlockingModal(window: *mut ImGuiWindow)
-{
+// static ImGuiWindow* FindBlockingModal(window: *mut ImGuiWindow)
+pub unsafe fn FindBlockingModal(window: *mut ImGuiWindow) -> *mut ImGuiWindow {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.OpenPopupStack.Size <= 0)
+    if g.OpenPopupStack.Size <= 0 {
         return null_mut();
+    }
 
     // Find a modal that has common parent with specified window. Specified window should be positioned behind that modal.
-    for (let i: c_int = g.OpenPopupStack.Size - 1; i >= 0; i--)
-    {
-        let mut popup_window: *mut ImGuiWindow =  g.OpenPopupStack.Data[i].Window;
-        if (popup_window == null_mut() || !(popup_window.Flags & ImGuiWindowFlags_Modal))
+    // for (let i: c_int = g.OpenPopupStack.Size - 1; i >= 0; i--)
+    for i in g.OpenPopupStack.len() - 1..0 {
+        let mut popup_window: *mut ImGuiWindow = g.OpenPopupStack.Data[i].Window;
+        if popup_window == null_mut() || flag_clear(popup_window.Flags, ImGuiWindowFlags_Modal) {
             continue;
-        if (!popup_window.Active && !popup_window.WasActive)      // Check WasActive, because this code may run before popup renders on current frame, also check Active to handle newly created windows.
+        }
+        if !popup_window.Active && !popup_window.WasActive {    // Check WasActive, because this code may run before popup renders on current frame, also check Active to handle newly created windows.
             continue;
-        if (IsWindowWithinBeginStackOf(window, popup_window))       // Window is rendered over last modal, no render order change needed.
+        }
+        if IsWindowWithinBeginStackOf(window, popup_window) {    // Window is rendered over last modal, no render order change needed.
             break;
-        for (let mut parent: *mut ImGuiWindow =  popup_window.ParentWindowInBeginStack.RootWindow; parent != null_mut(); parent = parent.ParentWindowInBeginStack.RootWindow)
-            if (IsWindowWithinBeginStackOf(window, parent))
-                return popup_window;                                // Place window above its begin stack parent.
+        }
+        // for (let mut parent: *mut ImGuiWindow =  popup_window.ParentWindowInBeginStack.RootWindow; parent != null_mut(); parent = parent.ParentWindowInBeginStack.RootWindow)
+        let mut parent: *mut ImGuiWindow = popup_window.ParentWindowInBeginStack.RootWindow;
+        while parent != null_mut() {
+            if IsWindowWithinBeginStackOf(window, parent) {
+                return popup_window;
+            }
+            parent = parent.ParentWindowInBeginStack.RootWindow;
+        }                         // Place window above its begin stack parent.
     }
     return null_mut();
 }

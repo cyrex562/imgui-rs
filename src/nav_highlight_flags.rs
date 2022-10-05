@@ -1,3 +1,5 @@
+#![allow(non_upper_case_globals)]
+
 use libc::c_int;
 
 // typedef int ImGuiNavHighlightFlags;     // -> enum ImGuiNavHighlightFlags_  // Flags: for RenderNavHighlight()

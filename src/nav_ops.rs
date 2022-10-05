@@ -3,19 +3,52 @@
 // In our terminology those should be interchangeable, yet right now this is super confusing.
 // Those two functions are merely a legacy artifact, so at minimum naming should be clarified.
 
-c_void SetNavWindow(window: *mut ImGuiWindow)
+use std::ptr::{null, null_mut};
+use libc::c_char;
+use crate::activate_flags::{ImGuiActivateFlags_None, ImGuiActivateFlags_PreferInput, ImGuiActivateFlags_PreferTweak};
+use crate::axis::{ImGuiAxis, ImGuiAxis_X};
+use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
+use crate::color::IM_COL32;
+use crate::config_flags::{ImGuiConfigFlags_NavEnableGamepad, ImGuiConfigFlags_NavEnableKeyboard};
+use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
+use crate::draw_list::ImDrawList;
+use crate::draw_list_ops::{GetForegroundDrawList, GetForegroundDrawList3};
+use crate::GImGui;
+use crate::input_flags::ImGuiInputFlags_RepeatRateNavTweak;
+use crate::input_ops::{GetKeyPressedAmount, GetTypematicRepeatRate, IsKeyDown, IsKeyPressed, IsMouseHoveringRect, IsMousePosValid};
+use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Nav};
+use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_Disabled, ImGuiItemFlags_Inputable, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus, ImGuiItemFlags_NoTabStop};
+use crate::key::{ImGuiKey, ImGuiKey_DownArrow, ImGuiKey_Enter, ImGuiKey_Escape, ImGuiKey_GamepadDpadDown, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadUp, ImGuiKey_GamepadFaceDown, ImGuiKey_GamepadFaceLeft, ImGuiKey_GamepadFaceRight, ImGuiKey_GamepadFaceUp, ImGuiKey_GamepadLStickLeft, ImGuiKey_LeftArrow, ImGuiKey_NavGamepadActivate, ImGuiKey_NavGamepadInput, ImGuiKey_RightArrow, ImGuiKey_Space, ImGuiKey_UpArrow};
+use crate::math::{ImClamp, ImClamp2, ImFloor, ImFloor2, ImLerp, ImMin};
+use crate::nav_item_data::ImGuiNavItemData;
+use crate::nav_layer::{ImGuiNavLayer_Main, ImGuiNavLayer_Menu};
+use crate::nav_move_flags::{ImGuiNavMoveFlags, ImGuiNavMoveFlags_AllowCurrentNavId, ImGuiNavMoveFlags_AlsoScoreVisibleSet, ImGuiNavMoveFlags_FocusApi, ImGuiNavMoveFlags_Forwarded, ImGuiNavMoveFlags_Tabbing};
+use crate::rect::ImRect;
+use crate::scroll_flags::ImGuiScrollFlags;
+use crate::string_ops::ImFormatString;
+use crate::tab_item::ImGuiTabItem;
+use crate::text_ops::CalcTextSize;
+use crate::type_defs::ImGuiID;
+use crate::utils::{flag_clear, flag_set, is_not_null, is_null};
+use crate::vec2::ImVec2;
+use crate::window::ImGuiWindow;
+use crate::window_flags::{ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_Popup};
+use crate::window_ops::{WindowRectAbsToRel, WindowRectRelToAbs};
+
+// c_void SetNavWindow(window: *mut ImGuiWindow)
+pub unsafe fn SetNavWindow(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.NavWindow != window)
+    if g.NavWindow != window
     {
-        IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"%s\")\n", window ? window.Name : "<NULL>");
+        // IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"%s\")\n", window ? window.Name : "<NULL>");
         g.NavWindow = window;
     }
-    g.NavInitRequest = g.NavMoveSubmitted = g.NavMoveScoringItems = false;
+    g.NavInitRequest = false; g.NavMoveSubmitted = false; g.NavMoveScoringItems = false;
     NavUpdateAnyRequestFlag();
 }
 
-c_void SetNavID(id: ImGuiID, ImGuiNavLayer nav_layer, focus_scope_id: ImGuiID, rect_rel: &ImRect)
+pub unsafe fn SetNavID(id: ImGuiID, nav_layer: ImGuiNavLayer, focus_scope_id: ImGuiID, rect_rel: &ImRect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindow != NULL);
@@ -27,49 +60,60 @@ c_void SetNavID(id: ImGuiID, ImGuiNavLayer nav_layer, focus_scope_id: ImGuiID, r
     g.NavWindow.NavRectRel[nav_layer] = rect_rel;
 }
 
-c_void SetFocusID(id: ImGuiID, window: *mut ImGuiWindow)
+pub unsafe fn SetFocusID(id: ImGuiID, window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
 
-    if (g.NavWindow != window)
-       SetNavWindow(window);
+    if g.NavWindow != window {
+        SetNavWindow(window);
+    }
 
     // Assume that SetFocusID() is called in the context where its window.DC.NavLayerCurrent and window.DC.NavFocusScopeIdCurrent are valid.
     // Note that window may be != g.CurrentWindow (e.g. SetFocusID call in InputTextEx for multi-line text)
-    const ImGuiNavLayer nav_layer = window.DC.NavLayerCurrent;
+    let nav_layer = window.DC.NavLayerCurrent;
     g.NavId = id;
     g.NavLayer = nav_layer;
     g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent;
     window.NavLastIds[nav_layer] = id;
-    if (g.LastItemData.ID == id)
-        window.NavRectRel[nav_layer] = WindowRectAbsToRel(window, g.LastItemData.NavRect);
+    if g.LastItemData.ID == id {
+        window.NavRectRel[nav_layer] = WindowRectAbsToRel(window, &g.LastItemData.NavRect);
+    }
 
-    if (g.ActiveIdSource == ImGuiInputSource_Nav)
+    if g.ActiveIdSource == ImGuiInputSource_Nav {
         g.NavDisableMouseHover = true;
-    else
+    }
+    else {
         g.NavDisableHighlight = true;
+    }
 }
 
-ImGuiDir ImGetDirQuadrantFromDelta(dx: c_float, dy: c_float)
+// ImGuiDir ImGetDirQuadrantFromDelta(dx: c_float, dy: c_float)
+pub fn ImGetDirQuadrantFromDelta(dx: c_float, dy: c_float) -> ImGuiDir
 {
-    if (ImFabs(dx) > ImFabs(dy))
-        return (dx > 0f32) ? ImGuiDir_Right : ImGuiDir_Left;
-    return (dy > 0f32) ? ImGuiDir_Down : ImGuiDir_Up;
+    if ImFabs(dx) > ImFabs(dy) {
+        if dx > 0f32 {
+            ImGuiDir_Right
+        } else { ImGuiDir_Left }
+    }
+    if dy > 0f32 { ImGuiDir_Down } else { ImGuiDir_Up }
 }
 
-static c_float inline NavScoreItemDistInterval(a0: c_float, a1: c_float, b0: c_float, b1: c_float)
+// static c_float inline NavScoreItemDistInterval(a0: c_float, a1: c_float, b0: c_float, b1: c_float)
+pub fn NavScoreItemDistInterval(a0: c_float, a1: c_float, b0: c_float, b1: c_float) -> c_float
 {
-    if (a1 < b0)
+    if (a1 < b0) {
         return a1 - b0;
-    if (b1 < a0)
+    }
+    if (b1 < a0) {
         return a0 - b1;
+    }
     return 0f32;
 }
 
-static c_void inline NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, r: &mut ImRect, clip_rect: &ImRect)
+pub fn NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, r: &mut ImRect, clip_rect: &ImRect)
 {
-    if (move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right)
+    if move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right
     {
         r.Min.y = ImClamp(r.Min.y, clip_rect.Min.y, clip_rect.Max.y);
         r.Max.y = ImClamp(r.Max.y, clip_rect.Min.y, clip_rect.Max.y);
@@ -82,37 +126,41 @@ static c_void inline NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, r: 
 }
 
 // Scoring function for gamepad/keyboard directional navigation. Based on https://gist.github.com/rygorous/6981057
-static bool NavScoreItem(ImGuiNavItemData* result)
+// static bool NavScoreItem(ImGuiNavItemData* result)
+pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    if (g.NavLayer != window.DC.NavLayerCurrent)
+    if g.NavLayer != window.DC.NavLayerCurrent {
         return false;
+    }
 
     // FIXME: Those are not good variables names
-    let cand: ImRect =  g.LastItemData.NavRect;   // Current item nav rectangle
-    const let curr: ImRect =  g.NavScoringRect;   // Current modified source rect (NB: we've applied Max.x = Min.x in NavUpdate() to inhibit the effect of having varied item width)
+    let mut cand: ImRect =  g.LastItemData.NavRect.clone();   // Current item nav rectangle
+    let curr: ImRect =  g.NavScoringRect.clone();   // Current modified source rect (NB: we've applied Max.x = Min.x in NavUpdate() to inhibit the effect of having varied item width)
     g.NavScoringDebugCount+= 1;
 
     // When entering through a NavFlattened border, we consider child window items as fully clipped for scoring
-    if (window.ParentWindow == g.NavWindow)
+    if window.ParentWindow == g.NavWindow
     {
         // IM_ASSERT((window.Flags | g.Navwindow.Flags) & ImGuiWindowFlags_NavFlattened);
-        if (!window.ClipRect.Overlaps(cand))
+        if !window.ClipRect.Overlaps(&cand) {
             return false;
-        cand.ClipWithFull(window.ClipRect); // This allows the scored item to not overlap other candidates in the parent window
+        }
+        cand.ClipWithFull(&window.ClipRect.clone()); // This allows the scored item to not overlap other candidates in the parent window
     }
 
     // We perform scoring on items bounding box clipped by the current clipping rectangle on the other axis (clipping on our movement axis would give us equal scores for all clipped items)
     // For example, this ensure that items in one column are not reached when moving vertically from items in another column.
-    NavClampRectToVisibleAreaForMoveDir(g.NavMoveClipDir, cand, window.ClipRect);
+    NavClampRectToVisibleAreaForMoveDir(g.NavMoveClipDir, &mut cand, &window.ClipRect);
 
     // Compute distance between boxes
     // FIXME-NAV: Introducing biases for vertical navigation, needs to be removed.
-    let dbx: c_float =  NavScoreItemDistInterval(cand.Min.x, cand.Max.x, curr.Min.x, curr.Max.x);
-    let dby: c_float =  NavScoreItemDistInterval(ImLerp(cand.Min.y, cand.Max.y, 0.20f32), ImLerp(cand.Min.y, cand.Max.y, 0.80f32), ImLerp(curr.Min.y, curr.Max.y, 0.20f32), ImLerp(curr.Min.y, curr.Max.y, 0.80f32)); // Scale down on Y to keep using box-distance for vertically touching items
-    if (dby != 0f32 && dbx != 0f32)
-        dbx = (dbx / 1000f32) + ((dbx > 0f32) ? +1f32 : -1f32);
+    let dbx: c_float =  NavScoreItemDistInterval(cand.Min.x.clone(), cand.Max.x.clone(), curr.Min.x, curr.Max.x);
+    let dby: c_float =  NavScoreItemDistInterval(ImLerp(cand.Min.y.clone(), cand.Max.y.clone(), 0.20f32), ImLerp(cand.Min.y.clone(), cand.Max.y.clone(), 0.80f32), ImLerp(curr.Min.y, curr.Max.y, 0.20f32), ImLerp(curr.Min.y, curr.Max.y, 0.80f32)); // Scale down on Y to keep using box-distance for vertically touching items
+    if dby != 0f32 && dbx != 0f32 {
+        dbx = (dbx / 1000f32) + (if dbx > 0f32 { 1f32 }else { { -1f32 } });
+    }
     let dist_box: c_float =  ImFabs(dbx) + ImFabs(dby);
 
     // Compute distance between centers (this is off by a factor of 2, but we only compare center distances with each other so it doesn't matter)
@@ -121,9 +169,11 @@ static bool NavScoreItem(ImGuiNavItemData* result)
     let dist_center: c_float =  ImFabs(dcx) + ImFabs(dcy); // L1 metric (need this for our connectedness guarantee)
 
     // Determine which quadrant of 'curr' our candidate item 'cand' lies in based on distance
-    ImGuiDir quadrant;
-    let dax: c_float =  0f32, day = 0f32, dist_axial = 0f32;
-    if (dbx != 0f32 || dby != 0f32)
+    let mut quadrant: ImGuiDir = ImGuiDir_None;
+    let dax: c_float =  0f32;
+    let mut day = 0f32;
+    let mut dist_axial = 0f32;
+    if dbx != 0f32 || dby != 0f32
     {
         // For non-overlapping boxes, use distance between boxes
         dax = dbx;
@@ -131,7 +181,7 @@ static bool NavScoreItem(ImGuiNavItemData* result)
         dist_axial = dist_box;
         quadrant = ImGetDirQuadrantFromDelta(dbx, dby);
     }
-    else if (dcx != 0f32 || dcy != 0f32)
+    else if dcx != 0f32 || dcy != 0f32
     {
         // For overlapping boxes with different centers, use distance between centers
         dax = dcx;
@@ -142,59 +192,62 @@ static bool NavScoreItem(ImGuiNavItemData* result)
     else
     {
         // Degenerate case: two overlapping buttons with same center, break ties arbitrarily (note that LastItemId here is really the _previous_ item order, but it doesn't matter)
-        quadrant = (g.LastItemData.ID < g.NavId) ? ImGuiDir_Left : ImGuiDir_Right;
+        quadrant = if (g.LastItemData.ID < g.NavId) { ImGuiDir_Left } else { ImGuiDir_Right };
     }
 
 // #if IMGUI_DEBUG_NAV_SCORING
-    buf: [c_char;128];
-    if (IsMouseHoveringRect(cand.Min, cand.Max))
+    let mut buf: [c_char;128] = [0;128];
+    if IsMouseHoveringRect(&cand.Min, &cand.Max, false)
     {
-        ImFormatString(buf, IM_ARRAYSIZE(buf), "dbox (%.2f,%.2f->%.40f32)\ndcen (%.2f,%.2f->%.40f32)\nd (%.2f,%.2f->%.40f32)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
-        let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window);
-        draw_list.AddRect(curr.Min, curr.Max, IM_COL32(255,200,0,100));
-        draw_list.AddRect(cand.Min, cand.Max, IM_COL32(255,255,0,200));
-        draw_list.AddRectFilled(cand.Max - ImVec2::new2(4, 4), cand.Max + CalcTextSize(buf) + ImVec2::new2(4, 4), IM_COL32(40,0,0,150));
-        draw_list.AddText(cand.Max, ~0U, buf);
+        // ImFormatString(buf, IM_ARRAYSIZE(buf), "dbox (%.2f,%.2f->%.40f32)\ndcen (%.2f,%.2f->%.40f32)\nd (%.2f,%.2f->%.40f32)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
+        let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList3(window);
+        draw_list.AddRect(&curr.Min, &curr.Max, IM_COL32(255, 200, 0, 100), 0.0, 0, 0.0);
+        draw_list.AddRect(&cand.Min, &cand.Max, IM_COL32(255, 255, 0, 200), 0.0, 0, 0.0);
+        draw_list.AddRectFilled3(cand.Max - ImVec2::new2(4, 4), cand.Max + CalcTextSize(buf.as_ptr(), null(), false, 0.0) + ImVec2::new2(4, 4), IM_COL32(40, 0, 0, 150), 0.0, 0);
+        draw_list.AddText(&cand.Max, 0, buf.as_ptr(), null_mut());
     }
-    else if (g.IO.KeyCtrl) // Hold to preview score in matching quadrant. Press C to rotate.
+    else if g.IO.KeyCtrl // Hold to preview score in matching quadrant. Press C to rotate.
     {
-        if (quadrant == g.NavMoveDir)
+        if quadrant == g.NavMoveDir
         {
-            ImFormatString(buf, IM_ARRAYSIZE(buf), "%.0f/%.0f", dist_box, dist_center);
-            let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window);
-            draw_list.AddRectFilled(cand.Min, cand.Max, IM_COL32(255, 0, 0, 200));
-            draw_list.AddText(cand.Min, IM_COL32(255, 255, 255, 255), buf);
+            // ImFormatString(buf, IM_ARRAYSIZE(buf), "%.0f/%.0f", dist_box, dist_center);
+            let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList3(window);
+            draw_list.AddRectFilled(&cand.Min, &cand.Max, IM_COL32(255, 0, 0, 200), 0.0, 0);
+            draw_list.AddText(&cand.Min, IM_COL32(255, 255, 255, 255), buf.as_ptr(), null());
         }
     }
 // #endif
 
     // Is it in the quadrant we're interesting in moving to?
     let mut new_best: bool =  false;
-    const ImGuiDir move_dir = g.NavMoveDir;
-    if (quadrant == move_dir)
+    let move_dir = g.NavMoveDir;
+    if quadrant == move_dir
     {
         // Does it beat the current best candidate?
-        if (dist_box < result.DistBox)
+        if dist_box < result.DistBox
         {
             result.DistBox = dist_box;
             result.DistCenter = dist_center;
             return true;
         }
-        if (dist_box == result.DistBox)
+        if dist_box == result.DistBox
         {
             // Try using distance between center points to break ties
-            if (dist_center < result.DistCenter)
+            if dist_center < result.DistCenter
             {
                 result.DistCenter = dist_center;
                 new_best = true;
             }
-            else if (dist_center == result.DistCenter)
+            else if dist_center == result.DistCenter
             {
                 // Still tied! we need to be extra-careful to make sure everything gets linked properly. We consistently break ties by symbolically moving "later" items
                 // (with higher index) to the right/downwards by an infinitesimal amount since we the current "best" button already (so it must have a lower index),
                 // this is fairly easy. This rule ensures that all buttons with dx==dy==0 will end up being linked in order of appearance along the x axis.
-                if (((move_dir == ImGuiDir_Up || move_dir == ImGuiDir_Down) ? dby : dbx) < 0f32) // moving bj to the right/down decreases distance
-                    new_best = true;
+                if (if (move_dir == ImGuiDir_Up || move_dir == ImGuiDir_Down) {
+                    dby
+                } else { dbx }) < 0f32{ // moving bj to the right/down decreases distance
+                new_best = true;
+            }
             }
         }
     }
@@ -204,18 +257,19 @@ static bool NavScoreItem(ImGuiNavItemData* result)
     // This is just to avoid buttons having no links in a particular direction when there's a suitable neighbor. you get good graphs without this too.
     // 2017/09/29: FIXME: This now currently only enabled inside menu bars, ideally we'd disable it everywhere. Menus in particular need to catch failure. For general navigation it feels awkward.
     // Disabling it may lead to disconnected graphs when nodes are very spaced out on different axis. Perhaps consider offering this as an option?
-    if (result.DistBox == f32::MAX && dist_axial < result.DistAxial)  // Check axial match
-        if (g.NavLayer == ImGuiNavLayer_Menu && !(g.NavWindow.Flags & ImGuiWindowFlags_ChildMenu))
-            if ((move_dir == ImGuiDir_Left && dax < 0f32) || (move_dir == ImGuiDir_Right && dax > 0f32) || (move_dir == ImGuiDir_Up && day < 0f32) || (move_dir == ImGuiDir_Down && day > 0f32))
-            {
+    if result.DistBox == f32::MAX && dist_axial < result.DistAxial { // Check axial match
+        if g.NavLayer == ImGuiNavLayer_Menu && flag_clear(g.NavWindow.Flags & ImGuiWindowFlags_ChildMenu) {
+            if (move_dir == ImGuiDir_Left && dax < 0f32) || (move_dir == ImGuiDir_Right && dax > 0f32) || (move_dir == ImGuiDir_Up && day < 0f32) || (move_dir == ImGuiDir_Down && day > 0f32) {
                 result.DistAxial = dist_axial;
                 new_best = true;
             }
+        }
+    }
 
     return new_best;
 }
 
-static c_void NavApplyItemToResult(ImGuiNavItemData* result)
+pub unsafe fn NavApplyItemToResult(result: *mut ImGuiNavItemData)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -223,12 +277,12 @@ static c_void NavApplyItemToResult(ImGuiNavItemData* result)
     result.ID = g.LastItemData.ID;
     result.FocusScopeId = window.DC.NavFocusScopeIdCurrent;
     result.InFlags = g.LastItemData.InFlags;
-    result.RectRel = WindowRectAbsToRel(window, g.LastItemData.NavRect);
+    result.RectRel = WindowRectAbsToRel(window, &g.LastItemData.NavRect);
 }
 
 // We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
 // This is called after LastItemData is set.
-static c_void NavProcessItem()
+pub unsafe fn NavProcessItem()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -237,16 +291,16 @@ static c_void NavProcessItem()
     let mut item_flags: ImGuiItemFlags =  g.LastItemData.InFlags;
 
     // Process Init Request
-    if (g.NavInitRequest && g.NavLayer == window.DC.NavLayerCurrent && (item_flags & ImGuiItemFlags_Disabled) == 0)
+    if g.NavInitRequest && g.NavLayer == window.DC.NavLayerCurrent && flag_clear(item_flags, ImGuiItemFlags_Disabled)
     {
         // Even if 'ImGuiItemFlags_NoNavDefaultFocus' is on (typically collapse/close button) we record the first ResultId so they can be used as a fallback
-        let candidate_for_nav_default_focus: bool = (item_flags & ImGuiItemFlags_NoNavDefaultFocus) == 0;
-        if (candidate_for_nav_default_focus || g.NavInitResultId == 0)
+        let candidate_for_nav_default_focus: bool = flag_set(item_flags, ImGuiItemFlags_NoNavDefaultFocus) == 0;
+        if candidate_for_nav_default_focus || g.NavInitResultId == 0
         {
             g.NavInitResultId = id;
-            g.NavInitResultRectRel = WindowRectAbsToRel(window, nav_bb);
+            g.NavInitResultRectRel = WindowRectAbsToRel(window, &nav_bb);
         }
-        if (candidate_for_nav_default_focus)
+        if candidate_for_nav_default_focus
         {
             g.NavInitRequest = false; // Found a match, clear request
             NavUpdateAnyRequestFlag();
@@ -255,42 +309,48 @@ static c_void NavProcessItem()
 
     // Process Move Request (scoring for navigation)
     // FIXME-NAV: Consider policy for double scoring (scoring from NavScoringRect + scoring from a rect wrapped according to current wrapping policy)
-    if (g.NavMoveScoringItems)
+    if g.NavMoveScoringItems
     {
-        let is_tab_stop: bool = (item_flags & ImGuiItemFlags_Inputable) && (item_flags & (ImGuiItemFlags_NoTabStop | ImGuiItemFlags_Disabled)) == 0;
-        let is_tabbing: bool = (g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) != 0;
-        if (is_tabbing)
+        let is_tab_stop: bool = flag_set(item_flags, ImGuiItemFlags_Inputable) && flag_clear(item_flags, (ImGuiItemFlags_NoTabStop | ImGuiItemFlags_Disabled));
+        let is_tabbing: bool = flag_set(g.NavMoveFlags, ImGuiNavMoveFlags_Tabbing);
+        if is_tabbing
         {
-            if (is_tab_stop || (g.NavMoveFlags & ImGuiNavMoveFlags_FocusApi))
+            if is_tab_stop || flag_set(g.NavMoveFlags, ImGuiNavMoveFlags_FocusApi) {
                 NavProcessItemForTabbingRequest(id);
+            }
         }
-        else if ((g.NavId != id || (g.NavMoveFlags & ImGuiNavMoveFlags_AllowCurrentNavId)) && !(item_flags & (ImGuiItemFlags_Disabled | ImGuiItemFlags_NoNav)))
+        else if (g.NavId != id || flag_set(g.NavMoveFlags, ImGuiNavMoveFlags_AllowCurrentNavId)) && flag_clear(item_flags, (ImGuiItemFlags_Disabled | ImGuiItemFlags_NoNav))
         {
-            ImGuiNavItemData* result = (window == g.NavWindow) ? &g.NavMoveResultLocal : &g.NavMoveResultOther;
-            if (!is_tabbing)
+            let mut result = if window == g.NavWindow { &mut g.NavMoveResultLocal }else { &mut g.NavMoveResultOther };
+            if !is_tabbing
             {
-                if (NavScoreItem(result))
+                if NavScoreItem(result) {
                     NavApplyItemToResult(result);
+                }
 
                 // Features like PageUp/PageDown need to maintain a separate score for the visible set of items.
                 let VISIBLE_RATIO: c_float =  0.70f32;
-                if ((g.NavMoveFlags & ImGuiNavMoveFlags_AlsoScoreVisibleSet) && window.ClipRect.Overlaps(nav_bb))
-                    if (ImClamp(nav_bb.Max.y, window.ClipRect.Min.y, window.ClipRect.Max.y) - ImClamp(nav_bb.Min.y, window.ClipRect.Min.y, window.ClipRect.Max.y) >= (nav_bb.Max.y - nav_bb.Min.y) * VISIBLE_RATIO)
-                        if (NavScoreItem(&g.NavMoveResultLocalVisible))
-                            NavApplyItemToResult(&g.NavMoveResultLocalVisible);
+                if flag_set(g.NavMoveFlags, ImGuiNavMoveFlags_AlsoScoreVisibleSet) && window.ClipRect.Overlaps(&nav_bb) {
+                    if ImClamp(nav_bb.Max.y, window.ClipRect.Min.y, window.ClipRect.Max.y) - ImClamp(nav_bb.Min.y, window.ClipRect.Min.y, window.ClipRect.Max.y) >= (nav_bb.Max.y - nav_bb.Min.y) * VISIBLE_RATIO {
+                        if NavScoreItem(&mut g.NavMoveResultLocalVisible) {
+                            NavApplyItemToResult(&mut g.NavMoveResultLocalVisible);
+                        }
+                    }
+                }
             }
         }
     }
 
     // Update window-relative bounding box of navigated item
-    if (g.NavId == id)
+    if g.NavId == id
     {
-        if (g.NavWindow != window)
-            SetNavWindow(window); // Always refresh g.NavWindow, because some operations such as FocusItem() may not have a window.
+        if g.NavWindow != window {
+            SetNavWindow(window);
+        } // Always refresh g.NavWindow, because some operations such as FocusItem() may not have a window.
         g.NavLayer = window.DC.NavLayerCurrent;
         g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent;
         g.NavIdIsAlive = true;
-        window.NavRectRel[window.DC.NavLayerCurrent] = WindowRectAbsToRel(window, nav_bb);    // Store item bounding box (relative to window position)
+        window.NavRectRel[window.DC.NavLayerCurrent] = WindowRectAbsToRel(window, &nav_bb);    // Store item bounding box (relative to window position)
     }
 }
 
@@ -301,28 +361,32 @@ static c_void NavProcessItem()
 // - Case 3: tab forward wrap:    set result to first eligible item (preemptively), on ref id set counter, on next frame if counter hasn't elapsed store result. // FIXME-TABBING: Could be done as a next-frame forwarded request
 // - Case 4: tab backward:        store all results, on ref id pick prev, stop storing
 // - Case 5: tab backward wrap:   store all results, on ref id if no result keep storing until last // FIXME-TABBING: Could be done as next-frame forwarded requested
-c_void NavProcessItemForTabbingRequest(id: ImGuiID)
+pub unsafe fn NavProcessItemForTabbingRequest(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Always store in NavMoveResultLocal (unlike directional request which uses NavMoveResultOther on sibling/flattened windows)
     ImGuiNavItemData* result = &g.NavMoveResultLocal;
-    if (g.NavTabbingDir == +1)
+    if g.NavTabbingDir == 1
     {
         // Tab Forward or SetKeyboardFocusHere() with >= 0
-        if (g.NavTabbingResultFirst.ID == 0)
-            NavApplyItemToResult(&g.NavTabbingResultFirst);
-        if (--g.NavTabbingCounter == 0)
+        if g.NavTabbingResultFirst.ID == 0 {
+            NavApplyItemToResult(&mut g.NavTabbingResultFirst);
+        }
+        g.NavTabbingCounter -= 1;
+        if g.NavTabbingCounter == 0 {
             NavMoveRequestResolveWithLastItem(result);
-        else if (g.NavId == id)
+        }
+        else if g.NavId == id {
             g.NavTabbingCounter = 1;
+        }
     }
-    else if (g.NavTabbingDir == -1)
+    else if g.NavTabbingDir == -1
     {
         // Tab Backward
-        if (g.NavId == id)
+        if g.NavId == id
         {
-            if (result.ID)
+            if result.ID
             {
                 g.NavMoveScoringItems = false;
                 NavUpdateAnyRequestFlag();
@@ -333,30 +397,33 @@ c_void NavProcessItemForTabbingRequest(id: ImGuiID)
             NavApplyItemToResult(result);
         }
     }
-    else if (g.NavTabbingDir == 0)
+    else if g.NavTabbingDir == 0
     {
         // Tab Init
-        if (g.NavTabbingResultFirst.ID == 0)
+        if g.NavTabbingResultFirst.ID == 0 {
             NavMoveRequestResolveWithLastItem(&g.NavTabbingResultFirst);
+        }
     }
 }
 
-bool NavMoveRequestButNoResultYet()
+pub unsafe fn NavMoveRequestButNoResultYet() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.NavMoveScoringItems && g.NavMoveResultLocal.ID == 0 && g.NavMoveResultOther.ID == 0;
 }
 
 // FIXME: ScoringRect is not set
-c_void NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
+pub unsafe fn NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, mut move_flags: ImGuiNavMoveFlags, scroll_flags: ImGuiScrollFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindow != NULL);
 
-    if (move_flags & ImGuiNavMoveFlags_Tabbing)
+    if move_flags & ImGuiNavMoveFlags_Tabbing {
         move_flags |= ImGuiNavMoveFlags_AllowCurrentNavId;
+    }
 
-    g.NavMoveSubmitted = g.NavMoveScoringItems = true;
+    g.NavMoveSubmitted = true;
+    g.NavMoveScoringItems = true;
     g.NavMoveDir = move_dir;
     g.NavMoveDirForDebug = move_dir;
     g.NavMoveClipDir = clip_dir;
@@ -372,7 +439,7 @@ c_void NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMove
     NavUpdateAnyRequestFlag();
 }
 
-c_void NavMoveRequestResolveWithLastItem(ImGuiNavItemData* result)
+pub unsafe fn NavMoveRequestResolveWithLastItem(result: *mut ImGuiNavItemData)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NavMoveScoringItems = false; // Ensure request doesn't need more processing
@@ -380,15 +447,16 @@ c_void NavMoveRequestResolveWithLastItem(ImGuiNavItemData* result)
     NavUpdateAnyRequestFlag();
 }
 
-c_void NavMoveRequestCancel()
+pub unsafe fn NavMoveRequestCancel()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    g.NavMoveSubmitted = g.NavMoveScoringItems = false;
+    g.NavMoveSubmitted = false;
+    g.NavMoveScoringItems = false;
     NavUpdateAnyRequestFlag();
 }
 
 // Forward will reuse the move request again on the next frame (generally with modifications done to it)
-c_void NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
+pub unsafe fn NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, move_flags: ImGuiNavMoveFlags, scroll_flags: ImGuiScrollFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavMoveForwardToNextFrame == false);
@@ -402,50 +470,59 @@ c_void NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMov
 
 // Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
 // popup is assembled and in case of appended popups it is not clear which EndPopup() call is final.
-c_void NavMoveRequestTryWrapping(window: *mut ImGuiWindow, ImGuiNavMoveFlags wrap_flags)
+pub unsafe fn NavMoveRequestTryWrapping(window: *mut ImGuiWindow,  wrap_flags: ImGuiNavMoveFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(wrap_flags != 0); // Call with _WrapX, _WrapY, _LoopX, _LoopY
     // In theory we should test for NavMoveRequestButNoResultYet() but there's no point doing it, NavEndFrame() will do the same test
-    if (g.NavWindow == window && g.NavMoveScoringItems && g.NavLayer == ImGuiNavLayer_Main)
+    if g.NavWindow == window && g.NavMoveScoringItems && g.NavLayer == ImGuiNavLayer_Main {
         g.NavMoveFlags |= wrap_flags;
+    }
 }
 
 // FIXME: This could be replaced by updating a frame number in each window when (window == NavWindow) and (NavLayer == 0).
 // This way we could find the last focused window among our children. It would be much less confusing this way?
-static c_void NavSaveLastChildNavWindowIntoParent(nav_window: *mut ImGuiWindow)
+pub fn NavSaveLastChildNavWindowIntoParent(nav_window: *mut ImGuiWindow)
 {
     let mut parent: *mut ImGuiWindow =  nav_window;
-    while (parent && parent.RootWindow != parent && (parent.Flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_ChildMenu)) == 0)
+    while is_not_null(parent) && parent.RootWindow != parent && flag_clear(parent.Flags, (ImGuiWindowFlags_Popup | ImGuiWindowFlags_ChildMenu), ) {
         parent = parent.ParentWindow;
-    if (parent && parent != nav_window)
+    }
+    if is_not_null(parent) && parent != nav_window {
         parent.NavLastChildNavWindow = nav_window;
+    }
 }
 
 // Restore the last focused child.
 // Call when we are expected to land on the Main Layer (0) after FocusWindow()
-static ImGuiWindow* NavRestoreLastChildNavWindow(window: *mut ImGuiWindow)
+pub unsafe fn NavRestoreLastChildNavWindow(window: *mut ImGuiWindow) -> *mut ImGuiWindow
 {
-    if (window.NavLastChildNavWindow && window.NavLastChildNavwindow.WasActive)
+    if is_not_null(window.NavLastChildNavWindow) && window.NavLastChildNavwindow.WasActive {
         return window.NavLastChildNavWindow;
-    if (window.DockNodeAsHost && window.DockNodeAsHost.TabBar)
-        if (let mut tab: *mut ImGuiTabItem = TabBarFindMostRecentlySelectedTabForActiveWindow(window.DockNodeAsHost.TabBar))
+    }
+    if is_not_null(window.DockNodeAsHost) && is_not_null(window.DockNodeAsHost.TabBar) {
+        let mut tab: *mut ImGuiTabItem = TabBarFindMostRecentlySelectedTabForActiveWindow(window.DockNodeAsHost.TabBar)
+        if is_not_null(tab)
+        {
             return tab.Window;
+        }
+    }
     return window;
 }
 
-c_void NavRestoreLayer(ImGuiNavLayer layer)
+pub unsafe fn NavRestoreLayer(layer: ImGuiNavLayer)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (layer == ImGuiNavLayer_Main)
+    if layer == ImGuiNavLayer_Main
     {
         let mut prev_nav_window: *mut ImGuiWindow =  g.NavWindow;
         g.NavWindow = NavRestoreLastChildNavWindow(g.NavWindow);    // FIXME-NAV: Should clear ongoing nav requests?
-        if (prev_nav_window)
-            IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.Name, g.NavWindow.Name);
+        if prev_nav_window {
+            // IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"%s\" to SetNavWindow(\"%s\")\n", prev_nav_window.Name, g.NavWindow.Name);
+        }
     }
     let mut window: *mut ImGuiWindow =  g.NavWindow;
-    if (window.NavLastIds[layer] != 0)
+    if window.NavLastIds[layer] != 0
     {
         SetNavID(window.NavLastIds[layer], layer, 0, window.NavRectRel[layer]);
     }
@@ -456,23 +533,25 @@ c_void NavRestoreLayer(ImGuiNavLayer layer)
     }
 }
 
-c_void NavRestoreHighlightAfterMove()
+pub unsafe fn NavRestoreHighlightAfterMove()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NavDisableHighlight = false;
-    g.NavDisableMouseHover = g.NavMousePosDirty = true;
+    g.NavDisableMouseHover = false;
+    g.NavMousePosDirty = true;
 }
 
-static inline c_void NavUpdateAnyRequestFlag()
+// static inline c_void NavUpdateAnyRequestFlag()
+pub unsafe fn NavUpdateAnyRequestFlag()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NavAnyRequest = g.NavMoveScoringItems || g.NavInitRequest || (IMGUI_DEBUG_NAV_SCORING && g.NavWindow != null_mut());
-    if (g.NavAnyRequest)
+    if g.NavAnyRequest {}
         // IM_ASSERT(g.NavWindow != NULL);
 }
 
 // This needs to be called before we submit any widget (aka in or before Begin)
-c_void NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
+pub unsafe fn NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
 {
     // FIXME: ChildWindow test here is wrong for docking
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -480,17 +559,19 @@ c_void NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
 
     if (window.Flags & ImGuiWindowFlags_NoNavInputs)
     {
-        g.NavId = g.NavFocusScopeId = 0;
+        g.NavId = 0;
+        g.NavFocusScopeId = 0;
         return;
     }
 
     let mut init_for_nav: bool =  false;
-    if (window == window.RootWindow || (window.Flags & ImGuiWindowFlags_Popup) || (window.NavLastIds[0] == 0) || force_reinit)
+    if window == window.RootWindow || flag_set(window.Flags, ImGuiWindowFlags_Popup) || (window.NavLastIds[0] == 0) || force_reinit {
         init_for_nav = true;
-    IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.Name, g.NavLayer);
-    if (init_for_nav)
+    }
+    // IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.Name, g.NavLayer);
+    if init_for_nav
     {
-        SetNavID(0, g.NavLayer, 0, ImRect::new());
+        SetNavID(0, g.NavLayer, 0, &ImRect::new());
         g.NavInitRequest = true;
         g.NavInitRequestFromMove = false;
         g.NavInitResultId = 0;
@@ -504,184 +585,217 @@ c_void NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
     }
 }
 
-static ImVec2 NavCalcPreferredRefPos()
+pub unsafe fn NavCalcPreferredRefPos() -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  g.NavWindow;
-    if (g.NavDisableHighlight || !g.NavDisableMouseHover || !window)
+    if g.NavDisableHighlight || !g.NavDisableMouseHover || is_null(window)
     {
         // Mouse (we need a fallback in case the mouse becomes invalid after being used)
         // The +1f32 offset when stored by OpenPopupEx() allows reopening this or another popup (same or another mouse button) while not moving the mouse, it is pretty standard.
         // In theory we could move that +1f32 offset in OpenPopupEx()
-        let p: ImVec2 = IsMousePosValid(&g.IO.MousePos) ? g.IO.MousePos : g.MouseLastValidPos;
-        return ImVec2::new(p.x + 1f32, p.y);
+        let p: ImVec2 = if IsMousePosValid(&g.IO.MousePos) { g.IO.MousePos }else { g.MouseLastValidPos };
+        return ImVec2::new2(p.x + 1f32, p.y);
     }
     else
     {
         // When navigation is active and mouse is disabled, pick a position around the bottom left of the currently navigated item
         // Take account of upcoming scrolling (maybe set mouse pos should be done in EndFrame?)
-        let rect_rel: ImRect =  WindowRectRelToAbs(window, window.NavRectRel[g.NavLayer]);
-        if (window.LastFrameActive != g.FrameCount && (window.ScrollTarget.x != f32::MAX || window.ScrollTarget.y != f32::MAX))
+        let mut rect_rel: ImRect =  WindowRectRelToAbs(window, window.NavRectRel[g.NavLayer]);
+        if window.LastFrameActive != g.FrameCount && (window.ScrollTarget.x != f32::MAX || window.ScrollTarget.y != f32::MAX)
         {
             let next_scroll: ImVec2 = CalcNextScrollFromScrollTargetAndClamp(window);
             rect_rel.Translate(window.Scroll - next_scroll);
         }
-        let pos: ImVec2 = ImVec2::new(rect_rel.Min.x + ImMin(g.Style.FramePadding.x * 4, rect_rel.GetWidth()), rect_rel.Max.y - ImMin(g.Style.FramePadding.y, rect_rel.GetHeight()));
-        ImGuiViewport* viewport = window.Viewport;
-        return ImFloor(ImClamp(pos, viewport.Pos, viewport.Pos + viewport.Size)); // ImFloor() is important because non-integer mouse position application in backend might be lossy and result in undesirable non-zero delta.
+        let pos: ImVec2 = ImVec2::new2(rect_rel.Min.x + ImMin(g.Style.FramePadding.x * 4, rect_rel.GetWidth()), rect_rel.Max.y - ImMin(g.Style.FramePadding.y, rect_rel.GetHeight()));
+        let viewport = window.Viewport;
+        return ImFloor2(&ImClamp2(&pos, &viewport.Pos, viewport.Pos + viewport.Size)); // ImFloor() is important because non-integer mouse position application in backend might be lossy and result in undesirable non-zero delta.
     }
 }
 
-c_float GetNavTweakPressedAmount(axis: ImGuiAxis)
+pub unsafe fn GetNavTweakPressedAmount(axis: ImGuiAxis) -> c_float
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    repeat_delay: c_float, repeat_rate;
-    GetTypematicRepeatRate(ImGuiInputFlags_RepeatRateNavTweak, &repeat_delay, &repeat_rate);
+    let mut repeat_delay: c_float = 0.0;
+    let mut repeat_rate: c_float = 0.0;
+    GetTypematicRepeatRate(ImGuiInputFlags_RepeatRateNavTweak, &mut repeat_delay, &mut repeat_rate);
 
-    ImGuiKey key_less, key_more;
-    if (g.NavInputSource == ImGuiInputSource_Gamepad)
+    let mut key_less: ImGuiNavLayer;
+    let mut key_more: ImGuiNavLayer;
+    if g.NavInputSource == ImGuiInputSource_Gamepad
     {
-        key_less = (axis == ImGuiAxis_X) ? ImGuiKey_GamepadDpadLeft : ImGuiKey_GamepadDpadUp;
-        key_more = (axis == ImGuiAxis_X) ? ImGuiKey_GamepadDpadRight : ImGuiKey_GamepadDpadDown;
+        key_less = if axis == ImGuiAxis_X { ImGuiKey_GamepadDpadLeft } else { ImGuiKey_GamepadDpadUp };
+        key_more = if axis == ImGuiAxis_X { ImGuiKey_GamepadDpadRight } else { ImGuiKey_GamepadDpadDown };
     }
     else
     {
-        key_less = (axis == ImGuiAxis_X) ? ImGuiKey_LeftArrow : ImGuiKey_UpArrow;
-        key_more = (axis == ImGuiAxis_X) ? ImGuiKey_RightArrow : ImGuiKey_DownArrow;
+        key_less = if axis == ImGuiAxis_X { ImGuiKey_LeftArrow } else { ImGuiKey_UpArrow };
+        key_more = if axis == ImGuiAxis_X { ImGuiKey_RightArrow } else { ImGuiKey_DownArrow };
     }
     let amount: c_float =  GetKeyPressedAmount(key_more, repeat_delay, repeat_rate) - GetKeyPressedAmount(key_less, repeat_delay, repeat_rate);
-    if (amount != 0f32 && IsKeyDown(key_less) && IsKeyDown(key_more)) // Cancel when opposite directions are held, regardless of repeat phase
+    if amount != 0f32 && IsKeyDown(key_less) && IsKeyDown(key_more) { // Cancel when opposite directions are held, regardless of repeat phase
         amount = 0f32;
+    }
     return amount;
 }
 
-static c_void NavUpdate()
+pub unsafe fn NavUpdate()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImGuiIO& io = g.IO;
+    let io = &mut g.IO;
 
     io.WantSetMousePos = false;
     //if (g.NavScoringDebugCount > 0) IMGUI_DEBUG_LOG_NAV("[nav] NavScoringDebugCount %d for '%s' layer %d (Init:%d, Move:%d)\n", g.NavScoringDebugCount, g.NavWindow ? g.Navwindow.Name : "NULL", g.NavLayer, g.NavInitRequest || g.NavInitResultId != 0, g.NavMoveRequest);
 
     // Set input source based on which keys are last pressed (as some features differs when used with Gamepad vs Keyboard)
     // FIXME-NAV: Now that keys are separated maybe we can get rid of NavInputSource?
-    let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
-    const ImGuiKey nav_gamepad_keys_to_change_source[] = { ImGuiKey_GamepadFaceRight, ImGuiKey_GamepadFaceLeft, ImGuiKey_GamepadFaceUp, ImGuiKey_GamepadFaceDown, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadUp, ImGuiKey_GamepadDpadDown };
-    if (nav_gamepad_active)
-        for (ImGuiKey key : nav_gamepad_keys_to_change_source)
-            if (IsKeyDown(key))
+    let nav_gamepad_active: bool = flag_set(io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad) && flag_set(io.BackendFlags, ImGuiBackendFlags_HasGamepad);
+    let nav_gamepad_keys_to_change_source: [ImGuiKey;8] = [ ImGuiKey_GamepadFaceRight, ImGuiKey_GamepadFaceLeft, ImGuiKey_GamepadFaceUp, ImGuiKey_GamepadFaceDown, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadUp, ImGuiKey_GamepadDpadDown ];
+    if nav_gamepad_active {
+        // for (ImGuiKey key : nav_gamepad_keys_to_change_source)
+        for key in nav_gamepad_keys_to_change_source.iter()
+        {
+            if IsKeyDown(key) {
                 g.NavInputSource = ImGuiInputSource_Gamepad;
-    let nav_keyboard_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) != 0;
-    const ImGuiKey nav_keyboard_keys_to_change_source[] = { ImGuiKey_Space, ImGuiKey_Enter, ImGuiKey_Escape, ImGuiKey_RightArrow, ImGuiKey_LeftArrow, ImGuiKey_UpArrow, ImGuiKey_DownArrow };
-    if (nav_keyboard_active)
-        for (ImGuiKey key : nav_keyboard_keys_to_change_source)
-            if (IsKeyDown(key))
+            }
+        }
+    }
+    let nav_keyboard_active: bool = flag_clear(io.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard);
+    let nav_keyboard_keys_to_change_source: [ImGuiKey;7] = { ImGuiKey_Space, ImGuiKey_Enter, ImGuiKey_Escape, ImGuiKey_RightArrow, ImGuiKey_LeftArrow, ImGuiKey_UpArrow, ImGuiKey_DownArrow };
+    if nav_keyboard_active {
+        // for (ImGuiKey key : nav_keyboard_keys_to_change_source)
+        for key in nav_keyboard_keys_to_change_source
+        {
+            if IsKeyDown(key) {
                 g.NavInputSource = ImGuiInputSource_Keyboard;
+            }
+        }
+    }
 
     // Process navigation init request (select first/default focus)
-    if (g.NavInitResultId != 0)
+    if g.NavInitResultId != 0 {
         NavInitRequestApplyResult();
+    }
     g.NavInitRequest = false;
     g.NavInitRequestFromMove = false;
     g.NavInitResultId = 0;
     g.NavJustMovedToId = 0;
 
     // Process navigation move request
-    if (g.NavMoveSubmitted)
+    if g.NavMoveSubmitted {
         NavMoveRequestApplyResult();
+    }
     g.NavTabbingCounter = 0;
-    g.NavMoveSubmitted = g.NavMoveScoringItems = false;
+    g.NavMoveSubmitted = false;
+    g.NavMoveScoringItems = false;
 
     // Schedule mouse position update (will be done at the bottom of this function, after 1) processing all move requests and 2) updating scrolling)
     let mut set_mouse_pos: bool =  false;
-    if (g.NavMousePosDirty && g.NavIdIsAlive)
-        if (!g.NavDisableHighlight && g.NavDisableMouseHover && g.NavWindow)
+    if g.NavMousePosDirty && g.NavIdIsAlive {
+        if !g.NavDisableHighlight && g.NavDisableMouseHover && g.NavWindow {
             set_mouse_pos = true;
+        }
+    }
     g.NavMousePosDirty = false;
     // IM_ASSERT(g.NavLayer == ImGuiNavLayer_Main || g.NavLayer == ImGuiNavLayer_Menu);
 
     // Store our return window (for returning from Menu Layer to Main Layer) and clear it as soon as we step back in our own Layer 0
-    if (g.NavWindow)
+    if g.NavWindow {
         NavSaveLastChildNavWindowIntoParent(g.NavWindow);
-    if (g.NavWindow && g.NavWindow.NavLastChildNavWindow != null_mut() && g.NavLayer == ImGuiNavLayer_Main)
-        g.NavWindow.NavLastChildNavWindow= null_mut();
+    }
+    if is_not_null(g.NavWindow) && g.NavWindow.NavLastChildNavWindow != null_mut() && g.NavLayer == ImGuiNavLayer_Main {
+        g.NavWindow.NavLastChildNavWindow = null_mut();
+    }
 
     // Update CTRL+TAB and Windowing features (hold Square to move/resize/etc.)
     NavUpdateWindowing();
 
     // Set output flags for user application
-    io.NavActive = (nav_keyboard_active || nav_gamepad_active) && g.NavWindow && !(g.NavWindow.Flags & ImGuiWindowFlags_NoNavInputs);
+    io.NavActive = (nav_keyboard_active || nav_gamepad_active) && is_not_null(g.NavWindow) && flag_clear(g.NavWindow.Flags, ImGuiWindowFlags_NoNavInputs);
     io.NavVisible = (io.NavActive && g.NavId != 0 && !g.NavDisableHighlight) || (g.NavWindowingTarget != null_mut());
 
     // Process NavCancel input (to close a popup, get back to parent, clear focus)
     NavUpdateCancelRequest();
 
     // Process manual activation request
-    g.NavActivateId = g.NavActivateDownId = g.NavActivatePressedId = g.NavActivateInputId = 0;
+    g.NavActivateId = 0;
+    g.NavActivateDownId = 0;
+    g.NavActivatePressedId = 0;
+    g.NavActivateInputId = 0;
     g.NavActivateFlags = ImGuiActivateFlags_None;
-    if (g.NavId != 0 && !g.NavDisableHighlight && !g.NavWindowingTarget && g.NavWindow && !(g.NavWindow.Flags & ImGuiWindowFlags_NoNavInputs))
+    if g.NavId != 0 && !g.NavDisableHighlight && is_null(g.NavWindowingTarget) && is_not_null(g.NavWindow) && flag_clear(g.NavWindow.Flags, ImGuiWindowFlags_NoNavInputs)
     {
         let activate_down: bool = (nav_keyboard_active && IsKeyDown(ImGuiKey_Space)) || (nav_gamepad_active && IsKeyDown(ImGuiKey_NavGamepadActivate));
         let activate_pressed: bool = activate_down && ((nav_keyboard_active && IsKeyPressed(ImGuiKey_Space, false)) || (nav_gamepad_active && IsKeyPressed(ImGuiKey_NavGamepadActivate, false)));
         let input_down: bool = (nav_keyboard_active && IsKeyDown(ImGuiKey_Enter)) || (nav_gamepad_active && IsKeyDown(ImGuiKey_NavGamepadInput));
         let input_pressed: bool = input_down && ((nav_keyboard_active && IsKeyPressed(ImGuiKey_Enter, false)) || (nav_gamepad_active && IsKeyPressed(ImGuiKey_NavGamepadInput, false)));
-        if (g.ActiveId == 0 && activate_pressed)
+        if g.ActiveId == 0 && activate_pressed
         {
             g.NavActivateId = g.NavId;
             g.NavActivateFlags = ImGuiActivateFlags_PreferTweak;
         }
-        if ((g.ActiveId == 0 || g.ActiveId == g.NavId) && input_pressed)
+        if (g.ActiveId == 0 || g.ActiveId == g.NavId) && input_pressed
         {
             g.NavActivateInputId = g.NavId;
             g.NavActivateFlags = ImGuiActivateFlags_PreferInput;
         }
-        if ((g.ActiveId == 0 || g.ActiveId == g.NavId) && activate_down)
+        if (g.ActiveId == 0 || g.ActiveId == g.NavId) && activate_down {
             g.NavActivateDownId = g.NavId;
-        if ((g.ActiveId == 0 || g.ActiveId == g.NavId) && activate_pressed)
+        }
+        if (g.ActiveId == 0 || g.ActiveId == g.NavId) && activate_pressed {
             g.NavActivatePressedId = g.NavId;
+        }
     }
-    if (g.NavWindow && (g.NavWindow.Flags & ImGuiWindowFlags_NoNavInputs))
+    if is_not_null(g.NavWindow) && flag_set(g.NavWindow.Flags, ImGuiWindowFlags_NoNavInputs) {
         g.NavDisableHighlight = true;
-    if (g.NavActivateId != 0)
+    }
+    if g.NavActivateId != 0 {}
         // IM_ASSERT(g.NavActivateDownId == g.NavActivateId);
 
     // Process programmatic activation request
     // FIXME-NAV: Those should eventually be queued (unlike focus they don't cancel each others)
-    if (g.NavNextActivateId != 0)
+    if g.NavNextActivateId != 0
     {
-        if (g.NavNextActivateFlags & ImGuiActivateFlags_PreferInput)
+        if flag_set(g.NavNextActivateFlags, ImGuiActivateFlags_PreferInput) {
             g.NavActivateInputId = g.NavNextActivateId;
-        else
-            g.NavActivateId = g.NavActivateDownId = g.NavActivatePressedId = g.NavNextActivateId;
+        }
+        else {
+            g.NavActivateId = g.NavNextActivateId;
+            g.NavActivateDownId = g.NavNextActivateId;
+            g.NavActivatePressedId = g.NavNextActivateId;
+        }
         g.NavActivateFlags = g.NavNextActivateFlags;
     }
     g.NavNextActivateId = 0;
 
     // Process move requests
     NavUpdateCreateMoveRequest();
-    if (g.NavMoveDir == ImGuiDir_None)
+    if g.NavMoveDir == ImGuiDir_None {
         NavUpdateCreateTabbingRequest();
+    }
     NavUpdateAnyRequestFlag();
     g.NavIdIsAlive = false;
 
     // Scrolling
-    if (g.NavWindow && !(g.NavWindow.Flags & ImGuiWindowFlags_NoNavInputs) && !g.NavWindowingTarget)
+    if is_not_null(g.NavWindow) && flag_clear(g.NavWindow.Flags, ImGuiWindowFlags_NoNavInputs) && is_null(g.NavWindowingTarget)
     {
         // *Fallback* manual-scroll with Nav directional keys when window has no navigable item
         let mut window: *mut ImGuiWindow =  g.NavWindow;
         let scroll_speed: c_float =  IM_ROUND(window.CalcFontSize() * 100 * io.DeltaTime); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
-        const ImGuiDir move_dir = g.NavMoveDir;
-        if (window.DC.NavLayersActiveMask == 0x00 && window.DC.NavHasScroll && move_dir != ImGuiDir_None)
+        let move_dir = g.NavMoveDir;
+        if window.DC.NavLayersActiveMask == 0x00 && window.DC.NavHasScroll && move_dir != ImGuiDir_None
         {
-            if (move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right)
-                SetScrollX(window, ImFloor(window.Scroll.x + ((move_dir == ImGuiDir_Left) ? -1f32 : +1f32) * scroll_speed));
-            if (move_dir == ImGuiDir_Up || move_dir == ImGuiDir_Down)
-                SetScrollY(window, ImFloor(window.Scroll.y + ((move_dir == ImGuiDir_Up) ? -1f32 : +1f32) * scroll_speed));
+            if move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right {
+                SetScrollX(window, ImFloor(window.Scroll.x + (if move_dir == ImGuiDir_Left { -1f32 }else { 1f32 }) * scroll_speed));
+            }
+            if move_dir == ImGuiDir_Up || move_dir == ImGuiDir_Down {
+                SetScrollY(window, ImFloor(window.Scroll.y + (if move_dir == ImGuiDir_Up { -1f32 }else { 1f32 }) * scroll_speed));
+            }
         }
 
         // *Normal* Manual scroll with LStick
         // Next movement request will clamp the NavId reference rectangle to the visible area, so navigation will resume within those bounds.
-        if (nav_gamepad_active)
+        if nav_gamepad_active
         {
             let scroll_dir: ImVec2 = GetKeyVector2d(ImGuiKey_GamepadLStickLeft, ImGuiKey_GamepadLStickRight, ImGuiKey_GamepadLStickUp, ImGuiKey_GamepadLStickDown);
             let tweak_factor: c_float =  IsKeyDown(ImGuiKey_NavGamepadTweakSlow) ? 1f32 / 10f32 : IsKeyDown(ImGuiKey_NavGamepadTweakFast) ? 10f32 : 1f32;
