@@ -127,7 +127,7 @@ static ImGuiWindow* GetWindowForTitleAndMenuHeight(ImGuiWindow* window)
     return (window.DockNodeAsHost && window.DockNodeAsHost->VisibleWindow) ? window.DockNodeAsHost->VisibleWindow : window;
 }
 
-static ImVec2 CalcWindowSizeAfterConstraint(ImGuiWindow* window, const ImVec2& size_desired)
+static ImVec2 CalcWindowSizeAfterConstraint(ImGuiWindow* window, size_desired: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let new_size: ImVec2 = size_desired;
@@ -182,7 +182,7 @@ static c_void CalcWindowContentSizes(ImGuiWindow* window, ImVec2* content_size_c
     content_size_ideal->y = (window.ContentSizeExplicit.y != 0f32) ? window.ContentSizeExplicit.y : IM_FLOOR(ImMax(window.DC.CursorMaxPos.y, window.DC.IdealMaxPos.y) - window.DC.CursorStartPos.y);
 }
 
-static ImVec2 CalcWindowAutoFitSize(ImGuiWindow* window, const ImVec2& size_contents)
+static ImVec2 CalcWindowAutoFitSize(ImGuiWindow* window, size_contents: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiStyle& style = g.Style;
@@ -244,7 +244,7 @@ static ImGuiCol GetWindowBgColorIdx(ImGuiWindow* window)
     return ImGuiCol_WindowBg;
 }
 
-static c_void CalcResizePosSizeFromAnyCorner(ImGuiWindow* window, const ImVec2& corner_target, const ImVec2& corner_norm, ImVec2* out_pos, ImVec2* out_size)
+static c_void CalcResizePosSizeFromAnyCorner(ImGuiWindow* window, corner_target: &ImVec2, corner_norm: &ImVec2, ImVec2* out_pos, ImVec2* out_size)
 {
     let pos_min: ImVec2 = ImLerp(corner_target, window.Pos, corner_norm);                // Expected window upper-left
     let pos_max: ImVec2 = ImLerp(window.Pos + window.Size, corner_target, corner_norm); // Expected window lower-right
@@ -324,7 +324,7 @@ ImGuiID GetWindowResizeBorderID(ImGuiWindow* window, ImGuiDir dir)
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
-static bool UpdateWindowManualResize(ImGuiWindow* window, const ImVec2& size_auto_fit, c_int* border_held, c_int resize_grip_count, u32 resize_grip_col[4], const ImRect& visibility_rect)
+static bool UpdateWindowManualResize(ImGuiWindow* window, size_auto_fit: &ImVec2, c_int* border_held, c_int resize_grip_count, u32 resize_grip_col[4], const ImRect& visibility_rect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiWindowFlags flags = window.Flags;
@@ -2120,7 +2120,7 @@ ImVec2 GetWindowPos()
     return window.Pos;
 }
 
-c_void SetWindowPos(ImGuiWindow* window, const ImVec2& pos, ImGuiCond cond)
+c_void SetWindowPos(ImGuiWindow* window, pos: &ImVec2, ImGuiCond cond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowPosAllowFlags & cond) == 0)
@@ -2144,13 +2144,13 @@ c_void SetWindowPos(ImGuiWindow* window, const ImVec2& pos, ImGuiCond cond)
     window.DC.CursorStartPos += offset;
 }
 
-c_void SetWindowPos(const ImVec2& pos, ImGuiCond cond)
+c_void SetWindowPos(pos: &ImVec2, ImGuiCond cond)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
     SetWindowPos(window, pos, cond);
 }
 
-c_void SetWindowPos(*const char name, const ImVec2& pos, ImGuiCond cond)
+c_void SetWindowPos(*const char name, pos: &ImVec2, ImGuiCond cond)
 {
     if (let mut window: *mut ImGuiWindow =  FindWindowByName(name))
         SetWindowPos(window, pos, cond);
@@ -2162,7 +2162,7 @@ ImVec2 GetWindowSize()
     return window.Size;
 }
 
-c_void SetWindowSize(ImGuiWindow* window, const ImVec2& size, ImGuiCond cond)
+c_void SetWindowSize(ImGuiWindow* window, size: &ImVec2, ImGuiCond cond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowSizeAllowFlags & cond) == 0)
@@ -2187,12 +2187,12 @@ c_void SetWindowSize(ImGuiWindow* window, const ImVec2& size, ImGuiCond cond)
         MarkIniSettingsDirty(window);
 }
 
-c_void SetWindowSize(const ImVec2& size, ImGuiCond cond)
+c_void SetWindowSize(size: &ImVec2, ImGuiCond cond)
 {
     SetWindowSize(GimGui.CurrentWindow, size, cond);
 }
 
-c_void SetWindowSize(*const char name, const ImVec2& size, ImGuiCond cond)
+c_void SetWindowSize(*const char name, size: &ImVec2, ImGuiCond cond)
 {
     if (let mut window: *mut ImGuiWindow =  FindWindowByName(name))
         SetWindowSize(window, size, cond);
@@ -2209,7 +2209,7 @@ c_void SetWindowCollapsed(ImGuiWindow* window, bool collapsed, ImGuiCond cond)
     window.Collapsed = collapsed;
 }
 
-c_void SetWindowHitTestHole(ImGuiWindow* window, const ImVec2& pos, const ImVec2& size)
+c_void SetWindowHitTestHole(ImGuiWindow* window, pos: &ImVec2, size: &ImVec2)
 {
     // IM_ASSERT(window.HitTestHoleSize.x == 0);     // We don't support multiple holes/hit test filters
     window.HitTestHoleSize = ImVec2ih(size);
@@ -2257,7 +2257,7 @@ c_void SetWindowFocus(*const char name)
     }
 }
 
-c_void SetNextWindowPos(const ImVec2& pos, ImGuiCond cond, const ImVec2& pivot)
+c_void SetNextWindowPos(pos: &ImVec2, ImGuiCond cond, pivot: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
@@ -2268,16 +2268,9 @@ c_void SetNextWindowPos(const ImVec2& pos, ImGuiCond cond, const ImVec2& pivot)
     g.NextWindowData.PosUndock = true;
 }
 
-c_void SetNextWindowSize(const ImVec2& size, ImGuiCond cond)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
-    g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize;
-    g.NextWindowData.SizeVal = size;
-    g.NextWindowData.SizeCond = cond ? cond : ImGuiCond_Always;
-}
 
-c_void SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_max, ImGuiSizeCallback custom_callback, custom_callback_user_data: *mut c_void)
+
+c_void SetNextWindowSizeConstraints(size_min: &ImVec2, size_max: &ImVec2, ImGuiSizeCallback custom_callback, custom_callback_user_data: *mut c_void)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSizeConstraint;
@@ -2288,14 +2281,14 @@ c_void SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_m
 
 // Content size = inner scrollable rectangle, padded with WindowPadding.
 // SetNextWindowContentSize(ImVec2(100,100) + ImGuiWindowFlags_AlwaysAutoResize will always allow submitting a 100x100 item.
-c_void SetNextWindowContentSize(const ImVec2& size)
+c_void SetNextWindowContentSize(size: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasContentSize;
     g.NextWindowData.ContentSizeVal = ImFloor(size);
 }
 
-c_void SetNextWindowScroll(const ImVec2& scroll)
+c_void SetNextWindowScroll(scroll: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasScroll;
@@ -2557,13 +2550,13 @@ ImGuiID GetID(*const c_void ptr_id)
     return window.GetID(ptr_id);
 }
 
-bool IsRectVisible(const ImVec2& size)
+bool IsRectVisible(size: &ImVec2)
 {
     let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.ClipRect.Overlaps(ImRect(window.DC.CursorPos, window.DC.CursorPos + size));
 }
 
-bool IsRectVisible(const ImVec2& rect_min, const ImVec2& rect_max)
+bool IsRectVisible(rect_min: &ImVec2, rect_max: &ImVec2)
 {
     let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.ClipRect.Overlaps(ImRect(rect_min, rect_max));
@@ -2885,7 +2878,7 @@ c_void ImGuiStackSizes::CompareWithCurrentState()
 // Advance cursor given item size for layout.
 // Register minimum needed size so it can extend the bounding box used for auto-fit calculation.
 // See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
-c_void ItemSize(const ImVec2& size, c_float text_baseline_y)
+c_void ItemSize(size: &ImVec2, c_float text_baseline_y)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -3030,7 +3023,7 @@ ImVec2 GetCursorScreenPos()
 // 2022/08/05: Setting cursor position also extend boundaries (via modifying CursorMaxPos) used to compute window size, group size etc.
 // I believe this was is a judicious choice but it's probably being relied upon (it has been the case since 1.31 and 1.50)
 // It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2(0,0)) to extend CursorMaxPos...
-c_void SetCursorScreenPos(const ImVec2& pos)
+c_void SetCursorScreenPos(pos: &ImVec2)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     window.DC.CursorPos = pos;
@@ -3058,7 +3051,7 @@ c_float GetCursorPosY()
     return window.DC.CursorPos.y - window.Pos.y + window.Scroll.y;
 }
 
-c_void SetCursorPos(const ImVec2& local_pos)
+c_void SetCursorPos(local_pos: &ImVec2)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     window.DC.CursorPos = window.Pos - window.Scroll + local_pos;
@@ -4081,7 +4074,7 @@ bool BeginPopupContextVoid(*const char str_id, ImGuiPopupFlags popup_flags)
 // (r_outer is usually equivalent to the viewport rectangle minus padding, but when multi-viewports are enabled and monitor
 //  information are available, it may represent the entire platform monitor from the frame of reference of the current viewport.
 //  this allows us to have tooltips/popups displayed out of the parent viewport.)
-ImVec2 FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, ImGuiDir* last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy)
+ImVec2 FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, ImGuiDir* last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy)
 {
     let base_pos_clamped: ImVec2 = ImClamp(ref_pos, r_outer.Min, r_outer.Max - size);
     //GetForegroundDrawList()->AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
@@ -6649,7 +6642,7 @@ static bool UpdateTryMergeWindowIntoHostViewports(ImGuiWindow* window)
 
 // Translate Dear ImGui windows when a Host Viewport has been moved
 // (This additionally keeps windows at the same place when ImGuiConfigFlags_ViewportsEnable is toggled!)
-c_void TranslateWindowsInViewport(*mut ImGuiViewportP viewport, const ImVec2& old_pos, const ImVec2& new_pos)
+c_void TranslateWindowsInViewport(*mut ImGuiViewportP viewport, old_pos: &ImVec2, new_pos: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(viewport.Window == NULL && (viewport.Flags & ImGuiViewportFlags_CanHostOtherWindows));
@@ -6686,7 +6679,7 @@ c_void ScaleWindowsInViewport(*mut ImGuiViewportP viewport, c_float scale)
 // If the backend doesn't set MouseLastHoveredViewport or doesn't honor ImGuiViewportFlags_NoInputs, we do a search ourselves.
 // A) It won't take account of the possibility that non-imgui windows may be in-between our dragged window and our target window.
 // B) It requires Platform_GetWindowFocus to be implemented by backend.
-*mut ImGuiViewportP FindHoveredViewportFromPlatformWindowStack(const ImVec2& mouse_platform_pos)
+*mut ImGuiViewportP FindHoveredViewportFromPlatformWindowStack(mouse_platform_pos: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut best_candidate: *mut ImGuiViewport =  null_mut();
@@ -6898,7 +6891,7 @@ static c_void UpdateViewportsEndFrame()
 }
 
 // FIXME: We should ideally refactor the system to call this every frame (we currently don't)
-*mut ImGuiViewportP AddUpdateViewport(ImGuiWindow* window, ImGuiID id, const ImVec2& pos, const ImVec2& size, ImGuiViewportFlags flags)
+*mut ImGuiViewportP AddUpdateViewport(ImGuiWindow* window, ImGuiID id, pos: &ImVec2, size: &ImVec2, ImGuiViewportFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
@@ -7367,7 +7360,7 @@ c_void RenderPlatformWindowsDefault(platform_render_arg: *mut c_void, renderer_r
     }
 }
 
-static c_int FindPlatformMonitorForPos(const ImVec2& pos)
+static c_int FindPlatformMonitorForPos(pos: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.Size; monitor_n++)
@@ -8183,7 +8176,7 @@ c_void DockContextProcessDock(ImGuiContext* ctx, ImGuiDockRequest* req)
 // Solution:
 //   When undocking a window we currently force its maximum size to 90% of the host viewport or monitor.
 // Reevaluate this when we implement preserving docked/undocked size ("docking_wip/undocked_size" branch).
-static ImVec2 FixLargeWindowsWhenUndocking(const ImVec2& size, ImGuiViewport* ref_viewport)
+static ImVec2 FixLargeWindowsWhenUndocking(size: &ImVec2, ImGuiViewport* ref_viewport)
 {
     if (ref_viewport == null_mut())
         return size;
@@ -10208,7 +10201,7 @@ c_void SetWindowDock(ImGuiWindow* window, ImGuiID dock_id, ImGuiCond cond)
 // Create an explicit dockspace node within an existing window. Also expose dock node flags and creates a CentralNode by default.
 // The Central Node is always displayed even when empty and shrink/extend according to the requested size of its neighbors.
 // DockSpace() needs to be submitted _before_ any window they can host. If you use a dockspace, submit it early in your app.
-ImGuiID DockSpace(ImGuiID id, const ImVec2& size_arg, ImGuiDockNodeFlags flags, *const ImGuiWindowClass window_class)
+ImGuiID DockSpace(ImGuiID id, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *const ImGuiWindowClass window_class)
 {
     ImGuiContext* ctx = GImGui;
     ImGuiContext& g = *ctx;

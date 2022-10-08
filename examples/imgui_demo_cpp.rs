@@ -1560,7 +1560,7 @@ static c_void ShowDemoWindowWidgets()
 
                 // Note: Because  is a namespace you would typically add your own function into the namespace.
                 // For example, you code may declare a function 'InputText(const char* label, MyString* my_str)'
-                static bool MyInputTextMultiline(*const char label, Vec<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
+                static bool MyInputTextMultiline(*const char label, Vec<char>* my_str, size: &ImVec2 = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
                 {
                     // IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
                     return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (*mut c_void)my_str);

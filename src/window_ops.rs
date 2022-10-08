@@ -388,3 +388,12 @@ pub unsafe fn FindHoveredWindows() {
         g.Movingwindow.Viewport = moving_window_viewport;
     }
 }
+
+pub fn SetNextWindowSize(size: &ImVec2, ImGuiCond cond)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
+    g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize;
+    g.NextWindowData.SizeVal = size;
+    g.NextWindowData.SizeCond = cond ? cond : ImGuiCond_Always;
+}

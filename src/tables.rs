@@ -301,13 +301,13 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
 }
 
 // Read about "TABLE SIZING" at the top of this file.
-bool    BeginTable(*const char str_id, c_int columns_count, ImGuiTableFlags flags, const ImVec2& outer_size, c_float inner_width)
+bool    BeginTable(*const char str_id, c_int columns_count, ImGuiTableFlags flags, outer_size: &ImVec2, c_float inner_width)
 {
     let mut id: ImGuiID =  GetID(str_id);
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
-bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags, const ImVec2& outer_size, c_float inner_width)
+bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags, outer_size: &ImVec2, c_float inner_width)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow outer_window = GetCurrentWindow();

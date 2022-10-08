@@ -123,7 +123,7 @@ pub struct ImGuiWindow {
 // i8                    AutoFitFramesX, AutoFitFramesY;
     pub AutoFitFramesX: i8,
     pub AutoFitFramesY: i8,
-    pub AutoFitChildAxises: i8,
+    pub AutoFitChildAxises: c_int,
     pub AutoFitOnlyGrows: bool,
     pub AutoPosLastDirection: ImGuiDir,
     pub HiddenFramesCanSkipItems: i8,

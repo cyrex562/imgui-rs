@@ -353,18 +353,18 @@ static inline bool      ImCharIsBlankW(c_uint c)  { return c == ' ' || c == '\t'
 // We unfortunately don't have a unary- operator for ImVec2 because this would needs to be defined inside the class itself.
 // #ifdef IMGUI_DEFINE_MATH_OPERATORS
 IM_MSVC_RUNTIME_CHECKS_OFF
-static inline ImVec2 *mut operator(const ImVec2& lhs, const c_float rhs)              { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
-static inline ImVec2 operator/(const ImVec2& lhs, const c_float rhs)              { return ImVec2(lhs.x / rhs, lhs.y / rhs); }
-static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
-static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
-static inline ImVec2 *mut operator(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
-static inline ImVec2 operator/(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x / rhs.x, lhs.y / rhs.y); }
+static inline ImVec2 *mut operator(lhs: &ImVec2, const c_float rhs)              { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
+static inline ImVec2 operator/(lhs: &ImVec2, const c_float rhs)              { return ImVec2(lhs.x / rhs, lhs.y / rhs); }
+static inline ImVec2 operator+(lhs: &ImVec2, rhs: &ImVec2)            { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
+static inline ImVec2 operator-(lhs: &ImVec2, rhs: &ImVec2)            { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
+static inline ImVec2 *mut operator(lhs: &ImVec2, rhs: &ImVec2)            { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
+static inline ImVec2 operator/(lhs: &ImVec2, rhs: &ImVec2)            { return ImVec2(lhs.x / rhs.x, lhs.y / rhs.y); }
 static inline ImVec2& *mut operator=(ImVec2& lhs, const c_float rhs)                  { lhs.x *= rhs; lhs.y *= rhs; return lhs; }
 static inline ImVec2& operator/=(ImVec2& lhs, const c_float rhs)                  { lhs.x /= rhs; lhs.y /= rhs; return lhs; }
-static inline ImVec2& operator+=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
-static inline ImVec2& operator-=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x -= rhs.x; lhs.y -= rhs.y; return lhs; }
-static inline ImVec2& *mut operator=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x *= rhs.x; lhs.y *= rhs.y; return lhs; }
-static inline ImVec2& operator/=(ImVec2& lhs, const ImVec2& rhs)                { lhs.x /= rhs.x; lhs.y /= rhs.y; return lhs; }
+static inline ImVec2& operator+=(ImVec2& lhs, rhs: &ImVec2)                { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
+static inline ImVec2& operator-=(ImVec2& lhs, rhs: &ImVec2)                { lhs.x -= rhs.x; lhs.y -= rhs.y; return lhs; }
+static inline ImVec2& *mut operator=(ImVec2& lhs, rhs: &ImVec2)                { lhs.x *= rhs.x; lhs.y *= rhs.y; return lhs; }
+static inline ImVec2& operator/=(ImVec2& lhs, rhs: &ImVec2)                { lhs.x /= rhs.x; lhs.y /= rhs.y; return lhs; }
 static inline ImVec4 operator+(const ImVec4& lhs, const ImVec4& rhs)            { return ImVec4(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w); }
 static inline ImVec4 operator-(const ImVec4& lhs, const ImVec4& rhs)            { return ImVec4(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w); }
 static inline ImVec4 *mut operator(const ImVec4& lhs, const ImVec4& rhs)            { return ImVec4(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w); }
@@ -433,38 +433,38 @@ template<typename T> static inline c_void ImSwap(T& a, T& b)                    
 template<typename T> static inline T ImAddClampOverflow(T a, T b, T mn, T mx)   { if (b < 0 && (a < mn - b)) return mn; if (b > 0 && (a > mx - b)) return mx; return a + b; }
 template<typename T> static inline T ImSubClampOverflow(T a, T b, T mn, T mx)   { if (b > 0 && (a < mn + b)) return mn; if (b < 0 && (a > mx + b)) return mx; return a - b; }
 // - Misc maths helpers
-static inline ImVec2 ImMin(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y); }
-static inline ImVec2 ImMax(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x >= rhs.x ? lhs.x : rhs.x, lhs.y >= rhs.y ? lhs.y : rhs.y); }
-static inline ImVec2 ImClamp(const ImVec2& v, const ImVec2& mn, ImVec2 mx)      { return ImVec2((v.x < mn.x) ? mn.x : (v.x > mx.x) ? mx.x : v.x, (v.y < mn.y) ? mn.y : (v.y > mx.y) ? mx.y : v.y); }
-static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, c_float t)          { return ImVec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
-static inline ImVec2 ImLerp(const ImVec2& a, const ImVec2& b, const ImVec2& t)  { return ImVec2(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
+static inline ImVec2 ImMin(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y); }
+static inline ImVec2 ImMax(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2(lhs.x >= rhs.x ? lhs.x : rhs.x, lhs.y >= rhs.y ? lhs.y : rhs.y); }
+static inline ImVec2 ImClamp(v: &ImVec2, mn: &ImVec2, ImVec2 mx)      { return ImVec2((v.x < mn.x) ? mn.x : (v.x > mx.x) ? mx.x : v.x, (v.y < mn.y) ? mn.y : (v.y > mx.y) ? mx.y : v.y); }
+static inline ImVec2 ImLerp(a: &ImVec2, b: &ImVec2, c_float t)          { return ImVec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
+static inline ImVec2 ImLerp(a: &ImVec2, b: &ImVec2, t: &ImVec2)  { return ImVec2(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
 static inline ImVec4 ImLerp(const ImVec4& a, const ImVec4& b, c_float t)          { return ImVec4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t); }
 static inline c_float  ImSaturate(c_float 0f32)                                        { return (f < 0f32) ? 0f32 : (f > 1f32) ? 1f32 : f; }
-static inline c_float  ImLengthSqr(const ImVec2& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
+static inline c_float  ImLengthSqr(lhs: &ImVec2)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y); }
 static inline c_float  ImLengthSqr(const ImVec4& lhs)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
-static inline c_float  ImInvLength(const ImVec2& lhs, c_float fail_value)           { let d: c_float =  (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0f32) return ImRsqrt(d); return fail_value; }
+static inline c_float  ImInvLength(lhs: &ImVec2, c_float fail_value)           { let d: c_float =  (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0f32) return ImRsqrt(d); return fail_value; }
 static inline c_float  ImFloor(c_float 0f32)                                           { return (0f32); }
 static inline c_float  ImFloorSigned(c_float 0f32)                                     { return ((f >= 0 || f == 0f32) ? f : f - 1); } // Decent replacement for floorf()
-static inline ImVec2 ImFloor(const ImVec2& v)                                   { return ImVec2((v.x), (v.y)); }
-static inline ImVec2 ImFloorSigned(const ImVec2& v)                             { return ImVec2(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
+static inline ImVec2 ImFloor(v: &ImVec2)                                   { return ImVec2((v.x), (v.y)); }
+static inline ImVec2 ImFloorSigned(v: &ImVec2)                             { return ImVec2(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
 static inline c_int    ImModPositive(c_int a, c_int b)                                { return (a + b) % b; }
-static inline c_float  ImDot(const ImVec2& a, const ImVec2& b)                    { return a.x * b.x + a.y * b.y; }
-static inline ImVec2 ImRotate(const ImVec2& v, c_float cos_a, c_float sin_a)        { return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
+static inline c_float  ImDot(a: &ImVec2, b: &ImVec2)                    { return a.x * b.x + a.y * b.y; }
+static inline ImVec2 ImRotate(v: &ImVec2, c_float cos_a, c_float sin_a)        { return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
 static inline c_float  ImLinearSweep(c_float current, c_float target, c_float speed)    { if (current < target) return ImMin(current + speed, target); if (current > target) return ImMax(current - speed, target); return current; }
-static inline ImVec2 ImMul(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
+static inline ImVec2 ImMul(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
 
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
 // Helpers: Geometry
- ImVec2     ImBezierCubicCalc(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, c_float t);
- ImVec2     ImBezierCubicClosestPoint(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, c_int num_segments);       // For curves with explicit number of segments
- ImVec2     ImBezierCubicClosestPointCasteljau(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, c_float tess_tol);// For auto-tessellated curves you can use tess_tol = style.CurveTessellationTol
- ImVec2     ImBezierQuadraticCalc(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, c_float t);
- ImVec2     ImLineClosestPoint(const ImVec2& a, const ImVec2& b, const ImVec2& p);
- bool       ImTriangleContainsPoint(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p);
- ImVec2     ImTriangleClosestPoint(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p);
- c_void       ImTriangleBarycentricCoords(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p, c_float& out_u, c_float& out_v, c_float& out_w);
-inline c_float         ImTriangleArea(const ImVec2& a, const ImVec2& b, const ImVec2& c) { return ImFabs((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))) * 0.5f32; }
+ ImVec2     ImBezierCubicCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, c_float t);
+ ImVec2     ImBezierCubicClosestPoint(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &ImVec2, c_int num_segments);       // For curves with explicit number of segments
+ ImVec2     ImBezierCubicClosestPointCasteljau(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &ImVec2, c_float tess_tol);// For auto-tessellated curves you can use tess_tol = style.CurveTessellationTol
+ ImVec2     ImBezierQuadraticCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, c_float t);
+ ImVec2     ImLineClosestPoint(a: &ImVec2, b: &ImVec2, p: &ImVec2);
+ bool       ImTriangleContainsPoint(a: &ImVec2, b: &ImVec2, c: &ImVec2, p: &ImVec2);
+ ImVec2     ImTriangleClosestPoint(a: &ImVec2, b: &ImVec2, c: &ImVec2, p: &ImVec2);
+ c_void       ImTriangleBarycentricCoords(a: &ImVec2, b: &ImVec2, c: &ImVec2, p: &ImVec2, c_float& out_u, c_float& out_v, c_float& out_w);
+inline c_float         ImTriangleArea(a: &ImVec2, b: &ImVec2, c: &ImVec2) { return ImFabs((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))) * 0.5f32; }
  ImGuiDir   ImGetDirQuadrantFromDelta(c_float dx, c_float dy);
 
 
@@ -986,10 +986,10 @@ namespace ImGui
      bool          IsWindowWithinBeginStackOf(*mut ImGuiWindow window, *mut ImGuiWindow potential_parent);
      bool          IsWindowAbove(*mut ImGuiWindow potential_above, *mut ImGuiWindow potential_below);
      bool          IsWindowNavFocusable(*mut ImGuiWindow window);
-     c_void          SetWindowPos(*mut ImGuiWindow window, const ImVec2& pos, ImGuiCond cond = 0);
-     c_void          SetWindowSize(*mut ImGuiWindow window, const ImVec2& size, ImGuiCond cond = 0);
+     c_void          SetWindowPos(*mut ImGuiWindow window, pos: &ImVec2, ImGuiCond cond = 0);
+     c_void          SetWindowSize(*mut ImGuiWindow window, size: &ImVec2, ImGuiCond cond = 0);
      c_void          SetWindowCollapsed(*mut ImGuiWindow window, bool collapsed, ImGuiCond cond = 0);
-     c_void          SetWindowHitTestHole(*mut ImGuiWindow window, const ImVec2& pos, const ImVec2& size);
+     c_void          SetWindowHitTestHole(*mut ImGuiWindow window, pos: &ImVec2, size: &ImVec2);
 
 
 
@@ -1026,13 +1026,13 @@ namespace ImGui
      c_void          CallContextHooks(*mut ImGuiContext context, ImGuiContextHookType type);
 
     // Viewports
-     c_void          TranslateWindowsInViewport(*mut ImGuiViewportP viewport, const ImVec2& old_pos, const ImVec2& new_pos);
+     c_void          TranslateWindowsInViewport(*mut ImGuiViewportP viewport, old_pos: &ImVec2, new_pos: &ImVec2);
      c_void          ScaleWindowsInViewport(*mut ImGuiViewportP viewport, c_float scale);
      c_void          DestroyPlatformWindow(*mut ImGuiViewportP viewport);
      c_void          SetWindowViewport(*mut ImGuiWindow window, *mut ImGuiViewportP viewport);
      c_void          SetCurrentViewport(*mut ImGuiWindow window, *mut ImGuiViewportP viewport);
      *const ImGuiPlatformMonitor   GetViewportPlatformMonitor(*mut ImGuiViewport viewport);
-     *mut ImGuiViewportP               FindHoveredViewportFromPlatformWindowStack(const ImVec2& mouse_platform_pos);
+     *mut ImGuiViewportP               FindHoveredViewportFromPlatformWindowStack(mouse_platform_pos: &ImVec2);
 
     // Settings
      c_void                  MarkIniSettingsDirty();
@@ -1046,7 +1046,7 @@ namespace ImGui
      *mut ImGuiSettingsHandler FindSettingsHandler(*const char type_name);
 
     // Scrolling
-     c_void          SetNextWindowScroll(const ImVec2& scroll); // Use -1f32 on one axis to leave as-is
+     c_void          SetNextWindowScroll(scroll: &ImVec2); // Use -1f32 on one axis to leave as-is
      c_void          SetScrollX(*mut ImGuiWindow window, c_float scroll_x);
      c_void          SetScrollY(*mut ImGuiWindow window, c_float scroll_y);
      c_void          SetScrollFromPosX(*mut ImGuiWindow window, c_float local_x, c_float center_x_ratio);
@@ -1077,14 +1077,14 @@ namespace ImGui
      ImGuiID       GetIDWithSeed(*const char str_id_begin, *const char str_id_end, ImGuiID seed);
 
     // Basic Helpers for widget code
-     c_void          ItemSize(const ImVec2& size, let text_baseline_y: c_float =  -1f32);
+     c_void          ItemSize(size: &ImVec2, let text_baseline_y: c_float =  -1f32);
     inline c_void             ItemSize(const ImRect& bb, let text_baseline_y: c_float =  -1f32) { ItemSize(bb.GetSize(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
      bool          ItemAdd(const ImRect& bb, ImGuiID id, *const let nav_bb: ImRect =  null_mut(), let mut extra_flags: ImGuiItemFlags =  0);
      bool          ItemHoverable(const ImRect& bb, ImGuiID id);
      bool          IsClippedEx(const ImRect& bb, ImGuiID id);
      c_void          SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags status_flags, const ImRect& item_rect);
      ImVec2        CalcItemSize(ImVec2 size, c_float default_w, c_float default_h);
-     c_float         CalcWrapWidthForPos(const ImVec2& pos, c_float wrap_pos_x);
+     c_float         CalcWrapWidthForPos(pos: &ImVec2, c_float wrap_pos_x);
      c_void          PushMultiItemsWidths(c_int components, c_float width_full);
      bool          IsItemToggledSelection();                                   // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
      ImVec2        GetContentRegionMaxAbs();
@@ -1101,7 +1101,7 @@ namespace ImGui
      c_void          LogSetNextTextDecoration(*const char prefix, *const char suffix);
 
     // Popups, Modals, Tooltips
-     bool          BeginChildEx(*const char name, ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags flags);
+     bool          BeginChildEx(*const char name, ImGuiID id, size_arg: &ImVec2, bool border, ImGuiWindowFlags flags);
      c_void          OpenPopupEx(ImGuiID id, ImGuiPopupFlags popup_flags = ImGuiPopupFlags_None);
      c_void          ClosePopupToLevel(c_int remaining, bool restore_focus_to_window_under_popup);
      c_void          ClosePopupsOverWindow(*mut ImGuiWindow ref_window, bool restore_focus_to_window_under_popup);
@@ -1113,7 +1113,7 @@ namespace ImGui
      *mut ImGuiWindow  GetTopMostPopupModal();
      *mut ImGuiWindow  GetTopMostAndVisiblePopupModal();
      ImVec2        FindBestWindowPosForPopup(*mut ImGuiWindow window);
-     ImVec2        FindBestWindowPosForPopupEx(const ImVec2& ref_pos, const ImVec2& size, *mut ImGuiDir last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy);
+     ImVec2        FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, *mut ImGuiDir last_dir, const ImRect& r_outer, const ImRect& r_avoid, ImGuiPopupPositionPolicy policy);
 
     // Menus
      bool          BeginViewportSideBar(*const char name, *mut ImGuiViewport viewport, ImGuiDir dir, c_float size, ImGuiWindowFlags window_flags);
@@ -1250,7 +1250,7 @@ namespace ImGui
     // Tables: Internals
     inline    *mut ImGuiTable   GetCurrentTable() { let g = GImGui; // ImGuiContext& g = *GImGui; return g.CurrentTable; }
      *mut ImGuiTable   TableFindByID(ImGuiID id);
-     bool          BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0, 0), let inner_width: c_float =  0f32);
+     bool          BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags = 0, outer_size: &ImVec2 = ImVec2(0, 0), let inner_width: c_float =  0f32);
      c_void          TableBeginInitMemory(*mut ImGuiTable table, c_int columns_count);
      c_void          TableBeginApplyRequests(*mut ImGuiTable table);
      c_void          TableSetupDrawChannels(*mut ImGuiTable table);
@@ -1311,9 +1311,9 @@ namespace ImGui
     // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
      c_void          RenderText(ImVec2 pos, *const char text, *const char text_end = null_mut(), let mut hide_text_after_hash: bool =  true);
      c_void          RenderTextWrapped(ImVec2 pos, *const char text, *const char text_end, c_float wrap_width);
-     c_void          RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  null_mut());
-     c_void          RenderTextClippedEx(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, *const char text, *const char text_end, *const ImVec2 text_size_if_known, const ImVec2& align = ImVec2(0, 0), *const let clip_rect: ImRect =  null_mut());
-     c_void          RenderTextEllipsis(*mut ImDrawList draw_list, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end, *const ImVec2 text_size_if_known);
+     c_void          RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, *const char text, *const char text_end, *const ImVec2 text_size_if_known, align: &ImVec2 = ImVec2(0, 0), *const let clip_rect: ImRect =  null_mut());
+     c_void          RenderTextClippedEx(*mut ImDrawList draw_list, pos_min: &ImVec2, pos_max: &ImVec2, *const char text, *const char text_end, *const ImVec2 text_size_if_known, align: &ImVec2 = ImVec2(0, 0), *const let clip_rect: ImRect =  null_mut());
+     c_void          RenderTextEllipsis(*mut ImDrawList draw_list, pos_min: &ImVec2, pos_max: &ImVec2, c_float clip_max_x, c_float ellipsis_max_x, *const char text, *const char text_end, *const ImVec2 text_size_if_known);
      c_void          RenderFrame(ImVec2 p_min, ImVec2 p_max, u32 fill_col, let mut border: bool =  true, let rounding: c_float =  0f32);
      c_void          RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, let rounding: c_float =  0f32);
      c_void          RenderColorRectWithAlphaCheckerboard(*mut ImDrawList draw_list, ImVec2 p_min, ImVec2 p_max, u32 fill_col, c_float grid_step, ImVec2 grid_off, let rounding: c_float =  0f32, ImDrawFlags flags = 0);
@@ -1333,13 +1333,13 @@ namespace ImGui
 
     // Widgets
      c_void          TextEx(*const char text, *const char text_end = null_mut(), ImGuiTextFlags flags = 0);
-     bool          ButtonEx(*const char label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
-     bool          CloseButton(ImGuiID id, const ImVec2& pos);
-     bool          CollapseButton(ImGuiID id, const ImVec2& pos, *mut ImGuiDockNode dock_node);
+     bool          ButtonEx(*const char label, size_arg: &ImVec2 = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
+     bool          CloseButton(ImGuiID id, pos: &ImVec2);
+     bool          CollapseButton(ImGuiID id, pos: &ImVec2, *mut ImGuiDockNode dock_node);
      bool          ArrowButtonEx(*const char str_id, ImGuiDir dir, ImVec2 size_arg, ImGuiButtonFlags flags = 0);
      c_void          Scrollbar(ImGuiAxis axis);
      bool          ScrollbarEx(const ImRect& bb, ImGuiID id, ImGuiAxis axis, *mut ImS64 p_scroll_v, ImS64 avail_v, ImS64 contents_v, ImDrawFlags flags);
-     bool          ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& bg_col, const ImVec4& tint_col);
+     bool          ImageButtonEx(ImGuiID id, ImTextureID texture_id, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, const ImVec4& bg_col, const ImVec4& tint_col);
      ImRect        GetWindowScrollbarRect(*mut ImGuiWindow window, ImGuiAxis axis);
      ImGuiID       GetWindowScrollbarID(*mut ImGuiWindow window, ImGuiAxis axis);
      ImGuiID       GetWindowResizeCornerID(*mut ImGuiWindow window, c_int n); // 0..3: corners
@@ -1377,7 +1377,7 @@ namespace ImGui
      bool          DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max);
 
     // InputText
-     bool          InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_size, const ImVec2& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = null_mut(), *mut c_void user_data = null_mut());
+     bool          InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_size, size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = null_mut(), *mut c_void user_data = null_mut());
      bool          TempInputText(const ImRect& bb, ImGuiID id, *const char label, *mut char buf, c_int buf_size, ImGuiInputTextFlags flags);
      bool          TempInputScalar(const ImRect& bb, ImGuiID id, *const char label, ImGuiDataType data_type, *mut c_void p_data, *const char format, *const c_void p_clamp_min = null_mut(), *const c_void p_clamp_max = null_mut());
     inline bool             TempInputIsActive(ImGuiID id)       { let g = GImGui; // ImGuiContext& g = *GImGui; return (g.ActiveId == id && g.TempInputId == id); }
@@ -1393,7 +1393,7 @@ namespace ImGui
 
     // Shade functions (write over already created vertices)
      c_void          ShadeVertsLinearColorGradientKeepAlpha(*mut ImDrawList draw_list, c_int vert_start_idx, c_int vert_end_idx, ImVec2 gradient_p0, ImVec2 gradient_p1, u32 col0, u32 col1);
-     c_void          ShadeVertsLinearUV(*mut ImDrawList draw_list, c_int vert_start_idx, c_int vert_end_idx, const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, bool clamp);
+     c_void          ShadeVertsLinearUV(*mut ImDrawList draw_list, c_int vert_start_idx, c_int vert_end_idx, a: &ImVec2, b: &ImVec2, uv_a: &ImVec2, uv_b: &ImVec2, bool clamp);
 
     // Garbage collection
      c_void          GcCompactTransientMiscBuffers();

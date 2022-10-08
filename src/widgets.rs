@@ -679,7 +679,7 @@ bool ButtonBehavior(const ImRect& bb, ImGuiID id, *mut bool out_hovered, *mut bo
     return pressed;
 }
 
-bool ButtonEx(*const char label, const ImVec2& size_arg, ImGuiButtonFlags flags)
+bool ButtonEx(*const char label, size_arg: &ImVec2, ImGuiButtonFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -723,7 +723,7 @@ bool ButtonEx(*const char label, const ImVec2& size_arg, ImGuiButtonFlags flags)
     return pressed;
 }
 
-bool Button(*const char label, const ImVec2& size_arg)
+bool Button(*const char label, size_arg: &ImVec2)
 {
     return ButtonEx(label, size_arg, ImGuiButtonFlags_None);
 }
@@ -741,7 +741,7 @@ bool SmallButton(*const char label)
 
 // Tip: use PushID()/PopID() to push indices or pointers in the ID stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
-bool InvisibleButton(*const char str_id, const ImVec2& size_arg, ImGuiButtonFlags flags)
+bool InvisibleButton(*const char str_id, size_arg: &ImVec2, ImGuiButtonFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -803,7 +803,7 @@ bool ArrowButton(*const char str_id, ImGuiDir dir)
 }
 
 // Button to close a window
-bool CloseButton(ImGuiID id, const ImVec2& pos)
+bool CloseButton(ImGuiID id, pos: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -842,7 +842,7 @@ bool CloseButton(ImGuiID id, const ImVec2& pos)
 }
 
 // The Collapse button also functions as a Dock Menu button.
-bool CollapseButton(ImGuiID id, const ImVec2& pos, *mut ImGuiDockNode dock_node)
+bool CollapseButton(ImGuiID id, pos: &ImVec2, *mut ImGuiDockNode dock_node)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -1018,7 +1018,7 @@ bool ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, *mut ImS64 
     return held;
 }
 
-c_void Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+c_void Image(ImTextureID user_texture_id, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, const ImVec4& tint_col, const ImVec4& border_col)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -1044,7 +1044,7 @@ c_void Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0,
 
 // ImageButton() is flawed as 'id' is always derived from 'texture_id' (see #2464 #1390)
 // We provide this internal helper to write your own variant while we figure out how to redesign the public ImageButton() API.
-bool ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& bg_col, const ImVec4& tint_col)
+bool ImageButtonEx(ImGuiID id, ImTextureID texture_id, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, const ImVec4& bg_col, const ImVec4& tint_col)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -1071,7 +1071,7 @@ bool ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size, const
     return pressed;
 }
 
-bool ImageButton(*const char str_id, ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& bg_col, const ImVec4& tint_col)
+bool ImageButton(*const char str_id, ImTextureID user_texture_id, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, const ImVec4& bg_col, const ImVec4& tint_col)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -1086,7 +1086,7 @@ bool ImageButton(*const char str_id, ImTextureID user_texture_id, const ImVec2& 
 // - new ImageButton() requires an explicit 'const char* str_id'    Old ImageButton() used opaque imTextureId (created issue with: multiple buttons with same image, transient texture id values, opaque computation of ID)
 // - new ImageButton() always use style.FramePadding                Old ImageButton() had an override argument.
 // If you need to change padding with new ImageButton() you can use PushStyleVar(ImGuiStyleVar_FramePadding, value), consistent with other Button functions.
-bool ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, c_int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
+bool ImageButton(ImTextureID user_texture_id, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, c_int frame_padding, const ImVec4& bg_col, const ImVec4& tint_col)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -1276,7 +1276,7 @@ bool RadioButton(*const char label, *mut c_int v, c_int v_button)
 }
 
 // size_arg (for each axis) < 0f32: align to end, 0f32: auto, > 0f32: specified size
-c_void ProgressBar(c_float fraction, const ImVec2& size_arg, *const char overlay)
+c_void ProgressBar(c_float fraction, size_arg: &ImVec2, *const char overlay)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -1356,7 +1356,7 @@ c_void Spacing()
     ItemSize(ImVec2(0, 0));
 }
 
-c_void Dummy(const ImVec2& size)
+c_void Dummy(size: &ImVec2)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3110,7 +3110,7 @@ bool SliderInt4(*const char label, c_int v[4], c_int v_min, c_int v_max, *const 
     return SliderScalarN(label, ImGuiDataType_S32, v, 4, &v_min, &v_max, format, flags);
 }
 
-bool VSliderScalar(*const char label, const ImVec2& size, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags)
+bool VSliderScalar(*const char label, size: &ImVec2, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, *const char format, ImGuiSliderFlags flags)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3169,12 +3169,12 @@ bool VSliderScalar(*const char label, const ImVec2& size, ImGuiDataType data_typ
     return value_changed;
 }
 
-bool VSliderFloat(*const char label, const ImVec2& size, *mut c_float v, c_float v_min, c_float v_max, *const char format, ImGuiSliderFlags flags)
+bool VSliderFloat(*const char label, size: &ImVec2, *mut c_float v, c_float v_min, c_float v_max, *const char format, ImGuiSliderFlags flags)
 {
     return VSliderScalar(label, size, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
 }
 
-bool VSliderInt(*const char label, const ImVec2& size, *mut c_int v, c_int v_min, c_int v_max, *const char format, ImGuiSliderFlags flags)
+bool VSliderInt(*const char label, size: &ImVec2, *mut c_int v, c_int v_min, c_int v_max, *const char format, ImGuiSliderFlags flags)
 {
     return VSliderScalar(label, size, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
 }
@@ -3574,7 +3574,7 @@ bool InputText(*const char label, *mut char buf, size_t buf_size, ImGuiInputText
     return InputTextEx(label, null_mut(), buf, buf_size, ImVec2(0, 0), flags, callback, user_data);
 }
 
-bool InputTextMultiline(*const char label, *mut char buf, size_t buf_size, const ImVec2& size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
+bool InputTextMultiline(*const char label, *mut char buf, size_t buf_size, size: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data)
 {
     return InputTextEx(label, null_mut(), buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, callback, user_data);
 }
@@ -3972,7 +3972,7 @@ static c_void InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
 // - If you want to use InputText() with std::string, see misc/cpp/imgui_stdlib.h
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_size, const ImVec2& size_arg, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void callback_user_data)
+bool InputTextEx(*const char label, *const char hint, *mut char buf, c_int buf_size, size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void callback_user_data)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -5570,7 +5570,7 @@ bool ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags flags, 
 // FIXME: May want to display/ignore the alpha component in the color display? Yet show it in the tooltip.
 // 'desc_id' is not called 'label' because we don't display it next to the button, but only in the tooltip.
 // Note that 'col' may be encoded in HSV if ImGuiColorEditFlags_InputHSV is set.
-bool ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFlags flags, const ImVec2& size_arg)
+bool ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFlags flags, size_arg: &ImVec2)
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -6256,7 +6256,7 @@ bool CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFlags fla
 // But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
 // With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: Selectable() with (size.x == 0f32) and (SelectableTextAlign.x > 0f32) followed by SameLine() is currently not supported.
-bool Selectable(*const char label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+bool Selectable(*const char label, bool selected, ImGuiSelectableFlags flags, size_arg: &ImVec2)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -6401,7 +6401,7 @@ bool Selectable(*const char label, bool selected, ImGuiSelectableFlags flags, co
     return pressed; //-V1020
 }
 
-bool Selectable(*const char label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+bool Selectable(*const char label, bool* p_selected, ImGuiSelectableFlags flags, size_arg: &ImVec2)
 {
     if (Selectable(label, *p_selected, flags, size_arg))
     {
@@ -6421,7 +6421,7 @@ bool Selectable(*const char label, bool* p_selected, ImGuiSelectableFlags flags,
 
 // Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.g. "##empty"
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
-bool BeginListBox(*const char label, const ImVec2& size_arg)
+bool BeginListBox(*const char label, size_arg: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();

@@ -1,5 +1,26 @@
+use std::io::SeekFrom::End;
+use std::ptr::null_mut;
+use libc::{c_char, c_float, c_int};
+use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
+use crate::GImGui;
+use crate::id_ops::SetActiveID;
+use crate::input_source::ImGuiInputSource_Nav;
+use crate::item_status_flags::ImGuiItemStatusFlags_HoveredWindow;
+use crate::nav_highlight_flags::ImGuiNavHighlightFlags_TypeThin;
+use crate::rect::ImRect;
+use crate::render_ops::RenderNavHighlight;
+use crate::string_ops::ImFormatStringToTempBuffer;
+use crate::style_ops::{PopStyleColor, PushStyleColor};
+use crate::style_var_ops::{PopStyleVar, PushStyleVar};
+use crate::type_defs::ImGuiID;
+use crate::utils::flag_clear;
+use crate::vec2::ImVec2;
+use crate::window::ImGuiWindow;
+use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
+
 // bool BeginChildEx(*const char name, ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags flags)
-pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, flags: ImGuiWindowFlags) -> bool {
+pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
 
@@ -8,7 +29,7 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
 
     // Size
     let content_avail: ImVec2 = GetContentRegionAvail();
-    let size: ImVec2 = ImFloor(size_arg);
+    let mut size: ImVec2 = ImFloor(size_arg);
     let auto_fit_axises: c_int = (if size.x == 0f32 { (1 << ImGuiAxis_X) } else { 0x00 }) | (if size.y == 0f32 { (1 << ImGuiAxis_Y) } else { 0x00 });
     if size.x <= 0f32 {
         size.x = ImMax(content_avail.x + size.x, 4.00f32);
@@ -19,15 +40,17 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     SetNextWindowSize(size);
 
     // Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(ImGuiID id) with a stable value.
-    let temp_window_name: *const c_char;
+    let temp_window_name: *const c_char = null_mut();
     if name {
-        ImFormatStringToTempBuffer(&temp_window_name, null_mut(), "%s/%s_%08X", parent_window.Name, name, id);
+        // TODO:
+        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "%s/%s_%08X", parent_window.Name, name, id);
     } else {
-        ImFormatStringToTempBuffer(&temp_window_name, null_mut(), "%s/%08X", parent_window.Name, id);
+        // TODO:
+        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "%s/%08X", parent_window.Name, id);
     }
 
     let backup_border_size: c_float = g.Style.ChildBorderSize;
-    if (!border) {
+    if !border {
         g.Style.ChildBorderSize = 0f32;
     }
     let mut ret: bool = Begin(temp_window_name, null_mut(), flags);
@@ -39,12 +62,12 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
 
     // Set the cursor to handle case where the user called SetNextWindowPos()+BeginChild() manually.
     // While this is not really documented/defined, it seems that the expected thing to do.
-    if (child_window.BeginCount == 1) {
+    if child_window.BeginCount == 1 {
         parent_window.DC.CursorPos = child_window.Pos;
     }
 
     // Process navigation-in immediately so NavInit can run on first frame
-    if g.NavActivateId == id && !(flags & ImGuiWindowFlags_NavFlattened) && (child_window.DC.NavLayersActiveMask != 0 || child_window.DC.NavHasScroll) {
+    if g.NavActivateId == id && flag_clear(flags, ImGuiWindowFlags_NavFlattened) && (child_window.DC.NavLayersActiveMask != 0 || child_window.DC.NavHasScroll) {
         FocusWindow(child_window);
         NavInitWindow(child_window, false);
         SetActiveID(id + 1, child_window); // Steal ActiveId with another arbitrary id so that key-press won't activate child item
