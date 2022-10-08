@@ -3,6 +3,7 @@
 use std::ptr::null_mut;
 use libc::{c_float, c_int, c_void};
 use crate::color::{IM_COL32_A_MASK, ImGuiCol_ModalWindowDimBg, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight};
+use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_None};
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
@@ -394,6 +395,6 @@ pub unsafe fn SetNextWindowSize(size: &ImVec2, cond: ImGuiCond)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize;
-    g.NextWindowData.SizeVal = size;
-    g.NextWindowData.SizeCond = cond ? cond : ImGuiCond_Always;
+    g.NextWindowData.SizeVal = size.clone();
+    g.NextWindowData.SizeCond = if cond != ImGuiCond_None { cond } else { ImGuiCond_Always };
 }
