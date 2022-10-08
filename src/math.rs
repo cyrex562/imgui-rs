@@ -361,12 +361,30 @@ pub fn ImMul(lhs: &ImVec2, rhs: &ImVec2) -> ImVec2 {
 }
 
 // ImVec2     ImBezierCubicCalc(const p1: &ImVec2, const p2: &ImVec2, const p3: &ImVec2, const p4: &ImVec2, t: c_float);
+pub fn ImBezierCubicCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, t: c_float) -> ImVec2
+{
+    let u: c_float =  1f32 - t;
+    let w1: c_float =  u * u * u;
+    let w2: c_float =  3 * u * u * t;
+    let w3: c_float =  3 * u * t * t;
+    let w4: c_float =  t * t * t;
+    return ImVec2::new2(w1 * p1.x + w2 * p2.x + w3 * p3.x + w4 * p4.x, w1 * p1.y + w2 * p2.y + w3 * p3.y + w4 * p4.y);
+}
 
 // ImVec2     ImBezierCubicClosestPoint(const p1: &ImVec2, const p2: &ImVec2, const p3: &ImVec2, const p4: &ImVec2, const p: &ImVec2, num_segments: c_int);       // For curves with explicit number of segments
 
 // ImVec2     ImBezierCubicClosestPointCasteljau(const p1: &ImVec2, const p2: &ImVec2, const p3: &ImVec2, const p4: &ImVec2, const p: &ImVec2, tess_tol: c_float);// For auto-tessellated curves you can use tess_tol = style.CurveTessellationTol
 
 // ImVec2     ImBezierQuadraticCalc(const p1: &ImVec2, const p2: &ImVec2, const p3: &ImVec2, t: c_float);
+pub fn ImBezierQuadraticCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, t: c_float) -> ImVec2
+{
+    let u: c_float =  1f32 - t;
+    let w1: c_float =  u * u;
+    let w2: c_float =  2 * u * t;
+    let w3: c_float =  t * t;
+    return ImVec2::new2(w1 * p1.x + w2 * p2.x + w3 * p3.x, w1 * p1.y + w2 * p2.y + w3 * p3.y);
+}
+
 
 // ImVec2     ImLineClosestPoint(const a: &ImVec2, const b: &ImVec2, const p: &ImVec2);
 

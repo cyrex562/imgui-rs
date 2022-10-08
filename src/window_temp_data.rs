@@ -1,5 +1,7 @@
 use libc::{c_float, c_int, c_short};
+use crate::imvec1::ImVec1;
 use crate::layout_type::ImGuiLayoutType;
+use crate::menu_columns::ImGuiMenuColumns;
 use crate::old_columns::ImGuiOldColumns;
 use crate::storage::ImGuiStorage;
 use crate::type_defs::ImGuiID;

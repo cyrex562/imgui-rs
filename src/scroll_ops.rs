@@ -19,10 +19,14 @@ pub fn ScrollToBringRectIntoView(window: *mut ImGuiWindow, rect: &ImRect) {
 // Note that the effect for this won't be visible on X axis with default Style settings as WindowPadding.x == ItemSpacing.x by default.
 static c_float CalcScrollEdgeSnap(target: c_float, snap_min: c_float, snap_max: c_float, snap_threshold: c_float, center_ratio: c_float)
 {
-    if (target <= snap_min + snap_threshold)
+    if target <= snap_min + snap_threshold
+{
         return ImLerp(snap_min, target, center_ratio);
-    if (target >= snap_max - snap_threshold)
+}
+    if target >= snap_max - snap_threshold
+{
         return ImLerp(target, snap_max, center_ratio);
+}
     return target;
 }
 
@@ -90,10 +94,14 @@ ImVec2 ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScrollF
 
     // Defaults
     ImGuiScrollFlags in_flags = flags;
-    if ((flags & ImGuiScrollFlags_MaskX_) == 0 && window.ScrollbarX)
+    if (flags & ImGuiScrollFlags_MaskX_) == 0 && window.ScrollbarX
+{
         flags |= ImGuiScrollFlags_KeepVisibleEdgeX;
-    if ((flags & ImGuiScrollFlags_MaskY_) == 0)
+}
+    if (flags & ImGuiScrollFlags_MaskY_) == 0
+{
         flags |= window.Appearing ? ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeY;
+}
 
     let fully_visible_x: bool = item_rect.Min.x >= window_rect.Min.x && item_rect.Max.x <= window_rect.Max.x;
     let fully_visible_y: bool = item_rect.Min.y >= window_rect.Min.y && item_rect.Max.y <= window_rect.Max.y;
@@ -102,8 +110,10 @@ ImVec2 ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScrollF
 
     if ((flags & ImGuiScrollFlags_KeepVisibleEdgeX) && !fully_visible_x)
     {
-        if (item_rect.Min.x < window_rect.Min.x || !can_be_fully_visible_x)
+        if item_rect.Min.x < window_rect.Min.x || !can_be_fully_visible_x
+{
             SetScrollFromPosX(window, item_rect.Min.x - g.Style.ItemSpacing.x - window.Pos.x, 0f32);
+}
         else if (item_rect.Max.x >= window_rect.Max.x)
             SetScrollFromPosX(window, item_rect.Max.x + g.Style.ItemSpacing.x - window.Pos.x, 1f32);
     }
@@ -115,8 +125,10 @@ ImVec2 ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScrollF
 
     if ((flags & ImGuiScrollFlags_KeepVisibleEdgeY) && !fully_visible_y)
     {
-        if (item_rect.Min.y < window_rect.Min.y || !can_be_fully_visible_y)
+        if item_rect.Min.y < window_rect.Min.y || !can_be_fully_visible_y
+{
             SetScrollFromPosY(window, item_rect.Min.y - g.Style.ItemSpacing.y - window.Pos.y, 0f32);
+}
         else if (item_rect.Max.y >= window_rect.Max.y)
             SetScrollFromPosY(window, item_rect.Max.y + g.Style.ItemSpacing.y - window.Pos.y, 1f32);
     }
@@ -133,10 +145,14 @@ ImVec2 ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScrollF
     if (!(flags & ImGuiScrollFlags_NoScrollParent) && (window.Flags & ImGuiWindowFlags_ChildWindow))
     {
         // FIXME-SCROLL: May be an option?
-        if ((in_flags & (ImGuiScrollFlags_AlwaysCenterX | ImGuiScrollFlags_KeepVisibleCenterX)) != 0)
+        if (in_flags & (ImGuiScrollFlags_AlwaysCenterX | ImGuiScrollFlags_KeepVisibleCenterX)) != 0
+{
             in_flags = (in_flags & ~ImGuiScrollFlags_MaskX_) | ImGuiScrollFlags_KeepVisibleEdgeX;
-        if ((in_flags & (ImGuiScrollFlags_AlwaysCenterY | ImGuiScrollFlags_KeepVisibleCenterY)) != 0)
+}
+        if (in_flags & (ImGuiScrollFlags_AlwaysCenterY | ImGuiScrollFlags_KeepVisibleCenterY)) != 0
+{
             in_flags = (in_flags & ~ImGuiScrollFlags_MaskY_) | ImGuiScrollFlags_KeepVisibleEdgeY;
+}
         delta_scroll += ScrollToRectEx(window.ParentWindow, ImRect::new(item_rect.Min - delta_scroll, item_rect.Max - delta_scroll), in_flags);
     }
 

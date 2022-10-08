@@ -1287,7 +1287,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
         if !close_button_is_enabled
         {
             PushItemFlag(ImGuiItemFlags_Disabled, true);
-            PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_Text] * ImVec4(1f32,1f32,1f32,0.40f32));
+            PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_Text] * ImVec4::new2(1f32,1f32,1f32,0.40f32));
         }
         if CloseButton(host_window.GetID(str_to_const_c_char_ptr("#CLOSE"), null()), close_button_pos)
         {
@@ -2121,10 +2121,11 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode)
                 {
                     for (int touching_node_n = 0; touching_node_n < touching_nodes[n].Size; touching_node_n++)
                         draw_list.AddRect(touching_nodes[n][touching_node_n].Pos, touching_nodes[n][touching_node_n].Pos + touching_nodes[n][touching_node_n].Size, IM_COL32(0, 255, 0, 255));
-                    if (axis == ImGuiAxis_X)
+                    if axis == ImGuiAxis_X
+{
                         draw_list.AddLine(ImVec2::new(resize_limits[n], node.ChildNodes[n].Pos.y), ImVec2::new(resize_limits[n], node.ChildNodes[n].Pos.y + node.ChildNodes[n].Size.y), IM_COL32(255, 0, 255, 255), 3.00f32);
-                    else
-                        draw_list.AddLine(ImVec2::new(node.ChildNodes[n].Pos.x, resize_limits[n]), ImVec2::new(node.ChildNodes[n].Pos.x + node.ChildNodes[n].Size.x, resize_limits[n]), IM_COL32(255, 0, 255, 255), 3.00f32);
+}
+
                 }
                 */
             }

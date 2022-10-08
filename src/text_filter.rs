@@ -2,9 +2,11 @@
 #![allow(non_snake_case)]
 
 use std::borrow::BorrowMut;
-use std::ptr::null;
+use std::ptr::{null, null_mut};
 use libc::c_char;
 use crate::imgui_cpp::{ImStristr, ImStrncpy};
+use crate::item_ops::SetNextItemWidth;
+use crate::string_ops::{ImCharIsBlankA, ImStristr, ImStrncpy};
 
 // [Internal]
 #[derive(Default,Debug,Clone)]

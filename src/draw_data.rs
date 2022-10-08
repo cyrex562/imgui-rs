@@ -3,7 +3,9 @@
 use std::ptr::null_mut;
 use libc::c_int;
 use crate::draw_list::ImDrawList;
+use crate::draw_vert::ImDrawVert;
 use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 use crate::viewport::ImGuiViewport;
 
 // All draw data to render a Dear ImGui frame
@@ -51,12 +53,44 @@ impl ImDrawData {
 
     // void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
     pub fn DeIndexAllBuffers(&mut self) {
-        todo!()
+        let mut new_vtx_buffer: Vec<ImDrawVert> = vec![];
+        self.TotalVtxCount = 0;
+        self.TotalIdxCount = 0;
+        // for (let i: c_int = 0; i < CmdListsCount; i++)
+        for i in 0 .. self.CmdListsCount
+        {
+            let mut  cmd_list: *mut ImDrawList =  CmdLists[i];
+            // TODO: fix missing element
+            // if .empty()
+            // {
+            //     continue;
+            // }
+            // new_vtx_buffer.resize(.Size);
+            // for (let j: c_int = 0; j < .Size; j++){
+            //     new_vtx_buffer[j] = [[j]];
+            // }
+            // .swap(new_vtx_buffer);
+            // .clear();
+            // TotalVtxCount += .Size;
+        }
     }
 
-    // void  ScaleClipRects(const fb_scale: &ImVec2); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
+    // void  ScaleClipRects(const fb_scale: &ImVec2);
+    // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
     pub fn ScaleClipRects(&mut self, fb_scale: &ImVec2) {
-        todo!()
+
+    // for (let i: c_int = 0; i < CmdListsCount; i++)
+    for i in 0 .. self.CmdListsCount
+        {
+        let mut  cmd_list: *mut ImDrawList =  self.CmdLists[i];
+        // for (let cmd_i: c_int = 0; cmd_i < cmd_list.Size; cmd_i++)
+        for cmd_i in 0 .. cmd_list.CmdBuffer.len()
+            {
+            let cmd = &mut cmd_list.CmdBuffer[cmd_i];
+             cmd.ClipRect = ImVec4::new2(cmd.ClipRect.x * fb_scale.x, cmd.ClipRect.y * fb_scale.y, cmd.ClipRect.z * fb_scale.x, cmd.ClipRect.w * fb_scale.y);
+        }
+    }
+
     }
 }
 

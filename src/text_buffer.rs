@@ -87,15 +87,15 @@ impl ImGuiTextBuffer {
         // Add zero-terminator the first time
         let write_off = if self.Buf.len() != 0 { Buf.Size } else { 1 };
         let needed_sz = write_off + len;
-        if write_off + len >= self.Buf.capacity()
+        if write_off.clone() + len.clone() >= self.Buf.capacity()
         {
             let new_capacity = Buf.Capacity * 2;
             self.Buf.reserve(if needed_sz > new_capacity { needed_sz } else { new_capacity });
         }
 
         self.Buf.resize(needed_sz);
-        libc::memcpy(&mut self.Buf[write_off - 1..], begin, len);
-        self.Buf[write_off - 1 + len] = 0;
+        libc::memcpy(&mut self.Buf[write_off.clone() - 1..], begin, len.clone());
+        self.Buf[write_off.clone() - 1 + len.clone()] = 0;
     }
 
 

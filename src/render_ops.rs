@@ -209,12 +209,12 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
         if ellipsis_x + ellipsis_total_width <= ellipsis_max_x {
             // for (let i: c_int = 0; i < ellipsis_char_count; i+ +)
             for i in 0..ellipsis_char_count {
-                font.RenderChar(draw_list, font_size, ImVec2::new(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text, 0f32, ), ellipsis_char);
+                font.RenderChar(draw_list, font_size, ImVec2::new2(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text, 0f32, ), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
         }
     } else {
-        RenderTextClippedEx(draw_list, pos_min, ImVec2::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2::new2(0f32, 0f32), null());
+        RenderTextClippedEx(draw_list, pos_min, ImVec2::new2(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2::new2(0f32, 0f32), null());
     }
 
     if g.LogEnabled {
@@ -266,12 +266,12 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     if flags & ImGuiNavHighlightFlags_TypeDefault {
         let THICKNESS: c_float = 2.0f32;
         let DISTANCE: c_float = 3.0f32 + THICKNESS * 0.5f32;
-        display_rect.Expand(ImVec2::new(DISTANCE, DISTANCE));
+        display_rect.Expand(ImVec2::new2(DISTANCE, DISTANCE));
         let mut fully_visible: bool = window.ClipRect.Contains2(&display_rect);
         if !fully_visible {
             window.DrawList.PushClipRect(&display_rect.Min, &display_rect.Max, false);
         }
-        window.DrawList.AddRect(display_rect.Min + ImVec2::new(THICKNESS * 0.5f32, THICKNESS * 0.5f32), display_rect.Max - ImVec2::new(THICKNESS * 0.5f32, THICKNESS * 0.5f32), GetColorU32(ImGuiCol_NavHighlight, 0f32, ), rounding, 0, THICKNESS, , );
+        window.DrawList.AddRect(display_rect.Min + ImVec2::new2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), display_rect.Max - ImVec2::new(THICKNESS * 0.5f32, THICKNESS * 0.5f32), GetColorU32(ImGuiCol_NavHighlight, 0f32, ), rounding, 0, THICKNESS, , );
         if !fully_visible {
             window.DrawList.PopClipRect();
         }

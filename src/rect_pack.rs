@@ -244,12 +244,11 @@ STBRP_DEF c_void stbrp_setup_heuristic(stbrp_context *context, heuristic: c_int)
 
 STBRP_DEF c_void stbrp_setup_allow_out_of_mem(stbrp_context *context, allow_out_of_mem: c_int)
 {
-   if (allow_out_of_mem)
-      // if it's ok to run out of memory, then don't bother aligning them;
+   if allow_out_of_mem{      // if it's ok to run out of memory, then don't bother aligning them;
       // this gives better packing, but may fail due to OOM (even though
       // the rectangles easily fit). @TODO a smarter approach would be to only
       // quantize once we've hit OOM, then we could get rid of this parameter.
-      context.align = 1;
+      context.align = 1; }
    else {
       // if it's not ok to run out of memory, then quantize the widths
       // so that num_nodes is always enough nodes.
@@ -319,15 +318,15 @@ static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, x0: 
          waste_area += visited_width * (node.y - min_y);
          min_y = node.y;
          // the first time through, visited_width might be reduced
-         if (node.x < x0)
-            visited_width += node. - x0;
-         else
-            visited_width += node. - node.x;
+         if node.x < x0{            visited_width += node. - x0;
+ }
       } else {
          // add waste area
          let under_width: c_int = node. - node.x;
-         if (under_width + visited_width > width)
+         if under_width + visited_width > width
+{
             under_width = width - visited_width;
+}
          waste_area += under_width * (min_y - node.y);
          visited_width += under_width;
       }
@@ -495,8 +494,10 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, w
    // stitch the list back in
    node.next = cur;
 
-   if (cur.x < res.x + width)
+   if cur.x < res.x + width
+{
       cur.x = (stbrp_coord) (res.x + width);
+}
 
 // #ifdef _DEBUG
    cur = context.active_head;
@@ -529,10 +530,14 @@ static c_int STBRP__CDECL rect_height_compare(const c_void *a, const c_void *b)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
-   if (p.h > q.h)
+   if p.h > q.h
+{
       return -1;
-   if (p.h < q.h)
+}
+   if p.h < q.h
+{
       return  1;
+}
    return (p.w > q.w) ? -1 : (p.w < q.w);
 }
 
@@ -575,8 +580,10 @@ STBRP_DEF c_int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, num_
    // set was_packed flags and all_rects_packed status
    for (i=0; i < num_rects; ++i) {
       rects[i].was_packed = !(rects[i].x == STBRP__MAXVAL && rects[i].y == STBRP__MAXVAL);
-      if (!rects[i].was_packed)
+      if !rects[i].was_packed
+{
          all_rects_packed = 0;
+}
    }
 
    // return the all_rects_packed status

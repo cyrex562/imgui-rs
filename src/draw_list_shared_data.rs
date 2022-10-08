@@ -36,9 +36,31 @@ pub struct ImDrawListSharedData {
 
 impl ImDrawListSharedData {
     // ImDrawListSharedData();
+    pub fn new() -> Self {
+        let mut out = Self::default();
+        // memset(this, 0, sizeof(*this));
+        // for (let i: c_int = 0; i < IM_ARRAYSIZE(ArcFastVtx); i++)
+        for i in 0..out.ArcFastVtx.len() {
+            let a: c_float = (i * 2 * IM_PI) / (out.ArcFastVtx.len());
+            out.ArcFastVtx[i] = ImVec2::new2(ImCos(a), ImSin(a));
+        }
+        out.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, out.CircleSegmentMaxError);
+        out
+    }
 
     // void SetCircleTessellationMaxError(max_error: c_float);
     pub fn SetCircleTesselationMaxError(&mut self, max_error: c_float) {
-        todo!()
+        if self.CircleSegmentMaxError == max_error {
+            return;
+        }
+
+        // IM_ASSERT(max_error > 0f32);
+        self.CircleSegmentMaxError = max_error;
+        // for (let i: c_int = 0; i < IM_ARRAYSIZE(CircleSegmentCounts); i++)
+        for i in 0..self.CircleSegmentCounts.len() {
+            let radius: c_float = i as c_float;
+            self.CircleSegmentCounts[i] = if i > 0 { IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, self.CircleSegmentMaxError) } else { IM_DRAWLIST_ARCFAST_SAMPLE_MAX };
+        }
+        self.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, self.CircleSegmentMaxError);
     }
 }

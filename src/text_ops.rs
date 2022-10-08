@@ -1,8 +1,14 @@
+use std::ptr::null_mut;
+use libc::{c_char, c_float};
+use crate::font::ImFont;
+use crate::GImGui;
+use crate::render_ops::FindRenderedTextEnd;
+use crate::vec2::ImVec2;
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
 // CalcTextSize("") should return ImVec2::new2(0f32, g.FontSize)
 // ImVec2 CalcTextSize(text: *const c_char, text_end: *const c_char, hide_text_after_double_hash: bool, wrap_width: c_float)
-pub fn CalcTextSize(text: *const c_char, text_end: *const c_char, hid_text_after_double_hash: bool, wrap_width: c_float) -> ImVec2
+pub unsafe fn CalcTextSize(text: *const c_char, text_end: *const c_char, hid_text_after_double_hash: bool, wrap_width: c_float) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 let text_display_end: *const c_char;
@@ -52,10 +58,14 @@ static ImGuiWindow* GetCombinedRootWindow(window: *mut ImGuiWindow, popup_hierar
     {
         last_window = window;
         window = window.RootWindow;
-        if (popup_hierarchy)
+        if popup_hierarchy
+{
             window = window.RootWindowPopupTree;
-		if (dock_hierarchy)
+}
+		if dock_hierarchy
+{
 			window = window.RootWindowDockTree;
+}
 	}
     return window;
 }

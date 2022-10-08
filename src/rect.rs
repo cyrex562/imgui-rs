@@ -7,7 +7,7 @@ use crate::vec4::ImVec4;
 
 // Helper: ImRect (2D axis aligned bounding-box)
 // NB: we can't rely on ImVec2 math operators being available here!
-#[derive(Debug,Clone,Default)]
+#[derive(Debug,Copy,Clone,Default)]
 pub struct  ImRect
 {
     // ImVec2      Min;    // Upper-left

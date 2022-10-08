@@ -1,4 +1,5 @@
 use libc::{c_char, c_int, c_void, size_t};
+use crate::bit_array::ImBitArray;
 
 // typedef int ImGuiDir;               // -> enum ImGuiDir_             // Enum: A cardinal direction
 // pub type ImGuiDir = c_int;
