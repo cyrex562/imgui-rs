@@ -389,7 +389,7 @@ pub unsafe fn FindHoveredWindows() {
     }
 }
 
-pub fn SetNextWindowSize(size: &ImVec2, ImGuiCond cond)
+pub unsafe fn SetNextWindowSize(size: &ImVec2, cond: ImGuiCond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.

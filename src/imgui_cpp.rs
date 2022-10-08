@@ -10,7 +10,7 @@ use crate::context::ImGuiContext;
 use crate::storage::ImGuiStoragePair;
 
 
-static c_void SetWindowConditionAllowFlags(ImGuiWindow* window, ImGuiCond flags, bool enabled)
+static c_void SetWindowConditionAllowFlags(ImGuiWindow* window, flags: ImGuiCond, bool enabled)
 {
     window.SetWindowPosAllowFlags       = enabled ? (window.SetWindowPosAllowFlags       | flags) : (window.SetWindowPosAllowFlags       & ~flags);
     window.SetWindowSizeAllowFlags      = enabled ? (window.SetWindowSizeAllowFlags      | flags) : (window.SetWindowSizeAllowFlags      & ~flags);
@@ -2120,7 +2120,7 @@ ImVec2 GetWindowPos()
     return window.Pos;
 }
 
-c_void SetWindowPos(ImGuiWindow* window, pos: &ImVec2, ImGuiCond cond)
+c_void SetWindowPos(ImGuiWindow* window, pos: &ImVec2, cond: ImGuiCond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowPosAllowFlags & cond) == 0)
@@ -2144,13 +2144,13 @@ c_void SetWindowPos(ImGuiWindow* window, pos: &ImVec2, ImGuiCond cond)
     window.DC.CursorStartPos += offset;
 }
 
-c_void SetWindowPos(pos: &ImVec2, ImGuiCond cond)
+c_void SetWindowPos(pos: &ImVec2, cond: ImGuiCond)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindowRead();
     SetWindowPos(window, pos, cond);
 }
 
-c_void SetWindowPos(*const char name, pos: &ImVec2, ImGuiCond cond)
+c_void SetWindowPos(*const char name, pos: &ImVec2, cond: ImGuiCond)
 {
     if (let mut window: *mut ImGuiWindow =  FindWindowByName(name))
         SetWindowPos(window, pos, cond);
@@ -2162,7 +2162,7 @@ ImVec2 GetWindowSize()
     return window.Size;
 }
 
-c_void SetWindowSize(ImGuiWindow* window, size: &ImVec2, ImGuiCond cond)
+c_void SetWindowSize(ImGuiWindow* window, size: &ImVec2, cond: ImGuiCond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowSizeAllowFlags & cond) == 0)
@@ -2187,18 +2187,18 @@ c_void SetWindowSize(ImGuiWindow* window, size: &ImVec2, ImGuiCond cond)
         MarkIniSettingsDirty(window);
 }
 
-c_void SetWindowSize(size: &ImVec2, ImGuiCond cond)
+c_void SetWindowSize(size: &ImVec2, cond: ImGuiCond)
 {
     SetWindowSize(GimGui.CurrentWindow, size, cond);
 }
 
-c_void SetWindowSize(*const char name, size: &ImVec2, ImGuiCond cond)
+c_void SetWindowSize(*const char name, size: &ImVec2, cond: ImGuiCond)
 {
     if (let mut window: *mut ImGuiWindow =  FindWindowByName(name))
         SetWindowSize(window, size, cond);
 }
 
-c_void SetWindowCollapsed(ImGuiWindow* window, bool collapsed, ImGuiCond cond)
+c_void SetWindowCollapsed(ImGuiWindow* window, bool collapsed, cond: ImGuiCond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowCollapsedAllowFlags & cond) == 0)
@@ -2216,7 +2216,7 @@ c_void SetWindowHitTestHole(ImGuiWindow* window, pos: &ImVec2, size: &ImVec2)
     window.HitTestHoleOffset = ImVec2ih(pos - window.Pos);
 }
 
-c_void SetWindowCollapsed(bool collapsed, ImGuiCond cond)
+c_void SetWindowCollapsed(bool collapsed, cond: ImGuiCond)
 {
     SetWindowCollapsed(GimGui.CurrentWindow, collapsed, cond);
 }
@@ -2233,7 +2233,7 @@ bool IsWindowAppearing()
     return window.Appearing;
 }
 
-c_void SetWindowCollapsed(*const char name, bool collapsed, ImGuiCond cond)
+c_void SetWindowCollapsed(*const char name, bool collapsed, cond: ImGuiCond)
 {
     if (let mut window: *mut ImGuiWindow =  FindWindowByName(name))
         SetWindowCollapsed(window, collapsed, cond);
@@ -2257,7 +2257,7 @@ c_void SetWindowFocus(*const char name)
     }
 }
 
-c_void SetNextWindowPos(pos: &ImVec2, ImGuiCond cond, pivot: &ImVec2)
+c_void SetNextWindowPos(pos: &ImVec2, cond: ImGuiCond, pivot: &ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
@@ -2295,7 +2295,7 @@ c_void SetNextWindowScroll(scroll: &ImVec2)
     g.NextWindowData.ScrollVal = scroll;
 }
 
-c_void SetNextWindowCollapsed(bool collapsed, ImGuiCond cond)
+c_void SetNextWindowCollapsed(bool collapsed, cond: ImGuiCond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
@@ -2324,7 +2324,7 @@ c_void SetNextWindowViewport(ImGuiID id)
     g.NextWindowData.ViewportId = id;
 }
 
-c_void SetNextWindowDockID(ImGuiID id, ImGuiCond cond)
+c_void SetNextWindowDockID(ImGuiID id, cond: ImGuiCond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasDock;
@@ -5802,7 +5802,7 @@ c_void EndDragDropSource()
 }
 
 // Use 'cond' to choose to submit payload on drag start or every frame
-bool SetDragDropPayload(*const char type, *const c_void data, size_t data_size, ImGuiCond cond)
+bool SetDragDropPayload(*const char type, *const c_void data, size_t data_size, cond: ImGuiCond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     ImGuiPayload& payload = g.DragDropPayload;
@@ -10162,7 +10162,7 @@ ImGuiDockNode* DockNodeTreeFindVisibleNodeByPos(ImGuiDockNode* node, ImVec2 pos)
 //-----------------------------------------------------------------------------
 
 // [Internal] Called via SetNextWindowDockID()
-c_void SetWindowDock(ImGuiWindow* window, ImGuiID dock_id, ImGuiCond cond)
+c_void SetWindowDock(ImGuiWindow* window, ImGuiID dock_id, cond: ImGuiCond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if (cond && (window.SetWindowDockAllowFlags & cond) == 0)

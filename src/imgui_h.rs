@@ -259,22 +259,22 @@ namespace ImGui
 
     // Window manipulation
     // - Prefer using SetNextXXX functions (before Begin) rather that SetXXX functions (after Begin).
-     c_void          SetNextWindowPos(pos: &ImVec2, ImGuiCond cond = 0, pivot: &ImVec2 = ImVec2(0, 0)); // set next window position. call before Begin(). use pivot=(0.5f32,0.5f32) to center on given point, etc.
-     c_void          SetNextWindowSize(size: &ImVec2, ImGuiCond cond = 0);                  // set next window size. set axis to 0f32 to force an auto-fit on this axis. call before Begin()
+     c_void          SetNextWindowPos(pos: &ImVec2, cond: ImGuiCond = 0, pivot: &ImVec2 = ImVec2(0, 0)); // set next window position. call before Begin(). use pivot=(0.5f32,0.5f32) to center on given point, etc.
+     c_void          SetNextWindowSize(size: &ImVec2, cond: ImGuiCond = 0);                  // set next window size. set axis to 0f32 to force an auto-fit on this axis. call before Begin()
      c_void          SetNextWindowSizeConstraints(size_min: &ImVec2, size_max: &ImVec2, ImGuiSizeCallback custom_callback = null_mut(), custom_callback_data: *mut c_void = null_mut()); // set next window size limits. use -1,-1 on either X/Y axis to preserve the current size. Sizes will be rounded down. Use callback to apply non-trivial programmatic constraints.
      c_void          SetNextWindowContentSize(size: &ImVec2);                               // set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0f32 to leave it automatic. call before Begin()
-     c_void          SetNextWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                 // set next window collapsed state. call before Begin()
+     c_void          SetNextWindowCollapsed(bool collapsed, cond: ImGuiCond = 0);                 // set next window collapsed state. call before Begin()
      c_void          SetNextWindowFocus();                                                       // set next window to be focused / top-most. call before Begin()
      c_void          SetNextWindowBgAlpha(c_float alpha);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
      c_void          SetNextWindowViewport(ImGuiID viewport_id);                                 // set next window viewport
-     c_void          SetWindowPos(pos: &ImVec2, ImGuiCond cond = 0);                        // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
-     c_void          SetWindowSize(size: &ImVec2, ImGuiCond cond = 0);                      // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
-     c_void          SetWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                     // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
+     c_void          SetWindowPos(pos: &ImVec2, cond: ImGuiCond = 0);                        // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
+     c_void          SetWindowSize(size: &ImVec2, cond: ImGuiCond = 0);                      // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
+     c_void          SetWindowCollapsed(bool collapsed, cond: ImGuiCond = 0);                     // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
      c_void          SetWindowFocus();                                                           // (not recommended) set current window to be focused / top-most. prefer using SetNextWindowFocus().
      c_void          SetWindowFontScale(c_float scale);                                            // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
-     c_void          SetWindowPos(*const char name, pos: &ImVec2, ImGuiCond cond = 0);      // set named window position.
-     c_void          SetWindowSize(*const char name, size: &ImVec2, ImGuiCond cond = 0);    // set named window size. set axis to 0f32 to force an auto-fit on this axis.
-     c_void          SetWindowCollapsed(*const char name, bool collapsed, ImGuiCond cond = 0);   // set named window collapsed state
+     c_void          SetWindowPos(*const char name, pos: &ImVec2, cond: ImGuiCond = 0);      // set named window position.
+     c_void          SetWindowSize(*const char name, size: &ImVec2, cond: ImGuiCond = 0);    // set named window size. set axis to 0f32 to force an auto-fit on this axis.
+     c_void          SetWindowCollapsed(*const char name, bool collapsed, cond: ImGuiCond = 0);   // set named window collapsed state
      c_void          SetWindowFocus(*const char name);                                           // set named window to be focused / top-most. use NULL to remove focus.
 
     // Content region
@@ -516,7 +516,7 @@ namespace ImGui
      c_float         GetTreeNodeToLabelSpacing();                                        // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
      bool          CollapsingHeader(*const char label, ImGuiTreeNodeFlags flags = 0);  // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
      bool          CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFlags flags = 0); // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if '*p_visible==false' don't display the header.
-     c_void          SetNextItemOpen(bool is_open, ImGuiCond cond = 0);                  // set next TreeNode/CollapsingHeader open state.
+     c_void          SetNextItemOpen(bool is_open, cond: ImGuiCond = 0);                  // set next TreeNode/CollapsingHeader open state.
 
     // Widgets: Selectables
     // - A selectable highlights when hovered, and can display another color when selected.
@@ -706,7 +706,7 @@ namespace ImGui
     //   e.g. if you have multiple tabs with a dockspace inside each tab: submit the non-visible dockspaces with ImGuiDockNodeFlags_KeepAliveOnly.
      ImGuiID       DockSpace(ImGuiID id, size: &ImVec2 = ImVec2(0, 0), ImGuiDockNodeFlags flags = 0, *const ImGuiWindowClass window_class = null_mut());
      ImGuiID       DockSpaceOverViewport(*const ImGuiViewport viewport = null_mut(), ImGuiDockNodeFlags flags = 0, *const ImGuiWindowClass window_class = null_mut());
-     c_void          SetNextWindowDockID(ImGuiID dock_id, ImGuiCond cond = 0);           // set next window dock id
+     c_void          SetNextWindowDockID(ImGuiID dock_id, cond: ImGuiCond = 0);           // set next window dock id
      c_void          SetNextWindowClass(*const ImGuiWindowClass window_class);           // set next window class (control docking compatibility + provide hints to platform backend via custom viewport flags and platform parent/child relationship)
      ImGuiID       GetWindowDockID();
      bool          IsWindowDocked();                                                   // is current window docked into another window?
@@ -727,7 +727,7 @@ namespace ImGui
     // - If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip, see #1725)
     // - An item can be both drag source and drop target.
      bool          BeginDragDropSource(ImGuiDragDropFlags flags = 0);                                      // call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
-     bool          SetDragDropPayload(*const char type, *const c_void data, size_t sz, ImGuiCond cond = 0);  // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui. Return true when payload has been accepted.
+     bool          SetDragDropPayload(*const char type, *const c_void data, size_t sz, cond: ImGuiCond = 0);  // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui. Return true when payload has been accepted.
      c_void          EndDragDropSource();                                                                    // only call EndDragDropSource() if BeginDragDropSource() returns true!
      bool                  BeginDragDropTarget();                                                          // call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()
      *const ImGuiPayload   AcceptDragDropPayload(*const char type, ImGuiDragDropFlags flags = 0);          // accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.

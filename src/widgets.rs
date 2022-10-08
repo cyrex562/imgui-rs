@@ -6188,7 +6188,7 @@ c_float GetTreeNodeToLabelSpacing()
 }
 
 // Set next TreeNode/CollapsingHeader open state.
-c_void SetNextItemOpen(bool is_open, ImGuiCond cond)
+c_void SetNextItemOpen(bool is_open, cond: ImGuiCond)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.Currentwindow.SkipItems)

@@ -986,9 +986,9 @@ namespace ImGui
      bool          IsWindowWithinBeginStackOf(*mut ImGuiWindow window, *mut ImGuiWindow potential_parent);
      bool          IsWindowAbove(*mut ImGuiWindow potential_above, *mut ImGuiWindow potential_below);
      bool          IsWindowNavFocusable(*mut ImGuiWindow window);
-     c_void          SetWindowPos(*mut ImGuiWindow window, pos: &ImVec2, ImGuiCond cond = 0);
-     c_void          SetWindowSize(*mut ImGuiWindow window, size: &ImVec2, ImGuiCond cond = 0);
-     c_void          SetWindowCollapsed(*mut ImGuiWindow window, bool collapsed, ImGuiCond cond = 0);
+     c_void          SetWindowPos(*mut ImGuiWindow window, pos: &ImVec2, cond: ImGuiCond = 0);
+     c_void          SetWindowSize(*mut ImGuiWindow window, size: &ImVec2, cond: ImGuiCond = 0);
+     c_void          SetWindowCollapsed(*mut ImGuiWindow window, bool collapsed, cond: ImGuiCond = 0);
      c_void          SetWindowHitTestHole(*mut ImGuiWindow window, pos: &ImVec2, size: &ImVec2);
 
 
@@ -1194,7 +1194,7 @@ namespace ImGui
      c_void          BeginDocked(*mut ImGuiWindow window, *mut bool p_open);
      c_void          BeginDockableDragDropSource(*mut ImGuiWindow window);
      c_void          BeginDockableDragDropTarget(*mut ImGuiWindow window);
-     c_void          SetWindowDock(*mut ImGuiWindow window, ImGuiID dock_id, ImGuiCond cond);
+     c_void          SetWindowDock(*mut ImGuiWindow window, ImGuiID dock_id, cond: ImGuiCond);
 
     // Docking - Builder function needs to be generally called before the node is used/submitted.
     // - The DockBuilderXXX functions are designed to _eventually_ become a public API, but it is too early to expose it and guarantee stability.
