@@ -60,3 +60,11 @@ pub fn flag_set<T>(flags: T, flag: T) -> bool {
 pub fn flag_clear<T>(flags: T, flag: T) -> bool {
     flag_set(flags, flag) == false
 }
+
+pub fn is_not_null<T>(ptr: *T) -> bool {
+    ptr.is_null() == false
+}
+
+pub fn is_null<T>(ptr: *T) -> bool {
+    ptr.is_null()
+}

@@ -6,7 +6,7 @@ use crate::layout_type::ImGuiLayoutType;
 use crate::vec2::ImVec2;
 
 // Storage data for BeginComboPreview()/EndComboPreview()
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct ImGuiComboPreviewData {
     pub PreviewRect: ImRect,
     pub BackupCursorPos: ImVec2,
