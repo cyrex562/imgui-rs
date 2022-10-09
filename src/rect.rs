@@ -18,15 +18,15 @@ pub Max: ImVec2
 
 impl ImRect {
     // constexpr ImRect()                                        : Min(0f32, 0f32), Max(0f32, 0f32)  {}
-    pub fn new() -> Self {
-        Self {
-            Min: ImVec2::default(),
-            Max: ImVec2::default()
-        }
-    }
+    // pub fn new() -> Self {
+    //     Self {
+    //         Min: ImVec2::default(),
+    //         Max: ImVec2::default()
+    //     }
+    // }
 
     // constexpr ImRect(const ImVec2& min, const ImVec2& max)    : Min(min), Max(max)                {}
-    pub fn new2(min: &ImVec2, max: &ImVec2) -> Self {
+    pub fn from_vec2(min: &ImVec2, max: &ImVec2) -> Self {
         Self {
             Min: min.clone(),
             Max: max.clone()
@@ -34,7 +34,7 @@ impl ImRect {
     }
 
     // constexpr ImRect(const ImVec4& v)                         : Min(v.x, v.y), Max(v.z, v.w)      {}
-    pub fn new3(v: &ImVec4) -> Self {
+    pub fn from_vec4(v: &ImVec4) -> Self {
         Self {
             Min: ImVec2::new2(v.x, v.y),
             Max: ImVec2::new2(v.z, v.w)
@@ -42,7 +42,7 @@ impl ImRect {
     }
 
     // constexpr ImRect(c_float x1, c_float y1, c_float x2, c_float y2)  : Min(x1, y1), Max(x2, y2)          {}
-    pub fn new4(x1: c_float, y1: c_float, x2: c_float, y2: c_float) -> Self {
+    pub fn from_floats(x1: c_float, y1: c_float, x2: c_float, y2: c_float) -> Self {
         Self {
             Min: ImVec2::new2(x1,y1),
             Max: ImVec2::new2(x2,y2),

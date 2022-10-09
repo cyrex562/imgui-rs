@@ -28,13 +28,13 @@ pub fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Clip
-    let mut rect_clipped: ImRect = ImRect::new2(r_min, r_max);
+    let mut rect_clipped: ImRect = ImRect::from_vec2(r_min, r_max);
     if clip {
         rect_clipped.ClipWith(g.Currentwindow.ClipRect);
     }
 
     // Expand for touch input const
-    let mut rect_for_touch: ImRect = ImRect::new2(rect_clipped.Min - g.Style.TouchExtraPadding.clone(), rect_clipped.Max + g.Style.TouchExtraPadding.clone());
+    let mut rect_for_touch: ImRect = ImRect::from_vec2(rect_clipped.Min - g.Style.TouchExtraPadding.clone(), rect_clipped.Max + g.Style.TouchExtraPadding.clone());
     if !rect_for_touch.Contains(&g.IO.MousePos) {
         return false;
     }

@@ -238,7 +238,7 @@ pub struct ImGuiIO {
     // bool        MouseDownOwnedUnlessPopupClose[5];  // Track if button was clicked inside a dear imgui window.
     pub MosueDownOwnedUnlessPopupClose: [bool; 5],
     // c_float       MouseDownDuration[5];               // Duration the mouse button has been down (0f32 == just clicked)
-    pub MouseDownDuration: [c_floatt; 5],
+    pub MouseDownDuration: [t: c_float; 5],
     // c_float       MouseDownDurationPrev[5];           // Previous time the mouse button has been down
     pub MouseDownDurationPrev: [c_float; 5],
     // ImVec2      MouseDragMaxDistanceAbs[5];         // Maximum distance, absolute, on each axis, of how much mouse has traveled from the clicking point

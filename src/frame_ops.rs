@@ -70,7 +70,7 @@ pub unsafe fn NewFrame()
     g.IO.Fonts.Locked = true;
     SetCurrentFont(GetDefaultFont());
     // IM_ASSERT(g.Font->IsLoaded());
-    let mut virtual_space: ImRect = ImRect::new4(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
+    let mut virtual_space: ImRect = ImRect::from_floats(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0 .. g.Viewports.len()
     {

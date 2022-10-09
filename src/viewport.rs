@@ -165,13 +165,13 @@ impl ImGuiViewport {
     // Helpers to retrieve ImRect (we don't need to store BuildWorkRect as every access tend to change it, hence the code asymmetry)
 //     ImRect  GetMainRect() const         { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
     pub fn GetMainRect(&self) -> ImRect {
-        ImRect::new4(self.Pos.x, self.Pos.y, self.Pos.x + self.Size.x, self.Pos.y + self.Size.y)
+        ImRect::from_floats(self.Pos.x, self.Pos.y, self.Pos.x + self.Size.x, self.Pos.y + self.Size.y)
     }
 
 
     // ImRect  GetWorkRect() const         { return ImRect(WorkPos.x, WorkPos.y, WorkPos.x + WorkSize.x, WorkPos.y + WorkSize.y); }
     pub fn GetWorkRect(&self) -> ImRect {
-        ImRect::new4(self.WorkPos.x, self.WorkPos.y, self.WorkPos.x + self.WorkSize.x, self.WorkPos.y + self.WorkSize.y)
+        ImRect::from_floats(self.WorkPos.x, self.WorkPos.y, self.WorkPos.x + self.WorkSize.x, self.WorkPos.y + self.WorkSize.y)
     }
 
 
@@ -179,6 +179,6 @@ impl ImGuiViewport {
     pub fn GetBuildWorkRect(&self) -> ImRect {
         let pos = self.CalcWorkRectPos(&self.BuildWorkOffsetMin);
         let size = self.CalcWorkRectSize(&self.BuildWorkOffsetMin, &self.BuildWorkOffsetMax);
-        ImRect::new4(pos.x, pos.y, pos.x + size.x, pos.y + size.y)
+        ImRect::from_floats(pos.x, pos.y, pos.x + size.x, pos.y + size.y)
     }
 }

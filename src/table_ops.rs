@@ -87,7 +87,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
 // Draw row background
 // We soft/cpu clip this so all backgrounds and borders can share the same clipping rectangle
         if bg_col0 || bg_col1 {
-            let mut row_rect = ImRect::new4(table.WorkRect.Min.x, bg_y1, table.WorkRect.Max.x, bg_y2);
+            let mut row_rect = ImRect::from_floats(table.WorkRect.Min.x, bg_y1, table.WorkRect.Max.x, bg_y2);
             row_rect.ClipWith(&table.BgClipRect);
             if bg_col0 != 0 && row_rect.Min.y < row_rect.Max.y {
                 window.DrawList.AddRectFilled(&row_rect.Min, &row_rect.Max, bg_col0, 0f32, ImDrawFlags_None);
@@ -229,5 +229,5 @@ pub fn TableGetCellBgRect(table: *const ImGuiTable, column_n: c_int) -> ImRect {
     //    x2 += table.OuterPaddingX;
     x1 = ImMax(x1, table.WorkRect.Min.x);
     x2 = ImMin(x2, table.WorkRect.Max.x);
-    return ImRect::new4(x1, table.RowPosY1, x2, table.RowPosY2);
+    return ImRect::from_floats(x1, table.RowPosY1, x2, table.RowPosY2);
 }

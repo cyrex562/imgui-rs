@@ -6,17 +6,21 @@ use crate::color::IM_COL32;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::hovered_flags::{ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem, ImGuiHoveredFlags_AllowWhenDisabled, ImGuiHoveredFlags_AllowWhenOverlapped, ImGuiHoveredFlags_DelayNormal, ImGuiHoveredFlags_DelayShort, ImGuiHoveredFlags_NoNavOverride, ImGuiHoveredFlags_None, ImGuiHoveredFlags_NoSharedDelay};
-use crate::id_ops::{ClearActiveID, SetHoveredID};
+use crate::id_ops::{ClearActiveID, KeepAliveID, SetHoveredID};
 use crate::imgui::GImGui;
 use crate::input_ops::{IsMouseClicked, IsMouseHoveringRect};
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_Disabled};
-use crate::item_status_flags::{ImGuiItemStatusFlags, ImGuiItemStatusFlags_Deactivated, ImGuiItemStatusFlags_Edited, ImGuiItemStatusFlags_HasDeactivated, ImGuiItemStatusFlags_HoveredRect, ImGuiItemStatusFlags_HoveredWindow, ImGuiItemStatusFlags_ToggledOpen, ImGuiItemStatusFlags_ToggledSelection};
+use crate::item_status_flags::{ImGuiItemStatusFlags, ImGuiItemStatusFlags_Deactivated, ImGuiItemStatusFlags_Edited, ImGuiItemStatusFlags_HasDeactivated, ImGuiItemStatusFlags_HoveredRect, ImGuiItemStatusFlags_HoveredWindow, ImGuiItemStatusFlags_None, ImGuiItemStatusFlags_ToggledOpen, ImGuiItemStatusFlags_ToggledSelection};
 use crate::key::{ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY};
+use crate::layout_type::ImGuiLayoutType_Horizontal;
+use crate::math_ops::ImMax;
 use crate::mouse_button::ImGuiMouseButton;
+use crate::nav_ops::NavProcessItem;
 use crate::rect::ImRect;
 use crate::type_defs::ImGuiID;
 use crate::utils::flag_set;
 use crate::vec2::ImVec2;
+use crate::window_flags::ImGuiWindowFlags_NavFlattened;
 use crate::window_ops::IsWindowContentHoverable;
 
 // c_void MarkItemEdited(ImGuiID id)
@@ -190,7 +194,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool
             GetForegroundDrawList(null_mut()).AddRect(&bb.Min, &bb.Max, IM_COL32(255, 255, 0, 255), 0f32, ImDrawFlags_None, 0f32);
         }
         if g.DebugItemPickerBreakId == id {
-            IM_DEBUG_BREAK();
+            // IM_DEBUG_BREAK();
         }
     }
 
@@ -404,4 +408,125 @@ pub unsafe fn GetItemRectSize() -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.LastItemData.Rect.GetSize();
+}
+
+
+
+// Declare item bounding box for clipping and interaction.
+// Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
+// declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
+pub unsafe fn ItemAdd(bb: &mut ImRect, id: ImGuiID, nav_bb_arg: *const ImRect, extra_flags: ImGuiItemFlags) -> bool
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+
+    // Set item data
+    // (DisplayRect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
+    g.LastItemData.ID = id;
+    g.LastItemData.Rect = bb.clone();
+    g.LastItemData.NavRect = nav_bb_arg ? *nav_bb_arg : bb;
+    g.LastItemData.InFlags = g.CurrentItemFlags | extra_flags;
+    g.LastItemData.StatusFlags = ImGuiItemStatusFlags_None;
+
+    // Directional navigation processing
+    if id != 0
+    {
+        KeepAliveID(id);
+
+        // Runs prior to clipping early-out
+        //  (a) So that NavInitRequest can be honored, for newly opened windows to select a default widget
+        //  (b) So that we can scroll up/down past clipped items. This adds a small O(N) cost to regular navigation requests
+        //      unfortunately, but it is still limited to one window. It may not scale very well for windows with ten of
+        //      thousands of item, but at least NavMoveRequest is only set on user interaction, aka maximum once a frame.
+        //      We could early out with "if (is_clipped && !g.NavInitRequest) return false;" but when we wouldn't be able
+        //      to reach unclipped widgets. This would work if user had explicit scrolling control (e.g. mapped on a stick).
+        // We intentionally don't check if g.NavWindow != NULL because g.NavAnyRequest should only be set when it is non null.
+        // If we crash on a NULL g.NavWindow we need to fix the bug elsewhere.
+        window.DC.NavLayersActiveMaskNext |= (1 << window.DC.NavLayerCurrent);
+        if g.NavId == id || g.NavAnyRequest {
+            if g.NavWindow.RootWindowForNav == window.RootWindowForNav {
+                if window == g.NavWindow || flag_set((window.Flags | g.NavWindow.Flags), ImGuiWindowFlags_NavFlattened) {
+                    NavProcessItem();
+                }
+            }
+        }
+
+        // [DEBUG] People keep stumbling on this problem and using "" as identifier in the root of a window instead of "##something".
+        // Empty identifier are valid and useful in a small amount of cases, but 99.9% of the time you want to use "##something".
+        // READ THE FAQ: https://dearimgui.org/faq
+        // IM_ASSERT(id != window.ID && "Cannot have an empty ID at the root of a window. If you need an empty label, use ## and read the FAQ about how the ID Stack works!");
+
+        // [DEBUG] Item Picker tool, when enabling the "extended" version we perform the check in ItemAdd()
+// #ifdef IMGUI_DEBUG_TOOL_ITEM_PICKER_EX
+        if id == g.DebugItemPickerBreakId
+        {
+            // IM_DEBUG_BREAK();
+            g.DebugItemPickerBreakId = 0;
+        }
+// #endif
+    }
+    g.NextItemData.Flags = ImGuiNextItemDataFlags_None;
+
+// #ifdef IMGUI_ENABLE_TEST_ENGINE
+    if (id != 0) {
+        IMGUI_TEST_ENGINE_ITEM_ADD(nav_bb_arg? * nav_bb_arg: bb, id);
+    }
+// #endif
+
+    // Clipping test
+    let is_clipped: bool = IsClippedEx(bb, id);
+    if is_clipped {
+        return false;
+    }
+    //if (g.IO.KeyAlt) window.DrawList.AddRect(bb.Min, bb.Max, IM_COL32(255,255,0,120)); // [DEBUG]
+
+    // We need to calculate this now to take account of the current clipping rectangle (as items like Selectable may change them)
+    if IsMouseHoveringRect(&bb.Min, &bb.Max, false) {
+        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredRect;
+    }
+    return true;
+}
+
+
+
+// Advance cursor given item size for layout.
+// Register minimum needed size so it can extend the bounding box used for auto-fit calculation.
+// See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
+pub unsafe fn ItemSize(size: &ImVec2,text_baseline_y: c_float)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    if window.SkipItems {
+        return;
+    }
+
+    // We increase the height in this function to accommodate for baseline offset.
+    // In theory we should be offsetting the starting position (window.DC.CursorPos), that will be the topic of a larger refactor,
+    // but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
+    let offset_to_match_baseline_y: c_float =  if text_baseline_y >= 0.0 { ImMax(0f32, window.DC.CurrLineTextBaseOffset - text_baseline_y) } else { 0.0 };
+
+    let line_y1: c_float =  if window.DC.IsSameLine { window.DC.CursorPosPrevLine.y } else { window.DC.CursorPos.y };
+    let line_height: c_float =  ImMax(window.DC.CurrLineSize.y, /*ImMax(*/window.DC.CursorPos.y - line_y1/*, 0f32)*/ + size.y + offset_to_match_baseline_y);
+
+    // Always align ourselves on pixel boundaries
+    //if (g.IO.KeyAlt) window.DrawList.AddRect(window.DC.CursorPos, window.DC.CursorPos + ImVec2(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
+    window.DC.CursorPosPrevLine.x = window.DC.CursorPos.x + size.x;
+    window.DC.CursorPosPrevLine.y = line_y1;
+    window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);    // Next line
+    window.DC.CursorPos.y = IM_FLOOR(line_y1 + line_height + g.Style.ItemSpacing.y);                    // Next line
+    window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPosPrevLine.x);
+    window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y - g.Style.ItemSpacing.y);
+    //if (g.IO.KeyAlt) window.DrawList.AddCircle(window.DC.CursorMaxPos, 3.0f32, IM_COL32(255,0,0,255), 4); // [DEBUG]
+
+    window.DC.PrevLineSize.y = line_height;
+    window.DC.CurrLineSize.y = 0f32;
+    window.DC.PrevLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, text_baseline_y);
+    window.DC.CurrLineTextBaseOffset = 0f32;
+    window.DC.IsSameLine = false;
+    window.DC.IsSetPos = false;
+
+    // Horizontal layout mode
+    if window.DC.LayoutType == ImGuiLayoutType_Horizontal {
+        SameLine();
+    }
 }

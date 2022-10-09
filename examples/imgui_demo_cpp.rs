@@ -743,7 +743,7 @@ static c_void ShowDemoWindowWidgets()
                 "You can input value using the scientific notation,\n"
                 "  e.g. \"1e+8\" becomes \"100000000\".");
 
-            static c_float vec4a[4] = { 0.1f32, 0.20f32, 0.3f32, 0.44f };
+            staticvec4a: c_float[4] = { 0.1f32, 0.20f32, 0.3f32, 0.44f };
             InputFloat3("input float3", vec4a);
         }
 
@@ -791,8 +791,8 @@ static c_void ShowDemoWindowWidgets()
 
         {
             IMGUI_DEMO_MARKER("Widgets/Basic/ColorEdit3, ColorEdit4");
-            static c_float col1[3] = { 1f32, 0f32, 0.2f };
-            static c_float col2[4] = { 0.4f, 0.7f, 0f32, 0.5f32 };
+            staticcol1: c_float[3] = { 1f32, 0f32, 0.2f };
+            staticcol2: c_float[4] = { 0.4f, 0.7f, 0f32, 0.5f32 };
             ColorEdit3("color 1", col1);
             SameLine(); HelpMarker(
                 "Click on the color square to open a color picker.\n"
@@ -831,7 +831,7 @@ static c_void ShowDemoWindowWidgets()
             {
                 BeginTooltip();
                 Text("I am a fancy tooltip");
-                static c_float arr[] = { 0.6f, 0.1f, 1f32, 0.5f32, 0.92f, 0.1f, 0.2f };
+                staticarr: c_float[] = { 0.6f, 0.1f, 1f32, 0.5f32, 0.92f, 0.1f, 0.2f };
                 PlotLines("Curve", arr, IM_ARRAYSIZE(arr));
                 Text("Sin(time) = %f", sinf(GetTime()));
                 EndTooltip();
@@ -1735,14 +1735,14 @@ static c_void ShowDemoWindowWidgets()
 
         // Plot as lines and plot as histogram
         IMGUI_DEMO_MARKER("Widgets/Plotting/PlotLines, PlotHistogram");
-        static c_float arr[] = { 0.6f, 0.1f, 1f32, 0.5f32, 0.92f, 0.1f, 0.2f };
+        staticarr: c_float[] = { 0.6f, 0.1f, 1f32, 0.5f32, 0.92f, 0.1f, 0.2f };
         PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
         PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, null_mut(), 0f32, 1f32, ImVec2(0, 80f32));
 
         // Fill an array of contiguous float values to plot
         // Tip: If your float aren't contiguous but part of a structure, you can pass a pointer to your first float
         // and the sizeof() of your structure in the "stride" parameter.
-        static c_float values[90] = {};
+        staticvalues: c_float[90] = {};
         static let values_offset: c_int = 0;
         static double refresh_time = 0.0;
         if (!animate || refresh_time == 0.0)
@@ -1773,8 +1773,8 @@ static c_void ShowDemoWindowWidgets()
         // We probably want an API passing floats and user provide sample rate/count.
         struct Funcs
         {
-            static c_float Sin(*mut c_void, c_int i) { return sinf(i * 0.1f32); }
-            static c_float Saw(*mut c_void, c_int i) { return (i & 1) ? 1f32 : -1f32; }
+            staticSin: c_float(*mut c_void, c_int i) { return sinf(i * 0.1f32); }
+            staticSaw: c_float(*mut c_void, c_int i) { return (i & 1) ? 1f32 : -1f32; }
         };
         static let func_type: c_int = 0, display_count = 70;
         Separator();
@@ -2078,7 +2078,7 @@ static c_void ShowDemoWindowWidgets()
         const u32   u32_zero = 0,   u32_one = 1,   u32_fifty = 50, u32_min = 0,           u32_max = UINT_MAX/2,   u32_hi_a = UINT_MAX/2 - 100,   u32_hi_b = UINT_MAX/2;
         const ImS64   s64_zero = 0,   s64_one = 1,   s64_fifty = 50, s64_min = LLONG_MIN/2, s64_max = LLONG_MAX/2,  s64_hi_a = LLONG_MAX/2 - 100,  s64_hi_b = LLONG_MAX/2;
         const u64   u64_zero = 0,   u64_one = 1,   u64_fifty = 50, u64_min = 0,           u64_max = ULLONG_MAX/2, u64_hi_a = ULLONG_MAX/2 - 100, u64_hi_b = ULLONG_MAX/2;
-        const c_float   f32_zero = 0.f, f32_one = 1.f, f32_lo_a = -10000000000f32, f32_hi_a = +10000000000f32;
+        f32_zero: c_float = 0.f, f32_one = 1.f, f32_lo_a = -10000000000f32, f32_hi_a = +10000000000f32;
         const double  f64_zero = 0.,  f64_one = 1.,  f64_lo_a = -1000000000000000.0, f64_hi_a = +1000000000000000.0;
 
         // State
@@ -2090,7 +2090,7 @@ static c_void ShowDemoWindowWidgets()
         static u32  u32_v = -1;
         static ImS64  s64_v = -1;
         static u64  u64_v = (u64)-1;
-        static c_float  f32_v = 0.123f;
+        staticf32_v: c_float = 0.123f;
         static double f64_v = 90000.01234567890123456789;
 
         let drag_speed: c_float =  0.2f;
@@ -2172,7 +2172,7 @@ static c_void ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Multi-component Widgets");
     if (TreeNode("Multi-component Widgets"))
     {
-        static c_float vec4f[4] = { 0.1f32, 0.20f32, 0.3f32, 0.44f };
+        staticvec4f: c_float[4] = { 0.1f32, 0.20f32, 0.3f32, 0.44f };
         static c_int vec4i[4] = { 1, 5, 100, 255 };
 
         InputFloat2("input float2", vec40f32);
@@ -2211,7 +2211,7 @@ static c_void ShowDemoWindowWidgets()
         VSliderInt("##int", ImVec2(18, 160), &int_value, 0, 5);
         SameLine();
 
-        static c_float values[7] = { 0f32, 0.60f32, 0.35f, 0.9f, 0.70f32, 0.20f32, 0f32 };
+        staticvalues: c_float[7] = { 0f32, 0.60f32, 0.35f, 0.9f, 0.70f32, 0.20f32, 0f32 };
         PushID("set1");
         for (let i: c_int = 0; i < 7; i++)
         {
@@ -2231,7 +2231,7 @@ static c_void ShowDemoWindowWidgets()
 
         SameLine();
         PushID("set2");
-        static c_float values2[4] = { 0.20f32, 0.80f32, 0.40f32, 0.25f };
+        staticvalues2: c_float[4] = { 0.20f32, 0.80f32, 0.40f32, 0.25f };
         let rows: c_int = 3;
         const ImVec2 small_slider_size(18, ((160f32 - (rows - 1) * spacing) / rows));
         for (let nx: c_int = 0; nx < 4; nx++)
@@ -2277,8 +2277,8 @@ static c_void ShowDemoWindowWidgets()
             // to allow your own widgets to use colors in their drag and drop interaction.
             // Also see 'Demo->Widgets->Color/Picker Widgets->Palette' demo.
             HelpMarker("You can drag from the color squares.");
-            static c_float col1[3] = { 1f32, 0f32, 0.2f };
-            static c_float col2[4] = { 0.4f, 0.7f, 0f32, 0.5f32 };
+            staticcol1: c_float[3] = { 1f32, 0f32, 0.2f };
+            staticcol2: c_float[4] = { 0.4f, 0.7f, 0f32, 0.5f32 };
             ColorEdit3("color 1", col1);
             ColorEdit4("color 2", col2);
             TreePop();
@@ -2401,7 +2401,7 @@ static c_void ShowDemoWindowWidgets()
         // Submit selected item item so we can query their status in the code following it.
         let mut ret: bool =  false;
         static let mut b: bool =  false;
-        static c_float col4f[4] = { 1f32, 0.5, 0f32, 1f32 };
+        staticcol4f: c_float[4] = { 1f32, 0.5, 0f32, 1f32 };
         static str: [c_char;16] = {};
         if (item_disabled)
             BeginDisabled(true);
@@ -2883,7 +2883,7 @@ static c_void ShowDemoWindowLayout()
         }
         // Capture the group size and create widgets using the same size
         let size: ImVec2 = GetItemRectSize();
-        const c_float values[5] = { 0.5f32, 0.20f32, 0.80f32, 0.60f32, 0.25f };
+        values: c_float[5] = { 0.5f32, 0.20f32, 0.80f32, 0.60f32, 0.25f };
         PlotHistogram("##values", values, IM_ARRAYSIZE(values), 0, null_mut(), 0f32, 1f32, size);
 
         Button("ACTION", ImVec2((size.x - GetStyle().ItemSpacing.x) * 0.5f32, size.y));
@@ -3628,7 +3628,7 @@ static c_void ShowDemoWindowPopups()
 
             // Testing behavior of widgets stacking their own regular popups over the modal.
             static let item: c_int = 1;
-            static c_float color[4] = { 0.4f, 0.7f, 0f32, 0.5f32 };
+            staticcolor: c_float[4] = { 0.4f, 0.7f, 0f32, 0.5f32 };
             Combo("Combo", &item, "aaaa\0bbbb\0cccc\0dddd\0eeee\0\0");
             ColorEdit4("color", color);
 
@@ -5840,13 +5840,13 @@ static c_void ShowDemoWindowMisc()
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
                 let key_size: ImVec2 = ImVec2(35f32, 35.00f32);
-                const c_float  key_rounding = 3.0f32;
+                key_rounding: c_float = 3.0f32;
                 let key_face_size: ImVec2 = ImVec2(25f32, 25.00f32);
                 let key_face_pos: ImVec2 = ImVec2(5f32, 3.00f32);
-                const c_float  key_face_rounding = 2.0f32;
+                key_face_rounding: c_float = 2.0f32;
                 let key_label_pos: ImVec2 = ImVec2(7.0f32, 4.00f32);
                 let key_step: ImVec2 = ImVec2(key_size.x - 1f32, key_size.y - 1f32);
-                const c_float  key_row_offset = 9.0f32;
+                key_row_offset: c_float = 9.0f32;
 
                 let board_min: ImVec2 = GetCursorScreenPos();
                 let board_max: ImVec2 = ImVec2(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10f32, board_min.y + 3 * key_step.y + 10f32);
@@ -5969,7 +5969,7 @@ static c_void ShowDemoWindowMisc()
                 Text("Item with focus: <none>");
 
             // Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
-            static c_float f3[3] = { 0f32, 0f32, 0f32 };
+            staticf3: c_float[3] = { 0f32, 0f32, 0f32 };
             let focus_ahead: c_int = -1;
             if (Button("Focus on X")) { focus_ahead = 0; } SameLine();
             if (Button("Focus on Y")) { focus_ahead = 1; } SameLine();
@@ -6472,8 +6472,8 @@ c_void ShowStyleEditor(*mut ImGuiStyle re0f32)
                     Text("R: %.f\nN: %d", rad, draw_list._CalcCircleAutoSegmentCount(rad));
 
                     let canvas_width: c_float =  IM_MAX(min_widget_width, rad * 2.00f32);
-                    const c_float offset_x     = floorf(canvas_width * 0.5f32);
-                    const c_float offset_y     = floorf(RAD_MAX);
+                    offset_x: c_float     = floorf(canvas_width * 0.5f32);
+                    offset_y: c_float     = floorf(RAD_MAX);
 
                     let p1: ImVec2 = GetCursorScreenPos();
                     draw_list.AddCircle(ImVec2(p1.x + offset_x, p1.y + offset_y), rad, GetColorU32(ImGuiCol_Text));
@@ -7226,7 +7226,7 @@ static c_void ShowPlaceholderObject(*const char prefix, c_int uid)
 
     if (node_open)
     {
-        static c_float placeholder_members[8] = { 0f32, 0f32, 1f32, 3.1416f, 100f32, 999.0f32 };
+        staticplaceholder_members: c_float[8] = { 0f32, 0f32, 1f32, 3.1416f, 100f32, 999.0f32 };
         for (let i: c_int = 0; i < 8; i++)
         {
             PushID(i); // Use field index as identifier.

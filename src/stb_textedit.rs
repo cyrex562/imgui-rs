@@ -323,10 +323,8 @@ pub type STB_TEXTEDIT_POSITIONTYPE  = c_int;
 
 // result of layout query
 typedef struct
-{
-   c_float x0,x1;             // starting x location, end x location (allows for align=right, etc)
-   let mut baseline_y_delta: c_float = 0f32;  // position of baseline relative to previous row's baseline
-   c_float ymin,ymax;         // height of row above and below baseline
+{x0: c_float,x1;             // starting x location, end x location (allows for align=right, etc)
+   let mut baseline_y_delta: c_float = 0f32;  // position of baseline relative to previous row's baselineymin: c_float,ymax;         // height of row above and below baseline
    let mut num_chars: c_int = 0;
 } StbTexteditRow;
 // #endif //INCLUDE_STB_TEXTEDIT_H
@@ -356,7 +354,7 @@ typedef struct
 //
 
 // traverse the layout to locate the nearest character to a display position
-static c_int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, c_float x, c_float y)
+static c_int stb_text_locate_coord(STB_TEXTEDIT_STRING *str,x: c_float,y: c_float)
 {
    StbTexteditRow r;
    let n: c_int = STB_TEXTEDIT_STRINGLEN(str);
@@ -416,7 +414,7 @@ static c_int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, c_float x, c_float 
 }
 
 // API click: on mouse down, move the cursor to the clicked location, and reset the selection
-static c_void stb_textedit_click(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, c_float x, c_float y)
+static c_void stb_textedit_click(STB_TEXTEDIT_STRING *str, STB_TexteditState *state,x: c_float,y: c_float)
 {
    // In single-line mode, just always make y = 0. This lets the drag keep working if the mouse
    // goes off the top or bottom of the text
@@ -434,7 +432,7 @@ static c_void stb_textedit_click(STB_TEXTEDIT_STRING *str, STB_TexteditState *st
 }
 
 // API drag: on mouse drag, move the cursor and selection endpoint to the clicked location
-static c_void stb_textedit_drag(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, c_float x, c_float y)
+static c_void stb_textedit_drag(STB_TEXTEDIT_STRING *str, STB_TexteditState *state,x: c_float,y: c_float)
 {
    let p: c_int = 0;
 
@@ -467,8 +465,7 @@ static c_void stb_text_makeundo_insert(STB_TexteditState *state, c_int where, c_
 static c_void stb_text_makeundo_replace(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, c_int where, c_int old_length, c_int new_length);
 
 typedef struct
-{
-   c_float x,y;    // position of n'th character
+{x: c_float,y;    // position of n'th character
    let mut height: c_float = 0f32; // height of line
    c_int first_char, length; // first char of row, and length
    let mut prev_first: c_int = 0;  // first char of previous row
@@ -840,8 +837,7 @@ retry:
          stb_textedit_clamp(str, state);
          stb_textedit_find_charpos(&find, str, state.cursor, state.single_line);
 
-         for (j = 0; j < row_count; ++j) {
-            c_float x, goal_x = state.has_preferred_x ? state.preferred_x : find.x;
+         for (j = 0; j < row_count; ++j) {x: c_float, goal_x = state.has_preferred_x ? state.preferred_x : find.x;
             let start: c_int = find.first_char + find.length;
 
             if (find.length == 0)
@@ -907,8 +903,7 @@ retry:
          stb_textedit_clamp(str, state);
          stb_textedit_find_charpos(&find, str, state.cursor, state.single_line);
 
-         for (j = 0; j < row_count; ++j) {
-            c_float  x, goal_x = state.has_preferred_x ? state.preferred_x : find.x;
+         for (j = 0; j < row_count; ++j) {x: c_float, goal_x = state.has_preferred_x ? state.preferred_x : find.x;
 
             // can only go up if there's a previous row
             if (find.prev_first == find.first_char)

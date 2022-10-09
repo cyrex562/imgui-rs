@@ -256,7 +256,7 @@ Index of this file:
 static let TABLE_DRAW_CHANNEL_BG0: c_int = 0;
 static let TABLE_DRAW_CHANNEL_BG2_FROZEN: c_int = 1;
 static let TABLE_DRAW_CHANNEL_NOCLIP: c_int = 2;                     // When using ImGuiTableFlags_NoClip (this becomes the last visible channel)
-static const c_float TABLE_BORDER_SIZE                     = 1f32;    // FIXME-TABLE: Currently hard-coded because of clipping assumptions with outer borders rendering.
+static TABLE_BORDER_SIZE: c_float                     = 1f32;    // FIXME-TABLE: Currently hard-coded because of clipping assumptions with outer borders rendering.
 static let TABLE_RESIZE_SEPARATOR_HALF_THICKNESS: c_float =  4.0f32;    // Extend outside inner borders.
 static let TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER: c_float =  0.06f;   // Delay/timer before making the hover feedback (color+cursor) visible because tables/columns tends to be more cramped.
 
@@ -294,20 +294,20 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
     return flags;
 }
 
-*mut ImGuiTable TableFindByID(ImGuiID id)
+*mut ImGuiTable TableFindByID(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.Tables.GetByKey(id);
 }
 
 // Read about "TABLE SIZING" at the top of this file.
-bool    BeginTable(*const char str_id, c_int columns_count, ImGuiTableFlags flags, outer_size: &ImVec2, c_float inner_width)
+bool    BeginTable(*const char str_id, c_int columns_count, ImGuiTableFlags flags, outer_size: &ImVec2,inner_width: c_float)
 {
     let mut id: ImGuiID =  GetID(str_id);
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
-bool    BeginTableEx(*const char name, ImGuiID id, c_int columns_count, ImGuiTableFlags flags, outer_size: &ImVec2, c_float inner_width)
+bool    BeginTableEx(*const char name, id: ImGuiID, c_int columns_count, ImGuiTableFlags flags, outer_size: &ImVec2,inner_width: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow outer_window = GetCurrentWindow();
@@ -1398,7 +1398,7 @@ c_void    EndTable()
 
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0f32) it is ignored
-c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags, c_float init_width_or_weight, ImGuiID user_id)
+c_void TableSetupColumn(*const char label, ImGuiTableColumnFlags flags,init_width_or_weight: c_float, ImGuiID user_id)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1653,7 +1653,7 @@ c_int TableGetRowIndex()
 }
 
 // [Public] Starts into the first cell of a new row
-c_void TableNextRow(ImGuiTableRowFlags row_flags, c_float row_min_height)
+c_void TableNextRow(ImGuiTableRowFlags row_flags,row_min_height: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -1852,8 +1852,7 @@ c_void TableBeginCell(*mut ImGuiTable table, c_int column_n)
 // - TableUpdateColumnsWeightFromWidth() [Internal]
 //-------------------------------------------------------------------------
 
-// Maximum column content width given current layout. Use column.MinX so this value on a per-column basis.
-c_float TableGetMaxColumnWidth(*const ImGuiTable table, c_int column_n)
+// Maximum column content width given current layout. Use column.MinX so this value on a per-column basis.TableGetMaxColumnWidth: c_float(*const ImGuiTable table, c_int column_n)
 {
     let column: *const ImGuiTableColumn = &table.Columns[column_n];
     let max_width: c_float =  f32::MAX;
@@ -1884,8 +1883,7 @@ c_float TableGetMaxColumnWidth(*const ImGuiTable table, c_int column_n)
     return max_width;
 }
 
-// Note this is meant to be stored in column.WidthAuto, please generally use the WidthAuto field
-c_float TableGetColumnWidthAuto(*mut ImGuiTable table, *mut ImGuiTableColumn column)
+// Note this is meant to be stored in column.WidthAuto, please generally use the WidthAuto fieldTableGetColumnWidthAuto: c_float(*mut ImGuiTable table, *mut ImGuiTableColumn column)
 {
     let content_width_body: c_float =  ImMax(column.ContentMaxXFrozen, column.ContentMaxXUnfrozen) - column.WorkMinX;
     let content_width_headers: c_float =  column.ContentMaxXHeadersIdeal - column.WorkMinX;
@@ -1902,7 +1900,7 @@ c_float TableGetColumnWidthAuto(*mut ImGuiTable table, *mut ImGuiTableColumn col
 }
 
 // 'width' = inner column width, without padding
-c_void TableSetColumnWidth(c_int column_n, c_float width)
+c_void TableSetColumnWidth(c_int column_n,width: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTable table = g.CurrentTable;
@@ -2621,9 +2619,7 @@ c_void TableSortSpecsBuild(*mut ImGuiTable table)
 // - TableGetHeaderRowHeight() [Internal]
 // - TableHeadersRow()
 // - TableHeader()
-//-------------------------------------------------------------------------
-
-c_float TableGetHeaderRowHeight()
+//-------------------------------------------------------------------------TableGetHeaderRowHeight: c_float()
 {
     // Caring for a minor edge case:
     // Calculate row height, for the unlikely case that some labels may be taller than others.
@@ -2983,7 +2979,7 @@ let size_all_desc: *const c_char;
 //-------------------------------------------------------------------------
 
 // Clear and initialize empty settings instance
-static c_void TableSettingsInit(*mut ImGuiTableSettings settings, ImGuiID id, c_int columns_count, c_int columns_count_max)
+static c_void TableSettingsInit(*mut ImGuiTableSettings settings, id: ImGuiID, c_int columns_count, c_int columns_count_max)
 {
     IM_PLACEMENT_NEW(settings) ImGuiTableSettings();
     *mut ImGuiTableColumnSettings settings_column = settings.GetColumnSettings();
@@ -3000,7 +2996,7 @@ static size_t TableSettingsCalcChunkSize(c_int columns_count)
     return sizeof(ImGuiTableSettings) + columns_count * sizeof(ImGuiTableColumnSettings);
 }
 
-*mut ImGuiTableSettings TableSettingsCreate(ImGuiID id, c_int columns_count)
+*mut ImGuiTableSettings TableSettingsCreate(id: ImGuiID, c_int columns_count)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiTableSettings settings = g.SettingsTables.alloc_chunk(TableSettingsCalcChunkSize(columns_count));
@@ -3009,7 +3005,7 @@ static size_t TableSettingsCalcChunkSize(c_int columns_count)
 }
 
 // Find existing settings
-*mut ImGuiTableSettings TableSettingsFindByID(ImGuiID id)
+*mut ImGuiTableSettings TableSettingsFindByID(id: ImGuiID)
 {
     // FIXME-OPT: Might want to store a lookup map for this?
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -3488,21 +3484,17 @@ c_int GetColumnsCount()
 {
     *mut ImGuiWindow window = GetCurrentWindowRead();
     return window.DC.CurrentColumns ? window.DC.CurrentColumns->Count : 1;
-}
-
-c_float GetColumnOffsetFromNorm(*const ImGuiOldColumns columns, c_float offset_norm)
+}GetColumnOffsetFromNorm: c_float(*const ImGuiOldColumns columns,offset_norm: c_float)
 {
     return offset_norm * (columns->OffMaxX - columns->OffMinX);
-}
-
-c_float GetColumnNormFromOffset(*const ImGuiOldColumns columns, c_float offset)
+}GetColumnNormFromOffset: c_float(*const ImGuiOldColumns columns,offset: c_float)
 {
     return offset / (columns->OffMaxX - columns->OffMinX);
 }
 
 static let COLUMNS_HIT_RECT_HALF_WIDTH: c_float =  4.0f32;
 
-static c_float GetDraggedColumnOffset(*mut ImGuiOldColumns columns, c_int column_index)
+staticGetDraggedColumnOffset: c_float(*mut ImGuiOldColumns columns, c_int column_index)
 {
     // Active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
     // window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
@@ -3517,9 +3509,7 @@ static c_float GetDraggedColumnOffset(*mut ImGuiOldColumns columns, c_int column
         x = ImMin(x, GetColumnOffset(column_index + 1) - g.Style.ColumnsMinSpacing);
 
     return x;
-}
-
-c_float GetColumnOffset(c_int column_index)
+}GetColumnOffset: c_float(c_int column_index)
 {
     *mut ImGuiWindow window = GetCurrentWindowRead();
     *mut ImGuiOldColumns columns = window.DC.CurrentColumns;
@@ -3535,7 +3525,7 @@ c_float GetColumnOffset(c_int column_index)
     return x_offset;
 }
 
-static c_float GetColumnWidthEx(*mut ImGuiOldColumns columns, c_int column_index, let mut before_resize: bool =  false)
+staticGetColumnWidthEx: c_float(*mut ImGuiOldColumns columns, c_int column_index, let mut before_resize: bool =  false)
 {
     if (column_index < 0)
         column_index = columns->Current;
@@ -3546,9 +3536,7 @@ static c_float GetColumnWidthEx(*mut ImGuiOldColumns columns, c_int column_index
     else
         offset_norm = columns->Columns[column_index + 1].OffsetNorm - columns->Columns[column_index].OffsetNorm;
     return GetColumnOffsetFromNorm(columns, offset_norm);
-}
-
-c_float GetColumnWidth(c_int column_index)
+}GetColumnWidth: c_float(c_int column_index)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -3561,7 +3549,7 @@ c_float GetColumnWidth(c_int column_index)
     return GetColumnOffsetFromNorm(columns, columns->Columns[column_index + 1].OffsetNorm - columns->Columns[column_index].OffsetNorm);
 }
 
-c_void SetColumnOffset(c_int column_index, c_float offset)
+c_void SetColumnOffset(c_int column_index,offset: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -3583,7 +3571,7 @@ c_void SetColumnOffset(c_int column_index, c_float offset)
         SetColumnOffset(column_index + 1, offset + ImMax(g.Style.ColumnsMinSpacing, width));
 }
 
-c_void SetColumnWidth(c_int column_index, c_float width)
+c_void SetColumnWidth(c_int column_index,width: c_float)
 {
     *mut ImGuiWindow window = GetCurrentWindowRead();
     *mut ImGuiOldColumns columns = window.DC.CurrentColumns;
@@ -3631,7 +3619,7 @@ c_void PopColumnsBackground()
     columns->Splitter.SetCurrentChannel(window.DrawList, columns->Current + 1);
 }
 
-*mut ImGuiOldColumns FindOrCreateColumns(*mut ImGuiWindow window, ImGuiID id)
+*mut ImGuiOldColumns FindOrCreateColumns(*mut ImGuiWindow window, id: ImGuiID)
 {
     // We have few columns per window so for now we don't need bother much with turning this into a faster lookup.
     for (let n: c_int = 0; n < window.ColumnsStorage.Size; n++)

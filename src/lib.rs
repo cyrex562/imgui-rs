@@ -195,6 +195,10 @@ mod frame_ops;
 mod viewport_ops;
 mod text_ops;
 mod child_ops;
+mod content_ops;
+mod nav_ops;
+mod layout_ops;
+
 
 // c_void Initialize()
 pub unsafe fn Initialize()

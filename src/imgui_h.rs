@@ -240,7 +240,7 @@ namespace ImGui
     //    BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function
     //    returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
      bool          BeginChild(*const char str_id, size: &ImVec2 = ImVec2(0, 0), let mut border: bool =  false, ImGuiWindowFlags flags = 0);
-     bool          BeginChild(ImGuiID id, size: &ImVec2 = ImVec2(0, 0), let mut border: bool =  false, ImGuiWindowFlags flags = 0);
+     bool          BeginChild(id: ImGuiID, size: &ImVec2 = ImVec2(0, 0), let mut border: bool =  false, ImGuiWindowFlags flags = 0);
      c_void          EndChild();
 
     // Windows Utilities
@@ -249,12 +249,9 @@ namespace ImGui
      bool          IsWindowCollapsed();
      bool          IsWindowFocused(ImGuiFocusedFlags flags=0); // is current window focused? or its root/child, depending on flags. see flags for options.
      bool          IsWindowHovered(ImGuiHoveredFlags flags=0); // is current window hovered (and typically: not blocked by a popup/modal)? see flags for options. NB: If you are trying to check whether your mouse should be dispatched to imgui or to your app, you should use the 'io.WantCaptureMouse' boolean for that! Please read the FAQ!
-     ImDrawList*   GetWindowDrawList();                        // get draw list associated to the current window, to append your own drawing primitives
-     c_float         GetWindowDpiScale();                        // get DPI scale currently associated to the current window's viewport.
+     ImDrawList*   GetWindowDrawList();                        // get draw list associated to the current window, to append your own drawing primitivesGetWindowDpiScale: c_float();                        // get DPI scale currently associated to the current window's viewport.
      ImVec2        GetWindowPos();                             // get current window position in screen space (useful if you want to do your own drawing via the DrawList API)
-     ImVec2        GetWindowSize();                            // get current window size
-     c_float         GetWindowWidth();                           // get current window width (shortcut for GetWindowSize().x)
-     c_float         GetWindowHeight();                          // get current window height (shortcut for GetWindowSize().y)
+     ImVec2        GetWindowSize();                            // get current window sizeGetWindowWidth: c_float();                           // get current window width (shortcut for GetWindowSize().x)GetWindowHeight: c_float();                          // get current window height (shortcut for GetWindowSize().y)
      ImGuiViewport*GetWindowViewport();                        // get viewport currently associated to the current window.
 
     // Window manipulation
@@ -265,13 +262,13 @@ namespace ImGui
      c_void          SetNextWindowContentSize(size: &ImVec2);                               // set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0f32 to leave it automatic. call before Begin()
      c_void          SetNextWindowCollapsed(bool collapsed, cond: ImGuiCond = 0);                 // set next window collapsed state. call before Begin()
      c_void          SetNextWindowFocus();                                                       // set next window to be focused / top-most. call before Begin()
-     c_void          SetNextWindowBgAlpha(c_float alpha);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
+     c_void          SetNextWindowBgAlpha(alpha: c_float);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
      c_void          SetNextWindowViewport(ImGuiID viewport_id);                                 // set next window viewport
      c_void          SetWindowPos(pos: &ImVec2, cond: ImGuiCond = 0);                        // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
      c_void          SetWindowSize(size: &ImVec2, cond: ImGuiCond = 0);                      // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
      c_void          SetWindowCollapsed(bool collapsed, cond: ImGuiCond = 0);                     // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
      c_void          SetWindowFocus();                                                           // (not recommended) set current window to be focused / top-most. prefer using SetNextWindowFocus().
-     c_void          SetWindowFontScale(c_float scale);                                            // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
+     c_void          SetWindowFontScale(scale: c_float);                                            // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
      c_void          SetWindowPos(*const char name, pos: &ImVec2, cond: ImGuiCond = 0);      // set named window position.
      c_void          SetWindowSize(*const char name, size: &ImVec2, cond: ImGuiCond = 0);    // set named window size. set axis to 0f32 to force an auto-fit on this axis.
      c_void          SetWindowCollapsed(*const char name, bool collapsed, cond: ImGuiCond = 0);   // set named window collapsed state
@@ -285,17 +282,13 @@ namespace ImGui
      ImVec2        GetWindowContentRegionMin();                                    // content boundaries min for the full window (roughly (0,0)-Scroll), in window coordinates
      ImVec2        GetWindowContentRegionMax();                                    // content boundaries max for the full window (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
 
-    // Windows Scrolling
-     c_float         GetScrollX();                                                   // get scrolling amount [0 .. GetScrollMaxX()]
-     c_float         GetScrollY();                                                   // get scrolling amount [0 .. GetScrollMaxY()]
-     c_void          SetScrollX(c_float scroll_x);                                     // set scrolling amount [0 .. GetScrollMaxX()]
-     c_void          SetScrollY(c_float scroll_y);                                     // set scrolling amount [0 .. GetScrollMaxY()]
-     c_float         GetScrollMaxX();                                                // get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x
-     c_float         GetScrollMaxY();                                                // get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
+    // Windows ScrollingGetScrollX: c_float();                                                   // get scrolling amount [0 .. GetScrollMaxX()]GetScrollY: c_float();                                                   // get scrolling amount [0 .. GetScrollMaxY()]
+     c_void          SetScrollX(scroll_x: c_float);                                     // set scrolling amount [0 .. GetScrollMaxX()]
+     c_void          SetScrollY(scroll_y: c_float);                                     // set scrolling amount [0 .. GetScrollMaxY()]GetScrollMaxX: c_float();                                                // get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.xGetScrollMaxY: c_float();                                                // get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
      c_void          SetScrollHereX(let center_x_ratio: c_float =  0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
      c_void          SetScrollHereY(let center_y_ratio: c_float =  0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
-     c_void          SetScrollFromPosX(c_float local_x, let center_x_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
-     c_void          SetScrollFromPosY(c_float local_y, let center_y_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+     c_void          SetScrollFromPosX(local_x: c_float, let center_x_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+     c_void          SetScrollFromPosY(local_y: c_float, let center_y_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 
     // Parameters stacks (shared)
      c_void          PushFont(ImFont* font);                                         // use NULL as a shortcut to push default font
@@ -303,7 +296,7 @@ namespace ImGui
      c_void          PushStyleColor(ImGuiCol idx, u32 col);                        // modify a style color. always use this if you modify the style after NewFrame().
      c_void          PushStyleColor(ImGuiCol idx, const ImVec4& col);
      c_void          PopStyleColor(let count: c_int = 1);
-     c_void          PushStyleVar(ImGuiStyleVar idx, c_float val);                     // modify a style float variable. always use this if you modify the style after NewFrame().
+     c_void          PushStyleVar(ImGuiStyleVar idx,val: c_float);                     // modify a style float variable. always use this if you modify the style after NewFrame().
      c_void          PushStyleVar(ImGuiStyleVar idx, val: &ImVec2);             // modify a style ImVec2 variable. always use this if you modify the style after NewFrame().
      c_void          PopStyleVar(let count: c_int = 1);
      c_void          PushAllowKeyboardFocus(bool allow_keyboard_focus);              // == tab stop enable. Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets
@@ -312,17 +305,15 @@ namespace ImGui
      c_void          PopButtonRepeat();
 
     // Parameters stacks (current window)
-     c_void          PushItemWidth(c_float item_width);                                // push width of items for common large "item+label" widgets. >0f32: width in pixels, <0f32 align xx pixels to the right of window (so -FLT_MIN always align width to the right side).
+     c_void          PushItemWidth(item_width: c_float);                                // push width of items for common large "item+label" widgets. >0f32: width in pixels, <0f32 align xx pixels to the right of window (so -FLT_MIN always align width to the right side).
      c_void          PopItemWidth();
-     c_void          SetNextItemWidth(c_float item_width);                             // set width of the _next_ common large "item+label" widget. >0f32: width in pixels, <0f32 align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
-     c_float         CalcItemWidth();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
+     c_void          SetNextItemWidth(item_width: c_float);                             // set width of the _next_ common large "item+label" widget. >0f32: width in pixels, <0f32 align xx pixels to the right of window (so -FLT_MIN always align width to the right side)CalcItemWidth: c_float();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
      c_void          PushTextWrapPos(let wrap_local_pos_x: c_float =  0f32);                 // push word-wrapping position for Text*() commands. < 0f32: no wrapping; 0f32: wrap to end of window (or column); > 0f32: wrap at 'wrap_pos_x' position in window local space
      c_void          PopTextWrapPos();
 
     // Style read access
     // - Use the style editor (ShowStyleEditor() function) to interactively see what the colors are)
-     ImFont*       GetFont();                                                      // get current font
-     c_float         GetFontSize();                                                  // get current font size (= height in pixels) of current font with current scale applied
+     ImFont*       GetFont();                                                      // get current fontGetFontSize: c_float();                                                  // get current font size (= height in pixels) of current font with current scale applied
      ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
      u32         GetColorU32(ImGuiCol idx, let alpha_mul: c_float =  1f32);              // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
      u32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
@@ -337,7 +328,7 @@ namespace ImGui
     //    Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
     //    Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions.
      c_void          Separator();                                                    // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
-     c_void          SameLine(c_float offset_from_start_x=0f32, c_float spacing=-1f32);  // call between widgets or groups to layout them horizontally. X position given in window coordinates.
+     c_void          SameLine(offset_from_start_x: c_float=0f32,spacing: c_float=-1f32);  // call between widgets or groups to layout them horizontally. X position given in window coordinates.
      c_void          NewLine();                                                      // undo a SameLine() or force a new line when in an horizontal-layout context.
      c_void          Spacing();                                                      // add vertical spacing.
      c_void          Dummy(size: &ImVec2);                                      // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
@@ -345,20 +336,14 @@ namespace ImGui
      c_void          Unindent(let indent_w: c_float =  0f32);                                // move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
      c_void          BeginGroup();                                                   // lock horizontal starting position
      c_void          EndGroup();                                                     // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
-     ImVec2        GetCursorPos();                                                 // cursor position in window coordinates (relative to window position)
-     c_float         GetCursorPosX();                                                //   (some functions are using window-relative coordinates, such as: GetCursorPos, GetCursorStartPos, GetContentRegionMax, GetWindowContentRegion* etc.
-     c_float         GetCursorPosY();                                                //    other functions such as GetCursorScreenPos or everything in ImDrawList::
+     ImVec2        GetCursorPos();                                                 // cursor position in window coordinates (relative to window position)GetCursorPosX: c_float();                                                //   (some functions are using window-relative coordinates, such as: GetCursorPos, GetCursorStartPos, GetContentRegionMax, GetWindowContentRegion* etc.GetCursorPosY: c_float();                                                //    other functions such as GetCursorScreenPos or everything in ImDrawList::
      c_void          SetCursorPos(local_pos: &ImVec2);                          //    are using the main, absolute coordinate system.
-     c_void          SetCursorPosX(c_float local_x);                                   //    GetWindowPos() + GetCursorPos() == GetCursorScreenPos() etc.)
-     c_void          SetCursorPosY(c_float local_y);                                   //
+     c_void          SetCursorPosX(local_x: c_float);                                   //    GetWindowPos() + GetCursorPos() == GetCursorScreenPos() etc.)
+     c_void          SetCursorPosY(local_y: c_float);                                   //
      ImVec2        GetCursorStartPos();                                            // initial cursor position in window coordinates
      ImVec2        GetCursorScreenPos();                                           // cursor position in absolute coordinates (useful to work with ImDrawList API). generally top-left == GetMainViewport()->Pos == (0,0) in single viewport mode, and bottom-right == GetMainViewport()->Pos+Size == io.DisplaySize in single-viewport mode.
      c_void          SetCursorScreenPos(pos: &ImVec2);                          // cursor position in absolute coordinates
-     c_void          AlignTextToFramePadding();                                      // vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
-     c_float         GetTextLineHeight();                                            // ~ FontSize
-     c_float         GetTextLineHeightWithSpacing();                                 // ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
-     c_float         GetFrameHeight();                                               // ~ FontSize + style.FramePadding.y * 2
-     c_float         GetFrameHeightWithSpacing();                                    // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
+     c_void          AlignTextToFramePadding();                                      // vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)GetTextLineHeight: c_float();                                            // ~ FontSizeGetTextLineHeightWithSpacing: c_float();                                 // ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)GetFrameHeight: c_float();                                               // ~ FontSize + style.FramePadding.y * 2GetFrameHeightWithSpacing: c_float();                                    // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
 
     // ID stack/scopes
     // Read the FAQ (docs/FAQ.md or http://dearimgui.org/faq) for more details about how ID are handled in dear imgui.
@@ -407,7 +392,7 @@ namespace ImGui
      bool          CheckboxFlags(*const char label, c_uint* flags, c_uint flags_value);
      bool          RadioButton(*const char label, bool active);                    // use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; }
      bool          RadioButton(*const char label, c_int* v, c_int v_button);           // shortcut to handle the above pattern when value is an integer
-     c_void          ProgressBar(c_float fraction, size_arg: &ImVec2 = ImVec2(-FLT_MIN, 0), *const char overlay = null_mut());
+     c_void          ProgressBar(fraction: c_float, size_arg: &ImVec2 = ImVec2(-FLT_MIN, 0), *const char overlay = null_mut());
      c_void          Bullet();                                                       // draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
 
     // Widgets: Images
@@ -437,9 +422,9 @@ namespace ImGui
     // - Legacy: Pre-1.78 there are DragXXX() function signatures that takes a final `float power=1.0f' argument instead of the `ImGuiSliderFlags flags=0' argument.
     //   If you get a warning converting a float to ImGuiSliderFlags, read https://github.com/ocornut/imgui/issues/3361
      bool          DragFloat(*const char label, c_float* v, let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);     // If v_min >= v_max we have no bound
-     bool          DragFloat2(*const char label, c_float v[2], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          DragFloat3(*const char label, c_float v[3], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          DragFloat4(*const char label, c_float v[4], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          DragFloat2(*const char label,v: c_float[2], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          DragFloat3(*const char label,v: c_float[3], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          DragFloat4(*const char label,v: c_float[4], let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
      bool          DragFloatRange2(*const char label, c_float* v_current_min, c_float* v_current_max, let v_speed: c_float =  1f32, let v_min: c_float =  0f32, let v_max: c_float =  0f32, *const char format = "%.3f", *const char format_max = null_mut(), ImGuiSliderFlags flags = 0);
      bool          DragInt(*const char label, c_int* v, let v_speed: c_float =  1f32, let v_min: c_int = 0, let v_max: c_int = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);  // If v_min >= v_max we have no bound
      bool          DragInt2(*const char label, c_int v[2], let v_speed: c_float =  1f32, let v_min: c_int = 0, let v_max: c_int = 0, *const char format = "%d", ImGuiSliderFlags flags = 0);
@@ -455,10 +440,10 @@ namespace ImGui
     // - Format string may also be set to NULL or use the default format ("%f" or "%d").
     // - Legacy: Pre-1.78 there are SliderXXX() function signatures that takes a final `float power=1.0f' argument instead of the `ImGuiSliderFlags flags=0' argument.
     //   If you get a warning converting a float to ImGuiSliderFlags, read https://github.com/ocornut/imgui/issues/3361
-     bool          SliderFloat(*const char label, c_float* v, c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);     // adjust format to decorate the value with a prefix or a suffix for in-slider labels or unit display.
-     bool          SliderFloat2(*const char label, c_float v[2], c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          SliderFloat3(*const char label, c_float v[3], c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
-     bool          SliderFloat4(*const char label, c_float v[4], c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          SliderFloat(*const char label, c_float* v,v_min: c_float,v_max: c_float, *const char format = "%.3f", ImGuiSliderFlags flags = 0);     // adjust format to decorate the value with a prefix or a suffix for in-slider labels or unit display.
+     bool          SliderFloat2(*const char label,v: c_float[2],v_min: c_float,v_max: c_float, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          SliderFloat3(*const char label,v: c_float[3],v_min: c_float,v_max: c_float, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          SliderFloat4(*const char label,v: c_float[4],v_min: c_float,v_max: c_float, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
      bool          SliderAngle(*const char label, c_float* v_rad, let v_degrees_min: c_float =  -360f32, let v_degrees_max: c_float =  +360f32, *const char format = "%.0f32 deg", ImGuiSliderFlags flags = 0);
      bool          SliderInt(*const char label, c_int* v, c_int v_min, c_int v_max, *const char format = "%d", ImGuiSliderFlags flags = 0);
      bool          SliderInt2(*const char label, c_int v[2], c_int v_min, c_int v_max, *const char format = "%d", ImGuiSliderFlags flags = 0);
@@ -466,7 +451,7 @@ namespace ImGui
      bool          SliderInt4(*const char label, c_int v[4], c_int v_min, c_int v_max, *const char format = "%d", ImGuiSliderFlags flags = 0);
      bool          SliderScalar(*const char label, ImGuiDataType data_type, p_data: *mut c_void, *const c_void p_min, *const c_void p_max, *const char format = null_mut(), ImGuiSliderFlags flags = 0);
      bool          SliderScalarN(*const char label, ImGuiDataType data_type, p_data: *mut c_void, c_int components, *const c_void p_min, *const c_void p_max, *const char format = null_mut(), ImGuiSliderFlags flags = 0);
-     bool          VSliderFloat(*const char label, size: &ImVec2, c_float* v, c_float v_min, c_float v_max, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
+     bool          VSliderFloat(*const char label, size: &ImVec2, c_float* v,v_min: c_float,v_max: c_float, *const char format = "%.3f", ImGuiSliderFlags flags = 0);
      bool          VSliderInt(*const char label, size: &ImVec2, c_int* v, c_int v_min, c_int v_max, *const char format = "%d", ImGuiSliderFlags flags = 0);
      bool          VSliderScalar(*const char label, size: &ImVec2, ImGuiDataType data_type, p_data: *mut c_void, *const c_void p_min, *const c_void p_max, *const char format = null_mut(), ImGuiSliderFlags flags = 0);
 
@@ -477,9 +462,9 @@ namespace ImGui
      bool          InputTextMultiline(*const char label, char* buf, size_t buf_size, size: &ImVec2 = ImVec2(0, 0), ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = null_mut(), user_data: *mut c_void = null_mut());
      bool          InputTextWithHint(*const char label, *const char hint, char* buf, size_t buf_size, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = null_mut(), user_data: *mut c_void = null_mut());
      bool          InputFloat(*const char label, c_float* v, let step: c_float =  0f32, let step_fast: c_float =  0f32, *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
-     bool          InputFloat2(*const char label, c_float v[2], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
-     bool          InputFloat3(*const char label, c_float v[3], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
-     bool          InputFloat4(*const char label, c_float v[4], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
+     bool          InputFloat2(*const char label,v: c_float[2], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
+     bool          InputFloat3(*const char label,v: c_float[3], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
+     bool          InputFloat4(*const char label,v: c_float[4], *const char format = "%.3f", ImGuiInputTextFlags flags = 0);
      bool          InputInt(*const char label, c_int* v, let step: c_int = 1, let step_fast: c_int = 100, ImGuiInputTextFlags flags = 0);
      bool          InputInt2(*const char label, c_int v[2], ImGuiInputTextFlags flags = 0);
      bool          InputInt3(*const char label, c_int v[3], ImGuiInputTextFlags flags = 0);
@@ -491,10 +476,10 @@ namespace ImGui
     // Widgets: Color Editor/Picker (tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)
     // - Note that in C++ a 'float v[X]' function argument is the _same_ as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible.
     // - You can pass the address of a first float element out of a contiguous structure, e.g. &myvector.x
-     bool          ColorEdit3(*const char label, c_float col[3], ImGuiColorEditFlags flags = 0);
-     bool          ColorEdit4(*const char label, c_float col[4], ImGuiColorEditFlags flags = 0);
-     bool          ColorPicker3(*const char label, c_float col[3], ImGuiColorEditFlags flags = 0);
-     bool          ColorPicker4(*const char label, c_float col[4], ImGuiColorEditFlags flags = 0, *let ref_col: c_float =  null_mut());
+     bool          ColorEdit3(*const char label,col: c_float[3], ImGuiColorEditFlags flags = 0);
+     bool          ColorEdit4(*const char label,col: c_float[4], ImGuiColorEditFlags flags = 0);
+     bool          ColorPicker3(*const char label,col: c_float[3], ImGuiColorEditFlags flags = 0);
+     bool          ColorPicker4(*const char label,col: c_float[4], ImGuiColorEditFlags flags = 0, *let ref_col: c_float =  null_mut());
      bool          ColorButton(*const char desc_id, const ImVec4& col, ImGuiColorEditFlags flags = 0, size: &ImVec2 = ImVec2(0, 0)); // display a color square/button, hover for details, return true when pressed.
      c_void          SetColorEditOptions(ImGuiColorEditFlags flags);                     // initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
 
@@ -512,8 +497,7 @@ namespace ImGui
      bool          TreeNodeExV(*const c_void ptr_id, ImGuiTreeNodeFlags flags, *const char fmt, va_list args) IM_FMTLIST(3);
      c_void          TreePush(*const char str_id);                                       // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
      c_void          TreePush(*const c_void ptr_id = null_mut());                                // "
-     c_void          TreePop();                                                          // ~ Unindent()+PopId()
-     c_float         GetTreeNodeToLabelSpacing();                                        // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
+     c_void          TreePop();                                                          // ~ Unindent()+PopId()GetTreeNodeToLabelSpacing: c_float();                                        // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
      bool          CollapsingHeader(*const char label, ImGuiTreeNodeFlags flags = 0);  // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
      bool          CollapsingHeader(*const char label, bool* p_visible, ImGuiTreeNodeFlags flags = 0); // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if '*p_visible==false' don't display the header.
      c_void          SetNextItemOpen(bool is_open, cond: ImGuiCond = 0);                  // set next TreeNode/CollapsingHeader open state.
@@ -537,9 +521,9 @@ namespace ImGui
 
     // Widgets: Data Plotting
     // - Consider using ImPlot (https://github.com/epezent/implot) which is much better!
-     c_void          PlotLines(*const char label, *const c_float values, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = null_mut(), let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, let mut graph_size: ImVec2 =  ImVec2(0, 0), let stride: c_int = sizeof);
+     c_void          PlotLines(*const char label, *values: c_float, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = null_mut(), let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, let mut graph_size: ImVec2 =  ImVec2(0, 0), let stride: c_int = sizeof);
      c_void          PlotLines(*const char label, c_float(*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = null_mut(), let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, let mut graph_size: ImVec2 =  ImVec2(0, 0));
-     c_void          PlotHistogram(*const char label, *const c_float values, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = null_mut(), let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, let mut graph_size: ImVec2 =  ImVec2(0, 0), let stride: c_int = sizeof);
+     c_void          PlotHistogram(*const char label, *values: c_float, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = null_mut(), let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, let mut graph_size: ImVec2 =  ImVec2(0, 0), let stride: c_int = sizeof);
      c_void          PlotHistogram(*const char label, c_float(*values_getter)(data: *mut c_void, c_int idx), data: *mut c_void, c_int values_count, let values_offset: c_int = 0, *const char overlay_text = null_mut(), let scale_min: c_float =  f32::MAX, let scale_max: c_float =  f32::MAX, let mut graph_size: ImVec2 =  ImVec2(0, 0));
 
     // Widgets: Value() Helpers.
@@ -547,7 +531,7 @@ namespace ImGui
      c_void          Value(*const char prefix, bool b);
      c_void          Value(*const char prefix, c_int v);
      c_void          Value(*const char prefix, c_uint v);
-     c_void          Value(*const char prefix, c_float v, *const char float_format = null_mut());
+     c_void          Value(*const char prefix,v: c_float, *const char float_format = null_mut());
 
     // Widgets: Menus
     // - Use BeginMenuBar() on a window ImGuiWindowFlags_MenuBar to append to its menu bar.
@@ -595,7 +579,7 @@ namespace ImGui
     //  - Use IsWindowAppearing() after BeginPopup() to tell if a window just opened.
     //  - IMPORTANT: Notice that for OpenPopupOnItemClick() we exceptionally default flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter
      c_void          OpenPopup(*const char str_id, ImGuiPopupFlags popup_flags = 0);                     // call to mark popup as open (don't call every frame!).
-     c_void          OpenPopup(ImGuiID id, ImGuiPopupFlags popup_flags = 0);                             // id overload to facilitate calling from nested stacks
+     c_void          OpenPopup(id: ImGuiID, ImGuiPopupFlags popup_flags = 0);                             // id overload to facilitate calling from nested stacks
      c_void          OpenPopupOnItemClick(*const char str_id = null_mut(), ImGuiPopupFlags popup_flags = 1);   // helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
      c_void          CloseCurrentPopup();                                                                // manually close the popup we have begin-ed into.
 
@@ -675,11 +659,9 @@ namespace ImGui
     // - You can also use SameLine(pos_x) to mimic simplified columns.
      c_void          Columns(let count: c_int = 1, *const char id = null_mut(), let mut border: bool =  true);
      c_void          NextColumn();                                                       // next column, defaults to current row or next row if the current row is finished
-     c_int           GetColumnIndex();                                                   // get current column index
-     c_float         GetColumnWidth(let column_index: c_int = -1);                              // get column width (in pixels). pass -1 to use current column
-     c_void          SetColumnWidth(c_int column_index, c_float width);                      // set column width (in pixels). pass -1 to use current column
-     c_float         GetColumnOffset(let column_index: c_int = -1);                             // get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0f32
-     c_void          SetColumnOffset(c_int column_index, c_float offset_x);                  // set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
+     c_int           GetColumnIndex();                                                   // get current column indexGetColumnWidth: c_float(let column_index: c_int = -1);                              // get column width (in pixels). pass -1 to use current column
+     c_void          SetColumnWidth(c_int column_index,width: c_float);                      // set column width (in pixels). pass -1 to use current columnGetColumnOffset: c_float(let column_index: c_int = -1);                             // get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0f32
+     c_void          SetColumnOffset(c_int column_index,offset_x: c_float);                  // set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
      c_int           GetColumnsCount();
 
     // Tab Bars, Tabs
@@ -704,7 +686,7 @@ namespace ImGui
     // - Important: Dockspaces need to be submitted _before_ any window they can host. Submit it early in your frame!
     // - Important: Dockspaces need to be kept alive if hidden, otherwise windows docked into it will be undocked.
     //   e.g. if you have multiple tabs with a dockspace inside each tab: submit the non-visible dockspaces with ImGuiDockNodeFlags_KeepAliveOnly.
-     ImGuiID       DockSpace(ImGuiID id, size: &ImVec2 = ImVec2(0, 0), ImGuiDockNodeFlags flags = 0, *const ImGuiWindowClass window_class = null_mut());
+     ImGuiID       DockSpace(id: ImGuiID, size: &ImVec2 = ImVec2(0, 0), ImGuiDockNodeFlags flags = 0, *const ImGuiWindowClass window_class = null_mut());
      ImGuiID       DockSpaceOverViewport(*const ImGuiViewport viewport = null_mut(), ImGuiDockNodeFlags flags = 0, *const ImGuiWindowClass window_class = null_mut());
      c_void          SetNextWindowDockID(ImGuiID dock_id, cond: ImGuiCond = 0);           // set next window dock id
      c_void          SetNextWindowClass(*const ImGuiWindowClass window_class);           // set next window class (control docking compatibility + provide hints to platform backend via custom viewport flags and platform parent/child relationship)
@@ -793,7 +775,7 @@ namespace ImGui
      *const char   GetStyleColorName(ImGuiCol idx);                                    // get a string corresponding to the enum value (for display, saving, etc.).
      c_void          SetStateStorage(ImGuiStorage* storage);                             // replace current window storage with our own (if you want to manipulate it yourself, typically clear subsection of it)
      ImGuiStorage* GetStateStorage();
-     bool          BeginChildFrame(ImGuiID id, size: &ImVec2, ImGuiWindowFlags flags = 0); // helper to create a child window / scrolling region that looks like a normal widget frame
+     bool          BeginChildFrame(id: ImGuiID, size: &ImVec2, ImGuiWindowFlags flags = 0); // helper to create a child window / scrolling region that looks like a normal widget frame
      c_void          EndChildFrame();                                                    // always call EndChildFrame() regardless of BeginChildFrame() return values (which indicates a collapsed/clipped window)
 
     // Text Utilities
@@ -802,8 +784,8 @@ namespace ImGui
     // Color Utilities
      ImVec4        ColorConvertU32ToFloat4(u32 in);
      u32         ColorConvertFloat4ToU32(const ImVec4& in);
-     c_void          ColorConvertRGBtoHSV(c_float r, c_float g, c_float b, c_float& out_h, c_float& out_s, c_float& out_v);
-     c_void          ColorConvertHSVtoRGB(c_float h, c_float s, c_float v, c_float& out_r, c_float& out_g, c_float& out_b);
+     c_void          ColorConvertRGBtoHSV(r: c_float,g: c_float,b: c_float, c_float& out_h, c_float& out_s, c_float& out_v);
+     c_void          ColorConvertHSVtoRGB(h: c_float,s: c_float,v: c_float, c_float& out_r, c_float& out_g, c_float& out_b);
 
     // Inputs Utilities: Keyboard
     // Without IMGUI_DISABLE_OBSOLETE_KEYIO: (legacy support)
@@ -814,7 +796,7 @@ namespace ImGui
      bool          IsKeyDown(ImGuiKey key);                                            // is key being held.
      bool          IsKeyPressed(ImGuiKey key, let mut repeat: bool =  true);                     // was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
      bool          IsKeyReleased(ImGuiKey key);                                        // was key released (went from Down to !Down)?
-     c_int           GetKeyPressedAmount(ImGuiKey key, c_float repeat_delay, c_float rate);  // uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
+     c_int           GetKeyPressedAmount(ImGuiKey key,repeat_delay: c_float,rate: c_float);  // uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
      *const char   GetKeyName(ImGuiKey key);                                           // [DEBUG] returns English name of the key. Those names a provided for debugging purpose and are not meant to be saved persistently not compared.
      c_void          SetNextFrameWantCaptureKeyboard(bool want_capture_keyboard);        // Override io.WantCaptureKeyboard flag next frame (said flag is left for your application to handle, typically when true it instructs your app to ignore inputs). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard"; after the next NewFrame() call.
 
@@ -873,7 +855,7 @@ namespace ImGui
      c_void              UpdatePlatformWindows();                                        // call in main loop. will call CreateWindow/ResizeWindow/etc. platform functions for each secondary viewport, and DestroyWindow for each inactive viewport.
      c_void              RenderPlatformWindowsDefault(platform_render_arg: *mut c_void = null_mut(), renderer_render_arg: *mut c_void = null_mut()); // call in main loop. will call RenderWindow/SwapBuffers platform functions for each secondary viewport which doesn't have the ImGuiViewportFlags_Minimized flag set. May be reimplemented by user for custom rendering needs.
      c_void              DestroyPlatformWindows();                                       // call DestroyWindow platform functions for all viewports. call from backend Shutdown() if you need to close platform windows before imgui shutdown. otherwise will be called by DestroyContext().
-     ImGuiViewport*    FindViewportByID(ImGuiID id);                                   // this is a helper for backends.
+     ImGuiViewport*    FindViewportByID(id: ImGuiID);                                   // this is a helper for backends.
      ImGuiViewport*    FindViewportByPlatformHandle(platform_handle: *mut c_void);            // this is a helper for backends. the type platform_handle is decided by the backend (e.g. HWND, MyWindow*, GLFWwindow* etc.)
 
 } // namespace ImGui
@@ -1423,7 +1405,7 @@ struct ImColor
     ImVec4          Value;
 
     constexpr ImColor()                                             { }
-    constexpr ImColor(c_float r, c_float g, c_float b, let a: c_float =  1f32)    : Value(r, g, b, a) { }
+    constexpr ImColor(r: c_float,g: c_float,b: c_float, let a: c_float =  1f32)    : Value(r, g, b, a) { }
     constexpr ImColor(const ImVec4& col)                            : Value(col) {}
     ImColor(c_int r, c_int g, c_int b, let a: c_int = 255)                       { let sc: c_float =  1f32 / 255f32; Value.x = r * sc; Value.y = g * sc; Value.z = b * sc; Value.w = a * sc; }
     ImColor(u32 rgba)                                             { let sc: c_float =  1f32 / 255f32; Value.x = ((rgba >> IM_COL32_R_SHIFT) & 0xF0f32) * sc; Value.y = ((rgba >> IM_COL32_G_SHIFT) & 0xF0f32) * sc; Value.z = ((rgba >> IM_COL32_B_SHIFT) & 0xF0f32) * sc; Value.w = ((rgba >> IM_COL32_A_SHIFT) & 0xF0f32) * sc; }
@@ -1431,8 +1413,8 @@ struct ImColor
     inline operator ImVec4() const                                  { return Value; }
 
     // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
-    inline c_void    SetHSV(c_float h, c_float s, c_float v, let a: c_float =  1f32){ ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
-    static ImColor HSV(c_float h, c_float s, c_float v, let a: c_float =  1f32)   { c_float r, g, b; ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
+    inline c_void    SetHSV(h: c_float,s: c_float,v: c_float, let a: c_float =  1f32){ ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
+    static ImColor HSV(h: c_float,s: c_float,v: c_float, let a: c_float =  1f32)   {r: c_float, g, b; ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
 };
 
 //-----------------------------------------------------------------------------
@@ -1500,8 +1482,7 @@ struct ImFontAtlasCustomRect
 {
     unsigned c_short  Width, Height;  // Input    // Desired rectangle dimension
     unsigned c_short  X, Y;           // Output   // Packed position in Atlas
-    c_uint    GlyphID;        // Input    // For custom font glyphs only (ID < 0x110000)
-    c_float           GlyphAdvanceX;  // Input    // For custom font glyphs only: glyph xadvance
+    c_uint    GlyphID;        // Input    // For custom font glyphs only (ID < 0x110000)GlyphAdvanceX: c_float;  // Input    // For custom font glyphs only: glyph xadvance
     ImVec2          GlyphOffset;    // Input    // For custom font glyphs only: glyph display offset
     ImFont*         Font;           // Input    // For custom font glyphs only: target font
     ImFontAtlasCustomRect()         { Width = Height = 0; X = Y = 0xFFFF; GlyphID = 0; GlyphAdvanceX = 0f32; GlyphOffset = ImVec2(0, 0); Font= null_mut(); }
@@ -1618,9 +1599,9 @@ namespace ImGui
     static inline c_void  CaptureKeyboardFromApp(let mut want_capture_keyboard: bool =  true)   { SetNextFrameWantCaptureKeyboard(want_capture_keyboard); } // Renamed as name was misleading + removed default value.
     static inline c_void  CaptureMouseFromApp(let mut want_capture_mouse: bool =  true)         { SetNextFrameWantCaptureMouse(want_capture_mouse); }       // Renamed as name was misleading + removed default value.
     // OBSOLETED in 1.86 (from November 2021)
-     c_void      CalcListClipping(c_int items_count, c_float items_height, c_int* out_items_display_start, c_int* out_items_display_end); // Calculate coarse clipping for large list of evenly sized items. Prefer using ImGuiListClipper.
+     c_void      CalcListClipping(c_int items_count,items_height: c_float, c_int* out_items_display_start, c_int* out_items_display_end); // Calculate coarse clipping for large list of evenly sized items. Prefer using ImGuiListClipper.
     // OBSOLETED in 1.85 (from August 2021)
-    static inline c_float GetWindowContentRegionWidth()                               { return GetWindowContentRegionMax().x - GetWindowContentRegionMin().x; }
+    static inlineGetWindowContentRegionWidth: c_float()                               { return GetWindowContentRegionMax().x - GetWindowContentRegionMin().x; }
     // OBSOLETED in 1.81 (from February 2021)
      bool      ListBoxHeader(*const char label, c_int items_count, let height_in_items: c_int = -1); // Helper to calculate size from items_count and height_in_items
     static inline bool  ListBoxHeader(*const char label, size: &ImVec2 = ImVec2(0, 0))         { return BeginListBox(label, size); }

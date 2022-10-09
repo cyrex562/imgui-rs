@@ -11,6 +11,7 @@ use crate::hovered_flags::{ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenBlocked
 use crate::imgui::GImGui;
 use crate::ImGuiViewport;
 use crate::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
+use crate::next_window_data_flags::ImGuiNextWindowDataFlags_HasSize;
 use crate::rect::ImRect;
 use crate::style_ops::GetColorU32;
 use crate::type_defs::ImGuiID;
@@ -34,14 +35,14 @@ pub fn SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, clip_rect: &I
 // inline ImRect           WindowRectRelToAbs(*mut ImGuiWindow window, const ImRect& r) 
 pub fn WindowRectRelToAbs(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
     let off = window.DC.CursorStartPos.clone();
-    ImRect::new4(r.Min.x + off.x, r.Min.y + off.y, r.Max.x + off.x, r.Max.y + off.y)
+    ImRect::from_floats(r.Min.x + off.x, r.Min.y + off.y, r.Max.x + off.x, r.Max.y + off.y)
 }
 
 
 // inline ImRect           WindowRectAbsToRel(*mut ImGuiWindow window, const ImRect& r)
 pub fn WindowRectAbsToRel(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
     let mut off: ImVec2 = window.DC.CursorStartPos.clone();
-    return ImRect::new4(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y);
+    return ImRect::from_floats(r.Min.x - off.x, r.Min.y - off.y, r.Max.x - off.x, r.Max.y - off.y);
 }
 
 // static c_void SetCurrentWindow(ImGuiWindow* window)
@@ -350,7 +351,7 @@ pub unsafe fn FindHoveredWindows() {
         }
 
         // Using the clipped AABB, a child window will typically be clipped by its parent (not always)
-        let mut bb: ImRect = ImRect::new3(window.OuterRectClipped.into());
+        let mut bb: ImRect = ImRect::from_vec4(window.OuterRectClipped.into());
         if window.Flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize) {
             bb.Expand2(&padding_regular.clone());
         } else {
