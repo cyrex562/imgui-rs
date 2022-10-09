@@ -5,6 +5,7 @@
 //-----------------------------------------------------------------------------
 
 use crate::color::{IM_COL32, IM_COL32_A_SHIFT, IM_COL32_B_SHIFT, IM_COL32_G_SHIFT, IM_COL32_R_SHIFT};
+use crate::math_ops::{ImFabs, ImFmod, ImLerp, ImSwap};
 use crate::vec4::ImVec4;
 
 // IMGUI_API u32 ImAlphaBlendColors(u32 col_a, u32 col_b)
@@ -42,17 +43,17 @@ pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 // Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
 // Optimized http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
 // void ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
-pub fn ColorConvertRGBtoHSV(r: f32, g: f32, b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
+pub fn ColorConvertRGBtoHSV(mut r: f32, mut g: f32, mut b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
 {
     let mut K = 0f32;
     if g < b
     {
-        ImSwap(g, b);
+        ImSwap(&mut g, &mut b);
         K = -1.f;
     }
     if r < g
     {
-        ImSwap(r, g);
+        ImSwap(&mut r, &mut g);
         K = -2.f / 6.f - K;
     }
 
