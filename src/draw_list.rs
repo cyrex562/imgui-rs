@@ -347,7 +347,7 @@ impl ImDrawList {
         self.AddText(pos, col, text_begin, text_end);
     }
 
-    // void  AddText(const ImFont* font, c_float font_size, const ImVec2& pos, col: u32, const char* text_begin, const char*
+    // void  AddText(const font: *mut ImFont, c_float font_size, const ImVec2& pos, col: u32, const char* text_begin, const char*
 // text_end = NULL, c_float wrap_width = 0f32, const ImVec4* cpu_fine_clip_rect = NULL);
     pub unsafe fn AddText2(&mut self, font: *const ImFont, font_size: c_float, pos: &ImVec2, col: u32, text_begin: *const c_char, text_end: *const c_char, wrap_width: c_float, cpu_fine_clip_rect: *const ImVec4) {
         if (col & IM_COL32_A_MASK) == 0 {

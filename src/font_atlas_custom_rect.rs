@@ -1,4 +1,4 @@
-use libc::{c_uint, c_ushort};
+use libc::{c_uint, c_ushort, size_t};
 use crate::font::ImFont;
 use crate::vec2::ImVec2;
 
@@ -7,8 +7,8 @@ use crate::vec2::ImVec2;
 pub struct ImFontAtlasCustomRect
 {
     // unsigned c_short  Width, Height;  // Input    // Desired rectangle dimension
-    pub Width: c_ushort,
-    pub Height: c_ushort,
+    pub Width: size_t,
+    pub Height: size_t,
     // unsigned c_short  X, Y;           // Output   // Packed position in Atlas
     pub X: c_ushort,
     pub Y: c_ushort,

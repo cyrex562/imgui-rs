@@ -17,9 +17,9 @@ static inline c_int       ImUpperPowerOfTwo(v: c_int)        { v-= 1; v |= v >> 
  *mut char         ImStrdup(str: *const c_char);
  *mut char         ImStrdupcpy(dst: *mut c_char, *mut p_dst_size: size_t, str: *const c_char);
  *const char   ImStrchrRange(str_begin: *const c_char, str_end: *const c_char,  c: c_char);
- c_int           ImStrlenW(*const ImWchar str);
+ c_int           ImStrlenW(str: *const ImWchar);
  *const char   ImStreolRange(str: *const c_char, str_end: *const c_char);                // End end-of-line
- *const ImWcharImStrbolW(*const ImWchar buf_mid_line, *const ImWchar buf_begin);   // Find beginning-of-line
+ *const ImWcharImStrbolW(buf_mid_line: *const ImWchar, buf_begin: *const ImWchar);   // Find beginning-of-line
  *const char   ImStristr(haystack: *const c_char, haystack_end: *const c_char, needle: *const c_char, needle_end: *const c_char);
  c_void          ImStrTrimBlanks(str: *mut c_char);
  *const char   ImStrSkipBlank(str: *const c_char);
@@ -40,12 +40,12 @@ static inline bool      ImCharIsBlankW(c: c_uint)  { return c == ' ' || c == '\t
 
 // Helpers: UTF-8 <> wchar conversions
  *const char   ImTextCharToUtf8(out_buf: [c_char;5], c: c_uint);                                                      // return out_buf
- c_int           ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, *const ImWchar in_text, *const ImWchar in_text_end);   // return output UTF-8 bytes count
+ c_int           ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, in_text: *const ImWchar, in_text_end: *const ImWchar);   // return output UTF-8 bytes count
  c_int           ImTextCharFromUtf8(*mut out_char: c_uint, in_text: *const c_char, in_text_end: *const c_char);               // read one character. return input UTF-8 bytes count
  c_int           ImTextStrFromUtf8(*mut ImWchar out_buf, out_buf_size: c_int, in_text: *const c_char, in_text_end: *const c_char, *const in_remaining: *mut c_char = null_mut());   // return input UTF-8 bytes count
  c_int           ImTextCountCharsFromUtf8(in_text: *const c_char, in_text_end: *const c_char);                                 // return number of UTF-8 code-points (NOT bytes count)
  c_int           ImTextCountUtf8BytesFromChar(in_text: *const c_char, in_text_end: *const c_char);                             // return number of bytes to express one char in UTF-8
- c_int           ImTextCountUtf8BytesFromStr(*const ImWchar in_text, *const ImWchar in_text_end);                        // return number of bytes to express string in UTF-8
+ c_int           ImTextCountUtf8BytesFromStr(in_text: *const ImWchar, in_text_end: *const ImWchar);                        // return number of bytes to express string in UTF-8
 
 // Helpers: ImVec2/ImVec4 operators
 // We are keeping those disabled by default so they don't leak in user space, to allow user enabling implicit cast operators between and: ImVec2 their own types (using IM_VEC2_CLASS_EXTRA etc.)

@@ -66,7 +66,7 @@ pub unsafe fn ImStrchrRange(str_start: * c_char, str_end: * c_char, c: c_char) -
     libc::memchr(str_start, c as c_int, str_end - str_start) as * c_char
 }
 
-// int ImStrlenW(const ImWchar* str)
+// int ImStrlenW(const str: *mut ImWchar)
 pub unsafe fn ImStrlenW(str_begin: * ImWchar) -> i32 {
     //return wcslen((const wchar_t*)str);  // FIXME-OPT: Could use this when wchar_t are 16-bit
     let mut n = 0;
@@ -90,7 +90,7 @@ pub unsafe fn ImStreolRange(str_begin: * c_char, str_end: * c_char) -> * c_char 
     };
 }
 
-// const ImWchar* ImStrbolW(const ImWchar* buf_mid_line, const ImWchar* buf_begin) // find beginning-of-line
+// const ImStrbolW: *mut ImWchar(const buf_mid_line: *mut ImWchar, const buf_begin: *mut ImWchar) // find beginning-of-line
 pub fn ImStrbolW(mut buf_mid_line: * ImWchar, buf_begin: * ImWchar) -> * ImWchar {
     while buf_mid_line > buf_begin && buf_mid_line[-1] != '\n' {
         buf_mid_line -= 1;
@@ -296,12 +296,12 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_uint, in_text: *c_char, mut in
     return wanted;
 }
 
-// int ImTextStrFromUtf8(ImWchar* buf, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
+// int ImTextStrFromUtf8(buf: *mut ImWchar, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
 pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, mut in_text: *const c_char, in_text_end: *const c_char, in_text_remaining: *mut *const c_char)
 {
-    // ImWchar* buf_out = buf;
+    // buf_out: *mut ImWchar = buf;
     let mut buf_out = buf;
-    // ImWchar* buf_end = buf + buf_size;
+    // buf_end: *mut ImWchar = buf + buf_size;
     let mut buf_end = buf + buf_size;
     while buf_out < buf_end - 1 && (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
     {
@@ -401,7 +401,7 @@ pub fn ImTextCountUtf8BytesFromChar2(c: c_uint) -> c_int
     return 3;
 }
 
-// int ImTextStrToUtf8(char* out_buf, int out_buf_size, const ImWchar* in_text, const ImWchar* in_text_end)
+// int ImTextStrToUtf8(char* out_buf, int out_buf_size, const in_text: *mut ImWchar, const in_text_end: *mut ImWchar)
 pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, int_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
 {
     let mut buf_p = out_buf;
@@ -424,7 +424,7 @@ pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, int_tex
     return buf_p - out_buf;
 }
 
-// int ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end)
+// int ImTextCountUtf8BytesFromStr(const in_text: *mut ImWchar, const in_text_end: *mut ImWchar)
 pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
 {
     let mut bytes_count = 0;

@@ -13,7 +13,7 @@ let text_display_end: *const c_char;
         text_display_end = text_end;
     }
 
-    ImFont* font = g.Font;
+    font: *mut ImFont = g.Font;
     let font_size: c_float =  g.FontSize;
     if text == text_display_end {
         return ImVec2::new2(0f32, font_size);

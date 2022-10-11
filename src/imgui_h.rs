@@ -291,7 +291,7 @@ namespace ImGui
      c_void          SetScrollFromPosY(local_y: c_float, let center_y_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 
     // Parameters stacks (shared)
-     c_void          PushFont(ImFont* font);                                         // use NULL as a shortcut to push default font
+     c_void          PushFont(font: *mut ImFont);                                         // use NULL as a shortcut to push default font
      c_void          PopFont();
      c_void          PushStyleColor(ImGuiCol idx, col: u32);                        // modify a style color. always use this if you modify the style after NewFrame().
      c_void          PushStyleColor(ImGuiCol idx, const ImVec4& col);
@@ -1461,21 +1461,7 @@ IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT;
 //-
 
 
-// Helper to build glyph ranges from text/string data. Feed your application strings/characters to it then call BuildRanges().
-// This is essentially a tightly packed of vector of 64k booleans = 8KB storage.
-struct ImFontGlyphRangesBuilder
-{
-    Vec<u32> UsedChars;            // Store 1-bit per Unicode code point (0=unused, 1=used)
 
-    ImFontGlyphRangesBuilder()              { Clear(); }
-    inline c_void     Clear()                 { let size_in_bytes: c_int = (IM_UNICODE_CODEPOINT_MAX + 1) / 8; UsedChars.resize(size_in_bytes / sizeof); memset(UsedChars.Data, 0, size_in_bytes); }
-    inline bool     GetBit(n: size_t) const  { let off: c_int = (n >> 5); mask: u32 = 1u << (n & 31); return (UsedChars[off] & mask) != 0; }  // Get bit n in the array
-    inline c_void     SetBit(n: size_t)        { let off: c_int = (n >> 5); mask: u32 = 1u << (n & 31); UsedChars[off] |= mask; }               // Set bit n in the array
-    inline c_void     AddChar(ImWchar c)      { SetBit(c); }                      // Add character
-     c_void  AddText(text: *const c_char, text_end: *const c_char = null_mut());     // Add string (each character of the UTF-8 string are added)
-     c_void  AddRanges(*const ImWchar ranges);                           // Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
-     c_void  BuildRanges(Vec<ImWchar>* out_ranges);                 // Output new ranges
-};
 
 
 

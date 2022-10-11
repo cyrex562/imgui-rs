@@ -1835,7 +1835,7 @@ c_void FocusTopMostWindowUnderOne(ImGuiWindow* under_this_window, ImGuiWindow* i
 }
 
 // Important: this alone doesn't alter current ImDrawList state. This is called by PushFont/PopFont only.
-c_void SetCurrentFont(ImFont* font)
+c_void SetCurrentFont(font: *mut ImFont)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(font && font->IsLoaded());    // Font Atlas not created. Did you call io.Fonts.GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
@@ -1851,7 +1851,7 @@ c_void SetCurrentFont(ImFont* font)
     g.DrawListSharedData.FontSize = g.FontSize;
 }
 
-c_void PushFont(ImFont* font)
+c_void PushFont(font: *mut ImFont)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!font)
@@ -2352,7 +2352,7 @@ ImGuiViewport* GetWindowViewport()
     return g.CurrentViewport;
 }
 
-ImFont* GetFont()
+GetFont: *mut ImFont()
 {
     return GimGui.Font;
 }GetFontSize: c_float()
@@ -11327,7 +11327,7 @@ c_void ShowFontAtlas(atlas: *mut ImFontAtlas)
 {
     for (let i: c_int = 0; i < atlas->Fonts.Size; i++)
     {
-        ImFont* font = atlas->Fonts[i];
+        font: *mut ImFont = atlas->Fonts[i];
         PushID(font);
         DebugNodeFont(font);
         PopID();
@@ -12081,7 +12081,7 @@ c_void DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, *const 
 }
 
 // [DEBUG] Display details for a single font, called by ShowStyleEditor().
-c_void DebugNodeFont(ImFont* font)
+c_void DebugNodeFont(font: *mut ImFont)
 {
     let mut opened: bool =  TreeNode(font, "Font: \"%s\"\n%.2f px, %d glyphs, %d file(s)",
         font->ConfigData ? font->ConfigData[0].Name : "", font->FontSize, font->Glyphs.Size, font->ConfigDataCount);

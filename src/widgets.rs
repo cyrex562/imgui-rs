@@ -127,7 +127,7 @@ static const u64          IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
 // For InputTextEx()
 static bool             InputTextFilterCharacter(*mut p_char: c_uint, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data, ImGuiInputSource input_source);
 static c_int              InputTextCalcTextLenAndLineCount(text_begin: *const c_char, *const out_text_end: *mut c_char);
-static ImVec2           InputTextCalcTextSizeW(*const ImWchar text_begin, *const ImWchar text_end, *const *mut let remaining: ImWchar = null_mut(), *mut let mut out_offset: ImVec2 =  null_mut(), let mut stop_on_new_line: bool =  false);
+static ImVec2           InputTextCalcTextSizeW(text_begin: *const ImWchar, text_end: *const ImWchar, *const *mut let remaining: ImWchar = null_mut(), *mut let mut out_offset: ImVec2 =  null_mut(), let mut stop_on_new_line: bool =  false);
 
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: Text, etc.
@@ -3598,7 +3598,7 @@ static InputTextCalcTextLenAndLineCount: c_int(text_begin: *const c_char, *const
     return line_count;
 }
 
-static InputTextCalcTextSizeW: ImVec2(*const ImWchar text_begin, *const ImWchar text_end, *const *mut ImWchar remaining, *mut out_offset: ImVec2, stop_on_new_line: bool)
+static InputTextCalcTextSizeW: ImVec2(text_begin: *const ImWchar, text_end: *const ImWchar, *const *mut ImWchar remaining, *mut out_offset: ImVec2, stop_on_new_line: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImFont font = g.Font;
@@ -3692,7 +3692,7 @@ static c_void STB_TEXTEDIT_DELETECHARS(*mut ImGuiInputTextState obj, pos: c_int,
     *dst = '\0';
 }
 
-static STB_TEXTEDIT_INSERTCHARS: bool(*mut ImGuiInputTextState obj, pos: c_int, *const ImWchar new_text, new_text_len: c_int)
+static STB_TEXTEDIT_INSERTCHARS: bool(*mut ImGuiInputTextState obj, pos: c_int, new_text: *const ImWchar, new_text_len: c_int)
 {
     let is_resizable: bool = (obj->Flags & ImGuiInputTextFlags_CallbackResize) != 0;
     let text_len: c_int = obj->CurLenW;
@@ -4673,7 +4673,7 @@ InputTextEx: bool(label: *const c_char, hint: *const c_char, buf: *mut c_char, b
             // In multi-line mode, we never exit the loop until all lines are counted, so add one extra to the searches_remaining counter.
             searches_remaining += is_multiline ? 1 : 0;
             let line_count: c_int = 0;
-            //for (const ImWchar* s = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != None; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
+            //for (const s: *mut ImWchar = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != None; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
             for (*const let s: ImWchar = text_begin; *s != 0; s++)
                 if (*s == '\n')
                 {
