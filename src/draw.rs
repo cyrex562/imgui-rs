@@ -11,7 +11,7 @@ use crate::draw_vert::ImDrawVert;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::font_atlas_custom_rect::ImFontAtlasCustomRect;
-use crate::font_atlas_default_tex_data::{FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_vec, FONT_ATLAS_DEFAULT_TEX_DATA_W};
+use crate::font_atlas_default_tex_data::{FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_vec, FONT_ATLAS_DEFAULT_TEX_DATA_W};
 use crate::font_atlas_flags::{ImFontAtlasFlags_NoBakedLines, ImFontAtlasFlags_NoMouseCursors, ImFontAtlasFlags_NoPowerOfTwoHeight};
 use crate::font_build_dst_data::ImFontBuildDstData;
 use crate::font_build_src_data::ImFontBuildSrcData;
@@ -528,7 +528,7 @@ pub fn ImFontAtlasBuildRender32bppRectFromString(atlas: *mut ImFontAtlas, x: c_i
     }
 }
 
-pub fn ImFontAtlasBuildRenderDefaultTexData(mut atlas: *mut ImFontAtlas)
+pub unsafe fn ImFontAtlasBuildRenderDefaultTexData(mut atlas: *mut ImFontAtlas)
 {
    let mut r: *mut ImFontAtlasCustomRect = atlas.GetCustomRectByIndex(atlas.PackIdMouseCursors);
     // IM_ASSERT(r.IsPacked());
@@ -540,16 +540,15 @@ pub fn ImFontAtlasBuildRenderDefaultTexData(mut atlas: *mut ImFontAtlas)
         // IM_ASSERT(r.Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
         let x_for_white = r.X;
         let x_for_black = r.X + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
-        let a = FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_vec().
-        if (atlas.TexPixelsAlpha8 != null_mut())
+        if atlas.TexPixelsAlpha8 != null_mut()
         {
-            ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_white, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, '.', 0xF0);
-            ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_black, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, 'X', 0xF0);
+            ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_white, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr(), '.', 0xF0);
+            ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_black, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr(), 'X', 0xF0);
         }
         else
         {
-            ImFontAtlasBuildRender32bppRectFromString(atlas, x_for_white as c_int, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, '.', IM_COL32_WHITE);
-            ImFontAtlasBuildRender32bppRectFromString(atlas, x_for_black as c_int, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, 'X', IM_COL32_WHITE);
+            ImFontAtlasBuildRender32bppRectFromString(atlas, x_for_white as c_int, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr(), '.', IM_COL32_WHITE);
+            ImFontAtlasBuildRender32bppRectFromString(atlas, x_for_black as c_int, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr(), 'X', IM_COL32_WHITE);
         }
     }
     else

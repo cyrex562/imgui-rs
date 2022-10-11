@@ -78,6 +78,10 @@ pub const FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS: &'static str =  "..-         -XXXX
 //     out
 // }
 
+pub unsafe fn FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr() -> *const c_char {
+    CStr::from_bytes_with_nul_unchecked(FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS.as_bytes()).as_ptr()
+}
+
 pub const FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA: [[ImVec2; 3]; ImGuiMouseCursor_COUNT as usize] = [
     // Pos ........ Size ......... Offset ......
     [ImVec2::new(0.0, 3.0), ImVec2::new(12.0, 19.0), ImVec2::new(0.0, 0.0)], // ImGuiMouseCursor_Arrow
