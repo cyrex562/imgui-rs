@@ -147,8 +147,97 @@ impl ImFont {
     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). f32::MAX to disable.
     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0f32 to disable.
     // ImVec2            CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-    pub fn CalcTextSizeA(&mut self, size: c_float, max_width: c_float, wrap_width: c_float, text_begin: *const c_char, text_end: *const c_char, remaining: *mut *const c_char) -> ImVec2 {
-        todo!()
+    pub unsafe fn CalcTextSizeA(&mut self, size: c_float, max_width: c_float, wrap_width: c_float, text_begin: *const c_char, mut text_end: *const c_char, remaining: *mut *const c_char) -> ImVec2 {
+        if !text_end {
+            text_end = text_begin + libc::strlen(text_begin);
+        } // FIXME-OPT: Need to avoid this.
+
+        let line_height: c_float = size;
+        let scale: c_float = size / FontSize;
+
+        let mut text_size: ImVec2 = ImVec2::new(0.0, 0.0);
+        let mut line_width: c_float = 0.0;
+
+        let word_wrap_enabled: bool = (wrap_width > 0.0);
+        let mut word_wrap_eol: *const c_char = null_mut();
+
+        let mut s: *const c_char = text_begin;
+        while s < text_end {
+            if word_wrap_enabled {
+                // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
+                if !word_wrap_eol {
+                    word_wrap_eol = CalcWordWrapPositionA(scale, s, text_end, wrap_width - line_width);
+                    if word_wrap_eol == s {// Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
+                        word_wrap_eol += 1;
+                    }    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
+                }
+
+                if s >= word_wrap_eol {
+                    if text_size.x < line_width {
+                        text_size.x = line_width;
+                    }
+                    text_size.y += line_height;
+                    line_width = 0.0;
+                    word_wrap_eol = null_mut();
+
+                    // Wrapping skips upcoming blanks
+                    while s < text_end {
+                        const c: c_char = *s;
+                        if ImCharIsBlankA(c) { s += 1; } else if c == '\n' as c_char {
+                            s += 1;
+                            break;
+                        } else { break; }
+                    }
+                    continue;
+                }
+            }
+
+            // Decode and advance source
+            let mut prev_s: *const c_char = s;
+            let mut c: c_uint = *s as c_uint;
+            if c < 0x80 {
+                s += 1;
+            } else {
+                s += ImTextCharFromUtf8(&mut c, s, text_end);
+                if c == 0 { // Malformed UTF-8?
+                    break;
+                }
+            }
+
+            if c < 32 {
+                if c == c_uint::from('\n') {
+                    text_size.x = ImMax(text_size.x, line_width);
+                    text_size.y += line_height;
+                    line_width = 0.0;
+                    continue;
+                }
+                if c == c_uint::from('\r') {
+                    continue;
+                }
+            }
+
+            let char_width: c_float = (if c < self.IndexAdvanceX.Size { self.IndexAdvanceX[c] } else { self.FallbackAdvanceX }) * scale;
+            if line_width + char_width >= max_width {
+                s = prev_s;
+                break;
+            }
+
+            line_width += char_width;
+        }
+
+        if text_size.x < line_width {
+            text_size.x = line_width;
+        }
+
+        if line_width > 0.0 || text_size.y == 0.0 {
+            text_size.y += line_height;
+        }
+
+        if remaining {
+            *remaining = s;
+        }
+
+        return text_size;
     }
 
 
@@ -288,7 +377,7 @@ impl ImFont {
         self.IndexLookup.clear();
         self.DirtyLookupTables = false;
         libc::memset(self.Used4kPagesMap.as_mut_ptr() as *mut c_void, 0, self.Used4kPagesMap.len());
-        self.GrowIndex(max_codepoint + 1);
+        self.GrowIndex((max_codepoint + 1) as size_t);
         // for (let i: c_int = 0; i < Glyphs.len(); i++)
         for i in 0..self.Glyphs.len() {
             let codepoint: c_int = self.Glyphs[i].Codepoint;
@@ -438,7 +527,7 @@ impl ImFont {
             return;
         }
 
-        self.GrowIndex(dst.clone() + 1);
+        self.GrowIndex((dst.clone() + 1) as size_t);
         self.IndexLookup[dst.clone()] = if src < index_size.clone() as ImWchar { self.IndexLookup[src] } else { -1 };
         self.IndexAdvanceX[dst.clone()] = if src < index_size.clone() as ImWchar { self.IndexAdvanceX[src.clone()] } else { 1 };
     }
@@ -459,7 +548,7 @@ impl ImFont {
         let mut page_last: c_uint = (c_last / 4096);
         // for (let mut page_n: c_uint =  page_begin; page_n <= page_last; page_n++)
         for page_n in page_begin..page_last {
-            if (page_n >> 3) < self.Used4kPagesMap.len() {
+            if (page_n >> 3) < self.Used4kPagesMap.len() as c_uint {
                 if self.Used4kPagesMap[page_n.clone() >> 3] & (1 << (page_n.clone() & 7)) {
                     return false;
                 }
