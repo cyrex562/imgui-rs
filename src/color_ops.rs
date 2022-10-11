@@ -8,7 +8,7 @@ use crate::color::{IM_COL32, IM_COL32_A_SHIFT, IM_COL32_B_SHIFT, IM_COL32_G_SHIF
 use crate::math_ops::{ImFabs, ImFmod, ImLerp, ImSwap};
 use crate::vec4::ImVec4;
 
-// IMGUI_API u32 ImAlphaBlendColors(u32 col_a, u32 col_b)
+// IMGUI_API ImAlphaBlendColors: u32(col_a: u32, col_b: u32)
 pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
 {
     let mut t = ((col_b >> IM_COL32_A_SHIFT) & 0xFF) / 255.f;
@@ -18,7 +18,7 @@ pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
     return IM_COL32(r, g, b, 0xFF);
 }
 
-// ImVec4 ColorConvertU32ToFloat4(u32 in)
+// ImVec4 ColorConvertU32ToFloat4(in: u32)
 pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
 {
     let s = 1f32 / 255f32;
@@ -29,7 +29,7 @@ pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
         ((in_color >> IM_COL32_A_SHIFT) & 0xFF) * s);
 }
 
-// u32 ColorConvertFloat4ToU32(const ImVec4& in)
+// ColorConvertFloat4ToU32: u32(const ImVec4& in)
 pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 {
     let mut out: u32 = 0;

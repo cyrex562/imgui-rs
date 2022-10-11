@@ -8,7 +8,7 @@ use crate::imgui::GImGui;
 use crate::string_ops::str_to_const_c_char_ptr;
 use crate::viewport::ImGuiViewport;
 
-// static ImDrawList* GetViewportDrawList(*mut ImGuiViewportP viewport, size_t drawlist_no, *const char drawlist_name)
+// static ImDrawList* GetViewportDrawList(*mut ImGuiViewportP viewport, drawlist_no: size_t, drawlist_name: *const c_char)
 pub unsafe fn GetViewportDrawList(viewport: *mut ImGuiViewport, drawlist_no: c_sizet, drawlist_name: *const c_char) -> *mut ImDrawList
 {
     // Create the draw list on demand, because they are not frequently used for all viewports

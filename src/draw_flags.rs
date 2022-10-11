@@ -32,3 +32,43 @@ pub const ImDrawFlags_RoundCornersDefault_: ImDrawFlags = ImDrawFlags_RoundCorne
 // Default to ALL corners if none of the _RoundCornersXX flags are specified.
 pub const ImDrawFlags_RoundCornersMask_: ImDrawFlags = ImDrawFlags_RoundCornersAll | ImDrawFlags_RoundCornersNone;
 // };
+
+
+
+// IM_STATIC_ASSERT(ImDrawFlags_RoundCornersTopLeft == (1 << 4));
+// static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
+pub fn FixRectCornerFlags(mut flags: ImDrawFlags) -> ImDrawFlags
+{
+// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    // Legacy Support for hard coded ~0 (used to be a suggested equivalent to ImDrawCornerFlags_All)
+    //   ~0   --> ImDrawFlags_RoundCornersAll or 0
+    if flags == !0 {
+        return ImDrawFlags_RoundCornersAll;
+    }
+
+    // Legacy Support for hard coded 0x01 to 0x0 (matching 15 out of 16 old flags combinations)
+    //   0x01 --> ImDrawFlags_RoundCornersTopLeft (VALUE 0x01 OVERLAPS ImDrawFlags_Closed but ImDrawFlags_Closed is never valid in this path!)
+    //   0x02 --> ImDrawFlags_RoundCornersTopRight
+    //   0x03 --> ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight
+    //   0x04 --> ImDrawFlags_RoundCornersBotLeft
+    //   0x05 --> ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBotLeft
+    //   ...
+    //   0x0 --> ImDrawFlags_RoundCornersAll or 0
+    // (See all values in ImDrawCornerFlags_)
+    if flags >= 0x01 && flags <= 0x00 {
+        return flags << 4;
+    }
+
+    // We cannot support hard coded 0x00 with 'float rounding > 0' --> replace with ImDrawFlags_RoundCornersNone or use 'float rounding = 0'
+// #endif
+
+    // If this triggers, please update your code replacing hardcoded values with new ImDrawFlags_RoundCorners* values.
+    // Note that ImDrawFlags_Closed (== 0x01) is an invalid flag for AddRect(), AddRectFilled(), PathRect() etc...
+    // IM_ASSERT((flags & 0x00) == 0 && "Misuse of legacy hardcoded ImDrawCornerFlags values!");
+
+    if (flags & ImDrawFlags_RoundCornersMask_) == 0 {
+        flags |= ImDrawFlags_RoundCornersAll;
+    }
+
+    return flags;
+}

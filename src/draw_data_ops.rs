@@ -20,13 +20,13 @@ pub unsafe fn GetDrawData() -> *mut ImDrawData {
 }
 
 
-// static c_void AddDrawListToDrawData(Vec<ImDrawList*>* out_list, ImDrawList* draw_list)
+// static c_void AddDrawListToDrawData(Vec<ImDrawList*>* out_list, draw_list: *mut ImDrawList)
 pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mut ImDrawList)
 {
-    if draw_list.CmdBuffer.Size == 0 {
+    if draw_list.CmdBuffer.len() == 0 {
         return;
     }
-    if draw_list.CmdBuffer.Size == 1 && draw_list.CmdBuffer[0].ElemCount == 0 && draw_list.CmdBuffer[0].UserCallback == null_mut() {
+    if draw_list.CmdBuffer.len() == 1 && draw_list.CmdBuffer[0].ElemCount == 0 && draw_list.CmdBuffer[0].UserCallback == null_mut() {
         return;
     }
 
@@ -52,13 +52,13 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     //       2 and 4 bytes indices are generally supported by most graphics API.
     // - If for some reason neither of those solutions works for you, a workaround is to call BeginChild()/EndChild() before reaching
     //   the 64K limit to split your draw commands in multiple draw lists.
-    if libc::sizeof(ImDrawIdx) == 2 {}
+    if libc::sizeof == 2 {}
         // IM_ASSERT(draw_list._VtxCurrentIdx < (1 << 16) && "Too many vertices in ImDrawList using 16-bit indices. Read comment above");
 
     out_list.push(draw_list);
 }
 
-// static c_void AddWindowToDrawData(ImGuiWindow* window, c_int layer)
+// static c_void AddWindowToDrawData(ImGuiWindow* window, layer: c_int)
 pub unsafe fn AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -84,4 +84,3 @@ pub unsafe fn AddRootWindowToDrawData(window: *mut ImGuiWindow)
 {
     AddWindowToDrawData(window, GetWindowDisplayLayer(window));
 }
-

@@ -316,7 +316,7 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
-    SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(ImVec2::new(400, 400), ImGuiCond_FirstUseEver);
     Begin("Debug##Default");
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 

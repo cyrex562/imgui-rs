@@ -19,7 +19,7 @@ use crate::window_ops::WindowRectRelToAbs;
 
 // FIXME-TABLE: This prevents us from using ImGuiListClipper _inside_ a table cell.
 // The problem we have is that without a Begin/End scheme for rows using the clipper is ambiguous.
-// static bool GetSkipItemForListClipping()
+// static GetSkipItemForListClipping: bool()
 pub fn GetSkipItemForListClipping() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     //return (g.CurrentTable ? g.Currenttable.HostSkipItems : g.Currentwindow.SkipItems);
@@ -113,7 +113,7 @@ pub fn ImGuiListClipper_SortAndFuseRanges(ranges: &mut Vec<ImGuiListClipperRange
 }
 
 
-// static bool ImGuiListClipper_StepInternal(ImGuiListClipper* clipper)
+// static ImGuiListClipper_StepInternal: bool(ImGuiListClipper* clipper)
 pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -203,7 +203,7 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
 // - Very important: when a starting position is after our maximum item, we set Min to (ItemsCount - 1). This allows us to handle most forms of wrapping.
 // - Due to how Selectable extra padding they tend to be "unaligned" with exact unit in the item list,
 //   which with the flooring/ceiling tend to lead to 2 items instead of one being submitted.
-// for (c_int i = 0; i < data.Ranges.Size; i++)
+// for (i: c_int = 0; i < data.Ranges.Size; i++)
         for i in 0..data.Ranges.len() {
             if data.Ranges[i].PosToIndexConvert {
                 let mut m1 = ((data.Ranges[i].Min - window.DC.CursorPos.y - data.LossynessOffset) / clipper.ItemsHeight);

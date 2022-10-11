@@ -28,7 +28,7 @@ pub fn SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, clip_rect: &I
     let mut clip_rect_vec4 = clip_rect.ToVec4();
     window.ClipRect = clip_rect.clone();
     window.DrawList._CmdHeader.ClipRect = clip_rect_vec4;
-    window.DrawList._ClipRectStack[window.DrawList._ClipRectStack.Size - 1] = clip_rect_vec4.clone();
+    window.DrawList._ClipRectStack[window.DrawList._ClipRectStack.len() - 1] = clip_rect_vec4.clone();
 }
 
 
@@ -56,7 +56,7 @@ pub unsafe fn SetCurrentWindow(window: *mut ImGuiWindow) {
     }
 }
 
-// static inline bool IsWindowContentHoverable(ImGuiWindow* window, ImGuiHoveredFlags flags)
+// static inline IsWindowContentHoverable: bool(ImGuiWindow* window, ImGuiHoveredFlags flags)
 pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags) -> bool {
     // An active popup disable hovering on other windows (apart from its own children)
     // FIXME-OPT: This could be cached/stored within the window.
@@ -109,14 +109,14 @@ pub fn ScaleWindow(window: *mut ImGuiWindow, scale: c_float) {
     window.ContentSize = ImFloor(window.ContentSize.clone() * scale);
 }
 
-// static bool IsWindowActiveAndVisible(ImGuiWindow* window)
+// static IsWindowActiveAndVisible: bool(ImGuiWindow* window)
 pub fn IsWindowActiveAndVisible(window: *mut ImGuiWindow) -> bool {
     return (window.Active) && (!window.Hidden);
 }
 
 
 // FIXME: Add a more explicit sort order in the window structure.
-// static c_int IMGUI_CDECL ChildWindowComparer(*const c_void lhs, *const c_void rhs)
+// static IMGUI_CDECL: c_int ChildWindowComparer(*const c_void lhs, *const c_void rhs)
 pub fn ChildWindowComparer(lhs: *const c_void, rhs: *const c_void) -> c_int {
     let a: *const ImGuiWindow = lhs;
     let b: *const ImGuiWindow = rhs;
@@ -155,7 +155,7 @@ pub fn AddWindowToSortBuffer(mut out_sorted_windows: *mut Vec<*mut ImGuiWindow>,
 }
 
 
-// static inline c_int GetWindowDisplayLayer(ImGuiWindow* window)
+// static inline GetWindowDisplayLayer: c_int(ImGuiWindow* window)
 pub fn GetWindowDisplayLayer(window: *mut ImGuiWindow) -> c_int {
     return if window.Flags & ImGuiWindowFlags_Tooltip { 1 } else { 0 };
 }
@@ -167,7 +167,7 @@ pub fn GetWindowDisplayLayer(window: *mut ImGuiWindow) -> c_int {
 // - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
 //   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
 //   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
-// c_void PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect)
+// c_void PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, intersect_with_current_clip_rect: bool)
 pub fn PushClipRect(clip_rect_min: &ImVec2, clip_rect_max: &ImVec2, intersect_with_current_clip_rect: bool) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     window.DrawList.PushClipRect(clip_rect_min, clip_rect_max, intersect_with_current_clip_rect);
@@ -192,7 +192,7 @@ pub fn FindFrontMostVisibleChildWindow(window: *mut ImGuiWindow) -> *mut ImGuiWi
     return window;
 }
 
-// static c_void RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, u32 col)
+// static c_void RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, col: u32)
 pub fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: u32) {
     if (col & IM_COL32_A_MASK) == 0 {
         return;
@@ -210,7 +210,7 @@ pub fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: u32) {
         if draw_list.CmdBuffer.len() == 0 {
             draw_list.AddDrawCmd();
         }
-        draw_list.PushClipRect(viewport_rect.Min - ImVec2(1, 1), viewport_rect.Max + ImVec2(1, 1), false); // Ensure ImDrawCmd are not merged
+        draw_list.PushClipRect(viewport_rect.Min - ImVec2::new(1, 1), viewport_rect.Max + ImVec2::new(1, 1), false); // Ensure ImDrawCmd are not merged
         draw_list.AddRectFilled(&viewport_rect.Min, &viewport_rect.Max, col, 0f32, ImDrawFlags_None);
         let cmd = draw_list.CmdBuffer.last().unwrap();
         // IM_ASSERT(cmd.ElemCount == 6);
@@ -223,7 +223,7 @@ pub fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: u32) {
     // Draw over sibling docking nodes in a same docking tree
     if window.Rootwindow.DockIsActive {
         let mut draw_list: *mut ImDrawList = FindFrontMostVisibleChildWindow(window.RootWindowDockTree).DrawList;
-        if draw_list.CmdBuffer.Size == 0 {
+        if draw_list.CmdBuffer.len() == 0 {
             draw_list.AddDrawCmd();
         }
         draw_list.PushClipRect(&viewport_rect.Min, &viewport_rect.Max, false);
@@ -288,7 +288,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
         if bb.GetWidth() >= viewport.Size.x && bb.GetHeight() >= viewport.Size.y {
             bb.Expand(-distance - 1f32);
         } // If a window fits the entire viewport, adjust its highlight inward
-        if window.DrawList.CmdBuffer.Size == 0 {
+        if window.DrawList.CmdBuffer.len() == 0 {
             window.DrawList.AddDrawCmd();
         }
         window.DrawList.PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, false);
@@ -364,8 +364,8 @@ pub unsafe fn FindHoveredWindows() {
         // Support for one rectangular hole in any given window
         // FIXME: Consider generalizing hit-testing override (with more generic data, callback, etc.) (#1512)
         if window.HitTestHoleSize.x != 0 {
-            let hole_pos = ImVec2::new2(window.Pos.x + window.HitTestHoleOffset.x, window.Pos.y + window.HitTestHoleOffset.y);
-            let hole_size = ImVec2::new2(window.HitTestHoleSize.x as c_float, window.HitTestHoleSize.y as c_float);
+            let hole_pos = ImVec2::new(window.Pos.x + window.HitTestHoleOffset.x, window.Pos.y + window.HitTestHoleOffset.y);
+            let hole_size = ImVec2::new(window.HitTestHoleSize.x as c_float, window.HitTestHoleSize.y as c_float);
             if ImRect(hole_pos.clone(), hole_pos.clone() + hole_size).Contains(g.IO.MousePos.clone()) {
                 continue;
             }

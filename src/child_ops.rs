@@ -24,7 +24,7 @@ use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
 use crate::window_ops::SetNextWindowSize;
 
-// bool BeginChildEx(*const char name, ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags flags)
+// BeginChildEx: bool(name: *const c_char, ImGuiID id, const ImVec2& size_arg, border: bool, ImGuiWindowFlags flags)
 pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
@@ -81,13 +81,13 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     return ret;
 }
 
-// bool BeginChild(*const char str_id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+// BeginChild: bool(str_id: *const c_char, const ImVec2& size_arg, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild(str_id: *const c_char, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     return BeginChildEx(str_id, window.GetID(str_id, null()), size_arg, border, extra_flags);
 }
 
-// bool BeginChild(ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
+// BeginChild: bool(ImGuiID id, const ImVec2& size_arg, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild2(id: ImGuiID, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     // IM_ASSERT(id != 0);
     return BeginChildEx(null_mut(), id, size_arg, border, extra_flags);
@@ -123,7 +123,7 @@ pub unsafe fn EndChild() {
 
             // When browsing a window that has no activable items (scroll only) we keep a highlight on the child (pass g.NavId to trick into always displaying)
             if window.DC.NavLayersActiveMask == 0 && window == g.NavWindow {
-                RenderNavHighlight(&ImRect::from_vec2(bb.Min.clone() - ImVec2::new2(2.0, 2.0), bb.Max.clone() + ImVec2::new2(2.0, 2.0)), g.NavId, ImGuiNavHighlightFlags_TypeThin);
+                RenderNavHighlight(&ImRect::from_vec2(bb.Min.clone() - ImVec2::new(2.0, 2.0), bb.Max.clone() + ImVec2::new(2.0, 2.0)), g.NavId, ImGuiNavHighlightFlags_TypeThin);
             }
         } else {
             // Not navigable into
@@ -138,7 +138,7 @@ pub unsafe fn EndChild() {
 }
 
 // Helper to create a child window / scrolling region that looks like a normal widget frame.
-// bool BeginChildFrame(ImGuiID id, const ImVec2& size, ImGuiWindowFlags extra_flags)
+// BeginChildFrame: bool(ImGuiID id, const ImVec2& size, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChildFrame(id: ImGuiID, size: &ImVec2, extra_flags: ImGuiWindowFlagss) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;

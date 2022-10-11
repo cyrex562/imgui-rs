@@ -25,7 +25,7 @@ impl ImSpan<T> {
             DataEnd: null_mut(),
         }
     }
-    // inline ImSpan(*mut T data, c_int size)                { Data = data; DataEnd = data + size; }
+    // inline ImSpan(*mut T data, size: c_int)                { Data = data; DataEnd = data + size; }
     pub fn new2(data: *mut T, size: c_int) -> Self {
         Self {
             Data: data,
@@ -40,7 +40,7 @@ impl ImSpan<T> {
         }
     }
 
-    // inline c_void         set(*mut T data, c_int size)      { Data = data; DataEnd = data + size; }
+    // inline c_void         set(*mut T data, size: c_int)      { Data = data; DataEnd = data + size; }
     pub fn set(&mut self, data: *mut T, size: c_int) {
         self.Data = data;
         self.DataEnd = data + size;
@@ -59,9 +59,9 @@ impl ImSpan<T> {
     pub fn size_in_bytes(&self) -> c_int {
         (self.DataEnd - self.Data) * mem::size_of::<T>()
     }
-    // inline T&           operator[](c_int i)           { *mut T p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
+    // inline T&           operator[](i: c_int)           { *mut T p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
 
-    // inline const T&     operator[](c_int i) const     { *const T p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
+    // inline const T&     operator[](i: c_int) const     { *const T p = Data + i; IM_ASSERT(p >= Data && p < DataEnd); return *p; }
 
     // inline *mut T           begin()                     { return Data; }
     pub fn begin_mut(&mut self) -> *mut T {

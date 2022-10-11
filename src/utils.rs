@@ -12,7 +12,7 @@ use crate::type_defs::{ImGuiID, ImGuiMemAllocFunc, ImGuiMemFreeFunc};
 // - You probably don't want to modify that mid-program, and if you use global/static e.g. ImVector<> instances you may need to keep them accessible during program destruction.
 // - DLL users: read comments above.
 // #ifndef IMGUI_DISABLE_DEFAULT_ALLOCATORS
-// static void*   MallocWrapper(size_t size, void* user_data)    { IM_UNUSED(user_data); return malloc(size); }
+// static void*   MallocWrapper(size: size_t, void* user_data)    { IM_UNUSED(user_data); return malloc(size); }
 pub unsafe fn MallocWrapper(size: &usize, mut user_data: *mut u8) -> *mut u8 {
     user_data = libc::malloc(size as libc::size_t) as *mut u8;
     return user_data;
@@ -30,7 +30,7 @@ pub type GImAllocatorFreeFunc = FreeWrapper;
 
 
 
-// *const char GetVersion()
+// GetVersion: *const c_char()
 pub fn GetVersion() -> *const c_char
 {
     return IMGUI_VERSION;

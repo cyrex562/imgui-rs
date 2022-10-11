@@ -81,7 +81,7 @@ impl ImGuiTextFilter {
         };
         if default_filter.is_null() == false
         {
-            ImStrncpy(out.InputBuf.as_mut_ptr(), default_filter, IM_ARRAYSIZE(InputBuf));
+            ImStrncpy(out.InputBuf.as_mut_ptr(), default_filter, InputBuf.len());
             Build();
         }
         out
@@ -92,7 +92,7 @@ impl ImGuiTextFilter {
         if width != 0f32 {
             SetNextItemWidth(width);
         }
-        let value_changed = InputText::new(label, InputBuf, IM_ARRAYSIZE(InputBu0f32));
+        let value_changed = InputText::new(label, InputBuf, InputBu0f32.len());
         if value_changed {
             self.Build();
         }

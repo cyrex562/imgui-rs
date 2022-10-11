@@ -2,15 +2,17 @@
 
 use std::ptr::null;
 use libc::c_int;
+use crate::axis::ImGuiAxis;
 use crate::data_authority::ImGuiDataAuthority;
 use crate::dock_node_flags::ImGuiDockNodeFlags;
+use crate::tab_bar::ImGuiTabBar;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::ImGuiID;
 
 // sizeof() 156~192
-#[derive(Default,Debug,Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct  ImGuiDockNode
 {
 pub ID: ImGuiID,

@@ -117,12 +117,12 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
 
 // Draw top border
         if border_col > 0 && bg_y1 >= table.BgClipRect.Min.y && bg_y1 < table.BgClipRect.Max.y {
-            window.DrawList.AddLine(&mut ImVec2::new2(table.BorderX1, bg_y1), &mut ImVec2::new2(table.BorderX2, bg_y1), border_col, border_size);
+            window.DrawList.AddLine(&mut ImVec2::new(table.BorderX1, bg_y1), &mut ImVec2::new(table.BorderX2, bg_y1), border_col, border_size);
         }
 
 // Draw bottom border at the row unfreezing mark (always strong)
         if draw_strong_bottom_border && bg_y2 >= table.BgClipRect.Min.y && bg_y2 < table.BgClipRect.Max.y {
-            window.DrawList.AddLine(&mut ImVec2::new2(table.BorderX1, bg_y2), &mut ImVec2::new2(table.BorderX2, bg_y2), table.BorderColorStrong, border_size);
+            window.DrawList.AddLine(&mut ImVec2::new(table.BorderX1, bg_y2), &mut ImVec2::new(table.BorderX2, bg_y2), table.BorderColorStrong, border_size);
         }
     }
 
@@ -130,7 +130,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
 // We need to do that in TableEndRow() instead of TableBeginRow() so the list clipper can mark end of row and
 // get the new cursor position.
     if unfreeze_rows_request {
-        // for (c_int column_n = 0; column_n < table.ColumnsCount; column_n+ +)
+        // for (column_n: c_int = 0; column_n < table.ColumnsCount; column_n+ +)
         for column_n in 0..table.ColumnsCount {
             let mut column: &mut ImGuiTableColumn = &mut table.Columns[column_n];
             column.NavLayerCurrent = if column_n < table.FreezeColumnsCount as c_int { ImGuiNavLayer_Menu } else { ImGuiNavLayer_Main };
@@ -154,7 +154,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
         table.RowPosY2 = table.WorkRect.Min.y + table.RowPosY2 - table.OuterRect.Min.y;
         window.DC.CursorPos.y = table.WorkRect.Min.y + table.RowPosY2 - table.OuterRect.Min.y;
         table.RowPosY1 = table.RowPosY2 - row_height;
-// for (c_int column_n = 0; column_n < table.ColumnsCount; column_n++)
+// for (column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
         for column_n in 0..table.ColumnsCount {
             let mut column: &mut ImGuiTableColumn = &mut table.Columns[column_n];
             column.DrawChannelCurrent = column.DrawChannelUnfrozen;
@@ -202,7 +202,7 @@ pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
 }
 
 
-// inline *mut ImGuiTableInstanceData   TableGetInstanceData(*mut ImGuiTable table, c_int instance_no)
+// inline *mut ImGuiTableInstanceData   TableGetInstanceData(*mut ImGuiTable table, instance_no: c_int)
 pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut ImGuiTableInstanceData {
     if instance_no == 0 {
         return &mut table.InstanceDataFirst;
@@ -218,7 +218,7 @@ pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut 
 // - Important: if ImGuiTableFlags_PadOuterX is set but ImGuiTableFlags_PadInnerX is not set, the outer-most left and right
 //   columns report a small offset so their CellBgRect can extend up to the outer border.
 //   FIXME: But the rendering code in TableEndRow() nullifies that with clamping required for scrolling.
-// ImRect TableGetCellBgRect(*const ImGuiTable table, c_int column_n)
+// ImRect TableGetCellBgRect(*const ImGuiTable table, column_n: c_int)
 pub fn TableGetCellBgRect(table: *const ImGuiTable, column_n: c_int) -> ImRect {
     let column: &ImGuiTableColumn = &table.Columns[column_n];
     let mut x1 = column.MinX;

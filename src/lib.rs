@@ -198,6 +198,13 @@ mod child_ops;
 mod content_ops;
 mod nav_ops;
 mod layout_ops;
+mod shade_verts_ops;
+mod font_atlas_default_tex_data;
+mod font_atlas_custom_rect;
+mod font_builder_io;
+mod font_build_src_data;
+mod font_build_dst_data;
+mod font_atlas_ops;
 
 
 // c_void Initialize()

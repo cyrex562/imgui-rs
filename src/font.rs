@@ -117,13 +117,13 @@ impl ImFont {
     }
 
 
-    // void              RenderChar(ImDrawList* draw_list, c_float size, const ImVec2& pos, u32 col, ImWchar c) const;
+    // void              RenderChar(draw_list: *mut ImDrawList, c_float size, const ImVec2& pos, col: u32, ImWchar c) const;
     pub fn RenderChar(&mut self, draw_list: *const ImDrawList, size: c_float, pos: &ImVec2, col: u32, c: ImWchar) {
         todo!()
     }
 
 
-    // void              RenderText(ImDrawList* draw_list, c_float size, const ImVec2& pos, u32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, c_float wrap_width = 0f32, bool cpu_fine_clip = false) const;
+    // void              RenderText(draw_list: *mut ImDrawList, c_float size, const ImVec2& pos, col: u32, const ImVec4& clip_rect, const char* text_begin, const char* text_end, c_float wrap_width = 0f32, cpu_fine_clip: bool = false) const;
     pub fn RenderText(&mut self, draw_list: *mut ImDrawList, size: c_float, pos: &ImVec2, col: u32, clip_rect: &ImVec4, text_begin: *const c_char, text_end: *const c_char, wrap_width: c_float, cpu_fine_clip: bool) {
         todo!()
     }
@@ -142,7 +142,7 @@ impl ImFont {
     }
 
 
-    // void              GrowIndex(c_int new_size);
+    // void              GrowIndex(new_size: c_int);
     pub fn GrowIndex(&mut self, new_size: c_int) {
         todo!()
     }
@@ -153,18 +153,18 @@ impl ImFont {
         todo!()
     }
 
-    // void              AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+    // void              AddRemapChar(ImWchar dst, ImWchar src, overwrite_dst: bool = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
     pub fn AddRemapChar(&mut self, dst: ImWchar, src: ImWchar, overwrite_dst: bool) {
         todo!()
     }
 
 
-    // void              SetGlyphVisible(ImWchar c, bool visible);
+    // void              SetGlyphVisible(ImWchar c, visible: bool);
     pub fn SetGlyphVisible(&mut self, c: ImWchar, visible: bool) {
         todo!()
     }
 
-    // bool              IsGlyphRangeUnused(unsigned c_int c_begin, unsigned c_int c_last);
+    // bool              IsGlyphRangeUnused(unsigned c_begin: c_int, unsigned c_last: c_int);
     pub fn IsGlyphRangeUnused(&mut self, c_being: c_uint, c_last: c_uint) {
         todo!()
     }

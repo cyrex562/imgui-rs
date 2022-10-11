@@ -24,7 +24,7 @@ pub fn SetupViewportDrawData(viewport: *mut ImGuiViewport, draw_lists: *mut Vec<
     for n in 0..draw_lists.len() {
         let mut draw_list: *mut ImDrawList = draw_lists.Data[n];
         draw_list._PopUnusedDrawCmd();
-        draw_data.TotalVtxCount += draw_list.VtxBuffer.Size;
-        draw_data.TotalIdxCount += draw_list.IdxBuffer.Size;
+        draw_data.TotalVtxCount += draw_list.VtxBuffer.len();
+        draw_data.TotalIdxCount += draw_list.IdxBuffer.len();
     }
 }

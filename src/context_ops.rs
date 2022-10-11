@@ -28,7 +28,7 @@ pub fn SetCurrentContext(ctx: *mut ImGuiContext) {
                                          // #endif
 }
 
-// ImGuiContext* CreateContext(ImFontAtlas* shared_font_atlas)
+// ImGuiContext* CreateContext(shared_font_atlas: *mut ImFontAtlas)
 pub unsafe fn CreateContext(shared_font_atlas: *mut ImFontAtlas) -> *mut ImGuiContext {
     // ImGuiContext* prev_ctx = GetCurrentContext();
     let mut prev_ctx = GetCurrentContext();
@@ -109,7 +109,7 @@ fn GetTime() -> c_double {
     return GimGui.Time;
 }
 
-// c_int GetFrameCount()
+// GetFrameCount: c_int()
 pub fn GetFrameCount() -> c_int {
     return GimGui.FrameCount;
 }

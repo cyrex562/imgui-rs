@@ -2,7 +2,7 @@ use crate::dock_node_settings::ImGuiDockNodeSettings;
 use crate::dock_request::ImGuiDockRequest;
 use crate::storage::ImGuiStorage;
 
-#[derive(Default,Debug,Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct ImGuiDockContext
 {
 pub Nodes:  ImGuiStorage,          // Map ID -> ImGuiDockNode*: Active nodes

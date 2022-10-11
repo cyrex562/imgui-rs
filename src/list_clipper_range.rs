@@ -17,7 +17,7 @@ pub struct ImGuiListClipperRange {
 }
 
 impl ImGuiListClipperRange {
-    // static ImGuiListClipperRange    FromIndices(c_int min, c_int max)                               { ImGuiListClipperRange r = { min, max, false, 0, 0 }; return r; }
+    // static ImGuiListClipperRange    FromIndices(min: c_int, max: c_int)                               { ImGuiListClipperRange r = { min, max, false, 0, 0 }; return r; }
     pub fn FromIndices(min: c_int, max: c_int) -> Self {
         Self {
             Min: min as c_float,
@@ -28,7 +28,7 @@ impl ImGuiListClipperRange {
         }
     }
 
-    // static ImGuiListClipperRange    FromPositions(c_float y1, c_float y2, c_int off_min, c_int off_max) { ImGuiListClipperRange r = { y1, y2, true, off_min, off_max }; return r; }
+    // static ImGuiListClipperRange    FromPositions(c_float y1, c_float y2, off_min: c_int, off_max: c_int) { ImGuiListClipperRange r = { y1, y2, true, off_min, off_max }; return r; }
     pub fn FromPositions(y1: c_float, y2: c_float, off_min: c_int, off_max: c_int) -> Self {
         Self {
             Min: y1,

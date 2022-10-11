@@ -1,7 +1,7 @@
 
 
 // IM_ALLOC() == MemAlloc()
-*mut c_void MemAlloc(size_t size)
+*mut c_void MemAlloc(size: size_t)
 {
     if (ImGuiContext* ctx = GImGui)
         ctx.IO.MetricsActiveAllocations+= 1;

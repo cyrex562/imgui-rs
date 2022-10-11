@@ -82,12 +82,12 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API bool      GetBool(ImGuiID key, bool default_val = false) const;
+    // IMGUI_API bool      GetBool(ImGuiID key, default_val: bool = false) const;
     pub fn GetBool(&mut self, key: ImGuiID, default_val: bool) -> bool {
         return self.GetInt(key, if default_val { 1 } else { 0 }) != 0;
     }
 
-    // IMGUI_API void      SetBool(ImGuiID key, bool val);
+    // IMGUI_API void      SetBool(ImGuiID key, val: bool);
     pub fn SetBool(&mut self, key: ImGuiID, val: bool) {
         self.SetInt(key, if val { 1 } else { 0 });
     }
@@ -146,7 +146,7 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API bool*     GetBoolRef(ImGuiID key, bool default_val = false);
+    // IMGUI_API bool*     GetBoolRef(ImGuiID key, default_val: bool = false);
     pub fn GetBoolRef(&mut self, key: ImGUiID, default_val: bool) -> *mut bool {
         return self.GetIntRef(key, if default_val { 1 } else { 0 }) as *mut bool;
     }

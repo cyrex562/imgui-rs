@@ -31,10 +31,10 @@ pub unsafe fn PushStyleVarVec2(idx: ImGuiStyleVar, val: &ImVec2) {
         *pvar = val;
         return;
     }
-    // IM_ASSERT(0 && "Called PushStyleVar() ImVec2 variant but variable is not a ImVec2!");
+    // IM_ASSERT(0 && "Called PushStyleVar() variant: ImVec2 but variable is not a ImVec2!");
 }
 
-// c_void PopStyleVar(c_int count)
+// c_void PopStyleVar(count: c_int)
 pub unsafe fn PopStyleVarInt(mut count: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.StyleVarStack.Size < count {

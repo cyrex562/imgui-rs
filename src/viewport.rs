@@ -96,20 +96,20 @@ impl ImGuiViewport {
 
     // Helpers
 
-    // ImVec2              GetCenter() const       { return ImVec2(Pos.x + Size.x * 0.5f32, Pos.y + Size.y * 0.5f32); }
+    // ImVec2              GetCenter() const       { return ImVec2::new(Pos.x + Size.x * 0.5f32, Pos.y + Size.y * 0.5f32); }
     pub fn GetCenter(&self) -> ImVec2 {
-        ImVec2::new2(self.Pos.x + self.Size.x * 0.5f32, self.Pos.y + self.Size.y * 0.5f32)
+        ImVec2::new(self.Pos.x + self.Size.x * 0.5f32, self.Pos.y + self.Size.y * 0.5f32)
     }
 
-    // ImVec2              GetWorkCenter() const   { return ImVec2(WorkPos.x + WorkSize.x * 0.5f32, WorkPos.y + WorkSize.y * 0.5f32); }
+    // ImVec2              GetWorkCenter() const   { return ImVec2::new(WorkPos.x + WorkSize.x * 0.5f32, WorkPos.y + WorkSize.y * 0.5f32); }
     pub fn GetWorkCenter(&self) -> ImVec2 {
-        ImVec2::new2(
+        ImVec2::new(
             self.WorkPos.x + self.WorkSize.x * 0.5f32,
             self.WorkPos.y + self.WorkSize.y * 0.5f32,
         )
     }
 
-    // ImGuiViewportP()                    { Idx = -1; LastFrameActive = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; LastNameHash = 0; Alpha = LastAlpha = 1f32; PlatformMonitor = -1; PlatformWindowCreated = false; Window = None; DrawLists[0] = DrawLists[1] = None; LastPlatformPos = LastPlatformSize = LastRendererSize = ImVec2(f32::MAX, f32::MAX); }
+    // ImGuiViewportP()                    { Idx = -1; LastFrameActive = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; LastNameHash = 0; Alpha = LastAlpha = 1f32; PlatformMonitor = -1; PlatformWindowCreated = false; Window = None; DrawLists[0] = DrawLists[1] = None; LastPlatformPos = LastPlatformSize = LastRendererSize = ImVec2::new(f32::MAX, f32::MAX); }
     pub fn new() -> Self {
         Self {
             Idx: -1,
@@ -122,9 +122,9 @@ impl ImGuiViewport {
             PlatformWindowCreated: false,
             Window: null_mut(),
             DrawLists: [null_mut(); 2],
-            LastPlatformPos: ImVec2::new2(f32::MAX, f32::MAX),
-            LastPlatformSize: ImVec2::new2(f32::MAX, f32::MAX),
-            LastRendererSize: ImVec2::new2(f32::MAX, f32::MAX),
+            LastPlatformPos: ImVec2::new(f32::MAX, f32::MAX),
+            LastPlatformSize: ImVec2::new(f32::MAX, f32::MAX),
+            LastRendererSize: ImVec2::new(f32::MAX, f32::MAX),
             ..Default::default()
         }
     }
@@ -141,15 +141,15 @@ impl ImGuiViewport {
     }
 
     // Calculate work rect pos/size given a set of offset (we have 1 pair of offset for rect locked from last frame data, and 1 pair for currently building rect)
-//     ImVec2  CalcWorkRectPos(const ImVec2& off_min) const                            { return ImVec2(Pos.x + off_min.x, Pos.y + off_min.y); }
+//     ImVec2  CalcWorkRectPos(const ImVec2& off_min) const                            { return ImVec2::new(Pos.x + off_min.x, Pos.y + off_min.y); }
     pub fn CalcWorkRectPos(&self, off_min: &ImVec2) -> ImVec2 {
-        ImVec2::new2(self.Pos.x + off_min.x, self.Pos.y + off_min.y)
+        ImVec2::new(self.Pos.x + off_min.x, self.Pos.y + off_min.y)
     }
 
 
-    // ImVec2  CalcWorkRectSize(const ImVec2& off_min, const ImVec2& off_max) const    { return ImVec2(ImMax(0f32, Size.x - off_min.x + off_max.x), ImMax(0f32, Size.y - off_min.y + off_max.y)); }
+    // ImVec2  CalcWorkRectSize(const ImVec2& off_min, const ImVec2& off_max) const    { return ImVec2::new(ImMax(0f32, Size.x - off_min.x + off_max.x), ImMax(0f32, Size.y - off_min.y + off_max.y)); }
     pub fn CalcWorkRectSize(&self, off_min: &ImVec2, off_max: &ImVec2) -> ImVec2 {
-        ImVec2::new2(
+        ImVec2::new(
             ImMax(0f32, self.Size.x - off_min.x + off_max.x),
             ImMax(0f32, self.Size.y - off_min.y + off_max.y),
         )

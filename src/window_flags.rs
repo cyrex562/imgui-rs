@@ -33,7 +33,7 @@ pub const ImGuiWindowFlags_NoMouseInputs: ImGuiWindowFlags = 1 << 9;
 pub const ImGuiWindowFlags_MenuBar: ImGuiWindowFlags = 1 << 10;
 // Has a menu-bar
 pub const ImGuiWindowFlags_HorizontalScrollbar: ImGuiWindowFlags = 1 << 11;
-// Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2(width;0f32)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
+// Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2::new(width;0f32)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
 pub const ImGuiWindowFlags_NoFocusOnAppearing: ImGuiWindowFlags = 1 << 12;
 // Disable taking focus when transitioning from hidden to visible state
 pub const ImGuiWindowFlags_NoBringToFrontOnFocus: ImGuiWindowFlags = 1 << 13;

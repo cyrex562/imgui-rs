@@ -17,24 +17,24 @@ pub struct ImVec2
 }
 
 impl ImVec2 {
-    // constexpr ImVec2()                      : x(0f32), y(0f32) { }
-    pub fn new() -> Self {
-        Self {
-            x: 0f32,
-            y: 0f32
-        }
-    }
+    // constexpr ImVec2::new()                      : x(0f32), y(0f32) { }
+    // pub fn new() -> Self {
+    //     Self {
+    //         x: 0f32,
+    //         y: 0f32
+    //     }
+    // }
 
-    // constexpr ImVec2(float _x, float _y)    : x(_x), y(_y) { }
-    pub fn new2(x: c_float, y: c_float) -> Self {
+    // constexpr ImVec2::new(float _x, float _y)    : x(_x), y(_y) { }
+    pub fn new(x: c_float, y: c_float) -> Self {
         Self {
             x,
             y
         }
     }
 
-    // float  operator[] (size_t idx) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
-// float& operator[] (size_t idx)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
+    // float  operator[] (idx: size_t) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
+// float& operator[] (idx: size_t)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
 }
 
 

@@ -87,7 +87,7 @@ pub fn ImLogDouble(x: c_double) -> c_double {
 }
 
 
-// static inline c_int    ImAbs(c_int x)               { return x < 0 ? -x : x; }
+// static inline c_int    ImAbs(x: c_int)               { return x < 0 ? -x : x; }
 pub fn ImAbsInt(x: c_int) -> c_int {
     x.abs()
 }
@@ -190,7 +190,7 @@ pub fn ImSubClampOverflow(a: T, b: T, mn: T, mx: T) -> T {
 
 
 // - Misc maths helpers
-// static inline ImVec2 ImMin(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y); }
+// static inline ImMin: ImVec2(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2::new(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y); }
 pub fn ImMinVec2(lhs: &mut ImVec2, rhs: &mut ImVec2) -> ImVec2 {
     let x = if lhs.x < rhs.x {
         lhs.x
@@ -202,11 +202,11 @@ pub fn ImMinVec2(lhs: &mut ImVec2, rhs: &mut ImVec2) -> ImVec2 {
     } else {
         rhs.y
     };
-    ImVec2::new2(x, y)
+    ImVec2::new(x, y)
 }
 
 
-// static inline ImVec2 ImMax(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2(lhs.x >= rhs.x ? lhs.x : rhs.x, lhs.y >= rhs.y ? lhs.y : rhs.y); }
+// static inline ImMax: ImVec2(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2::new(lhs.x >= rhs.x ? lhs.x : rhs.x, lhs.y >= rhs.y ? lhs.y : rhs.y); }
 pub fn ImMaxVec2(lhs: &mut ImVec2, rhs: &mut ImVec2) -> ImVec2 {
     let x = if lhs.x >= rhs.x {
         lhs.x
@@ -218,11 +218,11 @@ pub fn ImMaxVec2(lhs: &mut ImVec2, rhs: &mut ImVec2) -> ImVec2 {
     } else {
         rhs.y
     };
-    ImVec2::new2(x, y)
+    ImVec2::new(x, y)
 }
 
 
-// static inline ImVec2 ImClamp(v: &ImVec2, mn: &ImVec2, ImVec2 mx)      { return ImVec2((v.x < mn.x) ? mn.x : (v.x > mx.x) ? mx.x : v.x, (v.y < mn.y) ? mn.y : (v.y > mx.y) ? mx.y : v.y); }
+// static inline ImClamp: ImVec2(v: &ImVec2, mn: &ImVec2, mx: ImVec2)      { return ImVec2::new((v.x < mn.x) ? mn.x : (v.x > mx.x) ? mx.x : v.x, (v.y < mn.y) ? mn.y : (v.y > mx.y) ? mx.y : v.y); }
 pub fn ImClampVec2(v: &ImVec2, mn: &ImVec2, mx: &ImVec2) -> ImVec2 {
     let x = if v.x < mn.x {
         mn.x
@@ -238,23 +238,23 @@ pub fn ImClampVec2(v: &ImVec2, mn: &ImVec2, mx: &ImVec2) -> ImVec2 {
     } else {
         v.y
     };
-    ImVec2::new2(x, y)
+    ImVec2::new(x, y)
 }
 
 
-// static inline ImVec2 ImLerp(a: &ImVec2, b: &ImVec2, c_float t)          { return ImVec2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
+// static inline ImLerp: ImVec2(a: &ImVec2, b: &ImVec2, c_float t)          { return ImVec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
 pub fn ImLerpVec2(a: &ImVec2, b: &ImVec2, t: c_float) -> ImVec2 {
     let x = a.x + (b.x - a.x) * t;
     let y = a.y + (b.y - a.y) * t;
-    ImVec2::new2(x, y)
+    ImVec2::new(x, y)
 }
 
 
-// static inline ImVec2 ImLerp(a: &ImVec2, b: &ImVec2, t: &ImVec2)  { return ImVec2(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
+// static inline ImLerp: ImVec2(a: &ImVec2, b: &ImVec2, t: &ImVec2)  { return ImVec2::new(a.x + (b.x - a.x) * t.x, a.y + (b.y - a.y) * t.y); }
 pub fn ImLerpVec22(a: &ImVec2, b: &ImVec2, t: &ImVec2) -> ImVec2 {
     let x = a.x  + (b.x - a.x) * t.x;
     let y = a.y + (b.y - a.y) * t.y;
-    ImVec2::new2(x, y)
+    ImVec2::new(x, y)
 }
 
 
@@ -307,16 +307,16 @@ pub fn ImFloorFloat(x : c_float) -> c_float {
 
 // static inline c_float  ImFloorSigned(c_float 0f32)                                     { return ((f >= 0 || f == 0f32) ? f : f - 1); } // Decent replacement for floorf()
 
-// static inline ImVec2 ImFloor(v: &ImVec2)                                   { return ImVec2((v.x), (v.y)); }
+// static inline ImFloor: ImVec2(v: &ImVec2)                                   { return ImVec2::new((v.x), (v.y)); }
 pub fn ImFloorVec2(v: &ImVec2) -> ImVec2 {
-    ImVec2::new2(v.x.floor(), v.y.floor())
+    ImVec2::new(v.x.floor(), v.y.floor())
 }
 
 
-// static inline ImVec2 ImFloorSigned(v: &ImVec2)                             { return ImVec2(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
+// static inline ImFloorSigned: ImVec2(v: &ImVec2)                             { return ImVec2::new(ImFloorSigned(v.x), ImFloorSigned(v.y)); }
 
 
-// static inline c_int    ImModPositive(c_int a, c_int b)                                { return (a + b) % b; }
+// static inline c_int    ImModPositive(a: c_int, b: c_int)                                { return (a + b) % b; }
 pub fn ImModPositive(a: c_int, b: c_int) -> c_int {
     (a + b) % b
 }
@@ -328,9 +328,9 @@ pub fn ImDotVec2(a: &ImVec2, b: &ImVec2) -> c_float {
 }
 
 
-// static inline ImVec2 ImRotate(v: &ImVec2, c_float cos_a, c_float sin_a)        { return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
+// static inline ImRotate: ImVec2(v: &ImVec2, c_float cos_a, c_float sin_a)        { return ImVec2::new(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a); }
 pub fn ImRotate(v: &ImVec2, cos_a: c_float, sin_a: c_float) -> ImVec2 {
-    ImVec2::new2(
+    ImVec2::new(
         v.x * cos_a - v.y * sin_a,
         v.x * sin_a - v.y * cos_a
     )
@@ -349,7 +349,77 @@ pub fn ImLinearSweep(current: c_float, target: c_float, speed: c_float) -> c_flo
 }
 
 
-// static inline ImVec2 ImMul(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2(lhs.x * rhs.x, lhs.y * rhs.y); }
+// static inline ImMul: ImVec2(lhs: &ImVec2, rhs: &ImVec2)                { return ImVec2::new(lhs.x * rhs.x, lhs.y * rhs.y); }
 pub fn ImMul(lhs: &ImVec2, rhs: &ImVec2) -> ImVec2 {
-    ImVec2::new2(lhs.x * rhs.x, lhs.y * rhs.y)
+    ImVec2::new(lhs.x * rhs.x, lhs.y * rhs.y)
+}
+
+
+pub fn ImBezierCubicCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2,t: c_float) -> ImVec2
+{
+    let u: c_float =  1 - t;
+    let w1: c_float =  u * u * u;
+    let w2: c_float =  3 * u * u * t;
+    let w3: c_float =  3 * u * t * t;
+    let w4: c_float =  t * t * t;
+    return ImVec2::new(w1 * p1.x + w2 * p2.x + w3 * p3.x + w4 * p4.x, w1 * p1.y + w2 * p2.y + w3 * p3.y + w4 * p4.y);
+}
+
+pub fn ImBezierQuadraticCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2,t: c_float) -> ImVec2
+{
+    let u: c_float =  1 - t;
+    let w1: c_float =  u * u;
+    let w2: c_float =  2 * u * t;
+    let w3: c_float =  t * t;
+    return ImVec2::new(w1 * p1.x + w2 * p2.x + w3 * p3.x, w1 * p1.y + w2 * p2.y + w3 * p3.y);
+}
+
+// Closely mimics ImBezierCubicClosestPointCasteljau() in imgui.cpp
+pub fn PathBezierCubicCurveToCasteljau(path: &mut Vec<ImVec2>, x1: c_float, y1: c_float, x2: c_float, y2: c_float, x3: c_float, y3: c_float, x4: c_float, y4: c_float, tess_tol: c_float, level: c_int) {
+    let dx: c_float = x4 - x1;
+    let dy: c_float = y4 - y1;
+    let mut d2: c_float = (x2 - x4) * dy - (y2 - y4) * dx;
+    let mut d3: c_float = (x3 - x4) * dy - (y3 - y4) * dx;
+    d2 = if d2 >= 0.0 { d2 } else { -d2 };
+    d3 = if d3 >= 0.0 { d3 } else { -d3 };
+    if (d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy) {
+        path.push(ImVec2::new(x4, y4));
+    } else if level < 10 {
+        let x12: c_float = (x1 + x2) * 0.5;
+        let y12 = (y1 + y2) * 0.5;
+        let x23: c_float = (x2 + x3) * 0.5;
+        let y23 = (y2 + y3) * 0.5;
+        let x34: c_float = (x3 + x4) * 0.5;
+        let y34 = (y3 + y4) * 0.5;
+        let x123: c_float = (x12 + x23) * 0.5;
+        let y123 = (y12 + y23) * 0.5;
+        let x234: c_float = (x23 + x34) * 0.5;
+        let y234 = (y23 + y34) * 0.5;
+        let x1234: c_float = (x123 + x234) * 0.5;
+        let y1234 = (y123 + y234) * 0.5;
+        PathBezierCubicCurveToCasteljau(path, x1, y1, x12, y12, x123, y123, x1234, y1234, tess_tol, level + 1);
+        PathBezierCubicCurveToCasteljau(path, x1234, y1234, x234, y234, x34, y34, x4, y4, tess_tol, level + 1);
+    }
+}
+
+pub fn PathBezierQuadraticCurveToCasteljau(path: &mut Vec<ImVec2> ,x1: c_float,y1: c_float,x2: c_float,y2: c_float,x3: c_float,y3: c_float,tess_tol: c_float, level: c_int)
+{
+    let dx: c_float =  x3 - x1;
+    let dy = y3 - y1;
+    let det: c_float =  (x2 - x3) * dy - (y2 - y3) * dx;
+    if det * det * 4.0 < tess_tol * (dx * dx + dy * dy)
+    {
+        path.push(ImVec2::new(x3, y3));
+    }
+    else if level < 10
+    {
+        let x12: c_float =  (x1 + x2) * 0.5;
+        let y12 = (y1 + y2) * 0.5;
+        let x23: c_float =  (x2 + x3) * 0.5;
+        let y23 = (y2 + y3) * 0.5;
+        let x123: c_float =  (x12 + x23) * 0.5;
+        let y123 = (y12 + y23) * 0.5;
+        PathBezierQuadraticCurveToCasteljau(path, x1, y1, x12, y12, x123, y123, tess_tol, level + 1);
+        PathBezierQuadraticCurveToCasteljau(path, x123, y123, x23, y23, x3, y3, tess_tol, level + 1);
+    }
 }

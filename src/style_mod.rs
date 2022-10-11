@@ -13,7 +13,7 @@ pub struct ImGuiStyleMod {
 }
 
 impl ImGuiStyleMod {
-    // ImGuiStyleMod(ImGuiStyleVar idx, c_int v)     { VarIdx = idx; BackupInt[0] = v; }
+    // ImGuiStyleMod(ImGuiStyleVar idx, v: c_int)     { VarIdx = idx; BackupInt[0] = v; }
     pub fn new(idx: ImGuiStyleVar, v: c_int) -> Self {
         Self {
             VarIdx: idx,
@@ -32,7 +32,7 @@ impl ImGuiStyleMod {
     }
 
 
-    // ImGuiStyleMod(ImGuiStyleVar idx, ImVec2 v)  { VarIdx = idx; BackupFloat[0] = v.x; BackupFloat[1] = v.y; }
+    // ImGuiStyleMod(ImGuiStyleVar idx, v: ImVec2)  { VarIdx = idx; BackupFloat[0] = v.x; BackupFloat[1] = v.y; }
     pub fn new3(idx: ImGuiStyleVar, v: ImVec2) -> Self {
         Self {
             VarIdx: idx,

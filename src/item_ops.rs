@@ -38,7 +38,7 @@ pub unsafe fn MarkItemEdited(id: ImGuiID)
 }
 
 // == GetItemID() == GetFocusID()
-// bool IsItemFocused()
+// IsItemFocused: bool()
 pub unsafe fn IsItemFocused() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -60,7 +60,7 @@ pub unsafe fn IsItemFocused() -> bool
 // This is roughly matching the behavior of internal-facing ItemHoverable()
 // - we allow hovering to be true when ActiveId==window.MoveID, so that clicking on non-interactive items such as a Text() item still returns true with IsItemHovered()
 // - this should work even for non-interactive items that have no ID, so we cannot use LastItemId
-// bool IsItemHovered(ImGuiHoveredFlags flags)
+// IsItemHovered: bool(ImGuiHoveredFlags flags)
 pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -141,7 +141,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
 }
 
 // Internal facing ItemHoverable() used when submitting widgets. Differs slightly from IsItemHovered().
-// bool ItemHoverable(const ImRect& bb, ImGuiID id)
+// ItemHoverable: bool(const ImRect& bb, ImGuiID id)
 pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -205,7 +205,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool
     return true;
 }
 
-// bool IsClippedEx(const ImRect& bb, ImGuiID id)
+// IsClippedEx: bool(const ImRect& bb, ImGuiID id)
 pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -260,7 +260,7 @@ pub unsafe fn CalcWrapWidthForPos(pos: &ImVec2, mut wrap_pos_x: c_float) -> c_fl
 
 
 
-// bool IsItemActive()
+// IsItemActive: bool()
 pub unsafe fn IsItemActive() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -270,7 +270,7 @@ pub unsafe fn IsItemActive() -> bool
     return false;
 }
 
-// bool IsItemActivated()
+// IsItemActivated: bool()
 pub unsafe fn IsItemActivated() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -282,7 +282,7 @@ pub unsafe fn IsItemActivated() -> bool
     return false;
 }
 
-// bool IsItemDeactivated()
+// IsItemDeactivated: bool()
 pub unsafe fn IsItemDeactivated() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -292,7 +292,7 @@ pub unsafe fn IsItemDeactivated() -> bool
     return g.ActiveIdPreviousFrame == g.LastItemData.ID && g.ActiveIdPreviousFrame != 0 && g.ActiveId != g.LastItemData.ID;
 }
 
-// bool IsItemDeactivatedAfterEdit()
+// IsItemDeactivatedAfterEdit: bool()
 pub unsafe fn IsItemDeactivatedAfterEdit() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -303,55 +303,55 @@ pub unsafe fn IsItemDeactivatedAfterEdit() -> bool
 
 // Important: this can be useful but it is NOT equivalent to the behavior of e.g.Button()!
 // Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
-// bool IsItemClicked(ImGuiMouseButton mouse_button)
+// IsItemClicked: bool(ImGuiMouseButton mouse_button)
 pub unsafe fn IsItemClicked(mouse_button: ImGuiMouseButton) -> bool
 {
     return IsMouseClicked(mouse_button, false) && IsItemHovered(ImGuiHoveredFlags_None);
 }
 
-// bool IsItemToggledOpen()
+// IsItemToggledOpen: bool()
 pub unsafe fn IsItemToggledOpen() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return flag_set(g.LastItemData.StatusFlags, ImGuiItemStatusFlags_ToggledOpen);
 }
 
-// bool IsItemToggledSelection()
+// IsItemToggledSelection: bool()
 pub unsafe fn IsItemToggledSelectionm() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return flag_set(g.LastItemData.StatusFlags, ImGuiItemStatusFlags_ToggledSelection);
 }
 
-// bool IsAnyItemHovered()
+// IsAnyItemHovered: bool()
 pub unsafe fn IsAnyItemHovered() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.HoveredId != 0 || g.HoveredIdPreviousFrame != 0;
 }
 
-// bool IsAnyItemActive()
+// IsAnyItemActive: bool()
 pub unsafe fn IsAnyItemActive() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.ActiveId != 0;
 }
 
-// bool IsAnyItemFocused()
+// IsAnyItemFocused: bool()
 pub unsafe fn IsAnyItemFocused() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.NavId != 0 && !g.NavDisableHighlight;
 }
 
-// bool IsItemVisible()
+// IsItemVisible: bool()
 pub unsafe fn IsAnyItemVisible() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.Currentwindow.ClipRect.Overlaps(&g.LastItemData.Rect);
 }
 
-// bool IsItemEdited()
+// IsItemEdited: bool()
 pub unsafe fn IsItemEdited() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -389,21 +389,21 @@ pub unsafe fn SetItemUsingMouseWheel()
 }
 
 
-// ImVec2 GetItemRectMin()
+// GetItemRectMin: ImVec2()
 pub unsafe fn GetItemRectMin() -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.LastItemData.Rect.Min.clone();
 }
 
-// ImVec2 GetItemRectMax()
+// GetItemRectMax: ImVec2()
 pub unsafe fn GetItemRectMax() -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.LastItemData.Rect.Max.clone();
 }
 
-// ImVec2 GetItemRectSize()
+// GetItemRectSize: ImVec2()
 pub unsafe fn GetItemRectSize() -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -509,7 +509,7 @@ pub unsafe fn ItemSize(size: &ImVec2,text_baseline_y: c_float)
     let line_height: c_float =  ImMax(window.DC.CurrLineSize.y, /*ImMax(*/window.DC.CursorPos.y - line_y1/*, 0f32)*/ + size.y + offset_to_match_baseline_y);
 
     // Always align ourselves on pixel boundaries
-    //if (g.IO.KeyAlt) window.DrawList.AddRect(window.DC.CursorPos, window.DC.CursorPos + ImVec2(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
+    //if (g.IO.KeyAlt) window.DrawList.AddRect(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
     window.DC.CursorPosPrevLine.x = window.DC.CursorPos.x + size.x;
     window.DC.CursorPosPrevLine.y = line_y1;
     window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);    // Next line

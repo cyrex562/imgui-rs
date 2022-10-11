@@ -91,7 +91,7 @@ typedef c_int            stbrp_coord;
 // #define STBRP__MAXVAL  0x7fffffff
 // Mostly for internal use, but this is the maximum supported coordinate value.
 
-STBRP_DEF c_int stbrp_pack_rects (stbrp_context *context, stbrp_rect *rects, c_int num_rects);
+STBRP_DEF stbrp_pack_rects: c_int (stbrp_context *context, stbrp_rect *rects, num_rects: c_int);
 // Assign packed locations to rectangles. The rectangles are of type
 // 'stbrp_rect' defined below, stored in the array 'rects', and there
 // are 'num_rects' many of them.
@@ -131,7 +131,7 @@ struct stbrp_rect
 }; // 16 bytes, nominally
 
 
-STBRP_DEF c_void stbrp_init_target (stbrp_context *context, c_int width, c_int height, stbrp_node *nodes, c_int num_nodes);
+STBRP_DEF c_void stbrp_init_target (stbrp_context *context, width: c_int, height: c_int, stbrp_node *nodes, num_nodes: c_int);
 // Initialize a rectangle packer to:
 //    pack a rectangle that is 'width' by 'height' in dimensions
 //    using temporary storage provided by the array 'nodes', which is 'num_nodes' long
@@ -152,13 +152,13 @@ STBRP_DEF c_void stbrp_init_target (stbrp_context *context, c_int width, c_int h
 // If you do #2, then the non-quantized algorithm will be used, but the algorithm
 // may run out of temporary storage and be unable to pack some rectangles.
 
-STBRP_DEF c_void stbrp_setup_allow_out_of_mem (stbrp_context *context, c_int allow_out_of_mem);
+STBRP_DEF c_void stbrp_setup_allow_out_of_mem (stbrp_context *context, allow_out_of_mem: c_int);
 // Optionally call this function after init but before doing any packing to
 // change the handling of the out-of-temp-memory scenario, described above.
 // If you call init again, this will be reset to the default (false).
 
 
-STBRP_DEF c_void stbrp_setup_heuristic (stbrp_context *context, c_int heuristic);
+STBRP_DEF c_void stbrp_setup_heuristic (stbrp_context *context, heuristic: c_int);
 // Optionally select which packing heuristic the library should use. Different
 // heuristics will produce better/worse results for different data sets.
 // If you call init again, this will be reset to the default.
@@ -230,7 +230,7 @@ enum
    STBRP__INIT_skyline = 1
 };
 
-STBRP_DEF c_void stbrp_setup_heuristic(stbrp_context *context, c_int heuristic)
+STBRP_DEF c_void stbrp_setup_heuristic(stbrp_context *context, heuristic: c_int)
 {
    switch (context.init_mode) {
       case STBRP__INIT_skyline:
@@ -242,7 +242,7 @@ STBRP_DEF c_void stbrp_setup_heuristic(stbrp_context *context, c_int heuristic)
    }
 }
 
-STBRP_DEF c_void stbrp_setup_allow_out_of_mem(stbrp_context *context, c_int allow_out_of_mem)
+STBRP_DEF c_void stbrp_setup_allow_out_of_mem(stbrp_context *context, allow_out_of_mem: c_int)
 {
    if (allow_out_of_mem)
       // if it's ok to run out of memory, then don't bother aligning them;
@@ -262,7 +262,7 @@ STBRP_DEF c_void stbrp_setup_allow_out_of_mem(stbrp_context *context, c_int allo
    }
 }
 
-STBRP_DEF c_void stbrp_init_target(stbrp_context *context, c_int width, c_int height, stbrp_node *nodes, c_int num_nodes)
+STBRP_DEF c_void stbrp_init_target(stbrp_context *context, width: c_int, height: c_int, stbrp_node *nodes, num_nodes: c_int)
 {
    let mut i: c_int = 0;
 
@@ -288,11 +288,11 @@ STBRP_DEF c_void stbrp_init_target(stbrp_context *context, c_int width, c_int he
 }
 
 // find minimum y position if it starts at x1
-static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, c_int x0, c_int width, c_int *pwaste)
+static stbrp__skyline_find_min_y: c_int(stbrp_context *c, stbrp_node *first, x0: c_int, width: c_int, c_int *pwaste)
 {
    stbrp_node *node = first;
    let x1: c_int = x0 + width;
-   c_int min_y, visited_width, waste_area;
+   min_y: c_int, visited_width, waste_area;
 
    STBRP__NOTUSED(c);
 
@@ -340,11 +340,11 @@ static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, c_in
 
 typedef struct
 {
-   c_int x,y;
+   x: c_int,y;
    stbrp_node **prev_link;
 } stbrp__findresult;
 
-static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int width, c_int height)
+static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, width: c_int, height: c_int)
 {
    let best_waste: c_int = (1<<30), best_x, best_y = (1 << 30);
    stbrp__findresult fr;
@@ -365,7 +365,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
    node = c.active_head;
    prev = &c.active_head;
    while (node.x + width <= c.width) {
-      c_int y,waste;
+      y: c_int,waste;
       y = stbrp__skyline_find_min_y(c, node, node.x, width, &waste);
       if (c.heuristic == STBRP_HEURISTIC_Skyline_BL_sortHeight) { // actually just want to test BL
          // bottom left
@@ -416,7 +416,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
          tail = tail.next;
       while (tail) {
          let xpos: c_int = tail.x - width;
-         c_int y,waste;
+         y: c_int,waste;
          STBRP_ASSERT(xpos >= 0);
          // find the left position that matches this
          while (node.next->x <= xpos) {
@@ -446,7 +446,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, c_int wi
    return fr;
 }
 
-static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, c_int width, c_int height)
+static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, width: c_int, height: c_int)
 {
    // find best position according to heuristic
    stbrp__findresult res = stbrp__skyline_find_best_pos(context, width, height);
@@ -525,7 +525,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, c
    return res;
 }
 
-static c_int STBRP__CDECL rect_height_compare(const c_void *a, const c_void *b)
+static STBRP__CDECL: c_int rect_height_compare(const c_void *a, const c_void *b)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
@@ -536,16 +536,16 @@ static c_int STBRP__CDECL rect_height_compare(const c_void *a, const c_void *b)
    return (p.w > q.w) ? -1 : (p.w < q.w);
 }
 
-static c_int STBRP__CDECL rect_original_order(const c_void *a, const c_void *b)
+static STBRP__CDECL: c_int rect_original_order(const c_void *a, const c_void *b)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
    return (p.was_packed < q.was_packed) ? -1 : (p.was_packed > q.was_packed);
 }
 
-STBRP_DEF c_int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, c_int num_rects)
+STBRP_DEF stbrp_pack_rects: c_int(stbrp_context *context, stbrp_rect *rects, num_rects: c_int)
 {
-   c_int i, all_rects_packed = 1;
+   i: c_int, all_rects_packed = 1;
 
    // we use the 'was_packed' field internally to allow sorting/unsorting
    for (i=0; i < num_rects; ++i) {

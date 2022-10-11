@@ -32,7 +32,7 @@ pub struct ImGuiInputEvent {
 
 
 // FIXME: Structures in the union below need to be declared as anonymous unions appears to be an extension?
-// Using ImVec2() would fail on Clang 'union member 'MousePos' has a non-trivial default constructor'
+// Using ImVec2::new() would fail on Clang 'union member 'MousePos' has a non-trivial default constructor'
 #[derive(Default,Debug,Clone)]
 pub struct ImGuiInputEventMousePos      {
     pub PosX: c_float,
@@ -60,19 +60,19 @@ pub struct ImGuiInputEventMouseViewport {
 struct ImGuiInputEventKey           {
     // ImGuiKey pub(crate) Key;
     pub Key: ImGuiKey,
-    // bool pub(crate) Down;
+    // pub: bool(crate) Down;
     pub Down: Down,
     // let mut AnalogValue: c_float = 0f32;
 }
 
 #[derive(Default,Debug,Clone)]
 struct ImGuiInputEventText          {
-    // c_uint Char;
+    // Char: c_uint;
     pub Char: c_uint,
 }
 
 #[derive(Default,Debug,Clone)]
 struct ImGuiInputEventAppFocused    {
-    // bool Focused;
+    // Focused: bool;
     pub Focused: bool,
 };

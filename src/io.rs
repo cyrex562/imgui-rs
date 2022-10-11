@@ -193,7 +193,7 @@ pub struct ImGuiIO {
     // (this block used to be written by backend, since 1.87 it is best to NOT write to those directly, call the AddXXX functions above instead)
     // (reading from those variables is fair game, as they are extremely unlikely to be moving anywhere)
     pub MousePos: ImVec2,
-    // Mouse position, in pixels. Set to ImVec2(-f32::MAX, -f32::MAX) if mouse is unavailable (on another screen, etc.)
+    // Mouse position, in pixels. Set to ImVec2::new(-f32::MAX, -f32::MAX) if mouse is unavailable (on another screen, etc.)
     // bool        MouseDown[5];                       // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
     pub MouseDown: [bool; 5],
     pub MouseWheel: c_float,
@@ -274,7 +274,7 @@ impl ImGuiIO {
         // Settings
         out.ConfigFlags = ImGuiConfigFlags_None;
         out.BackendFlags = ImGuiBackendFlags_None;
-        out.DisplaySize = ImVec2(-1f32, -1f32);
+        out.DisplaySize = ImVec2::new(-1f32, -1f32);
         out.DeltaTime = 1f32 / 60f32;
         out.IniSavingRate = 5f32;
         out.IniFilename = String::from("imgui.ini").as_ptr().into(); // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
@@ -282,7 +282,7 @@ impl ImGuiIO {
         out.MouseDoubleClickTime = 0.3f32;
         out.MouseDoubleClickMaxDist = 6f32;
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//         for (c_int i = 0; i < ImGuiKey_COUNT; i+ +)
+//         for (i: c_int = 0; i < ImGuiKey_COUNT; i+ +)
         for i in 0 .. ImGuiKey_COUNT
         {
             out.KeyMap[i] = -1;
@@ -298,7 +298,7 @@ impl ImGuiIO {
         out.FontGlobalScale = 1f32;
         out.FontDefault = null_mut();
         out.FontAllowUserScaling = false;
-        out.DisplayFramebufferScale = ImVec2(1f32, 1f32);
+        out.DisplayFramebufferScale = ImVec2::new(1f32, 1f32);
 
         // Docking options (when ImGuiConfigFlags_DockingEnable is set)
         out.ConfigDockingNoSplit = false;
@@ -339,16 +339,16 @@ impl ImGuiIO {
         out.SetPlatformImeDataFn = SetPlatformImeDataFn_DefaultImpl;
 
         // Input (NB: we already have memset zero the entire structure!)
-        out.MousePos = ImVec2(-f32::MAX, -f32::MAX);
-        out.MousePosPrev = ImVec2(-f32::MAX, -f32::MAX);
+        out.MousePos = ImVec2::new(-f32::MAX, -f32::MAX);
+        out.MousePosPrev = ImVec2::new(-f32::MAX, -f32::MAX);
         out.MouseDragThreshold = 6f32;
-        // for (c_int i = 0; i < IM_ARRAYSIZE(MouseDownDuration); i+ +)
+        // for (i: c_int = 0; i < IM_ARRAYSIZE(MouseDownDuration); i+ +)
         for i in 0 .. out.MouseDownDuration.len()
         {
             out.MouseDownDuration[i] = -1f32;
             out.MouseDownDurationPrev[i] = -1f32;
         }
-        // for (c_int i = 0; i < IM_ARRAYSIZE(KeysData); i+ +)
+        // for (i: c_int = 0; i < IM_ARRAYSIZE(KeysData); i+ +)
         for i in 0 .. out.KeysData.len()
         {
             out.KeysData[i].DownDuration = -1f32;
@@ -364,7 +364,7 @@ impl ImGuiIO {
     // - with glfw you can get those from the callback set in glfwSetCharCallback()
     // - on Windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
     // FIXME: Should in theory be called "AddCharacterEvent()" to be consistent with new API
-    // void ImGuiIO::AddInputCharacter(unsigned c_int c)
+    // void ImGuiIO::AddInputCharacter(unsigned c: c_int)
     pub fn AddInputCharacter(&mut self, c: u32)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -429,7 +429,7 @@ impl ImGuiIO {
         }
         while *utf8_chars != 0
         {
-            // unsigned c_int c = 0;
+            // unsigned c: c_int = 0;
             let mut c: u32 = 0;
             utf8_chars += ImTextCharFromUtf8(&mut c, utf8_chars as *const c_char, null_mut());
             if c != 0 {
@@ -452,7 +452,7 @@ impl ImGuiIO {
     //     memset(KeysDown, 0, sizeof(KeysDown));
         self.KeysDown.clear();
     // #endif
-    //     for (c_int n = 0; n < IM_ARRAYSIZE(KeysData); n++)
+    //     for (n: c_int = 0; n < IM_ARRAYSIZE(KeysData); n++)
        for n in 0 .. self.KeysData.len()
         {
 
@@ -471,9 +471,9 @@ impl ImGuiIO {
 
     // Queue a new key down/up event.
     // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
-    // - bool down:          Is the key down? use false to signify a key release.
+    // - down: bool:          Is the key down? use false to signify a key release.
     // - c_float analog_value: 0f32..1.0f
-    // void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, bool down, c_float analog_value)
+    // void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, down: bool, c_float analog_value)
     pub fn AddKeyAnalogEvent(&mut self, key: ImGuiKey, down: bool, analog_value: c_float)
     {
         //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
@@ -489,7 +489,7 @@ impl ImGuiIO {
     // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
     //     IM_ASSERT((BackendUsingLegacyKeyArrays == -1 || BackendUsingLegacyKeyArrays == 0) && "Backend needs to either only use io.AddKeyEvent(), either only fill legacy io.KeysDown[] + io.KeyMap[]. Not both!");
     //     if (BackendUsingLegacyKeyArrays == -1) {
-    //         for (c_int n = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n+ +){
+    //         for (n: c_int = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n+ +){
     //             IM_ASSERT(KeyMap[n] == -1 && "Backend needs to either only use io.AddKeyEvent(), either only fill legacy io.KeysDown[] + io.KeyMap[]. Not both!");
     //         }
     //     }
@@ -504,7 +504,7 @@ impl ImGuiIO {
         if key_data.Down == down && key_data.AnalogValue == analog_value
         {
             let mut found = false;
-            // for (c_int n = g.InputEventsQueue.Size - 1; n >= 0 && !found; n--)
+            // for (n: c_int = g.InputEventsQueue.Size - 1; n >= 0 && !found; n--)
             for n in g.InputEventsQueue.len() - 1 .. 0
             {
                 if g.InputEventsQueue[n].Type == ImGuiInputEventType_Key && g.InputEventsQueue[n].Key.Key == key {
@@ -526,7 +526,7 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddKeyEvent(ImGuiKey key, bool down)
+    // void ImGuiIO::AddKeyEvent(ImGuiKey key, down: bool)
     pub fn AddKeyEvent(&mut self, key: ImGuiKey, down: bool)
     {
         if !self.AppAcceptingEvents {
@@ -538,7 +538,7 @@ impl ImGuiIO {
     // [Optional] Call after AddKeyEvent().
     // Specify native keycode, scancode + Specify index for legacy <1.87 IsKeyXXX() functions with native indices.
     // If you are writing a backend in 2022 or don't use IsKeyXXX() with native values that are not ImGuiKey values, you can avoid calling this.
-    // void ImGuiIO::SetKeyEventNativeData(ImGuiKey key, c_int native_keycode, c_int native_scancode, c_int native_legacy_index)
+    // void ImGuiIO::SetKeyEventNativeData(ImGuiKey key, native_keycode: c_int, native_scancode: c_int, native_legacy_index: c_int)
     pub fn SetKeyEventNativeData(&mut self, key:ImGuiKey, native_keycode: c_int, native_scancode: c_int, native_legacy_index: c_int)
     {
         if (key == ImGuiKey_None) {
@@ -564,7 +564,7 @@ impl ImGuiIO {
     }
 
     // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
-    // void ImGuiIO::SetAppAcceptingEvents(bool accepting_events)
+    // void ImGuiIO::SetAppAcceptingEvents(accepting_events: bool)
     pub fn SetAppAcceptingEvents(&mut self, accepting_events: bool)
     {
         self.AppAcceptingEvents = accepting_events;
@@ -589,7 +589,7 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddMouseButtonEvent(c_int mouse_button, bool down)
+    // void ImGuiIO::AddMouseButtonEvent(mouse_button: c_int, down: bool)
     pub fn AddMouseButtonEvent(&mut self, mouse_button: c_int, down: bool)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -642,7 +642,7 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddFocusEvent(bool focused)
+    // void ImGuiIO::AddFocusEvent(focused: bool)
     pub fn AddFocusEvent(&mut self, focused: bool)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -656,13 +656,13 @@ impl ImGuiIO {
     }
 
     // Input Functions
-    // void  AddKeyEvent(ImGuiKey key, bool down);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
+    // void  AddKeyEvent(ImGuiKey key, down: bool);                   // Queue a new key down/up event. Key should be "translated" (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
 
-    // void  AddKeyAnalogEvent(ImGuiKey key, bool down, c_float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
+    // void  AddKeyAnalogEvent(ImGuiKey key, down: bool, c_float v);    // Queue a new key down/up event for analog values (e.g. ImGuiKey_Gamepad_ values). Dead-zones should be handled by the backend.
 
     // void  AddMousePosEvent(c_float x, c_float y);                     // Queue a mouse position update. Use -f32::MAX,-f32::MAX to signify no mouse (e.g. app not focused and not hovered)
 
-    // void  AddMouseButtonEvent(c_int button, bool down);             // Queue a mouse button change
+    // void  AddMouseButtonEvent(button: c_int, down: bool);             // Queue a mouse button change
 
     // void  AddMouseWheelEvent(c_float wh_x, c_float wh_y);             // Queue a mouse wheel update
 
@@ -670,18 +670,18 @@ impl ImGuiIO {
 
     // ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
 
-    // void  AddFocusEvent(bool focused);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
+    // void  AddFocusEvent(focused: bool);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
 
-    // void  AddInputCharacter(unsigned c_int c);                      // Queue a new character input
+    // void  AddInputCharacter(unsigned c: c_int);                      // Queue a new character input
 
     // void  AddInputCharacterUTF16(ImWchar16 c);                    // Queue a new character input from an UTF-16 character, 
     // it can be a surrogate
 
     // void  AddInputCharactersUTF8(const char* str);                // Queue a new characters input from an UTF-8 string
 
-    // void  SetKeyEventNativeData(ImGuiKey key, c_int native_keycode, c_int native_scancode, c_int native_legacy_index = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
+    // void  SetKeyEventNativeData(ImGuiKey key, native_keycode: c_int, native_scancode: c_int, native_legacy_index: c_int = -1); // [Optional] Specify index for legacy <1.87 IsKeyXXX() functions with native indices + specify native keycode, scancode.
 
-    // void  SetAppAcceptingEvents(bool accepting_events);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
+    // void  SetAppAcceptingEvents(accepting_events: bool);           // Set master flag for accepting key/mouse/text events (default to true). Useful if you have native dialog boxes that are interrupting your application loop/refresh, and you want to disable events being queued while your app is frozen.
 
     // void  ClearInputCharacters();                                 // [Internal] Clear the text input buffer manually
 

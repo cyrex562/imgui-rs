@@ -1,6 +1,6 @@
 use libc::c_float;
 
-#[derive(Default,Debug,Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct ImVec4
 {
     // c_float                                                     x, y, z, w;

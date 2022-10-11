@@ -30,12 +30,12 @@ impl ImChunkStream<T> {
         self.Buf.len()
     }
 
-    // *mut T      alloc_chunk(size_t sz)
+    // *mut T      alloc_chunk(sz: size_t)
     pub fn alloc_chunk(&mut self, mut sz: usize) -> *mut T {
-        // size_t HDR_SZ = 4;
+        // HDR_SZ: size_t = 4;
         let mut HDR_SZ: usize = 4;
         sz = IM_MEMALIGN(HDR_SZ + sz, 4usize);
-        // c_int off = Buf.Size; Buf.resize(off + sz);
+        // off: c_int = Buf.Size; Buf.resize(off + sz);
         let mut off = self.Buf.len();
         self.Buf.resize(off + sz, 0);
         // ((*mut c_int)(*mut c_void)(Buf.Data + of0f32))[0] = sz;
@@ -56,7 +56,7 @@ impl ImChunkStream<T> {
 
     // *mut T      next_chunk(*mut T p)
     pub fn next_chunk(&mut self, mut p: *mut T) -> *mut T {
-        // size_t HDR_SZ = 4;
+        // HDR_SZ: size_t = 4;
         let mut HDR_SZ: usize = 4;
         // IM_ASSERT(p >= begin() && p < end());
         // p = (*mut T)(*mut c_void)((*mut char)(*mut c_void)p + chunk_size(p));
@@ -94,7 +94,7 @@ impl ImChunkStream<T> {
     }
 
 
-    // *mut T      ptr_from_offset(c_int of0f32)
+    // *mut T      ptr_from_offset(of0f32: c_int)
     pub fn ptr_from_offset(&mut self, off: usize) -> *mut T {
         // IM_ASSERT(off >= 4 && off < Buf.Size);
         // return (*mut T)(*mut c_void)(Buf.Data + of0f32);

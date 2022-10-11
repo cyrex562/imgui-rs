@@ -17,7 +17,7 @@ pub unsafe fn ImStricmp(str1: * c_char, str2: * c_char) -> i32 {
     libc::stricmp(str1, str2)
 }
 
-// int ImStrnicmp(const char* str1, const char* str2, size_t count)
+// int ImStrnicmp(const char* str1, const char* str2, count: size_t)
 pub unsafe fn ImStrnicmp(str1: * c_char, str2: * c_char, count: size_t) -> i32 {
     // int d = 0;
     // while (count > 0 && (d = toupper(*str2) - toupper(*str1)) == 0 && *str1) { str1+= 1; str2+= 1; count-= 1; }
@@ -25,7 +25,7 @@ pub unsafe fn ImStrnicmp(str1: * c_char, str2: * c_char, count: size_t) -> i32 {
     libc::strnicmp(str1, str2, count)
 }
 
-// void ImStrncpy(char* dst, const char* src, size_t count)
+// void ImStrncpy(char* dst, const char* src, count: size_t)
 pub unsafe fn ImStrncpy(dst: *mut c_char, src: * c_char, count: size_t) {
     // if (count < 1)
     //     return;
@@ -174,7 +174,7 @@ pub fn ImStrSkipBlank(in_str: * c_char) {
 // #define vsnprintf _vsnprintf
 // #endif
 
-// int ImFormatString(char* buf, size_t buf_size, const char* fmt, ...)
+// int ImFormatString(char* buf, buf_size: size_t, const char* fmt, ...)
 pub fn ImFormatString(buf: *mut c_char, buf_size: usize, fmt_str: * c_char) -> i32 {
 //     va_list args;
 //     va_start(args, fmt);
@@ -193,7 +193,7 @@ pub fn ImFormatString(buf: *mut c_char, buf_size: usize, fmt_str: * c_char) -> i
     todo!()
 }
 
-// int ImFormatStringV(char* buf, size_t buf_size, const char* fmt, va_list args)
+// int ImFormatStringV(char* buf, buf_size: size_t, const char* fmt, va_list args)
 pub fn ImFormatStringV(buf: *mut c_char, buf_size: usize, fmt_str: * c_char, args: &Vec<String>) -> i32 {
 // // #ifdef IMGUI_USE_STB_SPRINTF
 //     int w = stbsp_vsnprintf(buf, buf_size, fmt, args);

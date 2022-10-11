@@ -14,7 +14,7 @@ pub Offset:  u32,
 }
 
 impl ImGuiStyleVarInfo {
-    // *mut c_void           GetVarPtr(ImGuiStyle* style) const { return (*mut c_void)((c_uchar*)style + Offset); }
+    // *mut c_void           GetVarPtr(ImGuiStyle* style) const { return (*mut c_void)(style + Offset); }
     pub fn GetVarPtr(&mut self, style: *mut ImGuiStyle) -> *mut c_void {
         style + self.Offset
     }

@@ -29,10 +29,10 @@ pub const GCrc32LookupTable: [u32;256] =
 // Known size hash
 // It is ok to call ImHashData on a string with known length but the ### operator won't be supported.
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
-// ImGuiID ImHashData(const void* data_p, size_t data_size, u32 seed)
+// ImGuiID ImHashData(const void* data_p, data_size: size_t, seed: u32)
 pub unsafe fn ImHashData(data_p: *c_void, mut data_size: usize, seed: u32) -> ImGuiID
 {
-    // u32 crc = ~seed;
+    // crc: u32 = ~seed;
     let mut crc = !seed;
     let mut data = data_p;
     let crc32_lut = GCrc32LookupTable;
@@ -50,7 +50,7 @@ pub unsafe fn ImHashData(data_p: *c_void, mut data_size: usize, seed: u32) -> Im
 // - If we reach ### in the string we discard the hash so far and reset to the seed.
 // - We don't do 'current += 2; continue;' after handling ### to keep the code smaller/faster (measured ~10% diff in Debug build)
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
-// ImGuiID ImHashStr(const char* data_p, size_t data_size, u32 seed)
+// ImGuiID ImHashStr(const char* data_p, data_size: size_t, seed: u32)
 pub unsafe fn ImHashStr(data_p: *c_char, mut data_size: usize, mut seed: u32) -> ImGuiID
 {
     seed = !seed;

@@ -144,7 +144,7 @@ pub struct ImGuiWindow {
     pub SetWindowDockAllowFlags: ImGuiCond,
     pub SetWindowPosVal: ImVec2,
     // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
-    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2(0, 0) when positioning from top-left corner; ImVec2(0.5f32, 0.5f32) for centering; ImVec2(1, 1) for bottom right.
+    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2::new(0, 0) when positioning from top-left corner; ImVec2::new(0.5f32, 0.5f32) for centering; ImVec2::new(1, 1) for bottom right.
 
     // ImVector<ImGuiID>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
     pub IDStack: Vec<ImGuiID>,
@@ -244,11 +244,11 @@ impl ImGuiWindow {
             NameBufLen: libc::strlen(name) + 1,
             ID: ImHashStr(name, 0, 0),
             ViewportAllowPlatformMonitorExtend: -1,
-            ViewportPos: ImVec2(f32::MAX, f32::MAX),
+            ViewportPos: ImVec2::new(f32::MAX, f32::MAX),
             MoveId: GetID("#MOVE"),
             TabId: GetID("#TAB"),
-            ScrollTarget: ImVec2::new2(f32::MAX, f32::MAX),
-            ScrollTargetCenterRatio: ImVec2::new2(0.5f32, 0.5f32),
+            ScrollTarget: ImVec2::new(f32::MAX, f32::MAX),
+            ScrollTargetCenterRatio: ImVec2::new(0.5f32, 0.5f32),
             AutoFitFramesX: -1,
             AutoFitFramesY: -1,
             AutoPosLastDirection: ImGuiDir_None,
@@ -256,8 +256,8 @@ impl ImGuiWindow {
             SetWindowSizeAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
             SetWindowCollapsedAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
             SetWindowDockAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
-            SetWindowPosVal: ImVec2::new2(f32::MAX, f32::MAX),
-            SetWindowPosPivot: ImVec2::new2(f32::MAX, f32::MAX),
+            SetWindowPosVal: ImVec2::new(f32::MAX, f32::MAX),
+            SetWindowPosPivot: ImVec2::new(f32::MAX, f32::MAX),
             LastFrameActive: -1,
             LastFrameJustFocused: -1,
             LastTimeActive: -1f32,
@@ -303,7 +303,7 @@ impl ImGuiWindow {
 
 
     // ImGuiID     GetID(int n);
-    // ImGuiID ImGuiWindow::GetID(c_int n)
+    // ImGuiID ImGuiWindow::GetID(n: c_int)
     pub unsafe fn GetID3(&self, n: c_int) -> ImGuiID {
         let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
         let mut id: ImGuiID = ImHashData(&n, libc::sizeof(n), seed as u32);
@@ -335,7 +335,7 @@ impl ImGuiWindow {
     // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0f32 : CalcFontSize() + g.Style.FramePadding.y * 2.0f32; }
 
 
-    // ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
+    // ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2::new(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
 
 
     // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0f32 : 0f32; }

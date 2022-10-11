@@ -217,7 +217,7 @@ pub struct ImGuiContext {
     // ImGuiID                 ActiveId;                           // Active widget
     pub ActiveId: ImGuiID,
 
-    // ImGuiID                 ActiveIdIsAlive;                    // Active widget has been seen this frame (we can't use a bool as the ActiveId may change within the frame)
+    // ImGuiID                 ActiveIdIsAlive;                    // Active widget has been seen this frame (we can't use a as: bool the ActiveId may change within the frame)
     pub ActiveIdIsAlive: ImGuiID,
 
     // float                   ActiveIdTimer;
@@ -864,7 +864,7 @@ impl ImGuiContext {
             ActiveIdHasBeenPressedBefore: false,
             ActiveIdHasBeenEditedBefore: false,
             ActiveIdHasBeenEditedThisFrame: false,
-            ActiveIdClickOffset: ImVec2::new2(-1f32, -1f32),
+            ActiveIdClickOffset: ImVec2::new(-1f32, -1f32),
             ActiveIdWindow: null_mut(),
             ActiveIdSource: ImGuiInputSource_None,
             ActiveIdMouseButton: -1,
@@ -1012,7 +1012,7 @@ impl ImGuiContext {
         out.IO.Fonts = if shared_font_atlas.is_null() == false { shared_font_atlas } else { IM_NEW(ImFontAtlas)() };
         out.ActiveIdUsingKeyInputMask.ClearAllBits();
         out.PlatformImeData.InputPos = ImVec2::new();
-        out.PlatformImeDataPrev.InputPos = ImVec2::new2(-1f32, -1f32); // Different to ensure initial submission
+        out.PlatformImeDataPrev.InputPos = ImVec2::new(-1f32, -1f32); // Different to ensure initial submission
         libc::memset(out.DragDropPayloadBufLocal.as_mut_ptr(), 0, libc::sizeof(out.DragDropPayloadBufLocal));
         libc::memset(out.FramerateSecPerFrame.as_mut_ptr(), 0, libc::sizeof(FramerateSecPerFrame));
         return out;

@@ -5,7 +5,7 @@ use crate::type_defs::ImGuiID;
 use crate::vec2::ImVec2ih;
 
 // Persistent Settings data, stored contiguously in SettingsNodes (sizeof() ~32 bytes)
-#[derive(Default,Debug,Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct ImGuiDockNodeSettings
 {
 pub ID:  ImGuiID,

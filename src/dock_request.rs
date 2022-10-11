@@ -7,7 +7,7 @@ use crate::dock_node::ImGuiDockNode;
 use crate::dock_request_type::{ImGuiDockRequestType, ImGuiDockRequestType_None};
 use crate::window::ImGuiWindow;
 
-#[derive(Default,Debug,Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct ImGuiDockRequest
 {
 pub Type:  ImGuiDockRequestType,

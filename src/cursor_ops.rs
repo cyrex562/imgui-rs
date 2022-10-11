@@ -9,11 +9,11 @@ use crate::math_ops::ImMax;
 // See https://github.com/ocornut/imgui/issues/5548 for more details.
 // [Scenario 1]
 //  Previously this would make the window content size ~200x200:
-//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2(200,200)) + End();  // NOT OK
+//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2::new(200,200)) + End();  // NOT OK
 //  Instead, please submit an item:
-//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2(200,200)) + Dummy(ImVec2(0,0)) + End(); // OK
+//    Begin(...) + SetCursorScreenPos(GetCursorScreenPos() + ImVec2::new(200,200)) + Dummy(ImVec2::new(0,0)) + End(); // OK
 //  Alternative:
-//    Begin(...) + Dummy(ImVec2(200,200)) + End(); // OK
+//    Begin(...) + Dummy(ImVec2::new(200,200)) + End(); // OK
 // [Scenario 2]
 //  For reference this is one of the issue what we aim to fix with this change:
 //    BeginGroup() + SomeItem("foobar") + SetCursorScreenPos(GetCursorScreenPos()) + EndGroup()

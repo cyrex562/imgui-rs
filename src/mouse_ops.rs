@@ -46,7 +46,7 @@ pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
 // We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
 // - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
 // - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
-// c_void StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock_floating_node)
+// c_void StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, undock_floating_node: bool)
 pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut can_undock_node: bool = false;
@@ -202,7 +202,7 @@ pub unsafe fn UpdateMouseInputs() {
     if IsMousePosValid(&io.MousePos) && IsMousePosValid(&io.MousePosPrev) {
         io.MouseDelta = io.MousePos.clone() - io.MousePosPrev.clone();
     } else {
-        io.MouseDelta = ImVec2(0f32, 0f32);
+        io.MouseDelta = ImVec2::new(0f32, 0f32);
     }
 
     // If mouse moved we re-enable mouse hovering in case it was disabled by gamepad/keyboard. In theory should use a >0f32 threshold but would need to reset in everywhere we set this to true.
@@ -221,7 +221,7 @@ pub unsafe fn UpdateMouseInputs() {
         if io.MouseClicked[i] {
             let mut is_repeated_click: bool = false;
             if (g.Time - io.MouseClickedTime[i]) < io.MouseDoubleClickTime {
-                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new2(0f32, 0f32) };
+                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0f32, 0f32) };
                 if ImLengthSqr(delta_from_click_pos) < io.MouseDoubleClickMaxDist * io.MouseDoubleClickMaxDist {
                     is_repeated_click = true;
                 }
@@ -234,11 +234,11 @@ pub unsafe fn UpdateMouseInputs() {
             io.MouseClickedTime[i] = g.Time.clone();
             io.MouseClickedPos[i] = io.MousePos.clone();
             io.MouseClickedCount[i] = io.MouseClickedLastCount[i];
-            io.MouseDragMaxDistanceAbs[i] = ImVec2(0f32, 0f32);
+            io.MouseDragMaxDistanceAbs[i] = ImVec2::new(0f32, 0f32);
             io.MouseDragMaxDistanceSqr[i] = 0f32;
         } else if io.MouseDown[i] {
             // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
-            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new2(0f32, 0f32) };
+            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0f32, 0f32) };
             io.MouseDragMaxDistanceSqr[i] = ImMax(io.MouseDragMaxDistanceSqr[i], ImLengthSqr(delta_from_click_pos));
             io.MouseDragMaxDistanceAbs[i].x = ImMax(io.MouseDragMaxDistanceAbs[i].x, if delta_from_click_pos.x < 0f32 { delta_from_click_pos.x.clone() * -1 } else { delta_from_click_pos.x.clone() });
             io.MouseDragMaxDistanceAbs[i].y = ImMax(io.MouseDragMaxDistanceAbs[i].y, if delta_from_click_pos.y < 0f32 { delta_from_click_pos.y.clone() * -1 } else { delta_from_click_pos.y.clone() });
@@ -358,7 +358,7 @@ pub unsafe fn UpdateMouseWheel() {
 pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
-    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
+    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2::new(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
 
     // Find the window hovered by mouse:
     // - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from HoveredWindow.
