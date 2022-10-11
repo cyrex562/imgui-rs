@@ -8,12 +8,14 @@
 
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int};
+use std::mem::swap;
 use crate::CallContextHooks;
-use crate::color::{IM_COL32, IM_COL32_BLACK, IM_COL32_WHITE, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight, ImGuiCol_Text};
+use crate::color::{IM_COL32, IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_BLACK, IM_COL32_WHITE, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight, ImGuiCol_Text};
 use crate::context_hook::{ImGuiContextHookType_RenderPost, ImGuiContextHookType_RenderPre};
+use crate::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::draw_data::ImDrawData;
 use crate::draw_data_ops::{AddDrawListToDrawData, AddRootWindowToDrawData};
-use crate::draw_flags::ImDrawFlags_None;
+use crate::draw_flags::{ImDrawFlags, ImDrawFlags_None, ImDrawFlags_RoundCornersBottomLeft, ImDrawFlags_RoundCornersBottomRight, ImDrawFlags_RoundCornersDefault_, ImDrawFlags_RoundCornersMask_, ImDrawFlags_RoundCornersNone, ImDrawFlags_RoundCornersTopLeft, ImDrawFlags_RoundCornersTopRight};
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::{GetBackgroundDrawList, GetForegroundDrawList};
 use crate::font::ImFont;
@@ -22,6 +24,7 @@ use crate::font_glyph::ImFontGlyph;
 use crate::frame_ops::EndFrame;
 use crate::imgui::GImGui;
 use crate::logging_ops::LogRenderedText;
+use crate::math_ops::{ImAcosX, ImClamp, ImLerp, ImMax, ImMin};
 use crate::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_None};
 use crate::nav_highlight_flags::{ImGuiNavHighlightFlags, ImGuiNavHighlightFlags_AlwaysDraw, ImGuiNavHighlightFlags_NoRounding, ImGuiNavHighlightFlags_TypeDefault, ImGuiNavHighlightFlags_TypeThin};
 use crate::rect::ImRect;
@@ -396,4 +399,235 @@ pub unsafe fn Render()
     }
 
     CallContextHooks(g, ImGuiContextHookType_RenderPost);
+}
+
+// Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
+pub unsafe fn RenderArrow(mut draw_list: *mut ImDrawList, pos: ImVec2, col: u32, dir: ImGuiDir, scale: c_float)
+{
+    let h: c_float =  draw_list._Data.FontSize * 1;
+    let mut r: c_float =  h * 0.40 * scale;
+    let center: ImVec2 = pos + ImVec2::new(h * 0.50, h * 0.50 * scale);
+
+    // a: ImVec2, b, c;
+    let mut a = ImVec2::default();
+    let mut b = ImVec2::default();
+    let mut c = ImVec2::default();
+
+    match dir {
+        ImGuiDir_Up | ImGuiDir_Down => {
+            if dir == ImGuiDir_Up {r = -r};
+        a = ImVec2::new(0.000, 0.7500) * r;
+        b = ImVec2::new(-0.866, -0.7500) * r;
+        c = ImVec2::new(0.866, -0.7500) * r;
+        },
+        ImGuiDir_Left | ImGuiDir_Right => {
+            if dir == ImGuiDir_Left { r = -r; }
+            a = ImVec2::new(0.750, 0.0000) * r;
+            b = ImVec2::new(-0.750, 0.8660) * r;
+            c = ImVec2::new(-0.750, -0.8660) * r;
+        },
+        ImGuiDir_None | ImGuiDir_COUNT => {
+
+        }
+        _ => {}
+    }
+
+    draw_list.AddTriangleFilled(center + a, center + b, center + c, col);
+}
+
+pub unsafe fn RenderBullet(mut draw_list: *mut ImDrawList, pos: ImVec2, col: u32)
+{
+    draw_list.AddCircleFilled(&pos, draw_list._Data.FontSize * 0.20, col, 8);
+}
+
+pub unsafe fn RenderCheckMark(mut draw_list: *mut ImDrawList, mut pos: ImVec2, col: u32, mut sz: c_float)
+{
+    let thickness: c_float =  ImMax(sz / 5, 1.0);
+    sz -= thickness * 0.5;
+    pos += ImVec2::new(thickness * 0.25, thickness * 0.250);
+
+    let third: c_float =  sz / 3.0;
+    let bx: c_float =  pos.x + third;
+    let by: c_float =  pos.y + sz - third * 0.5;
+    draw_list.PathLineTo(&ImVec2::new(bx - third, by - third));
+    draw_list.PathLineTo(&ImVec2::new(bx, by));
+    draw_list.PathLineTo(&ImVec2::new(bx + third * 2.0, by - third * 2.00));
+    draw_list.PathStroke(col, 0, thickness);
+}
+
+// Render an arrow. 'pos' is position of the arrow tip. half_sz.x is length from base to tip. half_sz.y is length on each side.
+pub unsafe fn RenderArrowPointingAt(mut draw_list: *mut ImDrawList, pos: ImVec2, half_sz: ImVec2, direction: ImGuiDir, col: u32)
+{
+    match direction
+    {
+     ImGuiDir_Left =>  draw_list.AddTriangleFilled(&ImVec2::new(pos.x + half_sz.x, pos.y - half_sz.y), &ImVec2::new(pos.x + half_sz.x, pos.y + half_sz.y), &pos, col),
+     ImGuiDir_Right => draw_list.AddTriangleFilled(&ImVec2::new(pos.x - half_sz.x, pos.y + half_sz.y), &ImVec2::new(pos.x - half_sz.x, pos.y - half_sz.y), &pos, col),
+     ImGuiDir_Up =>    draw_list.AddTriangleFilled(&ImVec2::new(pos.x + half_sz.x, pos.y + half_sz.y), &ImVec2::new(pos.x - half_sz.x, pos.y + half_sz.y), &pos, col),
+    ImGuiDir_Down =>  draw_list.AddTriangleFilled(&ImVec2::new(pos.x - half_sz.x, pos.y - half_sz.y), &ImVec2::new(pos.x + half_sz.x, pos.y - half_sz.y), &pos, col),
+    ImGuiDir_None | ImGuiDir_COUNT => {} // Fix warnings
+        _ => {}
+    }
+}
+
+// This is less wide than RenderArrow() and we use in dock nodes instead of the regular RenderArrow() to denote a change of functionality,
+// and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
+pub unsafe fn RenderArrowDockMenu(mut draw_list: *mut ImDrawList, p_min: ImVec2,sz: c_float, col: u32)
+{
+    draw_list.AddRectFilled(p_min + ImVec2::new(sz * 0.20, sz * 0.150), p_min + ImVec2::new(sz * 0.80, sz * 0.300), col, 0.0, 0);
+    RenderArrowPointingAt(draw_list, p_min + ImVec2::new(sz * 0.50, sz * 0.850), ImVec2::new(sz * 0.3, sz * 0.400), ImGuiDir_Down, col);
+}
+
+// FIXME: Cleanup and move code to ImDrawList.
+pub unsafe fn RenderRectFilledRangeH(mut draw_list: *mut ImDrawList, rect: &ImRect, col: u32, mut x_start_norm: c_float, mut x_end_norm: c_float, mut rounding: c_float)
+{
+    if x_end_norm == x_start_norm {
+        return;
+    }
+    if x_start_norm > x_end_norm {
+        // ImSwap(&mut x_start_norm, &mut x_end_norm);
+        swap(&mut x_start_norm, &mut x_end_norm);
+    }
+
+    let p0: ImVec2 = ImVec2::new(ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y);
+    let p1: ImVec2 = ImVec2::new(ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y);
+    if rounding == 0.0
+    {
+        draw_list.AddRectFilled(&p0, &p1, col, 0.0, 0);
+        return;
+    }
+
+    rounding = ImClamp(ImMin((rect.Max.x - rect.Min.x) * 0.5, (rect.Max.y - rect.Min.y) * 0.5) - 1, 0.0, rounding);
+    let inv_rounding: c_float =  1 / rounding;
+    let arc0_b: c_float =  ImAcosX(1 - (p0.x - rect.Min.x) * inv_rounding);
+    let arc0_e: c_float =  ImAcosX(1 - (p1.x - rect.Min.x) * inv_rounding);
+    let half_pi: c_float =  IM_PI * 0.5; // We will == compare to this because we know this is the exact value ImAcos01 can return.
+    let x0: c_float =  ImMax(p0.x, rect.Min.x + rounding);
+    if arc0_b == arc0_e
+    {
+        draw_list.PathLineTo(&ImVec2::new(x0, p1.y));
+        draw_list.PathLineTo(&ImVec2::new(x0, p0.y));
+    }
+    else if arc0_b == 0.0 && arc0_e == half_pi
+    {
+        draw_list.PathArcToFast(&ImVec2::new(x0, p1.y - rounding), rounding, 3, 6); // BL
+        draw_list.PathArcToFast(&ImVec2::new(x0, p0.y + rounding), rounding, 6, 9); // TR
+    }
+    else
+    {
+        draw_list.PathArcTo(&ImVec2::new(x0, p1.y - rounding), rounding, IM_PI - arc0_e, IM_PI - arc0_b, 3); // BL
+        draw_list.PathArcTo(&ImVec2::new(x0, p0.y + rounding), rounding, IM_PI + arc0_b, IM_PI + arc0_e, 3); // TR
+    }
+    if p1.x > rect.Min.x + rounding
+    {
+        let arc1_b: c_float =  ImAcos01(1 - (rect.Max.x - p1.x) * inv_rounding);
+        let arc1_e: c_float =  ImAcos01(1 - (rect.Max.x - p0.x) * inv_rounding);
+        let x1: c_float =  ImMin(p1.x, rect.Max.x - rounding);
+        if arc1_b == arc1_e
+        {
+            draw_list.PathLineTo(&ImVec2::new(x1, p0.y));
+            draw_list.PathLineTo(&ImVec2::new(x1, p1.y));
+        }
+        else if arc1_b == 0.0 && arc1_e == half_pi
+        {
+            draw_list.PathArcToFast(&ImVec2::new(x1, p0.y + rounding), rounding, 9, 12); // TR
+            draw_list.PathArcToFast(&ImVec2::new(x1, p1.y - rounding), rounding, 0, 3);  // BR
+        }
+        else
+        {
+            draw_list.PathArcTo(&ImVec2::new(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
+            draw_list.PathArcTo(&ImVec2::new(x1, p1.y - rounding), rounding, arc1_b, arc1_e, 3); // BR
+        }
+    }
+    draw_list.PathFillConvex(col);
+}
+
+pub unsafe fn RenderRectFilledWithHole(mut draw_list: *mut ImDrawList, outer: &ImRect, inner: &ImRect, col: u32, rounding: c_float) {
+    let fill_L: bool = (inner.Min.x > outer.Min.x);
+    let fill_R: bool = (inner.Max.x < outer.Max.x);
+    let fill_U: bool = (inner.Min.y > outer.Min.y);
+    let fill_D: bool = (inner.Max.y < outer.Max.y);
+    if fill_L { draw_list.AddRectFilled(&ImVec2::new(outer.Min.x, inner.Min.y), &ImVec2::new(inner.Min.x, inner.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_U { 0 } else { ImDrawFlags_RoundCornersTopLeft }) | (if fill_D { 0 } else { ImDrawFlags_RoundCornersBottomLeft })); }
+    if fill_R {
+        draw_list.AddRectFilled(&ImVec2::new(inner.Max.x, inner.Min.y), &ImVec2::new(outer.Max.x, inner.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_U? { 0 } else { ImDrawFlags_RoundCornersTopRight }) | (if fill_D {
+            0
+        } else { ImDrawFlags_RoundCornersBottomRight }));
+    }
+    if fill_U {
+        draw_list.AddRectFilled(&ImVec2::new(inner.Min.x, outer.Min.y), &ImVec2::new(inner.Max.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_L { 0 } else { ImDrawFlags_RoundCornersTopLeft }) | (if fill_R {
+            0
+        } else { ImDrawFlags_RoundCornersTopRight }));
+    }
+    if fill_D {
+        draw_list.AddRectFilled(&ImVec2::new(inner.Min.x, inner.Max.y), &ImVec2::new(inner.Max.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_L { 0 } else { ImDrawFlags_RoundCornersBottomLeft }) | (if fill_R {
+            0
+        } else { ImDrawFlags_RoundCornersBottomRight }));
+    }
+    if fill_L && fill_U { draw_list.AddRectFilled(&ImVec2::new(outer.Min.x, outer.Min.y), &ImVec2::new(inner.Min.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersTopLeft); }
+    if fill_R && fill_U {
+        draw_list.AddRectFilled(&ImVec2::new(inner.Max.x, outer.Min.y), &ImVec2::new(outer.Max.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersTopRight);
+    }
+    if fill_L && fill_D { draw_list.AddRectFilled(&ImVec2::new(outer.Min.x, inner.Max.y), &ImVec2::new(inner.Min.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomLeft); }
+    if fill_R && fill_D { draw_list.AddRectFilled(&ImVec2::new(inner.Max.x, inner.Max.y), &ImVec2::new(outer.Max.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomRight); }
+}
+
+pub fn CalcRoundingFlagsForRectInRect(r_in: &ImRect, r_outer: &ImRect, threshold: c_float) -> ImDrawFlags
+{
+    let mut round_l: bool =  r_in.Min.x <= r_outer.Min.x + threshold;
+    let mut round_r: bool =  r_in.Max.x >= r_outer.Max.x - threshold;
+    let mut round_t: bool =  r_in.Min.y <= r_outer.Min.y + threshold;
+    let mut round_b: bool =  r_in.Max.y >= r_outer.Max.y - threshold;
+    return ImDrawFlags_RoundCornersNone
+        | (if round_t && round_l { ImDrawFlags_RoundCornersTopLeft } else { 0 }) | (if round_t && round_r { ImDrawFlags_RoundCornersTopRight } else { 0 })
+        | (if round_b && round_l { ImDrawFlags_RoundCornersBottomLeft } else { 0 }) | (if round_b && round_r { ImDrawFlags_RoundCornersBottomRight } else { 0 });
+}
+
+// Helper for ColorPicker4()
+// NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
+// Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
+// FIXME: uses GetColorU32
+pub unsafe fn RenderColorRectWithAlphaCheckerboard(mut draw_list: *mut ImDrawList, p_min: ImVec2, p_max: ImVec2, col: u32, grid_step: c_float, grid_off: ImVec2, rounding: c_float, mut flags: ImDrawFlags) {
+    if ((flags & ImDrawFlags_RoundCornersMask_) == 0) {
+        flags = ImDrawFlags_RoundCornersDefault_;
+    }
+    if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xF0) {
+        col_bg1: u32 = GetColorU32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col), 0.0);
+        col_bg2: u32 = GetColorU32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col), 0.0);
+        draw_list.AddRectFilled(&p_min, &p_max, col_bg1, rounding, flags);
+
+        let mut yi: c_int = 0;
+        // for (let y: c_float =  p_min.y + grid_off.y; y < p_max.y; y += grid_step, yi++)
+        for y in (p_min.y..p_max.y).step(grid_step) {
+            let y1: c_float = ImClamp(y, p_min.y, p_max.y);
+            let y2 = ImMin(y + grid_step, p_max.y);
+            if y2 <= y1 {
+                continue;
+            }
+            // for (let x: c_float =  p_min.x + grid_off.x + (yi & 1) * grid_step; x < p_max.x; x += grid_step * 2.00)
+            for x in (p_min.x + grid_off.x + (yi & 1) * grid_step..p_max.x).step(grid_step * 2.0) {
+                let x1: c_float = ImClamp(x, p_min.x, p_max.x);
+                let x2 = ImMin(x + grid_step, p_max.x);
+                if x2 <= x1 {
+                    continue;
+                }
+                cell_flags: ImDrawFlags = ImDrawFlags_RoundCornersNone;
+                if y1 <= p_min.y {
+                    if x1 <= p_min.x { cell_flags |= ImDrawFlags_RoundCornersTopLeft; }
+                    if x2 >= p_max.x { cell_flags |= ImDrawFlags_RoundCornersTopRight; }
+                }
+                if y2 >= p_max.y {
+                    if x1 <= p_min.x { cell_flags |= ImDrawFlags_RoundCornersBottomLeft; }
+                    if x2 >= p_max.x { cell_flags |= ImDrawFlags_RoundCornersBottomRight; }
+                }
+
+                // Combine flags
+                cell_flags = if flags == ImDrawFlags_RoundCornersNone || cell_flags == ImDrawFlags_RoundCornersNone { 
+                    ImDrawFlags_RoundCornersNone } else { 
+                    (cell_flags & flags) };
+                draw_list.AddRectFilled(&ImVec2::new(x1, y1), &ImVec2::new(x2, y2), col_bg2, rounding, cell_flags);
+            }
+            yi += 1;
+        }
+    } else {
+        draw_list.AddRectFilled(&p_min, &p_max, col, rounding, flags);
+    }
 }

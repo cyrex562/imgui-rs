@@ -7666,7 +7666,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             let p: ImVec2 = GetCursorScreenPos();
             col: u32 = ImColor(col0f32);
             let spacing: c_float =  10f32;
-            const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
+            const corners_tl_br: ImDrawFlags = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
             let rounding: c_float =  sz / 5f32;
             let circle_segments: c_int = circle_segments_override ? circle_segments_override_v : 0;
             let curve_segments: c_int = curve_segments_override ? curve_segments_override_v : 0;

@@ -3,7 +3,6 @@
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use crate::color::IM_COL32;
-use crate::draw::{Decode85, UnpackAccumulativeOffsetsIntoRanges};
 use crate::file_ops::ImFileLoadToMemory;
 use crate::font::ImFont;
 use crate::font_atlas_custom_rect::ImFontAtlasCustomRect;
@@ -12,6 +11,7 @@ use crate::font_atlas_flags::{ImFontAtlasFlags, ImFontAtlasFlags_NoMouseCursors}
 use crate::font_atlas_ops::ImFontAtlasGetBuilderForStbTruetype;
 use crate::font_config::ImFontConfig;
 use crate::font_glyph::ImFontGlyph;
+use crate::font_ops::{Decode85, UnpackAccumulativeOffsetsIntoRanges};
 use crate::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_COUNT, ImGuiMouseCursor_None};
 use crate::string_ops::{ImFormatString, str_to_const_c_char_ptr};
 use crate::vec2::ImVec2;

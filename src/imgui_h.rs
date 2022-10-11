@@ -386,7 +386,7 @@ namespace ImGui
      bool          Button(label: *const c_char, size: &ImVec2 = ImVec2::new(0, 0));   // button
      bool          SmallButton(label: *const c_char);                                 // button with FramePadding=(0,0) to easily embed within text
      bool          InvisibleButton(str_id: *const c_char, size: &ImVec2, ImGuiButtonFlags flags = 0); // flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
-     bool          ArrowButton(str_id: *const c_char, ImGuiDir dir);                  // square button with an arrow shape
+     bool          ArrowButton(str_id: *const c_char, dir: ImGuiDir);                  // square button with an arrow shape
      bool          Checkbox(label: *const c_char, bool* v);
      bool          CheckboxFlags(label: *const c_char, c_int* flags, flags_value: c_int);
      bool          CheckboxFlags(label: *const c_char, flags: *mut c_uint, flags_value: c_uint);
@@ -1622,7 +1622,7 @@ namespace ImGui
 }
 
 // OBSOLETED in 1.82 (from Mars 2021): flags for AddRect(), AddRectFilled(), AddImageRounded(), PathRect()
-typedef ImDrawFlags ImDrawCornerFlags;
+typedef ImDrawCornerFlags: ImDrawFlags;
 enum ImDrawCornerFlags_
 {
     ImDrawCornerFlags_None      = ImDrawFlags_RoundCornersNone,         // Was == 0 prior to 1.82, this is now == ImDrawFlags_RoundCornersNone which is != 0 and not implicit

@@ -311,7 +311,7 @@ ImGuiID GetWindowResizeCornerID(ImGuiWindow* window, n: c_int)
 }
 
 // Borders (Left, Right, Up, Down)
-ImGuiID GetWindowResizeBorderID(ImGuiWindow* window, ImGuiDir dir)
+ImGuiID GetWindowResizeBorderID(ImGuiWindow* window, dir: ImGuiDir)
 {
     // IM_ASSERT(dir >= 0 && dir < 4);
     let n: c_int = dir + 4;
@@ -3901,10 +3901,10 @@ FindBestWindowPosForPopupEx: ImVec2(ref_pos: &ImVec2, size: &ImVec2, ImGuiDir* l
     // Combo Box policy (we want a connecting edge)
     if (policy == ImGuiPopupPositionPolicy_ComboBox)
     {
-        const ImGuiDir dir_prefered_order[ImGuiDir_COUNT] = { ImGuiDir_Down, ImGuiDir_Right, ImGuiDir_Left, ImGuiDir_Up };
+        const dir_prefered_order: ImGuiDir[ImGuiDir_COUNT] = { ImGuiDir_Down, ImGuiDir_Right, ImGuiDir_Left, ImGuiDir_Up };
         for (let n: c_int = (*last_dir != ImGuiDir_None) ? -1 : 0; n < ImGuiDir_COUNT; n++)
         {
-            const ImGuiDir dir = (n == -1) ? *last_dir : dir_prefered_order[n];
+            const dir: ImGuiDir = (n == -1) ? *last_dir : dir_prefered_order[n];
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
             pos: ImVec2;
@@ -3923,10 +3923,10 @@ FindBestWindowPosForPopupEx: ImVec2(ref_pos: &ImVec2, size: &ImVec2, ImGuiDir* l
     // (Always first try the direction we used on the last frame, if any)
     if (policy == ImGuiPopupPositionPolicy_Tooltip || policy == ImGuiPopupPositionPolicy_Default)
     {
-        const ImGuiDir dir_prefered_order[ImGuiDir_COUNT] = { ImGuiDir_Right, ImGuiDir_Down, ImGuiDir_Up, ImGuiDir_Left };
+        const dir_prefered_order: ImGuiDir[ImGuiDir_COUNT] = { ImGuiDir_Right, ImGuiDir_Down, ImGuiDir_Up, ImGuiDir_Left };
         for (let n: c_int = (*last_dir != ImGuiDir_None) ? -1 : 0; n < ImGuiDir_COUNT; n++)
         {
-            const ImGuiDir dir = (n == -1) ? *last_dir : dir_prefered_order[n];
+            const dir: ImGuiDir = (n == -1) ? *last_dir : dir_prefered_order[n];
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
 
@@ -4082,7 +4082,7 @@ c_void SetFocusID(id: ImGuiID, ImGuiWindow* window)
         g.NavDisableHighlight = true;
 }
 
-ImGuiDir ImGetDirQuadrantFromDelta(dx: c_float,dy: c_float)
+ImGetDirQuadrantFromDelta: ImGuiDir(dx: c_float,dy: c_float)
 {
     if (ImFabs(dx) > ImFabs(dy))
         return (dx > 0f32) ? ImGuiDir_Right : ImGuiDir_Left;
@@ -4098,7 +4098,7 @@ staticinline: c_float NavScoreItemDistInterval(a0: c_float,a1: c_float,b0: c_flo
     return 0f32;
 }
 
-static c_void inline NavClampRectToVisibleAreaForMoveDir(ImGuiDir move_dir, ImRect& r, clip_rect: &ImRect)
+static c_void inline NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, ImRect& r, clip_rect: &ImRect)
 {
     if (move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right)
     {
@@ -4152,7 +4152,7 @@ static NavScoreItem: bool(ImGuiNavItemData* result)
     let dist_center: c_float =  ImFabs(dcx) + ImFabs(dcy); // L1 metric (need this for our connectedness guarantee)
 
     // Determine which quadrant of 'curr' our candidate item 'cand' lies in based on distance
-    ImGuiDir quadrant;
+    quadrant: ImGuiDir;
     let dax: c_float =  0f32, day = 0f32, dist_axial = 0f32;
     if (dbx != 0f32 || dby != 0f32)
     {
@@ -4201,7 +4201,7 @@ static NavScoreItem: bool(ImGuiNavItemData* result)
 
     // Is it in the quadrant we're interesting in moving to?
     let mut new_best: bool =  false;
-    const ImGuiDir move_dir = g.NavMoveDir;
+    const move_dir: ImGuiDir = g.NavMoveDir;
     if (quadrant == move_dir)
     {
         // Does it beat the current best candidate?
@@ -4311,7 +4311,7 @@ NavMoveRequestButNoResultYet: bool()
 }
 
 // FIXME: ScoringRect is not set
-c_void NavMoveRequestSubmit(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
+c_void NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavWindow != NULL);
@@ -4351,7 +4351,7 @@ c_void NavMoveRequestCancel()
 }
 
 // Forward will reuse the move request again on the next frame (generally with modifications done to it)
-c_void NavMoveRequestForward(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
+c_void NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.NavMoveForwardToNextFrame == false);
@@ -4630,7 +4630,7 @@ static c_void NavUpdate()
         // *Fallback* manual-scroll with Nav directional keys when window has no navigable item
         let mut window: *mut ImGuiWindow =  g.NavWindow;
         let scroll_speed: c_float =  IM_ROUND(window.CalcFontSize() * 100 * io.DeltaTime); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
-        const ImGuiDir move_dir = g.NavMoveDir;
+        const move_dir: ImGuiDir = g.NavMoveDir;
         if (window.DC.NavLayersActiveMask == 0x00 && window.DC.NavHasScroll && move_dir != ImGuiDir_None)
         {
             if (move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right)
@@ -4824,7 +4824,7 @@ c_void NavUpdateCreateTabbingRequest()
     //// FIXME: We use (g.ActiveId == 0) but (g.NavDisableHighlight == false) might be righter once we can tab through anything
     g.NavTabbingDir = g.IO.KeyShift ? -1 : (g.ActiveId == 0) ? 0 : +1;
     ImGuiScrollFlags scroll_flags = window.Appearing ? ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeX | ImGuiScrollFlags_KeepVisibleEdgeY;
-    ImGuiDir clip_dir = (g.NavTabbingDir < 0) ? ImGuiDir_Up : ImGuiDir_Down;
+    clip_dir: ImGuiDir = (g.NavTabbingDir < 0) ? ImGuiDir_Up : ImGuiDir_Down;
     NavMoveRequestSubmit(ImGuiDir_None, clip_dir, ImGuiNavMoveFlags_Tabbing, scroll_flags); // FIXME-NAV: Once we refactor tabbing, add LegacyApi flag to not activate non-inputable.
     g.NavTabbingCounter = -1;
 }
@@ -5072,7 +5072,7 @@ static c_void NavUpdateCreateWrappingRequest()
 
     let mut do_forward: bool =  false;
     let bb_rel: ImRect =  window.NavRectRel[g.NavLayer];
-    ImGuiDir clip_dir = g.NavMoveDir;
+    clip_dir: ImGuiDir = g.NavMoveDir;
     const ImGuiNavMoveFlags move_flags = g.NavMoveFlags;
     if (g.NavMoveDir == ImGuiDir_Left && (move_flags & (ImGuiNavMoveFlags_WrapX | ImGuiNavMoveFlags_LoopX)))
     {
@@ -7340,8 +7340,8 @@ namespace ImGui
     static c_void             DockNodePreviewDockSetup(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* payload_window, ImGuiDockNode* payload_node, ImGuiDockPreviewData* preview_data, is_explicit_target: bool, is_outer_docking: bool);
     static c_void             DockNodePreviewDockRender(ImGuiWindow* host_window, ImGuiDockNode* host_node, ImGuiWindow* payload_window, *const ImGuiDockPreviewData preview_data);
     static c_void             DockNodeCalcTabBarLayout(*const ImGuiDockNode node, ImRect* out_title_rect, ImRect* out_tab_bar_rect, ImVec2* out_window_menu_button_pos, ImVec2* out_close_button_pos);
-    static c_void             DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new, ImVec2& size_new, ImGuiDir dir, size_new_desired: ImVec2);
-    static bool             DockNodeCalcDropRectsAndTestMousePos(parent: &ImRect, ImGuiDir dir, ImRect& out_draw, outer_docking: bool, ImVec2* test_mouse_pos);
+    static c_void             DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new, ImVec2& size_new, dir: ImGuiDir, size_new_desired: ImVec2);
+    static bool             DockNodeCalcDropRectsAndTestMousePos(parent: &ImRect, dir: ImGuiDir, ImRect& out_draw, outer_docking: bool, ImVec2* test_mouse_pos);
     static *const char      DockNodeGetHostWindowTitle(ImGuiDockNode* node, char* buf, buf_size: c_int) { ImFormatString(buf, buf_size, "##DockNode_%02X", node.ID); return buf; }
     static c_int              DockNodeGetTabOrder(ImGuiWindow* window);
 
@@ -7527,7 +7527,7 @@ c_void DockContextEndFrame(ImGuiContext* ctx)
             if (node.LastFrameActive == g.FrameCount && node.IsVisible && node.HostWindow && node.IsLeafNode() && !node.IsBgDrawnThisFrame)
             {
                 let mut bg_rect: ImRect = ImRect::new(node.Pos + ImVec2::new(0f32, GetFrameHeight()), node.Pos + node.Size);
-                ImDrawFlags bg_rounding_flags = CalcRoundingFlagsForRectInRect(bg_rect, node.Hostwindow.Rect(), DOCKING_SPLITTER_SIZE);
+                bg_rounding_flags: ImDrawFlags = CalcRoundingFlagsForRectInRect(bg_rect, node.Hostwindow.Rect(), DOCKING_SPLITTER_SIZE);
                 node.Hostwindow.DrawList.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_BG);
                 node.Hostwindow.DrawList.AddRectFilled(bg_rect.Min, bg_rect.Max, node.LastBgColor, node.Hostwindow.WindowRounding, bg_rounding_flags);
             }
@@ -7738,7 +7738,7 @@ c_void DockContextBuildAddWindowsToNodes(ImGuiContext* ctx, ImGuiID root_id)
 // - DockContextCalcDropPosForDocking()
 //-----------------------------------------------------------------------------
 
-c_void DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, ImGuiDir split_dir,split_ratio: c_float, split_outer: bool)
+c_void DockContextQueueDock(ImGuiContext* ctx, ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload, split_dir: ImGuiDir,split_ratio: c_float, split_outer: bool)
 {
     // IM_ASSERT(target != payload);
     ImGuiDockRequest req;
@@ -7826,7 +7826,7 @@ c_void DockContextProcessDock(ImGuiContext* ctx, ImGuiDockRequest* req)
         }
     }
 
-    ImGuiDir split_dir = req->DockSplitDir;
+    split_dir: ImGuiDir = req->DockSplitDir;
     if (split_dir != ImGuiDir_None)
     {
         // Split into two, one side will be our payload node unless we are dropping a loose window
@@ -7996,7 +7996,7 @@ c_void DockContextProcessUndockNode(ImGuiContext* ctx, ImGuiDockNode* node)
 }
 
 // This is mostly used for automation.
-DockContextCalcDropPosForDocking: bool(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload_window, ImGuiDockNode* payload_node, ImGuiDir split_dir, split_outer: bool, ImVec2* out_pos)
+DockContextCalcDropPosForDocking: bool(ImGuiWindow* target, ImGuiDockNode* target_node, ImGuiWindow* payload_window, ImGuiDockNode* payload_node, split_dir: ImGuiDir, split_outer: bool, ImVec2* out_pos)
 {
     // In DockNodePreviewDockSetup() for a root central node instead of showing both "inner" and "outer" drop rects
     // (which would be functionally identical) we only show the outer one. Reflect this here.
@@ -8962,7 +8962,7 @@ static c_void DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_window
     if (is_focused)
         node.LastFrameFocused = g.FrameCount;
     title_bar_col: u32 = GetColorU32(host_window.Collapsed ? ImGuiCol_TitleBgCollapsed : is_focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg);
-    ImDrawFlags rounding_flags = CalcRoundingFlagsForRectInRect(title_bar_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE);
+    rounding_flags: ImDrawFlags = CalcRoundingFlagsForRectInRect(title_bar_rect, host_window.Rect(), DOCKING_SPLITTER_SIZE);
     host_window.DrawList.AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, host_window.WindowRounding, rounding_flags);
 
     // Docking/Collapse button
@@ -9237,7 +9237,7 @@ static c_void DockNodeCalcTabBarLayout(*const ImGuiDockNode node, ImRect* out_ti
     if (out_window_menu_button_pos) { *out_window_menu_button_pos = window_menu_button_pos; }
 }
 
-c_void DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new, ImVec2& size_new, ImGuiDir dir, size_new_desired: ImVec2)
+c_void DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new, ImVec2& size_new, dir: ImGuiDir, size_new_desired: ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let dock_spacing: c_float =  g.Style.ItemInnerSpacing.x;
@@ -9271,7 +9271,7 @@ c_void DockNodeCalcSplitRects(ImVec2& pos_old, ImVec2& size_old, ImVec2& pos_new
 }
 
 // Retrieve the drop rectangles for a given direction or for the center + perform hit testing.
-DockNodeCalcDropRectsAndTestMousePos: bool(parent: &ImRect, ImGuiDir dir, ImRect& out_r, outer_docking: bool, ImVec2* test_mouse_pos)
+DockNodeCalcDropRectsAndTestMousePos: bool(parent: &ImRect, dir: ImGuiDir, ImRect& out_r, outer_docking: bool, ImVec2* test_mouse_pos)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -9399,7 +9399,7 @@ static c_void DockNodePreviewDockSetup(ImGuiWindow* host_window, ImGuiDockNode* 
     data.SplitRatio = 0f32;
     if (data.SplitDir != ImGuiDir_None)
     {
-        ImGuiDir split_dir = data.SplitDir;
+        split_dir: ImGuiDir = data.SplitDir;
         ImGuiAxis split_axis = (split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Right) ? ImGuiAxis_X : ImGuiAxis_Y;
         pos_new: ImVec2, pos_old = data.FutureNode.Pos;
         size_new: ImVec2, size_old = data.FutureNode.Size;
@@ -10304,7 +10304,7 @@ c_void DockBuilderRemoveNodeDockedWindows(ImGuiID root_id, clear_settings_refs: 
 // If 'out_id_at_dir' or 'out_id_at_opposite_dir' are non NULL, the function will write out the ID of the two new nodes created.
 // Return value is ID of the node at the specified direction, so same as (*out_id_at_dir) if that pointer is set.
 // FIXME-DOCK: We are not exposing nor using split_outer.
-ImGuiID DockBuilderSplitNode(id: ImGuiID, ImGuiDir split_dir,size_ratio_for_node_at_dir: c_float, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir)
+ImGuiID DockBuilderSplitNode(id: ImGuiID, split_dir: ImGuiDir,size_ratio_for_node_at_dir: c_float, ImGuiID* out_id_at_dir, ImGuiID* out_id_at_opposite_dir)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_dir != ImGuiDir_None);

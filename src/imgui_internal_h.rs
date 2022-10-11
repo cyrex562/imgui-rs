@@ -692,10 +692,10 @@ namespace ImGui
      *mut ImGuiWindow  GetTopMostPopupModal();
      *mut ImGuiWindow  GetTopMostAndVisiblePopupModal();
      ImVec2        FindBestWindowPosForPopup(*mut ImGuiWindow window);
-     ImVec2        FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, *mut ImGuiDir last_dir, r_outer: &ImRect, r_avoid: &ImRect, ImGuiPopupPositionPolicy policy);
+     ImVec2        FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, *mut last_dir: ImGuiDir, r_outer: &ImRect, r_avoid: &ImRect, ImGuiPopupPositionPolicy policy);
 
     // Menus
-     bool          BeginViewportSideBar(name: *const c_char, *mut ImGuiViewport viewport, ImGuiDir dir,size: c_float, ImGuiWindowFlags window_flags);
+     bool          BeginViewportSideBar(name: *const c_char, *mut ImGuiViewport viewport, dir: ImGuiDir,size: c_float, ImGuiWindowFlags window_flags);
      bool          BeginMenuEx(label: *const c_char, icon: *const c_char, let mut enabled: bool =  true);
      bool          MenuItemEx(label: *const c_char, icon: *const c_char, shortcut: *const c_char = null_mut(), let mut selected: bool =  false, let mut enabled: bool =  true);
 
@@ -708,8 +708,8 @@ namespace ImGui
      c_void          NavInitWindow(*mut ImGuiWindow window, force_reinit: bool);
      c_void          NavInitRequestApplyResult();
      bool          NavMoveRequestButNoResultYet();
-     c_void          NavMoveRequestSubmit(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags);
-     c_void          NavMoveRequestForward(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags);
+     c_void          NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags);
+     c_void          NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags);
      c_void          NavMoveRequestResolveWithLastItem(*mut ImGuiNavItemData result);
      c_void          NavMoveRequestCancel();
      c_void          NavMoveRequestApplyResult();
@@ -732,7 +732,7 @@ namespace ImGui
      c_void          GetKeyChordName(ImGuiModFlags mods, ImGuiKey key, out_buf: *mut c_char, out_buf_size: c_int);
      c_void          SetItemUsingMouseWheel();
      c_void          SetActiveIdUsingAllKeyboardKeys();
-    inline bool             IsActiveIdUsingNavDir(ImGuiDir dir)                         { let g = GImGui; // ImGuiContext& g = *GImGui; return (g.ActiveIdUsingNavDirMask & (1 << dir)) != 0; }
+    inline bool             IsActiveIdUsingNavDir(dir: ImGuiDir)                         { let g = GImGui; // ImGuiContext& g = *GImGui; return (g.ActiveIdUsingNavDirMask & (1 << dir)) != 0; }
     inline bool             IsActiveIdUsingKey(ImGuiKey key)                            { let g = GImGui; // ImGuiContext& g = *GImGui; return g.ActiveIdUsingKeyInputMask[key]; }
     inline c_void             SetActiveIdUsingKey(ImGuiKey key)                           { let g = GImGui; // ImGuiContext& g = *GImGui; g.ActiveIdUsingKeyInputMask.SetBit(key); }
     inline ImGuiKey         MouseButtonToKey(ImGuiMouseButton button)                   { IM_ASSERT(button >= 0 && button < ImGuiMouseButton_COUNT); return ImGuiKey_MouseLeft + button; }
@@ -756,10 +756,10 @@ namespace ImGui
      c_void          DockContextNewFrameUpdateDocking(*mut ImGuiContext ctx);
      c_void          DockContextEndFrame(*mut ImGuiContext ctx);
      ImGuiID       DockContextGenNodeID(*mut ImGuiContext ctx);
-     c_void          DockContextQueueDock(*mut ImGuiContext ctx, *mut ImGuiWindow target, *mut ImGuiDockNode target_node, *mut ImGuiWindow payload, ImGuiDir split_dir,split_ratio: c_float, split_outer: bool);
+     c_void          DockContextQueueDock(*mut ImGuiContext ctx, *mut ImGuiWindow target, *mut ImGuiDockNode target_node, *mut ImGuiWindow payload, split_dir: ImGuiDir,split_ratio: c_float, split_outer: bool);
      c_void          DockContextQueueUndockWindow(*mut ImGuiContext ctx, *mut ImGuiWindow window);
      c_void          DockContextQueueUndockNode(*mut ImGuiContext ctx, *mut ImGuiDockNode node);
-     bool          DockContextCalcDropPosForDocking(*mut ImGuiWindow target, *mut ImGuiDockNode target_node, *mut ImGuiWindow payload_window, *mut ImGuiDockNode payload_node, ImGuiDir split_dir, split_outer: bool, *mut out_pos: ImVec2);
+     bool          DockContextCalcDropPosForDocking(*mut ImGuiWindow target, *mut ImGuiDockNode target_node, *mut ImGuiWindow payload_window, *mut ImGuiDockNode payload_node, split_dir: ImGuiDir, split_outer: bool, *mut out_pos: ImVec2);
      *mut ImGuiDockNodeDockContextFindNodeByID(*mut ImGuiContext ctx, id: ImGuiID);
      bool          DockNodeBeginAmendTabBar(*mut ImGuiDockNode node);
      c_void          DockNodeEndAmendTabBar();
@@ -792,7 +792,7 @@ namespace ImGui
      c_void          DockBuilderRemoveNodeChildNodes(ImGuiID node_id);       // Remove all split/hierarchy. All remaining docked windows will be re-docked to the remaining root node (node_id).
      c_void          DockBuilderSetNodePos(ImGuiID node_id, pos: ImVec2);
      c_void          DockBuilderSetNodeSize(ImGuiID node_id, size: ImVec2);
-     ImGuiID       DockBuilderSplitNode(ImGuiID node_id, ImGuiDir split_dir,size_ratio_for_node_at_dir: c_float, *mut ImGuiID out_id_at_dir, *mut ImGuiID out_id_at_opposite_dir); // Create 2 child nodes in this parent node.
+     ImGuiID       DockBuilderSplitNode(ImGuiID node_id, split_dir: ImGuiDir,size_ratio_for_node_at_dir: c_float, *mut ImGuiID out_id_at_dir, *mut ImGuiID out_id_at_opposite_dir); // Create 2 child nodes in this parent node.
      c_void          DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_id, Vec<*const char>* in_window_remap_pairs);
      c_void          DockBuilderCopyNode(ImGuiID src_node_id, ImGuiID dst_node_id, Vec<ImGuiID>* out_node_remap_pairs);
      c_void          DockBuilderCopyWindowSettings(src_name: *const c_char, dst_name: *const c_char);
@@ -889,16 +889,16 @@ namespace ImGui
      c_void          RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2,clip_max_x: c_float,ellipsis_max_x: c_float, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2);
      c_void          RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, let mut border: bool =  true, let rounding: c_float =  0f32);
      c_void          RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, let rounding: c_float =  0f32);
-     c_void          RenderColorRectWithAlphaCheckerboard(draw_list: *mut ImDrawList, p_min: ImVec2, p_max: ImVec2, fill_col: u32,grid_step: c_float, grid_off: ImVec2, let rounding: c_float =  0f32, ImDrawFlags flags = 0);
+     c_void          RenderColorRectWithAlphaCheckerboard(draw_list: *mut ImDrawList, p_min: ImVec2, p_max: ImVec2, fill_col: u32,grid_step: c_float, grid_off: ImVec2, let rounding: c_float =  0f32, flags: ImDrawFlags = 0);
      c_void          RenderNavHighlight(bb: &ImRect, id: ImGuiID, ImGuiNavHighlightFlags flags = ImGuiNavHighlightFlags_TypeDefault); // Navigation highlight
      *const char   FindRenderedTextEnd(text: *const c_char, text_end: *const c_char = null_mut()); // Find the optional ## from which we stop displaying text.
      c_void          RenderMouseCursor(pos: ImVec2,scale: c_float, ImGuiMouseCursor mouse_cursor, col_fill: u32, col_border: u32, col_shadow: u32);
 
     // Render helpers (those functions don't access any ImGui state!)
-     c_void          RenderArrow(draw_list: *mut ImDrawList, pos: ImVec2, col: u32, ImGuiDir dir, let scale: c_float =  1f32);
+     c_void          RenderArrow(draw_list: *mut ImDrawList, pos: ImVec2, col: u32, dir: ImGuiDir, let scale: c_float =  1f32);
      c_void          RenderBullet(draw_list: *mut ImDrawList, pos: ImVec2, col: u32);
      c_void          RenderCheckMark(draw_list: *mut ImDrawList, pos: ImVec2, col: u32,sz: c_float);
-     c_void          RenderArrowPointingAt(draw_list: *mut ImDrawList, pos: ImVec2, half_sz: ImVec2, ImGuiDir direction, col: u32);
+     c_void          RenderArrowPointingAt(draw_list: *mut ImDrawList, pos: ImVec2, half_sz: ImVec2, direction: ImGuiDir, col: u32);
      c_void          RenderArrowDockMenu(draw_list: *mut ImDrawList, p_min: ImVec2,sz: c_float, col: u32);
      c_void          RenderRectFilledRangeH(draw_list: *mut ImDrawList, rect: &ImRect, col: u32,x_start_norm: c_float,x_end_norm: c_float,rounding: c_float);
      c_void          RenderRectFilledWithHole(draw_list: *mut ImDrawList, outer: &ImRect, inner: &ImRect, col: u32,rounding: c_float);
@@ -909,14 +909,14 @@ namespace ImGui
      bool          ButtonEx(label: *const c_char, size_arg: &ImVec2 = ImVec2::new(0, 0), ImGuiButtonFlags flags = 0);
      bool          CloseButton(id: ImGuiID, pos: &ImVec2);
      bool          CollapseButton(id: ImGuiID, pos: &ImVec2, *mut ImGuiDockNode dock_node);
-     bool          ArrowButtonEx(str_id: *const c_char, ImGuiDir dir, size_arg: ImVec2, ImGuiButtonFlags flags = 0);
+     bool          ArrowButtonEx(str_id: *const c_char, dir: ImGuiDir, size_arg: ImVec2, ImGuiButtonFlags flags = 0);
      c_void          Scrollbar(ImGuiAxis axis);
-     bool          ScrollbarEx(bb: &ImRect, id: ImGuiID, ImGuiAxis axis, *mut ImS64 p_scroll_v, ImS64 avail_v, ImS64 contents_v, ImDrawFlags flags);
+     bool          ScrollbarEx(bb: &ImRect, id: ImGuiID, ImGuiAxis axis, *mut ImS64 p_scroll_v, ImS64 avail_v, ImS64 contents_v, flags: ImDrawFlags);
      bool          ImageButtonEx(id: ImGuiID, ImTextureID texture_id, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, const ImVec4& bg_col, const ImVec4& tint_col);
      ImRect        GetWindowScrollbarRect(*mut ImGuiWindow window, ImGuiAxis axis);
      ImGuiID       GetWindowScrollbarID(*mut ImGuiWindow window, ImGuiAxis axis);
      ImGuiID       GetWindowResizeCornerID(*mut ImGuiWindow window, n: c_int); // 0..3: corners
-     ImGuiID       GetWindowResizeBorderID(*mut ImGuiWindow window, ImGuiDir dir);
+     ImGuiID       GetWindowResizeBorderID(*mut ImGuiWindow window, dir: ImGuiDir);
      c_void          SeparatorEx(ImGuiSeparatorFlags flags);
      bool          CheckboxFlags(label: *const c_char, *mut ImS64 flags, ImS64 flags_value);
      bool          CheckboxFlags(label: *const c_char, *mut u64 flags, u64 flags_value);

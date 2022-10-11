@@ -765,7 +765,7 @@ InvisibleButton: bool(str_id: *const c_char, size_arg: &ImVec2, ImGuiButtonFlags
     return pressed;
 }
 
-ArrowButtonEx: bool(str_id: *const c_char, ImGuiDir dir, size: ImVec2, ImGuiButtonFlags flags)
+ArrowButtonEx: bool(str_id: *const c_char, dir: ImGuiDir, size: ImVec2, ImGuiButtonFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = GetCurrentWindow();
@@ -796,7 +796,7 @@ ArrowButtonEx: bool(str_id: *const c_char, ImGuiDir dir, size: ImVec2, ImGuiButt
     return pressed;
 }
 
-ArrowButton: bool(str_id: *const c_char, ImGuiDir dir)
+ArrowButton: bool(str_id: *const c_char, dir: ImGuiDir)
 {
     let sz: c_float =  GetFrameHeight();
     return ArrowButtonEx(str_id, dir, ImVec2::new(sz, sz), ImGuiButtonFlags_None);
@@ -898,7 +898,7 @@ c_void Scrollbar(ImGuiAxis axis)
 
     // Calculate scrollbar bounding box
     let bb: ImRect =  GetWindowScrollbarRect(window, axis);
-    ImDrawFlags rounding_corners = ImDrawFlags_RoundCornersNone;
+    rounding_corners: ImDrawFlags = ImDrawFlags_RoundCornersNone;
     if (axis == ImGuiAxis_X)
     {
         rounding_corners |= ImDrawFlags_RoundCornersBottomLeft;
@@ -925,7 +925,7 @@ c_void Scrollbar(ImGuiAxis axis)
 // - We store values as normalized ratio and in a form that allows the window content to change while we are holding on a scrollbar
 // - We handle both horizontal and vertical scrollbars, which makes the terminology not ideal.
 // Still, the code should probably be made simpler..
-ScrollbarEx: bool(bb_frame: &ImRect, id: ImGuiID, ImGuiAxis axis, *mut ImS64 p_scroll_v, ImS64 size_avail_v, ImS64 size_contents_v, ImDrawFlags flags)
+ScrollbarEx: bool(bb_frame: &ImRect, id: ImGuiID, ImGuiAxis axis, *mut ImS64 p_scroll_v, ImS64 size_avail_v, ImS64 size_contents_v, flags: ImDrawFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
@@ -6866,7 +6866,7 @@ c_void EndMenuBar()
 // Important: calling order matters!
 // FIXME: Somehow overlapping with docking tech.
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
-BeginViewportSideBar: bool(name: *const c_char, ImGuiViewport* viewport_p, ImGuiDir dir,axis_size: c_float, ImGuiWindowFlags window_flags)
+BeginViewportSideBar: bool(name: *const c_char, ImGuiViewport* viewport_p, dir: ImGuiDir,axis_size: c_float, ImGuiWindowFlags window_flags)
 {
     // IM_ASSERT(dir != ImGuiDir_None);
 

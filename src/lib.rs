@@ -206,6 +206,9 @@ mod font_build_src_data;
 mod font_build_dst_data;
 mod font_atlas_ops;
 mod font_glyph_ranges_builder;
+mod font_ops;
+mod fallback_font_data;
+mod stb_ops;
 
 
 // c_void Initialize()

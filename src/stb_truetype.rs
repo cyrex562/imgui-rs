@@ -533,7 +533,7 @@ typedef struct
    unsigned c_short x0,y0,x1,y1; // coordinates of bbox in bitmapxoff: c_float,yoff,xadvance;
 } stbtt_bakedchar;
 
-STBTT_DEF stbtt_BakeFontBitmap: c_int(const c_uchar *data, offset: c_int,  // font location (use offset=0 for plain .tt0f32)pixel_height: c_float,                     // height of font in pixels
+STBTT_DEF stbtt_BakeFontBitmap: c_int(data: *const c_uchar, offset: c_int,  // font location (use offset=0 for plain .tt0f32)pixel_height: c_float,                     // height of font in pixels
                                 c_uchar *pixels, pw: c_int, ph: c_int,  // bitmap to be filled in
                                 first_char: c_int, num_chars: c_int,          // characters to bake
                                 stbtt_bakedchar *chardata);             // you allocate this, it's num_chars long
@@ -561,7 +561,7 @@ STBTT_DEF c_void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, pw: c_int, 
 //
 // It's inefficient; you might want to c&p it and optimize it.
 
-STBTT_DEF c_void stbtt_GetScaledFontVMetrics(const c_uchar *fontdata, index: c_int,size: c_float, c_float *ascent, c_float *descent, c_float *lineGap);
+STBTT_DEF c_void stbtt_GetScaledFontVMetrics(fontdata: *const c_uchar, index: c_int,size: c_float, c_float *ascent, c_float *descent, c_float *lineGap);
 // Query the font vertical metrics without having to create a font first.
 
 
@@ -599,7 +599,7 @@ STBTT_DEF c_void stbtt_PackEnd  (stbtt_pack_context *spc);
 
 // #define STBTT_POINT_SIZE(x)   (-(x))
 
-STBTT_DEF c_int  stbtt_PackFontRange(stbtt_pack_context *spc, const c_uchar *fontdata, font_index: c_int,font_size: c_float,
+STBTT_DEF c_int  stbtt_PackFontRange(stbtt_pack_context *spc, fontdata: *const c_uchar, font_index: c_int,font_size: c_float,
                                 first_unicode_char_in_range: c_int, num_chars_in_range: c_int, stbtt_packedchar *chardata_for_range);
 // Creates character bitmaps from the font_index'th font found in fontdata (use
 // font_index=0 if you don't know what that is). It creates num_chars_in_range
@@ -624,7 +624,7 @@ typedef struct
    c_uchar h_oversample, v_oversample; // don't set these, they're used internally
 } stbtt_pack_range;
 
-STBTT_DEF c_int  stbtt_PackFontRanges(stbtt_pack_context *spc, const c_uchar *fontdata, font_index: c_int, stbtt_pack_range *ranges, num_ranges: c_int);
+STBTT_DEF c_int  stbtt_PackFontRanges(stbtt_pack_context *spc, fontdata: *const c_uchar, font_index: c_int, stbtt_pack_range *ranges, num_ranges: c_int);
 // Creates character bitmaps from multiple ranges of characters stored in
 // ranges. This will usually create a better-packed bitmap than multiple
 // calls to stbtt_PackFontRange. Note that you can call this multiple
@@ -692,14 +692,14 @@ struct stbtt_pack_context {
 //
 //
 
-STBTT_DEF stbtt_GetNumberOfFonts: c_int(const c_uchar *data);
+STBTT_DEF stbtt_GetNumberOfFonts: c_int(data: *const c_uchar);
 // This function will determine the number of fonts in a font file.  TrueType
 // collection (.ttc) files may contain multiple fonts, while TrueType font
 // (.tt0f32) files only contain one font. The number of fonts can be used for
 // indexing with the previous function where the index is between zero and one
 // less than the total fonts. If an error occurs, -1 is returned.
 
-STBTT_DEF stbtt_GetFontOffsetForIndex: c_int(const c_uchar *data, index: c_int);
+STBTT_DEF stbtt_GetFontOffsetForIndex: c_int(data: *const c_uchar, index: c_int);
 // Each .ttf/.ttc file may have more than one font. Each font has a sequential
 // index number starting from 0. Call this function to get the font offset for
 // a given index; it returns -1 if the index is out of range. A regular .ttf
@@ -728,7 +728,7 @@ struct stbtt_fontinfo
    stbtt__buf fdselect;               // map from glyph to fontdict
 };
 
-STBTT_DEF stbtt_InitFont: c_int(stbtt_fontinfo *info, const c_uchar *data, offset: c_int);
+STBTT_DEF stbtt_InitFont: c_int(stbtt_fontinfo *info, data: *const c_uchar, offset: c_int);
 // Given an offset into the file that defines a font, this function builds
 // the necessary cached info for the rest of the system. You must allocate
 // the stbtt_fontinfo yourself, and stbtt_InitFont will fill it out. You don't
@@ -1013,7 +1013,7 @@ STBTT_DEF c_uchar * stbtt_GetCodepointSDF(const stbtt_fontinfo *info,scale: c_fl
 //             You have to have called stbtt_InitFont() first.
 
 
-STBTT_DEF stbtt_FindMatchingFont: c_int(const c_uchar *fontdata, const char *name, flags: c_int);
+STBTT_DEF stbtt_FindMatchingFont: c_int(fontdata: *const c_uchar, const char *name, flags: c_int);
 // returns the offset (not index) of the font that matches, or -1 if none
 //   if you use STBTT_MACSTYLE_DONTCARE, use a font name like "Arial Bold".
 //   if you use any other flag, use a font name like "Arial"; this checks
@@ -4279,7 +4279,7 @@ STBTT_DEF c_void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, stbrp_re
    stbrp_pack_rects((stbrp_context *) spc.pack_info, rects, num_rects);
 }
 
-STBTT_DEF stbtt_PackFontRanges: c_int(stbtt_pack_context *spc, const c_uchar *fontdata, font_index: c_int, stbtt_pack_range *ranges, num_ranges: c_int)
+STBTT_DEF stbtt_PackFontRanges: c_int(stbtt_pack_context *spc, fontdata: *const c_uchar, font_index: c_int, stbtt_pack_range *ranges, num_ranges: c_int)
 {
    stbtt_fontinfo info;
    i: c_int, j, n, return_value; // [DEAR IMGUI] removed = 1;
@@ -4315,7 +4315,7 @@ STBTT_DEF stbtt_PackFontRanges: c_int(stbtt_pack_context *spc, const c_uchar *fo
    return return_value;
 }
 
-STBTT_DEF stbtt_PackFontRange: c_int(stbtt_pack_context *spc, const c_uchar *fontdata, font_index: c_int,font_size: c_float,
+STBTT_DEF stbtt_PackFontRange: c_int(stbtt_pack_context *spc, fontdata: *const c_uchar, font_index: c_int,font_size: c_float,
             first_unicode_codepoint_in_range: c_int, num_chars_in_range: c_int, stbtt_packedchar *chardata_for_range)
 {
    stbtt_pack_range range;
@@ -4327,7 +4327,7 @@ STBTT_DEF stbtt_PackFontRange: c_int(stbtt_pack_context *spc, const c_uchar *fon
    return stbtt_PackFontRanges(spc, fontdata, font_index, &range, 1);
 }
 
-STBTT_DEF c_void stbtt_GetScaledFontVMetrics(const c_uchar *fontdata, index: c_int,size: c_float, c_float *ascent, c_float *descent, c_float *lineGap)
+STBTT_DEF c_void stbtt_GetScaledFontVMetrics(fontdata: *const c_uchar, index: c_int,size: c_float, c_float *ascent, c_float *descent, c_float *lineGap)
 {
    i_ascent: c_int, i_descent, i_lineGap;
    let mut scale: c_float = 0f32;
@@ -4905,28 +4905,28 @@ static stbtt_FindMatchingFont_internal: c_int(c_uchar *font_collection, char *na
 // #pragma GCC diagnostic ignored "-Wcast-qual"
 // #endif
 
-STBTT_DEF stbtt_BakeFontBitmap: c_int(const c_uchar *data, offset: c_int,pixel_height: c_float, c_uchar *pixels, pw: c_int, ph: c_int,
+STBTT_DEF stbtt_BakeFontBitmap: c_int(data: *const c_uchar, offset: c_int,pixel_height: c_float, c_uchar *pixels, pw: c_int, ph: c_int,
                                 first_char: c_int, num_chars: c_int, stbtt_bakedchar *chardata)
 {
    return stbtt_BakeFontBitmap_internal((c_uchar *) data, offset, pixel_height, pixels, pw, ph, first_char, num_chars, chardata);
 }
 
-STBTT_DEF stbtt_GetFontOffsetForIndex: c_int(const c_uchar *data, index: c_int)
+STBTT_DEF stbtt_GetFontOffsetForIndex: c_int(data: *const c_uchar, index: c_int)
 {
    return stbtt_GetFontOffsetForIndex_internal((c_uchar *) data, index);
 }
 
-STBTT_DEF stbtt_GetNumberOfFonts: c_int(const c_uchar *data)
+STBTT_DEF stbtt_GetNumberOfFonts: c_int(data: *const c_uchar)
 {
    return stbtt_GetNumberOfFonts_internal((c_uchar *) data);
 }
 
-STBTT_DEF stbtt_InitFont: c_int(stbtt_fontinfo *info, const c_uchar *data, offset: c_int)
+STBTT_DEF stbtt_InitFont: c_int(stbtt_fontinfo *info, data: *const c_uchar, offset: c_int)
 {
    return stbtt_InitFont_internal(info, (c_uchar *) data, offset);
 }
 
-STBTT_DEF stbtt_FindMatchingFont: c_int(const c_uchar *fontdata, const char *name, flags: c_int)
+STBTT_DEF stbtt_FindMatchingFont: c_int(fontdata: *const c_uchar, const char *name, flags: c_int)
 {
    return stbtt_FindMatchingFont_internal((c_uchar *) fontdata,  name, flags);
 }

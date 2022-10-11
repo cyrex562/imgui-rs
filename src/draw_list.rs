@@ -161,7 +161,7 @@ impl ImDrawList {
 
     }
 
-    // void  AddRect(const ImVec2& p_min, const ImVec2& p_max, col: u32, c_float rounding = 0f32, ImDrawFlags flags = 0, c_float thickness = 1f32);   // a: upper-left, b: lower-right (== upper-left + size)
+    // void  AddRect(const ImVec2& p_min, const ImVec2& p_max, col: u32, c_float rounding = 0f32, flags: ImDrawFlags = 0, c_float thickness = 1f32);   // a: upper-left, b: lower-right (== upper-left + size)
     pub unsafe fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float, flags: ImDrawFlags, thickness: c_float) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
@@ -176,7 +176,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, col: u32, c_float rounding = 0f32, ImDrawFlags flags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
+    // void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, col: u32, c_float rounding = 0f32, flags: ImDrawFlags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
     pub unsafe fn AddRectFilled(&mut self, p_min: &ImVec2, p_masx: &ImVec2, col: u32, rounding: c_float, flags: ImDrawFlags) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -382,7 +382,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddPolyline(const ImVec2* points, num_points: c_int, col: u32, ImDrawFlags flags, c_float thickness);
+    // void  AddPolyline(const ImVec2* points, num_points: c_int, col: u32, flags: ImDrawFlags, c_float thickness);
     pub unsafe fn AddPolyline(&mut self, points: *const ImVec2, points_count: size_t, col: u32, flags: ImDrawFlags, thickness: c_float) {
         if points_count < 2 {
             return;
@@ -809,7 +809,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, col: u32, c_float rounding, ImDrawFlags flags = 0);
+    // void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, col: u32, c_float rounding, flags: ImDrawFlags = 0);
     pub unsafe fn AddImageRounded(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_min: &ImVec2, uv_max: &ImVec2, col: u32, rounding: c_float, mut flags: ImDrawFlags) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
@@ -860,7 +860,7 @@ impl ImDrawList {
     }
 
 
-    // inline    void  PathStroke(col: u32, ImDrawFlags flags = 0, c_float thickness = 1f32) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
+    // inline    void  PathStroke(col: u32, flags: ImDrawFlags = 0, c_float thickness = 1f32) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
     pub unsafe fn PathStroke(&mut self, col: u32, flags: ImDrawFlags, thickness: c_float) {
         self.AddPolyline(self._Path.as_ptr(), self._Path.len(), col, flags, thickness);
     }
@@ -970,7 +970,7 @@ impl ImDrawList {
         }
     }
 
-    // void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, c_float rounding = 0f32, ImDrawFlags flags = 0);
+    // void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, c_float rounding = 0f32, flags: ImDrawFlags = 0);
     pub fn PathRect(&mut self, rect_min: &ImVec2, rect_max: &ImVec2, mut rounding: c_float, mut flags: ImDrawFlags) {
 
         flags = FixRectCornerFlags(flags);

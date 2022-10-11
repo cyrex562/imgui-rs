@@ -36,7 +36,7 @@ pub const ImDrawFlags_RoundCornersMask_: ImDrawFlags = ImDrawFlags_RoundCornersA
 
 
 // IM_STATIC_ASSERT(ImDrawFlags_RoundCornersTopLeft == (1 << 4));
-// static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
+// static inline FixRectCornerFlags: ImDrawFlags(flags: ImDrawFlags)
 pub fn FixRectCornerFlags(mut flags: ImDrawFlags) -> ImDrawFlags
 {
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS

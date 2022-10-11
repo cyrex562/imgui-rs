@@ -423,3 +423,10 @@ pub fn PathBezierQuadraticCurveToCasteljau(path: &mut Vec<ImVec2> ,x1: c_float,y
         PathBezierQuadraticCurveToCasteljau(path, x123, y123, x23, y23, x3, y3, tess_tol, level + 1);
     }
 }
+
+pub fn ImAcosX(x: c_float) -> c_float {
+    if x <= 0 { return IM_PI * 0.5; };
+    if x >= 1 { return 0.0; };
+    return ImAcos(x);
+    //return (-0.69813170079773212 * x * x - 0.872664625997164770) * x + 1.5707963267948966; // Cheap approximation, may be enough for what we do.
+}
