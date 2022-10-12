@@ -35,11 +35,11 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     // Size
     let content_avail: ImVec2 = GetContentRegionAvail();
     let mut size: ImVec2 = ImFloor(size_arg);
-    let auto_fit_axises: c_int = (if size.x == 0f32 { (1 << ImGuiAxis_X) } else { 0x00 }) | (if size.y == 0f32 { (1 << ImGuiAxis_Y) } else { 0x00 });
-    if size.x <= 0f32 {
+    let auto_fit_axises: c_int = (if size.x == 0.0 { (1 << ImGuiAxis_X) } else { 0x00 }) | (if size.y == 0.0 { (1 << ImGuiAxis_Y) } else { 0x00 });
+    if size.x <= 0.0 {
         size.x = ImMax(content_avail.x + size.x, 4.00f32);
-    }// Arbitrary minimum child size (0f32 causing too much issues)
-    if size.y <= 0f32 {
+    }// Arbitrary minimum child size (0.0 causing too much issues)
+    if size.y <= 0.0 {
         size.y = ImMax(content_avail.y + size.y, 4.00f32);
     }
     SetNextWindowSize(&size, ImGuiCond_None);
@@ -56,7 +56,7 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
 
     let backup_border_size: c_float = g.Style.ChildBorderSize;
     if !border {
-        g.Style.ChildBorderSize = 0f32;
+        g.Style.ChildBorderSize = 0.0;
     }
     let mut ret: bool = Begin(temp_window_name, null_mut(), flags);
     g.Style.ChildBorderSize = backup_border_size;
@@ -106,11 +106,11 @@ pub unsafe fn EndChild() {
         End(0);
     } else {
         let mut sz: ImVec2 = window.Size;
-        if window.AutoFitChildAxises & (1 << ImGuiAxis_X) {// Arbitrary minimum zero-ish child size of 4.0f32 causes less trouble than a 0f32
-            sz.x = ImMax(4.0f32, sz.x);
+        if window.AutoFitChildAxises & (1 << ImGuiAxis_X) {// Arbitrary minimum zero-ish child size of 4.0.0 causes less trouble than a 0.0
+            sz.x = ImMax(4.0.0, sz.x);
         }
         if window.AutoFitChildAxises & (1 << ImGuiAxis_Y) {
-            sz.y = ImMax(4.0f32, sz.y);
+            sz.y = ImMax(4.0.0, sz.y);
         }
         End(0);
 

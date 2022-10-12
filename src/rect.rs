@@ -17,7 +17,7 @@ pub Max: ImVec2
 }
 
 impl ImRect {
-    // constexpr ImRect()                                        : Min(0f32, 0f32), Max(0f32, 0f32)  {}
+    // constexpr ImRect()                                        : Min(0.0, 0.0), Max(0.0, 0.0)  {}
     // pub fn new() -> Self {
     //     Self {
     //         Min: ImVec2::default(),

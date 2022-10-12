@@ -17,11 +17,11 @@ pub struct ImVec2
 }
 
 impl ImVec2 {
-    // constexpr ImVec2::new()                      : x(0f32), y(0f32) { }
+    // constexpr ImVec2::new()                      : x(0.0), y(0.0) { }
     // pub fn new() -> Self {
     //     Self {
-    //         x: 0f32,
-    //         y: 0f32
+    //         x: 0.0,
+    //         y: 0.0
     //     }
     // }
 

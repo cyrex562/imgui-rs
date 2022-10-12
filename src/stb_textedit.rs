@@ -324,7 +324,7 @@ pub type STB_TEXTEDIT_POSITIONTYPE  = c_int;
 // result of layout query
 typedef struct
 {x0: c_float,x1;             // starting x location, end x location (allows for align=right, etc)
-   let mut baseline_y_delta: c_float = 0f32;  // position of baseline relative to previous row's baselineymin: c_float,ymax;         // height of row above and below baseline
+   let mut baseline_y_delta: c_float = 0.0;  // position of baseline relative to previous row's baselineymin: c_float,ymax;         // height of row above and below baseline
    let mut num_chars: c_int = 0;
 } StbTexteditRow;
 // #endif //INCLUDE_STB_TEXTEDIT_H
@@ -466,7 +466,7 @@ static c_void stb_text_makeundo_replace(STB_TEXTEDIT_STRING *str, STB_TexteditSt
 
 typedef struct
 {x: c_float,y;    // position of n'th character
-   let mut height: c_float = 0f32; // height of line
+   let mut height: c_float = 0.0; // height of line
    first_char: c_int, length; // first char of row, and length
    let mut prev_first: c_int = 0;  // first char of previous row
 } StbFindState;

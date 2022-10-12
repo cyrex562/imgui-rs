@@ -40,13 +40,13 @@ pub const FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS: &'static str =
 pub const FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA: [[Vector2D;3];9] =
 [
     // pos ........ size ......... Offset ......
-    [ Vector2D::new( 0f32,3f32), Vector2D::new(12f32,19f32), Vector2D::new( 0f32, 0f32) ], // ImGuiMouseCursor_Arrow
-    [ Vector2D::new(13f32,0f32), Vector2D::new( 7f32,16f32), Vector2D::new( 1f32, 8f32) ], // ImGuiMouseCursor_TextInput
-    [ Vector2D::new(31f32,0f32), Vector2D::new(23f32,23f32), Vector2D::new(11f32,11f32) ], // ImGuiMouseCursor_ResizeAll
-    [ Vector2D::new(21f32,0f32), Vector2D::new( 9f32,23f32), Vector2D::new( 4f32,11f32) ], // ImGuiMouseCursor_ResizeNS
+    [ Vector2D::new( 0.0,3f32), Vector2D::new(12f32,19f32), Vector2D::new( 0.0, 0.0) ], // ImGuiMouseCursor_Arrow
+    [ Vector2D::new(13f32,0.0), Vector2D::new( 7f32,16f32), Vector2D::new( 1.0, 8f32) ], // ImGuiMouseCursor_TextInput
+    [ Vector2D::new(31f32,0.0), Vector2D::new(23f32,23f32), Vector2D::new(11f32,11f32) ], // ImGuiMouseCursor_ResizeAll
+    [ Vector2D::new(21f32,0.0), Vector2D::new( 9f32,23f32), Vector2D::new( 4f32,11f32) ], // ImGuiMouseCursor_ResizeNS
     [ Vector2D::new(55f32,18f32),Vector2D::new(23f32, 9f32), Vector2D::new(11f32, 4f32) ], // ImGuiMouseCursor_ResizeEW
-    [ Vector2D::new(73f32,0f32), Vector2D::new(17f32,17f32), Vector2D::new( 8f32, 8f32) ], // ImGuiMouseCursor_ResizeNESW
-    [ Vector2D::new(55f32,0f32), Vector2D::new(17f32,17f32), Vector2D::new( 8f32, 8f32) ], // ImGuiMouseCursor_ResizeNWSE
-    [ Vector2D::new(91f32,0f32), Vector2D::new(17f32,22f32), Vector2D::new( 5f32, 0f32) ], // ImGuiMouseCursor_Hand
-    [ Vector2D::new(109f32,0f32),Vector2D::new(13f32,15f32), Vector2D::new( 6f32, 7f32) ], // ImGuiMouseCursor_NotAllowed
+    [ Vector2D::new(73f32,0.0), Vector2D::new(17f32,17f32), Vector2D::new( 8f32, 8f32) ], // ImGuiMouseCursor_ResizeNESW
+    [ Vector2D::new(55f32,0.0), Vector2D::new(17f32,17f32), Vector2D::new( 8f32, 8f32) ], // ImGuiMouseCursor_ResizeNWSE
+    [ Vector2D::new(91f32,0.0), Vector2D::new(17f32,22f32), Vector2D::new( 5f32, 0.0) ], // ImGuiMouseCursor_Hand
+    [ Vector2D::new(109f32,0.0),Vector2D::new(13f32,15f32), Vector2D::new( 6f32, 7f32) ], // ImGuiMouseCursor_NotAllowed
 ];

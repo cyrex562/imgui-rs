@@ -32,7 +32,7 @@ pub unsafe fn ImFileOpen(filename: * c_char, mode: * c_char) -> ImFileHandle {
 }
 
 // We should in theory be using fseeko()/ftello() with off_t and _fseeki64()/_ftelli64() with __int64, waiting for the PR that does that in a very portable pre-C++11 zero-warnings way.
-// bool    ImFileClose(ImFileHandle 0f32)     { return fclose(0f32) == 0; }
+// bool    ImFileClose(ImFileHandle 0.0)     { return fclose(0.0) == 0; }
 pub unsafe fn ImFileClose(f: ImFileHandle) -> c_int {
     libc::fclose(f)
 }

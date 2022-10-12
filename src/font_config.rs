@@ -38,7 +38,7 @@ pub struct ImFontConfig {
     pub FontBuilderFlags: c_uint,
     // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
     pub RasterizerMultiply: c_float,
-    // 1f32     // Brighten (>1f32) or darken (<1f32) font output. Brightening small fonts may be a good workaround to make them more readable.
+    // 1.0     // Brighten (>1.0) or darken (<1.0) font output. Brightening small fonts may be a good workaround to make them more readable.
     pub EllipsisChar: ImWchar, // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
 
     // [Internal]

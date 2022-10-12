@@ -15,7 +15,7 @@ pub fn ImBezierCubicClosestPoint(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImV
 // p_closest: ImVec2;
     let mut p_closest: ImVec2 = ImVec2::default();
     let mut p_closest_dist2 = f32::MAX;
-    let mut t_step = 1f32 / num_segments;
+    let mut t_step = 1.0 / num_segments;
     // for (int i_step = 1; i_step <= num_segments; i_step++)
     for i_step in 1..num_segments {
         let mut p_current = ImBezierCubicCalc(p1, p2, p3, p4, t_step * i_step);
@@ -37,8 +37,8 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &mut ImVec2, p_closest: &mut Im
     let mut dy = y4 - y1;
     let mut d2 = ((x2 - x4) * dy - (y2 - y4) * dx);
     let mut d3 = ((x3 - x4) * dy - (y3 - y4) * dx);
-    d2 = if d2 >= 0f32 { d2 } else { -d2 };
-    d3 = if d3 >= 0f32 { d3 } else { -d3 };
+    d2 = if d2 >= 0.0 { d2 } else { -d2 };
+    d3 = if d3 >= 0.0 { d3 } else { -d3 };
     if (d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy) {
         let mut p_current = ImVec2::new(x4, y4);
         let mut p_line = ImLineClosestPoint(p_last, p_current, p);
@@ -70,7 +70,7 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &mut ImVec2, p_closest: &mut Im
 // Because those ImXXX functions are lower-level than  we cannot access this value automatically.
 // ImBezierCubicClosestPointCasteljau: ImVec2(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, float tess_tol)
 pub fn ImBezierCubicClosestPointCasteljau(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, p: &mut ImVec2, tess_tol: f32) -> ImVec2 {
-    // IM_ASSERT(tess_tol > 0f32);
+    // IM_ASSERT(tess_tol > 0.0);
     let mut p_last = p1.clone();
     let mut p_closest: ImVec2 = ImVec2::default();
     let mut p_closest_dist2 = f32::MAX;
@@ -83,7 +83,7 @@ pub fn ImLineClosest(a: &ImVec2, b: &ImVec2, p: &ImVec2) -> ImVec2 {
     let mut ap = p - a;
     let mut ab_dir = b - a;
     let mut dot = ap.x * ab_dir.x + ap.y * ab_dir.y;
-    if dot < 0f32 {
+    if dot < 0.0 {
         return a.clone();
     }
     let mut ab_len_sqr = ab_dir.x * ab_dir.x + ab_dir.y * ab_dir.y;
@@ -95,9 +95,9 @@ pub fn ImLineClosest(a: &ImVec2, b: &ImVec2, p: &ImVec2) -> ImVec2 {
 
 // ImTriangleContainsPoint: bool(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p)
 pub fn ImTriangleContainsPoint(a: &ImVec2, b: &ImVec2, c: &ImVec2, p: &ImVec2) -> bool {
-    let mut b1 = ((p.x - b.x) * (a.y - b.y) - (p.y - b.y) * (a.x - b.x)) < 0f32;
-    let mut b2 = ((p.x - c.x) * (b.y - c.y) - (p.y - c.y) * (b.x - c.x)) < 0f32;
-    let mut b3 = ((p.x - a.x) * (c.y - a.y) - (p.y - a.y) * (c.x - a.x)) < 0f32;
+    let mut b1 = ((p.x - b.x) * (a.y - b.y) - (p.y - b.y) * (a.x - b.x)) < 0.0;
+    let mut b2 = ((p.x - c.x) * (b.y - c.y) - (p.y - c.y) * (b.x - c.x)) < 0.0;
+    let mut b3 = ((p.x - a.x) * (c.y - a.y) - (p.y - a.y) * (c.x - a.x)) < 0.0;
     return (b1 == b2) && (b2 == b3);
 }
 
@@ -109,7 +109,7 @@ pub fn ImTriangleBarycentricCoords(a: &ImVec2, b: &ImVec2, c: &ImVec2, p: &ImVec
     let denom = v0.x * v1.y - v1.x * v0.y;
     *out_v = (v2.x * v1.y - v1.x * v2.y) / denom;
     *out_w = (v0.x * v2.y - v2.x * v0.y) / denom;
-    *out_u = 1f32 - out_v - out_w;
+    *out_u = 1.0 - out_v - out_w;
 }
 
 // ImTriangleClosestPoint: ImVec2(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p)

@@ -23,7 +23,7 @@ impl ImGuiTableColumnSettings {
     pub fn new() -> Self
     {
         Self {
-            WidthOrWeight : 0f32,
+            WidthOrWeight : 0.0,
             UserID : 0,
             Index : -1,
             DisplayOrder : -1,

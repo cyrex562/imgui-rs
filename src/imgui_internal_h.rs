@@ -626,7 +626,7 @@ namespace ImGui
      *mut ImGuiSettingsHandler FindSettingsHandler(type_name: *const c_char);
 
     // Scrolling
-     c_void          SetNextWindowScroll(scroll: &ImVec2); // Use -1f32 on one axis to leave as-is
+     c_void          SetNextWindowScroll(scroll: &ImVec2); // Use -1.0 on one axis to leave as-is
      c_void          SetScrollX(*mut ImGuiWindow window,scroll_x: c_float);
      c_void          SetScrollY(*mut ImGuiWindow window,scroll_y: c_float);
      c_void          SetScrollFromPosX(*mut ImGuiWindow window,local_x: c_float,center_x_ratio: c_float);
@@ -657,9 +657,9 @@ namespace ImGui
      ImGuiID       GetIDWithSeed(str_id_begin: *const c_char, str_id_end: *const c_char, ImGuiID seed);
 
     // Basic Helpers for widget code
-     c_void          ItemSize(size: &ImVec2, let text_baseline_y: c_float =  -1f32);
-    inline c_void             ItemSize(bb: &ImRect, let text_baseline_y: c_float =  -1f32) { ItemSize(bb.GetSize(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
-     bool          ItemAdd(bb: &ImRect, id: ImGuiID, *const let nav_bb: ImRect =  null_mut(), let mut extra_flags: ImGuiItemFlags =  0);
+     c_void          ItemSize(size: &ImVec2, let text_baseline_y: c_float =  -1.0);
+    inline c_void             ItemSize(bb: &ImRect, let text_baseline_y: c_float =  -1.0) { ItemSize(bb.GetSize(), text_baseline_y); } // FIXME: This is a misleading API since we expect CursorPos to be bb.Min.
+     bool          ItemAdd(bb: &ImRect, id: ImGuiID, *let nav_bb: ImRect =  null_mut(), let mut extra_flags: ImGuiItemFlags =  0);
      bool          ItemHoverable(bb: &ImRect, id: ImGuiID);
      bool          IsClippedEx(bb: &ImRect, id: ImGuiID);
      c_void          SetLastItemData(ImGuiID item_id, in_flags: ImGuiItemFlags, ImGuiItemStatusFlags status_flags, item_rect: &ImRect);
@@ -736,7 +736,7 @@ namespace ImGui
     inline bool             IsActiveIdUsingKey(ImGuiKey key)                            { let g = GImGui; // ImGuiContext& g = *GImGui; return g.ActiveIdUsingKeyInputMask[key]; }
     inline c_void             SetActiveIdUsingKey(ImGuiKey key)                           { let g = GImGui; // ImGuiContext& g = *GImGui; g.ActiveIdUsingKeyInputMask.SetBit(key); }
     inline ImGuiKey         MouseButtonToKey(ImGuiMouseButton button)                   { IM_ASSERT(button >= 0 && button < ImGuiMouseButton_COUNT); return ImGuiKey_MouseLeft + button; }
-     bool          IsMouseDragPastThreshold(ImGuiMouseButton button, let lock_threshold: c_float =  -1f32);
+     bool          IsMouseDragPastThreshold(ImGuiMouseButton button, let lock_threshold: c_float =  -1.0);
      ImGuiModFlags GetMergedModFlags();
      ImVec2        GetKeyVector2d(ImGuiKey key_left, ImGuiKey key_right, ImGuiKey key_up, ImGuiKey key_down);GetNavTweakPressedAmount: c_float(ImGuiAxis axis);
      c_int           CalcTypematicRepeatAmount(t0: c_float,t1: c_float,repeat_delay: c_float,repeat_rate: c_float);
@@ -825,7 +825,7 @@ namespace ImGui
     // Tables: Internals
     inline    *mut ImGuiTable   GetCurrentTable() { let g = GImGui; // ImGuiContext& g = *GImGui; return g.CurrentTable; }
      *mut ImGuiTable   TableFindByID(id: ImGuiID);
-     bool          BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImGuiTableFlags flags = 0, outer_size: &ImVec2 = ImVec2::new(0, 0), let inner_width: c_float =  0f32);
+     bool          BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImGuiTableFlags flags = 0, outer_size: &ImVec2 = ImVec2::new(0, 0), let inner_width: c_float =  0.0);
      c_void          TableBeginInitMemory(*mut ImGuiTable table, columns_count: c_int);
      c_void          TableBeginApplyRequests(*mut ImGuiTable table);
      c_void          TableSetupDrawChannels(*mut ImGuiTable table);
@@ -884,18 +884,18 @@ namespace ImGui
     // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
      c_void          RenderText(pos: ImVec2, text: *const c_char, text_end: *const c_char = null_mut(), let mut hide_text_after_hash: bool =  true);
      c_void          RenderTextWrapped(pos: ImVec2, text: *const c_char, text_end: *const c_char,wrap_width: c_float);
-     c_void          RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, align: &ImVec2 = ImVec2::new(0, 0), *const let clip_rect: ImRect =  null_mut());
-     c_void          RenderTextClippedEx(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, align: &ImVec2 = ImVec2::new(0, 0), *const let clip_rect: ImRect =  null_mut());
+     c_void          RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, align: &ImVec2 = ImVec2::new(0, 0), *let clip_rect: ImRect =  null_mut());
+     c_void          RenderTextClippedEx(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, align: &ImVec2 = ImVec2::new(0, 0), *let clip_rect: ImRect =  null_mut());
      c_void          RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2,clip_max_x: c_float,ellipsis_max_x: c_float, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2);
-     c_void          RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, let mut border: bool =  true, let rounding: c_float =  0f32);
-     c_void          RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, let rounding: c_float =  0f32);
-     c_void          RenderColorRectWithAlphaCheckerboard(draw_list: *mut ImDrawList, p_min: ImVec2, p_max: ImVec2, fill_col: u32,grid_step: c_float, grid_off: ImVec2, let rounding: c_float =  0f32, flags: ImDrawFlags = 0);
+     c_void          RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, let mut border: bool =  true, let rounding: c_float =  0.0);
+     c_void          RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, let rounding: c_float =  0.0);
+     c_void          RenderColorRectWithAlphaCheckerboard(draw_list: *mut ImDrawList, p_min: ImVec2, p_max: ImVec2, fill_col: u32,grid_step: c_float, grid_off: ImVec2, let rounding: c_float =  0.0, flags: ImDrawFlags = 0);
      c_void          RenderNavHighlight(bb: &ImRect, id: ImGuiID, ImGuiNavHighlightFlags flags = ImGuiNavHighlightFlags_TypeDefault); // Navigation highlight
      *const char   FindRenderedTextEnd(text: *const c_char, text_end: *const c_char = null_mut()); // Find the optional ## from which we stop displaying text.
      c_void          RenderMouseCursor(pos: ImVec2,scale: c_float, ImGuiMouseCursor mouse_cursor, col_fill: u32, col_border: u32, col_shadow: u32);
 
     // Render helpers (those functions don't access any ImGui state!)
-     c_void          RenderArrow(draw_list: *mut ImDrawList, pos: ImVec2, col: u32, dir: ImGuiDir, let scale: c_float =  1f32);
+     c_void          RenderArrow(draw_list: *mut ImDrawList, pos: ImVec2, col: u32, dir: ImGuiDir, let scale: c_float =  1.0);
      c_void          RenderBullet(draw_list: *mut ImDrawList, pos: ImVec2, col: u32);
      c_void          RenderCheckMark(draw_list: *mut ImDrawList, pos: ImVec2, col: u32,sz: c_float);
      c_void          RenderArrowPointingAt(draw_list: *mut ImDrawList, pos: ImVec2, half_sz: ImVec2, direction: ImGuiDir, col: u32);
@@ -925,7 +925,7 @@ namespace ImGui
      bool          ButtonBehavior(bb: &ImRect, id: ImGuiID, *mut out_hovered: bool, *mut out_held: bool, ImGuiButtonFlags flags = 0);
      bool          DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v,v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags);
      bool          SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb);
-     bool          SplitterBehavior(bb: &ImRect, id: ImGuiID, ImGuiAxis axis, *mutsize1: c_float, *mutsize2: c_float,min_size1: c_float,min_size2: c_float, let hover_extend: c_float =  0f32, let hover_visibility_delay: c_float =  0f32, bg_col: u32 = 0);
+     bool          SplitterBehavior(bb: &ImRect, id: ImGuiID, ImGuiAxis axis, *mutsize1: c_float, *mutsize2: c_float,min_size1: c_float,min_size2: c_float, let hover_extend: c_float =  0.0, let hover_visibility_delay: c_float =  0.0, bg_col: u32 = 0);
      bool          TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *const c_char, label_end: *const c_char = null_mut());
      c_void          TreePushOverrideID(id: ImGuiID);
      c_void          TreeNodeSetOpen(id: ImGuiID, open: bool);

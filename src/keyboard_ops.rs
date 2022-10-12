@@ -70,8 +70,8 @@ pub unsafe fn UpdateKeyboardInputs()
 //     let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
 //     if io.BackendUsingLegacyNavInputArray && nav_gamepad_active
 //     {
-//         #define MAP_LEGACY_NAV_INPUT_TO_KEY1(_KEY, _NAV1)           do { io.KeysData[_KEY].Down = (io.NavInputs[_NAV1] > 0f32); io.KeysData[_KEY].AnalogValue = io.NavInputs[_NAV1]; } while (0)
-//         #define MAP_LEGACY_NAV_INPUT_TO_KEY2(_KEY, _NAV1, _NAV2)    do { io.KeysData[_KEY].Down = (io.NavInputs[_NAV1] > 0f32) || (io.NavInputs[_NAV2] > 0f32); io.KeysData[_KEY].AnalogValue = ImMax(io.NavInputs[_NAV1], io.NavInputs[_NAV2]); } while (0)
+//         #define MAP_LEGACY_NAV_INPUT_TO_KEY1(_KEY, _NAV1)           do { io.KeysData[_KEY].Down = (io.NavInputs[_NAV1] > 0.0); io.KeysData[_KEY].AnalogValue = io.NavInputs[_NAV1]; } while (0)
+//         #define MAP_LEGACY_NAV_INPUT_TO_KEY2(_KEY, _NAV1, _NAV2)    do { io.KeysData[_KEY].Down = (io.NavInputs[_NAV1] > 0.0) || (io.NavInputs[_NAV2] > 0.0); io.KeysData[_KEY].AnalogValue = ImMax(io.NavInputs[_NAV1], io.NavInputs[_NAV2]); } while (0)
 //         MAP_LEGACY_NAV_INPUT_TO_KEY1(ImGuiKey_GamepadFaceDown, ImGuiNavInput_Activate);
 //         MAP_LEGACY_NAV_INPUT_TO_KEY1(ImGuiKey_GamepadFaceRight, ImGuiNavInput_Cancel);
 //         MAP_LEGACY_NAV_INPUT_TO_KEY1(ImGuiKey_GamepadFaceLeft, ImGuiNavInput_Menu);
@@ -97,10 +97,10 @@ pub unsafe fn UpdateKeyboardInputs()
     // for (let n: c_int = 0; n < ImGuiMouseButton_COUNT; n++)
     for n in 0 .. ImGuiMouseButton_COUNT
     {
-        UpdateAliasKey(MouseButtonToKey(n), io.MouseDown[n], if io.MouseDown[n] { 1f32 }else { 0f32 });
+        UpdateAliasKey(MouseButtonToKey(n), io.MouseDown[n], if io.MouseDown[n] { 1.0 }else { 0.0 });
     }
-    UpdateAliasKey(ImGuiKey_MouseWheelX, io.MouseWheelH != 0f32, io.MouseWheelH);
-    UpdateAliasKey(ImGuiKey_MouseWheelY, io.MouseWheel != 0f32, io.MouseWheel);
+    UpdateAliasKey(ImGuiKey_MouseWheelX, io.MouseWheelH != 0.0, io.MouseWheelH);
+    UpdateAliasKey(ImGuiKey_MouseWheelY, io.MouseWheel != 0.0, io.MouseWheel);
 
     // Clear gamepad data if disabled
     if (io.BackendFlags & ImGuiBackendFlags_HasGamepad) == 0 {
@@ -108,7 +108,7 @@ pub unsafe fn UpdateKeyboardInputs()
         for i in ImGuiKey_Gamepad_BEGIN .. ImGuiKey_Gamepad_END
         {
             io.KeysData[i - ImGuiKey_KeysData_OFFSET].Down = false;
-            io.KeysData[i - ImGuiKey_KeysData_OFFSET].AnalogValue = 0f32;
+            io.KeysData[i - ImGuiKey_KeysData_OFFSET].AnalogValue = 0.0;
         }
     }
 
@@ -118,10 +118,10 @@ pub unsafe fn UpdateKeyboardInputs()
         let mut key_data: *mut ImGuiKeyData = &mut io.KeysData[i];
         key_data.DownDurationPrev = key_data.DownDuration;
         key_data.DownDuration = if key_data.Down {
-            if key_data.DownDuration < 0f32 {
-                0f32
+            if key_data.DownDuration < 0.0 {
+                0.0
             } else { key_data.DownDuration + io.DeltaTime }
-        } else { -1f32 };
+        } else { -1.0 };
     }
 }
 

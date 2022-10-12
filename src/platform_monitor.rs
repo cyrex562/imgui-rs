@@ -15,20 +15,20 @@ pub struct ImGuiPlatformMonitor {
     pub WorkPos: ImVec2,
     pub WorkSize: ImVec2,
 
-    // c_float   DpiScale;               // 1f32 = 96 DPI
+    // c_float   DpiScale;               // 1.0 = 96 DPI
     pub DpiScale: c_float,
 
 }
 
 impl ImGuiPlatformMonitor {
-    // ImGuiPlatformMonitor()          { MainPos = MainSize = WorkPos = WorkSize = ImVec2::new(0, 0); DpiScale = 1f32; }
+    // ImGuiPlatformMonitor()          { MainPos = MainSize = WorkPos = WorkSize = ImVec2::new(0, 0); DpiScale = 1.0; }
     pub fn new() -> Self {
         Self {
             MainPos: ImVec2::new(),
             MainSize: ImVec2::new(),
             WorkPos: ImVec2::new(),
             WorkSize: ImVec2::new(),
-            DpiScale: 1f32,
+            DpiScale: 1.0,
         }
     }
 }

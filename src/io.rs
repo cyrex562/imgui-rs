@@ -57,7 +57,7 @@ pub struct ImGuiIO {
     pub Fonts: *mut ImFontAtlas,
     // <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
     pub FontGlobalScale: c_float,
-    // = 1f32           // Global scale all fonts
+    // = 1.0           // Global scale all fonts
     pub FontAllowUserScaling: bool,
     // = false          // Allow user scaling text of individual window with CTRL+Wheel.
     // ImFont*     FontDefault;                    // = NULL           // Font to use on NewFrame(). Use NULL to uses Fonts.Fonts[0].
@@ -99,7 +99,7 @@ pub struct ImGuiIO {
     // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
     pub ConfigWindowsMoveFromTitleBarOnly: bool,
     // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
-    pub ConfigMemoryCompactTimer: c_float,       // = 60f32          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1f32 to disable.
+    pub ConfigMemoryCompactTimer: c_float,       // = 60f32          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0 to disable.
 
     //------------------------------------------------------------------
     // Platform Functions
@@ -237,7 +237,7 @@ pub struct ImGuiIO {
     pub MouseDownOwned: [bool; 5],
     // bool        MouseDownOwnedUnlessPopupClose[5];  // Track if button was clicked inside a dear imgui window.
     pub MosueDownOwnedUnlessPopupClose: [bool; 5],
-    // c_float       MouseDownDuration[5];               // Duration the mouse button has been down (0f32 == just clicked)
+    // c_float       MouseDownDuration[5];               // Duration the mouse button has been down (0.0 == just clicked)
     pub MouseDownDuration: [t: c_float; 5],
     // c_float       MouseDownDurationPrev[5];           // Previous time the mouse button has been down
     pub MouseDownDurationPrev: [c_float; 5],
@@ -246,7 +246,7 @@ pub struct ImGuiIO {
     // c_float       MouseDragMaxDistanceSqr[5];         // Squared maximum distance of how much mouse has traveled from the clicking point (used for moving thresholds)
     pub MouseDragMaxDistanceSqr: [c_float; 5],
     pub PenPressure: c_float,
-    // Touch/Pen pressure (0f32 to 1f32, should be >0f32 only when MouseDown[0] == true). Helper storage currently unused by Dear ImGui.
+    // Touch/Pen pressure (0.0 to 1.0, should be >0.0 only when MouseDown[0] == true). Helper storage currently unused by Dear ImGui.
     pub AppFocusLost: bool,
     // Only modify via AddFocusEvent()
     pub AppAcceptingEvents: bool,
@@ -274,8 +274,8 @@ impl ImGuiIO {
         // Settings
         out.ConfigFlags = ImGuiConfigFlags_None;
         out.BackendFlags = ImGuiBackendFlags_None;
-        out.DisplaySize = ImVec2::new(-1f32, -1f32);
-        out.DeltaTime = 1f32 / 60f32;
+        out.DisplaySize = ImVec2::new(-1.0, -1.0);
+        out.DeltaTime = 1.0 / 60f32;
         out.IniSavingRate = 5f32;
         out.IniFilename = String::from("imgui.ini").as_ptr().into(); // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
         out.LogFilename = String::from("imgui_log.txt").into();
@@ -291,14 +291,14 @@ impl ImGuiIO {
         out.KeyRepeatDelay = 0.275f32;
         out.KeyRepeatRate = 0.05f32;
         out.HoverDelayNormal = 0.3f32;
-        out.HoverDelayShort = 0.1f32;
+        out.HoverDelayShort = 0.1.0;
         out.UserData = null_mut();
 
         out.Fonts = null_mut();
-        out.FontGlobalScale = 1f32;
+        out.FontGlobalScale = 1.0;
         out.FontDefault = null_mut();
         out.FontAllowUserScaling = false;
-        out.DisplayFramebufferScale = ImVec2::new(1f32, 1f32);
+        out.DisplayFramebufferScale = ImVec2::new(1.0, 1.0);
 
         // Docking options (when ImGuiConfigFlags_DockingEnable is set)
         out.ConfigDockingNoSplit = false;
@@ -345,14 +345,14 @@ impl ImGuiIO {
         // for (i: c_int = 0; i < IM_ARRAYSIZE(MouseDownDuration); i+ +)
         for i in 0 .. out.MouseDownDuration.len()
         {
-            out.MouseDownDuration[i] = -1f32;
-            out.MouseDownDurationPrev[i] = -1f32;
+            out.MouseDownDuration[i] = -1.0;
+            out.MouseDownDurationPrev[i] = -1.0;
         }
         // for (i: c_int = 0; i < IM_ARRAYSIZE(KeysData); i+ +)
         for i in 0 .. out.KeysData.len()
         {
-            out.KeysData[i].DownDuration = -1f32;
-            out.KeysData[i].DownDurationPrev = -1f32;
+            out.KeysData[i].DownDuration = -1.0;
+            out.KeysData[i].DownDurationPrev = -1.0;
         }
         out.AppAcceptingEvents = true;
         out.BackendUsingLegacyKeyArrays =  - 1;
@@ -457,8 +457,8 @@ impl ImGuiIO {
         {
 
             self.KeysData[n].Down             = false;
-            self.KeysData[n].DownDuration     = -1f32;
-            self.KeysData[n].DownDurationPrev = -1f32;
+            self.KeysData[n].DownDuration     = -1.0;
+            self.KeysData[n].DownDurationPrev = -1.0;
         }
         self.KeyCtrl = false;
         self.KeyShift = false;
@@ -472,7 +472,7 @@ impl ImGuiIO {
     // Queue a new key down/up event.
     // - ImGuiKey key:       Translated key (as in, generally ImGuiKey_A matches the key end-user would use to emit an 'A' character)
     // - down: bool:          Is the key down? use false to signify a key release.
-    // - c_float analog_value: 0f32..1.0f
+    // - c_float analog_value: 0.0..1.0f
     // void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, down: bool, c_float analog_value)
     pub fn AddKeyAnalogEvent(&mut self, key: ImGuiKey, down: bool, analog_value: c_float)
     {
@@ -532,7 +532,7 @@ impl ImGuiIO {
         if !self.AppAcceptingEvents {
             return;
         }
-        self.AddKeyAnalogEvent(key, down, if down { 1f32 } else { 0f32 });
+        self.AddKeyAnalogEvent(key, down, if down { 1.0 } else { 0.0 });
     }
 
     // [Optional] Call after AddKeyEvent().
@@ -614,7 +614,7 @@ impl ImGuiIO {
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
-        if (wheel_x == 0f32 && wheel_y == 0f32) || !self.ppAcceptingEvents {
+        if (wheel_x == 0.0 && wheel_y == 0.0) || !self.ppAcceptingEvents {
             return;
         }
 

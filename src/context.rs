@@ -484,7 +484,7 @@ pub struct ImGuiContext {
     // ImGuiWindow*            NavWindowingTarget;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
     pub NavWindowingTarget: *mut ImGuiWindow,
 
-    // ImGuiWindow*            NavWindowingTargetAnim;             // Record of last valid NavWindowingTarget until DimBgRatio and NavWindowingHighlightAlpha becomes 0f32, so the fade-out can stay on it.
+    // ImGuiWindow*            NavWindowingTargetAnim;             // Record of last valid NavWindowingTarget until DimBgRatio and NavWindowingHighlightAlpha becomes 0.0, so the fade-out can stay on it.
     pub NavWindowingTargetAnim: *mut ImGuiWindow,
 
     // ImGuiWindow*            NavWindowingListWindow;             // Internal window actually listing the CTRL+Tab contents
@@ -667,7 +667,7 @@ pub struct ImGuiContext {
     // float                   DragCurrentAccum;                   // Accumulator for dragging modification. Always high-precision, not rounded by end-user precision settings
     pub DragCurrentAccum: c_float,
 
-    // float                   DragSpeedDefaultRatio;              // If speed == 0f32, uses (max-min) * DragSpeedDefaultRatio
+    // float                   DragSpeedDefaultRatio;              // If speed == 0.0, uses (max-min) * DragSpeedDefaultRatio
     pub DragSpeedDefaultRatio: c_float,
 
     // float                   ScrollbarClickDeltaToGrabCenter;    // Distance between mouse and center of grab box, normalized in parent space. Use storage?
@@ -864,7 +864,7 @@ impl ImGuiContext {
             ActiveIdHasBeenPressedBefore: false,
             ActiveIdHasBeenEditedBefore: false,
             ActiveIdHasBeenEditedThisFrame: false,
-            ActiveIdClickOffset: ImVec2::new(-1f32, -1f32),
+            ActiveIdClickOffset: ImVec2::new(-1.0, -1.0),
             ActiveIdWindow: null_mut(),
             ActiveIdSource: ImGuiInputSource_None,
             ActiveIdMouseButton: -1,
@@ -970,7 +970,7 @@ impl ImGuiContext {
             SliderCurrentAccumDirty: false,
             DragCurrentAccumDirty: false,
             DragCurrentAccum: 0.0,
-            DragSpeedDefaultRatio: 1f32 / 100.0,
+            DragSpeedDefaultRatio: 1.0 / 100.0,
             ScrollbarClickDeltaToGrabCenter: 0.0,
             DisabledAlphaBackup: 0.0,
             DisabledStackSize: 0,
@@ -1012,7 +1012,7 @@ impl ImGuiContext {
         out.IO.Fonts = if shared_font_atlas.is_null() == false { shared_font_atlas } else { IM_NEW(ImFontAtlas)() };
         out.ActiveIdUsingKeyInputMask.ClearAllBits();
         out.PlatformImeData.InputPos = ImVec2::new();
-        out.PlatformImeDataPrev.InputPos = ImVec2::new(-1f32, -1f32); // Different to ensure initial submission
+        out.PlatformImeDataPrev.InputPos = ImVec2::new(-1.0, -1.0); // Different to ensure initial submission
         libc::memset(out.DragDropPayloadBufLocal.as_mut_ptr(), 0, libc::sizeof(out.DragDropPayloadBufLocal));
         libc::memset(out.FramerateSecPerFrame.as_mut_ptr(), 0, libc::sizeof(FramerateSecPerFrame));
         return out;

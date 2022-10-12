@@ -26,7 +26,7 @@ pub struct ImGuiWindowTempData {
     pub CurrLineSize: ImVec2,
     pub PrevLineSize: ImVec2,
     pub CurrLineTextBaseOffset: c_float,
-    // Baseline offset (0f32 by default on a new line, generally == style.FramePadding.y when a framed item has been added).
+    // Baseline offset (0.0 by default on a new line, generally == style.FramePadding.y when a framed item has been added).
     pub PrevLineTextBaseOffset: c_float,
     pub IsSameLine: bool,
     pub IsSetPos: bool,
@@ -47,7 +47,7 @@ pub struct ImGuiWindowTempData {
     pub NavFocusScopeIdCurrent: ImGuiID,
     // Current focus scope ID while appending
     pub NavHideHighlightOneFrame: bool,
-    pub NavHasScroll: bool,           // Set when scrolling can be used (ScrollMax > 0f32)
+    pub NavHasScroll: bool,           // Set when scrolling can be used (ScrollMax > 0.0)
 
     // Miscellaneous
     pub MenuBarAppending: bool,

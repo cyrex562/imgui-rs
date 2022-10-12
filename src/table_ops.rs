@@ -90,7 +90,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
             let mut row_rect = ImRect::from_floats(table.WorkRect.Min.x, bg_y1, table.WorkRect.Max.x, bg_y2);
             row_rect.ClipWith(&table.BgClipRect);
             if bg_col0 != 0 && row_rect.Min.y < row_rect.Max.y {
-                window.DrawList.AddRectFilled(&row_rect.Min, &row_rect.Max, bg_col0, 0f32, ImDrawFlags_None);
+                window.DrawList.AddRectFilled(&row_rect.Min, &row_rect.Max, bg_col0, 0.0, ImDrawFlags_None);
             }
             if bg_col1 != 0 && row_rect.Min.y < row_rect.Max.y {
                 window.DrawList.ddRectFilled(row_rect.Min, row_rect.Max, bg_col1);
@@ -110,7 +110,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
                 cell_bg_rect.ClipWith(&table.BgClipRect);
                 cell_bg_rect.Min.x = ImMax(cell_bg_rect.Min.x, column.ClipRect.Min.x);     // So that first column after frozen one gets clipped when scrolling
                 cell_bg_rect.Max.x = ImMin(cell_bg_rect.Max.x, column.MaxX);
-                window.DrawList.AddRectFilled(&cell_bg_rect.Min, &cell_bg_rect.Max, cell_data.BgColor, 0f32, ImDrawFlags_None);
+                window.DrawList.AddRectFilled(&cell_bg_rect.Min, &cell_bg_rect.Max, cell_data.BgColor, 0.0, ImDrawFlags_None);
                 cell_data += 1;
             }
         }
@@ -184,7 +184,7 @@ pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
     }
 
 // Report maximum position so we can infer content size per column.
-// *mut let mut p_max_pos_x: c_float = 0f32;
+// *mut let mut p_max_pos_x: c_float = 0.0;
     let mut p_max_pos_x: *mut c_float = null_mut();
     if table.RowFlags & ImGuiTableRowFlags_Headers {
         p_max_pos_x = &mut column.ContentMaxXHeadersUsed;

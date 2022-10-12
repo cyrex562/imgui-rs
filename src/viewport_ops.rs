@@ -17,7 +17,7 @@ pub fn SetupViewportDrawData(viewport: *mut ImGuiViewport, draw_lists: *mut Vec<
     draw_data.CmdListsCount = draw_lists.Size;
     draw_data.TotalVtxCount = draw_data.TotalIdxCount = 0;
     draw_data.DisplayPos = viewport.Pos;
-    draw_data.DisplaySize = if is_minimized { ImVec2::new2(0f32, 0f32) } else { viewport.Size };
+    draw_data.DisplaySize = if is_minimized { ImVec2::new2(0.0, 0.0) } else { viewport.Size };
     draw_data.FramebufferScale = io.DisplayFramebufferScale; // FIXME-VIEWPORT: This may vary on a per-monitor/viewport basis?
     draw_data.OwnerViewport = viewport;
     // for (let n: c_int = 0; n < draw_lists.Size; n++)

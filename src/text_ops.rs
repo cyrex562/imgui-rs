@@ -1,6 +1,6 @@
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
-// CalcTextSize("") should return ImVec2::new(0f32, g.FontSize)
+// CalcTextSize("") should return ImVec2::new(0.0, g.FontSize)
 // CalcTextSize: ImVec2(text: *const c_char, text_end: *const c_char, hide_text_after_double_hash: bool, c_float wrap_width)
 pub fn CalcTextSize(text: *const c_char, text_end: *const c_char, hid_text_after_double_hash: bool, wrap_width: c_float) -> ImVec2
 {
@@ -16,7 +16,7 @@ let text_display_end: *const c_char;
     font: *mut ImFont = g.Font;
     let font_size: c_float =  g.FontSize;
     if text == text_display_end {
-        return ImVec2::new2(0f32, font_size);
+        return ImVec2::new2(0.0, font_size);
     }
     let text_size: ImVec2 = font.CalcTextSizeA(font_size, f32::MAX, wrap_width, text, text_display_end, null_mut());
 

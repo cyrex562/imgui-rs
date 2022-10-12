@@ -122,7 +122,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
         // Measure highest codepoints
         let mut dst_tmp = &mut dst_tmp_array[src_tmp.DstIndex];
         src_tmp.SrcRanges = if cfg.GlyphRanges { cfg.GlyphRanges } else { atlas.GetGlyphRangesDefault() };
-        // for (*const let src_range: ImWchar = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
+        // for (*let src_range: ImWchar = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
         let mut src_range = src_tmp.SrcRanges;
         while src_range[0] && src_range[1]
         {
@@ -145,7 +145,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
             dst_tmp.GlyphsSet.Create(dst_tmp.GlyphsHighest + 1);
         }
 
-        // for (*const let src_range: ImWchar = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
+        // for (*let src_range: ImWchar = src_tmp.SrcRanges; src_range[0] && src_range[1]; src_range += 2)
         let mut src_range = src_tmp.SrcRanges;
         while src_range[0] && src_range[1]
         {

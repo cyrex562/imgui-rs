@@ -1,78 +1,57 @@
 #![allow(non_snake_case)]
 
 use std::mem;
-use crate::color::{ImGuiCol_ModalWindowDimBg, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight, IM_COL32_A_MASK, ImGuiCol, ImGuiCol_WindowBg, ImGuiCol_ChildBg, ImGuiCol_PopupBg, ImGuiCol_ResizeGripActive, ImGuiCol_ResizeGripHovered, ImGuiCol_ResizeGrip, ImGuiCol_Border, ImGuiCol_SeparatorActive, ImGuiCol_ButtonHovered, ImGuiCol_ButtonActive, ImGuiCol_MenuBarBg, ImGuiCol_TitleBgActive, IM_COL32_A_SHIFT, ImGuiCol_TitleBgCollapsed, ImGuiCol_TitleBg, ImGuiCol_Button};
-use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_FirstUseEver, ImGuiCond_None};
+use crate::color::{IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiCol, ImGuiCol_Border, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_ChildBg, ImGuiCol_MenuBarBg, ImGuiCol_ModalWindowDimBg, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight, ImGuiCol_PopupBg, ImGuiCol_ResizeGrip, ImGuiCol_ResizeGripActive, ImGuiCol_ResizeGripHovered, ImGuiCol_SeparatorActive, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed, ImGuiCol_WindowBg};
+use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_None, ImGuiCond_Once};
 use crate::draw_flags::{ImDrawFlags_None, ImDrawFlags_RoundCornersBottom, ImDrawFlags_RoundCornersTop};
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::hovered_flags::{ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenBlockedByPopup};
 use crate::imgui::GImGui;
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
-use crate::next_window_data_flags::{ImGuiNextWindowDataFlags_HasBgAlpha, ImGuiNextWindowDataFlags_HasSize, ImGuiNextWindowDataFlags_HasSizeConstraint};
+use crate::next_window_data_flags::{ImGuiNextWindowDataFlags_HasBgAlpha, ImGuiNextWindowDataFlags_HasCollapsed, ImGuiNextWindowDataFlags_HasContentSize, ImGuiNextWindowDataFlags_HasDock, ImGuiNextWindowDataFlags_HasFocus, ImGuiNextWindowDataFlags_HasPos, ImGuiNextWindowDataFlags_HasScroll, ImGuiNextWindowDataFlags_HasSize, ImGuiNextWindowDataFlags_HasSizeConstraint, ImGuiNextWindowDataFlags_HasWindowClass};
 use crate::rect::ImRect;
 use crate::render_ops::{RenderFrame, RenderRectFilledWithHole};
 use crate::style_ops::GetColorU32;
 use crate::type_defs::ImGuiID;
 use crate::vec2::ImVec2;
-use crate::window::ImGuiWindow;
+use crate::window::{find, ImGuiWindow, render};
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysHorizontalScrollbar, ImGuiWindowFlags_AlwaysVerticalScrollbar, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_HorizontalScrollbar, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoBringToFrontOnFocus, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip};
 use crate::{ImGuiViewport, ImHashStr};
-use libc::{c_char, c_float, c_int, c_void};
+use libc::{c_char, c_float, c_int, c_short, c_void, size_t, strcmp};
 use std::ptr::{null, null_mut};
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_DpiEnableScaleFonts};
 use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
-use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
+use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::dock_node::ImGuiDockNode;
+use crate::garbage_collection::GcAwakeTransientWindowBuffers;
 use crate::hash_ops::ImHashData;
 use crate::id_ops::{ClearActiveID, KeepAliveID};
-use crate::input_ops::IsMouseDragging;
+use crate::input_ops::{IsMouseDragging, IsMouseHoveringRect};
+use crate::item_ops::SetLastItemData;
+use crate::item_status_flags::ImGuiItemStatusFlags_HoveredRect;
 use crate::key::{ImGuiKey_DownArrow, ImGuiKey_GamepadDpadDown, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadUp, ImGuiKey_LeftArrow, ImGuiKey_RightArrow, ImGuiKey_UpArrow};
+use crate::layout_type::ImGuiLayoutType_Vertical;
 use crate::math_ops::{ImClamp, ImLerp, ImLerpVec2, ImLerpVec22, ImMax, ImMin, ImSwap};
 use crate::mouse_cursor::{ImGuiMouseCursor_ResizeEW, ImGuiMouseCursor_ResizeNESW, ImGuiMouseCursor_ResizeNS, ImGuiMouseCursor_ResizeNWSE};
 use crate::mouse_ops::StartMouseMovingWindowOrNode;
 use crate::nav_layer::{ImGuiNavLayer_Main, ImGuiNavLayer_Menu};
+use crate::platform_monitor::ImGuiPlatformMonitor;
+use crate::popup_data::ImGuiPopupData;
 use crate::resize_border_def::resize_border_def;
 use crate::resize_grip_def::resize_grip_def;
 use crate::size_callback_data::ImGuiSizeCallbackData;
-use crate::string_ops::str_to_const_c_char_ptr;
+use crate::string_ops::{ImStrdupcpy, str_to_const_c_char_ptr};
 use crate::utils::{flag_clear, flag_set, is_not_null, is_null};
+use crate::vec4::ImVec4;
+use crate::window::find::{FindBlockingModal, FindWindowByName};
+use crate::window::rect::{ClampWindowRect, PushClipRect};
+use crate::window::render::{RenderWindowDecorations, RenderWindowTitleBarContents, UpdateWindowParentAndRootLinks};
+use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysHorizontalScrollbar, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_AlwaysVerticalScrollbar, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_HorizontalScrollbar, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoBringToFrontOnFocus, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoInputs, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip};
+use crate::window::window_settings::ImGuiWindowSettings;
+use crate::window::window_stack_data::ImGuiWindowStackData;
 use crate::window_settings::ImGuiWindowSettings;
-
-// [Internal] Small optimization to avoid calls to PopClipRect/SetCurrentChannel/PushClipRect in sequences,
-// they would meddle many times with the underlying ImDrawCmd.
-// Instead, we do a preemptive overwrite of clipping rectangle _without_ altering the command-buffer and let
-// the subsequent single call to SetCurrentChannel() does it things once.
-// c_void SetWindowClipRectBeforeSetChannel(*mut ImGuiWindow window, const ImRect& clip_rect)
-pub fn SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, clip_rect: &ImRect) {
-    let mut clip_rect_vec4 = clip_rect.ToVec4();
-    window.ClipRect = clip_rect.ToVec4();
-    window.DrawList._CmdHeader.ClipRect = clip_rect_vec4;
-    window.DrawList._ClipRectStack[window.DrawList._ClipRectStack.len() - 1] =
-        clip_rect_vec4.clone();
-}
-
-// inline ImRect           WindowRectRelToAbs(*mut ImGuiWindow window, const ImRect& r)
-pub fn WindowRectRelToAbs(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
-    let off = window.DC.CursorStartPos.clone();
-    ImRect::from_floats(
-        r.Min.x + off.x,
-        r.Min.y + off.y,
-        r.Max.x + off.x,
-        r.Max.y + off.y,
-    )
-}
-
-// inline ImRect           WindowRectAbsToRel(*mut ImGuiWindow window, const ImRect& r)
-pub fn WindowRectAbsToRel(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
-    let mut off: ImVec2 = window.DC.CursorStartPos.clone();
-    return ImRect::from_floats(
-        r.Min.x - off.x,
-        r.Min.y - off.y,
-        r.Max.x - off.x,
-        r.Max.y - off.y,
-    );
-}
 
 // static c_void SetCurrentWindow(window: *mut ImGuiWindow)
 pub unsafe fn SetCurrentWindow(window: *mut ImGuiWindow) {
@@ -201,327 +180,6 @@ pub fn GetWindowDisplayLayer(window: *mut ImGuiWindow) -> c_int {
     };
 }
 
-// Push a clipping rectangle for both ImGui logic (hit-testing etc.) and low-level ImDrawList rendering.
-// - When using this function it is sane to ensure that float are perfectly rounded to integer values,
-//   so that e.g. (max.x-min.x) in user's render produce correct result.
-// - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
-//   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
-//   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
-// c_void PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, intersect_with_current_clip_rect: bool)
-pub unsafe fn PushClipRect(
-    clip_rect_min: &ImVec2,
-    clip_rect_max: &ImVec2,
-    intersect_with_current_clip_rect: bool,
-) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    window.DrawList.PushClipRect(
-        clip_rect_min,
-        clip_rect_max,
-        intersect_with_current_clip_rect,
-    );
-    window.ClipRect = window.DrawList._ClipRectStack.last().unwrap().clone();
-}
-
-// c_void PopClipRect()
-pub unsafe fn PopClipRect() {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    window.DrawList.PopClipRect();
-    window.ClipRect = window.DrawList._ClipRectStack.last().unwrap().clone();
-}
-
-// static FindFrontMostVisibleChildWindow: *mut ImGuiWindow(window: *mut ImGuiWindow)
-pub fn FindFrontMostVisibleChildWindow(window: *mut ImGuiWindow) -> *mut ImGuiWindow {
-    // for (let n: c_int = window.DC.ChildWindows.Size - 1; n >= 0; n--)
-    for n in window.DC.ChildWindows.len() - 1..0 {
-        if IsWindowActiveAndVisible(window.DC.ChildWindows[n]) {
-            return FindFrontMostVisibleChildWindow(window.DC.ChildWindows[n]);
-        }
-    }
-    return window;
-}
-
-// static c_void RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: u32)
-pub unsafe fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: u32) {
-    if (col & IM_COL32_A_MASK) == 0 {
-        return;
-    }
-
-    let mut viewport: *mut ImGuiViewport = window.Viewport;
-    let viewport_rect: ImRect = viewport.GetMainRect();
-
-    // Draw behind window by moving the draw command at the FRONT of the draw list
-    unsafe {
-        // We've already called AddWindowToDrawData() which called DrawList.ChannelsMerge() on DockNodeHost windows,
-        // and draw list have been trimmed already, hence the explicit recreation of a draw command if missing.
-        // FIXME: This is creating complication, might be simpler if we could inject a drawlist in drawdata at a given position and not attempt to manipulate ImDrawCmd order.
-        let mut draw_list: *mut ImDrawList = window.RootWindowDockTree.DrawList;
-        if draw_list.CmdBuffer.len() == 0 {
-            draw_list.AddDrawCmd();
-        }
-        draw_list.PushClipRect(
-            viewport_rect.Min - ImVec2::new(1.0, 1.0),
-            viewport_rect.Max + ImVec2::new(1.0, 1.0),
-            false,
-        ); // Ensure ImDrawCmd are not merged
-        draw_list.AddRectFilled(
-            &viewport_rect.Min,
-            &viewport_rect.Max,
-            col,
-            0f32,
-            ImDrawFlags_None,
-        );
-        let cmd = draw_list.CmdBuffer.last().unwrap();
-        // IM_ASSERT(cmd.ElemCount == 6);
-        draw_list.CmdBuffer.pop_back();
-        draw_list.CmdBuffer.push_front(cmd);
-        draw_list.PopClipRect();
-        draw_list.AddDrawCmd(); // We need to create a command as CmdBuffer.back().IdxOffset won't be correct if we append to same command.
-    }
-
-    // Draw over sibling docking nodes in a same docking tree
-    if window.Rootwindow.DockIsActive {
-        let mut draw_list: *mut ImDrawList =
-            FindFrontMostVisibleChildWindow(window.RootWindowDockTree).DrawList;
-        if draw_list.CmdBuffer.len() == 0 {
-            draw_list.AddDrawCmd();
-        }
-        draw_list.PushClipRect(&viewport_rect.Min, &viewport_rect.Max, false);
-        RenderRectFilledWithHole(
-            draw_list,
-            window.RootWindowDockTree.Rect(),
-            window.Rootwindow.Rect(),
-            col,
-            0f32,
-        ); // window.RootWindowDockTree->WindowRounding);
-        draw_list.PopClipRect();
-    }
-}
-
-// FindBottomMostVisibleWindowWithinBeginStack: *mut ImGuiWindow(parent_window: *mut ImGuiWindow)
-pub unsafe fn FindBottomMostVisibleWindowWithBeginStack(
-    parent_window: *mut ImGuiWindow,
-) -> *mut ImGuiWindow {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut bottom_most_visible_window: *mut ImGuiWindow = parent_window;
-    // for (let i: c_int = FindWindowDisplayIndex(parent_window); i >= 0; i--)
-    for i in FindWindowDisplayIndex(parent_window)..0 {
-        let mut window: *mut ImGuiWindow = g.Windows[i];
-        if window.Flags & ImGuiWindowFlags_ChildWindow {
-            continue;
-        }
-        if !IsWindowWithinBeginStackOf(window, parent_window) {
-            break;
-        }
-        if IsWindowActiveAndVisible(window)
-            && GetWindowDisplayLayer(window) <= GetWindowDisplayLayer(parent_window)
-        {
-            bottom_most_visible_window = window;
-        }
-    }
-    return bottom_most_visible_window;
-}
-
-pub unsafe fn RenderDimmedBackgrounds() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut modal_window: *mut ImGuiWindow = GetTopMostAndVisiblePopupModal();
-    if g.DimBgRatio <= 0f32 && g.NavWindowingHighlightAlpha <= 0f32 {
-        return;
-    }
-    let dim_bg_for_modal: bool = (modal_window != null_mut());
-    let dim_bg_for_window_list: bool =
-        (g.NavWindowingTargetAnim != null_mut() && g.NavWindowingTargetAnim.Active);
-    if !dim_bg_for_modal && !dim_bg_for_window_list {
-        return;
-    }
-
-    let mut viewports_already_dimmed: [*mut ImGuiViewport; 2] = [null_mut(), null_mut()];
-    if dim_bg_for_modal {
-        // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
-        let mut dim_behind_window: *mut ImGuiWindow =
-            FindBottomMostVisibleWindowWithinBeginStack(modal_window);
-        RenderDimmedBackgroundBehindWindow(
-            dim_behind_window,
-            GetColorU32(ImGuiCol_ModalWindowDimBg, g.DimBgRatio),
-        );
-        viewports_already_dimmed[0] = modal_window.Viewport;
-    } else if dim_bg_for_window_list {
-        // Draw dimming behind CTRL+Tab target window and behind CTRL+Tab UI window
-        RenderDimmedBackgroundBehindWindow(
-            g.NavWindowingTargetAnim,
-            GetColorU32(ImGuiCol_NavWindowingDimBg, g.DimBgRatio),
-        );
-        if g.NavWindowingListWindow != null_mut()
-            && g.NavWindowingListwindow.Viewport
-            && g.NavWindowingListwindow.Viewport != g.NavWindowingTargetAnim.Viewport
-        {
-            RenderDimmedBackgroundBehindWindow(
-                g.NavWindowingListWindow,
-                GetColorU32(ImGuiCol_NavWindowingDimBg, g.DimBgRatio),
-            );
-        }
-        viewports_already_dimmed[0] = g.NavWindowingTargetAnim.Viewport;
-        viewports_already_dimmed[1] = if g.NavWindowingListWindow {
-            g.NavWindowingListwindow.Viewport
-        } else {
-            null_mut()
-        };
-
-        // Draw border around CTRL+Tab target window
-        let mut window: *mut ImGuiWindow = g.NavWindowingTargetAnim;
-        ImGuiViewport * viewport = window.Viewport;
-        let distance: c_float = g.FontSize;
-        let mut bb: ImRect = window.Rect();
-        bb.Expand(distance);
-        if bb.GetWidth() >= viewport.Size.x && bb.GetHeight() >= viewport.Size.y {
-            bb.Expand(-distance - 1f32);
-        } // If a window fits the entire viewport, adjust its highlight inward
-        if window.DrawList.CmdBuffer.len() == 0 {
-            window.DrawList.AddDrawCmd();
-        }
-        window
-            .DrawList
-            .PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, false);
-        window.DrawList.AddRect(
-            &bb.Min,
-            &bb.Max,
-            GetColorU32(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha),
-            window.WindowRounding,
-            0,
-            3.00f32,
-        );
-        window.DrawList.PopClipRect();
-    }
-
-    // Draw dimming background on _other_ viewports than the ones our windows are in
-    // for (let viewport_n: c_int = 0; viewport_n < g.Viewports.Size; viewport_n++)
-    for viewport_n in 0..g.Viewports.len() {
-        let mut viewport: *mut ImGuiViewport = g.Viewports[viewport_n];
-        if viewport == viewports_already_dimmed[0] || viewport == viewports_already_dimmed[1] {
-            continue;
-        }
-        if modal_window && viewport.Window && IsWindowAbove(viewport.Window, modal_window) {
-            continue;
-        }
-        let mut draw_list: *mut ImDrawList = GetForegroundDrawList(viewport);
-        let dim_bg_col = GetColorU32(
-            if dim_bg_for_modal {
-                ImGuiCol_ModalWindowDimBg
-            } else {
-                ImGuiCol_NavWindowingDimBg
-            },
-            g.DimBgRatio,
-        );
-        draw_list.AddRectFilled(
-            &viewport.Pos,
-            viewport.Pos.clone() + viewport.Size.clone(),
-            dim_bg_col,
-            0f32,
-            ImDrawFlags_None,
-        );
-    }
-}
-
-// Find window given position, search front-to-back
-// FIXME: Note that we have an inconsequential lag here: OuterRectClipped is updated in Begin(), so windows moved programmatically
-// with SetWindowPos() and not SetNextWindowPos() will have that rectangle lagging by a frame at the time FindHoveredWindow() is
-// called, aka before the next Begin(). Moving window isn't affected.
-// static c_void FindHoveredWindow()
-pub unsafe fn FindHoveredWindows() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-
-    // Special handling for the window being moved: Ignore the mouse viewport check (because it may reset/lose its viewport during the undocking frame)
-    let mut moving_window_viewport: *mut ImGuiViewport = if !(g.MovingWindow.is_null()) {
-        g.Movingwindow.Viewport
-    } else {
-        null_mut()
-    };
-    if g.MovingWindow {
-        g.Movingwindow.Viewport = g.MouseViewport;
-    }
-
-    let mut hovered_window: *mut ImGuiWindow = null_mut();
-    let mut hovered_window_ignoring_moving_window: *mut ImGuiWindow = null_mut();
-    if g.MovingWindow && !(g.Movingwindow.Flags & ImGuiWindowFlags_NoMouseInputs) {
-        hovered_window = g.MovingWindow;
-    }
-
-    let padding_regular: ImVec2 = g.Style.TouchExtraPadding.clone();
-    let padding_for_resize: ImVec2 = if g.IO.ConfigWindowsResizeFromEdges {
-        g.WindowsHoverPadding.clone()
-    } else {
-        padding_regular
-    };
-    // for (let i: c_int = g.Windows.Size - 1; i >= 0; i--)
-    for i in g.Windows.len() - 1..0 {
-        let mut window: *mut ImGuiWindow = g.Windows[i];
-        IM_MSVC_WARNING_SUPPRESS(28182); // [Static Analyzer] Dereferencing NULL pointer.
-        if !window.Active || window.Hidden {
-            continue;
-        }
-        if window.Flags & ImGuiWindowFlags_NoMouseInputs {
-            continue;
-        }
-        // IM_ASSERT(window.Viewport);
-        if window.Viewport != g.MouseViewport {
-            continue;
-        }
-
-        // Using the clipped AABB, a child window will typically be clipped by its parent (not always)
-        let mut bb: ImRect = ImRect::from_vec4(window.OuterRectClipped.into());
-        if window.Flags
-            & (ImGuiWindowFlags_ChildWindow
-                | ImGuiWindowFlags_NoResize
-                | ImGuiWindowFlags_AlwaysAutoResize)
-        {
-            bb.Expand2(&padding_regular.clone());
-        } else {
-            bb.Expand2(&padding_for_resize);
-        }
-        if !bb.Contains(&g.IO.MousePos) {
-            continue;
-        }
-
-        // Support for one rectangular hole in any given window
-        // FIXME: Consider generalizing hit-testing override (with more generic data, callback, etc.) (#1512)
-        if window.HitTestHoleSize.x != 0 {
-            let hole_pos = ImVec2::new(
-                window.Pos.x + window.HitTestHoleOffset.x,
-                window.Pos.y + window.HitTestHoleOffset.y,
-            );
-            let hole_size = ImVec2::new(
-                window.HitTestHoleSize.x as c_float,
-                window.HitTestHoleSize.y as c_float,
-            );
-            if ImRect(hole_pos.clone(), hole_pos.clone() + hole_size)
-                .Contains(g.IO.MousePos.clone())
-            {
-                continue;
-            }
-        }
-
-        if hovered_window == null_mut() {
-            hovered_window = window;
-        }
-        IM_MSVC_WARNING_SUPPRESS(28182); // [Static Analyzer] Dereferencing NULL pointer.
-        if hovered_window_ignoring_moving_window == null_mut()
-            && (g.MovingWindow.is_null()
-                || window.RootWindowDockTree != g.Movingwindow.RootWindowDockTree)
-        {
-            hovered_window_ignoring_moving_window = window;
-        }
-        if hovered_window && hovered_window_ignoring_moving_window {
-            break;
-        }
-    }
-
-    g.HoveredWindow = hovered_window;
-    g.HoveredWindowUnderMovingWindow = hovered_window_ignoring_moving_window;
-
-    if g.MovingWindow {
-        g.Movingwindow.Viewport = moving_window_viewport;
-    }
-}
-
 pub unsafe fn SetNextWindowSize(size: &ImVec2, cond: ImGuiCond) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
@@ -555,18 +213,6 @@ pub fn SetWindowConditionAllowFlags(window: *mut ImGuiWindow, flags: ImGuiCond, 
     } else {
         window.SetWindowDockAllowFlags & !flags
     };
-}
-
-pub unsafe fn FindWindowByID(id: ImGuiID) -> *mut ImGuiWindow {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.WindowsById.GetVoidPtr(id) as *mut ImGuiWindow;
-}
-
-
-pub unsafe fn FindWindowByName(name: *const c_char) ->  *mut ImGuiWindow
-{
-    let mut id: ImGuiID =  ImHashStr(name, 0, 0);
-    return FindWindowByID(id);
 }
 
 
@@ -671,16 +317,6 @@ pub unsafe fn CreateNewWindow(name: *const c_char, flags: ImGuiWindowFlags) -> *
     return window;
 }
 
-pub fn GetWindowForTitleDisplay(window: *mut ImGuiWindow) -> *mut ImGuiWindow
-{
-    return if window.DockNodeAsHost { window.DockNodeAsHost.VisibleWindow } else { window };
-}
-
-pub fn GetWindowForTitleAndMenuHeight(window: *mut ImGuiWindow) -> *mut ImGuiWindow
-{
-    return if is_not_null(window.DockNodeAsHost) && is_not_null(window.DockNodeAsHost.VisibleWindow) { window.DockNodeAsHost.VisibleWindow } else { window };
-}
-
 
 pub unsafe fn CalcWindowSizeAfterConstraint(window: *mut ImGuiWindow, size_desired: &ImVec2) -> ImVec2
 {
@@ -709,10 +345,10 @@ pub unsafe fn CalcWindowSizeAfterConstraint(window: *mut ImGuiWindow, size_desir
     // Minimum size
     if !(window.Flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_AlwaysAutoResize))
     {
-        let mut window_for_height: *mut ImGuiWindow =  GetWindowForTitleAndMenuHeight(window);
+        let mut window_for_height: *mut ImGuiWindow =  find::GetWindowForTitleAndMenuHeight(window);
         let decoration_up_height: c_float =  window_for_height.TitleBarHeight() + window_for_height.MenuBarHeight();
         new_size = ImMax(new_size, g.Style.WindowMinSize);
-        new_size.y = ImMax(new_size.y, decoration_up_height + ImMax(0f32, g.Style.WindowRounding - 1f32)); // Reduce artifacts with very small windows
+        new_size.y = ImMax(new_size.y, decoration_up_height + ImMax(0.0, g.Style.WindowRounding - 1.0)); // Reduce artifacts with very small windows
     }
     return new_size;
 }
@@ -722,8 +358,8 @@ pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;
     let decoration_up_height: c_float = window.TitleBarHeight() + window.MenuBarHeight();
-    let size_pad: ImVec2 = window.WindowPadding * 2.0f32;
-    let size_desired: ImVec2 = size_contents + size_pad + ImVec2::new(0f32, decoration_up_height);
+    let size_pad: ImVec2 = window.WindowPadding * 2.0.0;
+    let size_desired: ImVec2 = size_contents + size_pad + ImVec2::new(0.0, decoration_up_height);
     if window.Flags & ImGuiWindowFlags_Tooltip {
         // Tooltip always resize
         return size_desired;
@@ -909,8 +545,8 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         {
             // Resize from any of the four corners
             // We don't use an incremental MouseDelta but rather compute an absolute target size based on mouse position
-            let clamp_min: ImVec2 = ImVec2::new(if def.CornerPosN.x == 1f32 { visibility_rect.Min.x } else { -f32::MAX }, if def.CornerPosN.y == 1f32 { visibility_rect.Min.y } else { -f32::MAX });
-            let clamp_max: ImVec2 = ImVec2::new(if def.CornerPosN.x == 0f32 { visibility_rect.Max.x } else { f32::MAX }, if def.CornerPosN.y == 0f32 { visibility_rect.Max.y } else { f32::MAX });
+            let clamp_min: ImVec2 = ImVec2::new(if def.CornerPosN.x == 1.0 { visibility_rect.Min.x } else { -f32::MAX }, if def.CornerPosN.y == 1.0 { visibility_rect.Min.y } else { -f32::MAX });
+            let clamp_max: ImVec2 = ImVec2::new(if def.CornerPosN.x == 0.0 { visibility_rect.Max.x } else { f32::MAX }, if def.CornerPosN.y == 0.0 { visibility_rect.Max.y } else { f32::MAX });
             let mut corner_target: ImVec2 = g.IO.MousePos - g.ActiveIdClickOffset + ImLerp(def.InnerDir * grip_hover_outer_size, def.InnerDir * -grip_hover_inner_size, def.CornerPosN); // Corner of the window corresponding to our corner grip
             corner_target = ImClamp(corner_target, clamp_min, clamp_max);
             CalcResizePosSizeFromAnyCorner(window, &corner_target, def.CornerPosN, &mut pos_target, &mut size_target);
@@ -973,7 +609,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         if g.NavInputSource == ImGuiInputSource_Gamepad {
             nav_resize_dir = GetKeyVector2d(ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadUp, ImGuiKey_GamepadDpadDown);
         }
-        if nav_resize_dir.x != 0f32 || nav_resize_dir.y != 0f32
+        if nav_resize_dir.x != 0.0 || nav_resize_dir.y != 0.0
         {
             let NAV_RESIZE_SPEED: c_float =  600f32;
             let resize_step: c_float =  NAV_RESIZE_SPEED * g.IO.DeltaTime * ImMin(g.IO.DisplayFramebufferScale.x, g.IO.DisplayFramebufferScale.y);
@@ -983,7 +619,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
             g.NavDisableMouseHover = true;
             resize_grip_col[0] = GetColorU32(ImGuiCol_ResizeGripActive, 0.0);
             let accum_floored: ImVec2 = ImFloor(g.NavWindowingAccumDeltaSize);
-            if accum_floored.x != 0f32 || accum_floored.y != 0f32
+            if accum_floored.x != 0.0 || accum_floored.y != 0.0
             {
                 // FIXME-NAV: Should store and accumulate into a separate size buffer to handle sizing constraints properly, right now a constraint will make us stuck.
                 size_target = CalcWindowSizeAfterConstraint(window, window.SizeFull + accum_floored);
@@ -1010,204 +646,898 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
 
 
 
-pub unsafe fn ClampWindowRect(window: *mut ImGuiWindow, visibility_rect: &ImRect)
+// Push a new Dear ImGui window to add widgets to.
+// - A default window called "Debug" is automatically stacked at the beginning of every frame so you can use widgets without explicitly calling a Begin/End pair.
+// - Begin/End can be called multiple times during the frame with the same window name to append content.
+// - The window name is used as a unique identifier to preserve window information across frames (and save rudimentary information to the .ini file).
+//   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
+// - Return false when window is collapsed, so you can early out in your code. You always need to call End() even if false is returned.
+// - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
+pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWindowFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut size_for_clamping: ImVec2 = window.Size;
-    if g.IO.ConfigWindowsMoveFromTitleBarOnly && (flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) || is_not_null(window.DockNodeAsHost)) {
-        size_for_clamping.y = GetFrameHeight();
-    } // Not using window.TitleBarHeight() as DockNodeAsHost will report 0f32 here.
-    window.Pos = ImClamp(window.Pos, visibility_rect.Min - size_for_clamping, visibility_rect.Max);
-}
+    let setyle = &mut g.Style;
+    // IM_ASSERT(name != NULL && name[0] != '\0');     // Window name required
+    // IM_ASSERT(g.WithinFrameScope);                  // Forgot to call NewFrame()
+    // IM_ASSERT(g.FrameCountEnded != g.FrameCount);   // Called Render() or EndFrame() and haven't called NewFrame() again yet
 
-
-
-pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let rounding: c_float =  window.WindowRounding;
-    let border_size: c_float =  window.WindowBorderSize;
-    if border_size > 0f32 && flag_clear(window.Flags, ImGuiWindowFlags_NoBackground) {
-        window.DrawList.AddRect(&window.Pos, window.Pos + window.Size, GetColorU32(ImGuiCol_Border, 0.0), rounding, 0, border_size);
+    // Find or create
+    let mut window: *mut ImGuiWindow =  FindWindowByName(name);
+    let window_just_created: bool = (window == null_mut());
+    if (window_just_created) {
+        window = CreateNewWindow(name, flags);
     }
 
-    let border_held = window.ResizeBorderHeld;
-    if border_held != -1
-    {
-        let def = resize_border_def[border_held];
-        let border_r: ImRect =  GetResizeBorderRect(window, border_held as c_int, rounding, 0f32);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::new(0.5f32, 0.5f32) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::new(0.5f32, 0.5f32) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
-        window.DrawList.PathStroke(GetColorU32(ImGuiCol_SeparatorActive, 0.0), 0, ImMax(2.0f32, border_size)); // Thicker than usual
+    // Automatically disable manual moving/resizing when NoInputs is set
+    if (flags & ImGuiWindowFlags_NoInputs) == ImGuiWindowFlags_NoInputs {
+        flags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
     }
-    if g.Style.FrameBorderSize > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
+
+    if flags & ImGuiWindowFlags_NavFlattened {}
+        // IM_ASSERT(flags & ImGuiWindowFlags_ChildWindow);
+
+    let current_frame: c_int = g.FrameCount;
+    let first_begin_of_the_frame: bool = (window.LastFrameActive != current_frame);
+    window.IsFallbackWindow = (g.CurrentWindowStack.Size == 0 && g.WithinFrameScopeWithImplicitWindow);
+
+    // Update the Appearing flag (note: the BeginDocked() path may also set this to true later)
+    let mut window_just_activated_by_user: bool =  (window.LastFrameActive < current_frame - 1); // Not using !WasActive because the implicit "Debug" window would always toggle off->on
+    if flags & ImGuiWindowFlags_Popup
     {
-        let y: c_float =  window.Pos.y + window.TitleBarHeight() - 1;
-        window.DrawList.AddLine(&ImVec2::new(window.Pos.x + border_size, y), &ImVec2::new(window.Pos.x + window.Size.x - border_size, y), GetColorU32(ImGuiCol_Border, 0.0), g.Style.FrameBorderSize);
+        ImGuiPopupData& popup_ref = g.OpenPopupStack[g.BeginPopupStack.Size];
+        window_just_activated_by_user |= (window.PopupId != popup_ref.PopupId); // We recycle popups so treat window as activated if popup id changed
+        window_just_activated_by_user |= (window != popup_ref.Window);
     }
-}
 
-
-
-// Draw background and borders
-// Draw and handle scrollbars
-pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: &ImRect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, resize_grip_count: c_int, resize_grip_col: [u32;4],resize_grip_draw_size: c_float)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let style = &mut g.Style;
-    let flags: ImGuiWindowFlags = window.Flags;
-
-    // Ensure that ScrollBar doesn't read last frame's SkipItems
-    // IM_ASSERT(window.BeginCount == 0);
-    window.SkipItems = false;
-
-    // Draw window + handle manual resize
-    // As we highlight the title bar when want_focus is set, multiple reappearing windows will have have their title bar highlighted on their reappearing frame.
-    let window_rounding: c_float =  window.WindowRounding;
-    let window_border_size: c_float =  window.WindowBorderSize;
-    if window.Collapsed
+    // Update Flags, LastFrameActive, BeginOrderXXX fields
+    let window_was_appearing: bool = window.Appearing;
+    if first_begin_of_the_frame
     {
-        // Title bar only
-        let backup_border_size: c_float =  style.FrameBorderSize;
-        g.Style.FrameBorderSize = window.WindowBorderSize;
-        title_bar_col: u32 = GetColorU32(if title_bar_is_highlight && !g.NavDisableHighlight { ImGuiCol_TitleBgActive } else { ImGuiCol_TitleBgCollapsed }, 0.0);
-        RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding);
-        g.Style.FrameBorderSize = backup_border_size;
+        UpdateWindowInFocusOrderList(window, window_just_created, flags);
+        window.Appearing = window_just_activated_by_user;
+        if window.Appearing {
+            SetWindowConditionAllowFlags(window, ImGuiCond_Appearing, true);
+        }
+        window.FlagsPreviousFrame = window.Flags;
+        window.Flags = flags;
+        window.LastFrameActive = current_frame;
+        window.LastTimeActive = g.Time as c_float;
+        window.BeginOrderWithinParent = 0;
+        window.BeginOrderWithinContext = (g.WindowsActiveCount) as c_short;
+        g.WindowsActiveCount += 1;
     }
     else
     {
-        // Window background
-        if flag_clear(flags, ImGuiWindowFlags_NoBackground)
+        flags = window.Flags;
+    }
+
+    // Docking
+    // (NB: during the frame dock nodes are created, it is possible that (window.DockIsActive == false) even though (window.DockNode->Windows.Size > 1)
+    // IM_ASSERT(window.DockNode == NULL || window.DockNodeAsHost == NULL); // Cannot be both
+    if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasDock {
+        SetWindowDock(window, g.NextWindowData.DockId, g.NextWindowData.DockCond);
+    }
+    if first_begin_of_the_frame
+    {
+        let mut has_dock_node: bool =  (window.DockId != 0 || window.DockNode != null_mut());
+        let mut new_auto_dock_node: bool =  !has_dock_node && GetWindowAlwaysWantOwnTabBar(window);
+        let mut dock_node_was_visible: bool =  window.DockNodeIsVisible;
+        let mut dock_tab_was_visible: bool =  window.DockTabIsVisible;
+        if has_dock_node || new_auto_dock_node
         {
-            let mut is_docking_transparent_payload: bool =  false;
-            if g.DragDropActive && (g.FrameCount - g.DragDropAcceptFrameCount) <= 1 && g.IO.ConfigDockingTransparentPayload {
-                if g.DragDropPayload.IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW) &&
-                g.DragDropPayload.Data == window{
-                    is_docking_transparent_payload = true;
-                }
+            BeginDocked(window, p_open);
+            flags = window.Flags;
+            if window.DockIsActive
+            {
+                // IM_ASSERT(window.DockNode != NULL);
+                g.NextWindowData.Flags &= !ImGuiNextWindowDataFlags_HasSizeConstraint; // Docking currently override constraints
             }
 
-            bg_col: u32 = GetColorU32(GetWindowBgColorIdx(window), 0.0);
-            if window.ViewportOwned
+            // Amend the Appearing flag
+            if window.DockTabIsVisible && !dock_tab_was_visible && dock_node_was_visible && !window.Appearing && !window_was_appearing
             {
-                // No alpha
-                bg_col = (bg_col | IM_COL32_A_MASK);
-                if is_docking_transparent_payload {
-                    window.Viewport.Alpha *= DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
-                }
-            }
-            else
-            {
-                // Adjust alpha. For docking
-                let mut override_alpha: bool =  false;
-                let mut alpha: c_float =  1f32;
-                if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasBgAlpha
-                {
-                    alpha = g.NextWindowData.BgAlphaVal;
-                    override_alpha = true;
-                }
-                if is_docking_transparent_payload
-                {
-                    alpha *= DOCKING_TRANSPARENT_PAYLOAD_ALPHA; // FIXME-DOCK: Should that be an override?
-                    override_alpha = true;
-                }
-                if override_alpha {
-                    bg_col = (bg_col & !IM_COL32_A_MASK) | (IM_F32_TO_INT8_SAT(alpha) << IM_COL32_A_SHIFT);
-                }
-            }
-
-            // Render, for docked windows and host windows we ensure bg goes before decorations
-            if window.DockIsActive {
-                window.DockNode.LastBgColor = bg_col;
-            }
-            let mut  bg_draw_list: *mut ImDrawList =  if window.DockIsActive { window.DockNode.Hostwindow.DrawList } else { window.DrawList };
-            if window.DockIsActive || flag_set(flags, ImGuiWindowFlags_DockNodeHost) {
-                bg_draw_list.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_BG);
-            }
-            bg_draw_list.AddRectFilled(window.Pos + ImVec2::new(0.0, window.TitleBarHeight()), window.Pos + window.Size, bg_col, window_rounding, if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { 0 } else { ImDrawFlags_RoundCornersBottom });
-            if window.DockIsActive || flag_set(flags, ImGuiWindowFlags_DockNodeHost) {
-                bg_draw_list.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_FG);
+                window.Appearing = true;
+                SetWindowConditionAllowFlags(window, ImGuiCond_Appearing, true);
             }
         }
+        else
+        {
+            window.DockIsActive = false;
+            window.DockNodeIsVisible = false;
+            window.DockTabIsVisible = false;
+        }
+    }
+
+    // Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
+    let mut parent_window_in_stack: *mut ImGuiWindow =  if (window.DockIsActive && is_not_null(window.DockNode.HostWindow)) { window.DockNode.HostWindow } else {
+        if g.CurrentWindowStack.empty() {
+            null_mut()
+        } else { g.CurrentWindowStack.last().unwrap().Window }
+    };
+    let mut parent_window: *mut ImGuiWindow =  if first_begin_of_the_frame {
+        if flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Popup) {
+            parent_window_in_stack
+        } else { null_mut() }
+    } else { window.ParentWindow };
+    // IM_ASSERT(parent_window != NULL || !(flags & ImGuiWindowFlags_ChildWindow));
+
+    // We allow window memory to be compacted so recreate the base stack when needed.
+    if window.IDStack.Size == 0 {
+        window.IDStack.push(window.ID);
+    }
+
+    // Add to stack
+    // We intentionally set g.CurrentWindow to NULL to prevent usage until when the viewport is set, then will call SetCurrentWindow()
+    g.CurrentWindow = window;
+    let mut window_stack_data = ImGuiWindowStackData::default();
+    window_stack_data.Window = window;
+    window_stack_data.ParentLastItemDataBackup = g.LastItemData.clone();
+    window_stack_data.StackSizesOnBegin.SetToCurrentState();
+    g.CurrentWindowStack.push(window_stack_data);
+    g.CurrentWindow= null_mut();
+    if flags & ImGuiWindowFlags_ChildMenu {
+        g.BeginMenuCount += 1;
+    }
+
+    if flags & ImGuiWindowFlags_Popup
+    {
+        ImGuiPopupData& popup_ref = g.OpenPopupStack[g.BeginPopupStack.Size];
+        popup_ref.Window = window;
+        popup_ref.ParentNavLayer = parent_window_in_stack.DC.NavLayerCurrent;
+        g.BeginPopupStack.push(popup_re0f32);
+        window.PopupId = popup_ref.PopupId;
+    }
+
+    // Update ->RootWindow and others pointers (before any possible call to FocusWindow)
+    if first_begin_of_the_frame
+    {
+        UpdateWindowParentAndRootLinks(window, flags, parent_window);
+        window.ParentWindowInBeginStack = parent_window_in_stack;
+    }
+
+    // Process SetNextWindow***() calls
+    // (FIXME: Consider splitting the HasXXX flags into X/Y components
+    let mut window_pos_set_by_api: bool =  false;
+    let mut window_size_x_set_by_api: bool =  false;
+    let mut window_size_y_set_by_api = false;
+    if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos
+    {
+        window_pos_set_by_api = (window.SetWindowPosAllowFlags & g.NextWindowData.PosCond) != 0;
+        if window_pos_set_by_api && ImLengthSqr(g.NextWindowData.PosPivotVal) > 0.00001
+        {
+            // May be processed on the next frame if this is our first frame and we are measuring size
+            // FIXME: Look into removing the branch so everything can go through this same code path for consistency.
+            window.SetWindowPosVal = g.NextWindowData.PosVal;
+            window.SetWindowPosPivot = g.NextWindowData.PosPivotVal;
+            window.SetWindowPosAllowFlags &= !(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing);
+        }
+        else
+        {
+            SetWindowPos(window, g.NextWindowData.PosVal, g.NextWindowData.PosCond);
+        }
+    }
+    if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize
+    {
+        window_size_x_set_by_api = (window.SetWindowSizeAllowFlags & g.NextWindowData.SizeCond) != 0 && (g.NextWindowData.SizeVal.x > 0.0);
+        window_size_y_set_by_api = (window.SetWindowSizeAllowFlags & g.NextWindowData.SizeCond) != 0 && (g.NextWindowData.SizeVal.y > 0.0);
+        SetWindowSize(window, g.NextWindowData.SizeVal, g.NextWindowData.SizeCond);
+    }
+    if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasScroll
+    {
+        if (g.NextWindowData.ScrollVal.x >= 0.0)
+        {
+            window.ScrollTarget.x = g.NextWindowData.ScrollVal.x;
+            window.ScrollTargetCenterRatio.x = 0.0;
+        }
+        if (g.NextWindowData.ScrollVal.y >= 0.0)
+        {
+            window.ScrollTarget.y = g.NextWindowData.ScrollVal.y;
+            window.ScrollTargetCenterRatio.y = 0.0;
+        }
+    }
+    if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasContentSize) {
+        window.ContentSizeExplicit = g.NextWindowData.ContentSizeVal;
+    }
+    else if (first_begin_of_the_frame) {
+    window.ContentSizeExplicit = ImVec2::new(0.0, 0.0);
+}
+    if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasWindowClass) {
+        window.WindowClass = g.NextWindowData.WindowClass;
+    }
+    if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasCollapsed) {
+        SetWindowCollapsed(window, g.NextWindowData.CollapsedVal, g.NextWindowData.CollapsedCond);
+    }
+    if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasFocus) {
+        FocusWindow(window);
+    }
+    if (window.Appearing) {
+        SetWindowConditionAllowFlags(window, ImGuiCond_Appearing, false);
+    }
+
+    // When reusing window again multiple times a frame, just append content (don't need to setup again)
+    if (first_begin_of_the_frame)
+    {
+        // Initialize
+        let window_is_child_tooltip: bool = (flags & ImGuiWindowFlags_ChildWindow) && (flags & ImGuiWindowFlags_Tooltip); // FIXME-WIP: Undocumented behavior of Child+Tooltip for pinned tooltip (#1345)
+        let window_just_appearing_after_hidden_for_resize: bool = (window.HiddenFramesCannotSkipItems > 0);
+        window.Active = true;
+        window.HasCloseButton = (p_open != null_mut());
+        window.ClipRect = ImVec4(-f32::MAX, -f32::MAX, f32::MAX, f32::MAX);
+        window.IDStack.resize(1);
+        window.DrawList._ResetForNewFrame();
+        window.DC.CurrentTableIdx = -1;
+        if (flags & ImGuiWindowFlags_DockNodeHost)
+        {
+            window.DrawList.ChannelsSplit(2);
+            window.DrawList.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_FG); // Render decorations on channel 1 as we will render the backgrounds manually later
+        }
+
+        // Restore buffer capacity when woken from a compacted state, to avoid
+        if window.MemoryCompacted {
+            GcAwakeTransientWindowBuffers(window);
+        }
+
+        // Update stored window name when it changes (which can _only_ happen with the "###" operator, so the ID would stay unchanged).
+        // The title bar always display the 'name' parameter, so we only update the string storage if it needs to be visible to the end-user elsewhere.
+        let mut window_title_visible_elsewhere: bool =  false;
+        if (is_not_null(window.Viewport) && window.Viewport.Window == window) || (window.DockIsActive) {
+            window_title_visible_elsewhere = true;
+        }
+        else if g.NavWindowingListWindow != null_mut() && (window.Flags & ImGuiWindowFlags_NoNavFocus) == 0 {  // Window titles visible when using CTRL+TAB
+            window_title_visible_elsewhere = true;
+        }
+        if window_title_visible_elsewhere && !window_just_created && strcmp(name, window.Name) != 0
+        {
+            buf_len: size_t = window.NameBufLen;
+            window.Name = ImStrdupcpy(window.Name, &mut buf_len, name);
+            window.NameBufLen = buf_len;
+        }
+
+        // UPDATE CONTENTS SIZE, UPDATE HIDDEN STATUS
+
+        // Update contents size from last frame for auto-fitting (or use explicit size)
+        CalcWindowContentSizes(window, &window.ContentSize, &window.ContentSizeIdeal);
+
+        // FIXME: These flags are decremented before they are used. This means that in order to have these fields produce their intended behaviors
+        // for one frame we must set them to at least 2, which is counter-intuitive. HiddenFramesCannotSkipItems is a more complicated case because
+        // it has a single usage before this code block and may be set below before it is finally checked.
+        if window.HiddenFramesCanSkipItems > 0 {
+            window.HiddenFramesCanSkipItems -= 1;
+        }
+        if window.HiddenFramesCannotSkipItems > 0 {
+            window.HiddenFramesCannotSkipItems -= 1;
+        }
+        if window.HiddenFramesForRenderOnly > 0 {
+            window.HiddenFramesForRenderOnly -= 1;
+        }
+
+        // Hide new windows for one frame until they calculate their size
+        if (window_just_created && (!window_size_x_set_by_api || !window_size_y_set_by_api))
+            window.HiddenFramesCannotSkipItems = 1;
+
+        // Hide popup/tooltip window when re-opening while we measure size (because we recycle the windows)
+        // We reset Size/ContentSize for reappearing popups/tooltips early in this function, so further code won't be tempted to use the old size.
+        if window_just_activated_by_user && (flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_Tooltip)) != 0
+        {
+            window.HiddenFramesCannotSkipItems = 1;
+            if flags & ImGuiWindowFlags_AlwaysAutoResize
+            {
+                if !window_size_x_set_by_api {
+                    window.Size.x = 0.0; window.SizeFull.x = 0.0;
+                }
+                if !window_size_y_set_by_api {
+                    window.Size.y = 0.0; window.SizeFull.y = 0.0;
+                }
+                window.ContentSize = ImVec2::default();
+                window.ContentSizeIdeal = ImVec2::default();
+            }
+        }
+
+        // SELECT VIEWPORT
+        // We need to do this before using any style/font sizes, as viewport with a different DPI may affect font sizes.
+
+        WindowSelectViewport(window);
+        SetCurrentViewport(window, window.Viewport);
+        window.FontDpiScale = (g.IO.ConfigFlags & ImGuiConfigFlags_DpiEnableScaleFonts) ? window.Viewport.DpiScale : 1.0;
+        SetCurrentWindow(window);
+        flags = window.Flags;
+
+        // LOCK BORDER SIZE AND PADDING FOR THE FRAME (so that altering them doesn't cause inconsistencies)
+        // We read Style data after the call to UpdateSelectWindowViewport() which might be swapping the style.
+
+        if (flags & ImGuiWindowFlags_ChildWindow) {
+            window.WindowBorderSize = style.ChildBorderSize;
+        }
+        else {
+            window.WindowBorderSize = ((flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_Tooltip)) && !(flags & ImGuiWindowFlags_Modal))?
+            style.PopupBorderSize: style.WindowBorderSize;
+        }
+        if !window.DockIsActive && flag_set(flags, ImGuiWindowFlags_ChildWindow) && flag_clear(flags, (ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_Popup)) && window.WindowBorderSize == 0.0 {
+            window.WindowPadding = ImVec2::new(0.0, if flag_set(flags, ImGuiWindowFlags_MenuBar) { style.WindowPadding.y }else { 0.0 });
+        }
+        else {
+            window.WindowPadding = style.WindowPadding;
+        }
+
+        // Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
+        window.DC.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.ItemSpacing.x), g.NextWindowData.MenuBarOffsetMinVal.x);
+        window.DC.MenuBarOffset.y = g.NextWindowData.MenuBarOffsetMinVal.y;
+
+        // Collapse window by double-clicking on title bar
+        // At this point we don't have a clipping rectangle setup yet, so we can use the title bar area for hit detection and drawing
+        if !(flags & ImGuiWindowFlags_NoTitleBar) && !(flags & ImGuiWindowFlags_NoCollapse) && !window.DockIsActive
+        {
+            // We don't use a regular button+id to test for double-click on title bar (mostly due to legacy reason, could be fixed), so verify that we don't have items over the title bar.
+            let title_bar_rect: ImRect =  window.TitleBarRect();
+            if g.HoveredWindow == window && g.HoveredId == 0 && g.HoveredIdPreviousFrame == 0 && IsMouseHoveringRect(&title_bar_rect.Min, &title_bar_rect.Max, false) && g.IO.MouseClickedCount[0] == 2 {
+                window.WantCollapseToggle = true;
+            }
+            if window.WantCollapseToggle
+            {
+                window.Collapsed = !window.Collapsed;
+                MarkIniSettingsDirty(window);
+            }
+        }
+        else
+        {
+            window.Collapsed = false;
+        }
+        window.WantCollapseToggle = false;
+
+        // SIZE
+
+        // Calculate auto-fit size, handle automatic resize
+        let size_auto_fit: ImVec2 = CalcWindowAutoFitSize(window, &window.ContentSizeIdeal);
+        let mut use_current_size_for_scrollbar_x: bool =  window_just_created;
+        let mut use_current_size_for_scrollbar_y: bool =  window_just_created;
+        if flag_set(flags, ImGuiWindowFlags_AlwaysAutoResize) && !window.Collapsed
+        {
+            // Using SetNextWindowSize() overrides ImGuiWindowFlags_AlwaysAutoResize, so it can be used on tooltips/popups, etc.
+            if (!window_size_x_set_by_api)
+            {
+                window.SizeFull.x = size_auto_fit.x;
+                use_current_size_for_scrollbar_x = true;
+            }
+            if (!window_size_y_set_by_api)
+            {
+                window.SizeFull.y = size_auto_fit.y;
+                use_current_size_for_scrollbar_y = true;
+            }
+        }
+        else if (window.AutoFitFramesX > 0 || window.AutoFitFramesY > 0)
+        {
+            // Auto-fit may only grow window during the first few frames
+            // We still process initial auto-fit on collapsed windows to get a window width, but otherwise don't honor ImGuiWindowFlags_AlwaysAutoResize when collapsed.
+            if (!window_size_x_set_by_api && window.AutoFitFramesX > 0)
+            {
+                if window.SizeFull.x = if window.AutoFitOnlyGrows { ImMax(window.SizeFull.x, size_auto_fit.x) } else { size_auto_fit.x };
+                use_current_size_for_scrollbar_x = true;
+            }
+            if (!window_size_y_set_by_api && window.AutoFitFramesY > 0)
+            {
+                window.SizeFull.y = if window.AutoFitOnlyGrows { ImMax(window.SizeFull.y, size_auto_fit.y) } else { size_auto_fit.y };
+                use_current_size_for_scrollbar_y = true;
+            }
+            if (!window.Collapsed) {
+                MarkIniSettingsDirty(window);
+            }
+        }
+
+        // Apply minimum/maximum window size constraints and final size
+        window.SizeFull = CalcWindowSizeAfterConstraint(window, &window.SizeFull);
+        window.Size = if window.Collapsed && flag_clear(flags, ImGuiWindowFlags_ChildWindow) { window.TitleBarRect().GetSize() } else { window.SizeFull };
+
+        // Decoration size
+        let decoration_up_height: c_float =  window.TitleBarHeight() + window.MenuBarHeight();
+
+        // POSITION
+
+        // Popup latch its initial position, will position itself when it appears next frame
+        if window_just_activated_by_user
+        {
+            window.AutoPosLastDirection = ImGuiDir_None;
+            if flag_set(flags, ImGuiWindowFlags_Popup) && flag_clear(flags, ImGuiWindowFlags_Modal) && !window_pos_set_by_api {// FIXME: BeginPopup() could use SetNextWindowPos()
+                window.Pos = g.BeginPopupStack.last().unwrap().OpenPopupPos;
+            }
+        }
+
+        // Position child window
+        if flags & ImGuiWindowFlags_ChildWindow
+        {
+            // IM_ASSERT(parent_window && parent_window.Active);
+            window.BeginOrderWithinParent = parent_window.DC.ChildWindows.Size;
+            parent_window.DC.ChildWindows.push(window);
+            if flag_clear(flags, ImGuiWindowFlags_Popup) && !window_pos_set_by_api && !window_is_child_tooltip {
+                window.Pos = parent_window.DC.CursorPos;
+            }
+        }
+
+        let window_pos_with_pivot: bool = (window.SetWindowPosVal.x != f32::MAX && window.HiddenFramesCannotSkipItems == 0);
+        if (window_pos_with_pivot) {
+            SetWindowPos(window, window.SetWindowPosVal - window.Size * window.SetWindowPosPivot, 0);
+        }// Position given a pivot (e.g. for centering)
+        else if ((flags & ImGuiWindowFlags_ChildMenu) != 0) {
+            window.Pos = FindBestWindowPosForPopup(window);
+        }
+        else if ((flags & ImGuiWindowFlags_Popup) != 0 && !window_pos_set_by_api && window_just_appearing_after_hidden_for_resize) {
+            window.Pos = FindBestWindowPosForPopup(window);
+        }
+        else if ((flags & ImGuiWindowFlags_Tooltip) != 0 && !window_pos_set_by_api && !window_is_child_tooltip) {
+            window.Pos = FindBestWindowPosForPopup(window);
+        }
+
+        // Late create viewport if we don't fit within our current host viewport.
+        if (window.ViewportAllowPlatformMonitorExtend >= 0 && !window.ViewportOwned && !(window.Viewport.Flags & ImGuiViewportFlags_Minimized)) {
+            if (!window.Viewport.GetMainRect().Contains(window.Rect())) {
+                // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
+                //ImGuiViewport* old_viewport = window.Viewport;
+                window.Viewport = AddUpdateViewport(window, window.ID, window.Pos, window.Size, ImGuiViewportFlags_NoFocusOnAppearing);
+
+                // FIXME-DPI
+                //IM_ASSERT(old_viewport.DpiScale == window.Viewport->DpiScale); // FIXME-DPI: Something went wrong
+                SetCurrentViewport(window, window.Viewport);
+                window.FontDpiScale = if (g.IO.ConfigFlags & ImGuiConfigFlags_DpiEnableScaleFonts) {
+                    window.Viewport.DpiScale
+                } else { 1.0 };
+                SetCurrentWindow(window);
+            }
+        }
+
+        if (window.ViewportOwned) {
+            WindowSyncOwnedViewport(window, parent_window_in_stack);
+        }
+
+        // Calculate the range of allowed position for that window (to be movable and visible past safe area padding)
+        // When clamping to stay visible, we will enforce that window.Pos stays inside of visibility_rect.
+        let mut viewport_rect: ImRect = ImRect::new(window.Viewport.GetMainRect());
+        let mut viewport_work_rect: ImRect = ImRect::new(window.Viewport.GetWorkRect());
+        let visibility_padding: ImVec2 = ImMax(style.DisplayWindowPadding, style.DisplaySafeAreaPadding);
+        let mut visibility_rect: ImRect = ImRect::new(viewport_work_rect.Min + visibility_padding, viewport_work_rect.Max - visibility_padding);
+
+        // Clamp position/size so window stays visible within its viewport or monitor
+        // Ignore zero-sized display explicitly to avoid losing positions if a window manager reports zero-sized window when initializing or minimizing.
+        // FIXME: Similar to code in GetWindowAllowedExtentRect()
+        if (!window_pos_set_by_api && flag_clear(flags, ImGuiWindowFlags_ChildWindow) && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0)
+        {
+            if (!window.ViewportOwned && viewport_rect.GetWidth() > 0.0 && viewport_rect.GetHeight() > 0.0)
+            {
+                ClampWindowRect(window, &visibility_rect);
+            }
+            else if (window.ViewportOwned && g.PlatformIO.Monitors.len() > 0)
+            {
+                // Lost windows (e.g. a monitor disconnected) will naturally moved to the fallback/dummy monitor aka the main viewport.
+                let monitor: *const ImGuiPlatformMonitor = GetViewportPlatformMonitor(window.Viewport);
+                visibility_rect.Min = monitor.WorkPos + visibility_padding;
+                visibility_rect.Max = monitor.WorkPos + monitor.WorkSize - visibility_padding;
+                ClampWindowRect(window, visibility_rect);
+            }
+        }
+        window.Pos = ImFloor(window.Pos);
+
+        // Lock window rounding for the frame (so that altering them doesn't cause inconsistencies)
+        // Large values tend to lead to variety of artifacts and are not recommended.
+        if (window.ViewportOwned || window.DockIsActive)
+            window.WindowRounding = 0.0;
+        else
+            window.WindowRounding = (flags & ImGuiWindowFlags_ChildWindow) ? style.ChildRounding : ((flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiWindowFlags_Modal)) ? style.PopupRounding : style.WindowRounding;
+
+        // For windows with title bar or menu bar, we clamp to FrameHeight(FontSize + FramePadding.y * 2.00f32) to completely hide artifacts.
+        //if ((window.Flags & ImGuiWindowFlags_MenuBar) || !(window.Flags & ImGuiWindowFlags_NoTitleBar))
+        //    window.WindowRounding = ImMin(window.WindowRounding, g.FontSize + style.FramePadding.y * 2.00f32);
+
+        // Apply window focus (new and reactivated windows are moved to front)
+        let mut want_focus: bool =  false;
+        if window_just_activated_by_user && flag_clear(flags, ImGuiWindowFlags_NoFocusOnAppearing)
+        {
+            if flags & ImGuiWindowFlags_Popup {
+                want_focus = true;
+            }
+            else if (window.DockIsActive || (flags & ImGuiWindowFlags_ChildWindow) == 0) && flag_clear(flags, ImGuiWindowFlags_Tooltip) {
+                want_focus = true;
+            }
+
+            let mut modal: *mut ImGuiWindow =  GetTopMostPopupModal();
+            if modal != null_mut() && !IsWindowWithinBeginStackOf(window, modal)
+            {
+                // Avoid focusing a window that is created outside of active modal. This will prevent active modal from being closed.
+                // Since window is not focused it would reappear at the same display position like the last time it was visible.
+                // In case of completely new windows it would go to the top (over current modal), but input to such window would still be blocked by modal.
+                // Position window behind a modal that is not a begin-parent of this window.
+                want_focus = false;
+                if window == window.RootWindow
+                {
+                    let mut blocking_modal: *mut ImGuiWindow =  FindBlockingModal(window);
+                    // IM_ASSERT(blocking_modal != NULL);
+                    BringWindowToDisplayBehind(window, blocking_modal);
+                }
+            }
+        }
+
+        // [Test Engine] Register whole window in the item system
+// #ifdef IMGUI_ENABLE_TEST_ENGINE
+        if g.TestEngineHookItems
+        {
+            // IM_ASSERT(window.IDStack.Size == 1);
+            window.IDStack.Size = 0; // As window.IDStack[0] == window.ID here, make sure TestEngine doesn't erroneously see window as parent of itself.
+            IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.ID);
+            IMGUI_TEST_ENGINE_ITEM_INFO(window.ID, window.Name, if g.HoveredWindow == window { ImGuiItemStatusFlags_HoveredRect }else { 0 });
+            window.IDStack.Size = 1;
+        }
+// #endif
+
+        // Decide if we are going to handle borders and resize grips
+        let handle_borders_and_resize_grips: bool = (is_not_null(window.DockNodeAsHost) || !window.DockIsActive);
+
+        // Handle manual resize: Resize Grips, Borders, Gamepad
+        let border_held: c_int = -1;
+        resize_grip_col: u32[4] = {};
+        let resize_grip_count: c_int = if g.IO.ConfigWindowsResizeFromEdges { 2 } else { 1 }; // Allow resize from lower-left if we have the mouse cursor feedback for it.
+        let resize_grip_draw_size: c_float =  IM_FLOOR(ImMax(g.FontSize * 1.10f32, window.WindowRounding + 1.0 + g.FontSize * 0.20f32));
+        if (handle_borders_and_resize_grips && !window.Collapsed) {
+            if (UpdateWindowManualResize(window, size_auto_fit, &border_held, resize_grip_count, &resize_grip_col[0], visibility_rect)) {
+                use_current_size_for_scrollbar_x = use_current_size_for_scrollbar_y = true;
+            }
+        }
+        window.ResizeBorderHeld = border_held as i8;
+
+        // Synchronize window --> viewport again and one last time (clamping and manual resize may have affected either)
+        if (window.ViewportOwned)
+        {
+            if (!window.Viewport.PlatformRequestMove) {
+                window.Viewport.Pos = window.Pos;
+            }
+            if (!window.Viewport.PlatformRequestResize) {
+                window.Viewport.Size = window.Size;
+            }
+            window.Viewport.UpdateWorkRect();
+            viewport_rect = window.Viewport.GetMainRect();
+        }
+
+        // Save last known viewport position within the window itself (so it can be saved in .ini file and restored)
+        window.ViewportPos = window.Viewport.Pos;
+
+        // SCROLLBAR VISIBILITY
+
+        // Update scrollbar visibility (based on the Size that was effective during last frame or the auto-resized Size).
+        if !window.Collapsed
+        {
+            // When reading the current size we need to read it after size constraints have been applied.
+            // When we use InnerRect here we are intentionally reading last frame size, same for ScrollbarSizes values before we set them again.
+            let avail_size_from_current_frame: ImVec2 = ImVec2::new(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
+            let avail_size_from_last_frame: ImVec2 = window.InnerRect.GetSize() + window.ScrollbarSizes;
+            let needed_size_from_last_frame: ImVec2 = if window_just_created { ImVec2::new(0.0, 0.0) } else { window.ContentSize + window.WindowPadding * 2.0 };
+            let size_x_for_scrollbars: c_float =  if use_current_size_for_scrollbar_x { avail_size_from_current_frame.x } else { avail_size_from_last_frame.x };
+            let size_y_for_scrollbars: c_float =  if use_current_size_for_scrollbar_y { avail_size_from_current_frame.y } else { avail_size_from_last_frame.y };
+            //scrollbar_y_from_last_frame: bool = window.ScrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
+            window.ScrollbarY = flag_set(flags, ImGuiWindowFlags_AlwaysVerticalScrollbar) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar));
+            window.ScrollbarX = flag_set(flags, ImGuiWindowFlags_AlwaysHorizontalScrollbar) || (if needed_size_from_last_frame.x > size_x_for_scrollbars - window.ScrollbarY { style.ScrollbarSize } else { 0.0 }) != 0 && flag_clear(flags, ImGuiWindowFlags_NoScrollbar) && flag_set(flags, ImGuiWindowFlags_HorizontalScrollbar);
+            if window.ScrollbarX && !window.ScrollbarY {
+                window.ScrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar);
+            }
+            window.ScrollbarSizes = ImVec2::new(if window.ScrollbarY { style.ScrollbarSize }else { 0.0 }, if window.ScrollbarX { style.ScrollbarSize }else { 0.0 });
+        }
+
+        // UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)
+        // Update various regions. Variables they depends on should be set above in this function.
+        // We set this up after processing the resize grip so that our rectangles doesn't lag by a frame.
+
+        // Outer rectangle
+        // Not affected by window border size. Used by:
+        // - FindHoveredWindow() (w/ extra padding when border resize is enabled)
+        // - Begin() initial clipping rect for drawing window background and borders.
+        // - Begin() clipping whole child
+        let host_rect: ImRect =  ((flags & ImGuiWindowFlags_ChildWindow) && !(flags & ImGuiWindowFlags_Popup) && !window_is_child_tooltip) ? parent_window.ClipRect : viewport_rect;
+        let outer_rect: ImRect =  window.Rect();
+        let title_bar_rect: ImRect =  window.TitleBarRect();
+        window.OuterRectClipped = outer_rect;
         if window.DockIsActive {
-            window.DockNode.IsBgDrawnThisFrame = true;
+            window.OuterRectClipped.Min.y += window.TitleBarHeight();
+        }
+        window.OuterRectClipped.ClipWith(host_rect);
+
+        // Inner rectangle
+        // Not affected by window border size. Used by:
+        // - InnerClipRect
+        // - ScrollToRectEx()
+        // - NavUpdatePageUpPageDown()
+        // - Scrollbar()
+        window.InnerRect.Min.x = window.Pos.x;
+        window.InnerRect.Min.y = window.Pos.y + decoration_up_height;
+        window.InnerRect.Max.x = window.Pos.x + window.Size.x - window.ScrollbarSizes.x;
+        window.InnerRect.Max.y = window.Pos.y + window.Size.y - window.ScrollbarSizes.y;
+
+        // Inner clipping rectangle.
+        // Will extend a little bit outside the normal work region.
+        // This is to allow e.g. Selectable or CollapsingHeader or some separators to cover that space.
+        // Force round operator last to ensure that e.g. (max.x-min.x) in user's render code produce correct result.
+        // Note that if our window is collapsed we will end up with an inverted (~null) clipping rectangle which is the correct behavior.
+        // Affected by window/frame border size. Used by:
+        // - Begin() initial clip rect
+        let top_border_size: c_float =  (((flags & ImGuiWindowFlags_MenuBar) || !(flags & ImGuiWindowFlags_NoTitleBar)) ? style.FrameBorderSize : window.WindowBorderSize);
+        window.InnerClipRect.Min.x = ImFloor(0.5f32 + window.InnerRect.Min.x + ImMax(ImFloor(window.WindowPadding.x * 0.5f32), window.WindowBorderSize));
+        window.InnerClipRect.Min.y = ImFloor(0.5f32 + window.InnerRect.Min.y + top_border_size);
+        window.InnerClipRect.Max.x = ImFloor(0.5f32 + window.InnerRect.Max.x - ImMax(ImFloor(window.WindowPadding.x * 0.5f32), window.WindowBorderSize));
+        window.InnerClipRect.Max.y = ImFloor(0.5f32 + window.InnerRect.Max.y - window.WindowBorderSize);
+        window.InnerClipRect.ClipWithFull(&host_rect);
+
+        // Default item width. Make it proportional to window size if window manually resizes
+        if window.Size.x > 0.0 && flag_clear(flags, ImGuiWindowFlags_Tooltip) && flag_clear(flags, ImGuiWindowFlags_AlwaysAutoResize) {
+            window.ItemWidthDefault = ImFloor(window.Size.x * 0.650f32);
+        }
+        else {
+            window.ItemWidthDefault = ImFloor(g.FontSize * 16.00f32);
+        }
+
+        // SCROLLING
+
+        // Lock down maximum scrolling
+        // The value of ScrollMax are ahead from ScrollbarX/ScrollbarY which is intentionally using InnerRect from previous rect in order to accommodate
+        // for right/bottom aligned items without creating a scrollbar.
+        window.ScrollMax.x = ImMax(0.0, window.ContentSize.x + window.WindowPadding.x * 2.0.0 - window.InnerRect.GetWidth());
+        window.ScrollMax.y = ImMax(0.0, window.ContentSize.y + window.WindowPadding.y * 2.0.0 - window.InnerRect.GetHeight());
+
+        // Apply scrolling
+        window.Scroll = CalcNextScrollFromScrollTargetAndClamp(window);
+        window.ScrollTarget = ImVec2::new(f32::MAX, f32::MAX);
+
+        // DRAWING
+
+        // Setup draw list and outer clipping rectangle
+        // IM_ASSERT(window.DrawList.CmdBuffer.Size == 1 && window.DrawList.CmdBuffer[0].ElemCount == 0);
+        window.DrawList.PushTextureID(g.Font.ContainerAtlas.TexID);
+        PushClipRect(&host_rect.Min, &host_rect.Max, false);
+
+        // Child windows can render their decoration (bg color, border, scrollbars, etc.) within their parent to save a draw call (since 1.71)
+        // When using overlapping child windows, this will break the assumption that child z-order is mapped to submission order.
+        // FIXME: User code may rely on explicit sorting of overlapping child window and would need to disable this somehow. Please get in contact if you are affected (github #4493)
+        let is_undocked_or_docked_visible: bool = !window.DockIsActive || window.DockTabIsVisible;
+        if is_undocked_or_docked_visible
+        {
+            let mut render_decorations_in_parent: bool =  false;
+            if (flags & ImGuiWindowFlags_ChildWindow) && !(flags & ImGuiWindowFlags_Popup) && !window_is_child_tooltip
+            {
+                // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
+                // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
+                let mut previous_child: *mut ImGuiWindow =  if parent_window.DC.ChildWindows.Size >= 2 { parent_window.DC.ChildWindows[parent_window.DC.ChildWindows.Size - 2] } else { null_mut() };
+                let mut previous_child_overlapping: bool = if previous_child { previous_child.Rect().Overlaps(window.Rect()) } else { false };
+                let mut parent_is_empty: bool =  parent_window.DrawList.VtxBuffer.len() > 0;
+                if window.DrawList.CmdBuffer.last().unwrap().ElemCount == 0 && parent_is_empty && !previous_child_overlapping {
+                    render_decorations_in_parent = true;
+                }
+            }
+            if render_decorations_in_parent {
+                window.DrawList = parent_window.DrawList;
+            }
+
+            // Handle title bar, scrollbar, resize grips and resize borders
+            let window_to_highlight: *const ImGuiWindow = if g.NavWindowingTarget { g.NavWindowingTarget } else { g.NavWindow };
+            let title_bar_is_highlight: bool = want_focus || (is_not_null(window_to_highlight) && (window.RootWindowForTitleBarHighlight == window_to_highlight.RootWindowForTitleBarHighlight || (is_not_null(window.DockNode) && window.DockNode == window_to_highlight.DockNode)));
+            RenderWindowDecorations(window, &title_bar_rect, title_bar_is_highlight, handle_borders_and_resize_grips, resize_grip_count, resize_grip_col, resize_grip_draw_size);
+
+            if render_decorations_in_parent {
+                window.DrawList = window.DrawListInst.clone();
+            }
+        }
+
+        // UPDATE RECTANGLES (2- THOSE AFFECTED BY SCROLLING)
+
+        // Work rectangle.
+        // Affected by window padding and border size. Used by:
+        // - Columns() for right-most edge
+        // - TreeNode(), CollapsingHeader() for right-most edge
+        // - BeginTabBar() for right-most edge
+        let allow_scrollbar_x: bool = flag_clear(flags, ImGuiWindowFlags_NoScrollbar) && flag_clear(flags, ImGuiWindowFlags_HorizontalScrollbar);
+        let allow_scrollbar_y: bool = flag_clear(flags, ImGuiWindowFlags_NoScrollbar);
+        let work_rect_size_x: c_float =  (window.ContentSizeExplicit.x != 0.0 ? window.ContentSizeExplicit.x : ImMax(allow_scrollbar_x ? window.ContentSize.x : 0.0, window.Size.x - window.WindowPadding.x * 2.0.0 - window.ScrollbarSizes.x));
+        let work_rect_size_y: c_float =  (window.ContentSizeExplicit.y != 0.0 ? window.ContentSizeExplicit.y : ImMax(allow_scrollbar_y ? window.ContentSize.y : 0.0, window.Size.y - window.WindowPadding.y * 2.0.0 - decoration_up_height - window.ScrollbarSizes.y));
+        window.WorkRect.Min.x = ImFloor(window.InnerRect.Min.x - window.Scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize));
+        window.WorkRect.Min.y = ImFloor(window.InnerRect.Min.y - window.Scroll.y + ImMax(window.WindowPadding.y, window.WindowBorderSize));
+        window.WorkRect.Max.x = window.WorkRect.Min.x + work_rect_size_x;
+        window.WorkRect.Max.y = window.WorkRect.Min.y + work_rect_size_y;
+        window.ParentWorkRect = window.WorkRect;
+
+        // [LEGACY] Content Region
+        // FIXME-OBSOLETE: window.ContentRegionRect.Max is currently very misleading / partly faulty, but some BeginChild() patterns relies on it.
+        // Used by:
+        // - Mouse wheel scrolling + many other things
+        window.ContentRegionRect.Min.x = window.Pos.x - window.Scroll.x + window.WindowPadding.x;
+        window.ContentRegionRect.Min.y = window.Pos.y - window.Scroll.y + window.WindowPadding.y + decoration_up_height;
+        window.ContentRegionRect.Max.x = window.ContentRegionRect.Min.x + (window.ContentSizeExplicit.x != 0.0 ? window.ContentSizeExplicit.x : (window.Size.x - window.WindowPadding.x * 2.0.0 - window.ScrollbarSizes.x));
+        window.ContentRegionRect.Max.y = window.ContentRegionRect.Min.y + (window.ContentSizeExplicit.y != 0.0 ? window.ContentSizeExplicit.y : (window.Size.y - window.WindowPadding.y * 2.0.0 - decoration_up_height - window.ScrollbarSizes.y));
+
+        // Setup drawing context
+        // (NB: That term "drawing context / DC" lost its meaning a long time ago. Initially was meant to hold transient data only. Nowadays difference between window. and window.DC-> is dubious.)
+        window.DC.Indent.x = 0.0 + window.WindowPadding.x - window.Scroll.x;
+        window.DC.GroupOffset.x = 0.0;
+        window.DC.ColumnsOffset.x = 0.0;
+
+        // Record the loss of precision of CursorStartPos which can happen due to really large scrolling amount.
+        // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or u64.
+        double start_pos_highp_x = window.Pos.x + window.WindowPadding.x - window.Scroll.x + window.DC.ColumnsOffset.x;
+        double start_pos_highp_y = window.Pos.y + window.WindowPadding.y - window.Scroll.y + decoration_up_height;
+        window.DC.CursorStartPos  = ImVec2::new(start_pos_highp_x, start_pos_highp_y);
+        window.DC.CursorStartPosLossyness = ImVec2::new((start_pos_highp_x - window.DC.CursorStartPos.x), (start_pos_highp_y - window.DC.CursorStartPos.y));
+        window.DC.CursorPos = window.DC.CursorStartPos;
+        window.DC.CursorPosPrevLine = window.DC.CursorPos;
+        window.DC.CursorMaxPos = window.DC.CursorStartPos;
+        window.DC.IdealMaxPos = window.DC.CursorStartPos;
+        window.DC.CurrLineSize = window.DC.PrevLineSize = ImVec2::new(0.0, 0.0);
+        window.DC.CurrLineTextBaseOffset = window.DC.PrevLineTextBaseOffset = 0.0;
+        window.DC.IsSameLine = window.DC.IsSetPos = false;
+
+        window.DC.NavLayerCurrent = ImGuiNavLayer_Main;
+        window.DC.NavLayersActiveMask = window.DC.NavLayersActiveMaskNext;
+        window.DC.NavLayersActiveMaskNext = 0x00;
+        window.DC.NavHideHighlightOneFrame = false;
+        window.DC.NavHasScroll = (window.ScrollMax.y > 0.0);
+
+        window.DC.MenuBarAppending = false;
+        window.DC.MenuColumns.Update(style.ItemSpacing.x, window_just_activated_by_user);
+        window.DC.TreeDepth = 0;
+        window.DC.TreeJumpToParentOnPopMask = 0x00;
+        window.DC.ChildWindows.clear();
+        window.DC.StateStorage = &window.StateStorage;
+        window.DC.CurrentColumns= null_mut();
+        window.DC.LayoutType = ImGuiLayoutType_Vertical;
+        window.DC.ParentLayoutType = parent_window ? parent_window.DC.LayoutType : ImGuiLayoutType_Vertical;
+
+        window.DC.ItemWidth = window.ItemWidthDefault;
+        window.DC.TextWrapPos = -1.0; // disabled
+        window.DC.ItemWidthStack.clear();
+        window.DC.TextWrapPosStack.clear();
+
+        if (window.AutoFitFramesX > 0)
+            window.AutoFitFramesX-= 1;
+        if (window.AutoFitFramesY > 0)
+            window.AutoFitFramesY-= 1;
+
+        // Apply focus (we need to call FocusWindow() AFTER setting DC.CursorStartPos so our initial navigation reference rectangle can start around there)
+        if (want_focus)
+        {
+            FocusWindow(window);
+            NavInitWindow(window, false); // <-- this is in the way for us to be able to defer and sort reappearing FocusWindow() calls
+        }
+
+        // Close requested by platform window
+        if (p_open != null_mut() && window.Viewport.PlatformRequestClose && window.Viewport != GetMainViewport())
+        {
+            if (!window.DockIsActive || window.DockTabIsVisible)
+            {
+                window.Viewport.PlatformRequestClose = false;
+                g.NavWindowingToggleLayer = false; // Assume user mapped PlatformRequestClose on ALT-F4 so we disable ALT for menu toggle. False positive not an issue.
+                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Window '%s' PlatformRequestClose\n", window.Name);
+                *p_open = false;
+            }
         }
 
         // Title bar
-        // (when docked, DockNode are drawing their own title bar. Individual windows however do NOT set the _NoTitleBar flag,
-        // in order for their pos/size to be matching their undocking state.)
-        if flag_clear(flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
+        if (!(flags & ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive)
+            RenderWindowTitleBarContents(window, ImRect(title_bar_rect.Min.x + window.WindowBorderSize, title_bar_rect.Min.y, title_bar_rect.Max.x - window.WindowBorderSize, title_bar_rect.Max.y), name, p_open);
+
+        // Clear hit test shape every frame
+        window.HitTestHoleSize.x = window.HitTestHoleSize.y = 0;
+
+        // Pressing CTRL+C while holding on a window copy its content to the clipboard
+        // This works but 1. doesn't handle multiple Begin/End pairs, 2. recursing into another Begin/End pair - so we need to work that out and add better logging scope.
+        // Maybe we can support CTRL+C on every element?
+        /*
+        //if (g.NavWindow == window && g.ActiveId == 0)
+        if (g.ActiveId == window.MoveId)
+            if (g.IO.KeyCtrl && IsKeyPressed(ImGuiKey_C))
+                LogToClipboard();
+        */
+
+        if (g.IO.ConfigFlags & ImGuiConfigFlags_DockingEnable)
         {
-            title_bar_col: u32 = GetColorU32(if title_bar_is_highlight { ImGuiCol_TitleBgActive } else { ImGuiCol_TitleBg }, 0.0);
-            window.DrawList.AddRectFilled(&title_bar_rect.Min, &title_bar_rect.Max, title_bar_col, window_rounding, ImDrawFlags_RoundCornersTop);
+            // Docking: Dragging a dockable window (or any of its child) turns it into a drag and drop source.
+            // We need to do this _before_ we overwrite window.DC.LastItemId below because BeginDockableDragDropSource() also overwrites it.
+            if ((g.MovingWindow == window) && (g.IO.ConfigDockingWithShift == g.IO.KeyShift))
+                if ((window.RootWindowDockTree.Flags & ImGuiWindowFlags_NoDocking) == 0)
+                    BeginDockableDragDropSource(window);
+
+            // Docking: Any dockable window can act as a target. For dock node hosts we call BeginDockableDragDropTarget() in DockNodeUpdate() instead.
+            if (g.DragDropActive && !(flags & ImGuiWindowFlags_NoDocking))
+                if (g.MovingWindow == null_mut() || g.Movingwindow.RootWindowDockTree != window)
+                    if ((window == window.RootWindowDockTree) && !(window.Flags & ImGuiWindowFlags_DockNodeHost))
+                        BeginDockableDragDropTarget(window);
         }
 
-        // Menu bar
-        if flag_set(flags, ImGuiWindowFlags_MenuBar)
-        {
-            let mut menu_bar_rect: ImRect =  window.MenuBarRect();
-            menu_bar_rect.ClipWith(window.Rect());  // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
-            window.DrawList.AddRectFilled(menu_bar_rect.Min + ImVec2::new(window_border_size, 0.0), menu_bar_rect.Max - ImVec2::new(window_border_size, 0.0), GetColorU32(ImGuiCol_MenuBarBg, 0.0), if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { window_rounding }else { 0.0 }, ImDrawFlags_RoundCornersTop);
-            if style.FrameBorderSize > 0f32 && menu_bar_rect.Max.y < window.Pos.y + window.Size.y {
-                window.DrawList.AddLine(&menu_bar_rect.GetBL(), &menu_bar_rect.GetBR(), GetColorU32(ImGuiCol_Border, 0.0), style.FrameBorderSize);
-            }
-        }
+        // We fill last item data based on Title Bar/Tab, in order for IsItemHovered() and IsItemActive() to be usable after Begin().
+        // This is useful to allow creating context menus on title bar only, etc.
+        if (window.DockIsActive)
+            SetLastItemData(window.MoveId, g.CurrentItemFlags, window.DockTabItemStatusFlags, window.DockTabItemRect);
+        else
+            SetLastItemData(window.MoveId, g.CurrentItemFlags, IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max, false) ? ImGuiItemStatusFlags_HoveredRect : 0, title_bar_rect);
 
-        // Docking: Unhide tab bar (small triangle in the corner), drag from small triangle to quickly undock
-        ImGuiDockNode* node = window.DockNode;
-        if window.DockIsActive && node.IsHiddenTabBar() && !node.IsNoTabBar()
-        {
-            let unhide_sz_draw: c_float =  ImFloor(g.FontSize * 0.700f32);
-            let unhide_sz_hit: c_float =  ImFloor(g.FontSize * 0.550f32);
-            let p: ImVec2 = node.Pos;
-            let mut r: ImRect = ImRect::new(p, p + ImVec2::new(unhide_sz_hit, unhide_sz_hit));
-            let mut unhide_id: ImGuiID =  window.GetID(str_to_const_c_char_ptr("#UNHIDE"), null());
-            KeepAliveID(unhide_id);
-            // hovered: bool, held;
-            let mut hovered = false;
-            let mut held = false;
-            if ButtonBehavior(r, unhide_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren) {
-                node.WantHiddenTabBarToggle = true;
-            }
-            else if held && IsMouseDragging(0, 0.0) {
-                StartMouseMovingWindowOrNode(window, node, true);
-            }
-
-            // FIXME-DOCK: Ideally we'd use ImGuiCol_TitleBgActive/ImGuiCol_TitleBg here, but neither is guaranteed to be visible enough at this sort of size..
-            col: u32 = GetColorU32(if (held && hovered) || (node.IsFocused && !hovered) { ImGuiCol_ButtonActive } else {
-                if hovered {
-                    ImGuiCol_ButtonHovered
-                } else { ImGuiCol_Button }
-            }, 0.0);
-            window.DrawList.AddTriangleFilled(&p, p + ImVec2::new(unhide_sz_draw, 0f32), p + ImVec2::new(0f32, unhide_sz_draw), col);
-        }
-
-        // Scrollbars
-        if window.ScrollbarX {
-            Scrollbar(ImGuiAxis_X);
-        }
-        if window.ScrollbarY {
-            Scrollbar(ImGuiAxis_Y);
-        }
-
-        // Render resize grips (after their input handling so we don't have a frame of latency)
-        if handle_borders_and_resize_grips && flag_clear(flags, ImGuiWindowFlags_NoResize)
-        {
-            // for (let resize_grip_n: c_int = 0; resize_grip_n < resize_grip_count; resize_grip_n++)
-            for resize_grip_n in 0 .. resize_grip_count
-            {
-                let grip = resize_grip_def[resize_grip_n];
-                let corner: ImVec2 = ImLerp(window.Pos, window.Pos + window.Size, grip.CornerPosN);
-                window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::new(window_border_size, resize_grip_draw_size) } else { ImVec2::new(resize_grip_draw_size, window_border_size) }));
-                window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::new(resize_grip_draw_size, window_border_size) } else { ImVec2::new(window_border_size, resize_grip_draw_size) }));
-                window.DrawList.PathArcToFast(&ImVec2::new(corner.x + grip.InnerDir.x * (window_rounding + window_border_size), corner.y + grip.InnerDir.y * (window_rounding + window_border_size)), window_rounding, grip.AngleMin12, grip.AngleMax12);
-                window.DrawList.PathFillConvex(resize_grip_col[resize_grip_n]);
-            }
-        }
-
-        // Borders (for dock node host they will be rendered over after the tab bar)
-        if handle_borders_and_resize_grips && is_null(window.DockNodeAsHost) {
-            RenderWindowOuterBorders(window);
-        }
+        // [Test Engine] Register title bar / tab
+        if (!(window.Flags & ImGuiWindowFlags_NoTitleBar))
+            IMGUI_TEST_ENGINE_ITEM_ADD(g.LastItemData.Rect, g.LastItemData.ID);
     }
+    else
+    {
+        // Append
+        SetCurrentViewport(window, window.Viewport);
+        SetCurrentWindow(window);
+    }
+
+    // Pull/inherit current state
+    window.DC.NavFocusScopeIdCurrent = (flags & ImGuiWindowFlags_ChildWindow) ? parent_window.DC.NavFocusScopeIdCurrent : window.GetID("#FOCUSSCOPE"); // Inherit from parent only // -V595
+
+    if (!(flags & ImGuiWindowFlags_DockNodeHost))
+        PushClipRect(window.InnerClipRect.Min, window.InnerClipRect.Max, true);
+
+    // Clear 'accessed' flag last thing (After PushClipRect which will set the flag. We want the flag to stay false when the default "Debug" window is unused)
+    window.WriteAccessed = false;
+    window.BeginCount+= 1;
+    g.NextWindowData.ClearFlags();
+
+    // Update visibility
+    if (first_begin_of_the_frame)
+    {
+        // When we are about to select this tab (which will only be visible on the _next frame_), flag it with a non-zero HiddenFramesCannotSkipItems.
+        // This will have the important effect of actually returning true in Begin() and not setting SkipItems, allowing an earlier submission of the window contents.
+        // This is analogous to regular windows being hidden from one frame.
+        // It is especially important as e.g. nested TabBars would otherwise generate flicker in the form of one empty frame, or focus requests won't be processed.
+        if (window.DockIsActive && !window.DockTabIsVisible)
+        {
+            if (window.LastFrameJustFocused == g.FrameCount)
+                window.HiddenFramesCannotSkipItems = 1;
+            else
+                window.HiddenFramesCanSkipItems = 1;
+        }
+
+        if (flags & ImGuiWindowFlags_ChildWindow)
+        {
+            // Child window can be out of sight and have "negative" clip windows.
+            // Mark them as collapsed so commands are skipped earlier (we can't manually collapse them because they have no title bar).
+            // IM_ASSERT((flags& ImGuiWindowFlags_NoTitleBar) != 0 || (window.DockIsActive));
+            if (!(flags & ImGuiWindowFlags_AlwaysAutoResize) && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0) // FIXME: Doesn't make sense for ChildWindow??
+            {
+                let nav_request: bool = (flags & ImGuiWindowFlags_NavFlattened) && (g.NavAnyRequest && g.NavWindow && g.NavWindow.RootWindowForNav == window.RootWindowForNav);
+                if (!g.LogEnabled && !nav_request)
+                    if (window.OuterRectClipped.Min.x >= window.OuterRectClipped.Max.x || window.OuterRectClipped.Min.y >= window.OuterRectClipped.Max.y)
+                        window.HiddenFramesCanSkipItems = 1;
+            }
+
+            // Hide along with parent or if parent is collapsed
+            if (parent_window && (parent_window.Collapsed || parent_window.HiddenFramesCanSkipItems > 0))
+                window.HiddenFramesCanSkipItems = 1;
+            if (parent_window && (parent_window.Collapsed || parent_window.HiddenFramesCannotSkipItems > 0))
+                window.HiddenFramesCannotSkipItems = 1;
+        }
+
+        // Don't render if style alpha is 0.0 at the time of Begin(). This is arbitrary and inconsistent but has been there for a long while (may remove at some point)
+        if (style.Alpha <= 0.0)
+            window.HiddenFramesCanSkipItems = 1;
+
+        // Update the Hidden flag
+        let mut hidden_regular: bool =  (window.HiddenFramesCanSkipItems > 0) || (window.HiddenFramesCannotSkipItems > 0);
+        window.Hidden = hidden_regular || (window.HiddenFramesForRenderOnly > 0);
+
+        // Disable inputs for requested number of frames
+        if (window.DisableInputsFrames > 0)
+        {
+            window.DisableInputsFrames-= 1;
+            window.Flags |= ImGuiWindowFlags_NoInputs;
+        }
+
+        // Update the SkipItems flag, used to early out of all items functions (no layout required)
+        let mut skip_items: bool =  false;
+        if (window.Collapsed || !window.Active || hidden_regular)
+            if (window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 && window.HiddenFramesCannotSkipItems <= 0)
+                skip_items = true;
+        window.SkipItems = skip_items;
+
+        // Restore NavLayersActiveMaskNext to previous value when not visible, so a CTRL+Tab back can use a safe value.
+        if (window.SkipItems)
+            window.DC.NavLayersActiveMaskNext = window.DC.NavLayersActiveMask;
+
+        // Sanity check: there are two spots which can set Appearing = true
+        // - when 'window_just_activated_by_user' is set -> HiddenFramesCannotSkipItems is set -> SkipItems always false
+        // - in BeginDocked() path when DockNodeIsVisible == DockTabIsVisible == true -> hidden _should_ be all zero // FIXME: Not formally proven, hence the assert.
+        if (window.SkipItems && !window.Appearing)
+            // IM_ASSERT(window.Appearing == false); // Please report on GitHub if this triggers: https://github.com/ocornut/imgui/issues/4177
+    }
+
+    return !window.SkipItems;
 }

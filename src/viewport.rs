@@ -48,8 +48,8 @@ pub struct ImGuiViewport {
     pub WorkOffsetMax: ImVec2,
     // Work Area: Offset from Pos+Size to bottom-right corner of Work Area. Generally (0,0) or (0,-status_bar_height).
     pub BuildWorkOffsetMin: ImVec2,
-    // Work Area: Offset being built during current frame. Generally >= 0f32.
-    pub BuildWorkOffsetMax: ImVec2,     // Work Area: Offset being built during current frame. Generally <= 0f32.
+    // Work Area: Offset being built during current frame. Generally >= 0.0.
+    pub BuildWorkOffsetMax: ImVec2,     // Work Area: Offset being built during current frame. Generally <= 0.0.
 
     pub ID: ImGuiID,
     // Unique identifier for the viewport
@@ -64,7 +64,7 @@ pub struct ImGuiViewport {
     pub WorkSize: ImVec2,
     // Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
     pub DpiScale: c_float,
-    // 1f32 = 96 DPI = No extra scale.
+    // 1.0 = 96 DPI = No extra scale.
     pub ParentViewportId: ImGuiID,
     // (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
     pub DrawData: *mut ImDrawData,               // The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame().
@@ -109,15 +109,15 @@ impl ImGuiViewport {
         )
     }
 
-    // ImGuiViewportP()                    { Idx = -1; LastFrameActive = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; LastNameHash = 0; Alpha = LastAlpha = 1f32; PlatformMonitor = -1; PlatformWindowCreated = false; Window = None; DrawLists[0] = DrawLists[1] = None; LastPlatformPos = LastPlatformSize = LastRendererSize = ImVec2::new(f32::MAX, f32::MAX); }
+    // ImGuiViewportP()                    { Idx = -1; LastFrameActive = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; LastNameHash = 0; Alpha = LastAlpha = 1.0; PlatformMonitor = -1; PlatformWindowCreated = false; Window = None; DrawLists[0] = DrawLists[1] = None; LastPlatformPos = LastPlatformSize = LastRendererSize = ImVec2::new(f32::MAX, f32::MAX); }
     pub fn new() -> Self {
         Self {
             Idx: -1,
             LastFrameActive: -1,
             DrawListsLastFrame: [-1; 2],
             LastFrontMostStampCount: -1,
-            Alpha: 1f32,
-            LastAlpha: 1f32,
+            Alpha: 1.0,
+            LastAlpha: 1.0,
             PlatformMonitor: -1,
             PlatformWindowCreated: false,
             Window: null_mut(),
@@ -147,11 +147,11 @@ impl ImGuiViewport {
     }
 
 
-    // ImVec2  CalcWorkRectSize(const ImVec2& off_min, const ImVec2& off_max) const    { return ImVec2::new(ImMax(0f32, Size.x - off_min.x + off_max.x), ImMax(0f32, Size.y - off_min.y + off_max.y)); }
+    // ImVec2  CalcWorkRectSize(const ImVec2& off_min, const ImVec2& off_max) const    { return ImVec2::new(ImMax(0.0, Size.x - off_min.x + off_max.x), ImMax(0.0, Size.y - off_min.y + off_max.y)); }
     pub fn CalcWorkRectSize(&self, off_min: &ImVec2, off_max: &ImVec2) -> ImVec2 {
         ImVec2::new(
-            ImMax(0f32, self.Size.x - off_min.x + off_max.x),
-            ImMax(0f32, self.Size.y - off_min.y + off_max.y),
+            ImMax(0.0, self.Size.x - off_min.x + off_max.x),
+            ImMax(0.0, self.Size.y - off_min.y + off_max.y),
         )
     }
 

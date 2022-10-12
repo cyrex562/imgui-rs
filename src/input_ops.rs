@@ -162,16 +162,16 @@ pub fn GetKeyChordName(mods: ImGuiModFlags, key: ImGuiKey, out_buf: *mut c_char,
 // t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
 // t1 = current time (e.g.: g.Time)
 // An event is triggered at:
-//  t = 0f32     t = repeat_delay,    t = repeat_delay + repeat_rate*N
+//  t = 0.0     t = repeat_delay,    t = repeat_delay + repeat_rate*N
 // CalcTypematicRepeatAmount: c_int(c_float t0, c_float t1, c_float repeat_delay, c_float repeat_rate)
 pub fn CalcTypematicRepeatAmount(t0: c_float, t1: c_float, repeat_delay: c_float, repeat_rate: c_float) -> c_int {
-    if t1 == 0f32 {
+    if t1 == 0.0 {
         return 1;
     }
     if t0 >= t1 {
         return 0;
     }
-    if repeat_rate <= 0f32 {
+    if repeat_rate <= 0.0 {
         return if (t0 < repeat_delay) && (t1 >= repeat_delay) {
             1
         } else {
@@ -198,12 +198,12 @@ pub unsafe fn GetTypematicRepeatRate(flags: ImGuiInputFlags, repeat_delay: *mut 
         return;
     }
     if (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavTweak || (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateDefault {
-        *repeat_delay = g.IO.KeyRepeatDelay * 1f32;
-        *repeat_rate = g.IO.KeyRepeatRate * 1f32;
+        *repeat_delay = g.IO.KeyRepeatDelay * 1.0;
+        *repeat_rate = g.IO.KeyRepeatRate * 1.0;
         return;
     }
-    *repeat_delay = g.IO.KeyRepeatDelay * 1f32;
-    *repeat_rate = g.IO.KeyRepeatRate * 1f32;
+    *repeat_delay = g.IO.KeyRepeatDelay * 1.0;
+    *repeat_rate = g.IO.KeyRepeatRate * 1.0;
     return;
 }
 
@@ -213,7 +213,7 @@ pub unsafe fn GetTypematicRepeatRate(flags: ImGuiInputFlags, repeat_delay: *mut 
 pub fn GetKeyPressedAmount(key: ImGuiKey, repeat_delay: c_float, repeat_rate: c_float) -> c_int {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let key_data = GetKeyData(key);
-    if !key_data.Down { // In theory this should already be encoded as (DownDuration < 0f32), but testing this facilitate eating mechanism (until we finish work on input ownership)
+    if !key_data.Down { // In theory this should already be encoded as (DownDuration < 0.0), but testing this facilitate eating mechanism (until we finish work on input ownership)
         return 0;
     }
     let t: c_float = key_data.DownDuration;
@@ -249,19 +249,19 @@ pub unsafe fn IsKeyPressed(key: ImGuiKey, repeat: bool) -> bool {
 // IsKeyPressedEx: bool(ImGuiKey key, ImGuiInputFlags flags)
 pub unsafe fn IsKeyPressedEx(key: ImGuiKey, flags: ImGuiInputFlags) -> bool {
     let key_data = GetKeyData(key);
-    if !key_data.Down { // In theory this should already be encoded as (DownDuration < 0f32), but testing this facilitate eating mechanism (until we finish work on input ownership)
+    if !key_data.Down { // In theory this should already be encoded as (DownDuration < 0.0), but testing this facilitate eating mechanism (until we finish work on input ownership)
         return false;
     }
     let t: c_float = key_data.DownDuration;
-    if t < 0f32 {
+    if t < 0.0 {
         return false;
     }
 
-    let mut pressed: bool = (t == 0f32);
+    let mut pressed: bool = (t == 0.0);
     if !pressed && ((flags & ImGuiInputFlags_Repeat) != 0) {
         // c_float repeat_delay, repeat_rate;
-        let mut repeat_delay: c_float = 0f32;
-        let mut repeat_rate: c_float = 0f32;
+        let mut repeat_delay: c_float = 0.0;
+        let mut repeat_rate: c_float = 0.0;
         GetTypematicRepeatRate(flags, &mut repeat_delay, &mut repeat_rate);
         pressed = (t > repeat_delay) && GetKeyPressedAmount(key, repeat_delay, repeat_rate) > 0;
     }
@@ -275,7 +275,7 @@ pub unsafe fn IsKeyPressedEx(key: ImGuiKey, flags: ImGuiInputFlags) -> bool {
 // IsKeyReleased: bool(ImGuiKey key)
 pub fn IsKeyRelease(key: ImGuiKey) -> bool {
     let key_data = GetKeyData(key);
-    if key_data.DownDurationPrev < 0f32 || key_data.Down {
+    if key_data.DownDurationPrev < 0.0 || key_data.Down {
         return false;
     }
     return true;
@@ -292,11 +292,11 @@ pub fn IsMouseDown(button: ImGuiMouseButton) -> bool {
 pub fn IsMouseClicked(button: ImGuiMouseButton, repeat: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
-    if !g.IO.MouseDown[button] {// In theory this should already be encoded as (DownDuration < 0f32), but testing this facilitate eating mechanism (until we finish work on input ownership)
+    if !g.IO.MouseDown[button] {// In theory this should already be encoded as (DownDuration < 0.0), but testing this facilitate eating mechanism (until we finish work on input ownership)
         return false;
     }
     let t: c_float = g.IO.MouseDownDuration[button];
-    if t == 0f32 {
+    if t == 0.0 {
         return true;
     }
     if repeat && t > g.IO.KeyRepeatDelay {
@@ -332,7 +332,7 @@ pub fn GetMouseClickedCount(button: ImGuiMouseButton) -> c_int {
 pub fn IsMouseDragPastThreshold(button: ImGuiMouseButton, mut lock_threshold: c_float) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
-    if lock_threshold < 0f32 {
+    if lock_threshold < 0.0 {
         lock_threshold = g.IO.MouseDragThreshold;
     }
     return g.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold * lock_threshold;
@@ -389,13 +389,13 @@ pub fn IsAnyMouseDown() -> bool {
 }
 
 // Return the delta from the initial clicking position while the mouse button is clicked or was just released.
-// This is locked and return 0f32 until the mouse moves past a distance threshold at least once.
+// This is locked and return 0.0 until the mouse moves past a distance threshold at least once.
 // NB: This is only valid if IsMousePosValid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
 // GetMouseDragDelta: ImVec2(ImGuiMouseButton button, c_float lock_threshold)
 pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
-    if lock_threshold < 0f32 {
+    if lock_threshold < 0.0 {
         lock_threshold = g.IO.MouseDragThreshold;
     }
     if g.IO.MouseDown[button] || g.IO.MouseReleased[button] {
@@ -405,7 +405,7 @@ pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) 
             }
         }
     }
-    return ImVec2::new(0f32, 0f32);
+    return ImVec2::new(0.0, 0.0);
 }
 
 // c_void ResetMouseDragDelta(ImGuiMouseButton button)
@@ -528,7 +528,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
                 mouse_button_changed |= (1 << button);
             }
         } else if e.Type == ImGuiInputEventType_MouseWheel {
-            e.IgnoredAsSame = (e.MouseWheel.WheelX == 0f32 && e.MouseWheel.WheelY == 0f32);
+            e.IgnoredAsSame = (e.MouseWheel.WheelX == 0.0 && e.MouseWheel.WheelY == 0.0);
             if !e.IgnoredAsSame {
                 // Trickling Rule: Stop processing queued events if we got multiple action on the event
                 if trickle_fast_inputs && (mouse_moved || mouse_button_changed != 0) {

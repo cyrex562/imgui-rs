@@ -43,7 +43,7 @@ pub fn GetStyleColorVec4(idx: ImGuiCol) -> &ImVec4 {
 // GetColorU32: u32(col: u32)
 pub fn GetColorU32FromU32(col: u32) -> u32 {
     let style = GimGui.Style;
-    if style.Alpha >= 1f32 {
+    if style.Alpha >= 1.0 {
         return col;
     }
     let a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;

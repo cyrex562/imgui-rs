@@ -9,8 +9,8 @@ pub struct ImGuiKeyData {
     pub Down: bool,
     // True for if key is down
     pub DownDuration: c_float,
-    // Duration the key has been down (<0f32: not pressed, 0f32: just pressed, >0f32: time held)
+    // Duration the key has been down (<0.0: not pressed, 0.0: just pressed, >0.0: time held)
     pub DownDurationPrev: c_float,
     // Last frame duration the key has been down
-    pub AnalogValue: c_float,        // 0f32..1f32 for gamepad values
+    pub AnalogValue: c_float,        // 0.0..1.0 for gamepad values
 }

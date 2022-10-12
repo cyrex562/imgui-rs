@@ -120,18 +120,18 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
 
     // Handle hover delay
     // (some ideas: https://www.nngroup.com/articles/timing-exposing-content)
-    let mut delay: c_float = 0f32;
+    let mut delay: c_float = 0.0;
     if flags & ImGuiHoveredFlags_DelayNormal {
         delay = g.IO.HoverDelayNormal;
     } else if flags & ImGuiHoveredFlags_DelayShort {
         delay = g.IO.HoverDelayShort;
     } else {
-        delay = 0f32;
+        delay = 0.0;
     }
-    if delay > 0f32 {
+    if delay > 0.0 {
         let mut hover_delay_id: ImGuiID = if g.LastItemData.ID != 0 { g.LastItemData.ID } else { window.GetIDFromRectangle(&g.LastItemData.Rect) };
         if (flags & ImGuiHoveredFlags_NoSharedDelay) != 0 && (g.HoverDelayIdPreviousFrame != hover_delay_id) {
-            g.HoverDelayTimer = 0f32;
+            g.HoverDelayTimer = 0.0;
         }
         g.HoverDelayId = hover_delay_id;
         return g.HoverDelayTimer >= delay;
@@ -191,7 +191,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id {
-            GetForegroundDrawList(null_mut()).AddRect(&bb.Min, &bb.Max, IM_COL32(255, 255, 0, 255), 0f32, ImDrawFlags_None, 0f32);
+            GetForegroundDrawList(null_mut()).AddRect(&bb.Min, &bb.Max, IM_COL32(255, 255, 0, 255), 0.0, ImDrawFlags_None, 0.0);
         }
         if g.DebugItemPickerBreakId == id {
             // IM_DEBUG_BREAK();
@@ -235,13 +235,13 @@ pub unsafe fn SetLastItemData(item_id: ImGuiID, in_flags: ImGuiItemFlags, item_f
 // c_float CalcWrapWidthForPos(const ImVec2& pos, c_float wrap_pos_x)
 pub unsafe fn CalcWrapWidthForPos(pos: &ImVec2, mut wrap_pos_x: c_float) -> c_float
 {
-    if wrap_pos_x < 0f32 {
-        return 0f32;
+    if wrap_pos_x < 0.0 {
+        return 0.0;
     }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    if wrap_pos_x == 0f32
+    if wrap_pos_x == 0.0
     {
         // We could decide to setup a default wrapping max point for auto-resizing windows,
         // or have auto-wrap (with unspecified wrapping pos) behave as a ContentSize extending function?
@@ -250,12 +250,12 @@ pub unsafe fn CalcWrapWidthForPos(pos: &ImVec2, mut wrap_pos_x: c_float) -> c_fl
         //else
         wrap_pos_x = window.WorkRect.Max.x;
     }
-    else if wrap_pos_x > 0f32
+    else if wrap_pos_x > 0.0
     {
         wrap_pos_x += window.Pos.x - window.Scroll.x; // wrap_pos_x is provided is window local space
     }
 
-    return ImMax(wrap_pos_x - pos.x, 1f32);
+    return ImMax(wrap_pos_x - pos.x, 1.0);
 }
 
 
@@ -503,10 +503,10 @@ pub unsafe fn ItemSize(size: &ImVec2,text_baseline_y: c_float)
     // We increase the height in this function to accommodate for baseline offset.
     // In theory we should be offsetting the starting position (window.DC.CursorPos), that will be the topic of a larger refactor,
     // but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
-    let offset_to_match_baseline_y: c_float =  if text_baseline_y >= 0.0 { ImMax(0f32, window.DC.CurrLineTextBaseOffset - text_baseline_y) } else { 0.0 };
+    let offset_to_match_baseline_y: c_float =  if text_baseline_y >= 0.0 { ImMax(0.0, window.DC.CurrLineTextBaseOffset - text_baseline_y) } else { 0.0 };
 
     let line_y1: c_float =  if window.DC.IsSameLine { window.DC.CursorPosPrevLine.y } else { window.DC.CursorPos.y };
-    let line_height: c_float =  ImMax(window.DC.CurrLineSize.y, /*ImMax(*/window.DC.CursorPos.y - line_y1/*, 0f32)*/ + size.y + offset_to_match_baseline_y);
+    let line_height: c_float =  ImMax(window.DC.CurrLineSize.y, /*ImMax(*/window.DC.CursorPos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y);
 
     // Always align ourselves on pixel boundaries
     //if (g.IO.KeyAlt) window.DrawList.AddRect(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
@@ -516,12 +516,12 @@ pub unsafe fn ItemSize(size: &ImVec2,text_baseline_y: c_float)
     window.DC.CursorPos.y = IM_FLOOR(line_y1 + line_height + g.Style.ItemSpacing.y);                    // Next line
     window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPosPrevLine.x);
     window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y - g.Style.ItemSpacing.y);
-    //if (g.IO.KeyAlt) window.DrawList.AddCircle(window.DC.CursorMaxPos, 3.0f32, IM_COL32(255,0,0,255), 4); // [DEBUG]
+    //if (g.IO.KeyAlt) window.DrawList.AddCircle(window.DC.CursorMaxPos, 3.0.0, IM_COL32(255,0,0,255), 4); // [DEBUG]
 
     window.DC.PrevLineSize.y = line_height;
-    window.DC.CurrLineSize.y = 0f32;
+    window.DC.CurrLineSize.y = 0.0;
     window.DC.PrevLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, text_baseline_y);
-    window.DC.CurrLineTextBaseOffset = 0f32;
+    window.DC.CurrLineTextBaseOffset = 0.0;
     window.DC.IsSameLine = false;
     window.DC.IsSetPos = false;
 

@@ -58,7 +58,7 @@ impl ImDrawListSharedData {
             return;
         }
 
-        // IM_ASSERT(max_error > 0f32);
+        // IM_ASSERT(max_error > 0.0);
         self.CircleSegmentMaxError = max_error;
         // for (let i: c_int = 0; i < CircleSegmentCounts.len(); i++)
         for i in 0.0..self.CircleSegmentCounts.len() {

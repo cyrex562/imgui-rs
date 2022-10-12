@@ -46,14 +46,14 @@ pub struct ImGuiListClipper {
 
 impl ImGuiListClipper {
     // items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
-    // items_height: Use -1f32 to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
+    // items_height: Use -1.0 to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
     // ImGuiListClipper();
 
     // ~ImGuiListClipper();
 
 
-    // c_void  Begin(items_count: c_int, c_float items_height = -1f32);
-    // IMGUI_API void  Begin(int items_count, float items_height = -1f32);
+    // c_void  Begin(items_count: c_int, c_float items_height = -1.0);
+    // IMGUI_API void  Begin(int items_count, float items_height = -1.0);
     pub unsafe fn Begin(&mut self, items_count: i32, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut window = g.CurrentWindow;
@@ -112,7 +112,7 @@ impl ImGuiListClipper {
     // ImGuiListClipper: bool::Step()
     pub unsafe fn Step(&mut self) -> bool {
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        let mut need_items_height: bool = (self.ItemsHeight <= 0f32);
+        let mut need_items_height: bool = (self.ItemsHeight <= 0.0);
         let mut ret: bool = ImGuiListClipper_StepInternal(this);
         if ret && (self.DisplayStart == self.DisplayEnd) {
             ret = false;
@@ -120,7 +120,7 @@ impl ImGuiListClipper {
         if g.CurrentTable.is_null() == false && g.Currenttable.IsUnfrozenRows == false {
             IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): inside frozen table row.\n");
         }
-        if need_items_height && self.ItemsHeight > 0f32 {
+        if need_items_height && self.ItemsHeight > 0.0 {
             IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): computed ItemsHeight: %.2f.\n", self.ItemsHeight);
         }
         if ret {
@@ -147,7 +147,7 @@ impl ImGuiListClipper {
 
 
     // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    // inline ImGuiListClipper(items_count: c_int, c_float items_height = -1f32) { memset(this, 0, sizeof(*this)); ItemsCount = -1; Begin(items_count, items_height); } // [removed in 1.79]
+    // inline ImGuiListClipper(items_count: c_int, c_float items_height = -1.0) { memset(this, 0, sizeof(*this)); ItemsCount = -1; Begin(items_count, items_height); } // [removed in 1.79]
 // #endif
 }
 

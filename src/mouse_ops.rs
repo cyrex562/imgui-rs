@@ -202,26 +202,26 @@ pub unsafe fn UpdateMouseInputs() {
     if IsMousePosValid(&io.MousePos) && IsMousePosValid(&io.MousePosPrev) {
         io.MouseDelta = io.MousePos.clone() - io.MousePosPrev.clone();
     } else {
-        io.MouseDelta = ImVec2::new(0f32, 0f32);
+        io.MouseDelta = ImVec2::new(0.0, 0.0);
     }
 
-    // If mouse moved we re-enable mouse hovering in case it was disabled by gamepad/keyboard. In theory should use a >0f32 threshold but would need to reset in everywhere we set this to true.
-    if io.MouseDelta.x != 0f32 || io.MouseDelta.y != 0f32 {
+    // If mouse moved we re-enable mouse hovering in case it was disabled by gamepad/keyboard. In theory should use a >0.0 threshold but would need to reset in everywhere we set this to true.
+    if io.MouseDelta.x != 0.0 || io.MouseDelta.y != 0.0 {
         g.NavDisableMouseHover = false;
     }
 
     io.MousePosPrev = io.MousePos.clone();
     // for (let i: c_int = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
     for i in 0..io.MouseDown.len() {
-        io.MouseClicked[i] = io.MouseDown[i] && io.MouseDownDuration[i] < 0f32;
+        io.MouseClicked[i] = io.MouseDown[i] && io.MouseDownDuration[i] < 0.0;
         io.MouseClickedCount[i] = 0; // Will be filled below
-        io.MouseReleased[i] = !io.MouseDown[i] && io.MouseDownDuration[i] >= 0f32;
+        io.MouseReleased[i] = !io.MouseDown[i] && io.MouseDownDuration[i] >= 0.0;
         io.MouseDownDurationPrev[i] = io.MouseDownDuration[i];
-        io.MouseDownDuration[i] = if io.MouseDown[i] { (if io.MouseDownDuration[i] < 0f32 { 0f32 } else { io.MouseDownDuration[i] + io.DeltaTime }) } else { -1f32 };
+        io.MouseDownDuration[i] = if io.MouseDown[i] { (if io.MouseDownDuration[i] < 0.0 { 0.0 } else { io.MouseDownDuration[i] + io.DeltaTime }) } else { -1.0 };
         if io.MouseClicked[i] {
             let mut is_repeated_click: bool = false;
             if (g.Time - io.MouseClickedTime[i]) < io.MouseDoubleClickTime {
-                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0f32, 0f32) };
+                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0.0, 0.0) };
                 if ImLengthSqr(delta_from_click_pos) < io.MouseDoubleClickMaxDist * io.MouseDoubleClickMaxDist {
                     is_repeated_click = true;
                 }
@@ -234,14 +234,14 @@ pub unsafe fn UpdateMouseInputs() {
             io.MouseClickedTime[i] = g.Time.clone();
             io.MouseClickedPos[i] = io.MousePos.clone();
             io.MouseClickedCount[i] = io.MouseClickedLastCount[i];
-            io.MouseDragMaxDistanceAbs[i] = ImVec2::new(0f32, 0f32);
-            io.MouseDragMaxDistanceSqr[i] = 0f32;
+            io.MouseDragMaxDistanceAbs[i] = ImVec2::new(0.0, 0.0);
+            io.MouseDragMaxDistanceSqr[i] = 0.0;
         } else if io.MouseDown[i] {
             // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
-            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0f32, 0f32) };
+            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0.0, 0.0) };
             io.MouseDragMaxDistanceSqr[i] = ImMax(io.MouseDragMaxDistanceSqr[i], ImLengthSqr(delta_from_click_pos));
-            io.MouseDragMaxDistanceAbs[i].x = ImMax(io.MouseDragMaxDistanceAbs[i].x, if delta_from_click_pos.x < 0f32 { delta_from_click_pos.x.clone() * -1 } else { delta_from_click_pos.x.clone() });
-            io.MouseDragMaxDistanceAbs[i].y = ImMax(io.MouseDragMaxDistanceAbs[i].y, if delta_from_click_pos.y < 0f32 { delta_from_click_pos.y.clone() * -1 } else { delta_from_click_pos.y.clone() });
+            io.MouseDragMaxDistanceAbs[i].x = ImMax(io.MouseDragMaxDistanceAbs[i].x, if delta_from_click_pos.x < 0.0 { delta_from_click_pos.x.clone() * -1 } else { delta_from_click_pos.x.clone() });
+            io.MouseDragMaxDistanceAbs[i].y = ImMax(io.MouseDragMaxDistanceAbs[i].y, if delta_from_click_pos.y < 0.0 { delta_from_click_pos.y.clone() * -1 } else { delta_from_click_pos.y.clone() });
         }
 
         // We provide io.MouseDoubleClicked[] as a legacy service
@@ -273,11 +273,11 @@ pub unsafe fn UpdateMouseWheel() {
     if g.WheelingWindow != null_mut() {
         g.WheelingWindowTimer -= g.IO.DeltaTime;
         if IsMousePosValid(null_mut()) && ImLengthSqr(g.IO.MousePos.clone() - g.WheelingWindowRefMousePos.clone()) > g.IO.MouseDragThreshold * g.IO.MouseDragThreshold {
-            g.WheelingWindowTimer = 0f32;
+            g.WheelingWindowTimer = 0.0;
         }
-        if g.WheelingWindowTimer <= 0f32 {
+        if g.WheelingWindowTimer <= 0.0 {
             g.WheelingWindow = null_mut();
-            g.WheelingWindowTimer = 0f32;
+            g.WheelingWindowTimer = 0.0;
         }
     }
 
@@ -285,9 +285,9 @@ pub unsafe fn UpdateMouseWheel() {
     let active_id_using_mouse_wheel_x: bool = g.ActiveIdUsingKeyInputMask.TestBit(ImGuiKey_MouseWheelX);
     let active_id_using_mouse_wheel_y: bool = g.ActiveIdUsingKeyInputMask.TestBit(ImGuiKey_MouseWheelY);
 
-    let mut wheel_x: c_float = if !hovered_id_using_mouse_wheel && !active_id_using_mouse_wheel_x { g.IO.MouseWheelH } else { 0f32 };
+    let mut wheel_x: c_float = if !hovered_id_using_mouse_wheel && !active_id_using_mouse_wheel_x { g.IO.MouseWheelH } else { 0.0 };
     let mut wheel_y: c_float = if !hovered_id_using_mouse_wheel && !active_id_using_mouse_wheel_y { g.IO.MouseWheel } else { 0 };
-    if wheel_x == 0f32 && wheel_y == 0f32 {
+    if wheel_x == 0.0 && wheel_y == 0.0 {
         return;
     }
 
@@ -298,13 +298,13 @@ pub unsafe fn UpdateMouseWheel() {
 
     // Zoom / Scale window
     // FIXME-OBSOLETE: This is an old feature, it still works but pretty much nobody is using it and may be best redesigned.
-    if wheel_y != 0f32 && g.IO.KeyCtrl && g.IO.FontAllowUserScaling {
+    if wheel_y != 0.0 && g.IO.KeyCtrl && g.IO.FontAllowUserScaling {
         StartLockWheelingWindow(window);
-        let new_font_scale: c_float = ImClamp(window.FontWindowScale + g.IO.MouseWheel * 0.1f32, 0.50f32, 2.500f32);
+        let new_font_scale: c_float = ImClamp(window.FontWindowScale + g.IO.MouseWheel * 0.1.0, 0.50f32, 2.500f32);
         let scale: c_float = new_font_scale / window.FontWindowScale;
         window.FontWindowScale = new_font_scale;
         if window == window.RootWindow {
-            let offset: ImVec2 = window.Size.clone() * (1f32 - scale) * (g.IO.MousePos.clone() - window.Pos.clone()) / window.Size.clone();
+            let offset: ImVec2 = window.Size.clone() * (1.0 - scale) * (g.IO.MousePos.clone() - window.Pos.clone()) / window.Size.clone();
             SetWindowPos(window, window.Pos.clone() + offset, 0);
             window.Size = ImFloor(window.Size.clone() * scale);
             window.SizeFull = ImFloor(window.SizeFull.clone() * scale);
@@ -323,13 +323,13 @@ pub unsafe fn UpdateMouseWheel() {
     let swap_axis: bool = g.IO.KeyShift && !g.IO.ConfigMacOSXBehaviors;
     if swap_axis {
         wheel_x = wheel_y;
-        wheel_y = 0f32;
+        wheel_y = 0.0;
     }
 
     // Vertical Mouse Wheel scrolling
-    if wheel_y != 0f32 {
+    if wheel_y != 0.0 {
         StartLockWheelingWindow(window);
-        while (window.Flags & ImGuiWindowFlags_ChildWindow) && ImGuiWindowFlags::from(((window.ScrollMax.y == 0f32) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window.Flags & ImGuiWindowFlags_NoMouseInputs)))) {
+        while (window.Flags & ImGuiWindowFlags_ChildWindow) && ImGuiWindowFlags::from(((window.ScrollMax.y == 0.0) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window.Flags & ImGuiWindowFlags_NoMouseInputs)))) {
             window = window.ParentWindow;
         }
         if !(window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window.Flags & ImGuiWindowFlags_NoMouseInputs) {
@@ -340,9 +340,9 @@ pub unsafe fn UpdateMouseWheel() {
     }
 
     // Horizontal Mouse Wheel scrolling, or Vertical Mouse Wheel w/ Shift held
-    if wheel_x != 0f32 {
+    if wheel_x != 0.0 {
         StartLockWheelingWindow(window);
-        while (window.Flags & ImGuiWindowFlags_ChildWindow) != 0 && ((window.ScrollMax.x == 0f32) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) != 0 && !(window.Flags & ImGuiWindowFlags_NoMouseInputs) != 0)) {
+        while (window.Flags & ImGuiWindowFlags_ChildWindow) != 0 && ((window.ScrollMax.x == 0.0) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) != 0 && !(window.Flags & ImGuiWindowFlags_NoMouseInputs) != 0)) {
             window = window.ParentWindow;
         }
         if !(window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window.Flags & ImGuiWindowFlags_NoMouseInputs) {

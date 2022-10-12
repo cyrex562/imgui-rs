@@ -18,7 +18,7 @@ impl ImGuiStyleMod {
         Self {
             VarIdx: idx,
             BackupInt: [v, 0],
-            BackupFloat: [0f32; 2],
+            BackupFloat: [0.0; 2],
         }
     }
 
@@ -26,7 +26,7 @@ impl ImGuiStyleMod {
     pub fn new2(idx: ImGuiStyleVar, v: c_float) -> Self {
         Self {
             VarIdx: idx,
-            BackupFloat: [v, 0f32],
+            BackupFloat: [v, 0.0],
             ..Default::default()
         }
     }
@@ -36,7 +36,7 @@ impl ImGuiStyleMod {
     pub fn new3(idx: ImGuiStyleVar, v: ImVec2) -> Self {
         Self {
             VarIdx: idx,
-            BackupFloat: [v.x, 0f32],
+            BackupFloat: [v.x, 0.0],
             ..Default::default()
         }
     }

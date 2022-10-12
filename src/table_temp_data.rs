@@ -29,5 +29,5 @@ pub HostBackupItemWidthStackSize: c_int,//Backup of Outerwindow.DC.ItemWidthStac
 }
 
 impl ImGuiTableTempData {
-    // ImGuiTableTempData()        { memset(this, 0, sizeof(*this)); LastTimeActive = -1f32; }
+    // ImGuiTableTempData()        { memset(this, 0, sizeof(*this)); LastTimeActive = -1.0; }
 }

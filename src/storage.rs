@@ -23,7 +23,7 @@ impl ImGuiStoragePair {
         Self {
             key: _key,
             val_i: _val_i.unwrap_or(0),
-            val_f: _val_f.unwrap_or(0f32),
+            val_f: _val_f.unwrap_or(0.0),
             val_p: _val_p.unwrap_or(null_mut()),
         }
     }
@@ -94,7 +94,7 @@ impl ImGuiStorage {
         self.SetInt(key, if val { 1 } else { 0 });
     }
 
-    // IMGUI_API float     GetFloat(ImGuiID key, float default_val = 0f32) const;
+    // IMGUI_API float     GetFloat(ImGuiID key, float default_val = 0.0) const;
     pub fn GetFloat(&mut self, key: ImGuiID, default_val: f32) -> f32 {
         let it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {
@@ -154,7 +154,7 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API float*    GetFloatRef(ImGuiID key, float default_val = 0f32);
+    // IMGUI_API float*    GetFloatRef(ImGuiID key, float default_val = 0.0);
     pub fn GetFloatRef(&mut self, key: ImGuiID, default_val: f32) -> *mut f32 {
         let mut it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {

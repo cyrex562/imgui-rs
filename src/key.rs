@@ -130,7 +130,7 @@ pub const ImGuiKey_KeypadAdd: ImGuiKey = 623;
 pub const ImGuiKey_KeypadEnter: ImGuiKey = 624;
 pub const ImGuiKey_KeypadEqual: ImGuiKey = 625;
 
-// Gamepad (some of those are analog values; 0f32 to 1f32)                          // GAME NAVIGATION ACTION
+// Gamepad (some of those are analog values; 0.0 to 1.0)                          // GAME NAVIGATION ACTION
 // (download controller mapping PNG/PSD at http://dearimgui.org/controls_sheets)
 pub const ImGuiKey_GamepadStart: ImGuiKey = 626;
 // Menu (Xbox)      + (Switch)   Start/Options (PS)

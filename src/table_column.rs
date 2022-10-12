@@ -24,7 +24,7 @@ pub struct ImGuiTableColumn {
     pub WidthAuto: c_float,
     // Automatic width
     pub StretchWeight: c_float,
-    // Master width weight when (Flags & _WidthStretch). Often around ~1f32 initially.
+    // Master width weight when (Flags & _WidthStretch). Often around ~1.0 initially.
     pub InitStretchWeightOrWidth: c_float,
     // Value passed to TableSetupColumn(). For Width it is a content width (_without padding_).
     pub ClipRect: ImRect,
@@ -94,8 +94,8 @@ impl ImGuiTableColumn {
         Self
         {
             // memset(this, 0, sizeof(*this));
-            StretchWeight: -1f32,
-            WidthRequest : -1f32,
+            StretchWeight: -1.0,
+            WidthRequest : -1.0,
             NameOffset : -1,
             DisplayOrder : -1,
             IndexWithinEnabledSet : -1,

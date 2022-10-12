@@ -22,7 +22,7 @@ pub struct ImGuiTabItem {
     pub ContentWidth: c_float,
     // Width of label, stored during BeginTabItem() call
     pub RequestedWidth: c_float,
-    // Width optionally requested by caller, -1f32 is unused
+    // Width optionally requested by caller, -1.0 is unused
     pub NameOffset: i32,
     // When Window==NULL, offset to name within parent ImGuiTabBar::TabsNames
     pub BeginOrder: i16,
@@ -38,13 +38,13 @@ impl ImGuiTabItem {
     {
     // memset(this, 0, sizeof(*this));
     //     LastFrameVisible = LastFrameSelected = -1;
-    //     RequestedWidth = -1f32;
+    //     RequestedWidth = -1.0;
     //     NameOffset = -1;
     //     BeginOrder = IndexDuringLayout = -1;
         Self {
             LastFrameVisible: -1,
             LastFrameSelected: -1,
-            RequestedWidth: -1f32,
+            RequestedWidth: -1.0,
             NameOffset: -1,
             BeginOrder: -1,
             IndexDuringLayout: -1,

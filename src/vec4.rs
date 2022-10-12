@@ -9,7 +9,7 @@ pub struct ImVec4
     pub z: c_float,
     pub w: c_float
 
-    // constexpr ImVec4()                                        : x(0f32), y(0f32), z(0f32), w(0f32) { }
+    // constexpr ImVec4()                                        : x(0.0), y(0.0), z(0.0), w(0.0) { }
     // constexpr ImVec4(c_float _x, c_float _y, c_float _z, c_float _w)  : x(_x), y(_y), z(_z), w(_w) { }
     // #ifdef IM_VEC4_CLASS_EXTRA
     // IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.

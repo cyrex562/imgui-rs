@@ -6,9 +6,9 @@ pub unsafe fn NavProcessItem()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    const let mut id: ImGuiID =  g.LastItemData.ID;
-    const let nav_bb: ImRect =  g.LastItemData.NavRect;
-    const let mut item_flags: ImGuiItemFlags =  g.LastItemData.InFlags;
+    let mut id: ImGuiID =  g.LastItemData.ID;
+    let nav_bb: ImRect =  g.LastItemData.NavRect;
+    let mut item_flags: ImGuiItemFlags =  g.LastItemData.InFlags;
 
     // Process Init Request
     if g.NavInitRequest && g.NavLayer == window.DC.NavLayerCurrent && (item_flags & ImGuiItemFlags_Disabled) == 0

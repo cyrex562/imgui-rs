@@ -5,7 +5,7 @@ use libc::{c_double, c_float, c_int};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 
-// static inline bool   ImIsFloatAboveGuaranteedIntegerPrecision(c_float 0f32)
+// static inline bool   ImIsFloatAboveGuaranteedIntegerPrecision(c_float 0.0)
 pub fn ImIsFloatAboveGuaranteedIntegerPrecision(f: c_loat) -> bool {
     return f <= -16777216 || f >= 16777216;
 }
@@ -102,7 +102,7 @@ pub fn ImAbsDouble(x: c_double) -> c_double {
     x.abs()
 }
 
-// static inline c_float  ImSign(c_float x)            { return (x < 0f32) ? -1f32 : (x > 0f32) ? 1f32 : 0f32; } // Sign operator - returns -1, 0 or 1 based on sign of argument
+// static inline c_float  ImSign(c_float x)            { return (x < 0.0) ? -1.0 : (x > 0.0) ? 1.0 : 0.0; } // Sign operator - returns -1, 0 or 1 based on sign of argument
 pub fn ImSignFloat(x: c_float) -> c_float {
     x.signum()
 }
@@ -120,7 +120,7 @@ pub fn ImRsqrtFloat(x: c_float) -> c_float {
 }
 
 // #else
-// static inline c_float  ImRsqrt(c_float x)           { return 1f32 / sqrtf(x); }
+// static inline c_float  ImRsqrt(c_float x)           { return 1.0 / sqrtf(x); }
 // #endif
 // static inline double ImRsqrt(double x)          { return 1.0 / sqrt(x); }
 pub fn ImRsqrtDouble(x: c_double) -> c_double {
@@ -267,7 +267,7 @@ pub fn ImLerpVec4(a: &ImVec4, b: &ImVec4, t: c_float) -> ImVec4 {
     ImVec4::new2(x,y,z,w)
 }
 
-// static inline c_float  ImSaturate(c_float 0f32)                                        { return (f < 0f32) ? 0f32 : (f > 1f32) ? 1f32 : f; }
+// static inline c_float  ImSaturate(c_float 0.0)                                        { return (f < 0.0) ? 0.0 : (f > 1.0) ? 1.0 : f; }
 pub fn ImSaturateFloat(x: c_float) -> c_float {
     if x < 0.0 {
         0.0
@@ -290,7 +290,7 @@ pub fn ImLengthSqrVec4(lhs: &ImVec4) -> c_float{
 }
 
 
-// static inline c_float  ImInvLength(lhs: &ImVec2, c_float fail_value)           { let d: c_float =  (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0f32) return ImRsqrt(d); return fail_value; }
+// static inline c_float  ImInvLength(lhs: &ImVec2, c_float fail_value)           { let d: c_float =  (lhs.x * lhs.x) + (lhs.y * lhs.y); if (d > 0.0) return ImRsqrt(d); return fail_value; }
 pub fn ImInvLength(lhs: &ImVec2, fail_value: c_float) -> c_float {
     let d = (lhs.x * lhs.x) + (lhs.y * lhs.y);
     if d > 0.0 {
@@ -300,12 +300,12 @@ pub fn ImInvLength(lhs: &ImVec2, fail_value: c_float) -> c_float {
     }
 }
 
-// static inline c_float  ImFloor(c_float 0f32)                                           { return (0f32); }
+// static inline c_float  ImFloor(c_float 0.0)                                           { return (0.0); }
 pub fn ImFloorFloat(x : c_float) -> c_float {
     x.floor()
 }
 
-// static inline c_float  ImFloorSigned(c_float 0f32)                                     { return ((f >= 0 || f == 0f32) ? f : f - 1); } // Decent replacement for floorf()
+// static inline c_float  ImFloorSigned(c_float 0.0)                                     { return ((f >= 0 || f == 0.0) ? f : f - 1); } // Decent replacement for floorf()
 
 // static inline ImFloor: ImVec2(v: &ImVec2)                                   { return ImVec2::new((v.x), (v.y)); }
 pub fn ImFloorVec2(v: &ImVec2) -> ImVec2 {

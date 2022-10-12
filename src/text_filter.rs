@@ -89,9 +89,9 @@ impl ImGuiTextFilter {
         out
     }
 
-    // IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0f32);  // Helper calling InputText+Build
+    // IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0);  // Helper calling InputText+Build
     pub unsafe fn Draw(&mut self, label: *const c_char, width: f32) -> bool {
-        if width != 0f32 {
+        if width != 0.0 {
             SetNextItemWidth(width);
         }
         let value_changed = InputText::new(label, InputBuf, InputBu0f32.len());

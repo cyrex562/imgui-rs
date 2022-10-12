@@ -63,7 +63,7 @@ pub unsafe fn NewFrame()
     g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx] = g.IO.DeltaTime;
     g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % g.FramerateSecPerFrame.len();
     g.FramerateSecPerFrameCount = ImMin(g.FramerateSecPerFrameCount + 1, g.FramerateSecPerFrame.len() as c_int);
-    g.IO.Framerate = (g.FramerateSecPerFrameAccum > 0f32) ? (1f32 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)) : f32::MAX;
+    g.IO.Framerate = (g.FramerateSecPerFrameAccum > 0.0) ? (1.0 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)) : f32::MAX;
 
     UpdateViewportsNewFrame();
 
@@ -110,10 +110,10 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
 
     // Update HoveredId data
     if !g.HoveredIdPreviousFrame {
-        g.HoveredIdTimer = 0f32;
+        g.HoveredIdTimer = 0.0;
     }
     if !g.HoveredIdPreviousFrame >= 0 || (g.HoveredId != -1 && g.ActiveId == g.HoveredId) {
-        g.HoveredIdNotActiveTimer = 0f32;
+        g.HoveredIdNotActiveTimer = 0.0;
     }
     if g.HoveredId {
         g.HoveredIdTimer += g.IO.DeltaTime;
@@ -178,19 +178,19 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     g.HoverDelayIdPreviousFrame = g.HoverDelayId;
     if g.HoverDelayId != 0
     {
-        //if (g.IO.MouseDelta.x == 0f32 && g.IO.MouseDelta.y == 0f32) // Need design/flags
+        //if (g.IO.MouseDelta.x == 0.0 && g.IO.MouseDelta.y == 0.0) // Need design/flags
         g.HoverDelayTimer += g.IO.DeltaTime;
-        g.HoverDelayClearTimer = 0f32;
+        g.HoverDelayClearTimer = 0.0;
         g.HoverDelayId = 0;
     }
-    else if g.HoverDelayTimer > 0f32
+    else if g.HoverDelayTimer > 0.0
     {
         // This gives a little bit of leeway before clearing the hover timer, allowing mouse to cross gaps
         g.HoverDelayClearTimer += g.IO.DeltaTime;
         if g.HoverDelayClearTimer >= ImMax(0.20f32, g.IO.DeltaTime * 2.00f32) {
             // ~6 frames at 30 Hz + allow for low framerate
-            g.HoverDelayTimer = 0f32;
-            g.HoverDelayClearTimer = 0f32;
+            g.HoverDelayTimer = 0.0;
+            g.HoverDelayClearTimer = 0.0;
         }
         // May want a decaying timer, in which case need to clamp at max first, based on max of caller last requested timer.
     }
@@ -237,11 +237,11 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     UpdateMouseMovingWindowNewFrame();
 
     // Background darkening/whitening
-    if GetTopMostPopupModal() != null_mut() || (g.NavWindowingTarget != null_mut() && g.NavWindowingHighlightAlpha > 0f32) {
-        g.DimBgRatio = ImMin(g.DimBgRatio + g.IO.DeltaTime * 6f32, 1f32);
+    if GetTopMostPopupModal() != null_mut() || (g.NavWindowingTarget != null_mut() && g.NavWindowingHighlightAlpha > 0.0) {
+        g.DimBgRatio = ImMin(g.DimBgRatio + g.IO.DeltaTime * 6f32, 1.0);
     }
     else {
-        g.DimBgRatio = ImMax(g.DimBgRatio - g.IO.DeltaTime * 10f32, 0f32);
+        g.DimBgRatio = ImMax(g.DimBgRatio - g.IO.DeltaTime * 10f32, 0.0);
     }
 
     g.MouseCursor = ImGuiMouseCursor_Arrow;
@@ -258,7 +258,7 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
 
     // Mark all windows as not visible and compact unused memory.
     // IM_ASSERT(g.WindowsFocusOrder.Size <= g.Windows.Size);
-    let memory_compact_start_time: c_float =  if g.GcCompactAll || g.IO.ConfigMemoryCompactTimer < 0f32 { f32::MAX } else { g.Time - g.IO.ConfigMemoryCompactTimer };
+    let memory_compact_start_time: c_float =  if g.GcCompactAll || g.IO.ConfigMemoryCompactTimer < 0.0 { f32::MAX } else { g.Time - g.IO.ConfigMemoryCompactTimer };
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
     for i in 0 .. g.Windows.len()
     {
@@ -278,14 +278,14 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     // for (let i: c_int = 0; i < g.TablesLastTimeActive.Size; i++)
     for i in 0 .. g.TablesLastTimeActive.len()
     {
-        if g.TablesLastTimeActive[i] >= 0f32 && g.TablesLastTimeActive[i] < memory_compact_start_time {
+        if g.TablesLastTimeActive[i] >= 0.0 && g.TablesLastTimeActive[i] < memory_compact_start_time {
             TableGcCompactTransientBuffers(g.Tables.GetByIndex(i));
         }
     }
     // for (let i: c_int = 0; i < g.TablesTempData.Size; i++)
     for i in 0 .. g.TablesTempData.len()
     {
-        if g.TablesTempData[i].LastTimeActive >= 0f32 && g.TablesTempData[i].LastTimeActive < memory_compact_start_time {
+        if g.TablesTempData[i].LastTimeActive >= 0.0 && g.TablesTempData[i].LastTimeActive < memory_compact_start_time {
             TableGcCompactTransientBuffers(&g.TablesTempData[i]);
         }
     }
@@ -416,8 +416,8 @@ pub unsafe fn EndFrame()
     g.IO.Fonts.Locked = false;
 
     // Clear Input data for next frame
-    g.IO.MouseWheel = 0f32;
-    g.IO.MouseWheelH = 0f32;
+    g.IO.MouseWheel = 0.0;
+    g.IO.MouseWheelH = 0.0;
     g.IO.InputQueueCharacters.clear();
 
     CallContextHooks(g, ImGuiContextHookType_EndFramePost);

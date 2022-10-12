@@ -25,7 +25,7 @@ pub const ImGuiWindowFlags_NoCollapse: ImGuiWindowFlags = 1 << 5;
 pub const ImGuiWindowFlags_AlwaysAutoResize: ImGuiWindowFlags = 1 << 6;
 // Resize every window to its content every frame
 pub const ImGuiWindowFlags_NoBackground: ImGuiWindowFlags = 1 << 7;
-// Disable drawing background color (WindowBg; etc.) and outside border. Similar as using SetNextWindowBgAlpha(0f32).
+// Disable drawing background color (WindowBg; etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0).
 pub const ImGuiWindowFlags_NoSavedSettings: ImGuiWindowFlags = 1 << 8;
 // Never load/save settings in .ini file
 pub const ImGuiWindowFlags_NoMouseInputs: ImGuiWindowFlags = 1 << 9;
@@ -33,7 +33,7 @@ pub const ImGuiWindowFlags_NoMouseInputs: ImGuiWindowFlags = 1 << 9;
 pub const ImGuiWindowFlags_MenuBar: ImGuiWindowFlags = 1 << 10;
 // Has a menu-bar
 pub const ImGuiWindowFlags_HorizontalScrollbar: ImGuiWindowFlags = 1 << 11;
-// Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2::new(width;0f32)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
+// Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2::new(width;0.0)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
 pub const ImGuiWindowFlags_NoFocusOnAppearing: ImGuiWindowFlags = 1 << 12;
 // Disable taking focus when transitioning from hidden to visible state
 pub const ImGuiWindowFlags_NoBringToFrontOnFocus: ImGuiWindowFlags = 1 << 13;

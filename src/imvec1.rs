@@ -9,10 +9,10 @@ pub struct ImVec1 {
 }
 
 impl ImVec1 {
-    // constexpr ImVec1()         : x(0f32) { }
+    // constexpr ImVec1()         : x(0.0) { }
     pub fn new() -> Self {
         Self {
-            x: 0f32,
+            x: 0.0,
         }
     }
     // constexpr ImVec1(c_float _x) : x(_x) { }

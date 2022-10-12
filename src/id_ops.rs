@@ -26,13 +26,13 @@ pub unsafe fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
     g.ActiveIdIsJustActivated = (g.ActiveId != id);
     if g.ActiveIdIsJustActivated {
         // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.ActiveId, g.ActiveIdWindow ? g.ActiveIdwindow.Name : "", id, window ? window.Name : "");
-        g.ActiveIdTimer = 0f32;
+        g.ActiveIdTimer = 0.0;
         g.ActiveIdHasBeenPressedBefore = false;
         g.ActiveIdHasBeenEditedBefore = false;
         g.ActiveIdMouseButton = -1;
         if id != 0 {
             g.LastActiveId = id;
-            g.LastActiveIdTimer = 0f32;
+            g.LastActiveIdTimer = 0.0;
         }
     }
     g.ActiveId = id;
@@ -67,8 +67,8 @@ pub unsafe fn SetHoveredID(id: ImGuiID) {
     g.HoveredIdAllowOverlap = false;
     g.HoveredIdUsingMouseWheel = false;
     if id != 0 && g.HoveredIdPreviousFrame != id {
-        g.HoveredIdTimer = 0f32;
-        g.HoveredIdNotActiveTimer = 0f32;
+        g.HoveredIdTimer = 0.0;
+        g.HoveredIdNotActiveTimer = 0.0;
     }
 }
 

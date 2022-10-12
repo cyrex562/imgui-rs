@@ -14,8 +14,8 @@ pub LastFirstRowHeight:  c_float,         // Height of first row from last frame
 impl ImGuiTableInstanceData {
     pub fn new() -> Self {
         Self {
-            LastOuterHeight: 0f32,
-            LastFirstRowHeight: 0f32,
+            LastOuterHeight: 0.0,
+            LastFirstRowHeight: 0.0,
         }
     }
 }

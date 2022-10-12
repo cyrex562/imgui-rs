@@ -21,7 +21,7 @@ pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
 // ImVec4 ColorConvertU32ToFloat4(in: u32)
 pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
 {
-    let s = 1f32 / 255f32;
+    let s = 1.0 / 255f32;
     return ImVec4::new2(
         ((in_color >> IM_COL32_R_SHIFT) & 0xFF) * s,
         ((in_color >> IM_COL32_G_SHIFT) & 0xFF) * s,
@@ -45,7 +45,7 @@ pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 // void ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
 pub fn ColorConvertRGBtoHSV(mut r: f32, mut g: f32, mut b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32)
 {
-    let mut K = 0f32;
+    let mut K = 0.0;
     if g < b
     {
         ImSwap(&mut g, &mut b);
@@ -67,7 +67,7 @@ pub fn ColorConvertRGBtoHSV(mut r: f32, mut g: f32, mut b: f32, out_h: &mut f32,
 // also http://en.wikipedia.org/wiki/HSL_and_HSV
 // void ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
 pub fn ColorConvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32) {
-    if s == 0f32 {
+    if s == 0.0 {
         // gray
         *out_r = v;
         *out_g = v;
@@ -75,20 +75,20 @@ pub fn ColorConvertHSVtoRGB(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: 
         return;
     }
 
-    h = ImFmod(h, 1f32) / (60f32 / 360f32);
+    h = ImFmod(h, 1.0) / (60f32 / 360f32);
     let mut i = h;
     let mut f = h - i;
-    let mut p = v * (1f32 - s);
-    let mut q = v * (1f32 - s * 0f32);
-    let mut t = v * (1f32 - s * (1f32 - 0f32));
+    let mut p = v * (1.0 - s);
+    let mut q = v * (1.0 - s * 0.0);
+    let mut t = v * (1.0 - s * (1.0 - 0.0));
 
     match i {
-        0f32 => {
+        0.0 => {
             *out_r = v;
             *out_g = t;
             *out_b = p;
         }
-        1f32 => {
+        1.0 => {
             *out_r = q;
             *out_g = v;
             *out_b = p;

@@ -13,15 +13,15 @@ pub const ImDrawFlags_None: ImDrawFlags = 0;
 pub const ImDrawFlags_Closed: ImDrawFlags = 1 << 0;
 // PathStroke(); AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
 pub const ImDrawFlags_RoundCornersTopLeft: ImDrawFlags = 1 << 4;
-// AddRect(); AddRectFilled(); PathRect(): enable rounding top-left corner only (when rounding > 0f32; we default to all corners). Was 0x01.
+// AddRect(); AddRectFilled(); PathRect(): enable rounding top-left corner only (when rounding > 0.0; we default to all corners). Was 0x01.
 pub const ImDrawFlags_RoundCornersTopRight: ImDrawFlags = 1 << 5;
-// AddRect(); AddRectFilled(); PathRect(): enable rounding top-right corner only (when rounding > 0f32; we default to all corners). Was 0x02.
+// AddRect(); AddRectFilled(); PathRect(): enable rounding top-right corner only (when rounding > 0.0; we default to all corners). Was 0x02.
 pub const ImDrawFlags_RoundCornersBottomLeft: ImDrawFlags = 1 << 6;
-// AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-left corner only (when rounding > 0f32; we default to all corners). Was 0x04.
+// AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-left corner only (when rounding > 0.0; we default to all corners). Was 0x04.
 pub const ImDrawFlags_RoundCornersBottomRight: ImDrawFlags = 1 << 7;
-// AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-right corner only (when rounding > 0f32; we default to all corners). Wax 0x08.
+// AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-right corner only (when rounding > 0.0; we default to all corners). Wax 0x08.
 pub const ImDrawFlags_RoundCornersNone: ImDrawFlags = 1 << 8;
-// AddRect(); AddRectFilled(); PathRect(): disable rounding on all corners (when rounding > 0f32). This is NOT zero; NOT an implicit flag!
+// AddRect(); AddRectFilled(); PathRect(): disable rounding on all corners (when rounding > 0.0). This is NOT zero; NOT an implicit flag!
 pub const ImDrawFlags_RoundCornersTop: ImDrawFlags =
     ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight;
 pub const ImDrawFlags_RoundCornersBottom: ImDrawFlags =

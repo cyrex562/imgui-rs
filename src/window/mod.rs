@@ -29,7 +29,7 @@ use crate::type_defs::{ImGuiDir, ImGuiID};
 use crate::vec4::ImVec4;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window::window_flags::ImGuiWindowFlags;
-use crate::window::window_ops::WindowRectAbsToRel;
+use rect::WindowRectAbsToRel;
 use crate::window::window_temp_data::ImGuiWindowTempData;
 use crate::window_flags::ImGuiWindowFlags;
 use crate::window_ops::WindowRectAbsToRel;
@@ -43,6 +43,9 @@ pub mod window_ops;
 pub mod window_temp_data;
 pub mod window_dock_style_colors;
 pub mod window_dock_style_color;
+pub mod render;
+mod rect;
+mod find;
 
 // Storage for one window
 pub struct ImGuiWindow {
@@ -91,11 +94,11 @@ pub struct ImGuiWindow {
     pub Scroll: ImVec2,
     pub ScrollMax: ImVec2,
     pub ScrollTarget: ImVec2,
-    // target scroll position. stored as cursor position with scrolling canceled out, so the highest point is always 0f32. (f32::MAX for no change)
+    // target scroll position. stored as cursor position with scrolling canceled out, so the highest point is always 0.0. (f32::MAX for no change)
     pub ScrollTargetCenterRatio: ImVec2,
-    // 0f32 = scroll so that target position is at top, 0.5f32 = scroll so that target position is centered
+    // 0.0 = scroll so that target position is at top, 0.5f32 = scroll so that target position is centered
     pub ScrollTargetEdgeSnapDist: ImVec2,
-    // 0f32 = no snapping, >0f32 snapping threshold
+    // 0.0 = no snapping, >0.0 snapping threshold
     pub ScrollbarSizes: ImVec2,
     // Size taken by each scrollbars on their smaller axis. Pay attention! ScrollbarSizes.x == width of the vertical scrollbar, ScrollbarSizes.y = height of the horizontal scrollbar.
 // bool                    ScrollbarX, ScrollbarY;             // Are scrollbars visible?
@@ -173,7 +176,7 @@ pub struct ImGuiWindow {
     pub InnerClipRect: ImRect,
     // == InnerRect shrunk by WindowPadding*0.5f32 on each side, clipped within viewport or parent clip rect.
     pub WorkRect: ImRect,
-    // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1f32 on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
+    // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1.0 on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
     pub ParentWorkRect: ImRect,
     // Backup of WorkRect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
     pub ClipRect: ImVec4,
@@ -274,9 +277,9 @@ impl ImGuiWindow {
             SetWindowPosPivot: ImVec2::new(f32::MAX, f32::MAX),
             LastFrameActive: -1,
             LastFrameJustFocused: -1,
-            LastTimeActive: -1f32,
-            FontWindowScale: 1f32,
-            FontDpiScale: 1f32,
+            LastTimeActive: -1.0,
+            FontWindowScale: 1.0,
+            FontDpiScale: 1.0,
             SettingsOffset: -1,
             DockOrder: -1,
             DrawList: null_mut(),
@@ -346,13 +349,13 @@ impl ImGuiWindow {
     // float       CalcFontSize() const    { let g = GImGui; // ImGuiContext& g = *GImGui; float scale = g.FontBaseSize * FontWindowScale * FontDpiScale; if (ParentWindow) scale *= Parentwindow.FontWindowScale; return scale; }
 
 
-    // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0f32 : CalcFontSize() + g.Style.FramePadding.y * 2.0f32; }
+    // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0.0 : CalcFontSize() + g.Style.FramePadding.y * 2.0.0; }
 
 
     // ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2::new(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
 
 
-    // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0f32 : 0f32; }
+    // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0.0 : 0.0; }
 
 
     // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }

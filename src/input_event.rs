@@ -62,7 +62,7 @@ struct ImGuiInputEventKey           {
     pub Key: ImGuiKey,
     // pub: bool(crate) Down;
     pub Down: Down,
-    // let mut AnalogValue: c_float = 0f32;
+    // let mut AnalogValue: c_float = 0.0;
 }
 
 #[derive(Default,Debug,Clone,Copy)]

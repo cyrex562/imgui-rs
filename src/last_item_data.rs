@@ -4,7 +4,7 @@ use crate::rect::ImRect;
 use crate::type_defs::ImGuiID;
 
 // Status storage for the last submitted item
-#[derive(Default,Debug,Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct ImGuiLastItemData
 {
 pub ID: ImGuiID,
