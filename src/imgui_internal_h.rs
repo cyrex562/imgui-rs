@@ -77,7 +77,7 @@ static inline u64         ImFileWrite(*const c_void, u64, u64, ImFileHandle)    
 
 // Helper: ImBitArray
 inline bool     ImBitArrayTestBit(*arr: u32, n: c_int)      { mask: u32 = 1 << (n & 31); return (arr[n >> 5] & mask) != 0; }
-inline c_void     ImBitArrayClearBit(*mut arr: u32, n: c_int)           { mask: u32 = 1 << (n & 31); arr[n >> 5] &= ~mask; }
+inline c_void     ImBitArrayClearBit(*mut arr: u32, n: c_int)           { mask: u32 = 1 << (n & 31); arr[n >> 5] &= !mask; }
 inline c_void     ImBitArraySetBit(*mut arr: u32, n: c_int)             { mask: u32 = 1 << (n & 31); arr[n >> 5] |= mask; }
 inline c_void     ImBitArraySetBitRange(*mut arr: u32, n: c_int, n2: c_int) // Works on range [n..n2)
 {
@@ -88,7 +88,7 @@ inline c_void     ImBitArraySetBitRange(*mut arr: u32, n: c_int, n2: c_int) // W
         let b_mod: c_int = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
         mask: u32 = (((u64)1 << b_mod) - 1) & ~(((u64)1 << a_mod) - 1);
         arr[n >> 5] |= mask;
-        n = (n + 32) & ~31;
+        n = (n + 32) & !31;
     }
 }
 
@@ -435,10 +435,10 @@ enum ImGuiDockNodeFlagsPrivate_
     ImGuiDockNodeFlags_NoDockingOverEmpty       = 1 << 21,  // [EXPERIMENTAL] Prevent this node to be docked over an empty node (e.g. DockSpace with no other windows)
     ImGuiDockNodeFlags_NoResizeX                = 1 << 22,  // [EXPERIMENTAL]
     ImGuiDockNodeFlags_NoResizeY                = 1 << 23,  // [EXPERIMENTAL]
-    ImGuiDockNodeFlags_SharedFlagsInheritMask_  = ~0,
+    ImGuiDockNodeFlags_SharedFlagsInheritMask_  = !0,
     ImGuiDockNodeFlags_NoResizeFlagsMask_       = ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoResizeX | ImGuiDockNodeFlags_NoResizeY,
     ImGuiDockNodeFlags_LocalFlagsMask_          = ImGuiDockNodeFlags_NoSplit | ImGuiDockNodeFlags_NoResizeFlagsMask_ | ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_CentralNode | ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_HiddenTabBar | ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton | ImGuiDockNodeFlags_NoDocking,
-    ImGuiDockNodeFlags_LocalFlagsTransferMask_  = ImGuiDockNodeFlags_LocalFlagsMask_ & ~ImGuiDockNodeFlags_DockSpace,  // When splitting those flags are moved to the inheriting child, never duplicated
+    ImGuiDockNodeFlags_LocalFlagsTransferMask_  = ImGuiDockNodeFlags_LocalFlagsMask_ & !ImGuiDockNodeFlags_DockSpace,  // When splitting those flags are moved to the inheriting child, never duplicated
     ImGuiDockNodeFlags_SavedFlagsMask_          = ImGuiDockNodeFlags_NoResizeFlagsMask_ | ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlags_CentralNode | ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_HiddenTabBar | ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton | ImGuiDockNodeFlags_NoDocking
 };
 
@@ -560,7 +560,7 @@ namespace ImGui
     inline    *mut ImGuiWindow  GetCurrentWindow()          { let g = GImGui; // ImGuiContext& g = *GImGui; g.Currentwindow.WriteAccessed = true; return g.CurrentWindow; }
      *mut ImGuiWindow  FindWindowByID(id: ImGuiID);
      *mut ImGuiWindow  FindWindowByName(name: *const c_char);
-     c_void          UpdateWindowParentAndRootLinks(*mut ImGuiWindow window, ImGuiWindowFlags flags, *mut ImGuiWindow parent_window);
+     c_void          UpdateWindowParentAndRootLinks(*mut ImGuiWindow window, flags: ImGuiWindowFlags, *mut ImGuiWindow parent_window);
      ImVec2        CalcWindowNextAutoFitSize(*mut ImGuiWindow window);
      bool          IsWindowChildOf(*mut ImGuiWindow window, *mut ImGuiWindow potential_parent, popup_hierarchy: bool, dock_hierarchy: bool);
      bool          IsWindowWithinBeginStackOf(*mut ImGuiWindow window, *mut ImGuiWindow potential_parent);
@@ -680,14 +680,14 @@ namespace ImGui
      c_void          LogSetNextTextDecoration(prefix: *const c_char, suffix: *const c_char);
 
     // Popups, Modals, Tooltips
-     bool          BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, ImGuiWindowFlags flags);
+     bool          BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, flags: ImGuiWindowFlags);
      c_void          OpenPopupEx(id: ImGuiID, ImGuiPopupFlags popup_flags = ImGuiPopupFlags_None);
      c_void          ClosePopupToLevel(remaining: c_int, restore_focus_to_window_under_popup: bool);
      c_void          ClosePopupsOverWindow(*mut ImGuiWindow ref_window, restore_focus_to_window_under_popup: bool);
      c_void          ClosePopupsExceptModals();
      bool          IsPopupOpen(id: ImGuiID, ImGuiPopupFlags popup_flags);
-     bool          BeginPopupEx(id: ImGuiID, ImGuiWindowFlags extra_flags);
-     c_void          BeginTooltipEx(ImGuiTooltipFlags tooltip_flags, ImGuiWindowFlags extra_window_flags);
+     bool          BeginPopupEx(id: ImGuiID, extra_flags: ImGuiWindowFlags);
+     c_void          BeginTooltipEx(ImGuiTooltipFlags tooltip_flags, extra_window_flags: ImGuiWindowFlags);
      ImRect        GetPopupAllowedExtentRect(*mut ImGuiWindow window);
      *mut ImGuiWindow  GetTopMostPopupModal();
      *mut ImGuiWindow  GetTopMostAndVisiblePopupModal();
@@ -695,7 +695,7 @@ namespace ImGui
      ImVec2        FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, *mut last_dir: ImGuiDir, r_outer: &ImRect, r_avoid: &ImRect, ImGuiPopupPositionPolicy policy);
 
     // Menus
-     bool          BeginViewportSideBar(name: *const c_char, *mut ImGuiViewport viewport, dir: ImGuiDir,size: c_float, ImGuiWindowFlags window_flags);
+     bool          BeginViewportSideBar(name: *const c_char, *mut ImGuiViewport viewport, dir: ImGuiDir,size: c_float, window_flags: ImGuiWindowFlags);
      bool          BeginMenuEx(label: *const c_char, icon: *const c_char, let mut enabled: bool =  true);
      bool          MenuItemEx(label: *const c_char, icon: *const c_char, shortcut: *const c_char = null_mut(), let mut selected: bool =  false, let mut enabled: bool =  true);
 
@@ -981,7 +981,7 @@ namespace ImGui
      c_void          ErrorCheckEndFrameRecover(ImGuiErrorLogCallback log_callback, *mut c_void user_data = null_mut());
      c_void          ErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback, *mut c_void user_data = null_mut());
      c_void          ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
-    inline c_void             DebugDrawItemRect(col: u32 = IM_COL32(255,0,0,255))    { let g = GImGui; // ImGuiContext& g = *GImGui; ImGuiWindow* window = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col); }
+    inline c_void             DebugDrawItemRect(col: u32 = IM_COL32(255,0,0,255))    { let g = GImGui; // ImGuiContext& g = *GImGui; window: *mut ImGuiWindow = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col); }
     inline c_void             DebugStartItemPicker()                                  { let g = GImGui; // ImGuiContext& g = *GImGui; g.DebugItemPickerActive = true; }
      c_void          ShowFontAtlas(*mut ImFontAtlas atlas);
      c_void          DebugHookIdInfo(id: ImGuiID, ImGuiDataType data_type, *const c_void data_id, *const c_void data_id_end);
@@ -999,7 +999,7 @@ namespace ImGui
      c_void          DebugNodeWindow(*mut ImGuiWindow window, label: *const c_char);
      c_void          DebugNodeWindowSettings(*mut ImGuiWindowSettings settings);
      c_void          DebugNodeWindowsList(Vec<*mut ImGuiWindow>* windows, label: *const c_char);
-     c_void          DebugNodeWindowsListByBeginStackParent(*mut ImGuiWindow* windows, windows_size: c_int, *mut ImGuiWindow parent_in_begin_stack);
+     c_void          DebugNodeWindowsListByBeginStackParent(*mut windows: *mut ImGuiWindow, windows_size: c_int, *mut ImGuiWindow parent_in_begin_stack);
      c_void          DebugNodeViewport(*mut ImGuiViewportP viewport);
      c_void          DebugRenderViewportThumbnail(draw_list: *mut ImDrawList, *mut ImGuiViewportP viewport, bb: &ImRect);
 

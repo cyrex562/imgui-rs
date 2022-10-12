@@ -209,6 +209,10 @@ mod font_glyph_ranges_builder;
 mod font_ops;
 mod fallback_font_data;
 mod stb_ops;
+mod size_callback_data;
+mod resize_grip_def;
+mod resize_border_def;
+
 
 
 // c_void Initialize()

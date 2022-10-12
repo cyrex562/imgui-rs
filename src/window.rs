@@ -26,6 +26,7 @@ use crate::viewport::ImGuiViewport;
 use crate::win_dock_style::ImGuiWindowDockStyle;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::{ImGuiDir, ImGuiID};
+use crate::vec4::ImVec4;
 use crate::window_flags::ImGuiWindowFlags;
 use crate::window_ops::WindowRectAbsToRel;
 use crate::window_temp_data::ImGuiWindowTempData;
@@ -162,7 +163,7 @@ pub struct ImGuiWindow {
     // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1f32 on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
     pub ParentWorkRect: ImRect,
     // Backup of WorkRect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
-    pub ClipRect: ImRect,
+    pub ClipRect: ImVec4,
     // Current clipping/scissoring rectangle, evolve as we are using PushClipRect(), etc. == DrawList.clip_rect_stack.back().
     pub ContentRegionRect: ImRect,
     // FIXME: This is currently confusing/misleading. It is essentially WorkRect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.

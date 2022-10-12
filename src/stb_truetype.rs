@@ -401,8 +401,8 @@ main: c_int(arg: c_int, char **argv)
       // a sequence of characters, you really need to render each bitmap to a temp buffer, then
       // "alpha blend" that into the working buffer
       xpos += (advance * scale);
-      if (text[ch+1])
-         xpos += *mut scalestbtt_GetCodepointKernAdvance(&font, text[ch],text[ch+1]);
+      if (text[ch1])
+         xpos += *mut scalestbtt_GetCodepointKernAdvance(&font, text[ch],text[ch1]);
       ++ch;
    }
 
@@ -1263,7 +1263,7 @@ static stbtt__buf stbtt__cff_index_get(stbtt__buf b, i: c_int)
    stbtt__buf_skip(&b, *mut ioffsize);
    start = stbtt__buf_get(&b, offsize);
    end = stbtt__buf_get(&b, offsize);
-   return stbtt__buf_range(&b, 2+(count+1)*offsize+start, end - start);
+   return stbtt__buf_range(&b, 2+(count1)*offsize+start, end - start);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1300,13 +1300,13 @@ static stbtt__isfont: c_int(stbtt_uint8 *font)
 // @OPTIMIZE: binary search
 static stbtt_uint32 stbtt__find_table(stbtt_uint8 *data, stbtt_uint32 fontstart, const char *tag)
 {
-   stbtt_int32 num_tables = ttUSHORT(data+fontstart+4);
+   stbtt_int32 num_tables = ttUSHORT(data+fontstart4);
    stbtt_uint32 tabledir = fontstart + 12;
    stbtt_int32 i;
    for (i=0; i < num_tables; ++i) {
       stbtt_uint32 loc = tabledir + *mut 16i;
-      if (stbtt_tag(data+loc+0, tag))
-         return ttULONG(data+loc+8);
+      if (stbtt_tag(data+loc0, tag))
+         return ttULONG(data+loc8);
    }
    return 0;
 }
@@ -1320,11 +1320,11 @@ static stbtt_GetFontOffsetForIndex_internal: c_int(c_uchar *font_collection, ind
    // check if it's a TTC
    if (stbtt_tag(font_collection, "ttcf")) {
       // version 1?
-      if (ttULONG(font_collection+4) == 0x00010000 || ttULONG(font_collection+4) == 0x00020000) {
-         stbtt_int32 n = ttLONG(font_collection+8);
+      if (ttULONG(font_collection4) == 0x00010000 || ttULONG(font_collection4) == 0x00020000) {
+         stbtt_int32 n = ttLONG(font_collection8);
          if (index >= n)
             return -1;
-         return ttULONG(font_collection+12+*mut index4);
+         return ttULONG(font_collection12+*mut index4);
       }
    }
    return -1;
@@ -1339,8 +1339,8 @@ static stbtt_GetNumberOfFonts_internal: c_int(c_uchar *font_collection)
    // check if it's a TTC
    if (stbtt_tag(font_collection, "ttcf")) {
       // version 1?
-      if (ttULONG(font_collection+4) == 0x00010000 || ttULONG(font_collection+4) == 0x00020000) {
-         return ttLONG(font_collection+8);
+      if (ttULONG(font_collection4) == 0x00010000 || ttULONG(font_collection4) == 0x00020000) {
+         return ttLONG(font_collection8);
       }
    }
    return 0;
@@ -1450,7 +1450,7 @@ static stbtt_InitFont_internal: c_int(stbtt_fontinfo *info, c_uchar *data, fonts
 
    t = stbtt__find_table(data, fontstart, "maxp");
    if (t)
-      info.numGlyphs = ttUSHORT(data+t+4);
+      info.numGlyphs = ttUSHORT(data+t4);
    else
       info.numGlyphs = 0xffff;
 
@@ -1466,18 +1466,18 @@ static stbtt_InitFont_internal: c_int(stbtt_fontinfo *info, c_uchar *data, fonts
       // find an encoding we understand:
       switch(ttUSHORT(data+encoding_record)) {
          case STBTT_PLATFORM_ID_MICROSOFT:
-            switch (ttUSHORT(data+encoding_record+2)) {
+            switch (ttUSHORT(data+encoding_record2)) {
                case STBTT_MS_EID_UNICODE_BMP:
                case STBTT_MS_EID_UNICODE_FULL:
                   // MS/Unicode
-                  info.index_map = cmap + ttULONG(data+encoding_record+4);
+                  info.index_map = cmap + ttULONG(data+encoding_record4);
                   break;
             }
             break;
         case STBTT_PLATFORM_ID_UNICODE:
             // Mac/iOS has these
             // all the encodingIDs are unicode, so we don't bother to check it
-            info.index_map = cmap + ttULONG(data+encoding_record+4);
+            info.index_map = cmap + ttULONG(data+encoding_record4);
             break;
       }
    }
@@ -1509,10 +1509,10 @@ STBTT_DEF stbtt_FindGlyphIndex: c_int(const stbtt_fontinfo *info, unicode_codepo
       STBTT_assert(0); // @TODO: high-byte mapping for japanese/chinese/korean
       return 0;
    } else if (format == 4) { // standard mapping for windows fonts: binary search collection of ranges
-      stbtt_uint16 segcount = ttUSHORT(data+index_map+6) >> 1;
-      stbtt_uint16 searchRange = ttUSHORT(data+index_map+8) >> 1;
-      stbtt_uint16 entrySelector = ttUSHORT(data+index_map+10);
-      stbtt_uint16 rangeShift = ttUSHORT(data+index_map+12) >> 1;
+      stbtt_uint16 segcount = ttUSHORT(data+index_map6) >> 1;
+      stbtt_uint16 searchRange = ttUSHORT(data+index_map8) >> 1;
+      stbtt_uint16 entrySelector = ttUSHORT(data+index_map10);
+      stbtt_uint16 rangeShift = ttUSHORT(data+index_map12) >> 1;
 
       // do a binary search of the segments
       stbtt_uint32 endCount = index_map + 14;
@@ -1554,20 +1554,20 @@ STBTT_DEF stbtt_FindGlyphIndex: c_int(const stbtt_fontinfo *info, unicode_codepo
          return ttUSHORT(data + offset + (unicode_codepoint-start)*2 + index_map + 14 + segcount*6 + 2 + 2*item);
       }
    } else if (format == 12 || format == 13) {
-      stbtt_uint32 ngroups = ttULONG(data+index_map+12);
+      stbtt_uint32 ngroups = ttULONG(data+index_map12);
       stbtt_int32 low,high;
       low = 0; high = (stbtt_int32)ngroups;
       // Binary search the right group.
       while (low < high) {
          stbtt_int32 mid = low + ((high-low) >> 1); // rounds down, so low <= mid < high
-         stbtt_uint32 start_char = ttULONG(data+index_map+16+mid*12);
-         stbtt_uint32 end_char = ttULONG(data+index_map+16+mid*12+4);
+         stbtt_uint32 start_char = ttULONG(data+index_map16+mid*12);
+         stbtt_uint32 end_char = ttULONG(data+index_map16+mid*124);
          if ((stbtt_uint32) unicode_codepoint < start_char)
             high = mid;
          else if ((stbtt_uint32) unicode_codepoint > end_char)
-            low = mid+1;
+            low = mid1;
          else {
-            stbtt_uint32 start_glyph = ttULONG(data+index_map+16+mid*12+8);
+            stbtt_uint32 start_glyph = ttULONG(data+index_map16+mid*128);
             if (format == 12)
                return start_glyph + unicode_codepoint-start_char;
             else // format == 13
@@ -1769,14 +1769,14 @@ static stbtt__GetGlyphShapeTT: c_int(const stbtt_fontinfo *info, glyph_index: c_
                // where we can start, and we need to save some state for when we wraparound.
                scx = x;
                scy = y;
-               if (!(vertices[off+i+1].type & 1)) {
+               if (!(vertices[off+i1].type & 1)) {
                   // next point is also a curve point, so interpolate an on-point curve
-                  sx = (x + (stbtt_int32) vertices[off+i+1].x) >> 1;
-                  sy = (y + (stbtt_int32) vertices[off+i+1].y) >> 1;
+                  sx = (x + (stbtt_int32) vertices[off+i1].x) >> 1;
+                  sy = (y + (stbtt_int32) vertices[off+i1].y) >> 1;
                } else {
                   // otherwise just use the next point as our start point
-                  sx = (stbtt_int32) vertices[off+i+1].x;
-                  sy = (stbtt_int32) vertices[off+i+1].y;
+                  sx = (stbtt_int32) vertices[off+i1].x;
+                  sy = (stbtt_int32) vertices[off+i1].y;
                   ++i; // we're using point i+1 as the starting point, so skip it
                }
             } else {
@@ -2050,7 +2050,7 @@ static stbtt__run_charstring: c_int(const stbtt_fontinfo *info, glyph_index: c_i
       case 0x05: // rlineto
          if (sp < 2) return STBTT__CSERR("rlineto stack");
          for (; i + 1 < sp; i += 2)
-            stbtt__csctx_rline_to(c, s[i], s[i+1]);
+            stbtt__csctx_rline_to(c, s[i], s[i1]);
          break;
 
       // hlineto/vlineto and vhcurveto/hvcurveto alternate horizontal and vertical
@@ -2079,11 +2079,11 @@ static stbtt__run_charstring: c_int(const stbtt_fontinfo *info, glyph_index: c_i
          if (sp < 4) return STBTT__CSERR("vhcurveto stack");
          for (;;) {
             if (i + 3 >= sp) break;
-            stbtt__csctx_rccurve_to(c, 0, s[i], s[i+1], s[i+2], s[i+3], (sp - i == 5) ? s[i + 4] : 0f32);
+            stbtt__csctx_rccurve_to(c, 0, s[i], s[i1], s[i2], s[i3], (sp - i == 5) ? s[i + 4] : 0f32);
             i += 4;
       hvcurveto:
             if (i + 3 >= sp) break;
-            stbtt__csctx_rccurve_to(c, s[i], 0, s[i+1], s[i+2], (sp - i == 5) ? s[i+4] : 0f32, s[i+3]);
+            stbtt__csctx_rccurve_to(c, s[i], 0, s[i1], s[i2], (sp - i == 5) ? s[i4] : 0f32, s[i3]);
             i += 4;
          }
          break;
@@ -2091,23 +2091,23 @@ static stbtt__run_charstring: c_int(const stbtt_fontinfo *info, glyph_index: c_i
       case 0x08: // rrcurveto
          if (sp < 6) return STBTT__CSERR("rcurveline stack");
          for (; i + 5 < sp; i += 6)
-            stbtt__csctx_rccurve_to(c, s[i], s[i+1], s[i+2], s[i+3], s[i+4], s[i+5]);
+            stbtt__csctx_rccurve_to(c, s[i], s[i1], s[i2], s[i3], s[i4], s[i5]);
          break;
 
       case 0x18: // rcurveline
          if (sp < 8) return STBTT__CSERR("rcurveline stack");
          for (; i + 5 < sp - 2; i += 6)
-            stbtt__csctx_rccurve_to(c, s[i], s[i+1], s[i+2], s[i+3], s[i+4], s[i+5]);
+            stbtt__csctx_rccurve_to(c, s[i], s[i1], s[i2], s[i3], s[i4], s[i5]);
          if (i + 1 >= sp) return STBTT__CSERR("rcurveline stack");
-         stbtt__csctx_rline_to(c, s[i], s[i+1]);
+         stbtt__csctx_rline_to(c, s[i], s[i1]);
          break;
 
       case 0x19: // rlinecurve
          if (sp < 8) return STBTT__CSERR("rlinecurve stack");
          for (; i + 1 < sp - 6; i += 2)
-            stbtt__csctx_rline_to(c, s[i], s[i+1]);
+            stbtt__csctx_rline_to(c, s[i], s[i1]);
          if (i + 5 >= sp) return STBTT__CSERR("rlinecurve stack");
-         stbtt__csctx_rccurve_to(c, s[i], s[i+1], s[i+2], s[i+3], s[i+4], s[i+5]);
+         stbtt__csctx_rccurve_to(c, s[i], s[i1], s[i2], s[i3], s[i4], s[i5]);
          break;
 
       case 0x1A: // vvcurveto
@@ -2117,9 +2117,9 @@ static stbtt__run_charstring: c_int(const stbtt_fontinfo *info, glyph_index: c_i
          if (sp & 1) { f = s[i]; i+= 1; }
          for (; i + 3 < sp; i += 4) {
             if (b0 == 0x1B)
-               stbtt__csctx_rccurve_to(c, s[i], f, s[i+1], s[i+2], s[i+3], 0.0);
+               stbtt__csctx_rccurve_to(c, s[i], f, s[i1], s[i2], s[i3], 0.0);
             else
-               stbtt__csctx_rccurve_to(c, f, s[i], s[i+1], s[i+2], 0.0, s[i+3]);
+               stbtt__csctx_rccurve_to(c, f, s[i], s[i1], s[i2], 0.0, s[i3]);
             f = 0.0;
          }
          break;
@@ -2310,12 +2310,12 @@ STBTT_DEF c_int  stbtt_GetKerningTableLength(const stbtt_fontinfo *info)
    // we only look at the first table. it must be 'horizontal' and format 0.
    if (!info.kern)
       return 0;
-   if (ttUSHORT(data+2) < 1) // number of tables, need at least 1
+   if (ttUSHORT(data2) < 1) // number of tables, need at least 1
       return 0;
-   if (ttUSHORT(data+8) != 1) // horizontal flag must be set in format
+   if (ttUSHORT(data8) != 1) // horizontal flag must be set in format
       return 0;
 
-   return ttUSHORT(data+10);
+   return ttUSHORT(data10);
 }
 
 STBTT_DEF stbtt_GetKerningTable: c_int(const stbtt_fontinfo *info, stbtt_kerningentry* table, table_length: c_int)
@@ -2326,20 +2326,20 @@ STBTT_DEF stbtt_GetKerningTable: c_int(const stbtt_fontinfo *info, stbtt_kerning
    // we only look at the first table. it must be 'horizontal' and format 0.
    if (!info.kern)
       return 0;
-   if (ttUSHORT(data+2) < 1) // number of tables, need at least 1
+   if (ttUSHORT(data2) < 1) // number of tables, need at least 1
       return 0;
-   if (ttUSHORT(data+8) != 1) // horizontal flag must be set in format
+   if (ttUSHORT(data8) != 1) // horizontal flag must be set in format
       return 0;
 
-   length = ttUSHORT(data+10);
+   length = ttUSHORT(data10);
    if (table_length < length)
       length = table_length;
 
    for (k = 0; k < length; k++)
    {
-      table[k].glyph1 = ttUSHORT(data+18+(k*6));
-      table[k].glyph2 = ttUSHORT(data+20+(k*6));
-      table[k].advance = ttSHORT(data+22+(k*6));
+      table[k].glyph1 = ttUSHORT(data18+(k*6));
+      table[k].glyph2 = ttUSHORT(data20+(k*6));
+      table[k].advance = ttSHORT(data22+(k*6));
    }
 
    return length;
@@ -2354,23 +2354,23 @@ static stbtt__GetGlyphKernInfoAdvance: c_int(const stbtt_fontinfo *info, glyph1:
    // we only look at the first table. it must be 'horizontal' and format 0.
    if (!info.kern)
       return 0;
-   if (ttUSHORT(data+2) < 1) // number of tables, need at least 1
+   if (ttUSHORT(data2) < 1) // number of tables, need at least 1
       return 0;
-   if (ttUSHORT(data+8) != 1) // horizontal flag must be set in format
+   if (ttUSHORT(data8) != 1) // horizontal flag must be set in format
       return 0;
 
    l = 0;
-   r = ttUSHORT(data+10) - 1;
+   r = ttUSHORT(data10) - 1;
    needle = glyph1 << 16 | glyph2;
    while (l <= r) {
       m = (l + r) >> 1;
-      straw = ttULONG(data+18+(m*6)); // note: unaligned read
+      straw = ttULONG(data18+(m*6)); // note: unaligned read
       if (needle < straw)
          r = m - 1;
       else if (needle > straw)
          l = m + 1;
       else
-         return ttSHORT(data+22+(m*6));
+         return ttSHORT(data22+(m*6));
    }
    return 0;
 }
@@ -2494,10 +2494,10 @@ static stbtt_int32 stbtt__GetGlyphGPOSInfoAdvance(const stbtt_fontinfo *info, gl
 
    data = info.data + info.gpos;
 
-   if (ttUSHORT(data+0) != 1) return 0; // Major version 1
-   if (ttUSHORT(data+2) != 0) return 0; // Minor version 0
+   if (ttUSHORT(data0) != 1) return 0; // Major version 1
+   if (ttUSHORT(data2) != 0) return 0; // Minor version 0
 
-   lookupListOffset = ttUSHORT(data+8);
+   lookupListOffset = ttUSHORT(data8);
    lookupList = data + lookupListOffset;
    lookupCount = ttUSHORT(lookupList);
 
@@ -3029,22 +3029,22 @@ static c_void stbtt__handle_clipped_edge(c_float *scanline, x: c_int, stbtt__act
    }
 
    if (x0 == x)
-      STBTT_assert(x1 <= x+1);
-   else if (x0 == x+1)
+      STBTT_assert(x1 <= x1);
+   else if (x0 == x1)
       STBTT_assert(x1 >= x);
    else if (x0 <= x)
       STBTT_assert(x1 <= x);
-   else if (x0 >= x+1)
-      STBTT_assert(x1 >= x+1);
+   else if (x0 >= x1)
+      STBTT_assert(x1 >= x1);
    else
-      STBTT_assert(x1 >= x && x1 <= x+1);
+      STBTT_assert(x1 >= x && x1 <= x1);
 
    if (x0 <= x && x1 <= x)
       scanline[x] += e.direction * (y1-y0);
-   else if (x0 >= x+1 && x1 >= x+1)
+   else if (x0 >= x1 && x1 >= x1)
       ;
    else {
-      STBTT_assert(x0 >= x && x0 <= x+1 && x1 >= x && x1 <= x+1);
+      STBTT_assert(x0 >= x && x0 <= x1 && x1 >= x && x1 <= x1);
       scanline[x] += e.direction * (y1-y0) * (1-((x0-x)+(x1-x))/2); // coverage = 1 - average x position
    }
 }
@@ -3068,7 +3068,7 @@ staticstbtt__sized_triangle_area: c_float(height: c_float,width: c_float)
 
 static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_fill, len: c_int, stbtt__active_edge *e,y_top: c_float)
 {
-   let y_bottom: c_float =  y_top+1;
+   let y_bottom: c_float =  y_top1;
 
    while (e) {
       // brute force every pixel
@@ -3081,7 +3081,7 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
          if (x0 < len) {
             if (x0 >= 0) {
                stbtt__handle_clipped_edge(scanline, x0,e, x0,y_top, x0,y_bottom);
-               stbtt__handle_clipped_edge(scanline_fill-1, x0+1,e, x0,y_top, x0,y_bottom);
+               stbtt__handle_clipped_edge(scanline_fill-1, x01,e, x0,y_top, x0,y_bottom);
             } else {
                stbtt__handle_clipped_edge(scanline_fill-1,0,e, x0,y_top, x0,y_bottom);
             }
@@ -3120,7 +3120,7 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
                let x: c_int =  x_top;
                height = (sy1 - sy0) * e.direction;
                STBTT_assert(x >= 0 && x < len);
-               scanline[x]      += stbtt__position_trapezoid_area(height, x_top, x+1f32, x_bottom, x+1f32);
+               scanline[x]      += stbtt__position_trapezoid_area(height, x_top, x1f32, x_bottom, x1f32);
                scanline_fill[x] += height; // everything right of this pixel is filled
             } else {
                x: c_int,x1,x2;y_crossing: c_float, y_final, step, sign, area;
@@ -3142,7 +3142,7 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
                x1 =  x_top;
                x2 =  x_bottom;
                // compute intersection with y axis at x1+1
-               y_crossing = y_top + dy * (x1+1 - x0);
+               y_crossing = y_top + dy * (x11 - x0);
 
                // compute intersection with y axis at x2
                y_final = y_top + dy * (x2 - x0);
@@ -3175,11 +3175,11 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
                area = sign * (y_crossing-sy0);
 
                // area of the triangle (x_top,sy0), (x1+1,sy0), (x1+1,y_crossing)
-               scanline[x1] += stbtt__sized_triangle_area(area, x1+1 - x_top);
+               scanline[x1] += stbtt__sized_triangle_area(area, x11 - x_top);
 
                // check if final y_crossing is blown up; no test case for this
                if (y_final > y_bottom) {
-                  let denom: c_int = (x2 - (x1+1));
+                  let denom: c_int = (x2 - (x11));
                   y_final = y_bottom;
                   if (denom != 0) { // [DEAR IMGUI] Avoid div by zero (https://github.com/nothings/stb/issues/1316)
                      dy = (y_final - y_crossing ) / denom; // if denom=0, y_final = y_crossing, so y_final <= y_bottom
@@ -3200,7 +3200,7 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
                // which multiplied by 1-pixel-width is how much pixel area changes for each step in x
                // so the area advances by 'step' every time
 
-               for (x = x1+1; x < x2; ++x) {
+               for (x = x11; x < x2; ++x) {
                   scanline[x] += area + step/2; // area of trapezoid is 1*step/2
                   area += step;
                }
@@ -3209,7 +3209,7 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
 
                // area covered in the last pixel is the rectangle from all the pixels to the left,
                // plus the trapezoid filled by the line segment in this pixel all the way to the right edge
-               scanline[x2] += area + sign * stbtt__position_trapezoid_area(sy1-y_final,  x2, x2+1f32, x_bottom, x2+1f32);
+               scanline[x2] += area + sign * stbtt__position_trapezoid_area(sy1-y_final,  x2, x21f32, x_bottom, x21f32);
 
                // the rest of the line is filled based on the total height of the line segment in this pixel
                scanline_fill[x2] += sign * (sy1-sy0);
@@ -3240,7 +3240,7 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
                // rename variables to clearly-defined pairs
                let y0: c_float =  y_top;
                let x1: c_float =   (x);
-               let x2: c_float =   (x+1);
+               let x2: c_float =   (x1);
                let x3: c_float =  xb;
                let y3: c_float =  y_bottom;
 
@@ -3248,7 +3248,7 @@ static c_void stbtt__fill_active_edges_new(c_float *scanline, c_float *scanline_
                // (y-y_top) = (x - e->x) / e->dx
                // y = (x - e->x) / e->dx + y_top
                let y1: c_float =  (x - x0) / dx + y_top;
-               let y2: c_float =  (x+1 - x0) / dx + y_top;
+               let y2: c_float =  (x1 - x0) / dx + y_top;
 
                if (x0 < x1 && x3 > x2) {         // three segments descending down-right
                   stbtt__handle_clipped_edge(scanline,x,e, x0,y0, x1,y1);
@@ -3290,7 +3290,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
    STBTT__NOTUSED(vsubsample);
 
    if (result.w > 64)
-      scanline = (c_float *) STBTT_malloc((result.w*2+1) * sizeof, userdata);
+      scanline = (c_float *) STBTT_malloc((result.w*21) * sizeof, userdata);
    else
       scanline = scanline_data;
 
@@ -3305,7 +3305,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
       stbtt__active_edge **step = &active;
 
       STBTT_memset(scanline , 0, result.w*sizeof(scanline[0]));
-      STBTT_memset(scanline2, 0, (result.w+1)*sizeof(scanline[0]));
+      STBTT_memset(scanline2, 0, (result.w1)*sizeof(scanline[0]));
 
       // update all active edges;
       // remove all active edges that terminate before the top of this scanline
@@ -3343,7 +3343,7 @@ static c_void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *
 
       // now process all active edges
       if (active)
-         stbtt__fill_active_edges_new(scanline, scanline2+1, result.w, active, scan_y_top);
+         stbtt__fill_active_edges_new(scanline, scanline21, result.w, active, scan_y_top);
 
       {
          let sum: c_float =  0;
@@ -3490,7 +3490,7 @@ static c_void stbtt__rasterize(stbtt__bitmap *result, stbtt__point *pts, c_int *
    for (i=0; i < windings; ++i)
       n += wcount[i];
 
-   e = (stbtt__edge *) STBTT_malloc(sizeof(*e) * (n+1), userdata); // add an extra one as a sentinel
+   e = (stbtt__edge *) STBTT_malloc(sizeof(*e) * (n1), userdata); // add an extra one as a sentinel
    if (e == 0) return;
    n = 0;
 
@@ -3547,11 +3547,11 @@ static stbtt__tesselate_curve: c_int(stbtt__point *points, c_int *num_points,x0:
    if (n > 16) // 65536 segments on one curve better be enough!
       return 1;
    if (dx*dx+dy*dy > objspace_flatness_squared) { // half-pixel error allowed... need to be smaller if AA
-      stbtt__tesselate_curve(points, num_points, x0,y0, (x0+x1)/2.0f32,(y0+y1)/2.0f32, mx,my, objspace_flatness_squared,n+1);
-      stbtt__tesselate_curve(points, num_points, mx,my, (x1+x2)/2.0f32,(y1+y2)/2.0f32, x2,y2, objspace_flatness_squared,n+1);
+      stbtt__tesselate_curve(points, num_points, x0,y0, (x0+x1)/2.0f32,(y0+y1)/2.0f32, mx,my, objspace_flatness_squared,n1);
+      stbtt__tesselate_curve(points, num_points, mx,my, (x1+x2)/2.0f32,(y1+y2)/2.0f32, x2,y2, objspace_flatness_squared,n1);
    } else {
       stbtt__add_point(points, *num_points,x2,y2);
-      *num_points = *num_points+1;
+      *num_points = *num_points1;
    }
    return 1;
 }
@@ -3590,11 +3590,11 @@ static c_void stbtt__tesselate_cubic(stbtt__point *points, c_int *num_points,x0:
       let mx: c_float =  (xa+xb)/2;
       let my: c_float =  (ya+yb)/2;
 
-      stbtt__tesselate_cubic(points, num_points, x0,y0, x01,y01, xa,ya, mx,my, objspace_flatness_squared,n+1);
-      stbtt__tesselate_cubic(points, num_points, mx,my, xb,yb, x23,y23, x3,y3, objspace_flatness_squared,n+1);
+      stbtt__tesselate_cubic(points, num_points, x0,y0, x01,y01, xa,ya, mx,my, objspace_flatness_squared,n1);
+      stbtt__tesselate_cubic(points, num_points, mx,my, xb,yb, x23,y23, x3,y3, objspace_flatness_squared,n1);
    } else {
       stbtt__add_point(points, *num_points,x3,y3);
-      *num_points = *num_points+1;
+      *num_points = *num_points1;
    }
 }
 
@@ -3831,8 +3831,8 @@ static stbtt_BakeFontBitmap_internal: c_int(c_uchar *data, offset: c_int,  // fo
       chardata[i].xoff     =  x0;
       chardata[i].yoff     =  y0;
       x = x + gw + 1;
-      if (y+gh+1 > bottom_y)
-         bottom_y = y+gh+1;
+      if (y+gh1 > bottom_y)
+         bottom_y = y+gh1;
    }
    return bottom_y;
 }
@@ -4225,8 +4225,8 @@ STBTT_DEF stbtt_PackFontRangesRenderIntoRects: c_int(stbtt_pack_context *spc, co
                                     &x0,&y0,&x1,&y1);
             stbtt_MakeGlyphBitmapSubpixel(info,
                                           spc.pixels + r.x + r.y*spc.stride_in_bytes,
-                                          r.w - spc.h_oversample+1,
-                                          r.h - spc.v_oversample+1,
+                                          r.w - spc.h_oversample1,
+                                          r.h - spc.v_oversample1,
                                           spc.stride_in_bytes,
                                           scale * spc.h_oversample,
                                           scale * spc.v_oversample,
@@ -4757,13 +4757,13 @@ static stbtt_int32 stbtt__CompareUTF8toUTF16_bigendian_prefix(stbtt_uint8 *s1, s
          if (i >= len1) return -1;
          if (s1[i++] != ch) return -1;
       } else if (ch < 0x800) {
-         if (i+1 >= len1) return -1;
+         if (i1 >= len1) return -1;
          if (s1[i++] != 0xc0 + (ch >> 6)) return -1;
          if (s1[i++] != 0x80 + (ch & 0x30f32)) return -1;
       } else if (ch >= 0xd800 && ch < 0xdc00) {
          stbtt_uint32 c;
          stbtt_uint16 ch2 = s2[2]*256 + s2[3];
-         if (i+3 >= len1) return -1;
+         if (i3 >= len1) return -1;
          c = ((ch - 0xd800) << 10) + (ch2 - 0xdc00) + 0x10000;
          if (s1[i++] != 0xf0 + (c >> 18)) return -1;
          if (s1[i++] != 0x80 + ((c >> 12) & 0x30f32)) return -1;
@@ -4774,7 +4774,7 @@ static stbtt_int32 stbtt__CompareUTF8toUTF16_bigendian_prefix(stbtt_uint8 *s1, s
       } else if (ch >= 0xdc00 && ch < 0xe000) {
          return -1;
       } else {
-         if (i+2 >= len1) return -1;
+         if (i2 >= len1) return -1;
          if (s1[i++] != 0xe0 + (ch >> 12)) return -1;
          if (s1[i++] != 0x80 + ((ch >> 6) & 0x30f32)) return -1;
          if (s1[i++] != 0x80 + ((ch     ) & 0x30f32)) return -1;
@@ -4800,14 +4800,14 @@ STBTT_DEF const char *stbtt_GetFontNameString(const stbtt_fontinfo *font, c_int 
    stbtt_uint32 nm = stbtt__find_table(fc, offset, "name");
    if (!nm) return null_mut();
 
-   count = ttUSHORT(fc+nm+2);
-   stringOffset = nm + ttUSHORT(fc+nm+4);
+   count = ttUSHORT(fc+nm2);
+   stringOffset = nm + ttUSHORT(fc+nm4);
    for (i=0; i < count; ++i) {
       stbtt_uint32 loc = nm + 6 + 12 * i;
-      if (platformID == ttUSHORT(fc+loc+0) && encodingID == ttUSHORT(fc+loc+2)
-          && languageID == ttUSHORT(fc+loc+4) && nameID == ttUSHORT(fc+loc+6)) {
-         *length = ttUSHORT(fc+loc+8);
-         return (const char *) (fc+stringOffset+ttUSHORT(fc+loc+10));
+      if (platformID == ttUSHORT(fc+loc0) && encodingID == ttUSHORT(fc+loc2)
+          && languageID == ttUSHORT(fc+loc4) && nameID == ttUSHORT(fc+loc6)) {
+         *length = ttUSHORT(fc+loc8);
+         return (const char *) (fc+stringOffset+ttUSHORT(fc+loc10));
       }
    }
    return null_mut();
@@ -4816,28 +4816,28 @@ STBTT_DEF const char *stbtt_GetFontNameString(const stbtt_fontinfo *font, c_int 
 static stbtt__matchpair: c_int(stbtt_uint8 *fc, stbtt_uint32 nm, stbtt_uint8 *name, stbtt_int32 nlen, stbtt_int32 target_id, stbtt_int32 next_id)
 {
    stbtt_int32 i;
-   stbtt_int32 count = ttUSHORT(fc+nm+2);
-   stbtt_int32 stringOffset = nm + ttUSHORT(fc+nm+4);
+   stbtt_int32 count = ttUSHORT(fc+nm2);
+   stbtt_int32 stringOffset = nm + ttUSHORT(fc+nm4);
 
    for (i=0; i < count; ++i) {
       stbtt_uint32 loc = nm + 6 + 12 * i;
-      stbtt_int32 id = ttUSHORT(fc+loc+6);
+      stbtt_int32 id = ttUSHORT(fc+loc6);
       if (id == target_id) {
          // find the encoding
-         stbtt_int32 platform = ttUSHORT(fc+loc+0), encoding = ttUSHORT(fc+loc+2), language = ttUSHORT(fc+loc+4);
+         stbtt_int32 platform = ttUSHORT(fc+loc0), encoding = ttUSHORT(fc+loc2), language = ttUSHORT(fc+loc4);
 
          // is this a Unicode encoding?
          if (platform == 0 || (platform == 3 && encoding == 1) || (platform == 3 && encoding == 10)) {
-            stbtt_int32 slen = ttUSHORT(fc+loc+8);
-            stbtt_int32 off = ttUSHORT(fc+loc+10);
+            stbtt_int32 slen = ttUSHORT(fc+loc8);
+            stbtt_int32 off = ttUSHORT(fc+loc10);
 
             // check if there's a prefix match
             stbtt_int32 matchlen = stbtt__CompareUTF8toUTF16_bigendian_prefix(name, nlen, fc+stringOffset+off,slen);
             if (matchlen >= 0) {
                // check for target_id+1 immediately following, with same encoding & language
-               if (i+1 < count && ttUSHORT(fc+loc+12+6) == next_id && ttUSHORT(fc+loc+12) == platform && ttUSHORT(fc+loc+12+2) == encoding && ttUSHORT(fc+loc+12+4) == language) {
-                  slen = ttUSHORT(fc+loc+12+8);
-                  off = ttUSHORT(fc+loc+12+10);
+               if (i1 < count && ttUSHORT(fc+loc126) == next_id && ttUSHORT(fc+loc12) == platform && ttUSHORT(fc+loc122) == encoding && ttUSHORT(fc+loc124) == language) {
+                  slen = ttUSHORT(fc+loc128);
+                  off = ttUSHORT(fc+loc1210);
                   if (slen == 0) {
                      if (matchlen == nlen)
                         return 1;
@@ -4869,7 +4869,7 @@ static stbtt__matches: c_int(stbtt_uint8 *fc, stbtt_uint32 offset, stbtt_uint8 *
    // check italics/bold/underline flags in macStyle...
    if (flags) {
       hd = stbtt__find_table(fc, offset, "head");
-      if ((ttUSHORT(fc+hd+44) & 7) != (flags & 7)) return 0;
+      if ((ttUSHORT(fc+hd44) & 7) != (flags & 7)) return 0;
    }
 
    nm = stbtt__find_table(fc, offset, "name");

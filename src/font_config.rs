@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use libc::{c_char, c_float, c_int, c_uint, c_void, size_t};
 use crate::font::ImFont;
-use crate::vec2::ImVec2;
 use crate::type_defs::ImWchar;
+use crate::vec2::ImVec2;
+use libc::{c_char, c_float, c_int, c_uint, c_void, size_t};
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct ImFontConfig {
@@ -39,13 +39,12 @@ pub struct ImFontConfig {
     // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
     pub RasterizerMultiply: c_float,
     // 1f32     // Brighten (>1f32) or darken (<1f32) font output. Brightening small fonts may be a good workaround to make them more readable.
-    pub EllipsisChar: ImWchar,           // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
+    pub EllipsisChar: ImWchar, // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
 
     // [Internal]
     pub Name: [c_char; 40],
     // Name (strictly to ease debugging)
     pub DstFont: *mut ImFont,
-
     // ImFontConfig();
 }
 

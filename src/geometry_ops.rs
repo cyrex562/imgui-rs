@@ -3,6 +3,7 @@
 // [SECTION] MISC HELPERS/UTILITIES (Geometry functions)
 //-----------------------------------------------------------------------------
 
+use crate::math_ops::{ImBezierCubicCalc, ImMin};
 use crate::vec2::ImVec2;
 
 // ImBezierCubicClosestPoint: ImVec2(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, int num_segments)

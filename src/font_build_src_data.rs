@@ -1,10 +1,11 @@
+use crate::type_defs::ImWchar;
+use libc::{c_int, size_t};
 
 // #ifdef IMGUI_ENABLE_STB_TRUETYPE
 // Temporary data for one source font (multiple source fonts can be merged into one destination ImFont)
 // (C++03 doesn't allow instancing ImVector<> with function-local types so we declare the type here.)
-#[derive(Default,Debug,Copy, Clone)]
-pub struct ImFontBuildSrcData
-{
+#[derive(Default, Debug, Copy, Clone)]
+pub struct ImFontBuildSrcData {
     // stbtt_fontinfo      FontInfo;
     pub FontInfo: stbtt_fontinfo,
     // stbtt_pack_range    PackRange;          // Hold the list of codepoints to pack (essentially points to Codepoints.Data)
@@ -24,5 +25,5 @@ pub struct ImFontBuildSrcData
     // ImBitVector         GlyphsSet;          // Glyph bit map (random access, 1-bit per codepoint. This will be a maximum of 8KB)
     pub GlyphsSet: ImBitVector,
     // Vec<c_int>       GlyphsList;         // Glyph codepoints list (flattened version of GlyphsMap)
-    pub GlyphsLIst: Vec<c_int>
+    pub GlyphsLIst: Vec<c_int>,
 }

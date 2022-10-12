@@ -1,27 +1,29 @@
 #![allow(non_snake_case)]
 
 use std::ptr::null_mut;
-use libc::c_float;
+use libc::{c_float, c_int};
 use crate::{CallContextHooks, GImGui, ImGuiViewport};
 use crate::condition::ImGuiCond_FirstUseEver;
 use crate::context_hook::{ImGuiContextHookType_EndFramePost, ImGuiContextHookType_EndFramePre, ImGuiContextHookType_NewFramePost, ImGuiContextHookType_NewFramePre, ImGuiContextHookType_PendingRemoval_};
 use crate::drag_drop_flags::{ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoPreviewTooltip};
 use crate::draw_list_flags::{ImDrawListFlags_AllowVtxOffset, ImDrawListFlags_AntiAliasedFill, ImDrawListFlags_AntiAliasedLines, ImDrawListFlags_AntiAliasedLinesUseTex, ImDrawListFlags_None};
+use crate::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
 use crate::garbage_collection::GcCompactTransientWindowBuffers;
 use crate::id_ops::{ClearActiveID, KeepAliveID};
 use crate::input_ops::{IsMouseDown, UpdateInputEvents};
 use crate::item_flags::ImGuiItemFlags_None;
 use crate::key::ImGuiKey_Escape;
 use crate::keyboard_ops::UpdateKeyboardInputs;
+use crate::math_ops::{ImMax, ImMin};
 use crate::mouse_cursor::ImGuiMouseCursor_Arrow;
 use crate::mouse_ops::{UpdateHoveredWindowAndCaptureFlags, UpdateMouseInputs, UpdateMouseMovingWindowEndFrame, UpdateMouseMovingWindowNewFrame, UpdateMouseWheel};
 use crate::platform_ime_data::ImGuiPlatformImeData;
 use crate::rect::ImRect;
-use crate::utils::flag_set;
+use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_flags::ImGuiWindowFlags_ChildWindow;
-use crate::window_ops::AddWindowToSortBuffer;
+use crate::window_ops::{AddWindowToSortBuffer, SetNextWindowSize};
 
 // c_void NewFrame()
 pub unsafe fn NewFrame()
@@ -59,8 +61,8 @@ pub unsafe fn NewFrame()
     // Calculate frame-rate for the user, as a purely luxurious feature
     g.FramerateSecPerFrameAccum += g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx];
     g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx] = g.IO.DeltaTime;
-    g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % IM_ARRAYSIZE(g.FramerateSecPerFrame);
-    g.FramerateSecPerFrameCount = ImMin(g.FramerateSecPerFrameCount + 1, IM_ARRAYSIZE(g.FramerateSecPerFrame));
+    g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % g.FramerateSecPerFrame.len();
+    g.FramerateSecPerFrameCount = ImMin(g.FramerateSecPerFrameCount + 1, g.FramerateSecPerFrame.len() as c_int);
     g.IO.Framerate = (g.FramerateSecPerFrameAccum > 0f32) ? (1f32 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)) : f32::MAX;
 
     UpdateViewportsNewFrame();
@@ -83,7 +85,7 @@ pub unsafe fn NewFrame()
     if g.Style.AntiAliasedLines {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLines;
     }
-    if g.Style.AntiAliasedLinesUseTex && !(g.Font.ContainerAtlas.Flags & ImFontAtlasFlags_NoBakedLines) {
+    if g.Style.AntiAliasedLinesUseTex && flag_clear(g.Font.ContainerAtlas.Flags, ImFontAtlasFlags_NoBakedLines) {
 g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     if g.Style.AntiAliasedFill {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedFill;
@@ -316,7 +318,7 @@ g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
-    SetNextWindowSize(ImVec2::new(400, 400), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(&ImVec2::new(400.0, 400.0), ImGuiCond_FirstUseEver);
     Begin("Debug##Default");
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 
@@ -332,7 +334,7 @@ pub unsafe fn EndFrame()
     // IM_ASSERT(g.Initialized);
 
     // Don't process EndFrame() multiple times.
-    if (g.FrameCountEnded == g.FrameCount) {
+    if g.FrameCountEnded == g.FrameCount {
         return;
     }
     // IM_ASSERT(g.WithinFrameScope && "Forgot to call NewFrame()?");
@@ -350,7 +352,7 @@ pub unsafe fn EndFrame()
 
     // Hide implicit/fallback "Debug" window if it hasn't been used
     g.WithinFrameScopeWithImplicitWindow = false;
-    if (g.CurrentWindow && !g.Currentwindow.WriteAccessed) {
+    if g.CurrentWindow && !g.Currentwindow.WriteAccessed {
         g.Currentwindow.Active = false;
     }
     End();

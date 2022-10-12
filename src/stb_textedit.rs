@@ -399,7 +399,7 @@ static stb_text_locate_coord: c_int(STB_TEXTEDIT_STRING *str,x: c_float,y: c_flo
             if (x < prev_x+w/2)
                return k+i;
             else
-               return k+i+1;
+               return k+i1;
          }
          prev_x += w;
       }
@@ -819,7 +819,7 @@ retry:
          StbFindState find;
          StbTexteditRow row;
          i: c_int, j, sel = (key & STB_TEXTEDIT_K_SHIFT) != 0;
-         let is_page: c_int = (key & ~STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGDOWN;
+         let is_page: c_int = (key & !STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGDOWN;
          let row_count: c_int = is_page ? state.row_count_per_page : 1;
 
          if (!is_page && state.single_line) {
@@ -885,7 +885,7 @@ retry:
          StbFindState find;
          StbTexteditRow row;
          i: c_int, j, prev_scan, sel = (key & STB_TEXTEDIT_K_SHIFT) != 0;
-         let is_page: c_int = (key & ~STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGUP;
+         let is_page: c_int = (key & !STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGUP;
          let row_count: c_int = is_page ? state.row_count_per_page : 1;
 
          if (!is_page && state.single_line) {
@@ -1092,7 +1092,7 @@ static c_void stb_textedit_discard_undo(StbUndoState *state)
                state.undo_rec[i].char_storage -= n; // @OPTIMIZE: get rid of char_storage and infer it
       }
       --state.undo_point;
-      STB_TEXTEDIT_memmove(state.undo_rec, state.undo_rec+1,  (state.*mut undo_pointsizeof(state.undo_rec[0])));
+      STB_TEXTEDIT_memmove(state.undo_rec, state.undo_rec1,  (state.*mut undo_pointsizeof(state.undo_rec[0])));
    }
 }
 
@@ -1123,7 +1123,7 @@ static c_void stb_textedit_discard_redo(StbUndoState *state)
       let mut  buf_end: *const c_char = (*mut char)state.undo_rec + sizeof(state.undo_rec); (c_void)buf_end;
       // IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point)) >= buf_begin);
       // IM_ASSERT(((*mut char)(state->undo_rec + state->redo_point + 1) + move_size) <= buf_end);
-      STB_TEXTEDIT_memmove(state.undo_rec + state.redo_point+1, state.undo_rec + state.redo_point, move_size);
+      STB_TEXTEDIT_memmove(state.undo_rec + state.redo_point1, state.undo_rec + state.redo_point, move_size);
 
       // now move redo_point to point to the new one
       ++state.redo_point;

@@ -1,11 +1,12 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
+use crate::imvec1::ImVec1;
 use crate::vec2::ImVec2;
 use crate::type_defs::ImGuiID;
 
 // Stacked storage data for BeginGroup()/EndGroup()
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone,Copy)]
 pub struct ImGuiGroupData {
     pub WindowID: ImGuiID,
     pub BackupCursorPos: ImVec2,

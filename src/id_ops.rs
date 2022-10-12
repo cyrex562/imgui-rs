@@ -10,8 +10,8 @@ use crate::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
 use crate::type_defs::ImGuiID;
 use crate::window::ImGuiWindow;
 
-// c_void SetActiveID(ImGuiID id, ImGuiWindow* window)
-pub fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
+// c_void SetActiveID(ImGuiID id, window: *mut ImGuiWindow)
+pub unsafe fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
@@ -56,12 +56,12 @@ pub fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
 
 
 // c_void ClearActiveID()
-pub fn ClearActiveID() {
+pub unsafe fn ClearActiveID() {
     SetActiveID(0, null_mut()); // g.ActiveId = 0;
 }
 
 // c_void SetHoveredID(ImGuiID id)
-pub fn SetHoveredID(id: ImGuiID) {
+pub unsafe fn SetHoveredID(id: ImGuiID) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.HoveredId = id;
     g.HoveredIdAllowOverlap = false;
@@ -73,7 +73,7 @@ pub fn SetHoveredID(id: ImGuiID) {
 }
 
 // ImGuiID GetHoveredID()
-pub fn GetHoveredID() -> ImGuiID
+pub unsafe fn GetHoveredID() -> ImGuiID
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return if g.HoveredId { g.HoveredId } else { g.HoveredIdPreviousFrame };
@@ -82,7 +82,7 @@ pub fn GetHoveredID() -> ImGuiID
 // This is called by ItemAdd().
 // Code not using ItemAdd() may need to call this manually otherwise ActiveId will be cleared. In IMGUI_VERSION_NUM < 18717 this was called by GetID().
 // c_void KeepAliveID(ImGuiID id)
-pub fn KeepAliveID(id: ImGuiID)
+pub unsafe fn KeepAliveID(id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.ActiveId == id {

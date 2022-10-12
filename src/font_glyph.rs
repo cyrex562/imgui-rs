@@ -14,7 +14,7 @@ pub struct ImFontGlyph {
     // unsigned c_int    Codepoint : 30;     // 0x0000..0x10FFFF
     pub AdvanceX: c_float,
     // c_float           AdvanceX;           // Distance to next character (= data from font + ImFontConfig::GlyphExtraSpacing.x baked in)
-// c_float           X0, Y0, X1, Y1;     // Glyph corners
+    // c_float           X0, Y0, X1, Y1;     // Glyph corners
     pub X0: c_float,
     pub Y0: c_float,
     pub X1: c_float,

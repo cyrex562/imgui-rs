@@ -281,7 +281,7 @@ inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow out
 
     // Adjust flags: NoBordersInBodyUntilResize takes priority over NoBordersInBody
     if (flags & ImGuiTableFlags_NoBordersInBodyUntilResize)
-        flags &= ~ImGuiTableFlags_NoBordersInBody;
+        flags &= !ImGuiTableFlags_NoBordersInBody;
 
     // Adjust flags: disable saved settings if there's nothing to save
     if ((flags & (ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Sortable)) == 0)
@@ -388,7 +388,7 @@ bool    BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImG
             SetNextWindowScroll(ImVec2::new(0f32, 0f32));
 
         // Create scrolling region (without border and zero window padding)
-        ImGuiWindowFlags child_flags = (flags & ImGuiTableFlags_ScrollX) ? ImGuiWindowFlags_HorizontalScrollbar : ImGuiWindowFlags_None;
+        child_flags: ImGuiWindowFlags = (flags & ImGuiTableFlags_ScrollX) ? ImGuiWindowFlags_HorizontalScrollbar : ImGuiWindowFlags_None;
         BeginChildEx(name, instance_id, outer_rect.GetSize(), false, child_flags);
         table.InnerWindow = g.CurrentWindow;
         table.WorkRect = table.Innerwindow.WorkRect;
@@ -965,7 +965,7 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
         }
 
         // Clear status flags
-        column.Flags &= ~ImGuiTableColumnFlags_StatusMask_;
+        column.Flags &= !ImGuiTableColumnFlags_StatusMask_;
 
         if ((table.EnabledMaskByDisplayOrder & ((u64)1 << order_n)) == 0)
         {
@@ -1078,13 +1078,13 @@ c_void TableUpdateLayout(*mut ImGuiTable table)
             table.HoveredColumnBody = (ImGuiTableColumnIdx)table.ColumnsCount;
     }
     if (has_resizable == false && (table.Flags & ImGuiTableFlags_Resizable))
-        table.Flags &= ~ImGuiTableFlags_Resizable;
+        table.Flags &= !ImGuiTableFlags_Resizable;
 
     // [Part 8] Lock actual OuterRect/WorkRect right-most position.
     // This is done late to handle the case of fixed-columns tables not claiming more widths that they need.
     // Because of this we are careful with uses of WorkRect and InnerClipRect before this point.
     if (table.RightMostStretchedColumn != -1)
-        table.Flags &= ~ImGuiTableFlags_NoHostExtendX;
+        table.Flags &= !ImGuiTableFlags_NoHostExtendX;
     if (table.Flags & ImGuiTableFlags_NoHostExtendX)
     {
         table.OuterRect.Max.x = table.WorkRect.Max.x = unused_x1;
@@ -2091,7 +2091,7 @@ c_void TableSetupDrawChannels(*mut ImGuiTable table)
     let freeze_row_multiplier: c_int = (table.FreezeRowsCount > 0) ? 2 : 1;
     let channels_for_row: c_int = (table.Flags & ImGuiTableFlags_NoClip) ? 1 : table.ColumnsEnabledCount;
     let channels_for_bg: c_int = 1 + 1 * freeze_row_multiplier;
-    let channels_for_dummy: c_int = (table.ColumnsEnabledCount < table.ColumnsCount || table.VisibleMaskByIndex != table.EnabledMaskByIndex) ? +1 : 0;
+    let channels_for_dummy: c_int = (table.ColumnsEnabledCount < table.ColumnsCount || table.VisibleMaskByIndex != table.EnabledMaskByIndex) ? 1 : 0;
     let channels_total: c_int = channels_for_bg + (channels_for_row * freeze_row_multiplier) + channels_for_dummy;
     table.DrawSplitter.Split(table.Innerwindow.DrawList, channels_total);
     table.DummyDrawChannel = (ImGuiTableDrawChannelIdx)((channels_for_dummy > 0) ? channels_total - 1 : -1);
@@ -2285,7 +2285,7 @@ c_void TableMergeDrawChannels(*mut ImGuiTable table)
 // #endif
                 remaining_count -= merge_group.ChannelsCount;
                 for (let n: c_int = 0; n < IM_ARRAYSIZE(remaining_mask.Storage); n++)
-                    remaining_mask.Storage[n] &= ~merge_group.ChannelsMask.Storage[n];
+                    remaining_mask.Storage[n] &= !merge_group.ChannelsMask.Storage[n];
                 for (let n: c_int = 0; n < splitter._Count && merge_channels_count != 0; n++)
                 {
                     // Copy + overwrite new clip rect
@@ -2781,7 +2781,7 @@ c_void TableHeader(label: *const c_char)
             if (*mut ImGuiTableColumn next_column = (column.NextEnabledColumn != -1) ? &table.Columns[column.NextEnabledColumn] : null_mut())
                 if (!((column.Flags | next_column.Flags) & ImGuiTableColumnFlags_NoReorder))
                     if ((column.IndexWithinEnabledSet < table.FreezeColumnsRequest) == (next_column.IndexWithinEnabledSet < table.FreezeColumnsRequest))
-                        table.ReorderColumnDir = +1;
+                        table.ReorderColumnDir = 1;
     }
 
     // Sort order arrow
@@ -3149,7 +3149,7 @@ c_void TableLoadSettings(*mut ImGuiTable table)
     }
 
     // Validate and fix invalid display order data
-    const u64 expected_display_order_mask = (settings->ColumnsCount == 64) ? ~0 : ((u64)1 << settings->ColumnsCount) - 1;
+    const u64 expected_display_order_mask = (settings->ColumnsCount == 64) ? !0 : ((u64)1 << settings->ColumnsCount) - 1;
     if (display_order_mask != expected_display_order_mask)
         for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
             table.Columns[column_n].DisplayOrder = (ImGuiTableColumnIdx)column_n;

@@ -1,4 +1,4 @@
-use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, size_t};
+use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use std::ptr::null_mut;
 use crate::color::{IM_COL32, IM_COL32_BLACK_TRANS, IM_COL32_WHITE};
 use crate::font::ImFont;

@@ -1,3 +1,5 @@
+#![allow(non_upper_case_globals)]
+
 use libc::c_char;
 use std::ffi::CStr;
 

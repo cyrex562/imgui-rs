@@ -350,7 +350,7 @@ c_void ShowDemoWindow(*mut p_open: bool)
     static let mut no_docking: bool =  false;
     static let mut unsaved_document: bool =  false;
 
-    ImGuiWindowFlags window_flags = 0;
+    window_flags: ImGuiWindowFlags = 0;
     if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
     if (no_scrollbar)       window_flags |= ImGuiWindowFlags_NoScrollbar;
     if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
@@ -482,7 +482,7 @@ c_void ShowDemoWindow(*mut p_open: bool)
                     Text("<<PRESS SPACE TO DISABLE>>");
                 }
                 if (IsKeyPressed(ImGuiKey_Space))
-                    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+                    io.ConfigFlags &= !ImGuiConfigFlags_NoMouse;
             }
             CheckboxFlags("io.ConfigFlags: NoMouseCursorChange", &io.ConfigFlags, ImGuiConfigFlags_NoMouseCursorChange);
             SameLine(); HelpMarker("Instruct backend to not alter mouse cursor shape and visibility.");
@@ -1170,9 +1170,9 @@ static c_void ShowDemoWindowWidgets()
         CheckboxFlags("ImGuiComboFlags_PopupAlignLeft", &flags, ImGuiComboFlags_PopupAlignLeft);
         SameLine(); HelpMarker("Only makes a difference if the popup is larger than the combo");
         if (CheckboxFlags("ImGuiComboFlags_NoArrowButton", &flags, ImGuiComboFlags_NoArrowButton))
-            flags &= ~ImGuiComboFlags_NoPreview;     // Clear the other flag, as we cannot combine both
+            flags &= !ImGuiComboFlags_NoPreview;     // Clear the other flag, as we cannot combine both
         if (CheckboxFlags("ImGuiComboFlags_NoPreview", &flags, ImGuiComboFlags_NoPreview))
-            flags &= ~ImGuiComboFlags_NoArrowButton; // Clear the other flag, as we cannot combine both
+            flags &= !ImGuiComboFlags_NoArrowButton; // Clear the other flag, as we cannot combine both
 
         // Using the generic BeginCombo() API, you have full control over how to display the combo contents.
         // (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
@@ -1793,7 +1793,7 @@ static c_void ShowDemoWindowWidgets()
         if (animate)
         {
             progress += progress_dir * 0.4f * GetIO().DeltaTime;
-            if (progress >= +1.10f32) { progress = +1.1f; progress_dir *= -1f32; }
+            if (progress >= 1.10f32) { progress = 1.1f; progress_dir *= -1f32; }
             if (progress <= -0.1f32) { progress = -0.1f; progress_dir *= -1f32; }
         }
 
@@ -2078,8 +2078,8 @@ static c_void ShowDemoWindowWidgets()
         const u32   u32_zero = 0,   u32_one = 1,   u32_fifty = 50, u32_min = 0,           u32_max = UINT_MAX/2,   u32_hi_a = UINT_MAX/2 - 100,   u32_hi_b = UINT_MAX/2;
         const ImS64   s64_zero = 0,   s64_one = 1,   s64_fifty = 50, s64_min = LLONG_MIN/2, s64_max = LLONG_MAX/2,  s64_hi_a = LLONG_MAX/2 - 100,  s64_hi_b = LLONG_MAX/2;
         const u64   u64_zero = 0,   u64_one = 1,   u64_fifty = 50, u64_min = 0,           u64_max = ULLONG_MAX/2, u64_hi_a = ULLONG_MAX/2 - 100, u64_hi_b = ULLONG_MAX/2;
-        f32_zero: c_float = 0.f, f32_one = 1.f, f32_lo_a = -10000000000f32, f32_hi_a = +10000000000f32;
-        const double  f64_zero = 0.,  f64_one = 1.,  f64_lo_a = -1000000000000000.0, f64_hi_a = +1000000000000000.0;
+        f32_zero: c_float = 0.f, f32_one = 1.f, f32_lo_a = -10000000000f32, f32_hi_a = 10000000000f32;
+        const double  f64_zero = 0.,  f64_one = 1.,  f64_lo_a = -1000000000000000.0, f64_hi_a = 1000000000000000.0;
 
         // State
         static char   s8_v  = 127;
@@ -2610,7 +2610,7 @@ static c_void ShowDemoWindowLayout()
 
         // Child 1: no border, enable horizontal scrollbar
         {
-            ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
+            window_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar;
             if (disable_mouse_wheel)
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
             BeginChild("ChildL", ImVec2::new(GetContentRegionAvail().x * 0.5f32, 260), false, window_flags);
@@ -2623,7 +2623,7 @@ static c_void ShowDemoWindowLayout()
 
         // Child 2: rounded border
         {
-            ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+            window_flags: ImGuiWindowFlags = ImGuiWindowFlags_None;
             if (disable_mouse_wheel)
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
             if (!disable_menu)
@@ -3065,7 +3065,7 @@ static c_void ShowDemoWindowLayout()
             names: *const c_char[] = { "Top", "25%", "Center", "75%", "Bottom" };
             TextUnformatted(names[i]);
 
-            const ImGuiWindowFlags child_flags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
+            const child_flags: ImGuiWindowFlags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
             const let mut child_id: ImGuiID =  GetID((*mut c_void)i);
             let child_is_visible: bool = BeginChild(child_id, ImVec2::new(child_w, 200f32), true, child_flags);
             if (BeginMenuBar())
@@ -3112,7 +3112,7 @@ static c_void ShowDemoWindowLayout()
         for (let i: c_int = 0; i < 5; i++)
         {
             let child_height: c_float =  GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0f32;
-            ImGuiWindowFlags child_flags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
+            child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
             let mut child_id: ImGuiID =  GetID((*mut c_void)i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2::new(-100, child_height), true, child_flags);
             if (scroll_to_of0f32)
@@ -3724,9 +3724,9 @@ let Name: *const c_char;
             default: IM_ASSERT(0); break;
             }
             if (delta > 0)
-                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
+                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? 1 : -1;
             if (delta < 0)
-                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
+                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : 1;
         }
 
         // qsort() is instable so always return a way to differenciate items.
@@ -3771,7 +3771,7 @@ static c_void EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
     {
         for (let n: c_int = 0; n < policies.len(); n++)
             if (Selectable(policies[n].Name, idx == n))
-                *p_flags = (*p_flags & ~ImGuiTableFlags_SizingMask_) | policies[n].Value;
+                *p_flags = (*p_flags & !ImGuiTableFlags_SizingMask_) | policies[n].Value;
         EndCombo();
     }
     SameLine();
@@ -5910,9 +5910,9 @@ static c_void ShowDemoWindowMisc()
             static let capture_override_keyboard: c_int = -1;
             capture_override_desc: *const c_char[] = { "None", "Set to false", "Set to true" };
             SetNextItemWidth(GetFontSize() * 15);
-            SliderInt("SetNextFrameWantCaptureMouse()", &capture_override_mouse, -1, +1, capture_override_desc[capture_override_mouse + 1], ImGuiSliderFlags_AlwaysClamp);
+            SliderInt("SetNextFrameWantCaptureMouse()", &capture_override_mouse, -1, 1, capture_override_desc[capture_override_mouse + 1], ImGuiSliderFlags_AlwaysClamp);
             SetNextItemWidth(GetFontSize() * 15);
-            SliderInt("SetNextFrameWantCaptureKeyboard()", &capture_override_keyboard, -1, +1, capture_override_desc[capture_override_keyboard + 1], ImGuiSliderFlags_AlwaysClamp);
+            SliderInt("SetNextFrameWantCaptureKeyboard()", &capture_override_keyboard, -1, 1, capture_override_desc[capture_override_keyboard + 1], ImGuiSliderFlags_AlwaysClamp);
 
             ColorButton("##panel", ImVec4(0.7f, 0.1f, 0.7f, 1f32), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2::new(256f32, 192.00f32)); // Dummy item
             if (IsItemHovered() && capture_override_mouse != -1)
@@ -6655,7 +6655,7 @@ struct ExampleAppConsole
         ScrollToBottom = false;
         AddLog("Welcome to Dear ImGui!");
     }
-    ~ExampleAppConsole()
+    !ExampleAppConsole()
     {
         ClearLog();
         for (let i: c_int = 0; i < History.Size; i++)
@@ -7428,7 +7428,7 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
     // Submit window
     if (!window_padding)
         PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2::new(0f32, 0f32));
-    const ImGuiWindowFlags window_flags = auto_resize ? ImGuiWindowFlags_AlwaysAutoResize : 0;
+    const window_flags: ImGuiWindowFlags = auto_resize ? ImGuiWindowFlags_AlwaysAutoResize : 0;
     let window_open: bool = Begin("Example: Constrained Resize", p_open, window_flags);
     if (!window_padding)
         PopStyleVar();
@@ -7475,7 +7475,7 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
 {
     static let location: c_int = 0;
     ImGuiIO& io = GetIO();
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    window_flags: ImGuiWindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     if (location >= 0)
     {
         let PAD: c_float =  10f32;
@@ -7530,7 +7530,7 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
 static c_void ShowExampleAppFullscreen(bool* p_open)
 {
     static let mut use_work_area: bool =  true;
-    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+    static flags: ImGuiWindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
 
     // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
     // Based on your use case you may want one of the other.
@@ -7876,7 +7876,7 @@ c_void ShowExampleAppDockSpace(bool* p_open)
 
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
     // because it would be confusing to have two docking targets within each others.
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    window_flags: ImGuiWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
     if (opt_fullscreen)
     {
         let viewport: *const ImGuiViewport = GetMainViewport();
@@ -7890,7 +7890,7 @@ c_void ShowExampleAppDockSpace(bool* p_open)
     }
     else
     {
-        dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+        dockspace_flags &= !ImGuiDockNodeFlags_PassthruCentralNode;
     }
 
     // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
@@ -8204,7 +8204,7 @@ c_void ShowExampleAppDocuments(bool* p_open)
                     continue;
 
                 SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
-                ImGuiWindowFlags window_flags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
+                window_flags: ImGuiWindowFlags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
                 let mut visible: bool =  Begin(doc->Name, &doc->Open, window_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.

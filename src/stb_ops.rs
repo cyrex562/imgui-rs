@@ -10,7 +10,7 @@ pub unsafe fn stb__match(mut data: *const c_uchar, mut length: c_uint)
     // INVERSE of memmove... write each byte before copying the next...
     // IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
     if stb__dout + length > stb__barrier_out_e { stb__dout += length; return; }
-    if data < stb__barrier_out_b { stb__dout = stb__barrier_out_e+1; return; }
+    if data < stb__barrier_out_b { stb__dout = stb__barrier_out_e1; return; }
     while length {
         data += 1;
         *stb__dout = *data;
@@ -23,7 +23,7 @@ pub unsafe fn stb__lit(data: *const c_uchar, length: c_uint)
 {
     // IM_ASSERT(stb__dout + length <= stb__barrier_out_e);
     if stb__dout + length > stb__barrier_out_e { stb__dout += length; return; }
-    if (data < stb__barrier_in_b) { stb__dout = stb__barrier_out_e+1; return; }
+    if (data < stb__barrier_in_b) { stb__dout = stb__barrier_out_e1; return; }
     libc::memcpy(stb__dout, data, length as size_t);
     stb__dout += length;
 }
@@ -108,9 +108,9 @@ pub unsafe fn stb_adler32(adler32: c_uint, mut buffer: *mut c_cuchar, mut buflen
     return (s2 << 16) + s1;
 }
 
-pub unsafe fn stb_decompress(mut output: *mut c_uchar, mut i: *const c_uchar, length: c_uint /*length*/) -> size_t {
-    if (stb__in4(0) != 0x57bC0000) { return 0; }
-    if (stb__in4(4) != 0) { return 0; } // error! stream is > 4GB
+pub unsafe fn stb_decompress(mut output: *mut c_uchar, mut i: *const c_uchar, length: size_t /*length*/) -> size_t {
+    if stb__in4(0) != 0x57bC0000 { return 0; }
+    if stb__in4(4) != 0 { return 0; } // error! stream is > 4GB
     let mut olen: size_t = stb_decompress_length(i) as size_t;
     stb__barrier_in_b = i;
     stb__barrier_out_e = output + olen;

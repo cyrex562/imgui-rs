@@ -15,7 +15,7 @@ use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
 
-// c_void StartMouseMovingWindow(ImGuiWindow* window)
+// c_void StartMouseMovingWindow(window: *mut ImGuiWindow)
 pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
     // Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
     // We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.
@@ -46,7 +46,7 @@ pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
 // We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
 // - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
 // - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
-// c_void StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, undock_floating_node: bool)
+// c_void StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, ImGuiDockNode* node, undock_floating_node: bool)
 pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut can_undock_node: bool = false;
@@ -254,7 +254,7 @@ pub unsafe fn UpdateMouseInputs() {
     }
 }
 
-// static c_void StartLockWheelingWindow(ImGuiWindow* window)
+// static c_void StartLockWheelingWindow(window: *mut ImGuiWindow)
 pub unsafe fn StartLockWheelingWindow(window: *mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.WheelingWindow == window {

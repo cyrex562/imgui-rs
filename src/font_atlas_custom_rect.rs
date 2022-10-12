@@ -1,11 +1,10 @@
-use libc::{c_uint, c_ushort, size_t};
 use crate::font::ImFont;
 use crate::vec2::ImVec2;
+use libc::{c_uint, c_ushort, size_t};
 
 // See ImFontAtlas::AddCustomRectXXX functions.
-#[derive(Default,Debug,Clone,Copy)]
-pub struct ImFontAtlasCustomRect
-{
+#[derive(Default, Debug, Clone, Copy)]
+pub struct ImFontAtlasCustomRect {
     // unsigned c_short  Width, Height;  // Input    // Desired rectangle dimension
     pub Width: size_t,
     pub Height: size_t,
@@ -18,9 +17,6 @@ pub struct ImFontAtlasCustomRect
     pub GlyphOffset: ImVec2,
     // ImFont*         Font;           // Input    // For custom font glyphs only: target font
     pub Font: *mut ImFont,
-
 }
 
-impl ImFontAtlasCustomRect {
-
-}
+impl ImFontAtlasCustomRect {}

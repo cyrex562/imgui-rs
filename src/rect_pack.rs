@@ -267,7 +267,7 @@ STBRP_DEF c_void stbrp_init_target(stbrp_context *context, width: c_int, height:
    let mut i: c_int = 0;
 
    for (i=0; i < num_nodes-1; ++i)
-      nodes[i].next = &nodes[i+1];
+      nodes[i].next = &nodes[i1];
    nodes[i].next= null_mut();
    context.init_mode = STBRP__INIT_skyline;
    context.heuristic = STBRP_HEURISTIC_Skyline_default;
@@ -518,7 +518,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, w
          cur = cur.next;
          ++count;
       }
-      STBRP_ASSERT(count == context.num_nodes+2);
+      STBRP_ASSERT(count == context.num_nodes2);
    }
 // #endif
 

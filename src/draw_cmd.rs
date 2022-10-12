@@ -10,7 +10,7 @@ use crate::vec4::ImVec4;
 //   this fields allow us to render meshes larger than 64K vertices while keeping 16-bit indices.
 //   Backends made for <1.71. will typically ignore the VtxOffset fields.
 // - The ClipRect/TextureId/VtxOffset fields must be contiguous as we memcmp() them together (this is asserted for).
-#[derive(Default,Debug,Clone,Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct ImDrawCmd
 {
 pub ClipRect:  ImVec4,           // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData->DisplayPos to get clipping rectangle in "viewport" coordinates

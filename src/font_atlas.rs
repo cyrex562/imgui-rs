@@ -13,6 +13,7 @@ use crate::font_config::ImFontConfig;
 use crate::font_glyph::ImFontGlyph;
 use crate::font_ops::{Decode85, UnpackAccumulativeOffsetsIntoRanges};
 use crate::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_COUNT, ImGuiMouseCursor_None};
+use crate::stb_ops::{stb_decompress, stb_decompress_length};
 use crate::string_ops::{ImFormatString, str_to_const_c_char_ptr};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
@@ -208,8 +209,8 @@ impl ImFontAtlas {
 
 
     // ImFont*           AddFontFromMemoryCompressedTTF(const void* compressed_font_data, compressed_font_size: c_int, c_float size_pixels, const ImFontConfig* font_cfg = NULL, const glyph_ranges: *mut ImWchar = NULL); // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
-    pub unsafe fn AddFontFromMemoryCompressedTTF(&mut self, compressed_font_data: *const c_void, compressed_font_size: size_t, size_pixels: c_float, font_cfg: *const ImFontConfig, glyph_ranges: *const ImWchar) -> *mut ImFont {
-        let mut buf_decompressed_size: size_t =  stb_decompress_length(compressed_ttf_data);
+    pub unsafe fn AddFontFromMemoryCompressedTTF(&mut self, compressed_ttf_data: *const c_void, compressed_ttf_size: size_t, size_pixels: c_float, font_cfg: *const ImFontConfig, glyph_ranges: *const ImWchar) -> *mut ImFont {
+        let mut buf_decompressed_size: size_t = stb_decompress_length(compressed_ttf_data) as size_t;
         let mut buf_decompressed_data: *mut c_uchar = libc::malloc(buf_decompressed_size);
         stb_decompress(buf_decompressed_data, compressed_ttf_data, compressed_ttf_size);
 

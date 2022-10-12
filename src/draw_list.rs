@@ -52,7 +52,7 @@ pub struct ImDrawList {
     // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
     pub _IdxWritePtr: *mut ImDrawIdx,
     // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    pub _ClipRectStack: Vec<ImRect>,
+    pub _ClipRectStack: Vec<ImVec4>,
     // [Internal]
     pub _TextureIdStack: Vec<ImTextureID>,
     // [Internal]
@@ -349,7 +349,7 @@ impl ImDrawList {
 
     // void  AddText(const font: *mut ImFont, c_float font_size, const ImVec2& pos, col: u32, const char* text_begin, const char*
 // text_end = NULL, c_float wrap_width = 0f32, const ImVec4* cpu_fine_clip_rect = NULL);
-    pub unsafe fn AddText2(&mut self, font: *const ImFont, font_size: c_float, pos: &ImVec2, col: u32, text_begin: *const c_char, text_end: *const c_char, wrap_width: c_float, cpu_fine_clip_rect: *const ImVec4) {
+    pub unsafe fn AddText2(&mut self, mut font: *const ImFont, mut font_size: c_float, pos: &ImVec2, col: u32, text_begin: *const c_char, mut text_end: *const c_char, wrap_width: c_float, cpu_fine_clip_rect: *const ImVec4) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
@@ -365,7 +365,7 @@ impl ImDrawList {
         if font == null_mut() {
             font = self._Data.Font;
         }
-        if font_size == 0 {
+        if font_size == 0.0 {
             font_size = self._Data.FontSize;
         }
 
@@ -378,7 +378,7 @@ impl ImDrawList {
             clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect.z);
             clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect.w);
         }
-        font.RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != null_mut());
+        font.RenderText(this, font_size, pos, col, &clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != null_mut());
     }
 
 
@@ -455,8 +455,8 @@ impl ImDrawList {
                 {
                     temp_points[0] = points[0] + temp_normals[0] * half_draw_size;
                     temp_points[1] = points[0] - temp_normals[0] * half_draw_size;
-                    temp_points[(points_count-1)*2+0] = points[points_count-1] + temp_normals[points_count-1] * half_draw_size;
-                    temp_points[(points_count-1)*2+1] = points[points_count-1] - temp_normals[points_count-1] * half_draw_size;
+                    temp_points[(points_count-1)*20] = points[points_count-1] + temp_normals[points_count-1] * half_draw_size;
+                    temp_points[(points_count-1)*21] = points[points_count-1] - temp_normals[points_count-1] * half_draw_size;
                 }
 
                 // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
@@ -1056,18 +1056,18 @@ impl ImDrawList {
 //   Prefer using your own persistent instance of ImDrawListSplitter as you can stack them.
 //   Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.
 // inline void     ChannelsSplit(count: c_int)    { _Splitter.Split(this, count); }
-    pub fn ChannelsSplit(&mut self, count: c_int) {
+    pub unsafe fn ChannelsSplit(&mut self, count: size_t) {
         self._Splitter.Split(self, count)
     }
 
 
     // inline void     ChannelsMerge()             { _Splitter.Merge(this); }
-    pub fn ChannelsMerge(&mut self) {
+    pub unsafe fn ChannelsMerge(&mut self) {
         self._Splitter.Merge(self)
     }
 
     // inline void     ChannelsSetCurrent(n: c_int)   { _Splitter.SetCurrentChannel(this, n); }
-    pub fn ChannelsSetCurrent(&mut self, n: c_int) {
+    pub unsafe fn ChannelsSetCurrent(&mut self, n: c_int) {
         self._Splitter.SetCurrentChannel(self, n)
     }
 
@@ -1234,7 +1234,7 @@ impl ImDrawList {
 // void  _ResetForNewFrame(); 
 
 // Initialize before use in a new frame. We always have a command ready in the buffer.
-    pub fn _ResetForNewFrame(&mut self) {
+    pub unsafe fn _ResetForNewFrame(&mut self) {
         // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
         // IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, ClipRect) == 0);
         // IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, TextureId) == sizeof(ImVec4));
@@ -1265,7 +1265,7 @@ impl ImDrawList {
     // pub fn _ClearFreeMemory(&mut self) {
     //     todo!()
     // }
-    pub fn _ClearFreeMemory(&mut self)
+    pub unsafe fn _ClearFreeMemory(&mut self)
     {
         self.CmdBuffer.clear();
         self.IdxBuffer.clear();

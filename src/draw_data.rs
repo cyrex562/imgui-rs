@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use std::ptr::null_mut;
-use libc::c_int;
+use libc::{c_int, size_t};
 use crate::draw_cmd::ImDrawCmd;
 use crate::draw_list::ImDrawList;
 use crate::draw_vert::ImDrawVert;
@@ -13,18 +13,24 @@ use crate::viewport::ImGuiViewport;
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
 // as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
 #[derive(Default,Debug,Clone)]
-pub struct ImDrawData
-{
-pub Valid: bool,                  // Only valid after Render() is called and before the next NewFrame() is called.
-pub CmdListsCount: c_int,          // Number of ImDrawList* to render
-pub TotalIdxCount: c_int,          // For convenience, sum of all ImDrawList's IdxBuffer.Size
-pub TotalVtxCount: c_int,          // For convenience, sum of all ImDrawList's VtxBuffer.Size
-pub CmdLists: *mut *mut ImDrawList,               // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
-pub DisplayPos: ImVec2,             // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport()->Pos for the main viewport, == (0.0) in most single-viewport applications)
-pub DisplaySize: ImVec2,            // Size of the viewport to render (== GetMainViewport()->Size for the main viewport, == io.DisplaySize in most single-viewport applications)
-pub FramebufferScale: ImVec2,       // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
-pub OwnerViewport: *mut ImGuiViewport,          // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
-
+pub struct ImDrawData {
+    pub Valid: bool,
+    // Only valid after Render() is called and before the next NewFrame() is called.
+    pub CmdListsCount: size_t,
+    // Number of ImDrawList* to render
+    pub TotalIdxCount: size_t,
+    // For convenience, sum of all ImDrawList's IdxBuffer.Size
+    pub TotalVtxCount: size_t,
+    // For convenience, sum of all ImDrawList's VtxBuffer.Size
+    pub CmdLists: *mut *mut ImDrawList,
+    // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
+    pub DisplayPos: ImVec2,
+    // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport()->Pos for the main viewport, == (0.0) in most single-viewport applications)
+    pub DisplaySize: ImVec2,
+    // Size of the viewport to render (== GetMainViewport()->Size for the main viewport, == io.DisplaySize in most single-viewport applications)
+    pub FramebufferScale: ImVec2,
+    // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
+    pub OwnerViewport: *mut ImGuiViewport,          // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
 }
 
 impl ImDrawData {
