@@ -1,158 +1,183 @@
-use crate::orig_imgui_single_file;
-use crate::imgui_text_range::ImGuiTextRange;
-use crate::item::set_next_item_width;
-use crate::text_range::TextRange;
+// Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
+#![allow(non_snake_case)]
 
-/// Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
+use std::borrow::BorrowMut;
+use std::ptr::{null, null_mut};
+use libc::c_char;
+use crate::imgui_cpp::{ImStristr, ImStrncpy};
+use crate::item_ops::SetNextItemWidth;
+use crate::string_ops::{ImCharIsBlankA, ImStristr, ImStrncpy};
+
+// [Internal]
 #[derive(Default,Debug,Clone)]
-pub struct TextFilter
+pub struct ImGuiTextRange
 {
-    pub input_buf: String,
-    pub filters: Vec<TextRange>,
-    pub count_grep: i32,
+    // const char*     b;
+    // const char*     e;
+    pub b: *const c_char,
+    pub e: *const c_char
 }
 
-impl TextFilter {
-    //            ImGuiTextFilter(const char* default_filter = "");
-    pub fn new(default_filter: &String) -> Self {
+impl ImGuiTextRange {
+    // ImGuiTextRange()                                { b = e = None; }
+    pub fn new() -> Self {
+        Self {
+            b: null(),
+            e: null()
+        }
+    }
+
+    // ImGuiTextRange(const char* _b, const char* _e)  { b = _b; e = _e; }
+    pub fn new2(b: *const c_char, e: *const c_char) -> Self {
+        Self {
+            b,
+            e,
+        }
+    }
+
+    // bool            empty() const                   { return b == e; }
+    pub fn empty(&mut self) -> bool {
+        self.b == self.e
+    }
+
+    // IMGUI_API void  split(char separator, ImVector<ImGuiTextRange>* out) const;
+    pub fn split(&mut self, separator: c_char, out: &mut Vec<ImGuiTextRange>) {
+        // out.resize(0);
+        let mut wb = b;
+        let mut we = wb;
+        while we < e
+        {
+            if *we == separator
+            {
+                out.push(ImGuiTextRange::new2(wb, we));
+                wb = we + 1;
+            }
+            we+= 1;
+        }
+        if wb != we {
+            out.push(ImGuiTextRange::new2(wb, we));
+        }
+    }
+}
+
+#[derive(Default,Debug,Clone)]
+pub struct ImGuiTextFilter
+{
+    // char                    InputBuf[256];
+    pub InputBuf: [c_char;256],
+    // ImVector<ImGuiTextRange>Filters;
+    pub Filters: Vec<ImGuiTextRange>,
+    // int                     CountGrep;
+    pub CountGrep: i32
+}
+
+impl ImGuiTextFilter {
+    // IMGUI_API           ImGuiTextFilter(const char* default_filter = "");
+    pub unsafe fn new(default_filter: *const c_char) -> Self {
+        // InputBuf[0] = 0;
+        // CountGrep = 0;
         let mut out = Self {
-            ..Default()
+            InputBuf: [0;256],
+            CountGrep: 0,
+            Filters: vec![]
         };
-        // out.input_buf[0] = 0;
-        // out.countGrep = 0;
-        if default_filter {
-            out.input_buf = default_filter.clone();
-            out.build();
+        if default_filter.is_null() == false
+        {
+            ImStrncpy(out.InputBuf.as_mut_ptr(), default_filter, IM_ARRAYSIZE(InputBuf));
+            Build();
         }
         out
     }
 
-    //  bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0);  // Helper calling InputText+build
-    pub fn draw(&mut self, label: &String, width: f32) -> bool {
-        if width != 0.0 {
-           set_next_item_width(g, width);
+    // IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0f32);  // Helper calling InputText+Build
+    pub unsafe fn Draw(&mut self, label: *const c_char, width: f32) -> bool {
+        if width != 0f32 {
+            SetNextItemWidth(width);
         }
-        let value_changed = input_text(label, &mut self.input_buf);
+        let value_changed = InputText::new(label, InputBuf, IM_ARRAYSIZE(Inputbuf));
         if value_changed {
             self.Build();
         }
         return value_changed;
     }
-    //  bool      PassFilter(const char* text, const char* text_end = None) const;
-    pub fn pass_filter(&mut self, text: &mut String, text_end: &String) -> bool {
-        if self.filters.empty() {
+
+
+    // IMGUI_API bool      PassFilter(const char* text, const char* text_end = NULL) const;
+    pub unsafe fn PassFilter(&mut self, mut text: *const c_char, text_end: *const c_char) -> bool {
+        if self.Filters.empty() {
             return true;
         }
 
-        if (text.is_empty()) {
-            *text = String::from("");
+        if text.is_null() {
+            text = String::from("").into();
         }
 
-        // for (int i = 0; i != filters.size; i += 1)
-        // for i in 0..self.filters.size
-        for filter in self.filters.iter_mut()
+        // for (int i = 0; i != Filters.Size; i++)
+        for i in 0 .. self.Filters.len()
         {
-            // const ImGuiTextRange& f = filters[i];
-            // let f = self.filters[i];
-            if filter.empty() {
+            let f = self.Filters[i].borrow_mut();
+            if f.empty() {
                 continue;
             }
-            if filter.b[0] == '-' {
+            if f.b[0] == '-'
+            {
                 // Subtract
-                // todo
-                // if (ImStristr(text, text_end, f.b + 1, f.e) != None) {
-                //     return false;
-                // }
-            } else {
+                if ImStristr(text, text_end, f.b + 1, f.e) != null_mut() {
+                    return false;
+                }
+            }
+            else
+            {
                 // Grep
-                // todo
-                // if (ImStristr(text, text_end, f.b, f.e) != None) {
-                //     return true;
-                // }
+                if ImStristr(text, text_end, f.b, f.e) != null_mut() {
+                    return true;
+                }
             }
         }
 
         // Implicit * grep
-        if self.count_grep == 0 {
+        if self.CountGrep == 0 {
             return true;
         }
 
         return false;
     }
 
-    //  void      build();
-    pub fn build(&mut self) {
-        // filters.resize(0);
-        self.filters.reserve(0);
-        // ImGuiTextRange input_range(input_buf, input_buf + strlen(input_buf));
-        let mut input_range = TextRange::new(&mut self.input_buf, &mut self.input_buf + self.input_buf.len());
-        // input_range.split(',', &filters);
-        text_filter_text_range_split(',', &mut self.filters);
+    // IMGUI_API void      Build();
+    pub unsafe fn Build(&mut self) {
+        // Filters.resize(0);
+        self.Filters.clear();
+        let  mut input_range = ImGuiTextRange::new2(InputBuf, InputBuf + libc::strlen(self.InputBuf.as_ptr()));
+        input_range.split(',' as c_char, &mut self.Filters);
 
-        self.count_grep = 0;
-        // for (int i = 0; i != filters.size; i += 1)
-        // for i in 0..self.filters.size {
-        for f in self.filters.iter_mut() {
-            // let f = self.filters[i];
-            // while f.b < f.e && char_is_blank_a(f.b[0]) {
-            //     f.b += 1;
-            // }
-            // TODO:
-            while f.e > f.b && char_is_blank_a(f.e[-1]) {
+        self.CountGrep = 0;
+        // for (int i = 0; i != Filters.Size; i++)
+        for i in 0 .. self.Filters.len()
+        {
+            let f = Filters[i];
+            while f.b < f.e && ImCharIsBlankA(f.b[0]) {
+                f.b += 1;
+            }
+            while f.e > f.b && ImCharIsBlankA(f.e[-1]) {
                 f.e -= 1;
             }
             if f.empty() {
                 continue;
             }
-            // if (self.filters.[i].b[0] != '-') {
-            //     CountGrep += 1;
-            // }
-            if f.b[0] != '-' {
-                self.count_grep += 1;
+            if Filters[i].b[0] != '-' {
+                CountGrep += 1;
             }
         }
     }
-    // void                clear()          { input_buf[0] = 0; build(); }
-    pub fn clear(&mut self) {
-        self.input_buf.clear();
-        self.filters.clear();
-        self.count_grep = 0;
-    }
-    // bool                IsActive() const { return !filters.empty(); }
-    pub fn is_active(&self) -> bool {
-        !self.filters.is_empty()
+
+    // void                Clear()          { InputBuf[0] = 0; Build(); }
+    pub unsafe fn Clear(&mut self) {
+        self.InputBuf[0] = 0;
+        self.Build();
     }
 
-
-
-//
-// bool ImGuiTextFilter::PassFilter(const char* text, const char* text_end) const
-// {
-//
-// }
-
-}
-
-
-// void ImGuiTextFilter::ImGuiTextRange::split(char separator, ImVector<ImGuiTextRange>* out) const
-pub fn text_filter_text_range_split(separator: char, out: &mut Vec<TextRange>)
-{
-    // // out->resize(0);
-    //
-    // // const char* wb = b;
-    // let wb = b;
-    // // const char* we = wb;
-    //
-    // while we < e
-    // {
-    //     if (*we == separator)
-    //     {
-    //         out.push_back(ImGuiTextRange(wb, we));
-    //         wb = we + 1;
-    //     }
-    //     we += 1;
-    // }
-    // if (wb != we)
-    //     out.push_back(ImGuiTextRange(wb, we));
-    todo!()
+    // bool                IsActive() const { return !Filters.empty(); }
+    pub unsafe fn IsActive(&mut self) -> bool {
+        !self.Filters.is_empty()
+    }
 }

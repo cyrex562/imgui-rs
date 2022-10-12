@@ -1,383 +1,198 @@
-use std::collections::HashSet;
-use crate::imgui_h::Color;
-use crate::imgui_math::{IM_F32_TO_INT8_SAT};
-use crate::imgui_vec::Vector4D;
-use crate::math::{f32_mod, f32_to_int8_sat, lerp_u32};
-use crate::vectors::Vector4D;
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
 
-pub fn alpha_blend_colors(col_a: u32, col_b: u32) -> u32 {
-    // float t = ((col_b >> IM_COL32_A_SHIFT) & 0xFF) / 255.f;
-    let t = ((col_b >> IM_COL32_A_SHIFT) & 0xff) as f32 / 255.0;
-    // int r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
-    let r = lerp_u32((col_a >> IM_COL32_R_SHIFT) & 0xff, (col_b >> IM_COL32_R_SHIFT) & 0xff, t);
-    // int g = ImLerp((col_a >> IM_COL32_G_SHIFT) & 0xFF, (col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
-    let g = lerp_u32((col_a >> IM_COL32_G_SHIFT) & 0xff, (col_b >> IM_COL32_G_SHIFT) & 0xff, t);
-    // int b = ImLerp((col_a >> IM_COL32_B_SHIFT) & 0xFF, (col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
-    let b = lerp_u32((col_a >> IM_COL32_B_SHIFT) & 0xff, (col_b >> IM_COL32_B_SHIFT) & 0xff, t);
-    make_color_32(r, g, b, 0xFF)
-}
+use libc::{c_float, c_int};
+use crate::vec4::ImVec4;
 
-pub fn convert_u32_color_to_vector4d(in_u32: u32) -> Vector4D {
-    let mut s: f32 = 1.0 / 255.0;
-    return Vector4D {
-        x: ((in_u32 >> IM_COL32_R_SHIFT) & 0xFF) as f32 * s,
-        y: ((in_u32 >> IM_COL32_G_SHIFT) & 0xFF) as f32 * s,
-        z: ((in_u32 >> IM_COL32_B_SHIFT) & 0xFF) as f32 * s,
-        w: ((in_u32 >> IM_COL32_A_SHIFT) & 0xFF) as f32 * s,
-    };
-}
+//   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
+// typedef int ImGuiCol;               // -> enum ImGuiCol_             // Enum: A color identifier for styling
+pub type ImGuiCol = u32;
 
-pub fn convert_vector4d_to_u32_color(in_vec: &Vector4D) -> u32 {
-    let mut out: u32 = ((f32_to_int8_sat(in_vec.x)) << IM_COL32_R_SHIFT) as u32;
-    out |= ((f32_to_int8_sat(in_vec.y)) << IM_COL32_G_SHIFT) as u32;
-    out |= ((f32_to_int8_sat(in_vec.z)) << IM_COL32_B_SHIFT) as u32;
-    out |= ((f32_to_int8_sat(in_vec.w)) << IM_COL32_A_SHIFT) as u32;
-    out
-}
 
-/// Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
-/// Optimized http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
-pub fn convert_rgb_to_hsv(mut r: f32, mut g: f32, mut b: f32, out_h: &mut f32, out_s: &mut f32, out_v: &mut f32) {
-    let mut k: f32 = 0.0;
-    if g < b {
-        f32::swap(&mut g, &mut b);
-        k = -1.0;
-    }
-    if r < g {
-        f32::swap(&mut r, &mut g);
-        k = -2.0 / 6.0 - k;
-    }
+// Helpers macros to generate 32-bit encoded colors
+// User can declare their own format by #defining the 5 _SHIFT/_MASK macros in their imconfig file.
+// #ifndef IM_COL32_R_SHIFT
+// #ifdef IMGUI_USE_BGRA_PACKED_COLOR
+// #define IM_COL32_R_SHIFT    16
+// #define IM_COL32_G_SHIFT    8
+// #define IM_COL32_B_SHIFT    0
+// #define IM_COL32_A_SHIFT    24
+// #define IM_COL32_A_MASK     0xFF000000
+// #else
+// #define IM_COL32_R_SHIFT    0
+pub const IM_COL32_R_SHIFT: ImGUiCol = 0;
+// #define IM_COL32_G_SHIFT    8
+pub const IM_COL32_G_SHIFT: ImGUiCol = 8;
+// #define IM_COL32_B_SHIFT    16
+pub const IM_COL32_B_SHIFT: ImGuiCol = 16;
+// #define IM_COL32_A_SHIFT    24
+pub const IM_COL32_A_SHIFT: IMGuiCol = 24;
+// #define IM_COL32_A_MASK     0xFF000000
+pub const IM_COL32_A_MASK: ImGuiCol = 0xFF000000;
 
-    let mut chroma: f32 = r - (if g < b { g } else { b });
-    *out_h = f32::abs(k + (g - b) / (6.0 * chroma + 1e-20));
-    *out_s = chroma / (r + 1e-20);
-    *out_v = r;
-}
-
-/// Convert hsv floats ([0-1],[0-1],[0-1]) to rgb floats ([0-1],[0-1],[0-1]), from Foley & van Dam p593
-/// also http://en.wikipedia.org/wiki/HSL_and_HSV
-pub fn convert_hsv_to_rgb(mut h: f32, s: f32, v: f32, out_r: &mut f32, out_g: &mut f32, out_b: &mut f32) {
-    if s == 0.0 {
-        // gray
-
-        *out_r = v;
-        *out_g = v;
-        *out_b = v;
-        return;
-    }
-
-    h = f32_mod(h, 1.0) / (60.0 / 360.0);
-    // int   i = h;
-    let mut i: i32 = h as i32;
-    // float f = h - (float)i;
-    let mut f: f32 = h - i as f32;
-    // float p = v * (1.0 - s);
-    let mut p: f32 = v * (1.0 - s);
-    // float q = v * (1.0 - s * f);
-    let mut q: f32 = v * (1.0 - s * f);
-    // float t = v * (1.0 - s * (1.0 - f));
-    let mut t: f32 = v * (1.0 - s * (1.0 - f));
-
-    // switch (i)
-    // {
-    match i {
-        // case 0: out_r = v; out_g = t; out_b = p; break;
-        0 => {
-            *out_r = v;
-            *out_g = t;
-            *out_b = p
-        }
-        // case 1: out_r = q; out_g = v; out_b = p; break;
-        1 => {
-            *out_r = q;
-            *out_g = v;
-            *out_b = p
-        }
-        // case 2: out_r = p; out_g = v; out_b = t; break;
-        2 => {
-            *out_r = p;
-            *out_g = v;
-            *out_b = t
-        }
-        // case 3: out_r = p; out_g = q; out_b = v; break;
-        3 => {
-            *out_r = p;
-            *out_g = q;
-            *out_b = v
-        }
-        // case 4: out_r = t; out_g = p; out_b = v; break;
-        4 => {
-            *out_r = t;
-            *out_g = p;
-            *out_b = v
-        }
-        // case 5: default: out_r = v; out_g = p; out_b = q; break;
-        _ => {
-            *out_r = v;
-            *out_g = p;
-            *out_b = q
-        }
-        // }
-    }
+// #endif
+// #endif
+// #define IM_COL32(R,G,B,A)    (((ImU32)(A)<<IM_COL32_A_SHIFT) | ((ImU32)(B)<<IM_COL32_B_SHIFT) | ((ImU32)(G)<<IM_COL32_G_SHIFT) | ((ImU32)(R)<<IM_COL32_R_SHIFT))
+pub fn IM_COL32(r: u32, g: u32, b: u32, a: u32) -> u32 {
+    a << IM_COL32_A_SHIFT | b << IM_COL32_B_SHIFT | g << IM_COL32_G_SHIFT | r << IM_COL32_R_SHIFT
 }
 
 
-/// Helpers macros to generate 32-bit encoded colors
-/// User can declare their own format by #defining the 5 _SHIFT/_MASK macros in their imconfig file.
-pub const IM_COL32_R_SHIFT: u32 = 0;
-pub const IM_COL32_G_SHIFT: u32 = 8;
-pub const IM_COL32_B_SHIFT: u32 = 16;
-pub const IM_COL32_A_SHIFT: u32 = 24;
-pub const COLOR32_A_MASK: u32 = 0xFF000000;
+// #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
+pub const IM_COL32_DISABLE: ImGuiCol = IM_COL32(0, 0, 0, 1);
+// #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
+pub const IM_COL32_WHITE: ImGuiCol = IM_COL32(255, 255, 255, 255);
+// #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
+pub const IM_COL32_BLACK: ImGuiCol = IM_COL32(0, 0, 0, 255);
+// #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
+pub const IM_COL32_BLACK_TRANS: ImGuiCol = IM_COL32(0, 0, 0, 0);
 
-///#define IM_COL32(R,G,B,A)    (((A)<<IM_COL32_A_SHIFT) | ((B)<<IM_COL32_B_SHIFT) | ((G)<<IM_COL32_G_SHIFT) | ((R)<<IM_COL32_R_SHIFT))
-pub fn make_color_32(red: u32, green: u32, blue: u32, alpha: u32) -> u32 {
-    alpha << IM_COL32_A_SHIFT | blue << IM_COL32_B_SHIFT | green << IM_COL32_G_SHIFT | red << IM_COL32_R_SHIFT
+
+// Enumeration for PushStyleColor() / PopStyleColor()
+// enum ImGuiCol_
+// {
+pub const ImGuiCol_Text: ImGuiCol = 0;
+pub const ImGuiCol_TextDisabled: ImGuiCol = 1;
+pub const ImGuiCol_WindowBg: ImGuiCol = 2;
+// Background of normal windows
+pub const ImGuiCol_ChildBg: ImGuiCol = 3;
+// Background of child windows
+pub const ImGuiCol_PopupBg: ImGuiCol = 4;
+// Background of popups; menus; tooltips windows
+pub const ImGuiCol_Border: ImGuiCol = 5;
+pub const ImGuiCol_BorderShadow: ImGuiCol = 6;
+pub const ImGuiCol_FrameBg: ImGuiCol = 7;
+// Background of checkbox; radio button; plot; slider; text input
+pub const ImGuiCol_FrameBgHovered: ImGuiCol = 8;
+pub const ImGuiCol_FrameBgActive: ImGuiCol = 9;
+pub const ImGuiCol_TitleBg: ImGuiCol = 10;
+pub const ImGuiCol_TitleBgActive: ImGuiCol = 11;
+pub const ImGuiCol_TitleBgCollapsed: ImGuiCol = 12;
+pub const ImGuiCol_MenuBarBg: ImGuiCol = 13;
+pub const ImGuiCol_ScrollbarBg: ImGuiCol = 14;
+pub const ImGuiCol_ScrollbarGrab: ImGuiCol = 15;
+pub const ImGuiCol_ScrollbarGrabHovered: ImGuiCol = 16;
+pub const ImGuiCol_ScrollbarGrabActive: ImGuiCol = 17;
+pub const ImGuiCol_CheckMark: ImGuiCol = 18;
+pub const ImGuiCol_SliderGrab: ImGuiCol = 19;
+pub const ImGuiCol_SliderGrabActive: ImGuiCol = 20;
+pub const ImGuiCol_Button: ImGuiCol = 21;
+pub const ImGuiCol_ButtonHovered: ImGuiCol = 22;
+pub const ImGuiCol_ButtonActive: ImGuiCol = 23;
+pub const ImGuiCol_Header: ImGuiCol = 24;
+// Header* colors are used for CollapsingHeader; TreeNode; Selectable; MenuItem
+pub const ImGuiCol_HeaderHovered: ImGuiCol = 25;
+pub const ImGuiCol_HeaderActive: ImGuiCol = 26;
+pub const ImGuiCol_Separator: ImGuiCol = 27;
+pub const ImGuiCol_SeparatorHovered: ImGuiCol = 28;
+pub const ImGuiCol_SeparatorActive: ImGuiCol = 29;
+pub const ImGuiCol_ResizeGrip: ImGuiCol = 30;
+// Resize grip in lower-right and lower-left corners of windows.
+pub const ImGuiCol_ResizeGripHovered: ImGuiCol = 31;
+pub const ImGuiCol_ResizeGripActive: ImGuiCol = 32;
+pub const ImGuiCol_Tab: ImGuiCol = 33;
+// TabItem in a TabBar
+pub const ImGuiCol_TabHovered: ImGuiCol = 34;
+pub const ImGuiCol_TabActive: ImGuiCol = 35;
+pub const ImGuiCol_TabUnfocused: ImGuiCol = 36;
+pub const ImGuiCol_TabUnfocusedActive: ImGuiCol = 37;
+pub const ImGuiCol_DockingPreview: ImGuiCol = 38;
+// Preview overlay color when about to docking something
+pub const ImGuiCol_DockingEmptyBg: ImGuiCol = 39;
+// Background color for empty node (e.g. CentralNode with no window docked into it)
+pub const ImGuiCol_PlotLines: ImGuiCol = 40;
+pub const ImGuiCol_PlotLinesHovered: ImGuiCol = 41;
+pub const ImGuiCol_PlotHistogram: ImGuiCol = 42;
+pub const ImGuiCol_PlotHistogramHovered: ImGuiCol = 43;
+pub const ImGuiCol_TableHeaderBg: ImGuiCol = 44;
+// Table header background
+pub const ImGuiCol_TableBorderStrong: ImGuiCol = 45;
+// Table outer and header borders (prefer using Alpha=1.0 here)
+pub const ImGuiCol_TableBorderLight: ImGuiCol = 46;
+// Table inner borders (prefer using Alpha=1.0 here)
+pub const ImGuiCol_TableRowBg: ImGuiCol = 47;
+// Table row background (even rows)
+pub const ImGuiCol_TableRowBgAlt: ImGuiCol = 48;
+// Table row background (odd rows)
+pub const ImGuiCol_TextSelectedBg: ImGuiCol = 49;
+pub const ImGuiCol_DragDropTarget: ImGuiCol = 50;
+// Rectangle highlighting a drop target
+pub const ImGuiCol_NavHighlight: ImGuiCol = 51;
+// Gamepad/keyboard: current highlighted item
+pub const ImGuiCol_NavWindowingHighlight: ImGuiCol = 52;
+// Highlight window when using CTRL+TAB
+pub const ImGuiCol_NavWindowingDimBg: ImGuiCol = 53;
+// Darken/colorize entire screen behind the CTRL+TAB window list; when active
+pub const ImGuiCol_ModalWindowDimBg: ImGuiCol = 54;
+// Darken/colorize entire screen behind a modal window, when one is active
+pub const ImGuiCol_COUNT: ImGuiCol = 55;
+// };
+
+
+// Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or ImVec4 (4x1 float)
+// Prefer using IM_COL32() macros if you want a guaranteed compile-time ImU32 for usage with ImDrawList API.
+// **Avoid storing ImColor! Store either u32 of ImVec4. This is not a full-featured color class. MAY OBSOLETE.
+// **None of the ImGui API are using ImColor directly but you can use it as a convenience to pass colors in either ImU32 or ImVec4 formats. Explicitly cast to ImU32 or ImVec4 if needed.
+#[derive(Default, Debug, Copy, Clone)]
+pub struct ImColor {
+    pub Value: ImVec4,
+
 }
 
-/// #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
-pub const IM_COL32_WHITE: u32 = make_color_32(255, 255, 255, 255);
-/// #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
-pub const IM_COL32_BLACK: u32 = make_color_32(0, 0, 0, 255);
-/// #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
-pub const IM_COL32_BLACK_TRANS: u32 = make_color_32(0, 0, 0, 0);
-
-/// Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or Vector4D (4x1 float)
-/// Prefer using IM_COL32() macros if you want a guaranteed compile-time ImU32 for usage with ImDrawList API.
-/// **Avoid storing ImColor! Store either u32 of Vector4D. This is not a full-featured color class. MAY OBSOLETE.
-/// **None of the ImGui API are using ImColor directly but you can use it as a convenience to pass colors in either ImU32 or Vector4D formats. Explicitly cast to ImU32 or Vector4D if needed.
-#[derive(Default, Debug, Clone)]
-pub struct Color {
-    // Vector4D          value;
-    pub value: Vector4D,
-}
-
-impl From<(f32, f32, f32, f32)> for Color {
-    fn from(floats: (f32, f32, f32, f32)) -> Self {
-        let (r, g, b, a) = floats;
+impl ImColor {
+    // constexpr ImColor()                                             { }
+    // constexpr ImColor(r: c_float, g: c_float, b: c_float, let a: c_float =  1f32)    : Value(r, g, b, a) { }
+    pub fn new(r: c_float, g: c_float, b: c_float, a: c_float) -> Self {
         Self {
-            value: Vector4D {
-                x: r,
-                y: g,
-                z: b,
-                w: a,
-            }
+            Value: ImVec4::new4(r, g, b, a)
         }
     }
-}
 
-impl From<Vector4D> for Color {
-    fn from(x: Vector4D) -> Self {
+
+    // constexpr ImColor(const ImVec4& col)                            : Value(col) {}
+    pub fn new2(col: &ImVec4) -> Self {
         Self {
-            value: x
+            Value: col.clone(),
         }
     }
-}
 
-impl From<(i32, i32, i32, i32)> for Color {
-    fn from(ints: (i32, i32, i32, i32)) -> Self {
-        let (r, g, b, a) = ints;
-        let sc: f32 = 1.0 / 255.0;
-        let value = Vector4D::new(r as f32 * sc, g as f32 * sc, b as f32 * sc, a as f32 * sc);
-        Self {
-            value
-        }
-    }
-}
 
-impl From<u32> for Color {
-    fn from(rgba: u32) -> Self {
-        let sc: f32 = 1.0 / 255.0;
-        let value = Vector4D {
-            x: (rgba >> IM_COL32_R_SHIFT & 0xff) as f32 * sc,
-            y: (rgba >> IM_COL32_G_SHIFT & 0xff) as f32 * sc,
-            z: (rgba >> IM_COL32_B_SHIFT & 0xff) as f32 * sc,
-            w: (rgba >> IM_COL32_A_SHIFT & 0xff) as f32 * sc,
+    // ImColor(r: c_int, g: c_int, b: c_int, let a: c_int = 255)
+    pub fn new3(r: c_int, g: c_int, b: c_int, a: c_int) -> Self {
+        let sc: c_float = 1f32 / 255f32;
+        let mut out = Self {
+            Value: ImVec4::default(),
         };
-        Self {
-            value
-        }
+        out.Value.x = r * sc;
+        out.Value.y = g * sc;
+        out.Value.z = b * sc;
+        out.Value.w = a * sc;
+        out
     }
-}
 
-impl Into<u32> for Color {
-    fn into(self) -> u32 {
-        convert_vector4d_to_u32_color(&self.value)
+
+    // ImColor(u32 rgba)                                             
+    pub fn new4(rgba: u32) -> Self {
+        let sc: c_float = 1f32 / 255f32;
+        let mut out = Self {
+            Value: ImVec4::default(),
+        };
+        out.Value.x = ((rgba >> IM_COL32_R_SHIFT) & 0xF0f32) * sc;
+        out.Value.y = ((rgba >> IM_COL32_G_SHIFT) & 0xF0f32) * sc;
+        out.Value.z = ((rgba >> IM_COL32_B_SHIFT) & 0xF0f32) * sc;
+        out.Value.w = ((rgba >> IM_COL32_A_SHIFT) & 0xF0f32) * sc;
+        out
     }
+
+
+    // inline operator u32() const                                   { return ColorConvertFloat4ToU32(Value); }
+
+
+    // inline operator ImVec4() const                                  { return Value; }
+
+    // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
+    // inline c_void    SetHSV(h: c_float, s: c_float, v: c_float, let a: c_float =  1f32){ ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
+
+
+    // static ImColor HSV(h: c_float, s: c_float, v: c_float, let a: c_float =  1f32)   { r: c_float, g, b; ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
 }
-
-impl Into<Vector4D> for Color {
-    fn into(self) -> Vector4D {
-        self.value.clone()
-    }
-}
-
-/// Stacked color modifier, backup of modified data so we can restore it
-#[derive(Default, Debug, Clone)]
-pub struct StackedColorModifier {
-    // ImGuiCol        col;
-    pub col: Color,
-    // Vector4D          backup_value;
-    pub backup_value: Vector4D,
-}
-
-/// Enumeration for PushStyleColor() / PopStyleColor()
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub enum StyleColor {
-    Text,
-    TextDisabled,
-    WindowBg,
-    // Background of normal windows
-    ChildBg,
-    // Background of child windows
-    PopupBg,
-    // Background of popups, menus, tooltips windows
-    Border,
-    BorderShadow,
-    FrameBg,
-    // Background of checkbox, radio button, plot, slider, text input
-    FrameBgHovered,
-    FrameBgActive,
-    TitleBg,
-    TitleBgActive,
-    TitleBgCollapsed,
-    MenuBarBg,
-    ScrollbarBg,
-    ScrollbarGrab,
-    ScrollbarGrabHovered,
-    ScrollbarGrabActive,
-    CheckMark,
-    SliderGrab,
-    SliderGrabActive,
-    Button,
-    ButtonHovered,
-    ButtonActive,
-    Header,
-    // Header* colors are used for CollapsingHeader, TreeNode, selectable, menu_item
-    HeaderHovered,
-    HeaderActive,
-    Separator,
-    SeparatorHovered,
-    SeparatorActive,
-    ResizeGrip,
-    // Resize grip in lower-right and lower-left corners of windows.
-    ResizeGripHovered,
-    ResizeGripActive,
-    Tab,
-    // TabItem in a tab_bar
-    TabHovered,
-    TabActive,
-    TabUnfocused,
-    TabUnfocusedActive,
-    DockingPreview,
-    // preview overlay color when about to docking something
-    DockingEmptyBg,
-    // Background color for empty node (e.g. central_node with no window docked into it)
-    PlotLines,
-    PlotLinesHovered,
-    PlotHistogram,
-    PlotHistogramHovered,
-    TableHeaderBg,
-    // Table header background
-    TableBorderStrong,
-    // Table outer and header borders (prefer using alpha=1.0 here)
-    TableBorderLight,
-    // Table inner borders (prefer using alpha=1.0 here)
-    TableRowBg,
-    // Table row background (even rows)
-    TableRowBgAlt,
-    // Table row background (odd rows)
-    TextSelectedBg,
-    DragDropTarget,
-    // Rectangle highlighting a drop target
-    NavHighlight,
-    // Gamepad/keyboard: current highlighted item
-    NavWindowingHighlight,
-    // Highlight window when using CTRL+TAB
-    NavWindowingDimBg,
-    // Darken/colorize entire screen behind the CTRL+TAB window list, when active
-    ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
-}
-
-// flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub enum ColorEditFlags {
-    None,
-    NoAlpha,
-    //              // ColorEdit, ColorPicker, ColorButton: ignore alpha component (will only read 3 components from the input pointer).
-    NoPicker,
-    //              // ColorEdit: disable picker when clicking on color square.
-    NoOptions,
-    //              // ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.
-    NoSmallPreview,
-    //              // ColorEdit, ColorPicker: disable color square preview next to the inputs. (e.g. to show only the inputs)
-    NoInputs,
-    //              // ColorEdit, ColorPicker: disable inputs sliders/text widgets (e.g. to show only the small preview color square).
-    NoTooltip,
-    //              // ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.
-    NoLabel,
-    //              // ColorEdit, ColorPicker: disable display of inline text label (the label is still forwarded to the tooltip and picker).
-    NoSidePreview,
-    //              // ColorPicker: disable bigger color preview on right side of the picker, use small color square preview instead.
-    NoDragDrop,
-    //              // ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.
-    NoBorder,  //              // ColorButton: disable border (which is enforced by default)
-
-    // User Options (right-click on widget to change some of them).
-    AlphaBar,
-    //              // ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
-    AlphaPreview,
-    //              // ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a checkerboard, instead of opaque.
-    AlphaPreviewHalf,
-    //              // ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead of opaque.
-    HDR,
-    //              // (WIP) ColorEdit: Currently only disable 0.0..1.0 limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).
-    DisplayRGB,
-    // [Display]    // ColorEdit: override _display_ type among RGB/HSV/Hex. ColorPicker: select any combination using one or more of RGB/HSV/Hex.
-    DisplayHSV,
-    // [Display]    // "
-    DisplayHex,
-    // [Display]    // "
-    Uint8,
-    // [data_type]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.
-    Float,
-    // [data_type]   // ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0..1.0 floats instead of 0..255 integers. No round-trip of value via integers.
-    PickerHueBar,
-    // [Picker]     // ColorPicker: bar for Hue, rectangle for Sat/value.
-    PickerHueWheel,
-    // [Picker]     // ColorPicker: wheel for Hue, triangle for Sat/value.
-    InputRGB,
-    // [Input]      // ColorEdit, ColorPicker: input and output data in RGB format.
-    InputHSV,  // [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
-}
-
-/// Defaults Options. You can set application defaults using SetColorEditOptions(). The intent is that you probably don't want to
-/// override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.
-pub const COLOR_EDIT_FLAGS_DFLT_OPTS: HashSet<ColorEditFlags> = HashSet::from([
-    ColorEditFlags::Uint8,
-    ColorEditFlags::DisplayRGB,
-    ColorEditFlags::InputRGB,
-    ColorEditFlags::PickerHueBar
-]);
-
-pub const COLOR_EDIT_FLAGS_DISPLAY_MASK: HashSet<ColorEditFlags> = HashSet::from([
-    ColorEditFlags::DisplayRGB, ColorEditFlags::DisplayHSV, ColorEditFlags::DisplayHex
-]);
-
-pub const COLOR_EDIT_FLAGS_DATA_TYPE_MASK: HashSet<ColorEditFlags> = HashSet::from([
-    ColorEditFlags::Uint8, ColorEditFlags::Float
-]);
-
-pub const COLOR_EDIT_FLAGS_PICKER_MASK: HashSet<ColorEditFlags> = HashSet::from([
-    ColorEditFlags::PickerHueBar, ColorEditFlags::PickerHueBar
-]);
-
-pub const COLOR_EDIT_FLAGS_INPUT_MASK: HashSet<ColorEditFlags> = HashSet::from([
-    ColorEditFlags::InputRGB, ColorEditFlags::InputHSV
-]);
-
-pub const COLOR_WHITE_32: u32 = make_color_32(255,255,255,255);
-pub const COLOR_BLACK_32: u32 = make_color_32(0,0,0,255);
-pub const COLOR_RED_32: u32 = make_color_32(255,0,0,255);
-pub const COLOR_GREEN_32: u32 = make_color_32(0,255,0,255);
-pub const COLOR_BLUE_32: u32 = make_color_32(0,0,255,255);

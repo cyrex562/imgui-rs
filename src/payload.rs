@@ -1,66 +1,60 @@
-use crate::types::Id32;
-use crate::window::Window;
-use crate::INVALID_ID;
+#![allow(non_snake_case)]
 
-pub enum PayloadDataType {
-    None,
-    Window,
-}
+use std::ptr::null_mut;
+use libc::{c_char, c_int, c_void};
+use crate::type_defs::ImGuiID;
 
-pub union PayloadData {
-    win: Window,
-}
-
-/// data payload for Drag and Drop operations: accept_drag_drop_payload(), GetDragDropPayload()
+// Data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 #[derive(Default, Debug, Clone)]
-pub struct Payload {
+pub struct ImGuiPayload {
     // Members
-    // pub data: Vec<u8>,               // data (copied and owned by dear imgui)
-    // pub data_size: usize,         // data size
-    pub data: PayloadData,
-    pub data_size: usize,
+    pub Data: *mut c_void,
+    // Data (copied and owned by dear imgui)
+    pub DataSize: c_int,           // Data size
+
     // [Internal]
-    pub source_id: Id32,            // Source item id
-    pub source_parent_id: Id32,     // Source parent id (if available)
-    pub data_frame_count: usize,    // data timestamp
-    pub data_type: String, // char            data_type[32 + 1];   // data type tag (short user-supplied string, 32 characters max)
-    pub preview: bool, // Set when accept_drag_drop_payload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
-    pub delivery: bool, // Set when accept_drag_drop_payload() was called and mouse button is released over the target item.
+    pub SourceId: ImGuiID,
+    // Source item id
+    pub SourceParentId: ImGuiID,
+    // Source parent id (if available)
+    pub DataFrameCount: c_int,
+    // Data timestamp
+    pub DataType: [c_char; 32 + 1],
+    // Data type tag (short user-supplied string, 32 characters max)
+    pub Preview: bool,
+    // Set when AcceptDragDropPayload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
+    pub Delivery: bool,           // Set when AcceptDragDropPayload() was called and mouse button is released over the target item.
 }
 
-impl Payload {
-    // ImGuiPayload()  { clear(); }
-    pub fn new() -> Self {
-        Self {
-            data_frame_count: usize::MAX,
-            preview: false,
-            delivery: false,
-            ..Default::default()
-        }
-    }
-    // void clear()    { source_id = source_parent_id = 0; data = None; data_size = 0; memset(data_type, 0, sizeof(data_type)); data_frame_count = -1; preview = delivery = false; }
-    pub fn clear(&mut self) {
-        self.source_id = INVALID_ID;
-        self.source_parent_id = INVALID_ID;
-        self.data = PayloadData::default();
-        self.data_size = 0;
-        self.data_type = String::from("");
-        self.data_frame_count = usize::MAX;
-        self.preview = false;
-        self.delivery = false;
+impl ImGuiPayload {
+    // ImGuiPayload()  { Clear(); }
+
+
+    // void Clear()    { SourceId = SourceParentId = 0; Data = None; DataSize = 0; memset(DataType, 0, sizeof(DataType)); DataFrameCount = - 1; Preview = Delivery = false; }
+    pub fn Clear(&mut self) {
+        self.SourceId = 0;
+        self.SourceParentId = 0;
+        self.Data = null_mut();
+        self.DataSize = 0;
+        self.DataType = [0; 33];
+        self.Preview = false;
+        self.Delivery = false;
     }
 
-    // bool is_data_type(const char* type) const { return data_frame_count != -1 && strcmp(type, data_type) == 0; }
-    pub fn is_data_type(&self, data_type: &str) -> bool {
-        self.data_frame_count != usize::MAX && (*data_type == self.data_type)
+    // bool IsDataType( * const char type ) const { return DataFrameCount != - 1 & & strcmp( type, DataType) == 0; }
+    pub unsafe fn IsDataType(&mut self, data_type: *const c_char) -> bool {
+        self.DataFrameCount != -1 && libc::strcmp(data_type, self.DataType.as_ptr()) == 0
     }
 
-    // bool is_preview() const                  { return preview; }
-    pub fn is_preview(&self) -> bool {
-        self.preview
+
+    // bool IsPreview() const { return Preview; }
+    pub fn IsPreview(&mut self) -> bool {
+        self.Preview
     }
-    // bool is_delivery() const                 { return delivery; }
-    pub fn is_delivery(&self) -> bool {
-        self.delivery
+
+
+    // bool IsDelivery() const { return Delivery; }
+    pub fn IsDelivery(&mut self) -> bool {
+        self.Delivery
     }
 }

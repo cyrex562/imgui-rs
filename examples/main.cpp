@@ -1,6 +1,6 @@
 #include "node_editor.h"
 
-#include "../src/defines.rs"
+#include "../src/input_source.rs"
 
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>

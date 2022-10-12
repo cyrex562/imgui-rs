@@ -1,76 +1,81 @@
-use std::collections::{HashMap, HashSet};
-use std::hash::Hash;
-use crate::window::WindowFlags::Popup;
+#![allow(non_snake_case)]
 
-pub fn extend_hash_set<T: Eq + Hash+ Clone>(left: &mut HashSet<T>, right: &HashSet<T>){
-    for x in right.iter() {
-        left.insert(x.clone());
-    }
+use std::ptr::null_mut;
+use libc::{c_char, c_int, c_void, size_t};
+use crate::context::ImGuiContext;
+use crate::context_hook::{ImGuiContextHook, ImGuiContextHookType, ImGuiContextHookType_PendingRemoval_};
+use crate::font_atlas::ImFontAtlas;
+use crate::imgui::{GImAllocatorUserData, GImGui};
+use crate::type_defs::{ImGuiID, ImGuiMemAllocFunc, ImGuiMemFreeFunc};
+
+// Memory Allocator functions. Use SetAllocatorFunctions() to change them.
+// - You probably don't want to modify that mid-program, and if you use global/static e.g. ImVector<> instances you may need to keep them accessible during program destruction.
+// - DLL users: read comments above.
+// #ifndef IMGUI_DISABLE_DEFAULT_ALLOCATORS
+// static void*   MallocWrapper(size_t size, void* user_data)    { IM_UNUSED(user_data); return malloc(size); }
+pub unsafe fn MallocWrapper(size: &usize, mut user_data: *mut u8) -> *mut u8 {
+    user_data = libc::malloc(size as libc::size_t) as *mut u8;
+    return user_data;
 }
 
-pub fn set_hash_set<T: Eq + Hash + Clone>(left: &mut HashSet<T>, right: &HashSet<T>) {
-    left.clear();
-    left.clone_from(right);
+// static void    FreeWrapper(void* ptr, void* user_data)        { IM_UNUSED(user_data); free(ptr); }
+pub unsafe fn FreeWrapper<T>(ptr: T) {
+    libc::free(ptr);
 }
 
-pub fn remove_hash_set_val<T: Eq + Hash + Clone>(left: &mut HashSet<T>, right: &T) {
-    if left.contains(right) {
-        left.remove(right)
-    }
+// static ImGuiMemAllocFunc    GImAllocatorAllocFunc = MallocWrapper;
+pub type GImAllocatorAllocFunc = MallocWrapper;
+// static ImGuiMemFreeFunc     GImAllocatorFreeFunc = FreeWrapper;
+pub type GImAllocatorFreeFunc = FreeWrapper;
+
+
+
+// *const char GetVersion()
+pub fn GetVersion() -> *const c_char
+{
+    return IMGUI_VERSION;
 }
 
-pub fn add_hash_set<T: Eq + Hash + Clone>(left: &HashSet<T>, right: &HashSet<T>) -> HashSet<T> {
-    let mut out: HashSet<T> = HashSet::new();
-    for r in right.iter() {
-        out.insert(r);
-    }
-    for l in left.iter() {
-        out.insert(l);
-    }
-    out
+
+// c_void SetAllocatorFunctions(ImGuiMemAllocFunc alloc_func, ImGuiMemFreeFunc free_func, user_data: *mut c_void)
+pub unsafe fn SetAllocatorFunctions(alloc_func: ImGuiMemAllocFunc, free_func: ImGuiMemFreeFunc, user_data: *mut c_void) {
+    GImAllocatorAllocFunc = alloc_func;
+    GImAllocatorFreeFunc = free_func;
+    GImAllocatorUserData = user_data;
 }
 
-pub fn sub_hash_set<T: Eq + Hash + Clone>(left: &HashSet<T>, right: &HashSet<T>) -> HashSet<T> {
-    let mut out: HashSet<T> = HashSet::new();
-    for l in left.iter() {
-        out.insert(l);
-    }
-    for r in right.iter() {
-        out.remove(r);
-    }
-    out
+// This is provided to facilitate copying allocators from one static/DLL boundary to another (e.g. retrieve default allocator of your executable address space)
+// c_void GetAllocatorFunctions(ImGuiMemAllocFunc* p_alloc_func, ImGuiMemFreeFunc* p_free_func, c_void** p_user_data)
+pub unsafe fn GetAllocatorFunctions(p_alloc_func: *mut ImGuiMemAllocFunc, p_free_func: *mut ImGuiMemFreeFunc, p_user_data: *mut *mut c_void)
+{
+    *p_alloc_func = GImAllocatorAllocFunc;
+    *p_free_func = GImAllocatorFreeFunc;
+    *p_user_data = GImAllocatorUserData;
 }
 
-pub fn get_or_add<K, V: Default>(hash_map: &mut HashMap<K,V>, key: &K) -> &mut V {
-    let mut out_opt: Option<&mut V> = hash_map.get_mut(key);
-    if out_opt.is_none() {
-        let new_out = V::default();
-        hash_map[key] = new_out;
-        out_opt = hash_map.get_mut(key);
-    }
-    out_opt.unwrap()
+pub fn flag_set<T>(flags: T, flag: T) -> bool {
+    flags & flag == 1
 }
 
-// static void UnpackBitVectorToFlatIndexList(const ImBitVector* in, ImVector<int>* out)
-// pub fn unpack_bit_vector_to_flat_index_list(in: )
-// {
-//     // IM_ASSERT(sizeof(in.Storage.data[0]) == sizeof);
-//     const ImU32* it_begin = in.Storage.begin();
-//     const ImU32* it_end = in.Storage.end();
-//     for (const ImU32* it = it_begin; it < it_end; it += 1)
-//         if (ImU32 entries_32 = *it)
-//             for (ImU32 bit_n = 0; bit_n < 32; bit_n += 1)
-//                 if (entries_32 & (1 << bit_n))
-//                     out.push_back((((it - it_begin) << 5) + bit_n));
-// }
+pub fn flag_clear<T>(flags: T, flag: T) -> bool {
+    flag_set(flags, flag) == false
+}
+
+// static inline c_void      ImQsort(*mut c_void base, size_t count, size_t size_of_element, c_int(IMGUI_CDECL *compare_func)(c_void *mut const, c_void *mut const)) 
+pub fn ImQsort(
+    base: *mut c_void, 
+    count: size_t, size_of_element: size_t, 
+    compare_fn: fn(a: *const c_void, b: *const c_void) -> c_int)
+{ 
+if count > 1 { libc::qsort(base, count, size_of_element, compare_func); }
+}
 
 
-// static void UnpackAccumulativeOffsetsIntoRanges(int base_codepoint, const short* accumulative_offsets, int accumulative_offsets_count, ImWchar* out_ranges)
-// {
-//     for (int n = 0; n < accumulative_offsets_count; n += 1, out_ranges += 2)
-//     {
-//         out_ranges[0] = out_ranges[1] = (ImWchar)(base_codepoint + accumulative_offsets[n]);
-//         base_codepoint += accumulative_offsets[n];
-//     }
-//     out_ranges[0] = 0;
-// }
+pub fn is_null<T>(pointer: *T) -> bool
+{
+    pointer.is_null()
+}
+
+pub fn is_not_null<T>(pointer: *T) -> bool {
+    pointer.is_null() == false
+}
