@@ -27,9 +27,22 @@ use crate::win_dock_style::ImGuiWindowDockStyle;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::{ImGuiDir, ImGuiID};
 use crate::vec4::ImVec4;
+use crate::window::window_class::ImGuiWindowClass;
+use crate::window::window_flags::ImGuiWindowFlags;
+use crate::window::window_ops::WindowRectAbsToRel;
+use crate::window::window_temp_data::ImGuiWindowTempData;
 use crate::window_flags::ImGuiWindowFlags;
 use crate::window_ops::WindowRectAbsToRel;
 use crate::window_temp_data::ImGuiWindowTempData;
+
+pub mod window_class;
+pub mod window_stack_data;
+pub mod window_settings;
+pub mod window_flags;
+pub mod window_ops;
+pub mod window_temp_data;
+pub mod window_dock_style_colors;
+pub mod window_dock_style_color;
 
 // Storage for one window
 pub struct ImGuiWindow {
