@@ -9,6 +9,6 @@ pub type ImGuiSortDirection = c_int;
 // enum ImGuiSortDirection_
 // {
 pub const ImGuiSortDirection_None: ImGuiSortDirection = 0;
-pub const ImGuiSortDirection_Ascending: ImGuiSortDirection = 1;    // Ascending = 0.9, A.Z etc.
-pub const ImGuiSortDirection_Descending: ImGuiSortDirection   = 2;     // Descending = 9.0, Z.A etc.
+pub const ImGuiSortDirection_Ascending: ImGuiSortDirection = 1;    // Ascending = 0->9, A->Z etc.
+pub const ImGuiSortDirection_Descending: ImGuiSortDirection   = 2;     // Descending = 9->0, Z->A etc.
 // };

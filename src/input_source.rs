@@ -25,4 +25,4 @@ pub const ImGuiInputSource_Nav: ImGuiInputSource = 5;
 // Stored in g.ActiveIdSource only
 pub const ImGuiInputSource_COUNT: ImGuiInputSource = 6;
 
-pub const input_source_names: [&'static str; 6] = ["None", "Mouse", "Keyboard", "Gamepad", "Nav", "Clipboard"];
+pub const input_source_names: [&'static str;6] = [ "None", "Mouse", "Keyboard", "Gamepad", "Nav", "Clipboard" ];

@@ -10,27 +10,31 @@ pub struct ImVec2
     // float                                   x, y;
     pub x: c_float,
     pub y: c_float
+
+// #ifdef IM_VEC2_CLASS_EXTRA
+// IM_VEC2_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec2.
+// #endif
 }
 
 impl ImVec2 {
     // constexpr ImVec2::new()                      : x(0f32), y(0f32) { }
-    pub fn new() -> Self {
-        Self {
-            x: 0f32,
-            y: 0f32
-        }
-    }
+    // pub fn new() -> Self {
+    //     Self {
+    //         x: 0f32,
+    //         y: 0f32
+    //     }
+    // }
 
     // constexpr ImVec2::new(float _x, float _y)    : x(_x), y(_y) { }
-    pub fn new2(x: c_float, y: c_float) -> Self {
+    pub fn new(x: c_float, y: c_float) -> Self {
         Self {
             x,
             y
         }
     }
 
-    // float  operator[] (size_t idx) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
-// float& operator[] (size_t idx)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
+    // float  operator[] (idx: size_t) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
+// float& operator[] (idx: size_t)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
 }
 
 
@@ -61,7 +65,7 @@ impl ImVec2ih {
     }
     
     
-    // constexpr explicit ImVec2ih(const rhs: &ImVec2) : x((c_short)rhs.x), y((c_short)rhs.y) {}
+    // constexpr explicit ImVec2ih(const ImVec2& rhs) : x((c_short)rhs.x), y((c_short)rhs.y) {}
     pub fn new3(rhs: &ImVec2) -> Self {
         Self {
             x: rhs.x.clone() as c_short,
@@ -71,16 +75,3 @@ impl ImVec2ih {
 
 
 }
-
-static inline ImVec2 *mut operator(const lhs: &ImVec2, const rhs: c_float)              { return ImVec2::new2(lhs.x * rhs, lhs.y * rhs); }
-static inline ImVec2 operator/(const lhs: &ImVec2, const rhs: c_float)              { return ImVec2::new2(lhs.x / rhs, lhs.y / rhs); }
-static inline ImVec2 operator+(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new2(lhs.x + rhs.x, lhs.y + rhs.y); }
-static inline ImVec2 operator-(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new2(lhs.x - rhs.x, lhs.y - rhs.y); }
-static inline ImVec2 *mut operator(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new2(lhs.x * rhs.x, lhs.y * rhs.y); }
-static inline ImVec2 operator/(const lhs: &ImVec2, const rhs: &ImVec2)            { return ImVec2::new2(lhs.x / rhs.x, lhs.y / rhs.y); }
-static inline ImVec2& *mut operator=(lhs: &ImVec2, const rhs: c_float)                  { lhs.x *= rhs; lhs.y *= rhs; return lhs; }
-static inline ImVec2& operator/=(lhs: &ImVec2, const rhs: c_float)                  { lhs.x /= rhs; lhs.y /= rhs; return lhs; }
-static inline ImVec2& operator+=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x += rhs.x; lhs.y += rhs.y; return lhs; }
-static inline ImVec2& operator-=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x -= rhs.x; lhs.y -= rhs.y; return lhs; }
-static inline ImVec2& *mut operator=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x *= rhs.x; lhs.y *= rhs.y; return lhs; }
-static inline ImVec2& operator/=(lhs: &ImVec2, const rhs: &ImVec2)                { lhs.x /= rhs.x; lhs.y /= rhs.y; return lhs; }

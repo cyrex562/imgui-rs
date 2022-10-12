@@ -1,44 +1,41 @@
 #![allow(non_snake_case)]
 
 use std::ptr::null_mut;
-use libc::c_float;
+use libc::{c_float, c_int};
 use crate::{CallContextHooks, GImGui, ImGuiViewport};
-use crate::backend_flags::ImGuiBackendFlags_RendererHasVtxOffset;
 use crate::condition::ImGuiCond_FirstUseEver;
 use crate::context_hook::{ImGuiContextHookType_EndFramePost, ImGuiContextHookType_EndFramePre, ImGuiContextHookType_NewFramePost, ImGuiContextHookType_NewFramePre, ImGuiContextHookType_PendingRemoval_};
-use crate::debug_ops::{ErrorCheckEndFrameSanityChecks, ErrorCheckNewFrameSanityChecks};
-use crate::dock_context_ops::{DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking};
 use crate::drag_drop_flags::{ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoPreviewTooltip};
 use crate::draw_list_flags::{ImDrawListFlags_AllowVtxOffset, ImDrawListFlags_AntiAliasedFill, ImDrawListFlags_AntiAliasedLines, ImDrawListFlags_AntiAliasedLinesUseTex, ImDrawListFlags_None};
 use crate::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
-use crate::font_ops::SetCurrentFont;
 use crate::garbage_collection::GcCompactTransientWindowBuffers;
 use crate::id_ops::{ClearActiveID, KeepAliveID};
 use crate::input_ops::{IsMouseDown, UpdateInputEvents};
 use crate::item_flags::ImGuiItemFlags_None;
 use crate::key::ImGuiKey_Escape;
 use crate::keyboard_ops::UpdateKeyboardInputs;
+use crate::math_ops::{ImMax, ImMin};
 use crate::mouse_cursor::ImGuiMouseCursor_Arrow;
 use crate::mouse_ops::{UpdateHoveredWindowAndCaptureFlags, UpdateMouseInputs, UpdateMouseMovingWindowEndFrame, UpdateMouseMovingWindowNewFrame, UpdateMouseWheel};
 use crate::platform_ime_data::ImGuiPlatformImeData;
 use crate::rect::ImRect;
-use crate::state_ops::{Begin, End};
-use crate::string_ops::str_to_const_c_char_ptr;
-use crate::utils::flag_set;
+use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_flags::ImGuiWindowFlags_ChildWindow;
-use crate::window_ops::AddWindowToSortBuffer;
+use crate::window_ops::{AddWindowToSortBuffer, SetNextWindowSize};
 
 // c_void NewFrame()
-pub unsafe fn NewFrame() {
+pub unsafe fn NewFrame()
+{
     // IM_ASSERT(GImGui != NULL && "No current context. Did you call CreateContext() and SetCurrentContext() ?");
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Remove pending delete hooks before frame start.
     // This deferred removal avoid issues of removal while iterating the hook vector
     // for (let n: c_int = g.Hooks.Size - 1; n >= 0; n--)
-    for n in g.Hooks.len() - 1..0 {
+    for n in g.Hooks.len() -1 .. 0
+    {
         if g.Hooks[n].Type == ImGuiContextHookType_PendingRemoval_ {
             g.Hooks.erase(&g.Hooks[n]);
         }
@@ -64,9 +61,9 @@ pub unsafe fn NewFrame() {
     // Calculate frame-rate for the user, as a purely luxurious feature
     g.FramerateSecPerFrameAccum += g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx];
     g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx] = g.IO.DeltaTime;
-    g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % IM_ARRAYSIZE(g.FramerateSecPerFrame);
-    g.FramerateSecPerFrameCount = ImMin(g.FramerateSecPerFrameCount + 1, IM_ARRAYSIZE(g.FramerateSecPerFrame));
-    g.IO.Framerate = (g.FramerateSecPerFrameAccum > 0f32)?(1f32 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)): f32::MAX;
+    g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % g.FramerateSecPerFrame.len();
+    g.FramerateSecPerFrameCount = ImMin(g.FramerateSecPerFrameCount + 1, g.FramerateSecPerFrame.len() as c_int);
+    g.IO.Framerate = (g.FramerateSecPerFrameAccum > 0f32) ? (1f32 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)) : f32::MAX;
 
     UpdateViewportsNewFrame();
 
@@ -74,10 +71,11 @@ pub unsafe fn NewFrame() {
     // FIXME-VIEWPORT: the concept of a single ClipRectFullscreen is not ideal!
     g.IO.Fonts.Locked = true;
     SetCurrentFont(GetDefaultFont());
-    // IM_ASSERT(g.Font.IsLoaded());
-    let mut virtual_space: ImRect = ImRect::new4(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
+    // IM_ASSERT(g.Font->IsLoaded());
+    let mut virtual_space: ImRect = ImRect::from_floats(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
-    for n in 0..g.Viewports.len() {
+    for n in 0 .. g.Viewports.len()
+    {
         virtual_space.Add(&g.Viewports[n].GetMainRect().Min);
     }
     g.DrawListSharedData.ClipRectFullscreen = virtual_space.ToVec4();
@@ -87,9 +85,8 @@ pub unsafe fn NewFrame() {
     if g.Style.AntiAliasedLines {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLines;
     }
-    if g.Style.AntiAliasedLinesUseTex && !(g.Font.ContainerAtlas.Flags & ImFontAtlasFlags_NoBakedLines) {
-        g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;
-    }
+    if g.Style.AntiAliasedLinesUseTex && flag_clear(g.Font.ContainerAtlas.Flags, ImFontAtlasFlags_NoBakedLines) {
+g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;}
     if g.Style.AntiAliasedFill {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedFill;
     }
@@ -99,9 +96,10 @@ pub unsafe fn NewFrame() {
 
     // Mark rendering data as invalid to prevent user who may have a handle on it to use it.
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
-    for n in 0..g.Viewports.len() {
-        let mut viewport: *mut ImGuiViewport = g.Viewports[n];
-        viewport.DrawData = null_mut();
+    for n in 0 .. g.Viewports.len()
+    {
+        let mut viewport: *mut ImGuiViewport =  g.Viewports[n];
+        viewport.DrawData= null_mut();
         viewport.DrawDataP.Clear();
     }
 
@@ -133,7 +131,8 @@ pub unsafe fn NewFrame() {
     // Clear ActiveID if the item is not alive anymore.
     // In 1.87, the common most call to KeepAliveID() was moved from GetID() to ItemAdd().
     // As a result, custom widget using ButtonBehavior() _without_ ItemAdd() need to call KeepAliveID() themselves.
-    if g.ActiveId != 0 && g.ActiveIdIsAlive != g.ActiveId && g.ActiveIdPreviousFrame == g.ActiveId {
+    if g.ActiveId != 0 && g.ActiveIdIsAlive != g.ActiveId && g.ActiveIdPreviousFrame == g.ActiveId
+    {
         // IMGUI_DEBUG_LOG_ACTIVEID("NewFrame(): ClearActiveID() because it isn't marked alive anymore!\n");
         ClearActiveID();
     }
@@ -153,7 +152,8 @@ pub unsafe fn NewFrame() {
     if g.TempInputId != 0 && g.ActiveId != g.TempInputId {
         g.TempInputId = 0;
     }
-    if g.ActiveId == 0 {
+    if g.ActiveId == 0
+    {
         g.ActiveIdUsingNavDirMask = 0x00;
         g.ActiveIdUsingKeyInputMask.ClearAllBits();
     }
@@ -161,29 +161,34 @@ pub unsafe fn NewFrame() {
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
     if g.ActiveId == 0 {
         g.ActiveIdUsingNavInputMask = 0;
-    } else if g.ActiveIdUsingNavInputMask != 0 {
+    }
+    else if g.ActiveIdUsingNavInputMask != 0
+    {
         // If your custom widget code used:                 { g.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel); }
         // Since IMGUI_VERSION_NUM >= 18804 it should be:   { SetActiveIdUsingKey(ImGuiKey_Escape); SetActiveIdUsingKey(ImGuiKey_NavGamepadCancel); }
         if g.ActiveIdUsingNavInputMask & (1 << ImGuiNavInput_Cancel) {
             SetActiveIdUsingKey(ImGuiKey_Escape);
         }
         if g.ActiveIdUsingNavInputMask & !(1 << ImGuiNavInput_Cancel) {}
-        // IM_ASSERT(0); // Other values unsupported
+            // IM_ASSERT(0); // Other values unsupported
     }
 // #endif
 
     // Update hover delay for IsItemHovered() with delays and tooltips
     g.HoverDelayIdPreviousFrame = g.HoverDelayId;
-    if g.HoverDelayId != 0 {
+    if g.HoverDelayId != 0
+    {
         //if (g.IO.MouseDelta.x == 0f32 && g.IO.MouseDelta.y == 0f32) // Need design/flags
         g.HoverDelayTimer += g.IO.DeltaTime;
         g.HoverDelayClearTimer = 0f32;
         g.HoverDelayId = 0;
-    } else if g.HoverDelayTimer > 0f32 {
+    }
+    else if g.HoverDelayTimer > 0f32
+    {
         // This gives a little bit of leeway before clearing the hover timer, allowing mouse to cross gaps
         g.HoverDelayClearTimer += g.IO.DeltaTime;
         if g.HoverDelayClearTimer >= ImMax(0.20f32, g.IO.DeltaTime * 2.00f32) {
-            // !6 frames at 30 Hz + allow for low framerate
+            // ~6 frames at 30 Hz + allow for low framerate
             g.HoverDelayTimer = 0f32;
             g.HoverDelayClearTimer = 0f32;
         }
@@ -222,7 +227,7 @@ pub unsafe fn NewFrame() {
 
     // Undocking
     // (needs to be before UpdateMouseMovingWindowNewFrame so the window is already offset and following the mouse on the detaching frame)
-    DockContextNewFrameUpdateUndocking(g);
+    DockContextNewFrameUpdateUndocking(&g);
 
     // Find hovered window
     // (needs to be before UpdateMouseMovingWindowNewFrame so we fill g.HoveredWindowUnderMovingWindow on the mouse release frame)
@@ -234,7 +239,8 @@ pub unsafe fn NewFrame() {
     // Background darkening/whitening
     if GetTopMostPopupModal() != null_mut() || (g.NavWindowingTarget != null_mut() && g.NavWindowingHighlightAlpha > 0f32) {
         g.DimBgRatio = ImMin(g.DimBgRatio + g.IO.DeltaTime * 6f32, 1f32);
-    } else {
+    }
+    else {
         g.DimBgRatio = ImMax(g.DimBgRatio - g.IO.DeltaTime * 10f32, 0f32);
     }
 
@@ -252,10 +258,11 @@ pub unsafe fn NewFrame() {
 
     // Mark all windows as not visible and compact unused memory.
     // IM_ASSERT(g.WindowsFocusOrder.Size <= g.Windows.Size);
-    let memory_compact_start_time: c_float = if g.GcCompactAll || g.IO.ConfigMemoryCompactTimer < 0f32 { f32::MAX } else { g.Time - g.IO.ConfigMemoryCompactTimer };
+    let memory_compact_start_time: c_float =  if g.GcCompactAll || g.IO.ConfigMemoryCompactTimer < 0f32 { f32::MAX } else { g.Time - g.IO.ConfigMemoryCompactTimer };
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
-    for i in 0..g.Windows.len() {
-        let mut window: *mut ImGuiWindow = g.Windows[i];
+    for i in 0 .. g.Windows.len()
+    {
+        let mut window: *mut ImGuiWindow =  g.Windows[i];
         window.WasActive = window.Active;
         window.BeginCount = 0;
         window.Active = false;
@@ -269,13 +276,15 @@ pub unsafe fn NewFrame() {
 
     // Garbage collect transient buffers of recently unused tables
     // for (let i: c_int = 0; i < g.TablesLastTimeActive.Size; i++)
-    for i in 0..g.TablesLastTimeActive.len() {
+    for i in 0 .. g.TablesLastTimeActive.len()
+    {
         if g.TablesLastTimeActive[i] >= 0f32 && g.TablesLastTimeActive[i] < memory_compact_start_time {
             TableGcCompactTransientBuffers(g.Tables.GetByIndex(i));
         }
     }
     // for (let i: c_int = 0; i < g.TablesTempData.Size; i++)
-    for i in 0..g.TablesTempData.len() {
+    for i in 0 .. g.TablesTempData.len()
+    {
         if g.TablesTempData[i].LastTimeActive >= 0f32 && g.TablesTempData[i].LastTimeActive < memory_compact_start_time {
             TableGcCompactTransientBuffers(&g.TablesTempData[i]);
         }
@@ -299,7 +308,7 @@ pub unsafe fn NewFrame() {
     // g.GroupStack.resize(0);
 
     // Docking
-    DockContextNewFrameUpdateDocking(g);
+    DockContextNewFrameUpdateDocking(&g);
 
     // [DEBUG] Update debug features
     UpdateDebugToolItemPicker();
@@ -309,8 +318,8 @@ pub unsafe fn NewFrame() {
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
-    SetNextWindowSize(ImVec2::new2(400.0, 400.0), ImGuiCond_FirstUseEver);
-    Begin(str_to_const_c_char_ptr("Debug##Default"), null_mut(), 0);
+    SetNextWindowSize(&ImVec2::new(400.0, 400.0), ImGuiCond_FirstUseEver);
+    Begin("Debug##Default");
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 
     CallContextHooks(g, ImGuiContextHookType_NewFramePost);
@@ -319,7 +328,8 @@ pub unsafe fn NewFrame() {
 
 // This is normally called by Render(). You may want to call it directly if you want to avoid calling Render() but the gain will be very minimal.
 // c_void EndFrame()
-pub unsafe fn EndFrame() {
+pub unsafe fn EndFrame()
+{
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.Initialized);
 
@@ -334,14 +344,15 @@ pub unsafe fn EndFrame() {
     ErrorCheckEndFrameSanityChecks();
 
     // Notify Platform/OS when our Input Method Editor cursor has moved (e.g. CJK inputs using Microsoft IME)
-    if g.IO.SetPlatformImeDataFn != null_mut() && libc::memcmp(&g.PlatformImeData, &g.PlatformImeDataPrev, libc::sizeof(ImGuiPlatformImeData)) != 0 {
+    if g.IO.SetPlatformImeDataFn != null_mut() && libc::memcmp(&g.PlatformImeData, &g.PlatformImeDataPrev, libc::sizeof(ImGuiPlatformImeData)) != 0
+    {
         let viewport = FindViewportByID(g.PlatformImeViewport);
         g.IO.SetPlatformImeDataFn(if viewport.is_null() == false { viewport } else { GetMainViewport() }, &g.PlatformImeData);
     }
 
     // Hide implicit/fallback "Debug" window if it hasn't been used
     g.WithinFrameScopeWithImplicitWindow = false;
-    if (g.CurrentWindow && !g.Currentwindow.WriteAccessed) {
+    if g.CurrentWindow && !g.Currentwindow.WriteAccessed {
         g.Currentwindow.Active = false;
     }
     End();
@@ -350,21 +361,23 @@ pub unsafe fn EndFrame() {
     NavEndFrame();
 
     // Update docking
-    DockContextEndFrame(g);
+    DockContextEndFrame(&g);
 
     SetCurrentViewport(null_mut(), null_mut());
 
     // Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
-    if g.DragDropActive {
-        let mut is_delivered: bool = g.DragDropPayload.Delivery;
-        let mut is_elapsed: bool = (g.DragDropPayload.DataFrameCount + 1 < g.FrameCount) && ((g.DragDropSourceFlags & ImGuiDragDropFlags_SourceAutoExpirePayload) != 0 || !IsMouseDown(g.DragDropMouseButton));
+    if g.DragDropActive
+    {
+        let mut is_delivered: bool =  g.DragDropPayload.Delivery;
+        let mut is_elapsed: bool =  (g.DragDropPayload.DataFrameCount + 1 < g.FrameCount) && ((g.DragDropSourceFlags & ImGuiDragDropFlags_SourceAutoExpirePayload) != 0 || !IsMouseDown(g.DragDropMouseButton));
         if is_delivered || is_elapsed {
             ClearDragDrop();
         }
     }
 
     // Drag and Drop: Fallback for source tooltip. This is not ideal but better than nothing.
-    if g.DragDropActive && g.DragDropSourceFrameCount < g.FrameCount && !(g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip) != 0 {
+    if g.DragDropActive && g.DragDropSourceFrameCount < g.FrameCount && !(g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip) != 0
+    {
         g.DragDropWithinSource = true;
         SetTooltip("...");
         g.DragDropWithinSource = false;
@@ -385,8 +398,9 @@ pub unsafe fn EndFrame() {
     g.WindowsTempSortBuffer.clear();
     g.WindowsTempSortBuffer.reserve(g.Windows.len());
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
-    for i in 0..g.Windows.len() {
-        let mut window: *mut ImGuiWindow = g.Windows[i];
+    for i in 0 .. g.Windows.len()
+    {
+        let mut window: *mut ImGuiWindow =  g.Windows[i];
         if window.Active && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) {     // if a child is active its parent will add it
             continue;
         }
@@ -407,17 +421,4 @@ pub unsafe fn EndFrame() {
     g.IO.InputQueueCharacters.clear();
 
     CallContextHooks(g, ImGuiContextHookType_EndFramePost);
-}
-
-
-// c_float GetFrameHeight()
-pub unsafe fn GetFrameHeight() -> c_float {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.FontSize + g.Style.FramePadding.y * 2.0f32;
-}
-
-// c_float GetFrameHeightWithSpacing()
-pub unsafe fn GetFrameHeighWithSpacing() -> c_float {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.FontSize + g.Style.FramePadding.y * 2.0f32 + g.Style.ItemSpacing.y;
 }

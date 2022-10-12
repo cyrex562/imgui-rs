@@ -42,7 +42,7 @@ impl ImGuiTextRange {
 
     // IMGUI_API void  split(char separator, ImVector<ImGuiTextRange>* out) const;
     pub fn split(&mut self, separator: c_char, out: &mut Vec<ImGuiTextRange>) {
-        // out.resize(0);
+        // out->resize(0);
         let mut wb = b;
         let mut we = wb;
         while we < e
@@ -83,7 +83,7 @@ impl ImGuiTextFilter {
         };
         if default_filter.is_null() == false
         {
-            ImStrncpy(out.InputBuf.as_mut_ptr(), default_filter, IM_ARRAYSIZE(InputBuf));
+            ImStrncpy(out.InputBuf.as_mut_ptr(), default_filter, InputBuf.len());
             Build();
         }
         out
@@ -94,7 +94,7 @@ impl ImGuiTextFilter {
         if width != 0f32 {
             SetNextItemWidth(width);
         }
-        let value_changed = InputText::new(label, InputBuf, IM_ARRAYSIZE(Inputbuf));
+        let value_changed = InputText::new(label, InputBuf, InputBu0f32.len());
         if value_changed {
             self.Build();
         }

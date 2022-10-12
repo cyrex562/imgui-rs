@@ -18,7 +18,7 @@ pub struct ImGuiStoragePair {
 }
 
 impl ImGuiStoragePair {
-    // ImGuiStoragePair(_key: ImGuiID, int _val_i)      { key = _key; val_i = _val_i; }
+    // ImGuiStoragePair(ImGuiID _key, int _val_i)      { key = _key; val_i = _val_i; }
     pub fn new(_key: ImGuiID, _val_i: Option<i32>, _val_f: Option<f32>, _val_p: Option<*mut c_void>) -> Self {
         Self {
             key: _key,
@@ -27,8 +27,8 @@ impl ImGuiStoragePair {
             val_p: _val_p.unwrap_or(null_mut()),
         }
     }
-    // ImGuiStoragePair(_key: ImGuiID, float _val_0f32)    { key = _key; val_f = _val_f; }
-    // ImGuiStoragePair(_key: ImGuiID, void* _val_p)    { key = _key; val_p = _val_p; }
+    // ImGuiStoragePair(ImGuiID _key, float _val_0f32)    { key = _key; val_f = _val_f; }
+    // ImGuiStoragePair(ImGuiID _key, void* _val_p)    { key = _key; val_p = _val_p; }
 }
 
 // For quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
@@ -41,7 +41,7 @@ pub fn PairComparerByID(lhs: *const c_void, rhs: *const c_void) -> c_int {
     return 0;
 }
 
-// Helper: Key.Value storage
+// Helper: Key->Value storage
 // Typically you don't have to worry about this since a storage is held within each Window.
 // We use it to e.g. store collapse state for a tree (Int 0/1)
 // This is optimized for efficient lookup (dichotomy into a contiguous buffer) and rare insertion (typically tied to user interactions aka max once a frame)
@@ -65,7 +65,7 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API int       GetInt(key: ImGuiID, int default_val = 0) const;
+    // IMGUI_API int       GetInt(ImGuiID key, int default_val = 0) const;
     pub fn GetInt(&mut self, key: ImGuiID, default_val: i32) -> i32 {
         let it = self.LowerBound(Data, key);
         if it == self.Data.end() || it.key != key {
@@ -73,7 +73,7 @@ impl ImGuiStorage {
         }
         return it.val_i;
     }
-    // IMGUI_API void      SetInt(key: ImGuiID, int val);
+    // IMGUI_API void      SetInt(ImGuiID key, int val);
     pub fn SetInt(&mut self, key: ImGuiID, val: i32) {
         let mut it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {
@@ -84,17 +84,17 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API bool      GetBool(key: ImGuiID, bool default_val = false) const;
+    // IMGUI_API bool      GetBool(ImGuiID key, default_val: bool = false) const;
     pub fn GetBool(&mut self, key: ImGuiID, default_val: bool) -> bool {
         return self.GetInt(key, if default_val { 1 } else { 0 }) != 0;
     }
 
-    // IMGUI_API void      SetBool(key: ImGuiID, val: bool);
+    // IMGUI_API void      SetBool(ImGuiID key, val: bool);
     pub fn SetBool(&mut self, key: ImGuiID, val: bool) {
         self.SetInt(key, if val { 1 } else { 0 });
     }
 
-    // IMGUI_API float     GetFloat(key: ImGuiID, float default_val = 0f32) const;
+    // IMGUI_API float     GetFloat(ImGuiID key, float default_val = 0f32) const;
     pub fn GetFloat(&mut self, key: ImGuiID, default_val: f32) -> f32 {
         let it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {
@@ -103,7 +103,7 @@ impl ImGuiStorage {
         return it.val_f;
     }
 
-    // IMGUI_API void      SetFloat(key: ImGuiID, float val);
+    // IMGUI_API void      SetFloat(ImGuiID key, float val);
     pub fn SetFloat(&mut self, key: ImGuiID, val: f32) {
         let mut it = self.LowerBound(Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {
@@ -114,7 +114,7 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API void*     GetVoidPtr(key: ImGuiID) const; // default_val is NULL
+    // IMGUI_API void*     GetVoidPtr(ImGuiID key) const; // default_val is NULL
     pub fn GetVoidPtr(&mut self, key: ImGuiID) -> *const c_void {
         let it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.end() || it.key != key {
@@ -124,7 +124,7 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API void      SetVoidPtr(key: ImGuiID, void* val);
+    // IMGUI_API void      SetVoidPtr(ImGuiID key, void* val);
     pub fn SetVoidPtr(&mut self, key: ImGuiID, val: *mut c_void) {
         let mut it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.end() || it.key != key {
@@ -138,7 +138,7 @@ impl ImGuiStorage {
     // - References are only valid until a new value is added to the storage. Calling a Set***() function or a Get***Ref() function invalidates the pointer.
     // - A typical use case where this is convenient for quick hacking (e.g. add storage during a live Edit&Continue session if you can't modify existing struct)
     //      float* pvar = GetFloatRef(key); SliderFloat("var", pvar, 0, 100f32); some_var += *pvar;
-    // IMGUI_API int*      GetIntRef(key: ImGuiID, int default_val = 0);
+    // IMGUI_API int*      GetIntRef(ImGuiID key, int default_val = 0);
     pub fn GetIntRef(&mut self, key: ImGuiID, default_val: i32) -> *mut c_int {
         let mut it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {
@@ -148,13 +148,13 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API bool*     GetBoolRef(key: ImGuiID, bool default_val = false);
+    // IMGUI_API bool*     GetBoolRef(ImGuiID key, default_val: bool = false);
     pub fn GetBoolRef(&mut self, key: ImGUiID, default_val: bool) -> *mut bool {
         return self.GetIntRef(key, if default_val { 1 } else { 0 }) as *mut bool;
     }
 
 
-    // IMGUI_API float*    GetFloatRef(key: ImGuiID, float default_val = 0f32);
+    // IMGUI_API float*    GetFloatRef(ImGuiID key, float default_val = 0f32);
     pub fn GetFloatRef(&mut self, key: ImGuiID, default_val: f32) -> *mut f32 {
         let mut it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {
@@ -164,7 +164,7 @@ impl ImGuiStorage {
     }
 
 
-    // IMGUI_API void**    GetVoidPtrRef(key: ImGuiID, void* default_val = NULL);
+    // IMGUI_API void**    GetVoidPtrRef(ImGuiID key, void* default_val = NULL);
     pub fn GetVoidPtrRef(&mut self, key: ImGuiID, default_val: *mut c_void) -> *mut *mut c_void {
         let mut it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.last_mut().unwrap() || it.key != key {

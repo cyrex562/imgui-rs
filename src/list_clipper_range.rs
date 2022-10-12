@@ -24,18 +24,19 @@ impl ImGuiListClipperRange {
             Max: max as c_float,
             PosToIndexConvert: false,
             PosToIndexOffsetMin: 0,
-            PosToIndexOffsetMax: 0,
+            PosToIndexOffsetMax: 0
         }
     }
 
-    // static ImGuiListClipperRange    FromPositions(y1: c_float, y2: c_float, off_min: c_int, off_max: c_int) { ImGuiListClipperRange r = { y1, y2, true, off_min, off_max }; return r; }
+    // static ImGuiListClipperRange    FromPositions(c_float y1, c_float y2, off_min: c_int, off_max: c_int) { ImGuiListClipperRange r = { y1, y2, true, off_min, off_max }; return r; }
     pub fn FromPositions(y1: c_float, y2: c_float, off_min: c_int, off_max: c_int) -> Self {
         Self {
             Min: y1,
             Max: y2,
             PosToIndexConvert: true,
             PosToIndexOffsetMin: off_min,
-            PosToIndexOffsetMax: off_max,
+            PosToIndexOffsetMax: off_max
         }
     }
+
 }

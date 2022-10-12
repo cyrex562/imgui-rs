@@ -102,7 +102,7 @@ pub struct ImGuiContext {
     // float                   FontSize;                           // (Shortcut) == FontBaseSize * g.Currentwindow.FontWindowScale == window.FontSize(). Text height for current window.
     pub FontSize: f32,
 
-    // float                   FontBaseSize;                       // (Shortcut) == IO.FontGlobalScale * Font.Scale * Font.FontSize. Base text height.
+    // float                   FontBaseSize;                       // (Shortcut) == IO.FontGlobalScale * Font->Scale * Font->FontSize. Base text height.
     pub FontBaseSize: c_float,
 
     // ImDrawListSharedData    DrawListSharedData;
@@ -217,7 +217,7 @@ pub struct ImGuiContext {
     // ImGuiID                 ActiveId;                           // Active widget
     pub ActiveId: ImGuiID,
 
-    // ImGuiID                 ActiveIdIsAlive;                    // Active widget has been seen this frame (we can't use a bool as the ActiveId may change within the frame)
+    // ImGuiID                 ActiveIdIsAlive;                    // Active widget has been seen this frame (we can't use a as: bool the ActiveId may change within the frame)
     pub ActiveIdIsAlive: ImGuiID,
 
     // float                   ActiveIdTimer;
@@ -329,7 +329,7 @@ pub struct ImGuiContext {
     // ImVector<ImGuiViewportP*> Viewports;                        // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
     pub Viewports: Vec<*mut ImGuiViewport>,
 
-    // float                   CurrentDpiScale;                    // == CurrentViewport.DpiScale
+    // float                   CurrentDpiScale;                    // == CurrentViewport->DpiScale
     pub CurrentDpiScale: c_float,
 
     // ImGuiViewportP*         CurrentViewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
@@ -699,7 +699,7 @@ pub struct ImGuiContext {
     // ImGuiID                 PlatformImeViewport;
     pub PlatformImeViewport: ImGuiID,
 
-    // char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv().decimal_point
+    // char                    PlatformLocaleDecimalPoint;         // '.' or *localeconv()->decimal_point
     pub PlatformLocaleDecimalPoint: c_char,
 
     // Extensions
@@ -826,9 +826,9 @@ impl ImGuiContext {
             ConfigFlagsLastFrame: ImGuiConfigFlags_None,
             FontAtlasOwnedByContext: if shared_font_atlas.is_null() == false { false } else { true },
             Font: null_mut(),
-            FontSize: 0f32,
-            FontBaseSize: 0f32,
-            Time: c_double::from(0),
+            FontSize: 0.0,
+            FontBaseSize: 0.0,
+            Time: 0.0,
             FrameCount: 0,
             FrameCountEnded: -1,
             FrameCountPlatformEnded: -1,
@@ -845,7 +845,7 @@ impl ImGuiContext {
             HoveredWindowUnderMovingWindow: null_mut(),
             MovingWindow: null_mut(),
             WheelingWindow: null_mut(),
-            WheelingWindowTimer: 0f32,
+            WheelingWindowTimer: 0.0,
             DebugHookIdInfo: 0,
             HoveredId: 0,
             HoveredIdPreviousFrame: 0,
@@ -853,18 +853,18 @@ impl ImGuiContext {
             HoveredIdUsingMouseWheel: false,
             HoveredIdPreviousFrameUsingMouseWheel: false,
             HoveredIdDisabled: false,
-            HoveredIdTimer: 0f32,
-            HoveredIdNotActiveTimer: 0f32,
+            HoveredIdTimer: 0.0,
+            HoveredIdNotActiveTimer: 0.0,
             ActiveId: 0,
             ActiveIdIsAlive: 0,
-            ActiveIdTimer: 0f32,
+            ActiveIdTimer: 0.0,
             ActiveIdIsJustActivated: false,
             ActiveIdAllowOverlap: false,
             ActiveIdNoClearOnFocusLoss: false,
             ActiveIdHasBeenPressedBefore: false,
             ActiveIdHasBeenEditedBefore: false,
             ActiveIdHasBeenEditedThisFrame: false,
-            ActiveIdClickOffset: ImVec2::new2(-1f32, -1f32),
+            ActiveIdClickOffset: ImVec2::new(-1f32, -1f32),
             ActiveIdWindow: null_mut(),
             ActiveIdSource: ImGuiInputSource_None,
             ActiveIdMouseButton: -1,
@@ -873,7 +873,7 @@ impl ImGuiContext {
             ActiveIdPreviousFrameHasBeenEditedBefore: false,
             ActiveIdPreviousFrameWindow: null_mut(),
             LastActiveId: 0,
-            LastActiveIdTimer: 0f32,
+            LastActiveIdTimer: 0.0,
             ActiveIdUsingNavDirMask: 0x00,
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
 //             ActiveIdUsingNavInputMask : 0x00,
@@ -882,7 +882,7 @@ impl ImGuiContext {
             CurrentItemFlags: ImGuiItemFlags_None,
             BeginMenuCount: vec![],
 
-            CurrentDpiScale: 0f32,
+            CurrentDpiScale: 0.0,
             CurrentViewport: null_mut(),
             MouseViewport: null_mut(),
             MouseLastHoveredViewport: null_mut(),
@@ -928,11 +928,11 @@ impl ImGuiContext {
             NavWindowingTarget: null_mut(),
             NavWindowingTargetAnim: null_mut(),
             NavWindowingListWindow: null_mut(),
-            NavWindowingTimer: 0f32,
-            NavWindowingHighlightAlpha: 0f32,
+            NavWindowingTimer: 0.0,
+            NavWindowingHighlightAlpha: 0.0,
             NavWindowingToggleLayer: false,
 
-            DimBgRatio: 0f32,
+            DimBgRatio: 0.0,
             MouseCursor: ImGuiMouseCursor_Arrow,
 
             DragDropActive: false,
@@ -943,7 +943,7 @@ impl ImGuiContext {
             DragDropMouseButton: -1,
             DragDropTargetId: 0,
             DragDropAcceptFlags: ImGuiDragDropFlags_None,
-            DragDropAcceptIdCurrRectSurface: 0f32,
+            DragDropAcceptIdCurrRectSurface: 0.0,
             DragDropAcceptIdPrev: 0,
             DragDropAcceptIdCurr: 0,
             DragDropAcceptFrameCount: -1,
@@ -957,22 +957,22 @@ impl ImGuiContext {
 
             HoverDelayId: 0,
             HoverDelayIdPreviousFrame: 0,
-            HoverDelayTimer: 0f32,
-            HoverDelayClearTimer: 0f32,
+            HoverDelayTimer: 0.0,
+            HoverDelayClearTimer: 0.0,
 
             TempInputId: 0,
             ColorEditOptions: ImGuiColorEditFlags_DefaultOptions_,
-            ColorEditLastHue: 0f32,
-            ColorEditLastSat: 0f32,
+            ColorEditLastHue: 0.0,
+            ColorEditLastSat: 0.0,
             ColorEditLastColor: 0,
-            SliderGrabClickOffset: 0f32,
-            SliderCurrentAccum: 0f32,
+            SliderGrabClickOffset: 0.0,
+            SliderCurrentAccum: 0.0,
             SliderCurrentAccumDirty: false,
             DragCurrentAccumDirty: false,
-            DragCurrentAccum: 0f32,
-            DragSpeedDefaultRatio: 1f32 / 100f32,
-            ScrollbarClickDeltaToGrabCenter: 0f32,
-            DisabledAlphaBackup: 0f32,
+            DragCurrentAccum: 0.0,
+            DragSpeedDefaultRatio: 1f32 / 100.0,
+            ScrollbarClickDeltaToGrabCenter: 0.0,
+            DisabledAlphaBackup: 0.0,
             DisabledStackSize: 0,
             TooltipOverrideCount: 0,
 
@@ -980,7 +980,7 @@ impl ImGuiContext {
             PlatformLocaleDecimalPoint: '.'.into(),
 
             SettingsLoaded: false,
-            SettingsDirtyTimer: 0f32,
+            SettingsDirtyTimer: 0.0,
             HookIdNext: vec![],
 
             LogEnabled: false,
@@ -1002,7 +1002,7 @@ impl ImGuiContext {
 
             FramerateSecPerFrameIdx: 0,
             FramerateSecPerFrameCount: 0,
-            FramerateSecPerFrameAccum: 0f32,
+            FramerateSecPerFrameAccum: 0.0,
             WantCaptureMouseNextFrame: -1,
             WantCaptureKeyboardNextFrame: -1,
             WantTextInputNextFrame: -1,
@@ -1012,7 +1012,7 @@ impl ImGuiContext {
         out.IO.Fonts = if shared_font_atlas.is_null() == false { shared_font_atlas } else { IM_NEW(ImFontAtlas)() };
         out.ActiveIdUsingKeyInputMask.ClearAllBits();
         out.PlatformImeData.InputPos = ImVec2::new();
-        out.PlatformImeDataPrev.InputPos = ImVec2::new2(-1f32, -1f32); // Different to ensure initial submission
+        out.PlatformImeDataPrev.InputPos = ImVec2::new(-1f32, -1f32); // Different to ensure initial submission
         libc::memset(out.DragDropPayloadBufLocal.as_mut_ptr(), 0, libc::sizeof(out.DragDropPayloadBufLocal));
         libc::memset(out.FramerateSecPerFrame.as_mut_ptr(), 0, libc::sizeof(FramerateSecPerFrame));
         return out;

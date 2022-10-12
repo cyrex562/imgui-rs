@@ -75,7 +75,7 @@ impl ImGuiTabBar {
         if tab.Window.is_null() == false {
             return tab.Window.Name;
         }
-        // IM_ASSERT(tab.NameOffset != -1 && tab.NameOffset < TabsNames.Buf.Size);
-        return self.TabsNames.Buf.as_ptr() + tab.NameOffset.clone();
+        // IM_ASSERT(tab->NameOffset != -1 && tab->NameOffset < TabsNames.Buf.Size);
+        return self.TabsNames.Buf.as_ptr() + tab.NameOffset;
     }
 }

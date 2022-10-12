@@ -8,7 +8,7 @@ use crate::type_defs::ImGuiID;
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiSettingsHandler {
-    pub TypeName: *const c_char,
+    pub TypeName: *const char,
     // Short description stored in .ini file. Disallowed characters: '[' ']'
     pub TypeHash: ImGuiID,
     // == ImHashStr(TypeName)
@@ -30,7 +30,7 @@ pub struct ImGuiSettingsHandler {
     // c_void        (*ApplyAllFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler);                                // Read: Called after reading (in registration order)
     pub ApplyAllFn: fn(ctx: *mut ImGuiContext, handler: *mut Self),
 
-    // c_void        (*WriteAllFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut ImGuiTextBuffer out_buf);      // Write: Output every entries into 'out_buf'
+    // c_void        (*WriteAllFn)(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut ImGuiTextBuffer out_bu0f32);      // Write: Output every entries into 'out_buf'
     pub WriteAllFn: fn(ctx: *mut ImGuiContext, handler: *mut Self, out_buf: *mut ImGuiTextBuffer),
 }
 

@@ -3,7 +3,7 @@
 use libc::c_float;
 
 // [Internal] Storage used by IsKeyDown(), IsKeyPressed() etc functions.
-// If prior to 1.87 you used io.KeysDownDuration[] (which was marked as internal), you should use GetKeyData(key).DownDuration and not io.KeysData[key].DownDuration.
+// If prior to 1.87 you used io.KeysDownDuration[] (which was marked as internal), you should use GetKeyData(key)->DownDuration and not io.KeysData[key]->DownDuration.
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiKeyData {
     pub Down: bool,

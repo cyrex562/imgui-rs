@@ -19,7 +19,7 @@ pub type ImTextureID = *mut c_void;
 // #ifndef ImDrawIdx
 // typedef unsigned short ImDrawIdx;   // Default: 16-bit (for maximum compatibility with renderer backends)
 // #endif
-pub type ImDrawIdx = u16;
+pub type ImDrawIdx = size_t;
 
 // Scalar data types
 // typedef unsigned int        ImGuiID;// A unique ID used by widgets (typically the result of hashing a stack of string)
@@ -57,7 +57,7 @@ pub type ImGuiInputTextCallback = fn(data: *mut ImGuiInpuTextCallbackData) -> c_
 // typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);              // Callback function for SetNextWindowSizeConstraints()
 pub type ImGuisizeCallback = fn(data: *mut ImGuisizeCallbackData);
 
-// typedef void*   (*ImGuiMemAllocFunc)(size_t sz, void* user_data);               // Function signature for SetAllocatorFunctions()
+// typedef void*   (*ImGuiMemAllocFunc)(sz: size_t, void* user_data);               // Function signature for SetAllocatorFunctions()
 pub type ImGuiMemAllocFunc = fn(sz: size_t, user_data: *mut c_void);
 
 // typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for SetAllocatorFunctions()

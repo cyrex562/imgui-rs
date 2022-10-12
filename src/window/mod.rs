@@ -12,7 +12,6 @@ use crate::direction::{ImGuiDir, ImGuiDir_None};
 use crate::dock_node::ImGuiDockNode;
 use crate::draw_list::ImDrawList;
 use crate::hash_ops::{ImHashData, ImHashStr};
-use crate::id_ops::GetID;
 use crate::imgui::GImGui;
 use crate::item_status_flags::ImGuiItemStatusFlags;
 use crate::layout_type::ImGuiLayoutType;
@@ -21,15 +20,29 @@ use crate::old_columns::ImGuiOldColumns;
 use crate::rect::ImRect;
 use crate::stack_sizes::ImGuiStackSizes;
 use crate::storage::ImGuiStorage;
-use crate::string_ops::{ImStrdup, str_to_const_c_char_ptr};
+use crate::string_ops::ImStrdup;
 use crate::vec2::{ImVec2, ImVec2ih};
 use crate::viewport::ImGuiViewport;
 use crate::win_dock_style::ImGuiWindowDockStyle;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::{ImGuiDir, ImGuiID};
+use crate::vec4::ImVec4;
+use crate::window::window_class::ImGuiWindowClass;
+use crate::window::window_flags::ImGuiWindowFlags;
+use crate::window::window_ops::WindowRectAbsToRel;
+use crate::window::window_temp_data::ImGuiWindowTempData;
 use crate::window_flags::ImGuiWindowFlags;
 use crate::window_ops::WindowRectAbsToRel;
 use crate::window_temp_data::ImGuiWindowTempData;
+
+pub mod window_class;
+pub mod window_stack_data;
+pub mod window_settings;
+pub mod window_flags;
+pub mod window_ops;
+pub mod window_temp_data;
+pub mod window_dock_style_colors;
+pub mod window_dock_style_color;
 
 // Storage for one window
 pub struct ImGuiWindow {
@@ -124,7 +137,7 @@ pub struct ImGuiWindow {
 // i8                    AutoFitFramesX, AutoFitFramesY;
     pub AutoFitFramesX: i8,
     pub AutoFitFramesY: i8,
-    pub AutoFitChildAxises: i8,
+    pub AutoFitChildAxises: c_int,
     pub AutoFitOnlyGrows: bool,
     pub AutoPosLastDirection: ImGuiDir,
     pub HiddenFramesCanSkipItems: i8,
@@ -145,13 +158,13 @@ pub struct ImGuiWindow {
     pub SetWindowDockAllowFlags: ImGuiCond,
     pub SetWindowPosVal: ImVec2,
     // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
-    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2::new2(0, 0) when positioning from top-left corner; ImVec2::new2(0.5f32, 0.5f32) for centering; ImVec2::new2(1, 1) for bottom right.
+    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2::new(0, 0) when positioning from top-left corner; ImVec2::new(0.5f32, 0.5f32) for centering; ImVec2::new(1, 1) for bottom right.
 
     // ImVector<ImGuiID>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
     pub IDStack: Vec<ImGuiID>,
     pub DC: ImGuiWindowTempData,                                 // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "DC" variable name.
 
-    // The best way to understand what those rectangles are is to use the 'Metrics.Tools.Show Windows Rectangles' viewer.
+    // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show Windows Rectangles' viewer.
 // The main 'OuterRect', omitted as a field, is window.Rect().
     pub OuterRectClipped: ImRect,
     // == window.Rect() just after setup in Begin(). == window.Rect() for root window.
@@ -163,7 +176,7 @@ pub struct ImGuiWindow {
     // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1f32 on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
     pub ParentWorkRect: ImRect,
     // Backup of WorkRect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
-    pub ClipRect: ImRect,
+    pub ClipRect: ImVec4,
     // Current clipping/scissoring rectangle, evolve as we are using PushClipRect(), etc. == DrawList.clip_rect_stack.back().
     pub ContentRegionRect: ImRect,
     // FIXME: This is currently confusing/misleading. It is essentially WorkRect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
@@ -215,7 +228,7 @@ pub struct ImGuiWindow {
     pub MemoryCompacted: bool,                    // Set when window extraneous data have been garbage collected
 
     // Docking
-// bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode.Windows.Size > 1).
+// bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode->Windows.Size > 1).
     pub DockIsActive: bool,
     // bool                    DockNodeIsVisible   :1;
     pub DockNodeIsVisible: bool,
@@ -231,7 +244,7 @@ pub struct ImGuiWindow {
     pub DockNodeAsHost: *mut ImGuiDockNode,
     // Which node are we owning (for parent windows)
     pub DockId: ImGuiID,
-    // Backup of last valid DockNode.ID, so single window remember their dock node id even when they are not bound any more
+    // Backup of last valid DockNode->ID, so single window remember their dock node id even when they are not bound any more
     pub DockTabItemStatusFlags: ImGuiItemStatusFlags,
     pub DockTabItemRect: ImRect,
 
@@ -245,11 +258,11 @@ impl ImGuiWindow {
             NameBufLen: libc::strlen(name) + 1,
             ID: ImHashStr(name, 0, 0),
             ViewportAllowPlatformMonitorExtend: -1,
-            ViewportPos: ImVec2::new2(f32::MAX, f32::MAX),
-            MoveId: GetID(str_to_const_c_char_ptr("#MOVE")),
-            TabId: GetID(str_to_const_c_char_ptr("#TAB")),
-            ScrollTarget: ImVec2::new2(f32::MAX, f32::MAX),
-            ScrollTargetCenterRatio: ImVec2::new2(0.5f32, 0.5f32),
+            ViewportPos: ImVec2::new(f32::MAX, f32::MAX),
+            MoveId: GetID("#MOVE"),
+            TabId: GetID("#TAB"),
+            ScrollTarget: ImVec2::new(f32::MAX, f32::MAX),
+            ScrollTargetCenterRatio: ImVec2::new(0.5f32, 0.5f32),
             AutoFitFramesX: -1,
             AutoFitFramesY: -1,
             AutoPosLastDirection: ImGuiDir_None,
@@ -257,8 +270,8 @@ impl ImGuiWindow {
             SetWindowSizeAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
             SetWindowCollapsedAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
             SetWindowDockAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
-            SetWindowPosVal: ImVec2::new2(f32::MAX, f32::MAX),
-            SetWindowPosPivot: ImVec2::new2(f32::MAX, f32::MAX),
+            SetWindowPosVal: ImVec2::new(f32::MAX, f32::MAX),
+            SetWindowPosPivot: ImVec2::new(f32::MAX, f32::MAX),
             LastFrameActive: -1,
             LastFrameJustFocused: -1,
             LastTimeActive: -1f32,
@@ -287,7 +300,7 @@ impl ImGuiWindow {
         if g.DebugHookIdInfo == id {
             DebugHookIdInfo(id, ImGuiDataType_String, begin, end);
         }
-        return id.clone();
+        return id;
     }
 
 
@@ -299,7 +312,7 @@ impl ImGuiWindow {
         if g.DebugHookIdInfo == id {
             DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr, null_mut());
         }
-        return id.clone();
+        return id;
     }
 
 
@@ -315,9 +328,9 @@ impl ImGuiWindow {
         return id;
     }
 
-    // ImGuiID     GetIDFromRectangle(r_abs: &ImRect);
+    // ImGuiID     GetIDFromRectangle(const ImRect& r_abs);
     // This is only used in rare/specific situations to manufacture an ID out of nowhere.
-    // ImGuiID ImGuiWindow::GetIDFromRectangle(r_abs: &ImRect)
+    // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
     pub unsafe fn GetIDFromRectangle(&self, r_abs: &ImRect) -> ImGuiID
     {
         let mut seed: ImGuiID =  self.IDStack.last().unwrap().clone();
@@ -327,7 +340,7 @@ impl ImGuiWindow {
     }
 
 // We don't use g.FontSize because the window may be != g.CurrentWindow.
-//     ImRect      Rect() const            { return ImRect::new(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
+//     ImRect      Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
 
 
     // float       CalcFontSize() const    { let g = GImGui; // ImGuiContext& g = *GImGui; float scale = g.FontBaseSize * FontWindowScale * FontDpiScale; if (ParentWindow) scale *= Parentwindow.FontWindowScale; return scale; }
@@ -336,11 +349,11 @@ impl ImGuiWindow {
     // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0f32 : CalcFontSize() + g.Style.FramePadding.y * 2.0f32; }
 
 
-    // ImRect      TitleBarRect() const    { return ImRect::new(Pos, ImVec2::new(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
+    // ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2::new(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
 
 
     // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0f32 : 0f32; }
 
 
-    // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect::new(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
+    // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
 }

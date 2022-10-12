@@ -1,13 +1,17 @@
 #![allow(non_snake_case)]
 
-use libc::c_char;
-use crate::GImGui;
 use crate::string_ops::str_to_const_c_char_ptr;
+use crate::GImGui;
+use libc::c_char;
 
-// *const char GetClipboardText()
+// GetClipboardText: *const c_char()
 pub unsafe fn GetClipboardText() -> *const c_char {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return if g.IO.GetClipboardTextFn { g.IO.GetClipboardTextFn(g.IO.ClipboardUserData) } else { str_to_const_c_char_ptr("") };
+    return if g.IO.GetClipboardTextFn {
+        g.IO.GetClipboardTextFn(g.IO.ClipboardUserData)
+    } else {
+        str_to_const_c_char_ptr("")
+    };
 }
 
 // c_void SetClipboardText(text: *const c_char)

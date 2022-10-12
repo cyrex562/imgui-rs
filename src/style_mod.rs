@@ -22,7 +22,7 @@ impl ImGuiStyleMod {
         }
     }
 
-    // ImGuiStyleMod(ImGuiStyleVar idx, v: c_float)   { VarIdx = idx; BackupFloat[0] = v; }
+    // ImGuiStyleMod(ImGuiStyleVar idx, c_float v)   { VarIdx = idx; BackupFloat[0] = v; }
     pub fn new2(idx: ImGuiStyleVar, v: c_float) -> Self {
         Self {
             VarIdx: idx,

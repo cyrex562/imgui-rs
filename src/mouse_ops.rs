@@ -5,16 +5,12 @@ use libc::{c_float, c_int};
 use crate::condition::ImGuiCond_Always;
 use crate::config_flags::{ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_NavNoCaptureKeyboard, ImGuiConfigFlags_NoMouse, ImGuiConfigFlags_ViewportsEnable};
 use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
-use crate::dock_context_ops::DockContextQueueUndockNode;
 use crate::dock_node::ImGuiDockNode;
-use crate::dock_node_ops::DockNodeGetRootNode;
 use crate::drag_drop_flags::ImGuiDragDropFlags_SourceExtern;
 use crate::id_ops::{ClearActiveID, KeepAliveID, SetActiveID};
 use crate::imgui::GImGui;
 use crate::input_ops::{IsMouseClicked, IsMouseDragging, IsMousePosValid};
 use crate::key::{ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY};
-use crate::math::{ImClamp, ImFloor, ImFloor2, ImFloorSigned, ImFloorSigned2, ImLengthSqr, ImMax, ImMin};
-use crate::popup_flags::ImGuiPopupFlags_AnyPopupLevel;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
@@ -50,7 +46,7 @@ pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
 // We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
 // - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
 // - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
-// c_void StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool)
+// c_void StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, ImGuiDockNode* node, undock_floating_node: bool)
 pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut can_undock_node: bool = false;
@@ -69,7 +65,7 @@ pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut 
     let clicked: bool = IsMouseClicked(0, false);
     let dragging: bool = IsMouseDragging(0, g.IO.MouseDragThreshold * 1.700f32);
     if can_undock_node && dragging {
-        DockContextQueueUndockNode(g, node);
+        DockContextQueueUndockNode(&g, node);
     } // Will lead to DockNodeStartMouseMovingWindow() -> StartMouseMovingWindow() being called next frame
     else if !can_undock_node && (clicked || dragging) && g.MovingWindow != window {
         StartMouseMovingWindow(window);
@@ -96,7 +92,8 @@ pub unsafe fn UpdateMouseMovingWindowNewFrame() {
             let pos: ImVec2 = g.IO.MousePos.clone() - g.ActiveIdClickOffset.clone();
             if moving_window.Pos.x != pos.x || moving_window.Pos.y != pos.y {
                 SetWindowPos(moving_window, pos, ImGuiCond_Always);
-                if moving_window.ViewportOwned {// Synchronize viewport immediately because some overlays may relies on clipping rectangle before we Begin() into the window. {
+                if moving_window.ViewportOwned // Synchronize viewport immediately because some overlays may relies on clipping rectangle before we Begin() into the window.
+                {
                     moving_window.Viewport.Pos = pos.clone();
                     moving_window.Viewport.UpdateWorkRect();
                 }
@@ -179,7 +176,7 @@ pub unsafe fn UpdateMouseMovingWindowEndFrame() {
 
     // With right mouse button we close popups without changing focus based on where the mouse is aimed
     // Instead, focus will be restored to the window under the bottom-most closed popup.
-    // (The left mouse button path calls FocusWindow on the hovered window, which will lead NewFrame.ClosePopupsOverWindow to trigger)
+    // (The left mouse button path calls FocusWindow on the hovered window, which will lead NewFrame->ClosePopupsOverWindow to trigger)
     if g.IO.MouseClicked[1] {
         // Find the top-most window between HoveredWindow and the top-most Modal Window.
         // This is where we can trim the popup stack.
@@ -197,15 +194,15 @@ pub unsafe fn UpdateMouseInputs() {
 
     // Round mouse position to avoid spreading non-rounded position (e.g. UpdateManualResize doesn't support them well)
     if IsMousePosValid(&io.MousePos) {
-        io.MousePos = ImFloorSigned2(&io.MousePos.clone());
-        g.MouseLastValidPos = ImFloorSigned2(&io.MousePos.clone());
+        io.MousePos = ImFloorSigned(io.MousePos.clone());
+        g.MouseLastValidPos = ImFloorSigned(io.MousePos.clone());
     }
 
     // If mouse just appeared or disappeared (usually denoted by -f32::MAX components) we cancel out movement in MouseDelta
     if IsMousePosValid(&io.MousePos) && IsMousePosValid(&io.MousePosPrev) {
         io.MouseDelta = io.MousePos.clone() - io.MousePosPrev.clone();
     } else {
-        io.MouseDelta = ImVec2::new2(0f32, 0f32);
+        io.MouseDelta = ImVec2::new(0f32, 0f32);
     }
 
     // If mouse moved we re-enable mouse hovering in case it was disabled by gamepad/keyboard. In theory should use a >0f32 threshold but would need to reset in everywhere we set this to true.
@@ -224,8 +221,8 @@ pub unsafe fn UpdateMouseInputs() {
         if io.MouseClicked[i] {
             let mut is_repeated_click: bool = false;
             if (g.Time - io.MouseClickedTime[i]) < io.MouseDoubleClickTime {
-                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new2(0f32, 0f32) };
-                if ImLengthSqr(&delta_from_click_pos) < io.MouseDoubleClickMaxDist * io.MouseDoubleClickMaxDist {
+                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0f32, 0f32) };
+                if ImLengthSqr(delta_from_click_pos) < io.MouseDoubleClickMaxDist * io.MouseDoubleClickMaxDist {
                     is_repeated_click = true;
                 }
             }
@@ -237,12 +234,12 @@ pub unsafe fn UpdateMouseInputs() {
             io.MouseClickedTime[i] = g.Time.clone();
             io.MouseClickedPos[i] = io.MousePos.clone();
             io.MouseClickedCount[i] = io.MouseClickedLastCount[i];
-            io.MouseDragMaxDistanceAbs[i] = ImVec2::new2(0f32, 0f32);
+            io.MouseDragMaxDistanceAbs[i] = ImVec2::new(0f32, 0f32);
             io.MouseDragMaxDistanceSqr[i] = 0f32;
         } else if io.MouseDown[i] {
             // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
-            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new2(0f32, 0f32) };
-            io.MouseDragMaxDistanceSqr[i] = ImMax(io.MouseDragMaxDistanceSqr[i], ImLengthSqr(&delta_from_click_pos));
+            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0f32, 0f32) };
+            io.MouseDragMaxDistanceSqr[i] = ImMax(io.MouseDragMaxDistanceSqr[i], ImLengthSqr(delta_from_click_pos));
             io.MouseDragMaxDistanceAbs[i].x = ImMax(io.MouseDragMaxDistanceAbs[i].x, if delta_from_click_pos.x < 0f32 { delta_from_click_pos.x.clone() * -1 } else { delta_from_click_pos.x.clone() });
             io.MouseDragMaxDistanceAbs[i].y = ImMax(io.MouseDragMaxDistanceAbs[i].y, if delta_from_click_pos.y < 0f32 { delta_from_click_pos.y.clone() * -1 } else { delta_from_click_pos.y.clone() });
         }
@@ -309,15 +306,15 @@ pub unsafe fn UpdateMouseWheel() {
         if window == window.RootWindow {
             let offset: ImVec2 = window.Size.clone() * (1f32 - scale) * (g.IO.MousePos.clone() - window.Pos.clone()) / window.Size.clone();
             SetWindowPos(window, window.Pos.clone() + offset, 0);
-            window.Size = ImFloor2(window.Size.clone() * scale);
-            window.SizeFull = ImFloor2(window.SizeFull.clone() * scale);
+            window.Size = ImFloor(window.Size.clone() * scale);
+            window.SizeFull = ImFloor(window.SizeFull.clone() * scale);
         }
         return;
     }
 
     // Mouse wheel scrolling
     // If a child window has the ImGuiWindowFlags_NoScrollWithMouse flag, we give a chance to scroll its parent
-    if g.IO.KeyCtrl {
+    if (g.IO.KeyCtrl) {
         return;
     }
 
@@ -361,7 +358,7 @@ pub unsafe fn UpdateMouseWheel() {
 pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
-    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2::new2(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
+    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2::new(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
 
     // Find the window hovered by mouse:
     // - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from HoveredWindow.

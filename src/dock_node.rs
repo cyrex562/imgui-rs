@@ -1,20 +1,18 @@
 #![allow(non_snake_case)]
 
-use std::ptr::{null, null_mut};
+use std::ptr::null;
 use libc::c_int;
-use crate::axis::{ImGuiAxis, ImGuiAxis_None};
-use crate::color::IM_COL32_WHITE;
-use crate::data_authority::{ImGuiDataAuthority, ImGuiDataAuthority_Auto, ImGuiDataAuthority_DockNode};
-use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_CentralNode, ImGuiDockNodeFlags_DockSpace, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoTabBar};
-use crate::dock_node_state::{ImGuiDockNodeState, ImGuiDockNodeState_Unknown};
+use crate::axis::ImGuiAxis;
+use crate::data_authority::ImGuiDataAuthority;
+use crate::dock_node_flags::ImGuiDockNodeFlags;
 use crate::tab_bar::ImGuiTabBar;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::ImGuiID;
 
-// sizeof() 156!192
-#[derive(Default,Debug,Clone)]
+// sizeof() 156~192
+#[derive(Default,Debug,Clone,Copy)]
 pub struct  ImGuiDockNode
 {
 pub ID: ImGuiID,
@@ -26,7 +24,7 @@ pub State: ImGuiDockNodeState,
 pub ParentNode: *mut ImGuiDockNode,
     // ImGuiDockNode*          ChildNodes[2];              // [Split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
 pub ChildNodes: [*mut ImGuiDockNode;2],
-    pub Windows: Vec<*mut ImGuiWindow>,                    // Note: unordered list! Iterate TabBar.Tabs for user-order.
+    pub Windows: Vec<*mut ImGuiWindow>,                    // Note: unordered list! Iterate TabBar->Tabs for user-order.
 pub TabBar: *mut ImGuiTabBar,
 pub Pos: ImVec2,                        // Current position
 pub Size: ImVec2,                       // Current size
@@ -64,60 +62,11 @@ pub WantHiddenTabBarToggle: bool,
 }
 
 impl ImGuiDockNode {
-    // ImGuiDockNode(id: ImGuiID);
-    pub fn new(id: ImGuiID) -> Self {
-        Self {
-            ID: id,
-            SharedFlags: ImGuiDockNodeFlags_None,
-            LocalFlags: ImGuiDockNodeFlags_None,
-            LocalFlagsInWindows: ImGuiDockNodeFlags_None,
-            MergedFlags: ImGuiDockNodeFlags_None,
-            ParentNode: null_mut(),
-            ChildNodes: [null_mut(); 2],
-            Windows: vec![],
-            TabBar: null_mut(),
-            Pos: Default::default(),
-            Size: Default::default(),
-            SizeRef: Default::default(),
-            SplitAxis: ImGuiAxis_None,
-            State: ImGuiDockNodeState_Unknown,
-            LastBgColor: IM_COL32_WHITE,
-            HostWindow: null_mut(),
-            VisibleWindow: null_mut(),
-            CentralNode: null_mut(),
-            OnlyNodeWithWindows: null_mut(),
-            CountNodeWithWindows: 0,
-            LastFrameAlive: -1,
-            LastFrameActive: -1,
-            LastFrameFocused: -1,
-            LastFocusedNodeId: 0,
-            SelectedTabId: 0,
-            WantCloseTabId: 0,
-            AuthorityForPos: ImGuiDataAuthority_DockNode,
-            AuthorityForSize: ImGuiDataAuthority_DockNode,
-            AuthorityForViewport: ImGuiDataAuthority_Auto,
-            IsVisible: true,
-            IsFocused: false,
-            HasCloseButton: false,
-            HasWindowMenuButton: false,
-            HasCentralNodeChild: false,
-            IsBgDrawnThisFrame: false,
-            WantCloseAll: false,
-            WantLockSizeOnce: false,
-            WantMouseMove: false,
-            WantHiddenTabBarUpdate: false,
-            WantHiddenTabBarToggle: false,
-            WindowClass: Default::default()
-        }
-    }
+    // ImGuiDockNode(ImGuiID id);
+
 
     // ~ImGuiDockNode();
-    //     ImGuiDockNode::~ImGuiDockNode()
-    // {
-    //     IM_DELETE(TabBar);
-    //     TabBar= null_mut();
-    //     ChildNodes[0] = ChildNodes[1]= null_mut();
-    // }
+
 
     // bool                    IsRootNode() const      { return ParentNode == None; }
     pub fn IsRootNode(&self) -> bool {
@@ -167,11 +116,11 @@ impl ImGuiDockNode {
         self.ChildNodes[0].is_null() && self.Windows.len() == 0
     }
 
-    // ImRect                  Rect() const            { return ImRect::new(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
+    // ImRect                  Rect() const            { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
 
 
 
-    // void                    SetLocalFlags(flags: ImGuiDockNodeFlags) { LocalFlags = flags; UpdateMergedFlags(); }
+    // void                    SetLocalFlags(ImGuiDockNodeFlags flags) { LocalFlags = flags; UpdateMergedFlags(); }
 
 
     // void                    UpdateMergedFlags()     { MergedFlags = SharedFlags | LocalFlags | LocalFlagsInWindows; }

@@ -5,7 +5,6 @@
 // the API mid-way through development and support two ways to using the clipper, needs some rework (see TODO)
 //-----------------------------------------------------------------------------
 
-use std::ptr::null_mut;
 use libc::{c_float, c_int, c_void};
 use crate::direction::{ImGuiDir_Down, ImGuiDir_Up};
 use crate::imgui::GImGui;
@@ -20,8 +19,8 @@ use crate::window_ops::WindowRectRelToAbs;
 
 // FIXME-TABLE: This prevents us from using ImGuiListClipper _inside_ a table cell.
 // The problem we have is that without a Begin/End scheme for rows using the clipper is ambiguous.
-// static bool GetSkipItemForListClipping()
-pub unsafe fn GetSkipItemForListClipping() -> bool {
+// static GetSkipItemForListClipping: bool()
+pub fn GetSkipItemForListClipping() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     //return (g.CurrentTable ? g.Currenttable.HostSkipItems : g.Currentwindow.SkipItems);
     return if g.CurrentTable.is_null() == false {
@@ -114,7 +113,7 @@ pub fn ImGuiListClipper_SortAndFuseRanges(ranges: &mut Vec<ImGuiListClipperRange
 }
 
 
-// static bool ImGuiListClipper_StepInternal(ImGuiListClipper* clipper)
+// static ImGuiListClipper_StepInternal: bool(ImGuiListClipper* clipper)
 pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -159,16 +158,16 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
 
 // Step 1: Let the clipper infer height from first range
     if clipper.ItemsHeight <= 0f32 {
-// IM_ASSERT(data.StepNo == 1);
+// IM_ASSERT(data->StepNo == 1);
 // if (table) {}
-// IM_ASSERT(table.RowPosY1 == clipper.StartPosY && table.RowPosY2 == window.DC.CursorPos.y);
+// IM_ASSERT(table.RowPosY1 == clipper->StartPosY && table.RowPosY2 == window.DC.CursorPos.y);
 
         clipper.ItemsHeight = (window.DC.CursorPos.y - clipper.StartPosY) / (clipper.DisplayEnd - clipper.DisplayStart);
         let mut affected_by_floating_point_precision: bool = ImIsFloatAboveGuaranteedIntegerPrecision(clipper.StartPosY) || ImIsFloatAboveGuaranteedIntegerPrecision(window.DC.CursorPos.y);
         if affected_by_floating_point_precision {
             clipper.ItemsHeight = window.DC.PrevLineSize.y + g.Style.ItemSpacing.y; // FIXME: Technically wouldn't allow multi-line entries.
         }
-// IM_ASSERT(clipper.ItemsHeight > 0f32 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
+// IM_ASSERT(clipper->ItemsHeight > 0f32 && "Unable to calculate item height! First item hasn't moved the cursor vertically!");
         calc_clipping = true;   // If item height had to be calculated, calculate clipping afterwards.
     }
 
@@ -204,7 +203,7 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
 // - Very important: when a starting position is after our maximum item, we set Min to (ItemsCount - 1). This allows us to handle most forms of wrapping.
 // - Due to how Selectable extra padding they tend to be "unaligned" with exact unit in the item list,
 //   which with the flooring/ceiling tend to lead to 2 items instead of one being submitted.
-// for (c_int i = 0; i < data.Ranges.Size; i++)
+// for (i: c_int = 0; i < data.Ranges.Size; i++)
         for i in 0..data.Ranges.len() {
             if data.Ranges[i].PosToIndexConvert {
                 let mut m1 = ((data.Ranges[i].Min - window.DC.CursorPos.y - data.LossynessOffset) / clipper.ItemsHeight);

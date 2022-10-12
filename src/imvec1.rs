@@ -15,7 +15,7 @@ impl ImVec1 {
             x: 0f32,
         }
     }
-    // constexpr ImVec1(_x: c_float) : x(_x) { }
+    // constexpr ImVec1(c_float _x) : x(_x) { }
     pub fn new2(x: c_float) -> Self {
         Self {
             x

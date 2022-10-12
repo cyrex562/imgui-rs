@@ -13,17 +13,20 @@ use crate::imgui::GImGui;
 use crate::settings_handler::ImGuiSettingsHandler;
 use crate::viewport::ImGuiViewport;
 
+
+mod imgui_cpp;
 mod style;
 mod io;
 mod storage;
 mod text_filter;
+mod imgui_h;
 mod type_defs;
 mod text_buffer;
 mod context;
+mod imgui_internal_h;
 mod window;
 mod platform_io;
 mod vec2;
-mod window_class;
 mod viewport;
 mod draw_list;
 mod vec4;
@@ -38,7 +41,6 @@ mod font_glyph;
 mod font_atlas;
 mod font_config;
 mod draw_list_shared_data;
-mod window_stack_data;
 mod input_source;
 mod next_item_data;
 mod last_item_data;
@@ -75,7 +77,6 @@ mod direction;
 mod dock_node_settings;
 mod axis;
 mod settings_handler;
-mod window_settings;
 mod chunk_stream;
 mod table_settings;
 mod table_flags;
@@ -105,15 +106,15 @@ mod focused_flags;
 mod hovered_flags;
 mod mod_flags;
 mod popup_flags;
-mod selectable_flags;
+mod selectable_flagss;
 mod slider_flags;
+mod tab_bat_flags;
 mod input_text_flags;
 mod tab_item_flags;
 mod table_column_flags;
 mod table_row_flags;
 mod tree_node_flags;
 mod viewport_flags;
-mod window_flags;
 mod data_authority;
 mod layout_type;
 mod activate_flags;
@@ -143,12 +144,12 @@ mod table_column;
 mod table_cell_data;
 mod table_instance_data;
 mod table_column_sort_specs;
-mod window_ops;
 mod draw_cmd;
 mod draw;
 mod draw_vert;
 mod draw_cmd_header;
 mod cursor_ops;
+mod config;
 mod constants;
 mod imgui;
 mod utils;
@@ -158,12 +159,10 @@ mod hash_ops;
 mod file_ops;
 mod color_ops;
 mod list_clipper_range;
-mod window_temp_data;
 mod list_clipper_ops;
+mod math_ops;
 mod style_ops;
 mod style_var_info;
-mod window_dock_style_colors;
-mod window_dock_style_color;
 mod g_style_var_info;
 mod style_var_ops;
 mod render_ops;
@@ -188,60 +187,149 @@ mod frame_ops;
 mod viewport_ops;
 mod text_ops;
 mod child_ops;
-mod state_ops;
-mod size_callback_data;
-mod resize_ops;
-mod resize_grip_def;
-mod resize_border_def;
-mod modal_ops;
-mod math;
-mod span_allocator;
-mod bit_vector;
-mod bit_array;
-mod plot_type;
-mod popup_position_policy;
-mod data_type_temp_storage;
-mod data_type_info;
-mod menu_columns;
-mod dock_node_state;
-mod scroll_ops;
-mod focus_ops;
-mod dock_node_ops;
-mod dock_builder_ops;
-mod draw_item_ops;
-mod item_picker_ops;
-mod tree_node_ops;
-mod font_builder_io;
-mod nav_input;
-mod imgui_vector;
-mod input_text_callback_data;
-mod table_sort_specs;
-mod once_upon_a_frame;
-mod font_glyph_ranges_builder;
-mod font_atlas_custom_rect;
-mod font_ops;
-mod button_ops;
-mod rect_ops;
-mod layout_ops;
 mod content_ops;
-mod group_ops;
-mod tooltip_ops;
-mod popup_ops;
 mod nav_ops;
-mod settings_ops;
-mod docking_ops;
-mod dock_preview_data;
-mod dock_context_ops;
-mod dock_node_tree_info;
-mod dock_settings_ops;
-mod platform_native;
-mod dock_context_prune_node_data;
-mod drag_drop_ops;
-mod tables;
-mod widgets;
-mod window_data_flags;
-mod rect_pack;
-mod font_atlas_def_tex_cursor_data;
+mod layout_ops;
+mod shade_verts_ops;
 mod font_atlas_default_tex_data;
+mod font_atlas_custom_rect;
+mod font_builder_io;
 mod font_build_src_data;
 mod font_build_dst_data;
+mod font_atlas_ops;
+mod font_glyph_ranges_builder;
+mod font_ops;
+mod fallback_font_data;
+mod stb_ops;
+mod size_callback_data;
+mod resize_grip_def;
+mod resize_border_def;
+
+
+
+// c_void Initialize()
+pub unsafe fn Initialize()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
+
+    // Add .ini handle for ImGuiWindow type
+    {
+        let mut ini_handler = ImGuiSettingsHandler::new();
+        ini_handler.TypeName = "Window";
+        ini_handler.TypeHash = ImHashStr2("Window");
+        ini_handler.ClearAllFn = WindowSettingsHandler_ClearAll;
+        ini_handler.ReadOpenFn = WindowSettingsHandler_ReadOpen;
+        ini_handler.ReadLineFn = WindowSettingsHandler_ReadLine;
+        ini_handler.ApplyAllFn = WindowSettingsHandler_ApplyAll;
+        ini_handler.WriteAllFn = WindowSettingsHandler_WriteAll;
+        AddSettingsHandler(&ini_handler);
+    }
+
+    // Add .ini handle for ImGuiTable type
+    TableSettingsAddSettingsHandler();
+
+    // Create default viewport
+    let mut viewport: *mut ImGuiViewport =  IM_NEW(ImGuiViewportP)();
+    viewport.ID = IMGUI_VIEWPORT_DEFAULT_ID;
+    viewport.Idx = 0;
+    viewport.PlatformWindowCreated = true;
+    viewport.Flags = ImGuiViewportFlags_OwnedByApp;
+    g.Viewports.push(viewport);
+    g.TempBuffer.resize(1024 * 3 + 1, 0);
+    g.PlatformIO.Viewports.push(g.Viewports[0]);
+
+// #ifdef IMGUI_HAS_DOCK
+    // Initialize Docking
+    DockContextInitialize(&g);
+// #endif
+
+    g.Initialized = true;
+}
+
+// This function is merely here to free heap allocations.
+// c_void Shutdown()
+pub unsafe fn Shutdown()
+{
+    // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    if g.IO.Fonts.is_null() == false && g.FontAtlasOwnedByContext
+    {
+        g.IO.Fonts.Locked = false;
+        IM_DELETE(g.IO.Fonts);
+    }
+    g.IO.Fonts= null_mut();
+
+    // Cleanup of other data are conditional on actually having initialized Dear ImGui.
+    if !g.Initialized {
+        return;
+    }
+
+    // Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
+    if g.SettingsLoaded && g.IO.IniFilename != null_mut() {
+        SaveIniSettingsToDisk(g.IO.IniFilename);
+    }
+
+    // Destroy platform windows
+    DestroyPlatformWindows();
+
+    // Shutdown extensions
+    DockContextShutdown(&g);
+
+    CallContextHooks(g, ImGuiContextHookType_Shutdown);
+
+    // Clear everything else
+    g.Windows.clear_delete();
+    g.WindowsFocusOrder.clear();
+    g.WindowsTempSortBuffer.clear();
+    g.CurrentWindow= null_mut();
+    g.CurrentWindowStack.clear();
+    g.WindowsById.Clear();
+    g.NavWindow= null_mut();
+    g.HoveredWindow = null_Mut();
+    g.HoveredWindowUnderMovingWindow= null_mut();
+    g.ActiveIdWindow = null_mut();
+    g.ActiveIdPreviousFrameWindow= null_mut();
+    g.MovingWindow= null_mut();
+    g.ColorStack.clear();
+    g.StyleVarStack.clear();
+    g.FontStack.clear();
+    g.OpenPopupStack.clear();
+    g.BeginPopupStack.clear();
+
+    g.CurrentViewport = null_mut();
+    g.MouseViewport = null_mut();
+    g.MouseLastHoveredViewport= null_mut();
+    g.Viewports.clear_delete();
+
+    g.TabBars.Clear();
+    g.CurrentTabBarStack.clear();
+    g.ShrinkWidthBuffer.clear();
+
+    g.ClipperTempData.clear_destruct();
+
+    g.Tables.Clear();
+    g.TablesTempData.clear_destruct();
+    g.DrawChannelsTempMergeBuffer.clear();
+
+    g.ClipboardHandlerData.clear();
+    g.MenusIdSubmittedThisFrame.clear();
+    g.InputTextState.ClearFreeMemory();
+
+    g.SettingsWindows.clear();
+    g.SettingsHandlers.clear();
+
+    if g.LogFile
+    {
+// #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+        if g.LogFile != libc::stdout {
+// #endif
+            ImFileClose(g.LogFile);
+        }
+        g.LogFile= null_mut();
+    }
+    g.LogBuffer.clear();
+    g.DebugLogBuf.clear();
+
+    g.Initialized = false;
+}

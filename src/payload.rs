@@ -41,19 +41,19 @@ impl ImGuiPayload {
         self.Delivery = false;
     }
 
-    // bool IsDataType( * const char type ) const { return DataFrameCount != - 1 & & strcmp( type, DataType) == 0; }
+    // IsDataType: bool( * const char type ) const { return DataFrameCount != - 1 & & strcmp( type, DataType) == 0; }
     pub unsafe fn IsDataType(&mut self, data_type: *const c_char) -> bool {
         self.DataFrameCount != -1 && libc::strcmp(data_type, self.DataType.as_ptr()) == 0
     }
 
 
-    // bool IsPreview() const { return Preview; }
+    // IsPreview: bool() const { return Preview; }
     pub fn IsPreview(&mut self) -> bool {
         self.Preview
     }
 
 
-    // bool IsDelivery() const { return Delivery; }
+    // IsDelivery: bool() const { return Delivery; }
     pub fn IsDelivery(&mut self) -> bool {
         self.Delivery
     }

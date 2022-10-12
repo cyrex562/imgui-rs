@@ -91,7 +91,7 @@ typedef c_int            stbrp_coord;
 // #define STBRP__MAXVAL  0x7fffffff
 // Mostly for internal use, but this is the maximum supported coordinate value.
 
-STBRP_DEF c_int stbrp_pack_rects (stbrp_context *context, stbrp_rect *rects, num_rects: c_int);
+STBRP_DEF stbrp_pack_rects: c_int (stbrp_context *context, stbrp_rect *rects, num_rects: c_int);
 // Assign packed locations to rectangles. The rectangles are of type
 // 'stbrp_rect' defined below, stored in the array 'rects', and there
 // are 'num_rects' many of them.
@@ -244,11 +244,12 @@ STBRP_DEF c_void stbrp_setup_heuristic(stbrp_context *context, heuristic: c_int)
 
 STBRP_DEF c_void stbrp_setup_allow_out_of_mem(stbrp_context *context, allow_out_of_mem: c_int)
 {
-   if allow_out_of_mem{      // if it's ok to run out of memory, then don't bother aligning them;
+   if (allow_out_of_mem)
+      // if it's ok to run out of memory, then don't bother aligning them;
       // this gives better packing, but may fail due to OOM (even though
       // the rectangles easily fit). @TODO a smarter approach would be to only
       // quantize once we've hit OOM, then we could get rid of this parameter.
-      context.align = 1; }
+      context.align = 1;
    else {
       // if it's not ok to run out of memory, then quantize the widths
       // so that num_nodes is always enough nodes.
@@ -266,7 +267,7 @@ STBRP_DEF c_void stbrp_init_target(stbrp_context *context, width: c_int, height:
    let mut i: c_int = 0;
 
    for (i=0; i < num_nodes-1; ++i)
-      nodes[i].next = &nodes[i+1];
+      nodes[i].next = &nodes[i1];
    nodes[i].next= null_mut();
    context.init_mode = STBRP__INIT_skyline;
    context.heuristic = STBRP_HEURISTIC_Skyline_default;
@@ -287,7 +288,7 @@ STBRP_DEF c_void stbrp_init_target(stbrp_context *context, width: c_int, height:
 }
 
 // find minimum y position if it starts at x1
-static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, x0: c_int, width: c_int, c_int *pwaste)
+static stbrp__skyline_find_min_y: c_int(stbrp_context *c, stbrp_node *first, x0: c_int, width: c_int, c_int *pwaste)
 {
    stbrp_node *node = first;
    let x1: c_int = x0 + width;
@@ -299,10 +300,10 @@ static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, x0: 
 
    #if 0
    // skip in case we're past the node
-   while (node. <= x0)
+   while (node.next->x <= x0)
       ++node;
    #else
-   STBRP_ASSERT(node. > x0); // we ended up handling this in the caller for efficiency
+   STBRP_ASSERT(node.next->x > x0); // we ended up handling this in the caller for efficiency
    #endif
 
    STBRP_ASSERT(node.x <= x0);
@@ -318,15 +319,15 @@ static c_int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, x0: 
          waste_area += visited_width * (node.y - min_y);
          min_y = node.y;
          // the first time through, visited_width might be reduced
-         if node.x < x0{            visited_width += node. - x0;
- }
+         if (node.x < x0)
+            visited_width += node.next->x - x0;
+         else
+            visited_width += node.next->x - node.x;
       } else {
          // add waste area
-         let under_width: c_int = node. - node.x;
-         if under_width + visited_width > width
-{
+         let under_width: c_int = node.next->x - node.x;
+         if (under_width + visited_width > width)
             under_width = width - visited_width;
-}
          waste_area += under_width * (min_y - node.y);
          visited_width += under_width;
       }
@@ -349,7 +350,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, width: c
    stbrp__findresult fr;
    stbrp_node **prev, *node, *tail, **best= null_mut();
 
-   // align to multiple of c.align
+   // align to multiple of c->align
    width = (width + c.align - 1);
    width -= width % c.align;
    STBRP_ASSERT(width % c.align == 0);
@@ -387,7 +388,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, width: c
       node = node.next;
    }
 
-   best_x = (best == null_mut()) ? 0 : (*best).x;
+   best_x = (best == null_mut()) ? 0 : (*best)->x;
 
    // if doing best-fit (B0f32), we also have to try aligning right edge to each node position
    //
@@ -418,11 +419,11 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context *c, width: c
          y: c_int,waste;
          STBRP_ASSERT(xpos >= 0);
          // find the left position that matches this
-         while (node. <= xpos) {
+         while (node.next->x <= xpos) {
             prev = &node.next;
             node = node.next;
          }
-         STBRP_ASSERT(node. > xpos && node.x <= xpos);
+         STBRP_ASSERT(node.next->x > xpos && node.x <= xpos);
          y = stbrp__skyline_find_min_y(c, node, xpos, width, &waste);
          if (y + height <= c.height) {
             if (y <= best_y) {
@@ -483,7 +484,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, w
 
    // from here, traverse cur and free the nodes, until we get to one
    // that shouldn't be freed
-   while (cur.next && cur. <= res.x + width) {
+   while (cur.next && cur.next->x <= res.x + width) {
       stbrp_node *next = cur.next;
       // move the current node to the free list
       cur.next = context.free_head;
@@ -494,15 +495,13 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, w
    // stitch the list back in
    node.next = cur;
 
-   if cur.x < res.x + width
-{
+   if (cur.x < res.x + width)
       cur.x = (stbrp_coord) (res.x + width);
-}
 
 // #ifdef _DEBUG
    cur = context.active_head;
    while (cur.x < context.width) {
-      STBRP_ASSERT(cur.x < cur.);
+      STBRP_ASSERT(cur.x < cur.next->x);
       cur = cur.next;
    }
    STBRP_ASSERT(cur.next == null_mut());
@@ -519,36 +518,32 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, w
          cur = cur.next;
          ++count;
       }
-      STBRP_ASSERT(count == context.num_nodes+2);
+      STBRP_ASSERT(count == context.num_nodes2);
    }
 // #endif
 
    return res;
 }
 
-static c_int STBRP__CDECL rect_height_compare(const c_void *a, const c_void *b)
+static STBRP__CDECL: c_int rect_height_compare(const c_void *a, const c_void *b)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
-   if p.h > q.h
-{
+   if (p.h > q.h)
       return -1;
-}
-   if p.h < q.h
-{
+   if (p.h < q.h)
       return  1;
-}
    return (p.w > q.w) ? -1 : (p.w < q.w);
 }
 
-static c_int STBRP__CDECL rect_original_order(const c_void *a, const c_void *b)
+static STBRP__CDECL: c_int rect_original_order(const c_void *a, const c_void *b)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
    return (p.was_packed < q.was_packed) ? -1 : (p.was_packed > q.was_packed);
 }
 
-STBRP_DEF c_int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, num_rects: c_int)
+STBRP_DEF stbrp_pack_rects: c_int(stbrp_context *context, stbrp_rect *rects, num_rects: c_int)
 {
    i: c_int, all_rects_packed = 1;
 
@@ -580,10 +575,8 @@ STBRP_DEF c_int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, num_
    // set was_packed flags and all_rects_packed status
    for (i=0; i < num_rects; ++i) {
       rects[i].was_packed = !(rects[i].x == STBRP__MAXVAL && rects[i].y == STBRP__MAXVAL);
-      if !rects[i].was_packed
-{
+      if (!rects[i].was_packed)
          all_rects_packed = 0;
-}
    }
 
    // return the all_rects_packed status

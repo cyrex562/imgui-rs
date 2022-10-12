@@ -6,7 +6,7 @@ use crate::input_source::ImGuiInputSource;
 use crate::key::ImGuiKey;
 use crate::type_defs::ImGuiID;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone,Copy)]
 pub struct ImGuiInputEvent {
     pub Type: ImGuiInputEventType,
     pub Source: ImGuiInputSource,
@@ -33,48 +33,46 @@ pub struct ImGuiInputEvent {
 
 // FIXME: Structures in the union below need to be declared as anonymous unions appears to be an extension?
 // Using ImVec2::new() would fail on Clang 'union member 'MousePos' has a non-trivial default constructor'
-#[derive(Default, Debug, Clone)]
-pub struct ImGuiInputEventMousePos {
+#[derive(Default,Debug,Clone,Copy)]
+pub struct ImGuiInputEventMousePos      {
     pub PosX: c_float,
-    pub PosY: c_float,
-}
+    pub PosY: c_float }
 
-#[derive(Default, Debug, Clone)]
-pub struct ImGuiInputEventMouseWheel {
-    // WheelX: c_float, WheelY;
+#[derive(Default,Debug,Clone,Copy)]
+pub struct ImGuiInputEventMouseWheel    {
+    // c_float WheelX, WheelY;
     pub WheelX: c_float,
-    pub WheelY: c_float,
+    pub WheelY: c_float
 }
 
-#[derive(Default, Debug, Clone)]
-pub struct ImGuiInputEventMouseButton {
+#[derive(Default,Debug,Clone,Copy)]
+pub struct ImGuiInputEventMouseButton   {
     pub Button: c_int,
-    pub Down: bool,
-}
+    pub Down: bool }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default,Debug,Clone,Copy)]
 pub struct ImGuiInputEventMouseViewport {
     // ImGuiID pub(crate) HoveredViewportID;
     pub HoveredViewportID: ImGuiID,
 }
 
-#[derive(Default, Debug, Clone)]
-struct ImGuiInputEventKey {
+#[derive(Default,Debug,Clone,Copy)]
+struct ImGuiInputEventKey           {
     // ImGuiKey pub(crate) Key;
     pub Key: ImGuiKey,
-    // bool pub(crate) Down;
+    // pub: bool(crate) Down;
     pub Down: Down,
     // let mut AnalogValue: c_float = 0f32;
 }
 
-#[derive(Default, Debug, Clone)]
-struct ImGuiInputEventText {
-    // c_uint Char;
+#[derive(Default,Debug,Clone,Copy)]
+struct ImGuiInputEventText          {
+    // Char: c_uint;
     pub Char: c_uint,
 }
 
-#[derive(Default, Debug, Clone)]
-struct ImGuiInputEventAppFocused {
-    // bool Focused;
+#[derive(Default,Debug,Clone.Copy)]
+struct ImGuiInputEventAppFocused    {
+    // Focused: bool;
     pub Focused: bool,
 }

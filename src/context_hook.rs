@@ -1,9 +1,9 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
 
-use libc::{c_int, c_void};
 use crate::context::ImGuiContext;
 use crate::type_defs::ImGuiID;
+use libc::{c_int, c_void};
 
 pub type ImGuiContextHookType = c_int;
 
@@ -29,6 +29,5 @@ pub struct ImGuiContextHook {
     pub Owner: ImGuiID,
     pub Callback: ImGuiContextHookCallback,
     pub UserData: *mut c_void,
-
     // ImGuiContextHook()          { memset(this, 0, sizeof(*this)); }
 }
