@@ -13,7 +13,7 @@ use crate::vec4::ImVec4;
 // - The ClipRect/TextureId/VtxOffset fields must be contiguous as we memcmp() them together (this is asserted for).
 #[derive(Default, Debug, Clone)]
 pub struct ImDrawCmd {
-    pub ClipRect: ImRect,
+    pub ClipRect: ImVec4,
     // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData.DisplayPos to get clipping rectangle in "viewport" coordinates
     pub TextureId: ImTextureID,
     // 4-8  // User-provided texture ID. Set by user in ImfontAtlas::SetTexID() for fonts or passed to Image*() functions. Ignore if never using images or multiple fonts atlas.

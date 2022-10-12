@@ -10,6 +10,7 @@ use crate::table_column_sort_specs::ImGuiTableColumnSortSpecs;
 use crate::table_flags::ImGuiTableFlags;
 use crate::table_instance_data::ImGuiTableInstanceData;
 use crate::table_row_flags::ImGuiTableRowFlags;
+use crate::table_sort_specs::ImGuiTableSortSpecs;
 use crate::table_temp_data::ImGuiTableTempData;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::window::ImGuiWindow;

@@ -370,26 +370,36 @@ static c_int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, x: c_float, y: c_fl
    // search rows to find one that straddles 'y'
    while (i < n) {
       STB_TEXTEDIT_LAYOUTROW(&r, str, i);
-      if (r.num_chars <= 0)
+      if r.num_chars <= 0
+{
          return n;
+}
 
-      if (i==0 && y < base_y + r.ymin)
+      if i==0 && y < base_y + r.ymin
+{
          return 0;
+}
 
-      if (y < base_y + r.ymax)
+      if y < base_y + r.ymax
+{
          break;
+}
 
       i += r.num_chars;
       base_y += r.baseline_y_delta;
    }
 
    // below all text, return 'after' last character
-   if (i >= n)
+   if i >= n
+{
       return n;
+}
 
    // check if it's before the beginning of the line
-   if (x < r.x0)
+   if x < r.x0
+{
       return i;
+}
 
    // check if it's before the end of the line
    if (x < r.x1) {
@@ -398,10 +408,11 @@ static c_int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, x: c_float, y: c_fl
       for (k=0; k < r.num_chars; ++k) {
          let w: c_float =  STB_TEXTEDIT_GETWIDTH(str, i, k);
          if (x < prev_x+w) {
-            if (x < prev_x+w/2)
+            if x < prev_x+w/2
+{
                return k+i;
-            else
-               return k+i+1;
+}
+
          }
          prev_x += w;
       }
@@ -409,10 +420,11 @@ static c_int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, x: c_float, y: c_fl
    }
 
    // if the last character is a newline, return that. otherwise return 'after' the last character
-   if (STB_TEXTEDIT_GETCHAR(str, i+r.num_chars-1) == STB_TEXTEDIT_NEWLINE)
+   if STB_TEXTEDIT_GETCHAR(str, i+r.num_chars-1) == STB_TEXTEDIT_NEWLINE
+{
       return i+r.num_chars-1;
-   else
-      return i+r.num_chars;
+}
+
 }
 
 // API click: on mouse down, move the cursor to the clicked location, and reset the selection
@@ -447,8 +459,10 @@ static c_void stb_textedit_drag(STB_TEXTEDIT_STRING *str, STB_TexteditState *sta
       y = r.ymin;
    }
 
-   if (state.select_start == state.select_end)
+   if state.select_start == state.select_end
+{
       state.select_start = state.cursor;
+}
 
    p = stb_text_locate_coord(str, x, y);
    state.cursor = state.select_end = p;
@@ -514,8 +528,10 @@ static c_void stb_textedit_find_charpos(StbFindState *find, STB_TEXTEDIT_STRING 
 
    for(;;) {
       STB_TEXTEDIT_LAYOUTROW(&r, str, i);
-      if (n < i + r.num_chars)
+      if n < i + r.num_chars
+{
          break;
+}
       prev_start = i;
       i += r.num_chars;
       find.y += r.baseline_y_delta;
@@ -542,8 +558,10 @@ static c_void stb_textedit_clamp(STB_TEXTEDIT_STRING *str, STB_TexteditState *st
       if (state.select_start > n) state.select_start = n;
       if (state.select_end   > n) state.select_end = n;
       // if clamping forced them to be equal, move the cursor to match
-      if (state.select_start == state.select_end)
+      if state.select_start == state.select_end
+{
          state.cursor = state.select_start;
+}
    }
    if (state.cursor > n) state.cursor = n;
 }
@@ -618,8 +636,10 @@ static c_int stb_textedit_move_to_word_previous( STB_TEXTEDIT_STRING *str, c_int
    while( c >= 0 && !is_word_boundary( str, c ) )
       --c;
 
-   if( c < 0 )
+   if  c < 0
+{
       c = 0;
+}
 
    return c;
 }
@@ -634,8 +654,10 @@ static c_int stb_textedit_move_to_word_next( STB_TEXTEDIT_STRING *str, c_int c )
    while( c < len && !is_word_boundary( str, c ) )
       ++c;
 
-   if( c > len )
+   if  c > len
+{
       c = len;
+}
 
    return c;
 }
@@ -647,10 +669,11 @@ static c_int stb_textedit_move_to_word_next( STB_TEXTEDIT_STRING *str, c_int c )
 // update selection and cursor to match each other
 static c_void stb_textedit_prep_selection_at_cursor(STB_TexteditState *state)
 {
-   if (!STB_TEXT_HAS_SELECTION(state))
+   if !STB_TEXT_HAS_SELECTION(state)
+{
       state.select_start = state.select_end = state.cursor;
-   else
-      state.cursor = state.select_end;
+}
+
 }
 
 // API cut: delete selection
@@ -696,8 +719,10 @@ retry:
             STB_TEXTEDIT_CHARTYPE ch = (STB_TEXTEDIT_CHARTYPE) c;
 
             // can't add newline in single-line mode
-            if (c == '\n' && state.single_line)
+            if c == '\n' && state.single_line
+{
                break;
+}
 
             if (state.insert_mode && !STB_TEXT_HAS_SELECTION(state) && state.cursor < STB_TEXTEDIT_STRINGLEN(str)) {
                stb_text_makeundo_replace(str, state, state.cursor, 1, 1);
@@ -736,20 +761,25 @@ retry:
 
       case STB_TEXTEDIT_K_LEFT:
          // if currently there's a selection, move cursor to start of selection
-         if (STB_TEXT_HAS_SELECTION(state))
+         if STB_TEXT_HAS_SELECTION(state)
+{
             stb_textedit_move_to_first(state);
+}
          else
-            if (state.cursor > 0)
+            if state.cursor > 0
+{
                --state.cursor;
+}
          state.has_preferred_x = 0;
          break;
 
       case STB_TEXTEDIT_K_RIGHT:
          // if currently there's a selection, move cursor to end of selection
-         if (STB_TEXT_HAS_SELECTION(state))
+         if STB_TEXT_HAS_SELECTION(state)
+{
             stb_textedit_move_to_last(str, state);
-         else
-            ++state.cursor;
+}
+
          stb_textedit_clamp(str, state);
          state.has_preferred_x = 0;
          break;
@@ -758,16 +788,20 @@ retry:
          stb_textedit_clamp(str, state);
          stb_textedit_prep_selection_at_cursor(state);
          // move selection left
-         if (state.select_end > 0)
+         if state.select_end > 0
+{
             --state.select_end;
+}
          state.cursor = state.select_end;
          state.has_preferred_x = 0;
          break;
 
 // #ifdef STB_TEXTEDIT_MOVEWORDLEFT
       case STB_TEXTEDIT_K_WORDLEFT:
-         if (STB_TEXT_HAS_SELECTION(state))
+         if STB_TEXT_HAS_SELECTION(state)
+{
             stb_textedit_move_to_first(state);
+}
          else {
             state.cursor = STB_TEXTEDIT_MOVEWORDLEFT(str, state.cursor);
             stb_textedit_clamp( str, state );
@@ -775,8 +809,10 @@ retry:
          break;
 
       case STB_TEXTEDIT_K_WORDLEFT | STB_TEXTEDIT_K_SHIFT:
-         if( !STB_TEXT_HAS_SELECTION( state ) )
+         if  !STB_TEXT_HAS_SELECTION( state )
+{
             stb_textedit_prep_selection_at_cursor(state);
+}
 
          state.cursor = STB_TEXTEDIT_MOVEWORDLEFT(str, state.cursor);
          state.select_end = state.cursor;
@@ -787,8 +823,10 @@ retry:
 
 // #ifdef STB_TEXTEDIT_MOVEWORDRIGHT
       case STB_TEXTEDIT_K_WORDRIGHT:
-         if (STB_TEXT_HAS_SELECTION(state))
+         if STB_TEXT_HAS_SELECTION(state)
+{
             stb_textedit_move_to_last(str, state);
+}
          else {
             state.cursor = STB_TEXTEDIT_MOVEWORDRIGHT(str, state.cursor);
             stb_textedit_clamp( str, state );
@@ -796,8 +834,10 @@ retry:
          break;
 
       case STB_TEXTEDIT_K_WORDRIGHT | STB_TEXTEDIT_K_SHIFT:
-         if( !STB_TEXT_HAS_SELECTION( state ) )
+         if  !STB_TEXT_HAS_SELECTION( state )
+{
             stb_textedit_prep_selection_at_cursor(state);
+}
 
          state.cursor = STB_TEXTEDIT_MOVEWORDRIGHT(str, state.cursor);
          state.select_end = state.cursor;
@@ -831,8 +871,10 @@ retry:
             goto retry;
          }
 
-         if (sel)
+         if sel
+{
             stb_textedit_prep_selection_at_cursor(state);
+}
          else if (STB_TEXT_HAS_SELECTION(state))
             stb_textedit_move_to_last(str, state);
 
@@ -844,13 +886,17 @@ retry:
             x: c_float, goal_x = state.has_preferred_x ? state.preferred_x : find.x;
             let start: c_int = find.first_char + find.length;
 
-            if (find.length == 0)
+            if find.length == 0
+{
                break;
+}
 
             // [DEAR IMGUI]
             // going down while being on the last line shouldn't bring us to that line end
-            if (STB_TEXTEDIT_GETCHAR(str, find.first_char + find.length - 1) != STB_TEXTEDIT_NEWLINE)
+            if STB_TEXTEDIT_GETCHAR(str, find.first_char + find.length - 1) != STB_TEXTEDIT_NEWLINE
+{
                break;
+}
 
             // now find character position down a row
             state.cursor = start;
@@ -859,12 +905,16 @@ retry:
             for (i=0; i < row.num_chars; ++i) {
                let dx: c_float =  STB_TEXTEDIT_GETWIDTH(str, start, i);
                #ifdef STB_TEXTEDIT_GETWIDTH_NEWLINE
-               if (dx == STB_TEXTEDIT_GETWIDTH_NEWLINE)
+               if dx == STB_TEXTEDIT_GETWIDTH_NEWLINE
+{
                   break;
+}
                #endif
                x += dx;
-               if (x > goal_x)
+               if x > goal_x
+{
                   break;
+}
                ++state.cursor;
             }
             stb_textedit_clamp(str, state);
@@ -872,8 +922,10 @@ retry:
             state.has_preferred_x = 1;
             state.preferred_x = goal_x;
 
-            if (sel)
+            if sel
+{
                state.select_end = state.cursor;
+}
 
             // go to next line
             find.first_char = find.first_char + find.length;
@@ -898,8 +950,10 @@ retry:
             goto retry;
          }
 
-         if (sel)
+         if sel
+{
             stb_textedit_prep_selection_at_cursor(state);
+}
          else if (STB_TEXT_HAS_SELECTION(state))
             stb_textedit_move_to_first(state);
 
@@ -911,8 +965,10 @@ retry:
             c_float  x, goal_x = state.has_preferred_x ? state.preferred_x : find.x;
 
             // can only go up if there's a previous row
-            if (find.prev_first == find.first_char)
+            if find.prev_first == find.first_char
+{
                break;
+}
 
             // now find character position up a row
             state.cursor = find.prev_first;
@@ -921,12 +977,16 @@ retry:
             for (i=0; i < row.num_chars; ++i) {
                let dx: c_float =  STB_TEXTEDIT_GETWIDTH(str, find.prev_first, i);
                #ifdef STB_TEXTEDIT_GETWIDTH_NEWLINE
-               if (dx == STB_TEXTEDIT_GETWIDTH_NEWLINE)
+               if dx == STB_TEXTEDIT_GETWIDTH_NEWLINE
+{
                   break;
+}
                #endif
                x += dx;
-               if (x > goal_x)
+               if x > goal_x
+{
                   break;
+}
                ++state.cursor;
             }
             stb_textedit_clamp(str, state);
@@ -934,8 +994,10 @@ retry:
             state.has_preferred_x = 1;
             state.preferred_x = goal_x;
 
-            if (sel)
+            if sel
+{
                state.select_end = state.cursor;
+}
 
             // go to previous line
             // (we need to scan previous line the hard way. maybe we could expose this as a new API function?)
@@ -950,20 +1012,26 @@ retry:
 
       case STB_TEXTEDIT_K_DELETE:
       case STB_TEXTEDIT_K_DELETE | STB_TEXTEDIT_K_SHIFT:
-         if (STB_TEXT_HAS_SELECTION(state))
+         if STB_TEXT_HAS_SELECTION(state)
+{
             stb_textedit_delete_selection(str, state);
+}
          else {
             let n: c_int = STB_TEXTEDIT_STRINGLEN(str);
-            if (state.cursor < n)
+            if state.cursor < n
+{
                stb_textedit_delete(str, state, state.cursor, 1);
+}
          }
          state.has_preferred_x = 0;
          break;
 
       case STB_TEXTEDIT_K_BACKSPACE:
       case STB_TEXTEDIT_K_BACKSPACE | STB_TEXTEDIT_K_SHIFT:
-         if (STB_TEXT_HAS_SELECTION(state))
+         if STB_TEXT_HAS_SELECTION(state)
+{
             stb_textedit_delete_selection(str, state);
+}
          else {
             stb_textedit_clamp(str, state);
             if (state.cursor > 0) {
@@ -1016,8 +1084,10 @@ retry:
       case STB_TEXTEDIT_K_LINESTART:
          stb_textedit_clamp(str, state);
          stb_textedit_move_to_first(state);
-         if (state.single_line)
+         if state.single_line
+{
             state.cursor = 0;
+}
          else while (state.cursor > 0 && STB_TEXTEDIT_GETCHAR(str, state.cursor-1) != STB_TEXTEDIT_NEWLINE)
             --state.cursor;
          state.has_preferred_x = 0;
@@ -1030,8 +1100,10 @@ retry:
          let n: c_int = STB_TEXTEDIT_STRINGLEN(str);
          stb_textedit_clamp(str, state);
          stb_textedit_move_to_first(state);
-         if (state.single_line)
+         if state.single_line
+{
              state.cursor = n;
+}
          else while (state.cursor < n && STB_TEXTEDIT_GETCHAR(str, state.cursor) != STB_TEXTEDIT_NEWLINE)
              ++state.cursor;
          state.has_preferred_x = 0;
@@ -1044,8 +1116,10 @@ retry:
       case STB_TEXTEDIT_K_LINESTART | STB_TEXTEDIT_K_SHIFT:
          stb_textedit_clamp(str, state);
          stb_textedit_prep_selection_at_cursor(state);
-         if (state.single_line)
+         if state.single_line
+{
             state.cursor = 0;
+}
          else while (state.cursor > 0 && STB_TEXTEDIT_GETCHAR(str, state.cursor-1) != STB_TEXTEDIT_NEWLINE)
             --state.cursor;
          state.select_end = state.cursor;
@@ -1059,8 +1133,10 @@ retry:
          let n: c_int = STB_TEXTEDIT_STRINGLEN(str);
          stb_textedit_clamp(str, state);
          stb_textedit_prep_selection_at_cursor(state);
-         if (state.single_line)
+         if state.single_line
+{
              state.cursor = n;
+}
          else while (state.cursor < n && STB_TEXTEDIT_GETCHAR(str, state.cursor) != STB_TEXTEDIT_NEWLINE)
             ++state.cursor;
          state.select_end = state.cursor;
@@ -1093,8 +1169,10 @@ static c_void stb_textedit_discard_undo(StbUndoState *state)
          state.undo_char_point -= n;
          STB_TEXTEDIT_memmove(state.undo_char, state.undo_char + n,  (state.*mut undo_char_pointsizeof(STB_TEXTEDIT_CHARTYPE)));
          for (i=0; i < state.undo_point; ++i)
-            if (state.undo_rec[i].char_storage >= 0)
-               state.undo_rec[i].char_storage -= n; // @OPTIMIZE: get rid of char_storage and infer it
+            if state.undo_rec[i].char_storage >= 0
+{
+               state.undo_rec[i].char_storage -= n;
+} // @OPTIMIZE: get rid of char_storage and infer it
       }
       --state.undo_point;
       STB_TEXTEDIT_memmove(state.undo_rec, state.undo_rec+1,  (state.*mut undo_pointsizeof(state.undo_rec[0])));
@@ -1118,8 +1196,10 @@ static c_void stb_textedit_discard_redo(StbUndoState *state)
          STB_TEXTEDIT_memmove(state.undo_char + state.redo_char_point, state.undo_char + state.redo_char_point-n,  ((STB_TEXTEDIT_UNDOCHARCOUNT - state.redo_char_point)*sizeof(STB_TEXTEDIT_CHARTYPE)));
          // adjust the position of all the other records to account for above memmove
          for (i=state.redo_point; i < k; ++i)
-            if (state.undo_rec[i].char_storage >= 0)
+            if state.undo_rec[i].char_storage >= 0
+{
                state.undo_rec[i].char_storage += n;
+}
       }
       // now move all the redo records towards the end of the buffer; the first one is at 'redo_point'
       // [DEAR IMGUI]
@@ -1142,8 +1222,10 @@ static StbUndoRecord *stb_text_create_undo_record(StbUndoState *state, numchars:
 
    // if we have no free records, we have to make room, by sliding the
    // existing records down
-   if (state.undo_point == STB_TEXTEDIT_UNDOSTATECOUNT)
+   if state.undo_point == STB_TEXTEDIT_UNDOSTATECOUNT
+{
       stb_textedit_discard_undo(state);
+}
 
    // if the characters to store won't possibly fit in the buffer, we can't undo
    if (numchars > STB_TEXTEDIT_UNDOCHARCOUNT) {
@@ -1162,8 +1244,10 @@ static StbUndoRecord *stb_text_create_undo_record(StbUndoState *state, numchars:
 static STB_TEXTEDIT_CHARTYPE *stb_text_createundo(StbUndoState *state, pos: c_int, insert_len: c_int, delete_len: c_int)
 {
    StbUndoRecord *r = stb_text_create_undo_record(state, insert_len);
-   if (r == null_mut())
+   if r == null_mut()
+{
       return null_mut();
+}
 
    r.where = pos;
    r.insert_length = (STB_TEXTEDIT_POSITIONTYPE) insert_len;
@@ -1183,8 +1267,10 @@ static c_void stb_text_undo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
 {
    StbUndoState *s = &state.undostate;
    StbUndoRecord u, *r;
-   if (s.undo_point == 0)
+   if s.undo_point == 0
+{
       return;
+}
 
    // we need to do two things: apply the undo record, and create a redo record
    u = s.undo_rec[s.undo_point-1];
@@ -1215,8 +1301,10 @@ static c_void stb_text_undo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
          // there's definitely room to store the characters eventually
          while (s.undo_char_point + u.delete_length > s.redo_char_point) {
             // should never happen:
-            if (s.redo_point == STB_TEXTEDIT_UNDOSTATECOUNT)
+            if s.redo_point == STB_TEXTEDIT_UNDOSTATECOUNT
+{
                return;
+}
             // there's currently not enough room, so discard a redo record
             stb_textedit_discard_redo(s);
          }
@@ -1251,8 +1339,10 @@ static c_void stb_text_redo(STB_TEXTEDIT_STRING *str, STB_TexteditState *state)
 {
    StbUndoState *s = &state.undostate;
    StbUndoRecord *u, r;
-   if (s.redo_point == STB_TEXTEDIT_UNDOSTATECOUNT)
+   if s.redo_point == STB_TEXTEDIT_UNDOSTATECOUNT
+{
       return;
+}
 
    // we need to do two things: apply the redo record, and create an undo record
    u = &s.undo_rec[s.undo_point];

@@ -2,7 +2,7 @@
 
 use libc::c_float;
 use crate::condition::ImGuiCond;
-use crate::next_item_data_flags::ImGuiNextItemDataFlags;
+use crate::next_item_data_flags::{ImGuiNextItemDataFlags, ImGuiNextItemDataFlags_None};
 use crate::type_defs::ImGuiID;
 
 #[derive(Default, Debug, Clone)]

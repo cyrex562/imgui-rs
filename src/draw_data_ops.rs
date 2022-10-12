@@ -23,10 +23,10 @@ pub unsafe fn GetDrawData() -> *mut ImDrawData {
 // static c_void AddDrawListToDrawData(out_list: *mut  Vec<*mut ImDrawList>, ImDrawList* draw_list)
 pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mut ImDrawList)
 {
-    if draw_list.CmdBuffer.Size == 0 {
+    if draw_list.CmdBuffer.len() == 0 {
         return;
     }
-    if draw_list.CmdBuffer.Size == 1 && draw_list.CmdBuffer[0].ElemCount == 0 && draw_list.CmdBuffer[0].UserCallback == null_mut() {
+    if draw_list.CmdBuffer.len() == 1 && draw_list.CmdBuffer[0].ElemCount == 0 && draw_list.CmdBuffer[0].UserCallback == null_mut() {
         return;
     }
 
@@ -47,12 +47,12 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     //       Some graphics API such as GL ES 1/2 don't have a way to offset the starting vertex so it is not supported for them.
     //   (B) Or handle 32-bit indices in your renderer backend, and uncomment '#define ImDrawIdx unsigned int' line in imconfig.h.
     //       Most example backends already support this. For example, the OpenGL example code detect index size at compile-time:
-    //         glDrawElements(GL_TRIANGLES, (GLsizei)pcmd.ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
+    //         glDrawElements(GL_TRIANGLES, (GLsizei)pcmd.ElemCount, sizeof == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
     //       Your own engine or render API may use different parameters or function calls to specify index sizes.
     //       2 and 4 bytes indices are generally supported by most graphics API.
     // - If for some reason neither of those solutions works for you, a workaround is to call BeginChild()/EndChild() before reaching
     //   the 64K limit to split your draw commands in multiple draw lists.
-    if libc::sizeof(ImDrawIdx) == 2 {}
+    if libc::sizeof == 2 {}
         // IM_ASSERT(draw_list._VtxCurrentIdx < (1 << 16) && "Too many vertices in ImDrawList using 16-bit indices. Read comment above");
 
     out_list.push(draw_list);

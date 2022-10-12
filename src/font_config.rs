@@ -48,3 +48,19 @@ pub struct ImFontConfig {
 
     // ImFontConfig();
 }
+
+impl ImFontConfig {
+    pub fn new() -> Self {
+        let mut out = Self::default();
+        
+        // memset(this, 0, sizeof(*this));
+        out.FontDataOwnedByAtlas = true;
+        out.OversampleH = 3; // FIXME: 2 may be a better default?
+        out.OversampleV = 1;
+        out.GlyphMaxAdvanceX = f32::MAX;
+        out.RasterizerMultiply = 1f32;
+        out.EllipsisChar = -1;
+        
+        out
+    }
+}

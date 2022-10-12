@@ -13,6 +13,7 @@ use std::ptr::null_mut;
 use libc::{c_float, c_int, c_short, c_void};
 use crate::draw_data::{ImDrawData, ImDrawDataBuilder};
 use crate::draw_list::ImDrawList;
+use crate::math::ImMax;
 use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
@@ -98,14 +99,14 @@ impl ImGuiViewport {
 
     // ImVec2              GetCenter() const       { return ImVec2::new(Pos.x + Size.x * 0.5f32, Pos.y + Size.y * 0.5f32); }
     pub fn GetCenter(&self) -> ImVec2 {
-        ImVec2::new2(self.Pos.x + self.Size.x * 0.5f32, self.Pos.y + self.Size.y * 0.5f32)
+        ImVec2::new2(self.Pos.x.clone() + self.Size.x.clone() * 0.5f32, self.Pos.y.clone() + self.Size.y.clone() * 0.5f32)
     }
 
     // ImVec2              GetWorkCenter() const   { return ImVec2::new(WorkPos.x + WorkSize.x * 0.5f32, WorkPos.y + WorkSize.y * 0.5f32); }
     pub fn GetWorkCenter(&self) -> ImVec2 {
         ImVec2::new2(
-            self.WorkPos.x + self.WorkSize.x * 0.5f32,
-            self.WorkPos.y + self.WorkSize.y * 0.5f32,
+            self.WorkPos.x.clone() + self.WorkSize.x.clone() * 0.5f32,
+            self.WorkPos.y.clone() + self.WorkSize.y.clone() * 0.5f32,
         )
     }
 
@@ -143,15 +144,15 @@ impl ImGuiViewport {
     // Calculate work rect pos/size given a set of offset (we have 1 pair of offset for rect locked from last frame data, and 1 pair for currently building rect)
 //     ImVec2  CalcWorkRectPos(const off_min: &ImVec2) const                            { return ImVec2::new(Pos.x + off_min.x, Pos.y + off_min.y); }
     pub fn CalcWorkRectPos(&self, off_min: &ImVec2) -> ImVec2 {
-        ImVec2::new2(self.Pos.x + off_min.x, self.Pos.y + off_min.y)
+        ImVec2::new2(self.Pos.x.clone() + off_min.x.clone(), self.Pos.y.clone() + off_min.y.clone())
     }
 
 
     // ImVec2  CalcWorkRectSize(const off_min: &ImVec2, const off_max: &ImVec2) const    { return ImVec2::new(ImMax(0f32, Size.x - off_min.x + off_max.x), ImMax(0f32, Size.y - off_min.y + off_max.y)); }
     pub fn CalcWorkRectSize(&self, off_min: &ImVec2, off_max: &ImVec2) -> ImVec2 {
         ImVec2::new2(
-            ImMax(0f32, self.Size.x - off_min.x + off_max.x),
-            ImMax(0f32, self.Size.y - off_min.y + off_max.y),
+            ImMax(0f32, self.Size.x.clone() - off_min.x.clone() + off_max.x.clone()),
+            ImMax(0f32, self.Size.y.clone() - off_min.y.clone() + off_max.y.clone()),
         )
     }
 
@@ -165,13 +166,13 @@ impl ImGuiViewport {
     // Helpers to retrieve ImRect (we don't need to store BuildWorkRect as every access tend to change it, hence the code asymmetry)
 //     ImRect  GetMainRect() const         { return ImRect::new(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
     pub fn GetMainRect(&self) -> ImRect {
-        ImRect::new4(self.Pos.x, self.Pos.y, self.Pos.x + self.Size.x, self.Pos.y + self.Size.y)
+        ImRect::new4(self.Pos.x.clone(), self.Pos.y.clone(), self.Pos.x.clone() + self.Size.x.clone(), self.Pos.y.clone() + self.Size.y.clone())
     }
 
 
     // ImRect  GetWorkRect() const         { return ImRect::new(WorkPos.x, WorkPos.y, WorkPos.x + WorkSize.x, WorkPos.y + WorkSize.y); }
     pub fn GetWorkRect(&self) -> ImRect {
-        ImRect::new4(self.WorkPos.x, self.WorkPos.y, self.WorkPos.x + self.WorkSize.x, self.WorkPos.y + self.WorkSize.y)
+        ImRect::new4(self.WorkPos.x.clone(), self.WorkPos.y.clone(), self.WorkPos.x.clone() + self.WorkSize.x.clone(), self.WorkPos.y.clone() + self.WorkSize.y.clone())
     }
 
 
@@ -179,6 +180,6 @@ impl ImGuiViewport {
     pub fn GetBuildWorkRect(&self) -> ImRect {
         let pos = self.CalcWorkRectPos(&self.BuildWorkOffsetMin);
         let size = self.CalcWorkRectSize(&self.BuildWorkOffsetMin, &self.BuildWorkOffsetMax);
-        ImRect::new4(pos.x, pos.y, pos.x + size.x, pos.y + size.y)
+        ImRect::new4(pos.x, pos.y, pos.x.clone() + size.x, pos.y.clone() + size.y)
     }
 }

@@ -12,6 +12,7 @@ use crate::direction::{ImGuiDir, ImGuiDir_None};
 use crate::dock_node::ImGuiDockNode;
 use crate::draw_list::ImDrawList;
 use crate::hash_ops::{ImHashData, ImHashStr};
+use crate::id_ops::GetID;
 use crate::imgui::GImGui;
 use crate::item_status_flags::ImGuiItemStatusFlags;
 use crate::layout_type::ImGuiLayoutType;
@@ -20,7 +21,7 @@ use crate::old_columns::ImGuiOldColumns;
 use crate::rect::ImRect;
 use crate::stack_sizes::ImGuiStackSizes;
 use crate::storage::ImGuiStorage;
-use crate::string_ops::ImStrdup;
+use crate::string_ops::{ImStrdup, str_to_const_c_char_ptr};
 use crate::vec2::{ImVec2, ImVec2ih};
 use crate::viewport::ImGuiViewport;
 use crate::win_dock_style::ImGuiWindowDockStyle;
@@ -244,9 +245,9 @@ impl ImGuiWindow {
             NameBufLen: libc::strlen(name) + 1,
             ID: ImHashStr(name, 0, 0),
             ViewportAllowPlatformMonitorExtend: -1,
-            ViewportPos: ImVec2::new(f32::MAX, f32::MAX),
-            MoveId: GetID("#MOVE"),
-            TabId: GetID("#TAB"),
+            ViewportPos: ImVec2::new2(f32::MAX, f32::MAX),
+            MoveId: GetID(str_to_const_c_char_ptr("#MOVE")),
+            TabId: GetID(str_to_const_c_char_ptr("#TAB")),
             ScrollTarget: ImVec2::new2(f32::MAX, f32::MAX),
             ScrollTargetCenterRatio: ImVec2::new2(0.5f32, 0.5f32),
             AutoFitFramesX: -1,
@@ -286,7 +287,7 @@ impl ImGuiWindow {
         if g.DebugHookIdInfo == id {
             DebugHookIdInfo(id, ImGuiDataType_String, begin, end);
         }
-        return id;
+        return id.clone();
     }
 
 
@@ -298,7 +299,7 @@ impl ImGuiWindow {
         if g.DebugHookIdInfo == id {
             DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr, null_mut());
         }
-        return id;
+        return id.clone();
     }
 
 

@@ -199,7 +199,7 @@ pub unsafe fn DebugCheckVersionAndDataLayout(version: *const c_char, sz_io: size
     }
     if (sz_idx != mem::size_of::<ImDrawIdx>()) {
         error = true;
-        // IM_ASSERT(sz_idx == sizeof(ImDrawIdx) && "Mismatched struct layout!");
+        // IM_ASSERT(sz_idx == sizeof && "Mismatched struct layout!");
     }
     return !error;
 }
@@ -495,7 +495,7 @@ pub unsafe fn DebugRenderViewportThumbnaiL(draw_list: &mut ImDrawList, viewport:
         let mut thumb_r: ImRect =  thumb_window.Rect();
         let mut title_r: ImRect =  thumb_window.TitleBarRect();
         thumb_r = ImRect::new(ImFloor(off + thumb_r.Min * scale), ImFloor(off +  thumb_r.Max * scale));
-        title_r = ImRect::new(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2::new(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::new2(0,5)); // Exaggerate title bar height
+        title_r = ImRect::new(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2::new2(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::new2(0,5)); // Exaggerate title bar height
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
         let window_is_focused: bool = (g.NavWindow.is_null() == false && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight);
@@ -616,7 +616,7 @@ pub fn ShowFontAtlas(atlas: *mut ImFontAtlas)
     {
         let tint_col = ImVec4::new2(1f32, 1f32, 1f32, 1f32);
         let border_col = ImVec4::new2(1f32, 1f32, 1f32, 0.5f32);
-        Image(atlas.TexID, ImVec2::new(atlas.TexWidth, atlas.TexHeight), ImVec2::new2(0f32, 0f32), ImVec2::new2(1f32, 1f32), tint_col, border_col);
+        Image(atlas.TexID, ImVec2::new2(atlas.TexWidth, atlas.TexHeight), ImVec2::new2(0f32, 0f32), ImVec2::new2(1f32, 1f32), tint_col, border_col);
         TreePop();
     }
 }
@@ -1229,7 +1229,7 @@ pub unsafe fn ShowMetricsWindow(p_open: *mut bool)
                 buf: [c_char;32];
                 // ImFormatString(buf, IM_ARRAYSIZE(buf), "%d", window.BeginOrderWithinContext);
                 let font_size: c_float =  GetFontSize();
-                draw_list.AddRectFilled(&window.Pos, window.Pos + ImVec2::new(font_size, font_size), IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None);
+                draw_list.AddRectFilled(&window.Pos, window.Pos + ImVec2::new2(font_size, font_size), IM_COL32(200, 100, 100, 255), 0f32, ImDrawFlags_None);
                 draw_list.AddText(&window.Pos, IM_COL32(255, 255, 255, 255), buf, null());
             }
         }
@@ -1420,11 +1420,11 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
     if cmd_count > 0 && draw_list.CmdBuffer.last().unwrap().ElemCount == 0 && draw_list.CmdBuffer.last().unwrap().UserCallback == null_mut() {
         cmd_count -= 1;
     }
-    let mut node_open: bool =  TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, if draw_list._OwnerName { draw_list._OwnerName } else { "" }, draw_list.VtxBuffer.Size, draw_list.IdxBuffer.Size, cmd_count);
+    let mut node_open: bool =  TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, if draw_list._OwnerName { draw_list._OwnerName } else { "" }, draw_list.VtxBuffer.len(), draw_list.IdxBuffer.len(), cmd_count);
     if draw_list == GetWindowDrawList()
     {
         SameLine();
-        TextColored(ImVec4(1f32, 0.4f32, 0.4f32, 1f32), "CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
+        TextColored(ImVec4::new2(1f32, 0.4f32, 0.4f32, 1f32), "CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
         if node_open {
             TreePop();
         }
@@ -1466,8 +1466,8 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
 
         // Calculate approximate coverage area (touched pixel count)
         // This will be in pixels squared as long there's no post-scaling happening to the renderer output.
-        let idx_buffer: *const ImDrawIdx = if draw_list.IdxBuffer.Size > 0 { draw_list.IdxBuffer.Data } else { null_mut() };
-        let vtx_buffer: *const ImDrawVert = draw_list.VtxBuffer.Data + pcmd.VtxOffset;
+        let idx_buffer: *const ImDrawIdx = if draw_list.IdxBuffer.len() > 0 { draw_list.IdxBuffer } else { null_mut() };
+        let vtx_buffer: *const ImDrawVert = draw_list.VtxBuffer + pcmd.VtxOffset;
         let mut total_area: c_float =  0f32;
         // for (let mut idx_n: c_uint =  pcmd.IdxOffset; idx_n < pcmd.IdxOffset + pcmd.ElemCount; )
         for idx_n in pcmd.IdxOffset .. pcmd.IdxOffset + pcmd.ElemCount
@@ -1542,8 +1542,8 @@ pub fn DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: &mut ImDrawList, da
         let idx_end = draw_cmd.IdxOffset + draw_cmd.ElemCount;
     for idx_n in draw_cmd.IdxOffset .. idx_end
         {
-        let idx_buffer = if draw_list.IdxBuffer.Size > 0 { draw_list.IdxBuffer.Data } else { null_mut() }; // We don't hold on those pointers past iterations as .AddPolyline() may invalidate them if out_draw_list==draw_list
-        let vtx_buffer = draw_list.VtxBuffer.Data + draw_cmd.VtxOffset;
+        let idx_buffer = if draw_list.IdxBuffer.len() > 0 { draw_list.IdxBuffer } else { null_mut() }; // We don't hold on those pointers past iterations as .AddPolyline() may invalidate them if out_draw_list==draw_list
+        let vtx_buffer = draw_list.VtxBuffer + draw_cmd.VtxOffset;
 
         let mut triangle: [ImVec2; 3] = [ImVec2::default();3];
         // for (let n: c_int = 0; n < 3; n++, idx_n++)
@@ -1666,7 +1666,7 @@ pub unsafe fn DebugNodeFont(font: &mut ImFont)
                     EndTooltip();
                 }
             }
-            Dummy(ImVec2::new((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
+            Dummy(ImVec2::new2((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
             TreePop();
         }
         TreePop();
@@ -1726,8 +1726,8 @@ pub unsafe fn DebugNodeTabBar(tab_bar: *mut ImGuiTabBar, label: *const c_char)
     {
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(null_mut());
         draw_list.AddRect(&tab_bar.BarRect.Min, &tab_bar.BarRect.Max, IM_COL32(255, 255, 0, 255), 0f32, ImDrawFlags_None, 0f32);
-        draw_list.AddLine(ImVec2::new(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
-        draw_list.AddLine(ImVec2::new(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
+        draw_list.AddLine(ImVec2::new2(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar.ScrollingRectMinX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
+        draw_list.AddLine(ImVec2::new2(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar.ScrollingRectMaxX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255), 0f32);
     }
     if open
     {
@@ -2136,7 +2136,7 @@ pub unsafe fn ShowStackToolWIndow(p_open: *mut bool)
     let time_since_copy: c_float = (g.Time - tool.CopyToClipboardLastTime) as c_float;
     Checkbox("Ctrl+C: copy path to clipboard", &tool.CopyToClipboardOnCtrlC);
     SameLine();
-    TextColored(if(time_since_copy >= 0f32 && time_since_copy < 0.75f32 && ImFmod(time_since_copy, 0.250f32) < 0.25f32 * 0.5f32) { ImVec4(1.f, 1.f, 0.3f32, 1f32) } else { ImVec4::default() }, "*COPIED*");
+    TextColored(if(time_since_copy >= 0f32 && time_since_copy < 0.75f32 && ImFmod(time_since_copy, 0.250f32) < 0.25f32 * 0.5f32) { ImVec4::new2(1.f, 1.f, 0.3f32, 1f32) } else { ImVec4::default() }, "*COPIED*");
     if tool.CopyToClipboardOnCtrlC && IsKeyDown(ImGuiKey_ModCtrl) && IsKeyPressed(ImGuiKey_C, false)
     {
         tool.CopyToClipboardLastTime = g.Time as c_float;

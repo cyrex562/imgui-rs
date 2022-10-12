@@ -1,3 +1,6 @@
+use libc::c_int;
+use crate::table_column_sort_specs::ImGuiTableColumnSortSpecs;
+
 // Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
 // Obtained by calling TableGetSortSpecs().
 // When 'SpecsDirty == true' you can sort your data. It will be true with sorting specs have changed since last call, or the first time.

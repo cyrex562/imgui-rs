@@ -19,7 +19,7 @@ pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32 {
 // ImVec4 ColorConvertU32ToFloat4(u32 in)
 pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4 {
     let s = 1f32 / 255f32;
-    return ImVec4(
+    return ImVec4::new2(
         ((in_color >> IM_COL32_R_SHIFT) & 0xFF) * s,
         ((in_color >> IM_COL32_G_SHIFT) & 0xFF) * s,
         ((in_color >> IM_COL32_B_SHIFT) & 0xFF) * s,

@@ -535,8 +535,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         {
             // We don't use a regular button+id to test for double-click on title bar (mostly due to legacy reason, could be fixed), so verify that we don't have items over the title bar.
             let title_bar_rect: ImRect =  window.TitleBarRect();
-            if (g.HoveredWindow == window && g.HoveredId == 0 && g.HoveredIdPreviousFrame == 0 && IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max) && g.IO.MouseClickedCount[0] == 2)
+            if g.HoveredWindow == window && g.HoveredId == 0 && g.HoveredIdPreviousFrame == 0 && IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max) && g.IO.MouseClickedCount[0] == 2
+{
                 window.WantCollapseToggle = true;
+}
             if (window.WantCollapseToggle)
             {
                 window.Collapsed = !window.Collapsed;
@@ -583,8 +585,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
                 window.SizeFull.y = window.AutoFitOnlyGrows ? ImMax(window.SizeFull.y, size_auto_fit.y) : size_auto_fit.y;
                 use_current_size_for_scrollbar_y = true;
             }
-            if (!window.Collapsed)
+            if !window.Collapsed
+{
                 MarkIniSettingsDirty(window);
+}
         }
 
         // Apply minimum/maximum window size constraints and final size
@@ -600,8 +604,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         if (window_just_activated_by_user)
         {
             window.AutoPosLastDirection = ImGuiDir_None;
-            if ((flags & ImGuiWindowFlags_Popup) != 0 && !(flags & ImGuiWindowFlags_Modal) && !window_pos_set_by_api) // FIXME: BeginPopup() could use SetNextWindowPos()
+            if (flags & ImGuiWindowFlags_Popup) != 0 && !(flags & ImGuiWindowFlags_Modal) && !window_pos_set_by_api) // FIXME: BeginPopup() could use SetNextWindowPos(
+{
                 window.Pos = g.BeginPopupStack.last().unwrap().OpenPopupPos;
+}
         }
 
         // Position child window
@@ -610,13 +616,17 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             // IM_ASSERT(parent_window && parent_window.Active);
             window.BeginOrderWithinParent = parent_window.DC.ChildWindows.Size;
             parent_window.DC.ChildWindows.push(window);
-            if (!(flags & ImGuiWindowFlags_Popup) && !window_pos_set_by_api && !window_is_child_tooltip)
+            if !(flags & ImGuiWindowFlags_Popup) && !window_pos_set_by_api && !window_is_child_tooltip
+{
                 window.Pos = parent_window.DC.CursorPos;
+}
         }
 
         let window_pos_with_pivot: bool = (window.SetWindowPosVal.x != f32::MAX && window.HiddenFramesCannotSkipItems == 0);
-        if (window_pos_with_pivot)
-            SetWindowPos(window, window.SetWindowPosVal - window.Size * window.SetWindowPosPivot, 0); // Position given a pivot (e.g. for centering)
+        if window_pos_with_pivot
+{
+            SetWindowPos(window, window.SetWindowPosVal - window.Size * window.SetWindowPosPivot, 0);
+} // Position given a pivot (e.g. for centering)
         else if ((flags & ImGuiWindowFlags_ChildMenu) != 0)
             window.Pos = FindBestWindowPosForPopup(window);
         else if ((flags & ImGuiWindowFlags_Popup) != 0 && !window_pos_set_by_api && window_just_appearing_after_hidden_for_resize)
@@ -639,8 +649,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
                 SetCurrentWindow(window);
             }
 
-        if (window.ViewportOwned)
+        if window.ViewportOwned
+{
             WindowSyncOwnedViewport(window, parent_window_in_stack);
+}
 
         // Calculate the range of allowed position for that window (to be movable and visible past safe area padding)
         // When clamping to stay visible, we will enforce that window.Pos stays inside of visibility_rect.
@@ -671,10 +683,11 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 
         // Lock window rounding for the frame (so that altering them doesn't cause inconsistencies)
         // Large values tend to lead to variety of artifacts and are not recommended.
-        if (window.ViewportOwned || window.DockIsActive)
+        if window.ViewportOwned || window.DockIsActive
+{
             window.WindowRounding = 0f32;
-        else
-            window.WindowRounding = (flags & ImGuiWindowFlags_ChildWindow) ? style.ChildRounding : ((flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiWindowFlags_Modal)) ? style.PopupRounding : style.WindowRounding;
+}
+
 
         // For windows with title bar or menu bar, we clamp to FrameHeight(FontSize + FramePadding.y * 2.00f32) to completely hide artifacts.
         //if ((window.Flags & ImGuiWindowFlags_MenuBar) || !(window.Flags & ImGuiWindowFlags_NoTitleBar))
@@ -684,8 +697,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         let mut want_focus: bool =  false;
         if (window_just_activated_by_user && !(flags & ImGuiWindowFlags_NoFocusOnAppearing))
         {
-            if (flags & ImGuiWindowFlags_Popup)
+            if flags & ImGuiWindowFlags_Popup
+{
                 want_focus = true;
+}
             else if ((window.DockIsActive || (flags & ImGuiWindowFlags_ChildWindow) == 0) && !(flags & ImGuiWindowFlags_Tooltip))
                 want_focus = true;
 
@@ -723,21 +738,27 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 
         // Handle manual resize: Resize Grips, Borders, Gamepad
         let border_held: c_int = -1;
-        u32 resize_grip_col[4] = {};
+        resize_grip_col: u32[4] = {};
         let resize_grip_count: c_int = g.IO.ConfigWindowsResizeFromEdges ? 2 : 1; // Allow resize from lower-left if we have the mouse cursor feedback for it.
         let resize_grip_draw_size: c_float =  IM_FLOOR(ImMax(g.FontSize * 1.10f32, window.WindowRounding + 1f32 + g.FontSize * 0.20f32));
-        if (handle_borders_and_resize_grips && !window.Collapsed)
+        if handle_borders_and_resize_grips && !window.Collapsed
+{
             if (UpdateWindowManualResize(window, size_auto_fit, &border_held, resize_grip_count, &resize_grip_col[0], visibility_rect))
                 use_current_size_for_scrollbar_x = use_current_size_for_scrollbar_y = true;
+}
         window.ResizeBorderHeld = border_held;
 
         // Synchronize window --> viewport again and one last time (clamping and manual resize may have affected either)
         if (window.ViewportOwned)
         {
-            if (!window.Viewport.PlatformRequestMove)
+            if !window.Viewport.PlatformRequestMove
+{
                 window.Viewport.Pos = window.Pos;
-            if (!window.Viewport.PlatformRequestResize)
+}
+            if !window.Viewport.PlatformRequestResize
+{
                 window.Viewport.Size = window.Size;
+}
             window.Viewport.UpdateWorkRect();
             viewport_rect = window.Viewport.GetMainRect();
         }
@@ -752,7 +773,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         {
             // When reading the current size we need to read it after size constraints have been applied.
             // When we use InnerRect here we are intentionally reading last frame size, same for ScrollbarSizes values before we set them again.
-            let avail_size_from_current_frame: ImVec2 = ImVec2::new(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
+            let avail_size_from_current_frame: ImVec2 = ImVec2::new2(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
             let avail_size_from_last_frame: ImVec2 = window.InnerRect.GetSize() + window.ScrollbarSizes;
             let needed_size_from_last_frame: ImVec2 = window_just_created ? ImVec2::new2(0, 0) : window.ContentSize + window.WindowPadding * 2.0f32;
             let size_x_for_scrollbars: c_float =  use_current_size_for_scrollbar_x ? avail_size_from_current_frame.x : avail_size_from_last_frame.x;
@@ -760,9 +781,11 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             //bool scrollbar_y_from_last_frame = window.ScrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
             window.ScrollbarY = (flags & ImGuiWindowFlags_AlwaysVerticalScrollbar) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && !(flags & ImGuiWindowFlags_NoScrollbar));
             window.ScrollbarX = (flags & ImGuiWindowFlags_AlwaysHorizontalScrollbar) || ((needed_size_from_last_frame.x > size_x_for_scrollbars - (window.ScrollbarY ? style.ScrollbarSize : 0f32)) && !(flags & ImGuiWindowFlags_NoScrollbar) && (flags & ImGuiWindowFlags_HorizontalScrollbar));
-            if (window.ScrollbarX && !window.ScrollbarY)
+            if window.ScrollbarX && !window.ScrollbarY
+{
                 window.ScrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && !(flags & ImGuiWindowFlags_NoScrollbar);
-            window.ScrollbarSizes = ImVec2::new(window.ScrollbarY ? style.ScrollbarSize : 0f32, window.ScrollbarX ? style.ScrollbarSize : 0f32);
+}
+            window.ScrollbarSizes = ImVec2::new2(window.ScrollbarY ? style.ScrollbarSize : 0f32, window.ScrollbarX ? style.ScrollbarSize : 0f32);
         }
 
         // UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)
@@ -778,8 +801,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         const let outer_rect: ImRect =  window.Rect();
         const let title_bar_rect: ImRect =  window.TitleBarRect();
         window.OuterRectClipped = outer_rect;
-        if (window.DockIsActive)
+        if window.DockIsActive
+{
             window.OuterRectClipped.Min.y += window.TitleBarHeight();
+}
         window.OuterRectClipped.ClipWith(host_rect);
 
         // Inner rectangle
@@ -808,10 +833,11 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         window.InnerClipRect.ClipWithFull(host_rect);
 
         // Default item width. Make it proportional to window size if window manually resizes
-        if (window.Size.x > 0f32 && !(flags & ImGuiWindowFlags_Tooltip) && !(flags & ImGuiWindowFlags_AlwaysAutoResize))
+        if window.Size.x > 0f32 && !(flags & ImGuiWindowFlags_Tooltip) && !(flags & ImGuiWindowFlags_AlwaysAutoResize)
+{
             window.ItemWidthDefault = ImFloor(window.Size.x * 0.650f32);
-        else
-            window.ItemWidthDefault = ImFloor(g.FontSize * 16.00f32);
+}
+
 
         // SCROLLING
 
@@ -823,7 +849,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 
         // Apply scrolling
         window.Scroll = CalcNextScrollFromScrollTargetAndClamp(window);
-        window.ScrollTarget = ImVec2::new(f32::MAX, f32::MAX);
+        window.ScrollTarget = ImVec2::new2(f32::MAX, f32::MAX);
 
         // DRAWING
 
@@ -845,20 +871,26 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
                 // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
                 let mut previous_child: *mut ImGuiWindow =  parent_window.DC.ChildWindows.Size >= 2 ? parent_window.DC.ChildWindows[parent_window.DC.ChildWindows.Size - 2] : null_mut();
                 let mut previous_child_overlapping: bool =  previous_child ? previous_child.Rect().Overlaps(window.Rect()) : false;
-                let mut parent_is_empty: bool =  parent_window.DrawList.VtxBuffer.Size > 0;
-                if (window.DrawList.CmdBuffer.last().unwrap().ElemCount == 0 && parent_is_empty && !previous_child_overlapping)
+                let mut parent_is_empty: bool =  parent_window.DrawList.VtxBuffer.len() > 0;
+                if window.DrawList.CmdBuffer.last().unwrap().ElemCount == 0 && parent_is_empty && !previous_child_overlapping
+{
                     render_decorations_in_parent = true;
+}
             }
-            if (render_decorations_in_parent)
+            if render_decorations_in_parent
+{
                 window.DrawList = parent_window.DrawList;
+}
 
             // Handle title bar, scrollbar, resize grips and resize borders
             let window_to_highlight: *const ImGuiWindow = g.NavWindowingTarget ? g.NavWindowingTarget : g.NavWindow;
             let title_bar_is_highlight: bool = want_focus || (window_to_highlight && (window.RootWindowForTitleBarHighlight == window_to_highlight.RootWindowForTitleBarHighlight || (window.DockNode && window.DockNode == window_to_highlight.DockNode)));
             RenderWindowDecorations(window, title_bar_rect, title_bar_is_highlight, handle_borders_and_resize_grips, resize_grip_count, resize_grip_col, resize_grip_draw_size);
 
-            if (render_decorations_in_parent)
+            if render_decorations_in_parent
+{
                 window.DrawList = &window.DrawListInst;
+}
         }
 
         // UPDATE RECTANGLES (2- THOSE AFFECTED BY SCROLLING)
@@ -897,8 +929,8 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or u64.
         double start_pos_highp_x = window.Pos.x + window.WindowPadding.x - window.Scroll.x + window.DC.ColumnsOffset.x;
         double start_pos_highp_y = window.Pos.y + window.WindowPadding.y - window.Scroll.y + decoration_up_height;
-        window.DC.CursorStartPos  = ImVec2::new(start_pos_highp_x, start_pos_highp_y);
-        window.DC.CursorStartPosLossyness = ImVec2::new((start_pos_highp_x - window.DC.CursorStartPos.x), (start_pos_highp_y - window.DC.CursorStartPos.y));
+        window.DC.CursorStartPos  = ImVec2::new2(start_pos_highp_x, start_pos_highp_y);
+        window.DC.CursorStartPosLossyness = ImVec2::new2((start_pos_highp_x - window.DC.CursorStartPos.x), (start_pos_highp_y - window.DC.CursorStartPos.y));
         window.DC.CursorPos = window.DC.CursorStartPos;
         window.DC.CursorPosPrevLine = window.DC.CursorPos;
         window.DC.CursorMaxPos = window.DC.CursorStartPos;
@@ -928,10 +960,14 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         window.DC.ItemWidthStack.clear();
         window.DC.TextWrapPosStack.clear();
 
-        if (window.AutoFitFramesX > 0)
+        if window.AutoFitFramesX > 0
+{
             window.AutoFitFramesX-= 1;
-        if (window.AutoFitFramesY > 0)
+}
+        if window.AutoFitFramesY > 0
+{
             window.AutoFitFramesY-= 1;
+}
 
         // Apply focus (we need to call FocusWindow() AFTER setting DC.CursorStartPos so our initial navigation reference rectangle can start around there)
         if (want_focus)
@@ -953,8 +989,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         }
 
         // Title bar
-        if (!(flags & ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive)
+        if !(flags & ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
+{
             RenderWindowTitleBarContents(window, ImRect::new(title_bar_rect.Min.x + window.WindowBorderSize, title_bar_rect.Min.y, title_bar_rect.Max.x - window.WindowBorderSize, title_bar_rect.Max.y), name, p_open);
+}
 
         // Clear hit test shape every frame
         window.HitTestHoleSize.x = window.HitTestHoleSize.y = 0;
@@ -964,36 +1002,45 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // Maybe we can support CTRL+C on every element?
         /*
         //if (g.NavWindow == window && g.ActiveId == 0)
-        if (g.ActiveId == window.MoveId)
+        if g.ActiveId == window.MoveId
+{
             if (g.IO.KeyCtrl && IsKeyPressed(ImGuiKey_C))
                 LogToClipboard();
+}
         */
 
         if (g.IO.ConfigFlags & ImGuiConfigFlags_DockingEnable)
         {
             // Docking: Dragging a dockable window (or any of its child) turns it into a drag and drop source.
             // We need to do this _before_ we overwrite window.DC.LastItemId below because BeginDockableDragDropSource() also overwrites it.
-            if ((g.MovingWindow == window) && (g.IO.ConfigDockingWithShift == g.IO.KeyShift))
+            if (g.MovingWindow == window) && (g.IO.ConfigDockingWithShift == g.IO.KeyShift)
+{
                 if ((window.RootWindowDockTree.Flags & ImGuiWindowFlags_NoDocking) == 0)
                     BeginDockableDragDropSource(window);
+}
 
             // Docking: Any dockable window can act as a target. For dock node hosts we call BeginDockableDragDropTarget() in DockNodeUpdate() instead.
-            if (g.DragDropActive && !(flags & ImGuiWindowFlags_NoDocking))
+            if g.DragDropActive && !(flags & ImGuiWindowFlags_NoDocking)
+{
                 if (g.MovingWindow == null_mut() || g.Movingwindow.RootWindowDockTree != window)
                     if ((window == window.RootWindowDockTree) && !(window.Flags & ImGuiWindowFlags_DockNodeHost))
                         BeginDockableDragDropTarget(window);
+}
         }
 
         // We fill last item data based on Title Bar/Tab, in order for IsItemHovered() and IsItemActive() to be usable after Begin().
         // This is useful to allow creating context menus on title bar only, etc.
-        if (window.DockIsActive)
+        if window.DockIsActive
+{
             SetLastItemData(window.MoveId, g.CurrentItemFlags, window.DockTabItemStatusFlags, window.DockTabItemRect);
-        else
-            SetLastItemData(window.MoveId, g.CurrentItemFlags, IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max, false) ? ImGuiItemStatusFlags_HoveredRect : 0, title_bar_rect);
+}
+
 
         // [Test Engine] Register title bar / tab
-        if (!(window.Flags & ImGuiWindowFlags_NoTitleBar))
+        if !(window.Flags & ImGuiWindowFlags_NoTitleBar)
+{
             IMGUI_TEST_ENGINE_ITEM_ADD(g.LastItemData.Rect, g.LastItemData.ID);
+}
     }
     else
     {
@@ -1005,8 +1052,10 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     // Pull/inherit current state
     window.DC.NavFocusScopeIdCurrent = (flags & ImGuiWindowFlags_ChildWindow) ? parent_window.DC.NavFocusScopeIdCurrent : window.GetID("#FOCUSSCOPE"); // Inherit from parent only // -V595
 
-    if (!(flags & ImGuiWindowFlags_DockNodeHost))
+    if !(flags & ImGuiWindowFlags_DockNodeHost)
+{
         PushClipRect(window.InnerClipRect.Min, window.InnerClipRect.Max, true);
+}
 
     // Clear 'accessed' flag last thing (After PushClipRect which will set the flag. We want the flag to stay false when the default "Debug" window is unused)
     window.WriteAccessed = false;
@@ -1022,10 +1071,11 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // It is especially important as e.g. nested TabBars would otherwise generate flicker in the form of one empty frame, or focus requests won't be processed.
         if (window.DockIsActive && !window.DockTabIsVisible)
         {
-            if (window.LastFrameJustFocused == g.FrameCount)
+            if window.LastFrameJustFocused == g.FrameCount
+{
                 window.HiddenFramesCannotSkipItems = 1;
-            else
-                window.HiddenFramesCanSkipItems = 1;
+}
+
         }
 
         if (flags & ImGuiWindowFlags_ChildWindow)
@@ -1036,21 +1086,29 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             if (!(flags & ImGuiWindowFlags_AlwaysAutoResize) && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0) // FIXME: Doesn't make sense for ChildWindow??
             {
                 let nav_request: bool = (flags & ImGuiWindowFlags_NavFlattened) && (g.NavAnyRequest && g.NavWindow && g.NavWindow.RootWindowForNav == window.RootWindowForNav);
-                if (!g.LogEnabled && !nav_request)
+                if !g.LogEnabled && !nav_request
+{
                     if (window.OuterRectClipped.Min.x >= window.OuterRectClipped.Max.x || window.OuterRectClipped.Min.y >= window.OuterRectClipped.Max.y)
                         window.HiddenFramesCanSkipItems = 1;
+}
             }
 
             // Hide along with parent or if parent is collapsed
-            if (parent_window && (parent_window.Collapsed || parent_window.HiddenFramesCanSkipItems > 0))
+            if parent_window && (parent_window.Collapsed || parent_window.HiddenFramesCanSkipItems > 0)
+{
                 window.HiddenFramesCanSkipItems = 1;
-            if (parent_window && (parent_window.Collapsed || parent_window.HiddenFramesCannotSkipItems > 0))
+}
+            if parent_window && (parent_window.Collapsed || parent_window.HiddenFramesCannotSkipItems > 0)
+{
                 window.HiddenFramesCannotSkipItems = 1;
+}
         }
 
         // Don't render if style alpha is 0.0 at the time of Begin(). This is arbitrary and inconsistent but has been there for a long while (may remove at some point)
-        if (style.Alpha <= 0f32)
+        if style.Alpha <= 0f32
+{
             window.HiddenFramesCanSkipItems = 1;
+}
 
         // Update the Hidden flag
         let mut hidden_regular: bool =  (window.HiddenFramesCanSkipItems > 0) || (window.HiddenFramesCannotSkipItems > 0);
@@ -1065,20 +1123,26 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 
         // Update the SkipItems flag, used to early out of all items functions (no layout required)
         let mut skip_items: bool =  false;
-        if (window.Collapsed || !window.Active || hidden_regular)
+        if window.Collapsed || !window.Active || hidden_regular
+{
             if (window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 && window.HiddenFramesCannotSkipItems <= 0)
                 skip_items = true;
+}
         window.SkipItems = skip_items;
 
         // Restore NavLayersActiveMaskNext to previous value when not visible, so a CTRL+Tab back can use a safe value.
-        if (window.SkipItems)
+        if window.SkipItems
+{
             window.DC.NavLayersActiveMaskNext = window.DC.NavLayersActiveMask;
+}
 
         // Sanity check: there are two spots which can set Appearing = true
         // - when 'window_just_activated_by_user' is set -> HiddenFramesCannotSkipItems is set -> SkipItems always false
         // - in BeginDocked() path when DockNodeIsVisible == DockTabIsVisible == true -> hidden _should_ be all zero // FIXME: Not formally proven, hence the assert.
-        if (window.SkipItems && !window.Appearing)
-            // IM_ASSERT(window.Appearing == false); // Please report on GitHub if this triggers: https://github.com/ocornut/imgui/issues/4177
+        if window.SkipItems && !window.Appearing
+{
+            // IM_ASSERT(window.Appearing == false);
+} // Please report on GitHub if this triggers: https://github.com/ocornut/imgui/issues/4177
     }
 
     return !window.SkipItems;
@@ -1100,8 +1164,10 @@ c_void BeginDisabled(disabled: bool)
         g.DisabledAlphaBackup = g.Style.Alpha;
         g.Style.Alpha *= g.Style.DisabledAlpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * g.Style.DisabledAlpha);
     }
-    if (was_disabled || disabled)
+    if was_disabled || disabled
+{
         g.CurrentItemFlags |= ImGuiItemFlags_Disabled;
+}
     g.ItemFlagsStack.push(g.CurrentItemFlags);
     g.DisabledStackSize+= 1;
 }
@@ -1115,8 +1181,10 @@ c_void EndDisabled()
     //PopItemFlag();
     g.ItemFlagsStack.pop_back();
     g.CurrentItemFlags = g.ItemFlagsStack.last().unwrap();
-    if (was_disabled && (g.CurrentItemFlags & ImGuiItemFlags_Disabled) == 0)
-        g.Style.Alpha = g.DisabledAlphaBackup; //PopStyleVar();
+    if was_disabled && (g.CurrentItemFlags & ImGuiItemFlags_Disabled) == 0
+{
+        g.Style.Alpha = g.DisabledAlphaBackup;
+} //PopStyleVar();
 }
 
 

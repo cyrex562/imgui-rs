@@ -191,14 +191,17 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
         }
 
         // Render text, render ellipsis
-        RenderTextClippedEx(draw_list, pos_min, ImVec2(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, ImVec2(0f32, 0f32));
-        c_float ellipsis_x = pos_min.x + text_size_clipped_x;
-        if (ellipsis_x + ellipsis_total_width <= ellipsis_max_x)
-            for (c_int i = 0; i < ellipsis_char_count; i++)
-            {
-                font.RenderChar(draw_list, font_size, ImVec2(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text), ellipsis_char);
+        RenderTextClippedEx(draw_list, pos_min, &ImVec2::new2(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, &ImVec2::new2(0f32, 0f32), null_mut());
+        let mut ellipsis_x: c_float = pos_min.x + text_size_clipped_x;
+        if ellipsis_x + ellipsis_total_width <= ellipsis_max_x {
+            // for (let i: c_int = 0; i < ellipsis_char_count; i+ +)
+            for i in 0..ellipsis_char_count {
+                font.RenderChar(draw_list, font_size, ImVec2::new2(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text, 0f32, ), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
+        }
+    } else {
+        RenderTextClippedEx(draw_list, pos_min, ImVec2::new2(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2::new2(0f32, 0f32), null());
     }
     else
     {
@@ -246,19 +249,19 @@ c_void ImGui::RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlight
     if (window.DC.NavHideHighlightOneFrame)
         return;
 
-    c_float rounding = (flags & ImGuiNavHighlightFlags_NoRounding) ? 0f32 : g.Style.FrameRounding;
-    ImRect display_rect = bb;
-    display_rect.ClipWith(window.ClipRect);
-    if (flags & ImGuiNavHighlightFlags_TypeDefault)
-    {
-        let         : c_float =  2.0f32;
-        let         : c_float =  3.0f32 + THICKNESS * 0.5f32;
-        display_rect.Expand(ImVec2(DISTANCE, DISTANCE));
-        let mut fully_visible: bool =  window.ClipRect.Contains(display_rect);
-        if (!fully_visible)
-            window.DrawList.PushClipRect(display_rect.Min, display_rect.Max);
-        window.DrawList.AddRect(display_rect.Min + ImVec2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), display_rect.Max - ImVec2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), GetColorU32(ImGuiCol_NavHighlight), rounding, 0, THICKNESS);
-        if (!fully_visible)
+    let rounding: c_float = if (flags & ImGuiNavHighlightFlags_NoRounding) != 0 { 0f32 } else { g.Style.FrameRounding };
+    let mut display_rect: ImRect = bb.clone();
+    display_rect.ClipWith(&window.ClipRect);
+    if flags & ImGuiNavHighlightFlags_TypeDefault {
+        let THICKNESS: c_float = 2.0f32;
+        let DISTANCE: c_float = 3.0f32 + THICKNESS * 0.5f32;
+        display_rect.Expand(ImVec2::new2(DISTANCE, DISTANCE));
+        let mut fully_visible: bool = window.ClipRect.Contains2(&display_rect);
+        if !fully_visible {
+            window.DrawList.PushClipRect(&display_rect.Min, &display_rect.Max, false);
+        }
+        window.DrawList.AddRect(display_rect.Min + ImVec2::new2(THICKNESS * 0.5f32, THICKNESS * 0.5f32), display_rect.Max - ImVec2::new(THICKNESS * 0.5f32, THICKNESS * 0.5f32), GetColorU32(ImGuiCol_NavHighlight, 0f32, ), rounding, 0, THICKNESS, , );
+        if !fully_visible {
             window.DrawList.PopClipRect();
     }
     if (flags & ImGuiNavHighlightFlags_TypeThin)

@@ -30,14 +30,14 @@ impl ImGuiStackSizes {
     pub unsafe fn SetToCurrentState(&mut self) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut window = g.CurrentWindow;
-        self.SizeOfIDStack = window.IDStack.len();
-        self.SizeOfColorStack = g.ColorStack.len();
-        self.SizeOfStyleVarStack = g.StyleVarStack.len();
-        self.SizeOfFontStack = g.FontStack.len();
-        self.SizeOfFocusScopeStack = g.FocusScopeStack.len();
-        self.SizeOfGroupStack = g.GroupStack.len();
-        self.SizeOfItemFlagsStack = g.ItemFlagsStack.len();
-        self.SizeOfBeginPopupStack = g.BeginPopupStack.len();
+        self.SizeOfIDStack = window.IDStack.len() as c_short;
+        self.SizeOfColorStack = g.ColorStack.len() as c_short;
+        self.SizeOfStyleVarStack = g.StyleVarStack.len() as c_short;
+        self.SizeOfFontStack = g.FontStack.len() as c_short;
+        self.SizeOfFocusScopeStack = g.FocusScopeStack.len() as c_short;
+        self.SizeOfGroupStack = g.GroupStack.len() as c_short;
+        self.SizeOfItemFlagsStack = g.ItemFlagsStack.len() as c_short;
+        self.SizeOfBeginPopupStack = g.BeginPopupStack.len() as c_short;
         self.SizeOfDisabledStack = g.DisabledStackSize;
     }
 

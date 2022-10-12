@@ -26,7 +26,7 @@ pub struct ImGuiPayload {
     pub Delivery: bool,           // Set when AcceptDragDropPayload() was called and mouse button is released over the target item.
 }
 
-impl  ImGuiPayload {
+impl ImGuiPayload {
     // ImGuiPayload()  { Clear(); }
 
 
@@ -36,7 +36,7 @@ impl  ImGuiPayload {
         self.SourceParentId = 0;
         self.Data = null_mut();
         self.DataSize = 0;
-        self.DataType = [0;33];
+        self.DataType = [0; 33];
         self.Preview = false;
         self.Delivery = false;
     }
@@ -57,5 +57,4 @@ impl  ImGuiPayload {
     pub fn IsDelivery(&mut self) -> bool {
         self.Delivery
     }
-
 }

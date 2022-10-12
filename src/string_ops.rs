@@ -6,6 +6,7 @@
 use std::ffi::CStr;
 use std::ptr::null;
 use libc::{c_char, c_int, c_uchar, c_uint, size_t};
+use crate::math::ImMin;
 use crate::type_defs::ImWchar;
 
 // Consider using _stricmp/_strnicmp under Windows or strcasecmp/strncasecmp. We don't actually use either ImStricmp/ImStrnicmp in the codebase any more.

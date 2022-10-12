@@ -14,7 +14,7 @@ pub unsafe fn PushStyleVar(idx: ImGuiStyleVar, val: c_float) {
     if var_info.Type == ImGuiDataType_Float && var_info.Count == 1 {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut pvar = var_info.GetVarPtr(&mut g.Style).clone();
-        g.StyleVarStack.push(ImGuiStyleMod(idx, *pvar));
+        g.StyleVarStack.push(ImGuiStyleMod(idx.clone(), *pvar));
         *pvar = val;
         return;
     }
@@ -28,7 +28,7 @@ pub unsafe fn PushStyleVar2(idx: ImGuiStyleVar, val: &ImVec2) {
     if var_info.Type == ImGuiDataType_Float && var_info.Count == 2 {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         ImVec2 * pvar = var_info.GetVarPtr(&mut g.Style);
-        g.StyleVarStack.push(ImGuiStyleMod(idx, *pvar));
+        g.StyleVarStack.push(ImGuiStyleMod(idx.clone(), *pvar));
         *pvar = val;
         return;
     }
@@ -37,7 +37,7 @@ pub unsafe fn PushStyleVar2(idx: ImGuiStyleVar, val: &ImVec2) {
 
 
 // c_void PopStyleVar(count: c_int)
-pub fn PopStyleVar(mut count: c_int) {
+pub unsafe fn PopStyleVar(mut count: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.StyleVarStack.Size < count {
         // IM_ASSERT_USER_ERROR(g.StyleVarStack.Size > count, "Calling PopStyleVar() too many times: stack underflow.");

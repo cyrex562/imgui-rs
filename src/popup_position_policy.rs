@@ -1,5 +1,7 @@
 #![allow(non_upper_case_globals)]
 
+use libc::c_int;
+
 pub type ImGuiPopupPositionPolicy = c_int;
 // enum ImGuiPopupPositionPolicy
 

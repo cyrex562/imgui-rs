@@ -8,10 +8,11 @@ bool IsPopupOpen(id: ImGuiID, ImGuiPopupFlags popup_flags)
         // Return true if any popup is open at the current BeginPopup() level of the popup stack
         // This may be used to e.g. test for another popups already opened to handle popups priorities at the same level.
         // IM_ASSERT(id == 0);
-        if (popup_flags & ImGuiPopupFlags_AnyPopupLevel)
+        if popup_flags & ImGuiPopupFlags_AnyPopupLevel
+{
             return g.OpenPopupStack.Size > 0;
-        else
-            return g.OpenPopupStack.Size > g.BeginPopupStack.Size;
+}
+
     }
     else
     {
@@ -19,8 +20,10 @@ bool IsPopupOpen(id: ImGuiID, ImGuiPopupFlags popup_flags)
         {
             // Return true if the popup is open anywhere in the popup stack
             for (let n: c_int = 0; n < g.OpenPopupStack.Size; n++)
-                if (g.OpenPopupStack[n].PopupId == id)
+                if g.OpenPopupStack[n].PopupId == id
+{
                     return true;
+}
             return false;
         }
         else
@@ -35,8 +38,10 @@ bool IsPopupOpen(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImGuiID =  (popup_flags & ImGuiPopupFlags_AnyPopupId) ? 0 : g.Currentwindow.GetID(str_id);
-    if ((popup_flags & ImGuiPopupFlags_AnyPopupLevel) && id != 0)
-        // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel."); // But non-string version is legal and used internally
+    if (popup_flags & ImGuiPopupFlags_AnyPopupLevel) && id != 0
+{
+        // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel.");
+} // But non-string version is legal and used internally
     return IsPopupOpen(id, popup_flags);
 }
 
@@ -44,9 +49,11 @@ ImGuiWindow* GetTopMostPopupModal()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let n: c_int = g.OpenPopupStack.Size - 1; n >= 0; n--)
-        if (let mut popup: *mut ImGuiWindow =  g.OpenPopupStack.Data[n].Window)
+        if let mut popup: *mut ImGuiWindow =  g.OpenPopupStack.Data[n].Window
+{
             if (popup.Flags & ImGuiWindowFlags_Modal)
                 return popup;
+}
     return null_mut();
 }
 
@@ -54,9 +61,11 @@ ImGuiWindow* GetTopMostAndVisiblePopupModal()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     for (let n: c_int = g.OpenPopupStack.Size - 1; n >= 0; n--)
-        if (let mut popup: *mut ImGuiWindow =  g.OpenPopupStack.Data[n].Window)
+        if let mut popup: *mut ImGuiWindow =  g.OpenPopupStack.Data[n].Window
+{
             if ((popup.Flags & ImGuiWindowFlags_Modal) && IsWindowActiveAndVisible(popup))
                 return popup;
+}
     return null_mut();
 }
 
@@ -83,9 +92,11 @@ c_void OpenPopupEx(id: ImGuiID, ImGuiPopupFlags popup_flags)
     let mut parent_window: *mut ImGuiWindow =  g.CurrentWindow;
     let current_stack_size: c_int = g.BeginPopupStack.Size;
 
-    if (popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup)
+    if popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup
+{
         if (IsPopupOpen(0u, ImGuiPopupFlags_AnyPopupId))
             return;
+}
 
     ImGuiPopupData popup_ref; // Tagged as new ref as Window will be set back to NULL if we write this into OpenPopupStack.
     popup_ref.PopupId = id;
@@ -129,8 +140,10 @@ c_void OpenPopupEx(id: ImGuiID, ImGuiPopupFlags popup_flags)
 c_void ClosePopupsOverWindow(ref_window: *mut ImGuiWindow, restore_focus_to_window_under_popup: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.OpenPopupStack.Size == 0)
+    if g.OpenPopupStack.Size == 0
+{
         return;
+}
 
     // Don't close our own child popup windows.
     let popup_count_to_keep: c_int = 0;
@@ -140,11 +153,15 @@ c_void ClosePopupsOverWindow(ref_window: *mut ImGuiWindow, restore_focus_to_wind
         for (; popup_count_to_keep < g.OpenPopupStack.Size; popup_count_to_keep++)
         {
             ImGuiPopupData& popup = g.OpenPopupStack[popup_count_to_keep];
-            if (!popup.Window)
+            if !popup.Window
+{
                 continue;
+}
             // IM_ASSERT((popup.window.Flags & ImGuiWindowFlags_Popup) != 0);
-            if (popup.window.Flags & ImGuiWindowFlags_ChildWindow)
+            if popup.window.Flags & ImGuiWindowFlags_ChildWindow
+{
                 continue;
+}
 
             // Trim the stack unless the popup is a direct parent of the reference window (the reference window is often the NavWindow)
             // - With this stack of window, clicking/focusing Popup1 will close Popup2 and Popup3:
@@ -160,8 +177,10 @@ c_void ClosePopupsOverWindow(ref_window: *mut ImGuiWindow, restore_focus_to_wind
                         ref_window_is_descendent_of_popup = true;
                         break;
                     }
-            if (!ref_window_is_descendent_of_popup)
+            if !ref_window_is_descendent_of_popup
+{
                 break;
+}
         }
     }
     if (popup_count_to_keep < g.OpenPopupStack.Size) // This test is not required but it allows to set a convenient breakpoint on the statement below
@@ -179,8 +198,10 @@ c_void ClosePopupsExceptModals()
     for (popup_count_to_keep = g.OpenPopupStack.Size; popup_count_to_keep > 0; popup_count_to_keep--)
     {
         let mut window: *mut ImGuiWindow =  g.OpenPopupStack[popup_count_to_keep - 1].Window;
-        if (!window || window.Flags & ImGuiWindowFlags_Modal)
+        if !window || window.Flags & ImGuiWindowFlags_Modal
+{
             break;
+}
     }
     if (popup_count_to_keep < g.OpenPopupStack.Size) // This test is not required but it allows to set a convenient breakpoint on the statement below
         ClosePopupToLevel(popup_count_to_keep, true);
@@ -207,8 +228,10 @@ c_void ClosePopupToLevel(remaining: c_int, restore_focus_to_window_under_popup: 
         }
         else
         {
-            if (g.NavLayer == ImGuiNavLayer_Main && focus_window)
+            if g.NavLayer == ImGuiNavLayer_Main && focus_window
+{
                 focus_window = NavRestoreLastChildNavWindow(focus_window);
+}
             FocusWindow(focus_window);
         }
     }
@@ -219,8 +242,10 @@ c_void CloseCurrentPopup()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let popup_idx: c_int = g.BeginPopupStack.Size - 1;
-    if (popup_idx < 0 || popup_idx >= g.OpenPopupStack.Size || g.BeginPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId)
+    if popup_idx < 0 || popup_idx >= g.OpenPopupStack.Size || g.BeginPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId
+{
         return;
+}
 
     // Closing a menu closes its top-most parent popup (unless a modal)
     while (popup_idx > 0)
@@ -228,11 +253,15 @@ c_void CloseCurrentPopup()
         let mut popup_window: *mut ImGuiWindow =  g.OpenPopupStack[popup_idx].Window;
         let mut parent_popup_window: *mut ImGuiWindow =  g.OpenPopupStack[popup_idx - 1].Window;
         let mut close_parent: bool =  false;
-        if (popup_window && (popup_window.Flags & ImGuiWindowFlags_ChildMenu))
+        if popup_window && (popup_window.Flags & ImGuiWindowFlags_ChildMenu)
+{
             if (parent_popup_window && !(parent_popup_window.Flags & ImGuiWindowFlags_MenuBar))
                 close_parent = true;
-        if (!close_parent)
+}
+        if !close_parent
+{
             break;
+}
         popup_idx-= 1;
     }
     IMGUI_DEBUG_LOG_POPUP("[popup] CloseCurrentPopup %d -> %d\n", g.BeginPopupStack.Size - 1, popup_idx);
@@ -241,8 +270,10 @@ c_void CloseCurrentPopup()
     // A common pattern is to close a popup when selecting a menu item/selectable that will open another window.
     // To improve this usage pattern, we avoid nav highlight for a single frame in the parent window.
     // Similarly, we could avoid mouse hover highlight in this window but it is less visually problematic.
-    if (let mut window: *mut ImGuiWindow =  g.NavWindow)
+    if let mut window: *mut ImGuiWindow =  g.NavWindow
+{
         window.DC.NavHideHighlightOneFrame = true;
+}
 }
 
 // Attention! BeginPopup() adds default flags which BeginPopupEx()!
@@ -256,15 +287,18 @@ bool BeginPopupEx(id: ImGuiID, ImGuiWindowFlags flags)
     }
 
     name: [c_char;20];
-    if (flags & ImGuiWindowFlags_ChildMenu)
-        ImFormatString(name, IM_ARRAYSIZE(name), "##Menu_%02d", g.BeginMenuCount); // Recycle windows based on depth
-    else
-        ImFormatString(name, IM_ARRAYSIZE(name), "##Popup_%08x", id); // Not recycling, so we can close/open during the same frame
+    if flags & ImGuiWindowFlags_ChildMenu
+{
+        ImFormatString(name, IM_ARRAYSIZE(name), "##Menu_%02d", g.BeginMenuCount);
+} // Recycle windows based on depth
+ // Not recycling, so we can close/open during the same frame
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoDocking;
     let mut is_open: bool =  Begin(name, null_mut(), flags);
-    if (!is_open) // NB: Begin can return false when the popup is completely clipped (e.g. zero size display)
+    if !is_open) // NB: Begin can return false when the popup is completely clipped (e.g. zero size display
+{
         EndPopup();
+}
 
     return is_open;
 }
@@ -309,8 +343,10 @@ bool BeginPopupModal(name: *const c_char, p_open: *mut bool, ImGuiWindowFlags fl
     if (!is_open || (p_open && !*p_open)) // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
     {
         EndPopup();
-        if (is_open)
+        if is_open
+{
             ClosePopupToLevel(g.BeginPopupStack.Size, true);
+}
         return false;
     }
     return is_open;
@@ -324,13 +360,17 @@ c_void EndPopup()
     // IM_ASSERT(g.BeginPopupStack.Size > 0);
 
     // Make all menus and popups wrap around for now, may need to expose that policy (e.g. focus scope could include wrap/loop policy flags used by new move requests)
-    if (g.NavWindow == window)
+    if g.NavWindow == window
+{
         NavMoveRequestTryWrapping(window, ImGuiNavMoveFlags_LoopY);
+}
 
     // Child-popups don't need to be laid out
     // IM_ASSERT(g.WithinEndChild == false);
-    if (window.Flags & ImGuiWindowFlags_ChildWindow)
+    if window.Flags & ImGuiWindowFlags_ChildWindow
+{
         g.WithinEndChild = true;
+}
     End();
     g.WithinEndChild = false;
 }
@@ -370,13 +410,17 @@ bool BeginPopupContextItem(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    if (window.SkipItems)
+    if window.SkipItems
+{
         return false;
+}
     let mut id: ImGuiID =  str_id ? window.GetID(str_id) : g.LastItemData.ID;    // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
     // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
-    if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+    if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)
+{
         OpenPopupEx(id, popup_flags);
+}
     return BeginPopupEx(id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings);
 }
 
@@ -384,13 +428,17 @@ bool BeginPopupContextWindow(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    if (!str_id)
+    if !str_id
+{
         str_id = "window_context";
+}
     let mut id: ImGuiID =  window.GetID(str_id);
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
-    if (IsMouseReleased(mouse_button) && IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup))
+    if IsMouseReleased(mouse_button) && IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)
+{
         if (!(popup_flags & ImGuiPopupFlags_NoOpenOverItems) || !IsAnyItemHovered())
             OpenPopupEx(id, popup_flags);
+}
     return BeginPopupEx(id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings);
 }
 
@@ -398,13 +446,17 @@ bool BeginPopupContextVoid(str_id: *const c_char, ImGuiPopupFlags popup_flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    if (!str_id)
+    if !str_id
+{
         str_id = "void_context";
+}
     let mut id: ImGuiID =  window.GetID(str_id);
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
-    if (IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+    if IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
+{
         if (GetTopMostPopupModal() == null_mut())
             OpenPopupEx(id, popup_flags);
+}
     return BeginPopupEx(id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings);
 }
 
@@ -429,12 +481,16 @@ ImVec2 FindBestWindowPosForPopupEx(const ref_pos: &ImVec2, const size: &ImVec2, 
             if (n != -1 && dir == *last_dir) // Already tried this direction?
                 continue;
             let mut pos = ImVec2::default();
-            if (dir == ImGuiDir_Down)  pos = ImVec2::new(r_avoid.Min.x, r_avoid.Max.y);          // Below, Toward Right (default)
-            if (dir == ImGuiDir_Right) pos = ImVec2::new(r_avoid.Min.x, r_avoid.Min.y - size.y); // Above, Toward Right
-            if (dir == ImGuiDir_Left)  pos = ImVec2::new(r_avoid.Max.x - size.x, r_avoid.Max.y); // Below, Toward Left
-            if (dir == ImGuiDir_Up)    pos = ImVec2::new(r_avoid.Max.x - size.x, r_avoid.Min.y - size.y); // Above, Toward Left
-            if (!r_outer.Contains(ImRect::new(pos, pos + size)))
+            if dir == ImGuiDir_Down)  pos = ImVec2::new2(r_avoid.Min.x, r_avoid.Max.y);          // Below, Toward Right (default
+{
+            if (dir == ImGuiDir_Right) pos = ImVec2::new2(r_avoid.Min.x, r_avoid.Min.y - size.y);
+} // Above, Toward Right
+            if (dir == ImGuiDir_Left)  pos = ImVec2::new2(r_avoid.Max.x - size.x, r_avoid.Max.y); // Below, Toward Left
+            if (dir == ImGuiDir_Up)    pos = ImVec2::new2(r_avoid.Max.x - size.x, r_avoid.Min.y - size.y); // Above, Toward Left
+            if !r_outer.Contains(ImRect::new(pos, pos + size))
+{
                 continue;
+}
             *last_dir = dir;
             return pos;
         }
@@ -455,10 +511,14 @@ ImVec2 FindBestWindowPosForPopupEx(const ref_pos: &ImVec2, const size: &ImVec2, 
             let avail_h: c_float =  (dir == ImGuiDir_Up ? r_avoid.Min.y : r_outer.Max.y) - (dir == ImGuiDir_Down ? r_avoid.Max.y : r_outer.Min.y);
 
             // If there not enough room on one axis, there's no point in positioning on a side on this axis (e.g. when not enough width, use a top/bottom position to maximize available width)
-            if (avail_w < size.x && (dir == ImGuiDir_Left || dir == ImGuiDir_Right))
+            if avail_w < size.x && (dir == ImGuiDir_Left || dir == ImGuiDir_Right)
+{
                 continue;
-            if (avail_h < size.y && (dir == ImGuiDir_Up || dir == ImGuiDir_Down))
+}
+            if avail_h < size.y && (dir == ImGuiDir_Up || dir == ImGuiDir_Down)
+{
                 continue;
+}
 
             let mut pos = ImVec2::default();
             pos.x = (dir == ImGuiDir_Left) ? r_avoid.Min.x - size.x : (dir == ImGuiDir_Right) ? r_avoid.Max.x : base_pos_clamped.x;
@@ -477,8 +537,10 @@ ImVec2 FindBestWindowPosForPopupEx(const ref_pos: &ImVec2, const size: &ImVec2, 
     *last_dir = ImGuiDir_None;
 
     // For tooltip we prefer avoiding the cursor at all cost even if it means that part of the tooltip won't be visible.
-    if (policy == ImGuiPopupPositionPolicy_Tooltip)
+    if policy == ImGuiPopupPositionPolicy_Tooltip
+{
         return ref_pos + ImVec2::new2(2, 2);
+}
 
     // Otherwise try to keep within display
     let pos: ImVec2 = ref_pos;
@@ -505,7 +567,7 @@ ImRect GetPopupAllowedExtentRect(window: *mut ImGuiWindow)
         r_screen = window.Viewport.GetMainRect();
     }
     let padding: ImVec2 = g.Style.DisplaySafeAreaPadding;
-    r_screen.Expand(ImVec2::new((r_screen.GetWidth() > padding.x * 2) ? -padding.x : 0f32, (r_screen.GetHeight() > padding.y * 2) ? -padding.y : 0f32));
+    r_screen.Expand(ImVec2::new2((r_screen.GetWidth() > padding.x * 2) ? -padding.x : 0f32, (r_screen.GetHeight() > padding.y * 2) ? -padding.y : 0f32));
     return r_screen;
 }
 
@@ -521,10 +583,11 @@ ImVec2 FindBestWindowPosForPopup(window: *mut ImGuiWindow)
         let mut parent_window: *mut ImGuiWindow =  window.ParentWindow;
         let horizontal_overlap: c_float =  g.Style.ItemInnerSpacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
         let mut r_avoid: ImRect = ImRect::default();
-        if (parent_window.DC.MenuBarAppending)
-            r_avoid = ImRect::new(-f32::MAX, parent_window.ClipRect.Min.y, f32::MAX, parent_window.ClipRect.Max.y); // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a NextWindowData.PosConstraintAvoidRect field
-        else
-            r_avoid = ImRect::new(parent_window.Pos.x + horizontal_overlap, -f32::MAX, parent_window.Pos.x + parent_window.Size.x - horizontal_overlap - parent_window.ScrollbarSizes.x, f32::MAX);
+        if parent_window.DC.MenuBarAppending
+{
+            r_avoid = ImRect::new(-f32::MAX, parent_window.ClipRect.Min.y, f32::MAX, parent_window.ClipRect.Max.y);
+} // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a NextWindowData.PosConstraintAvoidRect field
+
         return FindBestWindowPosForPopupEx(window.Pos, window.Size, &window.AutoPosLastDirection, r_outer, r_avoid, ImGuiPopupPositionPolicy_Default);
     }
     if (window.Flags & ImGuiWindowFlags_Popup)
@@ -537,10 +600,11 @@ ImVec2 FindBestWindowPosForPopup(window: *mut ImGuiWindow)
         let sc: c_float =  g.Style.MouseCursorScale;
         let ref_pos: ImVec2 = NavCalcPreferredRefPos();
         let mut r_avoid: ImRect = ImRect::default();
-        if (!g.NavDisableHighlight && g.NavDisableMouseHover && !(g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos))
+        if !g.NavDisableHighlight && g.NavDisableMouseHover && !(g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos)
+{
             r_avoid = ImRect::new(ref_pos.x - 16, ref_pos.y - 8, ref_pos.x + 16, ref_pos.y + 8);
-        else
-            r_avoid = ImRect::new(ref_pos.x - 16, ref_pos.y - 8, ref_pos.x + 24 * sc, ref_pos.y + 24 * sc); // FIXME: Hard-coded based on mouse cursor shape expectation. Exact dimension not very important.
+}
+ // FIXME: Hard-coded based on mouse cursor shape expectation. Exact dimension not very important.
         return FindBestWindowPosForPopupEx(ref_pos, window.Size, &window.AutoPosLastDirection, r_outer, r_avoid, ImGuiPopupPositionPolicy_Tooltip);
     }
     // IM_ASSERT(0);

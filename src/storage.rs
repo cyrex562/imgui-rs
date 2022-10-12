@@ -4,6 +4,8 @@ use std::borrow::BorrowMut;
 use std::ptr::{null, null_mut};
 use libc::{c_int, c_void};
 use crate::imgui_cpp::LowerBound;
+use crate::type_defs::ImGuiID;
+use crate::utils::ImQsort;
 
 // [Internal]
 pub struct ImGuiStoragePair {

@@ -21,7 +21,7 @@ pub unsafe fn GetColorU32(idx: ImGuiCol, alpha_mul: f32) -> u32 {
     let g = GImGui;
     let style = &mut g.Style;
     let mut c = style.Colors[idx];
-    c.w *= style.Alpha * alpha_mul;
+    c.w *= style.Alpha.clone() * alpha_mul;
     return ColorConvertFloat4ToU32(c);
 }
 
@@ -30,7 +30,7 @@ pub unsafe fn GetColorU32FromImVec4(col: &ImVec4) -> u32 {
     let g = GImGui;
     let style = &mut g.Style;
     let mut c = col.clone();
-    c.w *= style.Alpha;
+    c.w *= style.Alpha.clone();
     return ColorConvertFloat4ToU32(&c);
 }
 
@@ -57,8 +57,8 @@ pub unsafe fn GetColorU32FromU32(col: u32) -> u32 {
         return col;
     }
     let a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
-    a = (a * style.Alpha); // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
-    return (col & !IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT);
+    a = (a * style.Alpha.clone()); // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
+    return (col.clone() & !IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT);
 }
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
@@ -67,9 +67,9 @@ pub unsafe fn PushStyleColor(idx: ImGuiCol, col: u32) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut backup: ImGuiColorMod = ImGuiColorMod::default();
     backup.Col = idx;
-    backup.BackupValue = g.Style.Colors[idx];
+    backup.BackupValue = g.Style.Colors[idx.clone()];
     g.ColorStack.push(backup);
-    g.Style.Colors[idx] = ColorConvertU32ToFloat4(col);
+    g.Style.Colors[idx.clone()] = ColorConvertU32ToFloat4(col);
 }
 
 // c_void PushStyleColor(ImGuiCol idx, const ImVec4& col)
@@ -77,9 +77,9 @@ pub unsafe fn PushStyleColor2(idx: ImGuiCol, col: &ImVec4) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut backup: ImGuiColorMod = ImGuiColorMod::default();
     backup.Col = idx;
-    backup.BackupValue = g.Style.Colors[idx];
+    backup.BackupValue = g.Style.Colors[idx.clone()];
     g.ColorStack.push(backup);
-    g.Style.Colors[idx] = col;
+    g.Style.Colors[idx.clone()] = col;
 }
 
 // c_void PopStyleColor(count: c_int)
