@@ -421,11 +421,11 @@ IsWindowHovered: bool(ImGuiHoveredFlags flags)
     if (ref_window == null_mut())
         return false;
 
-    if ((flags & ImGuiHoveredFlags_AnyWindow) == 0)
+    if (flag_clear(flags, ImGuiHoveredFlags_AnyWindow))
     {
         // IM_ASSERT(cur_window); // Not inside a Begin()/End()
-        let popup_hierarchy: bool = (flags & ImGuiHoveredFlags_NoPopupHierarchy) == 0;
-        let dock_hierarchy: bool = (flags & ImGuiHoveredFlags_DockHierarchy) != 0;
+        let popup_hierarchy: bool = flag_clear(flags, ImGuiHoveredFlags_NoPopupHierarchy);
+        let dock_hierarchy: bool = flag_set(flags, ImGuiHoveredFlags_DockHierarchy);
         if (flags & ImGuiHoveredFlags_RootWindow)
             cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy, dock_hierarchy);
 
@@ -440,7 +440,7 @@ IsWindowHovered: bool(ImGuiHoveredFlags flags)
 
     if (!IsWindowContentHoverable(ref_window, flags))
         return false;
-    if (!(flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
+    if (flag_clear(flags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
         if (g.ActiveId != 0 && !g.ActiveIdAllowOverlap && g.ActiveId != ref_window.MoveId)
             return false;
     return true;
@@ -458,8 +458,8 @@ IsWindowFocused: bool(ImGuiFocusedFlags flags)
         return true;
 
     // IM_ASSERT(cur_window); // Not inside a Begin()/End()
-    let popup_hierarchy: bool = (flags & ImGuiFocusedFlags_NoPopupHierarchy) == 0;
-    let dock_hierarchy: bool = (flags & ImGuiFocusedFlags_DockHierarchy) != 0;
+    let popup_hierarchy: bool = flag_clear(flags, ImGuiFocusedFlags_NoPopupHierarchy);
+    let dock_hierarchy: bool = flag_set(flags, ImGuiFocusedFlags_DockHierarchy);
     if (flags & ImGuiHoveredFlags_RootWindow)
         cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy, dock_hierarchy);
 
@@ -1640,9 +1640,9 @@ ScrollToRectEx: ImVec2(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScroll
 
     // Defaults
     ImGuiScrollFlags in_flags = flags;
-    if ((flags & ImGuiScrollFlags_MaskX_) == 0 && window.ScrollbarX)
+    if (flag_clear(flags, ImGuiScrollFlags_MaskX_) && window.ScrollbarX)
         flags |= ImGuiScrollFlags_KeepVisibleEdgeX;
-    if ((flags & ImGuiScrollFlags_MaskY_) == 0)
+    if (flag_clear(flags, ImGuiScrollFlags_MaskY_))
         flags |= window.Appearing ? ImGuiScrollFlags_AlwaysCenterY : ImGuiScrollFlags_KeepVisibleEdgeY;
 
     let fully_visible_x: bool = item_rect.Min.x >= window_rect.Min.x && item_rect.Max.x <= window_rect.Max.x;
@@ -1680,7 +1680,7 @@ ScrollToRectEx: ImVec2(window: *mut ImGuiWindow, item_rect: &ImRect, ImGuiScroll
     let delta_scroll: ImVec2 = next_scroll - window.Scroll;
 
     // Also scroll parent window to keep us into view if necessary
-    if (!(flags & ImGuiScrollFlags_NoScrollParent) && (window.Flags & ImGuiWindowFlags_ChildWindow))
+    if (flag_clear(flags, ImGuiScrollFlags_NoScrollParent) && (window.Flags & ImGuiWindowFlags_ChildWindow))
     {
         // FIXME-SCROLL: May be an option?
         if ((in_flags & (ImGuiScrollFlags_AlwaysCenterX | ImGuiScrollFlags_KeepVisibleCenterX)) != 0)
@@ -3822,7 +3822,7 @@ BeginDragDropSource: bool(ImGuiDragDropFlags flags)
     let mut source_drag_active: bool =  false;
     let mut source_id: ImGuiID =  0;
     let mut source_parent_id: ImGuiID =  0;
-    if (!(flags & ImGuiDragDropFlags_SourceExtern))
+    if (flag_clear(flags, ImGuiDragDropFlags_SourceExtern))
     {
         source_id = g.LastItemData.ID;
         if (source_id != 0)
@@ -3846,7 +3846,7 @@ BeginDragDropSource: bool(ImGuiDragDropFlags flags)
 
             // If you want to use BeginDragDropSource() on an item with no unique identifier for interaction, such as Text() or Image(), you need to:
             // A) Read the explanation below, B) Use the ImGuiDragDropFlags_SourceAllowNullID flag.
-            if (!(flags & ImGuiDragDropFlags_SourceAllowNullID))
+            if (flag_clear(flags, ImGuiDragDropFlags_SourceAllowNullID))
             {
                 // IM_ASSERT(0);
                 return false;
@@ -3901,7 +3901,7 @@ BeginDragDropSource: bool(ImGuiDragDropFlags flags)
         g.DragDropSourceFrameCount = g.FrameCount;
         g.DragDropWithinSource = true;
 
-        if (!(flags & ImGuiDragDropFlags_SourceNoPreviewTooltip))
+        if (flag_clear(flags, ImGuiDragDropFlags_SourceNoPreviewTooltip))
         {
             // Target can request the Source to not display its tooltip (we use a dedicated flag to make this request explicit)
             // We unfortunately can't just modify the source flags and skip the call to BeginTooltip, as caller may be emitting contents.
@@ -3914,7 +3914,7 @@ BeginDragDropSource: bool(ImGuiDragDropFlags flags)
             }
         }
 
-        if (!(flags & ImGuiDragDropFlags_SourceNoDisableHover) && !(flags & ImGuiDragDropFlags_SourceExtern))
+        if (flag_clear(flags, ImGuiDragDropFlags_SourceNoDisableHover) && flag_clear(flags, ImGuiDragDropFlags_SourceExtern))
             g.LastItemData.StatusFlags &= !ImGuiItemStatusFlags_HoveredRect;
 
         return true;
@@ -4071,12 +4071,12 @@ IsDragDropPayloadBeingAccepted: bool()
     // FIXME-DRAGDROP: Settle on a proper default visuals for drop target.
     payload.Preview = was_accepted_previously;
     flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
-    if (!(flags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview)
+    if (flag_clear(flags, ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview)
         window.DrawList.AddRect(r.Min - ImVec2::new(3.5f32,3.5f32), r.Max + ImVec2::new(3.5f32, 3.5f32), GetColorU32(ImGuiCol_DragDropTarget), 0.0, 0, 2.00f32);
 
     g.DragDropAcceptFrameCount = g.FrameCount;
     payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()
-    if (!payload.Delivery && !(flags & ImGuiDragDropFlags_AcceptBeforeDelivery))
+    if (!payload.Delivery && flag_clear(flags, ImGuiDragDropFlags_AcceptBeforeDelivery))
         return null_mut();
 
     return &payload;
@@ -5215,7 +5215,7 @@ static c_void WindowSelectViewport(window: *mut ImGuiWindow)
             else
                 window.ViewportAllowPlatformMonitorExtend = window.Viewport.PlatformMonitor;
         }
-        else if (window.Viewport && window != window.Viewport.Window && window.Viewport.Window && !(flags & ImGuiWindowFlags_ChildWindow) && window.DockNode == null_mut())
+        else if (window.Viewport && window != window.Viewport.Window && window.Viewport.Window && flag_clear(flags, ImGuiWindowFlags_ChildWindow) && window.DockNode == null_mut())
         {
             // When called from Begin() we don't have access to a proper version of the Hidden flag yet, so we replicate this code.
             let will_be_visible: bool = (window.DockIsActive && !window.DockTabIsVisible) ? false : true;
@@ -5233,7 +5233,7 @@ static c_void WindowSelectViewport(window: *mut ImGuiWindow)
                 window.Viewport = AddUpdateViewport(window, window.ID, window.Pos, window.Size, ImGuiViewportFlags_NoFocusOnAppearing);
             }
         }
-        else if (window.ViewportAllowPlatformMonitorExtend < 0 && (flags & ImGuiWindowFlags_ChildWindow) == 0)
+        else if (window.ViewportAllowPlatformMonitorExtend < 0 && flag_clear(flags, ImGuiWindowFlags_ChildWindow))
         {
             // Regular (non-child, non-popup) windows by default are also allowed to protrude
             // Child windows are kept contained within their parent.
@@ -8365,7 +8365,7 @@ ImGuiID DockSpace(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *con
 
     // When a DockSpace transitioned form implicit to explicit this may be called a second time
     // It is possible that the node has already been claimed by a docked window which appeared before the DockSpace() node, so we overwrite IsDockSpace again.
-    if (node.LastFrameActive == g.FrameCount && !(flags & ImGuiDockNodeFlags_KeepAliveOnly))
+    if (node.LastFrameActive == g.FrameCount && flag_clear(flags, ImGuiDockNodeFlags_KeepAliveOnly))
     {
         // IM_ASSERT(node->IsDockSpace() == false && "Cannot call DockSpace() twice a frame with the same ID");
         node.SetLocalFlags(node.LocalFlags | ImGuiDockNodeFlags_DockSpace);

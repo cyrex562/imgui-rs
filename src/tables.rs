@@ -264,7 +264,7 @@ static let TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER: c_float =  0.06f;   // Delay/t
 inline ImGuiTableFlags TableFixFlags(ImGuiTableFlags flags, *mut ImGuiWindow outer_window)
 {
     // Adjust flags: set default sizing policy
-    if ((flags & ImGuiTableFlags_SizingMask_) == 0)
+    if (flag_clear(flags, ImGuiTableFlags_SizingMask_))
         flags |= ((flags & ImGuiTableFlags_ScrollX) || (outer_window.Flags & ImGuiWindowFlags_AlwaysAutoResize)) ? ImGuiTableFlags_SizingFixedFit : ImGuiTableFlags_SizingStretchSame;
 
     // Adjust flags: enable NoKeepColumnsVisible when using ImGuiTableFlags_SizingFixedSame
@@ -348,7 +348,7 @@ bool    BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImG
     table.DrawSplitter.Clear();
 
     // Fix flags
-    table.IsDefaultSizingPolicy = (flags & ImGuiTableFlags_SizingMask_) == 0;
+    table.IsDefaultSizingPolicy = flag_clear(flags, ImGuiTableFlags_SizingMask_);
     flags = TableFixFlags(flags, outer_window);
 
     // Initialize
@@ -370,7 +370,7 @@ bool    BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImG
         // Ensure no vertical scrollbar appears if we only want horizontal one, to make flag consistent
         // (we have no other way to disable vertical scrollbar of a window while keeping the horizontal one showing)
         override_content_size: ImVec2(f32::MAX, f32::MAX);
-        if ((flags & ImGuiTableFlags_ScrollX) && !(flags & ImGuiTableFlags_ScrollY))
+        if ((flags & ImGuiTableFlags_ScrollX) && flag_clear(flags, ImGuiTableFlags_ScrollY))
             override_content_size.y = FLT_MIN;
 
         // Ensure specified width (when not specified, Stretched columns will act as if the width == OuterWidth and
@@ -426,11 +426,11 @@ bool    BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImG
     // - PadOuter           | Pad ..Content..... Pad .....Content.. Pad |
     // - PadInner           ........Content.. Pad | Pad ..Content........
     // - PadOuter+PadInner  | Pad ..Content.. Pad | Pad ..Content.. Pad |
-    let pad_outer_x: bool = (flags & ImGuiTableFlags_NoPadOuterX) ? false : (flags & ImGuiTableFlags_PadOuterX) ? true : (flags & ImGuiTableFlags_BordersOuterV) != 0;
+    let pad_outer_x: bool = (flags & ImGuiTableFlags_NoPadOuterX) ? false : (flags & ImGuiTableFlags_PadOuterX) ? true : flag_set(flags, ImGuiTableFlags_BordersOuterV);
     let pad_inner_x: bool = (flags & ImGuiTableFlags_NoPadInnerX) ? false : true;
     let inner_spacing_for_border: c_float =  (flags & ImGuiTableFlags_BordersInnerV) ? TABLE_BORDER_SIZE : 0.0;
-    let inner_spacing_explicit: c_float =  (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) == 0) ? g.Style.CellPadding.x : 0.0;
-    let inner_padding_explicit: c_float =  (pad_inner_x && (flags & ImGuiTableFlags_BordersInnerV) != 0) ? g.Style.CellPadding.x : 0.0;
+    let inner_spacing_explicit: c_float =  (pad_inner_x && flag_clear(flags, ImGuiTableFlags_BordersInnerV)) ? g.Style.CellPadding.x : 0.0;
+    let inner_padding_explicit: c_float =  (pad_inner_x && flag_set(flags, ImGuiTableFlags_BordersInnerV)) ? g.Style.CellPadding.x : 0.0;
     table.CellSpacingX1 = inner_spacing_explicit + inner_spacing_for_border;
     table.CellSpacingX2 = inner_spacing_explicit;
     table.CellPaddingX = inner_padding_explicit;
@@ -466,7 +466,7 @@ bool    BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImG
     if (inner_window != outer_window) // So EndChild() within the inner window can restore the table properly.
         inner_window.DC.CurrentTableIdx = table_idx;
 
-    if ((table_last_flags & ImGuiTableFlags_Reorderable) && (flags & ImGuiTableFlags_Reorderable) == 0)
+    if ((table_last_flags & ImGuiTableFlags_Reorderable) && flag_clear(flags, ImGuiTableFlags_Reorderable))
         table.IsResetDisplayOrderRequest = true;
 
     // Mark as used
@@ -659,7 +659,7 @@ static c_void TableSetupColumnFlags(*mut ImGuiTable table, *mut ImGuiTableColumn
     ImGuiTableColumnFlags flags = flags_in;
 
     // Sizing Policy
-    if ((flags & ImGuiTableColumnFlags_WidthMask_) == 0)
+    if (flag_clear(flags, ImGuiTableColumnFlags_WidthMask_))
     {
         const ImGuiTableFlags table_sizing_policy = (table.Flags & ImGuiTableFlags_SizingMask_);
         if (table_sizing_policy == ImGuiTableFlags_SizingFixedFit || table_sizing_policy == ImGuiTableFlags_SizingFixedSame)
@@ -681,7 +681,7 @@ static c_void TableSetupColumnFlags(*mut ImGuiTable table, *mut ImGuiTableColumn
         flags |= ImGuiTableColumnFlags_NoSort;
 
     // Indentation
-    if ((flags & ImGuiTableColumnFlags_IndentMask_) == 0)
+    if (flag_clear(flags, ImGuiTableColumnFlags_IndentMask_))
         flags |= (table.Columns.index_from_ptr(column) == 0) ? ImGuiTableColumnFlags_IndentEnable : ImGuiTableColumnFlags_IndentDisable;
 
     // Alignment
@@ -698,9 +698,9 @@ static c_void TableSetupColumnFlags(*mut ImGuiTable table, *mut ImGuiTableColumn
     {
         let count: c_int = 0, mask = 0, list = 0;
         if ((flags & ImGuiTableColumnFlags_PreferSortAscending)  != 0 && (flags & ImGuiTableColumnFlags_NoSortAscending)  == 0) { mask |= 1 << ImGuiSortDirection_Ascending;  list |= ImGuiSortDirection_Ascending  << (count << 1); count+= 1; }
-        if ((flags & ImGuiTableColumnFlags_PreferSortDescending) != 0 && (flags & ImGuiTableColumnFlags_NoSortDescending) == 0) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count+= 1; }
+        if (flag_set(flags, ImGuiTableColumnFlags_PreferSortDescending) && flag_clear(flags, ImGuiTableColumnFlags_NoSortDescending)) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count+= 1; }
         if ((flags & ImGuiTableColumnFlags_PreferSortAscending)  == 0 && (flags & ImGuiTableColumnFlags_NoSortAscending)  == 0) { mask |= 1 << ImGuiSortDirection_Ascending;  list |= ImGuiSortDirection_Ascending  << (count << 1); count+= 1; }
-        if ((flags & ImGuiTableColumnFlags_PreferSortDescending) == 0 && (flags & ImGuiTableColumnFlags_NoSortDescending) == 0) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count+= 1; }
+        if (flag_clear(flags, ImGuiTableColumnFlags_PreferSortDescending) && flag_clear(flags, ImGuiTableColumnFlags_NoSortDescending)) { mask |= 1 << ImGuiSortDirection_Descending; list |= ImGuiSortDirection_Descending << (count << 1); count+= 1; }
         if ((table.Flags & ImGuiTableFlags_SortTristate) || count == 0) { mask |= 1 << ImGuiSortDirection_None; count+= 1; }
         column.SortDirectionsAvailList = list;
         column.SortDirectionsAvailMask = mask;
@@ -1228,7 +1228,7 @@ c_void    EndTable()
     // IM_ASSERT(table.RowPosY2 == inner_window.DC.CursorPos.y);
     if (inner_window != outer_window)
         inner_window.DC.CursorMaxPos.y = inner_content_max_y;
-    else if (!(flags & ImGuiTableFlags_NoHostExtendY))
+    else if (flag_clear(flags, ImGuiTableFlags_NoHostExtendY))
         table.OuterRect.Max.y = table.InnerRect.Max.y = ImMax(table.OuterRect.Max.y, inner_content_max_y); // Patch OuterRect/InnerRect height
     table.WorkRect.Max.y = ImMax(table.WorkRect.Max.y, table.OuterRect.Max.y);
     table_instance.LastOuterHeight = table.OuterRect.GetHeight();
@@ -1248,12 +1248,12 @@ c_void    EndTable()
     }
 
     // Pop clipping rect
-    if (!(flags & ImGuiTableFlags_NoClip))
+    if (flag_clear(flags, ImGuiTableFlags_NoClip))
         inner_window.DrawList.PopClipRect();
     inner_window.ClipRect = inner_window.DrawList._ClipRectStack.last().unwrap();
 
     // Draw borders
-    if ((flags & ImGuiTableFlags_Borders) != 0)
+    if (flag_set(flags, ImGuiTableFlags_Borders))
         TableDrawBorders(table);
 
 // #if 0
@@ -1416,12 +1416,12 @@ c_void TableSetupColumn(label: *const c_char, ImGuiTableColumnFlags flags,init_w
 
     // Assert when passing a width or weight if policy is entirely left to default, to avoid storing width into weight and vice-versa.
     // Give a grace to users of ImGuiTableFlags_ScrollX.
-    if (table.IsDefaultSizingPolicy && (flags & ImGuiTableColumnFlags_WidthMask_) == 0 && (flags & ImGuiTableFlags_ScrollX) == 0)
+    if (table.IsDefaultSizingPolicy && flag_clear(flags, ImGuiTableColumnFlags_WidthMask_) && flag_clear(flags, ImGuiTableFlags_ScrollX))
         // IM_ASSERT(init_width_or_weight <= 0.0 && "Can only specify width/weight if sizing policy is set explicitly in either Table or Column.");
 
     // When passing a width automatically enforce WidthFixed policy
     // (whereas TableSetupColumnFlags would default to WidthAuto if table is not Resizable)
-    if ((flags & ImGuiTableColumnFlags_WidthMask_) == 0 && init_width_or_weight > 0.0)
+    if (flag_clear(flags, ImGuiTableColumnFlags_WidthMask_) && init_width_or_weight > 0.0)
         if ((table.Flags & ImGuiTableFlags_SizingMask_) == ImGuiTableFlags_SizingFixedFit || (table.Flags & ImGuiTableFlags_SizingMask_) == ImGuiTableFlags_SizingFixedSame)
             flags |= ImGuiTableColumnFlags_WidthFixed;
 
@@ -2630,7 +2630,7 @@ c_void TableSortSpecsBuild(*mut ImGuiTable table)
     for (let column_n: c_int = 0; column_n < columns_count; column_n++)
     {
         ImGuiTableColumnFlags flags = TableGetColumnFlags(column_n);
-        if ((flags & ImGuiTableColumnFlags_IsEnabled) && !(flags & ImGuiTableColumnFlags_NoHeaderLabel))
+        if ((flags & ImGuiTableColumnFlags_IsEnabled) && flag_clear(flags, ImGuiTableColumnFlags_NoHeaderLabel))
             row_height = ImMax(row_height, CalcTextSize(TableGetColumnName(column_n)).y);
     }
     row_height += GetStyle().CellPadding.y * 2.0.0;
@@ -3795,13 +3795,13 @@ c_void EndColumns()
     const ImGuiOldColumnFlags flags = columns->Flags;
     columns->LineMaxY = ImMax(columns->LineMaxY, window.DC.CursorPos.y);
     window.DC.CursorPos.y = columns->LineMaxY;
-    if (!(flags & ImGuiOldColumnFlags_GrowParentContentsSize))
+    if (flag_clear(flags, ImGuiOldColumnFlags_GrowParentContentsSize))
         window.DC.CursorMaxPos.x = columns->HostCursorMaxPosX;  // Restore cursor max pos, as columns don't grow parent
 
     // Draw columns borders and handle resize
     // The IsBeingResized flag ensure we preserve pre-resize columns width so back-and-forth are not lossy
     let mut is_being_resized: bool =  false;
-    if (!(flags & ImGuiOldColumnFlags_NoBorder) && !window.SkipItems)
+    if (flag_clear(flags, ImGuiOldColumnFlags_NoBorder) && !window.SkipItems)
     {
         // We clip Y boundaries CPU side because very long triangles are mishandled by some GPU drivers.
         let y1: c_float =  ImMax(columns->HostCursorPosY, window.ClipRect.Min.y);
@@ -3819,7 +3819,7 @@ c_void EndColumns()
                 continue;
 
             let mut hovered: bool =  false, held = false;
-            if (!(flags & ImGuiOldColumnFlags_NoResize))
+            if (flag_clear(flags, ImGuiOldColumnFlags_NoResize))
             {
                 ButtonBehavior(column_hit_rect, column_id, &hovered, &held);
                 if (hovered || held)

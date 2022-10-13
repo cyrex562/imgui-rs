@@ -70,7 +70,7 @@ pub fn FixRectCornerFlags(mut flags: ImDrawFlags) -> ImDrawFlags {
     // Note that ImDrawFlags_Closed (== 0x01) is an invalid flag for AddRect(), AddRectFilled(), PathRect() etc...
     // IM_ASSERT((flags & 0x00) == 0 && "Misuse of legacy hardcoded ImDrawCornerFlags values!");
 
-    if (flags & ImDrawFlags_RoundCornersMask_) == 0 {
+    if flag_clear(flags, ImDrawFlags_RoundCornersMask_) {
         flags |= ImDrawFlags_RoundCornersAll;
     }
 

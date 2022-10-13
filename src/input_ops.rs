@@ -258,7 +258,7 @@ pub unsafe fn IsKeyPressedEx(key: ImGuiKey, flags: ImGuiInputFlags) -> bool {
     }
 
     let mut pressed: bool = (t == 0.0);
-    if !pressed && ((flags & ImGuiInputFlags_Repeat) != 0) {
+    if !pressed && (flag_set(flags, ImGuiInputFlags_Repeat)) {
         // c_float repeat_delay, repeat_rate;
         let mut repeat_delay: c_float = 0.0;
         let mut repeat_rate: c_float = 0.0;

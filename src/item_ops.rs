@@ -64,8 +64,8 @@ pub unsafe fn IsItemFocused() -> bool
 pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    if g.NavDisableMouseHover && !g.NavDisableHighlight && (flags & ImGuiHoveredFlags_NoNavOverride) == 0 {
-        if (g.LastItemData.InFlags & ImGuiItemFlags_Disabled) && !(flags & ImGuiHoveredFlags_AllowWhenDisabled) {
+    if g.NavDisableMouseHover && !g.NavDisableHighlight && flag_clear(flags, ImGuiHoveredFlags_NoNavOverride) {
+        if (g.LastItemData.InFlags & ImGuiItemFlags_Disabled) && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled) {
             return false;
         }
         if !IsItemFocused() {
@@ -85,13 +85,13 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         // to use IsItemHovered() after EndChild() itself. Until a solution is found I believe reverting to the test from 2017/09/27 is safe since this was
         // the test that has been running for a long while.
         if g.HoveredWindow != window && (status_flags & ImGuiItemStatusFlags_HoveredWindow) == 0 {
-            if (flags & ImGuiHoveredFlags_AllowWhenOverlapped) == 0 {
+            if flag_clear(flags, ImGuiHoveredFlags_AllowWhenOverlapped) {
                 return false;
             }
         }
 
         // Test if another item is active (e.g. being dragged)
-        if (flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) == 0 {
+        if flag_clear(flags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) {
             if g.ActiveId != 0 && g.ActiveId != g.LastItemData.ID && !g.ActiveIdAllowOverlap {
                 if g.ActiveId != window.MoveId && g.ActiveId != window.TabId {
                     return false;
@@ -106,7 +106,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         }
 
         // Test if the item is disabled
-        if (g.LastItemData.InFlags & ImGuiItemFlags_Disabled) && !(flags & ImGuiHoveredFlags_AllowWhenDisabled) {
+        if (g.LastItemData.InFlags & ImGuiItemFlags_Disabled) && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled) {
             return false;
         }
 
@@ -130,7 +130,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
     }
     if delay > 0.0 {
         let mut hover_delay_id: ImGuiID = if g.LastItemData.ID != 0 { g.LastItemData.ID } else { window.GetIDFromRectangle(&g.LastItemData.Rect) };
-        if (flags & ImGuiHoveredFlags_NoSharedDelay) != 0 && (g.HoverDelayIdPreviousFrame != hover_delay_id) {
+        if flag_set(flags, ImGuiHoveredFlags_NoSharedDelay) && (g.HoverDelayIdPreviousFrame != hover_delay_id) {
             g.HoverDelayTimer = 0.0;
         }
         g.HoverDelayId = hover_delay_id;

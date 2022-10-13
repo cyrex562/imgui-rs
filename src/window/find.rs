@@ -5,14 +5,14 @@ use crate::rect::ImRect;
 use crate::type_defs::ImGuiID;
 use crate::utils::{flag_clear, is_not_null};
 use crate::vec2::ImVec2;
-use crate::window::{ImGuiWindow, window_ops};
+use crate::window::{ImGuiWindow, ops};
 use crate::window::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize};
 
 // static FindFrontMostVisibleChildWindow: *mut ImGuiWindow(window: *mut ImGuiWindow)
 pub fn FindFrontMostVisibleChildWindow(window: *mut ImGuiWindow) -> *mut ImGuiWindow {
     // for (let n: c_int = window.DC.ChildWindows.Size - 1; n >= 0; n--)
     for n in window.DC.ChildWindows.len() - 1..0 {
-        if window_ops::IsWindowActiveAndVisible(window.DC.ChildWindows[n]) {
+        if ops::IsWindowActiveAndVisible(window.DC.ChildWindows[n]) {
             return FindFrontMostVisibleChildWindow(window.DC.ChildWindows[n]);
         }
     }
@@ -34,8 +34,8 @@ pub unsafe fn FindBottomMostVisibleWindowWithBeginStack(
         if !IsWindowWithinBeginStackOf(window, parent_window) {
             break;
         }
-        if window_ops::IsWindowActiveAndVisible(window)
-            && window_ops::GetWindowDisplayLayer(window) <= window_ops::GetWindowDisplayLayer(parent_window)
+        if ops::IsWindowActiveAndVisible(window)
+            && ops::GetWindowDisplayLayer(window) <= ops::GetWindowDisplayLayer(parent_window)
         {
             bottom_most_visible_window = window;
         }

@@ -1726,7 +1726,7 @@ static stbtt__GetGlyphShapeTT: c_int(const stbtt_fontinfo *info, glyph_index: c_
             stbtt_int16 dx = *points+= 1;
             x += (flags & 16) ? dx : -dx; // ???
          } else {
-            if (!(flags & 16)) {
+            if (flag_clear(flags, 16)) {
                x = x + (stbtt_int16) (points[0]*256 + points[1]);
                points += 2;
             }
@@ -1742,7 +1742,7 @@ static stbtt__GetGlyphShapeTT: c_int(const stbtt_fontinfo *info, glyph_index: c_
             stbtt_int16 dy = *points+= 1;
             y += (flags & 32) ? dy : -dy; // ???
          } else {
-            if (!(flags & 32)) {
+            if (flag_clear(flags, 32)) {
                y = y + (stbtt_int16) (points[0]*256 + points[1]);
                points += 2;
             }
@@ -1763,7 +1763,7 @@ static stbtt__GetGlyphShapeTT: c_int(const stbtt_fontinfo *info, glyph_index: c_
                num_vertices = stbtt__close_shape(vertices, num_vertices, was_off, start_off, sx,sy,scx,scy,cx,cy);
 
             // now start the new one
-            start_off = !(flags & 1);
+            start_off = flag_clear(flags, 1);
             if (start_of0f32) {
                // if we start off with an off-curve point, then when we need to find a point on the curve
                // where we can start, and we need to save some state for when we wraparound.
@@ -1788,7 +1788,7 @@ static stbtt__GetGlyphShapeTT: c_int(const stbtt_fontinfo *info, glyph_index: c_
             next_move = 1 + ttUSHORT(endPtsOfContours+j*2);
             ++j;
          } else {
-            if (!(flags & 1)) { // if it's a curve
+            if (flag_clear(flags, 1)) { // if it's a curve
                if (was_of0f32) // two off-curve control points in a row means interpolate an on-curve midpoint
                   stbtt_setvertex(&vertices[num_vertices++], STBTT_vcurve, (cx+x)>>1, (cy+y)>>1, cx, cy);
                cx = x;

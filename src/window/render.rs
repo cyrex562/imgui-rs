@@ -25,7 +25,7 @@ use crate::text_ops::CalcTextSize;
 use crate::type_defs::ImGuiID;
 use crate::utils::{flag_clear, flag_set, is_not_null, is_null};
 use crate::vec2::ImVec2;
-use crate::window::{find, ImGuiWindow, window_ops};
+use crate::window::{find, ImGuiWindow, ops};
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip, ImGuiWindowFlags_UnsavedDocument};
 
 // Render title text, collapse button, close button
@@ -37,7 +37,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     flags: ImGuiWindowFlags = window.Flags;
 
     let has_close_button: bool = (p_open != null_mut());
-    let has_collapse_button: bool = !(flags & ImGuiWindowFlags_NoCollapse) && (style.WindowMenuButtonPosition != ImGuiDir_None);
+    let has_collapse_button: bool = flag_clear(flags, ImGuiWindowFlags_NoCollapse) && (style.WindowMenuButtonPosition != ImGuiDir_None);
 
     // Close & Collapse button are on the Menu NavLayer and don't default focus (unless there's nothing else on that layer)
     // FIXME-NAV: Might want (or not?) to set the equivalent of ImGuiButtonFlags_NoNavFocus so that mouse clicks on standard title bar items don't necessarily set nav/keyboard ref?
@@ -138,7 +138,7 @@ pub fn UpdateWindowParentAndRootLinks(window: *mut ImGuiWindow, flags: ImGuiWind
     }
     if (parent_window && (flags & ImGuiWindowFlags_Popup))
         window.RootWindowPopupTree = parent_window.RootWindowPopupTree;
-    if (parent_window && !(flags & ImGuiWindowFlags_Modal) && (flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Popup))) // FIXME: simply use _NoTitleBar ?
+    if (parent_window && flag_clear(flags, ImGuiWindowFlags_Modal) && (flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Popup))) // FIXME: simply use _NoTitleBar ?
         window.RootWindowForTitleBarHighlight = parent_window.RootWindowForTitleBarHighlight;
     while (window.RootWindowForNav->Flags & ImGuiWindowFlags_NavFlattened)
     {
@@ -318,7 +318,7 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
     if border_held != -1
     {
         let def = resize_border_def[border_held];
-        let border_r: ImRect =  window_ops::GetResizeBorderRect(window, border_held as c_int, rounding, 0.0);
+        let border_r: ImRect =  ops::GetResizeBorderRect(window, border_held as c_int, rounding, 0.0);
         window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::new(0.5f32, 0.5f32) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
         window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::new(0.5f32, 0.5f32) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
         window.DrawList.PathStroke(GetColorU32(ImGuiCol_SeparatorActive, 0.0), 0, ImMax(2.0.0, border_size)); // Thicker than usual
@@ -369,7 +369,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
                 }
             }
 
-            bg_col: u32 = GetColorU32(window_ops::GetWindowBgColorIdx(window), 0.0);
+            bg_col: u32 = GetColorU32(ops::GetWindowBgColorIdx(window), 0.0);
             if window.ViewportOwned
             {
                 // No alpha

@@ -39,7 +39,7 @@ pub mod window_class;
 pub mod window_stack_data;
 pub mod window_settings;
 pub mod window_flags;
-pub mod window_ops;
+pub mod ops;
 pub mod window_temp_data;
 pub mod window_dock_style_colors;
 pub mod window_dock_style_color;

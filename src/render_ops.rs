@@ -254,7 +254,7 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     if id != g.NavId {
         return;
     }
-    if g.NavDisableHighlight && !(flags & ImGuiNavHighlightFlags_AlwaysDraw) == 0 {
+    if g.NavDisableHighlight && flag_clear(flags, ImGuiNavHighlightFlags_AlwaysDraw) == 0 {
         return;
     }
     let mut window = g.CurrentWindow;
@@ -262,7 +262,7 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
         return;
     }
 
-    let rounding: c_float = if (flags & ImGuiNavHighlightFlags_NoRounding) != 0 { 0.0 } else { g.Style.FrameRounding };
+    let rounding: c_float = if flag_set(flags, ImGuiNavHighlightFlags_NoRounding) { 0.0 } else { g.Style.FrameRounding };
     let mut display_rect: ImRect = bb.clone();
     display_rect.ClipWith(&window.ClipRect);
     if flags & ImGuiNavHighlightFlags_TypeDefault {
@@ -586,7 +586,7 @@ pub fn CalcRoundingFlagsForRectInRect(r_in: &ImRect, r_outer: &ImRect, threshold
 // Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
 // FIXME: uses GetColorU32
 pub unsafe fn RenderColorRectWithAlphaCheckerboard(mut draw_list: *mut ImDrawList, p_min: ImVec2, p_max: ImVec2, col: u32, grid_step: c_float, grid_off: ImVec2, rounding: c_float, mut flags: ImDrawFlags) {
-    if ((flags & ImDrawFlags_RoundCornersMask_) == 0) {
+    if (flag_clear(flags, ImDrawFlags_RoundCornersMask_)) {
         flags = ImDrawFlags_RoundCornersDefault_;
     }
     if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xF0) {
