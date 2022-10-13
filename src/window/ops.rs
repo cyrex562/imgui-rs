@@ -15,7 +15,7 @@ use crate::render_ops::{RenderFrame, RenderRectFilledWithHole};
 use crate::style_ops::GetColorU32;
 use crate::type_defs::ImGuiID;
 use crate::vec2::ImVec2;
-use crate::window::{find, ImGuiWindow, render};
+use crate::window::{find, focus, ImGuiWindow, render};
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysHorizontalScrollbar, ImGuiWindowFlags_AlwaysVerticalScrollbar, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_HorizontalScrollbar, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoBringToFrontOnFocus, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip};
 use crate::{ImGuiViewport, ImHashStr};
 use libc::{c_char, c_float, c_int, c_short, c_void, size_t, strcmp};
@@ -23,12 +23,14 @@ use std::ptr::{null, null_mut};
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
 use crate::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_DpiEnableScaleFonts};
 use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
+use crate::cursor_ops::ErrorCheckUsingSetCursorPosToExtendParentBoundaries;
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::dock_node::ImGuiDockNode;
 use crate::garbage_collection::GcAwakeTransientWindowBuffers;
 use crate::hash_ops::ImHashData;
 use crate::id_ops::{ClearActiveID, KeepAliveID};
 use crate::input_ops::{IsMouseDragging, IsMouseHoveringRect};
+use crate::item_flags::ImGuiItemFlags_Disabled;
 use crate::item_ops::SetLastItemData;
 use crate::item_status_flags::ImGuiItemStatusFlags_HoveredRect;
 use crate::key::{ImGuiKey_DownArrow, ImGuiKey_GamepadDpadDown, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadUp, ImGuiKey_LeftArrow, ImGuiKey_RightArrow, ImGuiKey_UpArrow};
@@ -45,8 +47,8 @@ use crate::size_callback_data::ImGuiSizeCallbackData;
 use crate::string_ops::{ImStrdupcpy, str_to_const_c_char_ptr};
 use crate::utils::{flag_clear, flag_set, is_not_null, is_null};
 use crate::vec4::ImVec4;
-use crate::window::find::{FindBlockingModal, FindWindowByName};
-use crate::window::rect::{ClampWindowRect, PushClipRect};
+use crate::window::find::{FindBlockingModal, FindWindowByName, FindWindowDisplayIndex};
+use crate::window::rect::{ClampWindowRect, PopClipRect, PushClipRect};
 use crate::window::render::{RenderWindowDecorations, RenderWindowTitleBarContents, UpdateWindowParentAndRootLinks};
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysHorizontalScrollbar, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_AlwaysVerticalScrollbar, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_HorizontalScrollbar, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoBringToFrontOnFocus, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoInputs, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip};
 use crate::window::window_settings::ImGuiWindowSettings;
@@ -68,7 +70,7 @@ pub unsafe fn SetCurrentWindow(window: *mut ImGuiWindow) {
     }
 }
 
-// static inline IsWindowContentHoverable: bool(window: *mut ImGuiWindow, ImGuiHoveredFlags flags)
+// static inline IsWindowContentHoverable: bool(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags)
 pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags) -> bool {
     // An active popup disable hovering on other windows (apart from its own children)
     // FIXME-OPT: This could be cached/stored within the window.
@@ -854,7 +856,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         SetWindowCollapsed(window, g.NextWindowData.CollapsedVal.clone(), g.NextWindowData.CollapsedCond.clone());
     }
     if flag_set(g.NextWindowData.Flags.clone(), ImGuiNextWindowDataFlags_HasFocus) {
-        FocusWindow(window);
+        focus::FocusWindow(window);
     }
     if window.Appearing {
         SetWindowConditionAllowFlags(window, ImGuiCond_Appearing, false);
@@ -1226,7 +1228,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             let size_y_for_scrollbars: c_float =  if use_current_size_for_scrollbar_y { avail_size_from_current_frame.y } else { avail_size_from_last_frame.y };
             //scrollbar_y_from_last_frame: bool = window.ScrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
             window.ScrollbarY = flag_set(flags, ImGuiWindowFlags_AlwaysVerticalScrollbar) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar));
-            window.ScrollbarX = flag_set(flags, ImGuiWindowFlags_AlwaysHorizontalScrollbar) || (if needed_size_from_last_frame.x > size_x_for_scrollbars - window.ScrollbarY { style.ScrollbarSize } else { 0.0 }) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar) && flag_set(flags, ImGuiWindowFlags_HorizontalScrollbar);
+            // window.ScrollbarX = flag_set(flags, ImGuiWindowFlags_AlwaysHorizontalScrollbar) || (needed_size_from_last_frame.x > size_x_for_scrollbars - window.ScrollbarY { style.ScrollbarSize } else { 0.0 }) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar) && flag_set(flags, ImGuiWindowFlags_HorizontalScrollbar);
             if window.ScrollbarX && !window.ScrollbarY {
                 window.ScrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar);
             }
@@ -1415,7 +1417,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // Apply focus (we need to call FocusWindow() AFTER setting DC.CursorStartPos so our initial navigation reference rectangle can start around there)
         if (want_focus)
         {
-            FocusWindow(window);
+            focus::FocusWindow(window);
             NavInitWindow(window, false); // <-- this is in the way for us to be able to defer and sort reappearing FocusWindow() calls
         }
 
@@ -1583,4 +1585,176 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     }
 
     return !window.SkipItems;
+}
+
+
+
+pub unsafe fn End()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+
+    // Error checking: verify that user hasn't called End() too many times!
+    if (g.CurrentWindowStack.Size <= 1 && g.WithinFrameScopeWithImplicitWindow)
+    {
+        // IM_ASSERT_USER_ERROR(g.CurrentWindowStack.Size > 1, "Calling End() too many times!");
+        return;
+    }
+    // IM_ASSERT(g.CurrentWindowStack.Size > 0);
+
+    // Error checking: verify that user doesn't directly call End() on a child window.
+    if ((window.Flags & ImGuiWindowFlags_ChildWindow) && !(window.Flags & ImGuiWindowFlags_DockNodeHost) && !window.DockIsActive) {}
+        // IM_ASSERT_USER_ERROR(g.WithinEndChild, "Must call EndChild() and not End()!");
+
+    // Close anything that is open
+    if (window.DC.CurrentColumns) {
+        EndColumns();
+    }
+    if (!(window.Flags & ImGuiWindowFlags_DockNodeHost)) {   // Pop inner window clip rectangle
+        PopClipRect();
+    }
+
+    // Stop logging
+    if (!(window.Flags & ImGuiWindowFlags_ChildWindow)) {   // FIXME: add more options for scope of logging
+        LogFinish();
+    }
+
+    if (window.DC.IsSetPos) {
+        ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
+    }
+
+    // Docking: report contents sizes to parent to allow for auto-resize
+    if is_not_null(window.DockNode) && window.DockTabIsVisible {
+        let mut host_window: *mut ImGuiWindow = window.DockNode.HostWindow;
+        if is_not_null(host_window)
+        {         // FIXME-DOCK
+            host_window.DC.CursorMaxPos = window.DC.CursorMaxPos + window.WindowPadding - host_window.WindowPadding;
+        }
+    }
+
+    // Pop from window stack
+    g.LastItemData = g.CurrentWindowStack.last().unwrap().ParentLastItemDataBackup;
+    if (window.Flags & ImGuiWindowFlags_ChildMenu) {
+        g.BeginMenuCount -= 1;
+    }
+    if (window.Flags & ImGuiWindowFlags_Popup) {
+        g.BeginPopupStack.pop_back();
+    }
+    g.CurrentWindowStack.last().unwrap().StackSizesOnBegin.CompareWithCurrentState();
+    g.CurrentWindowStack.pop_back();
+    SetCurrentWindow(if g.CurrentWindowStack.Size == 0 { null_mut() } else { g.CurrentWindowStack.last().unwrap().Window });
+    if (g.CurrentWindow) {
+        SetCurrentViewport(g.CurrentWindow, g.Currentwindow.Viewport);
+    }
+}
+
+
+pub unsafe fn BringWindowToFocusFront(window: *mut ImGuiWindow)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(window == window.RootWindow);
+
+    let cur_order: c_int = window.FocusOrder as c_int;
+    // IM_ASSERT(g.WindowsFocusOrder[cur_order] == window);
+    if g.WindowsFocusOrder.last().unwrap() == window {
+        return;
+    }
+
+    let new_order: c_int = g.WindowsFocusOrder.Size - 1;
+    // for (let n: c_int = cur_order; n < new_order; n++)
+    for n in cur_order ..new_order
+    {
+        g.WindowsFocusOrder[n] = g.WindowsFocusOrder[n + 1];
+        g.WindowsFocusOrder[n].FocusOrder-= 1;
+        // IM_ASSERT(g.WindowsFocusOrder[n]->FocusOrder == n);
+    }
+    g.WindowsFocusOrder[new_order] = window;
+    window.FocusOrder = new_order as c_short;
+}
+
+
+pub unsafe fn BringWindowToDisplayFront(window: *mut ImGuiWindow) {
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut current_front_window: *mut ImGuiWindow = *g.Windows.last_mut().unwrap();
+    if current_front_window == window || current_front_window.RootWindowDockTree == window { // Cheap early out (could be better)
+        return;
+    }
+    // for (let i: c_int = g.Windows.len() - 2; i >= 0; i--)
+    for i in g.Windows.len() - 2..0 { // We can ignore the top-most window
+        if g.Windows[i] == window {
+            libc::memmove(g.Windows[i], &g.Windows[i + 1], (g.Windows.len() - i - 1) * sizeof);
+            g.Windows[g.Windows.len() - 1] = window;
+            break;
+        }
+    }
+}
+
+pub unsafe fn BringWindowToDisplayBack(window: *mut ImGuiWindow) {
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    if g.Windows[0] == window {
+        return;
+    }
+    // for (let i: c_int = 0; i < g.Windows.len(); i++)
+    for i in 0..g.Windows.len() {
+        if g.Windows[i] == window {
+            libc::memmove(g.Windows[1], &g.Windows[0], i * sizeof);
+            g.Windows[0] = window;
+            break;
+        }
+    }
+}
+
+pub unsafe fn BringWindowToDisplayBehind(mut window: *mut ImGuiWindow, mut behind_window: *mut ImGuiWindow) {
+    // IM_ASSERT(window != NULL && behind_window != NULL);
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    window = window.RootWindow;
+    behind_window = behind_window.RootWindow;
+    let pos_wnd: c_int = FindWindowDisplayIndex(window);
+    let pos_beh: c_int = FindWindowDisplayIndex(behind_window);
+    if pos_wnd < pos_beh {
+        let copy_bytes: size_t = (pos_beh - pos_wnd - 1) * sizeof;
+        libc::memmove(g.Windows.Data[pos_wnd], &g.Windows.Data[pos_wnd + 1], copy_bytes);
+        g.Windows[pos_beh - 1] = window;
+    } else {
+        copy_bytes: size_t = (pos_wnd - pos_beh) * sizeof;
+        libc::memmove(g.Windows.Data[pos_beh + 1], &g.Windows.Data[pos_beh], copy_bytes);
+        g.Windows[pos_beh] = window;
+    }
+}
+
+
+// BeginDisabled()/EndDisabled()
+// - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
+// - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
+// - Feedback welcome at https://github.com/ocornut/imgui/issues/211
+// - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
+// - Optimized shortcuts instead of PushStyleVar() + PushItemFlag()
+pub unsafe fn BeginDisabled(disabled: bool)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut was_disabled: bool =  (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
+    if !was_disabled && disabled
+    {
+        g.DisabledAlphaBackup = g.Style.Alpha;
+        g.Style.Alpha *= g.Style.DisabledAlpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * g.Style.DisabledAlpha);
+    }
+    if was_disabled || disabled {
+        g.CurrentItemFlags |= ImGuiItemFlags_Disabled;
+    }
+    g.ItemFlagsStack.push(g.CurrentItemFlags);
+    g.DisabledStackSize+= 1;
+}
+
+
+pub unsafe fn EndDisabled() {
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.DisabledStackSize > 0);
+    g.DisabledStackSize -= 1;
+    let mut was_disabled: bool = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
+    //PopItemFlag();
+    g.ItemFlagsStack.pop_back();
+    g.CurrentItemFlags = g.ItemFlagsStack.last().unwrap().clone();
+    if was_disabled && (g.CurrentItemFlags & ImGuiItemFlags_Disabled) == 0 {
+        g.Style.Alpha = g.DisabledAlphaBackup; //PopStyleVar();}
+    }
 }

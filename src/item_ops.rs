@@ -12,14 +12,17 @@ use crate::input_ops::{IsMouseClicked, IsMouseHoveringRect};
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_Disabled};
 use crate::item_status_flags::{ImGuiItemStatusFlags, ImGuiItemStatusFlags_Deactivated, ImGuiItemStatusFlags_Edited, ImGuiItemStatusFlags_HasDeactivated, ImGuiItemStatusFlags_HoveredRect, ImGuiItemStatusFlags_HoveredWindow, ImGuiItemStatusFlags_None, ImGuiItemStatusFlags_ToggledOpen, ImGuiItemStatusFlags_ToggledSelection};
 use crate::key::{ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY};
+use crate::layout_ops::SameLine;
 use crate::layout_type::ImGuiLayoutType_Horizontal;
 use crate::math_ops::ImMax;
 use crate::mouse_button::ImGuiMouseButton;
 use crate::nav_ops::NavProcessItem;
 use crate::rect::ImRect;
 use crate::type_defs::ImGuiID;
-use crate::utils::flag_set;
+use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
+use crate::window::ops::IsWindowContentHoverable;
+use crate::window::window_flags::ImGuiWindowFlags_NavFlattened;
 use crate::window_flags::ImGuiWindowFlags_NavFlattened;
 use crate::window_ops::IsWindowContentHoverable;
 
@@ -60,12 +63,12 @@ pub unsafe fn IsItemFocused() -> bool
 // This is roughly matching the behavior of internal-facing ItemHoverable()
 // - we allow hovering to be true when ActiveId==window.MoveID, so that clicking on non-interactive items such as a Text() item still returns true with IsItemHovered()
 // - this should work even for non-interactive items that have no ID, so we cannot use LastItemId
-// IsItemHovered: bool(ImGuiHoveredFlags flags)
+// IsItemHovered: bool(flags: ImGuiHoveredFlags)
 pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     if g.NavDisableMouseHover && !g.NavDisableHighlight && flag_clear(flags, ImGuiHoveredFlags_NoNavOverride) {
-        if (g.LastItemData.InFlags & ImGuiItemFlags_Disabled) && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled) {
+        if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_Disabled) && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled) {
             return false;
         }
         if !IsItemFocused() {
@@ -106,7 +109,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         }
 
         // Test if the item is disabled
-        if (g.LastItemData.InFlags & ImGuiItemFlags_Disabled) && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled) {
+        if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_Disabled) && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled) {
             return false;
         }
 
@@ -210,7 +213,7 @@ pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    if !bb.Overlaps(&window.ClipRect) {
+    if !bb.Overlaps(&ImRect::from_vec4(&window.ClipRect)) {
         if id == 0 || (id != g.ActiveId && id != g.NavId) {
             if !g.LogEnabled {
                 return true;
@@ -527,6 +530,31 @@ pub unsafe fn ItemSize(size: &ImVec2,text_baseline_y: c_float)
 
     // Horizontal layout mode
     if window.DC.LayoutType == ImGuiLayoutType_Horizontal {
-        SameLine();
+        SameLine(0.0, 0.0);
     }
+}
+
+
+pub unsafe fn PushItemFlag(option: ImGuiItemFlags, enabled: bool)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut item_flags: ImGuiItemFlags =  g.CurrentItemFlags;
+    // IM_ASSERT(item_flags == g.ItemFlagsStack.back());
+    if (enabled) {
+        item_flags |= option;
+    }
+    else {
+        item_flags &= !option;
+    }
+    g.CurrentItemFlags = item_flags;
+    g.ItemFlagsStack.push(item_flags);
+}
+
+
+pub unsafe fn PopItemFlag()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.ItemFlagsStack.Size > 1); // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
+    g.ItemFlagsStack.pop_back();
+    g.CurrentItemFlags = g.ItemFlagsStack.last().unwrap().clone();
 }

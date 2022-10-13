@@ -13,496 +13,54 @@ use crate::storage::ImGuiStoragePair;
 
 
 
-c_void End()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
 
-    // Error checking: verify that user hasn't called End() too many times!
-    if (g.CurrentWindowStack.Size <= 1 && g.WithinFrameScopeWithImplicitWindow)
-    {
-        // IM_ASSERT_USER_ERROR(g.CurrentWindowStack.Size > 1, "Calling End() too many times!");
-        return;
-    }
-    // IM_ASSERT(g.CurrentWindowStack.Size > 0);
 
-    // Error checking: verify that user doesn't directly call End() on a child window.
-    if ((window.Flags & ImGuiWindowFlags_ChildWindow) && !(window.Flags & ImGuiWindowFlags_DockNodeHost) && !window.DockIsActive)
-        // IM_ASSERT_USER_ERROR(g.WithinEndChild, "Must call EndChild() and not End()!");
 
-    // Close anything that is open
-    if (window.DC.CurrentColumns)
-        EndColumns();
-    if (!(window.Flags & ImGuiWindowFlags_DockNodeHost))   // Pop inner window clip rectangle
-        PopClipRect();
 
-    // Stop logging
-    if (!(window.Flags & ImGuiWindowFlags_ChildWindow))    // FIXME: add more options for scope of logging
-        LogFinish();
 
-    if (window.DC.IsSetPos)
-        ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
 
-    // Docking: report contents sizes to parent to allow for auto-resize
-    if (window.DockNode && window.DockTabIsVisible)
-        if (let mut host_window: *mut ImGuiWindow =  window.DockNode.HostWindow)         // FIXME-DOCK
-            host_window.DC.CursorMaxPos = window.DC.CursorMaxPos + window.WindowPadding - host_window.WindowPadding;
 
-    // Pop from window stack
-    g.LastItemData = g.CurrentWindowStack.last().unwrap().ParentLastItemDataBackup;
-    if (window.Flags & ImGuiWindowFlags_ChildMenu)
-        g.BeginMenuCount-= 1;
-    if (window.Flags & ImGuiWindowFlags_Popup)
-        g.BeginPopupStack.pop_back();
-    g.CurrentWindowStack.last().unwrap().StackSizesOnBegin.CompareWithCurrentState();
-    g.CurrentWindowStack.pop_back();
-    SetCurrentWindow(g.CurrentWindowStack.Size == 0 ? null_mut() : g.CurrentWindowStack.last().unwrap().Window);
-    if (g.CurrentWindow)
-        SetCurrentViewport(g.CurrentWindow, g.Currentwindow.Viewport);
-}
 
-c_void BringWindowToFocusFront(window: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(window == window.RootWindow);
 
-    let cur_order: c_int = window.FocusOrder;
-    // IM_ASSERT(g.WindowsFocusOrder[cur_order] == window);
-    if (g.WindowsFocusOrder.last().unwrap() == window)
-        return;
 
-    let new_order: c_int = g.WindowsFocusOrder.Size - 1;
-    for (let n: c_int = cur_order; n < new_order; n++)
-    {
-        g.WindowsFocusOrder[n] = g.WindowsFocusOrder[n + 1];
-        g.WindowsFocusOrder[n]->FocusOrder-= 1;
-        // IM_ASSERT(g.WindowsFocusOrder[n]->FocusOrder == n);
-    }
-    g.WindowsFocusOrder[new_order] = window;
-    window.FocusOrder = new_order;
-}
 
-c_void BringWindowToDisplayFront(window: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut current_front_window: *mut ImGuiWindow =  g.Windows.last().unwrap();
-    if (current_front_window == window || current_front_window.RootWindowDockTree == window) // Cheap early out (could be better)
-        return;
-    for (let i: c_int = g.Windows.len() - 2; i >= 0; i--) // We can ignore the top-most window
-        if (g.Windows[i] == window)
-        {
-            memmove(&g.Windows[i], &g.Windows[i + 1], (g.Windows.len() - i - 1) * sizeof);
-            g.Windows[g.Windows.len() - 1] = window;
-            break;
-        }
-}
 
-c_void BringWindowToDisplayBack(window: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.Windows[0] == window)
-        return;
-    for (let i: c_int = 0; i < g.Windows.len(); i++)
-        if (g.Windows[i] == window)
-        {
-            memmove(&g.Windows[1], &g.Windows[0], i * sizeof);
-            g.Windows[0] = window;
-            break;
-        }
-}
 
-c_void BringWindowToDisplayBehind(window: *mut ImGuiWindow, behind_window: *mut ImGuiWindow)
-{
-    // IM_ASSERT(window != NULL && behind_window != NULL);
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    window = window.RootWindow;
-    behind_window = behind_window.RootWindow;
-    let pos_wnd: c_int = FindWindowDisplayIndex(window);
-    let pos_beh: c_int = FindWindowDisplayIndex(behind_window);
-    if (pos_wnd < pos_beh)
-    {
-        copy_bytes: size_t = (pos_beh - pos_wnd - 1) * sizeof;
-        memmove(&g.Windows.Data[pos_wnd], &g.Windows.Data[pos_wnd + 1], copy_bytes);
-        g.Windows[pos_beh - 1] = window;
-    }
-    else
-    {
-        copy_bytes: size_t = (pos_wnd - pos_beh) * sizeof;
-        memmove(&g.Windows.Data[pos_beh + 1], &g.Windows.Data[pos_beh], copy_bytes);
-        g.Windows[pos_beh] = window;
-    }
-}
 
-FindWindowDisplayIndex: c_int(window: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.Windows.index_from_ptr(g.Windows.find(window));
-}
 
-// Moving window to front of display and set focus (which happens to be back of our sorted list)
-c_void FocusWindow(window: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
 
-    if (g.NavWindow != window)
-    {
-        SetNavWindow(window);
-        if (window && g.NavDisableMouseHover)
-            g.NavMousePosDirty = true;
-        g.NavId = window ? window.NavLastIds[0] : 0; // Restore NavId
-        g.NavLayer = ImGuiNavLayer_Main;
-        g.NavFocusScopeId = 0;
-        g.NavIdIsAlive = false;
-    }
 
-    // Close popups if any
-    ClosePopupsOverWindow(window, false);
 
-    // Move the root window to the top of the pile
-    // IM_ASSERT(window == NULL || window.RootWindowDockTree != NULL);
-    let mut focus_front_window: *mut ImGuiWindow =  window ? window.RootWindow : null_mut();
-    let mut display_front_window: *mut ImGuiWindow =  window ? window.RootWindowDockTree : null_mut();
-    ImGuiDockNode* dock_node = window ? window.DockNode : null_mut();
-    let mut active_id_window_is_dock_node_host: bool =  (g.ActiveIdWindow && dock_node && dock_node.HostWindow == g.ActiveIdWindow);
 
-    // Steal active widgets. Some of the cases it triggers includes:
-    // - Focus a window while an InputText in another window is active, if focus happens before the old InputText can run.
-    // - When using Nav to activate menu items (due to timing of activating on press->new window appears->losing ActiveId)
-    // - Using dock host items (tab, collapse button) can trigger this before we redirect the ActiveIdWindow toward the child window.
-    if (g.ActiveId != 0 && g.ActiveIdWindow && g.ActiveIdwindow.RootWindow != focus_front_window)
-        if (!g.ActiveIdNoClearOnFocusLoss && !active_id_window_is_dock_node_host)
-            ClearActiveID();
 
-    // Passing NULL allow to disable keyboard focus
-    if (!window)
-        return;
-    window.LastFrameJustFocused = g.FrameCount;
 
-    // Select in dock node
-    if (dock_node && dock_node.TabBar)
-        dock_node.TabBar->SelectedTabId = dock_node.TabBar->NextSelectedTabId = window.TabId;
 
-    // Bring to front
-    BringWindowToFocusFront(focus_front_window);
-    if (((window.Flags | focus_front_window.Flags | display_front_window.Flags) & ImGuiWindowFlags_NoBringToFrontOnFocus) == 0)
-        BringWindowToDisplayFront(display_front_window);
-}
 
-c_void FocusTopMostWindowUnderOne(under_this_window: *mut ImGuiWindow, ignore_window: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let start_idx: c_int = g.WindowsFocusOrder.Size - 1;
-    if (under_this_window != null_mut())
-    {
-        // Aim at root window behind us, if we are in a child window that's our own root (see #4640)
-        let offset: c_int = -1;
-        while (under_this_window.Flags & ImGuiWindowFlags_ChildWindow)
-        {
-            under_this_window = under_this_window.ParentWindow;
-            offset = 0;
-        }
-        start_idx = FindWindowFocusIndex(under_this_window) + offset;
-    }
-    for (let i: c_int = start_idx; i >= 0; i--)
-    {
-        // We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
-        let mut window: *mut ImGuiWindow =  g.WindowsFocusOrder[i];
-        // IM_ASSERT(window == window.RootWindow);
-        if (window != ignore_window && window.WasActive)
-            if ((window.Flags & (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs)) != (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs))
-            {
-                // FIXME-DOCK: This is failing (lagging by one frame) for docked windows.
-                // If A and B are docked into window and B disappear, at the NewFrame() call site window.NavLastChildNavWindow will still point to B.
-                // We might leverage the tab order implicitly stored in window.DockNodeAsHost->TabBar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
-                // to tell which is the "previous" window. Or we may leverage 'LastFrameFocused/LastFrameJustFocused' and have this function handle child window itself?
-                let mut focus_window: *mut ImGuiWindow =  NavRestoreLastChildNavWindow(window);
-                FocusWindow(focus_window);
-                return;
-            }
-    }
-    FocusWindow(null_mut());
-}
 
-// Important: this alone doesn't alter current ImDrawList state. This is called by PushFont/PopFont only.
-c_void SetCurrentFont(font: *mut ImFont)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(font && font->IsLoaded());    // Font Atlas not created. Did you call io.Fonts.GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
-    // IM_ASSERT(font->Scale > 0.0);
-    g.Font = font;
-    g.FontBaseSize = ImMax(1.0, g.IO.FontGlobalScale * g.Font.FontSize * g.Font.Scale);
-    g.FontSize = g.CurrentWindow ? g.Currentwindow.CalcFontSize() : 0.0;
 
-    atlas: *mut ImFontAtlas = g.Font.ContainerAtlas;
-    g.DrawListSharedData.TexUvWhitePixel = atlas->TexUvWhitePixel;
-    g.DrawListSharedData.TexUvLines = atlas->TexUvLines;
-    g.DrawListSharedData.Font = g.Font;
-    g.DrawListSharedData.FontSize = g.FontSize;
-}
 
-c_void PushFont(font: *mut ImFont)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (!font)
-        font = GetDefaultFont();
-    SetCurrentFont(font);
-    g.FontStack.push(font);
-    g.Currentwindow.DrawList.PushTextureID(font->ContainerAtlas.TexID);
-}
 
-c_void  PopFont()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    g.Currentwindow.DrawList.PopTextureID();
-    g.FontStack.pop_back();
-    SetCurrentFont(g.FontStack.empty() ? GetDefaultFont() : g.FontStack.last().unwrap());
-}
 
-c_void PushItemFlag(option: ImGuiItemFlags, enabled: bool)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut item_flags: ImGuiItemFlags =  g.CurrentItemFlags;
-    // IM_ASSERT(item_flags == g.ItemFlagsStack.back());
-    if (enabled)
-        item_flags |= option;
-    else
-        item_flags &= !option;
-    g.CurrentItemFlags = item_flags;
-    g.ItemFlagsStack.push(item_flags);
-}
 
-c_void PopItemFlag()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(g.ItemFlagsStack.Size > 1); // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
-    g.ItemFlagsStack.pop_back();
-    g.CurrentItemFlags = g.ItemFlagsStack.last().unwrap();
-}
 
-// BeginDisabled()/EndDisabled()
-// - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
-// - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
-// - Feedback welcome at https://github.com/ocornut/imgui/issues/211
-// - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
-// - Optimized shortcuts instead of PushStyleVar() + PushItemFlag()
-c_void BeginDisabled(disabled: bool)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut was_disabled: bool =  (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
-    if (!was_disabled && disabled)
-    {
-        g.DisabledAlphaBackup = g.Style.Alpha;
-        g.Style.Alpha *= g.Style.DisabledAlpha; // PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * g.Style.DisabledAlpha);
-    }
-    if (was_disabled || disabled)
-        g.CurrentItemFlags |= ImGuiItemFlags_Disabled;
-    g.ItemFlagsStack.push(g.CurrentItemFlags);
-    g.DisabledStackSize+= 1;
-}
 
-c_void EndDisabled()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(g.DisabledStackSize > 0);
-    g.DisabledStackSize-= 1;
-    let mut was_disabled: bool =  (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
-    //PopItemFlag();
-    g.ItemFlagsStack.pop_back();
-    g.CurrentItemFlags = g.ItemFlagsStack.last().unwrap();
-    if (was_disabled && (g.CurrentItemFlags & ImGuiItemFlags_Disabled) == 0)
-        g.Style.Alpha = g.DisabledAlphaBackup; //PopStyleVar();
-}
 
-// FIXME: Look into renaming this once we have settled the new Focus/Activation/TabStop system.
-c_void PushAllowKeyboardFocus(allow_keyboard_focus: bool)
-{
-    PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus);
-}
 
-c_void PopAllowKeyboardFocus()
-{
-    PopItemFlag();
-}
 
-c_void PushButtonRepeat(repeat: bool)
-{
-    PushItemFlag(ImGuiItemFlags_ButtonRepeat, repeat);
-}
 
-c_void PopButtonRepeat()
-{
-    PopItemFlag();
-}
 
-c_void PushTextWrapPos(wrap_pos_x: c_float)
-{
-    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
-    window.DC.TextWrapPosStack.push(window.DC.TextWrapPos);
-    window.DC.TextWrapPos = wrap_pos_x;
-}
 
-c_void PopTextWrapPos()
-{
-    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
-    window.DC.TextWrapPos = window.DC.TextWrapPosStack.last().unwrap();
-    window.DC.TextWrapPosStack.pop_back();
-}
 
-static GetCombinedRootWindow: *mut ImGuiWindow(window: *mut ImGuiWindow, popup_hierarchy: bool, dock_hierarchy: bool)
-{
-    let mut last_window: *mut ImGuiWindow =  null_mut();
-    while (last_window != window)
-    {
-        last_window = window;
-        window = window.RootWindow;
-        if (popup_hierarchy)
-            window = window.RootWindowPopupTree;
-		if (dock_hierarchy)
-			window = window.RootWindowDockTree;
-	}
-    return window;
-}
 
-IsWindowChildOf: bool(window: *mut ImGuiWindow, potential_parent: *mut ImGuiWindow, popup_hierarchy: bool, dock_hierarchy: bool)
-{
-    let mut window_root: *mut ImGuiWindow =  GetCombinedRootWindow(window, popup_hierarchy, dock_hierarchy);
-    if (window_root == potential_parent)
-        return true;
-    while (window != null_mut())
-    {
-        if (window == potential_parent)
-            return true;
-        if (window == window_root) // end of chain
-            return false;
-        window = window.ParentWindow;
-    }
-    return false;
-}
 
-IsWindowWithinBeginStackOf: bool(window: *mut ImGuiWindow, potential_parent: *mut ImGuiWindow)
-{
-    if (window.RootWindow == potential_parent)
-        return true;
-    while (window != null_mut())
-    {
-        if (window == potential_parent)
-            return true;
-        window = window.ParentWindowInBeginStack;
-    }
-    return false;
-}
 
-IsWindowAbove: bool(potential_above: *mut ImGuiWindow, potential_below: *mut ImGuiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
 
-    // It would be saner to ensure that display layer is always reflected in the g.Windows[] order, which would likely requires altering all manipulations of that array
-    let display_layer_delta: c_int = GetWindowDisplayLayer(potential_above) - GetWindowDisplayLayer(potential_below);
-    if (display_layer_delta != 0)
-        return display_layer_delta > 0;
 
-    for (let i: c_int = g.Windows.len() - 1; i >= 0; i--)
-    {
-        let mut candidate_window: *mut ImGuiWindow =  g.Windows[i];
-        if (candidate_window == potential_above)
-            return true;
-        if (candidate_window == potential_below)
-            return false;
-    }
-    return false;
-}
 
-IsWindowHovered: bool(ImGuiHoveredFlags flags)
-{
-    // IM_ASSERT((flags & (ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenDisabled)) == 0);   // Flags not supported by this function
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut ref_window: *mut ImGuiWindow =  g.HoveredWindow;
-    let mut cur_window: *mut ImGuiWindow =  g.CurrentWindow;
-    if (ref_window == null_mut())
-        return false;
 
-    if (flag_clear(flags, ImGuiHoveredFlags_AnyWindow))
-    {
-        // IM_ASSERT(cur_window); // Not inside a Begin()/End()
-        let popup_hierarchy: bool = flag_clear(flags, ImGuiHoveredFlags_NoPopupHierarchy);
-        let dock_hierarchy: bool = flag_set(flags, ImGuiHoveredFlags_DockHierarchy);
-        if (flags & ImGuiHoveredFlags_RootWindow)
-            cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy, dock_hierarchy);
 
-        result: bool;
-        if (flags & ImGuiHoveredFlags_ChildWindows)
-            result = IsWindowChildOf(ref_window, cur_window, popup_hierarchy, dock_hierarchy);
-        else
-            result = (ref_window == cur_window);
-        if (!result)
-            return false;
-    }
 
-    if (!IsWindowContentHoverable(ref_window, flags))
-        return false;
-    if (flag_clear(flags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
-        if (g.ActiveId != 0 && !g.ActiveIdAllowOverlap && g.ActiveId != ref_window.MoveId)
-            return false;
-    return true;
-}
 
-IsWindowFocused: bool(ImGuiFocusedFlags flags)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut ref_window: *mut ImGuiWindow =  g.NavWindow;
-    let mut cur_window: *mut ImGuiWindow =  g.CurrentWindow;
-
-    if (ref_window == null_mut())
-        return false;
-    if (flags & ImGuiFocusedFlags_AnyWindow)
-        return true;
-
-    // IM_ASSERT(cur_window); // Not inside a Begin()/End()
-    let popup_hierarchy: bool = flag_clear(flags, ImGuiFocusedFlags_NoPopupHierarchy);
-    let dock_hierarchy: bool = flag_set(flags, ImGuiFocusedFlags_DockHierarchy);
-    if (flags & ImGuiHoveredFlags_RootWindow)
-        cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy, dock_hierarchy);
-
-    if (flags & ImGuiHoveredFlags_ChildWindows)
-        return IsWindowChildOf(ref_window, cur_window, popup_hierarchy, dock_hierarchy);
-    else
-        return (ref_window == cur_window);
-}
-
-ImGuiID GetWindowDockID()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.Currentwindow.DockId;
-}
-
-IsWindowDocked: bool()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.Currentwindow.DockIsActive;
-}
-
-// Can we focus this window with CTRL+TAB (or PadMenu + PadFocusPrev/PadFocusNext)
-// Note that NoNavFocus makes the window not reachable with CTRL+TAB but it can still be focused with mouse or programmatically.
-// If you want a window to never be focused, you may use the e.g. NoInputs flag.
-IsWindowNavFocusable: bool(window: *mut ImGuiWindow)
-{
-    return window.WasActive && window == window.RootWindow && !(window.Flags & ImGuiWindowFlags_NoNavFocus);
-}GetWindowWidth: c_float()
-{
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
-    return window.Size.x;
-}GetWindowHeight: c_float()
-{
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
-    return window.Size.y;
-}
-
-GetWindowPos: ImVec2()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
-    return window.Pos;
-}
 
 c_void SetWindowPos(window: *mut ImGuiWindow, pos: &ImVec2, cond: ImGuiCond)
 {

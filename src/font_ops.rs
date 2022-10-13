@@ -2,6 +2,10 @@ use crate::font::ImFont;
 use crate::type_defs::ImWchar;
 use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, size_t};
 use std::ptr::null_mut;
+use crate::font_atlas::ImFontAtlas;
+use crate::GImGui;
+use crate::math_ops::ImMax;
+use crate::utils::is_not_null;
 
 // Default font TTF is compressed with stb_compress then base85 encoded (see misc/fonts/binary_to_compressed_c.cpp for encoder)
 // static stb_decompress_length: c_uint(const input: *mut c_uchar);
@@ -54,3 +58,43 @@ pub fn FindFirstExistingGlyph(
     }
     return -1;
 }
+
+
+
+// Important: this alone doesn't alter current ImDrawList state. This is called by PushFont/PopFont only.
+pub unsafe fn SetCurrentFont(font: *mut ImFont)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(font && font->IsLoaded());    // Font Atlas not created. Did you call io.Fonts.GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
+    // IM_ASSERT(font->Scale > 0.0);
+    g.Font = font;
+    g.FontBaseSize = ImMax(1.0, g.IO.FontGlobalScale * g.Font.FontSize * g.Font.Scale);
+    g.FontSize = if is_not_null(g.CurrentWindow) { g.Currentwindow.CalcFontSize() } else { 0.0 };
+
+    atlas: *mut ImFontAtlas = g.Font.ContainerAtlas;
+    g.DrawListSharedData.TexUvWhitePixel = atlas.TexUvWhitePixel;
+    g.DrawListSharedData.TexUvLines = atlas.TexUvLines;
+    g.DrawListSharedData.Font = g.Font;
+    g.DrawListSharedData.FontSize = g.FontSize;
+}
+
+pub unsafe fn PushFont(mut font: *mut ImFont)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    if (!font) {
+        font = GetDefaultFont();
+    }
+    SetCurrentFont(font);
+    g.FontStack.push(font);
+    g.Currentwindow.DrawList.PushTextureID(font.ContainerAtlas.TexID);
+}
+
+
+pub unsafe fn  PopFont()
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    g.Currentwindow.DrawList.PopTextureID();
+    g.FontStack.pop_back();
+    SetCurrentFont(if g.FontStack.empty() { GetDefaultFont() } else { g.FontStack.last_mut().unwrap() });
+}
+

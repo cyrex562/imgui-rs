@@ -247,8 +247,8 @@ namespace ImGui
     // - 'current window' = the window we are appending into while inside a Begin()/End() block. 'next window' = next window we will Begin() into.
      bool          IsWindowAppearing();
      bool          IsWindowCollapsed();
-     bool          IsWindowFocused(ImGuiFocusedFlags flags=0); // is current window focused? or its root/child, depending on flags. see flags for options.
-     bool          IsWindowHovered(ImGuiHoveredFlags flags=0); // is current window hovered (and typically: not blocked by a popup/modal)? see flags for options. NB: If you are trying to check whether your mouse should be dispatched to imgui or to your app, you should use the 'io.WantCaptureMouse' boolean for that! Please read the FAQ!
+     bool          IsWindowFocused(flags: ImGuiFocusedFlags=0); // is current window focused? or its root/child, depending on flags. see flags for options.
+     bool          IsWindowHovered(flags: ImGuiHoveredFlags=0); // is current window hovered (and typically: not blocked by a popup/modal)? see flags for options. NB: If you are trying to check whether your mouse should be dispatched to imgui or to your app, you should use the 'io.WantCaptureMouse' boolean for that! Please read the FAQ!
      ImDrawList*   GetWindowDrawList();                        // get draw list associated to the current window, to append your own drawing primitivesGetWindowDpiScale: c_float();                        // get DPI scale currently associated to the current window's viewport.
      ImVec2        GetWindowPos();                             // get current window position in screen space (useful if you want to do your own drawing via the DrawList API)
      ImVec2        GetWindowSize();                            // get current window sizeGetWindowWidth: c_float();                           // get current window width (shortcut for GetWindowSize().x)GetWindowHeight: c_float();                          // get current window height (shortcut for GetWindowSize().y)
@@ -736,7 +736,7 @@ namespace ImGui
     // Item/Widgets Utilities and Query Functions
     // - Most of the functions are referring to the previous Item that has been submitted.
     // - See Demo Window under "Widgets->Querying Status" for an interactive visualization of most of those functions.
-     bool          IsItemHovered(ImGuiHoveredFlags flags = 0);                         // is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGuiHoveredFlags for more options.
+     bool          IsItemHovered(flags: ImGuiHoveredFlags = 0);                         // is the last item hovered? (and usable, aka not blocked by a popup, etc.). See for: ImGuiHoveredFlags more options.
      bool          IsItemActive();                                                     // is the last item active? (e.g. button being held, text field being edited. This will continuously return true while holding mouse button on an item. Items that don't interact will always return false)
      bool          IsItemFocused();                                                    // is the last item focused for keyboard/gamepad navigation?
      bool          IsItemClicked(let mut mouse_button: ImGuiMouseButton =  0);                   // is the last item hovered and mouse clicked on? (**)  == IsMouseClicked(mouse_button) && IsItemHovered()Important. (**) this it NOT equivalent to the behavior of e.g. Button(). Read comments in function definition.

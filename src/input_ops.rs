@@ -10,6 +10,8 @@ use crate::input_event_type::{ImGuiInputEventType_Focus, ImGuiInputEventType_Key
 use crate::input_flags::{ImGuiInputFlags, ImGuiInputFlags_None, ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateDefault, ImGuiInputFlags_RepeatRateMask_, ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak};
 use crate::input_source::{ImGuiInputSource, input_source_names};
 use crate::io::ImGuiIO;
+use crate::item_flags::ImGuiItemFlags_NoTabStop;
+use crate::item_ops::{PopItemFlag, PushItemFlag};
 use crate::key::{ImGuiKey, ImGuiKey_Aliases_BEGIN, ImGuiKey_Aliases_END, ImGuiKey_Gamepad_BEGIN, ImGuiKey_Gamepad_END, ImGuiKey_KeysData_OFFSET, ImGuiKey_LegacyNativeKey_BEGIN, ImGuiKey_LegacyNativeKey_END, ImGuiKey_ModAlt, ImGuiKey_ModCtrl, ImGuiKey_ModShift, ImGuiKey_ModSuper, ImGuiKey_NamedKey_BEGIN, ImGuiKey_NamedKey_END, ImGuiKey_None};
 use crate::key_data::ImGuiKeyData;
 use crate::mod_flags::ImGuiModFlags;
@@ -24,7 +26,7 @@ use crate::vec2::ImVec2;
 // NB- Rectangle is clipped by our current clip setting
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
 // IsMouseHoveringRect: bool(const ImVec2& r_min, const ImVec2& r_max, clip: bool)
-pub fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
+pub unsafe fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Clip
@@ -66,7 +68,7 @@ pub fn IsAliasKey(key: ImGuiKey) -> bool {
 
 
 // ImGuiKeyData* GetKeyData(ImGuiKey key)
-pub fn GetKeyData(key: ImGuiKey) -> *mut ImGuiKeyData {
+pub unsafe fn GetKeyData(key: ImGuiKey) -> *mut ImGuiKeyData {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut index: c_int = 0;
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
@@ -626,3 +628,17 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
         g.IO.AppFocusLost = false;
     }
 }
+
+
+// FIXME: Look into renaming this once we have settled the new Focus/Activation/TabStop system.
+pub unsafe fn PushAllowKeyboardFocus(allow_keyboard_focus: bool)
+{
+    PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus);
+}
+
+pub unsafe fn PopAllowKeyboardFocus()
+{
+    PopItemFlag();
+}
+
+

@@ -204,7 +204,7 @@ mod stb_ops;
 mod size_callback_data;
 mod resize_grip_def;
 mod resize_border_def;
-
+mod widget_ops;
 
 
 // c_void Initialize()

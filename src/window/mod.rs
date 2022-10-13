@@ -44,8 +44,10 @@ pub mod window_temp_data;
 pub mod window_dock_style_colors;
 pub mod window_dock_style_color;
 pub mod render;
-mod rect;
-mod find;
+pub mod rect;
+pub mod find;
+pub mod focus;
+pub mod props;
 
 // Storage for one window
 pub struct ImGuiWindow {

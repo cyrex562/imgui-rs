@@ -1,11 +1,12 @@
 use std::ptr::null_mut;
-use libc::{c_char, c_float};
+use libc::{c_char, c_float, c_int};
 use crate::{GImGui, ImGuiViewport, ImHashStr};
 use crate::rect::ImRect;
 use crate::type_defs::ImGuiID;
 use crate::utils::{flag_clear, is_not_null};
 use crate::vec2::ImVec2;
 use crate::window::{ImGuiWindow, ops};
+use crate::window::ops::GetWindowDisplayLayer;
 use crate::window::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize};
 
 // static FindFrontMostVisibleChildWindow: *mut ImGuiWindow(window: *mut ImGuiWindow)
@@ -209,3 +210,91 @@ pub unsafe fn FindBlockingModal(window: *mut ImGuiWindow) -> *mut ImGuiWindow
     }
     return null_mut();
 }
+
+
+
+pub unsafe fn FindWindowDisplayIndex(window: *mut ImGuiWindow) -> c_int
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.Windows.index_from_ptr(g.Windows.find(window));
+}
+
+
+pub unsafe fn GetCombinedRootWindow(mut window: *mut ImGuiWindow, popup_hierarchy: bool, dock_hierarchy: bool) -> *mut ImGuiWindow
+{
+    let mut last_window: *mut ImGuiWindow =  null_mut();
+    while last_window != window
+    {
+        last_window = window;
+        window = window.RootWindow;
+        if popup_hierarchy {
+            window = window.RootWindowPopupTree;
+        }
+		if dock_hierarchy {
+            window = window.RootWindowDockTree;
+        }
+	}
+    return window;
+}
+
+
+pub unsafe fn IsWindowChildOf(mut window: *mut ImGuiWindow, potential_parent: *mut ImGuiWindow, popup_hierarchy: bool, dock_hierarchy: bool) -> bool
+{
+    let mut window_root: *mut ImGuiWindow =  GetCombinedRootWindow(window, popup_hierarchy, dock_hierarchy);
+    if window_root == potential_parent {
+        return true;
+    }
+    while window != null_mut()
+    {
+        if window == potential_parent {
+            return true;
+        }
+        if window == window_root {// end of chain
+            return false;
+        }
+        window = window.ParentWindow;
+    }
+    return false;
+}
+
+
+pub fn IsWindowWithinBeginStackOf(mut window: *mut ImGuiWindow, potential_parent: *mut ImGuiWindow) -> bool
+{
+    if window.RootWindow == potential_parent {
+        return true;
+    }
+    while window != null_mut()
+    {
+        if window == potential_parent {
+            return true;
+        }
+        window = window.ParentWindowInBeginStack;
+    }
+    return false;
+}
+
+pub unsafe fn IsWindowAbove(potential_above: *mut ImGuiWindow, potential_below: *mut ImGuiWindow) -> bool
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+
+    // It would be saner to ensure that display layer is always reflected in the g.Windows[] order, which would likely requires altering all manipulations of that array
+    let display_layer_delta: c_int = GetWindowDisplayLayer(potential_above) - GetWindowDisplayLayer(potential_below);
+    if display_layer_delta != 0 {
+        return display_layer_delta > 0;
+    }
+
+    // for (let i: c_int = g.Windows.len() - 1; i >= 0; i--)
+    for i in g.Windows.len() - 1 ..0
+    {
+        let mut candidate_window: *mut ImGuiWindow =  g.Windows[i];
+        if candidate_window == potential_above {
+            return true;
+        }
+        if candidate_window == potential_below {
+            return false;
+        }
+    }
+    return false;
+}
+
+
