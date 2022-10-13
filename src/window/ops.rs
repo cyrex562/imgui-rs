@@ -366,8 +366,8 @@ pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
         return size_desired;
     } else {
         // Maximum window size is determined by the viewport size or monitor size
-        let is_popup: bool = flag_set(window.Flags.clone(), ImGuiWindowFlags_Popup) != 0;
-        let is_menu: bool = flag_set(window.Flags.clone(), ImGuiWindowFlags_ChildMenu) != 0;
+        let is_popup: bool = flag_set(window.Flags.clone(), ImGuiWindowFlags_Popup);
+        let is_menu: bool = flag_set(window.Flags.clone(), ImGuiWindowFlags_ChildMenu);
         let mut size_min: ImVec2 = style.WindowMinSize;
         if is_popup || is_menu { // Popups and menus bypass style.WindowMinSize by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.g. empty popups)
             size_min = ImMin(size_min, ImVec2::new(4.0, 4.0));
@@ -662,7 +662,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
 pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWindowFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
+    let style = &mut g.Style;
     // IM_ASSERT(name != NULL && name[0] != '\0');     // Window name required
     // IM_ASSERT(g.WithinFrameScope);                  // Forgot to call NewFrame()
     // IM_ASSERT(g.FrameCountEnded != g.FrameCount);   // Called Render() or EndFrame() and haven't called NewFrame() again yet
@@ -670,7 +670,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     // Find or create
     let mut window: *mut ImGuiWindow =  FindWindowByName(name);
     let window_just_created: bool = (window == null_mut());
-    if (window_just_created) {
+    if window_just_created {
         window = CreateNewWindow(name, flags);
     }
 
@@ -808,7 +808,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     let mut window_size_y_set_by_api = false;
     if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos
     {
-        window_pos_set_by_api = flag_set(window.SetWindowPosAllowFlags.clone(), g.NextWindowData.PosCond.clone()) != 0;
+        window_pos_set_by_api = flag_set(window.SetWindowPosAllowFlags.clone(), g.NextWindowData.PosCond.clone());
         if window_pos_set_by_api && ImLengthSqr(g.NextWindowData.PosPivotVal) > 0.00001
         {
             // May be processed on the next frame if this is our first frame and we are measuring size
@@ -824,8 +824,8 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     }
     if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize
     {
-        window_size_x_set_by_api = flag_set(window.SetWindowSizeAllowFlags.clone(), g.NextWindowData.SizeCond.clone()) != 0 && (g.NextWindowData.SizeVal.x > 0.0);
-        window_size_y_set_by_api = flag_set(window.SetWindowSizeAllowFlags.clone(), g.NextWindowData.SizeCond.clone()) != 0 && (g.NextWindowData.SizeVal.y > 0.0);
+        window_size_x_set_by_api = flag_set(window.SetWindowSizeAllowFlags.clone(), g.NextWindowData.SizeCond.clone()) && (g.NextWindowData.SizeVal.x > 0.0);
+        window_size_y_set_by_api = flag_set(window.SetWindowSizeAllowFlags.clone(), g.NextWindowData.SizeCond.clone()) && (g.NextWindowData.SizeVal.y > 0.0);
         SetWindowSize(window, g.NextWindowData.SizeVal, g.NextWindowData.SizeCond.clone());
     }
     if flag_set(g.NextWindowData.Flags.clone(), ImGuiNextWindowDataFlags_HasScroll)
@@ -889,7 +889,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         if (is_not_null(window.Viewport) && window.Viewport.Window == window) || (window.DockIsActive.clone()) {
             window_title_visible_elsewhere = true;
         }
-        else if g.NavWindowingListWindow != null_mut() && flag_set(window.Flags.clone() & ImGuiWindowFlags_NoNavFocus) == 0 {  // Window titles visible when using CTRL+TAB
+        else if g.NavWindowingListWindow != null_mut() && flag_clear(window.Flags.clone(), ImGuiWindowFlags_NoNavFocus) {  // Window titles visible when using CTRL+TAB
             window_title_visible_elsewhere = true;
         }
         if window_title_visible_elsewhere && !window_just_created && strcmp(name, window.Name) != 0
@@ -1226,7 +1226,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             let size_y_for_scrollbars: c_float =  if use_current_size_for_scrollbar_y { avail_size_from_current_frame.y } else { avail_size_from_last_frame.y };
             //scrollbar_y_from_last_frame: bool = window.ScrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
             window.ScrollbarY = flag_set(flags, ImGuiWindowFlags_AlwaysVerticalScrollbar) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar));
-            window.ScrollbarX = flag_set(flags, ImGuiWindowFlags_AlwaysHorizontalScrollbar) || (if needed_size_from_last_frame.x > size_x_for_scrollbars - window.ScrollbarY { style.ScrollbarSize } else { 0.0 }) != 0 && flag_clear(flags, ImGuiWindowFlags_NoScrollbar) && flag_set(flags, ImGuiWindowFlags_HorizontalScrollbar);
+            window.ScrollbarX = flag_set(flags, ImGuiWindowFlags_AlwaysHorizontalScrollbar) || (if needed_size_from_last_frame.x > size_x_for_scrollbars - window.ScrollbarY { style.ScrollbarSize } else { 0.0 }) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar) && flag_set(flags, ImGuiWindowFlags_HorizontalScrollbar);
             if window.ScrollbarX && !window.ScrollbarY {
                 window.ScrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar);
             }
