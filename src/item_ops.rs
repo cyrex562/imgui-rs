@@ -1,8 +1,10 @@
 #![allow(non_snake_case)]
 
 use std::ptr::null_mut;
-use libc::c_float;
+use libc::{c_float, c_int};
+use crate::activate_flags::ImGuiActivateFlags_None;
 use crate::color::IM_COL32;
+use crate::content_ops::GetContentRegionMaxAbs;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::hovered_flags::{ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem, ImGuiHoveredFlags_AllowWhenDisabled, ImGuiHoveredFlags_AllowWhenOverlapped, ImGuiHoveredFlags_DelayNormal, ImGuiHoveredFlags_DelayShort, ImGuiHoveredFlags_NoNavOverride, ImGuiHoveredFlags_None, ImGuiHoveredFlags_NoSharedDelay};
@@ -21,6 +23,7 @@ use crate::rect::ImRect;
 use crate::type_defs::ImGuiID;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
+use crate::window::ImGuiWindow;
 use crate::window::ops::IsWindowContentHoverable;
 use crate::window::window_flags::ImGuiWindowFlags_NavFlattened;
 use crate::window_flags::ImGuiWindowFlags_NavFlattened;
@@ -557,4 +560,109 @@ pub unsafe fn PopItemFlag()
     // IM_ASSERT(g.ItemFlagsStack.Size > 1); // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
     g.ItemFlagsStack.pop_back();
     g.CurrentItemFlags = g.ItemFlagsStack.last().unwrap().clone();
+}
+
+pub unsafe fn ActivateItem(id: ImGuiID)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    g.NavNextActivateId = id;
+    g.NavNextActivateFlags = ImGuiActivateFlags_None;
+}
+
+
+// Affect large frame+labels widgets only.
+pub unsafe fn SetNextItemWidth(item_width: c_float)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasWidth;
+    g.NextItemData.Width = item_width;
+}
+
+// FIXME: Remove the == 0.0 behavior?
+pub unsafe fn PushItemWidth(item_width: c_float)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
+    window.DC.ItemWidth = (if item_width == 0.0 { window.ItemWidthDefault } else { item_width });
+    g.NextItemData.Flags &= !ImGuiNextItemDataFlags_HasWidth;
+}
+
+pub unsafe fn PushMultiItemsWidths(components: c_int,w_full: c_float)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    let setyle = &mut g.Style;
+    w_item_one: c_float  = ImMax(1.0, IM_FLOOR((w_full - (style.ItemInnerSpacing.x) * (components - 1)) / components));
+    let w_item_last: c_float =  ImMax(1.0, IM_FLOOR(w_full - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
+    window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
+    window.DC.ItemWidthStack.push(w_item_last);
+    // for (let i: c_int = 0; i < components - 2; i++)
+    for i in 0 .. components - 2
+    {
+        window.DC.ItemWidthStack.push(w_item_one);
+    }
+    window.DC.ItemWidth = if components == 1 { w_item_last } else { w_item_one };
+    g.NextItemData.Flags &= !ImGuiNextItemDataFlags_HasWidth;
+}
+
+pub unsafe fn PopItemWidth()
+{
+    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    window.DC.ItemWidth = window.DC.ItemWidthStack.last().unwrap().clone();
+    window.DC.ItemWidthStack.pop_back();
+}
+
+// Calculate default item width given value passed to PushItemWidth() or SetNextItemWidth().
+// The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or NextItemData.ClearFlags()CalcItemWidth: c_float()
+pub unsafe fn CalcItemWidth() -> c_float
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+    let mut w: c_float = 0.0;
+    if g.NextItemData.Flags & ImGuiNextItemDataFlags_HasWidth {
+        w = g.NextItemData.Width;
+    }
+    else{
+    w = window.DC.ItemWidth;
+}
+    if (w < 0.0)
+    {
+        let region_max_x: c_float =  GetContentRegionMaxAbs().x;
+        w = ImMax(1.0, region_max_x - window.DC.CursorPos.x + w);
+    }
+    w = IM_FLOOR(w);
+    return w;
+}
+
+// [Internal] Calculate full item size given user provided 'size' parameter and default width/height. Default width is often == CalcItemWidth().
+// Those two functions CalcItemWidth vs CalcItemSize are awkwardly named because they are not fully symmetrical.
+// Note that only CalcItemWidth() is publicly exposed.
+// The 4.0.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
+// CalcItemSize: ImVec2(size: ImVec2,default_w: c_float,default_h: c_float)
+pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.CurrentWindow;
+
+    region_max: ImVec2;
+    if size.x < 0.0 || size.y < 0.0 {
+        region_max = GetContentRegionMaxAbs();
+    }
+
+    if size.x == 0.0 {
+        size.x = default_w;
+    }
+    else if size.x < 0.0 {
+    size.x = ImMax(4.0.0, region_max.x - window.DC.CursorPos.x + size.x);
+}
+
+    if size.y == 0.0 {
+        size.y = default_h;
+    }
+    else if size.y < 0.0 {
+        size.y = ImMax(4.0.0, region_max.y - window.DC.CursorPos.y + size.y);
+    }
+
+    return size;
 }

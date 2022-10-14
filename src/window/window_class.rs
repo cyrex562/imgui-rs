@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 
 use crate::dock_node_flags::ImGuiDockNodeFlags;
+use crate::GImGui;
+use crate::next_window_data_flags::ImGuiNextWindowDataFlags_HasWindowClass;
 use crate::tab_item_flags::ImGuiTabItemFlags;
 use crate::type_defs::ImGuiID;
 use crate::viewport_flags::ImGuiViewportFlags;
@@ -41,4 +43,12 @@ impl ImGuiWindowClass {
             ..Default::default()
         }
     }
+}
+
+pub unsafe fn SetNextWindowClass(mut window_class: *const ImGuiWindowClass)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT((window_class->ViewportFlagsOverrideSet & window_class->ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
+    g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasWindowClass;
+    g.NextWindowData.WindowClass = (*window_class).clone();
 }

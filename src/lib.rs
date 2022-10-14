@@ -205,6 +205,10 @@ mod size_callback_data;
 mod resize_grip_def;
 mod resize_border_def;
 mod widget_ops;
+mod state_storage_ops;
+mod error_ops;
+mod group_ops;
+mod scrolling_ops;
 
 
 // c_void Initialize()

@@ -2,13 +2,18 @@
 
 
 use std::ffi::CStr;
-use libc::{c_int, c_void};
+use libc::{c_char, c_int, c_void, size_t};
 use crate::data_type::ImGuiDataType;
+use crate::draw_vert::ImDrawVert;
 use crate::imgui::GImGui;
+use crate::io::ImGuiIO;
 use crate::stack_level_info::ImGuiStackLevelInfo;
 use crate::stack_tool::ImGuiStackTool;
 use crate::string_ops::ImFormatString;
+use crate::style::ImGuiStyle;
 use crate::type_defs::ImGuiID;
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
 // c_void DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, *const c_void data_id, *const c_void data_id_end)
@@ -75,4 +80,28 @@ pub unsafe fn DebugHookIdInfo(id: ImGuiID, data_type: ImGuiDataType, data_id: *c
     };
     info.QuerySuccess = true;
     info.DataType = data_type;
+}
+
+
+
+// Helper function to verify ABI compatibility between caller code and compiled version of Dear ImGui.
+// Verify that the type sizes are matching between the calling file's compilation unit and imgui.cpp's compilation unit
+// If this triggers you have an issue:
+// - Most commonly: mismatched headers and compiled code version.
+// - Or: mismatched configuration #define, compilation settings, packing pragma etc.
+//   The configuration settings mentioned in imconfig.h must be set for all compilation units involved with Dear ImGui,
+//   which is way it is required you put them in your imconfig file (and not just before including imgui.h).
+//   Otherwise it is possible that different compilation units would see different structure layout
+pub unsafe fn DebugCheckVersionAndDataLayout(version: *const c_char, sz_io: size_t, sz_style: size_t, sz_vec2: size_t, sz_vec4: size_t, sz_vert: size_t, sz_idx: size_t) -> bool
+{
+    // let mut error: bool =  false;
+    // if (libc::strcmp(version, IMGUI_VERSION) != 0) { error = true; IM_ASSERT(libc::strcmp(version, IMGUI_VERSION) == 0 && "Mismatched version string!"); }
+    // if (sz_io != sizeof(ImGuiIO)) { error = true; IM_ASSERT(sz_io == sizeof(ImGuiIO) && "Mismatched struct layout!"); }
+    // if (sz_style != sizeof(ImGuiStyle)) { error = true; IM_ASSERT(sz_style == sizeof(ImGuiStyle) && "Mismatched struct layout!"); }
+    // if (sz_vec2 != sizeof(ImVec2)) { error = true; IM_ASSERT(sz_vec2 == sizeof(ImVec2) && "Mismatched struct layout!"); }
+    // if (sz_vec4 != sizeof(ImVec4)) { error = true; IM_ASSERT(sz_vec4 == sizeof(ImVec4) && "Mismatched struct layout!"); }
+    // if (sz_vert != sizeof(ImDrawVert)) { error = true; IM_ASSERT(sz_vert == sizeof(ImDrawVert) && "Mismatched struct layout!"); }
+    // if (sz_idx != sizeof) { error = true; IM_ASSERT(sz_idx == sizeof && "Mismatched struct layout!"); }
+    // return !error;
+    todo!()
 }

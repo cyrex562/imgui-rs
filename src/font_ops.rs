@@ -85,7 +85,7 @@ pub unsafe fn PushFont(mut font: *mut ImFont)
         font = GetDefaultFont();
     }
     SetCurrentFont(font);
-    g.FontStack.push(font);
+    g.FontStack.push((*font).clone());
     g.Currentwindow.DrawList.PushTextureID(font.ContainerAtlas.TexID);
 }
 

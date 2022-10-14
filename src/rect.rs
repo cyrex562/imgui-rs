@@ -1,19 +1,20 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
+use crate::GImGui;
+use crate::math_ops::{ImClamp, ImMax};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
+use crate::window::ImGuiWindow;
 
 // Helper: ImRect (2D axis aligned bounding-box)
 // NB: we can't rely on math: ImVec2 operators being available here!
-#[derive(Debug,Clone,Default, Copy)]
-pub struct  ImRect
-{
+#[derive(Debug, Clone, Default, Copy)]
+pub struct ImRect {
     // ImVec2      Min;    // Upper-left
-pub Min: ImVec2,
-// ImVec2      Max;    // Lower-right
-pub Max: ImVec2
-
+    pub Min: ImVec2,
+    // ImVec2      Max;    // Lower-right
+    pub Max: ImVec2,
 }
 
 impl ImRect {
@@ -29,7 +30,7 @@ impl ImRect {
     pub fn from_vec2(min: &ImVec2, max: &ImVec2) -> Self {
         Self {
             Min: min.clone(),
-            Max: max.clone()
+            Max: max.clone(),
         }
     }
 
@@ -37,7 +38,7 @@ impl ImRect {
     pub fn from_vec4(v: &ImVec4) -> Self {
         Self {
             Min: ImVec2::new(v.x, v.y),
-            Max: ImVec2::new(v.z, v.w)
+            Max: ImVec2::new(v.z, v.w),
         }
     }
 
@@ -51,7 +52,7 @@ impl ImRect {
 
     // ImVec2      GetCenter() const                   { return ImVec2::new((Min.x + Max.x) * 0.5f32, (Min.y + Max.y) * 0.5f32); }
     pub fn GetCenter(&mut self) -> ImVec2 {
-        ImVec2::new((self.Min.x + self.Max.x) *0.5f32, (self.Min.y + Self.Max.y) * 0.5f32)
+        ImVec2::new((self.Min.x + self.Max.x) * 0.5f32, (self.Min.y + Self.Max.y) * 0.5f32)
     }
 
     // ImVec2      GetSize() const                     { return ImVec2::new(Max.x - Min.x, Max.y - Min.y); }
@@ -61,12 +62,12 @@ impl ImRect {
 
     // c_float       GetWidth() const                    { return Max.x - Min.x; }
     pub fn GetWidth(&mut self) -> c_float {
-        return self.Max.x - self.Min.x
+        return self.Max.x - self.Min.x;
     }
 
     // c_float       GetHeight() const                   { return Max.y - Min.y; }
     pub fn GetHeight(&mut self) -> c_float {
-        return self.Max.y - self.Min.y
+        return self.Max.y - self.Min.y;
     }
 
     // c_float       GetArea() const                     { return (Max.x - Min.x) * (Max.y - Min.y); }
@@ -107,7 +108,7 @@ impl ImRect {
 
     // bool        Overlaps(const ImRect& r) const     { return r.Min.y <  Max.y && r.Max.y >  Min.y && r.Min.x <  Max.x && r.Max.x >  Min.x; }
     pub fn Overlaps(&mut self, r: &Self) -> bool {
-        return r.Min.y < self.Max.y && r.Max.y > self.Min.y && r.Min.x < self.Max.x && r.Max.x > self.Min.x
+        return r.Min.y < self.Max.y && r.Max.y > self.Min.y && r.Min.x < self.Max.x && r.Max.x > self.Min.x;
     }
 
     // void        Add(const ImVec2& p)                { if (Min.x > p.x)     Min.x = p.x;     if (Min.y > p.y)     Min.y = p.y;     if (Max.x < p.x)     Max.x = p.x;     if (Max.y < p.y)     Max.y = p.y; }
@@ -207,4 +208,18 @@ impl ImRect {
     pub fn ToVec4(&self) -> ImVec4 {
         ImVec4::new2(self.Min.x, self.Min.y, self.Max.x, self.Max.y)
     }
+}
+
+// IsRectVisible: bool(size: &ImVec2)
+pub unsafe fn IsRectVisible(size: &ImVec2) -> bool {
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    return window.ClipRect.Overlaps(ImRect::from_vec2(&window.DC.CursorPos, window.DC.CursorPos + size));
+}
+
+// IsRectVisible: bool(rect_min: &ImVec2, rect_max: &ImVec2)
+pub unsafe fn IsRectVisible2(rect_min: &ImVec2, rect_max: &ImVec2) -> bool {
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    return window.ClipRect.Overlaps(ImRect::from_vec2(rect_min, rect_max));
 }
