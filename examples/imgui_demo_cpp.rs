@@ -172,25 +172,25 @@ Index of this file:
 // #if !defined(IMGUI_DISABLE_DEMO_WINDOWS)
 
 // Forward Declarations
-static c_void ShowExampleAppDockSpace(*mut p_open: bool);
-static c_void ShowExampleAppDocuments(*mut p_open: bool);
-static c_void ShowExampleAppMainMenuBar();
-static c_void ShowExampleAppConsole(*mut p_open: bool);
-static c_void ShowExampleAppLog(*mut p_open: bool);
-static c_void ShowExampleAppLayout(*mut p_open: bool);
-static c_void ShowExampleAppPropertyEditor(*mut p_open: bool);
-static c_void ShowExampleAppLongText(*mut p_open: bool);
-static c_void ShowExampleAppAutoResize(*mut p_open: bool);
-static c_void ShowExampleAppConstrainedResize(*mut p_open: bool);
-static c_void ShowExampleAppSimpleOverlay(*mut p_open: bool);
-static c_void ShowExampleAppFullscreen(*mut p_open: bool);
-static c_void ShowExampleAppWindowTitles(*mut p_open: bool);
-static c_void ShowExampleAppCustomRendering(*mut p_open: bool);
-static c_void ShowExampleMenuFile();
+pub unsafe fn ShowExampleAppDockSpace(*mut p_open: bool);
+pub unsafe fn ShowExampleAppDocuments(*mut p_open: bool);
+pub unsafe fn ShowExampleAppMainMenuBar();
+pub unsafe fn ShowExampleAppConsole(*mut p_open: bool);
+pub unsafe fn ShowExampleAppLog(*mut p_open: bool);
+pub unsafe fn ShowExampleAppLayout(*mut p_open: bool);
+pub unsafe fn ShowExampleAppPropertyEditor(*mut p_open: bool);
+pub unsafe fn ShowExampleAppLongText(*mut p_open: bool);
+pub unsafe fn ShowExampleAppAutoResize(*mut p_open: bool);
+pub unsafe fn ShowExampleAppConstrainedResize(*mut p_open: bool);
+pub unsafe fn ShowExampleAppSimpleOverlay(*mut p_open: bool);
+pub unsafe fn ShowExampleAppFullscreen(*mut p_open: bool);
+pub unsafe fn ShowExampleAppWindowTitles(*mut p_open: bool);
+pub unsafe fn ShowExampleAppCustomRendering(*mut p_open: bool);
+pub unsafe fn ShowExampleMenuFile();
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
-static c_void HelpMarker(desc: *const c_char)
+pub unsafe fn HelpMarker(desc: *const c_char)
 {
     TextDisabled("(?)");
     if (IsItemHovered(ImGuiHoveredFlags_DelayShort))
@@ -203,7 +203,7 @@ static c_void HelpMarker(desc: *const c_char)
     }
 }
 
-static c_void ShowDockingDisabledMessage()
+pub unsafe fn ShowDockingDisabledMessage()
 {
     ImGuiIO& io = GetIO();
     Text("ERROR: Docking is not enabled! See Demo > Configuration.");
@@ -222,7 +222,7 @@ ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback= null_mut();
 // #define IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
 
 // Helper to display basic user controls.
-c_void ShowUserGuide()
+pub unsafe fn ShowUserGuide()
 {
     ImGuiIO& io = GetIO();
     BulletText("Double-click on title bar to collapse window.");
@@ -265,17 +265,17 @@ c_void ShowUserGuide()
 
 // We split the contents of the big ShowDemoWindow() function into smaller functions
 // (because the link time of very large functions grow non-linearly)
-static c_void ShowDemoWindowWidgets();
-static c_void ShowDemoWindowLayout();
-static c_void ShowDemoWindowPopups();
-static c_void ShowDemoWindowTables();
-static c_void ShowDemoWindowColumns();
-static c_void ShowDemoWindowMisc();
+pub unsafe fn ShowDemoWindowWidgets();
+pub unsafe fn ShowDemoWindowLayout();
+pub unsafe fn ShowDemoWindowPopups();
+pub unsafe fn ShowDemoWindowTables();
+pub unsafe fn ShowDemoWindowColumns();
+pub unsafe fn ShowDemoWindowMisc();
 
 // Demonstrate most Dear ImGui features (this is big function!)
 // You may execute this function to experiment with the UI and understand what it does.
 // You may then search for keywords in the code when you are interested by a specific feature.
-c_void ShowDemoWindow(*mut p_open: bool)
+pub unsafe fn ShowDemoWindow(*mut p_open: bool)
 {
     // Exceptionally add an extra assert here for people confused about initial Dear ImGui setup
     // Most ImGui functions would normally just crash if the context is missing.
@@ -624,7 +624,7 @@ c_void ShowDemoWindow(*mut p_open: bool)
     End();
 }
 
-static c_void ShowDemoWindowWidgets()
+pub unsafe fn ShowDemoWindowWidgets()
 {
     IMGUI_DEMO_MARKER("Widgets");
     if (!CollapsingHeader("Widgets"))
@@ -784,7 +784,7 @@ static c_void ShowDemoWindowWidgets()
             enum Element { Element_Fire, Element_Earth, Element_Air, Element_Water, Element_COUNT };
             static let elem: c_int = Element_Fire;
             elems_names: *const c_char[Element_COUNT] = { "Fire", "Earth", "Air", "Water" };
-            let mut  elem_name: *const c_char = (elem >= 0 && elem < Element_COUNT) ? elems_names[elem] : "Unknown";
+            let mut  elem_name: *const c_char = if elem >= 0 && elem < Element_COUNT { elems_names[elem]} else { "Unknown"};
             SliderInt("slider enum", &elem, 0, Element_COUNT - 1, elem_name);
             SameLine(); HelpMarker("Using the format string parameter to display a name instead of the underlying integer.");
         }
@@ -792,7 +792,7 @@ static c_void ShowDemoWindowWidgets()
         {
             IMGUI_DEMO_MARKER("Widgets/Basic/ColorEdit3, ColorEdit4");
             staticcol1: c_float[3] = { 1.0, 0.0, 0.2f };
-            staticcol2: c_float[4] = { 0.4f, 0.7f, 0.0, 0.5f32 };
+            staticcol2: c_float[4] = { 0.4f, 0.7f, 0.0, 0.5 };
             ColorEdit3("color 1", col1);
             SameLine(); HelpMarker(
                 "Click on the color square to open a color picker.\n"
@@ -831,7 +831,7 @@ static c_void ShowDemoWindowWidgets()
             {
                 BeginTooltip();
                 Text("I am a fancy tooltip");
-                staticarr: c_float[] = { 0.6f, 0.1f, 1.0, 0.5f32, 0.92f, 0.1f, 0.2f };
+                staticarr: c_float[] = { 0.6f, 0.1f, 1.0, 0.5, 0.92f, 0.1f, 0.2f };
                 PlotLines("Curve", arr, arr.len());
                 Text("Sin(time) = %f", sinf(GetTime()));
                 EndTooltip();
@@ -1073,7 +1073,7 @@ static c_void ShowDemoWindowWidgets()
             Text("Kanjis: \xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e (nihongo)");
             static buf: [c_char;32] = "\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e";
             //static char buf[32] = u8"NIHONGO"; // <- this is how you would write it with C++11, using real kanjis
-            InputText("UTF-8 input", buf, bu0f32.len());
+            InputText("UTF-8 input", buf, buf.len());
             TreePop();
         }
         TreePop();
@@ -1112,14 +1112,14 @@ static c_void ShowDemoWindowWidgets()
             let uv_min: ImVec2 = ImVec2::new(0.0, 0.0);                 // Top-left
             let uv_max: ImVec2 = ImVec2::new(1.0, 1.0);                 // Lower-right
             tint_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 1.0);   // No tint
-            border_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 0.5f32); // 50% opaque white
+            border_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 0.5); // 50% opaque white
             Image(my_tex_id, ImVec2::new(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
             if (IsItemHovered())
             {
                 BeginTooltip();
                 let region_sz: c_float =  32.0.0;
-                let region_x: c_float =  io.MousePos.x - pos.x - region_sz * 0.5f32;
-                let region_y: c_float =  io.MousePos.y - pos.y - region_sz * 0.5f32;
+                let region_x: c_float =  io.MousePos.x - pos.x - region_sz * 0.5;
+                let region_y: c_float =  io.MousePos.y - pos.y - region_sz * 0.5;
                 let zoom: c_float =  4.0.0;
                 if (region_x < 0.0) { region_x = 0.0; }
                 else if (region_x > my_tex_w - region_sz) { region_x = my_tex_w - region_sz; }
@@ -1364,7 +1364,7 @@ static c_void ShowDemoWindowWidgets()
             let time: c_float =  GetTime();
             let winning_state: bool = memchr(selected, 0, sizeof(selected)) == null_mut(); // If all cells are selected...
             if (winning_state)
-                PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2::new(0.5f32 + 0.5f32 * cosf(time * 2.00f32), 0.5f32 + 0.5f32 * sinf(time * 3.00f32)));
+                PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2::new(0.5 + 0.5 * cosf(time * 2.00f32), 0.5 + 0.5 * sinf(time * 3.00f32)));
 
             for (let y: c_int = 0; y < 4; y++)
                 for (let x: c_int = 0; x < 4; x++)
@@ -1735,7 +1735,7 @@ static c_void ShowDemoWindowWidgets()
 
         // Plot as lines and plot as histogram
         IMGUI_DEMO_MARKER("Widgets/Plotting/PlotLines, PlotHistogram");
-        staticarr: c_float[] = { 0.6f, 0.1f, 1.0, 0.5f32, 0.92f, 0.1f, 0.2f };
+        staticarr: c_float[] = { 0.6f, 0.1f, 1.0, 0.5, 0.92f, 0.1f, 0.2f };
         PlotLines("Frame Times", arr, arr.len());
         PlotHistogram("Histogram", arr, arr.len(), 0, null_mut(), 0.0, 1.0, ImVec2::new(0, 80f32));
 
@@ -1806,7 +1806,7 @@ static c_void ShowDemoWindowWidgets()
         let progress_saturated: c_float =  IM_CLAMP(progress, 0.0, 1.0);
         buf: [c_char;32];
         sprintf(buf, "%d/%d", (progress_saturated * 1753), 1753);
-        ProgressBar(progress, ImVec2::new(0.f, 0.0), bu0f32);
+        ProgressBar(progress, ImVec2::new(0.f, 0.0), buf);
         TreePop();
     }
 
@@ -1930,7 +1930,7 @@ static c_void ShowDemoWindowWidgets()
         static let mut alpha_bar: bool =  true;
         static let mut side_preview: bool =  true;
         static let mut ref_color: bool =  false;
-        static ref_color_v: ImVec4(1.0, 0.0, 1.0, 0.5f32);
+        static ref_color_v: ImVec4(1.0, 0.0, 1.0, 0.5);
         static let display_mode: c_int = 0;
         static let picker_mode: c_int = 0;
         Checkbox("With Alpha", &alpha);
@@ -2015,17 +2015,17 @@ static c_void ShowDemoWindowWidgets()
         SameLine(); HelpMarker("Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
 
         // Drags
-        static let drag_f: c_float =  0.5f32;
+        static let drag_f: c_float =  0.5;
         static let drag_i: c_int = 50;
         Text("Underlying float value: %f", drag_0f32);
         DragFloat("DragFloat (0 -> 1)", &drag_f, 0.005f, 0.0, 1.0, "%.3f", flags);
         DragFloat("DragFloat (0 -> +in0f32)", &drag_f, 0.005f, 0.0, f32::MAX, "%.3f", flags);
         DragFloat("DragFloat (-inf -> 1)", &drag_f, 0.005f, -f32::MAX, 1.0, "%.3f", flags);
         DragFloat("DragFloat (-inf -> +in0f32)", &drag_f, 0.005f, -f32::MAX, f32::MAX, "%.3f", flags);
-        DragInt("DragInt (0 -> 100)", &drag_i, 0.5f32, 0, 100, "%d", flags);
+        DragInt("DragInt (0 -> 100)", &drag_i, 0.5, 0, 100, "%d", flags);
 
         // Sliders
-        static let slider_f: c_float =  0.5f32;
+        static let slider_f: c_float =  0.5;
         static let slider_i: c_int = 50;
         Text("Underlying float value: %f", slider_0f32);
         SliderFloat("SliderFloat (0 -> 1)", &slider_f, 0.0, 1.0, "%.3f", flags);
@@ -2217,9 +2217,9 @@ static c_void ShowDemoWindowWidgets()
         {
             if (i > 0) SameLine();
             PushID(i);
-            PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0.0, 0.5f32, 0.5f32));
-            PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.5f32));
-            PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0.0, 0.7f, 0.5f32));
+            PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0.0, 0.5, 0.5));
+            PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.5));
+            PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0.0, 0.7f, 0.5));
             PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0.0, 0.9f, 0.90f32));
             VSliderFloat("##v", ImVec2::new(18, 160), &values[i], 0.0, 1.0, "");
             if (IsItemActive() || IsItemHovered())
@@ -2278,7 +2278,7 @@ static c_void ShowDemoWindowWidgets()
             // Also see 'Demo->Widgets->Color/Picker Widgets->Palette' demo.
             HelpMarker("You can drag from the color squares.");
             staticcol1: c_float[3] = { 1.0, 0.0, 0.2f };
-            staticcol2: c_float[4] = { 0.4f, 0.7f, 0.0, 0.5f32 };
+            staticcol2: c_float[4] = { 0.4f, 0.7f, 0.0, 0.5 };
             ColorEdit3("color 1", col1);
             ColorEdit4("color 2", col2);
             TreePop();
@@ -2477,7 +2477,7 @@ static c_void ShowDemoWindowWidgets()
             EndDisabled();
 
         buf: [c_char;1] = "";
-        InputText("unused", buf, bu0f32.len(), ImGuiInputTextFlags_ReadOnly);
+        InputText("unused", buf, buf.len(), ImGuiInputTextFlags_ReadOnly);
         SameLine();
         HelpMarker("This widget is only here to be able to tab-out of the widgets above and see e.g. Deactivated() status.");
 
@@ -2593,7 +2593,7 @@ static c_void ShowDemoWindowWidgets()
     }
 }
 
-static c_void ShowDemoWindowLayout()
+pub unsafe fn ShowDemoWindowLayout()
 {
     IMGUI_DEMO_MARKER("Layout");
     if (!CollapsingHeader("Layout & Scrolling"))
@@ -2613,7 +2613,7 @@ static c_void ShowDemoWindowLayout()
             window_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar;
             if (disable_mouse_wheel)
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
-            BeginChild("ChildL", ImVec2::new(GetContentRegionAvail().x * 0.5f32, 260), false, window_flags);
+            BeginChild("ChildL", ImVec2::new(GetContentRegionAvail().x * 0.5, 260), false, window_flags);
             for (let i: c_int = 0; i < 100; i++)
                 Text("%04d: scrollable region", i);
             EndChild();
@@ -2723,7 +2723,7 @@ static c_void ShowDemoWindowLayout()
 
         Text("SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5f32)");
         SameLine(); HelpMarker("Half of available width.\n(~ right-cursor_pos)\n(works within a column set)");
-        PushItemWidth(GetContentRegionAvail().x * 0.5f32);
+        PushItemWidth(GetContentRegionAvail().x * 0.5);
         DragFloat("float##3a", &0.0);
         if (show_indented_items)
         {
@@ -2735,7 +2735,7 @@ static c_void ShowDemoWindowLayout()
 
         Text("SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5f32)");
         SameLine(); HelpMarker("Align to right edge minus half");
-        PushItemWidth(-GetContentRegionAvail().x * 0.5f32);
+        PushItemWidth(-GetContentRegionAvail().x * 0.5);
         DragFloat("float##4a", &0.0);
         if (show_indented_items)
         {
@@ -2883,12 +2883,12 @@ static c_void ShowDemoWindowLayout()
         }
         // Capture the group size and create widgets using the same size
         let size: ImVec2 = GetItemRectSize();
-        values: c_float[5] = { 0.5f32, 0.20f32, 0.80f32, 0.60f32, 0.25f };
+        values: c_float[5] = { 0.5, 0.20f32, 0.80f32, 0.60f32, 0.25f };
         PlotHistogram("##values", values, values.len(), 0, null_mut(), 0.0, 1.0, size);
 
-        Button("ACTION", ImVec2::new((size.x - GetStyle().ItemSpacing.x) * 0.5f32, size.y));
+        Button("ACTION", ImVec2::new((size.x - GetStyle().ItemSpacing.x) * 0.5, size.y));
         SameLine();
-        Button("REACTION", ImVec2::new((size.x - GetStyle().ItemSpacing.x) * 0.5f32, size.y));
+        Button("REACTION", ImVec2::new((size.x - GetStyle().ItemSpacing.x) * 0.5, size.y));
         EndGroup();
         SameLine();
 
@@ -3170,7 +3170,7 @@ static c_void ShowDemoWindowLayout()
                 PushID(n + line * 1000);
                 num_buf: [c_char;16];
                 sprintf(num_buf, "%d", n);
-                let mut  label: *const c_char = (!(n % 15)) ? "FizzBuzz" : (!(n % 3)) ? "Fizz" : (!(n % 5)) ? "Buzz" : num_buf;
+                let mut  label: *const c_char = if !(n % 15)) ? "FizzBuzz" : (!(n % 3)) ? "Fizz" : (!(n % 5) { "Buzz"} else { num_buf};
                 let hue: c_float =  n * 0.05f32;
                 PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.60f32));
                 PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.7f, 0.70f32));
@@ -3314,7 +3314,7 @@ static c_void ShowDemoWindowLayout()
     {
         static size: ImVec2::new(100f32, 100f32);
         static offset: ImVec2::new(30f32, 30f32);
-        DragFloat2("size", (*mut c_float)&size, 0.5f32, 1.0, 200f32, "%.0f");
+        DragFloat2("size", (*mut c_float)&size, 0.5, 1.0, 200f32, "%.0f");
         TextWrapped("(Click and drag to scroll)");
 
         HelpMarker(
@@ -3375,7 +3375,7 @@ static c_void ShowDemoWindowLayout()
     }
 }
 
-static c_void ShowDemoWindowPopups()
+pub unsafe fn ShowDemoWindowPopups()
 {
     IMGUI_DEMO_MARKER("Popups");
     if (!CollapsingHeader("Popups & Modal windows"))
@@ -3533,7 +3533,7 @@ static c_void ShowDemoWindowPopups()
         // Using an explicit identifier is also convenient if you want to activate the popups from different locations.
         {
             HelpMarker("Text() elements don't have stable identifiers so we need to provide one.");
-            static let value: c_float =  0.5f32;
+            static let value: c_float =  0.5;
             Text("Value = %.3f <-- (1) right-click this text", value);
             if (BeginPopupContextItem("my popup"))
             {
@@ -3564,7 +3564,7 @@ static c_void ShowDemoWindowPopups()
             static name: [c_char;32] = "Label1";
             buf: [c_char;64];
             sprintf(buf, "Button: %s###Button", name); // ### operator override ID ignoring the preceding label
-            Button(bu0f32);
+            Button(buf);
             if (BeginPopupContextItem())
             {
                 Text("Edit name:");
@@ -3589,7 +3589,7 @@ static c_void ShowDemoWindowPopups()
 
         // Always center this window when appearing
         let center: ImVec2 = GetMainViewport()->GetCenter();
-        SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2::new(0.5f32, 0.5f32));
+        SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2::new(0.5, 0.5));
 
         if (BeginPopupModal("Delete?", null_mut(), ImGuiWindowFlags_AlwaysAutoResize))
         {
@@ -3628,7 +3628,7 @@ static c_void ShowDemoWindowPopups()
 
             // Testing behavior of widgets stacking their own regular popups over the modal.
             static let item: c_int = 1;
-            staticcolor: c_float[4] = { 0.4f, 0.7f, 0.0, 0.5f32 };
+            staticcolor: c_float[4] = { 0.4f, 0.7f, 0.0, 0.5 };
             Combo("Combo", &item, "aaaa\0bbbb\0cccc\0dddd\0eeee\0\0");
             ColorEdit4("color", color);
 
@@ -3738,20 +3738,20 @@ let Name: *const c_char;
 }
 
 // Make the UI compact because there are so many fields
-static c_void PushStyleCompact()
+pub unsafe fn PushStyleCompact()
 {
     ImGuiStyle& style = GetStyle();
     PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(style.FramePadding.x, (style.FramePadding.y * 0.600f32)));
     PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(style.ItemSpacing.x, (style.ItemSpacing.y * 0.600f32)));
 }
 
-static c_void PopStyleCompact()
+pub unsafe fn PopStyleCompact()
 {
     PopStyleVar(2);
 }
 
 // Show a combo box with a choice of sizing policies
-static c_void EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
+pub unsafe fn EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
 {
     struct EnumDesc { ImGuiTableFlags Value; Name: *const c_char; Tooltip: *const c_char; };
     static const EnumDesc policies[] =
@@ -3766,7 +3766,7 @@ static c_void EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
     for (idx = 0; idx < policies.len(); idx++)
         if (policies[idx].Value == (*p_flags & ImGuiTableFlags_SizingMask_))
             break;
-    let mut  preview_text: *const c_char = (idx < policies.len()) ? policies[idx].Name + (idx > 0 ? strlen("ImGuiTableFlags") : 0) : "";
+    let mut  preview_text: *const c_char = if idx < policies.len() { policies[idx].Name + (idx > 0 ? strlen("ImGuiTableFlags") : 0)} else { ""};
     if (BeginCombo("Sizing Policy", preview_text))
     {
         for (let n: c_int = 0; n < policies.len(); n++)
@@ -3785,7 +3785,7 @@ static c_void EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
             Separator();
             Text("%s:", policies[m].Name);
             Separator();
-            SetCursorPosX(GetCursorPosX() + GetStyle().IndentSpacing * 0.5f32);
+            SetCursorPosX(GetCursorPosX() + GetStyle().IndentSpacing * 0.5);
             TextUnformatted(policies[m].Tooltip);
         }
         PopTextWrapPos();
@@ -3793,7 +3793,7 @@ static c_void EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
     }
 }
 
-static c_void EditTableColumnsFlags(*mut ImGuiTableColumnFlags p_flags)
+pub unsafe fn EditTableColumnsFlags(*mut ImGuiTableColumnFlags p_flags)
 {
     CheckboxFlags("_Disabled", p_flags, ImGuiTableColumnFlags_Disabled); SameLine(); HelpMarker("Master disable flag (also hide from context menu)");
     CheckboxFlags("_DefaultHide", p_flags, ImGuiTableColumnFlags_DefaultHide);
@@ -3817,7 +3817,7 @@ static c_void EditTableColumnsFlags(*mut ImGuiTableColumnFlags p_flags)
     CheckboxFlags("_IndentDisable", p_flags, ImGuiTableColumnFlags_IndentDisable); SameLine(); HelpMarker("Default for column >0");
 }
 
-static c_void ShowTableColumnsStatusFlags(ImGuiTableColumnFlags flags)
+pub unsafe fn ShowTableColumnsStatusFlags(ImGuiTableColumnFlags flags)
 {
     CheckboxFlags("_IsEnabled", &flags, ImGuiTableColumnFlags_IsEnabled);
     CheckboxFlags("_IsVisible", &flags, ImGuiTableColumnFlags_IsVisible);
@@ -3825,7 +3825,7 @@ static c_void ShowTableColumnsStatusFlags(ImGuiTableColumnFlags flags)
     CheckboxFlags("_IsHovered", &flags, ImGuiTableColumnFlags_IsHovered);
 }
 
-static c_void ShowDemoWindowTables()
+pub unsafe fn ShowDemoWindowTables()
 {
     //SetNextItemOpen(true, ImGuiCond_Once);
     IMGUI_DEMO_MARKER("Tables");
@@ -3989,7 +3989,7 @@ static c_void ShowDemoWindowTables()
                     buf: [c_char;32];
                     sprintf(buf, "Hello %d,%d", column, row);
                     if (contents_type == CT_Text)
-                        TextUnformatted(bu0f32);
+                        TextUnformatted(buf);
                     else if (contents_type == CT_FillButton)
                         Button(buf, ImVec2::new(-FLT_MIN, 0.0));
                 }
@@ -4375,7 +4375,7 @@ static c_void ShowDemoWindowTables()
                 case CT_ShowWidth:  Text("W: %.1f", GetContentRegionAvail().x); break;
                 case CT_Button:     Button(label); break;
                 case CT_FillButton: Button(label, ImVec2::new(-FLT_MIN, 0.0)); break;
-                case CT_InputText:  SetNextItemWidth(-FLT_MIN); InputText("##", text_buf, text_bu0f32.len()); break;
+                case CT_InputText:  SetNextItemWidth(-FLT_MIN); InputText("##", text_buf, text_buf.len()); break;
                 }
                 PopID();
             }
@@ -4935,7 +4935,7 @@ static c_void ShowDemoWindowTables()
                     TableSetColumnIndex(0);
                     PushItemWidth(TEXT_BASE_WIDTH * 3.00f32); // Small
                     TableSetColumnIndex(1);
-                    PushItemWidth(-GetContentRegionAvail().x * 0.5f32);
+                    PushItemWidth(-GetContentRegionAvail().x * 0.5);
                     TableSetColumnIndex(2);
                     PushItemWidth(-FLT_MIN); // Right-aligned
                 }
@@ -5553,7 +5553,7 @@ static c_void ShowDemoWindowTables()
 
 // Demonstrate old/legacy Columns API!
 // [2020: Columns are under-featured and not maintained. Prefer using the more flexible and powerful BeginTable() API!]
-static c_void ShowDemoWindowColumns()
+pub unsafe fn ShowDemoWindowColumns()
 {
     IMGUI_DEMO_MARKER("Columns (legacy API)");
     let mut open: bool =  TreeNode("Legacy Columns API");
@@ -5759,7 +5759,7 @@ static c_void ShowDemoWindowColumns()
 
 namespace ImGui { extern *mut ImGuiKeyData GetKeyData(ImGuiKey key); }
 
-static c_void ShowDemoWindowMisc()
+pub unsafe fn ShowDemoWindowMisc()
 {
     IMGUI_DEMO_MARKER("Filtering");
     if (CollapsingHeader("Filtering"))
@@ -5928,14 +5928,14 @@ static c_void ShowDemoWindowMisc()
         {
             Text("Use TAB/SHIFT+TAB to cycle through keyboard editable fields.");
             static buf: [c_char;32] = "hello";
-            InputText("1", buf, bu0f32.len());
-            InputText("2", buf, bu0f32.len());
-            InputText("3", buf, bu0f32.len());
+            InputText("1", buf, buf.len());
+            InputText("2", buf, buf.len());
+            InputText("3", buf, buf.len());
             PushAllowKeyboardFocus(false);
-            InputText("4 (tab skip)", buf, bu0f32.len());
+            InputText("4 (tab skip)", buf, buf.len());
             SameLine(); HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.");
             PopAllowKeyboardFocus();
-            InputText("5", buf, bu0f32.len());
+            InputText("5", buf, buf.len());
             TreePop();
         }
 
@@ -5949,16 +5949,16 @@ static c_void ShowDemoWindowMisc()
             static buf: [c_char;128] = "click on a button to set focus";
 
             if (focus_1) SetKeyboardFocusHere();
-            InputText("1", buf, bu0f32.len());
+            InputText("1", buf, buf.len());
             if (IsItemActive()) has_focus = 1;
 
             if (focus_2) SetKeyboardFocusHere();
-            InputText("2", buf, bu0f32.len());
+            InputText("2", buf, buf.len());
             if (IsItemActive()) has_focus = 2;
 
             PushAllowKeyboardFocus(false);
             if (focus_3) SetKeyboardFocusHere();
-            InputText("3 (tab skip)", buf, bu0f32.len());
+            InputText("3 (tab skip)", buf, buf.len());
             if (IsItemActive()) has_focus = 3;
             SameLine(); HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.");
             PopAllowKeyboardFocus();
@@ -6041,7 +6041,7 @@ static c_void ShowDemoWindowMisc()
 // Access from Dear ImGui Demo -> Tools -> About
 //-----------------------------------------------------------------------------
 
-c_void ShowAboutWindow(*mut p_open: bool)
+pub unsafe fn ShowAboutWindow(*mut p_open: bool)
 {
     if (!Begin("About Dear ImGui", p_open, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -6215,7 +6215,7 @@ namespace ImGui {  c_void ShowFontAtlas(*mut ImFontAtlas atlas); }
 
 // Demo helper function to select among loaded fonts.
 // Here we use the regular BeginCombo()/EndCombo() api which is the more flexible one.
-c_void ShowFontSelector(label: *const c_char)
+pub unsafe fn ShowFontSelector(label: *const c_char)
 {
     ImGuiIO& io = GetIO();
     *mut ImFont font_current = GetFont();
@@ -6242,7 +6242,7 @@ c_void ShowFontSelector(label: *const c_char)
 // Demo helper function to select among default colors. See ShowStyleEditor() for more advanced options.
 // Here we use the simplified Combo() api that packs items into a single literal string.
 // Useful for quick combo boxes where the choices are known locally.
-ShowStyleSelector: bool(label: *const c_char)
+pub unsafe fn ShowStyleSelector(label: *const c_char) -> bool
 {
     static let style_idx: c_int = -1;
     if (Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
@@ -6258,7 +6258,7 @@ ShowStyleSelector: bool(label: *const c_char)
     return false;
 }
 
-c_void ShowStyleEditor(re0f32: *mut ImGuiStyle)
+pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
 {
     IMGUI_DEMO_MARKER("Tools/Style Editor");
     // You can pass in a reference ImGuiStyle structure to compare to, revert to and save to
@@ -6472,7 +6472,7 @@ c_void ShowStyleEditor(re0f32: *mut ImGuiStyle)
                     Text("R: %.f\nN: %d", rad, draw_list._CalcCircleAutoSegmentCount(rad));
 
                     let canvas_width: c_float =  IM_MAX(min_widget_width, rad * 2.00f32);
-                    offset_x: c_float     = floorf(canvas_width * 0.5f32);
+                    offset_x: c_float     = floorf(canvas_width * 0.5);
                     offset_y: c_float     = floorf(RAD_MAX);
 
                     let p1: ImVec2 = GetCursorScreenPos();
@@ -6517,7 +6517,7 @@ c_void ShowStyleEditor(re0f32: *mut ImGuiStyle)
 // Note the difference between BeginMainMenuBar() and BeginMenuBar():
 // - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
 // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
-static c_void ShowExampleAppMainMenuBar()
+pub unsafe fn ShowExampleAppMainMenuBar()
 {
     if (BeginMainMenuBar())
     {
@@ -6542,7 +6542,7 @@ static c_void ShowExampleAppMainMenuBar()
 
 // Note that shortcuts are currently provided for display only
 // (future version will add explicit flags to BeginMenu() to request processing shortcuts)
-static c_void ShowExampleMenuFile()
+pub unsafe fn ShowExampleMenuFile()
 {
     IMGUI_DEMO_MARKER("Examples/Menu");
     MenuItem("(demo menu)", null_mut(), false, false);
@@ -6579,7 +6579,7 @@ static c_void ShowExampleMenuFile()
         for (let i: c_int = 0; i < 10; i++)
             Text("Scrolling Text %d", i);
         EndChild();
-        static let f: c_float =  0.5f32;
+        static let f: c_float =  0.5;
         static let n: c_int = 0;
         SliderFloat("Value", &f, 0.0, 1.0);
         InputFloat("Input", &f, 0.1.0);
@@ -6665,7 +6665,7 @@ struct ExampleAppConsole
     // Portable helpers
     static c_int   Stricmp(s1: *const c_char, s2: *const c_char)         { let mut d: c_int = 0; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
     static c_int   Strnicmp(s1: *const c_char, s2: *const c_char, n: c_int) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
-    static char* Strdup(s: *const c_char)                           { IM_ASSERT(s); len: size_t = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(bu0f32); return (char*)memcpy(buf, (*const c_void)s, len); }
+    static char* Strdup(s: *const c_char)                           { IM_ASSERT(s); len: size_t = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (*const c_void)s, len); }
     static c_void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end-= 1; *str_end = 0; }
 
     c_void    ClearLog()
@@ -6681,10 +6681,10 @@ struct ExampleAppConsole
         buf: [c_char;1024];
         va_list args;
         va_start(args, fmt);
-        vsnprintf(buf, bu0f32.len(), fmt, args);
-        buf[bu0f32.len()-1] = 0;
+        vsnprintf(buf, buf.len(), fmt, args);
+        buf[buf.len()-1] = 0;
         va_end(args);
-        Items.push(Strdup(bu0f32));
+        Items.push(Strdup(buf));
     }
 
     c_void    Draw(title: *const c_char,p_open: *mut bool)
@@ -6965,7 +6965,7 @@ struct ExampleAppConsole
                 // A better implementation would preserve the data on the current input line along with cursor position.
                 if (prev_history_pos != HistoryPos)
                 {
-                    let mut  history_str: *const c_char = (HistoryPos >= 0) ? History[HistoryPos] : "";
+                    let mut  history_str: *const c_char = if HistoryPos >= 0 { History[HistoryPos]} else { ""};
                     data.DeleteChars(0, data.BufTextLen);
                     data.InsertChars(0, history_str);
                 }
@@ -6975,7 +6975,7 @@ struct ExampleAppConsole
     }
 };
 
-static c_void ShowExampleAppConsole(bool* p_open)
+pub unsafe fn ShowExampleAppConsole(bool* p_open)
 {
     static ExampleAppConsole console;
     console.Draw("Example: Console", p_open);
@@ -7110,7 +7110,7 @@ struct ExampleAppLog
 };
 
 // Demonstrate creating a simple log window with basic filtering.
-static c_void ShowExampleAppLog(bool* p_open)
+pub unsafe fn ShowExampleAppLog(bool* p_open)
 {
     static ExampleAppLog log;
 
@@ -7145,7 +7145,7 @@ static c_void ShowExampleAppLog(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate create a window with multiple child windows.
-static c_void ShowExampleAppLayout(bool* p_open)
+pub unsafe fn ShowExampleAppLayout(bool* p_open)
 {
     SetNextWindowSize(ImVec2::new(500, 440), ImGuiCond_FirstUseEver);
     if (Begin("Example: Simple layout", p_open, ImGuiWindowFlags_MenuBar))
@@ -7211,7 +7211,7 @@ static c_void ShowExampleAppLayout(bool* p_open)
 // [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
 //-----------------------------------------------------------------------------
 
-static c_void ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
+pub unsafe fn ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
 {
     // Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
     PushID(uid);
@@ -7259,7 +7259,7 @@ static c_void ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
 }
 
 // Demonstrate create a simple property editor.
-static c_void ShowExampleAppPropertyEditor(bool* p_open)
+pub unsafe fn ShowExampleAppPropertyEditor(bool* p_open)
 {
     SetNextWindowSize(ImVec2::new(430, 450), ImGuiCond_FirstUseEver);
     if (!Begin("Example: Property editor", p_open))
@@ -7295,7 +7295,7 @@ static c_void ShowExampleAppPropertyEditor(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate/test rendering huge amount of text, and the incidence of clipping.
-static c_void ShowExampleAppLongText(bool* p_open)
+pub unsafe fn ShowExampleAppLongText(bool* p_open)
 {
     SetNextWindowSize(ImVec2::new(520, 600), ImGuiCond_FirstUseEver);
     if (!Begin("Example: Long text display", p_open))
@@ -7358,7 +7358,7 @@ static c_void ShowExampleAppLongText(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate creating a window which gets auto-resized according to its content.
-static c_void ShowExampleAppAutoResize(bool* p_open)
+pub unsafe fn ShowExampleAppAutoResize(bool* p_open)
 {
     if (!Begin("Example: Auto-resizing window", p_open, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -7384,7 +7384,7 @@ static c_void ShowExampleAppAutoResize(bool* p_open)
 
 // Demonstrate creating a window with custom resize constraints.
 // Note that size constraints currently don't work on a docked window (when in 'docking' branch)
-static c_void ShowExampleAppConstrainedResize(bool* p_open)
+pub unsafe fn ShowExampleAppConstrainedResize(bool* p_open)
 {
     struct CustomConstraints
     {
@@ -7392,7 +7392,7 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
         // FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
         static c_void AspectRatio(ImGuiSizeCallbackData* data)    { let aspect_ratio: c_float =  *data.UserData; data.DesiredSize.x = IM_MAX(data.CurrentSize.x, data.CurrentSize.y); data.DesiredSize.y = (data.DesiredSize.x / aspect_ratio); }
         static c_void Square(ImGuiSizeCallbackData* data)         { data.DesiredSize.x = data.DesiredSize.y = IM_MAX(data.CurrentSize.x, data.CurrentSize.y); }
-        static c_void Step(ImGuiSizeCallbackData* data)           { let step: c_float =  *data.UserData; data.DesiredSize = ImVec2::new((data.CurrentSize.x / step + 0.5f32) * step, (data.CurrentSize.y / step + 0.5f32) * step); }
+        static c_void Step(ImGuiSizeCallbackData* data)           { let step: c_float =  *data.UserData; data.DesiredSize = ImVec2::new((data.CurrentSize.x / step + 0.5) * step, (data.CurrentSize.y / step + 0.5) * step); }
     };
 
     test_desc: *const c_char[] =
@@ -7440,7 +7440,7 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
             // Display a dummy viewport (in your real app you would likely use ImageButton() to display a texture.
             let avail_size: ImVec2 = GetContentRegionAvail();
             let pos: ImVec2 = GetCursorScreenPos();
-            ColorButton("viewport", ImVec4(0.5f32, 0.2f, 0.5f32, 1.0), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, avail_size);
+            ColorButton("viewport", ImVec4(0.5, 0.2f, 0.5, 1.0), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, avail_size);
             SetCursorScreenPos(ImVec2::new(pos.x + 10, pos.y + 10));
             Text("%.2f x %.2f", avail_size.x, avail_size.y);
         }
@@ -7471,7 +7471,7 @@ static c_void ShowExampleAppConstrainedResize(bool* p_open)
 
 // Demonstrate creating a simple static window with no decoration
 // + a context-menu to choose which corner of the screen to use.
-static c_void ShowExampleAppSimpleOverlay(bool* p_open)
+pub unsafe fn ShowExampleAppSimpleOverlay(bool* p_open)
 {
     static let location: c_int = 0;
     ImGuiIO& io = GetIO();
@@ -7494,7 +7494,7 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
     else if (location == -2)
     {
         // Center window
-        SetNextWindowPos(GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2::new(0.5f32, 0.5f32));
+        SetNextWindowPos(GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2::new(0.5, 0.5));
         window_flags |= ImGuiWindowFlags_NoMove;
     }
     SetNextWindowBgAlpha(0.350f32); // Transparent background
@@ -7527,7 +7527,7 @@ static c_void ShowExampleAppSimpleOverlay(bool* p_open)
 //-----------------------------------------------------------------------------
 
 // Demonstrate creating a window covering the entire screen/viewport
-static c_void ShowExampleAppFullscreen(bool* p_open)
+pub unsafe fn ShowExampleAppFullscreen(bool* p_open)
 {
     static let mut use_work_area: bool =  true;
     static flags: ImGuiWindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
@@ -7565,7 +7565,7 @@ static c_void ShowExampleAppFullscreen(bool* p_open)
 // Demonstrate using "##" and "###" in identifiers to manipulate ID generation.
 // This apply to all regular items as well.
 // Read FAQ section "How can I have multiple widgets with the same label?" for details.
-static c_void ShowExampleAppWindowTitles(bool*)
+pub unsafe fn ShowExampleAppWindowTitles(bool*)
 {
     let viewport: *const ImGuiViewport = GetMainViewport();
     let base_pos: ImVec2 = viewport.Pos;
@@ -7589,7 +7589,7 @@ static c_void ShowExampleAppWindowTitles(bool*)
     buf: [c_char;128];
     sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(GetTime() / 0.250f32) & 3], GetFrameCount());
     SetNextWindowPos(ImVec2::new(base_pos.x + 100, base_pos.y + 300), ImGuiCond_FirstUseEver);
-    Begin(bu0f32);
+    Begin(buf);
     Text("This window has a changing title.");
     End();
 }
@@ -7599,7 +7599,7 @@ static c_void ShowExampleAppWindowTitles(bool*)
 //-----------------------------------------------------------------------------
 
 // Demonstrate using the low-level ImDrawList to draw custom shapes.
-static c_void ShowExampleAppCustomRendering(bool* p_open)
+pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
 {
     if (!Begin("Example: Custom rendering", p_open))
     {
@@ -7676,19 +7676,19 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             {
                 // First line uses a thickness of 1.0, second line uses the configurable thickness
                 let th: c_float =  (n == 0) ? 1.0 : thickness;
-                draw_list.AddNgon(ImVec2::new(x + sz*0.5f32, y + sz*0.5f32), sz*0.5f32, col, ngon_sides, th);                 x += sz + spacing;  // N-gon
-                draw_list.AddCircle(ImVec2::new(x + sz*0.5f32, y + sz*0.5f32), sz*0.5f32, col, circle_segments, th);          x += sz + spacing;  // Circle
+                draw_list.AddNgon(ImVec2::new(x + sz*0.5, y + sz*0.5), sz*0.5, col, ngon_sides, th);                 x += sz + spacing;  // N-gon
+                draw_list.AddCircle(ImVec2::new(x + sz*0.5, y + sz*0.5), sz*0.5, col, circle_segments, th);          x += sz + spacing;  // Circle
                 draw_list.AddRect(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 0.0, ImDrawFlags_None, th);          x += sz + spacing;  // Square
                 draw_list.AddRect(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, rounding, ImDrawFlags_None, th);      x += sz + spacing;  // Square with all rounded corners
                 draw_list.AddRect(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, rounding, corners_tl_br, th);         x += sz + spacing;  // Square with two rounded corners
-                draw_list.AddTriangle(ImVec2::new(x+sz*0.5f32,y), ImVec2::new(x+sz, y+sz-0.5f32), ImVec2::new(x, y+sz-0.5f32), col, th);x += sz + spacing;  // Triangle
+                draw_list.AddTriangle(ImVec2::new(x+sz*0.5,y), ImVec2::new(x+sz, y+sz-0.5), ImVec2::new(x, y+sz-0.5), col, th);x += sz + spacing;  // Triangle
                 //draw_list.AddTriangle(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5f32), ImVec2::new(x+sz*0.4f, y+sz-0.5f32), col, th);x+= sz*0.4f + spacing; // Thin triangle
                 draw_list.AddLine(ImVec2::new(x, y), ImVec2::new(x + sz, y), col, th);                                       x += sz + spacing;  // Horizontal line (note: drawing a filled rectangle will be faster!)
                 draw_list.AddLine(ImVec2::new(x, y), ImVec2::new(x, y + sz), col, th);                                       x += spacing;       // Vertical line (note: drawing a filled rectangle will be faster!)
                 draw_list.AddLine(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, th);                                  x += sz + spacing;  // Diagonal line
 
                 // Quadratic Bezier Curve (3 control points)
-                cp3: ImVec2[3] = { ImVec2::new(x, y + sz * 0.60f32), ImVec2::new(x + sz * 0.5f32, y - sz * 0.40f32), ImVec2::new(x + sz, y + sz) };
+                cp3: ImVec2[3] = { ImVec2::new(x, y + sz * 0.60f32), ImVec2::new(x + sz * 0.5, y - sz * 0.40f32), ImVec2::new(x + sz, y + sz) };
                 draw_list.AddBezierQuadratic(cp3[0], cp3[1], cp3[2], col, th, curve_segments); x += sz + spacing;
 
                 // Cubic Bezier Curve (4 control points)
@@ -7698,12 +7698,12 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
                 x = p.x + 4;
                 y += sz + spacing;
             }
-            draw_list.AddNgonFilled(ImVec2::new(x + sz * 0.5f32, y + sz * 0.5f32), sz*0.5f32, col, ngon_sides);               x += sz + spacing;  // N-gon
-            draw_list.AddCircleFilled(ImVec2::new(x + sz*0.5f32, y + sz*0.5f32), sz*0.5f32, col, circle_segments);            x += sz + spacing;  // Circle
+            draw_list.AddNgonFilled(ImVec2::new(x + sz * 0.5, y + sz * 0.5), sz*0.5, col, ngon_sides);               x += sz + spacing;  // N-gon
+            draw_list.AddCircleFilled(ImVec2::new(x + sz*0.5, y + sz*0.5), sz*0.5, col, circle_segments);            x += sz + spacing;  // Circle
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col);                                    x += sz + spacing;  // Square
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10f32);                             x += sz + spacing;  // Square with all rounded corners
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10f32, corners_tl_br);              x += sz + spacing;  // Square with two rounded corners
-            draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.5f32,y), ImVec2::new(x+sz, y+sz-0.5f32), ImVec2::new(x, y+sz-0.5f32), col);  x += sz + spacing;  // Triangle
+            draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.5,y), ImVec2::new(x+sz, y+sz-0.5), ImVec2::new(x, y+sz-0.5), col);  x += sz + spacing;  // Triangle
             //draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5f32), ImVec2::new(x+sz*0.4f, y+sz-0.5f32), col); x += sz*0.4f + spacing; // Thin triangle
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + thickness), col);                             x += sz + spacing;  // Horizontal line (faster than AddLine, but only handle integer thickness)
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + thickness, y + sz), col);                             x += spacing * 2.0.0;// Vertical line (faster than AddLine, but only handle integer thickness)
@@ -7822,7 +7822,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
             SameLine(); HelpMarker("The Foreground draw list will be rendered over every Dear ImGui windows.");
             let window_pos: ImVec2 = GetWindowPos();
             let window_size: ImVec2 = GetWindowSize();
-            let window_center: ImVec2 = ImVec2::new(window_pos.x + window_size.x * 0.5f32, window_pos.y + window_size.y * 0.5f32);
+            let window_center: ImVec2 = ImVec2::new(window_pos.x + window_size.x * 0.5, window_pos.y + window_size.y * 0.5);
             if (draw_bg)
                 GetBackgroundDrawList()->AddCircle(window_center, window_size.x * 0.6f, IM_COL32(255, 0, 0, 200), 0, 10 + 4);
             if (draw_fg)
@@ -7855,7 +7855,7 @@ static c_void ShowExampleAppCustomRendering(bool* p_open)
 // (*) because of this constraint, the implicit \"Debug\" window can not be docked into an explicit DockSpace() node,
 // because that window is submitted as part of the part of the NewFrame() call. An easy workaround is that you can create
 // your own implicit "Debug##2" window after calling DockSpace() and leave it in the window stack for anyone to use.
-c_void ShowExampleAppDockSpace(bool* p_open)
+pub unsafe fn ShowExampleAppDockSpace(bool* p_open)
 {
     // If you strip some features of, this demo is pretty much equivalent to calling DockSpaceOverViewport()!
     // In most cases you should be able to just call DockSpaceOverViewport() and ignore all the code below!
@@ -8028,8 +8028,8 @@ struct ExampleAppDocuments
     ExampleAppDocuments()
     {
         Documents.push(MyDocument("Lettuce",             true,  ImVec4(0.4f, 0.8f, 0.4f, 1.0)));
-        Documents.push(MyDocument("Eggplant",            true,  ImVec4(0.8f, 0.5f32, 1.0, 1.0)));
-        Documents.push(MyDocument("Carrot",              true,  ImVec4(1.0, 0.8f, 0.5f32, 1.0)));
+        Documents.push(MyDocument("Eggplant",            true,  ImVec4(0.8f, 0.5, 1.0, 1.0)));
+        Documents.push(MyDocument("Carrot",              true,  ImVec4(1.0, 0.8f, 0.5, 1.0)));
         Documents.push(MyDocument("Tomato",              false, ImVec4(1.0, 0.3f, 0.4f, 1.0)));
         Documents.push(MyDocument("A Rather Long Title", false));
         Documents.push(MyDocument("Some Document",       false));
@@ -8044,7 +8044,7 @@ struct ExampleAppDocuments
 // give the impression of a flicker for one frame.
 // We call SetTabItemClosed() to manually notify the Tab Bar or Docking system of removed tabs to avoid this glitch.
 // Note that this completely optional, and only affect tab bars with the ImGuiTabBarFlags_Reorderable flag.
-static c_void NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
+pub unsafe fn NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
 {
     for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
     {
@@ -8055,7 +8055,7 @@ static c_void NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
     }
 }
 
-c_void ShowExampleAppDocuments(bool* p_open)
+pub unsafe fn ShowExampleAppDocuments(bool* p_open)
 {
     static ExampleAppDocuments app;
 
@@ -8318,10 +8318,10 @@ c_void ShowExampleAppDocuments(bool* p_open)
 // End of Demo code
 // #else
 
-c_void ShowAboutWindow(bool*) {}
-c_void ShowDemoWindow(bool*) {}
-c_void ShowUserGuide() {}
-c_void ShowStyleEditor(ImGuiStyle*) {}
+pub unsafe fn ShowAboutWindow(bool*) {}
+pub unsafe fn ShowDemoWindow(bool*) {}
+pub unsafe fn ShowUserGuide() {}
+pub unsafe fn ShowStyleEditor(ImGuiStyle*) {}
 
 // #endif
 

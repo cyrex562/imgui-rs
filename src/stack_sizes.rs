@@ -32,7 +32,7 @@ impl ImGuiStackSizes {
         self.SizeOfFocusScopeStack = g.FocusScopeStack.Size;
         self.SizeOfGroupStack = g.GroupStack.Size;
         self.SizeOfItemFlagsStack = g.ItemFlagsStack.Size;
-        self.SizeOfBeginPopupStack = g.BeginPopupStack.Size;
+        self.SizeOfBeginPopupStack = g.BeginPopupStack.len();
         self.SizeOfDisabledStack = g.DisabledStackSize;
     }
 

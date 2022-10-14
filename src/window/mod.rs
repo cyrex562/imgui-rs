@@ -267,7 +267,7 @@ impl ImGuiWindow {
             MoveId: GetID("#MOVE"),
             TabId: GetID("#TAB"),
             ScrollTarget: ImVec2::new(f32::MAX, f32::MAX),
-            ScrollTargetCenterRatio: ImVec2::new(0.5f32, 0.5f32),
+            ScrollTargetCenterRatio: ImVec2::new(0.5, 0.5),
             AutoFitFramesX: -1,
             AutoFitFramesY: -1,
             AutoPosLastDirection: ImGuiDir_None,

@@ -111,7 +111,7 @@ impl ImGuiStyle {
         out.WindowRounding = 0.0;             // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
         out.WindowBorderSize = 1.0;             // Thickness of border around windows. Generally set to 0.0 or 1.0f. Other values not well tested.
         out.WindowMinSize = ImVec2::new(32, 32);    // Minimum window size
-        out.WindowTitleAlign = ImVec2::new(0.0, 0.5f32);// Alignment for title bar text
+        out.WindowTitleAlign = ImVec2::new(0.0, 0.5);// Alignment for title bar text
         out.WindowMenuButtonPosition = ImGuiDir_Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
         out.ChildRounding = 0.0;             // Radius of child window corners rounding. Set to 0.0 to have rectangular child windows
         out.ChildBorderSize = 1.0;             // Thickness of border around child windows. Generally set to 0.0 or 1.0f. Other values not well tested.
@@ -135,7 +135,7 @@ impl ImGuiStyle {
         out.TabBorderSize = 0.0;             // Thickness of border around tabs.
         out.TabMinWidthForCloseButton = 0.0;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to f32::MAX to never show close button unless selected.
         out.ColorButtonPosition = ImGuiDir_Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-        out.ButtonTextAlign = ImVec2::new(0.5f32, 0.5f32);// Alignment of button text when button is larger than text.
+        out.ButtonTextAlign = ImVec2::new(0.5, 0.5);// Alignment of button text when button is larger than text.
         out.SelectableTextAlign = ImVec2::new(0.0, 0.0);// Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
         out.DisplayWindowPadding = ImVec2::new(19, 19);    // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
         out.DisplaySafeAreaPadding = ImVec2::new(3, 3);      // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.

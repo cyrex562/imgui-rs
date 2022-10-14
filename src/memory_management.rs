@@ -9,7 +9,7 @@
 }
 
 // IM_FREE() == MemFree()
-c_void MemFree(ptr: *mut c_void)
+pub unsafe fn MemFree(ptr: *mut c_void)
 {
     if (ptr)
         if (ImGuiContext* ctx = GImGui)

@@ -360,8 +360,8 @@ pub fn GetMousePos() -> ImVec2 {
 // GetMousePosOnOpeningCurrentPopup: ImVec2()
 pub fn GetMousePosOnOPeningCurrentPopup() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if g.BeginPopupStack.Size > 0 {
-        return g.OpenPopupStack[g.BeginPopupStack.Size - 1].OpenMousePos;
+    if g.BeginPopupStack.len() > 0 {
+        return g.OpenPopupStack[g.BeginPopupStack.len() - 1].OpenMousePos;
     }
     return g.IO.MousePos.clone();
 }
@@ -640,5 +640,3 @@ pub unsafe fn PopAllowKeyboardFocus()
 {
     PopItemFlag();
 }
-
-

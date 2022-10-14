@@ -114,7 +114,7 @@ pub unsafe fn ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &mut ImRect, m
     }
     else if (flag_set(flags, ImGuiScrollFlags_KeepVisibleCenterX) && !fully_visible_x) || flag_set(flags, ImGuiScrollFlags_AlwaysCenterX)
     {
-        let target_x: c_float =  if can_be_fully_visible_x { ImFloor((item_rect.Min.x + item_rect.Max.x - window.InnerRect.GetWidth()) * 0.5f32) } else { item_rect.Min.x };
+        let target_x: c_float =  if can_be_fully_visible_x { ImFloor((item_rect.Min.x + item_rect.Max.x - window.InnerRect.GetWidth()) * 0.5) } else { item_rect.Min.x };
         SetScrollFromPosX(window, target_x - window.Pos.x, 0.0);
     }
 
@@ -129,7 +129,7 @@ pub unsafe fn ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &mut ImRect, m
     }
     else if ((flag_set(flags, ImGuiScrollFlags_KeepVisibleCenterY) && !fully_visible_y) || flag_set(flags, ImGuiScrollFlags_AlwaysCenterY))
     {
-        let target_y: c_float =  if can_be_fully_visible_y { ImFloor((item_rect.Min.y + item_rect.Max.y - window.InnerRect.GetHeight()) * 0.5f32) } else { item_rect.Min.y };
+        let target_y: c_float =  if can_be_fully_visible_y { ImFloor((item_rect.Min.y + item_rect.Max.y - window.InnerRect.GetHeight()) * 0.5) } else { item_rect.Min.y };
         SetScrollFromPosY(window, target_y - window.Pos.y, 0.0);
     }
 

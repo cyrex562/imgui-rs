@@ -85,7 +85,7 @@ inline c_void     ImBitArraySetBitRange(*mut arr: u32, n: c_int, n2: c_int) // W
     while (n <= n2)
     {
         let a_mod: c_int = (n & 31);
-        let b_mod: c_int = (n2 > (n | 31) ? 31 : (n2 & 31)) + 1;
+        let b_mod: c_int = if n2 > (n | 31 { 31} else { (n2 & 31)) + 1};
         mask: u32 = (((u64)1 << b_mod) - 1) & ~(((u64)1 << a_mod) - 1);
         arr[n >> 5] |= mask;
         n = (n + 32) & !31;
@@ -259,11 +259,7 @@ enum ImGuiTextFlags_
     ImGuiTextFlags_NoWidthForLargeClippedText   = 1 << 0,
 };
 
-enum ImGuiTooltipFlags_
-{
-    ImGuiTooltipFlags_None                      = 0,
-    ImGuiTooltipFlags_OverridePreviousTooltip   = 1 << 0,   // Override will clear/ignore previously submitted tooltip (defaults to append)
-};
+
 
 
 
@@ -276,12 +272,7 @@ enum ImGuiPlotType
     ImGuiPlotType_Histogram,
 };
 
-enum ImGuiPopupPositionPolicy
-{
-    ImGuiPopupPositionPolicy_Default,
-    ImGuiPopupPositionPolicy_ComboBox,
-    ImGuiPopupPositionPolicy_Tooltip,
-};
+
 
 struct ImGuiDataTypeTempStorage
 {
@@ -602,7 +593,7 @@ namespace ImGui
 
     // Generic context hooks
      ImGuiID       AddContextHook(*mut ImGuiContext context, *const ImGuiContextHook hook);
-     c_void          RemoveContextHook(*mut ImGuiContext context, ImGuiID hook_to_remove);
+     c_void          RemoveContextHook(*mut ImGuiContext context, hook_to_remove: ImGuiID);
      c_void          CallContextHooks(*mut ImGuiContext context, ImGuiContextHookType type);
 
     // Viewports
@@ -633,9 +624,9 @@ namespace ImGui
      c_void          SetScrollFromPosY(*mut ImGuiWindow window,local_y: c_float,center_y_ratio: c_float);
 
     // Early work-in-progress API (ScrollToItem() will become public)
-     c_void          ScrollToItem(ImGuiScrollFlags flags = 0);
-     c_void          ScrollToRect(*mut ImGuiWindow window, rect: &ImRect, ImGuiScrollFlags flags = 0);
-     ImVec2        ScrollToRectEx(*mut ImGuiWindow window, rect: &ImRect, ImGuiScrollFlags flags = 0);
+     c_void          ScrollToItem(flags: ImGuiScrollFlags = 0);
+     c_void          ScrollToRect(*mut ImGuiWindow window, rect: &ImRect, flags: ImGuiScrollFlags = 0);
+     ImVec2        ScrollToRectEx(*mut ImGuiWindow window, rect: &ImRect, flags: ImGuiScrollFlags = 0);
 //#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     inline c_void             ScrollToBringRectIntoView(*mut ImGuiWindow window, rect: &ImRect) { ScrollToRect(window, rect, ImGuiScrollFlags_KeepVisibleEdgeY); }
 //#endif
@@ -654,7 +645,7 @@ namespace ImGui
      c_void          KeepAliveID(id: ImGuiID);
      c_void          MarkItemEdited(id: ImGuiID);     // Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
      c_void          PushOverrideID(id: ImGuiID);     // Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
-     ImGuiID       GetIDWithSeed(str_id_begin: *const c_char, str_id_end: *const c_char, ImGuiID seed);
+     ImGuiID       GetIDWithSeed(str_id_begin: *const c_char, str_id_end: *const c_char, seed: ImGuiID);
 
     // Basic Helpers for widget code
      c_void          ItemSize(size: &ImVec2, let text_baseline_y: c_float =  -1.0);
@@ -662,7 +653,7 @@ namespace ImGui
      bool          ItemAdd(bb: &ImRect, id: ImGuiID, *let nav_bb: ImRect =  null_mut(), let mut extra_flags: ImGuiItemFlags =  0);
      bool          ItemHoverable(bb: &ImRect, id: ImGuiID);
      bool          IsClippedEx(bb: &ImRect, id: ImGuiID);
-     c_void          SetLastItemData(ImGuiID item_id, in_flags: ImGuiItemFlags, ImGuiItemStatusFlags status_flags, item_rect: &ImRect);
+     c_void          SetLastItemData(item_id: ImGuiID, in_flags: ImGuiItemFlags, ImGuiItemStatusFlags status_flags, item_rect: &ImRect);
      ImVec2        CalcItemSize(size: ImVec2,default_w: c_float,default_h: c_float);CalcWrapWidthForPos: c_float(pos: &ImVec2,wrap_pos_x: c_float);
      c_void          PushMultiItemsWidths(components: c_int,width_full: c_float);
      bool          IsItemToggledSelection();                                   // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
@@ -681,18 +672,18 @@ namespace ImGui
 
     // Popups, Modals, Tooltips
      bool          BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, flags: ImGuiWindowFlags);
-     c_void          OpenPopupEx(id: ImGuiID, ImGuiPopupFlags popup_flags = ImGuiPopupFlags_None);
+     c_void          OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags = ImGuiPopupFlags_None);
      c_void          ClosePopupToLevel(remaining: c_int, restore_focus_to_window_under_popup: bool);
      c_void          ClosePopupsOverWindow(*mut ImGuiWindow ref_window, restore_focus_to_window_under_popup: bool);
      c_void          ClosePopupsExceptModals();
-     bool          IsPopupOpen(id: ImGuiID, ImGuiPopupFlags popup_flags);
+     bool          IsPopupOpen(id: ImGuiID, popup_flags: ImGuiPopupFlags);
      bool          BeginPopupEx(id: ImGuiID, extra_flags: ImGuiWindowFlags);
-     c_void          BeginTooltipEx(ImGuiTooltipFlags tooltip_flags, extra_window_flags: ImGuiWindowFlags);
+     c_void          BeginTooltipEx(tooltip_flags: ImGuiTooltipFlags, extra_window_flags: ImGuiWindowFlags);
      ImRect        GetPopupAllowedExtentRect(*mut ImGuiWindow window);
      *mut ImGuiWindow  GetTopMostPopupModal();
      *mut ImGuiWindow  GetTopMostAndVisiblePopupModal();
      ImVec2        FindBestWindowPosForPopup(*mut ImGuiWindow window);
-     ImVec2        FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, *mut last_dir: ImGuiDir, r_outer: &ImRect, r_avoid: &ImRect, ImGuiPopupPositionPolicy policy);
+     ImVec2        FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, *mut last_dir: ImGuiDir, r_outer: &ImRect, r_avoid: &ImRect, policy: ImGuiPopupPositionPolicy);
 
     // Menus
      bool          BeginViewportSideBar(name: *const c_char, *mut ImGuiViewport viewport, dir: ImGuiDir,size: c_float, window_flags: ImGuiWindowFlags);
@@ -700,7 +691,7 @@ namespace ImGui
      bool          MenuItemEx(label: *const c_char, icon: *const c_char, shortcut: *const c_char = null_mut(), let mut selected: bool =  false, let mut enabled: bool =  true);
 
     // Combos
-     bool          BeginComboPopup(ImGuiID popup_id, bb: &ImRect, ImGuiComboFlags flags);
+     bool          BeginComboPopup(popup_id: ImGuiID, bb: &ImRect, ImGuiComboFlags flags);
      bool          BeginComboPreview();
      c_void          EndComboPreview();
 
@@ -708,15 +699,15 @@ namespace ImGui
      c_void          NavInitWindow(*mut ImGuiWindow window, force_reinit: bool);
      c_void          NavInitRequestApplyResult();
      bool          NavMoveRequestButNoResultYet();
-     c_void          NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags);
-     c_void          NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, ImGuiNavMoveFlags move_flags, ImGuiScrollFlags scroll_flags);
+     c_void          NavMoveRequestSubmit(move_dir: ImGuiDir, clip_dir: ImGuiDir, move_flags: ImGuiNavMoveFlags, scroll_flags: ImGuiScrollFlags);
+     c_void          NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, move_flags: ImGuiNavMoveFlags, scroll_flags: ImGuiScrollFlags);
      c_void          NavMoveRequestResolveWithLastItem(*mut ImGuiNavItemData result);
      c_void          NavMoveRequestCancel();
      c_void          NavMoveRequestApplyResult();
-     c_void          NavMoveRequestTryWrapping(*mut ImGuiWindow window, ImGuiNavMoveFlags move_flags);
+     c_void          NavMoveRequestTryWrapping(*mut ImGuiWindow window, move_flags: ImGuiNavMoveFlags);
      c_void          ActivateItem(id: ImGuiID);   // Remotely activate a button, checkbox, tree node etc. given its unique ID. activation is queued and processed on the next frame when the item is encountered again.
      c_void          SetNavWindow(*mut ImGuiWindow window);
-     c_void          SetNavID(id: ImGuiID, ImGuiNavLayer nav_layer, ImGuiID focus_scope_id, rect_rel: &ImRect);
+     c_void          SetNavID(id: ImGuiID, nav_layer: ImGuiNavLayer, focus_scope_id: ImGuiID, rect_rel: &ImRect);
 
     // Focus Scope (WIP)
     // This is generally used to identify a selection set (multiple of which may be in the same window), as selection
@@ -738,7 +729,7 @@ namespace ImGui
     inline ImGuiKey         MouseButtonToKey(ImGuiMouseButton button)                   { IM_ASSERT(button >= 0 && button < ImGuiMouseButton_COUNT); return ImGuiKey_MouseLeft + button; }
      bool          IsMouseDragPastThreshold(ImGuiMouseButton button, let lock_threshold: c_float =  -1.0);
      ImGuiModFlags GetMergedModFlags();
-     ImVec2        GetKeyVector2d(ImGuiKey key_left, ImGuiKey key_right, ImGuiKey key_up, ImGuiKey key_down);GetNavTweakPressedAmount: c_float(ImGuiAxis axis);
+     ImVec2        GetKeyVector2d(ImGuiKey key_left, ImGuiKey key_right, ImGuiKey key_up, ImGuiKey key_down);GetNavTweakPressedAmount: c_float(axis: ImGuiAxis);
      c_int           CalcTypematicRepeatAmount(t0: c_float,t1: c_float,repeat_delay: c_float,repeat_rate: c_float);
      c_void          GetTypematicRepeatRate(ImGuiInputFlags flags, *mutrepeat_delay: c_float, *mutrepeat_rate: c_float);
      bool          IsKeyPressedEx(ImGuiKey key, ImGuiInputFlags flags = 0);
@@ -750,7 +741,7 @@ namespace ImGui
     // (some functions are only declared in imgui.cpp, see Docking section)
      c_void          DockContextInitialize(*mut ImGuiContext ctx);
      c_void          DockContextShutdown(*mut ImGuiContext ctx);
-     c_void          DockContextClearNodes(*mut ImGuiContext ctx, ImGuiID root_id, clear_settings_refs: bool); // Use root_id==0 to clear all
+     c_void          DockContextClearNodes(*mut ImGuiContext ctx, root_id: ImGuiID, clear_settings_refs: bool); // Use root_id==0 to clear all
      c_void          DockContextRebuildNodes(*mut ImGuiContext ctx);
      c_void          DockContextNewFrameUpdateUndocking(*mut ImGuiContext ctx);
      c_void          DockContextNewFrameUpdateDocking(*mut ImGuiContext ctx);
@@ -772,7 +763,7 @@ namespace ImGui
      c_void          BeginDocked(*mut ImGuiWindow window, *mut p_open: bool);
      c_void          BeginDockableDragDropSource(*mut ImGuiWindow window);
      c_void          BeginDockableDragDropTarget(*mut ImGuiWindow window);
-     c_void          SetWindowDock(*mut ImGuiWindow window, ImGuiID dock_id, cond: ImGuiCond);
+     c_void          SetWindowDock(*mut ImGuiWindow window, dock_id: ImGuiID, cond: ImGuiCond);
 
     // Docking - Builder function needs to be generally called before the node is used/submitted.
     // - The DockBuilderXXX functions are designed to _eventually_ become a public API, but it is too early to expose it and guarantee stability.
@@ -783,20 +774,20 @@ namespace ImGui
     // - If you intend to split the node immediately after creation using DockBuilderSplitNode(), make sure
     //   to call DockBuilderSetNodeSize() beforehand. If you don't, the resulting split sizes may not be reliable.
     // - Call DockBuilderFinish() after you are done.
-     c_void          DockBuilderDockWindow(window_name: *const c_char, ImGuiID node_id);
-     *mut ImGuiDockNodeDockBuilderGetNode(ImGuiID node_id);
-    inline *mut ImGuiDockNode   DockBuilderGetCentralNode(ImGuiID node_id)              { *mut ImGuiDockNode node = DockBuilderGetNode(node_id); if (!node) return null_mut(); return DockNodeGetRootNode(node)->CentralNode; }
+     c_void          DockBuilderDockWindow(window_name: *const c_char, node_id: ImGuiID);
+     *mut ImGuiDockNodeDockBuilderGetNode(node_id: ImGuiID);
+    inline *mut ImGuiDockNode   DockBuilderGetCentralNode(node_id: ImGuiID)              { *mut ImGuiDockNode node = DockBuilderGetNode(node_id); if (!node) return null_mut(); return DockNodeGetRootNode(node)->CentralNode; }
      ImGuiID       DockBuilderAddNode(let mut node_id: ImGuiID =  0, ImGuiDockNodeFlags flags = 0);
-     c_void          DockBuilderRemoveNode(ImGuiID node_id);                 // Remove node and all its child, undock all windows
-     c_void          DockBuilderRemoveNodeDockedWindows(ImGuiID node_id, let mut clear_settings_refs: bool =  true);
-     c_void          DockBuilderRemoveNodeChildNodes(ImGuiID node_id);       // Remove all split/hierarchy. All remaining docked windows will be re-docked to the remaining root node (node_id).
-     c_void          DockBuilderSetNodePos(ImGuiID node_id, pos: ImVec2);
-     c_void          DockBuilderSetNodeSize(ImGuiID node_id, size: ImVec2);
-     ImGuiID       DockBuilderSplitNode(ImGuiID node_id, split_dir: ImGuiDir,size_ratio_for_node_at_dir: c_float, *mut ImGuiID out_id_at_dir, *mut ImGuiID out_id_at_opposite_dir); // Create 2 child nodes in this parent node.
-     c_void          DockBuilderCopyDockSpace(ImGuiID src_dockspace_id, ImGuiID dst_dockspace_id, Vec<*const char>* in_window_remap_pairs);
-     c_void          DockBuilderCopyNode(ImGuiID src_node_id, ImGuiID dst_node_id, Vec<ImGuiID>* out_node_remap_pairs);
+     c_void          DockBuilderRemoveNode(node_id: ImGuiID);                 // Remove node and all its child, undock all windows
+     c_void          DockBuilderRemoveNodeDockedWindows(node_id: ImGuiID, let mut clear_settings_refs: bool =  true);
+     c_void          DockBuilderRemoveNodeChildNodes(node_id: ImGuiID);       // Remove all split/hierarchy. All remaining docked windows will be re-docked to the remaining root node (node_id).
+     c_void          DockBuilderSetNodePos(node_id: ImGuiID, pos: ImVec2);
+     c_void          DockBuilderSetNodeSize(node_id: ImGuiID, size: ImVec2);
+     ImGuiID       DockBuilderSplitNode(node_id: ImGuiID, split_dir: ImGuiDir,size_ratio_for_node_at_dir: c_float, *mut out_id_at_dir: ImGuiID, *mut out_id_at_opposite_dir: ImGuiID); // Create 2 child nodes in this parent node.
+     c_void          DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_id: ImGuiID, Vec<*const char>* in_window_remap_pairs);
+     c_void          DockBuilderCopyNode(src_node_id: ImGuiID, dst_node_id: ImGuiID, Vec<ImGuiID>* out_node_remap_pairs);
      c_void          DockBuilderCopyWindowSettings(src_name: *const c_char, dst_name: *const c_char);
-     c_void          DockBuilderFinish(ImGuiID node_id);
+     c_void          DockBuilderFinish(node_id: ImGuiID);
 
     // Drag and Drop
      bool          IsDragDropActive();
@@ -866,10 +857,10 @@ namespace ImGui
 
     // Tab Bars
      bool          BeginTabBarEx(*mut ImGuiTabBar tab_bar, bb: &ImRect, ImGuiTabBarFlags flags, *mut ImGuiDockNode dock_node);
-     *mut ImGuiTabItem TabBarFindTabByID(*mut ImGuiTabBar tab_bar, ImGuiID tab_id);
+     *mut ImGuiTabItem TabBarFindTabByID(*mut ImGuiTabBar tab_bar, tab_id: ImGuiID);
      *mut ImGuiTabItem TabBarFindMostRecentlySelectedTabForActiveWindow(*mut ImGuiTabBar tab_bar);
      c_void          TabBarAddTab(*mut ImGuiTabBar tab_bar, ImGuiTabItemFlags tab_flags, *mut ImGuiWindow window);
-     c_void          TabBarRemoveTab(*mut ImGuiTabBar tab_bar, ImGuiID tab_id);
+     c_void          TabBarRemoveTab(*mut ImGuiTabBar tab_bar, tab_id: ImGuiID);
      c_void          TabBarCloseTab(*mut ImGuiTabBar tab_bar, *mut ImGuiTabItem tab);
      c_void          TabBarQueueReorder(*mut ImGuiTabBar tab_bar, *const ImGuiTabItem tab, offset: c_int);
      c_void          TabBarQueueReorderFromMousePos(*mut ImGuiTabBar tab_bar, *const ImGuiTabItem tab, mouse_pos: ImVec2);
@@ -877,7 +868,7 @@ namespace ImGui
      bool          TabItemEx(*mut ImGuiTabBar tab_bar, label: *const c_char, *mut p_open: bool, ImGuiTabItemFlags flags, *mut ImGuiWindow docked_window);
      ImVec2        TabItemCalcSize(label: *const c_char, has_close_button: bool);
      c_void          TabItemBackground(draw_list: *mut ImDrawList, bb: &ImRect, ImGuiTabItemFlags flags, col: u32);
-     c_void          TabItemLabelAndCloseButton(draw_list: *mut ImDrawList, bb: &ImRect, ImGuiTabItemFlags flags, frame_padding: ImVec2, label: *const c_char, ImGuiID tab_id, ImGuiID close_button_id, is_contents_visible: bool, *mut out_just_closed: bool, *mut out_text_clipped: bool);
+     c_void          TabItemLabelAndCloseButton(draw_list: *mut ImDrawList, bb: &ImRect, ImGuiTabItemFlags flags, frame_padding: ImVec2, label: *const c_char, tab_id: ImGuiID, close_button_id: ImGuiID, is_contents_visible: bool, *mut out_just_closed: bool, *mut out_text_clipped: bool);
 
     // Render helpers
     // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
@@ -910,11 +901,11 @@ namespace ImGui
      bool          CloseButton(id: ImGuiID, pos: &ImVec2);
      bool          CollapseButton(id: ImGuiID, pos: &ImVec2, *mut ImGuiDockNode dock_node);
      bool          ArrowButtonEx(str_id: *const c_char, dir: ImGuiDir, size_arg: ImVec2, ImGuiButtonFlags flags = 0);
-     c_void          Scrollbar(ImGuiAxis axis);
-     bool          ScrollbarEx(bb: &ImRect, id: ImGuiID, ImGuiAxis axis, *mut ImS64 p_scroll_v, ImS64 avail_v, ImS64 contents_v, flags: ImDrawFlags);
+     c_void          Scrollbar(axis: ImGuiAxis);
+     bool          ScrollbarEx(bb: &ImRect, id: ImGuiID, axis: ImGuiAxis, *mut ImS64 p_scroll_v, ImS64 avail_v, ImS64 contents_v, flags: ImDrawFlags);
      bool          ImageButtonEx(id: ImGuiID, ImTextureID texture_id, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, const ImVec4& bg_col, const ImVec4& tint_col);
-     ImRect        GetWindowScrollbarRect(*mut ImGuiWindow window, ImGuiAxis axis);
-     ImGuiID       GetWindowScrollbarID(*mut ImGuiWindow window, ImGuiAxis axis);
+     ImRect        GetWindowScrollbarRect(*mut ImGuiWindow window, axis: ImGuiAxis);
+     ImGuiID       GetWindowScrollbarID(*mut ImGuiWindow window, axis: ImGuiAxis);
      ImGuiID       GetWindowResizeCornerID(*mut ImGuiWindow window, n: c_int); // 0..3: corners
      ImGuiID       GetWindowResizeBorderID(*mut ImGuiWindow window, dir: ImGuiDir);
      c_void          SeparatorEx(ImGuiSeparatorFlags flags);
@@ -925,7 +916,7 @@ namespace ImGui
      bool          ButtonBehavior(bb: &ImRect, id: ImGuiID, *mut out_hovered: bool, *mut out_held: bool, ImGuiButtonFlags flags = 0);
      bool          DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v,v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags);
      bool          SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb);
-     bool          SplitterBehavior(bb: &ImRect, id: ImGuiID, ImGuiAxis axis, *mutsize1: c_float, *mutsize2: c_float,min_size1: c_float,min_size2: c_float, let hover_extend: c_float =  0.0, let hover_visibility_delay: c_float =  0.0, bg_col: u32 = 0);
+     bool          SplitterBehavior(bb: &ImRect, id: ImGuiID, axis: ImGuiAxis, *mutsize1: c_float, *mutsize2: c_float,min_size1: c_float,min_size2: c_float, let hover_extend: c_float =  0.0, let hover_visibility_delay: c_float =  0.0, bg_col: u32 = 0);
      bool          TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *const c_char, label_end: *const c_char = null_mut());
      c_void          TreePushOverrideID(id: ImGuiID);
      c_void          TreeNodeSetOpen(id: ImGuiID, open: bool);

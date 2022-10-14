@@ -100,7 +100,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     }
     if style.WindowTitleAlign.x > 0.0 && style.WindowTitleAlign.x < 1.0
     {
-        let centerness: c_float =  ImSaturate(1.0 - ImFabs(style.WindowTitleAlign.x - 0.5f32) * 2.00f32); // 0.0 on either edges, 1.0 on center
+        let centerness: c_float =  ImSaturate(1.0 - ImFabs(style.WindowTitleAlign.x - 0.5) * 2.00f32); // 0.0 on either edges, 1.0 on center
         let pad_extend: c_float =  ImMin(ImMax(pad_l, pad_r), title_bar_rect.GetWidth() - pad_l - pad_r - text_size.x);
         pad_l = ImMax(pad_l, pad_extend * centerness);
         pad_r = ImMax(pad_r, pad_extend * centerness);
@@ -112,11 +112,11 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     {
         marker_pos: ImVec2;
         marker_pos.x = ImClamp(layout_r.Min.x + (layout_r.GetWidth() - text_size.x) * style.WindowTitleAlign.x + text_size.x, layout_r.Min.x, layout_r.Max.x);
-        marker_pos.y = (layout_r.Min.y + layout_r.Max.y) * 0.5f32;
+        marker_pos.y = (layout_r.Min.y + layout_r.Max.y) * 0.5;
         if marker_pos.x > layout_r.Min.x
         {
             RenderBullet(window.DrawList, marker_pos, GetColorU32(ImGuiCol_Text, 0.0));
-            clip_r.Max.x = ImMin(clip_r.Max.x, marker_pos.x - (marker_size_x * 0.5f32));
+            clip_r.Max.x = ImMin(clip_r.Max.x, marker_pos.x - (marker_size_x * 0.5));
         }
     }
     //if (g.IO.KeyShift) window.DrawList.AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
@@ -140,7 +140,7 @@ pub fn UpdateWindowParentAndRootLinks(window: *mut ImGuiWindow, flags: ImGuiWind
         window.RootWindowPopupTree = parent_window.RootWindowPopupTree;
     if (parent_window && flag_clear(flags, ImGuiWindowFlags_Modal) && (flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Popup))) // FIXME: simply use _NoTitleBar ?
         window.RootWindowForTitleBarHighlight = parent_window.RootWindowForTitleBarHighlight;
-    while (window.RootWindowForNav->Flags & ImGuiWindowFlags_NavFlattened)
+    while (window.RootWindowForNav.Flags & ImGuiWindowFlags_NavFlattened)
     {
         // IM_ASSERT(window.RootWindowForNav->ParentWindow != NULL);
         window.RootWindowForNav = window.RootWindowForNav->ParentWindow;
@@ -319,8 +319,8 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
     {
         let def = resize_border_def[border_held];
         let border_r: ImRect =  ops::GetResizeBorderRect(window, border_held as c_int, rounding, 0.0);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::new(0.5f32, 0.5f32) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::new(0.5f32, 0.5f32) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
+        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
+        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
         window.DrawList.PathStroke(GetColorU32(ImGuiCol_SeparatorActive, 0.0), 0, ImMax(2.0.0, border_size)); // Thicker than usual
     }
     if g.Style.FrameBorderSize > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive

@@ -187,7 +187,7 @@ pub unsafe fn ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y: c_float, line_h
             TableEndRow(table);
         }
         table.RowPosY2 = window.DC.CursorPos.y;
-        let row_increase = ((off_y / line_height) + 0.5f32);
+        let row_increase = ((off_y / line_height) + 0.5);
         //table.CurrentRow += row_increase; // Can't do without fixing TableEndRow()
         table.RowBgColorCounter += row_increase;
     }

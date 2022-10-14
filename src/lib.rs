@@ -209,6 +209,9 @@ mod state_storage_ops;
 mod error_ops;
 mod group_ops;
 mod scrolling_ops;
+mod tooltip_ops;
+mod popup_ops;
+mod popup_position_policy;
 
 
 // c_void Initialize()

@@ -33,7 +33,7 @@ impl ImGuiDockRequest {
             DockTargetNode: null_mut(),
             UndockTargetNode: null_mut(),
             DockSplitDir: ImGuiDir_None,
-            DockSplitRatio: 0.5f32,
+            DockSplitRatio: 0.5,
             DockSplitOuter: false,
         }
     }

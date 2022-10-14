@@ -91,7 +91,7 @@ impl ImDrawListSplitter {
         // Calculate our final buffer sizes. Also fix the incorrect IdxOffset values in each command.
         let mut new_cmd_buffer_count: size_t = 0;
         let mut new_idx_buffer_count: size_t = 0;
-        last_cmd: *mut ImDrawCmd = (self._Count > 0 && draw_list.CmdBuffer.len() > 0) ? &draw_list.CmdBuffer.last().unwrap() : null_mut();
+        last_cmd: *mut ImDrawCmd = if self._Count > 0 && draw_list.CmdBuffer.len() > 0 { &draw_list.CmdBuffer.last().unwrap()} else { null_mut()};
         let mut idx_offset: size_t = if last_cmd { last_cmd.IdxOffset + last_cmd.ElemCount } else { 0 };
         // for (let i: c_int = 1; i < _Count; i++)
         for i in 1 ..self._Count

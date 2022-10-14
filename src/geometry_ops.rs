@@ -49,18 +49,18 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &mut ImVec2, p_closest: &mut Im
         }
         *p_last = p_current.clone();
     } else if level < 10 {
-        let mut x12 = (x1 + x2) * 0.5f32;
-        let mut y12 = (y1 + y2) * 0.5f32;
-        let mut x23 = (x2 + x3) * 0.5f32;
-        let mut y23 = (y2 + y3) * 0.5f32;
-        let mut x34 = (x3 + x4) * 0.5f32;
-        let mut y34 = (y3 + y4) * 0.5f32;
-        let mut x123 = (x12 + x23) * 0.5f32;
-        let mut y123 = (y12 + y23) * 0.5f32;
-        let mut x234 = (x23 + x34) * 0.5f32;
-        let mut y234 = (y23 + y34) * 0.5f32;
-        let mut x1234 = (x123 + x234) * 0.5f32;
-        let mut y1234 = (y123 + y234) * 0.5f32;
+        let mut x12 = (x1 + x2) * 0.5;
+        let mut y12 = (y1 + y2) * 0.5;
+        let mut x23 = (x2 + x3) * 0.5;
+        let mut y23 = (y2 + y3) * 0.5;
+        let mut x34 = (x3 + x4) * 0.5;
+        let mut y34 = (y3 + y4) * 0.5;
+        let mut x123 = (x12 + x23) * 0.5;
+        let mut y123 = (y12 + y23) * 0.5;
+        let mut x234 = (x23 + x34) * 0.5;
+        let mut y234 = (y23 + y34) * 0.5;
+        let mut x1234 = (x123 + x234) * 0.5;
+        let mut y1234 = (y123 + y234) * 0.5;
         ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last, p_closest_dist2, x1, y1, x12, y12, x123, y123, x1234, y1234, tess_tol, level + 1);
         ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last, p_closest_dist2, x1234, y1234, x234, y234, x34, y34, x4, y4, tess_tol, level + 1);
     }

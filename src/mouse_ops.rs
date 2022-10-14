@@ -381,7 +381,7 @@ pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
 
     // We track click ownership. When clicked outside of a window the click is owned by the application and
     // won't report hovering nor request capture even while dragging over our windows afterward.
-    let has_open_popup: bool = (g.OpenPopupStack.Size > 0);
+    let has_open_popup: bool = (g.OpenPopupStack.len() > 0);
     let has_open_modal: bool = (modal_window != null_mut());
     let mut mouse_earliest_down: c_int = -1;
     let mut mouse_any_down: bool = false;

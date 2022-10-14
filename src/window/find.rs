@@ -179,7 +179,7 @@ pub fn GetWindowForTitleAndMenuHeight(window: *mut ImGuiWindow) -> *mut ImGuiWin
 pub unsafe fn FindBlockingModal(window: *mut ImGuiWindow) -> *mut ImGuiWindow
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if g.OpenPopupStack.Size <= 0 {
+    if g.OpenPopupStack.len() <= 0 {
         return null_mut();
     }
 
@@ -296,5 +296,3 @@ pub unsafe fn IsWindowAbove(potential_above: *mut ImGuiWindow, potential_below: 
     }
     return false;
 }
-
-

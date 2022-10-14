@@ -98,14 +98,14 @@ impl ImGuiViewport {
 
     // ImVec2              GetCenter() const       { return ImVec2::new(Pos.x + Size.x * 0.5f32, Pos.y + Size.y * 0.5f32); }
     pub fn GetCenter(&self) -> ImVec2 {
-        ImVec2::new(self.Pos.x + self.Size.x * 0.5f32, self.Pos.y + self.Size.y * 0.5f32)
+        ImVec2::new(self.Pos.x + self.Size.x * 0.5, self.Pos.y + self.Size.y * 0.5)
     }
 
     // ImVec2              GetWorkCenter() const   { return ImVec2::new(WorkPos.x + WorkSize.x * 0.5f32, WorkPos.y + WorkSize.y * 0.5f32); }
     pub fn GetWorkCenter(&self) -> ImVec2 {
         ImVec2::new(
-            self.WorkPos.x + self.WorkSize.x * 0.5f32,
-            self.WorkPos.y + self.WorkSize.y * 0.5f32,
+            self.WorkPos.x + self.WorkSize.x * 0.5,
+            self.WorkPos.y + self.WorkSize.y * 0.5,
         )
     }
 

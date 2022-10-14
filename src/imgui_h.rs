@@ -263,7 +263,7 @@ namespace ImGui
      c_void          SetNextWindowCollapsed(collapsed: bool, cond: ImGuiCond = 0);                 // set next window collapsed state. call before Begin()
      c_void          SetNextWindowFocus();                                                       // set next window to be focused / top-most. call before Begin()
      c_void          SetNextWindowBgAlpha(alpha: c_float);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
-     c_void          SetNextWindowViewport(ImGuiID viewport_id);                                 // set next window viewport
+     c_void          SetNextWindowViewport(viewport_id: ImGuiID);                                 // set next window viewport
      c_void          SetWindowPos(pos: &ImVec2, cond: ImGuiCond = 0);                        // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
      c_void          SetWindowSize(size: &ImVec2, cond: ImGuiCond = 0);                      // (not recommended) set current window size - call within Begin()/End(). set to ImVec2::new(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
      c_void          SetWindowCollapsed(collapsed: bool, cond: ImGuiCond = 0);                     // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
@@ -285,10 +285,10 @@ namespace ImGui
     // Windows ScrollingGetScrollX: c_float();                                                   // get scrolling amount [0 .. GetScrollMaxX()]GetScrollY: c_float();                                                   // get scrolling amount [0 .. GetScrollMaxY()]
      c_void          SetScrollX(scroll_x: c_float);                                     // set scrolling amount [0 .. GetScrollMaxX()]
      c_void          SetScrollY(scroll_y: c_float);                                     // set scrolling amount [0 .. GetScrollMaxY()]GetScrollMaxX: c_float();                                                // get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.xGetScrollMaxY: c_float();                                                // get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
-     c_void          SetScrollHereX(let center_x_ratio: c_float =  0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
-     c_void          SetScrollHereY(let center_y_ratio: c_float =  0.5f32);                    // adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
-     c_void          SetScrollFromPosX(local_x: c_float, let center_x_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
-     c_void          SetScrollFromPosY(local_y: c_float, let center_y_ratio: c_float =  0.5f32);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+     c_void          SetScrollHereX(let center_x_ratio: c_float =  0.5);                    // adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+     c_void          SetScrollHereY(let center_y_ratio: c_float =  0.5);                    // adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+     c_void          SetScrollFromPosX(local_x: c_float, let center_x_ratio: c_float =  0.5);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+     c_void          SetScrollFromPosY(local_y: c_float, let center_y_ratio: c_float =  0.5);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 
     // Parameters stacks (shared)
      c_void          PushFont(font: *mut ImFont);                                         // use NULL as a shortcut to push default font
@@ -578,9 +578,9 @@ namespace ImGui
     //  - Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
     //  - Use IsWindowAppearing() after BeginPopup() to tell if a window just opened.
     //  - IMPORTANT: Notice that for OpenPopupOnItemClick() we exceptionally default flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter
-     c_void          OpenPopup(str_id: *const c_char, ImGuiPopupFlags popup_flags = 0);                     // call to mark popup as open (don't call every frame!).
-     c_void          OpenPopup(id: ImGuiID, ImGuiPopupFlags popup_flags = 0);                             // id overload to facilitate calling from nested stacks
-     c_void          OpenPopupOnItemClick(str_id: *const c_char = null_mut(), ImGuiPopupFlags popup_flags = 1);   // helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
+     c_void          OpenPopup(str_id: *const c_char, popup_flags: ImGuiPopupFlags = 0);                     // call to mark popup as open (don't call every frame!).
+     c_void          OpenPopup(id: ImGuiID, popup_flags: ImGuiPopupFlags = 0);                             // id overload to facilitate calling from nested stacks
+     c_void          OpenPopupOnItemClick(str_id: *const c_char = null_mut(), popup_flags: ImGuiPopupFlags = 1);   // helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
      c_void          CloseCurrentPopup();                                                                // manually close the popup we have begin-ed into.
 
     // Popups: open+begin combined functions helpers
@@ -588,9 +588,9 @@ namespace ImGui
     //  - They are convenient to easily create context menus, hence the name.
     //  - IMPORTANT: Notice that BeginPopupContextXXX takes ImGuiPopupFlags just like OpenPopup() and unlike BeginPopup(). For full consistency, we may add ImGuiWindowFlags to the BeginPopupContextXXX functions in the future.
     //  - IMPORTANT: Notice that we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.
-     bool          BeginPopupContextItem(str_id: *const c_char = null_mut(), ImGuiPopupFlags popup_flags = 1);  // open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
-     bool          BeginPopupContextWindow(str_id: *const c_char = null_mut(), ImGuiPopupFlags popup_flags = 1);// open+begin popup when clicked on current window.
-     bool          BeginPopupContextVoid(str_id: *const c_char = null_mut(), ImGuiPopupFlags popup_flags = 1);  // open+begin popup when clicked in void (where there are no windows).
+     bool          BeginPopupContextItem(str_id: *const c_char = null_mut(), popup_flags: ImGuiPopupFlags = 1);  // open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
+     bool          BeginPopupContextWindow(str_id: *const c_char = null_mut(), popup_flags: ImGuiPopupFlags = 1);// open+begin popup when clicked on current window.
+     bool          BeginPopupContextVoid(str_id: *const c_char = null_mut(), popup_flags: ImGuiPopupFlags = 1);  // open+begin popup when clicked in void (where there are no windows).
 
     // Popups: query functions
     //  - IsPopupOpen(): return true if the popup is open at the current BeginPopup() level of the popup stack.
@@ -688,7 +688,7 @@ namespace ImGui
     //   e.g. if you have multiple tabs with a dockspace inside each tab: submit the non-visible dockspaces with ImGuiDockNodeFlags_KeepAliveOnly.
      ImGuiID       DockSpace(id: ImGuiID, size: &ImVec2 = ImVec2::new(0, 0), ImGuiDockNodeFlags flags = 0, *const ImGuiWindowClass window_class = null_mut());
      ImGuiID       DockSpaceOverViewport(*const ImGuiViewport viewport = null_mut(), ImGuiDockNodeFlags flags = 0, *const ImGuiWindowClass window_class = null_mut());
-     c_void          SetNextWindowDockID(ImGuiID dock_id, cond: ImGuiCond = 0);           // set next window dock id
+     c_void          SetNextWindowDockID(dock_id: ImGuiID, cond: ImGuiCond = 0);           // set next window dock id
      c_void          SetNextWindowClass(*const ImGuiWindowClass window_class);           // set next window class (control docking compatibility + provide hints to platform backend via custom viewport flags and platform parent/child relationship)
      ImGuiID       GetWindowDockID();
      bool          IsWindowDocked();                                                   // is current window docked into another window?
@@ -918,28 +918,7 @@ enum ImGuiTreeNodeFlags_
     ImGuiTreeNodeFlags_CollapsingHeader     = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_NoAutoOpenOnLog,
 };
 
-// Flags for OpenPopup*(), BeginPopupContext*(), IsPopupOpen() functions.
-// - To be backward compatible with older API which took an 'int mouse_button = 1' argument, we need to treat
-//   small flags values as a mouse button index, so we encode the mouse button in the first few bits of the flags.
-//   It is therefore guaranteed to be legal to pass a mouse button index in ImGuiPopupFlags.
-// - For the same reason, we exceptionally default the ImGuiPopupFlags argument of BeginPopupContextXXX functions to 1 instead of 0.
-//   IMPORTANT: because the default parameter is 1 (==ImGuiPopupFlags_MouseButtonRight), if you rely on the default parameter
-//   and want to another another flag, you need to pass in the ImGuiPopupFlags_MouseButtonRight flag.
-// - Multiple buttons currently cannot be combined/or-ed in those functions (we could allow it later).
-enum ImGuiPopupFlags_
-{
-    ImGuiPopupFlags_None                    = 0,
-    ImGuiPopupFlags_MouseButtonLeft         = 0,        // For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)
-    ImGuiPopupFlags_MouseButtonRight        = 1,        // For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGuiMouseButton_Right)
-    ImGuiPopupFlags_MouseButtonMiddle       = 2,        // For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)
-    ImGuiPopupFlags_MouseButtonMask_        = 0x1F,
-    ImGuiPopupFlags_MouseButtonDefault_     = 1,
-    ImGuiPopupFlags_NoOpenOverExistingPopup = 1 << 5,   // For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack
-    ImGuiPopupFlags_NoOpenOverItems         = 1 << 6,   // For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space
-    ImGuiPopupFlags_AnyPopupId              = 1 << 7,   // For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
-    ImGuiPopupFlags_AnyPopupLevel           = 1 << 8,   // For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
-    ImGuiPopupFlags_AnyPopup                = ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel,
-};
+
 
 // Flags for Selectable()
 enum ImGuiSelectableFlags_
@@ -1102,20 +1081,7 @@ enum ImGuiNavInput
 
 
 
-// Backend capabilities flags stored in io.BackendFlags. Set by imgui_impl_xxx or custom backend.
-enum ImGuiBackendFlags_
-{
-    ImGuiBackendFlags_None                  = 0,
-    ImGuiBackendFlags_HasGamepad            = 1 << 0,   // Backend Platform supports gamepad and currently has one connected.
-    ImGuiBackendFlags_HasMouseCursors       = 1 << 1,   // Backend Platform supports honoring GetMouseCursor() value to change the OS cursor shape.
-    ImGuiBackendFlags_HasSetMousePos        = 1 << 2,   // Backend Platform supports io.WantSetMousePos requests to reposition the OS mouse position (only used if ImGuiConfigFlags_NavEnableSetMousePos is set).
-    ImGuiBackendFlags_RendererHasVtxOffset  = 1 << 3,   // Backend Renderer supports ImDrawCmd::VtxOffset. This enables output of large meshes (64K+ vertices) while still using 16-bit indices.
 
-    // [BETA] Viewports
-    ImGuiBackendFlags_PlatformHasViewports  = 1 << 10,  // Backend Platform supports multiple viewports.
-    ImGuiBackendFlags_HasMouseHoveredViewport=1 << 11,  // Backend Platform supports calling io.AddMouseViewportEvent() with the viewport under the mouse. IF POSSIBLE, ignore viewports with the ImGuiViewportFlags_NoInputs flag (Win32 backend, GLFW 3.30+ backend can do this, SDL backend cannot). If this cannot be done, Dear ImGui needs to use a flawed heuristic to find the viewport under.
-    ImGuiBackendFlags_RendererHasViewports  = 1 << 12,  // Backend Renderer supports multiple viewports.
-};
 
 // Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
 // - The enum only refers to fields of ImGuiStyle which makes sense to be pushed/popped inside UI code.

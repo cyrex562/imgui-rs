@@ -267,13 +267,13 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     display_rect.ClipWith(&window.ClipRect);
     if flags & ImGuiNavHighlightFlags_TypeDefault {
         let THICKNESS: c_float = 2.0.0;
-        let DISTANCE: c_float = 3.0.0 + THICKNESS * 0.5f32;
+        let DISTANCE: c_float = 3.0.0 + THICKNESS * 0.5;
         display_rect.Expand(ImVec2::new(DISTANCE, DISTANCE));
         let mut fully_visible: bool = window.ClipRect.Contains2(&display_rect);
         if !fully_visible {
             window.DrawList.PushClipRect(&display_rect.Min, &display_rect.Max, false);
         }
-        window.DrawList.AddRect(display_rect.Min + ImVec2::new(THICKNESS * 0.5f32, THICKNESS * 0.5f32), display_rect.Max - ImVec2::new(THICKNESS * 0.5f32, THICKNESS * 0.5f32), GetColorU32(ImGuiCol_NavHighlight, 0.0), rounding, 0, THICKNESS);
+        window.DrawList.AddRect(display_rect.Min + ImVec2::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - ImVec2::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight, 0.0), rounding, 0, THICKNESS);
         if !fully_visible {
             window.DrawList.PopClipRect();
         }

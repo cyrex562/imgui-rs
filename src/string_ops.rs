@@ -139,7 +139,7 @@ pub unsafe fn ImStrTrimBlanks(buf: *mut c_char) {
     while p > p_start && (p[-1] == ' ' || p[-1] == '\t') {  // Trailing blanks
         p -= 1;
     }
-    if p_start != bu0f32 {                   // Copy memory if we had leading blanks
+    if p_start != buf {                   // Copy memory if we had leading blanks
         libc::memmove(buf, p_start, p - p_start);
     }
     buf[p - p_start] = 0;                   // Zero terminate

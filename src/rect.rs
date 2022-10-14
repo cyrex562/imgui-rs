@@ -52,7 +52,7 @@ impl ImRect {
 
     // ImVec2      GetCenter() const                   { return ImVec2::new((Min.x + Max.x) * 0.5f32, (Min.y + Max.y) * 0.5f32); }
     pub fn GetCenter(&mut self) -> ImVec2 {
-        ImVec2::new((self.Min.x + self.Max.x) * 0.5f32, (self.Min.y + Self.Max.y) * 0.5f32)
+        ImVec2::new((self.Min.x + self.Max.x) * 0.5, (self.Min.y + Self.Max.y) * 0.5)
     }
 
     // ImVec2      GetSize() const                     { return ImVec2::new(Max.x - Min.x, Max.y - Min.y); }
