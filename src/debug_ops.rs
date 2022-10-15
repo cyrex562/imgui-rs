@@ -16,7 +16,7 @@ use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
-// c_void DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, *const c_void data_id, *const c_void data_id_end)
+// c_void DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, data_id: *const c_void, data_id_end: *const c_void)
 pub unsafe fn DebugHookIdInfo(id: ImGuiID, data_type: ImGuiDataType, data_id: *const c_void, data_id_ned: *const c_void) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

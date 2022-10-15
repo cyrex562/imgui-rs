@@ -358,12 +358,12 @@ namespace ImGui
     //   whereas "str_id" denote a string that is only used as an ID and not normally displayed.
      c_void          PushID(str_id: *const c_char);                                     // push string into the ID stack (will hash string).
      c_void          PushID(str_id_begin: *const c_char, str_id_end: *const c_char);       // push string into the ID stack (will hash string).
-     c_void          PushID(*const c_void ptr_id);                                     // push pointer into the ID stack (will hash pointer).
+     c_void          PushID(ptr_id: *const c_void);                                     // push pointer into the ID stack (will hash pointer).
      c_void          PushID(int_id: c_int);                                             // push integer into the ID stack (will hash integer).
      c_void          PopID();                                                        // pop from the ID stack.
      ImGuiID       GetID(str_id: *const c_char);                                      // calculate unique ID (hash of whole ID stack + given parameter). e.g. if you want to query into ImGuiStorage yourself
      ImGuiID       GetID(str_id_begin: *const c_char, str_id_end: *const c_char);
-     ImGuiID       GetID(*const c_void ptr_id);
+     ImGuiID       GetID(ptr_id: *const c_void);
 
     // Widgets: Text
      c_void          TextUnformatted(text: *const c_char, text_end: *const c_char = null_mut()); // raw text without formatting. Roughly equivalent to Text("%s", text) but: A) doesn't require null terminated string if 'text_end' is specified, B) it's faster, no memory copy is done, no buffer size limits, recommended for long chunks of text.
@@ -431,8 +431,8 @@ namespace ImGui
      bool          DragInt3(label: *const c_char, v: c_int[3], let v_speed: c_float =  1.0, let v_min: c_int = 0, let v_max: c_int = 0, format: *const c_char = "%d", ImGuiSliderFlags flags = 0);
      bool          DragInt4(label: *const c_char, v: c_int[4], let v_speed: c_float =  1.0, let v_min: c_int = 0, let v_max: c_int = 0, format: *const c_char = "%d", ImGuiSliderFlags flags = 0);
      bool          DragIntRange2(label: *const c_char, v_current_min:  *mut c_int, v_current_max:  *mut c_int, let v_speed: c_float =  1.0, let v_min: c_int = 0, let v_max: c_int = 0, format: *const c_char = "%d", format_max: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
-     bool          DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, let v_speed: c_float =  1.0, *const c_void p_min = null_mut(), *const c_void p_max = null_mut(), format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
-     bool          DragScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, let v_speed: c_float =  1.0, *const c_void p_min = null_mut(), *const c_void p_max = null_mut(), format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
+     bool          DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, let v_speed: c_float =  1.0, p_min: *const c_void = null_mut(), p_max: *const c_void = null_mut(), format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
+     bool          DragScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, let v_speed: c_float =  1.0, p_min: *const c_void = null_mut(), p_max: *const c_void = null_mut(), format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
 
     // Widgets: Regular Sliders
     // - CTRL+Click on any slider to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use ImGuiSliderFlags_AlwaysClamp to always clamp.
@@ -449,11 +449,11 @@ namespace ImGui
      bool          SliderInt2(label: *const c_char, v: c_int[2], v_min: c_int, v_max: c_int, format: *const c_char = "%d", ImGuiSliderFlags flags = 0);
      bool          SliderInt3(label: *const c_char, v: c_int[3], v_min: c_int, v_max: c_int, format: *const c_char = "%d", ImGuiSliderFlags flags = 0);
      bool          SliderInt4(label: *const c_char, v: c_int[4], v_min: c_int, v_max: c_int, format: *const c_char = "%d", ImGuiSliderFlags flags = 0);
-     bool          SliderScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, *const c_void p_min, *const c_void p_max, format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
-     bool          SliderScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, *const c_void p_min, *const c_void p_max, format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
+     bool          SliderScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
+     bool          SliderScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, p_min: *const c_void, p_max: *const c_void, format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
      bool          VSliderFloat(label: *const c_char, size: &ImVec2, c_float* v,v_min: c_float,v_max: c_float, format: *const c_char = "%.3f", ImGuiSliderFlags flags = 0);
      bool          VSliderInt(label: *const c_char, size: &ImVec2, v:  *mut c_int, v_min: c_int, v_max: c_int, format: *const c_char = "%d", ImGuiSliderFlags flags = 0);
-     bool          VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType data_type, p_data: *mut c_void, *const c_void p_min, *const c_void p_max, format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
+     bool          VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char = null_mut(), ImGuiSliderFlags flags = 0);
 
     // Widgets: Input with Keyboard
     // - If you want to use InputText() with std::string or any custom dynamic string type, see misc/cpp/imgui_stdlib.h and comments in imgui_demo.cpp.
@@ -470,8 +470,8 @@ namespace ImGui
      bool          InputInt3(label: *const c_char, v: c_int[3], ImGuiInputTextFlags flags = 0);
      bool          InputInt4(label: *const c_char, v: c_int[4], ImGuiInputTextFlags flags = 0);
      bool          InputDouble(label: *const c_char, double* v, double step = 0.0, double step_fast = 0.0, format: *const c_char = "%.6f", ImGuiInputTextFlags flags = 0);
-     bool          InputScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, *const c_void p_step = null_mut(), *const c_void p_step_fast = null_mut(), format: *const c_char = null_mut(), ImGuiInputTextFlags flags = 0);
-     bool          InputScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, *const c_void p_step = null_mut(), *const c_void p_step_fast = null_mut(), format: *const c_char = null_mut(), ImGuiInputTextFlags flags = 0);
+     bool          InputScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, p_step: *const c_void = null_mut(), p_step_fast: *const c_void = null_mut(), format: *const c_char = null_mut(), ImGuiInputTextFlags flags = 0);
+     bool          InputScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, p_step: *const c_void = null_mut(), p_step_fast: *const c_void = null_mut(), format: *const c_char = null_mut(), ImGuiInputTextFlags flags = 0);
 
     // Widgets: Color Editor/Picker (tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)
     // - Note that in C++ a 'float v[X]' function argument is the _same_ as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible.
@@ -487,16 +487,16 @@ namespace ImGui
     // - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
      bool          TreeNode(label: *const c_char);
      bool          TreeNode(str_id: *const c_char, fmt: *const c_char, ...) IM_FMTARGS(2);   // helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
-     bool          TreeNode(*const c_void ptr_id, fmt: *const c_char, ...) IM_FMTARGS(2);   // "
+     bool          TreeNode(ptr_id: *const c_void, fmt: *const c_char, ...) IM_FMTARGS(2);   // "
      bool          TreeNodeV(str_id: *const c_char, fmt: *const c_char, va_list args) IM_FMTLIST(2);
-     bool          TreeNodeV(*const c_void ptr_id, fmt: *const c_char, va_list args) IM_FMTLIST(2);
+     bool          TreeNodeV(ptr_id: *const c_void, fmt: *const c_char, va_list args) IM_FMTLIST(2);
      bool          TreeNodeEx(label: *const c_char, ImGuiTreeNodeFlags flags = 0);
      bool          TreeNodeEx(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...) IM_FMTARGS(3);
-     bool          TreeNodeEx(*const c_void ptr_id, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...) IM_FMTARGS(3);
+     bool          TreeNodeEx(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...) IM_FMTARGS(3);
      bool          TreeNodeExV(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args) IM_FMTLIST(3);
-     bool          TreeNodeExV(*const c_void ptr_id, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args) IM_FMTLIST(3);
+     bool          TreeNodeExV(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args) IM_FMTLIST(3);
      c_void          TreePush(str_id: *const c_char);                                       // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
-     c_void          TreePush(*const c_void ptr_id = null_mut());                                // "
+     c_void          TreePush(ptr_id: *const c_void = null_mut());                                // "
      c_void          TreePop();                                                          // ~ Unindent()+PopId()GetTreeNodeToLabelSpacing: c_float();                                        // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
      bool          CollapsingHeader(label: *const c_char, ImGuiTreeNodeFlags flags = 0);  // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
      bool          CollapsingHeader(label: *const c_char,p_visible: *mut bool, ImGuiTreeNodeFlags flags = 0); // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the to: bool false when clicked, if '*p_visible==false' don't display the header.
@@ -708,11 +708,11 @@ namespace ImGui
     // - On target candidates, call BeginDragDropTarget(), if it returns true also call AcceptDragDropPayload() + EndDragDropTarget().
     // - If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip, see #1725)
     // - An item can be both drag source and drop target.
-     bool          BeginDragDropSource(ImGuiDragDropFlags flags = 0);                                      // call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
-     bool          SetDragDropPayload(type: *const c_char, *const c_void data, sz: size_t, cond: ImGuiCond = 0);  // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui. Return true when payload has been accepted.
+     bool          BeginDragDropSource(flags: ImGuiDragDropFlags = 0);                                      // call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
+     bool          SetDragDropPayload(type: *const c_char, data: *const c_void, sz: size_t, cond: ImGuiCond = 0);  // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui. Return true when payload has been accepted.
      c_void          EndDragDropSource();                                                                    // only call EndDragDropSource() if BeginDragDropSource() returns true!
      bool                  BeginDragDropTarget();                                                          // call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()
-     *const ImGuiPayload   AcceptDragDropPayload(type: *const c_char, ImGuiDragDropFlags flags = 0);          // accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+     *const ImGuiPayload   AcceptDragDropPayload(type: *const c_char, flags: ImGuiDragDropFlags = 0);          // accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
      c_void                  EndDragDropTarget();                                                            // only call EndDragDropTarget() if BeginDragDropTarget() returns true!
      *const ImGuiPayload   GetDragDropPayload();                                                           // peek directly into the current payload from anywhere. may return NULL. use ImGuiPayload::IsDataType() to test for the payload type.
 

@@ -914,8 +914,8 @@ namespace ImGui
 
     // Widgets low-level behaviors
      bool          ButtonBehavior(bb: &ImRect, id: ImGuiID, *mut out_hovered: bool, *mut out_held: bool, ImGuiButtonFlags flags = 0);
-     bool          DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v,v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags);
-     bool          SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb);
+     bool          DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags);
+     bool          SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb);
      bool          SplitterBehavior(bb: &ImRect, id: ImGuiID, axis: ImGuiAxis, *mutsize1: c_float, *mutsize2: c_float,min_size1: c_float,min_size2: c_float, let hover_extend: c_float =  0.0, let hover_visibility_delay: c_float =  0.0, bg_col: u32 = 0);
      bool          TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *const c_char, label_end: *const c_char = null_mut());
      c_void          TreePushOverrideID(id: ImGuiID);
@@ -934,16 +934,16 @@ namespace ImGui
 
     // Data type helpers
      *const ImGuiDataTypeInfo  DataTypeGetInfo(ImGuiDataType data_type);
-     c_int           DataTypeFormatString(buf: *mut c_char, buf_size: c_int, ImGuiDataType data_type, *const c_void p_data, format: *const c_char);
-     c_void          DataTypeApplyOp(ImGuiDataType data_type, op: c_int, *mut c_void output, *const c_void arg_1, *const c_void arg_2);
+     c_int           DataTypeFormatString(buf: *mut c_char, buf_size: c_int, ImGuiDataType data_type, p_data: *const c_void, format: *const c_char);
+     c_void          DataTypeApplyOp(ImGuiDataType data_type, op: c_int, *mut c_void output, arg_1: *const c_void, arg_2: *const c_void);
      bool          DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char);
-     c_int           DataTypeCompare(ImGuiDataType data_type, *const c_void arg_1, *const c_void arg_2);
-     bool          DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max);
+     c_int           DataTypeCompare(ImGuiDataType data_type, arg_1: *const c_void, arg_2: *const c_void);
+     bool          DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, p_min: *const c_void, p_max: *const c_void);
 
     // InputText
      bool          InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: c_int, size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback = null_mut(), *mut c_void user_data = null_mut());
      bool          TempInputText(bb: &ImRect, id: ImGuiID, label: *const c_char, buf: *mut c_char, buf_size: c_int, ImGuiInputTextFlags flags);
-     bool          TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char, *const c_void p_clamp_min = null_mut(), *const c_void p_clamp_max = null_mut());
+     bool          TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char, p_clamp_min: *const c_void = null_mut(), p_clamp_max: *const c_void = null_mut());
     inline bool             TempInputIsActive(id: ImGuiID)       { let g = GImGui; // ImGuiContext& g = *GImGui; return (g.ActiveId == id && g.TempInputId == id); }
     inline *mut ImGuiInputTextState GetInputTextState(id: ImGuiID)   { let g = GImGui; // ImGuiContext& g = *GImGui; return (id != 0 && g.InputTextState.ID == id) ? &g.InputTextState : NULL; } // Get input text state if active
 
@@ -975,7 +975,7 @@ namespace ImGui
     inline c_void             DebugDrawItemRect(col: u32 = IM_COL32(255,0,0,255))    { let g = GImGui; // ImGuiContext& g = *GImGui; window: *mut ImGuiWindow = g.CurrentWindow; GetForegroundDrawList(window)->AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col); }
     inline c_void             DebugStartItemPicker()                                  { let g = GImGui; // ImGuiContext& g = *GImGui; g.DebugItemPickerActive = true; }
      c_void          ShowFontAtlas(*mut ImFontAtlas atlas);
-     c_void          DebugHookIdInfo(id: ImGuiID, ImGuiDataType data_type, *const c_void data_id, *const c_void data_id_end);
+     c_void          DebugHookIdInfo(id: ImGuiID, ImGuiDataType data_type, data_id: *const c_void, data_id_end: *const c_void);
      c_void          DebugNodeColumns(*mut ImGuiOldColumns columns);
      c_void          DebugNodeDockNode(*mut ImGuiDockNode node, label: *const c_char);
      c_void          DebugNodeDrawList(*mut ImGuiWindow window, *mut ImGuiViewportP viewport, *const ImDrawList draw_list, label: *const c_char);

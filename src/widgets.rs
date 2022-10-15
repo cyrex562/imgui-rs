@@ -1540,7 +1540,7 @@ pub unsafe fn SplitterBehavior(bb: &ImRect, id: ImGuiID, axis: ImGuiAxis, *mutsi
     return held;
 }
 
-static IMGUI_CDECL: c_int ShrinkWidthItemComparer(*const c_void lhs, *const c_void rhs)
+static IMGUI_CDECL: c_int ShrinkWidthItemComparer(lhs: *const c_void, rhs: *const c_void)
 {
     let a: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)lhs;
     let b: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)rhs;
@@ -1964,7 +1964,7 @@ let tmp_format: *const c_char;
     return &GDataTypeInfo[data_type];
 }
 
-DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, ImGuiDataType data_type, *const c_void p_data, format: *const c_char)
+DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, ImGuiDataType data_type, p_data: *const c_void, format: *const c_char)
 {
     // Signedness doesn't matter when pushing integer arguments
     if (data_type == ImGuiDataType_S32 || data_type == ImGuiDataType_U32)
@@ -1987,7 +1987,7 @@ DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, ImGuiDataType dat
     return 0;
 }
 
-pub unsafe fn DataTypeApplyOp(ImGuiDataType data_type, op: c_int, *mut c_void output, *const c_void arg1, *const c_void arg2)
+pub unsafe fn DataTypeApplyOp(ImGuiDataType data_type, op: c_int, *mut c_void output, arg1: *const c_void, arg2: *const c_void)
 {
     // IM_ASSERT(op == '+' || op == '-');
     switch (data_type)
@@ -2088,7 +2088,7 @@ static DataTypeCompareT: c_int(*const T lhs, *const T rhs)
     return 0;
 }
 
-DataTypeCompare: c_int(ImGuiDataType data_type, *const c_void arg_1, *const c_void arg_2)
+DataTypeCompare: c_int(ImGuiDataType data_type, arg_1: *const c_void, arg_2: *const c_void)
 {
     switch (data_type)
     {
@@ -2117,7 +2117,7 @@ pub unsafe fn DataTypeClampT(*mut T v, *const T v_min, *const T v_max) -> bool
     return false;
 }
 
-pub unsafe fn DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max) -> bool
+pub unsafe fn DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, p_min: *const c_void, p_max: *const c_void) -> bool
 {
     switch (data_type)
     {
@@ -2309,7 +2309,7 @@ pub unsafe fn DragBehaviorT(ImGuiDataType data_type, *mut TYPE v,v_speed: c_floa
     return true;
 }
 
-pub unsafe fn DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v,v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -2348,7 +2348,7 @@ pub unsafe fn DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data,v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2436,7 +2436,7 @@ pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, *mut c_v
     return value_changed;
 }
 
-pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int,v_speed: c_float, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2898,7 +2898,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type,
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
 // So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb) -> bool
+pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -2940,7 +2940,7 @@ pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, 
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3024,7 +3024,7 @@ pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, *mut c
 }
 
 // Add multiple sliders on 1 line for compact edition of multiple components
-pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void v, components: c_int, *const c_void v_min, *const c_void v_max, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void v, components: c_int, v_min: *const c_void, v_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3109,7 +3109,7 @@ pub unsafe fn SliderInt4(label: *const c_char, v: c_int[4], v_min: c_int, v_max:
     return SliderScalarN(label, ImGuiDataType_S32, v, 4, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_min, *const c_void p_max, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType data_type, *mut c_void p_data, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3357,7 +3357,7 @@ static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(ImGuiDataType d
 // Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
 // This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
-pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char, *const c_void p_clamp_min, *const c_void p_clamp_max) -> bool
+pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char, p_clamp_min: *const c_void, p_clamp_max: *const c_void) -> bool
 {
     fmt_buf: [c_char;32];
     data_buf: [c_char;32];
@@ -3395,7 +3395,7 @@ pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, Im
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, *const c_void p_step, *const c_void p_step_fast, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3470,7 +3470,7 @@ pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, *mut c_
     return value_changed;
 }
 
-pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int, *const c_void p_step, *const c_void p_step_fast, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -5810,7 +5810,7 @@ pub unsafe fn TreeNode(str_id: *const c_char, fmt: *const c_char, ...) -> bool
     return is_open;
 }
 
-pub unsafe fn TreeNode(*const c_void ptr_id, fmt: *const c_char, ...) -> bool
+pub unsafe fn TreeNode(ptr_id: *const c_void, fmt: *const c_char, ...) -> bool
 {
     va_list args;
     va_start(args, fmt);
@@ -5832,7 +5832,7 @@ pub unsafe fn TreeNodeV(str_id: *const c_char, fmt: *const c_char, va_list args)
     return TreeNodeExV(str_id, 0, fmt, args);
 }
 
-pub unsafe fn TreeNodeV(*const c_void ptr_id, fmt: *const c_char, va_list args) -> bool
+pub unsafe fn TreeNodeV(ptr_id: *const c_void, fmt: *const c_char, va_list args) -> bool
 {
     return TreeNodeExV(ptr_id, 0, fmt, args);
 }
@@ -5855,7 +5855,7 @@ pub unsafe fn TreeNodeEx(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *
     return is_open;
 }
 
-pub unsafe fn TreeNodeEx(*const c_void ptr_id, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...) -> bool
+pub unsafe fn TreeNodeEx(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...) -> bool
 {
     va_list args;
     va_start(args, fmt);
@@ -5875,7 +5875,7 @@ pub unsafe fn TreeNodeExV(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: 
     return TreeNodeBehavior(window.GetID(str_id), flags, label, label_end);
 }
 
-pub unsafe fn TreeNodeExV(*const c_void ptr_id, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args) -> bool
+pub unsafe fn TreeNodeExV(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if (window.SkipItems)
@@ -6134,7 +6134,7 @@ pub unsafe fn TreePush(str_id: *const c_char)
     PushID(str_id);
 }
 
-pub unsafe fn TreePush(*const c_void ptr_id)
+pub unsafe fn TreePush(ptr_id: *const c_void)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     Indent();
@@ -7307,7 +7307,7 @@ static inline TabItemGetSectionIdx: c_int(*const ImGuiTabItem tab)
     return (tab.Flags & ImGuiTabItemFlags_Leading) ? 0 : (tab.Flags & ImGuiTabItemFlags_Trailing) ? 2 : 1;
 }
 
-static IMGUI_CDECL: c_int TabItemComparerBySection(*const c_void lhs, *const c_void rhs)
+static IMGUI_CDECL: c_int TabItemComparerBySection(lhs: *const c_void, rhs: *const c_void)
 {
     let a: *const ImGuiTabItem = (*const ImGuiTabItem)lhs;
     let b: *const ImGuiTabItem = (*const ImGuiTabItem)rhs;
@@ -7318,7 +7318,7 @@ static IMGUI_CDECL: c_int TabItemComparerBySection(*const c_void lhs, *const c_v
     return (a->IndexDuringLayout - b->IndexDuringLayout);
 }
 
-static IMGUI_CDECL: c_int TabItemComparerByBeginOrder(*const c_void lhs, *const c_void rhs)
+static IMGUI_CDECL: c_int TabItemComparerByBeginOrder(lhs: *const c_void, rhs: *const c_void)
 {
     let a: *const ImGuiTabItem = (*const ImGuiTabItem)lhs;
     let b: *const ImGuiTabItem = (*const ImGuiTabItem)rhs;

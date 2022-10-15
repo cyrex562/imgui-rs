@@ -212,6 +212,7 @@ mod scrolling_ops;
 mod tooltip_ops;
 mod popup_ops;
 mod popup_position_policy;
+mod drag_drop_ops;
 
 
 // c_void Initialize()

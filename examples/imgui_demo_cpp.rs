@@ -3705,7 +3705,7 @@ let Name: *const c_char;
     static *const ImGuiTableSortSpecs s_current_sort_specs;
 
     // Compare function to be used by qsort()
-    static IMGUI_CDECL: c_int CompareWithSortSpecs(*const c_void lhs, *const c_void rhs)
+    static IMGUI_CDECL: c_int CompareWithSortSpecs(lhs: *const c_void, rhs: *const c_void)
     {
         a: *const MyItem = (*const MyItem)lhs;
         b: *const MyItem = (*const MyItem)rhs;

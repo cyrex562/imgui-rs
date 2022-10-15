@@ -132,7 +132,7 @@ pub fn IsWindowActiveAndVisible(window: *mut ImGuiWindow) -> bool {
 }
 
 // FIXME: Add a more explicit sort order in the window structure.
-// static IMGUI_CDECL: c_int ChildWindowComparer(*const c_void lhs, *const c_void rhs)
+// static IMGUI_CDECL: c_int ChildWindowComparer(lhs: *const c_void, rhs: *const c_void)
 pub fn ChildWindowComparer(lhs: *const c_void, rhs: *const c_void) -> c_int {
     let a: *const ImGuiWindow = lhs;
     let b: *const ImGuiWindow = rhs;
