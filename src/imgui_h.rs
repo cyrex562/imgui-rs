@@ -1523,8 +1523,8 @@ namespace ImGui
     // OBSOLETED in 1.89 (from August 2022)
      bool      ImageButton(ImTextureID user_texture_id, size: &ImVec2, uv0: &ImVec2 = ImVec2::new(0, 0), uv1: &ImVec2 = ImVec2::new(1, 1), let frame_padding: c_int = -1, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1)); // Use new ImageButton() signature (explicit item id, regular FramePadding)
     // OBSOLETED in 1.88 (from May 2022)
-    static inline c_void  CaptureKeyboardFromApp(let mut want_capture_keyboard: bool =  true)   { SetNextFrameWantCaptureKeyboard(want_capture_keyboard); } // Renamed as name was misleading + removed default value.
-    static inline c_void  CaptureMouseFromApp(let mut want_capture_mouse: bool =  true)         { SetNextFrameWantCaptureMouse(want_capture_mouse); }       // Renamed as name was misleading + removed default value.
+    pub unsafe fn  CaptureKeyboardFromApp(let mut want_capture_keyboard: bool =  true)   { SetNextFrameWantCaptureKeyboard(want_capture_keyboard); } // Renamed as name was misleading + removed default value.
+    pub unsafe fn  CaptureMouseFromApp(let mut want_capture_mouse: bool =  true)         { SetNextFrameWantCaptureMouse(want_capture_mouse); }       // Renamed as name was misleading + removed default value.
     // OBSOLETED in 1.86 (from November 2021)
      c_void      CalcListClipping(items_count: c_int,items_height: c_float, out_items_display_start:  *mut c_int, out_items_display_end:  *mut c_int); // Calculate coarse clipping for large list of evenly sized items. Prefer using ImGuiListClipper.
     // OBSOLETED in 1.85 (from August 2021)
@@ -1532,9 +1532,9 @@ namespace ImGui
     // OBSOLETED in 1.81 (from February 2021)
      bool      ListBoxHeader(label: *const c_char, items_count: c_int, let height_in_items: c_int = -1); // Helper to calculate size from items_count and height_in_items
     static inline bool  ListBoxHeader(label: *const c_char, size: &ImVec2 = ImVec2::new(0, 0))         { return BeginListBox(label, size); }
-    static inline c_void  ListBoxFooter() { EndListBox(); }
+    pub unsafe fn  ListBoxFooter() { EndListBox(); }
     // OBSOLETED in 1.79 (from August 2020)
-    static inline c_void  OpenPopupContextItem(str_id: *const c_char = null_mut(), let mut mb: ImGuiMouseButton =  1)    { OpenPopupOnItemClick(str_id, mb); } // Bool return value removed. Use IsWindowAppearing() in BeginPopup() instead. Renamed in 1.77, renamed back in 1.79. Sorry!
+    pub unsafe fn  OpenPopupContextItem(str_id: *const c_char = null_mut(), let mut mb: ImGuiMouseButton =  1)    { OpenPopupOnItemClick(str_id, mb); } // Bool return value removed. Use IsWindowAppearing() in BeginPopup() instead. Renamed in 1.77, renamed back in 1.79. Sorry!
 
     // Some of the older obsolete names along with their replacement (commented out so they are not reported in IDE)
     // [OBSOLETED in 1.78 (from June 2020] Old drag/sliders functions that took a 'float power > 1.0f' argument instead of ImGuiSliderFlags_Logarithmic. See github.com/ocornut/imgui/issues/3361 for details.

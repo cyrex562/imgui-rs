@@ -157,7 +157,7 @@ pub fn ImLerp<T>(a: T, b: T, t: c_float) -> T {
 }
 
 
-// template<typename T> static inline c_void ImSwap(T& a, T& b)                      { T tmp = a; a = b; b = tmp; }
+// template<typename T> pub unsafe fn ImSwap(T& a, T& b)                      { T tmp = a; a = b; b = tmp; }
 pub fn ImSwap<T>(a: &mut T, b: &mut T) {
     let mut tmp = *a.clone();
     *a = *b.clone();
