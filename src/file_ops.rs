@@ -11,7 +11,7 @@ use libc::{c_char, c_int, c_void, size_t};
 use windows_sys::Win32;
 use crate::type_defs::{ImFileHandle, ImWchar};
 
-// ImFileHandle ImFileOpen(const char* filename, const char* mode)
+// ImFileOpen: ImFileHandle(const char* filename, const char* mode)
 pub unsafe fn ImFileOpen(filename: * c_char, mode: * c_char) -> ImFileHandle {
     // #if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(__CYGWIN__) && !defined(__GNUC__)
     // We need a fopen() wrapper because MSVC/Windows fopen doesn't handle UTF-8 filenames.
@@ -32,7 +32,7 @@ pub unsafe fn ImFileOpen(filename: * c_char, mode: * c_char) -> ImFileHandle {
 }
 
 // We should in theory be using fseeko()/ftello() with off_t and _fseeki64()/_ftelli64() with __int64, waiting for the PR that does that in a very portable pre-C++11 zero-warnings way.
-// bool    ImFileClose(ImFileHandle 0.0)     { return fclose(0.0) == 0; }
+// bool    ImFileClose(0: ImFileHandle.0)     { return fclose(0.0) == 0; }
 pub unsafe fn ImFileClose(f: ImFileHandle) -> c_int {
     libc::fclose(f)
 }
@@ -73,7 +73,7 @@ pub unsafe fn ImFileLoadToMemory(filename: * c_char, mode: * c_char, out_file_si
         *out_file_size = 0;
     }
 
-    // ImFileHandle f;
+    // f: ImFileHandle;
     let mut f: ImFileHandle = ImFileOpen(filename, mode);
     if f.is_null() {
         return null_mut();

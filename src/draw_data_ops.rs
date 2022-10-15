@@ -79,7 +79,7 @@ pub unsafe fn AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
 }
 
 // Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
-// static inline c_void AddRootWindowToDrawData(window: *mut ImGuiWindow)
+// pub unsafe fn AddRootWindowToDrawData(window: *mut ImGuiWindow)
 pub unsafe fn AddRootWindowToDrawData(window: *mut ImGuiWindow)
 {
     AddWindowToDrawData(window, GetWindowDisplayLayer(window));

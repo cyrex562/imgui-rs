@@ -1,5 +1,5 @@
 
-static inline c_void      ImQsort(*mut c_void base, count: size_t, size_of_element: size_t, c_int(IMGUI_CDECL *compare_func)(c_void *mut const, c_void *mut const)) { if (count > 1) qsort(base, count, size_of_element, compare_func); }
+pub unsafe fn      ImQsort(*mut c_void base, count: size_t, size_of_element: size_t, c_int(IMGUI_CDECL *compare_func)(c_void *mut const, c_void *mut const)) { if (count > 1) qsort(base, count, size_of_element, compare_func); }
 // #endif
 
 // Helpers: Color Blending
@@ -665,7 +665,7 @@ namespace ImGui
      c_void          PopItemFlag();
 
     // Logging/Capture
-     c_void          LogBegin(ImGuiLogType type, auto_open_depth: c_int);           // -> BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
+     c_void          LogBegin(type: ImGuiLogType, auto_open_depth: c_int);           // -> BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
      c_void          LogToBuffer(let auto_open_depth: c_int = -1);                      // Start logging/capturing to internal buffer
      c_void          LogRenderedText(*const ref_pos: ImVec2, text: *const c_char, text_end: *const c_char = null_mut());
      c_void          LogSetNextTextDecoration(prefix: *const c_char, suffix: *const c_char);
