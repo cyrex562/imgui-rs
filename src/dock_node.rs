@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
 use std::ptr::{null, null_mut};
-use libc::c_int;
+use libc::{c_int, size_t};
 use crate::axis::{ImGuiAxis, ImGuiAxis_None};
 use crate::color::IM_COL32_WHITE;
 use crate::data_authority::{ImGuiDataAuthority, ImGuiDataAuthority_Auto, ImGuiDataAuthority_DockNode};
-use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_None};
+use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_CentralNode, ImGuiDockNodeFlags_DockSpace, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoTabBar};
 use crate::dock_node_state::{ImGuiDockNodeState, ImGuiDockNodeState_Unknown};
 use crate::tab_bar::ImGuiTabBar;
 use crate::vec2::ImVec2;
@@ -39,7 +39,7 @@ pub HostWindow: *mut ImGuiWindow,
 pub VisibleWindow: *mut ImGuiWindow,              // Generally point to window which is ID is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
 pub CentralNode: *mut ImGuiDockNode,                // [Root node only] Pointer to central node.
 pub OnlyNodeWithWindows: *mut ImGuiDockNode,        // [Root node only] Set when there is a single visible node within the hierarchy.
-pub CountNodeWithWindows: c_int,       // [Root node only]
+pub CountNodeWithWindows: size_t,       // [Root node only]
 pub LastFrameAlive: c_int,             // Last frame number the node was updated or kept alive explicitly with DockSpace() + ImGuiDockNodeFlags_KeepAliveOnly
 pub LastFrameActive: c_int,            // Last frame number the node was updated.
 pub LastFrameFocused: c_int,           // Last frame number the node was focused.

@@ -1,12 +1,13 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-use libc::c_int;
+use crate::color_ops::{ColorConvertFloat4ToU32, ColorConvertHSVtoRGB};
+use crate::vec4::ImVec4;
+use libc::{c_float, c_int};
 
 //   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
 // typedef int ImGuiCol;               // -> enum ImGuiCol_             // Enum: A color identifier for styling
 pub type ImGuiCol = u32;
-
 
 // Helpers macros to generate 32-bit encoded colors
 // User can declare their own format by #defining the 5 _SHIFT/_MASK macros in their imconfig file.
@@ -36,7 +37,6 @@ pub fn IM_COL32(r: u32, g: u32, b: u32, a: u32) -> u32 {
     a << IM_COL32_A_SHIFT | b << IM_COL32_B_SHIFT | g << IM_COL32_G_SHIFT | r << IM_COL32_R_SHIFT
 }
 
-
 // #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
 pub const IM_COL32_DISABLE: ImGuiCol = IM_COL32(0, 0, 0, 1);
 // #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
@@ -45,7 +45,6 @@ pub const IM_COL32_WHITE: ImGuiCol = IM_COL32(255, 255, 255, 255);
 pub const IM_COL32_BLACK: ImGuiCol = IM_COL32(0, 0, 0, 255);
 // #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
 pub const IM_COL32_BLACK_TRANS: ImGuiCol = IM_COL32(0, 0, 0, 0);
-
 
 // Enumeration for PushStyleColor() / PopStyleColor()
 // enum ImGuiCol_
@@ -126,3 +125,82 @@ pub const ImGuiCol_ModalWindowDimBg: ImGuiCol = 54;
 // Darken/colorize entire screen behind a modal window, when one is active
 pub const ImGuiCol_COUNT: ImGuiCol = 55;
 // };
+
+// Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or ImVec4 (4x1 float)
+// Prefer using IM_COL32() macros if you want a guaranteed compile-time ImU32 for usage with ImDrawList API.
+// **Avoid storing ImColor! Store either of: u32 ImVec4. This is not a full-featured color class. MAY OBSOLETE.
+// **None of the ImGui API are using ImColor directly but you can use it as a convenience to pass colors in either ImU32 or ImVec4 formats. Explicitly cast to ImU32 or ImVec4 if needed.
+#[derive(Default, Debug, Copy, Clone, PartialOrd, PartialEq)]
+pub struct ImColor {
+    // ImVec4          Value;
+    pub Value: ImVec4,
+}
+
+impl ImColor {
+    // constexpr ImColor()                                             { }
+
+    // constexpr ImColor(r: c_float,g: c_float,b: c_float, let a: c_float =  1.0)    : Value(r, g, b, a) { }
+    pub fn from_floats(r: c_float, g: c_float, b: c_float, a: c_float) -> Self {
+        Self {
+            Value: ImVec4::from_floats(r, g, b, a),
+        }
+    }
+    // constexpr ImColor(const ImVec4& col)                            : Value(col) {}
+    pub fn from_vec4(col: &ImVec4) -> Self {
+        Self { Value: col.clone() }
+    }
+    // ImColor(r: c_int, g: c_int, b: c_int, let a: c_int = 255)                       { let sc: c_float =  1.0 / 255f32; Value.x = r * sc; Value.y = g * sc; Value.z = b * sc; Value.w = a * sc; }
+    pub fn from_ints(r: c_int, g: c_int, b: c_int, a: c_int) -> Self {
+        let sc = 1.0 / 255.0;
+
+        Self {
+            Value: ImVec4::from_floats(r * sc, g * sc, b * sc, a * sc),
+        }
+    }
+
+    // ImColor(rgba: u32)                                             { let sc: c_float =  1.0 / 255f32; Value.x = ((rgba >> IM_COL32_R_SHIFT) & 0xF0f32) * sc; Value.y = ((rgba >> IM_COL32_G_SHIFT) & 0xF0f32) * sc; Value.z = ((rgba >> IM_COL32_B_SHIFT) & 0xF0f32) * sc; Value.w = ((rgba >> IM_COL32_A_SHIFT) & 0xF0f32) * sc; }
+    pub fn from_u32(rgba: u32) -> Self {
+        let sc = 1.0 / 255.0;
+        Self {
+            Value: ImVec4::from_floats(
+                ((rgba >> IM_COL32_R_SHIFT) & 0xF0F) * sc,
+                ((rgba >> IM_COL32_G_SHIFT) & 0xF0F) * sc,
+                ((rgba >> IM_COL32_B_SHIFT) & 0xF0F) * sc,
+                ((rgba >> IM_COL32_A_SHIFT) & 0xF0F) * sc,
+            ),
+        }
+    }
+
+    // inline operator u32() const                                   { return ColorConvertFloat4ToU32(Value); }
+    pub fn to_u32(&self) -> u32 {
+        ColorConvertFloat4ToU32(&self.Value)
+    }
+
+    // inline operator ImVec4() const                                  { return Value; }
+    pub fn to_vec4(&self) -> ImVec4 {
+        self.Value
+    }
+
+    // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
+    // inline c_void    SetHSV(h: c_float,s: c_float,v: c_float, let a: c_float =  1.0){ ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
+    pub fn SetHSV(&mut self, h: c_float, s: c_float, v: c_float, a: c_float) {
+        ColorConvertHSVtoRGB(
+            h,
+            s,
+            v,
+            &mut self.Value.x,
+            &mut self.Value.y,
+            &mut self.Value.z,
+        );
+        self.Value.w = a;
+    }
+
+    // static ImColor HSV(h: c_float,s: c_float,v: c_float, let a: c_float =  1.0)   {r: c_float, g, b; ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r, g, b, a); }
+    pub fn HSV(h: c_float, s: c_float, v: c_float, a: c_float) -> Self {
+        let mut r = 0.0;
+        let mut g = 0.0;
+        let mut b = 0.0;
+        ColorConvertHSVtoRGB(h, s, v, &mut r, &mut g, &mut b);
+        Self::from_floats(r, g, b, a)
+    }
+}

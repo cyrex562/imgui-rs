@@ -79,7 +79,7 @@ impl ImDrawList {
 
     // void  PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, intersect_with_current_clip_rect: bool = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level PushClipRect() to affect logic (hit-testing and widget culling)
     pub unsafe fn PushClipRect(&mut self, cr_min: &ImVec2, cr_max: &ImVec2, intersect_with_current_clip_rect: bool) {
-        let mut cr = ImVec4::new2(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
+        let mut cr = ImVec4::from_floats(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
         if intersect_with_current_clip_rect
         {
             let mut current: ImVec4 = self._CmdHeader.ClipRect;

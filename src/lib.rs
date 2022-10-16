@@ -7,11 +7,15 @@ use std::io::stdout;
 use std::ptr::null_mut;
 use crate::context_hook::ImGuiContextHookType_Shutdown;
 use crate::context_ops::CallContextHooks;
+use crate::dock_context_ops::{DockContextInitialize, DockContextShutdown};
 use crate::file_ops::ImFileClose;
 use crate::hash_ops::ImHashStr;
 use crate::imgui::GImGui;
 use crate::settings_handler::ImGuiSettingsHandler;
+use crate::settings_ops::{AddSettingsHandler, SaveIniSettingsToDisk, WindowSettingsHandler_ApplyAll, WindowSettingsHandler_ClearAll, WindowSettingsHandler_ReadLine, WindowSettingsHandler_WriteAll};
 use crate::viewport::ImGuiViewport;
+use crate::viewport_flags::ImGuiViewportFlags_OwnedByApp;
+use crate::viewport_ops::DestroyPlatformWindows;
 
 
 mod imgui_cpp;
@@ -106,7 +110,7 @@ mod focused_flags;
 mod hovered_flags;
 mod mod_flags;
 mod popup_flags;
-mod selectable_flagss;
+mod selectable_flags;
 mod slider_flags;
 mod tab_bat_flags;
 mod input_text_flags;
@@ -223,6 +227,14 @@ mod bit_array;
 mod bit_vector;
 mod bit_array_ops;
 mod span_allocator;
+mod plot_type;
+mod data_type_temp_storage;
+mod data_type_info;
+mod menu_columns;
+mod input_text_callback_data;
+mod table_sort_specs;
+mod once_upon_a_frame;
+mod dock_node_tree_info;
 
 
 // c_void Initialize()
@@ -259,7 +271,7 @@ pub unsafe fn Initialize()
 
 // #ifdef IMGUI_HAS_DOCK
     // Initialize Docking
-    DockContextInitialize(&g);
+    DockContextInitialize(g);
 // #endif
 
     g.Initialized = true;
@@ -292,7 +304,7 @@ pub unsafe fn Shutdown()
     DestroyPlatformWindows();
 
     // Shutdown extensions
-    DockContextShutdown(&g);
+    DockContextShutdown(g);
 
     CallContextHooks(g, ImGuiContextHookType_Shutdown);
 

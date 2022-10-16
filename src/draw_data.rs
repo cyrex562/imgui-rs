@@ -88,7 +88,7 @@ impl ImDrawData {
             for i in 0 .. cmd_list.CmdBuffer.len()
             {
                 let cmd: *mut ImDrawCmd = &mut cmd_list.CmdBuffer[cmd_i];
-                cmd.ClipRect = ImVec4::new2(cmd.ClipRect.x * fb_scale.x, cmd.ClipRect.y * fb_scale.y, cmd.ClipRect.z * fb_scale.x, cmd.ClipRect.w * fb_scale.y);
+                cmd.ClipRect = ImVec4::from_floats(cmd.ClipRect.x * fb_scale.x, cmd.ClipRect.y * fb_scale.y, cmd.ClipRect.z * fb_scale.x, cmd.ClipRect.w * fb_scale.y);
             }
         }
     }

@@ -206,7 +206,7 @@ impl ImRect {
 
     // ImVec4      ToVec4() const                      { return ImVec4(Min.x, Min.y, Max.x, Max.y); }
     pub fn ToVec4(&self) -> ImVec4 {
-        ImVec4::new2(self.Min.x, self.Min.y, self.Max.x, self.Max.y)
+        ImVec4::from_floats(self.Min.x, self.Min.y, self.Max.x, self.Max.y)
     }
 }
 

@@ -233,7 +233,7 @@ pub fn ImLerpVec4(a: &ImVec4, b: &ImVec4, t: c_float) -> ImVec4 {
     let y = a.y + (b.y - a.y) * t;
     let z = a.z + (b.z - a.z) * t;
     let w = a.w + (b.w - a.w) * t;
-    ImVec4::new2(x, y, z, w)
+    ImVec4::from_floats(x, y, z, w)
 }
 
 // static inline c_float  ImSaturate(c_float 0.0)                                        { return (f < 0.0) ? 0.0 : (f > 1.0) ? 1.0 : f; }

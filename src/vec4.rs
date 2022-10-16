@@ -23,7 +23,7 @@ impl ImVec4 {
         }
     }
 
-    pub fn new2(x: c_float, y: c_float, z: c_float, w: c_float) -> Sef {
+    pub fn from_floats(x: c_float, y: c_float, z: c_float, w: c_float) -> Sef {
         Self {
             x,
             y,

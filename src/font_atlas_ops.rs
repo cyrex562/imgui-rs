@@ -588,7 +588,7 @@ pub fn ImFontAtlasBuildRenderLinesTexData(mut atlas: *mut ImFontAtlas)
         let uv0: ImVec2 = ImVec2::new((r.X + pad_left - 1), (r.Y + y)) * atlas.TexUvScale;
         let uv1: ImVec2 = ImVec2::new((r.X + pad_left + line_width + 1), (r.Y + y + 1)) * atlas.TexUvScale;
         let half_v: c_float =  (uv0.y + uv1.y) * 0.5; // Calculate a constant V in the middle of the row to avoid sampling artifacts
-        atlas.TexUvLines[n] = ImVec4::new2(uv0.x, half_v, uv1.x, half_v);
+        atlas.TexUvLines[n] = ImVec4::from_floats(uv0.x, half_v, uv1.x, half_v);
     }
 }
 

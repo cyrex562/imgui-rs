@@ -22,3 +22,9 @@ pub type ImGuiTreeNodeFlags = c_int;
     pub const ImGuiTreeNodeFlags_NavLeftJumpsBackHere: ImGuiTreeNodeFlags = 1 << 13;  // (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)
     //pub const ImGuiTreeNodeFlags_NoScrollOnOpen: ImGuiTreeNodeFlags = 1 << 14;  // FIXME: TODO: Disable automatic scroll on TreePop() if node got just open and contents is not visible
     pub const ImGuiTreeNodeFlags_CollapsingHeader: ImGuiTreeNodeFlags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_NoAutoOpenOnLog;
+
+// Extend ImGuiTreeNodeFlags_
+// enum ImGuiTreeNodeFlagsPrivate_
+// {
+   pub const  ImGuiTreeNodeFlags_ClipLabelForTrailingButton: ImGuiTreeNodeFlags = 1 << 20;
+// };

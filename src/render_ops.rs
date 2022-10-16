@@ -123,7 +123,7 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
 
     // Render
     if need_clipping {
-        let mut fine_clip_rect = ImVec4::new2(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
+        let mut fine_clip_rect = ImVec4::from_floats(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
         draw_list.AddText2(null(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, text_display_end, 0.0, &fine_clip_rect);
     } else {
         draw_list.AddText2(null_mut(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, text_display_end, 0.0, null_mut());
