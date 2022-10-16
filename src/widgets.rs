@@ -125,7 +125,7 @@ static const u64          IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
 //-------------------------------------------------------------------------
 
 // For InputTextEx()
-static bool             InputTextFilterCharacter(*mut p_char: c_uint, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data, ImGuiInputSource input_source);
+static bool             InputTextFilterCharacter(*mut p_char: c_uint, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void, ImGuiInputSource input_source);
 static c_int              InputTextCalcTextLenAndLineCount(text_begin: *const c_char, *const out_text_end: *mut c_char);
 static ImVec2           InputTextCalcTextSizeW(text_begin: *const ImWchar, text_end: *const ImWchar, *const *mut let remaining: ImWchar = null_mut(), *mut let mut out_offset: ImVec2 =  null_mut(), let mut stop_on_new_line: bool =  false);
 
@@ -1805,7 +1805,7 @@ pub unsafe fn EndComboPreview()
 }
 
 // Getter for the old Combo() API: const char*[]
-pub unsafe fn Items_ArrayGetter(*mut c_void data, idx: c_int, *const out_text: *mut c_char) -> bool
+pub unsafe fn Items_ArrayGetter(data: *mut c_void, idx: c_int, *const out_text: *mut c_char) -> bool
 {
     *const char *mut const items = (*const char *mut const)data;
     if (out_text)
@@ -1814,7 +1814,7 @@ pub unsafe fn Items_ArrayGetter(*mut c_void data, idx: c_int, *const out_text: *
 }
 
 // Getter for the old Combo() API: "item1\0item2\0item3\0"
-pub unsafe fn Items_SingleStringGetter(*mut c_void data, idx: c_int, *const out_text: *mut c_char) -> bool
+pub unsafe fn Items_SingleStringGetter(data: *mut c_void, idx: c_int, *const out_text: *mut c_char) -> bool
 {
     // FIXME-OPT: we could pre-compute the indices to fasten this. But only 1 active combo means the waste is limited.
     let mut  items_separated_by_zeros: *const c_char =data;
@@ -1835,7 +1835,7 @@ pub unsafe fn Items_SingleStringGetter(*mut c_void data, idx: c_int, *const out_
 }
 
 // Old API, prefer using BeginCombo() nowadays if you can.
-pub unsafe fn Combo(label: *const c_char, *mut current_item: c_int, bool (*items_getter)(*mut c_void, c_int, *const *mut char), *mut c_void data, items_count: c_int, popup_max_height_in_items: c_int) -> bool
+pub unsafe fn Combo(label: *const c_char, *mut current_item: c_int, bool (*items_getter)(*mut c_void, c_int, *const *mut char), data: *mut c_void, items_count: c_int, popup_max_height_in_items: c_int) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -1987,7 +1987,7 @@ DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, ImGuiDataType dat
     return 0;
 }
 
-pub unsafe fn DataTypeApplyOp(ImGuiDataType data_type, op: c_int, *mut c_void output, arg1: *const c_void, arg2: *const c_void)
+pub unsafe fn DataTypeApplyOp(ImGuiDataType data_type, op: c_int, output: *mut c_void, arg1: *const c_void, arg2: *const c_void)
 {
     // IM_ASSERT(op == '+' || op == '-');
     switch (data_type)
@@ -2039,7 +2039,7 @@ pub unsafe fn DataTypeApplyOp(ImGuiDataType data_type, op: c_int, *mut c_void ou
 
 // User can input math operators (e.g. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
-pub unsafe fn DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char) -> bool
+pub unsafe fn DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, format: *const c_char) -> bool
 {
     while (ImCharIsBlankA(*buf))
         buf+= 1;
@@ -2117,7 +2117,7 @@ pub unsafe fn DataTypeClampT(*mut T v, *const T v_min, *const T v_max) -> bool
     return false;
 }
 
-pub unsafe fn DataTypeClamp(ImGuiDataType data_type, *mut c_void p_data, p_min: *const c_void, p_max: *const c_void) -> bool
+pub unsafe fn DataTypeClamp(ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void) -> bool
 {
     switch (data_type)
     {
@@ -2309,7 +2309,7 @@ pub unsafe fn DragBehaviorT(ImGuiDataType data_type, *mut TYPE v,v_speed: c_floa
     return true;
 }
 
-pub unsafe fn DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragBehavior(id: ImGuiID, ImGuiDataType data_type, p_v: *mut c_void,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -2348,7 +2348,7 @@ pub unsafe fn DragBehavior(id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2436,7 +2436,7 @@ pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, *mut c_v
     return value_changed;
 }
 
-pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -2898,7 +2898,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type,
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
 // So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut c_void p_v, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb) -> bool
+pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, p_v: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -2940,7 +2940,7 @@ pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, 
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3024,7 +3024,7 @@ pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, *mut c
 }
 
 // Add multiple sliders on 1 line for compact edition of multiple components
-pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void v, components: c_int, v_min: *const c_void, v_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, v: *mut c_void, components: c_int, v_min: *const c_void, v_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3109,7 +3109,7 @@ pub unsafe fn SliderInt4(label: *const c_char, v: c_int[4], v_min: c_int, v_max:
     return SliderScalarN(label, ImGuiDataType_S32, v, 4, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType data_type, *mut c_void p_data, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3357,7 +3357,7 @@ static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(ImGuiDataType d
 // Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
 // This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
-pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, format: *const c_char, p_clamp_min: *const c_void, p_clamp_max: *const c_void) -> bool
+pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, format: *const c_char, p_clamp_min: *const c_void, p_clamp_max: *const c_void) -> bool
 {
     fmt_buf: [c_char;32];
     data_buf: [c_char;32];
@@ -3395,7 +3395,7 @@ pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, Im
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3470,7 +3470,7 @@ pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, *mut c_
     return value_changed;
 }
 
-pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_void p_data, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)
@@ -3567,18 +3567,18 @@ pub unsafe fn InputDouble(label: *const c_char, *mut double v, double step, doub
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn InputText(label: *const c_char, buf: *mut c_char, buf_size: size_t, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data) -> bool
+pub unsafe fn InputText(label: *const c_char, buf: *mut c_char, buf_size: size_t, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
     return InputTextEx(label, null_mut(), buf, buf_size, ImVec2::new(0, 0), flags, callback, user_data);
 }
 
-pub unsafe fn InputTextMultiline(label: *const c_char, buf: *mut c_char, buf_size: size_t, size: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data) -> bool
+pub unsafe fn InputTextMultiline(label: *const c_char, buf: *mut c_char, buf_size: size_t, size: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     return InputTextEx(label, null_mut(), buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, callback, user_data);
 }
 
-pub unsafe fn InputTextWithHint(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: size_t, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data) -> bool
+pub unsafe fn InputTextWithHint(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: size_t, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
     return InputTextEx(label, hint, buf, buf_size, ImVec2::new(0, 0), flags, callback, user_data);
@@ -3831,7 +3831,7 @@ c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: *const c_ch
 }
 
 // Return false to discard a character.
-pub unsafe fn InputTextFilterCharacter(*mut p_char: c_uint, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void user_data, ImGuiInputSource input_source) -> bool
+pub unsafe fn InputTextFilterCharacter(*mut p_char: c_uint, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void, ImGuiInputSource input_source) -> bool
 {
     // IM_ASSERT(input_source == ImGuiInputSource_Keyboard || input_source == ImGuiInputSource_Clipboard);
     let mut c: c_uint =  *p_char;
@@ -3971,7 +3971,7 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
 // - If you want to use InputText() with std::string, see misc/cpp/imgui_stdlib.h
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: c_int, size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, *mut c_void callback_user_data) -> bool
+pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: c_int, size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, callback_user_data: *mut c_void) -> bool
 {
     *mut ImGuiWindow window = GetCurrentWindow();
     if (window.SkipItems)

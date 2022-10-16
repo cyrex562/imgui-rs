@@ -268,7 +268,7 @@ pub unsafe fn WindowSettingsHandler_ClearAll(ctx: *mut ImGuiContext, ImGuiSettin
     g.SettingsWindows.clear();
 }
 
-static *mut c_void WindowSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*, name: *const c_char)
+static WindowSettingsHandler_ReadOpen: *mut c_void(ImGuiContext*, ImGuiSettingsHandler*, name: *const c_char)
 {
     settings: *mut ImGuiWindowSettings = FindOrCreateWindowSettings(name);
     let mut id: ImGuiID =  settings.ID;
@@ -365,4 +365,3 @@ pub unsafe fn WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettin
         buf->append("\n");
     }
 }
-

@@ -214,7 +214,7 @@ pub unsafe fn ShowDockingDisabledMessage()
 }
 
 // Helper to wire demo markers located in code to a interactive browser
-typedef c_void (*ImGuiDemoMarkerCallback)(file: *const c_char, line: c_int, section: *const c_char, *mut c_void user_data);
+typedef c_void (*ImGuiDemoMarkerCallback)(file: *const c_char, line: c_int, section: *const c_char, user_data: *mut c_void);
 extern ImGuiDemoMarkerCallback  GImGuiDemoMarkerCallback;
 extern *mut c_void                    GImGuiDemoMarkerCallbackUserData;
 ImGuiDemoMarkerCallback         GImGuiDemoMarkerCallback= null_mut();
@@ -1206,7 +1206,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         Combo("combo 3 (array)", &item_current_3, items, items.len());
 
         // Simplified one-liner Combo() using an accessor function
-        struct Funcs { static ItemGetter: bool(*mut c_void data, n: c_int, *out_str: *const c_char) { *out_str = ((**const char)data)[n]; return true; } };
+        struct Funcs { static ItemGetter: bool(data: *mut c_void, n: c_int, *out_str: *const c_char) { *out_str = ((**const char)data)[n]; return true; } };
         static let item_current_4: c_int = 0;
         Combo("combo 4 (function)", &item_current_4, &Funcs::ItemGetter, items, items.len());
 

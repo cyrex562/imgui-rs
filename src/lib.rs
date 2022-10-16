@@ -217,6 +217,12 @@ mod settings_ops;
 mod dock_preview_data;
 mod dock_context_ops;
 mod dock_context_prune_node_data;
+mod dock_node_ops;
+mod dock_node_state;
+mod bit_array;
+mod bit_vector;
+mod bit_array_ops;
+mod span_allocator;
 
 
 // c_void Initialize()

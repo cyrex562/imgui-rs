@@ -478,7 +478,7 @@ bool    BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, ImG
 
     // Setup memory buffer (clear data if columns count changed)
     *mut ImGuiTableColumn old_columns_to_preserve= null_mut();
-    *mut c_void old_columns_raw_data= null_mut();
+    old_columns_raw_data: *mut c_void= null_mut();
     let old_columns_count: c_int = table.Columns.size();
     if (old_columns_count != 0 && old_columns_count != columns_count)
     {
@@ -3180,7 +3180,7 @@ pub unsafe fn TableSettingsHandler_ApplyAll(*mut ImGuiContext ctx, *mut ImGuiSet
         }
 }
 
-static *mut c_void TableSettingsHandler_ReadOpen(*mut ImGuiContext, *mut ImGuiSettingsHandler, name: *const c_char)
+static TableSettingsHandler_ReadOpen: *mut c_void(*mut ImGuiContext, *mut ImGuiSettingsHandler, name: *const c_char)
 {
     let mut id: ImGuiID =  0;
     let columns_count: c_int = 0;
@@ -3199,7 +3199,7 @@ static *mut c_void TableSettingsHandler_ReadOpen(*mut ImGuiContext, *mut ImGuiSe
     return TableSettingsCreate(id, columns_count);
 }
 
-pub unsafe fn TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSettingsHandler, *mut c_void entry, line: *const c_char)
+pub unsafe fn TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSettingsHandler, entry: *mut c_void, line: *const c_char)
 {
     // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
     *mut ImGuiTableSettings settings = (*mut ImGuiTableSettings)entry;

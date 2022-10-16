@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use std::ptr::null_mut;
-use libc::{c_char, c_void};
+use libc::{c_char, c_void, size_t};
 use crate::context::ImGuiContext;
 use crate::context_hook::{ImGuiContextHook, ImGuiContextHookType, ImGuiContextHookType_PendingRemoval_};
 use crate::font_atlas::ImFontAtlas;
@@ -67,4 +67,8 @@ pub fn is_not_null<T>(ptr: *T) -> bool {
 
 pub fn is_null<T>(ptr: *T) -> bool {
     ptr.is_null()
+}
+
+pub unsafe fn ImQsort(base: *mut c_void, count: size_t, size_of_element: size_t, compare_fn: fn(*const c_void, *const c_void)) {
+    if count > 1 { libc::qsort(base, count, size_of_element, compare_fn) };
 }

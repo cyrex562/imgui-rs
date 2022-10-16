@@ -1,15 +1,18 @@
 #![allow(non_snake_case)]
 
-use std::ptr::null;
+use std::ptr::{null, null_mut};
 use libc::c_int;
-use crate::axis::ImGuiAxis;
-use crate::data_authority::ImGuiDataAuthority;
-use crate::dock_node_flags::ImGuiDockNodeFlags;
+use crate::axis::{ImGuiAxis, ImGuiAxis_None};
+use crate::color::IM_COL32_WHITE;
+use crate::data_authority::{ImGuiDataAuthority, ImGuiDataAuthority_Auto, ImGuiDataAuthority_DockNode};
+use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_None};
+use crate::dock_node_state::{ImGuiDockNodeState, ImGuiDockNodeState_Unknown};
 use crate::tab_bar::ImGuiTabBar;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::ImGuiID;
+use crate::window::window_class::ImGuiWindowClass;
 
 // sizeof() 156~192
 #[derive(Default,Debug,Clone,Copy)]
@@ -63,7 +66,49 @@ pub WantHiddenTabBarToggle: bool,
 
 impl ImGuiDockNode {
     // ImGuiDockNode(ImGuiID id);
-
+    pub fn new(id: ImGuiID) -> Self
+    {
+        let mut out = Self::default();
+        out.ID = id;
+        // SharedFlags = LocalFlags = LocalFlagsInWindows = MergedFlags = ImGuiDockNodeFlags_None;
+        out.SharedFlags = ImGuiDockNodeFlags_None;
+        out.LocalFlags = ImGuiDockNodeFlags_None;
+        out.LocalFlagsInWindows = ImGuiDockNodeFlags_None;
+        out.MergedFlags = ImGuiDockNodeFlags_None;
+        // ParentNode = ChildNodes[0] = ChildNodes[1]= null_mut();
+        out.ParentNode = null_mut();
+        out.ChildNodes = [null_mut();2];
+        out.TabBar = null_mut();
+        out.SplitAxis = ImGuiAxis_None;
+        out.State = ImGuiDockNodeState_Unknown;
+        out.LastBgColor = IM_COL32_WHITE;
+        out.HostWindow = null_mut();
+        out.VisibleWindow= null_mut();
+        out.CentralNode = null_mut();
+        out.OnlyNodeWithWindows= null_mut();
+        out.CountNodeWithWindows = 0;
+        out.LastFrameAlive = -1;
+        out.LastFrameActive = -1;
+        out.LastFrameFocused = -1;
+        out.LastFocusedNodeId = 0;
+        out.SelectedTabId = 0;
+        out.WantCloseTabId = 0;
+        out.AuthorityForPos = ImGuiDataAuthority_DockNode;
+        out.AuthorityForSize = ImGuiDataAuthority_DockNode;
+        out.AuthorityForViewport = ImGuiDataAuthority_Auto;
+        out.IsVisible = true;
+        out.IsFocused = false;
+        out.HasCloseButton = false;
+        out.HasWindowMenuButton = false;
+        out.HasCentralNodeChild = false;
+        out.IsBgDrawnThisFrame = false;
+        out.WantCloseAll = false;
+        out.WantLockSizeOnce = false;
+        out.WantMouseMove = false;
+        out.WantHiddenTabBarUpdate = false;
+        out.WantHiddenTabBarToggle = false;
+        out
+    }
 
     // ~ImGuiDockNode();
 
