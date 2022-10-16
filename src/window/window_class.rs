@@ -32,7 +32,7 @@ pub struct ImGuiWindowClass {
     // Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.ConfigDockingAlwaysTabBar)
     pub DockingAllowUnclassed: bool,      // Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
 
-    // ImGuiWindowClass() { memset(this, 0, sizeof(*this)); ParentViewportId = (ImGuiID)-1; DockingAllowUnclassed = true; }
+    // ImGuiWindowClass() { memset(this, 0, sizeof(*this)); ParentViewportId = -1; DockingAllowUnclassed = true; }
 }
 
 impl ImGuiWindowClass {

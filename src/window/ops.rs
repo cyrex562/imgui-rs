@@ -1080,7 +1080,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         if (window.ViewportAllowPlatformMonitorExtend >= 0 && !window.ViewportOwned && !(window.Viewport.Flags & ImGuiViewportFlags_Minimized)) {
             if (!window.Viewport.GetMainRect().Contains(window.Rect())) {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
-                //ImGuiViewport* old_viewport = window.Viewport;
+                //old_viewport: *mut ImGuiViewport = window.Viewport;
                 window.Viewport = AddUpdateViewport(window, window.ID, window.Pos, window.Size, ImGuiViewportFlags_NoFocusOnAppearing);
 
                 // FIXME-DPI

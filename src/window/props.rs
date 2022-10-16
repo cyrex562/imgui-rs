@@ -344,7 +344,7 @@ pub unsafe fn GetWindowDpiScale() -> c_float
     return g.CurrentDpiScale;
 }
 
-// ImGuiViewport* GetWindowViewport()
+// GetWindowViewport: *mut ImGuiViewport()
 pub unsafe fn GetWindowViewport() -> *mut ImGuiViewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;

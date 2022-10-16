@@ -1529,7 +1529,7 @@ pub unsafe fn NavUpdateWindowing()
     // Apply final focus
     if is_not_null(apply_focus_window) && (g.NavWindow == null_mut() || apply_focus_window != g.NavWindow.RootWindow)
     {
-        ImGuiViewport* previous_viewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { null_mut() };
+        previous_viewport: *mut ImGuiViewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { null_mut() };
         ClearActiveID();
         NavRestoreHighlightAfterMove();
         apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);

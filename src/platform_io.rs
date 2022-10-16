@@ -26,67 +26,67 @@ pub struct ImGuiPlatformIO {
     // Platform functions are typically called before their Renderer counterpart, apart from Destroy which are called the other way.
 
     // Platform function --------------------------------------------------- Called by -----
-    // void    (*Platform_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
+    // void    (*Platform_CreateWindow)(vp: *mut ImGuiViewport);                    // . . U . .  // Create a new platform window for the given viewport
     pub Platform_CreateWindow: fn(vp: *mut ImGuiViewport),
 
-    // void    (*Platform_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  //
+    // void    (*Platform_DestroyWindow)(vp: *mut ImGuiViewport);                   // N . U . D  //
     pub Platform_DestroyWindow: fn(vp: *mut ImGuiViewport),
 
-    // void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
+    // void    (*Platform_ShowWindow)(vp: *mut ImGuiViewport);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
     pub Platform_ShowWindow: fn(vp: *mut ImGuiViewport),
 
-    // void    (*Platform_SetWindowPos)(ImGuiViewport* vp, pos: ImVec2);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    // void    (*Platform_SetWindowPos)(vp: *mut ImGuiViewport, pos: ImVec2);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
     pub Platform_SetWindowPos: fn(vp: *mut ImGuiViewport, pos: ImVec2),
 
-    // ImVec2  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
+    // ImVec2  (*Platform_GetWindowPos)(vp: *mut ImGuiViewport);                    // N . . . .  //
     pub Platform_GetWindowPos: fn(vp: *mut ImGuiViewport) -> ImVec2,
 
-    // void    (*Platform_SetWindowSize)(ImGuiViewport* vp, size: ImVec2);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    // void    (*Platform_SetWindowSize)(vp: *mut ImGuiViewport, size: ImVec2);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
     pub Platform_SetWindowSize: fn(vp: *mut ImGuiViewport, size: ImVec2),
 
-    // ImVec2  (*Platform_GetWindowSize)(ImGuiViewport* vp);                   // N . . . .  // Get platform window client area size
+    // ImVec2  (*Platform_GetWindowSize)(vp: *mut ImGuiViewport);                   // N . . . .  // Get platform window client area size
     pub Platform_GetWindowSize: fn(vp: *mut ImGuiViewport) -> ImVec2,
 
-    // void    (*Platform_SetWindowFocus)(ImGuiViewport* vp);                  // N . . . .  // Move window to front and set input focus
+    // void    (*Platform_SetWindowFocus)(vp: *mut ImGuiViewport);                  // N . . . .  // Move window to front and set input focus
     pub Platform_SetWindowFocus: fn(vp: *mut ImGuiViewport),
 
-    // bool    (*Platform_GetWindowFocus)(ImGuiViewport* vp);                  // . . U . .  //
+    // bool    (*Platform_GetWindowFocus)(vp: *mut ImGuiViewport);                  // . . U . .  //
     pub Platform_GetWindowFocus: fn(vp: *mut ImGuiViewport) -> bool,
 
-    // bool    (*Platform_GetWindowMinimized)(ImGuiViewport* vp);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
+    // bool    (*Platform_GetWindowMinimized)(vp: *mut ImGuiViewport);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
     pub Platform_GetWindowMinimized: fn(vp: *mut ImGuiViewport) -> bool,
 
-    // void    (*Platform_SetWindowTitle)(ImGuiViewport* vp, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
+    // void    (*Platform_SetWindowTitle)(vp: *mut ImGuiViewport, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
     pub Platform_SetWindowTitle: fn(vp: *mut ImGuiViewport, title: *const c_char),
 
-    // void    (*Platform_SetWindowAlpha)(ImGuiViewport* vp, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
+    // void    (*Platform_SetWindowAlpha)(vp: *mut ImGuiViewport, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
     pub Platform_SetWindowAlpha: fn(vp: *mut ImGuiViewport, alpha: c_float),
 
-    // void    (*Platform_UpdateWindow)(ImGuiViewport* vp);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
+    // void    (*Platform_UpdateWindow)(vp: *mut ImGuiViewport);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
     pub Platform_UpdateWindow: fn(vp: *mut ImGuiViewport),
 
-    // void    (*Platform_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    // void    (*Platform_RenderWindow)(vp: *mut ImGuiViewport, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
     pub Platform_RenderWindow: fn(vp: *mut ImGuiViewport, render_arg: *mut c_void),
 
-    // void    (*Platform_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    // void    (*Platform_SwapBuffers)(vp: *mut ImGuiViewport, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
     pub Platform_SwapBuffers: fn(vp: *mut ImGuiViewport, render_arg: *mut c_void),
 
-    // float   (*Platform_GetWindowDpiScale)(ImGuiViewport* vp);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0 = 96 DPI.
+    // float   (*Platform_GetWindowDpiScale)(vp: *mut ImGuiViewport);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0 = 96 DPI.
 
-    // void    (*Platform_OnChangedViewport)(ImGuiViewport* vp);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
+    // void    (*Platform_OnChangedViewport)(vp: *mut ImGuiViewport);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
 
-    // int     (*Platform_CreateVkSurface)(ImGuiViewport* vp, u64 vk_inst, const void* vk_allocators, u64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
+    // int     (*Platform_CreateVkSurface)(vp: *mut ImGuiViewport, u64 vk_inst, const void* vk_allocators, u64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
 
     // (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)
-    // void    (*Renderer_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
+    // void    (*Renderer_CreateWindow)(vp: *mut ImGuiViewport);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
 
-    // void    (*Renderer_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
+    // void    (*Renderer_DestroyWindow)(vp: *mut ImGuiViewport);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
 
-    // void    (*Renderer_SetWindowSize)(ImGuiViewport* vp, size: ImVec2);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
+    // void    (*Renderer_SetWindowSize)(vp: *mut ImGuiViewport, size: ImVec2);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
 
-    // void    (*Renderer_RenderWindow)(ImGuiViewport* vp, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport.DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    // void    (*Renderer_RenderWindow)(vp: *mut ImGuiViewport, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport.DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
-    // void    (*Renderer_SwapBuffers)(ImGuiViewport* vp, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    // void    (*Renderer_SwapBuffers)(vp: *mut ImGuiViewport, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
     // (Optional) Monitor list
     // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.

@@ -4843,7 +4843,7 @@ static stbtt__matchpair: c_int(stbtt_uint8 *fc, stbtt_uint32 nm, stbtt_uint8 *na
                         return 1;
                   } else if (matchlen < nlen && name[matchlen] == ' ') {
                      ++matchlen;
-                     if (stbtt_CompareUTF8toUTF16_bigendian_internal((char*) (name+matchlen), nlen-matchlen, (char*)(fc+stringOffset+of0f32),slen))
+                     if (stbtt_CompareUTF8toUTF16_bigendian_internal( (name+matchlen), nlen-matchlen, (fc+stringOffset+of0f32),slen))
                         return 1;
                   }
                } else {

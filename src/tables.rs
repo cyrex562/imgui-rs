@@ -3022,7 +3022,7 @@ static TableSettingsCalcChunkSize: size_t(columns_count: c_int)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         *mut ImGuiTableSettings settings = g.SettingsTables.ptr_from_offset(table.SettingsOffset);
-        // IM_ASSERT(settings->ID == table.ID);
+        // IM_ASSERT(settings.ID == table.ID);
         if (settings.ColumnsCountMax >= table.ColumnsCount)
             return settings; // OK
         settings.ID = 0; // Invalidate storage, we won't fit because of a count change
@@ -3056,8 +3056,8 @@ pub unsafe fn TableSaveSettings(*mut ImGuiTable table)
     settings.ColumnsCount = (ImGuiTableColumnIdx)table.ColumnsCount;
 
     // Serialize ImGuiTable/ImGuiTableColumn into ImGuiTableSettings/ImGuiTableColumnSettings
-    // IM_ASSERT(settings->ID == table.ID);
-    // IM_ASSERT(settings->ColumnsCount == table.ColumnsCount && settings->ColumnsCountMax >= settings->ColumnsCount);
+    // IM_ASSERT(settings.ID == table.ID);
+    // IM_ASSERT(settings.ColumnsCount == table.ColumnsCount && settings.ColumnsCountMax >= settings.ColumnsCount);
     *mut ImGuiTableColumn column = table.Columns.Data;
     *mut ImGuiTableColumnSettings column_settings = settings.GetColumnSettings();
 
@@ -3088,8 +3088,8 @@ pub unsafe fn TableSaveSettings(*mut ImGuiTable table)
         if (column.IsUserEnabled != ((column.Flags & ImGuiTableColumnFlags_DefaultHide) == 0))
             settings.SaveFlags |= ImGuiTableFlags_Hideable;
     }
-    settings->SaveFlags &= table.Flags;
-    settings->RefScale = save_ref_scale ? table.RefScale : 0.0;
+    settings.SaveFlags &= table.Flags;
+    settings.RefScale = save_ref_scale ? table.RefScale : 0.0;
 
     MarkIniSettingsDirty();
 }
@@ -3108,7 +3108,7 @@ pub unsafe fn TableLoadSettings(*mut ImGuiTable table)
         settings = TableSettingsFindByID(table.ID);
         if (settings == null_mut())
             return;
-        if (settings->ColumnsCount != table.ColumnsCount) // Allow settings if columns count changed. We could otherwise decide to return...
+        if (settings.ColumnsCount != table.ColumnsCount) // Allow settings if columns count changed. We could otherwise decide to return...
             table.IsSettingsDirty = true;
         table.SettingsOffset = g.SettingsTables.offset_from_ptr(settings);
     }
@@ -3117,20 +3117,20 @@ pub unsafe fn TableLoadSettings(*mut ImGuiTable table)
         settings = TableGetBoundSettings(table);
     }
 
-    table.SettingsLoadedFlags = settings->SaveFlags;
-    table.RefScale = settings->RefScale;
+    table.SettingsLoadedFlags = settings.SaveFlags;
+    table.RefScale = settings.RefScale;
 
     // Serialize ImGuiTableSettings/ImGuiTableColumnSettings into ImGuiTable/ImGuiTableColumn
-    *mut ImGuiTableColumnSettings column_settings = settings->GetColumnSettings();
+    *mut ImGuiTableColumnSettings column_settings = settings.GetColumnSettings();
     u64 display_order_mask = 0;
-    for (let data_n: c_int = 0; data_n < settings->ColumnsCount; data_n++, column_settings++)
+    for (let data_n: c_int = 0; data_n < settings.ColumnsCount; data_n++, column_settings++)
     {
         let column_n: c_int = column_settings->Index;
         if (column_n < 0 || column_n >= table.ColumnsCount)
             continue;
 
         *mut ImGuiTableColumn column = &table.Columns[column_n];
-        if (settings->SaveFlags & ImGuiTableFlags_Resizable)
+        if (settings.SaveFlags & ImGuiTableFlags_Resizable)
         {
             if (column_settings->IsStretch)
                 column.StretchWeight = column_settings->WidthOrWeight;
@@ -3138,7 +3138,7 @@ pub unsafe fn TableLoadSettings(*mut ImGuiTable table)
                 column.WidthRequest = column_settings->WidthOrWeight;
             column.AutoFitQueue = 0x00;
         }
-        if (settings->SaveFlags & ImGuiTableFlags_Reorderable)
+        if (settings.SaveFlags & ImGuiTableFlags_Reorderable)
             column.DisplayOrder = column_settings->DisplayOrder;
         else
             column.DisplayOrder = (ImGuiTableColumnIdx)column_n;
@@ -3149,7 +3149,7 @@ pub unsafe fn TableLoadSettings(*mut ImGuiTable table)
     }
 
     // Validate and fix invalid display order data
-    const u64 expected_display_order_mask = if settings->ColumnsCount == 64 { !0} else { ((u64)1 << settings->ColumnsCount) - 1};
+    const u64 expected_display_order_mask = if settings.ColumnsCount == 64 { !0} else { ((u64)1 << settings.ColumnsCount) - 1};
     if (display_order_mask != expected_display_order_mask)
         for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
             table.Columns[column_n].DisplayOrder = (ImGuiTableColumnIdx)column_n;
@@ -3161,7 +3161,7 @@ pub unsafe fn TableLoadSettings(*mut ImGuiTable table)
 
 pub unsafe fn TableSettingsHandler_ClearAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler)
 {
-    ImGuiContext& g = *ctx;
+    let g =  ctx;
     for (let i: c_int = 0; i != g.Tables.GetMapSize(); i++)
         if (*mut ImGuiTable table = g.Tables.TryGetMapData(i))
             table.SettingsOffset = -1;
@@ -3171,7 +3171,7 @@ pub unsafe fn TableSettingsHandler_ClearAll(*mut ImGuiContext ctx, *mut ImGuiSet
 // Apply to existing windows (if any)
 pub unsafe fn TableSettingsHandler_ApplyAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler)
 {
-    ImGuiContext& g = *ctx;
+    let g =  ctx;
     for (let i: c_int = 0; i != g.Tables.GetMapSize(); i++)
         if (*mut ImGuiTable table = g.Tables.TryGetMapData(i))
         {
@@ -3189,12 +3189,12 @@ static *mut c_void TableSettingsHandler_ReadOpen(*mut ImGuiContext, *mut ImGuiSe
 
     if (*mut ImGuiTableSettings settings = TableSettingsFindByID(id))
     {
-        if (settings->ColumnsCountMax >= columns_count)
+        if (settings.ColumnsCountMax >= columns_count)
         {
-            TableSettingsInit(settings, id, columns_count, settings->ColumnsCountMax); // Recycle
+            TableSettingsInit(settings, id, columns_count, settings.ColumnsCountMax); // Recycle
             return settings;
         }
-        settings->ID = 0; // Invalidate storage, we won't fit because of a count change
+        settings.ID = 0; // Invalidate storage, we won't fit because of a count change
     }
     return TableSettingsCreate(id, columns_count);
 }
@@ -3206,48 +3206,48 @@ pub unsafe fn TableSettingsHandler_ReadLine(*mut ImGuiContext, *mut ImGuiSetting
     let f: c_float =  0.0;
     let column_n: c_int = 0, r = 0, n = 0;
 
-    if (sscanf(line, "RefScale=%f", &0.0) == 1) { settings->RefScale = f; return; }
+    if (sscanf(line, "RefScale=%f", &0.0) == 1) { settings.RefScale = f; return; }
 
     if (sscanf(line, "Column %d%n", &column_n, &r) == 1)
     {
-        if (column_n < 0 || column_n >= settings->ColumnsCount)
+        if (column_n < 0 || column_n >= settings.ColumnsCount)
             return;
         line = ImStrSkipBlank(line + r);
          c: c_char = 0;
-        *mut ImGuiTableColumnSettings column = settings->GetColumnSettings() + column_n;
+        *mut ImGuiTableColumnSettings column = settings.GetColumnSettings() + column_n;
         column.Index = (ImGuiTableColumnIdx)column_n;
-        if (sscanf(line, "UserID=0x%08X%n", (*mut u32)&n, &r)==1) { line = ImStrSkipBlank(line + r); column.UserID = (ImGuiID)n; }
-        if (sscanf(line, "Width=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.WidthOrWeight = n; column.IsStretch = 0; settings->SaveFlags |= ImGuiTableFlags_Resizable; }
-        if (sscanf(line, "Weight=%f%n", &f, &r) == 1)           { line = ImStrSkipBlank(line + r); column.WidthOrWeight = f; column.IsStretch = 1; settings->SaveFlags |= ImGuiTableFlags_Resizable; }
-        if (sscanf(line, "Visible=%d%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column.IsEnabled = n; settings->SaveFlags |= ImGuiTableFlags_Hideable; }
-        if (sscanf(line, "Order=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.DisplayOrder = (ImGuiTableColumnIdx)n; settings->SaveFlags |= ImGuiTableFlags_Reorderable; }
-        if (sscanf(line, "Sort=%d%c%n", &n, &c, &r) == 2)       { line = ImStrSkipBlank(line + r); column.SortOrder = (ImGuiTableColumnIdx)n; column.SortDirection = (c == '^') ? ImGuiSortDirection_Descending : ImGuiSortDirection_Ascending; settings->SaveFlags |= ImGuiTableFlags_Sortable; }
+        if (sscanf(line, "UserID=0x%08X%n", (*mut u32)&n, &r)==1) { line = ImStrSkipBlank(line + r); column.UserID = n; }
+        if (sscanf(line, "Width=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.WidthOrWeight = n; column.IsStretch = 0; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
+        if (sscanf(line, "Weight=%f%n", &f, &r) == 1)           { line = ImStrSkipBlank(line + r); column.WidthOrWeight = f; column.IsStretch = 1; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
+        if (sscanf(line, "Visible=%d%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column.IsEnabled = n; settings.SaveFlags |= ImGuiTableFlags_Hideable; }
+        if (sscanf(line, "Order=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.DisplayOrder = (ImGuiTableColumnIdx)n; settings.SaveFlags |= ImGuiTableFlags_Reorderable; }
+        if (sscanf(line, "Sort=%d%c%n", &n, &c, &r) == 2)       { line = ImStrSkipBlank(line + r); column.SortOrder = (ImGuiTableColumnIdx)n; column.SortDirection = (c == '^') ? ImGuiSortDirection_Descending : ImGuiSortDirection_Ascending; settings.SaveFlags |= ImGuiTableFlags_Sortable; }
     }
 }
 
-pub unsafe fn TableSettingsHandler_WriteAll(*mut ImGuiContext ctx, *mut ImGuiSettingsHandler handler, *mut ImGuiTextBuffer buf)
+pub unsafe fn TableSettingsHandler_WriteAll(*mut ImGuiContext ctx, *mut handler: ImGuiSettingsHandler, *mut ImGuiTextBuffer buf)
 {
-    ImGuiContext& g = *ctx;
+    let g =  ctx;
     for (*mut ImGuiTableSettings settings = g.SettingsTables.begin(); settings != null_mut(); settings = g.SettingsTables.next_chunk(settings))
     {
-        if (settings->ID == 0) // Skip ditched settings
+        if (settings.ID == 0) // Skip ditched settings
             continue;
 
         // TableSaveSettings() may clear some of those flags when we establish that the data can be stripped
         // (e.g. Order was unchanged)
-        let save_size: bool = (settings->SaveFlags & ImGuiTableFlags_Resizable) != 0;
-        let save_visible: bool = (settings->SaveFlags & ImGuiTableFlags_Hideable) != 0;
-        let save_order: bool = (settings->SaveFlags & ImGuiTableFlags_Reorderable) != 0;
-        let save_sort: bool = (settings->SaveFlags & ImGuiTableFlags_Sortable) != 0;
+        let save_size: bool = (settings.SaveFlags & ImGuiTableFlags_Resizable) != 0;
+        let save_visible: bool = (settings.SaveFlags & ImGuiTableFlags_Hideable) != 0;
+        let save_order: bool = (settings.SaveFlags & ImGuiTableFlags_Reorderable) != 0;
+        let save_sort: bool = (settings.SaveFlags & ImGuiTableFlags_Sortable) != 0;
         if (!save_size && !save_visible && !save_order && !save_sort)
             continue;
 
-        buf->reserve(buf->size() + 30 + settings->ColumnsCount * 50); // ballpark reserve
-        buf->appendf("[%s][0x%08X,%d]\n", handler.TypeName, settings->ID, settings->ColumnsCount);
-        if (settings->RefScale != 0.0)
-            buf->appendf("RefScale=%g\n", settings->RefScale);
-        *mut ImGuiTableColumnSettings column = settings->GetColumnSettings();
-        for (let column_n: c_int = 0; column_n < settings->ColumnsCount; column_n++, column++)
+        buf->reserve(buf->size() + 30 + settings.ColumnsCount * 50); // ballpark reserve
+        buf->appendf("[%s][0x%08X,%d]\n", handler.TypeName, settings.ID, settings.ColumnsCount);
+        if (settings.RefScale != 0.0)
+            buf->appendf("RefScale=%g\n", settings.RefScale);
+        *mut ImGuiTableColumnSettings column = settings.GetColumnSettings();
+        for (let column_n: c_int = 0; column_n < settings.ColumnsCount; column_n++, column++)
         {
             // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
             let mut save_column: bool =  column.UserID != 0 || save_size || save_visible || save_order || (save_sort && column.SortOrder != -1);
@@ -3268,7 +3268,7 @@ pub unsafe fn TableSettingsHandler_WriteAll(*mut ImGuiContext ctx, *mut ImGuiSet
 
 pub unsafe fn TableSettingsAddSettingsHandler()
 {
-    ImGuiSettingsHandler ini_handler;
+    ini_handler: ImGuiSettingsHandler;
     ini_handler.TypeName = "Table";
     ini_handler.TypeHash = ImHashStr("Table");
     ini_handler.ClearAllFn = TableSettingsHandler_ClearAll;
@@ -3327,15 +3327,15 @@ pub unsafe fn TableGcCompactSettings()
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let required_memory: c_int = 0;
     for (*mut ImGuiTableSettings settings = g.SettingsTables.begin(); settings != null_mut(); settings = g.SettingsTables.next_chunk(settings))
-        if (settings->ID != 0)
-            required_memory += TableSettingsCalcChunkSize(settings->ColumnsCount);
+        if (settings.ID != 0)
+            required_memory += TableSettingsCalcChunkSize(settings.ColumnsCount);
     if (required_memory == g.SettingsTables.Buf.Size)
         return;
     ImChunkStream<ImGuiTableSettings> new_chunk_stream;
     new_chunk_stream.Buf.reserve(required_memory);
     for (*mut ImGuiTableSettings settings = g.SettingsTables.begin(); settings != null_mut(); settings = g.SettingsTables.next_chunk(settings))
-        if (settings->ID != 0)
-            memcpy(new_chunk_stream.alloc_chunk(TableSettingsCalcChunkSize(settings->ColumnsCount)), settings, TableSettingsCalcChunkSize(settings->ColumnsCount));
+        if (settings.ID != 0)
+            memcpy(new_chunk_stream.alloc_chunk(TableSettingsCalcChunkSize(settings.ColumnsCount)), settings, TableSettingsCalcChunkSize(settings.ColumnsCount));
     g.SettingsTables.swap(new_chunk_stream);
 }
 
@@ -3424,13 +3424,13 @@ pub unsafe fn DebugNodeTable(*mut ImGuiTable table)
 
 pub unsafe fn DebugNodeTableSettings(*mut ImGuiTableSettings settings)
 {
-    if (!TreeNode((*mut c_void)settings->ID, "Settings 0x%08X (%d columns)", settings->ID, settings->ColumnsCount))
+    if (!TreeNode(settings.ID, "Settings 0x%08X (%d columns)", settings.ID, settings.ColumnsCount))
         return;
-    BulletText("SaveFlags: 0x%08X", settings->SaveFlags);
-    BulletText("ColumnsCount: %d (max %d)", settings->ColumnsCount, settings->ColumnsCountMax);
-    for (let n: c_int = 0; n < settings->ColumnsCount; n++)
+    BulletText("SaveFlags: 0x%08X", settings.SaveFlags);
+    BulletText("ColumnsCount: %d (max %d)", settings.ColumnsCount, settings.ColumnsCountMax);
+    for (let n: c_int = 0; n < settings.ColumnsCount; n++)
     {
-        *mut ImGuiTableColumnSettings column_settings = &settings->GetColumnSettings()[n];
+        *mut ImGuiTableColumnSettings column_settings = &settings.GetColumnSettings()[n];
         ImGuiSortDirection sort_dir = if column_settings->SortOrder != -1 { (ImGuiSortDirection)column_settings->SortDirection} else { ImGuiSortDirection_None};
         BulletText("Column %d Order %d SortOrder %d %s Vis %d %s %7.3f UserID 0x%08X",
             n, column_settings->DisplayOrder, column_settings->SortOrder,

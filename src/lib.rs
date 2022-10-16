@@ -213,6 +213,10 @@ mod tooltip_ops;
 mod popup_ops;
 mod popup_position_policy;
 mod drag_drop_ops;
+mod settings_ops;
+mod dock_preview_data;
+mod dock_context_ops;
+mod dock_context_prune_node_data;
 
 
 // c_void Initialize()

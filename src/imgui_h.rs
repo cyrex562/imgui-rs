@@ -758,13 +758,13 @@ namespace ImGui
     // - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
     // - In 'docking' branch with multi-viewport enabled, we extend this concept to have multiple active viewports.
     // - In the future we will extend this concept further to also represent Platform Monitor and support a "no main platform window" operation mode.
-     ImGuiViewport* GetMainViewport();                                                 // return primary/default viewport. This can never be NULL.
+     GetMainViewport: *mut ImGuiViewport();                                                 // return primary/default viewport. This can never be NULL.
 
     // Background/Foreground Draw Lists
      ImDrawList*   GetBackgroundDrawList();                                            // get background draw list for the viewport associated to the current window. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
      ImDrawList*   GetForegroundDrawList();                                            // get foreground draw list for the viewport associated to the current window. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
-     ImDrawList*   GetBackgroundDrawList(ImGuiViewport* viewport);                     // get background draw list for the given viewport. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
-     ImDrawList*   GetForegroundDrawList(ImGuiViewport* viewport);                     // get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
+     ImDrawList*   GetBackgroundDrawList(viewport: *mut ImGuiViewport);                     // get background draw list for the given viewport. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
+     ImDrawList*   GetForegroundDrawList(viewport: *mut ImGuiViewport);                     // get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
 
     // Miscellaneous Utilities
      bool          IsRectVisible(size: &ImVec2);                                  // test if rectangle (of given size, starting from cursor position) is visible / not clipped.
@@ -1430,23 +1430,7 @@ IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT;
 //-----------------------------------------------------------------------------
 
 // Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
-enum ImGuiViewportFlags_
-{
-    ImGuiViewportFlags_None                     = 0,
-    ImGuiViewportFlags_IsPlatformWindow         = 1 << 0,   // Represent a Platform Window
-    ImGuiViewportFlags_IsPlatformMonitor        = 1 << 1,   // Represent a Platform Monitor (unused yet)
-    ImGuiViewportFlags_OwnedByApp               = 1 << 2,   // Platform Window: is created/managed by the application (rather than a dear imgui backend)
-    ImGuiViewportFlags_NoDecoration             = 1 << 3,   // Platform Window: Disable platform decorations: title bar, borders, etc. (generally set all windows, but if ImGuiConfigFlags_ViewportsDecoration is set we only set this on popups/tooltips)
-    ImGuiViewportFlags_NoTaskBarIcon            = 1 << 4,   // Platform Window: Disable platform task bar icon (generally set on popups/tooltips, or all windows if ImGuiConfigFlags_ViewportsNoTaskBarIcon is set)
-    ImGuiViewportFlags_NoFocusOnAppearing       = 1 << 5,   // Platform Window: Don't take focus when created.
-    ImGuiViewportFlags_NoFocusOnClick           = 1 << 6,   // Platform Window: Don't take focus when clicked on.
-    ImGuiViewportFlags_NoInputs                 = 1 << 7,   // Platform Window: Make mouse pass through so we can drag this window while peaking behind it.
-    ImGuiViewportFlags_NoRendererClear          = 1 << 8,   // Platform Window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
-    ImGuiViewportFlags_TopMost                  = 1 << 9,   // Platform Window: Display on top (for tooltips only).
-    ImGuiViewportFlags_Minimized                = 1 << 10,  // Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
-    ImGuiViewportFlags_NoAutoMerge              = 1 << 11,  // Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
-    ImGuiViewportFlags_CanHostOtherWindows      = 1 << 12,  // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
-};
+
 
 // };
 

@@ -256,7 +256,7 @@ pub struct ImGuiWindow {
 }
 
 impl ImGuiWindow {
-    //ImGuiWindow(ImGuiContext* context, *const c_char name);
+    //ImGuiWindow(context: *mut ImGuiContext, *const c_char name);
     pub unsafe fn new(context: *mut ImGuiContext, name: *const c_char) {
         let mut out = Self {
             Name: ImStrdup(name),

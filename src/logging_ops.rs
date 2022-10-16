@@ -4,6 +4,7 @@ use std::ptr::null_mut;
 use libc::{c_char, c_int};
 use crate::context::ImGuiContext;
 use crate::imgui_cpp::{GImGui, ImStreolRange};
+use crate::log_type::ImGuiLogType_None;
 use crate::vec2::ImVec2;
 
 // Internal version that takes a position to decide on newline placement and pad items according to their depth.
@@ -209,11 +210,10 @@ pub unsafe fn LogFinish()
      ImGuiLogType_Buffer => {},
         
      ImGuiLogType_Clipboard =>{
-        if (!g.LogBuffer.empty())
-            SetClipboardText(g.LogBuffer.begin());},
-    case ImGuiLogType_None:
+        if (!g.LogBuffer.empty()){
+            SetClipboardText(g.LogBuffer.begin());}},
+    ImGuiLogType_None => {}
         // IM_ASSERT(0);
-        break;
     }
 
     g.LogEnabled = false;
@@ -243,11 +243,11 @@ pub unsafe fn LogButtons()
     PopID();
 
     // Start logging at the end of the function so that the buttons don't appear in the log
-    if (log_to_tty)
-        LogToTTY();
-    if (log_to_file)
-        LogToFile();
-    if (log_to_clipboard)
-        LogToClipboard();
+    if (log_to_tty){
+        LogToTTY(0);}
+    if (log_to_file){
+        LogToFile(0, null());}
+    if (log_to_clipboard){
+        LogToClipboard(0);}
 }
 

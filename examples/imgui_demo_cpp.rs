@@ -870,7 +870,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 if (i == 0)
                     SetNextItemOpen(true, ImGuiCond_Once);
 
-                if (TreeNode((*mut c_void)i, "Child %d", i))
+                if (TreeNode(i, "Child %d", i))
                 {
                     Text("blah blah");
                     SameLine();
@@ -917,7 +917,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 if (i < 3)
                 {
                     // Items 0..2 are Tree Node
-                    let mut node_open: bool =  TreeNodeEx((*mut c_void)i, node_flags, "Selectable Node %d", i);
+                    let mut node_open: bool =  TreeNodeEx(i, node_flags, "Selectable Node %d", i);
                     if (IsItemClicked() && !IsItemToggledOpen())
                         node_clicked = i;
                     if (test_drag_and_drop && BeginDragDropSource())
@@ -938,7 +938,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                     // The only reason we use TreeNode at all is to allow selection of the leaf. Otherwise we can
                     // use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
                     node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
-                    TreeNodeEx((*mut c_void)i, node_flags, "Selectable Leaf %d", i);
+                    TreeNodeEx(i, node_flags, "Selectable Leaf %d", i);
                     if (IsItemClicked() && !IsItemToggledOpen())
                         node_clicked = i;
                     if (test_drag_and_drop && BeginDragDropSource())
@@ -1528,7 +1528,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 
             static buf3: [c_char;64];
             static let edit_count: c_int = 0;
-            InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, (*mut c_void)&edit_count);
+            InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, &edit_count);
             SameLine(); HelpMarker("Here we toggle the casing of the first character on every edits + count edits.");
             SameLine(); Text("(%d)", edit_count);
 
@@ -1563,7 +1563,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 static MyInputTextMultiline: bool(label: *const c_char, Vec<char>* my_str, size: &ImVec2 = ImVec2::new(0, 0), ImGuiInputTextFlags flags = 0)
                 {
                     // IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-                    return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (*mut c_void)my_str);
+                    return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, my_str);
                 }
             };
 
@@ -1574,7 +1574,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             if (my_str.empty())
                 my_str.push(0);
             Funcs::MyInputTextMultiline("##MyStr", &my_str, ImVec2::new(-FLT_MIN, GetTextLineHeight() * 16));
-            Text("Data: %p\nSize: %d\nCapacity: %d", (*mut c_void)my_str.begin(), my_str.size(), my_str.capacity());
+            Text("Data: %p\nSize: %d\nCapacity: %d", my_str.begin(), my_str.size(), my_str.capacity());
             TreePop();
         }
 
@@ -3066,7 +3066,7 @@ pub unsafe fn ShowDemoWindowLayout()
             TextUnformatted(names[i]);
 
             const child_flags: ImGuiWindowFlags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
-            let mut child_id: ImGuiID =  GetID((*mut c_void)i);
+            let mut child_id: ImGuiID =  GetID(i);
             let child_is_visible: bool = BeginChild(child_id, ImVec2::new(child_w, 200f32), true, child_flags);
             if (BeginMenuBar())
             {
@@ -3113,7 +3113,7 @@ pub unsafe fn ShowDemoWindowLayout()
         {
             let child_height: c_float =  GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0.0;
             child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
-            let mut child_id: ImGuiID =  GetID((*mut c_void)i);
+            let mut child_id: ImGuiID =  GetID(i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2::new(-100, child_height), true, child_flags);
             if (scroll_to_of0f32)
                 SetScrollX(scroll_to_off_px);
@@ -5723,7 +5723,7 @@ pub unsafe fn ShowDemoWindowColumns()
         Columns(2, "tree", true);
         for (let x: c_int = 0; x < 3; x++)
         {
-            let mut open1: bool =  TreeNode((*mut c_void)x, "Node%d", x);
+            let mut open1: bool =  TreeNode(x, "Node%d", x);
             NextColumn();
             Text("Node contents");
             NextColumn();
@@ -5731,7 +5731,7 @@ pub unsafe fn ShowDemoWindowColumns()
             {
                 for (let y: c_int = 0; y < 3; y++)
                 {
-                    let mut open2: bool =  TreeNode((*mut c_void)y, "Node%d.%d", x, y);
+                    let mut open2: bool =  TreeNode(y, "Node%d.%d", x, y);
                     NextColumn();
                     Text("Node contents");
                     if (open2)
@@ -6224,7 +6224,7 @@ pub unsafe fn ShowFontSelector(label: *const c_char)
         for (let n: c_int = 0; n < io.Fonts.Fonts.Size; n++)
         {
             *mut ImFont font = io.Fonts.Fonts[n];
-            PushID((*mut c_void)font);
+            PushID(font);
             if (Selectable(font->GetDebugName(), font == font_current))
                 io.FontDefault = font;
             PopID();
@@ -6665,7 +6665,7 @@ struct ExampleAppConsole
     // Portable helpers
     static c_int   Stricmp(s1: *const c_char, s2: *const c_char)         { let mut d: c_int = 0; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; } return d; }
     static c_int   Strnicmp(s1: *const c_char, s2: *const c_char, n: c_int) { let d: c_int = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1+= 1; s2+= 1; n-= 1; } return d; }
-    static char* Strdup(s: *const c_char)                           { IM_ASSERT(s); len: size_t = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (*const c_void)s, len); }
+    static char* Strdup(s: *const c_char)                           { IM_ASSERT(s); len: size_t = strlen(s) + 1; buf: *mut c_void = malloc(len); IM_ASSERT(buf); return memcpy(buf, (*const c_void)s, len); }
     static c_void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end-= 1; *str_end = 0; }
 
     c_void    ClearLog()
@@ -6806,7 +6806,7 @@ struct ExampleAppConsole
         // Command-line
         let mut reclaim_focus: bool =  false;
         ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-        if (InputText("Input", InputBuf, InputBu0f32.len(), input_text_flags, &TextEditCallbackStub, (*mut c_void)this))
+        if (InputText("Input", InputBuf, InputBu0f32.len(), input_text_flags, &TextEditCallbackStub, this))
         {
             char* s = InputBuf;
             Strtrim(s);
@@ -7421,9 +7421,9 @@ pub unsafe fn ShowExampleAppConstrainedResize(bool* p_open)
     if (type == 2) SetNextWindowSizeConstraints(ImVec2::new(-1, 0),    ImVec2::new(-1, f32::MAX));      // Vertical only
     if (type == 3) SetNextWindowSizeConstraints(ImVec2::new(0, -1),    ImVec2::new(f32::MAX, -1));      // Horizontal only
     if (type == 4) SetNextWindowSizeConstraints(ImVec2::new(400, -1),  ImVec2::new(500, -1));          // Width Between and 400 and 500
-    if (type == 5) SetNextWindowSizeConstraints(ImVec2::new(0, 0),     ImVec2::new(f32::MAX, f32::MAX), CustomConstraints::AspectRatio, (*mut c_void)&aspect_ratio);   // Aspect ratio
+    if (type == 5) SetNextWindowSizeConstraints(ImVec2::new(0, 0),     ImVec2::new(f32::MAX, f32::MAX), CustomConstraints::AspectRatio, &aspect_ratio);   // Aspect ratio
     if (type == 6) SetNextWindowSizeConstraints(ImVec2::new(0, 0),     ImVec2::new(f32::MAX, f32::MAX), CustomConstraints::Square);                              // Always Square
-    if (type == 7) SetNextWindowSizeConstraints(ImVec2::new(0, 0),     ImVec2::new(f32::MAX, f32::MAX), CustomConstraints::Step, (*mut c_void)&fixed_step);            // Fixed Step
+    if (type == 7) SetNextWindowSizeConstraints(ImVec2::new(0, 0),     ImVec2::new(f32::MAX, f32::MAX), CustomConstraints::Step, &fixed_step);            // Fixed Step
 
     // Submit window
     if (!window_padding)

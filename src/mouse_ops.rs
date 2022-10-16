@@ -46,7 +46,7 @@ pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
 // We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
 // - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
 // - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
-// c_void StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, ImGuiDockNode* node, undock_floating_node: bool)
+// c_void StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node:*mut ImGuiDockNode, undock_floating_node: bool)
 pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut can_undock_node: bool = false;

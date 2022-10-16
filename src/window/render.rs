@@ -436,7 +436,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
         }
 
         // Docking: Unhide tab bar (small triangle in the corner), drag from small triangle to quickly undock
-        ImGuiDockNode* node = window.DockNode;
+        node:*mut ImGuiDockNode = window.DockNode;
         if window.DockIsActive && node.IsHiddenTabBar() && !node.IsNoTabBar()
         {
             let unhide_sz_draw: c_float =  ImFloor(g.FontSize * 0.700f32);

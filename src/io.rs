@@ -126,7 +126,7 @@ pub struct ImGuiIO {
 
     // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
     // (default to use native imm32 api on Windows)
-    // void        (*SetPlatformImeDataFn)(ImGuiViewport* viewport, ImGuiPlatformImeData* data);
+    // void        (*SetPlatformImeDataFn)(viewport: *mut ImGuiViewport, ImGuiPlatformImeData* data);
     pub SetPlatformImeDataFn: fn(viewport: *mut ImGuiViewport, data: *mut ImGuiPlatformImeData),
     // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     pub ImeWindowHandle: *mut c_void,

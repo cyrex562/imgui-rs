@@ -38,9 +38,9 @@ impl ImChunkStream<T> {
         // off: c_int = Buf.Size; Buf.resize(off + sz);
         let mut off = self.Buf.len();
         self.Buf.resize(off + sz, 0);
-        // ((*mut c_int)(*mut c_void)(Buf.Data + of0f32))[0] = sz;
+        // ((*mut c_int)(Buf.Data + of0f32))[0] = sz;
         (self.Buf.as_mut_ptr() + off)[0] = sz;
-        // return (*mut T)(*mut c_void)(Buf.Data + off + HDR_SZ);
+        // return (*mut T)(Buf.Data + off + HDR_SZ);
         self.Buf.as_mut_ptr() + off + HDR_SZ
     }
 
@@ -49,7 +49,7 @@ impl ImChunkStream<T> {
     pub fn begin(&mut self) -> *mut T {
         let mut HDR_SZ = 4usize;
         if !self.Buf.as_ptr() { return null_mut(); };
-        // return (*mut T)(*mut c_void)(Buf.Data + HDR_SZ);
+        // return (*mut T)(Buf.Data + HDR_SZ);
         return self.Buf.as_mut_ptr() + HDR_SZ;
     }
 
@@ -59,10 +59,10 @@ impl ImChunkStream<T> {
         // HDR_SZ: size_t = 4;
         let mut HDR_SZ: usize = 4;
         // IM_ASSERT(p >= begin() && p < end());
-        // p = (*mut T)(*mut c_void)((*mut char)(*mut c_void)p + chunk_size(p));
+        // p = (*mut T)((*mut char)p + chunk_size(p));
         p = p + self.chunk_size(p);
 
-        // if (p == (*mut T)(*mut c_void)((*mut char)end() + HDR_SZ)) {return ( * mut T)0;}
+        // if (p == (*mut T)((*mut char)end() + HDR_SZ)) {return ( * mut T)0;}
         if p == self.end() + HDR_SZ {
             return null_mut();
         }
@@ -79,7 +79,7 @@ impl ImChunkStream<T> {
     }
 
 
-    // *mut T      end()                       { return (*mut T)(*mut c_void)(Buf.Data + Buf.Size); }
+    // *mut T      end()                       { return (*mut T)(Buf.Data + Buf.Size); }
     pub fn end(&mut self) -> *mut T {
         self.Buf.as_mut_ptr() + self.Buf.len()
     }
@@ -97,7 +97,7 @@ impl ImChunkStream<T> {
     // *mut T      ptr_from_offset(of0f32: c_int)
     pub fn ptr_from_offset(&mut self, off: usize) -> *mut T {
         // IM_ASSERT(off >= 4 && off < Buf.Size);
-        // return (*mut T)(*mut c_void)(Buf.Data + of0f32);
+        // return (*mut T)(Buf.Data + of0f32);
         self.Buf.as_mut_ptr() + off
     }
 

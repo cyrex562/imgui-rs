@@ -14,12 +14,12 @@ use std::ptr::null_mut;
 
 // Internal state access - if you want to share Dear ImGui state between modules (e.g. DLL) or allocate it yourself
 // Note that we still point to some static data and members (such as GFontAtlas), so the state instance you end up using will point to the static data within its module
-// ImGuiContext* GetCurrentContext()
+// GetCurrentContext: *mut ImGuiContext()
 pub unsafe fn GetCurrentContext() -> *mut ImGuiContext {
     return GImGui;
 }
 
-// c_void SetCurrentContext(ImGuiContext* ctx)
+// c_void SetCurrentContext(ctx: *mut ImGuiContext)
 pub fn SetCurrentContext(ctx: *mut ImGuiContext) {
     // #ifdef IMGUI_SET_CURRENT_CONTEXT_FUNC
     IMGUI_SET_CURRENT_CONTEXT_FUNC(ctx); // For custom thread-based hackery you may want to have control over this.
@@ -28,9 +28,9 @@ pub fn SetCurrentContext(ctx: *mut ImGuiContext) {
                                          // #endif
 }
 
-// ImGuiContext* CreateContext(shared_font_atlas: *mut ImFontAtlas)
+// CreateContext: *mut ImGuiContext(shared_font_atlas: *mut ImFontAtlas)
 pub unsafe fn CreateContext(shared_font_atlas: *mut ImFontAtlas) -> *mut ImGuiContext {
-    // ImGuiContext* prev_ctx = GetCurrentContext();
+    // prev_ctx: *mut ImGuiContext = GetCurrentContext();
     let mut prev_ctx = GetCurrentContext();
     let mut ctx = ImGuiContext::new(shared_font_atlas);
     SetCurrentContext(&mut ctx);
@@ -41,7 +41,7 @@ pub unsafe fn CreateContext(shared_font_atlas: *mut ImFontAtlas) -> *mut ImGuiCo
     return &mut ctx;
 }
 
-// c_void DestroyContext(ImGuiContext* ctx)
+// c_void DestroyContext(ctx: *mut ImGuiContext)
 pub unsafe fn DestroyContext(mut ctx: *mut ImGuiContext) {
     let mut prev_ctx = GetCurrentContext();
     if ctx == null_mut() {
@@ -59,9 +59,9 @@ pub unsafe fn DestroyContext(mut ctx: *mut ImGuiContext) {
 }
 
 // No specific ordering/dependency support, will see as needed
-// ImGuiID AddContextHook(ImGuiContext* ctx, *const ImGuiContextHook hook)
+// ImGuiID AddContextHook(ctx: *mut ImGuiContext, *const ImGuiContextHook hook)
 pub unsafe fn AddContextHook(ctx: *mut ImGuiContext, hook: *const ImGuiContextHook) -> ImGuiID {
-    // ImGuiContext& g = *ctx;
+    // let g =  ctx;
     let g = ctx;
     // IM_ASSERT(hook->Callback != NULL && hook->HookId == 0 && hook->Type != ImGuiContextHookType_PendingRemoval_);
     g.Hooks.push((*hook).clone());
@@ -71,9 +71,9 @@ pub unsafe fn AddContextHook(ctx: *mut ImGuiContext, hook: *const ImGuiContextHo
 }
 
 // Deferred removal, avoiding issue with changing vector while iterating it
-// c_void RemoveContextHook(ImGuiContext* ctx, ImGuiID hook_id)
+// c_void RemoveContextHook(ctx: *mut ImGuiContext, ImGuiID hook_id)
 pub fn RemoveContextHook(ctx: *mut ImGuiContext, hook_id: ImGuiID) {
-    // ImGuiContext& g = *ctx;
+    // let g =  ctx;
     let g = ctx;
     // IM_ASSERT(hook_id != 0);
     // for (let n: c_int = 0; n < g.Hooks.Size; n++)
@@ -86,9 +86,9 @@ pub fn RemoveContextHook(ctx: *mut ImGuiContext, hook_id: ImGuiID) {
 
 // Call context hooks (used by e.g. test engine)
 // We assume a small number of hooks so all stored in same array
-// c_void CallContextHooks(ImGuiContext* ctx, ImGuiContextHookType hook_type)
+// c_void CallContextHooks(ctx: *mut ImGuiContext, ImGuiContextHookType hook_type)
 pub fn CallContextHooks(ctx: *mut ImGuiContext, hook_type: ImGuiContextHookType) {
-    // ImGuiContext& g = *ctx;
+    // let g =  ctx;
     let g = ctx;
     // for (let n: c_int = 0; n < g.Hooks.Size; n++)
     for n in 0..g.Hooks.len() {

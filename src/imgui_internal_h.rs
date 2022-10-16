@@ -138,8 +138,8 @@ struct ImSpanAllocator
     inline c_void  Reserve(n: c_int, sz: size_t, let mut a: c_int = 4) { IM_ASSERT(n == CurrIdx && n < CHUNKS); CurrOff = IM_MEMALIGN(CurrOff, a); Offsets[n] = CurrOff; Sizes[n] = sz; CurrIdx+= 1; CurrOff += sz; }
     inline c_int   GetArenaSizeInBytes()              { return CurrOff; }
     inline c_void  SetArenaBasePtr(*mut c_void base_ptr)    { BasePtr = (*mut char)base_ptr; }
-    inline *mut c_void GetSpanPtrBegin(n: c_int)             { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (*mut c_void)(BasePtr + Offsets[n]); }
-    inline *mut c_void GetSpanPtrEnd(n: c_int)               { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (*mut c_void)(BasePtr + Offsets[n] + Sizes[n]); }
+    inline *mut c_void GetSpanPtrBegin(n: c_int)             { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (BasePtr + Offsets[n]); }
+    inline *mut c_void GetSpanPtrEnd(n: c_int)               { IM_ASSERT(n >= 0 && n < CHUNKS && CurrIdx == CHUNKS); return (BasePtr + Offsets[n] + Sizes[n]); }
     template<typename T>
     inline c_void  GetSpan(n: c_int, ImSpan<T>* span)    { span.set((*mut T)GetSpanPtrBegin(n), (*mut T)GetSpanPtrEnd(n)); }
 };
@@ -597,11 +597,11 @@ namespace ImGui
      c_void          CallContextHooks(*mut ImGuiContext context, ImGuiContextHookType type);
 
     // Viewports
-     c_void          TranslateWindowsInViewport(*mut ImGuiViewportP viewport, old_pos: &ImVec2, new_pos: &ImVec2);
-     c_void          ScaleWindowsInViewport(*mut ImGuiViewportP viewport,scale: c_float);
-     c_void          DestroyPlatformWindow(*mut ImGuiViewportP viewport);
-     c_void          SetWindowViewport(*mut ImGuiWindow window, *mut ImGuiViewportP viewport);
-     c_void          SetCurrentViewport(*mut ImGuiWindow window, *mut ImGuiViewportP viewport);
+     c_void          TranslateWindowsInViewport(viewport: *mut ImGuiViewport, old_pos: &ImVec2, new_pos: &ImVec2);
+     c_void          ScaleWindowsInViewport(viewport: *mut ImGuiViewport,scale: c_float);
+     c_void          DestroyPlatformWindow(viewport: *mut ImGuiViewport);
+     c_void          SetWindowViewport(*mut ImGuiWindow window, viewport: *mut ImGuiViewport);
+     c_void          SetCurrentViewport(*mut ImGuiWindow window, viewport: *mut ImGuiViewport);
      *const ImGuiPlatformMonitor   GetViewportPlatformMonitor(*mut ImGuiViewport viewport);
      *mut ImGuiViewportP               FindHoveredViewportFromPlatformWindowStack(mouse_platform_pos: &ImVec2);
 
@@ -612,9 +612,9 @@ namespace ImGui
      *mut ImGuiWindowSettings  CreateNewWindowSettings(name: *const c_char);
      *mut ImGuiWindowSettings  FindWindowSettings(id: ImGuiID);
      *mut ImGuiWindowSettings  FindOrCreateWindowSettings(name: *const c_char);
-     c_void                  AddSettingsHandler(*const ImGuiSettingsHandler handler);
+     c_void                  AddSettingsHandler(handler: *const ImGuiSettingsHandler);
      c_void                  RemoveSettingsHandler(type_name: *const c_char);
-     *mut ImGuiSettingsHandler FindSettingsHandler(type_name: *const c_char);
+     *mut FindSettingsHandler: ImGuiSettingsHandler(type_name: *const c_char);
 
     // Scrolling
      c_void          SetNextWindowScroll(scroll: &ImVec2); // Use -1.0 on one axis to leave as-is
@@ -767,7 +767,7 @@ namespace ImGui
 
     // Docking - Builder function needs to be generally called before the node is used/submitted.
     // - The DockBuilderXXX functions are designed to _eventually_ become a public API, but it is too early to expose it and guarantee stability.
-    // - Do not hold on ImGuiDockNode* pointers! They may be invalidated by any split/merge/remove operation and every frame.
+    // - Do not hold on pointers:*mut ImGuiDockNode! They may be invalidated by any split/merge/remove operation and every frame.
     // - To create a DockSpace() node, make sure to set the ImGuiDockNodeFlags_DockSpace flag when calling DockBuilderAddNode().
     //   You can create dockspace nodes (attached to a window) _or_ floating nodes (carry its own window) with this API.
     // - DockBuilderSplitNode() create 2 child nodes within 1 node. The initial node becomes a parent node.
@@ -978,7 +978,7 @@ namespace ImGui
      c_void          DebugHookIdInfo(id: ImGuiID, ImGuiDataType data_type, data_id: *const c_void, data_id_end: *const c_void);
      c_void          DebugNodeColumns(*mut ImGuiOldColumns columns);
      c_void          DebugNodeDockNode(*mut ImGuiDockNode node, label: *const c_char);
-     c_void          DebugNodeDrawList(*mut ImGuiWindow window, *mut ImGuiViewportP viewport, *const ImDrawList draw_list, label: *const c_char);
+     c_void          DebugNodeDrawList(*mut ImGuiWindow window, viewport: *mut ImGuiViewport, *const ImDrawList draw_list, label: *const c_char);
      c_void          DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: *mut ImDrawList, *const ImDrawList draw_list, *const ImDrawCmd draw_cmd, show_mesh: bool, show_aabb: bool);
      c_void          DebugNodeFont(*mut ImFont font);
      c_void          DebugNodeFontGlyph(*mut ImFont font, *const ImFontGlyph glyph);
@@ -991,8 +991,8 @@ namespace ImGui
      c_void          DebugNodeWindowSettings(*mut ImGuiWindowSettings settings);
      c_void          DebugNodeWindowsList(Vec<*mut ImGuiWindow>* windows, label: *const c_char);
      c_void          DebugNodeWindowsListByBeginStackParent(*mut windows: *mut ImGuiWindow, windows_size: c_int, *mut ImGuiWindow parent_in_begin_stack);
-     c_void          DebugNodeViewport(*mut ImGuiViewportP viewport);
-     c_void          DebugRenderViewportThumbnail(draw_list: *mut ImDrawList, *mut ImGuiViewportP viewport, bb: &ImRect);
+     c_void          DebugNodeViewport(viewport: *mut ImGuiViewport);
+     c_void          DebugRenderViewportThumbnail(draw_list: *mut ImDrawList, viewport: *mut ImGuiViewport, bb: &ImRect);
 
     // Obsolete functions
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS

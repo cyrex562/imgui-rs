@@ -1094,7 +1094,7 @@ pub unsafe fn ImageButton(ImTextureID user_texture_id, size: &ImVec2, uv0: &ImVe
         return false;
 
     // Default to using texture ID as ID. User can still push string/integer prefixes.
-    PushID((*mut c_void)user_texture_id);
+    PushID(user_texture_id);
     let mut id: ImGuiID =  window.GetID("#image");
     PopID();
 
@@ -1882,7 +1882,7 @@ let item_text: *const c_char;
 // Combo box helper allowing to pass an array of strings.
 pub unsafe fn Combo(label: *const c_char, *mut current_item: c_int, const: *const c_char items[], items_count: c_int, height_in_items: c_int) -> bool
 {
-    let value_changed: bool = Combo(label, current_item, Items_ArrayGetter, (*mut c_void)items, items_count, height_in_items);
+    let value_changed: bool = Combo(label, current_item, Items_ArrayGetter, items, items_count, height_in_items);
     return value_changed;
 }
 
@@ -1896,7 +1896,7 @@ pub unsafe fn Combo(label: *const c_char, *mut current_item: c_int, items_separa
         p += strlen(p) + 1;
         items_count+= 1;
     }
-    let mut value_changed: bool =  Combo(label, current_item, Items_SingleStringGetter, (*mut c_void)items_separated_by_zeros, items_count, height_in_items);
+    let mut value_changed: bool =  Combo(label, current_item, Items_SingleStringGetter, items_separated_by_zeros, items_count, height_in_items);
     return value_changed;
 }
 
@@ -2456,7 +2456,7 @@ pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, *mut c_
         value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
         PopID();
         PopItemWidth();
-        p_data = (*mut c_void)((*mut char)p_data + type_size);
+        p_data = ((*mut char)p_data + type_size);
     }
     PopID();
 
@@ -3044,7 +3044,7 @@ pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, *mut 
         value_changed |= SliderScalar("", data_type, v, v_min, v_max, format, flags);
         PopID();
         PopItemWidth();
-        v = (*mut c_void)((*mut char)v + type_size);
+        v = ((*mut char)v + type_size);
     }
     PopID();
 
@@ -3490,7 +3490,7 @@ pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, *mut c
         value_changed |= InputScalar("", data_type, p_data, p_step, p_step_fast, format, flags);
         PopID();
         PopItemWidth();
-        p_data = (*mut c_void)((*mut char)p_data + type_size);
+        p_data = ((*mut char)p_data + type_size);
     }
     PopID();
 
@@ -3508,7 +3508,7 @@ pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, *mut c
 pub unsafe fn InputFloat(label: *const c_char, *mutv: c_float,step: c_float,step_fast: c_float, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
-    return InputScalar(label, ImGuiDataType_Float, (*mut c_void)v, (*mut c_void)(step > 0.0 ? &step : null_mut()), (*mut c_void)(step_fast > 0.0 ? &step_fast : null_mut()), format, flags);
+    return InputScalar(label, ImGuiDataType_Float, v, (step > 0.0 ? &step : null_mut()), (step_fast > 0.0 ? &step_fast : null_mut()), format, flags);
 }
 
 pub unsafe fn InputFloat2(label: *const c_char,v: c_float[2], format: *const c_char, ImGuiInputTextFlags flags) -> bool
@@ -3530,7 +3530,7 @@ pub unsafe fn InputInt(label: *const c_char, *mut v: c_int, step: c_int, step_fa
 {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
     let mut  format: *const c_char = if flags & ImGuiInputTextFlags_CharsHexadecimal { "%08X"} else { "%d"};
-    return InputScalar(label, ImGuiDataType_S32, (*mut c_void)v, (*mut c_void)(step > 0 ? &step : null_mut()), (*mut c_void)(step_fast > 0 ? &step_fast : null_mut()), format, flags);
+    return InputScalar(label, ImGuiDataType_S32, v, (step > 0 ? &step : null_mut()), (step_fast > 0 ? &step_fast : null_mut()), format, flags);
 }
 
 pub unsafe fn InputInt2(label: *const c_char, v: c_int[2], ImGuiInputTextFlags flags) -> bool
@@ -3551,7 +3551,7 @@ pub unsafe fn InputInt4(label: *const c_char, v: c_int[4], ImGuiInputTextFlags f
 pub unsafe fn InputDouble(label: *const c_char, *mut double v, double step, double step_fast, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
-    return InputScalar(label, ImGuiDataType_Double, (*mut c_void)v, (*mut c_void)(step > 0.0 ? &step : null_mut()), (*mut c_void)(step_fast > 0.0 ? &step_fast : null_mut()), format, flags);
+    return InputScalar(label, ImGuiDataType_Double, v, (step > 0.0 ? &step : null_mut()), (step_fast > 0.0 ? &step_fast : null_mut()), format, flags);
 }
 
 //-------------------------------------------------------------------------
@@ -3938,7 +3938,7 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
     let old_length: c_int = state.CurLenW;
     let new_length: c_int = ImTextCountCharsFromUtf8(new_buf_a, new_buf_a + new_length_a);
     g.TempBuffer.reserve_discard((new_length + 1) * sizeof);
-    *mut let new_buf: ImWchar = (*mut ImWchar)(*mut c_void)g.TempBuffer.Data;
+    *mut let new_buf: ImWchar = (*mut ImWchar)g.TempBuffer.Data;
     ImTextStrFromUtf8(new_buf, new_length + 1, new_buf_a, new_buf_a + new_length_a);
 
     let shorter_length: c_int = ImMin(old_length, new_length);
@@ -6479,7 +6479,7 @@ pub unsafe fn EndListBox()
 
 pub unsafe fn ListBox(label: *const c_char, current_item:  *mut c_int, const: *const c_char items[], items_count: c_int, height_items: c_int) -> bool
 {
-    let value_changed: bool = ListBox(label, current_item, Items_ArrayGetter, (*mut c_void)items, items_count, height_items);
+    let value_changed: bool = ListBox(label, current_item, Items_ArrayGetter, items, items_count, height_items);
     return value_changed;
 }
 
@@ -6678,7 +6678,7 @@ staticPlot_ArrayGetter: c_float(data: *mut c_void, idx: c_int)
 pub unsafe fn PlotLines(label: *const c_char, *values: c_float, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2, stride: c_int)
 {
     ImGuiPlotArrayGetterData data(values, stride);
-    PlotEx(ImGuiPlotType_Lines, label, &Plot_ArrayGetter, (*mut c_void)&data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
+    PlotEx(ImGuiPlotType_Lines, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
 pub unsafe fn PlotLines(label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2)
@@ -6689,7 +6689,7 @@ pub unsafe fn PlotLines(label: *const c_char, c_float (*values_getter)(data: *mu
 pub unsafe fn PlotHistogram(label: *const c_char, *values: c_float, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2, stride: c_int)
 {
     ImGuiPlotArrayGetterData data(values, stride);
-    PlotEx(ImGuiPlotType_Histogram, label, &Plot_ArrayGetter, (*mut c_void)&data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
+    PlotEx(ImGuiPlotType_Histogram, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
 pub unsafe fn PlotHistogram(label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2)
@@ -6866,12 +6866,12 @@ pub unsafe fn EndMenuBar()
 // Important: calling order matters!
 // FIXME: Somehow overlapping with docking tech.
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
-pub unsafe fn BeginViewportSideBar(name: *const c_char, ImGuiViewport* viewport_p, dir: ImGuiDir,axis_size: c_float, window_flags: ImGuiWindowFlags) -> bool
+pub unsafe fn BeginViewportSideBar(name: *const c_char, viewport_p: *mut ImGuiViewport, dir: ImGuiDir,axis_size: c_float, window_flags: ImGuiWindowFlags) -> bool
 {
     // IM_ASSERT(dir != ImGuiDir_None);
 
     let mut bar_window: *mut ImGuiWindow =  FindWindowByName(name);
-    let mut viewport: *mut ImGuiViewport =  (*mut c_void)(viewport_p ? viewport_p : GetMainViewport());
+    let mut viewport: *mut ImGuiViewport =  (viewport_p ? viewport_p : GetMainViewport());
     if (bar_window == null_mut() || bar_window.BeginCount == 0)
     {
         // Calculate and set window size/position
@@ -6905,7 +6905,7 @@ pub unsafe fn BeginViewportSideBar(name: *const c_char, ImGuiViewport* viewport_
 pub unsafe fn BeginMainMenuBar() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut ImGuiViewport =  (*mut c_void)GetMainViewport();
+    let mut viewport: *mut ImGuiViewport =  GetMainViewport();
 
     // Notify of viewport change so GetFrameHeight() can be accurate in case of DPI change
     SetCurrentViewport(null_mut(), viewport);
@@ -7353,7 +7353,7 @@ bool    BeginTabBar(str_id: *const c_char, ImGuiTabBarFlags flags)
     return BeginTabBarEx(tab_bar, tab_bar_bb, flags | ImGuiTabBarFlags_IsFocused, null_mut());
 }
 
-bool    BeginTabBarEx(ImGuiTabBar* tab_bar, tab_bar_bb: &ImRect, ImGuiTabBarFlags flags, ImGuiDockNode* dock_node)
+bool    BeginTabBarEx(ImGuiTabBar* tab_bar, tab_bar_bb: &ImRect, ImGuiTabBarFlags flags, dock_node:*mut ImGuiDockNode)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -8244,7 +8244,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
         SetItemAllowOverlap();
 
     // Drag and drop a single floating window node moves it
-    ImGuiDockNode* node = docked_window ? docked_window.DockNode : null_mut();
+    node:*mut ImGuiDockNode = docked_window ? docked_window.DockNode : null_mut();
     let single_floating_window_node: bool = node && node.IsFloatingNode() && (node.Windows.len() == 1);
     if (held && single_floating_window_node && IsMouseDragging(0, 0.0))
     {
@@ -8386,7 +8386,7 @@ c_void    SetTabItemClosed(label: *const c_char)
     else if (let mut window: *mut ImGuiWindow =  FindWindowByName(label))
     {
         if (window.DockIsActive)
-            if (ImGuiDockNode* node = window.DockNode)
+            if (node:*mut ImGuiDockNode = window.DockNode)
             {
                 let mut tab_id: ImGuiID =  TabBarCalcTabID(node.TabBar, label, window);
                 TabBarRemoveTab(node.TabBar, tab_id);
