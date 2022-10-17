@@ -1,5 +1,5 @@
 use libc::{c_int, c_short};
-use crate::a_stb_textedit::{STB_TEXTEDIT_CHARTYPE, STB_TEXTEDIT_UNDOCHARCOUNT, STB_TEXTEDIT_UNDOSTATECOUNT};
+use crate::stb_textedit::{STB_TEXTEDIT_CHARTYPE, STB_TEXTEDIT_UNDOCHARCOUNT, STB_TEXTEDIT_UNDOSTATECOUNT};
 use crate::stb_undo_record::StbUndoRecord;
 
 #[derive(Default,Debug,Clone)]

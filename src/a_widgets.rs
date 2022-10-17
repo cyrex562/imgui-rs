@@ -1807,7 +1807,7 @@ pub unsafe fn EndComboPreview()
 // Getter for the old Combo() API: const char*[]
 pub unsafe fn Items_ArrayGetter(data: *mut c_void, idx: c_int, *const out_text: *mut c_char) -> bool
 {
-    *const char *mut const items = (*const char *mut const)data;
+    *const mut: *mut c_char const items = (*const mut: *mut c_char const)data;
     if (out_text)
         *out_text = items[idx];
     return true;
@@ -1917,7 +1917,7 @@ pub unsafe fn Combo(label: *const c_char, *mut current_item: c_int, items_separa
 static const ImGuiDataTypeInfo GDataTypeInfo[] =
 {
     { sizeof,             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
-    { sizeof(c_uchar),    "U8",   "%u",   "%u"    },
+    { sizeof,    "U8",   "%u",   "%u"    },
     { sizeof,            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
     { sizeof,   "U16",  "%u",   "%u"    },
     { sizeof,              "S32",  "%d",   "%d"    },  // ImGuiDataType_S32
@@ -2456,7 +2456,7 @@ pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, p_data:
         value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
         PopID();
         PopItemWidth();
-        p_data = ((*mut char)p_data + type_size);
+        p_data = (p_data + type_size);
     }
     PopID();
 
@@ -3044,7 +3044,7 @@ pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, v: *m
         value_changed |= SliderScalar("", data_type, v, v_min, v_max, format, flags);
         PopID();
         PopItemWidth();
-        v = ((*mut char)v + type_size);
+        v = (v + type_size);
     }
     PopID();
 
@@ -3490,7 +3490,7 @@ pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, p_data
         value_changed |= InputScalar("", data_type, p_data, p_step, p_step_fast, format, flags);
         PopID();
         PopItemWidth();
-        p_data = ((*mut char)p_data + type_size);
+        p_data = (p_data + type_size);
     }
     PopID();
 
@@ -3748,7 +3748,7 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, pos: c_int,
 
 // stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
 // the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
-pub unsafe fn stb_textedit_replace(*mut ImGuiInputTextState str, *mut STB_TexteditState state, *const STB_TEXTEDIT_CHARTYPE text, text_len: c_int)
+pub unsafe fn stb_textedit_replace(*mut ImGuiInputTextState str, *mut STB_TexteditState state, *const text: STB_TEXTEDIT_CHARTYPE, text_len: c_int)
 {
     stb_text_makeundo_replace(str, state, 0, str->CurLenW, text_len);
     ImStb::STB_TEXTEDIT_DELETECHARS(str, 0, str->CurLenW);
@@ -3958,7 +3958,7 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
     let insert_len: c_int = new_last_diff - first_diff + 1;
     let delete_len: c_int = old_last_diff - first_diff + 1;
     if (insert_len > 0 || delete_len > 0)
-        if (*mut STB_TEXTEDIT_CHARTYPE p = stb_text_createundo(&state.Stb.undostate, first_diff, delete_len, insert_len))
+        if (*mut p: STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&state.Stb.undostate, first_diff, delete_len, insert_len))
             for (let i: c_int = 0; i < delete_len; i++)
                 p[i] = ImStb::STB_TEXTEDIT_GETCHAR(state, first_diff + i);
 }
@@ -4398,7 +4398,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
                 let ib: c_int = state.HasSelection() ? ImMin(state.Stb.select_start, state.Stb.select_end) : 0;
                 let ie: c_int = state.HasSelection() ? ImMax(state.Stb.select_start, state.Stb.select_end) : state.CurLenW;
                 let clipboard_data_len: c_int = ImTextCountUtf8BytesFromStr(state.TextW.Data + ib, state.TextW.Data + ie) + 1;
-                clipboard_data: *mut c_char = (*mut char)IM_ALLOC(clipboard_data_len * sizeof);
+                clipboard_data: *mut c_char = IM_ALLOC(clipboard_data_len * sizeof);
                 ImTextStrToUtf8(clipboard_data, clipboard_data_len, state.TextW.Data + ib, state.TextW.Data + ie);
                 SetClipboardText(clipboard_data);
                 MemFree(clipboard_data);

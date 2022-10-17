@@ -2058,7 +2058,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         // In practice, if you frequently use a given type that is not covered by the normal API entry points,
         // you can wrap it yourself inside a 1 line function which can take typed argument as value instead of void*,
         // and then pass their address to the generic function. For example:
-        //   MySliderU64: bool(const char *label, u64* value, u64 min = 0, u64 max = 0, const char* format = "%lld")
+        //   MySliderU64: bool(const label: *mut c_char, u64* value, u64 min = 0, u64 max = 0, const char* format = "%lld")
         //   {
         //      return SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format);
         //   }

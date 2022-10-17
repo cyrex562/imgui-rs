@@ -301,7 +301,7 @@ static stbrp__skyline_find_min_y: c_int(stbrp_context *c, stbrp_node *first, x0:
    #if 0
    // skip in case we're past the node
    while (node.next->x <= x0)
-      ++node;
+      node += 1;
    #else
    STBRP_ASSERT(node.next->x > x0); // we ended up handling this in the caller for efficiency
    #endif
@@ -511,12 +511,12 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, w
       cur = context.active_head;
       while (cur) {
          cur = cur.next;
-         ++count;
+         count += 1;
       }
       cur = context.free_head;
       while (cur) {
          cur = cur.next;
-         ++count;
+         count += 1;
       }
       STBRP_ASSERT(count == context.num_nodes2);
    }

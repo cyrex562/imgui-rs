@@ -41,7 +41,7 @@ impl ImSpanAllocator {
         self.CurrOff
     }
 
-    // inline c_void  SetArenaBasePtr(base_ptr: *mut c_void)    { BasePtr = (*mut char)base_ptr; }
+    // inline c_void  SetArenaBasePtr(base_ptr: *mut c_void)    { BasePtr = base_ptr; }
     pub fn SetArenaBasePtr(&mut self, base_ptr: *mut c_void) {
         self.BasePtr = base_ptr
     }

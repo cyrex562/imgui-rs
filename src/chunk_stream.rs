@@ -59,10 +59,10 @@ impl ImChunkStream<T> {
         // HDR_SZ: size_t = 4;
         let mut HDR_SZ: usize = 4;
         // IM_ASSERT(p >= begin() && p < end());
-        // p = (*mut T)((*mut char)p + chunk_size(p));
+        // p = (*mut T)(p + chunk_size(p));
         p = p + self.chunk_size(p);
 
-        // if (p == (*mut T)((*mut char)end() + HDR_SZ)) {return ( * mut T)0;}
+        // if (p == (*mut T)(end() + HDR_SZ)) {return ( * mut T)0;}
         if p == self.end() + HDR_SZ {
             return null_mut();
         }

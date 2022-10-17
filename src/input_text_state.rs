@@ -5,7 +5,7 @@ use crate::input_text_flags::ImGuiInputTextFlags;
 use crate::math_ops::ImMin;
 use crate::type_defs::{ImGuiID, ImWchar};
 use crate::stb_text_edit_state::STB_TexteditState;
-use crate::a_stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
+use crate::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
 
 // Internal state of the currently focused/edited text input box
 // For a given item ID, access with GetInputTextState()

@@ -115,7 +115,7 @@ pub unsafe fn FindViewportByPlatformHandle(platform_handle: *mut c_void) -> *mut
 pub unsafe fn SetCurrentViewport(current_window: *mut ImGuiWindow, viewport: *mut ImGuiViewport)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // (c_void)current_window;
+    // current_window;
 
     if (viewport){
         viewport.LastFrameActive = g.FrameCount;}

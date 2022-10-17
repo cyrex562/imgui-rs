@@ -34,7 +34,7 @@ impl ImGuiWindowSettings {
         }
     }
 
-    // *mut char GetName()             { return (*mut char)(this + 1); }
+    // *mut char GetName()             { return (this + 1); }
     pub fn GetName(&mut self) -> *mut c_char {
         todo!()
     }

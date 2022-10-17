@@ -68,7 +68,7 @@ mod tab_bar_flags;
 mod ptr_or_index;
 mod shrink_width_item;
 mod input_text_state;
-mod a_stb_textedit;
+mod stb_textedit;
 mod stb_text_edit_state;
 mod stb_undo_state;
 mod stb_undo_record;
@@ -235,6 +235,18 @@ mod input_text_callback_data;
 mod table_sort_specs;
 mod once_upon_a_frame;
 mod dock_node_tree_info;
+mod docking_ops;
+mod platform_support;
+mod stb_text_edit_row;
+mod stb_find_state;
+mod a_stb_truetype;
+mod stb_tt_aligned_quad;
+mod stb_tt_buf;
+mod stb_tt_baked_char;
+mod stb_tt_packed_char;
+mod stb_tt_packed_range;
+mod stb_tt_packed_context;
+mod stb_tt_fontinfo;
 
 
 // c_void Initialize()
