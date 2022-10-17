@@ -1,12 +1,14 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
+use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
 use crate::imgui::GImGui;
 use crate::input_ops::GetKeyData;
 use crate::key::{ImGuiKey, ImGuiKey_Gamepad_BEGIN, ImGuiKey_Gamepad_END, ImGuiKey_Keyboard_BEGIN, ImGuiKey_Keyboard_END, ImGuiKey_KeysData_OFFSET, ImGuiKey_LegacyNativeKey_BEGIN, ImGuiKey_LegacyNativeKey_END, ImGuiKey_ModAlt, ImGuiKey_ModCtrl, ImGuiKey_ModShift, ImGuiKey_ModSuper, ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY, ImGuiKey_NamedKey_BEGIN, ImGuiKey_NamedKey_END};
 use crate::key_data::ImGuiKeyData;
 use crate::mod_flags::{ImGuiModFlags, ImGuiModFlags_Alt, ImGuiModFlags_Ctrl, ImGuiModFlags_None, ImGuiModFlags_Shift, ImGuiModFlags_Super};
 use crate::mouse_button::ImGuiMouseButton_COUNT;
+use crate::nav_ops::NavMoveRequestCancel;
 
 // static c_void UpdateKeyboardInputs()
 pub unsafe fn UpdateKeyboardInputs()
@@ -128,7 +130,7 @@ pub unsafe fn UpdateKeyboardInputs()
 
 
 // static c_void UpdateAliasKey(ImGuiKey key, v: bool, c_float analog_value)
-pub fn UpdateAliasKey(key: ImGuiKey, v: bool, analog_value: c_float) {
+pub unsafe fn UpdateAliasKey(key: ImGuiKey, v: bool, analog_value: c_float) {
     // IM_ASSERT(IsAliasKey(key));
     let mut key_data: *mut ImGuiKeyData = GetKeyData(key);
     key_data.Down = v;

@@ -7,6 +7,7 @@ use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::window_class::ImGuiWindowClass;
 use crate::type_defs::ImGuiID;
+use crate::window::window_class::ImGuiWindowClass;
 
 // Storage for SetNexWindow** functions
 #[derive(Default, Debug, Clone)]

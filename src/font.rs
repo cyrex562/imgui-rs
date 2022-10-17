@@ -13,7 +13,7 @@ use crate::draw_vert::ImDrawVert;
 use crate::font_atlas::ImFontAtlas;
 use crate::font_config::ImFontConfig;
 use crate::font_glyph::ImFontGlyph;
-use crate::math_ops::{ImClamp, ImMax};
+use crate::math_ops::{ImCharIsBlankA, ImCharIsBlankW, ImClamp, ImMax};
 use crate::string_ops::ImTextCharFromUtf8;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;

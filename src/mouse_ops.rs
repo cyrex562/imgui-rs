@@ -7,12 +7,23 @@ use crate::config_flags::{ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_N
 use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::dock_node::ImGuiDockNode;
 use crate::drag_drop_flags::ImGuiDragDropFlags_SourceExtern;
-use {ClearActiveID, KeepAliveID, SetActiveID};
+use crate::dock_context_ops::DockContextQueueUndockNode;
+use crate::drag_drop_ops::IsDragDropPayloadBeingAccepted;
+use crate::id_ops::{ClearActiveID, KeepAliveID, SetActiveID};
 use crate::imgui::GImGui;
 use crate::input_ops::{IsMouseClicked, IsMouseDragging, IsMousePosValid};
 use crate::key::{ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY};
+use crate::math_ops::{ImClamp, ImMax, ImMin};
+use crate::popup_flags::ImGuiPopupFlags_AnyPopupLevel;
+use crate::popup_ops::{ClosePopupsOverWindow, GetTopMostPopupModal, IsPopupOpen};
+use crate::scrolling_ops::{SetScrollX, SetScrollY};
 use crate::vec2::ImVec2;
+use crate::viewport_ops::UpdateTryMergeWindowIntoHostViewport;
+use crate::window::find::{IsWindowAbove, IsWindowWithinBeginStackOf};
+use crate::window::focus::FocusWindow;
 use crate::window::ImGuiWindow;
+use crate::window::props::SetWindowPos;
+use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
 
 // c_void StartMouseMovingWindow(window: *mut ImGuiWindow)

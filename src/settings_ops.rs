@@ -16,7 +16,20 @@
 // - WindowSettingsHandler_***() [Internal]
 //-----------------------------------------------------------------------------
 
-use crate::{string_ops::str_to_const_c_char_ptr, imgui::GImGui, window::window_settings::ImGuiWindowSettings, type_defs::ImGuiID, settings_handler::ImGuiSettingsHandler};
+use std::ptr::null_mut;
+use libc::{c_char, memcpy, size_t, sscanf, strlen};
+use crate::{string_ops::str_to_const_c_char_ptr, imgui::GImGui, window::window_settings::ImGuiWindowSettings, type_defs::ImGuiID, settings_handler::ImGuiSettingsHandler, ImFileClose, ImHashStr};
+use crate::context::ImGuiContext;
+use crate::file_ops::{ImFileLoadToMemory, ImFileOpen, ImFileWrite};
+use crate::string_ops::ImStrchrRange;
+use crate::text_buffer::ImGuiTextBuffer;
+use crate::type_defs::ImFileHandle;
+use crate::utils::is_not_null;
+use crate::vec2::ImVec2ih;
+use crate::window::find::FindWindowByID;
+use crate::window::ImGuiWindow;
+use crate::window::ops::ApplyWindowSettings;
+use crate::window::window_flags::ImGuiWindowFlags_NoSavedSettings;
 
 // Called by NewFrame()
 pub unsafe fn UpdateSettings()
@@ -53,7 +66,7 @@ pub unsafe fn MarkIniSettingsDirty()
         g.SettingsDirtyTimer = g.IO.IniSavingRate;}
 }
 
-pub unsafe fn MarkIniSettingsDirty(window: *mut ImGuiWindow)
+pub unsafe fn MarkIniSettingsDirty2(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(window.Flags & ImGuiWindowFlags_NoSavedSettings)){

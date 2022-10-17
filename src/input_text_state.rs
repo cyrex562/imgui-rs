@@ -2,6 +2,7 @@
 
 use libc::{c_float, c_int};
 use crate::input_text_flags::ImGuiInputTextFlags;
+use crate::math_ops::ImMin;
 use crate::type_defs::{ImGuiID, ImWchar};
 use crate::stb_text_edit_state::STB_TexteditState;
 use crate::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;

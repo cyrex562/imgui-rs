@@ -11,7 +11,12 @@ use crate::error_ops::{ErrorCheckEndFrameSanityChecks, ErrorCheckNewFrameSanityC
 use crate::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
 use crate::font_ops::SetCurrentFont;
 use crate::garbage_collection::GcCompactTransientWindowBuffers;
-use {ClearActiveID, KeepAliveID};
+
+use crate::backend_flags::ImGuiBackendFlags_RendererHasVtxOffset;
+use crate::dock_context_ops::{DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking};
+use crate::drag_drop_ops::ClearDragDrop;
+use crate::id_ops::{ClearActiveID, KeepAliveID};
+use crate::imgui_cpp::{UpdateDebugToolItemPicker, UpdateDebugToolStackQueries};
 use crate::input_ops::{IsMouseDown, UpdateInputEvents};
 use crate::item_flags::ImGuiItemFlags_None;
 use crate::key::ImGuiKey_Escape;
@@ -19,11 +24,15 @@ use crate::keyboard_ops::UpdateKeyboardInputs;
 use crate::math_ops::{ImMax, ImMin};
 use crate::mouse_cursor::ImGuiMouseCursor_Arrow;
 use crate::mouse_ops::{UpdateHoveredWindowAndCaptureFlags, UpdateMouseInputs, UpdateMouseMovingWindowEndFrame, UpdateMouseMovingWindowNewFrame, UpdateMouseWheel};
+use crate::nav_ops::{NavEndFrame, NavUpdate};
 use crate::platform_ime_data::ImGuiPlatformImeData;
+use crate::popup_ops::GetTopMostPopupModal;
 use crate::rect::ImRect;
+use crate::settings_ops::UpdateSettings;
 use crate::string_ops::str_to_const_c_char_ptr;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
+use crate::viewport_ops::{FindViewportByID, GetMainViewport, SetCurrentViewport, UpdateViewportsEndFrame, UpdateViewportsNewFrame};
 use crate::window::focus::FocusTopMostWindowUnderOne;
 use crate::window::ImGuiWindow;
 use crate::window::ops::{AddWindowToSortBuffer, Begin, End, SetNextWindowSize};
@@ -223,7 +232,7 @@ pub unsafe fn NewFrame() {
 
     // Undocking
     // (needs to be before UpdateMouseMovingWindowNewFrame so the window is already offset and following the mouse on the detaching frame)
-    DockContextNewFrameUpdateUndocking(&g);
+    DockContextNewFrameUpdateUndocking(g);
 
     // Find hovered window
     // (needs to be before UpdateMouseMovingWindowNewFrame so we fill g.HoveredWindowUnderMovingWindow on the mouse release frame)
@@ -300,7 +309,7 @@ pub unsafe fn NewFrame() {
     // g.GroupStack.resize(0);
 
     // Docking
-    DockContextNewFrameUpdateDocking(&g);
+    DockContextNewFrameUpdateDocking(g);
 
     // [DEBUG] Update debug features
     UpdateDebugToolItemPicker();
@@ -351,7 +360,7 @@ pub unsafe fn EndFrame() {
     NavEndFrame();
 
     // Update docking
-    DockContextEndFrame(&g);
+    DockContextEndFrame(g);
 
     SetCurrentViewport(null_mut(), null_mut());
 

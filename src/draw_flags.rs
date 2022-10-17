@@ -1,6 +1,7 @@
 #![allow(non_upper_case_globals)]
 
 use libc::c_int;
+use crate::utils::flag_clear;
 
 // typedef int ImDrawFlags;            // -> enum ImDrawFlags_          // Flags: for ImDrawList functions
 pub type ImDrawFlags = c_int;

@@ -1,5 +1,6 @@
 use crate::type_defs::ImWchar;
 use libc::{c_int, size_t};
+use crate::bit_vector::ImBitVector;
 
 // #ifdef IMGUI_ENABLE_STB_TRUETYPE
 // Temporary data for one source font (multiple source fonts can be merged into one destination ImFont)

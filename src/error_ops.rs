@@ -3,14 +3,16 @@ use libc::c_void;
 use crate::child_ops::EndChild;
 use crate::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_ViewportsEnable};
 use crate::GImGui;
-use PopID;
+use crate::backend_flags::{ImGuiBackendFlags_HasMouseCursors, ImGuiBackendFlags_PlatformHasViewports, ImGuiBackendFlags_RendererHasViewports};
+use crate::group_ops::EndGroup;
+use crate::id_ops::PopID;
 use crate::item_ops::PopItemFlag;
 use crate::key::{ImGuiKey_COUNT, ImGuiKey_NamedKey_BEGIN};
 use crate::keyboard_ops::GetMergedModFlags;
 use crate::platform_monitor::ImGuiPlatformMonitor;
 use crate::style_ops::PopStyleColor;
 use crate::type_defs::ImGuiErrorLogCallback;
-use crate::utils::{flag_set, is_not_null};
+use crate::utils::{flag_clear, flag_set, is_not_null};
 use crate::window::focus::PopFocusScope;
 use crate::window::ops::{End, EndDisabled};
 use crate::window::window_flags::ImGuiWindowFlags_ChildWindow;
@@ -52,7 +54,7 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks()
 // #endif
 
     // Check: the io.ConfigWindowsResizeFromEdges option requires backend to honor mouse cursor changes and set the ImGuiBackendFlags_HasMouseCursors flag accordingly.
-    if (g.IO.ConfigWindowsResizeFromEdges && !(g.IO.BackendFlags & ImGuiBackendFlags_HasMouseCursors)) {
+    if (g.IO.ConfigWindowsResizeFromEdges && flag_clear(g.IO.BackendFlags , ImGuiBackendFlags_HasMouseCursors)) {
         g.IO.ConfigWindowsResizeFromEdges = false;
     }
 

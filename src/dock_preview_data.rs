@@ -1,3 +1,5 @@
+use std::ptr::null_mut;
+use libc::c_float;
 use crate::{rect::ImRect, direction::{ImGuiDir_COUNT, ImGuiDir, ImGuiDir_None}, dock_node::ImGuiDockNode};
 
 #[derive(Default,Debug,Clone, Copy)]
@@ -19,7 +21,7 @@ pub struct ImGuiDockPreviewData
     pub SplitDir: ImGuiDir,
     pub SplitRatio: c_float,
     // ImRect          DropRectsDraw[ImGuiDir_COUNT + 1];  // May be slightly different from hit-testing drop rects used in DockNodeCalcDropRects()
-    pub DropRectsDraw: [ImRect; ImGuiDir_COUNT + 1],
+    pub DropRectsDraw: [ImRect; (ImGuiDir_COUNT + 1) as usize],
     
 }
 

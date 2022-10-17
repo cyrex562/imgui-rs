@@ -1,4 +1,5 @@
 use libc::size_t;
+use crate::bit_vector::ImBitVector;
 
 // Temporary data for one destination ImFont* (multiple source fonts can be merged into one destination ImFont)
 #[derive(Default, Debug, Copy, Clone)]

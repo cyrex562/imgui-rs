@@ -1,6 +1,25 @@
 #![allow(non_snake_case)]
 
-use crate::{type_defs::ImGuiID, viewport::ImGuiViewport, imgui::GImGui, window::{ImGuiWindow, window_flags::{ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_Tooltip, ImGuiWindowFlags_Popup, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground}}, rect::ImRect, vec2::ImVec2, config_flags::{ImGuiConfigFlags_ViewportsEnable, ImGuiConfigFlags_DpiEnableScaleViewports}, viewport_flags::{ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_IsPlatformWindow, ImGuiViewportFlags_TopMost, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoFocusOnClick}};
+use std::ptr::null_mut;
+use libc::{c_void, memcmp};
+use crate::{type_defs::ImGuiID, viewport::ImGuiViewport, imgui::GImGui, window::{ImGuiWindow, window_flags::{ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_Tooltip, ImGuiWindowFlags_Popup, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground}}, rect::ImRect, vec2::ImVec2, config_flags::{ImGuiConfigFlags_ViewportsEnable, ImGuiConfigFlags_DpiEnableScaleViewports}, viewport_flags::{ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_IsPlatformWindow, ImGuiViewportFlags_TopMost, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoFocusOnClick}, ImHashStr};
+use crate::backend_flags::ImGuiBackendFlags_HasMouseHoveredViewport;
+use crate::context_ops::GetPlatformIO;
+use crate::draw_list::ImDrawList;
+use crate::input_ops::{IsAnyMouseDown, IsMousePosValid};
+use crate::io_ops::GetIO;
+use crate::math_ops::{ImMax, ImMin};
+use crate::nav_ops::NavCalcPreferredRefPos;
+use crate::next_window_data_flags::ImGuiNextWindowDataFlags_HasViewport;
+use crate::platform_io::ImGuiPlatformIO;
+use crate::platform_monitor::ImGuiPlatformMonitor;
+use crate::render_ops::FindRenderedTextEnd;
+use crate::settings_ops::MarkIniSettingsDirty;
+use crate::utils::{flag_clear, is_not_null};
+use crate::viewport_flags::{ImGuiViewportFlags_NoAutoMerge, ImGuiViewportFlags_None};
+use crate::window::find::GetWindowForTitleDisplay;
+use crate::window::ops::{BringWindowToDisplayFront, IsWindowActiveAndVisible, ScaleWindow, TranslateWindow};
+use crate::window::window_flags::ImGuiWindowFlags;
 
 // static c_void SetupViewportDrawData(viewport: *mut ImGuiViewport, Vec<ImDrawList*>* draw_lists)
 pub fn SetupViewportDrawData(viewport: *mut ImGuiViewport, draw_lists: *mut Vec<*mut ImDrawList>) {

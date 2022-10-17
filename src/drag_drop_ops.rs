@@ -1,19 +1,22 @@
 use std::ptr::null_mut;
-use libc::{c_int, c_void, memcpy, memset, size_t};
-use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_AcceptNoPreviewTooltip, ImGuiDragDropFlags_None, ImGuiDragDropFlags_SourceAllowNullID, ImGuiDragDropFlags_SourceExtern, ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoPreviewTooltip};
+use libc::{c_char, c_float, c_int, c_void, memcpy, memset, size_t};
+use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_AcceptBeforeDelivery, ImGuiDragDropFlags_AcceptNoDrawDefaultRect, ImGuiDragDropFlags_AcceptNoPreviewTooltip, ImGuiDragDropFlags_None, ImGuiDragDropFlags_SourceAllowNullID, ImGuiDragDropFlags_SourceExtern, ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoPreviewTooltip};
 use crate::payload::ImGuiPayload;
 use crate::{GImGui, ImHashStr};
 use crate::condition::{ImGuiCond, ImGuiCond_Always};
-use {KeepAliveID, SetActiveID};
-use crate::input_ops::{IsMouseDragging, IsMouseHoveringRect};
+use crate::color::ImGuiCol_DragDropTarget;
+use crate::id_ops::{KeepAliveID, SetActiveID};
+use crate::input_ops::{IsMouseDown, IsMouseDragging, IsMouseHoveringRect};
 use crate::item_ops::ItemHoverable;
 use crate::item_status_flags::{ImGuiItemStatusFlags_HasDisplayRect, ImGuiItemStatusFlags_HoveredRect};
 use crate::mouse_button::{ImGuiMouseButton, ImGuiMouseButton_Left};
 use crate::rect::ImRect;
 use crate::string_ops::{ImStrncpy, str_to_const_c_char_ptr};
+use crate::style_ops::GetColorU32;
 use crate::tooltip_ops::{BeginTooltip, EndTooltip};
 use crate::type_defs::ImGuiID;
 use crate::utils::flag_clear;
+use crate::vec2::ImVec2;
 use crate::window::focus::FocusWindow;
 use crate::window::ImGuiWindow;
 
@@ -286,7 +289,7 @@ pub unsafe fn BeginDragDropTarget() -> bool
         return false;}
 
     // IM_ASSERT(g.DragDropWithinTarget == false);
-    g.DragDropTargetRect = display_rect;
+    g.DragDropTargetRect = display_rect.clone();
     g.DragDropTargetId = id;
     g.DragDropWithinTarget = true;
     return true;
@@ -298,22 +301,22 @@ pub unsafe fn IsDragDropPayloadBeingAccepted() -> bool
     return g.DragDropActive && g.DragDropAcceptIdPrev != 0;
 }
 
-pub unsafe fn AcceptDragDropPayload(payload_type: *const c_char, flags: ImGuiDragDropFlags) -> *const ImGuiPayload
+pub unsafe fn AcceptDragDropPayload(payload_type: *const c_char, mut flags: ImGuiDragDropFlags) -> *const ImGuiPayload
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    ImGuiPayload& payload = g.DragDropPayload;
+    let payload = &mut g.DragDropPayload;
     // IM_ASSERT(g.DragDropActive);                        // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
     // IM_ASSERT(payload.DataFrameCount != -1);            // Forgot to call EndDragDropTarget() ?
-    if (payload_type != null_mut() && !payload.IsDataType(payload_type)){
+    if payload_type != null_mut() && !payload.IsDataType(payload_type) {
         return null_mut();}
 
     // Accept smallest drag target bounding box, this allows us to nest drag targets conveniently without ordering constraints.
     // NB: We currently accept NULL id as target. However, overlapping targets requires a unique ID to function!
     let was_accepted_previously: bool = (g.DragDropAcceptIdPrev == g.DragDropTargetId);
-    let r: ImRect =  g.DragDropTargetRect;
+    let mut r =  g.DragDropTargetRect;
     let r_surface: c_float =  r.GetWidth() * r.GetHeight();
-    if (r_surface <= g.DragDropAcceptIdCurrRectSurface)
+    if r_surface <= g.DragDropAcceptIdCurrRectSurface
     {
         g.DragDropAcceptFlags = flags;
         g.DragDropAcceptIdCurr = g.DragDropTargetId;
@@ -324,15 +327,19 @@ pub unsafe fn AcceptDragDropPayload(payload_type: *const c_char, flags: ImGuiDra
     // FIXME-DRAGDROP: Settle on a proper default visuals for drop target.
     payload.Preview = was_accepted_previously;
     flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
-    if (flag_clear(flags, ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview){
-        window.DrawList.AddRect(r.Min - ImVec2::new(3.5,3.5), r.Max + ImVec2::new(3.5, 3.5), GetColorU32(ImGuiCol_DragDropTarget), 0.0, 0, 2.0);}
-
+    if flag_clear(flags, ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview {
+        window.DrawList.AddRect(r.Min - ImVec2::new(3.5,3.5),
+                                r.Max + ImVec2::new(3.5, 3.5),
+                                GetColorU32(ImGuiCol_DragDropTarget, 0.0),
+                                0.0,
+                                0,
+                                2.0);}
     g.DragDropAcceptFrameCount = g.FrameCount;
     payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()
-    if (!payload.Delivery && flag_clear(flags, ImGuiDragDropFlags_AcceptBeforeDelivery)){
+    if !payload.Delivery && flag_clear(flags, ImGuiDragDropFlags_AcceptBeforeDelivery) {
         return null_mut();}
 
-    return &payload;
+    return payload;
 }
 
 pub unsafe fn GetDragDropPayload() -> *const ImGuiPayload

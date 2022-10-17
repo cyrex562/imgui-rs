@@ -7,6 +7,9 @@
 //-----------------------------------------------------------------------------
 
 use libc::c_float;
+use crate::color::ImGuiCol_COUNT;
+use crate::direction::{ImGuiDir, ImGuiDir_Left, ImGuiDir_Right};
+use crate::style_ops::StyleColorsDark;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::type_defs::ImGuiDir;

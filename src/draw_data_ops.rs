@@ -8,6 +8,8 @@ use crate::draw_list::ImDrawList;
 use crate::draw_list_flags::ImDrawListFlags_AllowVtxOffset;
 use crate::type_defs::ImDrawIdx;
 use crate::window::ImGuiWindow;
+use crate::window::ops::{GetWindowDisplayLayer, IsWindowActiveAndVisible};
+use crate::window::window_flags::ImGuiWindowFlags_DockNodeHost;
 use crate::window_flags::ImGuiWindowFlags_DockNodeHost;
 use crate::window_ops::{GetWindowDisplayLayer, IsWindowActiveAndVisible};
 

@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use crate::window::window_dock_style_color::ImGuiWindowDockStyleCol_COUNT;
 use crate::window_dock_style_color::ImGuiWindowDockStyleCol_COUNT;
 
 #[derive(Default,Debug,Clone)]

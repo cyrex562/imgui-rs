@@ -2,19 +2,22 @@
 
 use std::ptr::null_mut;
 use libc::{c_float, c_int};
-use crate::color::IM_COL32_DISABLE;
+use crate::color::{IM_COL32_DISABLE, ImGuiCol_TableRowBg, ImGuiCol_TableRowBgAlt};
 use crate::cursor_ops::ErrorCheckUsingSetCursorPosToExtendParentBoundaries;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::imgui_cpp::GImGui;
 use crate::logging_ops::LogRenderedText;
+use crate::math_ops::{ImMax, ImMin};
 use crate::nav_layer::{ImGuiNavLayer_Main, ImGuiNavLayer_Menu};
 use crate::rect::ImRect;
+use crate::style_ops::GetColorU32;
 use crate::table::ImGuiTable;
 use crate::table_column::ImGuiTableColumn;
 use crate::table_flags::{ImGuiTableFlags_BordersInnerH, ImGuiTableFlags_NoClip, ImGuiTableFlags_RowBg};
 use crate::table_instance_data::ImGuiTableInstanceData;
 use crate::table_row_flags::ImGuiTableRowFlags_Headers;
 use crate::vec2::ImVec2;
+use crate::window::rect::SetWindowClipRectBeforeSetChannel;
 use crate::window_ops::SetWindowClipRectBeforeSetChannel;
 
 // [Internal] Called by TableNextRow()

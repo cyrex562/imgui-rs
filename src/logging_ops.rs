@@ -1,10 +1,21 @@
 #![allow(non_snake_case)]
 
-use std::ptr::null_mut;
-use libc::{c_char, c_int};
+use std::io::stdout;
+use std::ptr::{null, null_mut};
+use libc::{c_char, c_int, fflush};
+use crate::clipboard_ops::SetClipboardText;
 use crate::context::ImGuiContext;
+use crate::file_ops::ImFileOpen;
+use crate::id_ops::{PopID, PushID};
+use crate::ImFileClose;
 use crate::imgui_cpp::{GImGui, ImStreolRange};
-use crate::log_type::ImGuiLogType_None;
+use crate::input_ops::{PopAllowKeyboardFocus, PushAllowKeyboardFocus};
+use crate::item_ops::SetNextItemWidth;
+use crate::layout_ops::SameLine;
+use crate::log_type::{ImGuiLogType, ImGuiLogType_Buffer, ImGuiLogType_Clipboard, ImGuiLogType_File, ImGuiLogType_None, ImGuiLogType_TTY};
+use crate::render_ops::FindRenderedTextEnd;
+use crate::string_ops::ImStreolRange;
+use crate::type_defs::ImFileHandle;
 use crate::vec2::ImVec2;
 
 // Internal version that takes a position to decide on newline placement and pad items according to their depth.
@@ -250,4 +261,3 @@ pub unsafe fn LogButtons()
     if (log_to_clipboard){
         LogToClipboard(0);}
 }
-

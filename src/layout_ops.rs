@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
 
+use crate::GImGui;
+
 // Gets back to previous line and continue with horizontal layout
 //      offset_from_start_x == 0 : follow right after previous item
 //      offset_from_start_x != 0 : align to specified x position (relative to window/group left)

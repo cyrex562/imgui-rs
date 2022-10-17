@@ -1,5 +1,6 @@
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use std::ptr::null_mut;
+use crate::bit_vector::ImBitVector;
 use crate::color::{IM_COL32, IM_COL32_BLACK_TRANS, IM_COL32_WHITE};
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
@@ -8,8 +9,9 @@ use crate::font_atlas_default_tex_data::{FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATL
 use crate::font_atlas_flags::{ImFontAtlasFlags_NoBakedLines, ImFontAtlasFlags_NoMouseCursors, ImFontAtlasFlags_NoPowerOfTwoHeight};
 use crate::font_build_dst_data::ImFontBuildDstData;
 use crate::font_build_src_data::ImFontBuildSrcData;
+use crate::font_builder_io::ImFontBuilderIO;
 use crate::font_config::ImFontConfig;
-use crate::math_ops::{ImMax, ImSqrt};
+use crate::math_ops::{ImMax, ImSqrt, ImUpperPowerOfTwo};
 use crate::type_defs::ImWchar;
 use crate::utils::flag_clear;
 use crate::vec2::ImVec2;

@@ -13,6 +13,7 @@ use std::ptr::null_mut;
 use libc::{c_float, c_int, c_short, c_void};
 use crate::draw_data::{ImDrawData, ImDrawDataBuilder};
 use crate::draw_list::ImDrawList;
+use crate::math_ops::ImMax;
 use crate::rect::ImRect;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
