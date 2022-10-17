@@ -14,7 +14,7 @@ pub const ImGuiSliderFlags_AlwaysClamp: ImGuiSliderFlags = 1 << 4; // Clamp valu
 pub const ImGuiSliderFlags_Logarithmic: ImGuiSliderFlags = 1 << 5; // Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.
 pub const ImGuiSliderFlags_NoRoundToFormat: ImGuiSliderFlags = 1 << 6; // Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)
 pub const ImGuiSliderFlags_NoInput: ImGuiSliderFlags = 1 << 7; // Disable CTRL+Click or Enter key allowing to input text directly into the widget
-pub const ImGuiSliderFlags_InvalidMask_: ImGuiSliderFlags = 0x7000000f32; // [Internal] We treat using those bits as being potentially a 'float power' argument from the previous API that has got miscast to this enum; and will trigger an assert if needed.
+pub const ImGuiSliderFlags_InvalidMask_: ImGuiSliderFlags = 0x7000000; // [Internal] We treat using those bits as being potentially a 'float power' argument from the previous API that has got miscast to this enum; and will trigger an assert if needed.
 
 // Obsolete names (will be removed)
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS

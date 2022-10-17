@@ -11,7 +11,7 @@ use crate::color::IM_COL32;
 use crate::condition::ImGuiCond_Always;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
-use crate::id_ops::ClearActiveID;
+use ClearActiveID;
 use crate::imgui_cpp::{NavProcessItemForTabbingRequest, SetNavWindow};
 use crate::input_flags::{ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak};
 use crate::input_ops::{GetKeyPressedAmount, GetTypematicRepeatRate, IsKeyDown, IsKeyPressed, IsKeyPressedEx, IsMouseHoveringRect, IsMousePosValid};
@@ -230,9 +230,9 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
     // Compute distance between boxes
     // FIXME-NAV: Introducing biases for vertical navigation, needs to be removed.
     let mut dbx: c_float =  NavScoreItemDistInterval(cand.Min.x, cand.Max.x, curr.Min.x, curr.Max.x);
-    let dby: c_float =  NavScoreItemDistInterval(ImLerp(cand.Min.y, cand.Max.y, 0.20f32), ImLerp(cand.Min.y, cand.Max.y, 0.80f32), ImLerp(curr.Min.y, curr.Max.y, 0.20f32), ImLerp(curr.Min.y, curr.Max.y, 0.80f32)); // Scale down on Y to keep using box-distance for vertically touching items
+    let dby: c_float =  NavScoreItemDistInterval(ImLerp(cand.Min.y, cand.Max.y, 0.20), ImLerp(cand.Min.y, cand.Max.y, 0.80), ImLerp(curr.Min.y, curr.Max.y, 0.20), ImLerp(curr.Min.y, curr.Max.y, 0.80)); // Scale down on Y to keep using box-distance for vertically touching items
     if dby != 0.0 && dbx != 0.0 {
-        dbx = (dbx / 1000f32) + (if dbx > 0.0 {
+        dbx = (dbx / 1000) + (if dbx > 0.0 {
             1.0
         }else { -1.0 });
     }
@@ -968,8 +968,8 @@ pub unsafe fn NavUpdateCreateMoveRequest()
         scoring_rect.Min.x = ImMin(scoring_rect.Min.x + 1.0, scoring_rect.Max.x);
         scoring_rect.Max.x = scoring_rect.Min.x;
         // IM_ASSERT(!scoring_rect.IsInverted()); // Ensure if we have a finite, non-inverted bounding box here will allows us to remove extraneous ImFabs() calls in NavScoreItem().
-        //GetForegroundDrawList()->AddRect(scoring_rect.Min, scoring_rect.Max, IM_COL32(255,200,0,255)); // [DEBUG]
-        //if (!g.NavScoringNoClipRect.IsInverted()) { GetForegroundDrawList()->AddRect(g.NavScoringNoClipRect.Min, g.NavScoringNoClipRect.Max, IM_COL32(255, 200, 0, 255)); } // [DEBUG]
+        //GetForegroundDrawList().AddRect(scoring_rect.Min, scoring_rect.Max, IM_COL32(255,200,0,255)); // [DEBUG]
+        //if (!g.NavScoringNoClipRect.IsInverted()) { GetForegroundDrawList().AddRect(g.NavScoringNoClipRect.Min, g.NavScoringNoClipRect.Max, IM_COL32(255, 200, 0, 255)); } // [DEBUG]
     }
     g.NavScoringRect = scoring_rect;
     g.NavScoringNoClipRect.Add(&scoring_rect.GetSize());
@@ -1512,7 +1512,7 @@ pub unsafe fn NavUpdateWindowing()
         }
         if nav_move_dir.x != 0.0 || nav_move_dir.y != 0.0
         {
-            let NAV_MOVE_SPEED: c_float =  800f32;
+            let NAV_MOVE_SPEED: c_float =  800;
             let move_step: c_float =  NAV_MOVE_SPEED * io.DeltaTime * ImMin(io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
             g.NavWindowingAccumDeltaPos += nav_move_dir * move_step;
             g.NavDisableMouseHover = true;
@@ -1625,9 +1625,9 @@ pub unsafe fn NavUpdateWindowingOverlay()
         g.NavWindowingListWindow = FindWindowByName(str_to_const_c_char_ptr("###NavWindowingList"));
     }
     let viewport: *const ImGuiViewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
-    SetNextWindowSizeConstraints(&ImVec2::new(viewport.Size.x * 0.20f32, viewport.Size.y * 0.200f32), &ImVec2::new(f32::MAX, f32::MAX), (), null_mut());
+    SetNextWindowSizeConstraints(&ImVec2::new(viewport.Size.x * 0.20, viewport.Size.y * 0.200), &ImVec2::new(f32::MAX, f32::MAX), (), null_mut());
     SetNextWindowPos(&viewport.GetCenter(), ImGuiCond_Always, &ImVec2::new(0.5, 0.5));
-    PushStyleVar(ImGuiStyleVar_WindowPadding, g.Style.WindowPadding * 2.00f32);
+    PushStyleVar(ImGuiStyleVar_WindowPadding, g.Style.WindowPadding * 2.0);
     Begin(str_to_const_c_char_ptr("###NavWindowingList"), null_mut(), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
     // for (let n: c_int = g.WindowsFocusOrder.Size - 1; n >= 0; n--)
     for n in g.WindowsFocusOrder.len() - 1 .. 0

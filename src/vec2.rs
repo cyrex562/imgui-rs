@@ -65,7 +65,7 @@ impl ImVec2ih {
     }
     
     
-    // constexpr explicit ImVec2ih(const ImVec2& rhs) : x((c_short)rhs.x), y((c_short)rhs.y) {}
+    // constexpr explicit ImVec2ih(const rhs: &mut ImVec2) : x((c_short)rhs.x), y((c_short)rhs.y) {}
     pub fn new3(rhs: &ImVec2) -> Self {
         Self {
             x: rhs.x.clone() as c_short,

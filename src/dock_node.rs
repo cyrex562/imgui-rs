@@ -27,7 +27,7 @@ pub State: ImGuiDockNodeState,
 pub ParentNode: *mut ImGuiDockNode,
     // ImGuiDockNode*          ChildNodes[2];              // [Split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
 pub ChildNodes: [*mut ImGuiDockNode;2],
-    pub Windows: Vec<*mut ImGuiWindow>,                    // Note: unordered list! Iterate TabBar->Tabs for user-order.
+    pub Windows: Vec<*mut ImGuiWindow>,                    // Note: unordered list! Iterate TabBar.Tabs for user-order.
 pub TabBar: *mut ImGuiTabBar,
 pub Pos: ImVec2,                        // Current position
 pub Size: ImVec2,                       // Current size

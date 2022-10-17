@@ -4512,9 +4512,9 @@ static stbtt__compute_crossings_x: c_int(x: c_float,y: c_float, nverts: c_int, s
 staticstbtt__cuberoot: c_float(x: c_float )
 {
    if (x<0)
-      return - STBTT_pow(-x,1.0f/3.00f32);
+      return - STBTT_pow(-x,1.0f/3.0);
    else
-      return   STBTT_pow( x,1.0f/3.00f32);
+      return   STBTT_pow( x,1.0f/3.0);
 }
 
 // x^3 + a*x^2 + b*x + c = 0

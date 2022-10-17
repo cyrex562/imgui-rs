@@ -21,7 +21,7 @@ pub unsafe fn PushStyleVarFloat(idx: ImGuiStyleVar, val: c_float) {
     // IM_ASSERT(0 && "Called PushStyleVar() float variant but variable is not a float!");
 }
 
-// c_void PushStyleVar(ImGuiStyleVar idx, const ImVec2& val)
+// c_void PushStyleVar(ImGuiStyleVar idx, const val: &mut ImVec2)
 pub unsafe fn PushStyleVarVec2(idx: ImGuiStyleVar, val: &ImVec2) {
     let mut var_info = GetStyleVarInfo(idx);
     if var_info.Type == ImGuiDataType_Float && var_info.Count == 2 {

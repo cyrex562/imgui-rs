@@ -28,7 +28,7 @@ use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, Im
 use crate::dock_node::ImGuiDockNode;
 use crate::garbage_collection::GcAwakeTransientWindowBuffers;
 use crate::hash_ops::ImHashData;
-use crate::id_ops::{ClearActiveID, KeepAliveID};
+use {ClearActiveID, KeepAliveID};
 use crate::input_ops::{IsMouseDragging, IsMouseHoveringRect};
 use crate::item_flags::ImGuiItemFlags_Disabled;
 use crate::item_ops::SetLastItemData;
@@ -105,7 +105,7 @@ pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHov
 
 // This is called during NewFrame()->UpdateViewportsNewFrame() only.
 // Need to keep in sync with SetWindowPos()
-// static c_void TranslateWindow(window: *mut ImGuiWindow, const ImVec2& delta)
+// static c_void TranslateWindow(window: *mut ImGuiWindow, const delta: &mut ImVec2)
 pub fn TranslateWindow(window: *mut ImGuiWindow, delta: &ImVec2) {
     window.Pos += delta;
     window.ClipRect.Translate(delta);
@@ -132,7 +132,7 @@ pub fn IsWindowActiveAndVisible(window: *mut ImGuiWindow) -> bool {
 }
 
 // FIXME: Add a more explicit sort order in the window structure.
-// static IMGUI_CDECL: c_int ChildWindowComparer(lhs: *const c_void, rhs: *const c_void)
+// : c_int ChildWindowComparer(lhs: *const c_void, rhs: *const c_void)
 pub fn ChildWindowComparer(lhs: *const c_void, rhs: *const c_void) -> c_int {
     let a: *const ImGuiWindow = lhs;
     let b: *const ImGuiWindow = rhs;
@@ -384,7 +384,7 @@ pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
         if monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size {
             avail_size = g.PlatformIO.Monitors[monitor_idx].WorkSize;
         }
-        let mut size_auto_fit: ImVec2 = ImClamp(size_desired, size_min, ImMax(size_min, avail_size - style.DisplaySafeAreaPadding * 2.00f32));
+        let mut size_auto_fit: ImVec2 = ImClamp(size_desired, size_min, ImMax(size_min, avail_size - style.DisplaySafeAreaPadding * 2.0));
 
         // When the window cannot fit all contents (either because of constraints, either because screen is too small),
         // we are growing the size on the other axis to compensate for expected scrollbar. FIXME: Might turn bigger than ViewportSize-WindowPadding.
@@ -537,7 +537,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         let mut resize_grip_id: ImGuiID =  window.GetID3(resize_grip_n.clone()); // == GetWindowResizeCornerID()
         KeepAliveID(resize_grip_id);
         ButtonBehavior(resize_rect, resize_grip_id.clone(), &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_NoNavFocus);
-        //GetForegroundDrawList(window)->AddRect(resize_rect.Min, resize_rect.Max, IM_COL32(255, 255, 0, 255));
+        //GetForegroundDrawList(window).AddRect(resize_rect.Min, resize_rect.Max, IM_COL32(255, 255, 0, 255));
         if hovered || held {
             g.MouseCursor = if resize_grip_n.clone() & 1 { ImGuiMouseCursor_ResizeNESW } else { ImGuiMouseCursor_ResizeNWSE };
         }
@@ -582,7 +582,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         let mut border_id: ImGuiID =  window.GetID3(border_n.clone() + 4); // == GetWindowResizeBorderID()
         KeepAliveID(border_id);
         ButtonBehavior(border_rect, border_id.clone(), &hovered, &held, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_NoNavFocus);
-        //GetForegroundDrawLists(window)->AddRect(border_rect.Min, border_rect.Max, IM_COL32(255, 255, 0, 255));
+        //GetForegroundDrawLists(window).AddRect(border_rect.Min, border_rect.Max, IM_COL32(255, 255, 0, 255));
         if (hovered && g.HoveredIdTimer > WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER) || held
         {
             g.MouseCursor = if axis == ImGuiAxis_X { ImGuiMouseCursor_ResizeEW } else { ImGuiMouseCursor_ResizeNS };
@@ -619,7 +619,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         }
         if nav_resize_dir.x != 0.0 || nav_resize_dir.y != 0.0
         {
-            let NAV_RESIZE_SPEED: c_float =  600f32;
+            let NAV_RESIZE_SPEED: c_float =  600;
             let resize_step: c_float =  NAV_RESIZE_SPEED * g.IO.DeltaTime.clone() * ImMin(g.IO.DisplayFramebufferScale.x.clone(), g.IO.DisplayFramebufferScale.y.clone());
             g.NavWindowingAccumDeltaSize += nav_resize_dir * resize_step;
             g.NavWindowingAccumDeltaSize = ImMax(g.NavWindowingAccumDeltaSize, visibility_rect.Min - window.Pos - window.Size); // We need Pos+Size >= visibility_rect.Min, so Size >= visibility_rect.Min - Pos, so size_delta >= visibility_rect.Min - window.Pos - window.Size
@@ -720,7 +720,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     }
 
     // Docking
-    // (NB: during the frame dock nodes are created, it is possible that (window.DockIsActive == false) even though (window.DockNode->Windows.Size > 1)
+    // (NB: during the frame dock nodes are created, it is possible that (window.DockIsActive == false) even though (window.DockNode.Windows.Size > 1)
     // IM_ASSERT(window.DockNode == NULL || window.DockNodeAsHost == NULL); // Cannot be both
     if g.NextWindowData.Flags.clone() & ImGuiNextWindowDataFlags_HasDock {
         SetWindowDock(window, g.NextWindowData.DockId.clone(), g.NextWindowData.DockCond.clone());
@@ -811,7 +811,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
     if g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos
     {
         window_pos_set_by_api = flag_set(window.SetWindowPosAllowFlags.clone(), g.NextWindowData.PosCond.clone());
-        if window_pos_set_by_api && ImLengthSqr(g.NextWindowData.PosPivotVal) > 0.00001
+        if window_pos_set_by_api && ImLengthSqr(g.NextWindowData.PosPivotVal) > 0.001
         {
             // May be processed on the next frame if this is our first frame and we are measuring size
             // FIXME: Look into removing the branch so everything can go through this same code path for consistency.
@@ -1138,9 +1138,9 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
                 } else { style.WindowRounding }
             };
         }
-        // For windows with title bar or menu bar, we clamp to FrameHeight(FontSize + FramePadding.y * 2.00f32) to completely hide artifacts.
+        // For windows with title bar or menu bar, we clamp to FrameHeight(FontSize + FramePadding.y * 2.0) to completely hide artifacts.
         //if ((window.Flags & ImGuiWindowFlags_MenuBar) || !(window.Flags & ImGuiWindowFlags_NoTitleBar))
-        //    window.WindowRounding = ImMin(window.WindowRounding, g.FontSize + style.FramePadding.y * 2.00f32);
+        //    window.WindowRounding = ImMin(window.WindowRounding, g.FontSize + style.FramePadding.y * 2.0);
 
         // Apply window focus (new and reactivated windows are moved to front)
         let mut want_focus: bool =  false;
@@ -1189,7 +1189,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         let mut border_held: c_int = -1;
         resize_grip_col: u32[4] = {};
         let resize_grip_count: c_int = if g.IO.ConfigWindowsResizeFromEdges { 2 } else { 1 }; // Allow resize from lower-left if we have the mouse cursor feedback for it.
-        let resize_grip_draw_size: c_float =  IM_FLOOR(ImMax(g.FontSize * 1.10f32, window.WindowRounding + 1.0 + g.FontSize * 0.20f32));
+        let resize_grip_draw_size: c_float =  IM_FLOOR(ImMax(g.FontSize * 1.10f32, window.WindowRounding + 1.0 + g.FontSize * 0.20));
         if handle_borders_and_resize_grips && !window.Collapsed {
             if UpdateWindowManualResize(window, &size_auto_fit, &mut border_held, resize_grip_count, resize_grip_col[0], &visibility_rect) {
                 use_current_size_for_scrollbar_x = true;
@@ -1283,7 +1283,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             window.ItemWidthDefault = ImFloor(window.Size.x * 0.650f32);
         }
         else {
-            window.ItemWidthDefault = ImFloor(g.FontSize * 16.00f32);
+            window.ItemWidthDefault = ImFloor(g.FontSize * 16.0);
         }
 
         // SCROLLING

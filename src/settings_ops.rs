@@ -329,7 +329,7 @@ pub unsafe fn WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettin
         settings.Size = ImVec2ih(window.SizeFull);
         settings.ViewportId = window.ViewportId;
         settings.ViewportPos = ImVec2ih(window.ViewportPos);
-        // IM_ASSERT(window.DockNode == NULL || window.DockNode->ID == window.DockId);
+        // IM_ASSERT(window.DockNode == NULL || window.DockNode.ID == window.DockId);
         settings.DockId = window.DockId;
         settings.ClassId = window.WindowClass.ClassId;
         settings.DockOrder = window.DockOrder;

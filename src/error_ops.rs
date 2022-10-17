@@ -3,7 +3,7 @@ use libc::c_void;
 use crate::child_ops::EndChild;
 use crate::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_ViewportsEnable};
 use crate::GImGui;
-use crate::id_ops::PopID;
+use PopID;
 use crate::item_ops::PopItemFlag;
 use crate::key::{ImGuiKey_COUNT, ImGuiKey_NamedKey_BEGIN};
 use crate::keyboard_ops::GetMergedModFlags;

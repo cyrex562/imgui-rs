@@ -48,7 +48,7 @@ impl ImGuiWindowClass {
 pub unsafe fn SetNextWindowClass(mut window_class: *const ImGuiWindowClass)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT((window_class->ViewportFlagsOverrideSet & window_class->ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
+    // IM_ASSERT((window_class.ViewportFlagsOverrideSet & window_class.ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasWindowClass;
     g.NextWindowData.WindowClass = (*window_class).clone();
 }

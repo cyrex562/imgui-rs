@@ -137,7 +137,7 @@ impl ImFont {
     }
 
 
-    // const char*                 GetDebugName() const                { return ConfigData ? ConfigData->Name : "<unknown>"; }
+    // const char*                 GetDebugName() const                { return ConfigData ? ConfigData.Name : "<unknown>"; }
     pub unsafe fn GetDebugName(&self) -> *const c_char {
         return if self.ConfigData.is_null() == false {
             self.ConfigData.Name.as_ptr()
@@ -352,7 +352,7 @@ impl ImFont {
     }
 
 
-    // void              RenderChar(draw_list: *mut ImDrawList, c_float size, const ImVec2& pos, col: u32, ImWchar c) const;
+    // void              RenderChar(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, ImWchar c) const;
     pub unsafe fn RenderChar(&mut self, draw_list: &mut ImDrawList, size: c_float, pos: &ImVec2, mut col: u32, c: ImWchar) {
         let glyph: *const ImFontGlyph = self.FindGlyph(c);
         if glyph.is_null() || !glyph.Visible {
@@ -370,7 +370,7 @@ impl ImFont {
     }
 
 
-    // void              RenderText(draw_list: *mut ImDrawList, c_float size, const ImVec2& pos, col: u32, const ImVec4& clip_rect, const char* text_begin, const char* text_end, c_float wrap_width = 0.0, cpu_fine_clip: bool = false) const;
+    // void              RenderText(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, const ImVec4& clip_rect, const char* text_begin, const char* text_end, c_float wrap_width = 0.0, cpu_fine_clip: bool = false) const;
     pub unsafe fn RenderText(&mut self, draw_list: &mut ImDrawList, size: c_float, pos: &ImVec2, mut col: u32, clip_rect: &ImVec4, text_begin: *const c_char, mut text_end: *const c_char, wrap_width: c_float, cpu_fine_clip: bool) {
         if !text_end {
             text_end = text_begin + libc::strlen(text_begin);

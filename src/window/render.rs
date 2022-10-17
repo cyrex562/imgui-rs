@@ -7,7 +7,7 @@ use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
 use crate::draw_flags::{ImDrawFlags_None, ImDrawFlags_RoundCornersBottom, ImDrawFlags_RoundCornersTop};
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
-use crate::id_ops::KeepAliveID;
+use KeepAliveID;
 use crate::input_ops::IsMouseDragging;
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_NoNavDefaultFocus};
 use crate::math_ops::{ImClamp, ImFabs, ImLerp, ImMax, ImMin};
@@ -87,7 +87,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
 
     // Title bar text (with: horizontal alignment, avoiding collapse/close button, optional "unsaved document" marker)
     // FIXME: Refactor text alignment facilities along with RenderText helpers, this is WAY too much messy code..
-    let marker_size_x: c_float = if  flag_set(flags, ImGuiWindowFlags_UnsavedDocument) { button_sz * 0.80f32 } else { 0.0 };
+    let marker_size_x: c_float = if  flag_set(flags, ImGuiWindowFlags_UnsavedDocument) { button_sz * 0.80 } else { 0.0 };
     let text_size: ImVec2 = CalcTextSize(name, null_mut(), true, 0.0) + ImVec2::new(marker_size_x, 0.0);
 
     // As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,
@@ -100,7 +100,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     }
     if style.WindowTitleAlign.x > 0.0 && style.WindowTitleAlign.x < 1.0
     {
-        let centerness: c_float =  ImSaturate(1.0 - ImFabs(style.WindowTitleAlign.x - 0.5) * 2.00f32); // 0.0 on either edges, 1.0 on center
+        let centerness: c_float =  ImSaturate(1.0 - ImFabs(style.WindowTitleAlign.x - 0.5) * 2.0); // 0.0 on either edges, 1.0 on center
         let pad_extend: c_float =  ImMin(ImMax(pad_l, pad_r), title_bar_rect.GetWidth() - pad_l - pad_r - text_size.x);
         pad_l = ImMax(pad_l, pad_extend * centerness);
         pad_r = ImMax(pad_r, pad_extend * centerness);
@@ -199,7 +199,7 @@ pub unsafe fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: 
             window.Rootwindow.Rect(),
             col,
             0.0,
-        ); // window.RootWindowDockTree->WindowRounding);
+        ); // window.RootWindowDockTree.WindowRounding);
         draw_list.PopClipRect();
     }
 }
@@ -270,7 +270,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
             GetColorU32(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha),
             window.WindowRounding,
             0,
-            3.00f32,
+            3.0,
         );
         window.DrawList.PopClipRect();
     }
@@ -439,7 +439,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
         node:*mut ImGuiDockNode = window.DockNode;
         if window.DockIsActive && node.IsHiddenTabBar() && !node.IsNoTabBar()
         {
-            let unhide_sz_draw: c_float =  ImFloor(g.FontSize * 0.700f32);
+            let unhide_sz_draw: c_float =  ImFloor(g.FontSize * 0.70);
             let unhide_sz_hit: c_float =  ImFloor(g.FontSize * 0.550f32);
             let p: ImVec2 = node.Pos;
             let mut r: ImRect = ImRect::new(p, p + ImVec2::new(unhide_sz_hit, unhide_sz_hit));

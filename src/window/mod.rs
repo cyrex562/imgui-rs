@@ -98,7 +98,7 @@ pub struct ImGuiWindow {
     pub ScrollTarget: ImVec2,
     // target scroll position. stored as cursor position with scrolling canceled out, so the highest point is always 0.0. (f32::MAX for no change)
     pub ScrollTargetCenterRatio: ImVec2,
-    // 0.0 = scroll so that target position is at top, 0.5f32 = scroll so that target position is centered
+    // 0.0 = scroll so that target position is at top, 0.5 = scroll so that target position is centered
     pub ScrollTargetEdgeSnapDist: ImVec2,
     // 0.0 = no snapping, >0.0 snapping threshold
     pub ScrollbarSizes: ImVec2,
@@ -129,13 +129,13 @@ pub struct ImGuiWindow {
     // Set when the window has a close button (p_open != NULL)
 // signed char             ResizeBorderHeld;                   // Current border being held for resize (-1: none, otherwise 0-3)
     pub ResizeBorderHeld: i8,
-    pub BeginCount: c_short,
+    pub BeginCount: i32,
     // Number of Begin() during the current frame (generally 0 or 1, 1+ if appending via multiple Begin/End pairs)
-    pub BeginOrderWithinParent: c_short,
+    pub BeginOrderWithinParent: i32,
     // Begin() order within immediate parent window, if we are a child window. Otherwise 0.
-    pub BeginOrderWithinContext: c_short,
+    pub BeginOrderWithinContext: i32,
     // Begin() order within entire imgui context. This is mostly used for debugging submission order related issues.
-    pub FocusOrder: c_short,
+    pub FocusOrder: i32,
     // Order within WindowsFocusOrder[], altered when windows are focused.
     pub PopupId: ImGuiID,
     // ID in the popup stack when this window is used as a popup/menu (because we use generic Name/ID for recycling)
@@ -163,7 +163,7 @@ pub struct ImGuiWindow {
     pub SetWindowDockAllowFlags: ImGuiCond,
     pub SetWindowPosVal: ImVec2,
     // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
-    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2::new(0, 0) when positioning from top-left corner; ImVec2::new(0.5f32, 0.5f32) for centering; ImVec2::new(1, 1) for bottom right.
+    pub SetWindowPosPivot: ImVec2,                  // store window pivot for positioning. ImVec2::new(0, 0) when positioning from top-left corner; ImVec2::new(0.5, 0.5) for centering; ImVec2::new(1, 1) for bottom right.
 
     // ImVector<ImGuiID>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
     pub IDStack: Vec<ImGuiID>,
@@ -176,7 +176,7 @@ pub struct ImGuiWindow {
     pub InnerRect: ImRect,
     // Inner rectangle (omit title bar, menu bar, scroll bar)
     pub InnerClipRect: ImRect,
-    // == InnerRect shrunk by WindowPadding*0.5f32 on each side, clipped within viewport or parent clip rect.
+    // == InnerRect shrunk by WindowPadding*0.5 on each side, clipped within viewport or parent clip rect.
     pub WorkRect: ImRect,
     // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1.0 on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
     pub ParentWorkRect: ImRect,
@@ -233,7 +233,7 @@ pub struct ImGuiWindow {
     pub MemoryCompacted: bool,                    // Set when window extraneous data have been garbage collected
 
     // Docking
-// bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode->Windows.Size > 1).
+// bool                    DockIsActive        :1;             // When docking artifacts are actually visible. When this is set, DockNode is guaranteed to be != NULL. ~~ (DockNode != NULL) && (DockNode.Windows.Size > 1).
     pub DockIsActive: bool,
     // bool                    DockNodeIsVisible   :1;
     pub DockNodeIsVisible: bool,
@@ -241,7 +241,7 @@ pub struct ImGuiWindow {
     pub DockTabIsVisible: bool,
     // bool                    DockTabWantClose    :1;
     pub DockTabWantClose: bool,
-    pub DockOrder: c_short,
+    pub DockOrder: i32,
     // Order of the last time the window was visible within its DockNode. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
     pub DockStyle: ImGuiWindowDockStyle,
     pub DockNode: *mut ImGuiDockNode,
@@ -249,7 +249,7 @@ pub struct ImGuiWindow {
     pub DockNodeAsHost: *mut ImGuiDockNode,
     // Which node are we owning (for parent windows)
     pub DockId: ImGuiID,
-    // Backup of last valid DockNode->ID, so single window remember their dock node id even when they are not bound any more
+    // Backup of last valid DockNode.ID, so single window remember their dock node id even when they are not bound any more
     pub DockTabItemStatusFlags: ImGuiItemStatusFlags,
     pub DockTabItemRect: ImRect,
 

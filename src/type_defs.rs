@@ -23,7 +23,8 @@ pub type ImDrawIdx = size_t;
 
 // Scalar data types
 // typedef unsigned int        ImGuiID;// A unique ID used by widgets (typically the result of hashing a stack of string)
-pub type ImGuiID = c_int;
+pub type ImGuiID = i32;
+pub const INVALID_IMGUI_ID: i32 = i32::MAX;
 
 // typedef signed char         ImS8;   // 8-bit signed integer
 // typedef unsigned char       ImU8;   // 8-bit unsigned integer

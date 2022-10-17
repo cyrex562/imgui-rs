@@ -40,7 +40,7 @@ use crate::dock_request::ImGuiDockRequest;
 use crate::dock_request_type::{ImGuiDockRequestType_Dock, ImGuiDockRequestType_None, ImGuiDockRequestType_Undock};
 use crate::draw_flags::ImDrawFlags;
 use crate::file_ops::{ImFileLoadToMemory, ImFileOpen, ImFileWrite};
-use crate::id_ops::{ClearActiveID, GetID, KeepAliveID, PopID, PushID, PushOverrideID, SetActiveID};
+use {ClearActiveID, GetID, KeepAliveID, PopID, PushID, PushOverrideID, SetActiveID};
 use crate::input_flags::{ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateNavMove};
 use crate::input_ops::{GetKeyIndex, IsKeyDown, IsKeyPressed, IsKeyPressedEx, IsMouseClicked, IsMouseDragging, IsMouseHoveringRect, PopAllowKeyboardFocus, PushAllowKeyboardFocus, SetMouseCursor};
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Nav};
@@ -264,7 +264,7 @@ pub unsafe fn SetWindowDock(window: *mut ImGuiWindow, dock_id: ImGuiID, cond: Im
             new_node = DockNodeGetRootNode(new_node);
             if (new_node.CentralNode)
             {
-                // IM_ASSERT(new_node->CentralNode->IsCentralNode());
+                // IM_ASSERT(new_node.CentralNode.IsCentralNode());
                 dock_id = new_node.CentralNode.ID;
             }
             else
@@ -307,8 +307,8 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
         node = DockContextAddNode(ctx, id);
         node.SetLocalFlags(ImGuiDockNodeFlags_CentralNode);
     }
-    if (window_class && window_class->ClassId != node.WindowClass.ClassId)
-        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X: setup WindowClass 0x%08X -> 0x%08X\n", id, node.WindowClass.ClassId, window_class->ClassId);
+    if (window_class && window_class.ClassId != node.WindowClass.ClassId)
+        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X: setup WindowClass 0x%08X -> 0x%08X\n", id, node.WindowClass.ClassId, window_class.ClassId);
     node.SharedFlags = flags;
     node.WindowClass = window_class ? *window_class : ImGuiWindowClass();
 
@@ -316,7 +316,7 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
     // It is possible that the node has already been claimed by a docked window which appeared before the DockSpace() node, so we overwrite IsDockSpace again.
     if (node.LastFrameActive == g.FrameCount && flag_clear(flags, ImGuiDockNodeFlags_KeepAliveOnly))
     {
-        // IM_ASSERT(node->IsDockSpace() == false && "Cannot call DockSpace() twice a frame with the same ID");
+        // IM_ASSERT(node.IsDockSpace() == false && "Cannot call DockSpace() twice a frame with the same ID");
         node.SetLocalFlags(node.LocalFlags | ImGuiDockNodeFlags_DockSpace);
         return id;
     }
@@ -332,9 +332,9 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
     let content_avail: ImVec2 = GetContentRegionAvail();
     let size: ImVec2 = ImFloor(size_arg);
     if (size.x <= 0.0)
-        size.x = ImMax(content_avail.x + size.x, 4.00f32); // Arbitrary minimum child size (0.0 causing too much issues)
+        size.x = ImMax(content_avail.x + size.x, 4.0); // Arbitrary minimum child size (0.0 causing too much issues)
     if (size.y <= 0.0)
-        size.y = ImMax(content_avail.y + size.y, 4.00f32);
+        size.y = ImMax(content_avail.y + size.y, 4.0);
     // IM_ASSERT(size.x > 0.0 && size.y > 0.0);
 
     node.Pos = window.DC.CursorPos;
@@ -537,7 +537,7 @@ pub unsafe fn DockBuilderRemoveNode(node_id: ImGuiID)
 pub unsafe fn DockBuilderRemoveNodeChildNodes(root_id: ImGuiID)
 {
     ctx: *mut ImGuiContext = GImGui;
-    dc: *mut ImGuiDockContext  = &ctx->DockContext;
+    dc: *mut ImGuiDockContext  = &ctx.DockContext;
 
     root_node:*mut ImGuiDockNode = root_id ? DockContextFindNodeByID(ctx, root_id) : null_mut();
     if (root_id && root_node == null_mut())
@@ -552,7 +552,7 @@ pub unsafe fn DockBuilderRemoveNodeChildNodes(root_id: ImGuiID)
     for (let n: c_int = 0; n < dc->Nodes.Data.Size; n++)
         if (node:*mut ImGuiDockNode = dc->Nodes.Data[n].val_p)
         {
-            let mut want_removal: bool =  (root_id == 0) || (node.ID != root_id && DockNodeGetRootNode(node)->ID == root_id);
+            let mut want_removal: bool =  (root_id == 0) || (node.ID != root_id && DockNodeGetRootNode(node).ID == root_id);
             if (want_removal)
             {
                 if (node.IsCentralNode())
@@ -568,7 +568,7 @@ pub unsafe fn DockBuilderRemoveNodeChildNodes(root_id: ImGuiID)
             }
         }
 
-    // DockNodeMoveWindows->DockNodeAddWindow will normally set those when reaching two windows (which is only adequate during interactive merge)
+    // DockNodeMoveWindows.DockNodeAddWindow will normally set those when reaching two windows (which is only adequate during interactive merge)
     // Make sure we don't lose our current pos/size. (FIXME-DOCK: Consider tidying up that code in DockNodeAddWindow instead)
     if (root_node)
     {
@@ -580,7 +580,7 @@ pub unsafe fn DockBuilderRemoveNodeChildNodes(root_id: ImGuiID)
     for (settings: *mut ImGuiWindowSettings = ctx->SettingsWindows.begin(); settings != null_mut(); settings = ctx->SettingsWindows.next_chunk(settings))
         if (let mut window_settings_dock_id: ImGuiID =  settings.DockId)
             for (let n: c_int = 0; n < nodes_to_remove.Size; n++)
-                if (nodes_to_remove[n]->ID == window_settings_dock_id)
+                if (nodes_to_remove[n].ID == window_settings_dock_id)
                 {
                     settings.DockId = root_id;
                     break;
@@ -616,7 +616,7 @@ pub unsafe fn DockBuilderRemoveNodeDockedWindows(root_id: ImGuiID, clear_setting
             let mut want_removal: bool =  (root_id == 0) || (settings.DockId == root_id);
             if (!want_removal && settings.DockId != 0)
                 if (node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, settings.DockId))
-                    if (DockNodeGetRootNode(node)->ID == root_id)
+                    if (DockNodeGetRootNode(node).ID == root_id)
                         want_removal = true;
             if (want_removal)
                 settings.DockId = 0;
@@ -627,7 +627,7 @@ pub unsafe fn DockBuilderRemoveNodeDockedWindows(root_id: ImGuiID, clear_setting
     for (let n: c_int = 0; n < g.Windows.len(); n++)
     {
         let mut window: *mut ImGuiWindow =  g.Windows[n];
-        let mut want_removal: bool =  (root_id == 0) || (window.DockNode && DockNodeGetRootNode(window.DockNode)->ID == root_id) || (window.DockNodeAsHost && window.DockNodeAsHost->ID == root_id);
+        let mut want_removal: bool =  (root_id == 0) || (window.DockNode && DockNodeGetRootNode(window.DockNode).ID == root_id) || (window.DockNodeAsHost && window.DockNodeAsHost.ID == root_id);
         if (want_removal)
         {
             let mut backup_dock_id: ImGuiID =  window.DockId;
@@ -655,7 +655,7 @@ DockBuilderSplitNode: ImGuiID(id: ImGuiID, split_dir: ImGuiDir,size_ratio_for_no
         return 0;
     }
 
-    // IM_ASSERT(!node->IsSplitNode()); // Assert if already Split
+    // IM_ASSERT(!node.IsSplitNode()); // Assert if already Split
 
     req: ImGuiDockRequest;
     req.Type = ImGuiDockRequestType_Split;
@@ -667,8 +667,8 @@ DockBuilderSplitNode: ImGuiID(id: ImGuiID, split_dir: ImGuiDir,size_ratio_for_no
     req.DockSplitOuter = false;
     DockContextProcessDock(&g, &req);
 
-    let mut id_at_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 0 : 1]->ID;
-    let mut id_at_opposite_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 1 : 0]->ID;
+    let mut id_at_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 0 : 1].ID;
+    let mut id_at_opposite_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 1 : 0].ID;
     if (out_id_at_dir)
         *out_id_at_dir = id_at_dir;
     if (out_id_at_opposite_dir)
@@ -696,7 +696,7 @@ static DockBuilderCopyNodeRec:*mut ImGuiDockNode(src_node:*mut ImGuiDockNode, ds
         if (src_node.ChildNodes[child_n])
         {
             dst_node.ChildNodes[child_n] = DockBuilderCopyNodeRec(src_node.ChildNodes[child_n], 0, out_node_remap_pairs);
-            dst_node.ChildNodes[child_n]->ParentNode = dst_node;
+            dst_node.ChildNodes[child_n].ParentNode = dst_node;
         }
 
     IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X (%d childs)\n", src_node.ID, dst_node.ID, dst_node.IsSplitNode() ? 2 : 0);
@@ -718,7 +718,7 @@ pub unsafe fn DockBuilderCopyNode(src_node_id: ImGuiID, dst_node_id: ImGuiID, Ve
     out_node_remap_pairs->clear();
     DockBuilderCopyNodeRec(src_node, dst_node_id, out_node_remap_pairs);
 
-    // IM_ASSERT((out_node_remap_pairs->Size % 2) == 0);
+    // IM_ASSERT((out_node_remap_pairs.Size % 2) == 0);
 }
 
 pub unsafe fn DockBuilderCopyWindowSettings(src_name: *const c_char, dst_name: *const c_char)
@@ -738,15 +738,15 @@ pub unsafe fn DockBuilderCopyWindowSettings(src_name: *const c_char, dst_name: *
         ImVec2ih window_pos_2ih = ImVec2ih(src_window.Pos);
         if (src_window.ViewportId != 0 && src_window.ViewportId != IMGUI_VIEWPORT_DEFAULT_ID)
         {
-            dst_settings->ViewportPos = window_pos_2ih;
-            dst_settings->ViewportId = src_window.ViewportId;
-            dst_settings->Pos = ImVec2ih(0, 0);
+            dst_settings.ViewportPos = window_pos_2ih;
+            dst_settings.ViewportId = src_window.ViewportId;
+            dst_settings.Pos = ImVec2ih(0, 0);
         }
         else
         {
-            dst_settings->Pos = window_pos_2ih;
+            dst_settings.Pos = window_pos_2ih;
         }
-        dst_settings->Size = ImVec2ih(src_window.SizeFull);
+        dst_settings.Size = ImVec2ih(src_window.SizeFull);
         dst_settings->Collapsed = src_window.Collapsed;
     }
 }
@@ -758,7 +758,7 @@ pub unsafe fn DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_
     // IM_ASSERT(src_dockspace_id != 0);
     // IM_ASSERT(dst_dockspace_id != 0);
     // IM_ASSERT(in_window_remap_pairs != NULL);
-    // IM_ASSERT((in_window_remap_pairs->Size % 2) == 0);
+    // IM_ASSERT((in_window_remap_pairs.Size % 2) == 0);
 
     // Duplicate entire dock
     // FIXME: When overwriting dst_dockspace_id, windows that aren't part of our dockspace window class but that are docked in a same node will be split apart,
@@ -769,7 +769,7 @@ pub unsafe fn DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_
     // Attempt to transition all the upcoming windows associated to dst_dockspace_id into the newly created hierarchy of dock nodes
     // (The windows associated to src_dockspace_id are staying in place)
     Vec<ImGuiID> src_windows;
-    for (let remap_window_n: c_int = 0; remap_window_n < in_window_remap_pairs->Size; remap_window_n += 2)
+    for (let remap_window_n: c_int = 0; remap_window_n < in_window_remap_pairs.Size; remap_window_n += 2)
     {
         let mut  src_window_name: *const c_char = (*in_window_remap_pairs)[remap_window_n];
         let mut  dst_window_name: *const c_char = (*in_window_remap_pairs)[remap_window_n + 1];
@@ -884,7 +884,7 @@ static DockContextBindNodeToWindow:*mut ImGuiDockNode(ctx: *mut ImGuiContext, wi
         ancestor_node:*mut ImGuiDockNode = node;
         while (!ancestor_node.IsVisible && ancestor_node.ParentNode)
             ancestor_node = ancestor_node.ParentNode;
-        // IM_ASSERT(ancestor_node->Size.x > 0.0 && ancestor_node->Size.y > 0.0);
+        // IM_ASSERT(ancestor_node.Size.x > 0.0 && ancestor_node.Size.y > 0.0);
         DockNodeUpdateHasCentralNodeChild(DockNodeGetRootNode(ancestor_node));
         DockNodeTreeUpdatePosSize(ancestor_node, ancestor_node.Pos, ancestor_node.Size, node);
     }
@@ -930,7 +930,7 @@ pub unsafe fn BeginDocked(window: *mut ImGuiWindow,p_open: *mut bool)
     // Bind to our dock node
     node:*mut ImGuiDockNode = window.DockNode;
     if (node != null_mut())
-        // IM_ASSERT(window.DockId == node->ID);
+        // IM_ASSERT(window.DockId == node.ID);
     if (window.DockId != 0 && node == null_mut())
     {
         node = DockContextBindNodeToWindow(ctx, window);
@@ -979,7 +979,7 @@ pub unsafe fn BeginDocked(window: *mut ImGuiWindow,p_open: *mut bool)
     // We can have zero-sized nodes (e.g. children of a small-size dockspace)
     // IM_ASSERT(node->HostWindow);
     // IM_ASSERT(node->IsLeafNode());
-    // IM_ASSERT(node->Size.x >= 0.0 && node->Size.y >= 0.0);
+    // IM_ASSERT(node.Size.x >= 0.0 && node.Size.y >= 0.0);
     node.State = ImGuiDockNodeState_HostWindowVisible;
 
     // Undock if we are submitted earlier than the host window
@@ -1055,20 +1055,20 @@ pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
     // IM_ASSERT((window.Flags & ImGuiWindowFlags_NoDocking) == 0);
     if (!g.DragDropActive)
         return;
-    //GetForegroundDrawList(window)->AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
+    //GetForegroundDrawList(window).AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
     if (!BeginDragDropTargetCustom(window.Rect(), window.ID))
         return;
 
     // Peek into the payload before calling AcceptDragDropPayload() so we can handle overlapping dock nodes with filtering
     // (this is a little unusual pattern, normally most code would call AcceptDragDropPayload directly)
     let payload: *const ImGuiPayload = &g.DragDropPayload;
-    if (!payload->IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW) || !DockNodeIsDropAllowed(window, *(ImGuiWindow**)payload->Data))
+    if (!payload->IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW) || !DockNodeIsDropAllowed(window, *(ImGuiWindow**)payload.Data))
     {
         EndDragDropTarget();
         return;
     }
 
-    let mut payload_window: *mut ImGuiWindow =  *(ImGuiWindow**)payload->Data;
+    let mut payload_window: *mut ImGuiWindow =  *(ImGuiWindow**)payload.Data;
     if (AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_WINDOW, ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect))
     {
         // Select target node
@@ -1094,7 +1094,7 @@ pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
                 dock_into_floating_window = true; // Dock into a regular window
         }
 
-        let explicit_target_rect: ImRect =  (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) ? node.TabBar->BarRect : ImRect(window.Pos, window.Pos + ImVec2::new(window.Size.x, GetFrameHeight()));
+        let explicit_target_rect: ImRect =  (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) ? node.TabBar.BarRect : ImRect(window.Pos, window.Pos + ImVec2::new(window.Size.x, GetFrameHeight()));
         let is_explicit_target: bool = g.IO.ConfigDockingWithShift || IsMouseHoveringRect(explicit_target_rect.Min, explicit_target_rect.Max);
 
         // Preview docking request and find out split direction/ratio
@@ -1104,7 +1104,7 @@ pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
         {
             let mut split_inner = ImGuiDockPreviewData::default();
             let mut split_outer = ImGuiDockPreviewData::default();
-            ImGuiDockPreviewData* split_data = &split_inner;
+            split_data: *mut ImGuiDockPreviewData = &split_inner;
             if (node && (node.ParentNode || node.IsCentralNode()))
                 if (root_node:*mut ImGuiDockNode = DockNodeGetRootNode(node))
                 {
@@ -1178,7 +1178,7 @@ pub unsafe fn DockSettingsRemoveNodeReferences(ImGuiID* node_ids, node_ids_count
 static DockSettingsFindNodeSettings: *mut ImGuiDockNodeSettings(ctx: *mut ImGuiContext, id: ImGuiID)
 {
     // FIXME-OPT
-    dc: *mut ImGuiDockContext  = &ctx->DockContext;
+    dc: *mut ImGuiDockContext  = &ctx.DockContext;
     for (let n: c_int = 0; n < dc->NodesSettings.Size; n++)
         if (dc->NodesSettings[n].ID == id)
             return &dc->NodesSettings[n];
@@ -1188,7 +1188,7 @@ static DockSettingsFindNodeSettings: *mut ImGuiDockNodeSettings(ctx: *mut ImGuiC
 // Clear settings data
 pub unsafe fn DockSettingsHandler_ClearAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler*)
 {
-    dc: *mut ImGuiDockContext  = &ctx->DockContext;
+    dc: *mut ImGuiDockContext  = &ctx.DockContext;
     dc->NodesSettings.clear();
     DockContextClearNodes(ctx, 0, true);
 }
@@ -1197,8 +1197,8 @@ pub unsafe fn DockSettingsHandler_ClearAll(ctx: *mut ImGuiContext, ImGuiSettings
 pub unsafe fn DockSettingsHandler_ApplyAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler*)
 {
     // Prune settings at boot time only
-    dc: *mut ImGuiDockContext  = &ctx->DockContext;
-    if (ctx->Windows.len() == 0)
+    dc: *mut ImGuiDockContext  = &ctx.DockContext;
+    if (ctx.Windows.len() == 0)
         DockContextPruneUnusedSettingsNodes(ctx);
     DockContextBuildNodesFromSettings(ctx, dc->NodesSettings.Data, dc->NodesSettings.Size);
     DockContextBuildAddWindowsToNodes(ctx, 0);
@@ -1249,7 +1249,7 @@ pub unsafe fn DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, ImGuiSettings
     if (node.ParentNodeId != 0)
         if (parent_settings: *mut ImGuiDockNodeSettings = DockSettingsFindNodeSettings(ctx, node.ParentNodeId))
             node.Depth = parent_settings->Depth + 1;
-    ctx->DockContext.NodesSettings.push(node);
+    ctx.DockContext.NodesSettings.push(node);
 }
 
 pub unsafe fn DockSettingsHandler_DockNodeToSettings(dc: *mut ImGuiDockContext, node:*mut ImGuiDockNode, depth: c_int)
@@ -1276,7 +1276,7 @@ pub unsafe fn DockSettingsHandler_DockNodeToSettings(dc: *mut ImGuiDockContext, 
 pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 {
     let g =  ctx;
-    dc: *mut ImGuiDockContext = &ctx->DockContext;
+    dc: *mut ImGuiDockContext = &ctx.DockContext;
     if (!(g.IO.ConfigFlags & ImGuiConfigFlags_DockingEnable))
         return;
 
@@ -1300,16 +1300,16 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
         let line_start_pos: c_int = buf->size(); (c_void)line_start_pos;
         let node_settings: *const ImGuiDockNodeSettings = &dc->NodesSettings[node_n];
         buf->appendf("%*s%s%*s", node_settings->Depth * 2, "", (node_settings.Flags & ImGuiDockNodeFlags_DockSpace) ? "DockSpace" : "DockNode ", (max_depth - node_settings->Depth) * 2, "");  // Text align nodes to facilitate looking at .ini file
-        buf->appendf(" ID=0x%08X", node_settings->ID);
-        if (node_settings->ParentNodeId)
+        buf->appendf(" ID=0x%08X", node_settings.ID);
+        if (node_settings.ParentNodeId)
         {
-            buf->appendf(" Parent=0x%08X SizeRef=%d,%d", node_settings->ParentNodeId, node_settings->SizeRef.x, node_settings->SizeRef.y);
+            buf->appendf(" Parent=0x%08X SizeRef=%d,%d", node_settings.ParentNodeId, node_settings.SizeRef.x, node_settings.SizeRef.y);
         }
         else
         {
             if (node_settings->ParentWindowId)
                 buf->appendf(" Window=0x%08X", node_settings->ParentWindowId);
-            buf->appendf(" Pos=%d,%d Size=%d,%d", node_settings->Pos.x, node_settings->Pos.y, node_settings->Size.x, node_settings->Size.y);
+            buf->appendf(" Pos=%d,%d Size=%d,%d", node_settings.Pos.x, node_settings.Pos.y, node_settings.Size.x, node_settings.Size.y);
         }
         if (node_settings->SplitAxis != ImGuiAxis_None)
             buf->appendf(" Split=%c", (node_settings->SplitAxis == ImGuiAxis_X) ? 'X' : 'Y');
@@ -1325,12 +1325,12 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
             buf->appendf(" NoWindowMenuButton=1");
         if (node_settings.Flags & ImGuiDockNodeFlags_NoCloseButton)
             buf->appendf(" NoCloseButton=1");
-        if (node_settings->SelectedTabId)
-            buf->appendf(" Selected=0x%08X", node_settings->SelectedTabId);
+        if (node_settings.SelectedTabId)
+            buf->appendf(" Selected=0x%08X", node_settings.SelectedTabId);
 
 // #if IMGUI_DEBUG_INI_SETTINGS
         // [DEBUG] Include comments in the .ini file to ease debugging
-        if (node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_settings->ID))
+        if (node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_settings.ID))
         {
             buf->appendf("%*s", ImMax(2, (line_start_pos + 92) - buf->size()), "");     // Align everything
             if (node.IsDockSpace() && node.HostWindow && node.Hostwindow.ParentWindow)
@@ -1338,7 +1338,7 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
             // Iterate settings so we can give info about windows that didn't exist during the session.
             let contains_window: c_int = 0;
             for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
-                if (settings.DockId == node_settings->ID)
+                if (settings.DockId == node_settings.ID)
                 {
                     if (contains_window++ == 0)
                         buf->appendf(" ; contains ");
@@ -1558,7 +1558,7 @@ pub unsafe fn DebugRenderViewportThumbnail(draw_list: *mut ImDrawList, viewport:
     let scale: ImVec2 = bb.GetSize() / viewport.Size;
     let off: ImVec2 = bb.Min - viewport.Pos * scale;
     let alpha_mul: c_float =  (viewport.Flags & ImGuiViewportFlags_Minimized) ? 0.3f32 : 1.0;
-    window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Border, alpha_mul * 0.400f32));
+    window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Border, alpha_mul * 0.4));
     for (let i: c_int = 0; i != g.Windows.len(); i++)
     {
         let mut thumb_window: *mut ImGuiWindow =  g.Windows[i];
@@ -1603,7 +1603,7 @@ pub unsafe fn RenderViewportsThumbnails()
     Dummy(bb_full.GetSize() * SCALE);
 }
 
-static IMGUI_CDECL: c_int ViewportComparerByFrontMostStampCount(lhs: *const c_void, rhs: *const c_void)
+: c_int ViewportComparerByFrontMostStampCount(lhs: *const c_void, rhs: *const c_void)
 {
     let mut a: *mut ImGuiViewport =  *(const const: *mut ImGuiViewport*)lhs;
     let mut b: *mut ImGuiViewport =  *(const const: *mut ImGuiViewport*)rhs;
@@ -1653,7 +1653,7 @@ pub unsafe fn MetricsHelpMarker(desc: *const c_char)
     if (IsItemHovered(ImGuiHoveredFlags_DelayShort))
     {
         BeginTooltip();
-        PushTextWrapPos(GetFontSize() * 35.00f32);
+        PushTextWrapPos(GetFontSize() * 35.0);
         TextUnformatted(desc);
         PopTextWrapPos();
         EndTooltip();
@@ -1697,7 +1697,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 
     // Basic info
     Text("Dear ImGui %s", GetVersion());
-    Text("Application average %.3f ms/frame (%.1f FPS)", 1000f32 / io.Framerate, io.Framerate);
+    Text("Application average %.3f ms/frame (%.1f FPS)", 1000 / io.Framerate, io.Framerate);
     Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
     Text("%d visible windows, %d active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations);
     //SameLine(); if (SmallButton("GC")) { g.GcCompactAll = true; }
@@ -1814,7 +1814,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 
                 BulletText("Table 0x%08X (%d columns, in '%s')", table.ID, table.ColumnsCount, table.Outerwindow.Name);
                 if (IsItemHovered())
-                    GetForegroundDrawList()->AddRect(table.OuterRect.Min - ImVec2::new(1, 1), table.OuterRect.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.00f32);
+                    GetForegroundDrawList().AddRect(table.OuterRect.Min - ImVec2::new(1, 1), table.OuterRect.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                 Indent();
                 buf: [c_char;128];
                 for (let rect_n: c_int = 0; rect_n < TRT_Count; rect_n++)
@@ -1829,7 +1829,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                             ImFormatString(buf, buf.len(), "(%6.1f,%6.10f32) (%6.1f,%6.10f32) Size (%6.1f,%6.10f32) Col %d %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n]);
                             Selectable(buf);
                             if (IsItemHovered())
-                                GetForegroundDrawList()->AddRect(r.Min - ImVec2::new(1, 1), r.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.00f32);
+                                GetForegroundDrawList().AddRect(r.Min - ImVec2::new(1, 1), r.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                         }
                     }
                     else
@@ -1838,7 +1838,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                         ImFormatString(buf, buf.len(), "(%6.1f,%6.10f32) (%6.1f,%6.10f32) Size (%6.1f,%6.10f32) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), trt_rects_names[rect_n]);
                         Selectable(buf);
                         if (IsItemHovered())
-                            GetForegroundDrawList()->AddRect(r.Min - ImVec2::new(1, 1), r.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.00f32);
+                            GetForegroundDrawList().AddRect(r.Min - ImVec2::new(1, 1), r.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                     }
                 }
                 Unindent();
@@ -1862,7 +1862,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             for (let i: c_int = 0; i < g.Windows.len(); i++)
                 if (g.Windows[i]->LastFrameActive + 1 >= g.FrameCount)
                     temp_buffer.push(g.Windows[i]);
-            struct Func { static IMGUI_CDECL: c_int WindowComparerByBeginOrder(lhs: *const c_void, rhs: *const c_void) { return ((*(*const ImGuiWindow const *)lhs)->BeginOrderWithinContext - (*(*const ImGuiWindow const*)rhs)->BeginOrderWithinContext); } };
+            struct Func { : c_int WindowComparerByBeginOrder(lhs: *const c_void, rhs: *const c_void) { return ((*(*const ImGuiWindow const *)lhs).BeginOrderWithinContext - (*(*const ImGuiWindow const*)rhs).BeginOrderWithinContext); } };
             ImQsort(temp_buffer.Data, temp_buffer.Size, sizeof, Func::WindowComparerByBeginOrder);
             DebugNodeWindowsListByBeginStackParent(temp_buffer.Data, temp_buffer.Size, null_mut());
             TreePop();
@@ -1910,15 +1910,15 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             for (let i: c_int = 0; i < g.PlatformIO.Monitors.Size; i++)
             {
                 const ImGuiPlatformMonitor& mon = g.PlatformIO.Monitors[i];
-                BulletText("Monitor #%d: DPI %.0f%%\n MainMin (%.0.0,%.00f32), MainMax (%.0.0,%.00f32), MainSize (%.0.0,%.00f32)\n WorkMin (%.0.0,%.00f32), WorkMax (%.0.0,%.00f32), WorkSize (%.0.0,%.00f32)",
-                    i, mon.DpiScale * 100f32,
+                BulletText("Monitor #%d: DPI %.0f%%\n MainMin (%.0.0,%.0), MainMax (%.0.0,%.0), MainSize (%.0.0,%.0)\n WorkMin (%.0.0,%.0), WorkMax (%.0.0,%.0), WorkSize (%.0.0,%.0)",
+                    i, mon.DpiScale * 100,
                     mon.MainPos.x, mon.MainPos.y, mon.MainPos.x + mon.MainSize.x, mon.MainPos.y + mon.MainSize.y, mon.MainSize.x, mon.MainSize.y,
                     mon.WorkPos.x, mon.WorkPos.y, mon.WorkPos.x + mon.WorkSize.x, mon.WorkPos.y + mon.WorkSize.y, mon.WorkSize.x, mon.WorkSize.y);
             }
             TreePop();
         }
 
-        BulletText("MouseViewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.MouseViewport ? g.MouseViewport->ID : 0, g.IO.MouseHoveredViewport, g.MouseLastHoveredViewport ? g.MouseLastHoveredViewport->ID : 0);
+        BulletText("MouseViewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.MouseViewport ? g.MouseViewport.ID : 0, g.IO.MouseHoveredViewport, g.MouseLastHoveredViewport ? g.MouseLastHoveredViewport.ID : 0);
         if (TreeNode("Inferred Z order (front-to-back)"))
         {
             static Vec<*mut ImGuiViewportP> viewports;
@@ -1927,7 +1927,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             if (viewports.Size > 1)
                 ImQsort(viewports.Data, viewports.Size, sizeof(ImGuiViewport*), ViewportComparerByFrontMostStampCount);
             for (let i: c_int = 0; i < viewports.Size; i++)
-                BulletText("Viewport #%d, ID: 0x%08X, FrontMostStampCount = %08d, Window: \"%s\"", viewports[i]->Idx, viewports[i]->ID, viewports[i]->LastFrontMostStampCount, viewports[i]->Window ? viewports[i]->window.Name : "N/A");
+                BulletText("Viewport #%d, ID: 0x%08X, FrontMostStampCount = %08d, Window: \"%s\"", viewports[i]->Idx, viewports[i].ID, viewports[i]->LastFrontMostStampCount, viewports[i].Window ? viewports[i]->window.Name : "N/A");
             TreePop();
         }
 
@@ -2088,7 +2088,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         Text("HoveredWindowUnderMovingWindow: '%s'", g.HoveredWindowUnderMovingWindow ? g.HoveredWindowUnderMovingwindow.Name : "NULL");
         Text("HoveredDockNode: 0x%08X", g.DebugHoveredDockNode ? g.DebugHoveredDockNode.ID : 0);
         Text("MovingWindow: '%s'", g.MovingWindow ? g.Movingwindow.Name : "NULL");
-        Text("MouseViewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.MouseViewport->ID, g.IO.MouseHoveredViewport, g.MouseLastHoveredViewport ? g.MouseLastHoveredViewport->ID : 0);
+        Text("MouseViewport: 0x%08X (UserHovered 0x%08X, LastHovered 0x%08X)", g.MouseViewport.ID, g.IO.MouseHoveredViewport, g.MouseLastHoveredViewport ? g.MouseLastHoveredViewport.ID : 0);
         Unindent();
 
         Text("ITEMS");
@@ -2115,7 +2115,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         Text("NavActivateFlags: %04X", g.NavActivateFlags);
         Text("NavDisableHighlight: %d, NavDisableMouseHover: %d", g.NavDisableHighlight, g.NavDisableMouseHover);
         Text("NavFocusScopeId = 0x%08X", g.NavFocusScopeId);
-        Text("NavWindowingTarget: '%s'", g.NavWindowingTarget ? g.NavWindowingTarget->Name : "NULL");
+        Text("NavWindowingTarget: '%s'", g.NavWindowingTarget ? g.NavWindowingTarget.Name : "NULL");
         Unindent();
 
         TreePop();
@@ -2183,8 +2183,8 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         let mut  overlay_draw_list: *mut ImDrawList =  node.HostWindow ? GetForegroundDrawList(node.HostWindow) : GetForegroundDrawList(GetMainViewport());
         p += ImFormatString(p, buf + buf.len() - p, "DockId: %X%s\n", node.ID, node.IsCentralNode() ? " *CentralNode*" : "");
         p += ImFormatString(p, buf + buf.len() - p, "WindowClass: %08X\n", node.WindowClass.ClassId);
-        p += ImFormatString(p, buf + buf.len() - p, "Size: (%.0.0, %.00f32)\n", node.Size.x, node.Size.y);
-        p += ImFormatString(p, buf + buf.len() - p, "SizeRef: (%.0.0, %.00f32)\n", node.SizeRef.x, node.SizeRef.y);
+        p += ImFormatString(p, buf + buf.len() - p, "Size: (%.0.0, %.0)\n", node.Size.x, node.Size.y);
+        p += ImFormatString(p, buf + buf.len() - p, "SizeRef: (%.0.0, %.0)\n", node.SizeRef.x, node.SizeRef.y);
         let depth: c_int = DockNodeGetDepth(node);
         overlay_draw_list.AddRect(node.Pos + ImVec2::new(3, 3) * depth, node.Pos + node.Size - ImVec2::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
         let pos: ImVec2 = node.Pos + ImVec2::new(3, 3) * depth;
@@ -2199,7 +2199,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 // [DEBUG] Display contents of Columns
 pub unsafe fn DebugNodeColumns(ImGuiOldColumns* columns)
 {
-    if (!TreeNode((uintptr_t)columns->ID, "Columns Id: 0x%08X, Count: %d, Flags: 0x%04X", columns->ID, columns->Count, columns.Flags))
+    if (!TreeNode((uintptr_t)columns.ID, "Columns Id: 0x%08X, Count: %d, Flags: 0x%04X", columns.ID, columns->Count, columns.Flags))
         return;
     BulletText("Width: %.1f (MinX: %.1f, MaxX: %.10f32)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (let column_n: c_int = 0; column_n < columns->Columns.Size; column_n++)
@@ -2251,12 +2251,12 @@ pub unsafe fn DebugNodeDockNode(node:*mut ImGuiDockNode, label: *const c_char)
     if (!is_alive) { PopStyleColor(); }
     if (is_active && IsItemHovered())
         if (let mut window: *mut ImGuiWindow =  node.HostWindow ? node.HostWindow : node.VisibleWindow)
-            GetForegroundDrawList(window)->AddRect(node.Pos, node.Pos + node.Size, IM_COL32(255, 255, 0, 255));
+            GetForegroundDrawList(window).AddRect(node.Pos, node.Pos + node.Size, IM_COL32(255, 255, 0, 255));
     if (open)
     {
-        // IM_ASSERT(node->ChildNodes[0] == NULL || node->ChildNodes[0]->ParentNode == node);
-        // IM_ASSERT(node->ChildNodes[1] == NULL || node->ChildNodes[1]->ParentNode == node);
-        BulletText("Pos (%.0.0,%.00f32), Size (%.0.0, %.00f32) Ref (%.0.0, %.00f32)",
+        // IM_ASSERT(node->ChildNodes[0] == NULL || node->ChildNodes[0].ParentNode == node);
+        // IM_ASSERT(node->ChildNodes[1] == NULL || node->ChildNodes[1].ParentNode == node);
+        BulletText("Pos (%.0.0,%.0), Size (%.0.0, %.0) Ref (%.0.0, %.0)",
             node.Pos.x, node.Pos.y, node.Size.x, node.Size.y, node.SizeRef.x, node.SizeRef.y);
         DebugNodeWindow(node.HostWindow, "HostWindow");
         DebugNodeWindow(node.VisibleWindow, "VisibleWindow");
@@ -2330,7 +2330,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
         }
 
         buf: [c_char;300];
-        ImFormatString(buf, buf.len(), "DrawCmd:%5d tris, Tex 0x%p, ClipRect (%4.0.0,%4.00f32)-(%4.0.0,%4.00f32)",
+        ImFormatString(buf, buf.len(), "DrawCmd:%5d tris, Tex 0x%p, ClipRect (%4.0.0,%4.0)-(%4.0.0,%4.0)",
             pcmd->ElemCount / 3, pcmd.TextureId,
             pcmd->ClipRect.x, pcmd->ClipRect.y, pcmd->ClipRect.z, pcmd->ClipRect.w);
         let mut pcmd_node_open: bool =  TreeNode((pcmd - draw_list.CmdBuffer.begin()), "%s", buf);
@@ -2370,7 +2370,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
                 {
                     const ImDrawVert& v = vtx_buffer[idx_buffer ? idx_buffer[idx_i] : idx_i];
                     triangle[n] = v.pos;
-                    buf_p += ImFormatString(buf_p, buf_end - buf_p, "%s %04d: pos (%8.2f,%8.20f32), uv (%.6f,%.60f32), col %08X\n",
+                    buf_p += ImFormatString(buf_p, buf_end - buf_p, "%s %04d: pos (%8.2f,%8.20), uv (%.6f,%.60), col %08X\n",
                         (n == 0) ? "Vert:" : "     ", idx_i, v.pos.x, v.pos.y, v.uv.x, v.uv.y, v.col);
                 }
 
@@ -2453,7 +2453,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
         if (font->ConfigData)
             if (*const ImFontConfig cfg = &font->ConfigData[config_i])
                 BulletText("Input %d: \'%s\', Oversample: (%d,%d), PixelSnapH: %d, Offset: (%.1f,%.10f32)",
-                    config_i, cfg->Name, cfg->OversampleH, cfg->OversampleV, cfg->PixelSnapH, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
+                    config_i, cfg.Name, cfg->OversampleH, cfg->OversampleV, cfg->PixelSnapH, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
 
     // Display all glyphs of the fonts in separate pages of 256 characters
     if (TreeNode("Glyphs", "Glyphs (%d)", font->Glyphs.Size))
@@ -2516,7 +2516,7 @@ pub unsafe fn DebugNodeFontGlyph(ImFont*, *const ImFontGlyph glyph)
     Separator();
     Text("Visible: %d", glyph->Visible);
     Text("AdvanceX: %.1f", glyph->AdvanceX);
-    Text("Pos: (%.2f,%.20f32)->(%.2f,%.20f32)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
+    Text("Pos: (%.2f,%.20)->(%.2f,%.20)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
     Text("UV: (%.3f,%.30f32)->(%.3f,%.30f32)", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
 }
 
@@ -2541,35 +2541,35 @@ pub unsafe fn DebugNodeTabBar(ImGuiTabBar* tab_bar, label: *const c_char)
     char* p = buf;
     let mut  buf_end: *const c_char = buf + buf.len();
     let is_active: bool = (tab_bar->PrevFrameVisible >= GetFrameCount() - 2);
-    p += ImFormatString(p, buf_end - p, "%s 0x%08X (%d tabs)%s", label, tab_bar->ID, tab_bar->Tabs.Size, is_active ? "" : " *Inactive*");
+    p += ImFormatString(p, buf_end - p, "%s 0x%08X (%d tabs)%s", label, tab_bar.ID, tab_bar.Tabs.Size, is_active ? "" : " *Inactive*");
     p += ImFormatString(p, buf_end - p, "  { ");
-    for (let tab_n: c_int = 0; tab_n < ImMin(tab_bar->Tabs.Size, 3); tab_n++)
+    for (let tab_n: c_int = 0; tab_n < ImMin(tab_bar.Tabs.Size, 3); tab_n++)
     {
-        ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
+        ImGuiTabItem* tab = &tab_bar.Tabs[tab_n];
         p += ImFormatString(p, buf_end - p, "%s'%s'",
-            tab_n > 0 ? ", " : "", (tab->Window || tab->NameOffset != -1) ? tab_bar->GetTabName(tab) : "???");
+            tab_n > 0 ? ", " : "", (tab.Window || tab.NameOffset != -1) ? tab_bar.GetTabNametab) : "???");
     }
-    p += ImFormatString(p, buf_end - p, (tab_bar->Tabs.Size > 3) ? " ... }" : " } ");
+    p += ImFormatString(p, buf_end - p, (tab_bar.Tabs.Size > 3) ? " ... }" : " } ");
     if (!is_active) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
     let mut open: bool =  TreeNode(label, "%s", buf);
     if (!is_active) { PopStyleColor(); }
     if (is_active && IsItemHovered())
     {
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList();
-        draw_list.AddRect(tab_bar->BarRect.Min, tab_bar->BarRect.Max, IM_COL32(255, 255, 0, 255));
-        draw_list.AddLine(ImVec2::new(tab_bar->ScrollingRectMinX, tab_bar->BarRect.Min.y), ImVec2::new(tab_bar->ScrollingRectMinX, tab_bar->BarRect.Max.y), IM_COL32(0, 255, 0, 255));
-        draw_list.AddLine(ImVec2::new(tab_bar->ScrollingRectMaxX, tab_bar->BarRect.Min.y), ImVec2::new(tab_bar->ScrollingRectMaxX, tab_bar->BarRect.Max.y), IM_COL32(0, 255, 0, 255));
+        draw_list.AddRect(tab_bar.BarRect.Min, tab_bar.BarRect.Max, IM_COL32(255, 255, 0, 255));
+        draw_list.AddLine(ImVec2::new(tab_bar->ScrollingRectMinX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar->ScrollingRectMinX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255));
+        draw_list.AddLine(ImVec2::new(tab_bar->ScrollingRectMaxX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar->ScrollingRectMaxX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255));
     }
     if (open)
     {
-        for (let tab_n: c_int = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
+        for (let tab_n: c_int = 0; tab_n < tab_bar.Tabs.Size; tab_n++)
         {
-            let tab: *const ImGuiTabItem = &tab_bar->Tabs[tab_n];
+            let tab: *const ImGuiTabItem = &tab_bar.Tabs[tab_n];
             PushID(tab);
             if (SmallButton("<")) { TabBarQueueReorder(tab_bar, tab, -1); } SameLine(0, 2);
             if (SmallButton(">")) { TabBarQueueReorder(tab_bar, tab, 1); } SameLine();
             Text("%02d%c Tab 0x%08X '%s' Offset: %.2f, Width: %.2f/%.2f",
-                tab_n, (tab->ID == tab_bar->SelectedTabId) ? '*' : ' ', tab->ID, (tab->Window || tab->NameOffset != -1) ? tab_bar->GetTabName(tab) : "???", tab->Offset, tab->Width, tab->ContentWidth);
+                tab_n, (tab.ID == tab_bar.SelectedTabId) ? '*' : ' ', tab.ID, (tab.Window || tab.NameOffset != -1) ? tab_bar.GetTabNametab) : "???", tab->Offset, tab->Width, tab->ContentWidth);
             PopID();
         }
         TreePop();
@@ -2582,10 +2582,10 @@ pub unsafe fn DebugNodeViewport(viewport: *mut ImGuiViewport)
     if (TreeNode(viewport.ID, "Viewport #%d, ID: 0x%08X, Parent: 0x%08X, Window: \"%s\"", viewport.Idx, viewport.ID, viewport.ParentViewportId, viewport.Window ? viewport.window.Name : "N/A"))
     {
         flags: ImGuiWindowFlags = viewport.Flags;
-        BulletText("Main Pos: (%.0.0,%.00f32), Size: (%.0.0,%.00f32)\nWorkArea Offset Left: %.0.0 Top: %.0.0, Right: %.0.0, Bottom: %.0f\nMonitor: %d, DpiScale: %.0f%%",
+        BulletText("Main Pos: (%.0.0,%.0), Size: (%.0.0,%.0)\nWorkArea Offset Left: %.0.0 Top: %.0.0, Right: %.0.0, Bottom: %.0f\nMonitor: %d, DpiScale: %.0f%%",
             viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y,
             viewport.WorkOffsetMin.x, viewport.WorkOffsetMin.y, viewport.WorkOffsetMax.x, viewport.WorkOffsetMax.y,
-            viewport.PlatformMonitor, viewport.DpiScale * 100f32);
+            viewport.PlatformMonitor, viewport.DpiScale * 100);
         if (viewport.Idx > 0) { SameLine(); if (SmallButton("Reset Pos")) { viewport.Pos = ImVec2::new(200, 200); viewport.UpdateWorkRect(); if (viewport.Window) viewport.window.Pos = viewport.Pos; } }
         BulletText("Flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.Flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
@@ -2623,7 +2623,7 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
     let open: bool = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.Name, is_active ? "" : " *Inactive*");
     if (!is_active) { PopStyleColor(); }
     if (IsItemHovered() && is_active)
-        GetForegroundDrawList(window)->AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
+        GetForegroundDrawList(window).AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
     if (!open)
         return;
 
@@ -2638,7 +2638,7 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
         (flags & ImGuiWindowFlags_Modal)        ? "Modal " : "",      (flags & ImGuiWindowFlags_ChildMenu)   ? "ChildMenu " : "",  (flags & ImGuiWindowFlags_NoSavedSettings) ? "NoSavedSettings " : "",
         (flags & ImGuiWindowFlags_NoMouseInputs)? "NoMouseInputs":"", (flags & ImGuiWindowFlags_NoNavInputs) ? "NoNavInputs" : "", (flags & ImGuiWindowFlags_AlwaysAutoResize) ? "AlwaysAutoResize" : "");
     BulletText("WindowClassId: 0x%08X", window.WindowClass.ClassId);
-    BulletText("Scroll: (%.2f/%.2f,%.2f/%.20f32) Scrollbar:%s%s", window.Scroll.x, window.ScrollMax.x, window.Scroll.y, window.ScrollMax.y, window.ScrollbarX ? "X" : "", window.ScrollbarY ? "Y" : "");
+    BulletText("Scroll: (%.2f/%.2f,%.2f/%.20) Scrollbar:%s%s", window.Scroll.x, window.ScrollMax.x, window.Scroll.y, window.ScrollMax.y, window.ScrollbarX ? "X" : "", window.ScrollbarY ? "Y" : "");
     BulletText("Active: %d/%d, WriteAccessed: %d, BeginOrderWithinContext: %d", window.Active, window.WasActive, window.WriteAccessed, (window.Active || window.WasActive) ? window.BeginOrderWithinContext : -1);
     BulletText("Appearing: %d, Hidden: %d (CanSkip %d Cannot %d), SkipItems: %d", window.Appearing, window.Hidden, window.HiddenFramesCanSkipItems, window.HiddenFramesCannotSkipItems, window.SkipItems);
     for (let layer: c_int = 0; layer < ImGuiNavLayer_COUNT; layer++)
@@ -2651,7 +2651,7 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
         }
         BulletText("NavLastIds[%d]: 0x%08X at +(%.1f,%.10f32)(%.1f,%.10f32)", layer, window.NavLastIds[layer], r.Min.x, r.Min.y, r.Max.x, r.Max.y);
         if (IsItemHovered())
-            GetForegroundDrawList(window)->AddRect(r.Min + window.Pos, r.Max + window.Pos, IM_COL32(255, 255, 0, 255));
+            GetForegroundDrawList(window).AddRect(r.Min + window.Pos, r.Max + window.Pos, IM_COL32(255, 255, 0, 255));
     }
     BulletText("NavLayersActiveMask: %X, NavLastChildNavWindow: %s", window.DC.NavLayersActiveMask, window.NavLastChildNavWindow ? window.NavLastChildNavwindow.Name : "NULL");
 
@@ -2683,9 +2683,9 @@ pub unsafe fn DebugNodeWindowSettings(settings: *mut ImGuiWindowSettings)
 
 pub unsafe fn DebugNodeWindowsList(Vec<ImGuiWindow*>* windows, label: *const c_char)
 {
-    if (!TreeNode(label, "%s (%d)", label, windows->Size))
+    if (!TreeNode(label, "%s (%d)", label, windows.Size))
         return;
-    for (let i: c_int = windows->Size - 1; i >= 0; i--) // Iterate front to back
+    for (let i: c_int = windows.Size - 1; i >= 0; i--) // Iterate front to back
     {
         PushID((*windows)[i]);
         DebugNodeWindow((*windows)[i], "Window");
@@ -2738,7 +2738,7 @@ pub unsafe fn ShowDebugLogWindow(bool* p_open)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize))
-        SetNextWindowSize(ImVec2::new(0.0, GetFontSize() * 12.00f32), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(ImVec2::new(0.0, GetFontSize() * 12.0), ImGuiCond_FirstUseEver);
     if (!Begin("Dear ImGui Debug Log", p_open) || GetCurrentWindow()->BeginCount > 1)
     {
         End();
@@ -2796,7 +2796,7 @@ pub unsafe fn UpdateDebugToolItemPicker()
     for (let mouse_button: c_int = 0; mouse_button < 3; mouse_button++)
         if (change_mapping && IsMouseClicked(mouse_button))
             g.DebugItemPickerMouseButton = mouse_button;
-    SetNextWindowBgAlpha(0.700f32);
+    SetNextWindowBgAlpha(0.70);
     BeginTooltip();
     Text("HoveredId: 0x%08X", hovered_id);
     Text("Press ESC to abort picking.");
@@ -2870,7 +2870,7 @@ pub unsafe fn ShowStackToolWindow(bool* p_open)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize))
-        SetNextWindowSize(ImVec2::new(0.0, GetFontSize() * 8.00f32), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(ImVec2::new(0.0, GetFontSize() * 8.0), ImGuiCond_FirstUseEver);
     if (!Begin("Dear ImGui Stack Tool", p_open) || GetCurrentWindow()->BeginCount > 1)
     {
         End();

@@ -111,7 +111,7 @@ impl ImFontAtlas {
     pub unsafe fn AddFont(&mut self, font_cfg: *const ImFontConfig) -> *mut ImFont {
         // IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
         // IM_ASSERT(font_cfg->FontData != NULL && font_cfg->FontDataSize > 0);
-        // IM_ASSERT(font_cfg->SizePixels > 0);
+        // IM_ASSERT(font_cfg.SizePixels > 0);
 
         // Create new font
         if !font_cfg.MergeMode {
@@ -570,7 +570,7 @@ impl ImFontAtlas {
     }
 
 
-    // c_int               AddCustomRectFontGlyph(font: *mut ImFont, ImWchar id, width: c_int, height: c_int, c_float advance_x, const ImVec2& offset = ImVec2::new(0, 0));
+    // c_int               AddCustomRectFontGlyph(font: *mut ImFont, ImWchar id, width: c_int, height: c_int, c_float advance_x, const offset: &mut ImVec2 = ImVec2::new(0, 0));
     pub fn AddCustomRectFontGlyph(&mut self, font: *mut ImFont, id: ImWchar, width: size_t, height: size_t, advance_x: c_float, offset: &ImVec2) -> size_t {
 
         // #ifdef IMGUI_USE_WCHAR32

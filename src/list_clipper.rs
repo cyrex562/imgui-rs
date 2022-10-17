@@ -57,7 +57,7 @@ impl ImGuiListClipper {
     pub unsafe fn Begin(&mut self, items_count: i32, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut window = g.CurrentWindow;
-        // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin(%d,%.20f32) in '%s'\n", items_count, items_height, window.Name);
+        // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin(%d,%.20) in '%s'\n", items_count, items_height, window.Name);
 
         let table = g.CurrentTable;
         if table.is_null() == false {

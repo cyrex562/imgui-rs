@@ -7,7 +7,7 @@ use crate::config_flags::{ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_N
 use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::dock_node::ImGuiDockNode;
 use crate::drag_drop_flags::ImGuiDragDropFlags_SourceExtern;
-use crate::id_ops::{ClearActiveID, KeepAliveID, SetActiveID};
+use {ClearActiveID, KeepAliveID, SetActiveID};
 use crate::imgui::GImGui;
 use crate::input_ops::{IsMouseClicked, IsMouseDragging, IsMousePosValid};
 use crate::key::{ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY};
@@ -63,7 +63,7 @@ pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut 
     }
 
     let clicked: bool = IsMouseClicked(0, false);
-    let dragging: bool = IsMouseDragging(0, g.IO.MouseDragThreshold * 1.700f32);
+    let dragging: bool = IsMouseDragging(0, g.IO.MouseDragThreshold * 1.70);
     if can_undock_node && dragging {
         DockContextQueueUndockNode(&g, node);
     } // Will lead to DockNodeStartMouseMovingWindow() -> StartMouseMovingWindow() being called next frame
@@ -300,7 +300,7 @@ pub unsafe fn UpdateMouseWheel() {
     // FIXME-OBSOLETE: This is an old feature, it still works but pretty much nobody is using it and may be best redesigned.
     if wheel_y != 0.0 && g.IO.KeyCtrl && g.IO.FontAllowUserScaling {
         StartLockWheelingWindow(window);
-        let new_font_scale: c_float = ImClamp(window.FontWindowScale + g.IO.MouseWheel * 0.1.0, 0.50f32, 2.500f32);
+        let new_font_scale: c_float = ImClamp(window.FontWindowScale + g.IO.MouseWheel * 0.1.0, 0.50f32, 2.5);
         let scale: c_float = new_font_scale / window.FontWindowScale;
         window.FontWindowScale = new_font_scale;
         if window == window.RootWindow {

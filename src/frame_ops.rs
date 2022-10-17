@@ -11,7 +11,7 @@ use crate::error_ops::{ErrorCheckEndFrameSanityChecks, ErrorCheckNewFrameSanityC
 use crate::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
 use crate::font_ops::SetCurrentFont;
 use crate::garbage_collection::GcCompactTransientWindowBuffers;
-use crate::id_ops::{ClearActiveID, KeepAliveID};
+use {ClearActiveID, KeepAliveID};
 use crate::input_ops::{IsMouseDown, UpdateInputEvents};
 use crate::item_flags::ImGuiItemFlags_None;
 use crate::key::ImGuiKey_Escape;
@@ -183,7 +183,7 @@ pub unsafe fn NewFrame() {
     } else if g.HoverDelayTimer > 0.0 {
         // This gives a little bit of leeway before clearing the hover timer, allowing mouse to cross gaps
         g.HoverDelayClearTimer += g.IO.DeltaTime;
-        if g.HoverDelayClearTimer >= ImMax(0.20f32, g.IO.DeltaTime * 2.00f32) {
+        if g.HoverDelayClearTimer >= ImMax(0.20, g.IO.DeltaTime * 2.0) {
             // ~6 frames at 30 Hz + allow for low framerate
             g.HoverDelayTimer = 0.0;
             g.HoverDelayClearTimer = 0.0;

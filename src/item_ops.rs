@@ -8,7 +8,7 @@ use crate::content_ops::GetContentRegionMaxAbs;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::hovered_flags::{ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem, ImGuiHoveredFlags_AllowWhenDisabled, ImGuiHoveredFlags_AllowWhenOverlapped, ImGuiHoveredFlags_DelayNormal, ImGuiHoveredFlags_DelayShort, ImGuiHoveredFlags_NoNavOverride, ImGuiHoveredFlags_None, ImGuiHoveredFlags_NoSharedDelay};
-use crate::id_ops::{ClearActiveID, KeepAliveID, SetHoveredID};
+use {ClearActiveID, KeepAliveID, SetHoveredID};
 use crate::imgui::GImGui;
 use crate::input_ops::{IsMouseClicked, IsMouseHoveringRect};
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_Disabled};
@@ -238,7 +238,7 @@ pub unsafe fn SetLastItemData(item_id: ImGuiID, in_flags: ImGuiItemFlags, item_f
     g.LastItemData.Rect = item_rect.clone();
 }
 
-// c_float CalcWrapWidthForPos(const ImVec2& pos, c_float wrap_pos_x)
+// c_float CalcWrapWidthForPos(const pos: &mut ImVec2, c_float wrap_pos_x)
 pub unsafe fn CalcWrapWidthForPos(pos: &ImVec2, mut wrap_pos_x: c_float) -> c_float
 {
     if wrap_pos_x < 0.0 {

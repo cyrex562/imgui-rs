@@ -6,7 +6,7 @@ use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
 use crate::condition::ImGuiCond_None;
 use crate::content_ops::GetContentRegionAvail;
 use crate::GImGui;
-use crate::id_ops::SetActiveID;
+use SetActiveID;
 use crate::input_source::ImGuiInputSource_Nav;
 use crate::item_ops::{ItemAdd, ItemSize};
 use crate::item_status_flags::ImGuiItemStatusFlags_HoveredWindow;
@@ -24,7 +24,7 @@ use crate::window::ImGuiWindow;
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
 use crate::window_ops::SetNextWindowSize;
 
-// BeginChildEx: bool(name: *const c_char, ImGuiID id, const ImVec2& size_arg, border: bool, ImGuiWindowFlags flags)
+// BeginChildEx: bool(name: *const c_char, ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags flags)
 pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
@@ -37,10 +37,10 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     let mut size: ImVec2 = ImFloor(size_arg);
     let auto_fit_axises: c_int = (if size.x == 0.0 { (1 << ImGuiAxis_X) } else { 0x00 }) | (if size.y == 0.0 { (1 << ImGuiAxis_Y) } else { 0x00 });
     if size.x <= 0.0 {
-        size.x = ImMax(content_avail.x + size.x, 4.00f32);
+        size.x = ImMax(content_avail.x + size.x, 4.0);
     }// Arbitrary minimum child size (0.0 causing too much issues)
     if size.y <= 0.0 {
-        size.y = ImMax(content_avail.y + size.y, 4.00f32);
+        size.y = ImMax(content_avail.y + size.y, 4.0);
     }
     SetNextWindowSize(&size, ImGuiCond_None);
 
@@ -81,13 +81,13 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
     return ret;
 }
 
-// BeginChild: bool(str_id: *const c_char, const ImVec2& size_arg, border: bool, ImGuiWindowFlags extra_flags)
+// BeginChild: bool(str_id: *const c_char, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild(str_id: *const c_char, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     return BeginChildEx(str_id, window.GetID(str_id, null()), size_arg, border, extra_flags);
 }
 
-// BeginChild: bool(ImGuiID id, const ImVec2& size_arg, border: bool, ImGuiWindowFlags extra_flags)
+// BeginChild: bool(ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild2(id: ImGuiID, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     // IM_ASSERT(id != 0);
     return BeginChildEx(null_mut(), id, size_arg, border, extra_flags);
@@ -138,7 +138,7 @@ pub unsafe fn EndChild() {
 }
 
 // Helper to create a child window / scrolling region that looks like a normal widget frame.
-// BeginChildFrame: bool(ImGuiID id, const ImVec2& size, ImGuiWindowFlags extra_flags)
+// BeginChildFrame: bool(ImGuiID id, const size: &mut ImVec2, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChildFrame(id: ImGuiID, size: &ImVec2, extra_flags: ImGuiWindowFlagss) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;

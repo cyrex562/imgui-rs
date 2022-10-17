@@ -4,7 +4,7 @@ use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_AcceptNoPrev
 use crate::payload::ImGuiPayload;
 use crate::{GImGui, ImHashStr};
 use crate::condition::{ImGuiCond, ImGuiCond_Always};
-use crate::id_ops::{KeepAliveID, SetActiveID};
+use {KeepAliveID, SetActiveID};
 use crate::input_ops::{IsMouseDragging, IsMouseHoveringRect};
 use crate::item_ops::ItemHoverable;
 use crate::item_status_flags::{ImGuiItemStatusFlags_HasDisplayRect, ImGuiItemStatusFlags_HoveredRect};
@@ -325,7 +325,7 @@ pub unsafe fn AcceptDragDropPayload(payload_type: *const c_char, flags: ImGuiDra
     payload.Preview = was_accepted_previously;
     flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
     if (flag_clear(flags, ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview){
-        window.DrawList.AddRect(r.Min - ImVec2::new(3.5f32,3.5f32), r.Max + ImVec2::new(3.5f32, 3.5f32), GetColorU32(ImGuiCol_DragDropTarget), 0.0, 0, 2.00f32);}
+        window.DrawList.AddRect(r.Min - ImVec2::new(3.5,3.5), r.Max + ImVec2::new(3.5, 3.5), GetColorU32(ImGuiCol_DragDropTarget), 0.0, 0, 2.0);}
 
     g.DragDropAcceptFrameCount = g.FrameCount;
     payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()

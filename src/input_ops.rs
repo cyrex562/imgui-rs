@@ -25,7 +25,7 @@ use crate::vec2::ImVec2;
 // Test if mouse cursor is hovering given rectangle
 // NB- Rectangle is clipped by our current clip setting
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
-// IsMouseHoveringRect: bool(const ImVec2& r_min, const ImVec2& r_max, clip: bool)
+// IsMouseHoveringRect: bool(const r_min: &mut ImVec2, const r_max: &mut ImVec2, clip: bool)
 pub unsafe fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -191,7 +191,7 @@ pub unsafe fn GetTypematicRepeatRate(flags: ImGuiInputFlags, repeat_delay: *mut 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavMove {
         *repeat_delay = g.IO.KeyRepeatDelay * 0.72f32;
-        *repeat_rate = g.IO.KeyRepeatRate * 0.80f32;
+        *repeat_rate = g.IO.KeyRepeatRate * 0.80;
         return;
     }
     if (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavMove {
@@ -372,7 +372,7 @@ pub fn IsMousePosValid(mouse_pos: *const ImVec2) -> bool {
     // The assert is only to silence a false-positive in XCode Static Analysis.
     // Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be NULL (which it doesn't for other functions).
     // IM_ASSERT(GImGui != NULL);
-    let MOUSE_INVALID: c_float = -256000f32;
+    let MOUSE_INVALID: c_float = -256000;
     let p: ImVec2 = mouse_pos? * mouse_pos: GimGui.IO.MousePos;
     return p.x >= MOUSE_INVALID && p.y >= MOUSE_INVALID;
 }

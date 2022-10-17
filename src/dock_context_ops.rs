@@ -578,11 +578,11 @@ pub unsafe fn FixLargeWindowsWhenUndocking(size: &ImVec2, ref_viewport: *mut ImG
         return size;}
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let max_size: ImVec2 = ImFloor(ref_viewport.WorkSize * 0.900f32);
+    let max_size: ImVec2 = ImFloor(ref_viewport.WorkSize * 0.9);
     if (g.ConfigFlagsCurrFrame & ImGuiConfigFlags_ViewportsEnable)
     {
         let monitor: *const ImGuiPlatformMonitor = GetViewportPlatformMonitor(ref_viewport);
-        max_size = ImFloor(monitor.WorkSize * 0.900f32);
+        max_size = ImFloor(monitor.WorkSize * 0.9);
     }
     return ImMin(size, max_size);
 }

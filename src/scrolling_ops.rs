@@ -81,7 +81,7 @@ pub unsafe fn ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &mut ImRect, m
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window_rect: ImRect = ImRect::new(window.InnerRect.Min - ImVec2::new(1.0, 1.0), window.InnerRect.Max + ImVec2::new(1.0, 1.0));
-    //GetForegroundDrawList(window)->AddRect(window_rect.Min, window_rect.Max, IM_COL32_WHITE); // [DEBUG]
+    //GetForegroundDrawList(window).AddRect(window_rect.Min, window_rect.Max, IM_COL32_WHITE); // [DEBUG]
 
     // Check that only one behavior is selected per axis
     // IM_ASSERT((flags & ImGuiScrollFlags_MaskX_) == 0 || ImIsPowerOfTwo(flags & ImGuiScrollFlags_MaskX_));
@@ -100,8 +100,8 @@ pub unsafe fn ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &mut ImRect, m
 
     let fully_visible_x: bool = item_rect.Min.x >= window_rect.Min.x && item_rect.Max.x <= window_rect.Max.x;
     let fully_visible_y: bool = item_rect.Min.y >= window_rect.Min.y && item_rect.Max.y <= window_rect.Max.y;
-    let can_be_fully_visible_x: bool = (item_rect.GetWidth() + g.Style.ItemSpacing.x * 2.00f32) <= window_rect.GetWidth();
-    let can_be_fully_visible_y: bool = (item_rect.GetHeight() + g.Style.ItemSpacing.y * 2.00f32) <= window_rect.GetHeight();
+    let can_be_fully_visible_x: bool = (item_rect.GetWidth() + g.Style.ItemSpacing.x * 2.0) <= window_rect.GetWidth();
+    let can_be_fully_visible_y: bool = (item_rect.GetHeight() + g.Style.ItemSpacing.y * 2.0) <= window_rect.GetHeight();
 
     if flag_set(flags, ImGuiScrollFlags_KeepVisibleEdgeX) && !fully_visible_x
     {
@@ -246,7 +246,7 @@ pub unsafe fn SetScrollFromPosY2(local_y: c_float,center_y_ratio: c_float)
     SetScrollFromPosY(g.CurrentWindow, local_y, center_y_ratio);
 }
 
-// center_x_ratio: 0.0 left of last item, 0.5f32 horizontal center of last item, 1.0 right of last item.
+// center_x_ratio: 0.0 left of last item, 0.5 horizontal center of last item, 1.0 right of last item.
 pub unsafe fn SetScrollHereX(center_x_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -259,7 +259,7 @@ pub unsafe fn SetScrollHereX(center_x_ratio: c_float)
     window.ScrollTargetEdgeSnapDist.x = ImMax(0.0, window.WindowPadding.x - spacing_x);
 }
 
-// center_y_ratio: 0.0 top of last item, 0.5f32 vertical center of last item, 1.0 bottom of last item.
+// center_y_ratio: 0.0 top of last item, 0.5 vertical center of last item, 1.0 bottom of last item.
 pub unsafe fn SetScrollHereY(center_y_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;

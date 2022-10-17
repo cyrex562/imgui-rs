@@ -27,5 +27,5 @@ pub const ImGuiSelectableFlags_SelectOnRelease: ImGuiSelectableFlags = 1 << 23; 
 pub const ImGuiSelectableFlags_SpanAvailWidth: ImGuiSelectableFlags = 1 << 24; // Span all avail width even if we declared less for layout purpose. FIXME: We may be able to remove this (added in 6251d379; 2bcafc86 for menus)
 pub const ImGuiSelectableFlags_DrawHoveredWhenHeld: ImGuiSelectableFlags = 1 << 25; // Always show active when held; even is not hovered. This concept could probably be renamed/formalized somehow.
 pub const ImGuiSelectableFlags_SetNavIdOnHover: ImGuiSelectableFlags = 1 << 26; // Set Nav/Focus ID on mouse hover (used by MenuItem)
-pub const ImGuiSelectableFlags_NoPadWithHalfSpacing: ImGuiSelectableFlags = 1 << 27; // Disable padding each side with ItemSpacing * 0.5f32
+pub const ImGuiSelectableFlags_NoPadWithHalfSpacing: ImGuiSelectableFlags = 1 << 27; // Disable padding each side with ItemSpacing * 0.5
                                                                                      // };

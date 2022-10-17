@@ -693,7 +693,7 @@ pub unsafe fn ButtonEx(label: *const c_char, size_arg: &ImVec2, ImGuiButtonFlags
     let pos: ImVec2 = window.DC.CursorPos;
     if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window.DC.CurrLineTextBaseOffset) // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
         pos.y += window.DC.CurrLineTextBaseOffset - style.FramePadding.y;
-    let size: ImVec2 = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0.0, label_size.y + style.FramePadding.y * 2.00f32);
+    let size: ImVec2 = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0.0, label_size.y + style.FramePadding.y * 2.0);
 
     let mut bb: ImRect = ImRect::new(pos, pos + size);
     ItemSize(size, style.FramePadding.y);
@@ -810,10 +810,10 @@ pub unsafe fn CloseButton(id: ImGuiID, pos: &ImVec2) -> bool
 
     // Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
-    let mut bb: ImRect = ImRect::new(pos, pos + ImVec2::new(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.00f32);
+    let mut bb: ImRect = ImRect::new(pos, pos + ImVec2::new(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0);
     let bb_interact: ImRect =  bb;
     let area_to_visible_ratio: c_float =  window.OuterRectClipped.GetArea() / bb.GetArea();
-    if (area_to_visible_ratio < 1.5f32)
+    if (area_to_visible_ratio < 1.5)
         bb_interact.Expand(ImFloor(bb_interact.GetSize() * -0.250f32));
 
     // Tweak 2: We intentionally allow interaction when clipped so that a mechanical Alt,Right,Activate sequence can always close a window.
@@ -847,7 +847,7 @@ pub unsafe fn CollapseButton(id: ImGuiID, pos: &ImVec2, *mut ImGuiDockNode dock_
     let g = GImGui; // ImGuiContext& g = *GImGui;
     *mut ImGuiWindow window = g.CurrentWindow;
 
-    let mut bb: ImRect = ImRect::new(pos, pos + ImVec2::new(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.00f32);
+    let mut bb: ImRect = ImRect::new(pos, pos + ImVec2::new(g.FontSize, g.FontSize) + g.Style.FramePadding * 2.0);
     ItemAdd(bb, id);
     hovered: bool, held;
     let mut pressed: bool =  ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_None);
@@ -941,8 +941,8 @@ pub unsafe fn ScrollbarEx(bb_frame: &ImRect, id: ImGuiID, axis: ImGuiAxis, *mut 
 
     // When we are too small, start hiding and disabling the grab (this reduce visual noise on very small window and facilitate using the window resize grab)
     let alpha: c_float =  1.0;
-    if ((axis == ImGuiAxis_Y) && bb_frame_height < g.FontSize + g.Style.FramePadding.y * 2.00f32)
-        alpha = ImSaturate((bb_frame_height - g.FontSize) / (g.Style.FramePadding.y * 2.00f32));
+    if ((axis == ImGuiAxis_Y) && bb_frame_height < g.FontSize + g.Style.FramePadding.y * 2.0)
+        alpha = ImSaturate((bb_frame_height - g.FontSize) / (g.Style.FramePadding.y * 2.0));
     if (alpha <= 0.0)
         return false;
 
@@ -950,7 +950,7 @@ pub unsafe fn ScrollbarEx(bb_frame: &ImRect, id: ImGuiID, axis: ImGuiAxis, *mut 
     let allow_interaction: bool = (alpha >= 1.0);
 
     let bb: ImRect =  bb_frame;
-    bb.Expand(ImVec2::new(-ImClamp(IM_FLOOR((bb_frame_width - 2.00f32) * 0.5), 0.0, 3.00f32), -ImClamp(IM_FLOOR((bb_frame_height - 2.00f32) * 0.5), 0.0, 3.00f32)));
+    bb.Expand(ImVec2::new(-ImClamp(IM_FLOOR((bb_frame_width - 2.0) * 0.5), 0.0, 3.0), -ImClamp(IM_FLOOR((bb_frame_height - 2.0) * 0.5), 0.0, 3.0)));
 
     // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
     let scrollbar_size_v: c_float =  (axis == ImGuiAxis_X) ? bb.GetWidth() : bb.GetHeight();
@@ -1052,7 +1052,7 @@ pub unsafe fn ImageButtonEx(id: ImGuiID, ImTextureID texture_id, size: &ImVec2, 
         return false;
 
     let padding: ImVec2 = g.Style.FramePadding;
-    let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size + padding * 2.00f32);
+    let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size + padding * 2.0);
     ItemSize(bb);
     if (!ItemAdd(bb, id))
         return false;
@@ -1120,7 +1120,7 @@ pub unsafe fn Checkbox(label: *const c_char, *mut v: bool) -> bool
 
     let square_sz: c_float =  GetFrameHeight();
     let pos: ImVec2 = window.DC.CursorPos;
-    let mut total_bb: ImRect = ImRect::new(pos, pos + ImVec2::new(square_sz + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), label_size.y + style.FramePadding.y * 2.00f32));
+    let mut total_bb: ImRect = ImRect::new(pos, pos + ImVec2::new(square_sz + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), label_size.y + style.FramePadding.y * 2.0));
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id))
     {
@@ -1145,13 +1145,13 @@ pub unsafe fn Checkbox(label: *const c_char, *mut v: bool) -> bool
     {
         // Undocumented tristate/mixed/indeterminate checkbox (#2644)
         // This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
-        pad: ImVec2(ImMax(1.0, IM_FLOOR(square_sz / 3.60f32)), ImMax(1.0, IM_FLOOR(square_sz / 3.60f32)));
+        pad: ImVec2(ImMax(1.0, IM_FLOOR(square_sz / 3.60)), ImMax(1.0, IM_FLOOR(square_sz / 3.60)));
         window.DrawList.AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.FrameRounding);
     }
     else if (*v)
     {
-        let pad: c_float =  ImMax(1.0, IM_FLOOR(square_sz / 6.00f32));
-        RenderCheckMark(window.DrawList, check_bb.Min + ImVec2::new(pad, pad), check_col, square_sz - pad * 2.00f32);
+        let pad: c_float =  ImMax(1.0, IM_FLOOR(square_sz / 6.0));
+        RenderCheckMark(window.DrawList, check_bb.Min + ImVec2::new(pad, pad), check_col, square_sz - pad * 2.0);
     }
 
     let label_pos: ImVec2 = ImVec2::new(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
@@ -1227,7 +1227,7 @@ pub unsafe fn RadioButton(label: *const c_char, active: bool) -> bool
     let square_sz: c_float =  GetFrameHeight();
     let pos: ImVec2 = window.DC.CursorPos;
     let mut check_bb: ImRect = ImRect::new(pos, pos + ImVec2::new(square_sz, square_sz));
-    let mut total_bb: ImRect = ImRect::new(pos, pos + ImVec2::new(square_sz + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), label_size.y + style.FramePadding.y * 2.00f32));
+    let mut total_bb: ImRect = ImRect::new(pos, pos + ImVec2::new(square_sz + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), label_size.y + style.FramePadding.y * 2.0));
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id))
         return false;
@@ -1246,7 +1246,7 @@ pub unsafe fn RadioButton(label: *const c_char, active: bool) -> bool
     window.DrawList.AddCircleFilled(center, radius, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), 16);
     if (active)
     {
-        let pad: c_float =  ImMax(1.0, IM_FLOOR(square_sz / 6.00f32));
+        let pad: c_float =  ImMax(1.0, IM_FLOOR(square_sz / 6.0));
         window.DrawList.AddCircleFilled(center, radius - pad, GetColorU32(ImGuiCol_CheckMark), 16);
     }
 
@@ -1286,7 +1286,7 @@ pub unsafe fn ProgressBar(fraction: c_float, size_arg: &ImVec2, overlay: *const 
     let setyle = &mut g.Style;
 
     let pos: ImVec2 = window.DC.CursorPos;
-    let size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), g.FontSize + style.FramePadding.y * 2.00f32);
+    let size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), g.FontSize + style.FramePadding.y * 2.0);
     let mut bb: ImRect = ImRect::new(pos, pos + size);
     ItemSize(size, style.FramePadding.y);
     if (!ItemAdd(bb, 0))
@@ -1332,7 +1332,7 @@ pub unsafe fn Bullet()
     // Render and stay on same line
     text_col: u32 = GetColorU32(ImGuiCol_Text);
     RenderBullet(window.DrawList, bb.Min + ImVec2::new(style.FramePadding.x + g.FontSize * 0.5, line_height * 0.5), text_col);
-    SameLine(0, style.FramePadding.x * 2.00f32);
+    SameLine(0, style.FramePadding.x * 2.0);
 }
 
 //-------------------------------------------------------------------------
@@ -1540,7 +1540,7 @@ pub unsafe fn SplitterBehavior(bb: &ImRect, id: ImGuiID, axis: ImGuiAxis, *mutsi
     return held;
 }
 
-static IMGUI_CDECL: c_int ShrinkWidthItemComparer(lhs: *const c_void, rhs: *const c_void)
+: c_int ShrinkWidthItemComparer(lhs: *const c_void, rhs: *const c_void)
 {
     let a: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)lhs;
     let b: *const ImGuiShrinkWidthItem = (*const ImGuiShrinkWidthItem)rhs;
@@ -1629,7 +1629,7 @@ pub unsafe fn BeginCombo(label: *const c_char, preview_value: *const c_char, ImG
     let arrow_size: c_float =  (flags & ImGuiComboFlags_NoArrowButton) ? 0.0 : GetFrameHeight();
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
     let w: c_float =  (flags & ImGuiComboFlags_NoPreview) ? arrow_size : CalcItemWidth();
-    let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.00f32));
+    let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.0));
     let mut total_bb: ImRect = ImRect::new(bb.Min, bb.Max + ImVec2::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id, &bb))
@@ -2049,7 +2049,7 @@ pub unsafe fn DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type,
     // Copy the value in an opaque buffer so we can compare at the end of the function if it changed at all.
     let type_info: *const ImGuiDataTypeInfo = DataTypeGetInfo(data_type);
     ImGuiDataTypeTempStorage data_backup;
-    memcpy(&data_backup, p_data, type_info->Size);
+    memcpy(&data_backup, p_data, type_info.Size);
 
     // Sanitize format
     // For float/double we have to ignore format with precision (e.g. "%.2f") because sscanf doesn't take them in, so force them into %f and %lf
@@ -2061,9 +2061,9 @@ pub unsafe fn DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type,
 
     // Small types need a 32-bit buffer to receive the result from scanf()
     let v32: c_int = 0;
-    if (sscanf(buf, format, type_info->Size >= 4 ? p_data : &v32) < 1)
+    if (sscanf(buf, format, type_info.Size >= 4 ? p_data : &v32) < 1)
         return false;
-    if (type_info->Size < 4)
+    if (type_info.Size < 4)
     {
         if (data_type == ImGuiDataType_S8)
             *(*mut i8)p_data = ImClamp(v32, IM_S8_MIN, IM_S8_MAX);
@@ -2077,7 +2077,7 @@ pub unsafe fn DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type,
             // IM_ASSERT(0);
     }
 
-    return memcmp(&data_backup, p_data, type_info->Size) != 0;
+    return memcmp(&data_backup, p_data, type_info.Size) != 0;
 }
 
 template<typename T>
@@ -2139,7 +2139,7 @@ pub unsafe fn DataTypeClamp(ImGuiDataType data_type, p_data: *mut c_void, p_min:
 
 staticGetMinimumStepAtDecimalPrecision: c_float(decimal_precision: c_int)
 {
-    static min_steps: c_float[10] = { 1.0, 0.1f, 0.01f, 0.001f, 0.0001f, 0.00001f, 0.000001f, 0.0000001f, 0.00000001f, 0.000000001f };
+    static min_steps: c_float[10] = { 1.0, 0.1f, 0.01f, 0.001f, 0.01f, 0.001f, 0.0001f, 0.00001f, 0.000001f, 0.0000001f };
     if (decimal_precision < 0)
         return FLT_MIN;
     return (decimal_precision < min_steps.len()) ? min_steps[decimal_precision] : ImPow(10f32, -decimal_precision);
@@ -2209,7 +2209,7 @@ pub unsafe fn DragBehaviorT(ImGuiDataType data_type, *mut TYPE v,v_speed: c_floa
     {
         adjust_delta = g.IO.MouseDelta[axis];
         if (g.IO.KeyAlt)
-            adjust_delta *= 1.0 / 100f32;
+            adjust_delta *= 1.0 / 100;
         if (g.IO.KeyShift)
             adjust_delta *= 10f32;
     }
@@ -2229,7 +2229,7 @@ pub unsafe fn DragBehaviorT(ImGuiDataType data_type, *mut TYPE v,v_speed: c_floa
         adjust_delta = -adjust_delta;
 
     // For logarithmic use our range is effectively 0..1 so scale the delta into that range
-    if (is_logarithmic && (v_max - v_min < f32::MAX) && ((v_max - v_min) > 0.0000010f32)) // Epsilon to avoid /0
+    if (is_logarithmic && (v_max - v_min < f32::MAX) && ((v_max - v_min) > 0.00010f32)) // Epsilon to avoid /0
         adjust_delta /= (v_max - v_min);
 
     // Clear current value on activation
@@ -2360,7 +2360,7 @@ pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: 
     let w: c_float =  CalcItemWidth();
 
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
-    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.00f32));
+    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.0));
     let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Max + ImVec2::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
 
     let temp_input_allowed: bool = flag_clear(flags, ImGuiSliderFlags_NoInput);
@@ -2804,16 +2804,16 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type,
                 let decimal_precision: c_int = is_floating_point ? ImParseFormatPrecision(format, 3) : 0;
                 if (decimal_precision > 0)
                 {
-                    input_delta /= 100f32;    // Gamepad/keyboard tweak speeds in % of slider bounds
+                    input_delta /= 100;    // Gamepad/keyboard tweak speeds in % of slider bounds
                     if (tweak_slow)
                         input_delta /= 10f32;
                 }
                 else
                 {
-                    if ((v_range >= -100f32 && v_range <= 100f32) || tweak_slow)
+                    if ((v_range >= -100 && v_range <= 100) || tweak_slow)
                         input_delta = if (input_delta < 0.0 { -1.0} else { 1.0) / v_range}; // Gamepad/keyboard tweak speeds in integer steps
                     else
-                        input_delta /= 100f32;
+                        input_delta /= 100;
                 }
                 if (tweak_fast)
                     input_delta *= 10f32;
@@ -2927,10 +2927,10 @@ pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, 
         // IM_ASSERT(*(*const u64)p_max <= IM_U64_MAX / 2);
         return SliderBehaviorT<u64, ImS64, double>(bb, id, data_type, (*mut u64)p_v,  *(*const u64)p_min,  *(*const u64)p_max,  format, flags, out_grab_bb);
     case ImGuiDataType_Float:
-        // IM_ASSERT(*(*const c_float)p_min >= -f32::MAX / 2.0.0 && *(*const c_float)p_max <= f32::MAX / 2.00f32);
+        // IM_ASSERT(*(*const c_float)p_min >= -f32::MAX / 2.0.0 && *(*const c_float)p_max <= f32::MAX / 2.0);
         return SliderBehaviorT<c_float, c_float, c_float >(bb, id, data_type, (*mut c_float)p_v,  *(*const c_float)p_min,  *(*const c_float)p_max,  format, flags, out_grab_bb);
     case ImGuiDataType_Double:
-        // IM_ASSERT(*(*const double)p_min >= -DBL_MAX / 2.0.0 && *(*const double)p_max <= DBL_MAX / 2.00f32);
+        // IM_ASSERT(*(*const double)p_min >= -DBL_MAX / 2.0.0 && *(*const double)p_max <= DBL_MAX / 2.0);
         return SliderBehaviorT<double, double, double>(bb, id, data_type, (*mut double)p_v, *(*const double)p_min, *(*const double)p_max, format, flags, out_grab_bb);
     case ImGuiDataType_COUNT: break;
     }
@@ -2952,7 +2952,7 @@ pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, p_data
     let w: c_float =  CalcItemWidth();
 
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
-    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.00f32));
+    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.0));
     let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Max + ImVec2::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
 
     let temp_input_allowed: bool = flag_clear(flags, ImGuiSliderFlags_NoInput);
@@ -3372,7 +3372,7 @@ pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, Im
     if (TempInputText(bb, id, label, data_buf, data_buf.len(), flags))
     {
         // Backup old value
-        data_type_size: size_t = DataTypeGetInfo(data_type)->Size;
+        data_type_size: size_t = DataTypeGetInfo(data_type).Size;
         ImGuiDataTypeTempStorage data_backup;
         memcpy(&data_backup, p_data, data_type_size);
 
@@ -3740,7 +3740,7 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, pos: c_int,
 // #define STB_TEXTEDIT_K_WORDLEFT     0x20000C // keyboard input to move cursor left one word
 // #define STB_TEXTEDIT_K_WORDRIGHT    0x20000D // keyboard input to move cursor right one word
 // #define STB_TEXTEDIT_K_PGUP         0x20000E // keyboard input to move cursor up a page
-// #define STB_TEXTEDIT_K_PGDOWN       0x20000f32 // keyboard input to move cursor down a page
+// #define STB_TEXTEDIT_K_PGDOWN       0x20000 // keyboard input to move cursor down a page
 // #define STB_TEXTEDIT_K_SHIFT        0x400000
 
 // #define STB_TEXTEDIT_IMPLEMENTATION
@@ -3810,7 +3810,7 @@ c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: *const c_ch
         // Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
         let g = GImGui; // ImGuiContext& g = *GImGui;
         *mut ImGuiInputTextState edit_state = &g.InputTextState;
-        // IM_ASSERT(edit_state->ID != 0 && g.ActiveId == edit_state->ID);
+        // IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID);
         // IM_ASSERT(Buf == edit_state->TextA.Data);
         let new_buf_size: c_int = BufTextLen + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1;
         edit_state.TextA.reserve(new_buf_size + 1);
@@ -3998,7 +3998,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
         BeginGroup();
     let mut id: ImGuiID =  window.GetID(label);
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
-    let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), (is_multiline ? g.FontSize * 8.0.0 : label_size.y) + style.FramePadding.y * 2.00f32); // Arbitrary default of 8 lines high for multi-line
+    let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), (is_multiline ? g.FontSize * 8.0.0 : label_size.y) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
     let total_size: ImVec2 = ImVec2::new(frame_size.x + (label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0), frame_size.y);
 
     let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + frame_size);
@@ -4126,7 +4126,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
 
     if (g.ActiveId != id && init_make_active)
     {
-        // IM_ASSERT(state && state->ID == id);
+        // IM_ASSERT(state && state.ID == id);
         SetActiveID(id, window);
         SetFocusID(id, window);
         FocusWindow(window);
@@ -4725,9 +4725,9 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
                 // Test if cursor is vertically visible
                 if (cursor_offset.y - g.FontSize < scroll_y)
                     scroll_y = ImMax(0.0, cursor_offset.y - g.FontSize);
-                else if (cursor_offset.y - (inner_size.y - style.FramePadding.y * 2.00f32) >= scroll_y)
+                else if (cursor_offset.y - (inner_size.y - style.FramePadding.y * 2.0) >= scroll_y)
                     scroll_y = cursor_offset.y - inner_size.y + style.FramePadding.y * 2.0.0;
-                let scroll_max_y: c_float =  ImMax((text_size.y + style.FramePadding.y * 2.00f32) - inner_size.y, 0.0);
+                let scroll_max_y: c_float =  ImMax((text_size.y + style.FramePadding.y * 2.0) - inner_size.y, 0.0);
                 scroll_y = ImClamp(scroll_y, 0.0, scroll_max_y);
                 draw_pos.y += (draw_window.Scroll.y - scroll_y);   // Manipulate cursor pos immediately avoid a frame of lag
                 draw_window.Scroll.y = scroll_y;
@@ -4743,7 +4743,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
             let text_selected_begin: *const ImWchar = text_begin + ImMin(state.Stb.select_start, state.Stb.select_end);
             let text_selected_end: *const ImWchar = text_begin + ImMax(state.Stb.select_start, state.Stb.select_end);
 
-            bg_color: u32 = GetColorU32(ImGuiCol_TextSelectedBg, render_cursor ? 1.0 : 0.60f32); // FIXME: current code flow mandate that render_cursor is always true here, we are leaving the transparent one for tests.
+            bg_color: u32 = GetColorU32(ImGuiCol_TextSelectedBg, render_cursor ? 1.0 : 0.60); // FIXME: current code flow mandate that render_cursor is always true here, we are leaving the transparent one for tests.
             let bg_offy_up: c_float =  is_multiline ? 0.0 : -1.0;    // FIXME: those offsets should be part of the style? they don't play so well with multi-line selection.
             let bg_offy_dn: c_float =  is_multiline ? 0.0 : 2.0.0;
             let rect_pos: ImVec2 = draw_pos + select_start_offset - draw_scroll;
@@ -4762,7 +4762,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
                 else
                 {
                     let rect_size: ImVec2 = InputTextCalcTextSizeW(p, text_selected_end, &p, null_mut(), true);
-                    if (rect_size.x <= 0.0) rect_size.x = IM_FLOOR(g.Font.GetCharAdvance(' ') * 0.500f32); // So we can see selected empty lines
+                    if (rect_size.x <= 0.0) rect_size.x = IM_FLOOR(g.Font.GetCharAdvance(' ') * 0.5); // So we can see selected empty lines
                     let mut rect: ImRect = ImRect::new(rect_pos + ImVec2::new(0.0, bg_offy_up - g.FontSize), rect_pos + ImVec2::new(rect_size.x, bg_offy_dn));
                     rect.ClipWith(clip_rect);
                     if (rect.Overlaps(clip_rect))
@@ -4784,9 +4784,9 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
         if (render_cursor)
         {
             state.CursorAnim += io.DeltaTime;
-            let mut cursor_is_visible: bool =  (!g.IO.ConfigInputTextCursorBlink) || (state.CursorAnim <= 0.0) || ImFmod(state.CursorAnim, 1.200f32) <= 0.80f32;
+            let mut cursor_is_visible: bool =  (!g.IO.ConfigInputTextCursorBlink) || (state.CursorAnim <= 0.0) || ImFmod(state.CursorAnim, 1.200) <= 0.80;
             let cursor_screen_pos: ImVec2 = ImFloor(draw_pos + cursor_offset - draw_scroll);
-            let mut cursor_screen_rect: ImRect = ImRect::new(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5, cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5f32);
+            let mut cursor_screen_rect: ImRect = ImRect::new(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5, cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5);
             if (cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect))
                 draw_window.DrawList.AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
 
@@ -5010,7 +5010,7 @@ pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFla
         w_item_one: c_float  = ImMax(1.0, IM_FLOOR((w_inputs - (style.ItemInnerSpacing.x) * (components - 1)) / components));
         let w_item_last: c_float =  ImMax(1.0, IM_FLOOR(w_inputs - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
 
-        let hide_prefix: bool = if w_item_one <= CalcTextSize((flags & ImGuiColorEditFlags_Float { "M:0.000"} else { "M:000").x)};
+        let hide_prefix: bool = if w_item_one <= CalcTextSize((flags & ImGuiColorEditFlags_Float { "M:0.0"} else { "M:000").x)};
         static *const ids: [c_char;4] = { "##X", "##Y", "##Z", "##W" };
         static *const fmt_table_int: [c_char;3][4] =
         {
@@ -5104,7 +5104,7 @@ pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFla
             }
             ImGuiColorEditFlags picker_flags_to_forward = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar;
             ImGuiColorEditFlags picker_flags = (flags_untouched & picker_flags_to_forward) | ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf;
-            SetNextItemWidth(square_sz * 12.00f32); // Use 256 + bar sizes?
+            SetNextItemWidth(square_sz * 12.0); // Use 256 + bar sizes?
             value_changed |= ColorPicker4("##picker", col, picker_flags, &g.ColorPickerRef.x);
             EndPopup();
         }
@@ -5149,12 +5149,12 @@ pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFla
         let mut accepted_drag_drop: bool =  false;
         if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_30f32))
         {
-            memcpy((*mut c_float)col, payload->Data, sizeof * 3); // Preserve alpha if any //-V512 //-V1086
+            memcpy((*mut c_float)col, payload.Data, sizeof * 3); // Preserve alpha if any //-V512 //-V1086
             value_changed = accepted_drag_drop = true;
         }
         if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_40f32))
         {
-            memcpy((*mut c_float)col, payload->Data, sizeof * components);
+            memcpy((*mut c_float)col, payload.Data, sizeof * components);
             value_changed = accepted_drag_drop = true;
         }
 
@@ -5239,7 +5239,7 @@ pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditF
     let sv_picker_size: c_float =  ImMax(bars_width * 1, width - (alpha_bar ? 2 : 1) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/Value picking box
     let bar0_pos_x: c_float =  picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
     let bar1_pos_x: c_float =  bar0_pos_x + bars_width + style.ItemInnerSpacing.x;
-    let bars_triangles_half_sz: c_float =  IM_FLOOR(bars_width * 0.200f32);backup_initial_col: c_float[4];
+    let bars_triangles_half_sz: c_float =  IM_FLOOR(bars_width * 0.200);backup_initial_col: c_float[4];
     memcpy(backup_initial_col, col, components * sizeof);
 
     let wheel_thickness: c_float =  sv_picker_size * 0.08f;
@@ -5295,8 +5295,8 @@ pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditF
                 if (!ImTriangleContainsPoint(triangle_pa, triangle_pb, triangle_pc, current_off_unrotated))
                     current_off_unrotated = ImTriangleClosestPoint(triangle_pa, triangle_pb, triangle_pc, current_off_unrotated);uu: c_float, vv, ww;
                 ImTriangleBarycentricCoords(triangle_pa, triangle_pb, triangle_pc, current_off_unrotated, uu, vv, ww);
-                V = ImClamp(1.0 - vv, 0.0001f, 1.0);
-                S = ImClamp(uu / V, 0.0001f, 1.0);
+                V = ImClamp(1.0 - vv, 0.01f, 1.0);
+                S = ImClamp(uu / V, 0.01f, 1.0);
                 value_changed = value_changed_sv = true;
             }
         }
@@ -5509,7 +5509,7 @@ pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditF
         draw_list.PrimVtx(tra, uv_white, 0);
         draw_list.PrimVtx(trb, uv_white, col_black);
         draw_list.PrimVtx(trc, uv_white, 0);
-        draw_list.AddTriangle(tra, trb, trc, col_midgrey, 1.5f32);
+        draw_list.AddTriangle(tra, trb, trc, col_midgrey, 1.5);
         sv_cursor_pos = ImLerp(ImLerp(trc, tra, ImSaturate(S)), trb, ImSaturate(1 - V));
     }
     else if (flags & ImGuiColorEditFlags_PickerHueBar)
@@ -5964,7 +5964,7 @@ pub unsafe fn TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *co
     if (display_frame)
     {
         // Framed header expand a little outside the default padding, to the edge of InnerClipRect
-        // (FIXME: May remove this at some point and make InnerClipRect align with WindowPadding.x instead of WindowPadding.x*0.5f32)
+        // (FIXME: May remove this at some point and make InnerClipRect align with WindowPadding.x instead of WindowPadding.x*0.5)
         frame_bb.Min.x -= IM_FLOOR(window.WindowPadding.x * 0.5 - 1.0);
         frame_bb.Max.x += IM_FLOOR(window.WindowPadding.x * 0.5);
     }
@@ -6010,7 +6010,7 @@ pub unsafe fn TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *co
     // allow browsing a tree while preserving selection with code implementing multi-selection patterns.
     // When clicking on the rest of the tree node we always disallow keyboard modifiers.
     let arrow_hit_x1: c_float =  (text_pos.x - text_offset_x) - style.TouchExtraPadding.x;
-    let arrow_hit_x2: c_float =  (text_pos.x - text_offset_x) + (g.FontSize + padding.x * 2.00f32) + style.TouchExtraPadding.x;
+    let arrow_hit_x2: c_float =  (text_pos.x - text_offset_x) + (g.FontSize + padding.x * 2.0) + style.TouchExtraPadding.x;
     let is_mouse_x_over_arrow: bool = (g.IO.MousePos.x >= arrow_hit_x1 && g.IO.MousePos.x < arrow_hit_x2);
     if (window != g.HoveredWindow || !is_mouse_x_over_arrow)
         button_flags |= ImGuiButtonFlags_NoKeyModifiers;
@@ -6090,7 +6090,7 @@ pub unsafe fn TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *co
         RenderFrame(frame_bb.Min, frame_bb.Max, bg_col, true, style.FrameRounding);
         RenderNavHighlight(frame_bb, id, nav_highlight_flags);
         if (flags & ImGuiTreeNodeFlags_Bullet)
-            RenderBullet(window.DrawList, ImVec2::new(text_pos.x - text_offset_x * 0.60f32, text_pos.y + g.FontSize * 0.5), text_col);
+            RenderBullet(window.DrawList, ImVec2::new(text_pos.x - text_offset_x * 0.60, text_pos.y + g.FontSize * 0.5), text_col);
         else if (!is_lea0f32)
             RenderArrow(window.DrawList, ImVec2::new(text_pos.x - text_offset_x + padding.x, text_pos.y), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 1.0);
         else // Leaf without bullet, left-adjusted text
@@ -6114,7 +6114,7 @@ pub unsafe fn TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *co
         if (flags & ImGuiTreeNodeFlags_Bullet)
             RenderBullet(window.DrawList, ImVec2::new(text_pos.x - text_offset_x * 0.5, text_pos.y + g.FontSize * 0.5), text_col);
         else if (!is_lea0f32)
-            RenderArrow(window.DrawList, ImVec2::new(text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize * 0.150f32), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 0.700f32);
+            RenderArrow(window.DrawList, ImVec2::new(text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize * 0.150f32), text_col, is_open ? ImGuiDir_Down : ImGuiDir_Right, 0.70);
         if (g.LogEnabled)
             LogSetNextTextDecoration(">", null_mut());
         RenderText(text_pos, label, label_end, false);
@@ -6176,7 +6176,7 @@ pub unsafe fn TreePop()
 // Horizontal distance preceding label when using TreeNode() or Bullet()GetTreeNodeToLabelSpacing: c_float()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.FontSize + (g.Style.FramePadding.x * 2.00f32);
+    return g.FontSize + (g.Style.FramePadding.x * 2.0);
 }
 
 // Set next TreeNode/CollapsingHeader open state.
@@ -6283,14 +6283,14 @@ pub unsafe fn Selectable(label: *const c_char, selected: bool, ImGuiSelectableFl
     {
         let spacing_x: c_float =  span_all_columns ? 0.0 : style.ItemSpacing.x;
         let spacing_y: c_float =  style.ItemSpacing.y;
-        let spacing_L: c_float =  IM_FLOOR(spacing_x * 0.500f32);
-        let spacing_U: c_float =  IM_FLOOR(spacing_y * 0.500f32);
+        let spacing_L: c_float =  IM_FLOOR(spacing_x * 0.5);
+        let spacing_U: c_float =  IM_FLOOR(spacing_y * 0.5);
         bb.Min.x -= spacing_L;
         bb.Min.y -= spacing_U;
         bb.Max.x += (spacing_x - spacing_L);
         bb.Max.y += (spacing_y - spacing_U);
     }
-    //if (g.IO.KeyCtrl) { GetForegroundDrawList()->AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
+    //if (g.IO.KeyCtrl) { GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
 
     // Modify ClipRect for the ItemAdd(), faster than doing a PushColumnsBackground/PushTableBackground for every Selectable..
     let backup_clip_rect_min_x: c_float =  window.ClipRect.Min.x;
@@ -6426,7 +6426,7 @@ pub unsafe fn BeginListBox(label: *const c_char, size_arg: &ImVec2) -> bool
 
     // Size default to hold ~7.25 items.
     // Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
-    let size: ImVec2 = ImFloor(CalcItemSize(size_arg, CalcItemWidth(), GetTextLineHeightWithSpacing() * 7.25f + style.FramePadding.y * 2.00f32));
+    let size: ImVec2 = ImFloor(CalcItemSize(size_arg, CalcItemWidth(), GetTextLineHeightWithSpacing() * 7.25f + style.FramePadding.y * 2.0));
     let frame_size: ImVec2 = ImVec2::new(size.x, ImMax(size.y, label_size.y));
     let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + frame_size);
     let mut bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Max + ImVec2::new(label_size.x > 0.0 ? style.ItemInnerSpacing.x + label_size.x : 0.0, 0.0));
@@ -6493,7 +6493,7 @@ pub unsafe fn ListBox(label: *const c_char, current_item:  *mut c_int, bool (*it
     if (height_in_items < 0)
         height_in_items = ImMin(items_count, 7);
     let height_in_items_f: c_float =  height_in_items + 0.25f32;
-    size: ImVec2(0.0, ImFloor(GetTextLineHeightWithSpacing() * height_in_items_f + g.Style.FramePadding.y * 2.00f32));
+    size: ImVec2(0.0, ImFloor(GetTextLineHeightWithSpacing() * height_in_items_f + g.Style.FramePadding.y * 2.0));
 
     if (!BeginListBox(label, size))
         return false;
@@ -6638,7 +6638,7 @@ PlotEx: c_int(ImGuiPlotType plot_type, label: *const c_char, c_float (*values_ge
             }
             else if (plot_type == ImGuiPlotType_Histogram)
             {
-                if (pos1.x >= pos0.x + 2.00f32)
+                if (pos1.x >= pos0.x + 2.0)
                     pos1.x -= 1.0;
                 window.DrawList.AddRectFilled(pos0, pos1, idx_hovered == v1_idx ? col_hovered : col_base);
             }
@@ -6958,7 +6958,7 @@ pub unsafe fn IsRootOfOpenMenuSet() -> bool
     // open on hover, but that should be a lesser problem, because if such menus are close in proximity in window content then it won't feel weird and if they are far apart
     // it likely won't be a problem anyone runs into.
     let upper_popup: *const ImGuiPopupData = &g.OpenPopupStack[g.BeginPopupStack.len()];
-    return (window.DC.NavLayerCurrent == upper_popup->ParentNavLayer && upper_popup->Window && (upper_popup->window.Flags & ImGuiWindowFlags_ChildMenu));
+    return (window.DC.NavLayerCurrent == upper_popup->ParentNavLayer && upper_popup.Window && (upper_popup->window.Flags & ImGuiWindowFlags_ChildMenu));
 }
 
 pub unsafe fn BeginMenuEx(label: *const c_char, icon: *const c_char, enabled: bool) -> bool
@@ -7033,7 +7033,7 @@ pub unsafe fn BeginMenuEx(label: *const c_char, icon: *const c_char, enabled: bo
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
         popup_pos = ImVec2::new(pos.x, pos.y - style.WindowPadding.y);
         let icon_w: c_float =  (icon && icon[0]) ? CalcTextSize(icon, null_mut()).x : 0.0;
-        let checkmark_w: c_float =  IM_FLOOR(g.FontSize * 1.200f32);
+        let checkmark_w: c_float =  IM_FLOOR(g.FontSize * 1.200);
         let min_w: c_float =  window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0.0, checkmark_w); // Feedback to next frame
         let extra_w: c_float =  ImMax(0.0, GetContentRegionAvail().x - min_w);
         text_pos: ImVec2(window.DC.CursorPos.x + offsets->OffsetLabel, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset);
@@ -7058,7 +7058,7 @@ pub unsafe fn BeginMenuEx(label: *const c_char, icon: *const c_char, enabled: bo
         // Implement http://bjk5.com/post/44698559168/breaking-down-amazons-mega-dropdown to avoid using timers, so menus feels more reactive.
         let mut moving_toward_child_menu: bool =  false;
         ImGuiPopupData* child_popup = if g.BeginPopupStack.len() < g.OpenPopupStack.len() { &g.OpenPopupStack[g.BeginPopupStack.len()]} else { null_mut()}; // Popup candidate (testing below)
-        let mut child_menu_window: *mut ImGuiWindow =  (child_popup && child_popup->Window && child_popup->window.ParentWindow == window) ? child_popup->Window : null_mut();
+        let mut child_menu_window: *mut ImGuiWindow =  (child_popup && child_popup.Window && child_popup->window.ParentWindow == window) ? child_popup.Window : null_mut();
         if (g.HoveredWindow == window && child_menu_window != null_mut())
         {
             let ref_unit: c_float =  g.FontSize; // FIXME-DPI
@@ -7067,12 +7067,12 @@ pub unsafe fn BeginMenuEx(label: *const c_char, icon: *const c_char, enabled: bo
             let ta: ImVec2 = (g.IO.MousePos - g.IO.MouseDelta);
             let tb: ImVec2 = if child_dir > 0.0 { next_window_rect.GetTL()} else { next_window_rect.GetTR()};
             let tc: ImVec2 = if child_dir > 0.0 { next_window_rect.GetBL()} else { next_window_rect.GetBR()};
-            let extra: c_float =  ImClamp(ImFabs(ta.x - tb.x) * 0.3f32, ref_unit * 0.5, ref_unit * 2.5f32);   // add a bit of extra slack.
+            let extra: c_float =  ImClamp(ImFabs(ta.x - tb.x) * 0.3f32, ref_unit * 0.5, ref_unit * 2.5);   // add a bit of extra slack.
             ta.x += child_dir * -0.5;
             tb.x += child_dir * ref_unit;
             tc.x += child_dir * ref_unit;
-            tb.y = ta.y + ImMax((tb.y - extra) - ta.y, -ref_unit * 8.00f32);                           // triangle has maximum height to limit the slope and the bias toward large sub-menus
-            tc.y = ta.y + ImMin((tc.y + extra) - ta.y, +ref_unit * 8.00f32);
+            tb.y = ta.y + ImMax((tb.y - extra) - ta.y, -ref_unit * 8.0);                           // triangle has maximum height to limit the slope and the bias toward large sub-menus
+            tc.y = ta.y + ImMin((tc.y + extra) - ta.y, +ref_unit * 8.0);
             moving_toward_child_menu = ImTriangleContainsPoint(ta, tb, tc, g.IO.MousePos);
             //GetForegroundDrawList()->AddTriangleFilled(ta, tb, tc, moving_toward_child_menu ? IM_COL32(0,128,0,128) : IM_COL32(128,0,0,128)); // [DEBUG]
         }
@@ -7215,7 +7215,7 @@ pub unsafe fn MenuItemEx(label: *const c_char, icon: *const c_char, shortcut: *c
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
         let icon_w: c_float =  (icon && icon[0]) ? CalcTextSize(icon, null_mut()).x : 0.0;
         let shortcut_w: c_float =  (shortcut && shortcut[0]) ? CalcTextSize(shortcut, null_mut()).x : 0.0;
-        let checkmark_w: c_float =  IM_FLOOR(g.FontSize * 1.200f32);
+        let checkmark_w: c_float =  IM_FLOOR(g.FontSize * 1.200);
         let min_w: c_float =  window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, shortcut_w, checkmark_w); // Feedback for next frame
         let stretch_w: c_float =  ImMax(0.0, GetContentRegionAvail().x - min_w);
         pressed = Selectable("", false, selectable_flags | ImGuiSelectableFlags_SpanAvailWidth, ImVec2::new(min_w, 0.0));
@@ -7307,7 +7307,7 @@ static inline TabItemGetSectionIdx: c_int(*const ImGuiTabItem tab)
     return (tab.Flags & ImGuiTabItemFlags_Leading) ? 0 : (tab.Flags & ImGuiTabItemFlags_Trailing) ? 2 : 1;
 }
 
-static IMGUI_CDECL: c_int TabItemComparerBySection(lhs: *const c_void, rhs: *const c_void)
+: c_int TabItemComparerBySection(lhs: *const c_void, rhs: *const c_void)
 {
     let a: *const ImGuiTabItem = (*const ImGuiTabItem)lhs;
     let b: *const ImGuiTabItem = (*const ImGuiTabItem)rhs;
@@ -7318,7 +7318,7 @@ static IMGUI_CDECL: c_int TabItemComparerBySection(lhs: *const c_void, rhs: *con
     return (a->IndexDuringLayout - b->IndexDuringLayout);
 }
 
-static IMGUI_CDECL: c_int TabItemComparerByBeginOrder(lhs: *const c_void, rhs: *const c_void)
+: c_int TabItemComparerByBeginOrder(lhs: *const c_void, rhs: *const c_void)
 {
     let a: *const ImGuiTabItem = (*const ImGuiTabItem)lhs;
     let b: *const ImGuiTabItem = (*const ImGuiTabItem)rhs;
@@ -7349,7 +7349,7 @@ bool    BeginTabBar(str_id: *const c_char, ImGuiTabBarFlags flags)
     let mut id: ImGuiID =  window.GetID(str_id);
     ImGuiTabBar* tab_bar = g.TabBars.GetOrAddByKey(id);
     let tab_bar_bb: ImRect =  ImRect(window.DC.CursorPos.x, window.DC.CursorPos.y, window.WorkRect.Max.x, window.DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y * 2);
-    tab_bar->ID = id;
+    tab_bar.ID = id;
     return BeginTabBarEx(tab_bar, tab_bar_bb, flags | ImGuiTabBarFlags_IsFocused, null_mut());
 }
 
@@ -7361,7 +7361,7 @@ bool    BeginTabBarEx(ImGuiTabBar* tab_bar, tab_bar_bb: &ImRect, ImGuiTabBarFlag
         return false;
 
     if (flag_clear(flags, ImGuiTabBarFlags_DockNode))
-        PushOverrideID(tab_bar->ID);
+        PushOverrideID(tab_bar.ID);
 
     // Add to stack
     g.CurrentTabBarStack.push(GetTabBarRefFromTabBar(tab_bar));
@@ -7371,23 +7371,23 @@ bool    BeginTabBarEx(ImGuiTabBar* tab_bar, tab_bar_bb: &ImRect, ImGuiTabBarFlag
     tab_bar->BackupCursorPos = window.DC.CursorPos;
     if (tab_bar->CurrFrameVisible == g.FrameCount)
     {
-        window.DC.CursorPos = ImVec2::new(tab_bar->BarRect.Min.x, tab_bar->BarRect.Max.y + tab_bar->ItemSpacingY);
+        window.DC.CursorPos = ImVec2::new(tab_bar.BarRect.Min.x, tab_bar.BarRect.Max.y + tab_bar->ItemSpacingY);
         tab_bar->BeginCount+= 1;
         return true;
     }
 
     // Ensure correct ordering when toggling ImGuiTabBarFlags_Reorderable flag, or when a new tab was added while being not reorderable
-    if ((flags & ImGuiTabBarFlags_Reorderable) != (tab_bar.Flags & ImGuiTabBarFlags_Reorderable) || (tab_bar->TabsAddedNew && flag_clear(flags, ImGuiTabBarFlags_Reorderable)))
+    if ((flags & ImGuiTabBarFlags_Reorderable) != (tab_bar.Flags & ImGuiTabBarFlags_Reorderable) || (tab_bar.TabsAddedNew && flag_clear(flags, ImGuiTabBarFlags_Reorderable)))
         if (flag_clear(flags, ImGuiTabBarFlags_DockNode)) // FIXME: TabBar with DockNode can now be hybrid
-            ImQsort(tab_bar->Tabs.Data, tab_bar->Tabs.Size, sizeof(ImGuiTabItem), TabItemComparerByBeginOrder);
-    tab_bar->TabsAddedNew = false;
+            ImQsort(tab_bar.Tabs.Data, tab_bar.Tabs.Size, sizeof(ImGuiTabItem), TabItemComparerByBeginOrder);
+    tab_bar.TabsAddedNew = false;
 
     // Flags
     if (flag_clear(flags, ImGuiTabBarFlags_FittingPolicyMask_))
         flags |= ImGuiTabBarFlags_FittingPolicyDefault_;
 
     tab_bar.Flags = flags;
-    tab_bar->BarRect = tab_bar_bb;
+    tab_bar.BarRect = tab_bar_bb;
     tab_bar->WantLayout = true; // Layout will be done on the first call to ItemTab()
     tab_bar->PrevFrameVisible = tab_bar->CurrFrameVisible;
     tab_bar->CurrFrameVisible = g.FrameCount;
@@ -7395,15 +7395,15 @@ bool    BeginTabBarEx(ImGuiTabBar* tab_bar, tab_bar_bb: &ImRect, ImGuiTabBarFlag
     tab_bar->CurrTabsContentsHeight = 0.0;
     tab_bar->ItemSpacingY = g.Style.ItemSpacing.y;
     tab_bar->FramePadding = g.Style.FramePadding;
-    tab_bar->TabsActiveCount = 0;
+    tab_bar.TabsActiveCount = 0;
     tab_bar->BeginCount = 1;
 
     // Set cursor pos in a way which only be used in the off-chance the user erroneously submits item before BeginTabItem(): items will overlap
-    window.DC.CursorPos = ImVec2::new(tab_bar->BarRect.Min.x, tab_bar->BarRect.Max.y + tab_bar->ItemSpacingY);
+    window.DC.CursorPos = ImVec2::new(tab_bar.BarRect.Min.x, tab_bar.BarRect.Max.y + tab_bar->ItemSpacingY);
 
     // Draw separator
     col: u32 = GetColorU32((flags & ImGuiTabBarFlags_IsFocused) ? ImGuiCol_TabActive : ImGuiCol_TabUnfocusedActive);
-    let y: c_float =  tab_bar->BarRect.Max.y - 1.0;
+    let y: c_float =  tab_bar.BarRect.Max.y - 1.0;
     if (dock_node != null_mut())
     {
         let separator_min_x: c_float =  dock_node.Pos.x + window.WindowBorderSize;
@@ -7412,8 +7412,8 @@ bool    BeginTabBarEx(ImGuiTabBar* tab_bar, tab_bar_bb: &ImRect, ImGuiTabBarFlag
     }
     else
     {
-        let separator_min_x: c_float =  tab_bar->BarRect.Min.x - IM_FLOOR(window.WindowPadding.x * 0.5);
-        let separator_max_x: c_float =  tab_bar->BarRect.Max.x + IM_FLOOR(window.WindowPadding.x * 0.5);
+        let separator_min_x: c_float =  tab_bar.BarRect.Min.x - IM_FLOOR(window.WindowPadding.x * 0.5);
+        let separator_max_x: c_float =  tab_bar.BarRect.Max.x + IM_FLOOR(window.WindowPadding.x * 0.5);
         window.DrawList.AddLine(ImVec2::new(separator_min_x, y), ImVec2::new(separator_max_x, y), col, 1.0);
     }
     return true;
@@ -7439,14 +7439,14 @@ c_void    EndTabBar()
 
     // Restore the last visible height if no tab is visible, this reduce vertical flicker/movement when a tabs gets removed without calling SetTabItemClosed().
     let tab_bar_appearing: bool = (tab_bar->PrevFrameVisible + 1 < g.FrameCount);
-    if (tab_bar->VisibleTabWasSubmitted || tab_bar->VisibleTabId == 0 || tab_bar_appearing)
+    if (tab_bar->VisibleTabWasSubmitted || tab_bar.VisibleTabId == 0 || tab_bar_appearing)
     {
-        tab_bar->CurrTabsContentsHeight = ImMax(window.DC.CursorPos.y - tab_bar->BarRect.Max.y, tab_bar->CurrTabsContentsHeight);
-        window.DC.CursorPos.y = tab_bar->BarRect.Max.y + tab_bar->CurrTabsContentsHeight;
+        tab_bar->CurrTabsContentsHeight = ImMax(window.DC.CursorPos.y - tab_bar.BarRect.Max.y, tab_bar->CurrTabsContentsHeight);
+        window.DC.CursorPos.y = tab_bar.BarRect.Max.y + tab_bar->CurrTabsContentsHeight;
     }
     else
     {
-        window.DC.CursorPos.y = tab_bar->BarRect.Max.y + tab_bar->PrevTabsContentsHeight;
+        window.DC.CursorPos.y = tab_bar.BarRect.Max.y + tab_bar->PrevTabsContentsHeight;
     }
     if (tab_bar->BeginCount > 1)
         window.DC.CursorPos = tab_bar->BackupCursorPos;
@@ -7470,28 +7470,28 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
     let tab_dst_n: c_int = 0;
     let mut need_sort_by_section: bool =  false;
     ImGuiTabBarSection sections[3]; // Layout sections: Leading, Central, Trailing
-    for (let tab_src_n: c_int = 0; tab_src_n < tab_bar->Tabs.Size; tab_src_n++)
+    for (let tab_src_n: c_int = 0; tab_src_n < tab_bar.Tabs.Size; tab_src_n++)
     {
-        ImGuiTabItem* tab = &tab_bar->Tabs[tab_src_n];
+        ImGuiTabItem* tab = &tab_bar.Tabs[tab_src_n];
         if (tab->LastFrameVisible < tab_bar->PrevFrameVisible || tab->WantClose)
         {
             // Remove tab
-            if (tab_bar->VisibleTabId == tab->ID) { tab_bar->VisibleTabId = 0; }
-            if (tab_bar->SelectedTabId == tab->ID) { tab_bar->SelectedTabId = 0; }
-            if (tab_bar->NextSelectedTabId == tab->ID) { tab_bar->NextSelectedTabId = 0; }
+            if (tab_bar.VisibleTabId == tab.ID) { tab_bar.VisibleTabId = 0; }
+            if (tab_bar.SelectedTabId == tab.ID) { tab_bar.SelectedTabId = 0; }
+            if (tab_bar.NextSelectedTabId == tab.ID) { tab_bar.NextSelectedTabId = 0; }
             continue;
         }
         if (tab_dst_n != tab_src_n)
-            tab_bar->Tabs[tab_dst_n] = tab_bar->Tabs[tab_src_n];
+            tab_bar.Tabs[tab_dst_n] = tab_bar.Tabs[tab_src_n];
 
-        tab = &tab_bar->Tabs[tab_dst_n];
+        tab = &tab_bar.Tabs[tab_dst_n];
         tab->IndexDuringLayout = (i16)tab_dst_n;
 
         // We will need sorting if tabs have changed section (e.g. moved from one of Leading/Central/Trailing to another)
         let curr_tab_section_n: c_int = TabItemGetSectionIdx(tab);
         if (tab_dst_n > 0)
         {
-            ImGuiTabItem* prev_tab = &tab_bar->Tabs[tab_dst_n - 1];
+            ImGuiTabItem* prev_tab = &tab_bar.Tabs[tab_dst_n - 1];
             let prev_tab_section_n: c_int = TabItemGetSectionIdx(prev_tab);
             if (curr_tab_section_n == 0 && prev_tab_section_n != 0)
                 need_sort_by_section = true;
@@ -7502,11 +7502,11 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
         sections[curr_tab_section_n].TabCount+= 1;
         tab_dst_n+= 1;
     }
-    if (tab_bar->Tabs.Size != tab_dst_n)
-        tab_bar->Tabs.resize(tab_dst_n);
+    if (tab_bar.Tabs.Size != tab_dst_n)
+        tab_bar.Tabs.resize(tab_dst_n);
 
     if (need_sort_by_section)
-        ImQsort(tab_bar->Tabs.Data, tab_bar->Tabs.Size, sizeof(ImGuiTabItem), TabItemComparerBySection);
+        ImQsort(tab_bar.Tabs.Data, tab_bar.Tabs.Size, sizeof(ImGuiTabItem), TabItemComparerBySection);
 
     // Calculate spacing between sections
     sections[0].Spacing = sections[0].TabCount > 0 && (sections[1].TabCount + sections[2].TabCount) > 0 ? g.Style.ItemInnerSpacing.x : 0.0;
@@ -7514,53 +7514,53 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
 
     // Setup next selected tab
     let mut scroll_to_tab_id: ImGuiID =  0;
-    if (tab_bar->NextSelectedTabId)
+    if (tab_bar.NextSelectedTabId)
     {
-        tab_bar->SelectedTabId = tab_bar->NextSelectedTabId;
-        tab_bar->NextSelectedTabId = 0;
-        scroll_to_tab_id = tab_bar->SelectedTabId;
+        tab_bar.SelectedTabId = tab_bar.NextSelectedTabId;
+        tab_bar.NextSelectedTabId = 0;
+        scroll_to_tab_id = tab_bar.SelectedTabId;
     }
 
     // Process order change request (we could probably process it when requested but it's just saner to do it in a single spot).
     if (tab_bar->ReorderRequestTabId != 0)
     {
         if (TabBarProcessReorder(tab_bar))
-            if (tab_bar->ReorderRequestTabId == tab_bar->SelectedTabId)
+            if (tab_bar->ReorderRequestTabId == tab_bar.SelectedTabId)
                 scroll_to_tab_id = tab_bar->ReorderRequestTabId;
         tab_bar->ReorderRequestTabId = 0;
     }
 
-    // Tab List Popup (will alter tab_bar->BarRect and therefore the available width!)
+    // Tab List Popup (will alter tab_bar.BarRect and therefore the available width!)
     let tab_list_popup_button: bool = (tab_bar.Flags & ImGuiTabBarFlags_TabListPopupButton) != 0;
     if (tab_list_popup_button)
         if (ImGuiTabItem* tab_to_select = TabBarTabListPopupButton(tab_bar)) // NB: Will alter BarRect.Min.x!
-            scroll_to_tab_id = tab_bar->SelectedTabId = tab_to_select->ID;
+            scroll_to_tab_id = tab_bar.SelectedTabId = tab_to_select.ID;
 
     // Leading/Trailing tabs will be shrink only if central one aren't visible anymore, so layout the shrink data as: leading, trailing, central
     // (whereas our tabs are stored as: leading, central, trailing)
     shrink_buffer_indexes: c_int[3] = { 0, sections[0].TabCount + sections[2].TabCount, sections[0].TabCount };
-    g.ShrinkWidthBuffer.resize(tab_bar->Tabs.Size);
+    g.ShrinkWidthBuffer.resize(tab_bar.Tabs.Size);
 
     // Compute ideal tabs widths + store them into shrink buffer
     ImGuiTabItem* most_recently_selected_tab= null_mut();
     let curr_section_n: c_int = -1;
     let mut found_selected_tab_id: bool =  false;
-    for (let tab_n: c_int = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
+    for (let tab_n: c_int = 0; tab_n < tab_bar.Tabs.Size; tab_n++)
     {
-        ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
+        ImGuiTabItem* tab = &tab_bar.Tabs[tab_n];
         // IM_ASSERT(tab->LastFrameVisible >= tab_bar->PrevFrameVisible);
 
         if ((most_recently_selected_tab == null_mut() || most_recently_selected_tab->LastFrameSelected < tab->LastFrameSelected) && !(tab.Flags & ImGuiTabItemFlags_Button))
             most_recently_selected_tab = tab;
-        if (tab->ID == tab_bar->SelectedTabId)
+        if (tab.ID == tab_bar.SelectedTabId)
             found_selected_tab_id = true;
-        if (scroll_to_tab_id == 0 && g.NavJustMovedToId == tab->ID)
-            scroll_to_tab_id = tab->ID;
+        if (scroll_to_tab_id == 0 && g.NavJustMovedToId == tab.ID)
+            scroll_to_tab_id = tab.ID;
 
         // Refresh tab width immediately, otherwise changes of style e.g. style.FramePadding.x would noticeably lag in the tab bar.
         // Additionally, when using TabBarAddTab() to manipulate tab bar order we occasionally insert new tabs that don't have a width yet,
         // and we cannot wait for the next BeginTabItem() call. We cannot compute this width within TabBarAddTab() because font size depends on the active window.
-        let mut  tab_name: *const c_char = tab_bar->GetTabName(tab);
+        let mut  tab_name: *const c_char = tab_bar.GetTabNametab);
         let has_close_button: bool = if tab.Flags & ImGuiTabItemFlags_NoCloseButton { false} else { true};
         tab->ContentWidth = if tab->RequestedWidth >= 0.0 { tab->RequestedWidth} else { TabItemCalcSize(tab_name, has_close_button).x};
 
@@ -7578,30 +7578,30 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
     }
 
     // Compute total ideal width (used for e.g. auto-resizing a window)
-    tab_bar->WidthAllTabsIdeal = 0.0;
+    tab_bar.WidthAllTabsIdeal = 0.0;
     for (let section_n: c_int = 0; section_n < 3; section_n++)
-        tab_bar->WidthAllTabsIdeal += sections[section_n].Width + sections[section_n].Spacing;
+        tab_bar.WidthAllTabsIdeal += sections[section_n].Width + sections[section_n].Spacing;
 
     // Horizontal scrolling buttons
     // (note that TabBarScrollButtons() will alter BarRect.Max.x)
-    if ((tab_bar->WidthAllTabsIdeal > tab_bar->BarRect.GetWidth() && tab_bar->Tabs.Size > 1) && !(tab_bar.Flags & ImGuiTabBarFlags_NoTabListScrollingButtons) && (tab_bar.Flags & ImGuiTabBarFlags_FittingPolicyScroll))
+    if ((tab_bar.WidthAllTabsIdeal > tab_bar.BarRect.GetWidth() && tab_bar.Tabs.Size > 1) && !(tab_bar.Flags & ImGuiTabBarFlags_NoTabListScrollingButtons) && (tab_bar.Flags & ImGuiTabBarFlags_FittingPolicyScroll))
         if (ImGuiTabItem* scroll_and_select_tab = TabBarScrollingButtons(tab_bar))
         {
-            scroll_to_tab_id = scroll_and_select_tab->ID;
+            scroll_to_tab_id = scroll_and_select_tab.ID;
             if ((scroll_and_select_tab.Flags & ImGuiTabItemFlags_Button) == 0)
-                tab_bar->SelectedTabId = scroll_to_tab_id;
+                tab_bar.SelectedTabId = scroll_to_tab_id;
         }
 
     // Shrink widths if full tabs don't fit in their allocated space
     let section_0_w: c_float =  sections[0].Width + sections[0].Spacing;
     let section_1_w: c_float =  sections[1].Width + sections[1].Spacing;
     let section_2_w: c_float =  sections[2].Width + sections[2].Spacing;
-    let mut central_section_is_visible: bool =  (section_0_w + section_2_w) < tab_bar->BarRect.GetWidth();
+    let mut central_section_is_visible: bool =  (section_0_w + section_2_w) < tab_bar.BarRect.GetWidth();
     let mut width_excess: c_float = 0.0;
     if (central_section_is_visible)
-        width_excess = ImMax(section_1_w - (tab_bar->BarRect.GetWidth() - section_0_w - section_2_w), 0.0); // Excess used to shrink central section
+        width_excess = ImMax(section_1_w - (tab_bar.BarRect.GetWidth() - section_0_w - section_2_w), 0.0); // Excess used to shrink central section
     else
-        width_excess = (section_0_w + section_2_w) - tab_bar->BarRect.GetWidth(); // Excess used to shrink leading/trailing section
+        width_excess = (section_0_w + section_2_w) - tab_bar.BarRect.GetWidth(); // Excess used to shrink leading/trailing section
 
     // With ImGuiTabBarFlags_FittingPolicyScroll policy, we will only shrink leading/trailing if the central section is not visible anymore
     if (width_excess >= 1.0 && ((tab_bar.Flags & ImGuiTabBarFlags_FittingPolicyResizeDown) || !central_section_is_visible))
@@ -7613,7 +7613,7 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
         // Apply shrunk values into tabs and sections
         for (let tab_n: c_int = shrink_data_offset; tab_n < shrink_data_offset + shrink_data_count; tab_n++)
         {
-            ImGuiTabItem* tab = &tab_bar->Tabs[g.ShrinkWidthBuffer[tab_n].Index];
+            ImGuiTabItem* tab = &tab_bar.Tabs[g.ShrinkWidthBuffer[tab_n].Index];
             let shrinked_width: c_float =  IM_FLOOR(g.ShrinkWidthBuffer[tab_n].Width);
             if (shrinked_width < 0.0)
                 continue;
@@ -7628,41 +7628,41 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
     // Layout all active tabs
     let section_tab_index: c_int = 0;
     let tab_offset: c_float =  0.0;
-    tab_bar->WidthAllTabs = 0.0;
+    tab_bar.WidthAllTabs = 0.0;
     for (let section_n: c_int = 0; section_n < 3; section_n++)
     {
         ImGuiTabBarSection* section = &sections[section_n];
         if (section_n == 2)
-            tab_offset = ImMin(ImMax(0.0, tab_bar->BarRect.GetWidth() - section->Width), tab_offset);
+            tab_offset = ImMin(ImMax(0.0, tab_bar.BarRect.GetWidth() - section->Width), tab_offset);
 
         for (let tab_n: c_int = 0; tab_n < section->TabCount; tab_n++)
         {
-            ImGuiTabItem* tab = &tab_bar->Tabs[section_tab_index + tab_n];
+            ImGuiTabItem* tab = &tab_bar.Tabs[section_tab_index + tab_n];
             tab->Offset = tab_offset;
-            tab->NameOffset = -1;
+            tab.NameOffset = -1;
             tab_offset += tab->Width + (tab_n < section->TabCount - 1 ? g.Style.ItemInnerSpacing.x : 0.0);
         }
-        tab_bar->WidthAllTabs += ImMax(section->Width + section->Spacing, 0.0);
+        tab_bar.WidthAllTabs += ImMax(section->Width + section->Spacing, 0.0);
         tab_offset += section->Spacing;
         section_tab_index += section->TabCount;
     }
 
     // Clear name buffers
-    tab_bar->TabsNames.Buf.clear();
+    tab_bar.TabsNames.Buf.clear();
 
     // If we have lost the selected tab, select the next most recently active one
     if (found_selected_tab_id == false)
-        tab_bar->SelectedTabId = 0;
-    if (tab_bar->SelectedTabId == 0 && tab_bar->NextSelectedTabId == 0 && most_recently_selected_tab != null_mut())
-        scroll_to_tab_id = tab_bar->SelectedTabId = most_recently_selected_tab->ID;
+        tab_bar.SelectedTabId = 0;
+    if (tab_bar.SelectedTabId == 0 && tab_bar.NextSelectedTabId == 0 && most_recently_selected_tab != null_mut())
+        scroll_to_tab_id = tab_bar.SelectedTabId = most_recently_selected_tab.ID;
 
     // Lock in visible tab
-    tab_bar->VisibleTabId = tab_bar->SelectedTabId;
+    tab_bar.VisibleTabId = tab_bar.SelectedTabId;
     tab_bar->VisibleTabWasSubmitted = false;
 
     // CTRL+TAB can override visible tab temporarily
-    if (g.NavWindowingTarget != null_mut() && g.NavWindowingTarget->DockNode && g.NavWindowingTarget->DockNode.TabBar == tab_bar)
-        tab_bar->VisibleTabId = scroll_to_tab_id = g.NavWindowingTarget->TabId;
+    if (g.NavWindowingTarget != null_mut() && g.NavWindowingTarget.DockNode && g.NavWindowingTarget.DockNode.TabBar == tab_bar)
+        tab_bar.VisibleTabId = scroll_to_tab_id = g.NavWindowingTarget.TabId;
 
     // Update scrolling
     if (scroll_to_tab_id != 0)
@@ -7682,14 +7682,14 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
     {
         tab_bar->ScrollingSpeed = 0.0;
     }
-    tab_bar->ScrollingRectMinX = tab_bar->BarRect.Min.x + sections[0].Width + sections[0].Spacing;
-    tab_bar->ScrollingRectMaxX = tab_bar->BarRect.Max.x - sections[2].Width - sections[1].Spacing;
+    tab_bar->ScrollingRectMinX = tab_bar.BarRect.Min.x + sections[0].Width + sections[0].Spacing;
+    tab_bar->ScrollingRectMaxX = tab_bar.BarRect.Max.x - sections[2].Width - sections[1].Spacing;
 
     // Actual layout in host window (we don't do it in BeginTabBar() so as not to waste an extra frame)
     let mut window = g.CurrentWindow;
-    window.DC.CursorPos = tab_bar->BarRect.Min;
-    ItemSize(ImVec2::new(tab_bar->WidthAllTabs, tab_bar->BarRect.GetHeight()), tab_bar->FramePadding.y);
-    window.DC.IdealMaxPos.x = ImMax(window.DC.IdealMaxPos.x, tab_bar->BarRect.Min.x + tab_bar->WidthAllTabsIdeal);
+    window.DC.CursorPos = tab_bar.BarRect.Min;
+    ItemSize(ImVec2::new(tab_bar.WidthAllTabs, tab_bar.BarRect.GetHeight()), tab_bar->FramePadding.y);
+    window.DC.IdealMaxPos.x = ImMax(window.DC.IdealMaxPos.x, tab_bar.BarRect.Min.x + tab_bar.WidthAllTabsIdeal);
 }
 
 // Dockable uses Name/ID in the global namespace. Non-dockable items use the ID stack.
@@ -7719,9 +7719,9 @@ staticTabBarCalcMaxTabWidth: c_float()
 ImGuiTabItem* TabBarFindTabByID(ImGuiTabBar* tab_bar, tab_id: ImGuiID)
 {
     if (tab_id != 0)
-        for (let n: c_int = 0; n < tab_bar->Tabs.Size; n++)
-            if (tab_bar->Tabs[n].ID == tab_id)
-                return &tab_bar->Tabs[n];
+        for (let n: c_int = 0; n < tab_bar.Tabs.Size; n++)
+            if (tab_bar.Tabs[n].ID == tab_id)
+                return &tab_bar.Tabs[n];
     return null_mut();
 }
 
@@ -7729,11 +7729,11 @@ ImGuiTabItem* TabBarFindTabByID(ImGuiTabBar* tab_bar, tab_id: ImGuiID)
 ImGuiTabItem* TabBarFindMostRecentlySelectedTabForActiveWindow(ImGuiTabBar* tab_bar)
 {
     ImGuiTabItem* most_recently_selected_tab= null_mut();
-    for (let tab_n: c_int = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
+    for (let tab_n: c_int = 0; tab_n < tab_bar.Tabs.Size; tab_n++)
     {
-        ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
+        ImGuiTabItem* tab = &tab_bar.Tabs[tab_n];
         if (most_recently_selected_tab == null_mut() || most_recently_selected_tab->LastFrameSelected < tab->LastFrameSelected)
-            if (tab->Window && tab->window.WasActive)
+            if (tab.Window && tab->window.WasActive)
                 most_recently_selected_tab = tab;
     }
     return most_recently_selected_tab;
@@ -7757,17 +7757,17 @@ pub unsafe fn TabBarAddTab(ImGuiTabBar* tab_bar, ImGuiTabItemFlags tab_flags, wi
     if (new_tab.LastFrameVisible == -1)
         new_tab.LastFrameVisible = g.FrameCount - 1;
     new_tab.Window = window;                                // Required so tab bar layout can compute the tab width before tab submission
-    tab_bar->Tabs.push(new_tab);
+    tab_bar.Tabs.push(new_tab);
 }
 
 // The *TabId fields be already set by the docking system _before_ the actual TabItem was created, so we clear them regardless.
 pub unsafe fn TabBarRemoveTab(ImGuiTabBar* tab_bar, tab_id: ImGuiID)
 {
     if (ImGuiTabItem* tab = TabBarFindTabByID(tab_bar, tab_id))
-        tab_bar->Tabs.erase(tab);
-    if (tab_bar->VisibleTabId == tab_id)      { tab_bar->VisibleTabId = 0; }
-    if (tab_bar->SelectedTabId == tab_id)     { tab_bar->SelectedTabId = 0; }
-    if (tab_bar->NextSelectedTabId == tab_id) { tab_bar->NextSelectedTabId = 0; }
+        tab_bar.Tabs.erase(tab);
+    if (tab_bar.VisibleTabId == tab_id)      { tab_bar.VisibleTabId = 0; }
+    if (tab_bar.SelectedTabId == tab_id)     { tab_bar.SelectedTabId = 0; }
+    if (tab_bar.NextSelectedTabId == tab_id) { tab_bar.NextSelectedTabId = 0; }
 }
 
 // Called on manual closure attempt
@@ -7781,23 +7781,23 @@ pub unsafe fn TabBarCloseTab(ImGuiTabBar* tab_bar, ImGuiTabItem* tab)
         // This will remove a frame of lag for selecting another tab on closure.
         // However we don't run it in the case where the 'Unsaved' flag is set, so user gets a chance to fully undo the closure
         tab->WantClose = true;
-        if (tab_bar->VisibleTabId == tab->ID)
+        if (tab_bar.VisibleTabId == tab.ID)
         {
             tab->LastFrameVisible = -1;
-            tab_bar->SelectedTabId = tab_bar->NextSelectedTabId = 0;
+            tab_bar.SelectedTabId = tab_bar.NextSelectedTabId = 0;
         }
     }
     else
     {
         // Actually select before expecting closure attempt (on an UnsavedDocument tab user is expect to e.g. show a popup)
-        if (tab_bar->VisibleTabId != tab->ID)
-            tab_bar->NextSelectedTabId = tab->ID;
+        if (tab_bar.VisibleTabId != tab.ID)
+            tab_bar.NextSelectedTabId = tab.ID;
     }
 }
 
 staticTabBarScrollClamp: c_float(ImGuiTabBar* tab_bar,scrolling: c_float)
 {
-    scrolling = ImMin(scrolling, tab_bar->WidthAllTabs - tab_bar->BarRect.GetWidth());
+    scrolling = ImMin(scrolling, tab_bar.WidthAllTabs - tab_bar.BarRect.GetWidth());
     return ImMax(scrolling, 0.0);
 }
 
@@ -7816,11 +7816,11 @@ pub unsafe fn TabBarScrollToTab(ImGuiTabBar* tab_bar, tab_id: ImGuiID, ImGuiTabB
 
     // Scrolling happens only in the central section (leading/trailing sections are not scrolling)
     // FIXME: This is all confusing.
-    let scrollable_width: c_float =  tab_bar->BarRect.GetWidth() - sections[0].Width - sections[2].Width - sections[1].Spacing;
+    let scrollable_width: c_float =  tab_bar.BarRect.GetWidth() - sections[0].Width - sections[2].Width - sections[1].Spacing;
 
     // We make all tabs positions all relative Sections[0].Width to make code simpler
     let tab_x1: c_float =  tab->Offset - sections[0].Width + (order > sections[0].TabCount - 1 ? -margin : 0.0);
-    let tab_x2: c_float =  tab->Offset - sections[0].Width + tab->Width + (order + 1 < tab_bar->Tabs.Size - sections[2].TabCount ? margin : 1.0);
+    let tab_x2: c_float =  tab->Offset - sections[0].Width + tab->Width + (order + 1 < tab_bar.Tabs.Size - sections[2].TabCount ? margin : 1.0);
     tab_bar->ScrollingTargetDistToVisibility = 0.0;
     if (tab_bar->ScrollingTarget > tab_x1 || (tab_x2 - tab_x1 >= scrollable_width))
     {
@@ -7840,7 +7840,7 @@ pub unsafe fn TabBarQueueReorder(ImGuiTabBar* tab_bar, *const ImGuiTabItem tab, 
 {
     // IM_ASSERT(offset != 0);
     // IM_ASSERT(tab_bar->ReorderRequestTabId == 0);
-    tab_bar->ReorderRequestTabId = tab->ID;
+    tab_bar->ReorderRequestTabId = tab.ID;
     tab_bar->ReorderRequestOffset = (i16)offset;
 }
 
@@ -7852,16 +7852,16 @@ pub unsafe fn TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, *const ImGuiT
         return;
 
     let is_central_section: bool = (src_tab.Flags & ImGuiTabItemFlags_SectionMask_) == 0;
-    let bar_offset: c_float =  tab_bar->BarRect.Min.x - (is_central_section ? tab_bar->ScrollingTarget : 0);
+    let bar_offset: c_float =  tab_bar.BarRect.Min.x - (is_central_section ? tab_bar->ScrollingTarget : 0);
 
     // Count number of contiguous tabs we are crossing over
     let dir: c_int = (bar_offset + src_tab->Offset) > mouse_pos.x ? -1 : 1;
-    let src_idx: c_int = tab_bar->Tabs.index_from_ptr(src_tab);
+    let src_idx: c_int = tab_bar.Tabs.index_from_ptr(src_tab);
     let dst_idx: c_int = src_idx;
-    for (let i: c_int = src_idx; i >= 0 && i < tab_bar->Tabs.Size; i += dir)
+    for (let i: c_int = src_idx; i >= 0 && i < tab_bar.Tabs.Size; i += dir)
     {
         // Reordered tabs must share the same section
-        let dst_tab: *const ImGuiTabItem = &tab_bar->Tabs[i];
+        let dst_tab: *const ImGuiTabItem = &tab_bar.Tabs[i];
         if (dst_tab.Flags & ImGuiTabItemFlags_NoReorder)
             break;
         if ((dst_tab.Flags & ImGuiTabItemFlags_SectionMask_) != (src_tab.Flags & ImGuiTabItemFlags_SectionMask_))
@@ -7871,7 +7871,7 @@ pub unsafe fn TabBarQueueReorderFromMousePos(ImGuiTabBar* tab_bar, *const ImGuiT
         // Include spacing after tab, so when mouse cursor is between tabs we would not continue checking further tabs that are not hovered.
         let x1: c_float =  bar_offset + dst_tab->Offset - g.Style.ItemInnerSpacing.x;
         let x2: c_float =  bar_offset + dst_tab->Offset + dst_tab->Width + g.Style.ItemInnerSpacing.x;
-        //GetForegroundDrawList()->AddRect(ImVec2::new(x1, tab_bar->BarRect.Min.y), ImVec2::new(x2, tab_bar->BarRect.Max.y), IM_COL32(255, 0, 0, 255));
+        //GetForegroundDrawList().AddRect(ImVec2::new(x1, tab_bar.BarRect.Min.y), ImVec2::new(x2, tab_bar.BarRect.Max.y), IM_COL32(255, 0, 0, 255));
         if ((dir < 0 && mouse_pos.x > x1) || (dir > 0 && mouse_pos.x < x2))
             break;
     }
@@ -7888,12 +7888,12 @@ pub unsafe fn TabBarProcessReorder(ImGuiTabBar* tab_bar) -> bool
 
     //IM_ASSERT(tab_bar->Flags & ImGuiTabBarFlags_Reorderable); // <- this may happen when using debug tools
     let tab2_order: c_int = tab_bar->GetTabOrder(tab1) + tab_bar->ReorderRequestOffset;
-    if (tab2_order < 0 || tab2_order >= tab_bar->Tabs.Size)
+    if (tab2_order < 0 || tab2_order >= tab_bar.Tabs.Size)
         return false;
 
     // Reordered tabs must share the same section
     // (Note: TabBarQueueReorderFromMousePos() also has a similar test but since we allow direct calls to TabBarQueueReorder() we do it here too)
-    ImGuiTabItem* tab2 = &tab_bar->Tabs[tab2_order];
+    ImGuiTabItem* tab2 = &tab_bar.Tabs[tab2_order];
     if (tab2.Flags & ImGuiTabItemFlags_NoReorder)
         return false;
     if ((tab1.Flags & ImGuiTabItemFlags_SectionMask_) != (tab2.Flags & ImGuiTabItemFlags_SectionMask_))
@@ -7916,11 +7916,11 @@ static ImGuiTabItem* TabBarScrollingButtons(ImGuiTabBar* tab_bar)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
-    const arrow_button_size: ImVec2(g.FontSize - 2.0.0, g.FontSize + g.Style.FramePadding.y * 2.00f32);
+    const arrow_button_size: ImVec2(g.FontSize - 2.0.0, g.FontSize + g.Style.FramePadding.y * 2.0);
     let scrolling_buttons_width: c_float =  arrow_button_size.x * 2.0.0;
 
     let backup_cursor_pos: ImVec2 = window.DC.CursorPos;
-    //window.DrawList.AddRect(ImVec2::new(tab_bar->BarRect.Max.x - scrolling_buttons_width, tab_bar->BarRect.Min.y), ImVec2::new(tab_bar->BarRect.Max.x, tab_bar->BarRect.Max.y), IM_COL32(255,0,0,255));
+    //window.DrawList.AddRect(ImVec2::new(tab_bar.BarRect.Max.x - scrolling_buttons_width, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar.BarRect.Max.x, tab_bar.BarRect.Max.y), IM_COL32(255,0,0,255));
 
     let select_dir: c_int = 0;
     arrow_col: ImVec4 = g.Style.Colors[ImGuiCol_Text];
@@ -7931,12 +7931,12 @@ static ImGuiTabItem* TabBarScrollingButtons(ImGuiTabBar* tab_bar)
     let backup_repeat_delay: c_float =  g.IO.KeyRepeatDelay;
     let backup_repeat_rate: c_float =  g.IO.KeyRepeatRate;
     g.IO.KeyRepeatDelay = 0.250f32;
-    g.IO.KeyRepeatRate = 0.200f32;
-    let x: c_float =  ImMax(tab_bar->BarRect.Min.x, tab_bar->BarRect.Max.x - scrolling_buttons_width);
-    window.DC.CursorPos = ImVec2::new(x, tab_bar->BarRect.Min.y);
+    g.IO.KeyRepeatRate = 0.200;
+    let x: c_float =  ImMax(tab_bar.BarRect.Min.x, tab_bar.BarRect.Max.x - scrolling_buttons_width);
+    window.DC.CursorPos = ImVec2::new(x, tab_bar.BarRect.Min.y);
     if (ArrowButtonEx("##<", ImGuiDir_Left, arrow_button_size, ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_Repeat))
         select_dir = -1;
-    window.DC.CursorPos = ImVec2::new(x + arrow_button_size.x, tab_bar->BarRect.Min.y);
+    window.DC.CursorPos = ImVec2::new(x + arrow_button_size.x, tab_bar.BarRect.Min.y);
     if (ArrowButtonEx("##>", ImGuiDir_Right, arrow_button_size, ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_Repeat))
         select_dir = 1;
     PopStyleColor(2);
@@ -7945,7 +7945,7 @@ static ImGuiTabItem* TabBarScrollingButtons(ImGuiTabBar* tab_bar)
 
     ImGuiTabItem* tab_to_scroll_to= null_mut();
     if (select_dir != 0)
-        if (ImGuiTabItem* tab_item = TabBarFindTabByID(tab_bar, tab_bar->SelectedTabId))
+        if (ImGuiTabItem* tab_item = TabBarFindTabByID(tab_bar, tab_bar.SelectedTabId))
         {
             let selected_order: c_int = tab_bar->GetTabOrder(tab_item);
             let target_order: c_int = selected_order + select_dir;
@@ -7954,7 +7954,7 @@ static ImGuiTabItem* TabBarScrollingButtons(ImGuiTabBar* tab_bar)
             while (tab_to_scroll_to == null_mut())
             {
                 // If we are at the end of the list, still scroll to make our tab visible
-                tab_to_scroll_to = &tab_bar->Tabs[(target_order >= 0 && target_order < tab_bar->Tabs.Size) ? target_order : selected_order];
+                tab_to_scroll_to = &tab_bar.Tabs[(target_order >= 0 && target_order < tab_bar.Tabs.Size) ? target_order : selected_order];
 
                 // Cross through buttons
                 // (even if first/last item is a button, return it so we can update the scroll)
@@ -7962,12 +7962,12 @@ static ImGuiTabItem* TabBarScrollingButtons(ImGuiTabBar* tab_bar)
                 {
                     target_order += select_dir;
                     selected_order += select_dir;
-                    tab_to_scroll_to = if target_order < 0 || target_order >= tab_bar->Tabs.Size { tab_to_scroll_to} else { null_mut()};
+                    tab_to_scroll_to = if target_order < 0 || target_order >= tab_bar.Tabs.Size { tab_to_scroll_to} else { null_mut()};
                 }
             }
         }
     window.DC.CursorPos = backup_cursor_pos;
-    tab_bar->BarRect.Max.x -= scrolling_buttons_width + 1.0;
+    tab_bar.BarRect.Max.x -= scrolling_buttons_width + 1.0;
 
     return tab_to_scroll_to;
 }
@@ -7980,8 +7980,8 @@ static ImGuiTabItem* TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
     // We use g.Style.FramePadding.y to match the square ArrowButton size
     let tab_list_popup_button_width: c_float =  g.FontSize + g.Style.FramePadding.y;
     let backup_cursor_pos: ImVec2 = window.DC.CursorPos;
-    window.DC.CursorPos = ImVec2::new(tab_bar->BarRect.Min.x - g.Style.FramePadding.y, tab_bar->BarRect.Min.y);
-    tab_bar->BarRect.Min.x += tab_list_popup_button_width;
+    window.DC.CursorPos = ImVec2::new(tab_bar.BarRect.Min.x - g.Style.FramePadding.y, tab_bar.BarRect.Min.y);
+    tab_bar.BarRect.Min.x += tab_list_popup_button_width;
 
     arrow_col: ImVec4 = g.Style.Colors[ImGuiCol_Text];
     arrow_col.w *= 0.5;
@@ -7993,14 +7993,14 @@ static ImGuiTabItem* TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
     ImGuiTabItem* tab_to_select= null_mut();
     if (open)
     {
-        for (let tab_n: c_int = 0; tab_n < tab_bar->Tabs.Size; tab_n++)
+        for (let tab_n: c_int = 0; tab_n < tab_bar.Tabs.Size; tab_n++)
         {
-            ImGuiTabItem* tab = &tab_bar->Tabs[tab_n];
+            ImGuiTabItem* tab = &tab_bar.Tabs[tab_n];
             if (tab.Flags & ImGuiTabItemFlags_Button)
                 continue;
 
-            let mut  tab_name: *const c_char = tab_bar->GetTabName(tab);
-            if (Selectable(tab_name, tab_bar->SelectedTabId == tab->ID))
+            let mut  tab_name: *const c_char = tab_bar.GetTabNametab);
+            if (Selectable(tab_name, tab_bar.SelectedTabId == tab.ID))
                 tab_to_select = tab;
         }
         EndCombo();
@@ -8041,8 +8041,8 @@ bool    BeginTabItem(label: *const c_char,p_open: *mut bool, ImGuiTabItemFlags f
     let mut ret: bool =  TabItemEx(tab_bar, label, p_open, flags, null_mut());
     if (ret && flag_clear(flags, ImGuiTabItemFlags_NoPushId))
     {
-        ImGuiTabItem* tab = &tab_bar->Tabs[tab_bar->LastTabItemIdx];
-        PushOverrideID(tab->ID); // We already hashed 'label' so push into the ID stack directly instead of doing another hash through PushID(label)
+        ImGuiTabItem* tab = &tab_bar.Tabs[tab_bar->LastTabItemIdx];
+        PushOverrideID(tab.ID); // We already hashed 'label' so push into the ID stack directly instead of doing another hash through PushID(label)
     }
     return ret;
 }
@@ -8061,7 +8061,7 @@ c_void    EndTabItem()
         return;
     }
     // IM_ASSERT(tab_bar->LastTabItemIdx >= 0);
-    ImGuiTabItem* tab = &tab_bar->Tabs[tab_bar->LastTabItemIdx];
+    ImGuiTabItem* tab = &tab_bar.Tabs[tab_bar->LastTabItemIdx];
     if (!(tab.Flags & ImGuiTabItemFlags_NoPushId))
         PopID();
 }
@@ -8122,12 +8122,12 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     let mut tab_is_new: bool =  false;
     if (tab == null_mut())
     {
-        tab_bar->Tabs.push(ImGuiTabItem());
-        tab = &tab_bar->Tabs.last().unwrap();
-        tab->ID = id;
-        tab_bar->TabsAddedNew = tab_is_new = true;
+        tab_bar.Tabs.push(ImGuiTabItem());
+        tab = &tab_bar.Tabs.last().unwrap();
+        tab.ID = id;
+        tab_bar.TabsAddedNew = tab_is_new = true;
     }
-    tab_bar->LastTabItemIdx = (i16)tab_bar->Tabs.index_from_ptr(tab);
+    tab_bar->LastTabItemIdx = (i16)tab_bar.Tabs.index_from_ptr(tab);
 
     // Calculate tab contents size
     let size: ImVec2 = TabItemCalcSize(label, p_open != null_mut());
@@ -8137,7 +8137,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     if (tab_is_new)
         tab->Width = ImMax(1.0, size.x);
     tab->ContentWidth = size.x;
-    tab->BeginOrder = tab_bar->TabsActiveCount+= 1;
+    tab->BeginOrder = tab_bar.TabsActiveCount+= 1;
 
     let tab_bar_appearing: bool = (tab_bar->PrevFrameVisible + 1 < g.FrameCount);
     let tab_bar_focused: bool = (tab_bar.Flags & ImGuiTabBarFlags_IsFocused) != 0;
@@ -8145,41 +8145,41 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     let is_tab_button: bool = flag_set(flags, ImGuiTabItemFlags_Button);
     tab->LastFrameVisible = g.FrameCount;
     tab.Flags = flags;
-    tab->Window = docked_window;
+    tab.Window = docked_window;
 
     // Append name with zero-terminator
     // (regular tabs are permitted in a DockNode tab bar, but window tabs not permitted in a non-DockNode tab bar)
-    if (tab->Window != null_mut())
+    if (tab.Window != null_mut())
     {
         // IM_ASSERT(tab_bar->Flags & ImGuiTabBarFlags_DockNode);
-        tab->NameOffset = -1;
+        tab.NameOffset = -1;
     }
     else
     {
-        // IM_ASSERT(tab->Window == NULL);
-        tab->NameOffset = (i32)tab_bar->TabsNames.size();
-        tab_bar->TabsNames.append(label, label + strlen(label) + 1); // Append name _with_ the zero-terminator.
+        // IM_ASSERT(tab.Window == NULL);
+        tab.NameOffset = (i32)tab_bar.TabsNames.size();
+        tab_bar.TabsNames.append(label, label + strlen(label) + 1); // Append name _with_ the zero-terminator.
     }
 
     // Update selected tab
     if (!is_tab_button)
     {
-        if (tab_appearing && (tab_bar.Flags & ImGuiTabBarFlags_AutoSelectNewTabs) && tab_bar->NextSelectedTabId == 0)
-            if (!tab_bar_appearing || tab_bar->SelectedTabId == 0)
-                tab_bar->NextSelectedTabId = id;  // New tabs gets activated
-        if ((flags & ImGuiTabItemFlags_SetSelected) && (tab_bar->SelectedTabId != id)) // _SetSelected can only be passed on explicit tab bar
-            tab_bar->NextSelectedTabId = id;
+        if (tab_appearing && (tab_bar.Flags & ImGuiTabBarFlags_AutoSelectNewTabs) && tab_bar.NextSelectedTabId == 0)
+            if (!tab_bar_appearing || tab_bar.SelectedTabId == 0)
+                tab_bar.NextSelectedTabId = id;  // New tabs gets activated
+        if ((flags & ImGuiTabItemFlags_SetSelected) && (tab_bar.SelectedTabId != id)) // _SetSelected can only be passed on explicit tab bar
+            tab_bar.NextSelectedTabId = id;
     }
 
     // Lock visibility
     // (Note: tab_contents_visible != tab_selected... because CTRL+TAB operations may preview some tabs without selecting them!)
-    let mut tab_contents_visible: bool =  (tab_bar->VisibleTabId == id);
+    let mut tab_contents_visible: bool =  (tab_bar.VisibleTabId == id);
     if (tab_contents_visible)
         tab_bar->VisibleTabWasSubmitted = true;
 
     // On the very first frame of a tab bar we let first tab contents be visible to minimize appearing glitches
-    if (!tab_contents_visible && tab_bar->SelectedTabId == 0 && tab_bar_appearing && docked_window == null_mut())
-        if (tab_bar->Tabs.Size == 1 && !(tab_bar.Flags & ImGuiTabBarFlags_AutoSelectNewTabs))
+    if (!tab_contents_visible && tab_bar.SelectedTabId == 0 && tab_bar_appearing && docked_window == null_mut())
+        if (tab_bar.Tabs.Size == 1 && !(tab_bar.Flags & ImGuiTabBarFlags_AutoSelectNewTabs))
             tab_contents_visible = true;
 
     // Note that tab_is_new is not necessarily the same as tab_appearing! When a tab bar stops being submitted
@@ -8192,7 +8192,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
         return tab_contents_visible;
     }
 
-    if (tab_bar->SelectedTabId == id)
+    if (tab_bar.SelectedTabId == id)
         tab->LastFrameSelected = g.FrameCount;
 
     // Backup current layout position
@@ -8202,9 +8202,9 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     let is_central_section: bool = (tab.Flags & ImGuiTabItemFlags_SectionMask_) == 0;
     size.x = tab->Width;
     if (is_central_section)
-        window.DC.CursorPos = tab_bar->BarRect.Min + ImVec2::new(IM_FLOOR(tab->Offset - tab_bar->ScrollingAnim), 0.0);
+        window.DC.CursorPos = tab_bar.BarRect.Min + ImVec2::new(IM_FLOOR(tab->Offset - tab_bar->ScrollingAnim), 0.0);
     else
-        window.DC.CursorPos = tab_bar->BarRect.Min + ImVec2::new(tab->Offset, 0.0);
+        window.DC.CursorPos = tab_bar.BarRect.Min + ImVec2::new(tab->Offset, 0.0);
     let pos: ImVec2 = window.DC.CursorPos;
     let mut bb: ImRect = ImRect::new(pos, pos + size);
 
@@ -8232,7 +8232,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     hovered: bool, held;
     let mut pressed: bool =  ButtonBehavior(bb, id, &hovered, &held, button_flags);
     if (pressed && !is_tab_button)
-        tab_bar->NextSelectedTabId = id;
+        tab_bar.NextSelectedTabId = id;
 
     // Transfer active id window so the active id is not owned by the dock host (as StartMouseMovingWindow()
     // will only do it on the drag). This allows FocusWindow() to be more conservative in how it clears active id.
@@ -8281,15 +8281,15 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
             if (!undocking_tab) //&& (!g.IO.ConfigDockingWithShift || g.IO.KeyShift)
             {
                 let threshold_base: c_float =  g.FontSize;
-                let threshold_x: c_float =  (threshold_base * 2.20f32);
-                let threshold_y: c_float =  (threshold_base * 1.5f32) + ImClamp((ImFabs(g.IO.MouseDragMaxDistanceAbs[0].x) - threshold_base * 2.00f32) * 0.20f32, 0.0, threshold_base * 4.00f32);
-                //GetForegroundDrawList()->AddRect(ImVec2::new(bb.Min.x - threshold_x, bb.Min.y - threshold_y), ImVec2::new(bb.Max.x + threshold_x, bb.Max.y + threshold_y), IM_COL32_WHITE); // [DEBUG]
+                let threshold_x: c_float =  (threshold_base * 2.20);
+                let threshold_y: c_float =  (threshold_base * 1.5) + ImClamp((ImFabs(g.IO.MouseDragMaxDistanceAbs[0].x) - threshold_base * 2.0) * 0.20, 0.0, threshold_base * 4.0);
+                //GetForegroundDrawList().AddRect(ImVec2::new(bb.Min.x - threshold_x, bb.Min.y - threshold_y), ImVec2::new(bb.Max.x + threshold_x, bb.Max.y + threshold_y), IM_COL32_WHITE); // [DEBUG]
 
                 let distance_from_edge_y: c_float =  ImMax(bb.Min.y - g.IO.MousePos.y, g.IO.MousePos.y - bb.Max.y);
                 if (distance_from_edge_y >= threshold_y)
                     undocking_tab = true;
                 if (drag_distance_from_edge_x > threshold_x)
-                    if ((drag_dir < 0 && tab_bar->GetTabOrder(tab) == 0) || (drag_dir > 0 && tab_bar->GetTabOrder(tab) == tab_bar->Tabs.Size - 1))
+                    if ((drag_dir < 0 && tab_bar->GetTabOrder(tab) == 0) || (drag_dir > 0 && tab_bar->GetTabOrder(tab) == tab_bar.Tabs.Size - 1))
                         undocking_tab = true;
             }
 
@@ -8311,7 +8311,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     if (hovered && g.HoveredIdNotActiveTimer > TOOLTIP_DELAY && bb.GetWidth() < tab->ContentWidth)
     {
         // Enlarge tab display when hovering
-        bb.Max.x = bb.Min.x + IM_FLOOR(ImLerp(bb.GetWidth(), tab->ContentWidth, ImSaturate((g.HoveredIdNotActiveTimer - 0.400f32) * 6.00f32)));
+        bb.Max.x = bb.Min.x + IM_FLOOR(ImLerp(bb.GetWidth(), tab->ContentWidth, ImSaturate((g.HoveredIdNotActiveTimer - 0.4) * 6.0)));
         display_draw_list = GetForegroundDrawList(window);
         TabItemBackground(display_draw_list, bb, flags, GetColorU32(ImGuiCol_TitleBgActive));
     }
@@ -8327,7 +8327,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     let hovered_unblocked: bool = IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup);
     if (hovered_unblocked && (IsMouseClicked(1) || IsMouseReleased(1)))
         if (!is_tab_button)
-            tab_bar->NextSelectedTabId = id;
+            tab_bar.NextSelectedTabId = id;
 
     if (tab_bar.Flags & ImGuiTabBarFlags_NoCloseWithMiddleMouseButton)
         flags |= ImGuiTabItemFlags_NoCloseWithMiddleMouseButton;
@@ -8363,7 +8363,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
             if (IsItemHovered(ImGuiHoveredFlags_DelayNormal))
                 SetTooltip("%.*s", (FindRenderedTextEnd(label) - label), label);
 
-    // IM_ASSERT(!is_tab_button || !(tab_bar->SelectedTabId == tab->ID && is_tab_button)); // TabItemButton should not be selected
+    // IM_ASSERT(!is_tab_button || !(tab_bar->SelectedTabId == tab.ID && is_tab_button)); // TabItemButton should not be selected
     if (is_tab_button)
         return pressed;
     return tab_contents_visible;
@@ -8399,7 +8399,7 @@ pub unsafe fn TabItemCalcSize(label: *const c_char, has_close_button: bool) -> I
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
-    let size: ImVec2 = ImVec2::new(label_size.x + g.Style.FramePadding.x, label_size.y + g.Style.FramePadding.y * 2.00f32);
+    let size: ImVec2 = ImVec2::new(label_size.x + g.Style.FramePadding.x, label_size.y + g.Style.FramePadding.y * 2.0);
     if (has_close_button)
         size.x += g.Style.FramePadding.x + (g.Style.ItemInnerSpacing.x + g.FontSize); // We use Y intentionally to fit the close button circle.
     else
@@ -8497,7 +8497,7 @@ pub unsafe fn TabItemLabelAndCloseButton(draw_list: *mut ImDrawList, bb: &ImRect
     }
     else if (unsaved_marker_visible)
     {
-        let mut bullet_bb: ImRect = ImRect::new(button_pos, button_pos + ImVec2::new(button_sz, button_sz) + g.Style.FramePadding * 2.00f32);
+        let mut bullet_bb: ImRect = ImRect::new(button_pos, button_pos + ImVec2::new(button_sz, button_sz) + g.Style.FramePadding * 2.0);
         RenderBullet(draw_list, bullet_bb.GetCenter(), GetColorU32(ImGuiCol_Text));
     }
 
@@ -8507,8 +8507,8 @@ pub unsafe fn TabItemLabelAndCloseButton(draw_list: *mut ImDrawList, bb: &ImRect
     let ellipsis_max_x: c_float =  close_button_visible ? text_pixel_clip_bb.Max.x : bb.Max.x - 1.0;
     if (close_button_visible || unsaved_marker_visible)
     {
-        text_pixel_clip_bb.Max.x -= close_button_visible ? (button_sz) : (button_sz * 0.800f32);
-        text_ellipsis_clip_bb.Max.x -= unsaved_marker_visible ? (button_sz * 0.800f32) : 0.0;
+        text_pixel_clip_bb.Max.x -= close_button_visible ? (button_sz) : (button_sz * 0.8);
+        text_ellipsis_clip_bb.Max.x -= unsaved_marker_visible ? (button_sz * 0.8) : 0.0;
         ellipsis_max_x = text_pixel_clip_bb.Max.x;
     }
     RenderTextEllipsis(draw_list, text_ellipsis_clip_bb.Min, text_ellipsis_clip_bb.Max, text_pixel_clip_bb.Max.x, ellipsis_max_x, label, null_mut(), &label_size);

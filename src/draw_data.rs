@@ -25,9 +25,9 @@ pub struct ImDrawData {
     pub CmdLists: *mut *mut ImDrawList,
     // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
     pub DisplayPos: ImVec2,
-    // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport()->Pos for the main viewport, == (0.0) in most single-viewport applications)
+    // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport().Pos for the main viewport, == (0.0) in most single-viewport applications)
     pub DisplaySize: ImVec2,
-    // Size of the viewport to render (== GetMainViewport()->Size for the main viewport, == io.DisplaySize in most single-viewport applications)
+    // Size of the viewport to render (== GetMainViewport().Size for the main viewport, == io.DisplaySize in most single-viewport applications)
     pub FramebufferScale: ImVec2,
     // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
     pub OwnerViewport: *mut ImGuiViewport,          // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
@@ -78,7 +78,7 @@ impl ImDrawData {
     }
     }
 
-    // void  ScaleClipRects(const ImVec2& fb_scale); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
+    // void  ScaleClipRects(const fb_scale: &mut ImVec2); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
     pub fn ScaleClipRects(&mut self, fb_scale: &ImVec2) {
         // for (let i: c_int = 0; i < CmdListsCount; i++)
         for i in 0 .. self.CmdListsCount

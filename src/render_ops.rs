@@ -100,7 +100,7 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: 
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
-// c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const ImVec2& pos_min, const ImVec2& pos_max, text: *const c_char, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const ImVec2& align, *const ImRect clip_rect)
+// c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_display_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     let mut pos: ImVec2 = pos_min.clone();
@@ -130,7 +130,7 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
     }
 }
 
-// c_void RenderTextClipped(const ImVec2& pos_min, const ImVec2& pos_max, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, const ImVec2& align, *const ImRect clip_rect)
+// c_void RenderTextClipped(const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Hide anything after a '##' string
     let mut text_display_end: *const c_char = FindRenderedTextEnd(text, text_end);
@@ -151,7 +151,7 @@ pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
-// c_void RenderTextEllipsis(draw_list: *mut ImDrawList, const ImVec2& pos_min, const ImVec2& pos_max, c_float clip_max_x, c_float ellipsis_max_x, text: *const c_char, text_end_full: *const c_char, *const text_size_if_known: ImVec2)
+// c_void RenderTextEllipsis(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, c_float clip_max_x, c_float ellipsis_max_x, text: *const c_char, text_end_full: *const c_char, *const text_size_if_known: ImVec2)
 pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, clip_max_x: c_float, ellipsis_max_x: c_float, text: *const c_char, mut text_end_full: *const c_char, text_size_if_known: *const ImVec2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if text_end_full == null() {
@@ -416,13 +416,13 @@ pub unsafe fn RenderArrow(mut draw_list: *mut ImDrawList, pos: ImVec2, col: u32,
     match dir {
         ImGuiDir_Up | ImGuiDir_Down => {
             if dir == ImGuiDir_Up {r = -r};
-        a = ImVec2::new(0.000, 0.7500) * r;
+        a = ImVec2::new(0.0, 0.7500) * r;
         b = ImVec2::new(-0.866, -0.7500) * r;
         c = ImVec2::new(0.866, -0.7500) * r;
         },
         ImGuiDir_Left | ImGuiDir_Right => {
             if dir == ImGuiDir_Left { r = -r; }
-            a = ImVec2::new(0.750, 0.0000) * r;
+            a = ImVec2::new(0.750, 0.00) * r;
             b = ImVec2::new(-0.750, 0.8660) * r;
             c = ImVec2::new(-0.750, -0.8660) * r;
         },
@@ -473,8 +473,8 @@ pub unsafe fn RenderArrowPointingAt(mut draw_list: *mut ImDrawList, pos: ImVec2,
 // and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
 pub unsafe fn RenderArrowDockMenu(mut draw_list: *mut ImDrawList, p_min: ImVec2,sz: c_float, col: u32)
 {
-    draw_list.AddRectFilled(p_min + ImVec2::new(sz * 0.20, sz * 0.150), p_min + ImVec2::new(sz * 0.80, sz * 0.300), col, 0.0, 0);
-    RenderArrowPointingAt(draw_list, p_min + ImVec2::new(sz * 0.50, sz * 0.850), ImVec2::new(sz * 0.3, sz * 0.400), ImGuiDir_Down, col);
+    draw_list.AddRectFilled(p_min + ImVec2::new(sz * 0.20, sz * 0.150), p_min + ImVec2::new(sz * 0.80, sz * 0.3), col, 0.0, 0);
+    RenderArrowPointingAt(draw_list, p_min + ImVec2::new(sz * 0.50, sz * 0.850), ImVec2::new(sz * 0.3, sz * 0.4), ImGuiDir_Down, col);
 }
 
 // FIXME: Cleanup and move code to ImDrawList.

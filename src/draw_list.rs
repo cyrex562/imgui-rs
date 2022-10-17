@@ -27,7 +27,7 @@ use crate::utils::flag_set;
 // Each dear imgui window contains its own ImDrawList. You can use GetWindowDrawList() to
 // access the current window draw list and draw custom primitives.
 // You can interleave normal  calls and adding primitives to the current draw list.
-// In single viewport mode, top-left is == GetMainViewport()->Pos (generally 0,0), bottom-right is == GetMainViewport()->Pos+Size (generally io.DisplaySize).
+// In single viewport mode, top-left is == GetMainViewport().Pos (generally 0,0), bottom-right is == GetMainViewport().Pos+Size (generally io.DisplaySize).
 // You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to ClipRect as well!)
 // Important: Primitives are always added to the list and not culled (culling is done at higher-level by  functions), if you use this API a lot consider coarse culling your drawn objects.
 #[derive(Default, Debug, Clone)]
@@ -77,7 +77,7 @@ impl ImDrawList {
 
     // ~ImDrawList() { _ClearFreeMemory(); }
 
-    // void  PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, intersect_with_current_clip_rect: bool = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level PushClipRect() to affect logic (hit-testing and widget culling)
+    // void  PushClipRect(const clip_rect_min: &mut ImVec2, const clip_rect_max: &mut ImVec2, intersect_with_current_clip_rect: bool = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level PushClipRect() to affect logic (hit-testing and widget culling)
     pub unsafe fn PushClipRect(&mut self, cr_min: &ImVec2, cr_max: &ImVec2, intersect_with_current_clip_rect: bool) {
         let mut cr = ImVec4::from_floats(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
         if intersect_with_current_clip_rect
@@ -150,7 +150,7 @@ impl ImDrawList {
 //   In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
 //   In future versions we will use textures to provide cheaper and higher-quality circles.
 //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
-// void  AddLine(const ImVec2& p1, const ImVec2& p2, col: u32, c_float thickness = 1.0);
+// void  AddLine(const p1: &mut ImVec2, const p2: &mut ImVec2, col: u32, c_float thickness = 1.0);
     pub unsafe fn AddLine(&mut self, p1: &ImVec2, p2: &ImVec2, col: u32, thicknetss: c_float) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
@@ -161,22 +161,22 @@ impl ImDrawList {
 
     }
 
-    // void  AddRect(const ImVec2& p_min, const ImVec2& p_max, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0, c_float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
+    // void  AddRect(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0, c_float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
     pub unsafe fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float, flags: ImDrawFlags, thickness: c_float) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
         }
         if flag_set(Flags, ImDrawListFlags_AntiAliasedLines) {
-            self.PathRect(p_min + ImVec2::new(0.50, 0.500), p_max - ImVec2::new(0.50, 0.500), rounding, flags);
+            self.PathRect(p_min + ImVec2::new(0.50, 0.5), p_max - ImVec2::new(0.50, 0.5), rounding, flags);
         }
         else {
-            self.PathRect(p_min + ImVec2::new(0.50, 0.500), p_max - ImVec2::new(0.49, 0.490), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
+            self.PathRect(p_min + ImVec2::new(0.50, 0.5), p_max - ImVec2::new(0.49, 0.490), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
             self.PathStroke(col, ImDrawFlags_Closed, thickness);
         }
     }
 
 
-    // void  AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
+    // void  AddRectFilled(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
     pub unsafe fn AddRectFilled(&mut self, p_min: &ImVec2, p_masx: &ImVec2, col: u32, rounding: c_float, flags: ImDrawFlags) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -193,7 +193,7 @@ impl ImDrawList {
         }
     }
 
-    // void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, col_upr_left: u32, col_upr_right: u32, col_bot_right: u32, col_bot_left: u32);
+    // void  AddRectFilledMultiColor(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col_upr_left: u32, col_upr_right: u32, col_bot_right: u32, col_bot_left: u32);
     pub unsafe fn AddRectFilledMultiColor(&mut self, p_min: &ImVec2, p_max: &ImVec2, col_upr_left: u32, col_upr_right: u32, col_bot_right: u32, col_bot_left: u32) {
         if (((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & IM_COL32_A_MASK) == 0) {
             return;
@@ -213,7 +213,7 @@ impl ImDrawList {
         self.PrimWriteVtx(&ImVec2::new(p_min.x, p_max.y), &uv, col_bot_left);
     }
 
-    // void  AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, col: u32, c_float thickness = 1.0);
+    // void  AddQuad(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32, c_float thickness = 1.0);
     pub unsafe fn AddQuad(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32, thickness: c_float) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -226,7 +226,7 @@ impl ImDrawList {
         self.PathStroke(col, ImDrawFlags_Closed, thickness);
     }
 
-    // void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, col: u32);
+    // void  AddQuadFilled(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32);
     pub unsafe fn AddQuadFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -240,7 +240,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, col: u32, c_float thickness = 1.0);
+    // void  AddTriangle(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, col: u32, c_float thickness = 1.0);
     pub unsafe fn AddTriangle(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32, thickness: c_float) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -253,7 +253,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, col: u32);
+    // void  AddTriangleFilled(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, col: u32);
     pub unsafe fn AddTriangleFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
@@ -265,7 +265,7 @@ impl ImDrawList {
         self.PathFillConvex(col);
     }
 
-    // void  AddCircle(const ImVec2& center, c_float radius, col: u32, num_segments: c_int = 0, c_float thickness = 1.0);
+    // void  AddCircle(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int = 0, c_float thickness = 1.0);
     pub unsafe fn AddCircle(&mut self, center: &ImVec2, radius: c_float, col: u32, mut num_segments: size_t, thickness: c_float) {
         if (col & IM_COL32_A_MASK) == 0 || radius < 0.5 {
             return;
@@ -291,7 +291,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddCircleFilled(const ImVec2& center, c_float radius, col: u32, num_segments: c_int = 0);
+    // void  AddCircleFilled(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int = 0);
     pub unsafe fn AddCircleFilled(&mut self, center: &ImVec2, radius: c_float, col: u32, mut num_segments: size_t) {
         if (col & IM_COL32_A_MASK) == 0 || radius < 0.5 {
             return;
@@ -316,7 +316,7 @@ impl ImDrawList {
         self.PathFillConvex(col);
     }
 
-    // void  AddNgon(const ImVec2& center, c_float radius, col: u32, num_segments: c_int, c_float thickness = 1.0);
+    // void  AddNgon(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int, c_float thickness = 1.0);
     pub unsafe fn AddNgon(&mut self, center: &ImVec2, radius: c_float, col: u32, num_semgnets: c_int, thickness: c_float) {
          if (col & IM_COL32_A_MASK) == 0 || num_segments <= 2 {
              return;
@@ -329,7 +329,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddNgonFilled(const ImVec2& center, c_float radius, col: u32, num_segments: c_int);
+    // void  AddNgonFilled(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int);
     pub unsafe fn AddNgonFilled(&mut self, center: &ImVec2, radius: c_float, col: u32, num_segments: size_t) {
         if (col & IM_COL32_A_MASK) == 0 || num_segments <= 2 {
             return;
@@ -342,12 +342,12 @@ impl ImDrawList {
     }
 
 
-    // void  AddText(const ImVec2& pos, col: u32, const char* text_begin, const char* text_end = NULL);
+    // void  AddText(const pos: &mut ImVec2, col: u32, const char* text_begin, const char* text_end = NULL);
     pub unsafe fn AddText(&mut self, pos: *const ImVec2, col: u32, text_begin: *const c_char, mut text_end: *mut c_char) {
         self.AddText(pos, col, text_begin, text_end);
     }
 
-    // void  AddText(const font: *mut ImFont, c_float font_size, const ImVec2& pos, col: u32, const char* text_begin, const char*
+    // void  AddText(const font: *mut ImFont, c_float font_size, const pos: &mut ImVec2, col: u32, const char* text_begin, const char*
 // text_end = NULL, c_float wrap_width = 0.0, const ImVec4* cpu_fine_clip_rect = NULL);
     pub unsafe fn AddText2(&mut self, mut font: *const ImFont, mut font_size: c_float, pos: &ImVec2, col: u32, text_begin: *const c_char, mut text_end: *const c_char, wrap_width: c_float, cpu_fine_clip_rect: *const ImVec4) {
         if (col & IM_COL32_A_MASK) == 0 {
@@ -407,7 +407,7 @@ impl ImDrawList {
             // Do we want to draw this line using a texture?
             // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
             // - If AA_SIZE is not 1 we cannot use the texture path.
-            let use_texture: bool = flag_set(self.Flags, ImDrawListFlags_AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.000010) && (AA_SIZE == 1.0);
+            let use_texture: bool = flag_set(self.Flags, ImDrawListFlags_AntiAliasedLinesUseTex) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.0010) && (AA_SIZE == 1.0);
 
             // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
             // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font->ContainerAtlas->Flags & ImFontAtlasFlags_NoBakedLines));
@@ -744,7 +744,7 @@ impl ImDrawList {
         }
     }
 
-    // void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, col: u32, c_float thickness, num_segments: c_int = 0); // Cubic Bezier (4 control points)
+    // void  AddBezierCubic(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32, c_float thickness, num_segments: c_int = 0); // Cubic Bezier (4 control points)
     pub unsafe fn AddBezierCubic(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32, thickness: c_float, num_segments: c_int) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -755,7 +755,7 @@ impl ImDrawList {
         self.PathStroke(col, 0, thickness);
     }
 
-    // void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, col: u32, c_float thickness, num_segments: c_int = 0);               // Quadratic Bezier (3 control points)
+    // void  AddBezierQuadratic(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, col: u32, c_float thickness, num_segments: c_int = 0);               // Quadratic Bezier (3 control points)
     pub unsafe fn AddBezierQuadratic(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32, thickness: c_float, num_segments: c_int) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -770,7 +770,7 @@ impl ImDrawList {
 // - Read FAQ to understand what ImTextureID is.
 // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
 // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-// void  AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min = ImVec2::new(0, 0), const ImVec2& uv_max = ImVec2::new(1, 1), col: u32 = IM_COL32_WHITE);
+// void  AddImage(ImTextureID user_texture_id, const p_min: &mut ImVec2, const p_max: &mut ImVec2, const uv_min: &mut ImVec2 = ImVec2::new(0, 0), const uv_max: &mut ImVec2 = ImVec2::new(1, 1), col: u32 = IM_COL32_WHITE);
     pub fn AddImage(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_ming: &ImVec2, uv_max: &ImVec2, col: u32) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -790,7 +790,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1 = ImVec2::new(0, 0), const ImVec2& uv2 = ImVec2::new(1, 0), const ImVec2& uv3 = ImVec2::new(1, 1), const ImVec2& uv4 = ImVec2::new(0, 1), col: u32 = IM_COL32_WHITE);
+    // void  AddImageQuad(ImTextureID user_texture_id, const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, const uv1: &mut ImVec2 = ImVec2::new(0, 0), const uv2: &mut ImVec2 = ImVec2::new(1, 0), const uv3: &mut ImVec2 = ImVec2::new(1, 1), const uv4: &mut ImVec2 = ImVec2::new(0, 1), col: u32 = IM_COL32_WHITE);
     pub fn AddImageQuad(&mut self, user_texture_id: ImTextureID, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, uv1: &ImVec2, uv2: &ImVec2, uv3: &ImVec2, uv4: &ImVec2, col: u32) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -809,7 +809,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, col: u32, c_float rounding, flags: ImDrawFlags = 0);
+    // void  AddImageRounded(ImTextureID user_texture_id, const p_min: &mut ImVec2, const p_max: &mut ImVec2, const uv_min: &mut ImVec2, const uv_max: &mut ImVec2, col: u32, c_float rounding, flags: ImDrawFlags = 0);
     pub unsafe fn AddImageRounded(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_min: &ImVec2, uv_max: &ImVec2, col: u32, rounding: c_float, mut flags: ImDrawFlags) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
@@ -842,12 +842,12 @@ impl ImDrawList {
 // inline    void  PathClear()                                                 { _Path.Size = 0; }
     pub fn PathClear(&mut self) { self._Path.clear() }
 
-    // inline    void  PathLineTo(const ImVec2& pos)                               { _Path.push(pos); }
+    // inline    void  PathLineTo(const pos: &mut ImVec2)                               { _Path.push(pos); }
     pub fn PathLineTo(&mut self, pos: &ImVec2) {
         self._Path.push(pos.clone())
     }
 
-    // inline    void  PathLineToMergeDuplicate(const ImVec2& pos)
+    // inline    void  PathLineToMergeDuplicate(const pos: &mut ImVec2)
     pub unsafe fn PathLineToMergeDuplicate(&mut self, pos: &ImVec2) {
         if self._Path.len() == 0 || libc::memcmp(&self._Path[self._Path.Size - 1], &pos, 8) != 0 { self._Path.push(pos.clone()); }
     }
@@ -866,7 +866,7 @@ impl ImDrawList {
     }
 
 
-    // void  PathArcTo(const ImVec2& center, c_float radius, c_float a_min, c_float a_max, num_segments: c_int = 0);
+    // void  PathArcTo(const center: &mut ImVec2, c_float radius, c_float a_min, c_float a_max, num_segments: c_int = 0);
     pub fn PathArcTo(&mut self, center: &ImVec2, radius: c_float, a_min: c_float, a_max: c_float, num_segments: size_t) {
         if radius < 0.5
         {
@@ -920,7 +920,7 @@ impl ImDrawList {
     }
 
 
-    // void  PathArcToFast(const ImVec2& center, c_float radius, a_min_of_12: c_int, a_max_of_12: c_int);                // Use precomputed angles for a 12 steps circle
+    // void  PathArcToFast(const center: &mut ImVec2, c_float radius, a_min_of_12: c_int, a_max_of_12: c_int);                // Use precomputed angles for a 12 steps circle
     pub fn PathArcToFast(&mut self, center: &ImVec2, radius: c_float, a_min_of_12: c_int, a_max_of_12: c_int) {
         if radius < 0.5
         {
@@ -931,7 +931,7 @@ impl ImDrawList {
     }
 
 
-    // void  PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, num_segments: c_int = 0); // Cubic Bezier (4 control points)
+    // void  PathBezierCubicCurveTo(const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, num_segments: c_int = 0); // Cubic Bezier (4 control points)
     pub fn PathBezierCubicCurveTo(&mut self, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, num_segments: c_int) {
 
         let p1: ImVec2 = sekf._Path.last().unwrap();
@@ -951,7 +951,7 @@ impl ImDrawList {
 
     }
 
-    // void  PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, num_segments: c_int = 0);               // Quadratic Bezier (3 control points)
+    // void  PathBezierQuadraticCurveTo(const p2: &mut ImVec2, const p3: &mut ImVec2, num_segments: c_int = 0);               // Quadratic Bezier (3 control points)
     pub fn PathBezierQuadraticCurveTo(&mut self, p2: &ImVec2, p3: &ImVec2, num_segments: c_int)
     {
         let p1: ImVec2 = self._Path.last().unwrap().clone();
@@ -970,7 +970,7 @@ impl ImDrawList {
         }
     }
 
-    // void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, c_float rounding = 0.0, flags: ImDrawFlags = 0);
+    // void  PathRect(const rect_min: &mut ImVec2, const rect_max: &mut ImVec2, c_float rounding = 0.0, flags: ImDrawFlags = 0);
     pub fn PathRect(&mut self, rect_min: &ImVec2, rect_max: &ImVec2, mut rounding: c_float, mut flags: ImDrawFlags) {
 
         flags = FixRectCornerFlags(flags);
@@ -1108,7 +1108,7 @@ impl ImDrawList {
         self.IdxBuffer.truncate(self.IdxBuffer.len() - idx_count);
     }
 
-    // void  PrimRect(const ImVec2& a, const ImVec2& b, col: u32);      // Axis aligned rectangle (composed of two triangles)
+    // void  PrimRect(const a: &mut ImVec2, const b: &mut ImVec2, col: u32);      // Axis aligned rectangle (composed of two triangles)
     pub fn PrimRect(&mut self, a: &ImVec2, b: &ImVec2, col: u32) {
         // b: ImVec2(c.x, a.y), d(a.x, c.y), uv(_Data.TexUvWhitePixel);
         let mut b = ImVec2::new(c.x, a.y);
@@ -1140,7 +1140,7 @@ impl ImDrawList {
     }
 
 
-    // void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, col: u32);
+    // void  PrimRectUV(const a: &mut ImVec2, const b: &mut ImVec2, const uv_a: &mut ImVec2, const uv_b: &mut ImVec2, col: u32);
     pub fn PrimRectUV(&mut self, a: &ImVec2, b: &ImVec2, uv_a: &imVec2, uv_b: &ImVec2, col: u32) {
 
         // b: ImVec2(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
@@ -1171,7 +1171,7 @@ impl ImDrawList {
     }
 
 
-    // void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, col: u32);
+    // void  PrimQuadUV(const a: &mut ImVec2, const b: &mut ImVec2, const c: &mut ImVec2, const d: &mut ImVec2, const uv_a: &mut ImVec2, const uv_b: &mut ImVec2, const uv_c: &mut ImVec2, const uv_d: &mut ImVec2, col: u32);
     pub fn PrimQuadUV(&mut self, a: &ImVec2, b: &ImVec2, c: &ImVec2, d: &ImVec2, uv_a: &ImVec2, uv_b: &ImVec2, uv_c: &ImVec2, uv_d: &ImVec2, col: u32) {
         let mut idx: ImDrawIdx = self._VtxCurrentIdx;
         self._IdxWritePtr[0] = idx;
@@ -1197,7 +1197,7 @@ impl ImDrawList {
         self._IdxWritePtr += 6;
     }
 
-    // inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, col: u32)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr+= 1; _VtxCurrentIdx+= 1; }
+    // inline    void  PrimWriteVtx(const pos: &mut ImVec2, const uv: &mut ImVec2, col: u32)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr+= 1; _VtxCurrentIdx+= 1; }
     pub fn PrimWriteVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
         self._VtxWritePtr.pos = pos.clone();
         self._VtxWritePtr.uv = uv.clone();
@@ -1214,19 +1214,19 @@ impl ImDrawList {
     }
 
 
-    // inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, col: u32)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
+    // inline    void  PrimVtx(const pos: &mut ImVec2, const uv: &mut ImVec2, col: u32)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
     pub unsafe fn PrimVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
         self.PrimWriteIdx(self._VtxCurrentIdx as ImDrawIdx);
         self.PrimWriteVtx(pos, uv, col);
     }
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-// inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, col: u32, c_float thickness, num_segments: c_int = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
+// inline    void  AddBezierCurve(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32, c_float thickness, num_segments: c_int = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
 // pub fn AddBezierCurve(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, col: u32, thickness: c_float, num_segments: c_int) {
 //     self.AddBezierCubic(p1,p2,p3,p4,col,thickness,num_segments)
 // }
 
-// inline    void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, num_segments: c_int = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
+// inline    void  PathBezierCurveTo(const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, num_segments: c_int = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); } // OBSOLETED in 1.80 (Jan 2021)
 
 // #endif
 
@@ -1383,7 +1383,7 @@ impl ImDrawList {
         }
     }
 
-    // void  _PathArcToFastEx(const ImVec2& center, c_float radius, a_min_sample: c_int, a_max_sample: c_int, a_step: c_int);
+    // void  _PathArcToFastEx(const center: &mut ImVec2, c_float radius, a_min_sample: c_int, a_max_sample: c_int, a_step: c_int);
     pub fn _PathArcToFastEx(&mut self, center: &ImVec2, radius: c_float, a_min_sample: size_t, a_max_sample: size_t, mut a_step: size_t) {
         if radius < 0.5
         {
@@ -1492,7 +1492,7 @@ impl ImDrawList {
         // IM_ASSERT_PARANOID(_Path.Data + _Path.Size == out_ptr);
     }
 
-    // void  _PathArcToN(const ImVec2& center, c_float radius, c_float a_min, c_float a_max, num_segments: c_int);
+    // void  _PathArcToN(const center: &mut ImVec2, c_float radius, c_float a_min, c_float a_max, num_segments: c_int);
     pub fn _PathArcToN(&mut self, center: &ImVec2, radius: c_float, a_min: c_float, a_max: c_float, num_segments: size_t) {
         if radius < 0.5
         {

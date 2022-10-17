@@ -3,7 +3,7 @@ use libc::c_int;
 use crate::direction::{ImGuiDir_Down, ImGuiDir_None, ImGuiDir_Up};
 use crate::dock_node::ImGuiDockNode;
 use crate::GImGui;
-use crate::id_ops::ClearActiveID;
+use ClearActiveID;
 use crate::nav_layer::ImGuiNavLayer_Main;
 use crate::nav_move_flags::{ImGuiNavMoveFlags_FocusApi, ImGuiNavMoveFlags_Tabbing};
 use crate::scroll_flags::{ImGuiScrollFlags_AlwaysCenterY, ImGuiScrollFlags_KeepVisibleEdgeX, ImGuiScrollFlags_KeepVisibleEdgeY, ImGuiScrollFlags_None};
@@ -95,7 +95,7 @@ pub unsafe fn FocusTopMostWindowUnderOne(mut under_this_window: *mut ImGuiWindow
             if (window.Flags & (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs)) != (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs) {
                 // FIXME-DOCK: This is failing (lagging by one frame) for docked windows.
                 // If A and B are docked into window and B disappear, at the NewFrame() call site window.NavLastChildNavWindow will still point to B.
-                // We might leverage the tab order implicitly stored in window.DockNodeAsHost->TabBar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
+                // We might leverage the tab order implicitly stored in window.DockNodeAsHost.TabBar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
                 // to tell which is the "previous" window. Or we may leverage 'LastFrameFocused/LastFrameJustFocused' and have this function handle child window itself?
                 let mut focus_window: *mut ImGuiWindow = NavRestoreLastChildNavWindow(window);
                 FocusWindow(focus_window);
@@ -174,4 +174,3 @@ pub unsafe fn SetItemDefaultFocus() {
         ScrollToRectEx(window, g.LastItemData.Rect, ImGuiScrollFlags_None);
     }
 }
-

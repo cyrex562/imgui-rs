@@ -9,7 +9,7 @@ use crate::type_defs::ImGuiID;
 
 pub struct ImGuiNavItemData {
     pub Window: *mut ImGuiWindow,
-    // Init,Move    // Best candidate window (result->Itemwindow.RootWindowForNav == request->Window)
+    // Init,Move    // Best candidate window (result->Itemwindow.RootWindowForNav == request.Window)
     pub ID: ImGuiID,
     // Init,Move    // Best candidate item ID
     pub FocusScopeId: ImGuiID,

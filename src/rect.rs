@@ -26,7 +26,7 @@ impl ImRect {
     //     }
     // }
 
-    // constexpr ImRect(const ImVec2& min, const ImVec2& max)    : Min(min), Max(max)                {}
+    // constexpr ImRect(const min: &mut ImVec2, const max: &mut ImVec2)    : Min(min), Max(max)                {}
     pub fn from_vec2(min: &ImVec2, max: &ImVec2) -> Self {
         Self {
             Min: min.clone(),
@@ -50,7 +50,7 @@ impl ImRect {
         }
     }
 
-    // ImVec2      GetCenter() const                   { return ImVec2::new((Min.x + Max.x) * 0.5f32, (Min.y + Max.y) * 0.5f32); }
+    // ImVec2      GetCenter() const                   { return ImVec2::new((Min.x + Max.x) * 0.5, (Min.y + Max.y) * 0.5); }
     pub fn GetCenter(&mut self) -> ImVec2 {
         ImVec2::new((self.Min.x + self.Max.x) * 0.5, (self.Min.y + Self.Max.y) * 0.5)
     }
@@ -96,7 +96,7 @@ impl ImRect {
         self.Max.clone()
     }
 
-    // bool        Contains(const ImVec2& p) const     { return p.x     >= Min.x && p.y     >= Min.y && p.x     <  Max.x && p.y     <  Max.y; }
+    // bool        Contains(const p: &mut ImVec2) const     { return p.x     >= Min.x && p.y     >= Min.y && p.x     <  Max.x && p.y     <  Max.y; }
     pub fn Contains(&mut self, p: &ImVec2) -> bool {
         p.x >= self.Min.x && p.y >= self.Min.y && p.x < self.Max.x && p.x < self.Max.y
     }
@@ -111,7 +111,7 @@ impl ImRect {
         return r.Min.y < self.Max.y && r.Max.y > self.Min.y && r.Min.x < self.Max.x && r.Max.x > self.Min.x;
     }
 
-    // void        Add(const ImVec2& p)                { if (Min.x > p.x)     Min.x = p.x;     if (Min.y > p.y)     Min.y = p.y;     if (Max.x < p.x)     Max.x = p.x;     if (Max.y < p.y)     Max.y = p.y; }
+    // void        Add(const p: &mut ImVec2)                { if (Min.x > p.x)     Min.x = p.x;     if (Min.y > p.y)     Min.y = p.y;     if (Max.x < p.x)     Max.x = p.x;     if (Max.y < p.y)     Max.y = p.y; }
     pub fn Add(&mut self, p: &ImVec2) {
         if self.Min.x > p.x {
             self.Min.x = p.x;
@@ -151,7 +151,7 @@ impl ImRect {
         self.Max.y += amount;
     }
 
-    // void        Expand(const ImVec2& amount)        { Min.x -= amount.x; Min.y -= amount.y; Max.x += amount.x; Max.y += amount.y; }
+    // void        Expand(const amount: &mut ImVec2)        { Min.x -= amount.x; Min.y -= amount.y; Max.x += amount.x; Max.y += amount.y; }
     pub fn Expand2(&mut self, amount: &ImVec2) {
         self.Min.x -= amount.x;
         self.Min.y -= amount.y;
@@ -159,7 +159,7 @@ impl ImRect {
         self.Max.y += amount.y;
     }
 
-    // void        Translate(const ImVec2& d)          { Min.x += d.x; Min.y += d.y; Max.x += d.x; Max.y += d.y; }
+    // void        Translate(const d: &mut ImVec2)          { Min.x += d.x; Min.y += d.y; Max.x += d.x; Max.y += d.y; }
     pub fn Translate(&mut self, d: &ImVec2) {
         self.Min.x += d.x;
         self.Min.y += d.y;

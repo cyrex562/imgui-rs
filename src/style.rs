@@ -26,7 +26,7 @@ pub struct ImGuiStyle {
     pub WindowMinSize: ImVec2,
     // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
     pub WindowTitleAlign: ImVec2,
-    // Alignment for title bar text. Defaults to (0.0,0.5f32) for left-aligned,vertically centered.
+    // Alignment for title bar text. Defaults to (0.0,0.5) for left-aligned,vertically centered.
     pub WindowMenuButtonPosition: ImGuiDir,
     // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
     pub ChildRounding: c_float,
@@ -74,7 +74,7 @@ pub struct ImGuiStyle {
     pub ColorButtonPosition: ImGuiDir,
     // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
     pub ButtonTextAlign: ImVec2,
-    // Alignment of button text when button is larger than text. Defaults to (0.5f32, 0.5f32) (centered).
+    // Alignment of button text when button is larger than text. Defaults to (0.5, 0.5) (centered).
     pub SelectableTextAlign: ImVec2,
     // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
     pub DisplayWindowPadding: ImVec2,
@@ -106,7 +106,7 @@ impl ImGuiStyle {
     pub fn new() -> Self {
         let mut out = Self { ..Default::default() };
         out.Alpha = 1.0;             // Global alpha applies to everything in Dear ImGui.
-        out.DisabledAlpha = 0.60f32;            // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
+        out.DisabledAlpha = 0.60;            // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
         out.WindowPadding = ImVec2::new(8, 8);      // Padding within a window
         out.WindowRounding = 0.0;             // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
         out.WindowBorderSize = 1.0;             // Thickness of border around windows. Generally set to 0.0 or 1.0f. Other values not well tested.

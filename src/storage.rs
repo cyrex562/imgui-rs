@@ -137,7 +137,7 @@ impl ImGuiStorage {
     // - Get***Ref() functions finds pair, insert on demand if missing, return pointer. Useful if you intend to do Get+Set.
     // - References are only valid until a new value is added to the storage. Calling a Set***() function or a Get***Ref() function invalidates the pointer.
     // - A typical use case where this is convenient for quick hacking (e.g. add storage during a live Edit&Continue session if you can't modify existing struct)
-    //      float* pvar = GetFloatRef(key); SliderFloat("var", pvar, 0, 100f32); some_var += *pvar;
+    //      float* pvar = GetFloatRef(key); SliderFloat("var", pvar, 0, 100); some_var += *pvar;
     // IMGUI_API int*      GetIntRef(ImGuiID key, int default_val = 0);
     pub fn GetIntRef(&mut self, key: ImGuiID, default_val: i32) -> *mut c_int {
         let mut it = self.LowerBound(&mut self.Data, key);

@@ -196,7 +196,7 @@ pub unsafe fn HelpMarker(desc: *const c_char)
     if (IsItemHovered(ImGuiHoveredFlags_DelayShort))
     {
         BeginTooltip();
-        PushTextWrapPos(GetFontSize() * 35.00f32);
+        PushTextWrapPos(GetFontSize() * 35.0);
         TextUnformatted(desc);
         PopTextWrapPos();
         EndTooltip();
@@ -476,7 +476,7 @@ pub unsafe fn ShowDemoWindow(*mut p_open: bool)
             if (io.ConfigFlags & ImGuiConfigFlags_NoMouse)
             {
                 // The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
-                if (fmodf(GetTime(), 0.400f32) < 0.200f32)
+                if (fmodf(GetTime(), 0.4) < 0.200)
                 {
                     SameLine();
                     Text("<<PRESS SPACE TO DISABLE>>");
@@ -664,9 +664,9 @@ pub unsafe fn ShowDemoWindowWidgets()
             if (i > 0)
                 SameLine();
             PushID(i);
-            PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.60f32));
+            PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.60));
             PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.7f, 0.70f32));
-            PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(i / 7.0.0, 0.8f, 0.80f32));
+            PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(i / 7.0.0, 0.8f, 0.80));
             Button("Click");
             PopStyleColor(3);
             PopID();
@@ -734,7 +734,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             static let f0: c_float =  0.001f;
             InputFloat("input float", &f0, 0.01f, 1.0, "%.3f");
 
-            static double d0 = 999999.00000001;
+            static double d0 = 999999.000001;
             InputDouble("input double", &d0, 0.01f, 1.0, "%.8f");
 
             static let f1: c_float =  1.e10f32;
@@ -743,7 +743,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 "You can input value using the scientific notation,\n"
                 "  e.g. \"1e+8\" becomes \"100000000\".");
 
-            staticvec4a: c_float[4] = { 0.1.0, 0.20f32, 0.3f32, 0.44f };
+            staticvec4a: c_float[4] = { 0.1.0, 0.20, 0.3f32, 0.44f };
             InputFloat3("input float3", vec4a);
         }
 
@@ -760,7 +760,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 
             static let f1: c_float =  1.0, f2 = 0.0067f;
             DragFloat("drag float", &f1, 0.0050f32);
-            DragFloat("drag small float", &f2, 0.0001f, 0.0, 0.0, "%.06f ns");
+            DragFloat("drag small float", &f2, 0.01f, 0.0, 0.0, "%.06f ns");
         }
 
         {
@@ -1027,7 +1027,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 "for text wrapping follows simple rules suitable for English and possibly other languages.");
             Spacing();
 
-            static let wrap_width: c_float =  200f32;
+            static let wrap_width: c_float =  200;
             SliderFloat("Wrap width", &wrap_width, -20, 600, "%.0f");
 
             draw_list: *mut ImDrawList = GetWindowDrawList();
@@ -1125,8 +1125,8 @@ pub unsafe fn ShowDemoWindowWidgets()
                 else if (region_x > my_tex_w - region_sz) { region_x = my_tex_w - region_sz; }
                 if (region_y < 0.0) { region_y = 0.0; }
                 else if (region_y > my_tex_h - region_sz) { region_y = my_tex_h - region_sz; }
-                Text("Min: (%.2f, %.20f32)", region_x, region_y);
-                Text("Max: (%.2f, %.20f32)", region_x + region_sz, region_y + region_sz);
+                Text("Min: (%.2f, %.20)", region_x, region_y);
+                Text("Max: (%.2f, %.20)", region_x + region_sz, region_y + region_sz);
                 let uv0: ImVec2 = ImVec2::new((region_x) / my_tex_w, (region_y) / my_tex_h);
                 let uv1: ImVec2 = ImVec2::new((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
                 Image(my_tex_id, ImVec2::new(region_sz * zoom, region_sz * zoom), uv0, uv1, tint_col, border_col);
@@ -1145,7 +1145,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             PushID(i);
             if (i > 0)
                 PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(i - 1.0, i - 1.0));
-            let size: ImVec2 = ImVec2::new(32.0.0, 32.00f32);                         // Size of the image we want to make visible
+            let size: ImVec2 = ImVec2::new(32.0.0, 32.0);                         // Size of the image we want to make visible
             let uv0: ImVec2 = ImVec2::new(0.0, 0.0);                            // UV coordinates for lower-left
             let uv1: ImVec2 = ImVec2::new(32.0.0 / my_tex_w, 32.0.0 / my_tex_h);    // UV coordinates for (32,32) in our texture
             bg_col: ImVec4 = ImVec4(0.0, 0.0, 0.0, 1.0);             // Black background
@@ -1364,7 +1364,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             let time: c_float =  GetTime();
             let winning_state: bool = memchr(selected, 0, sizeof(selected)) == null_mut(); // If all cells are selected...
             if (winning_state)
-                PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2::new(0.5 + 0.5 * cosf(time * 2.00f32), 0.5 + 0.5 * sinf(time * 3.00f32)));
+                PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2::new(0.5 + 0.5 * cosf(time * 2.0), 0.5 + 0.5 * sinf(time * 3.0)));
 
             for (let y: c_int = 0; y < 4; y++)
                 for (let x: c_int = 0; x < 4; x++)
@@ -1400,7 +1400,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             {
                 for (let x: c_int = 0; x < 3; x++)
                 {
-                    let alignment: ImVec2 = ImVec2::new(x / 2.0.0, y / 2.00f32);
+                    let alignment: ImVec2 = ImVec2::new(x / 2.0.0, y / 2.0);
                     name: [c_char;32];
                     sprintf(name, "(%.1f,%.10f32)", alignment.x, alignment.y);
                     if (x > 0) SameLine();
@@ -1426,7 +1426,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             // and the code in misc/cpp/imgui_stdlib.h for how to setup InputText() for dynamically resizing strings.
             static  text: c_char[1024 * 16] =
                 "/*\n"
-                " The Pentium F00f32 bug, shorthand for F0 0.0 C7 C8,\n"
+                " The Pentium F00 bug, shorthand for F0 0.0 C7 C8,\n"
                 " the hexadecimal encoding of one offending instruction,\n"
                 " more formally, the invalid operand with locked CMPXCHG8B\n"
                 " instruction bug, is a design flaw in the majority of\n"
@@ -1813,7 +1813,7 @@ pub unsafe fn ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Color");
     if (TreeNode("Color/Picker Widgets"))
     {
-        static color: ImVec4 = ImVec4(114.0.0 / 255f32, 144.0.0 / 255f32, 154.0.0 / 255f32, 200f32 / 255.00f32);
+        static color: ImVec4 = ImVec4(114.0.0 / 255f32, 144.0.0 / 255f32, 154.0.0 / 255f32, 200 / 255.0);
 
         static let mut alpha_preview: bool =  true;
         static let mut alpha_half_preview: bool =  false;
@@ -2039,7 +2039,7 @@ pub unsafe fn ShowDemoWindowWidgets()
     {
         static let begin: c_float =  10, end = 90;
         static let begin_i: c_int = 100, end_i = 1000;
-        DragFloatRange2("range float", &begin, &end, 0.25f, 0.0, 100f32, "Min: %.1f %%", "Max: %.1f %%", ImGuiSliderFlags_AlwaysClamp);
+        DragFloatRange2("range float", &begin, &end, 0.25f, 0.0, 100, "Min: %.1f %%", "Max: %.1f %%", ImGuiSliderFlags_AlwaysClamp);
         DragIntRange2("range int", &begin_i, &end_i, 5, 0, 1000, "Min: %d units", "Max: %d units");
         DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %d units", "Max: %d units");
         TreePop();
@@ -2078,7 +2078,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         const u32   u32_zero = 0,   u32_one = 1,   u32_fifty = 50, u32_min = 0,           u32_max = UINT_MAX/2,   u32_hi_a = UINT_MAX/2 - 100,   u32_hi_b = UINT_MAX/2;
         const ImS64   s64_zero = 0,   s64_one = 1,   s64_fifty = 50, s64_min = LLONG_MIN/2, s64_max = LLONG_MAX/2,  s64_hi_a = LLONG_MAX/2 - 100,  s64_hi_b = LLONG_MAX/2;
         const u64   u64_zero = 0,   u64_one = 1,   u64_fifty = 50, u64_min = 0,           u64_max = ULLONG_MAX/2, u64_hi_a = ULLONG_MAX/2 - 100, u64_hi_b = ULLONG_MAX/2;
-        f32_zero: c_float = 0.f, f32_one = 1.f, f32_lo_a = -10000000000f32, f32_hi_a = 10000000000f32;
+        f32_zero: c_float = 0.f, f32_one = 1.f, f32_lo_a = -10000000000, f32_hi_a = 10000000000;
         const double  f64_zero = 0.,  f64_one = 1.,  f64_lo_a = -1000000000000000.0, f64_hi_a = 1000000000000000.0;
 
         // State
@@ -2112,8 +2112,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, drag_clamp ? &u64_zero : null_mut(), drag_clamp ? &u64_fifty : null_mut());
         DragScalar("drag float",     ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f");
         DragScalar("drag float log", ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f", ImGuiSliderFlags_Logarithmic);
-        DragScalar("drag double",    ImGuiDataType_Double, &f64_v, 0.0005f, &f64_zero, null_mut(),     "%.10f32 grams");
-        DragScalar("drag double log",ImGuiDataType_Double, &f64_v, 0.0005f, &f64_zero, &f64_one, "0 < %.10f32 < 1", ImGuiSliderFlags_Logarithmic);
+        DragScalar("drag double",    ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, null_mut(),     "%.10f32 grams");
+        DragScalar("drag double log",ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, &f64_one, "0 < %.10f32 < 1", ImGuiSliderFlags_Logarithmic);
 
         IMGUI_DEMO_MARKER("Widgets/Data Types/Sliders");
         Text("Sliders");
@@ -2172,7 +2172,7 @@ pub unsafe fn ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Multi-component Widgets");
     if (TreeNode("Multi-component Widgets"))
     {
-        staticvec4f: c_float[4] = { 0.1.0, 0.20f32, 0.3f32, 0.44f };
+        staticvec4f: c_float[4] = { 0.1.0, 0.20, 0.3f32, 0.44f };
         static vec4i: c_int[4] = { 1, 5, 100, 255 };
 
         InputFloat2("input float2", vec40f32);
@@ -2211,7 +2211,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         VSliderInt("##int", ImVec2::new(18, 160), &int_value, 0, 5);
         SameLine();
 
-        staticvalues: c_float[7] = { 0.0, 0.60f32, 0.35f, 0.9f, 0.70f32, 0.20f32, 0.0 };
+        staticvalues: c_float[7] = { 0.0, 0.60, 0.35f, 0.9f, 0.70f32, 0.20, 0.0 };
         PushID("set1");
         for (let i: c_int = 0; i < 7; i++)
         {
@@ -2220,7 +2220,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0.0, 0.5, 0.5));
             PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.5));
             PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0.0, 0.7f, 0.5));
-            PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0.0, 0.9f, 0.90f32));
+            PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0.0, 0.9f, 0.90));
             VSliderFloat("##v", ImVec2::new(18, 160), &values[i], 0.0, 1.0, "");
             if (IsItemActive() || IsItemHovered())
                 SetTooltip("%.3f", values[i]);
@@ -2231,7 +2231,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 
         SameLine();
         PushID("set2");
-        staticvalues2: c_float[4] = { 0.20f32, 0.80f32, 0.40f32, 0.25f };
+        staticvalues2: c_float[4] = { 0.20, 0.80, 0.40f32, 0.25f };
         let rows: c_int = 3;
         const small_slider_size: ImVec2(18, ((160f32 - (rows - 1) * spacing) / rows));
         for (let nx: c_int = 0; nx < 4; nx++)
@@ -2628,7 +2628,7 @@ pub unsafe fn ShowDemoWindowLayout()
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
             if (!disable_menu)
                 window_flags |= ImGuiWindowFlags_MenuBar;
-            PushStyleVar(ImGuiStyleVar_ChildRounding, 5.00f32);
+            PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0);
             BeginChild("ChildR", ImVec2::new(0, 260), true, window_flags);
             if (!disable_menu && BeginMenuBar())
             {
@@ -2679,7 +2679,7 @@ pub unsafe fn ShowDemoWindowLayout()
             let child_rect_max: ImVec2 = GetItemRectMax();
             PopStyleColor();
             Text("Hovered: %d", child_is_hovered);
-            Text("Rect of child window is: (%.0.0,%.00f32) (%.0.0,%.00f32)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
+            Text("Rect of child window is: (%.0.0,%.0) (%.0.0,%.0)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
         }
 
         TreePop();
@@ -2695,7 +2695,7 @@ pub unsafe fn ShowDemoWindowLayout()
         // Use SetNextItemWidth() to set the width of a single upcoming item.
         // Use PushItemWidth()/PopItemWidth() to set the width of a group of items.
         // In real code use you'll probably want to choose width values that are proportional to your font size
-        // e.g. Using '20f32 * GetFontSize()' as width instead of '200f32', etc.
+        // e.g. Using '20f32 * GetFontSize()' as width instead of '200', etc.
 
         Text("SetNextItemWidth/PushItemWidth(100)");
         SameLine(); HelpMarker("Fixed width.");
@@ -2721,7 +2721,7 @@ pub unsafe fn ShowDemoWindowLayout()
         }
         PopItemWidth();
 
-        Text("SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5f32)");
+        Text("SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5)");
         SameLine(); HelpMarker("Half of available width.\n(~ right-cursor_pos)\n(works within a column set)");
         PushItemWidth(GetContentRegionAvail().x * 0.5);
         DragFloat("float##3a", &0.0);
@@ -2733,7 +2733,7 @@ pub unsafe fn ShowDemoWindowLayout()
         }
         PopItemWidth();
 
-        Text("SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5f32)");
+        Text("SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5)");
         SameLine(); HelpMarker("Align to right edge minus half");
         PushItemWidth(-GetContentRegionAvail().x * 0.5);
         DragFloat("float##4a", &0.0);
@@ -2811,9 +2811,9 @@ pub unsafe fn ShowDemoWindowLayout()
         items: *const c_char[] = { "AAAA", "BBBB", "CCCC", "DDDD" };
         static let item: c_int = -1;
         Combo("Combo", &item, items, items.len()); SameLine();
-        SliderFloat("X", &f0, 0.0, 5.00f32); SameLine();
-        SliderFloat("Y", &f1, 0.0, 5.00f32); SameLine();
-        SliderFloat("Z", &f2, 0.0, 5.00f32);
+        SliderFloat("X", &f0, 0.0, 5.0); SameLine();
+        SliderFloat("Y", &f1, 0.0, 5.0); SameLine();
+        SliderFloat("Z", &f2, 0.0, 5.0);
         PopItemWidth();
 
         PushItemWidth(80);
@@ -2883,7 +2883,7 @@ pub unsafe fn ShowDemoWindowLayout()
         }
         // Capture the group size and create widgets using the same size
         let size: ImVec2 = GetItemRectSize();
-        values: c_float[5] = { 0.5, 0.20f32, 0.80f32, 0.60f32, 0.25f };
+        values: c_float[5] = { 0.5, 0.20, 0.80, 0.60, 0.25f };
         PlotHistogram("##values", values, values.len(), 0, null_mut(), 0.0, 1.0, size);
 
         Button("ACTION", ImVec2::new((size.x - GetStyle().ItemSpacing.x) * 0.5, size.y));
@@ -3035,7 +3035,7 @@ pub unsafe fn ShowDemoWindowLayout()
         static let mut enable_track: bool =  true;
         static let mut enable_extra_decorations: bool =  false;
         static let scroll_to_off_px: c_float =  0.0;
-        static let scroll_to_pos_px: c_float =  200f32;
+        static let scroll_to_pos_px: c_float =  200;
 
         Checkbox("Decoration", &enable_extra_decorations);
 
@@ -3067,7 +3067,7 @@ pub unsafe fn ShowDemoWindowLayout()
 
             const child_flags: ImGuiWindowFlags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
             let mut child_id: ImGuiID =  GetID(i);
-            let child_is_visible: bool = BeginChild(child_id, ImVec2::new(child_w, 200f32), true, child_flags);
+            let child_is_visible: bool = BeginChild(child_id, ImVec2::new(child_w, 200), true, child_flags);
             if (BeginMenuBar())
             {
                 TextUnformatted("abc");
@@ -3084,7 +3084,7 @@ pub unsafe fn ShowDemoWindowLayout()
                     if (enable_track && item == track_item)
                     {
                         TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
-                        SetScrollHereY(i * 0.250f32); // 0.0:top, 0.5f32:center, 1.0f:bottom
+                        SetScrollHereY(i * 0.250f32); // 0.0:top, 0.5:center, 1.0f:bottom
                     }
                     else
                     {
@@ -3128,7 +3128,7 @@ pub unsafe fn ShowDemoWindowLayout()
                     if (enable_track && item == track_item)
                     {
                         TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
-                        SetScrollHereX(i * 0.250f32); // 0.0:left, 0.5f32:center, 1.0f:right
+                        SetScrollHereX(i * 0.250f32); // 0.0:left, 0.5:center, 1.0f:right
                     }
                     else
                     {
@@ -3153,7 +3153,7 @@ pub unsafe fn ShowDemoWindowLayout()
             "You may want to also explicitly specify content width by using SetNextWindowContentWidth() before Begin().");
         static let lines: c_int = 7;
         SliderInt("Lines", &lines, 1, 15);
-        PushStyleVar(ImGuiStyleVar_FrameRounding, 3.00f32);
+        PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0);
         PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(2.0.0, 1.0));
         let scrolling_child_size: ImVec2 = ImVec2::new(0, GetFrameHeightWithSpacing() * 7 + 30);
         BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
@@ -3172,9 +3172,9 @@ pub unsafe fn ShowDemoWindowLayout()
                 sprintf(num_buf, "%d", n);
                 let mut  label: *const c_char = if !(n % 15)) ? "FizzBuzz" : (!(n % 3)) ? "Fizz" : (!(n % 5) { "Buzz"} else { num_buf};
                 let hue: c_float =  n * 0.05f32;
-                PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.60f32));
+                PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.60));
                 PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.7f, 0.70f32));
-                PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(hue, 0.8f, 0.80f32));
+                PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(hue, 0.8f, 0.80));
                 Button(label, ImVec2::new(40f32 + sinf((line + n)) * 20f32, 0.0));
                 PopStyleColor(3);
                 PopID();
@@ -3187,12 +3187,12 @@ pub unsafe fn ShowDemoWindowLayout()
         let scroll_x_delta: c_float =  0.0;
         SmallButton("<<");
         if (IsItemActive())
-            scroll_x_delta = -GetIO().DeltaTime * 1000f32;
+            scroll_x_delta = -GetIO().DeltaTime * 1000;
         SameLine();
         Text("Scroll from code"); SameLine();
         SmallButton(">>");
         if (IsItemActive())
-            scroll_x_delta = +GetIO().DeltaTime * 1000f32;
+            scroll_x_delta = +GetIO().DeltaTime * 1000;
         SameLine();
         Text("%.0f/%.0f", scroll_x, scroll_max_x);
         if (scroll_x_delta != 0.0)
@@ -3218,7 +3218,7 @@ pub unsafe fn ShowDemoWindowLayout()
             static let mut show_tab_bar: bool =  true;
             static let mut show_child: bool =  false;
             static let mut explicit_content_size: bool =  false;
-            static let contents_size_x: c_float =  300f32;
+            static let contents_size_x: c_float =  300;
             if (explicit_content_size)
                 SetNextWindowContentSize(ImVec2::new(contents_size_x, 0.0));
             Begin("Horizontal contents size demo window", &show_horizontal_contents_size_demo_window, show_h_scrollbar ? ImGuiWindowFlags_HorizontalScrollbar : 0);
@@ -3241,8 +3241,8 @@ pub unsafe fn ShowDemoWindowLayout()
                 SetNextItemWidth(100);
                 DragFloat("##csx", &contents_size_x);
                 let p: ImVec2 = GetCursorScreenPos();
-                GetWindowDrawList()->AddRectFilled(p, ImVec2::new(p.x + 10, p.y + 10), IM_COL32_WHITE);
-                GetWindowDrawList()->AddRectFilled(ImVec2::new(p.x + contents_size_x - 10, p.y), ImVec2::new(p.x + contents_size_x, p.y + 10), IM_COL32_WHITE);
+                GetWindowDrawList().AddRectFilled(p, ImVec2::new(p.x + 10, p.y + 10), IM_COL32_WHITE);
+                GetWindowDrawList().AddRectFilled(ImVec2::new(p.x + contents_size_x - 10, p.y), ImVec2::new(p.x + contents_size_x, p.y + 10), IM_COL32_WHITE);
                 Dummy(ImVec2::new(0, 10));
             }
             PopStyleVar(2);
@@ -3312,9 +3312,9 @@ pub unsafe fn ShowDemoWindowLayout()
     IMGUI_DEMO_MARKER("Layout/Clipping");
     if (TreeNode("Clipping"))
     {
-        static size: ImVec2::new(100f32, 100f32);
+        static size: ImVec2::new(100, 100);
         static offset: ImVec2::new(30f32, 30f32);
-        DragFloat2("size", (*mut c_float)&size, 0.5, 1.0, 200f32, "%.0f");
+        DragFloat2("size", (*mut c_float)&size, 0.5, 1.0, 200, "%.0f");
         TextWrapped("(Click and drag to scroll)");
 
         HelpMarker(
@@ -3705,7 +3705,7 @@ let Name: *const c_char;
     static *const ImGuiTableSortSpecs s_current_sort_specs;
 
     // Compare function to be used by qsort()
-    static IMGUI_CDECL: c_int CompareWithSortSpecs(lhs: *const c_void, rhs: *const c_void)
+    : c_int CompareWithSortSpecs(lhs: *const c_void, rhs: *const c_void)
     {
         a: *const MyItem = (*const MyItem)lhs;
         b: *const MyItem = (*const MyItem)rhs;
@@ -3720,7 +3720,7 @@ let Name: *const c_char;
             case MyItemColumnID_ID:             delta = (a.ID - b.ID);                break;
             case MyItemColumnID_Name:           delta = (strcmp(a.Name, b.Name));     break;
             case MyItemColumnID_Quantity:       delta = (a.Quantity - b.Quantity);    break;
-            case MyItemColumnID_Description:    delta = (strcmp(a.Name, b->Name));     break;
+            case MyItemColumnID_Description:    delta = (strcmp(a.Name, b.Name));     break;
             default: IM_ASSERT(0); break;
             }
             if (delta > 0)
@@ -3731,7 +3731,7 @@ let Name: *const c_char;
 
         // qsort() is instable so always return a way to differenciate items.
         // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
-        return (a->ID - b->ID);
+        return (a.ID - b.ID);
     }
 };
 *const ImGuiTableSortSpecs MyItem::s_current_sort_specs= null_mut();
@@ -3741,8 +3741,8 @@ let Name: *const c_char;
 pub unsafe fn PushStyleCompact()
 {
     ImGuiStyle& style = GetStyle();
-    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(style.FramePadding.x, (style.FramePadding.y * 0.600f32)));
-    PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(style.ItemSpacing.x, (style.ItemSpacing.y * 0.600f32)));
+    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(style.FramePadding.x, (style.FramePadding.y * 0.60)));
+    PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(style.ItemSpacing.x, (style.ItemSpacing.y * 0.60)));
 }
 
 pub unsafe fn PopStyleCompact()
@@ -4495,7 +4495,7 @@ pub unsafe fn ShowDemoWindowTables()
             "this is rather unusual and only makes sense when specifying an 'inner_width' for the table!\n"
             "Without an explicit value, inner_width is == outer_size.x and therefore using Stretch columns + ScrollX together doesn't make sense.");
         static ImGuiTableFlags flags2 = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
-        static let inner_width: c_float =  1000f32;
+        static let inner_width: c_float =  1000;
         PushStyleCompact();
         PushID("flags3");
         PushItemWidth(TEXT_BASE_WIDTH * 30);
@@ -4576,7 +4576,7 @@ pub unsafe fn ShowDemoWindowTables()
                     Text("%s %s", (column == 0) ? "Indented" : "Hello", TableGetColumnName(column));
                 }
             }
-            Unindent(indent_step * 8.00f32);
+            Unindent(indent_step * 8.0);
 
             EndTable();
         }
@@ -4598,8 +4598,8 @@ pub unsafe fn ShowDemoWindowTables()
         if (BeginTable("table1", 3, flags1))
         {
             // We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
-            TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, 100f32); // Default to 100f32
-            TableSetupColumn("two", ImGuiTableColumnFlags_WidthFixed, 200f32); // Default to 200f32
+            TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, 100); // Default to 100
+            TableSetupColumn("two", ImGuiTableColumnFlags_WidthFixed, 200); // Default to 200
             TableSetupColumn("three", ImGuiTableColumnFlags_WidthFixed);       // Default to auto
             TableHeadersRow();
             for (let row: c_int = 0; row < 4; row++)
@@ -4628,10 +4628,10 @@ pub unsafe fn ShowDemoWindowTables()
         if (BeginTable("table2", 4, flags2))
         {
             // We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
-            TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 100f32);
-            TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.00f32);
+            TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 100);
+            TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.0);
             TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 30f32);
-            TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.00f32);
+            TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.0);
             for (let row: c_int = 0; row < 5; row++)
             {
                 TableNextRow();
@@ -4730,7 +4730,7 @@ pub unsafe fn ShowDemoWindowTables()
         SameLine(); HelpMarker("Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.");
         PopStyleCompact();
 
-        let outer_size: ImVec2 = ImVec2::new(0.0, TEXT_BASE_HEIGHT * 5.5f32);
+        let outer_size: ImVec2 = ImVec2::new(0.0, TEXT_BASE_HEIGHT * 5.5);
         if (BeginTable("table1", 3, flags, outer_size))
         {
             for (let row: c_int = 0; row < 10; row++)
@@ -4768,7 +4768,7 @@ pub unsafe fn ShowDemoWindowTables()
         {
             for (let row: c_int = 0; row < 3; row++)
             {
-                TableNextRow(0, TEXT_BASE_HEIGHT * 1.5f32);
+                TableNextRow(0, TEXT_BASE_HEIGHT * 1.5);
                 for (let column: c_int = 0; column < 3; column++)
                 {
                     TableNextColumn();
@@ -4850,8 +4850,8 @@ pub unsafe fn ShowDemoWindowTables()
         {
             // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
             TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
-            TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.00f32);
-            TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.00f32);
+            TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0);
+            TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0);
             TableHeadersRow();
 
             // Simple storage to output a dummy file-system.
@@ -4933,7 +4933,7 @@ pub unsafe fn ShowDemoWindowTables()
                 {
                     // Setup ItemWidth once (instead of setting up every time, which is also possible but less efficient)
                     TableSetColumnIndex(0);
-                    PushItemWidth(TEXT_BASE_WIDTH * 3.00f32); // Small
+                    PushItemWidth(TEXT_BASE_WIDTH * 3.0); // Small
                     TableSetColumnIndex(1);
                     PushItemWidth(-GetContentRegionAvail().x * 0.5);
                     TableSetColumnIndex(2);
@@ -5215,12 +5215,12 @@ pub unsafe fn ShowDemoWindowTables()
                 {
                     // Display a data item
                     *mut MyItem item = &items[row_n];
-                    PushID(item->ID);
+                    PushID(item.ID);
                     TableNextRow();
                     TableNextColumn();
-                    Text("%04d", item->ID);
+                    Text("%04d", item.ID);
                     TableNextColumn();
-                    TextUnformatted(item->Name);
+                    TextUnformatted(item.Name);
                     TableNextColumn();
                     SmallButton("None");
                     TableNextColumn();
@@ -5266,7 +5266,7 @@ pub unsafe fn ShowDemoWindowTables()
         {
             // Make the UI compact because there are so many fields
             PushStyleCompact();
-            PushItemWidth(TEXT_BASE_WIDTH * 28.00f32);
+            PushItemWidth(TEXT_BASE_WIDTH * 28.0);
 
             if (TreeNodeEx("Features:", ImGuiTreeNodeFlags_DefaultOpen))
             {
@@ -5449,17 +5449,17 @@ pub unsafe fn ShowDemoWindowTables()
 // #endif
                 {
                     *mut MyItem item = &items[row_n];
-                    //if (!filter.PassFilter(item->Name))
+                    //if (!filter.PassFilter(item.Name))
                     //    continue;
 
-                    let item_is_selected: bool = selection.contains(item->ID);
-                    PushID(item->ID);
+                    let item_is_selected: bool = selection.contains(item.ID);
+                    PushID(item.ID);
                     TableNextRow(ImGuiTableRowFlags_None, row_min_height);
 
                     // For the demo purpose we can select among different type of items submitted in the first column
                     TableSetColumnIndex(0);
                     label: [c_char;32];
-                    sprintf(label, "%04d", item->ID);
+                    sprintf(label, "%04d", item.ID);
                     if (contents_type == CT_Text)
                         TextUnformatted(label);
                     else if (contents_type == CT_Button)
@@ -5476,20 +5476,20 @@ pub unsafe fn ShowDemoWindowTables()
                             if (GetIO().KeyCtrl)
                             {
                                 if (item_is_selected)
-                                    selection.find_erase_unsorted(item->ID);
+                                    selection.find_erase_unsorted(item.ID);
                                 else
-                                    selection.push(item->ID);
+                                    selection.push(item.ID);
                             }
                             else
                             {
                                 selection.clear();
-                                selection.push(item->ID);
+                                selection.push(item.ID);
                             }
                         }
                     }
 
                     if (TableSetColumnIndex(1))
-                        TextUnformatted(item->Name);
+                        TextUnformatted(item.Name);
 
                     // Here we demonstrate marking our data set as needing to be sorted again if we modified a quantity,
                     // and we are currently sorting on the column showing the Quantity.
@@ -5694,7 +5694,7 @@ pub unsafe fn ShowDemoWindowColumns()
     IMGUI_DEMO_MARKER("Columns (legacy API)/Horizontal Scrolling");
     if (TreeNode("Horizontal Scrolling"))
     {
-        SetNextWindowContentSize(ImVec2::new(1500f32, 0.0));
+        SetNextWindowContentSize(ImVec2::new(1500, 0.0));
         let child_size: ImVec2 = ImVec2::new(0, GetFontSize() * 20f32);
         BeginChild("##ScrollingRegion", child_size, false, ImGuiWindowFlags_HorizontalScrollbar);
         Columns(10);
@@ -5839,12 +5839,12 @@ pub unsafe fn ShowDemoWindowMisc()
 
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
-                let key_size: ImVec2 = ImVec2::new(35f32, 35.00f32);
+                let key_size: ImVec2 = ImVec2::new(35f32, 35.0);
                 key_rounding: c_float = 3.0.0;
-                let key_face_size: ImVec2 = ImVec2::new(25f32, 25.00f32);
-                let key_face_pos: ImVec2 = ImVec2::new(5f32, 3.00f32);
+                let key_face_size: ImVec2 = ImVec2::new(25f32, 25.0);
+                let key_face_pos: ImVec2 = ImVec2::new(5f32, 3.0);
                 key_face_rounding: c_float = 2.0.0;
-                let key_label_pos: ImVec2 = ImVec2::new(7.0.0, 4.00f32);
+                let key_label_pos: ImVec2 = ImVec2::new(7.0.0, 4.0);
                 let key_step: ImVec2 = ImVec2::new(key_size.x - 1.0, key_size.y - 1.0);
                 key_row_offset: c_float = 9.0.0;
 
@@ -5876,7 +5876,7 @@ pub unsafe fn ShowDemoWindowMisc()
                         draw_list.AddRect(key_min, key_max, IM_COL32(24, 24, 24, 255), key_rounding);
                         let face_min: ImVec2 = ImVec2::new(key_min.x + key_face_pos.x, key_min.y + key_face_pos.y);
                         let face_max: ImVec2 = ImVec2::new(face_min.x + key_face_size.x, face_min.y + key_face_size.y);
-                        draw_list.AddRect(face_min, face_max, IM_COL32(193, 193, 193, 255), key_face_rounding, ImDrawFlags_None, 2.00f32);
+                        draw_list.AddRect(face_min, face_max, IM_COL32(193, 193, 193, 255), key_face_rounding, ImDrawFlags_None, 2.0);
                         draw_list.AddRectFilled(face_min, face_max, IM_COL32(252, 252, 252, 255), key_face_rounding);
                         let label_min: ImVec2 = ImVec2::new(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
                         draw_list.AddText(label_min, IM_COL32(64, 64, 64, 255), key_Data.Label);
@@ -5914,7 +5914,7 @@ pub unsafe fn ShowDemoWindowMisc()
             SetNextItemWidth(GetFontSize() * 15);
             SliderInt("SetNextFrameWantCaptureKeyboard()", &capture_override_keyboard, -1, 1, capture_override_desc[capture_override_keyboard + 1], ImGuiSliderFlags_AlwaysClamp);
 
-            ColorButton("##panel", ImVec4(0.7f, 0.1f, 0.7f, 1.0), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2::new(256f32, 192.00f32)); // Dummy item
+            ColorButton("##panel", ImVec4(0.7f, 0.1f, 0.7f, 1.0), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2::new(256f32, 192.0)); // Dummy item
             if (IsItemHovered() && capture_override_mouse != -1)
                 SetNextFrameWantCaptureMouse(capture_override_mouse == 1);
             if (IsItemHovered() && capture_override_keyboard != -1)
@@ -5995,7 +5995,7 @@ pub unsafe fn ShowDemoWindowMisc()
 
             Button("Drag Me");
             if (IsItemActive())
-                GetForegroundDrawList()->AddLine(io.MouseClickedPos[0], io.MousePos, GetColorU32(ImGuiCol_Button), 4.00f32); // Draw a line between the button and the mouse cursor
+                GetForegroundDrawList().AddLine(io.MouseClickedPos[0], io.MousePos, GetColorU32(ImGuiCol_Button), 4.0); // Draw a line between the button and the mouse cursor
 
             // Drag operations gets "unlocked" when the mouse has moved past a certain threshold
             // (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
@@ -6274,7 +6274,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
     if (ref == null_mut())
         ref = &ref_saved_style;
 
-    PushItemWidth(GetWindowWidth() * 0.500f32);
+    PushItemWidth(GetWindowWidth() * 0.5);
 
     if (ShowStyleSelector("Colors##Selector"))
         ref_saved_style = style;
@@ -6449,7 +6449,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             Checkbox("Anti-aliased fill", &style.AntiAliasedFill);
             PushItemWidth(GetFontSize() * 8);
             DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.1.0, 10f32, "%.2f");
-            if (style.CurveTessellationTol < 0.100f32) style.CurveTessellationTol = 0.1.0;
+            if (style.CurveTessellationTol < 0.100) style.CurveTessellationTol = 0.1.0;
 
             // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
             DragFloat("Circle Tessellation Max Error", &style.CircleTessellationMaxError , 0.005f, 0.1.0, 5f32, "%.2f", ImGuiSliderFlags_AlwaysClamp);
@@ -6471,7 +6471,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
 
                     Text("R: %.f\nN: %d", rad, draw_list._CalcCircleAutoSegmentCount(rad));
 
-                    let canvas_width: c_float =  IM_MAX(min_widget_width, rad * 2.00f32);
+                    let canvas_width: c_float =  IM_MAX(min_widget_width, rad * 2.0);
                     offset_x: c_float     = floorf(canvas_width * 0.5);
                     offset_y: c_float     = floorf(RAD_MAX);
 
@@ -6493,7 +6493,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             SameLine();
             HelpMarker("When drawing circle primitives with \"num_segments == 0\" tesselation will be calculated automatically.");
 
-            DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f32, 1.0, "%.2f"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
+            DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20, 1.0, "%.2f"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
             DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005f, 0.0, 1.0, "%.2f"); SameLine(); HelpMarker("Additional alpha multiplier for disabled items (multiply over current value of Alpha).");
             PopItemWidth();
 
@@ -6595,7 +6595,7 @@ pub unsafe fn ShowExampleMenuFile()
         {
             let mut  name: *const c_char = GetStyleColorName((ImGuiCol)i);
             let p: ImVec2 = GetCursorScreenPos();
-            GetWindowDrawList()->AddRectFilled(p, ImVec2::new(p.x + sz, p.y + sz), GetColorU32((ImGuiCol)i));
+            GetWindowDrawList().AddRectFilled(p, ImVec2::new(p.x + sz, p.y + sz), GetColorU32((ImGuiCol)i));
             Dummy(ImVec2::new(sz, sz));
             SameLine();
             MenuItem(name);
@@ -7044,7 +7044,7 @@ struct ExampleAppLog
         SameLine();
         let mut copy: bool =  Button("Copy");
         SameLine();
-        Filter.Draw("Filter", -100f32);
+        Filter.Draw("Filter", -100);
 
         Separator();
         BeginChild("scrolling", ImVec2::new(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -7226,7 +7226,7 @@ pub unsafe fn ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
 
     if (node_open)
     {
-        staticplaceholder_members: c_float[8] = { 0.0, 0.0, 1.0, 3.1416f, 100f32, 999.0.0 };
+        staticplaceholder_members: c_float[8] = { 0.0, 0.0, 1.0, 3.1416f, 100, 999.0.0 };
         for (let i: c_int = 0; i < 8; i++)
         {
             PushID(i); // Use field index as identifier.
@@ -7415,7 +7415,7 @@ pub unsafe fn ShowExampleAppConstrainedResize(bool* p_open)
 
     // Submit constraint
     let aspect_ratio: c_float =  16f32 / 9.0.0;
-    let fixed_step: c_float =  100f32;
+    let fixed_step: c_float =  100;
     if (type == 0) SetNextWindowSizeConstraints(ImVec2::new(100, 100), ImVec2::new(500, 500));         // Between 100x100 and 500x500
     if (type == 1) SetNextWindowSizeConstraints(ImVec2::new(100, 100), ImVec2::new(f32::MAX, f32::MAX)); // Width > 100, Height > 100
     if (type == 2) SetNextWindowSizeConstraints(ImVec2::new(-1, 0),    ImVec2::new(-1, f32::MAX));      // Vertical only
@@ -7652,7 +7652,7 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             static let mut curve_segments_override: bool =  false;
             static let curve_segments_override_v: c_int = 8;
             static colf: ImVec4 = ImVec4(1.0, 1.0, 0.4f, 1.0);
-            DragFloat("Size", &sz, 0.2f, 2.0.0, 100f32, "%.0f");
+            DragFloat("Size", &sz, 0.2f, 2.0.0, 100, "%.0f");
             DragFloat("Thickness", &thickness, 0.05f, 1.0, 8.0.0, "%.02f");
             SliderInt("N-gon sides", &ngon_sides, 3, 12);
             Checkbox("##circlesegmentoverride", &circle_segments_override);
@@ -7682,13 +7682,13 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
                 draw_list.AddRect(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, rounding, ImDrawFlags_None, th);      x += sz + spacing;  // Square with all rounded corners
                 draw_list.AddRect(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, rounding, corners_tl_br, th);         x += sz + spacing;  // Square with two rounded corners
                 draw_list.AddTriangle(ImVec2::new(x+sz*0.5,y), ImVec2::new(x+sz, y+sz-0.5), ImVec2::new(x, y+sz-0.5), col, th);x += sz + spacing;  // Triangle
-                //draw_list.AddTriangle(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5f32), ImVec2::new(x+sz*0.4f, y+sz-0.5f32), col, th);x+= sz*0.4f + spacing; // Thin triangle
+                //draw_list.AddTriangle(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5), ImVec2::new(x+sz*0.4f, y+sz-0.5), col, th);x+= sz*0.4f + spacing; // Thin triangle
                 draw_list.AddLine(ImVec2::new(x, y), ImVec2::new(x + sz, y), col, th);                                       x += sz + spacing;  // Horizontal line (note: drawing a filled rectangle will be faster!)
                 draw_list.AddLine(ImVec2::new(x, y), ImVec2::new(x, y + sz), col, th);                                       x += spacing;       // Vertical line (note: drawing a filled rectangle will be faster!)
                 draw_list.AddLine(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, th);                                  x += sz + spacing;  // Diagonal line
 
                 // Quadratic Bezier Curve (3 control points)
-                cp3: ImVec2[3] = { ImVec2::new(x, y + sz * 0.60f32), ImVec2::new(x + sz * 0.5, y - sz * 0.40f32), ImVec2::new(x + sz, y + sz) };
+                cp3: ImVec2[3] = { ImVec2::new(x, y + sz * 0.60), ImVec2::new(x + sz * 0.5, y - sz * 0.40f32), ImVec2::new(x + sz, y + sz) };
                 draw_list.AddBezierQuadratic(cp3[0], cp3[1], cp3[2], col, th, curve_segments); x += sz + spacing;
 
                 // Cubic Bezier Curve (4 control points)
@@ -7704,13 +7704,13 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10f32);                             x += sz + spacing;  // Square with all rounded corners
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10f32, corners_tl_br);              x += sz + spacing;  // Square with two rounded corners
             draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.5,y), ImVec2::new(x+sz, y+sz-0.5), ImVec2::new(x, y+sz-0.5), col);  x += sz + spacing;  // Triangle
-            //draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5f32), ImVec2::new(x+sz*0.4f, y+sz-0.5f32), col); x += sz*0.4f + spacing; // Thin triangle
+            //draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5), ImVec2::new(x+sz*0.4f, y+sz-0.5), col); x += sz*0.4f + spacing; // Thin triangle
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + thickness), col);                             x += sz + spacing;  // Horizontal line (faster than AddLine, but only handle integer thickness)
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + thickness, y + sz), col);                             x += spacing * 2.0.0;// Vertical line (faster than AddLine, but only handle integer thickness)
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + 1, y + 1), col);                                      x += sz;            // Pixel (faster than AddLine)
             draw_list.AddRectFilledMultiColor(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), IM_COL32(0, 0, 0, 255), IM_COL32(255, 0, 0, 255), IM_COL32(255, 255, 0, 255), IM_COL32(0, 255, 0, 255));
 
-            Dummy(ImVec2::new((sz + spacing) * 10.2f, (sz + spacing) * 3.00f32));
+            Dummy(ImVec2::new((sz + spacing) * 10.2f, (sz + spacing) * 3.0));
             PopItemWidth();
             EndTabItem();
         }
@@ -7806,7 +7806,7 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
                     draw_list.AddLine(ImVec2::new(canvas_p0.x, canvas_p0.y + y), ImVec2::new(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
             }
             for (let n: c_int = 0; n < points.Size; n += 2)
-                draw_list.AddLine(ImVec2::new(origin.x + points[n].x, origin.y + points[n].y), ImVec2::new(origin.x + points[n + 1].x, origin.y + points[n + 1].y), IM_COL32(255, 255, 0, 255), 2.00f32);
+                draw_list.AddLine(ImVec2::new(origin.x + points[n].x, origin.y + points[n].y), ImVec2::new(origin.x + points[n + 1].x, origin.y + points[n + 1].y), IM_COL32(255, 255, 0, 255), 2.0);
             draw_list.PopClipRect();
 
             EndTabItem();
@@ -7992,7 +7992,7 @@ let Name: *const c_char;       // Document title
     static c_void DisplayContents(MyDocument* doc)
     {
         PushID(doc);
-        Text("Document \"%s\"", doc->Name);
+        Text("Document \"%s\"", doc.Name);
         PushStyleColor(ImGuiCol_Text, doc->Color);
         TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
         PopStyleColor();
@@ -8012,7 +8012,7 @@ let Name: *const c_char;       // Document title
             return;
 
         buf: [c_char;256];
-        sprintf(buf, "Save %s", doc->Name);
+        sprintf(buf, "Save %s", doc.Name);
         if (MenuItem(buf, "CTRL+S", false, doc->Open))
             doc->DoSave();
         if (MenuItem("Close", "CTRL+W", false, doc->Open))
@@ -8050,7 +8050,7 @@ pub unsafe fn NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
     {
         MyDocument* doc = &app.Documents[doc_n];
         if (!doc->Open && doc->OpenPrev)
-            SetTabItemClosed(doc->Name);
+            SetTabItemClosed(doc.Name);
         doc->OpenPrev = doc->Open;
     }
 }
@@ -8099,7 +8099,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                 {
                     MyDocument* doc = &app.Documents[doc_n];
                     if (!doc->Open)
-                        if (MenuItem(doc->Name))
+                        if (MenuItem(doc.Name))
                             doc->DoOpen();
                 }
                 EndMenu();
@@ -8121,7 +8121,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
         if (doc_n > 0)
             SameLine();
         PushID(doc);
-        if (Checkbox(doc->Name, &doc->Open))
+        if (Checkbox(doc.Name, &doc->Open))
             if (!doc->Open)
                 doc->DoForceClose();
         PopID();
@@ -8166,7 +8166,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                     continue;
 
                 ImGuiTabItemFlags tab_flags = (doc->Dirty ? ImGuiTabItemFlags_UnsavedDocument : 0);
-                let mut visible: bool =  BeginTabItem(doc->Name, &doc->Open, tab_flags);
+                let mut visible: bool =  BeginTabItem(doc.Name, &doc->Open, tab_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
                 if (!doc->Open && doc->Dirty)
@@ -8205,7 +8205,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
 
                 SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
                 window_flags: ImGuiWindowFlags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
-                let mut visible: bool =  Begin(doc->Name, &doc->Open, window_flags);
+                let mut visible: bool =  Begin(doc.Name, &doc->Open, window_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
                 if (!doc->Open && doc->Dirty)
@@ -8277,7 +8277,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                 {
                     for (let n: c_int = 0; n < close_queue.Size; n++)
                         if (close_queue[n]->Dirty)
-                            Text("%s", close_queue[n]->Name);
+                            Text("%s", close_queue[n].Name);
                     EndChildFrame();
                 }
 

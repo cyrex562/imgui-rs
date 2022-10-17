@@ -29,7 +29,7 @@ pub struct ImGuiIO {
     pub BackendFlags: ImGuiBackendFlags,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
     pub DisplaySize: ImVec2,
-    // <unset>          // Main display size, in pixels (generally == GetMainViewport()->Size). May change every frame.
+    // <unset>          // Main display size, in pixels (generally == GetMainViewport().Size). May change every frame.
     pub DeltaTime: c_float,
     // = 1.0f/60f32     // Time elapsed since last frame, in seconds. May change every frame.
     pub IniSavingRate: c_float,

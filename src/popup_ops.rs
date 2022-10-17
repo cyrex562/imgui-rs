@@ -67,7 +67,7 @@ pub unsafe fn IsPopupOpen(id: ImGuiID, popup_flags: ImGuiPopupFlags) -> bool
 }
 
 // IsPopupOpen: bool(str_id: *const c_char, ImGuiPopupFlags popup_flags)
-pub unsafe fn IsPopupOpen2(str_id: *const c_char, popup_flags: ImGuiPopupFlags) -> bool
+pub unsafe fn IsPopupOpenWithStrId(str_id: *const c_char, popup_flags: ImGuiPopupFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImGuiID =  if flag_set(popup_flags, ImGuiPopupFlags_AnyPopupId) { 0 } else { g.Currentwindow.GetID(str_id) };
@@ -503,8 +503,8 @@ pub unsafe fn BeginPopupContextVoid(mut str_id: *const c_char, popup_flags: ImGu
 pub unsafe fn FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, last_dir: *mut ImGuiDir, r_outer: &mut ImRect, r_avoid: &ImRect, policy: ImGuiPopupPositionPolicy) -> ImVec2
 {
     let base_pos_clamped: ImVec2 = ImClamp(ref_pos.clone(), r_outer.Min, r_outer.Max - size);
-    //GetForegroundDrawList()->AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
-    //GetForegroundDrawList()->AddRect(r_outer.Min, r_outer.Max, IM_COL32(0,255,0,255));
+    //GetForegroundDrawList().AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
+    //GetForegroundDrawList().AddRect(r_outer.Min, r_outer.Max, IM_COL32(0,255,0,255));
 
     // Combo Box policy (we want a connecting edge)
     if (policy == ImGuiPopupPositionPolicy_ComboBox)
