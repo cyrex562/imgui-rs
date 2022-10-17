@@ -5,7 +5,7 @@ use crate::condition::ImGuiCond_FirstUseEver;
 use crate::config_flags::ImGuiConfigFlags_NavEnableSetMousePos;
 use crate::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::hovered_flags::{ImGuiHoveredFlags_AllowWhenBlockedByPopup, ImGuiHoveredFlags_AnyWindow};
-use crate::imgui_cpp::NavMoveRequestTryWrapping;
+use crate::a_imgui_cpp::NavMoveRequestTryWrapping;
 use crate::input_ops::IsMousePosValid;
 use crate::item_ops::{IsAnyItemHovered, IsItemHovered};
 use crate::math_ops::{ImClamp, ImMax, ImMin};

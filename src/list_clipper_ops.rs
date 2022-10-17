@@ -9,7 +9,7 @@ use std::ptr::null_mut;
 use libc::{c_float, c_int, c_void};
 use crate::direction::{ImGuiDir_Down, ImGuiDir_Up};
 use crate::imgui::GImGui;
-use crate::imgui_cpp::GImGui;
+use crate::a_imgui_cpp::GImGui;
 use crate::list_clipper::{ImGuiListClipper, ImGuiListClipper_SeekCursorForItem};
 use crate::list_clipper_data::ImGuiListClipperData;
 use crate::list_clipper_range::ImGuiListClipperRange;

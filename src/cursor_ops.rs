@@ -2,7 +2,7 @@
 
 use libc::c_float;
 use crate::imgui::GImGui;
-use crate::imgui_cpp::GImGui;
+use crate::a_imgui_cpp::GImGui;
 use crate::math_ops::ImMax;
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;

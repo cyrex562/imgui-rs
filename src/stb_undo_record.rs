@@ -1,5 +1,5 @@
 use libc::c_int;
-use crate::stb_textedit::STB_TEXTEDIT_POSITIONTYPE;
+use crate::a_stb_textedit::STB_TEXTEDIT_POSITIONTYPE;
 
 #[derive(Default, Debug, Clone)]
 pub struct StbUndoRecord {

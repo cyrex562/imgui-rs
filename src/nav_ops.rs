@@ -12,7 +12,7 @@ use crate::condition::ImGuiCond_Always;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::id_ops::ClearActiveID;
-use crate::imgui_cpp::{NavProcessItemForTabbingRequest, SetNavWindow};
+use crate::a_imgui_cpp::{NavProcessItemForTabbingRequest, SetNavWindow};
 use crate::input_flags::{ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak};
 use crate::input_ops::{GetKeyPressedAmount, GetTypematicRepeatRate, IsKeyDown, IsKeyPressed, IsKeyPressedEx, IsMouseHoveringRect, IsMousePosValid};
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Nav};

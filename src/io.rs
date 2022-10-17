@@ -7,7 +7,7 @@ use crate::config_flags::{ImGuiConfigFlags, ImGuiConfigFlags_None};
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::imgui::GImGui;
-use crate::imgui_cpp::{GImGui, ImTextCharFromUtf8};
+use crate::a_imgui_cpp::{GImGui, ImTextCharFromUtf8};
 use crate::input_event::ImGuiInputEvent;
 use crate::input_ops::{GetKeyData, IsGamepadKey};
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Mouse};

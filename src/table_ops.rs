@@ -5,7 +5,7 @@ use libc::{c_float, c_int};
 use crate::color::{IM_COL32_DISABLE, ImGuiCol_TableRowBg, ImGuiCol_TableRowBgAlt};
 use crate::cursor_ops::ErrorCheckUsingSetCursorPosToExtendParentBoundaries;
 use crate::draw_flags::ImDrawFlags_None;
-use crate::imgui_cpp::GImGui;
+use crate::a_imgui_cpp::GImGui;
 use crate::logging_ops::LogRenderedText;
 use crate::math_ops::{ImMax, ImMin};
 use crate::nav_layer::{ImGuiNavLayer_Main, ImGuiNavLayer_Menu};

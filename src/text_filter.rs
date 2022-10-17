@@ -4,7 +4,7 @@
 use std::borrow::BorrowMut;
 use std::ptr::{null, null_mut};
 use libc::c_char;
-use crate::imgui_cpp::{ImStristr, ImStrncpy};
+use crate::a_imgui_cpp::{ImStristr, ImStrncpy};
 use crate::item_ops::SetNextItemWidth;
 use crate::math_ops::ImCharIsBlankA;
 use crate::string_ops::{ImCharIsBlankA, ImStristr, ImStrncpy};

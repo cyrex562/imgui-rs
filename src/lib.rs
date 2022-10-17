@@ -18,7 +18,7 @@ use crate::viewport_flags::ImGuiViewportFlags_OwnedByApp;
 use crate::viewport_ops::DestroyPlatformWindows;
 
 
-mod imgui_cpp;
+mod a_imgui_cpp;
 mod style;
 mod io;
 mod storage;
@@ -68,7 +68,7 @@ mod tab_bar_flags;
 mod ptr_or_index;
 mod shrink_width_item;
 mod input_text_state;
-mod stb_textedit;
+mod a_stb_textedit;
 mod stb_text_edit_state;
 mod stb_undo_state;
 mod stb_undo_record;
