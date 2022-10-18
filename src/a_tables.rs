@@ -1871,7 +1871,7 @@ pub unsafe fn TableBeginCell(*mut ImGuiTable table, column_n: c_int)
     {
         // If horizontal scrolling if disabled, we apply a final lossless shrinking of columns in order to make
         // sure they are all visible. Because of this we also know that all of the columns will always fit in
-        // table.WorkRect and therefore in table.InnerRect (because ScrollX is of0f32)
+        // table.WorkRect and therefore in table.InnerRect (because ScrollX is off)
         // FIXME-TABLE: This is solved incorrectly but also quite a difficult problem to fix as we also want ClipRect width to match.
         // See "table_width_distrib" and "table_width_keep_visible" tests
         max_width = table.WorkRect.Max.x - (table.ColumnsEnabledCount - column.IndexWithinEnabledSet - 1) * min_column_distance - column.MinX;

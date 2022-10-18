@@ -3073,7 +3073,7 @@ pub unsafe fn ShowDemoWindowLayout()
                 TextUnformatted("abc");
                 EndMenuBar();
             }
-            if (scroll_to_of0f32)
+            if (scroll_to_off)
                 SetScrollY(scroll_to_off_px);
             if (scroll_to_pos)
                 SetScrollFromPosY(GetCursorStartPos().y + scroll_to_pos_px, i * 0.250f32);
@@ -3115,7 +3115,7 @@ pub unsafe fn ShowDemoWindowLayout()
             child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
             let mut child_id: ImGuiID =  GetID(i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2::new(-100, child_height), true, child_flags);
-            if (scroll_to_of0f32)
+            if (scroll_to_off)
                 SetScrollX(scroll_to_off_px);
             if (scroll_to_pos)
                 SetScrollFromPosX(GetCursorStartPos().x + scroll_to_pos_px, i * 0.250f32);
@@ -4194,7 +4194,7 @@ pub unsafe fn ShowDemoWindowTables()
         CheckboxFlags("ImGuiTableFlags_NoPadOuterX", &flags1, ImGuiTableFlags_NoPadOuterX);
         SameLine(); HelpMarker("Disable outer-most padding (default if ImGuiTableFlags_BordersOuterV is not set)");
         CheckboxFlags("ImGuiTableFlags_NoPadInnerX", &flags1, ImGuiTableFlags_NoPadInnerX);
-        SameLine(); HelpMarker("Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is of0f32)");
+        SameLine(); HelpMarker("Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off)");
         CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags1, ImGuiTableFlags_BordersOuterV);
         CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags1, ImGuiTableFlags_BordersInnerV);
         static let mut show_headers: bool =  false;

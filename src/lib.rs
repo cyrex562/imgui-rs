@@ -247,6 +247,15 @@ mod stb_tt_packed_char;
 mod stb_tt_packed_range;
 mod stb_tt_packed_context;
 mod stb_tt_fontinfo;
+mod stb_tt_kerning_entry;
+mod stb_tt_shapes;
+mod stb_tt_types;
+mod stb_tt_vertex;
+mod stb_tt_bitmap;
+mod stb_tt_platform_id;
+mod stb_tt_encoding_id;
+mod stb_tt_lang_id;
+mod stb_tt_csctx;
 
 
 // c_void Initialize()

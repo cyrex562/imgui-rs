@@ -288,7 +288,7 @@ STBRP_DEF c_void stbrp_init_target(stbrp_context *context, width: c_int, height:
 }
 
 // find minimum y position if it starts at x1
-static stbrp__skyline_find_min_y: c_int(stbrp_context *c, stbrp_node *first, x0: c_int, width: c_int, c_int *pwaste)
+static stbrp__skyline_find_min_y: c_int(stbrp_context *c, stbrp_node *first, x0: c_int, width: c_int, pwaste: *mut c_int)
 {
    stbrp_node *node = first;
    let x1: c_int = x0 + width;
@@ -525,7 +525,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, w
    return res;
 }
 
-static STBRP__CDECL: c_int rect_height_compare(const c_void *a, const c_void *b)
+static STBRP__CDECL: c_int rect_height_compare(a: *const c_void, b: *const c_void)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;
@@ -536,7 +536,7 @@ static STBRP__CDECL: c_int rect_height_compare(const c_void *a, const c_void *b)
    return (p.w > q.w) ? -1 : (p.w < q.w);
 }
 
-static STBRP__CDECL: c_int rect_original_order(const c_void *a, const c_void *b)
+static STBRP__CDECL: c_int rect_original_order(a: *const c_void, b: *const c_void)
 {
    const stbrp_rect *p = (const stbrp_rect *) a;
    const stbrp_rect *q = (const stbrp_rect *) b;

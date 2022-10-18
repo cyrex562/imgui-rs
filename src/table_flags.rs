@@ -95,7 +95,7 @@ pub const ImGuiTableFlags_PadOuterX: ImGuiTableFlags = 1 << 21;
 pub const ImGuiTableFlags_NoPadOuterX: ImGuiTableFlags = 1 << 22;
 // Default if BordersOuterV is off. Disable outer-most padding.
 pub const ImGuiTableFlags_NoPadInnerX: ImGuiTableFlags = 1 << 23;
-// Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is of0f32).
+// Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
 // Scrolling
 pub const ImGuiTableFlags_ScrollX: ImGuiTableFlags = 1 << 24;
 // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.

@@ -19,16 +19,16 @@ pub struct stbtt_fontinfo
 
     // let mut indexToLocFormat: c_int = 0;              // format needed to map from glyph index to glyph
 
-   // stbtt__buf cff;                    // cff font data
+   // let mut cff = stbtt__buf::default();                    // cff font data
 
-   // stbtt__buf charstrings;            // the charstring index
+   // let mut charstrings = stbtt__buf::default();            // the charstring index
 
-   // stbtt__buf gsubrs;                 // global charstring subroutines index
+   // let mut gsubrs = stbtt__buf::default();                 // global charstring subroutines index
 
-   // stbtt__buf subrs;                  // private charstring subroutines index
+   // let mut subrs = stbtt__buf::default();                  // private charstring subroutines index
 
-   // stbtt__buf fontdicts;              // array of font dicts
+   // let mut fontdicts = stbtt__buf::default();              // array of font dicts
 
-   // stbtt__buf fdselect;               // map from glyph to fontdict
+   // let mut fdselect = stbtt__buf::default();               // map from glyph to fontdict
 
 }

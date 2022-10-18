@@ -38,7 +38,7 @@ impl ImChunkStream<T> {
         // off: c_int = Buf.Size; Buf.resize(off + sz);
         let mut off = self.Buf.len();
         self.Buf.resize(off + sz, 0);
-        // ((*mut c_int)(Buf.Data + of0f32))[0] = sz;
+        // ((*mut c_int)(Buf.Data + off))[0] = sz;
         (self.Buf.as_mut_ptr() + off)[0] = sz;
         // return (*mut T)(Buf.Data + off + HDR_SZ);
         self.Buf.as_mut_ptr() + off + HDR_SZ
@@ -94,10 +94,10 @@ impl ImChunkStream<T> {
     }
 
 
-    // *mut T      ptr_from_offset(of0f32: c_int)
+    // *mut T      ptr_from_offset(off: c_int)
     pub fn ptr_from_offset(&mut self, off: usize) -> *mut T {
         // IM_ASSERT(off >= 4 && off < Buf.Size);
-        // return (*mut T)(Buf.Data + of0f32);
+        // return (*mut T)(Buf.Data + off);
         self.Buf.as_mut_ptr() + off
     }
 
