@@ -216,7 +216,7 @@ pub unsafe fn RenderViewportsThumbnails()
     let mut window = g.CurrentWindow;
 
     // We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
-    let SCALE: c_float =  1.0 / 8.0.0;
+    let SCALE: c_float =  1.0 / 8.0;
     let mut bb_full: ImRect = ImRect::new(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
     for (let n: c_int = 0; n < g.Viewports.len(); n++)
         bb_full.Add(g.Viewports[n].GetMainRect());
@@ -537,7 +537,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             for (let i: c_int = 0; i < g.PlatformIO.Monitors.Size; i++)
             {
                 const ImGuiPlatformMonitor& mon = g.PlatformIO.Monitors[i];
-                BulletText("Monitor #%d: DPI %.0f%%\n MainMin (%.0.0,%.0), MainMax (%.0.0,%.0), MainSize (%.0.0,%.0)\n WorkMin (%.0.0,%.0), WorkMax (%.0.0,%.0), WorkSize (%.0.0,%.0)",
+                BulletText("Monitor #%d: DPI %.0f%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), MainSize (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), WorkSize (%.0,%.0)",
                     i, mon.DpiScale * 100,
                     mon.MainPos.x, mon.MainPos.y, mon.MainPos.x + mon.MainSize.x, mon.MainPos.y + mon.MainSize.y, mon.MainSize.x, mon.MainSize.y,
                     mon.WorkPos.x, mon.WorkPos.y, mon.WorkPos.x + mon.WorkSize.x, mon.WorkPos.y + mon.WorkSize.y, mon.WorkSize.x, mon.WorkSize.y);
@@ -788,7 +788,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                 {
                     let r: ImRect =  Funcs::GetTableRect(table, cfg->ShowTablesRectsType, column_n);
                     col: u32 = if table.HoveredColumnBody == column_n { IM_COL32(255, 255, 128, 255)} else { IM_COL32(255, 0, 128, 255)};
-                    let thickness: c_float =  (table.HoveredColumnBody == column_n) ? 3.0.0 : 1.0;
+                    let thickness: c_float =  (table.HoveredColumnBody == column_n) ? 3.0 : 1.0;
                     draw_list.AddRect(r.Min, r.Max, col, 0.0, 0, thickness);
                 }
             }
@@ -810,8 +810,8 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         let mut  overlay_draw_list: *mut ImDrawList =  node.HostWindow ? GetForegroundDrawList(node.HostWindow) : GetForegroundDrawList(GetMainViewport());
         p += ImFormatString(p, buf + buf.len() - p, "DockId: %X%s\n", node.ID, node.IsCentralNode() ? " *CentralNode*" : "");
         p += ImFormatString(p, buf + buf.len() - p, "WindowClass: %08X\n", node.WindowClass.ClassId);
-        p += ImFormatString(p, buf + buf.len() - p, "Size: (%.0.0, %.0)\n", node.Size.x, node.Size.y);
-        p += ImFormatString(p, buf + buf.len() - p, "SizeRef: (%.0.0, %.0)\n", node.SizeRef.x, node.SizeRef.y);
+        p += ImFormatString(p, buf + buf.len() - p, "Size: (%.0, %.0)\n", node.Size.x, node.Size.y);
+        p += ImFormatString(p, buf + buf.len() - p, "SizeRef: (%.0, %.0)\n", node.SizeRef.x, node.SizeRef.y);
         let depth: c_int = DockNodeGetDepth(node);
         overlay_draw_list.AddRect(node.Pos + ImVec2::new(3, 3) * depth, node.Pos + node.Size - ImVec2::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
         let pos: ImVec2 = node.Pos + ImVec2::new(3, 3) * depth;
@@ -882,7 +882,7 @@ pub unsafe fn DebugNodeDockNode(node:*mut ImGuiDockNode, label: *const c_char)
     {
         // IM_ASSERT(node->ChildNodes[0] == NULL || node->ChildNodes[0].ParentNode == node);
         // IM_ASSERT(node->ChildNodes[1] == NULL || node->ChildNodes[1].ParentNode == node);
-        BulletText("Pos (%.0.0,%.0), Size (%.0.0, %.0) Ref (%.0.0, %.0)",
+        BulletText("Pos (%.0,%.0), Size (%.0, %.0) Ref (%.0, %.0)",
             node.Pos.x, node.Pos.y, node.Size.x, node.Size.y, node.SizeRef.x, node.SizeRef.y);
         DebugNodeWindow(node.HostWindow, "HostWindow");
         DebugNodeWindow(node.VisibleWindow, "VisibleWindow");
@@ -955,7 +955,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
         }
 
         buf: [c_char;300];
-        ImFormatString(buf, buf.len(), "DrawCmd:%5d tris, Tex 0x%p, ClipRect (%4.0.0,%4.0)-(%4.0.0,%4.0)",
+        ImFormatString(buf, buf.len(), "DrawCmd:%5d tris, Tex 0x%p, ClipRect (%4.0,%4.0)-(%4.0,%4.0)",
             pcmd->ElemCount / 3, pcmd.TextureId,
             pcmd->ClipRect.x, pcmd->ClipRect.y, pcmd->ClipRect.z, pcmd->ClipRect.w);
         let mut pcmd_node_open: bool =  TreeNode((pcmd - draw_list.CmdBuffer.begin()), "%s", buf);
@@ -1060,7 +1060,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
 
     // Display details
     SetNextItemWidth(GetFontSize() * 8);
-    DragFloat("Font scale", &font->Scale, 0.005f, 0.3f, 2.0.0, "%.1f");
+    DragFloat("Font scale", &font->Scale, 0.005f, 0.3f, 2.0, "%.1f");
     SameLine(); MetricsHelpMarker(
         "Note than the default embedded font is NOT meant to be scaled.\n\n"
         "Font are currently rendered into bitmaps at a given size at the time of building the atlas. "
@@ -1205,7 +1205,7 @@ pub unsafe fn DebugNodeViewport(viewport: *mut ImGuiViewport)
     if (TreeNode(viewport.ID, "Viewport #%d, ID: 0x%08X, Parent: 0x%08X, Window: \"%s\"", viewport.Idx, viewport.ID, viewport.ParentViewportId, viewport.Window ? viewport.window.Name : "N/A"))
     {
         flags: ImGuiWindowFlags = viewport.Flags;
-        BulletText("Main Pos: (%.0.0,%.0), Size: (%.0.0,%.0)\nWorkArea Offset Left: %.0.0 Top: %.0.0, Right: %.0.0, Bottom: %.0f\nMonitor: %d, DpiScale: %.0f%%",
+        BulletText("Main Pos: (%.0,%.0), Size: (%.0,%.0)\nWorkArea Offset Left: %.0 Top: %.0, Right: %.0, Bottom: %.0f\nMonitor: %d, DpiScale: %.0f%%",
             viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y,
             viewport.WorkOffsetMin.x, viewport.WorkOffsetMin.y, viewport.WorkOffsetMax.x, viewport.WorkOffsetMax.y,
             viewport.PlatformMonitor, viewport.DpiScale * 100);

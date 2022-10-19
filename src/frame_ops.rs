@@ -423,11 +423,11 @@ pub unsafe fn EndFrame() {
 // GetFrameHeight: c_float()
 pub unsafe fn GetFrameHeight() -> c_float {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.FontSize + g.Style.FramePadding.y * 2.0.0;
+    return g.FontSize + g.Style.FramePadding.y * 2.0;
 }
 
 // GetFrameHeightWithSpacing: c_float()
 pub unsafe fn GetFrameHeightWithSpacing() -> c_float {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.FontSize + g.Style.FramePadding.y * 2.0.0 + g.Style.ItemSpacing.y;
+    return g.FontSize + g.Style.FramePadding.y * 2.0 + g.Style.ItemSpacing.y;
 }

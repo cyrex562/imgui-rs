@@ -10,7 +10,7 @@ use crate::window::window_flags::ImGuiWindowFlags_NoTitleBar;
 // they would meddle many times with the underlying ImDrawCmd.
 // Instead, we do a preemptive overwrite of clipping rectangle _without_ altering the command-buffer and let
 // the subsequent single call to SetCurrentChannel() does it things once.
-// c_void SetWindowClipRectBeforeSetChannel(*mut ImGuiWindow window, const ImRect& clip_rect)
+// c_void SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, const ImRect& clip_rect)
 pub fn SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, clip_rect: &ImRect) {
     let mut clip_rect_vec4 = clip_rect.ToVec4();
     window.ClipRect = clip_rect.ToVec4();
@@ -19,7 +19,7 @@ pub fn SetWindowClipRectBeforeSetChannel(window: *mut ImGuiWindow, clip_rect: &I
         clip_rect_vec4.clone();
 }
 
-// inline ImRect           WindowRectRelToAbs(*mut ImGuiWindow window, const ImRect& r)
+// inline ImRect           WindowRectRelToAbs(window: *mut ImGuiWindow, const ImRect& r)
 pub fn WindowRectRelToAbs(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
     let off = window.DC.CursorStartPos.clone();
     ImRect::from_floats(
@@ -30,7 +30,7 @@ pub fn WindowRectRelToAbs(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
     )
 }
 
-// inline ImRect           WindowRectAbsToRel(*mut ImGuiWindow window, const ImRect& r)
+// inline ImRect           WindowRectAbsToRel(window: *mut ImGuiWindow, const ImRect& r)
 pub fn WindowRectAbsToRel(window: *mut ImGuiWindow, r: &ImRect) -> ImRect {
     let mut off: ImVec2 = window.DC.CursorStartPos.clone();
     return ImRect::from_floats(

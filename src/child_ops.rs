@@ -106,11 +106,11 @@ pub unsafe fn EndChild() {
         End(0);
     } else {
         let mut sz: ImVec2 = window.Size;
-        if window.AutoFitChildAxises & (1 << ImGuiAxis_X) {// Arbitrary minimum zero-ish child size of 4.0.0 causes less trouble than a 0.0
-            sz.x = ImMax(4.0.0, sz.x);
+        if window.AutoFitChildAxises & (1 << ImGuiAxis_X) {// Arbitrary minimum zero-ish child size of 4.0 causes less trouble than a 0.0
+            sz.x = ImMax(4.0, sz.x);
         }
         if window.AutoFitChildAxises & (1 << ImGuiAxis_Y) {
-            sz.y = ImMax(4.0.0, sz.y);
+            sz.y = ImMax(4.0, sz.y);
         }
         End(0);
 

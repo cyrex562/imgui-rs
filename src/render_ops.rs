@@ -270,8 +270,8 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     let mut display_rect: ImRect = bb.clone();
     display_rect.ClipWith(&window.ClipRect);
     if flags & ImGuiNavHighlightFlags_TypeDefault {
-        let THICKNESS: c_float = 2.0.0;
-        let DISTANCE: c_float = 3.0.0 + THICKNESS * 0.5;
+        let THICKNESS: c_float = 2.0;
+        let DISTANCE: c_float = 3.0 + THICKNESS * 0.5;
         display_rect.Expand(ImVec2::new(DISTANCE, DISTANCE));
         let mut fully_visible: bool = window.ClipRect.Contains2(&display_rect);
         if !fully_visible {

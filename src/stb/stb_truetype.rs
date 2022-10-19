@@ -1859,11 +1859,11 @@ pub unsafe fn stbtt__GetGlyphShapeTT(info: *const stbtt_fontinfo, glyph_index: c
             mtx[1] = 0.0;
              mtx[2] = 0.0;
          } else if flags & (1<<6) { // WE_HAVE_AN_X_AND_YSCALE
-            mtx[0] = ttSHORT(comp)/16384.0.0;
+            mtx[0] = ttSHORT(comp)/16384.0;
              comp+=2;
             mtx[1] = 0.0;
              mtx[2] = 0.0;
-            mtx[3] = ttSHORT(comp)/16384.0.0;
+            mtx[3] = ttSHORT(comp)/16384.0;
              comp+=2;
          } else if flags & (1<<7) { // WE_HAVE_A_TWO_BY_TWO
             mtx[0] = ttSHORT(comp)/16384.0;
@@ -3243,7 +3243,7 @@ pub unsafe fn stbtt__sized_trapezoid_area(height: c_float,top_width: c_float,bot
 {
    STBTT_assert(top_width >= 0.0);
    STBTT_assert(bottom_width >= 0.0);
-   return (top_width + bottom_width) / 2.0.0 * height;
+   return (top_width + bottom_width) / 2.0 * height;
 }
 
 pub unsafe fn stbtt__position_trapezoid_area(height: c_float,tx0: c_float,tx1: c_float,bx0: c_float,bx1: c_float) -> c_float
@@ -3799,8 +3799,8 @@ pub unsafe fn stbtt__tesselate_curve(points: *mut stbtt__point, num_points: *mut
        return 1;
    }
    if (dx*dx+dy*dy > objspace_flatness_squared) { // half-pixel error allowed... need to be smaller if AA
-      stbtt__tesselate_curve(points, num_points, x0,y0, (x0+x1)/2.0.0,(y0+y1)/2.0.0, mx,my, objspace_flatness_squared,n1);
-      stbtt__tesselate_curve(points, num_points, mx,my, (x1+x2)/2.0.0,(y1+y2)/2.0.0, x2,y2, objspace_flatness_squared,n1);
+      stbtt__tesselate_curve(points, num_points, x0,y0, (x0+x1)/2.0,(y0+y1)/2.0, mx,my, objspace_flatness_squared,n1);
+      stbtt__tesselate_curve(points, num_points, mx,my, (x1+x2)/2.0,(y1+y2)/2.0, x2,y2, objspace_flatness_squared,n1);
    } else {
       stbtt__add_point(points, *num_points,x2,y2);
       *num_points = *num_points1;
@@ -4472,7 +4472,7 @@ pub unsafe fn staticstbtt__oversample_shift(oversample: c_int) -> c_float
    // which shifts phase by (oversample - 1)/2 pixels in
    // oversampled space. We want to shift in the opposite
    // direction to counter this.
-   return -(oversample - 1) / (2.0.0 * oversample);
+   return -(oversample - 1) / (2.0 * oversample);
 }
 
 // rects array must be big enough to accommodate all characters in the given ranges

@@ -839,8 +839,8 @@ pub unsafe fn NavUpdate()
         let mut p: ImVec2 =  NavCalcPreferredRefPos();
         let mut buf: [c_char;32] = [0;32];
         // ImFormatString(buf, 32, "%d", g.NavLayer);
-        draw_list.AddCircleFilled(&p, 3.0.0, col, 0);
-        draw_list.AddText2(null_mut(), 13.0.0, p + ImVec2::new(8.0, -4.0), col, buf.as_ptr(), null(), 0.0, null());
+        draw_list.AddCircleFilled(&p, 3.0, col, 0);
+        draw_list.AddText2(null_mut(), 13.0, p + ImVec2::new(8.0, -4.0), col, buf.as_ptr(), null(), 0.0, null());
     }
 // #endif
 }

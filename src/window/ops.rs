@@ -361,7 +361,7 @@ pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;
     let decoration_up_height: c_float = window.TitleBarHeight() + window.MenuBarHeight();
-    let size_pad: ImVec2 = window.WindowPadding * 2.0.0;
+    let size_pad: ImVec2 = window.WindowPadding * 2.0;
     let size_desired: ImVec2 = size_contents + size_pad + ImVec2::new(0.0, decoration_up_height);
     if flag_set(window.Flags.clone(), ImGuiWindowFlags_Tooltip) {
         // Tooltip always resize
@@ -1291,8 +1291,8 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // Lock down maximum scrolling
         // The value of ScrollMax are ahead from ScrollbarX/ScrollbarY which is intentionally using InnerRect from previous rect in order to accommodate
         // for right/bottom aligned items without creating a scrollbar.
-        window.ScrollMax.x = ImMax(0.0, window.ContentSize.x + window.WindowPadding.x * 2.0.0 - window.InnerRect.GetWidth());
-        window.ScrollMax.y = ImMax(0.0, window.ContentSize.y + window.WindowPadding.y * 2.0.0 - window.InnerRect.GetHeight());
+        window.ScrollMax.x = ImMax(0.0, window.ContentSize.x + window.WindowPadding.x * 2.0 - window.InnerRect.GetWidth());
+        window.ScrollMax.y = ImMax(0.0, window.ContentSize.y + window.WindowPadding.y * 2.0 - window.InnerRect.GetHeight());
 
         // Apply scrolling
         window.Scroll = CalcNextScrollFromScrollTargetAndClamp(window);
@@ -1346,8 +1346,8 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // - BeginTabBar() for right-most edge
         let allow_scrollbar_x: bool = flag_clear(flags, ImGuiWindowFlags_NoScrollbar) && flag_clear(flags, ImGuiWindowFlags_HorizontalScrollbar);
         let allow_scrollbar_y: bool = flag_clear(flags, ImGuiWindowFlags_NoScrollbar);
-        let work_rect_size_x: c_float =  if window.ContentSizeExplicit.x != 0.0 { window.ContentSizeExplicit.x } else { ImMax(if allow_scrollbar_x { window.ContentSize.x } else { 0.0 }, window.Size.x - window.WindowPadding.x * 2.0.0 - window.ScrollbarSizes.x) };
-        let work_rect_size_y: c_float =  if window.ContentSizeExplicit.y != 0.0 { window.ContentSizeExplicit.y } else { ImMax(if allow_scrollbar_y { window.ContentSize.y } else { 0.0 }, window.Size.y - window.WindowPadding.y * 2.0.0 - decoration_up_height - window.ScrollbarSizes.y) };
+        let work_rect_size_x: c_float =  if window.ContentSizeExplicit.x != 0.0 { window.ContentSizeExplicit.x } else { ImMax(if allow_scrollbar_x { window.ContentSize.x } else { 0.0 }, window.Size.x - window.WindowPadding.x * 2.0 - window.ScrollbarSizes.x) };
+        let work_rect_size_y: c_float =  if window.ContentSizeExplicit.y != 0.0 { window.ContentSizeExplicit.y } else { ImMax(if allow_scrollbar_y { window.ContentSize.y } else { 0.0 }, window.Size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.ScrollbarSizes.y) };
         window.WorkRect.Min.x = ImFloor(window.InnerRect.Min.x - window.Scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize));
         window.WorkRect.Min.y = ImFloor(window.InnerRect.Min.y - window.Scroll.y + ImMax(window.WindowPadding.y, window.WindowBorderSize));
         window.WorkRect.Max.x = window.WorkRect.Min.x + work_rect_size_x;
@@ -1360,8 +1360,8 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // - Mouse wheel scrolling + many other things
         window.ContentRegionRect.Min.x = window.Pos.x - window.Scroll.x + window.WindowPadding.x;
         window.ContentRegionRect.Min.y = window.Pos.y - window.Scroll.y + window.WindowPadding.y + decoration_up_height;
-        window.ContentRegionRect.Max.x = window.ContentRegionRect.Min.x + (if window.ContentSizeExplicit.x != 0.0 { window.ContentSizeExplicit.x } else { window.Size.x - window.WindowPadding.x * 2.0.0 - window.ScrollbarSizes.x });
-        window.ContentRegionRect.Max.y = window.ContentRegionRect.Min.y + (if window.ContentSizeExplicit.y != 0.0 { window.ContentSizeExplicit.y } else { (window.Size.y - window.WindowPadding.y * 2.0.0 - decoration_up_height - window.ScrollbarSizes.y) });
+        window.ContentRegionRect.Max.x = window.ContentRegionRect.Min.x + (if window.ContentSizeExplicit.x != 0.0 { window.ContentSizeExplicit.x } else { window.Size.x - window.WindowPadding.x * 2.0 - window.ScrollbarSizes.x });
+        window.ContentRegionRect.Max.y = window.ContentRegionRect.Min.y + (if window.ContentSizeExplicit.y != 0.0 { window.ContentSizeExplicit.y } else { (window.Size.y - window.WindowPadding.y * 2.0 - decoration_up_height - window.ScrollbarSizes.y) });
 
         // Setup drawing context
         // (NB: That term "drawing context / DC" lost its meaning a long time ago. Initially was meant to hold transient data only. Nowadays difference between window. and window.DC-> is dubious.)

@@ -524,7 +524,7 @@ pub unsafe fn ItemSize(size: &ImVec2,text_baseline_y: c_float)
     window.DC.CursorPos.y = IM_FLOOR(line_y1 + line_height + g.Style.ItemSpacing.y);                    // Next line
     window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPosPrevLine.x);
     window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y - g.Style.ItemSpacing.y);
-    //if (g.IO.KeyAlt) window.DrawList.AddCircle(window.DC.CursorMaxPos, 3.0.0, IM_COL32(255,0,0,255), 4); // [DEBUG]
+    //if (g.IO.KeyAlt) window.DrawList.AddCircle(window.DC.CursorMaxPos, 3.0, IM_COL32(255,0,0,255), 4); // [DEBUG]
 
     window.DC.PrevLineSize.y = line_height;
     window.DC.CurrLineSize.y = 0.0;
@@ -640,7 +640,7 @@ pub unsafe fn CalcItemWidth() -> c_float
 // [Internal] Calculate full item size given user provided 'size' parameter and default width/height. Default width is often == CalcItemWidth().
 // Those two functions CalcItemWidth vs CalcItemSize are awkwardly named because they are not fully symmetrical.
 // Note that only CalcItemWidth() is publicly exposed.
-// The 4.0.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
+// The 4.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
 // CalcItemSize: ImVec2(size: ImVec2,default_w: c_float,default_h: c_float)
 pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2
 {
@@ -656,14 +656,14 @@ pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_fl
         size.x = default_w;
     }
     else if size.x < 0.0 {
-    size.x = ImMax(4.0.0, region_max.x - window.DC.CursorPos.x + size.x);
+    size.x = ImMax(4.0, region_max.x - window.DC.CursorPos.x + size.x);
 }
 
     if size.y == 0.0 {
         size.y = default_h;
     }
     else if size.y < 0.0 {
-        size.y = ImMax(4.0.0, region_max.y - window.DC.CursorPos.y + size.y);
+        size.y = ImMax(4.0, region_max.y - window.DC.CursorPos.y + size.y);
     }
 
     return size;

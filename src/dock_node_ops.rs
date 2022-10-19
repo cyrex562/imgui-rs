@@ -1309,7 +1309,7 @@ pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImG
     let mut hs_h: c_float = 0.0; // Half-size, smaller axis
     off: ImVec2; // Distance from edge or center
     if outer_docking {
-        //hs_w = ImFloor(ImClamp(parent_smaller_axis - hs_for_central_nodes * 4.0.0, g.FontSize * 0.5, g.FontSize * 8.0));
+        //hs_w = ImFloor(ImClamp(parent_smaller_axis - hs_for_central_nodes * 4.0, g.FontSize * 0.5, g.FontSize * 8.0));
         //hs_h = ImFloor(hs_w * 0.150f32);
         //off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5 - GetFrameHeightWithSpacing() * 1.4 - hs_h), ImFloor(parent.GetHeight() * 0.5 - GetFrameHeightWithSpacing() * 1.4 - hs_h));
         hs_w = ImFloor(hs_for_central_nodes * 1.5);
@@ -1558,7 +1558,7 @@ pub unsafe fn DockNodePreviewDockRender(
     }
 
     // Display drop boxes
-    let overlay_rounding: c_float = ImMax(3.0.0, g.Style.FrameRounding);
+    let overlay_rounding: c_float = ImMax(3.0, g.Style.FrameRounding);
     // for (let dir: c_int = ImGuiDir_None; dir < ImGuiDir_COUNT; dir++)
     for dir in ImGuiDir_None..ImGuiDir_COUNT {
         if !data.DropRectsDraw[dir + 1].IsInverted() {

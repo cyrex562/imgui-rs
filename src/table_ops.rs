@@ -21,10 +21,10 @@ use crate::window::rect::SetWindowClipRectBeforeSetChannel;
 use crate::window_ops::SetWindowClipRectBeforeSetChannel;
 
 // [Internal] Called by TableNextRow()
-// c_void TableEndRow(*mut ImGuiTable table)
+// c_void TableEndRow(table: *mut ImGuiTable)
 pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-// *mut ImGuiWindow window = g.CurrentWindow;
+// window: *mut ImGuiWindow = g.CurrentWindow;
     let window = g.CurrentWindow;
     // IM_ASSERT(window == table.InnerWindow);
 // IM_ASSERT(table.IsInsideRow);
@@ -177,7 +177,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
 
 
 // [Internal] Called by TableNextRow()/TableSetColumnIndex()/TableNextColumn()
-// c_void TableEndCell(*mut ImGuiTable table)
+// c_void TableEndCell(table: *mut ImGuiTable)
 pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
     let mut column: &mut ImGuiTableColumn = &mut table.Columns[table.CurrentColumn];
     let mut window = table.InnerWindow;
@@ -205,7 +205,7 @@ pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
 }
 
 
-// inline *mut ImGuiTableInstanceData   TableGetInstanceData(*mut ImGuiTable table, instance_no: c_int)
+// inline *mut ImGuiTableInstanceData   TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int)
 pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut ImGuiTableInstanceData {
     if instance_no == 0 {
         return &mut table.InstanceDataFirst;

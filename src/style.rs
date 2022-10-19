@@ -129,12 +129,12 @@ impl ImGuiStyle {
         out.TouchExtraPadding = ImVec2::new(0, 0);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
         out.IndentSpacing = 21f32;            // Horizontal spacing when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
         out.ColumnsMinSpacing = 6f32;             // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
-        out.crollbarSize = 14.0.0;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
-        out.ScrollbarRounding = 9.0.0;             // Radius of grab corners rounding for scrollbar
-        out.GrabMinSize = 12.0.0;            // Minimum width/height of a grab box for slider/scrollbar
+        out.crollbarSize = 14.0;            // Width of the vertical scrollbar, Height of the horizontal scrollbar
+        out.ScrollbarRounding = 9.0;             // Radius of grab corners rounding for scrollbar
+        out.GrabMinSize = 12.0;            // Minimum width/height of a grab box for slider/scrollbar
         out.GrabRounding = 0.0;             // Radius of grabs corners rounding. Set to 0.0 to have rectangular slider grabs.
-        out.LogSliderDeadzone = 4.0.0;             // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
-        out.TabRounding = 4.0.0;             // Radius of upper corners of a tab. Set to 0.0 to have rectangular tabs.
+        out.LogSliderDeadzone = 4.0;             // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
+        out.TabRounding = 4.0;             // Radius of upper corners of a tab. Set to 0.0 to have rectangular tabs.
         out.TabBorderSize = 0.0;             // Thickness of border around tabs.
         out.TabMinWidthForCloseButton = 0.0;           // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to f32::MAX to never show close button unless selected.
         out.ColorButtonPosition = ImGuiDir_Right;   // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.

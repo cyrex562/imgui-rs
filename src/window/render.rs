@@ -321,7 +321,7 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
         let border_r: ImRect =  ops::GetResizeBorderRect(window, border_held as c_int, rounding, 0.0);
         window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
         window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
-        window.DrawList.PathStroke(GetColorU32(ImGuiCol_SeparatorActive, 0.0), 0, ImMax(2.0.0, border_size)); // Thicker than usual
+        window.DrawList.PathStroke(GetColorU32(ImGuiCol_SeparatorActive, 0.0), 0, ImMax(2.0, border_size)); // Thicker than usual
     }
     if g.Style.FrameBorderSize > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
     {

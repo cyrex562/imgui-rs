@@ -579,7 +579,7 @@ pub struct ImGuiContext {
     pub CurrentTable: *mut ImGuiTable,
 
     // int                             TablesTempDataStacked;      // Temporary table data size (because we leave previous instances undestructed, we generally don't use TablesTempData.Size)
-    pub TablesTempDataStacked: c_int,
+    pub TablesTempDataStacked: usize,
 
     // ImVector<ImGuiTableTempData>    TablesTempData;             // Temporary table data (buffers reused/shared across instances, support nesting)
     pub TablesTempData: Vec<ImGuiTableTempData>,

@@ -663,9 +663,9 @@ pub unsafe fn ShowDemoWindowWidgets()
             if i > 0 {
                 SameLine(); }
             PushID(i);
-            PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.60));
-            PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.7f, 0.70f32));
-            PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(i / 7.0.0, 0.8f, 0.80));
+            PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0, 0.6f, 0.60));
+            PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(i / 7.0, 0.7f, 0.70f32));
+            PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(i / 7.0, 0.8f, 0.80));
             Button("Click");
             PopStyleColor(3);
             PopID();
@@ -1038,7 +1038,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 let marker_max: ImVec2 = ImVec2::new(pos.x + wrap_width + 10, pos.y + GetTextLineHeight());
                 PushTextWrapPos(GetCursorPos().x + wrap_width);
                 if (n == 0)
-                    Text("The lazy dog is a good dog. This paragraph should fit within %.0.0 pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", wrap_width);
+                    Text("The lazy dog is a good dog. This paragraph should fit within %.0 pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", wrap_width);
                 else
                     Text("aaaaaaaa bbbbbbbb, c cccccccc,dddddddd. d eeeeeeee   ffffffff. gggggggg!hhhhhhhh");
 
@@ -1116,10 +1116,10 @@ pub unsafe fn ShowDemoWindowWidgets()
             if (IsItemHovered())
             {
                 BeginTooltip();
-                let region_sz: c_float =  32.0.0;
+                let region_sz: c_float =  32.0;
                 let region_x: c_float =  io.MousePos.x - pos.x - region_sz * 0.5;
                 let region_y: c_float =  io.MousePos.y - pos.y - region_sz * 0.5;
-                let zoom: c_float =  4.0.0;
+                let zoom: c_float =  4.0;
                 if (region_x < 0.0) { region_x = 0.0; }
                 else if (region_x > my_tex_w - region_sz) { region_x = my_tex_w - region_sz; }
                 if (region_y < 0.0) { region_y = 0.0; }
@@ -1144,9 +1144,9 @@ pub unsafe fn ShowDemoWindowWidgets()
             PushID(i);
             if (i > 0)
                 PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(i - 1.0, i - 1.0));
-            let size: ImVec2 = ImVec2::new(32.0.0, 32.0);                         // Size of the image we want to make visible
+            let size: ImVec2 = ImVec2::new(32.0, 32.0);                         // Size of the image we want to make visible
             let uv0: ImVec2 = ImVec2::new(0.0, 0.0);                            // UV coordinates for lower-left
-            let uv1: ImVec2 = ImVec2::new(32.0.0 / my_tex_w, 32.0.0 / my_tex_h);    // UV coordinates for (32,32) in our texture
+            let uv1: ImVec2 = ImVec2::new(32.0 / my_tex_w, 32.0 / my_tex_h);    // UV coordinates for (32,32) in our texture
             bg_col: ImVec4 = ImVec4(0.0, 0.0, 0.0, 1.0);             // Black background
             tint_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 1.0);           // No tint
             if (ImageButton("", my_tex_id, size, uv0, uv1, bg_col, tint_col))
@@ -1399,7 +1399,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             {
                 for (let x: c_int = 0; x < 3; x++)
                 {
-                    let alignment: ImVec2 = ImVec2::new(x / 2.0.0, y / 2.0);
+                    let alignment: ImVec2 = ImVec2::new(x / 2.0, y / 2.0);
                     name: [c_char;32];
                     sprintf(name, "(%.1f,%.10f32)", alignment.x, alignment.y);
                     if x > 0 {  SameLine(); }
@@ -1811,7 +1811,7 @@ pub unsafe fn ShowDemoWindowWidgets()
     IMGUI_DEMO_MARKER("Widgets/Color");
     if (TreeNode("Color/Picker Widgets"))
     {
-        static color: ImVec4 = ImVec4(114.0.0 / 255f32, 144.0.0 / 255f32, 154.0.0 / 255f32, 200 / 255.0);
+        static color: ImVec4 = ImVec4(114.0 / 255f32, 144.0 / 255f32, 154.0 / 255f32, 200 / 255.0);
 
         static let mut alpha_preview: bool =  true;
         static let mut alpha_half_preview: bool =  false;
@@ -2215,10 +2215,10 @@ pub unsafe fn ShowDemoWindowWidgets()
         {
             if i > 0 {  SameLine(); }
             PushID(i);
-            PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0.0, 0.5, 0.5));
-            PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.5));
-            PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0.0, 0.7f, 0.5));
-            PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0.0, 0.9f, 0.90));
+            PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0, 0.5, 0.5));
+            PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0, 0.6f, 0.5));
+            PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0, 0.7f, 0.5));
+            PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0, 0.9f, 0.90));
             VSliderFloat("##v", ImVec2::new(18, 160), &values[i], 0.0, 1.0, "");
             if (IsItemActive() || IsItemHovered())
                 SetTooltip("%.3f", values[i]);
@@ -2676,7 +2676,7 @@ pub unsafe fn ShowDemoWindowLayout()
             let child_rect_max: ImVec2 = GetItemRectMax();
             PopStyleColor();
             Text("Hovered: %d", child_is_hovered);
-            Text("Rect of child window is: (%.0.0,%.0) (%.0.0,%.0)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
+            Text("Rect of child window is: (%.0,%.0) (%.0,%.0)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
         }
 
         TreePop();
@@ -2803,7 +2803,7 @@ pub unsafe fn ShowDemoWindowLayout()
         Checkbox("Rich", &c4);
 
         // Various
-        static let f0: c_float =  1.0, f1 = 2.0.0, f2 = 3.0.0;
+        static let f0: c_float =  1.0, f1 = 2.0, f2 = 3.0;
         PushItemWidth(80);
         items: *const c_char[] = { "AAAA", "BBBB", "CCCC", "DDDD" };
         static let item: c_int = -1;
@@ -3041,10 +3041,10 @@ pub unsafe fn ShowDemoWindowLayout()
         SameLine(140); enable_track |= DragInt("##item", &track_item, 0.25f, 0, 99, "Item = %d");
 
         let mut scroll_to_off: bool =  Button("Scroll Offset");
-        SameLine(140); scroll_to_off |= DragFloat("##off", &scroll_to_off_px, 1.0, 0, f32::MAX, "+%.0.0 px");
+        SameLine(140); scroll_to_off |= DragFloat("##off", &scroll_to_off_px, 1.0, 0, f32::MAX, "+%.0 px");
 
         let mut scroll_to_pos: bool =  Button("Scroll To Pos");
-        SameLine(140); scroll_to_pos |= DragFloat("##pos", &scroll_to_pos_px, 1.0, -10, f32::MAX, "X/Y = %.0.0 px");
+        SameLine(140); scroll_to_pos |= DragFloat("##pos", &scroll_to_pos_px, 1.0, -10, f32::MAX, "X/Y = %.0 px");
         PopItemWidth();
 
         if scroll_to_off || scroll_to_pos {
@@ -3108,7 +3108,7 @@ pub unsafe fn ShowDemoWindowLayout()
         PushID("##HorizontalScrolling");
         for (let i: c_int = 0; i < 5; i++)
         {
-            let child_height: c_float =  GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0.0;
+            let child_height: c_float =  GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0;
             child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
             let mut child_id: ImGuiID =  GetID(i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2::new(-100, child_height), true, child_flags);
@@ -3151,7 +3151,7 @@ pub unsafe fn ShowDemoWindowLayout()
         static let lines: c_int = 7;
         SliderInt("Lines", &lines, 1, 15);
         PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0);
-        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(2.0.0, 1.0));
+        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(2.0, 1.0));
         let scrolling_child_size: ImVec2 = ImVec2::new(0, GetFrameHeightWithSpacing() * 7 + 30);
         BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
         for (let line: c_int = 0; line < lines; line++)
@@ -3747,9 +3747,9 @@ pub unsafe fn PopStyleCompact()
 }
 
 // Show a combo box with a choice of sizing policies
-pub unsafe fn EditTableSizingFlags(*mut ImGuiTableFlags p_flags)
+pub unsafe fn EditTableSizingFlags(*mut p_flags: ImGuiTableFlags)
 {
-    struct EnumDesc { ImGuiTableFlags Value; Name: *const c_char; Tooltip: *const c_char; };
+    struct EnumDesc { Value: ImGuiTableFlags; Name: *const c_char; Tooltip: *const c_char; };
     static const EnumDesc policies[] =
     {
         { ImGuiTableFlags_None,               "Default",                            "Use default sizing policy:\n- ImGuiTableFlags_SizingFixedFit if ScrollX is on or if host window has ImGuiWindowFlags_AlwaysAutoResize.\n- ImGuiTableFlags_SizingStretchSame otherwise." },
@@ -3930,7 +3930,7 @@ pub unsafe fn ShowDemoWindowTables()
     {
         // Expose a few Borders related flags interactively
         enum ContentsType { CT_Text, CT_FillButton };
-        static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
         static let mut display_headers: bool =  false;
         static let contents_type: c_int = CT_Text;
 
@@ -4001,7 +4001,7 @@ pub unsafe fn ShowDemoWindowTables()
     {
         // By default, if we don't enable ScrollX the sizing policy for each columns is "Stretch"
         // Each columns maintain a sizing weight, and they will occupy all available width.
-        static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody;
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
         CheckboxFlags("ImGuiTableFlags_BordersV", &flags, ImGuiTableFlags_BordersV);
@@ -4038,7 +4038,7 @@ pub unsafe fn ShowDemoWindowTables()
             "Fixed-width columns generally makes more sense if you want to use horizontal scrolling.\n\n"
             "Double-click a column border to auto-fit the column to its contents.");
         PushStyleCompact();
-        static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody;
         CheckboxFlags("ImGuiTableFlags_NoHostExtendX", &flags, ImGuiTableFlags_NoHostExtendX);
         PopStyleCompact();
 
@@ -4066,7 +4066,7 @@ pub unsafe fn ShowDemoWindowTables()
         HelpMarker(
             "Using TableSetupColumn() to alter resizing policy on a per-column basis.\n\n"
             "When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.");
-        static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
 
         if (BeginTable("table1", 3, flags))
         {
@@ -4116,7 +4116,7 @@ pub unsafe fn ShowDemoWindowTables()
         HelpMarker(
             "Click and drag column headers to reorder columns.\n\n"
             "Right-click on a header to open a context menu.");
-        static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
         CheckboxFlags("ImGuiTableFlags_Reorderable", &flags, ImGuiTableFlags_Reorderable);
@@ -4182,7 +4182,7 @@ pub unsafe fn ShowDemoWindowTables()
             "Actual padding values are using style.CellPadding.\n\n"
             "In this demo we don't show horizontal borders to emphasis how they don't affect default horizontal padding.");
 
-        static ImGuiTableFlags flags1 = ImGuiTableFlags_BordersV;
+        static flags1: ImGuiTableFlags = ImGuiTableFlags_BordersV;
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_PadOuterX", &flags1, ImGuiTableFlags_PadOuterX);
         SameLine(); HelpMarker("Enable outer-most padding (default if ImGuiTableFlags_BordersOuterV is set)");
@@ -4232,7 +4232,7 @@ pub unsafe fn ShowDemoWindowTables()
         // Second example: set style.CellPadding to (0.0) or a custom value.
         // FIXME-TABLE: Vertical border effectively not displayed the same way as horizontal one...
         HelpMarker("Setting style.CellPadding to (0,0) or a custom value.");
-        static ImGuiTableFlags flags2 = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
+        static flags2: ImGuiTableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
         static cell_padding: ImVec2::new(0.0, 0.0);
         static let mut show_widget_frame_bg: bool =  true;
 
@@ -4280,13 +4280,13 @@ pub unsafe fn ShowDemoWindowTables()
     IMGUI_DEMO_MARKER("Tables/Explicit widths");
     if (TreeNode("Sizing policies"))
     {
-        static ImGuiTableFlags flags1 = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
+        static flags1: ImGuiTableFlags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_Resizable", &flags1, ImGuiTableFlags_Resizable);
         CheckboxFlags("ImGuiTableFlags_NoHostExtendX", &flags1, ImGuiTableFlags_NoHostExtendX);
         PopStyleCompact();
 
-        static ImGuiTableFlags sizing_policy_flags[4] = { ImGuiTableFlags_SizingFixedFit, ImGuiTableFlags_SizingFixedSame, ImGuiTableFlags_SizingStretchProp, ImGuiTableFlags_SizingStretchSame };
+        static sizing_policy_flags: ImGuiTableFlags[4] = { ImGuiTableFlags_SizingFixedFit, ImGuiTableFlags_SizingFixedSame, ImGuiTableFlags_SizingStretchProp, ImGuiTableFlags_SizingStretchSame };
         for (let table_n: c_int = 0; table_n < 4; table_n++)
         {
             PushID(table_n);
@@ -4326,7 +4326,7 @@ pub unsafe fn ShowDemoWindowTables()
         HelpMarker("This section allows you to interact and see the effect of various sizing policies depending on whether Scroll is enabled and the contents of your columns.");
 
         enum ContentsType { CT_ShowWidth, CT_ShortText, CT_LongText, CT_Button, CT_FillButton, CT_InputText };
-        static ImGuiTableFlags flags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable;
         static let contents_type: c_int = CT_ShowWidth;
         static let column_count: c_int = 3;
 
@@ -4385,7 +4385,7 @@ pub unsafe fn ShowDemoWindowTables()
     if (TreeNode("Vertical scrolling, with clipping"))
     {
         HelpMarker("Here we activate ScrollY, which will create a child window container to allow hosting scrollable contents.\n\nWe also demonstrate using ImGuiListClipper to virtualize the submission of many items.");
-        static ImGuiTableFlags flags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
 
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_ScrollY", &flags, ImGuiTableFlags_ScrollY);
@@ -4432,7 +4432,7 @@ pub unsafe fn ShowDemoWindowTables()
             "as automatically stretching columns doesn't make much sense with horizontal scrolling.\n\n"
             "Also note that as of the current version, you will almost always want to enable ScrollY along with ScrollX,"
             "because the container window won't automatically extend vertically to fix contents (this may be improved in future versions).");
-        static ImGuiTableFlags flags = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
         static let freeze_cols: c_int = 1;
         static let freeze_rows: c_int = 1;
 
@@ -4489,7 +4489,7 @@ pub unsafe fn ShowDemoWindowTables()
             "Showcase using Stretch columns + ScrollX together: "
             "this is rather unusual and only makes sense when specifying an 'inner_width' for the table!\n"
             "Without an explicit value, inner_width is == outer_size.x and therefore using Stretch columns + ScrollX together doesn't make sense.");
-        static ImGuiTableFlags flags2 = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
+        static flags2: ImGuiTableFlags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
         static let inner_width: c_float =  1000;
         PushStyleCompact();
         PushID("flags3");
@@ -4548,7 +4548,7 @@ pub unsafe fn ShowDemoWindowTables()
         // Create the real table we care about for the example!
         // We use a scrolling table to be able to showcase the difference between the _IsEnabled and _IsVisible flags above, otherwise in
         // a non-scrolling table columns are always visible (unless using ImGuiTableFlags_NoKeepColumnsVisible + resizing the parent window down)
-        const ImGuiTableFlags flags
+        const flags: ImGuiTableFlags
             = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY
             | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV
             | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable;
@@ -4585,7 +4585,7 @@ pub unsafe fn ShowDemoWindowTables()
     {
         HelpMarker("Using TableSetupColumn() to setup default width.");
 
-        static ImGuiTableFlags flags1 = ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBodyUntilResize;
+        static flags1: ImGuiTableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBodyUntilResize;
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_Resizable", &flags1, ImGuiTableFlags_Resizable);
         CheckboxFlags("ImGuiTableFlags_NoBordersInBodyUntilResize", &flags1, ImGuiTableFlags_NoBordersInBodyUntilResize);
@@ -4614,7 +4614,7 @@ pub unsafe fn ShowDemoWindowTables()
 
         HelpMarker("Using TableSetupColumn() to setup explicit width.\n\nUnless _NoKeepColumnsVisible is set, fixed columns with set width may still be shrunk down if there's not enough space in the host.");
 
-        static ImGuiTableFlags flags2 = ImGuiTableFlags_None;
+        static flags2: ImGuiTableFlags = ImGuiTableFlags_None;
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_NoKeepColumnsVisible", &flags2, ImGuiTableFlags_NoKeepColumnsVisible);
         CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags2, ImGuiTableFlags_BordersInnerV);
@@ -4718,7 +4718,7 @@ pub unsafe fn ShowDemoWindowTables()
         // Important to that note how the two flags have slightly different behaviors!
         Text("Using NoHostExtendX and NoHostExtendY:");
         PushStyleCompact();
-        static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX;
         CheckboxFlags("ImGuiTableFlags_NoHostExtendX", &flags, ImGuiTableFlags_NoHostExtendX);
         SameLine(); HelpMarker("Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.");
         CheckboxFlags("ImGuiTableFlags_NoHostExtendY", &flags, ImGuiTableFlags_NoHostExtendY);
@@ -4781,7 +4781,7 @@ pub unsafe fn ShowDemoWindowTables()
     IMGUI_DEMO_MARKER("Tables/Background color");
     if (TreeNode("Background color"))
     {
-        static ImGuiTableFlags flags = ImGuiTableFlags_RowBg;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_RowBg;
         static let row_bg_type: c_int = 1;
         static let row_bg_target: c_int = 1;
         static let cell_bg_type: c_int = 1;
@@ -4839,7 +4839,7 @@ pub unsafe fn ShowDemoWindowTables()
     IMGUI_DEMO_MARKER("Tables/Tree view");
     if (TreeNode("Tree view"))
     {
-        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
+        static flags: ImGuiTableFlags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
 
         if (BeginTable("3ways", 3, flags))
         {
@@ -5006,7 +5006,7 @@ pub unsafe fn ShowDemoWindowTables()
     if (TreeNode("Context menus"))
     {
         HelpMarker("By default, right-clicking over a TableHeadersRow()/TableHeader() line will open the default context-menu.\nUsing ImGuiTableFlags_ContextMenuInBody we also allow right-clicking over columns body.");
-        static ImGuiTableFlags flags1 = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders | ImGuiTableFlags_ContextMenuInBody;
+        static flags1: ImGuiTableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders | ImGuiTableFlags_ContextMenuInBody;
 
         PushStyleCompact();
         CheckboxFlags("ImGuiTableFlags_ContextMenuInBody", &flags1, ImGuiTableFlags_ContextMenuInBody);
@@ -5043,7 +5043,7 @@ pub unsafe fn ShowDemoWindowTables()
         // [2.2] Right-click on the ".." to open a custom popup
         // [2.3] Right-click in columns to open another custom popup
         HelpMarker("Demonstrate mixing table context menu (over header), item context button (over button) and custom per-colum context menu (over column body).");
-        ImGuiTableFlags flags2 = ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders;
+        flags2: ImGuiTableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders;
         if (BeginTable("table_context_menu_2", COLUMNS_COUNT, flags2))
         {
             TableSetupColumn("One");
@@ -5164,7 +5164,7 @@ pub unsafe fn ShowDemoWindowTables()
         }
 
         // Options
-        static ImGuiTableFlags flags =
+        static flags: ImGuiTableFlags =
             ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti
             | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_NoBordersInBody
             | ImGuiTableFlags_ScrollY;
@@ -5236,7 +5236,7 @@ pub unsafe fn ShowDemoWindowTables()
     IMGUI_DEMO_MARKER("Tables/Advanced");
     if (TreeNode("Advanced"))
     {
-        static ImGuiTableFlags flags =
+        static flags: ImGuiTableFlags =
             ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable
             | ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti
             | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBody
@@ -5532,7 +5532,7 @@ pub unsafe fn ShowDemoWindowTables()
                 Text(": DrawCmd: +%d (in same window)",
                     table_draw_list_draw_cmd_count - parent_draw_list_draw_cmd_count);
             else
-                Text(": DrawCmd: +%d (in child window), Scroll: (%.f/%.0.0) (%.f/%.0.0)",
+                Text(": DrawCmd: +%d (in child window), Scroll: (%.f/%.0) (%.f/%.0)",
                     table_draw_list_draw_cmd_count - 1, table_scroll_cur.x, table_scroll_max.x, table_scroll_cur.y, table_scroll_max.y);
         }
         TreePop();
@@ -5834,13 +5834,13 @@ pub unsafe fn ShowDemoWindowMisc()
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
                 let key_size: ImVec2 = ImVec2::new(35f32, 35.0);
-                key_rounding: c_float = 3.0.0;
+                key_rounding: c_float = 3.0;
                 let key_face_size: ImVec2 = ImVec2::new(25f32, 25.0);
                 let key_face_pos: ImVec2 = ImVec2::new(5f32, 3.0);
-                key_face_rounding: c_float = 2.0.0;
-                let key_label_pos: ImVec2 = ImVec2::new(7.0.0, 4.0);
+                key_face_rounding: c_float = 2.0;
+                let key_label_pos: ImVec2 = ImVec2::new(7.0, 4.0);
                 let key_step: ImVec2 = ImVec2::new(key_size.x - 1.0, key_size.y - 1.0);
-                key_row_offset: c_float = 9.0.0;
+                key_row_offset: c_float = 9.0;
 
                 let board_min: ImVec2 = GetCursorScreenPos();
                 let board_max: ImVec2 = ImVec2::new(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10f32, board_min.y + 3 * key_step.y + 10f32);
@@ -6275,7 +6275,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
     ShowFontSelector("Fonts##Selector");
 
     // Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
-    if (SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0.0, "%.0f"))
+    if (SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0, "%.0f"))
         style.GrabRounding = style.FrameRounding; // Make GrabRounding always the same value as FrameRounding
     { let mut border: bool =  (style.WindowBorderSize > 0.0); if (Checkbox("WindowBorder", &border)) { style.WindowBorderSize = border ? 1.0 : 0.0; } }
     SameLine();
@@ -6317,14 +6317,14 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             SliderFloat("FrameBorderSize", &style.FrameBorderSize, 0.0, 1.0, "%.0f");
             SliderFloat("TabBorderSize", &style.TabBorderSize, 0.0, 1.0, "%.0f");
             Text("Rounding");
-            SliderFloat("WindowRounding", &style.WindowRounding, 0.0, 12.0.0, "%.0f");
-            SliderFloat("ChildRounding", &style.ChildRounding, 0.0, 12.0.0, "%.0f");
-            SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0.0, "%.0f");
-            SliderFloat("PopupRounding", &style.PopupRounding, 0.0, 12.0.0, "%.0f");
-            SliderFloat("ScrollbarRounding", &style.ScrollbarRounding, 0.0, 12.0.0, "%.0f");
-            SliderFloat("GrabRounding", &style.GrabRounding, 0.0, 12.0.0, "%.0f");
-            SliderFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.0, 12.0.0, "%.0f");
-            SliderFloat("TabRounding", &style.TabRounding, 0.0, 12.0.0, "%.0f");
+            SliderFloat("WindowRounding", &style.WindowRounding, 0.0, 12.0, "%.0f");
+            SliderFloat("ChildRounding", &style.ChildRounding, 0.0, 12.0, "%.0f");
+            SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0, "%.0f");
+            SliderFloat("PopupRounding", &style.PopupRounding, 0.0, 12.0, "%.0f");
+            SliderFloat("ScrollbarRounding", &style.ScrollbarRounding, 0.0, 12.0, "%.0f");
+            SliderFloat("GrabRounding", &style.GrabRounding, 0.0, 12.0, "%.0f");
+            SliderFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.0, 12.0, "%.0f");
+            SliderFloat("TabRounding", &style.TabRounding, 0.0, 12.0, "%.0f");
             Text("Alignment");
             SliderFloat2("WindowTitleAlign", &style.WindowTitleAlign, 0.0, 1.0, "%.2f");
             let window_menu_button_position: c_int = style.WindowMenuButtonPosition + 1;
@@ -6414,7 +6414,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             // Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
             // (we enforce hard clamping manually as by default DragFloat/SliderFloat allows CTRL+Click text to get out of bounds).
             let MIN_SCALE: c_float =  0.3f;
-            let MAX_SCALE: c_float =  2.0.0;
+            let MAX_SCALE: c_float =  2.0;
             HelpMarker(
                 "Those are old settings provided for convenience.\n"
                 "However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
@@ -6459,7 +6459,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
                 {
                     let RAD_MIN: c_float =  5f32;
                     let RAD_MAX: c_float =  70f32;
-                    let rad: c_float =  RAD_MIN + (RAD_MAX - RAD_MIN) * n / (8.0.0 - 1.0);
+                    let rad: c_float =  RAD_MIN + (RAD_MAX - RAD_MIN) * n / (8.0 - 1.0);
 
                     BeginGroup();
 
@@ -7220,7 +7220,7 @@ pub unsafe fn ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
 
     if (node_open)
     {
-        staticplaceholder_members: c_float[8] = { 0.0, 0.0, 1.0, 3.1416f, 100, 999.0.0 };
+        staticplaceholder_members: c_float[8] = { 0.0, 0.0, 1.0, 3.1416f, 100, 999.0 };
         for (let i: c_int = 0; i < 8; i++)
         {
             PushID(i); // Use field index as identifier.
@@ -7408,7 +7408,7 @@ pub unsafe fn ShowExampleAppConstrainedResize(bool* p_open)
     static let display_lines: c_int = 10;
 
     // Submit constraint
-    let aspect_ratio: c_float =  16f32 / 9.0.0;
+    let aspect_ratio: c_float =  16f32 / 9.0;
     let fixed_step: c_float =  100;
     if (type == 0) SetNextWindowSizeConstraints(ImVec2::new(100, 100), ImVec2::new(500, 500));         // Between 100x100 and 500x500
     if (type == 1) SetNextWindowSizeConstraints(ImVec2::new(100, 100), ImVec2::new(f32::MAX, f32::MAX)); // Width > 100, Height > 100
@@ -7639,15 +7639,15 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             // Draw a bunch of primitives
             Text("All primitives");
             static let sz: c_float =  36f32;
-            static let thickness: c_float =  3.0.0;
+            static let thickness: c_float =  3.0;
             static let ngon_sides: c_int = 6;
             static let mut circle_segments_override: bool =  false;
             static let circle_segments_override_v: c_int = 12;
             static let mut curve_segments_override: bool =  false;
             static let curve_segments_override_v: c_int = 8;
             static colf: ImVec4 = ImVec4(1.0, 1.0, 0.4f, 1.0);
-            DragFloat("Size", &sz, 0.2f, 2.0.0, 100, "%.0f");
-            DragFloat("Thickness", &thickness, 0.05f, 1.0, 8.0.0, "%.02f");
+            DragFloat("Size", &sz, 0.2f, 2.0, 100, "%.0f");
+            DragFloat("Thickness", &thickness, 0.05f, 1.0, 8.0, "%.02f");
             SliderInt("N-gon sides", &ngon_sides, 3, 12);
             Checkbox("##circlesegmentoverride", &circle_segments_override);
             SameLine(0.0, GetStyle().ItemInnerSpacing.x);
@@ -7664,8 +7664,8 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             let rounding: c_float =  sz / 5f32;
             let circle_segments: c_int = circle_segments_override ? circle_segments_override_v : 0;
             let curve_segments: c_int = curve_segments_override ? curve_segments_override_v : 0;
-            let x: c_float =  p.x + 4.0.0;
-            let y: c_float =  p.y + 4.0.0;
+            let x: c_float =  p.x + 4.0;
+            let y: c_float =  p.y + 4.0;
             for (let n: c_int = 0; n < 2; n++)
             {
                 // First line uses a thickness of 1.0, second line uses the configurable thickness
@@ -7700,7 +7700,7 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.5,y), ImVec2::new(x+sz, y+sz-0.5), ImVec2::new(x, y+sz-0.5), col);  x += sz + spacing;  // Triangle
             //draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5), ImVec2::new(x+sz*0.4f, y+sz-0.5), col); x += sz*0.4f + spacing; // Thin triangle
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + thickness), col);                             x += sz + spacing;  // Horizontal line (faster than AddLine, but only handle integer thickness)
-            draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + thickness, y + sz), col);                             x += spacing * 2.0.0;// Vertical line (faster than AddLine, but only handle integer thickness)
+            draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + thickness, y + sz), col);                             x += spacing * 2.0;// Vertical line (faster than AddLine, but only handle integer thickness)
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + 1, y + 1), col);                                      x += sz;            // Pixel (faster than AddLine)
             draw_list.AddRectFilledMultiColor(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), IM_COL32(0, 0, 0, 255), IM_COL32(255, 0, 0, 255), IM_COL32(255, 255, 0, 255), IM_COL32(0, 255, 0, 255));
 
@@ -7793,7 +7793,7 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             draw_list.PushClipRect(canvas_p0, canvas_p1, true);
             if (opt_enable_grid)
             {
-                let GRID_STEP: c_float =  64.0.0;
+                let GRID_STEP: c_float =  64.0;
                 for (let x: c_float =  fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
                     draw_list.AddLine(ImVec2::new(canvas_p0.x + x, canvas_p0.y), ImVec2::new(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
                 for (let y: c_float =  fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
@@ -8274,7 +8274,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                     EndChildFrame();
                 }
 
-                button_size: ImVec2(GetFontSize() * 7.0.0, 0.0);
+                button_size: ImVec2(GetFontSize() * 7.0, 0.0);
                 if (Button("Yes", button_size))
                 {
                     for (let n: c_int = 0; n < close_queue.Size; n++)
